@@ -661,7 +661,7 @@ and 'loc unsupported_syntax =
   | SpreadArgument
   | ImportDynamicArgument
   | IllegalName
-  | TupleOptionalElement
+  | TupleLabeledElement
   | TupleSpreadElement
   | UserDefinedTypeGuards
   | UnsupportedInternalSlot of {
@@ -768,7 +768,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       | PredicateDeclarationAnonymousParameters | PredicateInvalidBody
       | PredicateFunctionAbstractReturnType | PredicateVoidReturn | MultipleIndexers
       | MultipleProtos | ExplicitCallAfterProto | ExplicitProtoAfterCall | SpreadArgument
-      | ImportDynamicArgument | IllegalName | TupleOptionalElement | TupleSpreadElement
+      | ImportDynamicArgument | IllegalName | TupleLabeledElement | TupleSpreadElement
       | UserDefinedTypeGuards | UnsupportedInternalSlot _ | AnnotationInsideDestructuring
       | WithStatement ) as u ->
       u
@@ -2799,7 +2799,7 @@ let friendly_message_of_msg loc_of_aloc msg =
       | ExplicitProtoAfterCall -> [text "Unexpected prototype after call property."]
       | SpreadArgument -> [text "A spread argument is unsupported here."]
       | IllegalName -> [text "Illegal name."]
-      | TupleOptionalElement -> [text "Optional tuple elements are not supported."]
+      | TupleLabeledElement -> [text "Labeled tuple elements are not supported."]
       | TupleSpreadElement -> [text "Tuple spread is not supported."]
       | UserDefinedTypeGuards -> [text "User defined type guards are not yet supported."]
       | UnsupportedInternalSlot { name; static = false } ->

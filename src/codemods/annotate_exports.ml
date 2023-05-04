@@ -78,6 +78,7 @@ module SignatureVerification = struct
         relay_integration_module_prefix = Options.relay_integration_module_prefix options;
         conditional_type = true;
         mapped_type = true;
+        tuple_enhancements = true;
       }
     in
     let (sig_errors, locs, _) =

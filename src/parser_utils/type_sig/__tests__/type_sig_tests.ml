@@ -195,6 +195,7 @@ let sig_options
     ?(conditional_type = true)
     ?(mapped_type = true)
     ?relay_integration_module_prefix
+    ?(tuple_enhancements = true)
     () =
   {
     Type_sig_options.suppress_types;
@@ -211,6 +212,7 @@ let sig_options
     relay_integration_module_prefix;
     conditional_type;
     mapped_type;
+    tuple_enhancements;
   }
 
 let parse_and_pack_module ~strict sig_opts contents =
@@ -231,6 +233,7 @@ let print_sig
     ?conditional_type
     ?mapped_type
     ?relay_integration_module_prefix
+    ?tuple_enhancements
     contents_indent =
   let contents = dedent_trim contents_indent in
   let sig_opts =
@@ -248,6 +251,7 @@ let print_sig
       ?conditional_type
       ?mapped_type
       ?relay_integration_module_prefix
+      ?tuple_enhancements
       ()
   in
   let type_sig = parse_and_pack_module ~strict:true sig_opts contents in
