@@ -828,6 +828,17 @@ let get_def ~options ~reader ~env ~profiling ~type_parse_artifacts_cache (file_i
       in
       let json =
         let json_props = Base.Option.value ~default:[] json_props in
+        let json_props =
+          match result with
+          | Ok [] ->
+            (* add file context when we return no result (100 bytes before and after) *)
+            let offset = File_content.get_offset content { File_content.line; column = col } in
+            let before = String.sub content (Int.max (offset - 100) 0) (Int.min 100 offset) in
+            let after = String.sub content offset (Int.min 100 (String.length content - offset)) in
+            let str = Printf.sprintf "%s|%s" before after in
+            ("broader_context", Hh_json.JSON_String str) :: json_props
+          | _ -> json_props
+        in
         let json_props = add_cache_hit_data_to_json json_props did_hit_cache in
         Hh_json.JSON_Object json_props
       in
