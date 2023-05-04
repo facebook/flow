@@ -27,6 +27,11 @@ module Client_config = struct
   let show_suggest_ranking_info { show_suggest_ranking_info; _ } = show_suggest_ranking_info
 end
 
+type autocomplete_token = {
+  ac_type: string;
+  loc: int * int * File_key.t option;
+}
+
 type single_client = {
   client_id: Prot.client_id;
   lsp_initialize_params: Lsp.Initialize.params;
@@ -37,7 +42,7 @@ type single_client = {
     (Types_js_types.file_artifacts, Flow_error.ErrorSet.t) result FilenameCache.t;
   mutable client_config: Client_config.t;
   mutable outstanding_handlers: unit Lsp.lsp_handler Lsp.IdMap.t;
-  mutable token_loc: int * int * File_key.t option;
+  mutable autocomplete_token: autocomplete_token option;
   mutable autocomplete_session_length: int;
 }
 
@@ -125,7 +130,7 @@ let add_client client_id lsp_initialize_params =
           show_suggest_ranking_info = false;
         };
       outstanding_handlers = Lsp.IdMap.empty;
-      token_loc = (-1, -1, None);
+      autocomplete_token = None;
       autocomplete_session_length = 0;
     }
   in
@@ -299,11 +304,15 @@ let pop_outstanding_handler client id =
     Some handler
   | None -> None
 
-let autocomplete_session client token_loc =
-  if token_loc = client.token_loc then
+(** Update the autocomplete session. Given the type of autocomplete (e.g.
+    "Acid" when completing an identifier) and the start loc of the token,
+    increments the session length for each consecutive completion request.
+    Resets the session if the type or the token's start loc changes. *)
+let autocomplete_session client ~ac_type loc =
+  (match client.autocomplete_token with
+  | Some { ac_type = prev_ac_type; loc = prev_loc } when ac_type = prev_ac_type && prev_loc = loc ->
     client.autocomplete_session_length <- client.autocomplete_session_length + 1
-  else (
-    client.token_loc <- token_loc;
-    client.autocomplete_session_length <- 1
-  );
+  | _ ->
+    client.autocomplete_token <- Some { ac_type; loc };
+    client.autocomplete_session_length <- 1);
   client.autocomplete_session_length

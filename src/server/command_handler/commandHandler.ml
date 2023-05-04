@@ -1910,7 +1910,12 @@ let handle_persistent_autocomplete_lsp
       | (_, _, None) ->
         None
       | (Some token_line, Some token_char, file_key) ->
-        Some (Persistent_connection.autocomplete_session client (token_line, token_char, file_key))
+        Some
+          (Persistent_connection.autocomplete_session
+             client
+             ~ac_type
+             (token_line, token_char, file_key)
+          )
     in
     let typed_len =
       match token_char with
