@@ -1577,6 +1577,48 @@ let should_autoimport_react ~options ~imports ~file_sig =
   else
     false
 
+let autocomplete_jsx_intrinsic ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams_rev ~edit_locs =
+  let intrinsics_t =
+    let open Reason in
+    let reason = mk_reason (RType (OrdinaryName "$JSXIntrinsics")) ac_loc in
+    Flow_js.get_builtin_type cx reason (OrdinaryName "$JSXIntrinsics")
+  in
+  let (items, errors_to_log) =
+    match
+      members_of_type
+        ~reader
+        ~exclude_proto_members:true
+        ~tparams_rev
+        cx
+        file_sig
+        typed_ast
+        intrinsics_t
+    with
+    | Error err -> ([], [err])
+    | Ok (mems, errors_to_log, _) ->
+      let items =
+        Base.List.map mems ~f:(fun (name, documentation, tags, _) ->
+            {
+              ServerProt.Response.Completion.kind = Some Lsp.Completion.Variable;
+              name;
+              labelDetail = None;
+              description = None;
+              itemDetail = Some "JSX Intrinsic";
+              text_edit = Some (text_edit ~insert_text:name name edit_locs);
+              additional_text_edits = [];
+              sort_text = sort_text_of_rank 400;
+              preselect = false;
+              documentation;
+              tags;
+              log_info = "$JSXIntrinsics member";
+              insert_text_format = Lsp.Completion.PlainText;
+            }
+        )
+      in
+      (items, errors_to_log)
+  in
+  { result = { ServerProt.Response.Completion.items; is_incomplete = false }; errors_to_log }
+
 let autocomplete_jsx_element
     ~env
     ~options
@@ -1593,7 +1635,7 @@ let autocomplete_jsx_element
     ~edit_locs
     ~token
     ~type_ =
-  let ({ result; errors_to_log } as results) =
+  let results_id =
     autocomplete_id
       ~env
       ~options
@@ -1612,6 +1654,32 @@ let autocomplete_jsx_element
       ~edit_locs
       ~token
       ~type_
+  in
+  let results_jsx =
+    autocomplete_jsx_intrinsic ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams_rev ~edit_locs
+  in
+  let ({ result; errors_to_log } as results) =
+    let open ServerProt.Response.Completion in
+    let {
+      result = { items = items_id; is_incomplete = is_incomplete_id };
+      errors_to_log = errors_to_log_id;
+    } =
+      results_id
+    in
+    let {
+      result = { items = items_jsx; is_incomplete = is_incomplete_jsx };
+      errors_to_log = errors_to_log_jsx;
+    } =
+      results_jsx
+    in
+    {
+      result =
+        {
+          items = filter_by_token_and_sort token (items_id @ items_jsx);
+          is_incomplete = is_incomplete_id || is_incomplete_jsx;
+        };
+      errors_to_log = errors_to_log_id @ errors_to_log_jsx;
+    }
   in
   if should_autoimport_react ~options ~imports ~file_sig then
     let open ServerProt.Response.Completion in
