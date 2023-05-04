@@ -1,12 +1,15 @@
-function isStringNullOrEmpty(str: ?string): boolean %checks {
+export function isStringNullOrEmpty(str: ?string): boolean %checks {
   return str == null || str === "";
 }
 
-declare function declaredIsStringNullOrEmpty(
+declare export function declaredIsStringNullOrEmpty(
   str: ?string
 ): boolean %checks(str == null || str === "");
 
-module.exports = {
-  isStringNullOrEmpty,
-  declaredIsStringNullOrEmpty
-};
+const y = "abc";
+
+declare function mono(x: mixed, y: mixed): boolean %checks(typeof x === "number");
+
+export function wrapMono(x: mixed): boolean %checks {
+  return mono(x, y);
+}

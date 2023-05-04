@@ -3337,8 +3337,10 @@ and predicate opts scope tbls pnames =
     in
     let f acc i = function
       | E.Expression (_, E.Identifier id) ->
-        let%map key = refinement_key id in
-        (key, i) :: acc
+        Some
+          (match refinement_key id with
+          | Some key -> (key, i) :: acc
+          | None -> acc)
       | E.Expression _ -> Some acc
       | E.Spread _ -> None
     in

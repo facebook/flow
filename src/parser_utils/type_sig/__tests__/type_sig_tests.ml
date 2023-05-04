@@ -4533,6 +4533,46 @@ let%expect_test "predicate_latent" =
                            )))))};
          statics = {}} |}]
 
+let%expect_test "predicate_latent_non_param_identifiers" =
+  print_sig {|
+    const y = "abc";
+    declare function foo(x: mixed, y: mixed): boolean %checks(typeof x === "number");
+    export function bar(x: mixed): boolean %checks {
+      return foo(x, y);
+    }
+  |};
+  [%expect {|
+    ESModule {type_exports = [||]; exports = [|(ExportBinding 1)|];
+      info =
+      ESModuleInfo {type_export_keys = [||];
+        type_stars = []; export_keys = [|"bar"|];
+        stars = []; strict = true}}
+
+    Local defs:
+    0. DeclareFun {id_loc = [2:17-20];
+         name = "foo"; fn_loc = [2:20-49];
+         def =
+         FunSig {tparams = Mono;
+           params =
+           [FunParam {name = (Some "x"); t = (Annot (Mixed [2:24-29]))};
+             FunParam {name = (Some "y"); t = (Annot (Mixed [2:34-39]))}];
+           rest_param = None; this_param = None;
+           return = (Annot (Boolean [2:42-49]));
+           predicate = (Some ([2:50-80], (Some (NumP ("x", [2:58-79])))))};
+         tail = []}
+    1. FunBinding {id_loc = [3:16-19];
+         name = "bar"; async = false;
+         generator = false; fn_loc = [3:7-46];
+         def =
+         FunSig {tparams = Mono;
+           params = [FunParam {name = (Some "x"); t = (Annot (Mixed [3:23-28]))}];
+           rest_param = None; this_param = None;
+           return = (Annot (Boolean [3:31-38]));
+           predicate =
+           (Some ([4:2-19],
+                  (Some (LatentP ((Ref LocalRef {ref_loc = [4:9-12]; index = 0}), (("x", 0), []))))))};
+         statics = {}} |}]
+
 let%expect_test "long_string_lit" =
   print_sig ~max_literal_len:3 {|
     export const a = "aaa";
@@ -5606,7 +5646,7 @@ let%expect_test "mapped_types_invalid" =
       type_exports = [|(ExportTypeBinding 0); (ExportTypeBinding 1); (ExportTypeBinding 2)|];
       exports = None;
       info = CJSModuleInfo {type_export_keys = [|"T"; "U"; "V"|]; type_stars = []; strict = true}}
- 
+
     Local defs:
     0. TypeAlias {id_loc = [2:12-13]; name = "T"; tparams = Mono; body = (Annot (Any [2:17-43]))}
     1. TypeAlias {id_loc = [3:12-13]; name = "U"; tparams = Mono; body = (Annot (Any [3:17-35]))}
