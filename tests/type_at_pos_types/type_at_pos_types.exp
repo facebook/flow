@@ -566,7 +566,9 @@ callable-object.js:31:6 = {
   "start":6,
   "end":9
 }
-opaque.js:3:20 = {
+opaque.js:3:20
+Flags: --pretty
+{
   "types":{
     "unevaluated":{"type":"type Foo = number"},
     "evaluated":{"type":"type Foo = number"}
@@ -584,22 +586,10 @@ opaque.js:3:20 = {
   "start":20,
   "end":22
 }
-opaque.js:4:14 = {
-  "types":{"unevaluated":{"type":"Foo"},"evaluated":{"type":"Foo"}},
-  "reasons":[],
-  "loc":{
-    "source":"opaque.js",
-    "type":"SourceFile",
-    "start":{"line":4,"column":13,"offset":55},
-    "end":{"line":4,"column":15,"offset":58}
-  },
-  "path":"opaque.js",
-  "line":4,
-  "endline":4,
-  "start":13,
-  "end":15
-}
-opaque.js:4:19 = {
+
+opaque.js:6:19
+Flags: --pretty
+{
   "types":{
     "unevaluated":{"type":"type Foo = number"},
     "evaluated":{"type":"type Foo = number"}
@@ -608,16 +598,37 @@ opaque.js:4:19 = {
   "loc":{
     "source":"opaque.js",
     "type":"SourceFile",
-    "start":{"line":4,"column":18,"offset":60},
-    "end":{"line":4,"column":20,"offset":63}
+    "start":{"line":6,"column":18,"offset":82},
+    "end":{"line":6,"column":20,"offset":85}
   },
   "path":"opaque.js",
-  "line":4,
-  "endline":4,
+  "line":6,
+  "endline":6,
   "start":18,
   "end":20
 }
-opaque.js:6:22 = {
+
+opaque.js:8:3
+Flags: --pretty
+{
+  "types":{"unevaluated":{"type":"Foo"},"evaluated":{"type":"Foo"}},
+  "reasons":[],
+  "loc":{
+    "source":"opaque.js",
+    "type":"SourceFile",
+    "start":{"line":8,"column":1,"offset":107},
+    "end":{"line":8,"column":3,"offset":110}
+  },
+  "path":"opaque.js",
+  "line":8,
+  "endline":8,
+  "start":1,
+  "end":3
+}
+
+opaque.js:11:22
+Flags: --pretty
+{
   "types":{
     "unevaluated":{"type":"type Bar = number"},
     "evaluated":{"type":"type Bar = number"}
@@ -626,94 +637,112 @@ opaque.js:6:22 = {
   "loc":{
     "source":"opaque.js",
     "type":"SourceFile",
-    "start":{"line":6,"column":21,"offset":86},
-    "end":{"line":6,"column":23,"offset":89}
+    "start":{"line":11,"column":21,"offset":137},
+    "end":{"line":11,"column":23,"offset":140}
   },
   "path":"opaque.js",
-  "line":6,
-  "endline":6,
+  "line":11,
+  "endline":11,
   "start":21,
   "end":23
 }
-opaque.js:7:13 = {
+
+opaque.js:14:18
+Flags: --pretty
+{
+  "types":{
+    "unevaluated":{"type":"type Bar = number"},
+    "evaluated":{"type":"type Bar = number"}
+  },
+  "reasons":[],
+  "loc":{
+    "source":"opaque.js",
+    "type":"SourceFile",
+    "start":{"line":14,"column":18,"offset":191},
+    "end":{"line":14,"column":20,"offset":194}
+  },
+  "path":"opaque.js",
+  "line":14,
+  "endline":14,
+  "start":18,
+  "end":20
+}
+
+opaque.js:16:3
+Flags: --pretty
+{
   "types":{"unevaluated":{"type":"Bar"},"evaluated":{"type":"Bar"}},
   "reasons":[],
   "loc":{
     "source":"opaque.js",
     "type":"SourceFile",
-    "start":{"line":7,"column":13,"offset":111},
-    "end":{"line":7,"column":15,"offset":114}
+    "start":{"line":16,"column":1,"offset":215},
+    "end":{"line":16,"column":3,"offset":218}
   },
   "path":"opaque.js",
-  "line":7,
-  "endline":7,
-  "start":13,
-  "end":15
+  "line":16,
+  "endline":16,
+  "start":1,
+  "end":3
 }
-opaque.js:7:18 = {
-  "types":{
-    "unevaluated":{"type":"type Bar = number"},
-    "evaluated":{"type":"type Bar = number"}
-  },
-  "reasons":[],
-  "loc":{
-    "source":"opaque.js",
-    "type":"SourceFile",
-    "start":{"line":7,"column":18,"offset":116},
-    "end":{"line":7,"column":20,"offset":119}
-  },
-  "path":"opaque.js",
-  "line":7,
-  "endline":7,
-  "start":18,
-  "end":20
-}
-opaque.js:9:22 = {
+
+opaque.js:19:22
+Flags: --pretty
+{
   "types":{"unevaluated":{"type":"type Baz"},"evaluated":{"type":"type Baz"}},
   "reasons":[],
   "loc":{
     "source":"opaque.js",
     "type":"SourceFile",
-    "start":{"line":9,"column":21,"offset":142},
-    "end":{"line":9,"column":23,"offset":145}
+    "start":{"line":19,"column":21,"offset":245},
+    "end":{"line":19,"column":23,"offset":248}
   },
   "path":"opaque.js",
-  "line":9,
-  "endline":9,
+  "line":19,
+  "endline":19,
   "start":21,
   "end":23
 }
-opaque.js:10:13 = {
+
+opaque.js:22:18
+Flags: --pretty
+{
+  "types":{"unevaluated":{"type":"type Baz"},"evaluated":{"type":"type Baz"}},
+  "reasons":[],
+  "loc":{
+    "source":"opaque.js",
+    "type":"SourceFile",
+    "start":{"line":22,"column":18,"offset":291},
+    "end":{"line":22,"column":20,"offset":294}
+  },
+  "path":"opaque.js",
+  "line":22,
+  "endline":22,
+  "start":18,
+  "end":20
+}
+
+opaque.js:24:3
+Flags: --pretty
+{
   "types":{"unevaluated":{"type":"Baz"},"evaluated":{"type":"Baz"}},
   "reasons":[],
   "loc":{
     "source":"opaque.js",
     "type":"SourceFile",
-    "start":{"line":10,"column":13,"offset":159},
-    "end":{"line":10,"column":15,"offset":162}
+    "start":{"line":24,"column":1,"offset":315},
+    "end":{"line":24,"column":3,"offset":318}
   },
   "path":"opaque.js",
-  "line":10,
-  "endline":10,
-  "start":13,
-  "end":15
+  "line":24,
+  "endline":24,
+  "start":1,
+  "end":3
 }
-opaque.js:10:18 = {
-  "types":{"unevaluated":{"type":"type Baz"},"evaluated":{"type":"type Baz"}},
-  "reasons":[],
-  "loc":{
-    "source":"opaque.js",
-    "type":"SourceFile",
-    "start":{"line":10,"column":18,"offset":164},
-    "end":{"line":10,"column":20,"offset":167}
-  },
-  "path":"opaque.js",
-  "line":10,
-  "endline":10,
-  "start":18,
-  "end":20
-}
-opaque.js:12:14 = {
+
+opaque.js:27:14
+Flags: --pretty
+{
   "types":{
     "unevaluated":{"type":"type Bak<A> = number | A"},
     "evaluated":{"type":"type Bak<A> = number | A"}
@@ -722,142 +751,148 @@ opaque.js:12:14 = {
   "loc":{
     "source":"opaque.js",
     "type":"SourceFile",
-    "start":{"line":12,"column":13,"offset":182},
-    "end":{"line":12,"column":15,"offset":185}
+    "start":{"line":27,"column":13,"offset":337},
+    "end":{"line":27,"column":15,"offset":340}
   },
   "path":"opaque.js",
-  "line":12,
-  "endline":12,
+  "line":27,
+  "endline":27,
   "start":13,
   "end":15
 }
-opaque.js:13:14 = {
+
+opaque.js:30:19
+Flags: --pretty
+{
+  "types":{
+    "unevaluated":{"type":"type Bak<A> = number | A"},
+    "evaluated":{"type":"type Bak<A> = number | A"}
+  },
+  "reasons":[],
+  "loc":{
+    "source":"opaque.js",
+    "type":"SourceFile",
+    "start":{"line":30,"column":18,"offset":391},
+    "end":{"line":30,"column":20,"offset":394}
+  },
+  "path":"opaque.js",
+  "line":30,
+  "endline":30,
+  "start":18,
+  "end":20
+}
+
+opaque.js:32:3
+Flags: --pretty
+{
   "types":{"unevaluated":{"type":"Bak<string>"},"evaluated":{"type":"Bak<string>"}},
   "reasons":[],
   "loc":{
     "source":"opaque.js",
     "type":"SourceFile",
-    "start":{"line":13,"column":13,"offset":215},
-    "end":{"line":13,"column":15,"offset":218}
+    "start":{"line":32,"column":1,"offset":424},
+    "end":{"line":32,"column":3,"offset":427}
   },
   "path":"opaque.js",
-  "line":13,
-  "endline":13,
-  "start":13,
-  "end":15
+  "line":32,
+  "endline":32,
+  "start":1,
+  "end":3
 }
-opaque.js:13:19 = {
-  "types":{
-    "unevaluated":{"type":"type Bak<A> = number | A"},
-    "evaluated":{"type":"type Bak<A> = number | A"}
-  },
-  "reasons":[],
-  "loc":{
-    "source":"opaque.js",
-    "type":"SourceFile",
-    "start":{"line":13,"column":18,"offset":220},
-    "end":{"line":13,"column":20,"offset":223}
-  },
-  "path":"opaque.js",
-  "line":13,
-  "endline":13,
-  "start":18,
-  "end":20
-}
-opaque.js:15:22 = {
+
+opaque.js:35:22
+Flags: --pretty
+{
   "types":{"unevaluated":{"type":"type Bam<A>"},"evaluated":{"type":"type Bam<A>"}},
   "reasons":[],
   "loc":{
     "source":"opaque.js",
     "type":"SourceFile",
-    "start":{"line":15,"column":21,"offset":254},
-    "end":{"line":15,"column":23,"offset":257}
+    "start":{"line":35,"column":21,"offset":454},
+    "end":{"line":35,"column":23,"offset":457}
   },
   "path":"opaque.js",
-  "line":15,
-  "endline":15,
+  "line":35,
+  "endline":35,
   "start":21,
   "end":23
 }
-opaque.js:16:14 = {
+
+opaque.js:38:19
+Flags: --pretty
+{
+  "types":{"unevaluated":{"type":"type Bam<A>"},"evaluated":{"type":"type Bam<A>"}},
+  "reasons":[],
+  "loc":{
+    "source":"opaque.js",
+    "type":"SourceFile",
+    "start":{"line":38,"column":18,"offset":502},
+    "end":{"line":38,"column":20,"offset":505}
+  },
+  "path":"opaque.js",
+  "line":38,
+  "endline":38,
+  "start":18,
+  "end":20
+}
+
+opaque.js:40:3
+Flags: --pretty
+{
   "types":{"unevaluated":{"type":"Bam<string>"},"evaluated":{"type":"Bam<string>"}},
   "reasons":[],
   "loc":{
     "source":"opaque.js",
     "type":"SourceFile",
-    "start":{"line":16,"column":13,"offset":273},
-    "end":{"line":16,"column":15,"offset":276}
+    "start":{"line":40,"column":1,"offset":535},
+    "end":{"line":40,"column":3,"offset":538}
   },
   "path":"opaque.js",
-  "line":16,
-  "endline":16,
-  "start":13,
-  "end":15
+  "line":40,
+  "endline":40,
+  "start":1,
+  "end":3
 }
-opaque.js:16:19 = {
-  "types":{"unevaluated":{"type":"type Bam<A>"},"evaluated":{"type":"type Bam<A>"}},
-  "reasons":[],
-  "loc":{
-    "source":"opaque.js",
-    "type":"SourceFile",
-    "start":{"line":16,"column":18,"offset":278},
-    "end":{"line":16,"column":20,"offset":281}
-  },
-  "path":"opaque.js",
-  "line":16,
-  "endline":16,
-  "start":18,
-  "end":20
-}
-opaque.js:19:14 = {
-  "types":{"unevaluated":{"type":"Opaque"},"evaluated":{"type":"Opaque"}},
-  "reasons":[],
-  "loc":{
-    "source":"opaque.js",
-    "type":"SourceFile",
-    "start":{"line":19,"column":13,"offset":377},
-    "end":{"line":19,"column":18,"offset":383}
-  },
-  "path":"opaque.js",
-  "line":19,
-  "endline":19,
-  "start":13,
-  "end":18
-}
-opaque.js:19:22 = {
+
+opaque.js:45:22
+Flags: --pretty
+{
   "types":{"unevaluated":{"type":"type Opaque"},"evaluated":{"type":"type Opaque"}},
   "reasons":[],
   "loc":{
     "source":"opaque.js",
     "type":"SourceFile",
-    "start":{"line":19,"column":21,"offset":385},
-    "end":{"line":19,"column":26,"offset":391}
+    "start":{"line":45,"column":21,"offset":639},
+    "end":{"line":45,"column":26,"offset":645}
   },
   "path":"opaque.js",
-  "line":19,
-  "endline":19,
+  "line":45,
+  "endline":45,
   "start":21,
   "end":26
 }
-opaque.js:20:16 = {
-  "types":{
-    "unevaluated":{"type":"PolyTransparent<string>"},
-    "evaluated":{"type":"PolyTransparent<string>"}
-  },
+
+opaque.js:47:4
+Flags: --pretty
+{
+  "types":{"unevaluated":{"type":"Opaque"},"evaluated":{"type":"Opaque"}},
   "reasons":[],
   "loc":{
     "source":"opaque.js",
     "type":"SourceFile",
-    "start":{"line":20,"column":13,"offset":405},
-    "end":{"line":20,"column":27,"offset":420}
+    "start":{"line":47,"column":1,"offset":670},
+    "end":{"line":47,"column":6,"offset":676}
   },
   "path":"opaque.js",
-  "line":20,
-  "endline":20,
-  "start":13,
-  "end":27
+  "line":47,
+  "endline":47,
+  "start":1,
+  "end":6
 }
-opaque.js:20:34 = {
+
+opaque.js:50:34
+Flags: --pretty
+{
   "types":{
     "unevaluated":{"type":"type PolyTransparent<A> = Poly$Opaque<A>"},
     "evaluated":{"type":"type PolyTransparent<A> = Poly$Opaque<A>"}
@@ -866,34 +901,40 @@ opaque.js:20:34 = {
   "loc":{
     "source":"opaque.js",
     "type":"SourceFile",
-    "start":{"line":20,"column":30,"offset":422},
-    "end":{"line":20,"column":44,"offset":437}
+    "start":{"line":50,"column":30,"offset":713},
+    "end":{"line":50,"column":44,"offset":728}
   },
   "path":"opaque.js",
-  "line":20,
-  "endline":20,
+  "line":50,
+  "endline":50,
   "start":30,
   "end":44
 }
-opaque.js:21:19 = {
+
+opaque.js:52:4
+Flags: --pretty
+{
   "types":{
-    "unevaluated":{"type":"PolyOpaque<string>"},
-    "evaluated":{"type":"PolyOpaque<string>"}
+    "unevaluated":{"type":"PolyTransparent<string>"},
+    "evaluated":{"type":"PolyTransparent<string>"}
   },
   "reasons":[],
   "loc":{
     "source":"opaque.js",
     "type":"SourceFile",
-    "start":{"line":21,"column":13,"offset":459},
-    "end":{"line":21,"column":22,"offset":469}
+    "start":{"line":52,"column":1,"offset":773},
+    "end":{"line":52,"column":15,"offset":788}
   },
   "path":"opaque.js",
-  "line":21,
-  "endline":21,
-  "start":13,
-  "end":22
+  "line":52,
+  "endline":52,
+  "start":1,
+  "end":15
 }
-opaque.js:21:28 = {
+
+opaque.js:55:27
+Flags: --pretty
+{
   "types":{
     "unevaluated":{"type":"type PolyOpaque<A>"},
     "evaluated":{"type":"type PolyOpaque<A>"}
@@ -902,30 +943,55 @@ opaque.js:21:28 = {
   "loc":{
     "source":"opaque.js",
     "type":"SourceFile",
-    "start":{"line":21,"column":25,"offset":471},
-    "end":{"line":21,"column":34,"offset":481}
+    "start":{"line":55,"column":25,"offset":820},
+    "end":{"line":55,"column":34,"offset":830}
   },
   "path":"opaque.js",
-  "line":21,
-  "endline":21,
+  "line":55,
+  "endline":55,
   "start":25,
   "end":34
 }
-opaque.js:24:7 = {
+
+opaque.js:57:4
+Flags: --pretty
+{
+  "types":{
+    "unevaluated":{"type":"PolyOpaque<string>"},
+    "evaluated":{"type":"PolyOpaque<string>"}
+  },
+  "reasons":[],
+  "loc":{
+    "source":"opaque.js",
+    "type":"SourceFile",
+    "start":{"line":57,"column":1,"offset":868},
+    "end":{"line":57,"column":10,"offset":878}
+  },
+  "path":"opaque.js",
+  "line":57,
+  "endline":57,
+  "start":1,
+  "end":10
+}
+
+opaque.js:61:7
+Flags: --pretty
+{
   "types":{"unevaluated":{"type":"Opaque"},"evaluated":{"type":"Opaque"}},
   "reasons":[],
   "loc":{
     "source":"opaque.js",
     "type":"SourceFile",
-    "start":{"line":24,"column":7,"offset":538},
-    "end":{"line":24,"column":7,"offset":539}
+    "start":{"line":61,"column":7,"offset":932},
+    "end":{"line":61,"column":7,"offset":933}
   },
   "path":"opaque.js",
-  "line":24,
-  "endline":24,
+  "line":61,
+  "endline":61,
   "start":7,
   "end":7
 }
+
 optional.js:4:10 = {
   "types":{"unevaluated":{"type":"void | string"},"evaluated":{"type":"void | string"}},
   "reasons":[],
