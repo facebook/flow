@@ -783,6 +783,7 @@ module rec TypeTerm : sig
     | CreateObjWithComputedPropT of {
         reason: reason;
         reason_obj: reason;
+        reason_key: reason;
         value: t;
         tout_tvar: tvar;
       }
@@ -828,6 +829,12 @@ module rec TypeTerm : sig
     | CheckUnusedPromiseT of {
         reason: reason;
         async: bool;
+      }
+    | WriteComputedObjPropCheckT of {
+        reason: reason;
+        reason_key: reason option;
+        value_t: t;
+        err_on_str_or_num_key: (use_op * reason) option;
       }
 
   and enum_check_t =
@@ -3812,6 +3819,7 @@ let string_of_use_ctor = function
   | SealGenericT _ -> "SealGenericT"
   | OptionalIndexedAccessT _ -> "OptionalIndexedAccessT"
   | CheckUnusedPromiseT _ -> "CheckUnusedPromiseT"
+  | WriteComputedObjPropCheckT _ -> "WriteComputedObjPropCheckT"
 
 let string_of_binary_test = function
   | InstanceofTest -> "instanceof"

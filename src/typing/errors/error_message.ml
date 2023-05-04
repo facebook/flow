@@ -318,7 +318,7 @@ and 'loc t' =
   | EForInRHS of 'loc virtual_reason
   | EInstanceofRHS of 'loc virtual_reason
   | EObjectComputedPropertyAccess of ('loc virtual_reason * 'loc virtual_reason)
-  | EObjectComputedPropertyAssign of ('loc virtual_reason * 'loc virtual_reason)
+  | EObjectComputedPropertyAssign of ('loc virtual_reason * 'loc virtual_reason option)
   | EInvalidLHSInAssignment of 'loc
   | EIncompatibleWithUseOp of {
       use_op: 'loc virtual_use_op;
@@ -1027,7 +1027,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EObjectComputedPropertyAccess (r1, r2) ->
     EObjectComputedPropertyAccess (map_reason r1, map_reason r2)
   | EObjectComputedPropertyAssign (r1, r2) ->
-    EObjectComputedPropertyAssign (map_reason r1, map_reason r2)
+    EObjectComputedPropertyAssign (map_reason r1, Base.Option.map ~f:map_reason r2)
   | EInvalidLHSInAssignment l -> EInvalidLHSInAssignment (f l)
   | EUnsupportedImplements r -> EUnsupportedImplements (map_reason r)
   | EReactElementFunArity (r, s, i) -> EReactElementFunArity (map_reason r, s, i)
@@ -1528,7 +1528,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EUnsupportedSetProto reason
   | EReactElementFunArity (reason, _, _)
   | EUnsupportedImplements reason
-  | EObjectComputedPropertyAssign (_, reason)
+  | EObjectComputedPropertyAssign (reason, _)
   | EObjectComputedPropertyAccess (_, reason)
   | EForInRHS reason
   | EBinaryInRHS reason
@@ -3248,8 +3248,37 @@ let friendly_message_of_msg loc_of_aloc msg =
     Normal { features }
   | EObjectComputedPropertyAccess (_, reason_prop) ->
     Normal { features = [text "Cannot access computed property using "; ref reason_prop; text "."] }
-  | EObjectComputedPropertyAssign (_, reason_prop) ->
-    Normal { features = [text "Cannot assign computed property using "; ref reason_prop; text "."] }
+  | EObjectComputedPropertyAssign (reason_prop, Some reason_key) ->
+    Normal
+      {
+        features =
+          [
+            text "Cannot use ";
+            ref reason_key;
+            text " to assign a computed property.";
+            text " Computed properties may only be numeric or string literal values,";
+            text " but this one is a ";
+            ref reason_prop;
+            text ". Can you add an appropriate type annotation to ";
+            ref reason_key;
+            text "?";
+            text
+              " See https://flow.org/en/docs/types/literals/ for more information on literal types.";
+          ];
+      }
+  | EObjectComputedPropertyAssign (reason_prop, None) ->
+    Normal
+      {
+        features =
+          [
+            text "Cannot use ";
+            ref reason_prop;
+            text " to assign a computed property.";
+            text " Computed properties may only be numeric or string literal values.";
+            text
+              " See https://flow.org/en/docs/types/literals/ for more information on literal types.";
+          ];
+      }
   | EInvalidLHSInAssignment _ ->
     Normal { features = [text "Invalid left-hand side in assignment expression."] }
   | EIncompatibleWithUseOp { reason_lower; reason_upper; use_op } ->

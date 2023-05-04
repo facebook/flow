@@ -1,3 +1,45 @@
+Error ---------------------------------------------------------------------------------------------- boolean_key.js:9:23
+
+Cannot use `true` [1] to assign a computed property. Computed properties may only be numeric or string literal values,
+but this one is a boolean [1]. Can you add an appropriate type annotation to `true` [1]? See
+https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
+
+   9|   return {...params, [true]: true}; // error true is invalid-computed-prop
+                            ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- boolean_key.js:15:23
+
+Cannot use `key` [1] to assign a computed property. Computed properties may only be numeric or string literal values,
+but this one is a boolean [2]. Can you add an appropriate type annotation to `key` [1]? See
+https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
+
+   boolean_key.js:15:23
+   15|   return {...params, [key]: true}; // error boolean is invalid-computed-prop
+                             ^^^ [1]
+
+References:
+   boolean_key.js:13:8
+   13|   key: T,
+              ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- boolean_key.js:21:23
+
+Cannot use `key` [1] to assign a computed property. Computed properties may only be numeric or string literal values,
+but this one is a boolean literal `true` [2]. Can you add an appropriate type annotation to `key` [1]? See
+https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
+
+   boolean_key.js:21:23
+   21|   return {...params, [key]: true}; // error true is invalid-computed-prop
+                             ^^^ [1]
+
+References:
+   boolean_key.js:19:8
+   19|   key: T,
+              ^ [2]
+
+
 Error --------------------------------------------------------------------------------------------- object_keys.js:14:36
 
 Cannot use `k` [1] as a computed property. Computed properties may only be primitive literal values, but element of
@@ -35,16 +77,18 @@ Missing an annotation on return because generic functions must be fully annotate
 
 Error ----------------------------------------------------------------------------------------------------- poly.js:4:33
 
-Cannot assign computed property using `T` [1]. [invalid-computed-prop]
+Cannot use `x` [1] to assign a computed property. Computed properties may only be numeric or string literal values, but
+this one is a `T` [2]. Can you add an appropriate type annotation to `x` [1]? See
+https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
    poly.js:4:33
    4| function f2<T>(x: T) { return {[x]: x} } // error. mixed can't be used as a computed prop
-                                      ^
+                                      ^ [1]
 
 References:
    poly.js:4:19
    4| function f2<T>(x: T) { return {[x]: x} } // error. mixed can't be used as a computed prop
-                        ^ [1]
+                        ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:19:2
@@ -196,16 +240,18 @@ information on literal types. [invalid-computed-prop]
 
 Error --------------------------------------------------------------------------------------------------- union.js:20:13
 
-Cannot assign computed property using null or undefined [1]. [invalid-computed-prop]
+Cannot use `maybe` [1] to assign a computed property. Computed properties may only be numeric or string literal values,
+but this one is a null or undefined [2]. Can you add an appropriate type annotation to `maybe` [1]? See
+https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
    union.js:20:13
    20| const c = {[maybe]: 3}; // ERROR
-                   ^^^^^
+                   ^^^^^ [1]
 
 References:
    union.js:19:20
    19| declare var maybe: ?string;
-                          ^^^^^^^ [1]
+                          ^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- union.js:23:13
@@ -246,5 +292,53 @@ References:
                             ^^^^^^^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- union_key.js:11:23
 
-Found 16 errors
+Cannot use `key` [1] to assign a computed property. Computed properties may only be numeric or string literal values,
+but this one is a key set [2]. Can you add an appropriate type annotation to `key` [1]? See
+https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
+
+   union_key.js:11:23
+   11|   return {...params, [key]: true}; // error key set is invalid-computed-prop
+                             ^^^ [1]
+
+References:
+   union_key.js:9:8
+    9|   key: T,
+              ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- union_key.js:17:23
+
+Cannot use `key` [1] to assign a computed property. Computed properties may only be numeric or string literal values,
+but this one is a key set [2]. Can you add an appropriate type annotation to `key` [1]? See
+https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
+
+   union_key.js:17:23
+   17|   return {...params, [key]: true}; // error key set is invalid-computed-prop
+                             ^^^ [1]
+
+References:
+   union_key.js:15:8
+   15|   key: T,
+              ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- union_key.js:23:23
+
+Cannot use `key` [1] to assign a computed property. Computed properties may only be numeric or string literal values,
+but this one is a union type [2]. Can you add an appropriate type annotation to `key` [1]? See
+https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
+
+   union_key.js:23:23
+   23|   return {...params, [key]: true}; // error union is invalid-computed-prop
+                             ^^^ [1]
+
+References:
+   union_key.js:21:8
+   21|   key: T,
+              ^ [2]
+
+
+
+Found 22 errors

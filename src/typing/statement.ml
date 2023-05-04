@@ -2113,13 +2113,19 @@ module Make
     (* Use the same reason for proto and the ObjT so we can walk the proto chain
        and use the root proto reason to build an error. *)
     let obj_proto = ObjProtoT reason in
-    let mk_computed key value =
+    let mk_computed k key value =
       Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout_tvar ->
           Flow.flow
             cx
             ( key,
               CreateObjWithComputedPropT
-                { reason = reason_of_t key; reason_obj = reason; value; tout_tvar }
+                {
+                  reason = reason_of_t key;
+                  reason_key = Reason.mk_expression_reason k;
+                  reason_obj = reason;
+                  value;
+                  tout_tvar;
+                }
             )
       )
     in
@@ -2140,16 +2146,16 @@ module Make
                     shorthand;
                   }
               ) ->
-            let (((_, kt), _) as k) = expression cx k in
-            let (((_, vt), _) as v) = expression cx v in
-            let computed = mk_computed kt vt in
+            let (((_, kt), _) as k') = expression cx k in
+            let (((_, vt), _) as v') = expression cx v in
+            let computed = mk_computed k kt vt in
             ( ObjectExpressionAcc.add_spread computed acc,
               Property
                 ( prop_loc,
                   Property.Init
                     {
-                      key = Property.Computed (k_loc, { Ast.ComputedKey.expression = k; comments });
-                      value = v;
+                      key = Property.Computed (k_loc, { Ast.ComputedKey.expression = k'; comments });
+                      value = v';
                       shorthand;
                     }
                 )
@@ -2163,20 +2169,20 @@ module Make
                     value = (fn_loc, fn);
                   }
               ) ->
-            let (((_, kt), _) as k) = expression cx k in
-            let ((_, vt), v) = expression cx (fn_loc, Ast.Expression.Function fn) in
+            let (((_, kt), _) as k') = expression cx k in
+            let ((_, vt), v') = expression cx (fn_loc, Ast.Expression.Function fn) in
             let fn =
-              match v with
+              match v' with
               | Ast.Expression.Function fn -> fn
               | _ -> assert false
             in
-            let computed = mk_computed kt vt in
+            let computed = mk_computed k kt vt in
             ( ObjectExpressionAcc.add_spread computed acc,
               Property
                 ( prop_loc,
                   Property.Method
                     {
-                      key = Property.Computed (k_loc, { Ast.ComputedKey.expression = k; comments });
+                      key = Property.Computed (k_loc, { Ast.ComputedKey.expression = k'; comments });
                       value = (fn_loc, fn);
                     }
                 )

@@ -993,7 +993,7 @@ and dump_use_t_ (depth, tvars) cx t =
              (string_of_reason r)
              (tvar tout)
           )
-    | CreateObjWithComputedPropT { reason = _; reason_obj = _; value; tout_tvar } ->
+    | CreateObjWithComputedPropT { reason = _; reason_key = _; reason_obj = _; value; tout_tvar } ->
       p t ~extra:(spf "%s %s" (kid value) (kid (OpenT tout_tvar)))
     | ResolveUnionT { resolved; unresolved; upper; id; _ } ->
       p
@@ -1007,6 +1007,8 @@ and dump_use_t_ (depth, tvars) cx t =
              (use_kid upper)
           )
     | CheckUnusedPromiseT { reason; _ } -> spf "CheckUnusedPromiseT (%s)" (string_of_reason reason)
+    | WriteComputedObjPropCheckT { reason; _ } ->
+      spf "WriteComputedObjPropCheckT (%s)" (string_of_reason reason)
 
 and dump_tvar_ (depth, tvars) cx id =
   if ISet.mem id tvars then
@@ -1533,7 +1535,10 @@ let dump_error_message =
     | EObjectComputedPropertyAccess (reason1, reason2) ->
       spf "EObjectComputedPropertyAccess (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
     | EObjectComputedPropertyAssign (reason1, reason2) ->
-      spf "EObjectComputedPropertyAssign (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
+      spf
+        "EObjectComputedPropertyAssign (%s, %s)"
+        (dump_reason cx reason1)
+        (Base.Option.value_map ~f:(dump_reason cx) ~default:"none" reason2)
     | EInvalidLHSInAssignment loc -> spf "EInvalidLHSInAssignment (%s)" (string_of_aloc loc)
     | EIncompatibleWithUseOp { reason_lower; reason_upper; use_op } ->
       spf
