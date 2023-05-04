@@ -60,3 +60,8 @@ polyOpaque;
 import { fOpaque } from './opaque-lib';
 const o = fOpaque();
 //    ^
+
+opaque type OpaqueKeyWithSupertype1: string = string;
+declare const opaqueDict: {[OpaqueKeyWithSupertype1]: number};
+const x = Object.keys(opaqueDict)[0]);
+//    ^

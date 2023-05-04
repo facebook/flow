@@ -243,206 +243,259 @@ References:
                       ^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- object_keys.js:5:2
+Error ----------------------------------------------------------------------------------------------- object_keys.js:3:2
 
 Cannot cast `Object.keys(...)` to undefined because array type [1] is incompatible with undefined [2].
 [incompatible-cast]
 
-   object_keys.js:5:2
-   5| (Object.keys(sealed): void); // error, Array<string>
+   object_keys.js:3:2
+   3| (Object.keys(sealed): void); // error, Array<string>
        ^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   object_keys.js:5:23
-   5| (Object.keys(sealed): void); // error, Array<string>
+   object_keys.js:3:23
+   3| (Object.keys(sealed): void); // error, Array<string>
                             ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- object_keys.js:9:4
+Error ----------------------------------------------------------------------------------------------- object_keys.js:7:4
 
 Cannot cast `k` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
-   object_keys.js:9:4
-   9|   (k : number) // error: string ~> number
+   object_keys.js:7:4
+   7|   (k : number) // error: string ~> number
          ^
 
 References:
-   object_keys.js:8:1
-   8| Object.keys(dict).forEach(k => {
+   object_keys.js:6:1
+   6| Object.keys(dict).forEach(k => {
       ^^^^^^^^^^^^^^^^^ [1]
-   object_keys.js:9:8
-   9|   (k : number) // error: string ~> number
+   object_keys.js:7:8
+   7|   (k : number) // error: string ~> number
              ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- object_keys.js:13:2
+Error ---------------------------------------------------------------------------------------------- object_keys.js:17:2
 
 Cannot cast `Object.keys(...)` to array type because string [1] is incompatible with number [2] in array element.
 [incompatible-cast]
 
-   object_keys.js:13:2
-   13| (Object.keys(any): Array<number>); // error, Array<string>
+   object_keys.js:17:2
+   17| (Object.keys(any): Array<number>); // error, Array<string>
         ^^^^^^^^^^^^^^^^ [1]
 
 References:
-   object_keys.js:13:26
-   13| (Object.keys(any): Array<number>); // error, Array<string>
+   object_keys.js:17:26
+   17| (Object.keys(any): Array<number>); // error, Array<string>
                                 ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- object_keys.js:20:2
+Error ---------------------------------------------------------------------------------------------- object_keys.js:24:2
 
 Cannot cast `Object.keys(...)` to array type because string literal `prop` [1] is incompatible with string literal
 `error` [2] in array element. [incompatible-cast]
 
-   object_keys.js:20:2
-   20| (Object.keys(new Foo()): Array<'error'>); // error: prop ~> error
+   object_keys.js:24:2
+   24| (Object.keys(new Foo()): Array<'error'>); // error: prop ~> error
         ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   object_keys.js:20:32
-   20| (Object.keys(new Foo()): Array<'error'>); // error: prop ~> error
+   object_keys.js:24:32
+   24| (Object.keys(new Foo()): Array<'error'>); // error: prop ~> error
                                       ^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- object_keys.js:27:2
+Error ---------------------------------------------------------------------------------------------- object_keys.js:31:2
 
 Cannot cast `Object.keys(...)` to array type because string literal `bar_prop` [1] is incompatible with string literal
 `error` [2] in array element. [incompatible-cast]
 
-   object_keys.js:27:2
-   27| (Object.keys(new Bar()): Array<'error'>); // error: bar_prop ~> error
+   object_keys.js:31:2
+   31| (Object.keys(new Bar()): Array<'error'>); // error: bar_prop ~> error
         ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   object_keys.js:27:32
-   27| (Object.keys(new Bar()): Array<'error'>); // error: bar_prop ~> error
+   object_keys.js:31:32
+   31| (Object.keys(new Bar()): Array<'error'>); // error: bar_prop ~> error
                                       ^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- object_keys.js:33:6
+Error ---------------------------------------------------------------------------------------------- object_keys.js:37:6
 
 Cannot cast `Object.keys(...)` to array type because string literal `hi` [1] is incompatible with string literal
 `bye` [2] in array element. [incompatible-cast]
 
-   object_keys.js:33:6
-   33|     (Object.keys(dict): Array<'bye'>); // error
+   object_keys.js:37:6
+   37|     (Object.keys(dict): Array<'bye'>); // error
             ^^^^^^^^^^^^^^^^^
 
 References:
-   object_keys.js:31:20
-   31|   function(dict: {['hi']: mixed}) {
+   object_keys.js:35:20
+   35|   function(dict: {['hi']: mixed}) {
                           ^^^^ [1]
-   object_keys.js:33:31
-   33|     (Object.keys(dict): Array<'bye'>); // error
+   object_keys.js:37:31
+   37|     (Object.keys(dict): Array<'bye'>); // error
                                      ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- object_keys.js:39:6
+Error ---------------------------------------------------------------------------------------------- object_keys.js:43:6
 
 Cannot cast `Object.keys(...)` to array type because string [1] is incompatible with string literal `123` [2] in array
 element. [incompatible-cast]
 
-   object_keys.js:39:6
-   39|     (Object.keys(dict): Array<'123'>); // error: not supported yet
+   object_keys.js:43:6
+   43|     (Object.keys(dict): Array<'123'>); // error: not supported yet
             ^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   object_keys.js:39:31
-   39|     (Object.keys(dict): Array<'123'>); // error: not supported yet
+   object_keys.js:43:31
+   43|     (Object.keys(dict): Array<'123'>); // error: not supported yet
                                      ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- object_keys.js:51:2
+Error ---------------------------------------------------------------------------------------------- object_keys.js:55:2
 
 Cannot cast `Object.keys(...)` to array type because string literal `x` [1] is incompatible with literal union [2] in
 array element. [incompatible-cast]
 
-   object_keys.js:51:2
-   51| (Object.keys(ifaceDict): Array<'$value' | '$key'>); // ERROR
+   object_keys.js:55:2
+   55| (Object.keys(ifaceDict): Array<'$value' | '$key'>); // ERROR
         ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   object_keys.js:45:36
-   45| declare var ifaceDict: interface {['x' | 'y']: boolean};
+   object_keys.js:49:36
+   49| declare var ifaceDict: interface {['x' | 'y']: boolean};
                                           ^^^ [1]
-   object_keys.js:51:32
-   51| (Object.keys(ifaceDict): Array<'$value' | '$key'>); // ERROR
+   object_keys.js:55:32
+   55| (Object.keys(ifaceDict): Array<'$value' | '$key'>); // ERROR
                                       ^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- object_keys.js:51:2
+Error ---------------------------------------------------------------------------------------------- object_keys.js:55:2
 
 Cannot cast `Object.keys(...)` to array type because string literal `y` [1] is incompatible with literal union [2] in
 array element. [incompatible-cast]
 
-   object_keys.js:51:2
-   51| (Object.keys(ifaceDict): Array<'$value' | '$key'>); // ERROR
+   object_keys.js:55:2
+   55| (Object.keys(ifaceDict): Array<'$value' | '$key'>); // ERROR
         ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   object_keys.js:45:42
-   45| declare var ifaceDict: interface {['x' | 'y']: boolean};
+   object_keys.js:49:42
+   49| declare var ifaceDict: interface {['x' | 'y']: boolean};
                                                 ^^^ [1]
-   object_keys.js:51:32
-   51| (Object.keys(ifaceDict): Array<'$value' | '$key'>); // ERROR
+   object_keys.js:55:32
+   55| (Object.keys(ifaceDict): Array<'$value' | '$key'>); // ERROR
                                       ^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- object_keys.js:54:8
+Error ---------------------------------------------------------------------------------------------- object_keys.js:58:8
 
 Cannot call method `keys` because undefined [1] is not an object. [not-an-object]
 
-   object_keys.js:54:8
-   54| Object.keys(undefined); // ERROR
+   object_keys.js:58:8
+   58| Object.keys(undefined); // ERROR
               ^^^^
 
 References:
-   object_keys.js:54:13
-   54| Object.keys(undefined); // ERROR
+   object_keys.js:58:13
+   58| Object.keys(undefined); // ERROR
                    ^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- object_keys.js:55:8
+Error ---------------------------------------------------------------------------------------------- object_keys.js:59:8
 
 Cannot call method `keys` because null [1] is not an object. [not-an-object]
 
-   object_keys.js:55:8
-   55| Object.keys(null); // ERROR
+   object_keys.js:59:8
+   59| Object.keys(null); // ERROR
               ^^^^
 
 References:
-   object_keys.js:55:13
-   55| Object.keys(null); // ERROR
+   object_keys.js:59:13
+   59| Object.keys(null); // ERROR
                    ^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- object_keys.js:56:8
+Error ---------------------------------------------------------------------------------------------- object_keys.js:60:8
 
 Cannot call method `keys` because number [1] is not an object. [not-an-object]
 
-   object_keys.js:56:8
-   56| Object.keys(1); // ERROR
+   object_keys.js:60:8
+   60| Object.keys(1); // ERROR
               ^^^^
 
 References:
-   object_keys.js:56:13
-   56| Object.keys(1); // ERROR
+   object_keys.js:60:13
+   60| Object.keys(1); // ERROR
                    ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- object_keys.js:57:8
+Error ---------------------------------------------------------------------------------------------- object_keys.js:61:8
 
 Cannot call method `keys` because boolean [1] is not an object. [not-an-object]
 
-   object_keys.js:57:8
-   57| Object.keys(true); // ERROR
+   object_keys.js:61:8
+   61| Object.keys(true); // ERROR
               ^^^^
 
 References:
-   object_keys.js:57:13
-   57| Object.keys(true); // ERROR
+   object_keys.js:61:13
+   61| Object.keys(true); // ERROR
                    ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- object_keys.js:67:4
+
+Cannot cast `Object.keys(...)[0]` to `OpaqueKey` because string [1] is incompatible with `OpaqueKey` [2].
+[incompatible-cast]
+
+   object_keys.js:67:4
+   67|   (Object.keys(opaqueDict)[0]: OpaqueKey); // ERROR
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   object_keys.js:67:4
+   67|   (Object.keys(opaqueDict)[0]: OpaqueKey); // ERROR
+          ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   object_keys.js:67:32
+   67|   (Object.keys(opaqueDict)[0]: OpaqueKey); // ERROR
+                                      ^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- object_keys.js:74:4
+
+Cannot cast `Object.keys(...)[0]` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   object_keys.js:74:4
+   74|   (Object.keys(opaqueDict)[0]: empty); // ERROR
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   object_keys.js:72:31
+   72|   declare const opaqueDict: {[OpaqueKeyWithSupertype1]: number};
+                                     ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   object_keys.js:74:32
+   74|   (Object.keys(opaqueDict)[0]: empty); // ERROR
+                                      ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- object_keys.js:87:4
+
+Cannot cast `Object.keys(...)[0]` to `OpaqueKeyWithSupertype3` because string [1] is incompatible with
+`OpaqueKeyWithSupertype3` [2]. [incompatible-cast]
+
+   object_keys.js:87:4
+   87|   (Object.keys(opaqueDict)[0]: OpaqueKeyWithSupertype3); // ERROR
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   object_keys.js:87:4
+   87|   (Object.keys(opaqueDict)[0]: OpaqueKeyWithSupertype3); // ERROR
+          ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   object_keys.js:87:32
+   87|   (Object.keys(opaqueDict)[0]: OpaqueKeyWithSupertype3); // ERROR
+                                      ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- object_missing.js:3:12
@@ -1386,4 +1439,4 @@ References:
 
 
 
-Found 89 errors
+Found 92 errors

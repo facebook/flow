@@ -1358,6 +1358,10 @@ struct
          * have the "most recent" location when we do look at the opaque type *)
         | (OpaqueT _, ReposLowerT (reason, use_desc, u)) ->
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
+        (* Store the opaque type when doing `ToStringT`, so we can use that
+           rather than just `string` if the supertype is `string`. *)
+        | (OpaqueT (_, { super_t = Some t; _ }), ToStringT { reason; t_out; _ }) ->
+          rec_flow cx trace (t, ToStringT { orig_t = Some l; reason; t_out })
         (* If the type is still in the same file it was defined, we allow it to
          * expose its underlying type information *)
         | (OpaqueT (r, { underlying_t = Some t; _ }), _)
@@ -1391,9 +1395,9 @@ struct
         (*****************************************************)
         (* keys (NOTE: currently we only support string keys *)
         (*****************************************************)
-        | (KeysT _, ToStringT (_, t)) ->
+        | (KeysT _, ToStringT { t_out; _ }) ->
           (* KeysT outputs strings, so we know ToStringT will be a no-op. *)
-          rec_flow cx trace (l, t)
+          rec_flow cx trace (l, t_out)
         | (KeysT (reason1, o1), _) ->
           (* flow all keys of o1 to u *)
           rec_flow cx trace (o1, GetKeysT (reason1, u))
@@ -1481,7 +1485,7 @@ struct
           in
           rec_flow cx trace (union_of_ts reason_op keylist, keys);
           Base.Option.iter dict_t ~f:(fun { key; _ } ->
-              rec_flow cx trace (key, ToStringT (reason_op, keys))
+              rec_flow cx trace (key, ToStringT { orig_t = None; reason = reason_op; t_out = keys })
           )
         | (DefT (_, _, InstanceT (_, _, _, instance)), GetKeysT (reason_op, keys)) ->
           (* methods are not enumerable, so only walk fields *)
@@ -1494,7 +1498,11 @@ struct
             ()
           else (
             match NameUtils.Map.find (OrdinaryName "$key") own_props with
-            | Field (_, dict_key, _) -> rec_flow cx trace (dict_key, ToStringT (reason_op, keys))
+            | Field (_, dict_key, _) ->
+              rec_flow
+                cx
+                trace
+                (dict_key, ToStringT { orig_t = None; reason = reason_op; t_out = keys })
             | _ -> ()
           )
         | (AnyT _, GetKeysT (reason_op, keys)) ->
@@ -5254,9 +5262,12 @@ struct
         (*******************************)
 
         (* ToStringT passes through strings unchanged, and flows a generic StrT otherwise *)
-        | (DefT (_, _, StrT _), ToStringT (_, t_out)) -> rec_flow cx trace (l, t_out)
-        | (_, ToStringT (reason_op, t_out)) ->
-          rec_flow cx trace (StrT.why reason_op |> with_trust bogus_trust, t_out)
+        | (DefT (_, _, StrT _), ToStringT { orig_t = None; t_out; _ }) ->
+          rec_flow cx trace (l, t_out)
+        | (DefT (_, _, StrT _), ToStringT { orig_t = Some t; t_out; _ }) ->
+          rec_flow cx trace (t, t_out)
+        | (_, ToStringT { reason; t_out; _ }) ->
+          rec_flow cx trace (StrT.why reason |> with_trust bogus_trust, t_out)
         (**********************)
         (* Array library call *)
         (**********************)
@@ -5662,8 +5673,10 @@ struct
       | PredicateT (pred, t_out) ->
         narrow_generic_tvar (fun t_out' -> PredicateT (pred, t_out')) t_out;
         true
-      | ToStringT (r, t_out) ->
-        narrow_generic_use (fun t_out' -> ToStringT (r, UseT (unknown_use, OpenT t_out'))) t_out;
+      | ToStringT { orig_t; reason; t_out } ->
+        narrow_generic_use
+          (fun t_out' -> ToStringT { orig_t; reason; t_out = UseT (unknown_use, OpenT t_out') })
+          t_out;
         true
       | UseT (use_op, MaybeT (r, t_out)) ->
         narrow_generic ~use_op (fun t_out' -> UseT (use_op, MaybeT (r, t_out'))) t_out;

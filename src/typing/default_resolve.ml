@@ -108,7 +108,7 @@ let rec default_resolve_touts ~flow cx loc u =
   | SuperT _ -> ()
   | ImplementsT _ -> ()
   | MixinT (_, t) -> resolve t
-  | ToStringT (_, use) -> default_resolve_touts ~flow cx loc use
+  | ToStringT { t_out; _ } -> default_resolve_touts ~flow cx loc t_out
   | ArithT { result_t; _ } -> resolve result_t
   | ComparatorT _ -> ()
   | UnaryArithT { result_t; _ } -> resolve result_t

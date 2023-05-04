@@ -527,7 +527,11 @@ module rec TypeTerm : sig
     | SuperT of use_op * reason * derived_type
     | ImplementsT of use_op * t
     | MixinT of reason * t
-    | ToStringT of reason * use_t
+    | ToStringT of {
+        orig_t: t option;
+        reason: reason;
+        t_out: use_t;
+      }
     (* overloaded arithmetic operators *)
     | ArithT of {
         use_op: use_op;
@@ -2891,7 +2895,10 @@ module AConstraint = struct
     | Annot_ObjKeyMirror of Reason.t
     | Annot_ObjMapConst of Reason.t * TypeTerm.t
     | Annot_GetKeysT of Reason.t
-    | Annot_ToStringT of Reason.t
+    | Annot_ToStringT of {
+        orig_t: TypeTerm.t option;
+        reason: Reason.t;
+      }
     | Annot_ObjRestT of Reason.t * string list
     | Annot_GetValuesT of Reason.t
     | Annot__Future_added_value__ of Reason.t
@@ -3016,7 +3023,7 @@ module AConstraint = struct
     | Annot_ObjKeyMirror r
     | Annot_ObjMapConst (r, _)
     | Annot_GetKeysT r
-    | Annot_ToStringT r
+    | Annot_ToStringT { reason = r; _ }
     | Annot_ObjRestT (r, _)
     | Annot_GetValuesT r
     | Annot__Future_added_value__ r ->

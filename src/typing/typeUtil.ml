@@ -136,7 +136,7 @@ and reason_of_use_t = function
   | SuperT (_, reason, _) -> reason
   | TestPropT (_, reason, _, _, _) -> reason
   | ThisSpecializeT (reason, _, _) -> reason
-  | ToStringT (reason, _) -> reason
+  | ToStringT { reason; _ } -> reason
   | UnaryArithT { reason; _ } -> reason
   | VarianceCheckT (reason, _, _, _) -> reason
   | TypeAppVarianceCheckT (_, reason, _, _) -> reason
@@ -349,7 +349,7 @@ and mod_reason_of_use_t f = function
   | SuperT (op, reason, inst) -> SuperT (op, f reason, inst)
   | TestPropT (op, reason, id, n, t) -> TestPropT (op, f reason, id, n, t)
   | ThisSpecializeT (reason, this, k) -> ThisSpecializeT (f reason, this, k)
-  | ToStringT (reason, t) -> ToStringT (f reason, t)
+  | ToStringT { orig_t; reason; t_out } -> ToStringT { orig_t; reason = f reason; t_out }
   | UnaryArithT { reason; result_t; kind } -> UnaryArithT { reason = f reason; result_t; kind }
   | VarianceCheckT (reason, tparams, targs, polarity) ->
     VarianceCheckT (f reason, tparams, targs, polarity)
@@ -437,7 +437,8 @@ let rec util_use_op_of_use_t :
   | ArithT { use_op; reason; flip; rhs_t; result_t; kind } ->
     util use_op (fun use_op -> ArithT { use_op; reason; flip; rhs_t; result_t; kind })
   | ImplementsT (op, t) -> util op (fun op -> ImplementsT (op, t))
-  | ToStringT (r, u2) -> nested_util u2 (fun u2 -> ToStringT (r, u2))
+  | ToStringT { orig_t; reason; t_out } ->
+    nested_util t_out (fun t_out -> ToStringT { orig_t; reason; t_out })
   | SpecializeT (op, r1, r2, c, ts, t) -> util op (fun op -> SpecializeT (op, r1, r2, c, ts, t))
   | TypeAppVarianceCheckT (op, r1, r2, ts) ->
     util op (fun op -> TypeAppVarianceCheckT (op, r1, r2, ts))
