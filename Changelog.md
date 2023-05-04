@@ -1,3 +1,7 @@
+### 0.205.1
+
+* Fix over-eager IDE autocompletion of types after typing a space.
+
 ### 0.205.0
 
 Likely to cause new Flow errors:
