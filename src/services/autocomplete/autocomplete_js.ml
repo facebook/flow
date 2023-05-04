@@ -150,7 +150,9 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       fun ac_loc token autocomplete_type ->
         let autocomplete_type =
           match autocomplete_type with
-          | Ac_id _ when from_trigger_character ->
+          | Ac_id _
+          | Ac_type
+            when from_trigger_character ->
             (* space is a trigger character, so this avoids completing immediately following
                a space ('.' is also a trigger, but it'd be an Acmem for member expressions) *)
             Ac_ignored
