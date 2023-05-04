@@ -983,7 +983,8 @@ Cannot access computed property using boolean [1]. [invalid-computed-prop]
 
 Error --------------------------------------------------------------------------------------- misc-incompatibles.js:15:3
 
-Cannot assign computed property using boolean [1]. [invalid-computed-prop]
+Cannot use boolean [1] to assign a computed property. Computed properties may only be numeric or string literal values.
+See https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
    15| o[true] = 42;
          ^^^^ [1]

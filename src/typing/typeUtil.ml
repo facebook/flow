@@ -151,9 +151,12 @@ and reason_of_use_t = function
   | SealGenericT { reason; _ } ->
     reason
   | DestructuringT (reason, _, _, _, _) -> reason
-  | CreateObjWithComputedPropT { reason; reason_obj = _; value = _; tout_tvar = _ } -> reason
+  | CreateObjWithComputedPropT { reason; reason_obj = _; reason_key = _; value = _; tout_tvar = _ }
+    ->
+    reason
   | ResolveUnionT { reason; _ } -> reason
   | CheckUnusedPromiseT { reason; _ } -> reason
+  | WriteComputedObjPropCheckT { reason; _ } -> reason
 
 (* helper: we want the tvar id as well *)
 (* NOTE: uncalled for now, because ids are nondetermistic
@@ -210,6 +213,14 @@ and mod_reason_of_defer_use_t f = function
 and mod_reason_of_use_t f = function
   | UseT (_, t) -> UseT (Op UnknownUse, mod_reason_of_t f t)
   | CheckUnusedPromiseT { reason; async } -> CheckUnusedPromiseT { reason = f reason; async }
+  | WriteComputedObjPropCheckT { reason; reason_key; value_t; err_on_str_or_num_key } ->
+    WriteComputedObjPropCheckT
+      {
+        reason = f reason;
+        reason_key = Base.Option.map ~f reason_key;
+        value_t;
+        err_on_str_or_num_key;
+      }
   | ArithT { use_op; reason; flip; rhs_t; result_t; kind } ->
     ArithT { use_op; reason = f reason; flip; rhs_t; result_t; kind }
   | AndT (reason, t1, t2) -> AndT (f reason, t1, t2)
@@ -354,8 +365,8 @@ and mod_reason_of_use_t f = function
   | ReactPropsToOut (reason, t) -> ReactPropsToOut (f reason, t)
   | ReactInToProps (reason, t) -> ReactInToProps (f reason, t)
   | DestructuringT (reason, a, s, t, id) -> DestructuringT (f reason, a, s, t, id)
-  | CreateObjWithComputedPropT { reason; reason_obj; value; tout_tvar } ->
-    CreateObjWithComputedPropT { reason = f reason; reason_obj; value; tout_tvar }
+  | CreateObjWithComputedPropT { reason; reason_obj; reason_key; value; tout_tvar } ->
+    CreateObjWithComputedPropT { reason = f reason; reason_obj; reason_key; value; tout_tvar }
   | ResolveUnionT { reason; resolved; unresolved; upper; id } ->
     ResolveUnionT { reason = f reason; resolved; unresolved; upper; id }
 
@@ -514,7 +525,8 @@ let rec util_use_op_of_use_t :
   | ResolveUnionT _
   | EnumExhaustiveCheckT _
   | SealGenericT _
-  | CheckUnusedPromiseT _ ->
+  | CheckUnusedPromiseT _
+  | WriteComputedObjPropCheckT _ ->
     nope u
 
 let use_op_of_use_t = util_use_op_of_use_t (fun _ -> None) (fun _ op _ -> Some op)

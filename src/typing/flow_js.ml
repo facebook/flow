@@ -1610,7 +1610,13 @@ struct
           ObjectKit.run trace cx use_op reason resolve_tool tool ~tout l
         | ( UnionT (r, _),
             CreateObjWithComputedPropT
-              { reason; reason_obj = _; value = _; tout_tvar = (tout_reason, tout_id) }
+              {
+                reason;
+                reason_obj = _;
+                reason_key = _;
+                value = _;
+                tout_tvar = (tout_reason, tout_id);
+              }
           ) ->
           Context.computed_property_add_multiple_lower_bounds cx tout_id;
           rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason, OpenT (tout_reason, tout_id));
@@ -1721,7 +1727,8 @@ struct
                (* For l.key !== sentinel when sentinel has a union type, don't split the union. This
                   prevents a drastic blowup of cases which can cause perf problems. *)
                | PredicateT (RightP (SentinelProp _, _), _)
-               | PredicateT (NotP (RightP (SentinelProp _, _)), _) ->
+               | PredicateT (NotP (RightP (SentinelProp _, _)), _)
+               | WriteComputedObjPropCheckT _ ->
                  false
                | _ -> true ->
           flow_all_in_union cx trace rep u
@@ -4026,7 +4033,7 @@ struct
         (* computed properties *)
         | ( key,
             CreateObjWithComputedPropT
-              { reason; reason_obj; value; tout_tvar = (tout_reason, tout_id) }
+              { reason; reason_key; reason_obj; value; tout_tvar = (tout_reason, tout_id) }
           ) ->
           let on_named_prop reason_named =
             match Context.computed_property_state_for_id cx tout_id with
@@ -4048,14 +4055,16 @@ struct
           let obj =
             match propref_for_elem_t ~on_named_prop key with
             | Computed elem_t ->
-              write_computed_obj_prop
-                cx
-                trace
-                elem_t
-                value
-                reason
-                ~on_string_or_number_key:(fun () -> ()
-              );
+              let check =
+                WriteComputedObjPropCheckT
+                  {
+                    reason;
+                    reason_key = Some reason_key;
+                    value_t = value;
+                    err_on_str_or_num_key = None;
+                  }
+              in
+              rec_flow cx trace (elem_t, check);
               (* No properties are added in this case. *)
               Obj_type.mk_exact_empty cx reason_obj
             | Named (_, name) ->
@@ -5371,6 +5380,31 @@ struct
             else
               rec_flow cx trace (super, CheckUnusedPromiseT { reason; async }))
         | (_, CheckUnusedPromiseT _) -> ()
+        | (DefT (lreason, _, StrT (Literal _)), WriteComputedObjPropCheckT _) ->
+          let loc = loc_of_reason lreason in
+          add_output cx ~trace Error_message.(EInternal (loc, PropRefComputedLiteral))
+        | (AnyT (_, src), WriteComputedObjPropCheckT { reason; value_t; _ }) ->
+          let src = any_mod_src_keep_placeholder Untyped src in
+          rec_flow_t cx trace ~use_op:unknown_use (value_t, AnyT.why src reason)
+        | (DefT (_, _, (StrT _ | NumT _)), WriteComputedObjPropCheckT { err_on_str_or_num_key; _ })
+          ->
+          Base.Option.iter err_on_str_or_num_key ~f:(fun (use_op, reason_obj) ->
+              add_output
+                cx
+                ~trace
+                (Error_message.EPropNotFound
+                   {
+                     prop_name = None;
+                     reason_prop = TypeUtil.reason_of_t l;
+                     reason_obj;
+                     use_op;
+                     suggestion = None;
+                   }
+                )
+          )
+        | (_, WriteComputedObjPropCheckT { reason = _; reason_key; _ }) ->
+          let reason = reason_of_t l in
+          add_output cx ~trace (Error_message.EObjectComputedPropertyAssign (reason, reason_key))
         | _ ->
           add_output
             cx
@@ -6087,7 +6121,7 @@ struct
     | VarianceCheckT _
     | ConcretizeTypeAppsT _
     | UseT (_, KeysT _) (* Any won't interact with the type inside KeysT, so it can't be tainted *)
-      ->
+    | WriteComputedObjPropCheckT _ ->
       true
     (* TODO: Punt on these for now, but figure out whether these should fall through or not *)
     | UseT (_, CustomFunT (_, ReactElementFactory _))
@@ -7199,41 +7233,18 @@ struct
                 }
             )
       | Computed elem_t ->
-        write_computed_obj_prop cx trace elem_t prop_t reason_op ~on_string_or_number_key:(fun () ->
-            add_output
-              cx
-              ~trace
-              (Error_message.EPropNotFound
-                 {
-                   prop_name = None;
-                   reason_prop = TypeUtil.reason_of_t elem_t;
-                   reason_obj;
-                   use_op;
-                   suggestion = None;
-                 }
-              )
-        ))
-
-  and write_computed_obj_prop cx trace key_t value_t reason_op ~on_string_or_number_key =
-    match key_t with
-    | OpenT _ ->
-      let loc = loc_of_t key_t in
-      add_output cx ~trace Error_message.(EInternal (loc, PropRefComputedOpen))
-    | GenericT { bound = DefT (_, _, StrT (Literal _)); _ }
-    | DefT (_, _, StrT (Literal _)) ->
-      let loc = loc_of_t key_t in
-      add_output cx ~trace Error_message.(EInternal (loc, PropRefComputedLiteral))
-    | AnyT (_, src) ->
-      let src = any_mod_src_keep_placeholder Untyped src in
-      rec_flow_t cx trace ~use_op:unknown_use (value_t, AnyT.why src reason_op)
-    | GenericT { bound = DefT (_, _, StrT _); _ }
-    | GenericT { bound = DefT (_, _, NumT _); _ }
-    | DefT (_, _, StrT _)
-    | DefT (_, _, NumT _) ->
-      on_string_or_number_key ()
-    | _ ->
-      let reason_prop = reason_of_t key_t in
-      add_output cx ~trace (Error_message.EObjectComputedPropertyAssign (reason_op, reason_prop))
+        rec_flow
+          cx
+          trace
+          ( elem_t,
+            WriteComputedObjPropCheckT
+              {
+                reason = TypeUtil.reason_of_t elem_t;
+                reason_key = None;
+                value_t = prop_t;
+                err_on_str_or_num_key = Some (use_op, reason_obj);
+              }
+          ))
 
   and match_obj_prop cx trace ~use_op o propref reason_obj reason_op prop_t =
     MatchProp { use_op; drop_generic = false; prop_t }
