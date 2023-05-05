@@ -718,8 +718,8 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       let comments_diff = syntax_opt loc comments1 comments2 in
       join_diff_list [declaration_diff; comments_diff]
   and export_specifier
-      (spec1 : Loc.t Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t)
-      (spec2 : Loc.t Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t) :
+      (spec1 : (Loc.t, Loc.t) Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t)
+      (spec2 : (Loc.t, Loc.t) Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t) :
       node change list option =
     let open Ast.Statement.ExportNamedDeclaration.ExportSpecifier in
     let (_, { local = local1; exported = exported1 }) = spec1 in
@@ -728,8 +728,8 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     let exporteds = diff_if_changed_nonopt_fn identifier exported1 exported2 in
     join_diff_list [locals; exporteds]
   and export_named_declaration_specifier
-      (specs1 : Loc.t Ast.Statement.ExportNamedDeclaration.specifier)
-      (specs2 : Loc.t Ast.Statement.ExportNamedDeclaration.specifier) =
+      (specs1 : (Loc.t, Loc.t) Ast.Statement.ExportNamedDeclaration.specifier)
+      (specs2 : (Loc.t, Loc.t) Ast.Statement.ExportNamedDeclaration.specifier) =
     let open Ast.Statement.ExportNamedDeclaration in
     match (specs1, specs2) with
     | (ExportSpecifiers es1, ExportSpecifiers es2) ->

@@ -1027,7 +1027,7 @@ class ['loc] mapper =
         }
 
     method export_named_declaration_specifier
-        (spec : 'loc Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t) =
+        (spec : ('loc, 'loc) Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t) =
       let open Ast.Statement.ExportNamedDeclaration.ExportSpecifier in
       let (loc, { local; exported }) = spec in
       let local' = this#identifier local in
@@ -1038,7 +1038,7 @@ class ['loc] mapper =
         (loc, { local = local'; exported = exported' })
 
     method export_batch_specifier
-        (spec : 'loc Ast.Statement.ExportNamedDeclaration.ExportBatchSpecifier.t) =
+        (spec : ('loc, 'loc) Ast.Statement.ExportNamedDeclaration.ExportBatchSpecifier.t) =
       let (loc, id_opt) = spec in
       let id_opt' = map_opt this#identifier id_opt in
       if id_opt == id_opt' then
@@ -1046,7 +1046,8 @@ class ['loc] mapper =
       else
         (loc, id_opt')
 
-    method export_named_specifier (spec : 'loc Ast.Statement.ExportNamedDeclaration.specifier) =
+    method export_named_specifier
+        (spec : ('loc, 'loc) Ast.Statement.ExportNamedDeclaration.specifier) =
       let open Ast.Statement.ExportNamedDeclaration in
       match spec with
       | ExportSpecifiers spec_list ->

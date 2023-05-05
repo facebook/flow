@@ -246,18 +246,18 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('N, 'U) Ast.Statement.ExportNamedDeclaration.t
 
     method export_named_specifier :
-      'M Ast.Statement.ExportNamedDeclaration.specifier ->
-      'N Ast.Statement.ExportNamedDeclaration.specifier
+      ('M, 'T) Ast.Statement.ExportNamedDeclaration.specifier ->
+      ('N, 'U) Ast.Statement.ExportNamedDeclaration.specifier
 
-    method export_source : 'M -> 'M Ast.StringLiteral.t -> 'N Ast.StringLiteral.t
+    method export_source : 'T -> 'M Ast.StringLiteral.t -> 'N Ast.StringLiteral.t
 
     method export_named_declaration_specifier :
-      'M Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t ->
-      'N Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t
+      ('M, 'T) Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t ->
+      ('N, 'U) Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t
 
     method export_batch_specifier :
-      'M Ast.Statement.ExportNamedDeclaration.ExportBatchSpecifier.t ->
-      'N Ast.Statement.ExportNamedDeclaration.ExportBatchSpecifier.t
+      ('M, 'T) Ast.Statement.ExportNamedDeclaration.ExportBatchSpecifier.t ->
+      ('N, 'U) Ast.Statement.ExportNamedDeclaration.ExportBatchSpecifier.t
 
     method expression : ('M, 'T) Ast.Expression.t -> ('N, 'U) Ast.Expression.t
 

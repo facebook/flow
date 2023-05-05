@@ -1054,30 +1054,30 @@ and Statement : sig
 
   module ExportNamedDeclaration : sig
     module ExportSpecifier : sig
-      type 'M t = 'M * 'M t'
+      type ('M, 'T) t = 'M * ('M, 'T) t'
 
-      and 'M t' = {
-        local: ('M, 'M) Identifier.t;
-        exported: ('M, 'M) Identifier.t option;
+      and ('M, 'T) t' = {
+        local: ('M, 'T) Identifier.t;
+        exported: ('M, 'T) Identifier.t option;
       }
       [@@deriving show]
     end
 
     module ExportBatchSpecifier : sig
-      type 'M t = 'M * ('M, 'M) Identifier.t option [@@deriving show]
+      type ('M, 'T) t = 'M * ('M, 'T) Identifier.t option [@@deriving show]
     end
 
     type ('M, 'T) t = {
       declaration: ('M, 'T) Statement.t option;
-      specifiers: 'M specifier option;
-      source: ('M * 'M StringLiteral.t) option;
+      specifiers: ('M, 'T) specifier option;
+      source: ('T * 'M StringLiteral.t) option;
       export_kind: Statement.export_kind;
       comments: ('M, unit) Syntax.t option;
     }
 
-    and 'M specifier =
-      | ExportSpecifiers of 'M ExportSpecifier.t list
-      | ExportBatchSpecifier of 'M ExportBatchSpecifier.t
+    and ('M, 'T) specifier =
+      | ExportSpecifiers of ('M, 'T) ExportSpecifier.t list
+      | ExportBatchSpecifier of ('M, 'T) ExportBatchSpecifier.t
     [@@deriving show]
   end
 
@@ -1118,8 +1118,8 @@ and Statement : sig
     and ('M, 'T) t = {
       default: 'M option;
       declaration: ('M, 'T) declaration option;
-      specifiers: 'M ExportNamedDeclaration.specifier option;
-      source: ('M * 'M StringLiteral.t) option;
+      specifiers: ('M, 'T) ExportNamedDeclaration.specifier option;
+      source: ('T * 'M StringLiteral.t) option;
       comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]

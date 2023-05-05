@@ -146,21 +146,21 @@ class ['M, 'T] searcher
       let open Flow_ast.Statement.ExportNamedDeclaration in
       match decl.source with
       | None -> super#export_named_declaration export_loc decl
-      | Some (source_loc, { Flow_ast.StringLiteral.value = module_name; _ }) ->
+      | Some (source_annot, { Flow_ast.StringLiteral.value = module_name; _ }) ->
         let { specifiers; _ } = decl in
-        Base.Option.iter ~f:(this#export_specifier_with_loc ~source_loc) specifiers;
+        Base.Option.iter ~f:(this#export_specifier_with_annot ~source_annot) specifiers;
         if covers_target export_loc then
-          this#request (Get_def_request.Require (source_loc, module_name));
+          this#request (Get_def_request.Require (loc_of_annot source_annot, module_name));
         decl
 
-    method export_specifier_with_loc ~source_loc specifier =
+    method export_specifier_with_annot ~source_annot specifier =
       let open Flow_ast.Statement.ExportNamedDeclaration in
       match specifier with
       | ExportSpecifiers named_specifiers ->
-        Base.List.iter ~f:(this#export_named_specifier_with_loc ~source_loc) named_specifiers
+        Base.List.iter ~f:(this#export_named_specifier_with_annot ~source_annot) named_specifiers
       | ExportBatchSpecifier _ -> ()
 
-    method export_named_specifier_with_loc ~source_loc specifier =
+    method export_named_specifier_with_annot ~source_annot specifier =
       let open Flow_ast.Statement.ExportNamedDeclaration.ExportSpecifier in
       let (specifier_loc, { local; _ }) = specifier in
       let (_, { Flow_ast.Identifier.name = local_name; _ }) = local in
@@ -169,7 +169,7 @@ class ['M, 'T] searcher
           Member
             {
               prop_name = local_name;
-              object_source = ObjectRequireLoc source_loc;
+              object_source = ObjectRequireLoc (loc_of_annot source_annot);
               force_instance = false;
             }
         )

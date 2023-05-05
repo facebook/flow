@@ -334,7 +334,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
 
       (* don't rename the `bar` in `export {foo as bar}` *)
       method! export_named_declaration_specifier
-          (spec : L.t Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t) =
+          (spec : (L.t, L.t) Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t) =
         let open Ast.Statement.ExportNamedDeclaration.ExportSpecifier in
         let (_, { local; exported = _ }) = spec in
         ignore (this#identifier local);

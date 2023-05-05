@@ -344,7 +344,7 @@ struct
         method! remote_identifier ident = ident
 
         method! export_named_declaration_specifier
-            (spec : 'loc Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t) =
+            (spec : ('loc, 'loc) Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t) =
           let open Ast.Statement.ExportNamedDeclaration.ExportSpecifier in
           (* Ignore renamed export *)
           let (_, { local; exported = _ }) = spec in
