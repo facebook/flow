@@ -1788,11 +1788,7 @@ module Make
       | Ast.Statement.ExportValue -> Import_export.export cx remote_name loc t
     in
     (* [declare] export [type] {foo [as bar]} from 'module' *)
-    let export_from (source_loc, source) loc local_name remote_name =
-      let source_ns_t =
-        let reason = mk_reason (RModule (OrdinaryName source)) source_loc in
-        Import_export.import_ns cx reason (source_loc, source)
-      in
+    let export_from source_ns_t loc local_name remote_name =
       let t =
         let reason = mk_reason (RIdentifier local_name) loc in
         Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
@@ -1804,7 +1800,7 @@ module Make
       | Ast.Statement.ExportType -> Import_export.export_type cx remote_name (Some loc) t
       | Ast.Statement.ExportValue -> Import_export.export cx remote_name loc t
     in
-    let export_specifier (_, { E.ExportSpecifier.local; exported }) =
+    let export_specifier export (_, { E.ExportSpecifier.local; exported }) =
       let (local_name_loc, { Ast.Identifier.name = local_name; comments = _ }) = local in
       let local_name = OrdinaryName local_name in
       let remote_name =
@@ -1812,13 +1808,22 @@ module Make
         | None -> local_name
         | Some (_, { Ast.Identifier.name = remote_name; comments = _ }) -> OrdinaryName remote_name
       in
-      match source with
-      | Some source -> export_from source local_name_loc local_name remote_name
-      | None -> export_ref local_name_loc local_name remote_name
+      export local_name_loc local_name remote_name
     in
     function
     (* [declare] export [type] {foo [as bar]} [from ...]; *)
-    | E.ExportSpecifiers specifiers -> List.iter export_specifier specifiers
+    | E.ExportSpecifiers specifiers ->
+      let export =
+        match source with
+        | Some ((source_loc, module_name) as source) ->
+          let source_ns_t =
+            let reason = mk_reason (RModule (OrdinaryName module_name)) source_loc in
+            Import_export.import_ns cx reason source
+          in
+          export_from source_ns_t
+        | None -> export_ref
+      in
+      List.iter (export_specifier export) specifiers
     (* [declare] export [type] * as id from "source"; *)
     | E.ExportBatchSpecifier (_, Some id) ->
       let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
