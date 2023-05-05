@@ -39,17 +39,17 @@ let export info name loc t =
     (* Indeterminate module. We already errored during parsing. *)
     ()
 
-let export_star info loc ns =
+let export_star info loc module_t =
   match info.kind with
-  | CJS None -> info.kind <- ES { named = NameUtils.Map.empty; star = [(loc, ns)] }
-  | ES { named; star } -> info.kind <- ES { named; star = (loc, ns) :: star }
+  | CJS None -> info.kind <- ES { named = NameUtils.Map.empty; star = [(loc, module_t)] }
+  | ES { named; star } -> info.kind <- ES { named; star = (loc, module_t) :: star }
   | CJS (Some _) ->
     (* Indeterminate module. We already errored during parsing. *)
     ()
 
 let export_type info name loc t = info.type_named <- NameUtils.Map.add name (loc, t) info.type_named
 
-let export_type_star info loc ns = info.type_star <- (loc, ns) :: info.type_star
+let export_type_star info loc module_t = info.type_star <- (loc, module_t) :: info.type_star
 
 let cjs_clobber info loc =
   match info.kind with

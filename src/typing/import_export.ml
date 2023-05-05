@@ -90,11 +90,11 @@ let import_ns cx ?declare_module reason source =
 let cjs_clobber cx loc t =
   if Module_info.cjs_clobber (Context.module_info cx) loc then Env.set_module_exports cx t
 
-let export cx name loc t = Module_info.export (Context.module_info cx) name loc t
+let export cx = Module_info.export (Context.module_info cx)
 
-let export_star cx loc ns = Module_info.export_star (Context.module_info cx) loc ns
+let export_star cx = Module_info.export_star (Context.module_info cx)
 
-let export_type cx name = Module_info.export_type (Context.module_info cx) name
+let export_type cx = Module_info.export_type (Context.module_info cx)
 
 let export_type_star cx = Module_info.export_type_star (Context.module_info cx)
 
