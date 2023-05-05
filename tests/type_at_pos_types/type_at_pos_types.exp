@@ -992,6 +992,27 @@ Flags: --pretty
   "end":7
 }
 
+opaque.js:66:7
+Flags: --pretty
+{
+  "types":{
+    "unevaluated":{"type":"OpaqueKeyWithSupertype1"},
+    "evaluated":{"type":"OpaqueKeyWithSupertype1"}
+  },
+  "reasons":[],
+  "loc":{
+    "source":"opaque.js",
+    "type":"SourceFile",
+    "start":{"line":66,"column":7,"offset":1079},
+    "end":{"line":66,"column":7,"offset":1080}
+  },
+  "path":"opaque.js",
+  "line":66,
+  "endline":66,
+  "start":7,
+  "end":7
+}
+
 optional.js:4:10 = {
   "types":{"unevaluated":{"type":"void | string"},"evaluated":{"type":"void | string"}},
   "reasons":[],

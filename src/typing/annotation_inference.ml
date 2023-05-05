@@ -647,6 +647,8 @@ module rec ConsGen : S = struct
     (****************)
     (* Opaque types *)
     (****************)
+    | (OpaqueT (_, { super_t = Some super_t; _ }), Annot_ToStringT { reason; _ }) ->
+      elab_t cx super_t (Annot_ToStringT { orig_t = Some t; reason })
     | (OpaqueT (r, { underlying_t = Some t; _ }), _)
       when ALoc.source (loc_of_reason r) = ALoc.source (def_loc_of_reason r) ->
       elab_t cx ~seen t op
@@ -665,7 +667,7 @@ module rec ConsGen : S = struct
         match dict_t with
         | None -> keylist
         | Some { key; _ } ->
-          let key = elab_t cx key (Annot_ToStringT reason_op) in
+          let key = elab_t cx key (Annot_ToStringT { orig_t = None; reason = reason_op }) in
           key :: keylist
       in
       union_of_ts reason_op keylist
@@ -1066,7 +1068,7 @@ module rec ConsGen : S = struct
     (* ToStringT *)
     (*************)
     | (DefT (_, _, StrT _), Annot_ToStringT _) -> t
-    | (_, Annot_ToStringT reason_op) -> with_trust bogus_trust (StrT.why reason_op)
+    | (_, Annot_ToStringT { reason; _ }) -> with_trust bogus_trust (StrT.why reason)
     (************)
     (* GetPropT *)
     (************)

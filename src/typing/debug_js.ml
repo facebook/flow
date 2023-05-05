@@ -941,7 +941,7 @@ and dump_use_t_ (depth, tvars) cx t =
           )
         t
     | ThisSpecializeT (_, this, _) -> p ~extra:(spf "%s" (kid this)) t
-    | ToStringT (_, arg) -> p ~extra:(use_kid arg) t
+    | ToStringT { t_out; _ } -> p ~extra:(use_kid t_out) t
     | UnaryArithT _ -> p t
     | VarianceCheckT (_, _, args, pol) ->
       p

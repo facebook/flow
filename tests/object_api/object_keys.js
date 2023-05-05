@@ -1,5 +1,3 @@
-/* @flow */
-
 var sealed = {one: 'one', two: 'two'};
 (Object.keys(sealed): Array<'one'|'two'>);
 (Object.keys(sealed): void); // error, Array<string>
@@ -8,6 +6,12 @@ var dict: { [k: number]: string } = {};
 Object.keys(dict).forEach(k => {
   (k : number) // error: string ~> number
 });
+
+{
+  // Union dict
+  declare const x: {[string | number]: mixed}
+  (Object.keys(x): Array<string>); // OK
+}
 
 var any: Object = {};
 (Object.keys(any): Array<number>); // error, Array<string>
@@ -55,3 +59,36 @@ Object.keys(undefined); // ERROR
 Object.keys(null); // ERROR
 Object.keys(1); // ERROR
 Object.keys(true); // ERROR
+
+// Opaque types
+declare opaque type OpaqueKey;
+{
+  declare const opaqueDict: {[OpaqueKey]: number};
+  (Object.keys(opaqueDict)[0]: OpaqueKey); // ERROR
+}
+
+declare opaque type OpaqueKeyWithSupertype1: string;
+{
+  declare const opaqueDict: {[OpaqueKeyWithSupertype1]: number};
+  (Object.keys(opaqueDict)[0]: OpaqueKeyWithSupertype1); // OK
+  (Object.keys(opaqueDict)[0]: empty); // ERROR
+}
+
+type A<T> = T;
+declare opaque type OpaqueKeyWithSupertype2: A<string>;
+{
+  declare const opaqueDict: {[OpaqueKeyWithSupertype2]: number};
+  (Object.keys(opaqueDict)[0]: OpaqueKeyWithSupertype2); // OK
+}
+
+declare opaque type OpaqueKeyWithSupertype3: string | boolean;
+{
+  declare const opaqueDict: {[OpaqueKeyWithSupertype3]: number};
+  (Object.keys(opaqueDict)[0]: OpaqueKeyWithSupertype3); // ERROR
+}
+
+declare opaque type OpaqueKeyWithSupertype4: string | A<string>;
+{
+  declare const opaqueDict: {[OpaqueKeyWithSupertype4]: number};
+  (Object.keys(opaqueDict)[0]: OpaqueKeyWithSupertype4); // OK
+}
