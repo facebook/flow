@@ -146,35 +146,10 @@ class ['M, 'T] searcher
       let open Flow_ast.Statement.ExportNamedDeclaration in
       match decl.source with
       | None -> super#export_named_declaration export_loc decl
-      | Some (source_annot, { Flow_ast.StringLiteral.value = module_name; _ }) ->
-        let { specifiers; _ } = decl in
-        Base.Option.iter ~f:(this#export_specifier_with_annot ~source_annot) specifiers;
-        if covers_target export_loc then
-          this#request (Get_def_request.Require (loc_of_annot source_annot, module_name));
+      | Some (source_annot, _) ->
+        let decl = super#export_named_declaration export_loc decl in
+        if covers_target export_loc then this#request (Get_def_request.Type source_annot);
         decl
-
-    method export_specifier_with_annot ~source_annot specifier =
-      let open Flow_ast.Statement.ExportNamedDeclaration in
-      match specifier with
-      | ExportSpecifiers named_specifiers ->
-        Base.List.iter ~f:(this#export_named_specifier_with_annot ~source_annot) named_specifiers
-      | ExportBatchSpecifier _ -> ()
-
-    method export_named_specifier_with_annot ~source_annot specifier =
-      let open Flow_ast.Statement.ExportNamedDeclaration.ExportSpecifier in
-      let (specifier_loc, { local; _ }) = specifier in
-      let (_, { Flow_ast.Identifier.name = local_name; _ }) = local in
-      let result =
-        Get_def_request.(
-          Member
-            {
-              prop_name = local_name;
-              object_source = ObjectRequireLoc (loc_of_annot source_annot);
-              force_instance = false;
-            }
-        )
-      in
-      if covers_target specifier_loc then this#request result
 
     method! member expr =
       let open Flow_ast.Expression.Member in
@@ -186,9 +161,7 @@ class ['M, 'T] searcher
           let (obj_annot, _) = _object in
           let force_instance = Flow_ast_utils.is_super_member_access expr in
           let result =
-            Get_def_request.(
-              Member { prop_name = name; object_source = ObjectType obj_annot; force_instance }
-            )
+            Get_def_request.(Member { prop_name = name; object_type = obj_annot; force_instance })
           in
           this#request result
         | _ -> ()
@@ -243,23 +216,13 @@ class ['M, 'T] searcher
                   when covers_target loc ->
                   this#request
                     Get_def_request.(
-                      Member
-                        {
-                          prop_name = name;
-                          object_source = ObjectType pat_annot;
-                          force_instance = false;
-                        }
+                      Member { prop_name = name; object_type = pat_annot; force_instance = false }
                     )
                 | Property.Identifier (id_annot, { Flow_ast.Identifier.name; _ })
                   when annot_covers_target id_annot ->
                   this#request
                     Get_def_request.(
-                      Member
-                        {
-                          prop_name = name;
-                          object_source = ObjectType pat_annot;
-                          force_instance = false;
-                        }
+                      Member { prop_name = name; object_type = pat_annot; force_instance = false }
                     )
                 | _ -> ()
               end
@@ -343,7 +306,7 @@ class ['M, 'T] searcher
               Member
                 {
                   prop_name = "constructor";
-                  object_source = ObjectType annot;
+                  object_type = annot;
                   (* In `new Foo()`, the type of Foo is ThisClassT(InstanceT).
                      We use force_instance to force the normalizer to inspect
                      the InstanceT instead of the static properties of the class *)

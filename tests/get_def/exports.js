@@ -20,3 +20,13 @@ export {foo as lib_foo2} from 'test_lib';
 //             ^
 export {foo as lib_foo3} from 'test_lib';
 //                              ^
+
+const bar = 0
+export {bar}
+//      ^
+export {bar as bar1}
+//      ^
+export {bar as bar2}
+//          ^
+export {bar as bar3}
+//             ^

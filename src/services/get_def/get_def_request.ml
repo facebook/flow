@@ -5,15 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type ('M, 'T) object_source =
-  | ObjectType of 'T
-  | ObjectRequireLoc of 'M
-
-(* source loc *)
-
 type ('M, 'T) member_info = {
   prop_name: string;
-  object_source: ('M, 'T) object_source;
+  object_type: 'T;
   force_instance: bool;
 }
 

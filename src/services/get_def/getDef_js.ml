@@ -38,15 +38,6 @@ let extract_member_def ~reader ~cx ~file_sig ~typed_ast ~force_instance type_ na
   | Some def_locs -> Ok (Nel.map (loc_of_aloc ~reader) def_locs)
   | None -> Error (Printf.sprintf "failed to find member %s in members map" name)
 
-let extract_require_member_def ~reader ~cx this name =
-  match Members.extract cx this |> Members.to_command_result with
-  | Ok result_map ->
-    (match SMap.find_opt name result_map with
-    | Some (None, t) -> Ok (Nel.one (TypeUtil.loc_of_t t |> loc_of_aloc ~reader))
-    | Some (Some x, _) -> Ok (Nel.one (loc_of_aloc ~reader x))
-    | None -> Error (Printf.sprintf "failed to find member %s in members map" name))
-  | Error msg -> Error msg
-
 let rec process_request ~options ~reader ~cx ~is_legit_require ~ast ~typed_ast ~file_sig :
     (ALoc.t, ALoc.t * Type.t) Get_def_request.t -> (Loc.t Nel.t, string) result = function
   | Get_def_request.Identifier { name = _; loc = (aloc, type_) } ->
@@ -72,13 +63,8 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~ast ~typed_ast ~
         ~file_sig
         (Get_def_request.Type (aloc, type_))
     | _ :: _ :: _ -> Error "Scope builder found multiple matching identifiers")
-  | Get_def_request.(Member { prop_name = name; object_source; force_instance }) -> begin
-    match object_source with
-    | Get_def_request.ObjectType (_loc, t) ->
-      extract_member_def ~reader ~cx ~file_sig ~typed_ast ~force_instance t name
-    | Get_def_request.ObjectRequireLoc loc ->
-      let t = Type.OpenT (Context.find_require cx loc) in
-      extract_require_member_def ~reader ~cx t name
+  | Get_def_request.(Member { prop_name = name; object_type = (_loc, t); force_instance }) -> begin
+    extract_member_def ~reader ~cx ~file_sig ~typed_ast ~force_instance t name
   end
   | Get_def_request.(Type (_, v) | Typeof (_, v)) as request ->
     (* here lies the difference between "Go to Definition" and "Go to Type Definition":
@@ -179,12 +165,7 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~ast ~typed_ast ~
       ~typed_ast
       ~file_sig
       Get_def_request.(
-        Member
-          {
-            prop_name = name;
-            object_source = ObjectType (loc, props_object);
-            force_instance = false;
-          }
+        Member { prop_name = name; object_type = (loc, props_object); force_instance = false }
       )
 
 module Depth = struct

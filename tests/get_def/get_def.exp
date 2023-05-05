@@ -86,7 +86,7 @@ annot.js:19:7,19:7
 
 exports.js:3:9
 Flags: --pretty
-{"path":"helpers/exports_named.js","line":3,"endline":3,"start":14,"end":16}
+{"path":"helpers/exports_named.js","line":3,"endline":3,"start":20,"end":24}
 
 exports.js:5:4
 Flags: --pretty
@@ -94,15 +94,15 @@ Flags: --pretty
 
 exports.js:7:10
 Flags: --pretty
-{"path":"helpers/exports_named.js","line":3,"endline":3,"start":14,"end":16}
+{"path":"helpers/exports_named.js","line":3,"endline":3,"start":20,"end":24}
 
 exports.js:9:13
 Flags: --pretty
-{"path":"helpers/exports_named.js","line":3,"endline":3,"start":14,"end":16}
+{"path":"helpers/exports_named.js","line":0,"endline":0,"start":1,"end":0}
 
 exports.js:11:16
 Flags: --pretty
-{"path":"helpers/exports_named.js","line":3,"endline":3,"start":14,"end":16}
+{"path":"helpers/exports_named.js","line":3,"endline":3,"start":20,"end":24}
 
 exports.js:13:23
 Flags: --pretty
@@ -114,15 +114,31 @@ Flags: --pretty
 
 exports.js:17:9
 Flags: --pretty
-{"path":"[LIB] libs/lib.js","line":2,"endline":2,"start":22,"end":24}
+{"path":"[LIB] libs/lib.js","line":2,"endline":2,"start":27,"end":32}
 
 exports.js:19:16
 Flags: --pretty
-{"path":"[LIB] libs/lib.js","line":2,"endline":2,"start":22,"end":24}
+{"path":"[LIB] libs/lib.js","line":2,"endline":2,"start":27,"end":32}
 
 exports.js:21:33
 Flags: --pretty
-{"error":"Failed to find imported file test_lib"}
+{"path":"[LIB] libs/lib.js","line":1,"endline":1,"start":16,"end":25}
+
+exports.js:25:9
+Flags: --pretty
+{"path":"exports.js","line":24,"endline":24,"start":7,"end":9}
+
+exports.js:27:9
+Flags: --pretty
+{"path":"exports.js","line":24,"endline":24,"start":7,"end":9}
+
+exports.js:29:13
+Flags: --pretty
+[]
+
+exports.js:31:16
+Flags: --pretty
+{"path":"exports.js","line":24,"endline":24,"start":13,"end":13}
 
 identifier.js:5:4
 Flags:
