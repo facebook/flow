@@ -259,7 +259,7 @@ and collect_of_destructor ?log_unresolved cx acc = function
     collect_of_types ?log_unresolved cx acc [extends_t; true_t; false_t]
   | TypeMap tmap -> collect_of_type_map ?log_unresolved cx acc tmap
   | ReactConfigType default_props -> collect_of_type ?log_unresolved cx acc default_props
-  | MappedType { property_type; mapped_type_flags = _ } ->
+  | MappedType { property_type; mapped_type_flags = _; homomorphic = _ } ->
     collect_of_type ?log_unresolved cx acc property_type
   | ReactElementPropsType
   | ReactElementConfigType

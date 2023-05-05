@@ -1407,6 +1407,8 @@ module rec TypeTerm : sig
     | ReactConfigType of t
     | IdxUnwrapType
     | MappedType of {
+        (* Homomorphic mapped types use an inline keyof: {[key in keyof O]: T} *)
+        homomorphic: bool;
         property_type: t;
         mapped_type_flags: mapped_type_flags;
       }

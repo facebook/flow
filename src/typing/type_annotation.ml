@@ -1621,6 +1621,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                 reason,
                 MappedType
                   {
+                    homomorphic = true;
                     property_type = poly_prop_type;
                     mapped_type_flags =
                       { optional = mapped_type_optionality; variance = polarity cx variance };

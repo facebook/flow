@@ -215,7 +215,7 @@ class ['a] t =
         let acc = self#type_ cx pole_TODO acc false_t in
         acc
       | TypeMap map -> self#type_map cx acc map
-      | MappedType { property_type; mapped_type_flags = _ } ->
+      | MappedType { property_type; mapped_type_flags = _; homomorphic = _ } ->
         self#type_ cx pole_TODO acc property_type
       | LatentPred (t, _) -> self#type_ cx pole_TODO acc t
 

@@ -6856,7 +6856,7 @@ struct
           | ReactConfigType default_props ->
             ReactKitT (use_op, reason, React.GetConfigType (default_props, OpenT tout))
           | IdxUnwrapType -> IdxUnwrap (reason, OpenT tout)
-          | MappedType { property_type; mapped_type_flags } ->
+          | MappedType { property_type; mapped_type_flags; homomorphic = _ } ->
             Object.(
               ObjKitT
                 ( use_op,
