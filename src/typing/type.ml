@@ -695,7 +695,6 @@ module rec TypeTerm : sig
         reason: reason;
         t: t;
         is_strict: bool;  (** callee is @flow strict *)
-        allow_untyped: bool;  (** don't warn if the imported module is untyped *)
       }
     | ImportDefaultT of reason * import_kind * (string * string) * t * bool (* is_strict *)
     | ImportNamedT of reason * import_kind * string * string * t * bool (* is_strict *)

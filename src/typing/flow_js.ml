@@ -851,7 +851,7 @@ struct
         (******************)
         | (ModuleT m, CJSRequireT { reason; t_out; is_strict; legacy_interop }) ->
           CJSRequireTKit.on_ModuleT cx trace (reason, is_strict, legacy_interop) m t_out
-        | (ModuleT m, ImportModuleNsT { reason; t; is_strict; allow_untyped = _ }) ->
+        | (ModuleT m, ImportModuleNsT { reason; t; is_strict }) ->
           ImportModuleNsTKit.on_ModuleT cx trace (reason, is_strict) m t
         | (ModuleT m, ImportDefaultT (reason, import_kind, local, t, is_strict)) ->
           ImportDefaultTKit.on_ModuleT cx trace (reason, import_kind, local, is_strict) m t
@@ -861,8 +861,8 @@ struct
         | (AnyT (lreason, src), CJSRequireT { reason; t_out; _ }) ->
           Flow_js_utils.check_untyped_import cx ImportValue lreason reason;
           rec_flow_t ~use_op:unknown_use cx trace (AnyT.why src reason, t_out)
-        | (AnyT (lreason, src), ImportModuleNsT { reason; t; allow_untyped; is_strict = _ }) ->
-          if not allow_untyped then Flow_js_utils.check_untyped_import cx ImportValue lreason reason;
+        | (AnyT (lreason, src), ImportModuleNsT { reason; t; is_strict = _ }) ->
+          Flow_js_utils.check_untyped_import cx ImportValue lreason reason;
           rec_flow_t ~use_op:unknown_use cx trace (AnyT.why src reason, t)
         | (AnyT (lreason, src), ImportDefaultT (reason, import_kind, _, t, _)) ->
           Flow_js_utils.check_untyped_import cx import_kind lreason reason;

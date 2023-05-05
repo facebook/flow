@@ -297,8 +297,7 @@ and mod_reason_of_use_t f = function
   | ImplementsT (use_op, t) -> ImplementsT (use_op, mod_reason_of_t f t)
   | ImportDefaultT (reason, import_kind, name, t, is_strict) ->
     ImportDefaultT (f reason, import_kind, name, t, is_strict)
-  | ImportModuleNsT { reason; t; is_strict; allow_untyped } ->
-    ImportModuleNsT { reason = f reason; t; is_strict; allow_untyped }
+  | ImportModuleNsT { reason; t; is_strict } -> ImportModuleNsT { reason = f reason; t; is_strict }
   | ImportNamedT (reason, import_kind, name, t, module_name, is_strict) ->
     ImportNamedT (f reason, import_kind, name, t, module_name, is_strict)
   | ImportTypeofT (reason, name, t) -> ImportTypeofT (f reason, name, t)
@@ -494,7 +493,7 @@ let rec util_use_op_of_use_t :
   | BecomeT { reason = _; t = _; empty_success = _ }
   | GetValuesT (_, _)
   | CJSRequireT _
-  | ImportModuleNsT { reason = _; t = _; is_strict = _; allow_untyped = _ }
+  | ImportModuleNsT { reason = _; t = _; is_strict = _ }
   | ImportDefaultT (_, _, _, _, _)
   | ImportNamedT (_, _, _, _, _, _)
   | ImportTypeT (_, _, _)

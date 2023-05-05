@@ -824,8 +824,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | IdxUnMaybeifyT _ -> p t
     | IdxUnwrap _ -> p t
     | ImportDefaultT _ -> p t
-    | ImportModuleNsT { is_strict; allow_untyped; _ } ->
-      p ~extra:(spf "is_strict=%b, allow_untyped=%b" is_strict allow_untyped) t
+    | ImportModuleNsT { is_strict; _ } -> p ~extra:(spf "is_strict=%b" is_strict) t
     | ImportNamedT _ -> p t
     | ImportTypeofT _ -> p t
     | ImportTypeT _ -> p t
