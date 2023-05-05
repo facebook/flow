@@ -1453,10 +1453,8 @@ module Make
       let { ImportDeclaration.source; specifiers; default; import_kind; comments } = import_decl in
       let (source_loc, ({ Ast.StringLiteral.value = module_name; _ } as source_literal)) = source in
 
-      let source_ast =
-        let source_module_t = OpenT (Import_export.import cx (source_loc, module_name)) in
-        ((source_loc, source_module_t), source_literal)
-      in
+      let source_module_t = Import_export.import cx (source_loc, module_name) in
+      let source_ast = ((source_loc, source_module_t), source_literal) in
 
       let specifiers_ast =
         match specifiers with
@@ -1482,8 +1480,8 @@ module Make
                        cx
                        import_reason
                        import_kind
-                       ~source_loc
                        ~module_name
+                       ~source_module_t
                        ~remote_name_loc
                        ~remote_name
                        ~local_name
@@ -1520,8 +1518,8 @@ module Make
                 cx
                 import_reason
                 import_kind
-                ~source_loc
                 ~module_name
+                ~source_module_t
                 ~local_loc
             in
             ((local_loc, t), local_id)
@@ -1538,8 +1536,8 @@ module Make
               cx
               import_reason
               import_kind
-              ~source_loc
               ~module_name
+              ~source_module_t
               ~local_loc:loc
               ~local_name
           in
@@ -1719,46 +1717,42 @@ module Make
 
   and import_named_specifier_type
       cx
-      ?declare_module
       import_reason
       import_kind
-      ~source_loc
       ~module_name
+      ~source_module_t
       ~remote_name_loc
       ~remote_name
       ~local_name =
-    let module_t = OpenT (Import_export.import cx ?declare_module (source_loc, module_name)) in
-    if Type_inference_hooks_js.dispatch_member_hook cx remote_name remote_name_loc module_t then
+    if Type_inference_hooks_js.dispatch_member_hook cx remote_name remote_name_loc source_module_t
+    then
       Unsoundness.why InferenceHooks import_reason
     else
       let import_kind = type_kind_of_kind import_kind in
-      get_imported_t cx import_reason module_name module_t import_kind remote_name local_name
+      get_imported_t cx import_reason module_name source_module_t import_kind remote_name local_name
 
   and import_namespace_specifier_type
-      cx ?declare_module import_reason import_kind ~source_loc ~module_name ~local_loc =
+      cx import_reason import_kind ~module_name ~source_module_t ~local_loc =
     let open Ast.Statement in
     match import_kind with
     | ImportDeclaration.ImportType -> assert_false "import type * is a parse error"
     | ImportDeclaration.ImportTypeof ->
       let bind_reason = repos_reason local_loc import_reason in
-      let module_ns_t =
-        Import_export.import_ns cx ?declare_module import_reason (source_loc, module_name)
-      in
+      let module_ns_t = Import_export.import_ns cx import_reason source_module_t in
       Tvar_resolver.mk_tvar_and_fully_resolve_where cx bind_reason (fun t ->
           Flow.flow cx (module_ns_t, ImportTypeofT (bind_reason, "*", t))
       )
     | ImportDeclaration.ImportValue ->
       let reason = mk_reason (RModule (OrdinaryName module_name)) local_loc in
-      Import_export.import_ns cx ?declare_module reason (source_loc, module_name)
+      Import_export.import_ns cx reason source_module_t
 
   and import_default_specifier_type
-      cx ?declare_module import_reason import_kind ~source_loc ~module_name ~local_loc ~local_name =
-    let module_t = OpenT (Import_export.import cx ?declare_module (source_loc, module_name)) in
-    if Type_inference_hooks_js.dispatch_member_hook cx "default" local_loc module_t then
+      cx import_reason import_kind ~module_name ~source_module_t ~local_loc ~local_name =
+    if Type_inference_hooks_js.dispatch_member_hook cx "default" local_loc source_module_t then
       Unsoundness.why InferenceHooks import_reason
     else
       let import_kind = type_kind_of_kind import_kind in
-      get_imported_t cx import_reason module_name module_t import_kind "default" local_name
+      get_imported_t cx import_reason module_name source_module_t import_kind "default" local_name
 
   and export_specifiers cx loc source export_kind =
     let open Ast.Statement in
@@ -1770,7 +1764,9 @@ module Make
     in
     let source =
       match source with
-      | Some (loc, { Ast.StringLiteral.value; raw = _; comments = _ }) -> Some (loc, value)
+      | Some (loc, { Ast.StringLiteral.value = module_name; raw = _; comments = _ }) ->
+        let module_t = Import_export.import cx (loc, module_name) in
+        Some (loc, module_name, module_t)
       | None -> None
     in
     (* [declare] export [type] {foo [as bar]}; *)
@@ -1815,10 +1811,10 @@ module Make
     | E.ExportSpecifiers specifiers ->
       let export =
         match source with
-        | Some ((source_loc, module_name) as source) ->
+        | Some (source_loc, module_name, module_t) ->
           let source_ns_t =
             let reason = mk_reason (RModule (OrdinaryName module_name)) source_loc in
-            Import_export.import_ns cx reason source
+            Import_export.import_ns cx reason module_t
           in
           export_from source_ns_t
         | None -> export_ref
@@ -1828,16 +1824,17 @@ module Make
     | E.ExportBatchSpecifier (_, Some id) ->
       let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
       let reason = mk_reason (RIdentifier (OrdinaryName name)) id_loc in
-      let remote_namespace_t = Import_export.import_ns cx reason (Base.Option.value_exn source) in
+      let (_, _, module_t) = Base.Option.value_exn source in
+      let remote_namespace_t = Import_export.import_ns cx reason module_t in
       Import_export.export cx (OrdinaryName name) loc remote_namespace_t
     (* [declare] export [type] * from "source"; *)
     | E.ExportBatchSpecifier (_, None) ->
-      let source_module_t = OpenT (Import_export.import cx (Base.Option.value_exn source)) in
+      let (_, _, module_t) = Base.Option.value_exn source in
       let reason = mk_reason (RCustom "batch export") loc in
-      Flow.flow cx (source_module_t, CheckUntypedImportT (reason, ImportValue));
+      Flow.flow cx (module_t, CheckUntypedImportT (reason, ImportValue));
       (match export_kind with
-      | Ast.Statement.ExportValue -> Import_export.export_star cx loc source_module_t
-      | Ast.Statement.ExportType -> Import_export.export_type_star cx loc source_module_t)
+      | Ast.Statement.ExportValue -> Import_export.export_star cx loc module_t
+      | Ast.Statement.ExportType -> Import_export.export_type_star cx loc module_t)
 
   and interface_helper cx loc (iface_sig, self) =
     let def_reason = mk_reason (desc_of_t self) loc in
@@ -3053,7 +3050,8 @@ module Make
         in
         let imported_module_t =
           let import_reason = mk_reason (RModule (OrdinaryName module_name)) loc in
-          Import_export.import_ns cx import_reason (source_loc, module_name)
+          Import_export.import cx (source_loc, module_name)
+          |> Import_export.import_ns cx import_reason
         in
         let reason = mk_annot_reason RAsyncImport loc in
         let t = Flow.get_builtin_typeapp cx reason (OrdinaryName "Promise") [imported_module_t] in

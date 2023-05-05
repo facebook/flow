@@ -900,6 +900,7 @@ let resolve_opaque_type cx loc opaque =
 
 let resolve_import cx id_loc import_reason import_kind module_name source_loc import declare_module
     =
+  let source_module_t = Import_export.import cx ~declare_module (source_loc, module_name) in
   let t =
     match import with
     | Name_def.Named { kind; remote; remote_loc; local } ->
@@ -908,9 +909,8 @@ let resolve_import cx id_loc import_reason import_kind module_name source_loc im
         cx
         import_reason
         import_kind
-        ~declare_module
-        ~source_loc
         ~module_name
+        ~source_module_t
         ~remote_name_loc:remote_loc
         ~remote_name:remote
         ~local_name:local
@@ -919,18 +919,16 @@ let resolve_import cx id_loc import_reason import_kind module_name source_loc im
         cx
         import_reason
         import_kind
-        ~declare_module
-        ~source_loc
         ~module_name
+        ~source_module_t
         ~local_loc:id_loc
     | Default local_name ->
       Statement.import_default_specifier_type
         cx
         import_reason
         import_kind
-        ~declare_module
-        ~source_loc
         ~module_name
+        ~source_module_t
         ~local_loc:id_loc
         ~local_name
   in

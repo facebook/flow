@@ -9,9 +9,9 @@ val mk_module_t : Context.t -> Reason.t -> ALoc.t -> Type.t
 
 val require : Context.t -> ALoc.t * string -> ALoc.t -> legacy_interop:bool -> Type.t
 
-val import : Context.t -> ?declare_module:bool -> ALoc.t * string -> Type.tvar
+val import : Context.t -> ?declare_module:bool -> ALoc.t * string -> Type.t
 
-val import_ns : Context.t -> ?declare_module:bool -> Reason.t -> ALoc.t * string -> Type.t
+val import_ns : Context.t -> Reason.t -> Type.t -> Type.t
 
 val cjs_clobber : Context.t -> ALoc.t -> Type.t -> unit
 
