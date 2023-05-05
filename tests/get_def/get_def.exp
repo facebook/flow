@@ -90,7 +90,7 @@ Flags: --pretty
 
 exports.js:5:4
 Flags: --pretty
-{"path":"helpers/exports_named.js","line":0,"endline":0,"start":1,"end":0}
+[]
 
 exports.js:7:10
 Flags: --pretty
@@ -98,7 +98,7 @@ Flags: --pretty
 
 exports.js:9:13
 Flags: --pretty
-{"path":"helpers/exports_named.js","line":0,"endline":0,"start":1,"end":0}
+[]
 
 exports.js:11:16
 Flags: --pretty
@@ -106,7 +106,7 @@ Flags: --pretty
 
 exports.js:13:23
 Flags: --pretty
-{"path":"helpers/exports_named.js","line":0,"endline":0,"start":1,"end":0}
+[]
 
 exports.js:15:31
 Flags: --pretty

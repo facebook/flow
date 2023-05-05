@@ -136,14 +136,9 @@ class ['M, 'T] searcher
       );
       id
 
-    method! export_named_declaration export_loc decl =
-      let open Flow_ast.Statement.ExportNamedDeclaration in
-      match decl.source with
-      | None -> super#export_named_declaration export_loc decl
-      | Some (source_annot, _) ->
-        let decl = super#export_named_declaration export_loc decl in
-        if covers_target export_loc then this#request (Get_def_request.Type source_annot);
-        decl
+    method! export_source source_annot lit =
+      if annot_covers_target source_annot then this#request (Get_def_request.Type source_annot);
+      super#export_source source_annot lit
 
     method! member expr =
       let open Flow_ast.Expression.Member in
