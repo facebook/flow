@@ -20,6 +20,7 @@ type t = {
   relay_integration_module_prefix: string option;
   conditional_type: bool;
   mapped_type: bool;
+  tuple_enhancements: bool;
 }
 
 let of_parsing_options parsing_options docblock file =
@@ -38,6 +39,7 @@ let of_parsing_options parsing_options docblock file =
     parse_relay_integration_module_prefix_includes = relay_integration_module_prefix_includes;
     parse_enable_conditional_types = conditional_type;
     parse_enable_mapped_types = mapped_type;
+    parse_tuple_enhancements = tuple_enhancements;
     _;
   } =
     parsing_options
@@ -76,6 +78,7 @@ let of_parsing_options parsing_options docblock file =
     enable_enums;
     conditional_type;
     mapped_type;
+    tuple_enhancements;
   }
 
 let of_options options ~munge ~ignore_static_propTypes ~facebook_keyMirror =
@@ -94,4 +97,5 @@ let of_options options ~munge ~ignore_static_propTypes ~facebook_keyMirror =
     relay_integration_module_prefix = Options.relay_integration_module_prefix options;
     conditional_type = Options.conditional_type options;
     mapped_type = Options.mapped_type options;
+    tuple_enhancements = Options.tuple_enhancements options;
   }

@@ -1275,39 +1275,45 @@ and annot_with_loc opts scope tbls xs (loc, t) =
       let (_, result) = optional_indexed_access opts scope tbls xs (loc, ia) in
       result
     | T.Tuple { T.Tuple.elements; _ } ->
-      let (arity, req_after_opt, elems_rev) =
+      let (arity, req_after_opt, elems_rev, has_tuple_enhancements) =
         List.fold_left
-          (fun ((num_req, num_total), req_after_opt, elems) elem ->
-            let elem =
+          (fun ((num_req, num_total), req_after_opt, elems, has_tuple_enhancements) elem ->
+            let (elem_has_tuple_enhancements, elem) =
               match elem with
               | (_, T.Tuple.UnlabeledElement t) ->
-                TupleElement
-                  {
-                    name = None;
-                    t = annot opts scope tbls xs t;
-                    polarity = Polarity.Neutral;
-                    optional = false;
-                  }
+                ( false,
+                  TupleElement
+                    {
+                      name = None;
+                      t = annot opts scope tbls xs t;
+                      polarity = Polarity.Neutral;
+                      optional = false;
+                    }
+                )
               | ( _,
                   T.Tuple.LabeledElement
                     { T.Tuple.LabeledElement.annot = t; name; variance; optional }
                 ) ->
-                TupleElement
-                  {
-                    name = Some (id_name name);
-                    t = annot opts scope tbls xs t;
-                    polarity = polarity variance;
-                    optional;
-                  }
+                ( true,
+                  TupleElement
+                    {
+                      name = Some (id_name name);
+                      t = annot opts scope tbls xs t;
+                      polarity = polarity variance;
+                      optional;
+                    }
+                )
               | (loc, T.Tuple.SpreadElement _) ->
                 let loc = push_loc tbls loc in
-                TupleElement
-                  {
-                    name = None;
-                    t = Annot (Any loc);
-                    polarity = Polarity.Neutral;
-                    optional = false;
-                  }
+                ( true,
+                  TupleElement
+                    {
+                      name = None;
+                      t = Annot (Any loc);
+                      polarity = Polarity.Neutral;
+                      optional = false;
+                    }
+                )
             in
             let (TupleElement { optional; _ }) = elem in
             let (num_req, req_after_opt) =
@@ -1317,11 +1323,12 @@ and annot_with_loc opts scope tbls xs (loc, t) =
                 let has_opt = num_total > num_req in
                 (num_req + 1, has_opt)
             in
-            ((num_req, num_total + 1), req_after_opt, elem :: elems))
-          ((0, 0), false, [])
+            let has_tuple_enhancements = has_tuple_enhancements || elem_has_tuple_enhancements in
+            ((num_req, num_total + 1), req_after_opt, elem :: elems, has_tuple_enhancements))
+          ((0, 0), false, [], false)
           elements
       in
-      if req_after_opt then
+      if req_after_opt || (has_tuple_enhancements && (not @@ opts.tuple_enhancements)) then
         Annot (Any loc)
       else
         Annot (Tuple { loc; elems_rev; arity })

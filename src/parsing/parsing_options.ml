@@ -31,6 +31,7 @@ type t = {
   parse_distributed: bool;
   parse_enable_conditional_types: bool;
   parse_enable_mapped_types: bool;
+  parse_tuple_enhancements: bool;
 }
 
 let make_parsing_options ?(types_mode = TypesAllowed) ?use_strict options =
@@ -62,4 +63,5 @@ let make_parsing_options ?(types_mode = TypesAllowed) ?use_strict options =
     parse_distributed = Options.distributed options;
     parse_enable_conditional_types = Options.conditional_type options;
     parse_enable_mapped_types = Options.mapped_type options;
+    parse_tuple_enhancements = Options.tuple_enhancements options;
   }

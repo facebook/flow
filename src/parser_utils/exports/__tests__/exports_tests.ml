@@ -63,6 +63,7 @@ let sig_opts =
     relay_integration_module_prefix = None;
     conditional_type = true;
     mapped_type = true;
+    tuple_enhancements = true;
   }
 
 let print_index exports =

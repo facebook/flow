@@ -60,6 +60,7 @@ let stub_metadata ~root ~checked =
     suppress_types = SSet.empty;
     trust_mode = Options.NoTrust;
     use_mixed_in_catch_variables = false;
+    tuple_enhancements = false;
   }
 
 let dummy_filename = File_key.SourceFile ""
