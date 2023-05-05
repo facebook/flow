@@ -1788,7 +1788,7 @@ module Make
       | Ast.Statement.ExportValue -> Import_export.export cx remote_name loc t
     in
     (* [declare] export [type] {foo [as bar]} from 'module' *)
-    let export_from loc (source_loc, source) local_name remote_name =
+    let export_from (source_loc, source) loc local_name remote_name =
       let source_ns_t =
         let reason = mk_reason (RModule (OrdinaryName source)) source_loc in
         Import_export.import_ns cx reason (source_loc, source)
@@ -1804,17 +1804,16 @@ module Make
       | Ast.Statement.ExportType -> Import_export.export_type cx remote_name (Some loc) t
       | Ast.Statement.ExportValue -> Import_export.export cx remote_name loc t
     in
-    let export_specifier (loc, { E.ExportSpecifier.local; exported }) =
-      let (local_name, remote_name, local_name_loc) =
-        let (local_name_loc, { Ast.Identifier.name = local_name; comments = _ }) = local in
-        let local_name = OrdinaryName local_name in
+    let export_specifier (_, { E.ExportSpecifier.local; exported }) =
+      let (local_name_loc, { Ast.Identifier.name = local_name; comments = _ }) = local in
+      let local_name = OrdinaryName local_name in
+      let remote_name =
         match exported with
-        | None -> (local_name, local_name, local_name_loc)
-        | Some (_, { Ast.Identifier.name = remote_name; comments = _ }) ->
-          (local_name, OrdinaryName remote_name, local_name_loc)
+        | None -> local_name
+        | Some (_, { Ast.Identifier.name = remote_name; comments = _ }) -> OrdinaryName remote_name
       in
       match source with
-      | Some source -> export_from loc source local_name remote_name
+      | Some source -> export_from source local_name_loc local_name remote_name
       | None -> export_ref local_name_loc local_name remote_name
     in
     function
