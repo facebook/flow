@@ -49,7 +49,7 @@ val program :
 
 val program_simple : ?opts:opts -> (Loc.t, Loc.t) Flow_ast.Program.t -> Layout.layout_node
 
-val literal : opts:opts -> Loc.t -> Loc.t Flow_ast.Literal.t -> Layout.layout_node
+val literal : opts:opts -> Loc.t -> (Loc.t, Loc.t) Flow_ast.Literal.t -> Layout.layout_node
 
 val number_literal_type : Loc.t -> Loc.t Flow_ast.NumberLiteral.t -> Layout.layout_node
 

@@ -1946,7 +1946,8 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               Object.Property.key =
                 begin
                   match key with
-                  | Ast.Expression.Object.Property.Literal (_, lit) ->
+                  | Ast.Expression.Object.Property.Literal
+                      (_, ({ Ast.Literal.value = Ast.Literal.String _; _ } as lit)) ->
                     Ast.Expression.Object.Property.Literal ((loc, t), lit)
                   | Ast.Expression.Object.Property.Identifier
                       (_loc, { Ast.Identifier.name = _; comments = comments_inner }) ->

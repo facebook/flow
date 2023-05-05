@@ -18,8 +18,6 @@ type t = {
 }
 
 and options = {
-  module_ref_prefix: string option;
-  module_ref_prefix_LEGACY_INTEROP: string option;
   enable_enums: bool;
   enable_relay_integration: bool;
   relay_integration_module_prefix: string option;
@@ -75,13 +73,7 @@ type tolerable_t = t * tolerable_error list
 let empty = { requires = []; module_kind = CommonJS { mod_exp_loc = None } }
 
 let default_opts =
-  {
-    module_ref_prefix = None;
-    module_ref_prefix_LEGACY_INTEROP = None;
-    enable_relay_integration = false;
-    enable_enums = false;
-    relay_integration_module_prefix = None;
-  }
+  { enable_relay_integration = false; enable_enums = false; relay_integration_module_prefix = None }
 
 module PP = struct
   let string_of_option f = function
@@ -319,7 +311,7 @@ class requires_exports_calculator ~ast ~opts =
       this#handle_call call_loc callee arguments None;
       super#call call_loc expr
 
-    method! literal loc (expr : Loc.t Ast.Literal.t) =
+    method! literal loc (expr : (Loc.t, Loc.t) Ast.Literal.t) =
       let open Ast.Literal in
       this#handle_literal loc expr.value;
       super#literal loc expr
@@ -713,19 +705,9 @@ class requires_exports_calculator ~ast ~opts =
     method private handle_literal loc lit =
       let open Ast.Literal in
       match lit with
-      | String s ->
-        (match (opts.module_ref_prefix, opts.module_ref_prefix_LEGACY_INTEROP) with
-        | (Some prefix, _) when String.starts_with ~prefix s ->
-          this#add_require
-            (Require
-               { source = (loc, String_utils.lstrip s prefix); require_loc = loc; bindings = None }
-            )
-        | (_, Some prefix) when String.starts_with ~prefix s ->
-          this#add_require
-            (Require
-               { source = (loc, String_utils.lstrip s prefix); require_loc = loc; bindings = None }
-            )
-        | _ -> ())
+      | ModuleRef { string_value; prefix_len; _ } ->
+        let mref = Base.String.drop_prefix string_value prefix_len in
+        this#add_require (Require { source = (loc, mref); require_loc = loc; bindings = None })
       | _ -> ()
 
     (* skip declare module *)

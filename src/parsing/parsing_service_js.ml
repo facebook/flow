@@ -77,7 +77,8 @@ let empty_result =
   }
 
 (**************************** internal *********************************)
-let parse_source_file ~types ~use_strict content file =
+let parse_source_file
+    ~types ~use_strict ~module_ref_prefix ~module_ref_prefix_LEGACY_INTEROP content file =
   let parse_options =
     Some
       {
@@ -90,6 +91,8 @@ let parse_source_file ~types ~use_strict content file =
         esproposal_decorators = true;
         types;
         use_strict;
+        module_ref_prefix;
+        module_ref_prefix_LEGACY_INTEROP;
       }
   in
 
@@ -98,7 +101,14 @@ let parse_source_file ~types ~use_strict content file =
 let parse_package_json_file ~node_main_fields content file =
   let parse_options =
     Some
-      { Parser_env.enums = false; esproposal_decorators = false; types = true; use_strict = false }
+      {
+        Parser_env.enums = false;
+        esproposal_decorators = false;
+        types = true;
+        use_strict = false;
+        module_ref_prefix = None;
+        module_ref_prefix_LEGACY_INTEROP = None;
+      }
   in
 
   match Parser_flow.package_json_file ~parse_options content (Some file) with
@@ -123,8 +133,6 @@ let types_checked types_mode docblock =
 
 let parse_file_sig parsing_options file ast =
   let {
-    parse_module_ref_prefix = module_ref_prefix;
-    parse_module_ref_prefix_LEGACY_INTEROP = module_ref_prefix_LEGACY_INTEROP;
     parse_enable_enums = enable_enums;
     parse_enable_relay_integration = enable_relay_integration;
     parse_relay_integration_excludes = relay_integration_excludes;
@@ -144,13 +152,7 @@ let parse_file_sig parsing_options file ast =
       relay_integration_module_prefix
   in
   let file_sig_opts =
-    {
-      File_sig.module_ref_prefix;
-      module_ref_prefix_LEGACY_INTEROP;
-      enable_enums;
-      enable_relay_integration;
-      relay_integration_module_prefix;
-    }
+    { File_sig.enable_enums; enable_relay_integration; relay_integration_module_prefix }
   in
   File_sig.program ~ast ~opts:file_sig_opts
 
@@ -164,8 +166,8 @@ let do_parse ~parsing_options ~docblock content file =
     parse_types_mode = types_mode;
     parse_use_strict = use_strict;
     parse_munge_underscores = _;
-    parse_module_ref_prefix = _;
-    parse_module_ref_prefix_LEGACY_INTEROP = _;
+    parse_module_ref_prefix = module_ref_prefix;
+    parse_module_ref_prefix_LEGACY_INTEROP = module_ref_prefix_LEGACY_INTEROP;
     parse_facebook_fbt = _;
     parse_suppress_types = _;
     parse_max_literal_len = _;
@@ -198,7 +200,15 @@ let do_parse ~parsing_options ~docblock content file =
       if not types_checked then
         Parse_skip Skip_non_flow_file
       else
-        let (ast, parse_errors) = parse_source_file ~types:true ~use_strict content file in
+        let (ast, parse_errors) =
+          parse_source_file
+            ~types:true
+            ~use_strict
+            ~module_ref_prefix
+            ~module_ref_prefix_LEGACY_INTEROP
+            content
+            file
+        in
         let (file_sig, tolerable_errors) = parse_file_sig parsing_options file ast in
         let requires = File_sig.require_set file_sig |> SSet.elements |> Array.of_list in
         (*If you want efficiency, can compute globals along with file_sig in the above function since scope is computed when computing file_sig*)

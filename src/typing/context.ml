@@ -42,8 +42,6 @@ type metadata = {
   facebook_fbs: string option;
   facebook_fbt: string option;
   facebook_module_interop: bool;
-  haste_module_ref_prefix: string option;
-  haste_module_ref_prefix_LEGACY_INTEROP: string option;
   ignore_non_literal_requires: bool;
   mapped_type: bool;
   max_literal_length: int;
@@ -234,8 +232,6 @@ let metadata_of_options options =
     facebook_fbs = Options.facebook_fbs options;
     facebook_fbt = Options.facebook_fbt options;
     facebook_module_interop = Options.facebook_module_interop options;
-    haste_module_ref_prefix = Options.haste_module_ref_prefix options;
-    haste_module_ref_prefix_LEGACY_INTEROP = Options.haste_module_ref_prefix_LEGACY_INTEROP options;
     ignore_non_literal_requires = Options.should_ignore_non_literal_requires options;
     mapped_type = Options.mapped_type options;
     max_literal_length = Options.max_literal_length options;
@@ -525,10 +521,6 @@ let facebook_fbs cx = cx.metadata.facebook_fbs
 let facebook_fbt cx = cx.metadata.facebook_fbt
 
 let facebook_module_interop cx = cx.metadata.facebook_module_interop
-
-let haste_module_ref_prefix cx = cx.metadata.haste_module_ref_prefix
-
-let haste_module_ref_prefix_LEGACY_INTEROP cx = cx.metadata.haste_module_ref_prefix_LEGACY_INTEROP
 
 let should_ignore_non_literal_requires cx = cx.metadata.ignore_non_literal_requires
 

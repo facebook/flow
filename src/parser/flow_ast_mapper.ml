@@ -2174,7 +2174,7 @@ class ['loc] mapper =
         =
       this#jsx_expression loc jsx_expr
 
-    method jsx_attribute_value_literal loc (lit : 'loc Ast.Literal.t) = this#literal loc lit
+    method jsx_attribute_value_literal loc (lit : ('loc, 'loc) Ast.Literal.t) = this#literal loc lit
 
     method jsx_children ((loc, children) as orig : 'loc * ('loc, 'loc) Ast.JSX.child list) =
       let children' = map_list this#jsx_child children in
@@ -2291,9 +2291,16 @@ class ['loc] mapper =
       else
         { label = label'; body = body'; comments = comments' }
 
-    method literal _loc (expr : 'loc Ast.Literal.t) =
+    method module_ref_literal mref = mref
+
+    method literal _loc (expr : ('loc, 'loc) Ast.Literal.t) =
       let open Ast.Literal in
       let { value; raw; comments } = expr in
+      let value =
+        match value with
+        | ModuleRef mref -> ModuleRef (this#module_ref_literal mref)
+        | _ -> value
+      in
       let comments' = this#syntax_opt comments in
       if comments == comments' then
         expr
@@ -2453,7 +2460,7 @@ class ['loc] mapper =
       | PrivateName ident -> id this#private_name ident key (fun ident -> PrivateName ident)
       | Computed computed -> id this#object_key_computed computed key (fun expr -> Computed expr)
 
-    method object_key_literal (literal : 'loc * 'loc Ast.Literal.t) =
+    method object_key_literal (literal : 'loc * ('loc, 'loc) Ast.Literal.t) =
       let (loc, lit) = literal in
       id_loc this#literal loc lit literal (fun lit -> (loc, lit))
 
@@ -2550,7 +2557,7 @@ class ['loc] mapper =
       ignore kind;
       this#identifier ident
 
-    method pattern_literal ?kind loc (expr : 'loc Ast.Literal.t) =
+    method pattern_literal ?kind loc (expr : ('loc, 'loc) Ast.Literal.t) =
       ignore kind;
       this#literal loc expr
 
@@ -2599,7 +2606,7 @@ class ['loc] mapper =
       | Computed expr ->
         id (this#pattern_object_property_computed_key ?kind) expr key (fun expr' -> Computed expr')
 
-    method pattern_object_property_literal_key ?kind (literal : 'loc * 'loc Ast.Literal.t) =
+    method pattern_object_property_literal_key ?kind (literal : 'loc * ('loc, 'loc) Ast.Literal.t) =
       let (loc, key) = literal in
       id_loc (this#pattern_literal ?kind) loc key literal (fun key' -> (loc, key'))
 

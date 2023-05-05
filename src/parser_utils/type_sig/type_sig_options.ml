@@ -13,8 +13,6 @@ type t = {
   facebook_fbt: string option;
   max_literal_len: int;
   exact_by_default: bool;
-  module_ref_prefix: string option;
-  module_ref_prefix_LEGACY_INTEROP: string option;
   enable_enums: bool;
   enable_relay_integration: bool;
   relay_integration_module_prefix: string option;
@@ -26,8 +24,6 @@ type t = {
 let of_parsing_options parsing_options docblock file =
   let {
     Parsing_options.parse_munge_underscores = munge_underscores;
-    parse_module_ref_prefix = module_ref_prefix;
-    parse_module_ref_prefix_LEGACY_INTEROP = module_ref_prefix_LEGACY_INTEROP;
     parse_facebook_fbt = facebook_fbt;
     parse_suppress_types = suppress_types;
     parse_max_literal_len = max_literal_len;
@@ -73,8 +69,6 @@ let of_parsing_options parsing_options docblock file =
     facebook_fbt;
     max_literal_len;
     exact_by_default;
-    module_ref_prefix;
-    module_ref_prefix_LEGACY_INTEROP;
     enable_enums;
     conditional_type;
     mapped_type;
@@ -90,8 +84,6 @@ let of_options options ~munge ~ignore_static_propTypes ~facebook_keyMirror =
     facebook_fbt = Options.facebook_fbt options;
     max_literal_len = Options.max_literal_length options;
     exact_by_default = Options.exact_by_default options;
-    module_ref_prefix = Options.haste_module_ref_prefix options;
-    module_ref_prefix_LEGACY_INTEROP = Options.haste_module_ref_prefix_LEGACY_INTEROP options;
     enable_enums = Options.enums options;
     enable_relay_integration = Options.enable_relay_integration options;
     relay_integration_module_prefix = Options.relay_integration_module_prefix options;

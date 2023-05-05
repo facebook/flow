@@ -15,23 +15,17 @@ val process_location :
   loc_of_annot:('T -> 'M) ->
   ast:('M, 'T) Flow_ast.Program.t ->
   is_legit_require:('T -> bool) ->
-  module_ref_prefix:string option ->
-  module_ref_prefix_LEGACY_INTEROP:string option ->
   covers_target:('M -> bool) ->
   ('M, 'T) result
 
 val process_location_in_ast :
   ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
   is_legit_require:(Loc.t -> bool) ->
-  module_ref_prefix:string option ->
-  module_ref_prefix_LEGACY_INTEROP:string option ->
   Loc.t ->
   (Loc.t, Loc.t) result
 
 val process_location_in_typed_ast :
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   is_legit_require:(ALoc.t * Type.t -> bool) ->
-  module_ref_prefix:string option ->
-  module_ref_prefix_LEGACY_INTEROP:string option ->
   Loc.t ->
   (ALoc.t, ALoc.t * Type.t) result

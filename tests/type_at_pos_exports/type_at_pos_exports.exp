@@ -18,3 +18,18 @@ Flags:
 module
 cjs.js:7:1,7:7
 
+es_exports2.js:1:9
+Flags:
+string
+es_exports2.js:1:9,1:11
+
+es_exports2.js:4:16
+Flags:
+string
+es_exports2.js:4:16,4:19
+
+es_exports2.js:7:13
+Flags:
+{+bar: string, +foo: string}
+es_exports2.js:7:13,7:14
+

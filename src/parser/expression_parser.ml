@@ -1260,7 +1260,19 @@ module Expression
     | T_STRING (loc, value, raw, octal) ->
       if octal then strict_error env Parse_error.StrictOctalLiteral;
       Eat.token env;
-      let value = Literal.String value in
+      let value =
+        let opts = parse_options env in
+        match (opts.module_ref_prefix, opts.module_ref_prefix_LEGACY_INTEROP) with
+        | (Some prefix, _) when String.starts_with ~prefix value ->
+          let prefix_len = String.length prefix in
+          Literal.ModuleRef
+            { Literal.string_value = value; module_out = loc; prefix_len; legacy_interop = false }
+        | (_, Some prefix) when String.starts_with ~prefix value ->
+          let prefix_len = String.length prefix in
+          Literal.ModuleRef
+            { Literal.string_value = value; module_out = loc; prefix_len; legacy_interop = true }
+        | _ -> Literal.String value
+      in
       let trailing = Eat.trailing_comments env in
       Cover_expr
         ( loc,

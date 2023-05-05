@@ -124,10 +124,22 @@ let refactor_extract_code_actions
             }
         in
         let tokens =
-          Refactor_extract_utils.AstExtractor.tokens
-            ~use_strict:(Options.modules_are_use_strict options)
-            (Some file)
-            file_contents
+          let use_strict = Options.modules_are_use_strict options in
+          let module_ref_prefix = Options.haste_module_ref_prefix options in
+          let module_ref_prefix_LEGACY_INTEROP =
+            Options.haste_module_ref_prefix_LEGACY_INTEROP options
+          in
+          let parse_options =
+            {
+              Parser_env.enums = true;
+              esproposal_decorators = true;
+              types = true;
+              use_strict;
+              module_ref_prefix;
+              module_ref_prefix_LEGACY_INTEROP;
+            }
+          in
+          Refactor_extract_utils.AstExtractor.tokens ~parse_options (Some file) file_contents
         in
         Refactor_extract.provide_available_refactors
           ~tokens

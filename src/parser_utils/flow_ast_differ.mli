@@ -41,7 +41,7 @@ type statement_node_parent =
 type node =
   | Raw of string
   | Comment of Loc.t Flow_ast.Comment.t
-  | Literal of Loc.t * Loc.t Flow_ast.Literal.t
+  | Literal of Loc.t * (Loc.t, Loc.t) Flow_ast.Literal.t
   | StringLiteral of Loc.t * Loc.t Flow_ast.StringLiteral.t
   | NumberLiteral of Loc.t * Loc.t Flow_ast.NumberLiteral.t
   | BigIntLiteral of Loc.t * Loc.t Flow_ast.BigIntLiteral.t

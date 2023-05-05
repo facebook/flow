@@ -12,13 +12,21 @@ open Utils_js
 open OUnit2
 
 let parse_options =
-  Some { Parser_env.enums = true; esproposal_decorators = true; types = true; use_strict = false }
+  Some
+    {
+      Parser_env.enums = true;
+      esproposal_decorators = true;
+      types = true;
+      use_strict = false;
+      module_ref_prefix = None;
+      module_ref_prefix_LEGACY_INTEROP = None;
+    }
 
 class useless_mapper =
   object (this)
     inherit [Loc.t] Flow_ast_mapper.mapper as super
 
-    method! literal _loc (expr : Loc.t Ast.Literal.t) =
+    method! literal _loc (expr : (Loc.t, Loc.t) Ast.Literal.t) =
       let open Ast.Literal in
       match expr.value with
       | Number 4.0 -> { value = Number 5.0; raw = "5"; comments = None }
@@ -286,7 +294,7 @@ class literal_mapper =
   object
     inherit [Loc.t] Flow_ast_mapper.mapper
 
-    method! literal _loc (expr : Loc.t Ast.Literal.t) =
+    method! literal _loc (expr : (Loc.t, Loc.t) Ast.Literal.t) =
       let open Ast.Literal in
       match expr.value with
       | String "rename" -> { value = String "gotRenamed"; raw = "gotRenamed"; comments = None }
@@ -855,7 +863,7 @@ class true_to_false_mapper =
   object
     inherit [Loc.t] Flow_ast_mapper.mapper
 
-    method! literal _loc (expr : Loc.t Ast.Literal.t) =
+    method! literal _loc (expr : (Loc.t, Loc.t) Ast.Literal.t) =
       let open Ast.Literal in
       match expr.value with
       | Boolean true -> { value = Boolean false; raw = "false"; comments = None }

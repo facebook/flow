@@ -231,9 +231,10 @@ let tests =
          );
          ( "cjs_module_ref" >:: fun ctxt ->
            let source = "moduleRefConsumer('m#foo')" in
-           let { requires; _ } =
-             visit source ~opts:{ default_opts with module_ref_prefix = Some "m#" }
+           let parse_options =
+             { Parser_env.default_parse_options with Parser_env.module_ref_prefix = Some "m#" }
            in
+           let { requires; _ } = visit source ~parse_options in
            match requires with
            | [Require { source = (source_loc, "foo"); require_loc; _ }] ->
              assert_substring_equal ~ctxt "'m#foo'" source source_loc;

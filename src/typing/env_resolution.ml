@@ -64,7 +64,9 @@ let rec synthesizable_expression cx ?cond exp =
   let open Ast.Expression in
   match exp with
   | (loc, Identifier (_, name)) -> Statement.identifier cx name loc
-  | (loc, Ast.Expression.Literal lit) -> Statement.literal cx loc lit
+  | (loc, Ast.Expression.Literal lit) ->
+    let (t, _lit) = Statement.literal cx loc lit in
+    t
   | (_, Ast.Expression.TypeCast { TypeCast.annot; _ }) -> resolve_annotation cx ALocMap.empty annot
   | ( loc,
       Ast.Expression.Member
@@ -900,7 +902,7 @@ let resolve_opaque_type cx loc opaque =
 
 let resolve_import cx id_loc import_reason import_kind module_name source_loc import declare_module
     =
-  let source_module_t = Import_export.import cx ~declare_module (source_loc, module_name) in
+  let source_module_t = Import_export.get_module_t cx ~declare_module (source_loc, module_name) in
   let t =
     match import with
     | Name_def.Named { kind; remote; remote_loc; local } ->

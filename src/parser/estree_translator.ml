@@ -1416,7 +1416,9 @@ with type t = Impl.t = struct
       node ?comments "Literal" loc [("value", null); ("raw", string raw)]
     and literal (loc, ({ Literal.value; raw; comments } as lit)) =
       match value with
-      | Literal.String str -> string_literal (loc, { StringLiteral.value = str; raw; comments })
+      | Literal.ModuleRef { Literal.string_value = str; _ }
+      | Literal.String str ->
+        string_literal (loc, { StringLiteral.value = str; raw; comments })
       | Literal.Boolean b -> boolean_literal (loc, { BooleanLiteral.value = b; comments })
       | Literal.Null -> null_literal (loc, lit)
       | Literal.Number f -> number_literal (loc, { NumberLiteral.value = f; raw; comments })

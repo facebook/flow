@@ -48,19 +48,27 @@ and Literal : sig
   end
 
   (* Literals also carry along their raw value *)
-  type 'M t = {
-    value: value;
+  type ('M, 'T) t = {
+    value: 'T value;
     raw: string;
     comments: ('M, unit) Syntax.t option;
   }
 
-  and value =
+  and 'T value =
     | String of string
     | Boolean of bool
     | Null
     | Number of float
     | BigInt of int64 option
     | RegExp of RegExp.t
+    | ModuleRef of 'T module_ref
+
+  and 'T module_ref = {
+    string_value: string;
+    module_out: 'T;
+    prefix_len: int;
+    legacy_interop: bool;
+  }
   [@@deriving show]
 end =
   Literal
@@ -1298,7 +1306,7 @@ and Expression : sig
   module Object : sig
     module Property : sig
       type ('M, 'T) key =
-        | Literal of ('T * 'M Literal.t)
+        | Literal of ('T * ('M, 'T) Literal.t)
         | Identifier of ('M, 'T) Identifier.t
         | PrivateName of 'M PrivateName.t
         | Computed of ('M, 'T) ComputedKey.t
@@ -1617,7 +1625,7 @@ and Expression : sig
     | Import of ('M, 'T) Import.t
     | JSXElement of ('M, 'T) JSX.element
     | JSXFragment of ('M, 'T) JSX.fragment
-    | Literal of 'M Literal.t
+    | Literal of ('M, 'T) Literal.t
     | Logical of ('M, 'T) Logical.t
     | Member of ('M, 'T) Member.t
     | MetaProperty of 'M MetaProperty.t
@@ -1688,7 +1696,7 @@ and JSX : sig
       | NamespacedName of ('M, 'T) NamespacedName.t
 
     and ('M, 'T) value =
-      | Literal of ('T * 'M Literal.t)
+      | Literal of ('T * ('M, 'T) Literal.t)
       | ExpressionContainer of ('T * ('M, 'T) ExpressionContainer.t)
 
     and ('M, 'T) t' = {
@@ -1798,7 +1806,7 @@ and Pattern : sig
   module Object : sig
     module Property : sig
       type ('M, 'T) key =
-        | Literal of ('M * 'M Literal.t)
+        | Literal of ('M * ('M, 'T) Literal.t)
         | Identifier of ('M, 'T) Identifier.t
         | Computed of ('M, 'T) ComputedKey.t
 

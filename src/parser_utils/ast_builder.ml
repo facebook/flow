@@ -810,7 +810,15 @@ let mk_program ?(loc = Loc.none) ?(interpreter = None) ?(comments = None) ?(all_
 
 let ast_of_string ~parser str =
   let parse_options =
-    Some { Parser_env.enums = true; esproposal_decorators = true; types = true; use_strict = false }
+    Some
+      {
+        Parser_env.enums = true;
+        esproposal_decorators = true;
+        types = true;
+        use_strict = false;
+        module_ref_prefix = None;
+        module_ref_prefix_LEGACY_INTEROP = None;
+      }
   in
 
   let env = Parser_env.init_env ~token_sink:None ~parse_options None str in

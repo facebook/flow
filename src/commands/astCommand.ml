@@ -154,6 +154,8 @@ let main
               esproposal_decorators = true;
               types = true;
               use_strict;
+              module_ref_prefix = None;
+              module_ref_prefix_LEGACY_INTEROP = None;
             }
         in
 

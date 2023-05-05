@@ -31,8 +31,6 @@ let metadata =
     facebook_fbs = None;
     facebook_fbt = None;
     facebook_module_interop = false;
-    haste_module_ref_prefix = None;
-    haste_module_ref_prefix_LEGACY_INTEROP = None;
     ignore_non_literal_requires = false;
     mapped_type = true;
     max_literal_length = 100;
@@ -58,7 +56,15 @@ let metadata =
 (* somewhat copied from Flow_dot_js *)
 let parse_content file content =
   let parse_options =
-    Some { Parser_env.enums = true; esproposal_decorators = true; types = true; use_strict = false }
+    Some
+      {
+        Parser_env.enums = true;
+        esproposal_decorators = true;
+        types = true;
+        use_strict = false;
+        module_ref_prefix = None;
+        module_ref_prefix_LEGACY_INTEROP = None;
+      }
   in
 
   let (ast, _parse_errors) =

@@ -33,6 +33,8 @@ type parse_options = {
   esproposal_decorators: bool;  (** enable parsing of decorators *)
   types: bool;  (** enable parsing of Flow types *)
   use_strict: bool;  (** treat the file as strict, without needing a "use strict" directive *)
+  module_ref_prefix: string option;
+  module_ref_prefix_LEGACY_INTEROP: string option;
 }
 
 val default_parse_options : parse_options

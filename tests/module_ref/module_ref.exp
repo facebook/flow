@@ -73,5 +73,29 @@ References:
                ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- object_prop.js:5:4
 
-Found 5 errors
+Cannot resolve module `NotAModule`. [cannot-resolve-module]
+
+   5|   ['m#NotAModule']: null
+         ^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- object_prop.js:5:4
+
+Cannot use `'m#NotAModule'` [1] to assign a computed property. Computed properties may only be numeric or string literal
+values, but this one is a `$Flow$ModuleRef` [2]. Can you add an appropriate type annotation to `'m#NotAModule'` [1]? See
+https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
+
+   object_prop.js:5:4
+    5|   ['m#NotAModule']: null
+          ^^^^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/prelude.js:83:21
+   83| declare opaque type $Flow$ModuleRef<+T>;
+                           ^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 7 errors

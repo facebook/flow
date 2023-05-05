@@ -227,7 +227,11 @@ module type S = sig
     (ALoc.t, ALoc.t) Ast.Expression.t ->
     Type.t * Type.t list * (ALoc.t, ALoc.t * Type.t) Ast.Expression.t
 
-  val literal : Context.t -> ALoc.t -> ALoc.t Ast.Literal.t -> Type.t
+  val literal :
+    Context.t ->
+    ALoc.t ->
+    (ALoc.t, ALoc.t) Ast.Literal.t ->
+    Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Literal.t
 
   val identifier : Context.t -> ALoc.t Ast.Identifier.t' -> ALoc.t -> Type.t
 

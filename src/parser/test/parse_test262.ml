@@ -249,7 +249,14 @@ let parse_test acc filename =
 let run_test (name, frontmatter, content) =
   let (filename, use_strict) = name in
   let parse_options =
-    { Parser_env.enums = true; esproposal_decorators = false; types = false; use_strict }
+    {
+      Parser_env.enums = true;
+      esproposal_decorators = false;
+      types = false;
+      use_strict;
+      module_ref_prefix = None;
+      module_ref_prefix_LEGACY_INTEROP = None;
+    }
   in
   let result =
     try

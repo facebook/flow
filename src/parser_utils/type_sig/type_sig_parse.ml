@@ -2524,26 +2524,21 @@ let setter_def opts scope tbls xs id_loc f =
     Set (id_loc, t)
   | _ -> failwith "unexpected setter"
 
-let string_literal opts tbls loc s =
-  match (opts.module_ref_prefix, opts.module_ref_prefix_LEGACY_INTEROP) with
-  | (Some prefix, _) when String.starts_with ~prefix s ->
-    let name = String_utils.lstrip s prefix in
-    let mref = push_module_ref tbls name in
-    ModuleRef { loc; mref; legacy_interop = false }
-  | (_, Some prefix) when String.starts_with ~prefix s ->
-    let name = String_utils.lstrip s prefix in
-    let mref = push_module_ref tbls name in
-    ModuleRef { loc; mref; legacy_interop = true }
-  | _ ->
-    if opts.max_literal_len = 0 || String.length s <= opts.max_literal_len then
-      Value (StringLit (loc, s))
-    else
-      Value (LongStringLit loc)
+let module_ref_literal tbls loc { Ast.Literal.string_value; prefix_len; legacy_interop; _ } =
+  let mref = push_module_ref tbls (Base.String.drop_prefix string_value prefix_len) in
+  ModuleRef { loc; mref; legacy_interop }
+
+let string_literal opts loc s =
+  if opts.max_literal_len = 0 || String.length s <= opts.max_literal_len then
+    Value (StringLit (loc, s))
+  else
+    Value (LongStringLit loc)
 
 let literal opts tbls loc value raw =
   let module L = Ast.Literal in
   match value with
-  | L.String s -> string_literal opts tbls loc s
+  | L.ModuleRef mref -> module_ref_literal tbls loc mref
+  | L.String s -> string_literal opts loc s
   | L.Number n -> Value (NumberLit (loc, n, raw))
   | L.BigInt n -> Value (BigIntLit (loc, n, raw))
   | L.Boolean b -> Value (BooleanLit (loc, b))
@@ -2556,11 +2551,11 @@ let literal opts tbls loc value raw =
         SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Literal))
       )
 
-let template_literal opts tbls loc quasis =
+let template_literal opts loc quasis =
   let module T = Ast.Expression.TemplateLiteral in
   match quasis with
   | [(_, { T.Element.value = { T.Element.raw = _; cooked = s }; tail = _ })] ->
-    string_literal opts tbls loc s
+    string_literal opts loc s
   | _ -> Value (StringVal loc)
 
 let graphql_literal opts tbls loc quasi =
@@ -2663,7 +2658,7 @@ let rec expression opts scope tbls (loc, expr) =
     when opts.enable_relay_integration ->
     graphql_literal opts tbls loc quasi
   | E.TemplateLiteral { E.TemplateLiteral.quasis; expressions = _; comments = _ } ->
-    template_literal opts tbls loc quasis
+    template_literal opts loc quasis
   | E.Identifier id ->
     let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
     let id_loc = push_loc tbls id_loc in
@@ -3227,6 +3222,7 @@ and predicate opts scope tbls pnames =
       else
         None
     | L.RegExp _ -> None
+    | L.ModuleRef _ -> None
   in
   let eq_test ~strict ~sense eq_loc left right =
     let module T = E.TemplateLiteral in

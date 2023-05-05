@@ -128,10 +128,19 @@ type parse_options = {
   esproposal_decorators: bool;  (** enable parsing of decorators *)
   types: bool;  (** enable parsing of Flow types *)
   use_strict: bool;  (** treat the file as strict, without needing a "use strict" directive *)
+  module_ref_prefix: string option;
+  module_ref_prefix_LEGACY_INTEROP: string option;
 }
 
 let default_parse_options =
-  { enums = false; esproposal_decorators = false; types = true; use_strict = false }
+  {
+    enums = false;
+    esproposal_decorators = false;
+    types = true;
+    use_strict = false;
+    module_ref_prefix = None;
+    module_ref_prefix_LEGACY_INTEROP = None;
+  }
 
 type allowed_super =
   | No_super

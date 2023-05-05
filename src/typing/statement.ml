@@ -212,13 +212,17 @@ module Make
       );
     (r, tvar)
 
-  let translate_identifier_or_literal_key t =
-    let open Ast.Expression.Object in
+  let translate_identifier_or_string_literal_key t =
+    let module P = Ast.Expression.Object.Property in
+    let module L = Ast.Literal in
     function
-    | Property.Identifier (loc, name) -> Property.Identifier ((loc, t), name)
-    | Property.Literal (loc, lit) -> Property.Literal ((loc, t), lit)
-    | Property.PrivateName _
-    | Property.Computed _ ->
+    | P.Identifier (loc, name) -> P.Identifier ((loc, t), name)
+    | P.Literal (loc, ({ L.value = L.String _; _ } as lit)) -> P.Literal ((loc, t), lit)
+    | P.Literal (loc, { L.value = L.ModuleRef { L.string_value = s; _ }; raw; comments }) ->
+      P.Literal ((loc, t), { L.value = L.String s; raw; comments })
+    | P.Literal _
+    | P.PrivateName _
+    | P.Computed _ ->
       assert_false "precondition not met"
 
   let convert_call_targs =
@@ -1363,7 +1367,7 @@ module Make
         match source with
         | None -> None
         | Some (source_loc, ({ Ast.StringLiteral.value = module_name; _ } as source_literal)) ->
-          let source_module_t = Import_export.import cx (source_loc, module_name) in
+          let source_module_t = Import_export.get_module_t cx (source_loc, module_name) in
           Some ((source_loc, source_module_t), source_literal)
       in
       let specifiers =
@@ -1421,7 +1425,7 @@ module Make
         match source with
         | None -> None
         | Some (source_loc, ({ Ast.StringLiteral.value = module_name; _ } as source_literal)) ->
-          let source_module_t = Import_export.import cx (source_loc, module_name) in
+          let source_module_t = Import_export.get_module_t cx (source_loc, module_name) in
           Some ((source_loc, source_module_t), source_literal)
       in
       let specifiers = Option.map (export_specifiers cx loc source export_kind) specifiers in
@@ -1473,7 +1477,7 @@ module Make
       let { ImportDeclaration.source; specifiers; default; import_kind; comments } = import_decl in
       let (source_loc, ({ Ast.StringLiteral.value = module_name; _ } as source_literal)) = source in
 
-      let source_module_t = Import_export.import cx (source_loc, module_name) in
+      let source_module_t = Import_export.get_module_t cx (source_loc, module_name) in
       let source_ast = ((source_loc, source_module_t), source_literal) in
 
       let specifiers_ast =
@@ -1958,6 +1962,7 @@ module Make
 
   and object_prop cx acc prop =
     let open Ast.Expression.Object in
+    let module L = Ast.Literal in
     match prop with
     (* named prop *)
     | Property
@@ -1966,8 +1971,9 @@ module Make
             {
               key =
                 ( Property.Identifier (loc, { Ast.Identifier.name; _ })
-                | Property.Literal (loc, { Ast.Literal.value = Ast.Literal.String name; _ }) ) as
-                key;
+                | Property.Literal
+                    (loc, { L.value = L.String name | L.ModuleRef { L.string_value = name; _ }; _ })
+                  ) as key;
               value = v;
               shorthand;
             }
@@ -1975,14 +1981,14 @@ module Make
       let (acc, key, value) =
         if Type_inference_hooks_js.dispatch_obj_prop_decl_hook cx name loc then
           let t = Unsoundness.at InferenceHooks loc in
-          let key = translate_identifier_or_literal_key t key in
+          let key = translate_identifier_or_string_literal_key t key in
           (* don't add `name` to `acc` because `name` is the autocomplete token *)
           let acc = ObjectExpressionAcc.set_obj_key_autocomplete acc in
           let (((_, _t), _) as value) = expression cx v in
           (acc, key, value)
         else
           let (((_, t), _) as value) = expression cx v in
-          let key = translate_identifier_or_literal_key t key in
+          let key = translate_identifier_or_string_literal_key t key in
           let acc =
             ObjectExpressionAcc.add_prop
               (Properties.add_field (OrdinaryName name) Polarity.Neutral (Some loc) t)
@@ -1998,8 +2004,9 @@ module Make
             {
               key =
                 ( Property.Identifier (loc, { Ast.Identifier.name; comments = _ })
-                | Property.Literal (loc, { Ast.Literal.value = Ast.Literal.String name; _ }) ) as
-                key;
+                | Property.Literal
+                    (loc, { L.value = L.String name | L.ModuleRef { L.string_value = name; _ }; _ })
+                  ) as key;
               value = (fn_loc, func);
             }
         ) ->
@@ -2013,7 +2020,7 @@ module Make
         Property
           ( prop_loc,
             Property.Method
-              { key = translate_identifier_or_literal_key t key; value = (fn_loc, func) }
+              { key = translate_identifier_or_string_literal_key t key; value = (fn_loc, func) }
           )
       )
     (* We enable some unsafe support for getters and setters. The main unsafe bit
@@ -2026,8 +2033,10 @@ module Make
             {
               key =
                 ( Property.Identifier (id_loc, { Ast.Identifier.name; comments = _ })
-                | Property.Literal (id_loc, { Ast.Literal.value = Ast.Literal.String name; _ }) ) as
-                key;
+                | Property.Literal
+                    ( id_loc,
+                      { L.value = L.String name | L.ModuleRef { L.string_value = name; _ }; _ }
+                    ) ) as key;
               value = (vloc, func);
               comments;
             }
@@ -2047,7 +2056,7 @@ module Make
           ( loc,
             Property.Get
               {
-                key = translate_identifier_or_literal_key return_t key;
+                key = translate_identifier_or_string_literal_key return_t key;
                 value = (vloc, func);
                 comments;
               }
@@ -2060,8 +2069,10 @@ module Make
             {
               key =
                 ( Property.Identifier (id_loc, { Ast.Identifier.name; comments = _ })
-                | Property.Literal (id_loc, { Ast.Literal.value = Ast.Literal.String name; _ }) ) as
-                key;
+                | Property.Literal
+                    ( id_loc,
+                      { L.value = L.String name | L.ModuleRef { L.string_value = name; _ }; _ }
+                    ) ) as key;
               value = (vloc, func);
               comments;
             }
@@ -2081,7 +2092,7 @@ module Make
           ( loc,
             Property.Set
               {
-                key = translate_identifier_or_literal_key param_t key;
+                key = translate_identifier_or_string_literal_key param_t key;
                 value = (vloc, func);
                 comments;
               }
@@ -2227,7 +2238,7 @@ module Make
                 ( prop_loc,
                   Property.Init
                     {
-                      key = translate_identifier_or_literal_key vt key;
+                      key = translate_identifier_or_string_literal_key vt key;
                       value = v;
                       shorthand = false;
                     }
@@ -2462,7 +2473,9 @@ module Make
     let ex = (loc, e) in
     let open Ast.Expression in
     match e with
-    | Ast.Expression.Literal lit -> ((loc, literal cx loc lit), Ast.Expression.Literal lit)
+    | Ast.Expression.Literal lit ->
+      let (t, lit) = literal cx loc lit in
+      ((loc, t), Ast.Expression.Literal lit)
     (* Treat the identifier `undefined` as an annotation for error reporting
      * purposes. Like we do with other literals. Otherwise we end up pointing to
      * `void` in `core.js`. While possible to re-declare `undefined`, it is
@@ -2834,7 +2847,9 @@ module Make
       let module_prefix = Context.relay_integration_module_prefix cx in
       let t =
         match Graphql.extract_module_name ~module_prefix quasi with
-        | Ok module_name -> Import_export.require cx (loc, module_name) loc ~legacy_interop:false
+        | Ok module_name ->
+          Import_export.get_module_t cx (loc, module_name)
+          |> Import_export.require cx loc module_name ~legacy_interop:false
         | Error err ->
           Flow.add_output cx (Error_message.EInvalidGraphQL (loc, err));
           let reason = mk_reason (RCustom "graphql tag") loc in
@@ -2902,7 +2917,8 @@ module Make
             head
           in
           let lit = { Ast.Literal.value = Ast.Literal.String cooked; raw; comments = None } in
-          (literal cx elem_loc lit, [])
+          let (t, _) = literal cx elem_loc lit in
+          (t, [])
         | _ ->
           let t_out = StrT.at loc |> with_trust bogus_trust in
           let expressions =
@@ -3076,7 +3092,7 @@ module Make
         in
         let imported_ns_t =
           let import_reason = mk_reason (RModule (OrdinaryName module_name)) loc in
-          Import_export.import cx (source_loc, module_name)
+          Import_export.get_module_t cx (source_loc, module_name)
           |> Import_export.import_ns cx import_reason
         in
         let reason = mk_annot_reason RAsyncImport loc in
@@ -3199,9 +3215,11 @@ module Make
                 }
               )
             ) ->
-            ( Import_export.require cx (source_loc, module_name) loc ~legacy_interop:false,
-              (args_loc, { ArgList.arguments = [Expression (expression cx lit_exp)]; comments })
-            )
+            let t =
+              Import_export.get_module_t cx (source_loc, module_name)
+              |> Import_export.require cx loc module_name ~legacy_interop:false
+            in
+            (t, (args_loc, { ArgList.arguments = [Expression (expression cx lit_exp)]; comments }))
           | ( None,
               ( args_loc,
                 {
@@ -3231,9 +3249,11 @@ module Make
                 }
               )
             ) ->
-            ( Import_export.require cx (source_loc, module_name) loc ~legacy_interop:false,
-              (args_loc, { ArgList.arguments = [Expression (expression cx lit_exp)]; comments })
-            )
+            let t =
+              Import_export.get_module_t cx (source_loc, module_name)
+              |> Import_export.require cx loc module_name ~legacy_interop:false
+            in
+            (t, (args_loc, { ArgList.arguments = [Expression (expression cx lit_exp)]; comments }))
           | (Some _, arguments) ->
             ignore (arg_list cx arguments);
             Flow.add_output
@@ -4477,28 +4497,19 @@ module Make
     t
 
   (* traverse a literal expression, return result type *)
-  and literal cx loc lit =
-    let get_checking_mode_type () =
+  and literal cx loc { Ast.Literal.value; raw; comments } =
+    let module L = Ast.Literal in
+    if Type_inference_hooks_js.dispatch_literal_hook cx loc then
+      let (_, lazy_hint) = Env.get_hint cx loc in
+      let hint = lazy_hint (mk_reason (RCustom "literal") loc) in
+      let error () = EmptyT.at loc |> with_trust bogus_trust in
+      let t = Type_hint.with_hint_result hint ~ok:Base.Fn.id ~error in
+      (t, { L.value = L.Null; raw; comments })
+    else
       let make_trust = Context.trust_constructor cx in
-      let open Ast.Literal in
-      match lit.Ast.Literal.value with
-      | String s -> begin
-        let haste_module_ref_prefix = Context.haste_module_ref_prefix cx in
-        let haste_module_ref_prefix_LEGACY_INTEROP =
-          Context.haste_module_ref_prefix_LEGACY_INTEROP cx
-        in
-        match (haste_module_ref_prefix, haste_module_ref_prefix_LEGACY_INTEROP) with
-        | (Some prefix, _) when String.starts_with ~prefix s ->
-          let m = String_utils.lstrip s prefix in
-          let t = Import_export.require cx (loc, m) loc ~legacy_interop:false in
-          let reason = mk_reason (RCustom "module reference") loc in
-          Flow.get_builtin_typeapp cx reason (OrdinaryName "$Flow$ModuleRef") [t]
-        | (_, Some prefix) when String.starts_with ~prefix s ->
-          let m = String_utils.lstrip s prefix in
-          let t = Import_export.require cx (loc, m) loc ~legacy_interop:true in
-          let reason = mk_reason (RCustom "module reference") loc in
-          Flow.get_builtin_typeapp cx reason (OrdinaryName "$Flow$ModuleRef") [t]
-        | _ ->
+      let (t, value) =
+        match value with
+        | L.String s ->
           (* It's too expensive to track literal information for large strings.*)
           let max_literal_length = Context.max_literal_length cx in
           let (lit, r_desc) =
@@ -4507,24 +4518,38 @@ module Make
             else
               (AnyLiteral, RLongStringLit max_literal_length)
           in
-          DefT (mk_annot_reason r_desc loc, make_trust (), StrT lit)
-      end
-      | Boolean b -> DefT (mk_annot_reason RBoolean loc, make_trust (), BoolT (Some b))
-      | Null -> NullT.at loc |> with_trust make_trust
-      | Number f ->
-        DefT (mk_annot_reason RNumber loc, make_trust (), NumT (Literal (None, (f, lit.raw))))
-      | BigInt n ->
-        DefT (mk_annot_reason RBigInt loc, make_trust (), BigIntT (Literal (None, (n, lit.raw))))
-      | RegExp _ -> Flow.get_builtin_type cx (mk_annot_reason RRegExp loc) (OrdinaryName "RegExp")
-    in
-    if Type_inference_hooks_js.dispatch_literal_hook cx loc then
-      let (_, lazy_hint) = Env.get_hint cx loc in
-      lazy_hint (mk_reason (RCustom "literal") loc)
-      |> Type_hint.with_hint_result ~ok:Base.Fn.id ~error:(fun () ->
-             EmptyT.at loc |> with_trust bogus_trust
-         )
-    else
-      get_checking_mode_type ()
+          let t = DefT (mk_annot_reason r_desc loc, make_trust (), StrT lit) in
+          (t, L.String s)
+        | L.Boolean b ->
+          let reason = mk_annot_reason RBoolean loc in
+          let t = DefT (reason, make_trust (), BoolT (Some b)) in
+          (t, L.Boolean b)
+        | L.Null ->
+          let t = NullT.at loc |> with_trust make_trust in
+          (t, L.Null)
+        | L.Number f ->
+          let reason = mk_annot_reason RNumber loc in
+          let t = DefT (reason, make_trust (), NumT (Literal (None, (f, raw)))) in
+          (t, L.Number f)
+        | L.BigInt n ->
+          let reason = mk_annot_reason RBigInt loc in
+          let t = DefT (reason, make_trust (), BigIntT (Literal (None, (n, raw)))) in
+          (t, L.BigInt n)
+        | L.RegExp r ->
+          let t = Flow.get_builtin_type cx (mk_annot_reason RRegExp loc) (OrdinaryName "RegExp") in
+          (t, L.RegExp r)
+        | L.ModuleRef { L.string_value; module_out; prefix_len; legacy_interop } ->
+          let mref = Base.String.drop_prefix string_value prefix_len in
+          let module_t = Import_export.get_module_t cx (loc, mref) in
+          let require_t = Import_export.require cx ~legacy_interop loc mref module_t in
+          let reason = mk_reason (RCustom "module reference") loc in
+          let t = Flow.get_builtin_typeapp cx reason (OrdinaryName "$Flow$ModuleRef") [require_t] in
+          ( t,
+            L.ModuleRef
+              { L.string_value; module_out = (module_out, module_t); prefix_len; legacy_interop }
+          )
+      in
+      (t, { L.value; raw; comments })
 
   (* traverse a unary expression, return result type *)
   and unary cx ~cond loc =
@@ -5601,7 +5626,7 @@ module Make
               match value with
               (* <element name="literal" /> *)
               | Some (Attribute.Literal (loc, lit)) ->
-                let t = literal cx loc lit in
+                let (t, lit) = literal cx loc lit in
                 (t, Some (Attribute.Literal ((loc, t), lit)))
               (* <element name={expression} /> *)
               | Some

@@ -33,8 +33,6 @@ let metadata =
     facebook_fbs = None;
     facebook_fbt = None;
     facebook_module_interop = false;
-    haste_module_ref_prefix = None;
-    haste_module_ref_prefix_LEGACY_INTEROP = None;
     ignore_non_literal_requires = false;
     mapped_type = true;
     max_literal_length = 100;
@@ -73,7 +71,14 @@ end = struct
   let parse_type content =
     let parse_options =
       Some
-        { Parser_env.enums = true; esproposal_decorators = true; types = true; use_strict = false }
+        {
+          Parser_env.enums = true;
+          esproposal_decorators = true;
+          types = true;
+          use_strict = false;
+          module_ref_prefix = None;
+          module_ref_prefix_LEGACY_INTEROP = None;
+        }
     in
     (* the parser expects a colon *)
     let content = ": " ^ content in
@@ -141,6 +146,8 @@ end = struct
           esproposal_decorators = true;
           types = true;
           use_strict = false;
+          module_ref_prefix = None;
+          module_ref_prefix_LEGACY_INTEROP = None;
         }
     in
 

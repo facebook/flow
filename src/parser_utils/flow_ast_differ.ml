@@ -200,7 +200,7 @@ type statement_node_parent =
 type node =
   | Raw of string
   | Comment of Loc.t Flow_ast.Comment.t
-  | Literal of Loc.t * Loc.t Ast.Literal.t
+  | Literal of Loc.t * (Loc.t, Loc.t) Ast.Literal.t
   | StringLiteral of Loc.t * Loc.t Ast.StringLiteral.t
   | NumberLiteral of Loc.t * Loc.t Ast.NumberLiteral.t
   | BigIntLiteral of Loc.t * Loc.t Ast.BigIntLiteral.t
@@ -1366,8 +1366,11 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     Base.Option.value
       changes
       ~default:[replace old_loc (Expression (expr1, parent)) (Expression (expr2, parent))]
-  and literal (loc1 : Loc.t) (loc2 : Loc.t) (lit1 : Loc.t Ast.Literal.t) (lit2 : Loc.t Ast.Literal.t)
-      : node change list =
+  and literal
+      (loc1 : Loc.t)
+      (loc2 : Loc.t)
+      (lit1 : (Loc.t, Loc.t) Ast.Literal.t)
+      (lit2 : (Loc.t, Loc.t) Ast.Literal.t) : node change list =
     [replace loc1 (Literal (loc1, lit1)) (Literal (loc2, lit2))]
   and string_literal
       ((loc1, lit1) : Loc.t * Loc.t Ast.StringLiteral.t)

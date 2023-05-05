@@ -57,15 +57,15 @@ let require_t_of_ref_unsafe cx ?(declare_module = false) (loc, mref) =
   else
     Context.find_require cx loc
 
-let require cx ((_, module_ref) as source) require_loc ~legacy_interop =
-  let module_t = require_t_of_ref_unsafe cx source in
+let get_module_t cx ?declare_module source =
+  OpenT (require_t_of_ref_unsafe cx ?declare_module source)
+
+let require cx ~legacy_interop require_loc module_ref module_t =
   let reason = mk_reason (RCommonJSExports module_ref) require_loc in
   let is_strict = Context.is_strict cx in
   Tvar.mk_where cx reason (fun t_out ->
-      Flow.flow cx (OpenT module_t, CJSRequireT { reason; t_out; is_strict; legacy_interop })
+      Flow.flow cx (module_t, CJSRequireT { reason; t_out; is_strict; legacy_interop })
   )
-
-let import cx ?declare_module source = OpenT (require_t_of_ref_unsafe cx ?declare_module source)
 
 let import_ns cx reason module_t =
   let is_strict = Context.is_strict cx in

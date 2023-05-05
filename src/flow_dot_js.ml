@@ -30,6 +30,8 @@ let parse_content file content =
         esproposal_decorators = true;
         types = true;
         use_strict = false;
+        module_ref_prefix = None;
+        module_ref_prefix_LEGACY_INTEROP = None;
       }
   in
 
@@ -113,8 +115,6 @@ let stub_metadata ~root ~checked =
     facebook_fbs = None;
     facebook_fbt = None;
     facebook_module_interop = false;
-    haste_module_ref_prefix = None;
-    haste_module_ref_prefix_LEGACY_INTEROP = None;
     ignore_non_literal_requires = false;
     mapped_type = true;
     max_literal_length = 100;

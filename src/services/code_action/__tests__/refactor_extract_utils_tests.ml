@@ -39,8 +39,6 @@ let stub_metadata ~root ~checked =
     facebook_fbs = None;
     facebook_fbt = None;
     facebook_module_interop = false;
-    haste_module_ref_prefix = None;
-    haste_module_ref_prefix_LEGACY_INTEROP = None;
     ignore_non_literal_requires = false;
     mapped_type = true;
     max_literal_length = 100;
@@ -146,7 +144,8 @@ let extract_tests =
   let assert_extracted
       ~ctxt ?expected_statements ?expected_expression ?expected_type source extract_range =
     let ast = parse source in
-    let tokens = AstExtractor.tokens ~use_strict:true None source in
+    let parse_options = Parser_env.default_parse_options in
+    let tokens = AstExtractor.tokens ~parse_options None source in
     let { AstExtractor.extracted_statements; extracted_expression; extracted_type } =
       AstExtractor.extract tokens ast extract_range
     in

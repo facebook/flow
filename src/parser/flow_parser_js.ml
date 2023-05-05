@@ -69,6 +69,8 @@ let parse_options jsopts =
     esproposal_decorators = bool_opt defaults.esproposal_decorators jsopts "esproposal_decorators";
     types = bool_opt defaults.types jsopts "types";
     use_strict = bool_opt defaults.use_strict jsopts "use_strict";
+    module_ref_prefix = None;
+    module_ref_prefix_LEGACY_INTEROP = None;
   }
 
 let translate_tokens offset_table tokens =

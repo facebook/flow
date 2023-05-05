@@ -187,8 +187,6 @@ let get_def ~options ~reader ~cx ~file_sig ~ast ~typed_ast requested_loc =
     let source_loc = loc_of_aloc ~reader source_aloc in
     SMap.exists (fun _ locs -> Nel.exists (fun loc -> loc = source_loc) locs) require_loc_map
   in
-  let module_ref_prefix = Context.haste_module_ref_prefix cx in
-  let module_ref_prefix_LEGACY_INTEROP = Context.haste_module_ref_prefix_LEGACY_INTEROP cx in
   let rec loop ~depth req_loc =
     if depth.Depth.length > Depth.limit then
       let trace_str =
@@ -203,14 +201,7 @@ let get_def ~options ~reader ~cx ~file_sig ~ast ~typed_ast requested_loc =
       Partial ([req_loc], log_message)
     else
       let open Get_def_process_location in
-      match
-        process_location_in_typed_ast
-          ~is_legit_require
-          ~typed_ast
-          ~module_ref_prefix
-          ~module_ref_prefix_LEGACY_INTEROP
-          req_loc
-      with
+      match process_location_in_typed_ast ~is_legit_require ~typed_ast req_loc with
       | OwnDef aloc -> Def [loc_of_aloc ~reader aloc]
       | Request request -> begin
         match

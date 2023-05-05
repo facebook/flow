@@ -430,7 +430,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method jsx_attribute_value :
       ('M, 'T) Ast.JSX.Attribute.value -> ('N, 'U) Ast.JSX.Attribute.value
 
-    method jsx_attribute_value_literal : 'T * 'M Ast.Literal.t -> 'U * 'N Ast.Literal.t
+    method jsx_attribute_value_literal : 'T * ('M, 'T) Ast.Literal.t -> 'U * ('N, 'U) Ast.Literal.t
 
     method jsx_attribute_value_expression :
       'T * ('M, 'T) Ast.JSX.ExpressionContainer.t -> 'U * ('N, 'U) Ast.JSX.ExpressionContainer.t
@@ -491,7 +491,9 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method labeled_statement : ('M, 'T) Ast.Statement.Labeled.t -> ('N, 'U) Ast.Statement.Labeled.t
 
-    method literal : 'M Ast.Literal.t -> 'N Ast.Literal.t
+    method module_ref_literal : 'T Ast.Literal.module_ref -> 'U Ast.Literal.module_ref
+
+    method literal : ('M, 'T) Ast.Literal.t -> ('N, 'U) Ast.Literal.t
 
     method logical : ('M, 'T) Ast.Expression.Logical.t -> ('N, 'U) Ast.Expression.Logical.t
 
@@ -531,7 +533,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method object_key :
       ('M, 'T) Ast.Expression.Object.Property.key -> ('N, 'U) Ast.Expression.Object.Property.key
 
-    method object_key_literal : 'T * 'M Ast.Literal.t -> 'U * 'N Ast.Literal.t
+    method object_key_literal : 'T * ('M, 'T) Ast.Literal.t -> 'U * ('N, 'U) Ast.Literal.t
 
     method object_key_identifier : ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
 
@@ -604,7 +606,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method pattern_expression : ('M, 'T) Flow_ast.Expression.t -> ('N, 'U) Ast.Expression.t
 
-    method pattern_literal : ?kind:Ast.Variable.kind -> 'M Ast.Literal.t -> 'N Ast.Literal.t
+    method pattern_literal :
+      ?kind:Ast.Variable.kind -> ('M, 'T) Ast.Literal.t -> ('N, 'U) Ast.Literal.t
 
     method pattern_object_p :
       ?kind:Ast.Variable.kind ->
@@ -628,7 +631,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('N, 'U) Ast.Pattern.Object.Property.key
 
     method pattern_object_property_literal_key :
-      ?kind:Ast.Variable.kind -> 'M Ast.Literal.t -> 'N Ast.Literal.t
+      ?kind:Ast.Variable.kind -> ('M, 'T) Ast.Literal.t -> ('N, 'U) Ast.Literal.t
 
     method pattern_object_property_pattern :
       ?kind:Ast.Variable.kind -> ('M, 'T) Flow_ast.Pattern.t -> ('N, 'U) Ast.Pattern.t

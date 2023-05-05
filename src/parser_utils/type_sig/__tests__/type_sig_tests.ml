@@ -176,9 +176,10 @@ let make_test_formatter () =
   pp_set_max_indent fmt 32;
   fmt
 
-let parse_options =
+let parse_options ~module_ref_prefix ~module_ref_prefix_LEGACY_INTEROP =
   let open Parser_env in
-  Some { default_parse_options with enums = true }
+  Some
+    { default_parse_options with enums = true; module_ref_prefix; module_ref_prefix_LEGACY_INTEROP }
 
 let sig_options
     ?(suppress_types = SSet.empty)
@@ -188,8 +189,6 @@ let sig_options
     ?facebook_fbt
     ?(max_literal_len = 100)
     ?(exact_by_default = false)
-    ?module_ref_prefix
-    ?module_ref_prefix_LEGACY_INTEROP
     ?(enable_enums = true)
     ?(enable_relay_integration = false)
     ?(conditional_type = true)
@@ -205,8 +204,6 @@ let sig_options
     facebook_fbt;
     max_literal_len;
     exact_by_default;
-    module_ref_prefix;
-    module_ref_prefix_LEGACY_INTEROP;
     enable_enums;
     enable_relay_integration;
     relay_integration_module_prefix;
@@ -215,7 +212,7 @@ let sig_options
     tuple_enhancements;
   }
 
-let parse_and_pack_module ~strict sig_opts contents =
+let parse_and_pack_module ~parse_options ~strict sig_opts contents =
   let (ast, _errors) = Parser_flow.program ~parse_options contents in
   Type_sig_utils.parse_and_pack_module ~strict sig_opts None ast
 
@@ -244,8 +241,6 @@ let print_sig
       ?facebook_keyMirror
       ?exact_by_default
       ?max_literal_len
-      ?module_ref_prefix
-      ?module_ref_prefix_LEGACY_INTEROP
       ?enable_enums
       ?enable_relay_integration
       ?conditional_type
@@ -254,7 +249,8 @@ let print_sig
       ?tuple_enhancements
       ()
   in
-  let type_sig = parse_and_pack_module ~strict:true sig_opts contents in
+  let parse_options = parse_options ~module_ref_prefix ~module_ref_prefix_LEGACY_INTEROP in
+  let type_sig = parse_and_pack_module ~parse_options ~strict:true sig_opts contents in
   let fmt = make_test_formatter () in
   pp_sig fmt type_sig
 
@@ -263,6 +259,9 @@ let print_builtins ordered_contents_indent =
     List.map
       (fun contents_indent ->
         let contents = dedent_trim contents_indent in
+        let parse_options =
+          parse_options ~module_ref_prefix:None ~module_ref_prefix_LEGACY_INTEROP:None
+        in
         let (ast, _errors) = Parser_flow.program ~parse_options contents in
         ast)
       ordered_contents_indent

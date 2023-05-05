@@ -1891,10 +1891,26 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments' = this#syntax_opt comments in
       { label = label'; body = body'; comments = comments' }
 
-    method literal (expr : 'M Ast.Literal.t) : 'N Ast.Literal.t =
+    method module_ref_literal (mref : 'T Ast.Literal.module_ref) : 'U Ast.Literal.module_ref =
       let open Ast.Literal in
-      let { comments; _ } = expr in
-      { expr with comments = this#syntax_opt comments }
+      let { string_value; module_out; prefix_len; legacy_interop } = mref in
+      let module_out' = this#on_type_annot module_out in
+      { string_value; module_out = module_out'; prefix_len; legacy_interop }
+
+    method literal (expr : ('M, 'T) Ast.Literal.t) : ('N, 'U) Ast.Literal.t =
+      let open Ast.Literal in
+      let { comments; value; _ } = expr in
+      let value' : 'U Ast.Literal.value =
+        match value with
+        | String x -> String x
+        | Boolean x -> Boolean x
+        | Null -> Null
+        | Number x -> Number x
+        | BigInt x -> BigInt x
+        | RegExp x -> RegExp x
+        | ModuleRef mref -> ModuleRef (this#module_ref_literal mref)
+      in
+      { expr with value = value'; comments = this#syntax_opt comments }
 
     method logical (expr : ('M, 'T) Ast.Expression.Logical.t) : ('N, 'U) Ast.Expression.Logical.t =
       let open Ast.Expression.Logical in
@@ -2093,7 +2109,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       ignore kind;
       this#t_identifier ident
 
-    method pattern_literal ?kind (expr : 'M Ast.Literal.t) : 'N Ast.Literal.t =
+    method pattern_literal ?kind (expr : ('M, 'T) Ast.Literal.t) : ('N, 'U) Ast.Literal.t =
       ignore kind;
       this#literal expr
 
@@ -2123,7 +2139,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         Identifier (this#pattern_object_property_identifier_key ?kind identifier)
       | Computed expr -> Computed (this#pattern_object_property_computed_key ?kind expr)
 
-    method pattern_object_property_literal_key ?kind (key : 'M Ast.Literal.t) : 'N Ast.Literal.t =
+    method pattern_object_property_literal_key ?kind (key : ('M, 'T) Ast.Literal.t)
+        : ('N, 'U) Ast.Literal.t =
       this#pattern_literal ?kind key
 
     method pattern_object_property_identifier_key ?kind (key : ('M, 'T) Ast.Identifier.t)

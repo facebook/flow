@@ -198,12 +198,9 @@ module AstExtractor = struct
     extracted_type: type_with_statement_loc option;
   }
 
-  let tokens ~use_strict filename file_contents =
+  let tokens ?parse_options filename file_contents =
     let rev_tokens = ref [] in
     let token_sink = Some (fun token_data -> rev_tokens := token_data :: !rev_tokens) in
-    let parse_options =
-      Some { Parser_env.enums = true; esproposal_decorators = true; types = true; use_strict }
-    in
     ignore @@ Parser_flow.program_file ~token_sink ~fail:false ~parse_options file_contents filename;
     !rev_tokens
 
