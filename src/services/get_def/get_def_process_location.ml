@@ -97,15 +97,9 @@ class ['M, 'T] searcher
       in
       this#with_in_require_declarator has_require (fun () -> super#variable_declarator ~kind x)
 
-    method! import_declaration import_loc decl =
-      let open Flow_ast.Statement.ImportDeclaration in
-      let { source = (source_annot, { Flow_ast.StringLiteral.value = module_name; _ }); _ } =
-        decl
-      in
-      let res = super#import_declaration import_loc decl in
-      if covers_target import_loc then
-        this#request (Get_def_request.Require (loc_of_annot source_annot, module_name));
-      res
+    method! import_source source_annot lit =
+      if annot_covers_target source_annot then this#request (Get_def_request.Type source_annot);
+      super#import_source source_annot lit
 
     method! import_named_specifier ~import_kind decl =
       let open Flow_ast.Statement.ImportDeclaration in
