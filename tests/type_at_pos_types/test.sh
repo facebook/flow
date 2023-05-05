@@ -111,50 +111,7 @@ printf "callable-object.js:31:6 = "
 assert_ok "$FLOW" type-at-pos callable-object.js 31 6 --strip-root --pretty
 
 # opaque.js
-printf "opaque.js:3:20 = "
-assert_ok "$FLOW" type-at-pos opaque.js 3 20 --strip-root --pretty
-printf "opaque.js:4:14 = "
-assert_ok "$FLOW" type-at-pos opaque.js 4 14 --strip-root --pretty
-printf "opaque.js:4:19 = "
-assert_ok "$FLOW" type-at-pos opaque.js 4 19 --strip-root --pretty
-printf "opaque.js:6:22 = "
-assert_ok "$FLOW" type-at-pos opaque.js 6 22 --strip-root --pretty
-printf "opaque.js:7:13 = "
-assert_ok "$FLOW" type-at-pos opaque.js 7 13 --strip-root --pretty
-printf "opaque.js:7:18 = "
-assert_ok "$FLOW" type-at-pos opaque.js 7 18 --strip-root --pretty
-printf "opaque.js:9:22 = "
-assert_ok "$FLOW" type-at-pos opaque.js 9 22 --strip-root --pretty
-printf "opaque.js:10:13 = "
-assert_ok "$FLOW" type-at-pos opaque.js 10 13 --strip-root --pretty
-printf "opaque.js:10:18 = "
-assert_ok "$FLOW" type-at-pos opaque.js 10 18 --strip-root --pretty
-printf "opaque.js:12:14 = "
-assert_ok "$FLOW" type-at-pos opaque.js 12 14 --strip-root --pretty
-printf "opaque.js:13:14 = "
-assert_ok "$FLOW" type-at-pos opaque.js 13 14 --strip-root --pretty
-printf "opaque.js:13:19 = "
-assert_ok "$FLOW" type-at-pos opaque.js 13 19 --strip-root --pretty
-printf "opaque.js:15:22 = "
-assert_ok "$FLOW" type-at-pos opaque.js 15 22 --strip-root --pretty
-printf "opaque.js:16:14 = "
-assert_ok "$FLOW" type-at-pos opaque.js 16 14 --strip-root --pretty
-printf "opaque.js:16:19 = "
-assert_ok "$FLOW" type-at-pos opaque.js 16 19 --strip-root --pretty
-printf "opaque.js:19:14 = "
-assert_ok "$FLOW" type-at-pos opaque.js 19 14 --strip-root --pretty
-printf "opaque.js:19:22 = "
-assert_ok "$FLOW" type-at-pos opaque.js 19 22 --strip-root --pretty
-printf "opaque.js:20:16 = "
-assert_ok "$FLOW" type-at-pos opaque.js 20 16 --strip-root --pretty
-printf "opaque.js:20:34 = "
-assert_ok "$FLOW" type-at-pos opaque.js 20 34 --strip-root --pretty
-printf "opaque.js:21:19 = "
-assert_ok "$FLOW" type-at-pos opaque.js 21 19 --strip-root --pretty
-printf "opaque.js:21:28 = "
-assert_ok "$FLOW" type-at-pos opaque.js 21 28 --strip-root --pretty
-printf "opaque.js:24:7 = "
-assert_ok "$FLOW" type-at-pos opaque.js 24 7 --strip-root --pretty
+queries_in_file "type-at-pos" "opaque.js" --pretty
 
 # optional.js
 printf "optional.js:4:10 = "
