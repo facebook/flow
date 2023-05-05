@@ -36,7 +36,7 @@ Covered: 100.00% (3 of 3 expressions)
 
 dump-types with --wait-for-recheck false runs immediately:
 focused.js:3:8-10: number
-focused.js:3:17-33: module "./dependency.js"
+focused.js:3:17-33: module
 focused.js:5:5: string
 focused.js:5:5-13: string
 focused.js:5:8-13: string

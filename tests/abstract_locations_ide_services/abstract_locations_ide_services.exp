@@ -22,7 +22,7 @@ dump types:
     "end":11
   },
   {
-    "type":"module \"./foo\"",
+    "type":"module",
     "reasons":[],
     "loc":{
       "source":"bar.js",

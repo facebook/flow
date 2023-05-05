@@ -2557,7 +2557,8 @@ Flags: --pretty
     {"name":"Typhoon","type":"declare var Typhoon: string"},
     {"name":"Typhoons","type":"declare var Typhoons: string"},
     {"name":"Typical","type":"type Typical = {|x: number, y: number|}"},
-    {"name":"Tyrannosaurus","type":"class Tyrannosaurus"}
+    {"name":"Tyrannosaurus","type":"class Tyrannosaurus"},
+    {"name":"default","type":"declare var default: number"}
   ]
 }
 
@@ -2568,7 +2569,8 @@ Flags: --pretty
     {"name":"Typesafety","type":"interface Typesafety"},
     {"name":"Typhoons","type":"declare var Typhoons: string"},
     {"name":"Typical","type":"type Typical = {|x: number, y: number|}"},
-    {"name":"Tyrannosaurus","type":"class Tyrannosaurus"}
+    {"name":"Tyrannosaurus","type":"class Tyrannosaurus"},
+    {"name":"default","type":"declare var default: number"}
   ]
 }
 

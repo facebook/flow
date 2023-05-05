@@ -1454,20 +1454,8 @@ module Make
       let (source_loc, ({ Ast.StringLiteral.value = module_name; _ } as source_literal)) = source in
 
       let source_ast =
-        let reason = mk_reason (RModule (OrdinaryName module_name)) source_loc in
-        (* force a non-strict import and allow an untyped module because we don't
-           want to check for untyped-import or nonstrict-import warnings
-           on the module name, which is not an actual "use" of the module like
-           the specifiers are. *)
-        let source_t =
-          Import_export.import_ns
-            ~strict:false
-            ~allow_untyped:true
-            cx
-            reason
-            (source_loc, module_name)
-        in
-        ((source_loc, source_t), source_literal)
+        let source_module_t = OpenT (Import_export.import cx (source_loc, module_name)) in
+        ((source_loc, source_module_t), source_literal)
       in
 
       let specifiers_ast =
