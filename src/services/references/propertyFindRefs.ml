@@ -9,7 +9,9 @@ module Ast = Flow_ast
 open Loc_collections
 open GetDefUtils
 
-let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc
+let ( >>= ) = Base.Result.( >>= )
+
+let ( >>| ) = Base.Result.( >>| )
 
 let add_ref_kind kind = Base.List.map ~f:(fun loc -> (kind, loc))
 
@@ -125,7 +127,7 @@ module Potential_refs_search = struct
 end
 
 (* Returns `true` iff the given type is a reference to the symbol we are interested in *)
-let type_matches_locs ~reader cx ty prop_def_info name =
+let type_matches_locs ~loc_of_aloc cx ty prop_def_info name =
   let rec def_loc_matches_locs = function
     | FoundClass ty_def_locs ->
       prop_def_info
@@ -151,10 +153,9 @@ let type_matches_locs ~reader cx ty prop_def_info name =
     | AnyType ->
       false
   in
-  extract_def_loc ~reader cx ty name >>| def_loc_matches_locs
+  extract_def_loc ~loc_of_aloc cx ty name >>| def_loc_matches_locs
 
-let get_loc_of_def_info ~cx ~reader ~obj_to_obj_map prop_def_info =
-  (* let prop_loc_map = build_prop_location_map ~cx ~reader obj_to_obj_map in *)
+let get_loc_of_def_info ~cx ~loc_of_aloc ~obj_to_obj_map prop_def_info =
   let prop_obj_locs =
     Nel.fold_left
       (fun acc def_info ->
@@ -173,8 +174,7 @@ let get_loc_of_def_info ~cx ~reader ~obj_to_obj_map prop_def_info =
           NameUtils.Map.fold
             (fun _name prop result'' ->
               match Type.Property.read_loc prop with
-              | Some aloc when Loc_collections.LocSet.mem (loc_of_aloc ~reader aloc) prop_obj_locs
-                ->
+              | Some aloc when Loc_collections.LocSet.mem (loc_of_aloc aloc) prop_obj_locs ->
                 loc :: result''
               | _ -> result'')
             props
@@ -184,16 +184,16 @@ let get_loc_of_def_info ~cx ~reader ~obj_to_obj_map prop_def_info =
     obj_to_obj_map
     []
 
-let process_prop_refs ~reader cx potential_refs file_key prop_def_info name =
+let process_prop_refs ~loc_of_aloc cx potential_refs file_key prop_def_info name =
   potential_refs
   |> ALocMap.bindings
   |> Base.List.map ~f:(fun (ref_loc, ty) ->
-         type_matches_locs ~reader cx ty prop_def_info name >>| function
-         | true -> Some (loc_of_aloc ~reader ref_loc)
+         type_matches_locs ~loc_of_aloc cx ty prop_def_info name >>| function
+         | true -> Some (loc_of_aloc ref_loc)
          | false -> None
      )
-  |> Result.all
-  |> Result.map_error ~f:(fun err ->
+  |> Base.Result.all
+  |> Base.Result.map_error ~f:(fun err ->
          Printf.sprintf
            "Encountered while finding refs in `%s`: %s"
            (File_key.to_string file_key)
@@ -201,7 +201,7 @@ let process_prop_refs ~reader cx potential_refs file_key prop_def_info name =
      )
   >>| fun refs -> refs |> Base.List.filter_opt |> add_ref_kind FindRefsTypes.PropertyAccess
 
-let property_find_refs_in_file ~reader ast_info type_info file_key def_info name =
+let property_find_refs_in_file ~loc_of_aloc ast_info type_info file_key def_info name =
   let potential_refs : Type.t ALocMap.t ref = ref ALocMap.empty in
   let (cx, typed_ast, obj_to_obj_map) = type_info in
   let (ast, _file_sig, _info) = ast_info in
@@ -220,20 +220,21 @@ let property_find_refs_in_file ~reader ast_info type_info file_key def_info name
        * examine *)
       let prop_loc_map = lazy (LiteralToPropLoc.make ast ~prop_name:name) in
 
-      get_loc_of_def_info ~cx ~reader ~obj_to_obj_map def_info
+      get_loc_of_def_info ~cx ~loc_of_aloc ~obj_to_obj_map def_info
       |> List.filter_map (fun obj_loc -> LocMap.find_opt obj_loc (Lazy.force prop_loc_map))
       |> add_ref_kind FindRefsTypes.PropertyDefinition
     in
 
-    process_prop_refs ~reader cx !potential_refs file_key def_info name
+    process_prop_refs ~loc_of_aloc cx !potential_refs file_key def_info name
     >>| ( @ ) local_defs
     >>| ( @ ) literal_prop_refs_result
   )
 
 let find_local_refs ~reader file_key ast_info type_info loc =
-  match get_def_info ~reader type_info loc with
+  let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
+  match get_def_info ~loc_of_aloc type_info loc with
   | Error _ as err -> err
   | Ok None -> Ok None
   | Ok (Some (def_info, name)) ->
-    property_find_refs_in_file ~reader ast_info type_info file_key def_info name >>= fun refs ->
-    Ok (Some (name, refs))
+    property_find_refs_in_file ~loc_of_aloc ast_info type_info file_key def_info name
+    >>= fun refs -> Ok (Some (name, refs))

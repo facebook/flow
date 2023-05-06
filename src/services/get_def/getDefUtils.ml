@@ -12,8 +12,6 @@ let ( >>= ) = Result.( >>= )
 
 let ( >>| ) = Result.( >>| )
 
-let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc
-
 module ObjectKeyAtLoc : sig
   (* Given a location, returns Some (enclosing_literal_loc, prop_loc, name) if the given location
    * points to an object literal key. The first location returned is the location for the entire
@@ -366,19 +364,20 @@ let get_def_loc_from_extracted_type cx extracted_type name =
   | Some (None, _) -> None
   | Some (Some loc, _) -> Some loc
 
-let rec extract_def_loc ~reader cx ty name : (def_loc, string) result =
+let rec extract_def_loc ~loc_of_aloc cx ty name : (def_loc, string) result =
   let resolved = Members.resolve_type cx ty in
-  extract_def_loc_resolved ~reader cx resolved name
+  extract_def_loc_resolved ~loc_of_aloc cx resolved name
 
 (* The same as get_def_loc_from_extracted_type except it recursively checks for overridden
  * definitions of the member in superclasses and returns those as well *)
-and extract_def_loc_from_instancet ~reader cx extracted_type super name : (def_loc, string) result =
+and extract_def_loc_from_instancet ~loc_of_aloc cx extracted_type super name :
+    (def_loc, string) result =
   let current_class_def_loc = get_def_loc_from_extracted_type cx extracted_type name in
   current_class_def_loc >>= function
   | None -> Ok NoDefFound
   | Some loc ->
-    let loc = loc_of_aloc ~reader loc in
-    extract_def_loc ~reader cx super name >>= ( function
+    let loc = loc_of_aloc loc in
+    extract_def_loc ~loc_of_aloc cx super name >>= ( function
     | FoundClass lst ->
       (* Avoid duplicate entries. This can happen if a class does not override a method,
        * so the definition points to the method definition in the parent class. Then we
@@ -400,20 +399,20 @@ and extract_def_loc_from_instancet ~reader cx extracted_type super name : (def_l
     | AnyType ->
       Ok (FoundClass (Nel.one loc)) )
 
-and extract_def_loc_resolved ~reader cx ty name : (def_loc, string) result =
+and extract_def_loc_resolved ~loc_of_aloc cx ty name : (def_loc, string) result =
   Members.(
     Type.(
       match extract_type cx ty with
       | Success (DefT (_, _, InstanceT (_, super, _, _))) as extracted_type ->
-        extract_def_loc_from_instancet ~reader cx extracted_type super name
+        extract_def_loc_from_instancet ~loc_of_aloc cx extracted_type super name
       | (Success (DefT (_, _, ObjT _)) | SuccessModule _) as extracted_type ->
         get_def_loc_from_extracted_type cx extracted_type name >>| ( function
         | None -> NoDefFound
-        | Some loc -> FoundObject (loc_of_aloc ~reader loc) )
+        | Some loc -> FoundObject (loc_of_aloc loc) )
       | Success (UnionT (_, rep)) ->
         let union_members =
           UnionRep.members rep
-          |> Base.List.map ~f:(fun member -> extract_def_loc ~reader cx member name)
+          |> Base.List.map ~f:(fun member -> extract_def_loc ~loc_of_aloc cx member name)
           |> Result.all
         in
         ( union_members >>= fun members ->
@@ -429,15 +428,15 @@ and extract_def_loc_resolved ~reader cx ty name : (def_loc, string) result =
     )
   )
 
-let get_loc_of_prop ~reader props name =
+let get_loc_of_prop ~loc_of_aloc props name =
   match NameUtils.Map.find_opt (Reason.OrdinaryName name) props with
   | Some prop ->
     (match Type.Property.read_loc prop with
-    | Some aloc -> Some (loc_of_aloc ~reader aloc)
+    | Some aloc -> Some (loc_of_aloc aloc)
     | None -> None)
   | None -> None
 
-let def_info_of_typecheck_results ~reader cx obj_to_obj_map props_access_info =
+let def_info_of_typecheck_results ~loc_of_aloc cx obj_to_obj_map props_access_info =
   let def_info_of_class_member_locs locs =
     (* We want to include the immediate implementation as well as all superclass implementations.
      * If we wanted a mode where superclass implementations were not included, for example, we
@@ -455,7 +454,7 @@ let def_info_of_typecheck_results ~reader cx obj_to_obj_map props_access_info =
       | AnyType ->
         None
     in
-    extract_def_loc ~reader cx ty name >>| def_info_of_def_loc
+    extract_def_loc ~loc_of_aloc cx ty name >>| def_info_of_def_loc
   in
   match props_access_info with
   | Obj_def (loc, name) -> Ok (Some (Nel.one (Object loc), name))
@@ -468,7 +467,7 @@ let def_info_of_typecheck_results ~reader cx obj_to_obj_map props_access_info =
     else
       (* We get the type of the class back here, so we need to extract the type of an instance *)
       extract_instancet cx ty >>= fun ty ->
-      extract_def_loc_resolved ~reader cx ty name >>= ( function
+      extract_def_loc_resolved ~loc_of_aloc cx ty name >>= ( function
       | FoundClass locs -> Ok (Some (def_info_of_class_member_locs locs, name))
       | FoundUnion _
       | FoundObject _ ->
@@ -481,7 +480,7 @@ let def_info_of_typecheck_results ~reader cx obj_to_obj_map props_access_info =
     | Type.(DefT (_, _, ObjT { props_tmap = literal_obj_props_tmap_id; _ })) ->
       let literal_props = Context.find_props cx literal_obj_props_tmap_id in
       let literal_result =
-        match get_loc_of_prop ~reader literal_props name with
+        match get_loc_of_prop ~loc_of_aloc literal_props name with
         | Some loc -> Ok (Nel.one (Object loc))
         | None -> Error "Expected to find property on object definition"
       in
@@ -494,7 +493,7 @@ let def_info_of_typecheck_results ~reader cx obj_to_obj_map props_access_info =
             (fun props_tmap_set acc ->
               let props = Context.find_props cx props_tmap_set in
               (* Get the loc of the specific prop def *)
-              match get_loc_of_prop ~reader props name with
+              match get_loc_of_prop ~loc_of_aloc props name with
               | Some loc -> Base.Result.map ~f:(fun acc' -> Nel.cons (Object loc) acc') acc
               | None -> Error "Expected to find property on object definition")
             obj_prop_tmap_ids
@@ -524,18 +523,18 @@ let add_literal_properties literal_key_info def_info =
     else
       Ok (Some (Nel.cons (Object loc) defs, name1))
 
-let get_def_info ~reader type_info loc : (def_info option, string) result =
+let get_def_info ~loc_of_aloc type_info loc : (def_info option, string) result =
   let (cx, typed_ast, obj_to_obj_map) = type_info in
   let def_kind =
     Def_kind_search.search
       ~f:(fun aloc ->
-        let l = loc_of_aloc ~reader aloc in
+        let l = loc_of_aloc aloc in
         Loc.contains l loc)
       typed_ast
-    |> Base.Option.map ~f:(map_def_kind_loc ~f:(loc_of_aloc ~reader))
+    |> Base.Option.map ~f:(map_def_kind_loc ~f:loc_of_aloc)
   in
 
   Base.Option.value_map
-    ~f:(def_info_of_typecheck_results ~reader cx obj_to_obj_map)
+    ~f:(def_info_of_typecheck_results ~loc_of_aloc cx obj_to_obj_map)
     ~default:(Ok None)
     def_kind
