@@ -226,46 +226,25 @@ let merge_contents ~options ~profiling ~reader master_cx filename docblock ast r
       Merge_service.check_contents_context ~reader options master_cx filename ast docblock file_sig
   )
 
-(* If the given type refers to an object literal, return the location of the object literal.
- * Otherwise return None *)
-let get_object_literal_loc ty : ALoc.t option =
-  let open TypeUtil in
-  let open Reason in
-  let reason_desc = reason_of_t ty (* TODO look into unwrap *) |> desc_of_reason ~unwrap:false in
-  match reason_desc with
-  | RObjectLit -> Some (def_loc_of_t ty)
-  | _ -> None
-
-let set_obj_to_obj_hook ~reader () =
-  let obj_to_obj_map = ref Loc_collections.LocMap.empty in
-  let obj_to_obj_hook _ctxt obj1 obj2 =
-    match get_object_literal_loc obj1 with
-    | Some obj1_aloc ->
-      let open Type in
-      (match (obj1, obj2) with
-      | (DefT (_, _, ObjT _), DefT (_, _, ObjT { props_tmap = obj2_props_id; _ })) ->
-        obj_to_obj_map :=
-          Loc_collections.LocMap.adjust
-            (Parsing_heaps.Reader.loc_of_aloc ~reader obj1_aloc)
-            (function
-              | None -> Properties.Set.add obj2_props_id Properties.Set.empty
-              | Some ids -> Properties.Set.add obj2_props_id ids)
-            !obj_to_obj_map
-      | _ -> ())
-    | _ -> ()
-  in
-  Type_inference_hooks_js.set_obj_to_obj_hook obj_to_obj_hook;
-  obj_to_obj_map
-
 let type_parse_artifacts ~options ~profiling master_cx filename intermediate_result =
   match intermediate_result with
   | (Some (Parse_artifacts { docblock; ast; requires; file_sig; _ } as parse_artifacts), _errs) ->
     (* We assume that callers have already inspected the parse errors, so we discard them here. *)
     let reader = State_reader.create () in
-    let obj_to_obj_map_ref = set_obj_to_obj_hook ~reader () in
-    let (cx, typed_ast) =
-      merge_contents ~options ~profiling ~reader master_cx filename docblock ast requires file_sig
+    let ((cx, typed_ast), obj_to_obj_map) =
+      let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
+      Obj_to_obj_hook.with_obj_to_obj_hook ~enabled:true ~loc_of_aloc ~f:(fun () ->
+          merge_contents
+            ~options
+            ~profiling
+            ~reader
+            master_cx
+            filename
+            docblock
+            ast
+            requires
+            file_sig
+      )
     in
-    Type_inference_hooks_js.reset_hooks ();
-    Ok (parse_artifacts, Typecheck_artifacts { cx; typed_ast; obj_to_obj_map = !obj_to_obj_map_ref })
+    Ok (parse_artifacts, Typecheck_artifacts { cx; typed_ast; obj_to_obj_map })
   | (None, errs) -> Error errs
