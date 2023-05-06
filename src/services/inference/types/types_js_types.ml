@@ -24,3 +24,22 @@ type typecheck_artifacts =
     }
 
 type file_artifacts = parse_artifacts * typecheck_artifacts
+
+type duration = float
+
+type check_type_result =
+  Context.t
+  * Type_sig_collections.Locs.index Packed_type_sig.Module.t
+  * File_sig.t
+  * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
+
+type check_error_result =
+  Flow_error.ErrorSet.t
+  * Flow_error.ErrorSet.t
+  * Error_suppressions.t
+  * Coverage_response.file_coverage
+  * duration
+
+type check_result = check_type_result * check_error_result
+
+type merge_result = Error_suppressions.t * duration

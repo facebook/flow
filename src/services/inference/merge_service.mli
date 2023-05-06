@@ -7,26 +7,7 @@
 
 open Utils_js
 
-type duration = float
-
 type 'a unit_result = ('a, ALoc.t * Error_message.internal_error) result
-
-type merge_result = Error_suppressions.t * duration
-
-type check_type_result =
-  Context.t
-  * Type_sig_collections.Locs.index Packed_type_sig.Module.t
-  * File_sig.t
-  * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
-
-type check_error_result =
-  Flow_error.ErrorSet.t
-  * Flow_error.ErrorSet.t
-  * Error_suppressions.t
-  * Coverage_response.file_coverage
-  * duration
-
-type check_result = check_type_result * check_error_result
 
 type sig_opts_data = {
   skipped_count: int;
@@ -76,7 +57,7 @@ val merge :
   sig_dependency_graph:FilenameGraph.t ->
   components:File_key.t Nel.t list ->
   recheck_set:FilenameSet.t ->
-  merge_result option merge_results Lwt.t
+  Types_js_types.merge_result option merge_results Lwt.t
 
 val mk_check :
   Options.t ->
@@ -84,4 +65,4 @@ val mk_check :
   master_cx:Context.master_context ->
   unit ->
   File_key.t ->
-  check_result option unit_result
+  Types_js_types.check_result option unit_result
