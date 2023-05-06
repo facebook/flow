@@ -5,6 +5,7 @@
   flow_parser
   flow_server_env
   flow_service_get_def
+  flow_service_references_types
   flow_state_readers)
  (preprocess
   (pps lwt_ppx ppx_let)))
