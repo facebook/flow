@@ -1359,6 +1359,11 @@ struct
         | (OpaqueT _, ReposLowerT (reason, use_desc, u)) ->
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
         (* Store the opaque type when doing `ToStringT`, so we can use that
+           rather than just `string` if the underlying is `string`. *)
+        | (OpaqueT (r, { underlying_t = Some t; _ }), ToStringT { reason; t_out; _ })
+          when ALoc.source (loc_of_reason r) = ALoc.source (def_loc_of_reason r) ->
+          rec_flow cx trace (t, ToStringT { orig_t = Some l; reason; t_out })
+        (* Store the opaque type when doing `ToStringT`, so we can use that
            rather than just `string` if the supertype is `string`. *)
         | (OpaqueT (_, { super_t = Some t; _ }), ToStringT { reason; t_out; _ }) ->
           rec_flow cx trace (t, ToStringT { orig_t = Some l; reason; t_out })
