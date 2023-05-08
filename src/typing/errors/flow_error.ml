@@ -244,7 +244,8 @@ let flip_frame = function
   | TypeArgCompatibility c -> TypeArgCompatibility { c with lower = c.upper; upper = c.lower }
   | ( CallFunCompatibility _ | TupleMapFunCompatibility _ | ObjMapFunCompatibility _
     | ObjMapiFunCompatibility _ | TypeParamBound _ | FunMissingArg _ | ImplicitTypeParam
-    | ReactGetConfig _ | UnifyFlip | ConstrainedAssignment _ ) as use_op ->
+    | ReactGetConfig _ | UnifyFlip | ConstrainedAssignment _ | MappedTypeKeyCompatibility _ ) as
+    use_op ->
     use_op
 
 let post_process_errors original_errors =
@@ -743,7 +744,8 @@ let rec make_error_printable :
       | Frame (CallFunCompatibility _, use_op)
       | Frame (TupleMapFunCompatibility _, use_op)
       | Frame (ObjMapFunCompatibility _, use_op)
-      | Frame (ObjMapiFunCompatibility _, use_op) ->
+      | Frame (ObjMapiFunCompatibility _, use_op)
+      | Frame (MappedTypeKeyCompatibility _, use_op) ->
         loop loc frames use_op
     and next_with_loc loc frames frame_reason use_op =
       (* Skip this use_op, don't add a frame, but do use the loc to reposition
@@ -831,28 +833,41 @@ let rec make_error_printable :
 
   (* Make a friendly error based on failed speculation. *)
   let mk_use_op_speculation_error loc use_op branches =
-    let (root, loc, frames, explanations) = unwrap_use_ops (loc_of_aloc loc) use_op in
-    let error_code = code_of_error error in
-    let speculation_errors =
-      Base.List.map
-        ~f:(fun (_, msg) ->
-          let score = score_of_msg msg in
-          let error =
-            error_of_msg ~trace_reasons:[] ~source_file msg
-            |> make_error_printable loc_of_aloc ~strip_root ~speculation:true
-          in
-          (score, error))
-        branches
-    in
-    mk_speculation_error
-      ~kind:InferError
-      ~trace_infos
-      ~loc
-      ~root
-      ~frames
-      ~explanations
-      ~error_code
-      speculation_errors
+    match use_op with
+    | Frame (MappedTypeKeyCompatibility { source_type; mapped_type }, use_op) ->
+      let message =
+        [
+          ref source_type;
+          text " is incompatible with ";
+          code "string | number | symbol";
+          text ", so it cannot be used to generate keys for ";
+          ref mapped_type;
+        ]
+      in
+      mk_use_op_error (loc_of_reason source_type) use_op message
+    | _ ->
+      let (root, loc, frames, explanations) = unwrap_use_ops (loc_of_aloc loc) use_op in
+      let error_code = code_of_error error in
+      let speculation_errors =
+        Base.List.map
+          ~f:(fun (_, msg) ->
+            let score = score_of_msg msg in
+            let error =
+              error_of_msg ~trace_reasons:[] ~source_file msg
+              |> make_error_printable loc_of_aloc ~strip_root ~speculation:true
+            in
+            (score, error))
+          branches
+      in
+      mk_speculation_error
+        ~kind:InferError
+        ~trace_infos
+        ~loc
+        ~root
+        ~frames
+        ~explanations
+        ~error_code
+        speculation_errors
   in
   (* An error between two incompatible types. A "lower" type and an "upper"
    * type. The use_op describes the path which we followed to find

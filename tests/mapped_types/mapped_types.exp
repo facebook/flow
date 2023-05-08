@@ -465,6 +465,21 @@ References:
                                     ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------- non_homomorphic.js:28:27
+
+boolean [1] is incompatible with `string | number | symbol`, so it cannot be used to generate keys for `BadKeys` [2].
+[incompatible-type]
+
+   non_homomorphic.js:28:27
+   28|   type BadKeys = {[key in boolean]: number}; // ERROR!
+                                 ^^^^^^^ [1]
+
+References:
+   non_homomorphic.js:28:37
+   28|   type BadKeys = {[key in boolean]: number}; // ERROR!
+                                           ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------ non_homomorphic.js:40:4
 
 Cannot cast `keyMirroredObject` to object type because string literal `bar` [1] is incompatible with string literal
@@ -1015,4 +1030,4 @@ References:
 
 
 
-Found 70 errors
+Found 71 errors

@@ -83,6 +83,17 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
    * types.
    *)
   let mapped_type_of_keys cx trace use_op reason ~keys =
+    let key_upper_bound_reason desc = mk_reason desc (loc_of_reason reason) in
+    let str_t = StrT.make (key_upper_bound_reason RString) (bogus_trust ()) in
+    let num_t = NumT.make (key_upper_bound_reason RNumber) (bogus_trust ()) in
+    let symbol_t = SymbolT.make (key_upper_bound_reason RSymbol) (bogus_trust ()) in
+    let union = UnionT (reason, UnionRep.make str_t num_t [symbol_t]) in
+    let compatibility_use_op =
+      Frame
+        (MappedTypeKeyCompatibility { source_type = reason_of_t keys; mapped_type = reason }, use_op)
+    in
+    (* All keys must be a subtype of string | number | symbol *)
+    rec_flow_t cx trace ~use_op:compatibility_use_op (keys, union);
     let possible_types =
       let id = Tvar.mk_no_wrap cx reason in
       rec_flow

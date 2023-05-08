@@ -417,6 +417,10 @@ module rec TypeTerm : sig
         key: 'loc virtual_reason;
         value: 'loc virtual_reason;
       }
+    | MappedTypeKeyCompatibility of {
+        source_type: 'loc virtual_reason;
+        mapped_type: 'loc virtual_reason;
+      }
     | PropertyCompatibility of {
         prop: name option;
         lower: 'loc virtual_reason;
@@ -3681,6 +3685,7 @@ let string_of_frame_use_op (type a) : a virtual_frame_use_op -> string = functio
   | TupleMapFunCompatibility _ -> "TupleMapFunCompatibility"
   | ObjMapFunCompatibility _ -> "ObjMapFunCompatibility"
   | ObjMapiFunCompatibility _ -> "ObjMapiFunCompatibility"
+  | MappedTypeKeyCompatibility _ -> "MappedTypeKeyCompatibility"
   | PropertyCompatibility _ -> "PropertyCompatibility"
   | ReactConfigCheck -> "ReactConfigCheck"
   | ReactGetConfig _ -> "ReactGetConfig"

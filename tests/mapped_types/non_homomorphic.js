@@ -25,9 +25,9 @@
   // Key types must be string | number | symbol, otherwise error on the
   // definition.
   // TS Reference: https://www.typescriptlang.org/play?ts=5.0.4#code/C4TwDgpgBAsghmSATKBeKBvA2gawiKASwDsoAjAewoBsI5iBdALimIFcBbMiAJwF8A3EA
-  type BadKeys = {[key in boolean]: number};
+  type BadKeys = {[key in boolean]: number}; // ERROR!
   declare const badKeys: BadKeys;
-  (badKeys: any); // TODO: ERROR!
+  (badKeys: any);
 }
 
 {

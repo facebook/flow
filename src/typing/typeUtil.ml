@@ -645,6 +645,9 @@ let rec mod_loc_of_virtual_use_op f =
     | ObjMapFunCompatibility { value } -> ObjMapFunCompatibility { value = mod_reason value }
     | ObjMapiFunCompatibility { key; value } ->
       ObjMapiFunCompatibility { key = mod_reason key; value = mod_reason value }
+    | MappedTypeKeyCompatibility { source_type; mapped_type } ->
+      MappedTypeKeyCompatibility
+        { source_type = mod_reason source_type; mapped_type = mod_reason mapped_type }
     | PropertyCompatibility { prop; lower; upper } ->
       PropertyCompatibility { prop; lower = mod_reason lower; upper = mod_reason upper }
     | ReactConfigCheck -> ReactConfigCheck
