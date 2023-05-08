@@ -346,6 +346,272 @@ Mapped Types cannot be used when other properties or indexers are present. [inva
        ^
 
 
+Error ------------------------------------------------------------------------------------------ non_homomorphic.js:11:4
+
+Cannot cast `mapped` to empty because `Mapped` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   non_homomorphic.js:11:4
+   11|   (mapped: empty); // ERROR!
+          ^^^^^^
+
+References:
+   non_homomorphic.js:6:25
+    6|   declare const mapped: Mapped;
+                               ^^^^^^ [1]
+   non_homomorphic.js:11:12
+   11|   (mapped: empty); // ERROR!
+                  ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ non_homomorphic.js:12:4
+
+Cannot cast `mapped` to object type because number [1] is incompatible with empty [2] in property `bar`.
+[incompatible-cast]
+
+   non_homomorphic.js:12:4
+   12|   (mapped: {foo: empty, bar: empty}); // ERROR 2x
+          ^^^^^^
+
+References:
+   non_homomorphic.js:4:33
+    4|   type Mapped = {[key in Keys]: number};
+                                       ^^^^^^ [1]
+   non_homomorphic.js:12:30
+   12|   (mapped: {foo: empty, bar: empty}); // ERROR 2x
+                                    ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ non_homomorphic.js:12:4
+
+Cannot cast `mapped` to object type because number [1] is incompatible with empty [2] in property `foo`.
+[incompatible-cast]
+
+   non_homomorphic.js:12:4
+   12|   (mapped: {foo: empty, bar: empty}); // ERROR 2x
+          ^^^^^^
+
+References:
+   non_homomorphic.js:4:33
+    4|   type Mapped = {[key in Keys]: number};
+                                       ^^^^^^ [1]
+   non_homomorphic.js:12:18
+   12|   (mapped: {foo: empty, bar: empty}); // ERROR 2x
+                        ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ non_homomorphic.js:21:4
+
+Cannot cast `withLeftovers` to object type because number [1] is incompatible with string [2] in property `foo`.
+[incompatible-cast]
+
+   non_homomorphic.js:21:4
+   21|   (withLeftovers: {[number]: string, foo: string}); // ERROR 2x
+          ^^^^^^^^^^^^^
+
+References:
+   non_homomorphic.js:18:50
+   18|   type WithLeftovers = {[key in 'foo' | number]: number};
+                                                        ^^^^^^ [1]
+   non_homomorphic.js:21:43
+   21|   (withLeftovers: {[number]: string, foo: string}); // ERROR 2x
+                                                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ non_homomorphic.js:21:4
+
+Cannot cast `withLeftovers` to object type because number [1] is incompatible with string [2] in the indexer property.
+[incompatible-cast]
+
+   non_homomorphic.js:21:4
+   21|   (withLeftovers: {[number]: string, foo: string}); // ERROR 2x
+          ^^^^^^^^^^^^^
+
+References:
+   non_homomorphic.js:18:50
+   18|   type WithLeftovers = {[key in 'foo' | number]: number};
+                                                        ^^^^^^ [1]
+   non_homomorphic.js:21:30
+   21|   (withLeftovers: {[number]: string, foo: string}); // ERROR 2x
+                                    ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ non_homomorphic.js:40:4
+
+Cannot cast `keyMirroredObject` to object type because string literal `bar` [1] is incompatible with string literal
+`baz` [2] in property `bar`. [incompatible-cast]
+
+   non_homomorphic.js:40:4
+   40|   (keyMirroredObject: {foo: 'bar', bar: 'baz', baz: 'foo'}); // ERROR x3
+          ^^^^^^^^^^^^^^^^^
+
+References:
+   non_homomorphic.js:35:69
+   35|   declare function keyMirror<T>(...$ReadOnlyArray<T>): {[key in T]: key};
+                                                                           ^^^ [1]
+   non_homomorphic.js:40:41
+   40|   (keyMirroredObject: {foo: 'bar', bar: 'baz', baz: 'foo'}); // ERROR x3
+                                               ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ non_homomorphic.js:40:4
+
+Cannot cast `keyMirroredObject` to object type because string literal `baz` [1] is incompatible with string literal
+`foo` [2] in property `baz`. [incompatible-cast]
+
+   non_homomorphic.js:40:4
+   40|   (keyMirroredObject: {foo: 'bar', bar: 'baz', baz: 'foo'}); // ERROR x3
+          ^^^^^^^^^^^^^^^^^
+
+References:
+   non_homomorphic.js:35:69
+   35|   declare function keyMirror<T>(...$ReadOnlyArray<T>): {[key in T]: key};
+                                                                           ^^^ [1]
+   non_homomorphic.js:40:53
+   40|   (keyMirroredObject: {foo: 'bar', bar: 'baz', baz: 'foo'}); // ERROR x3
+                                                           ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ non_homomorphic.js:40:4
+
+Cannot cast `keyMirroredObject` to object type because string literal `foo` [1] is incompatible with string literal
+`bar` [2] in property `foo`. [incompatible-cast]
+
+   non_homomorphic.js:40:4
+   40|   (keyMirroredObject: {foo: 'bar', bar: 'baz', baz: 'foo'}); // ERROR x3
+          ^^^^^^^^^^^^^^^^^
+
+References:
+   non_homomorphic.js:35:69
+   35|   declare function keyMirror<T>(...$ReadOnlyArray<T>): {[key in T]: key};
+                                                                           ^^^ [1]
+   non_homomorphic.js:40:29
+   40|   (keyMirroredObject: {foo: 'bar', bar: 'baz', baz: 'foo'}); // ERROR x3
+                                   ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ non_homomorphic.js:48:4
+
+Cannot cast `noContext` to object type because property `baz` is missing in object type [1] but exists in object
+type [2]. [prop-missing]
+
+   non_homomorphic.js:48:4
+   48|   (noContext: {foo: empty, bar: empty, baz: number}); // ERROR 3x
+          ^^^^^^^^^
+
+References:
+   non_homomorphic.js:45:96
+   45|   declare function ObjWithKeys<T>(x: {[key in T]: number}, ...$ReadOnlyArray<T>): {[key in T]: number};
+                                                                                                      ^^^^^^ [1]
+   non_homomorphic.js:48:15
+   48|   (noContext: {foo: empty, bar: empty, baz: number}); // ERROR 3x
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ non_homomorphic.js:48:4
+
+Cannot cast `noContext` to object type because number [1] is incompatible with empty [2] in property `bar`.
+[incompatible-cast]
+
+   non_homomorphic.js:48:4
+   48|   (noContext: {foo: empty, bar: empty, baz: number}); // ERROR 3x
+          ^^^^^^^^^
+
+References:
+   non_homomorphic.js:45:96
+   45|   declare function ObjWithKeys<T>(x: {[key in T]: number}, ...$ReadOnlyArray<T>): {[key in T]: number};
+                                                                                                      ^^^^^^ [1]
+   non_homomorphic.js:48:33
+   48|   (noContext: {foo: empty, bar: empty, baz: number}); // ERROR 3x
+                                       ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ non_homomorphic.js:48:4
+
+Cannot cast `noContext` to object type because number [1] is incompatible with empty [2] in property `foo`.
+[incompatible-cast]
+
+   non_homomorphic.js:48:4
+   48|   (noContext: {foo: empty, bar: empty, baz: number}); // ERROR 3x
+          ^^^^^^^^^
+
+References:
+   non_homomorphic.js:45:96
+   45|   declare function ObjWithKeys<T>(x: {[key in T]: number}, ...$ReadOnlyArray<T>): {[key in T]: number};
+                                                                                                      ^^^^^^ [1]
+   non_homomorphic.js:48:21
+   48|   (noContext: {foo: empty, bar: empty, baz: number}); // ERROR 3x
+                           ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------- non_homomorphic_resolution.js:10:4
+
+Cannot cast `mappedTypeApp` to empty because `Mapped` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   non_homomorphic_resolution.js:10:4
+   10|   (mappedTypeApp: empty); // ERROR
+          ^^^^^^^^^^^^^
+
+References:
+   non_homomorphic_resolution.js:9:32
+    9|   declare const mappedTypeApp: MappedTypeApp;
+                                      ^^^^^^^^^^^^^ [1]
+   non_homomorphic_resolution.js:10:19
+   10|   (mappedTypeApp: empty); // ERROR
+                         ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------- non_homomorphic_resolution.js:18:4
+
+Cannot cast `mappedKeys` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   non_homomorphic_resolution.js:18:4
+   18|   (mappedKeys: empty); // ERROR
+          ^^^^^^^^^^
+
+References:
+   non_homomorphic_resolution.js:17:29
+   17|   declare const mappedKeys: MappedKeys;
+                                   ^^^^^^^^^^ [1]
+   non_homomorphic_resolution.js:18:16
+   18|   (mappedKeys: empty); // ERROR
+                      ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------- non_homomorphic_resolution.js:19:4
+
+Cannot cast `mappedKeys` to object type because indexed object type [1] is incompatible with exact object type [2].
+[incompatible-indexer]
+
+   non_homomorphic_resolution.js:19:4
+   19|   (mappedKeys: {foo: number}); // TODO: OK, error for now
+          ^^^^^^^^^^
+
+References:
+   non_homomorphic_resolution.js:17:29
+   17|   declare const mappedKeys: MappedKeys;
+                                   ^^^^^^^^^^ [1]
+   non_homomorphic_resolution.js:19:16
+   19|   (mappedKeys: {foo: number}); // TODO: OK, error for now
+                      ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------- non_homomorphic_resolution.js:27:4
+
+Cannot cast `mappedEval` to empty because `Mapped` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   non_homomorphic_resolution.js:27:4
+   27|   (mappedEval: empty); // ERROR
+          ^^^^^^^^^^
+
+References:
+   non_homomorphic_resolution.js:26:29
+   26|   declare const mappedEval: MappedEval;
+                                   ^^^^^^^^^^ [1]
+   non_homomorphic_resolution.js:27:16
+   27|   (mappedEval: empty); // ERROR
+                      ^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------- optionality.js:9:4
 
 Cannot cast `preserve` to object type because string [1] is incompatible with number [2] in property `bar`.
@@ -437,6 +703,109 @@ Mapped Types do not yet support optionality removal. [invalid-mapped-type]
 
    28|   type Removed = {[key in keyof O]-?: O[key]}; // ERROR
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- pick_and_omit.js:15:9
+
+Cannot assign `3` to `noFoo.foo` because property `foo` is missing in `Omit` [1]. [prop-missing]
+
+   pick_and_omit.js:15:9
+   15|   noFoo.foo = 3; // ERROR!
+               ^^^
+
+References:
+   pick_and_omit.js:14:24
+   14|   declare const noFoo: Omit<O, 'foo'>;
+                              ^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- pick_and_omit.js:21:36
+
+Cannot instantiate `Omit` because an index signature declaring the expected key / value type is missing in `O` [1] in
+type argument `Keys`. [prop-missing]
+
+   pick_and_omit.js:21:36
+   21|   declare const noKeysBad: Omit<O, string>; // ERROR! string is not a subtype of $Keys<O>
+                                          ^^^^^^
+
+References:
+   pick_and_omit.js:21:33
+   21|   declare const noKeysBad: Omit<O, string>; // ERROR! string is not a subtype of $Keys<O>
+                                       ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- pick_and_omit.js:37:47
+
+Cannot call `omitInput` with object literal bound to `x` because property `bar` is missing in object literal [1] but
+exists in `Omit` [2]. [prop-missing]
+
+   pick_and_omit.js:37:47
+   37|   const badCall = omitInput({foo: 3, bar: 3}, {foo: 3}, ('foo': 'foo')); // ERROR 2x
+                                                     ^^^^^^^^ [1]
+
+References:
+   pick_and_omit.js:35:65
+   35|   declare function omitInput<O: {...}, Keys: $Keys<O>>(o: O, x: Omit<O, Keys>, ...$ReadOnlyArray<Keys>): void;
+                                                                       ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- pick_and_omit.js:37:47
+
+Cannot call `omitInput` with object literal bound to `x` because property `foo` is missing in `Omit` [1] but exists in
+object literal [2]. [prop-missing]
+
+   pick_and_omit.js:37:47
+   37|   const badCall = omitInput({foo: 3, bar: 3}, {foo: 3}, ('foo': 'foo')); // ERROR 2x
+                                                     ^^^^^^^^ [2]
+
+References:
+   pick_and_omit.js:35:65
+   35|   declare function omitInput<O: {...}, Keys: $Keys<O>>(o: O, x: Omit<O, Keys>, ...$ReadOnlyArray<Keys>): void;
+                                                                       ^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- pick_and_omit.js:51:11
+
+Cannot get `onlyFoo.bar` because property `bar` is missing in `Pick` [1]. [prop-missing]
+
+   pick_and_omit.js:51:11
+   51|   onlyFoo.bar; // ERROR!
+                 ^^^
+
+References:
+   pick_and_omit.js:50:26
+   50|   declare const onlyFoo: Pick<P, 'foo'>;
+                                ^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- pick_and_omit.js:64:47
+
+Cannot call `pickInput` with object literal bound to `x` because property `bar` is missing in `Pick` [1] but exists in
+object literal [2]. [prop-missing]
+
+   pick_and_omit.js:64:47
+   64|   const badCall = pickInput({foo: 3, bar: 3}, {bar : 3}, 'foo'); // ERROR 2x
+                                                     ^^^^^^^^^ [2]
+
+References:
+   pick_and_omit.js:61:65
+   61|   declare function pickInput<O: {...}, Keys: $Keys<O>>(o: O, x: Pick<O, Keys>, ...$ReadOnlyArray<Keys>): void;
+                                                                       ^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- pick_and_omit.js:64:47
+
+Cannot call `pickInput` with object literal bound to `x` because property `foo` is missing in object literal [1] but
+exists in `Pick` [2]. [prop-missing]
+
+   pick_and_omit.js:64:47
+   64|   const badCall = pickInput({foo: 3, bar: 3}, {bar : 3}, 'foo'); // ERROR 2x
+                                                     ^^^^^^^^^ [1]
+
+References:
+   pick_and_omit.js:61:65
+   61|   declare function pickInput<O: {...}, Keys: $Keys<O>>(o: O, x: Pick<O, Keys>, ...$ReadOnlyArray<Keys>): void;
+                                                                       ^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- reasons.js:9:34
@@ -634,4 +1003,4 @@ References:
 
 
 
-Found 47 errors
+Found 69 errors

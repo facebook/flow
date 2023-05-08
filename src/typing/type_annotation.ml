@@ -1586,18 +1586,27 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
             | NoOptionalFlag -> KeepOptionality
           )
         in
-        (match (source_type, mapped_type_optionality) with
-        | ( (keyof_loc, T.Keyof { T.Keyof.argument; comments = keyof_comments }),
-            (MakeOptional | KeepOptionality)
-          ) ->
-          let (((_, source_type), _) as source_ast) =
-            convert cx tparams_map infer_tparams_map argument
-          in
-          let source_ast =
-            ( (keyof_loc, source_type),
-              T.Keyof { T.Keyof.argument = source_ast; comments = keyof_comments }
-            )
-          in
+        let (homomorphic, source_type, source_ast) =
+          match source_type with
+          | (keyof_loc, T.Keyof { T.Keyof.argument; comments = keyof_comments }) ->
+            let (((_, source_type), _) as source_ast) =
+              convert cx tparams_map infer_tparams_map argument
+            in
+            let source_ast =
+              ( (keyof_loc, source_type),
+                T.Keyof { T.Keyof.argument = source_ast; comments = keyof_comments }
+              )
+            in
+            (true, source_type, source_ast)
+          | t ->
+            let (((_, source_type), _) as source_ast) =
+              convert cx tparams_map infer_tparams_map t
+            in
+            (false, source_type, source_ast)
+        in
+        (match mapped_type_optionality with
+        | MakeOptional
+        | KeepOptionality ->
           let (tparam_ast, ({ name; _ } as tparam), tparam_t) =
             mk_type_param cx ~from_infer_type:false tparams_map infer_tparams_map key_tparam
           in
@@ -1621,7 +1630,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                 reason,
                 MappedType
                   {
-                    homomorphic = true;
+                    homomorphic;
                     property_type = poly_prop_type;
                     mapped_type_flags =
                       { optional = mapped_type_optionality; variance = polarity cx variance };
@@ -1647,21 +1656,10 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
             Ast.Type.Object { Ast.Type.Object.exact; properties = [prop_ast]; inexact; comments }
           in
           ((obj_loc, eval_t), obj_ast)
-        | (t, optionality) ->
-          (match t with
-          | (_, Ast.Type.Keyof _) -> ()
-          | _ ->
-            Flow_js_utils.add_output
-              cx
-              Error_message.(
-                EInvalidMappedType { loc = mapped_type_loc; kind = RequiredInlineKeyof }
-              ));
-          (match optionality with
-          | RemoveOptional ->
-            Flow_js_utils.add_output
-              cx
-              Error_message.(EInvalidMappedType { loc = mapped_type_loc; kind = RemoveOptionality })
-          | _ -> ());
+        | RemoveOptional ->
+          Flow_js_utils.add_output
+            cx
+            Error_message.(EInvalidMappedType { loc = mapped_type_loc; kind = RemoveOptionality });
           Tast_utils.error_mapper#type_ ot)
     | (loc, Object { Object.exact; properties; inexact; comments }) as ot ->
       let exact_by_default = Context.exact_by_default cx in

@@ -6668,211 +6668,253 @@ struct
     (slingshot, result)
 
   and eval_destructor cx ~trace use_op reason t d tout =
-    let destruct_union ?(f = (fun t -> t)) r members upper =
-      let destructor = TypeDestructorT (use_op, reason, d) in
-      let unresolved = members |> Base.List.map ~f:(fun t -> Cache.Eval.id cx (f t) destructor) in
-      let (first, unresolved) = (List.hd unresolved, List.tl unresolved) in
-      let u =
-        ResolveUnionT { reason = r; unresolved; resolved = []; upper; id = Reason.mk_id () }
-      in
-      rec_flow cx trace (first, u)
-    in
-    let destruct_maybe ?f r t upper =
-      let reason = replace_desc_new_reason RNullOrVoid r in
-      let null = NullT.make reason |> with_trust bogus_trust in
-      let void = VoidT.make reason |> with_trust bogus_trust in
-      destruct_union ?f reason [t; null; void] upper
-    in
-    let destruct_optional ?f r t upper =
-      let reason = replace_desc_new_reason RVoid r in
-      let void = VoidT.make reason |> with_trust bogus_trust in
-      destruct_union ?f reason [t; void] upper
-    in
-    match t with
-    | GenericT { bound = OpaqueT (_, { underlying_t = Some t; _ }); reason = r; id; name }
-      when ALoc.source (loc_of_reason r) = ALoc.source (def_loc_of_reason r) ->
-      eval_destructor cx ~trace use_op reason (GenericT { bound = t; reason = r; id; name }) d tout
-    | OpaqueT (r, { underlying_t = Some t; _ })
-      when ALoc.source (loc_of_reason r) = ALoc.source (def_loc_of_reason r) ->
-      eval_destructor cx ~trace use_op reason t d tout
-    (* Specialize TypeAppTs before evaluating them so that we can handle special
-       cases. Like the union case below. mk_typeapp_instance will return an AnnotT
-       which will be fully resolved using the AnnotT case above. *)
-    | GenericT { bound = TypeAppT (_, use_op_tapp, c, ts); reason = reason_tapp; id; name } ->
-      let destructor = TypeDestructorT (use_op, reason, d) in
+    match d with
+    (* Non-homomorphic mapped types have their own special resolution code, so they do not fit well
+     * into the structure of the rest of this function. We handle them upfront instead. *)
+    | MappedType { homomorphic = false; mapped_type_flags; property_type } ->
       let t =
-        mk_typeapp_instance_annot cx ~trace ~use_op:use_op_tapp ~reason_op:reason ~reason_tapp c ts
+        ObjectKit.mapped_type_of_keys
+          cx
+          trace
+          use_op
+          reason
+          ~keys:t
+          ~property_type
+          mapped_type_flags
       in
-      rec_flow
-        cx
-        trace
-        ( Cache.Eval.id cx (GenericT { bound = t; name; id; reason = reason_tapp }) destructor,
-          UseT (use_op, OpenT tout)
-        )
-    | TypeAppT (reason_tapp, use_op_tapp, c, ts) ->
-      let destructor = TypeDestructorT (use_op, reason, d) in
-      let t =
-        mk_typeapp_instance_annot cx ~trace ~use_op:use_op_tapp ~reason_op:reason ~reason_tapp c ts
-      in
-      rec_flow_t cx trace ~use_op:unknown_use (Cache.Eval.id cx t destructor, OpenT tout)
-    (* If we are destructuring a union, evaluating the destructor on the union
-       itself may have the effect of splitting the union into separate lower
-       bounds, which prevents the speculative match process from working.
-       Instead, we preserve the union by pushing down the destructor onto the
-       branches of the unions. *)
-    | UnionT (r, rep) -> destruct_union r (UnionRep.members rep) (UseT (unknown_use, OpenT tout))
-    | GenericT { reason; bound = UnionT (_, rep); id; name } ->
-      destruct_union
-        ~f:(fun bound -> GenericT { reason = reason_of_t bound; bound; id; name })
-        reason
-        (UnionRep.members rep)
-        (UseT (use_op, OpenT tout))
-    | MaybeT (r, t) -> destruct_maybe r t (UseT (unknown_use, OpenT tout))
-    | GenericT { reason; bound = MaybeT (_, t); id; name } ->
-      destruct_maybe
-        ~f:(fun bound -> GenericT { reason = reason_of_t bound; bound; id; name })
-        reason
-        t
-        (UseT (use_op, OpenT tout))
-    | OptionalT { reason = r; type_ = t; use_desc = _ } ->
-      destruct_optional r t (UseT (unknown_use, OpenT tout))
-    | GenericT { reason; bound = OptionalT { reason = _; type_ = t; use_desc = _ }; id; name } ->
-      destruct_optional
-        ~f:(fun bound -> GenericT { reason = reason_of_t bound; bound; id; name })
-        reason
-        t
-        (UseT (use_op, OpenT tout))
-    | AnnotT (r, t, use_desc) ->
-      let t = reposition_reason ~trace cx r ~use_desc t in
-      let destructor = TypeDestructorT (use_op, reason, d) in
-      rec_flow_t cx trace ~use_op:unknown_use (Cache.Eval.id cx t destructor, OpenT tout)
-    | GenericT { bound = AnnotT (_, t, use_desc); reason = r; name; id } ->
-      let t = reposition_reason ~trace cx r ~use_desc t in
-      let destructor = TypeDestructorT (use_op, reason, d) in
-      rec_flow_t
-        cx
-        trace
-        ~use_op
-        (Cache.Eval.id cx (GenericT { reason = r; id; name; bound = t }) destructor, OpenT tout)
+      (* Intentional unknown_use for the tout Flow *)
+      rec_flow cx trace (t, UseT (unknown_use, OpenT tout))
     | _ ->
-      rec_flow
-        cx
-        trace
-        ( t,
-          match d with
-          | NonMaybeType ->
-            (* We intentionally use `unknown_use` here! When we flow to a tout we never
-             * want to carry a `use_op`. We want whatever `use_op` the tout is used with
-             * to win. *)
-            FilterMaybeT (unknown_use, OpenT tout)
-          | PropertyType { name; _ } ->
-            let reason_op = replace_desc_reason (RProperty (Some name)) reason in
-            GetPropT (use_op, reason, None, Named (reason_op, name), tout)
-          | ElementType { index_type; _ } ->
-            GetElemT (use_op, reason, true (* annot *), index_type, tout)
-          | OptionalIndexedAccessNonMaybeType { index } ->
-            OptionalIndexedAccessT { use_op; reason; index; tout_tvar = tout }
-          | OptionalIndexedAccessResultType { void_reason } ->
-            let void = VoidT.why void_reason |> with_trust bogus_trust in
-            ResolveUnionT
-              {
-                reason;
-                resolved = [void];
-                unresolved = [];
-                upper = UseT (unknown_use, OpenT tout);
-                id = Reason.mk_id ();
-              }
-          | SpreadType (options, todo_rev, head_slice) ->
-            Object.(
-              Object.Spread.(
-                let tool = Resolve Next in
-                let state =
-                  {
-                    todo_rev;
-                    acc = Base.Option.value_map ~f:(fun x -> [InlineSlice x]) ~default:[] head_slice;
-                    spread_id = Reason.mk_id ();
-                    union_reason = None;
-                    curr_resolve_idx = 0;
-                  }
-                in
-                ObjKitT (use_op, reason, tool, Spread (options, state), OpenT tout)
-              )
-            )
-          | RestType (options, t) ->
-            Object.(
-              Object.Rest.(
-                let tool = Resolve Next in
-                let state = One t in
-                ObjKitT (use_op, reason, tool, Rest (options, state), OpenT tout)
-              )
-            )
-          | ReadOnlyType -> Object.(ObjKitT (use_op, reason, Resolve Next, ReadOnly, OpenT tout))
-          | PartialType -> Object.(ObjKitT (use_op, reason, Resolve Next, Partial, OpenT tout))
-          | RequiredType -> Object.(ObjKitT (use_op, reason, Resolve Next, Required, OpenT tout))
-          | ValuesType -> GetValuesT (reason, OpenT tout)
-          | CallType { from_maptype; args } ->
-            let args = Base.List.map ~f:(fun arg -> Arg arg) args in
-            let call_kind =
-              if from_maptype then
-                MapTypeKind
-              else
-                CallTypeKind
-            in
-            let call = mk_functioncalltype ~call_kind reason None args tout in
-            let call = { call with call_strict_arity = false } in
-            let use_op =
-              match use_op with
-              (* The following use ops are for operations that internally delegate to CallType. We
-                 don't want to leak the internally delegation to error messages by pushing an
-                 additional frame. Alternatively, we could have pushed here and filtered out when
-                 rendering error messages, but that seems a bit wasteful. *)
-              | Frame (TupleMapFunCompatibility _, _)
-              | Frame (ObjMapFunCompatibility _, _)
-              | Frame (ObjMapiFunCompatibility _, _) ->
-                use_op
-              (* For external CallType operations, we push an additional frame to distinguish their
-                 error messages from those of "normal" calls. *)
-              | _ -> Frame (CallFunCompatibility { n = List.length args }, use_op)
-            in
-            CallT
-              {
-                use_op;
-                reason;
-                call_action = Funcalltype call;
-                return_hint = Type.hint_unavailable;
-              }
-          | ConditionalType { distributive_tparam_name; infer_tparams; extends_t; true_t; false_t }
-            ->
-            ConditionalT
-              {
-                use_op;
-                reason;
-                distributive_tparam_name;
-                infer_tparams;
-                extends_t;
-                true_t;
-                false_t;
-                tout;
-              }
-          | TypeMap tmap -> MapTypeT (use_op, reason, tmap, OpenT tout)
-          | ReactElementPropsType -> ReactKitT (use_op, reason, React.GetProps (OpenT tout))
-          | ReactElementConfigType -> ReactKitT (use_op, reason, React.GetConfig (OpenT tout))
-          | ReactElementRefType -> ReactKitT (use_op, reason, React.GetRef (OpenT tout))
-          | ReactConfigType default_props ->
-            ReactKitT (use_op, reason, React.GetConfigType (default_props, OpenT tout))
-          | IdxUnwrapType -> IdxUnwrap (reason, OpenT tout)
-          | MappedType { property_type; mapped_type_flags; homomorphic = _ } ->
-            Object.(
-              ObjKitT
-                ( use_op,
-                  reason,
-                  Resolve Next,
-                  Object.ObjectMap { prop_type = property_type; mapped_type_flags },
-                  OpenT tout
+      let destruct_union ?(f = (fun t -> t)) r members upper =
+        let destructor = TypeDestructorT (use_op, reason, d) in
+        let unresolved = members |> Base.List.map ~f:(fun t -> Cache.Eval.id cx (f t) destructor) in
+        let (first, unresolved) = (List.hd unresolved, List.tl unresolved) in
+        let u =
+          ResolveUnionT { reason = r; unresolved; resolved = []; upper; id = Reason.mk_id () }
+        in
+        rec_flow cx trace (first, u)
+      in
+      let destruct_maybe ?f r t upper =
+        let reason = replace_desc_new_reason RNullOrVoid r in
+        let null = NullT.make reason |> with_trust bogus_trust in
+        let void = VoidT.make reason |> with_trust bogus_trust in
+        destruct_union ?f reason [t; null; void] upper
+      in
+      let destruct_optional ?f r t upper =
+        let reason = replace_desc_new_reason RVoid r in
+        let void = VoidT.make reason |> with_trust bogus_trust in
+        destruct_union ?f reason [t; void] upper
+      in
+      (match t with
+      | GenericT { bound = OpaqueT (_, { underlying_t = Some t; _ }); reason = r; id; name }
+        when ALoc.source (loc_of_reason r) = ALoc.source (def_loc_of_reason r) ->
+        eval_destructor
+          cx
+          ~trace
+          use_op
+          reason
+          (GenericT { bound = t; reason = r; id; name })
+          d
+          tout
+      | OpaqueT (r, { underlying_t = Some t; _ })
+        when ALoc.source (loc_of_reason r) = ALoc.source (def_loc_of_reason r) ->
+        eval_destructor cx ~trace use_op reason t d tout
+      (* Specialize TypeAppTs before evaluating them so that we can handle special
+         cases. Like the union case below. mk_typeapp_instance will return an AnnotT
+         which will be fully resolved using the AnnotT case above. *)
+      | GenericT { bound = TypeAppT (_, use_op_tapp, c, ts); reason = reason_tapp; id; name } ->
+        let destructor = TypeDestructorT (use_op, reason, d) in
+        let t =
+          mk_typeapp_instance_annot
+            cx
+            ~trace
+            ~use_op:use_op_tapp
+            ~reason_op:reason
+            ~reason_tapp
+            c
+            ts
+        in
+        rec_flow
+          cx
+          trace
+          ( Cache.Eval.id cx (GenericT { bound = t; name; id; reason = reason_tapp }) destructor,
+            UseT (use_op, OpenT tout)
+          )
+      | TypeAppT (reason_tapp, use_op_tapp, c, ts) ->
+        let destructor = TypeDestructorT (use_op, reason, d) in
+        let t =
+          mk_typeapp_instance_annot
+            cx
+            ~trace
+            ~use_op:use_op_tapp
+            ~reason_op:reason
+            ~reason_tapp
+            c
+            ts
+        in
+        rec_flow_t cx trace ~use_op:unknown_use (Cache.Eval.id cx t destructor, OpenT tout)
+      (* If we are destructuring a union, evaluating the destructor on the union
+         itself may have the effect of splitting the union into separate lower
+         bounds, which prevents the speculative match process from working.
+         Instead, we preserve the union by pushing down the destructor onto the
+         branches of the unions.
+      *)
+      | UnionT (r, rep) -> destruct_union r (UnionRep.members rep) (UseT (unknown_use, OpenT tout))
+      | GenericT { reason; bound = UnionT (_, rep); id; name } ->
+        destruct_union
+          ~f:(fun bound -> GenericT { reason = reason_of_t bound; bound; id; name })
+          reason
+          (UnionRep.members rep)
+          (UseT (use_op, OpenT tout))
+      | MaybeT (r, t) -> destruct_maybe r t (UseT (unknown_use, OpenT tout))
+      | GenericT { reason; bound = MaybeT (_, t); id; name } ->
+        destruct_maybe
+          ~f:(fun bound -> GenericT { reason = reason_of_t bound; bound; id; name })
+          reason
+          t
+          (UseT (use_op, OpenT tout))
+      | OptionalT { reason = r; type_ = t; use_desc = _ } ->
+        destruct_optional r t (UseT (unknown_use, OpenT tout))
+      | GenericT { reason; bound = OptionalT { reason = _; type_ = t; use_desc = _ }; id; name } ->
+        destruct_optional
+          ~f:(fun bound -> GenericT { reason = reason_of_t bound; bound; id; name })
+          reason
+          t
+          (UseT (use_op, OpenT tout))
+      | AnnotT (r, t, use_desc) ->
+        let t = reposition_reason ~trace cx r ~use_desc t in
+        let destructor = TypeDestructorT (use_op, reason, d) in
+        rec_flow_t cx trace ~use_op:unknown_use (Cache.Eval.id cx t destructor, OpenT tout)
+      | GenericT { bound = AnnotT (_, t, use_desc); reason = r; name; id } ->
+        let t = reposition_reason ~trace cx r ~use_desc t in
+        let destructor = TypeDestructorT (use_op, reason, d) in
+        rec_flow_t
+          cx
+          trace
+          ~use_op
+          (Cache.Eval.id cx (GenericT { reason = r; id; name; bound = t }) destructor, OpenT tout)
+      | _ ->
+        rec_flow
+          cx
+          trace
+          ( t,
+            match d with
+            | NonMaybeType ->
+              (* We intentionally use `unknown_use` here! When we flow to a tout we never
+               * want to carry a `use_op`. We want whatever `use_op` the tout is used with
+               * to win. *)
+              FilterMaybeT (unknown_use, OpenT tout)
+            | PropertyType { name; _ } ->
+              let reason_op = replace_desc_reason (RProperty (Some name)) reason in
+              GetPropT (use_op, reason, None, Named (reason_op, name), tout)
+            | ElementType { index_type; _ } ->
+              GetElemT (use_op, reason, true (* annot *), index_type, tout)
+            | OptionalIndexedAccessNonMaybeType { index } ->
+              OptionalIndexedAccessT { use_op; reason; index; tout_tvar = tout }
+            | OptionalIndexedAccessResultType { void_reason } ->
+              let void = VoidT.why void_reason |> with_trust bogus_trust in
+              ResolveUnionT
+                {
+                  reason;
+                  resolved = [void];
+                  unresolved = [];
+                  upper = UseT (unknown_use, OpenT tout);
+                  id = Reason.mk_id ();
+                }
+            | SpreadType (options, todo_rev, head_slice) ->
+              Object.(
+                Object.Spread.(
+                  let tool = Resolve Next in
+                  let state =
+                    {
+                      todo_rev;
+                      acc =
+                        Base.Option.value_map ~f:(fun x -> [InlineSlice x]) ~default:[] head_slice;
+                      spread_id = Reason.mk_id ();
+                      union_reason = None;
+                      curr_resolve_idx = 0;
+                    }
+                  in
+                  ObjKitT (use_op, reason, tool, Spread (options, state), OpenT tout)
                 )
-            )
-          | LatentPred (fun_t, idx) -> RefineT (reason, fun_t, idx, tout)
-        )
+              )
+            | RestType (options, t) ->
+              Object.(
+                Object.Rest.(
+                  let tool = Resolve Next in
+                  let state = One t in
+                  ObjKitT (use_op, reason, tool, Rest (options, state), OpenT tout)
+                )
+              )
+            | ReadOnlyType -> Object.(ObjKitT (use_op, reason, Resolve Next, ReadOnly, OpenT tout))
+            | PartialType -> Object.(ObjKitT (use_op, reason, Resolve Next, Partial, OpenT tout))
+            | RequiredType -> Object.(ObjKitT (use_op, reason, Resolve Next, Required, OpenT tout))
+            | ValuesType -> GetValuesT (reason, OpenT tout)
+            | CallType { from_maptype; args } ->
+              let args = Base.List.map ~f:(fun arg -> Arg arg) args in
+              let call_kind =
+                if from_maptype then
+                  MapTypeKind
+                else
+                  CallTypeKind
+              in
+              let call = mk_functioncalltype ~call_kind reason None args tout in
+              let call = { call with call_strict_arity = false } in
+              let use_op =
+                match use_op with
+                (* The following use ops are for operations that internally delegate to CallType. We
+                   don't want to leak the internally delegation to error messages by pushing an
+                   additional frame. Alternatively, we could have pushed here and filtered out when
+                   rendering error messages, but that seems a bit wasteful. *)
+                | Frame (TupleMapFunCompatibility _, _)
+                | Frame (ObjMapFunCompatibility _, _)
+                | Frame (ObjMapiFunCompatibility _, _) ->
+                  use_op
+                (* For external CallType operations, we push an additional frame to distinguish their
+                   error messages from those of "normal" calls. *)
+                | _ -> Frame (CallFunCompatibility { n = List.length args }, use_op)
+              in
+              CallT
+                {
+                  use_op;
+                  reason;
+                  call_action = Funcalltype call;
+                  return_hint = Type.hint_unavailable;
+                }
+            | ConditionalType
+                { distributive_tparam_name; infer_tparams; extends_t; true_t; false_t } ->
+              ConditionalT
+                {
+                  use_op;
+                  reason;
+                  distributive_tparam_name;
+                  infer_tparams;
+                  extends_t;
+                  true_t;
+                  false_t;
+                  tout;
+                }
+            | TypeMap tmap -> MapTypeT (use_op, reason, tmap, OpenT tout)
+            | ReactElementPropsType -> ReactKitT (use_op, reason, React.GetProps (OpenT tout))
+            | ReactElementConfigType -> ReactKitT (use_op, reason, React.GetConfig (OpenT tout))
+            | ReactElementRefType -> ReactKitT (use_op, reason, React.GetRef (OpenT tout))
+            | ReactConfigType default_props ->
+              ReactKitT (use_op, reason, React.GetConfigType (default_props, OpenT tout))
+            | IdxUnwrapType -> IdxUnwrap (reason, OpenT tout)
+            | MappedType { property_type; mapped_type_flags; homomorphic = true } ->
+              Object.(
+                ObjKitT
+                  ( use_op,
+                    reason,
+                    Resolve Next,
+                    Object.ObjectMap { prop_type = property_type; mapped_type_flags },
+                    OpenT tout
+                  )
+              )
+            | MappedType { property_type = _; mapped_type_flags = _; homomorphic = false } ->
+              failwith "Unreachable MappedType in eval_destructor"
+            | LatentPred (fun_t, idx) -> RefineT (reason, fun_t, idx, tout)
+          ))
 
   and eval_keys cx ~trace reason t =
     Tvar.mk_where cx reason (fun tout ->

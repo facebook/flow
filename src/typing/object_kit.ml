@@ -23,6 +23,16 @@ module type OBJECT = sig
 
   val widen_obj_type :
     Context.t -> ?trace:Type.trace -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
+
+  val mapped_type_of_keys :
+    Context.t ->
+    Type.trace ->
+    Type.use_op ->
+    Reason.t ->
+    keys:Type.t ->
+    property_type:Type.t ->
+    Type.mapped_type_flags ->
+    Type.t
 end
 
 module Kit (Flow : Flow_common.S) : OBJECT = struct
@@ -59,6 +69,76 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             rep
         )
     | t -> t
+
+  (* We use this function to transform a resolved UnionT into an object where all SingletonStrTs/StrTs
+   * are turned into keys and all other non-empty types are turned into indexers. This is how we support
+   * non-homomorphic mapped types, like
+   * {[key in 'a' | 'b' | number]: string}
+   *
+   * Note that we use the PreprocessKitT constraint to flatten the union. A non-homomorphic mapped
+   * type *must not* operate over Unresolved tvar because additional keys received in the future
+   * will cause us to incorrectly output a union. While this approach of eagerly resolving the type
+   * may lead to edge cases where we miss keys, it seems like the best way forward. To get rid of
+   * these bugs in 100% of cases we'd need to make our EvalT machinery only operate over resolved
+   * types.
+   *)
+  let mapped_type_of_keys cx trace use_op reason ~keys =
+    let possible_types =
+      let id = Tvar.mk_no_wrap cx reason in
+      rec_flow cx trace (keys, PreprocessKitT (reason, ConcretizeTypes (ConcretizeHintT id)));
+      Flow_js_utils.possible_types cx id
+    in
+    let (keys_with_reasons, indexers) =
+      possible_types
+      |> List.fold_left
+           (fun (keys, indexers) t ->
+             match t with
+             | DefT (r, _, StrT (Literal (_, name)))
+             | DefT (r, _, SingletonStrT name) ->
+               ((name, r) :: keys, indexers)
+             | DefT (_, _, EmptyT) -> (keys, indexers)
+             | _ -> (keys, t :: indexers))
+           ([], [])
+    in
+    (* To go from a union to a MappedType we first build an object with all the keys we
+     * extract from the union and create an object with all mixed values. Then we push it
+     * through the mapped type machinery. The specific type we choose for the properties
+     * does not matter because the mapped type code does not inspect the value types *)
+    let mixed = MixedT.why reason (bogus_trust ()) in
+    let mixed_prop_t key_reason =
+      let key_loc = Some (loc_of_reason key_reason) in
+      {
+        Object.prop_t = mixed;
+        is_own = true;
+        is_method = false;
+        polarity = Polarity.Neutral;
+        key_loc;
+      }
+    in
+    let props =
+      keys_with_reasons
+      |> List.fold_left
+           (fun pmap (key, key_reason) -> NameUtils.Map.add key (mixed_prop_t key_reason) pmap)
+           NameUtils.Map.empty
+    in
+    let generics = Generic.spread_empty in
+    let obj_kind =
+      match indexers with
+      | [] -> Exact
+      | t1 :: ts ->
+        let key_t =
+          match ts with
+          | [] -> t1
+          | t2 :: ts -> UnionT (reason, UnionRep.make t1 t2 ts)
+        in
+        Indexed { dict_name = None; key = key_t; value = mixed; dict_polarity = Polarity.Neutral }
+    in
+    let flags = { frozen = false; obj_kind } in
+    let interface = None in
+    let obj_reason = replace_desc_reason RObjectType reason in
+    let slice = { Object.reason = obj_reason; props; flags; generics; interface } in
+    fun ~property_type mapped_type_flags ->
+      Slice_utils.map_object property_type mapped_type_flags cx reason use_op slice
 
   let run =
     let open Object in
