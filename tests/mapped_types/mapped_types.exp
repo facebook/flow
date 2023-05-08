@@ -562,7 +562,7 @@ References:
 
 Error ------------------------------------------------------------------------------- non_homomorphic_resolution.js:18:4
 
-Cannot cast `mappedKeys` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `mappedKeys` to empty because `Mapped` [1] is incompatible with empty [2]. [incompatible-cast]
 
    non_homomorphic_resolution.js:18:4
    18|   (mappedKeys: empty); // ERROR
@@ -575,24 +575,6 @@ References:
    non_homomorphic_resolution.js:18:16
    18|   (mappedKeys: empty); // ERROR
                       ^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------- non_homomorphic_resolution.js:19:4
-
-Cannot cast `mappedKeys` to object type because indexed object type [1] is incompatible with exact object type [2].
-[incompatible-indexer]
-
-   non_homomorphic_resolution.js:19:4
-   19|   (mappedKeys: {foo: number}); // TODO: OK, error for now
-          ^^^^^^^^^^
-
-References:
-   non_homomorphic_resolution.js:17:29
-   17|   declare const mappedKeys: MappedKeys;
-                                   ^^^^^^^^^^ [1]
-   non_homomorphic_resolution.js:19:16
-   19|   (mappedKeys: {foo: number}); // TODO: OK, error for now
-                      ^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------- non_homomorphic_resolution.js:27:4
@@ -1003,4 +985,4 @@ References:
 
 
 
-Found 69 errors
+Found 68 errors

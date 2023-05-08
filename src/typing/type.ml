@@ -1473,6 +1473,10 @@ module rec TypeTerm : sig
      * of hint decomposition. The goal here is to simplify types like EvalT, OpenT,
      * TypeAppT, etc. and propagate them as lower bounds to the ident (payload). *)
     | ConcretizeHintT of ident
+    (* The purpose of this utility is to concretize the source type for a non-homomorphic
+     * mapped type: {[key in T]: U}. To compute the type, we need to fully resolve the union
+     * and flatten it so that we can determine what the keys should be *)
+    | ConcretizeMappedTypeArgumentT of ident
 
   and intersection_preprocess_tool =
     | ConcretizeTypes of concretization_target

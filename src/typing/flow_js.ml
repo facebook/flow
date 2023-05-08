@@ -1406,6 +1406,10 @@ struct
         | (KeysT (reason1, o1), _) ->
           (* flow all keys of o1 to u *)
           rec_flow cx trace (o1, GetKeysT (reason1, u))
+        (* Concretize types for mapped type purposes up to this point. The rest are
+           recorded as lower bound to the target tvar. *)
+        | (t, PreprocessKitT (reason, ConcretizeTypes (ConcretizeMappedTypeArgumentT tvar))) ->
+          rec_flow_t cx trace ~use_op:unknown_use (t, OpenT (reason, tvar))
         (* helpers *)
         | ( DefT (reason_o, _, ObjT { props_tmap = mapr; flags; _ }),
             HasOwnPropT (use_op, reason_op, key)

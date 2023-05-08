@@ -16,7 +16,7 @@ type Mapped<T> = {[key in T]: number};
   type MappedKeys = Mapped<Keys>;
   declare const mappedKeys: MappedKeys;
   (mappedKeys: empty); // ERROR
-  (mappedKeys: {foo: number}); // TODO: OK, error for now
+  (mappedKeys: {foo: number}); // OK!
 }
 
 {

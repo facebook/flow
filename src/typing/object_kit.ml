@@ -85,7 +85,10 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
   let mapped_type_of_keys cx trace use_op reason ~keys =
     let possible_types =
       let id = Tvar.mk_no_wrap cx reason in
-      rec_flow cx trace (keys, PreprocessKitT (reason, ConcretizeTypes (ConcretizeHintT id)));
+      rec_flow
+        cx
+        trace
+        (keys, PreprocessKitT (reason, ConcretizeTypes (ConcretizeMappedTypeArgumentT id)));
       Flow_js_utils.possible_types cx id
     in
     let (keys_with_reasons, indexers) =
