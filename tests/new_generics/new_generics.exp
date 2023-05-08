@@ -245,7 +245,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- basic_class.js:12:12
 
-Cannot return `this.x` because `X` [1] is incompatible with `Y` [2]. [incompatible-return]
+Cannot return `this.x` because mixed [1] is incompatible with `Y` [2]. [incompatible-return]
 
    basic_class.js:12:12
    12|     return this.x;
@@ -279,7 +279,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- basic_function.js:7:19
 
-Cannot assign `x` to `z` because `X` [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `x` to `z` because mixed [1] is incompatible with number [2]. [incompatible-type]
 
    basic_function.js:7:19
    7|   var z: number = x;
@@ -296,7 +296,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- basic_function.js:8:19
 
-Cannot assign `y` to `w` because `X` [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `y` to `w` because mixed [1] is incompatible with number [2]. [incompatible-type]
 
    basic_function.js:8:19
    8|   var w: number = y;
@@ -341,7 +341,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ basic_function.js:31:12
 
-Cannot return `arg[arg.length - 1]` because array element of refined `T` [1] is incompatible with `T` [2].
+Cannot return `arg[arg.length - 1]` because array element of refined mixed [1] is incompatible with `T` [2].
 [incompatible-return]
 
    basic_function.js:31:12
@@ -1028,7 +1028,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- nested.js:8:10
 
-Cannot return `w` because `W` [1] is incompatible with `X` [2]. [incompatible-return]
+Cannot return `w` because mixed [1] is incompatible with `X` [2]. [incompatible-return]
 
    nested.js:8:10
    8|   return w; // nope
@@ -1119,7 +1119,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:13:4
 
-Cannot cast `x` to number because `X` [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `x` to number because mixed [1] is incompatible with number [2]. [incompatible-cast]
 
    refinements.js:13:4
    13|   (x: number); // nope
@@ -1153,7 +1153,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:20:4
 
-Cannot cast `x` to `C` because `X` [1] is incompatible with `C` [2]. [incompatible-cast]
+Cannot cast `x` to `C` because mixed [1] is incompatible with `C` [2]. [incompatible-cast]
 
    refinements.js:20:4
    20|   (x: C); // nope
@@ -1283,7 +1283,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- spreads.js:24:4
 
-Cannot cast `x` to object type because `X` [1] is incompatible with object type [2]. [incompatible-cast]
+Cannot cast `x` to object type because mixed [1] is incompatible with object type [2]. [incompatible-cast]
 
    spreads.js:24:4
    24|   (x: {...X}); // nope

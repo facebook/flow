@@ -78,7 +78,7 @@ Missing an annotation on return because generic functions must be fully annotate
 Error ----------------------------------------------------------------------------------------------------- poly.js:4:33
 
 Cannot use `x` [1] to assign a computed property. Computed properties may only be numeric or string literal values, but
-this one is a `T` [2]. Can you add an appropriate type annotation to `x` [1]? See
+this one is a mixed [2]. Can you add an appropriate type annotation to `x` [1]? See
 https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
    poly.js:4:33

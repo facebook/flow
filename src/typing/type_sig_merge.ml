@@ -1288,7 +1288,8 @@ and merge_tparam ~from_infer tps infer_tps file tp =
   let reason = Reason.(mk_reason (RType (OrdinaryName name)) name_loc) in
   let bound =
     match bound with
-    | None -> Type.(DefT (reason, trust, MixedT Mixed_everything))
+    | None ->
+      Type.(DefT (Reason.replace_desc_reason Reason.RMixed reason, trust, MixedT Mixed_everything))
     | Some t -> merge tps infer_tps file t
   in
   let default =

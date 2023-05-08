@@ -560,7 +560,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- class_poly_method.js:28:5
 
-Cannot define method `foo` [1] on `B` because `T` [2] is incompatible with `X` [2] in type argument `T` [2].
+Cannot define method `foo` [1] on `B` because mixed [2] is incompatible with `T` [2] in type argument `T` [2].
 [incompatible-type-arg]
 
    class_poly_method.js:28:5
@@ -575,7 +575,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- class_poly_method.js:28:5
 
-Cannot define method `foo` [1] on `B` because `X` [2] is incompatible with `T` [2] in type argument `T` [2].
+Cannot define method `foo` [1] on `B` because mixed [2] is incompatible with `X` [2] in type argument `T` [2].
 [incompatible-type-arg]
 
    class_poly_method.js:28:5

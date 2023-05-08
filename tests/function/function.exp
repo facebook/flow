@@ -720,7 +720,7 @@ Missing an annotation on return because generic functions must be fully annotate
 
 Error ---------------------------------------------------------------------------------------------------- rest.js:36:13
 
-Cannot call `xs.pop` because property `pop` is missing in `T` [1]. [incompatible-use]
+Cannot call `xs.pop` because property `pop` is missing in mixed [1]. [incompatible-use]
 
    rest.js:36:13
    36|   return xs.pop(); // Error - no bound on T

@@ -21,7 +21,7 @@ References:
 
 Error --------------------------------------------------------------------------------- reason_of_inferred_targs.js:7:18
 
-Cannot cast `s` to string because `T` (inferred from type parameter's bound) [1] is incompatible with string [2].
+Cannot cast `s` to string because mixed (inferred from type parameter's bound) [1] is incompatible with string [2].
 [incompatible-cast]
 
    reason_of_inferred_targs.js:7:18
@@ -57,7 +57,7 @@ References:
 
 Error --------------------------------------------------------------------------------- reason_of_inferred_targs.js:9:19
 
-Cannot get `s.abcd` because property `abcd` is missing in `T` (inferred from type parameter's bound) [1].
+Cannot get `s.abcd` because property `abcd` is missing in mixed (inferred from type parameter's bound) [1].
 [incompatible-use]
 
    reason_of_inferred_targs.js:9:19

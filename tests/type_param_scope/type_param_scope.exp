@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- class.js:4:12
 
-Cannot call `this.b` with `a` bound to `x` because `A` [1] is incompatible with `T` [2]. [incompatible-call]
+Cannot call `this.b` with `a` bound to `x` because mixed [1] is incompatible with `T` [2]. [incompatible-call]
 
    class.js:4:12
    4|     this.b(a); // error: A ~> incompatible instance of T
@@ -17,7 +17,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- default_params.js:6:7
 
-Cannot call `h` with `c` bound to `d` because `T` [1] is incompatible with `U` [2]. [incompatible-call]
+Cannot call `h` with `c` bound to `d` because mixed [1] is incompatible with `U` [2]. [incompatible-call]
 
    default_params.js:6:7
    6|     h(c); // err, T ~> U
@@ -81,7 +81,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- method_shadow.js:51:18
 
-Cannot assign `x` to `this.x` because `T` [1] is incompatible with `T` [2]. [incompatible-type]
+Cannot assign `x` to `this.x` because mixed [1] is incompatible with `T` [2]. [incompatible-type]
 
    method_shadow.js:51:18
    51|         this.x = x; // err, m's T != H's T

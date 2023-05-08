@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- poly.js:3:36
 
-Cannot return `x` because `T` [1] is incompatible with `S` [2]. [incompatible-return]
+Cannot return `x` because mixed [1] is incompatible with `S` [2]. [incompatible-return]
 
    poly.js:3:36
    3| function foo2<T,S>(x:T):S { return x; }
@@ -25,7 +25,7 @@ Cannot determine type of empty array literal. Please provide an annotation. [mis
 
 Error ---------------------------------------------------------------------------------------------------- poly.js:10:38
 
-Cannot return `x` because `T` [1] is incompatible with unknown element of empty array [2] in array element. Arrays are
+Cannot return `x` because mixed [1] is incompatible with unknown element of empty array [2] in array element. Arrays are
 invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 [incompatible-return]
@@ -62,7 +62,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- poly.js:24:3
 
-Cannot call `y` because `U` [1] is not a function. [not-a-function]
+Cannot call `y` because mixed [1] is not a function. [not-a-function]
 
    poly.js:24:3
    24|   y();
