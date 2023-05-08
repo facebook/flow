@@ -190,6 +190,7 @@ and prop =
       source: t;
       prop: t;
       flags: mapped_type_flags;
+      homomorphic: bool;
     }
 
 and named_prop =

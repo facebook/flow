@@ -316,7 +316,13 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
         | CallProp func -> fuse [type_function ~depth ~sep:(Atom ":") func]
         | SpreadProp t -> fuse [Atom "..."; type_ ~depth t]
         | MappedTypeProp
-            { key_tparam = { tp_name; _ }; source; prop; flags = { polarity; optional } } ->
+            {
+              key_tparam = { tp_name; _ };
+              source;
+              prop;
+              flags = { polarity; optional };
+              homomorphic;
+            } ->
           let optional_modifier =
             match optional with
             | KeepOptionality -> Empty
@@ -328,7 +334,12 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
               variance_ polarity;
               Atom "[";
               Atom tp_name;
-              Atom " in keyof ";
+              Atom " in ";
+              ( if homomorphic then
+                Atom "keyof "
+              else
+                Empty
+              );
               type_ ~depth source;
               Atom "]";
               optional_modifier;

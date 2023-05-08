@@ -43,3 +43,30 @@ type Unevaluated6<T: {...}> = {-[key in keyof T]?: T[key]};
 declare var x: {[key in keyof O]: O[key]};
    x;
 // ^
+
+type Keys = 'foo' | 'bar';
+
+// Concrete - should be evaluated before normalization
+
+type MappedObjNonHomomorphic1 = {[key in Keys]: number};
+//   ^
+type MappedObjNonHomomorphic2 = {[key in Keys]: O[key]};
+//   ^
+type MappedObjNonHomomorphic3 = {-[key in Keys]: O[key]};
+//   ^
+type MappedObjNonHomomorphic4 = {+[key in Keys]: O[key]};
+//   ^
+type MappedObjNonHomomorphic5 = {[key in Keys]?: O[key]};
+//   ^
+type MappedObjNonHomomorphic6 = {+[key in Keys]?: O[key]};
+//   ^
+type MappedObjNonHomomorphic7 = {-[key in Keys]?: O[key]};
+//   ^
+
+// Unevaluated
+type UnevaluatedNonHomomorphic<T: {...}> = {[key in T]: T};
+//   ^
+
+declare var y: {[key in Keys]: O[key]};
+   x;
+// ^

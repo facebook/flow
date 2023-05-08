@@ -279,8 +279,8 @@ let type_ options =
     | SpreadProp t ->
       let%map p = obj_spread_prop t in
       T.Object.SpreadProperty p
-    | MappedTypeProp { key_tparam; source; prop; flags } ->
-      let%map p = obj_mapped_type_prop key_tparam source prop flags in
+    | MappedTypeProp { key_tparam; source; prop; flags; homomorphic } ->
+      let%map p = obj_mapped_type_prop key_tparam source prop flags homomorphic in
       T.Object.MappedType p
   and obj_named_prop =
     let to_key x =
@@ -362,10 +362,13 @@ let type_ options =
   and obj_spread_prop t =
     let%map t = type_ t in
     (Loc.none, { T.Object.SpreadProperty.argument = t; comments = None })
-  and obj_mapped_type_prop key_tparam source prop { optional; polarity } =
+  and obj_mapped_type_prop key_tparam source prop { optional; polarity } homomorphic =
     let%bind source_type = type_ source in
     let keyof_source_type =
-      (Loc.none, T.Keyof { T.Keyof.argument = source_type; comments = None })
+      if homomorphic then
+        (Loc.none, T.Keyof { T.Keyof.argument = source_type; comments = None })
+      else
+        source_type
     in
     let%bind prop_type = type_ prop in
     let%map key_tparam = type_param key_tparam in

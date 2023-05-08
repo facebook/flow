@@ -918,3 +918,56 @@ Flags:
 = {|bar: string, foo: number|}
 mapped-type.js:44:4,44:4
 
+mapped-type.js:51:6
+Flags:
+type MappedObjNonHomomorphic1 = {[key in Keys]: number}
+= {|bar: number, foo: number|}
+mapped-type.js:51:6,51:29
+
+mapped-type.js:53:6
+Flags:
+type MappedObjNonHomomorphic2 = {[key in Keys]: O[key]}
+= {|bar: string, foo: number|}
+mapped-type.js:53:6,53:29
+
+mapped-type.js:55:6
+Flags:
+type MappedObjNonHomomorphic3 = {-[key in Keys]: O[key]}
+= {|-bar: string, -foo: number|}
+mapped-type.js:55:6,55:29
+
+mapped-type.js:57:6
+Flags:
+type MappedObjNonHomomorphic4 = {+[key in Keys]: O[key]}
+= {|+bar: string, +foo: number|}
+mapped-type.js:57:6,57:29
+
+mapped-type.js:59:6
+Flags:
+type MappedObjNonHomomorphic5 = {[key in Keys]?: O[key]}
+= {|bar?: string, foo?: number|}
+mapped-type.js:59:6,59:29
+
+mapped-type.js:61:6
+Flags:
+type MappedObjNonHomomorphic6 = {+[key in Keys]?: O[key]}
+= {|+bar?: string, +foo?: number|}
+mapped-type.js:61:6,61:29
+
+mapped-type.js:63:6
+Flags:
+type MappedObjNonHomomorphic7 = {-[key in Keys]?: O[key]}
+= {|-bar?: string, -foo?: number|}
+mapped-type.js:63:6,63:29
+
+mapped-type.js:67:6
+Flags:
+type UnevaluatedNonHomomorphic<T: {...}> = {[key in T]: T}
+mapped-type.js:67:6,67:30
+
+mapped-type.js:71:4
+Flags:
+{|bar: $ElementType<O, "bar">, foo: $ElementType<O, "foo">|}
+= {|bar: string, foo: number|}
+mapped-type.js:71:4,71:4
+

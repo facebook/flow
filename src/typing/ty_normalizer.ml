@@ -1569,7 +1569,7 @@ end = struct
         in
         mk_spread ty target prefix_tys head_slice
 
-    and mapped_type ~env source property_type mapped_type_flags =
+    and mapped_type ~env source property_type mapped_type_flags homomorphic =
       let%bind (key_tparam, prop) =
         Type.TypeTerm.(
           match property_type with
@@ -1589,7 +1589,7 @@ end = struct
         | Type.KeepOptionality -> Ty.KeepOptionality
       in
       let flags = { Ty.optional; polarity = type_polarity variance } in
-      let prop = Ty.(MappedTypeProp { key_tparam; source; prop; flags }) in
+      let prop = Ty.(MappedTypeProp { key_tparam; source; prop; flags; homomorphic }) in
       let obj_t =
         {
           Ty.obj_def_loc = None;
@@ -1689,14 +1689,12 @@ end = struct
       | T.IdxUnwrapType -> return (Ty.Utility (Ty.IdxUnwrapType ty))
       | T.RestType ((T.Object.Rest.Omit | T.Object.Rest.ReactConfigMerge _), _) as d ->
         terr ~kind:BadEvalT ~msg:(Debug_js.string_of_destructor d) None
-      | T.MappedType { property_type; mapped_type_flags; homomorphic = true } ->
-        mapped_type ~env ty property_type mapped_type_flags
+      | T.MappedType { property_type; mapped_type_flags; homomorphic } ->
+        mapped_type ~env ty property_type mapped_type_flags homomorphic
       | T.LatentPred (p, i) ->
         let%bind t' = type__ ~env t in
         let%map p' = type__ ~env p in
         generic_builtin_t (Reason.OrdinaryName "$Refined") [t'; p'; Ty.NumLit (string_of_int i)]
-      | T.MappedType { homomorphic = false; _ } ->
-        terr ~kind:BadEvalT ~msg:"non-homomorphic mapped type" (Some t)
 
     let rec type_ctor_ = type_ctor ~cont:type_ctor_
 

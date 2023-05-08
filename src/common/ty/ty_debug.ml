@@ -203,8 +203,8 @@ struct
     | NamedProp { name; prop; _ } -> dump_named_prop ~depth name prop
     | CallProp f -> dump_fun_t ~depth f
     | SpreadProp t -> dump_spread ~depth t
-    | MappedTypeProp { key_tparam; source; prop; flags } ->
-      dump_mapped_type ~depth key_tparam source prop flags
+    | MappedTypeProp { key_tparam; source; prop; flags; homomorphic } ->
+      dump_mapped_type ~depth key_tparam source prop flags homomorphic
 
   and dump_named_prop ~depth x = function
     | Field { t; polarity; optional } ->
@@ -225,11 +225,16 @@ struct
 
   and dump_spread ~depth t = spf "...%s" (dump_t ~depth t)
 
-  and dump_mapped_type ~depth { tp_name; _ } source prop { optional; polarity } =
+  and dump_mapped_type ~depth { tp_name; _ } source prop { optional; polarity } homomorphic =
     spf
-      "%s[%s in keyof %s]%s: %s"
+      "%s[%s in %s%s]%s: %s"
       (dump_polarity polarity)
       tp_name
+      ( if homomorphic then
+        "keyof "
+      else
+        ""
+      )
       (dump_t ~depth source)
       (match optional with
       | KeepOptionality -> ""
@@ -595,7 +600,13 @@ struct
             [("kind", JSON_String "CallProp"); ("prop", JSON_Object (json_of_fun_t ft))]
           | SpreadProp t -> [("kind", JSON_String "SpreadProp"); ("prop", json_of_t t)]
           | MappedTypeProp
-              { key_tparam = { tp_name; _ }; source; prop; flags = { optional; polarity } } ->
+              {
+                key_tparam = { tp_name; _ };
+                source;
+                prop;
+                flags = { optional; polarity };
+                homomorphic;
+              } ->
             let optional_str =
               match optional with
               | KeepOptionality -> "KeepOptionality"
@@ -609,6 +620,7 @@ struct
                   [
                     ("key_tparam", JSON_String tp_name);
                     ("source", json_of_t source);
+                    ("homomorphic", JSON_Bool homomorphic);
                     ("prop", json_of_t prop);
                     ( "flags",
                       JSON_Object
