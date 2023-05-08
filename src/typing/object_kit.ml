@@ -95,12 +95,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
     (* All keys must be a subtype of string | number | symbol *)
     rec_flow_t cx trace ~use_op:compatibility_use_op (keys, union);
     let possible_types =
-      let id = Tvar.mk_no_wrap cx reason in
-      rec_flow
-        cx
-        trace
-        (keys, PreprocessKitT (reason, ConcretizeTypes (ConcretizeMappedTypeArgumentT id)));
-      Flow_js_utils.possible_types cx id
+      Flow.possible_concrete_types (fun ident -> ConcretizeMappedTypeArgumentT ident) cx reason keys
     in
     let (keys_with_reasons, indexers) =
       possible_types

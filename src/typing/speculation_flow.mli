@@ -10,8 +10,6 @@ val is_flow_successful :
 
 val get_method_type_opt : Context.t -> Type.t -> Reason.reason -> Type.propref -> Type.t option
 
-val possible_concrete_types : Context.t -> Reason.t -> Type.t -> Type.t list
-
 (* NOTE The unsafe functions below may throw SpeculationSingletonError exception *)
 
 val flow_t_unsafe : Context.t -> Reason.reason -> upper_unresolved:bool -> Type.t * Type.t -> unit

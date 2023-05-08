@@ -9656,6 +9656,14 @@ module rec FlowJs : Flow_common.S = struct
   let perform_read_prop_action = GetPropTKit.perform_read_prop_action
 
   let react_get_config = React.get_config
+
+  (* Returns a list of concrete types after breaking up unions, maybe types, etc *)
+  let possible_concrete_types mk_concretization_target cx reason t =
+    let id = Tvar.mk_no_wrap cx reason in
+    flow cx (t, PreprocessKitT (reason, ConcretizeTypes (mk_concretization_target id)));
+    Flow_js_utils.possible_types cx id
+
+  let possible_concrete_types_for_hint = possible_concrete_types (fun ident -> ConcretizeHintT ident)
 end
 
 include FlowJs

@@ -496,7 +496,7 @@ and type_of_hint_decomposition cx op reason t =
         (match SMap.elements checks with
         | [] -> t
         | hd :: tl ->
-          (match SpeculationFlow.possible_concrete_types cx reason t with
+          (match Flow_js.possible_concrete_types_for_hint cx reason t with
           | [] -> t
           | [t] -> t
           | _ ->

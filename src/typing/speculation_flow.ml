@@ -17,12 +17,6 @@ let flow_t_unsafe cx reason ~upper_unresolved (l, u) =
     l
     (UseT (unknown_use, u))
 
-(* Returns a list of concrete types after breaking up unions, maybe types, etc *)
-let possible_concrete_types cx reason t =
-  let id = Tvar.mk_no_wrap cx reason in
-  Flow_js.flow cx (t, PreprocessKitT (reason, ConcretizeTypes (ConcretizeHintT id)));
-  Flow_js_utils.possible_types cx id
-
 let is_flow_successful cx reason ~upper_unresolved t u =
   match
     SpeculationKit.try_singleton_throw_on_failure cx Trace.dummy_trace reason ~upper_unresolved t u
@@ -31,7 +25,7 @@ let is_flow_successful cx reason ~upper_unresolved t u =
   | () -> true
 
 let resolved_lower_flow_unsafe cx r (l, u) =
-  match possible_concrete_types cx r l with
+  match Flow_js.possible_concrete_types_for_hint cx r l with
   | [] -> ()
   | [l] -> Flow_js.flow cx (l, u)
   | ls ->
@@ -49,7 +43,7 @@ let resolved_lower_flow_t_unsafe cx r (l, u) =
   resolved_lower_flow_unsafe cx r (l, UseT (unknown_use, u))
 
 let resolved_upper_flow_t_unsafe cx r (l, u) =
-  match possible_concrete_types cx r u with
+  match Flow_js.possible_concrete_types_for_hint cx r u with
   | [] -> ()
   | [u] -> Flow_js.flow_t cx (l, u)
   | us ->

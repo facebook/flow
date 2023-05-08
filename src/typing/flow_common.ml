@@ -302,4 +302,13 @@ module type S = sig
 
   val widen_obj_type :
     Context.t -> ?trace:Type.trace -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
+
+  val possible_concrete_types :
+    (Type.ident -> Type.concretization_target) ->
+    Context.t ->
+    Reason.reason ->
+    Type.t ->
+    Type.t list
+
+  val possible_concrete_types_for_hint : Context.t -> Reason.reason -> Type.t -> Type.t list
 end
