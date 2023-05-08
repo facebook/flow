@@ -565,6 +565,7 @@ type ('loc, 'a) annot =
       key_tparam: ('loc, 'a) tparam;
       variance: Polarity.t;
       optional: Flow_ast.Type.Object.MappedType.optional_flag;
+      homomorphic: bool;
     }
   | ObjAnnot of {
       loc: 'loc;

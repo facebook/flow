@@ -5,6 +5,7 @@ import type {
   ParameterizedId,
   ParameterizedPartial,
   ParameterizedReadonly,
+  MappedNonHomomorphic,
 } from './export';
 
 // No modifiers concrete
@@ -61,4 +62,10 @@ type O = {foo: number, bar?: string, +baz: bool};
   readonly.foo = 4; // ERROR;
   readonly.bar = 'str'; // ERROR;
   readonly.baz = false; // ERROR;
+}
+
+// Non-homomorphic mapped types
+{
+  ({foo: 3, bar: 3}: MappedNonHomomorphic); // OK!
+  ({foo: null, bar: null}: MappedNonHomomorphic); // ERROR!
 }

@@ -5547,15 +5547,18 @@ let%expect_test "mapped_types" =
     export type T2 = {[key in keyof O]?: O[key]};
     export type T3 = {+[key in keyof O]: O[key]};
     export type T4 = {-[key in keyof O]?: O[key]};
+    export type T5 = {[key in O]: O[key]};
   |};
   [%expect{|
     CJSModule {
       type_exports =
       [|(ExportTypeBinding 1); (ExportTypeBinding 2); (
-        ExportTypeBinding 3); (ExportTypeBinding 4)|];
+        ExportTypeBinding 3); (ExportTypeBinding 4); (
+        ExportTypeBinding 5)|];
       exports = None;
       info =
-      CJSModuleInfo {type_export_keys = [|"T1"; "T2"; "T3"; "T4"|]; type_stars = []; strict = true}}
+      CJSModuleInfo {type_export_keys = [|"T1"; "T2"; "T3"; "T4"; "T5"|];
+        type_stars = []; strict = true}}
 
     Local defs:
     0. TypeAlias {id_loc = [1:5-6]; name = "O";
@@ -5584,7 +5587,8 @@ let%expect_test "mapped_types" =
                 name = "key"; polarity = Polarity.Neutral;
                 bound = None; default = None};
               variance = Polarity.Neutral;
-              optional = Flow_ast.Type.Object.MappedType.NoOptionalFlag})}
+              optional = Flow_ast.Type.Object.MappedType.NoOptionalFlag;
+              homomorphic = true})}
     2. TypeAlias {id_loc = [3:12-14];
          name = "T2"; tparams = Mono;
          body =
@@ -5601,7 +5605,8 @@ let%expect_test "mapped_types" =
                 name = "key"; polarity = Polarity.Neutral;
                 bound = None; default = None};
               variance = Polarity.Neutral;
-              optional = Flow_ast.Type.Object.MappedType.Optional})}
+              optional = Flow_ast.Type.Object.MappedType.Optional;
+              homomorphic = true})}
     3. TypeAlias {id_loc = [4:12-14];
          name = "T3"; tparams = Mono;
          body =
@@ -5618,7 +5623,8 @@ let%expect_test "mapped_types" =
                 name = "key"; polarity = Polarity.Neutral;
                 bound = None; default = None};
               variance = Polarity.Positive;
-              optional = Flow_ast.Type.Object.MappedType.NoOptionalFlag})}
+              optional = Flow_ast.Type.Object.MappedType.NoOptionalFlag;
+              homomorphic = true})}
     4. TypeAlias {id_loc = [5:12-14];
          name = "T4"; tparams = Mono;
          body =
@@ -5635,25 +5641,41 @@ let%expect_test "mapped_types" =
                 name = "key"; polarity = Polarity.Neutral;
                 bound = None; default = None};
               variance = Polarity.Negative;
-              optional = Flow_ast.Type.Object.MappedType.Optional})} |}]
+              optional = Flow_ast.Type.Object.MappedType.Optional;
+              homomorphic = true})}
+    5. TypeAlias {id_loc = [6:12-14];
+         name = "T5"; tparams = Mono;
+         body =
+         (Annot
+            MappedTypeAnnot {loc = [6:18-36];
+              source_type = (TyRef (Unqualified LocalRef {ref_loc = [6:26-27]; index = 0}));
+              property_type =
+              (Annot
+                 ElementType {loc = [6:30-36];
+                   obj = (TyRef (Unqualified LocalRef {ref_loc = [6:30-31]; index = 0}));
+                   elem = (Annot Bound {ref_loc = [6:32-35]; name = "key"})});
+              key_tparam =
+              TParam {name_loc = [6:19-22];
+                name = "key"; polarity = Polarity.Neutral;
+                bound = None; default = None};
+              variance = Polarity.Neutral;
+              optional = Flow_ast.Type.Object.MappedType.NoOptionalFlag;
+              homomorphic = false})} |}]
 
 let%expect_test "mapped_types_invalid" =
   print_sig {|
     type O = {foo: number, bar: string};
     export type T = {[key in keyof O]-?: O[key]};
-    export type U = {[key in O]: O[key]};
-    export type V = {[key in keyof O]: O[key], foo: number};
+    export type U = {[key in keyof O]: O[key], foo: number};
   |};
   [%expect{|
-    CJSModule {
-      type_exports = [|(ExportTypeBinding 0); (ExportTypeBinding 1); (ExportTypeBinding 2)|];
+    CJSModule {type_exports = [|(ExportTypeBinding 0); (ExportTypeBinding 1)|];
       exports = None;
-      info = CJSModuleInfo {type_export_keys = [|"T"; "U"; "V"|]; type_stars = []; strict = true}}
+      info = CJSModuleInfo {type_export_keys = [|"T"; "U"|]; type_stars = []; strict = true}}
 
     Local defs:
     0. TypeAlias {id_loc = [2:12-13]; name = "T"; tparams = Mono; body = (Annot (Any [2:17-43]))}
-    1. TypeAlias {id_loc = [3:12-13]; name = "U"; tparams = Mono; body = (Annot (Any [3:17-35]))}
-    2. TypeAlias {id_loc = [4:12-13]; name = "V"; tparams = Mono; body = (Annot (Any [4:16-55]))}
+    1. TypeAlias {id_loc = [3:12-13]; name = "U"; tparams = Mono; body = (Annot (Any [3:16-55]))}
   |}]
 
 let%expect_test "mapped_types_disabled" =

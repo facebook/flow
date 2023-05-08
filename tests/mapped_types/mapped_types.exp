@@ -1,261 +1,291 @@
-Error --------------------------------------------------------------------------------------------------- import.js:16:4
+Error --------------------------------------------------------------------------------------------------- import.js:17:4
 
 Cannot cast `mapped` to object type because string [1] is incompatible with empty [2] in property `bar`.
 [incompatible-cast]
 
-   import.js:16:4
-   16|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
+   import.js:17:4
+   17|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
           ^^^^^^
 
 References:
    export.js:1:30
     1| type O = {foo: number, bar?: string, +baz: bool};
                                     ^^^^^^ [1]
-   import.js:16:30
-   16|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
+   import.js:17:30
+   17|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
                                     ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- import.js:16:4
+Error --------------------------------------------------------------------------------------------------- import.js:17:4
 
 Cannot cast `mapped` to object type because undefined [1] is incompatible with empty [2] in property `bar`.
 [incompatible-cast]
 
-   import.js:16:4
-   16|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
+   import.js:17:4
+   17|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
           ^^^^^^
 
 References:
    export.js:1:30
     1| type O = {foo: number, bar?: string, +baz: bool};
                                     ^^^^^^ [1]
-   import.js:16:30
-   16|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
+   import.js:17:30
+   17|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
                                     ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- import.js:16:4
+Error --------------------------------------------------------------------------------------------------- import.js:17:4
 
 Cannot cast `mapped` to object type because undefined [1] is incompatible with empty [2] in property `bar`.
 [incompatible-cast]
 
-   import.js:16:4
-   16|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
+   import.js:17:4
+   17|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
           ^^^^^^
 
 References:
    export.js:3:42
     3| export type MappedO = {[key in keyof O]: O[key]};
                                                 ^^^^^^ [1]
-   import.js:16:30
-   16|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
+   import.js:17:30
+   17|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
                                     ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- import.js:16:4
+Error --------------------------------------------------------------------------------------------------- import.js:17:4
 
 Cannot cast `mapped` to object type because boolean [1] is incompatible with empty [2] in property `baz`.
 [incompatible-cast]
 
-   import.js:16:4
-   16|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
+   import.js:17:4
+   17|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
           ^^^^^^
 
 References:
    export.js:1:44
     1| type O = {foo: number, bar?: string, +baz: bool};
                                                   ^^^^ [1]
-   import.js:16:43
-   16|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
+   import.js:17:43
+   17|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
                                                  ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- import.js:16:4
+Error --------------------------------------------------------------------------------------------------- import.js:17:4
 
 Cannot cast `mapped` to object type because number [1] is incompatible with empty [2] in property `foo`.
 [incompatible-cast]
 
-   import.js:16:4
-   16|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
+   import.js:17:4
+   17|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
           ^^^^^^
 
 References:
    export.js:1:16
     1| type O = {foo: number, bar?: string, +baz: bool};
                       ^^^^^^ [1]
-   import.js:16:18
-   16|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
+   import.js:17:18
+   17|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
                         ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- import.js:17:10
+Error -------------------------------------------------------------------------------------------------- import.js:18:10
 
 Cannot assign `true` to `mapped.baz` because property `baz` is not writable. [cannot-write]
 
-   17|   mapped.baz = true; // ERROR
+   18|   mapped.baz = true; // ERROR
                 ^^^
 
 
-Error -------------------------------------------------------------------------------------------------- import.js:25:15
+Error -------------------------------------------------------------------------------------------------- import.js:26:15
 
 Cannot assign `true` to `addOptional.baz` because property `baz` is not writable. [cannot-write]
 
-   25|   addOptional.baz = true; // ERROR
+   26|   addOptional.baz = true; // ERROR
                      ^^^
-
-
-Error -------------------------------------------------------------------------------------------------- import.js:32:12
-
-Cannot assign `4` to `readonly.foo` because property `foo` is not writable. [cannot-write]
-
-   32|   readonly.foo = 4; // ERROR;
-                  ^^^
 
 
 Error -------------------------------------------------------------------------------------------------- import.js:33:12
 
-Cannot assign `'str'` to `readonly.bar` because property `bar` is not writable. [cannot-write]
+Cannot assign `4` to `readonly.foo` because property `foo` is not writable. [cannot-write]
 
-   33|   readonly.bar = 'str'; // ERROR;
+   33|   readonly.foo = 4; // ERROR;
                   ^^^
 
 
 Error -------------------------------------------------------------------------------------------------- import.js:34:12
 
-Cannot assign `false` to `readonly.baz` because property `baz` is not writable. [cannot-write]
+Cannot assign `'str'` to `readonly.bar` because property `bar` is not writable. [cannot-write]
 
-   34|   readonly.baz = false; // ERROR;
+   34|   readonly.bar = 'str'; // ERROR;
                   ^^^
 
 
-Error --------------------------------------------------------------------------------------------------- import.js:45:4
+Error -------------------------------------------------------------------------------------------------- import.js:35:12
+
+Cannot assign `false` to `readonly.baz` because property `baz` is not writable. [cannot-write]
+
+   35|   readonly.baz = false; // ERROR;
+                  ^^^
+
+
+Error --------------------------------------------------------------------------------------------------- import.js:46:4
 
 Cannot cast `mapped` to object type because undefined [1] is incompatible with empty [2] in property `bar`.
 [incompatible-cast]
 
-   import.js:45:4
-   45|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
+   import.js:46:4
+   46|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
           ^^^^^^
 
 References:
    export.js:7:60
     7| export type ParameterizedId<O: {...}> = {[key in keyof O]: O[key]};
                                                                   ^^^^^^ [1]
-   import.js:45:30
-   45|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
+   import.js:46:30
+   46|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
                                     ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- import.js:45:4
+Error --------------------------------------------------------------------------------------------------- import.js:46:4
 
 Cannot cast `mapped` to object type because string [1] is incompatible with empty [2] in property `bar`.
 [incompatible-cast]
 
-   import.js:45:4
-   45|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
+   import.js:46:4
+   46|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
           ^^^^^^
 
 References:
-   import.js:38:30
-   38| type O = {foo: number, bar?: string, +baz: bool};
+   import.js:39:30
+   39| type O = {foo: number, bar?: string, +baz: bool};
                                     ^^^^^^ [1]
-   import.js:45:30
-   45|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
+   import.js:46:30
+   46|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
                                     ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- import.js:45:4
+Error --------------------------------------------------------------------------------------------------- import.js:46:4
 
 Cannot cast `mapped` to object type because undefined [1] is incompatible with empty [2] in property `bar`.
 [incompatible-cast]
 
-   import.js:45:4
-   45|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
+   import.js:46:4
+   46|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
           ^^^^^^
 
 References:
-   import.js:38:30
-   38| type O = {foo: number, bar?: string, +baz: bool};
+   import.js:39:30
+   39| type O = {foo: number, bar?: string, +baz: bool};
                                     ^^^^^^ [1]
-   import.js:45:30
-   45|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
+   import.js:46:30
+   46|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
                                     ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- import.js:45:4
+Error --------------------------------------------------------------------------------------------------- import.js:46:4
 
 Cannot cast `mapped` to object type because boolean [1] is incompatible with empty [2] in property `baz`.
 [incompatible-cast]
 
-   import.js:45:4
-   45|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
+   import.js:46:4
+   46|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
           ^^^^^^
 
 References:
-   import.js:38:44
-   38| type O = {foo: number, bar?: string, +baz: bool};
+   import.js:39:44
+   39| type O = {foo: number, bar?: string, +baz: bool};
                                                   ^^^^ [1]
-   import.js:45:43
-   45|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
+   import.js:46:43
+   46|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
                                                  ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- import.js:45:4
+Error --------------------------------------------------------------------------------------------------- import.js:46:4
 
 Cannot cast `mapped` to object type because number [1] is incompatible with empty [2] in property `foo`.
 [incompatible-cast]
 
-   import.js:45:4
-   45|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
+   import.js:46:4
+   46|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
           ^^^^^^
 
 References:
-   import.js:38:16
-   38| type O = {foo: number, bar?: string, +baz: bool};
+   import.js:39:16
+   39| type O = {foo: number, bar?: string, +baz: bool};
                       ^^^^^^ [1]
-   import.js:45:18
-   45|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
+   import.js:46:18
+   46|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
                         ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- import.js:46:10
+Error -------------------------------------------------------------------------------------------------- import.js:47:10
 
 Cannot assign `true` to `mapped.baz` because property `baz` is not writable. [cannot-write]
 
-   46|   mapped.baz = true; // ERROR
+   47|   mapped.baz = true; // ERROR
                 ^^^
 
 
-Error -------------------------------------------------------------------------------------------------- import.js:54:15
+Error -------------------------------------------------------------------------------------------------- import.js:55:15
 
 Cannot assign `true` to `addOptional.baz` because property `baz` is not writable. [cannot-write]
 
-   54|   addOptional.baz = true; // ERROR
+   55|   addOptional.baz = true; // ERROR
                      ^^^
-
-
-Error -------------------------------------------------------------------------------------------------- import.js:61:12
-
-Cannot assign `4` to `readonly.foo` because property `foo` is not writable. [cannot-write]
-
-   61|   readonly.foo = 4; // ERROR;
-                  ^^^
 
 
 Error -------------------------------------------------------------------------------------------------- import.js:62:12
 
-Cannot assign `'str'` to `readonly.bar` because property `bar` is not writable. [cannot-write]
+Cannot assign `4` to `readonly.foo` because property `foo` is not writable. [cannot-write]
 
-   62|   readonly.bar = 'str'; // ERROR;
+   62|   readonly.foo = 4; // ERROR;
                   ^^^
 
 
 Error -------------------------------------------------------------------------------------------------- import.js:63:12
 
+Cannot assign `'str'` to `readonly.bar` because property `bar` is not writable. [cannot-write]
+
+   63|   readonly.bar = 'str'; // ERROR;
+                  ^^^
+
+
+Error -------------------------------------------------------------------------------------------------- import.js:64:12
+
 Cannot assign `false` to `readonly.baz` because property `baz` is not writable. [cannot-write]
 
-   63|   readonly.baz = false; // ERROR;
+   64|   readonly.baz = false; // ERROR;
                   ^^^
+
+
+Error -------------------------------------------------------------------------------------------------- import.js:70:10
+
+Cannot cast object literal to `MappedNonHomomorphic` because null [1] is incompatible with number [2] in property `foo`.
+[incompatible-cast]
+
+   import.js:70:10
+   70|   ({foo: null, bar: null}: MappedNonHomomorphic); // ERROR!
+                ^^^^ [1]
+
+References:
+   export.js:11:61
+   11| export type MappedNonHomomorphic = {[key in 'foo' | 'bar']: number};
+                                                                   ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- import.js:70:21
+
+Cannot cast object literal to `MappedNonHomomorphic` because null [1] is incompatible with number [2] in property `bar`.
+[incompatible-cast]
+
+   import.js:70:21
+   70|   ({foo: null, bar: null}: MappedNonHomomorphic); // ERROR!
+                           ^^^^ [1]
+
+References:
+   export.js:11:61
+   11| export type MappedNonHomomorphic = {[key in 'foo' | 'bar']: number};
+                                                                   ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------ no_explicit_exactness.js:7:20
@@ -985,4 +1015,4 @@ References:
 
 
 
-Found 68 errors
+Found 70 errors

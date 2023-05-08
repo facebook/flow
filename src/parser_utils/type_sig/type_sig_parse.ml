@@ -1523,11 +1523,9 @@ and object_type =
     (* The source type does not have the key_tparam in scope, but we need to parse locs in syntax
      * order or we will violate type sig invariants. I keep track of old xs to make sure we don't
      * accidentally shadow a tparam in source_type *)
-    match (source_type, optional) with
-    | ( (_, Ast.Type.Keyof { Ast.Type.Keyof.argument = source_type; comments = _ }),
-        Ast.Type.Object.MappedType.(
-          PlusOptional | Ast.Type.Object.MappedType.Optional | NoOptionalFlag)
-      )
+    match optional with
+    | Ast.Type.Object.MappedType.(
+        PlusOptional | Ast.Type.Object.MappedType.Optional | NoOptionalFlag)
       when opts.mapped_type ->
       let (key_loc, key_name) =
         let ( _,
@@ -1543,7 +1541,14 @@ and object_type =
         in
         (push_loc tbls name_loc, name)
       in
-      let source_type = annot opts scope tbls xs source_type in
+
+      let (source_type, homomorphic) =
+        match source_type with
+        | (_, Ast.Type.Keyof { Ast.Type.Keyof.argument; comments = _ }) ->
+          (annot opts scope tbls xs argument, true)
+        | t -> (annot opts scope tbls xs t, false)
+      in
+
       let (key_tparam, xs) =
         ( TParam
             {
@@ -1559,7 +1564,15 @@ and object_type =
       let property_type = annot opts scope tbls xs prop_type in
       Annot
         (MappedTypeAnnot
-           { loc; source_type; property_type; key_tparam; variance = polarity variance; optional }
+           {
+             loc;
+             source_type;
+             property_type;
+             key_tparam;
+             variance = polarity variance;
+             optional;
+             homomorphic;
+           }
         )
     | _ -> Annot (Any loc)
   in
