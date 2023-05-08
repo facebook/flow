@@ -1623,10 +1623,10 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               (Some (fst key_tparam, Nel.one tparam))
               type_t
           in
-          let reason = mk_reason RObjectType prop_loc in
+          let reason = mk_reason RMappedType obj_loc in
           let defer_use_t =
             TypeDestructorT
-              ( unknown_use,
+              ( Op (EvalMappedType { mapped_type = reason }),
                 reason,
                 MappedType
                   {

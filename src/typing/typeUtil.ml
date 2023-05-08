@@ -621,6 +621,7 @@ let rec mod_loc_of_virtual_use_op f =
           key;
           sentinel_reason = mod_reason sentinel_reason;
         }
+    | EvalMappedType { mapped_type } -> EvalMappedType { mapped_type = mod_reason mapped_type }
     | UnknownUse -> UnknownUse
   in
   let mod_loc_of_frame_use_op = function

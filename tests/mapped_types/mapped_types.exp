@@ -467,17 +467,17 @@ References:
 
 Error ----------------------------------------------------------------------------------------- non_homomorphic.js:28:27
 
-boolean [1] is incompatible with `string | number | symbol`, so it cannot be used to generate keys for `BadKeys` [2].
-[incompatible-type]
+Cannot instantiate mapped type [1] because boolean [2] is incompatible with `string | number | symbol`, so it cannot be
+used to generate keys for `BadKeys` [1]. [incompatible-type]
 
    non_homomorphic.js:28:27
    28|   type BadKeys = {[key in boolean]: number}; // ERROR!
-                                 ^^^^^^^ [1]
+                                 ^^^^^^^ [2]
 
 References:
-   non_homomorphic.js:28:37
+   non_homomorphic.js:28:18
    28|   type BadKeys = {[key in boolean]: number}; // ERROR!
-                                           ^^^^^^ [2]
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------ non_homomorphic.js:40:4
@@ -544,9 +544,9 @@ type [2]. [prop-missing]
           ^^^^^^^^^
 
 References:
-   non_homomorphic.js:45:96
+   non_homomorphic.js:45:83
    45|   declare function ObjWithKeys<T>(x: {[key in T]: number}, ...$ReadOnlyArray<T>): {[key in T]: number};
-                                                                                                      ^^^^^^ [1]
+                                                                                         ^^^^^^^^^^^^^^^^^^^^ [1]
    non_homomorphic.js:48:15
    48|   (noContext: {foo: empty, bar: empty, baz: number}); // ERROR 3x
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
@@ -835,18 +835,22 @@ References:
                                                                        ^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- reasons.js:9:34
+Error ------------------------------------------------------------------------------------------------- reasons.js:10:26
 
-string literal `bar` [1] is incompatible with string literal `foo` [2] in type argument `T`. [incompatible-type-arg]
+Cannot instantiate mapped type [1] because string literal `bar` [2] is incompatible with string literal `foo` [3] in
+type argument `T`. [incompatible-type-arg]
 
-   reasons.js:9:34
-   9|   type FooBarObj = {foo: number, bar: number};
-                                       ^^^ [1]
+   reasons.js:10:26
+   10|   type MappedFooBarObj = {[key in keyof FooBarObj]: TakesFoo<key>}; // ERROR
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
+   reasons.js:9:34
+    9|   type FooBarObj = {foo: number, bar: number};
+                                        ^^^ [2]
    reasons.js:7:20
-   7|   type TakesFoo<T: 'foo'> = T;
-                         ^^^^^ [2]
+    7|   type TakesFoo<T: 'foo'> = T;
+                          ^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:26:4
@@ -1029,5 +1033,37 @@ References:
                                 ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:99:35
 
-Found 71 errors
+Cannot instantiate `UnconstrainedKey` because boolean [1] is incompatible with `string | number | symbol`, so it cannot
+be used to generate keys for `UnconstrainedKey` [2]. [incompatible-type]
+
+   test.js:99:35
+   99|   type BadKeys = UnconstrainedKey<boolean>; // ERROR HERE, NOT LINE ABOVE
+                                         ^^^^^^^ [1]
+
+References:
+   test.js:98:30
+   98|   type UnconstrainedKey<T> = {[key in T]: number};
+                                    ^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:101:4
+
+Cannot cast `badKeys` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:101:4
+   101|   (badKeys: empty); // ERROR
+           ^^^^^^^
+
+References:
+   test.js:100:26
+   100|   declare const badKeys: BadKeys;
+                                 ^^^^^^^ [1]
+   test.js:101:13
+   101|   (badKeys: empty); // ERROR
+                    ^^^^^ [2]
+
+
+
+Found 73 errors

@@ -588,6 +588,9 @@ let rec make_error_printable :
           ]
         in
         root loc frames op message
+      | Op (EvalMappedType { mapped_type }) ->
+        let message = [text "Cannot instantiate "; ref mapped_type] in
+        root loc frames mapped_type message
       | Frame (ConstrainedAssignment { name; declaration; providers; array }, use_op) ->
         let noun =
           if array then

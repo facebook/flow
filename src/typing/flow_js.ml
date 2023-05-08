@@ -7894,6 +7894,7 @@ struct
               | IndexedTypeAccess _
               | InferBoundCompatibilityCheck _
               | ConditionalTypeEval _
+              | EvalMappedType _
               | SetProperty _
               | UpdateProperty _
               | JSXCreateElement _

@@ -369,6 +369,7 @@ module rec TypeTerm : sig
         key: string;
         sentinel_reason: 'loc virtual_reason;
       }
+    | EvalMappedType of { mapped_type: 'loc virtual_reason }
     | UnknownUse
 
   and 'loc virtual_frame_use_op =
@@ -3534,6 +3535,7 @@ let aloc_of_root_use_op : root_use_op -> ALoc.t = function
   | SwitchCheck { case_test = op; _ }
   | MatchingProp { op; _ } ->
     loc_of_reason op
+  | EvalMappedType { mapped_type } -> loc_of_reason mapped_type
   | ReactGetIntrinsic _
   | Speculation _
   | UnknownUse
@@ -3669,6 +3671,7 @@ let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
   | UpdateProperty _ -> "UpdateProperty"
   | SwitchCheck _ -> "SwitchCheck"
   | MatchingProp _ -> "MatchingProp"
+  | EvalMappedType _ -> "EvalMappedType"
   | UnknownUse -> "UnknownUse"
 
 let string_of_frame_use_op (type a) : a virtual_frame_use_op -> string = function

@@ -92,3 +92,11 @@ type Mapped<O: {...}> = {
   declare var constrained: MappedConstrained<O>; // ERROR HERE, NOT IN DEFINITION OF MAPPEDCONSTRAINED
   (constrained: {foo: {contents: number}}); // OK 
 }
+
+// Error positioning
+{
+  type UnconstrainedKey<T> = {[key in T]: number};
+  type BadKeys = UnconstrainedKey<boolean>; // ERROR HERE, NOT LINE ABOVE
+  declare const badKeys: BadKeys;
+  (badKeys: empty); // ERROR
+}

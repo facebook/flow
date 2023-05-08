@@ -79,6 +79,7 @@ type 'loc virtual_reason_desc =
   | RObject
   | RObjectLit
   | RObjectType
+  | RMappedType
   | RObjectClassName
   | RInterfaceType
   | RArray
@@ -260,7 +261,8 @@ let rec map_desc_locs f = function
     | RROArrayType | RTupleType | RTupleElement | RTupleLength _ | RTupleOutOfBoundsAccess _
     | RFunction _ | RFunctionType | RFunctionBody | RFunctionCallType | RFunctionUnusedArgument
     | RJSXFunctionCall _ | RJSXIdentifier _ | RJSXElementProps _ | RJSXElement _ | RJSXText | RFbt
-    | RUninitialized | RPossiblyUninitialized | RUnannotatedNext | REmptyArrayElement ) as r ->
+    | RUninitialized | RPossiblyUninitialized | RUnannotatedNext | REmptyArrayElement | RMappedType
+      ) as r ->
     r
   | RFunctionCall desc -> RFunctionCall (map_desc_locs f desc)
   | RUnknownUnspecifiedProperty desc -> RUnknownUnspecifiedProperty (map_desc_locs f desc)
@@ -543,6 +545,7 @@ let rec string_of_desc = function
   | RObject -> "object"
   | RObjectLit -> "object literal"
   | RObjectType -> "object type"
+  | RMappedType -> "mapped type"
   | RObjectClassName -> "Object"
   | RInterfaceType -> "interface type"
   | RArray -> "array"
@@ -1334,6 +1337,7 @@ let classification_of_reason r =
   | RObject
   | RObjectLit
   | RObjectType
+  | RMappedType
   | RObjectClassName
   | RInterfaceType
   | RTupleElement

@@ -43,6 +43,7 @@ type 'loc virtual_reason_desc =
   | RObject
   | RObjectLit
   | RObjectType
+  | RMappedType
   | RObjectClassName
   | RInterfaceType
   | RArray
