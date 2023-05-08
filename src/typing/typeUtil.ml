@@ -61,7 +61,7 @@ and reason_of_use_t = function
   | BecomeT { reason; _ } -> reason
   | BindT (_, reason, _) -> reason
   | CallElemT (_, reason, _, _, _) -> reason
-  | CallLatentPredT (reason, _, _, _, _) -> reason
+  | CallLatentPredT { reason; _ } -> reason
   | CallT { reason; _ } -> reason
   | ChoiceKitUseT (reason, _) -> reason
   | CJSExtractNamedExportsT (reason, _, _) -> reason
@@ -236,7 +236,8 @@ and mod_reason_of_use_t f = function
   | BindT (use_op, reason, ft) -> BindT (use_op, f reason, ft)
   | CallElemT (use_op, reason_call, reason_lookup, t, ft) ->
     CallElemT (use_op, f reason_call, reason_lookup, t, ft)
-  | CallLatentPredT (reason, b, k, l, t) -> CallLatentPredT (f reason, b, k, l, t)
+  | CallLatentPredT ({ reason; _ } as contents) ->
+    CallLatentPredT { contents with reason = f reason }
   | CallT { use_op; reason; call_action; return_hint } ->
     CallT { use_op; reason = f reason; call_action; return_hint }
   | ChoiceKitUseT (reason, tool) -> ChoiceKitUseT (f reason, tool)
@@ -515,7 +516,7 @@ let rec util_use_op_of_use_t :
   | IdxUnMaybeifyT (_, _)
   | OptionalChainT _
   | InvariantT _
-  | CallLatentPredT (_, _, _, _, _)
+  | CallLatentPredT _
   | RefineT (_, _, _, _)
   | CondT (_, _, _, _)
   | ReactPropsToOut _
@@ -902,7 +903,7 @@ let rec eq_predicate (p1, p2) =
   | (SingletonBoolP (_, s1), SingletonBoolP (_, s2)) -> s1 = s2
   | (SingletonStrP (_, s1, v1), SingletonStrP (_, s2, v2)) -> s1 = s2 && v1 = v2
   | (SingletonNumP (_, s1, v1), SingletonNumP (_, s2, v2)) -> s1 = s2 && v1 = v2
-  | (LatentP (t1, i1), LatentP (t2, i2)) -> t1 == t2 && i1 = i2
+  | (LatentP (c1, i1), LatentP (c2, i2)) -> c1 == c2 && i1 = i2
   | (PropExistsP (s1, _), PropExistsP (s2, _)) -> s1 = s2
   | (PropNonMaybeP (s1, _), PropNonMaybeP (s2, _)) -> s1 = s2
   (* Complex *)

@@ -1575,11 +1575,18 @@ and merge_predicate tps infer_tps file (loc, p) =
     | SentinelExprP (key, prop, t) ->
       let t = merge tps infer_tps file t in
       singleton key Type.(LeftP (SentinelProp prop, t))
-    | LatentP (t, keys) ->
-      let t = lazy (merge tps infer_tps file t) in
+    | LatentP (t, targs, args, keys) ->
+      let call_info =
+        lazy
+          (let t = merge tps infer_tps file t in
+           let targs = merge_targs_opt file tps infer_tps targs in
+           let args = merge_args file tps infer_tps args in
+           (t, targs, args)
+          )
+      in
       Nel.fold_left
         (fun (pos1, neg1) (key, i) ->
-          let (pos2, neg2) = singleton key (Type.LatentP (t, i + 1)) in
+          let (pos2, neg2) = singleton key (Type.LatentP (call_info, i + 1)) in
           (pred_and pos1 pos2, pred_or neg1 neg2))
         (Key_map.empty, Key_map.empty)
         keys
@@ -1647,6 +1654,23 @@ and merge_fun
     DefT (reason, trust, FunT (statics, funtype))
   in
   merge_tparams_targs tps infer_tps file reason t tparams
+
+and merge_targ file tps infer_tps = function
+  | ExplicitArg t -> Type.ExplicitArg (merge tps infer_tps file t)
+  | ImplicitArg loc ->
+    let reason = Reason.mk_reason Reason.RImplicitInstantiation loc in
+    let id = Tvar.mk_no_wrap file.cx reason in
+    Type.ImplicitArg (reason, id)
+
+and merge_targs_opt file tps infer_tps = function
+  | None -> None
+  | Some targs -> Some (Base.List.map ~f:(merge_targ file tps infer_tps) targs)
+
+and merge_args file tps infer_tps args =
+  Base.List.map args ~f:(function
+      | Arg t -> Type.Arg (merge tps infer_tps file t)
+      | SpreadArg t -> Type.SpreadArg (merge tps infer_tps file t)
+      )
 
 let merge_type_alias file reason name tparams body =
   let t (tps, _) =

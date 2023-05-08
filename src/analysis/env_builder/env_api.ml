@@ -154,6 +154,8 @@ module type S = sig
       | SentinelR of string * L.t
       | LatentR of {
           func: (L.t, L.t) Ast.Expression.t;
+          targs: (L.t, L.t) Ast.Expression.CallTypeArgs.t option;
+          arguments: (L.t, L.t) Ast.Expression.ArgList.t;
           index: int;
         }
       | PropExistsR of {
@@ -184,6 +186,11 @@ module type S = sig
 
   type predicate_refinement_maps = (read SMap.t * read SMap.t) L.LMap.t
 
+  type pred_func_info =
+    (L.t, L.t) Ast.Expression.t (* Callee *)
+    * (L.t, L.t) Ast.Expression.CallTypeArgs.t option
+    * (L.t, L.t) Ast.Expression.ArgList.t
+
   type env_info = {
     scopes: Scope_api.info;
     ssa_values: Ssa_api.values;
@@ -194,7 +201,7 @@ module type S = sig
     predicate_refinement_maps: predicate_refinement_maps;
     providers: Provider_api.info;
     refinement_of_id: int -> Refi.refinement;
-    pred_func_map: (L.t, L.t) Ast.Expression.t (* Callee *) L.LMap.t;
+    pred_func_map: pred_func_info L.LMap.t;
   }
 
   type 'l annot_loc =
@@ -418,6 +425,8 @@ module Make
       | SentinelR of string * L.t
       | LatentR of {
           func: (L.t, L.t) Ast.Expression.t;
+          targs: (L.t, L.t) Ast.Expression.CallTypeArgs.t option;
+          arguments: (L.t, L.t) Ast.Expression.ArgList.t;
           index: int;
         }
       | PropExistsR of {
@@ -460,6 +469,11 @@ module Make
 
   type predicate_refinement_maps = (read SMap.t * read SMap.t) L.LMap.t
 
+  type pred_func_info =
+    (L.t, L.t) Ast.Expression.t (* Callee *)
+    * (L.t, L.t) Ast.Expression.CallTypeArgs.t option
+    * (L.t, L.t) Ast.Expression.ArgList.t
+
   type env_info = {
     scopes: Scope_api.info;
     ssa_values: Ssa_api.values;
@@ -470,7 +484,7 @@ module Make
     predicate_refinement_maps: predicate_refinement_maps;
     providers: Provider_api.info;
     refinement_of_id: int -> Refi.refinement;
-    pred_func_map: (L.t, L.t) Ast.Expression.t (* Callee *) L.LMap.t;
+    pred_func_map: pred_func_info L.LMap.t;
   }
 
   type 'l annot_loc =
@@ -594,7 +608,8 @@ module Make
       else
         lit
     | SentinelR (prop, _) -> Printf.sprintf "SentinelR %s" prop
-    | LatentR { func = _; index } -> Printf.sprintf "LatentR (index = %i)" index
+    | LatentR { func = _; targs = _; arguments = _; index } ->
+      Printf.sprintf "LatentR (index = %i)" index
     | PropExistsR { propname; loc = _ } -> Printf.sprintf "PropExistsR (%s)" propname
 end
 

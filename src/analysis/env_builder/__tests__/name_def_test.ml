@@ -649,8 +649,8 @@ if (f(x)) {
   |};
   [%expect {|
     (3, 12) to (3, 13) =>
-    illegal scc: (((2, 9) to (2, 10)); ((7, 2) to (7, 3))) =>
-    (6, 6) to (6, 7) |}]
+    (6, 6) to (6, 7) =>
+    illegal scc: (((2, 9) to (2, 10)); ((7, 2) to (7, 3))) |}]
 
 let%expect_test "refi_latent_complex" =
   print_order_test {|
@@ -665,8 +665,8 @@ if (f()(x)) {
   [%expect {|
     (2, 23) to (2, 24) =>
     (3, 12) to (3, 13) =>
-    illegal scc: (((2, 9) to (2, 10)); ((7, 2) to (7, 3))) =>
-    (6, 8) to (6, 9) |}]
+    (6, 8) to (6, 9) =>
+    illegal scc: (((2, 9) to (2, 10)); ((7, 2) to (7, 3))) |}]
 
 let%expect_test "refi_sentinel" =
   print_order_test {|

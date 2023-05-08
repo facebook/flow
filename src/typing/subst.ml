@@ -289,12 +289,7 @@ let substituter =
 
     method! predicate cx (map, force, use_op) p =
       match p with
-      | LatentP ((lazy t), i) ->
-        let t' = self#type_ cx (map, force, use_op) t in
-        if t == t' then
-          p
-        else
-          LatentP (lazy t', i)
+      | LatentP _ -> super#predicate cx (map, force, use_op) p
       | p -> p
 
     method! obj_type cx map_cx t =

@@ -3344,12 +3344,29 @@ and predicate opts scope tbls pnames =
     | In ->
       None
   in
-  let call callee =
+  let targ = function
+    | E.CallTypeArg.Implicit (loc, _) -> ImplicitArg (push_loc tbls loc)
+    | E.CallTypeArg.Explicit t -> ExplicitArg (annot opts scope tbls pnames t)
+  in
+  let targs_ = function
+    | None -> None
+    | Some (_, { E.CallTypeArgs.arguments; _ }) -> Some (Base.List.map arguments ~f:targ)
+  in
+  let arg_list args =
+    Base.List.map args.E.ArgList.arguments ~f:(function
+        | E.Expression e -> Some (Arg (expression opts scope tbls e))
+        | E.Spread _ -> None
+        )
+    |> Base.Option.all
+  in
+  let call callee targs args =
     let finish = function
       | [] -> None
       | x :: xs ->
         let t = expression opts scope tbls callee in
-        Some (LatentP (t, (x, xs)))
+        let targs = targs_ targs in
+        let args_opt = arg_list args in
+        Base.Option.map args_opt ~f:(fun args -> LatentP (t, targs, args, (x, xs)))
     in
     let f acc i = function
       | E.Expression (_, E.Identifier id) ->
@@ -3366,20 +3383,19 @@ and predicate opts scope tbls pnames =
         let%bind acc = f acc i arg in
         loop acc (i + 1) args
     in
-    fun args ->
-      match (callee, args) with
-      | ( ( _,
-            E.Member
-              {
-                E.Member._object = (_, E.Identifier (_, { I.name = "Array"; comments = _ }));
-                property = E.Member.PropertyIdentifier (_, { I.name = "isArray"; comments = _ });
-                comments = _;
-              }
-          ),
-          { E.ArgList.arguments = [E.Expression arg]; comments = _ }
-        ) ->
-        refine `IsArray arg
-      | (_, { E.ArgList.arguments; comments = _ }) -> loop [] 0 arguments
+    match (callee, args) with
+    | ( ( _,
+          E.Member
+            {
+              E.Member._object = (_, E.Identifier (_, { I.name = "Array"; comments = _ }));
+              property = E.Member.PropertyIdentifier (_, { I.name = "isArray"; comments = _ });
+              comments = _;
+            }
+        ),
+        { E.ArgList.arguments = [E.Expression arg]; comments = _ }
+      ) ->
+      refine `IsArray arg
+    | (_, { E.ArgList.arguments; comments = _ }) -> loop [] 0 arguments
   in
   fun (loc, expr) ->
     let loc = push_loc tbls loc in
@@ -3388,7 +3404,7 @@ and predicate opts scope tbls pnames =
     | E.Logical { E.Logical.operator; left; right; comments = _ } -> logical left right operator
     | E.Unary { E.Unary.operator; argument; comments = _ } -> unary argument operator
     | E.Binary { E.Binary.operator; left; right; comments = _ } -> binary loc left right operator
-    | E.Call { E.Call.callee; targs = _; arguments = (_, args); comments = _ } -> call callee args
+    | E.Call { E.Call.callee; targs; arguments = (_, args); comments = _ } -> call callee targs args
     | _ -> None
 
 and class_def =

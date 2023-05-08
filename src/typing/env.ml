@@ -92,6 +92,17 @@ let with_debug_exn cx loc f =
       AnyT.at (AnyError None) loc
     )
 
+let with_debug_exn_error cx loc ~f ~error =
+  try f () with
+  | exn ->
+    let exn = Exception.wrap exn in
+    if Build_mode.dev then
+      Exception.reraise exn
+    else (
+      Flow_js_utils.add_output cx (Error_message.EInternal (loc, Error_message.MissingEnvWrite loc));
+      error ()
+    )
+
 let t_option_value_exn cx loc t =
   with_debug_exn cx loc (fun () ->
       match t with
@@ -269,8 +280,9 @@ let rec predicate_of_refinement cx =
         (lazy [spf "reading from location %s (in sentinel refinement)" (Reason.string_of_aloc loc)]);
       let other_t = checked_find_loc_env_write cx Env_api.ExpressionLoc loc in
       LeftP (SentinelProp prop, other_t)
-    | LatentR { func = (func_loc, _); index } ->
-      LatentP (lazy (read_pred_func_info_exn cx func_loc), index)
+    | LatentR { func = (func_loc, _); index; _ } ->
+      let call_info = read_pred_func_info_exn cx func_loc in
+      LatentP (call_info, index)
     | PropExistsR { propname; loc } ->
       PropExistsP (propname, mk_reason (RProperty (Some (OrdinaryName propname))) loc)
   )
@@ -472,12 +484,9 @@ and read_entry_exn ~lookup_mode cx loc reason =
   )
 
 and read_pred_func_info_exn cx loc =
-  with_debug_exn cx loc (fun () ->
-      let { Loc_env.pred_func_map; _ } = Context.environment cx in
-      match ALocMap.find_opt loc pred_func_map with
-      | None -> failwith (Utils_js.spf "PredFuncInfoNotFound %s" (Reason.string_of_aloc loc))
-      | Some (lazy t) -> t
-  )
+  let f () = ALocMap.find loc (Context.environment cx).Loc_env.pred_func_map in
+  let error () = lazy (AnyT.at (AnyError None) loc, None, []) in
+  with_debug_exn_error cx loc ~f ~error
 
 and predicate_refinement_maps cx loc =
   let { Loc_env.var_info; _ } = Context.environment cx in

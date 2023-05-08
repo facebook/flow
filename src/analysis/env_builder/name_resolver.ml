@@ -886,7 +886,7 @@ module Make
     visiting_hoisted_type: bool;
     in_conditional_type_extends: bool;
     jsx_base_name: string option;
-    pred_func_map: (L.t, L.t) Ast.Expression.t L.LMap.t;
+    pred_func_map: Env_api.pred_func_info L.LMap.t;
   }
 
   type pattern_write_kind =
@@ -1582,15 +1582,15 @@ module Make
        * as an argument. Variables not passed into the function are havoced if
        * the invalidation api says they can be invalidated.
        *)
-      method apply_latent_refinements refinement_keys_by_arg func =
+      method apply_latent_refinements refinement_keys_by_arg func targs arguments =
         let (callee_loc, _) = func in
         List.iteri
           (fun index -> function
             | None -> ()
             | Some key ->
-              let pred = LatentR { func; index = index + 1 } in
+              let pred = LatentR { func; targs; arguments; index = index + 1 } in
               this#add_single_refinement key (L.LSet.singleton callee_loc, pred);
-              this#add_pred_func_info (fst func) func)
+              this#add_pred_func_info (fst func) (func, targs, arguments))
           refinement_keys_by_arg
 
       method havoc_heap_refinements heap_refinements = heap_refinements := HeapRefinementMap.empty
@@ -4554,8 +4554,8 @@ module Make
 
       method add_single_refinement key refi = this#commit_refinement (this#start_refinement key refi)
 
-      method add_pred_func_info key loc =
-        env_state <- { env_state with pred_func_map = L.LMap.add key loc env_state.pred_func_map }
+      method add_pred_func_info key info =
+        env_state <- { env_state with pred_func_map = L.LMap.add key info env_state.pred_func_map }
 
       method start_refinement { RefinementKey.loc; lookup } refi =
         LookupMap.singleton lookup (loc, refi)
@@ -5001,7 +5001,7 @@ module Make
           let { ArgList.arguments = arglist; _ } = snd arguments in
           let is_spread = function
             | Spread _ -> true
-            | _ -> false
+            | Expression _ -> false
           in
           let refinement_keys =
             if List.exists is_spread arglist then
@@ -5013,7 +5013,7 @@ module Make
           ignore @@ Base.Option.map ~f:this#call_type_args targs;
           ignore @@ this#arg_list arguments;
           this#havoc_current_env ~all:false;
-          this#apply_latent_refinements refinement_keys callee
+          this#apply_latent_refinements refinement_keys callee targs arguments
         | _ -> ignore @@ this#call loc call
 
       method unary_refinement

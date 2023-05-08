@@ -741,26 +741,21 @@ module rec TypeTerm : sig
         voided_out: t_out;
       }
     | InvariantT of reason (* Function predicate uses *)
-    (*
-     * The following two uses are used when a predicate function is called to
-     * establish a predicate over one of its arguments.
-     *)
-    (*
-     * The intended use for CallLatentPredT is to flow a predicated function
-     * type to it. This function will refine the unrefined argument of
-     * CallLatentPredT and use the second of the two type arguments as the
-     * out-type. Also, since we might not yet know the function's formal
-     * parameters (until the incoming flow gets concretized), we can only
-     * keep the index of the argument that gets refined as part of the use.
-     *
-     * Flowing a non-predicate function type has no refining effect.
-     *
-     * This can be thought of as the equivalent of flows to `CallT` but for
-     * predicated calls.
-     *
-     * The boolean part is the sense of the conditional check.
-     *)
-    | CallLatentPredT of reason * sense * index * t * tvar
+    (* CallLatentPredT connects a predicate function with information available
+     * at a call-site appearing in a conditional position (e.g. `if (pred(x))`).
+     * [tin] is the incoming type of `x` and [tout] the refined result in the then-
+     * branch. Since at the time of processing the call we do not know yet the
+     * function's formal parameters, [idx] is the index of the argument that gets
+     * refined. *)
+    | CallLatentPredT of {
+        reason: reason;
+        targs: targ list option;
+        argts: call_arg list;
+        sense: sense;
+        idx: index;
+        tin: t;
+        tout: tvar;
+      }
     (*
      * `RefineT (reason, fun_t, i, tvar)` is an instruction to refine an incoming
      * flow using the predicate of function `fun_t` on the i-th position. The result
@@ -987,9 +982,10 @@ module rec TypeTerm : sig
     | PropExistsP of string * reason
     (* `if (a.b?.c)` yields `flow (a, PredicateT(PropNonMaybeP ("b"), tout))` *)
     | PropNonMaybeP of string * reason
-    (* Encondes the latent predicate associated with the i-th parameter
-       of a function, whose type is the second element of the triplet. *)
-    | LatentP of t Lazy.t * index
+    (* Encondes the latent predicate associated with the [index]-th parameter
+       of the function in type [t]. We also include information for all type arguments
+       and argument types of the call, to enable polymorphic calls. *)
+    | LatentP of pred_funcall_info Lazy.t * index
 
   and substitution = Key.t SMap.t
 
@@ -1128,6 +1124,8 @@ module rec TypeTerm : sig
   and call_arg =
     | Arg of t
     | SpreadArg of t
+
+  and pred_funcall_info = t (* callee *) * targ list option * call_arg list
 
   and arrtype =
     | ArrayAT of t * t list option
@@ -3878,8 +3876,8 @@ let rec string_of_predicate = function
   | ArrP -> "array"
   | PropExistsP (key, _) -> spf "prop `%s` is truthy" key
   | PropNonMaybeP (key, _) -> spf "prop `%s` is not null or undefined" key
-  | LatentP ((lazy (OpenT (_, id))), i) -> spf "LatentPred(TYPE_%d, %d)" id i
-  | LatentP ((lazy t), i) -> spf "LatentPred(%s, %d)" (string_of_ctor t) i
+  | LatentP ((lazy (OpenT (_, id), _, _)), i) -> spf "LatentPred(TYPE_%d, %d)" id i
+  | LatentP ((lazy (t, _, _)), i) -> spf "LatentPred(%s, %d)" (string_of_ctor t) i
 
 let string_of_type_t_kind = function
   | TypeAliasKind -> "TypeAliasKind"

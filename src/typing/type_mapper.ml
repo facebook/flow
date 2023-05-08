@@ -223,6 +223,21 @@ class virtual ['a] t =
         else
           ExplicitArg t''
 
+    method private call_arg cx map_cx a =
+      match a with
+      | Arg t ->
+        let t' = self#type_ cx map_cx t in
+        if t' == t then
+          a
+        else
+          Arg t'
+      | SpreadArg t ->
+        let t' = self#type_ cx map_cx t in
+        if t' == t then
+          a
+        else
+          SpreadArg t'
+
     method enum cx map_cx e =
       let { enum_id; members; representation_t; has_unknown_members } = e in
       let representation_t' = self#type_ cx map_cx representation_t in
@@ -752,12 +767,14 @@ class virtual ['a] t =
       | PropNonMaybeP _
       | PropExistsP _ ->
         p
-      | LatentP ((lazy t), i) ->
+      | LatentP ((lazy (t, targs, argts)), i) ->
         let t' = self#type_ cx map_cx t in
-        if t' == t then
+        let targs' = OptionUtils.ident_map (ListUtils.ident_map (self#targ cx map_cx)) targs in
+        let argts' = ListUtils.ident_map (self#call_arg cx map_cx) argts in
+        if t == t' && targs' == targs && argts' == argts then
           p
         else
-          LatentP (lazy t', i)
+          LatentP (lazy (t', targs', argts'), i)
 
     method type_map cx map_cx t =
       match t with

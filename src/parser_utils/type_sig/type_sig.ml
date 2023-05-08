@@ -33,6 +33,16 @@ type 'a tailrec_list = 'a list [@@deriving iter, show { with_path = false }]
 
 let map_tailrec_list f xs = Base.List.map ~f xs
 
+type ('loc, 'a) targ =
+  | ImplicitArg of 'loc
+  | ExplicitArg of 'a
+[@@deriving iter, map, show { with_path = false }]
+
+type 'a arg =
+  | Arg of 'a
+  | SpreadArg of 'a
+[@@deriving iter, map, show { with_path = false }]
+
 type ('key, 'loc, 'a) predicate =
   | AndP of ('key, 'loc, 'a) predicate * ('key, 'loc, 'a) predicate
   | OrP of ('key, 'loc, 'a) predicate * ('key, 'loc, 'a) predicate
@@ -61,7 +71,7 @@ type ('key, 'loc, 'a) predicate =
   | SentinelNullP of 'key * string * 'loc
   | SentinelVoidP of 'key * string * 'loc
   | SentinelExprP of 'key * string * 'a
-  | LatentP of 'a * ('key * int) Nel.t
+  | LatentP of 'a * ('loc, 'a) targ list option * 'a arg list * ('key * int) Nel.t
 [@@deriving iter, map, show { with_path = false }]
 
 type ('loc, 'a) tparam =

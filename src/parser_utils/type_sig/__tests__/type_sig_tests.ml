@@ -2684,7 +2684,9 @@ let%expect_test "function_predicates_2" =
            return = (Annot (Boolean [2:31-38]));
            predicate =
            (Some ([3:2-16],
-                  (Some (LatentP ((Ref LocalRef {ref_loc = [3:9-12]; index = 0}), (("x", 0), []))))))};
+                  (Some (LatentP ((Ref LocalRef {ref_loc = [3:9-12]; index = 0}), None,
+                           [(Arg (Ref BuiltinRef {ref_loc = [3:13-14]; name = "x"}))],
+                           (("x", 0), []))))))};
          statics = {}} |}]
 
 let%expect_test "function_predicates_3" =
@@ -2718,7 +2720,9 @@ let%expect_test "function_predicates_3" =
            return = (Annot (Boolean [2:39-46]));
            predicate =
            (Some ([2:47-62],
-                  (Some (LatentP ((Ref LocalRef {ref_loc = [2:55-58]; index = 0}), (("x", 0), []))))))};
+                  (Some (LatentP ((Ref LocalRef {ref_loc = [2:55-58]; index = 0}), None,
+                           [(Arg (Ref BuiltinRef {ref_loc = [2:59-60]; name = "x"}))],
+                           (("x", 0), []))))))};
          tail = []}
 
     Errors:
@@ -2776,6 +2780,87 @@ let%expect_test "function_predicates_5" =
            rest_param = None; this_param = None;
            return = (Annot (Boolean [2:33-40]));
            predicate = (Some ([3:2-19], None))};
+         statics = {}} |}]
+
+let%expect_test "function_predicates_6_unsupported_spread" =
+  print_sig {|
+    export function foo(x: mixed): boolean %checks {
+      return foo(...x);
+    }
+  |};
+  [%expect {|
+    ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      info =
+      ESModuleInfo {type_export_keys = [||];
+        type_stars = []; export_keys = [|"foo"|];
+        stars = []; strict = true}}
+
+    Local defs:
+    0. FunBinding {id_loc = [1:16-19];
+         name = "foo"; async = false;
+         generator = false; fn_loc = [1:7-46];
+         def =
+         FunSig {tparams = Mono;
+           params = [FunParam {name = (Some "x"); t = (Annot (Mixed [1:23-28]))}];
+           rest_param = None; this_param = None;
+           return = (Annot (Boolean [1:31-38]));
+           predicate = (Some ([2:2-19], None))};
+         statics = {}} |}]
+
+let%expect_test "function_predicates_7_latent_with_targs" =
+  print_sig {|
+    const y = "abc";
+    declare export function poly<A, B>(x: A, y: B): boolean;
+    export function foo(x: number): boolean %checks {
+      return poly<number, _>(x, y);
+    }
+  |};
+  [%expect {|
+    ESModule {type_exports = [||]; exports = [|(ExportBinding 2); (ExportBinding 1)|];
+      info =
+      ESModuleInfo {type_export_keys = [||];
+        type_stars = []; export_keys = [|"foo"; "poly"|];
+        stars = []; strict = true}}
+
+    Local defs:
+    0. Variable {id_loc = [1:6-7]; name = "y"; def = (Value (StringLit ([1:10-15], "abc")))}
+    1. DeclareFun {id_loc = [2:24-28];
+         name = "poly"; fn_loc = [2:28-55];
+         def =
+         FunSig {
+           tparams =
+           (Poly ([2:28-34],
+              TParam {name_loc = [2:29-30];
+                name = "A"; polarity = Polarity.Neutral;
+                bound = None; default = None},
+              [TParam {name_loc = [2:32-33];
+                 name = "B"; polarity = Polarity.Neutral;
+                 bound = None; default = None}
+                ]
+              ));
+           params =
+           [FunParam {name = (Some "x"); t = (Annot Bound {ref_loc = [2:38-39]; name = "A"})};
+             FunParam {name = (Some "y"); t = (Annot Bound {ref_loc = [2:44-45]; name = "B"})}];
+           rest_param = None; this_param = None;
+           return = (Annot (Boolean [2:48-55]));
+           predicate = None};
+         tail = []}
+    2. FunBinding {id_loc = [3:16-19];
+         name = "foo"; async = false;
+         generator = false; fn_loc = [3:7-47];
+         def =
+         FunSig {tparams = Mono;
+           params = [FunParam {name = (Some "x"); t = (Annot (Number [3:23-29]))}];
+           rest_param = None; this_param = None;
+           return = (Annot (Boolean [3:32-39]));
+           predicate =
+           (Some ([4:2-31],
+                  (Some (LatentP ((Ref LocalRef {ref_loc = [4:9-13]; index = 1}),
+                           (Some [(ExplicitArg (Annot (Number [4:14-20]))); (
+                                   ImplicitArg [4:22-23])]),
+                           [(Arg (Ref BuiltinRef {ref_loc = [4:25-26]; name = "x"}));
+                             (Arg (Ref LocalRef {ref_loc = [4:28-29]; index = 0}))],
+                           (("x", 0), []))))))};
          statics = {}} |}]
 
 let%expect_test "async_function_1" =
@@ -4528,10 +4613,13 @@ let%expect_test "predicate_latent" =
            (Some ([8:2-27],
                   (Some (AndP (
                            (LatentP ((
-                              Ref LocalRef {ref_loc = [8:10-11]; index = 0}), (
-                              ("a", 0), []))),
+                              Ref LocalRef {ref_loc = [8:10-11]; index = 0}), None,
+                              [(Arg (Ref BuiltinRef {ref_loc = [8:12-13]; name = "a"}))],
+                              (("a", 0), []))),
                            (LatentP ((
-                              Ref LocalRef {ref_loc = [8:18-19]; index = 1}),
+                              Ref LocalRef {ref_loc = [8:18-19]; index = 1}), None,
+                              [(Arg (Ref BuiltinRef {ref_loc = [8:20-21]; name = "a"}));
+                                (Arg (Ref BuiltinRef {ref_loc = [8:23-24]; name = "b"}))],
                               (("b", 1), [("a", 0)])))
                            )))))};
          statics = {}} |}]
@@ -4545,14 +4633,15 @@ let%expect_test "predicate_latent_non_param_identifiers" =
     }
   |};
   [%expect {|
-    ESModule {type_exports = [||]; exports = [|(ExportBinding 1)|];
+    ESModule {type_exports = [||]; exports = [|(ExportBinding 2)|];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"bar"|];
         stars = []; strict = true}}
 
     Local defs:
-    0. DeclareFun {id_loc = [2:17-20];
+    0. Variable {id_loc = [1:6-7]; name = "y"; def = (Value (StringLit ([1:10-15], "abc")))}
+    1. DeclareFun {id_loc = [2:17-20];
          name = "foo"; fn_loc = [2:20-49];
          def =
          FunSig {tparams = Mono;
@@ -4563,7 +4652,7 @@ let%expect_test "predicate_latent_non_param_identifiers" =
            return = (Annot (Boolean [2:42-49]));
            predicate = (Some ([2:50-80], (Some (NumP ("x", [2:58-79])))))};
          tail = []}
-    1. FunBinding {id_loc = [3:16-19];
+    2. FunBinding {id_loc = [3:16-19];
          name = "bar"; async = false;
          generator = false; fn_loc = [3:7-46];
          def =
@@ -4573,7 +4662,10 @@ let%expect_test "predicate_latent_non_param_identifiers" =
            return = (Annot (Boolean [3:31-38]));
            predicate =
            (Some ([4:2-19],
-                  (Some (LatentP ((Ref LocalRef {ref_loc = [4:9-12]; index = 0}), (("x", 0), []))))))};
+                  (Some (LatentP ((Ref LocalRef {ref_loc = [4:9-12]; index = 1}), None,
+                           [(Arg (Ref BuiltinRef {ref_loc = [4:13-14]; name = "x"}));
+                             (Arg (Ref LocalRef {ref_loc = [4:16-17]; index = 0}))],
+                           (("x", 0), []))))))};
          statics = {}} |}]
 
 let%expect_test "long_string_lit" =

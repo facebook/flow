@@ -704,8 +704,13 @@ struct
         (*****************************)
         (* Refinement type subtyping *)
         (*****************************)
-        | (_, RefineT (reason, fun_t, idx, tvar)) ->
-          rec_flow cx trace (fun_t, CallLatentPredT (reason, true, idx, l, tvar))
+        | (_, RefineT (reason, fun_t, idx, tout)) ->
+          rec_flow
+            cx
+            trace
+            ( fun_t,
+              CallLatentPredT { reason; targs = None; argts = []; sense = true; idx; tin = l; tout }
+            )
         (*************)
         (* Debugging *)
         (*************)
@@ -2351,11 +2356,11 @@ struct
            refinement never took place).
         *)
         | ( DefT (lreason, _, FunT (_, { params; predicate = Some (_, pmap, nmap); _ })),
-            CallLatentPredT (reason, sense, index, unrefined_t, fresh_t)
+            CallLatentPredT { reason; targs = _; argts = _; sense; idx; tin; tout }
           ) -> begin
           (* TODO: for the moment we only support simple keys (empty projection)
              that exactly correspond to the function's parameters *)
-          match Base.List.nth params (index - 1) with
+          match Base.List.nth params (idx - 1) with
           | None ->
             let msg =
               Error_message.EPredicateFuncTooShort
@@ -2363,14 +2368,14 @@ struct
                   loc = loc_of_reason reason;
                   pred_func = lreason;
                   pred_func_param_num = List.length params;
-                  index;
+                  index = idx;
                 }
             in
             add_output cx ~trace msg;
-            rec_flow_t ~use_op:unknown_use cx trace (unrefined_t, OpenT fresh_t)
+            rec_flow_t ~use_op:unknown_use cx trace (tin, OpenT tout)
           | Some (None, _) ->
             (* Already an unsupported-syntax error on the definition side of the function. *)
-            rec_flow_t ~use_op:unknown_use cx trace (unrefined_t, OpenT fresh_t)
+            rec_flow_t ~use_op:unknown_use cx trace (tin, OpenT tout)
           | Some (Some name, _) ->
             let key = (OrdinaryName name, []) in
             let preds =
@@ -2381,13 +2386,13 @@ struct
             in
             begin
               match Key_map.find_opt key preds with
-              | Some p -> rec_flow cx trace (unrefined_t, PredicateT (p, fresh_t))
-              | None -> rec_flow_t ~use_op:unknown_use cx trace (unrefined_t, OpenT fresh_t)
+              | Some p -> rec_flow cx trace (tin, PredicateT (p, tout))
+              | None -> rec_flow_t ~use_op:unknown_use cx trace (tin, OpenT tout)
             end
         end
         (* Fall through all the remaining cases *)
-        | (_, CallLatentPredT (_, _, _, unrefined_t, fresh_t)) ->
-          rec_flow_t ~use_op:unknown_use cx trace (unrefined_t, OpenT fresh_t)
+        | (_, CallLatentPredT { tin; tout; _ }) ->
+          rec_flow_t ~use_op:unknown_use cx trace (tin, OpenT tout)
         (********************)
         (* mixin conversion *)
         (********************)
@@ -7528,14 +7533,18 @@ struct
     (********************)
     (* Latent predicate *)
     (********************)
-    | LatentP ((lazy fun_t), idx) ->
+    | LatentP ((lazy (fun_t, targs, argts)), idx) ->
       let reason = update_desc_reason (fun desc -> RPredicateCall desc) (reason_of_t fun_t) in
-      rec_flow cx trace (fun_t, CallLatentPredT (reason, true, idx, l, t))
-    | NotP (LatentP ((lazy fun_t), idx)) ->
-      let neg_reason =
-        update_desc_reason (fun desc -> RPredicateCallNeg desc) (reason_of_t fun_t)
-      in
-      rec_flow cx trace (fun_t, CallLatentPredT (neg_reason, false, idx, l, t))
+      rec_flow
+        cx
+        trace
+        (fun_t, CallLatentPredT { reason; targs; argts; sense = true; idx; tin = l; tout = t })
+    | NotP (LatentP ((lazy (fun_t, targs, argts)), idx)) ->
+      let reason = update_desc_reason (fun desc -> RPredicateCallNeg desc) (reason_of_t fun_t) in
+      rec_flow
+        cx
+        trace
+        (fun_t, CallLatentPredT { reason; targs; argts; sense = false; idx; tin = l; tout = t })
 
   and prop_exists_test cx trace key reason sense obj result =
     prop_exists_test_generic key reason cx trace result obj sense (ExistsP, NotP ExistsP) obj

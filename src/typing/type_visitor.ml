@@ -181,7 +181,16 @@ class ['a] t =
       | ArrP -> acc
       | PropExistsP _ -> acc
       | PropNonMaybeP _ -> acc
-      | LatentP ((lazy t), _) -> self#type_ cx P.Positive acc t
+      | LatentP ((lazy (t, targs, argts)), _) ->
+        let acc = self#type_ cx P.Positive acc t in
+        let acc = self#opt (self#list (self#targ cx pole_TODO)) acc targs in
+        let acc = self#list (self#call_arg cx pole_TODO) acc argts in
+        acc
+
+    method private call_arg cx pole acc a =
+      match a with
+      | Arg t -> self#type_ cx pole acc t
+      | SpreadArg t -> self#type_ cx pole acc t
 
     method destructor cx acc =
       function

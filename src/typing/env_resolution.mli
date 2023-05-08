@@ -13,5 +13,4 @@ val resolve_component :
   Name_def_ordering.result ->
   unit
 
-val resolve_pred_func :
-  Context.t -> ALoc.t -> (ALoc.t, ALoc.t) Flow_ast.Expression.t -> Type.t Lazy.t
+val resolve_pred_func : Context.t -> Env_api.pred_func_info -> Type.pred_funcall_info Lazy.t

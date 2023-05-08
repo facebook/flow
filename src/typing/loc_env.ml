@@ -7,15 +7,11 @@
 
 (** New Environment:
     New environment maps locs to types using the ssa builder
-
-
  **)
 
 open Loc_collections
 module EnvMap = Env_api.EnvMap
 module EnvSet = Env_api.EnvSet
-
-type pred_func_info = Type.t (* callee type *) Lazy.t
 
 type t = {
   types: Type.t EnvMap.t;
@@ -28,7 +24,7 @@ type t = {
   under_resolution: EnvSet.t;
   hint_map: Type.lazy_hint_t ALocMap.t;
   var_info: Env_api.env_info;
-  pred_func_map: pred_func_info ALocMap.t;
+  pred_func_map: Type.pred_funcall_info Lazy.t ALocMap.t;
 }
 
 let initialize info def_loc_kind loc t =

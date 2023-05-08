@@ -196,7 +196,10 @@ struct
             let open Env_api.Refi in
             match refi with
             | InstanceOfR exp -> ignore (this#expression exp)
-            | LatentR { func; _ } -> ignore (this#expression func)
+            | LatentR { func; targs; arguments; index = _ } ->
+              ignore @@ this#expression func;
+              ignore @@ Flow_ast_mapper.map_opt this#call_type_args targs;
+              ignore @@ this#arg_list arguments
             | SentinelR (_prop, loc) -> this#add ~why:loc (Env_api.ExpressionLoc, loc)
             | AndR (l, r)
             | OrR (l, r) ->
