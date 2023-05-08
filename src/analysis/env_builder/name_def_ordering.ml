@@ -161,6 +161,8 @@ struct
       object (this)
         inherit [ALoc.t Nel.t EnvMap.t, ALoc.t] Flow_ast_visitor.visitor ~init as super
 
+        val mutable seen : ALocSet.t = ALocSet.empty
+
         method add ~why t =
           if Env_api.has_assigning_write t env_entries then
             this#update_acc (fun uses ->
@@ -571,16 +573,21 @@ struct
         (* In order to resolve a def containing a read, the writes that the
            Name_resolver determines reach the variable must be resolved *)
         method! expression ((loc, _) as expr) =
-          (* An expression might read an refined value. e.g. if (foo.bar) foo.bar.
-             Therefore, we need to record these writes. *)
-          let writes = this#find_writes ~for_type:false ~allow_missing:true loc in
-          Base.List.iter ~f:(this#add ~why:loc) writes;
-          if not named_only_for_synthesis then (
-            this#add ~why:loc (Env_api.OrdinaryNameLoc, loc);
-            this#add ~why:loc (Env_api.ExpressionLoc, loc);
-            this#add ~why:loc (Env_api.ArrayProviderLoc, loc)
-          );
-          super#expression expr
+          if ALocSet.mem loc seen then
+            expr
+          else begin
+            seen <- ALocSet.add loc seen;
+            (* An expression might read an refined value. e.g. if (foo.bar) foo.bar.
+               Therefore, we need to record these writes. *)
+            let writes = this#find_writes ~for_type:false ~allow_missing:true loc in
+            Base.List.iter ~f:(this#add ~why:loc) writes;
+            if not named_only_for_synthesis then (
+              this#add ~why:loc (Env_api.OrdinaryNameLoc, loc);
+              this#add ~why:loc (Env_api.ExpressionLoc, loc);
+              this#add ~why:loc (Env_api.ArrayProviderLoc, loc)
+            );
+            super#expression expr
+          end
 
         method visit_expression_for_expression_writes ((loc, _) as expr) =
           let writes = this#find_writes ~for_type:false ~allow_missing:true loc in
