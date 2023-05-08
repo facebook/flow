@@ -2492,7 +2492,10 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         let (bound, bound_ast) =
           match bound with
           | Ast.Type.Missing loc ->
-            let t = DefT (reason, infer_trust cx, MixedT Mixed_everything) in
+            let t =
+              DefT
+                (Reason.replace_desc_reason RMixed reason, infer_trust cx, MixedT Mixed_everything)
+            in
             (t, Ast.Type.Missing (loc, t))
           | Ast.Type.Available (bound_loc, u) ->
             let (bound, bound_ast) = mk_type cx tparams_map infer_tparams_map reason (Some u) in

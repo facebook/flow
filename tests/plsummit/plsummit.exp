@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------- generics.js:4:32
 
-Cannot assign `x` to `r` because `X` [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `x` to `r` because mixed [1] is incompatible with number [2]. [incompatible-type]
 
    generics.js:4:32
    4| function foo<X>(x: X): X { r = x; return x; }

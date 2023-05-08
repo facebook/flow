@@ -31,7 +31,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- logic2.js:3:15
 
-Cannot return `a && b` because `B` [1] is incompatible with `A` [2]. [incompatible-return]
+Cannot return `a && b` because mixed [1] is incompatible with `A` [2]. [incompatible-return]
 
    logic2.js:3:15
    3|   return a && b

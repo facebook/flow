@@ -822,7 +822,7 @@ Missing an annotation on `x`. [missing-local-annot]
 
 Error --------------------------------------------------------------------------------------------------- tparams.js:4:4
 
-Cannot cast `a` to empty because `A` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `a` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
 
    tparams.js:4:4
    4|   (a: empty);
@@ -887,7 +887,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- tparams.js:13:4
 
-Cannot cast `a` to empty because `A` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `a` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
 
    tparams.js:13:4
    13|   (a: empty);
@@ -952,7 +952,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- tparams.js:21:38
 
-Cannot instantiate `$Rest` because `A` [1] is incompatible with `B` [2]. [incompatible-type]
+Cannot instantiate `$Rest` because mixed [1] is incompatible with `B` [2]. [incompatible-type]
 
    tparams.js:21:38
    21| function removex<A, B>(a: A): [$Rest<A, {p: B}>, B] {
@@ -966,7 +966,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- tparams.js:22:10
 
-Property `p` is missing in `A` [1]. [incompatible-use]
+Property `p` is missing in mixed [1]. [incompatible-use]
 
    tparams.js:22:10
    22|   const {p, ...o} = a;
@@ -980,7 +980,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- tparams.js:22:16
 
-`A` [1] is not an object. [not-an-object]
+mixed [1] is not an object. [not-an-object]
 
    tparams.js:22:16
    22|   const {p, ...o} = a;
