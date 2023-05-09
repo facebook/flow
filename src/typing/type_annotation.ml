@@ -1597,12 +1597,12 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                 T.Keyof { T.Keyof.argument = source_ast; comments = keyof_comments }
               )
             in
-            (true, source_type, source_ast)
+            (Homomorphic, source_type, source_ast)
           | t ->
             let (((_, source_type), _) as source_ast) =
               convert cx tparams_map infer_tparams_map t
             in
-            (false, source_type, source_ast)
+            (Unspecialized, source_type, source_ast)
         in
         (match mapped_type_optionality with
         | MakeOptional

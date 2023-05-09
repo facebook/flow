@@ -6677,7 +6677,7 @@ struct
     match d with
     (* Non-homomorphic mapped types have their own special resolution code, so they do not fit well
      * into the structure of the rest of this function. We handle them upfront instead. *)
-    | MappedType { homomorphic = false; mapped_type_flags; property_type } ->
+    | MappedType { homomorphic = Unspecialized; mapped_type_flags; property_type } ->
       let t =
         ObjectKit.mapped_type_of_keys
           cx
@@ -6907,18 +6907,22 @@ struct
             | ReactConfigType default_props ->
               ReactKitT (use_op, reason, React.GetConfigType (default_props, OpenT tout))
             | IdxUnwrapType -> IdxUnwrap (reason, OpenT tout)
-            | MappedType { property_type; mapped_type_flags; homomorphic = true } ->
+            | MappedType { property_type; mapped_type_flags; homomorphic } ->
+              let selected_keys_opt =
+                match homomorphic with
+                | SemiHomomorphic t -> Some t
+                | _ -> None
+              in
               Object.(
                 ObjKitT
                   ( use_op,
                     reason,
                     Resolve Next,
-                    Object.ObjectMap { prop_type = property_type; mapped_type_flags },
+                    Object.ObjectMap
+                      { prop_type = property_type; mapped_type_flags; selected_keys_opt },
                     OpenT tout
                   )
               )
-            | MappedType { property_type = _; mapped_type_flags = _; homomorphic = false } ->
-              failwith "Unreachable MappedType in eval_destructor"
             | LatentPred (fun_t, idx) -> RefineT (reason, fun_t, idx, tout)
           ))
 

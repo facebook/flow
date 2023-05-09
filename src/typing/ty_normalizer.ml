@@ -1589,6 +1589,15 @@ end = struct
         | Type.KeepOptionality -> Ty.KeepOptionality
       in
       let flags = { Ty.optional; polarity = type_polarity variance } in
+      let homomorphic =
+        Type.(
+          match homomorphic with
+          | Homomorphic -> true
+          | SemiHomomorphic _
+          | Unspecialized ->
+            false
+        )
+      in
       let prop = Ty.(MappedTypeProp { key_tparam; source; prop; flags; homomorphic }) in
       let obj_t =
         {

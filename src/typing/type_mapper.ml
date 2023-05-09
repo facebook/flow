@@ -542,10 +542,23 @@ class virtual ['a] t =
           ReactConfigType default_props'
       | MappedType { property_type; mapped_type_flags; homomorphic } ->
         let property_type' = self#type_ cx map_cx property_type in
-        if property_type' == property_type then
+        let homomorphic' =
+          match homomorphic with
+          | SemiHomomorphic t ->
+            let t' = self#type_ cx map_cx t in
+            if t' == t then
+              homomorphic
+            else
+              SemiHomomorphic t'
+          | Homomorphic
+          | Unspecialized ->
+            homomorphic
+        in
+        if property_type' == property_type && homomorphic' == homomorphic then
           t
         else
-          MappedType { property_type = property_type'; mapped_type_flags; homomorphic }
+          MappedType
+            { property_type = property_type'; mapped_type_flags; homomorphic = homomorphic' }
       | ReactElementPropsType
       | ReactElementConfigType
       | ReactElementRefType

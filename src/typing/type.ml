@@ -1409,12 +1409,18 @@ module rec TypeTerm : sig
     | ReactConfigType of t
     | IdxUnwrapType
     | MappedType of {
-        (* Homomorphic mapped types use an inline keyof: {[key in keyof O]: T} *)
-        homomorphic: bool;
+        (* Homomorphic mapped types use an inline keyof: {[key in keyof O]: T} or a type parameter
+         * bound by $Keys/keyof: type Homomorphic<Keys: $Keys<O>> = {[key in O]: T *)
+        homomorphic: mapped_type_homomorphic_flag;
         property_type: t;
         mapped_type_flags: mapped_type_flags;
       }
     | LatentPred of t * index
+
+  and mapped_type_homomorphic_flag =
+    | Homomorphic
+    | SemiHomomorphic of t
+    | Unspecialized
 
   and mapped_type_optionality =
     | MakeOptional
@@ -2605,6 +2611,7 @@ and Object : sig
     | ObjectMap of {
         prop_type: TypeTerm.t;
         mapped_type_flags: TypeTerm.mapped_type_flags;
+        selected_keys_opt: TypeTerm.t option;
       }
 end =
   Object

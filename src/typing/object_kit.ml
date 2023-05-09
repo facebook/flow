@@ -795,7 +795,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
     (**************)
     (* Object Map *)
     (**************)
-    let object_map prop_type mapped_type_flags cx trace use_op reason x tout =
+    let object_map prop_type mapped_type_flags _selected_keys_opt cx trace use_op reason x tout =
       let t =
         match Nel.map (Slice_utils.map_object prop_type mapped_type_flags cx reason use_op) x with
         | (t, []) -> t
@@ -816,7 +816,8 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
       | Required -> object_required
       | ObjectRep -> object_rep
       | ObjectWiden id -> object_widen id
-      | Object.ObjectMap { prop_type; mapped_type_flags } -> object_map prop_type mapped_type_flags
+      | Object.ObjectMap { prop_type; mapped_type_flags; selected_keys_opt } ->
+        object_map prop_type mapped_type_flags selected_keys_opt
     in
     fun trace ->
       let add_output = Flow_js_utils.add_output ~trace in
