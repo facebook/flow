@@ -50,6 +50,7 @@ let spec =
              ~doc:"Type of input file (js or json)"
         |> flag "--strict" truthy ~doc:"Parse in strict mode"
         |> flag "--no-enums" truthy ~doc:"Disable enum support"
+        |> flag "--component_syntax" truthy ~doc:"Enable support for component syntax"
         |> flag
              "--include-comments"
              (required
@@ -96,6 +97,7 @@ let main
     file_type_opt
     use_strict
     no_enums
+    component_syntax
     include_comments
     include_locs
     offset_style
@@ -150,7 +152,8 @@ let main
         let parse_options =
           Some
             {
-              Parser_env.enums = not no_enums;
+              Parser_env.components = component_syntax;
+              enums = not no_enums;
               esproposal_decorators = true;
               types = true;
               use_strict;

@@ -124,6 +124,7 @@ type token_sink_result = {
 }
 
 type parse_options = {
+  components: bool; (* enable parsing of Flow component syntax *)
   enums: bool;  (** enable parsing of Flow enums *)
   esproposal_decorators: bool;  (** enable parsing of decorators *)
   types: bool;  (** enable parsing of Flow types *)
@@ -134,6 +135,7 @@ type parse_options = {
 
 let default_parse_options =
   {
+    components = false;
     enums = false;
     esproposal_decorators = false;
     types = true;

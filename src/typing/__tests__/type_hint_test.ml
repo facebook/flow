@@ -73,7 +73,8 @@ end = struct
     let parse_options =
       Some
         {
-          Parser_env.enums = true;
+          Parser_env.components = false;
+          enums = true;
           esproposal_decorators = true;
           types = true;
           use_strict = false;
@@ -138,7 +139,8 @@ end = struct
     let parse_options =
       Some
         {
-          Parser_env.enums = true;
+          Parser_env.components = false;
+          enums = true;
           (*
            * Always parse ES proposal syntax. The user-facing config option to
            * ignore/warn/enable them is handled during inference so that a clean error

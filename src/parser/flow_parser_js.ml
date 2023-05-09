@@ -65,6 +65,7 @@ let parse_options jsopts =
   let open Parser_env in
   let defaults = Parser_env.default_parse_options in
   {
+    components = bool_opt defaults.components jsopts "components";
     enums = bool_opt defaults.enums jsopts "enums";
     esproposal_decorators = bool_opt defaults.esproposal_decorators jsopts "esproposal_decorators";
     types = bool_opt defaults.types jsopts "types";

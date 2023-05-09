@@ -715,13 +715,13 @@ let tests =
            assert_expression ~ctxt ~msg:"nested sequence has parens" "f((x,y)||z)" call
          );
          ( "binary_in_space" >:: fun ctxt ->
-           let ast = statement_of_string {|if("foo" in {"foo": bar}){}|} in
+           let ast = test_statement_of_string {|if("foo" in {"foo": bar}){}|} in
            assert_statement ~ctxt {|if("foo"in{"foo":bar}){}|} ast;
 
-           let ast = statement_of_string {|if("foo" in bar){}|} in
+           let ast = test_statement_of_string {|if("foo" in bar){}|} in
            assert_statement ~ctxt {|if("foo"in bar){}|} ast;
 
-           let ast = statement_of_string {|if(foo in {"foo":bar}){}|} in
+           let ast = test_statement_of_string {|if(foo in {"foo":bar}){}|} in
            assert_statement ~ctxt {|if(foo in{"foo":bar}){}|} ast
          );
          ( "binary_instanceof_space" >:: fun ctxt ->
@@ -999,7 +999,7 @@ let tests =
          );
          ( "return_statement_space" >:: fun ctxt ->
            let assert_no_space ~ctxt expr =
-             let ret = statement_of_string ("return " ^ expr ^ ";") in
+             let ret = test_statement_of_string ("return " ^ expr ^ ";") in
              assert_statement ~ctxt ("return" ^ expr ^ ";") ret
            in
            assert_no_space ~ctxt {|"foo"|};
@@ -1010,10 +1010,10 @@ let tests =
            assert_no_space ~ctxt {|-foo|};
            assert_no_space ~ctxt {|~foo|};
 
-           let ret = statement_of_string {|return (foo);|} in
+           let ret = test_statement_of_string {|return (foo);|} in
            assert_statement ~ctxt {|return foo;|} ret;
 
-           let ret = statement_of_string {|return 123;|} in
+           let ret = test_statement_of_string {|return 123;|} in
            assert_statement ~ctxt {|return 123;|} ret
          );
          ( "for_loop" >:: fun ctxt ->
@@ -1093,10 +1093,10 @@ let tests =
              ast
          );
          ( "for_in_space" >:: fun ctxt ->
-           let ast = statement_of_string {|for(var x in {"foo": bar}){}|} in
+           let ast = test_statement_of_string {|for(var x in {"foo": bar}){}|} in
            assert_statement ~ctxt {|for(var x in{"foo":bar}){}|} ast;
 
-           let ast = statement_of_string {|for(var x in bar){}|} in
+           let ast = test_statement_of_string {|for(var x in bar){}|} in
            assert_statement ~ctxt {|for(var x in bar){}|} ast
          );
          ( "for_statement_without_block" >:: fun ctxt ->
@@ -2246,15 +2246,15 @@ let tests =
          );
          ( "regexp" >:: fun ctxt ->
            (* flags should be sorted *)
-           let regexp = expression_of_string "/foo/ymg" in
+           let regexp = test_expression_of_string "/foo/ymg" in
            assert_expression ~ctxt "/foo/gmy" regexp
          );
          ( "string_literal_quotes" >:: fun ctxt ->
-           assert_expression ~ctxt {|"'''"|} (expression_of_string {|"'''"|});
-           assert_expression ~ctxt {|'"'|} (expression_of_string {|"\""|});
-           assert_expression ~ctxt {|"''"|} (expression_of_string {|'\'\''|});
-           assert_expression ~ctxt {|"''\""|} (expression_of_string {|"''\""|});
-           assert_expression ~ctxt {|'""\''|} (expression_of_string {|'""\''|})
+           assert_expression ~ctxt {|"'''"|} (test_expression_of_string {|"'''"|});
+           assert_expression ~ctxt {|'"'|} (test_expression_of_string {|"\""|});
+           assert_expression ~ctxt {|"''"|} (test_expression_of_string {|'\'\''|});
+           assert_expression ~ctxt {|"''\""|} (test_expression_of_string {|"''\""|});
+           assert_expression ~ctxt {|'""\''|} (test_expression_of_string {|'""\''|})
          );
          ( "switch" >:: fun ctxt ->
            let case1_loc =
@@ -2386,7 +2386,7 @@ let tests =
          );
          ( "switch_case_space" >:: fun ctxt ->
            let assert_no_space ~ctxt expr =
-             let ret = statement_of_string ("switch(x){case " ^ expr ^ ":break}") in
+             let ret = test_statement_of_string ("switch(x){case " ^ expr ^ ":break}") in
              assert_statement ~ctxt ("switch(x){case" ^ expr ^ ":break}") ret
            in
            assert_no_space ~ctxt {|"foo"|};
@@ -2397,10 +2397,10 @@ let tests =
            assert_no_space ~ctxt {|-foo|};
            assert_no_space ~ctxt {|~foo|};
 
-           let ret = statement_of_string "switch(x){case (foo):break}" in
+           let ret = test_statement_of_string "switch(x){case (foo):break}" in
            assert_statement ~ctxt "switch(x){case foo:break}" ret;
 
-           let ret = statement_of_string "switch(x){case 123:break}" in
+           let ret = test_statement_of_string "switch(x){case 123:break}" in
            assert_statement ~ctxt "switch(x){case 123:break}" ret
          );
          ( "switch_case_empty" >:: fun ctxt ->
@@ -2421,7 +2421,7 @@ let tests =
          );
          ( "throw_space" >:: fun ctxt ->
            let assert_no_space ~ctxt expr =
-             let ret = statement_of_string ("throw " ^ expr ^ ";") in
+             let ret = test_statement_of_string ("throw " ^ expr ^ ";") in
              assert_statement ~ctxt ("throw" ^ expr ^ ";") ret
            in
            assert_no_space ~ctxt {|"foo"|};
@@ -2433,7 +2433,7 @@ let tests =
            assert_no_space ~ctxt {|~foo|};
 
            assert_statement_string ~ctxt "throw foo;";
-           assert_statement ~ctxt "throw foo;" (statement_of_string "throw (foo);");
+           assert_statement ~ctxt "throw foo;" (test_statement_of_string "throw (foo);");
            assert_statement_string ~ctxt "throw new Error();"
          );
          ( "string_literal" >:: fun ctxt ->
@@ -2445,50 +2445,50 @@ let tests =
          );
          ( "unicode_string_literal" >:: fun ctxt ->
            (* escaped using Unicode codepoint *)
-           let ast = expression_of_string {|"\u{1F4A9}"|} in
+           let ast = test_expression_of_string {|"\u{1F4A9}"|} in
            assert_expression ~ctxt {|"\ud83d\udca9"|} ast;
 
            (* not escaped when formatting is preserved *)
            assert_expression ~ctxt ~opts:preserve_formatting_opts {|"\u{1F4A9}"|} ast;
 
            (* escaped using UTF-16 (hex get lowercased) *)
-           let ast = expression_of_string {|"\uD83D\uDCA9"|} in
+           let ast = test_expression_of_string {|"\uD83D\uDCA9"|} in
            assert_expression ~ctxt {|"\ud83d\udca9"|} ast;
 
            (* literal emoji *)
-           let ast = expression_of_string "\"\xF0\x9F\x92\xA9\"" in
+           let ast = test_expression_of_string "\"\xF0\x9F\x92\xA9\"" in
            assert_expression ~ctxt {|"\ud83d\udca9"|} ast;
 
            (* zero followed by ASCII number *)
-           let ast = expression_of_string "\"\x00\x31\"" in
+           let ast = test_expression_of_string "\"\x00\x31\"" in
            assert_expression ~ctxt {|"\x001"|} ast;
 
            (* not `\01`! *)
-           let ast = expression_of_string "\"\x00\x39\"" in
+           let ast = test_expression_of_string "\"\x00\x39\"" in
            assert_expression ~ctxt {|"\x009"|} ast;
 
            (* not `\09`! *)
 
            (* unprintable ascii, escaped *)
-           let ast = expression_of_string {|"\x07"|} in
+           let ast = test_expression_of_string {|"\x07"|} in
            assert_expression ~ctxt {|"\x07"|} ast;
-           let ast = expression_of_string {|"\x11"|} in
+           let ast = test_expression_of_string {|"\x11"|} in
            assert_expression ~ctxt {|"\x11"|} ast;
 
            (* unprintable ascii, literal *)
-           let ast = expression_of_string "\"\x11\"" in
+           let ast = test_expression_of_string "\"\x11\"" in
            assert_expression ~ctxt {|"\x11"|} ast;
 
            (* special escapes *)
-           let ast = expression_of_string {|"\x09"|} in
+           let ast = test_expression_of_string {|"\x09"|} in
            assert_expression ~ctxt {|"\t"|} ast;
-           let ast = expression_of_string {|"\\"|} in
+           let ast = test_expression_of_string {|"\\"|} in
            assert_expression ~ctxt {|"\\"|} ast
          );
          ( "numbers" >:: fun ctxt ->
-           assert_expression ~ctxt "100" (expression_of_string "1e2");
-           assert_expression ~ctxt "1e3" (expression_of_string "1000");
-           assert_expression ~ctxt "2592e6" (expression_of_string "2.592e+09")
+           assert_expression ~ctxt "100" (test_expression_of_string "1e2");
+           assert_expression ~ctxt "1e3" (test_expression_of_string "1000");
+           assert_expression ~ctxt "2592e6" (test_expression_of_string "2.592e+09")
          );
          ( "sequence_long" >:: fun ctxt ->
            let x80 = String.make 80 'x' in
@@ -2733,7 +2733,7 @@ let tests =
              ~ctxt
              ~pretty:true
              "class C {\n  a;\n  \n  b;\n}"
-             (expression_of_string "class C {\n  a;\n  \n  \n b;\n}");
+             (test_expression_of_string "class C {\n  a;\n  \n  \n b;\n}");
            (* Comments are not treated as blank lines *)
            assert_expression_string ~ctxt ~pretty:true "class C {\n  a;\n  //L\n  b;\n}"
          );
@@ -2745,7 +2745,7 @@ let tests =
              ~ctxt
              ~pretty:true
              "type T = {\n  a: 1,\n  \n  b: 2,\n};"
-             (statement_of_string "type T = {\n  a: 1,\n  \n  \n b: 2,\n};");
+             (test_statement_of_string "type T = {\n  a: 1,\n  \n  \n b: 2,\n};");
            (* Comments are not treated as blank lines *)
            assert_statement_string ~ctxt ~pretty:true "type T = {\n  a: 1,\n  //L\n  b: 2,\n};"
          );
@@ -2757,7 +2757,7 @@ let tests =
              ~ctxt
              ~pretty:true
              "var {\n  a,\n  \n  b\n};"
-             (statement_of_string "var {\n  a,\n  \n  \n b\n};");
+             (test_statement_of_string "var {\n  a,\n  \n  \n b\n};");
            (* Comments are not treated as blank lines *)
            assert_statement_string ~ctxt ~pretty:true "var {\n  a,\n  //L\n  b\n};"
          );
@@ -2772,7 +2772,7 @@ let tests =
              ~ctxt
              ~pretty:true
              "switch (true) {\n  case a:\n    break;\n  \n  case b:\n    break;\n}"
-             (statement_of_string
+             (test_statement_of_string
                 "switch (true) {\n  case a:\n    break;\n  \n  \n  case b:\n    break;\n}"
              );
            (* Comments are not treated as blank lines *)
@@ -2795,7 +2795,7 @@ let tests =
              ~ctxt
              ~pretty:true
              "(\n  a,\n  \n  b,\n) => {}"
-             (expression_of_string "(\n  a,\n  \n  \n  b,\n) => {}");
+             (test_expression_of_string "(\n  a,\n  \n  \n  b,\n) => {}");
            (* Comments are not treated as blank lines *)
            assert_expression_string ~ctxt ~pretty:true "(\n  a,\n  //L\n  b,\n) => {}"
          );
@@ -2807,7 +2807,7 @@ let tests =
              ~ctxt
              ~pretty:true
              "type T = (\n  a,\n  \n  b\n) => c;"
-             (statement_of_string "type T = (\n  a,\n  \n  \n  b\n) => c;");
+             (test_statement_of_string "type T = (\n  a,\n  \n  \n  b\n) => c;");
            (* Comments are not treated as blank lines *)
            assert_statement_string ~ctxt ~pretty:true "type T = (\n  a,\n  //L\n  b\n) => c;"
          );
@@ -2819,7 +2819,7 @@ let tests =
              ~ctxt
              ~pretty:true
              "[\n  a,\n  \n  b,\n]"
-             (expression_of_string "[\n  a,\n  \n  \n  b,\n]");
+             (test_expression_of_string "[\n  a,\n  \n  \n  b,\n]");
            (* Comments are not treated as blank lines *)
            assert_expression_string ~ctxt ~pretty:true "[\n  a,\n  //L\n  b,\n]";
            (* Blank lines between holes are preserved *)
@@ -2835,7 +2835,7 @@ let tests =
              ~ctxt
              ~pretty:true
              "var [\n  a,\n  \n  b\n];"
-             (statement_of_string "var [\n  a,\n  \n  \n  b\n];");
+             (test_statement_of_string "var [\n  a,\n  \n  \n  b\n];");
            (* Comments are not treated as blank lines *)
            assert_statement_string ~ctxt ~pretty:true "var [\n  a,\n  //L\n  b\n];";
            (* Blank lines between holes are preserved *)
@@ -2850,7 +2850,7 @@ let tests =
              ~ctxt
              ~pretty:true
              "foo(\n  a,\n  \n  b,\n)"
-             (expression_of_string "foo(\n  a,\n  \n  \n  b,\n)");
+             (test_expression_of_string "foo(\n  a,\n  \n  \n  b,\n)");
            (* Comments are not treated as blank lines *)
            assert_expression_string ~ctxt ~pretty:true "foo(\n  a,\n  //L\n  b,\n)"
          );
@@ -2862,7 +2862,7 @@ let tests =
              ~ctxt
              ~pretty:true
              "new Foo(\n  a,\n  \n  b,\n)"
-             (expression_of_string "new Foo(\n  a,\n  \n  \n  b,\n)");
+             (test_expression_of_string "new Foo(\n  a,\n  \n  \n  b,\n)");
            (* Comments are not treated as blank lines *)
            assert_expression_string ~ctxt ~pretty:true "new Foo(\n  a,\n  //L\n  b,\n)"
          );
@@ -2874,7 +2874,7 @@ let tests =
              ~ctxt
              ~pretty:true
              "type Foo = Bar<\n  a,\n  \n  b,\n>;"
-             (statement_of_string "type Foo = Bar<\n  a,\n  \n  \n  b,\n>;");
+             (test_statement_of_string "type Foo = Bar<\n  a,\n  \n  \n  b,\n>;");
            (* Comments are not treated as blank lines *)
            assert_statement_string ~ctxt ~pretty:true "type Foo = Bar<\n  a,\n  //L\n  b,\n>;"
          );
@@ -2886,7 +2886,7 @@ let tests =
              ~ctxt
              ~pretty:true
              "foo<\n  a,\n  \n  b,\n>()"
-             (expression_of_string "foo<\n  a,\n  \n  \n  b,\n>()");
+             (test_expression_of_string "foo<\n  a,\n  \n  \n  b,\n>()");
            (* Comments are not treated as blank lines *)
            assert_expression_string ~ctxt ~pretty:true "foo<\n  a,\n  //L\n  b,\n>()"
          );
@@ -2902,7 +2902,7 @@ let tests =
              ~ctxt
              ~pretty:true
              "<\n  a,\n  \n  b,\n>() => {}"
-             (expression_of_string "<\n  a,\n  \n  \n  b,\n>() => {}");
+             (test_expression_of_string "<\n  a,\n  \n  \n  b,\n>() => {}");
            (* Comments are not treated as blank lines *)
            assert_expression_string ~ctxt ~pretty:true "<\n  a,\n  //L\n  b,\n>() => {}"
          );
@@ -2938,7 +2938,7 @@ let tests =
              ^ "  b,\n"
              ^ ")"
              )
-             (expression_of_string
+             (test_expression_of_string
                 ("new Foo(\n"
                 ^ "  a,\n"
                 ^ "  (\n"

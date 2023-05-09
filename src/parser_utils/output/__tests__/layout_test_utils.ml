@@ -268,5 +268,5 @@ let assert_layout_of_statement ~ctxt ?msg ?(opts = Js_layout_generator.default_o
   assert_layout ~ctxt ?msg expected actual
 
 let assert_layout_of_statement_string ~ctxt ?msg expected str =
-  let ast = statement_of_string str in
+  let ast = test_statement_of_string str in
   assert_layout_of_statement ~ctxt ?msg expected ast

@@ -25,6 +25,7 @@ let run ctxt expected name content =
         (* following options unused in classic mode *)
         parse_suppress_types = SSet.empty;
         parse_max_literal_len = 0;
+        parse_component_syntax = false;
         parse_exact_by_default = false;
         parse_enable_enums = false;
         parse_enable_relay_integration = false;

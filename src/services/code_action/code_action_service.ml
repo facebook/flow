@@ -124,6 +124,7 @@ let refactor_extract_code_actions
             }
         in
         let tokens =
+          let components = Options.component_syntax options in
           let use_strict = Options.modules_are_use_strict options in
           let module_ref_prefix = Options.haste_module_ref_prefix options in
           let module_ref_prefix_LEGACY_INTEROP =
@@ -131,7 +132,8 @@ let refactor_extract_code_actions
           in
           let parse_options =
             {
-              Parser_env.enums = true;
+              Parser_env.components;
+              enums = true;
               esproposal_decorators = true;
               types = true;
               use_strict;

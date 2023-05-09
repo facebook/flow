@@ -808,11 +808,12 @@ let mk_program ?(loc = Loc.none) ?(interpreter = None) ?(comments = None) ?(all_
     =
   (loc, { Ast.Program.statements = stmts; interpreter; comments; all_comments })
 
-let ast_of_string ~parser str =
+let test_ast_of_string ~parser str =
   let parse_options =
     Some
       {
-        Parser_env.enums = true;
+        Parser_env.components = true;
+        enums = true;
         esproposal_decorators = true;
         types = true;
         use_strict = false;
@@ -825,18 +826,20 @@ let ast_of_string ~parser str =
   let (ast, _) = Parser_flow.do_parse env parser false in
   ast
 
-let expression_of_string str = ast_of_string ~parser:Parser_flow.Parse.expression str
+let test_expression_of_string str = test_ast_of_string ~parser:Parser_flow.Parse.expression str
 
-let statement_of_string str =
+let test_statement_of_string str =
   let ast_list =
-    ast_of_string ~parser:(Parser_flow.Parse.module_body ~term_fn:(fun _ -> false)) str
+    test_ast_of_string ~parser:(Parser_flow.Parse.module_body ~term_fn:(fun _ -> false)) str
   in
   match ast_list with
   | [ast] -> ast
   | _ -> failwith "Multiple statements found"
 
-let program_of_string str =
-  let stmts = ast_of_string ~parser:(Parser_flow.Parse.module_body ~term_fn:(fun _ -> false)) str in
+let test_program_of_string str =
+  let stmts =
+    test_ast_of_string ~parser:(Parser_flow.Parse.module_body ~term_fn:(fun _ -> false)) str
+  in
   ( Loc.none,
     { Ast.Program.statements = stmts; interpreter = None; comments = None; all_comments = [] }
   )

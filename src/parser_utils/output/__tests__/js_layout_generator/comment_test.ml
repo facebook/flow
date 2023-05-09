@@ -29,81 +29,81 @@ let tests =
     );
     ( "leading" >:: fun ctxt ->
       (* Line with single newline *)
-      let ast = expression_of_string "//L\nA" in
+      let ast = test_expression_of_string "//L\nA" in
       assert_expression ~ctxt "//L\nA" ast;
       assert_expression ~ctxt ~pretty:true "//L\nA" ast;
       (* Line with two newlines *)
-      let ast = expression_of_string "//L\n\nA" in
+      let ast = test_expression_of_string "//L\n\nA" in
       assert_expression ~ctxt "//L\nA" ast;
       assert_expression ~ctxt ~pretty:true "//L\n\nA" ast;
       (* Line with more than two newlines *)
-      let ast = expression_of_string "//L\n\n\nA" in
+      let ast = test_expression_of_string "//L\n\n\nA" in
       assert_expression ~ctxt "//L\nA" ast;
       assert_expression ~ctxt ~pretty:true "//L\n\nA" ast;
       (* Block with no newline *)
-      let ast = expression_of_string "/*L*/A" in
+      let ast = test_expression_of_string "/*L*/A" in
       assert_expression ~ctxt "/*L*/A" ast;
       assert_expression ~ctxt ~pretty:true "/*L*/ A" ast;
       (* Block with single newline *)
-      let ast = expression_of_string "/*L*/\nA" in
+      let ast = test_expression_of_string "/*L*/\nA" in
       assert_expression ~ctxt "/*L*/A" ast;
       assert_expression ~ctxt ~pretty:true "/*L*/\nA" ast;
       (* Block with two newlines *)
-      let ast = expression_of_string "/*L*/\n\nA" in
+      let ast = test_expression_of_string "/*L*/\n\nA" in
       assert_expression ~ctxt "/*L*/A" ast;
       assert_expression ~ctxt ~pretty:true "/*L*/\n\nA" ast;
       (* Block with more than two newlines *)
-      let ast = expression_of_string "/*L*/\n\n\nA" in
+      let ast = test_expression_of_string "/*L*/\n\n\nA" in
       assert_expression ~ctxt "/*L*/A" ast;
       assert_expression ~ctxt ~pretty:true "/*L*/\n\nA" ast;
       (* Multiple leading comments *)
-      let ast = expression_of_string "//L1\n//L2\nA" in
+      let ast = test_expression_of_string "//L1\n//L2\nA" in
       assert_expression ~ctxt "//L1\n//L2\nA" ast;
       assert_expression ~ctxt ~pretty:true "//L1\n//L2\nA" ast
     );
     ( "trailing" >:: fun ctxt ->
       (* After node with no newline *)
-      let ast = expression_of_string "A//T\n" in
+      let ast = test_expression_of_string "A//T\n" in
       assert_expression ~ctxt "A//T\n" ast;
       assert_expression ~ctxt ~pretty:true "A //T\n" ast;
       (* After node with single newline *)
-      let ast = expression_of_string "A\n//T\n" in
+      let ast = test_expression_of_string "A\n//T\n" in
       assert_expression ~ctxt "A//T\n" ast;
       assert_expression ~ctxt ~pretty:true "A\n//T\n" ast;
       (* After node with two newlines *)
-      let ast = expression_of_string "A\n\n//T\n" in
+      let ast = test_expression_of_string "A\n\n//T\n" in
       assert_expression ~ctxt "A//T\n" ast;
       assert_expression ~ctxt ~pretty:true "A\n\n//T\n" ast;
       (* After node with more than two newlines *)
-      let ast = expression_of_string "A\n\n\n//T\n" in
+      let ast = test_expression_of_string "A\n\n\n//T\n" in
       assert_expression ~ctxt "A//T\n" ast;
       assert_expression ~ctxt ~pretty:true "A\n\n//T\n" ast;
       (* After line with single newline *)
-      let ast = expression_of_string "A\n//T1\n//T2\n" in
+      let ast = test_expression_of_string "A\n//T1\n//T2\n" in
       assert_expression ~ctxt "A//T1\n//T2\n" ast;
       assert_expression ~ctxt ~pretty:true "A\n//T1\n//T2\n" ast;
       (* After line with two newlines *)
-      let ast = expression_of_string "A\n//T1\n\n//T2\n" in
+      let ast = test_expression_of_string "A\n//T1\n\n//T2\n" in
       assert_expression ~ctxt "A//T1\n//T2\n" ast;
       assert_expression ~ctxt ~pretty:true "A\n//T1\n\n//T2\n" ast;
       (* After line with more than two newlines *)
-      let ast = expression_of_string "A\n//T1\n\n\n//T2\n" in
+      let ast = test_expression_of_string "A\n//T1\n\n\n//T2\n" in
       assert_expression ~ctxt "A//T1\n//T2\n" ast;
       assert_expression ~ctxt ~pretty:true "A\n//T1\n\n//T2\n" ast;
       (* After block with no newline *)
-      let ast = expression_of_string "A\n/*T1*//*T2*/" in
+      let ast = test_expression_of_string "A\n/*T1*//*T2*/" in
       assert_expression ~ctxt "A/*T1*//*T2*/" ast;
       assert_expression ~ctxt ~pretty:true "A\n/*T1*/ /*T2*/" ast;
       (* After block with single newline *)
-      let ast = expression_of_string "A\n/*T1*/\n/*T2*/" in
+      let ast = test_expression_of_string "A\n/*T1*/\n/*T2*/" in
       assert_expression ~ctxt "A/*T1*//*T2*/" ast;
       assert_expression ~ctxt ~pretty:true "A\n/*T1*/\n/*T2*/" ast;
       (* After block with two newlines *)
-      let ast = expression_of_string "A\n/*T1*/\n\n/*T2*/" in
+      let ast = test_expression_of_string "A\n/*T1*/\n\n/*T2*/" in
       assert_expression ~ctxt "A/*T1*//*T2*/" ast;
       assert_expression ~ctxt ~pretty:true "A\n/*T1*/\n\n/*T2*/" ast;
       (* After block with more than two newlines *)
-      let ast = expression_of_string "A\n/*T1*/\n\n\n/*T2*/" in
+      let ast = test_expression_of_string "A\n/*T1*/\n\n\n/*T2*/" in
       assert_expression ~ctxt "A/*T1*//*T2*/" ast;
       assert_expression ~ctxt ~pretty:true "A\n/*T1*/\n\n/*T2*/" ast
     );
@@ -136,7 +136,7 @@ let tests =
     );
     ( "arrow_function_params" >:: fun ctxt ->
       assert_expression_string ~ctxt "/*L*/()/*T*/=>{}";
-      assert_expression ~ctxt "/*L*/A/*T*/=>{}" (expression_of_string "/*L*/(A)/*T*/=>{}");
+      assert_expression ~ctxt "/*L*/A/*T*/=>{}" (test_expression_of_string "/*L*/(A)/*T*/=>{}");
       assert_expression_string ~ctxt "(/*L*/A/*T*/)=>{}";
       assert_expression_string ~ctxt "//L\nA=>{}"
     );
@@ -172,7 +172,7 @@ let tests =
     );
     ("function_body" >:: fun ctxt -> assert_statement_string ~ctxt "function foo(){/*I*/}");
     ( "function_params" >:: fun ctxt ->
-      let ast = expression_of_string "function foo/*L*/()/*T*/\n{}" in
+      let ast = test_expression_of_string "function foo/*L*/()/*T*/\n{}" in
       assert_expression ~ctxt "function foo/*L*/()/*T*/{}" ast;
       assert_expression_string ~ctxt "(/*I*/)=>{}";
       assert_expression_string ~ctxt ~pretty:true "(\n  a,\n  /*I*/\n) => {}";
@@ -237,7 +237,7 @@ let tests =
         ~ctxt
         ~pretty:true
         "type T = {\n  a: any,\n  \n  /*I1*/\n  /*I2*/\n  ...\n};"
-        (statement_of_string "type T = {\n  a: any,\n  ...\n  /*I1*/\n  /*I2*/\n};");
+        (test_statement_of_string "type T = {\n  a: any,\n  ...\n  /*I1*/\n  /*I2*/\n};");
       assert_statement_string
         ~ctxt
         ~pretty:true

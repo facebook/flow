@@ -78,16 +78,18 @@ let empty_result =
 
 (**************************** internal *********************************)
 let parse_source_file
-    ~types ~use_strict ~module_ref_prefix ~module_ref_prefix_LEGACY_INTEROP content file =
+    ~components ~types ~use_strict ~module_ref_prefix ~module_ref_prefix_LEGACY_INTEROP content file
+    =
   let parse_options =
     Some
       {
+        Parser_env.components;
         (*
          * Always parse ES proposal syntax. The user-facing config option to
          * ignore/warn/enable them is handled during inference so that a clean error
          * can be surfaced (rather than a more cryptic parse error).
          *)
-        Parser_env.enums = true;
+        enums = true;
         esproposal_decorators = true;
         types;
         use_strict;
@@ -102,7 +104,8 @@ let parse_package_json_file ~node_main_fields content file =
   let parse_options =
     Some
       {
-        Parser_env.enums = false;
+        Parser_env.components = false;
+        enums = false;
         esproposal_decorators = false;
         types = true;
         use_strict = false;
@@ -168,6 +171,7 @@ let do_parse ~parsing_options ~docblock content file =
     parse_munge_underscores = _;
     parse_module_ref_prefix = module_ref_prefix;
     parse_module_ref_prefix_LEGACY_INTEROP = module_ref_prefix_LEGACY_INTEROP;
+    parse_component_syntax = components;
     parse_facebook_fbt = _;
     parse_suppress_types = _;
     parse_max_literal_len = _;
@@ -202,6 +206,7 @@ let do_parse ~parsing_options ~docblock content file =
       else
         let (ast, parse_errors) =
           parse_source_file
+            ~components
             ~types:true
             ~use_strict
             ~module_ref_prefix

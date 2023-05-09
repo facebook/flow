@@ -50,7 +50,7 @@ let assert_expression
 
 let assert_expression_string
     ~ctxt ?msg ?pretty ?expr_ctxt ?(opts = Js_layout_generator.default_opts) str =
-  let ast = expression_of_string str in
+  let ast = test_expression_of_string str in
   assert_expression ~ctxt ~opts ?msg ?pretty ?expr_ctxt str ast
 
 let assert_statement ~ctxt ?msg ?pretty ?(opts = Js_layout_generator.default_opts) expected_str ast
@@ -59,11 +59,11 @@ let assert_statement ~ctxt ?msg ?pretty ?(opts = Js_layout_generator.default_opt
   assert_output ~ctxt ?msg ?pretty expected_str layout
 
 let assert_statement_string ~ctxt ?msg ?pretty ?(opts = Js_layout_generator.default_opts) str =
-  let ast = statement_of_string str in
+  let ast = test_statement_of_string str in
   let layout = Js_layout_generator.statement ~opts ast in
   assert_output ~ctxt ?msg ?pretty str layout
 
 let assert_program_string ~ctxt ?msg ?pretty str =
-  let ast = program_of_string str in
+  let ast = test_program_of_string str in
   let layout = Js_layout_generator.program_simple ast in
   assert_output ~ctxt ?msg ?pretty str layout

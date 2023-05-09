@@ -250,7 +250,8 @@ let run_test (name, frontmatter, content) =
   let (filename, use_strict) = name in
   let parse_options =
     {
-      Parser_env.enums = true;
+      Parser_env.components = false;
+      enums = true;
       esproposal_decorators = false;
       types = false;
       use_strict;

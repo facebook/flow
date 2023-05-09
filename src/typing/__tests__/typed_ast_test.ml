@@ -59,7 +59,8 @@ let parse_content file content =
   let parse_options =
     Some
       {
-        Parser_env.enums = true;
+        Parser_env.components = false;
+        enums = true;
         esproposal_decorators = true;
         types = true;
         use_strict = false;

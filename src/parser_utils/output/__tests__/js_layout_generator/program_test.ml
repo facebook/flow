@@ -15,7 +15,7 @@ module L = Layout_builder
 let tests =
   [
     ( "blank_lines_if_in_original" >:: fun ctxt ->
-      let ast = Ast_builder.program_of_string "var x = 1;\n\n\nvar y = 2;" in
+      let ast = Ast_builder.test_program_of_string "var x = 1;\n\n\nvar y = 2;" in
       let layout = Js_layout_generator.program ~checksum:None ~preserve_docblock:false ast in
       assert_layout
         ~ctxt

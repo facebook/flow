@@ -283,7 +283,7 @@ let tests =
         ~ctxt
         ~pretty:true
         "{\n  a: 1,\n  \n  b: 2,\n}"
-        (Ast_builder.expression_of_string "{\n  a: 1,\n  \n  \n b: 2,\n}");
+        (Ast_builder.test_expression_of_string "{\n  a: 1,\n  \n  \n b: 2,\n}");
       (* Comments are not treated as blank lines *)
       assert_expression_string ~ctxt ~pretty:true "{\n  a: 1,\n  //L\n  b: 2,\n}"
     );

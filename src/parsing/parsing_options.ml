@@ -21,6 +21,7 @@ type t = {
   parse_facebook_fbt: string option;
   parse_suppress_types: SSet.t;
   parse_max_literal_len: int;
+  parse_component_syntax: bool;
   parse_exact_by_default: bool;
   parse_enable_enums: bool;
   parse_enable_relay_integration: bool;
@@ -52,6 +53,7 @@ let make_parsing_options ?(types_mode = TypesAllowed) ?use_strict options =
     parse_facebook_fbt = facebook_fbt;
     parse_suppress_types = Options.suppress_types options;
     parse_max_literal_len = Options.max_literal_length options;
+    parse_component_syntax = Options.component_syntax options;
     parse_exact_by_default = Options.exact_by_default options;
     parse_enable_enums = Options.enums options;
     parse_enable_relay_integration = Options.enable_relay_integration options;
