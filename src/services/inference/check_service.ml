@@ -135,13 +135,13 @@ let unknown_module_t cx mref m =
     let reason = Reason.mk_reason desc loc in
     Flow_js_utils.lookup_builtin_strict cx m_name reason
 
-let unchecked_module_t cx mref =
+let unchecked_module_t cx file_key mref =
   let desc = Reason.RUntypedModule mref in
   let m_name = Reason.internal_module_name mref in
-  fun loc ->
-    let reason = Reason.mk_reason desc loc in
-    let default = Type.(AnyT (reason, Untyped)) in
-    Flow_js_utils.lookup_builtin_with_default cx m_name default
+  let loc = ALoc.of_loc Loc.{ none with source = Some file_key } in
+  let reason = Reason.mk_reason desc loc in
+  let default = Type.(AnyT (reason, Untyped)) in
+  Fun.const (Flow_js_utils.lookup_builtin_with_default cx m_name default)
 
 let get_lint_severities metadata options =
   let lint_severities = Options.lint_severities options in
@@ -268,7 +268,7 @@ let mk_check_file
         | dep_file ->
           (match Reader.get_typed_parse provider with
           | Some parse -> sig_module_t cx dep_file parse
-          | None -> unchecked_module_t cx mref)))
+          | None -> unchecked_module_t cx dep_file mref)))
   and sig_module_t cx file_key parse _loc =
     let create_file = dep_file file_key parse in
     let leader = lazy (Reader.get_leader_key parse) in

@@ -860,18 +860,18 @@ struct
         | (ModuleT m, ImportNamedT (reason, import_kind, export_name, module_name, t, is_strict)) ->
           let import = (reason, import_kind, export_name, module_name, is_strict) in
           ImportNamedTKit.on_ModuleT cx trace import m t
-        | (AnyT (lreason, src), CJSRequireT { reason; t_out; _ }) ->
+        | (AnyT (lreason, _), CJSRequireT { reason; t_out; _ }) ->
           Flow_js_utils.check_untyped_import cx ImportValue lreason reason;
-          rec_flow_t ~use_op:unknown_use cx trace (AnyT.why src reason, t_out)
-        | (AnyT (lreason, src), ImportModuleNsT { reason; t; is_strict = _ }) ->
+          rec_flow_t ~use_op:unknown_use cx trace (reposition_reason cx reason l, t_out)
+        | (AnyT (lreason, _), ImportModuleNsT { reason; t; is_strict = _ }) ->
           Flow_js_utils.check_untyped_import cx ImportValue lreason reason;
-          rec_flow_t ~use_op:unknown_use cx trace (AnyT.why src reason, t)
-        | (AnyT (lreason, src), ImportDefaultT (reason, import_kind, _, t, _)) ->
+          rec_flow_t ~use_op:unknown_use cx trace (reposition_reason cx reason l, t)
+        | (AnyT (lreason, _), ImportDefaultT (reason, import_kind, _, t, _)) ->
           Flow_js_utils.check_untyped_import cx import_kind lreason reason;
-          rec_flow_t ~use_op:unknown_use cx trace (AnyT.why src reason, t)
-        | (AnyT (lreason, src), ImportNamedT (reason, import_kind, _, _, t, _)) ->
+          rec_flow_t ~use_op:unknown_use cx trace (reposition_reason cx reason l, t)
+        | (AnyT (lreason, _), ImportNamedT (reason, import_kind, _, _, t, _)) ->
           Flow_js_utils.check_untyped_import cx import_kind lreason reason;
-          rec_flow_t ~use_op:unknown_use cx trace (AnyT.why src reason, t)
+          rec_flow_t ~use_op:unknown_use cx trace (reposition_reason cx reason l, t)
         (*****************)
         (* Import checks *)
         (*****************)
