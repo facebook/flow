@@ -1,4 +1,4 @@
-// @noflow
+// @flow
 
 declare function f(x: {p: string}): number;
 declare function f(x: mixed): string;

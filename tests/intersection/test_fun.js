@@ -11,7 +11,7 @@
  *
  * Definitions lin lib/lib.js
  *
- * @noflow
+ * @flow
  */
 
 // intersection of function types satisfies union of param types

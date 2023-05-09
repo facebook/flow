@@ -1,4 +1,4 @@
-// @noflow
+// @flow
 
 declare function foo(x: number): number;
 declare function foo(x: string): string;

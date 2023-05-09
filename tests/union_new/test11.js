@@ -1,4 +1,4 @@
-// @noflow
+// @flow
 
 // disjoint unions
 

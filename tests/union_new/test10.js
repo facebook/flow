@@ -1,4 +1,4 @@
-// @noflow
+// @flow
 
 function id<X>(x: X): X { return x; }
 

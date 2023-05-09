@@ -1,4 +1,4 @@
-// @noflow
+// @flow
 
 type A = {kind: 'a', e: Type};
 type B = {kind: 'b', k: Type, v: Type};

@@ -1,4 +1,4 @@
-// @noflow
+// @flow
 
 /**
  * Test that shows how the implementation of union types is broken

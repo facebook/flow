@@ -1,4 +1,4 @@
-/* @noflow */
+/* @flow */
 
 interface IFoo { foo: string }
 

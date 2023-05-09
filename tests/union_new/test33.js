@@ -1,4 +1,4 @@
-// @noflow
+// @flow
 
 // speculation failure should leave unresolved tvars alone
 

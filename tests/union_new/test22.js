@@ -1,4 +1,4 @@
-// @noflow
+// @flow
 
 // refinement of disjoint unions
 

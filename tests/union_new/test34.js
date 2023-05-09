@@ -1,4 +1,4 @@
-// @noflow
+// @flow
 
 type T =
   | {type: 'A', ...A}
