@@ -551,17 +551,13 @@ struct
               add_lower_edges cx trace ~new_use_op:use_op (id1, bounds1) (id2, bounds2);
               flows_across cx trace ~use_op bounds1.lower bounds2.upper
             )
-          | (Unresolved bounds1, Resolved (use_op', t2)) ->
-            let t2_use = flow_use_op cx use_op' (UseT (use_op, t2)) in
-            edges_and_flows_to_t cx trace (id1, bounds1) t2_use
-          | (Unresolved bounds1, FullyResolved ((), (lazy t2))) ->
+          | (Unresolved bounds1, (Resolved ((), t2) | FullyResolved ((), (lazy t2)))) ->
             edges_and_flows_to_t cx trace (id1, bounds1) (UseT (use_op, t2))
           | ((Resolved (_, t1) | FullyResolved (_, (lazy t1))), Unresolved bounds2) ->
             edges_and_flows_from_t cx trace ~new_use_op:use_op t1 (id2, bounds2)
-          | ((Resolved (_, t1) | FullyResolved (_, (lazy t1))), Resolved (use_op', t2)) ->
-            let t2_use = flow_use_op cx use_op' (UseT (use_op, t2)) in
-            rec_flow cx trace (t1, t2_use)
-          | ((Resolved (_, t1) | FullyResolved (_, (lazy t1))), FullyResolved ((), (lazy t2))) ->
+          | ( (Resolved (_, t1) | FullyResolved (_, (lazy t1))),
+              (Resolved ((), t2) | FullyResolved ((), (lazy t2)))
+            ) ->
             rec_flow cx trace (t1, UseT (use_op, t2)))
         (******************)
         (* process Y ~> U *)
@@ -586,10 +582,9 @@ struct
           (match constraints2 with
           | Unresolved bounds2 ->
             edges_and_flows_from_t cx trace ~new_use_op:use_op t1 (id2, bounds2)
-          | Resolved (use_op', t2) ->
-            let t2_use = flow_use_op cx use_op' (UseT (use_op, t2)) in
-            rec_flow cx trace (t1, t2_use)
-          | FullyResolved ((), (lazy t2)) -> rec_flow cx trace (t1, UseT (use_op, t2)))
+          | Resolved ((), t2)
+          | FullyResolved ((), (lazy t2)) ->
+            rec_flow cx trace (t1, UseT (use_op, t2)))
         (************)
         (* Subtyping *)
         (*************)
@@ -8250,7 +8245,7 @@ struct
         if fully_resolved then
           FullyResolved ((), lazy t)
         else
-          Resolved (use_op, t)
+          Resolved ((), t)
       in
       root.constraints <- constraints;
       edges_and_flows_to_t cx trace ~opt:true (id, bounds) (UseT (use_op, t));

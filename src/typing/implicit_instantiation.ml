@@ -1244,7 +1244,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
           | _ ->
             (* This indirection is added for performance purposes, since it prevents
              * unnecessary deep substitution traversals. *)
-            Tvar.mk_resolved cx use_op (TypeUtil.reason_of_t inferred) inferred)
+            Tvar.mk_resolved cx () (TypeUtil.reason_of_t inferred) inferred)
         inferred_targ_map
     in
     inferred_targ_map

@@ -91,7 +91,7 @@ class resolver ~no_lowers =
         Base.Option.value_map t ~default:seen ~f:(fun t ->
             let constraints =
               if Context.typing_mode cx <> Context.CheckingMode then
-                C.Resolved (unknown_use, t)
+                C.Resolved ((), t)
               else
                 C.FullyResolved ((), lazy t)
             in
