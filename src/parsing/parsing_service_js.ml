@@ -122,17 +122,11 @@ let parse_package_json_file ~node_main_fields content file =
    file header if possible. Note, this should be consistent with
    Infer_service.apply_docblock_overrides w.r.t. the metadata.checked flag. *)
 let types_checked types_mode docblock =
-  match types_mode with
-  | TypesAllowed -> true
-  | TypesForbiddenByDefault ->
-    (match Docblock.flow docblock with
-    | None
-    | Some Docblock.OptOut ->
-      false
-    | Some Docblock.OptIn
-    | Some Docblock.OptInStrict
-    | Some Docblock.OptInStrictLocal ->
-      true)
+  let open Docblock in
+  match flow docblock with
+  | None -> types_mode = TypesAllowed
+  | Some OptOut -> false
+  | Some (OptIn | OptInStrict | OptInStrictLocal) -> true
 
 let parse_file_sig parsing_options file ast =
   let {
