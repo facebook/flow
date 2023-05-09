@@ -1,4 +1,9 @@
 (library
  (name flow_types)
  (wrapped false)
- (libraries flow_common flow_parsing))
+ (libraries
+  flow_common
+  flow_coverage
+  flow_file_sig
+  flow_parsing_docblock
+  flow_typing))

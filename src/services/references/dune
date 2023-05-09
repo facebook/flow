@@ -3,6 +3,7 @@
  (wrapped false)
  (libraries
   flow_parser
+  flow_parsing
   flow_server_env
   flow_service_get_def
   flow_service_references_types
