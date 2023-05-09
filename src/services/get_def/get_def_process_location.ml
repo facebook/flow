@@ -227,24 +227,37 @@ class ['M, 'T] searcher
       super#pattern_identifier ?kind (annot, name)
 
     method! expression (annot, expr) =
-      match expr with
-      | Flow_ast.Expression.(
-          Call
+      let open Flow_ast in
+      let open Expression in
+      if annot_covers_target annot then
+        match expr with
+        | Literal Literal.{ value = String _; _ } -> this#found_empty "string"
+        | Literal Literal.{ value = Number _; _ } -> this#found_empty "number"
+        | Literal Literal.{ value = BigInt _; _ } -> this#found_empty "bigint"
+        | Literal Literal.{ value = Boolean _; _ } -> this#found_empty "boolean"
+        | Literal Literal.{ value = Null; _ } -> this#found_empty "null"
+        | Literal Literal.{ value = RegExp _; _ } -> this#found_empty "regexp"
+        | Call
             {
-              Call.callee = (_, Identifier (_, { Flow_ast.Identifier.name = "require"; _ }));
+              Call.callee = (_, Identifier (_, { Identifier.name = "require"; _ }));
               arguments =
                 ( _,
                   {
-                    Flow_ast.Expression.ArgList.arguments =
-                      [Expression (source_annot, Literal Flow_ast.Literal.{ value = String _; _ })];
+                    ArgList.arguments =
+                      [Expression (source_annot, Literal Literal.{ value = String _; _ })];
                     comments = _;
                   }
                 );
               _;
-            })
-        when annot_covers_target annot && is_legit_require source_annot ->
-        this#request (Get_def_request.Type annot)
-      | _ -> super#expression (annot, expr)
+            }
+          when is_legit_require source_annot ->
+          this#request (Get_def_request.Type annot)
+        | _ -> super#expression (annot, expr)
+      else
+        (* it is tempting to not recurse here, but comments are not included in
+           `annot`, so we have to dig into each child to visit their `comments`
+           fields. *)
+        super#expression (annot, expr)
 
     method! module_ref_literal mref =
       let { Flow_ast.Literal.require_out; _ } = mref in

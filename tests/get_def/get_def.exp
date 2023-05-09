@@ -152,9 +152,33 @@ identifier.js:11:11
 Flags:
 identifier.js:3:10,3:16
 
-module_ref.js:3:4
+literals.js:3:4
 Flags:
 helpers/Foo.js:6:18,6:18
+
+literals.js:6:4
+Flags:
+
+literals.js:9:4
+Flags:
+
+literals.js:13:4
+Flags:
+
+literals.js:16:4
+Flags:
+
+literals.js:19:4
+Flags:
+
+literals.js:22:4
+Flags:
+
+literals.js:25:4
+Flags:
+
+literals.js:28:4
+Flags:
 
 require.js:3:10
 Flags:
