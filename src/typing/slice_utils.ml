@@ -1397,7 +1397,7 @@ let map_object
     cx
     reason
     use_op
-    { Object.reason = r; props; flags; generics = _; interface = _ } =
+    { Object.reason = _; props; flags; generics = _; interface = _ } =
   let mk_prop_type key_t prop_optional =
     (* We persist the original use_op here so that errors involving the typeapp are positioned
      * at the use site and not the typeapp site *)
@@ -1456,7 +1456,7 @@ let map_object
       { flags with obj_kind = Indexed dict_t' }
     | _ -> flags
   in
-  let t = mk_object_def_type ~reason:r ~flags ~call id proto in
+  let t = mk_object_def_type ~reason ~flags ~call id proto in
   if flags.obj_kind = Exact then
     ExactT (reason, t)
   else

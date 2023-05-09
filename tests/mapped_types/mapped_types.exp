@@ -536,7 +536,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ non_homomorphic.js:48:4
 
-Cannot cast `noContext` to object type because property `baz` is missing in object type [1] but exists in object
+Cannot cast `noContext` to object type because property `baz` is missing in mapped type [1] but exists in object
 type [2]. [prop-missing]
 
    non_homomorphic.js:48:4
@@ -1050,7 +1050,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:101:4
 
-Cannot cast `badKeys` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `badKeys` to empty because `UnconstrainedKey` [1] is incompatible with empty [2]. [incompatible-cast]
 
    test.js:101:4
    101|   (badKeys: empty); // ERROR
