@@ -106,6 +106,7 @@ let stub_metadata ~root ~checked =
     any_propagation = true;
     automatic_require_default = false;
     babel_loose_array_spread = false;
+    component_syntax = false;
     conditional_type = false;
     enable_const_params = false;
     enable_enums = true;

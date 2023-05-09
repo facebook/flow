@@ -52,6 +52,7 @@ type metadata = {
   any_propagation: bool;
   automatic_require_default: bool;
   babel_loose_array_spread: bool;
+  component_syntax: bool;
   conditional_type: bool;
   enable_const_params: bool;
   enable_enums: bool;
@@ -138,6 +139,8 @@ val max_literal_length : t -> int
 val babel_loose_array_spread : t -> bool
 
 val builtins : t -> Builtins.t
+
+val component_syntax : t -> bool
 
 val enable_const_params : t -> bool
 

@@ -33,6 +33,7 @@ type metadata = {
   any_propagation: bool;
   automatic_require_default: bool;
   babel_loose_array_spread: bool;
+  component_syntax: bool;
   conditional_type: bool;
   enable_const_params: bool;
   enable_enums: bool;
@@ -223,6 +224,7 @@ let metadata_of_options options =
     any_propagation = Options.any_propagation options;
     automatic_require_default = Options.automatic_require_default options;
     babel_loose_array_spread = Options.babel_loose_array_spread options;
+    component_syntax = Options.component_syntax options;
     conditional_type = Options.conditional_type options;
     enable_const_params = Options.enable_const_params options;
     enable_enums = Options.enums options;
@@ -415,6 +417,8 @@ let max_literal_length cx = cx.metadata.max_literal_length
 let babel_loose_array_spread cx = cx.metadata.babel_loose_array_spread
 
 let builtins cx = cx.ccx.builtins
+
+let component_syntax cx = cx.metadata.component_syntax
 
 let enable_const_params cx =
   cx.metadata.enable_const_params || cx.metadata.strict || cx.metadata.strict_local

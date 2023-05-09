@@ -63,6 +63,7 @@ type t = {
   opt_automatic_require_default: bool;
   opt_babel_loose_array_spread: bool;
   opt_channel_mode: [ `pipe | `socket ];
+  opt_component_syntax: bool;
   opt_conditional_type: bool;
   opt_debug: bool;
   opt_direct_dependent_files_fix: bool;
@@ -156,6 +157,8 @@ let automatic_require_default opts = opts.opt_automatic_require_default
 let babel_loose_array_spread opts = opts.opt_babel_loose_array_spread
 
 let channel_mode opts = opts.opt_channel_mode
+
+let component_syntax opts = opts.opt_component_syntax
 
 let conditional_type opts = opts.opt_conditional_type
 

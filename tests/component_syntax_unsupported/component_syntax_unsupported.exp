@@ -1,0 +1,10 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:1:11
+
+Unexpected identifier, expected the end of an expression statement (`;`)
+
+   1| component Comp() {} // error: unsupported
+                ^^^^
+
+
+
+Found 1 error

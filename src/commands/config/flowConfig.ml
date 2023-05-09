@@ -49,6 +49,7 @@ module Opts = struct
     automatic_require_default: bool option;
     babel_loose_array_spread: bool option;
     channel_mode: [ `pipe | `socket ] option;
+    component_syntax: bool;
     conditional_type: bool option;
     direct_dependent_files_fix: bool option;
     emoji: bool option;
@@ -172,6 +173,7 @@ module Opts = struct
       automatic_require_default = None;
       babel_loose_array_spread = None;
       channel_mode = None;
+      component_syntax = false;
       conditional_type = None;
       direct_dependent_files_fix = None;
       emoji = None;
@@ -738,6 +740,9 @@ module Opts = struct
       ("exact_by_default", boolean (fun opts v -> Ok { opts with exact_by_default = Some v }));
       ( "experimental.const_params",
         boolean (fun opts v -> Ok { opts with enable_const_params = Some v })
+      );
+      ( "experimental.component_syntax",
+        boolean (fun opts v -> Ok { opts with component_syntax = v })
       );
       ( "experimental.conditional_type",
         boolean (fun opts v -> Ok { opts with conditional_type = Some v })
@@ -1374,6 +1379,8 @@ let automatic_require_default c = c.options.Opts.automatic_require_default
 let babel_loose_array_spread c = c.options.Opts.babel_loose_array_spread
 
 let channel_mode c = c.options.Opts.channel_mode
+
+let component_syntax c = c.options.Opts.component_syntax
 
 let conditional_type c = c.options.Opts.conditional_type
 
