@@ -32,7 +32,7 @@ let has_placeholders =
           let seen = ISet.add root_id seen in
           match constraints with
           | C.FullyResolved _ -> seen
-          | C.Resolved (_, t) -> this#type_ cx pole seen t
+          | C.Resolved t -> this#type_ cx pole seen t
           | C.Unresolved bounds ->
             TypeMap.fold (fun t _ seen -> this#type_ cx pole seen t) bounds.C.lower seen
     end
@@ -55,7 +55,7 @@ let has_unresolved_tvars_visitor =
         let seen = ISet.add root_id seen in
         match constraints with
         | C.FullyResolved _ -> seen
-        | C.Resolved (_, t) -> this#type_ cx pole seen t
+        | C.Resolved t -> this#type_ cx pole seen t
         | C.Unresolved _ -> raise EncounteredUnresolvedTvar
   end
 
@@ -91,9 +91,9 @@ class resolver ~no_lowers =
         Base.Option.value_map t ~default:seen ~f:(fun t ->
             let constraints =
               if Context.typing_mode cx <> Context.CheckingMode then
-                C.Resolved ((), t)
+                C.Resolved t
               else
-                C.FullyResolved ((), lazy t)
+                C.FullyResolved (lazy t)
             in
             root.C.constraints <- constraints;
             let seen = ISet.add root_id seen in

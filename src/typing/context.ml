@@ -977,8 +977,8 @@ let find_resolved =
         Some t_in
       else begin
         match find_graph cx id with
-        | Type.Constraint.Resolved (_, t)
-        | Type.Constraint.FullyResolved (_, (lazy t)) ->
+        | Type.Constraint.Resolved t
+        | Type.Constraint.FullyResolved (lazy t) ->
           loop cx (ISet.add id seen) t
         | Type.Constraint.Unresolved _ -> None
       end

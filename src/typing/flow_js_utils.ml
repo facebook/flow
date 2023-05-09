@@ -754,20 +754,18 @@ let builtin_promise_class_id cx =
     begin
       match constraints with
       | Constraint.FullyResolved
-          ( _,
-            (lazy
-              (DefT
-                ( _,
-                  _,
-                  PolyT
-                    {
-                      t_out = ThisClassT (_, DefT (_, _, InstanceT (_, _, _, { class_id; _ })), _, _);
-                      _;
-                    }
-                )
-                )
+          (lazy
+            (DefT
+              ( _,
+                _,
+                PolyT
+                  {
+                    t_out = ThisClassT (_, DefT (_, _, InstanceT (_, _, _, { class_id; _ })), _, _);
+                    _;
+                  }
               )
-          ) ->
+              )
+            ) ->
         Some class_id
       | _ -> None
     end
@@ -854,7 +852,7 @@ let fix_this_class cx reason (r, i, is_this, this_name) =
       let reason_i = reason_of_t i in
       let rec i' =
         lazy
-          (let this = Tvar.mk_fully_resolved_lazy cx () reason_i i' in
+          (let this = Tvar.mk_fully_resolved_lazy cx reason_i i' in
            let this_generic =
              if is_this then
                GenericT

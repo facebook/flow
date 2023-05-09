@@ -60,14 +60,14 @@ let copier =
             | Unresolved _
             | Resolved _ ->
               failwith "unexpected unresolved constraint"
-            | FullyResolved (_, thunk) ->
+            | FullyResolved thunk ->
               lazy
                 (let (lazy t) = thunk in
                  let (_ : Context.t) = self#type_ src_cx pole dst_cx t in
                  t
                 )
           in
-          let node = create_root (FullyResolved ((), t)) in
+          let node = create_root (FullyResolved t) in
           Context.set_graph dst_cx (IMap.add id node dst_graph);
           dst_cx
         ) else

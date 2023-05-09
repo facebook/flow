@@ -2797,9 +2797,9 @@ module Constraint = struct
       - Unresolved constraints contain bounds that carry both concrete types and
         other tvars as upper and lower bounds (see below). *)
   type constraints =
-    | Resolved of unit * TypeTerm.t
+    | Resolved of TypeTerm.t
     | Unresolved of bounds
-    | FullyResolved of unit * TypeTerm.t Lazy.t
+    | FullyResolved of TypeTerm.t Lazy.t
 
   (** The bounds structure carries the evolving constraints on the solution of an
       unresolved tvar.
@@ -2842,16 +2842,16 @@ module Constraint = struct
      bounds of the solution, or a singleton containing the solution itself. *)
   let types_of : constraints -> TypeTerm.t list = function
     | Unresolved { lower; _ } -> TypeMap.keys lower
-    | Resolved (_, t)
-    | FullyResolved (_, (lazy t)) ->
+    | Resolved t
+    | FullyResolved (lazy t) ->
       [t]
 
   let uses_of : constraints -> TypeTerm.use_t list = function
     | Unresolved { upper; _ } -> Base.List.map ~f:fst (UseTypeMap.keys upper)
-    | Resolved ((), t) -> [TypeTerm.UseT (unknown_use, t)]
-    | FullyResolved ((), (lazy t)) -> [TypeTerm.UseT (unknown_use, t)]
+    | Resolved t -> [TypeTerm.UseT (unknown_use, t)]
+    | FullyResolved (lazy t) -> [TypeTerm.UseT (unknown_use, t)]
 
-  let fully_resolved_node t = create_root (FullyResolved ((), lazy t))
+  let fully_resolved_node t = create_root (FullyResolved (lazy t))
 end
 
 (**************************)

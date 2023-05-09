@@ -53,8 +53,8 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             ?trace
             (t, ObjKitT (use_op, reason, Resolve Next, ObjectWiden widened_id, tout));
           tout
-        | Resolved (_, t)
-        | FullyResolved (_, (lazy t)) ->
+        | Resolved t
+        | FullyResolved (lazy t) ->
           widen_obj_type cx ?trace ~use_op reason t
       end
     | UnionT (r, rep) ->

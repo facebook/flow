@@ -234,8 +234,8 @@ let detect_matching_props_violations cx =
         else
           let seen = ISet.add root_id seen in
           (match constraints with
-          | Constraint.Resolved (_, t)
-          | Constraint.FullyResolved (_, (lazy t)) ->
+          | Constraint.Resolved t
+          | Constraint.FullyResolved (lazy t) ->
             loop cx acc seen t
           | Constraint.Unresolved bounds ->
             let ts = TypeMap.keys bounds.Constraint.lower in
@@ -346,8 +346,8 @@ let check_constrained_writes cx =
                      let t = resolve_t t in
                      (t, mk_use_op (Flow_js.flow_use_op cx use_op u))
                  )
-            | Resolved ((), _)
-            | FullyResolved ((), _) ->
+            | Resolved _
+            | FullyResolved _ ->
               let t = resolve_t t in
               [(t, mk_use_op (Flow_js.flow_use_op cx unknown_use u))]
           end

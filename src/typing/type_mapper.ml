@@ -20,8 +20,8 @@ let union_flatten =
         seen := ISet.add id !seen;
         Type.Constraint.(
           match Context.find_graph cx id with
-          | Resolved (_, t')
-          | FullyResolved (_, (lazy t')) ->
+          | Resolved t'
+          | FullyResolved (lazy t') ->
             flatten cx seen t'
           | Unresolved _ -> [t]
         )

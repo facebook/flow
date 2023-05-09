@@ -62,7 +62,7 @@ let function_like_op op = object_like_op op
 let get_fully_resolved_type cx id =
   let (_, constraints) = Context.find_constraints cx id in
   match constraints with
-  | Constraint.FullyResolved (_, (lazy t)) -> t
+  | Constraint.FullyResolved (lazy t) -> t
   | Constraint.Resolved _
   | Constraint.Unresolved _ ->
     failwith "unexpected unresolved constraint in annotation inference"
@@ -340,7 +340,7 @@ module rec ConsGen : S = struct
     let return cx ~use_op:_ _trace t =
       match t with
       | OpenT _ -> t
-      | _ -> Tvar.mk_fully_resolved cx () (reason_of_t t) t
+      | _ -> Tvar.mk_fully_resolved cx (reason_of_t t) t
 
     (* We will not be doing subtyping checks in annotation inference. *)
     let dict_read_check _ _ ~use_op:_ _ = ()
@@ -398,7 +398,7 @@ module rec ConsGen : S = struct
           ensure_annot_resolved cx reason id
         )
     in
-    let node = Constraint.create_root (Constraint.FullyResolved ((), t)) in
+    let node = Constraint.create_root (Constraint.FullyResolved t) in
     Context.add_tvar cx id node;
     tvar
 
@@ -1235,7 +1235,7 @@ module rec ConsGen : S = struct
         | Unresolved _
         | Resolved _ ->
           failwith "widen_obj_type unexpected non-FullyResolved tvar"
-        | FullyResolved (_, (lazy t)) -> widen_obj_type cx ~use_op reason t
+        | FullyResolved (lazy t) -> widen_obj_type cx ~use_op reason t
       end
     | UnionT (r, rep) ->
       UnionT

@@ -1484,7 +1484,7 @@ and merge_class tps infer_tps file reason id def =
   let t (tps, targs) =
     let rec t =
       lazy
-        (let rec_type = Tvar.mk_fully_resolved_lazy file.cx () this_reason t in
+        (let rec_type = Tvar.mk_fully_resolved_lazy file.cx this_reason t in
          this_class_t tps targs rec_type
         )
     in
@@ -1795,7 +1795,7 @@ let merge_declare_class file reason id def =
   let t (tps, targs) =
     let rec t =
       lazy
-        (let rec_type = Tvar.mk_fully_resolved_lazy file.cx () this_reason t in
+        (let rec_type = Tvar.mk_fully_resolved_lazy file.cx this_reason t in
          this_class_t tps targs rec_type
         )
     in

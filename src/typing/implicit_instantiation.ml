@@ -527,8 +527,8 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       else
         let constraints = Context.find_graph cx id in
         (match constraints with
-        | Constraint.FullyResolved (_, (lazy t))
-        | Constraint.Resolved (_, t) ->
+        | Constraint.FullyResolved (lazy t)
+        | Constraint.Resolved t ->
           filter_placeholder t
         | Constraint.Unresolved bounds ->
           let uppers = Constraint.UseTypeMap.keys bounds.Constraint.upper in
@@ -559,8 +559,8 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | OpenT (r, id) ->
       let constraints = Context.find_graph cx id in
       (match constraints with
-      | Constraint.FullyResolved (_, (lazy t))
-      | Constraint.Resolved (_, t) ->
+      | Constraint.FullyResolved (lazy t)
+      | Constraint.Resolved t ->
         if Tvar_resolver.has_placeholders cx t then
           None
         else
@@ -1244,7 +1244,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
           | _ ->
             (* This indirection is added for performance purposes, since it prevents
              * unnecessary deep substitution traversals. *)
-            Tvar.mk_resolved cx () (TypeUtil.reason_of_t inferred) inferred)
+            Tvar.mk_resolved cx (TypeUtil.reason_of_t inferred) inferred)
         inferred_targ_map
     in
     inferred_targ_map

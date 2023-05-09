@@ -19,8 +19,8 @@ let recurse_into_union cx filter_fn ((r, ts) : reason * Type.t list) =
             let (_, constraints) = Context.find_constraints cx id in
             begin
               match constraints with
-              | Constraint.FullyResolved (_, (lazy t))
-              | Constraint.Resolved (_, t) ->
+              | Constraint.FullyResolved (lazy t)
+              | Constraint.Resolved t ->
                 t
               | _ -> t
             end

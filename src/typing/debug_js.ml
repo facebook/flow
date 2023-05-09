@@ -1018,9 +1018,9 @@ and dump_tvar_ (depth, tvars) cx id =
       try
         match !(Context.find_tvar cx id) with
         | Goto goto -> spf "%d, Goto %d" id goto.parent
-        | Root { constraints = Resolved (_, t); _ } ->
+        | Root { constraints = Resolved t; _ } ->
           spf "%d, Resolved %s" id (dump_t_ (depth - 1, stack) cx t)
-        | Root { constraints = FullyResolved (_, (lazy t)); _ } ->
+        | Root { constraints = FullyResolved (lazy t); _ } ->
           spf "%d, FullyResolved %s" id (dump_t_ (depth - 1, stack) cx t)
         | Root { constraints = Unresolved { lower; upper; _ }; _ } ->
           if lower = TypeMap.empty && upper = UseTypeMap.empty then
