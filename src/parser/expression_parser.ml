@@ -1167,7 +1167,7 @@ module Expression
         let (body, contains_use_strict) =
           Declaration.function_body env ~async ~generator ~expression:true ~simple_params
         in
-        Declaration.strict_post_check env ~contains_use_strict id params;
+        Declaration.strict_function_post_check env ~contains_use_strict id params;
         Expression.Function
           {
             Function.id;
@@ -1772,7 +1772,7 @@ module Expression
       (* arrow functions can't be generators *)
       let env = enter_function env ~async ~generator:false ~simple_params in
       let (end_loc, (body, contains_use_strict)) = with_loc concise_function_body env in
-      Declaration.strict_post_check env ~contains_use_strict None params;
+      Declaration.strict_function_post_check env ~contains_use_strict None params;
       let loc = Loc.btwn start_loc end_loc in
       Cover_expr
         ( loc,

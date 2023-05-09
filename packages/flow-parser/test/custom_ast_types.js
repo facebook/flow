@@ -144,6 +144,21 @@ function custom_ast_types(fork) {
   );
   def('DeclareVariable').field('kind', or('var', 'let', 'const'));
 
+  def('ComponentDeclaration')
+    .bases('Declaration')
+    .build('id', 'tparams', 'params', 'return', 'body', 'comments')
+    .field('id', def('Identifier'))
+    .field('typeParameters', or(def('TypeParameterDeclaration'), null))
+    .field('params', [or(def('ComponentParameter'), def('RestElement'))])
+    .field('returnType', or(def('TypeAnnotation'), null))
+    .field('body', def('BlockStatement'));
+
+  def('ComponentParameter')
+    .build('name', 'local', 'shorthand')
+    .field('name', or(def('Identifier'), def('Literal')))
+    .field('local', def('Pattern'))
+    .field('shorthand', Boolean);
+
   /////////
   // es2018
   /////////

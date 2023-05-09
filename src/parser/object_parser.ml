@@ -203,7 +203,7 @@ module Object
           let (body, contains_use_strict) =
             Declaration.function_body env ~async ~generator ~expression:false ~simple_params
           in
-          Declaration.strict_post_check env ~contains_use_strict None params;
+          Declaration.strict_function_post_check env ~contains_use_strict None params;
           {
             Function.id = None;
             params;
@@ -292,7 +292,7 @@ module Object
             let (body, contains_use_strict) =
               Declaration.function_body env ~async ~generator ~expression:false ~simple_params
             in
-            Declaration.strict_post_check env ~contains_use_strict None params;
+            Declaration.strict_function_post_check env ~contains_use_strict None params;
             {
               Function.id = None;
               params;
@@ -865,7 +865,7 @@ module Object
               let (body, contains_use_strict) =
                 Declaration.function_body env ~async ~generator ~expression:false ~simple_params
               in
-              Declaration.strict_post_check env ~contains_use_strict None params;
+              Declaration.strict_function_post_check env ~contains_use_strict None params;
               {
                 Function.id = None;
                 params;

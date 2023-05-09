@@ -318,6 +318,7 @@ module rec Parse : PARSER = struct
     | T_TYPE -> type_alias env
     | T_OPAQUE -> opaque_type env
     | T_ENUM when (parse_options env).enums -> Declaration.enum_declaration env
+    | _ when Peek.is_component env -> Declaration.component env
     | _ -> statement env
 
   and statement env =

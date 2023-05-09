@@ -120,6 +120,8 @@ end = struct
         (fun opts (k, v) ->
           opts >>= fun (test_opts, opts) ->
           match k with
+          | "components" ->
+            get_bool k v >>= fun v -> return (test_opts, { opts with Parser_env.components = v })
           | "enums" ->
             get_bool k v >>= fun v -> return (test_opts, { opts with Parser_env.enums = v })
           | "esproposal_decorators" ->

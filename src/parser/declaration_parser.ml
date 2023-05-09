@@ -31,11 +31,21 @@ module type DECLARATION = sig
 
   val check_unique_formal_parameters : env -> (Loc.t, Loc.t) Ast.Function.Params.t -> unit
 
-  val strict_post_check :
+  val check_unique_component_formal_parameters :
+    env -> (Loc.t, Loc.t) Ast.Statement.ComponentDeclaration.Params.t -> unit
+
+  val strict_function_post_check :
     env ->
     contains_use_strict:bool ->
     (Loc.t, Loc.t) Identifier.t option ->
     (Loc.t, Loc.t) Ast.Function.Params.t ->
+    unit
+
+  val strict_component_post_check :
+    env ->
+    contains_use_strict:bool ->
+    (Loc.t, Loc.t) Identifier.t ->
+    (Loc.t, Loc.t) Ast.Statement.ComponentDeclaration.Params.t ->
     unit
 
   val let_ :
@@ -59,6 +69,8 @@ module type DECLARATION = sig
   val _function : env -> (Loc.t, Loc.t) Statement.t
 
   val enum_declaration : ?leading:Loc.t Comment.t list -> env -> (Loc.t, Loc.t) Statement.t
+
+  val component : env -> (Loc.t, Loc.t) Statement.t
 end
 
 module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DECLARATION = struct
@@ -118,9 +130,61 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
     | Some (_, { Function.RestParam.argument; comments = _ }) -> ignore (check_param acc argument)
     | None -> ()
 
+  (** This does the same check as check_unique_formal_parameters. However, it converts the component
+   *  params to a single object destructure, then runs the check. This is done to best match the behavior
+   *  of components still using function syntax. *)
+  let check_unique_component_formal_parameters env params =
+    let (_, { Ast.Statement.ComponentDeclaration.Params.params; rest; comments = _ }) = params in
+    let pattern_obj_props =
+      List.filter_map
+        (fun (_, { Ast.Statement.ComponentDeclaration.Param.name; local; default; shorthand }) ->
+          let key =
+            Option.map
+              (function
+                | Ast.Statement.ComponentDeclaration.Param.StringLiteral
+                    (_, { Ast.StringLiteral.value; raw; comments }) ->
+                  Ast.Pattern.Object.Property.Literal
+                    (Loc.none, { Ast.Literal.value = Ast.Literal.String value; raw; comments })
+                | Ast.Statement.ComponentDeclaration.Param.Identifier id ->
+                  Ast.Pattern.Object.Property.Identifier id)
+              name
+          in
+          Option.map
+            (fun key ->
+              Ast.Pattern.Object.Property
+                (Loc.none, { Ast.Pattern.Object.Property.key; pattern = local; default; shorthand }))
+            key)
+        params
+    in
+    let obj_param =
+      ( Loc.none,
+        Ast.Pattern.Object
+          {
+            Ast.Pattern.Object.properties = pattern_obj_props;
+            annot = Ast.Type.Missing Loc.none;
+            comments = None;
+          }
+      )
+    in
+    let acc = check_param (env, SSet.empty) obj_param in
+    match rest with
+    | Some (_, { Ast.Statement.ComponentDeclaration.RestParam.argument; comments = _ }) ->
+      ignore (check_param acc argument)
+    | None -> ()
+
+  type param_type =
+    | FunctionParams of (Loc.t, Loc.t) Ast.Function.Params.t
+    | ComponentParams of (Loc.t, Loc.t) Ast.Statement.ComponentDeclaration.Params.t
+
   let strict_post_check env ~contains_use_strict id params =
     let strict_mode = Parser_env.in_strict_mode env in
-    let simple = is_simple_parameter_list params in
+    let simple =
+      match params with
+      | FunctionParams p -> is_simple_parameter_list p
+      | ComponentParams _ ->
+        (* Component params are equivalent to an object destructure so not simple *)
+        false
+    in
     (* If we were already in strict mode and therefore already threw strict
        errors, we want to do these checks outside of strict mode. If we
        were in non-strict mode but the function contains "use strict", then
@@ -137,8 +201,31 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
         if is_restricted name then strict_error_at env (loc, Parse_error.StrictFunctionName);
         if is_strict_reserved name then strict_error_at env (loc, Parse_error.StrictReservedWord)
       | None -> ());
-      check_unique_formal_parameters env params
+      match params with
+      | FunctionParams p -> check_unique_formal_parameters env p
+      | ComponentParams p -> check_unique_component_formal_parameters env p
     )
+
+  let strict_function_post_check env ~contains_use_strict id params =
+    strict_post_check env ~contains_use_strict id (FunctionParams params)
+
+  let strict_component_post_check env ~contains_use_strict id params =
+    strict_post_check env ~contains_use_strict (Some id) (ComponentParams params)
+
+  let rest_param env t =
+    if t = T_ELLIPSIS then
+      let leading = Peek.comments env in
+      let (loc, id) =
+        with_loc
+          (fun env ->
+            Expect.token env T_ELLIPSIS;
+            Parse.pattern env Parse_error.StrictParamName)
+          env
+      in
+      let comments = Flow_ast_utils.mk_comments_opt ~leading () in
+      Some (loc, id, comments)
+    else
+      None
 
   let function_params =
     let rec param =
@@ -158,24 +245,10 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
       match Peek.token env with
       | (T_EOF | T_RPAREN | T_ELLIPSIS) as t ->
         let rest =
-          if t = T_ELLIPSIS then
-            let leading = Peek.comments env in
-            let (loc, id) =
-              with_loc
-                (fun env ->
-                  Expect.token env T_ELLIPSIS;
-                  Parse.pattern env Parse_error.StrictParamName)
-                env
-            in
-            Some
-              ( loc,
-                {
-                  Function.RestParam.argument = id;
-                  comments = Flow_ast_utils.mk_comments_opt ~leading ();
-                }
-              )
-          else
-            None
+          rest_param env t
+          |> Option.map (fun (loc, id, comments) ->
+                 (loc, { Function.RestParam.argument = id; comments })
+             )
         in
         if Peek.token env <> T_RPAREN then error env Parse_error.ParameterAfterRestParameter;
         (List.rev acc, rest)
@@ -235,9 +308,14 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
           }
       )
 
-  let function_body env ~async ~generator ~expression ~simple_params =
+  let function_or_component_body env ~async ~generator ~expression ~simple_params =
     let env = enter_function env ~async ~generator ~simple_params in
-    let (body_block, contains_use_strict) = Parse.function_block_body env ~expression in
+    Parse.function_block_body env ~expression
+
+  let function_body env ~async ~generator ~expression ~simple_params =
+    let (body_block, contains_use_strict) =
+      function_or_component_body env ~async ~generator ~expression ~simple_params
+    in
     (Function.BodyBlock body_block, contains_use_strict)
 
   let variance env ~parse_readonly is_async is_generator =
@@ -359,7 +437,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
         let (body, contains_use_strict) =
           function_body env ~async ~generator ~expression:false ~simple_params
         in
-        strict_post_check env ~contains_use_strict id params;
+        strict_function_post_check env ~contains_use_strict id params;
         Statement.FunctionDeclaration
           {
             Function.id;
@@ -443,5 +521,158 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
     with_loc (fun env ->
         let enum = Enum.declaration ?leading env in
         Statement.EnumDeclaration enum
+    )
+
+  let component_params =
+    let rec param =
+      with_loc (fun env ->
+          let leading = Peek.comments env in
+          let (name, local, shorthand) =
+            match (Peek.token env, Peek.ith_token ~i:1 env) with
+            (* "prop-key" as propKey *)
+            | (T_STRING (loc, value, raw, octal), T_IDENTIFIER { raw = "as"; _ }) ->
+              if octal then strict_error env Parse_error.StrictOctalLiteral;
+              Expect.token env (T_STRING (loc, value, raw, octal));
+              let trailing = Eat.trailing_comments env in
+              let name =
+                Some
+                  (Statement.ComponentDeclaration.Param.StringLiteral
+                     ( loc,
+                       {
+                         StringLiteral.value;
+                         raw;
+                         comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+                       }
+                     )
+                  )
+              in
+              Expect.identifier env "as";
+              let local = Parse.pattern env Parse_error.StrictParamName in
+              (name, local, false)
+            (* propKey as localProp *)
+            | (T_IDENTIFIER _, T_IDENTIFIER { raw = "as"; _ }) ->
+              let name =
+                Some (Statement.ComponentDeclaration.Param.Identifier (identifier_name env))
+              in
+              Expect.identifier env "as";
+              let local = Parse.pattern env Parse_error.StrictParamName in
+              (name, local, false)
+            (* propKey: Type *)
+            | (T_IDENTIFIER _, T_COLON) ->
+              let (loc, id) = identifier_name env in
+              let name = Some (Statement.ComponentDeclaration.Param.Identifier (loc, id)) in
+              let annot = Parse.annot env in
+              let pattern_id =
+                {
+                  Pattern.Identifier.name = (loc, id);
+                  annot = Flow_ast.Type.Available annot;
+                  optional = false;
+                }
+              in
+              (name, (loc, Pattern.Identifier pattern_id), true)
+            (* propKey *)
+            | (T_IDENTIFIER _, _) ->
+              let (loc, id) = identifier_name env in
+              let name = Some (Statement.ComponentDeclaration.Param.Identifier (loc, id)) in
+              let pattern_id =
+                {
+                  Pattern.Identifier.name = (loc, id);
+                  annot = Flow_ast.Type.Missing Loc.{ loc with start = loc._end };
+                  optional = false;
+                }
+              in
+              (name, (loc, Pattern.Identifier pattern_id), true)
+            (* Some invalid prop key. Parse this as a local pattern with a None name *)
+            | (_, _) ->
+              let local = Parse.pattern env Parse_error.StrictParamName in
+              (None, local, false)
+          in
+
+          let default =
+            if Peek.token env = T_ASSIGN then (
+              Expect.token env T_ASSIGN;
+              Some (Parse.assignment env)
+            ) else
+              None
+          in
+          { Statement.ComponentDeclaration.Param.name; local; default; shorthand }
+      )
+    and param_list env acc =
+      match Peek.token env with
+      | (T_EOF | T_RPAREN | T_ELLIPSIS) as t ->
+        let rest =
+          rest_param env t
+          |> Option.map (fun (loc, id, comments) ->
+                 (loc, { Statement.ComponentDeclaration.RestParam.argument = id; comments })
+             )
+        in
+        if Peek.token env <> T_RPAREN then error env Parse_error.ParameterAfterRestParameter;
+        (List.rev acc, rest)
+      | _ ->
+        let the_param = param env in
+        if Peek.token env <> T_RPAREN then Expect.token env T_COMMA;
+        param_list env (the_param :: acc)
+    in
+    with_loc (fun env ->
+        let env = env |> with_in_formal_parameters true in
+        let leading = Peek.comments env in
+        Expect.token env T_LPAREN;
+        let (params, rest) = param_list env [] in
+        let internal = Peek.comments env in
+        Expect.token env T_RPAREN;
+        let trailing = Eat.trailing_comments env in
+        {
+          Ast.Statement.ComponentDeclaration.Params.params;
+          rest;
+          comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ();
+        }
+    )
+
+  let component_body env =
+    function_or_component_body
+      env
+      ~async:false
+      ~generator:false
+      ~expression:false
+      ~simple_params:false
+
+  let component =
+    with_loc (fun env ->
+        let (sig_loc, (tparams, id, params, return, leading)) =
+          with_loc
+            (fun env ->
+              let leading = Peek.comments env in
+              Expect.identifier env "component";
+              let id =
+                id_remove_trailing
+                  env
+                  (* Components should have at least the same strictness as functions *)
+                  (Parse.identifier ~restricted_error:Parse_error.StrictFunctionName env)
+              in
+              let tparams = type_params_remove_trailing env (Type.type_params env) in
+              let params =
+                let params = component_params env in
+                if Peek.token env = T_COLON then
+                  params
+                else
+                  component_params_remove_trailing env params
+              in
+              let return = Type.annotation_opt env in
+              let return = type_annotation_hint_remove_trailing env return in
+              (tparams, id, params, return, leading))
+            env
+        in
+        let (body, contains_use_strict) = component_body env in
+        strict_component_post_check env ~contains_use_strict id params;
+        Statement.ComponentDeclaration
+          {
+            Statement.ComponentDeclaration.id;
+            params;
+            body;
+            return;
+            tparams;
+            sig_loc;
+            comments = Flow_ast_utils.mk_comments_opt ~leading ();
+          }
     )
 end

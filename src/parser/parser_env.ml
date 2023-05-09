@@ -992,6 +992,13 @@ module Peek = struct
       true
     | T_IDENTIFIER { raw = "abstract"; _ } when ith_token ~i:1 env = T_CLASS -> true
     | _ -> false
+
+  let is_component env =
+    (parse_options env).components
+    &&
+    match token env with
+    | T_IDENTIFIER { raw = "component"; _ } when ith_is_identifier ~i:1 env -> true
+    | _ -> false
 end
 
 (*****************************************************************************)

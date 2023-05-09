@@ -460,6 +460,10 @@ let function_params_remove_trailing env params =
   let { remove_trailing; _ } = trailing_and_remover env in
   remove_trailing params (fun remover params -> remover#function_params params)
 
+let component_params_remove_trailing env params =
+  let { remove_trailing; _ } = trailing_and_remover env in
+  remove_trailing params (fun remover params -> remover#component_params params)
+
 let predicate_remove_trailing env pred =
   match pred with
   | None -> None
