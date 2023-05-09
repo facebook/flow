@@ -801,7 +801,8 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
         | (t, []) -> t
         | (t0, t1 :: ts) -> UnionT (reason, UnionRep.make t0 t1 ts)
       in
-      rec_flow_t cx trace ~use_op (t, tout)
+      (* Intentional UnknownUse here. *)
+      rec_flow_t cx trace ~use_op:unknown_use (t, tout)
     in
     (*********************)
     (* Object Resolution *)
