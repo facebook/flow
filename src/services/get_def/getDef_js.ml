@@ -100,54 +100,6 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~ast ~typed_ast ~
         Ok (Nel.one (loc_of_aloc ~reader aloc))
     in
     loop v
-  | Get_def_request.Require (source_loc, name) ->
-    let module_t = Type.OpenT (Context.find_require cx source_loc) |> Members.resolve_type cx in
-    (* function just so we don't do the work unless it's actually needed. *)
-    let get_imported_file () =
-      let resolved_module =
-        Module_js.imported_module
-          ~options
-          ~reader:(Abstract_state_reader.State_reader reader)
-          ~node_modules_containers:!Files.node_modules_containers
-          (Context.file cx)
-          name
-      in
-      let provider =
-        match resolved_module with
-        | Ok m -> Parsing_heaps.Reader.get_provider ~reader m
-        | Error _ ->
-          (* TODO: We reach this codepath for requires that might resolve to
-           * builtin modules. During check we check the master context, which we
-           * can also do here. *)
-          None
-      in
-      match provider with
-      | None -> Error (Printf.sprintf "Failed to find imported file %s" name)
-      | Some addr ->
-        let file = Parsing_heaps.read_file_key addr in
-        Ok (Nel.one Loc.{ none with source = Some file })
-    in
-    (match module_t with
-    | Type.ModuleT (_, { Type.cjs_export; _ }, _) ->
-      (* If we have a location for the cjs export, go there. Otherwise
-         * fall back to just the top of the file *)
-      let loc =
-        match cjs_export with
-        | Some t -> TypeUtil.loc_of_t t |> loc_of_aloc ~reader (* This can return Loc.none *)
-        | None -> Loc.none
-      in
-      if loc = Loc.none then
-        get_imported_file ()
-      else
-        Ok (Nel.one loc)
-    | Type.AnyT _ -> get_imported_file ()
-    | _ ->
-      Error
-        (Printf.sprintf
-           "Internal Flow Error: Expected ModuleT for %S, but got %S!"
-           name
-           (Type.string_of_ctor module_t)
-        ))
   | Get_def_request.JsxAttribute { component_t = (_, component_t); name; loc } ->
     let reason = Reason.mk_reason (Reason.RCustom name) loc in
     let props_object =

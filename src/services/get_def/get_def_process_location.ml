@@ -236,26 +236,20 @@ class ['M, 'T] searcher
                 ( _,
                   {
                     Flow_ast.Expression.ArgList.arguments =
-                      [
-                        Expression
-                          (source_annot, Literal Flow_ast.Literal.{ value = String module_name; _ });
-                      ];
+                      [Expression (source_annot, Literal Flow_ast.Literal.{ value = String _; _ })];
                     comments = _;
                   }
                 );
               _;
             })
         when annot_covers_target annot && is_legit_require source_annot ->
-        let source_loc = loc_of_annot source_annot in
-        this#request (Get_def_request.Require (source_loc, module_name))
+        this#request (Get_def_request.Type annot)
       | _ -> super#expression (annot, expr)
 
     method! module_ref_literal mref =
-      let { Flow_ast.Literal.string_value; require_out; prefix_len; _ } = mref in
-      let loc = loc_of_annot require_out in
-      if covers_target loc then
-        let mref = Base.String.drop_prefix string_value prefix_len in
-        this#request (Get_def_request.Require (loc, mref))
+      let { Flow_ast.Literal.require_out; _ } = mref in
+      if annot_covers_target require_out then
+        this#request (Get_def_request.Type require_out)
       else
         super#module_ref_literal mref
 

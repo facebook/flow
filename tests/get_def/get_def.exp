@@ -158,10 +158,11 @@ helpers/Foo.js:6:18,6:18
 
 require.js:3:10
 Flags:
+require.js:3:9,3:17
 
 require.js:6:10
 Flags:
-[LIB] libs/lib.js:5:16,5:36
+[LIB] libs/lib.js:6:27,6:32
 
 require.js:9:10
 Flags:
@@ -169,5 +170,5 @@ Untyped.js:0:1,0:0
 
 require.js:12:10
 Flags:
-[LIB] libs/lib.js:9:16,9:36
+[LIB] libs/lib.js:10:27,10:32
 
