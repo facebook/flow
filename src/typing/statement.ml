@@ -4538,7 +4538,7 @@ module Make
         | L.RegExp r ->
           let t = Flow.get_builtin_type cx (mk_annot_reason RRegExp loc) (OrdinaryName "RegExp") in
           (t, L.RegExp r)
-        | L.ModuleRef { L.string_value; module_out; prefix_len; legacy_interop } ->
+        | L.ModuleRef { L.string_value; require_out; prefix_len; legacy_interop } ->
           let mref = Base.String.drop_prefix string_value prefix_len in
           let module_t = Import_export.get_module_t cx (loc, mref) in
           let require_t = Import_export.require cx ~legacy_interop loc mref module_t in
@@ -4546,7 +4546,7 @@ module Make
           let t = Flow.get_builtin_typeapp cx reason (OrdinaryName "$Flow$ModuleRef") [require_t] in
           ( t,
             L.ModuleRef
-              { L.string_value; module_out = (module_out, module_t); prefix_len; legacy_interop }
+              { L.string_value; require_out = (require_out, require_t); prefix_len; legacy_interop }
           )
       in
       (t, { L.value; raw; comments })

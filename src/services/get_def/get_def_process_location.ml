@@ -251,8 +251,8 @@ class ['M, 'T] searcher
       | _ -> super#expression (annot, expr)
 
     method! module_ref_literal mref =
-      let { Flow_ast.Literal.string_value; module_out; prefix_len; _ } = mref in
-      let loc = loc_of_annot module_out in
+      let { Flow_ast.Literal.string_value; require_out; prefix_len; _ } = mref in
+      let loc = loc_of_annot require_out in
       if covers_target loc then
         let mref = Base.String.drop_prefix string_value prefix_len in
         this#request (Get_def_request.Require (loc, mref))

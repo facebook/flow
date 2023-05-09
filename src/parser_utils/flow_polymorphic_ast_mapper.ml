@@ -1893,9 +1893,9 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method module_ref_literal (mref : 'T Ast.Literal.module_ref) : 'U Ast.Literal.module_ref =
       let open Ast.Literal in
-      let { string_value; module_out; prefix_len; legacy_interop } = mref in
-      let module_out' = this#on_type_annot module_out in
-      { string_value; module_out = module_out'; prefix_len; legacy_interop }
+      let { string_value; require_out; prefix_len; legacy_interop } = mref in
+      let require_out' = this#on_type_annot require_out in
+      { string_value; require_out = require_out'; prefix_len; legacy_interop }
 
     method literal (expr : ('M, 'T) Ast.Literal.t) : ('N, 'U) Ast.Literal.t =
       let open Ast.Literal in

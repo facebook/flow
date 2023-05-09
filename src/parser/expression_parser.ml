@@ -1266,11 +1266,11 @@ module Expression
         | (Some prefix, _) when String.starts_with ~prefix value ->
           let prefix_len = String.length prefix in
           Literal.ModuleRef
-            { Literal.string_value = value; module_out = loc; prefix_len; legacy_interop = false }
+            { Literal.string_value = value; require_out = loc; prefix_len; legacy_interop = false }
         | (_, Some prefix) when String.starts_with ~prefix value ->
           let prefix_len = String.length prefix in
           Literal.ModuleRef
-            { Literal.string_value = value; module_out = loc; prefix_len; legacy_interop = true }
+            { Literal.string_value = value; require_out = loc; prefix_len; legacy_interop = true }
         | _ -> Literal.String value
       in
       let trailing = Eat.trailing_comments env in

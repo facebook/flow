@@ -65,7 +65,7 @@ and Literal : sig
 
   and 'T module_ref = {
     string_value: string;
-    module_out: 'T;
+    require_out: 'T;
     prefix_len: int;
     legacy_interop: bool;
   }
