@@ -93,7 +93,7 @@ class resolver ~no_lowers =
               if Context.typing_mode cx <> Context.CheckingMode then
                 C.Resolved (unknown_use, t)
               else
-                C.FullyResolved (unknown_use, lazy t)
+                C.FullyResolved ((), lazy t)
             in
             root.C.constraints <- constraints;
             let seen = ISet.add root_id seen in

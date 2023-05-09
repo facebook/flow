@@ -2799,7 +2799,7 @@ module Constraint = struct
   type constraints =
     | Resolved of TypeTerm.use_op * TypeTerm.t
     | Unresolved of bounds
-    | FullyResolved of TypeTerm.use_op * TypeTerm.t Lazy.t
+    | FullyResolved of unit * TypeTerm.t Lazy.t
 
   (** The bounds structure carries the evolving constraints on the solution of an
       unresolved tvar.
@@ -2848,11 +2848,10 @@ module Constraint = struct
 
   let uses_of : constraints -> TypeTerm.use_t list = function
     | Unresolved { upper; _ } -> Base.List.map ~f:fst (UseTypeMap.keys upper)
-    | Resolved (use_op, t)
-    | FullyResolved (use_op, (lazy t)) ->
-      [TypeTerm.UseT (use_op, t)]
+    | Resolved (use_op, t) -> [TypeTerm.UseT (use_op, t)]
+    | FullyResolved ((), (lazy t)) -> [TypeTerm.UseT (unknown_use, t)]
 
-  let fully_resolved_node t = create_root (FullyResolved (unknown_use, lazy t))
+  let fully_resolved_node t = create_root (FullyResolved ((), lazy t))
 end
 
 (**************************)

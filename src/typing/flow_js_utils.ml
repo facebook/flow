@@ -854,7 +854,7 @@ let fix_this_class cx reason (r, i, is_this, this_name) =
       let reason_i = reason_of_t i in
       let rec i' =
         lazy
-          (let this = Tvar.mk_fully_resolved_lazy cx unknown_use reason_i i' in
+          (let this = Tvar.mk_fully_resolved_lazy cx () reason_i i' in
            let this_generic =
              if is_this then
                GenericT

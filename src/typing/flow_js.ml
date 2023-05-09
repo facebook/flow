@@ -551,16 +551,18 @@ struct
               add_lower_edges cx trace ~new_use_op:use_op (id1, bounds1) (id2, bounds2);
               flows_across cx trace ~use_op bounds1.lower bounds2.upper
             )
-          | (Unresolved bounds1, (Resolved (use_op', t2) | FullyResolved (use_op', (lazy t2)))) ->
+          | (Unresolved bounds1, Resolved (use_op', t2)) ->
             let t2_use = flow_use_op cx use_op' (UseT (use_op, t2)) in
             edges_and_flows_to_t cx trace (id1, bounds1) t2_use
+          | (Unresolved bounds1, FullyResolved ((), (lazy t2))) ->
+            edges_and_flows_to_t cx trace (id1, bounds1) (UseT (use_op, t2))
           | ((Resolved (_, t1) | FullyResolved (_, (lazy t1))), Unresolved bounds2) ->
             edges_and_flows_from_t cx trace ~new_use_op:use_op t1 (id2, bounds2)
-          | ( (Resolved (_, t1) | FullyResolved (_, (lazy t1))),
-              (Resolved (use_op', t2) | FullyResolved (use_op', (lazy t2)))
-            ) ->
+          | ((Resolved (_, t1) | FullyResolved (_, (lazy t1))), Resolved (use_op', t2)) ->
             let t2_use = flow_use_op cx use_op' (UseT (use_op, t2)) in
-            rec_flow cx trace (t1, t2_use))
+            rec_flow cx trace (t1, t2_use)
+          | ((Resolved (_, t1) | FullyResolved (_, (lazy t1))), FullyResolved ((), (lazy t2))) ->
+            rec_flow cx trace (t1, UseT (use_op, t2)))
         (******************)
         (* process Y ~> U *)
         (******************)
@@ -584,11 +586,11 @@ struct
           (match constraints2 with
           | Unresolved bounds2 ->
             edges_and_flows_from_t cx trace ~new_use_op:use_op t1 (id2, bounds2)
-          | Resolved (use_op', t2)
-          | FullyResolved (use_op', (lazy t2)) ->
+          | Resolved (use_op', t2) ->
             let t2_use = flow_use_op cx use_op' (UseT (use_op, t2)) in
-            rec_flow cx trace (t1, t2_use))
-        (*************)
+            rec_flow cx trace (t1, t2_use)
+          | FullyResolved ((), (lazy t2)) -> rec_flow cx trace (t1, UseT (use_op, t2)))
+        (************)
         (* Subtyping *)
         (*************)
         | (_, UseT (use_op, u)) -> rec_sub_t cx use_op l u trace
@@ -8246,7 +8248,7 @@ struct
     | Unresolved bounds ->
       let constraints =
         if fully_resolved then
-          FullyResolved (use_op, lazy t)
+          FullyResolved ((), lazy t)
         else
           Resolved (use_op, t)
       in
@@ -9380,8 +9382,8 @@ struct
           match constraints with
           (* TODO: In the FullyResolved case, repositioning will cause us to "lose"
            * the fully resolved status. We should be able to preserve it. *)
-          | Resolved (use_op, t)
-          | FullyResolved (use_op, (lazy t)) ->
+          | Resolved (_, t)
+          | FullyResolved ((), (lazy t)) ->
             (* A tvar may be resolved to a type that has special repositioning logic,
              * like UnionT. We want to recurse to pick up that logic, but must be
              * careful as the union may refer back to the tvar itself, causing a loop.
@@ -9404,6 +9406,7 @@ struct
                    * tvar whenever we started with one. *)
                   let t' = recurse (IMap.add id tvar seen) t in
                   (* resolve_id requires a trace param *)
+                  let use_op = unknown_use in
                   let trace =
                     match trace with
                     | None -> Trace.unit_trace tvar (UseT (use_op, t'))

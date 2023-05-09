@@ -67,7 +67,7 @@ let copier =
                  t
                 )
           in
-          let node = create_root (FullyResolved (unknown_use, t)) in
+          let node = create_root (FullyResolved ((), t)) in
           Context.set_graph dst_cx (IMap.add id node dst_graph);
           dst_cx
         ) else

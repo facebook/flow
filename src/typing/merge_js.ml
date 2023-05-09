@@ -346,10 +346,12 @@ let check_constrained_writes cx =
                      let t = resolve_t t in
                      (t, mk_use_op (Flow_js.flow_use_op cx use_op u))
                  )
-            | Resolved (use_op, _)
-            | FullyResolved (use_op, _) ->
+            | Resolved (use_op, _) ->
               let t = resolve_t t in
               [(t, mk_use_op (Flow_js.flow_use_op cx use_op u))]
+            | FullyResolved ((), _) ->
+              let t = resolve_t t in
+              [(t, mk_use_op (Flow_js.flow_use_op cx unknown_use u))]
           end
         | _ ->
           let t = resolve_t t in
