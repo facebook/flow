@@ -269,7 +269,7 @@ let fun_t ~params ~return_t =
             params;
             rest_param = None;
             return_t;
-            predicate = None;
+            predicate = NoPredicate;
             def_reason = dummy_reason;
           }
         )

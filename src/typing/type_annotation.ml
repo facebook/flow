@@ -1503,7 +1503,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                   params = List.rev rev_params;
                   rest_param;
                   return_t;
-                  predicate = None;
+                  predicate = NoPredicate;
                   def_reason = reason;
                 }
               )

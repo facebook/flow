@@ -379,7 +379,16 @@ class virtual ['a] t =
           else
             Some (name, loc, t')
       in
-      let predicate' = OptionUtils.ident_map (self#func_predicate cx map_cx) predicate in
+      let predicate' =
+        match predicate with
+        | NoPredicate -> predicate
+        | PredBased p ->
+          let p' = self#func_predicate cx map_cx p in
+          if p == p' then
+            predicate
+          else
+            PredBased p'
+      in
       let return_t' = self#type_ cx map_cx return_t in
       if this' == this && return_t' == return_t && params' == params && rest_param' == rest_param
       then

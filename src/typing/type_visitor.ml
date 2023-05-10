@@ -300,7 +300,11 @@ class ['a] t =
       let acc = self#list (fun acc (_, t) -> self#type_ cx (P.inv pole) acc t) acc params in
       let acc = self#opt (fun acc (_, _, t) -> self#type_ cx (P.inv pole) acc t) acc rest_param in
       let acc = self#type_ cx pole acc return_t in
-      let acc = self#opt (self#fun_predicate cx) acc predicate in
+      let acc =
+        match predicate with
+        | NoPredicate -> acc
+        | PredBased p -> self#fun_predicate cx acc p
+      in
       acc
 
     method private fun_predicate cx acc (_, pmap, nmap) =

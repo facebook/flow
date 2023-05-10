@@ -1267,17 +1267,17 @@ module Make (Flow : INPUT) : OUTPUT = struct
 
       begin
         match (ft1.predicate, ft2.predicate) with
-        | (None, Some _) ->
+        | (NoPredicate, PredBased _) ->
           (* Non-predicate functions are incompatible with predicate ones
              TODO: somehow the original flow needs to be propagated as well *)
           add_output
             cx
             ~trace
             (Error_message.EPredicateFuncIncompatibility { use_op; reasons = (lreason, ureason) })
-        | (Some p1, Some p2) ->
+        | (PredBased p1, PredBased p2) ->
           func_predicate_compat cx trace use_op (lreason, ft1.params, p1) (ureason, ft2.params, p2)
-        | (Some _, None)
-        | (None, None) ->
+        | (PredBased _, NoPredicate)
+        | (NoPredicate, NoPredicate) ->
           ()
       end
     | (DefT (reason, _, StrT (Literal (_, name))), DefT (reason_op, _, CharSetT chars)) ->

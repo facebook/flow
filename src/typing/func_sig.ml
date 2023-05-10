@@ -220,25 +220,29 @@ struct
     let { T.reason; kind; tparams; fparams; return_t; statics; _ } = x in
     let make_trust = Context.trust_constructor cx in
     let this_type = F.this fparams |> Base.Option.value ~default:this_default in
+    let return_t =
+      match return_t with
+      | Inferred t
+        when Context.typing_mode cx <> Context.CheckingMode
+             && (not @@ F.all_params_annotated x.T.fparams) ->
+        Context.mk_placeholder cx (TypeUtil.reason_of_t t)
+      | _ -> TypeUtil.type_t_of_annotated_or_inferred return_t
+    in
+    let predicate =
+      match kind with
+      | Predicate return_loc ->
+        let (pmap, nmap) = Env.predicate_refinement_maps cx return_loc in
+        let reason = mk_reason (RPredicateOf (RCustom "return")) return_loc in
+        PredBased (reason, pmap, nmap)
+      | _ -> NoPredicate
+    in
     let funtype =
       {
         Type.this_t = (this_type, This_Function);
         params = F.value fparams;
         rest_param = F.rest fparams;
-        return_t =
-          (match return_t with
-          | Inferred t
-            when Context.typing_mode cx <> Context.CheckingMode
-                 && (not @@ F.all_params_annotated x.T.fparams) ->
-            Context.mk_placeholder cx (TypeUtil.reason_of_t t)
-          | _ -> TypeUtil.type_t_of_annotated_or_inferred return_t);
-        predicate =
-          (match kind with
-          | Predicate return_loc ->
-            let (pmap, nmap) = Env.predicate_refinement_maps cx return_loc in
-            let reason = mk_reason (RPredicateOf (RCustom "return")) return_loc in
-            Some (reason, pmap, nmap)
-          | _ -> None);
+        return_t;
+        predicate;
         def_reason = reason;
       }
     in

@@ -2362,7 +2362,7 @@ struct
            `params`) raise errors, but also propagate the unrefined types (as if the
            refinement never took place).
         *)
-        | ( DefT (lreason, _, FunT (_, { params; predicate = Some (_, pmap, nmap); _ })),
+        | ( DefT (lreason, _, FunT (_, { params; predicate = PredBased (_, pmap, nmap); _ })),
             CallLatentPredT { use_op = _; reason; targs = _; argts = _; sense; idx; tin; tout }
           ) -> begin
           (* TODO: for the moment we only support simple keys (empty projection)
@@ -2775,14 +2775,18 @@ struct
         | (DefT (r, _, ClassT _), (ReactPropsToOut (_, props) | ReactInToProps (_, props))) ->
           rec_flow_t ~use_op:unknown_use cx trace (l, ReactJs.component_class cx r props)
         (* Functions with rest params or that are predicates cannot be React components *)
-        | ( DefT (reason, _, FunT (_, { params; rest_param = None; predicate = None; _ })),
+        | ( DefT (reason, _, FunT (_, { params; rest_param = None; predicate = NoPredicate; _ })),
             ReactPropsToOut (_, props)
           ) ->
           (* Contravariance *)
           Base.List.hd params
           |> Base.Option.value_map ~f:snd ~default:(Obj_type.mk ~obj_kind:Exact cx reason)
           |> fun t -> rec_flow_t ~use_op:unknown_use cx trace (t, props)
-        | ( DefT (reason, _, FunT (_, { params; return_t; rest_param = None; predicate = None; _ })),
+        | ( DefT
+              ( reason,
+                _,
+                FunT (_, { params; return_t; rest_param = None; predicate = NoPredicate; _ })
+              ),
             ReactInToProps (reason_op, props)
           ) ->
           (* Contravariance *)
@@ -2804,7 +2808,7 @@ struct
             (ReactInToProps (reason_op, props) | ReactPropsToOut (reason_op, props))
           ) -> begin
           match Context.find_call cx id with
-          | ( DefT (_, _, FunT (_, { rest_param = None; predicate = None; _ }))
+          | ( DefT (_, _, FunT (_, { rest_param = None; predicate = NoPredicate; _ }))
             | DefT (_, _, PolyT { t_out = DefT (_, _, FunT _); _ }) ) as fun_t ->
             (* Keep the object's reason for better error reporting *)
             rec_flow cx trace (Fun.const r |> Fun.flip mod_reason_of_t fun_t, u)

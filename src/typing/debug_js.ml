@@ -210,8 +210,8 @@ let rec dump_t_ (depth, tvars) cx t =
              (String.concat "; " (Base.List.map ~f:(fun (_, t) -> kid t) params))
              (kid return_t)
              (match predicate with
-             | Some _ -> " %checks"
-             | None -> "")
+             | PredBased _ -> " %checks"
+             | NoPredicate -> "")
           )
         t
     | AnyT (_, src) -> p ~extra:(string_of_any_source src) t

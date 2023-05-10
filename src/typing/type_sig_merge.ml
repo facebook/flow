@@ -1642,7 +1642,11 @@ and merge_fun
       | Some t -> merge tps infer_tps file t
     in
     let return_t = merge tps infer_tps file return in
-    let predicate = Base.Option.map predicate ~f:(merge_predicate tps infer_tps file) in
+    let predicate =
+      match predicate with
+      | Some p -> Type.PredBased (merge_predicate tps infer_tps file p)
+      | None -> Type.NoPredicate
+    in
     let this_status =
       if is_method then
         Type.This_Method { unbound = false }
