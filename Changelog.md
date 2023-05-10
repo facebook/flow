@@ -1,3 +1,23 @@
+### 0.206.0
+
+Likely to cause new Flow errors:
+* `React.Element` will now accept a second type argument that specifies the props type. JSX will populate this type argument with actual props passed to component, instead of deriving it from the signature. The change will reveal some broken code, e.g. [try-Flow example](https://flow.org/try#1N4Igxg9gdgZglgcxALlAJwKYEMwBcD6aArlLnALYYrgA2WAzvXGCADQgYAeOBARgJ74AJhhhYiNXClzEM7DFCLl602QF92kEdQoAHCGlwACAFRGGRgErY8RmGgjkjAckw9nAbgA6UHyLB0mEYBDPRGAMKO+lAKuAA8ACoAfEZcuApCYdY8ACSR5NGxcQAUwDAQEMhGCWoAlCnAaj4+MCR4cNCpnLoYePmFpADyMADKMsW1Vdl4OQCiNBiUpHHhdIwrUdBF9DJwUAhJh0bAPkZGmLhEaFBGGwVbpHYVALzAAMxqRgD0SR7fX0YoBAAO6pNAONBhYFwXAAC0BSl4GDQRj2kAKWDIvAWRmhcKMOzQewQPiaUDYIAAbsimNBqOQGOk0CA1EA).
+* `$Shape` is deprecated, use `Partial` instead. Read [this blog post](https://medium.com/flow-type/announcing-partial-required-flow-utility-types-catch-annotations-3a32f0bf2a20) for more.
+* Add a (temporary) option `tuple_enhancements` to gate our tuple type enhancements (labeled tuple elements, which can be optional or have variance annotations), so we can show a Flow error rather than having users just get syntax errors from various other tooling (e.g. Prettier, ESLint), until all that tooling is updated.
+* `experimental.abstract_locations` is removed. Setting this config to true improves Flow's performance. The config defaults to true since 0.139.
+
+New Features:
+* Allow opaque types with `string` supertypes to be used as keys in a dictionary, and have that opaque type be preserved when using `Object.keys`.
+* To help people familiar with TS, error on and supply a quickfix to the Flow equivalent for the TS types: `Readonly`, `ReadonlyArray`, `ReadonlyMap`, `ReadonlySet`, `NonNullable`.
+
+Notable bug fixes:
+* Error more consistently with `[invalid-computed-prop]` errors. [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAJwKYEMwBcD6aArlLnALYYrgA2WAzvXGCADQgYAeOBARgJ74AJhhhYiNXClzEM7DFCLl602QF92kEdVz8ADhgAEAWSx7DAXkMASAErYhAeSg1+AHmCGA2vRlwoCAC6yIa+aP4IhmoAfADcADpQiTAkeHDQhgDCEOR60Aq4bgAqpnohpdEAFACUhsCJhoYiYHSYhpBQvobkZiElZglJUI0pUGkZWEJCRRClxQDSGPwh1ov89MUVVQDWS31rrIYAblg0RBh9pV5Fa4HVl2Z1DY2GmLhEaMP1wy+NAHQAnp6VjPX5eXb8YLHU7nUFRZ5qRLPXQGQxregAQRocAYm16JjM0UsNnReL0cWeo3Gw0m01mZgATAs9milpjsbj+uSdiybktDiczhdDFzrrd7iLSk8fo03h8vnD-oCzCCZS9wUsoYLzoYAPS6wxuAC0JsMuAAFnB6IYAO5wGg0QxQCCGGjQBAYNCGXhGLDDT1oCBoOGIn6h0NsEBHT1MaDUI4ABj+DITAFY-gmQGogA).
+* Fixed cases where uses of `Partial`/`Required` caused errors to be positioned poorly.
+
+Misc:
+* To improve clarity of error messages we will display `mixed` instead of a generic type if that generic type has a default bound of `mixed`. [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAJwKYEMwBcD6aArlLnALYYrgA2WAzvXGCADQgYAeOBARgJ74AJhhhYiNXClzEM7DFCLl602QF92kEdRgk8caAAIYAHgAqAPgAUnZIbMBKO4vK8MaQ8AA6UQ38OYuERovpwA3D5qbCAAbu5M0NQxAAwAdABMyQCsqQCMIGpAA).
+* Object property type incompatibility errors will now contain additional explanations when the error only arises due to [object property invariant subtyping](https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number).
+
 ### 0.205.1
 
 * Fix over-eager IDE autocompletion of types after typing a space.
