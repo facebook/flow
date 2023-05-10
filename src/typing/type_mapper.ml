@@ -780,14 +780,14 @@ class virtual ['a] t =
       | PropNonMaybeP _
       | PropExistsP _ ->
         p
-      | LatentP ((lazy (t, targs, argts)), i) ->
+      | LatentP ((lazy (use_op, loc, t, targs, argts)), i) ->
         let t' = self#type_ cx map_cx t in
         let targs' = OptionUtils.ident_map (ListUtils.ident_map (self#targ cx map_cx)) targs in
         let argts' = ListUtils.ident_map (self#call_arg cx map_cx) argts in
         if t == t' && targs' == targs && argts' == argts then
           p
         else
-          LatentP (lazy (t', targs', argts'), i)
+          LatentP (lazy (use_op, loc, t', targs', argts'), i)
 
     method type_map cx map_cx t =
       match t with

@@ -706,7 +706,17 @@ struct
             cx
             trace
             ( fun_t,
-              CallLatentPredT { reason; targs = None; argts = []; sense = true; idx; tin = l; tout }
+              CallLatentPredT
+                {
+                  use_op = unknown_use;
+                  reason;
+                  targs = None;
+                  argts = [];
+                  sense = true;
+                  idx;
+                  tin = l;
+                  tout;
+                }
             )
         (*************)
         (* Debugging *)
@@ -2353,7 +2363,7 @@ struct
            refinement never took place).
         *)
         | ( DefT (lreason, _, FunT (_, { params; predicate = Some (_, pmap, nmap); _ })),
-            CallLatentPredT { reason; targs = _; argts = _; sense; idx; tin; tout }
+            CallLatentPredT { use_op = _; reason; targs = _; argts = _; sense; idx; tin; tout }
           ) -> begin
           (* TODO: for the moment we only support simple keys (empty projection)
              that exactly correspond to the function's parameters *)
@@ -7534,18 +7544,22 @@ struct
     (********************)
     (* Latent predicate *)
     (********************)
-    | LatentP ((lazy (fun_t, targs, argts)), idx) ->
-      let reason = update_desc_reason (fun desc -> RPredicateCall desc) (reason_of_t fun_t) in
+    | LatentP ((lazy (use_op, loc, fun_t, targs, argts)), idx) ->
+      let reason = mk_reason (RFunctionCall (desc_of_t fun_t)) loc in
       rec_flow
         cx
         trace
-        (fun_t, CallLatentPredT { reason; targs; argts; sense = true; idx; tin = l; tout = t })
-    | NotP (LatentP ((lazy (fun_t, targs, argts)), idx)) ->
-      let reason = update_desc_reason (fun desc -> RPredicateCallNeg desc) (reason_of_t fun_t) in
+        ( fun_t,
+          CallLatentPredT { use_op; reason; targs; argts; sense = true; idx; tin = l; tout = t }
+        )
+    | NotP (LatentP ((lazy (use_op, loc, fun_t, targs, argts)), idx)) ->
+      let reason = mk_reason (RFunctionCall (desc_of_t fun_t)) loc in
       rec_flow
         cx
         trace
-        (fun_t, CallLatentPredT { reason; targs; argts; sense = false; idx; tin = l; tout = t })
+        ( fun_t,
+          CallLatentPredT { use_op; reason; targs; argts; sense = false; idx; tin = l; tout = t }
+        )
 
   and prop_exists_test cx trace key reason sense obj result =
     prop_exists_test_generic key reason cx trace result obj sense (ExistsP, NotP ExistsP) obj

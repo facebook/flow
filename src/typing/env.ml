@@ -485,7 +485,7 @@ and read_entry_exn ~lookup_mode cx loc reason =
 
 and read_pred_func_info_exn cx loc =
   let f () = ALocMap.find loc (Context.environment cx).Loc_env.pred_func_map in
-  let error () = lazy (AnyT.at (AnyError None) loc, None, []) in
+  let error () = lazy (unknown_use, loc, AnyT.at (AnyError None) loc, None, []) in
   with_debug_exn_error cx loc ~f ~error
 
 and predicate_refinement_maps cx loc =

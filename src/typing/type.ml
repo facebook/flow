@@ -748,6 +748,7 @@ module rec TypeTerm : sig
      * function's formal parameters, [idx] is the index of the argument that gets
      * refined. *)
     | CallLatentPredT of {
+        use_op: use_op;
         reason: reason;
         targs: targ list option;
         argts: call_arg list;
@@ -1125,7 +1126,7 @@ module rec TypeTerm : sig
     | Arg of t
     | SpreadArg of t
 
-  and pred_funcall_info = t (* callee *) * targ list option * call_arg list
+  and pred_funcall_info = use_op * ALoc.t * t (* callee *) * targ list option * call_arg list
 
   and arrtype =
     | ArrayAT of t * t list option
@@ -3882,8 +3883,8 @@ let rec string_of_predicate = function
   | ArrP -> "array"
   | PropExistsP (key, _) -> spf "prop `%s` is truthy" key
   | PropNonMaybeP (key, _) -> spf "prop `%s` is not null or undefined" key
-  | LatentP ((lazy (OpenT (_, id), _, _)), i) -> spf "LatentPred(TYPE_%d, %d)" id i
-  | LatentP ((lazy (t, _, _)), i) -> spf "LatentPred(%s, %d)" (string_of_ctor t) i
+  | LatentP ((lazy (_, _, OpenT (_, id), _, _)), i) -> spf "LatentPred(TYPE_%d, %d)" id i
+  | LatentP ((lazy (_, _, t, _, _)), i) -> spf "LatentPred(%s, %d)" (string_of_ctor t) i
 
 let string_of_type_t_kind = function
   | TypeAliasKind -> "TypeAliasKind"

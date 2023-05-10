@@ -7577,15 +7577,6 @@ module Make
       )
     | _ -> ()
 
-  and mk_initial_arguments_reason =
-    let open Ast.Expression in
-    let rec helper = function
-      | [] -> []
-      | Expression x :: args -> mk_expression_reason x :: helper args
-      | Spread _ :: _ -> []
-    in
-    (fun (_args_loc, { Ast.Expression.ArgList.arguments; comments = _ }) -> helper arguments)
-
   and is_valid_enum_member_name name =
     (not @@ Base.String.is_empty name) && (not @@ Base.Char.is_lowercase name.[0])
 

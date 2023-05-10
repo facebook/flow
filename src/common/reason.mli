@@ -339,7 +339,10 @@ module ReasonMap : WrappedMap.S with type key = reason
 
 module ImplicitInstantiationReasonMap : WrappedMap.S with type key = reason * reason * reason Nel.t
 
-val mk_expression_reason : (ALoc.t, ALoc.t) Flow_ast.Expression.t -> reason
+val mk_expression_reason : ('loc, 'loc) Flow_ast.Expression.t -> 'loc virtual_reason
+
+val mk_initial_arguments_reason :
+  ('loc, 'loc) Flow_ast.Expression.ArgList.t -> 'loc virtual_reason list
 
 val mk_pattern_reason : (ALoc.t, ALoc.t) Flow_ast.Pattern.t -> reason
 

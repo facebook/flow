@@ -1267,6 +1267,15 @@ let rec mk_expression_reason =
       loc
   | (loc, _) as x -> mk_reason (RCode (code_desc_of_expression ~wrap:false x)) loc
 
+let mk_initial_arguments_reason =
+  let open Ast.Expression in
+  let rec helper = function
+    | [] -> []
+    | Expression x :: args -> mk_expression_reason x :: helper args
+    | Spread _ :: _ -> []
+  in
+  (fun (_args_loc, { Ast.Expression.ArgList.arguments; comments = _ }) -> helper arguments)
+
 let mk_pattern_reason ((loc, _) as patt) = mk_reason (RCode (code_desc_of_pattern patt)) loc
 
 (* TODO: replace RCustom descriptions with proper descriptions *)

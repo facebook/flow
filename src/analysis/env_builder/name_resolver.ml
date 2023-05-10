@@ -1582,15 +1582,16 @@ module Make
        * as an argument. Variables not passed into the function are havoced if
        * the invalidation api says they can be invalidated.
        *)
-      method apply_latent_refinements refinement_keys_by_arg func targs arguments =
+      method apply_latent_refinements refinement_keys_by_arg (loc, call) func targs arguments =
         let (callee_loc, _) = func in
+        let call_exp = (loc, Ast.Expression.Call call) in
         List.iteri
           (fun index -> function
             | None -> ()
             | Some key ->
               let pred = LatentR { func; targs; arguments; index = index + 1 } in
               this#add_single_refinement key (L.LSet.singleton callee_loc, pred);
-              this#add_pred_func_info (fst func) (func, targs, arguments))
+              this#add_pred_func_info callee_loc (call_exp, func, targs, arguments))
           refinement_keys_by_arg
 
       method havoc_heap_refinements heap_refinements = heap_refinements := HeapRefinementMap.empty
@@ -5013,7 +5014,7 @@ module Make
           ignore @@ Base.Option.map ~f:this#call_type_args targs;
           ignore @@ this#arg_list arguments;
           this#havoc_current_env ~all:false;
-          this#apply_latent_refinements refinement_keys callee targs arguments
+          this#apply_latent_refinements refinement_keys (loc, call) callee targs arguments
         | _ -> ignore @@ this#call loc call
 
       method unary_refinement

@@ -1589,7 +1589,7 @@ and merge_predicate tps infer_tps file (loc, p) =
           (let t = merge tps infer_tps file t in
            let targs = merge_targs_opt file tps infer_tps targs in
            let args = merge_args file tps infer_tps args in
-           (t, targs, args)
+           (Type.unknown_use, TypeUtil.loc_of_t t, t, targs, args)
           )
       in
       Nel.fold_left

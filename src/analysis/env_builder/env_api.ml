@@ -187,7 +187,8 @@ module type S = sig
   type predicate_refinement_maps = (read SMap.t * read SMap.t) L.LMap.t
 
   type pred_func_info =
-    (L.t, L.t) Ast.Expression.t (* Callee *)
+    (L.t, L.t) Ast.Expression.t (* Call exp *)
+    * (L.t, L.t) Ast.Expression.t (* Callee *)
     * (L.t, L.t) Ast.Expression.CallTypeArgs.t option
     * (L.t, L.t) Ast.Expression.ArgList.t
 
@@ -470,7 +471,8 @@ module Make
   type predicate_refinement_maps = (read SMap.t * read SMap.t) L.LMap.t
 
   type pred_func_info =
-    (L.t, L.t) Ast.Expression.t (* Callee *)
+    (L.t, L.t) Ast.Expression.t (* Call exp *)
+    * (L.t, L.t) Ast.Expression.t (* Callee *)
     * (L.t, L.t) Ast.Expression.CallTypeArgs.t option
     * (L.t, L.t) Ast.Expression.ArgList.t
 

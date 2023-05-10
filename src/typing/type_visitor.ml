@@ -181,7 +181,7 @@ class ['a] t =
       | ArrP -> acc
       | PropExistsP _ -> acc
       | PropNonMaybeP _ -> acc
-      | LatentP ((lazy (t, targs, argts)), _) ->
+      | LatentP ((lazy (_, _, t, targs, argts)), _) ->
         let acc = self#type_ cx P.Positive acc t in
         let acc = self#opt (self#list (self#targ cx pole_TODO)) acc targs in
         let acc = self#list (self#call_arg cx pole_TODO) acc argts in

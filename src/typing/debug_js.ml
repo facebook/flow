@@ -1808,7 +1808,8 @@ let dump_error_message =
     | EInvalidDeclaration { declaration = r; _ } -> spf "EInvalidDeclaration %s" (dump_reason cx r)
     | EImportInternalReactServerModule loc ->
       spf "EImportInternalReactServerModule (%s)" (string_of_aloc loc)
-    | EImplicitInstantiationUnderconstrainedError _ -> "EImplicitInstantiationUnderconstrainedError"
+    | EImplicitInstantiationUnderconstrainedError { use_op; _ } ->
+      spf "EImplicitInstantiationUnderconstrainedError (%s)" (string_of_use_op use_op)
     | EImplicitInstantiationWidenedError _ -> "EImplicitInstantiationWidenedError"
     | EClassToObject _ -> "EClassToObject"
     | EMethodUnbinding { use_op; reason_prop; reason_op } ->
