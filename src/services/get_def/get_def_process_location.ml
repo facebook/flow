@@ -279,43 +279,61 @@ class ['M, 'T] searcher
       super#pattern_identifier ?kind (annot, name)
 
     method! expression (annot, expr) =
-      match (expr, module_ref_prefix, module_ref_prefix_LEGACY_INTEROP) with
-      | ( Flow_ast.Expression.(
-            Call
-              {
-                Call.callee = (_, Identifier (_, { Flow_ast.Identifier.name = "require"; _ }));
-                arguments =
-                  ( _,
-                    {
-                      Flow_ast.Expression.ArgList.arguments =
-                        [
-                          Expression
-                            ( source_annot,
-                              Literal Flow_ast.Literal.{ value = String module_name; _ }
-                            );
-                        ];
-                      comments = _;
-                    }
-                  );
-                _;
-              }),
-          _,
-          _
-        )
-        when annot_covers_target annot && is_legit_require source_annot ->
-        let source_loc = loc_of_annot source_annot in
-        this#request (Get_def_request.Require (source_loc, module_name))
-      | (Flow_ast.Expression.Literal Flow_ast.Literal.{ value = String str; _ }, Some prefix, _)
-        when annot_covers_target annot && Base.String.is_prefix str ~prefix ->
-        let loc = loc_of_annot annot in
-        let mref = Base.String.chop_prefix_exn str ~prefix in
-        this#request (Get_def_request.Require (loc, mref))
-      | (Flow_ast.Expression.Literal Flow_ast.Literal.{ value = String str; _ }, _, Some prefix)
-        when annot_covers_target annot && Base.String.is_prefix str ~prefix ->
-        let loc = loc_of_annot annot in
-        let mref = Base.String.chop_prefix_exn str ~prefix in
-        this#request (Get_def_request.Require (loc, mref))
-      | _ -> super#expression (annot, expr)
+      if annot_covers_target annot then
+        match (expr, module_ref_prefix, module_ref_prefix_LEGACY_INTEROP) with
+        | ( Flow_ast.Expression.(
+              Call
+                {
+                  Call.callee = (_, Identifier (_, { Flow_ast.Identifier.name = "require"; _ }));
+                  arguments =
+                    ( _,
+                      {
+                        Flow_ast.Expression.ArgList.arguments =
+                          [
+                            Expression
+                              ( source_annot,
+                                Literal Flow_ast.Literal.{ value = String module_name; _ }
+                              );
+                          ];
+                        comments = _;
+                      }
+                    );
+                  _;
+                }),
+            _,
+            _
+          )
+          when is_legit_require source_annot ->
+          let source_loc = loc_of_annot source_annot in
+          this#request (Get_def_request.Require (source_loc, module_name))
+        | (Flow_ast.Expression.Literal Flow_ast.Literal.{ value = String str; _ }, Some prefix, _)
+          when Base.String.is_prefix str ~prefix ->
+          let loc = loc_of_annot annot in
+          let mref = Base.String.chop_prefix_exn str ~prefix in
+          this#request (Get_def_request.Require (loc, mref))
+        | (Flow_ast.Expression.Literal Flow_ast.Literal.{ value = String str; _ }, _, Some prefix)
+          when Base.String.is_prefix str ~prefix ->
+          let loc = loc_of_annot annot in
+          let mref = Base.String.chop_prefix_exn str ~prefix in
+          this#request (Get_def_request.Require (loc, mref))
+        | (Flow_ast.Expression.Literal Flow_ast.Literal.{ value = String _; _ }, _, _) ->
+          this#found_empty "string"
+        | (Flow_ast.Expression.Literal Flow_ast.Literal.{ value = Number _; _ }, _, _) ->
+          this#found_empty "number"
+        | (Flow_ast.Expression.Literal Flow_ast.Literal.{ value = BigInt _; _ }, _, _) ->
+          this#found_empty "bigint"
+        | (Flow_ast.Expression.Literal Flow_ast.Literal.{ value = Boolean _; _ }, _, _) ->
+          this#found_empty "boolean"
+        | (Flow_ast.Expression.Literal Flow_ast.Literal.{ value = Null; _ }, _, _) ->
+          this#found_empty "null"
+        | (Flow_ast.Expression.Literal Flow_ast.Literal.{ value = RegExp _; _ }, _, _) ->
+          this#found_empty "regexp"
+        | _ -> super#expression (annot, expr)
+      else
+        (* it is tempting to not recurse here, but comments are not included in
+           `annot`, so we have to dig into each child to visit their `comments`
+           fields. *)
+        super#expression (annot, expr)
 
     (* object keys would normally hit this#t_identifier; this circumvents that. *)
     method! object_key_identifier id =
