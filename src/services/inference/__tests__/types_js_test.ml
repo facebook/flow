@@ -41,51 +41,6 @@ let assert_components_equal ~ctxt expected actual =
     expected
     actual
 
-let dummy_flowconfig_params =
-  {
-    CommandUtils.ignores = [];
-    untyped = [];
-    declarations = [];
-    includes = [];
-    libs = [];
-    raw_lint_severities = [];
-  }
-
-let dummy_options_flags =
-  {
-    CommandUtils.Options_flags.all = false;
-    debug = false;
-    flowconfig_flags = dummy_flowconfig_params;
-    include_warnings = false;
-    max_warnings = None;
-    max_workers = None;
-    merge_timeout = None;
-    munge_underscore_members = false;
-    no_flowlib = false;
-    profile = false;
-    quiet = false;
-    strip_root = false;
-    temp_dir = None;
-    traces = None;
-    trust_mode = None;
-    verbose = None;
-    wait_for_recheck = None;
-    include_suppressions = false;
-    estimate_recheck_time = None;
-    long_lived_workers = None;
-    distributed = false;
-  }
-
-let dummy_saved_state_flags =
-  {
-    CommandUtils.Saved_state_flags.saved_state_allow_reinit = None;
-    saved_state_fetcher = None;
-    saved_state_force_recheck = false;
-    saved_state_no_fallback = false;
-    saved_state_skip_version_check = false;
-    saved_state_verify = false;
-  }
-
 let test_with_profiling test_fun ctxt =
   let%lwt (_finished, result) =
     Profiling_js.with_profiling_lwt ~label:"Test" ~should_print_summary:false (test_fun ctxt)
@@ -100,18 +55,6 @@ let make_checked_set ~focused ~dependents ~dependencies =
 
 let make_unchanged_checked checked_files freshparsed =
   CheckedSet.remove (CheckedSet.all freshparsed) checked_files
-
-let make_options () =
-  let flowconfig = FlowConfig.empty_config in
-  let root = Path.dummy_path in
-  CommandUtils.make_options
-    ~flowconfig_name:".flowconfig"
-    ~flowconfig_hash:""
-    ~flowconfig
-    ~lazy_mode:None
-    ~root
-    ~options_flags:dummy_options_flags
-    ~saved_state_options_flags:dummy_saved_state_flags
 
 let prepare_freshparsed freshparsed =
   freshparsed |> Base.List.map ~f:make_fake_file_key |> CheckedSet.of_focused_list
@@ -133,7 +76,7 @@ let determine_what_to_recheck
   let implementation_dependency_graph = make_dependency_graph implementation_dependency_graph in
   let checked_files = checked_files_of_graph ~implementation_dependency_graph in
   let freshparsed = prepare_freshparsed freshparsed in
-  let options = make_options () in
+  let options = Test_utils.make_options () in
   let unchanged_checked = make_unchanged_checked checked_files freshparsed in
   Types_js.debug_determine_what_to_recheck
     ~profiling
@@ -169,7 +112,7 @@ let include_dependencies_and_dependents
     | `Lazy lst -> make_checked_set ~focused:lst ~dependents:[] ~dependencies:[]
   in
   let unchanged_checked = make_unchanged_checked checked_files input in
-  let options = make_options () in
+  let options = Test_utils.make_options () in
   let (sig_dependent_files, all_dependent_files) =
     Pure_dep_graph_operations.calc_all_dependents
       ~sig_dependency_graph
