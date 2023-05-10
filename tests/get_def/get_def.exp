@@ -146,21 +146,29 @@ Flags:
 literals.js:9:4
 Flags:
 
-literals.js:13:4
+literals.js:13:9
+Flags:
+literals.js:12:13,12:15
+
+literals.js:17:9
 Flags:
 
-literals.js:16:4
+literals.js:20:4
+Flags:
+literals.js:16:18,16:23
+
+literals.js:23:4
 Flags:
 
-literals.js:19:4
+literals.js:26:4
 Flags:
 
-literals.js:22:4
+literals.js:29:4
 Flags:
 
-literals.js:25:4
+literals.js:32:4
 Flags:
 
-literals.js:28:4
+literals.js:35:4
 Flags:
 
