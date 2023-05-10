@@ -764,6 +764,7 @@ type cache_snapshot = {
   snapshot_const_fold_cache: int Type.ConstFoldMap.t IMap.t;
   snapshot_instantiation_cache: Type.t Reason.ImplicitInstantiationReasonMap.t;
   snapshot_evaluated: Type.t Type.Eval.Map.t;
+  snapshot_instantiation_stack: TypeAppExpansion.entry list;
 }
 
 let take_cache_snapshot cx =
@@ -779,6 +780,7 @@ let take_cache_snapshot cx =
     snapshot_const_fold_cache = !(cx.ccx.const_fold_cache);
     snapshot_instantiation_cache = !(cx.ccx.instantiation_cache);
     snapshot_evaluated = cx.ccx.sig_cx.evaluated;
+    snapshot_instantiation_stack = !(cx.ccx.instantiation_stack);
   }
 
 let restore_cache_snapshot cx snapshot =
@@ -793,6 +795,7 @@ let restore_cache_snapshot cx snapshot =
     snapshot_const_fold_cache;
     snapshot_instantiation_cache;
     snapshot_evaluated;
+    snapshot_instantiation_stack;
   } =
     snapshot
   in
@@ -807,10 +810,12 @@ let restore_cache_snapshot cx snapshot =
   cx.ccx.instantiation_cache := snapshot_instantiation_cache;
   cx.ccx.spread_cache := snapshot_spread_cache;
   cx.ccx.const_fold_cache := snapshot_const_fold_cache;
-  set_evaluated cx snapshot_evaluated
+  set_evaluated cx snapshot_evaluated;
+  cx.ccx.instantiation_stack := snapshot_instantiation_stack
 
 let run_and_rolled_back_cache cx f =
   let cache_snapshot = take_cache_snapshot cx in
+  cx.ccx.instantiation_stack := [];
   Exception.protect ~f ~finally:(fun () -> restore_cache_snapshot cx cache_snapshot)
 
 let run_in_synthesis_mode cx f =
