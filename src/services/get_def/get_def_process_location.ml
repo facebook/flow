@@ -312,6 +312,11 @@ class ['M, 'T] searcher
       let (annot, _) = c in
       if annot_covers_target annot then this#found_empty "comment";
       c
+
+    method! template_literal_element e =
+      let (loc, _) = e in
+      if covers_target loc then this#found_empty "template";
+      e
   end
 
 let process_location ~loc_of_annot ~ast ~is_legit_require ~covers_target =

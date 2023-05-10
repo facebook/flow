@@ -9,8 +9,15 @@
 `foo`;
 // ^
 
-declare function f(parts: Array<string>): void;
-f`foo`;
+declare var bar: string;
+`foo ${bar}`;
+//      ^
+
+declare function foobar(parts: TaggedTemplateLiteralArray): void;
+foobar`foo`;
+//      ^
+
+foobar`foo`;
 // ^
 
 123456;
