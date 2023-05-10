@@ -824,6 +824,7 @@ let run_in_synthesis_mode cx f =
   cx.ccx.synthesis_produced_placeholders <- false;
   cx.typing_mode <- SynthesisMode;
   let cache_snapshot = take_cache_snapshot cx in
+  cx.ccx.instantiation_stack := [];
   let produced_placeholders = ref false in
   let result =
     Exception.protect ~f ~finally:(fun () ->
@@ -843,6 +844,7 @@ let run_in_hint_eval_mode cx f =
   cx.ccx.speculation_state := [];
   cx.typing_mode <- HintEvaluationMode;
   let cache_snapshot = take_cache_snapshot cx in
+  cx.ccx.instantiation_stack := [];
   Exception.protect ~f ~finally:(fun () ->
       restore_cache_snapshot cx cache_snapshot;
       cx.ccx.speculation_state := saved_speculation_state;
