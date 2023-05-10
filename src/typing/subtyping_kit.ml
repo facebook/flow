@@ -608,9 +608,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
             cx
             trace
             (c2, ConcretizeTypeAppsT (use_op, (ts2, op2, r2), (c1, ts1, op1, r1), true));
-          TypeAppExpansion.pop ()
+          TypeAppExpansion.pop cx
         );
-        TypeAppExpansion.pop ()
+        TypeAppExpansion.pop cx
       )
     | (TypeAppT (reason_tapp, use_op_tapp, c, ts), _) ->
       if TypeAppExpansion.push_unless_loop cx (c, ts) then (
@@ -624,7 +624,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
             (mk_typeapp_instance cx ~trace ~use_op:use_op_tapp ~reason_op ~reason_tapp c ts)
         in
         rec_flow_t cx trace ~use_op (t, u);
-        TypeAppExpansion.pop ()
+        TypeAppExpansion.pop cx
       )
     | (_, TypeAppT (reason_tapp, use_op_tapp, c, ts)) ->
       if TypeAppExpansion.push_unless_loop cx (c, ts) then (
@@ -636,7 +636,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
          * invariants that we rely on. In particular, it would force us to traverse AnnotTs to
          * do any propagation, which is extremely costly. *)
         rec_flow cx trace (t, ReposUseT (reason_tapp, false, use_op, l));
-        TypeAppExpansion.pop ()
+        TypeAppExpansion.pop cx
       )
     (**********************)
     (*    opaque types    *)

@@ -84,6 +84,29 @@ type subst_cache_err =
   | ETooFewTypeArgs of ALoc.t Reason.virtual_reason * int
   | ETooManyTypeArgs of ALoc.t Reason.virtual_reason * int
 
+module TypeAppExpansion = struct
+  (* Array types function like type applications but are not implemented as such. Unless
+     we decide to unify their implementation with regular typeapps, they need special
+     handling here *)
+  type root =
+    | Type of Type.t
+    | Array of Reason.t
+    | ROArray of Reason.t
+    | Tuple of Reason.t * int
+
+  (* arity *)
+
+  module RootSet : Flow_set.S with type elt = root = Flow_set.Make (struct
+    type elt = root
+
+    type t = elt
+
+    let compare = Stdlib.compare
+  end)
+
+  type entry = Type.t * RootSet.t list
+end
+
 type sig_t = Type.TypeContext.t
 
 type master_context = {
@@ -149,6 +172,7 @@ type component_t = {
   spread_cache: Spread_cache.t ref;
   const_fold_cache: int Type.ConstFoldMap.t IMap.t ref;
   speculation_state: Speculation_state.t;
+  instantiation_stack: TypeAppExpansion.entry list ref;
   (* Post-inference checks *)
   mutable literal_subtypes: (ALoc.t * Env_api.literal_check) list;
   mutable matching_props: (string * ALoc.t * ALoc.t) list;
@@ -346,6 +370,7 @@ let make_ccx master_cx =
     eval_repos_cache = ref Type.EvalReposCacheMap.empty;
     fix_cache = ref Type.FixCacheMap.empty;
     spread_cache = ref IMap.empty;
+    instantiation_stack = ref [];
     const_fold_cache = ref IMap.empty;
     speculation_state = ref [];
     annot_graph = IMap.empty;
@@ -1032,6 +1057,8 @@ let eval_repos_cache cx = cx.ccx.eval_repos_cache
 let fix_cache cx = cx.ccx.fix_cache
 
 let spread_cache cx = cx.ccx.spread_cache
+
+let instantiation_stack cx = cx.ccx.instantiation_stack
 
 let const_fold_cache cx = cx.ccx.const_fold_cache
 

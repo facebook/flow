@@ -65,34 +65,15 @@ module TypeAppExpansion : sig
 
   val push_unless_loop : Context.t -> Type.t * Type.t list -> bool
 
-  val pop : unit -> unit
+  val pop : Context.t -> unit
 
-  val get : unit -> entry list
+  val get : Context.t -> entry list
 
-  val set : entry list -> unit
+  val set : Context.t -> entry list -> unit
 end = struct
-  (* Array types function like type applications but are not implemented as such. Unless
-     we decide to unify their implementation with regular typeapps, they need special
-     handling here *)
-  type root =
-    | Type of Type.t
-    | Array of reason
-    | ROArray of reason
-    | Tuple of reason * int
+  open Context.TypeAppExpansion
 
-  (* arity *)
-
-  module RootSet : Flow_set.S with type elt = root = Flow_set.Make (struct
-    type elt = root
-
-    type t = elt
-
-    let compare = Stdlib.compare
-  end)
-
-  type entry = Type.t * RootSet.t list
-
-  let stack = ref ([] : entry list)
+  type entry = Context.TypeAppExpansion.entry
 
   (* visitor to collect roots of type applications nested in a type *)
   let roots_collector =
@@ -143,7 +124,9 @@ end = struct
        )
       )
 
-  let _dump_stack () = string_of_list !stack "\n" show_entry
+  let _dump_stack cx =
+    let stack = Context.instantiation_stack cx in
+    string_of_list !stack "\n" show_entry
 
   (* Detect whether pushing would cause a loop. Push only if no loop is
      detected, and return whether push happened. *)
@@ -175,6 +158,7 @@ end = struct
       loop false (prev_tss, tss)
     in
     fun cx (c, ts) ->
+      let stack = Context.instantiation_stack cx in
       let tss = Base.List.map ~f:(collect_roots cx) ts in
       let loop =
         !stack
@@ -190,9 +174,15 @@ end = struct
         true
       )
 
-  let pop () = stack := List.tl !stack
+  let pop cx =
+    let stack = Context.instantiation_stack cx in
+    stack := List.tl !stack
 
-  let get () = !stack
+  let get cx =
+    let stack = Context.instantiation_stack cx in
+    !stack
 
-  let set _stack = stack := _stack
+  let set cx stack_ =
+    let stack = Context.instantiation_stack cx in
+    stack := stack_
 end

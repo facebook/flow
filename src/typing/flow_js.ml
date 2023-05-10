@@ -1350,7 +1350,7 @@ struct
             let reason_op = reason_of_use_t u in
             let t = mk_typeapp_instance_annot cx ~trace ~use_op ~reason_op ~reason_tapp c ts in
             rec_flow cx trace (t, u);
-            TypeAppExpansion.pop ()
+            TypeAppExpansion.pop cx
           )
         (**********************)
         (*    opaque types    *)

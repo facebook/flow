@@ -15,6 +15,21 @@ exception Require_not_found of string
 
 exception Module_not_found of string
 
+module TypeAppExpansion : sig
+  (* Array types function like type applications but are not implemented as such. Unless
+     we decide to unify their implementation with regular typeapps, they need special
+     handling here *)
+  type root =
+    | Type of Type.t
+    | Array of Reason.t
+    | ROArray of Reason.t
+    | Tuple of Reason.t * int (* arity *)
+
+  module RootSet : Flow_set.S with type elt = root
+
+  type entry = Type.t * RootSet.t list
+end
+
 (* The Context module defines types for data which is passed around during type
  * checking, providing access to commonly needed state. The data is layered
  * according to their lifetimes and falls into three categories: *)
@@ -502,6 +517,8 @@ val eval_repos_cache : t -> Type.t Type.EvalReposCacheMap.t ref
 val fix_cache : t -> Type.t Type.FixCacheMap.t ref
 
 val spread_cache : t -> Spread_cache.t ref
+
+val instantiation_stack : t -> TypeAppExpansion.entry list ref
 
 val const_fold_cache : t -> int Type.ConstFoldMap.t IMap.t ref
 

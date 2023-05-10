@@ -462,14 +462,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
      details on branches. See also speculative_matches, which calls this function
      iteratively and processes its results. *)
   and speculative_match cx trace branch l u =
-    let typeapp_stack = TypeAppExpansion.get () in
+    let typeapp_stack = TypeAppExpansion.get cx in
     let constraint_cache_ref = Context.constraint_cache cx in
     let constraint_cache = !constraint_cache_ref in
     Speculation.set_speculative cx branch;
     let restore () =
       Speculation.restore_speculative cx;
       constraint_cache_ref := constraint_cache;
-      TypeAppExpansion.set typeapp_stack
+      TypeAppExpansion.set cx typeapp_stack
     in
     try
       rec_flow cx trace (l, u);
