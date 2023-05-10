@@ -2397,6 +2397,19 @@ struct
               | None -> rec_flow_t ~use_op:unknown_use cx trace (tin, OpenT tout)
             end
         end
+        | ( DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; t_out = t; _ }),
+            CallLatentPredT { use_op; reason; targs; argts; sense; idx; tin; tout }
+          ) ->
+          let tvar = (reason, Tvar.mk_no_wrap cx reason) in
+          let calltype = mk_functioncalltype ~call_kind:RegularCallKind reason targs argts tvar in
+          let check = lazy (IICheck.of_call l (tparams_loc, ids, t) unknown_use reason calltype) in
+          let lparts = (reason_tapp, tparams_loc, ids, t) in
+          let uparts = (use_op, reason, calltype.call_targs, Type.hint_unavailable) in
+          let t_ = instantiate_poly_call_or_new cx trace ~cache:true lparts uparts check in
+          rec_flow
+            cx
+            trace
+            (t_, CallLatentPredT { use_op; reason; targs = None; argts; sense; idx; tin; tout })
         (* Fall through all the remaining cases *)
         | (_, CallLatentPredT { tin; tout; _ }) ->
           rec_flow_t ~use_op:unknown_use cx trace (tin, OpenT tout)

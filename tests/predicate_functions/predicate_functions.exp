@@ -32,5 +32,74 @@ References:
                ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------------ poly.js:8:6
 
-Found 2 errors
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   poly.js:8:6
+   8|     (x: string); // error
+           ^
+
+References:
+   poly.js:4:48
+   4|   declare function f<V>(x: V): boolean %checks(typeof x === "number");
+                                                     ^^^^^^^^^^^^^^^^^^^^^ [1]
+   poly.js:8:9
+   8|     (x: string); // error
+              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- poly.js:13:6
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   poly.js:13:6
+   13|     (x: string); // error
+            ^
+
+References:
+   poly.js:4:48
+    4|   declare function f<V>(x: V): boolean %checks(typeof x === "number");
+                                                      ^^^^^^^^^^^^^^^^^^^^^ [1]
+   poly.js:13:9
+   13|     (x: string); // error
+               ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- poly.js:23:6
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   poly.js:23:6
+   23|     (x: string); // error
+            ^
+
+References:
+   poly.js:18:48
+   18|   declare function f<V>(x: V): boolean %checks(typeof x === "number");
+                                                      ^^^^^^^^^^^^^^^^^^^^^ [1]
+   poly.js:23:9
+   23|     (x: string); // error
+               ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- poly.js:43:7
+
+Cannot call `fromMaybe` because `T` [1] is underconstrained by call of `fromMaybe` [2]. Either add explicit type
+arguments or cast the expression to your expected type. [underconstrained-implicit-instantiation]
+
+   poly.js:43:7
+   43|   if (fromMaybe(x)) { // a single [underconstrained-implicit-instantiation] error
+             ^^^^^^^^^
+
+References:
+   poly.js:40:30
+   40|   declare function fromMaybe<T>(x: mixed, ?{ f: T }): T;
+                                    ^ [1]
+   poly.js:43:7
+   43|   if (fromMaybe(x)) { // a single [underconstrained-implicit-instantiation] error
+             ^^^^^^^^^^^^ [2]
+
+
+
+Found 6 errors
