@@ -230,11 +230,9 @@ struct
       "%s[%s in %s%s]%s: %s"
       (dump_polarity polarity)
       tp_name
-      ( if homomorphic then
-        "keyof "
-      else
-        ""
-      )
+      (match homomorphic with
+      | Homomorphic -> "keyof "
+      | _ -> "")
       (dump_t ~depth source)
       (match optional with
       | KeepOptionality -> ""
@@ -613,6 +611,12 @@ struct
               | RemoveOptional -> "RemoveOptional"
               | MakeOptional -> "MakeOptional"
             in
+            let homomorphic_str =
+              match homomorphic with
+              | Homomorphic -> "Homomorphic"
+              | Unspecialized -> "Unspecialized"
+              | SemiHomomorphic _ -> "SemiHomomorphic"
+            in
             [
               ("kind", JSON_String "MappedTypeProp");
               ( "prop",
@@ -620,7 +624,7 @@ struct
                   [
                     ("key_tparam", JSON_String tp_name);
                     ("source", json_of_t source);
-                    ("homomorphic", JSON_Bool homomorphic);
+                    ("homomorphic", JSON_String homomorphic_str);
                     ("prop", json_of_t prop);
                     ( "flags",
                       JSON_Object

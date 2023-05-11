@@ -190,8 +190,13 @@ and prop =
       source: t;
       prop: t;
       flags: mapped_type_flags;
-      homomorphic: bool;
+      homomorphic: mapped_type_homomorphic_flag;
     }
+
+and mapped_type_homomorphic_flag =
+  | Homomorphic
+  | SemiHomomorphic of t
+  | Unspecialized
 
 and named_prop =
   | Field of {

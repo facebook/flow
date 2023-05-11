@@ -335,11 +335,11 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
               Atom "[";
               Atom tp_name;
               Atom " in ";
-              ( if homomorphic then
-                Atom "keyof "
-              else
-                Empty
-              );
+              (match homomorphic with
+              | Homomorphic -> Atom "keyof "
+              | SemiHomomorphic _
+              | Unspecialized ->
+                Empty);
               type_ ~depth source;
               Atom "]";
               optional_modifier;

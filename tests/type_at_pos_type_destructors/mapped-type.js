@@ -70,3 +70,11 @@ type UnevaluatedNonHomomorphic<T: {...}> = {[key in T]: T};
 declare var y: {[key in Keys]: O[key]};
    x;
 // ^
+
+// All semi-homomorphic mapped types must be unevaluated, otherwise
+// we cannot bind a tparam
+type SemiHomomorphic<O: {...}, Keys: $Keys<O>> = {[key in Keys]: O[key]};
+//   ^
+declare var z: SemiHomomorphic<{foo: number}, 'foo'>;
+   z;
+// ^

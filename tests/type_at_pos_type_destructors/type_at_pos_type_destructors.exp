@@ -971,3 +971,14 @@ Flags:
 = {|bar: string, foo: number|}
 mapped-type.js:71:4,71:4
 
+mapped-type.js:76:6
+Flags:
+type SemiHomomorphic<O: {...}, Keys: $Keys<O>> = {[key in O]: O[key]}
+= {||}
+mapped-type.js:76:6,76:20
+
+mapped-type.js:79:4
+Flags:
+SemiHomomorphic<{foo: number, ...}, "foo">
+mapped-type.js:79:4,79:4
+

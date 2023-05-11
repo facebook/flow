@@ -1589,13 +1589,14 @@ end = struct
         | Type.KeepOptionality -> Ty.KeepOptionality
       in
       let flags = { Ty.optional; polarity = type_polarity variance } in
-      let homomorphic =
+      let%bind homomorphic =
         Type.(
           match homomorphic with
-          | Homomorphic -> true
-          | SemiHomomorphic _
-          | Unspecialized ->
-            false
+          | Homomorphic -> return Ty.Homomorphic
+          | SemiHomomorphic t ->
+            let%bind t = type__ ~env t in
+            return (Ty.SemiHomomorphic t)
+          | Unspecialized -> return Ty.Unspecialized
         )
       in
       let prop = Ty.(MappedTypeProp { key_tparam; source; prop; flags; homomorphic }) in

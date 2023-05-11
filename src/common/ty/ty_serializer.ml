@@ -364,11 +364,11 @@ let type_ options =
     (Loc.none, { T.Object.SpreadProperty.argument = t; comments = None })
   and obj_mapped_type_prop key_tparam source prop { optional; polarity } homomorphic =
     let%bind source_type = type_ source in
-    let keyof_source_type =
-      if homomorphic then
-        (Loc.none, T.Keyof { T.Keyof.argument = source_type; comments = None })
-      else
-        source_type
+    let%bind source_type =
+      match homomorphic with
+      | Homomorphic -> return (Loc.none, T.Keyof { T.Keyof.argument = source_type; comments = None })
+      | SemiHomomorphic selected_keys -> type_ selected_keys
+      | Unspecialized -> return source_type
     in
     let%bind prop_type = type_ prop in
     let%map key_tparam = type_param key_tparam in
@@ -385,7 +385,7 @@ let type_ options =
       {
         T.Object.MappedType.key_tparam;
         prop_type;
-        source_type = keyof_source_type;
+        source_type;
         variance;
         optional;
         comments = None;
