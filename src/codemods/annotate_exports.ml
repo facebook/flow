@@ -77,6 +77,7 @@ module SignatureVerification = struct
         conditional_type = true;
         mapped_type = true;
         tuple_enhancements = true;
+        type_guards = true;
       }
     in
     let (sig_errors, locs, _) =

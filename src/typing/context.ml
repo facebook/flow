@@ -62,6 +62,7 @@ type metadata = {
   suppress_types: SSet.t;
   trust_mode: Options.trust_mode;
   tuple_enhancements: bool;
+  type_guards: bool;
   use_mixed_in_catch_variables: bool;
 }
 
@@ -278,6 +279,7 @@ let metadata_of_options options =
     suppress_types = Options.suppress_types options;
     trust_mode = Options.trust_mode options;
     tuple_enhancements = Options.tuple_enhancements options;
+    type_guards = Options.type_guards options;
     use_mixed_in_catch_variables = Options.use_mixed_in_catch_variables options;
   }
 
@@ -477,6 +479,8 @@ let exact_by_default cx = cx.metadata.exact_by_default
 let conditional_type cx = cx.metadata.conditional_type
 
 let mapped_type cx = cx.metadata.mapped_type
+
+let type_guards cx = cx.metadata.type_guards
 
 let aloc_tables cx = cx.ccx.aloc_tables
 

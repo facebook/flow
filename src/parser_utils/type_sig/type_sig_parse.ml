@@ -2473,9 +2473,9 @@ let annot_or_hint ~sort ~err_loc opts scope tbls xs = function
 let function_return_annot ~sort ~err_loc opts scope tbls xs = function
   | Ast.Function.ReturnAnnot.Available (_, t) -> annot opts scope tbls xs t
   | Ast.Function.ReturnAnnot.TypeGuard (loc, _) ->
-    (* TODO(pvekris) support type guards in type_sig_parse *)
+    (* This is only used for getters, where type guards are not allowed *)
     let loc = push_loc tbls loc in
-    Annot (Boolean loc)
+    Annot (Any loc)
   | Ast.Function.ReturnAnnot.Missing loc ->
     let err_loc =
       match err_loc with

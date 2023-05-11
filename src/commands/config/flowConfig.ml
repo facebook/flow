@@ -126,6 +126,7 @@ module Opts = struct
     traces: int;
     trust_mode: Options.trust_mode;
     tuple_enhancements: bool option;
+    type_guards: bool;
     use_mixed_in_catch_variables: bool option;
     wait_for_recheck: bool;
     watchman_defer_states: string list;
@@ -251,6 +252,7 @@ module Opts = struct
       traces = 0;
       trust_mode = Options.NoTrust;
       tuple_enhancements = None;
+      type_guards = false;
       use_mixed_in_catch_variables = None;
       wait_for_recheck = false;
       watchman_defer_states = [];
@@ -748,6 +750,7 @@ module Opts = struct
         boolean (fun opts v -> Ok { opts with conditional_type = Some v })
       );
       ("experimental.mapped_type", boolean (fun opts v -> Ok { opts with mapped_type = v }));
+      ("experimental.type_guards", boolean (fun opts v -> Ok { opts with type_guards = v }));
       ("experimental.direct_dependent_files_fix", direct_dependent_files_fix_parser);
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
       ("experimental.module.automatic_require_default", automatic_require_default_parser);
@@ -1539,6 +1542,8 @@ let traces c = c.options.Opts.traces
 let trust_mode c = c.options.Opts.trust_mode
 
 let tuple_enhancements c = c.options.Opts.tuple_enhancements
+
+let type_guards c = c.options.Opts.type_guards
 
 let use_mixed_in_catch_variables c = c.options.Opts.use_mixed_in_catch_variables
 

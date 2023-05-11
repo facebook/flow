@@ -96,6 +96,7 @@ type metadata = {
   suppress_types: SSet.t;
   trust_mode: Options.trust_mode;
   tuple_enhancements: bool;
+  type_guards: bool;
   use_mixed_in_catch_variables: bool;
 }
 
@@ -180,6 +181,8 @@ val exact_by_default : t -> bool
 val conditional_type : t -> bool
 
 val mapped_type : t -> bool
+
+val type_guards : t -> bool
 
 val file : t -> File_key.t
 

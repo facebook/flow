@@ -192,6 +192,7 @@ let sig_options
     ?(enable_enums = true)
     ?(enable_relay_integration = false)
     ?(conditional_type = true)
+    ?(type_guards = true)
     ?(mapped_type = true)
     ?relay_integration_module_prefix
     ?(tuple_enhancements = true)
@@ -208,6 +209,7 @@ let sig_options
     enable_relay_integration;
     relay_integration_module_prefix;
     conditional_type;
+    type_guards;
     mapped_type;
     tuple_enhancements;
   }

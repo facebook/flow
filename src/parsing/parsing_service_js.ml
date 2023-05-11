@@ -180,6 +180,7 @@ let do_parse ~parsing_options ~docblock content file =
     parse_enable_conditional_types = _;
     parse_enable_mapped_types = _;
     parse_tuple_enhancements = _;
+    parse_enable_type_guards = _;
   } =
     parsing_options
   in

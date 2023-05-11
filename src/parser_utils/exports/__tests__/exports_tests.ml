@@ -60,6 +60,7 @@ let sig_opts =
     enable_relay_integration = false;
     relay_integration_module_prefix = None;
     conditional_type = true;
+    type_guards = true;
     mapped_type = true;
     tuple_enhancements = true;
   }

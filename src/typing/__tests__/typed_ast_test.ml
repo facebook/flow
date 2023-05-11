@@ -51,6 +51,7 @@ let metadata =
     suppress_types = SSet.empty;
     trust_mode = Options.NoTrust;
     tuple_enhancements = true;
+    type_guards = true;
     use_mixed_in_catch_variables = false;
   }
 

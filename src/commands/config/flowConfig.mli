@@ -235,6 +235,8 @@ val trust_mode : config -> Options.trust_mode
 
 val tuple_enhancements : config -> bool option
 
+val type_guards : config -> bool
+
 val use_mixed_in_catch_variables : config -> bool option
 
 val wait_for_recheck : config -> bool

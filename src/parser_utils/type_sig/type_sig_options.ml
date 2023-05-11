@@ -19,6 +19,7 @@ type t = {
   conditional_type: bool;
   mapped_type: bool;
   tuple_enhancements: bool;
+  type_guards: bool;
 }
 
 let of_parsing_options parsing_options docblock file =
@@ -36,6 +37,7 @@ let of_parsing_options parsing_options docblock file =
     parse_enable_conditional_types = conditional_type;
     parse_enable_mapped_types = mapped_type;
     parse_tuple_enhancements = tuple_enhancements;
+    parse_enable_type_guards = type_guards;
     _;
   } =
     parsing_options
@@ -73,6 +75,7 @@ let of_parsing_options parsing_options docblock file =
     conditional_type;
     mapped_type;
     tuple_enhancements;
+    type_guards;
   }
 
 let of_options options ~munge ~ignore_static_propTypes ~facebook_keyMirror =
@@ -90,4 +93,5 @@ let of_options options ~munge ~ignore_static_propTypes ~facebook_keyMirror =
     conditional_type = Options.conditional_type options;
     mapped_type = Options.mapped_type options;
     tuple_enhancements = Options.tuple_enhancements options;
+    type_guards = Options.type_guards options;
   }

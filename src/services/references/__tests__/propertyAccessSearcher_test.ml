@@ -36,6 +36,7 @@ let run ctxt expected name content =
         parse_distributed = false;
         parse_enable_conditional_types = false;
         parse_enable_mapped_types = false;
+        parse_enable_type_guards = false;
         parse_tuple_enhancements = false;
       }
   in
