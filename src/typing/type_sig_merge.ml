@@ -1064,12 +1064,21 @@ and merge_annot tps infer_tps file = function
     let mapped_type_flags = { Type.variance; optional } in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     let reason = Reason.(mk_reason RObjectType loc) in
-    let homomorphic =
+    let (source_type, homomorphic) =
       Type.(
         if inline_keyof then
-          Homomorphic
+          (source_type, Homomorphic)
         else
-          Unspecialized
+          match source_type with
+          | Type.GenericT { bound = KeysT (_, obj_t); _ } -> (obj_t, SemiHomomorphic source_type)
+          | Type.OpenT (_, id) ->
+            (match Context.find_constraints file.cx id with
+            | ( _,
+                Type.Constraint.FullyResolved (lazy (Type.GenericT { bound = KeysT (_, obj_t); _ }))
+              ) ->
+              (obj_t, SemiHomomorphic source_type)
+            | _ -> (source_type, Unspecialized))
+          | _ -> (source_type, Unspecialized)
       )
     in
     Type.(

@@ -6,6 +6,7 @@ import type {
   ParameterizedPartial,
   ParameterizedReadonly,
   MappedNonHomomorphic,
+  SemiHomomorphic,
 } from './export';
 
 // No modifiers concrete
@@ -68,4 +69,11 @@ type O = {foo: number, bar?: string, +baz: bool};
 {
   ({foo: 3, bar: 3}: MappedNonHomomorphic); // OK!
   ({foo: null, bar: null}: MappedNonHomomorphic); // ERROR!
+}
+
+// Semi-homomorphic mapped types
+{
+  declare const semi: SemiHomomorphic<{+foo: number, bar: string}, 'foo'>;
+  (semi: {+foo: number}); // OK
+  (semi: {foo: number}); // ERROR
 }
