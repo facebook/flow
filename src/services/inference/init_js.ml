@@ -33,15 +33,17 @@ type lib_result =
 
 let parse_lib_file ~reader options file =
   (* types are always allowed in lib files *)
-  let types_mode = Parsing_options.TypesAllowed in
+  let force_types = true in
   (* lib files are always "use strict" *)
-  let use_strict = true in
+  let force_use_strict = true in
+  (* do not parallelize *)
+  let workers = None in
   try%lwt
     let lib_file = File_key.LibFile file in
     let filename_set = FilenameSet.singleton lib_file in
     let next = Parsing.next_of_filename_set (* workers *) None filename_set in
     let%lwt results =
-      Parsing.parse_with_defaults ~types_mode ~use_strict ~reader options (* workers *) None next
+      Parsing.parse_with_defaults ~force_types ~force_use_strict ~reader options workers next
     in
     Lwt.return
       ( if is_ok results then
@@ -128,13 +130,7 @@ let load_lib_files ~ccx ~options ~reader files =
   in
   let builtin_exports =
     if ok then
-      let sig_opts =
-        Type_sig_options.of_options
-          options
-          ~munge:false
-          ~ignore_static_propTypes:true
-          ~facebook_keyMirror:false
-      in
+      let sig_opts = Type_sig_options.builtin_options options in
       let (_builtin_errors, _builtin_locs, builtins) =
         Type_sig_utils.parse_and_pack_builtins sig_opts ordered_asts
       in

@@ -13,34 +13,11 @@ let run ctxt expected name content =
   let (_docblock_errors, docblock) =
     Docblock_parser.(parse_docblock ~max_tokens:docblock_max_tokens file content)
   in
-  let parsing_options =
-    Parsing_options.
-      {
-        parse_types_mode = TypesAllowed;
-        parse_use_strict = true;
-        parse_munge_underscores = true;
-        parse_module_ref_prefix = None;
-        parse_module_ref_prefix_LEGACY_INTEROP = None;
-        parse_facebook_fbt = None;
-        (* following options unused in classic mode *)
-        parse_suppress_types = SSet.empty;
-        parse_max_literal_len = 0;
-        parse_component_syntax = false;
-        parse_exact_by_default = false;
-        parse_enable_enums = false;
-        parse_enable_relay_integration = false;
-        parse_relay_integration_excludes = [];
-        parse_relay_integration_module_prefix = None;
-        parse_relay_integration_module_prefix_includes = [];
-        parse_node_main_fields = [];
-        parse_distributed = false;
-        parse_enable_conditional_types = false;
-        parse_enable_mapped_types = false;
-        parse_enable_type_guards = false;
-        parse_tuple_enhancements = false;
-      }
+  let options =
+    let options_flags = Test_utils.make_options_flags ~all:true () in
+    Test_utils.make_options ~options_flags ()
   in
-  let result = do_parse ~parsing_options ~docblock content file in
+  let result = do_parse ~options ~docblock content file in
   let ast =
     match result with
     | Parse_ok { ast; _ } -> ast

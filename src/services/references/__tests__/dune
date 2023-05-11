@@ -3,5 +3,5 @@
  (libraries
   ounit2
   flow_server_find_refs
-  flow_parsing_options
+  flow_common_test_utils
 ))

@@ -5,12 +5,6 @@
  (libraries flow_common))
 
 (library
- (name flow_parsing_options)
- (wrapped false)
- (modules parsing_options)
- (libraries flow_common))
-
-(library
  (name flow_parsing)
  (wrapped false)
  (modules parsing_service_js)
@@ -20,7 +14,6 @@
   flow_exports
   flow_procs
   flow_parsing_docblock
-  flow_parsing_options
   flow_service_inference_module
   flow_state_heaps_parsing
   flow_state_readers

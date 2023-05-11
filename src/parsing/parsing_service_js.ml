@@ -8,7 +8,6 @@
 open Utils_js
 open Sys_utils
 open Docblock_parser
-open Parsing_options
 
 type result =
   | Parse_ok of {
@@ -77,13 +76,16 @@ let empty_result =
   }
 
 (**************************** internal *********************************)
-let parse_source_file
-    ~components ~types ~use_strict ~module_ref_prefix ~module_ref_prefix_LEGACY_INTEROP content file
-    =
+let parse_source_file ~options ~force_use_strict content file =
+  let use_strict =
+    match force_use_strict with
+    | Some use_strict -> use_strict
+    | None -> Options.modules_are_use_strict options
+  in
   let parse_options =
     Some
       {
-        Parser_env.components;
+        Parser_env.components = Options.component_syntax options;
         (*
          * Always parse ES proposal syntax. The user-facing config option to
          * ignore/warn/enable them is handled during inference so that a clean error
@@ -91,16 +93,16 @@ let parse_source_file
          *)
         enums = true;
         esproposal_decorators = true;
-        types;
+        types = true;
         use_strict;
-        module_ref_prefix;
-        module_ref_prefix_LEGACY_INTEROP;
+        module_ref_prefix = Options.haste_module_ref_prefix options;
+        module_ref_prefix_LEGACY_INTEROP = Options.haste_module_ref_prefix_LEGACY_INTEROP options;
       }
   in
-
   Parser_flow.program_file ~fail:false ~parse_options content (Some file)
 
-let parse_package_json_file ~node_main_fields content file =
+let parse_package_json_file ~options content file =
+  let node_main_fields = Options.node_main_fields options in
   let parse_options =
     Some
       {
@@ -113,7 +115,6 @@ let parse_package_json_file ~node_main_fields content file =
         module_ref_prefix_LEGACY_INTEROP = None;
       }
   in
-
   match Parser_flow.package_json_file ~parse_options content (Some file) with
   | exception Parse_error.Error (err, _) -> Error err
   | ((_loc, obj), _parse_errors) -> Ok (Package_json.parse ~node_main_fields obj)
@@ -121,23 +122,23 @@ let parse_package_json_file ~node_main_fields content file =
 (* Allow types based on `types_mode`, using the @flow annotation in the
    file header if possible. Note, this should be consistent with
    Infer_service.apply_docblock_overrides w.r.t. the metadata.checked flag. *)
-let types_checked types_mode docblock =
-  let open Docblock in
-  match flow docblock with
-  | None -> types_mode = TypesAllowed
-  | Some OptOut -> false
-  | Some (OptIn | OptInStrict | OptInStrictLocal) -> true
+let types_checked ~force_types options docblock =
+  match force_types with
+  | Some types -> types
+  | None ->
+    let open Docblock in
+    (match flow docblock with
+    | None -> Options.all options
+    | Some OptOut -> false
+    | Some (OptIn | OptInStrict | OptInStrictLocal) -> true)
 
-let parse_file_sig parsing_options file ast =
-  let {
-    parse_enable_enums = enable_enums;
-    parse_enable_relay_integration = enable_relay_integration;
-    parse_relay_integration_excludes = relay_integration_excludes;
-    parse_relay_integration_module_prefix = relay_integration_module_prefix;
-    parse_relay_integration_module_prefix_includes = relay_integration_module_prefix_includes;
-    _;
-  } =
-    parsing_options
+let parse_file_sig options file ast =
+  let enable_enums = Options.enums options in
+  let enable_relay_integration = Options.enable_relay_integration options in
+  let relay_integration_excludes = Options.relay_integration_excludes options in
+  let relay_integration_module_prefix = Options.relay_integration_module_prefix options in
+  let relay_integration_module_prefix_includes =
+    Options.relay_integration_module_prefix_includes options
   in
   let enable_relay_integration =
     enable_relay_integration && Relay_options.enabled_for_file relay_integration_excludes file
@@ -153,66 +154,34 @@ let parse_file_sig parsing_options file ast =
   in
   File_sig.program ~ast ~opts:file_sig_opts
 
-let parse_type_sig parsing_options docblock file ast =
-  let sig_opts = Type_sig_options.of_parsing_options parsing_options docblock file in
+let parse_type_sig options docblock file ast =
+  let sig_opts = Type_sig_options.of_options options docblock file in
   let strict = Docblock.is_strict docblock in
   Type_sig_utils.parse_and_pack_module ~strict sig_opts (Some file) ast
 
-let do_parse ~parsing_options ~docblock content file =
-  let {
-    parse_types_mode = types_mode;
-    parse_use_strict = use_strict;
-    parse_munge_underscores = _;
-    parse_module_ref_prefix = module_ref_prefix;
-    parse_module_ref_prefix_LEGACY_INTEROP = module_ref_prefix_LEGACY_INTEROP;
-    parse_component_syntax = components;
-    parse_facebook_fbt = _;
-    parse_suppress_types = _;
-    parse_max_literal_len = _;
-    parse_exact_by_default = _;
-    parse_enable_enums = enable_enums;
-    parse_enable_relay_integration = _;
-    parse_relay_integration_excludes = _;
-    parse_relay_integration_module_prefix = _;
-    parse_relay_integration_module_prefix_includes = _;
-    parse_node_main_fields = node_main_fields;
-    parse_distributed = distributed;
-    parse_enable_conditional_types = _;
-    parse_enable_mapped_types = _;
-    parse_tuple_enhancements = _;
-    parse_enable_type_guards = _;
-  } =
-    parsing_options
-  in
+let do_parse ~options ~docblock ?force_types ?force_use_strict content file =
   try
     match file with
     | File_key.JsonFile str ->
       if Filename.basename str = "package.json" then
-        let result = parse_package_json_file ~node_main_fields content file in
+        let result = parse_package_json_file ~options content file in
         Parse_skip (Skip_package_json result)
       else
         Parse_skip Skip_resource_file
     | File_key.ResourceFile _ -> Parse_skip Skip_resource_file
     | _ ->
       (* either all=true or @flow pragma exists *)
-      let types_checked = types_checked types_mode docblock in
-      if not types_checked then
+      if not (types_checked ~force_types options docblock) then
         Parse_skip Skip_non_flow_file
       else
-        let (ast, parse_errors) =
-          parse_source_file
-            ~components
-            ~types:true
-            ~use_strict
-            ~module_ref_prefix
-            ~module_ref_prefix_LEGACY_INTEROP
-            content
-            file
-        in
-        let (file_sig, tolerable_errors) = parse_file_sig parsing_options file ast in
+        let (ast, parse_errors) = parse_source_file ~options ~force_use_strict content file in
+        let (file_sig, tolerable_errors) = parse_file_sig options file ast in
         let requires = File_sig.require_set file_sig |> SSet.elements |> Array.of_list in
         (*If you want efficiency, can compute globals along with file_sig in the above function since scope is computed when computing file_sig*)
-        let (_, (_, _, globals)) = Ssa_builder.program_with_scope ~enable_enums ast in
+        let (_, (_, _, globals)) =
+          let enable_enums = Options.enums options in
+          Ssa_builder.program_with_scope ~enable_enums ast
+        in
         if not (Base.List.is_empty parse_errors) then
           Parse_recovered
             {
@@ -223,7 +192,7 @@ let do_parse ~parsing_options ~docblock content file =
               parse_errors = Nel.of_list_exn parse_errors;
             }
         else
-          let (sig_errors, locs, type_sig) = parse_type_sig parsing_options docblock file ast in
+          let (sig_errors, locs, type_sig) = parse_type_sig options docblock file ast in
           let exports = Exports.of_module type_sig in
           let imports = Imports.of_file_sig file_sig in
           let imports = Imports.add_globals globals imports in
@@ -240,7 +209,7 @@ let do_parse ~parsing_options ~docblock content file =
           in
           (* add digest by distributed flag *)
           let cas_digest =
-            if distributed then
+            if Options.distributed options then
               Remote_execution.upload_blob type_sig
             else
               None
@@ -305,12 +274,13 @@ let fold_failed acc worker_mutator file_key file_opt hash module_name error =
 let reducer
     ~worker_mutator
     ~reader
-    ~parsing_options
+    ~options
     ~skip_changed
     ~skip_unchanged
-    ~max_header_tokens
+    ~force_types
+    ~force_use_strict
     ~noflow
-    (exported_module : File_key.t -> Module_js.exported_module_info -> string option)
+    ~exported_module
     acc
     file_key : results =
   let file_opt = Parsing_heaps.get_file_addr file_key in
@@ -359,7 +329,7 @@ let reducer
       else if skip_unchanged && content_hash_matches_old_file_hash ~reader file_key hash then
         { acc with unchanged = FilenameSet.add file_key acc.unchanged }
       else (
-        match parse_docblock ~max_tokens:max_header_tokens file_key content with
+        match parse_docblock ~max_tokens:(Options.max_header_tokens options) file_key content with
         | ([], docblock) ->
           let docblock =
             if noflow file_key then
@@ -368,7 +338,7 @@ let reducer
               docblock
           in
           begin
-            match do_parse ~parsing_options ~docblock content file_key with
+            match do_parse ~options ~docblock ?force_types ?force_use_strict content file_key with
             | Parse_ok
                 {
                   ast;
@@ -381,8 +351,6 @@ let reducer
                   cas_digest;
                   tolerable_errors;
                 } ->
-              (* if parsing_options.fail == true, then parse errors will hit Parse_fail below. otherwise,
-                 ignore any parse errors we get here. *)
               let file_sig = (file_sig, tolerable_errors) in
               let module_name = exported_module file_key (`Module docblock) in
               let dirty_modules =
@@ -475,31 +443,6 @@ let merge a b =
     dirty_modules = Modulename.Set.union a.dirty_modules b.dirty_modules;
   }
 
-let opt_or_alternate opt alternate =
-  match opt with
-  | Some x -> x
-  | None -> alternate
-
-(* types_mode and use_strict aren't special, they just happen to be the ones that needed to be
-   overridden *)
-let get_defaults ~types_mode ~use_strict options =
-  let types_mode =
-    opt_or_alternate
-      types_mode
-      (* force types when --all is set, but otherwise forbid them unless the file
-         has @flow in it. *)
-      ( if Options.all options then
-        TypesAllowed
-      else
-        TypesForbiddenByDefault
-      )
-  in
-  let use_strict = opt_or_alternate use_strict (Options.modules_are_use_strict options) in
-  let profile = Options.should_profile options in
-  let max_header_tokens = Options.max_header_tokens options in
-  let noflow fn = Files.is_untyped (Options.file_options options) (File_key.to_string fn) in
-  (types_mode, use_strict, profile, max_header_tokens, noflow)
-
 (***************************** public ********************************)
 
 let progress_fn ~total ~start ~length:_ =
@@ -515,29 +458,30 @@ let next_of_filename_set ?(with_progress = false) workers filenames =
 let parse
     ~worker_mutator
     ~reader
-    ~parsing_options
+    ~options
     ~skip_changed
     ~skip_unchanged
-    ~profile
-    ~max_header_tokens
-    ~noflow
-    exported_module
+    ~force_types
+    ~force_use_strict
     workers
     next : results Lwt.t =
   let t = Unix.gettimeofday () in
+  let noflow fn = Files.is_untyped (Options.file_options options) (File_key.to_string fn) in
+  let exported_module = Module_js.exported_module ~options in
   let job =
     reducer
       ~worker_mutator
       ~reader
-      ~parsing_options
+      ~options
       ~skip_changed
       ~skip_unchanged
-      ~max_header_tokens
+      ~force_types
+      ~force_use_strict
       ~noflow
-      exported_module
+      ~exported_module
   in
   let%lwt results = MultiWorkerLwt.fold workers ~job ~neutral:empty_result ~merge ~next in
-  if profile then
+  if Options.should_profile options then
     let t2 = Unix.gettimeofday () in
     let num_parsed = FilenameSet.cardinal results.parsed in
     let num_unparsed = FilenameSet.cardinal results.unparsed in
@@ -565,27 +509,23 @@ let parse
 let reparse
     ~transaction
     ~reader
-    ~parsing_options
-    ~profile
-    ~max_header_tokens
-    ~noflow
-    exported_module
+    ~options
+    ~force_types
+    ~force_use_strict
     ~with_progress
     ~workers
     ~modified:files =
   let (master_mutator, worker_mutator) = Parsing_heaps.Reparse_mutator.create transaction files in
-  let next = next_of_filename_set ?with_progress workers files in
+  let next = next_of_filename_set ~with_progress workers files in
   let%lwt results =
     parse
       ~worker_mutator
       ~reader
-      ~parsing_options
+      ~options
       ~skip_changed:false
       ~skip_unchanged:true
-      ~profile
-      ~max_header_tokens
-      ~noflow
-      exported_module
+      ~force_types
+      ~force_use_strict
       workers
       next
   in
@@ -593,42 +533,28 @@ let reparse
   Parsing_heaps.Reparse_mutator.record_not_found master_mutator results.not_found;
   Lwt.return results
 
-let parse_with_defaults ?types_mode ?use_strict ~reader options workers next =
-  let (types_mode, use_strict, profile, max_header_tokens, noflow) =
-    get_defaults ~types_mode ~use_strict options
-  in
-  let parsing_options = make_parsing_options ~use_strict ~types_mode options in
-  let exported_module = Module_js.exported_module ~options in
+let parse_with_defaults ?force_types ?force_use_strict ~reader options workers next =
   (* This isn't a recheck, so there shouldn't be any unchanged *)
   let worker_mutator = Parsing_heaps.Parse_mutator.create () in
   parse
     ~worker_mutator
     ~reader
-    ~parsing_options
+    ~options
     ~skip_changed:false
     ~skip_unchanged:false
-    ~profile
-    ~max_header_tokens
-    ~noflow
-    exported_module
+    ~force_types
+    ~force_use_strict
     workers
     next
 
 let reparse_with_defaults
-    ~transaction ~reader ?types_mode ?use_strict ?with_progress ~workers ~modified options =
-  let (types_mode, use_strict, profile, max_header_tokens, noflow) =
-    get_defaults ~types_mode ~use_strict options
-  in
-  let parsing_options = make_parsing_options ~types_mode ~use_strict options in
-  let exported_module = Module_js.exported_module ~options in
+    ~transaction ~reader ?force_types ?force_use_strict ~with_progress ~workers ~modified options =
   reparse
     ~transaction
     ~reader
-    ~parsing_options
-    ~profile
-    ~max_header_tokens
-    ~noflow
-    exported_module
+    ~options
+    ~force_types
+    ~force_use_strict
     ~with_progress
     ~workers
     ~modified
@@ -637,9 +563,6 @@ let reparse_with_defaults
  * Any not-yet-parsed files who's on-disk contents don't match their already-known hash are skipped
  * and returned to the caller. *)
 let ensure_parsed ~reader options workers files =
-  let (types_mode, use_strict, profile, max_header_tokens, noflow) =
-    get_defaults ~types_mode:None ~use_strict:None options
-  in
   (* We're not replacing any info, so there's nothing to roll back. That means we can just use the
    * simple Parse_mutator rather than the rollback-able Reparse_mutator *)
   let worker_mutator = Parsing_heaps.Parse_mutator.create () in
@@ -662,8 +585,6 @@ let ensure_parsed ~reader options workers files =
       ~next:(MultiWorkerLwt.next workers (FilenameSet.elements files))
   in
   let next = MultiWorkerLwt.next ~progress_fn workers (FilenameSet.elements files_missing_asts) in
-  let parsing_options = make_parsing_options ~types_mode ~use_strict options in
-  let exported_module = Module_js.exported_module ~options in
   let%lwt {
         parsed = _;
         unparsed = _;
@@ -677,13 +598,11 @@ let ensure_parsed ~reader options workers files =
     parse
       ~worker_mutator
       ~reader
-      ~parsing_options
+      ~options
       ~skip_changed:true
       ~skip_unchanged:false
-      ~profile
-      ~max_header_tokens
-      ~noflow
-      exported_module
+      ~force_types:None
+      ~force_use_strict:None
       workers
       next
   in

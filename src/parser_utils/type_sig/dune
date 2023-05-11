@@ -16,7 +16,6 @@
   flow_common_utils_loc_utils
   flow_parser
   flow_parser_utils_signature_builder
-  flow_parsing_options
   flow_typing_polarity
   hh_json)
  (preprocess

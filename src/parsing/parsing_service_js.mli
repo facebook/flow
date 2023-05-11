@@ -66,8 +66,8 @@ type results = {
 (* Use default values for the various settings that parse takes. Each one can be overridden
    individually *)
 val parse_with_defaults :
-  ?types_mode:Parsing_options.types_mode ->
-  ?use_strict:bool ->
+  ?force_types:bool ->
+  ?force_use_strict:bool ->
   reader:Mutator_state_reader.t ->
   Options.t ->
   MultiWorkerLwt.worker list option ->
@@ -77,9 +77,9 @@ val parse_with_defaults :
 val reparse_with_defaults :
   transaction:Transaction.t ->
   reader:Mutator_state_reader.t ->
-  ?types_mode:Parsing_options.types_mode ->
-  ?use_strict:bool ->
-  ?with_progress:bool ->
+  ?force_types:bool ->
+  ?force_use_strict:bool ->
+  with_progress:bool ->
   workers:MultiWorkerLwt.worker list option ->
   modified:FilenameSet.t ->
   Options.t ->
@@ -93,13 +93,13 @@ val ensure_parsed :
   FilenameSet.t Lwt.t
 
 val parse_package_json_file :
-  node_main_fields:string list -> string -> File_key.t -> (Package_json.t, parse_error) Result.t
+  options:Options.t -> string -> File_key.t -> (Package_json.t, parse_error) Result.t
 
 val parse_file_sig :
-  Parsing_options.t -> File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t -> File_sig.tolerable_t
+  Options.t -> File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t -> File_sig.tolerable_t
 
 val parse_type_sig :
-  Parsing_options.t ->
+  Options.t ->
   Docblock.t ->
   File_key.t ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->
@@ -109,8 +109,10 @@ val parse_type_sig :
 
 (* parse contents of a file *)
 val do_parse :
-  parsing_options:Parsing_options.t ->
+  options:Options.t ->
   docblock:Docblock.t ->
+  ?force_types:bool ->
+  ?force_use_strict:bool ->
   string ->
   (* contents of the file *)
   File_key.t ->

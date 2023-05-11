@@ -17,16 +17,9 @@ type parse_contents_return =
  * also benefit the other callers of `do_parse`. In the meantime, this function provides the
  * interface we would like here. *)
 let do_parse_wrapper ~options filename contents =
-  let types_mode =
-    if Options.all options then
-      Parsing_options.TypesAllowed
-    else
-      Parsing_options.TypesForbiddenByDefault
-  in
   let max_tokens = Options.max_header_tokens options in
   let (docblock_errors, docblock) = Docblock_parser.parse_docblock ~max_tokens filename contents in
-  let parsing_options = Parsing_options.make_parsing_options ~types_mode options in
-  let parse_result = Parsing_service_js.do_parse ~parsing_options ~docblock contents filename in
+  let parse_result = Parsing_service_js.do_parse ~options ~docblock contents filename in
   match parse_result with
   | Parsing_service_js.Parse_ok { ast; requires; file_sig; tolerable_errors; _ } ->
     Parsed

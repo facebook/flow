@@ -25,8 +25,7 @@ let is_incompatible_package_json ~options ~reader =
     match Sys_utils.cat_or_failed filename_str with
     | None -> Module_js.Incompatible Module_js.Unknown (* Failed to read package.json *)
     | Some content ->
-      let node_main_fields = Options.node_main_fields options in
-      let result = Parsing_service_js.parse_package_json_file ~node_main_fields content filename in
+      let result = Parsing_service_js.parse_package_json_file ~options content filename in
       Module_js.package_incompatible ~reader filename result
   in
   fun ~want ~sroot ~file_options f ->
