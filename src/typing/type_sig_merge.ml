@@ -1037,8 +1037,8 @@ and merge_annot tps infer_tps file = function
     let reason = Reason.(mk_annot_reason RInterfaceType loc) in
     let id = ALoc.id_none in
     merge_interface ~inline:true tps infer_tps file reason id def []
-  | MappedTypeAnnot { loc; source_type; property_type; key_tparam; variance; optional; homomorphic }
-    ->
+  | MappedTypeAnnot
+      { loc; source_type; property_type; key_tparam; variance; optional; inline_keyof } ->
     let source_type = merge tps infer_tps file source_type in
     let (tp, _, tps) = merge_tparam ~from_infer:false tps infer_tps file key_tparam in
     let property_type =
@@ -1066,7 +1066,7 @@ and merge_annot tps infer_tps file = function
     let reason = Reason.(mk_reason RObjectType loc) in
     let homomorphic =
       Type.(
-        if homomorphic then
+        if inline_keyof then
           Homomorphic
         else
           Unspecialized

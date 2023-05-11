@@ -5682,7 +5682,7 @@ let%expect_test "mapped_types" =
                 bound = None; default = None};
               variance = Polarity.Neutral;
               optional = Flow_ast.Type.Object.MappedType.NoOptionalFlag;
-              homomorphic = true})}
+              inline_keyof = true})}
     2. TypeAlias {id_loc = [3:12-14];
          name = "T2"; tparams = Mono;
          body =
@@ -5700,7 +5700,7 @@ let%expect_test "mapped_types" =
                 bound = None; default = None};
               variance = Polarity.Neutral;
               optional = Flow_ast.Type.Object.MappedType.Optional;
-              homomorphic = true})}
+              inline_keyof = true})}
     3. TypeAlias {id_loc = [4:12-14];
          name = "T3"; tparams = Mono;
          body =
@@ -5718,7 +5718,7 @@ let%expect_test "mapped_types" =
                 bound = None; default = None};
               variance = Polarity.Positive;
               optional = Flow_ast.Type.Object.MappedType.NoOptionalFlag;
-              homomorphic = true})}
+              inline_keyof = true})}
     4. TypeAlias {id_loc = [5:12-14];
          name = "T4"; tparams = Mono;
          body =
@@ -5736,7 +5736,7 @@ let%expect_test "mapped_types" =
                 bound = None; default = None};
               variance = Polarity.Negative;
               optional = Flow_ast.Type.Object.MappedType.Optional;
-              homomorphic = true})}
+              inline_keyof = true})}
     5. TypeAlias {id_loc = [6:12-14];
          name = "T5"; tparams = Mono;
          body =
@@ -5754,7 +5754,7 @@ let%expect_test "mapped_types" =
                 bound = None; default = None};
               variance = Polarity.Neutral;
               optional = Flow_ast.Type.Object.MappedType.NoOptionalFlag;
-              homomorphic = false})} |}]
+              inline_keyof = false})} |}]
 
 let%expect_test "mapped_types_invalid" =
   print_sig {|

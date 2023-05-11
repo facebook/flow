@@ -1542,7 +1542,7 @@ and object_type =
         (push_loc tbls name_loc, name)
       in
 
-      let (source_type, homomorphic) =
+      let (source_type, inline_keyof) =
         match source_type with
         | (_, Ast.Type.Keyof { Ast.Type.Keyof.argument; comments = _ }) ->
           (annot opts scope tbls xs argument, true)
@@ -1571,7 +1571,7 @@ and object_type =
              key_tparam;
              variance = polarity variance;
              optional;
-             homomorphic;
+             inline_keyof;
            }
         )
     | _ -> Annot (Any loc)
