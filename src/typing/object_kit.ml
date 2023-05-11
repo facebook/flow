@@ -70,10 +70,13 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
         )
     | t -> t
 
-  (* We use this function to transform a resolved UnionT into an object where all SingletonStrTs/StrTs
-   * are turned into keys and all other non-empty types are turned into indexers. This is how we support
-   * non-homomorphic mapped types, like
-   * {[key in 'a' | 'b' | number]: string}
+  (* We use this function to transform a resolved UnionT into a ((name * reason) list * Type.t),
+   * which represents a tuple of key names (with reasons for error messages) and an indexer to be
+   * used to create a new object. All SinlgetonStrTs/StrTs are turned into keys and all other
+   * non-empty types are turned into indexers. This is how we support non-homomorphic mapped types,
+   * like {[key in 'a' | 'b' | number]: string} and also how we support mapped types that use
+   * tparams with $Keys/keyof upper bounds:
+   * type Pick<O: {...}, Keys: $Keys<O>> = {[key in Keys]: O[key]}
    *
    * Note that we use the PreprocessKitT constraint to flatten the union. A non-homomorphic mapped
    * type *must not* operate over Unresolved tvar because additional keys received in the future
@@ -82,7 +85,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
    * these bugs in 100% of cases we'd need to make our EvalT machinery only operate over resolved
    * types.
    *)
-  let mapped_type_of_keys cx trace use_op reason ~keys =
+  let partition_keys_and_indexer cx trace use_op reason keys =
     let key_upper_bound_reason desc = mk_reason desc (loc_of_reason reason) in
     let str_t = StrT.make (key_upper_bound_reason RString) (bogus_trust ()) in
     let num_t = NumT.make (key_upper_bound_reason RNumber) (bogus_trust ()) in
@@ -97,18 +100,19 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
     let possible_types =
       Flow.possible_concrete_types (fun ident -> ConcretizeMappedTypeArgumentT ident) cx reason keys
     in
-    let (keys_with_reasons, indexers) =
-      possible_types
-      |> List.fold_left
-           (fun (keys, indexers) t ->
-             match t with
-             | DefT (r, _, StrT (Literal (_, name)))
-             | DefT (r, _, SingletonStrT name) ->
-               ((name, r) :: keys, indexers)
-             | DefT (_, _, EmptyT) -> (keys, indexers)
-             | _ -> (keys, t :: indexers))
-           ([], [])
-    in
+    possible_types
+    |> List.fold_left
+         (fun (keys, indexers) t ->
+           match t with
+           | DefT (r, _, StrT (Literal (_, name)))
+           | DefT (r, _, SingletonStrT name) ->
+             ((name, r) :: keys, indexers)
+           | DefT (_, _, EmptyT) -> (keys, indexers)
+           | _ -> (keys, t :: indexers))
+         ([], [])
+
+  let mapped_type_of_keys cx trace use_op reason ~keys =
+    let (keys_with_reasons, indexers) = partition_keys_and_indexer cx trace use_op reason keys in
     (* To go from a union to a MappedType we first build an object with all the keys we
      * extract from the union and create an object with all mixed values. Then we push it
      * through the mapped type machinery. The specific type we choose for the properties
@@ -147,7 +151,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
     let obj_reason = replace_desc_reason RObjectType reason in
     let slice = { Object.reason = obj_reason; props; flags; generics; interface } in
     fun ~property_type mapped_type_flags ->
-      Slice_utils.map_object property_type mapped_type_flags cx reason use_op slice
+      Slice_utils.map_object property_type mapped_type_flags cx reason use_op None slice
 
   let run =
     let open Object in
@@ -795,9 +799,18 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
     (**************)
     (* Object Map *)
     (**************)
-    let object_map prop_type mapped_type_flags _selected_keys_opt cx trace use_op reason x tout =
+    let object_map prop_type mapped_type_flags selected_keys_opt cx trace use_op reason x tout =
+      let selected_keys =
+        match selected_keys_opt with
+        | Some keys -> Some (partition_keys_and_indexer cx trace use_op reason keys)
+        | None -> None
+      in
       let t =
-        match Nel.map (Slice_utils.map_object prop_type mapped_type_flags cx reason use_op) x with
+        match
+          Nel.map
+            (Slice_utils.map_object prop_type mapped_type_flags cx reason use_op selected_keys)
+            x
+        with
         | (t, []) -> t
         | (t0, t1 :: ts) -> UnionT (reason, UnionRep.make t0 t1 ts)
       in

@@ -1588,6 +1588,24 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         in
         let (homomorphic, source_type, source_ast) =
           match source_type with
+          | ( _,
+              T.Generic
+                {
+                  T.Generic.id = T.Generic.Identifier.Unqualified (_, { Ast.Identifier.name; _ });
+                  _;
+                }
+            ) ->
+            (match Subst_name.Map.find_opt (Subst_name.Name name) tparams_map with
+            | Some (GenericT { bound = KeysT (_, obj_t); _ }) ->
+              let (((_, selected_keys), _) as source_ast) =
+                convert cx tparams_map infer_tparams_map source_type
+              in
+              (SemiHomomorphic selected_keys, obj_t, source_ast)
+            | _ ->
+              let (((_, source_type), _) as source_ast) =
+                convert cx tparams_map infer_tparams_map source_type
+              in
+              (Unspecialized, source_type, source_ast))
           | (keyof_loc, T.Keyof { T.Keyof.argument; comments = keyof_comments }) ->
             let (((_, source_type), _) as source_ast) =
               convert cx tparams_map infer_tparams_map argument

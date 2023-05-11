@@ -1397,6 +1397,7 @@ let map_object
     cx
     reason
     use_op
+    selected_keys_and_indexers
     { Object.reason = _; props; flags; generics = _; interface = _ } =
   let mk_prop_type key_t prop_optional =
     (* We persist the original use_op here so that errors involving the typeapp are positioned
@@ -1423,28 +1424,69 @@ let map_object
     | _ -> false
   in
   let props =
-    NameUtils.Map.mapi
-      (* Methods have no special consideration. There is no guarantee that the prop inserted by
-       * the mapped type is going to continue to be a function, so we transform it into a regular
-       * field. *)
-        (fun key { Object.prop_t; is_own = _; is_method = _; polarity = prop_polarity; key_loc } ->
-        let key_loc =
-          match key_loc with
-          | None -> loc_of_reason (reason_of_t prop_t)
-          | Some loc -> loc
-        in
-        let key_t = DefT (mk_reason (RStringLit key) key_loc, bogus_trust (), SingletonStrT key) in
-        let prop_optional = is_prop_optional prop_t in
-        let variance = mk_variance variance prop_polarity in
-        Field (None, mk_prop_type key_t prop_optional, variance))
-      props
+    let keys =
+      match selected_keys_and_indexers with
+      | Some (keys_with_reason, _) -> List.map fst keys_with_reason
+      | _ -> NameUtils.Map.keys props
+    in
+    keys
+    |> List.fold_left
+         (fun map key ->
+           match NameUtils.Map.find_opt key props with
+           | None ->
+             (* This is possible if a key is passed that does not actually conform to the
+              * $Keys/keyof upper bound. That already results in an error, so we refuse to evaluate
+              * the mapped type and signal to return `any` here *)
+             let field = Field (None, AnyT.why (AnyError None) reason, Polarity.Neutral) in
+             NameUtils.Map.add key field map
+           (* Methods have no special consideration. There is no guarantee that the prop inserted by
+            * the mapped type is going to continue to be a function, so we transform it into a regular
+            * field. *)
+           | Some { Object.prop_t; is_own = _; is_method = _; polarity = prop_polarity; key_loc } ->
+             let key_loc =
+               match key_loc with
+               | None -> loc_of_reason (reason_of_t prop_t)
+               | Some loc -> loc
+             in
+             let key_t =
+               DefT (mk_reason (RStringLit key) key_loc, bogus_trust (), SingletonStrT key)
+             in
+             let prop_optional = is_prop_optional prop_t in
+             let variance = mk_variance variance prop_polarity in
+             let field = Field (None, mk_prop_type key_t prop_optional, variance) in
+             NameUtils.Map.add key field map)
+         NameUtils.Map.empty
   in
-  let call = None in
-  let id = Context.generate_property_map cx props in
-  let proto = ObjProtoT reason in
-  let flags =
-    match flags.obj_kind with
-    | Indexed dict_t ->
+  let obj_kind =
+    match (selected_keys_and_indexers, flags.obj_kind) with
+    | (Some (_, []), _) -> Exact
+    | (Some (_, xs), Indexed dict_t) ->
+      let dict_optional = is_prop_optional dict_t.value in
+      let dict_key = union_of_ts reason xs in
+      let dict_t' =
+        {
+          dict_t with
+          key = dict_key;
+          value = mk_prop_type dict_t.key dict_optional;
+          dict_polarity = mk_variance variance dict_t.dict_polarity;
+        }
+      in
+      Indexed dict_t'
+    | (Some (_, xs), _) ->
+      let key = union_of_ts reason xs in
+      let dict =
+        {
+          dict_name = None;
+          key;
+          (* Similar to the missing prop case above, this is only possible when a semi-homomorphic
+           * mapped type violates the constraint on the key type. We don't attempt to evaluate the
+           * prop because it will likely lead to an error *)
+          value = AnyT.why (AnyError None) reason;
+          dict_polarity = Polarity.Neutral;
+        }
+      in
+      Indexed dict
+    | (None, Indexed dict_t) ->
       let dict_optional = is_prop_optional dict_t.value in
       let dict_t' =
         {
@@ -1453,9 +1495,13 @@ let map_object
           dict_polarity = mk_variance variance dict_t.dict_polarity;
         }
       in
-      { flags with obj_kind = Indexed dict_t' }
-    | _ -> flags
+      Indexed dict_t'
+    | (None, _) -> flags.obj_kind
   in
+  let call = None in
+  let id = Context.generate_property_map cx props in
+  let proto = ObjProtoT reason in
+  let flags = { flags with obj_kind } in
   let t = mk_object_def_type ~reason ~flags ~call id proto in
   if flags.obj_kind = Exact then
     ExactT (reason, t)

@@ -853,6 +853,94 @@ References:
                           ^^^^^ [3]
 
 
+Error ----------------------------------------------------------------------------------------- semi_homomorphic.js:11:5
+
+Cannot assign `3` to `a.foo` because property `foo` is not writable. [cannot-write]
+
+   11|   a.foo = 3; // ERROR
+           ^^^
+
+
+Error ---------------------------------------------------------------------------------------- semi_homomorphic.js:13:28
+
+Cannot instantiate `Semi` because property `bar` is missing in `O` [1] in type argument `Keys`. [prop-missing]
+
+   semi_homomorphic.js:13:28
+   13|   type MappedBad = Semi<O, 'bar'>; // ERROR HERE
+                                  ^^^^^
+
+References:
+   semi_homomorphic.js:13:25
+   13|   type MappedBad = Semi<O, 'bar'>; // ERROR HERE
+                               ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- semi_homomorphic.js:26:4
+
+Cannot cast `withIndexer` to object type because indexed `Semi` [1] is incompatible with exact object type [2].
+[incompatible-indexer]
+
+   semi_homomorphic.js:26:4
+   26|   (withIndexer: {foo: number}); // ERROR, missing indexer
+          ^^^^^^^^^^^
+
+References:
+   semi_homomorphic.js:24:30
+   24|   declare const withIndexer: MappedWithIndexer;
+                                    ^^^^^^^^^^^^^^^^^ [1]
+   semi_homomorphic.js:26:17
+   26|   (withIndexer: {foo: number}); // ERROR, missing indexer
+                       ^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- semi_homomorphic.js:34:4
+
+Cannot cast `p` to `MappedWithoutIndexer` because indexed `P` [1] is incompatible with exact `Semi` [2].
+[incompatible-indexer]
+
+   semi_homomorphic.js:34:4
+   34|   (p: MappedWithoutIndexer); // ERROR
+          ^
+
+References:
+   semi_homomorphic.js:33:20
+   33|   declare const p: P;
+                          ^ [1]
+   semi_homomorphic.js:34:7
+   34|   (p: MappedWithoutIndexer); // ERROR
+             ^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- semi_homomorphic.js:38:29
+
+Cannot instantiate `Semi` because number [1] is incompatible with key set [2] in type argument `Keys`.
+[incompatible-type-arg]
+
+   semi_homomorphic.js:38:29
+   38|   type IndexedBad = Semi<P, number>; // ERROR
+                                   ^^^^^^ [1]
+
+References:
+   semi_homomorphic.js:1:27
+    1| type Semi<O: {...}, Keys: $Keys<O>> = {
+                                 ^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- semi_homomorphic.js:44:32
+
+Cannot instantiate `Semi` because number [1] is incompatible with key set [2] in type argument `Keys`.
+[incompatible-type-arg]
+
+   semi_homomorphic.js:44:32
+   44|   type NoIndexerBad = Semi<{}, number>; // ERROR
+                                      ^^^^^^ [1]
+
+References:
+   semi_homomorphic.js:1:27
+    1| type Semi<O: {...}, Keys: $Keys<O>> = {
+                                 ^^^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- test.js:26:4
 
 Cannot cast `badKey` to `Mapped` because property `bar` is missing in `Mapped` [1] but exists in object type [2].
@@ -1066,4 +1154,4 @@ References:
 
 
 
-Found 73 errors
+Found 79 errors
