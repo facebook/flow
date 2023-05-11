@@ -20,6 +20,18 @@
     padding: 1rem;
 }
 
+.resetBanner {
+    position: absolute;
+    display: flex;
+    justify-content: space-between;
+    z-index: 1;
+    width: 100%;
+    padding: 1rem;
+    background-color: white;
+    border: 1px solid #ddd;
+    bottom: 0;
+}
+
 .tryEditor {
     display: flex;
     flex: 1;

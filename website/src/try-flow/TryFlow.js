@@ -30,13 +30,13 @@ function foo(x: ?number): string {
 }
 `;
 
-type InitialStateFromStorageAndURI = {
+type InitialStateFromHash = {
   code: string,
   config: ?{[string]: mixed},
   version: ?string,
 };
 
-function getHashedValue(hash: ?string): ?InitialStateFromStorageAndURI {
+function getHashedValue(hash: ?string): ?InitialStateFromHash {
   if (hash == null) return null;
   if (hash[0] !== '#' || hash.length < 2) return null;
   const version = hash.slice(1, 2);
@@ -77,13 +77,12 @@ function setHashedValue(
   localStorage.setItem(TRY_FLOW_LAST_CONTENT_STORAGE_KEY, location.hash);
 }
 
-const initialStateFromStorageAndURI: InitialStateFromStorageAndURI =
-  getHashedValue(location.hash) ||
-    getHashedValue(localStorage.getItem(TRY_FLOW_LAST_CONTENT_STORAGE_KEY)) || {
-      code: DEFAULT_FLOW_PROGRAM,
-      version: null,
-      config: null,
-    };
+const initialStateFromURI = getHashedValue(location.hash);
+const initialState: InitialStateFromHash = initialStateFromURI || {
+  code: DEFAULT_FLOW_PROGRAM,
+  version: null,
+  config: null,
+};
 
 export default function TryFlow({
   defaultFlowVersion,
@@ -92,8 +91,13 @@ export default function TryFlow({
   defaultFlowVersion: string,
   flowVersions: $ReadOnlyArray<string>,
 }): MixedElement {
+  const [initialStateFromStorage, setInitialStateFromStorage] = useState(
+    initialStateFromURI == null
+      ? getHashedValue(localStorage.getItem(TRY_FLOW_LAST_CONTENT_STORAGE_KEY))
+      : null,
+  );
   const [flowVersion, setFlowVersion] = useState(
-    initialStateFromStorageAndURI.version || defaultFlowVersion,
+    initialState.version || defaultFlowVersion,
   );
   const [errors, setErrors] = useState([]);
   const [internalError, setInternalError] = useState('');
@@ -110,7 +114,7 @@ export default function TryFlow({
       setFlowService(existing =>
         existing == null
           ? // Only the initial init will use the config encoded in the starting URI
-            f.withUpdatedConfig(initialStateFromStorageAndURI.config)
+            f.withUpdatedConfig(initialState.config)
           : f,
       );
       setLoading(false);
@@ -120,6 +124,20 @@ export default function TryFlow({
   useEffect(() => {
     forceRecheck();
   }, [flowService]);
+
+  function resetFromStorage() {
+    const model = monaco.editor.getModels()[0];
+    if (initialStateFromStorage != null && model != null) {
+      setInitialStateFromStorage(null);
+      setFlowVersion(initialStateFromStorage.version || defaultFlowVersion);
+      model.setValue(initialStateFromStorage.code);
+      setFlowService(
+        existing =>
+          existing?.withUpdatedConfig(initialStateFromStorage.config) ??
+          existing,
+      );
+    }
+  }
 
   function forceRecheck() {
     setTypeAtPosFunction(flowService);
@@ -201,6 +219,21 @@ export default function TryFlow({
               Config
             </li>
           </ul>
+          {initialStateFromStorage && (
+            <div className={styles.resetBanner}>
+              <span>Do you want to recover from the last saved state?</span>
+              <div>
+                <button
+                  style={{marginRight: '0.5rem'}}
+                  onClick={resetFromStorage}>
+                  Recover
+                </button>
+                <button onClick={() => setInitialStateFromStorage(null)}>
+                  Ignore
+                </button>
+              </div>
+            </div>
+          )}
           <div
             style={{display: activeToolbarTab === 'config' ? 'block' : 'none'}}
             className={styles.tryEditorConfig}>
@@ -212,7 +245,7 @@ export default function TryFlow({
             />
           </div>
           <Editor
-            defaultValue={initialStateFromStorageAndURI.code}
+            defaultValue={initialState.code}
             defaultLanguage="flow"
             theme="vs-light"
             height="calc(100vh - var(--ifm-navbar-height) - 40px)"
