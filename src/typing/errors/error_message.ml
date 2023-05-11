@@ -652,7 +652,6 @@ and 'loc unsupported_syntax =
   | PredicateDeclarationAnonymousParameters
   | PredicateInvalidBody
   | PredicateInvalidParameter of 'loc virtual_reason
-  | PredicateFunctionAbstractReturnType
   | PredicateVoidReturn
   | MultipleIndexers
   | MultipleProtos
@@ -765,12 +764,11 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       | CatchParameterDeclaration | DestructuringObjectPropertyLiteralNonString
       | DestructuringExpressionPattern | JSXTypeArgs | MappedType
       | PredicateDeclarationForImplementation | PredicateDeclarationWithoutExpression
-      | PredicateDeclarationAnonymousParameters | PredicateInvalidBody
-      | PredicateFunctionAbstractReturnType | PredicateVoidReturn | MultipleIndexers
-      | MultipleProtos | ExplicitCallAfterProto | ExplicitProtoAfterCall | SpreadArgument
-      | ImportDynamicArgument | IllegalName | TupleLabeledElement | TupleSpreadElement
-      | UserDefinedTypeGuards | UnsupportedInternalSlot _ | AnnotationInsideDestructuring
-      | WithStatement ) as u ->
+      | PredicateDeclarationAnonymousParameters | PredicateInvalidBody | PredicateVoidReturn
+      | MultipleIndexers | MultipleProtos | ExplicitCallAfterProto | ExplicitProtoAfterCall
+      | SpreadArgument | ImportDynamicArgument | IllegalName | TupleLabeledElement
+      | TupleSpreadElement | UserDefinedTypeGuards | UnsupportedInternalSlot _
+      | AnnotationInsideDestructuring | WithStatement ) as u ->
       u
   in
   function
@@ -2786,11 +2784,6 @@ let friendly_message_of_msg loc_of_aloc msg =
           text " in predicate function. Predicate functions cannot ";
           text "have destructured or spread parameters. This predicate annotation will ";
           text "be ignored.";
-        ]
-      | PredicateFunctionAbstractReturnType ->
-        [
-          text "The return type of a predicate function cannot contain a generic type. ";
-          text "The function predicate will be ignored here.";
         ]
       | PredicateVoidReturn -> [text "Predicate functions need to return non-void."]
       | MultipleIndexers -> [text "Multiple indexers are not supported."]

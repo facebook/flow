@@ -44,3 +44,25 @@ function underconstrained() {
     (x: mixed);
   }
 }
+
+function poly_id() {
+  function id<X>(x: X): X %checks {
+    return x;
+  }
+  declare var maybeObj: ?{};
+  if (id(maybeObj)) {
+    (maybeObj: {}); // okay
+  } else {
+    (maybeObj: {}); // error null or void ~> {}
+  }
+}
+
+function poly_eval() {
+  function truthyStr(x: string): $Call<<V>(V) => V, string> %checks {
+    return x;
+  }
+  declare var str: string;
+  if (!truthyStr(str)) {
+    (str: ''); // okay
+  }
+}

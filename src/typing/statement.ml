@@ -7236,28 +7236,6 @@ module Make
       in
       fparams
     in
-    let free_bound_ts cx t =
-      let finder =
-        object (_self)
-          inherit [Loc_collections.ALocSet.t] Type_visitor.t as super
-
-          val mutable tparams : Subst_name.t list = []
-
-          method! type_ cx pole acc t =
-            match t with
-            | DefT (_, _, PolyT { tparams = tps; _ }) ->
-              let old_tparams = tparams in
-              Nel.iter (fun tp -> tparams <- tp.name :: tparams) tps;
-              let acc = super#type_ cx pole acc t in
-              tparams <- old_tparams;
-              acc
-            | GenericT { name; _ } when not (List.exists (fun x -> x = name) tparams) ->
-              Loc_collections.ALocSet.add (TypeUtil.loc_of_t t) acc
-            | _ -> super#type_ cx pole acc t
-        end
-      in
-      finder#type_ cx Polarity.Neutral Loc_collections.ALocSet.empty t
-    in
     fun cx
         ~required_this_param_type
         ~require_return_annot
@@ -7341,21 +7319,7 @@ module Make
           let open Ast.Type.Predicate in
           match (predicate, kind) with
           | (Some ((_, { kind = Ast.Type.Predicate.Inferred; _ }) as pred), Func.Predicate _) ->
-            let bounds =
-              free_bound_ts cx (type_t_of_annotated_or_inferred return_annotated_or_inferred)
-            in
-            if Loc_collections.ALocSet.is_empty bounds then
-              (return_annotated_or_inferred, Some pred)
-            else
-              let () =
-                Loc_collections.ALocSet.iter
-                  (fun loc ->
-                    Flow_js.add_output
-                      cx
-                      Error_message.(EUnsupportedSyntax (loc, PredicateFunctionAbstractReturnType)))
-                  bounds
-              in
-              (return_annotated_or_inferred, Some (Tast_utils.error_mapper#predicate pred))
+            (return_annotated_or_inferred, Some pred)
           | (Some ((loc, { kind = Declared (expr_loc, _); comments = _ }) as pred), _) ->
             let (annotated_or_inferred, _) =
               Anno.mk_type_annotation cx tparams_map ret_reason (Ast.Type.Missing loc)

@@ -101,5 +101,23 @@ References:
              ^^^^^^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- poly.js:56:6
 
-Found 6 errors
+Cannot cast `maybeObj` to object type because null or undefined [1] is incompatible with object type [2].
+[incompatible-cast]
+
+   poly.js:56:6
+   56|     (maybeObj: {}); // error null or void ~> {}
+            ^^^^^^^^
+
+References:
+   poly.js:52:25
+   52|   declare var maybeObj: ?{};
+                               ^^^ [1]
+   poly.js:56:16
+   56|     (maybeObj: {}); // error null or void ~> {}
+                      ^^ [2]
+
+
+
+Found 7 errors
