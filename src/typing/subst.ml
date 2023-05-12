@@ -48,25 +48,33 @@ let visitor =
         { free; bound }
       | _ -> super#type_ cx pole { bound; free } t
 
+    method private with_distributive_tparam_name { bound; free } name f =
+      let orig_bound = bound in
+      let bound =
+        match name with
+        | None -> bound
+        | Some n -> Subst_name.Set.add n bound
+      in
+      let { bound = _; free } = f { bound; free } in
+      { bound = orig_bound; free }
+
     method! destructor cx { bound; free } t =
       match t with
       | ConditionalType { distributive_tparam_name; infer_tparams; extends_t; true_t; false_t } ->
-        let orig_bound = bound in
-        let pole = Polarity.Neutral in
-        let bound =
-          match distributive_tparam_name with
-          | None -> bound
-          | Some n -> Subst_name.Set.add n bound
-        in
-        let { bound; free } = self#type_ cx pole { bound; free } false_t in
-        let { bound; free } =
-          Base.List.fold infer_tparams ~init:{ bound; free } ~f:(fun { bound; free } tp ->
-              self#type_param cx pole { free; bound = Subst_name.Set.add tp.name bound } tp
-          )
-        in
-        let { bound; free } = self#type_ cx pole { bound; free } extends_t in
-        let { bound = _; free } = self#type_ cx pole { bound; free } true_t in
-        { bound = orig_bound; free }
+        self#with_distributive_tparam_name
+          { bound; free }
+          distributive_tparam_name
+          (fun { free; bound } ->
+            let pole = Polarity.Neutral in
+            let { bound; free } = self#type_ cx pole { bound; free } false_t in
+            let { bound; free } =
+              Base.List.fold infer_tparams ~init:{ bound; free } ~f:(fun { bound; free } tp ->
+                  self#type_param cx pole { free; bound = Subst_name.Set.add tp.name bound } tp
+              )
+            in
+            let { bound; free } = self#type_ cx pole { bound; free } extends_t in
+            self#type_ cx pole { bound; free } true_t
+        )
       | _ -> super#destructor cx { bound; free } t
   end
 
@@ -311,16 +319,19 @@ let substituter =
       else
         { t' with reachable_targs }
 
+    method private distributive_tparam_name name map =
+      match name with
+      | None -> (name, map)
+      | Some name ->
+        let (name, map) = avoid_capture map name in
+        (Some name, map)
+
     method! destructor cx map_cx t =
       let (map, _, _) = map_cx in
       match t with
       | ConditionalType { distributive_tparam_name; infer_tparams; extends_t; true_t; false_t } ->
         let (distributive_tparam_name, map) =
-          match distributive_tparam_name with
-          | None -> (distributive_tparam_name, map)
-          | Some name ->
-            let (name, map) = avoid_capture map name in
-            (Some name, map)
+          self#distributive_tparam_name distributive_tparam_name map
         in
         let false_t' = self#type_ cx (map, false, None) false_t in
         let (tparams_rev, map, changed) =
