@@ -163,4 +163,14 @@ val possible_concrete_types_for_hint : Context.t -> Reason.reason -> Type.t -> T
 
 val resolve_id : Context.t -> int -> Type.t -> unit
 
+val substitute_mapped_type_distributive_tparams :
+  Context.t ->
+  Type.trace ->
+  use_op:Type.use_op ->
+  Subst_name.t option ->
+  property_type:Type.t ->
+  Type.mapped_type_homomorphic_flag ->
+  source:Type.t ->
+  Type.t * Type.mapped_type_homomorphic_flag
+
 module FlowJs : Flow_common.S

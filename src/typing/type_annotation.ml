@@ -277,6 +277,21 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       (Some subst_name, tparams_map)
     | None -> (None, tparams_map)
 
+  let use_distributive_tparam_name_from_ast cx ast_type tparams_map =
+    let open Ast.Type in
+    match ast_type with
+    | ( _,
+        Generic
+          {
+            Generic.id =
+              Generic.Identifier.Unqualified (name_loc, { Ast.Identifier.name; comments = _ });
+            targs = None;
+            comments = _;
+          }
+      ) ->
+      use_distributive_tparam_name cx name name_loc tparams_map
+    | _ -> (None, tparams_map)
+
   (**********************************)
   (* Transform annotations to types *)
   (**********************************)
@@ -442,18 +457,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       as t_ast ->
       if Context.conditional_type cx then
         let (distributive_tparam_name, tparams_map) =
-          match check_type with
-          | ( _,
-              Generic
-                {
-                  Generic.id =
-                    Generic.Identifier.Unqualified (name_loc, { Ast.Identifier.name; comments = _ });
-                  targs = None;
-                  comments = _;
-                }
-            ) ->
-            use_distributive_tparam_name cx name name_loc tparams_map
-          | _ -> (None, tparams_map)
+          use_distributive_tparam_name_from_ast cx check_type tparams_map
         in
         let (((_, check_t), _) as check_type) =
           convert cx tparams_map infer_tparams_map check_type
@@ -1590,7 +1594,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
             | NoOptionalFlag -> KeepOptionality
           )
         in
-        let (homomorphic, source_type, source_ast) =
+        let (homomorphic, source_type, source_ast, distributive_tparam_name, tparams_map) =
           match source_type with
           | ( _,
               T.Generic
@@ -1604,12 +1608,27 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               let (((_, selected_keys), _) as source_ast) =
                 convert cx tparams_map infer_tparams_map source_type
               in
-              (SemiHomomorphic selected_keys, obj_t, source_ast)
+              let (distributive_tparam_name, tparams_map) =
+                match obj_t with
+                | GenericT { name; reason; _ } ->
+                  use_distributive_tparam_name
+                    cx
+                    (Subst_name.string_of_subst_name name)
+                    (def_loc_of_reason reason)
+                    tparams_map
+                | _ -> (None, tparams_map)
+              in
+              ( SemiHomomorphic selected_keys,
+                obj_t,
+                source_ast,
+                distributive_tparam_name,
+                tparams_map
+              )
             | _ ->
               let (((_, source_type), _) as source_ast) =
                 convert cx tparams_map infer_tparams_map source_type
               in
-              (Unspecialized, source_type, source_ast))
+              (Unspecialized, source_type, source_ast, None, tparams_map))
           | (keyof_loc, T.Keyof { T.Keyof.argument; comments = keyof_comments }) ->
             let (((_, source_type), _) as source_ast) =
               convert cx tparams_map infer_tparams_map argument
@@ -1619,12 +1638,15 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                 T.Keyof { T.Keyof.argument = source_ast; comments = keyof_comments }
               )
             in
-            (Homomorphic, source_type, source_ast)
+            let (distributive_tparam_name, tparams_map) =
+              use_distributive_tparam_name_from_ast cx argument tparams_map
+            in
+            (Homomorphic, source_type, source_ast, distributive_tparam_name, tparams_map)
           | t ->
             let (((_, source_type), _) as source_ast) =
               convert cx tparams_map infer_tparams_map t
             in
-            (Unspecialized, source_type, source_ast)
+            (Unspecialized, source_type, source_ast, None, tparams_map)
         in
         (match mapped_type_optionality with
         | MakeOptional
@@ -1656,7 +1678,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                     property_type = poly_prop_type;
                     mapped_type_flags =
                       { optional = mapped_type_optionality; variance = polarity cx variance };
-                    distributive_tparam_name = None;
+                    distributive_tparam_name;
                   }
               )
           in

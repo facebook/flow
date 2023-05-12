@@ -1,3 +1,71 @@
+Error -------------------------------------------------------------------------------------------- distributivity.js:8:4
+
+Cannot cast `o` to union type because: [incompatible-cast]
+ - Either number [1] is incompatible with empty [2] in property `bar`.
+ - Or property `bar` is missing in object type [3] but exists in `Homomorphic` [4].
+
+   distributivity.js:8:4
+   8|   (o: {foo: empty} | {bar: empty}); // ERROR x2
+         ^
+
+References:
+   distributivity.js:5:51
+   5|   type Homomorphic<O: {...}> = {[key in keyof O]: O[key]};
+                                                        ^^^^^^ [1]
+   distributivity.js:8:28
+   8|   (o: {foo: empty} | {bar: empty}); // ERROR x2
+                                 ^^^^^ [2]
+   distributivity.js:8:7
+   8|   (o: {foo: empty} | {bar: empty}); // ERROR x2
+            ^^^^^^^^^^^^ [3]
+   distributivity.js:6:20
+   6|   declare const o: Homomorphic<{foo: number} | {bar: number}>; // OK
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Error -------------------------------------------------------------------------------------------- distributivity.js:8:4
+
+Cannot cast `o` to union type because: [incompatible-cast]
+ - Either number [1] is incompatible with empty [2] in property `foo`.
+ - Or property `foo` is missing in object type [3] but exists in `Homomorphic` [4].
+
+   distributivity.js:8:4
+   8|   (o: {foo: empty} | {bar: empty}); // ERROR x2
+         ^
+
+References:
+   distributivity.js:5:51
+   5|   type Homomorphic<O: {...}> = {[key in keyof O]: O[key]};
+                                                        ^^^^^^ [1]
+   distributivity.js:8:13
+   8|   (o: {foo: empty} | {bar: empty}); // ERROR x2
+                  ^^^^^ [2]
+   distributivity.js:8:22
+   8|   (o: {foo: empty} | {bar: empty}); // ERROR x2
+                           ^^^^^^^^^^^^ [3]
+   distributivity.js:6:20
+   6|   declare const o: Homomorphic<{foo: number} | {bar: number}>; // OK
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------- distributivity.js:15:4
+
+Cannot cast `o` to object type because property `foo` is missing in object type [1] but exists in `SemiHomomorphic` [2].
+[prop-missing]
+
+   distributivity.js:15:4
+   15|   (o: {}); // ERROR
+          ^
+
+References:
+   distributivity.js:15:7
+   15|   (o: {}); // ERROR
+             ^^ [1]
+   distributivity.js:13:20
+   13|   declare const o: SemiHomomorphic<{foo: number, bar: number} | {foo: string, baz: number}, 'foo'>;
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- import.js:18:4
 
 Cannot cast `mapped` to object type because string [1] is incompatible with empty [2] in property `bar`.
@@ -1172,4 +1240,7 @@ References:
 
 
 
-Found 80 errors
+Found 83 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

@@ -75,6 +75,17 @@ let visitor =
             let { bound; free } = self#type_ cx pole { bound; free } extends_t in
             self#type_ cx pole { bound; free } true_t
         )
+      | MappedType { distributive_tparam_name; property_type; mapped_type_flags = _; homomorphic }
+        ->
+        self#with_distributive_tparam_name { bound; free } distributive_tparam_name (fun acc ->
+            let pole_TODO = Polarity.Neutral in
+            let acc = self#type_ cx pole_TODO acc property_type in
+            match homomorphic with
+            | SemiHomomorphic t -> self#type_ cx pole_TODO acc t
+            | Homomorphic
+            | Unspecialized ->
+              acc
+        )
       | _ -> super#destructor cx { bound; free } t
   end
 
@@ -357,6 +368,33 @@ let substituter =
             }
         else
           t
+      | MappedType { distributive_tparam_name; property_type; mapped_type_flags; homomorphic } ->
+        let (distributive_tparam_name, map) =
+          self#distributive_tparam_name distributive_tparam_name map
+        in
+        let property_type' = self#type_ cx (map, false, None) property_type in
+        let homomorphic' =
+          match homomorphic with
+          | SemiHomomorphic t ->
+            let t' = self#type_ cx (map, false, None) t in
+            if t' == t then
+              homomorphic
+            else
+              SemiHomomorphic t'
+          | Homomorphic
+          | Unspecialized ->
+            homomorphic
+        in
+        if property_type' == property_type && homomorphic' == homomorphic then
+          t
+        else
+          MappedType
+            {
+              distributive_tparam_name;
+              property_type = property_type';
+              mapped_type_flags;
+              homomorphic = homomorphic';
+            }
       | _ -> super#destructor cx map_cx t
 
     (* The EvalT case is the only case that calls this function. We've explicitly overrided it

@@ -6919,8 +6919,18 @@ struct
             | ReactConfigType default_props ->
               ReactKitT (use_op, reason, React.GetConfigType (default_props, OpenT tout))
             | IdxUnwrapType -> IdxUnwrap (reason, OpenT tout)
-            | MappedType
-                { property_type; mapped_type_flags; homomorphic; distributive_tparam_name = _ } ->
+            | MappedType { property_type; mapped_type_flags; homomorphic; distributive_tparam_name }
+              ->
+              let (property_type, homomorphic) =
+                substitute_mapped_type_distributive_tparams
+                  cx
+                  trace
+                  ~use_op
+                  distributive_tparam_name
+                  ~property_type
+                  homomorphic
+                  ~source:t
+              in
               let selected_keys_opt =
                 match homomorphic with
                 | SemiHomomorphic t -> Some t
@@ -9555,6 +9565,21 @@ struct
       let loc = loc_of_t arr in
       add_output cx ~trace Error_message.(EUnsupportedSyntax (loc, SpreadArgument));
       AnyT.error reason
+
+  and substitute_mapped_type_distributive_tparams
+      cx trace ~use_op distributive_tparam_name ~property_type homomorphic ~source =
+    match distributive_tparam_name with
+    | None -> (property_type, homomorphic)
+    | Some name ->
+      let subst = mk_distributive_tparam_subst_fn cx trace ~use_op name source in
+      let homomorphic' =
+        match homomorphic with
+        | SemiHomomorphic t -> SemiHomomorphic (subst (reason_of_t t) t)
+        | Homomorphic
+        | Unspecialized ->
+          homomorphic
+      in
+      (subst (reason_of_t property_type) property_type, homomorphic')
 
   and set_builtin cx ?trace x t =
     let builtins = Context.builtins cx in

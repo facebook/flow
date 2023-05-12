@@ -1614,6 +1614,7 @@ end = struct
     and type_destructor_unevaluated ~env t d =
       let env =
         match d with
+        | T.MappedType { distributive_tparam_name = Some name; _ }
         | T.ConditionalType { distributive_tparam_name = Some name; _ } ->
           let reason_tparam = TypeUtil.reason_of_t t in
           {
@@ -1699,8 +1700,18 @@ end = struct
       | T.IdxUnwrapType -> return (Ty.Utility (Ty.IdxUnwrapType ty))
       | T.RestType ((T.Object.Rest.Omit | T.Object.Rest.ReactConfigMerge _), _) as d ->
         terr ~kind:BadEvalT ~msg:(Debug_js.string_of_destructor d) None
-      | T.MappedType { property_type; mapped_type_flags; homomorphic; distributive_tparam_name = _ }
-        ->
+      | T.MappedType { property_type; mapped_type_flags; homomorphic; distributive_tparam_name } ->
+        let (property_type, homomorphic) =
+          let trace = Trace.dummy_trace in
+          Flow_js.substitute_mapped_type_distributive_tparams
+            (Env.get_cx env)
+            trace
+            ~use_op:Type.unknown_use
+            distributive_tparam_name
+            ~property_type
+            homomorphic
+            ~source:t
+        in
         mapped_type ~env ty property_type mapped_type_flags homomorphic
       | T.LatentPred (p, i) ->
         let%bind t' = type__ ~env t in
