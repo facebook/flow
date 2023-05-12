@@ -2071,7 +2071,7 @@ let get_file_artifacts ~options ~client ~profiling ~env pos :
       (Error err_str, Some (Hh_json.JSON_Object json_props))
     | Ok file_artifacts -> (Ok (Some (file_artifacts, file_key)), None))
 
-let find_local_references ~reader ~options ~file_artifacts file_key pos :
+let find_references ~reader ~options ~file_artifacts file_key pos :
     (FindRefsTypes.find_refs_found option, string) result * Hh_json.json option =
   let (parse_artifacts, typecheck_artifacts) = file_artifacts in
   let (line, col) = Flow_lsp_conversions.position_of_document_position pos in
@@ -2103,18 +2103,18 @@ let find_local_references ~reader ~options ~file_artifacts file_key pos :
   | Ok None -> (Ok None, extra_data)
   | Error s -> (Error s, extra_data)
 
-let map_local_refs ~reader ~options ~client ~profiling ~env ~f text_doc_position =
+let map_find_references_results ~reader ~options ~client ~profiling ~env ~f text_doc_position =
   let (file_artifacts_opt, extra_parse_data) =
     get_file_artifacts ~options ~client ~profiling ~env text_doc_position
   in
   match file_artifacts_opt with
   | Ok (Some (file_artifacts, file_key)) ->
     let (local_refs, extra_data) =
-      find_local_references ~reader ~options ~file_artifacts file_key text_doc_position
+      find_references ~reader ~options ~file_artifacts file_key text_doc_position
     in
     let mapped_refs =
       match local_refs with
-      | Ok (Some (_name, refs)) -> Ok (Base.List.map ~f refs)
+      | Ok (Some (_name, refs)) -> Ok (Base.List.filter_map ~f refs)
       | Ok None ->
         (* e.g. if it was requested on a place that's not even an identifier *)
         Ok []
@@ -2127,14 +2127,16 @@ let map_local_refs ~reader ~options ~client ~profiling ~env ~f text_doc_position
 let handle_persistent_find_references ~reader ~options ~id ~params ~metadata ~client ~profiling ~env
     =
   let text_doc_position = params.FindReferences.loc in
-  let document_uri =
-    text_doc_position.TextDocumentPositionParams.textDocument.TextDocumentIdentifier.uri
-  in
-  let ref_to_location (_, loc) =
-    { Location.uri = document_uri; range = Flow_lsp_conversions.loc_to_lsp_range loc }
-  in
+  let ref_to_location (_, loc) = Flow_lsp_conversions.loc_to_lsp loc |> Base.Result.ok in
   let (result, extra_data) =
-    map_local_refs ~reader ~options ~client ~profiling ~env ~f:ref_to_location text_doc_position
+    map_find_references_results
+      ~reader
+      ~options
+      ~client
+      ~profiling
+      ~env
+      ~f:ref_to_location
+      text_doc_position
   in
   let metadata = with_data ~extra_data metadata in
   match result with
@@ -2148,13 +2150,14 @@ let handle_persistent_document_highlight
     ~reader ~options ~id ~params ~metadata ~client ~profiling ~env =
   (* All the locs are implicitly in the same file *)
   let ref_to_highlight (_, loc) =
-    {
-      DocumentHighlight.range = Flow_lsp_conversions.loc_to_lsp_range loc;
-      kind = Some DocumentHighlight.Text;
-    }
+    Some
+      {
+        DocumentHighlight.range = Flow_lsp_conversions.loc_to_lsp_range loc;
+        kind = Some DocumentHighlight.Text;
+      }
   in
   let (result, extra_data) =
-    map_local_refs ~reader ~options ~client ~profiling ~env ~f:ref_to_highlight params
+    map_find_references_results ~reader ~options ~client ~profiling ~env ~f:ref_to_highlight params
   in
   let metadata = with_data ~extra_data metadata in
   match result with
@@ -2174,7 +2177,7 @@ let handle_persistent_rename ~reader ~options ~id ~params ~metadata ~client ~pro
     match file_artifacts_opt with
     | Ok (Some (file_artifacts, file_key)) ->
       let (local_refs, extra_data) =
-        find_local_references ~reader ~options ~file_artifacts file_key text_doc_position
+        find_references ~reader ~options ~file_artifacts file_key text_doc_position
       in
       let (parse_artifacts, _typecheck_artifacts) = file_artifacts in
       let edits =
