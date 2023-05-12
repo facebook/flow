@@ -1034,6 +1034,31 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
       ~unify_bounds
       (tparams_loc, xs, t)
       (Nel.to_list ts)
+
+  let mk_distributive_tparam_subst_fn cx trace ~use_op name distributed_t reason_op =
+    let reason_tparam = reason_of_t distributed_t in
+    let reason_tapp = update_desc_new_reason (fun desc -> RPolyType desc) reason_op in
+    fun t ->
+      mk_typeapp_of_poly
+        cx
+        trace
+        ~use_op
+        ~reason_op
+        ~reason_tapp
+        (Poly.generate_id ())
+        (loc_of_reason reason_tparam)
+        (Nel.one
+           {
+             reason = reason_tparam;
+             name;
+             bound = MixedT.make reason_tparam (bogus_trust ());
+             polarity = Polarity.Neutral;
+             default = None;
+             is_this = false;
+           }
+        )
+        t
+        [distributed_t]
 end
 
 (***********)

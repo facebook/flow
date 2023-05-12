@@ -2220,30 +2220,7 @@ struct
                 tout;
               }
           ) ->
-          let reason_tparam = reason_of_t check_t in
-          let reason_tapp = update_desc_new_reason (fun desc -> RPolyType desc) reason in
-          let subst t =
-            mk_typeapp_of_poly
-              cx
-              trace
-              ~use_op
-              ~reason_op:reason
-              ~reason_tapp
-              (Poly.generate_id ())
-              (loc_of_reason reason_tparam)
-              (Nel.one
-                 {
-                   reason = reason_tparam;
-                   name;
-                   bound = MixedT.make reason_tparam (bogus_trust ());
-                   polarity = Polarity.Neutral;
-                   default = None;
-                   is_this = false;
-                 }
-              )
-              t
-              [check_t]
-          in
+          let subst = mk_distributive_tparam_subst_fn cx trace ~use_op name check_t reason in
           rec_flow
             cx
             trace
