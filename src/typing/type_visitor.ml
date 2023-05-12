@@ -224,7 +224,8 @@ class ['a] t =
         let acc = self#type_ cx pole_TODO acc false_t in
         acc
       | TypeMap map -> self#type_map cx acc map
-      | MappedType { property_type; mapped_type_flags = _; homomorphic } ->
+      | MappedType
+          { property_type; mapped_type_flags = _; homomorphic; distributive_tparam_name = _ } ->
         let acc = self#type_ cx pole_TODO acc property_type in
         (match homomorphic with
         | SemiHomomorphic t -> self#type_ cx pole_TODO acc t

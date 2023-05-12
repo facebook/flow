@@ -1085,7 +1085,11 @@ and merge_annot tps infer_tps file = function
       EvalT
         ( source_type,
           TypeDestructorT
-            (unknown_use, reason, MappedType { property_type; mapped_type_flags; homomorphic }),
+            ( unknown_use,
+              reason,
+              MappedType
+                { property_type; mapped_type_flags; homomorphic; distributive_tparam_name = None }
+            ),
           id
         )
     )

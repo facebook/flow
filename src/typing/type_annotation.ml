@@ -1652,6 +1652,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                     property_type = poly_prop_type;
                     mapped_type_flags =
                       { optional = mapped_type_optionality; variance = polarity cx variance };
+                    distributive_tparam_name = None;
                   }
               )
           in

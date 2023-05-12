@@ -1699,7 +1699,8 @@ end = struct
       | T.IdxUnwrapType -> return (Ty.Utility (Ty.IdxUnwrapType ty))
       | T.RestType ((T.Object.Rest.Omit | T.Object.Rest.ReactConfigMerge _), _) as d ->
         terr ~kind:BadEvalT ~msg:(Debug_js.string_of_destructor d) None
-      | T.MappedType { property_type; mapped_type_flags; homomorphic } ->
+      | T.MappedType { property_type; mapped_type_flags; homomorphic; distributive_tparam_name = _ }
+        ->
         mapped_type ~env ty property_type mapped_type_flags homomorphic
       | T.LatentPred (p, i) ->
         let%bind t' = type__ ~env t in

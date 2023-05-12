@@ -814,7 +814,9 @@ struct
                  l
                  u ->
           ()
-        | (UnionT (_, rep1), TypeCastT _) -> flow_all_in_union cx trace rep1 u
+        | (UnionT (_, rep1), TypeCastT _) ->
+          prerr_endline "Casting all of union shit";
+          flow_all_in_union cx trace rep1 u
         | (_, TypeCastT (use_op, cast_to_t)) -> rec_flow cx trace (l, UseT (use_op, cast_to_t))
         (**********************************************************************)
         (* enum cast e.g. `(x: T)` where `x` is an `EnumT`                    *)
@@ -6704,7 +6706,13 @@ struct
     match d with
     (* Non-homomorphic mapped types have their own special resolution code, so they do not fit well
      * into the structure of the rest of this function. We handle them upfront instead. *)
-    | MappedType { homomorphic = Unspecialized; mapped_type_flags; property_type } ->
+    | MappedType
+        {
+          homomorphic = Unspecialized;
+          mapped_type_flags;
+          property_type;
+          distributive_tparam_name = _;
+        } ->
       let t =
         ObjectKit.mapped_type_of_keys
           cx
@@ -6934,7 +6942,8 @@ struct
             | ReactConfigType default_props ->
               ReactKitT (use_op, reason, React.GetConfigType (default_props, OpenT tout))
             | IdxUnwrapType -> IdxUnwrap (reason, OpenT tout)
-            | MappedType { property_type; mapped_type_flags; homomorphic } ->
+            | MappedType
+                { property_type; mapped_type_flags; homomorphic; distributive_tparam_name = _ } ->
               let selected_keys_opt =
                 match homomorphic with
                 | SemiHomomorphic t -> Some t

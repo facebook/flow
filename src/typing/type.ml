@@ -1417,6 +1417,7 @@ module rec TypeTerm : sig
         (* Homomorphic mapped types use an inline keyof: {[key in keyof O]: T} or a type parameter
          * bound by $Keys/keyof: type Homomorphic<Keys: $Keys<O>> = {[key in O]: T *)
         homomorphic: mapped_type_homomorphic_flag;
+        distributive_tparam_name: Subst_name.t option;
         property_type: t;
         mapped_type_flags: mapped_type_flags;
       }

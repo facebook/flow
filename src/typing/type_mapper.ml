@@ -549,7 +549,7 @@ class virtual ['a] t =
           t
         else
           ReactConfigType default_props'
-      | MappedType { property_type; mapped_type_flags; homomorphic } ->
+      | MappedType { property_type; mapped_type_flags; homomorphic; distributive_tparam_name } ->
         let property_type' = self#type_ cx map_cx property_type in
         let homomorphic' =
           match homomorphic with
@@ -567,7 +567,12 @@ class virtual ['a] t =
           t
         else
           MappedType
-            { property_type = property_type'; mapped_type_flags; homomorphic = homomorphic' }
+            {
+              distributive_tparam_name;
+              property_type = property_type';
+              mapped_type_flags;
+              homomorphic = homomorphic';
+            }
       | ReactElementPropsType
       | ReactElementConfigType
       | ReactElementRefType
