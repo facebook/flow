@@ -814,9 +814,7 @@ struct
                  l
                  u ->
           ()
-        | (UnionT (_, rep1), TypeCastT _) ->
-          prerr_endline "Casting all of union shit";
-          flow_all_in_union cx trace rep1 u
+        | (UnionT (_, rep1), TypeCastT _) -> flow_all_in_union cx trace rep1 u
         | (_, TypeCastT (use_op, cast_to_t)) -> rec_flow cx trace (l, UseT (use_op, cast_to_t))
         (**********************************************************************)
         (* enum cast e.g. `(x: T)` where `x` is an `EnumT`                    *)
