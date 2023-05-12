@@ -363,6 +363,17 @@ class ['M, 'T] searcher
       let (loc, _) = e in
       if covers_target loc then this#found_empty "template";
       e
+
+    method! jsx_attribute_value_literal lit =
+      let (annot, _) = lit in
+      if annot_covers_target annot then this#found_empty "jsx attribute literal";
+      lit
+
+    method! jsx_child child =
+      let (loc, c) = child in
+      match c with
+      | Flow_ast.JSX.Text _ when covers_target loc -> this#found_empty "jsx text"
+      | _ -> super#jsx_child child
   end
 
 let process_location ~loc_of_annot ~ast ~is_legit_require ~covers_target =
