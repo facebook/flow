@@ -1081,14 +1081,22 @@ and merge_annot tps infer_tps file = function
           | _ -> (source_type, Unspecialized)
       )
     in
+    let distributive_tparam_name =
+      match source_type with
+      | Type.GenericT { name; _ } -> Some name
+      | Type.OpenT (_, id) ->
+        (match Context.find_constraints file.cx id with
+        | (_, Type.Constraint.FullyResolved (lazy (Type.GenericT { name; _ }))) -> Some name
+        | _ -> None)
+      | _ -> None
+    in
     Type.(
       EvalT
         ( source_type,
           TypeDestructorT
             ( unknown_use,
               reason,
-              MappedType
-                { property_type; mapped_type_flags; homomorphic; distributive_tparam_name = None }
+              MappedType { property_type; mapped_type_flags; homomorphic; distributive_tparam_name }
             ),
           id
         )

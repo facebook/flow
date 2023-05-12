@@ -77,3 +77,14 @@ type O = {foo: number, bar?: string, +baz: bool};
   (semi: {+foo: number}); // OK
   (semi: {foo: number}); // ERROR
 }
+
+// Both homomorphic and semi-homomorphic mapped types are distributive
+{
+  declare const semi: SemiHomomorphic<{+foo: number} | {+foo: string}, 'foo'>;
+  (semi: {+foo: number} | {+foo: string}); // OK!
+  (semi: {foo: number} | {foo: string}); // ERROR 2x
+
+  declare const homomorphic: ParameterizedReadonly<{foo: number} | {bar:number} >;
+  (homomorphic: {+foo: number} | {+bar: number}); // OK!
+  (homomorphic: {foo: number} | {bar: number}); // ERROR 2x
+}
