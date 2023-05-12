@@ -259,6 +259,52 @@ class ['M, 'T] searcher
            fields. *)
         super#expression (annot, expr)
 
+    method! type_ (annot, t) =
+      if annot_covers_target annot then
+        let open! Flow_ast.Type in
+        match t with
+        | Any _
+        | Mixed _
+        | Empty _
+        | Void _
+        | Null _
+        | Symbol _
+        | Number _
+        | BigInt _
+        | String _
+        | Boolean _
+        | Exists _
+        | Unknown _
+        | Never _
+        | Undefined _ ->
+          this#found_empty "type literal"
+        | Nullable _
+        | Array _
+        | Conditional _
+        | Infer _
+        | Typeof _
+        | Keyof _
+        | ReadOnly _
+        | Function _
+        | Object _
+        | Interface _
+        | Generic _
+        | IndexedAccess _
+        | OptionalIndexedAccess _
+        | Union _
+        | Intersection _
+        | Tuple _
+        | StringLiteral _
+        | NumberLiteral _
+        | BigIntLiteral _
+        | BooleanLiteral _ ->
+          super#type_ (annot, t)
+      else
+        (* it is tempting to not recurse here, but comments are not included in
+           `annot`, so we have to dig into each child to visit their `comments`
+           fields. *)
+        super#type_ (annot, t)
+
     method! module_ref_literal mref =
       let { Flow_ast.Literal.require_out; _ } = mref in
       if annot_covers_target require_out then
