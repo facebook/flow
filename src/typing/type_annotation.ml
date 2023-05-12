@@ -253,6 +253,30 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     | _ -> ());
     Typed_ast_utils.polarity variance
 
+  (* Distributive tparam name helpers *)
+  let use_distributive_tparam_name cx name name_loc tparams_map =
+    let subst_name = Subst_name.Name name in
+    match Subst_name.Map.find_opt subst_name tparams_map with
+    | Some bound ->
+      let distributive_tparam =
+        {
+          reason = mk_annot_reason (RType (OrdinaryName name)) name_loc;
+          name = subst_name;
+          bound;
+          polarity = Polarity.Neutral;
+          default = None;
+          is_this = false;
+        }
+      in
+      let tparams_map =
+        Subst_name.Map.add
+          subst_name
+          (Flow_js_utils.generic_of_tparam ~f:(fun x -> x) cx distributive_tparam)
+          tparams_map
+      in
+      (Some subst_name, tparams_map)
+    | None -> (None, tparams_map)
+
   (**********************************)
   (* Transform annotations to types *)
   (**********************************)
@@ -428,27 +452,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                   comments = _;
                 }
             ) ->
-            let subst_name = Subst_name.Name name in
-            (match Subst_name.Map.find_opt subst_name tparams_map with
-            | Some bound ->
-              let distributive_tparam =
-                {
-                  reason = mk_annot_reason (RType (OrdinaryName name)) name_loc;
-                  name = subst_name;
-                  bound;
-                  polarity = Polarity.Neutral;
-                  default = None;
-                  is_this = false;
-                }
-              in
-              let tparams_map =
-                Subst_name.Map.add
-                  subst_name
-                  (Flow_js_utils.generic_of_tparam ~f:(fun x -> x) cx distributive_tparam)
-                  tparams_map
-              in
-              (Some subst_name, tparams_map)
-            | None -> (None, tparams_map))
+            use_distributive_tparam_name cx name name_loc tparams_map
           | _ -> (None, tparams_map)
         in
         let (((_, check_t), _) as check_type) =
