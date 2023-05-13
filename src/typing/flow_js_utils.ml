@@ -2171,3 +2171,31 @@ let flow_arith cx ?trace reason l r kind =
          { reason_out = reason; reason_l = reason_of_t l; reason_r = reason_of_t r; kind }
       );
     AnyT.error reason
+
+(* TypeAppT ~> TypeAppT has special behavior that flows the type arguments directly
+ * instead of evaluating the types and then flowing the results to each other. This is
+ * a bug that should be removed because it breaks transitivity, which can cause errors
+ * on code like:
+ * type ReadOnly<O> = {+[key in keyof O]: O[key]};
+ * type O1 = {foo: number};
+ * type O2 = {foo: string | number};
+ * declare const x: ReadOnly<O1>;
+ * (x: ReadOnly<O2>); // ERROR
+ *
+ * In order to prevent this in common mapped type cases, we do a best-effort check to
+ * see if the RHS contains a mapped type. This traversal is extremely limited and does
+ * not attempt to be exhaustive.
+ *)
+let rec wraps_mapped_type cx = function
+  | EvalT (_, TypeDestructorT (_, _, MappedType _), _) -> true
+  | DefT (_, _, TypeT (_, t)) -> wraps_mapped_type cx t
+  | OpenT (_, id) ->
+    let (_, constraints) = Context.find_constraints cx id in
+    (match constraints with
+    | FullyResolved (lazy t)
+    | Resolved t ->
+      wraps_mapped_type cx t
+    | _ -> false)
+  | DefT (_, _, PolyT { t_out; _ }) -> wraps_mapped_type cx t_out
+  | TypeAppT (_, _, t, _) -> wraps_mapped_type cx t
+  | _ -> false

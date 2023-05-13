@@ -1301,11 +1301,11 @@ struct
          *
          * The upper bound's c should always be a PolyT here since we could not have
          * made it here if it was not given the logic of our earlier case. *)
-        | ( DefT (_, _, PolyT { id = id1; _ }),
+        | ( DefT (_, _, PolyT { id = id1; t_out; _ }),
             ConcretizeTypeAppsT
               (use_op, (ts1, _, r1), (DefT (_, _, PolyT { id = id2; _ }), ts2, _, r2), false)
           )
-          when id1 = id2 && List.length ts1 = List.length ts2 ->
+          when id1 = id2 && List.length ts1 = List.length ts2 && not (wraps_mapped_type cx t_out) ->
           let targs = List.map2 (fun t1 t2 -> (t1, t2)) ts1 ts2 in
           rec_flow cx trace (l, TypeAppVarianceCheckT (use_op, r1, r2, targs))
         (* This is the case which implements the expansion for our
