@@ -1255,7 +1255,14 @@ let resolve
     recurse cx use_op reason resolve_tool tool t
   (* `null` and `void` should pass through Partial and Required,
      since we would like e.g. Partial<?Foo> to be equivalent to ?Partial<Foo> *)
-  | DefT (_, _, (NullT | VoidT)) when tool = Partial || tool = Required -> return cx use_op t
+  | DefT (_, _, (NullT | VoidT))
+    when match tool with
+         | Partial
+         | Required
+         | Object.ObjectMap _ ->
+           true
+         | _ -> false ->
+    return cx use_op t
   (* Mirroring Object.assign() and {...null} semantics, treat null/void as
    * empty objects. *)
   | DefT (_, _, (NullT | VoidT)) ->

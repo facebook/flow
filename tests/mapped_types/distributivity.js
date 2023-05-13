@@ -14,3 +14,17 @@
   (o: {foo: number} | {foo: string}); // OK
   (o: {}); // ERROR
 }
+
+{
+  type DistributeNullAndVoid<O> = {-[key in keyof O]: number};
+
+  type O = {foo: number};
+
+  declare const oExplicit: DistributeNullAndVoid<O | null | void>;
+  (oExplicit: {-foo: number} | null | void);
+  (oExplicit: {-foo: number}); // ERROR 2x
+
+  declare const oMaybe: DistributeNullAndVoid<?O>;
+  (oMaybe: {-foo: number} | null | void);
+  (oMaybe: {-foo: number}); // ERROR
+}

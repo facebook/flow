@@ -66,6 +66,58 @@ References:
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------- distributivity.js:25:4
+
+Cannot cast `oExplicit` to object type because null [1] is incompatible with object type [2]. [incompatible-cast]
+
+   distributivity.js:25:4
+   25|   (oExplicit: {-foo: number}); // ERROR 2x
+          ^^^^^^^^^
+
+References:
+   distributivity.js:23:28
+   23|   declare const oExplicit: DistributeNullAndVoid<O | null | void>;
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   distributivity.js:25:15
+   25|   (oExplicit: {-foo: number}); // ERROR 2x
+                     ^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- distributivity.js:25:4
+
+Cannot cast `oExplicit` to object type because undefined [1] is incompatible with object type [2]. [incompatible-cast]
+
+   distributivity.js:25:4
+   25|   (oExplicit: {-foo: number}); // ERROR 2x
+          ^^^^^^^^^
+
+References:
+   distributivity.js:23:28
+   23|   declare const oExplicit: DistributeNullAndVoid<O | null | void>;
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   distributivity.js:25:15
+   25|   (oExplicit: {-foo: number}); // ERROR 2x
+                     ^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- distributivity.js:29:4
+
+Cannot cast `oMaybe` to object type because null or undefined [1] is incompatible with object type [2].
+[incompatible-cast]
+
+   distributivity.js:29:4
+   29|   (oMaybe: {-foo: number}); // ERROR
+          ^^^^^^
+
+References:
+   distributivity.js:27:25
+   27|   declare const oMaybe: DistributeNullAndVoid<?O>;
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   distributivity.js:29:12
+   29|   (oMaybe: {-foo: number}); // ERROR
+                  ^^^^^^^^^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- import.js:18:4
 
 Cannot cast `mapped` to object type because string [1] is incompatible with empty [2] in property `bar`.
@@ -1334,7 +1386,7 @@ References:
 
 
 
-Found 87 errors
+Found 90 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
