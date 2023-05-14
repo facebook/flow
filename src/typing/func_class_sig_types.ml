@@ -71,7 +71,7 @@ module Func = struct
     | Generator of { return_loc: ALoc.t }
     | AsyncGenerator of { return_loc: ALoc.t }
     | FieldInit of (ALoc.t, ALoc.t) Flow_ast.Expression.t
-    | Predicate of ALoc.t (* loc of the return expression *)
+    | Predicate of Type.fun_predicate
     | Ctor
 
   module type S = sig

@@ -3106,7 +3106,11 @@ and function_def_helper =
     let params = params opts scope tbls xs [] ps in
     let rest_param = rest_param opts scope tbls xs rp in
     let return = return opts scope tbls xs ~async ~generator ~constructor body r in
-    let predicate = predicate opts scope tbls ps body p in
+    let predicate =
+      let open Option.Let_syntax in
+      let%map (loc, p) = predicate opts scope tbls ps body p in
+      Predicate (loc, p)
+    in
     FunSig { tparams; params; rest_param; this_param; return; predicate }
 
 and function_def = function_def_helper ~constructor:false
@@ -4032,7 +4036,7 @@ let declare_function_decl opts scope tbls decl =
                      SSet.empty
                      ps
                  in
-                 Some (loc, predicate opts scope tbls pnames expr)
+                 Some (Predicate (loc, predicate opts scope tbls pnames expr))
                | Some (_, { P.kind = P.Inferred; _ }) ->
                  (* inferred predicate not allowed in declared function *)
                  None

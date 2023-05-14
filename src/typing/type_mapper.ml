@@ -379,18 +379,14 @@ class virtual ['a] t =
           else
             Some (name, loc, t')
       in
-      let predicate' =
-        match predicate with
-        | NoPredicate -> predicate
-        | PredBased p ->
-          let p' = self#func_predicate cx map_cx p in
-          if p == p' then
-            predicate
-          else
-            PredBased p'
-      in
+      let predicate' = OptionUtils.ident_map (self#func_predicate cx map_cx) predicate in
       let return_t' = self#type_ cx map_cx return_t in
-      if this' == this && return_t' == return_t && params' == params && rest_param' == rest_param
+      if
+        this' == this
+        && return_t' == return_t
+        && params' == params
+        && rest_param' == rest_param
+        && predicate' == predicate
       then
         t
       else
@@ -640,6 +636,15 @@ class virtual ['a] t =
         kind
 
     method private func_predicate cx map_cx predicate =
+      match predicate with
+      | PredBased p ->
+        let p' = self#predicate_maps cx map_cx p in
+        if p == p' then
+          predicate
+        else
+          PredBased p'
+
+    method private predicate_maps cx map_cx predicate =
       let (reason, pmap, nmap) = predicate in
       let pmap' = Key_map.ident_map (self#predicate cx map_cx) pmap in
       let nmap' = Key_map.ident_map (self#predicate cx map_cx) nmap in

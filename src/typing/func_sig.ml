@@ -230,11 +230,8 @@ struct
     in
     let predicate =
       match kind with
-      | Predicate return_loc ->
-        let (pmap, nmap) = Env.predicate_refinement_maps cx return_loc in
-        let reason = mk_reason (RPredicateOf (RCustom "return")) return_loc in
-        PredBased (reason, pmap, nmap)
-      | _ -> NoPredicate
+      | Predicate p -> Some p
+      | _ -> None
     in
     let funtype =
       {

@@ -605,7 +605,6 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     | (loc, OptionalIndexedAccess ia) ->
       let (_, ast) = optional_indexed_access cx loc ~tparams_map ~infer_tparams_map ia in
       ast
-    (* TODO *)
     | ( loc,
         Generic
           {
@@ -1511,7 +1510,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                   params = List.rev rev_params;
                   rest_param;
                   return_t;
-                  predicate = NoPredicate;
+                  predicate = None;
                   def_reason = reason;
                 }
               )

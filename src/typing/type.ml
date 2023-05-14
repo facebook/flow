@@ -1049,13 +1049,11 @@ module rec TypeTerm : sig
     params: fun_param list;
     rest_param: fun_rest_param option;
     return_t: t;
-    predicate: fun_predicate;
+    predicate: fun_predicate option;
     def_reason: Reason.t;
   }
 
-  and fun_predicate =
-    | NoPredicate
-    | PredBased of (reason * predicate Key_map.t * predicate Key_map.t)
+  and fun_predicate = PredBased of (reason * predicate Key_map.t * predicate Key_map.t)
 
   (* FunTs carry around two `this` types, one to be used during subtyping and
      one to be treated as the param when the function is called. This is to allow
@@ -3959,8 +3957,8 @@ let mk_methodtype
     this_t ?(subtyping = This_Function) tins ~rest_param ~def_reason ?params_names ?predicate tout =
   let predicate =
     match predicate with
-    | Some p -> PredBased p
-    | None -> NoPredicate
+    | Some p -> Some (PredBased p)
+    | None -> None
   in
   {
     this_t = (this_t, subtyping);

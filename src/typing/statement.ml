@@ -7102,7 +7102,10 @@ module Make
       end;
       if Base.List.is_empty invalid_param_reasons then
         match pred_synth with
-        | Name_def.FunctionPredicateSynthesizable (ret_loc, _) -> Func.Predicate ret_loc
+        | Name_def.FunctionPredicateSynthesizable (ret_loc, _) ->
+          let (pmap, nmap) = Env.predicate_refinement_maps cx ret_loc in
+          let reason = mk_reason (RPredicateOf (RCustom "return")) ret_loc in
+          Func.Predicate (PredBased (reason, pmap, nmap))
         | Name_def.FunctionSynthesizable
         | Name_def.MissingReturn _ ->
           Func.Ordinary

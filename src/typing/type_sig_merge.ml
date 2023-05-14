@@ -1665,8 +1665,9 @@ and merge_fun
     let return_t = merge tps infer_tps file return in
     let predicate =
       match predicate with
-      | Some p -> Type.PredBased (merge_predicate tps infer_tps file p)
-      | None -> Type.NoPredicate
+      | None -> None
+      | Some (Predicate (loc, p)) ->
+        Some (Type.PredBased (merge_predicate tps infer_tps file (loc, p)))
     in
     let this_status =
       if is_method then

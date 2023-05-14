@@ -2649,7 +2649,7 @@ let%expect_test "function_predicates_1" =
            params = [FunParam {name = (Some "x"); t = (Annot (Mixed [2:23-28]))}];
            rest_param = None; this_param = None;
            return = (Annot (Boolean [2:31-38]));
-           predicate = (Some ([3:2-21], None))};
+           predicate = (Some (Predicate ([3:2-21], None)))};
          statics = {}} |}]
 
 let%expect_test "function_predicates_2" =
@@ -2674,7 +2674,7 @@ let%expect_test "function_predicates_2" =
            params = [FunParam {name = (Some "x"); t = (Annot (Mixed [1:24-29]))}];
            rest_param = None; this_param = None;
            return = (Annot (Boolean [1:32-39]));
-           predicate = (Some ([1:40-59], (Some (NullP "x"))))};
+           predicate = (Some (Predicate ([1:40-59], (Some (NullP "x")))))};
          tail = []}
     1. FunBinding {id_loc = [2:16-19];
          name = "foo"; async = false;
@@ -2685,10 +2685,12 @@ let%expect_test "function_predicates_2" =
            rest_param = None; this_param = None;
            return = (Annot (Boolean [2:31-38]));
            predicate =
-           (Some ([3:2-16],
-                  (Some (LatentP ((Ref LocalRef {ref_loc = [3:9-12]; index = 0}), None,
-                           [(Arg (Ref BuiltinRef {ref_loc = [3:13-14]; name = "x"}))],
-                           (("x", 0), []))))))};
+           (Some (Predicate ([3:2-16],
+                    (Some (LatentP ((
+                             Ref LocalRef {ref_loc = [3:9-12]; index = 0}), None,
+                             [(Arg (Ref BuiltinRef {ref_loc = [3:13-14]; name = "x"}))],
+                             (("x", 0), []))))
+                    )))};
          statics = {}} |}]
 
 let%expect_test "function_predicates_3" =
@@ -2711,7 +2713,7 @@ let%expect_test "function_predicates_3" =
          FunSig {tparams = Mono;
            params = [FunParam {name = (Some "x"); t = (Annot (Mixed [1:16-21]))}];
            rest_param = None; this_param = None;
-           return = (Err [1:22]); predicate = (Some ([1:34-52], (Some (NullP "x"))))};
+           return = (Err [1:22]); predicate = (Some (Predicate ([1:34-52], (Some (NullP "x")))))};
          statics = {}}
     1. DeclareFun {id_loc = [2:24-27];
          name = "foo"; fn_loc = [2:27-46];
@@ -2721,10 +2723,12 @@ let%expect_test "function_predicates_3" =
            rest_param = None; this_param = None;
            return = (Annot (Boolean [2:39-46]));
            predicate =
-           (Some ([2:47-62],
-                  (Some (LatentP ((Ref LocalRef {ref_loc = [2:55-58]; index = 0}), None,
-                           [(Arg (Ref BuiltinRef {ref_loc = [2:59-60]; name = "x"}))],
-                           (("x", 0), []))))))};
+           (Some (Predicate ([2:47-62],
+                    (Some (LatentP ((
+                             Ref LocalRef {ref_loc = [2:55-58]; index = 0}), None,
+                             [(Arg (Ref BuiltinRef {ref_loc = [2:59-60]; name = "x"}))],
+                             (("x", 0), []))))
+                    )))};
          tail = []}
 
     Errors:
@@ -2755,7 +2759,7 @@ let%expect_test "function_predicates_4" =
            params = [FunParam {name = (Some "x"); t = (Annot (Mixed [3:25-30]))}];
            rest_param = None; this_param = None;
            return = (Annot (Boolean [3:33-40]));
-           predicate = (Some ([4:2-17], None))};
+           predicate = (Some (Predicate ([4:2-17], None)))};
          statics = {}} |}]
 
 let%expect_test "function_predicates_5" =
@@ -2781,7 +2785,7 @@ let%expect_test "function_predicates_5" =
            params = [FunParam {name = (Some "x"); t = (Annot (Mixed [2:25-30]))}];
            rest_param = None; this_param = None;
            return = (Annot (Boolean [2:33-40]));
-           predicate = (Some ([3:2-19], None))};
+           predicate = (Some (Predicate ([3:2-19], None)))};
          statics = {}} |}]
 
 let%expect_test "function_predicates_6_unsupported_spread" =
@@ -2806,7 +2810,7 @@ let%expect_test "function_predicates_6_unsupported_spread" =
            params = [FunParam {name = (Some "x"); t = (Annot (Mixed [1:23-28]))}];
            rest_param = None; this_param = None;
            return = (Annot (Boolean [1:31-38]));
-           predicate = (Some ([2:2-19], None))};
+           predicate = (Some (Predicate ([2:2-19], None)))};
          statics = {}} |}]
 
 let%expect_test "function_predicates_7_latent_with_targs" =
@@ -2856,13 +2860,15 @@ let%expect_test "function_predicates_7_latent_with_targs" =
            rest_param = None; this_param = None;
            return = (Annot (Boolean [3:32-39]));
            predicate =
-           (Some ([4:2-31],
-                  (Some (LatentP ((Ref LocalRef {ref_loc = [4:9-13]; index = 1}),
-                           (Some [(ExplicitArg (Annot (Number [4:14-20]))); (
-                                   ImplicitArg [4:22-23])]),
-                           [(Arg (Ref BuiltinRef {ref_loc = [4:25-26]; name = "x"}));
-                             (Arg (Ref LocalRef {ref_loc = [4:28-29]; index = 0}))],
-                           (("x", 0), []))))))};
+           (Some (Predicate ([4:2-31],
+                    (Some (LatentP ((
+                             Ref LocalRef {ref_loc = [4:9-13]; index = 1}),
+                             (Some [(ExplicitArg (Annot (Number [4:14-20])));
+                                    (ImplicitArg [4:22-23])]),
+                             [(Arg (Ref BuiltinRef {ref_loc = [4:25-26]; name = "x"}));
+                               (Arg (Ref LocalRef {ref_loc = [4:28-29]; index = 0}))],
+                             (("x", 0), []))))
+                    )))};
          statics = {}} |}]
 
 let%expect_test "async_function_1" =
@@ -4074,7 +4080,7 @@ let%expect_test "predicate_exists" =
                    ];
                  rest_param = None; this_param = None;
                  return = (Annot (Mixed [1:37-42]));
-                 predicate = (Some ([2:2-11], (Some (ExistsP "x"))))};
+                 predicate = (Some (Predicate ([2:2-11], (Some (ExistsP "x")))))};
                statics = {}})}
         |];
       info =
@@ -4103,8 +4109,10 @@ let%expect_test "predicate_instanceof" =
                  rest_param = None; this_param = None;
                  return = (Annot (Boolean [2:35-42]));
                  predicate =
-                 (Some ([3:2-24],
-                        (Some (InstanceofP ("x", (Ref LocalRef {ref_loc = [3:22-23]; index = 0}))))))};
+                 (Some (Predicate ([3:2-24],
+                          (Some (InstanceofP ("x", (
+                                   Ref LocalRef {ref_loc = [3:22-23]; index = 0}))))
+                          )))};
                statics = {}})}
         |];
       info =
@@ -4139,7 +4147,7 @@ let%expect_test "predicate_typeof" =
                  params = [FunParam {name = (Some "x"); t = (Annot (Mixed [1:27-32]))}];
                  rest_param = None; this_param = None;
                  return = (Annot (Boolean [1:35-42]));
-                 predicate = (Some ([2:2-30], (Some (StrP ("x", [2:9-29])))))};
+                 predicate = (Some (Predicate ([2:2-30], (Some (StrP ("x", [2:9-29]))))))};
                statics = {}})}
         |];
       info =
@@ -4166,7 +4174,7 @@ let%expect_test "predicate_typeof_template_literal" =
                  params = [FunParam {name = (Some "x"); t = (Annot (Mixed [1:27-32]))}];
                  rest_param = None; this_param = None;
                  return = (Annot (Boolean [1:35-42]));
-                 predicate = (Some ([2:2-30], (Some (StrP ("x", [2:9-29])))))};
+                 predicate = (Some (Predicate ([2:2-30], (Some (StrP ("x", [2:9-29]))))))};
                statics = {}})}
         |];
       info =
@@ -4194,7 +4202,7 @@ let%expect_test "predicate_literal_string" =
                  rest_param = None; this_param = None;
                  return = (Annot (Boolean [1:35-42]));
                  predicate =
-                 (Some ([2:2-21], (Some (SingletonStrP ("x", [2:15-20], true, "foo")))))};
+                 (Some (Predicate ([2:2-21], (Some (SingletonStrP ("x", [2:15-20], true, "foo"))))))};
                statics = {}})}
         |];
       info =
@@ -4222,7 +4230,8 @@ let%expect_test "predicate_literal_number" =
                  rest_param = None; this_param = None;
                  return = (Annot (Boolean [1:35-42]));
                  predicate =
-                 (Some ([2:2-18], (Some (SingletonNumP ("x", [2:15-17], true, 42., "42")))))};
+                 (Some (Predicate ([2:2-18],
+                          (Some (SingletonNumP ("x", [2:15-17], true, 42., "42"))))))};
                statics = {}})}
         |];
       info =
@@ -4249,7 +4258,8 @@ let%expect_test "predicate_literal_boolean" =
                  params = [FunParam {name = (Some "x"); t = (Annot (Mixed [1:27-32]))}];
                  rest_param = None; this_param = None;
                  return = (Annot (Boolean [1:35-42]));
-                 predicate = (Some ([2:2-20], (Some (SingletonBoolP ("x", [2:15-19], true)))))};
+                 predicate =
+                 (Some (Predicate ([2:2-20], (Some (SingletonBoolP ("x", [2:15-19], true))))))};
                statics = {}})}
         |];
       info =
@@ -4276,7 +4286,7 @@ let%expect_test "predicate_literal_null" =
                  params = [FunParam {name = (Some "x"); t = (Annot (Mixed [1:27-32]))}];
                  rest_param = None; this_param = None;
                  return = (Annot (Boolean [1:35-42]));
-                 predicate = (Some ([2:2-20], (Some (NullP "x"))))};
+                 predicate = (Some (Predicate ([2:2-20], (Some (NullP "x")))))};
                statics = {}})}
         |];
       info =
@@ -4303,7 +4313,7 @@ let%expect_test "predicate_maybe" =
                  params = [FunParam {name = (Some "x"); t = (Annot (Mixed [1:27-32]))}];
                  rest_param = None; this_param = None;
                  return = (Annot (Boolean [1:35-42]));
-                 predicate = (Some ([2:2-19], (Some (MaybeP "x"))))};
+                 predicate = (Some (Predicate ([2:2-19], (Some (MaybeP "x")))))};
                statics = {}})}
         |];
       info =
@@ -4331,7 +4341,7 @@ let%expect_test "predicate_template_literal" =
                  rest_param = None; this_param = None;
                  return = (Annot (Boolean [1:35-42]));
                  predicate =
-                 (Some ([2:2-21], (Some (SingletonStrP ("x", [2:15-20], true, "foo")))))};
+                 (Some (Predicate ([2:2-21], (Some (SingletonStrP ("x", [2:15-20], true, "foo"))))))};
                statics = {}})}
         |];
       info =
@@ -4359,7 +4369,8 @@ let%expect_test "predicate_negative_number_literal" =
                  rest_param = None; this_param = None;
                  return = (Annot (Boolean [1:35-42]));
                  predicate =
-                 (Some ([2:2-19], (Some (SingletonNumP ("x", [2:15-18], true, -42., "-42")))))};
+                 (Some (Predicate ([2:2-19],
+                          (Some (SingletonNumP ("x", [2:15-18], true, -42., "-42"))))))};
                statics = {}})}
         |];
       info =
@@ -4386,7 +4397,7 @@ let%expect_test "predicate_undefined" =
                  params = [FunParam {name = (Some "x"); t = (Annot (Mixed [1:27-32]))}];
                  rest_param = None; this_param = None;
                  return = (Annot (Boolean [1:35-42]));
-                 predicate = (Some ([2:2-25], (Some (VoidP "x"))))};
+                 predicate = (Some (Predicate ([2:2-25], (Some (VoidP "x")))))};
                statics = {}})}
         |];
       info =
@@ -4415,7 +4426,7 @@ let%expect_test "predicate_undefined_shadow" =
                  params = [FunParam {name = (Some "x"); t = (Annot (Mixed [1:27-32]))}];
                  rest_param = None; this_param = None;
                  return = (Annot (Boolean [1:35-42]));
-                 predicate = (Some ([2:2-25], (Some (VoidP "x"))))};
+                 predicate = (Some (Predicate ([2:2-25], (Some (VoidP "x")))))};
                statics = {}})}
         |];
       info =
@@ -4442,7 +4453,7 @@ let%expect_test "predicate_void" =
                  params = [FunParam {name = (Some "x"); t = (Annot (Mixed [1:27-32]))}];
                  rest_param = None; this_param = None;
                  return = (Annot (Boolean [1:35-42]));
-                 predicate = (Some ([2:2-22], (Some (VoidP "x"))))};
+                 predicate = (Some (Predicate ([2:2-22], (Some (VoidP "x")))))};
                statics = {}})}
         |];
       info =
@@ -4474,7 +4485,8 @@ let%expect_test "predicate_sentinel_string" =
                  rest_param = None; this_param = None;
                  return = (Annot (Boolean [2:31-38]));
                  predicate =
-                 (Some ([3:2-26], (Some (SentinelStrP ("o", "type", [3:20-25], "foo")))))};
+                 (Some (Predicate ([3:2-26], (Some (
+                          SentinelStrP ("o", "type", [3:20-25], "foo"))))))};
                statics = {}})}
         |];
       info =
@@ -4513,9 +4525,10 @@ let%expect_test "predicate_sentinel_expr" =
                  rest_param = None; this_param = None;
                  return = (Annot (Boolean [3:31-38]));
                  predicate =
-                 (Some ([4:2-24],
-                        (Some (SentinelExprP ("o", "type",
-                                 (Ref LocalRef {ref_loc = [4:20-23]; index = 0}))))))};
+                 (Some (Predicate ([4:2-24],
+                          (Some (SentinelExprP ("o", "type",
+                                   (Ref LocalRef {ref_loc = [4:20-23]; index = 0}))))
+                          )))};
                statics = {}})}
         |];
       info =
@@ -4551,7 +4564,7 @@ let%expect_test "predicate_Array_isArray" =
                  params = [FunParam {name = (Some "x"); t = (Annot (Mixed [1:27-32]))}];
                  rest_param = None; this_param = None;
                  return = (Annot (Boolean [1:35-42]));
-                 predicate = (Some ([2:2-26], (Some (ArrP "x"))))};
+                 predicate = (Some (Predicate ([2:2-26], (Some (ArrP "x")))))};
                statics = {}})}
         |];
       info =
@@ -4587,7 +4600,7 @@ let%expect_test "predicate_latent" =
            params = [FunParam {name = (Some "a"); t = (Annot (Mixed [1:14-19]))}];
            rest_param = None; this_param = None;
            return = (Annot (Boolean [1:22-29]));
-           predicate = (Some ([2:2-31], (Some (StrP ("a", [2:9-30])))))};
+           predicate = (Some (Predicate ([2:2-31], (Some (StrP ("a", [2:9-30]))))))};
          statics = {}}
     1. FunBinding {id_loc = [4:9-10];
          name = "g"; async = false; generator = false;
@@ -4599,7 +4612,7 @@ let%expect_test "predicate_latent" =
              FunParam {name = (Some "b"); t = (Annot (Mixed [4:24-29]))}];
            rest_param = None; this_param = None;
            return = (Annot (Boolean [4:32-39]));
-           predicate = (Some ([5:2-31], (Some (NumP ("b", [5:9-30])))))};
+           predicate = (Some (Predicate ([5:2-31], (Some (NumP ("b", [5:9-30]))))))};
          statics = {}}
     2. FunBinding {id_loc = [7:16-17];
          name = "h"; async = false; generator = false;
@@ -4612,18 +4625,19 @@ let%expect_test "predicate_latent" =
            rest_param = None; this_param = None;
            return = (Annot (Boolean [7:39-46]));
            predicate =
-           (Some ([8:2-27],
-                  (Some (AndP (
-                           (LatentP ((
-                              Ref LocalRef {ref_loc = [8:10-11]; index = 0}), None,
-                              [(Arg (Ref BuiltinRef {ref_loc = [8:12-13]; name = "a"}))],
-                              (("a", 0), []))),
-                           (LatentP ((
-                              Ref LocalRef {ref_loc = [8:18-19]; index = 1}), None,
-                              [(Arg (Ref BuiltinRef {ref_loc = [8:20-21]; name = "a"}));
-                                (Arg (Ref BuiltinRef {ref_loc = [8:23-24]; name = "b"}))],
-                              (("b", 1), [("a", 0)])))
-                           )))))};
+           (Some (Predicate ([8:2-27],
+                    (Some (AndP (
+                             (LatentP ((
+                                Ref LocalRef {ref_loc = [8:10-11]; index = 0}), None,
+                                [(Arg (Ref BuiltinRef {ref_loc = [8:12-13]; name = "a"}))],
+                                (("a", 0), []))),
+                             (LatentP ((
+                                Ref LocalRef {ref_loc = [8:18-19]; index = 1}), None,
+                                [(Arg (Ref BuiltinRef {ref_loc = [8:20-21]; name = "a"}));
+                                  (Arg (Ref BuiltinRef {ref_loc = [8:23-24]; name = "b"}))],
+                                (("b", 1), [("a", 0)])))
+                             )))
+                    )))};
          statics = {}} |}]
 
 let%expect_test "predicate_latent_non_param_identifiers" =
@@ -4652,7 +4666,7 @@ let%expect_test "predicate_latent_non_param_identifiers" =
              FunParam {name = (Some "y"); t = (Annot (Mixed [2:34-39]))}];
            rest_param = None; this_param = None;
            return = (Annot (Boolean [2:42-49]));
-           predicate = (Some ([2:50-80], (Some (NumP ("x", [2:58-79])))))};
+           predicate = (Some (Predicate ([2:50-80], (Some (NumP ("x", [2:58-79]))))))};
          tail = []}
     2. FunBinding {id_loc = [3:16-19];
          name = "bar"; async = false;
@@ -4663,11 +4677,13 @@ let%expect_test "predicate_latent_non_param_identifiers" =
            rest_param = None; this_param = None;
            return = (Annot (Boolean [3:31-38]));
            predicate =
-           (Some ([4:2-19],
-                  (Some (LatentP ((Ref LocalRef {ref_loc = [4:9-12]; index = 1}), None,
-                           [(Arg (Ref BuiltinRef {ref_loc = [4:13-14]; name = "x"}));
-                             (Arg (Ref LocalRef {ref_loc = [4:16-17]; index = 0}))],
-                           (("x", 0), []))))))};
+           (Some (Predicate ([4:2-19],
+                    (Some (LatentP ((
+                             Ref LocalRef {ref_loc = [4:9-12]; index = 1}), None,
+                             [(Arg (Ref BuiltinRef {ref_loc = [4:13-14]; name = "x"}));
+                               (Arg (Ref LocalRef {ref_loc = [4:16-17]; index = 0}))],
+                             (("x", 0), []))))
+                    )))};
          statics = {}} |}]
 
 let%expect_test "long_string_lit" =

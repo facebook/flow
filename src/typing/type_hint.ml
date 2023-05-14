@@ -269,7 +269,7 @@ and type_of_hint_decomposition cx op reason t =
         params;
         rest_param;
         return_t;
-        predicate = NoPredicate;
+        predicate = None;
         def_reason = reason;
       }
     in

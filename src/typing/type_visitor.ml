@@ -301,14 +301,14 @@ class ['a] t =
       let acc = self#list (fun acc (_, t) -> self#type_ cx (P.inv pole) acc t) acc params in
       let acc = self#opt (fun acc (_, _, t) -> self#type_ cx (P.inv pole) acc t) acc rest_param in
       let acc = self#type_ cx pole acc return_t in
-      let acc =
-        match predicate with
-        | NoPredicate -> acc
-        | PredBased p -> self#fun_predicate cx acc p
-      in
+      let acc = self#opt (self#fun_predicate cx pole) acc predicate in
       acc
 
-    method private fun_predicate cx acc (_, pmap, nmap) =
+    method private fun_predicate cx _pole acc predicate =
+      match predicate with
+      | PredBased p -> self#predicate_maps cx acc p
+
+    method private predicate_maps cx acc (_, pmap, nmap) =
       let acc = Key_map.fold (fun _ p acc -> self#predicate cx acc p) pmap acc in
       let acc = Key_map.fold (fun _ p acc -> self#predicate cx acc p) nmap acc in
       acc
