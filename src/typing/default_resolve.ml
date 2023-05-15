@@ -132,9 +132,7 @@ let rec default_resolve_touts ~flow cx loc u =
   | SpecializeT (_, _, _, _, _, tout) -> resolve tout
   | ThisSpecializeT (_, _, k) -> resolve_cont k
   | VarianceCheckT _ -> ()
-  | TypeAppVarianceCheckT _
-  | ConcretizeTypeAppsT _ ->
-    _TODO
+  | ConcretizeTypeAppsT _ -> _TODO
   | LookupT { lookup_action; _ } -> resolve_lookup_action lookup_action
   | ObjAssignToT (_, _, _, t, _)
   | ObjAssignFromT (_, _, _, t, _)

@@ -707,7 +707,6 @@ and 'loc upper_kind =
   | IncompatibleGetValuesT
   | IncompatibleUnaryArithT
   | IncompatibleMapTypeTObject
-  | IncompatibleTypeAppVarianceCheckT
   | IncompatibleGetStaticsT
   | IncompatibleBindT
   | IncompatibleUnclassified of string
@@ -757,8 +756,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       | IncompatibleSuperT | IncompatibleMixinT | IncompatibleSpecializeT
       | IncompatibleThisSpecializeT | IncompatibleVarianceCheckT | IncompatibleGetKeysT
       | IncompatibleGetValuesT | IncompatibleUnaryArithT | IncompatibleMapTypeTObject
-      | IncompatibleTypeAppVarianceCheckT | IncompatibleGetStaticsT | IncompatibleBindT
-      | IncompatibleUnclassified _ ) as u ->
+      | IncompatibleGetStaticsT | IncompatibleBindT | IncompatibleUnclassified _ ) as u ->
       u
   in
   let map_unsupported_syntax = function

@@ -405,7 +405,6 @@ let error_message_kind_of_upper = function
   | UnaryArithT _ -> Error_message.IncompatibleUnaryArithT
   | MapTypeT (_, _, (ObjectMap _ | ObjectMapi _ | ObjectMapConst _ | ObjectKeyMirror), _) ->
     Error_message.IncompatibleMapTypeTObject
-  | TypeAppVarianceCheckT _ -> Error_message.IncompatibleTypeAppVarianceCheckT
   | GetStaticsT _ -> Error_message.IncompatibleGetStaticsT
   | BindT _ -> Error_message.IncompatibleBindT
   | use_t -> Error_message.IncompatibleUnclassified (string_of_use_ctor use_t)

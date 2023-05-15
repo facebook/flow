@@ -1301,13 +1301,13 @@ struct
          *
          * The upper bound's c should always be a PolyT here since we could not have
          * made it here if it was not given the logic of our earlier case. *)
-        | ( DefT (_, _, PolyT { id = id1; t_out; _ }),
+        | ( DefT (_, _, PolyT { tparams_loc; tparams; id = id1; t_out; _ }),
             ConcretizeTypeAppsT
               (use_op, (ts1, _, r1), (DefT (_, _, PolyT { id = id2; _ }), ts2, _, r2), false)
           )
           when id1 = id2 && List.length ts1 = List.length ts2 && not (wraps_mapped_type cx t_out) ->
           let targs = List.map2 (fun t1 t2 -> (t1, t2)) ts1 ts2 in
-          rec_flow cx trace (l, TypeAppVarianceCheckT (use_op, r1, r2, targs))
+          type_app_variance_check cx trace use_op r1 r2 targs tparams_loc tparams
         (* This is the case which implements the expansion for our
          * TypeAppT (c, ts) ~> TypeAppT (c, ts) when the cs are unequal. *)
         | ( DefT (_, _, PolyT { tparams_loc = tparams_loc1; tparams = xs1; t_out = t1; id = id1 }),
@@ -2478,63 +2478,6 @@ struct
            * parameter which needs to be specialized to the inheriting class, but
            * that is uninteresting for the variance check machinery. *)
           ()
-        | ( DefT (_, _, PolyT { tparams_loc; tparams; _ }),
-            TypeAppVarianceCheckT (use_op, reason_op, reason_tapp, targs)
-          ) ->
-          let minimum_arity = poly_minimum_arity tparams in
-          let maximum_arity = Nel.length tparams in
-          let reason_arity =
-            mk_reason (RCustom "See type parameters of definition here") tparams_loc
-          in
-          if List.length targs > maximum_arity then
-            add_output
-              cx
-              ~trace
-              (Error_message.ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity))
-          else
-            let (unused_targs, _, _) =
-              Nel.fold_left
-                (fun (targs, map1, map2) tparam ->
-                  let { name; default; polarity; reason; _ } = tparam in
-                  let flow_targs t1 t2 =
-                    let use_op =
-                      Frame
-                        ( TypeArgCompatibility
-                            {
-                              name;
-                              targ = reason;
-                              lower = reason_op;
-                              upper = reason_tapp;
-                              polarity;
-                            },
-                          use_op
-                        )
-                    in
-                    match polarity with
-                    | Polarity.Positive -> rec_flow cx trace (t1, UseT (use_op, t2))
-                    | Polarity.Negative -> rec_flow cx trace (t2, UseT (use_op, t1))
-                    | Polarity.Neutral -> rec_unify cx trace ~use_op t1 t2
-                  in
-                  match (default, targs) with
-                  | (None, []) ->
-                    (* fewer arguments than params but no default *)
-                    add_output
-                      cx
-                      ~trace
-                      (Error_message.ETooFewTypeArgs (reason_tapp, reason_arity, minimum_arity));
-                    ([], map1, map2)
-                  | (Some default, []) ->
-                    let t1 = subst cx ~use_op map1 default in
-                    let t2 = subst cx ~use_op map2 default in
-                    flow_targs t1 t2;
-                    ([], Subst_name.Map.add name t1 map1, Subst_name.Map.add name t2 map2)
-                  | (_, (t1, t2) :: targs) ->
-                    flow_targs t1 t2;
-                    (targs, Subst_name.Map.add name t1 map1, Subst_name.Map.add name t2 map2))
-                (targs, Subst_name.Map.empty, Subst_name.Map.empty)
-                tparams
-            in
-            assert (unused_targs = [])
         (* empty targs specialization of non-polymorphic classes is a no-op *)
         | ((DefT (_, _, ClassT _) | ThisClassT _), SpecializeT (_, _, _, _, None, tvar)) ->
           rec_flow_t ~use_op:unknown_use cx trace (l, tvar)
@@ -6139,7 +6082,6 @@ struct
     | SetPrivatePropT _
     | SetProtoT _
     | SuperT _
-    | TypeAppVarianceCheckT _
     | TypeCastT _
     | EnumCastT _
     | VarianceCheckT _
@@ -9678,6 +9620,54 @@ struct
   and continue_repos cx trace reason ?(use_desc = false) t = function
     | Lower (use_op, l) -> rec_flow cx trace (t, ReposUseT (reason, use_desc, use_op, l))
     | Upper u -> rec_flow cx trace (t, ReposLowerT (reason, use_desc, u))
+
+  and type_app_variance_check cx trace use_op reason_op reason_tapp targs tparams_loc tparams =
+    let minimum_arity = poly_minimum_arity tparams in
+    let maximum_arity = Nel.length tparams in
+    let reason_arity = mk_reason (RCustom "See type parameters of definition here") tparams_loc in
+    if List.length targs > maximum_arity then
+      add_output
+        cx
+        ~trace
+        (Error_message.ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity))
+    else
+      let (unused_targs, _, _) =
+        Nel.fold_left
+          (fun (targs, map1, map2) tparam ->
+            let { name; default; polarity; reason; _ } = tparam in
+            let flow_targs t1 t2 =
+              let use_op =
+                Frame
+                  ( TypeArgCompatibility
+                      { name; targ = reason; lower = reason_op; upper = reason_tapp; polarity },
+                    use_op
+                  )
+              in
+              match polarity with
+              | Polarity.Positive -> rec_flow cx trace (t1, UseT (use_op, t2))
+              | Polarity.Negative -> rec_flow cx trace (t2, UseT (use_op, t1))
+              | Polarity.Neutral -> rec_unify cx trace ~use_op t1 t2
+            in
+            match (default, targs) with
+            | (None, []) ->
+              (* fewer arguments than params but no default *)
+              add_output
+                cx
+                ~trace
+                (Error_message.ETooFewTypeArgs (reason_tapp, reason_arity, minimum_arity));
+              ([], map1, map2)
+            | (Some default, []) ->
+              let t1 = subst cx ~use_op map1 default in
+              let t2 = subst cx ~use_op map2 default in
+              flow_targs t1 t2;
+              ([], Subst_name.Map.add name t1 map1, Subst_name.Map.add name t2 map2)
+            | (_, (t1, t2) :: targs) ->
+              flow_targs t1 t2;
+              (targs, Subst_name.Map.add name t1 map1, Subst_name.Map.add name t2 map2))
+          (targs, Subst_name.Map.empty, Subst_name.Map.empty)
+          tparams
+      in
+      assert (unused_targs = [])
 
   include CheckPolarity
   include TrustChecking

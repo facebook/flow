@@ -949,7 +949,6 @@ and dump_use_t_ (depth, tvars) cx t =
           (spf "[%s], %s" (String.concat "; " (Base.List.map ~f:kid args)) (Polarity.string pol))
         t
     | ConcretizeTypeAppsT _ -> p t
-    | TypeAppVarianceCheckT _ -> p t
     | TypeCastT (_, arg) -> p ~reason:false ~extra:(kid arg) t
     | EnumCastT { use_op = _; enum = (reason, trust, enum) } ->
       p ~reason:false ~extra:(kid (DefT (reason, trust, EnumT enum))) t
@@ -1180,7 +1179,6 @@ let dump_error_message =
     | IncompatibleGetValuesT -> "IncompatibleGetValuesT"
     | IncompatibleUnaryArithT -> "IncompatibleUnaryArithT"
     | IncompatibleMapTypeTObject -> "IncompatibleMapTypeTObject"
-    | IncompatibleTypeAppVarianceCheckT -> "IncompatibleTypeAppVarianceCheckT"
     | IncompatibleGetStaticsT -> "IncompatibleGetStaticsT"
     | IncompatibleBindT -> "IncompatibleBindT"
     | IncompatibleUnclassified ctor -> spf "IncompatibleUnclassified %S" ctor

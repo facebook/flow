@@ -1148,8 +1148,7 @@ let rec make_error_printable :
     | IncompatibleThisSpecializeT ->
       nope "is not a class"
     | IncompatibleSpecializeT
-    | IncompatibleVarianceCheckT
-    | IncompatibleTypeAppVarianceCheckT ->
+    | IncompatibleVarianceCheckT ->
       nope "is not a polymorphic type"
     | IncompatibleSuperT -> nope "is not inheritable"
     | IncompatibleUnaryArithT -> nope "is not a number"

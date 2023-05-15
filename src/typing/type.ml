@@ -609,7 +609,6 @@ module rec TypeTerm : sig
     | ThisSpecializeT of reason * t * cont
     (* variance check on polymorphic types *)
     | VarianceCheckT of reason * typeparam Subst_name.Map.t * t list * Polarity.t
-    | TypeAppVarianceCheckT of use_op * reason * reason * (t * t) list
     (* In TypeAppT (c, ts) ~> TypeAppT (c, ts) we need to check both cs against
      * each other which means that we must concretize them first. *)
     | ConcretizeTypeAppsT of
@@ -3833,7 +3832,6 @@ let string_of_use_ctor = function
   | ToStringT _ -> "ToStringT"
   | UnaryArithT _ -> "UnaryArithT"
   | VarianceCheckT _ -> "VarianceCheckT"
-  | TypeAppVarianceCheckT _ -> "TypeAppVarianceCheck"
   | TypeCastT _ -> "TypeCastT"
   | ConcretizeTypeAppsT _ -> "ConcretizeTypeAppsT"
   | CondT _ -> "CondT"

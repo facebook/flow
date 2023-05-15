@@ -338,7 +338,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | SpecializeT _
     | ThisSpecializeT _
     | VarianceCheckT _
-    | TypeAppVarianceCheckT _
     | ConcretizeTypeAppsT _
     | ObjRestT _
     | BecomeT _

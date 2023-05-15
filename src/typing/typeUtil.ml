@@ -139,7 +139,6 @@ and reason_of_use_t = function
   | ToStringT { reason; _ } -> reason
   | UnaryArithT { reason; _ } -> reason
   | VarianceCheckT (reason, _, _, _) -> reason
-  | TypeAppVarianceCheckT (_, reason, _, _) -> reason
   | TypeCastT (_, t) -> reason_of_t t
   | FilterOptionalT (_, t) -> reason_of_t t
   | FilterMaybeT (_, t) -> reason_of_t t
@@ -353,8 +352,6 @@ and mod_reason_of_use_t f = function
   | UnaryArithT { reason; result_t; kind } -> UnaryArithT { reason = f reason; result_t; kind }
   | VarianceCheckT (reason, tparams, targs, polarity) ->
     VarianceCheckT (f reason, tparams, targs, polarity)
-  | TypeAppVarianceCheckT (use_op, reason_op, reason_tapp, targs) ->
-    TypeAppVarianceCheckT (use_op, f reason_op, reason_tapp, targs)
   | TypeCastT (use_op, t) -> TypeCastT (use_op, mod_reason_of_t f t)
   | FilterOptionalT (use_op, t) -> FilterOptionalT (use_op, mod_reason_of_t f t)
   | FilterMaybeT (use_op, t) -> FilterMaybeT (use_op, mod_reason_of_t f t)
@@ -440,8 +437,6 @@ let rec util_use_op_of_use_t :
   | ToStringT { orig_t; reason; t_out } ->
     nested_util t_out (fun t_out -> ToStringT { orig_t; reason; t_out })
   | SpecializeT (op, r1, r2, c, ts, t) -> util op (fun op -> SpecializeT (op, r1, r2, c, ts, t))
-  | TypeAppVarianceCheckT (op, r1, r2, ts) ->
-    util op (fun op -> TypeAppVarianceCheckT (op, r1, r2, ts))
   | TypeCastT (op, t) -> util op (fun op -> TypeCastT (op, t))
   | EnumCastT { use_op; enum } -> util use_op (fun use_op -> EnumCastT { use_op; enum })
   | FunImplicitVoidReturnT ({ use_op; _ } as contents) ->
