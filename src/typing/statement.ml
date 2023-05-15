@@ -1207,8 +1207,9 @@ module Make
     | (loc, FunctionDeclaration func) ->
       let (_, _, node) = function_ loc func in
       node
-    | (_loc, ComponentDeclaration _component) as stmt ->
+    | (loc, ComponentDeclaration _component) as stmt ->
       (* TODO(jmbrown): add typechecking for component syntax *)
+      Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, ComponentSyntax));
       Tast_utils.unimplemented_mapper#statement stmt
     | (loc, EnumDeclaration enum) ->
       let enum_ast = enum_declaration cx loc enum in

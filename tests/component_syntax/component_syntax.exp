@@ -1,0 +1,10 @@
+Error ----------------------------------------------------------------------------------------------- unsupported.js:4:1
+
+Component syntax is not supported [unsupported-syntax]
+
+   4| component Foo() {} // ERROR
+      ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 1 error

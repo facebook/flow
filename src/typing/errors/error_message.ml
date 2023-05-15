@@ -673,6 +673,7 @@ and 'loc unsupported_syntax =
       static: bool;
     }
   | WithStatement
+  | ComponentSyntax
 
 and lower_kind =
   | Possibly_null
@@ -771,7 +772,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       | MultipleIndexers | MultipleProtos | ExplicitCallAfterProto | ExplicitProtoAfterCall
       | SpreadArgument | ImportDynamicArgument | IllegalName | TupleLabeledElement
       | TupleSpreadElement | UserDefinedTypeGuards | UnsupportedInternalSlot _
-      | AnnotationInsideDestructuring | WithStatement ) as u ->
+      | AnnotationInsideDestructuring | WithStatement | ComponentSyntax ) as u ->
       u
   in
   function
@@ -2813,6 +2814,7 @@ let friendly_message_of_msg loc_of_aloc msg =
       | UnsupportedInternalSlot { name; static = true } ->
         [text "Unsupported static internal slot "; code name; text "."]
       | WithStatement -> [text "Flow doesn't support "; code "with"; text " statements."]
+      | ComponentSyntax -> [text "Component syntax is not supported"]
     in
     Normal { features }
   | EUseArrayLiteral _ ->
