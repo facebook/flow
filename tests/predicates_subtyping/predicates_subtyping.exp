@@ -70,5 +70,61 @@ References:
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- file.js:68:2
 
-Found 4 errors
+Cannot cast `b8` to array type because predicate encoded in return [1] is incompatible with predicate encoded in
+return [2] in array element. [incompatible-cast]
+
+   file.js:68:2
+   68| (b8: Array<typeof is_number_def>); // error incompatible predicates
+        ^^
+
+References:
+   file.js:22:3
+   22|   return typeof x === 'string';
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   file.js:25:3
+   25|   return typeof x === 'number';
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- file.js:71:2
+
+Cannot cast `b9` to array type because function type [1], a non-predicate function, is incompatible with function [2],
+which is a predicate function in array element. Arrays are invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[function-predicate]
+
+   file.js:71:2
+   71| (b9: Array<(x: mixed) => boolean>); // error incompatible predicates
+        ^^
+
+References:
+   file.js:71:12
+   71| (b9: Array<(x: mixed) => boolean>); // error incompatible predicates
+                  ^^^^^^^^^^^^^^^^^^^^^ [1]
+   file.js:70:23
+   70| declare var b9: Array<typeof is_string_def>;
+                             ^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- file.js:74:2
+
+Cannot cast `b10` to array type because function type [1], a non-predicate function, is incompatible with function [2],
+which is a predicate function in array element. [function-predicate]
+
+   file.js:74:2
+   74| (b10: Array<typeof is_string_def>); // error incompatible predicates
+        ^^^
+
+References:
+   file.js:73:24
+   73| declare var b10: Array<(x: mixed) => boolean>;
+                              ^^^^^^^^^^^^^^^^^^^^^ [1]
+   file.js:74:13
+   74| (b10: Array<typeof is_string_def>); // error incompatible predicates
+                   ^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 7 errors

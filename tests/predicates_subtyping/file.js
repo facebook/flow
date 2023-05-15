@@ -57,3 +57,18 @@ declare var b5: typeof is_number_def_2a;
 
 declare var b6: typeof is_number_def_2b;
 (b6: typeof is_number_def_2a); // error: is_number_def_2b does not refine at least `y`
+
+//
+// Predicate function unification
+//
+declare var b7: Array<typeof is_string_def>;
+(b7: Array<typeof is_string_def>); // okay
+
+declare var b8: Array<typeof is_string_def>;
+(b8: Array<typeof is_number_def>); // error incompatible predicates
+
+declare var b9: Array<typeof is_string_def>;
+(b9: Array<(x: mixed) => boolean>); // error incompatible predicates
+
+declare var b10: Array<(x: mixed) => boolean>;
+(b10: Array<typeof is_string_def>); // error incompatible predicates

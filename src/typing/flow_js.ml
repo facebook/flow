@@ -8408,7 +8408,9 @@ struct
             lpmap
             upmap
           |> ignore
-        | (DefT (_, _, FunT (_, funtype1)), DefT (_, _, FunT (_, funtype2)))
+        | ( DefT (_, _, FunT (_, ({ predicate = None; _ } as funtype1))),
+            DefT (_, _, FunT (_, ({ predicate = None; _ } as funtype2)))
+          )
           when List.length funtype1.params = List.length funtype2.params ->
           rec_unify cx trace ~use_op (fst funtype1.this_t) (fst funtype2.this_t);
           List.iter2
