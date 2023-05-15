@@ -559,6 +559,11 @@ and 'loc t' =
       loc: 'loc;
       kind: invalid_mapped_type_error_kind;
     }
+  | ECannotMapInstance of {
+      instance_reason: 'loc virtual_reason;
+      mapped_type_reason: 'loc virtual_reason;
+      use_op: 'loc virtual_use_op;
+    }
 
 and 'loc null_write = {
   null_loc: 'loc;
@@ -1259,6 +1264,13 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         kind;
       }
   | EInvalidMappedType { loc; kind } -> EInvalidMappedType { loc = f loc; kind }
+  | ECannotMapInstance { mapped_type_reason; instance_reason; use_op } ->
+    ECannotMapInstance
+      {
+        mapped_type_reason = map_reason mapped_type_reason;
+        instance_reason = map_reason instance_reason;
+        use_op = map_use_op use_op;
+      }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1371,6 +1383,8 @@ let util_use_op_of_msg nope util = function
     util use_op (fun use_op ->
         EImplicitInstantiationUnderconstrainedError { reason_call; reason_tparam; bound; use_op }
     )
+  | ECannotMapInstance { instance_reason; mapped_type_reason; use_op } ->
+    util use_op (fun use_op -> ECannotMapInstance { instance_reason; mapped_type_reason; use_op })
   | EDebugPrint (_, _)
   | EExportValueAsType (_, _)
   | EImportValueAsType (_, _)
@@ -1735,7 +1749,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EClassToObject _
   | EPrimitiveAsInterface _
   | EPredicateFuncArityMismatch _
-  | EPredicateFuncIncompatibility _ ->
+  | EPredicateFuncIncompatibility _
+  | ECannotMapInstance _ ->
     None
 
 let kind_of_msg =
@@ -4810,6 +4825,17 @@ let friendly_message_of_msg loc_of_aloc msg =
       | RemoveOptionality -> [text "Mapped Types do not yet support optionality removal."]
     in
     Normal { features }
+  | ECannotMapInstance { mapped_type_reason; instance_reason; use_op } ->
+    let features =
+      [
+        text "Mapped Types only support objects, so ";
+        ref mapped_type_reason;
+        text " cannot use ";
+        ref instance_reason;
+        text " to instantiate a mapped type";
+      ]
+    in
+    UseOp { loc = loc_of_reason mapped_type_reason; features; use_op }
 
 let defered_in_speculation = function
   | EUntypedTypeImport _
@@ -5077,6 +5103,7 @@ let error_code_of_message err : error_code option =
   | EObjectThisReference _ -> Some ObjectThisReference
   | EInvalidDeclaration _ -> Some InvalidDeclaration
   | EInvalidMappedType _ -> Some InvalidMappedType
+  | ECannotMapInstance _ -> Some InvalidMappedType
   | EMalformedCode _
   | EUnusedSuppression _
   | EImportInternalReactServerModule _ ->

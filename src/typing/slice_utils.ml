@@ -1223,6 +1223,13 @@ let resolve
              { spread_reason = reason; interface_reason = r; use_op }
           );
         return cx use_op (AnyT.error reason)
+      | (Object.ObjectMap _, _) ->
+        add_output
+          cx
+          Error_message.(
+            ECannotMapInstance { mapped_type_reason = reason; instance_reason = r; use_op }
+          );
+        return cx use_op (AnyT.error reason)
       | _ -> recurse cx use_op reason resolve_tool tool super
     end
   (* Statics of a class. TODO: This logic is unfortunately duplicated from the

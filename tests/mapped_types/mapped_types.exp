@@ -520,6 +520,36 @@ References:
                                        ^^^^^^^^^^^^^ [3]
 
 
+Error ----------------------------------------------------------------------------------------------- instancet.js:11:24
+
+Cannot instantiate mapped type [1] because Mapped Types only support objects, so `MappedInterface` [1] cannot use
+`I` [2] to instantiate a mapped type. [invalid-mapped-type]
+
+   instancet.js:11:24
+   11| type MappedInterface = {[key in keyof I]: I[key]}; // ERROR, cannot map interfaces
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   instancet.js:11:39
+   11| type MappedInterface = {[key in keyof I]: I[key]}; // ERROR, cannot map interfaces
+                                             ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- instancet.js:21:23
+
+Cannot instantiate mapped type [1] because Mapped Types only support objects, so `MappedInstance` [1] cannot use `A` [2]
+to instantiate a mapped type. [invalid-mapped-type]
+
+   instancet.js:21:23
+   21| type MappedInstance = {+[key in keyof A]: A[number]};
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   instancet.js:21:39
+   21| type MappedInstance = {+[key in keyof A]: A[number]};
+                                             ^ [2]
+
+
 Error ------------------------------------------------------------------------------------ no_explicit_exactness.js:7:20
 
 Mapped Types take on the exactness of the argument passed to keyof. They do not support explicit exact or inexact
@@ -1386,7 +1416,7 @@ References:
 
 
 
-Found 90 errors
+Found 92 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

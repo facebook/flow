@@ -1863,6 +1863,7 @@ let dump_error_message =
           | ExplicitExactOrInexact -> "ExplicitExactOrInexact"
           | RemoveOptionality -> "RemoveOptionality"
         )
+    | ECannotMapInstance _ -> "ECannotMapInstance"
 
 module Verbose = struct
   let verbose_in_file cx verbose =
