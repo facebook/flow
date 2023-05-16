@@ -6,8 +6,3 @@
  *)
 
 type ast_info = (Loc.t, Loc.t) Flow_ast.Program.t * File_sig.t * Docblock.t
-
-type type_info =
-  Context.t
-  * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
-  * Type.Properties.Set.t Loc_collections.LocMap.t

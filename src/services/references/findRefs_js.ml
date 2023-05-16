@@ -24,13 +24,8 @@ let find_local_refs ~reader ~options ~file_key ~parse_artifacts ~typecheck_artif
     match parse_artifacts with
     | Types_js_types.Parse_artifacts { ast; file_sig; docblock; _ } -> (ast, file_sig, docblock)
   in
-  let type_info =
-    match typecheck_artifacts with
-    | Types_js_types.Typecheck_artifacts { cx; typed_ast; obj_to_obj_map } ->
-      (cx, typed_ast, obj_to_obj_map)
-  in
   (* Start by running local variable find references *)
-  let (ast, _, _) = ast_info in
+  let (Types_js_types.Parse_artifacts { ast; _ }) = parse_artifacts in
   let scope_info =
     Scope_builder.program ~enable_enums:(Options.enums options) ~with_types:true ast
   in
@@ -38,7 +33,7 @@ let find_local_refs ~reader ~options ~file_key ~parse_artifacts ~typecheck_artif
   let%bind refs =
     match var_refs with
     | Some _ -> Ok var_refs
-    | None -> PropertyFindRefs.find_local_refs ~reader file_key ast_info type_info loc
+    | None -> PropertyFindRefs.find_local_refs ~reader file_key ast_info typecheck_artifacts loc
   in
   let refs = Base.Option.map ~f:(fun (name, refs) -> (name, sort_and_dedup refs)) refs in
   Ok refs

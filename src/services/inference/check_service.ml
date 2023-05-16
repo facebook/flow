@@ -503,7 +503,7 @@ let mk_check_file
         PropertyFindRefs.property_find_refs_in_file
           ~loc_of_aloc:Reader.loc_of_aloc
           (ast, file_sig, docblock)
-          (cx, typed_ast, obj_to_obj_map)
+          (Types_js_types.Typecheck_artifacts { cx; typed_ast; obj_to_obj_map })
           file_key
           def_info
           name

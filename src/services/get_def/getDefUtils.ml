@@ -479,7 +479,7 @@ let def_info_of_typecheck_results ~loc_of_aloc cx obj_to_obj_map props_access_in
     | _ -> Error "Expected to find an object")
 
 let get_def_info ~loc_of_aloc type_info loc : (def_info option, string) result =
-  let (cx, typed_ast, obj_to_obj_map) = type_info in
+  let (Types_js_types.Typecheck_artifacts { cx; typed_ast; obj_to_obj_map }) = type_info in
   let def_kind =
     Def_kind_search.search
       ~f:(fun aloc ->

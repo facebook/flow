@@ -2072,14 +2072,11 @@ let get_file_artifacts ~options ~client ~profiling ~env pos :
     | Ok file_artifacts -> (Ok (Some (file_artifacts, file_key)), None))
 
 let global_find_references ~genv ~reader ~options ~env ~typecheck_artifacts file_key line col =
-  let (Types_js_types.Typecheck_artifacts { cx; typed_ast; obj_to_obj_map }) =
-    typecheck_artifacts
-  in
   (* TODO: handle variable find-refs *)
   match
     GetDefUtils.get_def_info
       ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
-      (cx, typed_ast, obj_to_obj_map)
+      typecheck_artifacts
       (Loc.cursor (Some file_key) line col)
   with
   | Error s -> Lwt.return (Error s)

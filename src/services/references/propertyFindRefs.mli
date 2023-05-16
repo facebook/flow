@@ -8,7 +8,7 @@
 val property_find_refs_in_file :
   loc_of_aloc:(ALoc.t -> Loc.t) ->
   FindRefsUtils.ast_info ->
-  FindRefsUtils.type_info ->
+  Types_js_types.typecheck_artifacts ->
   File_key.t ->
   GetDefUtils.single_def_info Nel.t ->
   string ->
@@ -18,6 +18,6 @@ val find_local_refs :
   reader:State_reader.t ->
   File_key.t ->
   FindRefsUtils.ast_info ->
-  FindRefsUtils.type_info ->
+  Types_js_types.typecheck_artifacts ->
   Loc.t ->
   (FindRefsTypes.find_refs_ok, string) result

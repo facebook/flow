@@ -203,7 +203,7 @@ let process_prop_refs ~loc_of_aloc cx potential_refs file_key prop_def_info name
 
 let property_find_refs_in_file ~loc_of_aloc ast_info type_info file_key def_info name =
   let potential_refs : Type.t ALocMap.t ref = ref ALocMap.empty in
-  let (cx, typed_ast, obj_to_obj_map) = type_info in
+  let (Types_js_types.Typecheck_artifacts { cx; typed_ast; obj_to_obj_map }) = type_info in
   let (ast, _file_sig, _info) = ast_info in
   let local_defs =
     Nel.to_list (all_locs_of_property_def_info def_info)

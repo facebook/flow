@@ -32,8 +32,6 @@ val extract_def_loc :
 
 val get_def_info :
   loc_of_aloc:(ALoc.t -> Loc_collections.LocMap.key) ->
-  Context.t
-  * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
-  * Type.Properties.Set.t Loc_collections.LocMap.t ->
+  Types_js_types.typecheck_artifacts ->
   Loc.t ->
   (def_info option, string) result
