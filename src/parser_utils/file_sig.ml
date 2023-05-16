@@ -28,6 +28,7 @@ and require =
       source: Loc.t Ast_utils.source;
       require_loc: Loc.t;
       bindings: require_bindings option;
+      prefix: string option;
     }
   | ImportDynamic of {
       source: Loc.t Ast_utils.source;
@@ -327,7 +328,14 @@ class requires_exports_calculator ~ast ~opts =
          with
         | Ok module_name ->
           this#add_require
-            (Require { source = (loc, module_name); require_loc = loc; bindings = None });
+            (Require
+               {
+                 source = (loc, module_name);
+                 require_loc = loc;
+                 bindings = None;
+                 prefix = opts.relay_integration_module_prefix;
+               }
+            );
           expr
         | Error _ -> expr)
       | _ -> super#tagged_template loc expr
@@ -698,7 +706,9 @@ class requires_exports_calculator ~ast ~opts =
           ) ->
           if not (Scope_api.is_local_use scope_info loc) then
             this#add_require
-              (Require { source = (source_loc, name); require_loc = call_loc; bindings })
+              (Require
+                 { source = (source_loc, name); require_loc = call_loc; bindings; prefix = None }
+              )
         | _ -> ()
       )
 
@@ -707,7 +717,14 @@ class requires_exports_calculator ~ast ~opts =
       match lit with
       | ModuleRef { string_value; prefix_len; _ } ->
         let mref = Base.String.drop_prefix string_value prefix_len in
-        this#add_require (Require { source = (loc, mref); require_loc = loc; bindings = None })
+        let prefix =
+          if prefix_len > 0 then
+            Some (Base.String.prefix string_value prefix_len)
+          else
+            None
+        in
+        this#add_require
+          (Require { source = (loc, mref); require_loc = loc; bindings = None; prefix })
       | _ -> ()
 
     (* skip declare module *)

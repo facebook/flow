@@ -38,7 +38,7 @@ let from_bindings ~import_mode bindings_opt acc =
 
 let from_require require (acc : acc_t) =
   match require with
-  | Require { source = _; require_loc = _; bindings } ->
+  | Require { source = _; require_loc = _; bindings; prefix = _ } ->
     from_bindings ~import_mode:Ty.ValueMode bindings acc
   | Import { import_loc = _; source = _; named; ns = _; types; typesof; typesof_ns = _ } ->
     (* TODO import namespaces (`ns`) as modules that might contain imported types *)

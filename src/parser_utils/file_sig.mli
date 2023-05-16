@@ -34,6 +34,7 @@ and require =
       (* Note: These are best-effort.
        * DO NOT use these for typechecking. *)
       bindings: require_bindings option;
+      prefix: string option;
     }
   (* import('foo').then(...) *)
   | ImportDynamic of {

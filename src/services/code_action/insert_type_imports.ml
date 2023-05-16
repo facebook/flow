@@ -750,7 +750,7 @@ end = struct
       let from_bindings bindings_opt = Base.Option.iter ~f:from_binding bindings_opt in
       let from_require require =
         match require with
-        | Require { source = _; require_loc = _; bindings } -> from_bindings bindings
+        | Require { source = _; require_loc = _; bindings; prefix = _ } -> from_bindings bindings
         | Import { ns = Some (_, "React"); _ } -> raise Found_react_import
         | Import _
         | ImportDynamic _
