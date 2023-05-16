@@ -20,11 +20,12 @@ type 'a merge_results = 'a list * sig_opts_data
 type 'a merge_job =
   mutator:Parsing_heaps.Merge_context_mutator.t ->
   options:Options.t ->
+  for_find_all_refs:bool ->
   reader:Mutator_state_reader.t ->
   File_key.t Nel.t ->
   bool * 'a
 
-let sig_hash ~root =
+let sig_hash ~check_dirty_set ~root =
   let open Type_sig_collections in
   let open Type_sig_hash in
   let module P = Type_sig_pack in
@@ -238,12 +239,18 @@ let sig_hash ~root =
     in
 
     let local_defs file_rec =
+      let dirty_indices =
+        Bin.read_tbl_generic Bin.read_local_def_index buf (Bin.dirty_local_defs buf) Array.init
+      in
+      let current_index = ref 0 in
       let f buf pos =
         let def = Bin.read_local_def buf pos in
         let hash = ref (Bin.hash_serialized buf pos) in
+        if check_dirty_set && Array.mem !current_index dirty_indices then hash := Int64.lognot !hash;
         let visit edge dep_edge = visit_def edge dep_edge (Lazy.force file_rec) def in
         let read_hash () = !hash in
         let write_hash = ( := ) hash in
+        incr current_index;
         Cycle_hash.create_node visit read_hash write_hash
       in
       let pos = Bin.local_defs buf in
@@ -264,12 +271,18 @@ let sig_hash ~root =
     in
 
     let pattern_defs file_rec =
+      let dirty_indices =
+        Bin.read_tbl_generic Bin.read_pattern_def_index buf (Bin.dirty_pattern_defs buf) Array.init
+      in
+      let current_index = ref 0 in
       let f buf pos =
         let def = Bin.read_packed buf pos in
         let hash = ref (Bin.hash_serialized buf pos) in
+        if check_dirty_set && Array.mem !current_index dirty_indices then hash := Int64.lognot !hash;
         let visit edge dep_edge = visit_packed edge dep_edge (Lazy.force file_rec) def in
         let read_hash () = !hash in
         let write_hash = ( := ) hash in
+        incr current_index;
         Cycle_hash.create_node visit read_hash write_hash
       in
       let pos = Bin.pattern_defs buf in
@@ -332,14 +345,14 @@ let sig_hash ~root =
     !component_hash
 
 (* Entry point for merging a component *)
-let merge_component ~mutator ~options ~reader component =
+let merge_component ~mutator ~options ~for_find_all_refs ~reader component =
   let start_time = Unix.gettimeofday () in
   match Parsing_heaps.Mutator_reader.typed_component ~reader component with
   | None -> (false, None)
   | Some component ->
     let hash =
       let root = Options.root options in
-      sig_hash ~root ~reader component
+      sig_hash ~root ~check_dirty_set:for_find_all_refs ~reader component
     in
     let metadata = Context.metadata_of_options options in
     let lint_severities = Options.lint_severities options in
@@ -360,11 +373,17 @@ let merge_component ~mutator ~options ~reader component =
         Error_suppressions.empty
         component
     in
-    let diff = Parsing_heaps.Merge_context_mutator.add_merge_on_diff mutator component hash in
+    let diff =
+      Parsing_heaps.Merge_context_mutator.add_merge_on_diff
+        ~for_find_all_refs
+        mutator
+        component
+        hash
+    in
     let duration = Unix.gettimeofday () -. start_time in
     (diff, Some (suppressions, duration))
 
-let mk_check_file options ~reader ~master_cx () =
+let mk_check_file options ~reader ~master_cx ~def_info () =
   let check_file =
     let reader = Check_service.mk_heap_reader (Abstract_state_reader.Mutator_state_reader reader) in
     let cache = Check_cache.create ~capacity:10000000 in
@@ -385,7 +404,9 @@ let mk_check_file options ~reader ~master_cx () =
         Parsing_heaps.Mutator_reader.get_resolved_modules_unsafe ~reader Fun.id file parse
       in
       let resolve_require mref = SMap.find mref resolved_modules in
-      let (cx, typed_ast) = check_file file resolve_require ast file_sig docblock aloc_table in
+      let (cx, typed_ast, find_ref_result) =
+        check_file file resolve_require ast file_sig docblock aloc_table def_info
+      in
       let coverage = Coverage.file_coverage ~cx typed_ast in
       let errors = Context.errors cx in
       let errors =
@@ -407,7 +428,9 @@ let mk_check_file options ~reader ~master_cx () =
       in
       let duration = Unix.gettimeofday () -. start_time in
       Some
-        ((cx, type_sig, file_sig, typed_ast), (errors, warnings, suppressions, coverage, duration))
+        ( (cx, type_sig, file_sig, typed_ast),
+          (errors, warnings, suppressions, coverage, find_ref_result, duration)
+        )
 
 (* This cache is used in check_contents_context below. When we check the
  * contents of a file, we create types from the signatures of dependencies.
@@ -459,7 +482,8 @@ let check_contents_context ~reader options master_cx file ast docblock file_sig 
     let reader = Check_service.mk_heap_reader reader in
     Check_service.mk_check_file reader ~options ~master_cx ~cache:check_contents_cache ()
   in
-  check_file file resolve_require ast file_sig docblock aloc_table
+  let (cx, tast, _) = check_file file resolve_require ast file_sig docblock aloc_table None in
+  (cx, tast)
 
 (* Wrap a potentially slow operation with a timer that fires every interval seconds. When it fires,
  * it calls ~on_timer. When the operation finishes, the timer is cancelled *)
@@ -477,15 +501,23 @@ let with_async_logging_timer ~interval ~on_timer ~f =
   let finally () = Base.Option.iter ~f:Timer.cancel_timer !timer in
   Fun.protect ~finally f
 
-let merge_job ~mutator ~reader ~options ~job =
+let merge_job ~mutator ~reader ~options ~for_find_all_refs ~job =
   let f acc (Merge_stream.Component ((leader, _) as component)) =
-    let (diff, result) = job ~mutator ~options ~reader component in
+    let (diff, result) = job ~mutator ~options ~for_find_all_refs ~reader component in
     (leader, diff, result) :: acc
   in
   List.fold_left f []
 
 let merge_runner
-    ~job ~mutator ~reader ~options ~workers ~sig_dependency_graph ~components ~recheck_set =
+    ~job
+    ~mutator
+    ~reader
+    ~options
+    ~for_find_all_refs
+    ~workers
+    ~sig_dependency_graph
+    ~components
+    ~recheck_set =
   let num_workers = Options.max_workers options in
   let start_time = Unix.gettimeofday () in
   let stream = Merge_stream.create ~num_workers ~sig_dependency_graph ~components ~recheck_set in
@@ -495,7 +527,7 @@ let merge_runner
   let%lwt ret =
     MultiWorkerLwt.call
       workers
-      ~job:(merge_job ~mutator ~reader ~options ~job)
+      ~job:(merge_job ~mutator ~reader ~options ~for_find_all_refs ~job)
       ~neutral:[]
       ~merge:(Merge_stream.merge stream)
       ~next:(Merge_stream.next stream)
@@ -510,11 +542,11 @@ let merge_runner
 
 let merge = merge_runner ~job:merge_component
 
-let mk_check options ~reader ~master_cx () =
+let mk_check options ~reader ~master_cx ~def_info () =
   let check_timeout = Options.merge_timeout options in
   (* TODO: add new option *)
   let interval = Base.Option.value_map ~f:(min 5.0) ~default:5.0 check_timeout in
-  let check_file = mk_check_file options ~master_cx ~reader () in
+  let check_file = mk_check_file options ~master_cx ~reader ~def_info () in
   fun file ->
     let file_str = File_key.to_string file in
     try

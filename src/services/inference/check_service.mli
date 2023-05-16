@@ -16,7 +16,10 @@ type 'a check_file =
   File_sig.t ->
   Docblock.t ->
   ALoc.table Lazy.t ->
-  Context.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
+  GetDefUtils.def_info option ->
+  Context.t
+  * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
+  * (FindRefsTypes.single_ref list, string) result
 
 module type READER = sig
   type provider
@@ -42,6 +45,8 @@ module type READER = sig
   val get_type_sig_buf : typed_parse -> Type_sig_bin.buf
 
   val get_resolved_modules : typed_parse -> dependency Parsing_heaps.resolved_module' SMap.t
+
+  val loc_of_aloc : ALoc.t -> Loc.t
 end
 
 val mk_heap_reader :

@@ -2071,19 +2071,64 @@ let get_file_artifacts ~options ~client ~profiling ~env pos :
       (Error err_str, Some (Hh_json.JSON_Object json_props))
     | Ok file_artifacts -> (Ok (Some (file_artifacts, file_key)), None))
 
-let find_references ~reader ~options ~file_artifacts file_key pos :
-    (FindRefsTypes.find_refs_found option, string) result * Hh_json.json option =
+let global_find_references ~genv ~reader ~options ~env ~typecheck_artifacts file_key line col =
+  let (Types_js_types.Typecheck_artifacts { cx; typed_ast; obj_to_obj_map }) =
+    typecheck_artifacts
+  in
+  (* TODO: handle variable find-refs *)
+  match
+    GetDefUtils.get_def_info
+      ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
+      (cx, typed_ast, obj_to_obj_map)
+      (Loc.cursor (Some file_key) line col)
+  with
+  | Error s -> Lwt.return (Error s)
+  | Ok None -> Lwt.return (Ok None)
+  | Ok (Some (props_info, name) as def_info) ->
+    let def_locs = props_info |> GetDefUtils.all_locs_of_property_def_info |> Nel.to_list in
+    let%lwt (profiling, (log_fn, _recheck_stats, results, _env)) =
+      Profiling_js.with_profiling_lwt
+        ~label:"Recheck"
+        ~should_print_summary:(Options.should_profile options)
+        (fun profiling ->
+          let checked_set = CheckedSet.of_focused_list (List.filter_map Loc.source def_locs) in
+          Types_js.recheck
+            ~profiling
+            ~options
+            ~workers:genv.ServerEnv.workers
+            ~updates:checked_set
+            ~def_info
+            ~files_to_force:CheckedSet.empty
+            ~changed_mergebase:None
+            ~missed_changes:false
+            ~will_be_checked_files:(ref CheckedSet.empty)
+            env
+      )
+    in
+    let%lwt () = log_fn ~profiling in
+    let result_compare (_, l1) (_, l2) = Loc.compare l1 l2 in
+    Lwt.return
+      (Base.Result.map results ~f:(fun r -> Some (name, Base.List.sort ~compare:result_compare r)))
+
+let find_references ~genv ~reader ~options ~env ~file_artifacts ~local_only file_key pos :
+    ((FindRefsTypes.find_refs_found option, string) result * Hh_json.json option) Lwt.t =
   let (parse_artifacts, typecheck_artifacts) = file_artifacts in
   let (line, col) = Flow_lsp_conversions.position_of_document_position pos in
-  let local_refs =
-    FindRefs_js.find_local_refs
-      ~reader
-      ~options
-      ~file_key
-      ~parse_artifacts
-      ~typecheck_artifacts
-      ~line
-      ~col
+  let%lwt refs =
+    if (not local_only) && Options.global_find_ref_props options then
+      global_find_references ~genv ~reader ~options ~env ~typecheck_artifacts file_key line col
+    else
+      let results =
+        FindRefs_js.find_local_refs
+          ~reader
+          ~options
+          ~file_key
+          ~parse_artifacts
+          ~typecheck_artifacts
+          ~line
+          ~col
+      in
+      Lwt.return results
   in
   let extra_data =
     Some
@@ -2091,26 +2136,32 @@ let find_references ~reader ~options ~file_artifacts file_key pos :
          [
            ( "result",
              Hh_json.JSON_String
-               (match local_refs with
+               (match refs with
                | Ok _ -> "SUCCESS"
                | _ -> "FAILURE")
            );
          ]
       )
   in
-  match local_refs with
-  | Ok (Some ref_info) -> (Ok (Some ref_info), extra_data)
-  | Ok None -> (Ok None, extra_data)
-  | Error s -> (Error s, extra_data)
+  Lwt.return (refs, extra_data)
 
-let map_find_references_results ~reader ~options ~client ~profiling ~env ~f text_doc_position =
+let map_find_references_results
+    ~genv ~reader ~options ~client ~profiling ~env ~f ~local_only text_doc_position =
   let (file_artifacts_opt, extra_parse_data) =
     get_file_artifacts ~options ~client ~profiling ~env text_doc_position
   in
   match file_artifacts_opt with
   | Ok (Some (file_artifacts, file_key)) ->
-    let (local_refs, extra_data) =
-      find_references ~reader ~options ~file_artifacts file_key text_doc_position
+    let%lwt (local_refs, extra_data) =
+      find_references
+        ~genv
+        ~reader
+        ~options
+        ~env
+        ~file_artifacts
+        ~local_only
+        file_key
+        text_doc_position
     in
     let mapped_refs =
       match local_refs with
@@ -2120,21 +2171,23 @@ let map_find_references_results ~reader ~options ~client ~profiling ~env ~f text
         Ok []
       | Error _ as err -> err
     in
-    (mapped_refs, extra_data)
-  | Ok None -> (Ok [], extra_parse_data)
-  | Error _ as err -> (err, extra_parse_data)
+    Lwt.return (mapped_refs, extra_data)
+  | Ok None -> Lwt.return (Ok [], extra_parse_data)
+  | Error _ as err -> Lwt.return (err, extra_parse_data)
 
-let handle_persistent_find_references ~reader ~options ~id ~params ~metadata ~client ~profiling ~env
-    =
+let handle_persistent_find_references
+    ~genv ~reader ~options ~id ~params ~metadata ~client ~profiling ~env =
   let text_doc_position = params.FindReferences.loc in
   let ref_to_location (_, loc) = Flow_lsp_conversions.loc_to_lsp loc |> Base.Result.ok in
-  let (result, extra_data) =
+  let%lwt (result, extra_data) =
     map_find_references_results
+      ~genv
       ~reader
       ~options
       ~client
       ~profiling
       ~env
+      ~local_only:false
       ~f:ref_to_location
       text_doc_position
   in
@@ -2147,7 +2200,7 @@ let handle_persistent_find_references ~reader ~options ~id ~params ~metadata ~cl
   | Error reason -> Lwt.return (mk_lsp_error_response ~id:(Some id) ~reason metadata)
 
 let handle_persistent_document_highlight
-    ~reader ~options ~id ~params ~metadata ~client ~profiling ~env =
+    ~genv ~reader ~options ~id ~params ~metadata ~client ~profiling ~env =
   (* All the locs are implicitly in the same file *)
   let ref_to_highlight (_, loc) =
     Some
@@ -2156,8 +2209,17 @@ let handle_persistent_document_highlight
         kind = Some DocumentHighlight.Text;
       }
   in
-  let (result, extra_data) =
-    map_find_references_results ~reader ~options ~client ~profiling ~env ~f:ref_to_highlight params
+  let%lwt (result, extra_data) =
+    map_find_references_results
+      ~genv
+      ~reader
+      ~options
+      ~client
+      ~profiling
+      ~env
+      ~f:ref_to_highlight
+      ~local_only:true
+      params
   in
   let metadata = with_data ~extra_data metadata in
   match result with
@@ -2167,17 +2229,25 @@ let handle_persistent_document_highlight
     Lwt.return (LspProt.LspFromServer (Some response), metadata)
   | Error reason -> Lwt.return (mk_lsp_error_response ~id:(Some id) ~reason metadata)
 
-let handle_persistent_rename ~reader ~options ~id ~params ~metadata ~client ~profiling ~env =
+let handle_persistent_rename ~genv ~reader ~options ~id ~params ~metadata ~client ~profiling ~env =
   let Rename.{ textDocument; position; newName } = params in
   let text_doc_position = TextDocumentPositionParams.{ textDocument; position } in
-  let (result, extra_data) =
+  let%lwt (result, extra_data) =
     let (file_artifacts_opt, extra_parse_data) =
       get_file_artifacts ~options ~client ~profiling ~env text_doc_position
     in
     match file_artifacts_opt with
     | Ok (Some (file_artifacts, file_key)) ->
-      let (local_refs, extra_data) =
-        find_references ~reader ~options ~file_artifacts file_key text_doc_position
+      let%lwt (local_refs, extra_data) =
+        find_references
+          ~genv
+          ~reader
+          ~options
+          ~env
+          ~file_artifacts
+          ~local_only:false
+          file_key
+          text_doc_position
       in
       let (parse_artifacts, _typecheck_artifacts) = file_artifacts in
       let edits =
@@ -2216,9 +2286,9 @@ let handle_persistent_rename ~reader ~options ~id ~params ~metadata ~client ~pro
           Ok { WorkspaceEdit.changes = UriMap.empty }
         | Error _ as err -> err
       in
-      (edits, extra_data)
-    | Ok None -> (Ok { WorkspaceEdit.changes = UriMap.empty }, extra_parse_data)
-    | Error _ as err -> (err, extra_parse_data)
+      Lwt.return (edits, extra_data)
+    | Ok None -> Lwt.return (Ok { WorkspaceEdit.changes = UriMap.empty }, extra_parse_data)
+    | Error _ as err -> Lwt.return (err, extra_parse_data)
   in
   let metadata = with_data ~extra_data metadata in
   match result with
@@ -2748,15 +2818,15 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
   | LspToServer (RequestMessage (id, FindReferencesRequest params)) ->
     mk_parallelizable_persistent
       ~options
-      (handle_persistent_find_references ~reader ~options ~id ~params ~metadata)
+      (handle_persistent_find_references ~genv ~reader ~options ~id ~params ~metadata)
   | LspToServer (RequestMessage (id, DocumentHighlightRequest params)) ->
     mk_parallelizable_persistent
       ~options
-      (handle_persistent_document_highlight ~reader ~options ~id ~params ~metadata)
+      (handle_persistent_document_highlight ~genv ~reader ~options ~id ~params ~metadata)
   | LspToServer (RequestMessage (id, RenameRequest params)) ->
     mk_parallelizable_persistent
       ~options
-      (handle_persistent_rename ~reader ~options ~id ~params ~metadata)
+      (handle_persistent_rename ~genv ~reader ~options ~id ~params ~metadata)
   | LspToServer (RequestMessage (id, TypeCoverageRequest params)) ->
     (* Grab the file contents immediately in case of any future didChanges *)
     let textDocument = params.TypeCoverage.textDocument in

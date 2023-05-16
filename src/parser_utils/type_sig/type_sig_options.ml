@@ -23,7 +23,7 @@ type t = {
   type_guards: bool;
 }
 
-let of_options options docblock file =
+let of_options options docblock locs_to_dirtify file =
   let munge = Options.should_munge_underscores options && not (Docblock.preventMunge docblock) in
   (* NOTE: This is a temporary hack that makes the signature verifier ignore any static
      property named `propTypes` in any class. It should be killed with fire or replaced with
@@ -55,6 +55,7 @@ let of_options options docblock file =
     facebook_keyMirror;
     enable_relay_integration;
     relay_integration_module_prefix;
+    locs_to_dirtify;
     suppress_types = Options.suppress_types options;
     facebook_fbt = Options.facebook_fbt options;
     max_literal_len = Options.max_literal_length options;
@@ -64,7 +65,6 @@ let of_options options docblock file =
     mapped_type = Options.mapped_type options;
     tuple_enhancements = Options.tuple_enhancements options;
     type_guards = Options.type_guards options;
-    locs_to_dirtify = [];
   }
 
 let builtin_options options =

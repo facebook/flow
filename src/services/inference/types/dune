@@ -6,4 +6,5 @@
   flow_coverage
   flow_file_sig
   flow_parsing_docblock
+  flow_service_references_types
   flow_typing))

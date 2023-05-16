@@ -179,14 +179,20 @@ let merge_targets ~env ~options ~profiling ~get_dependent_files roots =
   let%lwt components = Types_js.calc_deps ~options ~profiling ~components roots in
   Lwt.return (sig_dependency_graph, components, roots, to_check)
 
-let merge_job ~mutator ~options ~reader component =
+let merge_job ~mutator ~options ~for_find_all_refs ~reader component =
   let diff =
     match Parsing_heaps.Mutator_reader.typed_component ~reader component with
     | None -> false
     | Some component ->
       let root = Options.root options in
-      let hash = Merge_service.sig_hash ~root ~reader component in
-      Parsing_heaps.Merge_context_mutator.add_merge_on_diff mutator component hash
+      let hash =
+        Merge_service.sig_hash ~check_dirty_set:for_find_all_refs ~root ~reader component
+      in
+      Parsing_heaps.Merge_context_mutator.add_merge_on_diff
+        ~for_find_all_refs
+        mutator
+        component
+        hash
   in
   (diff, Ok ())
 
@@ -218,7 +224,7 @@ let post_check ~visit ~iteration ~reader ~options ~metadata file = function
 
 let mk_check ~visit ~iteration ~reader ~options ~metadata () =
   let master_cx = Context_heaps.find_master () in
-  let check = Merge_service.mk_check options ~reader ~master_cx () in
+  let check = Merge_service.mk_check options ~reader ~master_cx ~def_info:None () in
   (fun file -> check file |> post_check ~visit ~iteration ~reader ~options ~metadata file)
 
 let mk_next ~options ~workers roots =
@@ -298,6 +304,7 @@ module SimpleTypedRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : TYPED_RUNNER_CONFIG 
             ~mutator
             ~reader
             ~options
+            ~for_find_all_refs:false
             ~workers
             ~sig_dependency_graph
             ~components
@@ -335,7 +342,7 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
     let state = C.prepass_init () in
     let options = C.mod_prepass_options options in
     let master_cx = Context_heaps.find_master () in
-    let check = Merge_service.mk_check options ~reader ~master_cx () in
+    let check = Merge_service.mk_check options ~reader ~master_cx ~def_info:None () in
     List.fold_left
       (fun acc file ->
         match check file with
@@ -383,6 +390,7 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
             ~mutator
             ~reader
             ~options
+            ~for_find_all_refs:false
             ~workers
             ~sig_dependency_graph
             ~components
@@ -458,12 +466,13 @@ module TypedRunner (TypedRunnerConfig : TYPED_RUNNER_CONFIG) : STEP_RUNNER = str
         (* Diff heaps are not cleared like the rest of the heaps during recheck
            so we clear them here, before moving further into recheck. *)
         Diff_heaps.remove_batch roots;
-        let%lwt (_, _, env) =
+        let%lwt (_, _, _, env) =
           Types_js.recheck
             ~profiling
             ~options
             ~workers
             ~updates:(CheckedSet.add ~focused:roots CheckedSet.empty)
+            ~def_info:None
             ~files_to_force:CheckedSet.empty
             ~changed_mergebase:None
             ~missed_changes:false

@@ -129,12 +129,13 @@ let recheck
     let should_print_summary = Options.should_profile options in
     Profiling_js.with_profiling_lwt ~label:"Recheck" ~should_print_summary (fun profiling ->
         send_start_recheck env;
-        let%lwt (log_recheck_event, recheck_stats, env) =
+        let%lwt (log_recheck_event, recheck_stats, _find_ref_results, env) =
           Types_js.recheck
             ~profiling
             ~options
             ~workers
             ~updates
+            ~def_info:None
             ~files_to_force
             ~changed_mergebase
             ~missed_changes

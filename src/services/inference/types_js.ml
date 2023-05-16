@@ -89,13 +89,19 @@ let parse ~options ~profiling ~workers ~reader parse_next =
       Lwt.return (collate_parse_results results)
   )
 
-let reparse ~options ~profiling ~transaction ~reader ~workers ~modified =
+let reparse ~options ~def_info ~profiling ~transaction ~reader ~workers ~modified =
   with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
+      let locs_to_dirtify =
+        Base.Option.value_map def_info ~default:[] ~f:(fun info ->
+            info |> GetDefUtils.all_locs_of_def_info |> Nel.to_list
+        )
+      in
       let%lwt results =
         Parsing_service_js.reparse_with_defaults
           ~transaction
           ~reader
           ~with_progress:true
+          ~locs_to_dirtify
           ~workers
           ~modified
           options
@@ -262,29 +268,41 @@ let update_slow_files acc file check_time =
     acc
 
 let update_check_results (acc, slow_files) (file, result) =
-  let (errors, warnings, suppressions, coverage, first_internal_error) = acc in
+  let (errors, warnings, suppressions, coverage, find_ref_results, first_internal_error) = acc in
   let errors = FilenameMap.remove file errors in
   let warnings = FilenameMap.remove file warnings in
   let suppressions = Error_suppressions.remove file suppressions in
   let coverage = FilenameMap.remove file coverage in
   match result with
   | Ok None -> (acc, slow_files)
-  | Ok (Some (new_errors, new_warnings, new_suppressions, new_coverage, check_time)) ->
+  | Ok
+      (Some
+        (new_errors, new_warnings, new_suppressions, new_coverage, new_find_ref_results, check_time)
+        ) ->
     let errors = update_errset errors file new_errors in
     let warnings = update_errset warnings file new_warnings in
     let suppressions = Error_suppressions.update_suppressions suppressions new_suppressions in
     let coverage = FilenameMap.add file new_coverage coverage in
+    let find_ref_results =
+      Base.Result.combine
+        find_ref_results
+        new_find_ref_results
+        ~ok:Base.List.append
+        ~err:(fun a _ -> a
+      )
+    in
     let slow_files = update_slow_files slow_files file check_time in
-    ((errors, warnings, suppressions, coverage, first_internal_error), slow_files)
+    ((errors, warnings, suppressions, coverage, find_ref_results, first_internal_error), slow_files)
   | Error e ->
     let first_internal_error = update_first_internal_error first_internal_error e in
     let errors = add_internal_error errors file e in
-    ((errors, warnings, suppressions, coverage, first_internal_error), slow_files)
+    ((errors, warnings, suppressions, coverage, find_ref_results, first_internal_error), slow_files)
 
 let run_merge_service
     ~mutator
     ~reader
     ~options
+    ~for_find_all_refs
     ~profiling
     ~workers
     ~sig_dependency_graph
@@ -297,6 +315,7 @@ let run_merge_service
           ~mutator
           ~reader
           ~options
+          ~for_find_all_refs
           ~workers
           ~sig_dependency_graph
           ~components
@@ -350,7 +369,7 @@ let mk_intermediate_result_callback ~reader ~options ~persistent_connections sup
   let collate_result acc (file, result) =
     match result with
     | Ok None -> acc
-    | Ok (Some (errors, warnings, _, _, _)) -> collate_errors acc file errors warnings
+    | Ok (Some (errors, warnings, _, _, _, _)) -> collate_errors acc file errors warnings
     | Error msg ->
       let errors = error_set_of_internal_error file msg in
       collate_errors acc file errors Flow_error.ErrorSet.empty
@@ -379,6 +398,7 @@ let merge
     ~transaction
     ~reader
     ~options
+    ~for_find_all_refs
     ~profiling
     ~workers
     ~suppressions
@@ -412,6 +432,7 @@ let merge
         ~mutator
         ~reader
         ~options
+        ~for_find_all_refs
         ~profiling
         ~workers
         ~sig_dependency_graph
@@ -456,6 +477,7 @@ module Check_files : sig
     reader:Parsing_heaps.Mutator_reader.reader ->
     options:Options.t ->
     profiling:Profiling_js.running ->
+    def_info:GetDefUtils.def_info option ->
     workers:MultiWorkerLwt.worker list option ->
     errors:ServerEnv.errors ->
     updated_suppressions:Error_suppressions.t ->
@@ -467,6 +489,7 @@ module Check_files : sig
     persistent_connections:Persistent_connection.t option ->
     ( ServerEnv.errors
     * Coverage_response.file_coverage Utils_js.FilenameMap.t
+    * (FindRefsTypes.single_ref list, string) result
     * float
     * int
     * string option
@@ -481,6 +504,7 @@ end = struct
       ~reader
       ~options
       ~profiling
+      ~def_info
       ~workers
       ~errors
       ~updated_suppressions
@@ -546,16 +570,24 @@ end = struct
           else
             let mk_check () =
               let master_cx = Context_heaps.find_master () in
-              Merge_service.mk_check options ~master_cx ~reader ()
+              Merge_service.mk_check options ~master_cx ~reader ~def_info ()
             in
             mk_job ~mk_check ~options ()
         in
         let%lwt ret = MultiWorkerLwt.call workers ~job ~neutral:[] ~merge ~next in
         let { ServerEnv.merge_errors; warnings; _ } = errors in
-        let ((merge_errors, warnings, suppressions, coverage, first_internal_error), slow_files) =
+        let ( ( merge_errors,
+                warnings,
+                suppressions,
+                coverage,
+                find_ref_results,
+                first_internal_error
+              ),
+              slow_files
+            ) =
           List.fold_left
             update_check_results
-            ((merge_errors, warnings, updated_suppressions, coverage, None), (0, 0., None))
+            ((merge_errors, warnings, updated_suppressions, coverage, Ok [], None), (0, 0., None))
             ret
         in
         let (num_slow_files, _, slowest_file) = slow_files in
@@ -565,6 +597,7 @@ end = struct
         Lwt.return
           ( errors,
             coverage,
+            find_ref_results,
             time_to_check_merged,
             !skipped_count,
             Base.Option.map ~f:File_key.to_string slowest_file,
@@ -804,11 +837,17 @@ module Recheck : sig
     options:Options.t ->
     workers:MultiWorkerLwt.worker list option ->
     updates:CheckedSet.t ->
+    def_info:GetDefUtils.def_info option ->
     files_to_force:CheckedSet.t ->
     changed_mergebase:bool option ->
     will_be_checked_files:CheckedSet.t ref ->
     env:ServerEnv.env ->
-    (ServerEnv.env * recheck_result * ((* record_recheck_time *) unit -> unit Lwt.t) * string option)
+    ( ServerEnv.env
+    * recheck_result
+    * ((* record_recheck_time *) unit -> unit Lwt.t)
+    * (FindRefsTypes.single_ref list, string) result
+    * string option
+    )
     Lwt.t
 
   (* Raises `Unexpected_file_changes` if it finds files unexpectedly changed when parsing. *)
@@ -819,6 +858,7 @@ module Recheck : sig
     options:Options.t ->
     workers:MultiWorkerLwt.worker list option ->
     updates:CheckedSet.t ->
+    def_info:GetDefUtils.def_info option ->
     files_to_force:CheckedSet.t ->
     env:ServerEnv.env ->
     ServerEnv.env Lwt.t
@@ -864,6 +904,7 @@ end = struct
       ~options
       ~workers
       ~(updates : CheckedSet.t)
+      ~def_info
       ~files_to_force
       ~env =
     let loc_of_aloc = Parsing_heaps.Mutator_reader.loc_of_aloc ~reader in
@@ -891,7 +932,7 @@ end = struct
     let%lwt (parsed_set, unparsed_set, unchanged_parse, deleted, dirty_modules, new_local_errors, _)
         =
       let modified = CheckedSet.all updates in
-      reparse ~options ~profiling ~transaction ~reader ~workers ~modified
+      reparse ~options ~def_info ~profiling ~transaction ~reader ~workers ~modified
     in
 
     (* parsed + unparsed = new or changed files *)
@@ -1440,7 +1481,9 @@ end = struct
       ~transaction
       ~reader
       ~options
+      ~for_find_all_refs
       ~workers
+      ~def_info
       ~will_be_checked_files
       ~changed_mergebase
       ~intermediate_values
@@ -1515,6 +1558,7 @@ end = struct
         ~transaction
         ~reader
         ~options
+        ~for_find_all_refs
         ~profiling
         ~workers
         ~suppressions:errors.ServerEnv.suppressions
@@ -1528,6 +1572,7 @@ end = struct
 
     let%lwt ( errors,
               coverage,
+              find_ref_results,
               time_to_check_merged,
               check_skip_count,
               slowest_file,
@@ -1545,6 +1590,7 @@ end = struct
         ~reader
         ~options
         ~profiling
+        ~def_info
         ~workers
         ~errors
         ~updated_suppressions
@@ -1584,6 +1630,7 @@ end = struct
           num_slow_files;
         },
         record_recheck_time,
+        find_ref_results,
         check_internal_error
       )
 
@@ -1602,6 +1649,7 @@ end = struct
       ~options
       ~workers
       ~updates
+      ~def_info
       ~files_to_force
       ~changed_mergebase
       ~will_be_checked_files
@@ -1615,6 +1663,7 @@ end = struct
           ~options
           ~workers
           ~updates
+          ~def_info
           ~files_to_force
           ~env
       with
@@ -1625,14 +1674,16 @@ end = struct
       ~transaction
       ~reader
       ~options
+      ~for_find_all_refs:(Option.is_some def_info)
       ~workers
+      ~def_info
       ~will_be_checked_files
       ~changed_mergebase
       ~intermediate_values
       ~env
 
   let parse_and_update_dependency_info
-      ~profiling ~transaction ~reader ~options ~workers ~updates ~files_to_force ~env =
+      ~profiling ~transaction ~reader ~options ~workers ~updates ~def_info ~files_to_force ~env =
     let%lwt (env, intermediate_values) =
       recheck_parse_and_update_dependency_info
         ~profiling
@@ -1641,6 +1692,7 @@ end = struct
         ~options
         ~workers
         ~updates
+        ~def_info
         ~files_to_force
         ~env
     in
@@ -1669,10 +1721,11 @@ let recheck_impl
     ~workers
     ~updates
     env
+    ~def_info
     ~files_to_force
     ~changed_mergebase
     ~will_be_checked_files =
-  let%lwt (env, stats, record_recheck_time, first_internal_error) =
+  let%lwt (env, stats, record_recheck_time, find_ref_results, first_internal_error) =
     Memory_utils.with_memory_profiling_lwt ~profiling (fun () ->
         with_transaction "recheck" (fun transaction reader ->
             Recheck.full
@@ -1683,6 +1736,7 @@ let recheck_impl
               ~workers
               ~updates
               ~env
+              ~def_info
               ~files_to_force
               ~changed_mergebase
               ~will_be_checked_files
@@ -1732,7 +1786,7 @@ let recheck_impl
     { LspProt.dependent_file_count = all_dependent_file_count; changed_file_count; top_cycle }
   in
 
-  Lwt.return (log_recheck_event, recheck_stats, env)
+  Lwt.return (log_recheck_event, recheck_stats, find_ref_results, env)
 
 (* creates a closure that lists all files in the given root, returned in chunks *)
 let make_next_files ~libs ~file_options root =
@@ -2096,7 +2150,7 @@ let handle_updates_since_saved_state ~profiling ~workers ~options ~libs_ok updat
        * --saved-state-force-recheck. These users want to force Flow to recheck all the files that
        * have changed since the saved state was generated *)
       let files_to_force = CheckedSet.empty in
-      let%lwt (recheck_profiling, (_log_recheck_event, _summary_info, env)) =
+      let%lwt (recheck_profiling, (_log_recheck_event, _summary_info, _find_ref_results, env)) =
         let should_print_summary = Options.should_profile options in
         Profiling_js.with_profiling_lwt ~label:"Recheck" ~should_print_summary (fun profiling ->
             recheck_impl
@@ -2104,6 +2158,7 @@ let handle_updates_since_saved_state ~profiling ~workers ~options ~libs_ok updat
               ~options
               ~workers
               ~updates
+              ~def_info:None
               ~files_to_force
               ~changed_mergebase:None
               ~will_be_checked_files:(ref files_to_force)
@@ -2127,6 +2182,7 @@ let handle_updates_since_saved_state ~profiling ~workers ~options ~libs_ok updat
             ~options
             ~workers
             ~updates:updated_files
+            ~def_info:None
             ~files_to_force:CheckedSet.empty
             ~env
         with
@@ -2377,13 +2433,14 @@ let reinit ~profiling ~workers ~options ~updates ~files_to_force ~will_be_checke
     let recheck_stats =
       { LspProt.dependent_file_count = 0; changed_file_count = 0; top_cycle = None }
     in
-    Lwt.return (log_recheck_event, recheck_stats, env)
+    Lwt.return (log_recheck_event, recheck_stats, Ok [], env)
 
 let recheck
     ~profiling
     ~options
     ~workers
     ~updates
+    ~def_info
     ~files_to_force
     ~changed_mergebase
     ~missed_changes
@@ -2402,6 +2459,7 @@ let recheck
         ~options
         ~workers
         ~updates
+        ~def_info
         ~files_to_force
         ~changed_mergebase
         ~will_be_checked_files
@@ -2450,6 +2508,7 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
           ~transaction
           ~reader
           ~options
+          ~for_find_all_refs:false
           ~profiling
           ~workers
           ~suppressions:errors.ServerEnv.suppressions
@@ -2461,11 +2520,12 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
           ~unparsed_set:FilenameSet.empty
       in
 
-      let%lwt (errors, coverage, _, _, _, _, check_internal_error) =
+      let%lwt (errors, coverage, _, _, _, _, _, check_internal_error) =
         Check_files.check_files
           ~reader
           ~options
           ~profiling
+          ~def_info:None
           ~workers
           ~errors
           ~updated_suppressions

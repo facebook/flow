@@ -26,12 +26,18 @@ val recheck :
   options:Options.t ->
   workers:MultiWorkerLwt.worker list option ->
   updates:CheckedSet.t ->
+  def_info:GetDefUtils.def_info option ->
   files_to_force:CheckedSet.t ->
   changed_mergebase:bool option ->
   missed_changes:bool ->
   will_be_checked_files:CheckedSet.t ref ->
   ServerEnv.env ->
-  ((profiling:Profiling_js.finished -> unit Lwt.t) * LspProt.recheck_stats * ServerEnv.env) Lwt.t
+  ( (profiling:Profiling_js.finished -> unit Lwt.t)
+  * LspProt.recheck_stats
+  * (FindRefsTypes.single_ref list, string) result
+  * ServerEnv.env
+  )
+  Lwt.t
 
 (* initial (full) check *)
 val full_check :

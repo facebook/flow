@@ -68,6 +68,7 @@ type results = {
 val parse_with_defaults :
   ?force_types:bool ->
   ?force_use_strict:bool ->
+  ?locs_to_dirtify:Loc.t list ->
   reader:Mutator_state_reader.t ->
   Options.t ->
   MultiWorkerLwt.worker list option ->
@@ -79,6 +80,7 @@ val reparse_with_defaults :
   reader:Mutator_state_reader.t ->
   ?force_types:bool ->
   ?force_use_strict:bool ->
+  ?locs_to_dirtify:Loc.t list ->
   with_progress:bool ->
   workers:MultiWorkerLwt.worker list option ->
   modified:FilenameSet.t ->
@@ -101,6 +103,7 @@ val parse_file_sig :
 val parse_type_sig :
   Options.t ->
   Docblock.t ->
+  Loc.t list ->
   File_key.t ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->
   Type_sig_collections.Locs.index Type_sig.error list
@@ -113,6 +116,7 @@ val do_parse :
   docblock:Docblock.t ->
   ?force_types:bool ->
   ?force_use_strict:bool ->
+  ?locs_to_dirtify:Loc.t list ->
   string ->
   (* contents of the file *)
   File_key.t ->

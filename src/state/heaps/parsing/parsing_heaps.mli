@@ -270,7 +270,7 @@ module Merge_context_mutator : sig
 
   val create : Transaction.t -> Utils_js.FilenameSet.t -> t
 
-  val add_merge_on_diff : t -> component_file Nel.t -> Xx.hash -> bool
+  val add_merge_on_diff : for_find_all_refs:bool -> t -> component_file Nel.t -> Xx.hash -> bool
 end
 
 module Saved_state_mutator : sig

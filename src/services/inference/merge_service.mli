@@ -19,12 +19,17 @@ type 'a merge_results = 'a list * sig_opts_data
 type 'a merge_job =
   mutator:Parsing_heaps.Merge_context_mutator.t ->
   options:Options.t ->
+  for_find_all_refs:bool ->
   reader:Mutator_state_reader.t ->
   File_key.t Nel.t ->
   bool * 'a
 
 val sig_hash :
-  root:Path.t -> reader:Mutator_state_reader.t -> Parsing_heaps.component_file Nel.t -> Xx.hash
+  check_dirty_set:bool ->
+  root:Path.t ->
+  reader:Mutator_state_reader.t ->
+  Parsing_heaps.component_file Nel.t ->
+  Xx.hash
 
 val check_contents_cache : Check_cache.t
 
@@ -43,6 +48,7 @@ val merge_runner :
   mutator:Parsing_heaps.Merge_context_mutator.t ->
   reader:Mutator_state_reader.t ->
   options:Options.t ->
+  for_find_all_refs:bool ->
   workers:MultiWorkerLwt.worker list option ->
   sig_dependency_graph:FilenameGraph.t ->
   components:File_key.t Nel.t list ->
@@ -53,6 +59,7 @@ val merge :
   mutator:Parsing_heaps.Merge_context_mutator.t ->
   reader:Mutator_state_reader.t ->
   options:Options.t ->
+  for_find_all_refs:bool ->
   workers:MultiWorkerLwt.worker list option ->
   sig_dependency_graph:FilenameGraph.t ->
   components:File_key.t Nel.t list ->
@@ -63,6 +70,7 @@ val mk_check :
   Options.t ->
   reader:Parsing_heaps.Mutator_reader.reader ->
   master_cx:Context.master_context ->
+  def_info:GetDefUtils.def_info option ->
   unit ->
   File_key.t ->
   Types_js_types.check_result option unit_result

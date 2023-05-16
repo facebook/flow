@@ -154,12 +154,13 @@ let parse_file_sig options file ast =
   in
   File_sig.program ~ast ~opts:file_sig_opts
 
-let parse_type_sig options docblock file ast =
-  let sig_opts = Type_sig_options.of_options options docblock file in
+let parse_type_sig options docblock locs_to_dirtify file ast =
+  let sig_opts = Type_sig_options.of_options options docblock locs_to_dirtify file in
   let strict = Docblock.is_strict docblock in
   Type_sig_utils.parse_and_pack_module ~strict sig_opts (Some file) ast
 
-let do_parse ~options ~docblock ?force_types ?force_use_strict content file =
+let do_parse ~options ~docblock ?force_types ?force_use_strict ?(locs_to_dirtify = []) content file
+    =
   try
     match file with
     | File_key.JsonFile str ->
@@ -192,7 +193,9 @@ let do_parse ~options ~docblock ?force_types ?force_use_strict content file =
               parse_errors = Nel.of_list_exn parse_errors;
             }
         else
-          let (sig_errors, locs, type_sig) = parse_type_sig options docblock file ast in
+          let (sig_errors, locs, type_sig) =
+            parse_type_sig options docblock locs_to_dirtify file ast
+          in
           let exports = Exports.of_module type_sig in
           let imports = Imports.of_file_sig file_sig in
           let imports = Imports.add_globals globals imports in
@@ -279,6 +282,7 @@ let reducer
     ~skip_unchanged
     ~force_types
     ~force_use_strict
+    ~locs_to_dirtify
     ~noflow
     ~exported_module
     acc
@@ -338,7 +342,16 @@ let reducer
               docblock
           in
           begin
-            match do_parse ~options ~docblock ?force_types ?force_use_strict content file_key with
+            match
+              do_parse
+                ~options
+                ~docblock
+                ?force_types
+                ?force_use_strict
+                ~locs_to_dirtify
+                content
+                file_key
+            with
             | Parse_ok
                 {
                   ast;
@@ -463,6 +476,7 @@ let parse
     ~skip_unchanged
     ~force_types
     ~force_use_strict
+    ~locs_to_dirtify
     workers
     next : results Lwt.t =
   let t = Unix.gettimeofday () in
@@ -477,6 +491,7 @@ let parse
       ~skip_unchanged
       ~force_types
       ~force_use_strict
+      ~locs_to_dirtify
       ~noflow
       ~exported_module
   in
@@ -512,6 +527,7 @@ let reparse
     ~options
     ~force_types
     ~force_use_strict
+    ~locs_to_dirtify
     ~with_progress
     ~workers
     ~modified:files =
@@ -523,9 +539,10 @@ let reparse
       ~reader
       ~options
       ~skip_changed:false
-      ~skip_unchanged:true
+      ~skip_unchanged:(locs_to_dirtify = [])
       ~force_types
       ~force_use_strict
+      ~locs_to_dirtify
       workers
       next
   in
@@ -533,7 +550,8 @@ let reparse
   Parsing_heaps.Reparse_mutator.record_not_found master_mutator results.not_found;
   Lwt.return results
 
-let parse_with_defaults ?force_types ?force_use_strict ~reader options workers next =
+let parse_with_defaults
+    ?force_types ?force_use_strict ?(locs_to_dirtify = []) ~reader options workers next =
   (* This isn't a recheck, so there shouldn't be any unchanged *)
   let worker_mutator = Parsing_heaps.Parse_mutator.create () in
   parse
@@ -544,17 +562,27 @@ let parse_with_defaults ?force_types ?force_use_strict ~reader options workers n
     ~skip_unchanged:false
     ~force_types
     ~force_use_strict
+    ~locs_to_dirtify
     workers
     next
 
 let reparse_with_defaults
-    ~transaction ~reader ?force_types ?force_use_strict ~with_progress ~workers ~modified options =
+    ~transaction
+    ~reader
+    ?force_types
+    ?force_use_strict
+    ?(locs_to_dirtify = [])
+    ~with_progress
+    ~workers
+    ~modified
+    options =
   reparse
     ~transaction
     ~reader
     ~options
     ~force_types
     ~force_use_strict
+    ~locs_to_dirtify
     ~with_progress
     ~workers
     ~modified
@@ -603,6 +631,7 @@ let ensure_parsed ~reader options workers files =
       ~skip_unchanged:false
       ~force_types:None
       ~force_use_strict:None
+      ~locs_to_dirtify:[]
       workers
       next
   in

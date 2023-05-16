@@ -16,7 +16,10 @@ type 'a check_file =
   File_sig.t ->
   Docblock.t ->
   ALoc.table Lazy.t ->
-  Context.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
+  GetDefUtils.def_info option ->
+  Context.t
+  * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
+  * (FindRefsTypes.single_ref list, string) result
 
 (* Check will lazily create types for the checked file's dependencies. These
  * types are created in the dependency's context and need to be copied into the
@@ -182,6 +185,8 @@ module type READER = sig
   val get_type_sig_buf : typed_parse -> Type_sig_bin.buf
 
   val get_resolved_modules : typed_parse -> dependency Parsing_heaps.resolved_module' SMap.t
+
+  val loc_of_aloc : ALoc.t -> Loc.t
 end
 
 let mk_heap_reader reader =
@@ -235,6 +240,12 @@ let mk_heap_reader reader =
 
     let get_resolved_modules (file_key, parse) =
       Parsing_heaps.Reader_dispatcher.get_resolved_modules_unsafe ~reader Fun.id file_key parse
+
+    let loc_of_aloc =
+      match reader with
+      | Abstract_state_reader.State_reader reader -> Parsing_heaps.Reader.loc_of_aloc ~reader
+      | Abstract_state_reader.Mutator_state_reader reader ->
+        Parsing_heaps.Mutator_reader.loc_of_aloc ~reader
   end in
   (module Reader : READER with type dependency = Parsing_heaps.dependency_addr)
 
@@ -464,17 +475,37 @@ let mk_check_file
     SMap.iter (connect_require cx resolve_require) (File_sig.require_loc_map file_sig)
   in
 
-  fun file_key resolve_require ast file_sig docblock aloc_table ->
+  fun file_key resolve_require ast file_sig docblock aloc_table def_info ->
     let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in
     let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
     let ccx = Context.make_ccx master_cx in
     let metadata = Context.docblock_overrides docblock base_metadata in
     let cx = Context.make ccx metadata file_key aloc_table Context.Checking in
     ConsGen.set_dst_cx cx;
-    let lint_severities = get_lint_severities metadata options in
-    Type_inference_js.add_require_tvars cx file_sig;
-    connect_requires cx resolve_require file_sig;
-    let typed_ast = Type_inference_js.infer_ast cx file_key comments aloc_ast ~lint_severities in
-    Merge_js.post_merge_checks cx aloc_ast metadata;
-    Context.reset_errors cx (Flow_error.post_process_errors (Context.errors cx));
-    (cx, typed_ast)
+    let (typed_ast, obj_to_obj_map) =
+      Obj_to_obj_hook.with_obj_to_obj_hook
+        ~enabled:(Base.Option.is_some def_info)
+        ~loc_of_aloc:Reader.loc_of_aloc
+        ~f:(fun () ->
+          let lint_severities = get_lint_severities metadata options in
+          Type_inference_js.add_require_tvars cx file_sig;
+          connect_requires cx resolve_require file_sig;
+          let tast = Type_inference_js.infer_ast cx file_key comments aloc_ast ~lint_severities in
+          Merge_js.post_merge_checks cx aloc_ast metadata;
+          Context.reset_errors cx (Flow_error.post_process_errors (Context.errors cx));
+          tast
+      )
+    in
+    let find_refs_result =
+      match def_info with
+      | None -> Ok []
+      | Some (def_info, name) ->
+        PropertyFindRefs.property_find_refs_in_file
+          ~loc_of_aloc:Reader.loc_of_aloc
+          (ast, file_sig, docblock)
+          (cx, typed_ast, obj_to_obj_map)
+          file_key
+          def_info
+          name
+    in
+    (cx, typed_ast, find_refs_result)

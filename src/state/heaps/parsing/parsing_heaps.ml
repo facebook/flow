@@ -1716,7 +1716,7 @@ module Merge_context_mutator = struct
 
   let update_sig_hash x (_, _, parse) = Heap.entity_advance (Heap.get_sig_hash parse) x
 
-  let add_sig_hash parse sig_hash =
+  let add_sig_hash ~for_find_all_refs parse sig_hash =
     let open Heap in
     let ent = get_sig_hash parse in
     let old_sig_hash =
@@ -1726,17 +1726,18 @@ module Merge_context_mutator = struct
     match old_sig_hash with
     | Some old_sig_hash when Int64.equal old_sig_hash sig_hash -> false
     | _ ->
-      alloc
-        (let+ sig_hash = prepare_write_int64 sig_hash in
-         entity_advance ent (Some sig_hash)
-        );
+      if not for_find_all_refs then
+        alloc
+          (let+ sig_hash = prepare_write_int64 sig_hash in
+           entity_advance ent (Some sig_hash)
+          );
       true
 
-  let add_merge_on_diff () component sig_hash =
+  let add_merge_on_diff ~for_find_all_refs () component sig_hash =
     let ((_, leader, leader_parse), rest) = component in
     Nel.iter (update_leader (Some leader)) component;
-    let diff = add_sig_hash leader_parse sig_hash in
-    if diff then List.iter (update_sig_hash None) rest;
+    let diff = add_sig_hash ~for_find_all_refs leader_parse sig_hash in
+    if diff && not for_find_all_refs then List.iter (update_sig_hash None) rest;
     diff
 end
 
