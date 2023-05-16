@@ -595,6 +595,7 @@ module Initialize = struct
         (** true if the server strictly orders completion results. when set, the editor
             should not do its own sorting. *)
     autoCloseJsx: bool;
+    renameFileImports: bool;
   }
 
   and workspaceServerCapabilities = {
@@ -1313,14 +1314,17 @@ module ToggleTypeCoverage = struct
   and toggleTypeCoverageParams = { toggle: bool }
 end
 
-(* Module for renamed files, method="workspace/willRenameFiles" *)
-module WillRenameFiles = struct
+(* Module for shared file renaming types *)
+module RenameFiles = struct
   type fileRename = {
     oldUri: DocumentUri.t;
     newUri: DocumentUri.t;
   }
+end
 
-  and params = { files: fileRename list }
+(* Module for will renamed files, method="workspace/willRenameFiles" *)
+module WillRenameFiles = struct
+  type params = { files: RenameFiles.fileRename list }
 
   and result = WorkspaceEdit.t
 end
@@ -1398,6 +1402,14 @@ module LinkedEditingRange = struct
   }
 end
 
+(** Rename imports after a module rename, method="flow/renameFileImports"
+    This is a non-standard LSP extension. *)
+module RenameFileImports = struct
+  type params = RenameFiles.fileRename
+
+  and result = WorkspaceEdit.t
+end
+
 (**
  * Here are gathered-up ADTs for all the messages we handle
  *)
@@ -1434,6 +1446,7 @@ type lsp_request =
   | WillRenameFilesRequest of WillRenameFiles.params
   | AutoCloseJsxRequest of AutoCloseJsx.params
   | LinkedEditingRangeRequest of LinkedEditingRange.params
+  | RenameFileImportsRequest of RenameFileImports.params
   | UnknownRequest of string * Hh_json.json option
 
 type lsp_result =
@@ -1469,6 +1482,7 @@ type lsp_result =
   | RegisterCapabilityResult
   | AutoCloseJsxResult of AutoCloseJsx.result
   | LinkedEditingRangeResult of LinkedEditingRange.result
+  | RenameFileImportsResult of RenameFileImports.result
   (* the string is a stacktrace *)
   | ErrorResult of Error.t * string
 

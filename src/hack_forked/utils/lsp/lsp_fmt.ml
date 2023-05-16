@@ -1447,7 +1447,7 @@ let print_initialize ~key (r : Initialize.result) : json =
     let cap = r.server_capabilities in
     let sync = cap.textDocumentSync in
     let experimental =
-      let { server_snippetTextEdit; strictCompletionOrder; autoCloseJsx } =
+      let { server_snippetTextEdit; strictCompletionOrder; autoCloseJsx; renameFileImports } =
         cap.server_experimental
       in
       let addCapability capability name json =
@@ -1461,6 +1461,7 @@ let print_initialize ~key (r : Initialize.result) : json =
         |> addCapability server_snippetTextEdit "snippetTextEdit"
         |> addCapability strictCompletionOrder "strictCompletionOrder"
         |> addCapability autoCloseJsx "autoCloseJsx"
+        |> addCapability renameFileImports "renameFileImports"
       in
       if Base.List.is_empty props then
         None
@@ -1604,7 +1605,7 @@ module WillRenameFilesFmt = struct
 
   let parse_file_rename json =
     {
-      oldUri = Jget.string_exn json "oldUri" |> DocumentUri.of_string;
+      RenameFiles.oldUri = Jget.string_exn json "oldUri" |> DocumentUri.of_string;
       newUri = Jget.string_exn json "newUri" |> DocumentUri.of_string;
     }
 
@@ -1653,6 +1654,12 @@ module LinkedEditingRangeFmt = struct
   let params_of_json = parse_linkedEditingRange
 
   let json_of_result = print_linkedEditingRange
+end
+
+module RenameFileImportsFmt = struct
+  let params_of_json = WillRenameFilesFmt.parse_file_rename
+
+  let json_of_result = print_workspaceEdit
 end
 
 (************************************************************************)
@@ -1741,6 +1748,7 @@ let request_name_to_string (request : lsp_request) : string =
   | AutoCloseJsxRequest _ -> "flow/autoCloseJsx"
   | LinkedEditingRangeRequest _ -> "textDocument/linkedEditingRange"
   | WillRenameFilesRequest _ -> "workspace/willRenameFiles"
+  | RenameFileImportsRequest _ -> "flow/renameFileImports"
   | UnknownRequest (method_, _params) -> method_
 
 let result_name_to_string (result : lsp_result) : string =
@@ -1777,6 +1785,7 @@ let result_name_to_string (result : lsp_result) : string =
   | RegisterCapabilityResult -> "client/registerCapability"
   | AutoCloseJsxResult _ -> "flow/autoCloseJsx"
   | LinkedEditingRangeResult _ -> "textDocument/linkedEditingRange"
+  | RenameFileImportsResult _ -> "flow/renameFileImports"
   | ErrorResult (e, _stack) -> "ERROR/" ^ e.Error.message
 
 let notification_name_to_string (notification : lsp_notification) : string =
@@ -1847,6 +1856,7 @@ let parse_lsp_request (method_ : string) (params : json option) : lsp_request =
   | "flow/autoCloseJsx" -> AutoCloseJsxRequest (AutoCloseJsxFmt.params_of_json params)
   | "textDocument/linkedEditingRange" ->
     LinkedEditingRangeRequest (LinkedEditingRangeFmt.params_of_json params)
+  | "flow/renameFileImports" -> RenameFileImportsRequest (RenameFileImportsFmt.params_of_json params)
   | "completionItem/resolve"
   | "window/showMessageRequest" (* server -> client, we should never receive this *)
   | "window/showStatus" (* server -> client, we should never receive this *)
@@ -1912,6 +1922,7 @@ let parse_lsp_result (request : lsp_request) (result : json) : lsp_result =
   | ExecuteCommandRequest _
   | AutoCloseJsxRequest _
   | LinkedEditingRangeRequest _
+  | RenameFileImportsRequest _
   | UnknownRequest _ ->
     raise
       (Error.LspException
@@ -1980,6 +1991,7 @@ let print_lsp_request (id : lsp_id) (request : lsp_request) : json =
     | ExecuteCommandRequest _
     | AutoCloseJsxRequest _
     | LinkedEditingRangeRequest _
+    | RenameFileImportsRequest _
     | UnknownRequest _ ->
       failwith ("Don't know how to print request " ^ method_)
   in
@@ -2023,6 +2035,7 @@ let print_lsp_response ?include_error_stack_trace ~key (id : lsp_id) (result : l
     | WillRenameFilesResult r -> WillRenameFilesFmt.json_of_result r
     | AutoCloseJsxResult r -> AutoCloseJsxFmt.json_of_result r
     | LinkedEditingRangeResult r -> LinkedEditingRangeFmt.json_of_result r
+    | RenameFileImportsResult r -> RenameFileImportsFmt.json_of_result r
     | ShowMessageRequestResult _
     | ShowStatusResult _
     | CompletionItemResolveResult _

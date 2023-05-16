@@ -827,7 +827,12 @@ let do_initialize params : Initialize.result =
         linkedEditingRangeProvider = true;
         server_workspace = { fileOperations = FileOperationOptions.{ willRename = None } };
         server_experimental =
-          { server_snippetTextEdit; strictCompletionOrder = true; autoCloseJsx = true };
+          {
+            server_snippetTextEdit;
+            strictCompletionOrder = true;
+            autoCloseJsx = true;
+            renameFileImports = true;
+          };
       };
     server_info = { name = "Flow"; version = Flow_version.version };
   }

@@ -37,6 +37,7 @@ type trigger =
   | WillRenameFiles of Lsp.lsp_id
   | AutoCloseJsx of Lsp.lsp_id
   | LinkedEditingRange of Lsp.lsp_id
+  | RenameFileImports of Lsp.lsp_id
   | UnknownTrigger
 
 (* Source of the trigger *)
@@ -106,6 +107,7 @@ let string_of_trigger = function
   | WillRenameFiles _ -> "willRenameFiles"
   | AutoCloseJsx _ -> "AutoCloseJsx"
   | LinkedEditingRange _ -> "LinkedEditingRange"
+  | RenameFileImports _ -> "RenameFileImports"
   | UnknownTrigger -> "UnknownTrigger"
 
 let lsp_id_of_trigger = function
@@ -124,7 +126,8 @@ let lsp_id_of_trigger = function
   | ExecuteCommand lsp_id
   | AutoCloseJsx lsp_id
   | WillRenameFiles lsp_id
-  | LinkedEditingRange lsp_id ->
+  | LinkedEditingRange lsp_id
+  | RenameFileImports lsp_id ->
     Some lsp_id
   | DidChange
   | DidClose
@@ -182,7 +185,8 @@ let source_of_trigger = function
   | ExecuteCommand _
   | AutoCloseJsx _
   | WillRenameFiles _
-  | LinkedEditingRange _ ->
+  | LinkedEditingRange _
+  | RenameFileImports _ ->
     Client
   | PushedErrorsEndOfRecheck
   | PushedErrorsEnvChange
@@ -345,6 +349,7 @@ let trigger_of_lsp_msg =
   | RequestMessage (lsp_id, WillRenameFilesRequest _) -> Some (WillRenameFiles lsp_id)
   | RequestMessage (lsp_id, AutoCloseJsxRequest _) -> Some (AutoCloseJsx lsp_id)
   | RequestMessage (lsp_id, LinkedEditingRangeRequest _) -> Some (LinkedEditingRange lsp_id)
+  | RequestMessage (lsp_id, RenameFileImportsRequest _) -> Some (RenameFileImports lsp_id)
   (* Requests which we don't care about. Some are unsupported and some are sent from the lsp to
      * the client *)
   | RequestMessage (_, ApplyWorkspaceEditRequest _)
@@ -398,7 +403,8 @@ let trigger_of_lsp_msg =
   | ResponseMessage (_, CodeActionResult _)
   | ResponseMessage (_, AutoCloseJsxResult _)
   | ResponseMessage (_, WillRenameFilesResult _)
-  | ResponseMessage (_, LinkedEditingRangeResult _) ->
+  | ResponseMessage (_, LinkedEditingRangeResult _)
+  | ResponseMessage (_, RenameFileImportsResult _) ->
     None
   (* Only a few notifications can trigger an interaction *)
   | NotificationMessage (DidOpenNotification _) -> Some DidOpen

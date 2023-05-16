@@ -455,6 +455,7 @@ module Initialize : sig
     server_snippetTextEdit: bool;
     strictCompletionOrder: bool;
     autoCloseJsx: bool;
+    renameFileImports: bool;
   }
 
   and workspaceServerCapabilities = {
@@ -1094,13 +1095,15 @@ module ToggleTypeCoverage : sig
   and toggleTypeCoverageParams = { toggle: bool }
 end
 
-module WillRenameFiles : sig
+module RenameFiles : sig
   type fileRename = {
     oldUri: DocumentUri.t;
     newUri: DocumentUri.t;
   }
+end
 
-  and params = { files: fileRename list }
+module WillRenameFiles : sig
+  type params = { files: RenameFiles.fileRename list }
 
   and result = WorkspaceEdit.t
 end
@@ -1162,6 +1165,12 @@ module LinkedEditingRange : sig
   }
 end
 
+module RenameFileImports : sig
+  type params = RenameFiles.fileRename
+
+  and result = WorkspaceEdit.t
+end
+
 type lsp_request =
   | InitializeRequest of Initialize.params
   | RegisterCapabilityRequest of RegisterCapability.params
@@ -1194,6 +1203,7 @@ type lsp_request =
   | WillRenameFilesRequest of WillRenameFiles.params
   | AutoCloseJsxRequest of AutoCloseJsx.params
   | LinkedEditingRangeRequest of LinkedEditingRange.params
+  | RenameFileImportsRequest of RenameFileImports.params
   | UnknownRequest of string * Hh_json.json option
 
 type lsp_result =
@@ -1229,6 +1239,7 @@ type lsp_result =
   | RegisterCapabilityResult
   | AutoCloseJsxResult of AutoCloseJsx.result
   | LinkedEditingRangeResult of LinkedEditingRange.result
+  | RenameFileImportsResult of RenameFileImports.result
   (* the string is a stacktrace *)
   | ErrorResult of Error.t * string
 

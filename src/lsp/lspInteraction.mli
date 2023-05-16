@@ -33,6 +33,7 @@ type trigger =
   | WillRenameFiles of Lsp.lsp_id
   | AutoCloseJsx of Lsp.lsp_id
   | LinkedEditingRange of Lsp.lsp_id
+  | RenameFileImports of Lsp.lsp_id
   | UnknownTrigger
 
 type ux =

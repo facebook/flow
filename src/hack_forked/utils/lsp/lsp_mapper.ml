@@ -83,6 +83,8 @@ type t = {
   of_register_capability_params: t -> RegisterCapability.params -> RegisterCapability.params;
   of_rename_params: t -> Rename.params -> Rename.params;
   of_rename_result: t -> Rename.result -> Rename.result;
+  of_rename_file_imports_params: t -> RenameFileImports.params -> RenameFileImports.params;
+  of_rename_file_imports_result: t -> RenameFileImports.result -> RenameFileImports.result;
   of_selection_range: t -> SelectionRange.selection_range -> SelectionRange.selection_range;
   of_selection_range_params: t -> SelectionRange.params -> SelectionRange.params;
   of_selection_range_result: t -> SelectionRange.result -> SelectionRange.result;
@@ -514,6 +516,8 @@ let default_mapper =
           AutoCloseJsxResult (mapper.of_auto_close_jsx_result mapper result)
         | LinkedEditingRangeResult result ->
           LinkedEditingRangeResult (mapper.of_linked_editing_range_result mapper result)
+        | RenameFileImportsResult result ->
+          RenameFileImportsResult (mapper.of_rename_file_imports_result mapper result)
         | ErrorResult (err, str) -> ErrorResult (err, str));
     of_lsp_request =
       (fun mapper request ->
@@ -573,6 +577,8 @@ let default_mapper =
           AutoCloseJsxRequest (mapper.of_auto_close_jsx_params mapper params)
         | LinkedEditingRangeRequest params ->
           LinkedEditingRangeRequest (mapper.of_linked_editing_range_params mapper params)
+        | RenameFileImportsRequest params ->
+          RenameFileImportsRequest (mapper.of_rename_file_imports_params mapper params)
         | UnknownRequest (req, json) -> UnknownRequest (req, json));
     of_location =
       (fun mapper { Location.uri; range } ->
@@ -604,6 +610,13 @@ let default_mapper =
         let textDocument = mapper.of_text_document_identifier mapper textDocument in
         { Rename.textDocument; position; newName });
     of_rename_result = (fun mapper result -> mapper.of_workspace_edit mapper result);
+    of_rename_file_imports_params =
+      (fun mapper { RenameFiles.oldUri; newUri } ->
+        {
+          RenameFiles.oldUri = mapper.of_document_uri mapper oldUri;
+          newUri = mapper.of_document_uri mapper newUri;
+        });
+    of_rename_file_imports_result = (fun mapper result -> mapper.of_workspace_edit mapper result);
     of_selection_range_params =
       (fun mapper { SelectionRange.textDocument; positions } ->
         let textDocument = mapper.of_text_document_identifier mapper textDocument in
@@ -674,17 +687,16 @@ let default_mapper =
         { VersionedTextDocumentIdentifier.uri; version });
     of_will_rename_files_params =
       (fun mapper { WillRenameFiles.files } ->
-        let open WillRenameFiles in
         let files =
           Base.List.map
-            ~f:(fun { oldUri; newUri } ->
+            ~f:(fun { RenameFiles.oldUri; newUri } ->
               {
-                oldUri = mapper.of_document_uri mapper oldUri;
+                RenameFiles.oldUri = mapper.of_document_uri mapper oldUri;
                 newUri = mapper.of_document_uri mapper newUri;
               })
             files
         in
-        { files });
+        { WillRenameFiles.files });
     of_will_rename_files_result = (fun mapper result -> mapper.of_workspace_edit mapper result);
     of_workspace_edit =
       (fun mapper { WorkspaceEdit.changes } ->
