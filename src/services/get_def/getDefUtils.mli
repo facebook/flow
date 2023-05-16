@@ -13,10 +13,6 @@ type property_def_info = single_def_info Nel.t
 
 type def_info = property_def_info * string
 
-module ObjectKeyAtLoc : sig
-  val get : (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> (Loc.t * Loc.t * string) option
-end
-
 val get_object_literal_loc : Type.t -> ALoc.t option
 
 val all_locs_of_property_def_info : property_def_info -> Loc.t Nel.t
@@ -33,9 +29,6 @@ type def_loc =
 
 val extract_def_loc :
   loc_of_aloc:(ALoc.t -> Loc.t) -> Context.t -> Type.t -> string -> (def_loc, string) result
-
-val add_literal_properties :
-  (string * Loc.t * string) option -> def_info option -> (def_info option, string) result
 
 val get_def_info :
   loc_of_aloc:(ALoc.t -> Loc_collections.LocMap.key) ->

@@ -12,33 +12,6 @@ let ( >>= ) = Result.( >>= )
 
 let ( >>| ) = Result.( >>| )
 
-module ObjectKeyAtLoc : sig
-  (* Given a location, returns Some (enclosing_literal_loc, prop_loc, name) if the given location
-   * points to an object literal key. The first location returned is the location for the entire
-   * enclosing object literal. This is because later, we need to figure out which types are related
-   * to this object literal which is easier to do when we have the location of the actual object
-   * literal than if we only had the location of a single key. *)
-  val get : (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> (Loc.t * Loc.t * string) option
-end = struct
-  class object_key_finder target_loc =
-    object (this)
-      inherit [(Loc.t * Loc.t * string) option] Object_key_visitor.visitor ~init:None
-
-      method! private visit_object_key
-          (literal_loc : Loc.t) (key : (Loc.t, Loc.t) Flow_ast.Expression.Object.Property.key) =
-        let open Flow_ast.Expression.Object in
-        match key with
-        | Property.Identifier (prop_loc, { Flow_ast.Identifier.name; comments = _ })
-          when Loc.contains prop_loc target_loc ->
-          this#set_acc (Some (literal_loc, prop_loc, name))
-        | _ -> ()
-    end
-
-  let get ast target_loc =
-    let finder = new object_key_finder target_loc in
-    finder#eval finder#program ast
-end
-
 (* If the given type refers to an object literal, return the location of the object literal.
  * Otherwise return None *)
 let get_object_literal_loc ty : ALoc.t option =
@@ -504,24 +477,6 @@ let def_info_of_typecheck_results ~loc_of_aloc cx obj_to_obj_map props_access_in
       in
       Base.Result.map ~f:(fun res -> Some (res, name)) result
     | _ -> Error "Expected to find an object")
-
-let add_literal_properties literal_key_info def_info =
-  (* If we happen to be on an object property, include the location of that
-   * property as a def loc. We don't want to do that above because:
-   * (a) We could also encounter a `Use_in_literal` if this object literal flows
-   * into another object type. This would force us to make props_access_info a
-   * list and add additional complexity just for the sake of this one case.
-   * (b) We would have to add a type inference hook, which we are trying to
-   * avoid. *)
-  match (def_info, literal_key_info) with
-  | (None, None) -> Ok None
-  | (Some _, None) -> Ok def_info
-  | (None, Some (_, loc, name)) -> Ok (Some (Nel.one (Object loc), name))
-  | (Some (defs, name1), Some (_, loc, name2)) ->
-    if name1 <> name2 then
-      Error "Unexpected name mismatch"
-    else
-      Ok (Some (Nel.cons (Object loc) defs, name1))
 
 let get_def_info ~loc_of_aloc type_info loc : (def_info option, string) result =
   let (cx, typed_ast, obj_to_obj_map) = type_info in
