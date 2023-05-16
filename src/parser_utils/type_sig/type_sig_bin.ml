@@ -233,8 +233,10 @@ let write type_sig =
     Packed_type_sig.Module.module_kind;
     module_refs;
     local_defs;
+    dirty_local_defs;
     remote_refs;
     pattern_defs;
+    dirty_pattern_defs;
     patterns;
   } =
     type_sig
@@ -245,7 +247,9 @@ let write type_sig =
   let remote_refs = Remote_refs.to_array_map serialize remote_refs in
   let pattern_defs = Pattern_defs.to_array_map serialize pattern_defs in
   let patterns = Patterns.to_array_map serialize patterns in
-  let index_size = 6 * offset_size in
+  let dirty_local_defs = Array.map serialize dirty_local_defs in
+  let dirty_pattern_defs = Array.map serialize dirty_pattern_defs in
+  let index_size = 8 * offset_size in
   let size =
     index_size
     + module_size
@@ -254,6 +258,8 @@ let write type_sig =
     + tbl_size serialized_size remote_refs
     + tbl_size serialized_size pattern_defs
     + tbl_size serialized_size patterns
+    + tbl_size serialized_size dirty_local_defs
+    + tbl_size serialized_size dirty_pattern_defs
   in
   let write buf =
     let pos_ref = ref index_size in
@@ -263,12 +269,16 @@ let write type_sig =
     let remote_refs_pos = write_tbl write_serialized buf pos_ref remote_refs in
     let pattern_defs_pos = write_tbl write_serialized buf pos_ref pattern_defs in
     let patterns_pos = write_tbl write_serialized buf pos_ref patterns in
+    let dirty_local_defs_pos = write_tbl write_serialized buf pos_ref dirty_local_defs in
+    let dirty_pattern_defs_pos = write_tbl write_serialized buf pos_ref dirty_pattern_defs in
     buf_set32 buf 0 (Int32.of_int module_pos);
     buf_set32 buf 4 (Int32.of_int module_refs_pos);
     buf_set32 buf 8 (Int32.of_int local_defs_pos);
     buf_set32 buf 12 (Int32.of_int remote_refs_pos);
     buf_set32 buf 16 (Int32.of_int pattern_defs_pos);
     buf_set32 buf 20 (Int32.of_int patterns_pos);
+    buf_set32 buf 24 (Int32.of_int dirty_local_defs_pos);
+    buf_set32 buf 28 (Int32.of_int dirty_pattern_defs_pos);
     assert (!pos_ref = size)
   in
   (size, write)
@@ -284,6 +294,10 @@ let remote_refs buf = Int32.to_int (buf_get32 buf 12)
 let pattern_defs buf = Int32.to_int (buf_get32 buf 16)
 
 let patterns buf = Int32.to_int (buf_get32 buf 20)
+
+let dirty_local_defs buf = Int32.to_int (buf_get32 buf 24)
+
+let dirty_pattern_defs buf = Int32.to_int (buf_get32 buf 28)
 
 let cjs_module_type_exports buf pos = Int32.to_int (buf_get32 buf pos)
 
@@ -362,6 +376,10 @@ let read_remote_ref : buf -> int -> Locs.index Type_sig_pack.remote_ref = buf_re
 
 let read_pattern : buf -> int -> Locs.index Type_sig_pack.pattern = buf_read_serialized
 
+let read_local_def_index : buf -> int -> int = buf_read_serialized
+
+let read_pattern_def_index : buf -> int -> int = buf_read_serialized
+
 let read_cjs_module buf pos =
   let type_exports_pos = cjs_module_type_exports buf pos in
   let exports_pos = cjs_module_exports buf pos in
@@ -395,17 +413,27 @@ let read buf =
   let remote_refs_pos = remote_refs buf in
   let pattern_defs_pos = pattern_defs buf in
   let patterns_pos = patterns buf in
+  let dirty_local_defs_pos = dirty_local_defs buf in
+  let dirty_pattern_defs_pos = dirty_pattern_defs buf in
   let module_kind = read_module_kind read_cjs_module read_es_module buf module_kind_pos in
   let module_refs = read_tbl_generic read_str buf module_refs_pos Module_refs.init in
   let local_defs = read_tbl_generic read_local_def buf local_defs_pos Local_defs.init in
   let remote_refs = read_tbl_generic read_remote_ref buf remote_refs_pos Remote_refs.init in
   let pattern_defs = read_tbl_generic read_packed buf pattern_defs_pos Pattern_defs.init in
   let patterns = read_tbl_generic read_pattern buf patterns_pos Patterns.init in
+  let dirty_local_defs =
+    read_tbl_generic read_local_def_index buf dirty_local_defs_pos Array.init
+  in
+  let dirty_pattern_defs =
+    read_tbl_generic read_pattern_def_index buf dirty_pattern_defs_pos Array.init
+  in
   {
     Packed_type_sig.Module.module_kind;
     module_refs;
     local_defs;
+    dirty_local_defs;
     remote_refs;
     pattern_defs;
+    dirty_pattern_defs;
     patterns;
   }

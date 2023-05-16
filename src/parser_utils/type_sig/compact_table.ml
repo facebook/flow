@@ -8,12 +8,17 @@
 module Make () = struct
   type index = int [@@deriving show]
 
+  type mark_status =
+    | Unmarked
+    | Marked
+    | MarkedDirty
+
   (* Nodes form a doubly linked list. *)
   type 'a node = {
     mutable data: 'a;
     mutable next: 'a node;
     mutable prev: 'a node;
-    mutable marked: bool;
+    mutable mark_status: mark_status;
     mutable index: index;
   }
 
@@ -29,12 +34,12 @@ module Make () = struct
   let push b data =
     match !b with
     | None ->
-      let rec head = { data; next = head; prev = head; marked = false; index = -1 } in
+      let rec head = { data; next = head; prev = head; mark_status = Unmarked; index = -1 } in
       b := Some head;
       head
     | Some head ->
       let last = head.prev in
-      let node = { data; next = head; prev = last; marked = false; index = -1 } in
+      let node = { data; next = head; prev = last; mark_status = Unmarked; index = -1 } in
       head.prev <- node;
       last.next <- node;
       node
@@ -65,9 +70,14 @@ module Make () = struct
   let modify node f = node.data <- f node.data
 
   let mark node f =
-    if not node.marked then begin
-      node.marked <- true;
-      f node.data
+    if node.mark_status = Unmarked then begin
+      node.mark_status <- Marked;
+      node.mark_status <-
+        ( if f node.data then
+          MarkedDirty
+        else
+          Marked
+        )
     end
 
   let merge_none _ _ = None
@@ -78,7 +88,7 @@ module Make () = struct
         head.prev <- prev;
         prev.next <- head;
         (prev.index + 1, head)
-      end else if node.marked then begin
+      end else if node.mark_status <> Unmarked then begin
         match merge prev.data node.data with
         | None ->
           node.index <- prev.index + 1;
@@ -95,7 +105,7 @@ module Make () = struct
     let rec loop0 head prev node =
       if node == head then
         None
-      else if node.marked then begin
+      else if node.mark_status <> Unmarked then begin
         node.index <- 0;
         node.prev <- prev;
         prev.next <- node;
@@ -109,7 +119,7 @@ module Make () = struct
       | Some head ->
         (* Reset builder. Can be re-used to build a new table. *)
         b := None;
-        if head.marked then begin
+        if head.mark_status <> Unmarked then begin
           head.index <- 0;
           Some (loop head head head.next)
         end else
@@ -124,21 +134,38 @@ module Make () = struct
   external set : 'a t -> index -> 'a -> unit = "%array_unsafe_set"
 
   let copy =
-    let rec loop f dst head node =
+    let rec loop f dst dirty_indices_rev head node =
       if node == head then
-        ()
+        dirty_indices_rev |> List.rev |> Array.of_list
       else
         let x = f node.data in
         set dst node.index x;
-        loop f dst head node.next
+        let dirty_indices_rev =
+          if node.mark_status = MarkedDirty then
+            node.index :: dirty_indices_rev
+          else
+            dirty_indices_rev
+        in
+        loop f dst dirty_indices_rev head node.next
     in
     fun f -> function
-      | None -> [||]
+      | None -> ([||], [||])
       | Some (size, head) ->
         let x = f head.data in
         let dst = Array.make size x in
-        loop f dst head head.next;
-        dst
+        let dirty_indices =
+          loop
+            f
+            dst
+            ( if head.mark_status = MarkedDirty then
+              [head.index]
+            else
+              []
+            )
+            head
+            head.next
+        in
+        (dst, dirty_indices)
 
   let init = Array.init
 

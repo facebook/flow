@@ -14,7 +14,9 @@ type t = {
   refs: t Tbl.node option ref list;
 }
 
-let rec mark { refs; _ } = List.iter (fun x -> Tbl.mark (Option.value_exn !x) mark) refs
+let rec mark { refs; _ } =
+  List.iter (fun x -> Tbl.mark (Option.value_exn !x) mark) refs;
+  false
 
 let merge x0 x1 =
   if x0.label = x1.label then
@@ -52,7 +54,7 @@ let%expect_test "cycle" =
   d_ref := Some d;
   Tbl.mark a mark;
   let indexed = Tbl.compact builder in
-  let copy = Tbl.copy compact indexed in
+  let (copy, _) = Tbl.copy compact indexed in
   print_tbl copy;
   [%expect {|
     0| A -> 2
@@ -63,7 +65,7 @@ let%expect_test "cycle" =
 let%expect_test "empty" =
   let builder = Tbl.create () in
   let indexed = Tbl.compact builder in
-  let copy = Tbl.copy compact indexed in
+  let (copy, _) = Tbl.copy compact indexed in
   print_int (Tbl.length copy);
   [%expect {| 0 |}]
 
@@ -71,7 +73,7 @@ let%expect_test "singleton_unmarked" =
   let builder = Tbl.create () in
   let _ = Tbl.push builder { label = 'A'; refs = [] } in
   let indexed = Tbl.compact builder in
-  let copy = Tbl.copy compact indexed in
+  let (copy, _) = Tbl.copy compact indexed in
   print_int (Tbl.length copy);
   [%expect {| 0 |}]
 
@@ -80,7 +82,7 @@ let%expect_test "singleton_marked" =
   let a = Tbl.push builder { label = 'A'; refs = [] } in
   Tbl.mark a mark;
   let indexed = Tbl.compact builder in
-  let copy = Tbl.copy compact indexed in
+  let (copy, _) = Tbl.copy compact indexed in
   print_tbl copy;
   [%expect {|
     0| A ->
@@ -99,7 +101,7 @@ let%expect_test "splice" =
   in
   List.iter (fun x -> Tbl.mark x mark) [a; b; c; d];
   let indexed = Tbl.compact builder in
-  let copy = Tbl.copy compact indexed in
+  let (copy, _) = Tbl.copy compact indexed in
   print_tbl copy;
   [%expect {|
     0| A ->
@@ -124,7 +126,7 @@ let%expect_test "compact_merge" =
   c_ref := Some c;
   List.iter (fun x -> Tbl.mark x mark) [a; b0; b1; c];
   let indexed = Tbl.compact ~merge builder in
-  let copy = Tbl.copy compact indexed in
+  let (copy, _) = Tbl.copy compact indexed in
   print_tbl copy;
   [%expect {|
     0| A -> 1

@@ -63,6 +63,7 @@ let sig_opts =
     type_guards = true;
     mapped_type = true;
     tuple_enhancements = true;
+    locs_to_dirtify = [];
   }
 
 let print_index exports =

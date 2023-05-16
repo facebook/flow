@@ -78,6 +78,7 @@ module SignatureVerification = struct
         mapped_type = true;
         tuple_enhancements = true;
         type_guards = true;
+        locs_to_dirtify = [];
       }
     in
     let (sig_errors, locs, _) =

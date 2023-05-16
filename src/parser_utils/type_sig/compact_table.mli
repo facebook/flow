@@ -89,8 +89,9 @@ module Make () : sig
   val modify : 'a node -> ('a -> 'a) -> unit
 
   (* If this node has already been marked, does nothing. Otherwise calls the
-   * provided function with the node's value. *)
-  val mark : 'a node -> ('a -> unit) -> unit
+   * provided function with the node's value. If the returned value is true, we will
+   * make the node as dirty. *)
+  val mark : 'a node -> ('a -> bool) -> unit
 
   val compact : ?merge:('a -> 'a -> 'a option) -> 'a builder -> 'a indexed
 
@@ -98,7 +99,7 @@ module Make () : sig
    * already been marked and the builder producing this node was compacted. *)
   val index_exn : 'a node -> index
 
-  val copy : ('a -> 'b) -> 'a indexed -> 'b t
+  val copy : ('a -> 'b) -> 'a indexed -> 'b t * int array
 
   val init : int -> (int -> 'a) -> 'a t
 

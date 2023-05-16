@@ -74,6 +74,10 @@ val pattern_defs : buf -> packed serialized tbl pos
 
 val patterns : buf -> pattern serialized tbl pos
 
+val dirty_local_defs : buf -> int serialized tbl pos
+
+val dirty_pattern_defs : buf -> int serialized tbl pos
+
 val cjs_module_exports : buf -> cjs_module pos -> packed serialized hashed opt pos
 
 val cjs_module_type_exports : buf -> cjs_module pos -> type_export serialized hashed tbl pos
@@ -119,6 +123,10 @@ val read_local_def : buf -> local_def serialized pos -> Locs.index Type_sig_pack
 val read_remote_ref : buf -> remote_ref serialized pos -> Locs.index Type_sig_pack.remote_ref
 
 val read_pattern : buf -> pattern serialized pos -> Locs.index Type_sig_pack.pattern
+
+val read_local_def_index : buf -> int serialized pos -> int
+
+val read_pattern_def_index : buf -> int serialized pos -> int
 
 val read_cjs_module : buf -> cjs_module pos -> Locs.index Type_sig_pack.module_kind
 

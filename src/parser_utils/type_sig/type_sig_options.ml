@@ -16,6 +16,7 @@ type t = {
   enable_enums: bool;
   enable_relay_integration: bool;
   relay_integration_module_prefix: string option;
+  locs_to_dirtify: Loc.t list;
   conditional_type: bool;
   mapped_type: bool;
   tuple_enhancements: bool;
@@ -63,6 +64,7 @@ let of_options options docblock file =
     mapped_type = Options.mapped_type options;
     tuple_enhancements = Options.tuple_enhancements options;
     type_guards = Options.type_guards options;
+    locs_to_dirtify = [];
   }
 
 let builtin_options options =
@@ -90,4 +92,5 @@ let builtin_options options =
     mapped_type = Options.mapped_type options;
     tuple_enhancements = Options.tuple_enhancements options;
     type_guards = Options.type_guards options;
+    locs_to_dirtify = [];
   }

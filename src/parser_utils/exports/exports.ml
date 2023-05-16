@@ -31,8 +31,10 @@ module Export_sig = struct
         Packed_type_sig.Module.module_kind;
         module_refs;
         local_defs;
+        dirty_local_defs = _;
         remote_refs;
         pattern_defs;
+        dirty_pattern_defs = _;
         patterns;
       } =
     { module_kind = Some module_kind; module_refs; local_defs; remote_refs; pattern_defs; patterns }

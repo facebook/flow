@@ -10,8 +10,10 @@ module Module = struct
     module_kind: 'loc Type_sig_pack.module_kind;
     module_refs: string Type_sig_collections.Module_refs.t;
     local_defs: 'loc Type_sig_pack.packed_def Type_sig_collections.Local_defs.t;
+    dirty_local_defs: int array;
     remote_refs: 'loc Type_sig_pack.remote_ref Type_sig_collections.Remote_refs.t;
     pattern_defs: 'loc Type_sig_pack.packed Type_sig_collections.Pattern_defs.t;
+    dirty_pattern_defs: int array;
     patterns: 'loc Type_sig_pack.pattern Type_sig_collections.Patterns.t;
   }
 end

@@ -62,12 +62,19 @@ let pp_module_refs fmt module_refs =
       pp_print_newline fmt ())
     module_refs
 
-let pp_local_defs pp_loc fmt local_defs =
+let pp_local_defs pp_loc fmt local_defs dirty_indices =
   let open Format in
   if Local_defs.length local_defs > 0 then fprintf fmt "@.Local defs:@.";
   Local_defs.iteri
     (fun i def ->
-      fprintf fmt "%d. " (i :> int);
+      let i = (i :> int) in
+      let dirty_prefix =
+        if Array.mem i dirty_indices then
+          "(dirty) "
+        else
+          ""
+      in
+      fprintf fmt "%s%d. " dirty_prefix i;
       pp_def pp_loc fmt def;
       pp_print_newline fmt ())
     local_defs
@@ -82,12 +89,19 @@ let pp_remote_refs pp_loc fmt remote_refs =
       pp_print_newline fmt ())
     remote_refs
 
-let pp_pattern_defs pp_loc fmt pattern_defs =
+let pp_pattern_defs pp_loc fmt pattern_defs dirty_indices =
   let open Format in
   if Pattern_defs.length pattern_defs > 0 then fprintf fmt "@.Pattern defs:@.";
   Pattern_defs.iteri
     (fun i def ->
-      fprintf fmt "%d. " (i :> int);
+      let i = (i :> int) in
+      let dirty_prefix =
+        if Array.mem i dirty_indices then
+          "(dirty) "
+        else
+          ""
+      in
+      fprintf fmt "%s%d. " dirty_prefix i;
       pp_packed pp_loc fmt def;
       pp_print_newline fmt ())
     pattern_defs
@@ -121,6 +135,8 @@ let pp_sig
         remote_refs;
         pattern_defs;
         patterns;
+        dirty_local_defs;
+        dirty_pattern_defs;
       }
     ) =
   let open Format in
@@ -128,9 +144,9 @@ let pp_sig
   pp_module_kind pp_loc fmt module_kind;
   pp_print_newline fmt ();
   pp_module_refs fmt module_refs;
-  pp_local_defs pp_loc fmt local_defs;
+  pp_local_defs pp_loc fmt local_defs dirty_local_defs;
   pp_remote_refs pp_loc fmt remote_refs;
-  pp_pattern_defs pp_loc fmt pattern_defs;
+  pp_pattern_defs pp_loc fmt pattern_defs dirty_pattern_defs;
   pp_patterns pp_loc fmt patterns;
   pp_errors pp_loc fmt errs
 
@@ -156,9 +172,9 @@ let pp_builtins
   let open Format in
   let pp_loc = mk_pp_loc locs in
   pp_module_refs fmt module_refs;
-  pp_local_defs pp_loc fmt local_defs;
+  pp_local_defs pp_loc fmt local_defs [||];
   pp_remote_refs pp_loc fmt remote_refs;
-  pp_pattern_defs pp_loc fmt pattern_defs;
+  pp_pattern_defs pp_loc fmt pattern_defs [||];
   pp_patterns pp_loc fmt patterns;
   SMap.iter
     (fun name m ->
@@ -196,6 +212,7 @@ let sig_options
     ?(mapped_type = true)
     ?relay_integration_module_prefix
     ?(tuple_enhancements = true)
+    ?(locs_to_dirtify = [])
     () =
   {
     Type_sig_options.suppress_types;
@@ -212,6 +229,7 @@ let sig_options
     type_guards;
     mapped_type;
     tuple_enhancements;
+    locs_to_dirtify;
   }
 
 let parse_and_pack_module ~parse_options ~strict sig_opts contents =
@@ -233,6 +251,7 @@ let print_sig
     ?mapped_type
     ?relay_integration_module_prefix
     ?tuple_enhancements
+    ?locs_to_dirtify
     contents_indent =
   let contents = dedent_trim contents_indent in
   let sig_opts =
@@ -249,6 +268,7 @@ let print_sig
       ?mapped_type
       ?relay_integration_module_prefix
       ?tuple_enhancements
+      ?locs_to_dirtify
       ()
   in
   let parse_options = parse_options ~module_ref_prefix ~module_ref_prefix_LEGACY_INTEROP in
@@ -5802,4 +5822,65 @@ let%expect_test "mapped_types_disabled" =
     Local defs:
     0. TypeAlias {id_loc = [2:12-13]; name = "T"; tparams = Mono; body = (Annot (Any [2:17-41]))}
     1. TypeAlias {id_loc = [3:12-13]; name = "U"; tparams = Mono; body = (Annot (Any [3:16-55]))}
+  |}]
+
+let%expect_test "dirtify_defs" =
+  print_sig ~locs_to_dirtify:[
+    Loc.mk_loc (1,25) (1,26);
+    Loc.mk_loc (2,25) (2,26);
+    Loc.mk_loc (3,25) (3,26);
+  ] {|
+export type OOOOOO = {foo: number, bar: string};
+export const aaaaa = {foo: 3, bar: ""};
+export const {foo} = {foo: 3};
+  |}; [%expect{|
+    ESModule {type_exports = [|(ExportTypeBinding 0)|];
+      exports = [|(ExportBinding 1); (ExportBinding 2)|];
+      info =
+      ESModuleInfo {type_export_keys = [|"OOOOOO"|];
+        type_stars = []; export_keys = [|"aaaaa"; "foo"|];
+        stars = []; strict = true}}
+
+    Local defs:
+    (dirty) 0. TypeAlias {id_loc = [1:12-18];
+                 name = "OOOOOO"; tparams = Mono;
+                 body =
+                 (Annot
+                    ObjAnnot {loc = [1:21-47];
+                      obj_kind = InexactObj;
+                      props =
+                      { "bar" ->
+                        (ObjAnnotField ([1:35-38], (Annot (String [1:40-46])), Polarity.Neutral));
+                        "foo" ->
+                        (ObjAnnotField ([1:22-25], (Annot (Number [1:27-33])), Polarity.Neutral)) };
+                      proto = ObjAnnotImplicitProto})}
+    (dirty) 1. Variable {id_loc = [2:13-18];
+                 name = "aaaaa";
+                 def =
+                 (Value
+                    ObjLit {loc = [2:21-38];
+                      frozen = false;
+                      proto = None;
+                      props =
+                      { "bar" ->
+                        (ObjValueField ([2:30-33], (
+                           Value (StringLit ([2:35-37], ""))), Polarity.Neutral));
+                        "foo" ->
+                        (ObjValueField ([2:22-25], (
+                           Value (NumberLit ([2:27-28], 3., "3"))), Polarity.Neutral)) }})}
+    2. Variable {id_loc = [3:14-17]; name = "foo"; def = (Pattern 1)}
+
+    Pattern defs:
+    (dirty) 0. (Value
+                  ObjLit {loc = [3:21-29];
+                    frozen = false; proto = None;
+                    props =
+                    { "foo" ->
+                      (ObjValueField ([3:22-25], (
+                         Value (NumberLit ([3:27-28], 3., "3"))), Polarity.Neutral)) }})
+
+    Patterns:
+    0. (PDef 0)
+    1. PropP {id_loc = [3:14-17]; name = "foo"; def = 0}
+
   |}]
