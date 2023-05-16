@@ -482,7 +482,9 @@ let check_contents_context ~reader options master_cx file ast docblock file_sig 
     let reader = Check_service.mk_heap_reader reader in
     Check_service.mk_check_file reader ~options ~master_cx ~cache:check_contents_cache ()
   in
-  let (cx, tast, _) = check_file file resolve_require ast file_sig docblock aloc_table None in
+  let (cx, tast, _) =
+    check_file file resolve_require ast file_sig docblock aloc_table GetDefUtils.NoDefinition
+  in
   (cx, tast)
 
 (* Wrap a potentially slow operation with a timer that fires every interval seconds. When it fires,

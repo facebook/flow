@@ -91,11 +91,7 @@ let parse ~options ~profiling ~workers ~reader parse_next =
 
 let reparse ~options ~def_info ~profiling ~transaction ~reader ~workers ~modified =
   with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
-      let locs_to_dirtify =
-        Base.Option.value_map def_info ~default:[] ~f:(fun info ->
-            info |> GetDefUtils.all_locs_of_def_info |> Nel.to_list
-        )
-      in
+      let locs_to_dirtify = GetDefUtils.all_locs_of_def_info def_info in
       let%lwt results =
         Parsing_service_js.reparse_with_defaults
           ~transaction
@@ -477,7 +473,7 @@ module Check_files : sig
     reader:Parsing_heaps.Mutator_reader.reader ->
     options:Options.t ->
     profiling:Profiling_js.running ->
-    def_info:GetDefUtils.def_info option ->
+    def_info:GetDefUtils.def_info ->
     workers:MultiWorkerLwt.worker list option ->
     errors:ServerEnv.errors ->
     updated_suppressions:Error_suppressions.t ->
@@ -837,7 +833,7 @@ module Recheck : sig
     options:Options.t ->
     workers:MultiWorkerLwt.worker list option ->
     updates:CheckedSet.t ->
-    def_info:GetDefUtils.def_info option ->
+    def_info:GetDefUtils.def_info ->
     files_to_force:CheckedSet.t ->
     changed_mergebase:bool option ->
     will_be_checked_files:CheckedSet.t ref ->
@@ -858,7 +854,7 @@ module Recheck : sig
     options:Options.t ->
     workers:MultiWorkerLwt.worker list option ->
     updates:CheckedSet.t ->
-    def_info:GetDefUtils.def_info option ->
+    def_info:GetDefUtils.def_info ->
     files_to_force:CheckedSet.t ->
     env:ServerEnv.env ->
     ServerEnv.env Lwt.t
@@ -1669,12 +1665,19 @@ end = struct
       with
       | Unexpected_file_changes changed_files -> handle_unexpected_file_changes changed_files
     in
+    let for_find_all_refs =
+      match def_info with
+      | GetDefUtils.VariableDefinition _
+      | GetDefUtils.PropertyDefinition _ ->
+        true
+      | GetDefUtils.NoDefinition -> false
+    in
     recheck_merge
       ~profiling
       ~transaction
       ~reader
       ~options
-      ~for_find_all_refs:(Option.is_some def_info)
+      ~for_find_all_refs
       ~workers
       ~def_info
       ~will_be_checked_files
@@ -2158,7 +2161,7 @@ let handle_updates_since_saved_state ~profiling ~workers ~options ~libs_ok updat
               ~options
               ~workers
               ~updates
-              ~def_info:None
+              ~def_info:GetDefUtils.NoDefinition
               ~files_to_force
               ~changed_mergebase:None
               ~will_be_checked_files:(ref files_to_force)
@@ -2182,7 +2185,7 @@ let handle_updates_since_saved_state ~profiling ~workers ~options ~libs_ok updat
             ~options
             ~workers
             ~updates:updated_files
-            ~def_info:None
+            ~def_info:GetDefUtils.NoDefinition
             ~files_to_force:CheckedSet.empty
             ~env
         with
@@ -2525,7 +2528,7 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
           ~reader
           ~options
           ~profiling
-          ~def_info:None
+          ~def_info:GetDefUtils.NoDefinition
           ~workers
           ~errors
           ~updated_suppressions

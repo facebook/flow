@@ -9,15 +9,18 @@ type single_property_def_info =
   | ClassProperty of Loc.t
   | ObjectProperty of Loc.t
 
-type property_def_info = single_property_def_info Nel.t
+type property_def_info = single_property_def_info Nel.t * string
 
-type def_info = property_def_info * string
+type def_info =
+  | VariableDefinition of Loc.t list * string option
+  | PropertyDefinition of property_def_info
+  | NoDefinition
 
 val get_object_literal_loc : Type.t -> ALoc.t option
 
 val all_locs_of_property_def_info : property_def_info -> Loc.t Nel.t
 
-val all_locs_of_def_info : def_info -> Loc.t Nel.t
+val all_locs_of_def_info : def_info -> Loc.t list
 
 type def_loc =
   | FoundClass of Loc.t Nel.t
@@ -34,4 +37,12 @@ val get_property_def_info :
   loc_of_aloc:(ALoc.t -> Loc_collections.LocMap.key) ->
   Types_js_types.typecheck_artifacts ->
   Loc.t ->
-  (def_info option, string) result
+  (property_def_info option, string) result
+
+val get_def_info :
+  options:Options.t ->
+  reader:Parsing_heaps.Reader.reader ->
+  FindRefsUtils.ast_info ->
+  Types_js_types.typecheck_artifacts ->
+  Loc.t ->
+  (def_info, string) result

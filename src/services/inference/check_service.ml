@@ -16,7 +16,7 @@ type 'a check_file =
   File_sig.t ->
   Docblock.t ->
   ALoc.table Lazy.t ->
-  GetDefUtils.def_info option ->
+  GetDefUtils.def_info ->
   Context.t
   * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
   * (FindRefsTypes.single_ref list, string) result
@@ -484,7 +484,10 @@ let mk_check_file
     ConsGen.set_dst_cx cx;
     let (typed_ast, obj_to_obj_map) =
       Obj_to_obj_hook.with_obj_to_obj_hook
-        ~enabled:(Base.Option.is_some def_info)
+        ~enabled:
+          (match def_info with
+          | GetDefUtils.PropertyDefinition _ -> true
+          | _ -> false)
         ~loc_of_aloc:Reader.loc_of_aloc
         ~f:(fun () ->
           let lint_severities = get_lint_severities metadata options in
@@ -493,19 +496,19 @@ let mk_check_file
           let tast = Type_inference_js.infer_ast cx file_key comments aloc_ast ~lint_severities in
           Merge_js.post_merge_checks cx aloc_ast metadata;
           Context.reset_errors cx (Flow_error.post_process_errors (Context.errors cx));
-          tast
-      )
+          tast)
     in
     let find_refs_result =
       match def_info with
-      | None -> Ok []
-      | Some (def_info, name) ->
+      | GetDefUtils.NoDefinition
+      | GetDefUtils.VariableDefinition _ ->
+        Ok []
+      | GetDefUtils.PropertyDefinition info ->
         PropertyFindRefs.property_find_refs_in_file
           ~loc_of_aloc:Reader.loc_of_aloc
           (ast, file_sig, docblock)
           (Types_js_types.Typecheck_artifacts { cx; typed_ast; obj_to_obj_map })
           file_key
-          def_info
-          name
+          info
     in
     (cx, typed_ast, find_refs_result)

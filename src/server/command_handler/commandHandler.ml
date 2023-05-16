@@ -2071,18 +2071,22 @@ let get_file_artifacts ~options ~client ~profiling ~env pos :
       (Error err_str, Some (Hh_json.JSON_Object json_props))
     | Ok file_artifacts -> (Ok (Some (file_artifacts, file_key)), None))
 
-let global_find_references ~genv ~reader ~options ~env ~typecheck_artifacts file_key line col =
+let global_find_references
+    ~genv ~reader ~options ~env ~parse_artifacts ~typecheck_artifacts file_key line col =
+  let (Types_js_types.Parse_artifacts { ast; file_sig; docblock; _ }) = parse_artifacts in
   (* TODO: handle variable find-refs *)
   match
-    GetDefUtils.get_property_def_info
-      ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
+    GetDefUtils.get_def_info
+      ~options
+      ~reader
+      (ast, file_sig, docblock)
       typecheck_artifacts
       (Loc.cursor (Some file_key) line col)
   with
   | Error s -> Lwt.return (Error s)
-  | Ok None -> Lwt.return (Ok None)
-  | Ok (Some (props_info, _name) as def_info) ->
-    let def_locs = props_info |> GetDefUtils.all_locs_of_property_def_info |> Nel.to_list in
+  | Ok GetDefUtils.NoDefinition -> Lwt.return (Ok None)
+  | Ok def_info ->
+    let def_locs = GetDefUtils.all_locs_of_def_info def_info in
     let%lwt (profiling, (log_fn, _recheck_stats, results, _env)) =
       Profiling_js.with_profiling_lwt
         ~label:"Recheck"
@@ -2113,7 +2117,16 @@ let find_references ~genv ~reader ~options ~env ~file_artifacts ~local_only file
   let (line, col) = Flow_lsp_conversions.position_of_document_position pos in
   let%lwt refs =
     if (not local_only) && Options.global_find_ref_props options then
-      global_find_references ~genv ~reader ~options ~env ~typecheck_artifacts file_key line col
+      global_find_references
+        ~genv
+        ~reader
+        ~options
+        ~env
+        ~parse_artifacts
+        ~typecheck_artifacts
+        file_key
+        line
+        col
     else
       let results =
         FindRefs_js.find_local_refs

@@ -16,7 +16,7 @@ type 'a check_file =
   File_sig.t ->
   Docblock.t ->
   ALoc.table Lazy.t ->
-  GetDefUtils.def_info option ->
+  GetDefUtils.def_info ->
   Context.t
   * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
   * (FindRefsTypes.single_ref list, string) result

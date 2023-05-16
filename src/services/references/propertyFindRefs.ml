@@ -201,12 +201,12 @@ let process_prop_refs ~loc_of_aloc cx potential_refs file_key prop_def_info name
      )
   >>| fun refs -> refs |> Base.List.filter_opt |> add_ref_kind FindRefsTypes.PropertyAccess
 
-let property_find_refs_in_file ~loc_of_aloc ast_info type_info file_key def_info name =
+let property_find_refs_in_file ~loc_of_aloc ast_info type_info file_key (props_info, name) =
   let potential_refs : Type.t ALocMap.t ref = ref ALocMap.empty in
   let (Types_js_types.Typecheck_artifacts { cx; typed_ast; obj_to_obj_map }) = type_info in
   let (ast, _file_sig, _info) = ast_info in
   let local_defs =
-    Nel.to_list (all_locs_of_property_def_info def_info)
+    Nel.to_list (all_locs_of_property_def_info (props_info, name))
     |> List.filter (fun loc -> loc.Loc.source = Some file_key)
     |> add_ref_kind FindRefsTypes.PropertyDefinition
   in
@@ -220,12 +220,12 @@ let property_find_refs_in_file ~loc_of_aloc ast_info type_info file_key def_info
        * examine *)
       let prop_loc_map = lazy (LiteralToPropLoc.make ast ~prop_name:name) in
 
-      get_loc_of_def_info ~cx ~loc_of_aloc ~obj_to_obj_map def_info
+      get_loc_of_def_info ~cx ~loc_of_aloc ~obj_to_obj_map props_info
       |> List.filter_map (fun obj_loc -> LocMap.find_opt obj_loc (Lazy.force prop_loc_map))
       |> add_ref_kind FindRefsTypes.PropertyDefinition
     in
 
-    process_prop_refs ~loc_of_aloc cx !potential_refs file_key def_info name
+    process_prop_refs ~loc_of_aloc cx !potential_refs file_key props_info name
     >>| ( @ ) local_defs
     >>| ( @ ) literal_prop_refs_result
   )
@@ -235,6 +235,6 @@ let find_local_refs ~reader file_key ast_info type_info loc =
   match get_property_def_info ~loc_of_aloc type_info loc with
   | Error _ as err -> err
   | Ok None -> Ok None
-  | Ok (Some (def_info, name)) ->
-    property_find_refs_in_file ~loc_of_aloc ast_info type_info file_key def_info name
-    >>= fun refs -> Ok (Some refs)
+  | Ok (Some props_info) ->
+    property_find_refs_in_file ~loc_of_aloc ast_info type_info file_key props_info >>= fun refs ->
+    Ok (Some refs)

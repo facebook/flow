@@ -135,7 +135,7 @@ let recheck
             ~options
             ~workers
             ~updates
-            ~def_info:None
+            ~def_info:GetDefUtils.NoDefinition
             ~files_to_force
             ~changed_mergebase
             ~missed_changes

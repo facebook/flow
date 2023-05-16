@@ -252,17 +252,23 @@ type single_property_def_info =
 (* If there are multiple relevant definition locations (e.g. the request was issued on an object
  * literal which is associated with multiple types) then there will be multiple locations in no
  * particular order. *)
-type property_def_info = single_property_def_info Nel.t
+type property_def_info = single_property_def_info Nel.t * string (* name *)
 
-type def_info = property_def_info * string (* name *)
+type def_info =
+  | VariableDefinition of Loc.t list * string option
+  | PropertyDefinition of property_def_info
+  | NoDefinition
 
 let loc_of_single_def_info = function
   | ClassProperty loc -> loc
   | ObjectProperty loc -> loc
 
-let all_locs_of_property_def_info def_info = def_info |> Nel.map loc_of_single_def_info
+let all_locs_of_property_def_info (props_info, _) = props_info |> Nel.map loc_of_single_def_info
 
-let all_locs_of_def_info (def_info, _) = all_locs_of_property_def_info def_info
+let all_locs_of_def_info = function
+  | VariableDefinition (locs, _) -> locs
+  | PropertyDefinition props_info -> props_info |> all_locs_of_property_def_info |> Nel.to_list
+  | NoDefinition -> []
 
 type def_loc =
   (* We found a class property. Include all overridden implementations. Superclass implementations
@@ -478,7 +484,7 @@ let def_info_of_typecheck_results ~loc_of_aloc cx obj_to_obj_map props_access_in
       Base.Result.map ~f:(fun res -> Some (res, name)) result
     | _ -> Error "Expected to find an object")
 
-let get_property_def_info ~loc_of_aloc type_info loc : (def_info option, string) result =
+let get_property_def_info ~loc_of_aloc type_info loc : (property_def_info option, string) result =
   let (Types_js_types.Typecheck_artifacts { cx; typed_ast; obj_to_obj_map }) = type_info in
   let def_kind =
     Def_kind_search.search
@@ -493,3 +499,18 @@ let get_property_def_info ~loc_of_aloc type_info loc : (def_info option, string)
     ~f:(def_info_of_typecheck_results ~loc_of_aloc cx obj_to_obj_map)
     ~default:(Ok None)
     def_kind
+
+let get_def_info ~options ~reader (ast, file_sig, _) type_info loc : (def_info, string) result =
+  let (Types_js_types.Typecheck_artifacts { cx; typed_ast; obj_to_obj_map = _ }) = type_info in
+  match
+    get_property_def_info ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader) type_info loc
+  with
+  | Error error -> Error error
+  | Ok (Some props_info) -> Ok (PropertyDefinition props_info)
+  | Ok None ->
+    (match GetDef_js.get_def ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc with
+    | GetDef_js.Get_def_result.Def locs -> Ok (VariableDefinition (locs, None))
+    | GetDef_js.Get_def_result.Partial (locs, name) -> Ok (VariableDefinition (locs, Some name))
+    | GetDef_js.Get_def_result.Bad_loc error
+    | GetDef_js.Get_def_result.Def_error error ->
+      Error error)

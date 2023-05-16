@@ -224,7 +224,9 @@ let post_check ~visit ~iteration ~reader ~options ~metadata file = function
 
 let mk_check ~visit ~iteration ~reader ~options ~metadata () =
   let master_cx = Context_heaps.find_master () in
-  let check = Merge_service.mk_check options ~reader ~master_cx ~def_info:None () in
+  let check =
+    Merge_service.mk_check options ~reader ~master_cx ~def_info:GetDefUtils.NoDefinition ()
+  in
   (fun file -> check file |> post_check ~visit ~iteration ~reader ~options ~metadata file)
 
 let mk_next ~options ~workers roots =
@@ -342,7 +344,9 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
     let state = C.prepass_init () in
     let options = C.mod_prepass_options options in
     let master_cx = Context_heaps.find_master () in
-    let check = Merge_service.mk_check options ~reader ~master_cx ~def_info:None () in
+    let check =
+      Merge_service.mk_check options ~reader ~master_cx ~def_info:GetDefUtils.NoDefinition ()
+    in
     List.fold_left
       (fun acc file ->
         match check file with
@@ -472,7 +476,7 @@ module TypedRunner (TypedRunnerConfig : TYPED_RUNNER_CONFIG) : STEP_RUNNER = str
             ~options
             ~workers
             ~updates:(CheckedSet.add ~focused:roots CheckedSet.empty)
-            ~def_info:None
+            ~def_info:GetDefUtils.NoDefinition
             ~files_to_force:CheckedSet.empty
             ~changed_mergebase:None
             ~missed_changes:false
