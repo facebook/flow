@@ -35,5 +35,5 @@ let find_local_refs ~reader ~options ~file_key ~parse_artifacts ~typecheck_artif
     | Some _ -> Ok var_refs
     | None -> PropertyFindRefs.find_local_refs ~reader file_key ast_info typecheck_artifacts loc
   in
-  let refs = Base.Option.map ~f:(fun (name, refs) -> (name, sort_and_dedup refs)) refs in
+  let refs = Base.Option.map ~f:(fun refs -> sort_and_dedup refs) refs in
   Ok refs

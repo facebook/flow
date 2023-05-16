@@ -2081,7 +2081,7 @@ let global_find_references ~genv ~reader ~options ~env ~typecheck_artifacts file
   with
   | Error s -> Lwt.return (Error s)
   | Ok None -> Lwt.return (Ok None)
-  | Ok (Some (props_info, name) as def_info) ->
+  | Ok (Some (props_info, _name) as def_info) ->
     let def_locs = props_info |> GetDefUtils.all_locs_of_property_def_info |> Nel.to_list in
     let%lwt (profiling, (log_fn, _recheck_stats, results, _env)) =
       Profiling_js.with_profiling_lwt
@@ -2105,7 +2105,7 @@ let global_find_references ~genv ~reader ~options ~env ~typecheck_artifacts file
     let%lwt () = log_fn ~profiling in
     let result_compare (_, l1) (_, l2) = Loc.compare l1 l2 in
     Lwt.return
-      (Base.Result.map results ~f:(fun r -> Some (name, Base.List.sort ~compare:result_compare r)))
+      (Base.Result.map results ~f:(fun r -> Some (Base.List.sort ~compare:result_compare r)))
 
 let find_references ~genv ~reader ~options ~env ~file_artifacts ~local_only file_key pos :
     ((FindRefsTypes.find_refs_found option, string) result * Hh_json.json option) Lwt.t =
@@ -2162,7 +2162,7 @@ let map_find_references_results
     in
     let mapped_refs =
       match local_refs with
-      | Ok (Some (_name, refs)) -> Ok (Base.List.filter_map ~f refs)
+      | Ok (Some refs) -> Ok (Base.List.filter_map ~f refs)
       | Ok None ->
         (* e.g. if it was requested on a place that's not even an identifier *)
         Ok []
@@ -2249,7 +2249,7 @@ let handle_persistent_rename ~genv ~reader ~options ~id ~params ~metadata ~clien
       let (parse_artifacts, _typecheck_artifacts) = file_artifacts in
       let edits =
         match local_refs with
-        | Ok (Some (_name, refs)) ->
+        | Ok (Some refs) ->
           let ast =
             match parse_artifacts with
             | Types_js_types.Parse_artifacts { ast; _ } -> ast

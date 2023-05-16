@@ -237,4 +237,4 @@ let find_local_refs ~reader file_key ast_info type_info loc =
   | Ok None -> Ok None
   | Ok (Some (def_info, name)) ->
     property_find_refs_in_file ~loc_of_aloc ast_info type_info file_key def_info name
-    >>= fun refs -> Ok (Some (name, refs))
+    >>= fun refs -> Ok (Some refs)
