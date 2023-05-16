@@ -2074,7 +2074,7 @@ let get_file_artifacts ~options ~client ~profiling ~env pos :
 let global_find_references ~genv ~reader ~options ~env ~typecheck_artifacts file_key line col =
   (* TODO: handle variable find-refs *)
   match
-    GetDefUtils.get_def_info
+    GetDefUtils.get_property_def_info
       ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
       typecheck_artifacts
       (Loc.cursor (Some file_key) line col)

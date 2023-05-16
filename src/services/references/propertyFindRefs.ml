@@ -132,8 +132,8 @@ let type_matches_locs ~loc_of_aloc cx ty prop_def_info name =
     | FoundClass ty_def_locs ->
       prop_def_info
       |> Nel.exists (function
-             | Object _ -> false
-             | Class loc ->
+             | ObjectProperty _ -> false
+             | ClassProperty loc ->
                (* Only take the first extracted def loc -- that is, the one for the actual definition
                 * and not overridden implementations, and compare it to the list of def locs we are
                 * interested in *)
@@ -142,8 +142,8 @@ let type_matches_locs ~loc_of_aloc cx ty prop_def_info name =
     | FoundObject loc ->
       prop_def_info
       |> Nel.exists (function
-             | Class _ -> false
-             | Object def_loc -> loc = def_loc
+             | ClassProperty _ -> false
+             | ObjectProperty def_loc -> loc = def_loc
              )
     | FoundUnion def_locs -> def_locs |> Nel.map def_loc_matches_locs |> Nel.fold_left ( || ) false
     (* TODO we may want to surface AnyType results somehow since we can't be sure whether they
@@ -160,8 +160,8 @@ let get_loc_of_def_info ~cx ~loc_of_aloc ~obj_to_obj_map prop_def_info =
     Nel.fold_left
       (fun acc def_info ->
         match def_info with
-        | Class _ -> acc
-        | Object def_loc -> Loc_collections.LocSet.add def_loc acc)
+        | ClassProperty _ -> acc
+        | ObjectProperty def_loc -> Loc_collections.LocSet.add def_loc acc)
       Loc_collections.LocSet.empty
       prop_def_info
   in
@@ -232,7 +232,7 @@ let property_find_refs_in_file ~loc_of_aloc ast_info type_info file_key def_info
 
 let find_local_refs ~reader file_key ast_info type_info loc =
   let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
-  match get_def_info ~loc_of_aloc type_info loc with
+  match get_property_def_info ~loc_of_aloc type_info loc with
   | Error _ as err -> err
   | Ok None -> Ok None
   | Ok (Some (def_info, name)) ->

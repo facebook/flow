@@ -10,7 +10,7 @@ val property_find_refs_in_file :
   FindRefsUtils.ast_info ->
   Types_js_types.typecheck_artifacts ->
   File_key.t ->
-  GetDefUtils.single_def_info Nel.t ->
+  GetDefUtils.single_property_def_info Nel.t ->
   string ->
   (FindRefsTypes.single_ref list, string) result
 

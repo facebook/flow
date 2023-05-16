@@ -5,11 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type single_def_info =
-  | Class of Loc.t
-  | Object of Loc.t
+type single_property_def_info =
+  | ClassProperty of Loc.t
+  | ObjectProperty of Loc.t
 
-type property_def_info = single_def_info Nel.t
+type property_def_info = single_property_def_info Nel.t
 
 type def_info = property_def_info * string
 
@@ -30,7 +30,7 @@ type def_loc =
 val extract_def_loc :
   loc_of_aloc:(ALoc.t -> Loc.t) -> Context.t -> Type.t -> string -> (def_loc, string) result
 
-val get_def_info :
+val get_property_def_info :
   loc_of_aloc:(ALoc.t -> Loc_collections.LocMap.key) ->
   Types_js_types.typecheck_artifacts ->
   Loc.t ->

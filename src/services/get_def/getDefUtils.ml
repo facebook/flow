@@ -244,21 +244,21 @@ module Def_kind_search = struct
     | Found def_kind -> Some def_kind
 end
 
-type single_def_info =
-  | Class of Loc.t
+type single_property_def_info =
+  | ClassProperty of Loc.t
   (* An object was found. *)
-  | Object of Loc.t
+  | ObjectProperty of Loc.t
 
 (* If there are multiple relevant definition locations (e.g. the request was issued on an object
  * literal which is associated with multiple types) then there will be multiple locations in no
  * particular order. *)
-type property_def_info = single_def_info Nel.t
+type property_def_info = single_property_def_info Nel.t
 
 type def_info = property_def_info * string (* name *)
 
 let loc_of_single_def_info = function
-  | Class loc -> loc
-  | Object loc -> loc
+  | ClassProperty loc -> loc
+  | ObjectProperty loc -> loc
 
 let all_locs_of_property_def_info def_info = def_info |> Nel.map loc_of_single_def_info
 
@@ -286,8 +286,8 @@ let debug_string_of_locs locs =
 [@@@warning "-32"]
 
 let debug_string_of_single_def_info = function
-  | Class loc -> spf "Class (%s)" (Loc.debug_to_string loc)
-  | Object loc -> spf "Object (%s)" (Loc.debug_to_string loc)
+  | ClassProperty loc -> spf "ClassProperty (%s)" (Loc.debug_to_string loc)
+  | ObjectProperty loc -> spf "ObjectProperty (%s)" (Loc.debug_to_string loc)
 
 let debug_string_of_property_def_info def_info =
   def_info
@@ -414,12 +414,12 @@ let def_info_of_typecheck_results ~loc_of_aloc cx obj_to_obj_map props_access_in
     (* We want to include the immediate implementation as well as all superclass implementations.
      * If we wanted a mode where superclass implementations were not included, for example, we
      * could choose to take only the first extracted location. *)
-    Nel.map (fun loc -> Class loc) locs
+    Nel.map (fun loc -> ClassProperty loc) locs
   in
   let def_info_of_type name ty =
     let rec def_info_of_def_loc = function
       | FoundClass locs -> Some (def_info_of_class_member_locs locs)
-      | FoundObject loc -> Some (Nel.one (Object loc))
+      | FoundObject loc -> Some (Nel.one (ObjectProperty loc))
       | FoundUnion def_locs ->
         def_locs |> Nel.map def_info_of_def_loc |> Nel.cat_maybes |> Base.Option.map ~f:Nel.concat
       | NoDefFound
@@ -430,7 +430,7 @@ let def_info_of_typecheck_results ~loc_of_aloc cx obj_to_obj_map props_access_in
     extract_def_loc ~loc_of_aloc cx ty name >>| def_info_of_def_loc
   in
   match props_access_info with
-  | Obj_def (loc, name) -> Ok (Some (Nel.one (Object loc), name))
+  | Obj_def (loc, name) -> Ok (Some (Nel.one (ObjectProperty loc), name))
   | Class_def (ty, name, static) ->
     if static then
       (* Here, `ty` ends up resolving to `ObjT` so we lose the knowledge that this is a static
@@ -454,7 +454,7 @@ let def_info_of_typecheck_results ~loc_of_aloc cx obj_to_obj_map props_access_in
       let literal_props = Context.find_props cx literal_obj_props_tmap_id in
       let literal_result =
         match get_loc_of_prop ~loc_of_aloc literal_props name with
-        | Some loc -> Ok (Nel.one (Object loc))
+        | Some loc -> Ok (Nel.one (ObjectProperty loc))
         | None -> Error "Expected to find property on object definition"
       in
       let result =
@@ -467,7 +467,7 @@ let def_info_of_typecheck_results ~loc_of_aloc cx obj_to_obj_map props_access_in
               let props = Context.find_props cx props_tmap_set in
               (* Get the loc of the specific prop def *)
               match get_loc_of_prop ~loc_of_aloc props name with
-              | Some loc -> Base.Result.map ~f:(fun acc' -> Nel.cons (Object loc) acc') acc
+              | Some loc -> Base.Result.map ~f:(fun acc' -> Nel.cons (ObjectProperty loc) acc') acc
               | None -> Error "Expected to find property on object definition")
             obj_prop_tmap_ids
             (Ok literal_result)
@@ -478,7 +478,7 @@ let def_info_of_typecheck_results ~loc_of_aloc cx obj_to_obj_map props_access_in
       Base.Result.map ~f:(fun res -> Some (res, name)) result
     | _ -> Error "Expected to find an object")
 
-let get_def_info ~loc_of_aloc type_info loc : (def_info option, string) result =
+let get_property_def_info ~loc_of_aloc type_info loc : (def_info option, string) result =
   let (Types_js_types.Typecheck_artifacts { cx; typed_ast; obj_to_obj_map }) = type_info in
   let def_kind =
     Def_kind_search.search
