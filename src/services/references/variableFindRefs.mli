@@ -10,5 +10,5 @@
  * global:false). *)
 val local_find_refs :
   Scope_api.With_Loc.info ->
-  Loc.t ->
+  Loc.t list ->
   (FindRefsTypes.find_refs_found * Loc.t) (* definition location *) option

@@ -13,7 +13,7 @@ let sort_and_dedup refs =
   Base.List.dedup_and_sort ~compare:(fun (_, loc1) (_, loc2) -> Loc.compare loc1 loc2) refs
 
 let local_variable_refs scope_info loc =
-  match VariableFindRefs.local_find_refs scope_info loc with
+  match VariableFindRefs.local_find_refs scope_info [loc] with
   | None -> (None, loc)
   | Some (var_refs, local_def_loc) -> (Some var_refs, local_def_loc)
 

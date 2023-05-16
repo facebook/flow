@@ -8,10 +8,12 @@
 open Loc_collections
 module Scope_api = Scope_api.With_Loc
 
-let local_find_refs scope_info loc =
+let local_find_refs scope_info locs =
   Scope_api.(
     let all_uses = all_uses scope_info in
-    let matching_uses = LocSet.filter (fun use -> Loc.contains use loc) all_uses in
+    let matching_uses =
+      LocSet.filter (fun use -> Base.List.exists locs ~f:(fun loc -> Loc.contains use loc)) all_uses
+    in
     let num_matching_uses = LocSet.cardinal matching_uses in
     if num_matching_uses = 0 then
       None
