@@ -971,7 +971,7 @@ struct
             trace
             (DefT (idx_reason, trust, IdxWrapper prop_type), OpenT t_out)
         | ( DefT (idx_reason, trust, IdxWrapper obj),
-            GetElemT (use_op, reason_op, annot, prop, t_out)
+            GetElemT { use_op; reason = reason_op; from_annot = annot; key_t = prop; tout = t_out }
           ) ->
           let de_maybed_obj =
             Tvar.mk_where cx idx_reason (fun t ->
@@ -979,8 +979,13 @@ struct
             )
           in
           let prop_type =
-            Tvar.mk_no_wrap_where cx reason_op (fun t ->
-                rec_flow cx trace (de_maybed_obj, GetElemT (use_op, reason_op, annot, prop, t))
+            Tvar.mk_no_wrap_where cx reason_op (fun tout ->
+                rec_flow
+                  cx
+                  trace
+                  ( de_maybed_obj,
+                    GetElemT { use_op; reason = reason_op; from_annot = annot; key_t = prop; tout }
+                  )
             )
           in
           rec_flow_t
@@ -1042,8 +1047,8 @@ struct
             | OptionalIndexedAccessStrLitIndex name ->
               let reason_op = replace_desc_reason (RProperty (Some name)) reason in
               GetPropT (use_op, reason, None, Named (reason_op, name), tout_tvar)
-            | OptionalIndexedAccessTypeIndex index_type ->
-              GetElemT (use_op, reason, true (* annot *), index_type, tout_tvar)
+            | OptionalIndexedAccessTypeIndex key_t ->
+              GetElemT { use_op; reason; from_annot = true; key_t; tout = tout_tvar }
           in
           rec_flow cx trace (l, u)
         (*************)
@@ -3925,8 +3930,10 @@ struct
         (******************************************)
         (* strings may have their characters read *)
         (******************************************)
-        | (DefT (reason_s, trust, StrT _), GetElemT (use_op, reason_op, _, index, tout)) ->
-          rec_flow cx trace (index, UseT (use_op, NumT.why reason_s |> with_trust bogus_trust));
+        | ( DefT (reason_s, trust, StrT _),
+            GetElemT { use_op; reason = reason_op; from_annot = _; key_t; tout }
+          ) ->
+          rec_flow cx trace (key_t, UseT (use_op, NumT.why reason_s |> with_trust bogus_trust));
           rec_flow_t cx trace ~use_op:unknown_use (StrT.why reason_op trust, OpenT tout)
         (* Expressions may be used as keys to access objects and arrays. In
            general, we cannot evaluate such expressions at compile time. However,
@@ -3940,9 +3947,10 @@ struct
             SetElemT (use_op, reason_op, key, mode, tin, tout)
           ) ->
           rec_flow cx trace (key, ElemT (use_op, reason_op, l, WriteElem (tin, tout, mode)))
-        | ((DefT (_, _, (ObjT _ | ArrT _)) | AnyT _), GetElemT (use_op, reason_op, annot, key, tout))
-          ->
-          rec_flow cx trace (key, ElemT (use_op, reason_op, l, ReadElem (annot, tout)))
+        | ( (DefT (_, _, (ObjT _ | ArrT _)) | AnyT _),
+            GetElemT { use_op; reason = reason_op; from_annot; key_t; tout }
+          ) ->
+          rec_flow cx trace (key_t, ElemT (use_op, reason_op, l, ReadElem (from_annot, tout)))
         | ( (DefT (_, _, (ObjT _ | ArrT _)) | AnyT _),
             CallElemT (use_op, reason_call, reason_lookup, key, action)
           ) ->
@@ -4672,15 +4680,15 @@ struct
           in
           rec_flow_t cx trace ~use_op:unknown_use (t, prop_t);
           apply_method_action cx trace t use_op call_reason l action
-        | (DefT (enum_reason, _, EnumObjectT _), GetElemT (_, _, _, elem, tvar_out)) ->
-          let reason = reason_of_t elem in
+        | (DefT (enum_reason, _, EnumObjectT _), GetElemT { key_t; tout; _ }) ->
+          let reason = reason_of_t key_t in
           add_output
             cx
             ~trace
             (Error_message.EEnumInvalidMemberAccess
                { member_name = None; suggestion = None; reason; enum_reason }
             );
-          rec_flow_t cx trace ~use_op:unknown_use (AnyT.error reason, OpenT tvar_out)
+          rec_flow_t cx trace ~use_op:unknown_use (AnyT.error reason, OpenT tout)
         | (DefT (enum_reason, _, EnumObjectT _), SetPropT (_, op_reason, _, _, _, _, tout))
         | (DefT (enum_reason, _, EnumObjectT _), SetElemT (_, op_reason, _, _, _, tout)) ->
           add_output
@@ -4892,17 +4900,18 @@ struct
         (************)
         (* indexing *)
         (************)
-        | (DefT (_, _, InstanceT _), GetElemT (use_op, reason, _, i, t)) ->
+        | (DefT (_, _, InstanceT _), GetElemT { use_op; reason; from_annot = _; key_t; tout }) ->
           rec_flow
             cx
             trace
             ( l,
-              SetPropT (use_op, reason, Named (reason, OrdinaryName "$key"), Assign, Normal, i, None)
+              SetPropT
+                (use_op, reason, Named (reason, OrdinaryName "$key"), Assign, Normal, key_t, None)
             );
           rec_flow
             cx
             trace
-            (l, GetPropT (use_op, reason, None, Named (reason, OrdinaryName "$value"), t))
+            (l, GetPropT (use_op, reason, None, Named (reason, OrdinaryName "$value"), tout))
         | (DefT (_, _, InstanceT _), SetElemT (use_op, reason, i, mode, tin, tout)) ->
           rec_flow
             cx
@@ -6542,7 +6551,8 @@ struct
             | _ -> getprop_ub ()
           else
             getprop_ub ()
-        | Elem key -> GetElemT (unknown_use, reason, annot, key, tvar)
+        | Elem key_t ->
+          GetElemT { use_op = unknown_use; reason; from_annot = annot; key_t; tout = tvar }
         | ObjRest xs -> ObjRestT (reason, xs, OpenT tvar, id)
         | ArrRest i -> ArrRestT (unknown_use, reason, i, OpenT tvar)
         | Default -> PredicateT (NotP VoidP, tvar)
@@ -6762,7 +6772,7 @@ struct
               let reason_op = replace_desc_reason (RProperty (Some name)) reason in
               GetPropT (use_op, reason, None, Named (reason_op, name), tout)
             | ElementType { index_type; _ } ->
-              GetElemT (use_op, reason, true (* annot *), index_type, tout)
+              GetElemT { use_op; reason; from_annot = true; key_t = index_type; tout }
             | OptionalIndexedAccessNonMaybeType { index } ->
               OptionalIndexedAccessT { use_op; reason; index; tout_tvar = tout }
             | OptionalIndexedAccessResultType { void_reason } ->

@@ -333,10 +333,16 @@ and type_of_hint_decomposition cx op reason t =
           | Some i -> Literal (None, (float_of_int i, string_of_int i))
           | None -> AnyLiteral
         in
-        Tvar.mk_no_wrap_where cx reason (fun element_t ->
+        Tvar.mk_no_wrap_where cx reason (fun tout ->
             let use_t =
               GetElemT
-                (unknown_use, reason, true, DefT (reason, bogus_trust (), NumT num), element_t)
+                {
+                  use_op = unknown_use;
+                  reason;
+                  from_annot = true;
+                  key_t = DefT (reason, bogus_trust (), NumT num);
+                  tout;
+                }
             in
             SpeculationFlow.resolved_lower_flow_unsafe cx reason (t, use_t)
         )
@@ -480,8 +486,8 @@ and type_of_hint_decomposition cx op reason t =
         )
       | Decomp_ObjComputed reason ->
         let key_t = Env.find_write cx Env_api.ExpressionLoc reason in
-        Tvar.mk_no_wrap_where cx reason (fun element_t ->
-            let use_t = GetElemT (unknown_use, reason, true, key_t, element_t) in
+        Tvar.mk_no_wrap_where cx reason (fun tout ->
+            let use_t = GetElemT { use_op = unknown_use; reason; from_annot = true; key_t; tout } in
             SpeculationFlow.resolved_lower_flow_unsafe cx reason (t, use_t)
         )
       | Decomp_ObjSpread ->

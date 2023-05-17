@@ -795,8 +795,17 @@ and dump_use_t_ (depth, tvars) cx t =
     | ExportTypeT _ -> p t
     | FunImplicitVoidReturnT _ -> p t
     | AssertExportIsTypeT _ -> p t
-    | GetElemT (_, _, _, ix, (preason, ptvar)) ->
-      p ~extra:(spf "%s, (%s, %s)" (kid ix) (string_of_reason preason) (tvar ptvar)) t
+    | GetElemT { use_op = _; reason = _; from_annot; key_t; tout = (preason, ptvar) } ->
+      p
+        ~extra:
+          (spf
+             "%s, (%s, %s), from_annot=%b"
+             (kid key_t)
+             (string_of_reason preason)
+             (tvar ptvar)
+             from_annot
+          )
+        t
     | GetKeysT _ -> p t
     | GetValuesT _ -> p t
     | GetDictValuesT _ -> p t

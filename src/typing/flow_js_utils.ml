@@ -376,7 +376,7 @@ let error_message_kind_of_upper = function
     Error_message.IncompatibleMethodT (loc_of_reason r, Some name)
   | MethodT (_, _, _, Computed t, _, _) -> Error_message.IncompatibleMethodT (loc_of_t t, None)
   | CallT _ -> Error_message.IncompatibleCallT
-  | GetElemT (_, _, _, t, _) -> Error_message.IncompatibleGetElemT (loc_of_t t)
+  | GetElemT { key_t; _ } -> Error_message.IncompatibleGetElemT (loc_of_t key_t)
   | SetElemT (_, _, t, _, _, _) -> Error_message.IncompatibleSetElemT (loc_of_t t)
   | CallElemT (_, _, _, t, _) -> Error_message.IncompatibleCallElemT (loc_of_t t)
   | ElemT (_, _, DefT (_, _, ArrT _), _) -> Error_message.IncompatibleElemTOfArrT

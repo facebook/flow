@@ -497,7 +497,14 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
               Flow.flow
                 cx
                 ( rest_param_t,
-                  GetElemT (unknown_use, reason, true, NumT.make reason (bogus_trust ()), tout)
+                  GetElemT
+                    {
+                      use_op = unknown_use;
+                      reason;
+                      from_annot = true;
+                      key_t = NumT.make reason (bogus_trust ());
+                      tout;
+                    }
                 )
           )
         in

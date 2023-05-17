@@ -83,7 +83,7 @@ and reason_of_use_t = function
   | FunImplicitVoidReturnT { reason; _ } -> reason
   | AssertExportIsTypeT (reason, _, _) -> reason
   | ExtendsUseT (_, reason, _, _, _) -> reason
-  | GetElemT (_, reason, _, _, _) -> reason
+  | GetElemT { reason; _ } -> reason
   | GetKeysT (reason, _) -> reason
   | GetValuesT (reason, _) -> reason
   | GetDictValuesT (reason, _) -> reason
@@ -281,7 +281,7 @@ and mod_reason_of_use_t f = function
   | ExtendsUseT (use_op, reason, ts, t1, t2) -> ExtendsUseT (use_op, f reason, ts, t1, t2)
   | FunImplicitVoidReturnT ({ reason; _ } as contents) ->
     FunImplicitVoidReturnT { contents with reason = f reason }
-  | GetElemT (use_op, reason, annot, it, et) -> GetElemT (use_op, f reason, annot, it, et)
+  | GetElemT ({ reason; _ } as x) -> GetElemT { x with reason = f reason }
   | GetKeysT (reason, t) -> GetKeysT (f reason, t)
   | GetValuesT (reason, t) -> GetValuesT (f reason, t)
   | GetDictValuesT (reason, t) -> GetDictValuesT (f reason, t)
@@ -423,7 +423,7 @@ let rec util_use_op_of_use_t :
   | MatchPropT (op, r, p, t) -> util op (fun op -> MatchPropT (op, r, p, t))
   | GetPrivatePropT (op, r, s, c, b, t) -> util op (fun op -> GetPrivatePropT (op, r, s, c, b, t))
   | SetElemT (op, r, t1, m, t2, t3) -> util op (fun op -> SetElemT (op, r, t1, m, t2, t3))
-  | GetElemT (op, r, a, t1, t2) -> util op (fun op -> GetElemT (op, r, a, t1, t2))
+  | GetElemT ({ use_op; _ } as x) -> util use_op (fun use_op -> GetElemT { x with use_op })
   | OptionalIndexedAccessT ({ use_op; _ } as x) ->
     util use_op (fun use_op -> OptionalIndexedAccessT { x with use_op })
   | ReposLowerT (r, d, u2) -> nested_util u2 (fun u2 -> ReposLowerT (r, d, u2))

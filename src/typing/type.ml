@@ -512,7 +512,13 @@ module rec TypeTerm : sig
        to initialize the property value, but in order to avoid race conditions we
        need to ensure that reads happen after writes. *)
     | SetElemT of use_op * reason * t * set_mode * t * t option (*tout *)
-    | GetElemT of use_op * reason * bool (* from annot *) * t * tvar
+    | GetElemT of {
+        use_op: use_op;
+        reason: reason;
+        from_annot: bool;
+        key_t: t;
+        tout: tvar;
+      }
     | CallElemT of use_op * (* call *) reason * (* lookup *) reason * t * method_action
     | GetStaticsT of tvar
     | GetProtoT of reason * tvar
@@ -4073,7 +4079,8 @@ let apply_opt_use opt_use t_out =
   | OptGetPropT (u, r, i, p) -> GetPropT (u, r, i, p, t_out)
   | OptGetPrivatePropT (u, r, s, cbs, b) -> GetPrivatePropT (u, r, s, cbs, b, t_out)
   | OptTestPropT (u, r, i, p) -> TestPropT (u, r, i, p, t_out)
-  | OptGetElemT (u, r, a, t) -> GetElemT (u, r, a, t, t_out)
+  | OptGetElemT (use_op, reason, from_annot, key_t) ->
+    GetElemT { use_op; reason; from_annot; key_t; tout = t_out }
   | OptCallElemT (u, r1, r2, elt, call) -> CallElemT (u, r1, r2, elt, apply_opt_action call t_out)
 
 let mk_enum_type ~trust reason enum =
