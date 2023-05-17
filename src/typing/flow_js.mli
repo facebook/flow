@@ -156,10 +156,11 @@ val strengthen_trust : Context.t -> Type.ident -> Trust.trust_qualifier -> Error
 val widen_obj_type :
   Context.t -> ?trace:Type.trace -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
 
-val possible_concrete_types :
-  (Type.ident -> Type.concretization_target) -> Context.t -> Reason.reason -> Type.t -> Type.t list
-
 val possible_concrete_types_for_hint : Context.t -> Reason.reason -> Type.t -> Type.t list
+
+val possible_concrete_types_for_mapped_types : Context.t -> Reason.reason -> Type.t -> Type.t list
+
+val possible_concrete_types_for_computed_props : Context.t -> Reason.reason -> Type.t -> Type.t list
 
 val resolve_id : Context.t -> int -> Type.t -> unit
 

@@ -42,9 +42,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------- object_keys.js:14:36
 
-Cannot use `k` [1] as a computed property. Computed properties may only be primitive literal values, but element of
-`Object.keys` [2] is a union. Can you add a literal type annotation to `k` [1]? See
-https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
+Cannot use `k` [1] as a computed property. Computed properties may only be primitive literal values, but the type of
+`k` [1] is a union. Can you add a literal type annotation to `k` [1]? See https://flow.org/en/docs/types/literals/ for
+more information on literal types. [invalid-computed-prop]
 
    object_keys.js:14:36
    14| Object.keys(y).map(k => { return {[k]: k} }); // Error
@@ -54,9 +54,6 @@ References:
    object_keys.js:14:20
    14| Object.keys(y).map(k => { return {[k]: k} }); // Error
                           ^ [1]
-   object_keys.js:14:1
-   14| Object.keys(y).map(k => { return {[k]: k} }); // Error
-       ^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- poly.js:3:29
@@ -211,9 +208,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:5:13
 
-Cannot use `k` [1] as a computed property. Computed properties may only be primitive literal values, but `key` [2] is a
-union. Can you add a literal type annotation to `k` [1]? See https://flow.org/en/docs/types/literals/ for more
-information on literal types. [invalid-computed-prop]
+Cannot use `k` [1] as a computed property. Computed properties may only be primitive literal values, but the type of
+`k` [1] is a union. Can you add a literal type annotation to `k` [1]? See https://flow.org/en/docs/types/literals/ for
+more information on literal types. [invalid-computed-prop]
 
    union.js:5:13
    5| const a = {[k]: 3}; // Error, k has multiple lower bounds
@@ -223,16 +220,13 @@ References:
    union.js:4:13
    4| declare var k: key;
                   ^ [1]
-   union.js:4:16
-   4| declare var k: key;
-                     ^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- union.js:17:13
 
-Cannot use `x` [1] as a computed property. Computed properties may only be primitive literal values, but `x` [1] is a
-union. Can you add a literal type annotation to `x` [1]? See https://flow.org/en/docs/types/literals/ for more
-information on literal types. [invalid-computed-prop]
+Cannot use `x` [1] as a computed property. Computed properties may only be primitive literal values, but the type of
+`x` [1] is a union. Can you add a literal type annotation to `x` [1]? See https://flow.org/en/docs/types/literals/ for
+more information on literal types. [invalid-computed-prop]
 
    17| const b = {[x]: 3} // Error, x has multiple lower bounds
                    ^ [1]
@@ -240,24 +234,24 @@ information on literal types. [invalid-computed-prop]
 
 Error --------------------------------------------------------------------------------------------------- union.js:20:13
 
-Cannot use `maybe` [1] to assign a computed property. Computed properties may only be numeric or string literal values,
-but this one is a null or undefined [2]. Can you add an appropriate type annotation to `maybe` [1]? See
+Cannot use `maybe` [1] as a computed property. Computed properties may only be primitive literal values, but the type of
+`maybe` [1] is a union. Can you add a literal type annotation to `maybe` [1]? See
 https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
    union.js:20:13
    20| const c = {[maybe]: 3}; // ERROR
-                   ^^^^^ [1]
+                   ^^^^^
 
 References:
-   union.js:19:20
+   union.js:19:13
    19| declare var maybe: ?string;
-                          ^^^^^^^ [2]
+                   ^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- union.js:23:13
 
-Cannot use `several` [1] as a computed property. Computed properties may only be primitive literal values, but union
-type [2] is a union. Can you add a literal type annotation to `several` [1]? See
+Cannot use `several` [1] as a computed property. Computed properties may only be primitive literal values, but the type
+of `several` [1] is a union. Can you add a literal type annotation to `several` [1]? See
 https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
    union.js:23:13
@@ -268,15 +262,12 @@ References:
    union.js:22:13
    22| declare var several: ?string | key;
                    ^^^^^^^ [1]
-   union.js:22:22
-   22| declare var several: ?string | key;
-                            ^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- union.js:28:6
 
-Cannot use `several` [1] as a computed property. Computed properties may only be primitive literal values, but union
-type [2] is a union. Can you add a literal type annotation to `several` [1]? See
+Cannot use `several` [1] as a computed property. Computed properties may only be primitive literal values, but the type
+of `several` [1] is a union. Can you add a literal type annotation to `several` [1]? See
 https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
    union.js:28:6
@@ -287,9 +278,6 @@ References:
    union.js:22:13
    22| declare var several: ?string | key;
                    ^^^^^^^ [1]
-   union.js:22:22
-   22| declare var several: ?string | key;
-                            ^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- union_key.js:11:23

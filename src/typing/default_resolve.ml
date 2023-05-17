@@ -190,7 +190,6 @@ let rec default_resolve_touts ~flow cx loc u =
   | ReactInToProps (_, t) ->
     resolve t
   | DestructuringT (_, _, _, tvar, _) -> resolve_tvar tvar
-  | CreateObjWithComputedPropT { tout_tvar; _ } -> resolve_tvar tout_tvar
   | ResolveUnionT { upper; _ } -> default_resolve_touts ~flow cx loc upper
   | TypeCastT (_, t) -> resolve t
   | EnumCastT _

@@ -1005,8 +1005,6 @@ and dump_use_t_ (depth, tvars) cx t =
              (string_of_reason r)
              (tvar tout)
           )
-    | CreateObjWithComputedPropT { reason = _; reason_key = _; reason_obj = _; value; tout_tvar } ->
-      p t ~extra:(spf "%s %s" (kid value) (kid (OpenT tout_tvar)))
     | ResolveUnionT { resolved; unresolved; upper; id; _ } ->
       p
         t
@@ -1741,11 +1739,8 @@ let dump_error_message =
         (dump_reason cx computed_property_reason)
         (dump_reason cx new_lower_bound_reason)
         (dump_reason cx existing_lower_bound_reason)
-    | EComputedPropertyWithUnion { computed_property_reason; union_reason } ->
-      spf
-        "EComputedPropertyWithUnion (%s) (%s)"
-        (dump_reason cx computed_property_reason)
-        (dump_reason cx union_reason)
+    | EComputedPropertyWithUnion reason ->
+      spf "EComputedPropertyWithUnion (%s)" (dump_reason cx reason)
     | EEnumInvalidMemberAccess { member_name; suggestion; reason; enum_reason } ->
       spf
         "EEnumInvalidMemberAccess (%s) (%s) (%s) (%s)"

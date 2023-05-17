@@ -2135,26 +2135,59 @@ module Make
     in
     (acc.ObjectExpressionAcc.obj_pmap, List.rev rev_prop_asts)
 
+  and create_obj_with_computed_prop cx keys ~reason ~reason_key ~reason_obj value id =
+    let on_named_prop reason_named =
+      match Context.computed_property_state_for_id cx id with
+      | None -> Context.computed_property_add_lower_bound cx id reason_named
+      | Some (Context.ResolvedOnce existing_lower_bound_reason) ->
+        Context.computed_property_add_multiple_lower_bounds cx id;
+        Flow_js_utils.add_output
+          cx
+          (Error_message.EComputedPropertyWithMultipleLowerBounds
+             {
+               existing_lower_bound_reason;
+               new_lower_bound_reason = reason_named;
+               computed_property_reason = reason;
+             }
+          )
+      | Some Context.ResolvedMultipleTimes -> ()
+    in
+    let single_key key =
+      match Flow_js_utils.propref_for_elem_t ~on_named_prop key with
+      | Computed elem_t ->
+        let check =
+          WriteComputedObjPropCheckT
+            { reason; reason_key = Some reason_key; value_t = value; err_on_str_or_num_key = None }
+        in
+        Flow.flow cx (elem_t, check);
+        (* No properties are added in this case. *)
+        Obj_type.mk_exact_empty cx reason_obj
+      | Named (_, name) ->
+        let prop = Field (None, value, Polarity.Neutral) in
+        let props = NameUtils.Map.singleton name prop in
+        let proto = NullT.make reason |> with_trust bogus_trust in
+        Obj_type.mk_with_proto ~obj_kind:Exact cx reason_obj ~props proto
+    in
+    match keys with
+    | [] -> DefT (reason_obj, bogus_trust (), EmptyT)
+    | [key] -> single_key key
+    | _ ->
+      Context.computed_property_add_multiple_lower_bounds cx id;
+      Flow_js_utils.add_output cx (Error_message.EComputedPropertyWithUnion reason);
+      AnyT.error reason
+
   and object_ cx reason ~frozen props =
     let open Ast.Expression.Object in
     (* Use the same reason for proto and the ObjT so we can walk the proto chain
        and use the root proto reason to build an error. *)
     let obj_proto = ObjProtoT reason in
     let mk_computed k key value =
-      Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout_tvar ->
-          Flow.flow
-            cx
-            ( key,
-              CreateObjWithComputedPropT
-                {
-                  reason = reason_of_t key;
-                  reason_key = Reason.mk_expression_reason k;
-                  reason_obj = reason;
-                  value;
-                  tout_tvar;
-                }
-            )
-      )
+      let keys = Flow.possible_concrete_types_for_computed_props cx reason key in
+      let reason = reason_of_t key in
+      let reason_key = Reason.mk_expression_reason k in
+      let reason_obj = reason in
+      let id = Reason.mk_id () in
+      create_obj_with_computed_prop cx keys ~reason ~reason_key ~reason_obj value id
     in
     let (acc, rev_prop_asts) =
       List.fold_left

@@ -1641,24 +1641,6 @@ struct
           rec_unify cx trace ~use_op:unknown_use (UnionT (reason, rep)) (OpenT tout)
         | (UnionT _, ObjKitT (use_op, reason, resolve_tool, tool, tout)) ->
           ObjectKit.run trace cx use_op reason resolve_tool tool ~tout l
-        | ( UnionT (r, _),
-            CreateObjWithComputedPropT
-              {
-                reason;
-                reason_obj = _;
-                reason_key = _;
-                value = _;
-                tout_tvar = (tout_reason, tout_id);
-              }
-          ) ->
-          Context.computed_property_add_multiple_lower_bounds cx tout_id;
-          rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason, OpenT (tout_reason, tout_id));
-          add_output
-            cx
-            ~trace
-            (Error_message.EComputedPropertyWithUnion
-               { computed_property_reason = reason; union_reason = r }
-            )
         | ((UnionT (_, rep1) as u1), EqT { arg = UnionT _ as u2; _ }) ->
           if union_optimization_guard cx ~equiv:true (curry equatable) u1 u2 then begin
             if Context.is_verbose cx then prerr_endline "UnionT ~> EqT fast path"
@@ -3995,49 +3977,8 @@ struct
           ) ->
           rec_flow_t cx trace ~use_op:unknown_use (AnyT.untyped reason_call, prop_t)
         (* computed properties *)
-        | ( key,
-            CreateObjWithComputedPropT
-              { reason; reason_key; reason_obj; value; tout_tvar = (tout_reason, tout_id) }
-          ) ->
-          let on_named_prop reason_named =
-            match Context.computed_property_state_for_id cx tout_id with
-            | None -> Context.computed_property_add_lower_bound cx tout_id reason_named
-            | Some (Context.ResolvedOnce existing_lower_bound_reason) ->
-              Context.computed_property_add_multiple_lower_bounds cx tout_id;
-              add_output
-                cx
-                ~trace
-                (Error_message.EComputedPropertyWithMultipleLowerBounds
-                   {
-                     existing_lower_bound_reason;
-                     new_lower_bound_reason = reason_named;
-                     computed_property_reason = reason;
-                   }
-                )
-            | Some Context.ResolvedMultipleTimes -> ()
-          in
-          let obj =
-            match propref_for_elem_t ~on_named_prop key with
-            | Computed elem_t ->
-              let check =
-                WriteComputedObjPropCheckT
-                  {
-                    reason;
-                    reason_key = Some reason_key;
-                    value_t = value;
-                    err_on_str_or_num_key = None;
-                  }
-              in
-              rec_flow cx trace (elem_t, check);
-              (* No properties are added in this case. *)
-              Obj_type.mk_exact_empty cx reason_obj
-            | Named (_, name) ->
-              let prop = Field (None, value, Polarity.Neutral) in
-              let props = NameUtils.Map.singleton name prop in
-              let proto = NullT.make reason |> with_trust bogus_trust in
-              Obj_type.mk_with_proto ~obj_kind:Exact cx reason_obj ~props proto
-          in
-          rec_flow_t cx trace ~use_op:unknown_use (obj, OpenT (tout_reason, tout_id))
+        | (t, PreprocessKitT (reason, ConcretizeTypes (ConcretizeComputedPropsT tvar))) ->
+          rec_flow_t cx trace ~use_op:unknown_use (t, OpenT (reason, tvar))
         (**************************************************)
         (* array pattern can consume the rest of an array *)
         (**************************************************)
@@ -6036,7 +5977,6 @@ struct
     | UseT (_, ThisTypeAppT _)
     | UseT (_, TypeAppT _)
     | UseT (_, DefT (_, _, TypeT _))
-    | CreateObjWithComputedPropT _ (* Handled in __flow *)
     (* Should never occur, so we just defer to __flow to handle errors *)
     | UseT (_, InternalT _)
     | UseT (_, MatchingPropT _)
@@ -9705,6 +9645,12 @@ module rec FlowJs : Flow_common.S = struct
     Flow_js_utils.possible_types cx id
 
   let possible_concrete_types_for_hint = possible_concrete_types (fun ident -> ConcretizeHintT ident)
+
+  let possible_concrete_types_for_mapped_types =
+    possible_concrete_types (fun ident -> ConcretizeMappedTypeArgumentT ident)
+
+  let possible_concrete_types_for_computed_props =
+    possible_concrete_types (fun ident -> ConcretizeComputedPropsT ident)
 end
 
 include FlowJs

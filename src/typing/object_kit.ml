@@ -97,9 +97,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
     in
     (* All keys must be a subtype of string | number | symbol *)
     rec_flow_t cx trace ~use_op:compatibility_use_op (keys, union);
-    let possible_types =
-      Flow.possible_concrete_types (fun ident -> ConcretizeMappedTypeArgumentT ident) cx reason keys
-    in
+    let possible_types = Flow.possible_concrete_types_for_mapped_types cx reason keys in
     possible_types
     |> List.fold_left
          (fun (keys, indexers) t ->

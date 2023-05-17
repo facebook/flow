@@ -314,7 +314,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | ObjAssignToT _
     | ObjAssignFromT _
     | ObjTestT _
-    | CreateObjWithComputedPropT _
     | TypeCastT _
     | EnumCastT _
     | EnumExhaustiveCheckT _

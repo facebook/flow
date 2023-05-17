@@ -794,13 +794,6 @@ module rec TypeTerm : sig
      * bound is an annotation (0->1), and t_out will be unified with the
      * destructured type. The caller should wrap the tvar with an AnnotT. *)
     | DestructuringT of reason * destruct_kind * selector * tvar * int
-    | CreateObjWithComputedPropT of {
-        reason: reason;
-        reason_obj: reason;
-        reason_key: reason;
-        value: t;
-        tout_tvar: tvar;
-      }
     (* Used to delay union lower bound handling until all the types in the union have been processed themselves *)
     | ResolveUnionT of {
         reason: reason;
@@ -1498,6 +1491,7 @@ module rec TypeTerm : sig
      * mapped type: {[key in T]: U}. To compute the type, we need to fully resolve the union
      * and flatten it so that we can determine what the keys should be *)
     | ConcretizeMappedTypeArgumentT of ident
+    | ConcretizeComputedPropsT of ident
 
   and intersection_preprocess_tool =
     | ConcretizeTypes of concretization_target
@@ -3847,7 +3841,6 @@ let string_of_use_ctor = function
   | ReactPropsToOut _ -> "ReactPropsToOut"
   | ReactInToProps _ -> "ReactInToProps"
   | DestructuringT _ -> "DestructuringT"
-  | CreateObjWithComputedPropT _ -> "CreateObjWithComputedPropT"
   | ResolveUnionT _ -> "ResolveUnionT"
   | FilterOptionalT _ -> "FilterOptionalT"
   | FilterMaybeT _ -> "FilterMaybeT"

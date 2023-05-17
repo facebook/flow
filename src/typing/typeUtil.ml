@@ -150,9 +150,6 @@ and reason_of_use_t = function
   | SealGenericT { reason; _ } ->
     reason
   | DestructuringT (reason, _, _, _, _) -> reason
-  | CreateObjWithComputedPropT { reason; reason_obj = _; reason_key = _; value = _; tout_tvar = _ }
-    ->
-    reason
   | ResolveUnionT { reason; _ } -> reason
   | CheckUnusedPromiseT { reason; _ } -> reason
   | WriteComputedObjPropCheckT { reason; _ } -> reason
@@ -362,8 +359,6 @@ and mod_reason_of_use_t f = function
   | ReactPropsToOut (reason, t) -> ReactPropsToOut (f reason, t)
   | ReactInToProps (reason, t) -> ReactInToProps (f reason, t)
   | DestructuringT (reason, a, s, t, id) -> DestructuringT (f reason, a, s, t, id)
-  | CreateObjWithComputedPropT { reason; reason_obj; reason_key; value; tout_tvar } ->
-    CreateObjWithComputedPropT { reason = f reason; reason_obj; reason_key; value; tout_tvar }
   | ResolveUnionT { reason; resolved; unresolved; upper; id } ->
     ResolveUnionT { reason = f reason; resolved; unresolved; upper; id }
 
@@ -517,7 +512,6 @@ let rec util_use_op_of_use_t :
   | ReactPropsToOut _
   | ReactInToProps _
   | DestructuringT _
-  | CreateObjWithComputedPropT _
   | ResolveUnionT _
   | EnumExhaustiveCheckT _
   | SealGenericT _

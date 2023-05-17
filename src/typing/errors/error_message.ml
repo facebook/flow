@@ -425,10 +425,7 @@ and 'loc t' =
       new_lower_bound_reason: 'loc virtual_reason;
       existing_lower_bound_reason: 'loc virtual_reason;
     }
-  | EComputedPropertyWithUnion of {
-      computed_property_reason: 'loc virtual_reason;
-      union_reason: 'loc virtual_reason;
-    }
+  | EComputedPropertyWithUnion of 'loc virtual_reason
   (* enums *)
   | EEnumInvalidMemberAccess of {
       member_name: name option;
@@ -1112,12 +1109,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         new_lower_bound_reason = map_reason new_lower_bound_reason;
         existing_lower_bound_reason = map_reason existing_lower_bound_reason;
       }
-  | EComputedPropertyWithUnion { computed_property_reason; union_reason } ->
-    EComputedPropertyWithUnion
-      {
-        computed_property_reason = map_reason computed_property_reason;
-        union_reason = map_reason union_reason;
-      }
+  | EComputedPropertyWithUnion reason -> EComputedPropertyWithUnion (map_reason reason)
   | EEnumInvalidMemberAccess { member_name; suggestion; reason; enum_reason } ->
     EEnumInvalidMemberAccess
       { member_name; suggestion; reason = map_reason reason; enum_reason = map_reason enum_reason }
@@ -1559,7 +1551,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
         new_lower_bound_reason = _;
         existing_lower_bound_reason = _;
       }
-  | EComputedPropertyWithUnion { computed_property_reason = reason; union_reason = _ } ->
+  | EComputedPropertyWithUnion reason ->
     Some (loc_of_reason reason)
   | EEnumMemberAlreadyChecked { reason; _ }
   | EEnumAllMembersAlreadyChecked { reason; _ }
@@ -3901,14 +3893,14 @@ let friendly_message_of_msg loc_of_aloc msg =
       ]
     in
     Normal { features }
-  | EComputedPropertyWithUnion { computed_property_reason; union_reason } ->
+  | EComputedPropertyWithUnion computed_property_reason ->
     let features =
       [
         text "Cannot use ";
         ref computed_property_reason;
         text " as a computed property.";
-        text " Computed properties may only be primitive literal values, but ";
-        ref union_reason;
+        text " Computed properties may only be primitive literal values, but the type of ";
+        ref computed_property_reason;
         text " is a union. Can you add a literal type annotation to ";
         ref computed_property_reason;
         text "?";
