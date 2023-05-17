@@ -184,7 +184,10 @@ module type S = sig
 
   type toplevel_member = Reason.name * read
 
-  type predicate_refinement_maps = (read SMap.t * read SMap.t) L.LMap.t
+  type predicate_refinement = read * L.t * Pattern_helper.binding
+
+  type predicate_refinement_maps =
+    (Reason.t * predicate_refinement SMap.t * predicate_refinement SMap.t) L.LMap.t
 
   type pred_func_info =
     (L.t, L.t) Ast.Expression.t (* Call exp *)
@@ -468,7 +471,10 @@ module Make
 
   type toplevel_member = Reason.name * read
 
-  type predicate_refinement_maps = (read SMap.t * read SMap.t) L.LMap.t
+  type predicate_refinement = read * L.t * Pattern_helper.binding
+
+  type predicate_refinement_maps =
+    (Reason.t * predicate_refinement SMap.t * predicate_refinement SMap.t) L.LMap.t
 
   type pred_func_info =
     (L.t, L.t) Ast.Expression.t (* Call exp *)

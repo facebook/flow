@@ -131,7 +131,7 @@ val query_var :
   Type.t
 
 val predicate_refinement_maps :
-  Context.t -> ALoc.t -> Type.predicate Key_map.t * Type.predicate Key_map.t
+  Context.t -> ALoc.t -> (Reason.t * Type.predicate Key_map.t * Type.predicate Key_map.t) option
 
 val set_var : Context.t -> use_op:Type.use_op -> string -> Type.t -> ALoc.t -> unit
 

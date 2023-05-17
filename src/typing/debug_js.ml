@@ -1473,6 +1473,8 @@ let dump_error_message =
       spf "EPredicateFuncArityMismatch (%s)" (string_of_use_op use_op)
     | EPredicateFuncIncompatibility { use_op; _ } ->
       spf "EPredicateFuncIncompatibility (%s)" (string_of_use_op use_op)
+    | EPredicateInvalidParameter { pred_reason = r; _ } ->
+      spf "EPredicateInvalidParameter (%s)" (dump_reason cx r)
     | EInternal (loc, err) -> spf "EInternal (%s, %s)" (string_of_aloc loc) (dump_internal_error err)
     | EUnsupportedSyntax (loc, _) -> spf "EUnsupportedSyntax (%s, _)" (string_of_aloc loc)
     | EUseArrayLiteral loc -> spf "EUseArrayLiteral (%s)" (string_of_aloc loc)

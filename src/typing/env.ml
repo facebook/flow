@@ -491,11 +491,7 @@ and read_pred_func_info_exn cx loc =
 and predicate_refinement_maps cx loc =
   let { Loc_env.var_info; _ } = Context.environment cx in
   let { Env_api.predicate_refinement_maps; _ } = var_info in
-  let (p_map, n_map) =
-    ALocMap.find_opt loc predicate_refinement_maps
-    |> Base.Option.value ~default:(SMap.empty, SMap.empty)
-  in
-  let read_to_predicate { Env_api.write_locs; _ } =
+  let read_to_predicate ({ Env_api.write_locs; _ }, _, _) =
     let predicates =
       Base.List.filter_map write_locs ~f:(function
           | Env_api.With_ALoc.Refinement { refinement_id; _ } ->
@@ -517,7 +513,10 @@ and predicate_refinement_maps cx loc =
        )
     |> Key_map.of_list
   in
-  (to_predicate_key_map p_map, to_predicate_key_map n_map)
+  match ALocMap.find_opt loc predicate_refinement_maps with
+  | None -> None
+  | Some (expr_reason, p_map, n_map) ->
+    Some (expr_reason, to_predicate_key_map p_map, to_predicate_key_map n_map)
 
 let ref_entry_exn ~lookup_mode cx loc reason =
   let t = read_entry_exn ~lookup_mode cx loc reason in

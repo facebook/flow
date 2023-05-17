@@ -32,6 +32,174 @@ References:
                ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------- patterns_and_rest.js:2:10
+
+A predicate encoded in return [1] cannot reference pattern parameter `b` [2]. [function-predicate]
+
+   patterns_and_rest.js:2:10
+   2|   return typeof b === 'string'; // error b is in pattern
+               ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   patterns_and_rest.js:1:37
+   1| function invalid_pattern_object({a: b}: {a: mixed}): boolean %checks {
+                                          ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- patterns_and_rest.js:6:10
+
+A predicate encoded in return [1] cannot reference pattern parameter `b` [2]. [function-predicate]
+
+   patterns_and_rest.js:6:10
+   6|   return typeof b === 'string'; // error b is in pattern
+               ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   patterns_and_rest.js:5:33
+   5| function invalid_pattern_array([b]: [mixed]): boolean %checks {
+                                      ^ [2]
+
+
+Error --------------------------------------------------------------------------------------- patterns_and_rest.js:10:10
+
+A predicate encoded in return [1] cannot reference rest parameter `a` [2]. [function-predicate]
+
+   patterns_and_rest.js:10:10
+   10|   return typeof a === 'string';  // error a is in rest param
+                ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   patterns_and_rest.js:9:26
+    9| function invalid_rest(...a: Array<mixed>): boolean %checks {
+                                ^ [2]
+
+
+Error --------------------------------------------------------------------------------------- patterns_and_rest.js:13:73
+
+A predicate encoded in return [1] cannot reference rest parameter `a` [2]. [function-predicate]
+
+   patterns_and_rest.js:13:73
+   13| declare function invalid_rest_decl(...a: Array<mixed>): boolean %checks(typeof a === 'string');  // error a is in rest param
+                                                                               ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   patterns_and_rest.js:13:39
+   13| declare function invalid_rest_decl(...a: Array<mixed>): boolean %checks(typeof a === 'string');  // error a is in rest param
+                                             ^ [2]
+
+
+Error --------------------------------------------------------------------------------------- patterns_and_rest.js:16:10
+
+A predicate encoded in return [1] cannot reference pattern parameter `b` [2]. [function-predicate]
+
+   patterns_and_rest.js:16:10
+   16|   return typeof b === 'string' && typeof c === 'number'; // error b, c in pattern
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   patterns_and_rest.js:15:40
+   15| function invalid_pattern_compound({a: [b]}: {a: [mixed]}, ...c: Array<mixed>): boolean %checks {
+                                              ^ [2]
+
+
+Error --------------------------------------------------------------------------------------- patterns_and_rest.js:16:10
+
+A predicate encoded in return [1] cannot reference rest parameter `c` [2]. [function-predicate]
+
+   patterns_and_rest.js:16:10
+   16|   return typeof b === 'string' && typeof c === 'number'; // error b, c in pattern
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   patterns_and_rest.js:15:62
+   15| function invalid_pattern_compound({a: [b]}: {a: [mixed]}, ...c: Array<mixed>): boolean %checks {
+                                                                    ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- patterns_and_rest.js:28:4
+
+Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   patterns_and_rest.js:28:4
+   28|   (x: number); // error string ~> number
+          ^
+
+References:
+   patterns_and_rest.js:22:10
+   22|   return typeof x === 'string'; // this is okay, pattern/rest does not affect predicate param
+                ^^^^^^^^^^^^^^^^^^^^^ [1]
+   patterns_and_rest.js:28:7
+   28|   (x: number); // error string ~> number
+             ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- patterns_and_rest.js:33:5
+
+A predicate encoded in return [1] cannot reference pattern parameter `x` [2]. [function-predicate]
+
+   patterns_and_rest.js:33:5
+           v------------------------------------------------
+   33|     typeof x === 'string' && // error '[x' in pattern
+   34|     typeof y === 'string'    // this is okay, pattern/rest does not affect predicate param
+           --------------------^ [1]
+
+References:
+   patterns_and_rest.js:31:27
+   31| function partially_valid({x}: {x: mixed}, y: mixed, ...r: Array<number>): boolean %checks {
+                                 ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- patterns_and_rest.js:42:4
+
+Cannot cast `a` to string because mixed [1] is incompatible with string [2]. [incompatible-cast]
+
+   patterns_and_rest.js:42:4
+   42|   (a: string); // error mixed ~> string because 'a' is not refined
+          ^
+
+References:
+   patterns_and_rest.js:38:16
+   38| declare var a: mixed;
+                      ^^^^^ [1]
+   patterns_and_rest.js:42:7
+   42|   (a: string); // error mixed ~> string because 'a' is not refined
+             ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- patterns_and_rest.js:43:4
+
+Cannot cast `a` to number because mixed [1] is incompatible with number [2]. [incompatible-cast]
+
+   patterns_and_rest.js:43:4
+   43|   (a: number); // error mixed ~> number because 'a' is not refined
+          ^
+
+References:
+   patterns_and_rest.js:38:16
+   38| declare var a: mixed;
+                      ^^^^^ [1]
+   patterns_and_rest.js:43:7
+   43|   (a: number); // error mixed ~> number because 'a' is not refined
+             ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- patterns_and_rest.js:45:4
+
+Cannot cast `b` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   patterns_and_rest.js:45:4
+   45|   (b: number); // error string ~> number
+          ^
+
+References:
+   patterns_and_rest.js:34:5
+   34|     typeof y === 'string'    // this is okay, pattern/rest does not affect predicate param
+           ^^^^^^^^^^^^^^^^^^^^^ [1]
+   patterns_and_rest.js:45:7
+   45|   (b: number); // error string ~> number
+             ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------------ poly.js:8:6
 
 Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
@@ -120,4 +288,4 @@ References:
 
 
 
-Found 7 errors
+Found 18 errors

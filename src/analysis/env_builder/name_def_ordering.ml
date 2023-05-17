@@ -738,24 +738,23 @@ struct
           match synth with
           | FunctionSynthesizable -> (true, state)
           | FunctionPredicateSynthesizable (loc, _) ->
-            let (p_map, n_map) =
-              ALocMap.find_opt loc predicate_refinement_maps
-              |> Base.Option.value ~default:(SMap.empty, SMap.empty)
-            in
             let state =
-              depends_of_node
-                (fun visitor ->
-                  SMap.iter
-                    (fun _ { Env_api.write_locs; _ } ->
-                      let writes = visitor#add_write_locs ~for_type:false write_locs in
-                      Base.List.iter ~f:(visitor#add ~why:loc) writes)
-                    p_map;
-                  SMap.iter
-                    (fun _ { Env_api.write_locs; _ } ->
-                      let writes = visitor#add_write_locs ~for_type:false write_locs in
-                      Base.List.iter ~f:(visitor#add ~why:loc) writes)
-                    n_map)
-                state
+              match ALocMap.find_opt loc predicate_refinement_maps with
+              | None -> state
+              | Some (_, p_map, n_map) ->
+                depends_of_node
+                  (fun visitor ->
+                    SMap.iter
+                      (fun _ ({ Env_api.write_locs; _ }, _, _) ->
+                        let writes = visitor#add_write_locs ~for_type:false write_locs in
+                        Base.List.iter ~f:(visitor#add ~why:loc) writes)
+                      p_map;
+                    SMap.iter
+                      (fun _ ({ Env_api.write_locs; _ }, _, _) ->
+                        let writes = visitor#add_write_locs ~for_type:false write_locs in
+                        Base.List.iter ~f:(visitor#add ~why:loc) writes)
+                      n_map)
+                  state
             in
             (true, state)
           | _ -> (false, state)

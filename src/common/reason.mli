@@ -122,6 +122,7 @@ type 'loc virtual_reason_desc =
   | RMethodCall of string option
   | RParameter of string option
   | RRestParameter of string option
+  | RPatternParameter of string
   | RIdentifier of name
   | RUnknownParameter of string
   | RIdentifierAssignment of string

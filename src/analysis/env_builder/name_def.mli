@@ -12,9 +12,6 @@ val predicate_synthesizable :
   (ALoc.t, ALoc.t) Ast.Function.body ->
   function_synth_kind
 
-val predicate_function_invalid_param_reasons :
-  ('a, 'a) Flow_ast.Function.Params.t -> 'a Reason.virtual_reason list
-
 val expression_is_definitely_synthesizable :
   autocomplete_hooks:Env_api.With_ALoc.autocomplete_hooks ->
   (ALoc.t, ALoc.t) Flow_ast.Expression.t ->

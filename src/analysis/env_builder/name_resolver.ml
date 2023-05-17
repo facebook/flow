@@ -882,7 +882,7 @@ module Make
        statement, the list will be cleared. A loop will consume the list, so we
        also clear the list on our way out of any labeled statement. *)
     possible_labeled_continues: AbruptCompletion.t list;
-    predicate_scope_names: SSet.t option;
+    predicate_scope_names: (ALoc.t * Pattern_helper.binding) SMap.t option;
     visiting_hoisted_type: bool;
     in_conditional_type_extends: bool;
     jsx_base_name: string option;
@@ -2809,7 +2809,9 @@ module Make
         | Flow_ast.Function.BodyExpression expr ->
           (match env_state.predicate_scope_names with
           | None -> ()
-          | Some names -> this#record_predicate_refinement_maps (fst expr) names expr));
+          | Some names ->
+            let reason = mk_reason RFunctionBody (fst expr) in
+            this#record_predicate_refinement_maps (fst expr) names reason expr));
         super#function_body_any body
 
       method! return loc (stmt : (ALoc.t, ALoc.t) Ast.Statement.Return.t) =
@@ -2819,16 +2821,14 @@ module Make
         | (None, _)
         | (Some _, None) ->
           ignore @@ Flow_ast_mapper.map_opt this#expression argument
-        | (Some names, Some argument) -> this#record_predicate_refinement_maps loc names argument);
+        | (Some names, Some argument) ->
+          let reason = mk_reason RReturn (fst argument) in
+          this#record_predicate_refinement_maps loc names reason argument);
         this#raise_abrupt_completion AbruptCompletion.return
 
-      method private record_predicate_refinement_maps loc names expr =
-        let compute_refi_map () =
-          names
-          |> SSet.elements
-          |> Base.List.map ~f:(fun name -> (name, this#synthesize_read name))
-          |> SMap.of_list
-        in
+      method private record_predicate_refinement_maps loc names expr_reason expr =
+        let record_binding name (loc, binding) = (this#synthesize_read name, loc, binding) in
+        let compute_refi_map () = names |> SMap.mapi record_binding in
         this#push_refinement_scope empty_refinements;
         ignore @@ this#expression_refinement expr;
         let positive_refi_map = compute_refi_map () in
@@ -2841,7 +2841,7 @@ module Make
             predicate_refinement_maps =
               L.LMap.add
                 loc
-                (positive_refi_map, negative_refi_map)
+                (expr_reason, positive_refi_map, negative_refi_map)
                 env_state.predicate_refinement_maps;
           }
 
@@ -3739,29 +3739,6 @@ module Make
         env_state <- { env_state with write_entries };
         super#function_param_pattern patt
 
-      method private predicate_scope_names_of_params predicate params =
-        Base.Option.map predicate ~f:(fun _ ->
-            let open Flow_ast in
-            let (_, { Function.Params.params; rest; _ }) = params in
-            let f acc (_, patt) =
-              match patt with
-              | Pattern.Identifier { Pattern.Identifier.name = (_, { Identifier.name; _ }); _ } ->
-                SSet.add name acc
-              (* Predicate functions disallow destructuring *)
-              | _ -> acc
-            in
-            let acc =
-              Base.List.fold
-                params
-                ~init:SSet.empty
-                ~f:(fun acc (_, { Function.Param.argument; _ }) -> f acc argument
-              )
-            in
-            Base.Option.fold rest ~init:acc ~f:(fun acc (_, { Function.RestParam.argument; _ }) ->
-                f acc argument
-            )
-        )
-
       (* We also havoc state when entering functions and exiting calls. *)
       method! lambda ~is_arrow ~fun_loc ~generator_return_loc params predicate body =
         this#expecting_abrupt_completions (fun () ->
@@ -3769,11 +3746,10 @@ module Make
             this#run
               (fun () ->
                 let saved_predicate_scope_names = env_state.predicate_scope_names in
-                env_state <-
-                  {
-                    env_state with
-                    predicate_scope_names = this#predicate_scope_names_of_params predicate params;
-                  };
+                let predicate_scope_names =
+                  Base.Option.map predicate ~f:(fun _ -> Pattern_helper.bindings_of_params params)
+                in
+                env_state <- { env_state with predicate_scope_names };
                 this#havoc_uninitialized_env;
                 let completion_state =
                   this#run_to_completion (fun () ->

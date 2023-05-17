@@ -275,9 +275,13 @@ and 'loc t' =
       use_op: 'loc virtual_use_op;
       reasons: 'loc virtual_reason * 'loc virtual_reason;
     }
+  | EPredicateInvalidParameter of {
+      pred_reason: 'loc virtual_reason;
+      binding_reason: 'loc virtual_reason;
+    }
   | EFunPredInvalidIndex of 'loc
   | EInternal of 'loc * internal_error
-  | EUnsupportedSyntax of 'loc * 'loc unsupported_syntax
+  | EUnsupportedSyntax of 'loc * unsupported_syntax
   | EUseArrayLiteral of 'loc
   | EMissingAnnotation of 'loc virtual_reason * 'loc virtual_reason list
   | EMissingLocalAnnotation of {
@@ -635,7 +639,7 @@ and internal_error =
   | EnvInvariant of Env_api.env_invariant_failure
   | ImplicitInstantiationInvariant of string
 
-and 'loc unsupported_syntax =
+and unsupported_syntax =
   | AnnotationInsideDestructuring
   | ConditionalType
   | ExistsType
@@ -656,7 +660,6 @@ and 'loc unsupported_syntax =
   | PredicateDeclarationWithoutExpression
   | PredicateDeclarationAnonymousParameters
   | PredicateInvalidBody
-  | PredicateInvalidParameter of 'loc virtual_reason
   | PredicateVoidReturn
   | MultipleIndexers
   | MultipleProtos
@@ -758,21 +761,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       | IncompatibleThisSpecializeT | IncompatibleVarianceCheckT | IncompatibleGetKeysT
       | IncompatibleGetValuesT | IncompatibleUnaryArithT | IncompatibleMapTypeTObject
       | IncompatibleGetStaticsT | IncompatibleBindT | IncompatibleUnclassified _ ) as u ->
-      u
-  in
-  let map_unsupported_syntax = function
-    | PredicateInvalidParameter reason -> PredicateInvalidParameter (map_reason reason)
-    | ( ConditionalType | ExistsType | MetaPropertyExpression | ObjectPropertyLiteralNonString
-      | ObjectPropertyGetSet | ObjectPropertyComputedGetSet | InvariantSpreadArgument
-      | ClassPropertyLiteral | ClassPropertyComputed | RequireDynamicArgument
-      | CatchParameterDeclaration | DestructuringObjectPropertyLiteralNonString
-      | DestructuringExpressionPattern | JSXTypeArgs | MappedType
-      | PredicateDeclarationForImplementation | PredicateDeclarationWithoutExpression
-      | PredicateDeclarationAnonymousParameters | PredicateInvalidBody | PredicateVoidReturn
-      | MultipleIndexers | MultipleProtos | ExplicitCallAfterProto | ExplicitProtoAfterCall
-      | SpreadArgument | ImportDynamicArgument | IllegalName | TupleLabeledElement
-      | TupleSpreadElement | UserDefinedTypeGuards | UnsupportedInternalSlot _
-      | AnnotationInsideDestructuring | WithStatement | ComponentSyntax ) as u ->
       u
   in
   function
@@ -995,9 +983,12 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EPredicateFuncIncompatibility { use_op; reasons = (r1, r2) } ->
     EPredicateFuncIncompatibility
       { use_op = map_use_op use_op; reasons = (map_reason r1, map_reason r2) }
+  | EPredicateInvalidParameter { pred_reason; binding_reason } ->
+    EPredicateInvalidParameter
+      { pred_reason = map_reason pred_reason; binding_reason = map_reason binding_reason }
   | EFunPredInvalidIndex loc -> EFunPredInvalidIndex (f loc)
   | EInternal (loc, i) -> EInternal (f loc, i)
-  | EUnsupportedSyntax (loc, u) -> EUnsupportedSyntax (f loc, map_unsupported_syntax u)
+  | EUnsupportedSyntax (loc, u) -> EUnsupportedSyntax (f loc, u)
   | EUseArrayLiteral loc -> EUseArrayLiteral (f loc)
   | EMissingAnnotation (r, rs) -> EMissingAnnotation (map_reason r, Base.List.map ~f:map_reason rs)
   | EMissingLocalAnnotation { reason; hint_available; from_generic_function } ->
@@ -1424,6 +1415,7 @@ let util_use_op_of_msg nope util = function
   | EPredicateFuncTooShort _
   | EPredicateFuncArityMismatch _
   | EPredicateFuncIncompatibility _
+  | EPredicateInvalidParameter _
   | EFunPredInvalidIndex _
   | EInternal (_, _)
   | EUnsupportedSyntax (_, _)
@@ -1586,7 +1578,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EBigIntRShift3 reason
   | EBigIntNumCoerce reason
   | EInvalidBinaryArith { reason_out = reason; _ }
-  | ETupleRequiredAfterOptional reason ->
+  | ETupleRequiredAfterOptional reason
+  | EPredicateInvalidParameter { pred_reason = reason; _ } ->
     Some (loc_of_reason reason)
   | EExponentialSpread
       {
@@ -2739,6 +2732,12 @@ let friendly_message_of_msg loc_of_aloc msg =
             text " type needs to be a positive integer.";
           ];
       }
+  | EPredicateInvalidParameter { pred_reason; binding_reason } ->
+    Normal
+      {
+        features =
+          [text "A "; ref pred_reason; text " cannot reference "; ref binding_reason; text "."];
+      }
   | EInternal (_, internal_error) ->
     let msg = string_of_internal_error internal_error in
     Normal { features = [text (spf "Internal error: %s" msg)] }
@@ -2790,14 +2789,6 @@ let friendly_message_of_msg loc_of_aloc msg =
         [
           text "Invalid body for predicate function. Expected a simple return ";
           text "statement as body.";
-        ]
-      | PredicateInvalidParameter r ->
-        [
-          text "Invalid ";
-          ref r;
-          text " in predicate function. Predicate functions cannot ";
-          text "have destructured or spread parameters. This predicate annotation will ";
-          text "be ignored.";
         ]
       | PredicateVoidReturn -> [text "Predicate functions need to return non-void."]
       | MultipleIndexers -> [text "Multiple indexers are not supported."]
@@ -4993,7 +4984,8 @@ let error_code_of_message err : error_code option =
   | EPredicateFuncTooShort _
   | EPredicateFuncArityMismatch _
   | EFunPredInvalidIndex _
-  | EPredicateFuncIncompatibility _ ->
+  | EPredicateFuncIncompatibility _
+  | EPredicateInvalidParameter _ ->
     Some FunctionPredicate
   | EIdxArity _ -> Some InvalidIdx
   | EIdxUse _ -> Some InvalidIdx

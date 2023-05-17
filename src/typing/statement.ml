@@ -7085,13 +7085,7 @@ module Make
         )
 
   and mk_func_sig =
-    let predicate_function_kind cx predicate body loc params =
-      let invalid_param_reasons = Name_def.predicate_function_invalid_param_reasons params in
-      Base.List.iter invalid_param_reasons ~f:(fun reason ->
-          Flow_js.add_output
-            cx
-            Error_message.(EUnsupportedSyntax (loc, PredicateInvalidParameter reason))
-      );
+    let predicate_function_kind cx predicate body _loc _params =
       let pred_synth = Name_def.predicate_synthesizable predicate body in
       if pred_synth = Name_def.FunctionSynthesizable then begin
         let body_loc =
@@ -7101,16 +7095,16 @@ module Make
         in
         Flow_js.add_output cx Error_message.(EUnsupportedSyntax (body_loc, PredicateInvalidBody))
       end;
-      if Base.List.is_empty invalid_param_reasons then
-        match pred_synth with
-        | Name_def.FunctionPredicateSynthesizable (ret_loc, _) ->
-          let (pmap, nmap) = Env.predicate_refinement_maps cx ret_loc in
-          let reason = mk_reason (RPredicateOf (RCustom "return")) ret_loc in
+      match pred_synth with
+      | Name_def.FunctionPredicateSynthesizable (ret_loc, _) -> begin
+        match Env.predicate_refinement_maps cx ret_loc with
+        | Some (expr_reason, pmap, nmap) ->
+          let reason = update_desc_reason (fun d -> RPredicateOf d) expr_reason in
           Func.Predicate (PredBased (reason, pmap, nmap))
-        | Name_def.FunctionSynthesizable
-        | Name_def.MissingReturn _ ->
-          Func.Ordinary
-      else
+        | None -> Func.Ordinary
+      end
+      | Name_def.FunctionSynthesizable
+      | Name_def.MissingReturn _ ->
         Func.Ordinary
     in
     let function_kind cx ~body ~constructor ~async ~generator ~predicate ~params ~ret_loc =
@@ -7288,42 +7282,39 @@ module Make
           (required_this_param_type, Ast.Function.Params.((snd params).this_));
         let body = Some body in
         let ret_reason = mk_reason RReturn (Func_sig.return_loc func) in
-        let (return_annotated_or_inferred, return) =
-          let open Func_class_sig_types.Func in
-          let has_nonvoid_return =
-            Nonvoid_return.might_have_nonvoid_return loc func
-            || (kind <> Ordinary && kind <> Async && kind <> Ctor)
-          in
-          let return =
-            Anno.mk_return_type_annotation
-              cx
-              tparams_map
-              ret_reason
-              ~void_return:(not has_nonvoid_return)
-              ~async:(kind = Async)
-              return
-          in
-          let from_generic_function = Base.Option.is_some tparams in
-          let require_return_annot = require_return_annot || from_generic_function in
-          begin
-            match return with
-            | (Inferred t, _) when has_nonvoid_return && require_return_annot ->
-              let reason = repos_reason ret_loc ret_reason in
-              Flow_js.add_output
-                cx
-                (Error_message.EMissingLocalAnnotation
-                   { reason; hint_available = false; from_generic_function }
-                );
-              Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, t)
-            | _ -> ()
-          end;
-          return
+        let open Func_class_sig_types.Func in
+        let has_nonvoid_return =
+          Nonvoid_return.might_have_nonvoid_return loc func
+          || (kind <> Ordinary && kind <> Async && kind <> Ctor)
         in
-        let (return_annotated_or_inferred, predicate) =
+        let (return_t, return) =
+          Anno.mk_return_type_annotation
+            cx
+            tparams_map
+            ret_reason
+            ~void_return:(not has_nonvoid_return)
+            ~async:(kind = Async)
+            return
+        in
+        let from_generic_function = Base.Option.is_some tparams in
+        let require_return_annot = require_return_annot || from_generic_function in
+        let () =
+          match return_t with
+          | Inferred t when has_nonvoid_return && require_return_annot ->
+            let reason = repos_reason ret_loc ret_reason in
+            Flow_js.add_output
+              cx
+              (Error_message.EMissingLocalAnnotation
+                 { reason; hint_available = false; from_generic_function }
+              );
+            Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, t)
+          | _ -> ()
+        in
+        let (return_t, predicate) =
           let open Ast.Type.Predicate in
           match (predicate, kind) with
           | (Some ((_, { kind = Ast.Type.Predicate.Inferred; _ }) as pred), Func.Predicate _) ->
-            (return_annotated_or_inferred, Some pred)
+            (return_t, Some pred)
           | (Some ((loc, { kind = Declared (expr_loc, _); comments = _ }) as pred), _) ->
             let (annotated_or_inferred, _) =
               Anno.mk_type_annotation cx tparams_map ret_reason (Ast.Type.Missing loc)
@@ -7332,15 +7323,41 @@ module Make
               cx
               Error_message.(EUnsupportedSyntax (expr_loc, PredicateDeclarationForImplementation));
             (annotated_or_inferred, Some (Tast_utils.error_mapper#predicate pred))
-          | _ ->
-            ( return_annotated_or_inferred,
-              Base.Option.map ~f:Tast_utils.error_mapper#predicate predicate
-            )
+          | _ -> (return_t, Base.Option.map ~f:Tast_utils.error_mapper#predicate predicate)
         in
         let return_t =
-          mk_inference_target_with_annots
-            ~has_hint:(Env.has_hint cx ret_loc)
-            return_annotated_or_inferred
+          mk_inference_target_with_annots ~has_hint:(Env.has_hint cx ret_loc) return_t
+        in
+        let () =
+          let err_with_desc cx desc pred_reason binding_loc =
+            let binding_reason = mk_reason desc binding_loc in
+            Flow_js.add_output
+              cx
+              Error_message.(EPredicateInvalidParameter { pred_reason; binding_reason })
+          in
+          let error_on_non_root_binding cx name expr_reason binding =
+            let open Pattern_helper in
+            match binding with
+            | (_, Root) -> ()
+            | (loc, Rest) -> err_with_desc cx (RRestParameter (Some name)) expr_reason loc
+            | (loc, Select _) -> err_with_desc cx (RPatternParameter name) expr_reason loc
+          in
+          match kind with
+          | Func.Predicate (PredBased (expr_reason, p_map, _)) ->
+            let required_bindings =
+              Base.List.filter_map (Key_map.keys p_map) ~f:(function
+                  | (OrdinaryName name, _) -> Some name
+                  | _ -> None
+                  )
+            in
+            if not (Base.List.is_empty required_bindings) then
+              let bindings = Pattern_helper.bindings_of_params params in
+              Base.List.iter required_bindings ~f:(fun name ->
+                  Base.Option.iter (SMap.find_opt name bindings) ~f:(fun binding ->
+                      error_on_non_root_binding cx name expr_reason binding
+                  )
+              )
+          | _ -> ()
         in
         let () =
           if kind = Func_class_sig_types.Func.Ctor then

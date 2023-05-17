@@ -163,6 +163,7 @@ type 'loc virtual_reason_desc =
   | RMethodCall of string option
   | RParameter of string option
   | RRestParameter of string option
+  | RPatternParameter of string
   | RIdentifier of name
   | RUnknownParameter of string
   | RIdentifierAssignment of string
@@ -275,9 +276,9 @@ let rec map_desc_locs f = function
     | RKeySet | RAnd | RConditional | RPrototype | RObjectPrototype | RFunctionPrototype
     | RDestructuring | RDefaultValue | RConstructor | RReturn | RDefaultConstructor | RRegExp
     | RSuper | RNoSuper | RDummyPrototype | RDummyThis | RTupleMap | RObjectMap | RType _
-    | RTypeof _ | RMethod _ | RMethodCall _ | RParameter _ | RRestParameter _ | RIdentifier _
-    | RUnknownParameter _ | RIdentifierAssignment _ | RPropertyAssignment _ | RProperty _
-    | RPrivateProperty _ | RMember _ | RPropertyIsAString _ | RMissingProperty _
+    | RTypeof _ | RMethod _ | RMethodCall _ | RParameter _ | RRestParameter _ | RPatternParameter _
+    | RIdentifier _ | RUnknownParameter _ | RIdentifierAssignment _ | RPropertyAssignment _
+    | RProperty _ | RPrivateProperty _ | RMember _ | RPropertyIsAString _ | RMissingProperty _
     | RUnknownProperty _ | RUndefinedProperty _ | RSomeProperty | RFieldInitializer _
     | RUntypedModule _ | RNamedImportedType _ | RImportStarType _ | RImportStarTypeOf _
     | RImportStar _ | RDefaultImportedType _ | RAsyncImport | RCode _ | RCustom _
@@ -637,6 +638,7 @@ let rec string_of_desc = function
   | RParameter None -> "parameter"
   | RRestParameter (Some x) -> spf "rest parameter `%s`" x
   | RRestParameter None -> "rest parameter"
+  | RPatternParameter x -> spf "pattern parameter `%s`" x
   | RProperty (Some x) -> spf "property `%s`" (display_string_of_name x)
   | RProperty None -> "computed property"
   | RPrivateProperty x -> spf "property `#%s`" x
@@ -1409,6 +1411,7 @@ let classification_of_reason r =
   | RMethodCall _
   | RParameter _
   | RRestParameter _
+  | RPatternParameter _
   | RIdentifier _
   | RUnknownParameter _
   | RIdentifierAssignment _
