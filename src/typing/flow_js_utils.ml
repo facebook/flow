@@ -759,7 +759,8 @@ let builtin_promise_class_id cx =
                 _,
                 PolyT
                   {
-                    t_out = ThisClassT (_, DefT (_, _, InstanceT (_, _, _, { class_id; _ })), _, _);
+                    t_out =
+                      ThisClassT (_, DefT (_, _, InstanceT { inst = { class_id; _ }; _ }), _, _);
                     _;
                   }
               )
@@ -1620,7 +1621,7 @@ module CJSExtractNamedExportsT_kit (F : Import_export_helper_sig) = struct
         (reason, Properties.extract_named_exports (Context.find_props cx props_tmap), ExportValue)
         module_t
     (* InstanceT CommonJS export values have their properties turned into named exports. *)
-    | DefT (_, _, InstanceT (_, _, _, { own_props; proto_props; _ })) ->
+    | DefT (_, _, InstanceT { inst = { own_props; proto_props; _ }; _ }) ->
       let module_t = ModuleT local_module in
       let extract_named_exports id =
         Context.find_props cx id

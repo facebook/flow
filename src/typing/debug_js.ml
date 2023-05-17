@@ -284,7 +284,11 @@ let rec dump_t_ (depth, tvars) cx t =
     | DefT (_, trust, CharSetT chars) ->
       p ~trust:(Some trust) ~extra:(spf "<%S>" (String_utils.CharSet.to_string chars)) t
     | DefT (_, trust, ClassT inst) -> p ~trust:(Some trust) ~extra:(kid inst) t
-    | DefT (_, trust, InstanceT (_, _, _, { class_id; type_args; _ })) ->
+    | DefT
+        ( _,
+          trust,
+          InstanceT { static = _; super = _; implements = _; inst = { class_id; type_args; _ } }
+        ) ->
       p
         ~trust:(Some trust)
         ~extra:

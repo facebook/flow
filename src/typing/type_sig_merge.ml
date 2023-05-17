@@ -1387,7 +1387,7 @@ and merge_interface ~inline tps infer_tps file reason id def =
   in
   fun targs ->
     let open Type in
-    let insttype =
+    let inst =
       {
         class_id = id;
         type_args = targs;
@@ -1400,7 +1400,7 @@ and merge_interface ~inline tps infer_tps file reason id def =
         inst_kind = InterfaceKind { inline };
       }
     in
-    DefT (reason, trust, InstanceT (static, super, [], insttype))
+    DefT (reason, trust, InstanceT { static; super; implements = []; inst })
 
 and merge_class_extends tps infer_tps file this reason extends mixins =
   let super_reason = Reason.(update_desc_reason (fun d -> RSuperOf d) reason) in
@@ -1494,7 +1494,7 @@ and merge_class tps infer_tps file reason id def =
       |> Context.generate_property_map file.cx
     in
     let open Type in
-    let insttype =
+    let inst =
       {
         class_id = id;
         type_args = targs;
@@ -1507,8 +1507,8 @@ and merge_class tps infer_tps file reason id def =
         inst_kind = ClassKind;
       }
     in
-    let inst = DefT (reason, trust, InstanceT (static, super, implements, insttype)) in
-    TypeUtil.this_class_type inst false (Subst_name.Name "this")
+    let instance = DefT (reason, trust, InstanceT { static; super; implements; inst }) in
+    TypeUtil.this_class_type instance false (Subst_name.Name "this")
   in
   let t (tps, targs) =
     let rec t =
@@ -1810,7 +1810,7 @@ let merge_declare_class file reason id def =
         Some (Context.make_call_prop file.cx t)
     in
     let open Type in
-    let insttype =
+    let inst =
       {
         class_id = id;
         type_args = targs;
@@ -1823,8 +1823,8 @@ let merge_declare_class file reason id def =
         inst_kind = ClassKind;
       }
     in
-    let inst = DefT (reason, trust, InstanceT (static, super, implements, insttype)) in
-    TypeUtil.this_class_type inst false (Subst_name.Name "this")
+    let instance = DefT (reason, trust, InstanceT { static; super; implements; inst }) in
+    TypeUtil.this_class_type instance false (Subst_name.Name "this")
   in
   let t (tps, targs) =
     let rec t =

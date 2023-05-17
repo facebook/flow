@@ -26,7 +26,11 @@ let mk_object_type
       let inst = { inst with own_props = id } in
       (* Implemented/super interfaces are folded into the property map computed by the slice, so
            we effectively flatten the hierarchy in the output *)
-      ( DefT (def_reason, bogus_trust (), InstanceT (static, ObjProtoT def_reason, [], inst)),
+      ( DefT
+          ( def_reason,
+            bogus_trust (),
+            InstanceT { static; super = ObjProtoT def_reason; implements = []; inst }
+          ),
         def_reason
       )
     | None ->
@@ -1209,7 +1213,9 @@ let resolve
   (* We take the fields from an InstanceT excluding methods (because methods
    * are always on the prototype). We also want to resolve fields from the
    * InstanceT's super class so we recurse. *)
-  | DefT (r, _, InstanceT (static, super, _, ({ own_props; inst_kind; _ } as inst))) ->
+  | DefT
+      (r, _, InstanceT { static; super; implements = _; inst = { own_props; inst_kind; _ } as inst })
+    ->
     let resolve_tool =
       Super (interface_slice cx r (static, inst) own_props t_generic_id, resolve_tool)
     in
@@ -1391,8 +1397,8 @@ let super
     resolve_tool
     tool
     acc = function
-  | DefT (r, _, InstanceT (st, super, _, ({ own_props; _ } as inst))) ->
-    let interface = (st, inst) in
+  | DefT (r, _, InstanceT { static; super; implements = _; inst = { own_props; _ } as inst }) ->
+    let interface = (static, inst) in
     let { Object.reason; _ } = acc in
     let slice = interface_slice cx r interface own_props Generic.spread_empty in
     let acc = intersect2 reason acc slice in

@@ -296,15 +296,15 @@ class virtual ['a] t =
           t
         else
           EnumObjectT enum'
-      | InstanceT (st, su, impl, instt) ->
-        let st' = self#type_ cx map_cx st in
-        let su' = self#type_ cx map_cx su in
-        let impl' = ListUtils.ident_map (self#type_ cx map_cx) impl in
-        let instt' = self#inst_type cx map_cx instt in
-        if st' == st && su' == su && impl' == impl && instt' == instt then
+      | InstanceT { static; super; implements; inst } ->
+        let static' = self#type_ cx map_cx static in
+        let super' = self#type_ cx map_cx super in
+        let implements' = ListUtils.ident_map (self#type_ cx map_cx) implements in
+        let inst' = self#inst_type cx map_cx inst in
+        if static' == static && super' == super && implements' == implements && inst' == inst then
           t
         else
-          InstanceT (st', su', impl', instt')
+          InstanceT { static = static'; super = super'; implements = implements'; inst = inst' }
       | SingletonStrT _
       | SingletonNumT _
       | SingletonBoolT _

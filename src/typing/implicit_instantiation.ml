@@ -900,7 +900,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
         | (_, _, Check.Jsx _) ->
           check_react_fun cx ~tparams ~tparams_map ~params:funtype.params ~implicit_instantiation
         | _ -> check_fun cx ~tparams ~tparams_map ~return_t:funtype.return_t ~implicit_instantiation)
-      | ThisClassT (_, DefT (_, _, InstanceT (_, _, _, _insttype)), _, _) ->
+      | ThisClassT (_, DefT (_, _, InstanceT _), _, _) ->
         (match operation with
         | (_, reason_op, Check.Call _) ->
           (* This case is hit when calling a static function. We will implicitly

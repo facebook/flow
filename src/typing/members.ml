@@ -437,8 +437,8 @@ let rec extract_type cx this_t =
   | DefT (_, _, PolyT { t_out = sub_type; _ }) ->
     (* TODO: replace type parameters with stable/proper names? *)
     extract_type cx sub_type
-  | ThisClassT (_, DefT (_, _, InstanceT (static, _, _, _)), _, _)
-  | DefT (_, _, ClassT (DefT (_, _, InstanceT (static, _, _, _)))) ->
+  | ThisClassT (_, DefT (_, _, InstanceT { static; _ }), _, _)
+  | DefT (_, _, ClassT (DefT (_, _, InstanceT { static; _ }))) ->
     extract_type cx static
   | DefT (_, _, FunT _) as t -> Success t
   | IntersectionT _ as t -> Success t
@@ -502,7 +502,7 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
   | FailureUnhandledType t -> FailureUnhandledType t
   | FailureUnhandledMembers t -> FailureUnhandledMembers t
   | Success (GenericT { bound; _ }) -> extract_members ~exclude_proto_members cx (Success bound)
-  | Success (DefT (_, _, InstanceT (_, super, _, { own_props; proto_props; _ }))) ->
+  | Success (DefT (_, _, InstanceT { super; inst = { own_props; proto_props; _ }; _ })) ->
     let members =
       SMap.fold
         (fun x p acc ->

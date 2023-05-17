@@ -892,7 +892,7 @@ struct
         | (_, AssertImportIsValueT (reason, name)) ->
           let test = function
             | TypeT _
-            | ClassT (DefT (_, _, InstanceT (_, _, _, { inst_kind = InterfaceKind _; _ }))) ->
+            | ClassT (DefT (_, _, InstanceT { inst = { inst_kind = InterfaceKind _; _ }; _ })) ->
               add_output cx ~trace (Error_message.EImportTypeAsValue (reason, name))
             | _ -> ()
           in
@@ -1455,7 +1455,7 @@ struct
                 }
             in
             add_output cx ~trace err)
-        | ( DefT (reason_o, _, InstanceT (_, _, _, instance)),
+        | ( DefT (reason_o, _, InstanceT { inst; _ }),
             HasOwnPropT
               ( use_op,
                 reason_op,
@@ -1464,7 +1464,7 @@ struct
                 )
               )
           ) ->
-          let own_props = Context.find_props cx instance.own_props in
+          let own_props = Context.find_props cx inst.own_props in
           let own_props_without_dict = remove_dict_from_props own_props in
           (match NameUtils.Map.find_opt x own_props_without_dict with
           | Some _ -> ()
@@ -1476,8 +1476,7 @@ struct
                   reason_prop = reason_op;
                   reason_obj = reason_o;
                   use_op;
-                  suggestion =
-                    prop_typo_suggestion cx [instance.own_props] (display_string_of_name x);
+                  suggestion = prop_typo_suggestion cx [inst.own_props] (display_string_of_name x);
                 }
             in
             (* If these are physically equal, $key and $value were not present, and thus there is no indexer *)
@@ -1489,7 +1488,7 @@ struct
                 rec_flow_t ~use_op cx trace (mod_reason_of_t (Fun.const reason_op) key, dict_key)
               | _ -> add_output cx ~trace err
             ))
-        | (DefT (reason_o, _, InstanceT (_, _, _, _)), HasOwnPropT (use_op, reason_op, _)) ->
+        | (DefT (reason_o, _, InstanceT _), HasOwnPropT (use_op, reason_op, _)) ->
           let err =
             Error_message.EPropNotFound
               {
@@ -1513,9 +1512,9 @@ struct
           Base.Option.iter dict_t ~f:(fun { key; _ } ->
               rec_flow cx trace (key, ToStringT { orig_t = None; reason = reason_op; t_out = keys })
           )
-        | (DefT (_, _, InstanceT (_, _, _, instance)), GetKeysT (reason_op, keys)) ->
+        | (DefT (_, _, InstanceT { inst; _ }), GetKeysT (reason_op, keys)) ->
           (* methods are not enumerable, so only walk fields *)
-          let own_props = Context.find_props cx instance.own_props in
+          let own_props = Context.find_props cx inst.own_props in
           let own_props_without_dict = remove_dict_from_props own_props in
           let keylist = Flow_js_utils.keylist_of_props own_props_without_dict reason_op in
           rec_flow cx trace (union_of_ts reason_op keylist, keys);
@@ -1548,7 +1547,7 @@ struct
         | (DefT (_, _, ObjT o), GetValuesT (reason, values)) ->
           let values_l = Flow_js_utils.get_values_type_of_obj_t cx o reason in
           rec_flow_t ~use_op:unknown_use cx trace (values_l, values)
-        | (DefT (_, _, InstanceT (_, _, _, { own_props; _ })), GetValuesT (reason, values)) ->
+        | (DefT (_, _, InstanceT { inst = { own_props; _ }; _ }), GetValuesT (reason, values)) ->
           let values_l = Flow_js_utils.get_values_type_of_instance_t cx own_props reason in
           rec_flow_t ~use_op:unknown_use cx trace (values_l, values)
         (* Any will always be ok *)
@@ -2401,7 +2400,7 @@ struct
 
         (* A class can be viewed as a mixin by extracting its immediate properties,
            and "erasing" its static and super *)
-        | ( ThisClassT (_, DefT (_, trust, InstanceT (_, _, _, instance)), is_this, this_name),
+        | ( ThisClassT (_, DefT (_, trust, InstanceT { inst; _ }), is_this, this_name),
             MixinT (r, tvar)
           ) ->
           let static = ObjProtoT r in
@@ -2410,7 +2409,7 @@ struct
             cx
             trace
             ( this_class_type
-                (DefT (r, trust, InstanceT (static, super, [], instance)))
+                (DefT (r, trust, InstanceT { static; super; implements = []; inst }))
                 is_this
                 this_name,
               UseT (unknown_use, tvar)
@@ -2423,8 +2422,7 @@ struct
                     tparams_loc;
                     tparams = xs;
                     t_out =
-                      ThisClassT
-                        (_, DefT (_, trust, InstanceT (_, _, _, insttype)), is_this, this_name);
+                      ThisClassT (_, DefT (_, trust, InstanceT { inst; _ }), is_this, this_name);
                     _;
                   }
               ),
@@ -2432,7 +2430,7 @@ struct
           ) ->
           let static = ObjProtoT r in
           let super = ObjProtoT r in
-          let instance = DefT (r, trust, InstanceT (static, super, [], insttype)) in
+          let instance = DefT (r, trust, InstanceT { static; super; implements = []; inst }) in
           rec_flow
             cx
             trace
@@ -3055,7 +3053,7 @@ struct
           let fun_t =
             match l with
             | DefT (_, _, ObjT { call_t = Some id; _ })
-            | DefT (_, _, InstanceT (_, _, _, { inst_call_t = Some id; _ })) ->
+            | DefT (_, _, InstanceT { inst = { inst_call_t = Some id; _ }; _ }) ->
               Context.find_call cx id
             | _ ->
               let reason_prop = replace_desc_reason (RProperty prop_name) reason_op in
@@ -3096,18 +3094,18 @@ struct
         (**************************************************)
         (* instances of classes follow declared hierarchy *)
         (**************************************************)
-        | ( DefT (reason, _, InstanceT (_, super, implements, instance)),
+        | ( DefT (reason, _, InstanceT { super; implements; inst; _ }),
             ExtendsUseT
               ( use_op,
                 reason_op,
                 try_ts_on_failure,
                 l,
-                (DefT (_, _, InstanceT (_, _, _, instance_super)) as u)
+                (DefT (_, _, InstanceT { inst = inst_super; _ }) as u)
               )
           ) ->
-          if ALoc.equal_id instance.class_id instance_super.class_id then
-            let { type_args = tmap1; _ } = instance in
-            let { type_args = tmap2; _ } = instance_super in
+          if ALoc.equal_id inst.class_id inst_super.class_id then
+            let { type_args = tmap1; _ } = inst in
+            let { type_args = tmap2; _ } = inst_super in
             let ureason =
               update_desc_reason
                 (function
@@ -3218,7 +3216,7 @@ struct
         (*************************)
         (* statics can be read   *)
         (*************************)
-        | (DefT (_, _, InstanceT (static, _, _, _)), GetStaticsT ((reason_op, _) as tout)) ->
+        | (DefT (_, _, InstanceT { static; _ }), GetStaticsT ((reason_op, _) as tout)) ->
           rec_flow cx trace (static, ReposLowerT (reason_op, false, UseT (unknown_use, OpenT tout)))
         | (AnyT (_, src), GetStaticsT ((reason_op, _) as tout)) ->
           rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src reason_op, OpenT tout)
@@ -3233,7 +3231,7 @@ struct
         (* TODO: Fix GetProtoT for InstanceT (and ClassT).
            The __proto__ object of an instance is an ObjT having the properties in
            insttype.methods_tmap, not the super instance. *)
-        | (DefT (_, _, InstanceT (_, super, _, _)), GetProtoT (reason_op, t)) ->
+        | (DefT (_, _, InstanceT { super; _ }), GetProtoT (reason_op, t)) ->
           let proto = reposition cx ~trace (loc_of_reason reason_op) super in
           rec_flow_t cx trace ~use_op:unknown_use (proto, OpenT t)
         | (DefT (_, _, ObjT { proto_t; _ }), GetProtoT (reason_op, t)) ->
@@ -3258,7 +3256,7 @@ struct
         (********************************************************)
         (* instances of classes may have their fields looked up *)
         (********************************************************)
-        | ( DefT (lreason, _, InstanceT (_, super, _, instance)),
+        | ( DefT (lreason, _, InstanceT { super; inst; _ }),
             LookupT
               {
                 reason = reason_op;
@@ -3270,15 +3268,15 @@ struct
                 method_accessible;
               }
           ) ->
-          let own_props = Context.find_props cx instance.own_props in
-          let proto_props = Context.find_props cx instance.proto_props in
+          let own_props = Context.find_props cx inst.own_props in
+          let proto_props = Context.find_props cx inst.proto_props in
           let pmap = NameUtils.Map.union own_props proto_props in
           (match NameUtils.Map.find_opt x pmap with
           | None ->
             (* If there are unknown mixins, the lookup should become nonstrict, as
                the searched-for property may be found in a mixin. *)
             let kind =
-              match (instance.has_unknown_react_mixins, kind) with
+              match (inst.has_unknown_react_mixins, kind) with
               | (true, Strict _) -> NonstrictReturning (None, None)
               | _ -> kind
             in
@@ -3297,13 +3295,13 @@ struct
                     ids =
                       Base.Option.map ids ~f:(fun ids ->
                           if
-                            Properties.Set.mem instance.own_props ids
-                            || Properties.Set.mem instance.proto_props ids
+                            Properties.Set.mem inst.own_props ids
+                            || Properties.Set.mem inst.proto_props ids
                           then
                             ids
                           else
-                            Properties.Set.add instance.own_props ids
-                            |> Properties.Set.add instance.proto_props
+                            Properties.Set.add inst.own_props ids
+                            |> Properties.Set.add inst.proto_props
                       );
                   }
               )
@@ -3340,11 +3338,11 @@ struct
         (********************************)
         (* ... and their fields written *)
         (********************************)
-        | ( DefT (reason_c, _, InstanceT (_, super, _, instance)),
+        | ( DefT (reason_c, _, InstanceT { super; inst; _ }),
             SetPropT (use_op, reason_op, Named (reason_prop, x), mode, wr_ctx, tin, prop_t)
           ) ->
-          let own_props = Context.find_props cx instance.own_props in
-          let proto_props = Context.find_props cx instance.proto_props in
+          let own_props = Context.find_props cx inst.own_props in
+          let proto_props = Context.find_props cx inst.proto_props in
           let fields = NameUtils.Map.union own_props proto_props in
           let lookup_kind = Strict reason_c in
           let options =
@@ -3353,8 +3351,7 @@ struct
               (* Methods cannot be written to because they are read-only; we
                  allow them to be accessed here to avoid redundant errors *)
               allow_method_access = true;
-              previously_seen_props =
-                Properties.Set.of_list [instance.own_props; instance.proto_props];
+              previously_seen_props = Properties.Set.of_list [inst.own_props; inst.proto_props];
               lookup_kind;
               id = None;
             }
@@ -3367,11 +3364,11 @@ struct
             cx
             ~trace
             (Error_message.EPrivateLookupFailed ((reason_op, reason_c), OrdinaryName x, use_op))
-        | ( DefT (reason_c, _, InstanceT (_, _, _, instance)),
+        | ( DefT (reason_c, _, InstanceT { inst; _ }),
             SetPrivatePropT
               (use_op, reason_op, x, mode, scope :: scopes, static, write_ctx, tin, prop_tout)
           ) ->
-          if not (ALoc.equal_id scope.class_binding_id instance.class_id) then
+          if not (ALoc.equal_id scope.class_binding_id inst.class_id) then
             rec_flow
               cx
               trace
@@ -3403,19 +3400,18 @@ struct
              element resolution in ElemT. *)
           let loc = loc_of_reason reason_op in
           add_output cx ~trace Error_message.(EInternal (loc, InstanceLookupComputed))
-        | ( DefT (reason_c, _, InstanceT (_, super, _, instance)),
+        | ( DefT (reason_c, _, InstanceT { super; inst; _ }),
             MatchPropT (use_op, reason_op, Named (reason_prop, x), prop_t)
           ) ->
-          let own_props = Context.find_props cx instance.own_props in
-          let proto_props = Context.find_props cx instance.proto_props in
+          let own_props = Context.find_props cx inst.own_props in
+          let proto_props = Context.find_props cx inst.proto_props in
           let fields = NameUtils.Map.union own_props proto_props in
           let lookup_kind = Strict reason_c in
           let options =
             {
               Access_prop_options.use_op;
               allow_method_access = false;
-              previously_seen_props =
-                Properties.Set.of_list [instance.own_props; instance.proto_props];
+              previously_seen_props = Properties.Set.of_list [inst.own_props; inst.proto_props];
               lookup_kind;
               id = None;
             }
@@ -3424,11 +3420,10 @@ struct
         (*****************************)
         (* ... and their fields read *)
         (*****************************)
-        | ( DefT (r, _, InstanceT (_, super, _, insttype)),
-            GetPropT (use_op, reason_op, id, propref, t)
-          ) ->
-          GetPropTKit.on_InstanceT cx trace ~l ~id r super insttype use_op reason_op propref t
-        | ( DefT (reason_c, _, InstanceT (_, _, _, instance)),
+        | (DefT (r, _, InstanceT { super; inst; _ }), GetPropT (use_op, reason_op, id, propref, t))
+          ->
+          GetPropTKit.on_InstanceT cx trace ~l ~id r super inst use_op reason_op propref t
+        | ( DefT (reason_c, _, InstanceT { inst; _ }),
             GetPrivatePropT (use_op, reason_op, prop_name, scopes, static, tout)
           ) ->
           get_private_prop
@@ -3437,7 +3432,7 @@ struct
             ~trace
             ~l
             ~reason_c
-            ~instance
+            ~instance:inst
             ~use_op
             ~reason_op
             ~prop_name
@@ -3447,17 +3442,17 @@ struct
         (********************************)
         (* ... and their methods called *)
         (********************************)
-        | ( DefT (reason_c, _, InstanceT (_, super, _, instance)),
+        | ( DefT (reason_c, _, InstanceT { super; inst; _ }),
             MethodT (use_op, reason_call, reason_lookup, Named (reason_prop, x), action, prop_t)
           ) ->
           (* TODO: closure *)
-          let own_props = Context.find_props cx instance.own_props in
-          let proto_props = Context.find_props cx instance.proto_props in
+          let own_props = Context.find_props cx inst.own_props in
+          let proto_props = Context.find_props cx inst.proto_props in
           let props = NameUtils.Map.union own_props proto_props in
           let tvar = Tvar.mk_no_wrap cx reason_lookup in
           let funt = OpenT (reason_lookup, tvar) in
           let lookup_kind =
-            if instance.has_unknown_react_mixins then
+            if inst.has_unknown_react_mixins then
               NonstrictReturning (None, None)
             else
               Strict reason_c
@@ -3465,8 +3460,7 @@ struct
           let options =
             {
               Access_prop_options.allow_method_access = true;
-              previously_seen_props =
-                Properties.Set.of_list [instance.own_props; instance.proto_props];
+              previously_seen_props = Properties.Set.of_list [inst.own_props; inst.proto_props];
               use_op;
               lookup_kind;
               id = None;
@@ -3480,7 +3474,7 @@ struct
              else, then something like `VoidT ~> CallT` doesn't need the op either
              because we want to point at the call and undefined thing. *)
           apply_method_action cx trace funt use_op reason_call l action
-        | ( DefT (reason_c, _, InstanceT (_, _, _, instance)),
+        | ( DefT (reason_c, _, InstanceT { inst; _ }),
             PrivateMethodT
               (use_op, reason_op, reason_lookup, prop_name, scopes, static, method_action, prop_t)
           ) ->
@@ -3506,7 +3500,7 @@ struct
             ~trace
             ~l
             ~reason_c
-            ~instance
+            ~instance:inst
             ~use_op
             ~reason_op
             ~prop_name
@@ -3630,7 +3624,7 @@ struct
           | Exact
           | Inexact ->
             rec_flow_t cx trace ~use_op (to_obj, t))
-        | ( DefT (lreason, _, InstanceT (_, _, _, { own_props; proto_props; _ })),
+        | ( DefT (lreason, _, InstanceT { inst = { own_props; proto_props; _ }; _ }),
             ObjAssignFromT (use_op, reason_op, to_obj, t, ObjAssign _)
           ) ->
           let own_props = Context.find_props cx own_props in
@@ -3720,7 +3714,7 @@ struct
                 rec_flow_t cx trace ~use_op:unknown_use (o, t)
               | _ -> ()
               )
-        | (DefT (reason, _, InstanceT (_, super, _, insttype)), ObjRestT (reason_op, xs, t, _)) ->
+        | (DefT (reason, _, InstanceT { super; inst; _ }), ObjRestT (reason_op, xs, t, _)) ->
           (* Spread fields from super into an object *)
           let obj_super =
             Tvar.mk_where cx reason_op (fun tvar ->
@@ -3731,7 +3725,7 @@ struct
           let o =
             Flow_js_utils.objt_to_obj_rest
               cx
-              insttype.own_props
+              inst.own_props
               ~obj_kind:Exact
               ~reason_op
               ~reason_obj:reason
@@ -4385,7 +4379,7 @@ struct
           resolve_call_list cx ~trace ~use_op reason tins2 resolve_to
         | (DefT (_, _, ObjT { call_t = Some id; _ }), BindT _) ->
           rec_flow cx trace (Context.find_call cx id, u)
-        | (DefT (_, _, InstanceT (_, _, _, { inst_call_t = Some id; _ })), BindT _) ->
+        | (DefT (_, _, InstanceT { inst = { inst_call_t = Some id; _ }; _ }), BindT _) ->
           rec_flow cx trace (Context.find_call cx id, u)
         | (AnyT (_, src), BindT (use_op, reason, calltype)) ->
           let {
@@ -4414,11 +4408,11 @@ struct
               ( reason_inst,
                 _,
                 InstanceT
-                  ( _,
-                    super,
-                    _,
-                    { own_props; proto_props; inst_call_t; inst_kind = InterfaceKind _; _ }
-                  )
+                  {
+                    super;
+                    inst = { own_props; proto_props; inst_call_t; inst_kind = InterfaceKind _; _ };
+                    _;
+                  }
               ),
             ImplementsT (use_op, t)
           ) ->
@@ -4436,7 +4430,7 @@ struct
            properties with overridden properties. As such, the lookups performed
            for the inherited properties are non-strict: they are not required to
            exist. **)
-        | ( DefT (ureason, _, InstanceT (st, _, _, _)),
+        | ( DefT (ureason, _, InstanceT { static = st; _ }),
             SuperT (use_op, reason, Derived { own; proto; static })
           ) ->
           let check_super l = check_super cx trace ~use_op reason ureason l in
@@ -5188,11 +5182,12 @@ struct
                   ( reason_inst,
                     _,
                     InstanceT
-                      ( _,
-                        super,
-                        _,
-                        { own_props; proto_props; inst_call_t; inst_kind = InterfaceKind _; _ }
-                      )
+                      {
+                        super;
+                        inst =
+                          { own_props; proto_props; inst_call_t; inst_kind = InterfaceKind _; _ };
+                        _;
+                      }
                   )
               )
           ) ->
@@ -5340,7 +5335,7 @@ struct
                  use_op;
                }
             )
-        | ( DefT (_, _, InstanceT (_, super, _, { class_id; _ })),
+        | ( DefT (_, _, InstanceT { super; inst = { class_id; _ }; _ }),
             CheckUnusedPromiseT { reason; async }
           ) ->
           (match Flow_js_utils.builtin_promise_class_id cx with
@@ -6060,7 +6055,7 @@ struct
     | UseT (use_op, DefT (_, _, ObjT obj)) ->
       any_prop_obj cx trace ~use_op ~covariant_flow ~contravariant_flow any obj;
       true
-    | UseT (use_op, DefT (_, _, InstanceT (static, super, implements, inst))) ->
+    | UseT (use_op, DefT (_, _, InstanceT { static; super; implements; inst })) ->
       any_prop_inst
         cx
         trace
@@ -6151,7 +6146,7 @@ struct
     | DefT (_, _, ObjT obj) ->
       any_prop_obj cx trace ~use_op ~covariant_flow ~contravariant_flow any obj;
       true
-    | DefT (_, _, InstanceT (static, super, implements, inst)) ->
+    | DefT (_, _, InstanceT { static; super; implements; inst }) ->
       any_prop_inst
         cx
         trace
@@ -6444,7 +6439,7 @@ struct
            in
            match lower with
            | DefT (_, _, ObjT { call_t = Some lid; _ })
-           | DefT (_, _, InstanceT (_, _, _, { inst_call_t = Some lid; _ })) ->
+           | DefT (_, _, InstanceT { inst = { inst_call_t = Some lid; _ }; _ }) ->
              let lt = Context.find_call cx lid in
              rec_flow cx trace (lt, UseT (use_op, ut))
            | _ ->
@@ -7624,8 +7619,8 @@ struct
        refine the type of x to A. (In general, the type of x should be refined to
        C & A, but that's hard to compute.) **)
     | ( true,
-        DefT (reason, _, InstanceT (_, super_c, _, instance_c)),
-        (InternalT (ExtendsT (_, c, DefT (_, _, InstanceT (_, _, _, instance_a)))) as right)
+        DefT (reason, _, InstanceT { super = super_c; inst = instance_c; _ }),
+        (InternalT (ExtendsT (_, c, DefT (_, _, InstanceT { inst = instance_a; _ }))) as right)
       ) ->
       (* TODO: intersection *)
       if ALoc.equal_id instance_a.class_id instance_c.class_id then
@@ -7668,8 +7663,8 @@ struct
     (* If C is a subclass of A, then do nothing, since this check cannot
        succeed. Otherwise, don't refine the type of x. **)
     | ( false,
-        DefT (reason, _, InstanceT (_, super_c, _, instance_c)),
-        (InternalT (ExtendsT (_, _, DefT (_, _, InstanceT (_, _, _, instance_a)))) as right)
+        DefT (reason, _, InstanceT { super = super_c; inst = instance_c; _ }),
+        (InternalT (ExtendsT (_, _, DefT (_, _, InstanceT { inst = instance_a; _ }))) as right)
       ) ->
       if ALoc.equal_id instance_a.class_id instance_c.class_id then
         ()
@@ -7793,7 +7788,7 @@ struct
         (* obj.key ===/!== literal value *)
         | DefT (_, _, ObjT { props_tmap; _ }) -> flow_sentinel sense props_tmap obj s
         (* instance.key ===/!== literal value *)
-        | DefT (_, _, InstanceT (_, _, _, { own_props; _ })) ->
+        | DefT (_, _, InstanceT { inst = { own_props; _ }; _ }) ->
           (* TODO: add test for sentinel test on implements *)
           flow_sentinel sense own_props obj s
         (* tuple.length ===/!== literal value *)

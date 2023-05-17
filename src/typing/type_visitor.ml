@@ -118,11 +118,11 @@ class ['a] t =
       | ArrT arrtype -> self#arr_type cx pole acc arrtype
       | CharSetT _ -> acc
       | ClassT t -> self#type_ cx pole acc t
-      | InstanceT (static, super, implements, insttype) ->
+      | InstanceT { static; super; implements; inst } ->
         let acc = self#type_ cx pole acc static in
         let acc = self#type_ cx pole acc super in
         let acc = self#list (self#type_ cx pole_TODO) acc implements in
-        let acc = self#inst_type cx pole acc insttype in
+        let acc = self#inst_type cx pole acc inst in
         acc
       | SingletonStrT _
       | SingletonNumT _

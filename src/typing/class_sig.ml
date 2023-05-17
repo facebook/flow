@@ -674,10 +674,10 @@ module Make
           implements
     in
     let (initialized_static_fields, static_objtype) = statictype cx static_proto x in
-    let insttype = insttype cx ~initialized_static_fields x in
+    let inst = insttype cx ~initialized_static_fields x in
     let open Type in
     let static = DefT (sreason, bogus_trust (), ObjT static_objtype) in
-    DefT (reason, bogus_trust (), InstanceT (static, super, implements, insttype))
+    DefT (reason, bogus_trust (), InstanceT { static; super; implements; inst })
 
   let check_methods cx def_reason x =
     let open Type in

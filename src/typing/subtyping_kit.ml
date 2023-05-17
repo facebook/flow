@@ -1363,7 +1363,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
           ( lreason,
             _,
             InstanceT
-              (_, super, _, { own_props = lown; proto_props = lproto; inst_call_t = lcall; _ })
+              {
+                super;
+                inst = { own_props = lown; proto_props = lproto; inst_call_t = lcall; _ };
+                _;
+              }
           ),
         DefT (ureason, _, ObjT { props_tmap = uflds; proto_t = uproto; call_t = ucall; _ })
       ) ->
@@ -1445,7 +1449,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let fun_t =
         match l with
         | DefT (_, _, ObjT { call_t = Some id; _ })
-        | DefT (_, _, InstanceT (_, _, _, { inst_call_t = Some id; _ })) ->
+        | DefT (_, _, InstanceT { inst = { inst_call_t = Some id; _ }; _ }) ->
           Context.find_call cx id
         | _ ->
           let reason_prop = replace_desc_reason (RProperty prop_name) reason_op in
@@ -1604,7 +1608,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (DefT (rl, _, ClassT l), DefT (_, _, ClassT u)) ->
       rec_flow cx trace (reposition cx ~trace (loc_of_reason rl) l, UseT (use_op, u))
     | ( DefT (_, _, FunT (static1, _)),
-        DefT (_, _, ClassT (DefT (_, _, InstanceT (static2, _, _, _))))
+        DefT (_, _, ClassT (DefT (_, _, InstanceT { static = static2; _ })))
       ) ->
       rec_unify cx trace ~use_op static1 static2
     (***********************************************)
@@ -1616,7 +1620,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
       rec_flow_t cx trace ~use_op (l, DefT (reason, trust, ObjT { o with call_t = None }))
     | ( DefT (_, _, FunT _),
         DefT
-          (reason, trust, InstanceT (static, super, implements, ({ inst_call_t = Some id; _ } as i)))
+          ( reason,
+            trust,
+            InstanceT { static; super; implements; inst = { inst_call_t = Some id; _ } as i }
+          )
       ) ->
       let t = Context.find_call cx id in
       rec_flow cx trace (l, UseT (use_op, t));
@@ -1625,7 +1632,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
         trace
         ~use_op
         ( l,
-          DefT (reason, trust, InstanceT (static, super, implements, { i with inst_call_t = None }))
+          DefT
+            ( reason,
+              trust,
+              InstanceT { static; super; implements; inst = { i with inst_call_t = None } }
+            )
         )
     (* FunT ~> ObjT *)
     (*
@@ -1689,7 +1700,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         rec_flow_t cx trace ~use_op (statics, u)
     (* TODO: similar concern as above *)
     | ( DefT (reason, _, FunT (statics, _)),
-        DefT (reason_inst, _, InstanceT (_, _, _, { own_props; inst_kind = InterfaceKind _; _ }))
+        DefT (reason_inst, _, InstanceT { inst = { own_props; inst_kind = InterfaceKind _; _ }; _ })
       ) ->
       if
         not
@@ -1711,25 +1722,25 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (* classes and arrays can implement some interface *)
     (***************************************************)
     | ( DefT (_, _, (ClassT _ | ArrT _)),
-        (DefT (_, _, InstanceT (_, _, _, { inst_kind = InterfaceKind _; _ })) as i)
+        (DefT (_, _, InstanceT { inst = { inst_kind = InterfaceKind _; _ }; _ }) as i)
       ) ->
       rec_flow cx trace (i, ImplementsT (use_op, l))
     | ( DefT (reason, _, BoolT _),
-        DefT (interface_reason, _, InstanceT (_, _, _, { inst_kind = InterfaceKind _; _ }))
+        DefT (interface_reason, _, InstanceT { inst = { inst_kind = InterfaceKind _; _ }; _ })
       ) ->
       add_output
         cx
         ~trace
         (Error_message.EPrimitiveAsInterface { use_op; reason; interface_reason; kind = `Boolean })
     | ( DefT (reason, _, NumT _),
-        DefT (interface_reason, _, InstanceT (_, _, _, { inst_kind = InterfaceKind _; _ }))
+        DefT (interface_reason, _, InstanceT { inst = { inst_kind = InterfaceKind _; _ }; _ })
       ) ->
       add_output
         cx
         ~trace
         (Error_message.EPrimitiveAsInterface { use_op; reason; interface_reason; kind = `Number })
     | ( DefT (reason, _, StrT _),
-        DefT (interface_reason, _, InstanceT (_, _, _, { inst_kind = InterfaceKind _; _ }))
+        DefT (interface_reason, _, InstanceT { inst = { inst_kind = InterfaceKind _; _ }; _ })
       ) ->
       add_output
         cx

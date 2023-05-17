@@ -382,7 +382,7 @@ and extract_def_loc_resolved ~loc_of_aloc cx ty name : (def_loc, string) result 
   Members.(
     Type.(
       match extract_type cx ty with
-      | Success (DefT (_, _, InstanceT (_, super, _, _))) as extracted_type ->
+      | Success (DefT (_, _, InstanceT { super; _ })) as extracted_type ->
         extract_def_loc_from_instancet ~loc_of_aloc cx extracted_type super name
       | (Success (DefT (_, _, ObjT _)) | SuccessModule _) as extracted_type ->
         get_def_loc_from_extracted_type cx extracted_type name >>| ( function

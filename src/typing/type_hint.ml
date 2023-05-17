@@ -124,7 +124,7 @@ let rec instantiate_callee cx fn instantiation_hint =
   let rec handle_poly = function
     | ExactT (_, DefT (_, _, ObjT { call_t = Some id; _ }))
     | DefT (_, _, ObjT { call_t = Some id; _ })
-    | DefT (_, _, InstanceT (_, _, _, { inst_call_t = Some id; _ })) ->
+    | DefT (_, _, InstanceT { inst = { inst_call_t = Some id; _ }; _ }) ->
       handle_poly (Context.find_call cx id)
     | DefT (reason, _, ClassT instance) ->
       let statics = (reason, Tvar.mk_no_wrap cx reason) in

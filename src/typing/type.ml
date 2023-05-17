@@ -193,7 +193,12 @@ module rec TypeTerm : sig
     (* type of a class *)
     | ClassT of t
     (* type of an instance of a class *)
-    | InstanceT of static * super * implements * insttype
+    | InstanceT of {
+        static: t;
+        super: t;
+        implements: t list;
+        inst: insttype;
+      }
     (* singleton string, matches exactly a given string literal *)
     (* TODO SingletonStrT should not include internal names *)
     | SingletonStrT of name
@@ -1457,8 +1462,6 @@ module rec TypeTerm : sig
   and super = t
 
   and static = t
-
-  and implements = t list
 
   and t_out = t
 

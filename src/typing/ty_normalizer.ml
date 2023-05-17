@@ -755,7 +755,7 @@ end = struct
       | IntersectionT (_, rep) -> app_intersection ~f:(type__ ~env ?id) rep
       | DefT (_, _, PolyT { tparams = ps; t_out = t; _ }) -> poly_ty ~env t ps
       | TypeAppT (_, _, t, ts) -> type_app ~env t (Some ts)
-      | DefT (r, _, InstanceT (_, super, _, t)) -> instance_t ~env r super t
+      | DefT (r, _, InstanceT { super; inst; _ }) -> instance_t ~env r super inst
       | DefT (_, _, ClassT t) -> class_t ~env t
       | DefT (_, _, IdxWrapper t) -> type__ ~env t
       | DefT (_, _, ReactAbstractComponentT { config; instance }) ->
@@ -1155,7 +1155,7 @@ end = struct
     (* The Class<T> utility type *)
     and class_t ~env t =
       match t with
-      | T.DefT (r, _, T.InstanceT (static, _, _, inst))
+      | T.DefT (r, _, T.InstanceT { static; inst; _ })
         when desc_of_reason ~unwrap:false r = RReactComponent ->
         let { Type.own_props; _ } = inst in
         react_component_class ~env static own_props
@@ -1166,7 +1166,7 @@ end = struct
     and this_class_t ~env t =
       let open Type in
       match t with
-      | DefT (r, _, InstanceT (_, _, _, { inst_kind = ClassKind; _ })) ->
+      | DefT (r, _, InstanceT { inst = { inst_kind = ClassKind; _ }; _ }) ->
         let%map symbol = Reason_utils.instance_symbol env r in
         Ty.TypeOf (Ty.TSymbol symbol)
       | _ -> terr ~kind:BadThisClassT ~msg:(string_of_ctor t) (Some t)
@@ -1245,10 +1245,10 @@ end = struct
       let singleton_poly ~env targs tparams t =
         let open Type in
         match t with
-        | ThisClassT (_, DefT (r, _, InstanceT (_, _, _, i)), _, _)
-        | DefT (_, _, TypeT (_, DefT (r, _, InstanceT (_, _, _, i))))
-        | DefT (_, _, ClassT (DefT (r, _, InstanceT (_, _, _, i)))) ->
-          instance_app ~env r i tparams targs
+        | ThisClassT (_, DefT (r, _, InstanceT { inst; _ }), _, _)
+        | DefT (_, _, TypeT (_, DefT (r, _, InstanceT { inst; _ })))
+        | DefT (_, _, ClassT (DefT (r, _, InstanceT { inst; _ }))) ->
+          instance_app ~env r inst tparams targs
         | DefT (r, _, TypeT (kind, _)) -> type_t_app ~env r kind tparams targs
         | DefT (_, _, ClassT (TypeAppT (_, _, t, _))) -> type_app ~env t targs
         | _ ->
@@ -1885,12 +1885,12 @@ end = struct
             ~msg:"Mapped Type properties should never appear in the toplevels"
             (Some t)
         (* Imported interfaces *)
-        | DefT (_, _, TypeT (ImportClassKind, DefT (r, _, InstanceT (static, super, _, inst)))) ->
+        | DefT (_, _, TypeT (ImportClassKind, DefT (r, _, InstanceT { static; super; inst; _ }))) ->
           class_or_interface_decl ~env r (Some tparams) static super inst
         (* Classes *)
-        | ThisClassT (_, DefT (r, _, InstanceT (static, super, _, inst)), _, _)
+        | ThisClassT (_, DefT (r, _, InstanceT { static; super; inst; _ }), _, _)
         (* Interfaces *)
-        | DefT (_, _, ClassT (DefT (r, _, InstanceT (static, super, _, inst)))) ->
+        | DefT (_, _, ClassT (DefT (r, _, InstanceT { static; super; inst; _ }))) ->
           class_or_interface_decl ~env r (Some tparams) static super inst
         (* See flow_js.ml canonicalize_imported_type, case of PolyT (ThisClassT):
            The initial abstraction is wrapper within an abstraction and a type application.
@@ -1917,10 +1917,10 @@ end = struct
           let%map (name, exports, default) = module_of_object ~env r o in
           Ty.Decl (Ty.ModuleDecl { name; exports; default })
         (* Monomorphic Classes/Interfaces *)
-        | ThisClassT (_, DefT (r, _, InstanceT (static, super, _, inst)), _, _)
-        | DefT (_, _, ClassT (DefT (r, _, InstanceT (static, super, _, inst))))
-        | DefT (_, _, TypeT (InstanceKind, DefT (r, _, InstanceT (static, super, _, inst))))
-        | DefT (_, _, TypeT (ImportClassKind, DefT (r, _, InstanceT (static, super, _, inst)))) ->
+        | ThisClassT (_, DefT (r, _, InstanceT { static; super; inst; _ }), _, _)
+        | DefT (_, _, ClassT (DefT (r, _, InstanceT { static; super; inst; _ })))
+        | DefT (_, _, TypeT (InstanceKind, DefT (r, _, InstanceT { static; super; inst; _ })))
+        | DefT (_, _, TypeT (ImportClassKind, DefT (r, _, InstanceT { static; super; inst; _ }))) ->
           class_or_interface_decl ~env r None static super inst
         (* Enums *)
         | DefT (reason, _, EnumObjectT _)
@@ -2283,7 +2283,7 @@ end = struct
       | DefT (_, _, ClassT t) -> type__ ~env ~inherited ~source ~imode t
       | DefT (r, _, ArrT a) -> arr_t ~env ~inherited r a
       | DefT (r, tr, EnumObjectT e) -> enum_t ~env ~inherited r tr e
-      | DefT (r, _, InstanceT (static, super, implements, inst)) ->
+      | DefT (r, _, InstanceT { static; super; implements; inst }) ->
         instance_t ~env ~inherited ~source ~imode r static super implements inst
       | ThisClassT (_, t, _, _) -> this_class_t ~env ~inherited ~source ~imode t
       | DefT (_, _, PolyT { tparams; t_out; _ }) ->

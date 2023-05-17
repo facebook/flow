@@ -349,21 +349,23 @@ let mk_private_method_eval_hint_test
       ( dummy_reason,
         bogus_trust (),
         InstanceT
-          ( ObjProtoT dummy_reason,
-            ObjProtoT dummy_reason,
-            [],
-            {
-              class_id = ALoc.id_none;
-              type_args = [];
-              own_props = Context.generate_property_map cx NameUtils.Map.empty;
-              proto_props = Context.generate_property_map cx NameUtils.Map.empty;
-              inst_call_t = None;
-              initialized_fields = SSet.empty;
-              initialized_static_fields = SSet.empty;
-              has_unknown_react_mixins = false;
-              inst_kind = ClassKind;
-            }
-          )
+          {
+            static = ObjProtoT dummy_reason;
+            super = ObjProtoT dummy_reason;
+            implements = [];
+            inst =
+              {
+                class_id = ALoc.id_none;
+                type_args = [];
+                own_props = Context.generate_property_map cx NameUtils.Map.empty;
+                proto_props = Context.generate_property_map cx NameUtils.Map.empty;
+                inst_call_t = None;
+                initialized_fields = SSet.empty;
+                initialized_static_fields = SSet.empty;
+                has_unknown_react_mixins = false;
+                inst_kind = ClassKind;
+              };
+          }
       )
   in
   let base =

@@ -66,7 +66,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
     | MaybeT (_, t) ->
       check_polarity cx ?trace tparams polarity t
     | DefT (_, _, ClassT t) -> check_polarity cx ?trace tparams polarity t
-    | DefT (_, _, InstanceT (static, super, implements, i)) ->
+    | DefT (_, _, InstanceT { static; super; implements; inst }) ->
       let {
         class_id = _;
         type_args = _;
@@ -78,7 +78,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
         has_unknown_react_mixins = _;
         inst_kind = _;
       } =
-        i
+        inst
       in
       check_polarity cx ?trace tparams polarity static;
       check_polarity cx ?trace tparams polarity super;

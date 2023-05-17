@@ -671,9 +671,9 @@ module rec ConsGen : S = struct
           key :: keylist
       in
       union_of_ts reason_op keylist
-    | (DefT (_, _, InstanceT (_, _, _, instance)), Annot_GetKeysT reason_op) ->
+    | (DefT (_, _, InstanceT { inst; _ }), Annot_GetKeysT reason_op) ->
       (* methods are not enumerable, so only walk fields *)
-      let own_props = Context.find_props cx instance.own_props in
+      let own_props = Context.find_props cx inst.own_props in
       let keylist = Flow_js_utils.keylist_of_props own_props reason_op in
       union_of_ts reason_op keylist
     | (AnyT _, Annot_GetKeysT reason_op) -> with_trust literal_trust (StrT.why reason_op)
@@ -682,7 +682,7 @@ module rec ConsGen : S = struct
     (***********)
     | (DefT (_, _, ObjT o), Annot_GetValuesT reason) ->
       Flow_js_utils.get_values_type_of_obj_t cx o reason
-    | (DefT (_, _, InstanceT (_, _, _, { own_props; _ })), Annot_GetValuesT reason) ->
+    | (DefT (_, _, InstanceT { inst = { own_props; _ }; _ }), Annot_GetValuesT reason) ->
       Flow_js_utils.get_values_type_of_instance_t cx own_props reason
     (* Any will always be ok *)
     | (AnyT (_, src), Annot_GetValuesT reason) -> AnyT.why src reason
@@ -761,14 +761,16 @@ module rec ConsGen : S = struct
     (**********)
     (* Mixins *)
     (**********)
-    | ( ThisClassT (_, DefT (_, trust, InstanceT (_, _, _, instance)), is_this, this_name),
-        Annot_MixinT r
-      ) ->
+    | (ThisClassT (_, DefT (_, trust, InstanceT { inst; _ }), is_this, this_name), Annot_MixinT r)
+      ->
       (* A class can be viewed as a mixin by extracting its immediate properties,
        * and "erasing" its static and super *)
       let static = ObjProtoT r in
       let super = ObjProtoT r in
-      this_class_type (DefT (r, trust, InstanceT (static, super, [], instance))) is_this this_name
+      this_class_type
+        (DefT (r, trust, InstanceT { static; super; implements = []; inst }))
+        is_this
+        this_name
     | ( DefT
           ( _,
             _,
@@ -776,8 +778,7 @@ module rec ConsGen : S = struct
               {
                 tparams_loc;
                 tparams = xs;
-                t_out =
-                  ThisClassT (_, DefT (_, trust, InstanceT (_, _, _, insttype)), is_this, this_name);
+                t_out = ThisClassT (_, DefT (_, trust, InstanceT { inst; _ }), is_this, this_name);
                 _;
               }
           ),
@@ -785,7 +786,7 @@ module rec ConsGen : S = struct
       ) ->
       let static = ObjProtoT r in
       let super = ObjProtoT r in
-      let instance = DefT (r, trust, InstanceT (static, super, [], insttype)) in
+      let instance = DefT (r, trust, InstanceT { static; super; implements = []; inst }) in
       poly_type
         (Type.Poly.generate_id ())
         tparams_loc
@@ -871,7 +872,7 @@ module rec ConsGen : S = struct
     (***************)
     (* Get statics *)
     (***************)
-    | (DefT (_, _, InstanceT (static, _, _, _)), Annot_GetStaticsT reason_op) ->
+    | (DefT (_, _, InstanceT { static; _ }), Annot_GetStaticsT reason_op) ->
       reposition cx (loc_of_reason reason_op) static
     | (AnyT (_, src), Annot_GetStaticsT reason_op) -> AnyT.why src reason_op
     | (ObjProtoT _, Annot_GetStaticsT reason_op) ->
@@ -881,11 +882,11 @@ module rec ConsGen : S = struct
     (***************)
     (* LookupT pt1 *)
     (***************)
-    | ( DefT (_lreason, _, InstanceT (_, super, _, instance)),
+    | ( DefT (_lreason, _, InstanceT { super; inst; _ }),
         Annot_LookupT (reason_op, use_op, (Named (_, x) as propref))
       ) ->
-      let own_props = Context.find_props cx instance.own_props in
-      let proto_props = Context.find_props cx instance.proto_props in
+      let own_props = Context.find_props cx inst.own_props in
+      let proto_props = Context.find_props cx inst.proto_props in
       let pmap = NameUtils.Map.union own_props proto_props in
       (match NameUtils.Map.find_opt x pmap with
       | None -> Get_prop_helper.cg_lookup_ cx use_op super reason_op propref
@@ -921,19 +922,8 @@ module rec ConsGen : S = struct
     (************)
     (* GetPropT *)
     (************)
-    | (DefT (r, _, InstanceT (_, super, _, insttype)), Annot_GetPropT (reason_op, use_op, propref))
-      ->
-      GetPropTKit.on_InstanceT
-        cx
-        dummy_trace
-        ~l:t
-        ~id:None
-        r
-        super
-        insttype
-        use_op
-        reason_op
-        propref
+    | (DefT (r, _, InstanceT { super; inst; _ }), Annot_GetPropT (reason_op, use_op, propref)) ->
+      GetPropTKit.on_InstanceT cx dummy_trace ~l:t ~id:None r super inst use_op reason_op propref
     | (DefT (_, _, ObjT _), Annot_GetPropT (reason_op, _, Named (_, OrdinaryName "constructor"))) ->
       Unsoundness.why Constructor reason_op
     | (DefT (reason_obj, _, ObjT o), Annot_GetPropT (reason_op, use_op, propref)) ->
