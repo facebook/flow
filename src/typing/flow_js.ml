@@ -7158,8 +7158,8 @@ struct
     let action = WriteProp { use_op; obj_t = l; prop_tout; tin; write_ctx = wr_ctx; mode } in
     access_prop cx trace options reason_prop reason_op super x pmap action
 
-  and elem_action_on_obj cx trace ~use_op ?on_named_prop l obj reason_op action =
-    let propref = propref_for_elem_t ?on_named_prop l in
+  and elem_action_on_obj cx trace ~use_op l obj reason_op action =
+    let propref = propref_for_elem_t l in
     match action with
     | ReadElem (_, t) -> rec_flow cx trace (obj, GetPropT (use_op, reason_op, None, propref, t))
     | WriteElem (tin, tout, mode) ->

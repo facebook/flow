@@ -420,11 +420,6 @@ and 'loc t' =
       reasons_for_operand1: 'loc exponential_spread_reason_group;
       reasons_for_operand2: 'loc exponential_spread_reason_group;
     }
-  | EComputedPropertyWithMultipleLowerBounds of {
-      computed_property_reason: 'loc virtual_reason;
-      new_lower_bound_reason: 'loc virtual_reason;
-      existing_lower_bound_reason: 'loc virtual_reason;
-    }
   | EComputedPropertyWithUnion of 'loc virtual_reason
   (* enums *)
   | EEnumInvalidMemberAccess of {
@@ -1101,14 +1096,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         reasons_for_operand2 =
           map_loc_of_exponential_spread_reason_group map_reason reasons_for_operand2;
       }
-  | EComputedPropertyWithMultipleLowerBounds
-      { computed_property_reason; new_lower_bound_reason; existing_lower_bound_reason } ->
-    EComputedPropertyWithMultipleLowerBounds
-      {
-        computed_property_reason = map_reason computed_property_reason;
-        new_lower_bound_reason = map_reason new_lower_bound_reason;
-        existing_lower_bound_reason = map_reason existing_lower_bound_reason;
-      }
   | EComputedPropertyWithUnion reason -> EComputedPropertyWithUnion (map_reason reason)
   | EEnumInvalidMemberAccess { member_name; suggestion; reason; enum_reason } ->
     EEnumInvalidMemberAccess
@@ -1468,7 +1455,6 @@ let util_use_op_of_msg nope util = function
   | ECannotDelete _
   | ESignatureVerification _
   | EExponentialSpread _
-  | EComputedPropertyWithMultipleLowerBounds _
   | EComputedPropertyWithUnion _
   | EEnumInvalidMemberAccess _
   | EEnumModification _
@@ -1545,12 +1531,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EExportValueAsType (reason, _)
   | EImportValueAsType (reason, _)
   | EDebugPrint (reason, _)
-  | EComputedPropertyWithMultipleLowerBounds
-      {
-        computed_property_reason = reason;
-        new_lower_bound_reason = _;
-        existing_lower_bound_reason = _;
-      }
   | EComputedPropertyWithUnion reason ->
     Some (loc_of_reason reason)
   | EEnumMemberAlreadyChecked { reason; _ }
@@ -3874,25 +3854,6 @@ let friendly_message_of_msg loc_of_aloc msg =
         ]
     in
     Normal { features }
-  | EComputedPropertyWithMultipleLowerBounds
-      { computed_property_reason; new_lower_bound_reason; existing_lower_bound_reason } ->
-    let features =
-      [
-        text "Cannot use ";
-        ref computed_property_reason;
-        text " as a computed property.";
-        text
-          " Computed properties may only be primitive literal values, but this one may be either ";
-        ref existing_lower_bound_reason;
-        text " or ";
-        ref new_lower_bound_reason;
-        text ". Can you add a literal type annotation to ";
-        ref computed_property_reason;
-        text "?";
-        text " See https://flow.org/en/docs/types/literals/ for more information on literal types.";
-      ]
-    in
-    Normal { features }
   | EComputedPropertyWithUnion computed_property_reason ->
     let features =
       [
@@ -4930,7 +4891,6 @@ let error_code_of_message err : error_code option =
   | ENonStrictEqualityComparison _
   | EComparison _ ->
     Some InvalidCompare
-  | EComputedPropertyWithMultipleLowerBounds _ -> Some InvalidComputedProp
   | EComputedPropertyWithUnion _ -> Some InvalidComputedProp
   | EDebugPrint (_, _) -> None
   | EIncorrectTypeWithReplacement { kind; _ } ->

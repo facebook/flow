@@ -1970,13 +1970,10 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
   );
   (value, is_tuple)
 
-let propref_for_elem_t ?on_named_prop = function
+let propref_for_elem_t = function
   | GenericT { bound = DefT (_, _, StrT (Literal (_, x))); reason = reason_x; _ }
   | DefT (reason_x, _, StrT (Literal (_, x))) ->
-    let reason_named = replace_desc_reason (RStringLit x) reason_x in
-    Base.Option.iter ~f:(fun f -> f reason_named) on_named_prop;
-    let reason_prop = replace_desc_reason (RProperty (Some x)) reason_x in
-    Named (reason_prop, x)
+    Named (replace_desc_reason (RProperty (Some x)) reason_x, x)
   | l -> Computed l
 
 let keylist_of_props props reason_op =

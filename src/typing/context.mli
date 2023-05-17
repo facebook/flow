@@ -119,10 +119,6 @@ type voidable_check = {
   errors: ALoc.t Property_assignment.errors;
 }
 
-type computed_property_state =
-  | ResolvedOnce of Reason.t
-  | ResolvedMultipleTimes
-
 type subst_cache_err =
   | ETooFewTypeArgs of ALoc.t Reason.virtual_reason * int
   | ETooManyTypeArgs of ALoc.t Reason.virtual_reason * int
@@ -415,12 +411,6 @@ val test_prop_get_never_hit :
 val with_allowed_method_unbinding : t -> ALoc.t -> (unit -> 'a) -> 'a
 
 val allowed_method_unbinding : t -> ALoc.t -> bool
-
-val computed_property_state_for_id : t -> Type.ident -> computed_property_state option
-
-val computed_property_add_lower_bound : t -> Type.ident -> Reason.t -> unit
-
-val computed_property_add_multiple_lower_bounds : t -> Type.ident -> unit
 
 val spread_widened_types_get_widest : t -> Type.ident -> Type.Object.slice option
 

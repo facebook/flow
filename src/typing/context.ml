@@ -76,11 +76,6 @@ type voidable_check = {
   errors: ALoc.t Property_assignment.errors;
 }
 
-(* Equivalently, we could use a Reason.t option, but this is more self-documenting. *)
-type computed_property_state =
-  | ResolvedOnce of Reason.t
-  | ResolvedMultipleTimes
-
 type subst_cache_err =
   | ETooFewTypeArgs of ALoc.t Reason.virtual_reason * int
   | ETooManyTypeArgs of ALoc.t Reason.virtual_reason * int
@@ -154,11 +149,6 @@ type component_t = {
    *)
   mutable voidable_checks: voidable_check list;
   mutable test_prop_hits_and_misses: test_prop_hit_or_miss IMap.t;
-  (* A map from syntactic computed properties to the reasons of the first lower bound they receive.
-   * If multiple lower bounds are received, we instead store ResolvedMultipleTimes so that we don't
-   * emit multiple errors for a single syntactic computed property.
-   *)
-  mutable computed_property_states: computed_property_state IMap.t;
   mutable spread_widened_types: Type.Object.slice IMap.t;
   mutable optional_chains_useful: (Reason.t * bool) ALocMap.t;
   mutable invariants_useful: (Reason.t * bool) ALocMap.t;
@@ -359,7 +349,6 @@ let make_ccx master_cx =
     exists_excuses = ALocMap.empty;
     voidable_checks = [];
     test_prop_hits_and_misses = IMap.empty;
-    computed_property_states = IMap.empty;
     spread_widened_types = IMap.empty;
     optional_chains_useful = ALocMap.empty;
     invariants_useful = ALocMap.empty;
@@ -878,15 +867,6 @@ let with_allowed_method_unbinding cx loc f =
   Exception.protect ~f ~finally:(fun () -> cx.ccx.allow_method_unbinding <- old_set)
 
 let allowed_method_unbinding cx loc = ALocSet.mem loc cx.ccx.allow_method_unbinding
-
-let computed_property_state_for_id cx id = IMap.find_opt id cx.ccx.computed_property_states
-
-let computed_property_add_lower_bound cx id r =
-  cx.ccx.computed_property_states <- IMap.add id (ResolvedOnce r) cx.ccx.computed_property_states
-
-let computed_property_add_multiple_lower_bounds cx id =
-  cx.ccx.computed_property_states <-
-    IMap.add id ResolvedMultipleTimes cx.ccx.computed_property_states
 
 let spread_widened_types_get_widest cx id = IMap.find_opt id cx.ccx.spread_widened_types
 

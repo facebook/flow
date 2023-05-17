@@ -2135,25 +2135,9 @@ module Make
     in
     (acc.ObjectExpressionAcc.obj_pmap, List.rev rev_prop_asts)
 
-  and create_obj_with_computed_prop cx keys ~reason ~reason_key ~reason_obj value id =
-    let on_named_prop reason_named =
-      match Context.computed_property_state_for_id cx id with
-      | None -> Context.computed_property_add_lower_bound cx id reason_named
-      | Some (Context.ResolvedOnce existing_lower_bound_reason) ->
-        Context.computed_property_add_multiple_lower_bounds cx id;
-        Flow_js_utils.add_output
-          cx
-          (Error_message.EComputedPropertyWithMultipleLowerBounds
-             {
-               existing_lower_bound_reason;
-               new_lower_bound_reason = reason_named;
-               computed_property_reason = reason;
-             }
-          )
-      | Some Context.ResolvedMultipleTimes -> ()
-    in
+  and create_obj_with_computed_prop cx keys ~reason ~reason_key ~reason_obj value =
     let single_key key =
-      match Flow_js_utils.propref_for_elem_t ~on_named_prop key with
+      match Flow_js_utils.propref_for_elem_t key with
       | Computed elem_t ->
         let check =
           WriteComputedObjPropCheckT
@@ -2172,7 +2156,6 @@ module Make
     | [] -> DefT (reason_obj, bogus_trust (), EmptyT)
     | [key] -> single_key key
     | _ ->
-      Context.computed_property_add_multiple_lower_bounds cx id;
       Flow_js_utils.add_output cx (Error_message.EComputedPropertyWithUnion reason);
       AnyT.error reason
 
@@ -2186,8 +2169,7 @@ module Make
       let reason = reason_of_t key in
       let reason_key = Reason.mk_expression_reason k in
       let reason_obj = reason in
-      let id = Reason.mk_id () in
-      create_obj_with_computed_prop cx keys ~reason ~reason_key ~reason_obj value id
+      create_obj_with_computed_prop cx keys ~reason ~reason_key ~reason_obj value
     in
     let (acc, rev_prop_asts) =
       List.fold_left

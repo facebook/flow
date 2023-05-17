@@ -1732,13 +1732,6 @@ let dump_error_message =
         (dump_reason cx reason)
         (format_reason_group reasons_for_operand1)
         (format_reason_group reasons_for_operand2)
-    | EComputedPropertyWithMultipleLowerBounds
-        { computed_property_reason; new_lower_bound_reason; existing_lower_bound_reason } ->
-      spf
-        "EComputedPropertyWithMultipleLowerBounds (%s) (%s) (%s)"
-        (dump_reason cx computed_property_reason)
-        (dump_reason cx new_lower_bound_reason)
-        (dump_reason cx existing_lower_bound_reason)
     | EComputedPropertyWithUnion reason ->
       spf "EComputedPropertyWithUnion (%s)" (dump_reason cx reason)
     | EEnumInvalidMemberAccess { member_name; suggestion; reason; enum_reason } ->
