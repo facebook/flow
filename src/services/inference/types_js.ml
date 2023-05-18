@@ -327,27 +327,26 @@ let mk_intermediate_result_callback ~reader ~options ~persistent_connections sup
   let open Errors in
   let loc_of_aloc = Parsing_heaps.Mutator_reader.loc_of_aloc ~reader in
   let root = Options.root options in
-  let strip_root = Some root in
   let file_options = Some (Options.file_options options) in
   (* We will keep track of seen errors/warnings to avoid sending the same thing twice. *)
   let seen_errors = ref ConcreteLocPrintableErrorSet.empty in
   let seen_warnings = ref ConcreteLocPrintableErrorSet.empty in
   let collate_errors (acc_errors, acc_warnings) file errors warnings =
     (* Filter errors and warnings. *)
-    let errors = Flow_error.make_errors_printable loc_of_aloc ~strip_root errors in
     let (errors, _, _) =
       Error_suppressions.filter_suppressed_errors
         ~root
         ~file_options
+        ~loc_of_aloc
         suppressions
         errors
         ~unused:Error_suppressions.empty
     in
-    let warnings = Flow_error.make_errors_printable loc_of_aloc ~strip_root warnings in
     let (warnings, _, _) =
       Error_suppressions.filter_suppressed_errors
         ~root
         ~file_options:None
+        ~loc_of_aloc
         suppressions
         warnings
         ~unused:Error_suppressions.empty

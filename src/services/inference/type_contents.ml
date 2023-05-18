@@ -111,14 +111,13 @@ let errors_of_file_artifacts ~options ~env ~loc_of_aloc ~filename ~file_artifact
       severity_cover
   in
   let root = Options.root options in
-  let errors = Flow_error.make_errors_printable loc_of_aloc ~strip_root:(Some root) errors in
-  let warnings = Flow_error.make_errors_printable loc_of_aloc ~strip_root:(Some root) warnings in
   let file_options = Some (Options.file_options options) in
   (* Filter out suppressed errors *)
   let (errors, _, _) =
     Error_suppressions.filter_suppressed_errors
       ~root
       ~file_options
+      ~loc_of_aloc
       suppressions
       errors
       ~unused:Error_suppressions.empty
@@ -129,6 +128,7 @@ let errors_of_file_artifacts ~options ~env ~loc_of_aloc ~filename ~file_artifact
     Error_suppressions.filter_suppressed_errors
       ~root
       ~file_options
+      ~loc_of_aloc
       suppressions
       warnings
       ~unused:Error_suppressions.empty

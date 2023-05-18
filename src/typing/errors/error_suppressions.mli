@@ -33,8 +33,9 @@ val universally_suppressed_codes : t -> CodeLocSet.t
 val filter_suppressed_errors :
   root:Path.t ->
   file_options:Files.options option ->
+  loc_of_aloc:(ALoc.t -> Loc.t) ->
   t ->
-  Errors.ConcreteLocPrintableErrorSet.t ->
+  Flow_error.ErrorSet.t ->
   unused:t ->
   Errors.ConcreteLocPrintableErrorSet.t
   * (Loc.t Errors.printable_error * Loc_collections.LocSet.t) list

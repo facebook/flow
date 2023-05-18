@@ -226,16 +226,13 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
       let loc_of_aloc = Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader in
       let suppressions = Context.error_suppressions cx in
       let error_is_suppressed error =
-        let errors =
-          Flow_error.ErrorSet.singleton error
-          |> Flow_error.make_errors_printable loc_of_aloc ~strip_root:(Some (Context.root cx))
-        in
         let (errors, _, _) =
           Error_suppressions.filter_suppressed_errors
-            ~root:Path.dummy_path
+            ~root:(Context.root cx)
             ~file_options:None
+            ~loc_of_aloc
             suppressions
-            errors
+            (Flow_error.ErrorSet.singleton error)
             ~unused:suppressions
         in
         Errors.ConcreteLocPrintableErrorSet.is_empty errors

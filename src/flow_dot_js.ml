@@ -255,12 +255,11 @@ let check_content ~filename ~content ~js_config_object =
           aloc_tables
           severity_cover
       in
-      let errors = Flow_error.make_errors_printable loc_of_aloc ~strip_root:None errors in
-      let warnings = Flow_error.make_errors_printable loc_of_aloc ~strip_root:None warnings in
       let (errors, _, suppressions) =
         Error_suppressions.filter_suppressed_errors
           ~root
           ~file_options:None
+          ~loc_of_aloc
           suppressions
           errors
           ~unused:suppressions
@@ -269,6 +268,7 @@ let check_content ~filename ~content ~js_config_object =
         Error_suppressions.filter_suppressed_errors
           ~root
           ~file_options:None
+          ~loc_of_aloc
           suppressions
           warnings
           ~unused:suppressions

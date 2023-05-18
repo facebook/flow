@@ -294,10 +294,11 @@ let universally_suppressed_codes map =
     map
     CodeLocSet.empty
 
-let filter_suppressed_errors ~root ~file_options suppressions errors ~unused =
+let filter_suppressed_errors ~root ~file_options ~loc_of_aloc suppressions errors ~unused =
   (* Filter out suppressed errors. also track which suppressions are used. *)
-  Errors.ConcreteLocPrintableErrorSet.fold
+  Flow_error.ErrorSet.fold
     (fun error ((errors, suppressed, unused) as acc) ->
+      let error = Flow_error.make_error_printable loc_of_aloc ~strip_root:(Some root) error in
       match check ~root ~file_options error suppressions unused with
       | None -> acc
       | Some (severity, used, unused) ->
