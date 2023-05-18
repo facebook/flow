@@ -1124,6 +1124,60 @@ Unexpected token <. Remember, adjacent JSX elements must be wrapped in an enclos
          ^
 
 
+Error ------------------------------------------------------------------------- react_util_types_monomorphization.js:7:4
+
+Cannot cast `config.foo` to string because mixed (inferred from type parameter's bound) [1] is incompatible with
+string [2]. [incompatible-cast]
+
+   react_util_types_monomorphization.js:7:4
+   7|   (config.foo: string); // error: mixed ~> string
+         ^^^^^^^^^^
+
+References:
+   react_util_types_monomorphization.js:3:29
+   3| declare class PolyComponent<T> extends React.Component<{foo: T}> {}
+                                  ^ [1]
+   react_util_types_monomorphization.js:7:16
+   7|   (config.foo: string); // error: mixed ~> string
+                     ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------ react_util_types_monomorphization.js:12:4
+
+Cannot cast `props.foo` to string because mixed (inferred from type parameter's bound) [1] is incompatible with
+string [2]. [incompatible-cast]
+
+   react_util_types_monomorphization.js:12:4
+   12|   (props.foo: string); // error: mixed ~> string
+          ^^^^^^^^^
+
+References:
+   react_util_types_monomorphization.js:3:29
+    3| declare class PolyComponent<T> extends React.Component<{foo: T}> {}
+                                   ^ [1]
+   react_util_types_monomorphization.js:12:15
+   12|   (props.foo: string); // error: mixed ~> string
+                     ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------ react_util_types_monomorphization.js:17:4
+
+Cannot cast `ref.props.foo` to string because mixed (inferred from type parameter's bound) [1] is incompatible with
+string [2]. [incompatible-cast]
+
+   react_util_types_monomorphization.js:17:4
+   17|   (ref.props.foo: string); // error: mixed ~> string
+          ^^^^^^^^^^^^^
+
+References:
+   react_util_types_monomorphization.js:3:29
+    3| declare class PolyComponent<T> extends React.Component<{foo: T}> {}
+                                   ^ [1]
+   react_util_types_monomorphization.js:17:19
+   17|   (ref.props.foo: string); // error: mixed ~> string
+                         ^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- ref.js:10:11
 
 Cannot create `Foo` element because in property `ref`: [incompatible-type]
@@ -2481,7 +2535,7 @@ References:
 
 
 
-Found 124 errors
+Found 127 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

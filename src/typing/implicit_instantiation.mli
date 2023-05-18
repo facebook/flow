@@ -101,6 +101,16 @@ module type KIT = sig
     reason_tapp:Reason.reason ->
     Type.t
 
+  val run_monomorphize :
+    Context.t ->
+    Type.trace ->
+    use_op:Type.use_op ->
+    reason_op:Reason.reason ->
+    reason_tapp:Reason.reason ->
+    Type.typeparam Nel.t ->
+    Type.t ->
+    Type.t
+
   val run_conditional :
     Context.t ->
     Type.trace ->
