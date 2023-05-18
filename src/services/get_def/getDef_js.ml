@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc
-
 module Get_def_result = struct
   type t =
     | Def of Loc.t list  (** the final location of the definition *)
@@ -18,7 +16,7 @@ end
 
 open Get_def_result
 
-let extract_member_def ~reader ~cx ~file_sig ~typed_ast ~force_instance type_ name =
+let extract_member_def ~loc_of_aloc ~cx ~file_sig ~typed_ast ~force_instance type_ name =
   let ( let* ) = Result.bind in
   let* Ty_members.{ members; _ } =
     Ty_members.extract
@@ -35,13 +33,13 @@ let extract_member_def ~reader ~cx ~file_sig ~typed_ast ~force_instance type_ na
     )
   in
   match def_locs with
-  | Some def_locs -> Ok (Nel.map (loc_of_aloc ~reader) def_locs)
+  | Some def_locs -> Ok (Nel.map loc_of_aloc def_locs)
   | None -> Error (Printf.sprintf "failed to find member %s in members map" name)
 
-let rec process_request ~options ~reader ~cx ~is_legit_require ~ast ~typed_ast ~file_sig :
+let rec process_request ~options ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_ast ~file_sig :
     (ALoc.t, ALoc.t * Type.t) Get_def_request.t -> (Loc.t Nel.t, string) result = function
   | Get_def_request.Identifier { name = _; loc = (aloc, type_) } ->
-    let loc = loc_of_aloc ~reader aloc in
+    let loc = loc_of_aloc aloc in
     let scope_info =
       Scope_builder.program ~enable_enums:(Context.enable_enums cx) ~with_types:true ast
     in
@@ -55,7 +53,7 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~ast ~typed_ast ~
     | [] ->
       process_request
         ~options
-        ~reader
+        ~loc_of_aloc
         ~cx
         ~is_legit_require
         ~ast
@@ -64,7 +62,7 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~ast ~typed_ast ~
         (Get_def_request.Type (aloc, type_))
     | _ :: _ :: _ -> Error "Scope builder found multiple matching identifiers")
   | Get_def_request.(Member { prop_name = name; object_type = (_loc, t); force_instance }) -> begin
-    extract_member_def ~reader ~cx ~file_sig ~typed_ast ~force_instance t name
+    extract_member_def ~loc_of_aloc ~cx ~file_sig ~typed_ast ~force_instance t name
   end
   | Get_def_request.(Type (_, v) | Typeof (_, v)) as request ->
     (* here lies the difference between "Go to Definition" and "Go to Type Definition":
@@ -87,7 +85,7 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~ast ~typed_ast ~
         | _ ->
           (* `annot_aloc` is set when an AnnotT is the result of an actual source annotation *)
           (match Reason.annot_loc_of_reason r with
-          | Some aloc -> Ok (Nel.one (loc_of_aloc ~reader aloc))
+          | Some aloc -> Ok (Nel.one (loc_of_aloc aloc))
           | None -> loop t))
       | DefT (_, _, TypeT ((ImportTypeofKind | ImportClassKind | ImportEnumKind), t)) -> loop t
       | t ->
@@ -97,7 +95,7 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~ast ~typed_ast ~
           | Some aloc -> aloc
           | None -> Reason.def_loc_of_reason r
         in
-        Ok (Nel.one (loc_of_aloc ~reader aloc))
+        Ok (Nel.one (loc_of_aloc aloc))
     in
     loop v
   | Get_def_request.JsxAttribute { component_t = (_, component_t); name; loc } ->
@@ -110,7 +108,7 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~ast ~typed_ast ~
     in
     process_request
       ~options
-      ~reader
+      ~loc_of_aloc
       ~cx
       ~is_legit_require
       ~ast
@@ -133,10 +131,10 @@ module Depth = struct
   let add loc { length; locs } = { length = length + 1; locs = loc :: locs }
 end
 
-let get_def ~options ~reader ~cx ~file_sig ~ast ~typed_ast requested_loc =
+let get_def ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast requested_loc =
   let require_loc_map = File_sig.require_loc_map file_sig in
   let is_legit_require (source_aloc, _) =
-    let source_loc = loc_of_aloc ~reader source_aloc in
+    let source_loc = loc_of_aloc source_aloc in
     SMap.exists (fun _ locs -> Nel.exists (fun loc -> loc = source_loc) locs) require_loc_map
   in
   let rec loop ~depth req_loc =
@@ -154,10 +152,18 @@ let get_def ~options ~reader ~cx ~file_sig ~ast ~typed_ast requested_loc =
     else
       let open Get_def_process_location in
       match process_location_in_typed_ast ~is_legit_require ~typed_ast req_loc with
-      | OwnDef aloc -> Def [loc_of_aloc ~reader aloc]
+      | OwnDef aloc -> Def [loc_of_aloc aloc]
       | Request request -> begin
         match
-          process_request ~options ~reader ~cx ~is_legit_require ~ast ~typed_ast ~file_sig request
+          process_request
+            ~options
+            ~loc_of_aloc
+            ~cx
+            ~is_legit_require
+            ~ast
+            ~typed_ast
+            ~file_sig
+            request
         with
         | Ok res_locs ->
           res_locs

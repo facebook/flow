@@ -15,7 +15,7 @@ end
 
 val get_def :
   options:Options.t ->
-  reader:State_reader.t ->
+  loc_of_aloc:(ALoc.t -> Loc.t) ->
   cx:Context.t ->
   file_sig:File_sig.t ->
   ast:(Loc.t, Loc.t) Flow_ast.Program.t ->

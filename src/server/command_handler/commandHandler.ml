@@ -417,7 +417,15 @@ let get_def_of_check_result ~options ~reader ~profiling ~check_result (file, lin
           ) =
         check_result
       in
-      GetDef_js.get_def ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc |> fun result ->
+      GetDef_js.get_def
+        ~options
+        ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
+        ~cx
+        ~file_sig
+        ~ast
+        ~typed_ast
+        loc
+      |> fun result ->
       let open GetDef_js.Get_def_result in
       let json_props = fold_json_of_parse_errors parse_errors [] in
       match result with

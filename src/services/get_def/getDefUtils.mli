@@ -34,7 +34,7 @@ val extract_def_loc :
   loc_of_aloc:(ALoc.t -> Loc.t) -> Context.t -> Type.t -> string -> (def_loc, string) result
 
 val get_property_def_info :
-  loc_of_aloc:(ALoc.t -> Loc_collections.LocMap.key) ->
+  loc_of_aloc:(ALoc.t -> Loc.t) ->
   Types_js_types.typecheck_artifacts ->
   Loc.t ->
   (property_def_info option, string) result
