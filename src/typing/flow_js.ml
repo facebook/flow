@@ -2632,6 +2632,20 @@ struct
               )
           in
           rec_flow cx trace (t_, u)
+        | ( DefT (reason_tapp, _, PolyT { tparams_loc = _; tparams; t_out; _ }),
+            ReactKitT (use_op, reason_op, (React.GetProps _ | React.GetConfig _ | React.GetRef _))
+          ) ->
+          let t_ =
+            ImplicitInstantiationKit.run_monomorphize
+              cx
+              trace
+              ~use_op
+              ~reason_op
+              ~reason_tapp
+              tparams
+              t_out
+          in
+          rec_flow cx trace (t_, u)
         | (DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; t_out = t; _ }), _) ->
           let reason_op = reason_of_use_t u in
           let use_op =

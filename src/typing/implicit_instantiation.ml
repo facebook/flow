@@ -1206,6 +1206,16 @@ module type KIT = sig
     reason_tapp:reason ->
     Type.t
 
+  val run_monomorphize :
+    Context.t ->
+    Type.trace ->
+    use_op:Type.use_op ->
+    reason_op:Reason.reason ->
+    reason_tapp:Reason.reason ->
+    Type.typeparam Nel.t ->
+    Type.t ->
+    Type.t
+
   val run_conditional :
     Context.t ->
     Type.trace ->
@@ -1336,6 +1346,34 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
       Context.run_in_synthesis_mode cx f |> snd
     else
       f ()
+
+  let run_monomorphize cx trace ~use_op ~reason_op ~reason_tapp tparams t =
+    let subst_map =
+      Nel.fold_left
+        (fun subst_map tparam ->
+          let inferred =
+            Pierce.pin_type
+              cx
+              ~use_op
+              tparam
+              None
+              ~default_bound:None
+              reason_op
+              (Instantiation_utils.ImplicitTypeArgument.mk_targ cx tparam reason_op reason_tapp)
+          in
+          Subst_name.Map.add tparam.name inferred subst_map)
+        Subst_name.Map.empty
+        tparams
+    in
+    instantiate_poly_with_subst_map
+      cx
+      trace
+      ~cache:false
+      t
+      subst_map
+      ~use_op
+      ~reason_op
+      ~reason_tapp
 
   let run_conditional cx trace ~use_op ~reason ~tparams ~check_t ~extends_t ~true_t ~false_t =
     if
