@@ -2325,13 +2325,13 @@ struct
            `params`) raise errors, but also propagate the unrefined types (as if the
            refinement never took place).
         *)
-        | ( DefT (lreason, _, FunT (_, { params; predicate = Some (PredBased (_, pmap, nmap)); _ })),
+        | ( DefT (lreason, _, FunT (_, { params; predicate = Some predicate; _ })),
             CallLatentPredT { use_op = _; reason; targs = _; argts = _; sense; idx; tin; tout }
           ) -> begin
           (* TODO: for the moment we only support simple keys (empty projection)
              that exactly correspond to the function's parameters *)
-          match Base.List.nth params (idx - 1) with
-          | None ->
+          match (Base.List.nth params (idx - 1), predicate) with
+          | (None, _) ->
             let msg =
               Error_message.EPredicateFuncTooShort
                 {
@@ -2343,10 +2343,10 @@ struct
             in
             add_output cx ~trace msg;
             rec_flow_t ~use_op:unknown_use cx trace (tin, OpenT tout)
-          | Some (None, _) ->
+          | (Some (None, _), _) ->
             (* Already an unsupported-syntax error on the definition side of the function. *)
             rec_flow_t ~use_op:unknown_use cx trace (tin, OpenT tout)
-          | Some (Some name, _) ->
+          | (Some (Some name, _), PredBased (_, pmap, nmap)) ->
             let key = (OrdinaryName name, []) in
             let preds =
               if sense then
@@ -2359,6 +2359,18 @@ struct
               | Some p -> rec_flow cx trace (tin, PredicateT (p, tout))
               | None -> rec_flow_t ~use_op:unknown_use cx trace (tin, OpenT tout)
             end
+          | (Some (Some name, _), TypeGuardBased { param_name = (_, param_name); type_guard }) ->
+            let t =
+              if not sense then
+                (* Only supports positive refinements. *)
+                tin
+              else if param_name <> name then
+                (* This is not the refined parameter. *)
+                tin
+              else
+                Type_filter.intersect cx tin type_guard
+            in
+            rec_flow_t ~use_op:unknown_use cx trace (t, OpenT tout)
         end
         | ( DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; t_out = t; _ }),
             CallLatentPredT { use_op; reason; targs; argts; sense; idx; tin; tout }

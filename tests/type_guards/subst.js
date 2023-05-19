@@ -11,5 +11,6 @@ const x2: B = funA(isA); // error A ~> B
 
 declare var input: mixed;
 if (funB(isA, input)) {
-  (input: A); // TODO okay
+  (input: A); // okay
+  (input: B); // error A ~> B
 }

@@ -559,3 +559,15 @@ let sentinel_refinement =
         [l]
     in
     TypeUtil.union_of_ts reason (loop enum)
+
+(* t1 is input t
+ * t2 is type guard *)
+let intersect cx t1 t2 =
+  let quick_subtype = TypeUtil.quick_subtype (Context.trust_errors cx) in
+  if quick_subtype t1 t2 then
+    t1
+  else if quick_subtype t2 t1 then
+    t2
+  else
+    match (t1, t2) with
+    | _ -> IntersectionT (reason_of_t t1, InterRep.make t2 t1 [])
