@@ -304,9 +304,10 @@ class ['a] t =
       let acc = self#opt (self#fun_predicate cx pole) acc predicate in
       acc
 
-    method private fun_predicate cx _pole acc predicate =
+    method private fun_predicate cx pole acc predicate =
       match predicate with
       | PredBased p -> self#predicate_maps cx acc p
+      | TypeGuardBased { param_name = _; type_guard = t } -> self#type_ cx pole acc t
 
     method private predicate_maps cx acc (_, pmap, nmap) =
       let acc = Key_map.fold (fun _ p acc -> self#predicate cx acc p) pmap acc in

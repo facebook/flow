@@ -375,6 +375,10 @@ module rec TypeTerm : sig
         sentinel_reason: 'loc virtual_reason;
       }
     | EvalMappedType of { mapped_type: 'loc virtual_reason }
+    | TypeGuardIncompatibility of {
+        guard_type: 'loc virtual_reason;
+        param_name: string;
+      }
     | UnknownUse
 
   and 'loc virtual_frame_use_op =
@@ -447,6 +451,7 @@ module rec TypeTerm : sig
         polarity: Polarity.t;
       }
     | TypeParamBound of { name: Subst_name.t }
+    | TypePredicateCompatibility
     | UnifyFlip
 
   and 'loc virtual_use_op =
@@ -1056,7 +1061,12 @@ module rec TypeTerm : sig
     def_reason: Reason.t;
   }
 
-  and fun_predicate = PredBased of (reason * predicate Key_map.t * predicate Key_map.t)
+  and fun_predicate =
+    | PredBased of (reason * predicate Key_map.t * predicate Key_map.t)
+    | TypeGuardBased of {
+        param_name: ALoc.t * string;
+        type_guard: t;
+      }
 
   (* FunTs carry around two `this` types, one to be used during subtyping and
      one to be treated as the param when the function is called. This is to allow
@@ -3543,7 +3553,8 @@ let aloc_of_root_use_op : root_use_op -> ALoc.t = function
   | SetProperty { value = op; _ }
   | UpdateProperty { lhs = op; _ }
   | SwitchCheck { case_test = op; _ }
-  | MatchingProp { op; _ } ->
+  | MatchingProp { op; _ }
+  | TypeGuardIncompatibility { guard_type = op; _ } ->
     loc_of_reason op
   | EvalMappedType { mapped_type } -> loc_of_reason mapped_type
   | ReactGetIntrinsic _
@@ -3682,6 +3693,7 @@ let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
   | SwitchCheck _ -> "SwitchCheck"
   | MatchingProp _ -> "MatchingProp"
   | EvalMappedType _ -> "EvalMappedType"
+  | TypeGuardIncompatibility _ -> "TypeGuardIncompatibility"
   | UnknownUse -> "UnknownUse"
 
 let string_of_frame_use_op (type a) : a virtual_frame_use_op -> string = function
@@ -3706,6 +3718,7 @@ let string_of_frame_use_op (type a) : a virtual_frame_use_op -> string = functio
   | TypeArgCompatibility _ -> "TypeArgCompatibility"
   | TypeParamBound _ -> "TypeParamBound"
   | UnifyFlip -> "UnifyFlip"
+  | TypePredicateCompatibility -> "TypePredicateCompatibility"
 
 let string_of_use_op (type a) : a virtual_use_op -> string = function
   | Op root -> string_of_root_use_op root

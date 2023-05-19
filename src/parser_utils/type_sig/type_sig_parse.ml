@@ -1349,12 +1349,31 @@ and annot_with_loc opts scope tbls xs (loc, t) =
   in
   (loc, annot)
 
-and return_annot opts scope tbls xs = function
-  | T.Function.TypeAnnotation r -> annot opts scope tbls xs r
-  | T.Function.TypeGuard (loc, _) ->
-    (* TODO(pvekris) support type guards in type_sig_parse *)
+and type_guard_opt opts scope tbls xs guard =
+  let (_, { T.TypeGuard.asserts = _; guard = (x, t_opt); _ }) = guard in
+  match t_opt with
+  | Some t ->
+    let (loc, { Ast.Identifier.name; _ }) = x in
     let loc = push_loc tbls loc in
-    Annot (Boolean loc)
+    Some ((loc, name), annot opts scope tbls xs t)
+  | None ->
+    (* TODO(pvekris) support assert type guards in type_sig_parse *)
+    None
+
+and type_guard_or_predicate_of_type_guard opts scope tbls xs guard =
+  match type_guard_opt opts scope tbls xs guard with
+  | Some p -> Some (TypeGuard p)
+  | None -> None
+
+and return_annot opts scope tbls xs = function
+  | T.Function.TypeAnnotation r -> (annot opts scope tbls xs r, None)
+  | T.Function.TypeGuard ((loc, _) as g) ->
+    let loc = push_loc tbls loc in
+    if opts.type_guards then
+      let guard = type_guard_or_predicate_of_type_guard opts scope tbls xs g in
+      (Annot (Boolean loc), guard)
+    else
+      (Annot (Any loc), None)
 
 and function_type opts scope tbls xs f =
   let module F = T.Function in
@@ -1370,8 +1389,8 @@ and function_type opts scope tbls xs f =
   let this_param = function_type_this_param opts scope tbls xs this_ in
   let params = function_type_params opts scope tbls xs ps in
   let rest_param = function_type_rest_param opts scope tbls xs rp in
-  let return = return_annot opts scope tbls xs r in
-  FunSig { tparams; params; rest_param; this_param; return; predicate = None }
+  let (return, predicate) = return_annot opts scope tbls xs r in
+  FunSig { tparams; params; rest_param; this_param; return; predicate }
 
 and function_type_params =
   let module F = T.Function in
@@ -1427,7 +1446,7 @@ and function_type_this_param opts scope tbls xs =
 and getter_type opts scope tbls xs id_loc f =
   let module F = T.Function in
   let { F.return = r; _ } = f in
-  Get (id_loc, return_annot opts scope tbls xs r)
+  Get (id_loc, return_annot opts scope tbls xs r |> fst)
 
 and setter_type opts scope tbls xs id_loc f =
   let module F = T.Function in
@@ -3023,33 +3042,36 @@ and function_def_helper =
         None)
     (* unexpected rest param pattern *)
   in
-  let return opts scope tbls xs ~async ~generator ~constructor body =
+  let return opts scope tbls xs ~async ~generator ~constructor body ret =
     if constructor then
-      function
-    | Ast.Function.ReturnAnnot.Available (loc, _)
-    | Ast.Function.ReturnAnnot.Missing loc
-    | Ast.Function.ReturnAnnot.TypeGuard (loc, _) ->
-      let loc = push_loc tbls loc in
-      Annot (Void loc)
+      match ret with
+      | Ast.Function.ReturnAnnot.Available (loc, _)
+      | Ast.Function.ReturnAnnot.Missing loc
+      | Ast.Function.ReturnAnnot.TypeGuard (loc, _) ->
+        let loc = push_loc tbls loc in
+        (Annot (Void loc), None)
     else
-      function
-    | Ast.Function.ReturnAnnot.Available (_, t) -> annot opts scope tbls xs t
-    | Ast.Function.ReturnAnnot.Missing loc ->
-      let loc = push_loc tbls loc in
-      if generator || not (Signature_utils.Procedure_decider.is body) then
-        Err
-          ( loc,
-            SigError
-              (Signature_error.ExpectedAnnotation (loc, Expected_annotation_sort.FunctionReturn))
-          )
-      else if async then
-        AsyncVoidReturn loc
-      else
-        Annot (Void loc)
-    | Ast.Function.ReturnAnnot.TypeGuard (loc, _) ->
-      (* TODO(pvekris) support type guards in type_sig_parse *)
-      let loc = push_loc tbls loc in
-      Annot (Boolean loc)
+      match ret with
+      | Ast.Function.ReturnAnnot.Available (_, t) -> (annot opts scope tbls xs t, None)
+      | Ast.Function.ReturnAnnot.Missing loc ->
+        let loc = push_loc tbls loc in
+        if generator || not (Signature_utils.Procedure_decider.is body) then
+          let err =
+            Err
+              ( loc,
+                SigError
+                  (Signature_error.ExpectedAnnotation (loc, Expected_annotation_sort.FunctionReturn))
+              )
+          in
+          (err, None)
+        else if async then
+          (AsyncVoidReturn loc, None)
+        else
+          (Annot (Void loc), None)
+      | Ast.Function.ReturnAnnot.TypeGuard (loc, guard) ->
+        let loc = push_loc tbls loc in
+        let guard = type_guard_opt opts scope tbls xs guard in
+        (Annot (Boolean loc), guard)
   in
   let predicate opts scope tbls ps body =
     let module P = Ast.Type.Predicate in
@@ -3105,11 +3127,18 @@ and function_def_helper =
     let this_param = this_param opts scope tbls xs this_ in
     let params = params opts scope tbls xs [] ps in
     let rest_param = rest_param opts scope tbls xs rp in
-    let return = return opts scope tbls xs ~async ~generator ~constructor body r in
+    let (return, type_guard_opt) =
+      return opts scope tbls xs ~async ~generator ~constructor body r
+    in
     let predicate =
       let open Option.Let_syntax in
-      let%map (loc, p) = predicate opts scope tbls ps body p in
-      Predicate (loc, p)
+      match type_guard_opt with
+      | Some (loc, p) ->
+        (* Type-guard and %checks cannot coexist (parse error) *)
+        Some (TypeGuard (loc, p))
+      | None ->
+        let%map (loc, p) = predicate opts scope tbls ps body p in
+        Predicate (loc, p)
     in
     FunSig { tparams; params; rest_param; this_param; return; predicate }
 
@@ -4019,12 +4048,13 @@ let declare_function_decl opts scope tbls decl =
              let this_param = function_type_this_param opts scope tbls xs this_ in
              let params = function_type_params opts scope tbls xs ps in
              let rest_param = function_type_rest_param opts scope tbls xs rp in
-             let return = return_annot opts scope tbls xs r in
+             let (return, type_guard) = return_annot opts scope tbls xs r in
              let predicate =
                let module P = T.Predicate in
-               match p with
-               | None -> None
-               | Some (loc, { P.kind = P.Declared expr; _ }) ->
+               match (type_guard, p) with
+               | (Some (TypeGuard _), _) -> type_guard
+               | (_, None) -> None
+               | (_, Some (loc, { P.kind = P.Declared expr; _ })) ->
                  let loc = push_loc tbls loc in
                  let pnames =
                    List.fold_left
@@ -4037,7 +4067,7 @@ let declare_function_decl opts scope tbls decl =
                      ps
                  in
                  Some (Predicate (loc, predicate opts scope tbls pnames expr))
-               | Some (_, { P.kind = P.Inferred; _ }) ->
+               | (_, Some (_, { P.kind = P.Inferred; _ })) ->
                  (* inferred predicate not allowed in declared function *)
                  None
              in

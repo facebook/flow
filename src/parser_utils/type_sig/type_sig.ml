@@ -74,7 +74,9 @@ type ('key, 'loc, 'a) predicate =
   | LatentP of 'a * ('loc, 'a) targ list option * 'a arg list * ('key * int) Nel.t
 [@@deriving iter, map, show { with_path = false }]
 
-type ('loc, 'a) predicate_or_type_guard = Predicate of 'loc * (string, 'loc, 'a) predicate option
+type ('loc, 'a) predicate_or_type_guard =
+  | Predicate of 'loc * (string, 'loc, 'a) predicate option
+  | TypeGuard of (('loc * string) * 'a)
 [@@deriving iter, map, show { with_path = false }]
 
 type ('loc, 'a) tparam =

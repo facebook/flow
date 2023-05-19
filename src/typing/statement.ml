@@ -7302,14 +7302,21 @@ module Make
           Nonvoid_return.might_have_nonvoid_return loc func
           || (kind <> Ordinary && kind <> Async && kind <> Ctor)
         in
-        let (return_t, return) =
+        let (return_t, return, type_guard_opt) =
           Anno.mk_return_type_annotation
             cx
             tparams_map
+            (Func_stmt_params.value fparams)
             ret_reason
             ~void_return:(not has_nonvoid_return)
             ~async:(kind = Async)
             return
+        in
+        (* Now that we've seen the return annotation we might need to update `kind`. *)
+        let kind =
+          match type_guard_opt with
+          | Some p -> Predicate p
+          | None -> kind
         in
         let from_generic_function = Base.Option.is_some tparams in
         let require_return_annot = require_return_annot || from_generic_function in
@@ -7358,6 +7365,13 @@ module Make
             | (loc, Select _) -> err_with_desc cx (RPatternParameter name) expr_reason loc
           in
           match kind with
+          | Func.Predicate (TypeGuardBased { param_name = (name_loc, name); _ }) ->
+            let expr_reason = mk_reason (RTypeGuardParam name) name_loc in
+            let bindings = Pattern_helper.bindings_of_params params in
+            let matching_binding = SMap.find_opt name bindings in
+            if Option.is_none matching_binding then
+              Flow_js_utils.add_output cx Error_message.(ETypeGuardParamUnbound expr_reason);
+            Base.Option.iter matching_binding ~f:(error_on_non_root_binding cx name expr_reason)
           | Func.Predicate (PredBased (expr_reason, p_map, _)) ->
             let required_bindings =
               Base.List.filter_map (Key_map.keys p_map) ~f:(function

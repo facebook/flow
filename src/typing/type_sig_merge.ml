@@ -1668,6 +1668,8 @@ and merge_fun
       | None -> None
       | Some (Predicate (loc, p)) ->
         Some (Type.PredBased (merge_predicate tps infer_tps file (loc, p)))
+      | Some (TypeGuard (x, t)) ->
+        Some (Type.TypeGuardBased { param_name = x; type_guard = merge tps infer_tps file t })
     in
     let this_status =
       if is_method then

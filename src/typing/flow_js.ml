@@ -5756,12 +5756,17 @@ struct
 
   and any_prop_to_function
       use_op
-      { this_t = (this, _); params; rest_param; return_t; predicate = _; def_reason = _ }
+      { this_t = (this, _); params; rest_param; return_t; predicate; def_reason = _ }
       covariant
       contravariant =
     List.iter (snd %> contravariant ~use_op) params;
     Base.Option.iter ~f:(fun (_, _, t) -> contravariant ~use_op t) rest_param;
     contravariant ~use_op this;
+    let () =
+      match predicate with
+      | Some (TypeGuardBased { type_guard = t; _ }) -> covariant ~use_op t
+      | _ -> ()
+    in
     covariant ~use_op return_t
 
   and invariant_any_propagation_flow cx trace ~use_op any t =
@@ -7848,6 +7853,7 @@ struct
               | ReactCreateElementCall _
               | ReactGetIntrinsic _
               | MatchingProp _
+              | TypeGuardIncompatibility _
               | UnknownUse ->
                 false)
             | UnifyFlip when not should_replace ->

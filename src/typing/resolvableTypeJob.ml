@@ -127,8 +127,13 @@ and collect_of_type ?log_unresolved cx acc = function
       | Some id -> Context.find_call cx id :: ts
     in
     collect_of_types ?log_unresolved cx acc ts
-  | DefT (_, _, FunT (_, { params; return_t; _ })) ->
+  | DefT (_, _, FunT (_, { params; return_t; predicate; _ })) ->
     let ts = List.fold_left (fun acc (_, t) -> t :: acc) [return_t] params in
+    let ts =
+      match predicate with
+      | Some (TypeGuardBased { type_guard = t; _ }) -> t :: ts
+      | _ -> ts
+    in
     collect_of_types ?log_unresolved cx acc ts
   | DefT (_, _, ArrT (ArrayAT (elemt, tuple_types))) ->
     let ts = Base.Option.value ~default:[] tuple_types in

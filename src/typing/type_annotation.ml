@@ -1429,16 +1429,10 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         (* other applications with id as head expr *)
         | _ -> local_generic_type ()
       end
-    | ( loc,
-        Function
-          {
-            Function.params =
-              (params_loc, { Function.Params.params; rest; this_; comments = params_comments });
-            return;
-            tparams;
-            comments = func_comments;
-          }
-      ) ->
+    | (loc, Function { Function.params; return; tparams; comments = func_comments }) ->
+      let (params_loc, { Function.Params.params = ps; rest; this_; comments = params_comments }) =
+        params
+      in
       let (tparams, tparams_map, tparams_ast) =
         mk_type_param_declarations cx ~tparams_map ~infer_tparams_map tparams
       in
@@ -1458,7 +1452,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               (param_loc, { Function.Param.name; annot = annot_ast; optional }) :: asts_acc
             ))
           ([], [])
-          params
+          ps
       in
       let (this_t, this_param_ast) =
         match this_ with
@@ -1492,8 +1486,19 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           )
         | None -> (None, None)
       in
-      let (return_t, return_ast) =
-        convert_return_annotation cx tparams_map infer_tparams_map return
+      let params =
+        ( params_loc,
+          {
+            Function.Params.params = List.rev rev_param_asts;
+            rest = rest_param_ast;
+            this_ = this_param_ast;
+            comments = params_comments;
+          }
+        )
+      in
+      let fparams = List.rev rev_params in
+      let (return_t, return_ast, predicate) =
+        convert_return_annotation cx tparams_map infer_tparams_map params fparams return
       in
       let statics_t =
         let reason = update_desc_reason (fun d -> RStatics d) reason in
@@ -1507,10 +1512,10 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               ( statics_t,
                 {
                   this_t = (this_t, This_Function);
-                  params = List.rev rev_params;
+                  params = fparams;
                   rest_param;
                   return_t;
-                  predicate = None;
+                  predicate;
                   def_reason = reason;
                 }
               )
@@ -1525,20 +1530,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       in
       ( (loc, t),
         Function
-          {
-            Function.params =
-              ( params_loc,
-                {
-                  Function.Params.params = List.rev rev_param_asts;
-                  rest = rest_param_ast;
-                  this_ = this_param_ast;
-                  comments = params_comments;
-                }
-              );
-            return = return_ast;
-            tparams = tparams_ast;
-            comments = func_comments;
-          }
+          { Function.params; return = return_ast; tparams = tparams_ast; comments = func_comments }
       )
     | ( obj_loc,
         Object
@@ -2295,17 +2287,93 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let optional = false in
       (t, TupleElement { name = None; t; polarity = Polarity.Neutral }, element_ast, optional, true)
 
-  and convert_return_annotation cx tparams_map infer_tparams_map return =
+  and check_guard_is_not_rest_param cx params (param_name, name_loc) =
+    let open T.Function in
+    let module I = Ast.Identifier in
+    let (_, { T.Function.Params.rest; _ }) = params in
+
+    Base.Option.iter rest ~f:(fun rest ->
+        let (_, { RestParam.argument = (_, { Param.name = rest_name; _ }); _ }) = rest in
+        match rest_name with
+        | Some ((rloc, _), { I.name = rest_name; _ }) when rest_name = param_name ->
+          let pred_reason = mk_reason (RTypeGuardParam param_name) name_loc in
+          let binding_reason = mk_reason (RRestParameter (Some rest_name)) rloc in
+          Flow_js.add_output
+            cx
+            Error_message.(EPredicateInvalidParameter { pred_reason; binding_reason })
+        | _ -> ()
+    )
+
+  and check_guard_appears_in_param_list cx params (param_name, name_loc) =
+    let open T.Function in
+    let module I = Ast.Identifier in
+    let (_, { T.Function.Params.params; rest; _ }) = params in
+    if
+      Base.List.for_all params ~f:(fun (_, { Param.name; _ }) ->
+          match name with
+          | Some (_, { I.name; _ }) -> name <> param_name
+          | None -> true
+      )
+      && Base.Option.for_all rest ~f:(function
+             | (_, { RestParam.argument = (_, { Param.name = Some (_, { I.name; _ }); _ }); _ }) ->
+               name <> param_name
+             | _ -> true
+             )
+    then
+      let param_reason = mk_reason (RTypeGuardParam param_name) name_loc in
+      Flow_js_utils.add_output cx Error_message.(ETypeGuardParamUnbound param_reason)
+
+  and check_guard_type cx fparams (guard_name, guard_t) =
+    Base.List.find_map fparams ~f:(function
+        | (Some name, t) when name = guard_name -> Some t
+        | _ -> None
+        )
+    |> Base.Option.iter ~f:(fun param_t ->
+           let use_op =
+             Op
+               (TypeGuardIncompatibility
+                  { guard_type = reason_of_t guard_t; param_name = guard_name }
+               )
+           in
+           Flow.flow cx (guard_t, UseT (use_op, param_t))
+       )
+
+  and convert_type_guard cx tparams_map infer_tparams_map fparams gloc id_name t comments =
+    let (name_loc, { Ast.Identifier.name; _ }) = id_name in
+    let (((_, type_guard), _) as t') = convert cx tparams_map infer_tparams_map t in
+    let bool_t = BoolT.at gloc |> with_trust_inference cx in
+    let guard' = (gloc, { T.TypeGuard.guard = (id_name, Some t'); asserts = false; comments }) in
+    let predicate = Some (TypeGuardBased { param_name = (name_loc, name); type_guard }) in
+    check_guard_type cx fparams (name, type_guard);
+    (bool_t, guard', predicate)
+
+  and convert_return_annotation cx tparams_map infer_tparams_map params fparams return =
+    let open T.Function in
     match return with
-    | T.Function.TypeAnnotation t_ast ->
+    | TypeAnnotation t_ast ->
       let (((_, t'), _) as t_ast') = convert cx tparams_map infer_tparams_map t_ast in
-      (t', T.Function.TypeAnnotation t_ast')
-    | T.Function.TypeGuard ((loc, _) as t_ast) ->
+      (t', TypeAnnotation t_ast', None)
+    | TypeGuard
+        ( gloc,
+          {
+            T.TypeGuard.guard = (((name_loc, { Ast.Identifier.name; _ }) as x), Some t);
+            asserts = false;
+            comments;
+          }
+        )
+      when Context.type_guards cx ->
+      check_guard_is_not_rest_param cx params (name, name_loc);
+      check_guard_appears_in_param_list cx params (name, name_loc);
+      let (bool_t, guard', predicate) =
+        convert_type_guard cx tparams_map infer_tparams_map fparams gloc x t comments
+      in
+      (bool_t, TypeGuard guard', predicate)
+    | TypeGuard (loc, guard) ->
       Flow_js_utils.add_output
         cx
         (Error_message.EUnsupportedSyntax (loc, Error_message.UserDefinedTypeGuards));
-      let t_ast' = Tast_utils.error_mapper#type_guard t_ast in
-      (AnyT.at (AnyError None) loc, T.Function.TypeGuard t_ast')
+      let guard' = Tast_utils.error_mapper#type_guard (loc, guard) in
+      (AnyT.at (AnyError None) loc, TypeGuard guard', None)
 
   and mk_func_sig =
     let open Ast.Type.Function in
@@ -2351,19 +2419,29 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       (fparams, Base.Option.value_exn params_ast)
     in
     fun cx tparams_map infer_tparams_map loc func ->
+      let { Ast.Type.Function.params; _ } = func in
       let (tparams, tparams_map, tparams_ast) =
         mk_type_param_declarations cx ~tparams_map ~infer_tparams_map func.tparams
       in
-      let (fparams, params_ast) =
-        convert_params cx tparams_map infer_tparams_map func.Ast.Type.Function.params
+      let (fparams, params_ast) = convert_params cx tparams_map infer_tparams_map params in
+      let (return_t, return_ast, predicate) =
+        convert_return_annotation
+          cx
+          tparams_map
+          infer_tparams_map
+          params_ast
+          (Func_type_params.value fparams)
+          func.return
       in
-      let (return_t, return_ast) =
-        convert_return_annotation cx tparams_map infer_tparams_map func.return
+      let kind =
+        match predicate with
+        | None -> Func_class_sig_types.Func.Ordinary
+        | Some pred -> Func_class_sig_types.Func.Predicate pred
       in
       let reason = mk_annot_reason RFunctionType loc in
       ( {
           Func_type_sig.Types.reason;
-          kind = Func_class_sig_types.Func.Ordinary;
+          kind;
           tparams;
           fparams;
           body = None;
@@ -2400,7 +2478,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let (t, ast_annot) = mk_type_available_annotation cx tparams_map annot in
       (Annotated t, T.Available ast_annot)
 
-  and mk_return_annot cx tparams_map reason = function
+  and mk_return_annot cx tparams_map params reason = function
     | Ast.Function.ReturnAnnot.Missing loc ->
       let t =
         if Context.typing_mode cx <> Context.CheckingMode then
@@ -2408,18 +2486,25 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         else
           Tvar.mk cx reason
       in
-      (Inferred t, Ast.Function.ReturnAnnot.Missing (loc, t))
+      (Inferred t, Ast.Function.ReturnAnnot.Missing (loc, t), None)
     | Ast.Function.ReturnAnnot.Available annot ->
       let (t, ast_annot) = mk_type_available_annotation cx tparams_map annot in
-      (Annotated t, Ast.Function.ReturnAnnot.Available ast_annot)
+      (Annotated t, Ast.Function.ReturnAnnot.Available ast_annot, None)
+    | Ast.Function.ReturnAnnot.TypeGuard
+        (loc, (gloc, { T.TypeGuard.guard = (id_name, Some t); asserts = false; comments }))
+      when Context.type_guards cx ->
+      let (bool_t, guard', predicate) =
+        convert_type_guard cx tparams_map ALocMap.empty params gloc id_name t comments
+      in
+      (Annotated bool_t, Ast.Function.ReturnAnnot.TypeGuard (loc, guard'), predicate)
     | Ast.Function.ReturnAnnot.TypeGuard annot ->
       let ((_, (loc, _)) as t_ast') = Tast_utils.error_mapper#type_guard_annotation annot in
       Flow_js_utils.add_output
         cx
         (Error_message.EUnsupportedSyntax (loc, Error_message.UserDefinedTypeGuards));
-      (Annotated (AnyT.at (AnyError None) loc), Ast.Function.ReturnAnnot.TypeGuard t_ast')
+      (Annotated (AnyT.at (AnyError None) loc), Ast.Function.ReturnAnnot.TypeGuard t_ast', None)
 
-  and mk_return_type_annotation cx tparams_map reason ~void_return ~async annot =
+  and mk_return_type_annotation cx tparams_map params reason ~void_return ~async annot =
     match annot with
     | Ast.Function.ReturnAnnot.Missing loc when void_return ->
       let void_t = VoidT.why reason |> with_trust literal_trust in
@@ -2430,10 +2515,10 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         else
           void_t
       in
-      (Inferred t, Ast.Function.ReturnAnnot.Missing (loc, t))
+      (Inferred t, Ast.Function.ReturnAnnot.Missing (loc, t), None)
     (* TODO we could probably take the same shortcut for functions with an explicit `void` annotation
        and no explicit returns *)
-    | _ -> mk_return_annot cx tparams_map reason annot
+    | _ -> mk_return_annot cx tparams_map params reason annot
 
   and mk_type_available_annotation cx tparams_map (loc, annot) =
     let node_cache = Context.node_cache cx in
@@ -3097,7 +3182,8 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
 
   let mk_type_available_annotation cx tparams_map = mk_type_available_annotation cx tparams_map
 
-  let mk_return_type_annotation cx tparams_map = mk_return_type_annotation cx tparams_map
+  let mk_return_type_annotation cx tparams_map params =
+    mk_return_type_annotation cx tparams_map params
 
   let mk_function_type_annotation cx tparams_map =
     mk_function_type_annotation cx tparams_map ALocMap.empty

@@ -643,6 +643,12 @@ class virtual ['a] t =
           predicate
         else
           PredBased p'
+      | TypeGuardBased { param_name; type_guard = t } ->
+        let t' = self#type_ cx map_cx t in
+        if t' == t then
+          predicate
+        else
+          TypeGuardBased { param_name; type_guard = t' }
 
     method private predicate_maps cx map_cx predicate =
       let (reason, pmap, nmap) = predicate in

@@ -280,6 +280,11 @@ and 'loc t' =
       binding_reason: 'loc virtual_reason;
     }
   | EFunPredInvalidIndex of 'loc
+  | ETypeGuardIndexMismatch of {
+      use_op: 'loc virtual_use_op;
+      reasons: 'loc virtual_reason * 'loc virtual_reason;
+    }
+  | ETypeGuardParamUnbound of 'loc virtual_reason
   | EInternal of 'loc * internal_error
   | EUnsupportedSyntax of 'loc * unsupported_syntax
   | EUseArrayLiteral of 'loc
@@ -978,6 +983,9 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EPredicateInvalidParameter { pred_reason; binding_reason } ->
     EPredicateInvalidParameter
       { pred_reason = map_reason pred_reason; binding_reason = map_reason binding_reason }
+  | ETypeGuardIndexMismatch { use_op; reasons = (r1, r2) } ->
+    ETypeGuardIndexMismatch { use_op = map_use_op use_op; reasons = (map_reason r1, map_reason r2) }
+  | ETypeGuardParamUnbound reason -> ETypeGuardParamUnbound (map_reason reason)
   | EFunPredInvalidIndex loc -> EFunPredInvalidIndex (f loc)
   | EInternal (loc, i) -> EInternal (f loc, i)
   | EUnsupportedSyntax (loc, u) -> EUnsupportedSyntax (f loc, u)
@@ -1396,6 +1404,7 @@ let util_use_op_of_msg nope util = function
   | EPredicateFuncIncompatibility _
   | EPredicateInvalidParameter _
   | EFunPredInvalidIndex _
+  | ETypeGuardIndexMismatch _
   | EInternal (_, _)
   | EUnsupportedSyntax (_, _)
   | EUseArrayLiteral _
@@ -1490,7 +1499,8 @@ let util_use_op_of_msg nope util = function
   | ETSSyntax _
   | EInvalidBinaryArith _
   | EInvalidMappedType _
-  | ETupleRequiredAfterOptional _ ->
+  | ETupleRequiredAfterOptional _
+  | ETypeGuardParamUnbound _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1551,7 +1561,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EBigIntNumCoerce reason
   | EInvalidBinaryArith { reason_out = reason; _ }
   | ETupleRequiredAfterOptional reason
-  | EPredicateInvalidParameter { pred_reason = reason; _ } ->
+  | EPredicateInvalidParameter { pred_reason = reason; _ }
+  | ETypeGuardParamUnbound reason ->
     Some (loc_of_reason reason)
   | EExponentialSpread
       {
@@ -1714,7 +1725,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EPrimitiveAsInterface _
   | EPredicateFuncArityMismatch _
   | EPredicateFuncIncompatibility _
-  | ECannotMapInstance _ ->
+  | ECannotMapInstance _
+  | ETypeGuardIndexMismatch _ ->
     None
 
 let kind_of_msg =
@@ -2709,6 +2721,19 @@ let friendly_message_of_msg loc_of_aloc msg =
       {
         features =
           [text "A "; ref pred_reason; text " cannot reference "; ref binding_reason; text "."];
+      }
+  | ETypeGuardIndexMismatch { use_op; reasons = (lower, upper) } ->
+    UseOp
+      {
+        loc = loc_of_reason lower;
+        features = [ref lower; text " does not appear in the same position as "; ref upper];
+        use_op;
+      }
+  | ETypeGuardParamUnbound reason ->
+    Normal
+      {
+        features =
+          [text "Cannot find "; ref reason; text " in the parameters of this function (type)."];
       }
   | EInternal (_, internal_error) ->
     let msg = string_of_internal_error internal_error in
@@ -4813,6 +4838,7 @@ let error_code_of_use_op use_op ~default =
     | FunReturnStatement _
     | FunImplicitReturn _ ->
       Some IncompatibleReturn
+    | TypeGuardIncompatibility _ -> Some IncompatibleTypeGuard
     | _ -> None
   in
   let code_of_frame acc frame =
@@ -4937,7 +4963,9 @@ let error_code_of_message err : error_code option =
   | EPredicateFuncArityMismatch _
   | EFunPredInvalidIndex _
   | EPredicateFuncIncompatibility _
-  | EPredicateInvalidParameter _ ->
+  | EPredicateInvalidParameter _
+  | ETypeGuardIndexMismatch _
+  | ETypeGuardParamUnbound _ ->
     Some FunctionPredicate
   | EIdxArity _ -> Some InvalidIdx
   | EIdxUse _ -> Some InvalidIdx

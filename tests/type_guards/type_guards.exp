@@ -1,1 +1,466 @@
-Found 0 errors
+Error -------------------------------------------------------------------------------------------------- invalid.js:9:12
+
+Cannot find type guard parameter `this` [1] in the parameters of this function (type). [function-predicate]
+
+   9|   get p(): this is C {  // TODO error no type guard on getter
+                 ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- patterns_and_rest.js:1:54
+
+A type guard parameter `b` [1] cannot reference pattern parameter `b` [2]. [function-predicate]
+
+   patterns_and_rest.js:1:54
+   1| function invalid_pattern_object({a: b}: {a: mixed}): b is string {
+                                                           ^ [1]
+
+References:
+   patterns_and_rest.js:1:37
+   1| function invalid_pattern_object({a: b}: {a: mixed}): b is string {
+                                          ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- patterns_and_rest.js:5:47
+
+A type guard parameter `b` [1] cannot reference pattern parameter `b` [2]. [function-predicate]
+
+   patterns_and_rest.js:5:47
+   5| function invalid_pattern_array([b]: [mixed]): b is string {
+                                                    ^ [1]
+
+References:
+   patterns_and_rest.js:5:33
+   5| function invalid_pattern_array([b]: [mixed]): b is string {
+                                      ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- patterns_and_rest.js:9:44
+
+A type guard parameter `a` [1] cannot reference rest parameter `a` [2]. [function-predicate]
+
+   patterns_and_rest.js:9:44
+   9| function invalid_rest(...a: Array<mixed>): a is string {
+                                                 ^ [1]
+
+References:
+   patterns_and_rest.js:9:26
+   9| function invalid_rest(...a: Array<mixed>): a is string {
+                               ^ [2]
+
+
+Error --------------------------------------------------------------------------------------- patterns_and_rest.js:13:57
+
+A type guard parameter `a` [1] cannot reference rest parameter `a` [2]. [function-predicate]
+
+   patterns_and_rest.js:13:57
+   13| declare function invalid_rest_decl(...a: Array<mixed>): a is string;  // error a is in rest param
+                                                               ^ [1]
+
+References:
+   patterns_and_rest.js:13:39
+   13| declare function invalid_rest_decl(...a: Array<mixed>): a is string;  // error a is in rest param
+                                             ^ [2]
+
+
+Error --------------------------------------------------------------------------------------- patterns_and_rest.js:15:60
+
+A type guard parameter `b` [1] cannot reference pattern parameter `b` [2]. [function-predicate]
+
+   patterns_and_rest.js:15:60
+   15| function invalid_pattern_compound({a: [b]}: {a: [mixed]}): b is string {
+                                                                  ^ [1]
+
+References:
+   patterns_and_rest.js:15:40
+   15| function invalid_pattern_compound({a: [b]}: {a: [mixed]}): b is string {
+                                              ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- patterns_and_rest.js:27:4
+
+Cannot cast `x` to string because mixed [1] is incompatible with string [2]. [incompatible-cast]
+
+   patterns_and_rest.js:27:4
+   27|   (x: string); // TODO okay
+          ^
+
+References:
+   patterns_and_rest.js:25:16
+   25| declare var x: mixed;
+                      ^^^^^ [1]
+   patterns_and_rest.js:27:7
+   27|   (x: string); // TODO okay
+             ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- patterns_and_rest.js:28:4
+
+Cannot cast `x` to number because mixed [1] is incompatible with number [2]. [incompatible-cast]
+
+   patterns_and_rest.js:28:4
+   28|   (x: number); // TODO error string ~> number
+          ^
+
+References:
+   patterns_and_rest.js:25:16
+   25| declare var x: mixed;
+                      ^^^^^ [1]
+   patterns_and_rest.js:28:7
+   28|   (x: number); // TODO error string ~> number
+             ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- patterns_and_rest.js:31:44
+
+A type guard parameter `p` [1] cannot reference rest parameter `p` [2]. [function-predicate]
+
+   patterns_and_rest.js:31:44
+   31| type F = (x: mixed, ...p: Array<mixed>) => p is number; // error p is in rest param
+                                                  ^ [1]
+
+References:
+   patterns_and_rest.js:31:24
+   31| type F = (x: mixed, ...p: Array<mixed>) => p is number; // error p is in rest param
+                              ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- subst.js:10:15
+
+Cannot assign `funA(...)` to `x2` because `A` [1] is incompatible with `B` [2]. [incompatible-type]
+
+   subst.js:10:15
+   10| const x2: B = funA(isA); // error A ~> B
+                     ^^^^^^^^^
+
+References:
+   subst.js:4:38
+    4| declare function isA(x: mixed): x is A;
+                                            ^ [1]
+   subst.js:10:11
+   10| const x2: B = funA(isA); // error A ~> B
+                 ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- subst.js:14:4
+
+Cannot cast `input` to `A` because mixed [1] is incompatible with `A` [2]. [incompatible-cast]
+
+   subst.js:14:4
+   14|   (input: A); // TODO okay
+          ^^^^^
+
+References:
+   subst.js:12:20
+   12| declare var input: mixed;
+                          ^^^^^ [1]
+   subst.js:14:11
+   14|   (input: A); // TODO okay
+                 ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ subtyping.js:6:10
+
+Cannot return `f` because type guard parameter `x` [1] does not appear in the same position as type guard parameter
+`x` [2] in the type predicate. [function-predicate]
+
+   subtyping.js:6:10
+   6|   return f; // error 'x' is not in the same position as 'y'
+               ^
+
+References:
+   subtyping.js:5:56
+   5| function non_matching_prams(f: (x: mixed, y: mixed) => x is number): (y: mixed, x: mixed) => x is number {
+                                                             ^ [1]
+   subtyping.js:5:94
+   5| function non_matching_prams(f: (x: mixed, y: mixed) => x is number): (y: mixed, x: mixed) => x is number {
+                                                                                                   ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- subtyping.js:10:10
+
+Cannot return `f` because function type [1], a non-predicate function, is incompatible with function type [2], which is
+a predicate function. [function-predicate]
+
+   subtyping.js:10:10
+   10|   return f; // error non type predicate
+                ^
+
+References:
+   subtyping.js:9:42
+    9| function non_type_guard_to_type_guard(f: (x: mixed) => boolean): (x: mixed) => x is number {
+                                                ^^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:9:66
+    9| function non_type_guard_to_type_guard(f: (x: mixed) => boolean): (x: mixed) => x is number {
+                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- subtyping.js:15:10
+
+Cannot return `f` because function [1], a non-predicate function, is incompatible with function type [2], which is a
+predicate function. [function-predicate]
+
+   subtyping.js:15:10
+   15|   return f; // error pred based to type guard based
+                ^
+
+References:
+   subtyping.js:14:3
+   14|   declare function f(x: mixed): boolean %checks(typeof x === "number");
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:13:38
+   13| function pred_based_to_type_guard(): (x: mixed) => x is number {
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ subtyping.js:20:4
+
+Cannot cast `g` to `typeof f` because function type [1], a non-predicate function, is incompatible with function [2],
+which is a predicate function. [function-predicate]
+
+   subtyping.js:20:4
+   20|   (g: typeof f); // error type guard based to pred based
+          ^
+
+References:
+   subtyping.js:18:38
+   18| function type_guard_to_pred_based(g: (x: mixed) => x is number): void {
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:20:7
+   20|   (g: typeof f); // error type guard based to pred based
+             ^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- subtyping.js:38:10
+
+Cannot return `f` because `A` [1] is incompatible with `B` [2] in the type predicate. [incompatible-return]
+
+   subtyping.js:38:10
+   38|   return f; // error A ~> B
+                ^
+
+References:
+   subtyping.js:37:61
+   37| function type_guard_subtyping_error_1(f: (x: mixed) => x is A): (x: mixed) => x is B {
+                                                                   ^ [1]
+   subtyping.js:37:84
+   37| function type_guard_subtyping_error_1(f: (x: mixed) => x is A): (x: mixed) => x is B {
+                                                                                          ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- subtyping.js:42:10
+
+Cannot return `f` because `A` [1] is incompatible with `C` [2] in the type predicate. [incompatible-return]
+
+   subtyping.js:42:10
+   42|   return f; // error A ~> C
+                ^
+
+References:
+   subtyping.js:41:61
+   41| function type_guard_subtyping_error_2(f: (x: mixed) => x is A): (x: mixed) => x is C {
+                                                                   ^ [1]
+   subtyping.js:41:84
+   41| function type_guard_subtyping_error_2(f: (x: mixed) => x is A): (x: mixed) => x is C {
+                                                                                          ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- subtyping.js:46:10
+
+Cannot return `f` because read-only array type [1] is incompatible with array type [2] in the type predicate.
+[incompatible-return]
+
+   subtyping.js:46:10
+   46|   return f; // error
+                ^
+
+References:
+   subtyping.js:45:64
+   45| function type_guard_subtyping_error_3(f: <A>(x: mixed) => x is $ReadOnlyArray<A>): <B>(x: mixed) => x is Array<B> {
+                                                                      ^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:45:106
+   45| function type_guard_subtyping_error_3(f: <A>(x: mixed) => x is $ReadOnlyArray<A>): <B>(x: mixed) => x is Array<B> {
+                                                                                                                ^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- subtyping.js:56:10
+
+Cannot return `f` because `A` [1] is incompatible with `C` [2] in the type predicate of array element. Arrays are
+invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[incompatible-return]
+
+   subtyping.js:56:10
+   56|   return f; // error C ~ A
+                ^
+
+References:
+   subtyping.js:55:92
+   55| function type_guard_unif_error_1(f: Array<(x: mixed) => x is C>): Array<(x: mixed) => x is A> {
+                                                                                                  ^ [1]
+   subtyping.js:55:62
+   55| function type_guard_unif_error_1(f: Array<(x: mixed) => x is C>): Array<(x: mixed) => x is A> {
+                                                                    ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- subtyping.js:60:10
+
+Cannot return `f` because `A` [1] is incompatible with `B` [2] in the type predicate of array element.
+[incompatible-return]
+
+   subtyping.js:60:10
+   60|   return f; // errors A ~> B, B ~> A
+                ^
+
+References:
+   subtyping.js:59:62
+   59| function type_guard_unif_error_2(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is B> {
+                                                                    ^ [1]
+   subtyping.js:59:92
+   59| function type_guard_unif_error_2(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is B> {
+                                                                                                  ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- subtyping.js:64:10
+
+Cannot return `f` because `A` [1] is incompatible with `C` [2] in the type predicate of array element.
+[incompatible-return]
+
+   subtyping.js:64:10
+   64|   return f; // error A ~> C
+                ^
+
+References:
+   subtyping.js:63:62
+   63| function type_guard_unif_error_3(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is C> {
+                                                                    ^ [1]
+   subtyping.js:63:92
+   63| function type_guard_unif_error_3(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is C> {
+                                                                                                  ^ [2]
+
+
+Error -------------------------------------------------------------------------------- type_guard_compatibility.js:15:30
+
+Cannot use `B` [1] as type prediate for parameter `x` because `B` [1] is incompatible with `A` [2].
+[incompatible-type-guard]
+
+   type_guard_compatibility.js:15:30
+   15| function error_1(x: A): x is B { // error B ~> A
+                                    ^ [1]
+
+References:
+   type_guard_compatibility.js:15:21
+   15| function error_1(x: A): x is B { // error B ~> A
+                           ^ [2]
+
+
+Error -------------------------------------------------------------------------------- type_guard_compatibility.js:19:59
+
+Cannot use array type [1] as type prediate for parameter `x` because mixed [2] is incompatible with `X` [3] in array
+element. [incompatible-type-guard]
+
+   type_guard_compatibility.js:19:59
+   19| declare function error_poly_1<X>(x: Array<X>): x is Array<mixed>; // error mixed ~> X
+                                                                 ^^^^^ [2]
+
+References:
+   type_guard_compatibility.js:19:53
+   19| declare function error_poly_1<X>(x: Array<X>): x is Array<mixed>; // error mixed ~> X
+                                                           ^^^^^^^^^^^^ [1]
+   type_guard_compatibility.js:19:43
+   19| declare function error_poly_1<X>(x: Array<X>): x is Array<mixed>; // error mixed ~> X
+                                                 ^ [3]
+
+
+Error -------------------------------------------------------------------------------- type_guard_compatibility.js:27:33
+
+Cannot use `B` [1] as type prediate for parameter `x` because `B` [1] is incompatible with `A` [2].
+[incompatible-type-guard]
+
+   type_guard_compatibility.js:27:33
+   27| type F_error_1 = (x: A) => x is B; // error B ~> A
+                                       ^ [1]
+
+References:
+   type_guard_compatibility.js:27:22
+   27| type F_error_1 = (x: A) => x is B; // error B ~> A
+                            ^ [2]
+
+
+Error -------------------------------------------------------------------------------- type_guard_compatibility.js:29:54
+
+Cannot use array type [1] as type prediate for parameter `x` because mixed [2] is incompatible with `X` [3] in array
+element. [incompatible-type-guard]
+
+   type_guard_compatibility.js:29:54
+   29| type F_error_poly_1 = <X>(x: Array<X>) => x is Array<mixed>; // error mixed ~> X
+                                                            ^^^^^ [2]
+
+References:
+   type_guard_compatibility.js:29:48
+   29| type F_error_poly_1 = <X>(x: Array<X>) => x is Array<mixed>; // error mixed ~> X
+                                                      ^^^^^^^^^^^^ [1]
+   type_guard_compatibility.js:29:36
+   29| type F_error_poly_1 = <X>(x: Array<X>) => x is Array<mixed>; // error mixed ~> X
+                                          ^ [3]
+
+
+Error -------------------------------------------------------------------------------- type_guard_compatibility.js:30:54
+
+Cannot use array type [1] as type prediate for parameter `x` because mixed [2] is incompatible with `X` [3] in array
+element. [incompatible-type-guard]
+
+   type_guard_compatibility.js:30:54
+   30| type F_error_poly_2<X> = (x: Array<X>) => x is Array<mixed>; // error mixed ~> X
+                                                            ^^^^^ [2]
+
+References:
+   type_guard_compatibility.js:30:48
+   30| type F_error_poly_2<X> = (x: Array<X>) => x is Array<mixed>; // error mixed ~> X
+                                                      ^^^^^^^^^^^^ [1]
+   type_guard_compatibility.js:30:36
+   30| type F_error_poly_2<X> = (x: Array<X>) => x is Array<mixed>; // error mixed ~> X
+                                          ^ [3]
+
+
+Error -------------------------------------------------------------------------------------------------- unbound.js:1:23
+
+Cannot find type guard parameter `x` [1] in the parameters of this function (type). [function-predicate]
+
+   1| function no_params(): x is number { // error x unbound
+                            ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- unbound.js:5:47
+
+Cannot find type guard parameter `y` [1] in the parameters of this function (type). [function-predicate]
+
+   5| function unbound_type_guard_param(x: number): y is number {  // error y is not a param
+                                                    ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- unbound.js:9:23
+
+Cannot find type guard parameter `x` [1] in the parameters of this function (type). [function-predicate]
+
+   9| type No_param = () => x is number; // error x unbound
+                            ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- unbound.js:11:37
+
+Cannot find type guard parameter `x` [1] in the parameters of this function (type). [function-predicate]
+
+   11| type Unbound_param = (y: number) => x is number; // error x unbound
+                                           ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- unbound.js:13:34
+
+Cannot find type guard parameter `x` [1] in the parameters of this function (type). [function-predicate]
+
+   13| type No_param_name = (number) => x is number; // error x unbound
+                                        ^ [1]
+
+
+
+Found 31 errors

@@ -243,6 +243,7 @@ type 'loc virtual_reason_desc =
   | RUninitialized
   | RPossiblyUninitialized
   | RUnannotatedNext
+  | RTypeGuardParam of string
 [@@deriving eq, show]
 
 and reason_desc_function =
@@ -263,7 +264,7 @@ let rec map_desc_locs f = function
     | RFunction _ | RFunctionType | RFunctionBody | RFunctionCallType | RFunctionUnusedArgument
     | RJSXFunctionCall _ | RJSXIdentifier _ | RJSXElementProps _ | RJSXElement _ | RJSXText | RFbt
     | RUninitialized | RPossiblyUninitialized | RUnannotatedNext | REmptyArrayElement | RMappedType
-      ) as r ->
+    | RTypeGuardParam _ ) as r ->
     r
   | RFunctionCall desc -> RFunctionCall (map_desc_locs f desc)
   | RUnknownUnspecifiedProperty desc -> RUnknownUnspecifiedProperty (map_desc_locs f desc)
@@ -731,6 +732,7 @@ let rec string_of_desc = function
   | RUninitialized -> "uninitialized variable"
   | RPossiblyUninitialized -> "possibly uninitialized variable"
   | RUnannotatedNext -> "undefined (default `next` of unannotated generator function)"
+  | RTypeGuardParam s -> spf "type guard parameter `%s`" s
 
 let string_of_reason ?(strip_root = None) r =
   let spos = string_of_aloc ~strip_root (loc_of_reason r) in
@@ -1487,7 +1489,8 @@ let classification_of_reason r =
   | RPrivate _
   | REnum _
   | REnumRepresentation _
-  | RUnannotatedNext ->
+  | RUnannotatedNext
+  | RTypeGuardParam _ ->
     `Unclassified
 
 let is_nullish_reason r = classification_of_reason r = `Nullish

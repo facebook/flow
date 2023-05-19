@@ -139,6 +139,29 @@ module Make (Flow : INPUT) : OUTPUT = struct
                { reason_lower = lreason; reason_upper = ureason; use_op }
             )
 
+  let index_of_param params x =
+    Base.List.find_mapi params ~f:(fun i p ->
+        match p with
+        | (Some x', _) when x = x' -> Some i
+        | _ -> None
+    )
+
+  let func_type_guard_compat cx trace use_op grd1 grd2 =
+    let (params1, (loc1, x1), t1) = grd1 in
+    let (params2, (loc2, x2), t2) = grd2 in
+    let idx1 = index_of_param params1 x1 in
+    let idx2 = index_of_param params2 x2 in
+    let use_op = Frame (TypePredicateCompatibility, use_op) in
+    let lower = Reason.mk_reason (RTypeGuardParam x1) loc1 in
+    let upper = Reason.mk_reason (RTypeGuardParam x2) loc2 in
+    if idx1 <> idx2 then
+      add_output
+        cx
+        ~trace
+        (Error_message.ETypeGuardIndexMismatch { use_op; reasons = (lower, upper) });
+
+    rec_flow_t cx trace ~use_op (t1, t2)
+
   let flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
     let {
       flags = lflags;
@@ -1267,7 +1290,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
 
       begin
         match (ft1.predicate, ft2.predicate) with
-        | (None, Some _) ->
+        | (None, Some _)
+        | (Some (PredBased _), Some (TypeGuardBased _))
+        | (Some (TypeGuardBased _), Some (PredBased _)) ->
           (* Non-predicate functions are incompatible with predicate ones
              TODO: somehow the original flow needs to be propagated as well *)
           add_output
@@ -1276,6 +1301,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
             (Error_message.EPredicateFuncIncompatibility { use_op; reasons = (lreason, ureason) })
         | (Some (PredBased p1), Some (PredBased p2)) ->
           func_predicate_compat cx trace use_op (lreason, ft1.params, p1) (ureason, ft2.params, p2)
+        | ( Some (TypeGuardBased { param_name = x1; type_guard = t1 }),
+            Some (TypeGuardBased { param_name = x2; type_guard = t2 })
+          ) ->
+          func_type_guard_compat cx trace use_op (ft1.params, x1, t1) (ft2.params, x2, t2)
         | (Some _, None)
         | (None, None) ->
           ()

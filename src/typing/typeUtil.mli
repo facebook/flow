@@ -110,3 +110,7 @@ val all_explicit_targ_ts : Type.targ Base.List.t option -> Type.t list option
 val tuple_length : reason -> Trust.trust_rep -> int * int -> Type.t
 
 val tuple_ts_of_elements : Type.tuple_element list -> Type.t list
+
+val type_guard_of_predicate : Type.fun_predicate -> Type.t option
+
+val type_guard_of_funtype : Type.funtype -> Type.t option

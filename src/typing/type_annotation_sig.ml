@@ -56,18 +56,24 @@ module type S = sig
   val mk_return_annot :
     Context.t ->
     Type.t Subst_name.Map.t ->
+    Type.fun_param list ->
     Reason.t ->
     (ALoc.t, ALoc.t) Flow_ast.Function.ReturnAnnot.t ->
-    Type.annotated_or_inferred * (ALoc.t, ALoc.t * Type.t) Flow_ast.Function.ReturnAnnot.t
+    Type.annotated_or_inferred
+    * (ALoc.t, ALoc.t * Type.t) Flow_ast.Function.ReturnAnnot.t
+    * Type.fun_predicate option
 
   val mk_return_type_annotation :
     Context.t ->
     Type.t Subst_name.Map.t ->
+    Type.fun_param list ->
     Reason.t ->
     void_return:bool ->
     async:bool ->
     (ALoc.t, ALoc.t) Flow_ast.Function.ReturnAnnot.t ->
-    Type.annotated_or_inferred * (ALoc.t, ALoc.t * Type.t) Flow_ast.Function.ReturnAnnot.t
+    Type.annotated_or_inferred
+    * (ALoc.t, ALoc.t * Type.t) Flow_ast.Function.ReturnAnnot.t
+    * Type.fun_predicate option
 
   val mk_type_available_annotation :
     Context.t ->

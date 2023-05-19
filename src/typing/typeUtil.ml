@@ -612,6 +612,8 @@ let rec mod_loc_of_virtual_use_op f =
           sentinel_reason = mod_reason sentinel_reason;
         }
     | EvalMappedType { mapped_type } -> EvalMappedType { mapped_type = mod_reason mapped_type }
+    | TypeGuardIncompatibility { guard_type; param_name } ->
+      TypeGuardIncompatibility { guard_type = mod_reason guard_type; param_name }
     | UnknownUse -> UnknownUse
   in
   let mod_loc_of_frame_use_op = function
@@ -655,6 +657,7 @@ let rec mod_loc_of_virtual_use_op f =
           upper = mod_reason upper;
         }
     | TypeParamBound o -> TypeParamBound o
+    | TypePredicateCompatibility -> TypePredicateCompatibility
     | UnifyFlip -> UnifyFlip
   in
   function
@@ -986,3 +989,13 @@ let tuple_length reason trust (num_req, num_total) =
   |> union_of_ts reason
 
 let tuple_ts_of_elements elements = Base.List.map ~f:(fun (TupleElement { t; _ }) -> t) elements
+
+let type_guard_of_predicate predicate =
+  match predicate with
+  | TypeGuardBased { type_guard = t; _ } -> Some t
+  | PredBased _ -> None
+
+let type_guard_of_funtype f =
+  match f.predicate with
+  | Some p -> type_guard_of_predicate p
+  | None -> None

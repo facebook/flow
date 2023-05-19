@@ -210,7 +210,9 @@ let rec dump_t_ (depth, tvars) cx t =
              (String.concat "; " (Base.List.map ~f:(fun (_, t) -> kid t) params))
              (kid return_t)
              (match predicate with
-             | Some _ -> " %checks"
+             | Some (PredBased _) -> " %checks"
+             | Some (TypeGuardBased { param_name = (_, name); type_guard }) ->
+               spf " %s is %s" name (kid type_guard)
              | None -> "")
           )
         t
@@ -1477,6 +1479,9 @@ let dump_error_message =
       spf "EPredicateFuncIncompatibility (%s)" (string_of_use_op use_op)
     | EPredicateInvalidParameter { pred_reason = r; _ } ->
       spf "EPredicateInvalidParameter (%s)" (dump_reason cx r)
+    | ETypeGuardIndexMismatch { use_op; _ } ->
+      spf "ETypeGuardIndexMismatch (%s)" (string_of_use_op use_op)
+    | ETypeGuardParamUnbound _ -> "ETypeGuardParamUnbound"
     | EInternal (loc, err) -> spf "EInternal (%s, %s)" (string_of_aloc loc) (dump_internal_error err)
     | EUnsupportedSyntax (loc, _) -> spf "EUnsupportedSyntax (%s, _)" (string_of_aloc loc)
     | EUseArrayLiteral loc -> spf "EUseArrayLiteral (%s)" (string_of_aloc loc)

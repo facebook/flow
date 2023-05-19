@@ -58,6 +58,7 @@ type error_code =
   | IncompatibleTrust
   | IncompatibleType
   | IncompatibleTypeArg
+  | IncompatibleTypeGuard
   | IncompatibleUse
   | IncompatibleVariance
   | InvalidCallUtil
@@ -247,6 +248,7 @@ let string_of_code : error_code -> string = function
   | IncompatibleTrust -> "incompatible-trust"
   | IncompatibleType -> "incompatible-type"
   | IncompatibleTypeArg -> "incompatible-type-arg"
+  | IncompatibleTypeGuard -> "incompatible-type-guard"
   | IncompatibleUse -> "incompatible-use"
   | IncompatibleVariance -> "incompatible-variance"
   | InvalidCallUtil -> "invalid-call-util"

@@ -244,8 +244,8 @@ let flip_frame = function
   | TypeArgCompatibility c -> TypeArgCompatibility { c with lower = c.upper; upper = c.lower }
   | ( CallFunCompatibility _ | TupleMapFunCompatibility _ | ObjMapFunCompatibility _
     | ObjMapiFunCompatibility _ | TypeParamBound _ | FunMissingArg _ | ImplicitTypeParam
-    | ReactGetConfig _ | UnifyFlip | ConstrainedAssignment _ | MappedTypeKeyCompatibility _ ) as
-    use_op ->
+    | ReactGetConfig _ | UnifyFlip | ConstrainedAssignment _ | MappedTypeKeyCompatibility _
+    | TypePredicateCompatibility ) as use_op ->
     use_op
 
 let post_process_errors original_errors =
@@ -591,6 +591,15 @@ let rec make_error_printable :
       | Op (EvalMappedType { mapped_type }) ->
         let message = [text "Cannot instantiate "; ref mapped_type] in
         root loc frames mapped_type message
+      | Op (TypeGuardIncompatibility { guard_type; param_name }) ->
+        let message =
+          [
+            text "Cannot use ";
+            ref guard_type;
+            text (spf " as type prediate for parameter `%s`" param_name);
+          ]
+        in
+        root loc frames guard_type message
       | Frame (ConstrainedAssignment { name; declaration; providers; array }, use_op) ->
         let noun =
           if array then
@@ -738,6 +747,8 @@ let rec make_error_printable :
           frames
           use_op
           [text "type argument "; code (Subst_name.string_of_subst_name name)]
+      | Frame (TypePredicateCompatibility, use_op) ->
+        unwrap_frame_without_loc loc frames use_op [text "the type predicate"]
       | Frame (FunCompatibility { lower; _ }, use_op) -> next_with_loc loc frames lower use_op
       | Frame (FunMissingArg _, use_op)
       | Frame (ImplicitTypeParam, use_op)

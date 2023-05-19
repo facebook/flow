@@ -96,7 +96,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
         params;
         rest_param;
         return_t;
-        predicate = _;
+        predicate;
         def_reason = _;
       } =
         f
@@ -104,7 +104,10 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
       let check_inv = check_polarity cx ?trace tparams (Polarity.inv polarity) in
       List.iter (fun (_, t) -> check_inv t) params;
       Base.Option.iter ~f:(fun (_, _, t) -> check_inv t) rest_param;
-      check_polarity cx ?trace tparams polarity return_t
+      check_polarity cx ?trace tparams polarity return_t;
+      (match predicate with
+      | Some (TypeGuardBased { type_guard = t; _ }) -> check_polarity cx ?trace tparams polarity t
+      | _ -> ())
     | DefT (_, _, ArrT (ArrayAT (_, Some _))) as t ->
       (* This representation signifies a literal, which is not a type. *)
       raise (UnexpectedType (Debug_js.dump_t cx t))
