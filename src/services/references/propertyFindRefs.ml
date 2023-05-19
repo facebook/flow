@@ -42,7 +42,7 @@ end = struct
 end
 
 module Potential_refs_search = struct
-  exception Found_import
+  exception Found_import of ALoc.t
 
   class searcher ~(target_name : string) ~(potential_refs : Type.t ALocMap.t ref) =
     object (_this)
@@ -56,20 +56,22 @@ module Potential_refs_search = struct
       method! import_declaration loc decl =
         let open Flow_ast.Statement.ImportDeclaration in
         try super#import_declaration loc decl with
-        | Found_import ->
+        | Found_import name_loc ->
           let { source = ((_, module_t), _); _ } = decl in
           (* Replace previous bindings of `loc`. We should always use the result of the last call to
              the hook for a given location (this may no longer be relevant with the removal of
              generate-tests) *)
-          potential_refs := ALocMap.add loc module_t !potential_refs;
+          potential_refs := ALocMap.add name_loc module_t !potential_refs;
           decl
 
       method! import_named_specifier ~import_kind:_ specifier =
         let open Flow_ast.Statement.ImportDeclaration in
         let { kind = _; local; remote } = specifier in
-        let (_, { Flow_ast.Identifier.name; _ }) = Base.Option.value ~default:remote local in
+        let ((name_loc, _), { Flow_ast.Identifier.name; _ }) =
+          Base.Option.value ~default:remote local
+        in
         if name = target_name then
-          raise Found_import
+          raise (Found_import name_loc)
         else
           specifier
 

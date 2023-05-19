@@ -49,6 +49,8 @@ module.exports = (suite(
         lspStartAndConnect(),
         snapshot('locals.js', 3, 5, 'var_defs_1.json'),
         snapshot('locals.js', 4, 2, 'var_defs_2.json'),
+        snapshot('locals.js', 23, 1, 'var_defs_3.json'),
+        snapshot('locals.js', 25, 3, 'var_defs_4.json'),
       ]),
       test('Nested functions', [
         addFiles(...fixtures),
