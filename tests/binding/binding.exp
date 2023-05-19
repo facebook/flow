@@ -1037,6 +1037,41 @@ Cannot resolve name `forwardRef`. [cannot-resolve-name]
                       ^^^^^^^^^^
 
 
+Error -------------------------------------------------------------------------------------------------- scope.js:146:36
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   146| function unannotated_param_as_type(x) { // error missing-local-annot
+                                           ^
+
+
+Error --------------------------------------------------------------------------------------------------- scope.js:148:8
+
+Cannot use `x` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`. [value-as-type]
+
+   148|     x: x, // error value-as-type
+               ^
+
+
+Error --------------------------------------------------------------------------------------------------- scope.js:149:8
+
+Cannot use `x` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`. [value-as-type]
+
+   149|     y: x, // error value-as-type
+               ^
+
+
+Error -------------------------------------------------------------------------------------------------- scope.js:155:19
+
+Cannot use `e` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`. [value-as-type]
+
+   155|   function foo(x: e) {} // error value-as-type
+                          ^
+
+
 Error ----------------------------------------------------------------------------------------------------- tdz.js:25:11
 
 Cannot use variable `x` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
@@ -1292,4 +1327,4 @@ Cannot resolve name `unboundFunction2`. [cannot-resolve-name]
 
 
 
-Found 98 errors
+Found 102 errors

@@ -142,3 +142,15 @@ function function_type_annotation_scope() {
     (y: string);
   }
 }
+
+function unannotated_param_as_type(x) { // error missing-local-annot
+  function foo(
+    x: x, // error value-as-type
+    y: x, // error value-as-type
+  ) {}
+}
+
+function empty_var_as_type() {
+  declare var e: empty;
+  function foo(x: e) {} // error value-as-type
+}

@@ -5451,6 +5451,7 @@ struct
     (* Work has to happen when Empty flows to these types *)
     | UseT (_, OpenT _)
     | UseT (_, TypeDestructorTriggerT _)
+    | UseT (_, DefT (_, _, TypeT _))
     | ChoiceKitUseT _
     | CondT _
     | ConditionalT _

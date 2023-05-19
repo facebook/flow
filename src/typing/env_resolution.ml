@@ -697,7 +697,7 @@ let resolve_binding_partial cx reason loc b =
             (Error_message.EMissingLocalAnnotation
                { reason; hint_available = true; from_generic_function = false }
             );
-        AnyT.error reason
+        AnyT (reason, AnyError (Some MissingAnnotation))
     in
     let () =
       match hints with
@@ -723,7 +723,7 @@ let resolve_binding_partial cx reason loc b =
       if Context.use_mixed_in_catch_variables cx then
         MixedT.why reason |> with_trust bogus_trust
       else
-        AnyT.annot reason
+        AnyT (reason, AnyError (Some MissingAnnotation))
     in
     (t, mk_use_op t)
   | Root (For (kind, exp)) ->

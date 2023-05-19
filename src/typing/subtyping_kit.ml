@@ -1597,8 +1597,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (* non-class/function values used in annotations are errors *)
     | (_, DefT (reason_use, _, TypeT (_, t))) ->
       (match l with
-      (* Short-circut as we already error on the unresolved name. *)
-      | AnyT (_, AnyError _) -> rec_flow_t cx ~use_op:unknown_use trace (l, t)
+      | DefT (_, _, EmptyT)
+      | AnyT (_, AnyError (Some MissingAnnotation)) ->
+        add_output cx ~trace Error_message.(EValueUsedAsType { reason_use });
+        rec_flow_t cx trace ~use_op:unknown_use (AnyT.error (reason_of_t l), t)
+      | AnyT (_, AnyError _) ->
+        (* Short-circut as we already error on the unresolved name. *)
+        rec_flow_t cx ~use_op:unknown_use trace (l, t)
       | AnyT _ ->
         rec_flow_t cx trace ~use_op:unknown_use (AnyT.error (reason_of_t l), t);
         add_output cx ~trace Error_message.(EAnyValueUsedAsType { reason_use })
