@@ -1258,6 +1258,9 @@ and annot_with_loc opts scope tbls xs (loc, t) =
     | T.Function f ->
       let def = function_type opts scope tbls xs f in
       Annot (FunAnnot (loc, def))
+    | T.Component _ ->
+      (* TODO(jmbrown): add typechecking for component syntax *)
+      Annot (Any loc)
     | T.Object o -> object_type opts scope tbls xs loc o
     | T.Interface
         {

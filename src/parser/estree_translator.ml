@@ -850,6 +850,32 @@ with type t = Impl.t = struct
           ("id", identifier id);
           ("params", component_type_params param_list);
           ("rest", option component_type_rest_param rest);
+          ("params", component_type_params param_list);
+          ("returnType", hint type_annotation return);
+          ("typeParameters", option type_parameter_declaration tparams);
+        ]
+    and component_type (loc, component) =
+      let {
+        Type.Component.tparams;
+        params = (_, { Type.Component.Params.comments = params_comments; _ }) as params;
+        return;
+        comments = component_comments;
+      } =
+        component
+      in
+      let comments =
+        Flow_ast_utils.merge_comments
+          ~outer:component_comments
+          ~inner:(format_internal_comments params_comments)
+      in
+      let (_, { Type.Component.Params.params = param_list; rest; comments = _ }) = params in
+      node
+        ?comments
+        "ComponentTypeAnnotation"
+        loc
+        [
+          ("params", component_type_params param_list);
+          ("rest", option component_type_rest_param rest);
           ("returnType", hint type_annotation return);
           ("typeParameters", option type_parameter_declaration tparams);
         ]
@@ -1551,6 +1577,7 @@ with type t = Impl.t = struct
         | Boolean { raw = _; comments } -> boolean_type loc comments
         | Nullable t -> nullable_type loc t
         | Function fn -> function_type (loc, fn)
+        | Component c -> component_type (loc, c)
         | Object o -> object_type ~include_inexact:true (loc, o)
         | Interface i -> interface_type (loc, i)
         | Array t -> array_type loc t

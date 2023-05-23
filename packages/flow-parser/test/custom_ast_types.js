@@ -130,8 +130,16 @@ function custom_ast_types(fork) {
 
   def('DeclareComponent')
     .bases('Declaration')
-    .build('id', 'tparams', 'params', 'rest', 'return', 'comments')
+    .build('id', 'tparams', 'params', 'rest', 'return')
     .field('id', def('Identifier'))
+    .field('typeParameters', or(def('TypeParameterDeclaration'), null))
+    .field('params', [def('ComponentTypeParameter')])
+    .field('rest', or(def('ComponentTypeParameter'), null))
+    .field('returnType', or(def('TypeAnnotation'), null));
+
+  def('ComponentTypeAnnotation')
+    .bases('FlowType')
+    .build('tparams', 'params', 'rest', 'return')
     .field('typeParameters', or(def('TypeParameterDeclaration'), null))
     .field('params', [def('ComponentTypeParameter')])
     .field('rest', or(def('ComponentTypeParameter'), null))
@@ -162,7 +170,7 @@ function custom_ast_types(fork) {
 
   def('ComponentDeclaration')
     .bases('Declaration')
-    .build('id', 'tparams', 'params', 'return', 'body', 'comments')
+    .build('id', 'tparams', 'params', 'return', 'body')
     .field('id', def('Identifier'))
     .field('typeParameters', or(def('TypeParameterDeclaration'), null))
     .field('params', [or(def('ComponentParameter'), def('RestElement'))])

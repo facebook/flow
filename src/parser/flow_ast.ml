@@ -263,6 +263,14 @@ and Type : sig
       }
       [@@deriving show]
     end
+
+    type ('M, 'T) t = {
+      tparams: ('M, 'T) Type.TypeParams.t option;
+      params: ('M, 'T) Params.t;
+      return: ('M, 'T) Type.annotation_or_hint;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
   end
 
   module Generic : sig
@@ -553,6 +561,7 @@ and Type : sig
     | Exists of ('M, unit) Syntax.t option
     | Nullable of ('M, 'T) Nullable.t
     | Function of ('M, 'T) Function.t
+    | Component of ('M, 'T) Component.t
     | Object of ('M, 'T) Object.t
     | Interface of ('M, 'T) Interface.t
     | Array of ('M, 'T) Array.t

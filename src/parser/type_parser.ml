@@ -402,6 +402,32 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         env
     | T_TYPEOF -> typeof env
     | T_LBRACKET -> tuple env
+    | T_IDENTIFIER { raw = "component"; _ } when (parse_options env).components ->
+      with_loc
+        (fun env ->
+          (* This logic is very similar to the statement parser but omits the component name *)
+          let leading = Peek.comments env in
+          Expect.identifier env "component";
+          let tparams = type_params_remove_trailing env (type_params env) in
+          let params = component_param_list env in
+          let (params, return) =
+            match Peek.token env with
+            | T_COLON ->
+              let return = annotation_opt env in
+              let return = type_annotation_hint_remove_trailing env return in
+              (params, return)
+            | _ ->
+              let missing_annotation = annotation_opt env in
+              (component_type_params_remove_trailing env params, missing_annotation)
+          in
+          Type.Component
+            {
+              Type.Component.tparams;
+              params;
+              return;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ();
+            })
+        env
     | T_IDENTIFIER _
     | T_EXTENDS (* `extends` is reserved, but recover by treating it as an identifier *)
     | T_STATIC (* `static` is reserved, but recover by treating it as an identifier *) ->
@@ -1860,6 +1886,8 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         Nullable { t with Nullable.comments = merge_comments comments }
       | Function ({ Function.comments; _ } as t) ->
         Function { t with Function.comments = merge_comments comments }
+      | Component ({ Component.comments; _ } as t) ->
+        Component { t with Component.comments = merge_comments comments }
       | Object ({ Object.comments; _ } as t) ->
         Object { t with Object.comments = merge_comments_with_internal comments }
       | Interface ({ Interface.comments; _ } as t) ->

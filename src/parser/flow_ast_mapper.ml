@@ -726,6 +726,18 @@ class ['loc] mapper =
           comments = comments';
         }
 
+    method component_type _loc (t : ('loc, 'loc) Ast.Type.Component.t) =
+      let open Ast.Type.Component in
+      let { tparams; params; return; comments } = t in
+      let tparams' = map_opt this#type_params tparams in
+      let params' = this#component_type_params params in
+      let return' = this#type_annotation_hint return in
+      let comments' = this#syntax_opt comments in
+      if tparams == tparams' && params == params' && return == return' && comments == comments' then
+        t
+      else
+        { tparams = tparams'; params = params'; return = return'; comments = comments' }
+
     method component_type_params (params : ('loc, 'loc) Ast.Type.Component.Params.t) =
       let open Ast.Type.Component in
       let (loc, { Params.params = params_list; rest; comments }) = params in
@@ -1780,6 +1792,7 @@ class ['loc] mapper =
       | (loc, Keyof t') -> id this#keyof_type t' t (fun t' -> (loc, Keyof t'))
       | (loc, ReadOnly t') -> id this#readonly_type t' t (fun t' -> (loc, ReadOnly t'))
       | (loc, Function ft) -> id_loc this#function_type loc ft t (fun ft -> (loc, Function ft))
+      | (loc, Component ct) -> id_loc this#component_type loc ct t (fun ct -> (loc, Component ct))
       | (loc, Object ot) -> id_loc this#object_type loc ot t (fun ot -> (loc, Object ot))
       | (loc, Interface i) -> id_loc this#interface_type loc i t (fun i -> (loc, Interface i))
       | (loc, Generic gt) -> id_loc this#generic_type loc gt t (fun gt -> (loc, Generic gt))

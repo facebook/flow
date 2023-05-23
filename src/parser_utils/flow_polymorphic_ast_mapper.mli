@@ -152,6 +152,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method declare_component :
       ('M, 'T) Ast.Statement.DeclareComponent.t -> ('N, 'U) Ast.Statement.DeclareComponent.t
 
+    method component_type : ('M, 'T) Ast.Type.Component.t -> ('N, 'U) Ast.Type.Component.t
+
     method component_type_params :
       ('M, 'T) Ast.Type.Component.Params.t -> ('N, 'U) Ast.Type.Component.Params.t
 

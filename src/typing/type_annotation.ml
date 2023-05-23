@@ -1697,6 +1697,9 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
             cx
             Error_message.(EInvalidMappedType { loc = mapped_type_loc; kind = RemoveOptionality });
           Tast_utils.error_mapper#type_ ot)
+    | (loc, Component _) ->
+      (* TODO(jmbrown): add typechecking for component syntax *)
+      ((loc, AnyT.at AnnotatedAny loc), Ast.Type.Any None)
     | (loc, Object { Object.exact; properties; inexact; comments }) as ot ->
       let exact_by_default = Context.exact_by_default cx in
       let exact_type = exact || ((not inexact) && exact_by_default) in

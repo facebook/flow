@@ -286,6 +286,7 @@ class ['M, 'T] searcher
         | Keyof _
         | ReadOnly _
         | Function _
+        | Component _
         | Object _
         | Interface _
         | Generic _

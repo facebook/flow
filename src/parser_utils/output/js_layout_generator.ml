@@ -4114,6 +4114,7 @@ and type_ ~opts ((loc, t) : (Loc.t, Loc.t) Ast.Type.t) =
       | T.Undefined comments -> layout_node_with_comments_opt loc comments (Atom "undefined")
       | T.Nullable t -> type_nullable ~opts loc t
       | T.Function func -> type_function ~opts ~sep:(fuse [pretty_space; Atom "=>"]) loc func
+      | T.Component comp -> type_component ~opts loc comp
       | T.Object obj -> type_object ~opts loc obj
       | T.Interface i -> type_interface ~opts loc i
       | T.Array t -> type_array ~opts loc t
@@ -4262,6 +4263,33 @@ and declare_component
             Atom "component";
             space;
             identifier id;
+            option (type_parameter ~opts) tparams;
+            group
+              [
+                layout_node_with_comments_opt
+                  params_loc
+                  params_comments
+                  (component_type_params ~opts params);
+                hint (type_annotation ~opts) return;
+              ];
+          ]
+       )
+
+and type_component
+    ~opts
+    loc
+    {
+      Ast.Type.Component.tparams;
+      params = (params_loc, { Ast.Type.Component.Params.comments = params_comments; _ }) as params;
+      return;
+      comments;
+    } =
+  layout_node_with_comments_opt loc comments
+  @@ with_semicolon
+       (fuse
+          [
+            Atom "component";
+            space;
             option (type_parameter ~opts) tparams;
             group
               [

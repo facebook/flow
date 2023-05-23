@@ -544,6 +544,16 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           }
       )
 
+    method component_type (t : ('M, 'T) Ast.Type.Component.t) : ('N, 'U) Ast.Type.Component.t =
+      let open Ast.Type.Component in
+      let { params; return; tparams; comments } = t in
+      this#type_params_opt tparams (fun tparams' ->
+          let params' = this#component_type_params params in
+          let return' = this#type_annotation_hint return in
+          let comments' = this#syntax_opt comments in
+          { params = params'; return = return'; tparams = tparams'; comments = comments' }
+      )
+
     method component_type_params (params : ('M, 'T) Ast.Type.Component.Params.t)
         : ('N, 'U) Ast.Type.Component.Params.t =
       let open Ast.Type.Component.Params in
@@ -1415,6 +1425,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | Keyof t' -> Keyof (this#keyof_type t')
         | ReadOnly t' -> ReadOnly (this#readonly_type t')
         | Function ft -> Function (this#function_type ft)
+        | Component c -> Component (this#component_type c)
         | Object ot -> Object (this#object_type ot)
         | Interface i -> Interface (this#interface_type i)
         | Generic gt -> Generic (this#generic_type gt)
