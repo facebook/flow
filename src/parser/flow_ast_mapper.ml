@@ -113,6 +113,8 @@ class ['loc] mapper =
       | (loc, Debugger dbg) -> id_loc this#debugger loc dbg stmt (fun dbg -> (loc, Debugger dbg))
       | (loc, DeclareClass stuff) ->
         id_loc this#declare_class loc stuff stmt (fun stuff -> (loc, DeclareClass stuff))
+      | (loc, DeclareComponent stuff) ->
+        id_loc this#declare_component loc stuff stmt (fun stuff -> (loc, DeclareComponent stuff))
       | (loc, DeclareEnum enum) ->
         id_loc this#declare_enum loc enum stmt (fun enum -> (loc, DeclareEnum enum))
       | (loc, DeclareExportDeclaration decl) ->
@@ -699,6 +701,63 @@ class ['loc] mapper =
           comments = comments';
         }
 
+    method declare_component _loc (decl : ('loc, 'loc) Ast.Statement.DeclareComponent.t) =
+      let open Ast.Statement.DeclareComponent in
+      let { id = ident; tparams; params; return; comments } = decl in
+      let ident' = this#component_identifier ident in
+      let tparams' = map_opt this#type_params tparams in
+      let params' = this#component_type_params params in
+      let return' = this#type_annotation_hint return in
+      let comments' = this#syntax_opt comments in
+      if
+        ident == ident'
+        && tparams == tparams'
+        && params == params'
+        && return == return'
+        && comments == comments'
+      then
+        decl
+      else
+        {
+          id = ident';
+          tparams = tparams';
+          params = params';
+          return = return';
+          comments = comments';
+        }
+
+    method component_type_params (params : ('loc, 'loc) Ast.Type.Component.Params.t) =
+      let open Ast.Type.Component in
+      let (loc, { Params.params = params_list; rest; comments }) = params in
+      let params_list' = map_list this#component_type_param params_list in
+      let rest' = map_opt this#component_type_rest_param rest in
+      let comments' = this#syntax_opt comments in
+      if params_list == params_list' && rest == rest' && comments == comments' then
+        params
+      else
+        (loc, { Params.params = params_list'; rest = rest'; comments = comments' })
+
+    method component_type_param (param : ('loc, 'loc) Ast.Type.Component.Param.t) =
+      let open Ast.Type.Component.Param in
+      let (loc, { name; annot; optional }) = param in
+      let name' = this#component_param_name name in
+      let annot' = this#type_annotation annot in
+      if name == name' && annot == annot' then
+        param
+      else
+        (loc, { name = name'; annot = annot'; optional })
+
+    method component_type_rest_param (expr : ('loc, 'loc) Ast.Type.Component.RestParam.t) =
+      let open Ast.Type.Component.RestParam in
+      let (loc, { argument; annot; optional; comments }) = expr in
+      let argument' = map_opt this#identifier argument in
+      let annot' = this#type_ annot in
+      let comments' = this#syntax_opt comments in
+      if argument == argument' && annot == annot' && comments == comments' then
+        expr
+      else
+        (loc, { argument = argument'; annot = annot'; comments = comments'; optional })
+
     method declare_enum loc (enum : ('loc, 'loc) Ast.Statement.EnumDeclaration.t) =
       this#enum_declaration loc enum
 
@@ -748,6 +807,12 @@ class ['loc] mapper =
           decl
         else
           Class (loc, dc')
+      | Component (loc, dc) ->
+        let dc' = this#declare_component loc dc in
+        if dc' == dc then
+          decl
+        else
+          Component (loc, dc')
       | DefaultType t ->
         let t' = this#type_ t in
         if t' == t then

@@ -1152,6 +1152,50 @@ module Statement
         Statement.DeclareClass fn)
       env
 
+  and declare_component ~leading env =
+    Expect.identifier env "component";
+    let id =
+      id_remove_trailing
+        env
+        (* Components should have at least the same strictness as functions *)
+        (Parse.identifier ~restricted_error:Parse_error.StrictFunctionName env)
+    in
+    let tparams = type_params_remove_trailing env (Type.type_params env) in
+    let params = Type.component_param_list env in
+    let (params, return) =
+      match Peek.token env with
+      | T_COLON ->
+        let return = Type.annotation_opt env in
+        let return = type_annotation_hint_remove_trailing env return in
+        (params, return)
+      | _ ->
+        let missing_annotation = Type.annotation_opt env in
+        (component_type_params_remove_trailing env params, missing_annotation)
+    in
+
+    let (trailing, return) =
+      match semicolon env with
+      | Explicit comments -> (comments, return)
+      | Implicit { remove_trailing; _ } ->
+        ([], remove_trailing return (fun remover annot -> remover#type_annotation_hint annot))
+    in
+    {
+      Statement.DeclareComponent.id;
+      params;
+      return;
+      tparams;
+      comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+    }
+
+  and declare_component_statement env =
+    with_loc
+      (fun env ->
+        let leading = Peek.comments env in
+        Expect.token env T_DECLARE;
+        let component = declare_component ~leading env in
+        Statement.DeclareComponent component)
+      env
+
   and declare_enum env =
     with_loc
       (fun env ->
@@ -1399,6 +1443,8 @@ module Statement
     | T_CONST -> declare_var_statement ~kind:Ast.Variable.Const env
     | T_EXPORT when in_module -> declare_export_declaration ~allow_export_type:in_module env
     | T_IDENTIFIER { raw = "module"; _ } -> declare_module ~in_module env
+    | T_IDENTIFIER { raw = "component"; _ } when (parse_options env).components ->
+      declare_component_statement env
     | _ when in_module ->
       (match Peek.token env with
       | T_IMPORT ->
@@ -1758,6 +1804,10 @@ module Statement
                 (* declare export default class foo { ... } *)
                 let class_ = with_loc (declare_class ~leading:[]) env in
                 (Some (Class class_), [])
+              | T_IDENTIFIER { raw = "component"; _ } when (parse_options env).components ->
+                (* declare export default component Foo() { ... } *)
+                let component = with_loc (declare_component ~leading:[]) env in
+                (Some (Component component), [])
               | _ ->
                 (* declare export default [type]; *)
                 let type_ = Type._type env in
@@ -1800,6 +1850,15 @@ module Statement
                 let var = with_loc (fun env -> declare_var ~kind:Ast.Variable.Const env []) env in
                 Some (Variable var)
               | _ -> assert false
+            in
+            let comments = Flow_ast_utils.mk_comments_opt ~leading () in
+            Statement.DeclareExportDeclaration
+              { default = None; declaration; specifiers = None; source = None; comments }
+          | T_IDENTIFIER { raw = "component"; _ } when (parse_options env).components ->
+            let declaration =
+              (* declare export component Foo() { ... } *)
+              let component = with_loc (declare_component ~leading:[]) env in
+              Some (Component component)
             in
             let comments = Flow_ast_utils.mk_comments_opt ~leading () in
             Statement.DeclareExportDeclaration

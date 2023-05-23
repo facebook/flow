@@ -247,6 +247,7 @@ with type t = Impl.t = struct
       | (loc, DeclareVariable d) -> declare_variable (loc, d)
       | (loc, DeclareFunction d) -> declare_function (loc, d)
       | (loc, DeclareClass d) -> declare_class (loc, d)
+      | (loc, DeclareComponent d) -> declare_component (loc, d)
       | (loc, DeclareEnum enum) -> declare_enum (loc, enum)
       | (loc, DeclareInterface i) -> declare_interface (loc, i)
       | (loc, DeclareTypeAlias a) -> declare_type_alias (loc, a)
@@ -287,6 +288,7 @@ with type t = Impl.t = struct
             | Some (DeclareExportDeclaration.Variable v) -> declare_variable v
             | Some (DeclareExportDeclaration.Function f) -> declare_function f
             | Some (DeclareExportDeclaration.Class c) -> declare_class c
+            | Some (DeclareExportDeclaration.Component c) -> declare_component c
             | Some (DeclareExportDeclaration.DefaultType t) -> _type t
             | Some (DeclareExportDeclaration.NamedType t) -> type_alias t
             | Some (DeclareExportDeclaration.NamedOpaqueType t) -> opaque_type ~declare:true t
@@ -824,6 +826,65 @@ with type t = Impl.t = struct
           ("implements", implements);
           ("mixins", array_of_list interface_extends mixins);
         ]
+    and declare_component (loc, component) =
+      let {
+        Statement.DeclareComponent.id;
+        tparams;
+        params = (_, { Type.Component.Params.comments = params_comments; _ }) as params;
+        return;
+        comments = component_comments;
+      } =
+        component
+      in
+      let comments =
+        Flow_ast_utils.merge_comments
+          ~outer:component_comments
+          ~inner:(format_internal_comments params_comments)
+      in
+      let (_, { Type.Component.Params.params = param_list; rest; comments = _ }) = params in
+      node
+        ?comments
+        "DeclareComponent"
+        loc
+        [
+          ("id", identifier id);
+          ("params", component_type_params param_list);
+          ("rest", option component_type_rest_param rest);
+          ("returnType", hint type_annotation return);
+          ("typeParameters", option type_parameter_declaration tparams);
+        ]
+    and component_type_params params =
+      let open Type.Component in
+      let params =
+        List.map
+          (fun (loc, { Param.name; annot; optional }) ->
+            let (_, annot') = annot in
+            component_type_param ~optional loc (Some name) annot')
+          params
+      in
+      array params
+    and component_type_rest_param rest =
+      let open Type.Component in
+      let (loc, { RestParam.argument; annot; optional; comments }) = rest in
+      component_type_param
+        ?comments
+        ~optional
+        loc
+        (Option.map (fun i -> Statement.ComponentDeclaration.Param.Identifier i) argument)
+        annot
+    and component_type_param ?comments ~optional loc name annot =
+      let name' =
+        match name with
+        | Some (Statement.ComponentDeclaration.Param.Identifier id) -> option identifier (Some id)
+        | Some (Statement.ComponentDeclaration.Param.StringLiteral id) ->
+          option string_literal (Some id)
+        | None -> option identifier None
+      in
+      node
+        ?comments
+        "ComponentTypeParameter"
+        loc
+        [("name", name'); ("typeAnnotation", _type annot); ("optional", bool optional)]
     and declare_enum (loc, { Statement.EnumDeclaration.id; body; comments }) =
       node ?comments "DeclareEnum" loc [("id", identifier id); ("body", enum_body body)]
     and declare_interface (loc, { Statement.Interface.id; tparams; body; extends; comments }) =

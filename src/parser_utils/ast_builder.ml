@@ -617,6 +617,26 @@ module Statements = struct
           sig_loc = Loc.none;
         }
     )
+
+  let component_type_param ?(loc = Loc.none) ?(optional = false) name annot =
+    (loc, { Ast.Type.Component.Param.name; annot; optional })
+
+  let component_type_params ?(loc = Loc.none) ?rest ?comments params =
+    (loc, { Ast.Type.Component.Params.params; rest; comments })
+
+  let declare_component
+      ?(loc = Loc.none) ?tparams ?params ?comments ?(return = Ast.Type.Missing Loc.none) id =
+    let params' = Base.Option.value ~default:(component_type_params []) params in
+    ( loc,
+      DeclareComponent
+        {
+          Ast.Statement.DeclareComponent.id = Identifiers.identifier id;
+          tparams;
+          params = params';
+          return;
+          comments;
+        }
+    )
 end
 
 module Expressions = struct

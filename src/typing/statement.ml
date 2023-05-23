@@ -1269,6 +1269,9 @@ module Make
       in
       Env.init_var cx ~use_op t name_loc;
       (loc, DeclareClass decl_ast)
+    | (_loc, DeclareComponent _component) as stmt ->
+      (* TODO(jmbrown): add typechecking for component syntax *)
+      Tast_utils.unimplemented_mapper#statement stmt
     | (loc, DeclareEnum enum) ->
       let decl_ast = enum_declaration cx loc enum in
       (loc, DeclareEnum decl_ast)
@@ -1322,6 +1325,14 @@ module Make
               match dec_class with
               | (_, DeclareClass c_ast) -> D.Class (loc, c_ast)
               | _ -> assert_false "DeclareClass typed AST doesn't preserve structure"
+            end
+          | D.Component (loc, c) ->
+            let dec_component = statement cx (loc, DeclareComponent c) in
+            export_maybe_default_binding c.DeclareComponent.id;
+            begin
+              match dec_component with
+              | (_, DeclareComponent c_ast) -> D.Component (loc, c_ast)
+              | _ -> assert_false "DeclareComponent typed AST doesn't preserve structure"
             end
           | D.DefaultType (loc, t) ->
             let default_loc = Base.Option.value_exn default in

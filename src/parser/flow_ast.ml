@@ -229,6 +229,42 @@ and Type : sig
     [@@deriving show]
   end
 
+  module Component : sig
+    module Param : sig
+      type ('M, 'T) t = 'M * ('M, 'T) t'
+
+      and ('M, 'T) t' = {
+        name: ('M, 'T) Statement.ComponentDeclaration.Param.param_name;
+        annot: ('M, 'T) Type.annotation;
+        optional: bool;
+      }
+      [@@deriving show]
+    end
+
+    module RestParam : sig
+      type ('M, 'T) t = 'M * ('M, 'T) t'
+
+      and ('M, 'T) t' = {
+        argument: ('M, 'T) Identifier.t option;
+        annot: ('M, 'T) Type.t;
+        optional: bool;
+        comments: ('M, unit) Syntax.t option;
+      }
+      [@@deriving show]
+    end
+
+    module Params : sig
+      type ('M, 'T) t = 'M * ('M, 'T) t'
+
+      and ('M, 'T) t' = {
+        params: ('M, 'T) Param.t list;
+        rest: ('M, 'T) RestParam.t option;
+        comments: ('M, 'M Comment.t list) Syntax.t option;
+      }
+      [@@deriving show]
+    end
+  end
+
   module Generic : sig
     module Identifier : sig
       type ('M, 'T) t =
@@ -1014,6 +1050,17 @@ and Statement : sig
     [@@deriving show]
   end
 
+  module DeclareComponent : sig
+    type ('M, 'T) t = {
+      id: ('M, 'T) Identifier.t;
+      tparams: ('M, 'T) Type.TypeParams.t option;
+      params: ('M, 'T) Type.Component.Params.t;
+      return: ('M, 'T) Type.annotation_or_hint;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   module DeclareVariable : sig
     type ('M, 'T) t = {
       id: ('M, 'T) Identifier.t;
@@ -1110,6 +1157,8 @@ and Statement : sig
       | Function of ('M * ('M, 'T) DeclareFunction.t)
       (* declare export class *)
       | Class of ('M * ('M, 'T) DeclareClass.t)
+      (* declare export component *)
+      | Component of ('M * ('M, 'T) DeclareComponent.t)
       (* declare export default [type]
        * this corresponds to things like
        * export default 1+1; *)
@@ -1186,6 +1235,7 @@ and Statement : sig
     | Continue of 'M Continue.t
     | Debugger of 'M Debugger.t
     | DeclareClass of ('M, 'T) DeclareClass.t
+    | DeclareComponent of ('M, 'T) DeclareComponent.t
     | DeclareEnum of ('M, 'T) EnumDeclaration.t
     | DeclareExportDeclaration of ('M, 'T) DeclareExportDeclaration.t
     | DeclareFunction of ('M, 'T) DeclareFunction.t

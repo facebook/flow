@@ -887,6 +887,7 @@ and statement ?(pretty_semicolon = false) ~opts (root_stmt : (Loc.t, Loc.t) Ast.
       | S.OpaqueType opaqueType -> opaque_type ~opts ~declare:false loc opaqueType
       | S.InterfaceDeclaration interface -> interface_declaration ~opts loc interface
       | S.DeclareClass interface -> declare_class ~opts loc interface
+      | S.DeclareComponent interface -> declare_component ~opts loc interface
       | S.DeclareEnum enum -> declare_enum loc enum
       | S.DeclareFunction func -> declare_function ~opts loc func
       | S.DeclareInterface interface -> declare_interface ~opts loc interface
@@ -4240,6 +4241,108 @@ and declare_class
   in
   source_location_with_comments ?comments (loc, group parts)
 
+and declare_component
+    ?(s_type = Empty)
+    ~opts
+    loc
+    {
+      Ast.Statement.DeclareComponent.id;
+      tparams;
+      params = (params_loc, { Ast.Type.Component.Params.comments = params_comments; _ }) as params;
+      return;
+      comments;
+    } =
+  layout_node_with_comments_opt loc comments
+  @@ with_semicolon
+       (fuse
+          [
+            Atom "declare";
+            space;
+            s_type;
+            Atom "component";
+            space;
+            identifier id;
+            option (type_parameter ~opts) tparams;
+            group
+              [
+                layout_node_with_comments_opt
+                  params_loc
+                  params_comments
+                  (component_type_params ~opts params);
+                hint (type_annotation ~opts) return;
+              ];
+          ]
+       )
+
+and component_type_params ~opts (_, { Ast.Type.Component.Params.params; rest; comments }) =
+  let params =
+    Base.List.map
+      ~f:(fun ((loc, { Ast.Type.Component.Param.name; annot; optional }) as param) ->
+        let (_, annot') = annot in
+        ( loc,
+          Comment_attachment.component_type_param_comment_bounds param,
+          component_type_param ~opts ~optional loc (Some name) annot'
+        ))
+      params
+  in
+  (* Add rest param *)
+  let params =
+    match rest with
+    | Some ((loc, { Ast.Type.Component.RestParam.argument; annot; optional; comments }) as rest) ->
+      let rest_layout =
+        source_location_with_comments
+          ?comments
+          ( loc,
+            fuse
+              [
+                Atom "...";
+                component_type_param
+                  ~opts
+                  ~optional
+                  loc
+                  (Option.map
+                     (fun i -> Ast.Statement.ComponentDeclaration.Param.Identifier i)
+                     argument
+                  )
+                  annot;
+              ]
+          )
+      in
+      let rest_param =
+        (loc, Comment_attachment.component_type_rest_param_comment_bounds rest, rest_layout)
+      in
+      params @ [rest_param]
+    | None -> params
+  in
+  let params_layout = list_with_newlines ~sep:(Atom ",") ~sep_linebreak:pretty_line params in
+  (* Add trailing comma *)
+  let params_layout =
+    if
+      params <> []
+      && rest = None
+      && Trailing_commas.enabled_for_function_params opts.trailing_commas
+    then
+      params_layout @ [if_break (Atom ",") Empty]
+    else
+      params_layout
+  in
+  let params_layout = list_add_internal_comments params params_layout comments in
+  wrap_and_indent (Atom "(", Atom ")") params_layout
+
+and component_type_param ~opts ~optional loc name annot =
+  let name_layout =
+    match name with
+    | Some _ ->
+      let optional_layout =
+        match optional with
+        | true -> Atom "?"
+        | false -> Empty
+      in
+      fuse [component_param_name ~opts name; optional_layout; Atom ":"; pretty_space]
+    | None -> Empty
+  in
+  source_location_with_comments (loc, fuse [name_layout; type_ ~opts annot])
+
 and declare_function
     ?(s_type = Empty)
     ~opts
@@ -4340,6 +4443,9 @@ and declare_export_declaration
     (* declare export class *)
     | Class (loc, c) ->
       source_location_with_comments ?comments (loc, declare_class ~opts ~s_type:s_export loc c)
+    (* declare export component *)
+    | Component (loc, c) ->
+      source_location_with_comments ?comments (loc, declare_component ~opts ~s_type:s_export loc c)
     (* declare export default [type]
      * this corresponds to things like
      * export default 1+1; *)

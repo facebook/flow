@@ -670,6 +670,11 @@ module Scope = struct
     let def = lazy (Annot (Any id_loc)) in
     bind_local scope tbls name (LetConstBinding { id_loc; name; def })
 
+  let bind_component_decl scope tbls id_loc name =
+    (* TODO(jmbrown): add typechecking for component syntax *)
+    let def = lazy (Annot (Any id_loc)) in
+    bind_local scope tbls name (LetConstBinding { id_loc; name; def })
+
   let bind_var scope tbls kind id_loc name def =
     bind_local scope tbls name (value_binding kind id_loc name def)
 
@@ -4084,6 +4089,19 @@ let declare_class_decl opts scope tbls decl =
   let def = lazy (splice tbls id_loc (fun tbls -> declare_class_def opts scope tbls decl)) in
   Scope.bind_declare_class scope tbls id_loc name def
 
+let declare_component_decl _opts scope tbls decl =
+  let {
+    Ast.Statement.DeclareComponent.id = (id_loc, { Ast.Identifier.name; comments = _ });
+    params = _;
+    tparams = _;
+    return = _;
+    comments = _;
+  } =
+    decl
+  in
+  let id_loc = push_loc tbls id_loc in
+  Scope.bind_component_decl scope tbls id_loc name
+
 let import_decl _opts scope tbls decl =
   let module I = Ast.Statement.ImportDeclaration in
   let {
@@ -4267,6 +4285,7 @@ let declare_export_decl opts scope tbls default =
     declare_variable_decl opts scope tbls v (Scope.export_binding scope S.ExportValue)
   | D.Function (_, f) -> declare_function_decl opts scope tbls f export_maybe_default_binding
   | D.Class (_, c) -> declare_class_decl opts scope tbls c export_maybe_default_binding
+  | D.Component (_, c) -> declare_component_decl opts scope tbls c export_maybe_default_binding
   | D.Enum (_, enum) -> enum_decl opts scope tbls enum (Scope.export_binding scope S.ExportValue)
   | D.DefaultType t ->
     let default_loc = Base.Option.value_exn default in
@@ -4432,6 +4451,7 @@ let rec statement opts scope tbls (loc, stmt) =
   | S.DeclareOpaqueType decl -> opaque_type_decl opts scope tbls decl ignore2
   | S.ClassDeclaration decl -> class_decl opts scope tbls decl ignore2
   | S.DeclareClass decl -> declare_class_decl opts scope tbls decl ignore2
+  | S.DeclareComponent decl -> declare_component_decl opts scope tbls decl ignore2
   | S.InterfaceDeclaration decl -> interface_decl opts scope tbls decl ignore2
   | S.DeclareInterface decl -> interface_decl opts scope tbls decl ignore2
   | S.FunctionDeclaration decl -> function_decl opts scope tbls decl ignore2

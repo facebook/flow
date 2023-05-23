@@ -149,6 +149,18 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method declare_class :
       ('M, 'T) Ast.Statement.DeclareClass.t -> ('N, 'U) Ast.Statement.DeclareClass.t
 
+    method declare_component :
+      ('M, 'T) Ast.Statement.DeclareComponent.t -> ('N, 'U) Ast.Statement.DeclareComponent.t
+
+    method component_type_params :
+      ('M, 'T) Ast.Type.Component.Params.t -> ('N, 'U) Ast.Type.Component.Params.t
+
+    method component_type_param :
+      ('M, 'T) Ast.Type.Component.Param.t -> ('N, 'U) Ast.Type.Component.Param.t
+
+    method component_type_rest_param :
+      ('M, 'T) Ast.Type.Component.RestParam.t -> ('N, 'U) Ast.Type.Component.RestParam.t
+
     method declare_enum :
       ('M, 'T) Ast.Statement.EnumDeclaration.t -> ('N, 'U) Ast.Statement.EnumDeclaration.t
 

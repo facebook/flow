@@ -464,6 +464,10 @@ let component_params_remove_trailing env params =
   let { remove_trailing; _ } = trailing_and_remover env in
   remove_trailing params (fun remover params -> remover#component_params params)
 
+let component_type_params_remove_trailing env params =
+  let { remove_trailing; _ } = trailing_and_remover env in
+  remove_trailing params (fun remover params -> remover#component_type_params params)
+
 let predicate_remove_trailing env pred =
   match pred with
   | None -> None
@@ -516,6 +520,8 @@ let statement_add_comments
     | Debugger { Debugger.comments } -> Debugger { Debugger.comments = merge_comments comments }
     | DeclareClass ({ DeclareClass.comments; _ } as s) ->
       DeclareClass { s with DeclareClass.comments = merge_comments comments }
+    | DeclareComponent ({ DeclareComponent.comments; _ } as s) ->
+      DeclareComponent { s with DeclareComponent.comments = merge_comments comments }
     | DeclareEnum ({ EnumDeclaration.comments; _ } as s) ->
       DeclareEnum { s with EnumDeclaration.comments = merge_comments comments }
     | DeclareExportDeclaration ({ DeclareExportDeclaration.comments; _ } as s) ->
@@ -774,6 +780,16 @@ let component_param_comment_bounds (loc, param) =
 let component_rest_param_comment_bounds (loc, param) =
   let collector = new comment_bounds_collector ~loc in
   ignore (collector#component_rest_param (loc, param));
+  collect_without_trailing_line_comment collector
+
+let component_type_param_comment_bounds (loc, param) =
+  let collector = new comment_bounds_collector ~loc in
+  ignore (collector#component_type_param (loc, param));
+  collect_without_trailing_line_comment collector
+
+let component_type_rest_param_comment_bounds (loc, param) =
+  let collector = new comment_bounds_collector ~loc in
+  ignore (collector#component_type_rest_param (loc, param));
   collect_without_trailing_line_comment collector
 
 let array_element_comment_bounds loc element =

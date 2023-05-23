@@ -31,6 +31,8 @@ module type TYPE = sig
 
   val function_param_list : env -> (Loc.t, Loc.t) Type.Function.Params.t
 
+  val component_param_list : env -> (Loc.t, Loc.t) Ast.Type.Component.Params.t
+
   val annotation : env -> (Loc.t, Loc.t) Ast.Type.annotation
 
   val annotation_opt : env -> (Loc.t, Loc.t) Ast.Type.annotation_or_hint
@@ -770,6 +772,98 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         {
           params with
           Ast.Type.Function.Params.comments =
+            Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ();
+        })
+      env
+
+  and component_param_list_without_parens =
+    let param_name env =
+      match Peek.token env with
+      | T_STRING (loc, value, raw, octal) ->
+        if octal then strict_error env Parse_error.StrictOctalLiteral;
+        Expect.token env (T_STRING (loc, value, raw, octal));
+        let trailing = Eat.trailing_comments env in
+        Statement.ComponentDeclaration.Param.StringLiteral
+          (loc, { StringLiteral.value; raw; comments = Flow_ast_utils.mk_comments_opt ~trailing () })
+      (* If not a string, must be an identifier *)
+      | _ ->
+        Eat.push_lex_mode env Lex_mode.NORMAL;
+        let ident = Parse.identifier env in
+        Eat.pop_lex_mode env;
+        Statement.ComponentDeclaration.Param.Identifier ident
+    in
+
+    let param env =
+      with_loc
+        (fun env ->
+          let name = param_name env in
+          let optional = Eat.maybe env T_PLING in
+          let annot = annotation env in
+          { Ast.Type.Component.Param.name; annot; optional })
+        env
+    in
+    let rec param_list env acc =
+      match Peek.token env with
+      | (T_EOF | T_ELLIPSIS | T_RPAREN) as t ->
+        let rest =
+          if t = T_ELLIPSIS then
+            let rest =
+              with_loc
+                (fun env ->
+                  let leading = Peek.comments env in
+                  Expect.token env T_ELLIPSIS;
+                  let (argument, optional) =
+                    match Peek.ith_token ~i:1 env with
+                    | T_COLON ->
+                      Eat.push_lex_mode env Lex_mode.NORMAL;
+                      let ident = Parse.identifier env in
+                      Eat.pop_lex_mode env;
+                      Expect.token env T_COLON;
+                      (Some ident, false)
+                    | T_PLING ->
+                      Eat.push_lex_mode env Lex_mode.NORMAL;
+                      let ident = Parse.identifier env in
+                      Eat.pop_lex_mode env;
+                      Expect.token env T_PLING;
+                      Expect.token env T_COLON;
+                      (Some ident, true)
+                    | _ -> (None, false)
+                  in
+                  let annot = _type env in
+                  {
+                    Ast.Type.Component.RestParam.argument;
+                    annot;
+                    optional;
+                    comments = Flow_ast_utils.mk_comments_opt ~leading ();
+                  })
+                env
+            in
+            Some rest
+          else
+            None
+        in
+        { Ast.Type.Component.Params.params = List.rev acc; rest; comments = None }
+      | _ ->
+        let acc = param env :: acc in
+        if Peek.token env <> T_RPAREN then Expect.token env T_COMMA;
+        param_list env acc
+    in
+    (* Need this wrapper function due to a compilation issue with js_of_ocaml.
+       Directly returning param_list causes an error. *)
+    (fun env acc -> param_list env acc)
+
+  and component_param_list env =
+    with_loc
+      (fun env ->
+        let leading = Peek.comments env in
+        Expect.token env T_LPAREN;
+        let params = component_param_list_without_parens env [] in
+        let internal = Peek.comments env in
+        Expect.token env T_RPAREN;
+        let trailing = Eat.trailing_comments env in
+        {
+          params with
+          Ast.Type.Component.Params.comments =
             Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ();
         })
       env

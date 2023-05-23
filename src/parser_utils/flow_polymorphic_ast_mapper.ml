@@ -49,6 +49,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | Continue cont -> Continue (this#continue cont)
         | Debugger dbg -> Debugger (this#debugger dbg)
         | DeclareClass stuff -> DeclareClass (this#declare_class stuff)
+        | DeclareComponent stuff -> DeclareComponent (this#declare_component stuff)
         | DeclareEnum enum -> DeclareEnum (this#declare_enum enum)
         | DeclareExportDeclaration decl ->
           DeclareExportDeclaration (this#declare_export_declaration annot decl)
@@ -525,6 +526,52 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let targs' = Option.map ~f:this#type_args targs in
       (annot', { id = id'; targs = targs' })
 
+    method declare_component (decl : ('M, 'T) Ast.Statement.DeclareComponent.t)
+        : ('N, 'U) Ast.Statement.DeclareComponent.t =
+      let open Ast.Statement.DeclareComponent in
+      let { id = ident; params; return; tparams; comments } = decl in
+      let ident' = this#t_identifier ident in
+      this#type_params_opt tparams (fun tparams' ->
+          let params' = this#component_type_params params in
+          let return' = this#type_annotation_hint return in
+          let comments' = this#syntax_opt comments in
+          {
+            id = ident';
+            params = params';
+            return = return';
+            tparams = tparams';
+            comments = comments';
+          }
+      )
+
+    method component_type_params (params : ('M, 'T) Ast.Type.Component.Params.t)
+        : ('N, 'U) Ast.Type.Component.Params.t =
+      let open Ast.Type.Component.Params in
+      let (annot, { params = params_list; rest; comments }) = params in
+      let params_list' = List.map ~f:this#component_type_param params_list in
+      let rest' = Option.map ~f:this#component_type_rest_param rest in
+      let comments' = this#syntax_with_internal_opt comments in
+      (this#on_loc_annot annot, { params = params_list'; rest = rest'; comments = comments' })
+
+    method component_type_param (param : ('M, 'T) Ast.Type.Component.Param.t)
+        : ('N, 'U) Ast.Type.Component.Param.t =
+      let open Ast.Type.Component.Param in
+      let (loc_annot, { name; annot; optional }) = param in
+      let name' = this#component_param_name name in
+      let annot' = this#type_annotation annot in
+      (this#on_loc_annot loc_annot, { name = name'; annot = annot'; optional })
+
+    method component_type_rest_param (expr : ('M, 'T) Ast.Type.Component.RestParam.t)
+        : ('N, 'U) Ast.Type.Component.RestParam.t =
+      let open Ast.Type.Component.RestParam in
+      let (loc_annot, { argument; annot; optional; comments }) = expr in
+      let argument' = Option.map ~f:this#t_identifier argument in
+      let annot' = this#type_ annot in
+      let comments' = this#syntax_opt comments in
+      ( this#on_loc_annot loc_annot,
+        { argument = argument'; annot = annot'; comments = comments'; optional }
+      )
+
     method declare_enum (enum : ('M, 'T) Ast.Statement.EnumDeclaration.t)
         : ('N, 'U) Ast.Statement.EnumDeclaration.t =
       this#enum_declaration enum
@@ -561,6 +608,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       | Function (annot, decl_func) ->
         Function (this#on_loc_annot annot, this#declare_function decl_func)
       | Class (annot, decl_class) -> Class (this#on_loc_annot annot, this#declare_class decl_class)
+      | Component (annot, decl_component) ->
+        Component (this#on_loc_annot annot, this#declare_component decl_component)
       | DefaultType t -> DefaultType (this#type_ t)
       | NamedType (annot, alias) -> NamedType (this#on_loc_annot annot, this#type_alias alias)
       | NamedOpaqueType (annot, ot) -> NamedOpaqueType (this#on_loc_annot annot, this#opaque_type ot)

@@ -508,6 +508,7 @@ class requires_exports_calculator ~ast ~opts =
             | Variable _
             | Function _
             | Class _
+            | Component _
             | DefaultType _
             | Enum _ ->
               ExportValue

@@ -128,6 +128,21 @@ function custom_ast_types(fork) {
       ),
     );
 
+  def('DeclareComponent')
+    .bases('Declaration')
+    .build('id', 'tparams', 'params', 'rest', 'return', 'comments')
+    .field('id', def('Identifier'))
+    .field('typeParameters', or(def('TypeParameterDeclaration'), null))
+    .field('params', [def('ComponentTypeParameter')])
+    .field('rest', or(def('ComponentTypeParameter'), null))
+    .field('returnType', or(def('TypeAnnotation'), null));
+
+  def('ComponentTypeParameter')
+    .build('name', 'annotation', 'optional')
+    .field('name', or(def('Identifier'), def('Literal'), null))
+    .field('typeAnnotation', def('FlowType'))
+    .field('optional', Boolean);
+
   def('DeclareExportDeclaration').field(
     'declaration',
     or(
@@ -135,6 +150,7 @@ function custom_ast_types(fork) {
       def('DeclareFunction'),
       def('DeclareClass'),
       def('DeclareEnum'), // <-- ADDITION
+      def('DeclareComponent'),
       def('FlowType'), // Implies default.
       def('TypeAlias'), // Implies named type
       def('DeclareOpaqueType'), // Implies named opaque type
