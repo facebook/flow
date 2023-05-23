@@ -2121,13 +2121,13 @@ and component_params
 and component_param
     ~ctxt ~opts (loc, { Ast.Statement.ComponentDeclaration.Param.name; local; default; shorthand })
     =
-  let node = component_param_name ~opts name in
+  let local_node = pattern ~ctxt ~opts local in
   let node =
     match shorthand with
-    | true -> node
+    | true -> local_node
     | false ->
-      let local_node = pattern ~ctxt ~opts local in
-      fuse [node; space; Atom "as"; space; local_node]
+      let name_node = component_param_name ~opts name in
+      fuse [name_node; space; Atom "as"; space; local_node]
   in
   let node =
     match default with

@@ -228,4 +228,114 @@ let tests =
       assert_output ~ctxt "declare component Comp(p1:number,...mixed);" layout;
       assert_output ~ctxt ~pretty:true "declare component Comp(p1: number, ...mixed);" layout
     );
+    (* Tests which include parsing *)
+    ( "parse_simple_component" >:: fun ctxt ->
+      assert_statement_string ~ctxt ~pretty:true "component Comp() {}"
+    );
+    ( "parse_component_return" >:: fun ctxt ->
+      assert_statement_string ~ctxt ~pretty:true "component Comp(): TReturn {}"
+    );
+    ( "parse_component_comments" >:: fun ctxt ->
+      assert_statement_string ~ctxt ~pretty:true "/* leading */ component Comp() {} // trailing\n"
+    );
+    ( "parse_component_comments2" >:: fun ctxt ->
+      assert_statement_string ~ctxt ~pretty:true "component /* c1 */ Comp() {} /* c2 */"
+    );
+    ( "parse_component_comments3" >:: fun ctxt ->
+      assert_statement_string ~ctxt ~pretty:true "component Comp(/* c1 */) /* c2 */ {}"
+    );
+    ( "parse_component_comments4" >:: fun ctxt ->
+      assert_statement_string ~ctxt ~pretty:true "component Comp(): TReturn /* c1*/ {// c2
+}"
+    );
+    ( "parse_component_comments5" >:: fun ctxt ->
+      assert_statement_string ~ctxt ~pretty:true "component Comp() /* c1 */: TReturn {}"
+    );
+    ( "parse_component_params" >:: fun ctxt ->
+      assert_statement_string ~ctxt ~pretty:true "component Comp(p1: T1, p2: T2, ...rest: TRest) {}"
+    );
+    ( "parse_component_params2" >:: fun ctxt ->
+      assert_statement_string ~ctxt ~pretty:true "component Comp(p1 as p11: T1 = \"default\") {}"
+    );
+    ( "parse_component_params_comments" >:: fun ctxt ->
+      assert_statement_string ~ctxt ~pretty:true "component Comp(p1: T1 /* c1 */) {}"
+    );
+    ( "parse_component_params_comments2" >:: fun ctxt ->
+      assert_statement_string
+        ~ctxt
+        ~pretty:true
+        "component Comp(p1: T1 /* c1 */, p2 /* some */: T2) {}"
+    );
+    (* TODO: This comment printing is not ideal. However, this needs to also be fixed for functions *)
+    ( "parse_component_params_comments3" >:: fun ctxt ->
+      let ast = Ast_builder.test_statement_of_string "component Comp(
+  p1: T1, // c1
+) {}" in
+      let layout = Js_layout_generator.statement ~opts ast in
+      assert_output ~ctxt ~pretty:true "component Comp(
+  p1: T1 // c1
+  ,
+) {}" layout
+    );
+    ( "parse_component_params_comments4" >:: fun ctxt ->
+      assert_statement_string
+        ~ctxt
+        ~pretty:true
+        "component Comp(p1 as p11 /* c1 */: T1 /* c1 */ = \"default\") {}"
+    );
+    ( "parse_component_params_comments5" >:: fun ctxt ->
+      assert_statement_string
+        ~ctxt
+        ~pretty:true
+        "component Comp(...rest /* c1 */: TRest /* c2 */) {}"
+    );
+    ( "parse_declare_component" >:: fun ctxt ->
+      assert_statement_string ~ctxt ~pretty:true "declare component Comp();"
+    );
+    ( "parse_declare_component_return" >:: fun ctxt ->
+      assert_statement_string ~ctxt ~pretty:true "declare component Comp(): TReturn;"
+    );
+    ( "parse_declare_component_comments" >:: fun ctxt ->
+      assert_statement_string ~ctxt ~pretty:true "/* c1 */ declare component Comp(); // c2\n"
+    );
+    (* TODO: This comment printing is not ideal. However, this needs to also be fixed for functions *)
+    ( "parse_declare_component_comments2" >:: fun ctxt ->
+      let ast =
+        Ast_builder.test_statement_of_string "declare /* c1 */ component Comp(/* c2 */); /* c3 */"
+      in
+      let layout = Js_layout_generator.statement ~opts ast in
+      assert_output ~ctxt ~pretty:true "/* c1 */ declare component Comp(/* c2 */); /* c3 */" layout
+    );
+    ( "parse_declare_component_comments3" >:: fun ctxt ->
+      assert_statement_string ~ctxt ~pretty:true "declare component /* c1 */ Comp() /* c2 */;"
+    );
+    ( "parse_declare_component_comments4" >:: fun ctxt ->
+      assert_statement_string
+        ~ctxt
+        ~pretty:true
+        "declare component Comp() /* c1 */: TReturn; // c2\n"
+    );
+    ( "parse_declare_component_params" >:: fun ctxt ->
+      assert_statement_string ~ctxt ~pretty:true "declare component Comp(p1: T1, p2: T2, ...TRest);"
+    );
+    ( "parse_declare_component_params_comments" >:: fun ctxt ->
+      assert_statement_string ~ctxt ~pretty:true "declare component Comp(p1: T1 /* c1 */);"
+    );
+    ( "parse_declare_component_params_comments2" >:: fun ctxt ->
+      assert_statement_string
+        ~ctxt
+        ~pretty:true
+        "declare component Comp(p1 /* c1 */: T1, /* c2 */ p2: /* c3 */ T2);"
+    );
+    (* TODO: This comment printing is not ideal. However, this needs to also be fixed for functions *)
+    ( "parse_declare_component_params_comments3" >:: fun ctxt ->
+      let ast = Ast_builder.test_statement_of_string "declare component Comp(
+  p1: T1, // c1
+);" in
+      let layout = Js_layout_generator.statement ~opts ast in
+      assert_output ~ctxt ~pretty:true "declare component Comp(
+  p1: T1 // c1
+  ,
+);" layout
+    );
   ]

@@ -1153,6 +1153,7 @@ module Statement
       env
 
   and declare_component ~leading env =
+    let leading = leading @ Peek.comments env in
     Expect.identifier env "component";
     let id =
       id_remove_trailing
@@ -1170,7 +1171,7 @@ module Statement
         (params, return)
       | _ ->
         let missing_annotation = Type.annotation_opt env in
-        (component_type_params_remove_trailing env params, missing_annotation)
+        (params, missing_annotation)
     in
 
     let (trailing, return) =
