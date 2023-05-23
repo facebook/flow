@@ -1,0 +1,78 @@
+{
+  "method": "flow/renameFileImports",
+  "result": {
+    "changes": {
+      "<PLACEHOLDER_PROJECT_URL>/__fixtures__/requires.js": [
+        {
+          "range": {
+            "start": {
+              "line": 4,
+              "character": 54
+            },
+            "end": {
+              "line": 4,
+              "character": 72
+            }
+          },
+          "newText": "\"m#NEW_NAME\""
+        },
+        {
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 22
+            },
+            "end": {
+              "line": 2,
+              "character": 38
+            }
+          },
+          "newText": "\"NEW_NAME\""
+        }
+      ],
+      "<PLACEHOLDER_PROJECT_URL>/__fixtures__/imports_1.js": [
+        {
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 18
+            },
+            "end": {
+              "line": 2,
+              "character": 34
+            }
+          },
+          "newText": "\"NEW_NAME\""
+        }
+      ],
+      "<PLACEHOLDER_PROJECT_URL>/__fixtures__/imports.js": [
+        {
+          "range": {
+            "start": {
+              "line": 4,
+              "character": 32
+            },
+            "end": {
+              "line": 4,
+              "character": 48
+            }
+          },
+          "newText": "\"NEW_NAME\""
+        },
+        {
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 18
+            },
+            "end": {
+              "line": 2,
+              "character": 34
+            }
+          },
+          "newText": "\"NEW_NAME\""
+        }
+      ]
+    }
+  }
+}

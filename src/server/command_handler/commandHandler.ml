@@ -2524,6 +2524,46 @@ let handle_persistent_linked_editing_range ~options ~id ~params ~metadata ~clien
         metadata
       )
 
+let handle_persistent_rename_file_imports
+    ~reader ~options ~id ~params ~metadata ~client ~profiling:_ ~env =
+  let text_document_identifier = { TextDocumentIdentifier.uri = params.RenameFiles.oldUri } in
+  let file_input = file_input_of_text_document_identifier ~client text_document_identifier in
+  let (result, extra_data) =
+    match of_file_input ~options ~env file_input with
+    | Error (Failed reason) -> (Error reason, None)
+    | Error (Skipped reason) ->
+      (Ok { Lsp.WorkspaceEdit.changes = Lsp.UriMap.empty }, json_of_skipped reason)
+    | Ok (file_key, content) ->
+      let (_, docblock) =
+        Docblock_parser.(parse_docblock ~max_tokens:docblock_max_tokens file_key content)
+      in
+      (* This only works for haste modules right now *)
+      let old_haste_name = Module_js.exported_module ~options file_key (`Module docblock) in
+      let new_flowpath =
+        Flow_lsp_conversions.lsp_DocumentIdentifier_to_flow_path
+          { TextDocumentIdentifier.uri = params.RenameFiles.newUri }
+      in
+      (* The type or contents of the file isn't changing, just the path *)
+      let new_file_key = File_key.map (fun _ -> new_flowpath) file_key in
+      let new_haste_name = Module_js.exported_module ~options new_file_key (`Module docblock) in
+      (match (old_haste_name, new_haste_name) with
+      | (Some old_haste_name, Some new_haste_name) ->
+        let edits =
+          RenameModule.get_rename_edits ~reader ~options ~old_haste_name ~new_haste_name file_key
+        in
+        (edits, None)
+      | (_, _) -> (Error "Error converting file names to Haste paths", None))
+  in
+  let metadata = with_data ~extra_data metadata in
+  match result with
+  | Ok result ->
+    let r = RenameFileImportsResult result in
+    let response = ResponseMessage (id, r) in
+    Lwt.return (LspProt.LspFromServer (Some response), metadata)
+  | Error reason ->
+    let (res, meta) = mk_lsp_error_response ~id:(Some id) ~reason metadata in
+    Lwt.return (res, meta)
+
 let handle_persistent_malformed_command ~id ~metadata ~client:_ ~profiling:_ =
   mk_lsp_error_response ~id:(Some id) ~reason:"Malformed command" metadata
 
@@ -2916,6 +2956,10 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
     mk_parallelizable_persistent
       ~options
       (handle_persistent_linked_editing_range ~options ~id ~params ~metadata)
+  | LspToServer (RequestMessage (id, RenameFileImportsRequest params)) ->
+    mk_parallelizable_persistent
+      ~options
+      (handle_persistent_rename_file_imports ~reader ~options ~id ~params ~metadata)
   | LspToServer (ResponseMessage (id, result)) ->
     Handle_persistent_immediately (handle_result_from_client ~id ~result ~metadata)
   | LspToServer unhandled ->

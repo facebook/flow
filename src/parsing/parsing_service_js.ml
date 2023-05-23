@@ -134,6 +134,11 @@ let types_checked ~force_types options docblock =
 
 let parse_file_sig options file ast =
   let enable_enums = Options.enums options in
+
+  let haste_module_ref_prefix = Options.haste_module_ref_prefix options in
+  let haste_module_ref_prefix_LEGACY_INTEROP =
+    Options.haste_module_ref_prefix_LEGACY_INTEROP options
+  in
   let enable_relay_integration = Options.enable_relay_integration options in
   let relay_integration_excludes = Options.relay_integration_excludes options in
   let relay_integration_module_prefix = Options.relay_integration_module_prefix options in
@@ -150,7 +155,13 @@ let parse_file_sig options file ast =
       relay_integration_module_prefix
   in
   let file_sig_opts =
-    { File_sig.enable_enums; enable_relay_integration; relay_integration_module_prefix }
+    {
+      File_sig.enable_enums;
+      enable_relay_integration;
+      haste_module_ref_prefix;
+      haste_module_ref_prefix_LEGACY_INTEROP;
+      relay_integration_module_prefix;
+    }
   in
   File_sig.program ~ast ~opts:file_sig_opts
 

@@ -15,6 +15,8 @@ type t = {
 and options = {
   enable_enums: bool;
   enable_relay_integration: bool;
+  haste_module_ref_prefix: string option;
+  haste_module_ref_prefix_LEGACY_INTEROP: string option;
   relay_integration_module_prefix: string option;
 }
 

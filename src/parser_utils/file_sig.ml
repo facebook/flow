@@ -20,6 +20,8 @@ type t = {
 and options = {
   enable_enums: bool;
   enable_relay_integration: bool;
+  haste_module_ref_prefix: string option;
+  haste_module_ref_prefix_LEGACY_INTEROP: string option;
   relay_integration_module_prefix: string option;
 }
 
@@ -74,7 +76,13 @@ type tolerable_t = t * tolerable_error list
 let empty = { requires = []; module_kind = CommonJS { mod_exp_loc = None } }
 
 let default_opts =
-  { enable_relay_integration = false; enable_enums = false; relay_integration_module_prefix = None }
+  {
+    enable_relay_integration = false;
+    enable_enums = false;
+    haste_module_ref_prefix = None;
+    haste_module_ref_prefix_LEGACY_INTEROP = None;
+    relay_integration_module_prefix = None;
+  }
 
 module PP = struct
   let string_of_option f = function
