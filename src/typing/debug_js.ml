@@ -843,7 +843,6 @@ and dump_use_t_ (depth, tvars) cx t =
     | ImportModuleNsT { is_strict; _ } -> p ~extra:(spf "is_strict=%b" is_strict) t
     | ImportNamedT _ -> p t
     | ImportTypeofT _ -> p t
-    | ImportTypeT _ -> p t
     | PreprocessKitT _ -> p t
     | InvariantT _ -> p t
     | LookupT { lookup_kind = kind; propref = prop; lookup_action = action; ids; _ } ->

@@ -280,7 +280,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | ImportModuleNsT _
     | ImportDefaultT _
     | ImportNamedT _
-    | ImportTypeT _
     | ImportTypeofT _
     | AssertImportIsValueT _
     | CJSExtractNamedExportsT _

@@ -252,15 +252,14 @@ struct
 
     let return cx trace t tout = FlowJs.rec_flow_t cx ~use_op:unknown_use trace (t, tout)
 
-    let import_type cx trace reason name export_t =
-      Tvar.mk_where cx reason (fun tvar ->
-          FlowJs.rec_flow cx trace (export_t, ImportTypeT (reason, name, tvar))
-      )
-
-    let import_typeof cx trace reason name export_t =
-      Tvar.mk_where cx reason (fun tvar ->
-          FlowJs.rec_flow cx trace (export_t, ImportTypeofT (reason, name, tvar))
-      )
+    let with_concretized_type cx r f t =
+      let t' =
+        match FlowJs.possible_concrete_types_for_inspection cx r t with
+        | [] -> EmptyT.make r (bogus_trust ())
+        | [t] -> t
+        | t1 :: t2 :: ts -> UnionT (r, UnionRep.make t1 t2 ts)
+      in
+      f t'
 
     let export_named cx trace (reason, named, kind) module_t tout =
       FlowJs.rec_flow cx trace (module_t, Type.ExportNamedT (reason, named, kind, tout))
@@ -289,7 +288,6 @@ struct
   module CJSRequireTKit = CJSRequireT_kit (Import_export_helper)
   module ImportDefaultTKit = ImportDefaultT_kit (Import_export_helper)
   module ImportNamedTKit = ImportNamedT_kit (Import_export_helper)
-  module ImportTypeTKit = ImportTypeT_kit (Import_export_helper)
   module ImportTypeofTKit = ImportTypeofT_kit (Import_export_helper)
   module ExportNamedTKit = ExportNamedT_kit (Import_export_helper)
   module AssertExportIsTypeTKit = AssertExportIsTypeT_kit (Import_export_helper)
@@ -825,15 +823,6 @@ struct
           rec_flow cx trace (representation_t, UseT (use_op, cast_to_t))
         | (cast_to_t, EnumCastT { use_op; enum = (reason, trust, enum) }) ->
           rec_flow cx trace (DefT (reason, trust, EnumT enum), UseT (use_op, cast_to_t))
-        (*****************)
-        (* `import type` *)
-        (*****************)
-        | (_, ImportTypeT (reason, export_name, tout)) ->
-          FlowJs.rec_flow_t
-            cx
-            ~use_op:unknown_use
-            trace
-            (ImportTypeTKit.on_concrete_type cx trace reason export_name l, tout)
         (*******************)
         (* `import typeof` *)
         (*******************)
@@ -5983,7 +5972,6 @@ struct
     | ImportDefaultT _
     | ImportModuleNsT _
     | ImportNamedT _
-    | ImportTypeT _
     | ImportTypeofT _
     | PreprocessKitT _
     | ResolveUnionT _

@@ -152,7 +152,6 @@ let rec default_resolve_touts ~flow cx loc u =
   | ImportModuleNsT { t; _ }
   | ImportDefaultT (_, _, _, t, _)
   | ImportNamedT (_, _, _, _, t, _)
-  | ImportTypeT (_, _, t)
   | ImportTypeofT (_, _, t) ->
     resolve t
   | AssertImportIsValueT _ -> ()

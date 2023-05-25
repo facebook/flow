@@ -718,7 +718,6 @@ module rec TypeTerm : sig
       }
     | ImportDefaultT of reason * import_kind * (string * string) * t * bool (* is_strict *)
     | ImportNamedT of reason * import_kind * string * string * t * bool (* is_strict *)
-    | ImportTypeT of reason * string * t
     | ImportTypeofT of reason * string * t
     | AssertImportIsValueT of reason * string
     (* Module export handling *)
@@ -2878,10 +2877,10 @@ end
 (**************************)
 module AConstraint = struct
   type op =
+    | Annot_ConcretizeForImportsExports of Reason.t * (TypeTerm.t -> TypeTerm.t)
     (* Imports *)
     | Annot_ImportNamedT of Reason.t * TypeTerm.import_kind * string * string * bool
     | Annot_ImportModuleNsT of Reason.t * bool
-    | Annot_ImportTypeT of Reason.reason * string
     | Annot_ImportTypeofT of Reason.reason * string
     | Annot_ImportDefaultT of Reason.t * TypeTerm.import_kind * (string * string) * bool
     | Annot_CJSRequireT of {
@@ -2986,8 +2985,8 @@ module AConstraint = struct
     | Annot_SpecializeT _ -> "Annot_SpecializeT"
     | Annot_ThisSpecializeT _ -> "Annot_ThisSpecializeT"
     | Annot_UseT_TypeT _ -> "Annot_UseT_TypeT"
+    | Annot_ConcretizeForImportsExports _ -> "Annot_ConcretizeForImportsExports"
     | Annot_CJSRequireT _ -> "Annot_CJSRequireT"
-    | Annot_ImportTypeT _ -> "Annot_ImportTypeT"
     | Annot_ImportTypeofT _ -> "Annot_ImportTypeofT"
     | Annot_ImportNamedT _ -> "Annot_ImportNamedT"
     | Annot_ImportDefaultT _ -> "Annot_ImportDefaultT"
@@ -3019,11 +3018,11 @@ module AConstraint = struct
     | Annot__Future_added_value__ _ -> "Annot__Future_added_value__"
 
   let reason_of_op = function
+    | Annot_ConcretizeForImportsExports (r, _)
     | Annot_SpecializeT (_, r, _, _)
     | Annot_ThisSpecializeT (r, _)
     | Annot_UseT_TypeT r
     | Annot_CJSRequireT { reason = r; _ }
-    | Annot_ImportTypeT (r, _)
     | Annot_ImportTypeofT (r, _)
     | Annot_ImportNamedT (r, _, _, _, _)
     | Annot_ImportDefaultT (r, _, _, _)
@@ -3065,8 +3064,8 @@ module AConstraint = struct
       Some use_op
     | Annot_ThisSpecializeT _
     | Annot_UseT_TypeT _
+    | Annot_ConcretizeForImportsExports _
     | Annot_CJSRequireT _
-    | Annot_ImportTypeT _
     | Annot_ImportTypeofT _
     | Annot_ImportNamedT _
     | Annot_ImportDefaultT _
@@ -3785,7 +3784,6 @@ let string_of_use_ctor = function
   | ImportModuleNsT _ -> "ImportModuleNsT"
   | ImportNamedT _ -> "ImportNamedT"
   | ImportTypeofT _ -> "ImportTypeofT"
-  | ImportTypeT _ -> "ImportTypeT"
   | PreprocessKitT (_, tool) ->
     spf
       "PreprocessKitT %s"

@@ -100,7 +100,6 @@ and reason_of_use_t = function
   | ImportModuleNsT { reason; _ } -> reason
   | ImportNamedT (reason, _, _, _, _, _) -> reason
   | ImportTypeofT (reason, _, _) -> reason
-  | ImportTypeT (reason, _, _) -> reason
   | PreprocessKitT (reason, _) -> reason
   | InvariantT reason -> reason
   | LookupT { reason; _ } -> reason
@@ -298,7 +297,6 @@ and mod_reason_of_use_t f = function
   | ImportNamedT (reason, import_kind, name, t, module_name, is_strict) ->
     ImportNamedT (f reason, import_kind, name, t, module_name, is_strict)
   | ImportTypeofT (reason, name, t) -> ImportTypeofT (f reason, name, t)
-  | ImportTypeT (reason, name, t) -> ImportTypeT (f reason, name, t)
   | PreprocessKitT (reason, tool) -> PreprocessKitT (f reason, tool)
   | InvariantT reason -> InvariantT (f reason)
   | LookupT { reason; lookup_kind; ts; propref; lookup_action; ids; method_accessible } ->
@@ -487,7 +485,6 @@ let rec util_use_op_of_use_t :
   | ImportModuleNsT { reason = _; t = _; is_strict = _ }
   | ImportDefaultT (_, _, _, _, _)
   | ImportNamedT (_, _, _, _, _, _)
-  | ImportTypeT (_, _, _)
   | ImportTypeofT (_, _, _)
   | AssertImportIsValueT (_, _)
   | CJSExtractNamedExportsT (_, _, _)

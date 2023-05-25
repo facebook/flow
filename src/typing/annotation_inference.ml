@@ -15,8 +15,8 @@ let object_like_op = function
   | Annot_SpecializeT _
   | Annot_ThisSpecializeT _
   | Annot_UseT_TypeT _
+  | Annot_ConcretizeForImportsExports _
   | Annot_CJSRequireT _
-  | Annot_ImportTypeT _
   | Annot_ImportTypeofT _
   | Annot_ImportNamedT _
   | Annot_ImportDefaultT _
@@ -256,10 +256,8 @@ module rec ConsGen : S = struct
 
     let return _cx _trace t = t
 
-    let import_type cx _ reason export_name t =
-      ConsGen.elab_t cx t (Annot_ImportTypeT (reason, export_name))
-
-    let import_typeof cx _trace reason export_name t = ConsGen.import_typeof cx reason export_name t
+    let with_concretized_type cx r f t =
+      ConsGen.elab_t cx t (Annot_ConcretizeForImportsExports (r, f))
 
     let export_named cx _trace (reason, named, kind) t = ConsGen.export_named cx reason kind named t
 
@@ -281,7 +279,6 @@ module rec ConsGen : S = struct
   module ImportModuleNsTKit = Flow_js_utils.ImportModuleNsTKit
   module ImportDefaultTKit = Flow_js_utils.ImportDefaultT_kit (Import_export_helper)
   module ImportNamedTKit = Flow_js_utils.ImportNamedT_kit (Import_export_helper)
-  module ImportTypeTKit = Flow_js_utils.ImportTypeT_kit (Import_export_helper)
   module ImportTypeofTKit = Flow_js_utils.ImportTypeofT_kit (Import_export_helper)
   module ExportNamedTKit = Flow_js_utils.ExportNamedT_kit (Import_export_helper)
   module AssertExportIsTypeTKit = Flow_js_utils.AssertExportIsTypeT_kit (Import_export_helper)
@@ -566,11 +563,7 @@ module rec ConsGen : S = struct
       | AnyT _ -> Flow_js_utils.add_output cx Error_message.(EAnyValueUsedAsType { reason_use })
       | _ -> Flow_js_utils.add_output cx Error_message.(EValueUsedAsType { reason_use }));
       AnyT.error reason_use
-    (*****************)
-    (* `import type` *)
-    (*****************)
-    | (_, Annot_ImportTypeT (reason, export_name)) ->
-      ImportTypeTKit.on_concrete_type cx dummy_trace reason export_name t
+    | (l, Annot_ConcretizeForImportsExports (_, f)) -> f l
     (*******************)
     (* `import typeof` *)
     (*******************)
