@@ -124,7 +124,7 @@ a subtype of `InvariantOf<SanFrancisco>`.
 ## Contravariance {#toc-contravariance}
 
 When a type parameter is only used in *input* positions, we say that it is used in
-a *contravariant* way. This means that it only apears in positions through which
+a *contravariant* way. This means that it only appears in positions through which
 we write data to the structure. We use the sigil `-` to describe this kind of type
 parameters:
 
