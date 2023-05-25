@@ -522,11 +522,11 @@ References:
    HTMLInputElement.js:7:28
       7|     el.setRangeText('foo', 123); // end is required
                                     ^^^ [1]
-   <BUILTINS>/dom.js:3731:45
-   3731|   setRangeText(replacement: string, start?: void, end?: void, selectMode?: void): void;
+   <BUILTINS>/dom.js:3732:45
+   3732|   setRangeText(replacement: string, start?: void, end?: void, selectMode?: void): void;
                                                      ^^^^ [2]
-   <BUILTINS>/dom.js:3732:3
-   3732|   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
+   <BUILTINS>/dom.js:3733:3
+   3733|   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    HTMLInputElement.js:7:5
       7|     el.setRangeText('foo', 123); // end is required
@@ -547,14 +547,14 @@ References:
    HTMLInputElement.js:10:38
      10|     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
                                               ^^^^^^^ [1]
-   <BUILTINS>/dom.js:3732:78
-   3732|   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
+   <BUILTINS>/dom.js:3733:78
+   3733|   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
                                                                                       ^^^^^^^^^^^^^ [2]
    HTMLInputElement.js:10:28
      10|     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
                                     ^^^ [3]
-   <BUILTINS>/dom.js:3731:45
-   3731|   setRangeText(replacement: string, start?: void, end?: void, selectMode?: void): void;
+   <BUILTINS>/dom.js:3732:45
+   3732|   setRangeText(replacement: string, start?: void, end?: void, selectMode?: void): void;
                                                      ^^^^ [4]
 
 
@@ -567,8 +567,8 @@ Cannot get `form.action` because property `action` is missing in null [1]. [inco
               ^^^^^^
 
 References:
-   <BUILTINS>/dom.js:3794:27
-   3794|   form: HTMLFormElement | null;
+   <BUILTINS>/dom.js:3795:27
+   3795|   form: HTMLFormElement | null;
                                    ^^^^ [1]
 
 
@@ -581,8 +581,8 @@ Cannot get `item.value` because property `value` is missing in null [1]. [incomp
               ^^^^^
 
 References:
-   <BUILTINS>/dom.js:3812:44
-   3812|   item(index: number): HTMLOptionElement | null;
+   <BUILTINS>/dom.js:3813:44
+   3813|   item(index: number): HTMLOptionElement | null;
                                                     ^^^^ [1]
 
 
@@ -595,8 +595,8 @@ Cannot get `item.value` because property `value` is missing in null [1]. [incomp
               ^^^^^
 
 References:
-   <BUILTINS>/dom.js:3813:48
-   3813|   namedItem(name: string): HTMLOptionElement | null;
+   <BUILTINS>/dom.js:3814:48
+   3814|   namedItem(name: string): HTMLOptionElement | null;
                                                         ^^^^ [1]
 
 
@@ -1017,11 +1017,11 @@ References:
    traversal.js:188:74
     188|     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                   ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:4281:1
+   <BUILTINS>/dom.js:4282:1
          v--------------------------------
-   4281| typeof NodeFilter.FILTER_ACCEPT |
-   4282| typeof NodeFilter.FILTER_REJECT |
-   4283| typeof NodeFilter.FILTER_SKIP;
+   4282| typeof NodeFilter.FILTER_ACCEPT |
+   4283| typeof NodeFilter.FILTER_REJECT |
+   4284| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
    traversal.js:188:48
     188|     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
@@ -1393,11 +1393,11 @@ References:
    traversal.js:195:72
     195|     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                 ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:4281:1
+   <BUILTINS>/dom.js:4282:1
          v--------------------------------
-   4281| typeof NodeFilter.FILTER_ACCEPT |
-   4282| typeof NodeFilter.FILTER_REJECT |
-   4283| typeof NodeFilter.FILTER_SKIP;
+   4282| typeof NodeFilter.FILTER_ACCEPT |
+   4283| typeof NodeFilter.FILTER_REJECT |
+   4284| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
    traversal.js:195:46
     195|     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
