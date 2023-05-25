@@ -1494,13 +1494,9 @@ module rec TypeTerm : sig
   and concretization_target =
     | ConcretizeIntersectionT of t list * t list * reason * InterRep.t * use_t
     (* The purpose of this utility is to concretize a resolved type for the purpose
-     * of hint decomposition. The goal here is to simplify types like EvalT, OpenT,
+     * of type inspection. The goal here is to simplify types like EvalT, OpenT,
      * TypeAppT, etc. and propagate them as lower bounds to the ident (payload). *)
-    | ConcretizeHintT of ident
-    (* The purpose of this utility is to concretize the source type for a non-homomorphic
-     * mapped type: {[key in T]: U}. To compute the type, we need to fully resolve the union
-     * and flatten it so that we can determine what the keys should be *)
-    | ConcretizeMappedTypeArgumentT of ident
+    | ConcretizeForInspection of ident
     | ConcretizeComputedPropsT of ident
 
   and intersection_preprocess_tool =

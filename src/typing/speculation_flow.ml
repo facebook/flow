@@ -25,7 +25,7 @@ let is_flow_successful cx reason ~upper_unresolved t u =
   | () -> true
 
 let resolved_lower_flow_unsafe cx r (l, u) =
-  match Flow_js.possible_concrete_types_for_hint cx r l with
+  match Flow_js.possible_concrete_types_for_inspection cx r l with
   | [] -> ()
   | [l] -> Flow_js.flow cx (l, u)
   | ls ->
@@ -43,7 +43,7 @@ let resolved_lower_flow_t_unsafe cx r (l, u) =
   resolved_lower_flow_unsafe cx r (l, UseT (unknown_use, u))
 
 let resolved_upper_flow_t_unsafe cx r (l, u) =
-  match Flow_js.possible_concrete_types_for_hint cx r u with
+  match Flow_js.possible_concrete_types_for_inspection cx r u with
   | [] -> ()
   | [u] -> Flow_js.flow_t cx (l, u)
   | us ->

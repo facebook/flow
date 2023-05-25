@@ -1410,10 +1410,6 @@ struct
           sentinel_prop_test_generic key cx trace tvar inter (sense, l, t)
         | (_, PreprocessKitT (_, PropExistsTest (sense, key, reason, inter, tvar, preds))) ->
           prop_exists_test_generic key reason cx trace tvar inter sense preds l
-        (* Concretize types for hint purposes up to this point. The rest are
-           recorded as lower bound to the target tvar. *)
-        | (t, PreprocessKitT (reason, ConcretizeTypes (ConcretizeHintT tvar))) ->
-          rec_flow_t cx trace ~use_op:unknown_use (t, OpenT (reason, tvar))
         (*****************************************************)
         (* keys (NOTE: currently we only support string keys *)
         (*****************************************************)
@@ -1423,9 +1419,9 @@ struct
         | (KeysT (reason1, o1), _) ->
           (* flow all keys of o1 to u *)
           rec_flow cx trace (o1, GetKeysT (reason1, u))
-        (* Concretize types for mapped type purposes up to this point. The rest are
+        (* Concretize types for type inspection purpose up to this point. The rest are
            recorded as lower bound to the target tvar. *)
-        | (t, PreprocessKitT (reason, ConcretizeTypes (ConcretizeMappedTypeArgumentT tvar))) ->
+        | (t, PreprocessKitT (reason, ConcretizeTypes (ConcretizeForInspection tvar))) ->
           rec_flow_t cx trace ~use_op:unknown_use (t, OpenT (reason, tvar))
         (* helpers *)
         | ( DefT (reason_o, _, ObjT { props_tmap = mapr; flags; _ }),
@@ -9677,10 +9673,8 @@ module rec FlowJs : Flow_common.S = struct
     flow cx (t, PreprocessKitT (reason, ConcretizeTypes (mk_concretization_target id)));
     Flow_js_utils.possible_types cx id
 
-  let possible_concrete_types_for_hint = possible_concrete_types (fun ident -> ConcretizeHintT ident)
-
-  let possible_concrete_types_for_mapped_types =
-    possible_concrete_types (fun ident -> ConcretizeMappedTypeArgumentT ident)
+  let possible_concrete_types_for_inspection =
+    possible_concrete_types (fun ident -> ConcretizeForInspection ident)
 
   let possible_concrete_types_for_computed_props =
     possible_concrete_types (fun ident -> ConcretizeComputedPropsT ident)

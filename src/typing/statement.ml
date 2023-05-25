@@ -3159,7 +3159,7 @@ module Make
   and optional_chain ~cond cx ((loc, e) as ex) =
     let open Ast.Expression in
     let normalize_voided_out t =
-      let ts = Flow.possible_concrete_types_for_hint cx (reason_of_t t) t in
+      let ts = Flow.possible_concrete_types_for_inspection cx (reason_of_t t) t in
       Base.List.iter ts ~f:(Tvar_resolver.resolve cx);
       ts
     in
