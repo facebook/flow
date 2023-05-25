@@ -274,13 +274,11 @@ module rec ConsGen : S = struct
     (* This check is bypassed in annotation inference *)
     let assert_import_is_value _cx _trace _reason _name _export_t = ()
 
-    let error_type _ _ = AnyT.error
-
     let mk_typeof_annotation = ConsGen.mk_typeof_annotation
   end
 
   module CJSRequireTKit = Flow_js_utils.CJSRequireT_kit (Import_export_helper)
-  module ImportModuleNsTKit = Flow_js_utils.ImportModuleNsT_kit (Import_export_helper)
+  module ImportModuleNsTKit = Flow_js_utils.ImportModuleNsTKit
   module ImportDefaultTKit = Flow_js_utils.ImportDefaultT_kit (Import_export_helper)
   module ImportNamedTKit = Flow_js_utils.ImportNamedT_kit (Import_export_helper)
   module ImportTypeTKit = Flow_js_utils.ImportTypeT_kit (Import_export_helper)

@@ -283,14 +283,10 @@ struct
     let assert_import_is_value cx trace reason name export_t =
       FlowJs.rec_flow cx trace (export_t, AssertImportIsValueT (reason, name))
 
-    let error_type cx trace reason tout =
-      FlowJs.rec_flow_t cx ~use_op:unknown_use trace (AnyT.error reason, tout)
-
     let mk_typeof_annotation = FlowJs.mk_typeof_annotation
   end
 
   module CJSRequireTKit = CJSRequireT_kit (Import_export_helper)
-  module ImportModuleNsTKit = ImportModuleNsT_kit (Import_export_helper)
   module ImportDefaultTKit = ImportDefaultT_kit (Import_export_helper)
   module ImportNamedTKit = ImportNamedT_kit (Import_export_helper)
   module ImportTypeTKit = ImportTypeT_kit (Import_export_helper)
@@ -832,13 +828,21 @@ struct
         (*****************)
         (* `import type` *)
         (*****************)
-        | (_, ImportTypeT (reason, export_name, t)) ->
-          ImportTypeTKit.on_concrete_type cx trace reason export_name l t
+        | (_, ImportTypeT (reason, export_name, tout)) ->
+          FlowJs.rec_flow_t
+            cx
+            ~use_op:unknown_use
+            trace
+            (ImportTypeTKit.on_concrete_type cx trace reason export_name l, tout)
         (*******************)
         (* `import typeof` *)
         (*******************)
-        | (_, ImportTypeofT (reason, export_name, t)) ->
-          ImportTypeofTKit.on_concrete_type cx trace reason export_name l t
+        | (_, ImportTypeofT (reason, export_name, tout)) ->
+          FlowJs.rec_flow_t
+            cx
+            ~use_op:unknown_use
+            trace
+            (ImportTypeofTKit.on_concrete_type cx trace reason export_name l, tout)
         (******************)
         (* Module exports *)
         (******************)
@@ -862,14 +866,31 @@ struct
         (* Module imports *)
         (******************)
         | (ModuleT m, CJSRequireT { reason; t_out; is_strict; legacy_interop }) ->
-          CJSRequireTKit.on_ModuleT cx trace (reason, is_strict, legacy_interop) m t_out
-        | (ModuleT m, ImportModuleNsT { reason; t; is_strict }) ->
-          ImportModuleNsTKit.on_ModuleT cx trace (reason, is_strict) m t
-        | (ModuleT m, ImportDefaultT (reason, import_kind, local, t, is_strict)) ->
-          ImportDefaultTKit.on_ModuleT cx trace (reason, import_kind, local, is_strict) m t
-        | (ModuleT m, ImportNamedT (reason, import_kind, export_name, module_name, t, is_strict)) ->
+          FlowJs.rec_flow_t
+            cx
+            ~use_op:unknown_use
+            trace
+            (CJSRequireTKit.on_ModuleT cx trace (reason, is_strict, legacy_interop) m, t_out)
+        | (ModuleT m, ImportModuleNsT { reason; t = tout; is_strict }) ->
+          FlowJs.rec_flow_t
+            cx
+            ~use_op:unknown_use
+            trace
+            (ImportModuleNsTKit.on_ModuleT cx trace (reason, is_strict) m, tout)
+        | (ModuleT m, ImportDefaultT (reason, import_kind, local, tout, is_strict)) ->
+          FlowJs.rec_flow_t
+            cx
+            ~use_op:unknown_use
+            trace
+            (ImportDefaultTKit.on_ModuleT cx trace (reason, import_kind, local, is_strict) m, tout)
+        | (ModuleT m, ImportNamedT (reason, import_kind, export_name, module_name, tout, is_strict))
+          ->
           let import = (reason, import_kind, export_name, module_name, is_strict) in
-          ImportNamedTKit.on_ModuleT cx trace import m t
+          FlowJs.rec_flow_t
+            cx
+            ~use_op:unknown_use
+            trace
+            (ImportNamedTKit.on_ModuleT cx trace import m, tout)
         | (AnyT (lreason, _), CJSRequireT { reason; t_out; _ }) ->
           Flow_js_utils.check_untyped_import cx ImportValue lreason reason;
           rec_flow_t ~use_op:unknown_use cx trace (reposition_reason cx reason l, t_out)

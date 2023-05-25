@@ -1142,8 +1142,6 @@ module type Import_export_helper_sig = sig
   val return : Context.t -> Type.trace -> Type.t -> r
 
   val mk_typeof_annotation : Context.t -> ?trace:Type.trace -> reason -> Type.t -> Type.t
-
-  val error_type : Context.t -> Type.trace -> Reason.t -> r
 end
 
 (*********************************************************************)
@@ -1179,7 +1177,7 @@ end
    Overall, we should be able to (at least conceptually) desugar `import
    type` to `import` followed by `type`.
 *)
-module ImportTypeT_kit (F : Import_export_helper_sig) = struct
+module ImportTypeT_kit (_ : Import_export_helper_sig) = struct
   let canonicalize_imported_type cx reason t =
     match t with
     | DefT (_, trust, ClassT inst) -> Some (DefT (reason, trust, TypeT (ImportClassKind, inst)))
@@ -1206,14 +1204,13 @@ module ImportTypeT_kit (F : Import_export_helper_sig) = struct
 
   let on_concrete_type cx trace reason export_name exported_type =
     match (exported_type, export_name) with
-    | ((ExactT (_, DefT (_, _, ObjT _)) | DefT (_, _, ObjT _)), "default") ->
-      F.return cx trace exported_type
+    | ((ExactT (_, DefT (_, _, ObjT _)) | DefT (_, _, ObjT _)), "default") -> exported_type
     | (exported_type, _) ->
       (match canonicalize_imported_type cx reason exported_type with
-      | Some imported_t -> F.return cx trace imported_t
+      | Some imported_t -> imported_t
       | None ->
         add_output cx ~trace (Error_message.EImportValueAsType (reason, export_name));
-        F.error_type cx trace reason)
+        AnyT.error reason)
 end
 
 (************************************************************************)
@@ -1236,22 +1233,19 @@ module ImportTypeofT_kit (F : Import_export_helper_sig) = struct
             }
         ) ->
       let typeof_t = F.mk_typeof_annotation cx ~trace reason lower_t in
-      F.return
-        cx
-        trace
-        (poly_type
-           id
-           tparams_loc
-           typeparams
-           (DefT (reason, bogus_trust (), TypeT (ImportTypeofKind, typeof_t)))
-        )
+
+      poly_type
+        id
+        tparams_loc
+        typeparams
+        (DefT (reason, bogus_trust (), TypeT (ImportTypeofKind, typeof_t)))
     | DefT (_, _, TypeT _)
     | DefT (_, _, PolyT { t_out = DefT (_, _, TypeT _); _ }) ->
       add_output cx ~trace (Error_message.EImportTypeAsTypeof (reason, export_name));
-      F.error_type cx trace reason
+      AnyT.error reason
     | _ ->
       let typeof_t = F.mk_typeof_annotation cx ~trace reason l in
-      F.return cx trace (DefT (reason, bogus_trust (), TypeT (ImportTypeofKind, typeof_t)))
+      DefT (reason, bogus_trust (), TypeT (ImportTypeofKind, typeof_t))
 end
 
 module CJSRequireT_kit (F : Import_export_helper_sig) = struct
@@ -1259,38 +1253,35 @@ module CJSRequireT_kit (F : Import_export_helper_sig) = struct
   let on_ModuleT
       cx trace (reason, is_strict, legacy_interop) (module_reason, exports, imported_is_strict) =
     check_nonstrict_import cx trace is_strict imported_is_strict reason;
-    let cjs_exports =
-      match exports.cjs_export with
-      | Some t ->
-        (* reposition the export to point at the require(), like the object
-           we create below for non-CommonJS exports *)
-        F.reposition ~trace cx (loc_of_reason reason) t
-      | None ->
-        (* Use default export if option is enabled and module is not lib *)
-        let automatic_require_default =
-          (legacy_interop || Context.automatic_require_default cx)
-          && not (is_lib_reason_def module_reason)
+    match exports.cjs_export with
+    | Some t ->
+      (* reposition the export to point at the require(), like the object
+         we create below for non-CommonJS exports *)
+      F.reposition ~trace cx (loc_of_reason reason) t
+    | None ->
+      (* Use default export if option is enabled and module is not lib *)
+      let automatic_require_default =
+        (legacy_interop || Context.automatic_require_default cx)
+        && not (is_lib_reason_def module_reason)
+      in
+      let exports_tmap = Context.find_exports cx exports.exports_tmap in
+      (* Convert ES module's named exports to an object *)
+      let mk_exports_object () =
+        let proto = ObjProtoT reason in
+        let props =
+          NameUtils.Map.map (fun (loc, t) -> Field (loc, t, Polarity.Positive)) exports_tmap
         in
-        let exports_tmap = Context.find_exports cx exports.exports_tmap in
-        (* Convert ES module's named exports to an object *)
-        let mk_exports_object () =
-          let proto = ObjProtoT reason in
-          let props =
-            NameUtils.Map.map (fun (loc, t) -> Field (loc, t, Polarity.Positive)) exports_tmap
-          in
-          Obj_type.mk_with_proto cx reason ~obj_kind:Exact ~frozen:true ~props proto
-        in
-        if automatic_require_default then
-          match NameUtils.Map.find_opt (OrdinaryName "default") exports_tmap with
-          | Some (_, default_t) -> default_t
-          | _ -> mk_exports_object ()
-        else
-          mk_exports_object ()
-    in
-    F.return cx trace cjs_exports
+        Obj_type.mk_with_proto cx reason ~obj_kind:Exact ~frozen:true ~props proto
+      in
+      if automatic_require_default then
+        match NameUtils.Map.find_opt (OrdinaryName "default") exports_tmap with
+        | Some (_, default_t) -> default_t
+        | _ -> mk_exports_object ()
+      else
+        mk_exports_object ()
 end
 
-module ImportModuleNsT_kit (F : Import_export_helper_sig) = struct
+module ImportModuleNsTKit = struct
   (* import * as X from 'SomeModule'; *)
   let on_ModuleT cx trace (reason_op, is_strict) (module_reason, exports, imported_is_strict) =
     check_nonstrict_import cx trace is_strict imported_is_strict reason_op;
@@ -1327,8 +1318,7 @@ module ImportModuleNsT_kit (F : Import_export_helper_sig) = struct
         Exact
     in
     let proto = ObjProtoT reason in
-    let ns_obj = Obj_type.mk_with_proto cx reason ~obj_kind ~frozen:true ~props proto in
-    F.return cx trace ns_obj
+    Obj_type.mk_with_proto cx reason ~obj_kind ~frozen:true ~props proto
 end
 
 module ImportDefaultT_kit (F : Import_export_helper_sig) = struct
@@ -1368,15 +1358,12 @@ module ImportDefaultT_kit (F : Import_export_helper_sig) = struct
           add_output cx ~trace (Error_message.ENoDefaultExport (reason, module_name, suggestion));
           AnyT.error module_reason)
     in
-    let import_t =
-      match import_kind with
-      | ImportType -> F.import_type cx trace reason "default" export_t
-      | ImportTypeof -> F.import_typeof cx trace reason "default" export_t
-      | ImportValue ->
-        F.assert_import_is_value cx trace reason "default" export_t;
-        export_t
-    in
-    F.return cx trace import_t
+    match import_kind with
+    | ImportType -> F.import_type cx trace reason "default" export_t
+    | ImportTypeof -> F.import_typeof cx trace reason "default" export_t
+    | ImportValue ->
+      F.assert_import_is_value cx trace reason "default" export_t;
+      export_t
 end
 
 module ImportNamedT_kit (F : Import_export_helper_sig) = struct
@@ -1401,39 +1388,36 @@ module ImportNamedT_kit (F : Import_export_helper_sig) = struct
       | None -> exports_tmap
     in
     let has_every_named_export = exports.has_every_named_export in
-    let import_t =
-      match (import_kind, NameUtils.Map.find_opt (OrdinaryName export_name) exports_tmap) with
-      | (ImportType, Some t) -> F.import_type cx trace reason export_name t
-      | (ImportType, None) when has_every_named_export ->
-        F.import_type cx trace reason export_name (AnyT.untyped reason)
-      | (ImportTypeof, Some t) -> F.import_typeof cx trace reason export_name t
-      | (ImportTypeof, None) when has_every_named_export ->
-        F.import_typeof cx trace reason export_name (AnyT.untyped reason)
-      | (ImportValue, Some t) ->
-        F.assert_import_is_value cx trace reason export_name t;
-        t
-      | (ImportValue, None) when has_every_named_export ->
-        let t = AnyT.untyped reason in
-        F.assert_import_is_value cx trace reason export_name t;
-        t
-      | (_, None) ->
-        let num_exports = NameUtils.Map.cardinal exports_tmap in
-        let has_default_export = NameUtils.Map.mem (OrdinaryName "default") exports_tmap in
-        let msg =
-          if num_exports = 1 && has_default_export then
-            Error_message.EOnlyDefaultExport (reason, module_name, export_name)
-          else
-            (* TODO consider filtering to OrdinaryNames only *)
-            let known_exports =
-              NameUtils.Map.keys exports_tmap |> List.rev_map display_string_of_name
-            in
-            let suggestion = typo_suggestion known_exports export_name in
-            Error_message.ENoNamedExport (reason, module_name, export_name, suggestion)
-        in
-        add_output cx ~trace msg;
-        AnyT.error reason
-    in
-    F.return cx trace import_t
+    match (import_kind, NameUtils.Map.find_opt (OrdinaryName export_name) exports_tmap) with
+    | (ImportType, Some t) -> F.import_type cx trace reason export_name t
+    | (ImportType, None) when has_every_named_export ->
+      F.import_type cx trace reason export_name (AnyT.untyped reason)
+    | (ImportTypeof, Some t) -> F.import_typeof cx trace reason export_name t
+    | (ImportTypeof, None) when has_every_named_export ->
+      F.import_typeof cx trace reason export_name (AnyT.untyped reason)
+    | (ImportValue, Some t) ->
+      F.assert_import_is_value cx trace reason export_name t;
+      t
+    | (ImportValue, None) when has_every_named_export ->
+      let t = AnyT.untyped reason in
+      F.assert_import_is_value cx trace reason export_name t;
+      t
+    | (_, None) ->
+      let num_exports = NameUtils.Map.cardinal exports_tmap in
+      let has_default_export = NameUtils.Map.mem (OrdinaryName "default") exports_tmap in
+      let msg =
+        if num_exports = 1 && has_default_export then
+          Error_message.EOnlyDefaultExport (reason, module_name, export_name)
+        else
+          (* TODO consider filtering to OrdinaryNames only *)
+          let known_exports =
+            NameUtils.Map.keys exports_tmap |> List.rev_map display_string_of_name
+          in
+          let suggestion = typo_suggestion known_exports export_name in
+          Error_message.ENoNamedExport (reason, module_name, export_name, suggestion)
+      in
+      add_output cx ~trace msg;
+      AnyT.error reason
 end
 
 (**************************************************************************)
