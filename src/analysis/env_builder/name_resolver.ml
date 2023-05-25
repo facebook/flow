@@ -2136,6 +2136,11 @@ module Make
         this#bind_pattern_identifier_customized ~kind:FunctionBinding loc x;
         super#identifier ident
 
+      method! component_identifier ident =
+        let (loc, { Flow_ast.Identifier.name = x; comments = _ }) = ident in
+        this#bind_pattern_identifier_customized ~kind:FunctionBinding loc x;
+        super#identifier ident
+
       (* We want to translate object pattern destructing {a:{b:{c}}} = o into o.a.b.c,
          so the use of refinement can be recorded as a write.
          We use acc to keep track of the current parent expr *)
@@ -3706,15 +3711,34 @@ module Make
           in
           env_state <- { env_state with write_entries }
 
-      method! function_param_pattern patt = this#visit_function_param_pattern ~is_rest:false patt
+      method! function_param_pattern patt =
+        this#visit_function_or_component_param_pattern ~is_rest:false patt;
+        super#function_param_pattern patt
 
       method! function_rest_param expr =
         let open Ast.Function.RestParam in
         let (_, { argument; comments = _ }) = expr in
-        ignore @@ this#visit_function_param_pattern ~is_rest:true argument;
+        this#visit_function_or_component_param_pattern ~is_rest:true argument;
+        ignore @@ super#function_param_pattern argument;
         expr
 
-      method private visit_function_param_pattern ~is_rest ((ploc, pattern) as patt) =
+      method! component_param_pattern patt =
+        this#visit_function_or_component_param_pattern ~is_rest:false patt;
+        ignore @@ super#component_param_pattern patt;
+        patt
+
+      (* This is an object key being declared, not an identifier being read. We need to override
+       * this method or else the name resolver will report a read on the param name *)
+      method! component_param_name param_name = param_name
+
+      method! component_rest_param expr =
+        let open Ast.Statement.ComponentDeclaration.RestParam in
+        let (_, { argument; comments = _ }) = expr in
+        this#visit_function_or_component_param_pattern ~is_rest:true argument;
+        ignore @@ super#component_param_pattern argument;
+        expr
+
+      method private visit_function_or_component_param_pattern ~is_rest (ploc, pattern) =
         let reason =
           match pattern with
           | Flow_ast.Pattern.Identifier
@@ -3736,8 +3760,24 @@ module Make
             (Env_api.AssigningWrite reason)
             env_state.write_entries
         in
-        env_state <- { env_state with write_entries };
-        super#function_param_pattern patt
+        env_state <- { env_state with write_entries }
+
+      method! component_body_with_params body params =
+        this#expecting_abrupt_completions (fun () ->
+            let env = this#env in
+            this#run
+              (fun () ->
+                this#havoc_uninitialized_env;
+                let completion_state =
+                  this#run_to_completion (fun () ->
+                      ignore (super#component_body_with_params body params)
+                  )
+                in
+                this#commit_abrupt_completion_matching
+                  AbruptCompletion.(mem [return; throw])
+                  completion_state)
+              ~finally:(fun () -> this#reset_env env)
+        )
 
       (* We also havoc state when entering functions and exiting calls. *)
       method! lambda ~is_arrow ~fun_loc ~generator_return_loc params predicate body =
@@ -5571,15 +5611,30 @@ module Make
         this#mark_dead_write (Env_api.FunctionThisLoc, loc);
         super#function_declaration loc expr
 
-      method! function_param_pattern ((loc, _) as patt) =
+      method! function_param_pattern patt =
+        this#visit_function_or_component_param_pattern patt;
+        super#function_param_pattern patt
+
+      method visit_function_or_component_param_pattern (loc, _) =
         write_entries <-
           EnvMap.update
             (Env_api.FunctionParamLoc, loc)
             (function
               | None -> Some Env_api.NonAssigningWrite
               | x -> x)
-            write_entries;
-        super#function_param_pattern patt
+            write_entries
+
+      method! component_declaration loc expr =
+        this#mark_dead_write (Env_api.FunctionThisLoc, loc);
+        super#component_declaration loc expr
+
+      method! component_param_pattern patt =
+        this#visit_function_or_component_param_pattern patt;
+        patt
+
+      (* This is an object key being declared, not an identifier being read. We need to override
+       * this method or else the name resolver will report a read on the param name *)
+      method! component_param_name param_name = param_name
 
       method! lambda ~is_arrow ~fun_loc ~generator_return_loc params predicate body =
         let loc =

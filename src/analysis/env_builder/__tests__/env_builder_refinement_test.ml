@@ -6879,3 +6879,67 @@ let y;
           (6, 2) to (6, 3): (`x`)
         }]
         |}]
+
+let%expect_test "component_declaration" =
+  print_ssa_test {|
+  Foo;
+  component Foo(param: T) { param }
+  Foo;
+|};
+    [%expect {|
+      [
+        (2, 2) to (2, 5) => {
+          (3, 12) to (3, 15): (`Foo`)
+        };
+        (3, 23) to (3, 24) => {
+          Global T
+        };
+        (3, 28) to (3, 33) => {
+          (3, 16) to (3, 21): (`param`)
+        };
+        (4, 2) to (4, 5) => {
+          (3, 12) to (3, 15): (`Foo`)
+        }]
+        |}]
+
+let%expect_test "dead_component_declaration" =
+  print_ssa_test {|
+  throw 'lol';
+  component Foo(param: T) { param } // hoisted
+  Foo;
+|};
+    [%expect{|
+      [
+        (3, 23) to (3, 24) => {
+          Global T
+        };
+        (3, 28) to (3, 33) => {
+          (3, 16) to (3, 21): (`param`)
+        };
+        (4, 2) to (4, 5) => {
+          unreachable
+        }] |}]
+
+let%expect_test "component_refinement_scope" =
+  print_ssa_test {|
+  let x = null;
+  invariant(x == null);
+  x; // refined
+  component Foo() {
+    x // not refined
+  }
+|};
+    [%expect{|
+      [
+        (3, 2) to (3, 11) => {
+          Global invariant
+        };
+        (3, 12) to (3, 13) => {
+          (2, 6) to (2, 7): (`x`)
+        };
+        (4, 2) to (4, 3) => {
+          {refinement = Not (Not (Maybe)); writes = (2, 6) to (2, 7): (`x`)}
+        };
+        (6, 4) to (6, 5) => {
+          (2, 6) to (2, 7): (`x`)
+        }] |}]

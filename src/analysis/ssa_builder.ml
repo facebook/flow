@@ -1211,7 +1211,7 @@ struct
         end;
         super#statement stmt
 
-      (* Function declarations are hoisted to the top of a block, so that they may be considered
+      (* Function and component declarations are hoisted to the top of a block, so that they may be considered
          initialized before they are read. *)
       method! statement_list (stmts : (L.t, L.t) Ast.Statement.t list) =
         let open Ast.Statement in
@@ -1219,6 +1219,7 @@ struct
           List.partition
             (function
               | (_, FunctionDeclaration _) -> true
+              | (_, ComponentDeclaration _) -> true
               | _ -> false)
             stmts
         in
