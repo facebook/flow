@@ -347,6 +347,13 @@ let resolve_annotated_function
     unknown_use
   )
 
+let resolve_annotated_component _cx reason _tparams_map _component_loc component =
+  let { Ast.Statement.ComponentDeclaration.body = _; params = _; sig_loc = _; return = _; _ } =
+    component
+  in
+  (* TODO(jmbrown): Signatures for components *)
+  (AnyT.error reason, unknown_use)
+
 let rec binding_has_annot = function
   | Root (Annotation _) -> true
   | Select { parent = (_, b); _ } -> binding_has_annot b
@@ -1064,6 +1071,8 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
       resolve_chain_expression cx ~cond expr
     | ExpressionDef { cond_context = cond; expr; chain = false; hints = _ } ->
       resolve_write_expression cx ~cond expr
+    | Component { component; component_loc; tparams_map } ->
+      resolve_annotated_component cx def_reason tparams_map component_loc component
     | Function
         {
           function_;

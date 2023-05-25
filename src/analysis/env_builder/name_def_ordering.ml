@@ -373,6 +373,15 @@ struct
           let _ = map_opt this#type_params tparams in
           ()
 
+        method component_def (expr : ('loc, 'loc) Ast.Statement.ComponentDeclaration.t) =
+          let { Ast.Statement.ComponentDeclaration.params; body; return; tparams; _ } = expr in
+          let open Flow_ast_mapper in
+          let _ = this#function_body body in
+          let _ = this#type_annotation_hint return in
+          let _ = this#component_params_annotated params in
+          let _ = map_opt this#type_params tparams in
+          ()
+
         method function_param_pattern_annotated (expr : ('loc, 'loc) Ast.Pattern.t) =
           let open Ast.Pattern in
           let open Flow_ast_mapper in
@@ -464,6 +473,29 @@ struct
           let (_, { argument; comments = _ }) = elem in
           let _argument' = this#function_param_pattern_annotated argument in
           elem
+
+        method component_params_annotated
+            (params : ('loc, 'loc) Ast.Statement.ComponentDeclaration.Params.t) =
+          let open Flow_ast_mapper in
+          let open Ast.Statement.ComponentDeclaration in
+          let (_, { Params.params = params_list; rest; comments = _ }) = params in
+          let _ = map_list this#component_param_annotated params_list in
+          let _ = map_opt this#component_rest_param_annotated rest in
+          params
+
+        method component_param_annotated
+            (param : ('loc, 'loc) Ast.Statement.ComponentDeclaration.Param.t) =
+          let open Ast.Statement.ComponentDeclaration.Param in
+          let (_, { local; _ }) = param in
+          let _ = this#function_param_pattern_annotated local in
+          param
+
+        method component_rest_param_annotated
+            (param : ('loc, 'loc) Ast.Statement.ComponentDeclaration.RestParam.t) =
+          let open Ast.Statement.ComponentDeclaration.RestParam in
+          let (_, { argument; _ }) = param in
+          let _ = this#function_param_pattern_annotated argument in
+          param
 
         method function_params_annotated (params : ('loc, 'loc) Ast.Function.Params.t) =
           let open Flow_ast_mapper in
@@ -766,6 +798,11 @@ struct
             (depends_of_tparams_map tparams_map state)
         in
         depends_of_node (fun visitor -> SMap.iter (fun _ -> visitor#add ~why:id_loc) statics) state
+      in
+      let depends_of_component tparams_map component state =
+        depends_of_node
+          (fun visitor -> visitor#component_def component)
+          (depends_of_tparams_map tparams_map state)
       in
       let depends_of_class
           { Ast.Class.id = _; body; tparams; extends; implements; class_decorators; comments = _ } =
@@ -1073,6 +1110,8 @@ struct
           ~statics
           function_
           EnvMap.empty
+      | Component { tparams_map; component; component_loc = _ } ->
+        depends_of_component tparams_map component EnvMap.empty
       | Class { class_; class_loc = _; class_implicit_this_tparam = _; this_super_write_locs = _ }
         ->
         depends_of_class class_
@@ -1149,7 +1188,8 @@ struct
           {
             synthesizable_from_annotation = FunctionSynthesizable | FunctionPredicateSynthesizable _;
             _;
-          } ->
+          }
+      | Component _ ->
         true
       | ExpressionDef _
       | Update _
@@ -1220,6 +1260,7 @@ struct
     | Binding bind -> bind_loop bind
     | GeneratorNext None -> [Env_api.Loc loc]
     | Function { synthesizable_from_annotation = MissingReturn loc; _ } -> [Env_api.Loc loc]
+    | Component _
     | TypeAlias _
     | OpaqueType _
     | TypeParam _

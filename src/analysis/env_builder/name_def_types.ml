@@ -202,6 +202,11 @@ type def =
       statics: Env_api.EnvKey.t SMap.t;
       tparams_map: tparams_map;
     }
+  | Component of {
+      tparams_map: tparams_map;
+      component_loc: ALoc.t;
+      component: (ALoc.t, ALoc.t) Ast.Statement.ComponentDeclaration.t;
+    }
   | Class of {
       class_implicit_this_tparam: class_implicit_this_tparam;
       class_: (ALoc.t, ALoc.t) Ast.Class.t;
@@ -315,6 +320,12 @@ module Print = struct
            ~default:"<anonymous>"
            id
         )
+    | Component
+        {
+          component = { Ast.Statement.ComponentDeclaration.id = (_, { Ast.Identifier.name; _ }); _ };
+          _;
+        } ->
+      spf "component %s" name
     | DeclaredClass (_, { Ast.Statement.DeclareClass.id = (_, { Ast.Identifier.name; _ }); _ }) ->
       spf "declared class %s" name
     | Class

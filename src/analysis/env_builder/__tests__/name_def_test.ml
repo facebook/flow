@@ -1471,3 +1471,30 @@ if (pair.values.length !== 0) {
       (4, 27) to (4, 28) =>
       (5, 8) to (5, 11) =>
       (6, 20) to (6, 31) |}]
+
+let%expect_test "component ordering" =
+  print_order_test {|
+let x;
+component F(param) {
+  x = param;
+}
+x();
+|};
+    [%expect{|
+      (3, 12) to (3, 17) =>
+      (4, 2) to (4, 3) =>
+      (3, 10) to (3, 11) |}]
+
+let%expect_test "component ordering inc" =
+  print_order_test {|
+let x;
+var y;
+component F() {
+  y = x; return 42;
+}
+x++;
+|};
+    [%expect{|
+      (7, 0) to (7, 1) =>
+      (5, 2) to (5, 3) =>
+      (4, 10) to (4, 11) |}]

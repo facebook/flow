@@ -582,6 +582,9 @@ let def_of_function ~tparams_map ~hints ~has_this_def ~function_loc ~statics ~ar
       statics;
     }
 
+let def_of_component ~tparams_map ~component_loc component =
+  Component { tparams_map; component_loc; component }
+
 let func_scope_kind ?key { Ast.Function.async; generator; _ } =
   match (async, generator, key) with
   | ( false,
@@ -1147,6 +1150,196 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
       in
       this#add_destructure_bindings source pat;
       super#catch_clause_pattern pat
+
+    method! component_declaration loc stmt =
+      this#visit_component_declaration loc stmt;
+      stmt
+
+    method visit_component_declaration loc stmt =
+      let { Ast.Statement.ComponentDeclaration.id; sig_loc; params = _; body = _; _ } = stmt in
+      this#in_new_tparams_env (fun () ->
+          this#visit_component stmt;
+          let (_, { Ast.Identifier.name; _ }) = id in
+          let reason = mk_reason (RComponent (OrdinaryName name)) sig_loc in
+          let def = def_of_component ~tparams_map:tparams ~component_loc:loc stmt in
+          let (id_loc, _) = id in
+          this#add_ordinary_binding id_loc reason def
+      )
+
+    method private visit_component stmt =
+      this#in_scope
+        (fun () ->
+          let {
+            Ast.Statement.ComponentDeclaration.id = _;
+            params =
+              ( _,
+                {
+                  Ast.Statement.ComponentDeclaration.Params.params = params_list;
+                  rest;
+                  comments = _;
+                }
+              );
+            body;
+            return;
+            tparams = component_tparams;
+            sig_loc = _;
+            comments = _;
+          } =
+            stmt
+          in
+          Base.Option.iter component_tparams ~f:(fun tparams -> ignore @@ this#type_params tparams);
+          Base.List.iter ~f:(this#visit_component_param ~hints:[]) params_list;
+          Base.Option.iter ~f:(this#visit_component_rest_param ~hints:[]) rest;
+          ignore @@ this#type_annotation_hint return;
+
+          let return_loc =
+            match return with
+            | Ast.Type.Available (loc, _)
+            | Ast.Type.Missing loc ->
+              loc
+          in
+          let return_hint =
+            match return with
+            | Ast.Type.Available annot ->
+              [Hint_t (AnnotationHint (tparams, annot), ExpectedTypeHint)]
+            | Ast.Type.Missing _ -> []
+          in
+          this#record_hint return_loc return_hint;
+          let old_stack = return_hint_stack in
+          return_hint_stack <- return_hint :: return_hint_stack;
+          let (body_loc, block) = body in
+          ignore @@ this#block body_loc block;
+          return_hint_stack <- old_stack)
+        Ordinary
+        ()
+
+    method private visit_component_param
+        ~hints (param : ('loc, 'loc) Ast.Statement.ComponentDeclaration.Param.t) =
+      let open Ast.Statement.ComponentDeclaration.Param in
+      let (loc, { local; default = default_expression; shorthand; name }) = param in
+      let optional =
+        match local with
+        | (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.optional; _ }) -> optional
+        | _ -> false
+      in
+      let (param_loc, _) = local in
+      let annot = Destructure.type_of_pattern local in
+      let source =
+        match annot with
+        | Some annot ->
+          Base.Option.iter
+            default_expression
+            ~f:
+              (this#visit_expression
+                 ~hints:[Hint_t (AnnotationHint (tparams, annot), ExpectedTypeHint)]
+                 ~cond:NonConditionalContext
+              );
+          Annotation
+            {
+              tparams_map = tparams;
+              optional;
+              has_default_expression = Base.Option.is_some default_expression;
+              param_loc = Some param_loc;
+              annot;
+            }
+        | None ->
+          Base.Option.iter
+            default_expression
+            ~f:(this#visit_expression ~hints:[] ~cond:NonConditionalContext);
+          let reason =
+            match local with
+            | ( _,
+                Ast.Pattern.Identifier
+                  { Ast.Pattern.Identifier.name = (_, { Ast.Identifier.name; _ }); _ }
+              ) ->
+              mk_reason (RParameter (Some name)) param_loc
+            | _ -> mk_reason RDestructuring param_loc
+          in
+          this#record_hint param_loc hints;
+          Contextual { reason; hints; optional; default_expression }
+      in
+      let record_identifier loc reason binding =
+        this#add_ordinary_binding loc reason (Binding binding);
+        true
+      in
+      if
+        (not
+           (Destructure.fold_pattern
+              ~record_identifier
+              ~record_destructuring_intermediate:this#add_destructure_binding
+              ~visit_default_expression:(this#visit_expression ~cond:NonConditionalContext)
+              ~default:false
+              ~join:( || )
+              (Root source)
+              local
+           )
+        )
+        && Base.Option.is_none annot
+      then
+        this#add_binding
+          (Env_api.FunctionParamLoc, loc)
+          (mk_reason RDestructuring loc)
+          NonBindingParam;
+      ignore @@ super#component_param (loc, { local; default = None; shorthand; name })
+
+    method private visit_component_rest_param
+        ~hints (param : ('loc, 'loc) Ast.Statement.ComponentDeclaration.RestParam.t) =
+      let open Ast.Statement.ComponentDeclaration.RestParam in
+      let (loc, { argument; comments = _ }) = param in
+      let optional =
+        match argument with
+        | (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.optional; _ }) -> optional
+        | _ -> false
+      in
+      let (param_loc, _) = argument in
+      let annot = Destructure.type_of_pattern argument in
+      let source =
+        match annot with
+        | Some annot ->
+          Annotation
+            {
+              tparams_map = tparams;
+              optional;
+              has_default_expression = false;
+              param_loc = Some param_loc;
+              annot;
+            }
+        | None ->
+          let reason =
+            match argument with
+            | ( _,
+                Ast.Pattern.Identifier
+                  { Ast.Pattern.Identifier.name = (_, { Ast.Identifier.name; _ }); _ }
+              ) ->
+              mk_reason (RParameter (Some name)) param_loc
+            | _ -> mk_reason RDestructuring param_loc
+          in
+          this#record_hint param_loc hints;
+          Contextual { reason; hints; optional; default_expression = None }
+      in
+      let record_identifier loc reason binding =
+        this#add_ordinary_binding loc reason (Binding binding);
+        true
+      in
+      if
+        (not
+           (Destructure.fold_pattern
+              ~record_identifier
+              ~record_destructuring_intermediate:this#add_destructure_binding
+              ~visit_default_expression:(this#visit_expression ~cond:NonConditionalContext)
+              ~default:false
+              ~join:( || )
+              (Root source)
+              argument
+           )
+        )
+        && Base.Option.is_none annot
+      then
+        this#add_binding
+          (Env_api.FunctionParamLoc, loc)
+          (mk_reason RDestructuring loc)
+          NonBindingParam;
+      ignore @@ super#component_rest_param param
 
     method visit_function_expr
         ~func_hints ~has_this_def ~var_assigned_to ~statics ~arrow function_loc expr =
