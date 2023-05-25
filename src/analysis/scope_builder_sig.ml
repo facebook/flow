@@ -32,6 +32,11 @@ module type S = sig
 
          method with_bindings : 'a. ?lexical:bool -> L.t -> L.t Bindings.t -> ('a -> 'a) -> 'a -> 'a
 
+         method component_body_with_params :
+           L.t * (L.t, L.t) Flow_ast.Statement.Block.t ->
+           (L.t, L.t) Flow_ast.Statement.ComponentDeclaration.Params.t ->
+           unit
+
          method private scoped_for_statement :
            L.t -> (L.t, L.t) Flow_ast.Statement.For.t -> (L.t, L.t) Flow_ast.Statement.For.t
 

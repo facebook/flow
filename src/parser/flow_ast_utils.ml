@@ -68,32 +68,40 @@ let partition_directives statements =
   in
   helper [] statements
 
-let hoist_function_declarations stmts =
+let hoist_function_and_component_declarations stmts =
   let open Flow_ast.Statement in
-  let (func_decs, other_stmts) =
+  let (func_and_component_decs, other_stmts) =
     List.partition
       (function
-        (* function f() {} *)
-        | (_, FunctionDeclaration { Flow_ast.Function.id = Some _; _ })
-        (* export function f() {} *)
+        (* function f() {} / component F() {} *)
+        | (_, (FunctionDeclaration { Flow_ast.Function.id = Some _; _ } | ComponentDeclaration _))
+        (* export function f() {} / export component F() {} *)
         | ( _,
             ExportNamedDeclaration
               {
                 ExportNamedDeclaration.declaration =
-                  Some (_, FunctionDeclaration { Flow_ast.Function.id = Some _; _ });
+                  Some
+                    ( _,
+                      ( FunctionDeclaration { Flow_ast.Function.id = Some _; _ }
+                      | ComponentDeclaration _ )
+                    );
                 _;
               }
           )
-        (* export default function f() {} *)
+        (* export default function f() {} / export default component F() {} *)
         | ( _,
             ExportDefaultDeclaration
               {
                 ExportDefaultDeclaration.declaration =
                   ExportDefaultDeclaration.Declaration
-                    (_, FunctionDeclaration { Flow_ast.Function.id = Some _; _ });
+                    ( _,
+                      ( FunctionDeclaration { Flow_ast.Function.id = Some _; _ }
+                      | ComponentDeclaration _ )
+                    );
                 _;
               }
           )
+        (* TODO(jmbrown): Hoist declared components *)
         (* declare function f(): void; *)
         | (_, DeclareFunction _)
         (* declare export function f(): void; *)
@@ -104,7 +112,7 @@ let hoist_function_declarations stmts =
         | _ -> false)
       stmts
   in
-  func_decs @ other_stmts
+  func_and_component_decs @ other_stmts
 
 let negate_raw_lit raw =
   let raw_len = String.length raw in

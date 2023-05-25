@@ -4215,7 +4215,8 @@ module Make
       (* Function declarations are hoisted to the top of a block, so that they may be considered
          initialized before they are read. *)
       method! statement_list (stmts : (ALoc.t, ALoc.t) Ast.Statement.t list) =
-        ignore @@ super#statement_list (Flow_ast_utils.hoist_function_declarations stmts);
+        ignore
+        @@ super#statement_list (Flow_ast_utils.hoist_function_and_component_declarations stmts);
         stmts
 
       (* WHen the refinement scope we push is non-empty we want to make sure that the variables

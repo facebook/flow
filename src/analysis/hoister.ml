@@ -9,9 +9,10 @@ module Ast = Flow_ast
 open Flow_ast_visitor
 
 (* Hoister class. Does a shallow visit of statements, looking for binding
-   declarations (currently, variable declarations, parameters, and function
-   declarations) and recording the corresponding bindings in a list. The list
-   can have duplicates, which are handled elsewhere.
+   declarations (currently, variable declarations, parameters, function
+   declarations, and component declarations) and recording the corresponding
+   bindings in a list. The list can have duplicates, which are handled
+   elsewhere.
 
    TODO: Ideally implemented as a fold, not a map.
 *)
@@ -68,6 +69,7 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
       | (_, Labeled _) ->
         super#statement stmt
       | (_, FunctionDeclaration _)
+      | (_, ComponentDeclaration _)
       | (_, DeclareFunction _) ->
         this#flowmin_compatibility_statement stmt
       | _ -> this#nonlexical_statement stmt
@@ -159,6 +161,12 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
         | None -> ()
       end;
       expr
+
+    method! component_declaration _loc (stmt : ('loc, 'loc) Ast.Statement.ComponentDeclaration.t) =
+      let open Ast.Statement.ComponentDeclaration in
+      let { id; _ } = stmt in
+      this#add_function_binding id;
+      stmt
 
     method! declare_class loc (decl : ('loc, 'loc) Ast.Statement.DeclareClass.t) =
       let open Ast.Statement.DeclareClass in

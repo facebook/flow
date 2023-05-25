@@ -152,6 +152,23 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         (loc, { Params.params = params_list'; rest = rest'; comments = comments'; this_ = this_' })
     end
 
+  let component_annot_and_default_remover =
+    object (this)
+      inherit [(L.t, L.t) Ast.Type.t list, L.t] visitor ~init:[]
+
+      method! type_annotation_hint return =
+        let open Ast.Type in
+        match return with
+        | Available _ -> Missing L.none
+        | Missing _ -> return
+
+      method! component_param param =
+        let open Ast.Statement.ComponentDeclaration.Param in
+        let (loc, { name; local; default = _; shorthand }) = param in
+        let local' = this#component_param_pattern local in
+        (loc, { name; local = local'; default = None; shorthand })
+    end
+
   class scope_builder ~flowmin_compatibility ~enable_enums ~with_types =
     object (this)
       inherit [Acc.t, L.t] visitor ~init:Acc.init as super
@@ -605,6 +622,48 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
 
       method private this_binding_function_id_opt ~fun_loc:_ ~has_this_annot:_ ident =
         Base.Option.iter ident ~f:(fun id -> ignore @@ this#function_identifier id)
+
+      method component_body_with_params body params =
+        (* In component syntax param types and defaults cannot reference other params. *)
+        run this#component_params params;
+        let bindings =
+          let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
+          run hoist#component_params params;
+          hoist#acc
+        in
+        let params_without_annots_and_defaults =
+          component_annot_and_default_remover#component_params params
+        in
+        this#with_bindings
+          (fst params)
+          bindings
+          (fun () ->
+            (* This is to ensure that params are declared *)
+            run this#component_params params_without_annots_and_defaults;
+            run this#component_body body)
+          ()
+
+      method! component_declaration loc (expr : (L.t, L.t) Ast.Statement.ComponentDeclaration.t) =
+        let skip_scope =
+          flowmin_compatibility
+          &&
+          let visit = new with_or_eval_visitor in
+          visit#eval (visit#component_declaration loc) expr
+        in
+        if not skip_scope then (
+          let open Ast.Statement.ComponentDeclaration in
+          let { id; params; body; return; tparams; sig_loc = _; comments = _ } = expr in
+          ignore @@ this#component_identifier id;
+          this#scoped_type_params
+            ~hoist_op:this#hoist_annotations
+            tparams
+            ~in_tparam_scope:(fun () ->
+              this#component_body_with_params body params;
+              if with_types then
+                this#hoist_annotations (fun () -> ignore @@ this#type_annotation_hint return)
+          )
+        );
+        expr
 
       method! function_declaration loc (expr : (L.t, L.t) Ast.Function.t) =
         let skip_scope =

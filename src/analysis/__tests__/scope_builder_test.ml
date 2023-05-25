@@ -348,4 +348,44 @@ let tests =
          >:: mk_scope_builder_all_uses_test
                "declare export default class Foo {}; new Foo()"
                [mk_loc (1, 29) (1, 32); mk_loc (1, 41) (1, 44)];
+         "hoisted_component_declaration_uses"
+         >:: mk_scope_builder_all_uses_test
+               "Foo; component Foo() { }; Foo"
+               [mk_loc (1, 0) (1, 3); mk_loc (1, 15) (1, 18); mk_loc (1, 26) (1, 29)];
+         "component_param_scoping_1"
+         >:: mk_scope_builder_all_uses_test
+               "component Foo(
+                  param,
+                  param2 = param
+                ) {
+                  param;
+                  param2;
+                }"
+               [
+                 mk_loc (1, 10) (1, 13);
+                 mk_loc (2, 18) (2, 23);
+                 mk_loc (3, 18) (3, 24);
+                 (* The default `param` is out of scope. *)
+                 mk_loc (5, 18) (5, 23);
+                 mk_loc (6, 18) (6, 24);
+               ];
+         "component_param_scoping_out_of_scope"
+         >:: mk_scope_builder_all_uses_test
+               "component Foo(
+                  p,
+                  q: typeof p,
+                ) {
+                }"
+               [
+                 mk_loc (1, 10) (1, 13);
+                 mk_loc (2, 18) (2, 19);
+                 (* The reference to `p` in `typeof p` is out-of-scope. *)
+                 mk_loc (3, 18) (3, 19);
+               ];
+         "scope_loc_component_declaration"
+         >:: mk_scope_builder_scope_loc_test
+               "component Foo(param: T) {};"
+               [
+                 (0, mk_loc (1, 0) (1, 27)); (1, mk_loc (1, 13) (1, 23)); (2, mk_loc (1, 24) (1, 26));
+               ];
        ]

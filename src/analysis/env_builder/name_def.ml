@@ -668,7 +668,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
     method! statement_list stmts =
       (* Function statics *)
       let open Ast.Statement in
-      let stmts = Flow_ast_utils.hoist_function_declarations stmts in
+      let stmts = Flow_ast_utils.hoist_function_and_component_declarations stmts in
       let rec loop state stmts =
         match stmts with
         | [] ->

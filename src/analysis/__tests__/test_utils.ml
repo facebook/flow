@@ -8,7 +8,7 @@
 let parse contents =
   let parse_options =
     let open Parser_env in
-    Some { default_parse_options with enums = true }
+    Some { default_parse_options with enums = true; components = true }
   in
   let (ast, _errors) = Parser_flow.program ~parse_options contents in
   ast
