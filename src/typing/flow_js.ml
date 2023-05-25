@@ -250,7 +250,7 @@ struct
 
     let reposition = FlowJs.reposition
 
-    let return cx ~use_op trace t tout = FlowJs.rec_flow_t cx ~use_op trace (t, tout)
+    let return cx trace t tout = FlowJs.rec_flow_t cx ~use_op:unknown_use trace (t, tout)
 
     let import_type cx trace reason name export_t =
       Tvar.mk_where cx reason (fun tvar ->

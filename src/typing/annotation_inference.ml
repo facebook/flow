@@ -254,7 +254,7 @@ module rec ConsGen : S = struct
 
     let reposition cx ?trace:_ loc ?desc:_ ?annot_loc:_ t = reposition cx loc t
 
-    let return _cx ~use_op:_ _trace t = t
+    let return _cx _trace t = t
 
     let import_type cx _ reason export_name t =
       ConsGen.elab_t cx t (Annot_ImportTypeT (reason, export_name))

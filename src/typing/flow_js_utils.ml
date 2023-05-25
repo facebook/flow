@@ -1139,7 +1139,7 @@ module type Import_export_helper_sig = sig
   val cjs_extract_named_exports :
     Context.t -> Type.trace -> Reason.t * (Reason.t * Type.exporttypes * bool) -> Type.t -> Type.t
 
-  val return : Context.t -> use_op:use_op -> Type.trace -> Type.t -> r
+  val return : Context.t -> Type.trace -> Type.t -> r
 
   val mk_typeof_annotation : Context.t -> ?trace:Type.trace -> reason -> Type.t -> Type.t
 
@@ -1207,10 +1207,10 @@ module ImportTypeT_kit (F : Import_export_helper_sig) = struct
   let on_concrete_type cx trace reason export_name exported_type =
     match (exported_type, export_name) with
     | ((ExactT (_, DefT (_, _, ObjT _)) | DefT (_, _, ObjT _)), "default") ->
-      F.return cx trace ~use_op:unknown_use exported_type
+      F.return cx trace exported_type
     | (exported_type, _) ->
       (match canonicalize_imported_type cx reason exported_type with
-      | Some imported_t -> F.return cx trace ~use_op:unknown_use imported_t
+      | Some imported_t -> F.return cx trace imported_t
       | None ->
         add_output cx ~trace (Error_message.EImportValueAsType (reason, export_name));
         F.error_type cx trace reason)
@@ -1237,7 +1237,6 @@ module ImportTypeofT_kit (F : Import_export_helper_sig) = struct
         ) ->
       let typeof_t = F.mk_typeof_annotation cx ~trace reason lower_t in
       F.return
-        ~use_op:unknown_use
         cx
         trace
         (poly_type
@@ -1252,11 +1251,7 @@ module ImportTypeofT_kit (F : Import_export_helper_sig) = struct
       F.error_type cx trace reason
     | _ ->
       let typeof_t = F.mk_typeof_annotation cx ~trace reason l in
-      F.return
-        ~use_op:unknown_use
-        cx
-        trace
-        (DefT (reason, bogus_trust (), TypeT (ImportTypeofKind, typeof_t)))
+      F.return cx trace (DefT (reason, bogus_trust (), TypeT (ImportTypeofKind, typeof_t)))
 end
 
 module CJSRequireT_kit (F : Import_export_helper_sig) = struct
@@ -1292,7 +1287,7 @@ module CJSRequireT_kit (F : Import_export_helper_sig) = struct
         else
           mk_exports_object ()
     in
-    F.return cx ~use_op:unknown_use trace cjs_exports
+    F.return cx trace cjs_exports
 end
 
 module ImportModuleNsT_kit (F : Import_export_helper_sig) = struct
@@ -1333,7 +1328,7 @@ module ImportModuleNsT_kit (F : Import_export_helper_sig) = struct
     in
     let proto = ObjProtoT reason in
     let ns_obj = Obj_type.mk_with_proto cx reason ~obj_kind ~frozen:true ~props proto in
-    F.return cx ~use_op:unknown_use trace ns_obj
+    F.return cx trace ns_obj
 end
 
 module ImportDefaultT_kit (F : Import_export_helper_sig) = struct
@@ -1381,7 +1376,7 @@ module ImportDefaultT_kit (F : Import_export_helper_sig) = struct
         F.assert_import_is_value cx trace reason "default" export_t;
         export_t
     in
-    F.return cx ~use_op:unknown_use trace import_t
+    F.return cx trace import_t
 end
 
 module ImportNamedT_kit (F : Import_export_helper_sig) = struct
@@ -1438,7 +1433,7 @@ module ImportNamedT_kit (F : Import_export_helper_sig) = struct
         add_output cx ~trace msg;
         AnyT.error reason
     in
-    F.return cx trace ~use_op:unknown_use import_t
+    F.return cx trace import_t
 end
 
 (**************************************************************************)
@@ -1523,7 +1518,7 @@ module ExportNamedT_kit (F : Import_export_helper_sig) = struct
     Context.find_exports cx exports_tmap
     |> NameUtils.Map.fold add_export tmap
     |> Context.add_export_map cx exports_tmap;
-    F.return cx trace ~use_op:unknown_use lhs
+    F.return cx trace lhs
 end
 
 module AssertExportIsTypeT_kit (F : Import_export_helper_sig) = struct
@@ -1539,11 +1534,11 @@ module AssertExportIsTypeT_kit (F : Import_export_helper_sig) = struct
 
   let on_concrete_type cx trace name l =
     if is_type l then
-      F.return cx trace ~use_op:unknown_use l
+      F.return cx trace l
     else
       let reason = reason_of_t l in
       add_output cx ~trace Error_message.(EExportValueAsType (reason, name));
-      F.return ~use_op:unknown_use cx trace (AnyT.error reason)
+      F.return cx trace (AnyT.error reason)
 end
 
 (* Copy the named exports from a source module into a target module. Used
@@ -1557,7 +1552,7 @@ module CopyNamedExportsT_kit (F : Import_export_helper_sig) = struct
   (* There is nothing to copy from a module exporting `any` or `Object`. *)
   let on_AnyT cx trace lreason (reason, target_module) =
     check_untyped_import cx ImportValue lreason reason;
-    F.return ~use_op:unknown_use cx trace target_module
+    F.return cx trace target_module
 end
 
 (* Copy only the type exports from a source module into a target module.
@@ -1574,12 +1569,12 @@ module CopyTypeExportsT_kit (F : Import_export_helper_sig) = struct
         source_exports
         target_module_t
     in
-    F.return cx trace ~use_op:unknown_use target_module_t
+    F.return cx trace target_module_t
 
   (* There is nothing to copy from a module exporting `any` or `Object`. *)
   let on_AnyT cx trace lreason (reason, target_module) =
     check_untyped_import cx ImportValue lreason reason;
-    F.return ~use_op:unknown_use cx trace target_module
+    F.return cx trace target_module
 end
 
 (* Export a type from a given ModuleT, but only if the type is compatible
@@ -1603,7 +1598,7 @@ module ExportTypeT_kit (F : Import_export_helper_sig) = struct
       let named = NameUtils.Map.singleton export_name (None, l) in
       F.export_named cx trace (reason, named, ReExport) target_module_t
     else
-      F.return cx trace ~use_op:unknown_use target_module_t
+      F.return cx trace target_module_t
 end
 
 module CJSExtractNamedExportsT_kit (F : Import_export_helper_sig) = struct
@@ -1645,10 +1640,10 @@ module CJSExtractNamedExportsT_kit (F : Import_export_helper_sig) = struct
       let module_t =
         ModuleT (module_t_reason, { exporttypes with has_every_named_export = true }, is_strict)
       in
-      F.return cx trace ~use_op:unknown_use module_t
+      F.return cx trace module_t
     (* All other CommonJS export value types do not get merged into the named
      * exports tmap in any special way. *)
-    | _ -> F.return cx trace ~use_op:unknown_use (ModuleT local_module)
+    | _ -> F.return cx trace (ModuleT local_module)
 end
 
 (*******************)
