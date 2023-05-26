@@ -1,3 +1,22 @@
+### 0.207.0
+
+Likely to cause new Flow errors:
+* When you pass a generic component type to some React utility type like `React.ElementConfig<typeof some_generic_component>`, we will replace all the type parameters with their defaults or bounds. It can potentially cause downstream errors. ([Example](https://flow.org/try#1N4Igxg9gdgZglgcxALlAJwKYEMwBcD6aArlLnALYYrgA2WAzvXGCADQgYAeOBARgJ74AJhhhYiNXClzEM7DFCLl602QF92kEdRFg6mAAQwSeONAMBhADwAVAHwAKYDAgRkBgIJo0WfrbtqAJTuAG4QcEIA3AA6ULr6GAYhWGgGELwAVu7Oru5ePn70MnBQCAExUA7pWQYASth4ACQAojQYlKQW0PAIVrj8AA4YEDCWdoGRBgD0UwZCEBj0UADkuAYY3hCpvKJbcuubqVAQAO6xbCAhG0zQ1CEADAB0AEz3AMyPAIwgakA))
+
+New Features:
+* Add built-in (intrisic) element names like `div` to JSX autocomplete
+* Mapped types now support operating directly over keys, like TypeScript's Pick and Omit ([Example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAJwKYEMwBcD6aArlLnALYYrgA2WAzvXGCADQgYAeOBARgJ74AJhhhYiNXClzEM7DFCLl602fM4AHDGgoLcWGgDpIUIXDLQD+XPy0oxNenI6btu0gcPksGrUOu2VMgOTupaOpQeRjZa+AhEWGhCKsEGTgC+7JAi1DEYAAQA8vkAvPnAMBAQyPmK5LzarPm8iTV1DWhNLQBebUod6QA6UMN5+QAKzADWADyFNcCGS5n5ANIY-PQ1ACTrm3MAfAel5QDaUxv5cFBrG-QAujWF5xv36QDcw6OB+QBiVQBBUwAIUSJ0mYFmhSaAHJKhAYfkAD75GEtNAwg6fKAACgqVRqAGYuq18oT0jV-hAgUJQWgAJTvfIAemZ+QA6lUAIRsEAAN20TGg1G89Fw2hA6SAA)). Mapped type support is still experimental; enable `experimental.mapped_type=true` to try them.
+
+Notable bug fixes:
+* Don't check `@noflow` files in "all" mode
+* Fixed a source of spurious errors when using refined string keys as computed properties in objects ([Example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAJwKYEMwBcD6aArlLnALYYrgA2WAzvXGCADQgYAeOBARgJ74AJhhhYiNXClzEM7DFCLl602QF92kEdRgk8caAAJcGergAUAawz9khgPxm0cKAgCUh4AB0ohw3BhDKxtDAF5Qw0UaGg9vXz9DTFwiNCgAbh8-NUzDSCgzQwheACswz0MAbWt+AF07LxAGwzU0wwB6NsMAdzhcAAtjPoxDeE5WQbh6brhoyIhDGmgEDDRDFbQINB9sqDYQADcVpmhqfYAGADoAJjOANguzkDUgA))
+* Improved Go to Definition on `export` statements
+
+Library Definitions:
+* Added `rel` as an attribute to `HTMLFormElement`
+* Added `WeakRef` class definition
+* Added `ariaHidden` DOM property
+
 ### 0.206.0
 
 Likely to cause new Flow errors:
