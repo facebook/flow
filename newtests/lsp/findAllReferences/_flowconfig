@@ -1,3 +1,2 @@
 [options]
-experimental.global_find_ref_identifiers=true
-experimental.global_find_ref_props=true
+experimental.global_find_ref=true

@@ -2124,7 +2124,7 @@ let find_references ~genv ~reader ~options ~env ~file_artifacts ~local_only file
   let (parse_artifacts, typecheck_artifacts) = file_artifacts in
   let (line, col) = Flow_lsp_conversions.position_of_document_position pos in
   let%lwt refs =
-    if (not local_only) && Options.global_find_ref_props options then
+    if (not local_only) && Options.global_find_ref options then
       global_find_references
         ~genv
         ~reader
