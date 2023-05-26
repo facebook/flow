@@ -367,7 +367,7 @@ let merge_component ~mutator ~options ~for_find_all_refs ~reader component =
             Parsing_heaps.read_ast_unsafe file parse
           in
           let (_, suppressions, _) =
-            Type_inference_js.scan_for_suppressions file lint_severities comments
+            Type_inference_js.scan_for_suppressions ~in_libdef:false file lint_severities comments
           in
           Error_suppressions.union suppressions acc)
         Error_suppressions.empty

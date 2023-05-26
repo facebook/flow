@@ -125,7 +125,7 @@ let update_settings =
   (fun range setting_list builder -> update_range range (map_fun setting_list) builder)
 
 let update_settings_and_running =
-  let update_settings_and_error err_fun settings settings_list =
+  let update_settings_and_error ~in_libdef err_fun settings settings_list =
     match settings_list with
     | (_, (_, loc)) :: _ ->
       let (new_settings, all_redundant) =
@@ -139,18 +139,18 @@ let update_settings_and_running =
           (settings, true)
           settings_list
       in
-      if all_redundant then err_fun (loc, LintSettings.Redundant_argument);
+      if (not in_libdef) && all_redundant then err_fun (loc, LintSettings.Redundant_argument);
       new_settings
     | [] -> settings
   in
-  let update_settings_and_error_from_list err_fun settings_list_list settings =
-    List.fold_left (update_settings_and_error err_fun) settings settings_list_list
+  let update_settings_and_error_from_list ~in_libdef err_fun settings_list_list settings =
+    List.fold_left (update_settings_and_error ~in_libdef err_fun) settings settings_list_list
   in
-  fun running_settings err_fun range settings_list_list builder ->
+  fun ~in_libdef running_settings err_fun range settings_list_list builder ->
     let flat_settings_list = List.flatten settings_list_list in
     let updated_builder = update_settings range flat_settings_list builder in
     let updated_running_settings =
-      update_settings_and_error_from_list err_fun settings_list_list running_settings
+      update_settings_and_error_from_list ~in_libdef err_fun settings_list_list running_settings
     in
     (updated_builder, updated_running_settings)
 

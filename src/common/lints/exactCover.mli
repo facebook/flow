@@ -90,6 +90,7 @@ val update_settings :
  * anything. It doesn't check for settings that are redundant because they are
  * immediately overwritten. (That's done elsewhere.) *)
 val update_settings_and_running :
+  in_libdef:bool ->
   'a LintSettings.t ->
   ((* Running lint settings *)
    Loc.t * LintSettings.lint_parse_error -> unit) ->

@@ -6,6 +6,7 @@
  *)
 
 val scan_for_suppressions :
+  in_libdef:bool ->
   File_key.t ->
   Severity.severity LintSettings.t ->
   Loc.t Flow_ast.Comment.t list ->
