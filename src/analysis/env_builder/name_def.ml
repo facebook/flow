@@ -2057,7 +2057,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
       let r = mk_reason (RModule (OrdinaryName name)) loc in
       this#add_ordinary_binding name_loc r (DeclaredModule (loc, m));
       in_declare_module <- true;
-      let ret = super#declare_module loc m in
+      let ret = this#in_scope (super#declare_module loc) Ordinary m in
       in_declare_module <- false;
       ret
 
