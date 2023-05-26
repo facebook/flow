@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 show_help() {
-  printf "Usage: runtests.sh [-hlnqrv] [-d DIR] [-t TEST] [-b] FLOW_BINARY [[-f] TEST_FILTER]\n\n"
+  printf "Usage: runtests.sh [-hlqrv] [-d DIR] [-t TEST] [-b] FLOW_BINARY [[-f] TEST_FILTER]\n\n"
   printf "Runs Flow's tests.\n\n"
   echo "    [-b] FLOW_BINARY"
   echo "        path to Flow binary (the -b is optional)"
@@ -19,8 +19,6 @@ show_help() {
   echo "        run the test DIR/tests/TEST, equivalent to a filter of \"^TEST$\""
   echo "    -c"
   echo "        only run check tests"
-  echo "    -n"
-  echo "        test using sealed tvars environment"
   echo "    -r"
   echo "        re-record failing tests to update expected output"
   echo "    -q"
