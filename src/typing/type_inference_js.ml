@@ -380,7 +380,13 @@ let initialize_env
     }
   in
   let (name_def_graph, hint_map) =
-    Name_def.find_defs ~autocomplete_hooks env_entries env_values providers aloc_ast
+    Name_def.find_defs
+      ~autocomplete_hooks
+      env_entries
+      env_values
+      providers
+      toplevel_scope_kind
+      aloc_ast
   in
   let hint_map = ALocMap.mapi (Env_resolution.lazily_resolve_hints cx) hint_map in
   let pred_func_map = ALocMap.map (Env_resolution.resolve_pred_func cx) pred_func_map in

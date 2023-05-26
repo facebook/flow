@@ -7,6 +7,8 @@
 
 include module type of Name_def_types
 
+val show_scope_kind : scope_kind -> string
+
 val predicate_synthesizable :
   (ALoc.t, ALoc.t) Ast.Type.Predicate.t option ->
   (ALoc.t, ALoc.t) Ast.Function.body ->
@@ -22,5 +24,6 @@ val find_defs :
   Env_api.env_entry Env_api.EnvMap.t ->
   Env_api.read Loc_sig.ALocS.LMap.t ->
   Provider_api.info ->
+  scope_kind ->
   (ALoc.t, ALoc.t) Flow_ast.Program.t ->
   env_entries_map * hint_map

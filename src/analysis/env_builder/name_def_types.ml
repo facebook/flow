@@ -21,8 +21,8 @@ type scope_kind =
   | AsyncGenerator (* async generator function *)
   | Module (* module scope *)
   | Global (* global scope *)
-  | Ctor
-(* constructor function *)
+  | Ctor (* constructor function *)
+[@@deriving show]
 
 type class_stack = ALoc.t list
 

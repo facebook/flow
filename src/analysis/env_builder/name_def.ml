@@ -2899,6 +2899,8 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
       res
   end
 
-let find_defs ~autocomplete_hooks env_entries env_values providers ast =
-  let finder = new def_finder ~autocomplete_hooks env_entries env_values providers Module in
+let find_defs ~autocomplete_hooks env_entries env_values providers toplevel_scope_kind ast =
+  let finder =
+    new def_finder ~autocomplete_hooks env_entries env_values providers toplevel_scope_kind
+  in
   finder#eval finder#program ast
