@@ -249,15 +249,12 @@ module rec ConsGen : S = struct
   (***********)
   (* Imports *)
   (***********)
-  module Import_export_helper = struct
+  module Import_export_helper : Flow_js_utils.Import_export_helper_sig with type r = Type.t = struct
     type r = Type.t
 
     let reposition cx ?trace:_ loc ?desc:_ ?annot_loc:_ t = reposition cx loc t
 
     let return _cx _trace t = t
-
-    let with_concretized_type cx r f t =
-      ConsGen.elab_t cx t (Annot_ConcretizeForImportsExports (r, f))
 
     let export_named cx _trace (reason, named, kind) t = ConsGen.export_named cx reason kind named t
 
@@ -268,18 +265,17 @@ module rec ConsGen : S = struct
 
     let cjs_extract_named_exports cx _ (reason, local_module) t =
       ConsGen.cjs_extract_named_exports cx reason local_module t
-
-    (* This check is bypassed in annotation inference *)
-    let assert_import_is_value _cx _trace _reason _name _export_t = ()
-
-    let mk_typeof_annotation = ConsGen.mk_typeof_annotation
   end
+
+  let assert_import_is_value _cx _trace _reason _name _export_t = ()
+
+  let with_concretized_type cx r f t = ConsGen.elab_t cx t (Annot_ConcretizeForImportsExports (r, f))
 
   module CJSRequireTKit = Flow_js_utils.CJSRequireT_kit (Import_export_helper)
   module ImportModuleNsTKit = Flow_js_utils.ImportModuleNsTKit
-  module ImportDefaultTKit = Flow_js_utils.ImportDefaultT_kit (Import_export_helper)
-  module ImportNamedTKit = Flow_js_utils.ImportNamedT_kit (Import_export_helper)
-  module ImportTypeofTKit = Flow_js_utils.ImportTypeofT_kit (Import_export_helper)
+  module ImportDefaultTKit = Flow_js_utils.ImportDefaultTKit
+  module ImportNamedTKit = Flow_js_utils.ImportNamedTKit
+  module ImportTypeofTKit = Flow_js_utils.ImportTypeofTKit
   module ExportNamedTKit = Flow_js_utils.ExportNamedT_kit (Import_export_helper)
   module AssertExportIsTypeTKit = Flow_js_utils.AssertExportIsTypeT_kit (Import_export_helper)
   module CopyNamedExportsTKit = Flow_js_utils.CopyNamedExportsT_kit (Import_export_helper)
@@ -568,7 +564,13 @@ module rec ConsGen : S = struct
     (* `import typeof` *)
     (*******************)
     | (_, Annot_ImportTypeofT (reason, export_name)) ->
-      ImportTypeofTKit.on_concrete_type cx dummy_trace reason export_name t
+      ImportTypeofTKit.on_concrete_type
+        cx
+        dummy_trace
+        ~mk_typeof_annotation:ConsGen.mk_typeof_annotation
+        reason
+        export_name
+        t
     (******************)
     (* Module exports *)
     (******************)
@@ -596,11 +598,21 @@ module rec ConsGen : S = struct
     | (ModuleT m, Annot_ImportModuleNsT (reason, is_strict)) ->
       ImportModuleNsTKit.on_ModuleT cx dummy_trace (reason, is_strict) m
     | (ModuleT m, Annot_ImportDefaultT (reason, import_kind, local, is_strict)) ->
-      ImportDefaultTKit.on_ModuleT cx dummy_trace (reason, import_kind, local, is_strict) m
+      ImportDefaultTKit.on_ModuleT
+        cx
+        dummy_trace
+        ~mk_typeof_annotation:ConsGen.mk_typeof_annotation
+        ~assert_import_is_value
+        ~with_concretized_type
+        (reason, import_kind, local, is_strict)
+        m
     | (ModuleT m, Annot_ImportNamedT (reason, import_kind, export_name, module_name, is_strict)) ->
       ImportNamedTKit.on_ModuleT
         cx
         dummy_trace
+        ~mk_typeof_annotation:ConsGen.mk_typeof_annotation
+        ~assert_import_is_value
+        ~with_concretized_type
         (reason, import_kind, export_name, module_name, is_strict)
         m
     | (AnyT (lreason, src), (Annot_CJSRequireT { reason; _ } | Annot_ImportModuleNsT (reason, _)))

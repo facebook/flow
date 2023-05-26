@@ -245,21 +245,18 @@ struct
   module InstantiationKit = Instantiation_kit (InstantiationHelper)
   module ImplicitInstantiationKit = Implicit_instantiation.Kit (FlowJs) (InstantiationHelper)
 
-  module Import_export_helper = struct
+  let assert_import_is_value cx trace reason name export_t =
+    FlowJs.rec_flow cx trace (export_t, AssertImportIsValueT (reason, name))
+
+  let with_concretized_type cx r f t = f (FlowJs.singleton_concrete_type_for_inspection cx r t)
+
+  module Import_export_helper :
+    Flow_js_utils.Import_export_helper_sig with type r = Type.t -> unit = struct
     type r = Type.t -> unit
 
     let reposition = FlowJs.reposition
 
     let return cx trace t tout = FlowJs.rec_flow_t cx ~use_op:unknown_use trace (t, tout)
-
-    let with_concretized_type cx r f t =
-      let t' =
-        match FlowJs.possible_concrete_types_for_inspection cx r t with
-        | [] -> EmptyT.make r (bogus_trust ())
-        | [t] -> t
-        | t1 :: t2 :: ts -> UnionT (r, UnionRep.make t1 t2 ts)
-      in
-      f t'
 
     let export_named cx trace (reason, named, kind) module_t tout =
       FlowJs.rec_flow cx trace (module_t, Type.ExportNamedT (reason, named, kind, tout))
@@ -278,17 +275,9 @@ struct
       Tvar.mk_where cx reason (fun t ->
           FlowJs.rec_flow cx trace (proto_t, CJSExtractNamedExportsT (reason, local_module, t))
       )
-
-    let assert_import_is_value cx trace reason name export_t =
-      FlowJs.rec_flow cx trace (export_t, AssertImportIsValueT (reason, name))
-
-    let mk_typeof_annotation = FlowJs.mk_typeof_annotation
   end
 
   module CJSRequireTKit = CJSRequireT_kit (Import_export_helper)
-  module ImportDefaultTKit = ImportDefaultT_kit (Import_export_helper)
-  module ImportNamedTKit = ImportNamedT_kit (Import_export_helper)
-  module ImportTypeofTKit = ImportTypeofT_kit (Import_export_helper)
   module ExportNamedTKit = ExportNamedT_kit (Import_export_helper)
   module AssertExportIsTypeTKit = AssertExportIsTypeT_kit (Import_export_helper)
   module CopyNamedExportsTKit = CopyNamedExportsT_kit (Import_export_helper)
@@ -831,7 +820,15 @@ struct
             cx
             ~use_op:unknown_use
             trace
-            (ImportTypeofTKit.on_concrete_type cx trace reason export_name l, tout)
+            ( ImportTypeofTKit.on_concrete_type
+                cx
+                trace
+                ~mk_typeof_annotation:FlowJs.mk_typeof_annotation
+                reason
+                export_name
+                l,
+              tout
+            )
         (******************)
         (* Module exports *)
         (******************)
@@ -871,7 +868,16 @@ struct
             cx
             ~use_op:unknown_use
             trace
-            (ImportDefaultTKit.on_ModuleT cx trace (reason, import_kind, local, is_strict) m, tout)
+            ( ImportDefaultTKit.on_ModuleT
+                cx
+                trace
+                ~mk_typeof_annotation:FlowJs.mk_typeof_annotation
+                ~assert_import_is_value
+                ~with_concretized_type
+                (reason, import_kind, local, is_strict)
+                m,
+              tout
+            )
         | (ModuleT m, ImportNamedT (reason, import_kind, export_name, module_name, tout, is_strict))
           ->
           let import = (reason, import_kind, export_name, module_name, is_strict) in
@@ -879,7 +885,16 @@ struct
             cx
             ~use_op:unknown_use
             trace
-            (ImportNamedTKit.on_ModuleT cx trace import m, tout)
+            ( ImportNamedTKit.on_ModuleT
+                cx
+                trace
+                ~mk_typeof_annotation:FlowJs.mk_typeof_annotation
+                ~assert_import_is_value
+                ~with_concretized_type
+                import
+                m,
+              tout
+            )
         | (AnyT (lreason, _), CJSRequireT { reason; t_out; _ }) ->
           Flow_js_utils.check_untyped_import cx ImportValue lreason reason;
           rec_flow_t ~use_op:unknown_use cx trace (reposition_reason cx reason l, t_out)
@@ -9684,6 +9699,12 @@ module rec FlowJs : Flow_common.S = struct
 
   let possible_concrete_types_for_inspection =
     possible_concrete_types (fun ident -> ConcretizeForInspection ident)
+
+  let singleton_concrete_type_for_inspection cx reason t =
+    match possible_concrete_types_for_inspection cx reason t with
+    | [] -> EmptyT.make reason (bogus_trust ())
+    | [t] -> t
+    | t1 :: t2 :: ts -> UnionT (reason, UnionRep.make t1 t2 ts)
 
   let possible_concrete_types_for_computed_props =
     possible_concrete_types (fun ident -> ConcretizeComputedPropsT ident)

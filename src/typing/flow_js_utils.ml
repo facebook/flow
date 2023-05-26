@@ -1109,10 +1109,6 @@ module type Import_export_helper_sig = sig
     Type.t ->
     Type.t
 
-  val assert_import_is_value : Context.t -> Type.trace -> Reason.t -> string -> Type.t -> unit
-
-  val with_concretized_type : Context.t -> Reason.t -> (Type.t -> Type.t) -> Type.t -> Type.t
-
   val export_named :
     Context.t ->
     Type.trace ->
@@ -1138,8 +1134,6 @@ module type Import_export_helper_sig = sig
     Context.t -> Type.trace -> Reason.t * (Reason.t * Type.exporttypes * bool) -> Type.t -> Type.t
 
   val return : Context.t -> Type.trace -> Type.t -> r
-
-  val mk_typeof_annotation : Context.t -> ?trace:Type.trace -> reason -> Type.t -> Type.t
 end
 
 (*********************************************************************)
@@ -1175,7 +1169,7 @@ end
    Overall, we should be able to (at least conceptually) desugar `import
    type` to `import` followed by `type`.
 *)
-module ImportTypeT_kit (F : Import_export_helper_sig) = struct
+module ImportTypeTKit = struct
   let canonicalize_imported_type cx reason t =
     match t with
     | DefT (_, trust, ClassT inst) -> Some (DefT (reason, trust, TypeT (ImportClassKind, inst)))
@@ -1209,9 +1203,6 @@ module ImportTypeT_kit (F : Import_export_helper_sig) = struct
       | None ->
         add_output cx ~trace (Error_message.EImportValueAsType (reason, export_name));
         AnyT.error reason)
-
-  let on_type cx trace reason export_name l =
-    F.with_concretized_type cx reason (on_concrete_type cx trace reason export_name) l
 end
 
 (************************************************************************)
@@ -1219,8 +1210,8 @@ end
 (* "typeof" the remote export.                                          *)
 (************************************************************************)
 
-module ImportTypeofT_kit (F : Import_export_helper_sig) = struct
-  let on_concrete_type cx trace reason export_name l =
+module ImportTypeofTKit = struct
+  let on_concrete_type cx trace ~mk_typeof_annotation reason export_name l =
     match l with
     | DefT
         ( _,
@@ -1233,7 +1224,7 @@ module ImportTypeofT_kit (F : Import_export_helper_sig) = struct
               id;
             }
         ) ->
-      let typeof_t = F.mk_typeof_annotation cx ~trace reason lower_t in
+      let typeof_t = mk_typeof_annotation cx ?trace:(Some trace) reason lower_t in
 
       poly_type
         id
@@ -1245,11 +1236,8 @@ module ImportTypeofT_kit (F : Import_export_helper_sig) = struct
       add_output cx ~trace (Error_message.EImportTypeAsTypeof (reason, export_name));
       AnyT.error reason
     | _ ->
-      let typeof_t = F.mk_typeof_annotation cx ~trace reason l in
+      let typeof_t = mk_typeof_annotation cx ?trace:(Some trace) reason l in
       DefT (reason, bogus_trust (), TypeT (ImportTypeofKind, typeof_t))
-
-  let on_type cx trace reason export_name l =
-    F.with_concretized_type cx reason (on_concrete_type cx trace reason export_name) l
 end
 
 module CJSRequireT_kit (F : Import_export_helper_sig) = struct
@@ -1325,14 +1313,14 @@ module ImportModuleNsTKit = struct
     Obj_type.mk_with_proto cx reason ~obj_kind ~frozen:true ~props proto
 end
 
-module ImportDefaultT_kit (F : Import_export_helper_sig) = struct
-  module ImportTypeTKit = ImportTypeT_kit (F)
-  module ImportTypeofTKit = ImportTypeofT_kit (F)
-
+module ImportDefaultTKit = struct
   (* import [type] X from 'SomeModule'; *)
   let on_ModuleT
       cx
       trace
+      ~mk_typeof_annotation
+      ~assert_import_is_value
+      ~with_concretized_type
       (reason, import_kind, (local_name, module_name), is_strict)
       (module_reason, exports, imported_is_strict) =
     check_nonstrict_import cx trace is_strict imported_is_strict reason;
@@ -1366,21 +1354,31 @@ module ImportDefaultT_kit (F : Import_export_helper_sig) = struct
           AnyT.error module_reason)
     in
     match import_kind with
-    | ImportType -> ImportTypeTKit.on_type cx trace reason "default" export_t
-    | ImportTypeof -> ImportTypeofTKit.on_type cx trace reason "default" export_t
+    | ImportType ->
+      with_concretized_type
+        cx
+        reason
+        (ImportTypeTKit.on_concrete_type cx trace reason "default")
+        export_t
+    | ImportTypeof ->
+      with_concretized_type
+        cx
+        reason
+        (ImportTypeofTKit.on_concrete_type cx trace ~mk_typeof_annotation reason "default")
+        export_t
     | ImportValue ->
-      F.assert_import_is_value cx trace reason "default" export_t;
+      assert_import_is_value cx trace reason "default" export_t;
       export_t
 end
 
-module ImportNamedT_kit (F : Import_export_helper_sig) = struct
-  module ImportTypeTKit = ImportTypeT_kit (F)
-  module ImportTypeofTKit = ImportTypeofT_kit (F)
-
+module ImportNamedTKit = struct
   (* import {X} from 'SomeModule'; *)
   let on_ModuleT
       cx
       trace
+      ~mk_typeof_annotation
+      ~assert_import_is_value
+      ~with_concretized_type
       (reason, import_kind, export_name, module_name, is_strict)
       (_, exports, imported_is_strict) =
     check_nonstrict_import cx trace is_strict imported_is_strict reason;
@@ -1399,18 +1397,36 @@ module ImportNamedT_kit (F : Import_export_helper_sig) = struct
     in
     let has_every_named_export = exports.has_every_named_export in
     match (import_kind, NameUtils.Map.find_opt (OrdinaryName export_name) exports_tmap) with
-    | (ImportType, Some t) -> ImportTypeTKit.on_type cx trace reason export_name t
+    | (ImportType, Some t) ->
+      with_concretized_type
+        cx
+        reason
+        (ImportTypeTKit.on_concrete_type cx trace reason export_name)
+        t
     | (ImportType, None) when has_every_named_export ->
-      ImportTypeTKit.on_type cx trace reason export_name (AnyT.untyped reason)
-    | (ImportTypeof, Some t) -> ImportTypeofTKit.on_type cx trace reason export_name t
+      with_concretized_type
+        cx
+        reason
+        (ImportTypeTKit.on_concrete_type cx trace reason export_name)
+        (AnyT.untyped reason)
+    | (ImportTypeof, Some t) ->
+      with_concretized_type
+        cx
+        reason
+        (ImportTypeofTKit.on_concrete_type cx trace ~mk_typeof_annotation reason export_name)
+        t
     | (ImportTypeof, None) when has_every_named_export ->
-      ImportTypeofTKit.on_type cx trace reason export_name (AnyT.untyped reason)
+      with_concretized_type
+        cx
+        reason
+        (ImportTypeofTKit.on_concrete_type cx trace ~mk_typeof_annotation reason export_name)
+        (AnyT.untyped reason)
     | (ImportValue, Some t) ->
-      F.assert_import_is_value cx trace reason export_name t;
+      assert_import_is_value cx trace reason export_name t;
       t
     | (ImportValue, None) when has_every_named_export ->
       let t = AnyT.untyped reason in
-      F.assert_import_is_value cx trace reason export_name t;
+      assert_import_is_value cx trace reason export_name t;
       t
     | (_, None) ->
       let num_exports = NameUtils.Map.cardinal exports_tmap in
@@ -1579,8 +1595,6 @@ end
  * exports one type at a time and it takes the type to be exported as a
  * lower (so that the type can be filtered post-resolution). *)
 module ExportTypeT_kit (F : Import_export_helper_sig) = struct
-  module ImportTypeTKit = ImportTypeT_kit (F)
-
   let on_concrete_type cx trace (reason, export_name, target_module_t) l =
     let is_type_export =
       match l with
