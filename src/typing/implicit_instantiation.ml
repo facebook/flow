@@ -261,7 +261,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | CallElemT _
     | GetPropT _
     | GetPrivatePropT _
-    | MatchPropT _
     | TestPropT _
     | GetStaticsT _
     | GetProtoT _

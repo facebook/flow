@@ -511,8 +511,6 @@ module rec TypeTerm : sig
     | SetPrivatePropT of
         use_op * reason * string * set_mode * class_binding list * bool * write_ctx * t * t option
     | GetPropT of use_op * reason * ident option * propref * tvar
-    (* For shapes *)
-    | MatchPropT of use_op * reason * propref * tvar
     (* The same comment on SetPrivatePropT applies here *)
     | GetPrivatePropT of use_op * reason * string * class_binding list * bool * tvar
     | TestPropT of use_op * reason * ident * propref * tvar
@@ -3830,7 +3828,6 @@ let string_of_use_ctor = function
   | SentinelPropTestT _ -> "SentinelPropTestT"
   | SetElemT _ -> "SetElemT"
   | SetPropT _ -> "SetPropT"
-  | MatchPropT _ -> "MatchPropT"
   | SetPrivatePropT _ -> "SetPrivatePropT"
   | SetProtoT _ -> "SetProtoT"
   | SpecializeT _ -> "SpecializeT"

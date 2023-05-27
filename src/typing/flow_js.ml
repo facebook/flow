@@ -3429,23 +3429,6 @@ struct
              element resolution in ElemT. *)
           let loc = loc_of_reason reason_op in
           add_output cx ~trace Error_message.(EInternal (loc, InstanceLookupComputed))
-        | ( DefT (reason_c, _, InstanceT { super; inst; _ }),
-            MatchPropT (use_op, reason_op, Named (reason_prop, x), prop_t)
-          ) ->
-          let own_props = Context.find_props cx inst.own_props in
-          let proto_props = Context.find_props cx inst.proto_props in
-          let fields = NameUtils.Map.union own_props proto_props in
-          let lookup_kind = Strict reason_c in
-          let options =
-            {
-              Access_prop_options.use_op;
-              allow_method_access = false;
-              previously_seen_props = Properties.Set.of_list [inst.own_props; inst.proto_props];
-              lookup_kind;
-              id = None;
-            }
-          in
-          match_prop cx trace options reason_prop reason_op super x fields (OpenT prop_t)
         (*****************************)
         (* ... and their fields read *)
         (*****************************)
@@ -3896,11 +3879,6 @@ struct
             ~f:(fun t -> rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src reason_op, t))
             prop_t;
           rec_flow cx trace (t, UseT (use_op, AnyT.why src reason_op))
-        | (DefT (reason_obj, _, ObjT o), MatchPropT (use_op, reason_op, propref, proptype)) ->
-          match_obj_prop cx trace ~use_op o propref reason_obj reason_op (OpenT proptype)
-        | (AnyT (_, src), MatchPropT (use_op, reason_op, _, t)) ->
-          let src = any_mod_src_keep_placeholder Untyped src in
-          rec_flow cx trace (OpenT t, UseT (use_op, AnyT.why src reason_op))
         (*****************************)
         (* ... and their fields read *)
         (*****************************)
@@ -5265,7 +5243,7 @@ struct
         (* Nice error messages for mixed function refinement *)
         (*****************************************************)
         | ( DefT (lreason, _, MixedT Mixed_function),
-            (MethodT _ | SetPropT _ | GetPropT _ | MatchPropT _ | LookupT _)
+            (MethodT _ | SetPropT _ | GetPropT _ | LookupT _)
           ) ->
           rec_flow cx trace (FunProtoT lreason, u)
         | (DefT (_, _, MixedT Mixed_function), CallT { call_action = ConcretizeCallee tout; _ }) ->
@@ -5991,7 +5969,6 @@ struct
     | PreprocessKitT _
     | ResolveUnionT _
     | LookupT _
-    | MatchPropT _
     | MakeExactT _
     | MapTypeT _
     | MethodT _
@@ -7200,10 +7177,6 @@ struct
               ~trace
               (Error_message.EPrivateLookupFailed ((reason_op, reason_c), x, use_op))))
 
-  and match_prop cx trace options reason_prop reason_op super x pmap prop_t =
-    MatchProp { use_op = options.Access_prop_options.use_op; drop_generic = false; prop_t }
-    |> access_prop cx trace options reason_prop reason_op super x pmap
-
   and set_prop
       cx ?(wr_ctx = Normal) ~mode trace options reason_prop reason_op l super x pmap tin prop_tout =
     let use_op = options.Access_prop_options.use_op in
@@ -7271,10 +7244,6 @@ struct
                 err_on_str_or_num_key = Some (use_op, reason_obj);
               }
           ))
-
-  and match_obj_prop cx trace ~use_op o propref reason_obj reason_op prop_t =
-    MatchProp { use_op; drop_generic = false; prop_t }
-    |> writelike_obj_prop cx trace ~use_op o propref reason_obj reason_op prop_t
 
   and write_obj_prop cx trace ~use_op ~mode o propref reason_obj reason_op tin prop_tout =
     let obj_t = DefT (reason_obj, bogus_trust (), ObjT o) in

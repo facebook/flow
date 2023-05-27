@@ -143,7 +143,6 @@ and reason_of_use_t = function
   | FilterMaybeT (_, t) -> reason_of_t t
   | ConcretizeTypeAppsT (_, _, (_, _, _, reason), _) -> reason
   | CondT (reason, _, _, _) -> reason
-  | MatchPropT (_, reason, _, _) -> reason
   | ReactPropsToOut (reason, _)
   | ReactInToProps (reason, _)
   | SealGenericT { reason; _ } ->
@@ -353,7 +352,6 @@ and mod_reason_of_use_t f = function
   | ConcretizeTypeAppsT (use_op, t1, (t2, ts2, op2, r2), targs) ->
     ConcretizeTypeAppsT (use_op, t1, (t2, ts2, op2, f r2), targs)
   | CondT (reason, then_t, else_t, tout) -> CondT (f reason, then_t, else_t, tout)
-  | MatchPropT (op, reason, prop, t) -> MatchPropT (op, f reason, prop, t)
   | ReactPropsToOut (reason, t) -> ReactPropsToOut (f reason, t)
   | ReactInToProps (reason, t) -> ReactInToProps (f reason, t)
   | DestructuringT (reason, a, s, t, id) -> DestructuringT (f reason, a, s, t, id)
@@ -413,7 +411,6 @@ let rec util_use_op_of_use_t :
     util op (fun op -> SetPrivatePropT (op, r, s, m, c, b, x, t, tp))
   | GetPropT (op, r, id, p, t) -> util op (fun op -> GetPropT (op, r, id, p, t))
   | TestPropT (op, r, id, p, t) -> util op (fun op -> TestPropT (op, r, id, p, t))
-  | MatchPropT (op, r, p, t) -> util op (fun op -> MatchPropT (op, r, p, t))
   | GetPrivatePropT (op, r, s, c, b, t) -> util op (fun op -> GetPrivatePropT (op, r, s, c, b, t))
   | SetElemT (op, r, t1, m, t2, t3) -> util op (fun op -> SetElemT (op, r, t1, m, t2, t3))
   | GetElemT ({ use_op; _ } as x) -> util use_op (fun use_op -> GetElemT { x with use_op })

@@ -1165,7 +1165,6 @@ let rec make_error_printable :
     | IncompatibleUnaryArithT -> nope "is not a number"
     | IncompatibleGetPropT (prop_loc, prop)
     | IncompatibleSetPropT (prop_loc, prop)
-    | IncompatibleMatchPropT (prop_loc, prop)
     | IncompatibleHasOwnPropT (prop_loc, prop)
     | IncompatibleMethodT (prop_loc, prop) ->
       mk_prop_missing_error

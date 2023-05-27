@@ -89,7 +89,6 @@ let rec default_resolve_touts ~flow cx loc u =
   | SetPrivatePropT (_, _, _, _, _, _, _, _, topt) ->
     map_opt resolve topt
   | GetPropT (_, _, _, _, tvar)
-  | MatchPropT (_, _, _, tvar)
   | GetPrivatePropT (_, _, _, _, _, tvar)
   | TestPropT (_, _, _, _, tvar) ->
     resolve_tvar tvar

@@ -157,7 +157,6 @@ let object_like_op = function
   | TestPropT _
   | MethodT _
   | LookupT _
-  | MatchPropT _
   | GetProtoT _
   | SetProtoT _
   | SuperT _
@@ -368,9 +367,6 @@ let error_message_kind_of_upper = function
   | SetPropT (_, _, Named (r, name), _, _, _, _) ->
     Error_message.IncompatibleSetPropT (loc_of_reason r, Some name)
   | SetPropT (_, _, Computed t, _, _, _, _) -> Error_message.IncompatibleSetPropT (loc_of_t t, None)
-  | MatchPropT (_, _, Named (r, name), _) ->
-    Error_message.IncompatibleMatchPropT (loc_of_reason r, Some name)
-  | MatchPropT (_, _, Computed t, _) -> Error_message.IncompatibleMatchPropT (loc_of_t t, None)
   | SetPrivatePropT (_, _, _, _, _, _, _, _, _) -> Error_message.IncompatibleSetPrivatePropT
   | MethodT (_, _, _, Named (r, name), _, _) ->
     Error_message.IncompatibleMethodT (loc_of_reason r, Some name)

@@ -684,7 +684,6 @@ and lower_kind =
 and 'loc upper_kind =
   | IncompatibleGetPropT of 'loc * name option
   | IncompatibleSetPropT of 'loc * name option
-  | IncompatibleMatchPropT of 'loc * name option
   | IncompatibleGetPrivatePropT
   | IncompatibleSetPrivatePropT
   | IncompatibleMethodT of 'loc * name option
@@ -745,7 +744,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   let map_upper_kind = function
     | IncompatibleGetPropT (loc, s) -> IncompatibleGetPropT (f loc, s)
     | IncompatibleSetPropT (loc, s) -> IncompatibleSetPropT (f loc, s)
-    | IncompatibleMatchPropT (loc, s) -> IncompatibleMatchPropT (f loc, s)
     | IncompatibleMethodT (loc, s) -> IncompatibleMethodT (f loc, s)
     | IncompatibleHasOwnPropT (loc, s) -> IncompatibleHasOwnPropT (f loc, s)
     | IncompatibleGetElemT loc -> IncompatibleGetElemT (f loc)
