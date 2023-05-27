@@ -1205,12 +1205,20 @@ and Statement : sig
       kind: import_kind option;
       local: ('M, 'T) Identifier.t option;
       remote: ('M, 'T) Identifier.t;
+      (* Remote name's definition location. It will be populated only in typed AST. *)
+      remote_name_def_loc: 'M option;
+    }
+
+    and ('M, 'T) default_identifier = {
+      identifier: ('M, 'T) Identifier.t;
+      (* Remote name's definition location. It will be populated only in typed AST. *)
+      remote_default_name_def_loc: 'M option;
     }
 
     and ('M, 'T) t = {
       import_kind: import_kind;
       source: 'T * 'M StringLiteral.t;
-      default: ('M, 'T) Identifier.t option;
+      default: ('M, 'T) default_identifier option;
       specifiers: ('M, 'T) specifier option;
       comments: ('M, unit) Syntax.t option;
     }

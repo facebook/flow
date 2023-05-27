@@ -1501,7 +1501,7 @@ module Make
           let named_specifiers_ast =
             named_specifiers
             |> Base.List.map ~f:(function
-                   | { Ast.Statement.ImportDeclaration.local; remote; kind } ->
+                   | { Ast.Statement.ImportDeclaration.local; remote; remote_name_def_loc; kind } ->
                    let ( remote_name_loc,
                          ({ Ast.Identifier.name = remote_name; comments = _ } as rmt)
                        ) =
@@ -1532,7 +1532,12 @@ module Make
                          ((local_loc, imported_t), mk_ident ~comments local_name)
                      )
                    in
-                   { Ast.Statement.ImportDeclaration.local = local_ast; remote = remote_ast; kind }
+                   {
+                     Ast.Statement.ImportDeclaration.local = local_ast;
+                     remote = remote_ast;
+                     remote_name_def_loc;
+                     kind;
+                   }
                    )
           in
           Some (ImportDeclaration.ImportNamedSpecifiers named_specifiers_ast)
@@ -1568,7 +1573,12 @@ module Make
       in
       let default_ast =
         match default with
-        | Some (loc, ({ Ast.Identifier.name = local_name; comments = _ } as id)) ->
+        | Some
+            {
+              ImportDeclaration.identifier =
+                (loc, ({ Ast.Identifier.name = local_name; comments = _ } as id));
+              remote_default_name_def_loc;
+            } ->
           let import_reason = mk_reason (RDefaultImportedType (local_name, module_name)) loc in
           let imported_t =
             import_default_specifier_type
@@ -1580,7 +1590,8 @@ module Make
               ~local_loc:loc
               ~local_name
           in
-          Some ((loc, imported_t), id)
+          Some
+            { ImportDeclaration.identifier = ((loc, imported_t), id); remote_default_name_def_loc }
         | None -> None
       in
 

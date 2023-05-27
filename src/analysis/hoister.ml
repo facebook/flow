@@ -300,8 +300,8 @@ class ['loc] hoister ~flowmin_compatibility ~enable_enums ~with_types =
           (with_types, this#add_type_binding ~imported:true)
       in
       (match specifier with
-      | { local = Some binding; remote = _; kind }
-      | { local = None; remote = binding; kind } ->
+      | { local = Some binding; remote = _; remote_name_def_loc = _; kind }
+      | { local = None; remote = binding; remote_name_def_loc = _; kind } ->
         let (allowed, add_binding) = allowed_kind kind in
         if allowed then add_binding binding);
       specifier

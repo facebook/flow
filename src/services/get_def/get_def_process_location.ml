@@ -99,7 +99,7 @@ class ['M, 'T] searcher
 
     method! import_named_specifier ~import_kind decl =
       let open Flow_ast.Statement.ImportDeclaration in
-      let { local; remote = (remote_annot, _); kind } = decl in
+      let { local; remote = (remote_annot, _); remote_name_def_loc = _; kind } = decl in
       ( if
         annot_covers_target remote_annot
         || Base.Option.exists local ~f:(fun (local_annot, _) -> annot_covers_target local_annot)

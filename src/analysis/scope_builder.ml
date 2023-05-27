@@ -343,8 +343,8 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           | _ -> Some (this#pattern_identifier ~kind:Ast.Variable.Const)
         in
         (match specifier with
-        | { local = Some ident; remote = _; kind }
-        | { local = None; remote = ident; kind } ->
+        | { local = Some ident; remote = _; remote_name_def_loc = _; kind }
+        | { local = None; remote = ident; remote_name_def_loc = _; kind } ->
           let visitor = visitor kind in
           ignore (Base.Option.map ~f:(fun visitor -> visitor ident) visitor));
         specifier

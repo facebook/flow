@@ -369,7 +369,7 @@ with type t = Impl.t = struct
           match specifiers with
           | Some (ImportDeclaration.ImportNamedSpecifiers specifiers) ->
             List.map
-              (fun { ImportDeclaration.local; remote; kind } ->
+              (fun { ImportDeclaration.local; remote; remote_name_def_loc = _; kind } ->
                 import_named_specifier local remote kind)
               specifiers
           | Some (ImportDeclaration.ImportNamespaceSpecifier id) -> [import_namespace_specifier id]
@@ -2170,7 +2170,8 @@ with type t = Impl.t = struct
         | None -> identifier local
       in
       node "ExportSpecifier" loc [("local", identifier local); ("exported", exported)]
-    and import_default_specifier id =
+    and import_default_specifier
+        { Statement.ImportDeclaration.identifier = id; remote_default_name_def_loc = _ } =
       node "ImportDefaultSpecifier" (fst id) [("local", identifier id)]
     and import_namespace_specifier (loc, id) =
       node "ImportNamespaceSpecifier" loc [("local", identifier id)]

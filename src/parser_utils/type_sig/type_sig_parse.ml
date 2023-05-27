@@ -4119,7 +4119,11 @@ let import_decl _opts scope tbls decl =
   begin
     match default with
     | None -> ()
-    | Some (id_loc, { Ast.Identifier.name = local; comments = _ }) ->
+    | Some
+        {
+          I.identifier = (id_loc, { Ast.Identifier.name = local; comments = _ });
+          remote_default_name_def_loc = _;
+        } ->
       let id_loc = push_loc tbls id_loc in
       Scope.bind_import scope tbls kind id_loc ~local ~remote:"default" mref
   end;
@@ -4136,6 +4140,7 @@ let import_decl _opts scope tbls decl =
           I.kind = kind_opt;
           local = local_opt;
           remote = (remote_id_loc, { Ast.Identifier.name = remote; comments = _ });
+          remote_name_def_loc = _;
         } =
           specifier
         in

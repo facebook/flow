@@ -494,7 +494,8 @@ module Statements = struct
   let import_declaration ?(loc = Loc.none) ?comments import_kind source default specifiers =
     (loc, ImportDeclaration { ImportDeclaration.import_kind; source; default; specifiers; comments })
 
-  let named_import_specifier ?kind ?local remote = { ImportDeclaration.kind; local; remote }
+  let named_import_specifier ?kind ?local remote =
+    { ImportDeclaration.kind; local; remote; remote_name_def_loc = None }
 
   let named_import_declaration ?loc ?comments import_kind source specifiers =
     let default = None in

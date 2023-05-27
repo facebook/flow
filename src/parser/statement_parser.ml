@@ -2063,7 +2063,7 @@ module Statement
             let remote = type_keyword_or_remote in
             (* `type` becomes a value *)
             assert_identifier_name_is_identifier env remote;
-            { remote; local = None; kind = None }
+            { remote; local = None; remote_name_def_loc = None; kind = None }
           (* `type as foo` (value named `type`) or `type as,` (type named `as`) *)
           | T_IDENTIFIER { raw = "as"; _ } -> begin
             match Peek.ith_token ~i:1 env with
@@ -2071,7 +2071,7 @@ module Statement
             | T_RCURLY
             | T_COMMA ->
               (* `type as` *)
-              { remote = Type.type_identifier env; local = None; kind }
+              { remote = Type.type_identifier env; remote_name_def_loc = None; local = None; kind }
             | T_IDENTIFIER { raw = "as"; _ } ->
               (* `type as as foo` *)
               let remote = identifier_name env in
@@ -2081,7 +2081,7 @@ module Statement
               (* second `as` *)
               let local = Some (Type.type_identifier env) in
               (* `foo` *)
-              { remote; local; kind }
+              { remote; remote_name_def_loc = None; local; kind }
             | _ ->
               (* `type as foo` *)
               let remote = type_keyword_or_remote in
@@ -2091,16 +2091,16 @@ module Statement
 
               (* `as` *)
               let local = Some (Parse.identifier env) in
-              { remote; local; kind = None }
+              { remote; remote_name_def_loc = None; local; kind = None }
           end
           (* `type x`, or `type x as y` *)
           | _ ->
             let (remote, local) = with_maybe_as ~for_type:true env in
-            { remote; local; kind }
+            { remote; remote_name_def_loc = None; local; kind }
         else
           (* standard `x` or `x as y` *)
           let (remote, local) = with_maybe_as ~for_type:false env in
-          { remote; local; kind = None }
+          { remote; remote_name_def_loc = None; local; kind = None }
         (* specifier in an `import type { ... }` *)
       in
       let type_specifier env =
@@ -2110,7 +2110,7 @@ module Statement
             ~for_type:true
             ~error_if_type:Parse_error.ImportTypeShorthandOnlyInPureImport
         in
-        { remote; local; kind = None }
+        { remote; remote_name_def_loc = None; local; kind = None }
         (* specifier in an `import typeof { ... }` *)
       in
       let typeof_specifier env =
@@ -2120,7 +2120,7 @@ module Statement
             ~for_type:true
             ~error_if_type:Parse_error.ImportTypeShorthandOnlyInPureImport
         in
-        { remote; local; kind = None }
+        { remote; remote_name_def_loc = None; local; kind = None }
       in
       let rec specifier_list ?(preceding_comma = true) env statement_kind acc =
         match Peek.token env with
@@ -2197,8 +2197,15 @@ module Statement
           match import_kind with
           | ImportType
           | ImportTypeof ->
-            Type.type_identifier env
-          | ImportValue -> Parse.identifier env
+            {
+              Statement.ImportDeclaration.identifier = Type.type_identifier env;
+              remote_default_name_def_loc = None;
+            }
+          | ImportValue ->
+            {
+              Statement.ImportDeclaration.identifier = Parse.identifier env;
+              remote_default_name_def_loc = None;
+            }
         in
         let additional_specifiers =
           match Peek.token env with

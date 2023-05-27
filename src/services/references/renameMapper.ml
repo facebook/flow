@@ -30,13 +30,13 @@ class rename_mapper ~(targets : FindRefsTypes.ref_kind Loc_collections.LocMap.t)
 
     method! import_named_specifier ~import_kind specifier =
       let open Flow_ast.Statement.ImportDeclaration in
-      let { local; remote = (loc, _) as remote; kind } = specifier in
+      let { local; remote = (loc, _) as remote; remote_name_def_loc; kind } = specifier in
       match local with
       | Some _ -> super#import_named_specifier ~import_kind specifier
       | None ->
         if LocMap.mem loc targets then
           let localName = Ast_builder.Identifiers.identifier new_name in
-          { local = Some localName; remote; kind }
+          { local = Some localName; remote; remote_name_def_loc; kind }
         else
           specifier
 

@@ -77,7 +77,15 @@ module AstHelper = struct
           else
             Some local_id
         in
-        (None, Some { Ast.Statement.ImportDeclaration.kind = None; local; remote = remote_id })
+        ( None,
+          Some
+            {
+              Ast.Statement.ImportDeclaration.kind = None;
+              local;
+              remote = remote_id;
+              remote_name_def_loc = None;
+            }
+        )
     in
     { import_kind; source; default; named_specifier }
 
@@ -644,7 +652,13 @@ end = struct
                   {
                     Ast.Statement.ImportDeclaration.import_kind;
                     source;
-                    default;
+                    default =
+                      Base.Option.map default ~f:(fun identifier ->
+                          {
+                            Ast.Statement.ImportDeclaration.identifier;
+                            remote_default_name_def_loc = None;
+                          }
+                      );
                     specifiers;
                     comments = None;
                   }

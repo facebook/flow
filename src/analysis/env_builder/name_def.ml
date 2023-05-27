@@ -2082,7 +2082,13 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
         match specifiers with
         | Some (ImportNamedSpecifiers specifiers) ->
           Base.List.iter
-            ~f:(fun { kind; local; remote = (rem_id_loc, { Ast.Identifier.name = remote; _ }) } ->
+            ~f:
+              (fun {
+                     kind;
+                     local;
+                     remote = (rem_id_loc, { Ast.Identifier.name = remote; _ });
+                     remote_name_def_loc = _;
+                   } ->
               let (id_loc, name) =
                 Base.Option.value_map
                   ~f:(fun (id_loc, { Ast.Identifier.name; _ }) -> (id_loc, name))
@@ -2127,7 +2133,11 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
         | None -> ()
       end;
       Base.Option.iter
-        ~f:(fun (id_loc, { Ast.Identifier.name; _ }) ->
+        ~f:
+          (fun {
+                 identifier = (id_loc, { Ast.Identifier.name; _ });
+                 remote_default_name_def_loc = _;
+               } ->
           let import_reason = mk_reason (RDefaultImportedType (name, source)) id_loc in
           this#add_ordinary_binding
             id_loc

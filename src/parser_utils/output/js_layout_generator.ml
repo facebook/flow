@@ -3021,7 +3021,8 @@ and partition_specifiers ~opts default specifiers =
   in
   let special =
     match default with
-    | Some default -> identifier default :: special
+    | Some { identifier = default; remote_default_name_def_loc = _ } ->
+      identifier default :: special
     | None -> special
   in
   (special, named)
@@ -3029,7 +3030,8 @@ and partition_specifiers ~opts default specifiers =
 and import_namespace_specifier (loc, id) =
   source_location_with_comments (loc, fuse [Atom "*"; pretty_space; Atom "as"; space; identifier id])
 
-and import_named_specifier { Ast.Statement.ImportDeclaration.kind; local; remote } =
+and import_named_specifier
+    { Ast.Statement.ImportDeclaration.kind; local; remote; remote_name_def_loc = _ } =
   fuse
     [
       (let open Ast.Statement.ImportDeclaration in

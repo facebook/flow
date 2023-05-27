@@ -2038,7 +2038,16 @@ class ['loc] mapper =
       let { import_kind; source; specifiers; default; comments } = decl in
       let source' = map_loc this#import_source source in
       let specifiers' = map_opt (this#import_specifier ~import_kind) specifiers in
-      let default' = map_opt (this#import_default_specifier ~import_kind) default in
+      let default' =
+        map_opt
+          (fun ({ identifier; remote_default_name_def_loc } as id) ->
+            let identifier' = this#import_default_specifier ~import_kind identifier in
+            if identifier' == identifier then
+              id
+            else
+              { identifier = identifier'; remote_default_name_def_loc })
+          default
+      in
       let comments' = this#syntax_opt comments in
       if
         source == source'
@@ -2088,7 +2097,7 @@ class ['loc] mapper =
         ~(import_kind : Ast.Statement.ImportDeclaration.import_kind)
         (specifier : ('loc, 'loc) Ast.Statement.ImportDeclaration.named_specifier) =
       let open Ast.Statement.ImportDeclaration in
-      let { kind; local; remote } = specifier in
+      let { kind; local; remote; remote_name_def_loc } = specifier in
       let (is_type_remote, is_type_local) =
         match (import_kind, kind) with
         | (ImportType, _)
@@ -2123,7 +2132,7 @@ class ['loc] mapper =
       if local == local' && remote == remote' then
         specifier
       else
-        { kind; local = local'; remote = remote' }
+        { kind; local = local'; remote = remote'; remote_name_def_loc }
 
     method import_default_specifier ~import_kind (id : ('loc, 'loc) Ast.Identifier.t) =
       let open Ast.Statement.ImportDeclaration in

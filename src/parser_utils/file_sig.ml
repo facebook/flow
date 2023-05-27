@@ -409,7 +409,11 @@ class requires_exports_calculator ~ast ~opts =
               failwith "unreachable"
           in
           Base.Option.iter
-            ~f:(fun (loc, { Ast.Identifier.name = local; comments = _ }) ->
+            ~f:
+              (fun {
+                     identifier = (loc, { Ast.Identifier.name = local; comments = _ });
+                     remote_default_name_def_loc = _;
+                   } ->
               add_named
                 "default"
                 local
@@ -429,7 +433,7 @@ class requires_exports_calculator ~ast ~opts =
               | ImportNamedSpecifiers named_specifiers ->
                 List.iter
                   (function
-                    | { local; remote; kind } ->
+                    | { local; remote; remote_name_def_loc = _; kind } ->
                       let import_kind =
                         match kind with
                         | Some k -> k

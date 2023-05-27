@@ -1679,7 +1679,16 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         (this#on_type_annot annot, this#import_source annot lit)
       in
       let specifiers' = Option.map ~f:(this#import_specifier ~import_kind) specifiers in
-      let default' = Option.map ~f:(this#import_default_specifier ~import_kind) default in
+      let default' =
+        Option.map
+          ~f:(fun { identifier; remote_default_name_def_loc } ->
+            {
+              identifier = this#import_default_specifier ~import_kind identifier;
+              remote_default_name_def_loc =
+                Option.map ~f:this#on_loc_annot remote_default_name_def_loc;
+            })
+          default
+      in
       let comments' = this#syntax_opt comments in
       {
         import_kind;
@@ -1712,7 +1721,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         (specifier : ('M, 'T) Ast.Statement.ImportDeclaration.named_specifier)
         : ('N, 'U) Ast.Statement.ImportDeclaration.named_specifier =
       let open Ast.Statement.ImportDeclaration in
-      let { kind; local; remote } = specifier in
+      let { kind; local; remote; remote_name_def_loc } = specifier in
       let (is_type_remote, is_type_local) =
         match (import_kind, kind) with
         | (ImportType, _)
@@ -1744,7 +1753,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           in
           Some (local_visitor ident)
       in
-      { kind; local = local'; remote = remote' }
+      let remote_name_def_loc' = Option.map ~f:this#on_loc_annot remote_name_def_loc in
+      { kind; local = local'; remote = remote'; remote_name_def_loc = remote_name_def_loc' }
 
     method import_default_specifier
         ~(import_kind : Ast.Statement.ImportDeclaration.import_kind) (id : ('M, 'T) Ast.Identifier.t)

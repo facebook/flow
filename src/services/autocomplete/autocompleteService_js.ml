@@ -1064,11 +1064,12 @@ class local_type_identifiers_searcher =
         | ImportValue -> false
       in
       let declaration_binds_type = binds_type import_kind in
-      if declaration_binds_type then Base.Option.iter default ~f:this#add_id;
+      if declaration_binds_type then
+        Base.Option.iter default ~f:(fun { identifier; _ } -> this#add_id identifier);
       Base.Option.iter specifiers ~f:(function
           | ImportNamedSpecifiers specifiers ->
             List.iter
-              (fun { kind; local; remote } ->
+              (fun { kind; local; remote; remote_name_def_loc = _ } ->
                 let specifier_binds_type =
                   match kind with
                   | None -> declaration_binds_type

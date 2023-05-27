@@ -768,9 +768,16 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       let comments_diff = syntax_opt loc comments1 comments2 in
       join_diff_list [specs_diff; comments_diff]
   and import_default_specifier
-      (ident1 : (Loc.t, Loc.t) Ast.Identifier.t option)
-      (ident2 : (Loc.t, Loc.t) Ast.Identifier.t option) : node change list option =
-    diff_if_changed_nonopt_fn identifier ident1 ident2
+      (ds1 : (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.default_identifier option)
+      (ds2 : (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.default_identifier option) :
+      node change list option =
+    let f ds1 ds2 =
+      let open Ast.Statement.ImportDeclaration in
+      let { identifier = id1; remote_default_name_def_loc = _ } = ds1 in
+      let { identifier = id2; remote_default_name_def_loc = _ } = ds2 in
+      identifier id1 id2
+    in
+    diff_if_changed_nonopt_fn f ds1 ds2
   and import_namespace_specifier
       (ident1 : (Loc.t, Loc.t) Ast.Identifier.t) (ident2 : (Loc.t, Loc.t) Ast.Identifier.t) :
       node change list option =
@@ -780,8 +787,8 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       (nm_spec2 : (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.named_specifier) :
       node change list option =
     let open Ast.Statement.ImportDeclaration in
-    let { kind = kind1; local = local1; remote = remote1 } = nm_spec1 in
-    let { kind = kind2; local = local2; remote = remote2 } = nm_spec2 in
+    let { kind = kind1; local = local1; remote = remote1; remote_name_def_loc = _ } = nm_spec1 in
+    let { kind = kind2; local = local2; remote = remote2; remote_name_def_loc = _ } = nm_spec2 in
     if kind1 != kind2 then
       None
     else

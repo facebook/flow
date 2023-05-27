@@ -92,7 +92,13 @@ let loc_with_comments stmt =
 let mk_default_import ?loc ?comments ~from name =
   let open Ast_builder in
   let source = (Loc.none, string_literal from) in
-  let default = Some (Identifiers.identifier name) in
+  let default =
+    Some
+      {
+        Statement.ImportDeclaration.identifier = Identifiers.identifier name;
+        remote_default_name_def_loc = None;
+      }
+  in
   let specifiers = None in
   Statements.import_declaration
     ?loc
@@ -209,7 +215,7 @@ let update_import ~bindings stmt =
     let (_, { StringLiteral.value = from; _ }) = source in
     let edit =
       match (bindings, default, specifiers) with
-      | (Default bound_name, Some (_, { Identifier.name; _ }), _)
+      | (Default bound_name, Some { identifier = (_, { Identifier.name; _ }); _ }, _)
       | ( Namespace bound_name,
           None,
           Some (ImportNamespaceSpecifier (_, (_, { Identifier.name; _ })))
@@ -247,6 +253,7 @@ let update_import ~bindings stmt =
                 kind;
                 local = Base.Option.map ~f:Ast_builder.Identifiers.identifier local_name;
                 remote = Ast_builder.Identifiers.identifier remote_name;
+                remote_name_def_loc = None;
               })
             bound_names
         in
@@ -321,7 +328,7 @@ let compare_kind_of_import a b =
       )
     ) ->
     (match (a_default, b_default) with
-    | (Some a_id, Some b_id) -> compare_identifier a_id b_id
+    | (Some { identifier = a_id; _ }, Some { identifier = b_id; _ }) -> compare_identifier a_id b_id
     | (Some _, None) -> -1
     | (None, Some _) -> 1
     | (None, None) ->
@@ -618,12 +625,16 @@ let merge_imports =
     | (Some default, None) -> Some default
     | (None, Some default) -> Some default
     | (None, None) -> None
-    | ( Some (_, { Identifier.name; comments }),
-        Some (_, { Identifier.name = b_name; comments = b_comments })
+    | ( Some { identifier = (_, { Identifier.name; comments }); _ },
+        Some { identifier = (_, { Identifier.name = b_name; comments = b_comments }); _ }
       ) ->
       if name <> b_name then
         failwith "Can't merge imports with different defaults from the same file";
-      Some (Loc.none, { Identifier.name; comments = merge_comments comments b_comments })
+      Some
+        {
+          identifier = (Loc.none, { Identifier.name; comments = merge_comments comments b_comments });
+          remote_default_name_def_loc = None;
+        }
   in
   let merge_named_specifiers a b =
     Base.List.rev_append a b |> Base.List.sort ~compare:compare_specifiers
