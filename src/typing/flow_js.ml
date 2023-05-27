@@ -864,37 +864,31 @@ struct
             trace
             (ImportModuleNsTKit.on_ModuleT cx trace (reason, is_strict) m, tout)
         | (ModuleT m, ImportDefaultT (reason, import_kind, local, tout, is_strict)) ->
-          FlowJs.rec_flow_t
-            cx
-            ~use_op:unknown_use
-            trace
-            ( ImportDefaultTKit.on_ModuleT
-                cx
-                trace
-                ~mk_typeof_annotation:FlowJs.mk_typeof_annotation
-                ~assert_import_is_value
-                ~with_concretized_type
-                (reason, import_kind, local, is_strict)
-                m,
-              tout
-            )
+          let (_name_loc_opt, t) =
+            ImportDefaultTKit.on_ModuleT
+              cx
+              trace
+              ~mk_typeof_annotation:FlowJs.mk_typeof_annotation
+              ~assert_import_is_value
+              ~with_concretized_type
+              (reason, import_kind, local, is_strict)
+              m
+          in
+          rec_flow_t cx ~use_op:unknown_use trace (t, tout)
         | (ModuleT m, ImportNamedT (reason, import_kind, export_name, module_name, tout, is_strict))
           ->
           let import = (reason, import_kind, export_name, module_name, is_strict) in
-          FlowJs.rec_flow_t
-            cx
-            ~use_op:unknown_use
-            trace
-            ( ImportNamedTKit.on_ModuleT
-                cx
-                trace
-                ~mk_typeof_annotation:FlowJs.mk_typeof_annotation
-                ~assert_import_is_value
-                ~with_concretized_type
-                import
-                m,
-              tout
-            )
+          let (_name_loc_opt, t) =
+            ImportNamedTKit.on_ModuleT
+              cx
+              trace
+              ~mk_typeof_annotation:FlowJs.mk_typeof_annotation
+              ~assert_import_is_value
+              ~with_concretized_type
+              import
+              m
+          in
+          rec_flow_t cx ~use_op:unknown_use trace (t, tout)
         | (AnyT (lreason, _), CJSRequireT { reason; t_out; _ }) ->
           Flow_js_utils.check_untyped_import cx ImportValue lreason reason;
           rec_flow_t ~use_op:unknown_use cx trace (reposition_reason cx reason l, t_out)

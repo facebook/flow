@@ -1320,13 +1320,13 @@ module ImportDefaultTKit = struct
       (reason, import_kind, (local_name, module_name), is_strict)
       (module_reason, exports, imported_is_strict) =
     check_nonstrict_import cx trace is_strict imported_is_strict reason;
-    let export_t =
+    let (loc_opt, export_t) =
       match exports.cjs_export with
-      | Some t -> t
+      | Some t -> (None, t)
       | None ->
         let exports_tmap = Context.find_exports cx exports.exports_tmap in
         (match NameUtils.Map.find_opt (OrdinaryName "default") exports_tmap with
-        | Some (_, t) -> t
+        | Some (loc_opt, t) -> (loc_opt, t)
         | None ->
           (*
            * A common error while using `import` syntax is to forget or
@@ -1347,24 +1347,28 @@ module ImportDefaultTKit = struct
           in
           let suggestion = typo_suggestion known_exports local_name in
           add_output cx ~trace (Error_message.ENoDefaultExport (reason, module_name, suggestion));
-          AnyT.error module_reason)
+          (None, AnyT.error module_reason))
     in
     match import_kind with
     | ImportType ->
-      with_concretized_type
-        cx
-        reason
-        (ImportTypeTKit.on_concrete_type cx trace reason "default")
-        export_t
+      ( loc_opt,
+        with_concretized_type
+          cx
+          reason
+          (ImportTypeTKit.on_concrete_type cx trace reason "default")
+          export_t
+      )
     | ImportTypeof ->
-      with_concretized_type
-        cx
-        reason
-        (ImportTypeofTKit.on_concrete_type cx trace ~mk_typeof_annotation reason "default")
-        export_t
+      ( loc_opt,
+        with_concretized_type
+          cx
+          reason
+          (ImportTypeofTKit.on_concrete_type cx trace ~mk_typeof_annotation reason "default")
+          export_t
+      )
     | ImportValue ->
       assert_import_is_value cx trace reason "default" export_t;
-      export_t
+      (loc_opt, export_t)
 end
 
 module ImportNamedTKit = struct
@@ -1385,45 +1389,51 @@ module ImportNamedTKit = struct
      *)
     let exports_tmap =
       let exports_tmap = Context.find_exports cx exports.exports_tmap in
-      (* Drop locations; they are not needed here *)
-      let exports_tmap = NameUtils.Map.map snd exports_tmap in
       match exports.cjs_export with
-      | Some t -> NameUtils.Map.add (OrdinaryName "default") t exports_tmap
+      | Some t -> NameUtils.Map.add (OrdinaryName "default") (None, t) exports_tmap
       | None -> exports_tmap
     in
     let has_every_named_export = exports.has_every_named_export in
     match (import_kind, NameUtils.Map.find_opt (OrdinaryName export_name) exports_tmap) with
-    | (ImportType, Some t) ->
-      with_concretized_type
-        cx
-        reason
-        (ImportTypeTKit.on_concrete_type cx trace reason export_name)
-        t
+    | (ImportType, Some (loc_opt, t)) ->
+      ( loc_opt,
+        with_concretized_type
+          cx
+          reason
+          (ImportTypeTKit.on_concrete_type cx trace reason export_name)
+          t
+      )
     | (ImportType, None) when has_every_named_export ->
-      with_concretized_type
-        cx
-        reason
-        (ImportTypeTKit.on_concrete_type cx trace reason export_name)
-        (AnyT.untyped reason)
-    | (ImportTypeof, Some t) ->
-      with_concretized_type
-        cx
-        reason
-        (ImportTypeofTKit.on_concrete_type cx trace ~mk_typeof_annotation reason export_name)
-        t
+      ( None,
+        with_concretized_type
+          cx
+          reason
+          (ImportTypeTKit.on_concrete_type cx trace reason export_name)
+          (AnyT.untyped reason)
+      )
+    | (ImportTypeof, Some (loc_opt, t)) ->
+      ( loc_opt,
+        with_concretized_type
+          cx
+          reason
+          (ImportTypeofTKit.on_concrete_type cx trace ~mk_typeof_annotation reason export_name)
+          t
+      )
     | (ImportTypeof, None) when has_every_named_export ->
-      with_concretized_type
-        cx
-        reason
-        (ImportTypeofTKit.on_concrete_type cx trace ~mk_typeof_annotation reason export_name)
-        (AnyT.untyped reason)
-    | (ImportValue, Some t) ->
+      ( None,
+        with_concretized_type
+          cx
+          reason
+          (ImportTypeofTKit.on_concrete_type cx trace ~mk_typeof_annotation reason export_name)
+          (AnyT.untyped reason)
+      )
+    | (ImportValue, Some (loc_opt, t)) ->
       assert_import_is_value cx trace reason export_name t;
-      t
+      (loc_opt, t)
     | (ImportValue, None) when has_every_named_export ->
       let t = AnyT.untyped reason in
       assert_import_is_value cx trace reason export_name t;
-      t
+      (None, t)
     | (_, None) ->
       let num_exports = NameUtils.Map.cardinal exports_tmap in
       let has_default_export = NameUtils.Map.mem (OrdinaryName "default") exports_tmap in
@@ -1439,7 +1449,7 @@ module ImportNamedTKit = struct
           Error_message.ENoNamedExport (reason, module_name, export_name, suggestion)
       in
       add_output cx ~trace msg;
-      AnyT.error reason
+      (None, AnyT.error reason)
 end
 
 (**************************************************************************)

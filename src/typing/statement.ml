@@ -1501,7 +1501,13 @@ module Make
           let named_specifiers_ast =
             named_specifiers
             |> Base.List.map ~f:(function
-                   | { Ast.Statement.ImportDeclaration.local; remote; remote_name_def_loc; kind } ->
+                   | {
+                       Ast.Statement.ImportDeclaration.local;
+                       remote;
+                       remote_name_def_loc = _;
+                       kind;
+                     }
+                   ->
                    let ( remote_name_loc,
                          ({ Ast.Identifier.name = remote_name; comments = _ } as rmt)
                        ) =
@@ -1514,7 +1520,7 @@ module Make
                      mk_reason (RNamedImportedType (module_name, local_name)) (fst remote)
                    in
                    let import_kind = Base.Option.value ~default:import_kind kind in
-                   let imported_t =
+                   let (remote_name_def_loc, imported_t) =
                      import_named_specifier_type
                        cx
                        import_reason
@@ -1577,10 +1583,10 @@ module Make
             {
               ImportDeclaration.identifier =
                 (loc, ({ Ast.Identifier.name = local_name; comments = _ } as id));
-              remote_default_name_def_loc;
+              remote_default_name_def_loc = _;
             } ->
           let import_reason = mk_reason (RDefaultImportedType (local_name, module_name)) loc in
-          let imported_t =
+          let (remote_default_name_def_loc, imported_t) =
             import_default_specifier_type
               cx
               import_reason
@@ -1753,17 +1759,60 @@ module Make
     | Ast.Statement.ImportDeclaration.ImportValue -> Type.ImportValue
 
   and get_imported_t cx get_reason module_name module_t import_kind remote_export_name local_name =
-    Tvar_resolver.mk_tvar_and_fully_resolve_where cx get_reason (fun t ->
-        let import_type =
+    let is_strict = Context.is_strict cx in
+    let constraint_resolver tout =
+      let import_type =
+        if remote_export_name = "default" then
+          ImportDefaultT (get_reason, import_kind, (local_name, module_name), tout, is_strict)
+        else
+          ImportNamedT (get_reason, import_kind, remote_export_name, module_name, tout, is_strict)
+      in
+      Flow.flow cx (module_t, import_type)
+    in
+    let name_def_loc_ref = ref None in
+    let ordinary_file_resolver tout =
+      let assert_import_is_value cx trace reason name export_t =
+        Flow.FlowJs.flow_opt cx ~trace (export_t, AssertImportIsValueT (reason, name))
+      in
+      let with_concretized_type cx r f t = f (Flow.singleton_concrete_type_for_inspection cx r t) in
+      match Flow.possible_concrete_types_for_inspection cx get_reason module_t with
+      | [ModuleT m] ->
+        let (name_loc_opt, t) =
           if remote_export_name = "default" then
-            ImportDefaultT
-              (get_reason, import_kind, (local_name, module_name), t, Context.is_strict cx)
+            Flow_js_utils.ImportDefaultTKit.on_ModuleT
+              cx
+              Trace.dummy_trace
+              ~mk_typeof_annotation:Flow.mk_typeof_annotation
+              ~assert_import_is_value
+              ~with_concretized_type
+              (get_reason, import_kind, (local_name, module_name), is_strict)
+              m
           else
-            ImportNamedT
-              (get_reason, import_kind, remote_export_name, module_name, t, Context.is_strict cx)
+            Flow_js_utils.ImportNamedTKit.on_ModuleT
+              cx
+              Trace.dummy_trace
+              ~mk_typeof_annotation:Flow.mk_typeof_annotation
+              ~assert_import_is_value
+              ~with_concretized_type
+              (get_reason, import_kind, remote_export_name, module_name, is_strict)
+              m
         in
-        Flow.flow cx (module_t, import_type)
-    )
+        name_def_loc_ref := name_loc_opt;
+        Flow.flow_t cx (t, tout)
+      | [(AnyT (lreason, _) as l)] ->
+        Flow_js_utils.check_untyped_import cx import_kind lreason get_reason;
+        Flow.flow_t cx (Flow.reposition_reason cx get_reason l, tout)
+      | _ -> constraint_resolver tout
+    in
+    let resolver =
+      if File_key.is_lib_file (Context.file cx) then
+        constraint_resolver
+      else
+        ordinary_file_resolver
+    in
+    let t = Tvar_resolver.mk_tvar_and_fully_resolve_where cx get_reason resolver in
+    let name_def_loc = !name_def_loc_ref in
+    (name_def_loc, t)
 
   and import_named_specifier_type
       cx
@@ -1776,7 +1825,7 @@ module Make
       ~local_name =
     if Type_inference_hooks_js.dispatch_member_hook cx remote_name remote_name_loc source_module_t
     then
-      Unsoundness.why InferenceHooks import_reason
+      (None, Unsoundness.why InferenceHooks import_reason)
     else
       let import_kind = type_kind_of_kind import_kind in
       get_imported_t cx import_reason module_name source_module_t import_kind remote_name local_name
@@ -1799,7 +1848,7 @@ module Make
   and import_default_specifier_type
       cx import_reason import_kind ~module_name ~source_module_t ~local_loc ~local_name =
     if Type_inference_hooks_js.dispatch_member_hook cx "default" local_loc source_module_t then
-      Unsoundness.why InferenceHooks import_reason
+      (None, Unsoundness.why InferenceHooks import_reason)
     else
       let import_kind = type_kind_of_kind import_kind in
       get_imported_t cx import_reason module_name source_module_t import_kind "default" local_name

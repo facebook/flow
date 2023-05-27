@@ -937,15 +937,18 @@ let resolve_import cx id_loc import_reason import_kind module_name source_loc im
     match import with
     | Name_def.Named { kind; remote; remote_loc; local } ->
       let import_kind = Base.Option.value ~default:import_kind kind in
-      Statement.import_named_specifier_type
-        cx
-        import_reason
-        import_kind
-        ~module_name
-        ~source_module_t
-        ~remote_name_loc:remote_loc
-        ~remote_name:remote
-        ~local_name:local
+      let (_, t) =
+        Statement.import_named_specifier_type
+          cx
+          import_reason
+          import_kind
+          ~module_name
+          ~source_module_t
+          ~remote_name_loc:remote_loc
+          ~remote_name:remote
+          ~local_name:local
+      in
+      t
     | Namespace ->
       Statement.import_namespace_specifier_type
         cx
@@ -955,14 +958,17 @@ let resolve_import cx id_loc import_reason import_kind module_name source_loc im
         ~source_module_t
         ~local_loc:id_loc
     | Default local_name ->
-      Statement.import_default_specifier_type
-        cx
-        import_reason
-        import_kind
-        ~module_name
-        ~source_module_t
-        ~local_loc:id_loc
-        ~local_name
+      let (_, t) =
+        Statement.import_default_specifier_type
+          cx
+          import_reason
+          import_kind
+          ~module_name
+          ~source_module_t
+          ~local_loc:id_loc
+          ~local_name
+      in
+      t
   in
   (t, unknown_use)
 

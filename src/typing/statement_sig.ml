@@ -175,7 +175,7 @@ module type S = sig
     remote_name_loc:ALoc.t ->
     remote_name:string ->
     local_name:string ->
-    Type.t
+    ALoc.t option * Type.t
 
   val import_namespace_specifier_type :
     Context.t ->
@@ -194,7 +194,7 @@ module type S = sig
     source_module_t:Type.t ->
     local_loc:ALoc.t ->
     local_name:string ->
-    Type.t
+    ALoc.t option * Type.t
 
   val interface :
     Context.t ->

@@ -598,23 +598,29 @@ module rec ConsGen : S = struct
     | (ModuleT m, Annot_ImportModuleNsT (reason, is_strict)) ->
       ImportModuleNsTKit.on_ModuleT cx dummy_trace (reason, is_strict) m
     | (ModuleT m, Annot_ImportDefaultT (reason, import_kind, local, is_strict)) ->
-      ImportDefaultTKit.on_ModuleT
-        cx
-        dummy_trace
-        ~mk_typeof_annotation:ConsGen.mk_typeof_annotation
-        ~assert_import_is_value
-        ~with_concretized_type
-        (reason, import_kind, local, is_strict)
-        m
+      let (_name_loc_opt, t) =
+        ImportDefaultTKit.on_ModuleT
+          cx
+          dummy_trace
+          ~mk_typeof_annotation:ConsGen.mk_typeof_annotation
+          ~assert_import_is_value
+          ~with_concretized_type
+          (reason, import_kind, local, is_strict)
+          m
+      in
+      t
     | (ModuleT m, Annot_ImportNamedT (reason, import_kind, export_name, module_name, is_strict)) ->
-      ImportNamedTKit.on_ModuleT
-        cx
-        dummy_trace
-        ~mk_typeof_annotation:ConsGen.mk_typeof_annotation
-        ~assert_import_is_value
-        ~with_concretized_type
-        (reason, import_kind, export_name, module_name, is_strict)
-        m
+      let (_name_loc_opt, t) =
+        ImportNamedTKit.on_ModuleT
+          cx
+          dummy_trace
+          ~mk_typeof_annotation:ConsGen.mk_typeof_annotation
+          ~assert_import_is_value
+          ~with_concretized_type
+          (reason, import_kind, export_name, module_name, is_strict)
+          m
+      in
+      t
     | (AnyT (lreason, src), (Annot_CJSRequireT { reason; _ } | Annot_ImportModuleNsT (reason, _)))
       ->
       Flow_js_utils.check_untyped_import cx ImportValue lreason reason;
