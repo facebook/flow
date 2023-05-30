@@ -27,7 +27,6 @@ val infer_ast :
 val infer_lib_file :
   exclude_syms:NameUtils.Set.t ->
   lint_severities:Severity.severity LintSettings.t ->
-  file_sig:File_sig.t ->
   Context.t ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->
   Reason.name list * (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t list

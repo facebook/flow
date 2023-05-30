@@ -61,7 +61,7 @@ let parse_lib_file ~reader options file =
   with
   | _ -> failwith (spf "Can't read library definitions file %s, exiting." file)
 
-let infer_lib_file ~ccx ~options ~exclude_syms lib_file ast file_sig =
+let infer_lib_file ~ccx ~options ~exclude_syms lib_file ast =
   let verbose = Options.verbose options in
   let lint_severities = Options.lint_severities options in
   let metadata =
@@ -73,7 +73,7 @@ let infer_lib_file ~ccx ~options ~exclude_syms lib_file ast file_sig =
   (* Lib files use only concrete locations, so this is not used. *)
   let aloc_table = lazy (ALoc.empty_table lib_file) in
   let cx = Context.make ccx metadata lib_file aloc_table Context.InitLib in
-  let (syms, _) = Infer.infer_lib_file cx ast ~exclude_syms ~lint_severities ~file_sig in
+  let (syms, _) = Infer.infer_lib_file cx ast ~exclude_syms ~lint_severities in
 
   if verbose != None then
     prerr_endlinef
@@ -102,10 +102,8 @@ let load_lib_files ~ccx ~options ~reader files =
          (fun (exclude_syms, leader, ok_acc, errors_acc, asts_acc) file ->
            let lib_file = File_key.LibFile file in
            match%lwt parse_lib_file ~reader options file with
-           | Lib_ok { ast; file_sig; tolerable_errors } ->
-             let (cx, exclude_syms) =
-               infer_lib_file ~ccx ~options ~exclude_syms lib_file ast file_sig
-             in
+           | Lib_ok { ast; file_sig = _; tolerable_errors } ->
+             let (cx, exclude_syms) = infer_lib_file ~ccx ~options ~exclude_syms lib_file ast in
              let errors =
                tolerable_errors
                |> Inference_utils.set_of_file_sig_tolerable_errors ~source_file:lib_file

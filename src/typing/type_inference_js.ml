@@ -492,16 +492,11 @@ let infer_ast ~lint_severities cx filename comments aloc_ast =
    a) symbols from prior library loads are suppressed if found,
    b) bindings are added as properties to the builtin object
 *)
-let infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast =
+let infer_lib_file ~exclude_syms ~lint_severities cx ast =
   let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   let (_, { Ast.Program.all_comments; _ }) = ast in
   let (prog_aloc, { Ast.Program.statements = aloc_statements; _ }) = aloc_ast in
 
-  let () =
-    (* TODO: Wait a minute, why do we bother with requires for lib files? Pretty
-       confident that we don't support them in any sensible way. *)
-    add_require_tvars cx file_sig
-  in
   try
     initialize_env ~lib:true ~exclude_syms cx aloc_ast Name_def.Global;
 

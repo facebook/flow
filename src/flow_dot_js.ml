@@ -75,7 +75,7 @@ let load_lib_files ~ccx ~metadata files =
            let lib_content = Sys_utils.cat file in
            let lib_file = File_key.LibFile file in
            match parse_content lib_file lib_content with
-           | Ok (ast, file_sig) ->
+           | Ok (ast, _file_sig) ->
              (* Lib files use only concrete locations, so this is not used. *)
              let aloc_table = lazy (ALoc.empty_table lib_file) in
              let cx = Context.make ccx metadata lib_file aloc_table Context.InitLib in
@@ -84,7 +84,6 @@ let load_lib_files ~ccx ~metadata files =
                  cx
                  ast
                  ~exclude_syms
-                 ~file_sig
                  ~lint_severities:LintSettings.empty_severities
              in
              (* symbols loaded from this file are suppressed if found in later ones *)
