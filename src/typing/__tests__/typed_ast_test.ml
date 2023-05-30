@@ -78,7 +78,7 @@ let parse_content file content =
 
 let before_and_after_stmts file_name =
   let content = Sys_utils.cat file_name in
-  let file_key = File_key.LibFile file_name in
+  let file_key = File_key.SourceFile file_name in
   let (((_, { Flow_ast.Program.statements = stmts; _ }) as ast), file_sig) =
     parse_content file_key content
   in
@@ -104,13 +104,24 @@ let before_and_after_stmts file_name =
     let ccx = Context.(make_ccx master_cx) in
     Context.make ccx metadata file_key aloc_table Context.Checking
   in
+  Type_inference_js.add_require_tvars cx file_sig;
+  let connect_requires mref =
+    Nel.iter (fun loc ->
+        let loc = ALoc.of_loc loc in
+        let reason = Reason.(mk_reason (RCustom mref) loc) in
+        let module_t = Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)) in
+        let (_, require_id) = Context.find_require cx loc in
+        Flow_js.resolve_id cx require_id module_t
+    )
+  in
+  SMap.iter connect_requires (File_sig.require_loc_map file_sig);
   let stmts = Base.List.map ~f:Ast_loc_utils.loc_to_aloc_mapper#statement stmts in
-  let (_, t_stmts) =
-    Type_inference_js.infer_lib_file
+  let (_, { Flow_ast.Program.statements = t_stmts; _ }) =
+    Type_inference_js.infer_ast
       cx
-      ast
-      ~exclude_syms:(NameUtils.Set.singleton (Reason.OrdinaryName "Object"))
-      ~file_sig
+      file_key
+      []
+      (Ast_loc_utils.loc_to_aloc_mapper#program ast)
       ~lint_severities:LintSettings.empty_severities
   in
   (stmts, t_stmts)
