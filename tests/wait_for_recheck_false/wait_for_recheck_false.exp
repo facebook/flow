@@ -49,7 +49,7 @@ dependency.js
 
 
 get-def without --wait-for-recheck runs immediately:
-{"path":"dependency.js","line":3,"endline":3,"start":16,"end":18}
+{"path":"dependency.js","line":3,"endline":3,"start":8,"end":14}
 
 
 type-at-pos without --wait-for-recheck runs immediately:

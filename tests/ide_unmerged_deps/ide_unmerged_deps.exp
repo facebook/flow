@@ -4,7 +4,7 @@ Trigger a slow recheck: DONE
 Sleep: DONE
 
 Get-def with unchecked dependency:
-{"path":"dependency.js","line":3,"endline":3,"start":18,"end":20}
+{"path":"dependency.js","line":3,"endline":3,"start":14,"end":14}
 
 Did it finish in less than 2 seconds? YES
 

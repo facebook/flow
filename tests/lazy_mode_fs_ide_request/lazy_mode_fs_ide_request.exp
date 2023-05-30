@@ -5,4 +5,4 @@ No errors!
 The Flow server is currently in lazy mode and is only checking 0/2 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
-foo.js:3:8,3:27
+foo.js:3:17,3:19

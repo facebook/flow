@@ -61,9 +61,8 @@ let rec process_request ~options ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_
         ~file_sig
         (Get_def_request.Type (aloc, type_))
     | _ :: _ :: _ -> Error "Scope builder found multiple matching identifiers")
-  | Get_def_request.(Member { prop_name = name; object_type = (_loc, t); force_instance }) -> begin
+  | Get_def_request.(Member { prop_name = name; object_type = (_loc, t); force_instance }) ->
     extract_member_def ~loc_of_aloc ~cx ~file_sig ~typed_ast ~force_instance t name
-  end
   | Get_def_request.(Type (_, v) | Typeof (_, v)) as request ->
     (* here lies the difference between "Go to Definition" and "Go to Type Definition":
        the former should stop on annot_loc (where the value was annotated), while the

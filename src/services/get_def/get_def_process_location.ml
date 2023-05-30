@@ -99,28 +99,35 @@ class ['M, 'T] searcher
 
     method! import_named_specifier ~import_kind decl =
       let open Flow_ast.Statement.ImportDeclaration in
-      let { local; remote = (remote_annot, _); remote_name_def_loc = _; kind } = decl in
+      let { local; remote = (remote_annot, _); remote_name_def_loc; kind } = decl in
       ( if
         annot_covers_target remote_annot
         || Base.Option.exists local ~f:(fun (local_annot, _) -> annot_covers_target local_annot)
       then
-        match (kind, import_kind) with
-        | (Some ImportTypeof, _)
-        | (_, ImportTypeof) ->
-          this#request (Get_def_request.Typeof remote_annot)
-        | _ -> this#request (Get_def_request.Type remote_annot)
+        match remote_name_def_loc with
+        | Some l -> this#own_def l
+        | None ->
+          (match (kind, import_kind) with
+          | (Some ImportTypeof, _)
+          | (_, ImportTypeof) ->
+            this#request (Get_def_request.Typeof remote_annot)
+          | _ -> this#request (Get_def_request.Type remote_annot))
       );
       decl
 
-    method! import_default_specifier ~import_kind decl =
+    method! import_declaration loc decl =
       let open Flow_ast.Statement.ImportDeclaration in
-      let (annot, _) = decl in
-      ( if annot_covers_target annot then
-        match import_kind with
-        | ImportTypeof -> this#request (Get_def_request.Typeof annot)
-        | _ -> this#request (Get_def_request.Type annot)
+      let { import_kind; default; _ } = decl in
+      Base.Option.iter default ~f:(fun { identifier = (annot, _); remote_default_name_def_loc } ->
+          if annot_covers_target annot then
+            match remote_default_name_def_loc with
+            | Some l -> this#own_def l
+            | None ->
+              (match import_kind with
+              | ImportTypeof -> this#request (Get_def_request.Typeof annot)
+              | _ -> this#request (Get_def_request.Type annot))
       );
-      decl
+      super#import_declaration loc decl
 
     method! import_namespace_specifier ~import_kind loc id =
       let open Flow_ast.Statement.ImportDeclaration in

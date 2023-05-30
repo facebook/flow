@@ -48,5 +48,5 @@ Flags: --strip-root --pretty
 
 types.js:28:7
 Flags: --strip-root --pretty
-{"path":"type-exports.js","line":8,"endline":8,"start":28,"end":28}
+{"path":"type-exports.js","line":8,"endline":8,"start":14,"end":24}
 

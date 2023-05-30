@@ -197,7 +197,8 @@ class documentation_searcher find =
 
     method! export_default_declaration loc decl =
       let open Flow_ast.Statement.ExportDefaultDeclaration in
-      let { declaration; comments; _ } = decl in
+      let { default; declaration; comments; _ } = decl in
+      find default comments;
       (let open Flow_ast.Expression in
       match declaration with
       | Declaration stmt ->
