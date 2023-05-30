@@ -500,7 +500,7 @@ let infer_lib_file ~exclude_syms ~lint_severities cx ast =
   try
     initialize_env ~lib:true ~exclude_syms cx aloc_ast Name_def.Global;
 
-    let t_stmts = infer_core cx aloc_statements in
+    ignore @@ infer_core cx aloc_statements;
 
     let (severity_cover, suppressions, suppression_errors) =
       scan_for_suppressions ~in_libdef:true (Context.file cx) lint_severities all_comments
@@ -509,11 +509,9 @@ let infer_lib_file ~exclude_syms ~lint_severities cx ast =
     Context.add_error_suppressions cx suppressions;
     List.iter (Flow_js.add_output cx) suppression_errors;
 
-    let builtins = Env.init_builtins_from_libdef cx in
-
-    (builtins, t_stmts)
+    Env.init_builtins_from_libdef cx
   with
   | Env_api.Env_invariant (loc, inv) ->
     let loc = Base.Option.value ~default:prog_aloc loc in
     Flow_js.add_output cx Error_message.(EInternal (loc, EnvInvariant inv));
-    ([], Typed_ast_utils.error_mapper#statement_list aloc_statements)
+    []
