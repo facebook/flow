@@ -12,6 +12,9 @@ type kind =
   | Let
   | ThisAnnot
   | Const
+  | DeclaredVar
+  | DeclaredLet
+  | DeclaredConst
   | Type of { imported: bool }
   | Enum
   | Function

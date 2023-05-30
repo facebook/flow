@@ -48,6 +48,15 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
     method private add_declared_class_binding entry =
       this#update_acc Bindings.(add (entry, Bindings.DeclaredClass))
 
+    method private add_declared_var_binding entry =
+      this#update_acc Bindings.(add (entry, Bindings.DeclaredVar))
+
+    method private add_declared_let_binding entry =
+      this#update_acc Bindings.(add (entry, Bindings.DeclaredLet))
+
+    method private add_declared_const_binding entry =
+      this#update_acc Bindings.(add (entry, Bindings.DeclaredConst))
+
     (* Ignore all statements except variable declarations, class declarations, and
        import declarations. The ignored statements cannot contain lexical
        bindings in the current scope. *)
@@ -189,8 +198,8 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
       let { id; kind; _ } = decl in
       (match kind with
       | Ast.Variable.Var -> ()
-      | Ast.Variable.Let -> this#add_let_binding ?kind:None id
-      | Ast.Variable.Const -> this#add_const_binding ?kind:None id);
+      | Ast.Variable.Let -> this#add_declared_let_binding id
+      | Ast.Variable.Const -> this#add_declared_const_binding id);
       decl
 
     method! enum_declaration _loc (enum : ('loc, 'loc) Ast.Statement.EnumDeclaration.t) =
@@ -251,9 +260,9 @@ class ['loc] hoister ~flowmin_compatibility ~enable_enums ~with_types =
       let open Ast.Statement.DeclareVariable in
       let { id; kind; _ } = decl in
       (match kind with
-      | Ast.Variable.Var -> this#add_var_binding id
-      | Ast.Variable.Let -> this#add_let_binding ?kind:None id
-      | Ast.Variable.Const -> this#add_const_binding ?kind:None id);
+      | Ast.Variable.Var -> this#add_declared_var_binding id
+      | Ast.Variable.Let -> this#add_declared_let_binding id
+      | Ast.Variable.Const -> this#add_declared_const_binding id);
       super#declare_variable loc decl
 
     (* We intentionally skip the hoisting of infer type names,

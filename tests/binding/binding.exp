@@ -217,6 +217,352 @@ References:
                ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- declared.js:3:15
+
+Cannot declare `x` [1] because var redeclaration is not supported. [name-already-bound]
+
+   declared.js:3:15
+   3|   declare var x: string; // error
+                    ^
+
+References:
+   declared.js:2:15
+   2|   declare var x: number;
+                    ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- declared.js:5:4
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   declared.js:5:4
+   5|   (x: string); // error: should read the first x
+         ^
+
+References:
+   declared.js:2:18
+   2|   declare var x: number;
+                       ^^^^^^ [1]
+   declared.js:5:7
+   5|   (x: string); // error: should read the first x
+            ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- declared.js:9:7
+
+Cannot declare `x` [1] because var redeclaration is not supported. [name-already-bound]
+
+   declared.js:9:7
+   9|   var x: string = ''; // error
+            ^
+
+References:
+   declared.js:8:15
+   8|   declare var x: number;
+                    ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- declared.js:11:4
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   declared.js:11:4
+   11|   (x: string); // error: should read the first x
+          ^
+
+References:
+   declared.js:8:18
+    8|   declare var x: number;
+                        ^^^^^^ [1]
+   declared.js:11:7
+   11|   (x: string); // error: should read the first x
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ declared.js:15:15
+
+Cannot declare `x` [1] because var redeclaration is not supported. [name-already-bound]
+
+   declared.js:15:15
+   15|   declare var x: string; // error
+                     ^
+
+References:
+   declared.js:14:7
+   14|   var x: number = 1;
+             ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ declared.js:21:15
+
+Cannot declare `x` [1] because the name is already bound. [name-already-bound]
+
+   declared.js:21:15
+   21|   declare let x: string; // error
+                     ^
+
+References:
+   declared.js:20:15
+   20|   declare let x: number;
+                     ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- declared.js:23:4
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   declared.js:23:4
+   23|   (x: string); // error: should read the first x
+          ^
+
+References:
+   declared.js:20:18
+   20|   declare let x: number;
+                        ^^^^^^ [1]
+   declared.js:23:7
+   23|   (x: string); // error: should read the first x
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- declared.js:27:7
+
+Cannot declare `x` [1] because the name is already bound. [name-already-bound]
+
+   declared.js:27:7
+   27|   let x: string = ''; // error
+             ^
+
+References:
+   declared.js:26:15
+   26|   declare let x: number;
+                     ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- declared.js:29:4
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   declared.js:29:4
+   29|   (x: string); // error: should read the first x
+          ^
+
+References:
+   declared.js:26:18
+   26|   declare let x: number;
+                        ^^^^^^ [1]
+   declared.js:29:7
+   29|   (x: string); // error: should read the first x
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ declared.js:33:15
+
+Cannot declare `x` [1] because the name is already bound. [name-already-bound]
+
+   declared.js:33:15
+   33|   declare let x: string; // error
+                     ^
+
+References:
+   declared.js:32:7
+   32|   let x: number = 1;
+             ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- declared.js:35:4
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   declared.js:35:4
+   35|   (x: string); // error: should read the first x
+          ^
+
+References:
+   declared.js:32:10
+   32|   let x: number = 1;
+                ^^^^^^ [1]
+   declared.js:35:7
+   35|   (x: string); // error: should read the first x
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ declared.js:40:17
+
+Cannot declare `x` [1] because the name is already bound. [name-already-bound]
+
+   declared.js:40:17
+   40|   declare const x: string; // error
+                       ^
+
+References:
+   declared.js:39:17
+   39|   declare const x: number;
+                       ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- declared.js:42:4
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   declared.js:42:4
+   42|   (x: string); // error: should read the first x
+          ^
+
+References:
+   declared.js:39:20
+   39|   declare const x: number;
+                          ^^^^^^ [1]
+   declared.js:42:7
+   42|   (x: string); // error: should read the first x
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- declared.js:46:9
+
+Cannot declare `x` [1] because the name is already bound. [name-already-bound]
+
+   declared.js:46:9
+   46|   const x: string = ''; // error
+               ^
+
+References:
+   declared.js:45:17
+   45|   declare const x: number;
+                       ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- declared.js:48:4
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   declared.js:48:4
+   48|   (x: string); // error: should read the first x
+          ^
+
+References:
+   declared.js:45:20
+   45|   declare const x: number;
+                          ^^^^^^ [1]
+   declared.js:48:7
+   48|   (x: string); // error: should read the first x
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ declared.js:52:17
+
+Cannot declare `x` [1] because the name is already bound. [name-already-bound]
+
+   declared.js:52:17
+   52|   declare const x: string; // error
+                       ^
+
+References:
+   declared.js:51:9
+   51|   const x: number = 1;
+               ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- declared.js:54:4
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   declared.js:54:4
+   54|   (x: string); // error: should read the first x
+          ^
+
+References:
+   declared.js:51:12
+   51|   const x: number = 1;
+                  ^^^^^^ [1]
+   declared.js:54:7
+   54|   (x: string); // error: should read the first x
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ declared.js:61:17
+
+Cannot declare `C` [1] because the name is already bound. [name-already-bound]
+
+   declared.js:61:17
+   61|   declare class C extends B {}
+                       ^
+
+References:
+   declared.js:60:17
+   60|   declare class C extends A {}
+                       ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- declared.js:63:4
+
+Cannot cast `new C` to `B` because `C` [1] is incompatible with `B` [2]. [incompatible-cast]
+
+   declared.js:63:4
+   63|   (new C: B); // error: should read the first C
+          ^^^^^ [1]
+
+References:
+   declared.js:63:11
+   63|   (new C: B); // error: should read the first C
+                 ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- declared.js:69:9
+
+Cannot declare `C` [1] because the name is already bound. [name-already-bound]
+
+   declared.js:69:9
+   69|   class C extends B {}
+               ^
+
+References:
+   declared.js:68:17
+   68|   declare class C extends A {}
+                       ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- declared.js:71:4
+
+Cannot cast `new C` to `B` because `C` [1] is incompatible with `B` [2]. [incompatible-cast]
+
+   declared.js:71:4
+   71|   (new C: B); // error: should read the first C
+          ^^^^^ [1]
+
+References:
+   declared.js:71:11
+   71|   (new C: B); // error: should read the first C
+                 ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ declared.js:77:17
+
+Cannot declare `C` [1] because the name is already bound. [name-already-bound]
+
+   declared.js:77:17
+   77|   declare class C extends B {}
+                       ^
+
+References:
+   declared.js:76:9
+   76|   class C extends A {}
+               ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- declared.js:79:4
+
+Cannot cast `new C` to `B` because `C` [1] is incompatible with `B` [2]. [incompatible-cast]
+
+   declared.js:79:4
+   79|   (new C: B); // error: should read the first C
+          ^^^^^ [1]
+
+References:
+   declared.js:79:11
+   79|   (new C: B); // error: should read the first C
+                 ^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- imports.js:2:8
 
 Cannot declare `R1` [1] because the name is already bound. [name-already-bound]
@@ -1327,4 +1673,4 @@ Cannot resolve name `unboundFunction2`. [cannot-resolve-name]
 
 
 
-Found 102 errors
+Found 125 errors

@@ -917,7 +917,7 @@ module Make
       (* We use the pattern_write_kind to decide if we should emit an error saying
        * "you cannot re-declare X" vs. "you cannot reassign const X" *)
       (match (stored_binding_kind, pattern_write_kind) with
-      | (Bindings.Const, AssignmentWrite) ->
+      | (Bindings.(Const | DeclaredConst), AssignmentWrite) ->
         Some
           Error_message.(
             EBindingError (EConstReassigned, assignment_loc, OrdinaryName name, def_loc)
@@ -927,7 +927,7 @@ module Make
           Error_message.(
             EBindingError (EConstParamReassigned, assignment_loc, OrdinaryName name, def_loc)
           )
-      | (Bindings.Class, AssignmentWrite) ->
+      | (Bindings.(Class | DeclaredClass), AssignmentWrite) ->
         let def_reason = mk_reason (RIdentifier (OrdinaryName name)) def_loc in
         Some
           Error_message.(
@@ -958,12 +958,12 @@ module Make
                 binding_kind = DeclaredFunctionNameBinding;
               }
           )
-      | (Bindings.Var, (LetBinding | ConstBinding | FunctionBinding)) ->
+      | (Bindings.(Var | DeclaredVar), (LetBinding | ConstBinding | FunctionBinding)) ->
         Some
           Error_message.(
             EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)
           )
-      | (Bindings.Var, VarBinding) when assignment_loc <> def_loc ->
+      | (Bindings.(Var | DeclaredVar), VarBinding) when assignment_loc <> def_loc ->
         (* We ban var redeclaration on top of other JS illegal rebinding rules. *)
         Some
           Error_message.(
@@ -976,6 +976,14 @@ module Make
       | (Bindings.Import, (VarBinding | LetBinding | ConstBinding | FunctionBinding))
       | (Bindings.Type _, (VarBinding | LetBinding | ConstBinding | FunctionBinding))
         when not (Val.is_undeclared v) ->
+        Some
+          Error_message.(
+            EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)
+          )
+      | ( Bindings.(DeclaredClass | DeclaredConst | DeclaredLet),
+          (VarBinding | LetBinding | ConstBinding | FunctionBinding)
+        )
+        when assignment_loc <> def_loc ->
         Some
           Error_message.(
             EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)
@@ -1755,7 +1763,7 @@ module Make
                 heap_refinements = ref HeapRefinementMap.empty;
                 kind;
               }
-            | Bindings.DeclaredClass ->
+            | Bindings.(DeclaredClass | DeclaredVar | DeclaredLet | DeclaredConst) ->
               let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
               let write_entries =
                 EnvMap.add_ordinary loc (Env_api.AssigningWrite reason) env_state.write_entries
@@ -2102,7 +2110,12 @@ module Make
             | None -> None
             | Some def_loc ->
               (match kind with
-              | Bindings.Type _ when not (ALoc.equal loc def_loc) ->
+              | Bindings.Type _
+              | Bindings.DeclaredClass
+              | Bindings.DeclaredVar
+              | Bindings.DeclaredLet
+              | Bindings.DeclaredConst
+                when not (ALoc.equal loc def_loc) ->
                 (* Types are already bind in hoister,
                    so we only check for rebind in different locations. *)
                 Some
@@ -3573,7 +3586,9 @@ module Make
                  else
                    match kind with
                    | Bindings.Let
-                   | Bindings.Const ->
+                   | Bindings.Const
+                   | Bindings.DeclaredLet
+                   | Bindings.DeclaredConst ->
                      let { val_ref; heap_refinements; _ } = this#env_read name in
                      this#havoc_heap_refinements heap_refinements;
                      val_ref := Val.declared_but_skipped name loc
@@ -4474,7 +4489,12 @@ module Make
                 let { RefinementKey.base; projections } = key in
                 if projections = [] then
                   match this#env_read base with
-                  | { val_ref; kind = Bindings.Const | Bindings.Let; def_loc = Some def_loc; _ }
+                  | {
+                   val_ref;
+                   kind = Bindings.(Const | Let | DeclaredConst | DeclaredLet);
+                   def_loc = Some def_loc;
+                   _;
+                  }
                     when Val.is_undeclared_or_skipped !val_ref ->
                     refinement
                     |> fst

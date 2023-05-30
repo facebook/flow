@@ -12,6 +12,9 @@ type kind =
   | Let
   | ThisAnnot
   | Const
+  | DeclaredVar
+  | DeclaredLet
+  | DeclaredConst
   | Type of { imported: bool }
   | Enum
   | Function
@@ -66,6 +69,10 @@ let to_map t =
 
 let allow_forward_ref = function
   | DeclaredFunction _
+  | DeclaredClass
+  | DeclaredVar
+  | DeclaredLet
+  | DeclaredConst
   | Var
   | Function ->
     true
