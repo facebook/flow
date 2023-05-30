@@ -302,25 +302,25 @@ let merge_remote_ref file reason = function
   | Pack.ImportNs { id_loc; name = _; index } -> import_ns file reason id_loc index
   | Pack.ImportTypeofNs { id_loc; name = _; index } -> import_typeof_ns file reason id_loc index
 
-let merge_ref : 'a. _ -> (_ -> _ -> _ -> 'a) -> _ -> 'a =
+let merge_ref : 'a. _ -> (Type.t -> ref_loc:ALoc.t -> def_loc:ALoc.t -> string -> 'a) -> _ -> 'a =
  fun file f ref ->
   match ref with
   | Pack.LocalRef { ref_loc; index } ->
-    let (lazy (_loc, name, t)) = Local_defs.get file.local_defs index in
+    let (lazy (def_loc, name, t)) = Local_defs.get file.local_defs index in
     let t = reposition_sig_tvar file.cx ref_loc t in
-    f t ref_loc name
+    f t ~ref_loc ~def_loc name
   | Pack.RemoteRef { ref_loc; index } ->
-    let (lazy (_loc, name, t)) = Remote_refs.get file.remote_refs index in
+    let (lazy (def_loc, name, t)) = Remote_refs.get file.remote_refs index in
     let t = reposition_sig_tvar file.cx ref_loc t in
-    f t ref_loc name
+    f t ~ref_loc ~def_loc name
   | Pack.BuiltinRef { ref_loc; name } ->
     let reason = Reason.(mk_reason (RIdentifier (Reason.OrdinaryName name)) ref_loc) in
     let t = Flow_js_utils.lookup_builtin_strict file.cx (Reason.OrdinaryName name) reason in
-    f t ref_loc name
+    f t ~ref_loc ~def_loc:(t |> TypeUtil.reason_of_t |> Reason.def_loc_of_reason) name
 
 let rec merge_tyref file f = function
   | Pack.Unqualified ref ->
-    let f t loc name = f t loc (Nel.one name) in
+    let f t ~ref_loc ~def_loc:_ name = f t ref_loc (Nel.one name) in
     merge_ref file f ref
   | Pack.Qualified { loc; id_loc; name; qualification } ->
     let f t _ names =
@@ -338,9 +338,9 @@ let rec merge_tyref file f = function
 
 let merge_type_export file reason = function
   | Pack.ExportTypeRef ref ->
-    let f t ref_loc name =
+    let f t ~ref_loc:_ ~def_loc name =
       let t = ConsGen.assert_export_is_type file.cx reason name t in
-      (Some ref_loc, t)
+      (Some def_loc, t)
     in
     merge_ref file f ref
   | Pack.ExportTypeBinding index ->
@@ -426,7 +426,7 @@ let merge_exports =
 let rec merge tps infer_tps file = function
   | Pack.Annot t -> merge_annot tps infer_tps file t
   | Pack.Value t -> merge_value tps infer_tps file t
-  | Pack.Ref ref -> merge_ref file (fun t _ _ -> t) ref
+  | Pack.Ref ref -> merge_ref file (fun t ~ref_loc:_ ~def_loc:_ _ -> t) ref
   | Pack.TyRef name ->
     let f t ref_loc (name, _) =
       let reason = Reason.(mk_annot_reason (RType (Reason.OrdinaryName name)) ref_loc) in
@@ -1435,7 +1435,7 @@ and merge_class_mixin =
       let t = eval file loc t op in
       (t, name :: names_rev)
     | Pack.Ref ref ->
-      let f t _ name = (t, [name]) in
+      let f t ~ref_loc:_ ~def_loc:_ name = (t, [name]) in
       merge_ref file f ref
     | _ -> failwith "unexpected class mixin"
   in
@@ -1883,16 +1883,18 @@ let merge_def file reason = function
     merge_enum file reason id_loc rep members has_unknown_members
 
 let merge_export file = function
-  | Pack.ExportRef ref -> merge_ref file (fun t ref_loc _ -> (Some ref_loc, t)) ref
+  | Pack.ExportRef ref
+  | Pack.ExportDefault { default_loc = _; def = Pack.Ref ref } ->
+    merge_ref file (fun t ~ref_loc:_ ~def_loc _ -> (Some def_loc, t)) ref
   | Pack.ExportBinding index ->
     let (lazy (loc, _name, t)) = Local_defs.get file.local_defs index in
     (Some loc, t)
   | Pack.ExportDefault { default_loc; def } ->
     let t = merge SMap.empty SMap.empty file def in
     (Some default_loc, t)
-  | Pack.ExportDefaultBinding { default_loc; index } ->
-    let (lazy (_loc, _name, t)) = Local_defs.get file.local_defs index in
-    (Some default_loc, t)
+  | Pack.ExportDefaultBinding { default_loc = _; index } ->
+    let (lazy (loc, _name, t)) = Local_defs.get file.local_defs index in
+    (Some loc, t)
   | Pack.ExportFrom index ->
     let (lazy (loc, _name, t)) = Remote_refs.get file.remote_refs index in
     (Some loc, t)
