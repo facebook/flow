@@ -630,6 +630,7 @@ and internal_error =
   | MissingEnvRead of ALoc.t
   | MissingEnvWrite of ALoc.t
   | UnconstrainedTvar of int option
+  | UnexpectedModuleT of string
   | PlaceholderTypeInChecking
   | ReadOfUnreachedTvar of Env_api.def_loc_type
   | ReadOfUnresolvedTvar of Env_api.def_loc_type
@@ -1811,6 +1812,7 @@ let string_of_internal_error = function
   | AbnormalControlFlow -> "abnormal control flow"
   | UnconstrainedTvar None -> "unconstrained tvar during tvar resolution"
   | UnconstrainedTvar (Some i) -> spf "unconstrained tvar (%d) during tvar resolution" i
+  | UnexpectedModuleT s -> spf "unexpected module type: %s" s
   | PlaceholderTypeInChecking -> "placeholder type in checking mode"
   | ReadOfUnreachedTvar k ->
     spf "read of %s entry which has not been prepared for typechecking" (Env_api.show_def_loc_type k)

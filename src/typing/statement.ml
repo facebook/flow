@@ -1802,7 +1802,14 @@ module Make
       | [(AnyT (lreason, _) as l)] ->
         Flow_js_utils.check_untyped_import cx import_kind lreason get_reason;
         Flow.flow_t cx (Flow.reposition_reason cx get_reason l, tout)
-      | _ -> constraint_resolver tout
+      | _ ->
+        Flow_js_utils.add_output
+          cx
+          Error_message.(
+            EInternal
+              (loc_of_reason get_reason, UnexpectedModuleT (Debug_js.dump_t cx ~depth:3 module_t))
+          );
+        Flow.flow_t cx (AnyT.error get_reason, tout)
     in
     let resolver =
       if File_key.is_lib_file (Context.file cx) then

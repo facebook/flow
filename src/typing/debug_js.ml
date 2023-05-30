@@ -1138,6 +1138,7 @@ let dump_error_message =
   let dump_internal_error = function
     | AbnormalControlFlow -> "AbnormalControlFlow"
     | UnconstrainedTvar _ -> "UnconstrainedTvar"
+    | UnexpectedModuleT _ -> "UnexpectedModuleT"
     | PlaceholderTypeInChecking -> "PlaceholderTypeInChecking"
     | ReadOfUnreachedTvar _ -> "ReadOfUnreachedTvar"
     | ReadOfUnresolvedTvar _ -> "ReadOfUnresolvedTvar"
