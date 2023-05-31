@@ -1177,6 +1177,116 @@ References:
                                             ^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------- rec_params.js:7:26
+
+Cannot resolve name `x`. [cannot-resolve-name]
+
+   7|   function invalid_01(x: x): void {} // error on x
+                               ^
+
+
+Error ----------------------------------------------------------------------------------------------- rec_params.js:8:33
+
+Cannot resolve name `x`. [cannot-resolve-name]
+
+   8|   function invalid_02(x: typeof x): void {} // error on x
+                                      ^
+
+
+Error ----------------------------------------------------------------------------------------------- rec_params.js:9:45
+
+Cannot resolve name `V`. [cannot-resolve-name]
+
+   9|   function invalid_03(V: $Call<<V>(V) => V, V>): void {} // error on V
+                                                  ^
+
+
+Error ---------------------------------------------------------------------------------------------- rec_params.js:10:28
+
+Cannot resolve name `x`. [cannot-resolve-name]
+
+   10|   function invalid_04({x}: x) {} // error on x
+                                  ^
+
+
+Error ---------------------------------------------------------------------------------------------- rec_params.js:11:35
+
+Cannot resolve name `x`. [cannot-resolve-name]
+
+   11|   function invalid_05({x}: typeof x) {} // error on x
+                                         ^
+
+
+Error ---------------------------------------------------------------------------------------------- rec_params.js:12:37
+
+Cannot resolve name `y`. [cannot-resolve-name]
+
+   12|   function invalid_06({x:y}: typeof y) {} // error on y
+                                           ^
+
+
+Error ---------------------------------------------------------------------------------------------- rec_params.js:13:41
+
+Cannot resolve name `z`. [cannot-resolve-name]
+
+   13|   function invalid_07({x:[{z}]}: typeof z) {} // error on z
+                                               ^
+
+
+Error ---------------------------------------------------------------------------------------------- rec_params.js:15:39
+
+Cannot resolve name `y`. [cannot-resolve-name]
+
+   15|   function invalid_circular(x: typeof y, y: typeof x) {} // error cannot resolve 'y'
+                                             ^
+
+
+Error ---------------------------------------------------------------------------------------------- rec_params.js:17:15
+
+Cannot resolve name `y`. [cannot-resolve-name]
+
+   17|     x: typeof y /* error: cannot resolve 'y' */ = y /* error reference-before-declaration */,
+                     ^
+
+
+Error ---------------------------------------------------------------------------------------------- rec_params.js:17:51
+
+Cannot use variable `y` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
+
+   rec_params.js:17:51
+   17|     x: typeof y /* error: cannot resolve 'y' */ = y /* error reference-before-declaration */,
+                                                         ^
+
+References:
+   rec_params.js:18:5
+   18|     y: typeof x,
+           ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- rec_params.js:23:8
+
+Cannot resolve name `Val`. [cannot-resolve-name]
+
+   23|   Val: Val<K>, // error on Val, no recursion-limit-exceeded
+              ^^^
+
+
+Error ---------------------------------------------------------------------------------------------- rec_params.js:29:11
+
+Cannot resolve name `Val`. [cannot-resolve-name]
+
+   29|   ...Val: Val<K> // error on Val, no recursion-limit-exceeded
+                 ^^^
+
+
+Error ---------------------------------------------------------------------------------------------- rec_params.js:46:19
+
+Cannot resolve name `A`. [cannot-resolve-name]
+
+   46|   function foo(a: A) { // error cannot-resolve-name
+                         ^
+
+
 Error ----------------------------------------------------------------------------------------------------- scope.js:6:9
 
 Cannot declare `b` [1] because var redeclaration is not supported. [name-already-bound]
@@ -1367,116 +1477,175 @@ Cannot resolve name `b`. [cannot-resolve-name]
                                   ^
 
 
-Error -------------------------------------------------------------------------------------------------- scope.js:129:21
+Error --------------------------------------------------------------------------------------------------- scope.js:118:6
+
+Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   scope.js:118:6
+   118|     (a: string); // error a ~> number
+             ^
+
+References:
+   scope.js:116:51
+   116|   function f(x: number, y: boolean, z: string, a: typeof x, b: typeof y, c: typeof z) {
+                                                          ^^^^^^^^ [1]
+   scope.js:118:9
+   118|     (a: string); // error a ~> number
+                ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- scope.js:119:6
+
+Cannot cast `b` to number because boolean [1] is incompatible with number [2]. [incompatible-cast]
+
+   scope.js:119:6
+   119|     (b: number); // error boolean ~> number
+             ^
+
+References:
+   scope.js:116:64
+   116|   function f(x: number, y: boolean, z: string, a: typeof x, b: typeof y, c: typeof z) {
+                                                                       ^^^^^^^^ [1]
+   scope.js:119:9
+   119|     (b: number); // error boolean ~> number
+                ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- scope.js:120:6
+
+Cannot cast `c` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
+
+   scope.js:120:6
+   120|     (c: boolean); // error string ~> boolean
+             ^
+
+References:
+   scope.js:116:77
+   116|   function f(x: number, y: boolean, z: string, a: typeof x, b: typeof y, c: typeof z) {
+                                                                                    ^^^^^^^^ [1]
+   scope.js:120:9
+   120|     (c: boolean); // error string ~> boolean
+                ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- scope.js:124:21
 
 Cannot resolve name `selfRef`. [cannot-resolve-name]
 
-   129|     selfRef: typeof selfRef // Error: cannot resolve selfRef
+   124|     selfRef: typeof selfRef // Error cannot resolve selfRef
                             ^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------------- scope.js:133:15
+Error -------------------------------------------------------------------------------------------------- scope.js:128:15
 
 Cannot resolve name `forwardRef`. [cannot-resolve-name]
 
-   133|     x: typeof forwardRef, // Error: cannot resolve forwardRef
+   128|     x: typeof forwardRef, // Error: cannot resolve forwardRef
                       ^^^^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------------- scope.js:146:36
+Error --------------------------------------------------------------------------------------------------- scope.js:137:6
+
+Cannot cast `y` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   scope.js:137:6
+   137|     (y: string); // error number ~> string
+             ^
+
+References:
+   scope.js:134:8
+   134|     y: typeof x,
+               ^^^^^^^^ [1]
+   scope.js:137:9
+   137|     (y: string); // error number ~> string
+                ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- scope.js:141:36
 
 Missing an annotation on `x`. [missing-local-annot]
 
-   146| function unannotated_param_as_type(x) { // error missing-local-annot
+   141| function unannotated_param_as_type(x) { // error missing-local-annot
                                            ^
 
 
-Error --------------------------------------------------------------------------------------------------- scope.js:148:8
+Error --------------------------------------------------------------------------------------------------- scope.js:143:8
 
 Cannot use `x` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
 definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
-   148|     x: x, // error value-as-type
+   143|     x: x, // error value-as-type
                ^
 
 
-Error --------------------------------------------------------------------------------------------------- scope.js:149:8
-
-Cannot use `x` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
-definition. To get the type of a non-class value, use `typeof`. [value-as-type]
-
-   149|     y: x, // error value-as-type
-               ^
-
-
-Error -------------------------------------------------------------------------------------------------- scope.js:155:19
+Error -------------------------------------------------------------------------------------------------- scope.js:150:19
 
 Cannot use `e` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
 definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
-   155|   function foo(x: e) {} // error value-as-type
+   150|   function foo(x: e) {} // error value-as-type
                           ^
 
 
-Error --------------------------------------------------------------------------------------------------- scope.js:162:7
+Error --------------------------------------------------------------------------------------------------- scope.js:157:7
 
 Cannot declare `x` [1] because the name is already bound. [name-already-bound]
 
-   scope.js:162:7
-   162|   let x = 1; // error redeclaration
+   scope.js:157:7
+   157|   let x = 1; // error redeclaration
               ^
 
 References:
-   scope.js:159:3
-   159|   x: number,
+   scope.js:154:3
+   154|   x: number,
           ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- scope.js:168:7
+Error --------------------------------------------------------------------------------------------------- scope.js:163:7
 
 Cannot declare `x` [1] because the name is already bound. [name-already-bound]
 
-   scope.js:168:7
-   168|   let x = 1; // error redeclaration
+   scope.js:163:7
+   163|   let x = 1; // error redeclaration
               ^
 
 References:
-   scope.js:166:3
-   166|   x: number = 1,
+   scope.js:161:3
+   161|   x: number = 1,
           ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- scope.js:197:4
+Error --------------------------------------------------------------------------------------------------- scope.js:192:4
 
 Cannot cast `x` to number because null [1] is incompatible with number [2]. [incompatible-cast]
 
-   scope.js:197:4
-   197|   (x: number); // error null ~> number
+   scope.js:192:4
+   192|   (x: number); // error null ~> number
            ^
 
 References:
-   scope.js:194:6
-   194|   x: null | number,
+   scope.js:189:6
+   189|   x: null | number,
              ^^^^ [1]
-   scope.js:197:7
-   197|   (x: number); // error null ~> number
+   scope.js:192:7
+   192|   (x: number); // error null ~> number
               ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- scope.js:204:4
+Error --------------------------------------------------------------------------------------------------- scope.js:199:4
 
 Cannot cast `x` to number because null [1] is incompatible with number [2]. [incompatible-cast]
 
-   scope.js:204:4
-   204|   (x: number); // error null ~> number
+   scope.js:199:4
+   199|   (x: number); // error null ~> number
            ^
 
 References:
-   scope.js:201:6
-   201|   x: null | number,
+   scope.js:196:6
+   196|   x: null | number,
              ^^^^ [1]
-   scope.js:204:7
-   204|   (x: number); // error null ~> number
+   scope.js:199:7
+   199|   (x: number); // error null ~> number
               ^^^^^^ [2]
 
 
@@ -1735,4 +1904,4 @@ Cannot resolve name `unboundFunction2`. [cannot-resolve-name]
 
 
 
-Found 129 errors
+Found 145 errors

@@ -20,6 +20,8 @@ val fold_bindings_of_variable_declarations :
   ('m, 't) Flow_ast.Statement.VariableDeclaration.Declarator.t list ->
   'a
 
+val annot_of_pattern : ('l, 't) Flow_ast.Pattern.t -> ('l, 't) Flow_ast.Type.annotation_or_hint
+
 val partition_directives :
   (Loc.t, Loc.t) Flow_ast.Statement.t list ->
   (Loc.t, Loc.t) Flow_ast.Statement.t list * (Loc.t, Loc.t) Flow_ast.Statement.t list

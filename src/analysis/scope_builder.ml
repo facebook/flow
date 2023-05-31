@@ -124,48 +124,15 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       let has_default = params' != params in
       (has_default, params')
 
-  class function_annot_collector_and_remover =
-    object (this)
-      inherit [(L.t, L.t) Ast.Type.t list, L.t] visitor ~init:[]
+  let function_param_annot_remover =
+    object
+      inherit [L.t] Flow_ast_mapper.mapper
 
       method! type_annotation_hint return =
         let open Ast.Type in
         match return with
-        | Available (_, annot) ->
-          acc <- annot :: acc;
-          Missing L.none
+        | Available _ -> Missing L.none
         | Missing _ -> return
-
-      method! function_return_annotation return =
-        let open Ast.Function.ReturnAnnot in
-        match return with
-        | Available (_, annot)
-        | TypeGuard (_, (_, { Ast.Type.TypeGuard.guard = (_, Some annot); _ })) ->
-          acc <- annot :: acc;
-          Missing L.none
-        | TypeGuard (_, (_, { Ast.Type.TypeGuard.guard = (_, None); _ }))
-        | Missing _ ->
-          return
-
-      method! function_param param =
-        let open Ast.Function.Param in
-        let (loc, { argument; default }) = param in
-        let argument' = this#function_param_pattern argument in
-        (loc, { argument = argument'; default })
-
-      method! function_params params =
-        let open Ast.Function in
-        let (loc, { Params.params = params_list; rest; comments; this_ }) = params in
-        let params_list' = Flow_ast_mapper.map_list this#function_param params_list in
-        let rest' = Flow_ast_mapper.map_opt this#function_rest_param rest in
-        let this_' =
-          Base.Option.bind this_ ~f:(fun (_, { ThisParam.annot = (_, annot); comments = _ }) ->
-              acc <- annot :: acc;
-              None
-          )
-        in
-        let comments' = this#syntax_opt comments in
-        (loc, { Params.params = params_list'; rest = rest'; comments = comments'; this_ = this_' })
     end
 
   let component_annot_and_default_remover =
@@ -485,15 +452,6 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           | BodyBlock (loc, _) ->
             loc
         in
-        (* The old env will first visit all param type annotations before visiting param names.
-           We need to separate them so that we can visit the annotation and names in different
-           scopes. *)
-        let params =
-          let visitor = new function_annot_collector_and_remover in
-          let params = visitor#function_params params in
-          visitor#acc |> Base.List.rev |> Base.List.iter ~f:(fun annot -> ignore @@ this#type_ annot);
-          params
-        in
         let (has_default_parameters, params_without_defaults) = remove_params_default params in
         if has_default_parameters then begin
           (* We need to create a second scope when we have default parameters.
@@ -513,6 +471,62 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             (fun () -> run this#function_params params)
             ()
         end;
+        (* We have already visited the defaults in their own scope. Now visit the
+           parameter types, each in a separate scope that includes bindings for each
+           parameter name that has been seen before in the parameter list. *)
+        let (_, { Params.params = params_list; this_; rest; _ }) = params_without_defaults in
+        (* this-param *)
+        Base.Option.iter this_ ~f:(fun this_ ->
+            let (_, { ThisParam.annot; _ }) = this_ in
+            let (annot_loc, _) = annot in
+            this#with_bindings
+              annot_loc
+              Bindings.empty
+              (fun () -> run this#type_annotation annot)
+              ()
+        );
+
+        let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
+        (* Parameter list *)
+        let prev_params =
+          Base.List.fold_left params_list ~init:[] ~f:(fun prev_params param ->
+              let (_, { Param.argument; _ }) = param in
+              let annot = Flow_ast_utils.annot_of_pattern argument in
+              (match annot with
+              | Ast.Type.Available annot ->
+                let (annot_loc, _) = annot in
+                this#with_bindings
+                  annot_loc
+                  hoist#acc
+                  (fun () ->
+                    (* All previous params need to be declared in the current scope *)
+                    List.rev prev_params |> List.iter (run this#function_param);
+                    run this#type_annotation annot)
+                  ()
+              | Ast.Type.Missing _ -> ());
+              run hoist#function_param param;
+              function_param_annot_remover#function_param param :: prev_params
+          )
+        in
+        (* Rest param *)
+        Base.Option.iter rest ~f:(fun this_ ->
+            let (_, { RestParam.argument; _ }) = this_ in
+            let annot = Flow_ast_utils.annot_of_pattern argument in
+            match annot with
+            | Ast.Type.Available annot ->
+              let (annot_loc, _) = annot in
+              this#with_bindings
+                annot_loc
+                hoist#acc
+                (fun () ->
+                  (* All previous params need to be declared in the current scope *)
+                  List.rev prev_params |> List.iter (run this#function_param);
+                  run this#type_annotation annot)
+                ()
+            | Ast.Type.Missing _ -> ()
+        );
+        (* Finally, visit the body in a scope that includes bindings for all params
+           and hoisted body declarations. *)
         let bindings =
           let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
           run hoist#function_params params;
@@ -525,7 +539,9 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           body_loc
           bindings
           (fun () ->
-            run this#function_params params_without_defaults;
+            run
+              this#function_params
+              (function_param_annot_remover#function_params params_without_defaults);
             run_opt this#predicate predicate;
             run this#function_body_any body)
           ()

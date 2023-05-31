@@ -108,25 +108,20 @@ function default_param_2() {
   }
 }
 
-/**
- * TODO:
- * The old env has the implementation-defined behavior that considers function parameter annotations
- * to be in the outer scope of function parameters and bodies.
- * This is confusing, and we should eventually fix it when the new-env rolls out.
- */
 function function_type_annotation_scope() {
   const x: string = "";
   const y: number = 0;
   const z: boolean = true;
-  // Function parameter annotations are in the parent scope of function parameters.
+  // Function parameter annotations are in the scope of the function.
   function f(x: number, y: boolean, z: string, a: typeof x, b: typeof y, c: typeof z) {
-    (a: string); // OK
-    (b: number); // OK
-    (c: boolean); // OK
+    (a: number); // OK
+    (a: string); // error a ~> number
+    (b: number); // error boolean ~> number
+    (c: boolean); // error string ~> boolean
   }
 
   function invalid_self_reference(
-    selfRef: typeof selfRef // Error: cannot resolve selfRef
+    selfRef: typeof selfRef // Error cannot resolve selfRef
   ) {}
 
   function invalid_forward_reference_typeof(
@@ -139,14 +134,14 @@ function function_type_annotation_scope() {
     y: typeof x,
     f: (number) => void = (z: typeof x) => { (z: number) }
   ) {
-    (y: string);
+    (y: string); // error number ~> string
   }
 }
 
 function unannotated_param_as_type(x) { // error missing-local-annot
   function foo(
     x: x, // error value-as-type
-    y: x, // error value-as-type
+    y: x, // ideally an error, but 'x' is already an 'AnyT Error' type
   ) {}
 }
 

@@ -59,6 +59,14 @@ let fold_bindings_of_variable_declarations f acc declarations =
     acc
     declarations
 
+let annot_of_pattern patt =
+  let open Pattern in
+  match patt with
+  | (_, Object { Object.annot; _ }) -> annot
+  | (_, Array { Array.annot; _ }) -> annot
+  | (_, Identifier { Identifier.annot; _ }) -> annot
+  | (loc, Expression _) -> Type.Missing loc
+
 let partition_directives statements =
   let open Flow_ast.Statement in
   let rec helper directives = function
