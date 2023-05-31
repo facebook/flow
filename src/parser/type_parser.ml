@@ -100,6 +100,39 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         )
     | _ -> None
 
+  let number_singleton ~neg kind value raw env =
+    if kind = LEGACY_OCTAL then strict_error env Parse_error.StrictOctalLiteral;
+    let leading = Peek.comments env in
+    Eat.token env;
+    let trailing = Eat.trailing_comments env in
+    let (value, raw, comments) =
+      match neg with
+      | None ->
+        let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+        (value, raw, comments)
+      | Some leading_neg ->
+        let leading = leading_neg @ leading in
+        let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+        (~-.value, "-" ^ raw, comments)
+    in
+    Type.NumberLiteral { Ast.NumberLiteral.value; raw; comments }
+
+  let bigint_singleton ~neg value raw env =
+    let leading = Peek.comments env in
+    Eat.token env;
+    let trailing = Eat.trailing_comments env in
+    let (value, raw, comments) =
+      match neg with
+      | None ->
+        let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+        (value, raw, comments)
+      | Some leading_neg ->
+        let leading = leading_neg @ leading in
+        let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+        (Option.map Int64.neg value, "-" ^ raw, comments)
+    in
+    Type.BigIntLiteral { Ast.BigIntLiteral.value; raw; comments }
+
   let rec _type env = conditional env
 
   and annotation env =
@@ -446,31 +479,11 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
             comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
           }
       )
+    | T_MINUS -> with_loc negate env
     | T_NUMBER_SINGLETON_TYPE { kind; value; raw } ->
-      if kind = LEGACY_OCTAL then strict_error env Parse_error.StrictOctalLiteral;
-      let leading = Peek.comments env in
-      Eat.token env;
-      let trailing = Eat.trailing_comments env in
-      ( loc,
-        Type.NumberLiteral
-          {
-            Ast.NumberLiteral.value;
-            raw;
-            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-          }
-      )
+      with_loc (number_singleton ~neg:None kind value raw) env
     | T_BIGINT_SINGLETON_TYPE { kind = _; value; raw } ->
-      let leading = Peek.comments env in
-      Eat.token env;
-      let trailing = Eat.trailing_comments env in
-      ( loc,
-        Type.BigIntLiteral
-          {
-            Ast.BigIntLiteral.value;
-            raw;
-            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-          }
-      )
+      with_loc (bigint_singleton ~neg:None value raw) env
     | (T_TRUE | T_FALSE) as token ->
       let leading = Peek.comments env in
       Eat.token env;
@@ -546,6 +559,18 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       | None ->
         error_unexpected ~expected:"a type" env;
         (loc, Type.Any None))
+
+  and negate env =
+    let leading = Peek.comments env in
+    Eat.token env;
+    match Peek.token env with
+    | T_NUMBER_SINGLETON_TYPE { kind; value; raw } ->
+      number_singleton ~neg:(Some leading) kind value raw env
+    | T_BIGINT_SINGLETON_TYPE { kind = _; value; raw } ->
+      bigint_singleton ~neg:(Some leading) value raw env
+    | _ ->
+      error_unexpected ~expected:"a number literal type" env;
+      Type.Any None
 
   and is_primitive = function
     | T_ANY_TYPE

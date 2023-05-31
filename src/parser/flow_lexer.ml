@@ -151,35 +151,6 @@ let whitespace =
     | 0x2000 .. 0x200a
     | 0x202f | 0x205f | 0x3000 )]
 
-let is_whitespace = function
-  | 0x0009
-  | 0x000B
-  | 0x000C
-  | 0x0020
-  | 0x00A0
-  | 0xfeff
-  | 0x1680
-  | 0x2000
-  | 0x2001
-  | 0x2002
-  | 0x2003
-  | 0x2004
-  | 0x2005
-  | 0x2006
-  | 0x2007
-  | 0x2008
-  | 0x2009
-  | 0x200a
-  | 0x202f
-  | 0x205f
-  | 0x3000 ->
-    true
-  | _ -> false
-
-(* minus sign in front of negative numbers
-   (only for types! regular numbers use T_MINUS!) *)
-let neg = [%sedlex.regexp? ('-', Star whitespace)]
-
 let line_terminator_sequence = [%sedlex.regexp? '\n' | '\r' | "\r\n" | 0x2028 | 0x2029]
 
 let line_terminator_sequence_start = [%sedlex.regexp? '\n' | '\r' | 0x2028 | 0x2029]
@@ -315,64 +286,32 @@ let mk_comment
   let c = { kind; text; on_newline } in
   (loc, c)
 
-let split_number_type =
-  let rec strip_whitespace i len lexeme =
-    if is_whitespace lexeme.(i) then
-      (strip_whitespace [@tailcall]) (i + 1) len lexeme
-    else
-      Sedlexing.string_of_utf8 (Array.sub lexeme i (len - i))
-  in
-  fun (lexeme : int array) ->
-    (* quickly check whether the number is negative *)
-    if lexeme.(0) = Char.code '-' then
-      (* if it is, we re-scan it to remove whitespace *)
-      let num = strip_whitespace 1 (Array.length lexeme) lexeme in
-      let raw = Sedlexing.string_of_utf8 lexeme in
-      (true, num, raw)
-    else
-      let raw = Sedlexing.string_of_utf8 lexeme in
-      (false, raw, raw)
-
 let mk_num_singleton number_type (lexeme : int array) =
-  let (neg, num, raw) = split_number_type lexeme in
+  let raw = Sedlexing.string_of_utf8 lexeme in
   (* convert singleton number type into a float *)
   let value =
     match number_type with
     | LEGACY_OCTAL -> begin
-      try Int64.to_float (Int64.of_string ("0o" ^ num)) with
-      | Failure _ -> failwith ("Invalid legacy octal " ^ num)
+      try Int64.to_float (Int64.of_string ("0o" ^ raw)) with
+      | Failure _ -> failwith ("Invalid legacy octal " ^ raw)
     end
     | BINARY
     | OCTAL -> begin
-      try Int64.to_float (Int64.of_string num) with
-      | Failure _ -> failwith ("Invalid binary/octal " ^ num)
+      try Int64.to_float (Int64.of_string raw) with
+      | Failure _ -> failwith ("Invalid binary/octal " ^ raw)
     end
     | LEGACY_NON_OCTAL
     | NORMAL -> begin
-      try float_of_string num with
-      | Failure _ -> failwith ("Invalid number " ^ num)
+      try float_of_string raw with
+      | Failure _ -> failwith ("Invalid number " ^ raw)
     end
-  in
-  let value =
-    if neg then
-      ~-.value
-    else
-      value
   in
   T_NUMBER_SINGLETON_TYPE { kind = number_type; value; raw }
 
 let mk_bignum_singleton kind lexeme =
-  let (neg, num, raw) = split_number_type lexeme in
-  let postraw = bigint_strip_n num in
-  let value =
-    Int64.of_string_opt postraw
-    |> Option.map (fun value ->
-           if neg then
-             Int64.neg value
-           else
-             value
-       )
-  in
+  let raw = Sedlexing.string_of_utf8 lexeme in
+  let postraw = bigint_strip_n raw in
+  let value = Int64.of_string_opt postraw in
   T_BIGINT_SINGLETON_TYPE { kind; value; raw }
 
 (* This is valid since the escapes are already tackled*)
@@ -1638,157 +1577,158 @@ let type_token env lexbuf =
   (*
    * Number literals
    *)
-  | (Opt neg, binbigint, word) ->
+  | (binbigint, word) ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf ->
         match%sedlex lexbuf with
-        | (Opt neg, binbigint) ->
+        | binbigint ->
           let num = Sedlexing.lexeme lexbuf in
           Token (env, mk_bignum_singleton BIG_BINARY num)
         | _ -> failwith "unreachable type_token bigbigint"
     )
-  | (Opt neg, binbigint) ->
+  | binbigint ->
     let num = Sedlexing.lexeme lexbuf in
     Token (env, mk_bignum_singleton BIG_BINARY num)
-  | (Opt neg, binnumber, (letter | '2' .. '9'), Star alphanumeric) ->
+  | (binnumber, (letter | '2' .. '9'), Star alphanumeric) ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf ->
         match%sedlex lexbuf with
-        | (Opt neg, binnumber) ->
+        | binnumber ->
           let num = Sedlexing.lexeme lexbuf in
           Token (env, mk_num_singleton BINARY num)
         | _ -> failwith "unreachable type_token binnumber"
     )
-  | (Opt neg, binnumber) ->
+  | binnumber ->
     let num = Sedlexing.lexeme lexbuf in
     Token (env, mk_num_singleton BINARY num)
-  | (Opt neg, octbigint, word) ->
+  | (octbigint, word) ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf ->
         match%sedlex lexbuf with
-        | (Opt neg, octbigint) ->
+        | octbigint ->
           let num = Sedlexing.lexeme lexbuf in
           Token (env, mk_bignum_singleton BIG_OCTAL num)
         | _ -> failwith "unreachable type_token octbigint"
     )
-  | (Opt neg, octbigint) ->
+  | octbigint ->
     let num = Sedlexing.lexeme lexbuf in
     Token (env, mk_bignum_singleton BIG_OCTAL num)
-  | (Opt neg, octnumber, (letter | '8' .. '9'), Star alphanumeric) ->
+  | (octnumber, (letter | '8' .. '9'), Star alphanumeric) ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf ->
         match%sedlex lexbuf with
-        | (Opt neg, octnumber) ->
+        | octnumber ->
           let num = Sedlexing.lexeme lexbuf in
           Token (env, mk_num_singleton OCTAL num)
         | _ -> failwith "unreachable type_token octnumber"
     )
-  | (Opt neg, octnumber) ->
+  | octnumber ->
     let num = Sedlexing.lexeme lexbuf in
     Token (env, mk_num_singleton OCTAL num)
-  | (Opt neg, legacyoctnumber, (letter | '8' .. '9'), Star alphanumeric) ->
+  | (legacyoctnumber, (letter | '8' .. '9'), Star alphanumeric) ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf ->
         match%sedlex lexbuf with
-        | (Opt neg, legacyoctnumber) ->
+        | legacyoctnumber ->
           let num = Sedlexing.lexeme lexbuf in
           Token (env, mk_num_singleton LEGACY_OCTAL num)
         | _ -> failwith "unreachable type_token legacyoctnumber"
     )
-  | (Opt neg, legacyoctnumber) ->
+  | legacyoctnumber ->
     let num = Sedlexing.lexeme lexbuf in
     Token (env, mk_num_singleton LEGACY_OCTAL num)
-  | (Opt neg, hexbigint, word) ->
+  | (hexbigint, word) ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf ->
         match%sedlex lexbuf with
-        | (Opt neg, hexbigint) ->
+        | hexbigint ->
           let num = Sedlexing.lexeme lexbuf in
           Token (env, mk_bignum_singleton BIG_NORMAL num)
         | _ -> failwith "unreachable type_token hexbigint"
     )
-  | (Opt neg, hexbigint) ->
+  | hexbigint ->
     let num = Sedlexing.lexeme lexbuf in
     Token (env, mk_bignum_singleton BIG_NORMAL num)
-  | (Opt neg, hexnumber, non_hex_letter, Star alphanumeric) ->
+  | (hexnumber, non_hex_letter, Star alphanumeric) ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf ->
         match%sedlex lexbuf with
-        | (Opt neg, hexnumber) ->
+        | hexnumber ->
           let num = Sedlexing.lexeme lexbuf in
           Token (env, mk_num_singleton NORMAL num)
         | _ -> failwith "unreachable type_token hexnumber"
     )
-  | (Opt neg, hexnumber) ->
+  | hexnumber ->
     let num = Sedlexing.lexeme lexbuf in
     Token (env, mk_num_singleton NORMAL num)
-  | (Opt neg, scibigint, word) ->
+  | (scibigint, word) ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf ->
         match%sedlex lexbuf with
-        | (Opt neg, scibigint) ->
+        | scibigint ->
           let num = Sedlexing.lexeme lexbuf in
           let loc = loc_of_lexbuf env lexbuf in
           let env = lex_error env loc Parse_error.InvalidSciBigInt in
           Token (env, mk_bignum_singleton BIG_NORMAL num)
         | _ -> failwith "unreachable type_token scibigint"
     )
-  | (Opt neg, scibigint) ->
+  | scibigint ->
     let num = Sedlexing.lexeme lexbuf in
     let loc = loc_of_lexbuf env lexbuf in
     let env = lex_error env loc Parse_error.InvalidSciBigInt in
     Token (env, mk_bignum_singleton BIG_NORMAL num)
-  | (Opt neg, scinumber, word) ->
+  | (scinumber, word) ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf ->
         match%sedlex lexbuf with
-        | (Opt neg, scinumber) ->
+        | scinumber ->
           let num = Sedlexing.lexeme lexbuf in
           Token (env, mk_num_singleton NORMAL num)
         | _ -> failwith "unreachable type_token scinumber"
     )
-  | (Opt neg, scinumber) ->
+  | scinumber ->
     let num = Sedlexing.lexeme lexbuf in
     Token (env, mk_num_singleton NORMAL num)
-  | (Opt neg, floatbigint, word) ->
+  | (floatbigint, word) ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf ->
         match%sedlex lexbuf with
-        | (Opt neg, floatbigint) ->
+        | floatbigint ->
           let num = Sedlexing.lexeme lexbuf in
           let loc = loc_of_lexbuf env lexbuf in
           let env = lex_error env loc Parse_error.InvalidFloatBigInt in
           Token (env, mk_bignum_singleton BIG_NORMAL num)
         | _ -> failwith "unreachable type_token floatbigint"
     )
-  | (Opt neg, wholebigint, word) ->
+  | (wholebigint, word) ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf ->
         match%sedlex lexbuf with
-        | (Opt neg, wholebigint) ->
+        | wholebigint ->
           let num = Sedlexing.lexeme lexbuf in
           Token (env, mk_bignum_singleton BIG_NORMAL num)
         | _ -> failwith "unreachable type_token wholebigint"
     )
-  | (Opt neg, floatbigint) ->
+  | floatbigint ->
     let num = Sedlexing.lexeme lexbuf in
     let loc = loc_of_lexbuf env lexbuf in
     let env = lex_error env loc Parse_error.InvalidFloatBigInt in
     Token (env, mk_bignum_singleton BIG_NORMAL num)
-  | (Opt neg, wholebigint) ->
+  | wholebigint ->
     let num = Sedlexing.lexeme lexbuf in
     Token (env, mk_bignum_singleton BIG_NORMAL num)
-  | (Opt neg, (wholenumber | floatnumber), word) ->
+  | ((wholenumber | floatnumber), word) ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf ->
         match%sedlex lexbuf with
-        | (Opt neg, wholenumber)
+        | wholenumber
         | floatnumber ->
           let num = Sedlexing.lexeme lexbuf in
           Token (env, mk_num_singleton NORMAL num)
         | _ -> failwith "unreachable type_token wholenumber"
     )
-  | (Opt neg, (wholenumber | floatnumber)) ->
+  | wholenumber
+  | floatnumber ->
     let num = Sedlexing.lexeme lexbuf in
     Token (env, mk_num_singleton NORMAL num)
   (* Keywords *)
