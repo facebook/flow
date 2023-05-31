@@ -49,6 +49,8 @@ module.exports = (suite(
         lspStartAndConnect(),
         snapshot('use-prop-site-a.js', 5, 6, 'prop_defs_1.json'),
         snapshot('use-prop-site-b.js', 5, 6, 'prop_defs_2.json'),
+        snapshot('identifiers-def.js', 2, 14, 'identifiers-def-1.json'),
+        snapshot('identifiers-def.js', 3, 17, 'identifiers-def-2.json'),
       ]),
     ];
   },

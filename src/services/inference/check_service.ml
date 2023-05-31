@@ -499,16 +499,12 @@ let mk_check_file
           tast)
     in
     let find_refs_result =
-      match def_info with
-      | GetDefUtils.NoDefinition
-      | GetDefUtils.VariableDefinition _ ->
-        Ok []
-      | GetDefUtils.PropertyDefinition info ->
-        PropertyFindRefs.property_find_refs_in_file
-          ~loc_of_aloc:Reader.loc_of_aloc
-          (ast, file_sig, docblock)
-          (Types_js_types.Typecheck_artifacts { cx; typed_ast; obj_to_obj_map })
-          file_key
-          info
+      FindRefs_js.local_refs_for_global_find_refs
+        ~options
+        ~loc_of_aloc:Reader.loc_of_aloc
+        (ast, file_sig, docblock)
+        (Types_js_types.Typecheck_artifacts { cx; typed_ast; obj_to_obj_map })
+        file_key
+        def_info
     in
     (cx, typed_ast, find_refs_result)

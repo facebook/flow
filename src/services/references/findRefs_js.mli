@@ -14,3 +14,12 @@ val find_local_refs :
   line:int ->
   col:int ->
   (FindRefsTypes.find_refs_ok, string) result
+
+val local_refs_for_global_find_refs :
+  options:Options.t ->
+  loc_of_aloc:(ALoc.t -> Loc.t) ->
+  FindRefsUtils.ast_info ->
+  Types_js_types.typecheck_artifacts ->
+  File_key.t ->
+  GetDefUtils.def_info ->
+  (FindRefsTypes.find_refs_found, string) result

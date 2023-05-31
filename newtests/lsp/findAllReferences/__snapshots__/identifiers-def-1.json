@@ -1,0 +1,70 @@
+{
+  "method": "textDocument/references",
+  "result": [
+    {
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/identifiers-def.js",
+      "range": {
+        "start": {
+          "line": 2,
+          "character": 13
+        },
+        "end": {
+          "line": 2,
+          "character": 14
+        }
+      }
+    },
+    {
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-a.js",
+      "range": {
+        "start": {
+          "line": 2,
+          "character": 8
+        },
+        "end": {
+          "line": 2,
+          "character": 9
+        }
+      }
+    },
+    {
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-a.js",
+      "range": {
+        "start": {
+          "line": 5,
+          "character": 0
+        },
+        "end": {
+          "line": 5,
+          "character": 1
+        }
+      }
+    },
+    {
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-b.js",
+      "range": {
+        "start": {
+          "line": 4,
+          "character": 2
+        },
+        "end": {
+          "line": 4,
+          "character": 3
+        }
+      }
+    },
+    {
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-b.js",
+      "range": {
+        "start": {
+          "line": 6,
+          "character": 6
+        },
+        "end": {
+          "line": 6,
+          "character": 7
+        }
+      }
+    }
+  ]
+}

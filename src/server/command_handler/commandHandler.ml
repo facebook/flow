@@ -2082,7 +2082,6 @@ let get_file_artifacts ~options ~client ~profiling ~env pos :
 let global_find_references
     ~genv ~reader ~options ~env ~parse_artifacts ~typecheck_artifacts file_key line col =
   let (Types_js_types.Parse_artifacts { ast; file_sig; docblock; _ }) = parse_artifacts in
-  (* TODO: handle variable find-refs *)
   match
     GetDefUtils.get_def_info
       ~options
@@ -2117,7 +2116,10 @@ let global_find_references
     let%lwt () = log_fn ~profiling in
     let result_compare (_, l1) (_, l2) = Loc.compare l1 l2 in
     Lwt.return
-      (Base.Result.map results ~f:(fun r -> Some (Base.List.sort ~compare:result_compare r)))
+      (Base.Result.map results ~f:(fun r ->
+           Some (Base.List.dedup_and_sort ~compare:result_compare r)
+       )
+      )
 
 let find_references ~genv ~reader ~options ~env ~file_artifacts ~local_only file_key pos :
     ((FindRefsTypes.find_refs_found option, string) result * Hh_json.json option) Lwt.t =
