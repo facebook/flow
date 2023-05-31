@@ -47,3 +47,13 @@ function body_bindings_not_visible_from_param_scope() {
     const A: number = 1;
   }
 }
+
+function visit_nested_array_pattern_regression() {
+  type UnsupportedAnnotation = number;
+
+  declare var arr1: Array<[string, UnsupportedAnnotation]>;
+  arr1.forEach(([_, binding: UnsupportedAnnotation]) => 1); // error unsupported syntax, no internal error
+
+  declare var arr2: Array<{ f: [string, UnsupportedAnnotation] }>;
+  arr2.forEach(({ f: [_, binding: UnsupportedAnnotation] }) => 1); // error unsupported syntax, no internal error
+}

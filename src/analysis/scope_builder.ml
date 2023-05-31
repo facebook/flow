@@ -124,16 +124,18 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       let has_default = params' != params in
       (has_default, params')
 
-  let function_param_annot_remover =
-    object
-      inherit [L.t] Flow_ast_mapper.mapper
-
-      method! type_annotation_hint return =
-        let open Ast.Type in
-        match return with
-        | Available _ -> Missing L.none
-        | Missing _ -> return
-    end
+  let pattern_with_toplevel_annot_removed =
+    let missing = Ast.Type.Missing L.none in
+    fun patt ->
+      let open Ast.Pattern in
+      match patt with
+      | (loc, Identifier ({ Identifier.annot; _ } as id)) ->
+        (annot, (loc, Identifier { id with Identifier.annot = missing }))
+      | (loc, Object ({ Object.annot; _ } as obj)) ->
+        (annot, (loc, Object { obj with Object.annot = missing }))
+      | (loc, Array ({ Array.annot; _ } as arr)) ->
+        (annot, (loc, Array { arr with Array.annot = missing }))
+      | (_, Expression _) -> (missing, patt)
 
   let component_annot_and_default_remover =
     object (this)
@@ -474,24 +476,29 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         (* We have already visited the defaults in their own scope. Now visit the
            parameter types, each in a separate scope that includes bindings for each
            parameter name that has been seen before in the parameter list. *)
-        let (_, { Params.params = params_list; this_; rest; _ }) = params_without_defaults in
+        let (params_loc, { Params.params = params_list; this_; rest; comments = params_comments }) =
+          params_without_defaults
+        in
         (* this-param *)
-        Base.Option.iter this_ ~f:(fun this_ ->
-            let (_, { ThisParam.annot; _ }) = this_ in
-            let (annot_loc, _) = annot in
-            this#with_bindings
-              annot_loc
-              Bindings.empty
-              (fun () -> run this#type_annotation annot)
-              ()
-        );
+        let this_ =
+          Base.Option.map this_ ~f:(fun this_ ->
+              let (_, { ThisParam.annot; _ }) = this_ in
+              let (annot_loc, _) = annot in
+              this#with_bindings
+                annot_loc
+                Bindings.empty
+                (fun () -> run this#type_annotation annot)
+                ();
+              this_
+          )
+        in
 
         let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
         (* Parameter list *)
-        let prev_params =
+        let params_list_rev =
           Base.List.fold_left params_list ~init:[] ~f:(fun prev_params param ->
-              let (_, { Param.argument; _ }) = param in
-              let annot = Flow_ast_utils.annot_of_pattern argument in
+              let (param_loc, { Param.argument; default }) = param in
+              let (annot, argument') = pattern_with_toplevel_annot_removed argument in
               (match annot with
               | Ast.Type.Available annot ->
                 let (annot_loc, _) = annot in
@@ -505,26 +512,34 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
                   ()
               | Ast.Type.Missing _ -> ());
               run hoist#function_param param;
-              function_param_annot_remover#function_param param :: prev_params
+              (param_loc, { Param.argument = argument'; default }) :: prev_params
           )
         in
         (* Rest param *)
-        Base.Option.iter rest ~f:(fun this_ ->
-            let (_, { RestParam.argument; _ }) = this_ in
-            let annot = Flow_ast_utils.annot_of_pattern argument in
-            match annot with
-            | Ast.Type.Available annot ->
-              let (annot_loc, _) = annot in
-              this#with_bindings
-                annot_loc
-                hoist#acc
-                (fun () ->
-                  (* All previous params need to be declared in the current scope *)
-                  List.rev prev_params |> List.iter (run this#function_param);
-                  run this#type_annotation annot)
-                ()
-            | Ast.Type.Missing _ -> ()
-        );
+        let rest =
+          Base.Option.map rest ~f:(fun rest ->
+              let (rest_loc, { RestParam.argument; comments }) = rest in
+              let (annot, argument') = pattern_with_toplevel_annot_removed argument in
+              (match annot with
+              | Ast.Type.Available annot ->
+                let (annot_loc, _) = annot in
+                this#with_bindings
+                  annot_loc
+                  hoist#acc
+                  (fun () ->
+                    (* All previous params need to be declared in the current scope *)
+                    List.rev params_list_rev |> List.iter (run this#function_param);
+                    run this#type_annotation annot)
+                  ()
+              | Ast.Type.Missing _ -> ());
+              (rest_loc, { RestParam.argument = argument'; comments })
+          )
+        in
+        let params_without_toplevel_annots =
+          ( params_loc,
+            { Params.params = List.rev params_list_rev; this_; rest; comments = params_comments }
+          )
+        in
         (* Finally, visit the body in a scope that includes bindings for all params
            and hoisted body declarations. *)
         let bindings =
@@ -539,9 +554,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           body_loc
           bindings
           (fun () ->
-            run
-              this#function_params
-              (function_param_annot_remover#function_params params_without_defaults);
+            run this#function_params params_without_toplevel_annots;
             run_opt this#predicate predicate;
             run this#function_body_any body)
           ()

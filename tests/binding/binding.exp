@@ -1287,6 +1287,24 @@ Cannot resolve name `A`. [cannot-resolve-name]
                          ^
 
 
+Error ---------------------------------------------------------------------------------------------- rec_params.js:55:28
+
+Annotations inside of destructuring are not supported. Annotate the top-level pattern instead. For example, instead of
+the invalid `const [a: number, b: string] = ...` do `const [a, b]: [number, string] = ...`. [unsupported-syntax]
+
+   55|   arr1.forEach(([_, binding: UnsupportedAnnotation]) => 1); // error unsupported syntax, no internal error
+                                  ^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- rec_params.js:58:33
+
+Annotations inside of destructuring are not supported. Annotate the top-level pattern instead. For example, instead of
+the invalid `const [a: number, b: string] = ...` do `const [a, b]: [number, string] = ...`. [unsupported-syntax]
+
+   58|   arr2.forEach(({ f: [_, binding: UnsupportedAnnotation] }) => 1); // error unsupported syntax, no internal error
+                                       ^^^^^^^^^^^^^^^^^^^^^^^
+
+
 Error ----------------------------------------------------------------------------------------------------- scope.js:6:9
 
 Cannot declare `b` [1] because var redeclaration is not supported. [name-already-bound]
@@ -1904,4 +1922,4 @@ Cannot resolve name `unboundFunction2`. [cannot-resolve-name]
 
 
 
-Found 145 errors
+Found 147 errors
