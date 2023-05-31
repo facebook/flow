@@ -23,7 +23,7 @@ export default async function runCodemods(
       const originalContents = await fs.readFile(filePath, 'utf8');
       let contents: string = originalContents;
       for (const codemod of codemods) {
-        contents = transform(
+        contents = await transform(
           contents,
           codemod.transform,
           options.prettierOptions,
