@@ -6,7 +6,7 @@
  *)
 
 type ('M, 'T) result =
-  | OwnDef of 'M
+  | OwnDef of 'M * (* name *) string
   | Request of ('M, 'T) Get_def_request.t
   | Empty of string
   | LocNotFound

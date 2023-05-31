@@ -508,8 +508,9 @@ let get_def_info ~options ~reader (ast, file_sig, _) type_info loc : (def_info, 
   | Ok (Some props_info) -> Ok (PropertyDefinition props_info)
   | Ok None ->
     (match GetDef_js.get_def ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast loc with
-    | GetDef_js.Get_def_result.Def locs -> Ok (VariableDefinition (locs, None))
-    | GetDef_js.Get_def_result.Partial (locs, name) -> Ok (VariableDefinition (locs, Some name))
+    | GetDef_js.Get_def_result.Def (locs, name)
+    | GetDef_js.Get_def_result.Partial (locs, name, _) ->
+      Ok (VariableDefinition (locs, name))
     | GetDef_js.Get_def_result.Bad_loc error
     | GetDef_js.Get_def_result.Def_error error ->
       Error error)

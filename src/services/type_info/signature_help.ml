@@ -268,8 +268,8 @@ let find_signatures ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc =
           ~typed_ast
           callee_loc
       with
-      | Def [getdef_loc]
-      | Partial ([getdef_loc], _) ->
+      | Def ([getdef_loc], _)
+      | Partial ([getdef_loc], _, _) ->
         Find_documentation.jsdoc_of_getdef_loc ~current_ast:typed_ast ~reader getdef_loc
       | _ -> None
     in

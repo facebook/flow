@@ -11,7 +11,7 @@ exception Found
 (** This type is distinct from the one raised by the searcher because
   it would never make sense for the searcher to raise LocNotFound *)
 type ('M, 'T) result =
-  | OwnDef of 'M
+  | OwnDef of 'M * (* name *) string
   | Request of ('M, 'T) Get_def_request.t
   | Empty of string
   | LocNotFound
@@ -65,9 +65,9 @@ class ['M, 'T] searcher
 
     method on_type_annot (x : 'T) = x
 
-    method own_def : 'a. 'M -> 'a =
-      fun x ->
-        found_loc_ <- OwnDef x;
+    method own_def : 'a. 'M -> string -> 'a =
+      fun loc name ->
+        found_loc_ <- OwnDef (loc, name);
         raise Found
 
     method found_empty : 'a. string -> 'a =
@@ -99,13 +99,20 @@ class ['M, 'T] searcher
 
     method! import_named_specifier ~import_kind decl =
       let open Flow_ast.Statement.ImportDeclaration in
-      let { local; remote = (remote_annot, _); remote_name_def_loc; kind } = decl in
+      let {
+        local;
+        remote = (remote_annot, { Flow_ast.Identifier.name; _ });
+        remote_name_def_loc;
+        kind;
+      } =
+        decl
+      in
       ( if
         annot_covers_target remote_annot
         || Base.Option.exists local ~f:(fun (local_annot, _) -> annot_covers_target local_annot)
       then
         match remote_name_def_loc with
-        | Some l -> this#own_def l
+        | Some l -> this#own_def l name
         | None ->
           (match (kind, import_kind) with
           | (Some ImportTypeof, _)
@@ -121,7 +128,7 @@ class ['M, 'T] searcher
       Base.Option.iter default ~f:(fun { identifier = (annot, _); remote_default_name_def_loc } ->
           if annot_covers_target annot then
             match remote_default_name_def_loc with
-            | Some l -> this#own_def l
+            | Some l -> this#own_def l "default"
             | None ->
               (match import_kind with
               | ImportTypeof -> this#request (Get_def_request.Typeof annot)
@@ -225,13 +232,14 @@ class ['M, 'T] searcher
       );
       super#pattern ?kind pat
 
-    method! pattern_identifier ?kind (annot, name) =
+    method! pattern_identifier
+        ?kind (annot, ({ Flow_ast.Identifier.name; comments = _ } as name_node)) =
       if kind != None && annot_covers_target annot then
         if in_require_declarator then
           this#request (Get_def_request.Type annot)
         else
-          this#own_def (loc_of_annot annot);
-      super#pattern_identifier ?kind (annot, name)
+          this#own_def (loc_of_annot annot) name;
+      super#pattern_identifier ?kind (annot, name_node)
 
     method! expression (annot, expr) =
       let open Flow_ast in
@@ -322,8 +330,8 @@ class ['M, 'T] searcher
 
     (* object keys would normally hit this#t_identifier; this circumvents that. *)
     method! object_key_identifier id =
-      let (annot, _) = id in
-      if annot_covers_target annot then this#own_def (loc_of_annot annot);
+      let (annot, { Flow_ast.Identifier.name; comments = _ }) = id in
+      if annot_covers_target annot then this#own_def (loc_of_annot annot) name;
       id
 
     (* for object properties using the shorthand {variableName} syntax,
