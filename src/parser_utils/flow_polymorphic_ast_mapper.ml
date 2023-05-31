@@ -260,6 +260,10 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments' = this#syntax_opt comments in
       { param = param'; body = body'; comments = comments' }
 
+    method default_opt (default : ('M, 'T) Ast.Expression.t option)
+        : ('N, 'U) Ast.Expression.t option =
+      Option.map ~f:this#expression default
+
     method component_declaration (component : ('M, 'T) Ast.Statement.ComponentDeclaration.t)
         : ('N, 'U) Ast.Statement.ComponentDeclaration.t =
       let open Ast.Statement.ComponentDeclaration in
@@ -309,7 +313,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let annot' = this#on_loc_annot annot in
       let name' = Option.map ~f:this#component_param_name name in
       let local' = this#component_param_pattern local in
-      let default' = Option.map ~f:this#expression default in
+      let default' = this#default_opt default in
       (annot', { name = name'; local = local'; default = default'; shorthand })
 
     method component_param_name
@@ -1554,7 +1558,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let (annot, { argument; default }) = param in
       let annot' = this#on_loc_annot annot in
       let argument' = this#function_param_pattern argument in
-      let default' = Option.map ~f:this#expression default in
+      let default' = this#default_opt default in
       (annot', { argument = argument'; default = default' })
 
     method function_rest_param (expr : ('M, 'T) Ast.Function.RestParam.t)
@@ -2197,7 +2201,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let { key; pattern; default; shorthand } = prop in
       let key' = this#pattern_object_property_key ?kind key in
       let pattern' = this#pattern_object_property_pattern ?kind pattern in
-      let default' = Option.map ~f:this#expression default in
+      let default' = this#default_opt default in
       { key = key'; pattern = pattern'; default = default'; shorthand }
 
     method pattern_object_property_key ?kind (key : ('M, 'T) Ast.Pattern.Object.Property.key) =
@@ -2253,7 +2257,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Pattern.Array.Element in
       let { argument; default } = elem in
       let argument' = this#pattern_array_element_pattern ?kind argument in
-      let default' = Option.map ~f:this#expression default in
+      let default' = this#default_opt default in
       { argument = argument'; default = default' }
 
     method pattern_array_element_pattern ?kind (expr : ('M, 'T) Ast.Pattern.t)

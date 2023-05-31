@@ -554,6 +554,9 @@ class ['loc] mapper =
           comments = comments';
         }
 
+    method default_opt (default : ('loc, 'loc) Ast.Expression.t option) =
+      map_opt this#expression default
+
     method component_declaration _loc (component : ('loc, 'loc) Ast.Statement.ComponentDeclaration.t)
         =
       let open Ast.Statement.ComponentDeclaration in
@@ -603,7 +606,7 @@ class ['loc] mapper =
       let (loc, { name; local; default; shorthand }) = param in
       let name' = map_opt this#component_param_name name in
       let local' = this#component_param_pattern local in
-      let default' = map_opt this#expression default in
+      let default' = this#default_opt default in
       if name == name' && local == local' && default == default' then
         param
       else
@@ -1909,7 +1912,7 @@ class ['loc] mapper =
       let open Ast.Function.Param in
       let (loc, { argument; default }) = param in
       let argument' = this#function_param_pattern argument in
-      let default' = map_opt this#expression default in
+      let default' = this#default_opt default in
       if argument == argument' && default == default' then
         param
       else
@@ -2660,7 +2663,7 @@ class ['loc] mapper =
       let (loc, { key; pattern; default; shorthand }) = prop in
       let key' = this#pattern_object_property_key ?kind key in
       let pattern' = this#pattern_object_property_pattern ?kind pattern in
-      let default' = map_opt this#expression default in
+      let default' = this#default_opt default in
       let shorthand' =
         (* Try to figure out if shorthand should still be true--if
             key and value change differently, it should become false *)
@@ -2732,7 +2735,7 @@ class ['loc] mapper =
       let open Ast.Pattern.Array.Element in
       let (loc, { argument; default }) = elem in
       let argument' = this#pattern_array_element_pattern ?kind argument in
-      let default' = map_opt this#expression default in
+      let default' = this#default_opt default in
       if argument == argument' && default == default' then
         elem
       else

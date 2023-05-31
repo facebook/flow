@@ -144,6 +144,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method continue : 'M Ast.Statement.Continue.t -> 'N Ast.Statement.Continue.t
 
+    method default_opt : ('M, 'T) Ast.Expression.t option -> ('N, 'U) Ast.Expression.t option
+
     method debugger : 'M Ast.Statement.Debugger.t -> 'N Ast.Statement.Debugger.t
 
     method declare_class :
