@@ -154,3 +154,52 @@ function empty_var_as_type() {
   declare var e: empty;
   function foo(x: e) {} // error value-as-type
 }
+
+function redeclare_param_with_default_1(
+  x: number,
+  y: number = 1,
+) {
+  let x = 1; // error redeclaration
+}
+
+function redeclare_param_with_default_2(
+  x: number = 1,
+) {
+  let x = 1; // error redeclaration
+}
+
+function redeclare_param_with_default_3(
+  x: number,
+  y: number = 1,
+) {
+  var x = 1; // okay
+}
+
+function refinement_in_func_with_default_regression()  {
+  function foo() {}
+
+  function bar(
+    x: ?string,
+    param_with_default: number = 1,
+  ): void {
+    if (x == null) {
+      x = "";
+    };
+    foo();
+    (x: string); // okay
+  }
+}
+
+function refinement_in_default(
+  x: null | number,
+  y: number = (x = 1, 1),
+) {
+  (x: number); // error null ~> number
+}
+
+function refinement_in_nested_default(
+  x: null | number,
+  { y = (x = 1, 1) }: { y: number },
+) {
+  (x: number); // error null ~> number
+}

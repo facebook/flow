@@ -1418,6 +1418,68 @@ definition. To get the type of a non-class value, use `typeof`. [value-as-type]
                           ^
 
 
+Error --------------------------------------------------------------------------------------------------- scope.js:162:7
+
+Cannot declare `x` [1] because the name is already bound. [name-already-bound]
+
+   scope.js:162:7
+   162|   let x = 1; // error redeclaration
+              ^
+
+References:
+   scope.js:159:3
+   159|   x: number,
+          ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- scope.js:168:7
+
+Cannot declare `x` [1] because the name is already bound. [name-already-bound]
+
+   scope.js:168:7
+   168|   let x = 1; // error redeclaration
+              ^
+
+References:
+   scope.js:166:3
+   166|   x: number = 1,
+          ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- scope.js:197:4
+
+Cannot cast `x` to number because null [1] is incompatible with number [2]. [incompatible-cast]
+
+   scope.js:197:4
+   197|   (x: number); // error null ~> number
+           ^
+
+References:
+   scope.js:194:6
+   194|   x: null | number,
+             ^^^^ [1]
+   scope.js:197:7
+   197|   (x: number); // error null ~> number
+              ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- scope.js:204:4
+
+Cannot cast `x` to number because null [1] is incompatible with number [2]. [incompatible-cast]
+
+   scope.js:204:4
+   204|   (x: number); // error null ~> number
+           ^
+
+References:
+   scope.js:201:6
+   201|   x: null | number,
+             ^^^^ [1]
+   scope.js:204:7
+   204|   (x: number); // error null ~> number
+              ^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- tdz.js:25:11
 
 Cannot use variable `x` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
@@ -1673,4 +1735,4 @@ Cannot resolve name `unboundFunction2`. [cannot-resolve-name]
 
 
 
-Found 125 errors
+Found 129 errors

@@ -108,6 +108,22 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       env :: parent_env
   end
 
+  let remove_params_default =
+    let visitor =
+      object (_this)
+        inherit [unit, L.t] visitor ~init:()
+
+        method! default_opt expr =
+          match expr with
+          | None -> expr
+          | Some _ -> None
+      end
+    in
+    fun params ->
+      let params' = visitor#function_params params in
+      let has_default = params' != params in
+      (has_default, params')
+
   class function_annot_collector_and_remover =
     object (this)
       inherit [(L.t, L.t) Ast.Type.t list, L.t] visitor ~init:[]
@@ -478,57 +494,41 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           visitor#acc |> Base.List.rev |> Base.List.iter ~f:(fun annot -> ignore @@ this#type_ annot);
           params
         in
-        (* We need to visit function param default expressions
-           without bindings inside the function body. *)
-        let (_, { Params.params = params_list; _ }) = params in
-        let has_default_parameters =
-          Base.List.exists params_list ~f:(fun (_, { Ast.Function.Param.default; argument = _ }) ->
-              Option.is_some default
-          )
-        in
-        (* We need to create a second scope when we have default parameters.
-           See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Default_parameters#scope_effects
-        *)
-        if has_default_parameters then
+        let (has_default_parameters, params_without_defaults) = remove_params_default params in
+        if has_default_parameters then begin
+          (* We need to create a second scope when we have default parameters.
+             See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Default_parameters#scope_effects
+          *)
           let param_bindings =
             let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
             run hoist#function_params params;
             hoist#acc
           in
-          let body_bindings =
-            let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
-            run hoist#function_body_any body;
-            hoist#acc
-          in
+          (* We need to visit function param default expressions without bindings
+             inside the function body. *)
           this#with_bindings
             ~lexical:true
             body_loc
             param_bindings
-            (fun () ->
-              run this#function_params params;
-              this#with_bindings
-                body_loc
-                body_bindings
-                (fun () ->
-                  run_opt this#predicate predicate;
-                  run this#function_body_any body)
-                ())
+            (fun () -> run this#function_params params)
             ()
-        else
-          let bindings =
-            let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
-            run hoist#function_params params;
-            run hoist#function_body_any body;
-            hoist#acc
-          in
-          this#with_bindings
-            body_loc
-            bindings
-            (fun () ->
-              run this#function_params params;
-              run_opt this#predicate predicate;
-              run this#function_body_any body)
-            ()
+        end;
+        let bindings =
+          let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
+          run hoist#function_params params;
+          run hoist#function_body_any body;
+          hoist#acc
+        in
+        (* We have already visited the defaults in their own scope. Now visit the
+           params without the defaults in the function's scope. *)
+        this#with_bindings
+          body_loc
+          bindings
+          (fun () ->
+            run this#function_params params_without_defaults;
+            run_opt this#predicate predicate;
+            run this#function_body_any body)
+          ()
 
       method! declare_module _loc m =
         let open Ast.Statement.DeclareModule in
