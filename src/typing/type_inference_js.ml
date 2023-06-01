@@ -596,13 +596,9 @@ let infer_lib_file ~exclude_syms ~lint_severities cx ast =
   let visitor = new lib_def_loc_mapper_and_validator cx in
   let aloc_ast = visitor#program ast in
   let (_, { Ast.Program.all_comments; _ }) = ast in
-  let (prog_aloc, { Ast.Program.statements = aloc_statements; _ }) = aloc_ast in
 
   try
     initialize_env ~lib:true ~exclude_syms cx aloc_ast Name_def.Global;
-
-    ignore @@ infer_core cx aloc_statements;
-
     let (severity_cover, suppressions, suppression_errors) =
       scan_for_suppressions ~in_libdef:true (Context.file cx) lint_severities all_comments
     in
@@ -613,6 +609,6 @@ let infer_lib_file ~exclude_syms ~lint_severities cx ast =
     Env.init_builtins_from_libdef cx
   with
   | Env_api.Env_invariant (loc, inv) ->
-    let loc = Base.Option.value ~default:prog_aloc loc in
+    let loc = Base.Option.value ~default:(fst aloc_ast) loc in
     Flow_js.add_output cx Error_message.(EInternal (loc, EnvInvariant inv));
     []
