@@ -649,9 +649,11 @@ try {
                       ]
                );
          "component_abrupt_completion"
-         >:: mk_ssa_builder_test "component Foo() { return }
+         >:: mk_ssa_builder_test
+               "component Foo() { return }
 Foo;
-" LocMap.(empty);
+"
+               LocMap.(empty |> add (mk_loc (2, 0) (2, 3)) [mk_write (1, 10) (1, 13) "Foo"]);
          "function_abrupt_completion"
          >:: mk_ssa_builder_test
                "function Foo() { return }

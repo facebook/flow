@@ -1144,6 +1144,22 @@ struct
               ~finally:(fun () -> this#reset_ssa_env env)
         )
 
+      (* We also havoc state when entering components *)
+      method! component_body_with_params body params =
+        this#expecting_abrupt_completions (fun () ->
+            let env = this#ssa_env in
+            this#run
+              (fun () ->
+                this#havoc_uninitialized_ssa_env;
+                let completion_state =
+                  this#run_to_completion (fun () -> super#component_body_with_params body params)
+                in
+                this#commit_abrupt_completion_matching
+                  AbruptCompletion.(mem [return; throw])
+                  completion_state)
+              ~finally:(fun () -> this#reset_ssa_env env)
+        )
+
       method! declare_function loc expr =
         match Declare_function_utils.declare_function_to_function_declaration_simple loc expr with
         | Some stmt ->
