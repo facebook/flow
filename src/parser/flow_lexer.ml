@@ -235,7 +235,7 @@ let loc_of_token env lex_token =
   | T_STRING (loc, _, _, _) ->
     loc
   | T_JSX_TEXT (loc, _, _) -> loc
-  | T_TEMPLATE_PART (loc, _, _) -> loc
+  | T_TEMPLATE_PART (loc, _, _, _, _) -> loc
   | T_REGEXP (loc, _, _) -> loc
   | _ -> loc_of_lexbuf env env.lex_lb
 
@@ -539,50 +539,41 @@ let rec string_quote env q buf raw octal lexbuf =
     string_quote env q buf raw octal lexbuf
   | _ -> failwith "unreachable string_quote"
 
-let rec template_part env cooked raw literal lexbuf =
+let rec template_part env cooked raw lexbuf =
   match%sedlex lexbuf with
   | eof ->
     let env = illegal env (loc_of_lexbuf env lexbuf) in
     (env, true)
-  | '`' ->
-    Buffer.add_char literal '`';
-    (env, true)
-  | "${" ->
-    Buffer.add_string literal "${";
-    (env, false)
+  | '`' -> (env, true)
+  | "${" -> (env, false)
   | '\\' ->
     Buffer.add_char raw '\\';
-    Buffer.add_char literal '\\';
     let (env, str, codes, _) = string_escape env lexbuf in
     Buffer.add_string raw str;
-    Buffer.add_string literal str;
     Array.iter (Wtf8.add_wtf_8 cooked) codes;
-    template_part env cooked raw literal lexbuf
+    template_part env cooked raw lexbuf
   (* ECMAScript 6th Syntax, 11.8.6.1 Static Semantics: TV's and TRV's
    * Long story short, <LF> is 0xA, <CR> is 0xA, and <CR><LF> is 0xA
    * *)
   | "\r\n" ->
     Buffer.add_string raw "\r\n";
-    Buffer.add_string literal "\r\n";
     Buffer.add_string cooked "\n";
     let env = new_line env lexbuf in
-    template_part env cooked raw literal lexbuf
+    template_part env cooked raw lexbuf
   | "\n"
   | "\r" ->
     let lf = lexeme lexbuf in
     Buffer.add_string raw lf;
-    Buffer.add_string literal lf;
     Buffer.add_char cooked '\n';
     let env = new_line env lexbuf in
-    template_part env cooked raw literal lexbuf
+    template_part env cooked raw lexbuf
   (* match multi-char substrings that don't contain the start chars of the above patterns *)
   | Plus (Compl (eof | '`' | '$' | '\\' | '\r' | '\n'))
   | any ->
     let c = lexeme lexbuf in
     Buffer.add_string raw c;
-    Buffer.add_string literal c;
     Buffer.add_string cooked c;
-    template_part env cooked raw literal lexbuf
+    template_part env cooked raw lexbuf
   | _ -> failwith "unreachable template_part"
 
 let token (env : Lex_env.t) lexbuf : result =
@@ -660,27 +651,13 @@ let token (env : Lex_env.t) lexbuf : result =
     let loc = { Loc.source = Lex_env.source env; start; _end } in
     Token (env, T_STRING (loc, Buffer.contents buf, Buffer.contents raw, octal))
   | '`' ->
-    let cooked = Buffer.create 127 in
+    let value = Buffer.create 127 in
     let raw = Buffer.create 127 in
-    let literal = Buffer.create 127 in
-    lexeme_to_buffer lexbuf literal;
-
     let start = start_pos_of_lexbuf env lexbuf in
-    let (env, is_tail) = template_part env cooked raw literal lexbuf in
+    let (env, is_tail) = template_part env value raw lexbuf in
     let _end = end_pos_of_lexbuf env lexbuf in
     let loc = { Loc.source = Lex_env.source env; start; _end } in
-    Token
-      ( env,
-        T_TEMPLATE_PART
-          ( loc,
-            {
-              cooked = Buffer.contents cooked;
-              raw = Buffer.contents raw;
-              literal = Buffer.contents literal;
-            },
-            is_tail
-          )
-      )
+    Token (env, T_TEMPLATE_PART (loc, Buffer.contents value, Buffer.contents raw, true, is_tail))
   | (binbigint, word) ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf ->
@@ -1481,31 +1458,15 @@ let template_tail env lexbuf =
     Comment (env, mk_comment env start_pos end_pos buf true)
   | '}' ->
     let start = start_pos_of_lexbuf env lexbuf in
-    let cooked = Buffer.create 127 in
+    let value = Buffer.create 127 in
     let raw = Buffer.create 127 in
-    let literal = Buffer.create 127 in
-    Buffer.add_string literal "}";
-    let (env, is_tail) = template_part env cooked raw literal lexbuf in
+    let (env, is_tail) = template_part env value raw lexbuf in
     let _end = end_pos_of_lexbuf env lexbuf in
     let loc = { Loc.source = Lex_env.source env; start; _end } in
-    Token
-      ( env,
-        T_TEMPLATE_PART
-          ( loc,
-            {
-              cooked = Buffer.contents cooked;
-              raw = Buffer.contents raw;
-              literal = Buffer.contents literal;
-            },
-            is_tail
-          )
-      )
+    Token (env, T_TEMPLATE_PART (loc, Buffer.contents value, Buffer.contents raw, false, is_tail))
   | any ->
     let env = illegal env (loc_of_lexbuf env lexbuf) in
-    Token
-      ( env,
-        T_TEMPLATE_PART (loc_of_lexbuf env lexbuf, { cooked = ""; raw = ""; literal = "" }, true)
-      )
+    Token (env, T_TEMPLATE_PART (loc_of_lexbuf env lexbuf, "", "", false, true))
   | _ -> failwith "unreachable template_tail"
 
 (* There are some tokens that never show up in a type and which can cause

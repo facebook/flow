@@ -15,7 +15,7 @@ type t =
       raw: string;
     }
   | T_STRING of (Loc.t * string * string * bool) (* loc, value, raw, octal *)
-  | T_TEMPLATE_PART of (Loc.t * template_part * bool) (* loc, value, is_tail *)
+  | T_TEMPLATE_PART of (Loc.t * string * string * bool * bool) (* loc, value, raw, head, tail *)
   | T_IDENTIFIER of {
       loc: Loc.t;
       value: string;
@@ -196,14 +196,6 @@ and bigint_type =
   | BIG_BINARY
   | BIG_OCTAL
   | BIG_NORMAL
-
-and template_part = {
-  cooked: string;
-  (* string after processing special chars *)
-  raw: string;
-  (* string as specified in source *)
-  literal: string; (* same as raw, plus characters like ` and ${ *)
-}
 [@@deriving eq]
 
 (*****************************************************************************)
@@ -360,7 +352,15 @@ let value_of_token = function
   | T_NUMBER { raw; _ } -> raw
   | T_BIGINT { raw; _ } -> raw
   | T_STRING (_, _, raw, _) -> raw
-  | T_TEMPLATE_PART (_, { literal; _ }, _) -> literal
+  | T_TEMPLATE_PART (_, _, raw, is_head, is_tail) ->
+    if is_head && is_tail then
+      "`" ^ raw ^ "`"
+    else if is_head then
+      "`" ^ raw ^ "${"
+    else if is_tail then
+      "}" ^ raw ^ "`"
+    else
+      "${" ^ raw ^ "}"
   | T_IDENTIFIER { raw; _ } -> raw
   | T_REGEXP (_, pattern, flags) -> "/" ^ pattern ^ "/" ^ flags
   | T_LCURLY -> "{"

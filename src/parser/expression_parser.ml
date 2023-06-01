@@ -1095,7 +1095,6 @@ module Expression
         static ~allow_optional_chain ~in_optional_chain env start_loc left
       | T_TEMPLATE_PART part ->
         if in_optional_chain then error env Parse_error.OptionalChainTemplate;
-
         let expr = tagged_template env start_loc (as_expression env left) part in
         call_cover ~allow_optional_chain:true env start_loc (Cover_expr expr)
       | _ -> left
@@ -1364,7 +1363,7 @@ module Expression
         Eat.push_lex_mode env Lex_mode.TEMPLATE;
         let (loc, part, is_tail) =
           match Peek.token env with
-          | T_TEMPLATE_PART (loc, { cooked; raw; _ }, tail) ->
+          | T_TEMPLATE_PART (loc, cooked, raw, _, tail) ->
             let open Ast.Expression.TemplateLiteral in
             Eat.token env;
             (loc, { Element.value = { Element.cooked; raw }; tail }, tail)
@@ -1390,7 +1389,7 @@ module Expression
         in
         (fst expr, List.rev (imaginary_quasi :: quasis), List.rev expressions)
     in
-    fun env ((start_loc, { cooked; raw; _ }, is_tail) as part) ->
+    fun env ((start_loc, cooked, raw, _, is_tail) as part) ->
       let leading = Peek.comments env in
       Expect.token env (T_TEMPLATE_PART part);
       let (end_loc, quasis, expressions) =
