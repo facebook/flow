@@ -457,7 +457,7 @@ let infer_ast ~lint_severities cx filename comments aloc_ast =
     let (severity_cover, suppressions, suppression_errors) =
       scan_for_suppressions ~in_libdef:false filename lint_severities comments
     in
-    Context.add_severity_cover cx filename severity_cover;
+    Context.add_severity_covers cx severity_cover;
     Context.add_error_suppressions cx suppressions;
     List.iter (Flow_js.add_output cx) suppression_errors;
 
@@ -602,7 +602,7 @@ let infer_lib_file ~exclude_syms ~lint_severities cx ast =
     let (severity_cover, suppressions, suppression_errors) =
       scan_for_suppressions ~in_libdef:true (Context.file cx) lint_severities all_comments
     in
-    Context.add_severity_cover cx (Context.file cx) severity_cover;
+    Context.add_severity_covers cx severity_cover;
     Context.add_error_suppressions cx suppressions;
     List.iter (Flow_js.add_output cx) suppression_errors;
 

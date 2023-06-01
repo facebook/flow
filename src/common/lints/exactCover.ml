@@ -155,12 +155,20 @@ let update_settings_and_running =
     (updated_builder, updated_running_settings)
 
 let bake builder =
-  List.fold_left (fun map (loc, value) -> SpanMap.add loc value map) SpanMap.empty builder
+  List.fold_left
+    (fun map (loc, value) ->
+      let filename = Base.Option.value_exn (Loc.source loc) in
+      let updater map =
+        Some (SpanMap.add loc value (Base.Option.value ~default:SpanMap.empty map))
+      in
+      Utils_js.FilenameMap.update filename updater map)
+    Utils_js.FilenameMap.empty
+    builder
 
 (* Supports O(log(n)) queries to get the value associated with a loc. *)
 type 'a t = 'a SpanMap.t
 
-let file_cover source value = new_builder source value |> bake
+let file_cover source value = new_builder source value |> bake |> Utils_js.FilenameMap.find source
 
 (* Gets the value associated with a certain location in the code. To resolve
  * ambiguity, this looks at the location of the first character in the provided

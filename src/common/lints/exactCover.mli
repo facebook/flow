@@ -105,7 +105,7 @@ val update_settings_and_running :
 
 (* Resultant running lint settings *)
 
-val bake : 'a builder -> 'a t
+val bake : 'a builder -> 'a t Utils_js.FilenameMap.t
 
 (* `severity LintSettings.t`-specific functions *)
 
