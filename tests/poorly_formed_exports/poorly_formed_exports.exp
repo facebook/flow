@@ -1,4 +1,15 @@
 FLOW STATUS:
+Error ------------------------------------------------------------------------------------------------- libs/libs.js:3:1
+
+Cannot use block statements in a library file. The statement will be ignored. [unsupported-statement-in-lib]
+
+      v
+   3| {
+   4|   exports.foo = 5;
+   5| }
+      ^
+
+
 Error ------------------------------------------------------------------------------------------------- libs/libs.js:4:3
 
 Exports can only appear at the top level [invalid-export]
@@ -208,7 +219,7 @@ Missing an annotation on `x`. [missing-local-annot]
 
 
 
-Found 26 errors
+Found 27 errors
 FLOW CHECK-CONTENTS:
 Error ------------------------------------------------------------------------------------------ bad-named-export.js:4:3
 

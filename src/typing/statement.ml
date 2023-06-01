@@ -1486,13 +1486,7 @@ module Make
     | (import_loc, ImportDeclaration import_decl) ->
       let { ImportDeclaration.source; specifiers; default; import_kind; comments } = import_decl in
       let (source_loc, ({ Ast.StringLiteral.value = module_name; _ } as source_literal)) = source in
-      let source_module_t =
-        if File_key.is_lib_file (Context.file cx) && Env.in_global_scope cx then (
-          Flow_js.add_output cx Error_message.(EToplevelLibraryImport import_loc);
-          AnyT.error (mk_reason (RUntypedModule module_name) source_loc)
-        ) else
-          Import_export.get_module_t cx (source_loc, module_name)
-      in
+      let source_module_t = Import_export.get_module_t cx (source_loc, module_name) in
       let source_ast = ((source_loc, source_module_t), source_literal) in
 
       let specifiers_ast =
