@@ -30,6 +30,8 @@ class func_scope_visitor
 
     method! function_ fn = fn
 
+    method! component_declaration c = c
+
     method visit statements =
       ignore @@ this#statement_list statements;
       if not has_return_annot then (

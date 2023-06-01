@@ -191,23 +191,23 @@ Component syntax is not supported [unsupported-syntax]
 
         v------------------------
    5|   component Foo(): string {
-   6|     return 'str'; // TODO: No error
+   6|     return 'str'; // No error
    7|   }
         ^
 
 
-Error ------------------------------------------------------------------------------------- nested_with_function.js:6:12
+Error ------------------------------------------------------------------------------------- nested_with_function.js:11:1
 
-Cannot return `'str'` because string [1] is incompatible with number [2]. [incompatible-return]
+Component syntax is not supported [unsupported-syntax]
 
-   nested_with_function.js:6:12
-   6|     return 'str'; // TODO: No error
-                 ^^^^^ [1]
-
-References:
-   nested_with_function.js:4:15
-   4| function f(): number {
-                    ^^^^^^ [2]
+       v------------------------
+   11| component Foo(): number {
+   12|   function f(): string {
+   13|     return 'str'; // No error
+   14|   }
+   15|   return 3;
+   16| }
+       ^
 
 
 Error ---------------------------------------------------------------------------------------- strict_by_default.js:5:20

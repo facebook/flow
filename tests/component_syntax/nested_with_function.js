@@ -3,7 +3,14 @@
 
 function f(): number {
   component Foo(): string {
-    return 'str'; // TODO: No error
+    return 'str'; // No error
+  }
+  return 3;
+}
+
+component Foo(): number {
+  function f(): string {
+    return 'str'; // No error
   }
   return 3;
 }
