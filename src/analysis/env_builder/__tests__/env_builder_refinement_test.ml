@@ -6943,3 +6943,21 @@ let%expect_test "component_refinement_scope" =
         (6, 4) to (6, 5) => {
           (2, 6) to (2, 7): (`x`)
         }] |}]
+
+let%expect_test "component_param_scoping" =
+  print_ssa_test {|
+  component Foo(
+    x: number,
+    y: typeof x, // x not in scope, so global
+    z = y, // y not in scope, so global
+  ) {
+  }
+|};
+    [%expect{|
+      [
+        (4, 14) to (4, 15) => {
+          Global x
+        };
+        (5, 8) to (5, 9) => {
+          Global y
+        }] |}]

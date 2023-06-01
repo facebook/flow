@@ -137,14 +137,16 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         (annot, (loc, Array { arr with Array.annot = missing }))
       | (_, Expression _) -> (missing, patt)
 
-  let component_annot_and_default_remover =
+  class component_annot_collector_and_default_remover =
     object (this)
       inherit [(L.t, L.t) Ast.Type.t list, L.t] visitor ~init:[]
 
       method! type_annotation_hint return =
         let open Ast.Type in
         match return with
-        | Available _ -> Missing L.none
+        | Available (_, annot) ->
+          acc <- annot :: acc;
+          Missing L.none
         | Missing _ -> return
 
       method! component_param param =
@@ -656,15 +658,38 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         Base.Option.iter ident ~f:(fun id -> ignore @@ this#function_identifier id)
 
       method component_body_with_params body params =
-        (* In component syntax param types and defaults cannot reference other params. *)
-        run this#component_params params;
+        (* In component syntax param types and defaults cannot reference other params, so we visit
+         * the types and defaults without including the param bindings. *)
+        let ( _,
+              {
+                Ast.Statement.ComponentDeclaration.Params.params = inline_params;
+                rest = _;
+                comments = _;
+              }
+            ) =
+          params
+        in
+        List.iter
+          (fun ( _,
+                 {
+                   Ast.Statement.ComponentDeclaration.Param.default;
+                   local = _;
+                   shorthand = _;
+                   name = _;
+                 }
+               ) -> Base.Option.iter default ~f:(fun default -> ignore @@ this#expression default))
+          inline_params;
+        let params_without_annots_and_defaults =
+          let visitor = new component_annot_collector_and_default_remover in
+          let params = visitor#component_params params in
+          (* Visit all of the annotations without any additional bindings *)
+          visitor#acc |> Base.List.rev |> Base.List.iter ~f:(fun annot -> ignore @@ this#type_ annot);
+          params
+        in
         let bindings =
           let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
           run hoist#component_params params;
           hoist#acc
-        in
-        let params_without_annots_and_defaults =
-          component_annot_and_default_remover#component_params params
         in
         this#with_bindings
           (fst params)

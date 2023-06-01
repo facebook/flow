@@ -136,7 +136,7 @@ Component syntax is not supported [unsupported-syntax]
    29| component Defaults(
    30|   foo: number = 3, // OK
    31|   bar: string = 3, // ERROR
-   32|   backwardsRef: typeof foo = foo, // TODO: ERROR 2x
+   32|   backwardsRef: typeof foo = foo, // ERROR 2x
    33|   destructured as {a = 'str'}: {a?: number}, // ERROR
    34|   destructuredAssigned as {b = 3}: {b?: number},
    35| ) {
@@ -157,6 +157,22 @@ References:
    component_type_checking.js:31:8
    31|   bar: string = 3, // ERROR
               ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- component_type_checking.js:32:24
+
+Cannot resolve name `foo`. [cannot-resolve-name]
+
+   32|   backwardsRef: typeof foo = foo, // ERROR 2x
+                              ^^^
+
+
+Error --------------------------------------------------------------------------------- component_type_checking.js:32:30
+
+Cannot resolve name `foo`. [cannot-resolve-name]
+
+   32|   backwardsRef: typeof foo = foo, // ERROR 2x
+                                    ^^^
 
 
 Error --------------------------------------------------------------------------------- component_type_checking.js:33:24
@@ -521,4 +537,4 @@ Component syntax is not supported [unsupported-syntax]
 
 
 
-Found 35 errors
+Found 37 errors

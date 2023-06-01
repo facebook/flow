@@ -29,7 +29,7 @@ component InlineWithRestParam(
 component Defaults(
   foo: number = 3, // OK
   bar: string = 3, // ERROR
-  backwardsRef: typeof foo = foo, // TODO: ERROR 2x
+  backwardsRef: typeof foo = foo, // ERROR 2x
   destructured as {a = 'str'}: {a?: number}, // ERROR
   destructuredAssigned as {b = 3}: {b?: number},
 ) {
