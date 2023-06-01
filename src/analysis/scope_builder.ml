@@ -300,6 +300,9 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       (* don't rename the `foo` in `{ foo: ... }` *)
       method! object_key_identifier (id : (L.t, L.t) Ast.Identifier.t) = id
 
+      (* don't rename the `foo` in `component C(foo: number) {}` *)
+      method! component_param_name param_name = param_name
+
       method! import_declaration loc decl =
         let open Ast.Statement.ImportDeclaration in
         let { import_kind; _ } = decl in

@@ -3742,10 +3742,6 @@ module Make
         ignore @@ super#component_param_pattern patt;
         patt
 
-      (* This is an object key being declared, not an identifier being read. We need to override
-       * this method or else the name resolver will report a read on the param name *)
-      method! component_param_name param_name = param_name
-
       method! component_rest_param expr =
         let open Ast.Statement.ComponentDeclaration.RestParam in
         let (_, { argument; comments = _ }) = expr in
@@ -5651,10 +5647,6 @@ module Make
       method! component_param_pattern patt =
         this#visit_function_or_component_param_pattern patt;
         patt
-
-      (* This is an object key being declared, not an identifier being read. We need to override
-       * this method or else the name resolver will report a read on the param name *)
-      method! component_param_name param_name = param_name
 
       method! lambda ~is_arrow ~fun_loc ~generator_return_loc params predicate body =
         let loc =
