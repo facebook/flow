@@ -10,9 +10,9 @@ exception Found
 
 (** This type is distinct from the one raised by the searcher because
   it would never make sense for the searcher to raise LocNotFound *)
-type ('M, 'T) result =
-  | OwnDef of 'M * (* name *) string
-  | Request of ('M, 'T) Get_def_request.t
+type result =
+  | OwnDef of ALoc.t * (* name *) string
+  | Request of (ALoc.t, ALoc.t * Type.t) Get_def_request.t
   | Empty of string
   | LocNotFound
 
@@ -75,11 +75,12 @@ let annot_of_jsx_name =
   | MemberExpression (_, MemberExpression.{ property = (annot, _); _ }) ->
     annot
 
-class ['M, 'T] searcher
-  ~(is_legit_require : 'T -> bool) ~(covers_target : 'M -> bool) ~(loc_of_annot : 'T -> 'M) =
+class searcher ~(is_legit_require : ALoc.t * Type.t -> bool) ~(covers_target : ALoc.t -> bool) =
+  let loc_of_annot (loc, _) = loc in
   let annot_covers_target annot = covers_target (loc_of_annot annot) in
   object (this)
-    inherit ['M, 'T, 'M, 'T] Flow_polymorphic_ast_mapper.mapper as super
+    inherit
+      [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
 
     val mutable in_require_declarator = false
 
@@ -94,11 +95,11 @@ class ['M, 'T] searcher
       in_require_declarator <- was_in_require_declarator;
       result
 
-    method on_loc_annot (x : 'M) = x
+    method on_loc_annot (x : ALoc.t) = x
 
-    method on_type_annot (x : 'T) = x
+    method on_type_annot (x : ALoc.t * Type.t) = x
 
-    method own_def : 'a. 'M -> string -> 'a =
+    method own_def : 'a. ALoc.t -> string -> 'a =
       fun loc name ->
         found_loc_ <- OwnDef (loc, name);
         raise Found
@@ -108,7 +109,7 @@ class ['M, 'T] searcher
         found_loc_ <- Empty x;
         raise Found
 
-    method request : 'a. ('M, 'T) Get_def_request.t -> 'a =
+    method request : 'a. (ALoc.t, ALoc.t * Type.t) Get_def_request.t -> 'a =
       fun x ->
         found_loc_ <- Request x;
         raise Found
@@ -425,18 +426,9 @@ class ['M, 'T] searcher
       | _ -> super#jsx_child child
   end
 
-let process_location ~loc_of_annot ~ast ~is_legit_require ~covers_target =
-  let searcher = new searcher ~loc_of_annot ~is_legit_require ~covers_target in
-  (try ignore (searcher#program ast) with
+let process_location_in_typed_ast ~typed_ast ~is_legit_require loc =
+  let covers_target test_loc = Reason.in_range loc (ALoc.to_loc_exn test_loc) in
+  let searcher = new searcher ~is_legit_require ~covers_target in
+  (try ignore (searcher#program typed_ast) with
   | Found -> ());
   searcher#found_loc
-
-let process_location_in_ast ~ast ~is_legit_require loc =
-  let loc_of_annot loc = loc in
-  let covers_target test_loc = Reason.in_range loc test_loc in
-  process_location ~loc_of_annot ~is_legit_require ~ast ~covers_target
-
-let process_location_in_typed_ast ~typed_ast ~is_legit_require loc =
-  let loc_of_annot (loc, _) = loc in
-  let covers_target test_loc = Reason.in_range loc (ALoc.to_loc_exn test_loc) in
-  process_location ~loc_of_annot ~is_legit_require ~ast:typed_ast ~covers_target
