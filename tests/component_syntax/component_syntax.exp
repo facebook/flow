@@ -459,6 +459,51 @@ References:
                      ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- statics.js:2:1
+
+Component syntax is not supported [unsupported-syntax]
+
+   2| component Foo() {}
+      ^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- statics.js:4:19
+
+Cannot assign `3` to `Foo.displayName` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   statics.js:4:19
+     4| Foo.displayName = 3; // ERROR 
+                          ^ [1]
+
+References:
+   <BUILTINS>/react.js:123:18
+   123|   displayName?: ?string,
+                         ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- statics.js:6:5
+
+Cannot get `Foo.randomProperty` because property `randomProperty` is missing in `React.AbstractComponentStatics` [1].
+[prop-missing]
+
+   statics.js:6:5
+     6| Foo.randomProperty; // ERROR!
+            ^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:122:47
+                                                      v
+   122| declare type React$AbstractComponentStatics = {
+   123|   displayName?: ?string,
+   124|   // This is only on function components, but trying to access name when
+   125|   // displayName is undefined is a common pattern.
+   126|   name?: ?string,
+   127|   propTypes?: {[string] : any, ...},
+   128|   ...
+   129| };
+        ^ [1]
+
+
 Error ---------------------------------------------------------------------------------------- strict_by_default.js:5:20
 
 Strict mode function may not have duplicate parameter names
@@ -476,4 +521,4 @@ Component syntax is not supported [unsupported-syntax]
 
 
 
-Found 32 errors
+Found 35 errors

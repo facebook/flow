@@ -101,7 +101,7 @@ module Make
       }
     in
     let statics_t =
-      Obj_type.mk_with_proto cx reason (Type.FunProtoT reason) ~obj_kind:Type.Inexact
+      Flow_js.get_builtin_type cx reason (OrdinaryName "React$AbstractComponentStatics")
     in
     let make_trust = Context.trust_constructor cx in
     let t = DefT (reason, make_trust (), FunT (statics_t, funtype)) in
