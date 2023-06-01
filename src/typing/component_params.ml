@@ -24,7 +24,7 @@ module type S = sig
 
   val add_rest : Config_types.rest -> Types.t -> Types.t
 
-  val config : Types.t -> Type.t
+  val config : Context.t -> Reason.reason -> Types.t -> Type.t
 
   val eval : Context.t -> Types.t -> (ALoc.t * Type.t) Config_types.ast
 end
@@ -43,7 +43,46 @@ module Make
 
   let add_rest r x = { x with rest = Some r }
 
-  let config _ = failwith "Not yet implemented"
+  let config cx config_reason { params_rev; rest; reconstruct = _ } =
+    let inline_props_obj =
+      let pmap =
+        List.fold_left
+          (fun acc p ->
+            let key_and_t_opt = C.param_type_with_name p in
+            match key_and_t_opt with
+            | None ->
+              (* Unnamed props are a parser error, so we do not handle them here *)
+              acc
+            | Some (key_loc, key, t) ->
+              Type.Properties.add_field
+                (Reason.OrdinaryName key)
+                Polarity.Positive
+                (Some key_loc)
+                t
+                acc)
+          NameUtils.Map.empty
+          params_rev
+      in
+      let id = Context.generate_property_map cx pmap in
+      Type.(mk_object_def_type ~reason:config_reason ~call:None id (ObjProtoT config_reason))
+    in
+    match rest with
+    | None -> inline_props_obj
+    | Some rest ->
+      let open Type in
+      (* TODO(jmbrown): Instead of spreading, make a new ObjectKit tool to determine the config
+       * and perform definition checks *)
+      let rest_t = C.rest_type rest in
+      let target =
+        let open Type.Object.Spread in
+        Value { make_seal = Sealed }
+      in
+      EvalT
+        ( inline_props_obj,
+          TypeDestructorT
+            (unknown_use, config_reason, SpreadType (target, [Type.Object.Spread.Type rest_t], None)),
+          Eval.generate_id ()
+        )
 
   let eval cx { params_rev; rest; reconstruct } =
     let params = List.rev params_rev in

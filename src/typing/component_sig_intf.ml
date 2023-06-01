@@ -22,4 +22,6 @@ module type S = sig
 
   val toplevels :
     Context.t -> t -> component_params_tast * (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.Block.t
+
+  val component_type : Context.t -> ALoc.t -> t -> Type.t
 end

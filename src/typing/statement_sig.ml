@@ -34,6 +34,22 @@ module type S = sig
        and module Func := Func_stmt_sig
        and module Types = Class_stmt_sig_types
 
+  module Component_declaration_config :
+    Component_sig_types.Config with module Types := Component_sig_types.DeclarationParamConfig
+
+  module Component_declaration_params :
+    Component_params.S
+      with module Config_types := Component_sig_types.DeclarationParamConfig
+       and module Config := Component_declaration_config
+       and module Types = Component_sig_types.Component_declaration_params_types
+
+  module Component_declaration_sig :
+    Component_sig_intf.S
+      with module Config_types := Component_sig_types.DeclarationParamConfig
+      with module Config := Component_declaration_config
+       and module Param := Component_declaration_params
+       and module Types = Component_sig_types.Component_declaration_sig_types
+
   module ObjectExpressionAcc : sig
     type t
 
@@ -121,6 +137,18 @@ module type S = sig
       (ALoc.t, ALoc.t * Type.t) Ast.Function.body ->
       Type.t ->
       (ALoc.t, ALoc.t * Type.t) Ast.Function.t
+      )
+
+  val mk_component_sig :
+    Context.t ->
+    Type.t Subst_name.Map.t ->
+    Reason.reason ->
+    (ALoc.t, ALoc.t) Ast.Statement.ComponentDeclaration.t ->
+    Component_declaration_sig.Types.t
+    * ((ALoc.t, ALoc.t * Type.t) Ast.Statement.ComponentDeclaration.Params.t ->
+      (ALoc.t, ALoc.t * Type.t) Ast.Statement.Block.t ->
+      Type.t ->
+      (ALoc.t, ALoc.t * Type.t) Ast.Statement.ComponentDeclaration.t
       )
 
   val assignment_lhs :

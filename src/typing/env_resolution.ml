@@ -347,12 +347,11 @@ let resolve_annotated_function
     unknown_use
   )
 
-let resolve_annotated_component _cx reason _tparams_map _component_loc component =
-  let { Ast.Statement.ComponentDeclaration.body = _; params = _; sig_loc = _; return = _; _ } =
-    component
-  in
-  (* TODO(jmbrown): Signatures for components *)
-  (AnyT.error reason, unknown_use)
+let resolve_annotated_component cx reason tparams_map component_loc component =
+  let tparams_map = mk_tparams_map cx tparams_map in
+  (* TODO(jmbrown): Component sig cache *)
+  let (component_sig, _) = Statement.mk_component_sig cx tparams_map reason component in
+  (Statement.Component_declaration_sig.component_type cx component_loc component_sig, unknown_use)
 
 let rec binding_has_annot = function
   | Root (Annotation _) -> true

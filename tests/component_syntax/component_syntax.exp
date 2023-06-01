@@ -210,6 +210,255 @@ Component syntax is not supported [unsupported-syntax]
        ^
 
 
+Error ------------------------------------------------------------------------------------------------- signature.js:4:1
+
+Component syntax is not supported [unsupported-syntax]
+
+      v--------------------
+   4| component InlineOnly(
+   5|   foo: number,
+   6|   bar: string,
+   7| ) {
+   8|   return null;
+   9| }
+      ^
+
+
+Error ----------------------------------------------------------------------------------------------- signature.js:12:39
+
+Cannot create `InlineOnly` element because string [1] is incompatible with number [2] in property `foo`.
+[incompatible-type]
+
+   signature.js:12:39
+   12| const inlineOnlyBad = <InlineOnly foo="" bar={3} />; // Error 2x
+                                             ^^ [1]
+
+References:
+   signature.js:5:8
+    5|   foo: number,
+              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- signature.js:12:47
+
+Cannot create `InlineOnly` element because number [1] is incompatible with string [2] in property `bar`.
+[incompatible-type]
+
+   signature.js:12:47
+   12| const inlineOnlyBad = <InlineOnly foo="" bar={3} />; // Error 2x
+                                                     ^ [1]
+
+References:
+   signature.js:6:8
+    6|   bar: string,
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ signature.js:14:1
+
+Component syntax is not supported [unsupported-syntax]
+
+       v---------------------
+   14| component InexactRest(
+   15|   foo: number,
+   16|   ...rest: {bar: string, ...}
+   17| ) {
+   18|   return null;
+   19| }
+       ^
+
+
+Error ----------------------------------------------------------------------------------------------- signature.js:22:37
+
+Cannot create `InexactRest` element because string [1] is incompatible with number [2] in property `foo`.
+[incompatible-type]
+
+   signature.js:22:37
+   22| const inexactBad = <InexactRest foo="" bar={3} baz={3} />; // ERROR 2x for foo and bar
+                                           ^^ [1]
+
+References:
+   signature.js:15:8
+   15|   foo: number,
+              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- signature.js:22:45
+
+Cannot create `InexactRest` element because number [1] is incompatible with string [2] in property `bar`.
+[incompatible-type]
+
+   signature.js:22:45
+   22| const inexactBad = <InexactRest foo="" bar={3} baz={3} />; // ERROR 2x for foo and bar
+                                                   ^ [1]
+
+References:
+   signature.js:16:18
+   16|   ...rest: {bar: string, ...}
+                        ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ signature.js:24:1
+
+Component syntax is not supported [unsupported-syntax]
+
+       v---------------------
+   24| component IndexedRest(
+   25|   foo: number,
+   26|   ...rest: {[string]: number, ...}
+   27| ) {
+   28|   return null;
+   29| }
+       ^
+
+
+Error ----------------------------------------------------------------------------------------------- signature.js:32:37
+
+Cannot create `IndexedRest` element because string [1] is incompatible with number [2] in property `foo`.
+[incompatible-type]
+
+   signature.js:32:37
+   32| const indexedBad = <IndexedRest foo="" bar="str" />; // ERROR 2x for foo and bar
+                                           ^^ [1]
+
+References:
+   signature.js:25:8
+   25|   foo: number,
+              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- signature.js:32:44
+
+Cannot create `IndexedRest` element because string [1] is incompatible with number [2] in property `bar`.
+[incompatible-type]
+
+   signature.js:32:44
+   32| const indexedBad = <IndexedRest foo="" bar="str" />; // ERROR 2x for foo and bar
+                                                  ^^^^^ [1]
+
+References:
+   signature.js:26:23
+   26|   ...rest: {[string]: number, ...}
+                             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ signature.js:34:1
+
+Component syntax is not supported [unsupported-syntax]
+
+       v----------------------
+   34| component DefaultProps(
+   35|   foo: number = 3,
+   36| ) {
+   37|   return null;
+   38| }
+       ^
+
+
+Error ----------------------------------------------------------------------------------------------- signature.js:41:39
+
+Cannot create `DefaultProps` element because string [1] is incompatible with number [2] in property `foo`.
+[incompatible-type]
+
+   signature.js:41:39
+   41| const defaultsBad = <DefaultProps foo="bad" />; // ERROR
+                                             ^^^^^ [1]
+
+References:
+   signature.js:35:8
+   35|   foo: number = 3,
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ signature.js:43:1
+
+Component syntax is not supported [unsupported-syntax]
+
+       v-----------------------
+   43| component RenamedParams(
+   44|   foo as bar: number,
+   45|   bar as foo: string,
+   46|   'non-ident' as baz: string,
+   47| ) {}
+       ---^
+
+
+Error ----------------------------------------------------------------------------------------------- signature.js:50:28
+
+Cannot create `RenamedParams` element because property `baz` is missing in component RenamedParams [1] but exists in
+props [2]. [prop-missing]
+
+   signature.js:50:28
+   50| const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERROR 4x, bad foo type, bad bar type, no non-ident, extra baz
+                                  ^^^^^^^^^^^^^
+
+References:
+   signature.js:43:1
+       v-----------------------
+   43| component RenamedParams(
+   44|   foo as bar: number,
+   45|   bar as foo: string,
+   46|   'non-ident' as baz: string,
+   47| ) {}
+       ^ [1]
+   signature.js:50:27
+   50| const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERROR 4x, bad foo type, bad bar type, no non-ident, extra baz
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- signature.js:50:28
+
+Cannot create `RenamedParams` element because property `non-ident` is missing in props [1] but exists in component
+RenamedParams [2]. [prop-missing]
+
+   signature.js:50:28
+   50| const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERROR 4x, bad foo type, bad bar type, no non-ident, extra baz
+                                  ^^^^^^^^^^^^^
+
+References:
+   signature.js:50:27
+   50| const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERROR 4x, bad foo type, bad bar type, no non-ident, extra baz
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   signature.js:43:1
+       v-----------------------
+   43| component RenamedParams(
+   44|   foo as bar: number,
+   45|   bar as foo: string,
+   46|   'non-ident' as baz: string,
+   47| ) {}
+       ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- signature.js:50:47
+
+Cannot create `RenamedParams` element because number [1] is incompatible with string [2] in property `bar`.
+[incompatible-type]
+
+   signature.js:50:47
+   50| const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERROR 4x, bad foo type, bad bar type, no non-ident, extra baz
+                                                     ^ [1]
+
+References:
+   signature.js:45:15
+   45|   bar as foo: string,
+                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- signature.js:50:54
+
+Cannot create `RenamedParams` element because string [1] is incompatible with number [2] in property `foo`.
+[incompatible-type]
+
+   signature.js:50:54
+   50| const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERROR 4x, bad foo type, bad bar type, no non-ident, extra baz
+                                                            ^^^^^ [1]
+
+References:
+   signature.js:44:15
+   44|   foo as bar: number,
+                     ^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------- strict_by_default.js:5:20
 
 Strict mode function may not have duplicate parameter names
@@ -227,4 +476,4 @@ Component syntax is not supported [unsupported-syntax]
 
 
 
-Found 16 errors
+Found 32 errors

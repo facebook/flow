@@ -17,12 +17,17 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
   module Types = Component_sig_types.DeclarationParamConfig
   open Types
 
-  let param_type_with_name (Param { t; name; _ }) =
+  let param_type_with_name (Param { t; name; default; _ }) =
     let open Ast.Statement.ComponentDeclaration.Param in
+    let mk_type t =
+      match default with
+      | None -> t
+      | Some _ -> TypeUtil.optional t
+    in
     match name with
     | None -> None
-    | Some (Identifier (loc, { Ast.Identifier.name; _ })) -> Some (loc, name, t)
-    | Some (StringLiteral (loc, { Ast.StringLiteral.value; _ })) -> Some (loc, value, t)
+    | Some (Identifier (loc, { Ast.Identifier.name; _ })) -> Some (loc, name, mk_type t)
+    | Some (StringLiteral (loc, { Ast.StringLiteral.value; _ })) -> Some (loc, value, mk_type t)
 
   let rest_type (Rest { t; _ }) = t
 

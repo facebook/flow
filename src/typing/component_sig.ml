@@ -84,4 +84,26 @@ module Make
     let () = (new component_scope_visitor cx ~return_t)#visit statements_ast in
 
     (params_ast, body_ast)
+
+  let component_type cx _component_loc x =
+    let { T.reason; tparams; cparams; return_t; _ } = x in
+    let this_type = Type.implicit_mixed_this reason in
+    (* TODO(jmbrown): Better reasons for config. For now, we re-use the component
+     * reason *)
+    let funtype =
+      {
+        Type.this_t = (this_type, This_Function);
+        params = [(None, F.config cx reason cparams)];
+        rest_param = None;
+        return_t;
+        predicate = None;
+        def_reason = reason;
+      }
+    in
+    let statics_t =
+      Obj_type.mk_with_proto cx reason (Type.FunProtoT reason) ~obj_kind:Type.Inexact
+    in
+    let make_trust = Context.trust_constructor cx in
+    let t = DefT (reason, make_trust (), FunT (statics_t, funtype)) in
+    poly_type_of_tparams (Type.Poly.generate_id ()) tparams t
 end
