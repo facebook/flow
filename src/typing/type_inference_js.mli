@@ -10,7 +10,9 @@ val scan_for_suppressions :
   File_key.t ->
   Severity.severity LintSettings.t ->
   Loc.t Flow_ast.Comment.t list ->
-  ExactCover.lint_severity_cover * Error_suppressions.t * ALoc.t Error_message.t' list
+  ExactCover.lint_severity_cover Utils_js.FilenameMap.t
+  * Error_suppressions.t
+  * ALoc.t Error_message.t' list
 
 val add_require_tvars : Context.t -> File_sig.t -> unit
 

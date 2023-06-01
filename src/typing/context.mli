@@ -312,7 +312,7 @@ val reset_errors : t -> Flow_error.ErrorSet.t -> unit
 
 val add_error_suppressions : t -> Error_suppressions.t -> unit
 
-val add_severity_cover : t -> File_key.t -> ExactCover.lint_severity_cover -> unit
+val add_severity_covers : t -> ExactCover.lint_severity_cover Utils_js.FilenameMap.t -> unit
 
 val add_require : t -> ALoc.t -> Type.tvar -> unit
 

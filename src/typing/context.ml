@@ -647,8 +647,8 @@ let reset_errors cx errors = cx.ccx.errors <- errors
 let add_error_suppressions cx suppressions =
   cx.ccx.error_suppressions <- Error_suppressions.union suppressions cx.ccx.error_suppressions
 
-let add_severity_cover cx filekey severity_cover =
-  cx.ccx.severity_cover <- Utils_js.FilenameMap.add filekey severity_cover cx.ccx.severity_cover
+let add_severity_covers cx severity_covers =
+  cx.ccx.severity_cover <- Utils_js.FilenameMap.union severity_covers cx.ccx.severity_cover
 
 let add_require cx loc tvar = cx.require_map <- ALocMap.add loc tvar cx.require_map
 
