@@ -487,13 +487,114 @@ let infer_ast ~lint_severities cx filename comments aloc_ast =
       }
     )
 
+class lib_def_loc_mapper_and_validator cx =
+  let stmt_validator ~in_toplevel_scope (loc, stmt) =
+    let error_opt =
+      let open Flow_ast.Statement in
+      match stmt with
+      | DeclareClass _
+      | DeclareComponent _
+      | DeclareEnum _
+      | DeclareExportDeclaration _
+      | DeclareFunction _
+      | DeclareInterface _
+      | DeclareModule _
+      | DeclareModuleExports _
+      | DeclareTypeAlias _
+      | DeclareOpaqueType _
+      | DeclareVariable _
+      | Empty _
+      | EnumDeclaration _
+      | Expression { Expression.expression = Flow_ast.Expression.(_, Literal _); _ }
+      | ExportNamedDeclaration { ExportNamedDeclaration.export_kind = ExportType; _ }
+      | InterfaceDeclaration _
+      | TypeAlias _
+      | OpaqueType _ ->
+        None
+      | ExportNamedDeclaration { ExportNamedDeclaration.export_kind = ExportValue; _ } ->
+        Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "export"))
+      | ImportDeclaration _ ->
+        if in_toplevel_scope then
+          Some (Error_message.EToplevelLibraryImport (ALoc.of_loc loc))
+        else
+          None
+      | Block _ -> Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "block"))
+      | Break _ -> Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "break"))
+      | ClassDeclaration _ ->
+        Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "class declaration"))
+      | ComponentDeclaration _ ->
+        Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "component declaration"))
+      | Continue _ ->
+        Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "continue"))
+      | Debugger _ ->
+        Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "debugger"))
+      | DoWhile _ -> Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "do while"))
+      | ExportDefaultDeclaration _ ->
+        Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "export default"))
+      | Expression _ ->
+        Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "expression"))
+      | For _ -> Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "for"))
+      | ForIn _ -> Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "for in"))
+      | ForOf _ -> Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "for of"))
+      | FunctionDeclaration _ ->
+        Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "function declaration"))
+      | If _ -> Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "if"))
+      | Labeled _ -> Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "labeled"))
+      | Return _ -> Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "return"))
+      | Switch _ -> Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "switch"))
+      | Throw _ -> Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "throw"))
+      | Try _ -> Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "try"))
+      | VariableDeclaration _ ->
+        Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "variable declaration"))
+      | While _ -> Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "while"))
+      | With _ -> Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "with"))
+    in
+    match error_opt with
+    | None -> true
+    | Some error ->
+      Flow_js_utils.add_output cx error;
+      false
+  in
+  object
+    inherit [Loc.t, Loc.t, ALoc.t, ALoc.t] Flow_polymorphic_ast_mapper.mapper as super
+
+    method on_loc_annot = ALoc.of_loc
+
+    method on_type_annot = ALoc.of_loc
+
+    method! toplevel_statement_list stmts =
+      stmts |> Base.List.filter ~f:(stmt_validator ~in_toplevel_scope:true) |> super#statement_list
+
+    method! declare_module l m =
+      let open Ast.Statement.DeclareModule in
+      let { id; body = (body_loc, body_block); kind; comments } = m in
+      super#declare_module
+        l
+        {
+          Ast.Statement.DeclareModule.id;
+          body =
+            ( body_loc,
+              {
+                body_block with
+                Ast.Statement.Block.body =
+                  Base.List.filter
+                    ~f:(stmt_validator ~in_toplevel_scope:false)
+                    body_block.Ast.Statement.Block.body;
+              }
+            );
+          kind;
+          comments;
+        }
+  end
+
 (* infer a parsed library file.
    processing is similar to an ordinary module, except that
    a) symbols from prior library loads are suppressed if found,
    b) bindings are added as properties to the builtin object
 *)
 let infer_lib_file ~exclude_syms ~lint_severities cx ast =
-  let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
+  let visitor = new lib_def_loc_mapper_and_validator cx in
+  let aloc_ast = visitor#program ast in
   let (_, { Ast.Program.all_comments; _ }) = ast in
   let (prog_aloc, { Ast.Program.statements = aloc_statements; _ }) = aloc_ast in
 

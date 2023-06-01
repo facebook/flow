@@ -309,6 +309,7 @@ and 'loc t' =
   | EThisInExportedFunction of 'loc
   | EMixedImportAndRequire of 'loc * 'loc virtual_reason
   | EToplevelLibraryImport of 'loc
+  | EUnsupportedStatementInLibdef of 'loc * string
   | EExportRenamedDefault of {
       loc: 'loc;
       name: string option;
@@ -1008,6 +1009,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EThisInExportedFunction loc -> EThisInExportedFunction (f loc)
   | EMixedImportAndRequire (loc, r) -> EMixedImportAndRequire (f loc, map_reason r)
   | EToplevelLibraryImport loc -> EToplevelLibraryImport (f loc)
+  | EUnsupportedStatementInLibdef (loc, k) -> EUnsupportedStatementInLibdef (f loc, k)
   | EExportRenamedDefault { loc; name; is_reexport } ->
     EExportRenamedDefault { loc = f loc; name; is_reexport }
   | EUnreachable loc -> EUnreachable (f loc)
@@ -1426,6 +1428,7 @@ let util_use_op_of_msg nope util = function
   | EThisInExportedFunction _
   | EMixedImportAndRequire _
   | EToplevelLibraryImport _
+  | EUnsupportedStatementInLibdef _
   | EExportRenamedDefault _
   | EUnreachable _
   | EInvalidTypeof (_, _)
@@ -1623,6 +1626,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EThisInExportedFunction loc
   | EMixedImportAndRequire (loc, _)
   | EToplevelLibraryImport loc
+  | EUnsupportedStatementInLibdef (loc, _)
   | EExportRenamedDefault { loc; _ }
   | EIndeterminateModuleType loc
   | EEnumsNotEnabled loc
@@ -3079,7 +3083,18 @@ let friendly_message_of_msg loc_of_aloc msg =
             text "Cannot use an import statement at the toplevel of a library file. ";
             text "Import statements may only appear inside a ";
             code "declare module";
-            text ".";
+            text ". The statement will be ignored.";
+          ];
+      }
+  | EUnsupportedStatementInLibdef (_, kind) ->
+    Normal
+      {
+        features =
+          [
+            text "Cannot use ";
+            text kind;
+            text " statements in a library file. ";
+            text "The statement will be ignored.";
           ];
       }
   | EExportRenamedDefault { loc = _; name; is_reexport } ->
@@ -5028,6 +5043,7 @@ let error_code_of_message err : error_code option =
   | EMissingTypeArgs _ -> Some MissingTypeArg
   | EMixedImportAndRequire _ -> Some MixedImportAndRequire
   | EToplevelLibraryImport _ -> Some ToplevelLibraryImport
+  | EUnsupportedStatementInLibdef _ -> Some UnsupportedStatementInLibdef
   | ENoDefaultExport (_, _, _) -> Some MissingExport
   | ENoNamedExport (_, _, _, _) -> Some MissingExport
   | ENonConstVarExport _ -> Some NonConstVarExport

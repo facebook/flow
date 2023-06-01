@@ -1,10 +1,13 @@
 FLOW STATUS:
-Error ------------------------------------------------------------------------------------------------- libs/libs.js:4:3
+Error ------------------------------------------------------------------------------------------------- libs/libs.js:3:1
 
-Cannot resolve name `exports`. [cannot-resolve-name]
+Cannot use block statements in a library file. The statement will be ignored. [unsupported-statement-in-lib]
 
+      v
+   3| {
    4|   exports.foo = 5;
-        ^^^^^^^
+   5| }
+      ^
 
 
 Error ------------------------------------------------------------------------------------------------- libs/libs.js:4:3

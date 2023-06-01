@@ -926,13 +926,7 @@ let resolve_opaque_type cx loc opaque =
 
 let resolve_import cx id_loc import_reason import_kind module_name source_loc import declare_module
     =
-  let source_module_t =
-    if File_key.is_lib_file (Context.file cx) && Env.in_global_scope cx then
-      (* Error added in statement.ml *)
-      AnyT.error (mk_reason (RUntypedModule module_name) source_loc)
-    else
-      Import_export.get_module_t cx ~declare_module (source_loc, module_name)
-  in
+  let source_module_t = Import_export.get_module_t cx ~declare_module (source_loc, module_name) in
   let t =
     match import with
     | Name_def.Named { kind; remote; remote_loc; local } ->
