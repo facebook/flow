@@ -6,12 +6,16 @@
  *)
 
 module rec Statement_ : Statement_sig.S =
-  Statement.Make (Destructuring_) (Func_stmt_config_) (Statement_)
+  Statement.Make (Destructuring_) (Func_stmt_config_) (Component_declaration_config_) (Statement_)
 
 and Destructuring_ : Destructuring_sig.S = Destructuring.Make (Statement_)
 
 and Func_stmt_config_ : (Func_stmt_config_sig.S with module Types := Func_stmt_config_types.Types) =
   Func_stmt_config.Make (Destructuring_) (Statement_)
+
+and Component_declaration_config_ :
+  (Component_sig_types.Config with module Types := Component_sig_types.DeclarationParamConfig) =
+  Component_declaration_config.Make (Destructuring_) (Statement_)
 
 (* Some versions of Ocaml raise a warning 60 (unused module) without the following *)
 module _ = Destructuring_

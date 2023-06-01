@@ -1,3 +1,198 @@
+Error ----------------------------------------------------------------------------------- component_type_checking.js:3:1
+
+Component syntax is not supported [unsupported-syntax]
+
+       v----------------------
+    3| component InlineParams(
+    4|   foo: number, 
+    5|   'special-key' as bar: number,
+    6|   baz as qux: number,
+    7|   destructured as {a}: {a: number},
+    8| ): void {
+    9|   (foo: number); // OK
+   10|   (foo: string); // ERROR
+   11|   (bar: number); // OK
+   12|   (bar: string); // ERROR
+   13|   (baz: number); // ERROR, baz unbound
+   14|   (qux: number); // OK
+   15|   (a: number); // OK
+   16|   (a: string); // ERROR
+   17|   return null; // ERROR
+   18| }
+       ^
+
+
+Error ---------------------------------------------------------------------------------- component_type_checking.js:10:4
+
+Cannot cast `foo` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   component_type_checking.js:10:4
+   10|   (foo: string); // ERROR
+          ^^^
+
+References:
+   component_type_checking.js:4:8
+    4|   foo: number, 
+              ^^^^^^ [1]
+   component_type_checking.js:10:9
+   10|   (foo: string); // ERROR
+               ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- component_type_checking.js:12:4
+
+Cannot cast `bar` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   component_type_checking.js:12:4
+   12|   (bar: string); // ERROR
+          ^^^
+
+References:
+   component_type_checking.js:5:25
+    5|   'special-key' as bar: number,
+                               ^^^^^^ [1]
+   component_type_checking.js:12:9
+   12|   (bar: string); // ERROR
+               ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- component_type_checking.js:13:4
+
+Cannot resolve name `baz`. [cannot-resolve-name]
+
+   13|   (baz: number); // ERROR, baz unbound
+          ^^^
+
+
+Error ---------------------------------------------------------------------------------- component_type_checking.js:16:4
+
+Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   component_type_checking.js:16:4
+   16|   (a: string); // ERROR
+          ^
+
+References:
+   component_type_checking.js:7:28
+    7|   destructured as {a}: {a: number},
+                                  ^^^^^^ [1]
+   component_type_checking.js:16:7
+   16|   (a: string); // ERROR
+             ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- component_type_checking.js:17:10
+
+Cannot return `null` because null [1] is incompatible with undefined [2]. [incompatible-return]
+
+   component_type_checking.js:17:10
+   17|   return null; // ERROR
+                ^^^^ [1]
+
+References:
+   component_type_checking.js:8:4
+    8| ): void {
+          ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- component_type_checking.js:20:1
+
+Component syntax is not supported [unsupported-syntax]
+
+       v-----------------------------
+   20| component InlineWithRestParam(
+   21|   foo: number,
+   22|   ...rest: {foo: number}
+   23| ) {
+   24|   (foo: number);
+   25|   (rest: {foo: number}); // OK
+   26|   (rest: empty); // ERROR
+   27| }
+       ^
+
+
+Error ---------------------------------------------------------------------------------- component_type_checking.js:26:4
+
+Cannot cast `rest` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   component_type_checking.js:26:4
+   26|   (rest: empty); // ERROR
+          ^^^^
+
+References:
+   component_type_checking.js:22:12
+   22|   ...rest: {foo: number}
+                  ^^^^^^^^^^^^^ [1]
+   component_type_checking.js:26:10
+   26|   (rest: empty); // ERROR
+                ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- component_type_checking.js:29:1
+
+Component syntax is not supported [unsupported-syntax]
+
+       v------------------
+   29| component Defaults(
+   30|   foo: number = 3, // OK
+   31|   bar: string = 3, // ERROR
+   32|   backwardsRef: typeof foo = foo, // TODO: ERROR 2x
+   33|   destructured as {a = 'str'}: {a?: number}, // ERROR
+   34|   destructuredAssigned as {b = 3}: {b?: number},
+   35| ) {
+   36|   (b: number); // OK!
+   37| }
+       ^
+
+
+Error --------------------------------------------------------------------------------- component_type_checking.js:31:17
+
+Cannot assign number to `bar` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   component_type_checking.js:31:17
+   31|   bar: string = 3, // ERROR
+                       ^ [1]
+
+References:
+   component_type_checking.js:31:8
+   31|   bar: string = 3, // ERROR
+              ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- component_type_checking.js:33:24
+
+Cannot assign string to `a` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   component_type_checking.js:33:24
+   33|   destructured as {a = 'str'}: {a?: number}, // ERROR
+                              ^^^^^ [1]
+
+References:
+   component_type_checking.js:33:37
+   33|   destructured as {a = 'str'}: {a?: number}, // ERROR
+                                           ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- component_type_checking.js:39:1
+
+Component syntax is not supported [unsupported-syntax]
+
+       v-----------------------------------
+   39| component ReactNodeDefaultReturn() {
+   40|   declare const node: React$Node;
+   41|   return node; // OK!
+   42| }
+       ^
+
+
+Error ---------------------------------------------------------------------------------------- strict_by_default.js:5:20
+
+Strict mode function may not have duplicate parameter names
+
+   5|   destructured as {a}: {a: number}, // ERROR
+                         ^
+
+
 Error ----------------------------------------------------------------------------------------------- unsupported.js:4:1
 
 Component syntax is not supported [unsupported-syntax]
@@ -7,4 +202,4 @@ Component syntax is not supported [unsupported-syntax]
 
 
 
-Found 1 error
+Found 14 errors

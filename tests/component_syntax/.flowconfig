@@ -1,3 +1,4 @@
 [options]
 experimental.component_syntax=true
 all=true
+no_flowlib=false

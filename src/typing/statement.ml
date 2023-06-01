@@ -26,10 +26,14 @@ module Eq_test = Eq_test.Make (Scope_api.With_ALoc) (Ssa_api.With_ALoc) (Env_api
 module Make
     (Destructuring : Destructuring_sig.S)
     (Func_stmt_config : Func_stmt_config_sig.S with module Types := Func_stmt_config_types.Types)
+    (Component_declaration_config : Component_sig_types.Config
+                                      with module Types := Component_sig_types
+                                                           .DeclarationParamConfig)
     (Statement : Statement_sig.S) : Statement_sig.S = struct
   module Anno = Type_annotation.Make (Type_annotation.FlowJS) (Statement)
   module Class_type_sig = Anno.Class_type_sig
   module Func_stmt_config = Func_stmt_config
+  module Component_declaration_config = Component_declaration_config
   open Env.LookupMode
 
   (*************)
@@ -395,6 +399,16 @@ module Make
     Class_sig.Make (Func_stmt_config_types.Types) (Func_stmt_config) (Func_stmt_params)
       (Func_stmt_sig)
       (Class_stmt_sig_types)
+  module Component_declaration_params =
+    Component_params.Make
+      (Component_sig_types.DeclarationParamConfig)
+      (Component_declaration_config)
+      (Component_sig_types.Component_declaration_params_types)
+  module Component_declaration_sig =
+    Component_sig.Make (Statement) (Component_sig_types.DeclarationParamConfig)
+      (Component_declaration_config)
+      (Component_declaration_params)
+      (Component_sig_types.Component_declaration_sig_types)
 
   (* In positions where an annotation may be present or an annotation can be pushed down,
    * we should prefer the annotation over the pushed-down annotation. *)
@@ -1207,10 +1221,18 @@ module Make
     | (loc, FunctionDeclaration func) ->
       let (_, _, node) = function_ loc func in
       node
-    | (loc, ComponentDeclaration _component) as stmt ->
+    | (loc, ComponentDeclaration component) ->
       (* TODO(jmbrown): add typechecking for component syntax *)
       Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, ComponentSyntax));
-      Tast_utils.unimplemented_mapper#statement stmt
+      let { ComponentDeclaration.id = (_, { Ast.Identifier.name; _ }); _ } = component in
+      let reason = mk_reason (RComponent (OrdinaryName name)) loc in
+      let (component_sig, reconstruct_component) =
+        mk_component_sig cx Subst_name.Map.empty reason component
+      in
+      let (name_loc, _) = component.ComponentDeclaration.id in
+      let general = Env.read_declared_type cx reason name_loc in
+      let (params_ast, body_ast) = Component_declaration_sig.toplevels cx component_sig in
+      (loc, ComponentDeclaration (reconstruct_component params_ast body_ast general))
     | (loc, EnumDeclaration enum) ->
       let enum_ast = enum_declaration cx loc enum in
       (loc, EnumDeclaration enum_ast)
@@ -7179,6 +7201,161 @@ module Make
               comments;
             }
         )
+
+  and mk_component_sig =
+    let mk_param_annot cx tparams_map reason = function
+      | Ast.Type.Missing loc when Context.typing_mode cx <> Context.CheckingMode ->
+        let t = Context.mk_placeholder cx reason in
+        (t, Ast.Type.Missing (loc, t))
+      | Ast.Type.Missing loc ->
+        let t = Env.find_write cx Env_api.FunctionParamLoc reason in
+        (t, Ast.Type.Missing (loc, t))
+      | Ast.Type.Available annot ->
+        let (t, ast_annot) = Anno.mk_type_available_annotation cx tparams_map annot in
+        (t, Ast.Type.Available ast_annot)
+    in
+    let id_param cx tparams_map id mk_reason =
+      let { Ast.Pattern.Identifier.name; annot; optional } = id in
+      let (id_loc, ({ Ast.Identifier.name; comments = _ } as id)) = name in
+      let reason = mk_reason name in
+      let (t, annot) = mk_param_annot cx tparams_map reason annot in
+      let name = ((id_loc, t), id) in
+      (t, { Ast.Pattern.Identifier.name; annot; optional })
+    in
+    let mk_param cx tparams_map param =
+      let ( loc,
+            {
+              Ast.Statement.ComponentDeclaration.Param.local = (ploc, patt);
+              default;
+              name;
+              shorthand;
+            }
+          ) =
+        param
+      in
+      let has_param_anno =
+        match Destructuring.type_of_pattern (ploc, patt) with
+        | Ast.Type.Missing _ -> false
+        | Ast.Type.Available _ -> true
+      in
+      let (t, pattern) =
+        match patt with
+        | Ast.Pattern.Identifier id ->
+          let (t, id) =
+            id_param cx tparams_map id (fun name -> mk_reason (RParameter (Some name)) ploc)
+          in
+          (t, Component_sig_types.DeclarationParamConfig.Id id)
+        | Ast.Pattern.Object { Ast.Pattern.Object.annot; properties; comments } ->
+          let reason = mk_reason RDestructuring ploc in
+          let (t, annot) = mk_param_annot cx tparams_map reason annot in
+          (t, Component_sig_types.DeclarationParamConfig.Object { annot; properties; comments })
+        | Ast.Pattern.Array { Ast.Pattern.Array.annot; elements; comments } ->
+          let reason = mk_reason RDestructuring ploc in
+          let (t, annot) = mk_param_annot cx tparams_map reason annot in
+          (t, Component_sig_types.DeclarationParamConfig.Array { annot; elements; comments })
+        | Ast.Pattern.Expression _ -> failwith "unexpected expression pattern in param"
+      in
+      Component_sig_types.DeclarationParamConfig.Param
+        { t; loc; ploc; pattern; default; has_anno = has_param_anno; name; shorthand }
+    in
+    let mk_rest cx tparams_map rest =
+      let ( loc,
+            { Ast.Statement.ComponentDeclaration.RestParam.argument = (ploc, patt); comments = _ }
+          ) =
+        rest
+      in
+      let has_param_anno =
+        match Destructuring.type_of_pattern (ploc, patt) with
+        | Ast.Type.Missing _ -> false
+        | Ast.Type.Available _ -> true
+      in
+      match patt with
+      | Ast.Pattern.Identifier id ->
+        let (t, id) =
+          id_param cx tparams_map id (fun name -> mk_reason (RParameter (Some name)) ploc)
+        in
+        Ok
+          (Component_sig_types.DeclarationParamConfig.Rest
+             { t; loc; ploc; id; has_anno = has_param_anno }
+          )
+      | Ast.Pattern.Object _
+      | Ast.Pattern.Array _
+      | Ast.Pattern.Expression _ ->
+        Error Error_message.(EInternal (ploc, RestParameterNotIdentifierPattern))
+    in
+    let mk_params cx tparams_map params =
+      let (loc, { Ast.Statement.ComponentDeclaration.Params.params; rest; comments }) = params in
+      let cparams =
+        Component_declaration_params.empty (fun params rest ->
+            (loc, { Ast.Statement.ComponentDeclaration.Params.params; rest; comments })
+        )
+      in
+      let cparams =
+        Base.List.fold
+          ~f:(fun acc param ->
+            Component_declaration_params.add_param (mk_param cx tparams_map param) acc)
+          ~init:cparams
+          params
+      in
+      let cparams =
+        Base.Option.fold
+          ~f:(fun acc rest ->
+            match mk_rest cx tparams_map rest with
+            | Ok rest -> Component_declaration_params.add_rest rest acc
+            | Error err ->
+              Flow_js.add_output cx err;
+              acc)
+          ~init:cparams
+          rest
+      in
+      cparams
+    in
+    fun cx tparams_map reason component ->
+      let {
+        Ast.Statement.ComponentDeclaration.tparams;
+        return;
+        body = (body_loc, _) as body;
+        params;
+        id;
+        sig_loc = _;
+        comments = _;
+      } =
+        component
+      in
+      (* TODO(jmbrown) Add component node cache *)
+      let (tparams, tparams_map, tparams_ast) =
+        Anno.mk_type_param_declarations cx ~tparams_map tparams
+      in
+      let cparams = mk_params cx tparams_map params in
+      let (ret_loc, return_t, return_ast) =
+        match return with
+        | Ast.Type.Available (loc, annot) ->
+          let (((_, t), _) as return_ast) = Anno.convert cx tparams_map annot in
+          (loc, t, Ast.Type.Available (loc, return_ast))
+        | Ast.Type.Missing loc ->
+          let ret_reason = mk_reason RReturn loc in
+          let t = Flow.get_builtin_type cx ret_reason (OrdinaryName "React$Node") in
+          (loc, t, Ast.Type.Missing (loc, t))
+      in
+      ( {
+          Component_sig_types.Component_declaration_sig_types.reason;
+          tparams;
+          cparams;
+          body;
+          return_t;
+          ret_annot_loc = ret_loc;
+        },
+        fun params body component_type ->
+          let (id_loc, name) = id in
+          {
+            component with
+            Ast.Statement.ComponentDeclaration.id = ((id_loc, component_type), name);
+            params;
+            body = (body_loc, body);
+            return = return_ast;
+            tparams = tparams_ast;
+          }
+      )
 
   and mk_func_sig =
     let predicate_function_kind cx predicate body _loc _params =
