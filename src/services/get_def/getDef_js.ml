@@ -65,39 +65,8 @@ let rec process_request ~options ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_
   | Get_def_request.(Member { prop_name = name; object_type = (_loc, t); force_instance }) ->
     extract_member_def ~loc_of_aloc ~cx ~file_sig ~typed_ast ~force_instance t name
   | Get_def_request.(Type (_, v) | Typeof (_, v)) as request ->
-    (* here lies the difference between "Go to Definition" and "Go to Type Definition":
-       the former should stop on annot_loc (where the value was annotated), while the
-       latter should jump to the def_loc (where the type was defined).
-
-       for now, we only implement Go to Definition; if we want to do Go to Type
-       Definition, it would ignore the annot loc. *)
-    let rec loop =
-      let open Type in
-      function
-      | OpenT _ as t ->
-        (match Flow_js_utils.possible_types_of_type cx t with
-        | [t'] -> loop t'
-        | [] -> Error "No possible types"
-        | _ :: _ -> Error "More than one possible type")
-      | AnnotT (r, t, _) ->
-        (match request with
-        | Get_def_request.Typeof _ -> loop t
-        | _ ->
-          (* `annot_aloc` is set when an AnnotT is the result of an actual source annotation *)
-          (match Reason.annot_loc_of_reason r with
-          | Some aloc -> Ok (Nel.one (loc_of_aloc aloc), None)
-          | None -> loop t))
-      | DefT (_, _, TypeT ((ImportTypeofKind | ImportClassKind | ImportEnumKind), t)) -> loop t
-      | t ->
-        let r = TypeUtil.reason_of_t t in
-        let aloc =
-          match Reason.annot_loc_of_reason r with
-          | Some aloc -> aloc
-          | None -> Reason.def_loc_of_reason r
-        in
-        Ok (Nel.one (loc_of_aloc aloc), None)
-    in
-    loop v
+    Get_def_process_location.process_type_request cx request v
+    |> Base.Result.map ~f:(fun aloc -> (Nel.one (loc_of_aloc aloc), None))
   | Get_def_request.JsxAttribute { component_t = (_, component_t); name; loc } ->
     let reason = Reason.mk_reason (Reason.RCustom name) loc in
     let props_object =

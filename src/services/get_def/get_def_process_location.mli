@@ -11,6 +11,9 @@ type ('M, 'T) result =
   | Empty of string
   | LocNotFound
 
+val process_type_request :
+  Context.t -> ('M, 'T) Get_def_request.t -> Type.t -> (ALoc.t, string) Stdlib.result
+
 val process_location :
   loc_of_annot:('T -> 'M) ->
   ast:('M, 'T) Flow_ast.Program.t ->

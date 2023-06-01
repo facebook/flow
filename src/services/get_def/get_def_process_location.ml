@@ -16,6 +16,39 @@ type ('M, 'T) result =
   | Empty of string
   | LocNotFound
 
+(* here lies the difference between "Go to Definition" and "Go to Type Definition":
+   the former should stop on annot_loc (where the value was annotated), while the
+   latter should jump to the def_loc (where the type was defined).
+
+   for now, we only implement Go to Definition; if we want to do Go to Type
+   Definition, it would ignore the annot loc. *)
+let rec process_type_request cx request =
+  let open Type in
+  function
+  | OpenT _ as t ->
+    (match Flow_js_utils.possible_types_of_type cx t with
+    | [t'] -> process_type_request cx request t'
+    | [] -> Error "No possible types"
+    | _ :: _ -> Error "More than one possible type")
+  | AnnotT (r, t, _) ->
+    (match request with
+    | Get_def_request.Typeof _ -> process_type_request cx request t
+    | _ ->
+      (* `annot_aloc` is set when an AnnotT is the result of an actual source annotation *)
+      (match Reason.annot_loc_of_reason r with
+      | Some aloc -> Ok aloc
+      | None -> process_type_request cx request t))
+  | DefT (_, _, TypeT ((ImportTypeofKind | ImportClassKind | ImportEnumKind), t)) ->
+    process_type_request cx request t
+  | t ->
+    let r = TypeUtil.reason_of_t t in
+    let aloc =
+      match Reason.annot_loc_of_reason r with
+      | Some aloc -> aloc
+      | None -> Reason.def_loc_of_reason r
+    in
+    Ok aloc
+
 (** Determines if the given expression is a [require()] call, or a member expression
   containing one, like [require('foo').bar]. *)
 let rec is_require ~is_legit_require expr =
