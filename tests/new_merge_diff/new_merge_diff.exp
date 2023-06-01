@@ -89,6 +89,20 @@ Invalid trivially recursive definition of `a` in an export position.  [invalid-r
             ^
 
 
+Error ------------------------------------------------------------------------------------------ recursive_types.js:1:14
+
+Invalid type annotation for `x`. It contains a reference [1] to the binding being declared. [recursive-definition]
+
+   recursive_types.js:1:14
+   1| export const x: x = 0; // error recursive
+                   ^
+
+References:
+   recursive_types.js:1:17
+   1| export const x: x = 0; // error recursive
+                      ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------ recursive_types.js:1:17
 
 Invalid trivially recursive definition of `x` in an export position.  [invalid-recursive-exported-annotation]
@@ -97,18 +111,18 @@ Invalid trivially recursive definition of `x` in an export position.  [invalid-r
                       ^
 
 
-Error ------------------------------------------------------------------------------------------ recursive_types.js:1:21
+Error ------------------------------------------------------------------------------------------ recursive_types.js:3:14
 
-Cannot assign `0` to `x` because number [1] is incompatible with empty [2]. [incompatible-type]
+Invalid type annotation for `y`. It contains a reference [1] to the binding being declared. [recursive-definition]
 
-   recursive_types.js:1:21
-   1| export const x: x = 0; // error recursive
-                          ^ [1]
+   recursive_types.js:3:14
+   3| export const y: typeof y.f = 0; // error recursive
+                   ^
 
 References:
-   recursive_types.js:1:17
-   1| export const x: x = 0; // error recursive
-                      ^ [2]
+   recursive_types.js:3:24
+   3| export const y: typeof y.f = 0; // error recursive
+                             ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------ recursive_types.js:3:26
@@ -119,32 +133,18 @@ Invalid trivially recursive definition of property `f` in an export position.  [
                                ^
 
 
-Error ------------------------------------------------------------------------------------------ recursive_types.js:3:30
+Error ------------------------------------------------------------------------------------------ recursive_types.js:5:14
 
-Cannot assign `0` to `y` because number [1] is incompatible with empty [2]. [incompatible-type]
+Invalid type annotation for `z`. It contains a reference [1] to the binding being declared. [recursive-definition]
 
-   recursive_types.js:3:30
-   3| export const y: typeof y.f = 0; // error recursive
-                                   ^ [1]
-
-References:
-   recursive_types.js:3:17
-   3| export const y: typeof y.f = 0; // error recursive
-                      ^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ recursive_types.js:5:28
-
-Cannot assign `1` to `z` because number [1] is incompatible with empty [2]. [incompatible-type]
-
-   recursive_types.js:5:28
-   5| export const z: typeof z = 1; // TODO error recursive
-                                 ^ [1]
+   recursive_types.js:5:14
+   5| export const z: typeof z = 1; // error recursive
+                   ^
 
 References:
-   recursive_types.js:5:17
-   5| export const z: typeof z = 1; // TODO error recursive
-                      ^^^^^^^^ [2]
+   recursive_types.js:5:24
+   5| export const z: typeof z = 1; // error recursive
+                             ^ [1]
 
 
 

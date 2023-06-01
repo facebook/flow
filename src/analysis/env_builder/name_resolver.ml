@@ -887,6 +887,9 @@ module Make
     in_conditional_type_extends: bool;
     jsx_base_name: string option;
     pred_func_map: Env_api.pred_func_info L.LMap.t;
+    (* Track parameter binding def_locs currently being processed, so that we can
+       error when these appear in the corresponding annotation. *)
+    current_bindings: string L.LMap.t;
   }
 
   type pattern_write_kind =
@@ -1301,6 +1304,7 @@ module Make
           in_conditional_type_extends = false;
           jsx_base_name;
           pred_func_map = L.LMap.empty;
+          current_bindings = L.LMap.empty;
         }
 
       method jsx_base_name = env_state.jsx_base_name
@@ -2210,9 +2214,12 @@ module Make
                     ignore @@ this#binding_pattern_track_object_destructuring ?kind ~acc pattern)
                 | _ -> ignore @@ this#pattern_object_property ?kind prop)
           );
-          ignore @@ this#type_annotation_hint annot
+          this#with_current_pattern_bindings expr ~f:(fun () ->
+              ignore @@ this#type_annotation_hint annot
+          )
+        | Identifier { Identifier.name; annot; _ } ->
+          this#pattern_identifier_with_annot_check ?kind ploc name annot
         | Array _
-        | Identifier _
         | Expression _ ->
           ignore @@ this#pattern ?kind expr);
         expr
@@ -2264,6 +2271,17 @@ module Make
         let kind = variable_declaration_binding_kind_to_pattern_write_kind kind in
         this#bind_pattern_identifier_customized ~kind loc x;
         super#identifier ident
+
+      method private pattern_identifier_with_annot_check ?kind ploc name annot =
+        let write_entries =
+          EnvMap.add
+            (Env_api.PatternLoc, ploc)
+            (Env_api.AssigningWrite (mk_reason RDestructuring ploc))
+            env_state.write_entries
+        in
+        env_state <- { env_state with write_entries };
+        ignore @@ this#pattern_identifier ?kind name;
+        this#with_current_id_binding name ~f:(fun () -> ignore @@ this#type_annotation_hint annot)
 
       method! pattern_array_element ?kind (elem : ('loc, 'loc) Ast.Pattern.Array.Element.t) =
         let open Ast.Pattern.Array.Element in
@@ -2364,6 +2382,62 @@ module Make
         in
         env_state <- { env_state with values }
 
+      method private with_current_pattern_bindings pattern ~f =
+        let current_bindings =
+          SMap.fold
+            (fun name (loc, _) acc -> L.LMap.add loc name acc)
+            (Pattern_helper.bindings_of_pattern pattern)
+            L.LMap.empty
+        in
+        let old_val = env_state.current_bindings in
+        env_state <- { env_state with current_bindings };
+        Exception.protect ~f ~finally:(fun () ->
+            env_state <- { env_state with current_bindings = old_val }
+        )
+
+      method private with_current_id_binding id ~f =
+        let (loc, { Ast.Identifier.name; _ }) = id in
+        let current_bindings = L.LMap.singleton loc name in
+        let old_val = env_state.current_bindings in
+        env_state <- { env_state with current_bindings };
+        Exception.protect ~f ~finally:(fun () ->
+            env_state <- { env_state with current_bindings = old_val }
+        )
+
+      (* Override the object type constuctor to disable the EReferenceInAnnotation check
+       * since this is a common and safe way to encode recursive object types. *)
+      method! object_type loc ot =
+        let old_val = env_state.current_bindings in
+        env_state <- { env_state with current_bindings = L.LMap.empty };
+        Exception.protect
+          ~f:(fun () -> ignore @@ super#object_type loc ot)
+          ~finally:(fun () -> env_state <- { env_state with current_bindings = old_val });
+        ot
+
+      method private error_on_reference_to_currently_declared_id id =
+        let (loc, { Ast.Identifier.name; _ }) = id in
+        let { val_ref; def_loc; _ } = this#env_read name in
+        Base.Option.iter def_loc ~f:(fun def_loc ->
+            match L.LMap.find_opt def_loc env_state.current_bindings with
+            | None -> ()
+            | Some name ->
+              let reason = mk_reason Reason.(RIdentifier (OrdinaryName name)) def_loc in
+              let write_entries =
+                EnvMap.add_ordinary def_loc Env_api.NonAssigningWrite env_state.write_entries
+              in
+              env_state <- { env_state with write_entries };
+              val_ref := Val.illegal_write reason;
+              add_output (Error_message.EReferenceInAnnotation (def_loc, name, loc))
+        )
+
+      method! type_identifier_reference id =
+        this#error_on_reference_to_currently_declared_id id;
+        super#type_identifier_reference id
+
+      method! typeof_identifier id =
+        this#error_on_reference_to_currently_declared_id id;
+        super#typeof_identifier id
+
       method! this_expression loc this_ =
         this#any_identifier loc "this";
         this_
@@ -2381,7 +2455,7 @@ module Make
         let open Ast.Type.Generic.Identifier in
         let rec loop git =
           match git with
-          | Unqualified i -> ignore @@ this#type_identifier i
+          | Unqualified i -> ignore @@ this#type_identifier_reference i
           | Qualified (_, { qualification; _ }) -> loop qualification
         in
         loop git;
@@ -2773,10 +2847,20 @@ module Make
                     | _ -> ())
                 ()
                 id;
-              ignore @@ this#type_annotation_hint annot
+              this#with_current_pattern_bindings id ~f:(fun () ->
+                  ignore @@ this#type_annotation_hint annot
+              )
           end
           | (_, Expression _) -> statement_error
         end;
+        decl
+
+      method! declare_variable _ decl =
+        let { Ast.Statement.DeclareVariable.id = ident; annot; kind; comments = _ } = decl in
+        ignore @@ this#pattern_identifier ~kind ident;
+        this#hoist_annotations (fun () ->
+            this#with_current_id_binding ident ~f:(fun () -> ignore @@ this#type_annotation annot)
+        );
         decl
 
       (* read and write (when the argument is an identifier) *)

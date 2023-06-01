@@ -2,7 +2,7 @@ export const x: x = 0; // error recursive
 
 export const y: typeof y.f = 0; // error recursive
 
-export const z: typeof z = 1; // TODO error recursive
+export const z: typeof z = 1; // error recursive
 
 // $FlowExpectedError[incompatible-use]
 export type T = T.A | T.B;

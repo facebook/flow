@@ -1177,6 +1177,133 @@ References:
                                             ^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------ rec_decls.js:2:15
+
+Invalid type annotation for `x1`. It contains a reference [1] to the binding being declared. [recursive-definition]
+
+   rec_decls.js:2:15
+   2|   declare var x1: x1; // error recursive-definition
+                    ^^
+
+References:
+   rec_decls.js:2:19
+   2|   declare var x1: x1; // error recursive-definition
+                        ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ rec_decls.js:3:15
+
+Invalid type annotation for `x2`. It contains a reference [1] to the binding being declared. [recursive-definition]
+
+   rec_decls.js:3:15
+   3|   declare var x2: typeof x2; // error recursive-definition
+                    ^^
+
+References:
+   rec_decls.js:3:26
+   3|   declare var x2: typeof x2; // error recursive-definition
+                               ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ rec_decls.js:5:15
+
+Invalid type annotation for `V2`. It contains a reference [1] to the binding being declared. [recursive-definition]
+
+   rec_decls.js:5:15
+   5|   declare var V2: $Call<<V2>(V2) => V2, V2>; // error recursive-definition
+                    ^^
+
+References:
+   rec_decls.js:5:41
+   5|   declare var V2: $Call<<V2>(V2) => V2, V2>; // error recursive-definition
+                                              ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ rec_decls.js:8:15
+
+Invalid type annotation for `rec_obj_err`. It contains a reference [1] to the binding being declared.
+[recursive-definition]
+
+   rec_decls.js:8:15
+    8|   declare var rec_obj_err:
+                     ^^^^^^^^^^^
+
+References:
+   rec_decls.js:10:14
+   10|     | typeof rec_obj_err; // error here
+                    ^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ rec_decls.js:14:9
+
+Invalid type annotation for `x1`. It contains a reference [1] to the binding being declared. [recursive-definition]
+
+   rec_decls.js:14:9
+   14|   const x1: x1 = 1; // error on x1 not `1`
+               ^^
+
+References:
+   rec_decls.js:14:13
+   14|   const x1: x1 = 1; // error on x1 not `1`
+                   ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ rec_decls.js:15:9
+
+Invalid type annotation for `x2`. It contains a reference [1] to the binding being declared. [recursive-definition]
+
+   rec_decls.js:15:9
+   15|   const x2: typeof x2 = 1; // error on x2 not `1`
+               ^^
+
+References:
+   rec_decls.js:15:20
+   15|   const x2: typeof x2 = 1; // error on x2 not `1`
+                          ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ rec_decls.js:16:9
+
+Invalid type annotation for `x3`. It contains a reference [1] to the binding being declared. [recursive-definition]
+
+   rec_decls.js:16:9
+   16|   const x3: typeof x3.f = 1; // error on x2 not `1`
+               ^^
+
+References:
+   rec_decls.js:16:20
+   16|   const x3: typeof x3.f = 1; // error on x2 not `1`
+                          ^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- rec_decls.js:20:15
+
+Invalid type annotation for `Val`. It contains a reference [1] to the binding being declared. [recursive-definition]
+
+   rec_decls.js:20:15
+   20|   declare var Val: Val<string>; // error on Val, no recursion-limit-exceeded
+                     ^^^
+
+References:
+   rec_decls.js:20:20
+   20|   declare var Val: Val<string>; // error on Val, no recursion-limit-exceeded
+                          ^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ rec_decls.js:25:7
+
+Invalid type annotation for `Val`. It contains a reference [1] to the binding being declared. [recursive-definition]
+
+   rec_decls.js:25:7
+   25|   let Val: Val<string>;
+             ^^^
+
+References:
+   rec_decls.js:25:12
+   25|   let Val: Val<string>;
+                  ^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------- rec_params.js:7:26
 
 Cannot resolve name `x`. [cannot-resolve-name]
@@ -1922,4 +2049,4 @@ Cannot resolve name `unboundFunction2`. [cannot-resolve-name]
 
 
 
-Found 147 errors
+Found 156 errors

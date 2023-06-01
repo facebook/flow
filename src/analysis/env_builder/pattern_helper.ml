@@ -129,3 +129,5 @@ let bindings_of_params (_, { Ast.Function.Params.params; rest; _ }) =
   Base.Option.fold rest ~init:acc ~f:(fun acc (_, { Ast.Function.RestParam.argument; _ }) ->
       fold_pattern acc Rest argument
   )
+
+let bindings_of_pattern pattern = fold_pattern SMap.empty Root pattern

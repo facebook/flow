@@ -1841,6 +1841,7 @@ let dump_error_message =
     | ERecursiveDefinition _ -> "ERecursiveDefinition"
     | EDuplicateClassMember { loc; name; _ } ->
       spf "EDuplicateClassMember (%s) (%s)" (string_of_aloc loc) name
+    | EReferenceInAnnotation _ -> "EReferenceInAnnotation"
     | EEmptyArrayNoProvider { loc } -> spf "EEmptyArrayNoProvider (%s)" (string_of_aloc loc)
     | EUnusedPromise { loc; _ } -> spf "EUnusedPromise (%s)" (string_of_aloc loc)
     | EBigIntRShift3 reason -> spf "EBigIntRShift3 (%s)" (dump_reason cx reason)
