@@ -185,6 +185,31 @@ Component syntax is not supported [unsupported-syntax]
        ^
 
 
+Error -------------------------------------------------------------------------------------- nested_with_function.js:5:3
+
+Component syntax is not supported [unsupported-syntax]
+
+        v------------------------
+   5|   component Foo(): string {
+   6|     return 'str'; // TODO: No error
+   7|   }
+        ^
+
+
+Error ------------------------------------------------------------------------------------- nested_with_function.js:6:12
+
+Cannot return `'str'` because string [1] is incompatible with number [2]. [incompatible-return]
+
+   nested_with_function.js:6:12
+   6|     return 'str'; // TODO: No error
+                 ^^^^^ [1]
+
+References:
+   nested_with_function.js:4:15
+   4| function f(): number {
+                    ^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------- strict_by_default.js:5:20
 
 Strict mode function may not have duplicate parameter names
@@ -202,4 +227,4 @@ Component syntax is not supported [unsupported-syntax]
 
 
 
-Found 14 errors
+Found 16 errors
