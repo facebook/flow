@@ -648,4 +648,14 @@ try {
                         Ssa_api.uninitialized; mk_write (4, 4) (4, 5) "c"; mk_write (6, 4) (6, 5) "c";
                       ]
                );
+         "component_abrupt_completion"
+         >:: mk_ssa_builder_test "component Foo() { return }
+Foo;
+" LocMap.(empty);
+         "function_abrupt_completion"
+         >:: mk_ssa_builder_test
+               "function Foo() { return }
+Foo;
+"
+               LocMap.(empty |> add (mk_loc (2, 0) (2, 3)) [mk_write (1, 9) (1, 12) "Foo"]);
        ]
