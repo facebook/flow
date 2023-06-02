@@ -609,6 +609,7 @@ and assigned_const_like_binding_type =
   | ClassNameBinding
   | FunctionNameBinding
   | DeclaredFunctionNameBinding
+  | ComponentNameBinding
 
 and docblock_error =
   | MultipleFlowAttributes
@@ -745,6 +746,7 @@ let string_of_assigned_const_like_binding_type = function
   | ClassNameBinding -> "class"
   | FunctionNameBinding -> "function"
   | DeclaredFunctionNameBinding -> "declared function"
+  | ComponentNameBinding -> "component"
 
 let map_loc_of_exponential_spread_reason_group f { first_reason; second_reason } =
   { first_reason = f first_reason; second_reason = Base.Option.map ~f second_reason }

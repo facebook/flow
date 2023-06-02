@@ -42,6 +42,9 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
     method private add_function_binding entry =
       this#update_acc Bindings.(add (entry, Bindings.Function))
 
+    method private add_component_binding entry =
+      this#update_acc Bindings.(add (entry, Bindings.Component))
+
     method private add_declared_function_binding ~predicate entry =
       this#update_acc Bindings.(add (entry, Bindings.DeclaredFunction { predicate }))
 
@@ -174,7 +177,7 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
     method! component_declaration _loc (stmt : ('loc, 'loc) Ast.Statement.ComponentDeclaration.t) =
       let open Ast.Statement.ComponentDeclaration in
       let { id; _ } = stmt in
-      this#add_function_binding id;
+      this#add_component_binding id;
       stmt
 
     method! declare_class loc (decl : ('loc, 'loc) Ast.Statement.DeclareClass.t) =
@@ -227,6 +230,9 @@ class ['loc] hoister ~flowmin_compatibility ~enable_enums ~with_types =
 
     method! private add_function_binding entry =
       if lexical || flowmin_compatibility then super#add_function_binding entry
+
+    method! private add_component_binding entry =
+      if lexical || flowmin_compatibility then super#add_component_binding entry
 
     method! flowmin_compatibility_statement = this#base_statement
 

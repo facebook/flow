@@ -26,6 +26,7 @@ type kind =
   | DeclaredFunction of { predicate: bool }
   | Internal
   | GeneratorNext
+  | Component
 [@@deriving show]
 
 type 'loc entry = ('loc, 'loc) Ast.Identifier.t * kind
@@ -74,7 +75,8 @@ let allow_forward_ref = function
   | DeclaredLet
   | DeclaredConst
   | Var
-  | Function ->
+  | Function
+  | Component ->
     true
   | _ -> false
 

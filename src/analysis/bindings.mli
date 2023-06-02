@@ -26,6 +26,7 @@ type kind =
   | DeclaredFunction of { predicate: bool }
   | Internal
   | GeneratorNext
+  | Component
 [@@deriving show]
 
 type 'loc t

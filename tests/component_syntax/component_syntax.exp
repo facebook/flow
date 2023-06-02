@@ -1,3 +1,483 @@
+Error --------------------------------------------------------------------------------------------- binding_rules.js:5:1
+
+Component syntax is not supported [unsupported-syntax]
+
+   5| component Foo() {}
+      ^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- binding_rules.js:6:1
+
+Cannot reassign component binding `Foo` [1]. [cannot-reassign]
+
+   binding_rules.js:6:1
+   6| Foo = 3; // ERROR, cannot reassign components
+      ^^^
+
+References:
+   binding_rules.js:5:11
+   5| component Foo() {}
+                ^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- binding_rules.js:7:5
+
+Cannot declare `Foo` [1] because the name is already bound. [name-already-bound]
+
+   binding_rules.js:7:5
+   7| var Foo = 3; // ERROR, cannot re-bind components
+          ^^^
+
+References:
+   binding_rules.js:5:11
+   5| component Foo() {}
+                ^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- binding_rules.js:8:5
+
+Cannot declare `Foo` [1] because the name is already bound. [name-already-bound]
+
+   binding_rules.js:8:5
+   8| let Foo = 3; // ERROR, still can't re-bind
+          ^^^
+
+References:
+   binding_rules.js:5:11
+   5| component Foo() {}
+                ^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- binding_rules.js:9:7
+
+Cannot declare `Foo` [1] because the name is already bound. [name-already-bound]
+
+   binding_rules.js:9:7
+   9| const Foo = 3; // ERROR
+            ^^^
+
+References:
+   binding_rules.js:5:11
+   5| component Foo() {}
+                ^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- binding_rules.js:10:1
+
+Component syntax is not supported [unsupported-syntax]
+
+   10| component Foo() {} // ERROR, can't re-bind a component with a component either
+       ^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- binding_rules.js:10:11
+
+Cannot declare `Foo` [1] because the name is already bound. [name-already-bound]
+
+   binding_rules.js:10:11
+   10| component Foo() {} // ERROR, can't re-bind a component with a component either
+                 ^^^
+
+References:
+   binding_rules.js:5:11
+    5| component Foo() {}
+                 ^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- binding_rules.js:11:6
+
+Cannot declare `Foo` [1] because the name is already bound. [name-already-bound]
+
+   binding_rules.js:11:6
+   11| type Foo = number; // ERROR
+            ^^^
+
+References:
+   binding_rules.js:5:11
+    5| component Foo() {}
+                 ^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- binding_rules.js:12:10
+
+Cannot declare `Foo` [1] because the name is already bound. [name-already-bound]
+
+   binding_rules.js:12:10
+   12| function Foo() {} // ERROR
+                ^^^
+
+References:
+   binding_rules.js:5:11
+    5| component Foo() {}
+                 ^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- binding_rules.js:13:7
+
+Cannot declare `Foo` [1] because the name is already bound. [name-already-bound]
+
+   binding_rules.js:13:7
+   13| class Foo {} // ERROR
+             ^^^
+
+References:
+   binding_rules.js:5:11
+    5| component Foo() {}
+                 ^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- binding_rules.js:14:13
+
+Cannot declare `Foo` [1] because the name is already bound. [name-already-bound]
+
+   binding_rules.js:14:13
+   14| declare var Foo: number; // ERROR
+                   ^^^
+
+References:
+   binding_rules.js:5:11
+    5| component Foo() {}
+                 ^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- binding_rules.js:15:13
+
+Cannot declare `Foo` [1] because the name is already bound. [name-already-bound]
+
+   binding_rules.js:15:13
+   15| declare let Foo: number; // ERROR
+                   ^^^
+
+References:
+   binding_rules.js:5:11
+    5| component Foo() {}
+                 ^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- binding_rules.js:16:15
+
+Cannot declare `Foo` [1] because the name is already bound. [name-already-bound]
+
+   binding_rules.js:16:15
+   16| declare const Foo: number; // ERROR
+                     ^^^
+
+References:
+   binding_rules.js:5:11
+    5| component Foo() {}
+                 ^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- binding_rules.js:17:14
+
+Cannot declare `Foo` [1] because the name is already bound. [name-already-bound]
+
+   binding_rules.js:17:14
+   17| declare type Foo = number; // ERROR
+                    ^^^
+
+References:
+   binding_rules.js:5:11
+    5| component Foo() {}
+                 ^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- binding_rules.js:18:18
+
+Cannot declare `Foo` [1] because the name is already bound. [name-already-bound]
+
+   binding_rules.js:18:18
+   18| declare function Foo(): number; // ERROR
+                        ^^^
+
+References:
+   binding_rules.js:5:11
+    5| component Foo() {}
+                 ^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- binding_rules.js:19:15
+
+Cannot declare `Foo` [1] because the name is already bound. [name-already-bound]
+
+   binding_rules.js:19:15
+   19| declare class Foo {} // ERROR
+                     ^^^
+
+References:
+   binding_rules.js:5:11
+    5| component Foo() {}
+                 ^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- binding_rules.js:23:1
+
+Component syntax is not supported [unsupported-syntax]
+
+   23| component A() {} // ERROR, can't re-bind other bindings with a component either!
+       ^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- binding_rules.js:23:11
+
+Cannot declare `A` [1] because the name is already bound. [name-already-bound]
+
+   binding_rules.js:23:11
+   23| component A() {} // ERROR, can't re-bind other bindings with a component either!
+                 ^
+
+References:
+   binding_rules.js:22:10
+   22| function A() {}
+                ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- binding_rules.js:26:1
+
+Component syntax is not supported [unsupported-syntax]
+
+   26| component B() {} // ERROR
+       ^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- binding_rules.js:26:11
+
+Cannot declare `B` [1] because the name is already bound. [name-already-bound]
+
+   binding_rules.js:26:11
+   26| component B() {} // ERROR
+                 ^
+
+References:
+   binding_rules.js:25:5
+   25| var B = 3;
+           ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- binding_rules.js:28:5
+
+Cannot declare `C` [1] because the name is already bound. [name-already-bound]
+
+   28| let C = 3; // ERROR. Components are hoisted so the error is on the let
+           ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- binding_rules.js:29:1
+
+Component syntax is not supported [unsupported-syntax]
+
+   29| component C() {}
+       ^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- binding_rules.js:31:7
+
+Cannot declare `D` [1] because the name is already bound. [name-already-bound]
+
+   31| const D = 3;
+             ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- binding_rules.js:32:1
+
+Component syntax is not supported [unsupported-syntax]
+
+   32| component D() {} // ERROR
+       ^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- binding_rules.js:35:1
+
+Component syntax is not supported [unsupported-syntax]
+
+   35| component E() {} // ERROR
+       ^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- binding_rules.js:35:11
+
+Cannot declare `E` [1] because the name is already bound. [name-already-bound]
+
+   binding_rules.js:35:11
+   35| component E() {} // ERROR
+                 ^
+
+References:
+   binding_rules.js:34:6
+   34| type E = number;
+            ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- binding_rules.js:39:3
+
+Component syntax is not supported [unsupported-syntax]
+
+   39|   component F() {} // ERROR
+         ^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- binding_rules.js:39:13
+
+Cannot declare `F` [1] because the name is already bound. [name-already-bound]
+
+   binding_rules.js:39:13
+   39|   component F() {} // ERROR
+                   ^
+
+References:
+   binding_rules.js:37:23
+   37| function paramsStrict(F: number) {
+                             ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- binding_rules.js:43:3
+
+Component syntax is not supported [unsupported-syntax]
+
+   43|   component G() {} // ERROR
+         ^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- binding_rules.js:43:13
+
+Cannot declare `G` [1] because the name is already bound. [name-already-bound]
+
+   binding_rules.js:43:13
+   43|   component G() {} // ERROR
+                   ^
+
+References:
+   binding_rules.js:42:17
+   42| function params(G: number) {
+                       ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- binding_rules.js:47:1
+
+Component syntax is not supported [unsupported-syntax]
+
+   47| component H() {} // ERROR
+       ^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- binding_rules.js:47:11
+
+Cannot declare `H` [1] because the name is already bound. [name-already-bound]
+
+   binding_rules.js:47:11
+   47| component H() {} // ERROR
+                 ^
+
+References:
+   binding_rules.js:46:15
+   46| declare const H: number;
+                     ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- binding_rules.js:50:1
+
+Component syntax is not supported [unsupported-syntax]
+
+   50| component I() {} // ERROR
+       ^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- binding_rules.js:50:11
+
+Cannot declare `I` [1] because the name is already bound. [name-already-bound]
+
+   binding_rules.js:50:11
+   50| component I() {} // ERROR
+                 ^
+
+References:
+   binding_rules.js:49:18
+   49| declare function I(): void;
+                        ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- binding_rules.js:53:1
+
+Component syntax is not supported [unsupported-syntax]
+
+   53| component J() {} // ERROR
+       ^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- binding_rules.js:53:11
+
+Cannot declare `J` [1] because the name is already bound. [name-already-bound]
+
+   binding_rules.js:53:11
+   53| component J() {} // ERROR
+                 ^
+
+References:
+   binding_rules.js:52:14
+   52| declare type J = number;
+                    ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- binding_rules.js:56:1
+
+Component syntax is not supported [unsupported-syntax]
+
+   56| component K() {} // ERROR
+       ^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- binding_rules.js:56:11
+
+Cannot declare `K` [1] because the name is already bound. [name-already-bound]
+
+   binding_rules.js:56:11
+   56| component K() {} // ERROR
+                 ^
+
+References:
+   binding_rules.js:55:13
+   55| declare let K: number;
+                   ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- binding_rules.js:59:1
+
+Component syntax is not supported [unsupported-syntax]
+
+   59| component L() {} // ERROR
+       ^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- binding_rules.js:59:11
+
+Cannot declare `L` [1] because the name is already bound. [name-already-bound]
+
+   binding_rules.js:59:11
+   59| component L() {} // ERROR
+                 ^
+
+References:
+   binding_rules.js:58:15
+   58| declare class L {}
+                     ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- binding_rules.js:61:7
+
+Cannot declare `M` [1] because the name is already bound. [name-already-bound]
+
+   61| class M {} // ERROR
+             ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- binding_rules.js:62:1
+
+Component syntax is not supported [unsupported-syntax]
+
+   62| component M() {}
+       ^^^^^^^^^^^^^^^^
+
+
 Error ----------------------------------------------------------------------------------- component_type_checking.js:3:1
 
 Component syntax is not supported [unsupported-syntax]
@@ -914,4 +1394,4 @@ Component syntax is not supported [unsupported-syntax]
 
 
 
-Found 64 errors
+Found 106 errors

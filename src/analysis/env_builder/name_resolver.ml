@@ -897,6 +897,7 @@ module Make
     | LetBinding
     | ConstBinding
     | FunctionBinding
+    | ComponentBinding
     | AssignmentWrite
 
   type this_super_binding_env =
@@ -944,6 +945,13 @@ module Make
             EAssignConstLikeBinding
               { loc = assignment_loc; definition = def_reason; binding_kind = FunctionNameBinding }
           )
+      | (Bindings.Component, AssignmentWrite) ->
+        let def_reason = mk_reason (RIdentifier (OrdinaryName name)) def_loc in
+        Some
+          Error_message.(
+            EAssignConstLikeBinding
+              { loc = assignment_loc; definition = def_reason; binding_kind = ComponentNameBinding }
+          )
       | (Bindings.Import, AssignmentWrite) ->
         Some
           Error_message.(
@@ -961,7 +969,9 @@ module Make
                 binding_kind = DeclaredFunctionNameBinding;
               }
           )
-      | (Bindings.(Var | DeclaredVar), (LetBinding | ConstBinding | FunctionBinding)) ->
+      | ( Bindings.(Var | DeclaredVar),
+          (LetBinding | ConstBinding | FunctionBinding | ComponentBinding)
+        ) ->
         Some
           Error_message.(
             EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)
@@ -972,26 +982,40 @@ module Make
           Error_message.(
             EBindingError (EVarRedeclaration, assignment_loc, OrdinaryName name, def_loc)
           )
-      | (Bindings.Const, (VarBinding | LetBinding | ConstBinding | FunctionBinding))
-      | (Bindings.Let, (VarBinding | LetBinding | ConstBinding | FunctionBinding))
-      | (Bindings.Class, (VarBinding | LetBinding | ConstBinding | FunctionBinding))
-      | (Bindings.Function, (VarBinding | LetBinding | ConstBinding | FunctionBinding))
-      | (Bindings.Import, (VarBinding | LetBinding | ConstBinding | FunctionBinding))
-      | (Bindings.Type _, (VarBinding | LetBinding | ConstBinding | FunctionBinding))
+      | ( Bindings.Const,
+          (VarBinding | LetBinding | ConstBinding | FunctionBinding | ComponentBinding)
+        )
+      | (Bindings.Let, (VarBinding | LetBinding | ConstBinding | FunctionBinding | ComponentBinding))
+      | ( Bindings.Class,
+          (VarBinding | LetBinding | ConstBinding | FunctionBinding | ComponentBinding)
+        )
+      | ( Bindings.Function,
+          (VarBinding | LetBinding | ConstBinding | FunctionBinding | ComponentBinding)
+        )
+      | ( Bindings.Component,
+          (VarBinding | LetBinding | ConstBinding | FunctionBinding | ComponentBinding)
+        )
+      | ( Bindings.Import,
+          (VarBinding | LetBinding | ConstBinding | FunctionBinding | ComponentBinding)
+        )
+      | ( Bindings.Type _,
+          (VarBinding | LetBinding | ConstBinding | FunctionBinding | ComponentBinding)
+        )
         when not (Val.is_undeclared v) ->
         Some
           Error_message.(
             EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)
           )
       | ( Bindings.(DeclaredClass | DeclaredConst | DeclaredLet),
-          (VarBinding | LetBinding | ConstBinding | FunctionBinding)
+          (VarBinding | LetBinding | ConstBinding | FunctionBinding | ComponentBinding)
         )
         when assignment_loc <> def_loc ->
         Some
           Error_message.(
             EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)
           )
-      | (Bindings.DeclaredFunction _, (VarBinding | LetBinding | ConstBinding)) ->
+      | (Bindings.DeclaredFunction _, (VarBinding | LetBinding | ConstBinding | ComponentBinding))
+        ->
         Some
           Error_message.(
             EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)
@@ -1005,13 +1029,15 @@ module Make
             EBindingError
               (ETypeInValuePosition { imported; name }, assignment_loc, OrdinaryName name, def_loc)
           )
-      | (Bindings.Parameter, (VarBinding | LetBinding | ConstBinding | FunctionBinding))
+      | ( Bindings.Parameter,
+          (VarBinding | LetBinding | ConstBinding | FunctionBinding | ComponentBinding)
+        )
         when Context.enable_const_params cx && not (Val.is_undeclared v) ->
         Some
           Error_message.(
             EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)
           )
-      | (Bindings.Parameter, (LetBinding | ConstBinding | FunctionBinding))
+      | (Bindings.Parameter, (LetBinding | ConstBinding | FunctionBinding | ComponentBinding))
         when not (Val.is_undeclared v) ->
         Some
           Error_message.(
@@ -1895,7 +1921,8 @@ module Make
                     | Bindings.Const
                     | Bindings.Enum
                     | Bindings.Parameter
-                    | Bindings.Function ->
+                    | Bindings.Function
+                    | Bindings.Component ->
                       Val.undeclared name loc
                     | _ -> Val.uninitialized loc
                   in
@@ -2130,6 +2157,7 @@ module Make
               | Bindings.Let
               | Bindings.Class
               | Bindings.Function
+              | Bindings.Component
               | Bindings.Parameter
               | Bindings.Import ->
                 Some
@@ -2155,7 +2183,7 @@ module Make
 
       method! component_identifier ident =
         let (loc, { Flow_ast.Identifier.name = x; comments = _ }) = ident in
-        this#bind_pattern_identifier_customized ~kind:FunctionBinding loc x;
+        this#bind_pattern_identifier_customized ~kind:ComponentBinding loc x;
         super#identifier ident
 
       (* We want to translate object pattern destructing {a:{b:{c}}} = o into o.a.b.c,
