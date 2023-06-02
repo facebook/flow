@@ -32,7 +32,7 @@ type autocomplete_type =
       used_keys: SSet.t;
       spreads: (Loc.t * Type.t) list;
     }  (** object key *)
-  | Ac_literal of { lit_type: Type.t }  (** inside a literal like a string or regex *)
+  | Ac_literal of { lit_type: Type.t }  (** inside a string literal *)
   | Ac_module  (** a module name *)
   | Ac_type  (** type identifiers *)
   | Ac_type_binding  (** introduces a new type name. like Ac_binding, but for types *)
@@ -214,7 +214,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
         | PropertyExpression
             ( (prop_loc, type_),
               Flow_ast.Expression.(
-                ( Literal { Flow_ast.Literal.raw = token; _ }
+                ( Literal { Flow_ast.Literal.raw = token; value = Flow_ast.Literal.String _; _ }
                 | Identifier (_, { Flow_ast.Identifier.name = token; _ }) ))
             )
           when this#covers_target prop_loc ->
@@ -266,7 +266,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
         | PropertyExpression
             ( (prop_loc, type_),
               Flow_ast.Expression.(
-                ( Literal { Flow_ast.Literal.raw = token; _ }
+                ( Literal { Flow_ast.Literal.raw = token; value = Flow_ast.Literal.String _; _ }
                 | Identifier (_, { Flow_ast.Identifier.name = token; _ }) ))
             )
           when this#covers_target prop_loc ->
@@ -399,7 +399,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
     method! jsx_attribute_value value =
       let open Flow_ast.JSX.Attribute in
       match value with
-      | Literal ((loc, lit_type), Flow_ast.Literal.{ raw; _ }) when this#covers_target loc ->
+      | Literal ((loc, lit_type), { Flow_ast.Literal.raw; value = Flow_ast.Literal.String _; _ })
+        when this#covers_target loc ->
         this#find loc raw (Ac_literal { lit_type })
       | _ -> super#jsx_attribute_value value
 
@@ -413,7 +414,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       let open Flow_ast.Pattern.Object.Property in
       match key with
       (* TODO: we shouldn't have to fabricate a type here! *)
-      | Literal (loc, Flow_ast.Literal.{ raw; _ }) when this#covers_target loc ->
+      | Literal (loc, { Flow_ast.Literal.raw; value = Flow_ast.Literal.String _; _ })
+        when this#covers_target loc ->
         this#find loc raw (Ac_literal { lit_type = Type.(AnyT.at Untyped loc) })
       | _ -> super#pattern_object_property_key ?kind key
 
@@ -421,7 +423,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       let open Flow_ast.Expression.Object.Property in
       match key with
       | Identifier ((loc, _), { Flow_ast.Identifier.name; _ })
-      | Literal ((loc, _), Flow_ast.Literal.{ raw = name; _ })
+      | Literal ((loc, _), { Flow_ast.Literal.raw = name; value = Flow_ast.Literal.String _; _ })
         when this#covers_target loc ->
         this#find loc name (Ac_class_key { enclosing_class_t = this#get_enclosing_class })
       | PrivateName (loc, { Flow_ast.PrivateName.name; _ }) when this#covers_target loc ->
@@ -431,7 +433,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
     method! object_key key =
       let open Flow_ast.Expression.Object.Property in
       match key with
-      | Literal ((loc, lit_type), Flow_ast.Literal.{ raw; _ }) when this#covers_target loc ->
+      | Literal ((loc, lit_type), { Flow_ast.Literal.raw; value = Flow_ast.Literal.String _; _ })
+        when this#covers_target loc ->
         this#find loc raw (Ac_literal { lit_type })
       | _ -> super#object_key key
 
@@ -547,7 +550,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
     method! expression expr =
       let open Flow_ast.Expression in
       match expr with
-      | ((loc, lit_type), Literal Flow_ast.Literal.{ raw; _ }) when this#covers_target loc ->
+      | ((loc, lit_type), Literal { Flow_ast.Literal.raw; value = Flow_ast.Literal.String _; _ })
+        when this#covers_target loc ->
         this#find loc raw (Ac_literal { lit_type })
       | (((loc, _) as annot), Member member) ->
         (this#on_type_annot annot, Member (this#member_with_loc loc member))
@@ -598,7 +602,9 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
           {
             key =
               ( Identifier ((loc, _), Flow_ast.Identifier.{ name = token; _ })
-              | Literal ((loc, _), Flow_ast.Literal.{ raw = token; _ }) );
+              | Literal
+                  ((loc, _), { Flow_ast.Literal.raw = token; value = Flow_ast.Literal.String _; _ })
+                );
             _;
           }
         when this#covers_target loc ->
@@ -728,10 +734,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
     method! type_ t =
       let open Flow_ast.Type in
       match t with
-      | ( (loc, lit_type),
-          ( StringLiteral Flow_ast.StringLiteral.{ raw; _ }
-          | NumberLiteral Flow_ast.NumberLiteral.{ raw; _ } )
-        )
+      | ((loc, lit_type), StringLiteral { Flow_ast.StringLiteral.raw; _ })
         when this#covers_target loc ->
         this#find loc raw (Ac_literal { lit_type })
       | (((loc, _) as annot), IndexedAccess ia) ->

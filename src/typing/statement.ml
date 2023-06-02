@@ -4612,17 +4612,17 @@ module Make
   (* traverse a literal expression, return result type *)
   and literal cx loc { Ast.Literal.value; raw; comments } =
     let module L = Ast.Literal in
-    if Type_inference_hooks_js.dispatch_literal_hook cx loc then
-      let (_, lazy_hint) = Env.get_hint cx loc in
-      let hint = lazy_hint (mk_reason (RCustom "literal") loc) in
-      let error () = EmptyT.at loc |> with_trust bogus_trust in
-      let t = Type_hint.with_hint_result hint ~ok:Base.Fn.id ~error in
-      (t, { L.value = L.Null; raw; comments })
-    else
-      let make_trust = Context.trust_constructor cx in
-      let (t, value) =
-        match value with
-        | L.String s ->
+    let make_trust = Context.trust_constructor cx in
+    let (t, value) =
+      match value with
+      | L.String s ->
+        if Type_inference_hooks_js.dispatch_literal_hook cx loc then
+          let (_, lazy_hint) = Env.get_hint cx loc in
+          let hint = lazy_hint (mk_reason (RCustom "literal") loc) in
+          let error () = EmptyT.at loc |> with_trust bogus_trust in
+          let t = Type_hint.with_hint_result hint ~ok:Base.Fn.id ~error in
+          (t, L.String s)
+        else
           (* It's too expensive to track literal information for large strings.*)
           let max_literal_length = Context.max_literal_length cx in
           let (lit, r_desc) =
@@ -4633,36 +4633,36 @@ module Make
           in
           let t = DefT (mk_annot_reason r_desc loc, make_trust (), StrT lit) in
           (t, L.String s)
-        | L.Boolean b ->
-          let reason = mk_annot_reason RBoolean loc in
-          let t = DefT (reason, make_trust (), BoolT (Some b)) in
-          (t, L.Boolean b)
-        | L.Null ->
-          let t = NullT.at loc |> with_trust make_trust in
-          (t, L.Null)
-        | L.Number f ->
-          let reason = mk_annot_reason RNumber loc in
-          let t = DefT (reason, make_trust (), NumT (Literal (None, (f, raw)))) in
-          (t, L.Number f)
-        | L.BigInt n ->
-          let reason = mk_annot_reason RBigInt loc in
-          let t = DefT (reason, make_trust (), BigIntT (Literal (None, (n, raw)))) in
-          (t, L.BigInt n)
-        | L.RegExp r ->
-          let t = Flow.get_builtin_type cx (mk_annot_reason RRegExp loc) (OrdinaryName "RegExp") in
-          (t, L.RegExp r)
-        | L.ModuleRef { L.string_value; require_out; prefix_len; legacy_interop } ->
-          let mref = Base.String.drop_prefix string_value prefix_len in
-          let module_t = Import_export.get_module_t cx (loc, mref) in
-          let require_t = Import_export.require cx ~legacy_interop loc mref module_t in
-          let reason = mk_reason (RCustom "module reference") loc in
-          let t = Flow.get_builtin_typeapp cx reason (OrdinaryName "$Flow$ModuleRef") [require_t] in
-          ( t,
-            L.ModuleRef
-              { L.string_value; require_out = (require_out, require_t); prefix_len; legacy_interop }
-          )
-      in
-      (t, { L.value; raw; comments })
+      | L.Boolean b ->
+        let reason = mk_annot_reason RBoolean loc in
+        let t = DefT (reason, make_trust (), BoolT (Some b)) in
+        (t, L.Boolean b)
+      | L.Null ->
+        let t = NullT.at loc |> with_trust make_trust in
+        (t, L.Null)
+      | L.Number f ->
+        let reason = mk_annot_reason RNumber loc in
+        let t = DefT (reason, make_trust (), NumT (Literal (None, (f, raw)))) in
+        (t, L.Number f)
+      | L.BigInt n ->
+        let reason = mk_annot_reason RBigInt loc in
+        let t = DefT (reason, make_trust (), BigIntT (Literal (None, (n, raw)))) in
+        (t, L.BigInt n)
+      | L.RegExp r ->
+        let t = Flow.get_builtin_type cx (mk_annot_reason RRegExp loc) (OrdinaryName "RegExp") in
+        (t, L.RegExp r)
+      | L.ModuleRef { L.string_value; require_out; prefix_len; legacy_interop } ->
+        let mref = Base.String.drop_prefix string_value prefix_len in
+        let module_t = Import_export.get_module_t cx (loc, mref) in
+        let require_t = Import_export.require cx ~legacy_interop loc mref module_t in
+        let reason = mk_reason (RCustom "module reference") loc in
+        let t = Flow.get_builtin_typeapp cx reason (OrdinaryName "$Flow$ModuleRef") [require_t] in
+        ( t,
+          L.ModuleRef
+            { L.string_value; require_out = (require_out, require_t); prefix_len; legacy_interop }
+        )
+    in
+    (t, { L.value; raw; comments })
 
   (* traverse a unary expression, return result type *)
   and unary cx ~cond loc =

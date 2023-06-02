@@ -459,6 +459,20 @@ let function_params_all_annotated
      || not (Signature_utils.This_finder.found_this_in_body_or_params body params)
      )
 
+let identifier_has_autocomplete ~autocomplete_hooks (loc, { Ast.Identifier.name; _ }) =
+  autocomplete_hooks.Env_api.With_ALoc.id_hook name loc
+
+let literal_has_autocomplete ~autocomplete_hooks loc lit =
+  match lit with
+  | { Flow_ast.Literal.value = Flow_ast.Literal.String _; _ } ->
+    autocomplete_hooks.Env_api.With_ALoc.literal_hook loc
+  | _ -> false
+
+let expression_has_autocomplete ~autocomplete_hooks = function
+  | (_, Ast.Expression.Identifier id) -> identifier_has_autocomplete ~autocomplete_hooks id
+  | (loc, Ast.Expression.Literal lit) -> literal_has_autocomplete ~autocomplete_hooks loc lit
+  | _ -> false
+
 let expression_is_definitely_synthesizable ~autocomplete_hooks =
   let rec synthesizable (loc, expr) =
     let func_is_synthesizable ~allow_unannotated_this fn =
@@ -540,9 +554,8 @@ let expression_is_definitely_synthesizable ~autocomplete_hooks =
       false
     (* TaggedTemplates are function calls! They are not automatically synthesizable *)
     | Ast.Expression.TaggedTemplate _ -> false
-    | Ast.Expression.Identifier (name_loc, { Ast.Identifier.name; _ }) ->
-      not (autocomplete_hooks.Env_api.With_ALoc.id_hook name name_loc)
-    | Ast.Expression.Literal _ -> not (autocomplete_hooks.Env_api.With_ALoc.literal_hook loc)
+    | Ast.Expression.Identifier id -> not (identifier_has_autocomplete ~autocomplete_hooks id)
+    | Ast.Expression.Literal lit -> not (literal_has_autocomplete ~autocomplete_hooks loc lit)
     | Ast.Expression.Assignment _
     | Ast.Expression.Binary _
     | Ast.Expression.Class _
@@ -562,12 +575,6 @@ let expression_is_definitely_synthesizable ~autocomplete_hooks =
       true
   in
   (fun e -> synthesizable e)
-
-let expression_has_autocomplete ~autocomplete_hooks = function
-  | (_, Ast.Expression.Identifier (loc, { Ast.Identifier.name; _ })) ->
-    autocomplete_hooks.Env_api.With_ALoc.id_hook name loc
-  | (loc, Ast.Expression.Literal _) -> autocomplete_hooks.Env_api.With_ALoc.literal_hook loc
-  | _ -> false
 
 let def_of_function ~tparams_map ~hints ~has_this_def ~function_loc ~statics ~arrow function_ =
   Function
@@ -2497,8 +2504,8 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
               | Opening.Attribute (_, { Attribute.name = _; value }) ->
                 Base.Option.value_map value ~default:false ~f:(fun value ->
                     match value with
-                    | Attribute.Literal (loc, _) ->
-                      autocomplete_hooks.Env_api.With_ALoc.literal_hook loc
+                    | Attribute.Literal (loc, lit) ->
+                      literal_has_autocomplete ~autocomplete_hooks loc lit
                     | Attribute.ExpressionContainer
                         (_, { Ast.JSX.ExpressionContainer.expression; comments = _ }) ->
                       (match expression with
