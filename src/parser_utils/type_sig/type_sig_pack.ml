@@ -335,6 +335,19 @@ and pack_local_binding cx = function
         statics
     in
     FunBinding { id_loc; name; async; generator; fn_loc; def; statics }
+  | P.ComponentBinding { id_loc; name; fn_loc; def; statics } ->
+    let id_loc = pack_loc id_loc in
+    let fn_loc = pack_loc fn_loc in
+    let def = pack_component cx (Lazy.force def) in
+    let statics =
+      SMap.map
+        (fun (id_loc, t) ->
+          let id_loc = pack_loc id_loc in
+          let t = pack_parsed cx t in
+          (id_loc, t))
+        statics
+    in
+    ComponentBinding { id_loc; name; fn_loc; def; statics }
   | P.DeclareFunBinding { name; defs_rev } ->
     let ((id_loc, fn_loc, def), tail) =
       Nel.rev_map
@@ -486,6 +499,8 @@ and pack_tparams cx tparams = map_tparams pack_loc (pack_parsed cx) tparams
 and pack_annot cx t = map_annot pack_loc (pack_parsed cx) t
 
 and pack_fun cx def = map_fun_sig pack_loc (pack_parsed cx) def
+
+and pack_component cx def = map_component_sig pack_loc (pack_parsed cx) def
 
 and pack_class cx def = map_class_sig pack_loc (pack_parsed cx) def
 

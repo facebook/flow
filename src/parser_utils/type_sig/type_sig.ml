@@ -120,6 +120,27 @@ type ('loc, 'a) fun_sig =
     }
 [@@deriving iter, map, show { with_path = false }]
 
+type ('loc, 'a) component_param =
+  | ComponentParam of {
+      name: string;
+      name_loc: 'loc;
+      t: 'a;
+    }
+[@@deriving iter, map, show { with_path = false }]
+
+type 'a component_rest_param = ComponentRestParam of { t: 'a }
+[@@deriving iter, map, show { with_path = false }]
+
+type ('loc, 'a) component_sig =
+  | ComponentSig of {
+      params_loc: 'loc;
+      tparams: ('loc, 'a) tparams;
+      params: ('loc, 'a) component_param list;
+      rest_param: 'a component_rest_param option;
+      renders: 'a;
+    }
+[@@deriving iter, map, show { with_path = false }]
+
 type 'a tuple_element =
   | TupleElement of {
       name: string option;
@@ -311,6 +332,13 @@ type ('loc, 'a) def =
       def: ('loc, 'a) fun_sig;
       tail: ('loc * 'loc * ('loc, 'a) fun_sig) list;
     }
+  | ComponentBinding of {
+      id_loc: 'loc;
+      name: string;
+      fn_loc: 'loc;
+      def: ('loc, 'a) component_sig;
+      statics: ('loc * 'a) smap;
+    }
   | Variable of {
       id_loc: 'loc;
       name: string;
@@ -339,6 +367,7 @@ let def_id_loc = function
   | DeclareClassBinding { id_loc; _ }
   | FunBinding { id_loc; _ }
   | DeclareFun { id_loc; _ }
+  | ComponentBinding { id_loc; _ }
   | Variable { id_loc; _ } ->
     id_loc
   | EnumBinding { id_loc; _ } -> id_loc
@@ -352,6 +381,7 @@ let def_name = function
   | DeclareClassBinding { name; _ }
   | FunBinding { name; _ }
   | DeclareFun { name; _ }
+  | ComponentBinding { name; _ }
   | Variable { name; _ } ->
     name
   | EnumBinding { name; _ } -> name

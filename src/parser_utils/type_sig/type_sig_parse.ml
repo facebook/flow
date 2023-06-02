@@ -214,6 +214,13 @@ and 'loc local_binding =
       name: string;
       defs_rev: ('loc loc_node * 'loc loc_node * ('loc loc_node, 'loc parsed) fun_sig Lazy.t) Nel.t;
     }
+  | ComponentBinding of {
+      id_loc: 'loc loc_node;
+      name: string;
+      fn_loc: 'loc loc_node;
+      def: ('loc loc_node, 'loc parsed) component_sig Lazy.t;
+      statics: ('loc loc_node * 'loc parsed) smap;
+    }
   | EnumBinding of {
       id_loc: 'loc loc_node;
       name: string;
@@ -523,6 +530,7 @@ module Scope = struct
     | ConstRefBinding _
     | FunBinding _
     | DeclareFunBinding _
+    | ComponentBinding _
     | ClassBinding _
     | DeclareClassBinding _
     | EnumBinding _ ->
@@ -718,6 +726,9 @@ module Scope = struct
       | ConstFunBinding fn ->
         let statics = SMap.add prop_name prop fn.statics in
         ConstFunBinding { fn with statics }
+      | ComponentBinding cp ->
+        let statics = SMap.add prop_name prop cp.statics in
+        ComponentBinding { cp with statics }
       | ConstRefBinding { ref = Ref { name = ref_name; scope; _ }; _ } ->
         assign_binding prop_name prop ref_name scope;
         def

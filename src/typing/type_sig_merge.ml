@@ -57,6 +57,7 @@ let def_reason = function
     Type.DescFormat.instance_reason (Reason.OrdinaryName name) id_loc
   | FunBinding { fn_loc; async; generator; _ } -> Reason.func_reason ~async ~generator fn_loc
   | DeclareFun { id_loc; _ } -> Reason.(mk_reason RFunctionType id_loc)
+  | ComponentBinding { fn_loc; _ } -> Reason.func_reason ~async:false ~generator:false fn_loc
   | Variable { id_loc; name; _ } -> Reason.(mk_reason (RIdentifier (OrdinaryName name)) id_loc)
   | DisabledEnumBinding { id_loc; name; _ }
   | EnumBinding { id_loc; name; _ } ->
@@ -1877,6 +1878,7 @@ let merge_def file reason = function
     merge_fun SMap.empty SMap.empty file reason def statics
   | DeclareFun { id_loc; fn_loc; name = _; def; tail } ->
     merge_declare_fun file ((id_loc, fn_loc, def), tail)
+  | ComponentBinding _ -> (* Unimplemented *) Type.AnyT.error reason
   | Variable { id_loc = _; name = _; def } -> merge SMap.empty SMap.empty file def
   | DisabledEnumBinding _ -> Type.AnyT.error reason
   | EnumBinding { id_loc; rep; members; has_unknown_members; name = _ } ->
