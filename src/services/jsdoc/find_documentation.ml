@@ -82,6 +82,14 @@ class documentation_searcher find =
       Base.Option.iter id ~f:(fun (id_loc, _) -> find id_loc comments);
       super#function_ loc func
 
+    method! component_declaration loc c =
+      let open Flow_ast.Statement.ComponentDeclaration in
+      let { comments; id = (id_loc, _); sig_loc; _ } = c in
+      find loc comments;
+      find sig_loc comments;
+      find id_loc comments;
+      super#component_declaration loc c
+
     method! declare_variable stmt_loc decl =
       let open Flow_ast.Statement.DeclareVariable in
       let { id = (loc, _); comments; _ } = decl in
