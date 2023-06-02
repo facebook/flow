@@ -26,7 +26,7 @@ module Eq_test = Eq_test.Make (Scope_api.With_ALoc) (Ssa_api.With_ALoc) (Env_api
 module Make
     (Destructuring : Destructuring_sig.S)
     (Func_stmt_config : Func_stmt_config_sig.S with module Types := Func_stmt_config_types.Types)
-    (Component_declaration_config : Component_sig_types.Config
+    (Component_declaration_config : Component_params_intf.Config
                                       with module Types := Component_sig_types
                                                            .DeclarationParamConfig)
     (Statement : Statement_sig.S) : Statement_sig.S = struct

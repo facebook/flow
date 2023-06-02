@@ -14,7 +14,7 @@ and Func_stmt_config_ : (Func_stmt_config_sig.S with module Types := Func_stmt_c
   Func_stmt_config.Make (Destructuring_) (Statement_)
 
 and Component_declaration_config_ :
-  (Component_sig_types.Config with module Types := Component_sig_types.DeclarationParamConfig) =
+  (Component_params_intf.Config with module Types := Component_sig_types.DeclarationParamConfig) =
   Component_declaration_config.Make (Destructuring_) (Statement_)
 
 (* Some versions of Ocaml raise a warning 60 (unused module) without the following *)

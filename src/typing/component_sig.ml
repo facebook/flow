@@ -53,7 +53,7 @@ class component_scope_visitor cx ~return_t =
 module Make
     (Statement : Statement_sig.S)
     (CT : Component_sig_types.ParamConfig.S)
-    (C : Component_sig_types.Config with module Types := CT)
+    (C : Component_params_intf.Config with module Types := CT)
     (F : Component_params.S with module Config_types := CT and module Config := C)
     (T : Component_sig_types.ComponentSig.S with module Config := CT and module Param := F.Types) :
   Component_sig_intf.S

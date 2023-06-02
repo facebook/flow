@@ -103,23 +103,6 @@ module DeclarationParamConfig = struct
       }
 end
 
-(* This module defines the interface for the module that converts from the parameter representation
- * to types. This module is used by the Params module to reconstruct the typed AST.
- *
- * See component_declaration_config.ml for an example implementation.
- *)
-module type Config = sig
-  module Types : ParamConfig.S
-
-  val eval_param : Context.t -> Types.param -> (ALoc.t * Type.t) Types.param_ast
-
-  val eval_rest : Context.t -> Types.rest -> (ALoc.t * Type.t) Types.rest_ast
-
-  val param_type_with_name : Types.param -> (ALoc.t * string * Type.t) option
-
-  val rest_type : Types.rest -> Type.t
-end
-
 (* A common interfaces for the full signature of a component, including the common
  * representation for parameters. Component_sig.Make, takes in a module
  * matching this signature as an input. The functions in that functor operate over this

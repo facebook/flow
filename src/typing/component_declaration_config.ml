@@ -13,7 +13,8 @@ open Reason
  * from the component_sig.DeclarationParamConfig representation, we turn those params into
  * types and define a function for extracting the config type of the component *)
 module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) :
-  Component_sig_types.Config with module Types = Component_sig_types.DeclarationParamConfig = struct
+  Component_params_intf.Config with module Types = Component_sig_types.DeclarationParamConfig =
+struct
   module Types = Component_sig_types.DeclarationParamConfig
   open Types
 

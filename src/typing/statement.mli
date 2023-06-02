@@ -8,5 +8,6 @@
 module Make
     (_ : Destructuring_sig.S)
     (_ : Func_stmt_config_sig.S with module Types := Func_stmt_config_types.Types)
-    (_ : Component_sig_types.Config with module Types := Component_sig_types.DeclarationParamConfig)
+    (_ : Component_params_intf.Config
+           with module Types := Component_sig_types.DeclarationParamConfig)
     (_ : Statement_sig.S) : Statement_sig.S

@@ -35,7 +35,7 @@ module type S = sig
        and module Types = Class_stmt_sig_types
 
   module Component_declaration_config :
-    Component_sig_types.Config with module Types := Component_sig_types.DeclarationParamConfig
+    Component_params_intf.Config with module Types := Component_sig_types.DeclarationParamConfig
 
   module Component_declaration_params :
     Component_params.S

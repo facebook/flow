@@ -14,7 +14,7 @@
 module type S = sig
   module Config_types : Component_sig_types.ParamConfig.S
 
-  module Config : Component_sig_types.Config with module Types := Config_types
+  module Config : Component_params_intf.Config with module Types := Config_types
 
   module Types : Component_sig_types.ParamTypes.S with module Config := Config_types
 
@@ -31,7 +31,7 @@ end
 
 module Make
     (CT : Component_sig_types.ParamConfig.S)
-    (C : Component_sig_types.Config with module Types := CT)
+    (C : Component_params_intf.Config with module Types := CT)
     (T : Component_sig_types.ParamTypes.S with module Config := CT) :
   S with module Config_types := CT and module Config := C and module Types = T = struct
   module Types = T

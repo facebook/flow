@@ -8,7 +8,7 @@
 module type S = sig
   module Config_types : Component_sig_types.ParamConfig.S
 
-  module Config : Component_sig_types.Config with module Types := Config_types
+  module Config : Component_params_intf.Config with module Types := Config_types
 
   module Param :
     Component_params.S with module Config_types := Config_types and module Config := Config
