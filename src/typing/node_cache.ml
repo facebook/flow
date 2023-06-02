@@ -37,6 +37,15 @@ type cache = {
     )
     ALocMap.t;
   tparams: ((ALoc.t, ALoc.t * Type.t) Ast.Type.TypeParam.t * Type.typeparam * Type.t) ALocMap.t;
+  component_sigs:
+    ( Component_sig_types.Component_declaration_sig_types.t
+    * ((ALoc.t, ALoc.t * Type.t) Ast.Statement.ComponentDeclaration.Params.t ->
+      (ALoc.t, ALoc.t * Type.t) Ast.Statement.Block.t ->
+      Type.t ->
+      (ALoc.t, ALoc.t * Type.t) Ast.Statement.ComponentDeclaration.t
+      )
+    )
+    ALocMap.t;
 }
 
 type t = cache ref
@@ -57,6 +66,7 @@ let mk_empty () =
       classes = ALocMap.empty;
       class_sigs = ALocMap.empty;
       tparams = ALocMap.empty;
+      component_sigs = ALocMap.empty;
     }
 
 let set_annotation cache ((loc, _) as anno) =
@@ -98,6 +108,9 @@ let set_class_sig cache loc class_ =
 let set_tparam cache (((loc, _), _, _) as param) =
   cache := { !cache with tparams = ALocMap.add loc param !cache.tparams }
 
+let set_component_sig cache loc c =
+  cache := { !cache with component_sigs = ALocMap.add loc c !cache.component_sigs }
+
 let get_annotation cache loc = ALocMap.find_opt loc !cache.annotations
 
 let get_expression cache loc = ALocMap.find_opt loc !cache.expressions
@@ -123,3 +136,5 @@ let get_class cache loc = ALocMap.find_opt loc !cache.classes
 let get_class_sig cache loc = ALocMap.find_opt loc !cache.class_sigs
 
 let get_tparam cache loc = ALocMap.find_opt loc !cache.tparams
+
+let get_component_sig cache loc = ALocMap.find_opt loc !cache.component_sigs

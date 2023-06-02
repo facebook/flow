@@ -7305,51 +7305,54 @@ module Make
       cparams
     in
     fun cx tparams_map reason component ->
+      let cache = Context.node_cache cx in
       let {
         Ast.Statement.ComponentDeclaration.tparams;
         return;
         body = (body_loc, _) as body;
         params;
         id;
-        sig_loc = _;
+        sig_loc;
         comments = _;
       } =
         component
       in
-      (* TODO(jmbrown) Add component node cache *)
-      let (tparams, tparams_map, tparams_ast) =
-        Anno.mk_type_param_declarations cx ~tparams_map tparams
-      in
-      let cparams = mk_params cx tparams_map params in
-      let (ret_loc, return_t, return_ast) =
-        match return with
-        | Ast.Type.Available (loc, annot) ->
-          let (((_, t), _) as return_ast) = Anno.convert cx tparams_map annot in
-          (loc, t, Ast.Type.Available (loc, return_ast))
-        | Ast.Type.Missing loc ->
-          let ret_reason = mk_reason RReturn loc in
-          let t = Flow.get_builtin_type cx ret_reason (OrdinaryName "React$Node") in
-          (loc, t, Ast.Type.Missing (loc, t))
-      in
-      ( {
-          Component_sig_types.Component_declaration_sig_types.reason;
-          tparams;
-          cparams;
-          body;
-          return_t;
-          ret_annot_loc = ret_loc;
-        },
-        fun params body component_type ->
-          let (id_loc, name) = id in
-          {
-            component with
-            Ast.Statement.ComponentDeclaration.id = ((id_loc, component_type), name);
-            params;
-            body = (body_loc, body);
-            return = return_ast;
-            tparams = tparams_ast;
-          }
-      )
+      match Node_cache.get_component_sig cache sig_loc with
+      | Some x -> x
+      | None ->
+        let (tparams, tparams_map, tparams_ast) =
+          Anno.mk_type_param_declarations cx ~tparams_map tparams
+        in
+        let cparams = mk_params cx tparams_map params in
+        let (ret_loc, return_t, return_ast) =
+          match return with
+          | Ast.Type.Available (loc, annot) ->
+            let (((_, t), _) as return_ast) = Anno.convert cx tparams_map annot in
+            (loc, t, Ast.Type.Available (loc, return_ast))
+          | Ast.Type.Missing loc ->
+            let ret_reason = mk_reason RReturn loc in
+            let t = Flow.get_builtin_type cx ret_reason (OrdinaryName "React$Node") in
+            (loc, t, Ast.Type.Missing (loc, t))
+        in
+        ( {
+            Component_sig_types.Component_declaration_sig_types.reason;
+            tparams;
+            cparams;
+            body;
+            return_t;
+            ret_annot_loc = ret_loc;
+          },
+          fun params body component_type ->
+            let (id_loc, name) = id in
+            {
+              component with
+              Ast.Statement.ComponentDeclaration.id = ((id_loc, component_type), name);
+              params;
+              body = (body_loc, body);
+              return = return_ast;
+              tparams = tparams_ast;
+            }
+        )
 
   and mk_func_sig =
     let predicate_function_kind cx predicate body _loc _params =

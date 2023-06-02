@@ -62,6 +62,17 @@ val set_class_sig :
 val set_tparam :
   t -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.TypeParam.t * Type.typeparam * Type.t -> unit
 
+val set_component_sig :
+  t ->
+  ALoc.t ->
+  Component_sig_types.Component_declaration_sig_types.t
+  * ((ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.ComponentDeclaration.Params.t ->
+    (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.Block.t ->
+    Type.t ->
+    (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.ComponentDeclaration.t
+    ) ->
+  unit
+
 val get_annotation : t -> ALoc.t -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.annotation option
 
 val get_expression : t -> ALoc.t -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t option
@@ -116,3 +127,15 @@ val get_tparam :
   t ->
   ALoc.t ->
   ((ALoc.t, ALoc.t * Type.t) Flow_ast.Type.TypeParam.t * Type.typeparam * Type.t) option
+
+val get_component_sig :
+  t ->
+  ALoc.t ->
+  ( Component_sig_types.Component_declaration_sig_types.t
+  * ((ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.ComponentDeclaration.Params.t ->
+    (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.Block.t ->
+    Type.t ->
+    (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.ComponentDeclaration.t
+    )
+  )
+  option

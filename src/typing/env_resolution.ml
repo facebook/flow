@@ -349,8 +349,12 @@ let resolve_annotated_function
 
 let resolve_annotated_component cx reason tparams_map component_loc component =
   let tparams_map = mk_tparams_map cx tparams_map in
-  (* TODO(jmbrown): Component sig cache *)
-  let (component_sig, _) = Statement.mk_component_sig cx tparams_map reason component in
+  let { Ast.Statement.ComponentDeclaration.sig_loc; _ } = component in
+  let ((component_sig, _) as sig_data) =
+    Statement.mk_component_sig cx tparams_map reason component
+  in
+  let cache = Context.node_cache cx in
+  Node_cache.set_component_sig cache sig_loc sig_data;
   (Statement.Component_declaration_sig.component_type cx component_loc component_sig, unknown_use)
 
 let rec binding_has_annot = function
