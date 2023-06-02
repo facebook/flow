@@ -6760,6 +6760,11 @@ struct
                   ObjKitT (use_op, reason, tool, Spread (options, state), OpenT tout)
                 )
               )
+            | ReactCheckComponentConfig pmap ->
+              Object.(
+                let tool = Resolve Next in
+                ObjKitT (use_op, reason, tool, Object.ReactCheckComponentConfig pmap, OpenT tout)
+              )
             | RestType (options, t) ->
               Object.(
                 Object.Rest.(

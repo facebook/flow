@@ -37,6 +37,7 @@ let string_of_destructor = function
   | OptionalIndexedAccessNonMaybeType _ -> "OptionalIndexedAccessNonMaybeType"
   | OptionalIndexedAccessResultType _ -> "OptionalIndexedAccessResultType"
   | ReadOnlyType -> "ReadOnly"
+  | ReactCheckComponentConfig _ -> "ReactCheckComponentConfig"
   | PartialType -> "PartialType"
   | RequiredType -> "RequiredType"
   | SpreadType _ -> "Spread"
@@ -657,6 +658,7 @@ and dump_use_t_ (depth, tvars) cx t =
       let object_map prop_type = spf "ObjectMap {prop_type: %s}" (kid prop_type) in
       let tool = function
         | ReadOnly -> "ReadOnly"
+        | Object.ReactCheckComponentConfig _ -> "ReactCheckComponentConfig"
         | Partial -> "Partial"
         | Required -> "Required"
         | ObjectRep -> "ObjectRep"
@@ -1871,6 +1873,9 @@ let dump_error_message =
           | RemoveOptionality -> "RemoveOptionality"
         )
     | ECannotMapInstance _ -> "ECannotMapInstance"
+    | EDuplicateComponentProp { first; _ } ->
+      spf "EDuplicateComponentProp (%s)" (dump_reason cx first)
+    | ERefComponentProp { loc; _ } -> spf "ERefComponentProp (%s)" (string_of_aloc loc)
 
 module Verbose = struct
   let verbose_in_file cx verbose =

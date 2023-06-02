@@ -1420,6 +1420,7 @@ module rec TypeTerm : sig
     | ReactElementConfigType
     | ReactElementRefType
     | ReactConfigType of t
+    | ReactCheckComponentConfig of Property.t NameUtils.Map.t
     | IdxUnwrapType
     | MappedType of {
         (* Homomorphic mapped types use an inline keyof: {[key in keyof O]: T} or a type parameter
@@ -2615,6 +2616,7 @@ and Object : sig
     | Spread of Spread.target * Spread.state
     | Rest of Rest.merge_mode * Rest.state
     | ReactConfig of ReactConfig.state
+    | ReactCheckComponentConfig of Property.t NameUtils.Map.t
     | ObjectRep
     | ObjectWiden of ident
     | ObjectMap of {
@@ -3097,6 +3099,7 @@ module AConstraint = struct
         RCustom
           Object.(
             match tool with
+            | ReactCheckComponentConfig _ -> "react check component config"
             | ReadOnly -> "readonly"
             | Partial -> "partial"
             | Required -> "required"

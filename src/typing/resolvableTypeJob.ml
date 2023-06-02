@@ -237,6 +237,8 @@ and collect_of_type ?log_unresolved cx acc = function
     acc
 
 and collect_of_destructor ?log_unresolved cx acc = function
+  | ReactCheckComponentConfig map ->
+    NameUtils.Map.fold (collect_of_property ?log_unresolved cx) map acc
   | NonMaybeType -> acc
   | PropertyType _ -> acc
   | ElementType { index_type; _ } -> collect_of_type ?log_unresolved cx acc index_type

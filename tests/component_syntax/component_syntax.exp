@@ -201,6 +201,171 @@ Component syntax is not supported [unsupported-syntax]
        ^
 
 
+Error ----------------------------------------------------------------------------------------------------- names.js:4:1
+
+Component syntax is not supported [unsupported-syntax]
+
+   4| component Foo(a: number, ...props: {a: number}) {} // Error
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- names.js:4:36
+
+Component property `a` [1] is re-declared [2] within a spread [3]. Property names may only be have one definition within
+a component [invalid-component-prop]
+
+   names.js:4:36
+   4| component Foo(a: number, ...props: {a: number}) {} // Error
+                                         ^^^^^^^^^^^ [3]
+
+References:
+   names.js:4:15
+   4| component Foo(a: number, ...props: {a: number}) {} // Error
+                    ^ [1]
+   names.js:4:37
+   4| component Foo(a: number, ...props: {a: number}) {} // Error
+                                          ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- names.js:8:1
+
+Component syntax is not supported [unsupported-syntax]
+
+   8| component Bar(a: number, ...props: BarT) {}; // Error
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- names.js:8:36
+
+Component property `a` [1] is re-declared [2] within a spread [3]. Property names may only be have one definition within
+a component [invalid-component-prop]
+
+   names.js:8:36
+   8| component Bar(a: number, ...props: BarT) {}; // Error
+                                         ^^^^ [3]
+
+References:
+   names.js:8:15
+   8| component Bar(a: number, ...props: BarT) {}; // Error
+                    ^ [1]
+   names.js:7:14
+   7| type BarT = {a: string} | {b: string}
+                   ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- names.js:11:1
+
+Component syntax is not supported [unsupported-syntax]
+
+   11| component Baz(a: number, ...props: {[string]: boolean}) {}; // Ok
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- names.js:12:9
+
+Cannot create `Baz` element because boolean [1] is incompatible with number [2] in property `a`. [incompatible-type]
+
+   names.js:12:9
+   12| <Baz a={false} />; // Error
+               ^^^^^ [1]
+
+References:
+   names.js:11:18
+   11| component Baz(a: number, ...props: {[string]: boolean}) {}; // Ok
+                        ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- names.js:15:1
+
+Component syntax is not supported [unsupported-syntax]
+
+   15| component Qux(a: number, ...props: {[string]: boolean, a: number}) {}; // Error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- names.js:15:36
+
+Component property `a` [1] is re-declared [2] within a spread [3]. Property names may only be have one definition within
+a component [invalid-component-prop]
+
+   names.js:15:36
+   15| component Qux(a: number, ...props: {[string]: boolean, a: number}) {}; // Error
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+
+References:
+   names.js:15:15
+   15| component Qux(a: number, ...props: {[string]: boolean, a: number}) {}; // Error
+                     ^ [1]
+   names.js:15:56
+   15| component Qux(a: number, ...props: {[string]: boolean, a: number}) {}; // Error
+                                                              ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- names.js:19:1
+
+Component syntax is not supported [unsupported-syntax]
+
+   19| component RunningOutOfMetasyntaxticVariables(a: number, ...props: {...ROMSVType}) {}; // Error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- names.js:19:67
+
+Component property `a` [1] is re-declared [2] within a spread [3]. Property names may only be have one definition within
+a component [invalid-component-prop]
+
+   names.js:19:67
+   19| component RunningOutOfMetasyntaxticVariables(a: number, ...props: {...ROMSVType}) {}; // Error
+                                                                         ^^^^^^^^^^^^^^ [3]
+
+References:
+   names.js:19:46
+   19| component RunningOutOfMetasyntaxticVariables(a: number, ...props: {...ROMSVType}) {}; // Error
+                                                    ^ [1]
+   names.js:18:22
+   18| type ROMSVType = {a: number}
+                            ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- names.js:22:1
+
+Component syntax is not supported [unsupported-syntax]
+
+   22| component NoRef(ref: string) {}; // Error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- names.js:22:17
+
+Component syntax does not support ref properties [1]. Use a `forwardRef`-style component definition instead
+[invalid-component-prop]
+
+   22| component NoRef(ref: string) {}; // Error
+                       ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- names.js:25:1
+
+Component syntax is not supported [unsupported-syntax]
+
+   25| component NoRefInSpread(...props: {ref: string}) {}; // Error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- names.js:25:35
+
+Components do not support ref properties [1] within spreads [2] [invalid-component-prop]
+
+   names.js:25:35
+   25| component NoRefInSpread(...props: {ref: string}) {}; // Error
+                                         ^^^^^^^^^^^^^ [2]
+
+References:
+   names.js:25:36
+   25| component NoRefInSpread(...props: {ref: string}) {}; // Error
+                                          ^^^ [1]
+
+
 Error -------------------------------------------------------------------------------------- nested_with_function.js:5:3
 
 Component syntax is not supported [unsupported-syntax]
@@ -537,4 +702,4 @@ Component syntax is not supported [unsupported-syntax]
 
 
 
-Found 37 errors
+Found 51 errors

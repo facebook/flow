@@ -207,6 +207,7 @@ class ['a] t =
       | ReactElementRefType
       | IdxUnwrapType ->
         acc
+      | ReactCheckComponentConfig map -> self#namemap (self#prop cx pole_TODO) acc map
       | ReactConfigType default_props -> self#type_ cx pole_TODO acc default_props
       | ElementType { index_type; _ } -> self#type_ cx pole_TODO acc index_type
       | OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessTypeIndex index_type } ->

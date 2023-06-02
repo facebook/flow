@@ -180,6 +180,12 @@ class context_optimizer ~no_lowers =
 
     method! destructor cx map_cx t =
       match t with
+      | ReactCheckComponentConfig map ->
+        let map' = NameUtils.Map.ident_map (self#prop cx map_cx) map in
+        if map' == map then
+          t
+        else
+          ReactCheckComponentConfig map'
       | NonMaybeType -> t
       | PropertyType _ -> t
       | ElementType { index_type } ->

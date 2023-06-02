@@ -177,6 +177,19 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           cx
     in
 
+    (**************************)
+    (* Check component config *)
+    (**************************)
+    let check_component_config =
+      let return trace cx use_op t tout = rec_flow_t cx trace ~use_op (t, tout) in
+      fun pmap cx trace ->
+        Slice_utils.check_component_config
+          ~add_output:(Flow_js_utils.add_output ~trace)
+          ~return:(return trace)
+          pmap
+          cx
+    in
+
     (***************)
     (* Object Rest *)
     (***************)
@@ -827,6 +840,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
       | Required -> object_required
       | ObjectRep -> object_rep
       | ObjectWiden id -> object_widen id
+      | Object.ReactCheckComponentConfig pmap -> check_component_config pmap
       | Object.ObjectMap { prop_type; mapped_type_flags; selected_keys_opt } ->
         object_map prop_type mapped_type_flags selected_keys_opt
     in

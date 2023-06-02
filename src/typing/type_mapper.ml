@@ -471,6 +471,12 @@ class virtual ['a] t =
 
     method destructor cx map_cx t =
       match t with
+      | ReactCheckComponentConfig map ->
+        let map' = NameUtils.Map.ident_map (Property.ident_map_t (self#type_ cx map_cx)) map in
+        if map' == map then
+          t
+        else
+          ReactCheckComponentConfig map'
       | NonMaybeType
       | PropertyType _
       | OptionalIndexedAccessResultType _

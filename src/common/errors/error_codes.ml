@@ -168,6 +168,7 @@ type error_code =
   | UnusedPromise
   | BigIntRShift3
   | BigIntNumCoerce
+  | InvalidComponentProp
 
 let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.UntypedTypeImport -> UntypedTypeImport
@@ -359,3 +360,4 @@ let string_of_code : error_code -> string = function
   | UnusedPromise -> "unused-promise"
   | BigIntRShift3 -> "bigint-unsigned-right-shift"
   | BigIntNumCoerce -> "bigint-num-coerce"
+  | InvalidComponentProp -> "invalid-component-prop"

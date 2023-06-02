@@ -379,6 +379,7 @@ end = struct
         | RequiredType
         | SpreadType _
         | RestType _
+        | ReactCheckComponentConfig _
         | ValuesType
         | TypeMap _
         | ReactElementPropsType
@@ -1493,11 +1494,11 @@ end = struct
     (************)
     (* EvalT    *)
     (************)
+    and spread_of_ty = function
+      | Ty.Obj { Ty.obj_props; _ } -> obj_props
+      | t -> [Ty.SpreadProp t]
+
     and spread =
-      let spread_of_ty = function
-        | Ty.Obj { Ty.obj_props; _ } -> obj_props
-        | t -> [Ty.SpreadProp t]
-      in
       let obj_exact target =
         match target with
         | Type.Object.Spread.(Annot { make_exact }) -> return make_exact
@@ -1568,6 +1569,23 @@ end = struct
           List.fold_left (fun acc t -> List.rev_append (spread_of_ty t) acc) [] tys_rev
         in
         mk_spread ty target prefix_tys head_slice
+
+    and check_component ~env ty pmap =
+      let%bind map_props =
+        NameUtils.Map.bindings pmap |> concat_fold_m (obj_prop_t ~env ?inherited:None ?source:None)
+      in
+      let obj_props = spread_of_ty ty @ map_props in
+      let obj_kind = Ty.ExactObj in
+      return
+        (Ty.Obj
+           {
+             Ty.obj_def_loc = None;
+             obj_props;
+             obj_kind;
+             obj_literal = None;
+             obj_frozen = false (* default *);
+           }
+        )
 
     and mapped_type ~env source property_type mapped_type_flags homomorphic =
       let%bind (key_tparam, prop) =
@@ -1691,6 +1709,7 @@ end = struct
         let%map ty' = type__ ~env t' in
         Ty.Utility (Ty.Diff (ty, ty'))
       | T.SpreadType (target, operands, head_slice) -> spread ~env ty target operands head_slice
+      | T.ReactCheckComponentConfig pmap -> check_component ~env ty pmap
       | T.ReactElementPropsType -> return (Ty.Utility (Ty.ReactElementPropsType ty))
       | T.ReactElementConfigType -> return (Ty.Utility (Ty.ReactElementConfigType ty))
       | T.ReactElementRefType -> return (Ty.Utility (Ty.ReactElementRefType ty))

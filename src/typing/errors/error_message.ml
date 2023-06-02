@@ -567,6 +567,15 @@ and 'loc t' =
       mapped_type_reason: 'loc virtual_reason;
       use_op: 'loc virtual_use_op;
     }
+  | EDuplicateComponentProp of {
+      spread: 'loc;
+      first: 'loc virtual_reason;
+      second: 'loc;
+    }
+  | ERefComponentProp of {
+      spread: 'loc option;
+      loc: 'loc;
+    }
 
 and 'loc null_write = {
   null_loc: 'loc;
@@ -1251,6 +1260,10 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         instance_reason = map_reason instance_reason;
         use_op = map_use_op use_op;
       }
+  | EDuplicateComponentProp { spread; first; second } ->
+    EDuplicateComponentProp { spread = f spread; first = map_reason first; second = f second }
+  | ERefComponentProp { spread; loc } ->
+    ERefComponentProp { spread = Base.Option.map ~f spread; loc = f loc }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1505,7 +1518,9 @@ let util_use_op_of_msg nope util = function
   | EInvalidBinaryArith _
   | EInvalidMappedType _
   | ETupleRequiredAfterOptional _
-  | ETypeGuardParamUnbound _ ->
+  | ETypeGuardParamUnbound _
+  | EDuplicateComponentProp _
+  | ERefComponentProp _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1657,7 +1672,10 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EFunPredInvalidIndex loc
   | EPredicateFuncTooShort { loc; _ }
   | ETSSyntax { loc; _ }
-  | EReferenceInAnnotation (loc, _, _) ->
+  | EReferenceInAnnotation (loc, _, _)
+  | EDuplicateComponentProp { spread = loc; _ }
+  | ERefComponentProp { spread = None; loc }
+  | ERefComponentProp { spread = Some loc; _ } ->
     Some loc
   | EImplicitInstantiationWidenedError { reason_call; _ } -> Some (loc_of_reason reason_call)
   | ELintSetting (loc, _) -> Some loc
@@ -4836,6 +4854,40 @@ let friendly_message_of_msg loc_of_aloc msg =
       ]
     in
     UseOp { loc = loc_of_reason mapped_type_reason; features; use_op }
+  | EDuplicateComponentProp { spread; first; second } ->
+    let features =
+      [
+        text "Component property ";
+        ref first;
+        text " is ";
+        ref (mk_reason (RCustom "re-declared") second);
+        text " within a ";
+        ref (mk_reason (RCustom "spread") spread);
+        text ". Property names may only be have one definition within a component";
+      ]
+    in
+    Normal { features }
+  | ERefComponentProp { spread = None; loc } ->
+    let features =
+      [
+        text "Component syntax does not support ";
+        ref (mk_reason (RCustom "ref properties") loc);
+        text ". Use a ";
+        code "forwardRef";
+        text "-style component definition instead";
+      ]
+    in
+    Normal { features }
+  | ERefComponentProp { spread = Some spread; loc } ->
+    let features =
+      [
+        text "Components do not support ";
+        ref (mk_reason (RCustom "ref properties") loc);
+        text " within ";
+        ref (mk_reason (RCustom "spreads") spread);
+      ]
+    in
+    Normal { features }
 
 let defered_in_speculation = function
   | EUntypedTypeImport _
@@ -5108,6 +5160,8 @@ let error_code_of_message err : error_code option =
   | EInvalidDeclaration _ -> Some InvalidDeclaration
   | EInvalidMappedType _ -> Some InvalidMappedType
   | ECannotMapInstance _ -> Some InvalidMappedType
+  | EDuplicateComponentProp _ -> Some InvalidComponentProp
+  | ERefComponentProp _ -> Some InvalidComponentProp
   | EMalformedCode _
   | EUnusedSuppression _
   | EImportInternalReactServerModule _ ->
