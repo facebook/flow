@@ -131,13 +131,13 @@ class searcher ~(is_legit_require : ALoc.t * Type.t -> bool) ~(covers_target : A
       if annot_covers_target source_annot then this#request (Get_def_request.Type source_annot);
       super#import_source source_annot lit
 
-    method! import_named_specifier ~import_kind decl =
+    method! import_named_specifier ~import_kind:_ decl =
       let open Flow_ast.Statement.ImportDeclaration in
       let {
         local;
         remote = (remote_annot, { Flow_ast.Identifier.name; _ });
         remote_name_def_loc;
-        kind;
+        kind = _;
       } =
         decl
       in
@@ -148,25 +148,20 @@ class searcher ~(is_legit_require : ALoc.t * Type.t -> bool) ~(covers_target : A
         match remote_name_def_loc with
         | Some l -> this#own_def l name
         | None ->
-          (match (kind, import_kind) with
-          | (Some ImportTypeof, _)
-          | (_, ImportTypeof) ->
-            this#request (Get_def_request.Typeof remote_annot)
-          | _ -> this#request (Get_def_request.Type remote_annot))
+          this#request (Get_def_request.Fail "unresolvable remote def_loc for import name specifier")
       );
       decl
 
     method! import_declaration loc decl =
       let open Flow_ast.Statement.ImportDeclaration in
-      let { import_kind; default; _ } = decl in
+      let { default; _ } = decl in
       Base.Option.iter default ~f:(fun { identifier = (annot, _); remote_default_name_def_loc } ->
           if annot_covers_target annot then
             match remote_default_name_def_loc with
             | Some l -> this#own_def l "default"
             | None ->
-              (match import_kind with
-              | ImportTypeof -> this#request (Get_def_request.Typeof annot)
-              | _ -> this#request (Get_def_request.Type annot))
+              this#request
+                (Get_def_request.Fail "unresolvable remote def_loc for import default specifier")
       );
       super#import_declaration loc decl
 

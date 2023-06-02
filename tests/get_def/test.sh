@@ -110,6 +110,16 @@ assert_ok "$FLOW" get-def imports.js 10 15 --strip-root --pretty
 printf "local reference points to namespaced import = "
 assert_ok "$FLOW" get-def imports.js 11 4 --strip-root --pretty
 
+# import type {DoesNotExist} from "./doesNotExist";
+#                ^
+printf "imports of non-existent module leads to error = "
+assert_ok "$FLOW" get-def imports.js 14 17 --strip-root --pretty
+
+# const x: DoesNotExist<number> = "foo";
+#                ^
+printf "use of imports of non-existent module points to import loc = "
+assert_ok "$FLOW" get-def imports.js 15 17 --strip-root --pretty
+
 # import * as test_lib from 'test_lib';
 #        ^
 printf "namespaced import points to declare module (remote name) = "
