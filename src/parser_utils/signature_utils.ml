@@ -16,6 +16,10 @@ module Procedure_decider = struct
 
       method! function_ _loc (expr : (Loc.t, Loc.t) Flow_ast.Function.t) = expr
 
+      method! component_declaration
+          _loc (c : (Loc.t, Loc.t) Flow_ast.Statement.ComponentDeclaration.t) =
+        c
+
       method! return _loc (stmt : (Loc.t, Loc.t) Flow_ast.Statement.Return.t) =
         let open Flow_ast.Statement.Return in
         let { argument; comments = _; return_out = _ } = stmt in

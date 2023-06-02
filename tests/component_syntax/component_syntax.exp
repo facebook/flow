@@ -1083,6 +1083,17 @@ Component syntax is not supported [unsupported-syntax]
        ^
 
 
+Error ----------------------------------------------------------------------------------------- procedure_decider.js:6:3
+
+Component syntax is not supported [unsupported-syntax]
+
+        v----------------
+   6|   component Foo() {
+   7|     return bar();
+   8|   }
+        ^
+
+
 Error ------------------------------------------------------------------------------------------------- signature.js:4:1
 
 Component syntax is not supported [unsupported-syntax]
@@ -1394,4 +1405,4 @@ Component syntax is not supported [unsupported-syntax]
 
 
 
-Found 106 errors
+Found 107 errors
