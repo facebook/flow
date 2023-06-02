@@ -673,13 +673,12 @@ module Scope = struct
           binding_opt
     )
 
-  let bind_component scope tbls id_loc name =
-    (* TODO(jmbrown): add typechecking for component syntax *)
-    let def = lazy (Annot (Any id_loc)) in
-    bind_local scope tbls name (LetConstBinding { id_loc; name; def })
+  let bind_component scope tbls id_loc fn_loc name def =
+    let statics = SMap.empty in
+    bind_local scope tbls name (ComponentBinding { id_loc; fn_loc; name; def; statics })
 
   let bind_component_decl scope tbls id_loc name =
-    (* TODO(jmbrown): add typechecking for component syntax *)
+    (* TODO(mvitousek): add typechecking for component syntax *)
     let def = lazy (Annot (Any id_loc)) in
     bind_local scope tbls name (LetConstBinding { id_loc; name; def })
 
@@ -2975,58 +2974,82 @@ and member =
   in
   (fun opts scope tbls obj loc prop -> loop ~toplevel_loc:loc opts scope tbls [(loc, prop)] obj)
 
+and param opts scope tbls xs loc patt default =
+  let module P = Ast.Pattern in
+  match patt with
+  | P.Identifier { P.Identifier.name = id; annot = t; optional } ->
+    let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
+    let loc = push_loc tbls id_loc in
+    let t =
+      annot_or_hint
+        ~err_loc:(Some loc)
+        ~sort:Expected_annotation_sort.ArrayPattern (*Seems wrong, matches original behavior*)
+        opts
+        scope
+        tbls
+        xs
+        t
+    in
+    let t =
+      if optional || default <> None then
+        Annot (Optional t)
+      else
+        t
+    in
+    (Some name, t)
+  | P.Object { P.Object.annot = t; properties = _; comments = _ }
+  | P.Array { P.Array.annot = t; elements = _; comments = _ } ->
+    let loc = push_loc tbls loc in
+    let t =
+      annot_or_hint
+        ~err_loc:(Some loc)
+        ~sort:Expected_annotation_sort.ArrayPattern
+        opts
+        scope
+        tbls
+        xs
+        t
+    in
+    let t =
+      if default <> None then
+        Annot (Optional t)
+      else
+        t
+    in
+    (None, t)
+  | P.Expression _ -> failwith "unexpected expression pattern"
+
+and rest_param opts scope tbls xs param_loc p =
+  let module P = Ast.Pattern in
+  match p with
+  | P.Identifier { P.Identifier.name = (id_loc, _) as id; annot = t; optional = _ } ->
+    let loc = push_loc tbls param_loc in
+    let name = Some (id_name id) in
+    let id_loc = push_loc tbls id_loc in
+    let t =
+      annot_or_hint
+        ~err_loc:(Some id_loc) (* TODO: this seems wrong but matches TF1.0 *)
+        ~sort:Expected_annotation_sort.ArrayPattern
+        opts
+        scope
+        tbls
+        xs
+        t
+    in
+    Some (name, loc, t)
+  | P.Object _
+  | P.Array _
+  | P.Expression _ ->
+    None
+
 and function_def_helper =
   let module F = Ast.Function in
-  let param opts scope tbls xs (loc, p) =
-    let module P = Ast.Pattern in
-    let { F.Param.argument = (_, patt); default } = p in
-    match patt with
-    | P.Identifier { P.Identifier.name = id; annot = t; optional } ->
-      let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
-      let loc = push_loc tbls id_loc in
-      let t =
-        annot_or_hint
-          ~err_loc:(Some loc)
-          ~sort:Expected_annotation_sort.ArrayPattern (*Seems wrong, matches original behavior*)
-          opts
-          scope
-          tbls
-          xs
-          t
-      in
-      let t =
-        if optional || default <> None then
-          Annot (Optional t)
-        else
-          t
-      in
-      FunParam { name = Some name; t }
-    | P.Object { P.Object.annot = t; properties = _; comments = _ }
-    | P.Array { P.Array.annot = t; elements = _; comments = _ } ->
-      let loc = push_loc tbls loc in
-      let t =
-        annot_or_hint
-          ~err_loc:(Some loc)
-          ~sort:Expected_annotation_sort.ArrayPattern
-          opts
-          scope
-          tbls
-          xs
-          t
-      in
-      let t =
-        if default <> None then
-          Annot (Optional t)
-        else
-          t
-      in
-      FunParam { name = None; t }
-    | P.Expression _ -> failwith "unexpected expression pattern"
-  in
   let rec params opts scope tbls xs acc = function
     | [] -> List.rev acc
     | p :: ps ->
-      let p = param opts scope tbls xs p in
+      let (loc, { F.Param.argument = (_, patt); default }) = p in
+      let (name, t) = param opts scope tbls xs loc patt default in
+      let p = FunParam { name; t } in
       params opts scope tbls xs (p :: acc) ps
   in
   let this_param opts scope tbls xs = function
@@ -3034,31 +3057,6 @@ and function_def_helper =
     | Some (_, { F.ThisParam.annot = (_, t); comments = _ }) ->
       let t = annot opts scope tbls xs t in
       Some t
-  in
-  let rest_param opts scope tbls xs = function
-    | None -> None
-    | Some (param_loc, { F.RestParam.argument = (_, p); comments = _ }) ->
-      let module P = Ast.Pattern in
-      (match p with
-      | P.Identifier { P.Identifier.name = (id_loc, _) as id; annot = t; optional = _ } ->
-        let loc = push_loc tbls param_loc in
-        let name = Some (id_name id) in
-        let id_loc = push_loc tbls id_loc in
-        let t =
-          annot_or_hint
-            ~err_loc:(Some id_loc) (* TODO: this seems wrong but matches TF1.0 *)
-            ~sort:Expected_annotation_sort.ArrayPattern
-            opts
-            scope
-            tbls
-            xs
-            t
-        in
-        Some (FunRestParam { name; loc; t })
-      | P.Object _
-      | P.Array _
-      | P.Expression _ ->
-        None)
     (* unexpected rest param pattern *)
   in
   let return opts scope tbls xs ~async ~generator ~constructor body ret =
@@ -3145,7 +3143,13 @@ and function_def_helper =
     let (xs, tparams) = tparams opts scope tbls xs tps in
     let this_param = this_param opts scope tbls xs this_ in
     let params = params opts scope tbls xs [] ps in
-    let rest_param = rest_param opts scope tbls xs rp in
+    let rest_param =
+      match rp with
+      | Some (param_loc, { F.RestParam.argument = (_, p); comments = _ }) ->
+        let rp = rest_param opts scope tbls xs param_loc p in
+        Base.Option.map ~f:(fun (name, loc, t) -> FunRestParam { name; loc; t }) rp
+      | None -> None
+    in
     let (return, type_guard_opt) =
       return opts scope tbls xs ~async ~generator ~constructor body r
     in
@@ -3164,6 +3168,59 @@ and function_def_helper =
 and function_def = function_def_helper ~constructor:false
 
 and constructor_def = function_def_helper ~constructor:true
+
+and component_def =
+  let module C = Ast.Statement.ComponentDeclaration in
+  let param opts scope tbls xs (loc, p) =
+    let { C.Param.name; local = (_, patt); default; _ } = p in
+    let (name, name_loc) =
+      match name with
+      | Some (C.Param.Identifier (loc, { Ast.Identifier.name; _ }))
+      | Some (C.Param.StringLiteral (loc, { Ast.StringLiteral.value = name; _ })) ->
+        (name, loc)
+      | None -> failwith "Missing name"
+    in
+    let name_loc = push_loc tbls name_loc in
+    let (_, t) = param opts scope tbls xs loc patt default in
+    ComponentParam { name; name_loc; t }
+  in
+  let rec params opts scope tbls xs acc = function
+    | [] -> List.rev acc
+    | p :: ps ->
+      let p = param opts scope tbls xs p in
+      params opts scope tbls xs (p :: acc) ps
+  in
+  let return opts scope tbls xs ret =
+    match ret with
+    | Ast.Type.Available (_, t) -> annot opts scope tbls xs t
+    | Ast.Type.Missing loc ->
+      let loc = push_loc tbls loc in
+      maybe_special_unqualified_generic opts scope tbls xs loc None loc "React$Node"
+  in
+  fun opts scope tbls f ->
+    let {
+      C.id = _;
+      tparams = tps;
+      params = (loc, { C.Params.params = ps; rest = rp; comments = _ });
+      body = _;
+      return = r;
+      sig_loc = _;
+      comments = _;
+    } =
+      f
+    in
+    let (xs, tparams) = tparams opts scope tbls SSet.empty tps in
+    let loc = push_loc tbls loc in
+    let params = params opts scope tbls xs [] ps in
+    let rest_param =
+      match rp with
+      | Some (param_loc, { C.RestParam.argument = (_, p); comments = _ }) ->
+        let rp = rest_param opts scope tbls xs param_loc p in
+        Base.Option.map ~f:(fun (_, _, t) -> ComponentRestParam { t }) rp
+      | None -> None
+    in
+    let renders = return opts scope tbls xs r in
+    ComponentSig { params_loc = loc; tparams; params; rest_param; renders }
 
 and predicate opts scope tbls pnames =
   let open Option.Let_syntax in
@@ -4018,20 +4075,18 @@ let function_decl opts scope tbls decl =
   let def = lazy (splice tbls id_loc (fun tbls -> function_def opts scope tbls SSet.empty decl)) in
   Scope.bind_function scope tbls id_loc sig_loc name ~async ~generator def
 
-let component_decl scope tbls decl =
+let component_decl opts scope tbls decl =
   let {
     Ast.Statement.ComponentDeclaration.id = (id_loc, { Ast.Identifier.name; comments = _ });
-    params = _;
-    tparams = _;
-    return = _;
-    body = _;
-    comments = _;
-    sig_loc = _;
+    sig_loc;
+    _;
   } =
     decl
   in
+  let sig_loc = push_loc tbls sig_loc in
   let id_loc = push_loc tbls id_loc in
-  Scope.bind_component scope tbls id_loc name
+  let def = lazy (splice tbls id_loc (fun tbls -> component_def opts scope tbls decl)) in
+  Scope.bind_component scope tbls id_loc sig_loc name def
 
 let declare_variable_decl opts scope tbls decl =
   let { Ast.Statement.DeclareVariable.id; annot = (_, t); kind; comments = _ } = decl in
@@ -4474,7 +4529,7 @@ let rec statement opts scope tbls (loc, stmt) =
   | S.InterfaceDeclaration decl -> interface_decl opts scope tbls decl ignore2
   | S.DeclareInterface decl -> interface_decl opts scope tbls decl ignore2
   | S.FunctionDeclaration decl -> function_decl opts scope tbls decl ignore2
-  | S.ComponentDeclaration decl -> component_decl scope tbls decl ignore2
+  | S.ComponentDeclaration decl -> component_decl opts scope tbls decl ignore2
   | S.DeclareFunction decl -> declare_function_decl opts scope tbls decl ignore2
   | S.ImportDeclaration decl ->
     (match scope with

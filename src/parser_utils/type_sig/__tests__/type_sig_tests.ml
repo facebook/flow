@@ -195,7 +195,13 @@ let make_test_formatter () =
 let parse_options ~module_ref_prefix ~module_ref_prefix_LEGACY_INTEROP =
   let open Parser_env in
   Some
-    { default_parse_options with enums = true; module_ref_prefix; module_ref_prefix_LEGACY_INTEROP }
+    {
+      default_parse_options with
+      components = true;
+      enums = true;
+      module_ref_prefix;
+      module_ref_prefix_LEGACY_INTEROP;
+    }
 
 let sig_options
     ?(suppress_types = SSet.empty)
@@ -5882,5 +5888,158 @@ export const {foo} = {foo: 3};
     Patterns:
     0. (PDef 0)
     1. PropP {id_loc = [3:14-17]; name = "foo"; def = 0}
+
+  |}]
+
+let%expect_test "component" =
+  print_sig {|
+    component Baz() {};
+    module.exports = { Baz };
+  |};
+  [%expect{|
+    CJSModule {type_exports = [||];
+      exports =
+      (Some (Value
+               ObjLit {loc = [2:17-24];
+                 frozen = false; proto = None;
+                 props =
+                 { "Baz" ->
+                   (ObjValueField ([2:19-22], (
+                      Ref LocalRef {ref_loc = [2:19-22]; index = 0}), Polarity.Neutral)) }}));
+      info = CJSModuleInfo {type_export_keys = [||]; type_stars = []; strict = true}}
+
+    Local defs:
+    0. ComponentBinding {id_loc = [1:10-13];
+         name = "Baz"; fn_loc = [1:0-15];
+         def =
+         ComponentSig {params_loc = [1:13-15];
+           tparams = Mono; params = [];
+           rest_param = None;
+           renders = (TyRef (Unqualified BuiltinRef {ref_loc = [1:15]; name = "React$Node"}))};
+         statics = {}}
+
+  |}]
+
+let%expect_test "component2" =
+  print_sig {|
+    type Rest = { x: number }
+    component Baz(x: string, ...props: Rest) {};
+    module.exports = { Baz };
+  |};
+  [%expect{|
+    CJSModule {type_exports = [||];
+      exports =
+      (Some (Value
+               ObjLit {loc = [3:17-24];
+                 frozen = false; proto = None;
+                 props =
+                 { "Baz" ->
+                   (ObjValueField ([3:19-22], (
+                      Ref LocalRef {ref_loc = [3:19-22]; index = 1}), Polarity.Neutral)) }}));
+      info = CJSModuleInfo {type_export_keys = [||]; type_stars = []; strict = true}}
+
+    Local defs:
+    0. TypeAlias {id_loc = [1:5-9]; name = "Rest";
+         tparams = Mono;
+         body =
+         (Annot
+            ObjAnnot {loc = [1:12-25];
+              obj_kind = InexactObj;
+              props =
+              { "x" -> (ObjAnnotField ([1:14-15], (Annot (Number [1:17-23])), Polarity.Neutral)) };
+              proto = ObjAnnotImplicitProto})}
+    1. ComponentBinding {id_loc = [2:10-13];
+         name = "Baz"; fn_loc = [2:0-40];
+         def =
+         ComponentSig {params_loc = [2:13-40];
+           tparams = Mono;
+           params =
+           [ComponentParam {name = "x"; name_loc = [2:14-15]; t = (Annot (String [2:17-23]))}];
+           rest_param =
+           (Some ComponentRestParam {
+                   t = (TyRef (Unqualified LocalRef {ref_loc = [2:35-39]; index = 0}))});
+           renders = (TyRef (Unqualified BuiltinRef {ref_loc = [2:40]; name = "React$Node"}))};
+         statics = {}}
+
+  |}]
+
+let%expect_test "component3" =
+  print_sig {|
+    component RadComp() { };
+    component Baz('lets go' as x: string, ...props: Rest): RadComp {};
+    Baz.static = "amazing";
+    module.exports = { Baz };
+  |};
+  [%expect{|
+    CJSModule {type_exports = [||];
+      exports =
+      (Some (Value
+               ObjLit {loc = [4:17-24];
+                 frozen = false; proto = None;
+                 props =
+                 { "Baz" ->
+                   (ObjValueField ([4:19-22], (
+                      Ref LocalRef {ref_loc = [4:19-22]; index = 1}), Polarity.Neutral)) }}));
+      info = CJSModuleInfo {type_export_keys = [||]; type_stars = []; strict = true}}
+
+    Local defs:
+    0. ComponentBinding {id_loc = [1:10-17];
+         name = "RadComp"; fn_loc = [1:0-19];
+         def =
+         ComponentSig {params_loc = [1:17-19];
+           tparams = Mono; params = [];
+           rest_param = None;
+           renders = (TyRef (Unqualified BuiltinRef {ref_loc = [1:19]; name = "React$Node"}))};
+         statics = {}}
+    1. ComponentBinding {id_loc = [2:10-13];
+         name = "Baz"; fn_loc = [2:0-62];
+         def =
+         ComponentSig {params_loc = [2:13-53];
+           tparams = Mono;
+           params =
+           [ComponentParam {name = "lets go"; name_loc = [2:14-23]; t = (Annot (String [2:30-36]))}
+             ];
+           rest_param =
+           (Some ComponentRestParam {
+                   t = (TyRef (Unqualified BuiltinRef {ref_loc = [2:48-52]; name = "Rest"}))});
+           renders = (TyRef (Unqualified LocalRef {ref_loc = [2:55-62]; index = 0}))};
+         statics = { "static" -> ([3:4-10], (Value (StringLit ([3:13-22], "amazing")))) }}
+
+  |}]
+
+let%expect_test "component4" =
+  print_sig {|
+    component Baz<T>(prop: T): T {};
+    module.exports = { Baz };
+  |};
+  [%expect{|
+    CJSModule {type_exports = [||];
+      exports =
+      (Some (Value
+               ObjLit {loc = [2:17-24];
+                 frozen = false; proto = None;
+                 props =
+                 { "Baz" ->
+                   (ObjValueField ([2:19-22], (
+                      Ref LocalRef {ref_loc = [2:19-22]; index = 0}), Polarity.Neutral)) }}));
+      info = CJSModuleInfo {type_export_keys = [||]; type_stars = []; strict = true}}
+
+    Local defs:
+    0. ComponentBinding {id_loc = [1:10-13];
+         name = "Baz"; fn_loc = [1:0-28];
+         def =
+         ComponentSig {params_loc = [1:16-25];
+           tparams =
+           (Poly ([1:13-16],
+              TParam {name_loc = [1:14-15];
+                name = "T"; polarity = Polarity.Neutral;
+                bound = None; default = None},
+              []));
+           params =
+           [ComponentParam {name = "prop";
+              name_loc = [1:17-21]; t = (Annot Bound {ref_loc = [1:23-24]; name = "T"})}
+             ];
+           rest_param = None; renders = (Annot Bound {ref_loc = [1:27-28]; name = "T"})};
+         statics = {}}
 
   |}]

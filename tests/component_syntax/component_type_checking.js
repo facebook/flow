@@ -1,7 +1,7 @@
 // Verifies that we treat destructuring correctly and can check the body
 // of a component
 component InlineParams(
-  foo: number, 
+  foo: number,
   'special-key' as bar: number,
   baz as qux: number,
   destructured as {a}: {a: number},
@@ -40,3 +40,5 @@ component ReactNodeDefaultReturn() {
   declare const node: React$Node;
   return node; // OK!
 }
+
+module.exports = { InlineParams, InlineWithRestParam, Defaults, ReactNodeDefaultReturn };

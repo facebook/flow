@@ -1692,6 +1692,60 @@ and merge_fun
   in
   merge_tparams_targs tps infer_tps file reason t tparams
 
+and merge_component
+    tps
+    infer_tps
+    file
+    reason
+    (ComponentSig { params_loc; tparams; params; rest_param; renders })
+    statics =
+  let t (tps, _) =
+    let open Type in
+    let pmap =
+      Base.List.fold
+        ~f:(fun acc param ->
+          let (Type_sig.ComponentParam { name; name_loc; t }) = param in
+          let t = merge tps infer_tps file t in
+          Type.Properties.add_field
+            (Reason.OrdinaryName name)
+            Polarity.Positive
+            (Some name_loc)
+            t
+            acc)
+        ~init:NameUtils.Map.empty
+        params
+    in
+    let param =
+      let config_reason = Reason.(mk_reason (RCustom "component config") params_loc) in
+      let rest_t =
+        match rest_param with
+        | None -> Obj_type.mk_exact_empty file.cx config_reason
+        | Some (Type_sig.ComponentRestParam { t }) -> merge tps infer_tps file t
+      in
+      EvalT
+        ( rest_t,
+          TypeDestructorT (unknown_use, config_reason, ReactCheckComponentConfig pmap),
+          Eval.generate_id ()
+        )
+    in
+    let params = [(None, param)] in
+    let return_t = merge tps infer_tps file renders in
+    let this_t = Type.implicit_mixed_this reason in
+    let this_status = Type.This_Function in
+    let funtype =
+      {
+        this_t = (this_t, this_status);
+        params;
+        rest_param = None;
+        return_t;
+        predicate = None;
+        def_reason = reason;
+      }
+    in
+    DefT (reason, trust, FunT (statics, funtype))
+  in
+  merge_tparams_targs tps infer_tps file reason t tparams
+
 and merge_targ file tps infer_tps = function
   | ExplicitArg t -> Type.ExplicitArg (merge tps infer_tps file t)
   | ImplicitArg loc ->
@@ -1878,7 +1932,9 @@ let merge_def file reason = function
     merge_fun SMap.empty SMap.empty file reason def statics
   | DeclareFun { id_loc; fn_loc; name = _; def; tail } ->
     merge_declare_fun file ((id_loc, fn_loc, def), tail)
-  | ComponentBinding _ -> (* Unimplemented *) Type.AnyT.error reason
+  | ComponentBinding { id_loc = _; name = _; fn_loc = _; def; statics } ->
+    let statics = merge_fun_statics SMap.empty SMap.empty file reason statics in
+    merge_component SMap.empty SMap.empty file reason def statics
   | Variable { id_loc = _; name = _; def } -> merge SMap.empty SMap.empty file def
   | DisabledEnumBinding _ -> Type.AnyT.error reason
   | EnumBinding { id_loc; rep; members; has_unknown_members; name = _ } ->
