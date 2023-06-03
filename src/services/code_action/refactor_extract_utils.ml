@@ -765,24 +765,26 @@ module VariableAnalysis = struct
         scope_info.Scope_api.scopes
         (Scope_api.DefMap.empty, SMap.empty)
     in
-    {
-      defs_with_scopes_of_local_uses =
-        IMap.fold
-          (fun _ scope acc ->
-            let { Scope_api.Scope.defs; _ } = scope in
-            SMap.fold
-              (fun _ def acc ->
-                if Scope_api.DefMap.mem def used_defs_within_extracted_statements then
-                  (def, scope) :: acc
-                else
-                  acc)
-              defs
-              acc)
-          scope_info.Scope_api.scopes
-          [];
-      vars_with_shadowed_local_reassignments =
-        shadowed_local_reassignments_within_extracted_statements |> SMap.elements |> List.rev;
-    }
+    let defs_with_scopes_of_local_uses =
+      IMap.fold
+        (fun _ scope acc ->
+          let { Scope_api.Scope.defs; _ } = scope in
+          SMap.fold
+            (fun _ def acc ->
+              if Scope_api.DefMap.mem def used_defs_within_extracted_statements then
+                Scope_api.DefMap.add def (def, scope) acc
+              else
+                acc)
+            defs
+            acc)
+        scope_info.Scope_api.scopes
+        Scope_api.DefMap.empty
+      |> Scope_api.DefMap.values
+    in
+    let vars_with_shadowed_local_reassignments =
+      shadowed_local_reassignments_within_extracted_statements |> SMap.elements |> List.rev
+    in
+    { defs_with_scopes_of_local_uses; vars_with_shadowed_local_reassignments }
 
   let undefined_variables_after_extraction
       ~scope_info ~defs_with_scopes_of_local_uses ~new_function_target_scope_loc ~extracted_loc =

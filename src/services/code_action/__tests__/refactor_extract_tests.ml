@@ -683,7 +683,7 @@ export default class {
             {multiline|
 function foo<A, B, C: B = B>(c: C) {
   function bar<D: C, E: D, F: D = E>(f: F, e: E, d: D): F {
-    const f_ = newFunction(c, f, e, f, d, e, f);
+    const f_ = newFunction(c, f, e, d);
     return f_;
   }
 }
@@ -691,10 +691,7 @@ function newFunction<B, C: B = B, D: C, E: D, F: D = E>(
   c: C,
   f: F,
   e: E,
-  f: F,
   d: D,
-  e: E,
-  f: F,
 ): F {
   console.log(c); // selected
   const f_ = f; // selected
@@ -725,17 +722,10 @@ function foo<A, B, C: B = B>(c: C) {
             {multiline|
 function foo<A, B, C: B = B>(c: C) {
   function bar<D: C, E: D, F: D = E>(f: F, e: E, d: D): F {
-    const f_ = newFunction(f, e, f, d, e, f);
+    const f_ = newFunction(f, e, d);
     return f_;
   }
-  function newFunction<D: C, E: D, F: D = E>(
-    f: F,
-    e: E,
-    f: F,
-    d: D,
-    e: E,
-    f: F,
-  ): F {
+  function newFunction<D: C, E: D, F: D = E>(f: F, e: E, d: D): F {
     console.log(c); // selected
     const f_ = f; // selected
     const e_ = e; // selected
