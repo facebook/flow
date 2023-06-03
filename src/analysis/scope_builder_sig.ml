@@ -69,6 +69,7 @@ module type S = sig
            fun_loc:L.t ->
            generator_return_loc:L.t option ->
            (L.t, L.t) Flow_ast.Function.Params.t ->
+           (L.t, L.t) Flow_ast.Function.ReturnAnnot.t ->
            (L.t, L.t) Flow_ast.Type.Predicate.t option ->
            (L.t, L.t) Flow_ast.Function.body ->
            unit

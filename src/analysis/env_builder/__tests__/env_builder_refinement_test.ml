@@ -4440,7 +4440,9 @@ let y = (z: typeof x): typeof x => 3;
           (6, 2) to (6, 3): (`x`)
         };
         (15, 30) to (15, 31) => {
-          (9, 0) to (9, 1): (`x`)
+          (2, 4) to (2, 5): (`x`),
+          (4, 2) to (4, 3): (`x`),
+          (6, 2) to (6, 3): (`x`)
         }] |}]
 
 let%expect_test "hoisted_global_refinement" =
@@ -6960,4 +6962,20 @@ let%expect_test "component_param_scoping" =
         };
         (5, 8) to (5, 9) => {
           Global y
+        }] |}]
+
+let%expect_test "type_guard_scoping" =
+  print_ssa_test {|
+  const x = 1;
+  function f(x: mixed): x is number {
+    return typeof x === "number";
+  }
+|};
+  [%expect{|
+      [
+        (3, 24) to (3, 25) => {
+          (3, 13) to (3, 14): (`x`)
+        };
+        (4, 18) to (4, 19) => {
+          (3, 13) to (3, 14): (`x`)
         }] |}]

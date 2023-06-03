@@ -451,7 +451,8 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         this#with_bindings ~lexical:true loc lexical_bindings (super#catch_clause loc) clause
 
       (* helper for function params and body *)
-      method private lambda ~is_arrow:_ ~fun_loc:_ ~generator_return_loc:_ params predicate body =
+      method private lambda
+          ~is_arrow:_ ~fun_loc:_ ~generator_return_loc:_ params return predicate body =
         let open Ast.Function in
         let body_loc =
           match body with
@@ -537,6 +538,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
                     run this#type_annotation annot)
                   ()
               | Ast.Type.Missing _ -> ());
+              run hoist#function_rest_param rest;
               (rest_loc, { RestParam.argument = argument'; comments })
           )
         in
@@ -545,11 +547,25 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             { Params.params = List.rev params_list_rev; this_; rest; comments = params_comments }
           )
         in
+        (* return *)
+        let () =
+          match return with
+          | ReturnAnnot.Missing _ -> ()
+          | ReturnAnnot.Available (_, (loc, _))
+          | ReturnAnnot.TypeGuard (loc, _) ->
+            this#with_bindings
+              loc
+              hoist#acc
+              (fun () ->
+                if with_types then (
+                  run this#function_params params_without_toplevel_annots;
+                  run this#function_return_annotation return
+                ))
+              ()
+        in
         (* Finally, visit the body in a scope that includes bindings for all params
            and hoisted body declarations. *)
         let bindings =
-          let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
-          run hoist#function_params params;
           run hoist#function_body_any body;
           hoist#acc
         in
@@ -759,9 +775,14 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             ~hoist_op:this#hoist_annotations
             tparams
             ~in_tparam_scope:(fun () ->
-              this#lambda ~is_arrow:false ~fun_loc:loc ~generator_return_loc params predicate body;
-              if with_types then
-                this#hoist_annotations (fun () -> ignore @@ this#function_return_annotation return)
+              this#lambda
+                ~is_arrow:false
+                ~fun_loc:loc
+                ~generator_return_loc
+                params
+                return
+                predicate
+                body
           )
         );
 
@@ -817,8 +838,14 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
                   id;
               (* This function is not hoisted, so we just traverse the signature *)
               this#scoped_type_params tparams ~in_tparam_scope:(fun () ->
-                  this#lambda ~is_arrow ~fun_loc:loc ~generator_return_loc params predicate body;
-                  if with_types then ignore @@ this#function_return_annotation return
+                  this#lambda
+                    ~is_arrow
+                    ~fun_loc:loc
+                    ~generator_return_loc
+                    params
+                    return
+                    predicate
+                    body
               ))
             ()
         );

@@ -3903,7 +3903,7 @@ module Make
         )
 
       (* We also havoc state when entering functions and exiting calls. *)
-      method! lambda ~is_arrow ~fun_loc ~generator_return_loc params predicate body =
+      method! lambda ~is_arrow ~fun_loc ~generator_return_loc params return_ predicate body =
         this#expecting_abrupt_completions (fun () ->
             let env = this#env in
             this#run
@@ -3983,6 +3983,7 @@ module Make
                             ~fun_loc
                             ~generator_return_loc
                             params
+                            return_
                             predicate
                             body;
 
@@ -5760,7 +5761,7 @@ module Make
         this#visit_function_or_component_param_pattern patt;
         patt
 
-      method! lambda ~is_arrow ~fun_loc ~generator_return_loc params predicate body =
+      method! lambda ~is_arrow ~fun_loc ~generator_return_loc params return predicate body =
         let loc =
           let open Ast.Function in
           match body with
@@ -5781,7 +5782,7 @@ module Make
           try ignore (Context.exhaustive_check cx loc : _ * _) with
           | Not_found -> Context.add_exhaustive_check cx loc ([], false)
         end;
-        super#lambda ~is_arrow ~fun_loc ~generator_return_loc params predicate body
+        super#lambda ~is_arrow ~fun_loc ~generator_return_loc params return predicate body
     end
 
   let program_with_scope cx ?(lib = false) ?(exclude_syms = NameUtils.Set.empty) program =
