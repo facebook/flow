@@ -66,16 +66,17 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- enum.js:6:25
 
-number literal `2` [1] is incompatible with literal union [2]. [incompatible-type]
+Invalid check of number literal `2` against `Binary` [1] because number literal `2` [2] is incompatible with literal
+union [1]. [incompatible-type]
 
    enum.js:6:25
    6|   } else if (binary === 2) { // oops
-                              ^ [1]
+                              ^ [2]
 
 References:
    enum.js:3:34
    3| function stringifyBinary(binary: Binary): string {
-                                       ^^^^^^ [2]
+                                       ^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- generics.js:3:19

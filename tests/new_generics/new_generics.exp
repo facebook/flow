@@ -505,44 +505,50 @@ References:
 
 Error --------------------------------------------------------------------------------- detect_literal_subtypes.js:15:13
 
-string literal `b` [1] is incompatible with string literal `a` [2]. [incompatible-type]
+Invalid check of string literal `b` against string literal `a` [1] because string literal `b` [2] is incompatible with
+string literal `a` [1]. [incompatible-type]
 
    detect_literal_subtypes.js:15:13
    15|   if (a === 'b'){ } // error 'b' not compatible with 'a'
-                   ^^^ [1]
+                   ^^^ [2]
 
 References:
    detect_literal_subtypes.js:14:16
    14| function a1<A: 'a'>(a: A): void {
-                      ^^^ [2]
+                      ^^^ [1]
 
 
 Error --------------------------------------------------------------------------------- detect_literal_subtypes.js:19:13
 
-string literal `b` [1] is incompatible with string literal `a` [2]. [incompatible-type]
+Invalid check of string literal `b` against string literal `a` [1] because string literal `b` [2] is incompatible with
+string literal `a` [1]. [incompatible-type]
 
    detect_literal_subtypes.js:19:13
    19|   if (b === 'b'){ } // error 'b' not compatible with 'a'
-                   ^^^ [1]
+                   ^^^ [2]
 
 References:
    detect_literal_subtypes.js:18:16
    18| function b1<A: 'a', B: A>(b: B): void {
-                      ^^^ [2]
+                      ^^^ [1]
 
 
 Error --------------------------------------------------------------------------------- detect_literal_subtypes.js:37:10
 
-Property `r` is missing in object type [1]. [prop-missing]
+Invalid check of string literal `r` against key set [1] because property `r` is missing in object type [2].
+[prop-missing]
 
    detect_literal_subtypes.js:37:10
    37|     case 'r': // error
                 ^^^
 
 References:
+   detect_literal_subtypes.js:31:21
+   31| function c<X: T>(x: $Keys<X>) {
+                           ^^^^^^^^ [1]
    detect_literal_subtypes.js:31:27
    31| function c<X: T>(x: $Keys<X>) {
-                                 ^ [1]
+                                 ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- exact.js:6:4

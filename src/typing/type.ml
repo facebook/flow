@@ -364,9 +364,9 @@ module rec TypeTerm : sig
         lhs: 'loc virtual_reason;
         prop: 'loc virtual_reason;
       }
-    | SwitchCheck of {
-        case_test: 'loc virtual_reason;
-        switch_discriminant: 'loc virtual_reason;
+    | RefinementCheck of {
+        test: 'loc virtual_reason;
+        discriminant: 'loc virtual_reason;
       }
     | MatchingProp of {
         op: 'loc virtual_reason;
@@ -3548,7 +3548,7 @@ let aloc_of_root_use_op : root_use_op -> ALoc.t = function
   | TypeApplication { type' = op }
   | SetProperty { value = op; _ }
   | UpdateProperty { lhs = op; _ }
-  | SwitchCheck { case_test = op; _ }
+  | RefinementCheck { test = op; _ }
   | MatchingProp { op; _ }
   | TypeGuardIncompatibility { guard_type = op; _ } ->
     loc_of_reason op
@@ -3686,7 +3686,7 @@ let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
   | TypeApplication _ -> "TypeApplication"
   | SetProperty _ -> "SetProperty"
   | UpdateProperty _ -> "UpdateProperty"
-  | SwitchCheck _ -> "SwitchCheck"
+  | RefinementCheck _ -> "RefinementCheck"
   | MatchingProp _ -> "MatchingProp"
   | EvalMappedType _ -> "EvalMappedType"
   | TypeGuardIncompatibility _ -> "TypeGuardIncompatibility"

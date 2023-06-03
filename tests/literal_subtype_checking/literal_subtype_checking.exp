@@ -1,29 +1,31 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:7:8
 
-string literal `bar` [1] is incompatible with string literal `foo` [2]. [incompatible-type]
+Invalid check of string literal `bar` against `Literal` [1] because string literal `bar` [2] is incompatible with string
+literal `foo` [1]. [incompatible-type]
 
    test.js:7:8
    7|   case 'bar': // Error
-             ^^^^^ [1]
+             ^^^^^ [2]
 
 References:
    test.js:2:16
    2| declare var x: Literal;
-                     ^^^^^^^ [2]
+                     ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:8:8
 
-number literal `1` [1] is incompatible with string literal `foo` [2]. [incompatible-type]
+Invalid check of number literal `1` against `Literal` [1] because number literal `1` [2] is incompatible with string
+literal `foo` [1]. [incompatible-type]
 
    test.js:8:8
    8|   case 1: // Error
-             ^ [1]
+             ^ [2]
 
 References:
    test.js:2:16
    2| declare var x: Literal;
-                     ^^^^^^^ [2]
+                     ^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:14:8
@@ -64,30 +66,32 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:20:11
 
-string literal `bar` [1] is incompatible with string literal `foo` [2]. [incompatible-type]
+Invalid check of string literal `bar` against `Literal` [1] because string literal `bar` [2] is incompatible with string
+literal `foo` [1]. [incompatible-type]
 
    test.js:20:11
    20| if (x === 'bar') {} // Error
-                 ^^^^^ [1]
+                 ^^^^^ [2]
 
 References:
    test.js:2:16
     2| declare var x: Literal;
-                      ^^^^^^^ [2]
+                      ^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:21:11
 
-number literal `1` [1] is incompatible with string literal `foo` [2]. [incompatible-type]
+Invalid check of number literal `1` against `Literal` [1] because number literal `1` [2] is incompatible with string
+literal `foo` [1]. [incompatible-type]
 
    test.js:21:11
    21| if (x === 1) {} // Error
-                 ^ [1]
+                 ^ [2]
 
 References:
    test.js:2:16
     2| declare var x: Literal;
-                      ^^^^^^^ [2]
+                      ^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:24:13
@@ -128,16 +132,17 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:28:29
 
-string literal `bar` [1] is incompatible with string literal `foo` [2]. [incompatible-type]
+Invalid check of string literal `bar` against `Literal` [1] because string literal `bar` [2] is incompatible with string
+literal `foo` [1]. [incompatible-type]
 
    test.js:28:29
    28| if (true && (false || x === 'bar')) {} // Error
-                                   ^^^^^ [1]
+                                   ^^^^^ [2]
 
 References:
    test.js:2:16
     2| declare var x: Literal;
-                      ^^^^^^^ [2]
+                      ^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:29:31
@@ -160,16 +165,17 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:30:29
 
-number literal `1` [1] is incompatible with string literal `foo` [2]. [incompatible-type]
+Invalid check of number literal `1` against `Literal` [1] because number literal `1` [2] is incompatible with string
+literal `foo` [1]. [incompatible-type]
 
    test.js:30:29
    30| if (true && (false || x === 1)) {} // Error
-                                   ^ [1]
+                                   ^ [2]
 
 References:
    test.js:2:16
     2| declare var x: Literal;
-                      ^^^^^^^ [2]
+                      ^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:31:31
@@ -192,30 +198,38 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:39:10
 
-string literal `bar` [1] is incompatible with string literal `foo` [2]. [incompatible-type]
+Invalid check of string literal `bar` against nullable `Literal` [1] because string literal `bar` [2] is incompatible
+with string literal `foo` [3]. [incompatible-type]
 
    test.js:39:10
    39|     case 'bar': // Error
-                ^^^^^ [1]
+                ^^^^^ [2]
 
 References:
+   test.js:33:24
+   33| declare var nullableX: ?Literal;
+                              ^^^^^^^^ [1]
    test.js:33:25
    33| declare var nullableX: ?Literal;
-                               ^^^^^^^ [2]
+                               ^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:40:10
 
-number literal `1` [1] is incompatible with string literal `foo` [2]. [incompatible-type]
+Invalid check of number literal `1` against nullable `Literal` [1] because number literal `1` [2] is incompatible with
+string literal `foo` [3]. [incompatible-type]
 
    test.js:40:10
    40|     case 1: // Error
-                ^ [1]
+                ^ [2]
 
 References:
+   test.js:33:24
+   33| declare var nullableX: ?Literal;
+                              ^^^^^^^^ [1]
    test.js:33:25
    33| declare var nullableX: ?Literal;
-                               ^^^^^^^ [2]
+                               ^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:46:10
@@ -256,30 +270,38 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:54:21
 
-string literal `bar` [1] is incompatible with string literal `foo` [2]. [incompatible-type]
+Invalid check of string literal `bar` against nullable `Literal` [1] because string literal `bar` [2] is incompatible
+with string literal `foo` [3]. [incompatible-type]
 
    test.js:54:21
    54|   if (nullableX === 'bar') {} // Error
-                           ^^^^^ [1]
+                           ^^^^^ [2]
 
 References:
+   test.js:33:24
+   33| declare var nullableX: ?Literal;
+                              ^^^^^^^^ [1]
    test.js:33:25
    33| declare var nullableX: ?Literal;
-                               ^^^^^^^ [2]
+                               ^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:55:21
 
-number literal `1` [1] is incompatible with string literal `foo` [2]. [incompatible-type]
+Invalid check of number literal `1` against nullable `Literal` [1] because number literal `1` [2] is incompatible with
+string literal `foo` [3]. [incompatible-type]
 
    test.js:55:21
    55|   if (nullableX === 1) {} // Error
-                           ^ [1]
+                           ^ [2]
 
 References:
+   test.js:33:24
+   33| declare var nullableX: ?Literal;
+                              ^^^^^^^^ [1]
    test.js:33:25
    33| declare var nullableX: ?Literal;
-                               ^^^^^^^ [2]
+                               ^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:58:24
@@ -320,16 +342,20 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:64:39
 
-string literal `bar` [1] is incompatible with string literal `foo` [2]. [incompatible-type]
+Invalid check of string literal `bar` against nullable `Literal` [1] because string literal `bar` [2] is incompatible
+with string literal `foo` [3]. [incompatible-type]
 
    test.js:64:39
    64|   if (true && (false || nullableX === 'bar')) {} // Error
-                                             ^^^^^ [1]
+                                             ^^^^^ [2]
 
 References:
+   test.js:33:24
+   33| declare var nullableX: ?Literal;
+                              ^^^^^^^^ [1]
    test.js:33:25
    33| declare var nullableX: ?Literal;
-                               ^^^^^^^ [2]
+                               ^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:65:42
@@ -352,16 +378,20 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:66:39
 
-number literal `1` [1] is incompatible with string literal `foo` [2]. [incompatible-type]
+Invalid check of number literal `1` against nullable `Literal` [1] because number literal `1` [2] is incompatible with
+string literal `foo` [3]. [incompatible-type]
 
    test.js:66:39
    66|   if (true && (false || nullableX === 1)) {} // Error
-                                             ^ [1]
+                                             ^ [2]
 
 References:
+   test.js:33:24
+   33| declare var nullableX: ?Literal;
+                              ^^^^^^^^ [1]
    test.js:33:25
    33| declare var nullableX: ?Literal;
-                               ^^^^^^^ [2]
+                               ^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:67:42
@@ -384,58 +414,62 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:72:14
 
-boolean literal `false` [1] is incompatible with boolean literal `true` [2]. [incompatible-type]
+Invalid check of boolean literal `false` against boolean literal `true` [1] because boolean literal `false` [2] is
+incompatible with boolean literal `true` [1]. [incompatible-type]
 
    test.js:72:14
    72|   if (b1 === false) {} // error
-                    ^^^^^ [1]
+                    ^^^^^ [2]
 
 References:
    test.js:70:43
    70| function bool_literal_subtyping_check(b1: true, b2: false, b3: boolean) {
-                                                 ^^^^ [2]
+                                                 ^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:74:14
 
-boolean literal `false` [1] is incompatible with boolean literal `true` [2]. [incompatible-type]
+Invalid check of boolean literal `false` against boolean literal `true` [1] because boolean literal `false` [2] is
+incompatible with boolean literal `true` [1]. [incompatible-type]
 
    test.js:74:14
    74|   if (b1 !== false) {} // error
-                    ^^^^^ [1]
+                    ^^^^^ [2]
 
 References:
    test.js:70:43
    70| function bool_literal_subtyping_check(b1: true, b2: false, b3: boolean) {
-                                                 ^^^^ [2]
+                                                 ^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:76:14
 
-boolean literal `true` [1] is incompatible with boolean literal `false` [2]. [incompatible-type]
+Invalid check of boolean literal `true` against boolean literal `false` [1] because boolean literal `true` [2] is
+incompatible with boolean literal `false` [1]. [incompatible-type]
 
    test.js:76:14
    76|   if (b2 === true) {} // error
-                    ^^^^ [1]
+                    ^^^^ [2]
 
 References:
    test.js:70:53
    70| function bool_literal_subtyping_check(b1: true, b2: false, b3: boolean) {
-                                                           ^^^^^ [2]
+                                                           ^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:78:14
 
-boolean literal `true` [1] is incompatible with boolean literal `false` [2]. [incompatible-type]
+Invalid check of boolean literal `true` against boolean literal `false` [1] because boolean literal `true` [2] is
+incompatible with boolean literal `false` [1]. [incompatible-type]
 
    test.js:78:14
    78|   if (b2 !== true) {} // error
-                    ^^^^ [1]
+                    ^^^^ [2]
 
 References:
    test.js:70:53
    70| function bool_literal_subtyping_check(b1: true, b2: false, b3: boolean) {
-                                                           ^^^^^ [2]
+                                                           ^^^^^ [1]
 
 
 

@@ -570,12 +570,12 @@ let rec make_error_printable :
         root loc frames loc_reason [text "Cannot assign "; desc value; text " to "; desc prop]
       | Op (UpdateProperty { prop; lhs }) -> root loc frames lhs [text "Cannot update "; desc prop]
       | Op (DeleteProperty { prop; lhs }) -> root loc frames lhs [text "Cannot delete "; desc prop]
-      | Op (SwitchCheck { case_test; switch_discriminant }) ->
+      | Op (RefinementCheck { test; discriminant }) ->
         root
           loc
           frames
-          case_test
-          [text "Invalid check of "; desc case_test; text " against "; ref switch_discriminant]
+          test
+          [text "Invalid check of "; desc test; text " against "; ref discriminant]
       | Op (MatchingProp { op; obj; key; sentinel_reason }) ->
         let message =
           [

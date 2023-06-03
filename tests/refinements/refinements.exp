@@ -431,16 +431,20 @@ Cannot get `TDR.current` because property `current` is not readable. [cannot-rea
 
 Error ----------------------------------------------------------------------------------------- flow_to_general.js:14:11
 
-string literal `C` [1] is incompatible with literal union [2]. [incompatible-type]
+Invalid check of string literal `C` against optional nullable `T` [1] because string literal `C` [2] is incompatible
+with literal union [3]. [incompatible-type]
 
    flow_to_general.js:14:11
    14| if (p === 'C') { }
-                 ^^^ [1]
+                 ^^^ [2]
 
 References:
+   flow_to_general.js:11:22
+   11| declare var x: { p?: ?T };
+                            ^^ [1]
    flow_to_general.js:11:23
    11| declare var x: { p?: ?T };
-                             ^ [2]
+                             ^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------ fn.js:14:22
@@ -906,44 +910,53 @@ References:
 
 Error -------------------------------------------------------------------------------- inclusion_check_widening.js:36:11
 
-string literal `val` [1] is incompatible with null [2]. [incompatible-type]
+Invalid check of string literal `val` against null [1] because string literal `val` [2] is incompatible with null [1].
+[incompatible-type]
 
    inclusion_check_widening.js:36:11
    36| if (y === 'val') {} // error
-                 ^^^^^ [1]
+                 ^^^^^ [2]
 
 References:
    inclusion_check_widening.js:31:11
    31| const x = null;
-                 ^^^^ [2]
+                 ^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------- inclusion_check_widening.js:44:14
 
-Property `a` is missing in object type [1]. [prop-missing]
+Invalid check of string literal `a` against key set [1] because property `a` is missing in object type [2].
+[prop-missing]
 
    inclusion_check_widening.js:44:14
    44| if (key2 === 'a') {} // error (key2 does not include 'a')
                     ^^^
 
 References:
+   inclusion_check_widening.js:41:28
+   41| type V<T: {...}> = { key2: $Keys<T> };
+                                  ^^^^^^^^ [1]
    inclusion_check_widening.js:42:23
    42| declare var column: V<{...}>;
-                             ^^^^^ [1]
+                             ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------- inclusion_check_widening.js:59:18
 
-number literal `0` [1] is incompatible with `C` [2]. [incompatible-type]
+Invalid check of number literal `0` against nullable `C` [1] because number literal `0` [2] is incompatible with
+`C` [3]. [incompatible-type]
 
    inclusion_check_widening.js:59:18
    59|         prop !== 0 // error (0 incompatible with C)
-                        ^ [1]
+                        ^ [2]
 
 References:
+   inclusion_check_widening.js:50:22
+   50| type State = { prop: ?C };
+                            ^^ [1]
    inclusion_check_widening.js:50:23
    50| type State = { prop: ?C };
-                             ^ [2]
+                             ^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:13:12
@@ -3755,44 +3768,47 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- number.js:19:15
 
-number literal `0` [1] is incompatible with number literal `1` [2]. [incompatible-type]
+Invalid check of number literal `0` against number literal `1` [1] because number literal `0` [2] is incompatible with
+number literal `1` [1]. [incompatible-type]
 
    number.js:19:15
    19|     if (x === 0) {
-                     ^ [1]
+                     ^ [2]
 
 References:
    number.js:18:15
    18|   function(x: 1): 0 {
-                     ^ [2]
+                     ^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- number.js:26:15
 
-number literal `1` [1] is incompatible with number literal `0` [2]. [incompatible-type]
+Invalid check of number literal `1` against number literal `0` [1] because number literal `1` [2] is incompatible with
+number literal `0` [1]. [incompatible-type]
 
    number.js:26:15
    26|     if (x === 1) {
-                     ^ [1]
+                     ^ [2]
 
 References:
    number.js:25:15
    25|   function(x: 0): number {
-                     ^ [2]
+                     ^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- number.js:33:15
 
-number literal `1` [1] is incompatible with number literal `0` [2]. [incompatible-type]
+Invalid check of number literal `1` against number literal `0` [1] because number literal `1` [2] is incompatible with
+number literal `0` [1]. [incompatible-type]
 
    number.js:33:15
    33|     if (x !== 1) {
-                     ^ [1]
+                     ^ [2]
 
 References:
    number.js:32:15
    32|   function(x: 0) {
-                     ^ [2]
+                     ^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- number.js:49:8
@@ -4001,30 +4017,32 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- number.js:144:15
 
-number literal `-1` [1] is incompatible with number literal `0` [2]. [incompatible-type]
+Invalid check of number literal `-1` against number literal `0` [1] because number literal `-1` [2] is incompatible with
+number literal `0` [1]. [incompatible-type]
 
    number.js:144:15
    144|     if (x === -1) { // error
-                      ^^ [1]
+                      ^^ [2]
 
 References:
    number.js:143:15
    143|   function(x: 0): number {
-                      ^ [2]
+                      ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- number.js:151:15
 
-number literal `0` [1] is incompatible with number literal `-1` [2]. [incompatible-type]
+Invalid check of number literal `0` against number literal `-1` [1] because number literal `0` [2] is incompatible with
+number literal `-1` [1]. [incompatible-type]
 
    number.js:151:15
    151|     if (x === 0) { //error
-                      ^ [1]
+                      ^ [2]
 
 References:
    number.js:150:15
    150|   function(x: -1) {
-                      ^^ [2]
+                      ^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- number.js:168:12
@@ -4433,44 +4451,47 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- string.js:19:15
 
-string literal `foo` [1] is incompatible with string literal `bar` [2]. [incompatible-type]
+Invalid check of string literal `foo` against string literal `bar` [1] because string literal `foo` [2] is incompatible
+with string literal `bar` [1]. [incompatible-type]
 
    string.js:19:15
    19|     if (x === 'foo') {
-                     ^^^^^ [1]
+                     ^^^^^ [2]
 
 References:
    string.js:18:15
    18|   function(x: 'bar'): 'foo' {
-                     ^^^^^ [2]
+                     ^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- string.js:26:15
 
-string literal `bar` [1] is incompatible with string literal `foo` [2]. [incompatible-type]
+Invalid check of string literal `bar` against string literal `foo` [1] because string literal `bar` [2] is incompatible
+with string literal `foo` [1]. [incompatible-type]
 
    string.js:26:15
    26|     if (x === 'bar') {
-                     ^^^^^ [1]
+                     ^^^^^ [2]
 
 References:
    string.js:25:15
    25|   function(x: 'foo'): string {
-                     ^^^^^ [2]
+                     ^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- string.js:33:15
 
-string literal `bar` [1] is incompatible with string literal `foo` [2]. [incompatible-type]
+Invalid check of string literal `bar` against string literal `foo` [1] because string literal `bar` [2] is incompatible
+with string literal `foo` [1]. [incompatible-type]
 
    string.js:33:15
    33|     if (x !== 'bar') {
-                     ^^^^^ [1]
+                     ^^^^^ [2]
 
 References:
    string.js:32:15
    32|   function(x: 'foo') {
-                     ^^^^^ [2]
+                     ^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- string.js:49:8

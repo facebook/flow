@@ -135,10 +135,7 @@ let strict_equatable_error cond_context (l, r) =
       (match cond_context with
       | Some (SwitchTest { case_test_reason; switch_discriminant_reason }) ->
         let use_op =
-          Op
-            (SwitchCheck
-               { case_test = case_test_reason; switch_discriminant = switch_discriminant_reason }
-            )
+          Op (RefinementCheck { test = case_test_reason; discriminant = switch_discriminant_reason })
         in
         Error_message.EIncompatibleWithUseOp
           { reason_lower = reason_of_t l; reason_upper = reason_of_t r; use_op }
@@ -7829,7 +7826,7 @@ struct
               | InitField _ ->
                 true
               | Cast _
-              | SwitchCheck _
+              | RefinementCheck _
               | ClassExtendsCheck _
               | ClassMethodDefinition _
               | ClassImplementsCheck _
