@@ -667,10 +667,12 @@ export default class {
       let source =
         {multiline|
         function foo<A, B, C:B=B>(c: C) {
-          function bar<D:C, E:D, F:D=E>(f: F): F {
+          function bar<D:C, E:D, F:D=E>(f: F, e: E, d: D): F {
             console.log(c); // selected
-            const g = f; // selected
-            return g;
+            const f_ = f; // selected
+            const e_ = e; // selected
+            const d_ = d; // selected
+            return f_;
           }
         }
         |multiline}
@@ -680,28 +682,40 @@ export default class {
           ( "Extract to function in module scope",
             {multiline|
 function foo<A, B, C: B = B>(c: C) {
-  function bar<D: C, E: D, F: D = E>(f: F): F {
-    const g = newFunction(c, f);
-    return g;
+  function bar<D: C, E: D, F: D = E>(f: F, e: E, d: D): F {
+    const f_ = newFunction(c, f, e, f, d, e, f);
+    return f_;
   }
 }
-function newFunction<B, C: B = B, D: C, E: D, F: D = E>(c: C, f: F): F {
+function newFunction<B, C: B = B, D: C, E: D, F: D = E>(
+  c: C,
+  f: F,
+  e: E,
+  f: F,
+  d: D,
+  e: E,
+  f: F,
+): F {
   console.log(c); // selected
-  const g = f; // selected
-  return g;
+  const f_ = f; // selected
+  const e_ = e; // selected
+  const d_ = d; // selected
+  return f_;
 }
 |multiline}
           );
           ( "Extract to inner function in function 'bar'",
             {multiline|
 function foo<A, B, C: B = B>(c: C) {
-  function bar<D: C, E: D, F: D = E>(f: F): F {
-    const g = newFunction();
-    return g;
+  function bar<D: C, E: D, F: D = E>(f: F, e: E, d: D): F {
+    const f_ = newFunction();
+    return f_;
     function newFunction(): F {
       console.log(c); // selected
-      const g = f; // selected
-      return g;
+      const f_ = f; // selected
+      const e_ = e; // selected
+      const d_ = d; // selected
+      return f_;
     }
   }
 }
@@ -710,21 +724,30 @@ function foo<A, B, C: B = B>(c: C) {
           ( "Extract to inner function in function 'foo'",
             {multiline|
 function foo<A, B, C: B = B>(c: C) {
-  function bar<D: C, E: D, F: D = E>(f: F): F {
-    const g = newFunction(f);
-    return g;
+  function bar<D: C, E: D, F: D = E>(f: F, e: E, d: D): F {
+    const f_ = newFunction(f, e, f, d, e, f);
+    return f_;
   }
-  function newFunction<D: C, E: D, F: D = E>(f: F): F {
+  function newFunction<D: C, E: D, F: D = E>(
+    f: F,
+    e: E,
+    f: F,
+    d: D,
+    e: E,
+    f: F,
+  ): F {
     console.log(c); // selected
-    const g = f; // selected
-    return g;
+    const f_ = f; // selected
+    const e_ = e; // selected
+    const d_ = d; // selected
+    return f_;
   }
 }
 |multiline}
           );
         ]
       in
-      assert_refactored ~ctxt expected source (mk_loc (4, 0) (5, 50))
+      assert_refactored ~ctxt expected source (mk_loc (4, 0) (7, 50))
     );
     ( "very_nested_extract" >:: fun ctxt ->
       let source =
