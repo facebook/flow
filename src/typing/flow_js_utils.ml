@@ -1831,11 +1831,8 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
       let loc = loc_of_reason ureason in
       F.return cx trace ~use_op:unknown_use (F.reposition cx ~trace loc t)
     | None ->
-      let (reason_prop, prop_name) =
-        match propref with
-        | Named (r, x) -> (r, Some x)
-        | Computed t -> (reason_of_t t, None)
-      in
+      let reason_prop = reason_of_propref propref in
+      let prop_name = name_of_propref propref in
       let msg = Error_message.EPropNotReadable { reason_prop; prop_name; use_op } in
       add_output cx ~trace msg;
       F.error_type cx trace ureason

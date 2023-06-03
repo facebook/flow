@@ -309,11 +309,8 @@ struct
           ~f:(fun prop_tout -> rec_flow_t cx trace ~use_op:unknown_use (t, prop_tout))
           prop_tout
       | (None, _, _) ->
-        let (reason_prop, prop_name) =
-          match propref with
-          | Named (r, x) -> (r, Some x)
-          | Computed t -> (reason_of_t t, None)
-        in
+        let reason_prop = reason_of_propref propref in
+        let prop_name = name_of_propref propref in
         let msg = Error_message.EPropNotWritable { reason_prop; prop_name; use_op } in
         add_output cx ~trace msg
     end
@@ -328,11 +325,8 @@ struct
         in
         rec_flow cx trace (tin, UseT (use_op, t))
       | None ->
-        let (reason_prop, prop_name) =
-          match propref with
-          | Named (r, x) -> (r, Some x)
-          | Computed t -> (reason_of_t t, None)
-        in
+        let reason_prop = reason_of_propref propref in
+        let prop_name = name_of_propref propref in
         add_output cx ~trace (Error_message.EPropNotReadable { reason_prop; prop_name; use_op })
     end
 
@@ -3852,17 +3846,11 @@ struct
                  { reason_prop = prop; prop_name = Some (OrdinaryName "constructor"); use_op }
               )
         (* o.x = ... has the additional effect of o[_] = ... **)
-        | (DefT (_, _, ObjT { flags; _ }), SetPropT (use_op, _, prop, _, _, _, _)) when flags.frozen
-          ->
-          let (reason_prop, prop) =
-            match prop with
-            | Named (r, prop) -> (r, Some prop)
-            | Computed t -> (reason_of_t t, None)
-          in
-          add_output
-            cx
-            ~trace
-            (Error_message.EPropNotWritable { reason_prop; prop_name = prop; use_op })
+        | (DefT (_, _, ObjT { flags; _ }), SetPropT (use_op, _, propref, _, _, _, _))
+          when flags.frozen ->
+          let reason_prop = reason_of_propref propref in
+          let prop_name = name_of_propref propref in
+          add_output cx ~trace (Error_message.EPropNotWritable { reason_prop; prop_name; use_op })
         | (DefT (reason_obj, _, ObjT o), SetPropT (use_op, reason_op, propref, mode, _, tin, prop_t))
           ->
           write_obj_prop cx trace ~use_op ~mode o propref reason_obj reason_op tin prop_t
@@ -5285,10 +5273,7 @@ struct
             ~trace
             (Error_message.EIncompatibleProp
                {
-                 prop =
-                   (match propref with
-                   | Named (_, name) -> Some name
-                   | Computed _ -> None);
+                 prop = name_of_propref propref;
                  reason_prop = reason_of_propref propref;
                  reason_obj = reason_of_t l;
                  special = error_message_kind_of_lower l;

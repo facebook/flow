@@ -51,11 +51,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       unify_opt cx ?trace ~use_op lt ut
     (* directional cases *)
     | (lp, up) ->
-      let propref_error =
-        match propref with
-        | Named (_, x) -> Some x
-        | Computed _ -> None
-      in
+      let propref_error = name_of_propref propref in
       (match (Property.read_t lp, Property.read_t up) with
       | (Some lt, Some ut) -> flow_opt cx ?trace (lt, UseT (use_op, ut))
       | (None, Some _) when report_polarity ->

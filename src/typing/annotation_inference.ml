@@ -295,11 +295,8 @@ module rec ConsGen : S = struct
       match Property.read_t p with
       | Some t -> reposition cx (loc_of_reason ureason) t
       | None ->
-        let (reason_prop, prop_name) =
-          match propref with
-          | Named (r, x) -> (r, Some x)
-          | Computed t -> (reason_of_t t, None)
-        in
+        let reason_prop = reason_of_propref propref in
+        let prop_name = name_of_propref propref in
         let msg = Error_message.EPropNotReadable { reason_prop; prop_name; use_op } in
         Flow_js_utils.add_output cx msg;
         AnyT.error ureason
