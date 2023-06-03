@@ -107,3 +107,14 @@ import X from './lib.js';
 const ob : T = {
     f: X.method,
 };
+
+// Assignment does not produce method-unbinding errors (only 'cannot-write')
+{
+  class A {
+     m(): void {}
+  }
+  class B extends A {
+  }
+  declare const b: B;
+  b.m = () => {}; // ERROR: cannot-write
+}

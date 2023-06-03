@@ -50,20 +50,31 @@ type ArrNonexistant = Arr[boolean]; // Error
 (1: void['x']); // Error
 (1: null['x']); // Error
 
+type Bar = 'bar';
+
 type O = {
   [number]: boolean;
-  foo: string;
   bar: number;
 }
 (1: O['bar']); // OK
+(1: O[Bar]); // OK
 (true: O[number]); // OK
 ('xx': O['bar']); // Error
 
 declare class C {
   [number]: boolean;
-  foo: string;
   bar: number;
 }
 (1: C['bar']); // OK
+(1: C[Bar]); // Should be ok, currently errors
 (true: C[number]); // OK
 ('xx': C['bar']); // Error
+
+interface I {
+  [number]: boolean;
+  bar: number;
+}
+(1: I['bar']); // OK
+(1: I[Bar]); // Should be ok, currently errors
+(true: I[number]); // OK
+('xx': I['bar']); // ERROR

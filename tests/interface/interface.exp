@@ -49,12 +49,298 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- indexer.js:7:3
+Error --------------------------------------------------------------------------------------------------- indexer.js:8:3
 
 Multiple indexers are not supported. [unsupported-syntax]
 
-   7|   [k2: number]: number; // error: not supported (yet)
+   8|   [k2: number]: number; // ERROR
         ^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- indexer.js:19:4
+
+Cannot cast `x['foo']` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
+
+   indexer.js:19:4
+   19|   (x['foo']: boolean); // Should be ok, but currently isn't
+          ^^^^^^^^
+
+References:
+   indexer.js:13:13
+   13|   [number]: string;
+                   ^^^^^^ [1]
+   indexer.js:19:14
+   19|   (x['foo']: boolean); // Should be ok, but currently isn't
+                    ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- indexer.js:19:6
+
+Cannot get `x['foo']` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   indexer.js:19:6
+   19|   (x['foo']: boolean); // Should be ok, but currently isn't
+            ^^^^^ [1]
+
+References:
+   indexer.js:13:4
+   13|   [number]: string;
+          ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- indexer.js:20:5
+
+Cannot assign `true` to `x['foo']` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   indexer.js:20:5
+   20|   x['foo'] = true; // Should be ok, but currently isn't
+           ^^^^^ [1]
+
+References:
+   indexer.js:13:4
+   13|   [number]: string;
+          ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- indexer.js:20:14
+
+Cannot assign `true` to `x['foo']` because boolean [1] is incompatible with string [2]. [incompatible-type]
+
+   indexer.js:20:14
+   20|   x['foo'] = true; // Should be ok, but currently isn't
+                    ^^^^ [1]
+
+References:
+   indexer.js:13:13
+   13|   [number]: string;
+                   ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- indexer.js:40:5
+
+Cannot get `x['xxx']` because string [1] is incompatible with literal union [2]. [incompatible-type]
+
+   indexer.js:40:5
+   40|   x['xxx']; // ERROR
+           ^^^^^ [1]
+
+References:
+   indexer.js:27:4
+   27|   [Keys]: number | string;
+          ^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- indexer.js:45:3
+
+Cannot assign `1` to `x['a']` because an index signature declaring the expected key / value type is not writable.
+[cannot-write]
+
+   45|   x['a'] = 1; // ERROR
+         ^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- indexer.js:46:5
+
+Cannot get `x['xxx']` because string [1] is incompatible with literal union [2]. [incompatible-type]
+
+   indexer.js:46:5
+   46|   x['xxx']; // ERROR
+           ^^^^^ [1]
+
+References:
+   indexer.js:30:5
+   30|   +[Keys]: number | string;
+           ^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- indexer.js:50:3
+
+Cannot get `x['a']` because an index signature declaring the expected key / value type is not readable. [cannot-read]
+
+   50|   x['a']; // ERROR
+         ^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- indexer.js:52:5
+
+Cannot assign `1` to `x['xxx']` because string [1] is incompatible with literal union [2]. [incompatible-type]
+
+   indexer.js:52:5
+   52|   x['xxx'] = 1; // ERROR
+           ^^^^^ [1]
+
+References:
+   indexer.js:33:5
+   33|   -[Keys]: number;
+           ^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- indexer.js:58:3
+
+Cannot assign `1` to `x[s]` because an index signature declaring the expected key / value type is not writable.
+[cannot-write]
+
+   58|   x[s] = 1; // ERROR
+         ^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- indexer.js:59:5
+
+Cannot get `x[true]` because boolean [1] is incompatible with string [2]. [incompatible-type]
+
+   indexer.js:59:5
+   59|   x[true]; // ERROR
+           ^^^^ [1]
+
+References:
+   indexer.js:55:33
+   55|   declare const x: interface {+[string]: number};
+                                       ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- indexer.js:64:4
+
+Cannot cast `x` to `Invariant` because string [1] is incompatible with number [2] in the indexer property. This property
+is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-cast]
+
+   indexer.js:64:4
+   64|   (x: Invariant); // ERROR
+          ^
+
+References:
+   indexer.js:27:20
+   27|   [Keys]: number | string;
+                          ^^^^^^ [1]
+   indexer.js:63:29
+   63|   declare const x: {[Keys]: number};
+                                   ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- indexer.js:77:4
+
+Cannot cast `x` to interface type because string [1] is incompatible with number [2] in the indexer property.
+[incompatible-cast]
+
+   indexer.js:77:4
+   77|   (x: interface {[Keys]: number}); // ERROR
+          ^
+
+References:
+   indexer.js:76:38
+   76|   declare const x: {[Keys]: number | string};
+                                            ^^^^^^ [1]
+   indexer.js:77:26
+   77|   (x: interface {[Keys]: number}); // ERROR
+                                ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- indexer.js:78:4
+
+Cannot cast `x` to interface type because string [1] is incompatible with number [2] in the indexer property.
+[incompatible-cast]
+
+   indexer.js:78:4
+   78|   (x: interface {+[Keys]: number}); // ERROR
+          ^
+
+References:
+   indexer.js:76:38
+   76|   declare const x: {[Keys]: number | string};
+                                            ^^^^^^ [1]
+   indexer.js:78:27
+   78|   (x: interface {+[Keys]: number}); // ERROR
+                                 ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- indexer.js:97:4
+
+Cannot cast `x['foo']` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
+
+   indexer.js:97:4
+   97|   (x['foo']: string); // Should be ok, but currently isn't
+          ^^^^^^^^
+
+References:
+   indexer.js:90:13
+   90|   [number]: boolean;
+                   ^^^^^^^ [1]
+   indexer.js:97:14
+   97|   (x['foo']: string); // Should be ok, but currently isn't
+                    ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- indexer.js:97:6
+
+Cannot get `x['foo']` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   indexer.js:97:6
+   97|   (x['foo']: string); // Should be ok, but currently isn't
+            ^^^^^ [1]
+
+References:
+   indexer.js:90:4
+   90|   [number]: boolean;
+          ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- indexer.js:110:4
+
+Cannot cast `x['foo']` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
+
+   indexer.js:110:4
+   110|   (x['foo']: string); // Should be ok, but currently isn't
+           ^^^^^^^^
+
+References:
+   indexer.js:103:13
+   103|   [string]: boolean;
+                    ^^^^^^^ [1]
+   indexer.js:110:14
+   110|   (x['foo']: string); // Should be ok, but currently isn't
+                     ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- indexer.js:123:5
+
+An index signature declaring the expected key / value type is missing in `M` [1]. [incompatible-use]
+
+   indexer.js:123:5
+   123|   x['foo'](); // Should be ok, but currently isn't
+            ^^^^^
+
+References:
+   indexer.js:121:20
+   121|   declare const x: M;
+                           ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- indexer.js:132:5
+
+An index signature declaring the expected key / value type is missing in `M2` [1]. [incompatible-use]
+
+   indexer.js:132:5
+   132|   x['bar'](); // Should be ok, but currently isn't
+            ^^^^^
+
+References:
+   indexer.js:130:20
+   130|   declare const x: M2;
+                           ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- indexer.js:134:5
+
+An index signature declaring the expected key / value type is missing in `M2` [1]. [incompatible-use]
+
+   indexer.js:134:5
+   134|   x['foo'](); // Should be ok, but currently isn't
+            ^^^^^
+
+References:
+   indexer.js:130:20
+   130|   declare const x: M2;
+                           ^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- inline.js:5:6
@@ -928,7 +1214,7 @@ References:
 
 
 
-Found 58 errors
+Found 78 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
