@@ -28,7 +28,7 @@ References:
 
 Error --------------------------------------------------------------------------------- detect_literal_subtypes.js:37:12
 
-Property `r` is missing in `T` [1]. [prop-missing]
+Property `r` is missing in object type [1]. [prop-missing]
 
    detect_literal_subtypes.js:37:12
    37|       case 'r': // error

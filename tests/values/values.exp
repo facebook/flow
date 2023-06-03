@@ -284,7 +284,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_types.js:4:2
 
-Cannot cast `123` to `NoProps` because number [1] is incompatible with `NoProps` [2]. [incompatible-cast]
+Cannot cast `123` to `NoProps` because number [1] is incompatible with `$Values` [2]. [incompatible-cast]
 
    object_types.js:4:2
    4| (123: NoProps); // Error: There are no props.
@@ -298,7 +298,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_types.js:5:2
 
-Cannot cast `345` to `NoReadProps` because number [1] is incompatible with `NoReadProps` [2]. [incompatible-cast]
+Cannot cast `345` to `NoReadProps` because number [1] is incompatible with `$Values` [2]. [incompatible-cast]
 
    object_types.js:5:2
    5| (345: NoReadProps); // Error: There are no props which can be read.

@@ -48,8 +48,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- no_interfaces.js:18:10
 
-Flow cannot determine a type for `X` [1]. `B` [2] cannot be spread because interfaces do not track the own-ness of their
-properties. Try using an object type instead. [cannot-spread-interface]
+Flow cannot determine a type for object type [1]. `B` [2] cannot be spread because interfaces do not track the own-ness
+of their properties. Try using an object type instead. [cannot-spread-interface]
 
    no_interfaces.js:18:10
    18| type X = {...A, ...B}; // Error, can't spread interface
@@ -63,8 +63,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- no_interfaces.js:23:10
 
-Flow cannot determine a type for `Y` [1]. `A` [2] cannot be spread because interfaces do not track the own-ness of their
-properties. Try using an object type instead. [cannot-spread-interface]
+Flow cannot determine a type for object type [1]. `A` [2] cannot be spread because interfaces do not track the own-ness
+of their properties. Try using an object type instead. [cannot-spread-interface]
 
    no_interfaces.js:23:10
    23| type Y = {...A, foo: number}; // Error, can't spread interface
@@ -78,8 +78,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- no_interfaces.js:27:10
 
-Flow cannot determine a type for `Z` [1]. `A` [2] cannot be spread because interfaces do not track the own-ness of their
-properties. Try using an object type instead. [cannot-spread-interface]
+Flow cannot determine a type for object type [1]. `A` [2] cannot be spread because interfaces do not track the own-ness
+of their properties. Try using an object type instead. [cannot-spread-interface]
 
    no_interfaces.js:27:10
    27| type Z = {foo: number, ...A}; // Error, can't spread interface
@@ -112,7 +112,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:14:2
 
-Cannot cast object literal to `O1` because property `p` is missing in object literal [1] but exists in `O1` [2].
+Cannot cast object literal to `O1` because property `p` is missing in object literal [1] but exists in object type [2].
 [prop-missing]
 
    type.js:14:2
@@ -178,7 +178,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- type.js:30:16
 
-Inexact object type [1] is incompatible with exact `O3` [2]. [incompatible-exact]
+Inexact object type [1] is incompatible with exact object type [2]. [incompatible-exact]
 
    type.js:30:16
    30| type O3 = {|...{p:T}|}; ({p:x}: O3); // error: spread result is not exact
@@ -192,7 +192,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:36:2
 
-Cannot cast `o4` to object type because inexact `O4` [1] is incompatible with exact object type [2].
+Cannot cast `o4` to object type because inexact object type [1] is incompatible with exact object type [2].
 [incompatible-exact]
 
    type.js:36:2
@@ -210,7 +210,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:37:6
 
-Cannot cast object literal to `O4` because property `p` is missing in object type [1] but exists in `O4` [2].
+Cannot cast object literal to `O4` because property `p` is missing in object type [1] but exists in object type [2].
 [prop-missing]
 
    type.js:37:6
@@ -242,7 +242,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:47:2
 
-Cannot cast `nil` to `O5` because property `p` is missing in object type [1] but exists in `O5` [2]. [prop-missing]
+Cannot cast `nil` to `O5` because property `p` is missing in object type [1] but exists in object type [2].
+[prop-missing]
 
    type.js:47:2
    47| (nil: O5); // error: property `p` not found
@@ -276,7 +277,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:50:2
 
-Cannot cast object literal to `O5` because property `q` is missing in `O5` [1] but exists in object literal [2].
+Cannot cast object literal to `O5` because property `q` is missing in object type [1] but exists in object literal [2].
 [prop-missing]
 
    type.js:50:2
@@ -291,7 +292,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:56:6
 
-Cannot cast object literal to `O6` because property `p` is missing in object type [1] but exists in `O6` [2].
+Cannot cast object literal to `O6` because property `p` is missing in object type [1] but exists in object type [2].
 [prop-missing]
 
    type.js:56:6
@@ -323,7 +324,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- type.js:62:16
 
-Inexact object type [1] is incompatible with exact `O7` [2]. [incompatible-exact]
+Inexact object type [1] is incompatible with exact object type [2]. [incompatible-exact]
 
    type.js:62:16
    62| type O7 = {|...{p:T},...{|p:U|}|}; ({p:y}: O7);// error: spread result is not exact
@@ -373,8 +374,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- type.js:79:12
 
-Flow cannot determine a type for `O10` [1]. object type [2] is inexact, so it may contain `p` with a type that conflicts
-with `p`'s definition in object type [3]. Try making object type [2] exact. [cannot-spread-inexact]
+Flow cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `p` with a type that
+conflicts with `p`'s definition in object type [3]. Try making object type [2] exact. [cannot-spread-inexact]
 
    type.js:79:12
    79| type O10 = {...{|p:T|},...{q:U}}; // Error, p may exist in second object
@@ -391,8 +392,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- type.js:84:12
 
-Flow cannot determine a type for `O11` [1]. object type [2] is inexact, so it may contain `p` with a type that conflicts
-with `p`'s definition in object type [3]. Try making object type [2] exact. [cannot-spread-inexact]
+Flow cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `p` with a type that
+conflicts with `p`'s definition in object type [3]. Try making object type [2] exact. [cannot-spread-inexact]
 
    type.js:84:12
    84| type O11 = {...{p:T},...{q:U}}; // Error, p may exist in second object
@@ -445,7 +446,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- type.js:106:2
 
-Cannot cast object literal to `O14` because property `p` is missing in object literal [1] but exists in `O14` [2].
+Cannot cast object literal to `O14` because property `p` is missing in object literal [1] but exists in object type [2].
 [prop-missing]
 
    type.js:106:2
@@ -1007,7 +1008,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_mixed.js:3:5
 
-Cannot get `o1.someProp` because property `someProp` is missing in `O1` [1]. [prop-missing]
+Cannot get `o1.someProp` because property `someProp` is missing in object type [1]. [prop-missing]
 
    type_mixed.js:3:5
    3| (o1.someProp: empty); // Error someProp does not exist
@@ -1036,7 +1037,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_mixed.js:7:5
 
-Cannot get `o2.someProp` because property `someProp` is missing in `O2` [1]. [prop-missing]
+Cannot get `o2.someProp` because property `someProp` is missing in object type [1]. [prop-missing]
 
    type_mixed.js:7:5
    7| (o2.someProp: empty); // Error someProp does not exist
@@ -1101,7 +1102,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_mixed.js:13:5
 
-Cannot get `o3.c` because property `c` is missing in `O3` [1]. [prop-missing]
+Cannot get `o3.c` because property `c` is missing in object type [1]. [prop-missing]
 
    type_mixed.js:13:5
    13| (o3.c: empty); // Error c does not exist
@@ -1274,7 +1275,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:10:2
 
-Cannot cast `o1` to object type because inexact `O1` [1] is incompatible with exact object type [2].
+Cannot cast `o1` to object type because inexact object type [1] is incompatible with exact object type [2].
 [incompatible-exact]
 
    type_void.js:10:2
@@ -1292,7 +1293,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:11:2
 
-Cannot cast `o1` to object type because property `p` is missing in `O1` [1] but exists in object type [2].
+Cannot cast `o1` to object type because property `p` is missing in object type [1] but exists in object type [2].
 [prop-missing]
 
    type_void.js:11:2
@@ -1310,7 +1311,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:19:2
 
-Cannot cast `o2` to object type because property `p` is missing in `O2` [1] but exists in object type [2].
+Cannot cast `o2` to object type because property `p` is missing in object type [1] but exists in object type [2].
 [prop-missing]
 
    type_void.js:19:2
@@ -1328,7 +1329,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:21:2
 
-Cannot cast object literal to `O2` because property `p` is missing in `O2` [1] but exists in object literal [2].
+Cannot cast object literal to `O2` because property `p` is missing in object type [1] but exists in object literal [2].
 [prop-missing]
 
    type_void.js:21:2
@@ -1343,7 +1344,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:26:2
 
-Cannot cast `o3` to object type because inexact `O3` [1] is incompatible with exact object type [2].
+Cannot cast `o3` to object type because inexact object type [1] is incompatible with exact object type [2].
 [incompatible-exact]
 
    type_void.js:26:2
@@ -1361,7 +1362,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:27:2
 
-Cannot cast `o3` to object type because property `p` is missing in `O3` [1] but exists in object type [2].
+Cannot cast `o3` to object type because property `p` is missing in object type [1] but exists in object type [2].
 [prop-missing]
 
    type_void.js:27:2
@@ -1379,7 +1380,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:35:2
 
-Cannot cast `o4` to object type because property `p` is missing in `O4` [1] but exists in object type [2].
+Cannot cast `o4` to object type because property `p` is missing in object type [1] but exists in object type [2].
 [prop-missing]
 
    type_void.js:35:2
@@ -1397,7 +1398,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:37:2
 
-Cannot cast object literal to `O4` because property `p` is missing in `O4` [1] but exists in object literal [2].
+Cannot cast object literal to `O4` because property `p` is missing in object type [1] but exists in object literal [2].
 [prop-missing]
 
    type_void.js:37:2
@@ -1431,7 +1432,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:43:2
 
-Cannot cast object literal to `O5` because property `p` is missing in object literal [1] but exists in `O5` [2].
+Cannot cast object literal to `O5` because property `p` is missing in object literal [1] but exists in object type [2].
 [prop-missing]
 
    type_void.js:43:2
@@ -1482,7 +1483,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:52:2
 
-Cannot cast object literal to `O6` because property `p` is missing in object literal [1] but exists in `O6` [2].
+Cannot cast object literal to `O6` because property `p` is missing in object literal [1] but exists in object type [2].
 [prop-missing]
 
    type_void.js:52:2

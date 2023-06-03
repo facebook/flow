@@ -115,8 +115,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- error_position.js:11:2
 
-Cannot cast `foo` to `typeof bar` because property `x` is missing in `Props` [1] but exists in `Props2` [2] in the first
-parameter. [prop-missing]
+Cannot cast `foo` to `typeof bar` because property `x` is missing in object type [1] but exists in object type [2] in
+the first parameter. [prop-missing]
 
    error_position.js:11:2
    11| (foo : typeof bar);

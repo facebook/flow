@@ -297,6 +297,13 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
   (**********************************)
 
   (* converter *)
+
+  let mk_type_destructor cx use_op reason t d id =
+    let eval_t = EvalT (t, TypeDestructorT (use_op, reason, d), id) in
+    if Subst_name.Set.is_empty (Subst.free_var_finder cx eval_t) then
+      ignore @@ Flow_js.mk_type_destructor cx ~trace:Trace.dummy_trace use_op reason t d id;
+    eval_t
+
   let rec convert cx tparams_map infer_tparams_map =
     let open Ast.Type in
     function
@@ -539,7 +546,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           let destructor =
             ConditionalType { distributive_tparam_name; infer_tparams; extends_t; true_t; false_t }
           in
-          EvalT (check_t, TypeDestructorT (use_op, reason, destructor), mk_eval_id cx loc)
+          mk_type_destructor cx use_op reason check_t destructor (mk_eval_id cx loc)
         in
         ( (loc, t),
           Conditional { Conditional.check_type; extends_type; true_type; false_type; comments }
@@ -599,7 +606,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
             PropertyType { name = OrdinaryName value }
           | _ -> ElementType { index_type }
         in
-        EvalT (object_type, TypeDestructorT (use_op, reason, destructor), mk_eval_id cx loc)
+        mk_type_destructor cx use_op reason object_type destructor (mk_eval_id cx loc)
       in
       ((loc, t), IndexedAccess { IndexedAccess._object; index; comments })
     | (loc, OptionalIndexedAccess ia) ->
@@ -804,11 +811,13 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               | ([t; DefT (_, _, SingletonStrT key)], targs) ->
                 let reason = mk_reason (RType (OrdinaryName "$PropertyType")) loc in
                 reconstruct_ast
-                  (EvalT
-                     ( t,
-                       TypeDestructorT (use_op reason, reason, PropertyType { name = key }),
-                       mk_eval_id cx loc
-                     )
+                  (mk_type_destructor
+                     cx
+                     (use_op reason)
+                     reason
+                     t
+                     (PropertyType { name = key })
+                     (mk_eval_id cx loc)
                   )
                   targs
               | _ -> error_type cx loc (Error_message.EPropertyTypeAnnot loc) t_ast
@@ -821,11 +830,13 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               | ([t; e], targs) ->
                 let reason = mk_reason (RType (OrdinaryName "$ElementType")) loc in
                 reconstruct_ast
-                  (EvalT
-                     ( t,
-                       TypeDestructorT (use_op reason, reason, ElementType { index_type = e }),
-                       mk_eval_id cx loc
-                     )
+                  (mk_type_destructor
+                     cx
+                     (use_op reason)
+                     reason
+                     t
+                     (ElementType { index_type = e })
+                     (mk_eval_id cx loc)
                   )
                   targs
               | _ -> assert false
@@ -837,7 +848,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               let t = List.hd ts in
               let reason = mk_reason (RType (OrdinaryName "$NonMaybeType")) loc in
               reconstruct_ast
-                (EvalT (t, TypeDestructorT (use_op reason, reason, NonMaybeType), mk_eval_id cx loc))
+                (mk_type_destructor cx (use_op reason) reason t NonMaybeType (mk_eval_id cx loc))
                 targs
           )
         (* Deprecated former alias of `Partial` *)
@@ -854,7 +865,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               let t = List.hd ts in
               let reason = mk_reason (RPartialOf (desc_of_t t)) (loc_of_t t) in
               reconstruct_ast
-                (EvalT (t, TypeDestructorT (use_op reason, reason, PartialType), mk_eval_id cx loc))
+                (mk_type_destructor cx (use_op reason) reason t PartialType (mk_eval_id cx loc))
                 targs
           )
         (* Required<T> makes all of `T`'s optional properties required. *)
@@ -864,7 +875,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               let t = List.hd ts in
               let reason = mk_reason (RRequiredOf (desc_of_t t)) (loc_of_t t) in
               reconstruct_ast
-                (EvalT (t, TypeDestructorT (use_op reason, reason, RequiredType), mk_eval_id cx loc))
+                (mk_type_destructor cx (use_op reason) reason t RequiredType (mk_eval_id cx loc))
                 targs
           )
         (* `$Shape` is deprecated in favor of `Partial` *)
@@ -884,12 +895,13 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               in
               let reason = mk_reason (RType (OrdinaryName "$Diff")) loc in
               reconstruct_ast
-                (EvalT
-                   ( t1,
-                     TypeDestructorT
-                       (use_op reason, reason, RestType (Type.Object.Rest.IgnoreExactAndOwn, t2)),
-                     mk_eval_id cx loc
-                   )
+                (mk_type_destructor
+                   cx
+                   (use_op reason)
+                   reason
+                   t1
+                   (RestType (Type.Object.Rest.IgnoreExactAndOwn, t2))
+                   (mk_eval_id cx loc)
                 )
                 targs
           )
@@ -900,7 +912,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               let t = List.hd ts in
               let reason = mk_reason RReadOnlyType loc in
               reconstruct_ast
-                (EvalT (t, TypeDestructorT (use_op reason, reason, ReadOnlyType), mk_eval_id cx loc))
+                (mk_type_destructor cx (use_op reason) reason t ReadOnlyType (mk_eval_id cx loc))
                 targs
           )
         (* $Keys<T> is the set of keys of T *)
@@ -917,7 +929,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               let t = List.hd ts in
               let reason = mk_reason (RType (OrdinaryName "$Values")) loc in
               reconstruct_ast
-                (EvalT (t, TypeDestructorT (use_op reason, reason, ValuesType), mk_eval_id cx loc))
+                (mk_type_destructor cx (use_op reason) reason t ValuesType (mk_eval_id cx loc))
                 targs
           )
         | "$Exact" ->
@@ -936,11 +948,13 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               in
               let reason = mk_reason (RType (OrdinaryName "$Rest")) loc in
               reconstruct_ast
-                (EvalT
-                   ( t1,
-                     TypeDestructorT (use_op reason, reason, RestType (Type.Object.Rest.Sound, t2)),
-                     mk_eval_id cx loc
-                   )
+                (mk_type_destructor
+                   cx
+                   (use_op reason)
+                   reason
+                   t1
+                   (RestType (Type.Object.Rest.Sound, t2))
+                   (mk_eval_id cx loc)
                 )
                 targs
           )
@@ -987,11 +1001,13 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           | (fn :: args, targs) ->
             let reason = mk_reason RFunctionCallType loc in
             reconstruct_ast
-              (EvalT
-                 ( fn,
-                   TypeDestructorT (use_op reason, reason, CallType { from_maptype = false; args }),
-                   mk_eval_id cx loc
-                 )
+              (mk_type_destructor
+                 cx
+                 (use_op reason)
+                 reason
+                 fn
+                 (CallType { from_maptype = false; args })
+                 (mk_eval_id cx loc)
               )
               targs
           | _ -> error_type cx loc (Error_message.ETypeParamMinArity (loc, 1)) t_ast)
@@ -1004,11 +1020,13 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               in
               let reason = mk_reason RTupleMap loc in
               reconstruct_ast
-                (EvalT
-                   ( t1,
-                     TypeDestructorT (use_op reason, reason, TypeMap (TupleMap t2)),
-                     mk_eval_id cx loc
-                   )
+                (mk_type_destructor
+                   cx
+                   (use_op reason)
+                   reason
+                   t1
+                   (TypeMap (TupleMap t2))
+                   (mk_eval_id cx loc)
                 )
                 targs
           )
@@ -1021,11 +1039,13 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               in
               let reason = mk_reason RObjectMap loc in
               reconstruct_ast
-                (EvalT
-                   ( t1,
-                     TypeDestructorT (use_op reason, reason, TypeMap (ObjectMap t2)),
-                     mk_eval_id cx loc
-                   )
+                (mk_type_destructor
+                   cx
+                   (use_op reason)
+                   reason
+                   t1
+                   (TypeMap (ObjectMap t2))
+                   (mk_eval_id cx loc)
                 )
                 targs
           )
@@ -1038,11 +1058,13 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               in
               let reason = mk_reason RObjectMapi loc in
               reconstruct_ast
-                (EvalT
-                   ( t1,
-                     TypeDestructorT (use_op reason, reason, TypeMap (ObjectMapi t2)),
-                     mk_eval_id cx loc
-                   )
+                (mk_type_destructor
+                   cx
+                   (use_op reason)
+                   reason
+                   t1
+                   (TypeMap (ObjectMapi t2))
+                   (mk_eval_id cx loc)
                 )
                 targs
           )
@@ -1055,11 +1077,13 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               in
               let reason = mk_reason RObjectKeyMirror loc in
               reconstruct_ast
-                (EvalT
-                   ( t1,
-                     TypeDestructorT (use_op reason, reason, TypeMap ObjectKeyMirror),
-                     mk_eval_id cx loc
-                   )
+                (mk_type_destructor
+                   cx
+                   (use_op reason)
+                   reason
+                   t1
+                   (TypeMap ObjectKeyMirror)
+                   (mk_eval_id cx loc)
                 )
                 targs
           )
@@ -1072,11 +1096,13 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               in
               let reason = mk_reason RObjectMapi loc in
               reconstruct_ast
-                (EvalT
-                   ( t1,
-                     TypeDestructorT (use_op reason, reason, TypeMap (ObjectMapConst t2)),
-                     mk_eval_id cx loc
-                   )
+                (mk_type_destructor
+                   cx
+                   (use_op reason)
+                   reason
+                   t1
+                   (TypeMap (ObjectMapConst t2))
+                   (mk_eval_id cx loc)
                 )
                 targs
           )
@@ -1179,11 +1205,13 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               let default_props = List.nth ts 1 in
               let reason = mk_reason RReactConfig loc in
               reconstruct_ast
-                (EvalT
-                   ( props,
-                     TypeDestructorT (use_op reason, reason, ReactConfigType default_props),
-                     mk_eval_id cx loc
-                   )
+                (mk_type_destructor
+                   cx
+                   (use_op reason)
+                   reason
+                   props
+                   (ReactConfigType default_props)
+                   (mk_eval_id cx loc)
                 )
                 targs
           )
@@ -1256,11 +1284,13 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               let t = List.hd ts in
               let reason = mk_reason (RType (OrdinaryName "React$ElementProps")) loc in
               reconstruct_ast
-                (EvalT
-                   ( t,
-                     TypeDestructorT (use_op reason, reason, ReactElementPropsType),
-                     mk_eval_id cx loc
-                   )
+                (mk_type_destructor
+                   cx
+                   (use_op reason)
+                   reason
+                   t
+                   ReactElementPropsType
+                   (mk_eval_id cx loc)
                 )
                 targs
           )
@@ -1270,11 +1300,13 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               let t = List.hd ts in
               let reason = mk_reason (RType (OrdinaryName "React$ElementConfig")) loc in
               reconstruct_ast
-                (EvalT
-                   ( t,
-                     TypeDestructorT (use_op reason, reason, ReactElementConfigType),
-                     mk_eval_id cx loc
-                   )
+                (mk_type_destructor
+                   cx
+                   (use_op reason)
+                   reason
+                   t
+                   ReactElementConfigType
+                   (mk_eval_id cx loc)
                 )
                 targs
           )
@@ -1284,11 +1316,13 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               let t = List.hd ts in
               let reason = mk_reason (RType (OrdinaryName "React$ElementRef")) loc in
               reconstruct_ast
-                (EvalT
-                   ( t,
-                     TypeDestructorT (use_op reason, reason, ReactElementRefType),
-                     mk_eval_id cx loc
-                   )
+                (mk_type_destructor
+                   cx
+                   (use_op reason)
+                   reason
+                   t
+                   ReactElementRefType
+                   (mk_eval_id cx loc)
                 )
                 targs
           )
@@ -1298,8 +1332,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               let t = List.hd ts in
               let reason = mk_reason (RType (OrdinaryName "$Facebookism$IdxUnwrapper")) loc in
               reconstruct_ast
-                (EvalT (t, TypeDestructorT (use_op reason, reason, IdxUnwrapType), mk_eval_id cx loc)
-                )
+                (mk_type_destructor cx (use_op reason) reason t IdxUnwrapType (mk_eval_id cx loc))
                 targs
           )
         | "$Facebookism$IdxWrapper" ->
@@ -1362,11 +1395,13 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                 else
                   let reason = mk_reason (RCustom "refined type") loc in
                   reconstruct_ast
-                    (EvalT
-                       ( base_t,
-                         TypeDestructorT (unknown_use, reason, LatentPred (fun_pred_t, idx)),
-                         mk_eval_id cx loc
-                       )
+                    (mk_type_destructor
+                       cx
+                       (use_op reason)
+                       reason
+                       base_t
+                       (LatentPred (fun_pred_t, idx))
+                       (mk_eval_id cx loc)
                     )
                     targs
               | _ -> error_type cx loc (Error_message.ERefineAnnot loc) t_ast
@@ -1659,21 +1694,23 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               type_t
           in
           let reason = mk_reason RMappedType obj_loc in
-          let defer_use_t =
-            TypeDestructorT
-              ( Op (EvalMappedType { mapped_type = reason }),
-                reason,
-                MappedType
-                  {
-                    homomorphic;
-                    property_type = poly_prop_type;
-                    mapped_type_flags =
-                      { optional = mapped_type_optionality; variance = polarity cx variance };
-                    distributive_tparam_name;
-                  }
+          let eval_t =
+            mk_type_destructor
+              cx
+              (Op (EvalMappedType { mapped_type = reason }))
+              reason
+              source_type
+              (MappedType
+                 {
+                   homomorphic;
+                   property_type = poly_prop_type;
+                   mapped_type_flags =
+                     { optional = mapped_type_optionality; variance = polarity cx variance };
+                   distributive_tparam_name;
+                 }
               )
+              (Type.Eval.generate_id ())
           in
-          let eval_t = EvalT (source_type, defer_use_t, Type.Eval.generate_id ()) in
           let poly_prop_type_ast = ((prop_loc, poly_prop_type), prop_type_ast) in
           let prop_ast =
             T.Object.MappedType
@@ -2239,11 +2276,13 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               | _ -> failwith "Invariant Violation: spread list has two slices in a row"
             in
             let l = ConsGen.widen_obj_type cx ~use_op:unknown_use reason t in
-            EvalT
-              ( l,
-                TypeDestructorT (unknown_use, reason, SpreadType (target, ts, head_slice)),
-                Type.Eval.generate_id ()
-              )
+            mk_type_destructor
+              cx
+              unknown_use
+              reason
+              l
+              (SpreadType (target, ts, head_slice))
+              (Type.Eval.generate_id ())
           )
       in
       (t, List.rev rev_prop_asts)
@@ -2950,17 +2989,19 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           ElementType { index_type }
     in
     let non_maybe_result_t =
-      EvalT (object_t, TypeDestructorT (use_op, reason, non_maybe_destructor), mk_eval_id cx loc)
+      mk_type_destructor cx use_op reason object_t non_maybe_destructor (mk_eval_id cx loc)
     in
     let void_reason = replace_desc_reason RVoid lhs_reason in
     let result_t =
-      EvalT
-        ( non_maybe_result_t,
-          TypeDestructorT
-            (unknown_use (* not used *), reason, OptionalIndexedAccessResultType { void_reason }),
-          Eval.generate_id ()
-        )
+      mk_type_destructor
+        cx
+        unknown_use (* not used *)
+        reason
+        non_maybe_result_t
+        (OptionalIndexedAccessResultType { void_reason })
+        (Eval.generate_id ())
     in
+
     ( non_maybe_result_t,
       ( (loc, result_t),
         T.OptionalIndexedAccess

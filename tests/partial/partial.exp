@@ -170,17 +170,20 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:28:17
 
 Cannot assign `3` to `p6` because: [incompatible-type]
- - Either number [1] is incompatible with `PFoo` [2].
- - Or number [1] is incompatible with null or undefined [2].
+ - Either number [1] is incompatible with `Foo` [2].
+ - Or number [1] is incompatible with null or undefined [3].
 
    test.js:28:17
    28| let p6 : PFoo = 3; // error
                        ^ [1]
 
 References:
+   test.js:22:22
+   22| type PFoo = Partial<?Foo>;
+                            ^^^ [2]
    test.js:22:21
    22| type PFoo = Partial<?Foo>;
-                           ^^^^ [2]
+                           ^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:30:20

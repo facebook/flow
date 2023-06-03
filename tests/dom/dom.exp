@@ -44,7 +44,7 @@ References:
 Error ------------------------------------------------------------------------------------------- ClipboardEvent.js:25:7
 
 Cannot call `ClipboardEvent` with object literal bound to `eventInit` because property `clipboardData` is missing in
-object literal [1] but exists in `ClipboardEvent$Init` [2]. [prop-missing]
+object literal [1] but exists in object type [2]. [prop-missing]
 
    ClipboardEvent.js:25:7
     25|       {}, // invalid, clipboardData may not be omitted

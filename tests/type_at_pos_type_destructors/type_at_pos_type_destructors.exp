@@ -267,11 +267,13 @@ spread.js:56:6,56:8
 spread.js:58:6
 Flags:
 type ECtor1 = {|...Ctor, o: O|}
+= {|name: string, o: O|}
 spread.js:58:6,58:11
 
 spread.js:60:6
 Flags:
 type ECtor2 = {|o: O, ...Ctor|}
+= any (implicit)
 spread.js:60:6,60:11
 
 spread.js:62:6
@@ -352,6 +354,7 @@ type-destructor.js:50:6,50:18
 type-destructor.js:53:6
 Flags:
 type DiffFromEmptyObjectError = $Diff<{...}, {nope: number, ...}>
+= {...}
 type-destructor.js:53:6,53:29
 
 type-destructor.js:55:6
@@ -393,6 +396,7 @@ type-destructor.js:67:6,67:14
 type-destructor.js:70:6
 Flags:
 type RestObj = $Rest<{|y: O1|}, {[string]: O2}>
+= {|y?: O1|}
 type-destructor.js:70:6,70:12
 
 type-destructor.js:72:6
@@ -560,7 +564,7 @@ type-destructor.js:184:6,184:10
 
 type-destructor.js:189:14
 Flags:
-ReadOnlyObj
+{+key: any, ...}
 type-destructor.js:189:14,189:14
 
 type-destructor.js:20:6
@@ -612,6 +616,7 @@ type-destructor.js:50:6,50:18
 type-destructor.js:53:6
 Flags:
 type DiffFromEmptyObjectError = $Diff<{...}, {nope: number, ...}>
+= {...}
 type-destructor.js:53:6,53:29
 
 type-destructor.js:55:6
@@ -653,6 +658,7 @@ type-destructor.js:67:6,67:14
 type-destructor.js:70:6
 Flags:
 type RestObj = $Rest<{|y: O1|}, {[string]: O2}>
+= {|y?: O1|}
 type-destructor.js:70:6,70:12
 
 type-destructor.js:72:6
@@ -820,7 +826,7 @@ type-destructor.js:184:6,184:10
 
 type-destructor.js:189:14
 Flags:
-ReadOnlyObj
+{+key: any, ...}
 type-destructor.js:189:14,189:14
 
 mapped-type.js:7:6
