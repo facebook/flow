@@ -269,9 +269,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------- type_spread.js:81:16
 
-Computing `N` [1] may lead to an exponentially large number of cases to reason about because `State` [2] and `State` [3]
-are both unions. Please use at most one union type per spread to simplify reasoning about the spread result. You may be
-able to get rid of a union by specifying a more general type that captures all of the branches of the union.
+Computing object type [1] may lead to an exponentially large number of cases to reason about because `State` [2] and
+`State` [3] are both unions. Please use at most one union type per spread to simplify reasoning about the spread result.
+You may be able to get rid of a union by specifying a more general type that captures all of the branches of the union.
 [exponential-spread]
 
    type_spread.js:81:16

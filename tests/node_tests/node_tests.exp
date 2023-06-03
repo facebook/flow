@@ -755,7 +755,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `http.get` because: [incompatible-call]
  - Either number [1] is incompatible with string [2].
- - Or number [1] is incompatible with `http$requestOptions` [3].
+ - Or number [1] is incompatible with object type [3].
 
    http/get.js:11:6
      11| http.get(-1); // error
@@ -854,7 +854,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `http.request` because: [incompatible-call]
  - Either number [1] is incompatible with string [2].
- - Or number [1] is incompatible with `http$requestOptions` [3].
+ - Or number [1] is incompatible with object type [3].
 
    http/request.js:11:6
      11| http.request(-1); // error
@@ -1249,7 +1249,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `https.get` because: [incompatible-call]
  - Either number [1] is incompatible with string [2].
- - Or number [1] is incompatible with `https$requestOptions` [3].
+ - Or number [1] is incompatible with object type [3].
 
    https/get.js:11:7
      11| https.get(-1); // error
@@ -1348,7 +1348,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `https.request` because: [incompatible-call]
  - Either number [1] is incompatible with string [2].
- - Or number [1] is incompatible with `https$requestOptions` [3].
+ - Or number [1] is incompatible with object type [3].
 
    https/request.js:11:7
      11| https.request(-1); // error

@@ -522,8 +522,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- instancet.js:11:24
 
-Cannot instantiate mapped type [1] because Mapped Types only support objects, so `MappedInterface` [1] cannot use
-`I` [2] to instantiate a mapped type. [invalid-mapped-type]
+Cannot instantiate mapped type [1] because Mapped Types only support objects, so mapped type [1] cannot use `I` [2] to
+instantiate a mapped type. [invalid-mapped-type]
 
    instancet.js:11:24
    11| type MappedInterface = {[key in keyof I]: I[key]}; // ERROR, cannot map interfaces
@@ -537,8 +537,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- instancet.js:21:23
 
-Cannot instantiate mapped type [1] because Mapped Types only support objects, so `MappedInstance` [1] cannot use `A` [2]
-to instantiate a mapped type. [invalid-mapped-type]
+Cannot instantiate mapped type [1] because Mapped Types only support objects, so mapped type [1] cannot use `A` [2] to
+instantiate a mapped type. [invalid-mapped-type]
 
    instancet.js:21:23
    21| type MappedInstance = {+[key in keyof A]: A[number]};
@@ -548,6 +548,21 @@ References:
    instancet.js:21:39
    21| type MappedInstance = {+[key in keyof A]: A[number]};
                                              ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- instancet.js:21:45
+
+Cannot access number on `A` because an index signature declaring the expected key / value type is missing in `A` [1].
+[prop-missing]
+
+   instancet.js:21:45
+   21| type MappedInstance = {+[key in keyof A]: A[number]};
+                                                   ^^^^^^
+
+References:
+   instancet.js:21:43
+   21| type MappedInstance = {+[key in keyof A]: A[number]};
+                                                 ^ [1]
 
 
 Error ------------------------------------------------------------------------------------ no_explicit_exactness.js:7:20
@@ -640,7 +655,7 @@ Mapped Types cannot be used when other properties or indexers are present. [inva
 
 Error ------------------------------------------------------------------------------------------ non_homomorphic.js:11:4
 
-Cannot cast `mapped` to empty because `Mapped` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `mapped` to empty because mapped type [1] is incompatible with empty [2]. [incompatible-cast]
 
    non_homomorphic.js:11:4
    11|   (mapped: empty); // ERROR!
@@ -730,7 +745,7 @@ References:
 Error ----------------------------------------------------------------------------------------- non_homomorphic.js:28:27
 
 Cannot instantiate mapped type [1] because boolean [2] is incompatible with `string | number | symbol`, so it cannot be
-used to generate keys for `BadKeys` [1]. [incompatible-type]
+used to generate keys for mapped type [1]. [incompatible-type]
 
    non_homomorphic.js:28:27
    28|   type BadKeys = {[key in boolean]: number}; // ERROR!
@@ -1416,7 +1431,7 @@ References:
 
 
 
-Found 92 errors
+Found 93 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

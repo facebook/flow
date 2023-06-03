@@ -1221,7 +1221,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- variance.js:55:2
 
-Cannot cast `roc` to tuple type because tuple element at index `0` is read-only in `ROC` [1] but write-only in tuple
+Cannot cast `roc` to tuple type because tuple element at index `0` is read-only in `C` [1] but write-only in tuple
 type [2]. [incompatible-variance]
 
    variance.js:55:2
@@ -1239,7 +1239,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- variance.js:56:2
 
-Cannot cast `roc` to tuple type because tuple element at index `0` is read-only in `ROC` [1] but writable in tuple
+Cannot cast `roc` to tuple type because tuple element at index `0` is read-only in `C` [1] but writable in tuple
 type [2]. [incompatible-variance]
 
    variance.js:56:2
@@ -1265,7 +1265,7 @@ Cannot assign `"s"` to `roc[0]` because tuple element at index `0` [1] labeled `
 
 Error ------------------------------------------------------------------------------------------------- variance.js:63:2
 
-Cannot cast `rob` to tuple type because tuple element at index `0` is read-only in `ROB` [1] but write-only in tuple
+Cannot cast `rob` to tuple type because tuple element at index `0` is read-only in `B` [1] but write-only in tuple
 type [2]. [incompatible-variance]
 
    variance.js:63:2
@@ -1283,7 +1283,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- variance.js:64:2
 
-Cannot cast `rob` to tuple type because tuple element at index `0` is read-only in `ROB` [1] but writable in tuple
+Cannot cast `rob` to tuple type because tuple element at index `0` is read-only in `B` [1] but writable in tuple
 type [2]. [incompatible-variance]
 
    variance.js:64:2
