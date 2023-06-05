@@ -1397,7 +1397,6 @@ and merge_interface ~inline tps infer_tps file reason id def =
         inst_call_t;
         initialized_fields = SSet.empty;
         initialized_static_fields = SSet.empty;
-        has_unknown_react_mixins = false;
         inst_kind = InterfaceKind { inline };
       }
     in
@@ -1504,7 +1503,6 @@ and merge_class tps infer_tps file reason id def =
         inst_call_t = None;
         initialized_fields = SSet.empty;
         initialized_static_fields = SSet.empty;
-        has_unknown_react_mixins = false;
         inst_kind = ClassKind;
       }
     in
@@ -1876,7 +1874,6 @@ let merge_declare_class file reason id def =
         inst_call_t;
         initialized_fields = SSet.empty;
         initialized_static_fields = SSet.empty;
-        has_unknown_react_mixins = false;
         inst_kind = ClassKind;
       }
     in

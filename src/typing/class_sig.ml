@@ -538,7 +538,6 @@ module Make
       inst_call_t = Base.Option.map call ~f:(Context.make_call_prop cx);
       initialized_fields;
       initialized_static_fields;
-      has_unknown_react_mixins = false;
       inst_kind = inst_kind s;
     }
 

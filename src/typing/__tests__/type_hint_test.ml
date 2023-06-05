@@ -361,7 +361,6 @@ let mk_private_method_eval_hint_test
                 inst_call_t = None;
                 initialized_fields = SSet.empty;
                 initialized_static_fields = SSet.empty;
-                has_unknown_react_mixins = false;
                 inst_kind = ClassKind;
               };
           }

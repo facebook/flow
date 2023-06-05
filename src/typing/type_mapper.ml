@@ -406,7 +406,6 @@ class virtual ['a] t =
         inst_call_t;
         initialized_fields;
         initialized_static_fields;
-        has_unknown_react_mixins;
         inst_kind;
       } =
         i
@@ -441,7 +440,6 @@ class virtual ['a] t =
           inst_call_t = inst_call_t';
           initialized_fields;
           initialized_static_fields;
-          has_unknown_react_mixins;
           inst_kind;
         }
 

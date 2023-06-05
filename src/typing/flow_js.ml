@@ -3287,13 +3287,6 @@ struct
           let pmap = NameUtils.Map.union own_props proto_props in
           (match NameUtils.Map.find_opt x pmap with
           | None ->
-            (* If there are unknown mixins, the lookup should become nonstrict, as
-               the searched-for property may be found in a mixin. *)
-            let kind =
-              match (inst.has_unknown_react_mixins, kind) with
-              | (true, Strict _) -> NonstrictReturning (None, None)
-              | _ -> kind
-            in
             rec_flow
               cx
               trace
@@ -3448,12 +3441,7 @@ struct
           let props = NameUtils.Map.union own_props proto_props in
           let tvar = Tvar.mk_no_wrap cx reason_lookup in
           let funt = OpenT (reason_lookup, tvar) in
-          let lookup_kind =
-            if inst.has_unknown_react_mixins then
-              NonstrictReturning (None, None)
-            else
-              Strict reason_c
-          in
+          let lookup_kind = Strict reason_c in
           let options =
             {
               Access_prop_options.allow_method_access = true;
@@ -5841,7 +5829,6 @@ struct
         inst_call_t;
         initialized_fields = _;
         initialized_static_fields = _;
-        has_unknown_react_mixins = _;
         inst_kind;
       } =
     any_prop_to_type_args cx trace ~use_op any ~covariant_flow ~contravariant_flow type_args;

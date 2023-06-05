@@ -361,7 +361,6 @@ class ['a] t =
         inst_call_t;
         initialized_fields = _;
         initialized_static_fields = _;
-        has_unknown_react_mixins = _;
         inst_kind = _;
       } =
         i

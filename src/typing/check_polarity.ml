@@ -75,7 +75,6 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
         inst_call_t = call_t;
         initialized_fields = _;
         initialized_static_fields = _;
-        has_unknown_react_mixins = _;
         inst_kind = _;
       } =
         inst

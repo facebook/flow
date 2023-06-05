@@ -1322,7 +1322,6 @@ module rec TypeTerm : sig
     inst_call_t: int option;
     initialized_fields: SSet.t;
     initialized_static_fields: SSet.t;
-    has_unknown_react_mixins: bool;
     inst_kind: instance_kind;
   }
 

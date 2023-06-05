@@ -1737,12 +1737,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
       let own_props = Context.find_props cx insttype.own_props in
       let proto_props = Context.find_props cx insttype.proto_props in
       let fields = NameUtils.Map.union own_props proto_props in
-      let lookup_kind =
-        if insttype.has_unknown_react_mixins then
-          NonstrictReturning (None, None)
-        else
-          Strict r
-      in
+      let lookup_kind = Strict r in
       let options =
         {
           Access_prop_options.use_op;
