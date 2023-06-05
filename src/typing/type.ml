@@ -641,23 +641,19 @@ module rec TypeTerm : sig
            * the lower bound. See the implementation of flow_js for more clarity. *)
           bool
     (* operation on prototypes *)
-    (* LookupT(_, strict, try_ts_on_failure, x, lookup_action, ids) looks for
-          property x in an object type and emits a constraint according to the
-          provided lookup_action. It also carries with it a list of the prop_map ids it has already tried.
+    (* LookupT looks for a property in an object type and emits a constraint according to the
+          provided lookup_action.
+          It also carries with it a list of the prop_map ids it has already tried.
 
-          When x is not found, we have the following cases:
-
-          (1) try_ts_on_failure is not empty, and we try to look for property x in
-          the next object type in that list;
-
-          (2) strict = None, so no error is reported;
-
-          (3) strict = Some reason, so the position in reason is blamed.
+          When the property is not found, we have the following cases:
+          - `try_ts_on_failure` is not empty: we try to look for property in
+            the next object type in that list
+          - else: we examine the `lookup_kind` - read the comment on that type
        **)
     | LookupT of {
         reason: reason;
         lookup_kind: lookup_kind;
-        ts: t list;
+        try_ts_on_failure: t list;
         propref: propref;
         lookup_action: lookup_action;
         ids: Properties.Set.t option;

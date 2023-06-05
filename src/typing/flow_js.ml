@@ -344,7 +344,7 @@ struct
           {
             reason = reason_op;
             lookup_kind = options.Access_prop_options.lookup_kind;
-            ts = [];
+            try_ts_on_failure = [];
             propref;
             lookup_action = action;
             ids = Some options.Access_prop_options.previously_seen_props;
@@ -425,7 +425,7 @@ struct
             {
               reason = reason_op;
               lookup_kind;
-              ts = [];
+              try_ts_on_failure = [];
               propref;
               lookup_action = ReadProp { use_op; obj_t; tout };
               method_accessible = true;
@@ -1766,7 +1766,7 @@ struct
               {
                 reason;
                 lookup_kind;
-                ts = try_ts_on_failure;
+                try_ts_on_failure;
                 propref;
                 lookup_action;
                 ids;
@@ -1787,7 +1787,7 @@ struct
                 {
                   reason;
                   lookup_kind;
-                  ts = List.tl ts @ try_ts_on_failure;
+                  try_ts_on_failure = List.tl ts @ try_ts_on_failure;
                   propref;
                   lookup_action;
                   ids;
@@ -3275,7 +3275,7 @@ struct
               {
                 reason = reason_op;
                 lookup_kind = kind;
-                ts = try_ts_on_failure;
+                try_ts_on_failure;
                 propref = Named (reason_prop, x) as propref;
                 lookup_action = action;
                 ids;
@@ -3295,7 +3295,7 @@ struct
                   {
                     reason = reason_op;
                     lookup_kind = kind;
-                    ts = try_ts_on_failure;
+                    try_ts_on_failure;
                     propref;
                     lookup_action = action;
                     method_accessible;
@@ -3762,7 +3762,7 @@ struct
               {
                 reason = reason_op;
                 lookup_kind;
-                ts = try_ts_on_failure;
+                try_ts_on_failure;
                 propref;
                 lookup_action = action;
                 ids;
@@ -3784,7 +3784,7 @@ struct
                   {
                     reason = reason_op;
                     lookup_kind;
-                    ts = try_ts_on_failure;
+                    try_ts_on_failure;
                     propref;
                     lookup_action = action;
                     method_accessible;
@@ -3796,7 +3796,7 @@ struct
               {
                 reason = reason_op;
                 lookup_kind;
-                ts = _;
+                try_ts_on_failure = _;
                 propref;
                 lookup_action = action;
                 ids = _;
@@ -4811,7 +4811,7 @@ struct
                 {
                   reason = reason_op;
                   lookup_kind;
-                  ts = [];
+                  try_ts_on_failure = [];
                   propref;
                   lookup_action = ReadProp { use_op; obj_t = l; tout };
                   method_accessible =
@@ -4904,7 +4904,7 @@ struct
               {
                 reason;
                 lookup_kind;
-                ts = next :: try_ts_on_failure;
+                try_ts_on_failure = next :: try_ts_on_failure;
                 propref;
                 lookup_action;
                 method_accessible;
@@ -4921,7 +4921,7 @@ struct
                 {
                   reason;
                   lookup_kind;
-                  ts = try_ts_on_failure;
+                  try_ts_on_failure;
                   propref;
                   lookup_action;
                   method_accessible;
@@ -4933,7 +4933,7 @@ struct
               {
                 reason = reason_op;
                 lookup_kind = _;
-                ts = [];
+                try_ts_on_failure = [];
                 propref = Named (_, OrdinaryName "__proto__");
                 lookup_action = ReadProp { use_op = _; obj_t = l; tout };
                 ids = _;
@@ -4947,7 +4947,7 @@ struct
               {
                 reason = reason_op;
                 lookup_kind = _;
-                ts = [];
+                try_ts_on_failure = [];
                 propref = Named (_, OrdinaryName "__proto__");
                 lookup_action =
                   WriteProp { use_op = _; obj_t = l; prop_tout = _; tin; write_ctx = _; mode = _ };
@@ -4957,7 +4957,9 @@ struct
           ) ->
           (* __proto__ is a getter/setter on Object.prototype *)
           rec_flow cx trace (l, SetProtoT (reason_op, tin))
-        | (ObjProtoT _, LookupT { reason = reason_op; ts = []; propref = Named (_, x); _ })
+        | ( ObjProtoT _,
+            LookupT { reason = reason_op; try_ts_on_failure = []; propref = Named (_, x); _ }
+          )
           when is_object_prototype_method x ->
           (* TODO: These properties should go in Object.prototype. Currently we
              model Object.prototype as a ObjProtoT, as an optimization against a
@@ -4973,7 +4975,7 @@ struct
               {
                 reason = reason_op;
                 lookup_kind = Strict strict_reason;
-                ts = [];
+                try_ts_on_failure = [];
                 propref = Named (reason_prop, x) as propref;
                 lookup_action = action;
                 method_accessible = _;
@@ -4998,7 +5000,7 @@ struct
               {
                 reason = reason_op;
                 lookup_kind = Strict strict_reason;
-                ts = [];
+                try_ts_on_failure = [];
                 propref = Computed elem_t as propref;
                 lookup_action = action;
                 method_accessible = _;
@@ -5043,7 +5045,7 @@ struct
             LookupT
               {
                 lookup_kind = NonstrictReturning (t_opt, test_opt);
-                ts = [];
+                try_ts_on_failure = [];
                 propref;
                 lookup_action = action;
                 ids;
@@ -6300,7 +6302,7 @@ struct
                      lookup_kind =
                        NonstrictReturning
                          (Base.Option.map ~f:(fun { value; _ } -> (value, t)) dict, None);
-                     ts = [];
+                     try_ts_on_failure = [];
                      propref;
                      lookup_action = LookupProp (use_op, Field (None, t, polarity));
                      method_accessible = true;
@@ -6322,7 +6324,7 @@ struct
                    {
                      reason = reason_struct;
                      lookup_kind = Strict lreason;
-                     ts = [];
+                     try_ts_on_failure = [];
                      propref;
                      lookup_action = LookupProp (use_op, read_only_if_lit p);
                      method_accessible = true;
@@ -6352,7 +6354,7 @@ struct
                  {
                    reason = reason_struct;
                    lookup_kind = Strict lreason;
-                   ts = [];
+                   try_ts_on_failure = [];
                    propref;
                    lookup_action = LookupProp (use_op, read_only_if_lit p);
                    method_accessible = true;
@@ -6459,7 +6461,7 @@ struct
               {
                 reason;
                 lookup_kind;
-                ts = [];
+                try_ts_on_failure = [];
                 propref = Named (reason, OrdinaryName x);
                 lookup_action = action;
                 method_accessible = false;
@@ -7192,7 +7194,7 @@ struct
                 {
                   reason = reason_op;
                   lookup_kind;
-                  ts = [];
+                  try_ts_on_failure = [];
                   propref;
                   lookup_action = action;
                   ids = Some (Properties.Set.singleton o.props_tmap);

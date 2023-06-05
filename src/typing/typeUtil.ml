@@ -298,8 +298,18 @@ and mod_reason_of_use_t f = function
   | ImportTypeofT (reason, name, t) -> ImportTypeofT (f reason, name, t)
   | PreprocessKitT (reason, tool) -> PreprocessKitT (f reason, tool)
   | InvariantT reason -> InvariantT (f reason)
-  | LookupT { reason; lookup_kind; ts; propref; lookup_action; ids; method_accessible } ->
-    LookupT { reason = f reason; lookup_kind; ts; propref; lookup_action; ids; method_accessible }
+  | LookupT
+      { reason; lookup_kind; try_ts_on_failure; propref; lookup_action; ids; method_accessible } ->
+    LookupT
+      {
+        reason = f reason;
+        lookup_kind;
+        try_ts_on_failure;
+        propref;
+        lookup_action;
+        ids;
+        method_accessible;
+      }
   | MakeExactT (reason, t) -> MakeExactT (f reason, t)
   | MapTypeT (use_op, reason, kind, t) -> MapTypeT (use_op, f reason, kind, t)
   | MethodT (use_op, reason_call, reason_lookup, name, ft, tm) ->

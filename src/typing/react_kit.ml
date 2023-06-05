@@ -130,7 +130,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           {
             reason = reason_op;
             lookup_kind = Strict reason_op;
-            ts = [];
+            try_ts_on_failure = [];
             propref;
             lookup_action = LookupProp (unknown_use, prop);
             method_accessible = true;
@@ -159,7 +159,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           {
             reason = reason_op;
             lookup_kind;
-            ts = [];
+            try_ts_on_failure = [];
             propref;
             lookup_action = action;
             method_accessible = true;
@@ -577,7 +577,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
               {
                 reason = reason_key;
                 lookup_kind;
-                ts = [];
+                try_ts_on_failure = [];
                 propref;
                 lookup_action = action;
                 method_accessible = true;
@@ -623,7 +623,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
               {
                 reason = reason_ref;
                 lookup_kind;
-                ts = [];
+                try_ts_on_failure = [];
                 propref;
                 lookup_action = action;
                 method_accessible = true;

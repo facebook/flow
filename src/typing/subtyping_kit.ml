@@ -328,7 +328,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                   {
                     reason = ureason;
                     lookup_kind = NonstrictReturning (None, None);
-                    ts = [];
+                    try_ts_on_failure = [];
                     propref;
                     lookup_action = LookupProp (use_op, up);
                     method_accessible = true;
@@ -350,7 +350,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                   {
                     reason = ureason;
                     lookup_kind;
-                    ts = [];
+                    try_ts_on_failure = [];
                     propref;
                     lookup_action = LookupProp (use_op, up);
                     method_accessible = true;
@@ -939,7 +939,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           {
             reason;
             lookup_kind;
-            ts = [];
+            try_ts_on_failure = [];
             propref;
             lookup_action = MatchProp { use_op; drop_generic; prop_t = t };
             method_accessible = true;
@@ -1447,7 +1447,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                       {
                         reason = ureason;
                         lookup_kind;
-                        ts = [];
+                        try_ts_on_failure = [];
                         propref;
                         lookup_action = LookupProp (use_op, up);
                         method_accessible = false;
