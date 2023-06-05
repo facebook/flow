@@ -505,7 +505,8 @@ class lib_def_loc_mapper_and_validator cx =
       | DeclareVariable _
       | Empty _
       | EnumDeclaration _
-      | Expression { Expression.expression = Flow_ast.Expression.(_, Literal _); _ }
+      (* directives are not used and could be banned as well *)
+      | Expression { Expression.directive = Some _; _ }
       | ExportNamedDeclaration { ExportNamedDeclaration.export_kind = ExportType; _ }
       | InterfaceDeclaration _
       | TypeAlias _
