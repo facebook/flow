@@ -1448,6 +1448,7 @@ module Make
             | TypeAlias { TypeAlias.id; _ }
             | OpaqueType { OpaqueType.id; _ }
             | InterfaceDeclaration { Interface.id; _ }
+            | ComponentDeclaration { ComponentDeclaration.id; _ }
             | EnumDeclaration { EnumDeclaration.id; _ } ->
               let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
               Import_export.export_binding cx (OrdinaryName name) id_loc export_kind
@@ -1496,7 +1497,8 @@ module Make
               (loc, general, (loc, ClassDeclaration c))
             | FunctionDeclaration { Ast.Function.id = Some id; _ }
             | ClassDeclaration { Ast.Class.id = Some id; _ }
-            | EnumDeclaration { EnumDeclaration.id; _ } ->
+            | EnumDeclaration { EnumDeclaration.id; _ }
+            | ComponentDeclaration { ComponentDeclaration.id; _ } ->
               let stmt = statement cx (loc, stmt) in
               let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
               let t =

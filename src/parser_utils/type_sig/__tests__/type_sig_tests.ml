@@ -6048,7 +6048,40 @@ let%expect_test "component4" =
 
   |}]
 
-let%expect_test "component" =
+let%expect_test "component_5" =
+  print_sig {|
+    export component Baz () { }
+    export default component Bar () { }
+  |};
+  [%expect{|
+    ESModule {type_exports = [||];
+      exports = [|(ExportBinding 0); ExportDefaultBinding {default_loc = [2:7-14]; index = 1}|];
+      info =
+      ESModuleInfo {type_export_keys = [||];
+        type_stars = []; export_keys = [|"Baz"; "default"|];
+        stars = []; strict = true}}
+
+    Local defs:
+    0. ComponentBinding {id_loc = [1:17-20];
+         name = "Baz"; fn_loc = [1:7-23];
+         def =
+         ComponentSig {params_loc = [1:21-23];
+           tparams = Mono; params = [];
+           rest_param = None;
+           renders = (TyRef (Unqualified BuiltinRef {ref_loc = [1:23]; name = "React$Node"}))};
+         statics = {}}
+    1. ComponentBinding {id_loc = [2:25-28];
+         name = "Bar"; fn_loc = [2:15-31];
+         def =
+         ComponentSig {params_loc = [2:29-31];
+           tparams = Mono; params = [];
+           rest_param = None;
+           renders = (TyRef (Unqualified BuiltinRef {ref_loc = [2:31]; name = "React$Node"}))};
+         statics = {}}
+
+  |}]
+
+let%expect_test "component_disabled" =
   print_sig ~enable_component_syntax:false {|
     component Baz() {};
     module.exports = { Baz };
@@ -6067,5 +6100,24 @@ let%expect_test "component" =
 
     Local defs:
     0. DisabledComponentBinding {id_loc = [1:10-13]; name = "Baz"}
+
+  |}]
+
+let%expect_test "component_disabled2" =
+  print_sig ~enable_component_syntax:false {|
+    export component Baz () { }
+    export default component Bar () { }
+  |};
+  [%expect{|
+    ESModule {type_exports = [||];
+      exports = [|(ExportBinding 0); ExportDefaultBinding {default_loc = [2:7-14]; index = 1}|];
+      info =
+      ESModuleInfo {type_export_keys = [||];
+        type_stars = []; export_keys = [|"Baz"; "default"|];
+        stars = []; strict = true}}
+
+    Local defs:
+    0. DisabledComponentBinding {id_loc = [1:17-20]; name = "Baz"}
+    1. DisabledComponentBinding {id_loc = [2:25-28]; name = "Bar"}
 
   |}]

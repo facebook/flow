@@ -20,3 +20,9 @@ import { Foo } from "./statics.js"
 <Foo />; // Ok
 (Foo.displayName: empty); // error, displayName is a string
 Foo.randomProperty; // ERROR!
+
+import { C } from "./export_syntax.js"
+import D from "./export_syntax.js"
+
+<C x={"a"} />; // error
+<D y={"a"} /> // 2 errors

@@ -4343,6 +4343,7 @@ let export_named_decl opts scope tbls kind stmt =
     | S.InterfaceDeclaration i -> interface_decl opts scope tbls i
     | S.VariableDeclaration decl -> variable_decls opts scope tbls decl
     | S.EnumDeclaration e -> enum_decl opts scope tbls e
+    | S.ComponentDeclaration c -> component_decl opts scope tbls c
     | _ -> failwith "unexpected export declaration"
   in
   decl (Scope.export_binding scope kind)
@@ -4404,6 +4405,8 @@ let export_default_decl =
       export_default_fun opts scope tbls default_loc loc decl
     | D.Declaration (_, S.EnumDeclaration decl) ->
       enum_decl opts scope tbls decl (Scope.export_default_binding scope default_loc)
+    | D.Declaration (_, S.ComponentDeclaration c) ->
+      component_decl opts scope tbls c (Scope.export_default_binding scope default_loc)
     | D.Declaration _ -> failwith "unexpected default export declaration"
     | D.Expression expr ->
       let def = expression opts scope tbls expr in
