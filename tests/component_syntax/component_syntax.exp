@@ -1094,6 +1094,55 @@ Component syntax is not supported [unsupported-syntax]
         ^
 
 
+Error -------------------------------------------------------------------------------------------------- provider.js:3:1
+
+Component syntax is not supported [unsupported-syntax]
+
+      v--------------
+   3| component C() {
+   4|     x = 42;
+   5| }
+      ^
+
+
+Error -------------------------------------------------------------------------------------------------- provider.js:4:9
+
+Cannot assign `42` to `x` because number [1] is incompatible with string [2]. All writes to `x` must be compatible with
+the type of its initial assignment [3]. Add an annotation to `x` [4] if a different type is desired. [incompatible-type]
+
+   provider.js:4:9
+   4|     x = 42;
+              ^^ [1]
+
+References:
+   provider.js:7:5
+   7| x = 'a';
+          ^^^ [2]
+   provider.js:7:1
+   7| x = 'a';
+      ^ [3]
+   provider.js:1:5
+   1| var x;
+          ^ [4]
+
+
+Error ------------------------------------------------------------------------------------------------- provider.js:10:6
+
+Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   provider.js:10:6
+   10|     (x: empty);
+            ^
+
+References:
+   provider.js:7:5
+    7| x = 'a';
+           ^^^ [1]
+   provider.js:10:9
+   10|     (x: empty);
+               ^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------- signature.js:4:1
 
 Component syntax is not supported [unsupported-syntax]
@@ -1470,4 +1519,4 @@ Component syntax is not supported [unsupported-syntax]
 
 
 
-Found 112 errors
+Found 115 errors

@@ -639,6 +639,24 @@ end = struct
           loc
           expr
 
+      (* As above, since components compile to function declarations *)
+      method! component_declaration loc (expr : ('loc, 'loc) Ast.Statement.ComponentDeclaration.t) =
+        let open Ast.Statement.ComponentDeclaration in
+        let { id = ident; tparams; params; body; return; comments; sig_loc = _ } = expr in
+        let _ident' = this#component_identifier ident in
+        this#enter_possibly_polymorphic_scope
+          ~is_polymorphic:(Option.is_some tparams)
+          ~kind:Var
+          (fun _ _ ->
+            let _tparams' = map_opt this#type_params tparams in
+            let _params' = this#component_params params in
+            let _body' = this#component_body body in
+            let _return' = this#type_annotation_hint return in
+            let _comments' = this#syntax_opt comments in
+            expr)
+          loc
+          expr
+
       (* Declared modules provide their own var scope *)
       method! declare_module loc m =
         this#enter_scope Var (fun _ _ -> super#declare_module loc m) loc m
@@ -946,6 +964,29 @@ end = struct
         let _comments' = this#syntax_opt comments in
         expr
 
+      method! component_declaration loc (expr : ('loc, 'loc) Ast.Statement.ComponentDeclaration.t) =
+        let open Ast.Statement.ComponentDeclaration in
+        let { id = ident; tparams; params; body; return; comments; sig_loc = _ } = expr in
+        let init_state = Annotation { predicate = false; contextual = false } in
+        let _ident' =
+          this#in_context
+            ~mod_cx:(fun _cx -> { init_state })
+            (fun () -> this#component_identifier ident)
+        in
+
+        this#enter_possibly_polymorphic_scope
+          ~is_polymorphic:(Option.is_some tparams)
+          ~kind:Var
+          (fun _ _ ->
+            let _tparams' = map_opt this#type_params tparams in
+            let _params' = this#component_params params in
+            let _body' = this#component_body body in
+            let _return' = this#type_annotation_hint return in
+            let _comments' = this#syntax_opt comments in
+            expr)
+          loc
+          expr
+
       method! pattern_identifier ?kind ((loc, { Ast.Identifier.name; comments = _ }) as ident) =
         begin
           match kind with
@@ -967,6 +1008,10 @@ end = struct
 
       method! function_identifier ((loc, { Ast.Identifier.name; comments = _ }) as ident) =
         this#new_entry name Bindings.Function Flow_ast.Variable.Let loc;
+        super#identifier ident
+
+      method! component_identifier ((loc, { Ast.Identifier.name; comments = _ }) as ident) =
+        this#new_entry name Bindings.Component Flow_ast.Variable.Let loc;
         super#identifier ident
 
       method! declare_function
@@ -1055,6 +1100,15 @@ end = struct
         @@ this#in_context
              ~mod_cx:(fun _cx -> { init_state })
              (fun () -> super#function_param_pattern expr);
+
+        expr
+
+      method! component_param_pattern (expr : ('loc, 'loc) Ast.Pattern.t) =
+        let init_state = Annotation { predicate = false; contextual = false } in
+        ignore
+        @@ this#in_context
+             ~mod_cx:(fun _cx -> { init_state })
+             (fun () -> super#component_param_pattern expr);
 
         expr
     end
