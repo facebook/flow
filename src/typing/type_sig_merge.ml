@@ -58,6 +58,8 @@ let def_reason = function
   | FunBinding { fn_loc; async; generator; _ } -> Reason.func_reason ~async ~generator fn_loc
   | DeclareFun { id_loc; _ } -> Reason.(mk_reason RFunctionType id_loc)
   | ComponentBinding { fn_loc; _ } -> Reason.func_reason ~async:false ~generator:false fn_loc
+  | DisabledComponentBinding { id_loc; name } ->
+    Reason.(mk_reason (RIdentifier (OrdinaryName name)) id_loc)
   | Variable { id_loc; name; _ } -> Reason.(mk_reason (RIdentifier (OrdinaryName name)) id_loc)
   | DisabledEnumBinding { id_loc; name; _ }
   | EnumBinding { id_loc; name; _ } ->
@@ -1933,7 +1935,9 @@ let merge_def file reason = function
     let statics = merge_fun_statics SMap.empty SMap.empty file reason statics in
     merge_component SMap.empty SMap.empty file reason def statics
   | Variable { id_loc = _; name = _; def } -> merge SMap.empty SMap.empty file def
-  | DisabledEnumBinding _ -> Type.AnyT.error reason
+  | DisabledComponentBinding _
+  | DisabledEnumBinding _ ->
+    Type.AnyT.error reason
   | EnumBinding { id_loc; rep; members; has_unknown_members; name = _ } ->
     merge_enum file reason id_loc rep members has_unknown_members
 

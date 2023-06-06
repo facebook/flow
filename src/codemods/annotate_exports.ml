@@ -72,6 +72,7 @@ module SignatureVerification = struct
         max_literal_len = Options.max_literal_length options;
         exact_by_default = Options.exact_by_default options;
         enable_enums = Options.enums options;
+        enable_component_syntax = Options.component_syntax options;
         enable_relay_integration = Options.enable_relay_integration options;
         relay_integration_module_prefix = Options.relay_integration_module_prefix options;
         conditional_type = true;

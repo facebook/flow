@@ -141,6 +141,7 @@ module Eval = struct
     | FunBinding _
     | DeclareFun _
     | ComponentBinding _
+    | DisabledComponentBinding _
     | OpaqueType _ ->
       (* None of these contain anything that can be imported separately. For example,
          you can't `import {someMethod} ...` from an exported class. *)
@@ -347,7 +348,8 @@ let add_global =
       add_named_type acc name (Eval.def global_sig empty_seen def) |> add_named name
     | Type_sig.FunBinding _
     | Type_sig.DeclareFun _
-    | Type_sig.ComponentBinding _ ->
+    | Type_sig.ComponentBinding _
+    | Type_sig.DisabledComponentBinding _ ->
       add_named name acc
     | Type_sig.TypeAlias _
     | Type_sig.Interface _

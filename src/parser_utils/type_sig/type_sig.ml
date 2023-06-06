@@ -339,6 +339,10 @@ type ('loc, 'a) def =
       def: ('loc, 'a) component_sig;
       statics: ('loc * 'a) smap;
     }
+  | DisabledComponentBinding of {
+      id_loc: 'loc;
+      name: string;
+    }
   | Variable of {
       id_loc: 'loc;
       name: string;
@@ -368,6 +372,7 @@ let def_id_loc = function
   | FunBinding { id_loc; _ }
   | DeclareFun { id_loc; _ }
   | ComponentBinding { id_loc; _ }
+  | DisabledComponentBinding { id_loc; _ }
   | Variable { id_loc; _ } ->
     id_loc
   | EnumBinding { id_loc; _ } -> id_loc
@@ -382,6 +387,7 @@ let def_name = function
   | FunBinding { name; _ }
   | DeclareFun { name; _ }
   | ComponentBinding { name; _ }
+  | DisabledComponentBinding { name; _ }
   | Variable { name; _ } ->
     name
   | EnumBinding { name; _ } -> name

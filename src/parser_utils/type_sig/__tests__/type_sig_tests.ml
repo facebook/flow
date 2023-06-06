@@ -212,6 +212,7 @@ let sig_options
     ?(max_literal_len = 100)
     ?(exact_by_default = false)
     ?(enable_enums = true)
+    ?(enable_component_syntax = true)
     ?(enable_relay_integration = false)
     ?(conditional_type = true)
     ?(type_guards = true)
@@ -229,6 +230,7 @@ let sig_options
     max_literal_len;
     exact_by_default;
     enable_enums;
+    enable_component_syntax;
     enable_relay_integration;
     relay_integration_module_prefix;
     conditional_type;
@@ -252,6 +254,7 @@ let print_sig
     ?module_ref_prefix
     ?module_ref_prefix_LEGACY_INTEROP
     ?enable_enums
+    ?enable_component_syntax
     ?enable_relay_integration
     ?conditional_type
     ?mapped_type
@@ -269,6 +272,7 @@ let print_sig
       ?exact_by_default
       ?max_literal_len
       ?enable_enums
+      ?enable_component_syntax
       ?enable_relay_integration
       ?conditional_type
       ?mapped_type
@@ -6041,5 +6045,27 @@ let%expect_test "component4" =
              ];
            rest_param = None; renders = (Annot Bound {ref_loc = [1:27-28]; name = "T"})};
          statics = {}}
+
+  |}]
+
+let%expect_test "component" =
+  print_sig ~enable_component_syntax:false {|
+    component Baz() {};
+    module.exports = { Baz };
+  |};
+  [%expect{|
+    CJSModule {type_exports = [||];
+      exports =
+      (Some (Value
+               ObjLit {loc = [2:17-24];
+                 frozen = false; proto = None;
+                 props =
+                 { "Baz" ->
+                   (ObjValueField ([2:19-22], (
+                      Ref LocalRef {ref_loc = [2:19-22]; index = 0}), Polarity.Neutral)) }}));
+      info = CJSModuleInfo {type_export_keys = [||]; type_stars = []; strict = true}}
+
+    Local defs:
+    0. DisabledComponentBinding {id_loc = [1:10-13]; name = "Baz"}
 
   |}]

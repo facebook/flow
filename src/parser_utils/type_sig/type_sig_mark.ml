@@ -108,13 +108,18 @@ and mark_local_binding ~locs_to_dirtify ~visit_loc = function
       statics
   | P.ComponentBinding { id_loc; name = _; fn_loc; def; statics } ->
     mark_loc ~visit_loc id_loc;
-    mark_loc ~visit_loc fn_loc;
-    mark_component ~locs_to_dirtify ~visit_loc (Lazy.force def);
-    SMap.iter
-      (fun _ (id_loc, def) ->
-        mark_loc ~visit_loc id_loc;
-        mark_parsed ~locs_to_dirtify ~visit_loc def)
-      statics
+    begin
+      match def with
+      | Some (lazy def) ->
+        mark_loc ~visit_loc fn_loc;
+        mark_component ~locs_to_dirtify ~visit_loc def;
+        SMap.iter
+          (fun _ (id_loc, def) ->
+            mark_loc ~visit_loc id_loc;
+            mark_parsed ~locs_to_dirtify ~visit_loc def)
+          statics
+      | None -> ()
+    end
   | P.ClassBinding { id_loc; name = _; def } ->
     mark_loc ~visit_loc id_loc;
     mark_class ~locs_to_dirtify ~visit_loc (Lazy.force def)

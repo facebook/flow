@@ -218,7 +218,7 @@ and 'loc local_binding =
       id_loc: 'loc loc_node;
       name: string;
       fn_loc: 'loc loc_node;
-      def: ('loc loc_node, 'loc parsed) component_sig Lazy.t;
+      def: ('loc loc_node, 'loc parsed) component_sig Lazy.t option;
       statics: ('loc loc_node * 'loc parsed) smap;
     }
   | EnumBinding of {
@@ -725,9 +725,10 @@ module Scope = struct
       | ConstFunBinding fn ->
         let statics = SMap.add prop_name prop fn.statics in
         ConstFunBinding { fn with statics }
-      | ComponentBinding cp ->
+      | ComponentBinding ({ def = Some _; _ } as cp) ->
         let statics = SMap.add prop_name prop cp.statics in
         ComponentBinding { cp with statics }
+      | ComponentBinding { def = None; _ } -> def
       | ConstRefBinding { ref = Ref { name = ref_name; scope; _ }; _ } ->
         assign_binding prop_name prop ref_name scope;
         def
@@ -4080,7 +4081,12 @@ let component_decl opts scope tbls decl =
   in
   let sig_loc = push_loc tbls sig_loc in
   let id_loc = push_loc tbls id_loc in
-  let def = lazy (splice tbls id_loc (fun tbls -> component_def opts scope tbls decl)) in
+  let def =
+    if opts.enable_component_syntax then
+      Some (lazy (splice tbls id_loc (fun tbls -> component_def opts scope tbls decl)))
+    else
+      None
+  in
   Scope.bind_component scope tbls id_loc sig_loc name def
 
 let declare_variable_decl opts scope tbls decl =
