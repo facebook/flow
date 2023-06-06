@@ -1,11 +1,3 @@
-Error --------------------------------------------------------------------------------------------- binding_rules.js:5:1
-
-Component syntax is not supported [unsupported-syntax]
-
-   5| component Foo() {}
-      ^^^^^^^^^^^^^^^^^^
-
-
 Error --------------------------------------------------------------------------------------------- binding_rules.js:6:1
 
 Cannot reassign component binding `Foo` [1]. [cannot-reassign]
@@ -60,14 +52,6 @@ References:
    binding_rules.js:5:11
    5| component Foo() {}
                 ^^^ [1]
-
-
-Error -------------------------------------------------------------------------------------------- binding_rules.js:10:1
-
-Component syntax is not supported [unsupported-syntax]
-
-   10| component Foo() {} // ERROR, can't re-bind a component with a component either
-       ^^^^^^^^^^^^^^^^^^
 
 
 Error ------------------------------------------------------------------------------------------- binding_rules.js:10:11
@@ -210,14 +194,6 @@ References:
                  ^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- binding_rules.js:23:1
-
-Component syntax is not supported [unsupported-syntax]
-
-   23| component A() {} // ERROR, can't re-bind other bindings with a component either!
-       ^^^^^^^^^^^^^^^^
-
-
 Error ------------------------------------------------------------------------------------------- binding_rules.js:23:11
 
 Cannot declare `A` [1] because the name is already bound. [name-already-bound]
@@ -230,14 +206,6 @@ References:
    binding_rules.js:22:10
    22| function A() {}
                 ^ [1]
-
-
-Error -------------------------------------------------------------------------------------------- binding_rules.js:26:1
-
-Component syntax is not supported [unsupported-syntax]
-
-   26| component B() {} // ERROR
-       ^^^^^^^^^^^^^^^^
 
 
 Error ------------------------------------------------------------------------------------------- binding_rules.js:26:11
@@ -262,36 +230,12 @@ Cannot declare `C` [1] because the name is already bound. [name-already-bound]
            ^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- binding_rules.js:29:1
-
-Component syntax is not supported [unsupported-syntax]
-
-   29| component C() {}
-       ^^^^^^^^^^^^^^^^
-
-
 Error -------------------------------------------------------------------------------------------- binding_rules.js:31:7
 
 Cannot declare `D` [1] because the name is already bound. [name-already-bound]
 
    31| const D = 3;
              ^ [1]
-
-
-Error -------------------------------------------------------------------------------------------- binding_rules.js:32:1
-
-Component syntax is not supported [unsupported-syntax]
-
-   32| component D() {} // ERROR
-       ^^^^^^^^^^^^^^^^
-
-
-Error -------------------------------------------------------------------------------------------- binding_rules.js:35:1
-
-Component syntax is not supported [unsupported-syntax]
-
-   35| component E() {} // ERROR
-       ^^^^^^^^^^^^^^^^
 
 
 Error ------------------------------------------------------------------------------------------- binding_rules.js:35:11
@@ -308,14 +252,6 @@ References:
             ^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- binding_rules.js:39:3
-
-Component syntax is not supported [unsupported-syntax]
-
-   39|   component F() {} // ERROR
-         ^^^^^^^^^^^^^^^^
-
-
 Error ------------------------------------------------------------------------------------------- binding_rules.js:39:13
 
 Cannot declare `F` [1] because the name is already bound. [name-already-bound]
@@ -328,14 +264,6 @@ References:
    binding_rules.js:37:23
    37| function paramsStrict(F: number) {
                              ^ [1]
-
-
-Error -------------------------------------------------------------------------------------------- binding_rules.js:43:3
-
-Component syntax is not supported [unsupported-syntax]
-
-   43|   component G() {} // ERROR
-         ^^^^^^^^^^^^^^^^
 
 
 Error ------------------------------------------------------------------------------------------- binding_rules.js:43:13
@@ -352,14 +280,6 @@ References:
                        ^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- binding_rules.js:47:1
-
-Component syntax is not supported [unsupported-syntax]
-
-   47| component H() {} // ERROR
-       ^^^^^^^^^^^^^^^^
-
-
 Error ------------------------------------------------------------------------------------------- binding_rules.js:47:11
 
 Cannot declare `H` [1] because the name is already bound. [name-already-bound]
@@ -372,14 +292,6 @@ References:
    binding_rules.js:46:15
    46| declare const H: number;
                      ^ [1]
-
-
-Error -------------------------------------------------------------------------------------------- binding_rules.js:50:1
-
-Component syntax is not supported [unsupported-syntax]
-
-   50| component I() {} // ERROR
-       ^^^^^^^^^^^^^^^^
 
 
 Error ------------------------------------------------------------------------------------------- binding_rules.js:50:11
@@ -396,14 +308,6 @@ References:
                         ^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- binding_rules.js:53:1
-
-Component syntax is not supported [unsupported-syntax]
-
-   53| component J() {} // ERROR
-       ^^^^^^^^^^^^^^^^
-
-
 Error ------------------------------------------------------------------------------------------- binding_rules.js:53:11
 
 Cannot declare `J` [1] because the name is already bound. [name-already-bound]
@@ -418,14 +322,6 @@ References:
                     ^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- binding_rules.js:56:1
-
-Component syntax is not supported [unsupported-syntax]
-
-   56| component K() {} // ERROR
-       ^^^^^^^^^^^^^^^^
-
-
 Error ------------------------------------------------------------------------------------------- binding_rules.js:56:11
 
 Cannot declare `K` [1] because the name is already bound. [name-already-bound]
@@ -438,14 +334,6 @@ References:
    binding_rules.js:55:13
    55| declare let K: number;
                    ^ [1]
-
-
-Error -------------------------------------------------------------------------------------------- binding_rules.js:59:1
-
-Component syntax is not supported [unsupported-syntax]
-
-   59| component L() {} // ERROR
-       ^^^^^^^^^^^^^^^^
 
 
 Error ------------------------------------------------------------------------------------------- binding_rules.js:59:11
@@ -468,38 +356,6 @@ Cannot declare `M` [1] because the name is already bound. [name-already-bound]
 
    61| class M {} // ERROR
              ^ [1]
-
-
-Error -------------------------------------------------------------------------------------------- binding_rules.js:62:1
-
-Component syntax is not supported [unsupported-syntax]
-
-   62| component M() {}
-       ^^^^^^^^^^^^^^^^
-
-
-Error ----------------------------------------------------------------------------------- component_type_checking.js:3:1
-
-Component syntax is not supported [unsupported-syntax]
-
-       v----------------------
-    3| component InlineParams(
-    4|   foo: number,
-    5|   'special-key' as bar: number,
-    6|   baz as qux: number,
-    7|   destructured as {a}: {a: number},
-    8| ): void {
-    9|   (foo: number); // OK
-   10|   (foo: string); // ERROR
-   11|   (bar: number); // OK
-   12|   (bar: string); // ERROR
-   13|   (baz: number); // ERROR, baz unbound
-   14|   (qux: number); // OK
-   15|   (a: number); // OK
-   16|   (a: string); // ERROR
-   17|   return null; // ERROR
-   18| }
-       ^
 
 
 Error ---------------------------------------------------------------------------------- component_type_checking.js:10:4
@@ -575,22 +431,6 @@ References:
           ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------- component_type_checking.js:20:1
-
-Component syntax is not supported [unsupported-syntax]
-
-       v-----------------------------
-   20| component InlineWithRestParam(
-   21|   foo: number,
-   22|   ...rest: {foo: number}
-   23| ) {
-   24|   (foo: number);
-   25|   (rest: {foo: number}); // OK
-   26|   (rest: empty); // ERROR
-   27| }
-       ^
-
-
 Error ---------------------------------------------------------------------------------- component_type_checking.js:26:4
 
 Cannot cast `rest` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
@@ -606,23 +446,6 @@ References:
    component_type_checking.js:26:10
    26|   (rest: empty); // ERROR
                 ^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------- component_type_checking.js:29:1
-
-Component syntax is not supported [unsupported-syntax]
-
-       v------------------
-   29| component Defaults(
-   30|   foo: number = 3, // OK
-   31|   bar: string = 3, // ERROR
-   32|   backwardsRef: typeof foo = foo, // ERROR 2x
-   33|   destructured as {a = 'str'}: {a?: number}, // ERROR
-   34|   destructuredAssigned as {b = 3}: {b?: number},
-   35| ) {
-   36|   (b: number); // OK!
-   37| }
-       ^
 
 
 Error --------------------------------------------------------------------------------- component_type_checking.js:31:17
@@ -669,29 +492,6 @@ References:
                                            ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------- component_type_checking.js:39:1
-
-Component syntax is not supported [unsupported-syntax]
-
-       v-----------------------------------
-   39| component ReactNodeDefaultReturn() {
-   40|   declare const node: React$Node;
-   41|   return node; // OK!
-   42| }
-       ^
-
-
-Error ---------------------------------------------------------------------------------------------------- errors.js:1:1
-
-Component syntax is not supported [unsupported-syntax]
-
-      v----------------
-   1| component Bar() {
-   2|     this; // error
-   3| }
-      ^
-
-
 Error ---------------------------------------------------------------------------------------------------- errors.js:2:5
 
 Cannot reference `this` from within component declaration [1] [component-this-reference]
@@ -704,29 +504,6 @@ References:
    errors.js:1:1
    1| component Bar() {
       ^^^^^^^^^^^^^^^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------------- errors.js:5:1
-
-Component syntax is not supported [unsupported-syntax]
-
-       v----------------
-    5| component Baz() {
-    6|     class Nested {
-    7|         m() {
-    8|             this; // ok
-    9|         }
-   10|     }
-   11| }
-       ^
-
-
-Error --------------------------------------------------------------------------------------------------- errors.js:18:9
-
-Component syntax is not supported [unsupported-syntax]
-
-   18|         component Foo(x: string = this.x) { } // error from num ~> string, no error from this
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error -------------------------------------------------------------------------------------------------- errors.js:18:35
@@ -744,14 +521,6 @@ References:
    errors.js:18:26
    18|         component Foo(x: string = this.x) { } // error from num ~> string, no error from this
                                 ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- errors.js:23:1
-
-Component syntax is not supported [unsupported-syntax]
-
-   23| component lowercase() { } // error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error -------------------------------------------------------------------------------------------------- errors.js:23:11
@@ -974,14 +743,6 @@ References:
        ^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- names.js:4:1
-
-Component syntax is not supported [unsupported-syntax]
-
-   4| component Foo(a: number, ...props: {a: number}) {} // Error
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
 Error ---------------------------------------------------------------------------------------------------- names.js:4:36
 
 Component property `a` [1] is re-declared [2] within a spread [3]. Property names may only be have one definition within
@@ -998,14 +759,6 @@ References:
    names.js:4:37
    4| component Foo(a: number, ...props: {a: number}) {} // Error
                                           ^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- names.js:8:1
-
-Component syntax is not supported [unsupported-syntax]
-
-   8| component Bar(a: number, ...props: BarT) {}; // Error
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error ---------------------------------------------------------------------------------------------------- names.js:8:36
@@ -1026,14 +779,6 @@ References:
                    ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- names.js:11:1
-
-Component syntax is not supported [unsupported-syntax]
-
-   11| component Baz(a: number, ...props: {[string]: boolean}) {}; // Ok
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
 Error ---------------------------------------------------------------------------------------------------- names.js:12:9
 
 Cannot create `Baz` element because boolean [1] is incompatible with number [2] in property `a`. [incompatible-type]
@@ -1046,14 +791,6 @@ References:
    names.js:11:18
    11| component Baz(a: number, ...props: {[string]: boolean}) {}; // Ok
                         ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- names.js:15:1
-
-Component syntax is not supported [unsupported-syntax]
-
-   15| component Qux(a: number, ...props: {[string]: boolean, a: number}) {}; // Error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error --------------------------------------------------------------------------------------------------- names.js:15:36
@@ -1074,14 +811,6 @@ References:
                                                               ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- names.js:19:1
-
-Component syntax is not supported [unsupported-syntax]
-
-   19| component RunningOutOfMetasyntaxticVariables(a: number, ...props: {...ROMSVType}) {}; // Error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
 Error --------------------------------------------------------------------------------------------------- names.js:19:67
 
 Component property `a` [1] is re-declared [2] within a spread [3]. Property names may only be have one definition within
@@ -1100,14 +829,6 @@ References:
                             ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- names.js:22:1
-
-Component syntax is not supported [unsupported-syntax]
-
-   22| component NoRef(ref: string) {}; // Error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
 Error --------------------------------------------------------------------------------------------------- names.js:22:17
 
 Component syntax does not support ref properties [1]. Use a `forwardRef`-style component definition instead
@@ -1115,14 +836,6 @@ Component syntax does not support ref properties [1]. Use a `forwardRef`-style c
 
    22| component NoRef(ref: string) {}; // Error
                        ^^^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------------- names.js:25:1
-
-Component syntax is not supported [unsupported-syntax]
-
-   25| component NoRefInSpread(...props: {ref: string}) {}; // Error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error --------------------------------------------------------------------------------------------------- names.js:25:35
@@ -1137,53 +850,6 @@ References:
    names.js:25:36
    25| component NoRefInSpread(...props: {ref: string}) {}; // Error
                                           ^^^ [1]
-
-
-Error -------------------------------------------------------------------------------------- nested_with_function.js:5:3
-
-Component syntax is not supported [unsupported-syntax]
-
-        v------------------------
-   5|   component Foo(): string {
-   6|     return 'str'; // No error
-   7|   }
-        ^
-
-
-Error ------------------------------------------------------------------------------------- nested_with_function.js:11:1
-
-Component syntax is not supported [unsupported-syntax]
-
-       v------------------------
-   11| component Foo(): number {
-   12|   function f(): string {
-   13|     return 'str'; // No error
-   14|   }
-   15|   return 3;
-   16| }
-       ^
-
-
-Error ----------------------------------------------------------------------------------------- procedure_decider.js:6:3
-
-Component syntax is not supported [unsupported-syntax]
-
-        v----------------
-   6|   component Foo() {
-   7|     return bar();
-   8|   }
-        ^
-
-
-Error -------------------------------------------------------------------------------------------------- provider.js:3:1
-
-Component syntax is not supported [unsupported-syntax]
-
-      v--------------
-   3| component C() {
-   4|     x = 42;
-   5| }
-      ^
 
 
 Error -------------------------------------------------------------------------------------------------- provider.js:4:9
@@ -1224,20 +890,6 @@ References:
                ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- signature.js:4:1
-
-Component syntax is not supported [unsupported-syntax]
-
-      v--------------------
-   4| component InlineOnly(
-   5|   foo: number,
-   6|   bar: string,
-   7| ) {
-   8|   return null;
-   9| }
-      ^
-
-
 Error ----------------------------------------------------------------------------------------------- signature.js:12:39
 
 Cannot create `InlineOnly` element because string [1] is incompatible with number [2] in property `foo`.
@@ -1266,20 +918,6 @@ References:
    signature.js:6:8
     6|   bar: string,
               ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ signature.js:14:1
-
-Component syntax is not supported [unsupported-syntax]
-
-       v---------------------
-   14| component InexactRest(
-   15|   foo: number,
-   16|   ...rest: {bar: string, ...}
-   17| ) {
-   18|   return null;
-   19| }
-       ^
 
 
 Error ----------------------------------------------------------------------------------------------- signature.js:22:37
@@ -1312,20 +950,6 @@ References:
                         ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ signature.js:24:1
-
-Component syntax is not supported [unsupported-syntax]
-
-       v---------------------
-   24| component IndexedRest(
-   25|   foo: number,
-   26|   ...rest: {[string]: number, ...}
-   27| ) {
-   28|   return null;
-   29| }
-       ^
-
-
 Error ----------------------------------------------------------------------------------------------- signature.js:32:37
 
 Cannot create `IndexedRest` element because string [1] is incompatible with number [2] in property `foo`.
@@ -1356,19 +980,6 @@ References:
                              ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ signature.js:34:1
-
-Component syntax is not supported [unsupported-syntax]
-
-       v----------------------
-   34| component DefaultProps(
-   35|   foo: number = 3,
-   36| ) {
-   37|   return null;
-   38| }
-       ^
-
-
 Error ----------------------------------------------------------------------------------------------- signature.js:41:39
 
 Cannot create `DefaultProps` element because string [1] is incompatible with number [2] in property `foo`.
@@ -1382,19 +993,6 @@ References:
    signature.js:35:8
    35|   foo: number = 3,
               ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ signature.js:43:1
-
-Component syntax is not supported [unsupported-syntax]
-
-       v-----------------------
-   43| component RenamedParams(
-   44|   foo as bar: number,
-   45|   bar as foo: string,
-   46|   'non-ident' as baz: string,
-   47| ) {}
-       ---^
 
 
 Error ----------------------------------------------------------------------------------------------- signature.js:50:28
@@ -1473,14 +1071,6 @@ References:
                      ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- statics.js:2:1
-
-Component syntax is not supported [unsupported-syntax]
-
-   2| component Foo() {}
-      ^^^^^^^^^^^^^^^^^^
-
-
 Error -------------------------------------------------------------------------------------------------- statics.js:4:19
 
 Cannot assign `3` to `Foo.displayName` because number [1] is incompatible with string [2]. [incompatible-type]
@@ -1526,13 +1116,5 @@ Strict mode function may not have duplicate parameter names
                          ^
 
 
-Error ----------------------------------------------------------------------------------------------- unsupported.js:4:1
 
-Component syntax is not supported [unsupported-syntax]
-
-   4| component Foo() {} // ERROR
-      ^^^^^^^^^^^^^^^^^^
-
-
-
-Found 117 errors
+Found 76 errors

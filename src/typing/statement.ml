@@ -1231,7 +1231,6 @@ module Make
       let (_, _, node) = function_ loc func in
       node
     | (loc, ComponentDeclaration component) ->
-      Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, ComponentSyntax));
       error_on_this_uses_in_components cx component;
       let { ComponentDeclaration.id = (name_loc, { Ast.Identifier.name; _ }); _ } = component in
       if name <> String.capitalize_ascii name then
