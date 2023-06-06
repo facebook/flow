@@ -11,7 +11,7 @@ lib.js
 all=true
 exact_by_default=false
 no_flowlib=false
-experimental.conditional_type=true
+conditional_type=true
 experimental.mapped_type=true
 
 [strict]
