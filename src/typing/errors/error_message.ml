@@ -524,6 +524,7 @@ and 'loc t' =
       component_loc: 'loc;
       this_loc: 'loc;
     }
+  | EComponentCase of 'loc
   | EInvalidDeclaration of {
       declaration: 'loc virtual_reason;
       null_write: 'loc null_write option;
@@ -1201,6 +1202,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EObjectThisReference (loc, r) -> EObjectThisReference (f loc, map_reason r)
   | EComponentThisReference { component_loc; this_loc } ->
     EComponentThisReference { component_loc = f component_loc; this_loc = f this_loc }
+  | EComponentCase loc -> EComponentCase (f loc)
   | EInvalidDeclaration { declaration; null_write; possible_generic_escape_locs } ->
     EInvalidDeclaration
       {
@@ -1510,6 +1512,7 @@ let util_use_op_of_msg nope util = function
   | EMethodUnbinding _
   | EObjectThisReference _
   | EComponentThisReference _
+  | EComponentCase _
   | EInvalidDeclaration _
   | EInvalidGraphQL _
   | EDefinitionCycle _
@@ -1673,6 +1676,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EMalformedCode loc
   | EObjectThisReference (loc, _)
   | EComponentThisReference { this_loc = loc; _ }
+  | EComponentCase loc
   | EImportInternalReactServerModule loc
   | EInvalidGraphQL (loc, _)
   | EAnnotationInference (loc, _, _, _)
@@ -4238,6 +4242,8 @@ let friendly_message_of_msg loc_of_aloc msg =
             ref (mk_reason (RCustom "component declaration") component_loc);
           ];
       }
+  | EComponentCase _ ->
+    Normal { features = [text "Component identifiers must begin with an upper-case character"] }
   | EDuplicateClassMember { name; static; _ } ->
     let member_type =
       if static then
@@ -5179,6 +5185,7 @@ let error_code_of_message err : error_code option =
   | EImplicitInstantiationWidenedError _ -> None
   | EObjectThisReference _ -> Some ObjectThisReference
   | EComponentThisReference _ -> Some ComponentThisReference
+  | EComponentCase _ -> Some ComponentCase
   | EInvalidDeclaration _ -> Some InvalidDeclaration
   | EInvalidMappedType _ -> Some InvalidMappedType
   | ECannotMapInstance _ -> Some InvalidMappedType

@@ -681,6 +681,87 @@ Component syntax is not supported [unsupported-syntax]
        ^
 
 
+Error ---------------------------------------------------------------------------------------------------- errors.js:1:1
+
+Component syntax is not supported [unsupported-syntax]
+
+      v----------------
+   1| component Bar() {
+   2|     this; // error
+   3| }
+      ^
+
+
+Error ---------------------------------------------------------------------------------------------------- errors.js:2:5
+
+Cannot reference `this` from within component declaration [1] [component-this-reference]
+
+   errors.js:2:5
+   2|     this; // error
+          ^^^^
+
+References:
+   errors.js:1:1
+   1| component Bar() {
+      ^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- errors.js:5:1
+
+Component syntax is not supported [unsupported-syntax]
+
+       v----------------
+    5| component Baz() {
+    6|     class Nested {
+    7|         m() {
+    8|             this; // ok
+    9|         }
+   10|     }
+   11| }
+       ^
+
+
+Error --------------------------------------------------------------------------------------------------- errors.js:18:9
+
+Component syntax is not supported [unsupported-syntax]
+
+   18|         component Foo(x: string = this.x) { } // error from num ~> string, no error from this
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- errors.js:18:35
+
+Cannot assign `this.x` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   errors.js:18:35
+   18|         component Foo(x: string = this.x) { } // error from num ~> string, no error from this
+                                         ^^^^^^
+
+References:
+   errors.js:16:9
+   16|     x = 42;
+               ^^ [1]
+   errors.js:18:26
+   18|         component Foo(x: string = this.x) { } // error from num ~> string, no error from this
+                                ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- errors.js:23:1
+
+Component syntax is not supported [unsupported-syntax]
+
+   23| component lowercase() { } // error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- errors.js:23:11
+
+Component identifiers must begin with an upper-case character [component-case]
+
+   23| component lowercase() { } // error
+                 ^^^^^^^^^
+
+
 Error --------------------------------------------------------------------------------------------------- import.js:5:39
 
 Cannot create `InlineOnly` element because string [1] is incompatible with number [2] in property `foo`.
@@ -1445,71 +1526,6 @@ Strict mode function may not have duplicate parameter names
                          ^
 
 
-Error ------------------------------------------------------------------------------------------------ this_error.js:1:1
-
-Component syntax is not supported [unsupported-syntax]
-
-      v----------------
-   1| component Bar() {
-   2|     this; // error
-   3| }
-      ^
-
-
-Error ------------------------------------------------------------------------------------------------ this_error.js:2:5
-
-Cannot reference `this` from within component declaration [1] [component-this-reference]
-
-   this_error.js:2:5
-   2|     this; // error
-          ^^^^
-
-References:
-   this_error.js:1:1
-   1| component Bar() {
-      ^^^^^^^^^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------ this_error.js:5:1
-
-Component syntax is not supported [unsupported-syntax]
-
-       v----------------
-    5| component Baz() {
-    6|     class Nested {
-    7|         m() {
-    8|             this; // ok
-    9|         }
-   10|     }
-   11| }
-       ^
-
-
-Error ----------------------------------------------------------------------------------------------- this_error.js:18:9
-
-Component syntax is not supported [unsupported-syntax]
-
-   18|         component Foo(x: string = this.x) { } // error from num ~> string, no error from this
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------------------- this_error.js:18:35
-
-Cannot assign `this.x` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
-
-   this_error.js:18:35
-   18|         component Foo(x: string = this.x) { } // error from num ~> string, no error from this
-                                         ^^^^^^
-
-References:
-   this_error.js:16:9
-   16|     x = 42;
-               ^^ [1]
-   this_error.js:18:26
-   18|         component Foo(x: string = this.x) { } // error from num ~> string, no error from this
-                                ^^^^^^ [2]
-
-
 Error ----------------------------------------------------------------------------------------------- unsupported.js:4:1
 
 Component syntax is not supported [unsupported-syntax]
@@ -1519,4 +1535,4 @@ Component syntax is not supported [unsupported-syntax]
 
 
 
-Found 115 errors
+Found 117 errors

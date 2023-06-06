@@ -20,6 +20,7 @@ type error_code =
   | CannotWrite
   | CannotWriteEnum
   | ClassObject
+  | ComponentCase
   | ComponentThisReference
   | DefaultImportAccess
   | DeprecatedType
@@ -214,6 +215,7 @@ let string_of_code : error_code -> string = function
   | CannotWriteEnum -> "cannot-write-enum"
   | ClassObject -> "class-object-subtyping"
   | ComponentThisReference -> "component-this-reference"
+  | ComponentCase -> "component-case"
   | DefaultImportAccess -> "default-import-access"
   | DeprecatedType -> "deprecated-type"
   | DeprecatedUtility -> "deprecated-utility"

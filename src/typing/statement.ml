@@ -1231,15 +1231,15 @@ module Make
       let (_, _, node) = function_ loc func in
       node
     | (loc, ComponentDeclaration component) ->
-      (* TODO(jmbrown): add typechecking for component syntax *)
       Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, ComponentSyntax));
       error_on_this_uses_in_components cx component;
-      let { ComponentDeclaration.id = (_, { Ast.Identifier.name; _ }); _ } = component in
+      let { ComponentDeclaration.id = (name_loc, { Ast.Identifier.name; _ }); _ } = component in
+      if name <> String.capitalize_ascii name then
+        Flow_js_utils.add_output cx Error_message.(EComponentCase name_loc);
       let reason = mk_reason (RComponent (OrdinaryName name)) loc in
       let (component_sig, reconstruct_component) =
         mk_component_sig cx Subst_name.Map.empty reason component
       in
-      let (name_loc, _) = component.ComponentDeclaration.id in
       let general = Env.read_declared_type cx reason name_loc in
       let (params_ast, body_ast) = Component_declaration_sig.toplevels cx component_sig in
       (loc, ComponentDeclaration (reconstruct_component params_ast body_ast general))

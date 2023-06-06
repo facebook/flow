@@ -1818,6 +1818,7 @@ let dump_error_message =
         "EComponentThisReference (this=%s, component=%s)"
         (string_of_aloc this_loc)
         (string_of_aloc component_loc)
+    | EComponentCase loc -> spf "EComponentThisReference (%s)" (string_of_aloc loc)
     | EInvalidDeclaration { declaration = r; _ } -> spf "EInvalidDeclaration %s" (dump_reason cx r)
     | EImportInternalReactServerModule loc ->
       spf "EImportInternalReactServerModule (%s)" (string_of_aloc loc)

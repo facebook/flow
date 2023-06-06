@@ -19,3 +19,5 @@ class Ext {
         <Foo />; // ok
     }
 }
+
+component lowercase() { } // error
