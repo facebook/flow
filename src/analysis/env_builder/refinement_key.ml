@@ -124,11 +124,11 @@ module Make (L : Loc_sig.S) : REFINEMENT_KEY with module L = L = struct
     match property with
     | PropertyIdentifier (_, { Flow_ast.Identifier.name; comments = _ })
     | PropertyExpression
-        (_, Flow_ast.Expression.Literal { Flow_ast.Literal.value = Flow_ast.Literal.String name; _ })
+        (_, Flow_ast.Expression.StringLiteral { Flow_ast.StringLiteral.value = name; _ })
     | PropertyExpression
         ( _,
-          Flow_ast.Expression.Literal
-            { Flow_ast.Literal.value = Flow_ast.Literal.Number _; raw = name; comments = _ }
+          Flow_ast.Expression.NumberLiteral
+            { Flow_ast.NumberLiteral.value = _; raw = name; comments = _ }
         ) ->
       (match lookup_of_expression ~allow_optional _object with
       | Some { base; projections } -> Some { base; projections = Prop name :: projections }

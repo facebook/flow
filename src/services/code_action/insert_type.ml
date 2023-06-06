@@ -286,8 +286,16 @@ class mapper ~strict ~synth_type target =
         update_property loc prop annot
       | Property
           ( loc,
-            ( { key = Literal (kloc, _) | Identifier (kloc, _) | PrivateName (kloc, _); annot; _ }
-            as prop
+            ( {
+                key =
+                  ( StringLiteral (kloc, _)
+                  | NumberLiteral (kloc, _)
+                  | BigIntLiteral (kloc, _)
+                  | Identifier (kloc, _)
+                  | PrivateName (kloc, _) );
+                annot;
+                _;
+              } as prop
             )
           )
         when this#is_target kloc || (target_is_point && this#target_contained_by kloc) ->

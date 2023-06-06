@@ -138,7 +138,13 @@ let precedence_of_expression expr =
   | (_, E.Identifier _)
   | (_, E.JSXElement _)
   | (_, E.JSXFragment _)
-  | (_, E.Literal _)
+  | (_, E.StringLiteral _)
+  | (_, E.BooleanLiteral _)
+  | (_, E.NullLiteral _)
+  | (_, E.NumberLiteral _)
+  | (_, E.BigIntLiteral _)
+  | (_, E.RegExpLiteral _)
+  | (_, E.ModuleRefLiteral _)
   | (_, E.Object _)
   | (_, E.Super _)
   | (_, E.TemplateLiteral _)
@@ -1013,7 +1019,13 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
         layout_node_with_comments_opt loc comments
         @@ group [join (fuse [Atom ","; pretty_line]) layouts]
       | E.Identifier ident -> identifier ident
-      | E.Literal lit -> literal ~opts loc lit
+      | E.StringLiteral lit -> string_literal ~opts loc lit
+      | E.BooleanLiteral lit -> boolean_literal loc lit
+      | E.NullLiteral lit -> null_literal loc lit
+      | E.NumberLiteral lit -> number_literal ~opts loc lit
+      | E.BigIntLiteral lit -> bigint_literal loc lit
+      | E.RegExpLiteral lit -> regexp_literal ~opts loc lit
+      | E.ModuleRefLiteral lit -> module_ref_literal loc lit
       | E.Function func -> function_ ~opts loc func
       | E.ArrowFunction func -> arrow_function ~ctxt ~opts loc func
       | E.Assignment { E.Assignment.operator; left; right; comments } ->
@@ -1318,67 +1330,82 @@ and array_element ~ctxt ~opts element =
 
 and identifier (loc, { Ast.Identifier.name; comments }) = identifier_with_comments loc name comments
 
-and number_literal_type loc { Ast.NumberLiteral.value = _; raw; comments } =
-  layout_node_with_comments_opt loc comments (Atom raw)
-
-and number_literal ~in_member_object raw num =
-  let str = Dtoa.shortest_string_of_float num in
-  if in_member_object then
-    (* `1.foo` is a syntax error, but `1.0.foo`, `1e0.foo` and even `1..foo` are all ok. *)
-    let is_int x = not (String.contains x '.' || String.contains x 'e') in
-    let if_pretty =
-      if is_int raw then
-        wrap_in_parens (Atom raw)
-      else
-        Atom raw
-    in
-    let if_ugly =
-      if is_int str then
-        fuse [Atom str; Atom "."]
-      else
-        Atom str
-    in
-    if if_pretty = if_ugly then
-      if_pretty
+and number_literal ~opts loc { Ast.NumberLiteral.value; raw; comments } =
+  let node =
+    if opts.preserve_formatting then
+      Atom raw
     else
-      IfPretty (if_pretty, if_ugly)
-  else if String.equal raw str then
-    Atom raw
-  else
-    IfPretty (Atom raw, Atom str)
+      let str = Dtoa.shortest_string_of_float value in
+      if String.equal raw str then
+        Atom raw
+      else
+        IfPretty (Atom raw, Atom str)
+  in
+  layout_node_with_comments_opt loc comments node
 
-and literal ~opts loc { Ast.Literal.raw; value; comments } =
-  let open Ast.Literal in
-  layout_node_with_comments_opt loc comments
-  @@
-  match value with
-  | _ when opts.preserve_formatting -> Atom raw
-  | Number num -> number_literal ~in_member_object:false raw num
-  | String str ->
-    let quote = better_quote ~prefer_single_quotes:opts.single_quotes str in
-    fuse [Atom quote; Atom (utf8_escape ~quote str); Atom quote]
-  | RegExp { RegExp.pattern; flags } ->
-    let flags = flags |> String_utils.to_list |> List.sort Char.compare |> String_utils.of_list in
-    fuse [Atom "/"; Atom pattern; Atom "/"; Atom flags]
-  | _ -> Atom raw
+and number_literal_member ~opts loc { Ast.NumberLiteral.raw; value; comments } =
+  let node =
+    if opts.preserve_formatting then
+      Atom raw
+    else
+      let str = Dtoa.shortest_string_of_float value in
+      (* `1.foo` is a syntax error, but `1.0.foo`, `1e0.foo` and even `1..foo` are all ok. *)
+      let is_int x = not (String.contains x '.' || String.contains x 'e') in
+      let if_pretty =
+        if is_int raw then
+          wrap_in_parens (Atom raw)
+        else
+          Atom raw
+      in
+      let if_ugly =
+        if is_int str then
+          fuse [Atom str; Atom "."]
+        else
+          Atom str
+      in
+      if if_pretty = if_ugly then
+        if_pretty
+      else
+        IfPretty (if_pretty, if_ugly)
+  in
+  layout_node_with_comments_opt loc comments node
 
-and string_literal_type loc { Ast.StringLiteral.value = _; raw; comments } =
+and string_literal ~opts loc { Ast.StringLiteral.value; raw; comments } =
+  let node =
+    if opts.preserve_formatting then
+      Atom raw
+    else
+      let quote = better_quote ~prefer_single_quotes:opts.single_quotes value in
+      fuse [Atom quote; Atom (utf8_escape ~quote value); Atom quote]
+  in
+  layout_node_with_comments_opt loc comments node
+
+and bigint_literal loc { Ast.BigIntLiteral.value = _; raw; comments } =
   layout_node_with_comments_opt loc comments (Atom raw)
 
-and bigint_literal_type loc { Ast.BigIntLiteral.value = _; raw; comments } =
+and boolean_literal loc { Ast.BooleanLiteral.value; comments } =
+  let value =
+    if value then
+      "true"
+    else
+      "false"
+  in
+  layout_node_with_comments_opt loc comments (Atom value)
+
+and regexp_literal ~opts loc { Ast.RegExpLiteral.pattern; flags; raw; comments; _ } =
+  let node =
+    if opts.preserve_formatting then
+      Atom raw
+    else
+      let flags = flags |> String_utils.to_list |> List.sort Char.compare |> String_utils.of_list in
+      fuse [Atom "/"; Atom pattern; Atom "/"; Atom flags]
+  in
+  layout_node_with_comments_opt loc comments node
+
+and module_ref_literal loc { Ast.ModuleRefLiteral.raw; comments; _ } =
   layout_node_with_comments_opt loc comments (Atom raw)
 
-and boolean_literal_type loc { Ast.BooleanLiteral.value; comments } =
-  layout_node_with_comments_opt
-    loc
-    comments
-    (Atom
-       ( if value then
-         "true"
-       else
-         "false"
-       )
-    )
+and null_literal loc comments = layout_node_with_comments_opt loc comments (Atom "null")
 
 and member ?(optional = false) ~opts ~precedence ~ctxt member_node loc =
   let { Ast.Expression.Member._object; property; comments } = member_node in
@@ -1421,14 +1448,9 @@ and member ?(optional = false) ~opts ~precedence ~ctxt member_node loc =
          begin
            match _object with
            | (_, Ast.Expression.Call _) -> expression ~ctxt ~opts _object
-           | ( loc,
-               Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Number num; raw; comments }
-             )
-             when not computed ->
+           | (loc, Ast.Expression.NumberLiteral lit) when not computed ->
              (* 1.foo would be confused with a decimal point, so it needs parens *)
-             source_location_with_comments
-               ?comments
-               (loc, number_literal ~in_member_object:true raw num)
+             number_literal_member ~opts loc lit
            | _ -> expression_with_parens ~opts ~precedence ~ctxt _object
          end;
          (* If this is a non-computed member expression where the object has a trailing block
@@ -1443,13 +1465,6 @@ and member ?(optional = false) ~opts ~precedence ~ctxt member_node loc =
          end;
          property_layout_with_delims;
        ]
-
-and string_literal ~opts (loc, { Ast.StringLiteral.value; comments; _ }) =
-  let prefer_single_quotes = opts.single_quotes in
-  let quote = better_quote ~prefer_single_quotes value in
-  source_location_with_comments
-    ?comments
-    (loc, fuse [Atom quote; Atom (utf8_escape ~quote value); Atom quote])
 
 and type_cast ~opts loc cast =
   let { Ast.Expression.TypeCast.expression = expr; annot; comments } = cast in
@@ -1481,7 +1496,9 @@ and ts_type_cast ~opts loc cast =
 and pattern_object_property_key ~opts =
   let open Ast.Pattern.Object in
   function
-  | Property.Literal (loc, lit) -> source_location_with_comments (loc, literal ~opts loc lit)
+  | Property.StringLiteral (loc, lit) -> string_literal ~opts loc lit
+  | Property.NumberLiteral (loc, lit) -> number_literal ~opts loc lit
+  | Property.BigIntLiteral (loc, lit) -> bigint_literal loc lit
   | Property.Identifier ident -> identifier ident
   | Property.Computed (loc, { Ast.ComputedKey.expression = expr; comments }) ->
     layout_node_with_comments_opt loc comments
@@ -2138,7 +2155,8 @@ and component_param
 
 and component_param_name ~opts = function
   | Some (Ast.Statement.ComponentDeclaration.Param.Identifier name) -> identifier name
-  | Some (Ast.Statement.ComponentDeclaration.Param.StringLiteral name) -> string_literal ~opts name
+  | Some (Ast.Statement.ComponentDeclaration.Param.StringLiteral (loc, lit)) ->
+    string_literal ~opts loc lit
   | None -> failwith "Internal Error: Expected value to exist for component declaration param name"
 
 and component_return ~opts return =
@@ -2597,7 +2615,9 @@ and statement_list ?(pretty_semicolon = false) ~opts statements =
 and object_property_key ~opts key =
   let module O = Ast.Expression.Object in
   match key with
-  | O.Property.Literal (loc, lit) -> source_location_with_comments (loc, literal ~opts loc lit)
+  | O.Property.StringLiteral (loc, lit) -> string_literal ~opts loc lit
+  | O.Property.NumberLiteral (loc, lit) -> number_literal ~opts loc lit
+  | O.Property.BigIntLiteral (loc, lit) -> bigint_literal loc lit
   | O.Property.Identifier ident -> identifier ident
   | O.Property.Computed (loc, { Ast.ComputedKey.expression = expr; comments }) ->
     layout_node_with_comments_opt loc comments
@@ -2864,8 +2884,8 @@ and jsx_attribute ~opts (loc, { Ast.JSX.Attribute.name; value }) =
                   Atom "=";
                   begin
                     match v with
-                    | A.Literal (loc, lit) ->
-                      source_location_with_comments (loc, literal ~opts loc lit)
+                    | A.StringLiteral (loc, lit) ->
+                      source_location_with_comments (loc, string_literal ~opts loc lit)
                     | A.ExpressionContainer (loc, express) ->
                       source_location_with_comments (loc, jsx_expression_container ~opts loc express)
                   end;
@@ -3091,12 +3111,12 @@ and import_declaration
               | ((special, Some named), _) ->
                 fuse [space; fuse_list ~sep:(Atom ",") (special @ [named]); pretty_space; s_from]
             end;
-            string_literal ~opts source;
+            string_literal ~opts (fst source) (snd source);
           ]
        )
 
 and export_source ~opts ~prefix = function
-  | Some lit -> fuse [prefix; Atom "from"; pretty_space; string_literal ~opts lit]
+  | Some (loc, lit) -> fuse [prefix; Atom "from"; pretty_space; string_literal ~opts loc lit]
   | None -> Empty
 
 and export_specifier ~opts source =
@@ -4099,7 +4119,7 @@ and type_ ~opts ((loc, t) : (Loc.t, Loc.t) Ast.Type.t) =
       | T.Mixed comments -> layout_node_with_comments_opt loc comments (Atom "mixed")
       | T.Empty comments -> layout_node_with_comments_opt loc comments (Atom "empty")
       | T.Void comments -> layout_node_with_comments_opt loc comments (Atom "void")
-      | T.Null comments -> layout_node_with_comments_opt loc comments (Atom "null")
+      | T.Null comments -> null_literal loc comments
       | T.Symbol comments -> layout_node_with_comments_opt loc comments (Atom "symbol")
       | T.Number comments -> layout_node_with_comments_opt loc comments (Atom "number")
       | T.BigInt comments -> layout_node_with_comments_opt loc comments (Atom "bigint")
@@ -4132,10 +4152,10 @@ and type_ ~opts ((loc, t) : (Loc.t, Loc.t) Ast.Type.t) =
       | T.Keyof t -> type_keyof ~opts loc t
       | T.ReadOnly t -> type_readonly ~opts loc t
       | T.Tuple t -> type_tuple ~opts loc t
-      | T.StringLiteral lit -> string_literal_type loc lit
-      | T.NumberLiteral lit -> number_literal_type loc lit
-      | T.BigIntLiteral lit -> bigint_literal_type loc lit
-      | T.BooleanLiteral lit -> boolean_literal_type loc lit
+      | T.StringLiteral lit -> string_literal ~opts loc lit
+      | T.NumberLiteral lit -> number_literal ~opts loc lit
+      | T.BigIntLiteral lit -> bigint_literal loc lit
+      | T.BooleanLiteral lit -> boolean_literal loc lit
       | T.Exists comments -> layout_node_with_comments_opt loc comments (Atom "*")
     )
 
@@ -4437,7 +4457,7 @@ and declare_module ~opts loc { Ast.Statement.DeclareModule.id; body; kind = _; c
           begin
             match id with
             | Ast.Statement.DeclareModule.Identifier id -> identifier id
-            | Ast.Statement.DeclareModule.Literal lit -> string_literal ~opts lit
+            | Ast.Statement.DeclareModule.Literal (loc, lit) -> string_literal ~opts loc lit
           end;
           pretty_space;
           block ~opts body;

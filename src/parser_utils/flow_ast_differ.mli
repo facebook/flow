@@ -41,11 +41,12 @@ type statement_node_parent =
 type node =
   | Raw of string
   | Comment of Loc.t Flow_ast.Comment.t
-  | Literal of Loc.t * (Loc.t, Loc.t) Flow_ast.Literal.t
   | StringLiteral of Loc.t * Loc.t Flow_ast.StringLiteral.t
   | NumberLiteral of Loc.t * Loc.t Flow_ast.NumberLiteral.t
   | BigIntLiteral of Loc.t * Loc.t Flow_ast.BigIntLiteral.t
   | BooleanLiteral of Loc.t * Loc.t Flow_ast.BooleanLiteral.t
+  | RegExpLiteral of Loc.t * Loc.t Flow_ast.RegExpLiteral.t
+  | ModuleRefLiteral of Loc.t * (Loc.t, Loc.t) Flow_ast.ModuleRefLiteral.t
   | Statement of ((Loc.t, Loc.t) Flow_ast.Statement.t * statement_node_parent)
   | Program of (Loc.t, Loc.t) Flow_ast.Program.t
   | Expression of ((Loc.t, Loc.t) Flow_ast.Expression.t * expression_node_parent)

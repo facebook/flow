@@ -265,7 +265,10 @@ module Type_at_pos = struct
       method! object_key key =
         let open Ast.Expression.Object.Property in
         match key with
-        | Literal ((loc, t), _) when self#covers_target loc ->
+        | StringLiteral ((loc, t), _)
+        | NumberLiteral ((loc, t), _)
+        | BigIntLiteral ((loc, t), _)
+          when self#covers_target loc ->
           self#annot_with_tparams (self#find_loc loc t)
         | _ -> super#object_key key
 

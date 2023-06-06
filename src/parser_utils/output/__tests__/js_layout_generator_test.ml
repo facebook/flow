@@ -351,10 +351,10 @@ let tests =
                ~args:
                  (E.arg_list
                     [
-                      E.expression (E.literal (Literals.string "a"));
-                      E.expression (E.literal (Literals.string "b"));
+                      E.expression (E.Literals.string "a");
+                      E.expression (E.Literals.string "b");
                       E.expression (E.sequence [E.function_ ()]);
-                      E.expression (E.literal (Literals.number 1. "1"));
+                      E.expression (E.Literals.number 1. "1");
                     ]
                  )
                (E.identifier "__d")
@@ -402,20 +402,16 @@ let tests =
            assert_expression ~ctxt "(x,y).z" seq;
 
            let num =
-             E.member (E.Members.identifier_by_name (E.literal (Literals.number 1.0 "1")) ~name:"z")
+             E.member (E.Members.identifier_by_name (E.Literals.number 1.0 "1") ~name:"z")
            in
            assert_expression ~ctxt "1..z" num;
            let num =
-             E.member
-               (E.Members.identifier_by_name (E.literal (Literals.number 1.1 "1.1")) ~name:"z")
+             E.member (E.Members.identifier_by_name (E.Literals.number 1.1 "1.1") ~name:"z")
            in
            assert_expression ~ctxt "1.1.z" num;
            let num =
              E.member
-               (E.Members.identifier_by_name
-                  (E.literal (Literals.number 0.0000001 "0.0000001"))
-                  ~name:"z"
-               )
+               (E.Members.identifier_by_name (E.Literals.number 0.0000001 "0.0000001") ~name:"z")
            in
            assert_expression ~ctxt "1e-7.z" num
          );
@@ -726,7 +722,7 @@ let tests =
          );
          ( "binary_instanceof_space" >:: fun ctxt ->
            begin
-             let ast = E.instanceof (E.literal (Literals.string "foo")) (E.object_ []) in
+             let ast = E.instanceof (E.Literals.string "foo") (E.object_ []) in
              let layout = Js_layout_generator.expression ~opts ast in
              assert_layout
                ~ctxt
@@ -748,7 +744,7 @@ let tests =
            end;
 
            begin
-             let ast = E.instanceof (E.literal (Literals.string "foo")) (E.identifier "bar") in
+             let ast = E.instanceof (E.Literals.string "foo") (E.identifier "bar") in
              let layout = Js_layout_generator.expression ~opts ast in
              assert_layout
                ~ctxt
@@ -2044,7 +2040,7 @@ let tests =
              ~pretty:true
              ("type a = [\n  a,\n  " ^ String.make 80 'b' ^ ",\n];");
            assert_statement_string ~ctxt "type a=*;";
-           assert_statement_string ~ctxt "type a='';";
+           assert_statement_string ~ctxt "type a=\"\";";
            assert_statement_string ~ctxt "type a=1;";
            assert_statement_string ~ctxt "type a=true;";
            assert_statement_string ~ctxt "type a=unknown;";
@@ -2271,11 +2267,11 @@ let tests =
                   [
                     S.switch_case
                       ~loc:case1_loc
-                      ~test:(E.literal (Literals.string "a"))
+                      ~test:(E.Literals.string "a")
                       [S.expression (E.increment ~prefix:false (E.identifier "x")); S.break ()];
                     S.switch_case
                       ~loc:case2_loc
-                      ~test:(E.literal (Literals.string "b"))
+                      ~test:(E.Literals.string "b")
                       [S.expression (E.increment ~prefix:false (E.identifier "x")); S.break ()];
                   ]
                )
@@ -2409,7 +2405,7 @@ let tests =
                ~opts
                (S.switch
                   (E.identifier "x")
-                  [S.switch_case ~test:(E.literal (Literals.string "a")) [S.empty ()]]
+                  [S.switch_case ~test:(E.Literals.string "a") [S.empty ()]]
                )
            in
            assert_output ~ctxt "switch(x){case\"a\":;}" layout;
@@ -2437,7 +2433,7 @@ let tests =
            assert_statement_string ~ctxt "throw new Error();"
          );
          ( "string_literal" >:: fun ctxt ->
-           let ast = E.literal (Literals.string "a") in
+           let ast = E.Literals.string "a" in
            let layout = Js_layout_generator.expression ~opts ast in
            assert_layout ~ctxt L.(loc (fused [atom "\""; atom "a"; atom "\""])) layout;
            assert_output ~ctxt {|"a"|} layout;

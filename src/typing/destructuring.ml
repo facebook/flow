@@ -57,9 +57,9 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
                 property =
                   Member.PropertyExpression
                     ( loc,
-                      Ast.Expression.Literal
+                      Ast.Expression.NumberLiteral
                         {
-                          Ast.Literal.value = Ast.Literal.Number (float i);
+                          Ast.NumberLiteral.value = float i;
                           raw = string_of_int i;
                           comments = None;
                         }
@@ -154,13 +154,14 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
     | Property.Identifier (loc, { Ast.Identifier.name = x; comments }) ->
       let acc = object_named_property ~has_default ~parent_loc cx acc loc x comments in
       (acc, x :: xs, Property.Identifier ((loc, current), { Ast.Identifier.name = x; comments }))
-    | Property.Literal (loc, ({ Ast.Literal.value = Ast.Literal.String x; _ } as lit)) ->
+    | Property.StringLiteral (loc, ({ Ast.StringLiteral.value = x; _ } as lit)) ->
       let acc = object_named_property ~has_default ~parent_loc cx acc loc x None in
-      (acc, x :: xs, Property.Literal (loc, lit))
+      (acc, x :: xs, Property.StringLiteral (loc, lit))
     | Property.Computed (loc, { Ast.ComputedKey.expression; comments }) ->
       let (acc, e) = object_computed_property cx acc expression in
       (acc, xs, Property.Computed (loc, { Ast.ComputedKey.expression = e; comments }))
-    | Property.Literal (loc, _) ->
+    | Property.NumberLiteral (loc, _)
+    | Property.BigIntLiteral (loc, _) ->
       Flow_js.add_output
         cx
         Error_message.(EUnsupportedSyntax (loc, DestructuringObjectPropertyLiteralNonString));

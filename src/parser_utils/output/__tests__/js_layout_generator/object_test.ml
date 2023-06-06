@@ -145,13 +145,7 @@ let tests =
       let layout =
         Js_layout_generator.expression
           ~opts
-          (E.object_
-             [
-               E.object_property_with_literal
-                 (Ast_builder.Literals.string "foo")
-                 (E.literal (Ast_builder.Literals.string "bar"));
-             ]
-          )
+          (E.object_ [E.object_property_with_string_literal "foo" (E.Literals.string "bar")])
       in
       assert_output ~ctxt ~msg:"string literal keys should be quoted" "{\"foo\":\"bar\"}" layout;
       assert_output
@@ -168,7 +162,7 @@ let tests =
           [
             E.object_property
               (E.object_property_computed_key (E.identifier b80))
-              (E.literal (Ast_builder.Literals.number 123. "123"));
+              (E.Literals.number 123. "123");
           ]
       in
       let layout = Js_layout_generator.expression ~opts ast in
@@ -215,7 +209,7 @@ let tests =
               (E.object_property_computed_key
                  (E.binary ~op:Flow_ast.Expression.Binary.Plus (E.identifier b40) (E.identifier b40))
               )
-              (E.literal (Ast_builder.Literals.number 123. "123"));
+              (E.Literals.number 123. "123");
           ]
       in
       let layout = Js_layout_generator.expression ~opts ast in

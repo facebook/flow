@@ -212,14 +212,24 @@ class selection_range_finder ~position =
 
     method! object_property x = this#test super#object_property x
 
-    method! object_key_literal x = this#test super#object_key_literal x
+    method! object_key_string_literal x = this#test super#object_key_string_literal x
+
+    method! object_key_number_literal x = this#test super#object_key_number_literal x
+
+    method! object_key_bigint_literal x = this#test super#object_key_bigint_literal x
 
     method! pattern ?kind patt = this#test (super#pattern ?kind) patt
 
     method! pattern_object_property ?kind p = this#test (super#pattern_object_property ?kind) p
 
-    method! pattern_object_property_literal_key ?kind x =
-      this#test (super#pattern_object_property_literal_key ?kind) x
+    method! pattern_object_property_string_literal_key ?kind x =
+      this#test (super#pattern_object_property_string_literal_key ?kind) x
+
+    method! pattern_object_property_number_literal_key ?kind x =
+      this#test (super#pattern_object_property_number_literal_key ?kind) x
+
+    method! pattern_object_property_bigint_literal_key ?kind x =
+      this#test (super#pattern_object_property_bigint_literal_key ?kind) x
 
     method! pattern_object_rest_property ?kind x =
       this#test (super#pattern_object_rest_property ?kind) x

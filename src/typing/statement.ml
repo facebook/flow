@@ -218,13 +218,11 @@ module Make
 
   let translate_identifier_or_string_literal_key t =
     let module P = Ast.Expression.Object.Property in
-    let module L = Ast.Literal in
     function
     | P.Identifier (loc, name) -> P.Identifier ((loc, t), name)
-    | P.Literal (loc, ({ L.value = L.String _; _ } as lit)) -> P.Literal ((loc, t), lit)
-    | P.Literal (loc, { L.value = L.ModuleRef { L.string_value = s; _ }; raw; comments }) ->
-      P.Literal ((loc, t), { L.value = L.String s; raw; comments })
-    | P.Literal _
+    | P.StringLiteral (loc, lit) -> P.StringLiteral ((loc, t), lit)
+    | P.NumberLiteral _
+    | P.BigIntLiteral _
     | P.PrivateName _
     | P.Computed _ ->
       assert_false "precondition not met"
@@ -283,7 +281,7 @@ module Make
                    match key with
                    | Object.Property.Identifier (_, { Identifier.name; _ })
                    | Object.Property.PrivateName (_, { PrivateName.name; _ })
-                   | Object.Property.Literal (_, { Literal.raw = name; _ }) ->
+                   | Object.Property.StringLiteral (_, { StringLiteral.raw = name; _ }) ->
                      mk_reason (RMethod (Some name)) prop_loc
                    | _ -> mk_reason (RMethod None) prop_loc
                  in
@@ -2069,7 +2067,6 @@ module Make
 
   and object_prop cx acc prop =
     let open Ast.Expression.Object in
-    let module L = Ast.Literal in
     match prop with
     (* named prop *)
     | Property
@@ -2078,9 +2075,7 @@ module Make
             {
               key =
                 ( Property.Identifier (loc, { Ast.Identifier.name; _ })
-                | Property.Literal
-                    (loc, { L.value = L.String name | L.ModuleRef { L.string_value = name; _ }; _ })
-                  ) as key;
+                | Property.StringLiteral (loc, { Ast.StringLiteral.value = name; _ }) ) as key;
               value = v;
               shorthand;
             }
@@ -2111,9 +2106,7 @@ module Make
             {
               key =
                 ( Property.Identifier (loc, { Ast.Identifier.name; comments = _ })
-                | Property.Literal
-                    (loc, { L.value = L.String name | L.ModuleRef { L.string_value = name; _ }; _ })
-                  ) as key;
+                | Property.StringLiteral (loc, { Ast.StringLiteral.value = name; _ }) ) as key;
               value = (fn_loc, func);
             }
         ) ->
@@ -2140,10 +2133,7 @@ module Make
             {
               key =
                 ( Property.Identifier (id_loc, { Ast.Identifier.name; comments = _ })
-                | Property.Literal
-                    ( id_loc,
-                      { L.value = L.String name | L.ModuleRef { L.string_value = name; _ }; _ }
-                    ) ) as key;
+                | Property.StringLiteral (id_loc, { Ast.StringLiteral.value = name; _ }) ) as key;
               value = (vloc, func);
               comments;
             }
@@ -2176,10 +2166,7 @@ module Make
             {
               key =
                 ( Property.Identifier (id_loc, { Ast.Identifier.name; comments = _ })
-                | Property.Literal
-                    ( id_loc,
-                      { L.value = L.String name | L.ModuleRef { L.string_value = name; _ }; _ }
-                    ) ) as key;
+                | Property.StringLiteral (id_loc, { Ast.StringLiteral.value = name; _ }) ) as key;
               value = (vloc, func);
               comments;
             }
@@ -2206,10 +2193,12 @@ module Make
           )
       )
     (* non-string literal LHS *)
-    | Property (loc, Property.Init { key = Property.Literal _; _ })
-    | Property (loc, Property.Method { key = Property.Literal _; _ })
-    | Property (loc, Property.Get { key = Property.Literal _; _ })
-    | Property (loc, Property.Set { key = Property.Literal _; _ }) ->
+    | Property (loc, Property.Init { key = Property.NumberLiteral _ | Property.BigIntLiteral _; _ })
+    | Property
+        (loc, Property.Method { key = Property.NumberLiteral _ | Property.BigIntLiteral _; _ })
+    | Property (loc, Property.Get { key = Property.NumberLiteral _ | Property.BigIntLiteral _; _ })
+    | Property (loc, Property.Set { key = Property.NumberLiteral _ | Property.BigIntLiteral _; _ })
+      ->
       Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, ObjectPropertyLiteralNonString));
       (acc, Tast_utils.error_mapper#object_property_or_spread_property prop)
     (* computed getters and setters aren't supported yet regardless of the
@@ -2342,8 +2331,8 @@ module Make
                   {
                     key =
                       ( Property.Identifier (_, { Ast.Identifier.name = "__proto__"; comments = _ })
-                      | Property.Literal
-                          (_, { Ast.Literal.value = Ast.Literal.String "__proto__"; _ }) ) as key;
+                      | Property.StringLiteral (_, { Ast.StringLiteral.value = "__proto__"; _ }) )
+                      as key;
                     value = v;
                     shorthand = false;
                   }
@@ -2595,9 +2584,27 @@ module Make
     let ex = (loc, e) in
     let open Ast.Expression in
     match e with
-    | Ast.Expression.Literal lit ->
-      let (t, lit) = literal cx loc lit in
-      ((loc, t), Ast.Expression.Literal lit)
+    | StringLiteral lit ->
+      let t = string_literal cx loc lit in
+      ((loc, t), StringLiteral lit)
+    | BooleanLiteral lit ->
+      let t = boolean_literal cx loc lit in
+      ((loc, t), BooleanLiteral lit)
+    | NullLiteral lit ->
+      let t = null_literal cx loc in
+      ((loc, t), NullLiteral lit)
+    | NumberLiteral lit ->
+      let t = number_literal cx loc lit in
+      ((loc, t), NumberLiteral lit)
+    | BigIntLiteral lit ->
+      let t = bigint_literal cx loc lit in
+      ((loc, t), BigIntLiteral lit)
+    | RegExpLiteral lit ->
+      let t = regexp_literal cx loc in
+      ((loc, t), RegExpLiteral lit)
+    | ModuleRefLiteral lit ->
+      let (t, lit) = module_ref_literal cx loc lit in
+      ((loc, t), ModuleRefLiteral lit)
     (* Treat the identifier `undefined` as an annotation for error reporting
      * purposes. Like we do with other literals. Otherwise we end up pointing to
      * `void` in `core.js`. While possible to re-declare `undefined`, it is
@@ -3038,8 +3045,8 @@ module Make
               ) =
             head
           in
-          let lit = { Ast.Literal.value = Ast.Literal.String cooked; raw; comments = None } in
-          let (t, _) = literal cx elem_loc lit in
+          let lit = { Ast.StringLiteral.value = cooked; raw; comments = None } in
+          let t = string_literal cx elem_loc lit in
           (t, [])
         | _ ->
           let t_out = StrT.at loc |> with_trust bogus_trust in
@@ -3187,8 +3194,7 @@ module Make
     | Import { Import.argument; comments } ->
       (match argument with
       | ( source_loc,
-          Ast.Expression.Literal
-            { Ast.Literal.value = Ast.Literal.String module_name; raw; comments = _ }
+          Ast.Expression.StringLiteral { Ast.StringLiteral.value = module_name; raw; comments = _ }
         )
       | ( source_loc,
           TemplateLiteral
@@ -3209,7 +3215,7 @@ module Make
         ) ->
         let literal_comments =
           match argument with
-          | (_, Ast.Expression.Literal { Ast.Literal.comments; _ }) -> comments
+          | (_, Ast.Expression.StringLiteral { Ast.StringLiteral.comments; _ }) -> comments
           | _ -> None
         in
         let imported_ns_t =
@@ -3224,12 +3230,8 @@ module Make
             {
               Import.argument =
                 ( (source_loc, t),
-                  Ast.Expression.Literal
-                    {
-                      Ast.Literal.value = Ast.Literal.String module_name;
-                      raw;
-                      comments = literal_comments;
-                    }
+                  Ast.Expression.StringLiteral
+                    { Ast.StringLiteral.value = module_name; raw; comments = literal_comments }
                 );
               comments;
             }
@@ -3328,8 +3330,8 @@ module Make
                     [
                       Expression
                         ( ( source_loc,
-                            Ast.Expression.Literal
-                              { Ast.Literal.value = Ast.Literal.String module_name; _ }
+                            Ast.Expression.StringLiteral
+                              { Ast.StringLiteral.value = module_name; _ }
                           ) as lit_exp
                         );
                     ];
@@ -3609,10 +3611,8 @@ module Make
                 {
                   ArgList.arguments =
                     Expression
-                      ( ( _,
-                          Ast.Expression.Literal
-                            { Ast.Literal.value = Ast.Literal.Boolean false; _ }
-                        ) as lit_exp
+                      ( (_, Ast.Expression.BooleanLiteral { Ast.BooleanLiteral.value = false; _ })
+                      as lit_exp
                       )
                     :: arguments;
                   comments = args_comments;
@@ -4618,60 +4618,54 @@ module Make
     let t = identifier_ cx name loc in
     t
 
-  (* traverse a literal expression, return result type *)
-  and literal cx loc { Ast.Literal.value; raw; comments } =
-    let module L = Ast.Literal in
+  and string_literal cx loc { Ast.StringLiteral.value; _ } =
+    if Type_inference_hooks_js.dispatch_literal_hook cx loc then
+      let (_, lazy_hint) = Env.get_hint cx loc in
+      let hint = lazy_hint (mk_reason (RCustom "literal") loc) in
+      let error () = EmptyT.at loc |> with_trust bogus_trust in
+      Type_hint.with_hint_result hint ~ok:Base.Fn.id ~error
+    else
+      (* It's too expensive to track literal information for large strings.*)
+      let max_literal_length = Context.max_literal_length cx in
+      let make_trust = Context.trust_constructor cx in
+      if max_literal_length = 0 || String.length value <= max_literal_length then
+        let reason = mk_annot_reason RString loc in
+        DefT (reason, make_trust (), StrT (Literal (None, OrdinaryName value)))
+      else
+        let reason = mk_annot_reason (RLongStringLit max_literal_length) loc in
+        DefT (reason, make_trust (), StrT AnyLiteral)
+
+  and boolean_literal cx loc { Ast.BooleanLiteral.value; _ } =
     let make_trust = Context.trust_constructor cx in
-    let (t, value) =
-      match value with
-      | L.String s ->
-        if Type_inference_hooks_js.dispatch_literal_hook cx loc then
-          let (_, lazy_hint) = Env.get_hint cx loc in
-          let hint = lazy_hint (mk_reason (RCustom "literal") loc) in
-          let error () = EmptyT.at loc |> with_trust bogus_trust in
-          let t = Type_hint.with_hint_result hint ~ok:Base.Fn.id ~error in
-          (t, L.String s)
-        else
-          (* It's too expensive to track literal information for large strings.*)
-          let max_literal_length = Context.max_literal_length cx in
-          let (lit, r_desc) =
-            if max_literal_length = 0 || String.length s <= max_literal_length then
-              (Literal (None, OrdinaryName s), RString)
-            else
-              (AnyLiteral, RLongStringLit max_literal_length)
-          in
-          let t = DefT (mk_annot_reason r_desc loc, make_trust (), StrT lit) in
-          (t, L.String s)
-      | L.Boolean b ->
-        let reason = mk_annot_reason RBoolean loc in
-        let t = DefT (reason, make_trust (), BoolT (Some b)) in
-        (t, L.Boolean b)
-      | L.Null ->
-        let t = NullT.at loc |> with_trust make_trust in
-        (t, L.Null)
-      | L.Number f ->
-        let reason = mk_annot_reason RNumber loc in
-        let t = DefT (reason, make_trust (), NumT (Literal (None, (f, raw)))) in
-        (t, L.Number f)
-      | L.BigInt n ->
-        let reason = mk_annot_reason RBigInt loc in
-        let t = DefT (reason, make_trust (), BigIntT (Literal (None, (n, raw)))) in
-        (t, L.BigInt n)
-      | L.RegExp r ->
-        let t = Flow.get_builtin_type cx (mk_annot_reason RRegExp loc) (OrdinaryName "RegExp") in
-        (t, L.RegExp r)
-      | L.ModuleRef { L.string_value; require_out; prefix_len; legacy_interop } ->
-        let mref = Base.String.drop_prefix string_value prefix_len in
-        let module_t = Import_export.get_module_t cx (loc, mref) in
-        let require_t = Import_export.require cx ~legacy_interop loc mref module_t in
-        let reason = mk_reason (RCustom "module reference") loc in
-        let t = Flow.get_builtin_typeapp cx reason (OrdinaryName "$Flow$ModuleRef") [require_t] in
-        ( t,
-          L.ModuleRef
-            { L.string_value; require_out = (require_out, require_t); prefix_len; legacy_interop }
-        )
-    in
-    (t, { L.value; raw; comments })
+    let reason = mk_annot_reason RBoolean loc in
+    DefT (reason, make_trust (), BoolT (Some value))
+
+  and null_literal cx loc =
+    let make_trust = Context.trust_constructor cx in
+    NullT.at loc |> with_trust make_trust
+
+  and number_literal cx loc { Ast.NumberLiteral.value; raw; _ } =
+    let make_trust = Context.trust_constructor cx in
+    let reason = mk_annot_reason RNumber loc in
+    DefT (reason, make_trust (), NumT (Literal (None, (value, raw))))
+
+  and bigint_literal cx loc { Ast.BigIntLiteral.value; raw; _ } =
+    let make_trust = Context.trust_constructor cx in
+    let reason = mk_annot_reason RBigInt loc in
+    DefT (reason, make_trust (), BigIntT (Literal (None, (value, raw))))
+
+  and regexp_literal cx loc =
+    let reason = mk_annot_reason RRegExp loc in
+    Flow.get_builtin_type cx reason (OrdinaryName "RegExp")
+
+  and module_ref_literal cx loc lit =
+    let { Ast.ModuleRefLiteral.value; require_out; prefix_len; legacy_interop; _ } = lit in
+    let mref = Base.String.drop_prefix value prefix_len in
+    let module_t = Import_export.get_module_t cx (loc, mref) in
+    let require_t = Import_export.require cx ~legacy_interop loc mref module_t in
+    let reason = mk_reason (RCustom "module reference") loc in
+    let t = Flow.get_builtin_typeapp cx reason (OrdinaryName "$Flow$ModuleRef") [require_t] in
+    (t, { lit with Ast.ModuleRefLiteral.require_out = (require_out, require_t) })
 
   (* traverse a unary expression, return result type *)
   and unary cx ~cond loc =
@@ -5747,9 +5741,9 @@ module Make
             let (atype, value) =
               match value with
               (* <element name="literal" /> *)
-              | Some (Attribute.Literal (loc, lit)) ->
-                let (t, lit) = literal cx loc lit in
-                (t, Some (Attribute.Literal ((loc, t), lit)))
+              | Some (Attribute.StringLiteral (loc, lit)) ->
+                let t = string_literal cx loc lit in
+                (t, Some (Attribute.StringLiteral ((loc, t), lit)))
               (* <element name={expression} /> *)
               | Some
                   (Attribute.ExpressionContainer
@@ -6309,9 +6303,7 @@ module Make
               [
                 Expression e;
                 Expression
-                  ( (ploc, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.String x; _ })
-                  as key
-                  );
+                  ((ploc, Ast.Expression.StringLiteral { Ast.StringLiteral.value = x; _ }) as key);
                 Expression config;
               ];
             comments;
@@ -6569,17 +6561,20 @@ module Make
         | Ast.Class.Property.Initialized expr ->
           begin
             match (expr, annot_or_inferred) with
-            | ( ( _,
-                  Ast.Expression.Literal
-                    {
-                      Ast.Literal.value =
-                        Ast.Literal.(String _ | Boolean _ | Number _ | BigInt _ | RegExp _);
-                      _;
-                    }
-                ),
-                Inferred _
-              ) ->
-              let ((_, t), _) = expression cx expr in
+            | ((loc, Ast.Expression.StringLiteral lit), Inferred _) ->
+              let t = string_literal cx loc lit in
+              Flow.flow_t cx (t, annot_t)
+            | ((loc, Ast.Expression.BooleanLiteral lit), Inferred _) ->
+              let t = boolean_literal cx loc lit in
+              Flow.flow_t cx (t, annot_t)
+            | ((loc, Ast.Expression.NumberLiteral lit), Inferred _) ->
+              let t = number_literal cx loc lit in
+              Flow.flow_t cx (t, annot_t)
+            | ((loc, Ast.Expression.BigIntLiteral lit), Inferred _) ->
+              let t = bigint_literal cx loc lit in
+              Flow.flow_t cx (t, annot_t)
+            | ((loc, Ast.Expression.RegExpLiteral _), Inferred _) ->
+              let t = regexp_literal cx loc in
               Flow.flow_t cx (t, annot_t)
             | ((_, Ast.Expression.(ArrowFunction function_ | Function function_)), Inferred _) ->
               let { Ast.Function.sig_loc; _ } = function_ in
@@ -7142,9 +7137,24 @@ module Make
                   public_seen_names'
                 )
               (* literal LHS *)
-              | ( Body.Method (loc, { Method.key = Ast.Expression.Object.Property.Literal _; _ })
-                | Body.Property (loc, { Property.key = Ast.Expression.Object.Property.Literal _; _ })
-                  ) as elem ->
+              | ( Body.Method
+                    ( loc,
+                      {
+                        Method.key =
+                          Ast.Expression.Object.Property.(
+                            StringLiteral _ | NumberLiteral _ | BigIntLiteral _);
+                        _;
+                      }
+                    )
+                | Body.Property
+                    ( loc,
+                      {
+                        Property.key =
+                          Ast.Expression.Object.Property.(
+                            StringLiteral _ | NumberLiteral _ | BigIntLiteral _);
+                        _;
+                      }
+                    ) ) as elem ->
                 Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, ClassPropertyLiteral));
                 ( c,
                   (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
@@ -7836,24 +7846,19 @@ module Make
       let exists_excuses = Loc_collections.ALocMap.add left_loc exists_excuse exists_excuses in
       Context.set_exists_excuses cx exists_excuses
     in
+    let open ExistsCheck in
     match snd right with
-    | Ast.Expression.Literal literal ->
-      ExistsCheck.(
-        begin
-          match literal.Ast.Literal.value with
-          | Ast.Literal.String "" ->
-            update_excuses (fun excuse -> { excuse with string_loc = Some right_loc })
-          | Ast.Literal.Boolean false ->
-            update_excuses (fun excuse -> { excuse with bool_loc = Some right_loc })
-          | Ast.Literal.Number 0. ->
-            update_excuses (fun excuse -> { excuse with number_loc = Some right_loc })
-          | Ast.Literal.BigInt (Some 0L) ->
-            update_excuses (fun excuse -> { excuse with bigint_loc = Some right_loc })
-          (* There's no valid default value for mixed to create an excuse. *)
-          | _ -> ()
-        end
-      )
-    | _ -> ()
+    | Ast.Expression.StringLiteral { Ast.StringLiteral.value = ""; _ } ->
+      update_excuses (fun excuse -> { excuse with string_loc = Some right_loc })
+    | Ast.Expression.BooleanLiteral { Ast.BooleanLiteral.value = false; _ } ->
+      update_excuses (fun excuse -> { excuse with bool_loc = Some right_loc })
+    | Ast.Expression.NumberLiteral { Ast.NumberLiteral.value = 0.; _ } ->
+      update_excuses (fun excuse -> { excuse with number_loc = Some right_loc })
+    | Ast.Expression.BigIntLiteral { Ast.BigIntLiteral.value = Some 0L; _ } ->
+      update_excuses (fun excuse -> { excuse with bigint_loc = Some right_loc })
+    | _ ->
+      (* There's no valid default value for mixed to create an excuse. *)
+      ()
 
   and is_valid_enum_member_name name =
     (not @@ Base.String.is_empty name) && (not @@ Base.Char.is_lowercase name.[0])

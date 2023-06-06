@@ -64,8 +64,14 @@ let rec synthesizable_expression cx ?cond exp =
   let open Ast.Expression in
   match exp with
   | (loc, Identifier (_, name)) -> Statement.identifier cx name loc
-  | (loc, Ast.Expression.Literal lit) ->
-    let (t, _lit) = Statement.literal cx loc lit in
+  | (loc, StringLiteral lit) -> Statement.string_literal cx loc lit
+  | (loc, BooleanLiteral lit) -> Statement.boolean_literal cx loc lit
+  | (loc, NullLiteral _) -> Statement.null_literal cx loc
+  | (loc, NumberLiteral lit) -> Statement.number_literal cx loc lit
+  | (loc, BigIntLiteral lit) -> Statement.bigint_literal cx loc lit
+  | (loc, RegExpLiteral _) -> Statement.regexp_literal cx loc
+  | (loc, ModuleRefLiteral lit) ->
+    let (t, _lit) = Statement.module_ref_literal cx loc lit in
     t
   | (_, Ast.Expression.TypeCast { TypeCast.annot; _ }) -> resolve_annotation cx ALocMap.empty annot
   | ( loc,
@@ -406,7 +412,13 @@ let resolve_binding_partial cx reason loc b =
     let rec mk_obj obj_loc { properties; _ } =
       let rec mk_expression (loc, expr) =
         match expr with
-        | Ast.Expression.Literal _
+        | Ast.Expression.StringLiteral _
+        | Ast.Expression.NumberLiteral _
+        | Ast.Expression.NullLiteral _
+        | Ast.Expression.BooleanLiteral _
+        | Ast.Expression.BigIntLiteral _
+        | Ast.Expression.RegExpLiteral _
+        | Ast.Expression.ModuleRefLiteral _
         | Ast.Expression.Identifier _
         | Ast.Expression.TypeCast _
         | Ast.Expression.Member _ ->
@@ -472,8 +484,7 @@ let resolve_binding_partial cx reason loc b =
                     {
                       key =
                         ( Property.Identifier (name_loc, { Ast.Identifier.name; comments = _ })
-                        | Property.Literal
-                            (name_loc, { Ast.Literal.value = Ast.Literal.String name; _ }) );
+                        | Property.StringLiteral (name_loc, { Ast.StringLiteral.value = name; _ }) );
                       value = (fn_loc, fn);
                     }
                 ) ->
@@ -487,8 +498,7 @@ let resolve_binding_partial cx reason loc b =
                     {
                       key =
                         ( Property.Identifier (name_loc, { Ast.Identifier.name; comments = _ })
-                        | Property.Literal
-                            (name_loc, { Ast.Literal.value = Ast.Literal.String name; _ }) );
+                        | Property.StringLiteral (name_loc, { Ast.StringLiteral.value = name; _ }) );
                       value;
                       _;
                     }

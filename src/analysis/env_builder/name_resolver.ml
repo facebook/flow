@@ -2208,7 +2208,7 @@ module Make
               | Property ((_, { Property.key; pattern; default; shorthand = _ }) as prop) ->
                 (match key with
                 | Property.Identifier (loc, { Ast.Identifier.name = x; comments = _ })
-                | Property.Literal (loc, { Ast.Literal.value = Ast.Literal.String x; _ }) ->
+                | Property.StringLiteral (loc, { Ast.StringLiteral.value = x; _ }) ->
                   Base.Option.iter default ~f:(fun default -> ignore @@ this#expression default);
                   let acc =
                     let open Ast.Expression in
@@ -2572,13 +2572,8 @@ module Make
         | ( {
               Member.property =
                 ( Member.PropertyIdentifier _ | Member.PropertyPrivateName _
-                | Member.PropertyExpression
-                    (_, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.String _; _ })
-                | Member.PropertyExpression
-                    ( _,
-                      Ast.Expression.Literal
-                        { Ast.Literal.value = Ast.Literal.Number _; raw = _; comments = _ }
-                    ) );
+                | Member.PropertyExpression (_, Ast.Expression.StringLiteral _)
+                | Member.PropertyExpression (_, Ast.Expression.NumberLiteral _) );
               _;
             },
             Some lookup
@@ -4226,9 +4221,7 @@ module Make
                 {
                   Ast.Expression.ArgList.arguments =
                     Ast.Expression.Expression
-                      ( _,
-                        Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Boolean false; _ }
-                      )
+                      (_, Ast.Expression.BooleanLiteral { Ast.BooleanLiteral.value = false; _ })
                     :: other_args;
                   comments = _;
                 }
@@ -4988,8 +4981,7 @@ module Make
                       ( Expression.Member.PropertyIdentifier
                           (ploc, { Identifier.name = prop_name; _ })
                       | Expression.Member.PropertyExpression
-                          (ploc, Expression.Literal { Literal.value = Literal.String prop_name; _ })
-                        );
+                          (ploc, Expression.StringLiteral { StringLiteral.value = prop_name; _ }) );
                     _;
                   }
               )
@@ -5259,9 +5251,9 @@ module Make
           let propname =
             match property with
             | PropertyIdentifier (_, { Flow_ast.Identifier.name; _ })
-            | PropertyExpression (_, Literal { Flow_ast.Literal.value = Ast.Literal.String name; _ })
+            | PropertyExpression (_, StringLiteral { Flow_ast.StringLiteral.value = name; _ })
             | PropertyExpression
-                (_, Literal { Flow_ast.Literal.value = Ast.Literal.Number _; raw = name; _ }) ->
+                (_, NumberLiteral { Flow_ast.NumberLiteral.value = _; raw = name; _ }) ->
               Some name
             | _ -> None
           in
@@ -5335,7 +5327,13 @@ module Make
         | Import _
         | JSXElement _
         | JSXFragment _
-        | Literal _
+        | StringLiteral _
+        | NumberLiteral _
+        | BooleanLiteral _
+        | NullLiteral _
+        | RegExpLiteral _
+        | BigIntLiteral _
+        | ModuleRefLiteral _
         | MetaProperty _
         | New _
         | Object _

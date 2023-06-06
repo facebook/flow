@@ -200,11 +200,12 @@ type statement_node_parent =
 type node =
   | Raw of string
   | Comment of Loc.t Flow_ast.Comment.t
-  | Literal of Loc.t * (Loc.t, Loc.t) Ast.Literal.t
   | StringLiteral of Loc.t * Loc.t Ast.StringLiteral.t
   | NumberLiteral of Loc.t * Loc.t Ast.NumberLiteral.t
   | BigIntLiteral of Loc.t * Loc.t Ast.BigIntLiteral.t
   | BooleanLiteral of Loc.t * Loc.t Ast.BooleanLiteral.t
+  | RegExpLiteral of Loc.t * Loc.t Ast.RegExpLiteral.t
+  | ModuleRefLiteral of Loc.t * (Loc.t, Loc.t) Ast.ModuleRefLiteral.t
   | Statement of ((Loc.t, Loc.t) Ast.Statement.t * statement_node_parent)
   | Program of (Loc.t, Loc.t) Ast.Program.t
   | Expression of ((Loc.t, Loc.t) Ast.Expression.t * expression_node_parent)
@@ -233,7 +234,6 @@ let expand_loc_with_comments loc node =
   in
   let comment_bounds =
     match node with
-    | Literal (loc, lit) -> bounds (loc, lit) (fun collect (loc, lit) -> collect#literal loc lit)
     | StringLiteral (loc, lit) ->
       bounds (loc, lit) (fun collect (loc, lit) -> collect#string_literal loc lit)
     | NumberLiteral (loc, lit) ->
@@ -242,6 +242,10 @@ let expand_loc_with_comments loc node =
       bounds (loc, lit) (fun collect (loc, lit) -> collect#bigint_literal loc lit)
     | BooleanLiteral (loc, lit) ->
       bounds (loc, lit) (fun collect (loc, lit) -> collect#boolean_literal loc lit)
+    | RegExpLiteral (loc, lit) ->
+      bounds (loc, lit) (fun collect (loc, lit) -> collect#regexp_literal loc lit)
+    | ModuleRefLiteral (loc, lit) ->
+      bounds (loc, lit) (fun collect (loc, lit) -> collect#module_ref_literal loc lit)
     | Statement (stmt, _) -> bounds stmt (fun collect stmt -> collect#statement stmt)
     | Expression (expr, _) -> bounds expr (fun collect expr -> collect#expression expr)
     | Pattern pat -> bounds pat (fun collect pat -> collect#pattern pat)
@@ -1332,8 +1336,21 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
        * below *)
       let open Ast.Expression in
       match (expr1, expr2) with
-      | ((loc1, Ast.Expression.Literal lit1), (loc2, Ast.Expression.Literal lit2)) ->
-        Some (literal loc1 loc2 lit1 lit2)
+      | ((loc1, Ast.Expression.StringLiteral lit1), (loc2, Ast.Expression.StringLiteral lit2)) ->
+        diff_if_changed_ret_opt (string_literal loc1 loc2) lit1 lit2
+      | ((loc1, Ast.Expression.BooleanLiteral lit1), (loc2, Ast.Expression.BooleanLiteral lit2)) ->
+        diff_if_changed_ret_opt (boolean_literal loc1 loc2) lit1 lit2
+      | ((loc1, Ast.Expression.NullLiteral lit1), (_, Ast.Expression.NullLiteral lit2)) ->
+        diff_if_changed_ret_opt (syntax_opt loc1) lit1 lit2
+      | ((loc1, Ast.Expression.NumberLiteral lit1), (loc2, Ast.Expression.NumberLiteral lit2)) ->
+        diff_if_changed_ret_opt (number_literal loc1 loc2) lit1 lit2
+      | ((loc1, Ast.Expression.BigIntLiteral lit1), (loc2, Ast.Expression.BigIntLiteral lit2)) ->
+        diff_if_changed_ret_opt (bigint_literal loc1 loc2) lit1 lit2
+      | ((loc1, Ast.Expression.RegExpLiteral lit1), (loc2, Ast.Expression.RegExpLiteral lit2)) ->
+        diff_if_changed_ret_opt (regexp_literal loc1 loc2) lit1 lit2
+      | ((loc1, Ast.Expression.ModuleRefLiteral lit1), (loc2, Ast.Expression.ModuleRefLiteral lit2))
+        ->
+        diff_if_changed_ret_opt (module_ref_literal loc1 loc2) lit1 lit2
       | ((loc, Binary b1), (_, Binary b2)) -> binary loc b1 b2
       | ((loc, Unary u1), (_, Unary u2)) -> unary loc u1 u2
       | ((_, Ast.Expression.Identifier id1), (_, Ast.Expression.Identifier id2)) ->
@@ -1373,15 +1390,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     Base.Option.value
       changes
       ~default:[replace old_loc (Expression (expr1, parent)) (Expression (expr2, parent))]
-  and literal
-      (loc1 : Loc.t)
-      (loc2 : Loc.t)
-      (lit1 : (Loc.t, Loc.t) Ast.Literal.t)
-      (lit2 : (Loc.t, Loc.t) Ast.Literal.t) : node change list =
-    [replace loc1 (Literal (loc1, lit1)) (Literal (loc2, lit2))]
-  and string_literal
-      ((loc1, lit1) : Loc.t * Loc.t Ast.StringLiteral.t)
-      ((loc2, lit2) : Loc.t * Loc.t Ast.StringLiteral.t) : node change list option =
+  and string_literal loc1 loc2 lit1 lit2 =
     let open Ast.StringLiteral in
     let { value = val1; raw = raw1; comments = comments1 } = lit1 in
     let { value = val2; raw = raw2; comments = comments2 } = lit2 in
@@ -1393,9 +1402,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     in
     let comments_diff = syntax_opt loc1 comments1 comments2 in
     join_diff_list [value_diff; comments_diff]
-  and number_literal
-      ((loc1, lit1) : Loc.t * Loc.t Ast.NumberLiteral.t)
-      ((loc2, lit2) : Loc.t * Loc.t Ast.NumberLiteral.t) : node change list option =
+  and number_literal loc1 loc2 lit1 lit2 =
     let open Ast.NumberLiteral in
     let { value = value1; raw = raw1; comments = comments1 } = lit1 in
     let { value = value2; raw = raw2; comments = comments2 } = lit2 in
@@ -1407,9 +1414,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     in
     let comments_diff = syntax_opt loc1 comments1 comments2 in
     join_diff_list [value_diff; comments_diff]
-  and bigint_literal
-      ((loc1, lit1) : Loc.t * Loc.t Ast.BigIntLiteral.t)
-      ((loc2, lit2) : Loc.t * Loc.t Ast.BigIntLiteral.t) : node change list option =
+  and bigint_literal loc1 loc2 lit1 lit2 =
     let open Ast.BigIntLiteral in
     let { value = value1; raw = raw1; comments = comments1 } = lit1 in
     let { value = value2; raw = raw2; comments = comments2 } = lit2 in
@@ -1421,9 +1426,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     in
     let comments_diff = syntax_opt loc1 comments1 comments2 in
     join_diff_list [value_diff; comments_diff]
-  and boolean_literal
-      ((loc1, lit1) : Loc.t * Loc.t Ast.BooleanLiteral.t)
-      ((loc2, lit2) : Loc.t * Loc.t Ast.BooleanLiteral.t) : node change list option =
+  and boolean_literal loc1 loc2 lit1 lit2 =
     let open Ast.BooleanLiteral in
     let { value = value1; comments = comments1 } = lit1 in
     let { value = value2; comments = comments2 } = lit2 in
@@ -1435,6 +1438,20 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     in
     let comments_diff = syntax_opt loc1 comments1 comments2 in
     join_diff_list [value_diff; comments_diff]
+  and regexp_literal loc1 loc2 lit1 lit2 =
+    let open Ast.RegExpLiteral in
+    let { pattern = pattern1; flags = flags1; raw = raw1; comments = comments1 } = lit1 in
+    let { pattern = pattern2; flags = flags2; raw = raw2; comments = comments2 } = lit2 in
+    let value_diff =
+      if pattern1 = pattern2 && flags1 = flags2 && raw1 = raw2 then
+        Some []
+      else
+        Some [replace loc1 (RegExpLiteral (loc1, lit1)) (RegExpLiteral (loc2, lit2))]
+    in
+    let comments_diff = syntax_opt loc1 comments1 comments2 in
+    join_diff_list [value_diff; comments_diff]
+  and module_ref_literal loc1 loc2 lit1 lit2 =
+    Some [replace loc1 (ModuleRefLiteral (loc1, lit1)) (ModuleRefLiteral (loc2, lit2))]
   and tagged_template
       (loc : Loc.t)
       (t_tmpl1 : (Loc.t, Loc.t) Ast.Expression.TaggedTemplate.t)
@@ -1650,10 +1667,10 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     in
     let value_diff =
       match (value1, value2) with
-      | ( Some (Ast.JSX.Attribute.Literal (loc1, lit1)),
-          Some (Ast.JSX.Attribute.Literal (loc2, lit2))
+      | ( Some (Ast.JSX.Attribute.StringLiteral (loc1, lit1)),
+          Some (Ast.JSX.Attribute.StringLiteral (loc2, lit2))
         ) ->
-        diff_if_changed (literal loc1 loc2) lit1 lit2 |> Base.Option.return
+        diff_if_changed_ret_opt (string_literal loc1 loc2) lit1 lit2
       | (Some (ExpressionContainer (loc, expr1)), Some (ExpressionContainer (_, expr2))) ->
         diff_if_changed_ret_opt (jsx_expression loc) expr1 expr2
       | _ -> None
@@ -1740,8 +1757,12 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
   and object_key key1 key2 =
     let module EOP = Ast.Expression.Object.Property in
     match (key1, key2) with
-    | (EOP.Literal (loc1, l1), EOP.Literal (loc2, l2)) ->
-      diff_if_changed (literal loc1 loc2) l1 l2 |> Base.Option.return
+    | (EOP.StringLiteral (loc1, l1), EOP.StringLiteral (loc2, l2)) ->
+      diff_if_changed_ret_opt (string_literal loc1 loc2) l1 l2
+    | (EOP.NumberLiteral (loc1, l1), EOP.NumberLiteral (loc2, l2)) ->
+      diff_if_changed_ret_opt (number_literal loc1 loc2) l1 l2
+    | (EOP.BigIntLiteral (loc1, l1), EOP.BigIntLiteral (loc2, l2)) ->
+      diff_if_changed_ret_opt (bigint_literal loc1 loc2) l1 l2
     | (EOP.Identifier i1, EOP.Identifier i2) ->
       diff_if_changed identifier i1 i2 |> Base.Option.return
     | (EOP.Computed (loc, c1), EOP.Computed (_, c2)) -> computed_key loc c1 c2
@@ -2316,8 +2337,12 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       (k2 : (Loc.t, Loc.t) Ast.Pattern.Object.Property.key) : node change list option =
     let module POP = Ast.Pattern.Object.Property in
     match (k1, k2) with
-    | (POP.Literal (loc1, l1), POP.Literal (loc2, l2)) ->
-      diff_if_changed (literal loc1 loc2) l1 l2 |> Base.Option.return
+    | (POP.StringLiteral (loc1, l1), POP.StringLiteral (loc2, l2)) ->
+      diff_if_changed_ret_opt (string_literal loc1 loc2) l1 l2
+    | (POP.NumberLiteral (loc1, l1), POP.NumberLiteral (loc2, l2)) ->
+      diff_if_changed_ret_opt (number_literal loc1 loc2) l1 l2
+    | (POP.BigIntLiteral (loc1, l1), POP.BigIntLiteral (loc2, l2)) ->
+      diff_if_changed_ret_opt (bigint_literal loc1 loc2) l1 l2
     | (POP.Identifier i1, POP.Identifier i2) ->
       diff_if_changed identifier i1 i2 |> Base.Option.return
     | (POP.Computed (loc, c1), POP.Computed (_, c2)) ->
@@ -2413,13 +2438,13 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       | (Nullable t1, Nullable t2) -> diff_if_changed_ret_opt (nullable_type loc1) t1 t2
       | (Object obj1, Object obj2) -> diff_if_changed_ret_opt (object_type loc1) obj1 obj2
       | (Ast.Type.StringLiteral s1, Ast.Type.StringLiteral s2) ->
-        diff_if_changed_ret_opt string_literal (loc1, s1) (loc2, s2)
+        diff_if_changed_ret_opt (string_literal loc1 loc2) s1 s2
       | (Ast.Type.NumberLiteral n1, Ast.Type.NumberLiteral n2) ->
-        diff_if_changed_ret_opt number_literal (loc1, n1) (loc2, n2)
+        diff_if_changed_ret_opt (number_literal loc1 loc2) n1 n2
       | (Ast.Type.BigIntLiteral b1, Ast.Type.BigIntLiteral b2) ->
-        diff_if_changed_ret_opt bigint_literal (loc1, b1) (loc2, b2)
+        diff_if_changed_ret_opt (bigint_literal loc1 loc2) b1 b2
       | (Ast.Type.BooleanLiteral b1, Ast.Type.BooleanLiteral b2) ->
-        diff_if_changed_ret_opt boolean_literal (loc1, b1) (loc2, b2)
+        diff_if_changed_ret_opt (boolean_literal loc1 loc2) b1 b2
       | (Typeof t1, Typeof t2) -> diff_if_changed_ret_opt (typeof_type loc1) t1 t2
       | (Tuple t1, Tuple t2) -> diff_if_changed_ret_opt (tuple_type loc1) t1 t2
       | (Array t1, Array t2) -> diff_if_changed_ret_opt (array_type loc1) t1 t2
@@ -3091,10 +3116,10 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
         (Loc.t Ast.BooleanLiteral.t, Loc.t) Ast.Statement.EnumDeclaration.InitializedMember.t
         ) =
     let open Ast.Statement.EnumDeclaration.InitializedMember in
-    let (_, { id = id1; init = init1 }) = member1 in
-    let (_, { id = id2; init = init2 }) = member2 in
+    let (_, { id = id1; init = (loc1, lit1) }) = member1 in
+    let (_, { id = id2; init = (loc2, lit2) }) = member2 in
     let id_diff = Some (diff_if_changed identifier id1 id2) in
-    let value_diff = diff_if_changed_ret_opt boolean_literal init1 init2 in
+    let value_diff = diff_if_changed_ret_opt (boolean_literal loc1 loc2) lit1 lit2 in
     join_diff_list [id_diff; value_diff]
   and enum_number_member
       (member1 :
@@ -3104,10 +3129,10 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
         (Loc.t Ast.NumberLiteral.t, Loc.t) Ast.Statement.EnumDeclaration.InitializedMember.t
         ) =
     let open Ast.Statement.EnumDeclaration.InitializedMember in
-    let (_, { id = id1; init = init1 }) = member1 in
-    let (_, { id = id2; init = init2 }) = member2 in
+    let (_, { id = id1; init = (loc1, lit1) }) = member1 in
+    let (_, { id = id2; init = (loc2, lit2) }) = member2 in
     let id_diff = Some (diff_if_changed identifier id1 id2) in
-    let value_diff = diff_if_changed_ret_opt number_literal init1 init2 in
+    let value_diff = diff_if_changed_ret_opt (number_literal loc1 loc2) lit1 lit2 in
     join_diff_list [id_diff; value_diff]
   and enum_string_member
       (member1 :
@@ -3117,10 +3142,10 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
         (Loc.t Ast.StringLiteral.t, Loc.t) Ast.Statement.EnumDeclaration.InitializedMember.t
         ) =
     let open Ast.Statement.EnumDeclaration.InitializedMember in
-    let (_, { id = id1; init = init1 }) = member1 in
-    let (_, { id = id2; init = init2 }) = member2 in
+    let (_, { id = id1; init = (loc1, lit1) }) = member1 in
+    let (_, { id = id2; init = (loc2, lit2) }) = member2 in
     let id_diff = Some (diff_if_changed identifier id1 id2) in
-    let value_diff = diff_if_changed_ret_opt string_literal init1 init2 in
+    let value_diff = diff_if_changed_ret_opt (string_literal loc1 loc2) lit1 lit2 in
     join_diff_list [id_diff; value_diff]
   and type_params
       (pd1 : (Loc.t, Loc.t) Ast.Type.TypeParams.t) (pd2 : (Loc.t, Loc.t) Ast.Type.TypeParams.t) :

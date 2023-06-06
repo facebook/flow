@@ -75,7 +75,9 @@ class rename_mapper ~(targets : FindRefsTypes.ref_kind Loc_collections.LocMap.t)
           in
           (loc, new_ast)
         | Computed _
-        | Literal _
+        | StringLiteral _
+        | NumberLiteral _
+        | BigIntLiteral _
         | Identifier _ ->
           super#pattern_object_property ?kind prop)
       | (_loc, { shorthand = false; key = _; pattern = _; default = _ }) ->

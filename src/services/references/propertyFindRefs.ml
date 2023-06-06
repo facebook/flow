@@ -101,11 +101,12 @@ module Potential_refs_search = struct
                 | Property (_, { Property.key; _ }) ->
                   (match key with
                   | Property.Identifier ((loc, _), { Ast.Identifier.name; _ })
-                  | Property.Literal (loc, { Ast.Literal.value = Ast.Literal.String name; _ }) ->
+                  | Property.StringLiteral (loc, { Ast.StringLiteral.value = name; _ }) ->
                     if name = target_name then potential_refs := ALocMap.add loc ty !potential_refs;
                     ()
                   | Property.Computed _
-                  | Property.Literal _ ->
+                  | Property.NumberLiteral _
+                  | Property.BigIntLiteral _ ->
                     ())
                 | RestElement _ -> ())
               properties

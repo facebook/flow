@@ -141,10 +141,8 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
           let key =
             Option.map
               (function
-                | Ast.Statement.ComponentDeclaration.Param.StringLiteral
-                    (_, { Ast.StringLiteral.value; raw; comments }) ->
-                  Ast.Pattern.Object.Property.Literal
-                    (Loc.none, { Ast.Literal.value = Ast.Literal.String value; raw; comments })
+                | Ast.Statement.ComponentDeclaration.Param.StringLiteral (_, lit) ->
+                  Ast.Pattern.Object.Property.StringLiteral (Loc.none, lit)
                 | Ast.Statement.ComponentDeclaration.Param.Identifier id ->
                   Ast.Pattern.Object.Property.Identifier id)
               name

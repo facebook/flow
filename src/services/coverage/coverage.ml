@@ -300,7 +300,14 @@ class ['a, 'l, 't] coverage_folder ~(f : 'l -> 't -> 'a -> 'a) ~(init : 'a) =
       match prop with
       | ( loc,
           Property.Method
-            { key = Property.Literal ((_, t), _) | Property.Identifier ((_, t), _); _ }
+            {
+              key =
+                ( Property.Identifier ((_, t), _)
+                | Property.StringLiteral ((_, t), _)
+                | Property.NumberLiteral ((_, t), _)
+                | Property.BigIntLiteral ((_, t), _) );
+              _;
+            }
         ) ->
         acc <- f loc t acc;
         prop

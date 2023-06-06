@@ -166,9 +166,7 @@ end = struct
                                 );
                               init =
                                 Some
-                                  ( _,
-                                    Expression.Literal { Literal.value = Literal.String source; _ }
-                                  );
+                                  (_, Expression.StringLiteral { StringLiteral.value = source; _ });
                             }
                           );
                         ];
@@ -312,8 +310,8 @@ end = struct
               Object.Property.Init
                 {
                   key =
-                    Object.Property.Literal
-                      (_, { Ast.Literal.value = Ast.Literal.String name; raw = _; comments = _ });
+                    Object.Property.StringLiteral
+                      (_, { Ast.StringLiteral.value = name; raw = _; comments = _ });
                   value;
                   shorthand = false;
                 }
@@ -367,16 +365,15 @@ end = struct
             eitems
         in
         diffs
-    | ( JSON_Bool actual,
-        (_, Literal { Ast.Literal.value = Ast.Literal.Boolean expected; raw = _; comments = _ })
-      ) ->
+    | (JSON_Bool actual, (_, BooleanLiteral { Ast.BooleanLiteral.value = expected; comments = _ }))
+      ->
       if actual <> expected then
         let path = string_of_path path in
         (spf "%s: Expected %b, got %b." path expected actual, None) :: errors
       else
         errors
     | ( JSON_Number actual,
-        (_, Literal { Ast.Literal.value = Ast.Literal.Number _; raw = expected; comments = _ })
+        (_, NumberLiteral { Ast.NumberLiteral.value = _; raw = expected; comments = _ })
       ) ->
       if actual <> expected then
         let path = string_of_path path in
@@ -389,9 +386,7 @@ end = struct
             {
               Unary.operator = Unary.Minus;
               argument =
-                ( _,
-                  Literal { Ast.Literal.value = Ast.Literal.Number _; raw = expected; comments = _ }
-                );
+                (_, NumberLiteral { Ast.NumberLiteral.value = _; raw = expected; comments = _ });
               comments = _;
             }
         )
@@ -403,15 +398,14 @@ end = struct
       else
         errors
     | ( JSON_String actual,
-        (_, Literal { Ast.Literal.value = Ast.Literal.String expected; raw = _; comments = _ })
+        (_, StringLiteral { Ast.StringLiteral.value = expected; raw = _; comments = _ })
       ) ->
       if not (string_value_matches expected actual) then
         let path = string_of_path path in
         (spf "%s: Expected %S, got %S." path expected actual, None) :: errors
       else
         errors
-    | (JSON_Null, (_, Literal { Ast.Literal.value = Ast.Literal.Null; raw = _; comments = _ })) ->
-      errors
+    | (JSON_Null, (_, NullLiteral _)) -> errors
     | (_, _) ->
       let path = string_of_path path in
       let act_type = string_of_json_type actual in
@@ -446,8 +440,8 @@ end = struct
     | Object.Property.Init
         {
           key =
-            Object.Property.Literal
-              (_, { Ast.Literal.value = Ast.Literal.String name; raw = _; comments = _ });
+            Object.Property.StringLiteral
+              (_, { Ast.StringLiteral.value = name; raw = _; comments = _ });
           value;
           shorthand = false;
         } ->
@@ -578,7 +572,11 @@ end = struct
         Some (loc, Array { Array.elements; comments })
       | _ -> Some expected
     end
-    | (_, Literal _) -> Some diff
+    | ( _,
+        ( StringLiteral _ | NumberLiteral _ | BooleanLiteral _ | NullLiteral _ | RegExpLiteral _
+        | ModuleRefLiteral _ )
+      ) ->
+      Some diff
     | (_, Identifier (_, { Ast.Identifier.name = "undefined"; comments = _ })) -> None
     | _ -> failwith "Invalid diff format"
 

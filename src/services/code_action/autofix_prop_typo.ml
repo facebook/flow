@@ -26,17 +26,16 @@ class mapper target fixed_prop_name =
               }
           )
         | Member.PropertyExpression
-            ( property_literal_loc,
-              Literal { Flow_ast.Literal.value = Flow_ast.Literal.String _; comments; _ }
-            )
+            (property_literal_loc, StringLiteral { Flow_ast.StringLiteral.comments; _ })
           when this#is_target property_literal_loc ->
-          let fixed_prop_name_literal = Ast_builder.Literals.string ~comments fixed_prop_name in
+          let fixed_prop_name_literal = Ast_builder.Literals.string ?comments fixed_prop_name in
           ( loc,
             Member
               {
                 m with
                 Member.property =
-                  Member.PropertyExpression (property_literal_loc, Literal fixed_prop_name_literal);
+                  Member.PropertyExpression
+                    (property_literal_loc, StringLiteral fixed_prop_name_literal);
               }
           )
         | _ -> super#expression e)

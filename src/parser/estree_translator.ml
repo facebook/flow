@@ -632,7 +632,13 @@ with type t = Impl.t = struct
           loc
           [("argument", option expression argument); ("delegate", bool delegate)]
       | (_loc, Identifier id) -> identifier id
-      | (loc, Literal lit) -> literal (loc, lit)
+      | (loc, StringLiteral lit) -> string_literal (loc, lit)
+      | (loc, BooleanLiteral lit) -> boolean_literal (loc, lit)
+      | (loc, NullLiteral lit) -> null_literal (loc, lit)
+      | (loc, NumberLiteral lit) -> number_literal (loc, lit)
+      | (loc, BigIntLiteral lit) -> bigint_literal (loc, lit)
+      | (loc, RegExpLiteral lit) -> regexp_literal (loc, lit)
+      | (loc, ModuleRefLiteral lit) -> module_ref_literal (loc, lit)
       | (loc, TemplateLiteral lit) -> template_literal (loc, lit)
       | (loc, TaggedTemplate tagged) -> tagged_template (loc, tagged)
       | (loc, Class c) -> class_expression (loc, c)
@@ -1028,7 +1034,9 @@ with type t = Impl.t = struct
       let (key, computed, comments) =
         let open Expression.Object.Property in
         match key with
-        | Literal lit -> (literal lit, false, comments)
+        | StringLiteral lit -> (string_literal lit, false, comments)
+        | NumberLiteral lit -> (number_literal lit, false, comments)
+        | BigIntLiteral lit -> (bigint_literal lit, false, comments)
         | Identifier id -> (identifier id, false, comments)
         | PrivateName name -> (private_identifier name, false, comments)
         | Computed (_, { ComputedKey.expression = expr; comments = computed_comments }) ->
@@ -1103,7 +1111,9 @@ with type t = Impl.t = struct
         ) =
       let (key, computed, comments) =
         match key with
-        | Expression.Object.Property.Literal lit -> (literal lit, false, comments)
+        | Expression.Object.Property.StringLiteral lit -> (string_literal lit, false, comments)
+        | Expression.Object.Property.NumberLiteral lit -> (number_literal lit, false, comments)
+        | Expression.Object.Property.BigIntLiteral lit -> (bigint_literal lit, false, comments)
         | Expression.Object.Property.Identifier id -> (identifier id, false, comments)
         | Expression.Object.Property.PrivateName _ ->
           failwith "Internal Error: Private name found in class prop"
@@ -1412,7 +1422,9 @@ with type t = Impl.t = struct
           in
           let (key, computed, comments) =
             match key with
-            | Literal lit -> (literal lit, false, comments)
+            | StringLiteral lit -> (string_literal lit, false, comments)
+            | NumberLiteral lit -> (number_literal lit, false, comments)
+            | BigIntLiteral lit -> (bigint_literal lit, false, comments)
             | Identifier id -> (identifier id, false, comments)
             | PrivateName _ -> failwith "Internal Error: Found private field in object props"
             | Computed (_, { ComputedKey.expression = expr; comments = key_comments }) ->
@@ -1442,7 +1454,9 @@ with type t = Impl.t = struct
       | Property (loc, { Property.key; pattern = patt; default; shorthand }) ->
         let (key, computed, comments) =
           match key with
-          | Property.Literal lit -> (literal lit, false, None)
+          | Property.StringLiteral lit -> (string_literal lit, false, None)
+          | Property.NumberLiteral lit -> (number_literal lit, false, None)
+          | Property.BigIntLiteral lit -> (bigint_literal lit, false, None)
           | Property.Identifier id -> (identifier id, false, None)
           | Property.Computed (_, { ComputedKey.expression = expr; comments }) ->
             (expression expr, true, comments)
@@ -1495,22 +1509,14 @@ with type t = Impl.t = struct
           "false"
       in
       node ?comments "Literal" loc [("value", bool value); ("raw", string raw)]
-    and regexp_literal (loc, { Literal.raw; comments; _ }, { Literal.RegExp.pattern; flags }) =
+    and regexp_literal (loc, { RegExpLiteral.pattern; flags; raw; comments; _ }) =
       let value = regexp loc pattern flags in
       let regex = obj [("pattern", string pattern); ("flags", string flags)] in
       node ?comments "Literal" loc [("value", value); ("raw", string raw); ("regex", regex)]
-    and null_literal (loc, { Literal.raw; comments; _ }) =
-      node ?comments "Literal" loc [("value", null); ("raw", string raw)]
-    and literal (loc, ({ Literal.value; raw; comments } as lit)) =
-      match value with
-      | Literal.ModuleRef { Literal.string_value = str; _ }
-      | Literal.String str ->
-        string_literal (loc, { StringLiteral.value = str; raw; comments })
-      | Literal.Boolean b -> boolean_literal (loc, { BooleanLiteral.value = b; comments })
-      | Literal.Null -> null_literal (loc, lit)
-      | Literal.Number f -> number_literal (loc, { NumberLiteral.value = f; raw; comments })
-      | Literal.BigInt n -> bigint_literal (loc, { BigIntLiteral.value = n; raw; comments })
-      | Literal.RegExp r -> regexp_literal (loc, lit, r)
+    and null_literal (loc, comments) =
+      node ?comments "Literal" loc [("value", null); ("raw", string "null")]
+    and module_ref_literal (loc, { ModuleRefLiteral.value; raw; comments; _ }) =
+      string_literal (loc, { StringLiteral.value; raw; comments })
     and template_literal (loc, { Expression.TemplateLiteral.quasis; expressions; comments }) =
       node
         ?comments
@@ -1741,7 +1747,9 @@ with type t = Impl.t = struct
         ) =
       let key =
         match key with
-        | Expression.Object.Property.Literal lit -> literal lit
+        | Expression.Object.Property.StringLiteral lit -> string_literal lit
+        | Expression.Object.Property.NumberLiteral lit -> number_literal lit
+        | Expression.Object.Property.BigIntLiteral lit -> bigint_literal lit
         | Expression.Object.Property.Identifier id -> identifier id
         | Expression.Object.Property.PrivateName _ ->
           failwith "Internal Error: Found private field in object props"
@@ -2118,7 +2126,7 @@ with type t = Impl.t = struct
     and jsx_attribute_value =
       JSX.Attribute.(
         function
-        | Literal (loc, value) -> literal (loc, value)
+        | StringLiteral (loc, value) -> string_literal (loc, value)
         | ExpressionContainer (loc, expr) -> jsx_expression_container (loc, expr)
       )
     and jsx_spread_attribute (loc, { JSX.SpreadAttribute.argument; comments }) =

@@ -134,7 +134,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | Import x -> Import (this#import annot x)
         | JSXElement x -> JSXElement (this#jsx_element x)
         | JSXFragment x -> JSXFragment (this#jsx_fragment x)
-        | Literal x -> Literal (this#literal x)
+        | StringLiteral x -> StringLiteral (this#string_literal x)
+        | BooleanLiteral x -> BooleanLiteral (this#boolean_literal x)
+        | NullLiteral x -> NullLiteral (this#syntax_opt x)
+        | NumberLiteral x -> NumberLiteral (this#number_literal x)
+        | BigIntLiteral x -> BigIntLiteral (this#bigint_literal x)
+        | RegExpLiteral x -> RegExpLiteral (this#regexp_literal x)
+        | ModuleRefLiteral x -> ModuleRefLiteral (this#module_ref_literal x)
         | Logical x -> Logical (this#logical x)
         | Member x -> Member (this#member x)
         | MetaProperty x -> MetaProperty (this#meta_property x)
@@ -1403,6 +1409,20 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments' = this#syntax_opt comments in
       { value; comments = comments' }
 
+    method regexp_literal (t : 'M Ast.RegExpLiteral.t) : 'N Ast.RegExpLiteral.t =
+      let open Ast.RegExpLiteral in
+      let { pattern; flags; raw; comments } = t in
+      let comments' = this#syntax_opt comments in
+      { pattern; flags; raw; comments = comments' }
+
+    method module_ref_literal (mref : ('M, 'T) Ast.ModuleRefLiteral.t)
+        : ('N, 'U) Ast.ModuleRefLiteral.t =
+      let open Ast.ModuleRefLiteral in
+      let { value; require_out; prefix_len; legacy_interop; raw; comments } = mref in
+      let require_out' = this#on_type_annot require_out in
+      let comments' = this#syntax_opt comments in
+      { value; require_out = require_out'; prefix_len; legacy_interop; raw; comments = comments' }
+
     method type_ ((annot, t) : ('M, 'T) Ast.Type.t) : ('N, 'U) Ast.Type.t =
       let open Ast.Type in
       ( this#on_type_annot annot,
@@ -1854,12 +1874,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : ('N, 'U) Ast.JSX.Attribute.value =
       let open Ast.JSX.Attribute in
       match value with
-      | Literal lit -> Literal (this#jsx_attribute_value_literal lit)
+      | StringLiteral lit -> StringLiteral (this#jsx_attribute_value_literal lit)
       | ExpressionContainer expr -> ExpressionContainer (this#jsx_attribute_value_expression expr)
 
     method jsx_attribute_value_literal lit =
       let (annot, lit) = lit in
-      (this#on_type_annot annot, this#literal lit)
+      (this#on_type_annot annot, this#string_literal lit)
 
     method jsx_attribute_value_expression expr =
       let (annot, expr) = expr in
@@ -1964,27 +1984,6 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let body' = this#statement body in
       let comments' = this#syntax_opt comments in
       { label = label'; body = body'; comments = comments' }
-
-    method module_ref_literal (mref : 'T Ast.Literal.module_ref) : 'U Ast.Literal.module_ref =
-      let open Ast.Literal in
-      let { string_value; require_out; prefix_len; legacy_interop } = mref in
-      let require_out' = this#on_type_annot require_out in
-      { string_value; require_out = require_out'; prefix_len; legacy_interop }
-
-    method literal (expr : ('M, 'T) Ast.Literal.t) : ('N, 'U) Ast.Literal.t =
-      let open Ast.Literal in
-      let { comments; value; _ } = expr in
-      let value' : 'U Ast.Literal.value =
-        match value with
-        | String x -> String x
-        | Boolean x -> Boolean x
-        | Null -> Null
-        | Number x -> Number x
-        | BigInt x -> BigInt x
-        | RegExp x -> RegExp x
-        | ModuleRef mref -> ModuleRef (this#module_ref_literal mref)
-      in
-      { expr with value = value'; comments = this#syntax_opt comments }
 
     method logical (expr : ('M, 'T) Ast.Expression.Logical.t) : ('N, 'U) Ast.Expression.Logical.t =
       let open Ast.Expression.Logical in
@@ -2092,14 +2091,24 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : ('N, 'U) Ast.Expression.Object.Property.key =
       let open Ast.Expression.Object.Property in
       match key with
-      | Literal literal -> Literal (this#object_key_literal literal)
+      | StringLiteral literal -> StringLiteral (this#object_key_string_literal literal)
+      | NumberLiteral literal -> NumberLiteral (this#object_key_number_literal literal)
+      | BigIntLiteral literal -> BigIntLiteral (this#object_key_bigint_literal literal)
       | Identifier ident -> Identifier (this#object_key_identifier ident)
       | PrivateName ident -> PrivateName (this#private_name ident)
       | Computed computed -> Computed (this#object_key_computed computed)
 
-    method object_key_literal literal =
+    method object_key_string_literal literal =
       let (annot, lit) = literal in
-      (this#on_type_annot annot, this#literal lit)
+      (this#on_type_annot annot, this#string_literal lit)
+
+    method object_key_number_literal literal =
+      let (annot, lit) = literal in
+      (this#on_type_annot annot, this#number_literal lit)
+
+    method object_key_bigint_literal literal =
+      let (annot, lit) = literal in
+      (this#on_type_annot annot, this#bigint_literal lit)
 
     method object_key_identifier (ident : ('M, 'T) Ast.Identifier.t) : ('N, 'U) Ast.Identifier.t =
       this#t_identifier ident
@@ -2183,9 +2192,17 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       ignore kind;
       this#t_identifier ident
 
-    method pattern_literal ?kind (expr : ('M, 'T) Ast.Literal.t) : ('N, 'U) Ast.Literal.t =
+    method pattern_string_literal ?kind (expr : 'M Ast.StringLiteral.t) : 'N Ast.StringLiteral.t =
       ignore kind;
-      this#literal expr
+      this#string_literal expr
+
+    method pattern_number_literal ?kind (expr : 'M Ast.NumberLiteral.t) : 'N Ast.NumberLiteral.t =
+      ignore kind;
+      this#number_literal expr
+
+    method pattern_bigint_literal ?kind (expr : 'M Ast.BigIntLiteral.t) : 'N Ast.BigIntLiteral.t =
+      ignore kind;
+      this#bigint_literal expr
 
     method pattern_object_p ?kind (p : ('M, 'T) Ast.Pattern.Object.property) =
       let open Ast.Pattern.Object in
@@ -2207,15 +2224,30 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method pattern_object_property_key ?kind (key : ('M, 'T) Ast.Pattern.Object.Property.key) =
       let open Ast.Pattern.Object.Property in
       match key with
-      | Literal (annot, lit) ->
-        Literal (this#on_loc_annot annot, this#pattern_object_property_literal_key ?kind lit)
+      | StringLiteral (annot, lit) ->
+        StringLiteral
+          (this#on_loc_annot annot, this#pattern_object_property_string_literal_key ?kind lit)
+      | NumberLiteral (annot, lit) ->
+        NumberLiteral
+          (this#on_loc_annot annot, this#pattern_object_property_number_literal_key ?kind lit)
+      | BigIntLiteral (annot, lit) ->
+        BigIntLiteral
+          (this#on_loc_annot annot, this#pattern_object_property_bigint_literal_key ?kind lit)
       | Identifier identifier ->
         Identifier (this#pattern_object_property_identifier_key ?kind identifier)
       | Computed expr -> Computed (this#pattern_object_property_computed_key ?kind expr)
 
-    method pattern_object_property_literal_key ?kind (key : ('M, 'T) Ast.Literal.t)
-        : ('N, 'U) Ast.Literal.t =
-      this#pattern_literal ?kind key
+    method pattern_object_property_string_literal_key ?kind (key : 'M Ast.StringLiteral.t)
+        : 'N Ast.StringLiteral.t =
+      this#pattern_string_literal ?kind key
+
+    method pattern_object_property_number_literal_key ?kind (key : 'M Ast.NumberLiteral.t)
+        : 'N Ast.NumberLiteral.t =
+      this#pattern_number_literal ?kind key
+
+    method pattern_object_property_bigint_literal_key ?kind (key : 'M Ast.BigIntLiteral.t)
+        : 'N Ast.BigIntLiteral.t =
+      this#pattern_bigint_literal ?kind key
 
     method pattern_object_property_identifier_key ?kind (key : ('M, 'T) Ast.Identifier.t)
         : ('N, 'U) Ast.Identifier.t =

@@ -357,10 +357,10 @@ let merge_accessors a b =
 
 let extract_string_literal =
   let module E = Ast.Expression in
-  let module L = Ast.Literal in
+  let module S = Ast.StringLiteral in
   let module T = E.TemplateLiteral in
   function
-  | E.Literal { L.value = L.String x; _ } -> Some x
+  | E.StringLiteral { S.value = x; _ } -> Some x
   | E.TemplateLiteral { T.quasis; expressions = []; comments = _ } -> begin
     match quasis with
     | [(_, { T.Element.value = { T.Element.cooked = x; _ }; _ })] -> Some x
@@ -370,9 +370,9 @@ let extract_string_literal =
 
 let extract_number_literal =
   let module E = Ast.Expression in
-  let module L = Ast.Literal in
+  let module N = Ast.NumberLiteral in
   function
-  | E.Literal { L.value = L.Number x; raw; _ } -> Some (x, raw)
+  | E.NumberLiteral { N.value = x; raw; _ } -> Some (x, raw)
   | _ -> None
 
 (* The parser determines the type of a module based on the kinds of exports it
@@ -1504,7 +1504,7 @@ and object_type =
       begin
         match key with
         | P.Identifier (id_loc, { Ast.Identifier.name; comments = _ })
-        | P.Literal (id_loc, { Ast.Literal.value = Ast.Literal.String name; _ }) ->
+        | P.StringLiteral (id_loc, { Ast.StringLiteral.value = name; _ }) ->
           if _method then
             add_method opts scope tbls xs acc id_loc name t
           else
@@ -1521,7 +1521,8 @@ and object_type =
                   t
               in
               Acc.add_field name id_loc (polarity variance) t acc
-        | P.Literal _
+        | P.NumberLiteral _
+        | P.BigIntLiteral _
         | P.PrivateName _
         | P.Computed _ ->
           acc (* unsupported object keys *)
@@ -1700,7 +1701,9 @@ and interface_props =
     in
     let module P = Ast.Expression.Object.Property in
     match key with
-    | P.Literal _
+    | P.StringLiteral _
+    | P.NumberLiteral _
+    | P.BigIntLiteral _
     | P.PrivateName _
     | P.Computed _ ->
       acc (* unsupported interface keys *)
@@ -1782,7 +1785,9 @@ and declare_class_props =
     let { O.Property.key; value; optional; static; proto; _method; variance; comments = _ } = p in
     let module P = Ast.Expression.Object.Property in
     match key with
-    | P.Literal _
+    | P.StringLiteral _
+    | P.NumberLiteral _
+    | P.BigIntLiteral _
     | P.PrivateName _
     | P.Computed _ ->
       acc (* unsupported interface / declare class keys *)
@@ -2574,8 +2579,8 @@ let setter_def opts scope tbls xs id_loc f =
     Set (id_loc, t)
   | _ -> failwith "unexpected setter"
 
-let module_ref_literal tbls loc { Ast.Literal.string_value; prefix_len; legacy_interop; _ } =
-  let mref = push_module_ref tbls (Base.String.drop_prefix string_value prefix_len) in
+let module_ref_literal tbls loc { Ast.ModuleRefLiteral.value; prefix_len; legacy_interop; _ } =
+  let mref = push_module_ref tbls (Base.String.drop_prefix value prefix_len) in
   ModuleRef { loc; mref; legacy_interop }
 
 let string_literal opts loc s =
@@ -2583,23 +2588,6 @@ let string_literal opts loc s =
     Value (StringLit (loc, s))
   else
     Value (LongStringLit loc)
-
-let literal opts tbls loc value raw =
-  let module L = Ast.Literal in
-  match value with
-  | L.ModuleRef mref -> module_ref_literal tbls loc mref
-  | L.String s -> string_literal opts loc s
-  | L.Number n -> Value (NumberLit (loc, n, raw))
-  | L.BigInt n -> Value (BigIntLit (loc, n, raw))
-  | L.Boolean b -> Value (BooleanLit (loc, b))
-  | L.Null -> Value (NullLit loc)
-  | L.RegExp _ ->
-    (* This can probably be easily supported by referencing the builtin type, as
-     * we do in statement.ml. TODO: write a test and implement this. *)
-    Err
-      ( loc,
-        SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Literal))
-      )
 
 let template_literal opts loc quasis =
   let module T = Ast.Expression.TemplateLiteral in
@@ -2630,7 +2618,7 @@ let key_mirror =
               {
                 key =
                   ( P.Identifier (id_loc, { Ast.Identifier.name; comments = _ })
-                  | P.Literal (id_loc, { Ast.Literal.value = Ast.Literal.String name; _ }) );
+                  | P.StringLiteral (id_loc, { Ast.StringLiteral.value = name; _ }) );
                 value = _;
                 shorthand = _;
               }
@@ -2698,7 +2686,22 @@ let rec expression opts scope tbls (loc, expr) =
   let module E = Ast.Expression in
   let loc = push_loc tbls loc in
   match expr with
-  | E.Literal { Ast.Literal.value; raw; comments = _ } -> literal opts tbls loc value raw
+  | E.StringLiteral { Ast.StringLiteral.value; raw = _; comments = _ } ->
+    string_literal opts loc value
+  | E.NumberLiteral { Ast.NumberLiteral.value; raw; comments = _ } ->
+    Value (NumberLit (loc, value, raw))
+  | E.BigIntLiteral { Ast.BigIntLiteral.value; raw; comments = _ } ->
+    Value (BigIntLit (loc, value, raw))
+  | E.BooleanLiteral { Ast.BooleanLiteral.value; comments = _ } -> Value (BooleanLit (loc, value))
+  | E.NullLiteral _comments -> Value (NullLit loc)
+  | E.RegExpLiteral _ ->
+    (* This can probably be easily supported by referencing the builtin type, as
+     * we do in statement.ml. TODO: write a test and implement this. *)
+    Err
+      ( loc,
+        SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Literal))
+      )
+  | E.ModuleRefLiteral lit -> module_ref_literal tbls loc lit
   | E.TaggedTemplate
       {
         E.TaggedTemplate.tag = (_, E.Identifier (_, { Ast.Identifier.name = "graphql"; _ }));
@@ -3313,39 +3316,6 @@ and predicate opts scope tbls pnames =
       (* TODO: OptionalMember *)
       None
   in
-  let literal_test ~strict loc raw =
-    let module L = Ast.Literal in
-    function
-    | L.String x ->
-      if strict then
-        Some (`String (loc, x))
-      else
-        None
-    | L.Boolean x ->
-      if strict then
-        Some (`Bool (loc, x))
-      else
-        None
-    | L.Null ->
-      Some
-        ( if strict then
-          `Null loc
-        else
-          `Maybe
-        )
-    | L.Number x ->
-      if strict then
-        Some (`Number (loc, x, raw))
-      else
-        None
-    | L.BigInt x ->
-      if strict then
-        Some (`BigInt (loc, x, raw))
-      else
-        None
-    | L.RegExp _ -> None
-    | L.ModuleRef _ -> None
-  in
   let eq_test ~strict ~sense eq_loc left right =
     let module T = E.TemplateLiteral in
     match (left, right) with
@@ -3354,37 +3324,58 @@ and predicate opts scope tbls pnames =
       let%bind string_literal = extract_string_literal lit in
       let%bind typename = typeof_typename string_literal in
       refine (`Eq (eq_loc, sense, `Typeof typename)) expr
-    | ((loc, E.Literal { Ast.Literal.value; raw; _ }), expr)
-    | (expr, (loc, E.Literal { Ast.Literal.value; raw; _ })) ->
+    | ((loc, E.StringLiteral { Ast.StringLiteral.value; _ }), expr)
+    | (expr, (loc, E.StringLiteral { Ast.StringLiteral.value; _ }))
+      when strict ->
       let loc = push_loc tbls loc in
-      let%bind test = literal_test ~strict loc raw value in
+      refine (`Eq (eq_loc, sense, `String (loc, value))) expr
+    | ((loc, E.BooleanLiteral { Ast.BooleanLiteral.value; _ }), expr)
+    | (expr, (loc, E.BooleanLiteral { Ast.BooleanLiteral.value; _ }))
+      when strict ->
+      let loc = push_loc tbls loc in
+      refine (`Eq (eq_loc, sense, `Bool (loc, value))) expr
+    | ((loc, E.NumberLiteral { Ast.NumberLiteral.value; raw; _ }), expr)
+    | (expr, (loc, E.NumberLiteral { Ast.NumberLiteral.value; raw; _ }))
+      when strict ->
+      let loc = push_loc tbls loc in
+      refine (`Eq (eq_loc, sense, `Number (loc, value, raw))) expr
+    | ((loc, E.BigIntLiteral { Ast.BigIntLiteral.value; raw; _ }), expr)
+    | (expr, (loc, E.BigIntLiteral { Ast.BigIntLiteral.value; raw; _ }))
+      when strict ->
+      let loc = push_loc tbls loc in
+      refine (`Eq (eq_loc, sense, `BigInt (loc, value, raw))) expr
+    | ((loc, E.NullLiteral _), expr)
+    | (expr, (loc, E.NullLiteral _)) ->
+      let test =
+        if strict then
+          let loc = push_loc tbls loc in
+          `Null loc
+        else
+          `Maybe
+      in
       refine (`Eq (eq_loc, sense, test)) expr
     | ((loc, E.TemplateLiteral { T.quasis; expressions = []; _ }), expr)
-    | (expr, (loc, E.TemplateLiteral { T.quasis; expressions = []; _ })) ->
-      if strict then
-        match quasis with
-        | [(_, { T.Element.value = { T.Element.cooked = x; _ }; _ })] ->
-          let loc = push_loc tbls loc in
-          refine (`Eq (eq_loc, sense, `String (loc, x))) expr
-        | _ -> None
-      else
-        None
-    | ((loc, E.Unary { E.Unary.operator = E.Unary.Minus; argument = (_, lit); _ }), expr)
-    | (expr, (loc, E.Unary { E.Unary.operator = E.Unary.Minus; argument = (_, lit); _ })) ->
-      if strict then
+    | (expr, (loc, E.TemplateLiteral { T.quasis; expressions = []; _ }))
+      when strict ->
+      (match quasis with
+      | [(_, { T.Element.value = { T.Element.cooked = x; _ }; _ })] ->
         let loc = push_loc tbls loc in
-        let%bind (x, raw) = extract_number_literal lit in
-        refine (`Eq (eq_loc, sense, `Number (loc, -.x, "-" ^ raw))) expr
-      else
-        None
+        refine (`Eq (eq_loc, sense, `String (loc, x))) expr
+      | _ -> None)
+    | ((loc, E.Unary { E.Unary.operator = E.Unary.Minus; argument = (_, lit); _ }), expr)
+    | (expr, (loc, E.Unary { E.Unary.operator = E.Unary.Minus; argument = (_, lit); _ }))
+      when strict ->
+      let%bind (x, raw) = extract_number_literal lit in
+      let loc = push_loc tbls loc in
+      refine (`Eq (eq_loc, sense, `Number (loc, -.x, "-" ^ raw))) expr
     | ((loc, E.Unary { E.Unary.operator = E.Unary.Void; _ }), expr)
     | (expr, (loc, E.Unary { E.Unary.operator = E.Unary.Void; _ }))
     | ((loc, E.Identifier (_, { I.name = "undefined"; _ })), expr)
     | (expr, (loc, E.Identifier (_, { I.name = "undefined"; _ }))) ->
       (* TODO: should not refine if undefined is shadowed *)
-      let loc = push_loc tbls loc in
       let eq_test =
         if strict then
+          let loc = push_loc tbls loc in
           `Void loc
         else
           `Maybe
@@ -3612,8 +3603,11 @@ and class_def =
             in
             Acc.add_field ~static name id_loc (polarity variance) t acc
         | C.Body.PrivateField _ -> acc (* private fields are unreachable from exports *)
-        | C.Body.Method (_, { C.Method.key = P.Literal _; _ })
-        | C.Body.Property (_, { C.Property.key = P.Literal _; _ }) ->
+        | C.Body.Method
+            (_, { C.Method.key = P.StringLiteral _ | P.NumberLiteral _ | P.BigIntLiteral _; _ })
+        | C.Body.Property
+            (_, { C.Property.key = P.StringLiteral _ | P.NumberLiteral _ | P.BigIntLiteral _; _ })
+          ->
           acc (* unsupported literal method/field *)
         | C.Body.Method (_, { C.Method.key = P.Computed _; _ })
         | C.Body.Property (_, { C.Property.key = P.Computed _; _ }) ->
@@ -3652,7 +3646,7 @@ and object_literal =
         {
           key =
             ( P.Identifier (id_loc, { Ast.Identifier.name; comments = _ })
-            | P.Literal (id_loc, { Ast.Literal.value = Ast.Literal.String name; _ }) );
+            | P.StringLiteral (id_loc, { Ast.StringLiteral.value = name; _ }) );
           value;
           shorthand = _;
         } ->
@@ -3667,7 +3661,7 @@ and object_literal =
         {
           key =
             ( P.Identifier (id_loc, { Ast.Identifier.name; comments = _ })
-            | P.Literal (id_loc, { Ast.Literal.value = Ast.Literal.String name; _ }) );
+            | P.StringLiteral (id_loc, { Ast.StringLiteral.value = name; _ }) );
           value = (_, fn);
         } ->
       let { Ast.Function.async; generator; _ } = fn in
@@ -3679,7 +3673,7 @@ and object_literal =
         {
           key =
             ( P.Identifier (id_loc, { Ast.Identifier.name; comments = _ })
-            | P.Literal (id_loc, { Ast.Literal.value = Ast.Literal.String name; _ }) );
+            | P.StringLiteral (id_loc, { Ast.StringLiteral.value = name; _ }) );
           value = (_, fn);
           comments = _;
         } ->
@@ -3690,17 +3684,17 @@ and object_literal =
         {
           key =
             ( P.Identifier (id_loc, { Ast.Identifier.name; comments = _ })
-            | P.Literal (id_loc, { Ast.Literal.value = Ast.Literal.String name; _ }) );
+            | P.StringLiteral (id_loc, { Ast.StringLiteral.value = name; _ }) );
           value = (_, fn);
           comments = _;
         } ->
       let id_loc = push_loc tbls id_loc in
       let setter = setter_def opts scope tbls SSet.empty id_loc fn in
       Acc.add_accessor name setter acc
-    | P.Init { key = P.Literal _; _ }
-    | P.Method { key = P.Literal _; _ }
-    | P.Get { key = P.Literal _; _ }
-    | P.Set { key = P.Literal _; _ } ->
+    | P.Init { key = P.NumberLiteral _ | P.BigIntLiteral _; _ }
+    | P.Method { key = P.NumberLiteral _ | P.BigIntLiteral _; _ }
+    | P.Get { key = P.NumberLiteral _ | P.BigIntLiteral _; _ }
+    | P.Set { key = P.NumberLiteral _ | P.BigIntLiteral _; _ } ->
       acc (* unsupported non-string literal key *)
     | P.Get { key = P.Computed _; _ }
     | P.Set { key = P.Computed _; _ } ->
@@ -3856,7 +3850,7 @@ and object_pattern =
       let (xs, def) =
         match key with
         | O.Property.Identifier (id_loc, { Ast.Identifier.name; comments = _ })
-        | O.Property.Literal (id_loc, { Ast.Literal.value = Ast.Literal.String name; _ }) ->
+        | O.Property.StringLiteral (id_loc, { Ast.StringLiteral.value = name; _ }) ->
           let id_loc = push_loc tbls id_loc in
           let def = push_pattern tbls (PropP { id_loc; name; def }) in
           (name :: xs, def)
@@ -3865,7 +3859,8 @@ and object_pattern =
           let elem = push_pattern_def tbls t in
           let def = push_pattern tbls (ComputedP { elem; def }) in
           (xs, def)
-        | O.Property.Literal (loc, _) ->
+        | O.Property.NumberLiteral (loc, _)
+        | O.Property.BigIntLiteral (loc, _) ->
           let loc = push_loc tbls loc in
           let def = push_pattern tbls (UnsupportedLiteralP loc) in
           (xs, def)

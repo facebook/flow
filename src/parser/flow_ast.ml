@@ -38,41 +38,6 @@ and PrivateName : sig
 end =
   PrivateName
 
-and Literal : sig
-  module RegExp : sig
-    type t = {
-      pattern: string;
-      flags: string;
-    }
-    [@@deriving show]
-  end
-
-  (* Literals also carry along their raw value *)
-  type ('M, 'T) t = {
-    value: 'T value;
-    raw: string;
-    comments: ('M, unit) Syntax.t option;
-  }
-
-  and 'T value =
-    | String of string
-    | Boolean of bool
-    | Null
-    | Number of float
-    | BigInt of int64 option
-    | RegExp of RegExp.t
-    | ModuleRef of 'T module_ref
-
-  and 'T module_ref = {
-    string_value: string;
-    require_out: 'T;
-    prefix_len: int;
-    legacy_interop: bool;
-  }
-  [@@deriving show]
-end =
-  Literal
-
 and StringLiteral : sig
   type 'M t = {
     value: string;
@@ -112,6 +77,30 @@ and BooleanLiteral : sig
   [@@deriving show]
 end =
   BooleanLiteral
+
+and RegExpLiteral : sig
+  type 'M t = {
+    pattern: string;
+    flags: string;
+    raw: string;
+    comments: ('M, unit) Syntax.t option;
+  }
+  [@@deriving show]
+end =
+  RegExpLiteral
+
+and ModuleRefLiteral : sig
+  type ('M, 'T) t = {
+    value: string;
+    require_out: 'T;
+    prefix_len: int;
+    legacy_interop: bool;
+    raw: string;
+    comments: ('M, unit) Syntax.t option;
+  }
+  [@@deriving show]
+end =
+  ModuleRefLiteral
 
 and Variance : sig
   type 'M t = 'M * 'M t'
@@ -1373,7 +1362,9 @@ and Expression : sig
   module Object : sig
     module Property : sig
       type ('M, 'T) key =
-        | Literal of ('T * ('M, 'T) Literal.t)
+        | StringLiteral of ('T * 'M StringLiteral.t)
+        | NumberLiteral of ('T * 'M NumberLiteral.t)
+        | BigIntLiteral of ('T * 'M BigIntLiteral.t)
         | Identifier of ('M, 'T) Identifier.t
         | PrivateName of 'M PrivateName.t
         | Computed of ('M, 'T) ComputedKey.t
@@ -1692,7 +1683,13 @@ and Expression : sig
     | Import of ('M, 'T) Import.t
     | JSXElement of ('M, 'T) JSX.element
     | JSXFragment of ('M, 'T) JSX.fragment
-    | Literal of ('M, 'T) Literal.t
+    | StringLiteral of 'M StringLiteral.t
+    | BooleanLiteral of 'M BooleanLiteral.t
+    | NullLiteral of ('M, unit) Syntax.t option
+    | NumberLiteral of 'M NumberLiteral.t
+    | BigIntLiteral of 'M BigIntLiteral.t
+    | RegExpLiteral of 'M RegExpLiteral.t
+    | ModuleRefLiteral of ('M, 'T) ModuleRefLiteral.t
     | Logical of ('M, 'T) Logical.t
     | Member of ('M, 'T) Member.t
     | MetaProperty of 'M MetaProperty.t
@@ -1763,7 +1760,7 @@ and JSX : sig
       | NamespacedName of ('M, 'T) NamespacedName.t
 
     and ('M, 'T) value =
-      | Literal of ('T * ('M, 'T) Literal.t)
+      | StringLiteral of ('T * 'M StringLiteral.t)
       | ExpressionContainer of ('T * ('M, 'T) ExpressionContainer.t)
 
     and ('M, 'T) t' = {
@@ -1873,7 +1870,9 @@ and Pattern : sig
   module Object : sig
     module Property : sig
       type ('M, 'T) key =
-        | Literal of ('M * ('M, 'T) Literal.t)
+        | StringLiteral of ('M * 'M StringLiteral.t)
+        | NumberLiteral of ('M * 'M NumberLiteral.t)
+        | BigIntLiteral of ('M * 'M BigIntLiteral.t)
         | Identifier of ('M, 'T) Identifier.t
         | Computed of ('M, 'T) ComputedKey.t
 

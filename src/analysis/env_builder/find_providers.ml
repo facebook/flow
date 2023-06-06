@@ -863,8 +863,7 @@ end = struct
           | (None, _) -> Nothing
           | (Some (_, Ast.Expression.Array { Ast.Expression.Array.elements = []; _ }), _) ->
             EmptyArr
-          | (Some (_, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Null; _ }), _) ->
-            Null 0
+          | (Some (_, Ast.Expression.NullLiteral _), _) -> Null 0
           | _ -> Value 0
         in
 
@@ -1201,7 +1200,7 @@ end = struct
           _loc ({ Ast.Expression.Assignment.operator = _; left; right; comments; _ } as expr) =
         let mk_state n =
           match right with
-          | (_, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Null; _ }) -> Null n
+          | (_, Ast.Expression.NullLiteral _) -> Null n
           | (_, Ast.Expression.Array { Ast.Expression.Array.elements = _ :: _; _ }) -> ArrayValue n
           | _ -> Value n
         in

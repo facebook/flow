@@ -99,7 +99,7 @@ end = struct
     let open Ast.Expression.Object.Property in
     match key with
     | Identifier (_, { Ast.Identifier.name; _ })
-    | Literal (_, { Ast.Literal.value = Ast.Literal.String name; _ }) -> begin
+    | StringLiteral (_, { Ast.StringLiteral.value = name; _ }) -> begin
       match value with
       | Init t ->
         let optional = opt_chain || optional in
@@ -111,7 +111,8 @@ end = struct
       | Set _ ->
         None
     end
-    | Literal _
+    | NumberLiteral _
+    | BigIntLiteral _
     | PrivateName _
     | Computed _ ->
       None

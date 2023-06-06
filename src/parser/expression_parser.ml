@@ -97,7 +97,13 @@ module Expression
     | (_, Import _)
     | (_, JSXElement _)
     | (_, JSXFragment _)
-    | (_, Literal _)
+    | (_, StringLiteral _)
+    | (_, BooleanLiteral _)
+    | (_, NullLiteral _)
+    | (_, NumberLiteral _)
+    | (_, BigIntLiteral _)
+    | (_, RegExpLiteral _)
+    | (_, ModuleRefLiteral _)
     | (_, Logical _)
     | (_, New _)
     | (_, OptionalCall _)
@@ -308,7 +314,13 @@ module Expression
     | (_, Import _)
     | (_, JSXElement _)
     | (_, JSXFragment _)
-    | (_, Literal _)
+    | (_, StringLiteral _)
+    | (_, BooleanLiteral _)
+    | (_, NullLiteral _)
+    | (_, NumberLiteral _)
+    | (_, BigIntLiteral _)
+    | (_, RegExpLiteral _)
+    | (_, ModuleRefLiteral _)
     | (_, Logical _)
     | (_, New _)
     | (_, Object _)
@@ -1239,71 +1251,59 @@ module Expression
             { Expression.This.comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
         )
     | T_NUMBER { kind; raw } ->
-      let value = Literal.Number (number env kind raw) in
+      let value = number env kind raw in
       let trailing = Eat.trailing_comments env in
-      Cover_expr
-        ( loc,
-          let open Expression in
-          Literal
-            { Literal.value; raw; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
-        )
+      let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+      Cover_expr (loc, Expression.NumberLiteral { Ast.NumberLiteral.value; raw; comments })
     | T_BIGINT { kind; raw } ->
-      let value = Literal.BigInt (bigint env kind raw) in
+      let value = bigint env kind raw in
       let trailing = Eat.trailing_comments env in
-      Cover_expr
-        ( loc,
-          let open Expression in
-          Literal
-            { Literal.value; raw; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
-        )
+      let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+      Cover_expr (loc, Expression.BigIntLiteral { Ast.BigIntLiteral.value; raw; comments })
     | T_STRING (loc, value, raw, octal) ->
       if octal then strict_error env Parse_error.StrictOctalLiteral;
       Eat.token env;
-      let value =
+      let trailing = Eat.trailing_comments env in
+      let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+      let expr =
         let opts = parse_options env in
         match (opts.module_ref_prefix, opts.module_ref_prefix_LEGACY_INTEROP) with
         | (Some prefix, _) when String.starts_with ~prefix value ->
           let prefix_len = String.length prefix in
-          Literal.ModuleRef
-            { Literal.string_value = value; require_out = loc; prefix_len; legacy_interop = false }
+          Expression.ModuleRefLiteral
+            {
+              Ast.ModuleRefLiteral.value;
+              require_out = loc;
+              prefix_len;
+              legacy_interop = false;
+              raw;
+              comments;
+            }
         | (_, Some prefix) when String.starts_with ~prefix value ->
           let prefix_len = String.length prefix in
-          Literal.ModuleRef
-            { Literal.string_value = value; require_out = loc; prefix_len; legacy_interop = true }
-        | _ -> Literal.String value
+          Expression.ModuleRefLiteral
+            {
+              Ast.ModuleRefLiteral.value;
+              require_out = loc;
+              prefix_len;
+              legacy_interop = true;
+              raw;
+              comments;
+            }
+        | _ -> Expression.StringLiteral { Ast.StringLiteral.value; raw; comments }
       in
-      let trailing = Eat.trailing_comments env in
-      Cover_expr
-        ( loc,
-          Expression.Literal
-            { Literal.value; raw; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
-        )
+      Cover_expr (loc, expr)
     | (T_TRUE | T_FALSE) as token ->
       Eat.token env;
-      let truthy = token = T_TRUE in
-      let raw =
-        if truthy then
-          "true"
-        else
-          "false"
-      in
-      let value = Literal.Boolean truthy in
+      let value = token = T_TRUE in
       let trailing = Eat.trailing_comments env in
-      Cover_expr
-        ( loc,
-          Expression.Literal
-            { Literal.value; raw; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
-        )
+      let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+      Cover_expr (loc, Expression.BooleanLiteral { Ast.BooleanLiteral.value; comments })
     | T_NULL ->
       Eat.token env;
-      let raw = "null" in
-      let value = Literal.Null in
       let trailing = Eat.trailing_comments env in
-      Cover_expr
-        ( loc,
-          Expression.Literal
-            { Literal.value; raw; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
-        )
+      let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+      Cover_expr (loc, Expression.NullLiteral comments)
     | T_LPAREN -> Cover_expr (group env)
     | T_LCURLY ->
       let (loc, obj, errs) = Parse.object_initializer env in
@@ -1342,15 +1342,8 @@ module Expression
 
       (* Really no idea how to recover from this. I suppose a null
        * expression is as good as anything *)
-      let value = Literal.Null in
-      let raw = "null" in
-      let trailing = [] in
-      Cover_expr
-        ( loc,
-          let open Expression in
-          Literal
-            { Literal.value; raw; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
-        )
+      let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing:[] () in
+      Cover_expr (loc, Expression.NullLiteral comments)
 
   and primary env = as_expression env (primary_cover env)
 
@@ -1490,8 +1483,19 @@ module Expression
         JSXElement { e with JSX.comments = merge_comments comments }
       | JSXFragment ({ JSX.frag_comments; _ } as e) ->
         JSXFragment { e with JSX.frag_comments = merge_comments frag_comments }
-      | Literal ({ Literal.comments; _ } as e) ->
-        Literal { e with Literal.comments = merge_comments comments }
+      | StringLiteral ({ StringLiteral.comments; _ } as e) ->
+        StringLiteral { e with StringLiteral.comments = merge_comments comments }
+      | BooleanLiteral ({ BooleanLiteral.comments; _ } as e) ->
+        BooleanLiteral { e with BooleanLiteral.comments = merge_comments comments }
+      | NullLiteral comments -> NullLiteral (merge_comments comments)
+      | NumberLiteral ({ NumberLiteral.comments; _ } as e) ->
+        NumberLiteral { e with NumberLiteral.comments = merge_comments comments }
+      | BigIntLiteral ({ BigIntLiteral.comments; _ } as e) ->
+        BigIntLiteral { e with BigIntLiteral.comments = merge_comments comments }
+      | RegExpLiteral ({ RegExpLiteral.comments; _ } as e) ->
+        RegExpLiteral { e with RegExpLiteral.comments = merge_comments comments }
+      | ModuleRefLiteral ({ ModuleRefLiteral.comments; _ } as e) ->
+        ModuleRefLiteral { e with ModuleRefLiteral.comments = merge_comments comments }
       | Logical ({ Logical.comments; _ } as e) ->
         Logical { e with Logical.comments = merge_comments comments }
       | Member ({ Member.comments; _ } as e) ->
@@ -1629,12 +1633,8 @@ module Expression
       raw_flags;
     let flags = Buffer.contents filtered_flags in
     if flags <> raw_flags then error env (Parse_error.InvalidRegExpFlags raw_flags);
-    let value = Literal.(RegExp { RegExp.pattern; flags }) in
-    ( loc,
-      let open Expression in
-      Literal
-        { Literal.value; raw; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
-    )
+    let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+    (loc, Expression.RegExpLiteral { Ast.RegExpLiteral.pattern; flags; raw; comments })
 
   and try_arrow_function =
     (* Certain errors (almost all errors) cause a rollback *)

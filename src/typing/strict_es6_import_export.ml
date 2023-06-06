@@ -38,15 +38,13 @@ let declarations_init =
 
 let rec is_require =
   let open Ast.Expression in
-  let open Ast.Literal in
   function
   | (_, Member { Member._object; _ }) -> is_require _object
   | ( _,
       Call
         {
           Call.callee = (_, Identifier (_, { Ast.Identifier.name = "require"; _ }));
-          arguments =
-            (_, { ArgList.arguments = [Expression (_, Literal { value = String _; _ })]; _ });
+          arguments = (_, { ArgList.arguments = [Expression (_, StringLiteral _)]; _ });
           _;
         }
     ) ->
@@ -242,16 +240,13 @@ class import_export_visitor ~cx ~scope_info ~declarations =
         (* Error on attempt to access default export *)
         | (Some import_star, Member.PropertyIdentifier (_, { Ast.Identifier.name = "default"; _ }))
         | ( Some import_star,
-            Member.PropertyExpression
-              (_, Literal { Ast.Literal.value = Ast.Literal.String "default"; _ })
+            Member.PropertyExpression (_, StringLiteral { Ast.StringLiteral.value = "default"; _ })
           ) ->
           this#add_bad_default_import_access_error expr_loc import_star;
           expr
         (* Do not recurse on valid use of module object *)
         | (Some _, Member.PropertyIdentifier _)
-        | ( Some _,
-            Member.PropertyExpression (_, Literal { Ast.Literal.value = Ast.Literal.String _; _ })
-          ) ->
+        | (Some _, Member.PropertyExpression (_, StringLiteral _)) ->
           expr
         | _ -> super#member expr_loc expr)
       | _ -> super#member expr_loc expr
@@ -268,8 +263,7 @@ class import_export_visitor ~cx ~scope_info ~declarations =
                 {
                   key =
                     ( Identifier (default_loc, { Ast.Identifier.name = "default"; _ })
-                    | Literal (default_loc, { Ast.Literal.value = Ast.Literal.String "default"; _ })
-                      );
+                    | StringLiteral (default_loc, { Ast.StringLiteral.value = "default"; _ }) );
                   _;
                 }
               ) ->
@@ -284,7 +278,10 @@ class import_export_visitor ~cx ~scope_info ~declarations =
         ~f:(fun prop ->
           let open Property in
           match prop with
-          | Ast.Pattern.Object.Property (_, { key = Identifier _ | Literal _; _ }) -> true
+          | Ast.Pattern.Object.Property
+              (_, { key = Identifier _ | StringLiteral _ | NumberLiteral _ | BigIntLiteral _; _ })
+            ->
+            true
           | _ -> false)
         properties
 

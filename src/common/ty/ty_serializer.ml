@@ -287,9 +287,8 @@ let type_ options =
       if Ty_printer.property_key_quotes_needed x then
         let quote = Ty_printer.better_quote ~prefer_single_quotes:false x in
         let raw = quote ^ Ty_printer.utf8_escape ~quote x ^ quote in
-        let value = Ast.Literal.String x in
-        Ast.Expression.Object.Property.Literal
-          (Loc.none, { Ast.Literal.value; raw; comments = None })
+        Ast.Expression.Object.Property.StringLiteral
+          (Loc.none, { Ast.StringLiteral.value = x; raw; comments = None })
       else
         Ast.Expression.Object.Property.Identifier (id_from_string x)
     in

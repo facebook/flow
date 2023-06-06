@@ -320,10 +320,17 @@ class requires_exports_calculator ~ast ~opts =
       this#handle_call call_loc callee arguments None;
       super#call call_loc expr
 
-    method! literal loc (expr : (Loc.t, Loc.t) Ast.Literal.t) =
-      let open Ast.Literal in
-      this#handle_literal loc expr.value;
-      super#literal loc expr
+    method! module_ref_literal loc lit =
+      let { Ast.ModuleRefLiteral.value; prefix_len; _ } = lit in
+      let mref = Base.String.drop_prefix value prefix_len in
+      let prefix =
+        if prefix_len > 0 then
+          Some (Base.String.prefix value prefix_len)
+        else
+          None
+      in
+      this#add_require (Require { source = (loc, mref); require_loc = loc; bindings = None; prefix });
+      super#module_ref_literal loc lit
 
     method! tagged_template loc (expr : ('loc, 'loc) Ast.Expression.TaggedTemplate.t) =
       let open Ast.Expression.TaggedTemplate in
@@ -354,7 +361,7 @@ class requires_exports_calculator ~ast ~opts =
       begin
         match argument with
         | ( loc,
-            ( Literal { Ast.Literal.value = Ast.Literal.String name; _ }
+            ( StringLiteral { Ast.StringLiteral.value = name; _ }
             | TemplateLiteral
                 {
                   TemplateLiteral.quasis =
@@ -696,7 +703,7 @@ class requires_exports_calculator ~ast ~opts =
                   [
                     Expression
                       ( source_loc,
-                        ( Literal { Ast.Literal.value = Ast.Literal.String name; _ }
+                        ( StringLiteral { Ast.StringLiteral.value = name; _ }
                         | TemplateLiteral
                             {
                               TemplateLiteral.quasis =
@@ -724,21 +731,6 @@ class requires_exports_calculator ~ast ~opts =
               )
         | _ -> ()
       )
-
-    method private handle_literal loc lit =
-      let open Ast.Literal in
-      match lit with
-      | ModuleRef { string_value; prefix_len; _ } ->
-        let mref = Base.String.drop_prefix string_value prefix_len in
-        let prefix =
-          if prefix_len > 0 then
-            Some (Base.String.prefix string_value prefix_len)
-          else
-            None
-        in
-        this#add_require
-          (Require { source = (loc, mref); require_loc = loc; bindings = None; prefix })
-      | _ -> ()
 
     (* skip declare module *)
     method! declare_module _loc (m : (Loc.t, Loc.t) Ast.Statement.DeclareModule.t) = m

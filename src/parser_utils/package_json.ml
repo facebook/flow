@@ -24,19 +24,19 @@ let main package = package.main
 let haste_commonjs package = package.haste_commonjs
 
 let string_opt = function
-  | Some (Ast.Literal.String value) -> Some value
+  | Some (Ast.Expression.StringLiteral { Ast.StringLiteral.value; _ }) -> Some value
   | Some _
   | None ->
     None
 
 let bool_opt = function
-  | Some (Ast.Literal.Boolean value) -> Some value
+  | Some (Ast.Expression.BooleanLiteral { Ast.BooleanLiteral.value; _ }) -> Some value
   | Some _
   | None ->
     None
 
 (** Given a list of JSON properties, loosely extract the properties and turn it into a
-    [Literal.value SMap.t]. We aren't looking to validate the file, and don't currently
+    [Expression.t SMap.t]. We aren't looking to validate the file, and don't currently
     care about any non-literal properties, so we skip over everything else. *)
 let extract_property map property =
   let open Ast in
@@ -46,8 +46,8 @@ let extract_property map property =
       ( _,
         Property.Init
           {
-            key = Property.Literal (_, { Literal.value = Literal.String key; _ });
-            value = (_, Expression.Literal { Literal.value; _ });
+            key = Property.StringLiteral (_, { StringLiteral.value = key; _ });
+            value = (_, value);
             _;
           }
       ) ->

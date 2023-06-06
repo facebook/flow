@@ -861,7 +861,7 @@ module Statement
         let directive =
           if allow_directive env then
             match expression with
-            | (_, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.String _; raw; _ }) ->
+            | (_, Ast.Expression.StringLiteral { Ast.StringLiteral.raw; _ }) ->
               (* the parser may recover from errors and generate unclosed strings, where
                  the opening quote should be reliable but the closing one might not exist.
                  be defensive. *)

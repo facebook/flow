@@ -24,7 +24,15 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method assignment_pattern : ('M, 'T) Flow_ast.Pattern.t -> ('N, 'U) Ast.Pattern.t
 
+    method string_literal : 'M Ast.StringLiteral.t -> 'N Ast.StringLiteral.t
+
+    method number_literal : 'M Ast.NumberLiteral.t -> 'N Ast.NumberLiteral.t
+
     method bigint_literal : 'M Ast.BigIntLiteral.t -> 'N Ast.BigIntLiteral.t
+
+    method regexp_literal : 'M Ast.RegExpLiteral.t -> 'N Ast.RegExpLiteral.t
+
+    method module_ref_literal : ('M, 'T) Ast.ModuleRefLiteral.t -> ('N, 'U) Ast.ModuleRefLiteral.t
 
     method binary : ('M, 'T) Ast.Expression.Binary.t -> ('N, 'U) Ast.Expression.Binary.t
 
@@ -446,7 +454,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method jsx_attribute_value :
       ('M, 'T) Ast.JSX.Attribute.value -> ('N, 'U) Ast.JSX.Attribute.value
 
-    method jsx_attribute_value_literal : 'T * ('M, 'T) Ast.Literal.t -> 'U * ('N, 'U) Ast.Literal.t
+    method jsx_attribute_value_literal : 'T * 'M Ast.StringLiteral.t -> 'U * 'N Ast.StringLiteral.t
 
     method jsx_attribute_value_expression :
       'T * ('M, 'T) Ast.JSX.ExpressionContainer.t -> 'U * ('N, 'U) Ast.JSX.ExpressionContainer.t
@@ -507,10 +515,6 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method labeled_statement : ('M, 'T) Ast.Statement.Labeled.t -> ('N, 'U) Ast.Statement.Labeled.t
 
-    method module_ref_literal : 'T Ast.Literal.module_ref -> 'U Ast.Literal.module_ref
-
-    method literal : ('M, 'T) Ast.Literal.t -> ('N, 'U) Ast.Literal.t
-
     method logical : ('M, 'T) Ast.Expression.Logical.t -> ('N, 'U) Ast.Expression.Logical.t
 
     method member : ('M, 'T) Ast.Expression.Member.t -> ('N, 'U) Ast.Expression.Member.t
@@ -530,8 +534,6 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method nullable_type : ('M, 'T) Ast.Type.Nullable.t -> ('N, 'U) Ast.Type.Nullable.t
 
-    method number_literal : 'M Ast.NumberLiteral.t -> 'N Ast.NumberLiteral.t
-
     method object_ : ('M, 'T) Ast.Expression.Object.t -> ('N, 'U) Ast.Expression.Object.t
 
     method object_indexer_property_type :
@@ -549,7 +551,11 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method object_key :
       ('M, 'T) Ast.Expression.Object.Property.key -> ('N, 'U) Ast.Expression.Object.Property.key
 
-    method object_key_literal : 'T * ('M, 'T) Ast.Literal.t -> 'U * ('N, 'U) Ast.Literal.t
+    method object_key_string_literal : 'T * 'M Ast.StringLiteral.t -> 'U * 'N Ast.StringLiteral.t
+
+    method object_key_number_literal : 'T * 'M Ast.NumberLiteral.t -> 'U * 'N Ast.NumberLiteral.t
+
+    method object_key_bigint_literal : 'T * 'M Ast.BigIntLiteral.t -> 'U * 'N Ast.BigIntLiteral.t
 
     method object_key_identifier : ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
 
@@ -622,8 +628,14 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method pattern_expression : ('M, 'T) Flow_ast.Expression.t -> ('N, 'U) Ast.Expression.t
 
-    method pattern_literal :
-      ?kind:Ast.Variable.kind -> ('M, 'T) Ast.Literal.t -> ('N, 'U) Ast.Literal.t
+    method pattern_string_literal :
+      ?kind:Ast.Variable.kind -> 'M Ast.StringLiteral.t -> 'N Ast.StringLiteral.t
+
+    method pattern_number_literal :
+      ?kind:Ast.Variable.kind -> 'M Ast.NumberLiteral.t -> 'N Ast.NumberLiteral.t
+
+    method pattern_bigint_literal :
+      ?kind:Ast.Variable.kind -> 'M Ast.BigIntLiteral.t -> 'N Ast.BigIntLiteral.t
 
     method pattern_object_p :
       ?kind:Ast.Variable.kind ->
@@ -646,8 +658,14 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M, 'T) Ast.Pattern.Object.Property.key ->
       ('N, 'U) Ast.Pattern.Object.Property.key
 
-    method pattern_object_property_literal_key :
-      ?kind:Ast.Variable.kind -> ('M, 'T) Ast.Literal.t -> ('N, 'U) Ast.Literal.t
+    method pattern_object_property_string_literal_key :
+      ?kind:Ast.Variable.kind -> 'M Ast.StringLiteral.t -> 'N Ast.StringLiteral.t
+
+    method pattern_object_property_number_literal_key :
+      ?kind:Ast.Variable.kind -> 'M Ast.NumberLiteral.t -> 'N Ast.NumberLiteral.t
+
+    method pattern_object_property_bigint_literal_key :
+      ?kind:Ast.Variable.kind -> 'M Ast.BigIntLiteral.t -> 'N Ast.BigIntLiteral.t
 
     method pattern_object_property_pattern :
       ?kind:Ast.Variable.kind -> ('M, 'T) Flow_ast.Pattern.t -> ('N, 'U) Ast.Pattern.t
@@ -684,8 +702,6 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method statement_list : ('M, 'T) Flow_ast.Statement.t list -> ('N, 'U) Ast.Statement.t list
 
     method statement_fork_point : ('M, 'T) Ast.Statement.t -> ('N, 'U) Ast.Statement.t list
-
-    method string_literal : 'M Ast.StringLiteral.t -> 'N Ast.StringLiteral.t
 
     method super_expression : 'M Ast.Expression.Super.t -> 'N Ast.Expression.Super.t
 

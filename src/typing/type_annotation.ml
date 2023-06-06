@@ -2010,8 +2010,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       | { Object.Property.key; value = Object.Property.Init value; optional; variance; _method; _ }
         -> begin
         match key with
-        | Ast.Expression.Object.Property.Literal
-            (loc, { Ast.Literal.value = Ast.Literal.String name; _ })
+        | Ast.Expression.Object.Property.StringLiteral (loc, { Ast.StringLiteral.value = name; _ })
         | Ast.Expression.Object.Property.Identifier (loc, { Ast.Identifier.name; comments = _ }) ->
           let (((_, t), _) as value_ast) = convert cx tparams_map infer_tparams_map value in
           let prop_ast t =
@@ -2020,9 +2019,8 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               Object.Property.key =
                 begin
                   match key with
-                  | Ast.Expression.Object.Property.Literal
-                      (_, ({ Ast.Literal.value = Ast.Literal.String _; _ } as lit)) ->
-                    Ast.Expression.Object.Property.Literal ((loc, t), lit)
+                  | Ast.Expression.Object.Property.StringLiteral (_, lit) ->
+                    Ast.Expression.Object.Property.StringLiteral ((loc, t), lit)
                   | Ast.Expression.Object.Property.Identifier
                       (_loc, { Ast.Identifier.name = _; comments = comments_inner }) ->
                     Ast.Expression.Object.Property.Identifier
@@ -2057,7 +2055,8 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                 Properties.add_field (OrdinaryName name) (polarity cx variance) (Some loc) t
             in
             (Acc.add_prop prop acc, prop_ast t)
-        | Ast.Expression.Object.Property.Literal (loc, _)
+        | Ast.Expression.Object.Property.NumberLiteral (loc, _)
+        | Ast.Expression.Object.Property.BigIntLiteral (loc, _)
         | Ast.Expression.Object.Property.PrivateName (loc, _)
         | Ast.Expression.Object.Property.Computed (loc, _) ->
           Flow_js_utils.add_output cx (Error_message.EUnsupportedKeyInObjectType loc);
@@ -2806,7 +2805,9 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               let (x, prop) =
                 Ast.Expression.Object.(
                   match (_method, key, value) with
-                  | (_, Property.Literal (loc, _), _)
+                  | (_, Property.StringLiteral (loc, _), _)
+                  | (_, Property.NumberLiteral (loc, _), _)
+                  | (_, Property.BigIntLiteral (loc, _), _)
                   | (_, Property.PrivateName (loc, _), _)
                   | (_, Property.Computed (loc, _), _) ->
                     Flow_js_utils.add_output

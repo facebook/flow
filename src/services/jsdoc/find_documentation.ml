@@ -11,7 +11,9 @@ let loc_of_object_key =
   let open Flow_ast.Expression.Object.Property in
   function
   | Identifier (loc, _)
-  | Literal (loc, _)
+  | StringLiteral (loc, _)
+  | NumberLiteral (loc, _)
+  | BigIntLiteral (loc, _)
   | Computed (_, Flow_ast.ComputedKey.{ expression = (loc, _); _ })
   | PrivateName (loc, _) ->
     loc
@@ -24,7 +26,9 @@ let comments_of_object_key =
   let open Flow_ast.Expression.Object.Property in
   function
   | Identifier (_, Flow_ast.Identifier.{ comments; _ })
-  | Literal (_, Flow_ast.Literal.{ comments; _ })
+  | StringLiteral (_, Flow_ast.StringLiteral.{ comments; _ })
+  | NumberLiteral (_, Flow_ast.NumberLiteral.{ comments; _ })
+  | BigIntLiteral (_, Flow_ast.BigIntLiteral.{ comments; _ })
   | Computed (_, Flow_ast.ComputedKey.{ comments; _ }) ->
     comments
   | PrivateName _ -> None

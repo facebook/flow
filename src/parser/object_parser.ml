@@ -75,36 +75,21 @@ module Object
     | T_STRING (loc, value, raw, octal) ->
       if octal then strict_error env Parse_error.StrictOctalLiteral;
       Expect.token env (T_STRING (loc, value, raw, octal));
-      let value = Literal.String value in
       let trailing = Eat.trailing_comments env in
-      ( loc,
-        Literal
-          ( loc,
-            { Literal.value; raw; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
-          )
-      )
+      let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+      (loc, StringLiteral (loc, { Ast.StringLiteral.value; raw; comments }))
     | T_NUMBER { kind; raw } ->
       let loc = Peek.loc env in
       let value = Expression.number env kind raw in
-      let value = Literal.Number value in
       let trailing = Eat.trailing_comments env in
-      ( loc,
-        Literal
-          ( loc,
-            { Literal.value; raw; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
-          )
-      )
+      let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+      (loc, NumberLiteral (loc, { Ast.NumberLiteral.value; raw; comments }))
     | T_BIGINT { kind; raw } ->
       let loc = Peek.loc env in
       let value = Expression.bigint env kind raw in
-      let value = Literal.BigInt value in
       let trailing = Eat.trailing_comments env in
-      ( loc,
-        Literal
-          ( loc,
-            { Literal.value; raw; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
-          )
-      )
+      let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+      (loc, BigIntLiteral (loc, { Ast.BigIntLiteral.value; raw; comments }))
     | T_LBRACKET ->
       let (loc, key) =
         with_loc
@@ -249,9 +234,15 @@ module Object
       (* #prod-IdentifierReference *)
       let parse_shorthand env key =
         match key with
-        | Literal (loc, lit) ->
+        | StringLiteral (loc, lit) ->
           error_at env (loc, Parse_error.LiteralShorthandProperty);
-          (loc, Ast.Expression.Literal lit)
+          (loc, Ast.Expression.StringLiteral lit)
+        | NumberLiteral (loc, lit) ->
+          error_at env (loc, Parse_error.LiteralShorthandProperty);
+          (loc, Ast.Expression.NumberLiteral lit)
+        | BigIntLiteral (loc, lit) ->
+          error_at env (loc, Parse_error.LiteralShorthandProperty);
+          (loc, Ast.Expression.BigIntLiteral lit)
         | Identifier ((loc, { Identifier.name; comments = _ }) as id) ->
           (* #sec-identifiers-static-semantics-early-errors *)
           if is_reserved name then
@@ -340,7 +331,9 @@ module Object
             }
           in
           (ast, errs)
-        | Property.Literal _
+        | Property.StringLiteral _
+        | Property.NumberLiteral _
+        | Property.BigIntLiteral _
         | Property.PrivateName _
         | Property.Computed _ ->
           parse_value env
@@ -633,8 +626,7 @@ module Object
   let string_value_of_key key =
     match key with
     | Ast.Expression.Object.Property.Identifier (key_loc, { Identifier.name; comments = _ })
-    | Ast.Expression.Object.Property.Literal (key_loc, { Literal.value = Literal.String name; _ })
-      ->
+    | Ast.Expression.Object.Property.StringLiteral (key_loc, { StringLiteral.value = name; _ }) ->
       Some (key_loc, name)
     | _ -> None
 
@@ -1063,9 +1055,10 @@ module Object
             begin
               match key with
               | Identifier (loc, { Identifier.name; comments = _ })
-              | Literal (loc, { Literal.value = Literal.String name; _ }) ->
+              | StringLiteral (loc, { StringLiteral.value = name; _ }) ->
                 check_property_name env loc name static
-              | Literal _
+              | NumberLiteral _
+              | BigIntLiteral _
               | Computed _ ->
                 ()
               | PrivateName _ ->

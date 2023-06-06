@@ -355,8 +355,6 @@ val inferred_union_elem_array_desc : reason_desc
 
 val invalidate_rtype_alias : 'loc virtual_reason_desc -> 'loc virtual_reason_desc
 
-val code_desc_of_literal : ('loc, 'loc) Flow_ast.Literal.t -> string
-
 val code_desc_of_expression : wrap:bool -> ('a, 'b) Flow_ast.Expression.t -> string
 
 val code_desc_of_pattern : ('a, 'b) Flow_ast.Pattern.t -> string

@@ -1151,7 +1151,13 @@ struct
            always depend on the definition of the variable or member, and if the definitions
            are not resolvable, the entire component won't be either. *)
         match expr with
-        | Ast.Expression.Literal _
+        | Ast.Expression.StringLiteral _
+        | Ast.Expression.NumberLiteral _
+        | Ast.Expression.BooleanLiteral _
+        | Ast.Expression.NullLiteral _
+        | Ast.Expression.BigIntLiteral _
+        | Ast.Expression.RegExpLiteral _
+        | Ast.Expression.ModuleRefLiteral _
         | Ast.Expression.Identifier _ ->
           true
         | Ast.Expression.Member

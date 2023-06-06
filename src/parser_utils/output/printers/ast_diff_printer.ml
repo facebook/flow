@@ -36,11 +36,12 @@ let wrap_with_inferred_indentation statement_node_parent =
 let layout_of_node ~opts = function
   | Raw str -> Layout.Atom str
   | Comment c -> Js_layout_generator.comment c
-  | Literal (loc, lit) -> Js_layout_generator.literal ~opts loc lit
-  | StringLiteral (loc, lit) -> Js_layout_generator.string_literal_type loc lit
-  | NumberLiteral (loc, lit) -> Js_layout_generator.number_literal_type loc lit
-  | BigIntLiteral (loc, lit) -> Js_layout_generator.bigint_literal_type loc lit
-  | BooleanLiteral (loc, lit) -> Js_layout_generator.boolean_literal_type loc lit
+  | StringLiteral (loc, lit) -> Js_layout_generator.string_literal ~opts loc lit
+  | NumberLiteral (loc, lit) -> Js_layout_generator.number_literal ~opts loc lit
+  | BigIntLiteral (loc, lit) -> Js_layout_generator.bigint_literal loc lit
+  | BooleanLiteral (loc, lit) -> Js_layout_generator.boolean_literal loc lit
+  | RegExpLiteral (loc, lit) -> Js_layout_generator.regexp_literal ~opts loc lit
+  | ModuleRefLiteral (loc, lit) -> Js_layout_generator.module_ref_literal loc lit
   | Statement (stmt, parent) ->
     Js_layout_generator.statement ~opts stmt |> wrap_with_inferred_indentation parent
   | Program ast -> Js_layout_generator.program ~preserve_docblock:true ~checksum:None ast

@@ -73,13 +73,14 @@ end = struct
     | Property.Identifier (loc, { Ast.Identifier.name = x; comments = _ }) ->
       let acc = object_named_property (parent_loc, acc) loc x direct_default in
       (acc, x :: xs, false)
-    | Property.Literal (loc, { Ast.Literal.value = Ast.Literal.String x; _ }) ->
+    | Property.StringLiteral (loc, { Ast.StringLiteral.value = x; _ }) ->
       let acc = object_named_property (parent_loc, acc) loc x direct_default in
       (acc, x :: xs, false)
     | Property.Computed (_, { Ast.ComputedKey.expression; comments = _ }) ->
       let acc = object_computed_property (parent_loc, acc) expression direct_default in
       (acc, xs, true)
-    | Property.Literal (_, _) -> (acc, xs, false)
+    | Property.NumberLiteral _ -> (acc, xs, false)
+    | Property.BigIntLiteral _ -> (acc, xs, false)
 
   let identifier ~record_identifier acc (name_loc, { Ast.Identifier.name; _ }) =
     record_identifier name_loc (mk_reason (RIdentifier (OrdinaryName name)) name_loc) acc
@@ -372,7 +373,13 @@ let rec obj_properties_synthesizable
   in
   let rec synthesizable_expression (acc, this_write_locs) (elem_loc, expr) =
     match expr with
-    | Ast.Expression.Literal _
+    | Ast.Expression.StringLiteral _
+    | Ast.Expression.NumberLiteral _
+    | Ast.Expression.BooleanLiteral _
+    | Ast.Expression.NullLiteral _
+    | Ast.Expression.BigIntLiteral _
+    | Ast.Expression.RegExpLiteral _
+    | Ast.Expression.ModuleRefLiteral _
     | Ast.Expression.Identifier _
     | Ast.Expression.TypeCast _
     | Ast.Expression.Member
@@ -462,15 +469,12 @@ let function_params_all_annotated
 let identifier_has_autocomplete ~autocomplete_hooks (loc, { Ast.Identifier.name; _ }) =
   autocomplete_hooks.Env_api.With_ALoc.id_hook name loc
 
-let literal_has_autocomplete ~autocomplete_hooks loc lit =
-  match lit with
-  | { Flow_ast.Literal.value = Flow_ast.Literal.String _; _ } ->
-    autocomplete_hooks.Env_api.With_ALoc.literal_hook loc
-  | _ -> false
+let literal_has_autocomplete ~autocomplete_hooks loc =
+  autocomplete_hooks.Env_api.With_ALoc.literal_hook loc
 
 let expression_has_autocomplete ~autocomplete_hooks = function
   | (_, Ast.Expression.Identifier id) -> identifier_has_autocomplete ~autocomplete_hooks id
-  | (loc, Ast.Expression.Literal lit) -> literal_has_autocomplete ~autocomplete_hooks loc lit
+  | (loc, Ast.Expression.StringLiteral _) -> literal_has_autocomplete ~autocomplete_hooks loc
   | _ -> false
 
 let expression_is_definitely_synthesizable ~autocomplete_hooks =
@@ -512,7 +516,7 @@ let expression_is_definitely_synthesizable ~autocomplete_hooks =
             | (_, Init { key; value; shorthand = _ }) ->
               (match key with
               | Property.Identifier (loc, { Ast.Identifier.name; _ })
-              | Property.Literal (loc, { Ast.Literal.value = Ast.Literal.String name; _ })
+              | Property.StringLiteral (loc, { Ast.StringLiteral.value = name; _ })
                 when autocomplete_hooks.Env_api.With_ALoc.obj_prop_decl_hook name loc ->
                 (* Autocompletion in LTI will use hints to find the expected type of the object
                    we are completing. There are similar case for identifiers and literals below. *)
@@ -555,7 +559,13 @@ let expression_is_definitely_synthesizable ~autocomplete_hooks =
     (* TaggedTemplates are function calls! They are not automatically synthesizable *)
     | Ast.Expression.TaggedTemplate _ -> false
     | Ast.Expression.Identifier id -> not (identifier_has_autocomplete ~autocomplete_hooks id)
-    | Ast.Expression.Literal lit -> not (literal_has_autocomplete ~autocomplete_hooks loc lit)
+    | Ast.Expression.StringLiteral _ -> not (literal_has_autocomplete ~autocomplete_hooks loc)
+    | Ast.Expression.NumberLiteral _
+    | Ast.Expression.BooleanLiteral _
+    | Ast.Expression.NullLiteral _
+    | Ast.Expression.RegExpLiteral _
+    | Ast.Expression.BigIntLiteral _
+    | Ast.Expression.ModuleRefLiteral _
     | Ast.Expression.Assignment _
     | Ast.Expression.Binary _
     | Ast.Expression.Class _
@@ -1826,8 +1836,8 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
                   ->
                   (match (key, other_pattern_hint_opt pattern) with
                   | (Ast.Pattern.Object.Property.Identifier (l, { Ast.Identifier.name; _ }), Some h)
-                  | ( Ast.Pattern.Object.Property.Literal
-                        (l, { Ast.Literal.value = Ast.Literal.String name; _ }),
+                  | ( Ast.Pattern.Object.Property.StringLiteral
+                        (l, { Ast.StringLiteral.value = name; _ }),
                       Some h
                     ) ->
                     Base.Continue_or_stop.Continue (ObjectPropPatternHint (name, l, h) :: acc)
@@ -2504,8 +2514,8 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
               | Opening.Attribute (_, { Attribute.name = _; value }) ->
                 Base.Option.value_map value ~default:false ~f:(fun value ->
                     match value with
-                    | Attribute.Literal (loc, lit) ->
-                      literal_has_autocomplete ~autocomplete_hooks loc lit
+                    | Attribute.StringLiteral (loc, _) ->
+                      literal_has_autocomplete ~autocomplete_hooks loc
                     | Attribute.ExpressionContainer
                         (_, { Ast.JSX.ExpressionContainer.expression; comments = _ }) ->
                       (match expression with
@@ -2540,7 +2550,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
             Base.Option.iter name_loc ~f:(fun name_loc -> this#record_hint name_loc hints);
             Base.Option.iter value ~f:(fun value ->
                 match value with
-                | Attribute.Literal (loc, _) -> this#record_hint loc hints
+                | Attribute.StringLiteral (loc, _) -> this#record_hint loc hints
                 | Attribute.ExpressionContainer (_, expr) -> this#visit_jsx_expression ~hints expr
             )
           | Opening.SpreadAttribute (_, { SpreadAttribute.argument; comments = _ }) ->
@@ -2685,7 +2695,13 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
       | Ast.Expression.Import _
       | Ast.Expression.JSXElement _
       | Ast.Expression.JSXFragment _
-      | Ast.Expression.Literal _
+      | Ast.Expression.StringLiteral _
+      | Ast.Expression.NumberLiteral _
+      | Ast.Expression.BooleanLiteral _
+      | Ast.Expression.NullLiteral _
+      | Ast.Expression.RegExpLiteral _
+      | Ast.Expression.BigIntLiteral _
+      | Ast.Expression.ModuleRefLiteral _
       | Ast.Expression.MetaProperty _
       | Ast.Expression.Sequence _
       | Ast.Expression.Super _
@@ -2835,8 +2851,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
                       {
                         key =
                           ( Property.Identifier (loc, { Ast.Identifier.name; _ })
-                          | Property.Literal
-                              (loc, { Ast.Literal.value = Ast.Literal.String name; _ }) );
+                          | Property.StringLiteral (loc, { Ast.StringLiteral.value = name; _ }) );
                         _;
                       }
                   )
@@ -2857,10 +2872,11 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
           decompose_hints (Decomp_SentinelRefinement checks) object_hints
       in
       let visit_object_key_and_compute_hint = function
-        | Ast.Expression.Object.Property.Literal
-            (_, { Ast.Literal.value = Ast.Literal.String name; _ }) ->
+        | Ast.Expression.Object.Property.StringLiteral (_, { Ast.StringLiteral.value = name; _ }) ->
           decompose_hints (Decomp_ObjProp name) object_hints
-        | Ast.Expression.Object.Property.Literal _ -> []
+        | Ast.Expression.Object.Property.NumberLiteral _
+        | Ast.Expression.Object.Property.BigIntLiteral _ ->
+          []
         | Ast.Expression.Object.Property.Identifier
             (_, { Ast.Identifier.name = "__proto__"; comments = _ }) ->
           []

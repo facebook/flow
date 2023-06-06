@@ -547,9 +547,7 @@ let package_json_file =
 (* even if fail=false, still raises an error on a totally invalid token, since
    there's no legitimate fallback. *)
 let json_file =
-  let null_fallback _env =
-    Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Null; raw = "null"; comments = None }
-  in
+  let null_fallback _env = Ast.Expression.NullLiteral None in
   let parser env =
     match Peek.token env with
     | T_LBRACKET

@@ -239,8 +239,7 @@ class searcher ~(is_legit_require : ALoc.t * Type.t -> bool) ~(covers_target : A
               function
               | Property (_, { Property.key; _ }) -> begin
                 match key with
-                | Property.Literal
-                    (loc, { Flow_ast.Literal.value = Flow_ast.Literal.String name; _ })
+                | Property.StringLiteral (loc, { Flow_ast.StringLiteral.value = name; _ })
                   when covers_target loc ->
                   this#request
                     Get_def_request.(
@@ -275,22 +274,18 @@ class searcher ~(is_legit_require : ALoc.t * Type.t -> bool) ~(covers_target : A
       let open Expression in
       if annot_covers_target annot then
         match expr with
-        | Literal Literal.{ value = String _; _ } -> this#found_empty "string"
-        | Literal Literal.{ value = Number _; _ } -> this#found_empty "number"
-        | Literal Literal.{ value = BigInt _; _ } -> this#found_empty "bigint"
-        | Literal Literal.{ value = Boolean _; _ } -> this#found_empty "boolean"
-        | Literal Literal.{ value = Null; _ } -> this#found_empty "null"
-        | Literal Literal.{ value = RegExp _; _ } -> this#found_empty "regexp"
+        | StringLiteral _ -> this#found_empty "string"
+        | NumberLiteral _ -> this#found_empty "number"
+        | BigIntLiteral _ -> this#found_empty "bigint"
+        | BooleanLiteral _ -> this#found_empty "boolean"
+        | NullLiteral _ -> this#found_empty "null"
+        | RegExpLiteral _ -> this#found_empty "regexp"
         | Call
             {
               Call.callee = (_, Identifier (_, { Identifier.name = "require"; _ }));
               arguments =
                 ( _,
-                  {
-                    ArgList.arguments =
-                      [Expression (source_annot, Literal Literal.{ value = String _; _ })];
-                    comments = _;
-                  }
+                  { ArgList.arguments = [Expression (source_annot, StringLiteral _)]; comments = _ }
                 );
               _;
             }
@@ -351,7 +346,7 @@ class searcher ~(is_legit_require : ALoc.t * Type.t -> bool) ~(covers_target : A
         super#type_ (annot, t)
 
     method! module_ref_literal mref =
-      let { Flow_ast.Literal.require_out; _ } = mref in
+      let { Flow_ast.ModuleRefLiteral.require_out; _ } = mref in
       if annot_covers_target require_out then
         this#request (Get_def_request.Type require_out)
       else

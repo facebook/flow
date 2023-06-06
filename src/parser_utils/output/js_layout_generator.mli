@@ -49,15 +49,17 @@ val program :
 
 val program_simple : ?opts:opts -> (Loc.t, Loc.t) Flow_ast.Program.t -> Layout.layout_node
 
-val literal : opts:opts -> Loc.t -> (Loc.t, Loc.t) Flow_ast.Literal.t -> Layout.layout_node
+val number_literal : opts:opts -> Loc.t -> Loc.t Flow_ast.NumberLiteral.t -> Layout.layout_node
 
-val number_literal_type : Loc.t -> Loc.t Flow_ast.NumberLiteral.t -> Layout.layout_node
+val string_literal : opts:opts -> Loc.t -> Loc.t Flow_ast.StringLiteral.t -> Layout.layout_node
 
-val string_literal_type : Loc.t -> Loc.t Flow_ast.StringLiteral.t -> Layout.layout_node
+val bigint_literal : Loc.t -> Loc.t Flow_ast.BigIntLiteral.t -> Layout.layout_node
 
-val bigint_literal_type : Loc.t -> Loc.t Flow_ast.BigIntLiteral.t -> Layout.layout_node
+val boolean_literal : Loc.t -> Loc.t Flow_ast.BooleanLiteral.t -> Layout.layout_node
 
-val boolean_literal_type : Loc.t -> Loc.t Flow_ast.BooleanLiteral.t -> Layout.layout_node
+val regexp_literal : opts:opts -> Loc.t -> Loc.t Flow_ast.RegExpLiteral.t -> Layout.layout_node
+
+val module_ref_literal : Loc.t -> (Loc.t, Loc.t) Flow_ast.ModuleRefLiteral.t -> Layout.layout_node
 
 val expression :
   ?ctxt:expression_context ->

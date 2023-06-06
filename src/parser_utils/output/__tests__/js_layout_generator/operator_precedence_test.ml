@@ -19,7 +19,7 @@ let (x, y, z) = (E.identifier "x", E.identifier "y", E.identifier "z")
 
 let x40 = E.identifier (String.make 40 'x')
 
-let str = E.literal (Literals.string "a")
+let str = E.Literals.string "a"
 
 let ( && ) a b = E.logical_and a b
 

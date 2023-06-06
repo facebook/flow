@@ -219,7 +219,19 @@ class ['loc] mapper =
       | (loc, Import x) -> id (this#import loc) x expr (fun x -> (loc, Import x))
       | (loc, JSXElement x) -> id_loc this#jsx_element loc x expr (fun x -> (loc, JSXElement x))
       | (loc, JSXFragment x) -> id_loc this#jsx_fragment loc x expr (fun x -> (loc, JSXFragment x))
-      | (loc, Literal x) -> id_loc this#literal loc x expr (fun x -> (loc, Literal x))
+      | (loc, StringLiteral x) ->
+        id_loc this#string_literal loc x expr (fun x -> (loc, StringLiteral x))
+      | (loc, BooleanLiteral x) ->
+        id_loc this#boolean_literal loc x expr (fun x -> (loc, BooleanLiteral x))
+      | (loc, NullLiteral x) -> id_loc this#null_literal loc x expr (fun x -> (loc, NullLiteral x))
+      | (loc, NumberLiteral x) ->
+        id_loc this#number_literal loc x expr (fun x -> (loc, NumberLiteral x))
+      | (loc, BigIntLiteral x) ->
+        id_loc this#bigint_literal loc x expr (fun x -> (loc, BigIntLiteral x))
+      | (loc, RegExpLiteral x) ->
+        id_loc this#regexp_literal loc x expr (fun x -> (loc, RegExpLiteral x))
+      | (loc, ModuleRefLiteral x) ->
+        id_loc this#module_ref_literal loc x expr (fun x -> (loc, ModuleRefLiteral x))
       | (loc, Logical x) -> id_loc this#logical loc x expr (fun x -> (loc, Logical x))
       | (loc, Member x) -> id_loc this#member loc x expr (fun x -> (loc, Member x))
       | (loc, MetaProperty x) ->
@@ -1591,6 +1603,26 @@ class ['loc] mapper =
       else
         { value; comments = comments' }
 
+    method null_literal _loc comments = this#syntax_opt comments
+
+    method regexp_literal _loc (lit : 'loc Ast.RegExpLiteral.t) =
+      let open Ast.RegExpLiteral in
+      let { pattern; flags; raw; comments } = lit in
+      let comments' = this#syntax_opt comments in
+      if comments == comments' then
+        lit
+      else
+        { pattern; flags; raw; comments = comments' }
+
+    method module_ref_literal _loc (lit : ('loc, 'loc) Ast.ModuleRefLiteral.t) =
+      let open Ast.ModuleRefLiteral in
+      let { value; require_out; prefix_len; legacy_interop; raw; comments } = lit in
+      let comments' = this#syntax_opt comments in
+      if comments == comments' then
+        lit
+      else
+        { value; require_out; prefix_len; legacy_interop; raw; comments }
+
     method nullable_type (t : ('loc, 'loc) Ast.Type.Nullable.t) =
       let open Ast.Type.Nullable in
       let { argument; comments } = t in
@@ -2253,8 +2285,8 @@ class ['loc] mapper =
     method jsx_attribute_value (value : ('loc, 'loc) Ast.JSX.Attribute.value) =
       let open Ast.JSX.Attribute in
       match value with
-      | Literal (loc, lit) ->
-        id_loc this#jsx_attribute_value_literal loc lit value (fun lit -> Literal (loc, lit))
+      | StringLiteral (loc, lit) ->
+        id_loc this#jsx_attribute_value_literal loc lit value (fun lit -> StringLiteral (loc, lit))
       | ExpressionContainer (loc, expr) ->
         id_loc this#jsx_attribute_value_expression loc expr value (fun expr ->
             ExpressionContainer (loc, expr)
@@ -2264,7 +2296,8 @@ class ['loc] mapper =
         =
       this#jsx_expression loc jsx_expr
 
-    method jsx_attribute_value_literal loc (lit : ('loc, 'loc) Ast.Literal.t) = this#literal loc lit
+    method jsx_attribute_value_literal loc (lit : 'loc Ast.StringLiteral.t) =
+      this#string_literal loc lit
 
     method jsx_children ((loc, children) as orig : 'loc * ('loc, 'loc) Ast.JSX.child list) =
       let children' = map_list this#jsx_child children in
@@ -2380,22 +2413,6 @@ class ['loc] mapper =
         stmt
       else
         { label = label'; body = body'; comments = comments' }
-
-    method module_ref_literal mref = mref
-
-    method literal _loc (expr : ('loc, 'loc) Ast.Literal.t) =
-      let open Ast.Literal in
-      let { value; raw; comments } = expr in
-      let value =
-        match value with
-        | ModuleRef mref -> ModuleRef (this#module_ref_literal mref)
-        | _ -> value
-      in
-      let comments' = this#syntax_opt comments in
-      if comments == comments' then
-        expr
-      else
-        { value; raw; comments = comments' }
 
     method logical _loc (expr : ('loc, 'loc) Ast.Expression.Logical.t) =
       let open Ast.Expression.Logical in
@@ -2545,14 +2562,24 @@ class ['loc] mapper =
     method object_key (key : ('loc, 'loc) Ast.Expression.Object.Property.key) =
       let open Ast.Expression.Object.Property in
       match key with
-      | Literal literal -> id this#object_key_literal literal key (fun lit -> Literal lit)
+      | StringLiteral lit -> id this#object_key_string_literal lit key (fun lit -> StringLiteral lit)
+      | NumberLiteral lit -> id this#object_key_number_literal lit key (fun lit -> NumberLiteral lit)
+      | BigIntLiteral lit -> id this#object_key_bigint_literal lit key (fun lit -> BigIntLiteral lit)
       | Identifier ident -> id this#object_key_identifier ident key (fun ident -> Identifier ident)
       | PrivateName ident -> id this#private_name ident key (fun ident -> PrivateName ident)
       | Computed computed -> id this#object_key_computed computed key (fun expr -> Computed expr)
 
-    method object_key_literal (literal : 'loc * ('loc, 'loc) Ast.Literal.t) =
+    method object_key_string_literal (literal : 'loc * 'loc Ast.StringLiteral.t) =
       let (loc, lit) = literal in
-      id_loc this#literal loc lit literal (fun lit -> (loc, lit))
+      id_loc this#string_literal loc lit literal (fun lit -> (loc, lit))
+
+    method object_key_number_literal (literal : 'loc * 'loc Ast.NumberLiteral.t) =
+      let (loc, lit) = literal in
+      id_loc this#number_literal loc lit literal (fun lit -> (loc, lit))
+
+    method object_key_bigint_literal (literal : 'loc * 'loc Ast.BigIntLiteral.t) =
+      let (loc, lit) = literal in
+      id_loc this#bigint_literal loc lit literal (fun lit -> (loc, lit))
 
     method object_key_identifier (ident : ('loc, 'loc) Ast.Identifier.t) = this#identifier ident
 
@@ -2647,9 +2674,17 @@ class ['loc] mapper =
       ignore kind;
       this#identifier ident
 
-    method pattern_literal ?kind loc (expr : ('loc, 'loc) Ast.Literal.t) =
+    method pattern_string_literal ?kind loc (expr : 'loc Ast.StringLiteral.t) =
       ignore kind;
-      this#literal loc expr
+      this#string_literal loc expr
+
+    method pattern_number_literal ?kind loc (expr : 'loc Ast.NumberLiteral.t) =
+      ignore kind;
+      this#number_literal loc expr
+
+    method pattern_bigint_literal ?kind loc (expr : 'loc Ast.BigIntLiteral.t) =
+      ignore kind;
+      this#bigint_literal loc expr
 
     method pattern_object_p ?kind (p : ('loc, 'loc) Ast.Pattern.Object.property) =
       let open Ast.Pattern.Object in
@@ -2687,8 +2722,18 @@ class ['loc] mapper =
     method pattern_object_property_key ?kind (key : ('loc, 'loc) Ast.Pattern.Object.Property.key) =
       let open Ast.Pattern.Object.Property in
       match key with
-      | Literal lit ->
-        id (this#pattern_object_property_literal_key ?kind) lit key (fun lit' -> Literal lit')
+      | StringLiteral lit ->
+        id (this#pattern_object_property_string_literal_key ?kind) lit key (fun lit' ->
+            StringLiteral lit'
+        )
+      | NumberLiteral lit ->
+        id (this#pattern_object_property_number_literal_key ?kind) lit key (fun lit' ->
+            NumberLiteral lit'
+        )
+      | BigIntLiteral lit ->
+        id (this#pattern_object_property_bigint_literal_key ?kind) lit key (fun lit' ->
+            BigIntLiteral lit'
+        )
       | Identifier identifier ->
         id (this#pattern_object_property_identifier_key ?kind) identifier key (fun id' ->
             Identifier id'
@@ -2696,9 +2741,20 @@ class ['loc] mapper =
       | Computed expr ->
         id (this#pattern_object_property_computed_key ?kind) expr key (fun expr' -> Computed expr')
 
-    method pattern_object_property_literal_key ?kind (literal : 'loc * ('loc, 'loc) Ast.Literal.t) =
+    method pattern_object_property_string_literal_key
+        ?kind (literal : 'loc * 'loc Ast.StringLiteral.t) =
       let (loc, key) = literal in
-      id_loc (this#pattern_literal ?kind) loc key literal (fun key' -> (loc, key'))
+      id_loc (this#pattern_string_literal ?kind) loc key literal (fun key' -> (loc, key'))
+
+    method pattern_object_property_number_literal_key
+        ?kind (literal : 'loc * 'loc Ast.NumberLiteral.t) =
+      let (loc, key) = literal in
+      id_loc (this#pattern_number_literal ?kind) loc key literal (fun key' -> (loc, key'))
+
+    method pattern_object_property_bigint_literal_key
+        ?kind (literal : 'loc * 'loc Ast.BigIntLiteral.t) =
+      let (loc, key) = literal in
+      id_loc (this#pattern_bigint_literal ?kind) loc key literal (fun key' -> (loc, key'))
 
     method pattern_object_property_identifier_key ?kind (key : ('loc, 'loc) Ast.Identifier.t) =
       this#pattern_identifier ?kind key

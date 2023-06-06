@@ -90,7 +90,7 @@ class func_scope_visitor
             {
               Ast.Expression.ArgList.arguments =
                 Ast.Expression.Expression
-                  (_, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Boolean false; _ })
+                  (_, Ast.Expression.BooleanLiteral { Ast.BooleanLiteral.value = false; _ })
                 :: _;
               comments = _;
             }

@@ -27,17 +27,17 @@ class useless_mapper =
   object (this)
     inherit [Loc.t] Flow_ast_mapper.mapper as super
 
-    method! literal _loc (expr : (Loc.t, Loc.t) Ast.Literal.t) =
-      let open Ast.Literal in
-      match expr.value with
-      | Number 4.0 -> { value = Number 5.0; raw = "5"; comments = None }
-      | _ -> expr
+    method! number_literal _loc (lit : Loc.t Ast.NumberLiteral.t) =
+      let open Ast.NumberLiteral in
+      match lit.value with
+      | 4.0 -> { value = 5.0; raw = "5"; comments = None }
+      | _ -> lit
 
     method! string_literal _loc (lit : Loc.t Ast.StringLiteral.t) =
       let open Ast.StringLiteral in
       let { value; comments; _ } = lit in
       if String.equal "RenameSL" value then
-        { value = "\"GotRenamedSL\""; raw = "\"GotRenamedSL\""; comments }
+        { value = "GotRenamedSL"; raw = "\"GotRenamedSL\""; comments }
       else
         lit
 
@@ -258,7 +258,7 @@ class useless_mapper =
         ( loc,
           {
             id;
-            init = (loc', Ast.StringLiteral.{ value = "'enabled'"; raw = "'enabled'"; comments });
+            init = (loc', Ast.StringLiteral.{ value = "enabled"; raw = "\"enabled\""; comments });
           }
         )
       | _ -> member
@@ -291,19 +291,35 @@ class useless_mapper =
       | _ -> member
   end
 
+(* TODO: add test for RegExp case? *)
 class literal_mapper =
   object
-    inherit [Loc.t] Flow_ast_mapper.mapper
+    inherit [Loc.t] Flow_ast_mapper.mapper as super
 
-    method! literal _loc (expr : (Loc.t, Loc.t) Ast.Literal.t) =
-      let open Ast.Literal in
-      match expr.value with
-      | String "rename" -> { value = String "gotRenamed"; raw = "gotRenamed"; comments = None }
-      | Boolean false -> { value = Boolean true; raw = "true"; comments = None }
-      | Null -> { value = String "wasNull"; raw = "wasNull"; comments = None }
-      | Number 4.0 -> { value = Number 5.0; raw = "5"; comments = None }
-      (* TODO: add test for RegExp case? *)
-      | _ -> expr
+    method! expression (loc, expr) =
+      match expr with
+      | Ast.Expression.NullLiteral _ ->
+        let lit = { Ast.StringLiteral.value = "wasNull"; raw = "wasNull"; comments = None } in
+        (loc, Ast.Expression.StringLiteral lit)
+      | _ -> super#expression (loc, expr)
+
+    method! string_literal _loc lit =
+      let open Ast.StringLiteral in
+      match lit.value with
+      | "rename" -> { value = "gotRenamed"; raw = "gotRenamed"; comments = None }
+      | _ -> lit
+
+    method! boolean_literal _loc lit =
+      let open Ast.BooleanLiteral in
+      match lit.value with
+      | false -> { value = true; comments = None }
+      | _ -> lit
+
+    method! number_literal _loc lit =
+      let open Ast.NumberLiteral in
+      match lit.value with
+      | 4.0 -> { value = 5.0; raw = "5"; comments = None }
+      | _ -> lit
   end
 
 class insert_variance_mapper =
@@ -480,9 +496,9 @@ class insert_second_cjsimport_mapper =
                                 [
                                   Ast.Expression.Expression
                                     ( loc,
-                                      Ast.Expression.Literal
+                                      Ast.Expression.StringLiteral
                                         {
-                                          Ast.Literal.value = Ast.Literal.String "baz";
+                                          Ast.StringLiteral.value = "baz";
                                           raw = "\"baz\"";
                                           comments = None;
                                         }
@@ -533,9 +549,9 @@ class add_body_mapper =
                                 [
                                   Ast.Expression.Expression
                                     ( loc,
-                                      Ast.Expression.Literal
+                                      Ast.Expression.StringLiteral
                                         {
-                                          Ast.Literal.value = Ast.Literal.String "baz";
+                                          Ast.StringLiteral.value = "baz";
                                           raw = "\"baz\"";
                                           comments = None;
                                         }
@@ -867,10 +883,10 @@ class true_to_false_mapper =
   object
     inherit [Loc.t] Flow_ast_mapper.mapper
 
-    method! literal _loc (expr : (Loc.t, Loc.t) Ast.Literal.t) =
-      let open Ast.Literal in
+    method! boolean_literal _loc (expr : Loc.t Ast.BooleanLiteral.t) =
+      let open Ast.BooleanLiteral in
       match expr.value with
-      | Boolean true -> { value = Boolean false; raw = "false"; comments = None }
+      | true -> { value = false; comments = None }
       | _ -> expr
 
     method! type_annotation (annot : (Loc.t, Loc.t) Ast.Type.annotation) =
@@ -3437,12 +3453,12 @@ import type { there as here } from \"new_import2\";const x: (() => number) = (bl
              ~mapper:(new useless_mapper)
          );
          ( "enum_declaration_string" >:: fun ctxt ->
-           let source = "enum Status {On = 'on', Off = 'off'}" in
+           let source = "enum Status {On = \"on\", Off = \"off\"}" in
            assert_edits_equal
              ctxt
-             ~edits:[((18, 22), "'enabled'")]
+             ~edits:[((18, 22), "\"enabled\"")]
              ~source
-             ~expected:"enum Status {On = 'enabled', Off = 'off'}"
+             ~expected:"enum Status {On = \"enabled\", Off = \"off\"}"
              ~mapper:(new useless_mapper)
          );
          ( "enum_add_comment" >:: fun ctxt ->

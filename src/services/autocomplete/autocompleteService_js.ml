@@ -1349,7 +1349,7 @@ let print_expression ~options ~token expression =
 let print_name_as_indexer ~options ~token name =
   let expression =
     match Base.String.chop_prefix ~prefix:"@@" name with
-    | None -> Ast_builder.Expressions.literal (Ast_builder.Literals.string name)
+    | None -> Ast_builder.Expressions.Literals.string name
     | Some symbol ->
       Ast_builder.Expressions.member
         (Ast_builder.Expressions.Members.identifier_by_name

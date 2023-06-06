@@ -119,30 +119,32 @@ let string_literal ?comments value =
 
 let number_literal ?comments value raw = { Ast.NumberLiteral.value; raw; comments }
 
+let int_literal ?comments value =
+  number_literal ?comments (float_of_int value) (Printf.sprintf "%d" value)
+
 let boolean_literal ?comments value = { Ast.BooleanLiteral.value; comments }
 
 module Literals = struct
-  open Ast.Literal
+  let string = string_literal
 
-  let string ?(comments = None) value =
-    { value = String value; raw = Printf.sprintf "%S" value; comments }
+  let number = number_literal
 
-  let number ?(comments = None) value raw = { value = Number value; raw; comments }
+  let int = int_literal
 
-  let int value = number (float_of_int value) (Printf.sprintf "%d" value)
-
-  let bool ?(comments = None) is_true =
-    {
-      value = Boolean is_true;
-      raw =
-        ( if is_true then
-          "true"
-        else
-          "false"
-        );
-      comments;
-    }
+  let boolean = boolean_literal
 end
+
+let string_literal_expression ?(loc = Loc.none) ?comments value =
+  (loc, Ast.Expression.StringLiteral (string_literal ?comments value))
+
+let number_literal_expression ?(loc = Loc.none) ?comments value raw =
+  (loc, Ast.Expression.NumberLiteral (number_literal ?comments value raw))
+
+let int_literal_expression ?(loc = Loc.none) ?comments value =
+  (loc, Ast.Expression.NumberLiteral (int_literal ?comments value))
+
+let boolean_literal_expression ?(loc = Loc.none) ?comments value =
+  (loc, Ast.Expression.BooleanLiteral (boolean_literal ?comments value))
 
 module Patterns = struct
   open Ast.Pattern
@@ -336,7 +338,9 @@ module Classes = struct
       let (loc, method_) = method_ in
       let key =
         match method_.Flow_ast.Class.Method.key with
-        | Literal (t, lit) -> Literal (t, { lit with Flow_ast.Literal.comments = docs })
+        | StringLiteral (t, lit) -> StringLiteral (t, { lit with Ast.StringLiteral.comments = docs })
+        | NumberLiteral (t, lit) -> NumberLiteral (t, { lit with Ast.NumberLiteral.comments = docs })
+        | BigIntLiteral (t, lit) -> BigIntLiteral (t, { lit with Ast.BigIntLiteral.comments = docs })
         | Identifier (t, id) -> Identifier (t, { id with Flow_ast.Identifier.comments = docs })
         | PrivateName (loc, pn) ->
           PrivateName (loc, { pn with Flow_ast.PrivateName.comments = docs })
@@ -401,7 +405,7 @@ module JSXs = struct
   let attr_identifier ?(loc = Loc.none) ?comments name =
     Attribute.Identifier (loc, { Identifier.name; comments })
 
-  let attr_literal lit = Attribute.Literal (Loc.none, lit)
+  let attr_literal lit = Attribute.StringLiteral (Loc.none, lit)
 
   let attr ?(loc = Loc.none) name value = Opening.Attribute (loc, { Attribute.name; value })
 
@@ -516,8 +520,7 @@ module Statements = struct
     (loc, Return { Return.argument = expr; comments; return_out = loc })
 
   let directive ?(loc = Loc.none) txt =
-    let expr = (loc, Ast.Expression.Literal (Literals.string txt)) in
-    expression ~loc ~directive:txt expr
+    expression ~loc ~directive:txt (string_literal_expression ~loc txt)
 
   let switch ?(loc = Loc.none) ?comments discriminant cases =
     (loc, Switch { Switch.discriminant; cases; comments; exhaustive_out = fst discriminant })
@@ -678,8 +681,6 @@ module Expressions = struct
 
   let class_ ?(loc = Loc.none) ?super ?id elements = (loc, Class (Classes.make ?super ?id elements))
 
-  let literal ?(loc = Loc.none) lit = (loc, Literal lit)
-
   let assignment ?(loc = Loc.none) ?comments left ?operator right =
     (loc, Assignment { Assignment.operator; left; right; comments })
 
@@ -723,10 +724,11 @@ module Expressions = struct
   let object_property_key ?(loc = Loc.none) (k : string) =
     Object.Property.Identifier (Flow_ast_utils.ident_of_source (loc, k))
 
-  let object_property_key_literal ?(loc = Loc.none) k = Object.Property.Literal (loc, k)
+  let object_property_key_string_literal ?(loc = Loc.none) (k : string) =
+    Object.Property.StringLiteral (loc, string_literal k)
 
-  let object_property_key_literal_from_string ?(loc = Loc.none) (k : string) =
-    Object.Property.Literal (loc, Literals.string k)
+  let object_property_key_number_literal ?(loc = Loc.none) (value : float) (raw : string) =
+    Object.Property.NumberLiteral (loc, number_literal value raw)
 
   let object_property_computed_key ?comments ?(loc = Loc.none) expr =
     Object.Property.Computed (loc, { Ast.ComputedKey.expression = expr; comments })
@@ -741,8 +743,8 @@ module Expressions = struct
     let prop = Prop.Init { key; value; shorthand } in
     Object.Property (loc, prop)
 
-  let object_property_with_literal ?(shorthand = false) ?(loc = Loc.none) k v =
-    object_property ~shorthand ~loc (object_property_key_literal ~loc k) v
+  let object_property_with_string_literal ?(shorthand = false) ?(loc = Loc.none) k v =
+    object_property ~shorthand ~loc (object_property_key_string_literal ~loc k) v
 
   let object_ ?comments ?(loc = Loc.none) properties = (loc, Object { Object.properties; comments })
 
@@ -763,7 +765,8 @@ module Expressions = struct
       { Member._object; property = Member.PropertyExpression property; comments }
 
     let expression_by_string ?comments ~str _object =
-      expression ?comments ~property:(literal (Literals.string str)) _object
+      let expr = (Loc.none, Ast.Expression.StringLiteral (string_literal str)) in
+      expression ?comments ~property:expr _object
   end
 
   let member ?(loc = Loc.none) expr = (loc, Ast.Expression.Member expr)
@@ -784,11 +787,11 @@ module Expressions = struct
 
   let jsx_element ?(loc = Loc.none) elem = (loc, JSXElement elem)
 
-  let true_ () = literal (Literals.bool true)
+  let true_ () = boolean_literal_expression true
 
-  let false_ () = literal (Literals.bool false)
+  let false_ () = boolean_literal_expression false
 
-  let parenthesis_hint () = literal (Literals.string "_flowmin_paren_")
+  let parenthesis_hint () = string_literal_expression "_flowmin_paren_"
 
   let logical_and (l : (Loc.t, Loc.t) Ast.Expression.t) r = logical ~op:Logical.And l r
 
@@ -805,13 +808,13 @@ module Expressions = struct
   let super ?(loc = Loc.none) ?comments () = (loc, Super { Super.comments })
 
   module Literals = struct
-    let string ?loc value = literal ?loc (Literals.string value)
+    let string ?loc ?comments value = string_literal_expression ?loc ?comments value
 
-    let number ?loc value raw = literal ?loc (Literals.number value raw)
+    let number ?loc ?comments value raw = number_literal_expression ?loc ?comments value raw
 
-    let int ?loc value = literal ?loc (Literals.int value)
+    let int ?loc ?comments value = int_literal_expression ?loc ?comments value
 
-    let bool ?loc is_true = literal ?loc (Literals.bool is_true)
+    let bool ?loc ?comments is_true = boolean_literal_expression ?loc ?comments is_true
   end
 end
 

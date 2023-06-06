@@ -16,8 +16,7 @@ module L = Layout_builder
 let opts = Js_layout_generator.default_opts
 
 let variable_declaration =
-  S.const_declaration
-    [S.variable_declarator ~init:(E.literal (Ast_builder.Literals.string "x")) "x"]
+  S.const_declaration [S.variable_declarator ~init:(E.Literals.string "x") "x"]
 
 let void_annotation = Flow_ast.Type.Available (T.annotation (T.void ()))
 

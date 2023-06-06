@@ -25,7 +25,9 @@ let name_and_loc_of_key (key : (Loc.t, Loc.t) Ast.Expression.Object.Property.key
     (string * Loc.t) option =
   let open Ast.Expression.Object.Property in
   match key with
-  | Literal (loc, { Ast.Literal.raw; _ }) -> name_opt raw >>| fun name -> (name, loc)
+  | StringLiteral (loc, { Ast.StringLiteral.raw; _ }) -> name_opt raw >>| fun name -> (name, loc)
+  | NumberLiteral (loc, { Ast.NumberLiteral.raw; _ }) -> name_opt raw >>| fun name -> (name, loc)
+  | BigIntLiteral (loc, { Ast.BigIntLiteral.raw; _ }) -> name_opt raw >>| fun name -> (name, loc)
   | Identifier id -> name_and_loc_of_identifier id
   | PrivateName name -> name_and_loc_of_private_name name
   | Computed (_, _) -> None

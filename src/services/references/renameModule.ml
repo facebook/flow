@@ -53,7 +53,10 @@ let get_edits_for_file ~old_haste_name ~new_haste_name file_sig =
   Loc_collections.LocMap.fold
     (fun loc replacement acc ->
       let string_layout =
-        Js_layout_generator.string_literal_type Loc.none (Ast_builder.string_literal replacement)
+        Js_layout_generator.string_literal
+          ~opts:Js_layout_generator.default_opts
+          Loc.none
+          (Ast_builder.string_literal replacement)
       in
       let newText =
         Source.contents (Pretty_printer.print ~skip_endline:true ~source_maps:None string_layout)

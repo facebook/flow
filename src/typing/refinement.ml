@@ -45,13 +45,10 @@ module Keys = struct
     let open Ast.Expression.Member in
     match property with
     | PropertyIdentifier (_, { Ast.Identifier.name; comments = _ })
+    | PropertyExpression (_, Ast.Expression.StringLiteral { Ast.StringLiteral.value = name; _ })
     | PropertyExpression
-        (_, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.String name; _ })
-    | PropertyExpression
-        ( _,
-          Ast.Expression.Literal
-            { Ast.Literal.value = Ast.Literal.Number _; raw = name; comments = _ }
-        ) ->
+        (_, Ast.Expression.NumberLiteral { Ast.NumberLiteral.value = _; raw = name; comments = _ })
+      ->
       (match key ~allow_optional _object with
       | Some (base, chain) -> Some (base, Key.Prop name :: chain)
       | None -> None)

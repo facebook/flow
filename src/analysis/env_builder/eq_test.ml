@@ -8,11 +8,11 @@
 let is_number_literal node =
   let open Flow_ast in
   match node with
-  | Expression.Literal { Literal.value = Literal.Number _; _ }
+  | Expression.NumberLiteral _
   | Expression.Unary
       {
         Expression.Unary.operator = Expression.Unary.Minus;
-        argument = (_, Expression.Literal { Literal.value = Literal.Number _; _ });
+        argument = (_, Expression.NumberLiteral _);
         comments = _;
       } ->
     true
@@ -21,26 +21,26 @@ let is_number_literal node =
 let extract_number_literal node =
   let open Flow_ast in
   match node with
-  | Expression.Literal { Literal.value = Literal.Number lit; raw; comments = _ } -> (lit, raw)
+  | Expression.NumberLiteral { NumberLiteral.value; raw; comments = _ } -> (value, raw)
   | Expression.Unary
       {
         Expression.Unary.operator = Expression.Unary.Minus;
-        argument = (_, Expression.Literal { Literal.value = Literal.Number lit; raw; _ });
+        argument = (_, Expression.NumberLiteral { NumberLiteral.value; raw; _ });
         comments = _;
       } ->
-    (-.lit, "-" ^ raw)
+    (-.value, "-" ^ raw)
   | _ -> raise Env_api.(Env_invariant (None, Impossible "not a number literal"))
 
 let is_bigint_literal node =
   let open Flow_ast in
   match node with
-  | Expression.Literal { Literal.value = Literal.BigInt _; _ } -> true
+  | Expression.BigIntLiteral _ -> true
   | _ -> false
 
 let extract_bigint_literal node =
   let open Flow_ast in
   match node with
-  | Expression.Literal { Literal.value = Literal.BigInt lit; raw; comments = _ } -> (lit, raw)
+  | Expression.BigIntLiteral { BigIntLiteral.value; raw; comments = _ } -> (value, raw)
   | _ -> Utils_js.assert_false "not a bigint literal"
 
 module type S = sig
@@ -114,16 +114,14 @@ module Make
   open Env_api.Refi
   open Hint
 
-  let literal_check_of_literal { Flow_ast.Literal.value; _ } =
-    match value with
-    | Flow_ast.Literal.String s -> Some (SingletonStr s)
-    | Flow_ast.Literal.Boolean b -> Some (SingletonBool b)
-    | Flow_ast.Literal.Number n -> Some (SingletonNum n)
-    | _ -> None
-
   let literal_check_of_expr ((_loc, expr) as e) =
     match expr with
-    | Flow_ast.Expression.Literal l -> literal_check_of_literal l
+    | Flow_ast.Expression.StringLiteral { Flow_ast.StringLiteral.value; _ } ->
+      Some (SingletonStr value)
+    | Flow_ast.Expression.NumberLiteral { Flow_ast.NumberLiteral.value; _ } ->
+      Some (SingletonNum value)
+    | Flow_ast.Expression.BooleanLiteral { Flow_ast.BooleanLiteral.value; _ } ->
+      Some (SingletonBool value)
     | Flow_ast.Expression.Member mem ->
       if Base.Option.is_some @@ RefinementKey.lookup_of_member ~allow_optional:false mem then
         Some (Member (Reason.mk_expression_reason e))
@@ -145,7 +143,8 @@ module Make
         let check =
           match value with
           | None -> Some (SingletonBool true)
-          | Some (Attribute.Literal (_, l)) -> literal_check_of_literal l
+          | Some (Attribute.StringLiteral (_, { Flow_ast.StringLiteral.value; _ })) ->
+            Some (SingletonStr value)
           | Some
               (Attribute.ExpressionContainer
                 (_, { ExpressionContainer.expression = ExpressionContainer.Expression e; _ })
@@ -170,8 +169,8 @@ module Make
             Init
               {
                 key =
-                  ( Flow_ast.Expression.Object.Property.Literal
-                      (_, { Flow_ast.Literal.value = Flow_ast.Literal.String name; _ })
+                  ( Flow_ast.Expression.Object.Property.StringLiteral
+                      (_, { Flow_ast.StringLiteral.value = name; _ })
                   | Flow_ast.Expression.Object.Property.Identifier
                       (_, { Flow_ast.Identifier.name; comments = _ }) );
                 value;
@@ -205,9 +204,9 @@ module Make
           Expression.Unary
             { Expression.Unary.operator = Expression.Unary.Typeof; argument; comments = _ }
         ),
-        ((_, Expression.Literal { Literal.value = Literal.String s; _ }) as other)
+        ((_, Expression.StringLiteral { StringLiteral.value = s; _ }) as other)
       )
-    | ( ((_, Expression.Literal { Literal.value = Literal.String s; _ }) as other),
+    | ( ((_, Expression.StringLiteral { StringLiteral.value = s; _ }) as other),
         ( _,
           Expression.Unary
             { Expression.Unary.operator = Expression.Unary.Typeof; argument; comments = _ }
@@ -261,12 +260,12 @@ module Make
       ) ->
       on_type_of_test loc argument other s sense
     (* bool equality *)
-    | (((lit_loc, Expression.Literal { Literal.value = Literal.Boolean lit; _ }) as other), expr)
-    | (expr, ((lit_loc, Expression.Literal { Literal.value = Literal.Boolean lit; _ }) as other)) ->
+    | (((lit_loc, Expression.BooleanLiteral { BooleanLiteral.value = lit; _ }) as other), expr)
+    | (expr, ((lit_loc, Expression.BooleanLiteral { BooleanLiteral.value = lit; _ }) as other)) ->
       on_literal_test ~strict ~sense loc expr (SingletonBoolR { loc = lit_loc; sense; lit }) other
     (* string equality *)
-    | (((lit_loc, Expression.Literal { Literal.value = Literal.String lit; _ }) as other), expr)
-    | (expr, ((lit_loc, Expression.Literal { Literal.value = Literal.String lit; _ }) as other))
+    | (((lit_loc, Expression.StringLiteral { StringLiteral.value = lit; _ }) as other), expr)
+    | (expr, ((lit_loc, Expression.StringLiteral { StringLiteral.value = lit; _ }) as other))
     | ( expr,
         ( ( lit_loc,
             Expression.TemplateLiteral
@@ -345,8 +344,8 @@ module Make
         (SingletonBigIntR { loc = lit_loc; sense; lit = raw })
         other
     (* expr op null *)
-    | (((_, Expression.Literal { Literal.value = Literal.Null; _ }) as other), expr)
-    | (expr, ((_, Expression.Literal { Literal.value = Literal.Null; _ }) as other)) ->
+    | (((_, Expression.NullLiteral _) as other), expr)
+    | (expr, ((_, Expression.NullLiteral _) as other)) ->
       on_null_test ~sense ~strict loc expr other
     (* expr op undefined *)
     | ( ( (_, Expression.Identifier (_, { Flow_ast.Identifier.name = "undefined"; comments = _ }))

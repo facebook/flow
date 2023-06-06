@@ -64,13 +64,14 @@ let object_property (parent_loc, bind) xs key direct_default =
   | Property.Identifier (loc, { Ast.Identifier.name = x; comments = _ }) ->
     let bind = object_named_property (parent_loc, bind) loc x direct_default in
     (bind, x :: xs, false)
-  | Property.Literal (loc, { Ast.Literal.value = Ast.Literal.String x; _ }) ->
+  | Property.StringLiteral (loc, { Ast.StringLiteral.value = x; _ }) ->
     let bind = object_named_property (parent_loc, bind) loc x direct_default in
     (bind, x :: xs, false)
   | Property.Computed (_, { Ast.ComputedKey.expression; comments = _ }) ->
     let bind = object_computed_property (parent_loc, bind) expression direct_default in
     (bind, xs, true)
-  | Property.Literal (_, _) -> (bind, xs, false)
+  | Property.NumberLiteral (_, _) -> (bind, xs, false)
+  | Property.BigIntLiteral (_, _) -> (bind, xs, false)
 
 let identifier acc bind (name_loc, { Ast.Identifier.name; _ }) = SMap.add name (name_loc, bind) acc
 

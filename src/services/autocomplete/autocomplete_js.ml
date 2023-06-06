@@ -214,7 +214,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
         | PropertyExpression
             ( (prop_loc, type_),
               Flow_ast.Expression.(
-                ( Literal { Flow_ast.Literal.raw = token; value = Flow_ast.Literal.String _; _ }
+                ( StringLiteral { Flow_ast.StringLiteral.raw = token; _ }
                 | Identifier (_, { Flow_ast.Identifier.name = token; _ }) ))
             )
           when this#covers_target prop_loc ->
@@ -266,7 +266,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
         | PropertyExpression
             ( (prop_loc, type_),
               Flow_ast.Expression.(
-                ( Literal { Flow_ast.Literal.raw = token; value = Flow_ast.Literal.String _; _ }
+                ( StringLiteral { Flow_ast.StringLiteral.raw = token; _ }
                 | Identifier (_, { Flow_ast.Identifier.name = token; _ }) ))
             )
           when this#covers_target prop_loc ->
@@ -399,7 +399,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
     method! jsx_attribute_value value =
       let open Flow_ast.JSX.Attribute in
       match value with
-      | Literal ((loc, lit_type), { Flow_ast.Literal.raw; value = Flow_ast.Literal.String _; _ })
+      | StringLiteral ((loc, lit_type), { Flow_ast.StringLiteral.raw; _ })
         when this#covers_target loc ->
         this#find loc raw (Ac_literal { lit_type })
       | _ -> super#jsx_attribute_value value
@@ -414,8 +414,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       let open Flow_ast.Pattern.Object.Property in
       match key with
       (* TODO: we shouldn't have to fabricate a type here! *)
-      | Literal (loc, { Flow_ast.Literal.raw; value = Flow_ast.Literal.String _; _ })
-        when this#covers_target loc ->
+      | StringLiteral (loc, { Flow_ast.StringLiteral.raw; _ }) when this#covers_target loc ->
         this#find loc raw (Ac_literal { lit_type = Type.(AnyT.at Untyped loc) })
       | _ -> super#pattern_object_property_key ?kind key
 
@@ -423,7 +422,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       let open Flow_ast.Expression.Object.Property in
       match key with
       | Identifier ((loc, _), { Flow_ast.Identifier.name; _ })
-      | Literal ((loc, _), { Flow_ast.Literal.raw = name; value = Flow_ast.Literal.String _; _ })
+      | StringLiteral ((loc, _), Flow_ast.StringLiteral.{ raw = name; _ })
         when this#covers_target loc ->
         this#find loc name (Ac_class_key { enclosing_class_t = this#get_enclosing_class })
       | PrivateName (loc, { Flow_ast.PrivateName.name; _ }) when this#covers_target loc ->
@@ -433,7 +432,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
     method! object_key key =
       let open Flow_ast.Expression.Object.Property in
       match key with
-      | Literal ((loc, lit_type), { Flow_ast.Literal.raw; value = Flow_ast.Literal.String _; _ })
+      | StringLiteral ((loc, lit_type), Flow_ast.StringLiteral.{ raw; _ })
         when this#covers_target loc ->
         this#find loc raw (Ac_literal { lit_type })
       | _ -> super#object_key key
@@ -550,7 +549,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
     method! expression expr =
       let open Flow_ast.Expression in
       match expr with
-      | ((loc, lit_type), Literal { Flow_ast.Literal.raw; value = Flow_ast.Literal.String _; _ })
+      | ((loc, lit_type), StringLiteral Flow_ast.StringLiteral.{ raw; _ })
         when this#covers_target loc ->
         this#find loc raw (Ac_literal { lit_type })
       | (((loc, _) as annot), Member member) ->
@@ -572,8 +571,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
             | Property (_, (Property.Init { key; _ } | Property.Method { key; _ })) ->
               (match key with
               | Property.Identifier (_, { Flow_ast.Identifier.name; _ })
-              | Property.Literal (_, { Flow_ast.Literal.value = Flow_ast.Literal.String name; _ })
-                ->
+              | Property.StringLiteral (_, { Flow_ast.StringLiteral.value = name; _ }) ->
                 (SSet.add name used_keys, spreads)
               | _ -> acc)
             | Property _ -> acc
@@ -602,9 +600,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
           {
             key =
               ( Identifier ((loc, _), Flow_ast.Identifier.{ name = token; _ })
-              | Literal
-                  ((loc, _), { Flow_ast.Literal.raw = token; value = Flow_ast.Literal.String _; _ })
-                );
+              | StringLiteral ((loc, _), Flow_ast.StringLiteral.{ raw = token; _ }) );
             _;
           }
         when this#covers_target loc ->

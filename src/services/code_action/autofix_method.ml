@@ -60,7 +60,9 @@ class mapper target =
         Expression.Object.Property.(
           function
           | Identifier (_, { Identifier.name; _ }) -> name = "constructor"
-          | Literal (_, { Literal.raw; _ }) -> raw = "constructor"
+          | StringLiteral (_, { StringLiteral.raw; _ }) -> raw = "constructor"
+          | NumberLiteral _
+          | BigIntLiteral _
           | PrivateName _
           | Computed _ ->
             false

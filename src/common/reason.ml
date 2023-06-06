@@ -1002,7 +1002,19 @@ let rec code_desc_of_expression ~wrap (_, x) =
     "import(" ^ code_desc_of_expression ~wrap:false argument ^ ")"
   | JSXElement x -> code_desc_of_jsx_element x
   | JSXFragment _ -> "<>...</>"
-  | Ast.Expression.Literal x -> code_desc_of_literal x
+  | StringLiteral { Ast.StringLiteral.value; _ } when String.length value > 16 ->
+    "'" ^ String.sub value 0 10 ^ "...'"
+  | StringLiteral { Ast.StringLiteral.raw; _ } -> raw
+  | NumberLiteral { Ast.NumberLiteral.raw; _ } -> raw
+  | BooleanLiteral { Ast.BooleanLiteral.value; _ } ->
+    if value then
+      "true"
+    else
+      "false"
+  | NullLiteral _ -> "null"
+  | BigIntLiteral { Ast.BigIntLiteral.raw; _ } -> raw
+  | RegExpLiteral { Ast.RegExpLiteral.raw; _ } -> raw
+  | ModuleRefLiteral { Ast.ModuleRefLiteral.raw; _ } -> raw
   | Logical { Logical.operator; left; right; comments = _ } ->
     do_wrap (code_desc_of_operation left (`Logical operator) right)
   | Member { Member._object; property; comments = _ } ->
@@ -1219,12 +1231,6 @@ and code_desc_of_jsx_element x =
     in
     "<" ^ loop x ^ " />"
 
-and code_desc_of_literal x =
-  let open Ast in
-  match x.Literal.value with
-  | Literal.String x when String.length x > 16 -> "'" ^ String.sub x 0 10 ^ "...'"
-  | _ -> x.Literal.raw
-
 and code_desc_of_property ~optional property =
   match property with
   | Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name = x; comments = _ }) ->
@@ -1258,7 +1264,7 @@ let rec mk_expression_reason =
   | (loc, Array _) -> mk_reason RArrayLit loc
   | (loc, ArrowFunction { Ast.Function.async; _ }) -> func_reason ~async ~generator:false loc
   | (loc, Function { Ast.Function.async; generator; _ }) -> func_reason ~async ~generator loc
-  | (loc, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.String ""; _ }) ->
+  | (loc, StringLiteral { Ast.StringLiteral.value = ""; _ }) ->
     mk_reason (RStringLit (OrdinaryName "")) loc
   | (loc, TaggedTemplate _) -> mk_reason RTemplateString loc
   | (loc, TemplateLiteral _) -> mk_reason RTemplateString loc

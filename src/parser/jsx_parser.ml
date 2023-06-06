@@ -264,24 +264,16 @@ module JSX (Parse : Parser_common.PARSER) (Expression : Expression_parser.EXPRES
                 Some (JSX.Attribute.ExpressionContainer (loc, expression_container))
               | T_JSX_TEXT (loc, value, raw) as token ->
                 Expect.token env token;
-                let value = Ast.Literal.String value in
                 let trailing = tag_component_trailing_comments env in
-                Some
-                  (JSX.Attribute.Literal
-                     ( loc,
-                       {
-                         Ast.Literal.value;
-                         raw;
-                         comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-                       }
-                     )
-                  )
+                let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+                Some (JSX.Attribute.StringLiteral (loc, { Ast.StringLiteral.value; raw; comments }))
               | _ ->
                 error env Parse_error.InvalidJSXAttributeValue;
                 let loc = Peek.loc env in
-                let raw = "" in
-                let value = Ast.Literal.String "" in
-                Some (JSX.Attribute.Literal (loc, { Ast.Literal.value; raw; comments = None }))
+                Some
+                  (JSX.Attribute.StringLiteral
+                     (loc, { Ast.StringLiteral.value = ""; raw = ""; comments = None })
+                  )
             end
           | _ -> None
         in
