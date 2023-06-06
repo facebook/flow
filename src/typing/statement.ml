@@ -292,6 +292,15 @@ module Make
         | _ -> ()
         )
 
+  let error_on_this_uses_in_components cx { Ast.Statement.ComponentDeclaration.sig_loc; body; _ } =
+    let finder = new ALoc_this_finder.finder in
+    finder#eval finder#component_body body
+    |> Loc_collections.ALocSet.iter (fun this_loc ->
+           Flow_js.add_output
+             cx
+             (Error_message.EComponentThisReference { component_loc = sig_loc; this_loc })
+       )
+
   (* Given the expression of a statement expression, returns a list of child
      expressions which are _potentially_ unhandled promises. At this point,
      we don't know if they are actually of type Promise. We will determine that
@@ -1224,6 +1233,7 @@ module Make
     | (loc, ComponentDeclaration component) ->
       (* TODO(jmbrown): add typechecking for component syntax *)
       Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, ComponentSyntax));
+      error_on_this_uses_in_components cx component;
       let { ComponentDeclaration.id = (_, { Ast.Identifier.name; _ }); _ } = component in
       let reason = mk_reason (RComponent (OrdinaryName name)) loc in
       let (component_sig, reconstruct_component) =

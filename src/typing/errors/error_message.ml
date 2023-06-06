@@ -520,6 +520,10 @@ and 'loc t' =
       reason_op: 'loc virtual_reason;
     }
   | EObjectThisReference of 'loc * 'loc virtual_reason
+  | EComponentThisReference of {
+      component_loc: 'loc;
+      this_loc: 'loc;
+    }
   | EInvalidDeclaration of {
       declaration: 'loc virtual_reason;
       null_write: 'loc null_write option;
@@ -1195,6 +1199,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         reason_prop = map_reason reason_prop;
       }
   | EObjectThisReference (loc, r) -> EObjectThisReference (f loc, map_reason r)
+  | EComponentThisReference { component_loc; this_loc } ->
+    EComponentThisReference { component_loc = f component_loc; this_loc = f this_loc }
   | EInvalidDeclaration { declaration; null_write; possible_generic_escape_locs } ->
     EInvalidDeclaration
       {
@@ -1503,6 +1509,7 @@ let util_use_op_of_msg nope util = function
   | EClassToObject _
   | EMethodUnbinding _
   | EObjectThisReference _
+  | EComponentThisReference _
   | EInvalidDeclaration _
   | EInvalidGraphQL _
   | EDefinitionCycle _
@@ -1665,6 +1672,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EAssignConstLikeBinding { loc; _ }
   | EMalformedCode loc
   | EObjectThisReference (loc, _)
+  | EComponentThisReference { this_loc = loc; _ }
   | EImportInternalReactServerModule loc
   | EInvalidGraphQL (loc, _)
   | EAnnotationInference (loc, _, _, _)
@@ -4219,6 +4227,17 @@ let friendly_message_of_msg loc_of_aloc msg =
             text " with the name of the object, or rewriting the object as a class.";
           ];
       }
+  | EComponentThisReference { component_loc; this_loc = _ } ->
+    Normal
+      {
+        features =
+          [
+            text "Cannot reference ";
+            code "this";
+            text " from within ";
+            ref (mk_reason (RCustom "component declaration") component_loc);
+          ];
+      }
   | EDuplicateClassMember { name; static; _ } ->
     let member_type =
       if static then
@@ -5159,6 +5178,7 @@ let error_code_of_message err : error_code option =
   | EImplicitInstantiationUnderconstrainedError _ -> Some UnderconstrainedImplicitInstantiation
   | EImplicitInstantiationWidenedError _ -> None
   | EObjectThisReference _ -> Some ObjectThisReference
+  | EComponentThisReference _ -> Some ComponentThisReference
   | EInvalidDeclaration _ -> Some InvalidDeclaration
   | EInvalidMappedType _ -> Some InvalidMappedType
   | ECannotMapInstance _ -> Some InvalidMappedType

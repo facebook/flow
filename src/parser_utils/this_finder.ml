@@ -21,5 +21,7 @@ module Make (LocSet : Flow_set.S) = struct
       method! function_declaration _ x = x
 
       method! function_expression_or_method _ x = x
+
+      method! component_declaration _ x = x
     end
 end

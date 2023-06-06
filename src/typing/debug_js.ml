@@ -1813,6 +1813,11 @@ let dump_error_message =
     | EMalformedCode loc -> spf "EMalformedCode (%s)" (string_of_aloc loc)
     | EObjectThisReference (loc, r) ->
       spf "EObjectThisReference (%s, %s)" (string_of_aloc loc) (dump_reason cx r)
+    | EComponentThisReference { this_loc; component_loc } ->
+      spf
+        "EComponentThisReference (this=%s, component=%s)"
+        (string_of_aloc this_loc)
+        (string_of_aloc component_loc)
     | EInvalidDeclaration { declaration = r; _ } -> spf "EInvalidDeclaration %s" (dump_reason cx r)
     | EImportInternalReactServerModule loc ->
       spf "EImportInternalReactServerModule (%s)" (string_of_aloc loc)
