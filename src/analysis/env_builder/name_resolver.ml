@@ -3880,7 +3880,7 @@ module Make
         in
         env_state <- { env_state with write_entries }
 
-      method! component_body_with_params body params =
+      method! component_body_with_params ~component_loc body params =
         this#expecting_abrupt_completions (fun () ->
             let env = this#env in
             this#run
@@ -3888,7 +3888,51 @@ module Make
                 this#havoc_uninitialized_env;
                 let completion_state =
                   this#run_to_completion (fun () ->
-                      ignore (super#component_body_with_params body params)
+                      let (loc, _) = body in
+                      let bindings =
+                        Bindings.(
+                          singleton
+                            ( ( loc,
+                                {
+                                  Ast.Identifier.name = maybe_exhaustively_checked_var_name;
+                                  comments = None;
+                                }
+                              ),
+                              Internal
+                            )
+                        )
+                      in
+
+                      this#with_bindings
+                        component_loc
+                        bindings
+                        (fun () ->
+                          Context.add_exhaustive_check cx loc ([], false);
+
+                          super#component_body_with_params ~component_loc body params;
+
+                          let { val_ref; _ } = this#env_read maybe_exhaustively_checked_var_name in
+                          let { Env_api.write_locs; _ } = Val.simplify None None None !val_ref in
+                          let (locs, undeclared) =
+                            Base.List.fold
+                              ~init:([], false)
+                              ~f:
+                                (fun (locs, undeclared) -> function
+                                  | Env_api.Undeclared _ -> (locs, true)
+                                  | Env_api.Write r -> (Reason.loc_of_reason r :: locs, undeclared)
+                                  | _ ->
+                                    raise
+                                      Env_api.(
+                                        Env_invariant
+                                          ( Some component_loc,
+                                            Impossible
+                                              "Unexpected env state for maybe_exhaustively_checked"
+                                          )
+                                      ))
+                              write_locs
+                          in
+                          Context.add_exhaustive_check cx loc (locs, undeclared))
+                        ()
                   )
                 in
                 this#commit_abrupt_completion_matching
@@ -3997,7 +4041,7 @@ module Make
                                         Env_invariant
                                           ( Some fun_loc,
                                             Impossible
-                                              "Unexpected env state for maybe_exhaustively_checked_var_name"
+                                              "Unexpected env state for maybe_exhaustively_checked"
                                           )
                                       ))
                               write_locs

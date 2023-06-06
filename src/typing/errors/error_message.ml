@@ -525,6 +525,7 @@ and 'loc t' =
       this_loc: 'loc;
     }
   | EComponentCase of 'loc
+  | EComponentMissingReturn of 'loc virtual_reason
   | EInvalidDeclaration of {
       declaration: 'loc virtual_reason;
       null_write: 'loc null_write option;
@@ -1202,6 +1203,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EComponentThisReference { component_loc; this_loc } ->
     EComponentThisReference { component_loc = f component_loc; this_loc = f this_loc }
   | EComponentCase loc -> EComponentCase (f loc)
+  | EComponentMissingReturn r -> EComponentMissingReturn (map_reason r)
   | EInvalidDeclaration { declaration; null_write; possible_generic_escape_locs } ->
     EInvalidDeclaration
       {
@@ -1512,6 +1514,7 @@ let util_use_op_of_msg nope util = function
   | EObjectThisReference _
   | EComponentThisReference _
   | EComponentCase _
+  | EComponentMissingReturn _
   | EInvalidDeclaration _
   | EInvalidGraphQL _
   | EDefinitionCycle _
@@ -1562,6 +1565,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EMissingLocalAnnotation { reason; _ }
   | EIdxArity reason
   | EIdxUse reason
+  | EComponentMissingReturn reason
   | EUnsupportedExact (_, reason)
   | EPolarityMismatch { reason; _ }
   | ENoNamedExport (reason, _, _, _)
@@ -4242,6 +4246,17 @@ let friendly_message_of_msg loc_of_aloc msg =
       }
   | EComponentCase _ ->
     Normal { features = [text "Component identifiers must begin with an upper-case character"] }
+  | EComponentMissingReturn reason ->
+    Normal
+      {
+        features =
+          [
+            text "Cannot declare component because ";
+            ref reason;
+            text
+              " is not guaranteed to reach a return statement. An explicit return statement must be included for all possible branches.";
+          ];
+      }
   | EDuplicateClassMember { name; static; _ } ->
     let member_type =
       if static then
@@ -5184,6 +5199,7 @@ let error_code_of_message err : error_code option =
   | EObjectThisReference _ -> Some ObjectThisReference
   | EComponentThisReference _ -> Some ComponentThisReference
   | EComponentCase _ -> Some ComponentCase
+  | EComponentMissingReturn _ -> Some ComponentMissingReturn
   | EInvalidDeclaration _ -> Some InvalidDeclaration
   | EInvalidMappedType _ -> Some InvalidMappedType
   | ECannotMapInstance _ -> Some InvalidMappedType

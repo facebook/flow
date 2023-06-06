@@ -196,7 +196,8 @@ let rec default_resolve_touts ~flow cx loc u =
   | FilterOptionalT (_, t)
   | FilterMaybeT (_, t) ->
     resolve t
-  | FunImplicitVoidReturnT { return; _ } -> resolve return
+  | ImplicitVoidReturnT { action = PropagateVoid { return; _ }; _ } -> resolve return
+  | ImplicitVoidReturnT { action = NoImplicitReturns _; _ } -> ()
   | SealGenericT { cont; _ } -> resolve_cont cont
   | OptionalIndexedAccessT { tout_tvar; _ } -> resolve_tvar tout_tvar
   | CheckUnusedPromiseT _ -> _TODO

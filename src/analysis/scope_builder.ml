@@ -673,7 +673,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       method private this_binding_function_id_opt ~fun_loc:_ ~has_this_annot:_ ident =
         Base.Option.iter ident ~f:(fun id -> ignore @@ this#function_identifier id)
 
-      method component_body_with_params body params =
+      method component_body_with_params ~component_loc:_ body params =
         (* In component syntax param types and defaults cannot reference other params, so we visit
          * the types and defaults without including the param bindings. *)
         let ( _,
@@ -731,7 +731,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             ~hoist_op:this#hoist_annotations
             tparams
             ~in_tparam_scope:(fun () ->
-              this#component_body_with_params body params;
+              this#component_body_with_params ~component_loc:loc body params;
               if with_types then
                 this#hoist_annotations (fun () -> ignore @@ this#type_annotation_hint return)
           )

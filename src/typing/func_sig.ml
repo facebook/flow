@@ -503,8 +503,12 @@ struct
                     if undeclared then Flow.flow_t cx (VoidT.at body_loc (bogus_trust ()), t)
                 ),
                 exhaustive,
-                FunImplicitVoidReturnT
-                  { use_op; reason = reason_of_t return_t; return = return_t; void_t }
+                ImplicitVoidReturnT
+                  {
+                    use_op;
+                    reason = reason_of_t return_t;
+                    action = PropagateVoid { return = return_t; void_t };
+                  }
               )
         in
         (init_ast, exhaust)

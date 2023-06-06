@@ -11,7 +11,7 @@ open Reason
 open Type
 open TypeUtil
 
-class component_scope_visitor cx ~return_t =
+class component_scope_visitor cx ~return_t exhaust =
   object (this)
     inherit
       [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
@@ -25,6 +25,12 @@ class component_scope_visitor cx ~return_t =
     method! component_declaration c = c
 
     method visit statements = ignore @@ this#statement_list statements
+
+    method! switch ({ Ast.Statement.Switch.exhaustive_out = (loc, t); _ } as switch) =
+      Base.Option.iter exhaust ~f:(fun (exhaustive_t, exhaust_locs, _) ->
+          if Base.List.mem ~equal:ALoc.equal exhaust_locs loc then Flow.flow_t cx (t, exhaustive_t)
+      );
+      super#switch switch
 
     (* Override statement so that we have the loc for return *)
     method! statement (loc, stmt) =
@@ -64,8 +70,8 @@ module Make
   module Types = T
 
   let toplevels cx x =
-    let { T.reason = _; cparams; body; ret_annot_loc = _; return_t; _ } = x in
-    let (_, body_block) = body in
+    let { T.reason = reason_cmp; cparams; body; ret_annot_loc = _; return_t; _ } = x in
+    let (body_loc, body_block) = body in
 
     (* add param bindings *)
     let params_ast = F.eval cx cparams in
@@ -76,12 +82,44 @@ module Make
     in
 
     (* statement visit pass *)
-    let (statements_ast, _statements_abnormal) =
+    let (statements_ast, statements_abnormal) =
       Toplevels.toplevels Statement.statement cx statements
     in
-    (* TODO(jmbrown): Error on implicit returns unless enum exhaustiveness check passes *)
+
+    let maybe_void =
+      match statements_abnormal with
+      | Some Abnormal.Return -> false
+      | Some Abnormal.Throw -> false (* NOTE *)
+      | Some (Abnormal.Break _)
+      | Some (Abnormal.Continue _) ->
+        failwith "Illegal toplevel abnormal directive"
+      | None -> true
+    in
+
+    let exhaust =
+      if maybe_void then
+        let use_op = unknown_use in
+        let (exhaustive, undeclared) = Context.exhaustive_check cx body_loc in
+        if undeclared then begin
+          Flow_js_utils.add_output cx Error_message.(EComponentMissingReturn reason_cmp);
+          None
+        end else
+          Some
+            ( Tvar.mk cx (replace_desc_reason (RCustom "maybe_exhaustively_checked") reason_cmp),
+              exhaustive,
+              ImplicitVoidReturnT
+                { use_op; reason = reason_of_t return_t; action = NoImplicitReturns reason_cmp }
+            )
+      else
+        None
+    in
+
     let body_ast = reconstruct_body statements_ast in
-    let () = (new component_scope_visitor cx ~return_t)#visit statements_ast in
+    let () = (new component_scope_visitor cx ~return_t exhaust)#visit statements_ast in
+
+    Base.Option.iter exhaust ~f:(fun (maybe_exhaustively_checked, _, implicit_return) ->
+        Flow.flow cx (maybe_exhaustively_checked, implicit_return)
+    );
 
     (params_ast, body_ast)
 

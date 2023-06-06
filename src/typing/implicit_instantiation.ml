@@ -324,7 +324,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | RefineT _
     | CondT _
     | SentinelPropTestT _
-    | FunImplicitVoidReturnT _
+    | ImplicitVoidReturnT _
     | CheckUnusedPromiseT _
     | WriteComputedObjPropCheckT _
     (* We don't care about idx, as they are deprecated. *)

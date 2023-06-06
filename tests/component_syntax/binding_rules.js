@@ -2,12 +2,12 @@ import * as React from 'react';
 
 const Hoisted = <Foo />; // OK
 
-component Foo() {}
+component Foo() { return <div /> }
 Foo = 3; // ERROR, cannot reassign components
 var Foo = 3; // ERROR, cannot re-bind components
 let Foo = 3; // ERROR, still can't re-bind
 const Foo = 3; // ERROR
-component Foo() {} // ERROR, can't re-bind a component with a component either
+component Foo() { return <div /> } // ERROR, can't re-bind a component with a component either
 type Foo = number; // ERROR
 function Foo() {} // ERROR
 class Foo {} // ERROR
@@ -20,43 +20,43 @@ declare class Foo {} // ERROR
 function Bar(Foo: number) {} // OK
 
 function A() {}
-component A() {} // ERROR, can't re-bind other bindings with a component either!
+component A() { return <div /> } // ERROR, can't re-bind other bindings with a component either!
 
 var B = 3;
-component B() {} // ERROR
+component B() { return <div /> } // ERROR
 
 let C = 3; // ERROR. Components are hoisted so the error is on the let
-component C() {}
+component C() { return <div /> }
 
 const D = 3;
-component D() {} // ERROR
+component D() { return <div /> } // ERROR
 
 type E = number;
-component E() {} // ERROR
+component E() { return <div /> } // ERROR
 
 function paramsStrict(F: number) {
   'use strict';
-  component F() {} // ERROR
+  component F() { return <div /> } // ERROR
 }
 
 function params(G: number) {
-  component G() {} // ERROR
+  component G() { return <div /> } // ERROR
 }
 
 declare const H: number;
-component H() {} // ERROR
+component H() { return <div /> } // ERROR
 
 declare function I(): void;
-component I() {} // ERROR
+component I() { return <div /> } // ERROR
 
 declare type J = number;
-component J() {} // ERROR
+component J() { return <div /> } // ERROR
 
 declare let K: number;
-component K() {} // ERROR
+component K() { return <div /> } // ERROR
 
 declare class L {}
-component L() {} // ERROR
+component L() { return <div /> } // ERROR
 
 class M {} // ERROR
-component M() {}
+component M() { return <div /> }

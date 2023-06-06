@@ -801,7 +801,7 @@ and dump_use_t_ (depth, tvars) cx t =
              )
           )
     | ExportTypeT _ -> p t
-    | FunImplicitVoidReturnT _ -> p t
+    | ImplicitVoidReturnT _ -> p t
     | AssertExportIsTypeT _ -> p t
     | GetElemT { use_op = _; reason = _; from_annot; key_t; tout = (preason, ptvar) } ->
       p
@@ -1818,7 +1818,8 @@ let dump_error_message =
         "EComponentThisReference (this=%s, component=%s)"
         (string_of_aloc this_loc)
         (string_of_aloc component_loc)
-    | EComponentCase loc -> spf "EComponentThisReference (%s)" (string_of_aloc loc)
+    | EComponentCase loc -> spf "EComponentCase (%s)" (string_of_aloc loc)
+    | EComponentMissingReturn r -> spf "EComponentMissingReturn (%s)" (dump_reason cx r)
     | EInvalidDeclaration { declaration = r; _ } -> spf "EInvalidDeclaration %s" (dump_reason cx r)
     | EImportInternalReactServerModule loc ->
       spf "EImportInternalReactServerModule (%s)" (string_of_aloc loc)

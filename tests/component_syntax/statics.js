@@ -1,5 +1,5 @@
 // Components uses React$AbstractComponent statics
-component Foo() {}
+component Foo() { return (42: any); }
 
 Foo.displayName = 3; // ERROR
 Foo.displayName = 'str'; // OK

@@ -8,7 +8,7 @@ Cannot reassign component binding `Foo` [1]. [cannot-reassign]
 
 References:
    binding_rules.js:5:11
-   5| component Foo() {}
+   5| component Foo() { return <div /> }
                 ^^^ [1]
 
 
@@ -22,7 +22,7 @@ Cannot declare `Foo` [1] because the name is already bound. [name-already-bound]
 
 References:
    binding_rules.js:5:11
-   5| component Foo() {}
+   5| component Foo() { return <div /> }
                 ^^^ [1]
 
 
@@ -36,7 +36,7 @@ Cannot declare `Foo` [1] because the name is already bound. [name-already-bound]
 
 References:
    binding_rules.js:5:11
-   5| component Foo() {}
+   5| component Foo() { return <div /> }
                 ^^^ [1]
 
 
@@ -50,7 +50,7 @@ Cannot declare `Foo` [1] because the name is already bound. [name-already-bound]
 
 References:
    binding_rules.js:5:11
-   5| component Foo() {}
+   5| component Foo() { return <div /> }
                 ^^^ [1]
 
 
@@ -59,12 +59,12 @@ Error --------------------------------------------------------------------------
 Cannot declare `Foo` [1] because the name is already bound. [name-already-bound]
 
    binding_rules.js:10:11
-   10| component Foo() {} // ERROR, can't re-bind a component with a component either
+   10| component Foo() { return <div /> } // ERROR, can't re-bind a component with a component either
                  ^^^
 
 References:
    binding_rules.js:5:11
-    5| component Foo() {}
+    5| component Foo() { return <div /> }
                  ^^^ [1]
 
 
@@ -78,7 +78,7 @@ Cannot declare `Foo` [1] because the name is already bound. [name-already-bound]
 
 References:
    binding_rules.js:5:11
-    5| component Foo() {}
+    5| component Foo() { return <div /> }
                  ^^^ [1]
 
 
@@ -92,7 +92,7 @@ Cannot declare `Foo` [1] because the name is already bound. [name-already-bound]
 
 References:
    binding_rules.js:5:11
-    5| component Foo() {}
+    5| component Foo() { return <div /> }
                  ^^^ [1]
 
 
@@ -106,7 +106,7 @@ Cannot declare `Foo` [1] because the name is already bound. [name-already-bound]
 
 References:
    binding_rules.js:5:11
-    5| component Foo() {}
+    5| component Foo() { return <div /> }
                  ^^^ [1]
 
 
@@ -120,7 +120,7 @@ Cannot declare `Foo` [1] because the name is already bound. [name-already-bound]
 
 References:
    binding_rules.js:5:11
-    5| component Foo() {}
+    5| component Foo() { return <div /> }
                  ^^^ [1]
 
 
@@ -134,7 +134,7 @@ Cannot declare `Foo` [1] because the name is already bound. [name-already-bound]
 
 References:
    binding_rules.js:5:11
-    5| component Foo() {}
+    5| component Foo() { return <div /> }
                  ^^^ [1]
 
 
@@ -148,7 +148,7 @@ Cannot declare `Foo` [1] because the name is already bound. [name-already-bound]
 
 References:
    binding_rules.js:5:11
-    5| component Foo() {}
+    5| component Foo() { return <div /> }
                  ^^^ [1]
 
 
@@ -162,7 +162,7 @@ Cannot declare `Foo` [1] because the name is already bound. [name-already-bound]
 
 References:
    binding_rules.js:5:11
-    5| component Foo() {}
+    5| component Foo() { return <div /> }
                  ^^^ [1]
 
 
@@ -176,7 +176,7 @@ Cannot declare `Foo` [1] because the name is already bound. [name-already-bound]
 
 References:
    binding_rules.js:5:11
-    5| component Foo() {}
+    5| component Foo() { return <div /> }
                  ^^^ [1]
 
 
@@ -190,7 +190,7 @@ Cannot declare `Foo` [1] because the name is already bound. [name-already-bound]
 
 References:
    binding_rules.js:5:11
-    5| component Foo() {}
+    5| component Foo() { return <div /> }
                  ^^^ [1]
 
 
@@ -199,7 +199,7 @@ Error --------------------------------------------------------------------------
 Cannot declare `A` [1] because the name is already bound. [name-already-bound]
 
    binding_rules.js:23:11
-   23| component A() {} // ERROR, can't re-bind other bindings with a component either!
+   23| component A() { return <div /> } // ERROR, can't re-bind other bindings with a component either!
                  ^
 
 References:
@@ -213,7 +213,7 @@ Error --------------------------------------------------------------------------
 Cannot declare `B` [1] because the name is already bound. [name-already-bound]
 
    binding_rules.js:26:11
-   26| component B() {} // ERROR
+   26| component B() { return <div /> } // ERROR
                  ^
 
 References:
@@ -243,7 +243,7 @@ Error --------------------------------------------------------------------------
 Cannot declare `E` [1] because the name is already bound. [name-already-bound]
 
    binding_rules.js:35:11
-   35| component E() {} // ERROR
+   35| component E() { return <div /> } // ERROR
                  ^
 
 References:
@@ -257,7 +257,7 @@ Error --------------------------------------------------------------------------
 Cannot declare `F` [1] because the name is already bound. [name-already-bound]
 
    binding_rules.js:39:13
-   39|   component F() {} // ERROR
+   39|   component F() { return <div /> } // ERROR
                    ^
 
 References:
@@ -271,7 +271,7 @@ Error --------------------------------------------------------------------------
 Cannot declare `G` [1] because the name is already bound. [name-already-bound]
 
    binding_rules.js:43:13
-   43|   component G() {} // ERROR
+   43|   component G() { return <div /> } // ERROR
                    ^
 
 References:
@@ -285,7 +285,7 @@ Error --------------------------------------------------------------------------
 Cannot declare `H` [1] because the name is already bound. [name-already-bound]
 
    binding_rules.js:47:11
-   47| component H() {} // ERROR
+   47| component H() { return <div /> } // ERROR
                  ^
 
 References:
@@ -299,7 +299,7 @@ Error --------------------------------------------------------------------------
 Cannot declare `I` [1] because the name is already bound. [name-already-bound]
 
    binding_rules.js:50:11
-   50| component I() {} // ERROR
+   50| component I() { return <div /> } // ERROR
                  ^
 
 References:
@@ -313,7 +313,7 @@ Error --------------------------------------------------------------------------
 Cannot declare `J` [1] because the name is already bound. [name-already-bound]
 
    binding_rules.js:53:11
-   53| component J() {} // ERROR
+   53| component J() { return <div /> } // ERROR
                  ^
 
 References:
@@ -327,7 +327,7 @@ Error --------------------------------------------------------------------------
 Cannot declare `K` [1] because the name is already bound. [name-already-bound]
 
    binding_rules.js:56:11
-   56| component K() {} // ERROR
+   56| component K() { return <div /> } // ERROR
                  ^
 
 References:
@@ -341,7 +341,7 @@ Error --------------------------------------------------------------------------
 Cannot declare `L` [1] because the name is already bound. [name-already-bound]
 
    binding_rules.js:59:11
-   59| component L() {} // ERROR
+   59| component L() { return <div /> } // ERROR
                  ^
 
 References:
@@ -448,47 +448,47 @@ References:
                 ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------- component_type_checking.js:31:17
+Error --------------------------------------------------------------------------------- component_type_checking.js:32:17
 
 Cannot assign number to `bar` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   component_type_checking.js:31:17
-   31|   bar: string = 3, // ERROR
+   component_type_checking.js:32:17
+   32|   bar: string = 3, // ERROR
                        ^ [1]
 
 References:
-   component_type_checking.js:31:8
-   31|   bar: string = 3, // ERROR
+   component_type_checking.js:32:8
+   32|   bar: string = 3, // ERROR
               ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------- component_type_checking.js:32:24
-
-Cannot resolve name `foo`. [cannot-resolve-name]
-
-   32|   backwardsRef: typeof foo = foo, // ERROR 2x
-                              ^^^
-
-
-Error --------------------------------------------------------------------------------- component_type_checking.js:32:30
-
-Cannot resolve name `foo`. [cannot-resolve-name]
-
-   32|   backwardsRef: typeof foo = foo, // ERROR 2x
-                                    ^^^
 
 
 Error --------------------------------------------------------------------------------- component_type_checking.js:33:24
 
+Cannot resolve name `foo`. [cannot-resolve-name]
+
+   33|   backwardsRef: typeof foo = foo, // ERROR 2x
+                              ^^^
+
+
+Error --------------------------------------------------------------------------------- component_type_checking.js:33:30
+
+Cannot resolve name `foo`. [cannot-resolve-name]
+
+   33|   backwardsRef: typeof foo = foo, // ERROR 2x
+                                    ^^^
+
+
+Error --------------------------------------------------------------------------------- component_type_checking.js:34:24
+
 Cannot assign string to `a` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   component_type_checking.js:33:24
-   33|   destructured as {a = 'str'}: {a?: number}, // ERROR
+   component_type_checking.js:34:24
+   34|   destructured as {a = 'str'}: {a?: number}, // ERROR
                               ^^^^^ [1]
 
 References:
-   component_type_checking.js:33:37
-   33|   destructured as {a = 'str'}: {a?: number}, // ERROR
+   component_type_checking.js:34:37
+   34|   destructured as {a = 'str'}: {a?: number}, // ERROR
                                            ^^^^^^ [2]
 
 
@@ -506,29 +506,83 @@ References:
       ^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- errors.js:18:35
+Error --------------------------------------------------------------------------------------------------- errors.js:20:9
+
+Cannot declare component because component Foo [1] is not guaranteed to reach a return statement. An explicit return
+statement must be included for all possible branches. [component-missing-return]
+
+   20|         component Foo(x: string = this.x) { } // error from num ~> string, no error from this
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- errors.js:20:35
 
 Cannot assign `this.x` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   errors.js:18:35
-   18|         component Foo(x: string = this.x) { } // error from num ~> string, no error from this
+   errors.js:20:35
+   20|         component Foo(x: string = this.x) { } // error from num ~> string, no error from this
                                          ^^^^^^
 
 References:
-   errors.js:16:9
-   16|     x = 42;
+   errors.js:18:9
+   18|     x = 42;
                ^^ [1]
-   errors.js:18:26
-   18|         component Foo(x: string = this.x) { } // error from num ~> string, no error from this
+   errors.js:20:26
+   20|         component Foo(x: string = this.x) { } // error from num ~> string, no error from this
                                 ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- errors.js:23:11
+Error -------------------------------------------------------------------------------------------------- errors.js:25:11
 
 Component identifiers must begin with an upper-case character [component-case]
 
-   23| component lowercase() { } // error
+   25| component lowercase() { return (42: any) } // error
                  ^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- exhaust.js:4:5
+
+Cannot declare component because component NoReturn [1] is not guaranteed to reach a return statement. An explicit
+return statement must be included for all possible branches. [component-missing-return]
+
+   4|     component NoReturn() { } // error
+          ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- exhaust.js:16:5
+
+Cannot declare component because component Throws2 [1] is not guaranteed to reach a return statement. An explicit return
+statement must be included for all possible branches. [component-missing-return]
+
+   16|     component Throws2(f: boolean) { // error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- exhaust.js:30:5
+
+Cannot declare component because component NotExhaustive [1] is not guaranteed to reach a return statement. An explicit
+return statement must be included for all possible branches. [component-missing-return]
+
+   30|     component NotExhaustive(t: A) { // error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- export_syntax.js:3:8
+
+Cannot declare component because component C [1] is not guaranteed to reach a return statement. An explicit return
+statement must be included for all possible branches. [component-missing-return]
+
+   3| export component C (x: number) { }
+             ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- export_syntax.js:5:16
+
+Cannot declare component because component D [1] is not guaranteed to reach a return statement. An explicit return
+statement must be included for all possible branches. [component-missing-return]
+
+   5| export default component D (y: number, ...props: {z: string}) { }
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- export_syntax.js:7:7
@@ -697,7 +751,7 @@ References:
    44|   foo as bar: number,
    45|   bar as foo: string,
    46|   'non-ident' as baz: string,
-   47| ) {}
+   47| ) { return <div /> }
        ^ [1]
    import.js:17:27
    17| const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERROR 4x, bad foo type, bad bar type, no non-ident, extra baz
@@ -723,7 +777,7 @@ References:
    44|   foo as bar: number,
    45|   bar as foo: string,
    46|   'non-ident' as baz: string,
-   47| ) {}
+   47| ) { return <div /> }
        ^ [2]
 
 
@@ -784,7 +838,7 @@ Cannot get `Foo.randomProperty` because property `randomProperty` is missing in 
 
 References:
    statics.js:2:1
-    2| component Foo() {}
+    2| component Foo() { return (42: any); }
        ^^^^^^^^^^^^^^^ [1]
 
 
@@ -839,15 +893,15 @@ Component property `a` [1] is re-declared [2] within a spread [3]. Property name
 a component [invalid-component-prop]
 
    names.js:4:36
-   4| component Foo(a: number, ...props: {a: number}) {} // Error
+   4| component Foo(a: number, ...props: {a: number}) { return <div /> } // Error
                                          ^^^^^^^^^^^ [3]
 
 References:
    names.js:4:15
-   4| component Foo(a: number, ...props: {a: number}) {} // Error
+   4| component Foo(a: number, ...props: {a: number}) { return <div /> } // Error
                     ^ [1]
    names.js:4:37
-   4| component Foo(a: number, ...props: {a: number}) {} // Error
+   4| component Foo(a: number, ...props: {a: number}) { return <div /> } // Error
                                           ^ [2]
 
 
@@ -857,12 +911,12 @@ Component property `a` [1] is re-declared [2] within a spread [3]. Property name
 a component [invalid-component-prop]
 
    names.js:8:36
-   8| component Bar(a: number, ...props: BarT) {}; // Error
+   8| component Bar(a: number, ...props: BarT) { return <div /> }; // Error
                                          ^^^^ [3]
 
 References:
    names.js:8:15
-   8| component Bar(a: number, ...props: BarT) {}; // Error
+   8| component Bar(a: number, ...props: BarT) { return <div /> }; // Error
                     ^ [1]
    names.js:7:14
    7| type BarT = {a: string} | {b: string}
@@ -879,7 +933,7 @@ Cannot create `Baz` element because boolean [1] is incompatible with number [2] 
 
 References:
    names.js:11:18
-   11| component Baz(a: number, ...props: {[string]: boolean}) {}; // Ok
+   11| component Baz(a: number, ...props: {[string]: boolean}) { return <div /> }; // Ok
                         ^^^^^^ [2]
 
 
@@ -889,15 +943,15 @@ Component property `a` [1] is re-declared [2] within a spread [3]. Property name
 a component [invalid-component-prop]
 
    names.js:15:36
-   15| component Qux(a: number, ...props: {[string]: boolean, a: number}) {}; // Error
+   15| component Qux(a: number, ...props: {[string]: boolean, a: number}) { return <div /> }; // Error
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 References:
    names.js:15:15
-   15| component Qux(a: number, ...props: {[string]: boolean, a: number}) {}; // Error
+   15| component Qux(a: number, ...props: {[string]: boolean, a: number}) { return <div /> }; // Error
                      ^ [1]
    names.js:15:56
-   15| component Qux(a: number, ...props: {[string]: boolean, a: number}) {}; // Error
+   15| component Qux(a: number, ...props: {[string]: boolean, a: number}) { return <div /> }; // Error
                                                               ^ [2]
 
 
@@ -907,12 +961,12 @@ Component property `a` [1] is re-declared [2] within a spread [3]. Property name
 a component [invalid-component-prop]
 
    names.js:19:67
-   19| component RunningOutOfMetasyntaxticVariables(a: number, ...props: {...ROMSVType}) {}; // Error
+   19| component RunningOutOfMetasyntaxticVariables(a: number, ...props: {...ROMSVType}) { return <div /> }; // Error
                                                                          ^^^^^^^^^^^^^^ [3]
 
 References:
    names.js:19:46
-   19| component RunningOutOfMetasyntaxticVariables(a: number, ...props: {...ROMSVType}) {}; // Error
+   19| component RunningOutOfMetasyntaxticVariables(a: number, ...props: {...ROMSVType}) { return <div /> }; // Error
                                                     ^ [1]
    names.js:18:22
    18| type ROMSVType = {a: number}
@@ -924,7 +978,7 @@ Error --------------------------------------------------------------------------
 Component syntax does not support ref properties [1]. Use a `forwardRef`-style component definition instead
 [invalid-component-prop]
 
-   22| component NoRef(ref: string) {}; // Error
+   22| component NoRef(ref: string) { return <div /> }; // Error
                        ^^^ [1]
 
 
@@ -933,12 +987,12 @@ Error --------------------------------------------------------------------------
 Components do not support ref properties [1] within spreads [2] [invalid-component-prop]
 
    names.js:25:35
-   25| component NoRefInSpread(...props: {ref: string}) {}; // Error
+   25| component NoRefInSpread(...props: {ref: string}) { return <div /> }; // Error
                                          ^^^^^^^^^^^^^ [2]
 
 References:
    names.js:25:36
-   25| component NoRefInSpread(...props: {ref: string}) {}; // Error
+   25| component NoRefInSpread(...props: {ref: string}) { return <div /> }; // Error
                                           ^^^ [1]
 
 
@@ -952,31 +1006,31 @@ the type of its initial assignment [3]. Add an annotation to `x` [4] if a differ
               ^^ [1]
 
 References:
-   provider.js:7:5
-   7| x = 'a';
+   provider.js:8:5
+   8| x = 'a';
           ^^^ [2]
-   provider.js:7:1
-   7| x = 'a';
+   provider.js:8:1
+   8| x = 'a';
       ^ [3]
    provider.js:1:5
    1| var x;
           ^ [4]
 
 
-Error ------------------------------------------------------------------------------------------------- provider.js:10:6
+Error ------------------------------------------------------------------------------------------------- provider.js:11:6
 
 Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
-   provider.js:10:6
-   10|     (x: empty);
+   provider.js:11:6
+   11|     (x: empty);
             ^
 
 References:
-   provider.js:7:5
-    7| x = 'a';
+   provider.js:8:5
+    8| x = 'a';
            ^^^ [1]
-   provider.js:10:9
-   10|     (x: empty);
+   provider.js:11:9
+   11|     (x: empty);
                ^^^^^ [2]
 
 
@@ -1101,7 +1155,7 @@ References:
    44|   foo as bar: number,
    45|   bar as foo: string,
    46|   'non-ident' as baz: string,
-   47| ) {}
+   47| ) { return <div /> }
        ^ [1]
    signature.js:50:27
    50| const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERROR 4x, bad foo type, bad bar type, no non-ident, extra baz
@@ -1127,7 +1181,7 @@ References:
    44|   foo as bar: number,
    45|   bar as foo: string,
    46|   'non-ident' as baz: string,
-   47| ) {}
+   47| ) { return <div /> }
        ^ [2]
 
 
@@ -1207,4 +1261,4 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 82 errors
+Found 88 errors

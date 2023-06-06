@@ -1,5 +1,6 @@
 component Bar() {
     this; // error
+    return (42: any);
 }
 
 component Baz() {
@@ -8,6 +9,7 @@ component Baz() {
             this; // ok
         }
     }
+    return (42: any)
 }
 
 import * as React from 'react';
@@ -20,4 +22,4 @@ class Ext {
     }
 }
 
-component lowercase() { } // error
+component lowercase() { return (42: any) } // error

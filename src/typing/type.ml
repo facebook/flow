@@ -813,11 +813,10 @@ module rec TypeTerm : sig
       }
     | FilterOptionalT of use_op * t
     | FilterMaybeT of use_op * t
-    | FunImplicitVoidReturnT of {
+    | ImplicitVoidReturnT of {
         use_op: use_op;
         reason: reason;
-        return: t;
-        void_t: t;
+        action: implicit_return_action;
       }
     | SealGenericT of {
         reason: reason;
@@ -841,6 +840,13 @@ module rec TypeTerm : sig
         value_t: t;
         err_on_str_or_num_key: (use_op * reason) option;
       }
+
+  and implicit_return_action =
+    | PropagateVoid of {
+        void_t: t;
+        return: t;
+      }
+    | NoImplicitReturns of reason
 
   and enum_check_t =
     | EnumCheck of {
@@ -3762,7 +3768,7 @@ let string_of_use_ctor = function
   | ExportTypeT _ -> "ExportTypeT"
   | AssertExportIsTypeT _ -> "AssertExportIsTypeT"
   | ExtendsUseT _ -> "ExtendsUseT"
-  | FunImplicitVoidReturnT _ -> "FunImplicitVoidReturnT"
+  | ImplicitVoidReturnT _ -> "ImplicitVoidReturnT"
   | GetElemT _ -> "GetElemT"
   | GetKeysT _ -> "GetKeysT"
   | GetValuesT _ -> "GetValuesT"

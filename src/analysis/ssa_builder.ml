@@ -1152,14 +1152,16 @@ struct
         )
 
       (* We also havoc state when entering components *)
-      method! component_body_with_params body params =
+      method! component_body_with_params ~component_loc body params =
         this#expecting_abrupt_completions (fun () ->
             let env = this#ssa_env in
             this#run
               (fun () ->
                 this#havoc_uninitialized_ssa_env;
                 let completion_state =
-                  this#run_to_completion (fun () -> super#component_body_with_params body params)
+                  this#run_to_completion (fun () ->
+                      super#component_body_with_params ~component_loc body params
+                  )
                 in
                 this#commit_abrupt_completion_matching
                   AbruptCompletion.(mem [return; throw])

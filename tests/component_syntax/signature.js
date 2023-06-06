@@ -44,7 +44,7 @@ component RenamedParams(
   foo as bar: number,
   bar as foo: string,
   'non-ident' as baz: string,
-) {}
+) { return <div /> }
 
 const renamedGood = <RenamedParams foo={3} bar="str" non-ident="str" />; // OK!
 const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERROR 4x, bad foo type, bad bar type, no non-ident, extra baz

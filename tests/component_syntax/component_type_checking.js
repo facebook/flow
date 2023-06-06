@@ -24,6 +24,7 @@ component InlineWithRestParam(
   (foo: number);
   (rest: {foo: number}); // OK
   (rest: empty); // ERROR
+  return (42: any);
 }
 
 component Defaults(
@@ -34,6 +35,7 @@ component Defaults(
   destructuredAssigned as {b = 3}: {b?: number},
 ) {
   (b: number); // OK!
+  return (42: any);
 }
 
 component ReactNodeDefaultReturn() {
