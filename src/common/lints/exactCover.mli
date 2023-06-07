@@ -26,9 +26,6 @@ exception Uncovered of string
 (* Supports O(log(n)) queries to get the value associated with a loc. *)
 type 'a t
 
-(* Given a filename and a value, generate a cover associating that value with that entire file. *)
-val file_cover : File_key.t -> 'a -> 'a t
-
 (* Gets the value associated with a certain location in the code. To resolve
  * ambiguity, this looks at the location of the first character in the provided
  * location. Errors if queried for a file not contained in this cover. *)
@@ -105,15 +102,11 @@ val update_settings_and_running :
 
 (* Resultant running lint settings *)
 
-val bake : 'a builder -> 'a t Utils_js.FilenameMap.t
+val bake : 'a builder -> 'a t
 
 (* `severity LintSettings.t`-specific functions *)
 
 type lint_severity_cover = severity LintSettings.t t
-
-(* Given a filename, generate a cover that applies the default lint severities
- * across the entire file. *)
-val default_file_cover : File_key.t -> lint_severity_cover
 
 (* Gets the severity of the provided lint kind at the provided location. Errors
  * if queried for a file not contained in this cover. *)
