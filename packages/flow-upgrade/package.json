@@ -41,7 +41,7 @@
     "yargs": "^17.0.1"
   },
   "peerDependencies": {
-    "prettier": "2.7.1"
+    "prettier": "2.8.8"
   },
   "devDependencies": {
     "@babel/cli": "^7.14.8",
@@ -51,6 +51,6 @@
     "flow-bin": "^0.178.0",
     "jest": "^27.5.1",
     "memfs": "^3.4.3",
-    "prettier": "2.7.1"
+    "prettier": "2.8.8"
   }
 }
