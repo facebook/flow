@@ -599,6 +599,11 @@ let rec make_error_printable :
             text (spf " as type prediate for parameter `%s`" param_name);
           ]
         in
+        let (all_frames, explanations) = frames in
+        let explanation =
+          [text "A user defined type guard needs to be compatible with its parameter's type"]
+        in
+        let frames = (all_frames, explanation :: explanations) in
         root loc frames guard_type message
       | Frame (ConstrainedAssignment { name; declaration; providers; array }, use_op) ->
         let noun =

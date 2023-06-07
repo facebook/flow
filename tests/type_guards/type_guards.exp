@@ -529,8 +529,8 @@ References:
 
 Error -------------------------------------------------------------------------------- type_guard_compatibility.js:15:30
 
-Cannot use `B` [1] as type prediate for parameter `x` because `B` [1] is incompatible with `A` [2].
-[incompatible-type-guard]
+Cannot use `B` [1] as type prediate for parameter `x` because `B` [1] is incompatible with `A` [2]. A user defined type
+guard needs to be compatible with its parameter's type. [incompatible-type-guard]
 
    type_guard_compatibility.js:15:30
    15| function error_1(x: A): x is B { // error B ~> A
@@ -545,7 +545,7 @@ References:
 Error -------------------------------------------------------------------------------- type_guard_compatibility.js:19:59
 
 Cannot use array type [1] as type prediate for parameter `x` because mixed [2] is incompatible with `X` [3] in array
-element. [incompatible-type-guard]
+element. A user defined type guard needs to be compatible with its parameter's type. [incompatible-type-guard]
 
    type_guard_compatibility.js:19:59
    19| declare function error_poly_1<X>(x: Array<X>): x is Array<mixed>; // error mixed ~> X
@@ -562,8 +562,8 @@ References:
 
 Error -------------------------------------------------------------------------------- type_guard_compatibility.js:27:33
 
-Cannot use `B` [1] as type prediate for parameter `x` because `B` [1] is incompatible with `A` [2].
-[incompatible-type-guard]
+Cannot use `B` [1] as type prediate for parameter `x` because `B` [1] is incompatible with `A` [2]. A user defined type
+guard needs to be compatible with its parameter's type. [incompatible-type-guard]
 
    type_guard_compatibility.js:27:33
    27| type F_error_1 = (x: A) => x is B; // error B ~> A
@@ -578,7 +578,7 @@ References:
 Error -------------------------------------------------------------------------------- type_guard_compatibility.js:29:54
 
 Cannot use array type [1] as type prediate for parameter `x` because mixed [2] is incompatible with `X` [3] in array
-element. [incompatible-type-guard]
+element. A user defined type guard needs to be compatible with its parameter's type. [incompatible-type-guard]
 
    type_guard_compatibility.js:29:54
    29| type F_error_poly_1 = <X>(x: Array<X>) => x is Array<mixed>; // error mixed ~> X
@@ -596,7 +596,7 @@ References:
 Error -------------------------------------------------------------------------------- type_guard_compatibility.js:30:54
 
 Cannot use array type [1] as type prediate for parameter `x` because mixed [2] is incompatible with `X` [3] in array
-element. [incompatible-type-guard]
+element. A user defined type guard needs to be compatible with its parameter's type. [incompatible-type-guard]
 
    type_guard_compatibility.js:30:54
    30| type F_error_poly_2<X> = (x: Array<X>) => x is Array<mixed>; // error mixed ~> X
