@@ -270,3 +270,27 @@ require.js:49:20
 Flags:
 [LIB] libs/lib.js:9:16,9:21
 
+imports_from_cjs.js:1:10
+Flags:
+[LIB] libs/lib.js:8:5,8:7
+
+imports_from_cjs.js:3:10
+Flags:
+[LIB] libs/lib.js:8:5,8:7
+
+imports_from_cjs.js:5:17
+Flags:
+[LIB] libs/lib.js:8:5,8:7
+
+imports_from_cjs.js:7:10
+Flags:
+[LIB] libs/lib.js:9:5,9:7
+
+imports_from_cjs.js:9:10
+Flags:
+[LIB] libs/lib.js:9:5,9:7
+
+imports_from_cjs.js:11:17
+Flags:
+[LIB] libs/lib.js:9:5,9:7
+
