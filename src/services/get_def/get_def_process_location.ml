@@ -35,8 +35,6 @@ let rec process_type_request cx =
     (match Reason.annot_loc_of_reason r with
     | Some aloc -> Ok aloc
     | None -> process_type_request cx t)
-  | DefT (_, _, TypeT ((ImportTypeofKind | ImportClassKind | ImportEnumKind), t)) ->
-    process_type_request cx t
   | t ->
     let r = TypeUtil.reason_of_t t in
     let aloc =
