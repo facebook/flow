@@ -1502,3 +1502,25 @@ x++;
       (7, 0) to (7, 1) =>
       (5, 2) to (5, 3) =>
       (4, 10) to (4, 11) |}]
+
+let%expect_test "illegal contextual with reference to param in return annot" =
+  print_order_test {|
+declare var f: any;
+f((x): typeof x => x);
+|};
+    [%expect{|
+       (2, 12) to (2, 13) =>
+       illegal self-cycle ((3, 3) to (3, 4)) =>
+       (3, 2) to (3, 20)
+       |}]
+
+let%expect_test "contextual type guard" =
+  print_order_test {|
+declare var f: any;
+f((x): x is number => true);
+|};
+    [%expect{|
+       (2, 12) to (2, 13) =>
+       (3, 3) to (3, 4) =>
+       (3, 2) to (3, 26)
+       |}]

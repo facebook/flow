@@ -519,6 +519,13 @@ struct
           let _argument' = this#function_param_pattern_annotated argument in
           expr
 
+        method! type_guard guard =
+          let open Ast.Type.TypeGuard in
+          let (_, { guard = (_x, t); _ }) = guard in
+          (* We don't need to include the type guard name here *)
+          let _ = Flow_ast_mapper.map_opt this#type_ t in
+          guard
+
         method! function_ loc expr =
           let { Ast.Function.id; params; return; _ } = expr in
           if not named_only_for_synthesis then (
