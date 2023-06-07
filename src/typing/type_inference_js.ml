@@ -331,23 +331,34 @@ let scan_for_lint_suppressions =
       (severity_cover_builder, running_settings, suppression_locs, errs)
     | None -> acc
   in
-  fun ~in_libdef file_key base_settings acc errs comments ->
-    let severity_cover_builder = ExactCover.new_builder file_key base_settings in
-    let (severity_cover_builder, _, suppression_locs, errs) =
-      List.fold_left
-        (process_comment ~in_libdef)
-        (severity_cover_builder, base_settings, Loc_collections.LocSet.empty, errs)
-        comments
-    in
-    let severity_cover = ExactCover.bake severity_cover_builder in
-    let acc = Error_suppressions.add_lint_suppressions suppression_locs acc in
-    (severity_cover, acc, errs)
+  fun ~in_libdef base_settings acc errs file_keys_with_comments ->
+    Base.List.fold
+      file_keys_with_comments
+      ~init:(Utils_js.FilenameMap.empty, acc, errs)
+      ~f:(fun (severity_covers, acc, errs) (file_key, comments) ->
+        let severity_cover_builder = ExactCover.new_builder file_key base_settings in
+        let (severity_cover_builder, _, suppression_locs, errs) =
+          List.fold_left
+            (process_comment ~in_libdef)
+            (severity_cover_builder, base_settings, Loc_collections.LocSet.empty, errs)
+            comments
+        in
+        let severity_cover = ExactCover.bake severity_cover_builder in
+        let acc = Error_suppressions.add_lint_suppressions suppression_locs acc in
+        (Utils_js.FilenameMap.add file_key severity_cover severity_covers, acc, errs)
+    )
 
-let scan_for_suppressions ~in_libdef file_key lint_severities comments =
-  let comments = List.sort (fun (loc1, _) (loc2, _) -> Loc.compare loc1 loc2) comments in
+let scan_for_suppressions ~in_libdef lint_severities file_keys_with_comments =
+  let file_keys_with_comments =
+    Base.List.map file_keys_with_comments ~f:(fun (file, comments) ->
+        (file, List.sort (fun (loc1, _) (loc2, _) -> Loc.compare loc1 loc2) comments)
+    )
+  in
   let acc = Error_suppressions.empty in
-  let (acc, errs) = scan_for_error_suppressions acc [] comments in
-  scan_for_lint_suppressions ~in_libdef file_key lint_severities acc errs comments
+  let (acc, errs) =
+    scan_for_error_suppressions acc [] (Base.List.bind file_keys_with_comments ~f:snd)
+  in
+  scan_for_lint_suppressions ~in_libdef lint_severities acc errs file_keys_with_comments
 
 module Statement = Fix_statement.Statement_
 
@@ -455,7 +466,7 @@ let infer_ast ~lint_severities cx filename comments aloc_ast =
     let typed_statements = infer_core cx aloc_statements in
 
     let (severity_cover, suppressions, suppression_errors) =
-      scan_for_suppressions ~in_libdef:false filename lint_severities comments
+      scan_for_suppressions ~in_libdef:false lint_severities [(filename, comments)]
     in
     Context.add_severity_covers cx severity_cover;
     Context.add_error_suppressions cx suppressions;
@@ -601,7 +612,7 @@ let infer_lib_file ~exclude_syms ~lint_severities cx ast =
   try
     initialize_env ~lib:true ~exclude_syms cx aloc_ast Name_def.Global;
     let (severity_cover, suppressions, suppression_errors) =
-      scan_for_suppressions ~in_libdef:true (Context.file cx) lint_severities all_comments
+      scan_for_suppressions ~in_libdef:true lint_severities [(Context.file cx, all_comments)]
     in
     Context.add_severity_covers cx severity_cover;
     Context.add_error_suppressions cx suppressions;
