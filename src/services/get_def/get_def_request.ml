@@ -17,7 +17,6 @@ type ('M, 'T) t =
       loc: 'T;
     }
   | Type of 'T
-  | Typeof of 'T
   | Member of ('M, 'T) member_info
   | JsxAttribute of {
       component_t: 'T;

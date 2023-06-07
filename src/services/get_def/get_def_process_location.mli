@@ -11,8 +11,7 @@ type result =
   | Empty of string
   | LocNotFound
 
-val process_type_request :
-  Context.t -> ('M, 'T) Get_def_request.t -> Type.t -> (ALoc.t, string) Stdlib.result
+val process_type_request : Context.t -> Type.t -> (ALoc.t, string) Stdlib.result
 
 val process_location_in_typed_ast :
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->

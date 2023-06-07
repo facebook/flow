@@ -22,24 +22,21 @@ type result =
 
    for now, we only implement Go to Definition; if we want to do Go to Type
    Definition, it would ignore the annot loc. *)
-let rec process_type_request cx request =
+let rec process_type_request cx =
   let open Type in
   function
   | OpenT _ as t ->
     (match Flow_js_utils.possible_types_of_type cx t with
-    | [t'] -> process_type_request cx request t'
+    | [t'] -> process_type_request cx t'
     | [] -> Error "No possible types"
     | _ :: _ -> Error "More than one possible type")
   | AnnotT (r, t, _) ->
-    (match request with
-    | Get_def_request.Typeof _ -> process_type_request cx request t
-    | _ ->
-      (* `annot_aloc` is set when an AnnotT is the result of an actual source annotation *)
-      (match Reason.annot_loc_of_reason r with
-      | Some aloc -> Ok aloc
-      | None -> process_type_request cx request t))
+    (* `annot_aloc` is set when an AnnotT is the result of an actual source annotation *)
+    (match Reason.annot_loc_of_reason r with
+    | Some aloc -> Ok aloc
+    | None -> process_type_request cx t)
   | DefT (_, _, TypeT ((ImportTypeofKind | ImportClassKind | ImportEnumKind), t)) ->
-    process_type_request cx request t
+    process_type_request cx t
   | t ->
     let r = TypeUtil.reason_of_t t in
     let aloc =
@@ -154,7 +151,7 @@ class searcher ~(is_legit_require : ALoc.t * Type.t -> bool) ~(covers_target : A
 
     method! import_declaration loc decl =
       let open Flow_ast.Statement.ImportDeclaration in
-      let { default; _ } = decl in
+      let { default; specifiers; source; _ } = decl in
       Base.Option.iter default ~f:(fun { identifier = (annot, _); remote_default_name_def_loc } ->
           if annot_covers_target annot then
             match remote_default_name_def_loc with
@@ -163,17 +160,12 @@ class searcher ~(is_legit_require : ALoc.t * Type.t -> bool) ~(covers_target : A
               this#request
                 (Get_def_request.Fail "unresolvable remote def_loc for import default specifier")
       );
+      Base.Option.iter specifiers ~f:(function
+          | ImportNamedSpecifiers _ -> ()
+          | ImportNamespaceSpecifier (l, _) ->
+            if covers_target l then this#request (Get_def_request.Type (fst source))
+          );
       super#import_declaration loc decl
-
-    method! import_namespace_specifier ~import_kind loc id =
-      let open Flow_ast.Statement.ImportDeclaration in
-      let (annot, _) = id in
-      ( if covers_target loc then
-        match import_kind with
-        | ImportTypeof -> this#request (Get_def_request.Typeof annot)
-        | _ -> this#request (Get_def_request.Type annot)
-      );
-      id
 
     method! export_source source_annot lit =
       if annot_covers_target source_annot then this#request (Get_def_request.Type source_annot);
