@@ -1,3 +1,24 @@
+### 0.208.0
+
+Likely to cause new Flow errors:
+* Flow will now error on unsupported statements in library definitions, instead of silently ignoring them.
+* Flow will error more consistently when variables of type any and empty are used as types (e.g. [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAJwKYEMwBcD6aArlLnALYYrgA2WAzvXGCADQgYAeOBARgJ74AJhhhYiNXClzEM7DFCLl602QF92kEdQA6uHbBJ440AAQksUKBFxZcGIfgAOWNFnL4G+XPycYAFJwAlKbApgD04aZcfngO0WhoEGim5HCMcFAIALQ0EGBYNNmW1vpQpqYwRmRmMBAQ-gYVFZzIppysEVH0ABYQEkIJSSkA7nC4PaYAboVEGMX02T5+Tc38bR1dpr39NIMYicmmYxPTs-MMS74YqyHAagYPUAZVUMZmGOROPvgzaJ70bzXfx3VYiMB0TBnFIYNqfb78ADcq1e73KdQarWidzUWx2AyGRxOkxmNDmCyuKygajYICmByY0GoUwADAA6ABMLIAbGyWSA1EA))
+
+IDE:
+* Get definition request will now consistently jump to the name of the definition for ES module exports.
+* In find local references, if a reference appears in a named import, it will no longer highlight the entire import as reference. Instead, it will only highlight the relevant name.
+
+Notable bug fixes:
+* Parameter types can now refer to previous parameters in the same parameter list (e.g. `function f(x: number, y: typeof x) {}`)
+* Report error when a function parameter is redeclared in its body in functions that have default params (e.g. [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAJwKYEMwBcD6aArlLnALYYrgA2WAzvXGCADQgYAeOBARgJ74AJhhhYiNXClzEM7DFCLl602QF92kEdRgk8caAAIYUABSdkhxeV4Y0rQ-0vXbaQwF5DARgCUh4AA6UIaGNBi4hpwehgAMANyGAPSJhgDucDQ0VhCphraGWMF2aBBBamwgAG52TNDUlTEAdABMMQBsjTEgakA))
+* For all declared names (declare class/var/let/const), we will allow full forward reference. All reads of these values will be considered to be initialized.
+
+Misc:
+* Changed React.Element to support a second type argument, as supported by React$Element
+
+Library Definitions:
+* Updated dom libdefs to allow Trusted Type objects
+
 ### 0.207.0
 
 Likely to cause new Flow errors:
