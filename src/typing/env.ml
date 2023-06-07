@@ -902,15 +902,15 @@ let init_builtins_from_libdef cx =
     let desc = Reason.(RModule (OrdinaryName (File_key.to_string filename))) in
     Reason.mk_reason desc read_loc
   in
-  Base.List.map
-    env.Loc_env.var_info.Env_api.toplevel_members
-    ~f:(fun (name, { Env_api.write_locs; val_kind; id; _ }) ->
-      let lookup_mode =
-        match val_kind with
-        | Some (Env_api.Type _) -> ForType
-        | _ -> ForValue
-      in
-      let t = type_of_state ~lookup_mode cx env read_loc read_reason write_locs id None in
-      Flow_js.set_builtin cx name t;
-      name
-  )
+  env.Loc_env.var_info.Env_api.toplevel_members
+  |> NameUtils.Map.elements
+  |> Base.List.map ~f:(fun (name, { Env_api.write_locs; val_kind; id; _ }) ->
+         let lookup_mode =
+           match val_kind with
+           | Some (Env_api.Type _) -> ForType
+           | _ -> ForValue
+         in
+         let t = type_of_state ~lookup_mode cx env read_loc read_reason write_locs id None in
+         Flow_js.set_builtin cx name t;
+         name
+     )

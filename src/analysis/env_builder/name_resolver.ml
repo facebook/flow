@@ -844,7 +844,7 @@ module Make
        types. *)
     write_entries: Env_api.env_entry EnvMap.t;
     predicate_refinement_maps: Env_api.predicate_refinement_maps;
-    toplevel_members: Env_api.toplevel_member list;
+    toplevel_members: Env_api.read NameUtils.Map.t;
     module_toplevel_members: Env_api.toplevel_member list L.LMap.t;
     curr_id: int;
     (* Maps refinement ids to refinements. This mapping contains _all_ the refinements reachable at
@@ -1315,7 +1315,7 @@ module Make
         {
           values = L.LMap.empty;
           write_entries;
-          toplevel_members = [];
+          toplevel_members = NameUtils.Map.empty;
           module_toplevel_members = L.LMap.empty;
           predicate_refinement_maps = L.LMap.empty;
           curr_id = 0;
@@ -5592,7 +5592,7 @@ module Make
                  )
             in
             let statements =
-              Base.List.filter_map statements ~f:(function
+              Base.List.rev_filter_map statements ~f:(function
                   | ( _,
                       Ast.Statement.DeclareModule
                         {
@@ -5611,7 +5611,9 @@ module Make
                   | _ -> None
                   )
             in
-            let toplevel_members = Base.List.rev_append rev_bindings statements in
+            let toplevel_members =
+              Base.List.rev_append rev_bindings statements |> NameUtils.Map.of_list
+            in
             env_state <- { env_state with toplevel_members }
         )
     end
