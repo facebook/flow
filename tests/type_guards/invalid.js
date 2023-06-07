@@ -13,3 +13,5 @@ class Invalid_type_guard_positions {
     return true;
   }
 }
+
+function no_return(x: mixed): x is number {}

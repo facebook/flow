@@ -6,6 +6,21 @@ Cannot find type guard parameter `this` [1] in the parameters of this function (
                  ^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------- invalid.js:17:31
+
+Cannot declare a type predicate [1] for function [2] because boolean [1] is incompatible with implicitly-returned
+undefined. [incompatible-return]
+
+   invalid.js:17:31
+   17| function no_return(x: mixed): x is number {}
+                                     ^^^^^^^^^^^ [1]
+
+References:
+   invalid.js:17:1
+   17| function no_return(x: mixed): x is number {}
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------- patterns_and_rest.js:1:54
 
 A type guard parameter `b` [1] cannot reference pattern parameter `b` [2]. [function-predicate]
@@ -652,7 +667,7 @@ Cannot find type guard parameter `x` [1] in the parameters of this function (typ
 
 
 
-Found 40 errors
+Found 41 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

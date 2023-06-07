@@ -578,8 +578,8 @@ let rec mod_loc_of_virtual_use_op f =
           args = Base.List.map ~f:mod_reason args;
         }
     | FunReturnStatement { value } -> FunReturnStatement { value = mod_reason value }
-    | FunImplicitReturn { fn; upper } ->
-      FunImplicitReturn { fn = mod_reason fn; upper = mod_reason upper }
+    | FunImplicitReturn { fn; upper; predicate } ->
+      FunImplicitReturn { fn = mod_reason fn; upper = mod_reason upper; predicate }
     | GeneratorYield { value } -> GeneratorYield { value = mod_reason value }
     | GetProperty reason -> GetProperty (mod_reason reason)
     | IndexedTypeAccess { _object; index } ->

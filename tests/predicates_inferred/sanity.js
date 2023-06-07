@@ -23,3 +23,5 @@ function bak(z: string | number): number {
     return z.length;
   }
 }
+
+function missing_body(x: mixed): %checks {}

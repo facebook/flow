@@ -519,7 +519,18 @@ let rec make_error_printable :
           [text "Cannot call "; desc fn; text " with "; desc lower; text " bound to "; param]
       | Op (FunReturnStatement { value }) ->
         root loc frames value [text "Cannot return "; desc value]
-      | Op (FunImplicitReturn { upper; fn }) ->
+      | Op (FunImplicitReturn { upper; fn; predicate = true }) ->
+        root
+          loc
+          frames
+          upper
+          [
+            text "Cannot declare a ";
+            ref (mk_reason (RCustom "type predicate") (loc_of_reason upper));
+            text " for ";
+            ref fn;
+          ]
+      | Op (FunImplicitReturn { upper; fn; _ }) ->
         root
           loc
           frames

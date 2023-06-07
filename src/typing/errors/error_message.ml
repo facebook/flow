@@ -676,7 +676,6 @@ and unsupported_syntax =
   | PredicateDeclarationWithoutExpression
   | PredicateDeclarationAnonymousParameters
   | PredicateInvalidBody
-  | PredicateVoidReturn
   | MultipleIndexers
   | MultipleProtos
   | ExplicitCallAfterProto
@@ -2830,7 +2829,6 @@ let friendly_message_of_msg loc_of_aloc msg =
           text "Invalid body for predicate function. Expected a simple return ";
           text "statement as body.";
         ]
-      | PredicateVoidReturn -> [text "Predicate functions need to return non-void."]
       | MultipleIndexers -> [text "Multiple indexers are not supported."]
       | MultipleProtos -> [text "Multiple prototypes specified."]
       | ExplicitCallAfterProto -> [text "Unexpected call property after explicit prototype."]

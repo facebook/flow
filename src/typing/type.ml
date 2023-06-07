@@ -324,6 +324,7 @@ module rec TypeTerm : sig
     | FunImplicitReturn of {
         fn: 'loc virtual_reason;
         upper: 'loc virtual_reason;
+        predicate: bool;
       }
     | GeneratorYield of { value: 'loc virtual_reason }
     | GetProperty of 'loc virtual_reason

@@ -440,13 +440,23 @@ struct
           | Ordinary
           | Ctor ->
             let t = VoidT.at loc |> with_trust bogus_trust in
-            let use_op = Op (FunImplicitReturn { fn = reason_fn; upper = reason_of_t return_t }) in
+            let use_op =
+              Op
+                (FunImplicitReturn
+                   { fn = reason_fn; upper = reason_of_t return_t; predicate = false }
+                )
+            in
             (use_op, t, None)
           | Async ->
             let reason = mk_annot_reason (RType (OrdinaryName "Promise")) loc in
             let void_t = VoidT.at loc |> with_trust bogus_trust in
             let t = Flow.get_builtin_typeapp cx reason (OrdinaryName "Promise") [void_t] in
-            let use_op = Op (FunImplicitReturn { fn = reason_fn; upper = reason_of_t return_t }) in
+            let use_op =
+              Op
+                (FunImplicitReturn
+                   { fn = reason_fn; upper = reason_of_t return_t; predicate = false }
+                )
+            in
             let use_op = Frame (ImplicitTypeParam, use_op) in
             (use_op, t, None)
           | Generator _ ->
@@ -459,7 +469,12 @@ struct
                 (OrdinaryName "Generator")
                 [yield_t; void_t; next_t]
             in
-            let use_op = Op (FunImplicitReturn { fn = reason_fn; upper = reason_of_t return_t }) in
+            let use_op =
+              Op
+                (FunImplicitReturn
+                   { fn = reason_fn; upper = reason_of_t return_t; predicate = false }
+                )
+            in
             let use_op = Frame (ImplicitTypeParam, use_op) in
             (use_op, t, None)
           | AsyncGenerator _ ->
@@ -472,7 +487,12 @@ struct
                 (OrdinaryName "AsyncGenerator")
                 [yield_t; void_t; next_t]
             in
-            let use_op = Op (FunImplicitReturn { fn = reason_fn; upper = reason_of_t return_t }) in
+            let use_op =
+              Op
+                (FunImplicitReturn
+                   { fn = reason_fn; upper = reason_of_t return_t; predicate = false }
+                )
+            in
             let use_op = Frame (ImplicitTypeParam, use_op) in
             (use_op, t, None)
           | FieldInit e ->
@@ -481,10 +501,13 @@ struct
             let use_op = Op (InitField { op = reason_fn; body }) in
             (use_op, t, Some ast)
           | Predicate _ ->
-            let loc = loc_of_reason reason in
-            Flow_js.add_output cx Error_message.(EUnsupportedSyntax (loc, PredicateVoidReturn));
             let t = VoidT.at loc |> with_trust bogus_trust in
-            let use_op = Op (FunImplicitReturn { fn = reason_fn; upper = reason_of_t return_t }) in
+            let use_op =
+              Op
+                (FunImplicitReturn
+                   { fn = reason_fn; upper = reason_of_t return_t; predicate = true }
+                )
+            in
             (use_op, t, None)
         in
 

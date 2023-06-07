@@ -144,5 +144,13 @@ References:
                                 ^^^^^^ [1]
 
 
+Error -------------------------------------------------------------------------------------------------- sanity.js:27:42
 
-Found 10 errors
+Invalid body for predicate function. Expected a simple return statement as body. [unsupported-syntax]
+
+   27| function missing_body(x: mixed): %checks {}
+                                                ^^
+
+
+
+Found 11 errors
