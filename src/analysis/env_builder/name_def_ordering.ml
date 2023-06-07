@@ -374,10 +374,10 @@ struct
           ()
 
         method component_def (expr : ('loc, 'loc) Ast.Statement.ComponentDeclaration.t) =
-          let { Ast.Statement.ComponentDeclaration.params; body; return; tparams; _ } = expr in
+          let { Ast.Statement.ComponentDeclaration.params; body; renders; tparams; _ } = expr in
           let open Flow_ast_mapper in
           let _ = this#function_body body in
-          let _ = this#type_annotation_hint return in
+          let _ = this#type_annotation_hint renders in
           let _ = this#component_params_annotated params in
           let _ = map_opt this#type_params tparams in
           ()

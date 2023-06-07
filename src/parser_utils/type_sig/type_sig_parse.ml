@@ -3207,7 +3207,7 @@ and component_def =
       tparams = tps;
       params = (loc, { C.Params.params = ps; rest = rp; comments = _ });
       body = _;
-      return = r;
+      renders = r;
       sig_loc = _;
       comments = _;
     } =
@@ -4164,7 +4164,7 @@ let declare_component_decl _opts scope tbls decl =
     Ast.Statement.DeclareComponent.id = (id_loc, { Ast.Identifier.name; comments = _ });
     params = _;
     tparams = _;
-    return = _;
+    renders = _;
     comments = _;
   } =
     decl

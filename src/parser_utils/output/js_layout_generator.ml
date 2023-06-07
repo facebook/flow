@@ -2061,7 +2061,7 @@ and component_declaration ~opts loc component =
     Ast.Statement.ComponentDeclaration.id;
     params;
     body;
-    return;
+    renders;
     tparams;
     comments;
     sig_loc = _;
@@ -2069,9 +2069,9 @@ and component_declaration ~opts loc component =
     component
   in
   let prefix = fuse [Atom "component"; space; identifier id] in
-  component_base ~opts ~prefix ~params ~body ~return ~tparams ~loc ~comments
+  component_base ~opts ~prefix ~params ~body ~renders ~tparams ~loc ~comments
 
-and component_base ~opts ~prefix ~params ~body ~return ~tparams ~loc ~comments =
+and component_base ~opts ~prefix ~params ~body ~renders ~tparams ~loc ~comments =
   let (params_loc, { Ast.Statement.ComponentDeclaration.Params.comments = params_comments; _ }) =
     params
   in
@@ -2086,7 +2086,7 @@ and component_base ~opts ~prefix ~params ~body ~return ~tparams ~loc ~comments =
                params_loc
                params_comments
                (component_params ~ctxt:normal_context ~opts params);
-             component_return ~opts return;
+             component_renders ~opts renders;
            ];
          pretty_space;
          block ~opts body;
@@ -2159,7 +2159,7 @@ and component_param_name ~opts = function
     string_literal ~opts loc lit
   | None -> failwith "Internal Error: Expected value to exist for component declaration param name"
 
-and component_return ~opts return =
+and component_renders ~opts return =
   match return with
   | Ast.Type.Missing _ -> Empty
   | Ast.Type.Available ret -> type_annotation ~opts ~parens:false ret
@@ -4272,7 +4272,7 @@ and declare_component
       Ast.Statement.DeclareComponent.id;
       tparams;
       params = (params_loc, { Ast.Type.Component.Params.comments = params_comments; _ }) as params;
-      return;
+      renders;
       comments;
     } =
   layout_node_with_comments_opt loc comments
@@ -4292,7 +4292,7 @@ and declare_component
                   params_loc
                   params_comments
                   (component_type_params ~opts params);
-                hint (type_annotation ~opts) return;
+                hint (type_annotation ~opts) renders;
               ];
           ]
        )
@@ -4303,7 +4303,7 @@ and type_component
     {
       Ast.Type.Component.tparams;
       params = (params_loc, { Ast.Type.Component.Params.comments = params_comments; _ }) as params;
-      return;
+      renders;
       comments;
     } =
   layout_node_with_comments_opt loc comments
@@ -4319,7 +4319,7 @@ and type_component
                   params_loc
                   params_comments
                   (component_type_params ~opts params);
-                hint (type_annotation ~opts) return;
+                hint (type_annotation ~opts) renders;
               ];
           ]
        )

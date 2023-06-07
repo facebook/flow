@@ -256,7 +256,7 @@ and Type : sig
     type ('M, 'T) t = {
       tparams: ('M, 'T) Type.TypeParams.t option;
       params: ('M, 'T) Params.t;
-      return: ('M, 'T) Type.annotation_or_hint;
+      renders: ('M, 'T) Type.annotation_or_hint;
       comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
@@ -1012,7 +1012,7 @@ and Statement : sig
       id: ('M, 'T) Identifier.t;
       tparams: ('M, 'T) Type.TypeParams.t option;
       params: ('M, 'T) Params.t;
-      return: ('M, 'T) Type.annotation_or_hint;
+      renders: ('M, 'T) Type.annotation_or_hint;
       body: 'M * ('M, 'T) Statement.Block.t;
       comments: ('M, unit) Syntax.t option;
       (* Location of the signature portion of a component, e.g.
@@ -1053,7 +1053,7 @@ and Statement : sig
       id: ('M, 'T) Identifier.t;
       tparams: ('M, 'T) Type.TypeParams.t option;
       params: ('M, 'T) Type.Component.Params.t;
-      return: ('M, 'T) Type.annotation_or_hint;
+      renders: ('M, 'T) Type.annotation_or_hint;
       comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]

@@ -45,7 +45,7 @@
           "shorthand":true
         }
       ],
-      "returnType":null,
+      "rendersType":null,
       "typeParameters":null
     },
     {
@@ -108,7 +108,7 @@
           "shorthand":true
         }
       ],
-      "returnType":null,
+      "rendersType":null,
       "typeParameters":null
     },
     {
@@ -175,7 +175,7 @@
           "shorthand":true
         }
       ],
-      "returnType":null,
+      "rendersType":null,
       "typeParameters":null
     },
     {
@@ -278,7 +278,7 @@
           "shorthand":true
         }
       ],
-      "returnType":null,
+      "rendersType":null,
       "typeParameters":null
     }
   ],

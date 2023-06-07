@@ -642,7 +642,7 @@ end = struct
       (* As above, since components compile to function declarations *)
       method! component_declaration loc (expr : ('loc, 'loc) Ast.Statement.ComponentDeclaration.t) =
         let open Ast.Statement.ComponentDeclaration in
-        let { id = ident; tparams; params; body; return; comments; sig_loc = _ } = expr in
+        let { id = ident; tparams; params; body; renders; comments; sig_loc = _ } = expr in
         let _ident' = this#component_identifier ident in
         this#enter_possibly_polymorphic_scope
           ~is_polymorphic:(Option.is_some tparams)
@@ -651,7 +651,7 @@ end = struct
             let _tparams' = map_opt this#type_params tparams in
             let _params' = this#component_params params in
             let _body' = this#component_body body in
-            let _return' = this#type_annotation_hint return in
+            let _renders' = this#type_annotation_hint renders in
             let _comments' = this#syntax_opt comments in
             expr)
           loc
@@ -965,7 +965,7 @@ end = struct
 
       method! component_declaration loc (expr : ('loc, 'loc) Ast.Statement.ComponentDeclaration.t) =
         let open Ast.Statement.ComponentDeclaration in
-        let { id = ident; tparams; params; body; return; comments; sig_loc = _ } = expr in
+        let { id = ident; tparams; params; body; renders; comments; sig_loc = _ } = expr in
         let init_state = Annotation { predicate = false; contextual = false } in
         let _ident' =
           this#in_context
@@ -980,7 +980,7 @@ end = struct
             let _tparams' = map_opt this#type_params tparams in
             let _params' = this#component_params params in
             let _body' = this#component_body body in
-            let _return' = this#type_annotation_hint return in
+            let _renders' = this#type_annotation_hint renders in
             let _comments' = this#syntax_opt comments in
             expr)
           loc

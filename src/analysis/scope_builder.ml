@@ -725,7 +725,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         in
         if not skip_scope then (
           let open Ast.Statement.ComponentDeclaration in
-          let { id; params; body; return; tparams; sig_loc = _; comments = _ } = expr in
+          let { id; params; body; renders; tparams; sig_loc = _; comments = _ } = expr in
           ignore @@ this#component_identifier id;
           this#scoped_type_params
             ~hoist_op:this#hoist_annotations
@@ -733,7 +733,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             ~in_tparam_scope:(fun () ->
               this#component_body_with_params ~component_loc:loc body params;
               if with_types then
-                this#hoist_annotations (fun () -> ignore @@ this#type_annotation_hint return)
+                this#hoist_annotations (fun () -> ignore @@ this#type_annotation_hint renders)
           )
         );
         expr

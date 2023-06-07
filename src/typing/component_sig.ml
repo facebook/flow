@@ -11,7 +11,7 @@ open Reason
 open Type
 open TypeUtil
 
-class component_scope_visitor cx ~return_t exhaust =
+class component_scope_visitor cx ~renders_t exhaust =
   object (this)
     inherit
       [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
@@ -53,7 +53,7 @@ class component_scope_visitor cx ~return_t exhaust =
              }
           )
       in
-      Flow.flow cx (t, UseT (use_op, return_t))
+      Flow.flow cx (t, UseT (use_op, renders_t))
   end
 
 module Make
@@ -70,7 +70,7 @@ module Make
   module Types = T
 
   let toplevels cx x =
-    let { T.reason = reason_cmp; cparams; body; ret_annot_loc = _; return_t; _ } = x in
+    let { T.reason = reason_cmp; cparams; body; ret_annot_loc = _; renders_t; _ } = x in
     let (body_loc, body_block) = body in
 
     (* add param bindings *)
@@ -108,14 +108,14 @@ module Make
             ( Tvar.mk cx (replace_desc_reason (RCustom "maybe_exhaustively_checked") reason_cmp),
               exhaustive,
               ImplicitVoidReturnT
-                { use_op; reason = reason_of_t return_t; action = NoImplicitReturns reason_cmp }
+                { use_op; reason = reason_of_t renders_t; action = NoImplicitReturns reason_cmp }
             )
       else
         None
     in
 
     let body_ast = reconstruct_body statements_ast in
-    let () = (new component_scope_visitor cx ~return_t exhaust)#visit statements_ast in
+    let () = (new component_scope_visitor cx ~renders_t exhaust)#visit statements_ast in
 
     Base.Option.iter exhaust ~f:(fun (maybe_exhaustively_checked, _, implicit_return) ->
         Flow.flow cx (maybe_exhaustively_checked, implicit_return)
@@ -124,7 +124,7 @@ module Make
     (params_ast, body_ast)
 
   let component_type cx _component_loc x =
-    let { T.reason; tparams; cparams; return_t; _ } = x in
+    let { T.reason; tparams; cparams; renders_t; _ } = x in
     let this_type = Type.implicit_mixed_this reason in
     (* TODO(jmbrown): Better reasons for config. For now, we re-use the component
      * reason *)
@@ -133,7 +133,7 @@ module Make
         Type.this_t = (this_type, This_Function);
         params = [(None, F.config cx reason cparams)];
         rest_param = None;
-        return_t;
+        return_t = renders_t;
         predicate = None;
         def_reason = reason;
       }

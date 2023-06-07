@@ -1197,7 +1197,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
                 }
               );
             body;
-            return;
+            renders;
             tparams = component_tparams;
             sig_loc = _;
             comments = _;
@@ -1207,23 +1207,23 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
           Base.Option.iter component_tparams ~f:(fun tparams -> ignore @@ this#type_params tparams);
           Base.List.iter ~f:(this#visit_component_param ~hints:[]) params_list;
           Base.Option.iter ~f:(this#visit_component_rest_param ~hints:[]) rest;
-          ignore @@ this#type_annotation_hint return;
+          ignore @@ this#type_annotation_hint renders;
 
-          let return_loc =
-            match return with
+          let renders_loc =
+            match renders with
             | Ast.Type.Available (loc, _)
             | Ast.Type.Missing loc ->
               loc
           in
-          let return_hint =
-            match return with
+          let renders_hint =
+            match renders with
             | Ast.Type.Available annot ->
               [Hint_t (AnnotationHint (tparams, annot), ExpectedTypeHint)]
             | Ast.Type.Missing _ -> []
           in
-          this#record_hint return_loc return_hint;
+          this#record_hint renders_loc renders_hint;
           let old_stack = return_hint_stack in
-          return_hint_stack <- return_hint :: return_hint_stack;
+          return_hint_stack <- renders_hint :: return_hint_stack;
           let (body_loc, block) = body in
           ignore @@ this#block body_loc block;
           return_hint_stack <- old_stack)

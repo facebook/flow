@@ -133,8 +133,8 @@ let tests =
       assert_output ~ctxt ~pretty:true "declare component Comp();" layout
     );
     ( "declare_component_with_return_annot" >:: fun ctxt ->
-      let return = Some (Flow_ast.Type.Available (T.annotation @@ T.mixed ())) in
-      let ast = S.declare_component ?return "Comp" in
+      let renders = Some (Flow_ast.Type.Available (T.annotation @@ T.mixed ())) in
+      let ast = S.declare_component ?renders "Comp" in
       let layout = Js_layout_generator.statement ~opts ast in
       assert_output ~ctxt "declare component Comp():mixed;" layout;
       assert_output ~ctxt ~pretty:true "declare component Comp(): mixed;" layout

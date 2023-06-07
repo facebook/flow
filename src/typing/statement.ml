@@ -7365,7 +7365,7 @@ module Make
       let cache = Context.node_cache cx in
       let {
         Ast.Statement.ComponentDeclaration.tparams;
-        return;
+        renders;
         body = (body_loc, _) as body;
         params;
         id;
@@ -7381,11 +7381,11 @@ module Make
           Anno.mk_type_param_declarations cx ~tparams_map tparams
         in
         let cparams = mk_params cx tparams_map params in
-        let (ret_loc, return_t, return_ast) =
-          match return with
+        let (ret_loc, renders_t, renders_ast) =
+          match renders with
           | Ast.Type.Available (loc, annot) ->
-            let (((_, t), _) as return_ast) = Anno.convert cx tparams_map annot in
-            (loc, t, Ast.Type.Available (loc, return_ast))
+            let (((_, t), _) as renders_ast) = Anno.convert cx tparams_map annot in
+            (loc, t, Ast.Type.Available (loc, renders_ast))
           | Ast.Type.Missing loc ->
             let ret_reason = mk_reason RReturn loc in
             let t = Flow.get_builtin_type cx ret_reason (OrdinaryName "React$Node") in
@@ -7396,7 +7396,7 @@ module Make
             tparams;
             cparams;
             body;
-            return_t;
+            renders_t;
             ret_annot_loc = ret_loc;
           },
           fun params body component_type ->
@@ -7406,7 +7406,7 @@ module Make
               Ast.Statement.ComponentDeclaration.id = ((id_loc, component_type), name);
               params;
               body = (body_loc, body);
-              return = return_ast;
+              renders = renders_ast;
               tparams = tparams_ast;
             }
         )

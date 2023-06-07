@@ -608,7 +608,7 @@ module Statements = struct
 
   let component_declaration ?(loc = Loc.none) ?tparams ?params ?return ?comments id body =
     let params' = Base.Option.value ~default:(component_params []) params in
-    let return' = Base.Option.value ~default:(Ast.Type.Missing Loc.none) return in
+    let renders' = Base.Option.value ~default:(Ast.Type.Missing Loc.none) return in
     ( loc,
       ComponentDeclaration
         {
@@ -616,7 +616,7 @@ module Statements = struct
           body;
           tparams;
           params = params';
-          return = return';
+          renders = renders';
           comments;
           sig_loc = Loc.none;
         }
@@ -629,7 +629,7 @@ module Statements = struct
     (loc, { Ast.Type.Component.Params.params; rest; comments })
 
   let declare_component
-      ?(loc = Loc.none) ?tparams ?params ?comments ?(return = Ast.Type.Missing Loc.none) id =
+      ?(loc = Loc.none) ?tparams ?params ?comments ?(renders = Ast.Type.Missing Loc.none) id =
     let params' = Base.Option.value ~default:(component_type_params []) params in
     ( loc,
       DeclareComponent
@@ -637,7 +637,7 @@ module Statements = struct
           Ast.Statement.DeclareComponent.id = Identifiers.identifier id;
           tparams;
           params = params';
-          return;
+          renders;
           comments;
         }
     )

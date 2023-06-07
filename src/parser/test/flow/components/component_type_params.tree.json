@@ -78,7 +78,7 @@
           }
         ],
         "rest":null,
-        "returnType":null,
+        "rendersType":null,
         "typeParameters":null
       }
     },
@@ -121,7 +121,7 @@
           },
           "optional":false
         },
-        "returnType":null,
+        "rendersType":null,
         "typeParameters":null
       }
     }

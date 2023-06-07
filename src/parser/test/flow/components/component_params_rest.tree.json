@@ -36,7 +36,7 @@
           }
         }
       ],
-      "returnType":null,
+      "rendersType":null,
       "typeParameters":null
     },
     {
@@ -90,7 +90,7 @@
           }
         }
       ],
-      "returnType":null,
+      "rendersType":null,
       "typeParameters":null
     },
     {
@@ -148,7 +148,7 @@
           }
         }
       ],
-      "returnType":null,
+      "rendersType":null,
       "typeParameters":null
     },
     {
@@ -242,7 +242,7 @@
           }
         }
       ],
-      "returnType":null,
+      "rendersType":null,
       "typeParameters":null
     }
   ],

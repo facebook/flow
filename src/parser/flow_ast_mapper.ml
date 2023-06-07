@@ -572,19 +572,19 @@ class ['loc] mapper =
     method component_declaration _loc (component : ('loc, 'loc) Ast.Statement.ComponentDeclaration.t)
         =
       let open Ast.Statement.ComponentDeclaration in
-      let { id = ident; tparams; params; body; return; comments; sig_loc } = component in
+      let { id = ident; tparams; params; body; renders; comments; sig_loc } = component in
       let ident' = this#component_identifier ident in
       let tparams' = map_opt this#type_params tparams in
       let params' = this#component_params params in
       let body' = this#component_body body in
-      let return' = this#type_annotation_hint return in
+      let renders' = this#type_annotation_hint renders in
       let comments' = this#syntax_opt comments in
       if
         ident == ident'
         && tparams == tparams'
         && params == params'
         && body == body'
-        && return == return'
+        && renders == renders'
         && comments == comments'
       then
         component
@@ -594,7 +594,7 @@ class ['loc] mapper =
           tparams = tparams';
           params = params';
           body = body';
-          return = return';
+          renders = renders';
           comments = comments';
           sig_loc;
         }
@@ -718,17 +718,17 @@ class ['loc] mapper =
 
     method declare_component _loc (decl : ('loc, 'loc) Ast.Statement.DeclareComponent.t) =
       let open Ast.Statement.DeclareComponent in
-      let { id = ident; tparams; params; return; comments } = decl in
+      let { id = ident; tparams; params; renders; comments } = decl in
       let ident' = this#component_identifier ident in
       let tparams' = map_opt this#type_params tparams in
       let params' = this#component_type_params params in
-      let return' = this#type_annotation_hint return in
+      let renders' = this#type_annotation_hint renders in
       let comments' = this#syntax_opt comments in
       if
         ident == ident'
         && tparams == tparams'
         && params == params'
-        && return == return'
+        && renders == renders'
         && comments == comments'
       then
         decl
@@ -737,21 +737,22 @@ class ['loc] mapper =
           id = ident';
           tparams = tparams';
           params = params';
-          return = return';
+          renders = renders';
           comments = comments';
         }
 
     method component_type _loc (t : ('loc, 'loc) Ast.Type.Component.t) =
       let open Ast.Type.Component in
-      let { tparams; params; return; comments } = t in
+      let { tparams; params; renders; comments } = t in
       let tparams' = map_opt this#type_params tparams in
       let params' = this#component_type_params params in
-      let return' = this#type_annotation_hint return in
+      let renders' = this#type_annotation_hint renders in
       let comments' = this#syntax_opt comments in
-      if tparams == tparams' && params == params' && return == return' && comments == comments' then
+      if tparams == tparams' && params == params' && renders == renders' && comments == comments'
+      then
         t
       else
-        { tparams = tparams'; params = params'; return = return'; comments = comments' }
+        { tparams = tparams'; params = params'; renders = renders'; comments = comments' }
 
     method component_type_params (params : ('loc, 'loc) Ast.Type.Component.Params.t) =
       let open Ast.Type.Component in

@@ -125,7 +125,7 @@ module ComponentSig = struct
       tparams: Type.typeparams;
       cparams: component_params;
       body: ALoc.t * (ALoc.t, ALoc.t) Flow_ast.Statement.Block.t;
-      return_t: Type.t;
+      renders_t: Type.t;
       ret_annot_loc: ALoc.t;
     }
   end
@@ -141,7 +141,7 @@ module ComponentSig = struct
       tparams: Type.typeparams;
       cparams: component_params;
       body: ALoc.t * (ALoc.t, ALoc.t) Flow_ast.Statement.Block.t;
-      return_t: Type.t;
+      renders_t: Type.t;
       ret_annot_loc: ALoc.t;
     }
   end

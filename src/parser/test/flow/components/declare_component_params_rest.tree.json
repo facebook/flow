@@ -37,7 +37,8 @@
         },
         "optional":false
       },
-      "returnType":null,
+      "params":[],
+      "rendersType":null,
       "typeParameters":null
     },
     {
@@ -81,7 +82,8 @@
         },
         "optional":false
       },
-      "returnType":null,
+      "params":[],
+      "rendersType":null,
       "typeParameters":null
     },
     {
@@ -125,7 +127,8 @@
         },
         "optional":true
       },
-      "returnType":null,
+      "params":[],
+      "rendersType":null,
       "typeParameters":null
     },
     {
@@ -198,7 +201,37 @@
         },
         "optional":false
       },
-      "returnType":null,
+      "params":[
+        {
+          "type":"ComponentTypeParameter",
+          "loc":{"source":null,"start":{"line":7,"column":24},"end":{"line":7,"column":32}},
+          "range":[142,150],
+          "name":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":7,"column":24},"end":{"line":7,"column":25}},
+            "range":[142,143],
+            "name":"p",
+            "typeAnnotation":null,
+            "optional":false
+          },
+          "typeAnnotation":{
+            "type":"GenericTypeAnnotation",
+            "loc":{"source":null,"start":{"line":7,"column":27},"end":{"line":7,"column":32}},
+            "range":[145,150],
+            "id":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":7,"column":27},"end":{"line":7,"column":32}},
+              "range":[145,150],
+              "name":"Param",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "typeParameters":null
+          },
+          "optional":false
+        }
+      ],
+      "rendersType":null,
       "typeParameters":null
     }
   ],

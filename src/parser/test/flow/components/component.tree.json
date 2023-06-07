@@ -22,7 +22,7 @@
         "optional":false
       },
       "params":[],
-      "returnType":null,
+      "rendersType":null,
       "typeParameters":null
     },
     {
@@ -48,7 +48,7 @@
           "optional":false
         },
         "params":[],
-        "returnType":null,
+        "rendersType":null,
         "typeParameters":null
       },
       "exportKind":"value"
@@ -76,7 +76,7 @@
           "optional":false
         },
         "params":[],
-        "returnType":null,
+        "rendersType":null,
         "typeParameters":null
       },
       "specifiers":[],
@@ -102,7 +102,7 @@
         "optional":false
       },
       "params":[],
-      "returnType":{
+      "rendersType":{
         "type":"TypeAnnotation",
         "loc":{"source":null,"start":{"line":7,"column":22},"end":{"line":7,"column":37}},
         "range":[126,141],
@@ -142,7 +142,7 @@
         "optional":false
       },
       "params":[],
-      "returnType":null,
+      "rendersType":null,
       "typeParameters":{
         "type":"TypeParameterDeclaration",
         "loc":{"source":null,"start":{"line":9,"column":20},"end":{"line":9,"column":23}},

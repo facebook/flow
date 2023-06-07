@@ -636,7 +636,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
 
   let component =
     with_loc (fun env ->
-        let (sig_loc, (tparams, id, params, return, leading)) =
+        let (sig_loc, (tparams, id, params, renders, leading)) =
           with_loc
             (fun env ->
               let leading = Peek.comments env in
@@ -655,9 +655,9 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
                 else
                   component_params_remove_trailing env params
               in
-              let return = Type.annotation_opt env in
-              let return = type_annotation_hint_remove_trailing env return in
-              (tparams, id, params, return, leading))
+              let renders = Type.annotation_opt env in
+              let renders = type_annotation_hint_remove_trailing env renders in
+              (tparams, id, params, renders, leading))
             env
         in
         let (body, contains_use_strict) = component_body env in
@@ -667,7 +667,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
             Statement.ComponentDeclaration.id;
             params;
             body;
-            return;
+            renders;
             tparams;
             sig_loc;
             comments = Flow_ast_utils.mk_comments_opt ~leading ();

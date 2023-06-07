@@ -16,7 +16,9 @@
         "optional":false
       },
       "params":[],
-      "returnType":null,
+      "rest":null,
+      "params":[],
+      "rendersType":null,
       "typeParameters":null
     },
     {
@@ -37,7 +39,9 @@
           "optional":false
         },
         "params":[],
-        "returnType":null,
+        "rest":null,
+        "params":[],
+        "rendersType":null,
         "typeParameters":null
       },
       "specifiers":[],
@@ -61,7 +65,9 @@
           "optional":false
         },
         "params":[],
-        "returnType":null,
+        "rest":null,
+        "params":[],
+        "rendersType":null,
         "typeParameters":null
       },
       "specifiers":[],
@@ -80,7 +86,9 @@
         "optional":false
       },
       "params":[],
-      "returnType":{
+      "rest":null,
+      "params":[],
+      "rendersType":{
         "type":"TypeAnnotation",
         "loc":{"source":null,"start":{"line":7,"column":24},"end":{"line":7,"column":39}},
         "range":[127,142],
@@ -114,7 +122,9 @@
         "optional":false
       },
       "params":[],
-      "returnType":null,
+      "rest":null,
+      "params":[],
+      "rendersType":null,
       "typeParameters":{
         "type":"TypeParameterDeclaration",
         "loc":{"source":null,"start":{"line":9,"column":22},"end":{"line":9,"column":25}},

@@ -837,7 +837,7 @@ with type t = Impl.t = struct
         Statement.DeclareComponent.id;
         tparams;
         params = (_, { Type.Component.Params.comments = params_comments; _ }) as params;
-        return;
+        renders;
         comments = component_comments;
       } =
         component
@@ -857,14 +857,14 @@ with type t = Impl.t = struct
           ("params", component_type_params param_list);
           ("rest", option component_type_rest_param rest);
           ("params", component_type_params param_list);
-          ("returnType", hint type_annotation return);
+          ("rendersType", hint type_annotation renders);
           ("typeParameters", option type_parameter_declaration tparams);
         ]
     and component_type (loc, component) =
       let {
         Type.Component.tparams;
         params = (_, { Type.Component.Params.comments = params_comments; _ }) as params;
-        return;
+        renders;
         comments = component_comments;
       } =
         component
@@ -882,7 +882,7 @@ with type t = Impl.t = struct
         [
           ("params", component_type_params param_list);
           ("rest", option component_type_rest_param rest);
-          ("returnType", hint type_annotation return);
+          ("rendersType", hint type_annotation renders);
           ("typeParameters", option type_parameter_declaration tparams);
         ]
     and component_type_params params =
@@ -1155,14 +1155,14 @@ with type t = Impl.t = struct
         tparams;
         params = (_, { Params.comments = params_comments; _ }) as params;
         body;
-        return;
+        renders;
         comments = component_comments;
         sig_loc = _;
       } =
         component
       in
-      let return =
-        match return with
+      let renders =
+        match renders with
         | Ast.Type.Missing _ -> None
         | Ast.Type.Available t -> Some t
       in
@@ -1179,7 +1179,7 @@ with type t = Impl.t = struct
           ("body", block body);
           ("id", identifier id);
           ("params", component_params params);
-          ("returnType", option type_annotation return);
+          ("rendersType", option type_annotation renders);
           ("typeParameters", option type_parameter_declaration tparams);
         ]
     and component_params =

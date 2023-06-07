@@ -21,7 +21,8 @@
         "loc":{"source":null,"start":{"line":1,"column":13},"end":{"line":1,"column":24}},
         "range":[13,24],
         "params":[],
-        "returnType":null,
+        "rest":null,
+        "rendersType":null,
         "typeParameters":null
       }
     },
@@ -43,7 +44,8 @@
         "loc":{"source":null,"start":{"line":3,"column":13},"end":{"line":3,"column":39}},
         "range":[40,66],
         "params":[],
-        "returnType":{
+        "rest":null,
+        "rendersType":{
           "type":"TypeAnnotation",
           "loc":{"source":null,"start":{"line":3,"column":24},"end":{"line":3,"column":39}},
           "range":[51,66],
@@ -83,7 +85,8 @@
         "loc":{"source":null,"start":{"line":5,"column":13},"end":{"line":5,"column":27}},
         "range":[82,96],
         "params":[],
-        "returnType":null,
+        "rest":null,
+        "rendersType":null,
         "typeParameters":{
           "type":"TypeParameterDeclaration",
           "loc":{"source":null,"start":{"line":5,"column":22},"end":{"line":5,"column":25}},

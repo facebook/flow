@@ -443,12 +443,12 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           Expect.identifier env "component";
           let tparams = type_params_remove_trailing env (type_params env) in
           let params = component_param_list env in
-          let (params, return) =
+          let (params, renders) =
             match Peek.token env with
             | T_COLON ->
-              let return = annotation_opt env in
-              let return = type_annotation_hint_remove_trailing env return in
-              (params, return)
+              let renders = annotation_opt env in
+              let renders = type_annotation_hint_remove_trailing env renders in
+              (params, renders)
             | _ ->
               let missing_annotation = annotation_opt env in
               (component_type_params_remove_trailing env params, missing_annotation)
@@ -457,7 +457,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
             {
               Type.Component.tparams;
               params;
-              return;
+              renders;
               comments = Flow_ast_utils.mk_comments_opt ~leading ();
             })
         env

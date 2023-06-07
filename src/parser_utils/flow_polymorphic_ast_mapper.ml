@@ -273,18 +273,18 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method component_declaration (component : ('M, 'T) Ast.Statement.ComponentDeclaration.t)
         : ('N, 'U) Ast.Statement.ComponentDeclaration.t =
       let open Ast.Statement.ComponentDeclaration in
-      let { id = ident; params; body; return; tparams; comments; sig_loc } = component in
+      let { id = ident; params; body; renders; tparams; comments; sig_loc } = component in
       let ident' = this#component_identifier ident in
       this#type_params_opt tparams (fun tparams' ->
           let params' = this#component_params params in
-          let return' = this#type_annotation_hint return in
+          let renders' = this#type_annotation_hint renders in
           let body' = this#component_body body in
           let comments' = this#syntax_opt comments in
           let sig_loc' = this#on_loc_annot sig_loc in
           {
             id = ident';
             params = params';
-            return = return';
+            renders = renders';
             body = body';
             tparams = tparams';
             comments = comments';
@@ -539,16 +539,16 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method declare_component (decl : ('M, 'T) Ast.Statement.DeclareComponent.t)
         : ('N, 'U) Ast.Statement.DeclareComponent.t =
       let open Ast.Statement.DeclareComponent in
-      let { id = ident; params; return; tparams; comments } = decl in
+      let { id = ident; params; renders; tparams; comments } = decl in
       let ident' = this#t_identifier ident in
       this#type_params_opt tparams (fun tparams' ->
           let params' = this#component_type_params params in
-          let return' = this#type_annotation_hint return in
+          let renders' = this#type_annotation_hint renders in
           let comments' = this#syntax_opt comments in
           {
             id = ident';
             params = params';
-            return = return';
+            renders = renders';
             tparams = tparams';
             comments = comments';
           }
@@ -556,12 +556,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method component_type (t : ('M, 'T) Ast.Type.Component.t) : ('N, 'U) Ast.Type.Component.t =
       let open Ast.Type.Component in
-      let { params; return; tparams; comments } = t in
+      let { params; renders; tparams; comments } = t in
       this#type_params_opt tparams (fun tparams' ->
           let params' = this#component_type_params params in
-          let return' = this#type_annotation_hint return in
+          let renders' = this#type_annotation_hint renders in
           let comments' = this#syntax_opt comments in
-          { params = params'; return = return'; tparams = tparams'; comments = comments' }
+          { params = params'; renders = renders'; tparams = tparams'; comments = comments' }
       )
 
     method component_type_params (params : ('M, 'T) Ast.Type.Component.Params.t)

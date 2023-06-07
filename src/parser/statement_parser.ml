@@ -1163,27 +1163,27 @@ module Statement
     in
     let tparams = type_params_remove_trailing env (Type.type_params env) in
     let params = Type.component_param_list env in
-    let (params, return) =
+    let (params, renders) =
       match Peek.token env with
       | T_COLON ->
-        let return = Type.annotation_opt env in
-        let return = type_annotation_hint_remove_trailing env return in
-        (params, return)
+        let renders = Type.annotation_opt env in
+        let renders = type_annotation_hint_remove_trailing env renders in
+        (params, renders)
       | _ ->
         let missing_annotation = Type.annotation_opt env in
         (params, missing_annotation)
     in
 
-    let (trailing, return) =
+    let (trailing, renders) =
       match semicolon env with
-      | Explicit comments -> (comments, return)
+      | Explicit comments -> (comments, renders)
       | Implicit { remove_trailing; _ } ->
-        ([], remove_trailing return (fun remover annot -> remover#type_annotation_hint annot))
+        ([], remove_trailing renders (fun remover annot -> remover#type_annotation_hint annot))
     in
     {
       Statement.DeclareComponent.id;
       params;
-      return;
+      renders;
       tparams;
       comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
     }
