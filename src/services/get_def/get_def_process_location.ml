@@ -30,11 +30,6 @@ let rec process_type_request cx =
     | [t'] -> process_type_request cx t'
     | [] -> Error "No possible types"
     | _ :: _ -> Error "More than one possible type")
-  | AnnotT (r, t, _) ->
-    (* `annot_aloc` is set when an AnnotT is the result of an actual source annotation *)
-    (match Reason.annot_loc_of_reason r with
-    | Some aloc -> Ok aloc
-    | None -> process_type_request cx t)
   | t ->
     let r = TypeUtil.reason_of_t t in
     let aloc =
