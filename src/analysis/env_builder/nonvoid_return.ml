@@ -40,14 +40,10 @@ class return_finder =
       this#set_acc true;
       stmt
 
-    method! function_body_any body =
-      begin
-        match body with
-        (* If it's a body expression, some value is implicitly returned *)
-        | Ast.Function.BodyExpression _ -> this#set_acc true
-        | _ -> ()
-      end;
-      super#function_body_any body
+    (* If it's a body expression, some value is implicitly returned *)
+    method! body_expression e =
+      this#set_acc true;
+      super#body_expression e
 
     (* Any returns in these constructs would be for nested function definitions, so we short-circuit
      *)

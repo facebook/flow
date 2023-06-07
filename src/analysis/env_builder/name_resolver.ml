@@ -2928,16 +2928,12 @@ module Make
         let { label; comments = _ } = stmt in
         this#raise_abrupt_completion (AbruptCompletion.continue label)
 
-      method! function_body_any body =
-        (match body with
-        | Flow_ast.Function.BodyBlock _ -> ()
-        | Flow_ast.Function.BodyExpression expr ->
-          (match env_state.predicate_scope_names with
-          | None -> ()
-          | Some names ->
+      method! body_expression expr =
+        Base.Option.iter env_state.predicate_scope_names ~f:(fun names ->
             let reason = mk_reason RFunctionBody (fst expr) in
-            this#record_predicate_refinement_maps (fst expr) names reason expr));
-        super#function_body_any body
+            this#record_predicate_refinement_maps (fst expr) names reason expr
+        );
+        super#body_expression expr
 
       method! return loc (stmt : (ALoc.t, ALoc.t) Ast.Statement.Return.t) =
         let open Ast.Statement.Return in

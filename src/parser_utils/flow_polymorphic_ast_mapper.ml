@@ -1603,11 +1603,14 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Function in
       match body with
       | BodyBlock body -> BodyBlock (this#function_body body)
-      | BodyExpression expr -> BodyExpression (this#expression expr)
+      | BodyExpression expr -> BodyExpression (this#body_expression expr)
 
     method function_body (body : 'M * ('M, 'T) Ast.Statement.Block.t)
         : 'N * ('N, 'U) Ast.Statement.Block.t =
       (this#on_loc_annot * this#block) body
+
+    method body_expression (expr : ('M, 'T) Ast.Expression.t) : ('N, 'U) Ast.Expression.t =
+      this#expression expr
 
     method function_identifier (ident : ('M, 'T) Ast.Identifier.t) : ('N, 'U) Ast.Identifier.t =
       this#pattern_identifier ~kind:Ast.Variable.Var ident

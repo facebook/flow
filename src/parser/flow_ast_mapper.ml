@@ -1962,11 +1962,13 @@ class ['loc] mapper =
       | Ast.Function.BodyBlock block ->
         id this#function_body block body (fun block -> Ast.Function.BodyBlock block)
       | Ast.Function.BodyExpression expr ->
-        id this#expression expr body (fun expr -> Ast.Function.BodyExpression expr)
+        id this#body_expression expr body (fun expr -> Ast.Function.BodyExpression expr)
 
     method function_body (body : 'loc * ('loc, 'loc) Ast.Statement.Block.t) =
       let (loc, block) = body in
       id_loc this#block loc block body (fun block -> (loc, block))
+
+    method body_expression (expr : ('loc, 'loc) Ast.Expression.t) = this#expression expr
 
     method function_identifier (ident : ('loc, 'loc) Ast.Identifier.t) =
       this#pattern_identifier ~kind:Ast.Variable.Var ident

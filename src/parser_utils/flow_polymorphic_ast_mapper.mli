@@ -41,6 +41,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method block : ('M, 'T) Ast.Statement.Block.t -> ('N, 'U) Ast.Statement.Block.t
 
+    method body_expression : ('M, 'T) Ast.Expression.t -> ('N, 'U) Ast.Expression.t
+
     method boolean_literal : 'M Ast.BooleanLiteral.t -> 'N Ast.BooleanLiteral.t
 
     method break : 'M Ast.Statement.Break.t -> 'N Ast.Statement.Break.t
