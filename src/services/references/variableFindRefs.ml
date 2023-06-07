@@ -17,13 +17,17 @@ let local_find_refs scope_info locs =
     let num_matching_uses = LocSet.cardinal matching_uses in
     if num_matching_uses = 0 then
       None
-    else if num_matching_uses > 1 then
-      (* This is unlikely enough that we can just throw *)
-      failwith "Multiple identifiers were unexpectedly matched"
     else
-      let use = LocSet.choose matching_uses in
-      let def = def_of_use scope_info use in
-      let sorted_locs = LocSet.elements @@ uses_of_def scope_info ~exclude_def:false def in
+      let sorted_locs =
+        LocSet.fold
+          (fun use acc ->
+            LocSet.union
+              acc
+              (use |> def_of_use scope_info |> uses_of_def scope_info ~exclude_def:false))
+          matching_uses
+          LocSet.empty
+        |> LocSet.elements
+      in
       let sorted_locs = Base.List.map ~f:(fun loc -> (FindRefsTypes.Local, loc)) sorted_locs in
-      Some (sorted_locs, Nel.hd def.Def.locs)
+      Some sorted_locs
   )

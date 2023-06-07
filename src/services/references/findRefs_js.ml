@@ -12,11 +12,6 @@
 let sort_and_dedup refs =
   Base.List.dedup_and_sort ~compare:(fun (_, loc1) (_, loc2) -> Loc.compare loc1 loc2) refs
 
-let local_variable_refs scope_info locs =
-  match VariableFindRefs.local_find_refs scope_info locs with
-  | None -> None
-  | Some (var_refs, _) -> Some var_refs
-
 let find_local_refs ~reader ~options ~file_key ~parse_artifacts ~typecheck_artifacts ~line ~col =
   let open Base.Result.Let_syntax in
   let loc = Loc.cursor (Some file_key) line col in
@@ -29,7 +24,7 @@ let find_local_refs ~reader ~options ~file_key ~parse_artifacts ~typecheck_artif
   let scope_info =
     Scope_builder.program ~enable_enums:(Options.enums options) ~with_types:true ast
   in
-  let var_refs = local_variable_refs scope_info [loc] in
+  let var_refs = VariableFindRefs.local_find_refs scope_info [loc] in
   let%bind refs =
     match var_refs with
     | Some _ -> Ok var_refs
@@ -49,7 +44,8 @@ let local_refs_for_global_find_refs ~options ~loc_of_aloc ast_info type_info fil
     let import_def_locs =
       LocalImportRefSearcher.search ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast def_locs
     in
-    local_variable_refs scope_info (import_def_locs @ def_locs) |> Base.Option.value ~default:[]
+    VariableFindRefs.local_find_refs scope_info (import_def_locs @ def_locs)
+    |> Base.Option.value ~default:[]
   in
   let merge = function
     | ([], prop_refs) -> prop_refs

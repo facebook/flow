@@ -1,7 +1,7 @@
 // @flow
 
 import {a,b} from './identifiers-def';
-import {a as c} from './a';
+import {a as c} from './identifiers-def';
 
 a.toPrecision();
 b();

@@ -8,7 +8,4 @@
 (* This variant is limited strictly to local variables, and does not attempt to find anything to do
  * with exports (the above will find some additional locations related to imports/exports even with
  * global:false). *)
-val local_find_refs :
-  Scope_api.With_Loc.info ->
-  Loc.t list ->
-  (FindRefsTypes.find_refs_found * Loc.t) (* definition location *) option
+val local_find_refs : Scope_api.With_Loc.info -> Loc.t list -> FindRefsTypes.find_refs_found option
