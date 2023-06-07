@@ -1865,17 +1865,53 @@ module Make
   and import_namespace_specifier_type
       cx import_reason import_kind ~module_name ~source_module_t ~local_loc =
     let open Ast.Statement in
-    match import_kind with
-    | ImportDeclaration.ImportType -> assert_false "import type * is a parse error"
-    | ImportDeclaration.ImportTypeof ->
-      let bind_reason = repos_reason local_loc import_reason in
-      let module_ns_t = Import_export.import_ns cx import_reason source_module_t in
-      Tvar_resolver.mk_tvar_and_fully_resolve_where cx bind_reason (fun t ->
-          Flow.flow cx (module_ns_t, ImportTypeofT (bind_reason, "*", t))
-      )
-    | ImportDeclaration.ImportValue ->
-      let reason = mk_reason (RModule (OrdinaryName module_name)) local_loc in
-      Import_export.import_ns cx reason source_module_t
+    if File_key.is_lib_file (Context.file cx) then
+      match import_kind with
+      | ImportDeclaration.ImportType -> assert_false "import type * is a parse error"
+      | ImportDeclaration.ImportTypeof ->
+        let bind_reason = repos_reason local_loc import_reason in
+        let module_ns_t = Import_export.import_ns cx import_reason source_module_t in
+        Tvar_resolver.mk_tvar_and_fully_resolve_where cx bind_reason (fun t ->
+            Flow.flow cx (module_ns_t, ImportTypeofT (bind_reason, "*", t))
+        )
+      | ImportDeclaration.ImportValue ->
+        let reason = mk_reason (RModule (OrdinaryName module_name)) local_loc in
+        Import_export.import_ns cx reason source_module_t
+    else
+      let is_strict = Context.is_strict cx in
+      let get_module_ns_t reason =
+        match Flow.possible_concrete_types_for_inspection cx reason source_module_t with
+        | [ModuleT m] ->
+          Flow_js_utils.ImportModuleNsTKit.on_ModuleT cx Trace.dummy_trace (reason, is_strict) m
+        | [(AnyT (lreason, _) as l)] ->
+          Flow_js_utils.check_untyped_import cx ImportValue lreason reason;
+          Flow.reposition_reason cx reason l
+        | _ ->
+          Flow_js_utils.add_output
+            cx
+            Error_message.(
+              EInternal
+                ( loc_of_reason reason,
+                  UnexpectedModuleT (Debug_js.dump_t cx ~depth:3 source_module_t)
+                )
+            );
+          AnyT.error reason
+      in
+      match import_kind with
+      | ImportDeclaration.ImportType -> assert_false "import type * is a parse error"
+      | ImportDeclaration.ImportTypeof ->
+        let module_ns_t = get_module_ns_t import_reason in
+        let bind_reason = repos_reason local_loc import_reason in
+        Flow_js_utils.ImportTypeofTKit.on_concrete_type
+          cx
+          Trace.dummy_trace
+          ~mk_typeof_annotation:Flow.mk_typeof_annotation
+          bind_reason
+          "*"
+          module_ns_t
+      | ImportDeclaration.ImportValue ->
+        let reason = mk_reason (RModule (OrdinaryName module_name)) local_loc in
+        get_module_ns_t reason
 
   and import_default_specifier_type
       cx import_reason import_kind ~module_name ~source_module_t ~local_loc ~local_name =
