@@ -7561,6 +7561,49 @@ module Make
       in
       fparams
     in
+    let predicate_checks cx pred params =
+      let err_with_desc desc pred_reason binding_loc =
+        let binding_reason = mk_reason desc binding_loc in
+        Flow_js.add_output
+          cx
+          Error_message.(EPredicateInvalidParameter { pred_reason; binding_reason })
+      in
+      let error_on_non_root_binding name expr_reason binding =
+        let open Pattern_helper in
+        match binding with
+        | (_, Root) -> ()
+        | (loc, Rest) -> err_with_desc (RRestParameter (Some name)) expr_reason loc
+        | (loc, Select _) -> err_with_desc (RPatternParameter name) expr_reason loc
+      in
+      let type_guard_based_checks tg_param _type_guard binding_opt =
+        let (name_loc, name) = tg_param in
+        let tg_reason = mk_reason (RTypeGuardParam name) name_loc in
+        let open Pattern_helper in
+        match binding_opt with
+        | None -> Flow_js_utils.add_output cx Error_message.(ETypeGuardParamUnbound tg_reason)
+        | Some (_param_loc, Root) -> ()
+        | Some binding -> error_on_non_root_binding name tg_reason binding
+      in
+      match pred with
+      | TypeGuardBased { param_name; type_guard } ->
+        let bindings = Pattern_helper.bindings_of_params params in
+        let matching_binding = SMap.find_opt (snd param_name) bindings in
+        type_guard_based_checks param_name type_guard matching_binding
+      | PredBased (expr_reason, p_map, _) ->
+        let required_bindings =
+          Base.List.filter_map (Key_map.keys p_map) ~f:(function
+              | (OrdinaryName name, _) -> Some name
+              | _ -> None
+              )
+        in
+        if not (Base.List.is_empty required_bindings) then
+          let bindings = Pattern_helper.bindings_of_params params in
+          Base.List.iter required_bindings ~f:(fun name ->
+              Base.Option.iter (SMap.find_opt name bindings) ~f:(fun binding ->
+                  error_on_non_root_binding name expr_reason binding
+              )
+          )
+    in
     fun cx
         ~required_this_param_type
         ~require_return_annot
@@ -7663,44 +7706,6 @@ module Make
           mk_inference_target_with_annots ~has_hint:(Env.has_hint cx ret_loc) return_t
         in
         let () =
-          let err_with_desc cx desc pred_reason binding_loc =
-            let binding_reason = mk_reason desc binding_loc in
-            Flow_js.add_output
-              cx
-              Error_message.(EPredicateInvalidParameter { pred_reason; binding_reason })
-          in
-          let error_on_non_root_binding cx name expr_reason binding =
-            let open Pattern_helper in
-            match binding with
-            | (_, Root) -> ()
-            | (loc, Rest) -> err_with_desc cx (RRestParameter (Some name)) expr_reason loc
-            | (loc, Select _) -> err_with_desc cx (RPatternParameter name) expr_reason loc
-          in
-          match kind with
-          | Func.Predicate (TypeGuardBased { param_name = (name_loc, name); _ }) ->
-            let expr_reason = mk_reason (RTypeGuardParam name) name_loc in
-            let bindings = Pattern_helper.bindings_of_params params in
-            let matching_binding = SMap.find_opt name bindings in
-            if Option.is_none matching_binding then
-              Flow_js_utils.add_output cx Error_message.(ETypeGuardParamUnbound expr_reason);
-            Base.Option.iter matching_binding ~f:(error_on_non_root_binding cx name expr_reason)
-          | Func.Predicate (PredBased (expr_reason, p_map, _)) ->
-            let required_bindings =
-              Base.List.filter_map (Key_map.keys p_map) ~f:(function
-                  | (OrdinaryName name, _) -> Some name
-                  | _ -> None
-                  )
-            in
-            if not (Base.List.is_empty required_bindings) then
-              let bindings = Pattern_helper.bindings_of_params params in
-              Base.List.iter required_bindings ~f:(fun name ->
-                  Base.Option.iter (SMap.find_opt name bindings) ~f:(fun binding ->
-                      error_on_non_root_binding cx name expr_reason binding
-                  )
-              )
-          | _ -> ()
-        in
-        let () =
           if kind = Func_class_sig_types.Func.Ctor then
             let return_t = TypeUtil.type_t_of_annotated_or_inferred return_t in
             let use_op = Op (FunReturnStatement { value = TypeUtil.reason_of_t return_t }) in
@@ -7724,7 +7729,8 @@ module Make
           in
           Obj_type.mk_with_proto cx reason (FunProtoT reason) ~obj_kind:Type.Inexact ~props
         in
-        ( {
+        let func_stmt_sig =
+          {
             Func_stmt_sig_types.reason;
             kind;
             tparams;
@@ -7733,19 +7739,26 @@ module Make
             return_t;
             ret_annot_loc = ret_loc;
             statics = Some statics_t;
-          },
-          fun params body fun_type ->
-            {
-              func with
-              Ast.Function.id =
-                Base.Option.map ~f:(fun (id_loc, name) -> ((id_loc, fun_type), name)) id;
-              params;
-              body;
-              predicate;
-              return;
-              tparams = tparams_ast;
-            }
-        )
+          }
+        in
+        let reconstruct_ast params_tast body fun_type =
+          let () =
+            match kind with
+            | Predicate p -> predicate_checks cx p params
+            | _ -> ()
+          in
+          {
+            func with
+            Ast.Function.id =
+              Base.Option.map ~f:(fun (id_loc, name) -> ((id_loc, fun_type), name)) id;
+            params = params_tast;
+            body;
+            predicate;
+            return;
+            tparams = tparams_ast;
+          }
+        in
+        (func_stmt_sig, reconstruct_ast)
 
   (* Given a function declaration and types for `this` and `super`, extract a
      signature consisting of type parameters, parameter types, parameter names,
