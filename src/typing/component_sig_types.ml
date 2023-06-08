@@ -31,6 +31,12 @@ module ParamConfig = struct
   end
 end
 
+module BodyConfig = struct
+  module type S = sig
+    type 'T body
+  end
+end
+
 module ParamTypes = struct
   module type S = sig
     module Config : ParamConfig.S
@@ -59,6 +65,10 @@ module ParamTypes = struct
       reconstruct: reconstruct;
     }
   end
+end
+
+module DeclarationBodyConfig = struct
+  type 'T body = ALoc.t * (ALoc.t, 'T) Ast.Statement.Block.t
 end
 
 module DeclarationParamConfig = struct
@@ -112,9 +122,13 @@ end
  * to support declared components, component types, etc. *)
 module ComponentSig = struct
   module type S = sig
+    module Body : BodyConfig.S
+
     module Config : ParamConfig.S
 
     module Param : ParamTypes.S with module Config := Config
+
+    type 'T body = 'T Body.body
 
     type component_params = Param.t
 
@@ -124,14 +138,19 @@ module ComponentSig = struct
       reason: Reason.t;
       tparams: Type.typeparams;
       cparams: component_params;
-      body: ALoc.t * (ALoc.t, ALoc.t) Flow_ast.Statement.Block.t;
+      body: ALoc.t body;
       renders_t: Type.t;
       ret_annot_loc: ALoc.t;
     }
   end
 
-  module Make (Config : ParamConfig.S) (Param : ParamTypes.S with module Config := Config) :
-    S with module Config := Config and module Param := Param = struct
+  module Make
+      (Body : BodyConfig.S)
+      (Config : ParamConfig.S)
+      (Param : ParamTypes.S with module Config := Config) :
+    S with module Config := Config and module Param := Param and module Body := Body = struct
+    type 'T body = 'T Body.body
+
     type component_params = Param.t
 
     type component_params_tast = (ALoc.t * Type.t) Config.ast
@@ -140,7 +159,7 @@ module ComponentSig = struct
       reason: Reason.t;
       tparams: Type.typeparams;
       cparams: component_params;
-      body: ALoc.t * (ALoc.t, ALoc.t) Flow_ast.Statement.Block.t;
+      body: ALoc.t body;
       renders_t: Type.t;
       ret_annot_loc: ALoc.t;
     }
@@ -154,5 +173,7 @@ module Component_declaration_params_types :
 module Component_declaration_sig_types :
   ComponentSig.S
     with module Config := DeclarationParamConfig
-     and module Param := Component_declaration_params_types =
-  ComponentSig.Make (DeclarationParamConfig) (Component_declaration_params_types)
+     and module Param := Component_declaration_params_types
+     and module Body := DeclarationBodyConfig =
+  ComponentSig.Make (DeclarationBodyConfig) (DeclarationParamConfig)
+    (Component_declaration_params_types)

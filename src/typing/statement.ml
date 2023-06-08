@@ -411,10 +411,13 @@ module Make
       (Component_sig_types.DeclarationParamConfig)
       (Component_declaration_config)
       (Component_sig_types.Component_declaration_params_types)
+  module Component_declaration_body =
+    Component_sig.Component_declaration_body (Statement) (Component_sig_types.DeclarationBodyConfig)
   module Component_declaration_sig =
-    Component_sig.Make (Statement) (Component_sig_types.DeclarationParamConfig)
-      (Component_declaration_config)
+    Component_sig.Make (Component_sig_types.DeclarationParamConfig) (Component_declaration_config)
       (Component_declaration_params)
+      (Component_sig_types.DeclarationBodyConfig)
+      (Component_declaration_body)
       (Component_sig_types.Component_declaration_sig_types)
 
   (* In positions where an annotation may be present or an annotation can be pushed down,
@@ -1298,9 +1301,25 @@ module Make
       in
       Env.init_var cx ~use_op t name_loc;
       (loc, DeclareClass decl_ast)
-    | (_loc, DeclareComponent _component) as stmt ->
-      (* TODO(jmbrown): add typechecking for component syntax *)
-      Tast_utils.unimplemented_mapper#statement stmt
+    | ( loc,
+        DeclareComponent
+          ( {
+              Ast.Statement.DeclareComponent.id = (name_loc, { Ast.Identifier.name; comments = _ });
+              _;
+            } as decl
+          )
+      ) ->
+      if name <> String.capitalize_ascii name then
+        Flow_js_utils.add_output cx Error_message.(EComponentCase name_loc);
+      let (t, decl_ast) = declare_component cx loc decl in
+      let use_op =
+        Op
+          (AssignVar
+             { var = Some (mk_reason (RIdentifier (OrdinaryName name)) loc); init = reason_of_t t }
+          )
+      in
+      Env.init_var cx ~use_op t name_loc;
+      (loc, DeclareComponent decl_ast)
     | (loc, DeclareEnum enum) ->
       let decl_ast = enum_declaration cx loc enum in
       (loc, DeclareEnum decl_ast)
@@ -2050,6 +2069,18 @@ module Make
       let reason = DescFormat.instance_reason (OrdinaryName name) name_loc in
       let (class_sig, class_t, decl_ast) = Anno.mk_declare_class_sig cx loc reason decl in
       let t = interface_helper cx loc (class_sig, class_t) in
+      (t, decl_ast)
+
+  and declare_component cx loc decl =
+    let node_cache = Context.node_cache cx in
+    match Node_cache.get_declared_component node_cache loc with
+    | Some node ->
+      Debug_js.Verbose.print_if_verbose_lazy
+        cx
+        (lazy [spf "Declared component cache hit at %s" (ALoc.debug_to_string loc)]);
+      node
+    | None ->
+      let (t, decl_ast) = Anno.mk_declare_component_sig cx loc decl in
       (t, decl_ast)
 
   and declare_module cx loc { Ast.Statement.DeclareModule.id; body; kind; comments } =
@@ -7366,7 +7397,7 @@ module Make
       let {
         Ast.Statement.ComponentDeclaration.tparams;
         renders;
-        body = (body_loc, _) as body;
+        body;
         params;
         id;
         sig_loc;
@@ -7405,7 +7436,7 @@ module Make
               component with
               Ast.Statement.ComponentDeclaration.id = ((id_loc, component_type), name);
               params;
-              body = (body_loc, body);
+              body;
               renders = renders_ast;
               tparams = tparams_ast;
             }

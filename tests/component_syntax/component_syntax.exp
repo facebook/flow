@@ -492,6 +492,193 @@ References:
                                            ^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------------- declared.js:5:2
+
+Cannot create `Basic` element because property `foo` is missing in component Basic [1] but exists in props [2].
+[prop-missing]
+
+   declared.js:5:2
+   5| <Basic foo={42} /> // error
+       ^^^^^
+
+References:
+   declared.js:3:1
+   3| declare component Basic();
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   declared.js:5:1
+   5| <Basic foo={42} /> // error
+      ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ declared.js:13:39
+
+Cannot create `InlineOnly` element because string [1] is incompatible with number [2] in property `foo`.
+[incompatible-type]
+
+   declared.js:13:39
+   13| const inlineOnlyBad = <InlineOnly foo="" bar={3} />; // Error 2x
+                                             ^^ [1]
+
+References:
+   declared.js:8:8
+    8|   foo: number,
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ declared.js:13:47
+
+Cannot create `InlineOnly` element because number [1] is incompatible with string [2] in property `bar`.
+[incompatible-type]
+
+   declared.js:13:47
+   13| const inlineOnlyBad = <InlineOnly foo="" bar={3} />; // Error 2x
+                                                     ^ [1]
+
+References:
+   declared.js:9:8
+    9|   bar: string,
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ declared.js:21:37
+
+Cannot create `InexactRest` element because string [1] is incompatible with number [2] in property `foo`.
+[incompatible-type]
+
+   declared.js:21:37
+   21| const inexactBad = <InexactRest foo="" bar={3} baz={3} />; // ERROR 2x for foo and bar
+                                           ^^ [1]
+
+References:
+   declared.js:16:8
+   16|   foo: number,
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ declared.js:21:45
+
+Cannot create `InexactRest` element because number [1] is incompatible with string [2] in property `bar`.
+[incompatible-type]
+
+   declared.js:21:45
+   21| const inexactBad = <InexactRest foo="" bar={3} baz={3} />; // ERROR 2x for foo and bar
+                                                   ^ [1]
+
+References:
+   declared.js:17:18
+   17|   ...rest: {bar: string, ...}
+                        ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ declared.js:29:37
+
+Cannot create `IndexedRest` element because string [1] is incompatible with number [2] in property `foo`.
+[incompatible-type]
+
+   declared.js:29:37
+   29| const indexedBad = <IndexedRest foo="" bar="str" />; // ERROR 2x for foo and bar
+                                           ^^ [1]
+
+References:
+   declared.js:24:8
+   24|   foo: number,
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ declared.js:29:44
+
+Cannot create `IndexedRest` element because string [1] is incompatible with number [2] in property `bar`.
+[incompatible-type]
+
+   declared.js:29:44
+   29| const indexedBad = <IndexedRest foo="" bar="str" />; // ERROR 2x for foo and bar
+                                                  ^^^^^ [1]
+
+References:
+   declared.js:25:23
+   25|   ...rest: {[string]: number, ...}
+                             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ declared.js:36:39
+
+Cannot create `DefaultProps` element because string [1] is incompatible with number [2] in property `foo`.
+[incompatible-type]
+
+   declared.js:36:39
+   36| const defaultsBad = <DefaultProps foo="bad" />; // ERROR
+                                             ^^^^^ [1]
+
+References:
+   declared.js:32:9
+   32|   foo?: number,
+               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ declared.js:43:34
+
+Cannot create `OptionalRest` element because string [1] is incompatible with number [2] in property `foo`.
+[incompatible-type]
+
+   declared.js:43:34
+   43| const optBad = <OptionalRest foo="bad" />; // ERROR
+                                        ^^^^^ [1]
+
+References:
+   declared.js:39:15
+   39|     ...{foo?: number}
+                     ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ declared.js:45:19
+
+Component identifiers must begin with an upper-case character [component-case]
+
+   45| declare component lowercase(); // error
+                         ^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ declared.js:47:43
+
+Component property `x` [1] is re-declared [2] within a spread [3]. Property names may only be have one definition within
+a component [invalid-component-prop]
+
+   declared.js:47:43
+   47| declare component Duplicate(x: number, ...{x: number}); // error
+                                                 ^^^^^^^^^^^ [3]
+
+References:
+   declared.js:47:29
+   47| declare component Duplicate(x: number, ...{x: number}); // error
+                                   ^ [1]
+   declared.js:47:44
+   47| declare component Duplicate(x: number, ...{x: number}); // error
+                                                  ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ declared.js:50:29
+
+Component syntax does not support ref properties [1]. Use a `forwardRef`-style component definition instead
+[invalid-component-prop]
+
+   50| declare component InlineRef(ref: number); // error
+                                   ^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ declared.js:53:35
+
+Components do not support ref properties [1] within spreads [2] [invalid-component-prop]
+
+   declared.js:53:35
+   53| declare component SpreadRef(...p: {ref: number}); // error
+                                         ^^^^^^^^^^^^^ [2]
+
+References:
+   declared.js:53:36
+   53| declare component SpreadRef(...p: {ref: number}); // error
+                                          ^^^ [1]
+
+
 Error ---------------------------------------------------------------------------------------------------- errors.js:2:5
 
 Cannot reference `this` from within component declaration [1] [component-this-reference]
@@ -1261,4 +1448,4 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 88 errors
+Found 101 errors

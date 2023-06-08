@@ -27,6 +27,8 @@ type cache = {
   opaques: (Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.OpaqueType.t) ALocMap.t;
   interfaces: (Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.Interface.t) ALocMap.t;
   declared_classes: (Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.DeclareClass.t) ALocMap.t;
+  declared_components:
+    (Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.DeclareComponent.t) ALocMap.t;
   declared_modules: (Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.DeclareModule.t) ALocMap.t;
   classes: (Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Class.t) ALocMap.t;
   class_sigs:
@@ -40,7 +42,7 @@ type cache = {
   component_sigs:
     ( Component_sig_types.Component_declaration_sig_types.t
     * ((ALoc.t, ALoc.t * Type.t) Ast.Statement.ComponentDeclaration.Params.t ->
-      (ALoc.t, ALoc.t * Type.t) Ast.Statement.Block.t ->
+      ALoc.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.Block.t ->
       Type.t ->
       (ALoc.t, ALoc.t * Type.t) Ast.Statement.ComponentDeclaration.t
       )
@@ -62,6 +64,7 @@ let mk_empty () =
       opaques = ALocMap.empty;
       interfaces = ALocMap.empty;
       declared_classes = ALocMap.empty;
+      declared_components = ALocMap.empty;
       declared_modules = ALocMap.empty;
       classes = ALocMap.empty;
       class_sigs = ALocMap.empty;
@@ -92,6 +95,10 @@ let set_opaque cache loc opaque =
 
 let set_interface cache loc inter =
   cache := { !cache with interfaces = ALocMap.add loc inter !cache.interfaces }
+
+let set_declared_component cache loc component =
+  cache :=
+    { !cache with declared_components = ALocMap.add loc component !cache.declared_components }
 
 let set_declared_class cache loc class_ =
   cache := { !cache with declared_classes = ALocMap.add loc class_ !cache.declared_classes }
@@ -128,6 +135,8 @@ let get_opaque cache loc = ALocMap.find_opt loc !cache.opaques
 let get_interface cache loc = ALocMap.find_opt loc !cache.interfaces
 
 let get_declared_class cache loc = ALocMap.find_opt loc !cache.declared_classes
+
+let get_declared_component cache loc = ALocMap.find_opt loc !cache.declared_components
 
 let get_declared_module cache loc = ALocMap.find_opt loc !cache.declared_modules
 

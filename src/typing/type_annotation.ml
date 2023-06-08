@@ -169,6 +169,14 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     let eval_rest _cx (_, tast) = tast
   end
 
+  module Component_type_body_config = struct
+    type 'T body = unit
+  end
+
+  module Component_type_body = struct
+    let eval _ _ _ _ = ()
+  end
+
   module Func_type_params_types = Func_class_sig_types.Param.Make (Func_type_params_config_types)
   module Func_type_params =
     Func_params.Make (Func_type_params_config_types) (Func_type_params_config)
@@ -193,15 +201,15 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       (Component_type_params_types)
   module Component_type_sig_types =
     Component_sig_types.ComponentSig.Make
+      (Component_type_body_config)
       (Component_type_params_config_types)
       (Component_type_params_types)
   module Component_type_sig =
-    Component_sig.Make (Statement) (Component_type_params_config_types)
-      (Component_type_params_config)
+    Component_sig.Make (Component_type_params_config_types) (Component_type_params_config)
       (Component_type_params)
+      (Component_type_body_config)
+      (Component_type_body)
       (Component_type_sig_types)
-
-  let _ = Component_type_sig.toplevels
 
   (* AST helpers *)
 
@@ -3131,6 +3139,87 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         comments;
       }
     )
+
+  let mk_declare_component_sig =
+    let mk_param cx tparams_map param =
+      let (loc, ({ Ast.Type.Component.Param.name; annot; optional = _ } as param)) = param in
+      let (t, annot) = mk_type_available_annotation cx tparams_map annot in
+      let name =
+        match name with
+        | Ast.Statement.ComponentDeclaration.Param.StringLiteral (l, n) ->
+          Ast.Statement.ComponentDeclaration.Param.StringLiteral (l, n)
+        | Ast.Statement.ComponentDeclaration.Param.Identifier (l, x) ->
+          Ast.Statement.ComponentDeclaration.Param.Identifier ((l, t), x)
+      in
+      (t, (loc, { param with Ast.Type.Component.Param.annot; name }))
+    in
+    let mk_rest cx tparams_map rest =
+      let (loc, ({ Ast.Type.Component.RestParam.annot; argument; _ } as param)) = rest in
+      let (((_, t), _) as annot) = convert cx tparams_map ALocMap.empty annot in
+      let argument = Base.Option.map ~f:(fun (l, x) -> ((l, t), x)) argument in
+      (t, (loc, { param with Ast.Type.Component.RestParam.annot; argument }))
+    in
+    let mk_params cx tparams_map params =
+      let (loc, { Ast.Type.Component.Params.params; rest; comments }) = params in
+      let cparams =
+        Component_type_params.empty (fun params rest ->
+            (loc, { Ast.Type.Component.Params.params; rest; comments })
+        )
+      in
+      let cparams =
+        Base.List.fold
+          ~f:(fun acc param ->
+            let param = mk_param cx tparams_map param in
+            Component_type_params.add_param param acc)
+          ~init:cparams
+          params
+      in
+      let cparams =
+        Base.Option.fold
+          ~f:(fun acc rest ->
+            let rest = mk_rest cx tparams_map rest in
+            Component_type_params.add_rest rest acc)
+          ~init:cparams
+          rest
+      in
+      (cparams, Component_type_params.eval cx cparams)
+    in
+    fun cx loc component ->
+      let { Ast.Statement.DeclareComponent.tparams; renders; params; id; comments } = component in
+      let (tparams, tparams_map, tparam_asts) = mk_type_param_declarations cx tparams in
+      let (cparams, params_ast) = mk_params cx tparams_map params in
+      let (ren_loc, renders_t, renders_ast) =
+        match renders with
+        | Ast.Type.Available (loc, annot) ->
+          let (((_, t), _) as renders_ast) = convert cx tparams_map ALocMap.empty annot in
+          (loc, t, Ast.Type.Available (loc, renders_ast))
+        | Ast.Type.Missing loc ->
+          let ren_reason = mk_reason RReturn loc in
+          let t = Flow.get_builtin_type cx ren_reason (OrdinaryName "React$Node") in
+          (loc, t, Ast.Type.Missing (loc, t))
+      in
+      let (id_loc, ({ Ast.Identifier.name; _ } as id)) = id in
+      let reason = mk_reason (RComponent (OrdinaryName name)) loc in
+      let sig_ =
+        {
+          Component_type_sig_types.reason;
+          tparams;
+          cparams;
+          body = ();
+          renders_t;
+          ret_annot_loc = ren_loc;
+        }
+      in
+      let t = Component_type_sig.component_type cx loc sig_ in
+      ( t,
+        {
+          Ast.Statement.DeclareComponent.tparams = tparam_asts;
+          params = params_ast;
+          id = ((id_loc, t), id);
+          renders = renders_ast;
+          comments;
+        }
+      )
 
   let mk_declare_class_sig =
     let open Class_type_sig in

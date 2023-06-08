@@ -1,0 +1,54 @@
+import * as React from 'react';
+
+declare component Basic();
+<Basic />; // ok
+<Basic foo={42} /> // error
+
+declare component InlineOnly(
+  foo: number,
+  bar: string,
+);
+
+const inlineOnlyGood = <InlineOnly foo={3} bar="" />; // OK!
+const inlineOnlyBad = <InlineOnly foo="" bar={3} />; // Error 2x
+
+declare component InexactRest(
+  foo: number,
+  ...rest: {bar: string, ...}
+);
+
+const inexactGood = <InexactRest foo={3} bar="str" baz={3} />; // OK!
+const inexactBad = <InexactRest foo="" bar={3} baz={3} />; // ERROR 2x for foo and bar
+
+declare component IndexedRest(
+  foo: number,
+  ...rest: {[string]: number, ...}
+);
+
+const indexedGood = <IndexedRest foo={3} bar={3} />; // OK!
+const indexedBad = <IndexedRest foo="" bar="str" />; // ERROR 2x for foo and bar
+
+declare component DefaultProps(
+  foo?: number,
+);
+
+const defaultsGood = <DefaultProps />; // OK!
+const defaultsBad = <DefaultProps foo="bad" />; // ERROR
+
+declare component OptionalRest(
+    ...{foo?: number}
+  );
+
+const optGood = <OptionalRest />; // OK!
+const optBad = <OptionalRest foo="bad" />; // ERROR
+
+declare component lowercase(); // error
+
+declare component Duplicate(x: number, ...{x: number}); // error
+<Duplicate x={1} />;
+
+declare component InlineRef(ref: number); // error
+<InlineRef ref={1} />;
+
+declare component SpreadRef(...p: {ref: number}); // error
+<SpreadRef ref={1} />;

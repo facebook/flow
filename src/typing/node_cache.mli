@@ -45,6 +45,9 @@ val set_interface :
 val set_declared_class :
   t -> ALoc.t -> Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.DeclareClass.t -> unit
 
+val set_declared_component :
+  t -> ALoc.t -> Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.DeclareComponent.t -> unit
+
 val set_declared_module :
   t -> ALoc.t -> Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.DeclareModule.t -> unit
 
@@ -67,7 +70,7 @@ val set_component_sig :
   ALoc.t ->
   Component_sig_types.Component_declaration_sig_types.t
   * ((ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.ComponentDeclaration.Params.t ->
-    (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.Block.t ->
+    ALoc.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.Block.t ->
     Type.t ->
     (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.ComponentDeclaration.t
     ) ->
@@ -108,6 +111,9 @@ val get_interface :
 val get_declared_class :
   t -> ALoc.t -> (Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.DeclareClass.t) option
 
+val get_declared_component :
+  t -> ALoc.t -> (Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.DeclareComponent.t) option
+
 val get_declared_module :
   t -> ALoc.t -> (Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.DeclareModule.t) option
 
@@ -133,7 +139,7 @@ val get_component_sig :
   ALoc.t ->
   ( Component_sig_types.Component_declaration_sig_types.t
   * ((ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.ComponentDeclaration.Params.t ->
-    (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.Block.t ->
+    ALoc.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.Block.t ->
     Type.t ->
     (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.ComponentDeclaration.t
     )

@@ -994,6 +994,12 @@ let resolve_declare_class cx loc class_ =
   Node_cache.set_declared_class cache loc (t, ast);
   (t, unknown_use)
 
+let resolve_declare_component cx loc component =
+  let cache = Context.node_cache cx in
+  let (t, ast) = Statement.declare_component cx loc component in
+  Node_cache.set_declared_component cache loc (t, ast);
+  (t, unknown_use)
+
 let resolve_declare_module cx loc module_ =
   let cache = Context.node_cache cx in
   let ({ Loc_env.declare_module_exports_write_loc = old_dme_loc; _ } as env) =
@@ -1147,7 +1153,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
       resolve_import cx id_loc def_reason import_kind source source_loc import declare_module
     | Interface (loc, inter) -> resolve_interface cx loc inter
     | DeclaredClass (loc, class_) -> resolve_declare_class cx loc class_
-    | DeclaredComponent _ -> (AnyT.at (AnyError None) id_loc, unknown_use)
+    | DeclaredComponent (loc, comp) -> resolve_declare_component cx loc comp
     | Enum (enum_loc, enum) -> resolve_enum cx id_loc def_reason enum_loc enum
     | TypeParam _ -> resolve_type_param cx id_loc
     | GeneratorNext gen -> resolve_generator_next cx def_reason gen

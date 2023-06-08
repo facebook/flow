@@ -43,11 +43,16 @@ module type S = sig
        and module Config := Component_declaration_config
        and module Types = Component_sig_types.Component_declaration_params_types
 
+  module Component_declaration_body :
+    Component_sig_intf.ComponentBody with module Config := Component_sig_types.DeclarationBodyConfig
+
   module Component_declaration_sig :
     Component_sig_intf.S
       with module Config_types := Component_sig_types.DeclarationParamConfig
       with module Config := Component_declaration_config
        and module Param := Component_declaration_params
+       and module BodyConfig := Component_sig_types.DeclarationBodyConfig
+       and module ComponentBody := Component_declaration_body
        and module Types = Component_sig_types.Component_declaration_sig_types
 
   module ObjectExpressionAcc : sig
@@ -146,7 +151,7 @@ module type S = sig
     (ALoc.t, ALoc.t) Ast.Statement.ComponentDeclaration.t ->
     Component_declaration_sig.Types.t
     * ((ALoc.t, ALoc.t * Type.t) Ast.Statement.ComponentDeclaration.Params.t ->
-      (ALoc.t, ALoc.t * Type.t) Ast.Statement.Block.t ->
+      ALoc.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.Block.t ->
       Type.t ->
       (ALoc.t, ALoc.t * Type.t) Ast.Statement.ComponentDeclaration.t
       )
@@ -235,6 +240,12 @@ module type S = sig
     ALoc.t ->
     (ALoc.t, ALoc.t) Ast.Statement.DeclareClass.t ->
     Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.DeclareClass.t
+
+  val declare_component :
+    Context.t ->
+    ALoc.t ->
+    (ALoc.t, ALoc.t) Ast.Statement.DeclareComponent.t ->
+    Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.DeclareComponent.t
 
   val declare_module :
     Context.t ->

@@ -11,71 +11,58 @@ open Reason
 open Type
 open TypeUtil
 
-class component_scope_visitor cx ~renders_t exhaust =
-  object (this)
-    inherit
-      [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
-
-    method on_type_annot x = x
-
-    method on_loc_annot x = x
-
-    method! function_ fn = fn
-
-    method! component_declaration c = c
-
-    method visit statements = ignore @@ this#statement_list statements
-
-    method! switch ({ Ast.Statement.Switch.exhaustive_out = (loc, t); _ } as switch) =
-      Base.Option.iter exhaust ~f:(fun (exhaustive_t, exhaust_locs, _) ->
-          if Base.List.mem ~equal:ALoc.equal exhaust_locs loc then Flow.flow_t cx (t, exhaustive_t)
-      );
-      super#switch switch
-
-    (* Override statement so that we have the loc for return *)
-    method! statement (loc, stmt) =
-      begin
-        match stmt with
-        | Ast.Statement.Return return -> this#custom_return return
-        | _ -> ()
-      end;
-      super#statement (loc, stmt)
-
-    method custom_return { Ast.Statement.Return.return_out = (_, t); argument; _ } =
-      let use_op =
-        Op
-          (FunReturnStatement
-             {
-               value =
-                 Base.Option.value_map argument ~default:(reason_of_t t) ~f:(fun expr ->
-                     mk_expression_reason (Typed_ast_utils.untyped_ast_mapper#expression expr)
-                 );
-             }
-          )
-      in
-      Flow.flow cx (t, UseT (use_op, renders_t))
-  end
-
-module Make
+module Component_declaration_body
     (Statement : Statement_sig.S)
-    (CT : Component_sig_types.ParamConfig.S)
-    (C : Component_params_intf.Config with module Types := CT)
-    (F : Component_params.S with module Config_types := CT and module Config := C)
-    (T : Component_sig_types.ComponentSig.S with module Config := CT and module Param := F.Types) :
-  Component_sig_intf.S
-    with module Config_types := CT
-     and module Config := C
-     and module Param := F
-     and module Types = T = struct
-  module Types = T
+    (Config : Component_sig_types.BodyConfig.S) =
+struct
+  module Config = Config
 
-  let toplevels cx x =
-    let { T.reason = reason_cmp; cparams; body; ret_annot_loc = _; renders_t; _ } = x in
-    let (body_loc, body_block) = body in
+  class component_scope_visitor cx ~renders_t exhaust =
+    object (this)
+      inherit
+        [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
 
-    (* add param bindings *)
-    let params_ast = F.eval cx cparams in
+      method on_type_annot x = x
 
+      method on_loc_annot x = x
+
+      method! function_ fn = fn
+
+      method! component_declaration c = c
+
+      method visit statements = ignore @@ this#statement_list statements
+
+      method! switch ({ Ast.Statement.Switch.exhaustive_out = (loc, t); _ } as switch) =
+        Base.Option.iter exhaust ~f:(fun (exhaustive_t, exhaust_locs, _) ->
+            if Base.List.mem ~equal:ALoc.equal exhaust_locs loc then Flow.flow_t cx (t, exhaustive_t)
+        );
+        super#switch switch
+
+      (* Override statement so that we have the loc for renders *)
+      method! statement (loc, stmt) =
+        begin
+          match stmt with
+          | Ast.Statement.Return return -> this#custom_return return
+          | _ -> ()
+        end;
+        super#statement (loc, stmt)
+
+      method custom_return { Ast.Statement.Return.return_out = (_, t); argument; _ } =
+        let use_op =
+          Op
+            (FunReturnStatement
+               {
+                 value =
+                   Base.Option.value_map argument ~default:(reason_of_t t) ~f:(fun expr ->
+                       mk_expression_reason (Typed_ast_utils.untyped_ast_mapper#expression expr)
+                   );
+               }
+            )
+        in
+        Flow.flow cx (t, UseT (use_op, renders_t))
+    end
+
+  let eval cx reason_cmp renders_t (body_loc, body_block) =
     let open Ast.Statement in
     let (statements, reconstruct_body) =
       (body_block.Block.body, (fun body -> { body_block with Block.body }))
@@ -120,7 +107,37 @@ module Make
     Base.Option.iter exhaust ~f:(fun (maybe_exhaustively_checked, _, implicit_return) ->
         Flow.flow cx (maybe_exhaustively_checked, implicit_return)
     );
+    (body_loc, body_ast)
+end
 
+module Make
+    (CT : Component_sig_types.ParamConfig.S)
+    (C : Component_params_intf.Config with module Types := CT)
+    (F : Component_params.S with module Config_types := CT and module Config := C)
+    (BC : Component_sig_types.BodyConfig.S)
+    (B : Component_sig_intf.ComponentBody with module Config := BC)
+    (T : Component_sig_types.ComponentSig.S
+           with module Config := CT
+            and module Param := F.Types
+            and module Body := BC) :
+  Component_sig_intf.S
+    with module BodyConfig := BC
+     and module Config_types = CT
+     and module Config = C
+     and module Param = F
+     and module Types = T
+     and module ComponentBody = B = struct
+  module Types = T
+  module Config_types = CT
+  module Param = F
+  module Config = C
+  module ComponentBody = B
+
+  let toplevels cx x =
+    let { T.reason = reason_cmp; cparams; body; ret_annot_loc = _; renders_t; _ } = x in
+    (* add param bindings *)
+    let params_ast = F.eval cx cparams in
+    let body_ast = B.eval cx reason_cmp renders_t body in
     (params_ast, body_ast)
 
   let component_type cx _component_loc x =
