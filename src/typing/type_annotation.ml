@@ -462,7 +462,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       )
     | (loc, Conditional { Conditional.check_type; extends_type; true_type; false_type; comments })
       as t_ast ->
-      if Context.conditional_type cx then
+      if Context.conditional_type cx || Context.current_phase cx = Context.InitLib then
         let (distributive_tparam_name, tparams_map) =
           use_distributive_tparam_name_from_ast cx check_type tparams_map
         in
@@ -558,7 +558,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           (Error_message.EUnsupportedSyntax (loc, Error_message.ConditionalType))
           t_ast
     | (loc, Infer { Infer.tparam; comments }) as t_ast ->
-      if Context.conditional_type cx then
+      if Context.conditional_type cx || Context.current_phase cx = Context.InitLib then
         let (tparam_loc, { TypeParam.name = (name_loc, _); _ }) = tparam in
         let { Loc_env.var_info; _ } = Context.environment cx in
         match
