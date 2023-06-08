@@ -1000,6 +1000,7 @@ struct
           in
           depends_of_hints state hints
         | CatchUnannotated -> state
+        | UnannotatedParameter _ -> state
       in
       let depends_of_selector state = function
         | Computed { expression; _ } -> depends_of_expression expression state
@@ -1144,6 +1145,7 @@ struct
       let rec bind_loop b =
         match b with
         | Root CatchUnannotated -> true
+        | Root (UnannotatedParameter _) -> true
         | Root (Annotation _) -> true
         | Root (ObjectValue { synthesizable = ObjectSynthesizable _; _ }) -> true
         | Root (For _ | Value _ | FunctionValue _ | Contextual _ | EmptyArray _ | ObjectValue _) ->
@@ -1218,6 +1220,7 @@ struct
     let bind_loop b =
       match b with
       | Root CatchUnannotated
+      | Root (UnannotatedParameter _)
       | Root (Annotation _)
       | Root (ObjectValue { synthesizable = ObjectSynthesizable _; _ }) ->
         []

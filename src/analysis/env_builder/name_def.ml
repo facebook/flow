@@ -1205,8 +1205,8 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
             stmt
           in
           Base.Option.iter component_tparams ~f:(fun tparams -> ignore @@ this#type_params tparams);
-          Base.List.iter ~f:(this#visit_component_param ~hints:[]) params_list;
-          Base.Option.iter ~f:(this#visit_component_rest_param ~hints:[]) rest;
+          Base.List.iter ~f:this#visit_component_param params_list;
+          Base.Option.iter ~f:this#visit_component_rest_param rest;
           ignore @@ this#type_annotation_hint renders;
 
           let renders_loc =
@@ -1231,7 +1231,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
         ()
 
     method private visit_component_param
-        ~hints (param : ('loc, 'loc) Ast.Statement.ComponentDeclaration.Param.t) =
+        (param : ('loc, 'loc) Ast.Statement.ComponentDeclaration.Param.t) =
       let open Ast.Statement.ComponentDeclaration.Param in
       let (loc, { local; default = default_expression; shorthand; name }) = param in
       let optional =
@@ -1272,8 +1272,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
               mk_reason (RParameter (Some name)) param_loc
             | _ -> mk_reason RDestructuring param_loc
           in
-          this#record_hint param_loc hints;
-          Contextual { reason; hints; optional; default_expression }
+          UnannotatedParameter reason
       in
       let record_identifier loc reason binding =
         this#add_ordinary_binding loc reason (Binding binding);
@@ -1300,7 +1299,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
       ignore @@ super#component_param (loc, { local; default = None; shorthand; name })
 
     method private visit_component_rest_param
-        ~hints (param : ('loc, 'loc) Ast.Statement.ComponentDeclaration.RestParam.t) =
+        (param : ('loc, 'loc) Ast.Statement.ComponentDeclaration.RestParam.t) =
       let open Ast.Statement.ComponentDeclaration.RestParam in
       let (loc, { argument; comments = _ }) = param in
       let optional =
@@ -1331,8 +1330,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
               mk_reason (RParameter (Some name)) param_loc
             | _ -> mk_reason RDestructuring param_loc
           in
-          this#record_hint param_loc hints;
-          Contextual { reason; hints; optional; default_expression = None }
+          UnannotatedParameter reason
       in
       let record_identifier loc reason binding =
         this#add_ordinary_binding loc reason (Binding binding);

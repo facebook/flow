@@ -739,6 +739,9 @@ let resolve_binding_partial cx reason loc b =
         t
     in
     (t, mk_use_op t)
+  | Root (UnannotatedParameter reason) ->
+    let t = AnyT (reason, AnyError (Some MissingAnnotation)) in
+    (t, mk_use_op t)
   | Root CatchUnannotated ->
     let reason = mk_reason (RCustom "unannotated catch parameter") loc in
     let t =

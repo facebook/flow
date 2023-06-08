@@ -116,6 +116,7 @@ type root =
       default_expression: (ALoc.t, ALoc.t) Ast.Expression.t option;
     }
   | CatchUnannotated
+  | UnannotatedParameter of Reason.t
   | For of for_kind * (ALoc.t, ALoc.t) Ast.Expression.t
 
 type selector =
@@ -243,6 +244,7 @@ module Print = struct
     | Contextual _ -> "contextual"
     | EmptyArray _ -> "[]"
     | CatchUnannotated -> "unannotated catch param"
+    | UnannotatedParameter r -> Reason.string_of_reason r
     | Annotation { annot = (loc, _); _ } -> spf "annot %s" (ALoc.debug_to_string loc)
     | Value { expr = (loc, _); _ } -> spf "val %s" (ALoc.debug_to_string loc)
     | FunctionValue { function_loc; _ } -> spf "function val %s" (ALoc.debug_to_string function_loc)
