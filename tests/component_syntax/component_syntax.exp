@@ -1155,9 +1155,9 @@ References:
    names.js:19:46
    19| component RunningOutOfMetasyntaxticVariables(a: number, ...props: {...ROMSVType}) { return <div /> }; // Error
                                                     ^ [1]
-   names.js:18:22
+   names.js:18:19
    18| type ROMSVType = {a: number}
-                            ^^^^^^ [2]
+                         ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- names.js:22:17

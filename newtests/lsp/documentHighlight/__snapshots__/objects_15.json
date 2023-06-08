@@ -56,6 +56,45 @@
     {
       "range": {
         "start": {
+          "line": 21,
+          "character": 22
+        },
+        "end": {
+          "line": 21,
+          "character": 25
+        }
+      },
+      "kind": 1
+    },
+    {
+      "range": {
+        "start": {
+          "line": 22,
+          "character": 6
+        },
+        "end": {
+          "line": 22,
+          "character": 9
+        }
+      },
+      "kind": 1
+    },
+    {
+      "range": {
+        "start": {
+          "line": 22,
+          "character": 23
+        },
+        "end": {
+          "line": 22,
+          "character": 26
+        }
+      },
+      "kind": 1
+    },
+    {
+      "range": {
+        "start": {
           "line": 25,
           "character": 2
         },

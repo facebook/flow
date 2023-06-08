@@ -480,11 +480,11 @@ let spread_mk_object cx reason target { Object.reason = _; props; flags; generic
   let open Object.Spread in
   let props =
     NameUtils.Map.map
-      (fun { Object.prop_t; is_method; is_own = _; polarity = _; key_loc = _ } ->
+      (fun { Object.prop_t; is_method; is_own = _; polarity = _; key_loc } ->
         if is_method then
-          Method { key_loc = None; type_ = prop_t }
+          Method { key_loc; type_ = prop_t }
         else
-          Field { key_loc = None; type_ = prop_t; polarity = Polarity.Neutral })
+          Field { key_loc; type_ = prop_t; polarity = Polarity.Neutral })
       props
   in
   let id = Context.generate_property_map cx props in
@@ -677,11 +677,11 @@ let check_config2 cx pmap { Object.reason; props; flags; generics; interface = _
   | Ok props ->
     let props =
       NameUtils.Map.map
-        (fun { Object.prop_t; is_method; is_own = _; polarity = _; key_loc = _ } ->
+        (fun { Object.prop_t; is_method; is_own = _; polarity = _; key_loc } ->
           if is_method then
-            Method { key_loc = None; type_ = prop_t }
+            Method { key_loc; type_ = prop_t }
           else
-            Field { key_loc = None; type_ = prop_t; polarity = Polarity.Neutral })
+            Field { key_loc; type_ = prop_t; polarity = Polarity.Neutral })
         props
     in
     let id = Context.generate_property_map cx props in
@@ -785,26 +785,26 @@ let object_rest
            * subtracted and so is optional. If props2 is not exact then we may
            * optionally have some undocumented prop. *)
           | ( (Sound | IgnoreExactAndOwn),
-              Some { Object.prop_t = t1; is_method; is_own = _; polarity = _; key_loc = _ },
+              Some { Object.prop_t = t1; is_method; is_own = _; polarity = _; key_loc },
               Some { Object.prop_t = OptionalT _ as t2; _ },
               _
             )
           | ( Sound,
-              Some { Object.prop_t = t1; is_method; is_own = _; polarity = _; key_loc = _ },
+              Some { Object.prop_t = t1; is_method; is_own = _; polarity = _; key_loc },
               Some { Object.prop_t = t2; is_own = false; is_method = _; polarity = _; key_loc = _ },
               _
             )
           | ( Sound,
-              Some { Object.prop_t = t1; is_method; is_own = _; polarity = _; key_loc = _ },
+              Some { Object.prop_t = t1; is_method; is_own = _; polarity = _; key_loc },
               Some { Object.prop_t = t2; _ },
               false
             ) ->
             subt_check ~use_op cx (t1, optional t2);
             let p =
               if is_method then
-                Method { key_loc = None; type_ = optional t1 }
+                Method { key_loc; type_ = optional t1 }
               else
-                Field { key_loc = None; type_ = optional t1; polarity = Polarity.Neutral }
+                Field { key_loc; type_ = optional t1; polarity = Polarity.Neutral }
             in
             Some p
           (* Otherwise if the object we are using to subtract has a non-optional own
@@ -825,16 +825,16 @@ let object_rest
            * object, but our second object is inexact then we want to make our
            * property optional and flow that type to mixed. *)
           | ( Sound,
-              Some { Object.prop_t = t1; is_method; is_own = _; polarity = _; key_loc = _ },
+              Some { Object.prop_t = t1; is_method; is_own = _; polarity = _; key_loc },
               None,
               false
             ) ->
             subt_check ~use_op cx (t1, MixedT.make r2 |> with_trust bogus_trust);
             let p =
               if is_method then
-                Method { key_loc = None; type_ = optional t1 }
+                Method { key_loc; type_ = optional t1 }
               else
-                Field { key_loc = None; type_ = optional t1; polarity = Polarity.Neutral }
+                Field { key_loc; type_ = optional t1; polarity = Polarity.Neutral }
             in
             Some p
           (* If neither object has the prop then we don't add a prop to our
@@ -845,51 +845,51 @@ let object_rest
            * non-own then sometimes we may not copy it over so we mark it
            * as optional. *)
           | ( IgnoreExactAndOwn,
-              Some { Object.prop_t = t; is_method; is_own = _; polarity = _; key_loc = _ },
+              Some { Object.prop_t = t; is_method; is_own = _; polarity = _; key_loc },
               None,
               _
             ) ->
             let p =
               if is_method then
-                Method { key_loc = None; type_ = t }
+                Method { key_loc; type_ = t }
               else
-                Field { key_loc = None; type_ = t; polarity = Polarity.Neutral }
+                Field { key_loc; type_ = t; polarity = Polarity.Neutral }
             in
             Some p
           | ( (Omit | ReactConfigMerge _),
-              Some { Object.prop_t = t; is_method; is_own = _; polarity = _; key_loc = _ },
+              Some { Object.prop_t = t; is_method; is_own = _; polarity = _; key_loc },
               None,
               _
             ) ->
             let p =
               if is_method then
-                Method { key_loc = None; type_ = t }
+                Method { key_loc; type_ = t }
               else
-                Field { key_loc = None; type_ = t; polarity = Polarity.Positive }
+                Field { key_loc; type_ = t; polarity = Polarity.Positive }
             in
             Some p
           | ( Sound,
-              Some { Object.prop_t = t; is_own = true; is_method; polarity = _; key_loc = _ },
+              Some { Object.prop_t = t; is_own = true; is_method; polarity = _; key_loc },
               None,
               _
             ) ->
             let p =
               if is_method then
-                Method { key_loc = None; type_ = t }
+                Method { key_loc; type_ = t }
               else
-                Field { key_loc = None; type_ = t; polarity = Polarity.Neutral }
+                Field { key_loc; type_ = t; polarity = Polarity.Neutral }
             in
             Some p
           | ( Sound,
-              Some { Object.prop_t = t; is_own = false; is_method; polarity = _; key_loc = _ },
+              Some { Object.prop_t = t; is_own = false; is_method; polarity = _; key_loc },
               None,
               _
             ) ->
             let p =
               if is_method then
-                Method { key_loc = None; type_ = optional t }
+                Method { key_loc; type_ = optional t }
               else
-                Field { key_loc = None; type_ = optional t; polarity = Polarity.Neutral }
+                Field { key_loc; type_ = optional t; polarity = Polarity.Neutral }
             in
             Some p
           (* Omit works like TypeScript's Omit<Obj, 'a' | 'b'> utility type:
@@ -909,7 +909,7 @@ let object_rest
            * the behavior of other object rest merge modes implemented in this
            * pattern match. *)
           | ( ReactConfigMerge _,
-              Some { Object.prop_t = t1; is_method; is_own = _; polarity = _; key_loc = _ },
+              Some { Object.prop_t = t1; is_method; is_own = _; polarity = _; key_loc },
               Some { Object.prop_t = OptionalT { reason = _; type_ = t2; use_desc = _ }; _ },
               _
             ) ->
@@ -922,9 +922,9 @@ let object_rest
             | _ -> ());
             let p =
               if is_method then
-                Method { key_loc = None; type_ = t1 }
+                Method { key_loc; type_ = t1 }
               else
-                Field { key_loc = None; type_ = t1; polarity = Polarity.Neutral }
+                Field { key_loc; type_ = t1; polarity = Polarity.Neutral }
             in
             Some p
           (* Using our same equation. Consider this case:
@@ -936,7 +936,7 @@ let object_rest
            * {|p?|} is the best solution since it accepts more valid
            * programs then {||}. *)
           | ( ReactConfigMerge _,
-              Some { Object.prop_t = t1; is_method; is_own = _; polarity = _; key_loc = _ },
+              Some { Object.prop_t = t1; is_method; is_own = _; polarity = _; key_loc },
               Some { Object.prop_t = t2; _ },
               _
             ) ->
@@ -944,9 +944,9 @@ let object_rest
             subt_check ~use_op:unknown_use cx (t2, t1);
             let p =
               if is_method then
-                Method { key_loc = None; type_ = optional t1 }
+                Method { key_loc; type_ = optional t1 }
               else
-                Field { key_loc = None; type_ = optional t1; polarity = Polarity.Positive }
+                Field { key_loc; type_ = optional t1; polarity = Polarity.Positive }
             in
             Some p
           (* Omit works like TypeScript's Omit<Obj, 'a' | 'b'> utility type.
@@ -1045,11 +1045,11 @@ let object_read_only =
     let { Object.reason = r; props; flags; generics; interface } = slice in
     let props =
       NameUtils.Map.map
-        (fun { Object.prop_t; is_method; is_own = _; polarity = _; key_loc = _ } ->
+        (fun { Object.prop_t; is_method; is_own = _; polarity = _; key_loc } ->
           if is_method then
-            Method { key_loc = None; type_ = prop_t }
+            Method { key_loc; type_ = prop_t }
           else
-            Field { key_loc = None; type_ = prop_t; polarity })
+            Field { key_loc; type_ = prop_t; polarity })
         props
     in
     let flags =
@@ -1089,22 +1089,22 @@ let object_update_optionality kind =
     let { Object.reason = r; props; flags; generics; interface } = slice in
     let props =
       NameUtils.Map.map
-        (fun { Object.prop_t; is_method; is_own = _; polarity; key_loc = _ } ->
+        (fun { Object.prop_t; is_method; is_own = _; polarity; key_loc } ->
           if is_method then
-            Method { key_loc = None; type_ = prop_t }
+            Method { key_loc; type_ = prop_t }
           else
             match (prop_t, kind) with
-            | (OptionalT _, `Partial) -> Field { key_loc = None; type_ = prop_t; polarity }
+            | (OptionalT _, `Partial) -> Field { key_loc; type_ = prop_t; polarity }
             | (_, `Partial) ->
               Field
                 {
-                  key_loc = None;
+                  key_loc;
                   type_ =
                     OptionalT { reason = reason_of_t prop_t; type_ = prop_t; use_desc = false };
                   polarity;
                 }
-            | (OptionalT { type_; _ }, `Required) -> Field { key_loc = None; type_; polarity }
-            | (_, `Required) -> Field { key_loc = None; type_ = prop_t; polarity })
+            | (OptionalT { type_; _ }, `Required) -> Field { key_loc; type_; polarity }
+            | (_, `Required) -> Field { key_loc; type_ = prop_t; polarity })
         props
     in
     let call = None in
@@ -1593,7 +1593,11 @@ let map_object
              let variance = mk_variance variance prop_polarity in
              let field =
                Field
-                 { key_loc = None; type_ = mk_prop_type key_t prop_optional; polarity = variance }
+                 {
+                   key_loc = Some key_loc;
+                   type_ = mk_prop_type key_t prop_optional;
+                   polarity = variance;
+                 }
              in
              NameUtils.Map.add key field map)
          NameUtils.Map.empty

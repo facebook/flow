@@ -4444,6 +4444,10 @@ Flags: --lsp
   "labelDetails":{"detail":": void"},
   "kind":6,
   "detail":"void",
+  "documentation":{
+    "kind":"markdown",
+    "value":"unannotated getter property of an object literal (TODO)"
+  },
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{

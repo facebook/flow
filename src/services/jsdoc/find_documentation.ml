@@ -159,7 +159,7 @@ class documentation_searcher find =
         | (_, Init { key; value = (value_loc, _); _ }) ->
           ([loc_of_object_key key; value_loc], [comments_of_object_key key])
         | (prop_loc, Method { key; value = (_, Flow_ast.Function.{ comments; _ }) }) ->
-          ([prop_loc], [comments_of_object_key key; comments])
+          ([prop_loc; loc_of_object_key key], [comments_of_object_key key; comments])
         | (_, Get { key; value = (_, Flow_ast.Function.{ return; _ }); comments }) ->
           ([loc_of_object_key key; loc_of_return_annot return], [comments])
         | (_, Set _) -> ([], [])
