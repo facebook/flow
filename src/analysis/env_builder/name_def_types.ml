@@ -216,6 +216,7 @@ type def =
       this_super_write_locs: Env_api.EnvSet.t;
     }
   | DeclaredClass of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.DeclareClass.t
+  | DeclaredComponent of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.DeclareComponent.t
   | TypeAlias of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.TypeAlias.t
   | OpaqueType of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.OpaqueType.t
   | TypeParam of {
@@ -330,6 +331,9 @@ module Print = struct
       spf "component %s" name
     | DeclaredClass (_, { Ast.Statement.DeclareClass.id = (_, { Ast.Identifier.name; _ }); _ }) ->
       spf "declared class %s" name
+    | DeclaredComponent
+        (_, { Ast.Statement.DeclareComponent.id = (_, { Ast.Identifier.name; _ }); _ }) ->
+      spf "declared component %s" name
     | Class
         {
           class_ = { Ast.Class.id; _ };

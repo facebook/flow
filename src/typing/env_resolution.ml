@@ -1147,6 +1147,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
       resolve_import cx id_loc def_reason import_kind source source_loc import declare_module
     | Interface (loc, inter) -> resolve_interface cx loc inter
     | DeclaredClass (loc, class_) -> resolve_declare_class cx loc class_
+    | DeclaredComponent _ -> (AnyT.at (AnyError None) id_loc, unknown_use)
     | Enum (enum_loc, enum) -> resolve_enum cx id_loc def_reason enum_loc enum
     | TypeParam _ -> resolve_type_param cx id_loc
     | GeneratorNext gen -> resolve_generator_next cx def_reason gen

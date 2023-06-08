@@ -1486,8 +1486,8 @@ x();
 |};
     [%expect{|
       (3, 12) to (3, 17) =>
-      (4, 2) to (4, 3) =>
-      (3, 10) to (3, 11) |}]
+      (3, 10) to (3, 11) =>
+      (4, 2) to (4, 3) |}]
 
 let%expect_test "component ordering inc" =
   print_order_test {|
@@ -1499,9 +1499,9 @@ component F() {
 x++;
 |};
     [%expect{|
+      (4, 10) to (4, 11) =>
       (7, 0) to (7, 1) =>
-      (5, 2) to (5, 3) =>
-      (4, 10) to (4, 11) |}]
+      (5, 2) to (5, 3) |}]
 
 let%expect_test "illegal contextual with reference to param in return annot" =
   print_order_test {|
@@ -1524,3 +1524,14 @@ f((x): x is number => true);
        (3, 3) to (3, 4) =>
        (3, 2) to (3, 26)
        |}]
+
+let%expect_test "declare component ordering" =
+  print_order_test {|
+declare component F(x: T);
+const w = 42;
+type T = typeof w;
+|};
+    [%expect{|
+      (3, 6) to (3, 7) =>
+      (4, 5) to (4, 6) =>
+      (2, 18) to (2, 19) |}]

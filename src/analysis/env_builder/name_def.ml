@@ -1772,6 +1772,15 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
         (DeclaredClass (loc, decl));
       super#declare_class loc decl
 
+    method! declare_component loc (decl : ('loc, 'loc) Ast.Statement.DeclareComponent.t) =
+      let open Ast.Statement.DeclareComponent in
+      let { id = (id_loc, { Ast.Identifier.name; _ }); _ } = decl in
+      this#add_ordinary_binding
+        id_loc
+        (mk_reason (RComponent (OrdinaryName name)) loc)
+        (DeclaredComponent (loc, decl));
+      super#declare_component loc decl
+
     method! assignment loc _ = fail loc "Should be visited by visit_assignment_expression"
 
     method private visit_assignment_expression ~is_function_statics_assignment loc expr =

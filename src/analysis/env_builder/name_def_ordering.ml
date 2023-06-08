@@ -348,6 +348,8 @@ struct
 
         method! remote_identifier ident = ident
 
+        method! component_param_name name = name
+
         method! export_named_declaration_specifier
             (spec : ('loc, 'loc) Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t) =
           let open Ast.Statement.ExportNamedDeclaration.ExportSpecifier in
@@ -374,12 +376,19 @@ struct
           ()
 
         method component_def (expr : ('loc, 'loc) Ast.Statement.ComponentDeclaration.t) =
-          let { Ast.Statement.ComponentDeclaration.params; body; renders; tparams; _ } = expr in
+          let { Ast.Statement.ComponentDeclaration.params; renders; tparams; _ } = expr in
           let open Flow_ast_mapper in
-          let _ = this#function_body body in
           let _ = this#type_annotation_hint renders in
           let _ = this#component_params_annotated params in
           let _ = map_opt this#type_params tparams in
+          ()
+
+        method declare_component_def (expr : ('loc, 'loc) Ast.Statement.DeclareComponent.t) =
+          let { Ast.Statement.DeclareComponent.params; renders; tparams; _ } = expr in
+          let open Flow_ast_mapper in
+          let _ = this#type_annotation_hint renders in
+          let _ = map_opt this#type_params tparams in
+          let _ = this#component_type_params params in
           ()
 
         method function_param_pattern_annotated (expr : ('loc, 'loc) Ast.Pattern.t) =
@@ -845,6 +854,15 @@ struct
             ())
           EnvMap.empty
       in
+      let depends_of_declared_component loc component =
+        depends_of_node
+          (fun visitor ->
+            let (_ : (_, _) Ast.Statement.DeclareComponent.t) =
+              visitor#declare_component loc component
+            in
+            ())
+          EnvMap.empty
+      in
       let depends_of_declared_module
           { Ast.Statement.DeclareModule.id = _; body; kind = _; comments = _ } =
         depends_of_node
@@ -1124,6 +1142,7 @@ struct
         ->
         depends_of_class class_
       | DeclaredClass (_, decl) -> depends_of_declared_class decl
+      | DeclaredComponent (loc, decl) -> depends_of_declared_component loc decl
       | TypeAlias (_, alias) -> depends_of_alias alias
       | OpaqueType (_, alias) -> depends_of_opaque alias
       | TypeParam { tparams_map; from_infer_type = _; tparam } ->
@@ -1197,6 +1216,7 @@ struct
       | Class _
       | NonBindingParam
       | MissingThisAnnot
+      | DeclaredComponent _
       | DeclaredClass _
       | DeclaredModule _
       | Function
@@ -1286,6 +1306,7 @@ struct
     | Import _
     | Class _
     | DeclaredClass _
+    | DeclaredComponent _
     | ExpressionDef _
     | DeclaredModule _
     | NonBindingParam

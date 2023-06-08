@@ -6979,3 +6979,22 @@ let%expect_test "type_guard_scoping" =
         (4, 18) to (4, 19) => {
           (3, 13) to (3, 14): (`x`)
         }] |}]
+
+let%expect_test "declare_component" =
+  print_ssa_test {|
+  const x = 42;
+  declare component Foo(x: number, y: x);
+  x;
+  Foo;
+|};
+    [%expect{|
+      [
+        (3, 38) to (3, 39) => {
+          (2, 8) to (2, 9): (`x`)
+        };
+        (4, 2) to (4, 3) => {
+          (2, 8) to (2, 9): (`x`)
+        };
+        (5, 2) to (5, 5) => {
+          (3, 20) to (3, 23): (`Foo`)
+        }] |}]
