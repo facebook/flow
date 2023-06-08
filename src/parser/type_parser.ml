@@ -2063,5 +2063,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
   let function_return_annotation_and_predicate_opt =
     wrap function_return_annotation_and_predicate_opt
 
+  let component_param_list = wrap component_param_list
+
   let generic = wrap generic
 end

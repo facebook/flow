@@ -8,4 +8,6 @@ declare component Comp4('p1'?: Prop);
 
 declare component Comp5('p1': Prop, p2: Prop);
 
+declare component Comp6(p1: number);
+
 declare component MissingType(p1);
