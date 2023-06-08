@@ -1302,11 +1302,29 @@ module rec TypeTerm : sig
 
   (* Locations refer to the location of the identifier, if one exists *)
   and property =
-    | Field of ALoc.t option * t * Polarity.t
-    | Get of ALoc.t option * t
-    | Set of ALoc.t option * t
-    | GetSet of ALoc.t option * t * ALoc.t option * t
-    | Method of ALoc.t option * t
+    | Field of {
+        key_loc: ALoc.t option;
+        type_: t;
+        polarity: Polarity.t;
+      }
+    | Get of {
+        key_loc: ALoc.t option;
+        type_: t;
+      }
+    | Set of {
+        key_loc: ALoc.t option;
+        type_: t;
+      }
+    | GetSet of {
+        get_key_loc: ALoc.t option;
+        get_type: t;
+        set_key_loc: ALoc.t option;
+        set_type: t;
+      }
+    | Method of {
+        key_loc: ALoc.t option;
+        type_: t;
+      }
 
   (* This has to go here so that Type doesn't depend on Scope *)
   and class_binding = {
@@ -1672,60 +1690,60 @@ end = struct
   type t = property
 
   let polarity = function
-    | Field (_, _, polarity) -> polarity
+    | Field { polarity; _ } -> polarity
     | Get _ -> Positive
     | Set _ -> Negative
     | GetSet _ -> Neutral
     | Method _ -> Positive
 
   let read_t = function
-    | Field (_, t, polarity) ->
+    | Field { type_; polarity; _ } ->
       if Polarity.compat (polarity, Positive) then
-        Some t
+        Some type_
       else
         None
-    | Get (_, t) -> Some t
+    | Get { type_; _ } -> Some type_
     | Set _ -> None
-    | GetSet (_, t, _, _) -> Some t
-    | Method (_, t) -> Some t
+    | GetSet { get_type; _ } -> Some get_type
+    | Method { type_; _ } -> Some type_
 
   let write_t ?(ctx = Normal) = function
-    | Field (_, t, _) when ctx = ThisInCtor -> Some t
-    | Field (_, t, polarity) ->
+    | Field { type_; _ } when ctx = ThisInCtor -> Some type_
+    | Field { type_; polarity; _ } ->
       if Polarity.compat (polarity, Negative) then
-        Some t
+        Some type_
       else
         None
     | Get _ -> None
-    | Set (_, t) -> Some t
-    | GetSet (_, _, _, t) -> Some t
+    | Set { type_; _ } -> Some type_
+    | GetSet { set_type; _ } -> Some set_type
     | Method _ -> None
 
   let read_loc = function
-    | Field (loc, _, _)
-    | Get (loc, _)
-    | GetSet (loc, _, _, _)
-    | Method (loc, _) ->
+    | Field { key_loc = loc; _ }
+    | Get { key_loc = loc; _ }
+    | GetSet { get_key_loc = loc; _ }
+    | Method { key_loc = loc; _ } ->
       loc
     | Set _ -> None
 
   let write_loc = function
-    | Field (loc, _, _)
-    | Set (loc, _)
-    | GetSet (_, _, loc, _) ->
+    | Field { key_loc = loc; _ }
+    | Set { key_loc = loc; _ }
+    | GetSet { set_key_loc = loc; _ } ->
       loc
     | Method _
     | Get _ ->
       None
 
   let first_loc = function
-    | Field (loc, _, _)
-    | Get (loc, _)
-    | Set (loc, _)
-    | Method (loc, _) ->
+    | Field { key_loc = loc; _ }
+    | Get { key_loc = loc; _ }
+    | Set { key_loc = loc; _ }
+    | Method { key_loc = loc; _ } ->
       loc
-    | GetSet (loc1_opt, _, loc2_opt, _) ->
-      (match (loc1_opt, loc2_opt) with
+    | GetSet { get_key_loc; set_key_loc; _ } ->
+      (match (get_key_loc, set_key_loc) with
       | (None, None) -> None
       | (Some loc, None)
       | (None, Some loc) ->
@@ -1741,68 +1759,69 @@ end = struct
         Some loc)
 
   let iter_t f = function
-    | Field (_, t, _)
-    | Get (_, t)
-    | Set (_, t)
-    | Method (_, t) ->
-      f t
-    | GetSet (_, t1, _, t2) ->
-      f t1;
-      f t2
+    | Field { type_; _ }
+    | Get { type_; _ }
+    | Set { type_; _ }
+    | Method { type_; _ } ->
+      f type_
+    | GetSet { get_type; set_type; _ } ->
+      f get_type;
+      f set_type
 
   let fold_t f acc = function
-    | Field (_, t, _)
-    | Get (_, t)
-    | Set (_, t)
-    | Method (_, t) ->
-      f acc t
-    | GetSet (_, t1, _, t2) -> f (f acc t1) t2
+    | Field { type_; _ }
+    | Get { type_; _ }
+    | Set { type_; _ }
+    | Method { type_; _ } ->
+      f acc type_
+    | GetSet { get_type; set_type; _ } -> f (f acc get_type) set_type
 
   let map_t f = function
-    | Field (loc, t, polarity) -> Field (loc, f t, polarity)
-    | Get (loc, t) -> Get (loc, f t)
-    | Set (loc, t) -> Set (loc, f t)
-    | GetSet (loc1, t1, loc2, t2) -> GetSet (loc1, f t1, loc2, f t2)
-    | Method (loc, t) -> Method (loc, f t)
+    | Field { key_loc; type_; polarity } -> Field { key_loc; type_ = f type_; polarity }
+    | Get { key_loc; type_ } -> Get { key_loc; type_ = f type_ }
+    | Set { key_loc; type_ } -> Set { key_loc; type_ = f type_ }
+    | GetSet { get_key_loc; get_type; set_key_loc; set_type } ->
+      GetSet { get_key_loc; get_type = f get_type; set_key_loc; set_type = f set_type }
+    | Method { key_loc; type_ } -> Method { key_loc; type_ = f type_ }
 
   let ident_map_t f p =
     match p with
-    | Field (loc, t, polarity) ->
-      let t_ = f t in
-      if t_ == t then
+    | Field { key_loc; type_; polarity } ->
+      let type_' = f type_ in
+      if type_' == type_ then
         p
       else
-        Field (loc, t_, polarity)
-    | Get (loc, t) ->
-      let t_ = f t in
-      if t_ == t then
+        Field { key_loc; type_ = type_'; polarity }
+    | Get { key_loc; type_ } ->
+      let type_' = f type_ in
+      if type_' == type_ then
         p
       else
-        Get (loc, t_)
-    | Set (loc, t) ->
-      let t_ = f t in
-      if t_ == t then
+        Get { key_loc; type_ = type_' }
+    | Set { key_loc; type_ } ->
+      let type_' = f type_ in
+      if type_' == type_ then
         p
       else
-        Set (loc, t_)
-    | GetSet (loc1, t1, loc2, t2) ->
-      let t1_ = f t1 in
-      let t2_ = f t2 in
-      if t1_ == t1 && t2_ == t2 then
+        Set { key_loc; type_ = type_' }
+    | GetSet { get_key_loc; get_type; set_key_loc; set_type } ->
+      let get_type' = f get_type in
+      let set_type' = f set_type in
+      if get_type' == get_type && set_type' == set_type then
         p
       else
-        GetSet (loc1, t1_, loc2, t2_)
-    | Method (loc, t) ->
-      let t_ = f t in
-      if t_ == t then
+        GetSet { get_key_loc; get_type = get_type'; set_key_loc; set_type = set_type' }
+    | Method { key_loc; type_ } ->
+      let type_' = f type_ in
+      if type_' == type_ then
         p
       else
-        Method (loc, t_)
+        Method { key_loc; type_ = type_' }
 
   let forall_t f = fold_t (fun acc t -> acc && f t) true
 
   let assert_field = function
-    | Field (_, t, _) -> t
+    | Field { type_; _ } -> type_
     | _ -> assert_false "Unexpected field type"
 end
 
@@ -1861,25 +1880,27 @@ end = struct
 
   type map = t Map.t
 
-  let add_field x polarity loc t = NameUtils.Map.add x (Field (loc, t, polarity))
+  let add_field x polarity key_loc type_ = NameUtils.Map.add x (Field { key_loc; type_; polarity })
 
-  let add_getter x loc get_t map =
+  let add_getter x get_key_loc get_type map =
     NameUtils.Map.adjust
       x
       (function
-        | Some (Set (set_loc, set_t)) -> GetSet (loc, get_t, set_loc, set_t)
-        | _ -> Get (loc, get_t))
+        | Some (Set { key_loc = set_key_loc; type_ = set_type }) ->
+          GetSet { get_key_loc; get_type; set_key_loc; set_type }
+        | _ -> Get { key_loc = get_key_loc; type_ = get_type })
       map
 
-  let add_setter x loc set_t map =
+  let add_setter x set_key_loc set_type map =
     NameUtils.Map.adjust
       x
       (function
-        | Some (Get (get_loc, get_t)) -> GetSet (get_loc, get_t, loc, set_t)
-        | _ -> Set (loc, set_t))
+        | Some (Get { key_loc = get_key_loc; type_ = get_type }) ->
+          GetSet { get_key_loc; get_type; set_key_loc; set_type }
+        | _ -> Set { key_loc = set_key_loc; type_ = set_type })
       map
 
-  let add_method x loc t = NameUtils.Map.add x (Method (loc, t))
+  let add_method x key_loc type_ = NameUtils.Map.add x (Method { key_loc; type_ })
 
   let extract_named_exports pmap =
     NameUtils.Map.fold
@@ -1896,13 +1917,13 @@ end = struct
 
   let map_fields f =
     NameUtils.Map.map (function
-        | Field (loc, t, polarity) -> Field (loc, f t, polarity)
+        | Field { key_loc; type_; polarity } -> Field { key_loc; type_ = f type_; polarity }
         | p -> p
         )
 
   let mapi_fields f =
     NameUtils.Map.mapi (fun k -> function
-      | Field (loc, t, polarity) -> Field (loc, f k t, polarity)
+      | Field { key_loc; type_; polarity } -> Field { key_loc; type_ = f k type_; polarity }
       | p -> p
     )
 end

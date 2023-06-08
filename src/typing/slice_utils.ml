@@ -482,9 +482,9 @@ let spread_mk_object cx reason target { Object.reason = _; props; flags; generic
     NameUtils.Map.map
       (fun { Object.prop_t; is_method; is_own = _; polarity = _; key_loc = _ } ->
         if is_method then
-          Method (None, prop_t)
+          Method { key_loc = None; type_ = prop_t }
         else
-          Field (None, prop_t, Polarity.Neutral))
+          Field { key_loc = None; type_ = prop_t; polarity = Polarity.Neutral })
       props
   in
   let id = Context.generate_property_map cx props in
@@ -679,9 +679,9 @@ let check_config2 cx pmap { Object.reason; props; flags; generics; interface = _
       NameUtils.Map.map
         (fun { Object.prop_t; is_method; is_own = _; polarity = _; key_loc = _ } ->
           if is_method then
-            Method (None, prop_t)
+            Method { key_loc = None; type_ = prop_t }
           else
-            Field (None, prop_t, Polarity.Neutral))
+            Field { key_loc = None; type_ = prop_t; polarity = Polarity.Neutral })
         props
     in
     let id = Context.generate_property_map cx props in
@@ -802,9 +802,9 @@ let object_rest
             subt_check ~use_op cx (t1, optional t2);
             let p =
               if is_method then
-                Method (None, optional t1)
+                Method { key_loc = None; type_ = optional t1 }
               else
-                Field (None, optional t1, Polarity.Neutral)
+                Field { key_loc = None; type_ = optional t1; polarity = Polarity.Neutral }
             in
             Some p
           (* Otherwise if the object we are using to subtract has a non-optional own
@@ -832,9 +832,9 @@ let object_rest
             subt_check ~use_op cx (t1, MixedT.make r2 |> with_trust bogus_trust);
             let p =
               if is_method then
-                Method (None, optional t1)
+                Method { key_loc = None; type_ = optional t1 }
               else
-                Field (None, optional t1, Polarity.Neutral)
+                Field { key_loc = None; type_ = optional t1; polarity = Polarity.Neutral }
             in
             Some p
           (* If neither object has the prop then we don't add a prop to our
@@ -851,9 +851,9 @@ let object_rest
             ) ->
             let p =
               if is_method then
-                Method (None, t)
+                Method { key_loc = None; type_ = t }
               else
-                Field (None, t, Polarity.Neutral)
+                Field { key_loc = None; type_ = t; polarity = Polarity.Neutral }
             in
             Some p
           | ( (Omit | ReactConfigMerge _),
@@ -863,9 +863,9 @@ let object_rest
             ) ->
             let p =
               if is_method then
-                Method (None, t)
+                Method { key_loc = None; type_ = t }
               else
-                Field (None, t, Polarity.Positive)
+                Field { key_loc = None; type_ = t; polarity = Polarity.Positive }
             in
             Some p
           | ( Sound,
@@ -875,9 +875,9 @@ let object_rest
             ) ->
             let p =
               if is_method then
-                Method (None, t)
+                Method { key_loc = None; type_ = t }
               else
-                Field (None, t, Polarity.Neutral)
+                Field { key_loc = None; type_ = t; polarity = Polarity.Neutral }
             in
             Some p
           | ( Sound,
@@ -887,9 +887,9 @@ let object_rest
             ) ->
             let p =
               if is_method then
-                Method (None, optional t)
+                Method { key_loc = None; type_ = optional t }
               else
-                Field (None, optional t, Polarity.Neutral)
+                Field { key_loc = None; type_ = optional t; polarity = Polarity.Neutral }
             in
             Some p
           (* Omit works like TypeScript's Omit<Obj, 'a' | 'b'> utility type:
@@ -922,9 +922,9 @@ let object_rest
             | _ -> ());
             let p =
               if is_method then
-                Method (None, t1)
+                Method { key_loc = None; type_ = t1 }
               else
-                Field (None, t1, Polarity.Neutral)
+                Field { key_loc = None; type_ = t1; polarity = Polarity.Neutral }
             in
             Some p
           (* Using our same equation. Consider this case:
@@ -944,9 +944,9 @@ let object_rest
             subt_check ~use_op:unknown_use cx (t2, t1);
             let p =
               if is_method then
-                Method (None, optional t1)
+                Method { key_loc = None; type_ = optional t1 }
               else
-                Field (None, optional t1, Polarity.Positive)
+                Field { key_loc = None; type_ = optional t1; polarity = Polarity.Positive }
             in
             Some p
           (* Omit works like TypeScript's Omit<Obj, 'a' | 'b'> utility type.
@@ -1047,9 +1047,9 @@ let object_read_only =
       NameUtils.Map.map
         (fun { Object.prop_t; is_method; is_own = _; polarity = _; key_loc = _ } ->
           if is_method then
-            Method (None, prop_t)
+            Method { key_loc = None; type_ = prop_t }
           else
-            Field (None, prop_t, polarity))
+            Field { key_loc = None; type_ = prop_t; polarity })
         props
     in
     let flags =
@@ -1091,18 +1091,20 @@ let object_update_optionality kind =
       NameUtils.Map.map
         (fun { Object.prop_t; is_method; is_own = _; polarity; key_loc = _ } ->
           if is_method then
-            Method (None, prop_t)
+            Method { key_loc = None; type_ = prop_t }
           else
             match (prop_t, kind) with
-            | (OptionalT _, `Partial) -> Field (None, prop_t, polarity)
+            | (OptionalT _, `Partial) -> Field { key_loc = None; type_ = prop_t; polarity }
             | (_, `Partial) ->
               Field
-                ( None,
-                  OptionalT { reason = reason_of_t prop_t; type_ = prop_t; use_desc = false },
-                  polarity
-                )
-            | (OptionalT { type_; _ }, `Required) -> Field (None, type_, polarity)
-            | (_, `Required) -> Field (None, prop_t, polarity))
+                {
+                  key_loc = None;
+                  type_ =
+                    OptionalT { reason = reason_of_t prop_t; type_ = prop_t; use_desc = false };
+                  polarity;
+                }
+            | (OptionalT { type_; _ }, `Required) -> Field { key_loc = None; type_; polarity }
+            | (_, `Required) -> Field { key_loc = None; type_ = prop_t; polarity })
         props
     in
     let call = None in
@@ -1271,7 +1273,9 @@ let interface_slice cx r intf id generics =
         NameUtils.Map.find_opt (OrdinaryName "$value") props
       )
     with
-    | (Some (Field (_, key, polarity)), Some (Field (_, value, polarity')))
+    | ( Some (Field { type_ = key; polarity; _ }),
+        Some (Field { type_ = value; polarity = polarity'; _ })
+      )
       when polarity = polarity' ->
       let props =
         props
@@ -1564,7 +1568,14 @@ let map_object
              (* This is possible if a key is passed that does not actually conform to the
               * $Keys/keyof upper bound. That already results in an error, so we refuse to evaluate
               * the mapped type and signal to return `any` here *)
-             let field = Field (None, AnyT.why (AnyError None) reason, Polarity.Neutral) in
+             let field =
+               Field
+                 {
+                   key_loc = None;
+                   type_ = AnyT.why (AnyError None) reason;
+                   polarity = Polarity.Neutral;
+                 }
+             in
              NameUtils.Map.add key field map
            (* Methods have no special consideration. There is no guarantee that the prop inserted by
             * the mapped type is going to continue to be a function, so we transform it into a regular
@@ -1580,7 +1591,10 @@ let map_object
              in
              let prop_optional = is_prop_optional prop_t in
              let variance = mk_variance variance prop_polarity in
-             let field = Field (None, mk_prop_type key_t prop_optional, variance) in
+             let field =
+               Field
+                 { key_loc = None; type_ = mk_prop_type key_t prop_optional; polarity = variance }
+             in
              NameUtils.Map.add key field map)
          NameUtils.Map.empty
   in

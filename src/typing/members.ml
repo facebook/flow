@@ -129,7 +129,9 @@ let rec merge_type cx =
           | (None, Some _) ->
             Some (Obj_type.is_exact o1.flags.obj_kind || Obj_type.is_exact o2.flags.obj_kind)
           (* Covariant fields can be merged. *)
-          | (Some (Field (_, _, Polarity.Positive)), Some (Field (_, _, Polarity.Positive))) ->
+          | ( Some (Field { polarity = Polarity.Positive; _ }),
+              Some (Field { polarity = Polarity.Positive; _ })
+            ) ->
             Some true
           (* Getters are covariant and thus can be merged. *)
           | (Some (Get _), Some (Get _)) -> Some true
@@ -511,12 +513,12 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
            * type. *)
           let (loc, t) =
             match p with
-            | Field (loc, t, _)
-            | Get (loc, t)
-            | Set (loc, t)
+            | Field { key_loc = loc; type_ = t; _ }
+            | Get { key_loc = loc; type_ = t }
+            | Set { key_loc = loc; type_ = t }
             (* arbitrarily use the location for the getter. maybe we can send both in the future *)
-            | GetSet (loc, t, _, _)
-            | Method (loc, t) ->
+            | GetSet { get_key_loc = loc; get_type = t; _ }
+            | Method { key_loc = loc; type_ = t } ->
               (loc, t)
           in
           SMap.add x (loc, t) acc)

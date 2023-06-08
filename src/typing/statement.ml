@@ -2280,7 +2280,7 @@ module Make
         (* No properties are added in this case. *)
         Obj_type.mk_exact_empty cx reason_obj
       | Named (_, name) ->
-        let prop = Field (None, value, Polarity.Neutral) in
+        let prop = Field { key_loc = None; type_ = value; polarity = Polarity.Neutral } in
         let props = NameUtils.Map.singleton name prop in
         let proto = NullT.make reason |> with_trust bogus_trust in
         Obj_type.mk_with_proto ~obj_kind:Exact cx reason_obj ~props proto
@@ -6261,7 +6261,7 @@ module Make
                     Flow.flow cx (spec, UseT (use_op, propdesc))
                 )
               in
-              let p = Field (loc, t, Polarity.Neutral) in
+              let p = Field { key_loc = loc; type_ = t; polarity = Polarity.Neutral } in
               NameUtils.Map.add x p acc)
           pmap
           NameUtils.Map.empty
@@ -7722,7 +7722,9 @@ module Make
                 let expr_t =
                   Env.find_write cx kind (mk_reason (RIdentifier (OrdinaryName name)) loc)
                 in
-                let field = Field (Some loc, expr_t, Polarity.Neutral) in
+                let field =
+                  Field { key_loc = Some loc; type_ = expr_t; polarity = Polarity.Neutral }
+                in
                 NameUtils.Map.add (OrdinaryName name) field acc)
               statics
               NameUtils.Map.empty

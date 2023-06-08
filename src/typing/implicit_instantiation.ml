@@ -422,7 +422,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
         ~props:
           (NameUtils.Map.map
              (fun { Object.prop_t; is_own = _; is_method = _; polarity = _; key_loc } ->
-               Field (key_loc, prop_t, Polarity.Neutral))
+               Field { key_loc; type_ = prop_t; polarity = Polarity.Neutral })
              s.Object.props
           )
         (ObjProtoT r)

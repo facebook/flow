@@ -938,33 +938,33 @@ end = struct
       in
       fun ~env ?(inherited = false) ?(source = Ty.Other) (x, p) ->
         match p with
-        | T.Field (loc_opt, t, polarity) ->
+        | T.Field { key_loc; type_ = t; polarity } ->
           if keep_field ~env t then
-            let def_loc = Some (Base.Option.value loc_opt ~default:(TypeUtil.loc_of_t t)) in
+            let def_loc = Some (Base.Option.value key_loc ~default:(TypeUtil.loc_of_t t)) in
             let polarity = type_polarity polarity in
             let%map (t, optional) = opt_t ~env t in
             let prop = Ty.Field { t; polarity; optional } in
             [Ty.NamedProp { name = x; prop; inherited; source; def_loc }]
           else
             return []
-        | T.Method (loc_opt, t) ->
+        | T.Method { key_loc; type_ = t } ->
           let%map tys = method_ty ~env t in
-          let def_loc = Some (Base.Option.value loc_opt ~default:(TypeUtil.loc_of_t t)) in
+          let def_loc = Some (Base.Option.value key_loc ~default:(TypeUtil.loc_of_t t)) in
           Base.List.map
             ~f:(fun ty ->
               Ty.NamedProp { name = x; prop = Ty.Method ty; inherited; source; def_loc })
             tys
-        | T.Get (loc_opt, t) ->
-          let def_loc = Some (Base.Option.value loc_opt ~default:(TypeUtil.loc_of_t t)) in
+        | T.Get { key_loc; type_ = t } ->
+          let def_loc = Some (Base.Option.value key_loc ~default:(TypeUtil.loc_of_t t)) in
           let%map t = type__ ~env t in
           [Ty.NamedProp { name = x; prop = Ty.Get t; inherited; source; def_loc }]
-        | T.Set (loc_opt, t) ->
-          let def_loc = Some (Base.Option.value loc_opt ~default:(TypeUtil.loc_of_t t)) in
+        | T.Set { key_loc; type_ = t } ->
+          let def_loc = Some (Base.Option.value key_loc ~default:(TypeUtil.loc_of_t t)) in
           let%map t = type__ ~env t in
           [Ty.NamedProp { name = x; prop = Ty.Set t; inherited; source; def_loc }]
-        | T.GetSet (loc1, t1, loc2, t2) ->
-          let%bind p1 = obj_prop_t ~env (x, T.Get (loc1, t1)) in
-          let%map p2 = obj_prop_t ~env (x, T.Set (loc2, t2)) in
+        | T.GetSet { get_key_loc; get_type; set_key_loc; set_type } ->
+          let%bind p1 = obj_prop_t ~env (x, T.Get { key_loc = get_key_loc; type_ = get_type }) in
+          let%map p2 = obj_prop_t ~env (x, T.Set { key_loc = set_key_loc; type_ = set_type }) in
           p1 @ p2
 
     and call_prop_from_t ~env t =
@@ -1040,7 +1040,7 @@ end = struct
       let react_props ~env ~default props name =
         match NameUtils.Map.find (OrdinaryName name) props with
         | exception Not_found -> return default
-        | Type.Field (_, t, _) -> type__ ~env t
+        | Type.Field { type_ = t; _ } -> type__ ~env t
         | _ -> return default
       in
       let inexactify = function
@@ -2006,8 +2006,8 @@ end = struct
         let rec loop acc xs =
           match xs with
           | [] -> return acc
-          | (x, T.Field (_, t, p)) :: tl ->
-            let%bind acc' = step acc (x, t, p) in
+          | (x, T.Field { type_; polarity; _ }) :: tl ->
+            let%bind acc' = step acc (x, type_, polarity) in
             loop acc' tl
           | _ -> terr ~kind:UnsupportedTypeCtor ~msg:"module-prop" None
         in

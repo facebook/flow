@@ -654,7 +654,7 @@ let quick_error_fun_as_obj cx trace ~use_op reason statics reason_o props =
         (fun x p ->
           let optional =
             match p with
-            | Field (_, OptionalT _, _) -> true
+            | Field { type_ = OptionalT _; _ } -> true
             | _ -> false
           in
           not (optional || is_function_prototype x || NameUtils.Map.mem x statics_own_props))
@@ -1257,7 +1257,9 @@ module CJSRequireT_kit (F : Import_export_helper_sig) = struct
       let mk_exports_object () =
         let proto = ObjProtoT reason in
         let props =
-          NameUtils.Map.map (fun (loc, t) -> Field (loc, t, Polarity.Positive)) exports_tmap
+          NameUtils.Map.map
+            (fun (key_loc, type_) -> Field { key_loc; type_; polarity = Polarity.Positive })
+            exports_tmap
         in
         Obj_type.mk_with_proto cx reason ~obj_kind:Exact ~frozen:true ~props proto
       in
@@ -1280,16 +1282,18 @@ module ImportModuleNsTKit = struct
     in
     let exports_tmap = Context.find_exports cx exports.exports_tmap in
     let props =
-      NameUtils.Map.map (fun (loc, t) -> Field (loc, t, Polarity.Positive)) exports_tmap
+      NameUtils.Map.map
+        (fun (key_loc, type_) -> Field { key_loc; type_; polarity = Polarity.Positive })
+        exports_tmap
     in
     let props =
       if Context.facebook_module_interop cx then
         props
       else
         match exports.cjs_export with
-        | Some t ->
+        | Some type_ ->
           (* TODO this Field should probably have a location *)
-          let p = Field (None, t, Polarity.Positive) in
+          let p = Field { key_loc = None; type_; polarity = Polarity.Positive } in
           NameUtils.Map.add (OrdinaryName "default") p props
         | None -> props
     in
@@ -1814,10 +1818,10 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
       ->
       (* Dictionaries match all property reads *)
       F.dict_read_check cx trace ~use_op:unknown_use (string_key x reason_op, key);
-      Some (Field (None, value, dict_polarity), IndexerProperty)
+      Some (Field { key_loc = None; type_ = value; polarity = dict_polarity }, IndexerProperty)
     | (Computed k, None, Some { key; value; dict_polarity; _ }) ->
       F.dict_read_check cx trace ~use_op:unknown_use (k, key);
-      Some (Field (None, value, dict_polarity), IndexerProperty)
+      Some (Field { key_loc = None; type_ = value; polarity = dict_polarity }, IndexerProperty)
     | _ -> None
 
   let perform_read_prop_action cx trace use_op propref p ureason =
@@ -2001,19 +2005,19 @@ let objt_to_obj_rest cx props_tmap ~obj_kind ~reason_op ~reason_obj xs =
   let props =
     NameUtils.Map.mapi
       (fun name -> function
-        | Field (loc, t, polarity) ->
+        | Field { key_loc; type_; polarity } ->
           if not @@ Polarity.compat (polarity, Polarity.Positive) then
             add_output
               cx
               (Error_message.EPropNotReadable
-                 { reason_prop = reason_of_t t; prop_name = Some name; use_op }
+                 { reason_prop = reason_of_t type_; prop_name = Some name; use_op }
               );
-          Field (loc, t, Polarity.Neutral)
-        | Set (_, t) as p ->
+          Field { key_loc; type_; polarity = Polarity.Neutral }
+        | Set { key_loc = _; type_ } as p ->
           add_output
             cx
             (Error_message.EPropNotReadable
-               { reason_prop = reason_of_t t; prop_name = Some name; use_op }
+               { reason_prop = reason_of_t type_; prop_name = Some name; use_op }
             );
           p
         | p -> p)
@@ -2095,7 +2099,8 @@ let get_values_type_of_instance_t cx own_props reason =
       ts
     else
       match NameUtils.Map.find (OrdinaryName "$value") props with
-      | Field (_, dict_value, polarity) when Polarity.compat (polarity, Polarity.Positive) ->
+      | Field { type_ = dict_value; polarity; _ } when Polarity.compat (polarity, Polarity.Positive)
+        ->
         dict_value :: ts
       | _ -> ts
   in

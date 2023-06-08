@@ -368,7 +368,7 @@ struct
     | Some p ->
       let p =
         match p with
-        | Method (r, t)
+        | Method { key_loc; type_ = t }
           when (not allow_method_access)
                && not (Context.allowed_method_unbinding cx (Reason.loc_of_reason reason_op)) ->
           add_output
@@ -377,7 +377,7 @@ struct
             (Error_message.EMethodUnbinding
                { use_op; reason_op = reason_prop; reason_prop = reason_of_t t }
             );
-          Method (r, unbind_this_method t)
+          Method { key_loc; type_ = unbind_this_method t }
         | _ -> p
       in
       Base.Option.iter id ~f:(Context.test_prop_hit cx);
@@ -1490,7 +1490,7 @@ struct
               add_output cx ~trace err
             else (
               match NameUtils.Map.find (OrdinaryName "$key") own_props with
-              | Field (_, dict_key, _) ->
+              | Field { type_ = dict_key; _ } ->
                 rec_flow_t ~use_op cx trace (mod_reason_of_t (Fun.const reason_op) key, dict_key)
               | _ -> add_output cx ~trace err
             ))
@@ -1529,7 +1529,7 @@ struct
             ()
           else (
             match NameUtils.Map.find (OrdinaryName "$key") own_props with
-            | Field (_, dict_key, _) ->
+            | Field { type_ = dict_key; _ } ->
               rec_flow
                 cx
                 trace
@@ -3317,7 +3317,7 @@ struct
           | Some p ->
             let p =
               match p with
-              | Method (r, t)
+              | Method { key_loc; type_ = t }
                 when (not method_accessible)
                      && not (Context.allowed_method_unbinding cx (Reason.loc_of_reason reason_op))
                 ->
@@ -3331,7 +3331,7 @@ struct
                        reason_prop = reason_of_t t;
                      }
                   );
-                Method (r, unbind_this_method t)
+                Method { key_loc; type_ = unbind_this_method t }
               | _ -> p
             in
             (match kind with
@@ -3814,7 +3814,9 @@ struct
             ()
           | _ ->
             let src = any_mod_src_keep_placeholder Untyped src in
-            let p = Field (None, AnyT.why src reason_op, Polarity.Neutral) in
+            let p =
+              Field { key_loc = None; type_ = AnyT.why src reason_op; polarity = Polarity.Neutral }
+            in
             (match lookup_kind with
             | NonstrictReturning (_, Some (id, _)) -> Context.test_prop_hit cx id
             | _ -> ());
@@ -4995,7 +4997,14 @@ struct
               { reason_prop; reason_obj = strict_reason; prop_name = Some x; use_op; suggestion }
           in
           add_output cx ~trace error_message;
-          let p = Field (None, AnyT.error_of_kind UnresolvedName reason_op, Polarity.Neutral) in
+          let p =
+            Field
+              {
+                key_loc = None;
+                type_ = AnyT.error_of_kind UnresolvedName reason_op;
+                polarity = Polarity.Neutral;
+              }
+          in
           perform_lookup_action cx trace propref p DynamicProperty reason reason_op action
         | ( (DefT (reason, _, NullT) | ObjProtoT reason | FunProtoT reason),
             LookupT
@@ -5018,14 +5027,21 @@ struct
             add_output cx ~trace Error_message.(EInternal (loc, PropRefComputedLiteral))
           | AnyT (_, src) ->
             let src = any_mod_src_keep_placeholder Untyped src in
-            let p = Field (None, AnyT.why src reason_op, Polarity.Neutral) in
+            let p =
+              Field { key_loc = None; type_ = AnyT.why src reason_op; polarity = Polarity.Neutral }
+            in
             perform_lookup_action cx trace propref p DynamicProperty reason reason_op action
           | DefT (_, _, StrT _)
           | DefT (_, _, NumT _) ->
             (* string, and number keys are allowed, but there's nothing else to
                flow without knowing their literal values. *)
             let p =
-              Field (None, Unsoundness.why ComputedNonLiteralKey reason_op, Polarity.Neutral)
+              Field
+                {
+                  key_loc = None;
+                  type_ = Unsoundness.why ComputedNonLiteralKey reason_op;
+                  polarity = Polarity.Neutral;
+                }
             in
             perform_lookup_action cx trace propref p PropertyMapProperty reason reason_op action
           | _ ->
@@ -6194,7 +6210,7 @@ struct
               NameUtils.Map.find (OrdinaryName "$value") own_props
             )
           with
-          | (Field (_, key, _), Field (_, value, dict_polarity)) ->
+          | (Field { type_ = key; _ }, Field { type_ = value; polarity = dict_polarity; _ }) ->
             Some { key; value; dict_polarity; dict_name = None }
           | _ -> failwith "$key and $value must be added as fields"
       in
@@ -6258,16 +6274,16 @@ struct
             NameUtils.Map.find (OrdinaryName "$value") own_props
           )
         with
-        | (Field (_, key, _), Field (_, value, dict_polarity)) ->
+        | (Field { type_ = key; _ }, Field { type_ = value; polarity = dict_polarity; _ }) ->
           Some { key; value; dict_polarity; dict_name = None }
         | _ -> failwith "$key and $value must be added as fields"
     in
     let call_t = Base.Option.map call_id ~f:(Context.find_call cx) in
     let read_only_if_lit p =
       match p with
-      | Field (x, t, _) ->
+      | Field { key_loc; type_; _ } ->
         if lit then
-          Field (x, t, Polarity.Positive)
+          Field { key_loc; type_; polarity = Polarity.Positive }
         else
           p
       | _ -> p
@@ -6281,7 +6297,7 @@ struct
                )
            in
            match p with
-           | Field (_, (OptionalT _ as t), polarity) ->
+           | Field { type_ = OptionalT _ as t; polarity; _ } ->
              let propref =
                let reason_prop =
                  update_desc_reason (fun desc -> ROptional (RPropertyOf (s, desc))) reason_struct
@@ -6306,7 +6322,8 @@ struct
                          (Base.Option.map ~f:(fun { value; _ } -> (value, t)) dict, None);
                      try_ts_on_failure = [];
                      propref;
-                     lookup_action = LookupProp (use_op, Field (None, t, polarity));
+                     lookup_action =
+                       LookupProp (use_op, Field { key_loc = None; type_ = t; polarity });
                      method_accessible = true;
                      ids = Some Properties.Set.empty;
                    }
@@ -7134,7 +7151,7 @@ struct
           | Some p ->
             ( if not allow_method_access then
               match p with
-              | Method (_, t)
+              | Method { type_ = t; _ }
                 when not (Context.allowed_method_unbinding cx (Reason.loc_of_reason reason_op)) ->
                 add_output
                   cx
@@ -8395,7 +8412,9 @@ struct
     let use_op = Frame (PropertyCompatibility { prop = Some x; lower = r1; upper = r2 }, use_op) in
     (* If both sides are neutral fields, we can just unify once *)
     match (p1, p2) with
-    | (Field (_, t1, Polarity.Neutral), Field (_, t2, Polarity.Neutral)) ->
+    | ( Field { type_ = t1; polarity = Polarity.Neutral; _ },
+        Field { type_ = t2; polarity = Polarity.Neutral; _ }
+      ) ->
       rec_unify cx trace ~use_op t1 t2
     | _ ->
       (* Otherwise, unify read/write sides separately. *)
@@ -8434,7 +8453,7 @@ struct
               key
             )
         );
-      let p2 = Field (None, value, dict_polarity) in
+      let p2 = Field { key_loc = None; type_ = value; polarity = dict_polarity } in
       unify_props cx trace ~use_op x prop_obj_reason dict_reason p p2
     | None ->
       let use_op =

@@ -181,13 +181,14 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
       pmap
 
   and check_polarity_prop cx ?trace tparams polarity = function
-    | Field (_, t, p) -> check_polarity cx ?trace tparams (Polarity.mult (polarity, p)) t
-    | Get (_, t) -> check_polarity cx ?trace tparams polarity t
-    | Set (_, t) -> check_polarity cx ?trace tparams (Polarity.inv polarity) t
-    | GetSet (_, t1, _, t2) ->
-      check_polarity cx ?trace tparams polarity t1;
-      check_polarity cx ?trace tparams (Polarity.inv polarity) t2
-    | Method (_, t) -> check_polarity cx ?trace tparams polarity t
+    | Field { type_; polarity = p; _ } ->
+      check_polarity cx ?trace tparams (Polarity.mult (polarity, p)) type_
+    | Get { type_; _ } -> check_polarity cx ?trace tparams polarity type_
+    | Set { type_; _ } -> check_polarity cx ?trace tparams (Polarity.inv polarity) type_
+    | GetSet { get_type; set_type; _ } ->
+      check_polarity cx ?trace tparams polarity get_type;
+      check_polarity cx ?trace tparams (Polarity.inv polarity) set_type
+    | Method { type_; _ } -> check_polarity cx ?trace tparams polarity type_
 
   and check_polarity_dict cx ?trace tparams polarity d =
     let { dict_name = _; key; value; dict_polarity } = d in

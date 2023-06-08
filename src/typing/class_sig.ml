@@ -329,17 +329,17 @@ module Make
     let tparams_nel = Base.Option.value_exn (Nel.of_list tparams_lst) in
     Some (loc, tparams_nel)
 
-  let to_field (loc, polarity, field) =
-    let t =
+  let to_field (key_loc, polarity, field) =
+    let type_ =
       match field with
       | Annot t -> t
       | Infer (fsig, _) -> F.gettertype fsig
     in
-    Type.Field (loc, t, polarity)
+    Type.Field { key_loc; type_; polarity }
 
   let to_method
       cx this_default { id_loc; this_write_loc; func_sig = fsig; set_asts = _; set_type = _ } =
-    Type.Method (id_loc, F.methodtype cx this_write_loc this_default fsig)
+    Type.Method { key_loc = id_loc; type_ = F.methodtype cx this_write_loc this_default fsig }
 
   let to_prop_map to_prop_converter cx =
     SMap.map to_prop_converter %> NameUtils.namemap_of_smap %> Context.generate_property_map cx
@@ -425,15 +425,16 @@ module Make
       SMap.merge
         (fun _ getter setter ->
           match (getter, setter) with
-          | (Some (loc1, t1, _), Some (loc2, t2, _)) -> Some (Type.GetSet (loc1, t1, loc2, t2))
-          | (Some (loc, t, _), None) -> Some (Type.Get (loc, t))
-          | (None, Some (loc, t, _)) -> Some (Type.Set (loc, t))
+          | (Some (get_key_loc, get_type, _), Some (set_key_loc, set_type, _)) ->
+            Some (Type.GetSet { get_key_loc; get_type; set_key_loc; set_type })
+          | (Some (key_loc, type_, _), None) -> Some (Type.Get { key_loc; type_ })
+          | (None, Some (key_loc, type_, _)) -> Some (Type.Set { key_loc; type_ })
           | _ -> None)
         getters
         setters
     in
     let fields = SMap.map to_field s.fields in
-    let methods = SMap.map (fun (loc, t) -> Type.Method (loc, t)) methods in
+    let methods = SMap.map (fun (key_loc, type_) -> Type.Method { key_loc; type_ }) methods in
     (* Treat proto fields as methods, as they are on the proto object *)
     let methods =
       SMap.fold (fun name fld acc -> SMap.add name (to_field fld) acc) s.proto_fields methods

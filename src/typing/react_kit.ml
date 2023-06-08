@@ -149,7 +149,9 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       NonstrictReturning (Some (DefT (reason_missing, bogus_trust (), VoidT), upper), None)
     in
     let propref = Named (reason_prop, name) in
-    let action = LookupProp (unknown_use, Field (None, upper, pole)) in
+    let action =
+      LookupProp (unknown_use, Field { key_loc = None; type_ = upper; polarity = pole })
+    in
     (* Lookup the `defaultProps` property. *)
     rec_flow
       cx
@@ -195,7 +197,14 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       rec_flow cx trace (component, ReactPropsToOut (reason_op, tout))
     (* Special case for intrinsic components. *)
     | DefT (_, _, StrT lit) ->
-      get_intrinsic cx trace component ~reason_op `Props lit (Field (None, tout, Polarity.Positive))
+      get_intrinsic
+        cx
+        trace
+        component
+        ~reason_op
+        `Props
+        lit
+        (Field { key_loc = None; type_ = tout; polarity = Polarity.Positive })
     (* any and any specializations *)
     | AnyT (reason, src) -> rec_flow_t ~use_op:unknown_use cx trace (AnyT.why src reason, tout)
     | DefT (reason, trust, ReactAbstractComponentT _) ->
@@ -355,7 +364,11 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       | DefT (reason, trust, ReactAbstractComponentT _) ->
         rec_flow_t ~use_op:unknown_use cx trace (tin, MixedT.why reason trust)
       (* Intrinsic components. *)
-      | DefT (_, _, StrT lit) -> get_intrinsic `Props lit (Field (None, tin, Polarity.Negative))
+      | DefT (_, _, StrT lit) ->
+        get_intrinsic
+          `Props
+          lit
+          (Field { key_loc = None; type_ = tin; polarity = Polarity.Negative })
       | AnyT (reason, source) ->
         rec_flow_t ~use_op:unknown_use cx trace (tin, AnyT.why source reason)
       (* ...otherwise, error. *)
@@ -568,7 +581,9 @@ module Kit (Flow : Flow_common.S) : REACT = struct
               use_op
             )
         in
-        let action = LookupProp (use_op, Field (None, key_t, Polarity.Positive)) in
+        let action =
+          LookupProp (use_op, Field { key_loc = None; type_ = key_t; polarity = Polarity.Positive })
+        in
         rec_flow
           cx
           trace
@@ -614,7 +629,9 @@ module Kit (Flow : Flow_common.S) : REACT = struct
               use_op
             )
         in
-        let action = LookupProp (use_op, Field (None, ref_t, Polarity.Positive)) in
+        let action =
+          LookupProp (use_op, Field { key_loc = None; type_ = ref_t; polarity = Polarity.Positive })
+        in
         rec_flow
           cx
           trace
@@ -695,7 +712,11 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       | DefT (_, _, ReactAbstractComponentT { instance; _ }) ->
         rec_flow_t ~use_op:unknown_use cx trace (instance, tout)
       (* Intrinsic components. *)
-      | DefT (_, _, StrT lit) -> get_intrinsic `Instance lit (Field (None, tout, Polarity.Positive))
+      | DefT (_, _, StrT lit) ->
+        get_intrinsic
+          `Instance
+          lit
+          (Field { key_loc = None; type_ = tout; polarity = Polarity.Positive })
       | AnyT (reason, source) ->
         rec_flow_t ~use_op:unknown_use cx trace (AnyT.why source reason, tout)
       (* ...otherwise, error. *)
@@ -817,7 +838,12 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             | Error _ -> AnyT.make (AnyError None) reason_op |> resolve))
         | Shape tool ->
           let add_prop k t (reason, props, flags) =
-            let props = NameUtils.Map.add k (Field (None, t, Polarity.Neutral)) props in
+            let props =
+              NameUtils.Map.add
+                k
+                (Field { key_loc = None; type_ = t; polarity = Polarity.Neutral })
+                props
+            in
             (reason, props, flags)
           in
           let add_dict dict (reason, props, flags) =

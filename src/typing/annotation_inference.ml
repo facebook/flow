@@ -907,7 +907,9 @@ module rec ConsGen : S = struct
         GetPropTKit.perform_read_prop_action cx dummy_trace use_op propref p reason_op
       | None -> Get_prop_helper.cg_lookup_ cx use_op o.proto_t reason_op propref)
     | (AnyT _, Annot_LookupT (reason_op, use_op, propref)) ->
-      let p = Field (None, AnyT.untyped reason_op, Polarity.Neutral) in
+      let p =
+        Field { key_loc = None; type_ = AnyT.untyped reason_op; polarity = Polarity.Neutral }
+      in
       GetPropTKit.perform_read_prop_action cx dummy_trace use_op propref p reason_op
     (************)
     (* ObjRestT *)
@@ -1047,7 +1049,14 @@ module rec ConsGen : S = struct
           { reason_prop; reason_obj = reason_op; prop_name = Some x; use_op; suggestion = None }
       in
       Flow_js_utils.add_output cx error_message;
-      let p = Field (None, AnyT.error_of_kind UnresolvedName reason_op, Polarity.Neutral) in
+      let p =
+        Field
+          {
+            key_loc = None;
+            type_ = AnyT.error_of_kind UnresolvedName reason_op;
+            polarity = Polarity.Neutral;
+          }
+      in
       GetPropTKit.perform_read_prop_action cx dummy_trace use_op propref p reason_op
     (****************************************)
     (* Object, function, etc. library calls *)

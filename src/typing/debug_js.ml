@@ -1065,11 +1065,13 @@ and dump_tvar_ (depth, tvars) cx id =
 and dump_prop_ (depth, tvars) cx p =
   let kid t = dump_t_ (depth, tvars) cx t in
   match p with
-  | Field (_loc, t, polarity) -> spf "Field (%s) %s" (Polarity.string polarity) (kid t)
-  | Get (_loc, t) -> spf "Get %s" (kid t)
-  | Set (_loc, t) -> spf "Set %s" (kid t)
-  | GetSet (_loc1, t1, _loc2, t2) -> spf "Get %s Set %s" (kid t1) (kid t2)
-  | Method (_loc, t) -> spf "Method %s" (kid t)
+  | Field { key_loc = _; type_; polarity } ->
+    spf "Field (%s) %s" (Polarity.string polarity) (kid type_)
+  | Get { key_loc = _; type_ } -> spf "Get %s" (kid type_)
+  | Set { key_loc = _; type_ } -> spf "Set %s" (kid type_)
+  | GetSet { get_key_loc = _; get_type; set_key_loc = _; set_type } ->
+    spf "Get %s Set %s" (kid get_type) (kid set_type)
+  | Method { key_loc = _; type_ } -> spf "Method %s" (kid type_)
 
 (* This is the type-dump debugging API.
    We should make sure these are not called recursively to avoid circumventing

@@ -268,13 +268,13 @@ class ['a] t =
 
     method prop cx pole acc =
       function
-      | Field (_, t, p) -> self#type_ cx (P.mult (pole, p)) acc t
-      | Method (_, t) -> self#type_ cx pole acc t
-      | Get (_, t) -> self#type_ cx pole acc t
-      | Set (_, t) -> self#type_ cx (P.inv pole) acc t
-      | GetSet (_, t1, _, t2) ->
-        let acc = self#type_ cx pole acc t1 in
-        let acc = self#type_ cx (P.inv pole) acc t2 in
+      | Field { key_loc = _; type_; polarity } -> self#type_ cx (P.mult (pole, polarity)) acc type_
+      | Method { key_loc = _; type_ } -> self#type_ cx pole acc type_
+      | Get { key_loc = _; type_ } -> self#type_ cx pole acc type_
+      | Set { key_loc = _; type_ } -> self#type_ cx (P.inv pole) acc type_
+      | GetSet { get_key_loc = _; get_type; set_key_loc = _; set_type } ->
+        let acc = self#type_ cx pole acc get_type in
+        let acc = self#type_ cx (P.inv pole) acc set_type in
         acc
 
     method call_prop cx pole acc id =

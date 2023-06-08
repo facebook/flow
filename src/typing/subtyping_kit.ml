@@ -47,7 +47,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
 
   let rec_flow_p cx ?trace ~use_op ?(report_polarity = true) lreason ureason propref = function
     (* unification cases *)
-    | (Field (_, lt, Polarity.Neutral), Field (_, ut, Polarity.Neutral)) ->
+    | ( Field { type_ = lt; polarity = Polarity.Neutral; _ },
+        Field { type_ = ut; polarity = Polarity.Neutral; _ }
+      ) ->
       unify_opt cx ?trace ~use_op lt ut
     (* directional cases *)
     | (lp, up) ->
@@ -198,7 +200,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
         lreason
         ureason
         (Computed uk)
-        (Field (None, lk, lpolarity), Field (None, uk, upolarity));
+        ( Field { key_loc = None; type_ = lk; polarity = lpolarity },
+          Field { key_loc = None; type_ = uk; polarity = upolarity }
+        );
       rec_flow_p
         cx
         ~trace
@@ -207,7 +211,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
         lreason
         ureason
         (Computed uv)
-        (Field (None, lv, lpolarity), Field (None, uv, upolarity))
+        ( Field { key_loc = None; type_ = lv; polarity = lpolarity },
+          Field { key_loc = None; type_ = uv; polarity = upolarity }
+        )
     | _ -> ());
 
     if rflags.obj_kind = Exact && not (is_literal_object_reason ureason) then (
@@ -302,11 +308,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
               UseT
                 (Frame (IndexerKeyCompatibility { lower = lreason; upper = ureason }, use_op'), key)
             );
-          let lp = Field (None, value, dict_polarity) in
+          let lp = Field { key_loc = None; type_ = value; polarity = dict_polarity } in
           let up =
             match up with
-            | Field (loc, OptionalT { reason = _; type_ = ut; use_desc = _ }, upolarity) ->
-              Field (loc, ut, upolarity)
+            | Field
+                { key_loc; type_ = OptionalT { reason = _; type_ = ut; use_desc = _ }; polarity } ->
+              Field { key_loc; type_ = ut; polarity }
             | _ -> up
           in
           if lit then
@@ -318,8 +325,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
         | _ ->
           (* property doesn't exist in inflowing type *)
           (match up with
-          | Field (_, OptionalT _, _) when lit -> ()
-          | Field (_, OptionalT _, Polarity.Positive) when Obj_type.is_exact lflags.obj_kind ->
+          | Field { type_ = OptionalT _; _ } when lit -> ()
+          | Field { type_ = OptionalT _; polarity = Polarity.Positive; _ }
+            when Obj_type.is_exact lflags.obj_kind ->
             rec_flow
               cx
               trace
@@ -377,11 +385,16 @@ module Make (Flow : INPUT) : OUTPUT = struct
               in
               let lp =
                 match lp with
-                | Field (loc, OptionalT { reason = _; type_ = lt; use_desc = _ }, lpolarity) ->
-                  Field (loc, lt, lpolarity)
+                | Field
+                    {
+                      key_loc;
+                      type_ = OptionalT { reason = _; type_ = lt; use_desc = _ };
+                      polarity;
+                    } ->
+                  Field { key_loc; type_ = lt; polarity }
                 | _ -> lp
               in
-              let up = Field (None, value, dict_polarity) in
+              let up = Field { key_loc = None; type_ = value; polarity = dict_polarity } in
               begin
                 if lit then
                   match (Property.read_t lp, Property.read_t up) with
@@ -428,10 +441,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
         in
         let lp =
           match Context.find_call cx lcall with
-          | OptionalT { reason = _; type_ = t; use_desc = _ } -> Field (None, t, Polarity.Positive)
-          | t -> Field (None, t, Polarity.Positive)
+          | OptionalT { reason = _; type_ = t; use_desc = _ }
+          | t ->
+            Field { key_loc = None; type_ = t; polarity = Polarity.Positive }
         in
-        let up = Field (None, value, dict_polarity) in
+        let up = Field { key_loc = None; type_ = value; polarity = dict_polarity } in
         if lit then
           match (Property.read_t lp, Property.read_t up) with
           | (Some lt, Some ut) -> rec_flow cx trace (lt, UseT (use_op, ut))
@@ -1433,7 +1447,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           | _ ->
             let lookup_kind =
               match up with
-              | Field (_, OptionalT _, _) -> NonstrictReturning (None, None)
+              | Field { type_ = OptionalT _; _ } -> NonstrictReturning (None, None)
               | _ -> Strict lreason
             in
             rec_flow

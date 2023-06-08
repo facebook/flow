@@ -201,7 +201,7 @@ let detect_non_voidable_properties cx =
     SMap.iter (fun name errors ->
         let should_error =
           match NameUtils.Map.find_opt (Reason.OrdinaryName name) pmap with
-          | Some (Type.Field (_, t, _)) -> not @@ is_voidable ISet.empty t
+          | Some (Type.Field { type_ = t; _ }) -> not @@ is_voidable ISet.empty t
           | _ -> true
         in
         if should_error then

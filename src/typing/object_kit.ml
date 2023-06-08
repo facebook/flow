@@ -267,9 +267,9 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           NameUtils.Map.map
             (fun { Object.prop_t = t; is_own = _; is_method; polarity = _; key_loc } ->
               if is_method then
-                Method (key_loc, t)
+                Method { key_loc; type_ = t }
               else
-                Field (key_loc, t, polarity))
+                Field { key_loc; type_ = t; polarity })
             props
         in
         let flags =
@@ -312,9 +312,9 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           NameUtils.Map.map
             (fun { Object.prop_t = t; is_own = _; is_method; polarity = _; key_loc } ->
               if is_method then
-                Method (key_loc, t)
+                Method { key_loc; type_ = t }
               else
-                Field (key_loc, t, polarity))
+                Field { key_loc; type_ = t; polarity })
             props
         in
         let flags =
@@ -754,9 +754,9 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             NameUtils.Map.map
               (fun (t, is_method) ->
                 if is_method then
-                  Method (None, t)
+                  Method { key_loc = None; type_ = t }
                 else
-                  Field (None, t, prop_polarity))
+                  Field { key_loc = None; type_ = t; polarity = prop_polarity })
               props_map
           in
           let id = Context.generate_property_map cx props in

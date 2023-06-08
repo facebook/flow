@@ -183,7 +183,8 @@ let add_default_constructor reason extends props =
               ~rest_param:None
               ~def_reason:reason
           in
-          Some Type.(Method (None, DefT (reason, trust, FunT (statics, funtype))))
+          Some
+            Type.(Method { key_loc = None; type_ = DefT (reason, trust, FunT (statics, funtype)) })
         | prop -> prop)
       props
 
@@ -192,7 +193,7 @@ let add_name_field reason =
     | Some _ as p -> p
     | None ->
       let open Type in
-      Some (Field (None, StrT.why reason trust, Polarity.Neutral))
+      Some (Field { key_loc = None; type_ = StrT.why reason trust; polarity = Polarity.Neutral })
   in
   SMap.update "name" f
 
@@ -1219,53 +1220,53 @@ and merge_value tps infer_tps file = function
 
 and merge_accessor tps infer_tps file = function
   | Get (loc, t) ->
-    let t = merge tps infer_tps file t in
-    Type.Get (Some loc, t)
+    let type_ = merge tps infer_tps file t in
+    Type.Get { key_loc = Some loc; type_ }
   | Set (loc, t) ->
-    let t = merge tps infer_tps file t in
-    Type.Set (Some loc, t)
+    let type_ = merge tps infer_tps file t in
+    Type.Set { key_loc = Some loc; type_ }
   | GetSet (gloc, gt, sloc, st) ->
-    let gt = merge tps infer_tps file gt in
-    let st = merge tps infer_tps file st in
-    Type.GetSet (Some gloc, gt, Some sloc, st)
+    let get_type = merge tps infer_tps file gt in
+    let set_type = merge tps infer_tps file st in
+    Type.GetSet { get_key_loc = Some gloc; get_type; set_key_loc = Some sloc; set_type }
 
 and merge_obj_value_prop tps infer_tps file = function
   | ObjValueField (id_loc, t, polarity) ->
-    let t = merge tps infer_tps file t in
-    Type.Field (Some id_loc, t, polarity)
+    let type_ = merge tps infer_tps file t in
+    Type.Field { key_loc = Some id_loc; type_; polarity }
   | ObjValueAccess x -> merge_accessor tps infer_tps file x
   | ObjValueMethod { id_loc; fn_loc; async; generator; def } ->
     let reason = Reason.func_reason ~async ~generator fn_loc in
     let statics = merge_fun_statics tps infer_tps file reason SMap.empty in
-    let t = merge_fun tps infer_tps file reason def statics in
-    Type.Method (Some id_loc, t)
+    let type_ = merge_fun tps infer_tps file reason def statics in
+    Type.Method { key_loc = Some id_loc; type_ }
 
 and merge_class_prop tps infer_tps file = function
   | ObjValueField (id_loc, t, polarity) ->
-    let t = merge tps infer_tps file t in
-    Type.Field (Some id_loc, t, polarity)
+    let type_ = merge tps infer_tps file t in
+    Type.Field { key_loc = Some id_loc; type_; polarity }
   | ObjValueAccess x -> merge_accessor tps infer_tps file x
   | ObjValueMethod { id_loc; fn_loc; async; generator; def } ->
     let reason = Reason.func_reason ~async ~generator fn_loc in
     let statics = Type.dummy_static reason in
-    let t = merge_fun ~is_method:true tps infer_tps file reason def statics in
-    Type.Method (Some id_loc, t)
+    let type_ = merge_fun ~is_method:true tps infer_tps file reason def statics in
+    Type.Method { key_loc = Some id_loc; type_ }
 
 and merge_obj_annot_prop tps infer_tps file = function
   | ObjAnnotField (id_loc, t, polarity) ->
-    let t = merge tps infer_tps file t in
-    Type.Field (Some id_loc, t, polarity)
+    let type_ = merge tps infer_tps file t in
+    Type.Field { key_loc = Some id_loc; type_; polarity }
   | ObjAnnotAccess x -> merge_accessor tps infer_tps file x
   | ObjAnnotMethod { id_loc; fn_loc; def } ->
     let reason = Reason.(mk_annot_reason RFunctionType fn_loc) in
     let statics = merge_fun_statics tps infer_tps file reason SMap.empty in
-    let t = merge_fun tps infer_tps file reason def statics in
-    Type.Method (Some id_loc, t)
+    let type_ = merge_fun tps infer_tps file reason def statics in
+    Type.Method { key_loc = Some id_loc; type_ }
 
 and merge_interface_prop tps infer_tps file = function
   | InterfaceField (id_loc, t, polarity) ->
     let t = merge tps infer_tps file t in
-    Type.Field (id_loc, t, polarity)
+    Type.Field { key_loc = id_loc; type_ = t; polarity }
   | InterfaceAccess x -> merge_accessor tps infer_tps file x
   | InterfaceMethod ms ->
     let merge_method fn_loc def =
@@ -1280,7 +1281,7 @@ and merge_interface_prop tps infer_tps file = function
         Type.(IntersectionT (reason, InterRep.make t0 t1 ts))
     in
     let rec loop acc id_loc = function
-      | [] -> Type.Method (Some id_loc, finish acc)
+      | [] -> Type.Method { key_loc = Some id_loc; type_ = finish acc }
       | (id_loc, fn_loc, def) :: ms ->
         let acc = Nel.cons (merge_method fn_loc def) acc in
         loop acc id_loc ms
@@ -1527,7 +1528,7 @@ and merge_fun_statics tps infer_tps file reason statics =
     SMap.map
       (fun (id_loc, t) ->
         let t = merge tps infer_tps file t in
-        Type.Field (Some id_loc, t, Polarity.Neutral))
+        Type.Field { key_loc = Some id_loc; type_ = t; polarity = Polarity.Neutral })
       statics
     |> NameUtils.namemap_of_smap
   in

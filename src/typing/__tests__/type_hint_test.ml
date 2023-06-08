@@ -537,9 +537,10 @@ let eval_hint_tests =
           ~private_method:
             Type.(
               Method
-                ( Some ALoc.none,
-                  fun_t ~params:[] ~return_t:(VoidT.make dummy_reason (bogus_trust ()))
-                )
+                {
+                  key_loc = Some ALoc.none;
+                  type_ = fun_t ~params:[] ~return_t:(VoidT.make dummy_reason (bogus_trust ()));
+                }
             );
     "instance_private_method_call_from_static_method"
     >:: mk_private_method_eval_hint_test
@@ -548,9 +549,10 @@ let eval_hint_tests =
           ~private_static_method:
             Type.(
               Method
-                ( Some ALoc.none,
-                  fun_t ~params:[] ~return_t:(VoidT.make dummy_reason (bogus_trust ()))
-                )
+                {
+                  key_loc = Some ALoc.none;
+                  type_ = fun_t ~params:[] ~return_t:(VoidT.make dummy_reason (bogus_trust ()));
+                }
             );
     "instance_private_method_call_from_field"
     >:: mk_private_method_eval_hint_test
@@ -559,10 +561,11 @@ let eval_hint_tests =
           ~private_field:
             Type.(
               Field
-                ( Some ALoc.none,
-                  fun_t ~params:[] ~return_t:(VoidT.make dummy_reason (bogus_trust ())),
-                  Polarity.Neutral
-                )
+                {
+                  key_loc = Some ALoc.none;
+                  type_ = fun_t ~params:[] ~return_t:(VoidT.make dummy_reason (bogus_trust ()));
+                  polarity = Polarity.Neutral;
+                }
             );
     "instance_private_method_call_from_static_field"
     >:: mk_private_method_eval_hint_test
@@ -571,10 +574,11 @@ let eval_hint_tests =
           ~private_static_field:
             Type.(
               Field
-                ( Some ALoc.none,
-                  fun_t ~params:[] ~return_t:(VoidT.make dummy_reason (bogus_trust ())),
-                  Polarity.Neutral
-                )
+                {
+                  key_loc = Some ALoc.none;
+                  type_ = fun_t ~params:[] ~return_t:(VoidT.make dummy_reason (bogus_trust ()));
+                  polarity = Polarity.Neutral;
+                }
             );
     "call_new_from_class"
     >:: mk_eval_hint_test_with_type_setup

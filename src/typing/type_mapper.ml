@@ -852,37 +852,37 @@ class virtual ['a] t =
 
     method prop cx map_cx prop =
       match prop with
-      | Field (l, t, p) ->
-        let t' = self#type_ cx map_cx t in
-        if t == t' then
+      | Field { key_loc; type_; polarity } ->
+        let type_' = self#type_ cx map_cx type_ in
+        if type_' == type_ then
           prop
         else
-          Field (l, t', p)
-      | Method (l, t) ->
-        let t' = self#type_ cx map_cx t in
-        if t == t' then
+          Field { key_loc; type_ = type_'; polarity }
+      | Method { key_loc; type_ } ->
+        let type_' = self#type_ cx map_cx type_ in
+        if type_' == type_ then
           prop
         else
-          Method (l, t')
-      | Get (l, t) ->
-        let t' = self#type_ cx map_cx t in
-        if t == t' then
+          Method { key_loc; type_ = type_' }
+      | Get { key_loc; type_ } ->
+        let type_' = self#type_ cx map_cx type_ in
+        if type_' == type_ then
           prop
         else
-          Get (l, t')
-      | Set (l, t) ->
-        let t' = self#type_ cx map_cx t in
-        if t == t' then
+          Get { key_loc; type_ = type_' }
+      | Set { key_loc; type_ } ->
+        let type_' = self#type_ cx map_cx type_ in
+        if type_' == type_ then
           prop
         else
-          Set (l, t')
-      | GetSet (l1, t1, l2, t2) ->
-        let t1' = self#type_ cx map_cx t1 in
-        let t2' = self#type_ cx map_cx t2 in
-        if t1 == t1' && t2 == t2' then
+          Set { key_loc; type_ = type_' }
+      | GetSet { get_key_loc; get_type; set_key_loc; set_type } ->
+        let get_type' = self#type_ cx map_cx get_type in
+        let set_type' = self#type_ cx map_cx set_type in
+        if get_type == get_type' && set_type == set_type' then
           prop
         else
-          GetSet (l1, t1', l2, t2')
+          GetSet { get_key_loc; get_type = get_type'; set_key_loc; set_type = set_type' }
 
     method class_binding cx map_cx binding =
       let class_private_fields = self#props cx map_cx binding.class_private_fields in
