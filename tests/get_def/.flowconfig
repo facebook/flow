@@ -4,6 +4,7 @@ module.system=haste
 module.system.haste.module_ref_prefix=m#
 no_flowlib=true
 exact_by_default=true
+experimental.mapped_type=true
 
 [libs]
 libs
