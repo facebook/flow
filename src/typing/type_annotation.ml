@@ -135,6 +135,40 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     let eval_this _cx (_, tast) = tast
   end
 
+  module Component_type_params_config_types = struct
+    type 'T ast = (ALoc.t, 'T) Ast.Type.Component.Params.t
+
+    type 'T param_ast = (ALoc.t, 'T) Ast.Type.Component.Param.t
+
+    type 'T rest_ast = (ALoc.t, 'T) Ast.Type.Component.RestParam.t
+
+    type param = Type.t * (ALoc.t * Type.t) param_ast
+
+    type rest = Type.t * (ALoc.t * Type.t) rest_ast
+
+    type pattern = unit
+  end
+
+  module Component_type_params_config = struct
+    let param_type_with_name (t, (_, { Ast.Type.Component.Param.name; optional; _ })) =
+      let open Ast.Statement.ComponentDeclaration.Param in
+      let t =
+        if optional then
+          TypeUtil.optional t
+        else
+          t
+      in
+      match name with
+      | Identifier ((loc, _), { Ast.Identifier.name; _ }) -> Some (loc, name, t)
+      | StringLiteral (loc, { Ast.StringLiteral.value; _ }) -> Some (loc, value, t)
+
+    let rest_type (t, _) = t
+
+    let eval_param _cx (_, tast) = tast
+
+    let eval_rest _cx (_, tast) = tast
+  end
+
   module Func_type_params_types = Func_class_sig_types.Param.Make (Func_type_params_config_types)
   module Func_type_params =
     Func_params.Make (Func_type_params_config_types) (Func_type_params_config)
@@ -152,6 +186,22 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     Class_sig.Make (Func_type_params_config_types) (Func_type_params_config) (Func_type_params)
       (Func_type_sig)
       (Class_type_sig_types)
+  module Component_type_params_types =
+    Component_sig_types.ParamTypes.Make (Component_type_params_config_types)
+  module Component_type_params =
+    Component_params.Make (Component_type_params_config_types) (Component_type_params_config)
+      (Component_type_params_types)
+  module Component_type_sig_types =
+    Component_sig_types.ComponentSig.Make
+      (Component_type_params_config_types)
+      (Component_type_params_types)
+  module Component_type_sig =
+    Component_sig.Make (Statement) (Component_type_params_config_types)
+      (Component_type_params_config)
+      (Component_type_params)
+      (Component_type_sig_types)
+
+  let _ = Component_type_sig.toplevels
 
   (* AST helpers *)
 
