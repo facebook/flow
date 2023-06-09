@@ -6114,3 +6114,49 @@ let%expect_test "component_disabled2" =
     1. DisabledComponentBinding {id_loc = [2:25-28]; name = "Bar"}
 
   |}]
+
+let%expect_test "declare_component" =
+  print_sig {|
+    declare export component Baz ();
+    declare export default component Bar ();
+  |};
+  [%expect{|
+    ESModule {type_exports = [||];
+      exports = [|(ExportBinding 0); ExportDefaultBinding {default_loc = [2:15-22]; index = 1}|];
+      info =
+      ESModuleInfo {type_export_keys = [||];
+        type_stars = []; export_keys = [|"Baz"; "default"|];
+        stars = []; strict = true}}
+
+    Local defs:
+    0. ComponentBinding {id_loc = [1:25-28];
+         name = "Baz"; fn_loc = [1:15-32];
+         def =
+         ComponentSig {params_loc = [1:29-31];
+           tparams = Mono; params = [];
+           rest_param = None;
+           renders = (TyRef (Unqualified BuiltinRef {ref_loc = [1:31]; name = "React$Node"}))}}
+    1. ComponentBinding {id_loc = [2:33-36];
+         name = "Bar"; fn_loc = [2:23-40];
+         def =
+         ComponentSig {params_loc = [2:37-39];
+           tparams = Mono; params = [];
+           rest_param = None;
+           renders = (TyRef (Unqualified BuiltinRef {ref_loc = [2:39]; name = "React$Node"}))}} |}]
+
+let%expect_test "declare_component_disabled" =
+  print_sig ~enable_component_syntax:false {|
+    declare export component Baz ();
+    declare export default component Bar ();
+  |};
+  [%expect{|
+    ESModule {type_exports = [||];
+      exports = [|(ExportBinding 0); ExportDefaultBinding {default_loc = [2:15-22]; index = 1}|];
+      info =
+      ESModuleInfo {type_export_keys = [||];
+        type_stars = []; export_keys = [|"Baz"; "default"|];
+        stars = []; strict = true}}
+
+    Local defs:
+    0. DisabledComponentBinding {id_loc = [1:25-28]; name = "Baz"}
+    1. DisabledComponentBinding {id_loc = [2:33-36]; name = "Bar"} |}]

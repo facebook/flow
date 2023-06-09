@@ -679,6 +679,39 @@ References:
                                           ^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------- declared.js:60:2
+
+Cannot create `Export` element because property `x` is missing in props [1] but exists in component Export [2].
+[prop-missing]
+
+   declared.js:60:2
+   60| <Export />; // error
+        ^^^^^^
+
+References:
+   declared.js:60:1
+   60| <Export />; // error
+       ^^^^^^^^^^ [1]
+   declared.js:56:16
+   56| declare export component Export(x: number): number;
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ declared.js:61:19
+
+Cannot create `DefaultExport` element because string [1] is incompatible with number [2] in property `x`.
+[incompatible-type]
+
+   declared.js:61:19
+   61| <DefaultExport x={"a"} />; // error
+                         ^^^ [1]
+
+References:
+   declared.js:58:51
+   58| declare export default component DefaultExport(x: number);
+                                                         ^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- errors.js:2:5
 
 Cannot reference `this` from within component declaration [1] [component-this-reference]
@@ -1117,6 +1150,39 @@ References:
                                       ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- import.js:33:2
+
+Cannot create `Export` element because property `x` is missing in props [1] but exists in component config [2].
+[prop-missing]
+
+   import.js:33:2
+   33| <Export />; // error
+        ^^^^^^
+
+References:
+   import.js:33:1
+   33| <Export />; // error
+       ^^^^^^^^^^ [1]
+   declared.js:56:32
+   56| declare export component Export(x: number): number;
+                                      ^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- import.js:34:19
+
+Cannot create `DefaultExport` element because string [1] is incompatible with number [2] in property `x`.
+[incompatible-type]
+
+   import.js:34:19
+   34| <DefaultExport x={"a"} />; // error
+                         ^^^ [1]
+
+References:
+   declared.js:58:51
+   58| declare export default component DefaultExport(x: number);
+                                                         ^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- names.js:4:36
 
 Component property `a` [1] is re-declared [2] within a spread [3]. Property names may only be have one definition within
@@ -1491,4 +1557,4 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 103 errors
+Found 107 errors

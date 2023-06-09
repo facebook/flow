@@ -675,11 +675,6 @@ module Scope = struct
   let bind_component scope tbls id_loc fn_loc name def =
     bind_local scope tbls name (ComponentBinding { id_loc; fn_loc; name; def })
 
-  let bind_component_decl scope tbls id_loc name =
-    (* TODO(mvitousek): add typechecking for component syntax *)
-    let def = lazy (Annot (Any id_loc)) in
-    bind_local scope tbls name (LetConstBinding { id_loc; name; def })
-
   let bind_var scope tbls kind id_loc name def =
     bind_local scope tbls name (value_binding kind id_loc name def)
 
@@ -1406,6 +1401,13 @@ and function_type opts scope tbls xs f =
   let (return, predicate) = return_annot opts scope tbls xs r in
   FunSig { tparams; params; rest_param; this_param; return; predicate }
 
+and function_component_type_param opts scope tbls xs t optional =
+  let t = annot opts scope tbls xs t in
+  if optional then
+    Annot (Optional t)
+  else
+    t
+
 and function_type_params =
   let module F = T.Function in
   let param opts scope tbls xs (_, p) =
@@ -1415,13 +1417,7 @@ and function_type_params =
       | None -> None
       | Some id -> Some (id_name id)
     in
-    let t = annot opts scope tbls xs t in
-    let t =
-      if optional then
-        Annot (Optional t)
-      else
-        t
-    in
+    let t = function_component_type_param opts scope tbls xs t optional in
     FunParam { name; t }
   in
   let rec loop opts scope tbls xs acc = function
@@ -3221,6 +3217,62 @@ and component_def =
     let renders = return opts scope tbls xs r in
     ComponentSig { params_loc = loc; tparams; params; rest_param; renders }
 
+and declare_component_def =
+  let module C = Ast.Statement.DeclareComponent in
+  let param opts scope tbls xs (_, p) =
+    let module P = Ast.Type.Component.Param in
+    let { P.name; annot = (_, annot); optional; _ } = p in
+    let (name, name_loc) =
+      match name with
+      | Ast.Statement.ComponentDeclaration.Param.Identifier (loc, { Ast.Identifier.name; _ })
+      | Ast.Statement.ComponentDeclaration.Param.StringLiteral
+          (loc, { Ast.StringLiteral.value = name; _ }) ->
+        (name, loc)
+    in
+    let name_loc = push_loc tbls name_loc in
+    let t = function_component_type_param opts scope tbls xs annot optional in
+    ComponentParam { name; name_loc; t }
+  in
+  let rec params opts scope tbls xs acc = function
+    | [] -> List.rev acc
+    | p :: ps ->
+      let p = param opts scope tbls xs p in
+      params opts scope tbls xs (p :: acc) ps
+  in
+  let rest_param opts scope tbls xs (_, p) =
+    let module P = Ast.Type.Component.RestParam in
+    let { P.annot = t; _ } = p in
+    let t = annot opts scope tbls xs t in
+    ComponentRestParam { t }
+  in
+  let return opts scope tbls xs ret =
+    match ret with
+    | Ast.Type.Available (_, t) -> annot opts scope tbls xs t
+    | Ast.Type.Missing loc ->
+      let loc = push_loc tbls loc in
+      maybe_special_unqualified_generic opts scope tbls xs loc None loc "React$Node"
+  in
+  fun opts scope tbls f ->
+    let {
+      C.id = _;
+      tparams = tps;
+      params = (loc, { Ast.Type.Component.Params.params = ps; rest = rp; comments = _ });
+      renders = r;
+      comments = _;
+    } =
+      f
+    in
+    let (xs, tparams) = tparams opts scope tbls SSet.empty tps in
+    let loc = push_loc tbls loc in
+    let params = params opts scope tbls xs [] ps in
+    let rest_param =
+      match rp with
+      | Some p -> Some (rest_param opts scope tbls xs p)
+      | None -> None
+    in
+    let renders = return opts scope tbls xs r in
+    ComponentSig { params_loc = loc; tparams; params; rest_param; renders }
+
 and predicate opts scope tbls pnames =
   let open Option.Let_syntax in
   let module E = Ast.Expression in
@@ -4084,6 +4136,20 @@ let component_decl opts scope tbls decl =
   in
   Scope.bind_component scope tbls id_loc sig_loc name def
 
+let declare_component_decl opts scope tbls c_loc decl =
+  let { Ast.Statement.DeclareComponent.id = (id_loc, { Ast.Identifier.name; comments = _ }); _ } =
+    decl
+  in
+  let sig_loc = push_loc tbls c_loc in
+  let id_loc = push_loc tbls id_loc in
+  let def =
+    if opts.enable_component_syntax then
+      Some (lazy (splice tbls id_loc (fun tbls -> declare_component_def opts scope tbls decl)))
+    else
+      None
+  in
+  Scope.bind_component scope tbls id_loc sig_loc name def
+
 let declare_variable_decl opts scope tbls decl =
   let { Ast.Statement.DeclareVariable.id; annot = (_, t); kind; comments = _ } = decl in
   let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
@@ -4153,19 +4219,6 @@ let declare_class_decl opts scope tbls decl =
   let id_loc = push_loc tbls id_loc in
   let def = lazy (splice tbls id_loc (fun tbls -> declare_class_def opts scope tbls decl)) in
   Scope.bind_declare_class scope tbls id_loc name def
-
-let declare_component_decl _opts scope tbls decl =
-  let {
-    Ast.Statement.DeclareComponent.id = (id_loc, { Ast.Identifier.name; comments = _ });
-    params = _;
-    tparams = _;
-    renders = _;
-    comments = _;
-  } =
-    decl
-  in
-  let id_loc = push_loc tbls id_loc in
-  Scope.bind_component_decl scope tbls id_loc name
 
 let import_decl _opts scope tbls decl =
   let module I = Ast.Statement.ImportDeclaration in
@@ -4356,7 +4409,8 @@ let declare_export_decl opts scope tbls default =
     declare_variable_decl opts scope tbls v (Scope.export_binding scope S.ExportValue)
   | D.Function (_, f) -> declare_function_decl opts scope tbls f export_maybe_default_binding
   | D.Class (_, c) -> declare_class_decl opts scope tbls c export_maybe_default_binding
-  | D.Component (_, c) -> declare_component_decl opts scope tbls c export_maybe_default_binding
+  | D.Component (loc, c) ->
+    declare_component_decl opts scope tbls loc c export_maybe_default_binding
   | D.Enum (_, enum) -> enum_decl opts scope tbls enum (Scope.export_binding scope S.ExportValue)
   | D.DefaultType t ->
     let default_loc = Base.Option.value_exn default in
@@ -4524,7 +4578,7 @@ let rec statement opts scope tbls (loc, stmt) =
   | S.DeclareOpaqueType decl -> opaque_type_decl opts scope tbls decl ignore2
   | S.ClassDeclaration decl -> class_decl opts scope tbls decl ignore2
   | S.DeclareClass decl -> declare_class_decl opts scope tbls decl ignore2
-  | S.DeclareComponent decl -> declare_component_decl opts scope tbls decl ignore2
+  | S.DeclareComponent decl -> declare_component_decl opts scope tbls loc decl ignore2
   | S.InterfaceDeclaration decl -> interface_decl opts scope tbls decl ignore2
   | S.DeclareInterface decl -> interface_decl opts scope tbls decl ignore2
   | S.FunctionDeclaration decl -> function_decl opts scope tbls decl ignore2

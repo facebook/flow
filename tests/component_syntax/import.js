@@ -26,3 +26,9 @@ import D from "./export_syntax.js"
 
 <C x={"a"} />; // error
 <D y={"a"} /> // 2 errors
+
+import { Export } from "./declared.js";
+import DefaultExport from "./declared.js";
+
+<Export />; // error
+<DefaultExport x={"a"} />; // error
