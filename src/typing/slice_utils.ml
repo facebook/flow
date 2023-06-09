@@ -302,8 +302,9 @@ let spread2
   | Ok dict ->
     let union t1 t2 = UnionT (reason, UnionRep.make t1 t2 []) in
     let merge_props
-        propname ({ Object.is_method = method1; _ } as t1) ({ Object.is_method = method2; _ } as t2)
-        =
+        propname
+        ({ Object.is_method = method1; _ } as t1)
+        ({ Object.is_method = method2; key_loc = kl2; _ } as t2) =
       let (t1, opt1, missing_prop1) = type_optionality_and_missing_property t1 in
       let (t2, opt2, missing_prop2) = type_optionality_and_missing_property t2 in
       if not opt2 then
@@ -312,7 +313,7 @@ let spread2
           is_own = true;
           is_method = method2;
           polarity = Polarity.Neutral;
-          key_loc = None;
+          key_loc = kl2;
         }
       else if opt1 && opt2 then
         let prop_t =
