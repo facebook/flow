@@ -97,3 +97,36 @@ f = () => {
   <Comp foo={''} bar={3} />;
 //       ^
 }
+
+f = () => {
+  type ToSpread = { foo: string };
+  declare const Comp: React.ComponentType<{...SourceObj, ...ToSpread}>;
+  <Comp foo={''} bar={3} />;
+//       ^
+  <Comp foo={''} bar={3} />;
+//                ^
+}
+
+f = () => {
+  type A = { foo?: string };
+  type B = { foo: string };
+  declare const Comp: React.ComponentType<{...A, ...B}>;
+  <Comp foo={''} />;
+//       ^
+}
+
+f = () => {
+  type A = { foo: string };
+  type B = { foo?: string };
+  declare const Comp: React.ComponentType<{...A, ...B}>;
+  <Comp foo={''} />;
+//       ^
+}
+
+f = () => {
+  type A = { foo?: string };
+  type B = { foo?: string };
+  declare const Comp: React.ComponentType<{...A, ...B}>;
+  <Comp foo={''} />;
+//       ^
+}
