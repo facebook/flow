@@ -337,7 +337,6 @@ type ('loc, 'a) def =
       name: string;
       fn_loc: 'loc;
       def: ('loc, 'a) component_sig;
-      statics: ('loc * 'a) smap;
     }
   | DisabledComponentBinding of {
       id_loc: 'loc;

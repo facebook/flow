@@ -5919,8 +5919,7 @@ let%expect_test "component" =
          ComponentSig {params_loc = [1:13-15];
            tparams = Mono; params = [];
            rest_param = None;
-           renders = (TyRef (Unqualified BuiltinRef {ref_loc = [1:15]; name = "React$Node"}))};
-         statics = {}}
+           renders = (TyRef (Unqualified BuiltinRef {ref_loc = [1:15]; name = "React$Node"}))}}
 
   |}]
 
@@ -5962,8 +5961,7 @@ let%expect_test "component2" =
            rest_param =
            (Some ComponentRestParam {
                    t = (TyRef (Unqualified LocalRef {ref_loc = [2:35-39]; index = 0}))});
-           renders = (TyRef (Unqualified BuiltinRef {ref_loc = [2:40]; name = "React$Node"}))};
-         statics = {}}
+           renders = (TyRef (Unqualified BuiltinRef {ref_loc = [2:40]; name = "React$Node"}))}}
 
   |}]
 
@@ -5993,8 +5991,7 @@ let%expect_test "component3" =
          ComponentSig {params_loc = [1:17-19];
            tparams = Mono; params = [];
            rest_param = None;
-           renders = (TyRef (Unqualified BuiltinRef {ref_loc = [1:19]; name = "React$Node"}))};
-         statics = {}}
+           renders = (TyRef (Unqualified BuiltinRef {ref_loc = [1:19]; name = "React$Node"}))}}
     1. ComponentBinding {id_loc = [2:10-13];
          name = "Baz"; fn_loc = [2:0-62];
          def =
@@ -6006,8 +6003,7 @@ let%expect_test "component3" =
            rest_param =
            (Some ComponentRestParam {
                    t = (TyRef (Unqualified BuiltinRef {ref_loc = [2:48-52]; name = "Rest"}))});
-           renders = (TyRef (Unqualified LocalRef {ref_loc = [2:55-62]; index = 0}))};
-         statics = { "static" -> ([3:4-10], (Value (StringLit ([3:13-22], "amazing")))) }}
+           renders = (TyRef (Unqualified LocalRef {ref_loc = [2:55-62]; index = 0}))}}
 
   |}]
 
@@ -6043,8 +6039,7 @@ let%expect_test "component4" =
            [ComponentParam {name = "prop";
               name_loc = [1:17-21]; t = (Annot Bound {ref_loc = [1:23-24]; name = "T"})}
              ];
-           rest_param = None; renders = (Annot Bound {ref_loc = [1:27-28]; name = "T"})};
-         statics = {}}
+           rest_param = None; renders = (Annot Bound {ref_loc = [1:27-28]; name = "T"})}}
 
   |}]
 
@@ -6068,16 +6063,14 @@ let%expect_test "component_5" =
          ComponentSig {params_loc = [1:21-23];
            tparams = Mono; params = [];
            rest_param = None;
-           renders = (TyRef (Unqualified BuiltinRef {ref_loc = [1:23]; name = "React$Node"}))};
-         statics = {}}
+           renders = (TyRef (Unqualified BuiltinRef {ref_loc = [1:23]; name = "React$Node"}))}}
     1. ComponentBinding {id_loc = [2:25-28];
          name = "Bar"; fn_loc = [2:15-31];
          def =
          ComponentSig {params_loc = [2:29-31];
            tparams = Mono; params = [];
            rest_param = None;
-           renders = (TyRef (Unqualified BuiltinRef {ref_loc = [2:31]; name = "React$Node"}))};
-         statics = {}}
+           renders = (TyRef (Unqualified BuiltinRef {ref_loc = [2:31]; name = "React$Node"}))}}
 
   |}]
 

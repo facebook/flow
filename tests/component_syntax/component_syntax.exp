@@ -1000,33 +1000,76 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:21:2
 
+Cannot cast `Foo.displayName` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+
+   import.js:21:2
+    21| (Foo.displayName: empty); // error, displayName is a string
+         ^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:123:17
+   123|   displayName?: ?string,
+                        ^^^^^^^ [1]
+   import.js:21:19
+    21| (Foo.displayName: empty); // error, displayName is a string
+                          ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- import.js:21:2
+
+Cannot cast `Foo.displayName` to empty because undefined [1] is incompatible with empty [2]. [incompatible-cast]
+
+   import.js:21:2
+    21| (Foo.displayName: empty); // error, displayName is a string
+         ^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:123:17
+   123|   displayName?: ?string,
+                        ^^^^^^^ [1]
+   import.js:21:19
+    21| (Foo.displayName: empty); // error, displayName is a string
+                          ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- import.js:21:2
+
 Cannot cast `Foo.displayName` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    import.js:21:2
-   21| (Foo.displayName: empty); // error, displayName is a string
-        ^^^^^^^^^^^^^^^
+    21| (Foo.displayName: empty); // error, displayName is a string
+         ^^^^^^^^^^^^^^^
 
 References:
-   statics.js:5:19
-    5| Foo.displayName = 'str'; // OK
-                         ^^^^^ [1]
+   <BUILTINS>/react.js:123:18
+   123|   displayName?: ?string,
+                         ^^^^^^ [1]
    import.js:21:19
-   21| (Foo.displayName: empty); // error, displayName is a string
-                         ^^^^^ [2]
+    21| (Foo.displayName: empty); // error, displayName is a string
+                          ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- import.js:22:5
 
-Cannot get `Foo.randomProperty` because property `randomProperty` is missing in statics of function [1]. [prop-missing]
+Cannot get `Foo.randomProperty` because property `randomProperty` is missing in `React.AbstractComponentStatics` [1].
+[prop-missing]
 
    import.js:22:5
-   22| Foo.randomProperty; // ERROR!
-           ^^^^^^^^^^^^^^
+    22| Foo.randomProperty; // ERROR!
+            ^^^^^^^^^^^^^^
 
 References:
-   statics.js:2:1
-    2| component Foo() { return (42: any); }
-       ^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:122:47
+                                                      v
+   122| declare type React$AbstractComponentStatics = {
+   123|   displayName?: ?string,
+   124|   // This is only on function components, but trying to access name when
+   125|   // displayName is undefined is a common pattern.
+   126|   name?: ?string,
+   127|   propTypes?: {[string] : any, ...},
+   128|   ...
+   129| };
+        ^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- import.js:27:7
@@ -1448,4 +1491,4 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 101 errors
+Found 103 errors

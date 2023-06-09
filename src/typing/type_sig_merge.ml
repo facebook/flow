@@ -1694,12 +1694,7 @@ and merge_fun
   merge_tparams_targs tps infer_tps file reason t tparams
 
 and merge_component
-    tps
-    infer_tps
-    file
-    reason
-    (ComponentSig { params_loc; tparams; params; rest_param; renders })
-    statics =
+    tps infer_tps file reason (ComponentSig { params_loc; tparams; params; rest_param; renders }) =
   let t (tps, _) =
     let open Type in
     let pmap =
@@ -1743,6 +1738,13 @@ and merge_component
         def_reason = reason;
       }
     in
+    let statics =
+      Flow_js_utils.lookup_builtin_strict
+        file.cx
+        (Reason.OrdinaryName "React$AbstractComponentStatics")
+        reason
+    in
+    let statics = ConsGen.mk_instance file.cx reason statics in
     DefT (reason, trust, FunT (statics, funtype))
   in
   merge_tparams_targs tps infer_tps file reason t tparams
@@ -1932,9 +1934,8 @@ let merge_def file reason = function
     merge_fun SMap.empty SMap.empty file reason def statics
   | DeclareFun { id_loc; fn_loc; name = _; def; tail } ->
     merge_declare_fun file ((id_loc, fn_loc, def), tail)
-  | ComponentBinding { id_loc = _; name = _; fn_loc = _; def; statics } ->
-    let statics = merge_fun_statics SMap.empty SMap.empty file reason statics in
-    merge_component SMap.empty SMap.empty file reason def statics
+  | ComponentBinding { id_loc = _; name = _; fn_loc = _; def } ->
+    merge_component SMap.empty SMap.empty file reason def
   | Variable { id_loc = _; name = _; def } -> merge SMap.empty SMap.empty file def
   | DisabledComponentBinding _
   | DisabledEnumBinding _ ->

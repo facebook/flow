@@ -335,22 +335,14 @@ and pack_local_binding cx = function
         statics
     in
     FunBinding { id_loc; name; async; generator; fn_loc; def; statics }
-  | P.ComponentBinding { id_loc; name; fn_loc; def; statics } ->
+  | P.ComponentBinding { id_loc; name; fn_loc; def } ->
     let id_loc = pack_loc id_loc in
     begin
       match def with
       | Some (lazy def) ->
         let fn_loc = pack_loc fn_loc in
         let def = pack_component cx def in
-        let statics =
-          SMap.map
-            (fun (id_loc, t) ->
-              let id_loc = pack_loc id_loc in
-              let t = pack_parsed cx t in
-              (id_loc, t))
-            statics
-        in
-        ComponentBinding { id_loc; name; fn_loc; def; statics }
+        ComponentBinding { id_loc; name; fn_loc; def }
       | None -> DisabledComponentBinding { id_loc; name }
     end
   | P.DeclareFunBinding { name; defs_rev } ->

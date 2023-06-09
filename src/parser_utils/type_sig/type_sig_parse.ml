@@ -219,7 +219,6 @@ and 'loc local_binding =
       name: string;
       fn_loc: 'loc loc_node;
       def: ('loc loc_node, 'loc parsed) component_sig Lazy.t option;
-      statics: ('loc loc_node * 'loc parsed) smap;
     }
   | EnumBinding of {
       id_loc: 'loc loc_node;
@@ -674,8 +673,7 @@ module Scope = struct
     )
 
   let bind_component scope tbls id_loc fn_loc name def =
-    let statics = SMap.empty in
-    bind_local scope tbls name (ComponentBinding { id_loc; fn_loc; name; def; statics })
+    bind_local scope tbls name (ComponentBinding { id_loc; fn_loc; name; def })
 
   let bind_component_decl scope tbls id_loc name =
     (* TODO(mvitousek): add typechecking for component syntax *)
@@ -717,7 +715,8 @@ module Scope = struct
       | ClassBinding _
       | DeclareClassBinding _
       | DeclareFunBinding _
-      | EnumBinding _ ->
+      | EnumBinding _
+      | ComponentBinding _ ->
         def
       | FunBinding fn ->
         let statics = SMap.add prop_name prop fn.statics in
@@ -725,10 +724,6 @@ module Scope = struct
       | ConstFunBinding fn ->
         let statics = SMap.add prop_name prop fn.statics in
         ConstFunBinding { fn with statics }
-      | ComponentBinding ({ def = Some _; _ } as cp) ->
-        let statics = SMap.add prop_name prop cp.statics in
-        ComponentBinding { cp with statics }
-      | ComponentBinding { def = None; _ } -> def
       | ConstRefBinding { ref = Ref { name = ref_name; scope; _ }; _ } ->
         assign_binding prop_name prop ref_name scope;
         def
