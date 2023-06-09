@@ -191,7 +191,7 @@ let tests =
          "declare_var_let_const_block_scope"
          >:: mk_scope_builder_toplevel_scopes_test
                "{ declare var x: 1; declare let y: 2; declare const z: 3 }"
-               ["x"; "y"; "z"];
+               ["x"];
          "declare_export_var"
          >:: mk_scope_builder_all_uses_test
                "declare export var bar: number; bar"

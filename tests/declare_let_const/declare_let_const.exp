@@ -60,6 +60,14 @@ References:
                      ^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------------- const.js:19:3
+
+Cannot resolve name `y`. [cannot-resolve-name]
+
+   19|   y; // error
+         ^
+
+
 Error ---------------------------------------------------------------------------------------------------- import.js:4:2
 
 Cannot cast `s` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
@@ -129,4 +137,4 @@ References:
 
 
 
-Found 8 errors
+Found 9 errors

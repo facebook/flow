@@ -228,6 +228,12 @@ class ['loc] hoister ~flowmin_compatibility ~enable_enums ~with_types =
 
     method! private add_let_binding ?kind entry = if lexical then super#add_let_binding ?kind entry
 
+    method! private add_declared_let_binding entry =
+      if lexical then super#add_declared_let_binding entry
+
+    method! private add_declared_const_binding entry =
+      if lexical then super#add_declared_const_binding entry
+
     method! private add_function_binding entry =
       if lexical || flowmin_compatibility then super#add_function_binding entry
 

@@ -11,3 +11,10 @@ declare const x: string;
 }
 
 x = "foo"; // ERROR
+
+{
+  declare const y: number;
+}
+{
+  y; // error
+}
