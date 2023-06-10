@@ -198,3 +198,29 @@ function test19() {
     const imageHashes: Array<string> = await Promise.all(xs); // ok
   }
 }
+
+function test20() {
+  type Record<T: {...}> = { ...T, ... };
+
+  declare var fn: <TArguments, TReturn>(
+    implementation: (...args: TArguments) => TReturn,
+  ) => { (...args: TArguments): TReturn };
+
+  const result: (
+    value: mixed,
+    records: Record<interface {}>,
+  ) => any = fn((value, records) => 42); // okay
+}
+
+function test21() {
+  declare var a: Array<number>;
+
+  function F(): React.MixedElement {
+    // okay on []
+    return (
+      <>
+        { a.map(_ => []) }
+      </>
+    );
+  }
+}

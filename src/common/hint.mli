@@ -45,8 +45,8 @@ and ('t, 'targs, 'args, 'props, 'children) hint_decomposition =
   | Decomp_MethodElem
   | Decomp_CallNew
   | Decomp_CallSuper
-  | Decomp_FuncParam of int
-  | Decomp_FuncRest of int
+  | Decomp_FuncParam of string option list * int
+  | Decomp_FuncRest of string option list
   | Decomp_FuncReturn
   | Comp_ImmediateFuncCall
   | Comp_MaybeT

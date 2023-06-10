@@ -19,6 +19,8 @@ let with_hint_result ~ok ~error = function
 
 exception UnconstrainedTvarException
 
+exception DecompFuncParamOutOfBoundsException
+
 let in_sandbox_cx cx t ~f =
   Context.run_and_rolled_back_cache cx (fun () ->
       let original_errors = Context.errors cx in
@@ -26,7 +28,8 @@ let in_sandbox_cx cx t ~f =
       Context.reset_errors cx Flow_error.ErrorSet.empty;
       match f (Tvar_resolver.resolved_t cx ~no_lowers t) with
       | (exception Flow_js_utils.SpeculationSingletonError)
-      | (exception UnconstrainedTvarException) ->
+      | (exception UnconstrainedTvarException)
+      | (exception DecompFuncParamOutOfBoundsException) ->
         Context.reset_errors cx original_errors;
         None
       | exception exn ->
@@ -400,24 +403,30 @@ and type_of_hint_decomposition cx op reason t =
         in
         get_constructor_type this_t
       | Decomp_CallSuper -> get_constructor_type t
-      | Decomp_FuncParam i ->
-        Tvar.mk_where cx reason (fun param_t ->
-            let params =
-              Base.Fn.apply_n_times
-                ~n:i
-                (Base.List.cons (None, Unsoundness.unresolved_any reason))
-                [(None, param_t)]
-            in
-            let fun_t =
-              fun_t ~params ~rest_param:None ~return_t:(Unsoundness.unresolved_any reason)
-            in
-            SpeculationFlow.resolved_upper_flow_t_unsafe cx reason (fun_t, t)
-        )
-      | Decomp_FuncRest n ->
+      | Decomp_FuncParam (xs, i) ->
+        if i > List.length xs then
+          (* This is an internal error. We shouldn't be creating Decomp_FuncParam
+           * where [i] is not a valid index of [xs]. *)
+          raise DecompFuncParamOutOfBoundsException
+        else
+          let xs = Base.List.take xs (i + 1) in
+          Tvar.mk_where cx reason (fun param_t ->
+              let params =
+                Base.List.mapi xs ~f:(fun idx x ->
+                    if i = idx then
+                      (x, param_t)
+                    else
+                      (x, Unsoundness.unresolved_any reason)
+                )
+              in
+              let fun_t =
+                fun_t ~params ~rest_param:None ~return_t:(Unsoundness.unresolved_any reason)
+              in
+              SpeculationFlow.resolved_upper_flow_t_unsafe cx reason (fun_t, t)
+          )
+      | Decomp_FuncRest xs ->
         Tvar.mk_where cx reason (fun rest_t ->
-            let params =
-              Base.Fn.apply_n_times ~n (Base.List.cons (None, Unsoundness.unresolved_any reason)) []
-            in
+            let params = Base.List.map xs ~f:(fun x -> (x, Unsoundness.unresolved_any reason)) in
             let fun_t =
               fun_t
                 ~params

@@ -68,9 +68,9 @@ and ('t, 'targs, 'args, 'props, 'children) hint_decomposition =
   (* Type of the super-class becomes the type of the super constructor *)
   | Decomp_CallSuper
   (* Type of function becomes hint on the i-th argument *)
-  | Decomp_FuncParam of int
+  | Decomp_FuncParam of string option list * int
   (* Type of function becomes hint on rest argument *)
-  | Decomp_FuncRest of int (* number of params before rest params *)
+  | Decomp_FuncRest of string option list
   (* Type of function becomes hint on return *)
   | Decomp_FuncReturn
   (* Hint on call `f()` becomes hint on `f`. This is only meant to be used for the
@@ -117,8 +117,12 @@ let string_of_hint_unknown_kind = function
   | Decomp_MethodElem -> "Decomp_MethodElem"
   | Decomp_CallNew -> "Decomp_CallNew"
   | Decomp_CallSuper -> "Decomp_CallSuper"
-  | Decomp_FuncParam i -> Utils_js.spf "Decomp_FuncParam (%d)" i
-  | Decomp_FuncRest i -> Utils_js.spf "Decomp_FuncRest (%d)" i
+  | Decomp_FuncParam (xs, i) ->
+    let xs = List.map (Base.Option.value ~default:"_") xs |> String.concat ", " in
+    Utils_js.spf "Decomp_FuncParam ([%s], %d)" xs i
+  | Decomp_FuncRest xs ->
+    let xs = List.map (Base.Option.value ~default:"_") xs |> String.concat ", " in
+    Utils_js.spf "Decomp_FuncRest (%s)" xs
   | Decomp_FuncReturn -> "Decomp_FuncReturn"
   | Comp_ImmediateFuncCall -> "Comp_ImmediateFuncCall"
   | Comp_MaybeT -> "Comp_MaybeT"
@@ -171,8 +175,8 @@ let rec map_decomp_op ~map_base_hint ~map_targs ~map_arg_list ~map_jsx = functio
   | Decomp_MethodElem -> Decomp_MethodElem
   | Decomp_CallNew -> Decomp_CallNew
   | Decomp_CallSuper -> Decomp_CallSuper
-  | Decomp_FuncParam i -> Decomp_FuncParam i
-  | Decomp_FuncRest i -> Decomp_FuncRest i
+  | Decomp_FuncParam (xs, i) -> Decomp_FuncParam (xs, i)
+  | Decomp_FuncRest xs -> Decomp_FuncRest xs
   | Decomp_FuncReturn -> Decomp_FuncReturn
   | Comp_ImmediateFuncCall -> Comp_ImmediateFuncCall
   | Comp_MaybeT -> Comp_MaybeT
