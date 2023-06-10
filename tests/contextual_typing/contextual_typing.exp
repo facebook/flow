@@ -1011,6 +1011,40 @@ References:
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ type_guard.js:3:4
+
+Cannot cast `y` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   type_guard.js:3:4
+   3|   (y: empty); // error number | string ~> empty
+         ^
+
+References:
+   type_guard.js:1:15
+   1| const fn: (x: number | string) => x is string = (y): y is string => {
+                    ^^^^^^ [1]
+   type_guard.js:3:7
+   3|   (y: empty); // error number | string ~> empty
+            ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ type_guard.js:3:4
+
+Cannot cast `y` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   type_guard.js:3:4
+   3|   (y: empty); // error number | string ~> empty
+         ^
+
+References:
+   type_guard.js:1:24
+   1| const fn: (x: number | string) => x is string = (y): y is string => {
+                             ^^^^^^ [1]
+   type_guard.js:3:7
+   3|   (y: empty); // error number | string ~> empty
+            ^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------- under_constrained.js:3:5
 
 An annotation on `y` is required because Flow cannot infer its type from local context. [missing-local-annot]
@@ -1137,4 +1171,4 @@ References:
 
 
 
-Found 82 errors
+Found 84 errors

@@ -1496,6 +1496,16 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
       this#in_new_tparams_env (fun () -> this#visit_function ~scope_kind ~func_hints:[] expr);
       expr
 
+    method hint_pred_kind predicate return =
+      match (predicate, return) with
+      | (Some _, _) -> Some PredKind
+      | ( _,
+          Ast.Function.ReturnAnnot.TypeGuard
+            (_, (_, { Ast.Type.TypeGuard.guard = ((name_loc, { Ast.Identifier.name; _ }), _); _ }))
+        ) ->
+        Some (TypeGuardKind (name_loc, name))
+      | (_, _) -> None
+
     method private name_of_param param =
       let module P = Ast.Pattern in
       let (_, { Ast.Function.Param.argument; _ }) = param in
@@ -1526,15 +1536,16 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
           Base.Option.iter fun_tparams ~f:(fun tparams -> ignore @@ this#type_params tparams);
           ignore (Base.Option.map this_ ~f:this#function_this_param : _ option);
           let param_str_list = this#params_list_to_str_opt params_list in
+          let pred = this#hint_pred_kind predicate return in
           Base.List.iteri
             ~f:(fun i ->
               this#visit_function_param
-                ~hints:(decompose_hints (Decomp_FuncParam (param_str_list, i)) func_hints))
+                ~hints:(decompose_hints (Decomp_FuncParam (param_str_list, i, pred)) func_hints))
             params_list;
           Base.Option.iter
             ~f:
               (this#visit_function_rest_param
-                 ~hints:(decompose_hints (Decomp_FuncRest param_str_list) func_hints)
+                 ~hints:(decompose_hints (Decomp_FuncRest (param_str_list, pred)) func_hints)
               )
             rest;
           ignore @@ this#function_return_annotation return;
@@ -2320,7 +2331,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
                       arg_index = i;
                     }
                  )
-            |> decompose_hints (Decomp_FuncParam (param_str_list, i))
+            |> decompose_hints (Decomp_FuncParam (param_str_list, i, None))
           in
           match arg with
           | Ast.Expression.Expression expr ->
@@ -2597,7 +2608,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
         decompose_hints
           (Decomp_ObjProp "children")
           (decompose_hints
-             (Decomp_FuncParam ([None], 0))
+             (Decomp_FuncParam ([None], 0, None))
              [Hint_t (BuiltinType "React$FragmentType", ExpectedTypeHint)]
           )
       in

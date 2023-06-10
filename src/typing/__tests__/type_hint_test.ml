@@ -424,39 +424,39 @@ let eval_hint_tests =
     >:: mk_eval_hint_test
           ~expected:"string"
           "(string, number) => number"
-          [Decomp_FuncParam ([None], 0)];
+          [Decomp_FuncParam ([None], 0, None)];
     "fun_decomp_union"
     >:: mk_eval_hint_test
           ~expected:"string"
           "(string) => number | (string) => number"
-          [Decomp_FuncParam ([None], 0)];
+          [Decomp_FuncParam ([None], 0, None)];
     "fun_decomp_simple_on_second_argument_of_hint"
     >:: mk_eval_hint_test
           ~expected:"number"
           "(string, number) => number"
-          [Decomp_FuncParam ([None; None], 1)];
+          [Decomp_FuncParam ([None; None], 1, None)];
     "fun_decomp_on_nonexistent_argument_of_hint"
-    >:: mk_eval_hint_test ~expected:"void" "() => number" [Decomp_FuncParam ([None], 0)];
+    >:: mk_eval_hint_test ~expected:"void" "() => number" [Decomp_FuncParam ([None], 0, None)];
     "fun_decomp_on_rest_arguments_of_hint"
     >:: mk_eval_hint_test
           ~expected:"number"
           "(...Array<number>) => number"
-          [Decomp_FuncParam ([None], 0)];
+          [Decomp_FuncParam ([None], 0, None)];
     "fun_decomp_rest_arguments_matching_number_of_normal_parameters"
     >:: mk_eval_hint_test
           ~expected:"Array<number>"
           "(string, number, ...Array<number>) => number"
-          [Decomp_FuncRest [None; None]];
+          [Decomp_FuncRest ([None; None], None)];
     "fun_decomp_rest_arguments_with_additional_normal_parameters"
     >:: mk_eval_hint_test
           ~expected:"Array<string>"
           "(string, number, ...Array<string>) => number"
-          [Decomp_FuncRest [None; None; None]];
+          [Decomp_FuncRest ([None; None; None], None)];
     "fun_decomp_rest_arguments_overlap_with_normal_parameters"
     >:: mk_eval_hint_test
           ~expected:"Array<(number | string)>"
           "(string, number, ...Array<string>) => number"
-          [Decomp_FuncRest [None]];
+          [Decomp_FuncRest ([None], None)];
     (*
       When we try to extract the hint for the annotated parameter in
       ```
@@ -469,7 +469,7 @@ let eval_hint_tests =
     >:: mk_eval_hint_test
           ~expected:"DecompositionError"
           "<T>(T) => void"
-          [Decomp_FuncParam ([None], 0); Decomp_FuncParam ([None], 0)];
+          [Decomp_FuncParam ([None], 0, None); Decomp_FuncParam ([None], 0, None)];
     (*
       When we try to extract the hint for the lambda in
       ```
@@ -484,7 +484,7 @@ let eval_hint_tests =
     >:: mk_eval_hint_test
           ~expected:"(mixed) => void"
           "<T>(T => void) => void"
-          [Decomp_FuncParam ([None], 0)];
+          [Decomp_FuncParam ([None], 0, None)];
     "obj_prop_from_record_neutral_polarity"
     >:: mk_eval_hint_test ~expected:"number" "{foo: number}" [Decomp_ObjProp "foo"];
     "obj_prop_from_record_positive_polarity"
@@ -651,7 +651,7 @@ let eval_hint_tests =
     >:: mk_eval_hint_test
           ~expected:"React$ElementRef<React$AbstractComponent<{...}, string>> | null"
           "React$AbstractComponent<{...}, string>"
-          [Decomp_FuncParam ([None], 0); Decomp_JsxRef];
+          [Decomp_FuncParam ([None], 0, None); Decomp_JsxRef];
     "jsx_fragment_ref"
     >:: mk_eval_hint_test_with_type_setup
           ~expected:"void | React$Node"

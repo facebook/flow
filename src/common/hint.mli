@@ -32,6 +32,10 @@ and sentinel_refinement =
   | SingletonBigInt of int64
   | Member of Reason.t
 
+and predicate_kind =
+  | PredKind
+  | TypeGuardKind of ALoc.t * string
+
 and ('t, 'targs, 'args, 'props, 'children) hint_decomposition =
   | Decomp_ObjProp of string
   | Decomp_ObjComputed of Reason.t
@@ -45,8 +49,8 @@ and ('t, 'targs, 'args, 'props, 'children) hint_decomposition =
   | Decomp_MethodElem
   | Decomp_CallNew
   | Decomp_CallSuper
-  | Decomp_FuncParam of string option list * int
-  | Decomp_FuncRest of string option list
+  | Decomp_FuncParam of string option list * int * predicate_kind option
+  | Decomp_FuncRest of string option list * predicate_kind option
   | Decomp_FuncReturn
   | Comp_ImmediateFuncCall
   | Comp_MaybeT

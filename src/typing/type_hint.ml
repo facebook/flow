@@ -259,12 +259,23 @@ and instantiate_component cx component instantiation_hint =
   | t -> t
 
 and type_of_hint_decomposition cx op reason t =
-  let fun_t ~params ~rest_param ~return_t =
+  let fun_t ~params ~rest_param ~return_t ~pred =
     let statics_reason =
       Reason.func_reason ~async:false ~generator:false (Reason.loc_of_reason reason)
     in
     let statics =
       Obj_type.mk_with_proto cx statics_reason (Type.FunProtoT reason) ~obj_kind:Type.Inexact
+    in
+    let predicate =
+      Base.Option.map pred ~f:(function
+          | PredKind -> PredBased (reason, Key_map.empty, Key_map.empty)
+          | TypeGuardKind (param_loc, param_name) ->
+            TypeGuardBased
+              {
+                param_name = (param_loc, param_name);
+                type_guard = Unsoundness.unresolved_any reason;
+              }
+          )
     in
     let func =
       {
@@ -272,7 +283,7 @@ and type_of_hint_decomposition cx op reason t =
         params;
         rest_param;
         return_t;
-        predicate = None;
+        predicate;
         def_reason = reason;
       }
     in
@@ -403,7 +414,7 @@ and type_of_hint_decomposition cx op reason t =
         in
         get_constructor_type this_t
       | Decomp_CallSuper -> get_constructor_type t
-      | Decomp_FuncParam (xs, i) ->
+      | Decomp_FuncParam (xs, i, pred) ->
         if i > List.length xs then
           (* This is an internal error. We shouldn't be creating Decomp_FuncParam
            * where [i] is not a valid index of [xs]. *)
@@ -420,11 +431,11 @@ and type_of_hint_decomposition cx op reason t =
                 )
               in
               let fun_t =
-                fun_t ~params ~rest_param:None ~return_t:(Unsoundness.unresolved_any reason)
+                fun_t ~params ~rest_param:None ~return_t:(Unsoundness.unresolved_any reason) ~pred
               in
               SpeculationFlow.resolved_upper_flow_t_unsafe cx reason (fun_t, t)
           )
-      | Decomp_FuncRest xs ->
+      | Decomp_FuncRest (xs, pred) ->
         Tvar.mk_where cx reason (fun rest_t ->
             let params = Base.List.map xs ~f:(fun x -> (x, Unsoundness.unresolved_any reason)) in
             let fun_t =
@@ -432,6 +443,7 @@ and type_of_hint_decomposition cx op reason t =
                 ~params
                 ~rest_param:(Some (None, ALoc.none, rest_t))
                 ~return_t:(Unsoundness.unresolved_any reason)
+                ~pred
             in
             SpeculationFlow.resolved_upper_flow_t_unsafe cx reason (fun_t, t)
         )
@@ -442,10 +454,11 @@ and type_of_hint_decomposition cx op reason t =
                 ~params:[]
                 ~rest_param:(Some (None, ALoc.none, Unsoundness.unresolved_any reason))
                 ~return_t
+                ~pred:None
             in
             SpeculationFlow.resolved_lower_flow_t_unsafe cx reason (t, fun_t)
         )
-      | Comp_ImmediateFuncCall -> fun_t ~params:[] ~rest_param:None ~return_t:t
+      | Comp_ImmediateFuncCall -> fun_t ~params:[] ~rest_param:None ~return_t:t ~pred:None
       | Comp_MaybeT -> MaybeT (reason, t)
       | Decomp_JsxProps ->
         Tvar.mk_no_wrap_where cx reason (fun props_t ->

@@ -42,6 +42,10 @@ and sentinel_refinement =
   | SingletonBigInt of int64
   | Member of Reason.t
 
+and predicate_kind =
+  | PredKind
+  | TypeGuardKind of ALoc.t * string
+
 and ('t, 'targs, 'args, 'props, 'children) hint_decomposition =
   (* Hint on `{ f: e }` becomes hint on `e` *)
   | Decomp_ObjProp of string
@@ -68,9 +72,9 @@ and ('t, 'targs, 'args, 'props, 'children) hint_decomposition =
   (* Type of the super-class becomes the type of the super constructor *)
   | Decomp_CallSuper
   (* Type of function becomes hint on the i-th argument *)
-  | Decomp_FuncParam of string option list * int
+  | Decomp_FuncParam of string option list * int * predicate_kind option
   (* Type of function becomes hint on rest argument *)
-  | Decomp_FuncRest of string option list
+  | Decomp_FuncRest of string option list * predicate_kind option
   (* Type of function becomes hint on return *)
   | Decomp_FuncReturn
   (* Hint on call `f()` becomes hint on `f`. This is only meant to be used for the
@@ -104,6 +108,11 @@ and ('t, 'targs, 'args, 'props, 'children) hint =
      It will eventually be removed once we move all hint decomposition logic into env_resolution. *)
   | Hint_Placeholder
 
+let string_of_predicate_kind = function
+  | None -> "no pred"
+  | Some PredKind -> "pred kind"
+  | Some (TypeGuardKind _) -> "type guard kind"
+
 let string_of_hint_unknown_kind = function
   | Decomp_ObjProp _ -> "Decomp_ObjProp"
   | Decomp_ObjComputed _ -> "Decomp_ObjComputed"
@@ -117,12 +126,12 @@ let string_of_hint_unknown_kind = function
   | Decomp_MethodElem -> "Decomp_MethodElem"
   | Decomp_CallNew -> "Decomp_CallNew"
   | Decomp_CallSuper -> "Decomp_CallSuper"
-  | Decomp_FuncParam (xs, i) ->
+  | Decomp_FuncParam (xs, i, pred) ->
     let xs = List.map (Base.Option.value ~default:"_") xs |> String.concat ", " in
-    Utils_js.spf "Decomp_FuncParam ([%s], %d)" xs i
-  | Decomp_FuncRest xs ->
+    Utils_js.spf "Decomp_FuncParam ([%s], %d, %s)" xs i (string_of_predicate_kind pred)
+  | Decomp_FuncRest (xs, pred) ->
     let xs = List.map (Base.Option.value ~default:"_") xs |> String.concat ", " in
-    Utils_js.spf "Decomp_FuncRest (%s)" xs
+    Utils_js.spf "Decomp_FuncRest (%s, %s)" xs (string_of_predicate_kind pred)
   | Decomp_FuncReturn -> "Decomp_FuncReturn"
   | Comp_ImmediateFuncCall -> "Comp_ImmediateFuncCall"
   | Comp_MaybeT -> "Comp_MaybeT"
@@ -175,8 +184,8 @@ let rec map_decomp_op ~map_base_hint ~map_targs ~map_arg_list ~map_jsx = functio
   | Decomp_MethodElem -> Decomp_MethodElem
   | Decomp_CallNew -> Decomp_CallNew
   | Decomp_CallSuper -> Decomp_CallSuper
-  | Decomp_FuncParam (xs, i) -> Decomp_FuncParam (xs, i)
-  | Decomp_FuncRest xs -> Decomp_FuncRest xs
+  | Decomp_FuncParam (i, s, p) -> Decomp_FuncParam (i, s, p)
+  | Decomp_FuncRest (i, p) -> Decomp_FuncRest (i, p)
   | Decomp_FuncReturn -> Decomp_FuncReturn
   | Comp_ImmediateFuncCall -> Comp_ImmediateFuncCall
   | Comp_MaybeT -> Comp_MaybeT
