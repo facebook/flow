@@ -661,6 +661,8 @@ let rec mod_loc_of_virtual_use_op f =
         }
     | TypeParamBound o -> TypeParamBound o
     | TypePredicateCompatibility -> TypePredicateCompatibility
+    | InferredTypeForTypeGuardParameter reason ->
+      InferredTypeForTypeGuardParameter (mod_reason reason)
     | UnifyFlip -> UnifyFlip
   in
   function

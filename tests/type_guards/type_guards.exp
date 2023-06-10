@@ -1,3 +1,441 @@
+Error ---------------------------------------------------------------------------------------------- consistency.js:7:31
+
+Cannot declare a type predicate [1] for function [2] because boolean [1] is incompatible with implicitly-returned
+undefined. [incompatible-return]
+
+   consistency.js:7:31
+   7| function no_return(x: mixed): x is number {} // error no return
+                                    ^^^^^^^^^^^ [1]
+
+References:
+   consistency.js:7:1
+   7| function no_return(x: mixed): x is number {} // error no return
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- consistency.js:10:12
+
+Cannot return `true` because mixed [1] is incompatible with number [2] in the type inferred for type guard parameter
+`x` [3]. [incompatible-return]
+
+   consistency.js:10:12
+   10|     return true; // error x: mixed ~> number
+                  ^^^^
+
+References:
+   consistency.js:9:25
+    9| function return_true(x: mixed): x is number {
+                               ^^^^^ [1]
+   consistency.js:9:38
+    9| function return_true(x: mixed): x is number {
+                                            ^^^^^^ [2]
+   consistency.js:9:33
+    9| function return_true(x: mixed): x is number {
+                                       ^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- consistency.js:15:12
+
+Cannot return `true` because mixed [1] is incompatible with number [2] in the type inferred for type guard parameter
+`x` [3]. [incompatible-return]
+
+   consistency.js:15:12
+   15|     return true; // error in this branch x: mixed ~> number
+                  ^^^^
+
+References:
+   consistency.js:13:35
+   13| function return_true_in_branch(x: mixed): x is number {
+                                         ^^^^^ [1]
+   consistency.js:13:48
+   13| function return_true_in_branch(x: mixed): x is number {
+                                                      ^^^^^^ [2]
+   consistency.js:13:43
+   13| function return_true_in_branch(x: mixed): x is number {
+                                                 ^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- consistency.js:26:10
+
+Cannot return `false` because mixed [1] is incompatible with `A` [2] in the type inferred for type guard parameter
+`x` [3]. [incompatible-return]
+
+   consistency.js:26:10
+   26|   return false; // error (technically this should hold but that's not what we do in other refinements)
+                ^^^^^
+
+References:
+   consistency.js:25:32
+   25| function always_false_error(x: mixed): x is A {
+                                      ^^^^^ [1]
+   consistency.js:25:45
+   25| function always_false_error(x: mixed): x is A {
+                                                   ^ [2]
+   consistency.js:25:40
+   25| function always_false_error(x: mixed): x is A {
+                                              ^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- consistency.js:31:12
+
+Cannot return `false` because number [1] is incompatible with boolean [2] in the type inferred for type guard parameter
+`x` [3]. [incompatible-return]
+
+   consistency.js:31:12
+   31|     return false; // error (for the same reason as above)
+                  ^^^^^
+
+References:
+   consistency.js:29:42
+   29| function return_false_under_condition(x: number | string | boolean): x is boolean {
+                                                ^^^^^^ [1]
+   consistency.js:29:75
+   29| function return_false_under_condition(x: number | string | boolean): x is boolean {
+                                                                                 ^^^^^^^ [2]
+   consistency.js:29:70
+   29| function return_false_under_condition(x: number | string | boolean): x is boolean {
+                                                                            ^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- consistency.js:33:12
+
+Cannot return `false` because string [1] is incompatible with boolean [2] in the type inferred for type guard parameter
+`x` [3]. [incompatible-return]
+
+   consistency.js:33:12
+   33|     return false; // error (for the same reason as above)
+                  ^^^^^
+
+References:
+   consistency.js:29:51
+   29| function return_false_under_condition(x: number | string | boolean): x is boolean {
+                                                         ^^^^^^ [1]
+   consistency.js:29:75
+   29| function return_false_under_condition(x: number | string | boolean): x is boolean {
+                                                                                 ^^^^^^^ [2]
+   consistency.js:29:70
+   29| function return_false_under_condition(x: number | string | boolean): x is boolean {
+                                                                            ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- consistency.js:45:3
+
+Cannot return `((typeof x) === 'number') || ((typeof x) === 'string')` because string [1] is incompatible with
+number [2] in the type inferred for type guard parameter `x` [3]. [incompatible-return]
+
+   consistency.js:45:3
+   45|   typeof x === 'string' // error x: string ~> number
+         ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   consistency.js:43:38
+   43| const arrow_error = (x: mixed): x is number => (
+                                            ^^^^^^ [2]
+   consistency.js:43:33
+   43| const arrow_error = (x: mixed): x is number => (
+                                       ^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- consistency.js:50:12
+
+Cannot return `(typeof x) === 'string'` because string [1] is incompatible with number [2] in the type inferred for type
+guard parameter `x` [3]. [incompatible-return]
+
+   consistency.js:50:12
+   50|     return typeof x === 'string'; // error x: string ~> number
+                  ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   consistency.js:49:21
+   49|   m(x: mixed): x is number {
+                           ^^^^^^ [2]
+   consistency.js:49:16
+   49|   m(x: mixed): x is number {
+                      ^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- consistency.js:55:35
+
+Cannot use string [1] as type prediate for parameter `x` because string [1] is incompatible with number [2]. A user
+defined type guard needs to be compatible with its parameter's type. [incompatible-type-guard]
+
+   consistency.js:55:35
+   55|   const tes1 = (x: ?number): x is string => ( // error on string because string ~/> ?number
+                                         ^^^^^^ [1]
+
+References:
+   consistency.js:55:21
+   55|   const tes1 = (x: ?number): x is string => ( // error on string because string ~/> ?number
+                           ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- consistency.js:56:5
+
+Cannot return `x != null` because number [1] is incompatible with string [2] in the type inferred for type guard
+parameter `x` [3]. [incompatible-return]
+
+   consistency.js:56:5
+   56|     x != null // error number ~> string
+           ^^^^^^^^^
+
+References:
+   consistency.js:55:21
+   55|   const tes1 = (x: ?number): x is string => ( // error on string because string ~/> ?number
+                           ^^^^^^ [1]
+   consistency.js:55:35
+   55|   const tes1 = (x: ?number): x is string => ( // error on string because string ~/> ?number
+                                         ^^^^^^ [2]
+   consistency.js:55:30
+   55|   const tes1 = (x: ?number): x is string => ( // error on string because string ~/> ?number
+                                    ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- consistency.js:60:5
+
+Cannot return `x !== null` because null or undefined [1] is incompatible with number [2] in the type inferred for type
+guard parameter `x` [3]. [incompatible-return]
+
+   consistency.js:60:5
+   60|     x !== null // error null | undefined ~> string
+           ^^^^^^^^^^
+
+References:
+   consistency.js:59:21
+   59|   const test2 = (x: ?number): x is number => (
+                           ^^^^^^^ [1]
+   consistency.js:59:36
+   59|   const test2 = (x: ?number): x is number => (
+                                          ^^^^^^ [2]
+   consistency.js:59:31
+   59|   const test2 = (x: ?number): x is number => (
+                                     ^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- consistency.js:71:24
+
+Cannot use string [1] as type prediate for parameter `x` because string [1] is incompatible with number [2]. A user
+defined type guard needs to be compatible with its parameter's type. [incompatible-type-guard]
+
+   consistency.js:71:24
+   71|   arr.filter((x): x is string => ( // error on string because string ~/> ?number
+                              ^^^^^^ [1]
+
+References:
+   consistency.js:69:27
+   69|   declare var arr: Array<?number>;
+                                 ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- consistency.js:72:5
+
+Cannot return `x != null` because number [1] is incompatible with string [2] in the type inferred for type guard
+parameter `x` [3]. [incompatible-return]
+
+   consistency.js:72:5
+   72|     x != null // error number ~> string
+           ^^^^^^^^^
+
+References:
+   consistency.js:69:27
+   69|   declare var arr: Array<?number>;
+                                 ^^^^^^ [1]
+   consistency.js:71:24
+   71|   arr.filter((x): x is string => ( // error on string because string ~/> ?number
+                              ^^^^^^ [2]
+   consistency.js:71:19
+   71|   arr.filter((x): x is string => ( // error on string because string ~/> ?number
+                         ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- consistency.js:76:5
+
+Cannot return `x !== null` because null or undefined [1] is incompatible with number [2] in the type inferred for type
+guard parameter `x` [3]. [incompatible-return]
+
+   consistency.js:76:5
+   76|     x !== null // error null | undefined ~> string
+           ^^^^^^^^^^
+
+References:
+   consistency.js:69:26
+   69|   declare var arr: Array<?number>;
+                                ^^^^^^^ [1]
+   consistency.js:75:24
+   75|   arr.filter((x): x is number => (
+                              ^^^^^^ [2]
+   consistency.js:75:19
+   75|   arr.filter((x): x is number => (
+                         ^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- consistency.js:90:23
+
+Cannot return `x instanceof A` because `A` [1] is incompatible with `B` [2] in the type inferred for type guard
+parameter `x` [3]. [incompatible-return]
+
+   consistency.js:90:23
+   90|   return x instanceof A; // error A ~> B
+                             ^ [1]
+
+References:
+   consistency.js:89:43
+   89| function instanceof_error(x: mixed): x is B {
+                                                 ^ [2]
+   consistency.js:89:38
+   89| function instanceof_error(x: mixed): x is B {
+                                            ^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- consistency.js:116:10
+
+Cannot return `Array.isArray(...)` because array element of refined mixed [1] is incompatible with `A` [2] in array
+element of the type inferred for type guard parameter `x` [3]. [incompatible-return]
+
+   consistency.js:116:10
+   116|   return Array.isArray(x);
+                 ^^^^^^^^^^^^^^^^
+
+References:
+   consistency.js:115:36
+   115| function is_array_poly_error<A>(x: mixed): x is $ReadOnlyArray<A> { // error ROArray<mixed> ~> ROArray<A>
+                                           ^^^^^ [1]
+   consistency.js:115:64
+   115| function is_array_poly_error<A>(x: mixed): x is $ReadOnlyArray<A> { // error ROArray<mixed> ~> ROArray<A>
+                                                                       ^ [2]
+   consistency.js:115:44
+   115| function is_array_poly_error<A>(x: mixed): x is $ReadOnlyArray<A> { // error ROArray<mixed> ~> ROArray<A>
+                                                   ^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- consistency.js:129:12
+
+Cannot return `isNumberOrString(...) && isBoolean(...)` because in the type inferred for type guard parameter `x` [1]:
+[incompatible-return]
+ - Either boolean [2] is incompatible with string [3].
+ - Or number [4] is incompatible with string [3].
+
+   consistency.js:129:12
+   129|     return isNumberOrString(x) && isBoolean(x); // error number ~> string, boolean ~> string
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   consistency.js:128:29
+   128|   function error(x: mixed): x is string {
+                                    ^ [1]
+   consistency.js:122:46
+   122|   declare function isBoolean(x: mixed): x is boolean;
+                                                     ^^^^^^^ [2]
+   consistency.js:128:34
+   128|   function error(x: mixed): x is string {
+                                         ^^^^^^ [3]
+   consistency.js:120:54
+   120|   declare function isNumberOrString(x: mixed): x is (number | string);
+                                                             ^^^^^^ [4]
+
+
+Error -------------------------------------------------------------------------------------------- consistency.js:143:10
+
+Cannot use type guard parameter `x` [1] because at this return point it is writen to in [2]. [function-predicate]
+
+   consistency.js:143:10
+   143|   return x instanceof A; // error 'x' is written to
+                 ^^^^^^^^^^^^^^
+
+References:
+   consistency.js:141:55
+   141| function error_write_to_type_guard_param_1(x: mixed): x is A {
+                                                              ^ [1]
+   consistency.js:142:3
+   142|   x = 1;
+          ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- consistency.js:148:10
+
+Cannot use type guard parameter `x` [1] because at this return point it is writen to in [2]. [function-predicate]
+
+   consistency.js:148:10
+   148|   return x instanceof B; // error 'x' is written to
+                 ^^^^^^^^^^^^^^
+
+References:
+   consistency.js:146:55
+   146| function error_write_to_type_guard_param_2(x: mixed): x is B {
+                                                              ^ [1]
+   consistency.js:147:3
+   147|   x = new B();
+          ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- consistency.js:154:12
+
+Cannot use type guard parameter `x` [1] because at this return point it is writen to in [2]. [function-predicate]
+
+   consistency.js:154:12
+   154|     return x instanceof B; // error 'x' is written to (1st loc)
+                   ^^^^^^^^^^^^^^
+
+References:
+   consistency.js:151:59
+   151| function error_write_to_type_guard_param_multi(x: mixed): x is B {
+                                                                  ^ [1]
+   consistency.js:153:5
+   153|     x = new B();
+            ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- consistency.js:157:12
+
+Cannot use type guard parameter `x` [1] because at this return point it is writen to in [2]. [function-predicate]
+
+   consistency.js:157:12
+   157|     return x instanceof B; // error 'x' is written to (2nd loc)
+                   ^^^^^^^^^^^^^^
+
+References:
+   consistency.js:151:59
+   151| function error_write_to_type_guard_param_multi(x: mixed): x is B {
+                                                                  ^ [1]
+   consistency.js:156:5
+   156|     x = new B();
+            ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- consistency.js:170:25
+
+Cannot return `x instanceof A` because `A` [1] is incompatible with `B` [2] in the type inferred for type guard
+parameter `x` [3]. [incompatible-return]
+
+   consistency.js:170:25
+   170|     return x instanceof A; // error A ~> B
+                                ^ [1]
+
+References:
+   consistency.js:168:56
+   168| function multi_return_one_branch_error(x: mixed): x is B {
+                                                               ^ [2]
+   consistency.js:168:51
+   168| function multi_return_one_branch_error(x: mixed): x is B {
+                                                          ^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- consistency.js:179:33
+
+Cannot use type guard parameter `x`, because `x` [1] is reassigned in [2]. [function-predicate]
+
+   consistency.js:179:33
+   179| function havoc_error(x: mixed): x is B { // error 'x' is havoced
+                                        ^
+
+References:
+   consistency.js:179:22
+   179| function havoc_error(x: mixed): x is B { // error 'x' is havoced
+                             ^ [1]
+   consistency.js:183:3
+   183|   y();
+          ^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------------------- invalid.js:9:12
 
 Cannot find type guard parameter `this` [1] in the parameters of this function (type). [function-predicate]
@@ -288,22 +726,22 @@ Cannot call `arr.filter` because: [incompatible-call]
  - Or property `name` is missing in function [3] but exists in statics of `Boolean` [4].
 
    refinement.js:47:35
-   47|   const arr2: Array<string> = arr.filter((x: mixed): x is number => { return typeof x === "number"; }); // error
-                                         ^^^^^^
+    47|   const arr2: Array<string> = arr.filter((x: mixed): x is number => { return typeof x === "number"; }); // error
+                                          ^^^^^^
 
 References:
    refinement.js:47:59
-   47|   const arr2: Array<string> = arr.filter((x: mixed): x is number => { return typeof x === "number"; }); // error
-                                                                 ^^^^^^ [1]
+    47|   const arr2: Array<string> = arr.filter((x: mixed): x is number => { return typeof x === "number"; }); // error
+                                                                  ^^^^^^ [1]
    refinement.js:47:21
-   47|   const arr2: Array<string> = arr.filter((x: mixed): x is number => { return typeof x === "number"; }); // error
-                           ^^^^^^ [2]
+    47|   const arr2: Array<string> = arr.filter((x: mixed): x is number => { return typeof x === "number"; }); // error
+                            ^^^^^^ [2]
    refinement.js:47:42
-   47|   const arr2: Array<string> = arr.filter((x: mixed): x is number => { return typeof x === "number"; }); // error
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/prelude.js:16:15
-   16| declare class Boolean {}
-                     ^^^^^^^ [4]
+    47|   const arr2: Array<string> = arr.filter((x: mixed): x is number => { return typeof x === "number"; }); // error
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/core.js:367:15
+   367| declare class Boolean {
+                      ^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:48:35
@@ -313,19 +751,19 @@ Cannot call `arr.filter` because: [incompatible-call]
  - Or function [1], a non-predicate function, is incompatible with function type [3], which is a predicate function.
 
    refinement.js:48:35
-   48|   const arr3: Array<string> = arr.filter((x: mixed) => { return typeof x === "number"; }); // error no refinement
-                                         ^^^^^^
+    48|   const arr3: Array<string> = arr.filter((x: mixed) => { return typeof x === "number"; }); // error no refinement
+                                          ^^^^^^
 
 References:
    refinement.js:48:42
-   48|   const arr3: Array<string> = arr.filter((x: mixed) => { return typeof x === "number"; }); // error no refinement
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/prelude.js:16:15
-   16| declare class Boolean {}
-                     ^^^^^^^ [2]
+    48|   const arr3: Array<string> = arr.filter((x: mixed) => { return typeof x === "number"; }); // error no refinement
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:367:15
+   367| declare class Boolean {
+                      ^^^^^^^ [2]
    refinement.js:40:35
-   40|     filter<This, S: T>(predicate: (this: This, value: T, index: number, array: $ReadOnlyArray<T>) => value is S, thisArg?: This): Array<S>;
-                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+    40|     filter<This, S: T>(predicate: (this: This, value: T, index: number, array: $ReadOnlyArray<T>) => value is S, thisArg?: This): Array<S>;
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- subst.js:10:15
@@ -667,7 +1105,7 @@ Cannot find type guard parameter `x` [1] in the parameters of this function (typ
 
 
 
-Found 41 errors
+Found 64 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

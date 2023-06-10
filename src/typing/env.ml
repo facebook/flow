@@ -518,6 +518,29 @@ and predicate_refinement_maps cx loc =
   | Some (expr_reason, p_map, n_map) ->
     Some (expr_reason, to_predicate_key_map p_map, to_predicate_key_map n_map)
 
+and type_guard_at_return cx reason ~param_loc ~return_loc write_locs =
+  let rec is_invalid (acc_result, acc_locs) write_loc =
+    match write_loc with
+    | Env_api.Write reason when ALoc.equal (Reason.loc_of_reason reason) param_loc ->
+      (acc_result, acc_locs)
+    | Env_api.Refinement { refinement_id = _; writes; write_id = _ } ->
+      Base.List.fold_left ~init:(acc_result, acc_locs) writes ~f:is_invalid
+    | Env_api.Write r -> (true, Reason.loc_of_reason r :: acc_locs)
+    | _ ->
+      (* These cases are unlikely. Not all of them provide an error location.
+       * Just record the error without loc. *)
+      (true, acc_locs)
+  in
+  let (is_invalid, invalid_writes) =
+    Base.List.fold_left write_locs ~init:(false, []) ~f:is_invalid
+  in
+  let env = Context.environment cx in
+  if is_invalid then
+    Error invalid_writes
+  else
+    let lookup_mode = LookupMode.ForValue in
+    Ok (type_of_state ~lookup_mode cx env return_loc reason write_locs None None)
+
 let ref_entry_exn ~lookup_mode cx loc reason =
   let t = read_entry_exn ~lookup_mode cx loc reason in
   Flow_js.reposition cx loc t

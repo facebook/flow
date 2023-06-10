@@ -174,3 +174,11 @@ val ref_entry_exn :
   lookup_mode:LookupMode.t -> Context.t -> Env_api.With_ALoc.L.t -> Reason.reason -> Type.t
 
 val t_option_value_exn : Context.t -> ALoc.t -> Type.t option -> Type.t
+
+val type_guard_at_return :
+  Context.t ->
+  Reason.reason ->
+  param_loc:ALoc.t ->
+  return_loc:ALoc.t ->
+  Env_api.write_locs ->
+  (Type.t, ALoc.t list) result

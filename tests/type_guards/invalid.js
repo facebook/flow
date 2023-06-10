@@ -4,13 +4,13 @@ class C extends A {}
 
 class Invalid_type_guard_positions {
   constructor(x: A): x is C { // TODO error no type guard on constructor
-    return true;
+    return x instanceof C;
   }
   get p(): this is C {  // TODO error no type guard on getter
-    return true;
+    return this instanceof C;
   }
   set q(x: A): x is C {  // TODO error no type guard on setter
-    return true;
+    return x instanceof C;
   }
 }
 

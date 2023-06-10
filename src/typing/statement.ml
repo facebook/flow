@@ -7592,6 +7592,51 @@ module Make
       in
       fparams
     in
+    (* This check to be performed after the function has been checked to ensure all
+     * entries have been prepared for type checking. *)
+    let check_type_guard_consistency cx param_loc tg_param tg_reason type_guard =
+      let env = Context.environment cx in
+      let { Loc_env.var_info; _ } = env in
+      let { Env_api.type_guard_consistency_maps; _ } = var_info in
+      let (name_loc, name) = tg_param in
+      let param_reason = mk_reason (RParameter (Some name)) param_loc in
+      match Loc_collections.ALocMap.find_opt name_loc type_guard_consistency_maps with
+      | None ->
+        (* Entry missing when function does not return. Error raised in Func_sig. *)
+        ()
+      | Some (Some havoced_loc_set, _) ->
+        Flow_js_utils.add_output
+          cx
+          Error_message.(
+            ETypeGuardFunctionParamHavoced
+              {
+                param_reason;
+                type_guard_reason = tg_reason;
+                call_locs = Loc_collections.ALocSet.elements havoced_loc_set;
+              }
+          )
+      | Some (None, reads) ->
+        (* Each read corresponds to a return expression. *)
+        Base.List.iter reads ~f:(fun (return_reason, { Env_api.write_locs; _ }, _) ->
+            let return_loc = Reason.loc_of_reason return_reason in
+            match Env.type_guard_at_return cx param_reason ~param_loc ~return_loc write_locs with
+            | Ok t ->
+              let use_op =
+                Frame
+                  ( InferredTypeForTypeGuardParameter tg_reason,
+                    Op (FunReturnStatement { value = return_reason })
+                  )
+              in
+              Flow.flow cx (t, UseT (use_op, type_guard))
+            | Error write_locs ->
+              Flow_js_utils.add_output
+                cx
+                Error_message.(
+                  ETypeGuardFunctionInvalidWrites
+                    { reason = return_reason; type_guard_reason = tg_reason; write_locs }
+                )
+        )
+    in
     let predicate_checks cx pred params =
       let err_with_desc desc pred_reason binding_loc =
         let binding_reason = mk_reason desc binding_loc in
@@ -7606,13 +7651,14 @@ module Make
         | (loc, Rest) -> err_with_desc (RRestParameter (Some name)) expr_reason loc
         | (loc, Select _) -> err_with_desc (RPatternParameter name) expr_reason loc
       in
-      let type_guard_based_checks tg_param _type_guard binding_opt =
+      let type_guard_based_checks tg_param type_guard binding_opt =
         let (name_loc, name) = tg_param in
         let tg_reason = mk_reason (RTypeGuardParam name) name_loc in
         let open Pattern_helper in
         match binding_opt with
         | None -> Flow_js_utils.add_output cx Error_message.(ETypeGuardParamUnbound tg_reason)
-        | Some (_param_loc, Root) -> ()
+        | Some (param_loc, Root) ->
+          check_type_guard_consistency cx param_loc tg_param tg_reason type_guard
         | Some binding -> error_on_non_root_binding name tg_reason binding
       in
       match pred with

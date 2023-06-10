@@ -285,6 +285,16 @@ and 'loc t' =
       reasons: 'loc virtual_reason * 'loc virtual_reason;
     }
   | ETypeGuardParamUnbound of 'loc virtual_reason
+  | ETypeGuardFunctionInvalidWrites of {
+      reason: 'loc virtual_reason;
+      type_guard_reason: 'loc virtual_reason;
+      write_locs: 'loc list;
+    }
+  | ETypeGuardFunctionParamHavoced of {
+      type_guard_reason: 'loc virtual_reason;
+      param_reason: 'loc virtual_reason;
+      call_locs: 'loc list;
+    }
   | EInternal of 'loc * internal_error
   | EUnsupportedSyntax of 'loc * unsupported_syntax
   | EUseArrayLiteral of 'loc
@@ -1002,6 +1012,20 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | ETypeGuardIndexMismatch { use_op; reasons = (r1, r2) } ->
     ETypeGuardIndexMismatch { use_op = map_use_op use_op; reasons = (map_reason r1, map_reason r2) }
   | ETypeGuardParamUnbound reason -> ETypeGuardParamUnbound (map_reason reason)
+  | ETypeGuardFunctionInvalidWrites { reason; type_guard_reason; write_locs } ->
+    ETypeGuardFunctionInvalidWrites
+      {
+        reason = map_reason reason;
+        type_guard_reason = map_reason type_guard_reason;
+        write_locs = Base.List.map ~f write_locs;
+      }
+  | ETypeGuardFunctionParamHavoced { type_guard_reason; param_reason; call_locs } ->
+    ETypeGuardFunctionParamHavoced
+      {
+        type_guard_reason = map_reason type_guard_reason;
+        param_reason = map_reason param_reason;
+        call_locs = Base.List.map ~f call_locs;
+      }
   | EFunPredInvalidIndex loc -> EFunPredInvalidIndex (f loc)
   | EInternal (loc, i) -> EInternal (f loc, i)
   | EUnsupportedSyntax (loc, u) -> EUnsupportedSyntax (f loc, u)
@@ -1532,6 +1556,8 @@ let util_use_op_of_msg nope util = function
   | EInvalidMappedType _
   | ETupleRequiredAfterOptional _
   | ETypeGuardParamUnbound _
+  | ETypeGuardFunctionParamHavoced _
+  | ETypeGuardFunctionInvalidWrites _
   | EDuplicateComponentProp _
   | ERefComponentProp _ ->
     nope
@@ -1596,7 +1622,9 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EInvalidBinaryArith { reason_out = reason; _ }
   | ETupleRequiredAfterOptional reason
   | EPredicateInvalidParameter { pred_reason = reason; _ }
-  | ETypeGuardParamUnbound reason ->
+  | ETypeGuardParamUnbound reason
+  | ETypeGuardFunctionInvalidWrites { reason; _ }
+  | ETypeGuardFunctionParamHavoced { type_guard_reason = reason; _ } ->
     Some (loc_of_reason reason)
   | EExponentialSpread
       {
@@ -2776,6 +2804,48 @@ let friendly_message_of_msg loc_of_aloc msg =
       {
         features =
           [text "Cannot find "; ref reason; text " in the parameters of this function (type)."];
+      }
+  | ETypeGuardFunctionInvalidWrites { reason = _; type_guard_reason; write_locs } ->
+    let loc_str =
+      match write_locs with
+      | [] -> [text "in this function"]
+      | [loc] -> [text "in"; ref (mk_reason (RCustom "") loc)]
+      | _ ->
+        text "in the following statements:"
+        :: Base.List.map write_locs ~f:(fun loc -> ref (mk_reason (RCustom "") loc))
+    in
+    Normal
+      {
+        features =
+          [
+            text "Cannot use ";
+            ref type_guard_reason;
+            text " because at this return point it is writen to ";
+          ]
+          @ loc_str
+          @ [text "."];
+      }
+  | ETypeGuardFunctionParamHavoced { type_guard_reason; param_reason; call_locs } ->
+    let loc_str =
+      match call_locs with
+      | [] -> [text "in this function"]
+      | [loc] -> [text "in"; ref (mk_reason (RCustom "") loc)]
+      | _ ->
+        text "in the following expressions:"
+        :: Base.List.map call_locs ~f:(fun loc -> ref (mk_reason (RCustom "") loc))
+    in
+    Normal
+      {
+        features =
+          [
+            text "Cannot use ";
+            desc type_guard_reason;
+            text ", because ";
+            ref param_reason;
+            text " is reassigned ";
+          ]
+          @ loc_str
+          @ [text "."];
       }
   | EInternal (_, internal_error) ->
     let msg = string_of_internal_error internal_error in
@@ -5086,7 +5156,9 @@ let error_code_of_message err : error_code option =
   | EPredicateFuncIncompatibility _
   | EPredicateInvalidParameter _
   | ETypeGuardIndexMismatch _
-  | ETypeGuardParamUnbound _ ->
+  | ETypeGuardParamUnbound _
+  | ETypeGuardFunctionInvalidWrites _
+  | ETypeGuardFunctionParamHavoced _ ->
     Some FunctionPredicate
   | EIdxArity _ -> Some InvalidIdx
   | EIdxUse _ -> Some InvalidIdx

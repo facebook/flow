@@ -189,6 +189,11 @@ module type S = sig
   type predicate_refinement_maps =
     (Reason.t * predicate_refinement SMap.t * predicate_refinement SMap.t) L.LMap.t
 
+  (* First element is havoc information. This value will be [Some empty] when
+   * encountering a havocing event with no corresponding location. *)
+  type type_guard_consistency_maps =
+    (Loc_collections.ALocSet.t option * (L.t Reason.virtual_reason * read * read) list) L.LMap.t
+
   type pred_func_info =
     (L.t, L.t) Ast.Expression.t (* Call exp *)
     * (L.t, L.t) Ast.Expression.t (* Callee *)
@@ -203,6 +208,7 @@ module type S = sig
     toplevel_members: read NameUtils.Map.t;
     module_toplevel_members: toplevel_member list L.LMap.t;
     predicate_refinement_maps: predicate_refinement_maps;
+    type_guard_consistency_maps: type_guard_consistency_maps;
     providers: Provider_api.info;
     refinement_of_id: int -> Refi.refinement;
     pred_func_map: pred_func_info L.LMap.t;
@@ -476,6 +482,9 @@ module Make
   type predicate_refinement_maps =
     (Reason.t * predicate_refinement SMap.t * predicate_refinement SMap.t) L.LMap.t
 
+  type type_guard_consistency_maps =
+    (Loc_collections.ALocSet.t option * (L.t Reason.virtual_reason * read * read) list) L.LMap.t
+
   type pred_func_info =
     (L.t, L.t) Ast.Expression.t (* Call exp *)
     * (L.t, L.t) Ast.Expression.t (* Callee *)
@@ -490,6 +499,7 @@ module Make
     toplevel_members: read NameUtils.Map.t;
     module_toplevel_members: toplevel_member list L.LMap.t;
     predicate_refinement_maps: predicate_refinement_maps;
+    type_guard_consistency_maps: type_guard_consistency_maps;
     providers: Provider_api.info;
     refinement_of_id: int -> Refi.refinement;
     pred_func_map: pred_func_info L.LMap.t;
@@ -511,6 +521,7 @@ module Make
       toplevel_members = NameUtils.Map.empty;
       module_toplevel_members = L.LMap.empty;
       predicate_refinement_maps = L.LMap.empty;
+      type_guard_consistency_maps = L.LMap.empty;
       providers = Provider_api.empty;
       refinement_of_id = (fun _ -> raise (Env_invariant (None, Impossible "Empty env info")));
       pred_func_map = L.LMap.empty;

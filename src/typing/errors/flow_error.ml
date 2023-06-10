@@ -245,7 +245,7 @@ let flip_frame = function
   | ( CallFunCompatibility _ | TupleMapFunCompatibility _ | ObjMapFunCompatibility _
     | ObjMapiFunCompatibility _ | TypeParamBound _ | FunMissingArg _ | ImplicitTypeParam
     | ReactGetConfig _ | UnifyFlip | ConstrainedAssignment _ | MappedTypeKeyCompatibility _
-    | TypePredicateCompatibility ) as use_op ->
+    | TypePredicateCompatibility | InferredTypeForTypeGuardParameter _ ) as use_op ->
     use_op
 
 let post_process_errors original_errors =
@@ -765,6 +765,8 @@ let rec make_error_printable :
           [text "type argument "; code (Subst_name.string_of_subst_name name)]
       | Frame (TypePredicateCompatibility, use_op) ->
         unwrap_frame_without_loc loc frames use_op [text "the type predicate"]
+      | Frame (InferredTypeForTypeGuardParameter param, use_op) ->
+        unwrap_frame_without_loc loc frames use_op [text "the type inferred for "; ref param]
       | Frame (FunCompatibility { lower; _ }, use_op) -> next_with_loc loc frames lower use_op
       | Frame (FunMissingArg _, use_op)
       | Frame (ImplicitTypeParam, use_op)

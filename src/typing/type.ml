@@ -453,6 +453,7 @@ module rec TypeTerm : sig
       }
     | TypeParamBound of { name: Subst_name.t }
     | TypePredicateCompatibility
+    | InferredTypeForTypeGuardParameter of 'loc virtual_reason
     | UnifyFlip
 
   and 'loc virtual_use_op =
@@ -3738,6 +3739,7 @@ let string_of_frame_use_op (type a) : a virtual_frame_use_op -> string = functio
   | TypeParamBound _ -> "TypeParamBound"
   | UnifyFlip -> "UnifyFlip"
   | TypePredicateCompatibility -> "TypePredicateCompatibility"
+  | InferredTypeForTypeGuardParameter _ -> "InferredTypeForTypeGuardParameter"
 
 let string_of_use_op (type a) : a virtual_use_op -> string = function
   | Op root -> string_of_root_use_op root

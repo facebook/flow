@@ -11,6 +11,8 @@
  * actually share much code. If you're here to add support for a new syntax feature, you'll likely
  * need to modify the ssa_builder as well, but not necessarily with identical changes.*)
 
+module ALocSet = Loc_collections.ALocSet
+
 let statement_error = ()
 
 let maybe_exhaustively_checked_var_name = "<maybe_exhaustively_checked>"
@@ -836,6 +838,14 @@ module Make
     total: refinement_prop option;
   }
 
+  type type_guard_name_info =
+    | TGinfo of {
+        loc: ALoc.t;
+        name: string;
+        id: int;
+        havoced: ALocSet.t option ref;
+      }
+
   type name_resolver_state = {
     (* We maintain a map of read locations to raw Val.t and their def locs terms, which are
        simplified to lists of write locations once the analysis is done. *)
@@ -844,6 +854,7 @@ module Make
        types. *)
     write_entries: Env_api.env_entry EnvMap.t;
     predicate_refinement_maps: Env_api.predicate_refinement_maps;
+    type_guard_consistency_maps: Env_api.type_guard_consistency_maps;
     toplevel_members: Env_api.read NameUtils.Map.t;
     module_toplevel_members: Env_api.toplevel_member list L.LMap.t;
     curr_id: int;
@@ -883,6 +894,7 @@ module Make
        also clear the list on our way out of any labeled statement. *)
     possible_labeled_continues: AbruptCompletion.t list;
     predicate_scope_names: (ALoc.t * Pattern_helper.binding) SMap.t option;
+    type_guard_name: type_guard_name_info option;
     visiting_hoisted_type: bool;
     in_conditional_type_extends: bool;
     jsx_base_name: string option;
@@ -1318,6 +1330,7 @@ module Make
           toplevel_members = NameUtils.Map.empty;
           module_toplevel_members = L.LMap.empty;
           predicate_refinement_maps = L.LMap.empty;
+          type_guard_consistency_maps = L.LMap.empty;
           curr_id = 0;
           refinement_heap = IMap.empty;
           latest_refinements = [];
@@ -1326,6 +1339,7 @@ module Make
           abrupt_completion_envs = [];
           possible_labeled_continues = [];
           predicate_scope_names = None;
+          type_guard_name = None;
           visiting_hoisted_type = false;
           in_conditional_type_extends = false;
           jsx_base_name;
@@ -1348,6 +1362,8 @@ module Make
       method module_toplevel_members = env_state.module_toplevel_members
 
       method predicate_refinement_maps = env_state.predicate_refinement_maps
+
+      method type_guard_consistency_maps = env_state.type_guard_consistency_maps
 
       method pred_func_map = env_state.pred_func_map
 
@@ -1642,7 +1658,7 @@ module Make
               elts)
           env_state.env
 
-      method havoc_env ~all ~deep =
+      method havoc_env ~all ~deep ~loc =
         let force_initialization = not deep in
         let havoced_ids =
           SMap.fold
@@ -1709,6 +1725,16 @@ module Make
             env_state.env
             ISet.empty
         in
+        Base.Option.iter env_state.type_guard_name ~f:(fun (TGinfo { id; havoced; _ }) ->
+            if ISet.mem id havoced_ids then
+              havoced :=
+                Some
+                  (match (loc, !havoced) with
+                  | (Some loc, Some s) -> ALocSet.add loc s
+                  | (Some loc, None) -> ALocSet.singleton loc
+                  | (None, Some s) -> s
+                  | (None, None) -> ALocSet.empty)
+        );
         let latest_refinements =
           Base.List.map
             ~f:(fun { applied; _ } ->
@@ -1729,9 +1755,9 @@ module Make
         in
         env_state <- { env_state with latest_refinements }
 
-      method havoc_current_env ~all = this#havoc_env ~all ~deep:true
+      method havoc_current_env ~all ~loc = this#havoc_env ~all ~deep:true ~loc:(Some loc)
 
-      method havoc_uninitialized_env = this#havoc_env ~all:true ~deep:false
+      method havoc_uninitialized_env = this#havoc_env ~loc:None ~all:true ~deep:false
 
       method refinement_may_be_undefined id =
         let rec refine_undefined = function
@@ -2933,18 +2959,26 @@ module Make
             let reason = mk_reason RFunctionBody (fst expr) in
             this#record_predicate_refinement_maps (fst expr) names reason expr
         );
+        Base.Option.iter env_state.type_guard_name ~f:(fun name ->
+            let return = mk_expression_reason expr in
+            this#record_type_guard_maps name return expr
+        );
         super#body_expression expr
 
       method! return loc (stmt : (ALoc.t, ALoc.t) Ast.Statement.Return.t) =
         let open Ast.Statement.Return in
         let { argument; comments = _; return_out = _ } = stmt in
-        (match (env_state.predicate_scope_names, argument) with
-        | (None, _)
-        | (Some _, None) ->
+        (match (env_state.predicate_scope_names, env_state.type_guard_name, argument) with
+        | (None, None, _)
+        | (Some _, _, None)
+        | (_, Some _, None) ->
           ignore @@ Flow_ast_mapper.map_opt this#expression argument
-        | (Some names, Some argument) ->
+        | (Some names, _, Some argument) ->
           let reason = mk_reason RReturn (fst argument) in
-          this#record_predicate_refinement_maps loc names reason argument);
+          this#record_predicate_refinement_maps loc names reason argument
+        | (_, Some name, Some argument) ->
+          let return = mk_expression_reason argument in
+          this#record_type_guard_maps name return argument);
         this#raise_abrupt_completion AbruptCompletion.return
 
       method private record_predicate_refinement_maps loc names expr_reason expr =
@@ -2964,6 +2998,28 @@ module Make
                 loc
                 (expr_reason, positive_refi_map, negative_refi_map)
                 env_state.predicate_refinement_maps;
+          }
+
+      method private record_type_guard_maps tg_info return expr =
+        let (TGinfo { loc = guard_param_loc; name; havoced; _ }) = tg_info in
+        this#push_refinement_scope empty_refinements;
+        ignore @@ this#expression_refinement expr;
+        let positive_read = this#synthesize_read name in
+        this#negate_new_refinements ();
+        let negative_read = this#synthesize_read name in
+        this#pop_refinement_scope ();
+        env_state <-
+          {
+            env_state with
+            type_guard_consistency_maps =
+              L.LMap.update
+                guard_param_loc
+                (function
+                  | None -> Some (!havoced, [(return, positive_read, negative_read)])
+                  | Some (old_havoced, xs) ->
+                    let havoced = Base.Option.merge ~f:ALocSet.union old_havoced !havoced in
+                    Some (havoced, (return, positive_read, negative_read) :: xs))
+                env_state.type_guard_consistency_maps;
           }
 
       method! throw _loc (stmt : (ALoc.t, ALoc.t) Ast.Statement.Throw.t) =
@@ -3944,6 +4000,9 @@ module Make
             this#run
               (fun () ->
                 let saved_predicate_scope_names = env_state.predicate_scope_names in
+                (* If this is a type guard function type_guard_name will be set in
+                   type_guard_annotation. *)
+                let saved_type_guard_name = env_state.type_guard_name in
                 let predicate_scope_names =
                   Base.Option.map predicate ~f:(fun _ -> Pattern_helper.bindings_of_params params)
                 in
@@ -4046,12 +4105,27 @@ module Make
                         ()
                   )
                 in
-                env_state <- { env_state with predicate_scope_names = saved_predicate_scope_names };
+                env_state <-
+                  {
+                    env_state with
+                    predicate_scope_names = saved_predicate_scope_names;
+                    type_guard_name = saved_type_guard_name;
+                  };
                 this#commit_abrupt_completion_matching
                   AbruptCompletion.(mem [return; throw])
                   completion_state)
               ~finally:(fun () -> this#reset_env env)
         )
+
+      method! type_guard_annotation tg =
+        let (_, (_, { Ast.Type.TypeGuard.guard = ((loc, { Ast.Identifier.name; _ }), _); _ })) =
+          tg
+        in
+        let { val_ref; _ } = this#env_read name in
+        let id = !val_ref.Val.id in
+        let info = TGinfo { loc; name; id; havoced = ref None } in
+        env_state <- { env_state with type_guard_name = Some info };
+        super#type_guard_annotation tg
 
       method! class_ loc cls =
         let open Ast.Class in
@@ -4287,7 +4361,7 @@ module Make
             error_todo
           | (Some _, _) -> error_todo
         else
-          this#havoc_current_env ~all:false;
+          this#havoc_current_env ~all:false ~loc;
         expr
 
       method! arg_list arg_list =
@@ -4311,7 +4385,7 @@ module Make
 
       method! new_ loc (expr : (ALoc.t, ALoc.t) Ast.Expression.New.t) =
         ignore @@ super#new_ loc expr;
-        this#havoc_current_env ~all:false;
+        this#havoc_current_env ~all:false ~loc;
         expr
 
       method private delete loc argument =
@@ -4343,7 +4417,7 @@ module Make
           let { argument; operator; comments = _ } = expr in
           ignore @@ this#expression argument;
           match operator with
-          | Await -> this#havoc_current_env ~all:false
+          | Await -> this#havoc_current_env ~all:false ~loc
           | Delete -> this#delete loc argument
           | _ -> ()
         );
@@ -4352,7 +4426,7 @@ module Make
       method! yield loc (expr : ('loc, 'loc) Ast.Expression.Yield.t) =
         this#any_identifier loc next_var_name;
         ignore @@ super#yield loc expr;
-        this#havoc_current_env ~all:true;
+        this#havoc_current_env ~all:true ~loc;
         expr
 
       method! object_key_computed (key : ('loc, 'loc) Ast.ComputedKey.t) =
@@ -5191,7 +5265,7 @@ module Make
           ignore @@ this#expression callee;
           ignore @@ Base.Option.map ~f:this#call_type_args targs;
           ignore @@ this#arg_list arguments;
-          this#havoc_current_env ~all:false;
+          this#havoc_current_env ~all:false ~loc;
           this#apply_latent_refinements refinement_keys (loc, call) callee targs arguments
         | _ -> ignore @@ this#call loc call
 
@@ -5269,7 +5343,7 @@ module Make
             this#commit_refinement refi;
             let _targs' = Base.Option.map ~f:this#call_type_args targs in
             let _arguments' = this#arg_list arguments in
-            this#havoc_current_env ~all:false
+            this#havoc_current_env ~all:false ~loc
           | Member mem -> ignore @@ this#member loc mem
           | Call call -> ignore @@ this#call loc call
           | _ -> ignore @@ this#expression (loc, expr)
@@ -5863,6 +5937,7 @@ module Make
         toplevel_members = env_walk#toplevel_members;
         module_toplevel_members = env_walk#module_toplevel_members;
         predicate_refinement_maps = env_walk#predicate_refinement_maps;
+        type_guard_consistency_maps = env_walk#type_guard_consistency_maps;
         refinement_of_id = env_walk#refinement_of_id;
         pred_func_map = env_walk#pred_func_map;
       }
