@@ -6571,6 +6571,36 @@ struct
             f tvar
         )
     in
+    ( if
+      (not (Tvar_resolver.has_unresolved_tvars cx t))
+      && not (Tvar_resolver.has_unresolved_tvars_in_destructors cx d)
+    then
+      match d with
+      | ConditionalType _
+      | MappedType _ ->
+        Tvar_resolver.resolve cx result
+      | NonMaybeType
+      | PropertyType _
+      | ElementType _
+      | OptionalIndexedAccessNonMaybeType _
+      | OptionalIndexedAccessResultType _
+      | ReadOnlyType
+      | PartialType
+      | RequiredType
+      | SpreadType _
+      | RestType _
+      | ValuesType
+      | ReactElementPropsType
+      | ReactElementConfigType
+      | ReactElementRefType
+      | ReactConfigType _
+      | ReactCheckComponentConfig _
+      | IdxUnwrapType
+      | LatentPred _
+      | CallType _
+      | TypeMap _ ->
+        ()
+    );
     (slingshot, result)
 
   and eval_destructor cx ~trace use_op reason t d tout =

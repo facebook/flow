@@ -64,6 +64,11 @@ let has_unresolved_tvars cx t =
   | exception EncounteredUnresolvedTvar -> true
   | _ -> false
 
+let has_unresolved_tvars_in_destructors cx d =
+  match has_unresolved_tvars_visitor#destructor cx ISet.empty d with
+  | exception EncounteredUnresolvedTvar -> true
+  | _ -> false
+
 let default_no_lowers r =
   let desc =
     match desc_of_reason r with
