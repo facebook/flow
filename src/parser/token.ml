@@ -147,7 +147,8 @@ type t =
       raw: string;
       loc: Loc.t;
     }
-  | T_JSX_TEXT of Loc.t * string * string (* loc, value, raw *)
+  | T_JSX_CHILD_TEXT of Loc.t * string * string (* loc, value, raw *)
+  | T_JSX_QUOTE_TEXT of Loc.t * string * string (* loc, value, raw *)
   (* Type primitives *)
   | T_ANY_TYPE
   | T_MIXED_TYPE
@@ -331,7 +332,8 @@ let token_to_string = function
   | T_ERROR _ -> "T_ERROR"
   | T_EOF -> "T_EOF"
   | T_JSX_IDENTIFIER _ -> "T_JSX_IDENTIFIER"
-  | T_JSX_TEXT _ -> "T_JSX_TEXT"
+  | T_JSX_CHILD_TEXT _ -> "T_JSX_TEXT"
+  | T_JSX_QUOTE_TEXT _ -> "T_JSX_TEXT"
   (* Type primitives *)
   | T_ANY_TYPE -> "T_ANY_TYPE"
   | T_MIXED_TYPE -> "T_MIXED_TYPE"
@@ -486,7 +488,8 @@ let value_of_token = function
   | T_ERROR raw -> raw
   | T_EOF -> ""
   | T_JSX_IDENTIFIER { raw; _ } -> raw
-  | T_JSX_TEXT (_, _, raw) -> raw
+  | T_JSX_CHILD_TEXT (_, _, raw) -> raw
+  | T_JSX_QUOTE_TEXT (_, _, raw) -> raw
   (* Type primitives *)
   | T_ANY_TYPE -> "any"
   | T_MIXED_TYPE -> "mixed"
@@ -518,7 +521,8 @@ let explanation_of_token ?(use_article = false) token =
     | T_BIGINT_SINGLETON_TYPE _
     | T_BIGINT _ ->
       ("bigint", "a")
-    | T_JSX_TEXT _
+    | T_JSX_CHILD_TEXT _
+    | T_JSX_QUOTE_TEXT _
     | T_STRING _ ->
       ("string", "a")
     | T_TEMPLATE_PART _ -> ("template literal part", "a")

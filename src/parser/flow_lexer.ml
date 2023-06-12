@@ -234,7 +234,8 @@ let loc_of_token env lex_token =
   | T_JSX_IDENTIFIER { loc; _ }
   | T_STRING (loc, _, _, _) ->
     loc
-  | T_JSX_TEXT (loc, _, _) -> loc
+  | T_JSX_CHILD_TEXT (loc, _, _) -> loc
+  | T_JSX_QUOTE_TEXT (loc, _, _) -> loc
   | T_TEMPLATE_PART (loc, _, _, _, _) -> loc
   | T_REGEXP (loc, _, _) -> loc
   | _ -> loc_of_lexbuf env env.lex_lb
@@ -365,11 +366,6 @@ let recover env lexbuf ~f =
   let env = illegal env (loc_of_lexbuf env lexbuf) in
   Sedlexing.rollback lexbuf;
   f env lexbuf
-
-type jsx_text_mode =
-  | JSX_SINGLE_QUOTED_TEXT
-  | JSX_DOUBLE_QUOTED_TEXT
-  | JSX_CHILD_TEXT
 
 type result =
   | Token of Lex_env.t * Token.t
@@ -1287,34 +1283,73 @@ let decode_html_entity = function
   | "diams" -> Some 0x2666
   | _ -> None
 
-let rec jsx_text env mode buf raw lexbuf =
+let rec jsx_child_text env buf raw lexbuf =
   match%sedlex lexbuf with
-  | "'"
-  | '"'
   | '<'
-  | '>'
-  | '{'
-  | '}' ->
+  | '{' ->
+    (* Don't actually want to consume these guys
+     * yet...they're not part of the JSX text *)
+    Sedlexing.rollback lexbuf;
+    env
+  | '>' -> unexpected_error_w_suggest env (loc_of_lexbuf env lexbuf) ">" "{'>'}"
+  | '}' -> unexpected_error_w_suggest env (loc_of_lexbuf env lexbuf) "}" "{'}'}"
+  | eof -> illegal env (loc_of_lexbuf env lexbuf)
+  | line_terminator_sequence ->
+    let lt = lexeme lexbuf in
+    Buffer.add_string raw lt;
+    Buffer.add_string buf lt;
+    let env = new_line env lexbuf in
+    jsx_child_text env buf raw lexbuf
+  | ("&#x", Plus hex_digit, ';') ->
+    let s = lexeme lexbuf in
+    let n = String.sub s 3 (String.length s - 4) in
+    Buffer.add_string raw s;
+    let code = int_of_string ("0x" ^ n) in
+    Wtf8.add_wtf_8 buf code;
+    jsx_child_text env buf raw lexbuf
+  | ("&#", Plus digit, ';') ->
+    let s = lexeme lexbuf in
+    let n = String.sub s 2 (String.length s - 3) in
+    Buffer.add_string raw s;
+    let code = int_of_string n in
+    Wtf8.add_wtf_8 buf code;
+    jsx_child_text env buf raw lexbuf
+  | ("&", htmlentity, ';') ->
+    let s = lexeme lexbuf in
+    let entity = String.sub s 1 (String.length s - 2) in
+    Buffer.add_string raw s;
+    (match decode_html_entity entity with
+    | Some code -> Wtf8.add_wtf_8 buf code
+    | None -> Buffer.add_string buf ("&" ^ entity ^ ";"));
+    jsx_child_text env buf raw lexbuf
+  (* match multi-char substrings that don't contain the start chars of the above patterns *)
+  (* TODO: this should include '>' and '}', but that leads to issues with arrow function parsing *)
+  | Plus (Compl ('<' | '{' | '&' | eof | line_terminator_sequence_start))
+  | any ->
     let c = lexeme lexbuf in
-    begin
-      match (mode, c) with
-      | (JSX_SINGLE_QUOTED_TEXT, "'")
-      | (JSX_DOUBLE_QUOTED_TEXT, "\"") ->
-        env
-      | (JSX_CHILD_TEXT, ("<" | "{")) ->
-        (* Don't actually want to consume these guys
-         * yet...they're not part of the JSX text *)
-        Sedlexing.rollback lexbuf;
-        env
-      | (JSX_CHILD_TEXT, ">") ->
-        unexpected_error_w_suggest env (loc_of_lexbuf env lexbuf) ">" "{'>'}"
-      | (JSX_CHILD_TEXT, "}") ->
-        unexpected_error_w_suggest env (loc_of_lexbuf env lexbuf) "}" "{'}'}"
-      | _ ->
-        Buffer.add_string raw c;
-        Buffer.add_string buf c;
-        jsx_text env mode buf raw lexbuf
-    end
+    Buffer.add_string raw c;
+    Buffer.add_string buf c;
+    jsx_child_text env buf raw lexbuf
+  | _ -> failwith "unreachable jsxtext"
+
+let rec jsx_quote_text env single buf raw lexbuf =
+  match%sedlex lexbuf with
+  | '\'' ->
+    if single then
+      env
+    else (
+      Buffer.add_char raw '\'';
+      Buffer.add_char buf '\'';
+      jsx_quote_text env single buf raw lexbuf
+    )
+  | '"' ->
+    if not single then
+      env
+    else (
+      Buffer.add_char raw '"';
+      Buffer.add_char buf '"';
+      jsx_quote_text env single buf raw lexbuf
+    )
   | eof ->
     let env = illegal env (loc_of_lexbuf env lexbuf) in
     env
@@ -1323,21 +1358,21 @@ let rec jsx_text env mode buf raw lexbuf =
     Buffer.add_string raw lt;
     Buffer.add_string buf lt;
     let env = new_line env lexbuf in
-    jsx_text env mode buf raw lexbuf
+    jsx_quote_text env single buf raw lexbuf
   | ("&#x", Plus hex_digit, ';') ->
     let s = lexeme lexbuf in
     let n = String.sub s 3 (String.length s - 4) in
     Buffer.add_string raw s;
     let code = int_of_string ("0x" ^ n) in
     Wtf8.add_wtf_8 buf code;
-    jsx_text env mode buf raw lexbuf
+    jsx_quote_text env single buf raw lexbuf
   | ("&#", Plus digit, ';') ->
     let s = lexeme lexbuf in
     let n = String.sub s 2 (String.length s - 3) in
     Buffer.add_string raw s;
     let code = int_of_string n in
     Wtf8.add_wtf_8 buf code;
-    jsx_text env mode buf raw lexbuf
+    jsx_quote_text env single buf raw lexbuf
   | ("&", htmlentity, ';') ->
     let s = lexeme lexbuf in
     let entity = String.sub s 1 (String.length s - 2) in
@@ -1345,14 +1380,14 @@ let rec jsx_text env mode buf raw lexbuf =
     (match decode_html_entity entity with
     | Some code -> Wtf8.add_wtf_8 buf code
     | None -> Buffer.add_string buf ("&" ^ entity ^ ";"));
-    jsx_text env mode buf raw lexbuf
+    jsx_quote_text env single buf raw lexbuf
   (* match multi-char substrings that don't contain the start chars of the above patterns *)
-  | Plus (Compl ("'" | '"' | '<' | '{' | '&' | eof | line_terminator_sequence_start))
+  | Plus (Compl ('\'' | '"' | '&' | eof | line_terminator_sequence_start))
   | any ->
     let c = lexeme lexbuf in
     Buffer.add_string raw c;
     Buffer.add_string buf c;
-    jsx_text env mode buf raw lexbuf
+    jsx_quote_text env single buf raw lexbuf
   | _ -> failwith "unreachable jsxtext"
 
 let jsx_tag env lexbuf =
@@ -1386,19 +1421,14 @@ let jsx_tag env lexbuf =
     let buf = Buffer.create 127 in
     let raw = Buffer.create 127 in
     Buffer.add_string raw quote;
-    let mode =
-      if quote = "'" then
-        JSX_SINGLE_QUOTED_TEXT
-      else
-        JSX_DOUBLE_QUOTED_TEXT
-    in
-    let env = jsx_text env mode buf raw lexbuf in
+    let single = quote = "'" in
+    let env = jsx_quote_text env single buf raw lexbuf in
     let _end = end_pos_of_lexbuf env lexbuf in
     Buffer.add_string raw quote;
     let value = Buffer.contents buf in
     let raw = Buffer.contents raw in
     let loc = { Loc.source = Lex_env.source env; start; _end } in
-    Token (env, T_JSX_TEXT (loc, value, raw))
+    Token (env, T_JSX_QUOTE_TEXT (loc, value, raw))
   | js_id_start ->
     let start_offset = Sedlexing.lexeme_start lexbuf in
     (* see #3837, we should fix it - the work could be done in decoding later - cold path*)
@@ -1418,25 +1448,24 @@ let jsx_child env start buf raw lexbuf =
     Buffer.add_string raw lt;
     Buffer.add_string buf lt;
     let env = new_line env lexbuf in
-    let env = jsx_text env JSX_CHILD_TEXT buf raw lexbuf in
+    let env = jsx_child_text env buf raw lexbuf in
     let _end = end_pos_of_lexbuf env lexbuf in
     let value = Buffer.contents buf in
     let raw = Buffer.contents raw in
     let loc = { Loc.source = Lex_env.source env; start; _end } in
-    (env, T_JSX_TEXT (loc, value, raw))
+    (env, T_JSX_CHILD_TEXT (loc, value, raw))
   | eof -> (env, T_EOF)
   | '<' -> (env, T_LESS_THAN)
   | '{' -> (env, T_LCURLY)
   | any ->
     Sedlexing.rollback lexbuf;
-
-    (* let jsx_text consume this char *)
-    let env = jsx_text env JSX_CHILD_TEXT buf raw lexbuf in
+    (* let jsx_child_text consume this char *)
+    let env = jsx_child_text env buf raw lexbuf in
     let _end = end_pos_of_lexbuf env lexbuf in
     let value = Buffer.contents buf in
     let raw = Buffer.contents raw in
     let loc = { Loc.source = Lex_env.source env; start; _end } in
-    (env, T_JSX_TEXT (loc, value, raw))
+    (env, T_JSX_CHILD_TEXT (loc, value, raw))
   | _ -> failwith "unreachable jsx_child"
 
 let template_tail env lexbuf =

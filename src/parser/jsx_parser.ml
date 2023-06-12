@@ -262,7 +262,7 @@ module JSX (Parse : Parser_common.PARSER) (Expression : Expression_parser.EXPRES
                   | _ -> ()
                 );
                 Some (JSX.Attribute.ExpressionContainer (loc, expression_container))
-              | T_JSX_TEXT (loc, value, raw) as token ->
+              | T_JSX_QUOTE_TEXT (loc, value, raw) as token ->
                 Expect.token env token;
                 let trailing = tag_component_trailing_comments env in
                 let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
@@ -365,7 +365,7 @@ module JSX (Parse : Parser_common.PARSER) (Expression : Expression_parser.EXPRES
   let rec child ~parent_opening_name env =
     match Peek.token env with
     | T_LCURLY -> expression_container_or_spread_child env
-    | T_JSX_TEXT (loc, value, raw) as token ->
+    | T_JSX_CHILD_TEXT (loc, value, raw) as token ->
       Expect.token env token;
       (loc, JSX.Text { JSX.Text.value; raw })
     | _ ->

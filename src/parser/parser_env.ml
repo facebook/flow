@@ -864,7 +864,8 @@ let token_is_type_identifier env t =
     | T_REGEXP _
     (* misc that shouldn't appear in NORMAL mode *)
     | T_JSX_IDENTIFIER _
-    | T_JSX_TEXT _
+    | T_JSX_CHILD_TEXT _
+    | T_JSX_QUOTE_TEXT _
     | T_ERROR _ ->
       false
   end
