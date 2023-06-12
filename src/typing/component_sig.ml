@@ -143,12 +143,11 @@ module Make
   let component_type cx _component_loc x =
     let { T.reason; tparams; cparams; renders_t; _ } = x in
     let this_type = Type.implicit_mixed_this reason in
-    (* TODO(jmbrown): Better reasons for config. For now, we re-use the component
-     * reason *)
+    let config_reason = update_desc_reason (fun desc -> RPropsOfComponent desc) reason in
     let funtype =
       {
         Type.this_t = (this_type, This_Function);
-        params = [(None, F.config cx reason cparams)];
+        params = [(None, F.config cx config_reason cparams)];
         rest_param = None;
         return_t = renders_t;
         predicate = None;
