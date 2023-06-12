@@ -2374,7 +2374,7 @@ struct
                 (* This is not the refined parameter. *)
                 tin
               else
-                Type_filter.intersect cx tin type_guard
+                intersect cx tin type_guard
             in
             rec_flow_t ~use_op:unknown_use cx trace (t, OpenT tout)
         end
@@ -9659,6 +9659,61 @@ struct
       in
       assert (unused_targs = [])
 
+  and speculative_subtyping_succeeds cx l u =
+    match
+      SpeculationKit.try_singleton_throw_on_failure
+        cx
+        Trace.dummy_trace
+        (TypeUtil.reason_of_t l)
+        ~upper_unresolved:false
+        l
+        (UseT (unknown_use, u))
+    with
+    | exception Flow_js_utils.SpeculationSingletonError -> false
+    | _ -> true
+
+  (* This utility is expected to be used when we a variable of type [t1] is refined
+   * with the use of a type guard function with type `(x: mixed) => x is t2`.
+   * Because this kind of refinement is expressed through a PredicateT constraint,
+   * t1 is already concretized by the time it reaches this point. Type t2, on the
+   * other hand, is not, since it is coming directly from the annotation. This is why
+   * we concretize it first, before attempting any comparisons. *)
+  and intersect cx t1 t2 =
+    let module TSet = Type_filter.TypeTagSet in
+    let quick_subtype = TypeUtil.quick_subtype (Context.trust_errors cx) in
+    let t1_tags = Type_filter.tag_of_t cx t1 in
+    let t2_tags =
+      t2
+      |> possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t t2)
+      |> Base.List.map ~f:(Type_filter.tag_of_t cx)
+      |> Base.Option.all
+      |> Base.Option.map ~f:(Base.List.fold ~init:TSet.empty ~f:TSet.union)
+    in
+    match (t1_tags, t2_tags) with
+    | (Some t1_tags, Some t2_tags) when not (Type_filter.tags_overlap t1_tags t2_tags) ->
+      let r = update_desc_reason invalidate_rtype_alias (TypeUtil.reason_of_t t1) in
+      DefT (r, bogus_trust (), EmptyT)
+    | _ ->
+      if quick_subtype t1 t2 then
+        t1
+      else if quick_subtype t2 t1 then
+        t2
+      else if speculative_subtyping_succeeds cx t1 t2 then
+        t1
+      else if speculative_subtyping_succeeds cx t2 t1 then
+        t2
+      else
+        let r = update_desc_reason invalidate_rtype_alias (TypeUtil.reason_of_t t1) in
+        IntersectionT (r, InterRep.make t2 t1 [])
+
+  and possible_concrete_types mk_concretization_target cx reason t =
+    let id = Tvar.mk_no_wrap cx reason in
+    flow cx (t, PreprocessKitT (reason, ConcretizeTypes (mk_concretization_target id)));
+    Flow_js_utils.possible_types cx id
+
+  and possible_concrete_types_for_inspection cx t =
+    possible_concrete_types (fun ident -> ConcretizeForInspection ident) cx t
+
   include CheckPolarity
   include TrustChecking
 end
@@ -9682,13 +9737,6 @@ module rec FlowJs : Flow_common.S = struct
   let react_get_config = React.get_config
 
   (* Returns a list of concrete types after breaking up unions, maybe types, etc *)
-  let possible_concrete_types mk_concretization_target cx reason t =
-    let id = Tvar.mk_no_wrap cx reason in
-    flow cx (t, PreprocessKitT (reason, ConcretizeTypes (mk_concretization_target id)));
-    Flow_js_utils.possible_types cx id
-
-  let possible_concrete_types_for_inspection =
-    possible_concrete_types (fun ident -> ConcretizeForInspection ident)
 
   let singleton_concrete_type_for_inspection cx reason t =
     match possible_concrete_types_for_inspection cx reason t with

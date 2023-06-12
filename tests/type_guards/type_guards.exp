@@ -307,32 +307,6 @@ References:
                                                    ^ [3]
 
 
-Error -------------------------------------------------------------------------------------------- consistency.js:129:12
-
-Cannot return `isNumberOrString(...) && isBoolean(...)` because in the type inferred for type guard parameter `x` [1]:
-[incompatible-return]
- - Either boolean [2] is incompatible with string [3].
- - Or number [4] is incompatible with string [3].
-
-   consistency.js:129:12
-   129|     return isNumberOrString(x) && isBoolean(x); // error. For now this check is equivalent to: (number | string) & boolean ~> string
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   consistency.js:128:29
-   128|   function error(x: mixed): x is string {
-                                    ^ [1]
-   consistency.js:122:46
-   122|   declare function isBoolean(x: mixed): x is boolean;
-                                                     ^^^^^^^ [2]
-   consistency.js:128:34
-   128|   function error(x: mixed): x is string {
-                                         ^^^^^^ [3]
-   consistency.js:120:54
-   120|   declare function isNumberOrString(x: mixed): x is (number | string);
-                                                             ^^^^^^ [4]
-
-
 Error -------------------------------------------------------------------------------------------- consistency.js:140:10
 
 Cannot use type guard parameter `x` [1] because at this return point it is writen to in [2]. [function-predicate]
@@ -579,9 +553,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:20:6
 
-Cannot cast `x1` to number because: [incompatible-cast]
- - Either string [1] is incompatible with number [2].
- - Or string [1] is incompatible with number [2].
+Cannot cast `x1` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    refinement.js:20:6
    20|     (x1: number); // error string ~> number
@@ -598,9 +570,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:24:6
 
-Cannot cast `x2` to number because: [incompatible-cast]
- - Either string [1] is incompatible with number [2].
- - Or string [1] is incompatible with number [2].
+Cannot cast `x2` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    refinement.js:24:6
    24|     (x2: number); // error string ~> number
@@ -613,35 +583,11 @@ References:
    refinement.js:24:10
    24|     (x2: number); // error string ~> number
                 ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- refinement.js:24:6
-
-Cannot cast `x2` to number because: [incompatible-cast]
- - Either string [1] is incompatible with number [2].
- - Or null [3] is incompatible with number [2].
-
-   refinement.js:24:6
-   24|     (x2: number); // error string ~> number
-            ^^
-
-References:
-   refinement.js:14:7
-   14|   x2: string | null,
-             ^^^^^^ [1]
-   refinement.js:24:10
-   24|     (x2: number); // error string ~> number
-                ^^^^^^ [2]
-   refinement.js:14:16
-   14|   x2: string | null,
-                      ^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:28:6
 
-Cannot cast `x3` to number because: [incompatible-cast]
- - Either string [1] is incompatible with number [2].
- - Or string [1] is incompatible with number [2].
+Cannot cast `x3` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    refinement.js:28:6
    28|     (x3: number); // error string ~> number
@@ -680,6 +626,23 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:32:6
 
+Cannot cast `x4` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   refinement.js:32:6
+   32|     (x4: number); // error string ~> number
+            ^^
+
+References:
+   refinement.js:16:8
+   16|   x4: ?string,
+              ^^^^^^ [1]
+   refinement.js:32:10
+   32|     (x4: number); // error string ~> number
+                ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:32:6
+
 Cannot cast `x4` to number because: [incompatible-cast]
  - Either string [1] is incompatible with number [2].
  - Or null or undefined [3] is incompatible with number [2].
@@ -698,25 +661,6 @@ References:
    refinement.js:16:7
    16|   x4: ?string,
              ^^^^^^^ [3]
-
-
-Error ----------------------------------------------------------------------------------------------- refinement.js:32:6
-
-Cannot cast `x4` to number because: [incompatible-cast]
- - Either string [1] is incompatible with number [2].
- - Or string [1] is incompatible with number [2].
-
-   refinement.js:32:6
-   32|     (x4: number); // error string ~> number
-            ^^
-
-References:
-   refinement.js:16:8
-   16|   x4: ?string,
-              ^^^^^^ [1]
-   refinement.js:32:10
-   32|     (x4: number); // error string ~> number
-                ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:47:35
@@ -1105,7 +1049,7 @@ Cannot find type guard parameter `x` [1] in the parameters of this function (typ
 
 
 
-Found 64 errors
+Found 62 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -64,7 +64,7 @@
   build_mode)
  (modules_without_implementation partition)
  (preprocess
-  (pps ppx_let)))
+  (pps ppx_let ppx_deriving.std)))
 
 (dirs
  (:standard __tests__))

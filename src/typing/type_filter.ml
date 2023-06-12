@@ -560,14 +560,128 @@ let sentinel_refinement =
     in
     TypeUtil.union_of_ts reason (loop enum)
 
-(* t1 is input t
- * t2 is type guard *)
-let intersect cx t1 t2 =
-  let quick_subtype = TypeUtil.quick_subtype (Context.trust_errors cx) in
-  if quick_subtype t1 t2 then
-    t1
-  else if quick_subtype t2 t1 then
-    t2
-  else
-    match (t1, t2) with
-    | _ -> IntersectionT (reason_of_t t1, InterRep.make t2 t1 [])
+(* Type guard filtering *)
+
+(* These tags represent sets of values that have no overlap.
+ * - ObjTag represents objects that are not callable. Callable objects are associated
+ *   with both the ObjTag and the FunTag.
+ * - Interfaces can be objects, class instances, arrays, functions and symbols *)
+module TypeTag = struct
+  type t =
+    | BoolTag
+    | StringTag
+    | NumberTag
+    | NullTag
+    | SymbolTag
+    | ObjTag
+    | FunTag
+    | BigIntTag
+    | ClassInstanceTag
+    | ArrTag
+    | EnumTag
+  [@@deriving ord]
+end
+
+open TypeTag
+
+module TypeTagSet : Flow_set.S with type elt = TypeTag.t = Flow_set.Make (TypeTag)
+
+let rec tag_of_def_t cx = function
+  | NullT -> Some (TypeTagSet.singleton NullTag)
+  | SymbolT -> Some (TypeTagSet.singleton SymbolTag)
+  | FunT _ -> Some (TypeTagSet.singleton FunTag)
+  | SingletonBoolT _
+  | BoolT _ ->
+    Some (TypeTagSet.singleton BoolTag)
+  | SingletonStrT _
+  | StrT _
+  | CharSetT _ ->
+    Some (TypeTagSet.singleton StringTag)
+  | SingletonNumT _
+  | NumT _ ->
+    Some (TypeTagSet.singleton NumberTag)
+  | BigIntT _
+  | SingletonBigIntT _ ->
+    Some (TypeTagSet.singleton BigIntTag)
+  | ObjT { call_t = Some _; _ } -> Some (TypeTagSet.of_list [ObjTag; FunTag])
+  | ObjT _ -> Some (TypeTagSet.singleton ObjTag)
+  | InstanceT { inst; _ } -> tag_of_inst inst
+  | ArrT _ -> Some (TypeTagSet.singleton ArrTag)
+  | PolyT { t_out; _ } -> tag_of_t cx t_out
+  | EnumT _ -> Some (TypeTagSet.singleton EnumTag)
+  | EmptyT -> Some TypeTagSet.empty
+  | VoidT
+  | MixedT _
+  | ClassT _
+  | TypeT _
+  | IdxWrapper _
+  | ReactAbstractComponentT _
+  | EnumObjectT _ ->
+    None
+
+and tag_of_inst inst =
+  let {
+    inst_call_t;
+    inst_kind;
+    class_id = _;
+    type_args = _;
+    own_props = _;
+    proto_props = _;
+    initialized_fields = _;
+    initialized_static_fields = _;
+  } =
+    inst
+  in
+  let tags =
+    if Base.Option.is_some inst_call_t then
+      TypeTagSet.singleton FunTag
+    else
+      TypeTagSet.empty
+  in
+  let tags =
+    match inst_kind with
+    | ClassKind -> TypeTagSet.add ClassInstanceTag tags
+    | InterfaceKind _ ->
+      tags
+      |> TypeTagSet.add ClassInstanceTag
+      |> TypeTagSet.add ObjTag
+      |> TypeTagSet.add ArrTag
+      |> TypeTagSet.add SymbolTag
+      |> TypeTagSet.add FunTag
+  in
+  Some tags
+
+and tag_of_t cx t =
+  match t with
+  | DefT (_, _, t) -> tag_of_def_t cx t
+  | ExactT (_, t) -> tag_of_t cx t
+  | OpenT _
+  | AnnotT (_, _, _) ->
+    Context.find_resolved cx t |> Base.Option.bind ~f:(tag_of_t cx)
+  (* Most of the types below should have boiled away thanks to concretization. *)
+  | EvalT _
+  | GenericT _
+  | ThisClassT _
+  | ThisTypeAppT _
+  | TypeAppT _
+  | FunProtoT _
+  | ObjProtoT _
+  | NullProtoT _
+  | FunProtoApplyT _
+  | FunProtoBindT _
+  | FunProtoCallT _
+  | MatchingPropT _
+  | IntersectionT _
+  | UnionT _
+  | MaybeT (_, _)
+  | OptionalT _
+  | KeysT (_, _)
+  | OpaqueT (_, _)
+  | ModuleT _
+  | InternalT _
+  | TypeDestructorTriggerT (_, _, _, _, _)
+  | CustomFunT (_, _)
+  | AnyT (_, _) ->
+    None
+
+let tags_overlap t1s t2s = TypeTagSet.inter t1s t2s |> TypeTagSet.is_empty |> not

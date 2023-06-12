@@ -2,89 +2,89 @@ test.js:27:11
 Flags:
 {
   in_01: T01,
-  in_02: T02,
-  in_03: T03,
-  in_04: T04,
-  in_05: (T01 & C),
+  in_02: empty,
+  in_03: empty,
+  in_04: empty,
+  in_05: empty,
   in_06: empty,
-  in_07: (T01 & {+f: string}),
-  in_08: T08,
-  in_09: (T01 & E)
+  in_07: T01,
+  in_08: T01,
+  in_09: empty
 }
 test.js:27:11,27:13
 
 test.js:35:11
 Flags:
 {
-  in_01: T01,
+  in_01: empty,
   in_02: T02,
-  in_03: T03,
-  in_04: T04,
-  in_05: (T02 & C),
+  in_03: empty,
+  in_04: empty,
+  in_05: empty,
   in_06: empty,
-  in_07: (T02 & {+f: string}),
-  in_08: T08,
-  in_09: (T02 & E)
+  in_07: empty,
+  in_08: empty,
+  in_09: empty
 }
 test.js:35:11,35:13
 
 test.js:43:11
 Flags:
 {
-  in_01: T01,
-  in_02: T02,
+  in_01: empty,
+  in_02: empty,
   in_03: T03,
-  in_04: T04,
-  in_05: (T03 & C),
+  in_04: empty,
+  in_05: empty,
   in_06: empty,
-  in_07: (T03 & {+f: string}),
-  in_08: T08,
-  in_09: (T03 & E)
+  in_07: empty,
+  in_08: T03,
+  in_09: empty
 }
 test.js:43:11,43:13
 
 test.js:51:11
 Flags:
 {
-  in_01: T01,
-  in_02: T02,
-  in_03: T03,
+  in_01: empty,
+  in_02: empty,
+  in_03: empty,
   in_04: T04,
-  in_05: (T04 & C),
+  in_05: empty,
   in_06: empty,
-  in_07: (T04 & {+f: string}),
-  in_08: T08,
-  in_09: (T04 & E)
+  in_07: empty,
+  in_08: T04,
+  in_09: empty
 }
 test.js:51:11,51:13
 
 test.js:59:11
 Flags:
 {
-  in_01: T01,
-  in_02: T02,
-  in_03: T03,
-  in_04: T04,
-  in_05: (T05 & C),
+  in_01: empty,
+  in_02: empty,
+  in_03: empty,
+  in_04: empty,
+  in_05: C,
   in_06: empty,
-  in_07: (T05 & {+f: string}),
-  in_08: T08,
-  in_09: (T05 & E)
+  in_07: empty,
+  in_08: C,
+  in_09: empty
 }
 test.js:59:11,59:13
 
 test.js:67:11
 Flags:
 {
-  in_01: T01,
-  in_02: T02,
-  in_03: T03,
-  in_04: T04,
-  in_05: (T06 & C),
+  in_01: empty,
+  in_02: empty,
+  in_03: empty,
+  in_04: empty,
+  in_05: empty,
   in_06: empty,
-  in_07: (T06 & {+f: string}),
-  in_08: T08,
-  in_09: (T06 & E)
+  in_07: empty,
+  in_08: empty,
+  in_09: empty
 }
 test.js:67:11,67:13
 
@@ -92,25 +92,14 @@ test.js:75:11
 Flags:
 {
   in_01: T01,
-  in_02: T02,
-  in_03: T03,
-  in_04: T04,
-  in_05: (T07 & C),
+  in_02: empty,
+  in_03: empty,
+  in_04: empty,
+  in_05: empty,
   in_06: empty,
-  in_07: (T07 & {+f: string}),
-  in_08: T08,
-  in_09: (T07 & E)
-}
-= {
-  in_01: T01,
-  in_02: T02,
-  in_03: T03,
-  in_04: T04,
-  in_05: ($Exact<T01> & C),
-  in_06: empty,
-  in_07: ($Exact<T01> & {+f: string}),
-  in_08: T08,
-  in_09: ($Exact<T01> & E)
+  in_07: {+f: string},
+  in_08: {+f: string},
+  in_09: empty
 }
 test.js:75:11,75:13
 
@@ -118,29 +107,29 @@ test.js:83:11
 Flags:
 {
   in_01: T01,
-  in_02: T02,
+  in_02: empty,
   in_03: T03,
   in_04: T04,
-  in_05: (T08 & C),
+  in_05: C,
   in_06: empty,
-  in_07: (T08 & {+f: string}),
+  in_07: {+f: string},
   in_08: T08,
-  in_09: (T08 & E)
+  in_09: empty
 }
 test.js:83:11,83:13
 
 test.js:91:11
 Flags:
 {
-  in_01: T01,
-  in_02: T02,
-  in_03: T03,
-  in_04: T04,
-  in_05: (T09 & C),
+  in_01: empty,
+  in_02: empty,
+  in_03: empty,
+  in_04: empty,
+  in_05: empty,
   in_06: empty,
-  in_07: (T09 & {+f: string}),
-  in_08: T08,
-  in_09: (T09 & E)
+  in_07: empty,
+  in_08: empty,
+  in_09: E
 }
 test.js:91:11,91:13
 
