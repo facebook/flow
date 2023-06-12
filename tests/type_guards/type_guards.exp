@@ -315,7 +315,7 @@ Cannot return `isNumberOrString(...) && isBoolean(...)` because in the type infe
  - Or number [4] is incompatible with string [3].
 
    consistency.js:129:12
-   129|     return isNumberOrString(x) && isBoolean(x); // error number ~> string, boolean ~> string
+   129|     return isNumberOrString(x) && isBoolean(x); // error. For now this check is equivalent to: (number | string) & boolean ~> string
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
@@ -333,38 +333,55 @@ References:
                                                              ^^^^^^ [4]
 
 
-Error -------------------------------------------------------------------------------------------- consistency.js:143:10
+Error -------------------------------------------------------------------------------------------- consistency.js:140:10
 
 Cannot use type guard parameter `x` [1] because at this return point it is writen to in [2]. [function-predicate]
 
-   consistency.js:143:10
-   143|   return x instanceof A; // error 'x' is written to
+   consistency.js:140:10
+   140|   return x instanceof A; // error 'x' is written to
                  ^^^^^^^^^^^^^^
 
 References:
-   consistency.js:141:55
-   141| function error_write_to_type_guard_param_1(x: mixed): x is A {
+   consistency.js:138:55
+   138| function error_write_to_type_guard_param_1(x: mixed): x is A {
                                                               ^ [1]
-   consistency.js:142:3
-   142|   x = 1;
+   consistency.js:139:3
+   139|   x = 1;
           ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- consistency.js:148:10
+Error -------------------------------------------------------------------------------------------- consistency.js:145:10
 
 Cannot use type guard parameter `x` [1] because at this return point it is writen to in [2]. [function-predicate]
 
-   consistency.js:148:10
-   148|   return x instanceof B; // error 'x' is written to
+   consistency.js:145:10
+   145|   return x instanceof B; // error 'x' is written to
                  ^^^^^^^^^^^^^^
 
 References:
-   consistency.js:146:55
-   146| function error_write_to_type_guard_param_2(x: mixed): x is B {
+   consistency.js:143:55
+   143| function error_write_to_type_guard_param_2(x: mixed): x is B {
                                                               ^ [1]
-   consistency.js:147:3
-   147|   x = new B();
+   consistency.js:144:3
+   144|   x = new B();
           ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- consistency.js:151:12
+
+Cannot use type guard parameter `x` [1] because at this return point it is writen to in [2]. [function-predicate]
+
+   consistency.js:151:12
+   151|     return x instanceof B; // error 'x' is written to (1st loc)
+                   ^^^^^^^^^^^^^^
+
+References:
+   consistency.js:148:59
+   148| function error_write_to_type_guard_param_multi(x: mixed): x is B {
+                                                                  ^ [1]
+   consistency.js:150:5
+   150|     x = new B();
+            ^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- consistency.js:154:12
@@ -372,67 +389,50 @@ Error --------------------------------------------------------------------------
 Cannot use type guard parameter `x` [1] because at this return point it is writen to in [2]. [function-predicate]
 
    consistency.js:154:12
-   154|     return x instanceof B; // error 'x' is written to (1st loc)
+   154|     return x instanceof B; // error 'x' is written to (2nd loc)
                    ^^^^^^^^^^^^^^
 
 References:
-   consistency.js:151:59
-   151| function error_write_to_type_guard_param_multi(x: mixed): x is B {
+   consistency.js:148:59
+   148| function error_write_to_type_guard_param_multi(x: mixed): x is B {
                                                                   ^ [1]
    consistency.js:153:5
    153|     x = new B();
             ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- consistency.js:157:12
-
-Cannot use type guard parameter `x` [1] because at this return point it is writen to in [2]. [function-predicate]
-
-   consistency.js:157:12
-   157|     return x instanceof B; // error 'x' is written to (2nd loc)
-                   ^^^^^^^^^^^^^^
-
-References:
-   consistency.js:151:59
-   151| function error_write_to_type_guard_param_multi(x: mixed): x is B {
-                                                                  ^ [1]
-   consistency.js:156:5
-   156|     x = new B();
-            ^ [2]
-
-
-Error -------------------------------------------------------------------------------------------- consistency.js:170:25
+Error -------------------------------------------------------------------------------------------- consistency.js:167:25
 
 Cannot return `x instanceof A` because `A` [1] is incompatible with `B` [2] in the type inferred for type guard
 parameter `x` [3]. [incompatible-return]
 
-   consistency.js:170:25
-   170|     return x instanceof A; // error A ~> B
+   consistency.js:167:25
+   167|     return x instanceof A; // error A ~> B
                                 ^ [1]
 
 References:
-   consistency.js:168:56
-   168| function multi_return_one_branch_error(x: mixed): x is B {
+   consistency.js:165:56
+   165| function multi_return_one_branch_error(x: mixed): x is B {
                                                                ^ [2]
-   consistency.js:168:51
-   168| function multi_return_one_branch_error(x: mixed): x is B {
+   consistency.js:165:51
+   165| function multi_return_one_branch_error(x: mixed): x is B {
                                                           ^ [3]
 
 
-Error -------------------------------------------------------------------------------------------- consistency.js:179:33
+Error -------------------------------------------------------------------------------------------- consistency.js:176:33
 
 Cannot use type guard parameter `x`, because `x` [1] is reassigned in [2]. [function-predicate]
 
-   consistency.js:179:33
-   179| function havoc_error(x: mixed): x is B { // error 'x' is havoced
+   consistency.js:176:33
+   176| function havoc_error(x: mixed): x is B { // error 'x' is havoced
                                         ^
 
 References:
-   consistency.js:179:22
-   179| function havoc_error(x: mixed): x is B { // error 'x' is havoced
+   consistency.js:176:22
+   176| function havoc_error(x: mixed): x is B { // error 'x' is havoced
                              ^ [1]
-   consistency.js:183:3
-   183|   y();
+   consistency.js:180:3
+   180|   y();
           ^^^ [2]
 
 

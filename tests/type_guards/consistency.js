@@ -126,10 +126,7 @@ function pipe_result() {
   }
 
   function error(x: mixed): x is string {
-    return isNumberOrString(x) && isBoolean(x); // error number ~> string, boolean ~> string
-                                                // For now this check is equivalent to
-                                                // declare var t: (number | string) & boolean;
-                                                // (t: string);
+    return isNumberOrString(x) && isBoolean(x); // error. For now this check is equivalent to: (number | string) & boolean ~> string
   }
 }
 
