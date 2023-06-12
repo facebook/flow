@@ -710,6 +710,331 @@ References:
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
+Error ----------------------------------------------------------------------------------------------- refinement.js:61:8
+
+Cannot cast `x` to `B` because number [1] is incompatible with string [2] in property `foo`. [incompatible-cast]
+
+   refinement.js:61:8
+   61|       (x: B); // error A ~> B
+              ^
+
+References:
+   refinement.js:53:29
+   53|   type A = { tag: 'A', foo: number };
+                                   ^^^^^^ [1]
+   refinement.js:54:29
+   54|   type B = { tag: 'B', foo: string };
+                                   ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:61:8
+
+Cannot cast `x` to `B` because string literal `A` [1] is incompatible with string literal `B` [2] in property `tag`.
+[incompatible-cast]
+
+   refinement.js:61:8
+   61|       (x: B); // error A ~> B
+              ^
+
+References:
+   refinement.js:53:19
+   53|   type A = { tag: 'A', foo: number };
+                         ^^^ [1]
+   refinement.js:54:19
+   54|   type B = { tag: 'B', foo: string };
+                         ^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:72:8
+
+Cannot cast `x` to `A` because: [incompatible-cast]
+ - Either string [1] is incompatible with number [2] in property `foo`.
+ - Or inexact object type [3] is incompatible with exact `A` [4].
+
+   refinement.js:72:8
+   72|       (x: A); // error B & {tag_: 'A',...} ~> A
+              ^
+
+References:
+   refinement.js:54:29
+   54|   type B = { tag: 'B', foo: string };
+                                   ^^^^^^ [1]
+   refinement.js:53:29
+   53|   type A = { tag: 'A', foo: number };
+                                   ^^^^^^ [2]
+   refinement.js:70:57
+   70|   declare function invalid_sentinel_key(x: mixed): x is {tag_: 'A', ...};
+                                                               ^^^^^^^^^^^^^^^^ [3]
+   refinement.js:72:11
+   72|       (x: A); // error B & {tag_: 'A',...} ~> A
+                 ^ [4]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:73:8
+
+Cannot cast `x` to `B` because: [incompatible-cast]
+ - Either number [1] is incompatible with string [2] in property `foo`.
+ - Or inexact object type [3] is incompatible with exact `B` [4].
+
+   refinement.js:73:8
+   73|       (x: B); // error A & {tag_: 'A',...} ~> B
+              ^
+
+References:
+   refinement.js:53:29
+   53|   type A = { tag: 'A', foo: number };
+                                   ^^^^^^ [1]
+   refinement.js:54:29
+   54|   type B = { tag: 'B', foo: string };
+                                   ^^^^^^ [2]
+   refinement.js:70:57
+   70|   declare function invalid_sentinel_key(x: mixed): x is {tag_: 'A', ...};
+                                                               ^^^^^^^^^^^^^^^^ [3]
+   refinement.js:73:11
+   73|       (x: B); // error A & {tag_: 'A',...} ~> B
+                 ^ [4]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:86:8
+
+Cannot cast `x` to `B` because number [1] is incompatible with string [2] in property `foo`. [incompatible-cast]
+
+   refinement.js:86:8
+   86|       (x: B); // error A ~> B
+              ^
+
+References:
+   refinement.js:78:39
+   78|   type A = $ReadOnly<{ tag: 'A', foo: number }>;
+                                             ^^^^^^ [1]
+   refinement.js:79:39
+   79|   type B = $ReadOnly<{ tag: 'B', foo: string }>;
+                                             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:86:8
+
+Cannot cast `x` to `B` because string literal `A` [1] is incompatible with string literal `B` [2] in property `tag`.
+[incompatible-cast]
+
+   refinement.js:86:8
+   86|       (x: B); // error A ~> B
+              ^
+
+References:
+   refinement.js:78:29
+   78|   type A = $ReadOnly<{ tag: 'A', foo: number }>;
+                                   ^^^ [1]
+   refinement.js:79:29
+   79|   type B = $ReadOnly<{ tag: 'B', foo: string }>;
+                                   ^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:97:8
+
+Cannot cast `x` to `A` because: [incompatible-cast]
+ - Either string [1] is incompatible with number [2] in property `foo`.
+ - Or inexact object type [3] is incompatible with exact `$ReadOnly` [4].
+
+   refinement.js:97:8
+   97|       (x: A); // error B & {+tag_: 'A',...} ~> A
+              ^
+
+References:
+   refinement.js:79:39
+   79|   type B = $ReadOnly<{ tag: 'B', foo: string }>;
+                                             ^^^^^^ [1]
+   refinement.js:78:39
+   78|   type A = $ReadOnly<{ tag: 'A', foo: number }>;
+                                             ^^^^^^ [2]
+   refinement.js:95:67
+   95|   declare function invalid_sentinel_key(x: mixed): x is $ReadOnly<{tag_: 'A', ...}>;
+                                                                         ^^^^^^^^^^^^^^^^ [3]
+   refinement.js:97:11
+   97|       (x: A); // error B & {+tag_: 'A',...} ~> A
+                 ^ [4]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:98:8
+
+Cannot cast `x` to `B` because: [incompatible-cast]
+ - Either number [1] is incompatible with string [2] in property `foo`.
+ - Or inexact object type [3] is incompatible with exact `$ReadOnly` [4].
+
+   refinement.js:98:8
+   98|       (x: B); // error A & {+tag_: 'A',...} ~> B
+              ^
+
+References:
+   refinement.js:78:39
+   78|   type A = $ReadOnly<{ tag: 'A', foo: number }>;
+                                             ^^^^^^ [1]
+   refinement.js:79:39
+   79|   type B = $ReadOnly<{ tag: 'B', foo: string }>;
+                                             ^^^^^^ [2]
+   refinement.js:95:67
+   95|   declare function invalid_sentinel_key(x: mixed): x is $ReadOnly<{tag_: 'A', ...}>;
+                                                                         ^^^^^^^^^^^^^^^^ [3]
+   refinement.js:98:11
+   98|       (x: B); // error A & {+tag_: 'A',...} ~> B
+                 ^ [4]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:110:8
+
+Cannot cast `x` to `A` because: [incompatible-cast]
+ - Either string [1] is incompatible with number [2] in property `foo`.
+ - Or inexact object type [3] is incompatible with exact `$ReadOnly` [4].
+
+   refinement.js:110:8
+   110|       (x: A); // error B & {+tag: 'C', ...} ~> A
+               ^
+
+References:
+   refinement.js:104:49
+   104|   type B = $ReadOnly<{ tag1: 'B', tag2: 1, foo: string }>;
+                                                        ^^^^^^ [1]
+   refinement.js:103:49
+   103|   type A = $ReadOnly<{ tag1: 'A', tag2: 1, foo: number }>;
+                                                        ^^^^^^ [2]
+   refinement.js:108:63
+   108|   declare function unknown_sentinel(x: mixed): x is $ReadOnly<{tag: 'C', ...}>;
+                                                                      ^^^^^^^^^^^^^^^ [3]
+   refinement.js:110:11
+   110|       (x: A); // error B & {+tag: 'C', ...} ~> A
+                  ^ [4]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:111:8
+
+Cannot cast `x` to `B` because: [incompatible-cast]
+ - Either number [1] is incompatible with string [2] in property `foo`.
+ - Or inexact object type [3] is incompatible with exact `$ReadOnly` [4].
+
+   refinement.js:111:8
+   111|       (x: B); // error A & {+tag: 'C', ...} ~> B
+               ^
+
+References:
+   refinement.js:103:49
+   103|   type A = $ReadOnly<{ tag1: 'A', tag2: 1, foo: number }>;
+                                                        ^^^^^^ [1]
+   refinement.js:104:49
+   104|   type B = $ReadOnly<{ tag1: 'B', tag2: 1, foo: string }>;
+                                                        ^^^^^^ [2]
+   refinement.js:108:63
+   108|   declare function unknown_sentinel(x: mixed): x is $ReadOnly<{tag: 'C', ...}>;
+                                                                      ^^^^^^^^^^^^^^^ [3]
+   refinement.js:111:11
+   111|       (x: B); // error A & {+tag: 'C', ...} ~> B
+                  ^ [4]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:117:8
+
+Cannot cast `x` to `B` because number [1] is incompatible with string [2] in property `foo`. [incompatible-cast]
+
+   refinement.js:117:8
+   117|       (x: B); // error A ~> B
+               ^
+
+References:
+   refinement.js:103:49
+   103|   type A = $ReadOnly<{ tag1: 'A', tag2: 1, foo: number }>;
+                                                        ^^^^^^ [1]
+   refinement.js:104:49
+   104|   type B = $ReadOnly<{ tag1: 'B', tag2: 1, foo: string }>;
+                                                        ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:117:8
+
+Cannot cast `x` to `B` because string literal `A` [1] is incompatible with string literal `B` [2] in property `tag1`.
+[incompatible-cast]
+
+   refinement.js:117:8
+   117|       (x: B); // error A ~> B
+               ^
+
+References:
+   refinement.js:103:30
+   103|   type A = $ReadOnly<{ tag1: 'A', tag2: 1, foo: number }>;
+                                     ^^^ [1]
+   refinement.js:104:30
+   104|   type B = $ReadOnly<{ tag1: 'B', tag2: 1, foo: string }>;
+                                     ^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:122:8
+
+Cannot cast `x` to `A` because string [1] is incompatible with number [2] in property `foo`. [incompatible-cast]
+
+   refinement.js:122:8
+   122|       (x: A); // error B ~> A
+               ^
+
+References:
+   refinement.js:104:49
+   104|   type B = $ReadOnly<{ tag1: 'B', tag2: 1, foo: string }>;
+                                                        ^^^^^^ [1]
+   refinement.js:103:49
+   103|   type A = $ReadOnly<{ tag1: 'A', tag2: 1, foo: number }>;
+                                                        ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:122:8
+
+Cannot cast `x` to `A` because string literal `B` [1] is incompatible with string literal `A` [2] in property `tag1`.
+[incompatible-cast]
+
+   refinement.js:122:8
+   122|       (x: A); // error B ~> A
+               ^
+
+References:
+   refinement.js:104:30
+   104|   type B = $ReadOnly<{ tag1: 'B', tag2: 1, foo: string }>;
+                                     ^^^ [1]
+   refinement.js:103:30
+   103|   type A = $ReadOnly<{ tag1: 'A', tag2: 1, foo: number }>;
+                                     ^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:123:8
+
+Cannot cast `x` to `B` because number [1] is incompatible with string [2] in property `foo`. [incompatible-cast]
+
+   refinement.js:123:8
+   123|       (x: B); // error A ~> B
+               ^
+
+References:
+   refinement.js:103:49
+   103|   type A = $ReadOnly<{ tag1: 'A', tag2: 1, foo: number }>;
+                                                        ^^^^^^ [1]
+   refinement.js:104:49
+   104|   type B = $ReadOnly<{ tag1: 'B', tag2: 1, foo: string }>;
+                                                        ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:123:8
+
+Cannot cast `x` to `B` because string literal `A` [1] is incompatible with string literal `B` [2] in property `tag1`.
+[incompatible-cast]
+
+   refinement.js:123:8
+   123|       (x: B); // error A ~> B
+               ^
+
+References:
+   refinement.js:103:30
+   103|   type A = $ReadOnly<{ tag1: 'A', tag2: 1, foo: number }>;
+                                     ^^^ [1]
+   refinement.js:104:30
+   104|   type B = $ReadOnly<{ tag1: 'B', tag2: 1, foo: string }>;
+                                     ^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- subst.js:10:15
 
 Cannot assign `funA(...)` to `x2` because `A` [1] is incompatible with `B` [2]. [incompatible-type]
@@ -1049,7 +1374,7 @@ Cannot find type guard parameter `x` [1] in the parameters of this function (typ
 
 
 
-Found 62 errors
+Found 78 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -567,13 +567,31 @@ let sentinel_refinement =
  *   with both the ObjTag and the FunTag.
  * - Interfaces can be objects, class instances, arrays, functions and symbols *)
 module TypeTag = struct
+  type sentinel_val =
+    | Str of Reason.name
+    | Num of number_literal
+    | Bool of bool
+
+  type sentinel_map = sentinel_val SMap.t
+
+  (* Compare sentinel maps on their common keys. Keys that do not appear in both
+   * objects are ignored as they cannot be used to determine non-overlapping values. *)
+  let compare_sentinel_map (s1 : sentinel_val SMap.t) (s2 : sentinel_val SMap.t) =
+    let keyset1 = SMap.keys s1 |> SSet.of_list in
+    let keyset2 = SMap.keys s2 |> SSet.of_list in
+    let keyset = SSet.inter keyset1 keyset2 in
+    if SSet.for_all (fun k -> SMap.find k s1 = SMap.find k s2) keyset then
+      0
+    else
+      1
+
   type t =
     | BoolTag
     | StringTag
     | NumberTag
     | NullTag
     | SymbolTag
-    | ObjTag
+    | ObjTag of { sentinel: sentinel_map }
     | FunTag
     | BigIntTag
     | ClassInstanceTag
@@ -585,6 +603,26 @@ end
 open TypeTag
 
 module TypeTagSet : Flow_set.S with type elt = TypeTag.t = Flow_set.Make (TypeTag)
+
+let sentinel_of_obj cx id =
+  Context.fold_real_props
+    cx
+    id
+    (fun name prop acc ->
+      match prop with
+      | Field { type_; _ } ->
+        let v_opt =
+          match Context.find_resolved cx type_ with
+          | Some (DefT (_, _, SingletonStrT name)) -> Some (TypeTag.Str name)
+          | Some (DefT (_, _, SingletonNumT num_lit)) -> Some (TypeTag.Num num_lit)
+          | Some (DefT (_, _, SingletonBoolT b)) -> Some (TypeTag.Bool b)
+          | _ -> None
+        in
+        (match v_opt with
+        | Some v -> SMap.add (Reason.display_string_of_name name) v acc
+        | None -> acc)
+      | _ -> acc)
+    SMap.empty
 
 let rec tag_of_def_t cx = function
   | NullT -> Some (TypeTagSet.singleton NullTag)
@@ -603,8 +641,10 @@ let rec tag_of_def_t cx = function
   | BigIntT _
   | SingletonBigIntT _ ->
     Some (TypeTagSet.singleton BigIntTag)
-  | ObjT { call_t = Some _; _ } -> Some (TypeTagSet.of_list [ObjTag; FunTag])
-  | ObjT _ -> Some (TypeTagSet.singleton ObjTag)
+  | ObjT { call_t = Some _; props_tmap; _ } ->
+    Some (TypeTagSet.of_list [ObjTag { sentinel = sentinel_of_obj cx props_tmap }; FunTag])
+  | ObjT { props_tmap; _ } ->
+    Some (TypeTagSet.singleton (ObjTag { sentinel = sentinel_of_obj cx props_tmap }))
   | InstanceT { inst; _ } -> tag_of_inst inst
   | ArrT _ -> Some (TypeTagSet.singleton ArrTag)
   | PolyT { t_out; _ } -> tag_of_t cx t_out
@@ -644,7 +684,7 @@ and tag_of_inst inst =
     | InterfaceKind _ ->
       tags
       |> TypeTagSet.add ClassInstanceTag
-      |> TypeTagSet.add ObjTag
+      |> TypeTagSet.add (ObjTag { sentinel = SMap.empty })
       |> TypeTagSet.add ArrTag
       |> TypeTagSet.add SymbolTag
       |> TypeTagSet.add FunTag

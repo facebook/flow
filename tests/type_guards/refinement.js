@@ -47,3 +47,79 @@ function array_filter() {
   const arr2: Array<string> = arr.filter((x: mixed): x is number => { return typeof x === "number"; }); // error
   const arr3: Array<string> = arr.filter((x: mixed) => { return typeof x === "number"; }); // error no refinement
 }
+
+
+function sentinel_simple() {
+  type A = { tag: 'A', foo: number };
+  type B = { tag: 'B', foo: string };
+
+  declare var x: A | B;
+
+  declare function sentinel_A(x: mixed): x is {tag: 'A', ...};
+  if (sentinel_A(x)) {
+      (x: A); // okay A ~> A
+      (x: B); // error A ~> B
+  }
+
+  declare function invalid_sentinel_val(x: mixed): x is {tag: 'C', ...};
+  if (invalid_sentinel_val(x)) {
+      (x: A); // okay empty ~> A
+      (x: B); // okay empty ~> B
+  }
+
+  declare function invalid_sentinel_key(x: mixed): x is {tag_: 'A', ...};
+  if (invalid_sentinel_key(x)) {
+      (x: A); // error B & {tag_: 'A',...} ~> A
+      (x: B); // error A & {tag_: 'A',...} ~> B
+  }
+}
+
+function sentinel_readonly() {
+  type A = $ReadOnly<{ tag: 'A', foo: number }>;
+  type B = $ReadOnly<{ tag: 'B', foo: string }>;
+
+  declare var x: A | B;
+
+  declare function sentinel_A(x: mixed): x is $ReadOnly<{tag: 'A', ...}>;
+  if (sentinel_A(x)) {
+      (x: A); // okay A ~> A
+      (x: B); // error A ~> B
+  }
+
+  declare function invalid_sentinel_val(x: mixed): x is $ReadOnly<{tag: 'C', ...}>;
+  if (invalid_sentinel_val(x)) {
+      (x: A); // okay empty ~> A
+      (x: B); // okay empty ~> B
+  }
+
+  declare function invalid_sentinel_key(x: mixed): x is $ReadOnly<{tag_: 'A', ...}>;
+  if (invalid_sentinel_key(x)) {
+      (x: A); // error B & {+tag_: 'A',...} ~> A
+      (x: B); // error A & {+tag_: 'A',...} ~> B
+  }
+}
+
+function sentinel_multi_tag() {
+  type A = $ReadOnly<{ tag1: 'A', tag2: 1, foo: number }>;
+  type B = $ReadOnly<{ tag1: 'B', tag2: 1, foo: string }>;
+
+  declare var x: A | B;
+
+  declare function unknown_sentinel(x: mixed): x is $ReadOnly<{tag: 'C', ...}>;
+  if (unknown_sentinel(x)) {
+      (x: A); // error B & {+tag: 'C', ...} ~> A
+      (x: B); // error A & {+tag: 'C', ...} ~> B
+  }
+
+  declare function sentinel_A_1(x: mixed): x is $ReadOnly<{ tag1: 'A', tag2: 1, ...}>;
+  if (sentinel_A_1(x)) {
+      (x: A); // okay A ~> A
+      (x: B); // error A ~> B
+  }
+
+  declare function sentinel_1(x: mixed): x is $ReadOnly<{ tag2: 1, ...}>;
+  if (sentinel_1(x)) {
+      (x: A); // error B ~> A
+      (x: B); // error A ~> B
+  }
+}
