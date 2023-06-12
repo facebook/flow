@@ -3110,12 +3110,11 @@ module Make
         match quasis with
         | [head] ->
           let ( elem_loc,
-                { TemplateLiteral.Element.value = { TemplateLiteral.Element.raw; cooked }; _ }
+                { TemplateLiteral.Element.value = { TemplateLiteral.Element.cooked; _ }; _ }
               ) =
             head
           in
-          let lit = { Ast.StringLiteral.value = cooked; raw; comments = None } in
-          let t = string_literal cx elem_loc lit in
+          let t = string_literal_value cx elem_loc cooked in
           (t, [])
         | _ ->
           let t_out = StrT.at loc |> with_trust bogus_trust in
@@ -4669,7 +4668,7 @@ module Make
     let t = identifier_ cx name loc in
     t
 
-  and string_literal cx loc { Ast.StringLiteral.value; _ } =
+  and string_literal_value cx loc value =
     if Type_inference_hooks_js.dispatch_literal_hook cx loc then
       let (_, lazy_hint) = Env.get_hint cx loc in
       let hint = lazy_hint (mk_reason (RCustom "literal") loc) in
@@ -4685,6 +4684,8 @@ module Make
       else
         let reason = mk_annot_reason (RLongStringLit max_literal_length) loc in
         DefT (reason, make_trust (), StrT AnyLiteral)
+
+  and string_literal cx loc { Ast.StringLiteral.value; _ } = string_literal_value cx loc value
 
   and boolean_literal cx loc { Ast.BooleanLiteral.value; _ } =
     let make_trust = Context.trust_constructor cx in
