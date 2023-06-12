@@ -13,35 +13,31 @@ function extract_arr_element_with_bound() {
 }
 
 function extract_return_type() {
-  type Extract<T> = T extends (...args: $ReadOnlyArray<empty>) => infer Return ? Return : empty;
-
-  (3: Extract<() => number>); // ok
-  (3: Extract<() => string>); // error: number ~> string
-  (3: Extract<(number) => number>); // ok
-  (3: Extract<(number) => string>); // error: number ~> string
-  (3: Extract<(number, string, ...any) => number>); // ok
-  (3: Extract<(number, string, ...any) => string>); // error: number ~> string
+  (3: ReturnType<() => number>); // ok
+  (3: ReturnType<() => string>); // error: number ~> string
+  (3: ReturnType<(number) => number>); // ok
+  (3: ReturnType<(number) => string>); // error: number ~> string
+  (3: ReturnType<(number, string, ...any) => number>); // ok
+  (3: ReturnType<(number, string, ...any) => string>); // error: number ~> string
 }
 
 function extract_parameters_type() {
-  type ParamsType<T> = T extends (...args: infer Args) => mixed ? Args : empty;
-
-  (3: ParamsType<() => number>[0]); // error: invalid-tuple-index
-  ('': ParamsType<(string, number) => string>[0]); // ok
-  (3: ParamsType<(string, number) => string>[0]); // error: number ~> string
-  ('': ParamsType<(string, number) => string>[1]); // error: string ~> number
-  (3: ParamsType<(string, number) => string>[1]); // ok
+  (3: Parameters<() => number>[0]); // error: invalid-tuple-index
+  ('': Parameters<(string, number) => string>[0]); // ok
+  (3: Parameters<(string, number) => string>[0]); // error: number ~> string
+  ('': Parameters<(string, number) => string>[1]); // error: string ~> number
+  (3: Parameters<(string, number) => string>[1]); // ok
 }
 
 function extract_this_parameter_type() {
-  type ThisParam<T> = T extends (this: infer U, ...args: any) => any ? U : empty;
-
-  (3: ThisParam<(this: number, string) => void>); // ok
-  ('': ThisParam<(this: number, string) => void>); // error: string ~> number
+  (3: ThisParameterType<(this: number, string) => void>); // ok
+  ('': ThisParameterType<(this: number, string) => void>); // error: string ~> number
 
   // This param is inferred as any,
   // which comes from unsoundness of this param in function type annotation.
-  ((3: mixed): ThisParam<(string, number) => string>); // ok
+  ((3: mixed): ThisParameterType<(string, number) => string>); // ok
+
+  ('3': OmitThisParameter<ThisParameterType<(this: number, string) => void>>); // ok: fn type with this type has an implicit any this type
 }
 
 function recursive_awaited_type() {

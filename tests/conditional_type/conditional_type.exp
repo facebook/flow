@@ -310,170 +310,184 @@ References:
              ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- extraction.js:17:4
+
+Cannot cast `3` to `ReturnType` because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   extraction.js:17:4
+   17|   (3: ReturnType<() => string>); // error: number ~> string
+          ^ [1]
+
+References:
+   extraction.js:17:7
+   17|   (3: ReturnType<() => string>); // error: number ~> string
+             ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------- extraction.js:19:4
 
-Cannot cast `3` to `Extract` because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `3` to `ReturnType` because number [1] is incompatible with string [2]. [incompatible-cast]
 
    extraction.js:19:4
-   19|   (3: Extract<() => string>); // error: number ~> string
+   19|   (3: ReturnType<(number) => string>); // error: number ~> string
           ^ [1]
 
 References:
    extraction.js:19:7
-   19|   (3: Extract<() => string>); // error: number ~> string
-             ^^^^^^^^^^^^^^^^^^^^^ [2]
+   19|   (3: ReturnType<(number) => string>); // error: number ~> string
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- extraction.js:21:4
 
-Cannot cast `3` to `Extract` because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `3` to `ReturnType` because number [1] is incompatible with string [2]. [incompatible-cast]
 
    extraction.js:21:4
-   21|   (3: Extract<(number) => string>); // error: number ~> string
+   21|   (3: ReturnType<(number, string, ...any) => string>); // error: number ~> string
           ^ [1]
 
 References:
    extraction.js:21:7
-   21|   (3: Extract<(number) => string>); // error: number ~> string
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   21|   (3: ReturnType<(number, string, ...any) => string>); // error: number ~> string
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- extraction.js:23:4
+Error ---------------------------------------------------------------------------------------------- extraction.js:25:32
 
-Cannot cast `3` to `Extract` because number [1] is incompatible with string [2]. [incompatible-cast]
-
-   extraction.js:23:4
-   23|   (3: Extract<(number, string, ...any) => string>); // error: number ~> string
-          ^ [1]
-
-References:
-   extraction.js:23:7
-   23|   (3: Extract<(number, string, ...any) => string>); // error: number ~> string
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------- extraction.js:29:32
-
-Cannot access number literal `0` on `ParamsType` because function type [1] only has 0 elements, so index 0 is out of
+Cannot access number literal `0` on `Parameters` because function type [1] only has 0 elements, so index 0 is out of
 bounds. [invalid-tuple-index]
 
-   extraction.js:29:32
-   29|   (3: ParamsType<() => number>[0]); // error: invalid-tuple-index
+   extraction.js:25:32
+   25|   (3: Parameters<() => number>[0]); // error: invalid-tuple-index
                                       ^
 
 References:
-   extraction.js:29:7
-   29|   (3: ParamsType<() => number>[0]); // error: invalid-tuple-index
+   extraction.js:25:7
+   25|   (3: Parameters<() => number>[0]); // error: invalid-tuple-index
              ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- extraction.js:31:4
+Error ----------------------------------------------------------------------------------------------- extraction.js:27:4
 
 Cannot cast `3` to indexed access because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   extraction.js:31:4
-   31|   (3: ParamsType<(string, number) => string>[0]); // error: number ~> string
+   extraction.js:27:4
+   27|   (3: Parameters<(string, number) => string>[0]); // error: number ~> string
           ^ [1]
 
 References:
-   extraction.js:31:19
-   31|   (3: ParamsType<(string, number) => string>[0]); // error: number ~> string
+   extraction.js:27:19
+   27|   (3: Parameters<(string, number) => string>[0]); // error: number ~> string
                          ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- extraction.js:32:4
+Error ----------------------------------------------------------------------------------------------- extraction.js:28:4
 
 Cannot cast empty string to indexed access because string [1] is incompatible with number [2]. [incompatible-cast]
 
-   extraction.js:32:4
-   32|   ('': ParamsType<(string, number) => string>[1]); // error: string ~> number
+   extraction.js:28:4
+   28|   ('': Parameters<(string, number) => string>[1]); // error: string ~> number
           ^^ [1]
 
 References:
-   extraction.js:32:28
-   32|   ('': ParamsType<(string, number) => string>[1]); // error: string ~> number
+   extraction.js:28:28
+   28|   ('': Parameters<(string, number) => string>[1]); // error: string ~> number
                                   ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- extraction.js:34:4
+
+Cannot cast empty string to `ThisParameterType` because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   extraction.js:34:4
+   34|   ('': ThisParameterType<(this: number, string) => void>); // error: string ~> number
+          ^^ [1]
+
+References:
+   extraction.js:34:8
+   34|   ('': ThisParameterType<(this: number, string) => void>); // error: string ~> number
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- extraction.js:40:4
 
-Cannot cast empty string to `ThisParam` because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `'3'` to `OmitThisParameter` because string [1] is incompatible with number [2]. [incompatible-cast]
 
    extraction.js:40:4
-   40|   ('': ThisParam<(this: number, string) => void>); // error: string ~> number
-          ^^ [1]
+   40|   ('3': OmitThisParameter<ThisParameterType<(this: number, string) => void>>); // ok: fn type with this type has an implicit any this type
+          ^^^ [1]
 
 References:
-   extraction.js:40:8
-   40|   ('': ThisParam<(this: number, string) => void>); // error: string ~> number
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   extraction.js:40:9
+   40|   ('3': OmitThisParameter<ThisParameterType<(this: number, string) => void>>); // ok: fn type with this type has an implicit any this type
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- extraction.js:56:4
+Error ----------------------------------------------------------------------------------------------- extraction.js:52:4
 
 Cannot cast `awaited_null` to empty because null [1] is incompatible with empty [2]. [incompatible-cast]
 
-   extraction.js:56:4
-   56|   (awaited_null: empty); // error: null ~> empty
+   extraction.js:52:4
+   52|   (awaited_null: empty); // error: null ~> empty
           ^^^^^^^^^^^^
 
 References:
-   extraction.js:52:29
-   52|   declare var awaited_null: Awaited<null>;
+   extraction.js:48:29
+   48|   declare var awaited_null: Awaited<null>;
                                    ^^^^^^^^^^^^^ [1]
-   extraction.js:56:18
-   56|   (awaited_null: empty); // error: null ~> empty
+   extraction.js:52:18
+   52|   (awaited_null: empty); // error: null ~> empty
                         ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- extraction.js:57:4
+Error ----------------------------------------------------------------------------------------------- extraction.js:53:4
 
 Cannot cast `awaited_n1` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   extraction.js:57:4
-   57|   (awaited_n1: empty); // error: number ~> empty
+   extraction.js:53:4
+   53|   (awaited_n1: empty); // error: number ~> empty
           ^^^^^^^^^^
 
 References:
-   extraction.js:53:27
-   53|   declare var awaited_n1: Awaited<number>;
+   extraction.js:49:27
+   49|   declare var awaited_n1: Awaited<number>;
                                  ^^^^^^^^^^^^^^^ [1]
-   extraction.js:57:16
-   57|   (awaited_n1: empty); // error: number ~> empty
+   extraction.js:53:16
+   53|   (awaited_n1: empty); // error: number ~> empty
                       ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- extraction.js:58:4
+Error ----------------------------------------------------------------------------------------------- extraction.js:54:4
 
 Cannot cast `awaited_n2` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   extraction.js:58:4
-   58|   (awaited_n2: empty); // error: number ~> empty
+   extraction.js:54:4
+   54|   (awaited_n2: empty); // error: number ~> empty
           ^^^^^^^^^^
 
 References:
-   extraction.js:54:27
-   54|   declare var awaited_n2: Awaited<Promise<number>>;
+   extraction.js:50:27
+   50|   declare var awaited_n2: Awaited<Promise<number>>;
                                  ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   extraction.js:58:16
-   58|   (awaited_n2: empty); // error: number ~> empty
+   extraction.js:54:16
+   54|   (awaited_n2: empty); // error: number ~> empty
                       ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- extraction.js:59:4
+Error ----------------------------------------------------------------------------------------------- extraction.js:55:4
 
 Cannot cast `awaited_n3` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   extraction.js:59:4
-   59|   (awaited_n3: empty); // error: number ~> empty
+   extraction.js:55:4
+   55|   (awaited_n3: empty); // error: number ~> empty
           ^^^^^^^^^^
 
 References:
-   extraction.js:55:27
-   55|   declare var awaited_n3: Awaited<Promise<Promise<Promise<Promise<number>>>>>;
+   extraction.js:51:27
+   51|   declare var awaited_n3: Awaited<Promise<Promise<Promise<Promise<number>>>>>;
                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   extraction.js:59:16
-   59|   (awaited_n3: empty); // error: number ~> empty
+   extraction.js:55:16
+   55|   (awaited_n3: empty); // error: number ~> empty
                       ^^^^^ [2]
 
 
@@ -853,4 +867,4 @@ References:
 
 
 
-Found 56 errors
+Found 57 errors
