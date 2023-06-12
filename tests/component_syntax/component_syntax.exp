@@ -426,9 +426,9 @@ Cannot return `null` because null [1] is incompatible with undefined [2]. [incom
                 ^^^^ [1]
 
 References:
-   component_type_checking.js:8:4
-    8| ): void {
-          ^^^^ [2]
+   component_type_checking.js:8:11
+    8| ) renders void {
+                 ^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------- component_type_checking.js:26:4

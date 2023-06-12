@@ -5968,7 +5968,7 @@ let%expect_test "component2" =
 let%expect_test "component3" =
   print_sig {|
     component RadComp() { };
-    component Baz('lets go' as x: string, ...props: Rest): RadComp {};
+    component Baz('lets go' as x: string, ...props: Rest) renders RadComp {};
     Baz.static = "amazing";
     module.exports = { Baz };
   |};
@@ -5993,7 +5993,7 @@ let%expect_test "component3" =
            rest_param = None;
            renders = (TyRef (Unqualified BuiltinRef {ref_loc = [1:19]; name = "React$Node"}))}}
     1. ComponentBinding {id_loc = [2:10-13];
-         name = "Baz"; fn_loc = [2:0-62];
+         name = "Baz"; fn_loc = [2:0-69];
          def =
          ComponentSig {params_loc = [2:13-53];
            tparams = Mono;
@@ -6003,13 +6003,13 @@ let%expect_test "component3" =
            rest_param =
            (Some ComponentRestParam {
                    t = (TyRef (Unqualified BuiltinRef {ref_loc = [2:48-52]; name = "Rest"}))});
-           renders = (TyRef (Unqualified LocalRef {ref_loc = [2:55-62]; index = 0}))}}
+           renders = (TyRef (Unqualified LocalRef {ref_loc = [2:62-69]; index = 0}))}}
 
   |}]
 
 let%expect_test "component4" =
   print_sig {|
-    component Baz<T>(prop: T): T {};
+    component Baz<T>(prop: T) renders T {};
     module.exports = { Baz };
   |};
   [%expect{|
@@ -6026,7 +6026,7 @@ let%expect_test "component4" =
 
     Local defs:
     0. ComponentBinding {id_loc = [1:10-13];
-         name = "Baz"; fn_loc = [1:0-28];
+         name = "Baz"; fn_loc = [1:0-35];
          def =
          ComponentSig {params_loc = [1:16-25];
            tparams =
@@ -6039,8 +6039,7 @@ let%expect_test "component4" =
            [ComponentParam {name = "prop";
               name_loc = [1:17-21]; t = (Annot Bound {ref_loc = [1:23-24]; name = "T"})}
              ];
-           rest_param = None; renders = (Annot Bound {ref_loc = [1:27-28]; name = "T"})}}
-
+           rest_param = None; renders = (Annot Bound {ref_loc = [1:34-35]; name = "T"})}}
   |}]
 
 let%expect_test "component_5" =

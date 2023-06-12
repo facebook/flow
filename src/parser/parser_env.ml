@@ -1000,6 +1000,11 @@ module Peek = struct
     match token env with
     | T_IDENTIFIER { raw = "component"; _ } when ith_is_identifier ~i:1 env -> true
     | _ -> false
+
+  let is_renders_ident env =
+    match token env with
+    | T_IDENTIFIER { raw = "renders"; _ } -> true
+    | _ -> false
 end
 
 (*****************************************************************************)

@@ -37,6 +37,8 @@ module type TYPE = sig
 
   val annotation_opt : env -> (Loc.t, Loc.t) Ast.Type.annotation_or_hint
 
+  val renders_annotation_opt : env -> (Loc.t, Loc.t) Ast.Type.annotation_or_hint
+
   val function_return_annotation_opt : env -> (Loc.t, Loc.t) Ast.Function.ReturnAnnot.t
 
   val predicate_opt : env -> (Loc.t, Loc.t) Ast.Type.Predicate.t option
@@ -444,12 +446,11 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           let tparams = type_params_remove_trailing env (type_params env) in
           let params = component_param_list env in
           let (params, renders) =
-            match Peek.token env with
-            | T_COLON ->
-              let renders = annotation_opt env in
+            if Peek.is_renders_ident env then
+              let renders = renders_annotation_opt env in
               let renders = type_annotation_hint_remove_trailing env renders in
               (params, renders)
-            | _ ->
+            else
               let missing_annotation = annotation_opt env in
               (component_type_params_remove_trailing env params, missing_annotation)
           in
@@ -1879,6 +1880,14 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     | T_COLON -> Type.Available (annotation env)
     | _ -> Type.Missing (Peek.loc_skip_lookahead env)
 
+  and renders_annotation_opt env =
+    match Peek.token env with
+    | T_IDENTIFIER { raw = "renders"; _ } ->
+      if not (should_parse_types env) then error env Parse_error.UnexpectedTypeAnnotation;
+      Eat.token env;
+      Type.Available (with_loc (fun env -> _type env) env)
+    | _ -> Type.Missing (Peek.loc_skip_lookahead env)
+
   and add_comments (loc, t) leading trailing =
     let merge_comments inner =
       Flow_ast_utils.merge_comments
@@ -2066,4 +2075,6 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
   let component_param_list = wrap component_param_list
 
   let generic = wrap generic
+
+  let renders_annotation_opt = wrap renders_annotation_opt
 end

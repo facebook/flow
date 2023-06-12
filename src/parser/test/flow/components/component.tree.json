@@ -1,7 +1,7 @@
 {
   "type":"Program",
   "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":13,"column":14}},
-  "range":[0,206],
+  "range":[0,213],
   "body":[
     {
       "type":"ComponentDeclaration",
@@ -85,12 +85,12 @@
     },
     {
       "type":"ComponentDeclaration",
-      "loc":{"source":null,"start":{"line":7,"column":0},"end":{"line":7,"column":40}},
-      "range":[104,144],
+      "loc":{"source":null,"start":{"line":7,"column":0},"end":{"line":7,"column":47}},
+      "range":[104,151],
       "body":{
         "type":"BlockStatement",
-        "loc":{"source":null,"start":{"line":7,"column":38},"end":{"line":7,"column":40}},
-        "range":[142,144],
+        "loc":{"source":null,"start":{"line":7,"column":45},"end":{"line":7,"column":47}},
+        "range":[149,151],
         "body":[]
       },
       "id":{
@@ -104,16 +104,16 @@
       "params":[],
       "rendersType":{
         "type":"TypeAnnotation",
-        "loc":{"source":null,"start":{"line":7,"column":22},"end":{"line":7,"column":37}},
-        "range":[126,141],
+        "loc":{"source":null,"start":{"line":7,"column":31},"end":{"line":7,"column":44}},
+        "range":[135,148],
         "typeAnnotation":{
           "type":"GenericTypeAnnotation",
-          "loc":{"source":null,"start":{"line":7,"column":24},"end":{"line":7,"column":37}},
-          "range":[128,141],
+          "loc":{"source":null,"start":{"line":7,"column":31},"end":{"line":7,"column":44}},
+          "range":[135,148],
           "id":{
             "type":"Identifier",
-            "loc":{"source":null,"start":{"line":7,"column":24},"end":{"line":7,"column":37}},
-            "range":[128,141],
+            "loc":{"source":null,"start":{"line":7,"column":31},"end":{"line":7,"column":44}},
+            "range":[135,148],
             "name":"SomeComponent",
             "typeAnnotation":null,
             "optional":false
@@ -126,17 +126,17 @@
     {
       "type":"ComponentDeclaration",
       "loc":{"source":null,"start":{"line":9,"column":0},"end":{"line":9,"column":28}},
-      "range":[146,174],
+      "range":[153,181],
       "body":{
         "type":"BlockStatement",
         "loc":{"source":null,"start":{"line":9,"column":26},"end":{"line":9,"column":28}},
-        "range":[172,174],
+        "range":[179,181],
         "body":[]
       },
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":9,"column":10},"end":{"line":9,"column":20}},
-        "range":[156,166],
+        "range":[163,173],
         "name":"TParamComp",
         "typeAnnotation":null,
         "optional":false
@@ -146,12 +146,12 @@
       "typeParameters":{
         "type":"TypeParameterDeclaration",
         "loc":{"source":null,"start":{"line":9,"column":20},"end":{"line":9,"column":23}},
-        "range":[166,169],
+        "range":[173,176],
         "params":[
           {
             "type":"TypeParameter",
             "loc":{"source":null,"start":{"line":9,"column":21},"end":{"line":9,"column":22}},
-            "range":[167,168],
+            "range":[174,175],
             "name":"T",
             "bound":null,
             "variance":null,
@@ -163,23 +163,23 @@
     {
       "type":"ExpressionStatement",
       "loc":{"source":null,"start":{"line":11,"column":0},"end":{"line":11,"column":14}},
-      "range":[176,190],
+      "range":[183,197],
       "expression":{
         "type":"BinaryExpression",
         "loc":{"source":null,"start":{"line":11,"column":0},"end":{"line":11,"column":13}},
-        "range":[176,189],
+        "range":[183,196],
         "operator":"+",
         "left":{
           "type":"Literal",
           "loc":{"source":null,"start":{"line":11,"column":0},"end":{"line":11,"column":1}},
-          "range":[176,177],
+          "range":[183,184],
           "value":1,
           "raw":"1"
         },
         "right":{
           "type":"Identifier",
           "loc":{"source":null,"start":{"line":11,"column":4},"end":{"line":11,"column":13}},
-          "range":[180,189],
+          "range":[187,196],
           "name":"component",
           "typeAnnotation":null,
           "optional":false
@@ -190,16 +190,16 @@
     {
       "type":"ExpressionStatement",
       "loc":{"source":null,"start":{"line":13,"column":0},"end":{"line":13,"column":14}},
-      "range":[192,206],
+      "range":[199,213],
       "expression":{
         "type":"BinaryExpression",
         "loc":{"source":null,"start":{"line":13,"column":0},"end":{"line":13,"column":13}},
-        "range":[192,205],
+        "range":[199,212],
         "operator":"+",
         "left":{
           "type":"Identifier",
           "loc":{"source":null,"start":{"line":13,"column":0},"end":{"line":13,"column":9}},
-          "range":[192,201],
+          "range":[199,208],
           "name":"component",
           "typeAnnotation":null,
           "optional":false
@@ -207,7 +207,7 @@
         "right":{
           "type":"Literal",
           "loc":{"source":null,"start":{"line":13,"column":12},"end":{"line":13,"column":13}},
-          "range":[204,205],
+          "range":[211,212],
           "value":1,
           "raw":"1"
         }

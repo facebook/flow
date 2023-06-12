@@ -2162,7 +2162,8 @@ and component_param_name ~opts = function
 and component_renders ~opts return =
   match return with
   | Ast.Type.Missing _ -> Empty
-  | Ast.Type.Available ret -> type_annotation ~opts ~parens:false ret
+  | Ast.Type.Available (loc, renders) ->
+    source_location_with_comments (loc, fuse [space; Atom "renders"; space; type_ ~opts renders])
 
 and class_method
     ~opts
@@ -4292,7 +4293,7 @@ and declare_component
                   params_loc
                   params_comments
                   (component_type_params ~opts params);
-                hint (type_annotation ~opts) renders;
+                component_renders ~opts renders;
               ];
           ]
        )
@@ -4319,7 +4320,7 @@ and type_component
                   params_loc
                   params_comments
                   (component_type_params ~opts params);
-                hint (type_annotation ~opts) renders;
+                component_renders ~opts renders;
               ];
           ]
        )

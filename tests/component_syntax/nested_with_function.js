@@ -2,13 +2,13 @@
 // while verifying a function component and vice-versa
 
 function f(): number {
-  component Foo(): string {
+  component Foo() renders string {
     return 'str'; // No error
   }
   return 3;
 }
 
-component Foo(): number {
+component Foo() renders number {
   function f(): string {
     return 'str'; // No error
   }

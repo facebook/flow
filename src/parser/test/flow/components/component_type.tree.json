@@ -1,7 +1,7 @@
 {
   "type":"Program",
   "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":5,"column":28}},
-  "range":[0,97],
+  "range":[0,104],
   "body":[
     {
       "type":"TypeAlias",
@@ -28,8 +28,8 @@
     },
     {
       "type":"TypeAlias",
-      "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":40}},
-      "range":[27,67],
+      "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":47}},
+      "range":[27,74],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":3,"column":5},"end":{"line":3,"column":10}},
@@ -41,22 +41,22 @@
       "typeParameters":null,
       "right":{
         "type":"ComponentTypeAnnotation",
-        "loc":{"source":null,"start":{"line":3,"column":13},"end":{"line":3,"column":39}},
-        "range":[40,66],
+        "loc":{"source":null,"start":{"line":3,"column":13},"end":{"line":3,"column":46}},
+        "range":[40,73],
         "params":[],
         "rest":null,
         "rendersType":{
           "type":"TypeAnnotation",
-          "loc":{"source":null,"start":{"line":3,"column":24},"end":{"line":3,"column":39}},
-          "range":[51,66],
+          "loc":{"source":null,"start":{"line":3,"column":33},"end":{"line":3,"column":46}},
+          "range":[60,73],
           "typeAnnotation":{
             "type":"GenericTypeAnnotation",
-            "loc":{"source":null,"start":{"line":3,"column":26},"end":{"line":3,"column":39}},
-            "range":[53,66],
+            "loc":{"source":null,"start":{"line":3,"column":33},"end":{"line":3,"column":46}},
+            "range":[60,73],
             "id":{
               "type":"Identifier",
-              "loc":{"source":null,"start":{"line":3,"column":26},"end":{"line":3,"column":39}},
-              "range":[53,66],
+              "loc":{"source":null,"start":{"line":3,"column":33},"end":{"line":3,"column":46}},
+              "range":[60,73],
               "name":"SomeComponent",
               "typeAnnotation":null,
               "optional":false
@@ -70,11 +70,11 @@
     {
       "type":"TypeAlias",
       "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":28}},
-      "range":[69,97],
+      "range":[76,104],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":5,"column":5},"end":{"line":5,"column":10}},
-        "range":[74,79],
+        "range":[81,86],
         "name":"Comp3",
         "typeAnnotation":null,
         "optional":false
@@ -83,19 +83,19 @@
       "right":{
         "type":"ComponentTypeAnnotation",
         "loc":{"source":null,"start":{"line":5,"column":13},"end":{"line":5,"column":27}},
-        "range":[82,96],
+        "range":[89,103],
         "params":[],
         "rest":null,
         "rendersType":null,
         "typeParameters":{
           "type":"TypeParameterDeclaration",
           "loc":{"source":null,"start":{"line":5,"column":22},"end":{"line":5,"column":25}},
-          "range":[91,94],
+          "range":[98,101],
           "params":[
             {
               "type":"TypeParameter",
               "loc":{"source":null,"start":{"line":5,"column":23},"end":{"line":5,"column":24}},
-              "range":[92,93],
+              "range":[99,100],
               "name":"T",
               "bound":null,
               "variance":null,

@@ -1,7 +1,7 @@
 {
   "type":"Program",
   "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":9,"column":28}},
-  "range":[0,173],
+  "range":[0,180],
   "body":[
     {
       "type":"DeclareComponent",
@@ -75,8 +75,8 @@
     },
     {
       "type":"DeclareComponent",
-      "loc":{"source":null,"start":{"line":7,"column":0},"end":{"line":7,"column":40}},
-      "range":[103,143],
+      "loc":{"source":null,"start":{"line":7,"column":0},"end":{"line":7,"column":47}},
+      "range":[103,150],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":7,"column":18},"end":{"line":7,"column":22}},
@@ -90,16 +90,16 @@
       "params":[],
       "rendersType":{
         "type":"TypeAnnotation",
-        "loc":{"source":null,"start":{"line":7,"column":24},"end":{"line":7,"column":39}},
-        "range":[127,142],
+        "loc":{"source":null,"start":{"line":7,"column":33},"end":{"line":7,"column":46}},
+        "range":[136,149],
         "typeAnnotation":{
           "type":"GenericTypeAnnotation",
-          "loc":{"source":null,"start":{"line":7,"column":26},"end":{"line":7,"column":39}},
-          "range":[129,142],
+          "loc":{"source":null,"start":{"line":7,"column":33},"end":{"line":7,"column":46}},
+          "range":[136,149],
           "id":{
             "type":"Identifier",
-            "loc":{"source":null,"start":{"line":7,"column":26},"end":{"line":7,"column":39}},
-            "range":[129,142],
+            "loc":{"source":null,"start":{"line":7,"column":33},"end":{"line":7,"column":46}},
+            "range":[136,149],
             "name":"SomeComponent",
             "typeAnnotation":null,
             "optional":false
@@ -112,11 +112,11 @@
     {
       "type":"DeclareComponent",
       "loc":{"source":null,"start":{"line":9,"column":0},"end":{"line":9,"column":28}},
-      "range":[145,173],
+      "range":[152,180],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":9,"column":18},"end":{"line":9,"column":22}},
-        "range":[163,167],
+        "range":[170,174],
         "name":"Comp",
         "typeAnnotation":null,
         "optional":false
@@ -128,12 +128,12 @@
       "typeParameters":{
         "type":"TypeParameterDeclaration",
         "loc":{"source":null,"start":{"line":9,"column":22},"end":{"line":9,"column":25}},
-        "range":[167,170],
+        "range":[174,177],
         "params":[
           {
             "type":"TypeParameter",
             "loc":{"source":null,"start":{"line":9,"column":23},"end":{"line":9,"column":24}},
-            "range":[168,169],
+            "range":[175,176],
             "name":"T",
             "bound":null,
             "variance":null,

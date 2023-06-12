@@ -47,12 +47,13 @@ let tests =
       assert_output ~ctxt "component Comp(){const x=\"x\"}" layout;
       assert_output ~ctxt ~pretty:true "component Comp() {\n  const x = \"x\";\n}" layout
     );
-    ( "component_with_return" >:: fun ctxt ->
+    ( "component_with_renders" >:: fun ctxt ->
       let body = (Loc.none, { Flow_ast.Statement.Block.body = []; comments = None }) in
-      let ast = S.component_declaration ~tparams:type_params "Comp" body in
+      let renders = Some (Flow_ast.Type.Available (T.annotation @@ T.mixed ())) in
+      let ast = S.component_declaration ~tparams:type_params ?renders "Comp" body in
       let layout = Js_layout_generator.statement ~opts ast in
-      assert_output ~ctxt "component Comp<T>(){}" layout;
-      assert_output ~ctxt ~pretty:true "component Comp<T>() {}" layout
+      assert_output ~ctxt "component Comp<T>() renders mixed{}" layout;
+      assert_output ~ctxt ~pretty:true "component Comp<T>() renders mixed {}" layout
     );
     ( "component_with_comments" >:: fun ctxt ->
       let body = (Loc.none, { Flow_ast.Statement.Block.body = []; comments = None }) in
@@ -132,12 +133,12 @@ let tests =
       assert_output ~ctxt "declare component Comp();" layout;
       assert_output ~ctxt ~pretty:true "declare component Comp();" layout
     );
-    ( "declare_component_with_return_annot" >:: fun ctxt ->
+    ( "declare_component_with_renders_annot" >:: fun ctxt ->
       let renders = Some (Flow_ast.Type.Available (T.annotation @@ T.mixed ())) in
       let ast = S.declare_component ?renders "Comp" in
       let layout = Js_layout_generator.statement ~opts ast in
-      assert_output ~ctxt "declare component Comp():mixed;" layout;
-      assert_output ~ctxt ~pretty:true "declare component Comp(): mixed;" layout
+      assert_output ~ctxt "declare component Comp() renders mixed;" layout;
+      assert_output ~ctxt ~pretty:true "declare component Comp() renders mixed;" layout
     );
     ( "declare_component_with_comments" >:: fun ctxt ->
       let ast = S.declare_component ~comments "Comp" in
@@ -231,8 +232,8 @@ let tests =
     ( "parse_simple_component" >:: fun ctxt ->
       assert_statement_string ~ctxt ~pretty:true "component Comp() {}"
     );
-    ( "parse_component_return" >:: fun ctxt ->
-      assert_statement_string ~ctxt ~pretty:true "component Comp(): TReturn {}"
+    ( "parse_component_renders" >:: fun ctxt ->
+      assert_statement_string ~ctxt ~pretty:true "component Comp() renders TReturn {}"
     );
     ( "parse_component_comments" >:: fun ctxt ->
       assert_statement_string ~ctxt ~pretty:true "/* leading */ component Comp() {} // trailing\n"
@@ -244,11 +245,11 @@ let tests =
       assert_statement_string ~ctxt ~pretty:true "component Comp(/* c1 */) /* c2 */ {}"
     );
     ( "parse_component_comments4" >:: fun ctxt ->
-      assert_statement_string ~ctxt ~pretty:true "component Comp(): TReturn /* c1*/ {// c2
+      assert_statement_string ~ctxt ~pretty:true "component Comp() renders TReturn /* c1*/ {// c2
 }"
     );
     ( "parse_component_comments5" >:: fun ctxt ->
-      assert_statement_string ~ctxt ~pretty:true "component Comp() /* c1 */: TReturn {}"
+      assert_statement_string ~ctxt ~pretty:true "component Comp() /* c1 */ renders TReturn {}"
     );
     ( "parse_component_params" >:: fun ctxt ->
       assert_statement_string ~ctxt ~pretty:true "component Comp(p1: T1, p2: T2, ...rest: TRest) {}"
@@ -291,8 +292,8 @@ let tests =
     ( "parse_declare_component" >:: fun ctxt ->
       assert_statement_string ~ctxt ~pretty:true "declare component Comp();"
     );
-    ( "parse_declare_component_return" >:: fun ctxt ->
-      assert_statement_string ~ctxt ~pretty:true "declare component Comp(): TReturn;"
+    ( "parse_declare_component_renders" >:: fun ctxt ->
+      assert_statement_string ~ctxt ~pretty:true "declare component Comp() renders TReturn;"
     );
     ( "parse_declare_component_comments" >:: fun ctxt ->
       assert_statement_string ~ctxt ~pretty:true "/* c1 */ declare component Comp(); // c2\n"
@@ -312,7 +313,7 @@ let tests =
       assert_statement_string
         ~ctxt
         ~pretty:true
-        "declare component Comp() /* c1 */: TReturn; // c2\n"
+        "declare component Comp() /* c1 */ renders TReturn; // c2\n"
     );
     ( "parse_declare_component_params" >:: fun ctxt ->
       assert_statement_string ~ctxt ~pretty:true "declare component Comp(p1: T1, p2: T2, ...TRest);"

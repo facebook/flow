@@ -606,9 +606,9 @@ module Statements = struct
   let component_params ?(loc = Loc.none) ?rest ?comments params =
     (loc, { Ast.Statement.ComponentDeclaration.Params.params; rest; comments })
 
-  let component_declaration ?(loc = Loc.none) ?tparams ?params ?return ?comments id body =
+  let component_declaration ?(loc = Loc.none) ?tparams ?params ?renders ?comments id body =
     let params' = Base.Option.value ~default:(component_params []) params in
-    let renders' = Base.Option.value ~default:(Ast.Type.Missing Loc.none) return in
+    let renders' = Base.Option.value ~default:(Ast.Type.Missing Loc.none) renders in
     ( loc,
       ComponentDeclaration
         {

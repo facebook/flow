@@ -650,12 +650,12 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
               let tparams = type_params_remove_trailing env (Type.type_params env) in
               let params =
                 let params = component_params env in
-                if Peek.token env = T_COLON then
+                if Peek.is_renders_ident env then
                   params
                 else
                   component_params_remove_trailing env params
               in
-              let renders = Type.annotation_opt env in
+              let renders = Type.renders_annotation_opt env in
               let renders = type_annotation_hint_remove_trailing env renders in
               (tparams, id, params, renders, leading))
             env

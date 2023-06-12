@@ -1164,12 +1164,11 @@ module Statement
     let tparams = type_params_remove_trailing env (Type.type_params env) in
     let params = Type.component_param_list env in
     let (params, renders) =
-      match Peek.token env with
-      | T_COLON ->
-        let renders = Type.annotation_opt env in
+      if Peek.is_renders_ident env then
+        let renders = Type.renders_annotation_opt env in
         let renders = type_annotation_hint_remove_trailing env renders in
         (params, renders)
-      | _ ->
+      else
         let missing_annotation = Type.annotation_opt env in
         (params, missing_annotation)
     in

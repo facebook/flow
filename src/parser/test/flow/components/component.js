@@ -4,7 +4,7 @@ export default component ExportDefaultComp() {}
 
 export component ExportComp() {}
 
-component ReturnComp(): SomeComponent {}
+component ReturnComp() renders SomeComponent {}
 
 component TParamComp<T>() {}
 
