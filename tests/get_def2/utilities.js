@@ -130,3 +130,21 @@ f = () => {
   <Comp foo={''} />;
 //       ^
 }
+
+f = () => {
+  declare class Comp extends React.Component<SourceObj> {
+    defaultProps: {bar: string};
+  }
+    <Comp foo={''} bar={3} />;
+//         ^
+    <Comp foo={''} bar={3} />;
+//                  ^
+}
+
+f = () => {
+  declare const Comp: React.ComponentType<React.Config<SourceObj, {bar: string}>>;
+    <Comp foo={''} bar={3} />;
+//         ^
+    <Comp foo={''} bar={3} />;
+//                  ^
+}
