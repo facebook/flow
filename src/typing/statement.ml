@@ -3260,51 +3260,33 @@ module Make
     | MetaProperty _ ->
       Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, MetaPropertyExpression));
       Tast_utils.error_mapper#expression ex
-    | Import { Import.argument; comments } ->
-      (match argument with
-      | ( source_loc,
-          Ast.Expression.StringLiteral { Ast.StringLiteral.value = module_name; raw; comments = _ }
-        )
-      | ( source_loc,
-          TemplateLiteral
-            {
-              TemplateLiteral.quasis =
-                [
-                  ( _,
-                    {
-                      TemplateLiteral.Element.value =
-                        { TemplateLiteral.Element.cooked = module_name; raw };
-                      _;
-                    }
-                  );
-                ];
-              expressions = [];
-              comments = _;
-            }
-        ) ->
-        let literal_comments =
-          match argument with
-          | (_, Ast.Expression.StringLiteral { Ast.StringLiteral.comments; _ }) -> comments
-          | _ -> None
-        in
-        let imported_ns_t =
-          let import_reason = mk_reason (RModule (OrdinaryName module_name)) loc in
+    | Import { Import.argument = (source_loc, argument); comments } ->
+      let t module_name =
+        let ns_t =
+          let reason = mk_reason (RModule (OrdinaryName module_name)) loc in
           Import_export.get_module_t cx (source_loc, module_name)
-          |> Import_export.import_ns cx import_reason
+          |> Import_export.import_ns cx reason
         in
         let reason = mk_annot_reason RAsyncImport loc in
-        let t = Flow.get_builtin_typeapp cx reason (OrdinaryName "Promise") [imported_ns_t] in
+        Flow.get_builtin_typeapp cx reason (OrdinaryName "Promise") [ns_t]
+      in
+      (match argument with
+      | Ast.Expression.StringLiteral ({ Ast.StringLiteral.value = module_name; _ } as lit) ->
+        let t = t module_name in
         ( (loc, t),
-          Import
-            {
-              Import.argument =
-                ( (source_loc, t),
-                  Ast.Expression.StringLiteral
-                    { Ast.StringLiteral.value = module_name; raw; comments = literal_comments }
-                );
-              comments;
-            }
+          Import { Import.argument = ((source_loc, t), Ast.Expression.StringLiteral lit); comments }
         )
+      | TemplateLiteral ({ TemplateLiteral.quasis = [quasi]; expressions = []; _ } as lit) ->
+        let ( _,
+              {
+                TemplateLiteral.Element.value = { TemplateLiteral.Element.cooked = module_name; _ };
+                _;
+              }
+            ) =
+          quasi
+        in
+        let t = t module_name in
+        ((loc, t), Import { Import.argument = ((source_loc, t), TemplateLiteral lit); comments })
       | _ ->
         let ignore_non_literals = Context.should_ignore_non_literal_requires cx in
         if not ignore_non_literals then (
