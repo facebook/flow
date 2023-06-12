@@ -1024,14 +1024,11 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               | Some
                   ( targs_loc,
                     {
-                      Ast.Type.TypeArgs.arguments =
-                        ( str_loc,
-                          StringLiteral { Ast.StringLiteral.value; raw; comments = str_comments }
-                        )
-                        :: _;
+                      Ast.Type.TypeArgs.arguments = (str_loc, StringLiteral str_lit) :: _;
                       comments;
                     }
                   ) ->
+                let { Ast.StringLiteral.value; _ } = str_lit in
                 let desc = RModule (OrdinaryName value) in
                 let reason = mk_annot_reason desc loc in
                 let remote_module_t = ConsGen.get_builtin cx (internal_module_name value) reason in
@@ -1041,13 +1038,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                   (Some
                      ( targs_loc,
                        {
-                         Ast.Type.TypeArgs.arguments =
-                           [
-                             ( (str_loc, str_t),
-                               StringLiteral
-                                 { Ast.StringLiteral.value; raw; comments = str_comments }
-                             );
-                           ];
+                         Ast.Type.TypeArgs.arguments = [((str_loc, str_t), StringLiteral str_lit)];
                          comments;
                        }
                      )
@@ -1170,15 +1161,11 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               | Some
                   ( targs_loc,
                     {
-                      Ast.Type.TypeArgs.arguments =
-                        [
-                          ( str_loc,
-                            StringLiteral { Ast.StringLiteral.value; raw; comments = str_comments }
-                          );
-                        ];
+                      Ast.Type.TypeArgs.arguments = (str_loc, StringLiteral str_lit) :: _;
                       comments;
                     }
                   ) ->
+                let { Ast.StringLiteral.value; _ } = str_lit in
                 let str_t = mk_singleton_string cx str_loc value in
                 let chars = String_utils.CharSet.of_string value in
                 let char_str = String_utils.CharSet.to_string chars in
@@ -1189,13 +1176,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                   (Some
                      ( targs_loc,
                        {
-                         Ast.Type.TypeArgs.arguments =
-                           [
-                             ( (str_loc, str_t),
-                               StringLiteral
-                                 { Ast.StringLiteral.value; raw; comments = str_comments }
-                             );
-                           ];
+                         Ast.Type.TypeArgs.arguments = [((str_loc, str_t), StringLiteral str_lit)];
                          comments;
                        }
                      )
