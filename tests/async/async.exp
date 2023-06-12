@@ -10,8 +10,8 @@ References:
    async.js:9:30
       9| async function f1(): Promise<boolean> {
                                       ^^^^^^^ [2]
-   <BUILTINS>/core.js:1856:24
-   1856| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:1878:24
+   1878| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 
@@ -31,8 +31,8 @@ References:
    async.js:28:48
      28| async function f4(p: Promise<number>): Promise<boolean> {
                                                         ^^^^^^^ [2]
-   <BUILTINS>/core.js:1856:24
-   1856| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:1878:24
+   1878| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 
@@ -99,8 +99,8 @@ undefined in type argument `R` [2]. [incompatible-return]
                      ^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1856:24
-   1856| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:1878:24
+   1878| declare class Promise<+R = mixed> {
                                 ^ [2]
 
 
@@ -142,8 +142,8 @@ References:
    async_return_void.js:1:32
       1| async function foo1(): Promise<string> {
                                         ^^^^^^ [2]
-   <BUILTINS>/core.js:1856:24
-   1856| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:1878:24
+   1878| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 
@@ -160,8 +160,8 @@ References:
    async_return_void.js:5:32
       5| async function foo2(): Promise<string> {
                                         ^^^^^^ [2]
-   <BUILTINS>/core.js:1856:24
-   1856| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:1878:24
+   1878| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 
@@ -181,8 +181,8 @@ References:
    async_return_void.js:9:32
       9| async function foo3(): Promise<string> {
                                         ^^^^^^ [2]
-   <BUILTINS>/core.js:1856:24
-   1856| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:1878:24
+   1878| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 

@@ -107,8 +107,8 @@ References:
    array_lib.js:46:4
      46|   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
             ^^ [1]
-   <BUILTINS>/core.js:1297:13
-   1297|     length: number;
+   <BUILTINS>/core.js:1319:13
+   1319|     length: number;
                      ^^^^^^ [2]
 
 
@@ -124,8 +124,8 @@ References:
    array_lib.js:47:4
      47|   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
             ^^ [1]
-   <BUILTINS>/core.js:1297:13
-   1297|     length: number;
+   <BUILTINS>/core.js:1319:13
+   1319|     length: number;
                      ^^^^^^ [2]
 
 
@@ -139,8 +139,8 @@ Cannot cast `Array.from(...)` to array type because string [1] is incompatible w
             ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1082:37
-   1082|     static from(str: string): Array<string>;
+   <BUILTINS>/core.js:1104:37
+   1104|     static from(str: string): Array<string>;
                                              ^^^^^^ [1]
    array_lib.js:59:30
      59|   (Array.from("abcd"): Array<empty>); // ERROR
@@ -364,8 +364,8 @@ Cannot assign `arr3.flat(...)` to `result3_2` because mixed [1] is incompatible 
                                          ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:832:32
-   832|     flat(depth: number): Array<mixed>;
+   <BUILTINS>/core.js:843:32
+   843|     flat(depth: number): Array<mixed>;
                                        ^^^^^ [1]
    flat.js:20:24
     20| const result3_2: Array<number> = arr3.flat(2); // Error - don't support this
@@ -382,8 +382,8 @@ Cannot assign `arr2.flat(...)` to `result2_6` because mixed [1] is incompatible 
                                          ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:832:32
-   832|     flat(depth: number): Array<mixed>;
+   <BUILTINS>/core.js:843:32
+   843|     flat(depth: number): Array<mixed>;
                                        ^^^^^ [1]
    flat.js:25:24
     25| const result2_6: Array<number> = arr2.flat(x); // Error - don't support this

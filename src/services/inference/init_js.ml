@@ -67,7 +67,12 @@ let infer_lib_file ~ccx ~options ~exclude_syms lib_file ast =
   let metadata =
     Context.(
       let metadata = metadata_of_options options in
-      { metadata with checked = false }
+      {
+        metadata with
+        checked = false;
+        (* Temporarily enabling type-guards just in libdefs *)
+        type_guards = true;
+      }
     )
   in
   (* Lib files use only concrete locations, so this is not used. *)

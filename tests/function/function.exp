@@ -24,13 +24,13 @@ it into an object and attempt to use it as a subtype of an interface. [incompati
                         ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1090:22
+   <BUILTINS>/core.js:1112:22
                               v----------
-   1090| type $ArrayLike<T> = interface {
-   1091|   +[indexer: number]: T;
-   1092|   @@iterator(): Iterator<T>;
-   1093|   length: number;
-   1094| }
+   1112| type $ArrayLike<T> = interface {
+   1113|   +[indexer: number]: T;
+   1114|   @@iterator(): Iterator<T>;
+   1115|   length: number;
+   1116| }
          ^ [2]
 
 
@@ -93,16 +93,16 @@ Property `length` is missing in `Generator` [1] but exists in `$ArrayLike` [2]. 
                         ^^^^^
 
 References:
-   <BUILTINS>/core.js:1687:11
-   1687| interface Generator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1709:11
+   1709| interface Generator<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [1]
-   <BUILTINS>/core.js:1090:22
+   <BUILTINS>/core.js:1112:22
                               v----------
-   1090| type $ArrayLike<T> = interface {
-   1091|   +[indexer: number]: T;
-   1092|   @@iterator(): Iterator<T>;
-   1093|   length: number;
-   1094| }
+   1112| type $ArrayLike<T> = interface {
+   1113|   +[indexer: number]: T;
+   1114|   @@iterator(): Iterator<T>;
+   1115|   length: number;
+   1116| }
          ^ [2]
 
 
@@ -118,13 +118,13 @@ References:
    apply-array-like.js:16:17
      16| function * gen() {
                          ^ [1]
-   <BUILTINS>/core.js:1090:22
+   <BUILTINS>/core.js:1112:22
                               v----------
-   1090| type $ArrayLike<T> = interface {
-   1091|   +[indexer: number]: T;
-   1092|   @@iterator(): Iterator<T>;
-   1093|   length: number;
-   1094| }
+   1112| type $ArrayLike<T> = interface {
+   1113|   +[indexer: number]: T;
+   1114|   @@iterator(): Iterator<T>;
+   1115|   length: number;
+   1116| }
          ^ [2]
 
 
@@ -210,13 +210,13 @@ it into an object and attempt to use it as a subtype of an interface. [incompati
                         ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1090:22
+   <BUILTINS>/core.js:1112:22
                               v----------
-   1090| type $ArrayLike<T> = interface {
-   1091|   +[indexer: number]: T;
-   1092|   @@iterator(): Iterator<T>;
-   1093|   length: number;
-   1094| }
+   1112| type $ArrayLike<T> = interface {
+   1113|   +[indexer: number]: T;
+   1114|   @@iterator(): Iterator<T>;
+   1115|   length: number;
+   1116| }
          ^ [2]
 
 

@@ -8,14 +8,14 @@ in type argument `R` [3]. [incompatible-cast]
           ^
 
 References:
-   <BUILTINS>/core.js:1856:28
-   1856| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:1878:28
+   1878| declare class Promise<+R = mixed> {
                                     ^^^^^ [1]
    reason_of_inferred_targs.js:2:13
       2| (p: Promise<string>); // error
                      ^^^^^^ [2]
-   <BUILTINS>/core.js:1856:24
-   1856| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:1878:24
+   1878| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 

@@ -67,22 +67,22 @@ Cannot call `nums.reduce` because: [incompatible-call]
  - Or cannot call non-polymorphic function type [3] with type arguments.
 
    reduce.js:7:15
-     7|   return nums.reduce<T>(
-                      ^^^^^^
+      7|   return nums.reduce<T>(
+                       ^^^^^^
 
 References:
    reduce.js:8:27
-     8|     ((prevnum, curnum) => curnum + prevnum),
-                                  ^^^^^^^^^^^^^^^^ [1]
+      8|     ((prevnum, curnum) => curnum + prevnum),
+                                   ^^^^^^^^^^^^^^^^ [1]
    reduce.js:7:22
-     7|   return nums.reduce<T>(
-                             ^ [2]
-   <BUILTINS>/core.js:993:5
-            v------
-   993|     reduce(
-   994|       callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: Array<T>) => T,
-   995|     ): T;
-            ---^ [3]
+      7|   return nums.reduce<T>(
+                              ^ [2]
+   <BUILTINS>/core.js:1015:5
+             v------
+   1015|     reduce(
+   1016|       callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: Array<T>) => T,
+   1017|     ): T;
+             ---^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------- wc.js:6:12
