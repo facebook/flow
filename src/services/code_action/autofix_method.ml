@@ -56,18 +56,11 @@ class mapper target =
     inherit Flow_ast_contains_mapper.mapper target as super
 
     method private is_constructor =
-      Flow_ast.(
-        Expression.Object.Property.(
-          function
-          | Identifier (_, { Identifier.name; _ }) -> name = "constructor"
-          | StringLiteral (_, { StringLiteral.raw; _ }) -> raw = "constructor"
-          | NumberLiteral _
-          | BigIntLiteral _
-          | PrivateName _
-          | Computed _ ->
-            false
-        )
-      )
+      let open Flow_ast in
+      let open Expression.Object.Property in
+      function
+      | Identifier (_, { Identifier.name; _ }) -> name = "constructor"
+      | _ -> false
 
     method! class_element elem =
       let open Flow_ast in
