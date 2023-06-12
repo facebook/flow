@@ -576,11 +576,11 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                             is_own = _;
                             is_method = m;
                             polarity = _;
-                            key_loc = _;
+                            key_loc = l;
                           },
                         None
                       ) ->
-                      Some (t, m)
+                      Some (l, t, m)
                     | ( None,
                         Some
                           {
@@ -588,10 +588,10 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                             is_own = _;
                             is_method = m;
                             polarity = _;
-                            key_loc = _;
+                            key_loc = l;
                           }
                       ) ->
-                      Some (t, m)
+                      Some (l, t, m)
                     (* If a property is defined in both objects, and the first property's
                      * type includes void then we want to replace every occurrence of void
                      * with the second property's type. This is consistent with the behavior
@@ -605,7 +605,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                             is_own = _;
                             is_method = m1;
                             polarity = _;
-                            key_loc = _;
+                            key_loc = l;
                           },
                         Some
                           {
@@ -627,7 +627,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                               )
                         )
                       in
-                      Some (t, m1 || m2))
+                      Some (l, t, m1 || m2))
                   config_props
                   defaults_props
               in
@@ -671,8 +671,8 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             | None ->
               let props =
                 NameUtils.Map.map
-                  (fun { Object.prop_t = t; is_own = _; is_method; polarity = _; key_loc = _ } ->
-                    (t, is_method))
+                  (fun { Object.prop_t = t; is_own = _; is_method; polarity = _; key_loc = l } ->
+                    (l, t, is_method))
                   config_props
               in
               (* Create a new dictionary from our config's dictionary with a
@@ -735,7 +735,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
               get_builtin_type cx reason_transport_value_reason (OrdinaryName "React$TransportValue")
             in
             NameUtils.Map.iter
-              (fun _ (t, _) -> rec_flow_t cx trace ~use_op (t, react_transport_value))
+              (fun _ (_, t, _) -> rec_flow_t cx trace ~use_op (t, react_transport_value))
               props_map;
             match flags.obj_kind with
             | Exact -> ()
@@ -752,11 +752,11 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           (* Finish creating our props object. *)
           let props =
             NameUtils.Map.map
-              (fun (t, is_method) ->
+              (fun (key_loc, type_, is_method) ->
                 if is_method then
-                  Method { key_loc = None; type_ = t }
+                  Method { key_loc; type_ }
                 else
-                  Field { key_loc = None; type_ = t; polarity = prop_polarity })
+                  Field { key_loc; type_; polarity = prop_polarity })
               props_map
           in
           let id = Context.generate_property_map cx props in
