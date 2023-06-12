@@ -21,7 +21,7 @@ let parse_content file content =
     let open Parser_env in
     Some
       {
-        components = false;
+        components = true;
         enums = true;
         (*
          * Always parse ES proposal syntax. The user-facing config option to
