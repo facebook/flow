@@ -24,7 +24,7 @@ module type S = sig
 
   val add_rest : Config_types.rest -> Types.t -> Types.t
 
-  val config : Context.t -> Reason.reason -> Types.t -> Type.t
+  val config : Context.t -> Reason.reason -> Types.t -> Type.t * Type.t
 
   val eval : Context.t -> Types.t -> (ALoc.t * Type.t) Config_types.ast
 end
@@ -44,22 +44,29 @@ module Make
   let add_rest r x = { x with rest = Some r }
 
   let config cx config_reason { params_rev; rest; reconstruct = _ } =
-    let pmap =
+    let (pmap, instance) =
       List.fold_left
-        (fun acc p ->
+        (fun (acc, instance) p ->
           let key_and_t_opt = C.param_type_with_name p in
           match key_and_t_opt with
           | None ->
             (* Unnamed props are a parser error, so we do not handle them here *)
-            acc
+            (acc, instance)
+          | Some (key_loc, "ref", t) ->
+            Flow_js_utils.add_output
+              cx
+              Error_message.(ERefComponentProp { spread = None; loc = key_loc });
+            (acc, Some t)
           | Some (key_loc, key, t) ->
-            Type.Properties.add_field
-              (Reason.OrdinaryName key)
-              Polarity.Positive
-              (Some key_loc)
-              t
-              acc)
-        NameUtils.Map.empty
+            ( Type.Properties.add_field
+                (Reason.OrdinaryName key)
+                Polarity.Positive
+                (Some key_loc)
+                t
+                acc,
+              instance
+            ))
+        (NameUtils.Map.empty, None)
         params_rev
     in
     let rest_t =
@@ -67,12 +74,30 @@ module Make
       | None -> Obj_type.mk_exact_empty cx config_reason
       | Some rest -> C.rest_type rest
     in
-    Type.(
-      EvalT
-        ( rest_t,
-          TypeDestructorT (unknown_use, config_reason, ReactCheckComponentConfig pmap),
-          Eval.generate_id ()
+    let instance =
+      match instance with
+      | None -> Type.(MixedT.make config_reason (bogus_trust ()))
+      | Some instance ->
+        Tvar.mk_where cx config_reason (fun tvar ->
+            Flow_js.flow_t
+              cx
+              ( instance,
+                Flow_js.get_builtin_typeapp
+                  cx
+                  config_reason
+                  (Reason.OrdinaryName "React$Ref")
+                  [tvar]
+              )
         )
+    in
+    ( Type.(
+        EvalT
+          ( rest_t,
+            TypeDestructorT (unknown_use, config_reason, ReactCheckComponentConfig pmap),
+            Eval.generate_id ()
+          )
+      ),
+      instance
     )
 
   let eval cx { params_rev; rest; reconstruct } =

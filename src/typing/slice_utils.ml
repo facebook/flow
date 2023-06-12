@@ -628,11 +628,8 @@ let check_config2 cx pmap { Object.reason; props; flags; generics; interface = _
         (NameUtils.Map.merge
            (fun x p1 p2 ->
              match (x, p1, p2) with
-             | (Reason.OrdinaryName "ref", Some p1, _) ->
-               let loc =
-                 Type.Property.first_loc p1 |> Base.Option.value ~default:(loc_of_reason reason)
-               in
-               raise (InvalidConfig Error_message.(ERefComponentProp { spread = None; loc }))
+             | (Reason.OrdinaryName "ref", Some _, _) ->
+               failwith "Ref shouls have been extracted elsewhere"
              | (_, Some p1, Some { Object.key_loc = key_loc2; prop_t; _ }) ->
                let first =
                  Type.Property.first_loc p1

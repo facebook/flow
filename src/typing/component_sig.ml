@@ -144,10 +144,11 @@ module Make
     let { T.reason; tparams; cparams; renders_t; _ } = x in
     let this_type = Type.implicit_mixed_this reason in
     let config_reason = update_desc_reason (fun desc -> RPropsOfComponent desc) reason in
+    let (config, _instance) = F.config cx config_reason cparams in
     let funtype =
       {
         Type.this_t = (this_type, This_Function);
-        params = [(None, F.config cx config_reason cparams)];
+        params = [(None, config)];
         rest_param = None;
         return_t = renders_t;
         predicate = None;
