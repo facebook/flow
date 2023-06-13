@@ -201,14 +201,15 @@ let rec dump_t_ (depth, tvars) cx t =
           | Truthy -> "truthy"
           | AnyLiteral -> "")
         t
-    | DefT (_, trust, FunT (_, { params; return_t; this_t; predicate; _ })) ->
+    | DefT (_, trust, FunT (_, { params; rest_param; return_t; this_t; predicate; _ })) ->
       p
         ~trust:(Some trust)
         ~extra:
           (spf
-             "<this: %s>(%s) => %s%s"
+             "<this: %s>(%s%s) => %s%s"
              (kid (fst this_t))
              (String.concat "; " (Base.List.map ~f:(fun (_, t) -> kid t) params))
+             (Base.Option.value_map rest_param ~default:"" ~f:(fun (_, _, t) -> "..." ^ kid t))
              (kid return_t)
              (match predicate with
              | Some (PredBased _) -> " %checks"
