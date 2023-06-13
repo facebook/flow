@@ -7,7 +7,7 @@
 
 exception Found of Type.t option
 
-class enclosing_class_finder target =
+class enclosing_class_finder ~loc_of_aloc target =
   object (this)
     inherit
       [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
@@ -23,13 +23,13 @@ class enclosing_class_finder target =
         result
 
     method on_loc_annot loc =
-      if Loc.equal (ALoc.to_loc_exn loc) target then
+      if Loc.equal (loc_of_aloc loc) target then
         raise (Found (Base.List.hd enclosing_classes))
       else
         loc
 
     method on_type_annot x =
-      if Loc.equal (ALoc.to_loc_exn (fst x)) target then
+      if Loc.equal (loc_of_aloc (fst x)) target then
         raise (Found (Base.List.hd enclosing_classes))
       else
         x
@@ -47,9 +47,9 @@ class enclosing_class_finder target =
       | _ -> super#expression expr
   end
 
-let find_enclosing_class typed_ast target =
+let find_enclosing_class ~loc_of_aloc typed_ast target =
   try
-    let finder = new enclosing_class_finder target in
+    let finder = new enclosing_class_finder ~loc_of_aloc target in
     ignore (finder#program typed_ast);
     None
   with
@@ -89,9 +89,9 @@ let is_member cx typed_ast file_sig type_ name =
            | _ -> false
            )
 
-let fix ~cx ~file_sig ~ast ~typed_ast ~member_name target =
+let fix ~cx ~file_sig ~loc_of_aloc ~ast ~typed_ast ~member_name target =
   let open Base.Option.Let_syntax in
-  let%bind enclosing_class_t = find_enclosing_class typed_ast target in
+  let%bind enclosing_class_t = find_enclosing_class ~loc_of_aloc typed_ast target in
   if is_member cx typed_ast file_sig enclosing_class_t member_name then
     let ast = prefix_with_this ast target in
     Some ast

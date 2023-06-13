@@ -480,7 +480,7 @@ let loc_opt_intersects ~loc ~error_loc =
   | None -> true
   | Some loc -> Loc.intersects error_loc loc
 
-let ast_transforms_of_error ?loc = function
+let ast_transforms_of_error ~loc_of_aloc ?loc = function
   | Error_message.EDeprecatedBool error_loc ->
     if loc_opt_intersects ~error_loc ~loc then
       [
@@ -756,7 +756,9 @@ let ast_transforms_of_error ?loc = function
           title = "Prefix with `this.`";
           diagnostic_title = "prefix_with_this";
           transform =
-            Autofix_class_member_access.fix ~member_name:(Reason.display_string_of_name name);
+            Autofix_class_member_access.fix
+              ~loc_of_aloc
+              ~member_name:(Reason.display_string_of_name name);
           target_loc = error_loc;
         };
       ]
@@ -837,7 +839,10 @@ let code_actions_of_errors
         in
         let quick_fix_actions =
           if include_quick_fixes then
-            ast_transforms_of_error ~loc error_message
+            ast_transforms_of_error
+              ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
+              ~loc
+              error_message
             |> Base.List.filter_map ~f:(fun { title; diagnostic_title; transform; target_loc } ->
                    autofix_in_upstream_file
                      ~reader

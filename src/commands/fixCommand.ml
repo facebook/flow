@@ -63,14 +63,13 @@ module FixCodemod (Opts : FIX_CODEMOD_OPTIONS) = struct
             let error_code_string = Error_codes.string_of_code error_code in
             Base.List.exists codes ~f:(fun code -> code = error_code_string))
     in
+    let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
     Flow_error.ErrorSet.fold
       (fun error acc ->
         let error_message =
-          error
-          |> Flow_error.msg_of_error
-          |> Error_message.map_loc_of_error_message (Parsing_heaps.Reader.loc_of_aloc ~reader)
+          error |> Flow_error.msg_of_error |> Error_message.map_loc_of_error_message loc_of_aloc
         in
-        match Code_action_service.ast_transforms_of_error error_message with
+        match Code_action_service.ast_transforms_of_error ~loc_of_aloc error_message with
         (* TODO(T138883537): There should be a way to configure which fix to apply *)
         | [Code_action_service.{ target_loc; _ }] when should_include_error error_message ->
           let file_key = Base.Option.value_exn (Loc.source target_loc) in
@@ -96,7 +95,8 @@ module FixCodemod (Opts : FIX_CODEMOD_OPTIONS) = struct
   let visit =
     Codemod_utils.make_visitor
       (Codemod_utils.Mapper
-         (fun Codemod_context.Typed.{ file; file_sig; cx; typed_ast; _ } ->
+         (fun Codemod_context.Typed.{ file; file_sig; cx; typed_ast; reader; _ } ->
+           let loc_of_aloc = Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader in
            object
              inherit [unit] Codemod_ast_mapper.mapper "Apply code action transformations" ~init:()
 
@@ -107,7 +107,8 @@ module FixCodemod (Opts : FIX_CODEMOD_OPTIONS) = struct
                  Base.List.fold transformable_errors ~init:ast ~f:(fun acc_ast error_message ->
                      let Code_action_service.{ transform; target_loc; _ } =
                        (* TODO(T138883537): There should be a way to configure which fix to apply *)
-                       Base.List.hd_exn (Code_action_service.ast_transforms_of_error error_message)
+                       Base.List.hd_exn
+                         (Code_action_service.ast_transforms_of_error ~loc_of_aloc error_message)
                      in
                      Base.Option.value
                        ~default:acc_ast

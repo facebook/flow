@@ -2372,6 +2372,61 @@ module.exports = (suite(
         ['textDocument/publishDiagnostics'],
       ),
     ]),
+    test('provide autoimport for missing import', [
+      addFile('import-provider.js.ignored', 'import-provider.js'),
+      addFile('fix-missing-import.js.ignored', 'fix-missing-import.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-missing-import.js',
+        },
+        range: {
+          start: {line: 4, character: 9},
+          end: {line: 4, character: 10},
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Import type from ./import-provider',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/fix-missing-import.js': [
+                      {
+                        range: {
+                          start: {line: 2, character: 0},
+                          end: {line: 2, character: 41},
+                        },
+                        newText:
+                          'import type { A, B } from "./import-provider";',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'import',
+                    'Import type from ./import-provider',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
     test('provide quickfix for `unknown` type', [
       addFile('fix-unknown-type.js.ignored', 'fix-unknown-type.js'),
       lspStartAndConnect(),
