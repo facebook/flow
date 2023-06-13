@@ -1281,7 +1281,10 @@ module rec TypeTerm : sig
     | CallElem of reason * method_action
 
   and propref =
-    | Named of reason * name
+    | Named of {
+        reason: reason;
+        name: name;
+      }
     | Computed of t
 
   and obj_kind =
@@ -2773,7 +2776,7 @@ end =
 let unknown_use = TypeTerm.(Op UnknownUse)
 
 let name_of_propref = function
-  | TypeTerm.Named (_, x) -> Some x
+  | TypeTerm.Named { name; _ } -> Some name
   | TypeTerm.Computed _ -> None
 
 external use_t_compare : TypeTerm.use_t -> TypeTerm.use_t -> int = "caml_fast_generic_compare"

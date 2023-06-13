@@ -423,7 +423,7 @@ and dump_use_t_ (depth, tvars) cx t =
       )
   in
   let propref = function
-    | Named (r, x) -> spf "%S %s" (dump_reason cx r) (display_string_of_name x)
+    | Named { reason; name } -> spf "%S %s" (dump_reason cx reason) (display_string_of_name name)
     | Computed t -> kid t
   in
   let lookup_kind = function

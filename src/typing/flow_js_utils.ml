@@ -360,16 +360,16 @@ let error_message_kind_of_lower = function
     None
 
 let error_message_kind_of_upper = function
-  | GetPropT (_, _, _, Named (r, name), _) ->
-    Error_message.IncompatibleGetPropT (loc_of_reason r, Some name)
+  | GetPropT (_, _, _, Named { reason; name }, _) ->
+    Error_message.IncompatibleGetPropT (loc_of_reason reason, Some name)
   | GetPropT (_, _, _, Computed t, _) -> Error_message.IncompatibleGetPropT (loc_of_t t, None)
   | GetPrivatePropT (_, _, _, _, _, _) -> Error_message.IncompatibleGetPrivatePropT
-  | SetPropT (_, _, Named (r, name), _, _, _, _) ->
-    Error_message.IncompatibleSetPropT (loc_of_reason r, Some name)
+  | SetPropT (_, _, Named { reason; name }, _, _, _, _) ->
+    Error_message.IncompatibleSetPropT (loc_of_reason reason, Some name)
   | SetPropT (_, _, Computed t, _, _, _, _) -> Error_message.IncompatibleSetPropT (loc_of_t t, None)
   | SetPrivatePropT (_, _, _, _, _, _, _, _, _) -> Error_message.IncompatibleSetPrivatePropT
-  | MethodT (_, _, _, Named (r, name), _, _) ->
-    Error_message.IncompatibleMethodT (loc_of_reason r, Some name)
+  | MethodT (_, _, _, Named { reason; name }, _, _) ->
+    Error_message.IncompatibleMethodT (loc_of_reason reason, Some name)
   | MethodT (_, _, _, Computed t, _, _) -> Error_message.IncompatibleMethodT (loc_of_t t, None)
   | CallT _ -> Error_message.IncompatibleCallT
   | GetElemT { key_t; _ } -> Error_message.IncompatibleGetElemT (loc_of_t key_t)
@@ -1731,13 +1731,13 @@ end
 module GetPropT_kit (F : Get_prop_helper_sig) = struct
   let on_InstanceT cx trace ~l ~id r super insttype use_op reason_op propref =
     match propref with
-    | Named (_, OrdinaryName "constructor") ->
+    | Named { name = OrdinaryName "constructor"; _ } ->
       F.return
         cx
         trace
         ~use_op:unknown_use
         (TypeUtil.class_type ?annot_loc:(annot_loc_of_reason r) l)
-    | Named (reason_prop, x) ->
+    | Named { reason = reason_prop; name } ->
       let own_props = Context.find_props cx insttype.own_props in
       let proto_props = Context.find_props cx insttype.proto_props in
       let fields = NameUtils.Map.union own_props proto_props in
@@ -1752,7 +1752,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
         }
       in
       (* Instance methods cannot be unbound *)
-      F.read_prop cx trace options reason_prop reason_op l super x fields
+      F.read_prop cx trace options reason_prop reason_op l super name fields
     | Computed _ ->
       (* Instances don't have proper dictionary support. All computed accesses
          are converted to named property access to `$key` and `$value` during
@@ -1806,7 +1806,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
   let get_obj_prop cx trace o propref reason_op =
     let named_prop =
       match propref with
-      | Named (_, x) -> Context.get_prop cx o.props_tmap x
+      | Named { name; _ } -> Context.get_prop cx o.props_tmap name
       | Computed _ -> None
     in
     let dict_t = Obj_type.get_dict_opt o.flags.obj_kind in
@@ -1814,10 +1814,10 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
     | (_, Some prop, _) ->
       (* Property exists on this property map *)
       Some (prop, PropertyMapProperty)
-    | (Named (_, x), None, Some { key; value; dict_polarity; _ }) when not (is_dictionary_exempt x)
-      ->
+    | (Named { name; _ }, None, Some { key; value; dict_polarity; _ })
+      when not (is_dictionary_exempt name) ->
       (* Dictionaries match all property reads *)
-      F.dict_read_check cx trace ~use_op:unknown_use (string_key x reason_op, key);
+      F.dict_read_check cx trace ~use_op:unknown_use (string_key name reason_op, key);
       Some (Field { key_loc = None; type_ = value; polarity = dict_polarity }, IndexerProperty)
     | (Computed k, None, Some { key; value; dict_polarity; _ }) ->
       F.dict_read_check cx trace ~use_op:unknown_use (k, key);
@@ -1844,7 +1844,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
       perform_read_prop_action cx trace use_op propref p reason_op
     | None ->
       (match propref with
-      | Named (reason_prop, name) ->
+      | Named { reason = reason_prop; name } ->
         let lookup_kind =
           match lookup_info with
           | Some (id, lookup_default_tout) when Obj_type.is_exact o.flags.obj_kind ->
@@ -1976,9 +1976,9 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
   (value, is_tuple)
 
 let propref_for_elem_t = function
-  | GenericT { bound = DefT (_, _, StrT (Literal (_, x))); reason = reason_x; _ }
-  | DefT (reason_x, _, StrT (Literal (_, x))) ->
-    Named (replace_desc_reason (RProperty (Some x)) reason_x, x)
+  | GenericT { bound = DefT (_, _, StrT (Literal (_, name))); reason; _ }
+  | DefT (reason, _, StrT (Literal (_, name))) ->
+    Named { reason = replace_desc_reason (RProperty (Some name)) reason; name }
   | l -> Computed l
 
 let keylist_of_props props reason_op =

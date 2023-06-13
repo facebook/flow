@@ -779,7 +779,7 @@ module Make
                  }
               )
           in
-          let propref = Named (reason, OrdinaryName x) in
+          let propref = Named { reason; name = OrdinaryName x } in
           Flow.flow_p cx ~use_op reason reason propref (p1, p2))
       own;
 

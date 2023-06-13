@@ -751,7 +751,7 @@ let quick_subtype trust_checked t1 t2 =
   )
 
 let reason_of_propref = function
-  | Named (r, _) -> r
+  | Named { reason; _ } -> reason
   | Computed t -> reason_of_t t
 
 let optional ?annot_loc ?(use_desc = false) t =

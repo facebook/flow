@@ -105,7 +105,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             None,
             (match literal with
             | Literal (_, name) ->
-              Named (replace_desc_reason (RReactElement (Some name)) reason, name)
+              Named { reason = replace_desc_reason (RReactElement (Some name)) reason; name }
             | _ -> Computed component),
             (reason, intrinsic)
           )
@@ -118,7 +118,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         | `Props -> "props"
         | `Instance -> "instance"
       in
-      Named (replace_desc_reason (RCustom name) reason_op, OrdinaryName name)
+      Named { reason = replace_desc_reason (RCustom name) reason_op; name = OrdinaryName name }
     in
     (* TODO: if intrinsic is null, we will treat it like prototype termination,
      * but we should error like a GetPropT would instead. *)
@@ -148,7 +148,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     let lookup_kind =
       NonstrictReturning (Some (DefT (reason_missing, bogus_trust (), VoidT), upper), None)
     in
-    let propref = Named (reason_prop, name) in
+    let propref = Named { reason = reason_prop; name } in
     let action =
       LookupProp (unknown_use, Field { key_loc = None; type_ = upper; polarity = pole })
     in
@@ -569,7 +569,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         let key_t = optional (maybe (get_builtin_type cx reason_key (OrdinaryName "React$Key"))) in
         (* Flow the config input key type to the key type. *)
         let lookup_kind = NonstrictReturning (None, None) in
-        let propref = Named (reason_key, OrdinaryName "key") in
+        let propref = Named { reason = reason_key; name = OrdinaryName "key" } in
         let use_op =
           Frame
             ( PropertyCompatibility
@@ -617,7 +617,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         in
         (* Flow the config input ref type to the ref type. *)
         let lookup_kind = NonstrictReturning (None, None) in
-        let propref = Named (reason_ref, OrdinaryName "ref") in
+        let propref = Named { reason = reason_ref; name = OrdinaryName "ref" } in
         let use_op =
           Frame
             ( PropertyCompatibility

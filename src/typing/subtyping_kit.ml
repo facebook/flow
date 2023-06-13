@@ -217,13 +217,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | _ -> ());
 
     if rflags.obj_kind = Exact && not (is_literal_object_reason ureason) then (
-      Context.iter_real_props cx lflds (fun s _ ->
-          if not (Context.has_prop cx uflds s) then
+      Context.iter_real_props cx lflds (fun name _ ->
+          if not (Context.has_prop cx uflds name) then
             let use_op =
               Frame
                 ( PropertyCompatibility
                     {
-                      prop = Some s;
+                      prop = Some name;
                       (* Lower and upper are reversed in this case since the lower object
                        * is the one requiring the prop. *)
                       lower = ureason;
@@ -232,10 +232,16 @@ module Make (Flow : INPUT) : OUTPUT = struct
                   use_op
                 )
             in
-            let reason_prop = replace_desc_reason (RProperty (Some s)) lreason in
+            let reason_prop = replace_desc_reason (RProperty (Some name)) lreason in
             let err =
               Error_message.EPropNotFound
-                { prop_name = Some s; reason_prop; reason_obj = ureason; use_op; suggestion = None }
+                {
+                  prop_name = Some name;
+                  reason_prop;
+                  reason_obj = ureason;
+                  use_op;
+                  suggestion = None;
+                }
             in
             add_output cx ~trace err
       );
@@ -283,14 +289,15 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | None -> ());
 
     (* Properties in u must either exist in l, or match l's indexer. *)
-    Context.iter_real_props cx uflds (fun s up ->
-        let reason_prop = replace_desc_reason (RProperty (Some s)) ureason in
-        let propref = Named (reason_prop, s) in
+    Context.iter_real_props cx uflds (fun name up ->
+        let reason_prop = replace_desc_reason (RProperty (Some name)) ureason in
+        let propref = Named { reason = reason_prop; name } in
         let use_op' = use_op in
         let use_op =
-          Frame (PropertyCompatibility { prop = Some s; lower = lreason; upper = ureason }, use_op')
+          Frame
+            (PropertyCompatibility { prop = Some name; lower = lreason; upper = ureason }, use_op')
         in
-        match (Context.get_prop cx lflds s, ldict) with
+        match (Context.get_prop cx lflds name, ldict) with
         | (Some lp, _) ->
           if lit then
             (* prop from unaliased LB: check <: *)
@@ -300,11 +307,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
           else
             (* prop from aliased LB *)
             rec_flow_p cx ~trace ~use_op lreason ureason propref (lp, up)
-        | (None, Some { key; value; dict_polarity; _ }) when not (is_dictionary_exempt s) ->
+        | (None, Some { key; value; dict_polarity; _ }) when not (is_dictionary_exempt name) ->
           rec_flow
             cx
             trace
-            ( string_key s reason_prop,
+            ( string_key name reason_prop,
               UseT
                 (Frame (IndexerKeyCompatibility { lower = lreason; upper = ureason }, use_op'), key)
             );
@@ -375,13 +382,15 @@ module Make (Flow : INPUT) : OUTPUT = struct
         Context.fold_real_props
           cx
           lflds
-          (fun s lp keys ->
-            if Context.has_prop cx uflds s then
+          (fun name lp keys ->
+            if Context.has_prop cx uflds name then
               keys
             else
               let use_op =
                 Frame
-                  (PropertyCompatibility { prop = Some s; lower = lreason; upper = ureason }, use_op)
+                  ( PropertyCompatibility { prop = Some name; lower = lreason; upper = ureason },
+                    use_op
+                  )
               in
               let lp =
                 match lp with
@@ -401,11 +410,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
                   | (Some lt, Some ut) -> rec_flow cx trace (lt, UseT (use_op, ut))
                   | _ -> ()
                 else
-                  let reason_prop = replace_desc_reason (RProperty (Some s)) lreason in
-                  let propref = Named (reason_prop, s) in
+                  let reason_prop = replace_desc_reason (RProperty (Some name)) lreason in
+                  let propref = Named { reason = reason_prop; name } in
                   rec_flow_p cx ~trace ~use_op lreason ureason propref (lp, up)
               end;
-              string_key s lreason :: keys)
+              string_key name lreason :: keys)
           []
         |> union_of_ts lreason
       in
@@ -435,9 +444,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
          behavior, which should be fixed, and this code removed. *)
       (match (lcall, ucall) with
       | (Some lcall, None) ->
-        let s = OrdinaryName "$call" in
+        let name = OrdinaryName "$call" in
         let use_op =
-          Frame (PropertyCompatibility { prop = Some s; lower = lreason; upper = ureason }, use_op)
+          Frame
+            (PropertyCompatibility { prop = Some name; lower = lreason; upper = ureason }, use_op)
         in
         let lp =
           match Context.find_call cx lcall with
@@ -451,8 +461,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
           | (Some lt, Some ut) -> rec_flow cx trace (lt, UseT (use_op, ut))
           | _ -> ()
         else
-          let reason_prop = replace_desc_reason (RProperty (Some s)) lreason in
-          let propref = Named (reason_prop, s) in
+          let reason_prop = replace_desc_reason (RProperty (Some name)) lreason in
+          let propref = Named { reason = reason_prop; name } in
           rec_flow_p cx ~trace ~use_op lreason ureason propref (lp, up)
       | _ -> ()));
 
@@ -945,7 +955,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
        * and their exact versions). Notably, "meta" types like union, annot,
        * typeapp, eval, maybe, optional, and intersection should have boiled
        * away by this point. Generics should have been "unsealed" as well. *)
-      let propref = Named (reason, OrdinaryName x) in
+      let propref = Named { reason; name = OrdinaryName x } in
       let lookup_kind = NonstrictReturning (None, None) in
       let drop_generic = true in
       let u =
@@ -1434,15 +1444,16 @@ module Make (Flow : INPUT) : OUTPUT = struct
             add_output cx ~trace error_message
       );
 
-      Context.iter_real_props cx uflds (fun s up ->
+      Context.iter_real_props cx uflds (fun name up ->
           let use_op =
-            Frame (PropertyCompatibility { prop = Some s; lower = lreason; upper = ureason }, use_op)
+            Frame
+              (PropertyCompatibility { prop = Some name; lower = lreason; upper = ureason }, use_op)
           in
           let propref =
-            let reason_prop = replace_desc_reason (RProperty (Some s)) ureason in
-            Named (reason_prop, s)
+            let reason_prop = replace_desc_reason (RProperty (Some name)) ureason in
+            Named { reason = reason_prop; name }
           in
-          match NameUtils.Map.find_opt s lflds with
+          match NameUtils.Map.find_opt name lflds with
           | Some lp -> rec_flow_p cx ~trace ~use_op lreason ureason propref (lp, up)
           | _ ->
             let lookup_kind =

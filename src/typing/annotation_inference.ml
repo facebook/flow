@@ -304,15 +304,15 @@ module rec ConsGen : S = struct
     let cg_lookup_ cx use_op t reason_op propref =
       ConsGen.elab_t cx t (Annot_LookupT (reason_op, use_op, propref))
 
-    let read_prop cx _trace options reason_prop reason_op l _super x pmap =
+    let read_prop cx _trace options reason_prop reason_op l _super name pmap =
       let { Flow_js_utils.Access_prop_options.use_op; _ } = options in
-      let propref = Named (reason_prop, x) in
-      match NameUtils.Map.find_opt x pmap with
+      let propref = Named { reason = reason_prop; name } in
+      match NameUtils.Map.find_opt name pmap with
       | Some p -> perform_read_prop_action cx use_op propref p reason_op
       | None ->
         let l =
           (* munge names beginning with single _ *)
-          if Flow_js_utils.is_munged_prop_name cx x then
+          if Flow_js_utils.is_munged_prop_name cx name then
             ObjProtoT (reason_of_t l)
           else
             l
@@ -344,7 +344,10 @@ module rec ConsGen : S = struct
       cg_lookup_ cx use_op t reason_op propref
 
     let cg_get_prop cx _trace t (use_op, access_reason, _, (prop_reason, name)) =
-      ConsGen.elab_t cx t (Annot_GetPropT (access_reason, use_op, Named (prop_reason, name)))
+      ConsGen.elab_t
+        cx
+        t
+        (Annot_GetPropT (access_reason, use_op, Named { reason = prop_reason; name }))
   end
 
   module GetPropTKit = Flow_js_utils.GetPropT_kit (Get_prop_helper)
@@ -841,7 +844,7 @@ module rec ConsGen : S = struct
     (****************)
     | (DefT (reason, trust, CharSetT _), _) -> elab_t cx (StrT.why reason trust) op
     | ( CustomFunT (_, ReactPropType (React.PropType.Primitive (false, t))),
-        Annot_GetPropT (reason_op, _, Named (_, OrdinaryName "isRequired"))
+        Annot_GetPropT (reason_op, _, Named { name = OrdinaryName "isRequired"; _ })
       ) ->
       let prop_type = React.PropType.Primitive (true, t) in
       CustomFunT (reason_op, ReactPropType prop_type)
@@ -889,12 +892,12 @@ module rec ConsGen : S = struct
     (* LookupT pt1 *)
     (***************)
     | ( DefT (_lreason, _, InstanceT { super; inst; _ }),
-        Annot_LookupT (reason_op, use_op, (Named (_, x) as propref))
+        Annot_LookupT (reason_op, use_op, (Named { name; _ } as propref))
       ) ->
       let own_props = Context.find_props cx inst.own_props in
       let proto_props = Context.find_props cx inst.proto_props in
       let pmap = NameUtils.Map.union own_props proto_props in
-      (match NameUtils.Map.find_opt x pmap with
+      (match NameUtils.Map.find_opt name pmap with
       | None -> Get_prop_helper.cg_lookup_ cx use_op super reason_op propref
       | Some p -> GetPropTKit.perform_read_prop_action cx dummy_trace use_op propref p reason_op)
     | (DefT (_, _, InstanceT _), Annot_LookupT (_, _, Computed _)) -> error_unsupported cx t op
@@ -932,13 +935,16 @@ module rec ConsGen : S = struct
       ) ->
       GetPropTKit.on_InstanceT cx dummy_trace ~l:t ~id:None r super inst use_op reason_op propref
     | (DefT (_, _, InstanceT _), Annot_GetPropT (_, _, Computed _)) -> error_unsupported cx t op
-    | (DefT (_, _, ObjT _), Annot_GetPropT (reason_op, _, Named (_, OrdinaryName "constructor"))) ->
+    | ( DefT (_, _, ObjT _),
+        Annot_GetPropT (reason_op, _, Named { name = OrdinaryName "constructor"; _ })
+      ) ->
       Unsoundness.why Constructor reason_op
     | (DefT (reason_obj, _, ObjT o), Annot_GetPropT (reason_op, use_op, propref)) ->
       GetPropTKit.read_obj_prop cx dummy_trace ~use_op o propref reason_obj reason_op None
     | (AnyT _, Annot_GetPropT (reason_op, _, _)) -> AnyT (reason_op, Untyped)
-    | (DefT (reason, _, ClassT instance), Annot_GetPropT (_, _, Named (_, OrdinaryName "prototype")))
-      ->
+    | ( DefT (reason, _, ClassT instance),
+        Annot_GetPropT (_, _, Named { name = OrdinaryName "prototype"; _ })
+      ) ->
       reposition cx (loc_of_reason reason) instance
     (**************)
     (* Object Kit *)
@@ -1019,9 +1025,9 @@ module rec ConsGen : S = struct
     (* Enums *)
     (*********)
     | ( DefT (enum_reason, trust, EnumObjectT enum),
-        Annot_GetPropT (access_reason, use_op, Named (prop_reason, member_name))
+        Annot_GetPropT (access_reason, use_op, Named { reason = prop_reason; name })
       ) ->
-      let access = (use_op, access_reason, None, (prop_reason, member_name)) in
+      let access = (use_op, access_reason, None, (prop_reason, name)) in
       GetPropTKit.on_EnumObjectT cx dummy_trace enum_reason trust enum access
     | (DefT (enum_reason, _, EnumObjectT _), Annot_GetElemT (reason_op, _, elem)) ->
       let reason = reason_of_t elem in
@@ -1034,18 +1040,18 @@ module rec ConsGen : S = struct
     (***************)
     (* LookupT pt2 *)
     (***************)
-    | (ObjProtoT _, Annot_LookupT (reason_op, _, Named (_, x)))
-      when Flow_js_utils.is_object_prototype_method x ->
+    | (ObjProtoT _, Annot_LookupT (reason_op, _, Named { name; _ }))
+      when Flow_js_utils.is_object_prototype_method name ->
       Flow_js_utils.lookup_builtin_strict cx (OrdinaryName "Object") reason_op
-    | (FunProtoT _, Annot_LookupT (reason_op, _, Named (_, x)))
-      when Flow_js_utils.is_function_prototype x ->
+    | (FunProtoT _, Annot_LookupT (reason_op, _, Named { name; _ }))
+      when Flow_js_utils.is_function_prototype name ->
       Flow_js_utils.lookup_builtin_strict cx (OrdinaryName "Function") reason_op
     | ( (DefT (_, _, NullT) | ObjProtoT _ | FunProtoT _),
-        Annot_LookupT (reason_op, use_op, (Named (reason_prop, x) as propref))
+        Annot_LookupT (reason_op, use_op, (Named { reason = reason_prop; name } as propref))
       ) ->
       let error_message =
         Error_message.EPropNotFound
-          { reason_prop; reason_obj = reason_op; prop_name = Some x; use_op; suggestion = None }
+          { reason_prop; reason_obj = reason_op; prop_name = Some name; use_op; suggestion = None }
       in
       Flow_js_utils.add_output cx error_message;
       let p =
@@ -1080,7 +1086,7 @@ module rec ConsGen : S = struct
       let arr = get_builtin_typeapp cx reason (OrdinaryName "Array") [t] in
       elab_t cx arr op
     | ( DefT (reason, trust, ArrT (TupleAT { arity; _ })),
-        Annot_GetPropT (reason_op, _, Named (_, OrdinaryName "length"))
+        Annot_GetPropT (reason_op, _, Named { name = OrdinaryName "length"; _ })
       ) ->
       GetPropTKit.on_array_length cx dummy_trace reason trust arity reason_op
     | ( DefT (reason, _, ArrT ((TupleAT _ | ROArrayAT _) as arrtype)),
@@ -1114,8 +1120,8 @@ module rec ConsGen : S = struct
       Flow_js_utils.add_output cx (EIncompatible { lower; upper; use_op; branches = [] });
       AnyT.error reason_op
 
-  and get_builtin_type cx reason ?(use_desc = false) x =
-    let t = Flow_js_utils.lookup_builtin_strict cx x reason in
+  and get_builtin_type cx reason ?(use_desc = false) name =
+    let t = Flow_js_utils.lookup_builtin_strict cx name reason in
     mk_instance_raw cx reason ~use_desc ~reason_type:(reason_of_t t) t
 
   and get_builtin_prop_type cx reason tool =
@@ -1166,14 +1172,14 @@ module rec ConsGen : S = struct
   and get_statics cx reason t = elab_t cx t (Annot_GetStaticsT reason)
 
   and get_prop cx use_op reason ?(op_reason = reason) name t =
-    elab_t cx t (Annot_GetPropT (op_reason, use_op, Named (reason, name)))
+    elab_t cx t (Annot_GetPropT (op_reason, use_op, Named { reason; name }))
 
   and get_elem cx use_op reason ~key t = elab_t cx t (Annot_GetElemT (reason, use_op, key))
 
   and qualify_type cx use_op reason (reason_name, name) t =
     let open Type in
     let f id =
-      let t = elab_t cx t (Annot_GetPropT (reason, use_op, Named (reason_name, name))) in
+      let t = elab_t cx t (Annot_GetPropT (reason, use_op, Named { reason = reason_name; name })) in
       resolve_id cx reason id t
     in
     mk_lazy_tvar cx reason f

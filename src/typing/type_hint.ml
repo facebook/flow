@@ -298,7 +298,11 @@ and type_of_hint_decomposition cx op reason t =
 
   let get_constructor_type t =
     let get_constructor_method_type t =
-      SpeculationFlow.get_method_type_unsafe cx t reason (Named (reason, OrdinaryName "constructor"))
+      SpeculationFlow.get_method_type_unsafe
+        cx
+        t
+        reason
+        (Named { reason; name = OrdinaryName "constructor" })
     in
     let mod_ctor_return instance_type = function
       | DefT
@@ -475,7 +479,11 @@ and type_of_hint_decomposition cx op reason t =
           reason
           (Computed (DefT (reason, bogus_trust (), StrT AnyLiteral)))
       | Decomp_MethodName name ->
-        SpeculationFlow.get_method_type_unsafe cx t reason (Named (reason, OrdinaryName name))
+        SpeculationFlow.get_method_type_unsafe
+          cx
+          t
+          reason
+          (Named { reason; name = OrdinaryName name })
       | Decomp_MethodPrivateName (name, class_stack) ->
         let env = Context.environment cx in
         Context.set_environment cx { env with Loc_env.class_stack };
@@ -500,7 +508,7 @@ and type_of_hint_decomposition cx op reason t =
                 ( unknown_use,
                   reason,
                   Some (Reason.mk_id ()),
-                  Named (reason, OrdinaryName name),
+                  Named { reason; name = OrdinaryName name },
                   tout
                 )
             in
