@@ -26,8 +26,7 @@ const result2_6: Array<number> = arr2.flat(x); // Error - don't support this
 const result2_7: Array<mixed> = arr2.flat(x); // OK
 
 const arr4 = [1, [2]];
-// We don't support array elements which are unions or elements and arrays
-const result4_0: Array<number> = arr4.flat(); // Error - don't support this
-const result4_1: Array<Array<number>> = arr4.flat(); // Error - don't support this
+const result4_0: Array<number> = arr4.flat(); // ok
+const result4_1: Array<Array<number>> = arr4.flat(); // Error - should be flattened to Array<number>
 // But we can say it's a `$ReadOnlyArray<mixed>`
 const result4_3: $ReadOnlyArray<mixed> = arr4.flat(); // OK

@@ -390,40 +390,65 @@ References:
                                ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- flat.js:30:34
-
-Cannot assign `arr4.flat()` to `result4_0` because array literal [1] is incompatible with number [2] in array element.
-[incompatible-type]
-
-   flat.js:30:34
-   30| const result4_0: Array<number> = arr4.flat(); // Error - don't support this
-                                        ^^^^^^^^^^^
-
-References:
-   flat.js:28:18
-   28| const arr4 = [1, [2]];
-                        ^^^ [1]
-   flat.js:30:24
-   30| const result4_0: Array<number> = arr4.flat(); // Error - don't support this
-                              ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- flat.js:31:41
+Error ---------------------------------------------------------------------------------------------------- flat.js:30:41
 
 Cannot assign `arr4.flat()` to `result4_1` because number [1] is incompatible with array type [2] in array element.
 [incompatible-type]
 
-   flat.js:31:41
-   31| const result4_1: Array<Array<number>> = arr4.flat(); // Error - don't support this
+   flat.js:30:41
+   30| const result4_1: Array<Array<number>> = arr4.flat(); // Error - should be flattened to Array<number>
                                                ^^^^^^^^^^^
 
 References:
    flat.js:28:15
    28| const arr4 = [1, [2]];
                      ^ [1]
-   flat.js:31:24
-   31| const result4_1: Array<Array<number>> = arr4.flat(); // Error - don't support this
+   flat.js:30:24
+   30| const result4_1: Array<Array<number>> = arr4.flat(); // Error - should be flattened to Array<number>
                               ^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- flat.js:30:41
+
+Cannot assign `arr4.flat()` to `result4_1` because number [1] is incompatible with array type [2] in array element.
+[incompatible-type]
+
+   flat.js:30:41
+   30| const result4_1: Array<Array<number>> = arr4.flat(); // Error - should be flattened to Array<number>
+                                               ^^^^^^^^^^^
+
+References:
+   flat.js:28:19
+   28| const arr4 = [1, [2]];
+                         ^ [1]
+   flat.js:30:24
+   30| const result4_1: Array<Array<number>> = arr4.flat(); // Error - should be flattened to Array<number>
+                              ^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- flat.js:30:41
+
+Cannot assign `arr4.flat()` to `result4_1` because in array element: [incompatible-type]
+ - Either array type [1] is incompatible with number [2].
+ - Or array type [1] is incompatible with number [3].
+
+Arrays are invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+
+   flat.js:30:41
+   30| const result4_1: Array<Array<number>> = arr4.flat(); // Error - should be flattened to Array<number>
+                                               ^^^^^^^^^^^
+
+References:
+   flat.js:30:24
+   30| const result4_1: Array<Array<number>> = arr4.flat(); // Error - should be flattened to Array<number>
+                              ^^^^^^^^^^^^^ [1]
+   flat.js:28:19
+   28| const arr4 = [1, [2]];
+                         ^ [2]
+   flat.js:28:15
+   28| const arr4 = [1, [2]];
+                     ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- length.js:7:3
@@ -443,4 +468,4 @@ Cannot assign `7` to `t.length` because property `length` is not writable. [cann
 
 
 
-Found 28 errors
+Found 29 errors
