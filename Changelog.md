@@ -1,3 +1,8 @@
+### 0.208.1
+
+Notable bug fixes:
+* Fixed a crash when we are trying to produce a quick fix for missing imports. The autofix for missing imports broken in the previous release would be working again now.
+
 ### 0.208.0
 
 Likely to cause new Flow errors:
