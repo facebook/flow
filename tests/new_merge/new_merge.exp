@@ -1,3 +1,18 @@
+Error --------------------------------------------------------------------------------------- get_prop_instance.js:12:34
+
+Cannot use computed property on `C` [1] in an export position. Please provide an (alternative) annotation for computed
+property [2]. [invalid-exported-annotation]
+
+   get_prop_instance.js:12:34
+   12| export const instance_computed = c[s]; // ERROR
+                                        ^^^^ [2]
+
+References:
+   get_prop_instance.js:3:15
+    3| declare class C {
+                     ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------------ main.js:6:2
 
 Cannot cast empty string to `T1` because string [1] is incompatible with number [2]. [incompatible-cast]
@@ -816,5 +831,22 @@ References:
               ^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- main.js:181:2
 
-Found 51 errors
+Cannot cast `instance_named` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   main.js:181:2
+   181| (instance_named: empty); // ERROR
+         ^^^^^^^^^^^^^^
+
+References:
+   get_prop_instance.js:5:6
+     5|   s: number;
+             ^^^^^^ [1]
+   main.js:181:18
+   181| (instance_named: empty); // ERROR
+                         ^^^^^ [2]
+
+
+
+Found 53 errors

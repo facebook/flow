@@ -175,3 +175,8 @@ import {
 import type { T as T28 } from './values';
 declare var t28: T28;
 (t28: empty); // error number (length) ~> empty
+
+import {instance_named, instance_computed} from './get_prop_instance';
+(instance_named: number); // OK
+(instance_named: empty); // ERROR
+(instance_computed: empty); // OK (export is error)

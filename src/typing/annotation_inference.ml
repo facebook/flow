@@ -897,10 +897,7 @@ module rec ConsGen : S = struct
       (match NameUtils.Map.find_opt x pmap with
       | None -> Get_prop_helper.cg_lookup_ cx use_op super reason_op propref
       | Some p -> GetPropTKit.perform_read_prop_action cx dummy_trace use_op propref p reason_op)
-    | (DefT (_, _, InstanceT _), Annot_LookupT (reason_op, _, Computed _)) ->
-      let loc = loc_of_reason reason_op in
-      Flow_js_utils.add_output cx Error_message.(EInternal (loc, InstanceLookupComputed));
-      AnyT.error reason_op
+    | (DefT (_, _, InstanceT _), Annot_LookupT (_, _, Computed _)) -> error_unsupported cx t op
     | (DefT (_, _, ObjT o), Annot_LookupT (reason_op, use_op, propref)) ->
       (match GetPropTKit.get_obj_prop cx dummy_trace o propref reason_op with
       | Some (p, _) ->
@@ -930,8 +927,11 @@ module rec ConsGen : S = struct
     (************)
     (* GetPropT *)
     (************)
-    | (DefT (r, _, InstanceT { super; inst; _ }), Annot_GetPropT (reason_op, use_op, propref)) ->
+    | ( DefT (r, _, InstanceT { super; inst; _ }),
+        Annot_GetPropT (reason_op, use_op, (Named _ as propref))
+      ) ->
       GetPropTKit.on_InstanceT cx dummy_trace ~l:t ~id:None r super inst use_op reason_op propref
+    | (DefT (_, _, InstanceT _), Annot_GetPropT (_, _, Computed _)) -> error_unsupported cx t op
     | (DefT (_, _, ObjT _), Annot_GetPropT (reason_op, _, Named (_, OrdinaryName "constructor"))) ->
       Unsoundness.why Constructor reason_op
     | (DefT (reason_obj, _, ObjT o), Annot_GetPropT (reason_op, use_op, propref)) ->
@@ -951,12 +951,11 @@ module rec ConsGen : S = struct
     | (DefT (_, trust, StrT _), Annot_GetElemT (reason_op, _use_op, _index)) ->
       (* NOTE bypassing check that index is a number *)
       StrT.why reason_op trust
-    | ((DefT (_, _, (ObjT _ | ArrT _)) | AnyT _), Annot_GetElemT (reason_op, use_op, key)) ->
+    | ( (DefT (_, _, (ObjT _ | ArrT _ | InstanceT _)) | AnyT _),
+        Annot_GetElemT (reason_op, use_op, key)
+      ) ->
       elab_t cx key (Annot_ElemT (reason_op, use_op, t))
-    | (DefT (_, _, InstanceT _), Annot_GetElemT (reason, use_op, _i)) ->
-      (* NOTE bypassing key check *)
-      elab_t cx t (Annot_GetPropT (reason, use_op, Named (reason, OrdinaryName "$value")))
-    | (_, Annot_ElemT (reason_op, use_op, (DefT (_, _, ObjT _) as obj))) ->
+    | (_, Annot_ElemT (reason_op, use_op, (DefT (_, _, (ObjT _ | InstanceT _)) as obj))) ->
       let propref = Flow_js_utils.propref_for_elem_t t in
       elab_t cx obj (Annot_GetPropT (reason_op, use_op, propref))
     | (_, Annot_ElemT (reason_op, _use_op, (AnyT _ as _obj))) ->
