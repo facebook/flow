@@ -22,6 +22,4 @@ module Make
      a list only depend on keys in a subsequent list
   *)
   val topsort : roots:NSet.t -> NSet.t NMap.t -> N.t Nel.t list
-
-  val log : N.t Nel.t list -> unit
 end

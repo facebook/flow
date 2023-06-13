@@ -147,7 +147,6 @@ let error_set_of_internal_error file (loc, internal_error) =
 let calc_deps ~options ~profiling ~components to_merge =
   with_memory_timer_lwt ~options "CalcDeps" profiling (fun () ->
       let components = List.filter (Nel.exists (fun f -> FilenameSet.mem f to_merge)) components in
-      if Options.should_profile options then Sort_js.log components;
       Lwt.return components
   )
 

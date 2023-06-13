@@ -113,12 +113,4 @@ struct
     let state = initial_state graph in
     tarjan ~roots state;
     state.components
-
-  let log =
-    List.iter (fun mc ->
-        (* Show cycles, which are components with more than one node. *)
-        if Nel.length mc > 1 then
-          let nodes = mc |> Nel.to_list |> Base.List.map ~f:N.to_string |> String.concat "\n\t" in
-          Printf.ksprintf prerr_endline "cycle detected among the following nodes:\n\t%s" nodes
-    )
 end
