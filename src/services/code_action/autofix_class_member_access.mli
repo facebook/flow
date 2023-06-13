@@ -8,6 +8,7 @@
 val fix :
   cx:Context.t ->
   file_sig:File_sig.t ->
+  loc_of_aloc:(ALoc.t -> Loc.t) ->
   ast:(Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   member_name:string ->

@@ -43,7 +43,11 @@ type ast_transform_of_error = {
 val untyped_ast_transform :
   ((Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> (Loc.t, Loc.t) Flow_ast.Program.t) -> ast_transform
 
-val ast_transforms_of_error : ?loc:Loc.t -> Loc.t Error_message.t' -> ast_transform_of_error list
+val ast_transforms_of_error :
+  loc_of_aloc:(ALoc.t -> Loc.t) ->
+  ?loc:Loc.t ->
+  Loc.t Error_message.t' ->
+  ast_transform_of_error list
 
 val code_actions_at_loc :
   options:Options.t ->
