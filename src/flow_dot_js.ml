@@ -153,6 +153,8 @@ let init_builtins filenames =
   let ccx = Context.(make_ccx (empty_master_cx ())) in
   let leader =
     let metadata = stub_metadata ~root ~checked:true in
+    (* Temporarily enabling type-guards just in libdefs *)
+    let metadata = { metadata with Context.type_guards = true } in
     load_lib_files ~ccx ~metadata filenames
   in
   let master_cx =
