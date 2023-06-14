@@ -239,5 +239,5 @@ See also: the rule about [enum member name starting characters](#toc-member-name
 A Flow Enum, like a class, is both a type and a value. You don't need to create a separate type alias, you can use the enum name.
 
 #### Use dot access for accessing members {#toc-use-dot-access-for-accessing-members}
-Prefer `Status.Active` vs. `const {Active} = Status; Active`. This makes it easier find uses of the enum with text search, and makes it clearer to the reader what enum is involved.
+Prefer `Status.Active` vs. `const {Active} = Status;`. This makes it easier find uses of the enum with text search, and makes it clearer to the reader what enum is involved.
  Additionally, this is required for [switch statements involving enums](../using-enums/#toc-exhaustively-checking-enums-with-a-switch).
