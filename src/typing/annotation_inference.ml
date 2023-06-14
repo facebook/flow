@@ -883,7 +883,13 @@ module rec ConsGen : S = struct
            reason_op
        with
       | Some (p, _) ->
-        GetPropTKit.perform_read_prop_action cx dummy_trace use_op propref p reason_op
+        GetPropTKit.perform_read_prop_action
+          cx
+          dummy_trace
+          use_op
+          propref
+          (Property.type_ p)
+          reason_op
       | None -> Get_prop_helper.cg_lookup_ cx use_op super reason_op propref)
     | (DefT (_, _, InstanceT _), Annot_LookupT (_, _, Computed _)) -> error_unsupported cx t op
     | (DefT (_, _, ObjT o), Annot_LookupT (reason_op, use_op, propref)) ->
@@ -891,11 +897,7 @@ module rec ConsGen : S = struct
       | Some (p, _) ->
         GetPropTKit.perform_read_prop_action cx dummy_trace use_op propref p reason_op
       | None -> Get_prop_helper.cg_lookup_ cx use_op o.proto_t reason_op propref)
-    | (AnyT _, Annot_LookupT (reason_op, use_op, propref)) ->
-      let p =
-        Field { key_loc = None; type_ = AnyT.untyped reason_op; polarity = Polarity.Neutral }
-      in
-      GetPropTKit.perform_read_prop_action cx dummy_trace use_op propref p reason_op
+    | (AnyT _, Annot_LookupT (reason_op, _use_op, _propref)) -> AnyT.untyped reason_op
     (************)
     (* ObjRestT *)
     (************)
@@ -1043,22 +1045,14 @@ module rec ConsGen : S = struct
       when Flow_js_utils.is_function_prototype name ->
       Flow_js_utils.lookup_builtin_strict cx (OrdinaryName "Function") reason_op
     | ( (DefT (_, _, NullT) | ObjProtoT _ | FunProtoT _),
-        Annot_LookupT (reason_op, use_op, (Named { reason = reason_prop; name; _ } as propref))
+        Annot_LookupT (reason_op, use_op, Named { reason = reason_prop; name; _ })
       ) ->
       let error_message =
         Error_message.EPropNotFound
           { reason_prop; reason_obj = reason_op; prop_name = Some name; use_op; suggestion = None }
       in
       Flow_js_utils.add_output cx error_message;
-      let p =
-        Field
-          {
-            key_loc = None;
-            type_ = AnyT.error_of_kind UnresolvedName reason_op;
-            polarity = Polarity.Neutral;
-          }
-      in
-      GetPropTKit.perform_read_prop_action cx dummy_trace use_op propref p reason_op
+      AnyT.error_of_kind UnresolvedName reason_op
     (****************************************)
     (* Object, function, etc. library calls *)
     (****************************************)

@@ -293,7 +293,7 @@ struct
     | ReadProp { use_op; obj_t = _; tout } ->
       FlowJs.perform_read_prop_action cx trace use_op propref p ureason tout
     | WriteProp { use_op; obj_t = _; tin; write_ctx; prop_tout; mode } -> begin
-      match (Property.write_t ~ctx:write_ctx p, target_kind, mode) with
+      match (Property.write_t_of_property_type ~ctx:write_ctx p, target_kind, mode) with
       | (Some t, IndexerProperty, Delete) ->
         (* Always OK to delete a property we found via an indexer *)
         let void = VoidT.why (reason_of_t t) |> with_trust literal_trust in
@@ -312,7 +312,7 @@ struct
         add_output cx ~trace msg
     end
     | MatchProp { use_op; drop_generic = drop_generic_; prop_t = tin } -> begin
-      match Property.read_t p with
+      match Property.read_t_of_property_type p with
       | Some t ->
         let t =
           if drop_generic_ then
@@ -3241,7 +3241,15 @@ struct
             (match kind with
             | NonstrictReturning (_, Some (id, _)) -> Context.test_prop_hit cx id
             | _ -> ());
-            perform_lookup_action cx trace propref p target_kind lreason reason_op action
+            perform_lookup_action
+              cx
+              trace
+              propref
+              (Property.type_ p)
+              target_kind
+              lreason
+              reason_op
+              action
           | None ->
             rec_flow
               cx
@@ -3340,7 +3348,15 @@ struct
             | Some p ->
               let action = WriteProp { use_op; obj_t = l; prop_tout; tin; write_ctx; mode } in
               let propref = mk_named_prop ~reason:reason_op x in
-              perform_lookup_action cx trace propref p PropertyMapProperty reason_c reason_op action)
+              perform_lookup_action
+                cx
+                trace
+                propref
+                (Property.type_ p)
+                PropertyMapProperty
+                reason_c
+                reason_op
+                action)
         (*****************************)
         (* ... and their fields read *)
         (*****************************)
@@ -3777,7 +3793,7 @@ struct
               }
           ) ->
           (match action with
-          | SuperProp (_, lp) when Property.write_t lp = None ->
+          | SuperProp (_, lp) when Property.write_t_of_property_type lp = None ->
             (* Without this exception, we will call rec_flow_p where
              * `write_t lp = None` and `write_t up = Some`, which is a polarity
              * mismatch error. Instead of this, we could "read" `mixed` from
@@ -3785,9 +3801,7 @@ struct
             ()
           | _ ->
             let src = any_mod_src_keep_placeholder Untyped src in
-            let p =
-              Field { key_loc = None; type_ = AnyT.why src reason_op; polarity = Polarity.Neutral }
-            in
+            let p = OrdinaryField { type_ = AnyT.why src reason_op; polarity = Polarity.Neutral } in
             (match lookup_kind with
             | NonstrictReturning (_, Some (id, _)) -> Context.test_prop_hit cx id
             | _ -> ());
@@ -4969,12 +4983,8 @@ struct
           in
           add_output cx ~trace error_message;
           let p =
-            Field
-              {
-                key_loc = None;
-                type_ = AnyT.error_of_kind UnresolvedName reason_op;
-                polarity = Polarity.Neutral;
-              }
+            OrdinaryField
+              { type_ = AnyT.error_of_kind UnresolvedName reason_op; polarity = Polarity.Neutral }
           in
           perform_lookup_action cx trace propref p DynamicProperty reason reason_op action
         | ( (DefT (reason, _, NullT) | ObjProtoT reason | FunProtoT reason),
@@ -4999,9 +5009,7 @@ struct
             add_output cx ~trace Error_message.(EInternal (loc, PropRefComputedLiteral))
           | AnyT (_, src) ->
             let src = any_mod_src_keep_placeholder Untyped src in
-            let p =
-              Field { key_loc = None; type_ = AnyT.why src reason_op; polarity = Polarity.Neutral }
-            in
+            let p = OrdinaryField { type_ = AnyT.why src reason_op; polarity = Polarity.Neutral } in
             perform_lookup_action cx trace propref p DynamicProperty reason reason_op action
           | _ ->
             let reason_prop = reason_op in
@@ -6224,12 +6232,9 @@ struct
     let call_t = Base.Option.map call_id ~f:(Context.find_call cx) in
     let read_only_if_lit p =
       match p with
-      | Field { key_loc; type_; _ } ->
-        if lit then
-          Field { key_loc; type_; polarity = Polarity.Positive }
-        else
-          p
-      | _ -> p
+      | Field { key_loc = _; type_; _ } when lit ->
+        OrdinaryField { type_; polarity = Polarity.Positive }
+      | _ -> Property.type_ p
     in
     own_props
     |> NameUtils.Map.iter (fun name p ->
@@ -6265,8 +6270,7 @@ struct
                          (Base.Option.map ~f:(fun { value; _ } -> (value, t)) inst_dict, None);
                      try_ts_on_failure = [];
                      propref;
-                     lookup_action =
-                       LookupProp (use_op, Field { key_loc = None; type_ = t; polarity });
+                     lookup_action = LookupProp (use_op, OrdinaryField { type_ = t; polarity });
                      method_accessible = true;
                      ids = Some Properties.Set.empty;
                      ignore_dicts = false;
@@ -6359,7 +6363,7 @@ struct
       Frame (PropertyCompatibility { prop = Some x; lower = lreason; upper = ureason }, use_op)
     in
     let reason_prop = replace_desc_reason (RProperty (Some x)) lreason in
-    let action = SuperProp (use_op, p) in
+    let action = SuperProp (use_op, Property.type_ p) in
     let t =
       (* munge names beginning with single _ *)
       if is_munged_prop_name cx x then
@@ -7137,7 +7141,7 @@ struct
             scope.class_private_fields
         in
         (match NameUtils.Map.find_opt name (Context.find_props cx field_maps) with
-        | Some p -> perform_lookup_action p
+        | Some p -> perform_lookup_action (Property.type_ p)
         | None ->
           let method_maps =
             if static then
@@ -7157,7 +7161,7 @@ struct
                   (Error_message.EMethodUnbinding { use_op; reason_op; reason_prop = reason_of_t t })
               | _ -> ()
             );
-            perform_lookup_action p
+            perform_lookup_action (Property.type_ p)
           | None ->
             add_output
               cx

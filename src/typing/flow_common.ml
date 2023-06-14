@@ -19,7 +19,7 @@ module type BASE = sig
     reason ->
     reason ->
     Type.propref ->
-    Type.property * Type.property ->
+    Type.property_type * Type.property_type ->
     unit
 
   val flow_t : Context.t -> Type.t * Type.t -> unit
@@ -142,7 +142,7 @@ module type BUILTINS = sig
     Type.trace ->
     ALoc.t Type.virtual_use_op ->
     Type.propref ->
-    Type.Property.t ->
+    Type.property_type ->
     Reason.reason ->
     Type.tvar ->
     unit

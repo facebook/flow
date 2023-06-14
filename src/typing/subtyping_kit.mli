@@ -26,7 +26,7 @@ module type OUTPUT = sig
     Reason.reason ->
     Reason.reason ->
     Type.propref ->
-    Type.property * Type.property ->
+    Type.property_type * Type.property_type ->
     unit
 end
 

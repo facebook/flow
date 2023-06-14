@@ -404,6 +404,7 @@ and dump_use_t_ (depth, tvars) cx t =
   let tvar id = dump_tvar_ (depth - 1, tvars) cx id in
   let tout (reason, id) = spf "(%s, %s)" (string_of_reason reason) (tvar id) in
   let prop p = dump_prop_ (depth - 1, tvars) cx p in
+  let normalized_prop p = dump_normalized_prop_ (depth - 1, tvars) cx p in
   let string_of_use_op = string_of_use_op_rec in
   let call_arg_kid = function
     | Arg t -> kid t
@@ -417,6 +418,18 @@ and dump_use_t_ (depth, tvars) cx t =
          "; "
          (NameUtils.Map.fold
             (fun k p acc -> spf "%s = %s" (display_string_of_name k) (prop p) :: acc)
+            map
+            []
+         )
+      )
+  in
+  let _normalized_props map =
+    spf
+      "{%s}"
+      (String.concat
+         "; "
+         (NameUtils.Map.fold
+            (fun k p acc -> spf "%s = %s" (display_string_of_name k) (normalized_prop p) :: acc)
             map
             []
          )
@@ -440,8 +453,8 @@ and dump_use_t_ (depth, tvars) cx t =
     | ReadProp { tout = (reason, tout); _ } ->
       spf "Read (%s, %s)" (string_of_reason reason) (tvar tout)
     | WriteProp { tin; _ } -> spf "Write %s" (kid tin)
-    | LookupProp (op, p) -> spf "Lookup (%s, %s)" (string_of_use_op op) (prop p)
-    | SuperProp (_, p) -> spf "Super %s" (prop p)
+    | LookupProp (op, p) -> spf "Lookup (%s, %s)" (string_of_use_op op) (normalized_prop p)
+    | SuperProp (_, p) -> spf "Super %s" (normalized_prop p)
     | MatchProp { prop_t = tin; _ } -> spf "Match %s" (kid tin)
   in
   let specialize_cache cache =
@@ -1075,6 +1088,15 @@ and dump_prop_ (depth, tvars) cx p =
     spf "Get %s Set %s" (kid get_type) (kid set_type)
   | Method { key_loc = _; type_ } -> spf "Method %s" (kid type_)
 
+and dump_normalized_prop_ (depth, tvars) cx p =
+  let kid t = dump_t_ (depth, tvars) cx t in
+  let kid_opt = Base.Option.value_map ~default:"None" ~f:kid in
+  match p with
+  | OrdinaryField { type_; polarity } ->
+    spf "OrdinaryField (%s) %s" (Polarity.string polarity) (kid type_)
+  | SyntheticField { get_type; set_type } ->
+    spf "SyntheticField(%s, %s)" (kid_opt get_type) (kid_opt set_type)
+
 (* This is the type-dump debugging API.
    We should make sure these are not called recursively to avoid circumventing
    one of the termination mechanisms: depth or tvar-set.
@@ -1084,6 +1106,8 @@ let dump_t ?(depth = 3) cx t = dump_t_ (depth, ISet.empty) cx t
 let dump_use_t ?(depth = 3) cx t = dump_use_t_ (depth, ISet.empty) cx t
 
 let dump_prop ?(depth = 3) cx p = dump_prop_ (depth, ISet.empty) cx p
+
+let dump_normalized_prop ?(depth = 3) cx p = dump_normalized_prop_ (depth, ISet.empty) cx p
 
 let dump_tvar ?(depth = 3) cx id = dump_tvar_ (depth, ISet.empty) cx id
 

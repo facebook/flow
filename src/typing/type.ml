@@ -1236,8 +1236,8 @@ module rec TypeTerm : sig
         write_ctx: write_ctx;
         mode: set_mode;
       }
-    | LookupProp of use_op * Property.t
-    | SuperProp of use_op * Property.t
+    | LookupProp of use_op * property_type
+    | SuperProp of use_op * property_type
     | MatchProp of {
         use_op: use_op;
         drop_generic: bool;
@@ -1330,6 +1330,18 @@ module rec TypeTerm : sig
     | Method of {
         key_loc: ALoc.t option;
         type_: t;
+      }
+
+  and property_type =
+    (* A field that is defined in the source file as a field. *)
+    | OrdinaryField of {
+        type_: t;
+        polarity: Polarity.t;
+      }
+    (* Some properties that are normalized to a field. *)
+    | SyntheticField of {
+        get_type: t option;
+        set_type: t option;
       }
 
   (* This has to go here so that Type doesn't depend on Scope *)
@@ -1668,11 +1680,20 @@ and UnionEnumSet : (Flow_set.S with type elt = UnionEnum.t) = Flow_set.Make (Uni
 and Property : sig
   type t = TypeTerm.property
 
+  val type_ : t -> TypeTerm.property_type
+
   val polarity : t -> Polarity.t
+
+  val polarity_of_property_type : TypeTerm.property_type -> Polarity.t
+
+  val read_t_of_property_type : TypeTerm.property_type -> TypeTerm.t option
 
   val read_t : t -> TypeTerm.t option
 
-  val write_t : ?ctx:TypeTerm.write_ctx -> t -> TypeTerm.t option
+  val write_t_of_property_type :
+    ?ctx:TypeTerm.write_ctx -> TypeTerm.property_type -> TypeTerm.t option
+
+  val write_t : t -> TypeTerm.t option
 
   val read_loc : t -> ALoc.t option
 
@@ -1696,6 +1717,15 @@ end = struct
 
   type t = property
 
+  let type_ = function
+    | Field { type_; polarity; _ } -> OrdinaryField { type_; polarity }
+    | Get { type_; _ }
+    | Method { type_; _ } ->
+      SyntheticField { get_type = Some type_; set_type = None }
+    | Set { type_; _ } -> SyntheticField { get_type = None; set_type = Some type_ }
+    | GetSet { get_type; set_type; _ } ->
+      SyntheticField { get_type = Some get_type; set_type = Some set_type }
+
   let polarity = function
     | Field { polarity; _ } -> polarity
     | Get _ -> Positive
@@ -1703,28 +1733,33 @@ end = struct
     | GetSet _ -> Neutral
     | Method _ -> Positive
 
-  let read_t = function
-    | Field { type_; polarity; _ } ->
+  let polarity_of_property_type = function
+    | OrdinaryField { polarity; _ } -> polarity
+    | SyntheticField { get_type = None; set_type = None } -> failwith "Illegal property_type"
+    | SyntheticField { get_type = Some _; set_type = None } -> Positive
+    | SyntheticField { get_type = None; set_type = Some _ } -> Negative
+    | SyntheticField { get_type = Some _; set_type = Some _ } -> Neutral
+
+  let read_t_of_property_type = function
+    | OrdinaryField { type_; polarity } ->
       if Polarity.compat (polarity, Positive) then
         Some type_
       else
         None
-    | Get { type_; _ } -> Some type_
-    | Set _ -> None
-    | GetSet { get_type; _ } -> Some get_type
-    | Method { type_; _ } -> Some type_
+    | SyntheticField { get_type; _ } -> get_type
 
-  let write_t ?(ctx = Normal) = function
-    | Field { type_; _ } when ctx = ThisInCtor -> Some type_
-    | Field { type_; polarity; _ } ->
+  let read_t p = p |> type_ |> read_t_of_property_type
+
+  let write_t_of_property_type ?(ctx = Normal) = function
+    | OrdinaryField { type_; _ } when ctx = ThisInCtor -> Some type_
+    | OrdinaryField { type_; polarity } ->
       if Polarity.compat (polarity, Negative) then
         Some type_
       else
         None
-    | Get _ -> None
-    | Set { type_; _ } -> Some type_
-    | GetSet { set_type; _ } -> Some set_type
-    | Method _ -> None
+    | SyntheticField { set_type; _ } -> set_type
+
+  let write_t p = p |> type_ |> write_t_of_property_type ?ctx:None
 
   let read_loc = function
     | Field { key_loc = loc; _ }

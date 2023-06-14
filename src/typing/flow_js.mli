@@ -22,7 +22,7 @@ val flow_p :
   reason ->
   (* ureason *)
   Type.propref ->
-  Type.property * Type.property ->
+  Type.property_type * Type.property_type ->
   unit
 
 val flow_use_op : Context.t -> Type.use_op -> Type.use_t -> Type.use_t

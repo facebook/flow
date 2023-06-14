@@ -1730,7 +1730,7 @@ end
 
 module GetPropT_kit (F : Get_prop_helper_sig) = struct
   let perform_read_prop_action cx trace use_op propref p ureason =
-    match Property.read_t p with
+    match Property.read_t_of_property_type p with
     | Some t ->
       let loc = loc_of_reason ureason in
       F.return cx trace ~use_op:unknown_use (F.reposition cx ~trace loc t)
@@ -1774,7 +1774,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
     | Some (p, _target_kind) ->
       let p = check_method_unbinding cx trace ~use_op ~method_accessible ~reason_op ~propref p in
       Base.Option.iter id ~f:(Context.test_prop_hit cx);
-      perform_read_prop_action cx trace use_op propref p reason_op
+      perform_read_prop_action cx trace use_op propref (Property.type_ p) reason_op
     | None ->
       let super =
         match name_of_propref propref with
@@ -1842,15 +1842,15 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
     match (propref, named_prop, dict_t) with
     | (_, Some prop, _) ->
       (* Property exists on this property map *)
-      Some (prop, PropertyMapProperty)
+      Some (Property.type_ prop, PropertyMapProperty)
     | (Named { name; _ }, None, Some { key; value; dict_polarity; _ })
       when not (is_dictionary_exempt name) ->
       (* Dictionaries match all property reads *)
       F.dict_read_check cx trace ~use_op:unknown_use (string_key name reason_op, key);
-      Some (Field { key_loc = None; type_ = value; polarity = dict_polarity }, IndexerProperty)
+      Some (OrdinaryField { type_ = value; polarity = dict_polarity }, IndexerProperty)
     | (Computed k, None, Some { key; value; dict_polarity; _ }) ->
       F.dict_read_check cx trace ~use_op:unknown_use (k, key);
-      Some (Field { key_loc = None; type_ = value; polarity = dict_polarity }, IndexerProperty)
+      Some (OrdinaryField { type_ = value; polarity = dict_polarity }, IndexerProperty)
     | _ -> None
 
   let read_obj_prop cx trace ~use_op o propref reason_obj reason_op lookup_info =

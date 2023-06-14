@@ -25,6 +25,8 @@ val dump_tvar : ?depth:int -> Context.t -> Type.ident -> string
 
 val dump_prop : ?depth:int -> Context.t -> Type.Property.t -> string
 
+val dump_normalized_prop : ?depth:int -> Context.t -> Type.property_type -> string
+
 val dump_reason : Context.t -> Reason.t -> string
 
 val dump_error_message : Context.t -> Error_message.t -> string

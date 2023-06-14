@@ -781,7 +781,7 @@ module Make
               )
           in
           let propref = mk_named_prop ~reason x in
-          Flow.flow_p cx ~use_op reason reason propref (p1, p2))
+          Flow.flow_p cx ~use_op reason reason propref (Property.type_ p1, Property.type_ p2))
       own;
 
     let (super, _) = supertype cx x in

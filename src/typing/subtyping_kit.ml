@@ -34,7 +34,7 @@ module type OUTPUT = sig
     reason ->
     reason ->
     Type.propref ->
-    Type.property * Type.property ->
+    Type.property_type * Type.property_type ->
     unit
 end
 
@@ -47,14 +47,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
 
   let rec_flow_p cx ?trace ~use_op ?(report_polarity = true) lreason ureason propref = function
     (* unification cases *)
-    | ( Field { type_ = lt; polarity = Polarity.Neutral; _ },
-        Field { type_ = ut; polarity = Polarity.Neutral; _ }
+    | ( OrdinaryField { type_ = lt; polarity = Polarity.Neutral },
+        OrdinaryField { type_ = ut; polarity = Polarity.Neutral }
       ) ->
       unify_opt cx ?trace ~use_op lt ut
     (* directional cases *)
     | (lp, up) ->
       let propref_error = name_of_propref propref in
-      (match (Property.read_t lp, Property.read_t up) with
+      (match (Property.read_t_of_property_type lp, Property.read_t_of_property_type up) with
       | (Some lt, Some ut) -> flow_opt cx ?trace (lt, UseT (use_op, ut))
       | (None, Some _) when report_polarity ->
         add_output
@@ -63,12 +63,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
           (Error_message.EPropPolarityMismatch
              ( (lreason, ureason),
                propref_error,
-               (Property.polarity lp, Property.polarity up),
+               (Property.polarity_of_property_type lp, Property.polarity_of_property_type up),
                use_op
              )
           )
       | _ -> ());
-      (match (Property.write_t lp, Property.write_t up) with
+      (match (Property.write_t_of_property_type lp, Property.write_t_of_property_type up) with
       | (Some lt, Some ut) -> flow_opt cx ?trace (ut, UseT (use_op, lt))
       | (None, Some _) when report_polarity ->
         add_output
@@ -77,7 +77,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           (Error_message.EPropPolarityMismatch
              ( (lreason, ureason),
                propref_error,
-               (Property.polarity lp, Property.polarity up),
+               (Property.polarity_of_property_type lp, Property.polarity_of_property_type up),
                use_op
              )
           )
@@ -200,8 +200,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
         lreason
         ureason
         (Computed uk)
-        ( Field { key_loc = None; type_ = lk; polarity = lpolarity },
-          Field { key_loc = None; type_ = uk; polarity = upolarity }
+        ( OrdinaryField { type_ = lk; polarity = lpolarity },
+          OrdinaryField { type_ = uk; polarity = upolarity }
         );
       rec_flow_p
         cx
@@ -211,8 +211,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
         lreason
         ureason
         (Computed uv)
-        ( Field { key_loc = None; type_ = lv; polarity = lpolarity },
-          Field { key_loc = None; type_ = uv; polarity = upolarity }
+        ( OrdinaryField { type_ = lv; polarity = lpolarity },
+          OrdinaryField { type_ = uv; polarity = upolarity }
         )
     | _ -> ());
 
@@ -306,7 +306,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
             | _ -> ()
           else
             (* prop from aliased LB *)
-            rec_flow_p cx ~trace ~use_op lreason ureason propref (lp, up)
+            rec_flow_p
+              cx
+              ~trace
+              ~use_op
+              lreason
+              ureason
+              propref
+              (Property.type_ lp, Property.type_ up)
         | (None, Some { key; value; dict_polarity; _ }) when not (is_dictionary_exempt name) ->
           rec_flow
             cx
@@ -315,16 +322,20 @@ module Make (Flow : INPUT) : OUTPUT = struct
               UseT
                 (Frame (IndexerKeyCompatibility { lower = lreason; upper = ureason }, use_op'), key)
             );
-          let lp = Field { key_loc = None; type_ = value; polarity = dict_polarity } in
+          let lp = OrdinaryField { type_ = value; polarity = dict_polarity } in
           let up =
             match up with
             | Field
-                { key_loc; type_ = OptionalT { reason = _; type_ = ut; use_desc = _ }; polarity } ->
-              Field { key_loc; type_ = ut; polarity }
-            | _ -> up
+                {
+                  key_loc = _;
+                  type_ = OptionalT { reason = _; type_ = ut; use_desc = _ };
+                  polarity;
+                } ->
+              OrdinaryField { type_ = ut; polarity }
+            | _ -> Property.type_ up
           in
           if lit then
-            match (Property.read_t lp, Property.read_t up) with
+            match (Property.read_t_of_property_type lp, Property.read_t_of_property_type up) with
             | (Some lt, Some ut) -> rec_flow cx trace (lt, UseT (use_op, ut))
             | _ -> ()
           else
@@ -333,7 +344,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           (* property doesn't exist in inflowing type *)
           (match up with
           | Field { type_ = OptionalT _; _ } when lit -> ()
-          | Field { type_ = OptionalT _; polarity = Polarity.Positive; _ }
+          | Field { type_ = OptionalT _ as type_; polarity = Polarity.Positive; _ }
             when Obj_type.is_exact lflags.obj_kind ->
             rec_flow
               cx
@@ -345,7 +356,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
                     lookup_kind = NonstrictReturning (None, None);
                     try_ts_on_failure = [];
                     propref;
-                    lookup_action = LookupProp (use_op, up);
+                    lookup_action =
+                      LookupProp (use_op, OrdinaryField { type_; polarity = Polarity.Positive });
                     method_accessible = true;
                     ids = None;
                     ignore_dicts = false;
@@ -368,7 +380,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                     lookup_kind;
                     try_ts_on_failure = [];
                     propref;
-                    lookup_action = LookupProp (use_op, up);
+                    lookup_action = LookupProp (use_op, Property.type_ up);
                     method_accessible = true;
                     ids = None;
                     ignore_dicts = false;
@@ -398,17 +410,19 @@ module Make (Flow : INPUT) : OUTPUT = struct
                 match lp with
                 | Field
                     {
-                      key_loc;
+                      key_loc = _;
                       type_ = OptionalT { reason = _; type_ = lt; use_desc = _ };
                       polarity;
                     } ->
-                  Field { key_loc; type_ = lt; polarity }
-                | _ -> lp
+                  OrdinaryField { type_ = lt; polarity }
+                | _ -> Property.type_ lp
               in
-              let up = Field { key_loc = None; type_ = value; polarity = dict_polarity } in
+              let up = OrdinaryField { type_ = value; polarity = dict_polarity } in
               begin
                 if lit then
-                  match (Property.read_t lp, Property.read_t up) with
+                  match
+                    (Property.read_t_of_property_type lp, Property.read_t_of_property_type up)
+                  with
                   | (Some lt, Some ut) -> rec_flow cx trace (lt, UseT (use_op, ut))
                   | _ -> ()
                 else
@@ -458,11 +472,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
           match Context.find_call cx lcall with
           | OptionalT { reason = _; type_ = t; use_desc = _ }
           | t ->
-            Field { key_loc = None; type_ = t; polarity = Polarity.Positive }
+            OrdinaryField { type_ = t; polarity = Polarity.Positive }
         in
-        let up = Field { key_loc = None; type_ = value; polarity = dict_polarity } in
+        let up = OrdinaryField { type_ = value; polarity = dict_polarity } in
         if lit then
-          match (Property.read_t lp, Property.read_t up) with
+          match (Property.read_t_of_property_type lp, Property.read_t_of_property_type up) with
           | (Some lt, Some ut) -> rec_flow cx trace (lt, UseT (use_op, ut))
           | _ -> ()
         else
@@ -1460,7 +1474,15 @@ module Make (Flow : INPUT) : OUTPUT = struct
             Named { reason = reason_prop; name; from_indexed_access = false }
           in
           match NameUtils.Map.find_opt name lflds with
-          | Some lp -> rec_flow_p cx ~trace ~use_op lreason ureason propref (lp, up)
+          | Some lp ->
+            rec_flow_p
+              cx
+              ~trace
+              ~use_op
+              lreason
+              ureason
+              propref
+              (Property.type_ lp, Property.type_ up)
           | _ ->
             let lookup_kind =
               match up with
@@ -1480,7 +1502,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                         lookup_kind;
                         try_ts_on_failure = [];
                         propref;
-                        lookup_action = LookupProp (use_op, up);
+                        lookup_action = LookupProp (use_op, Property.type_ up);
                         method_accessible = false;
                         ids = Some (Properties.Set.of_list [lown; lproto]);
                         ignore_dicts = false;
