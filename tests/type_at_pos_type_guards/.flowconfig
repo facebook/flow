@@ -10,5 +10,6 @@
 all=true
 experimental.type_guards=true
 enums=true
+no_flowlib=false
 
 [strict]

@@ -8,6 +8,35 @@ Flags:
 (x: mixed) => x is number
 decls.js:3:10,3:12
 
+decls.js:9:15
+Flags:
+Returns the elements of an array that meet the condition specified in a callback function.
+
+  ((callbackfn: typeof Boolean) => Array<$NonMaybeType<(0 | 1)>>)
+  &
+  (<This, S: (0 | 1)>(
+    callbackfn: (value: (0 | 1), index: number, array: $ReadOnlyArray<(0 | 1)>) => value is S,
+    thisArg: This
+  ) => Array<S>)
+  &
+  (<This>(
+    callbackfn: (value: (0 | 1), index: number, array: $ReadOnlyArray<(0 | 1)>) => mixed,
+    thisArg: This
+  ) => Array<(0 | 1)>)
+= 
+  ((callbackfn: typeof Boolean) => Array<(1 | 0)>)
+  &
+  (<This, S: (0 | 1)>(
+    callbackfn: (value: (0 | 1), index: number, array: $ReadOnlyArray<(0 | 1)>) => value is S,
+    thisArg: This
+  ) => Array<S>)
+  &
+  (<This>(
+    callbackfn: (value: (0 | 1), index: number, array: $ReadOnlyArray<(0 | 1)>) => mixed,
+    thisArg: This
+  ) => Array<(0 | 1)>)
+decls.js:9:15,9:20
+
 test.js:27:11
 Flags:
 {

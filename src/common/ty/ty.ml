@@ -500,6 +500,16 @@ class ['A] comparator_ty =
 
     method! private fail_elt env x y = fail_gen this#tag_of_elt env x y
 
+    method! private fail_return_t env x y = fail_gen this#tag_of_return_t env x y
+
+    method! private fail_any_error_kind env x y = fail_gen this#tag_of_any_error_kind env x y
+
+    method! private fail_mapped_type_homomorphic_flag env x y =
+      fail_gen this#tag_of_mapped_type_homomorphic_flag env x y
+
+    method! private fail_mapped_type_optional_flag env x y =
+      fail_gen this#tag_of_mapped_type_optional_flag env x y
+
     (* types will show up in unions and intersections in ascending order *)
     (* No two elements of each variant can be assigned the same tag *)
     method tag_of_t _ =
@@ -663,6 +673,28 @@ class ['A] comparator_ty =
       | FunProtoBind -> 3
       | FunProtoCall -> 4
       | TSymbol _ -> 5
+
+    method tag_of_return_t _ =
+      function
+      | ReturnType _ -> 0
+      | TypeGuard _ -> 1
+
+    method tag_of_mapped_type_homomorphic_flag _ =
+      function
+      | Homomorphic -> 0
+      | SemiHomomorphic _ -> 1
+      | Unspecialized -> 2
+
+    method tag_of_any_error_kind _ =
+      function
+      | UnresolvedName -> 0
+      | MissingAnnotation -> 1
+
+    method tag_of_mapped_type_optional_flag _ =
+      function
+      | RemoveOptional -> 0
+      | KeepOptionality -> 1
+      | MakeOptional -> 2
   end
 
 (* Type destructors *)
