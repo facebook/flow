@@ -1325,13 +1325,6 @@ let resolve
              { spread_reason = reason; interface_reason = r; use_op }
           );
         return cx use_op (AnyT.error reason)
-      | (Object.ObjectMap _, _) ->
-        add_output
-          cx
-          Error_message.(
-            ECannotMapInstance { mapped_type_reason = reason; instance_reason = r; use_op }
-          );
-        return cx use_op (AnyT.error reason)
       | _ -> recurse cx use_op reason resolve_tool tool super
     end
   (* Statics of a class. TODO: This logic is unfortunately duplicated from the
@@ -1513,7 +1506,7 @@ let map_object
     reason
     use_op
     selected_keys_and_indexers
-    { Object.reason = _; props; flags; generics = _; interface = _ } =
+    { Object.reason = _; props; flags; generics; interface } =
   let mk_prop_type key_t prop_optional =
     (* We persist the original use_op here so that errors involving the typeapp are positioned
      * at the use site and not the typeapp site *)
@@ -1631,11 +1624,16 @@ let map_object
   let id = Context.generate_property_map cx props in
   let proto = ObjProtoT reason in
   let flags = { flags with obj_kind } in
-  let t = mk_object_def_type ~reason ~flags ~call id proto in
-  if flags.obj_kind = Exact then
-    ExactT (reason, t)
-  else
-    t
+  mk_object_type
+    ~def_reason:reason
+    ~exact_reason:(Some reason)
+    ~invalidate_aliases:true
+    ~interface
+    flags
+    call
+    id
+    proto
+    generics
 
 let run
     (type a)

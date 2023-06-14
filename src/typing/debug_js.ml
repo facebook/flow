@@ -1885,7 +1885,6 @@ let dump_error_message =
           | ExplicitExactOrInexact -> "ExplicitExactOrInexact"
           | RemoveOptionality -> "RemoveOptionality"
         )
-    | ECannotMapInstance _ -> "ECannotMapInstance"
     | EDuplicateComponentProp { first; _ } ->
       spf "EDuplicateComponentProp (%s)" (dump_reason cx first)
     | ERefComponentProp { loc; _ } -> spf "ERefComponentProp (%s)" (string_of_aloc loc)

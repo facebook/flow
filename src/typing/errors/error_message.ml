@@ -578,11 +578,6 @@ and 'loc t' =
       loc: 'loc;
       kind: invalid_mapped_type_error_kind;
     }
-  | ECannotMapInstance of {
-      instance_reason: 'loc virtual_reason;
-      mapped_type_reason: 'loc virtual_reason;
-      use_op: 'loc virtual_use_op;
-    }
   | EDuplicateComponentProp of {
       spread: 'loc;
       first: 'loc virtual_reason;
@@ -1287,13 +1282,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         kind;
       }
   | EInvalidMappedType { loc; kind } -> EInvalidMappedType { loc = f loc; kind }
-  | ECannotMapInstance { mapped_type_reason; instance_reason; use_op } ->
-    ECannotMapInstance
-      {
-        mapped_type_reason = map_reason mapped_type_reason;
-        instance_reason = map_reason instance_reason;
-        use_op = map_use_op use_op;
-      }
   | EDuplicateComponentProp { spread; first; second } ->
     EDuplicateComponentProp { spread = f spread; first = map_reason first; second = f second }
   | ERefComponentProp { spread; loc } ->
@@ -1410,8 +1398,6 @@ let util_use_op_of_msg nope util = function
     util use_op (fun use_op ->
         EImplicitInstantiationUnderconstrainedError { reason_call; reason_tparam; bound; use_op }
     )
-  | ECannotMapInstance { instance_reason; mapped_type_reason; use_op } ->
-    util use_op (fun use_op -> ECannotMapInstance { instance_reason; mapped_type_reason; use_op })
   | EDebugPrint (_, _)
   | EExportValueAsType (_, _)
   | EImportValueAsType (_, _)
@@ -1794,7 +1780,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EPrimitiveAsInterface _
   | EPredicateFuncArityMismatch _
   | EPredicateFuncIncompatibility _
-  | ECannotMapInstance _
   | ETypeGuardIndexMismatch _ ->
     None
 
@@ -4948,17 +4933,6 @@ let friendly_message_of_msg loc_of_aloc msg =
       | RemoveOptionality -> [text "Mapped Types do not yet support optionality removal."]
     in
     Normal { features }
-  | ECannotMapInstance { mapped_type_reason; instance_reason; use_op } ->
-    let features =
-      [
-        text "Mapped Types only support objects, so ";
-        ref mapped_type_reason;
-        text " cannot use ";
-        ref instance_reason;
-        text " to instantiate a mapped type";
-      ]
-    in
-    UseOp { loc = loc_of_reason mapped_type_reason; features; use_op }
   | EDuplicateComponentProp { spread; first; second } ->
     let features =
       [
@@ -5269,7 +5243,6 @@ let error_code_of_message err : error_code option =
   | EComponentMissingReturn _ -> Some ComponentMissingReturn
   | EInvalidDeclaration _ -> Some InvalidDeclaration
   | EInvalidMappedType _ -> Some InvalidMappedType
-  | ECannotMapInstance _ -> Some InvalidMappedType
   | EDuplicateComponentProp _ -> Some InvalidComponentProp
   | ERefComponentProp _ -> Some InvalidComponentProp
   | EMalformedCode _

@@ -520,49 +520,90 @@ References:
                                        ^^^^^^^^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------- instancet.js:11:24
+Error ------------------------------------------------------------------------------------------------- instancet.js:9:4
 
-Cannot instantiate mapped type [1] because Mapped Types only support objects, so mapped type [1] cannot use `I` [2] to
-instantiate a mapped type. [invalid-mapped-type]
+Cannot cast `i` to interface type because property `foo` is read-only in mapped type [1] but writable in interface
+type [2]. [incompatible-variance]
 
-   instancet.js:11:24
-   11| type MappedInterface = {[key in keyof I]: I[key]}; // ERROR, cannot map interfaces
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   instancet.js:11:39
-   11| type MappedInterface = {[key in keyof I]: I[key]}; // ERROR, cannot map interfaces
-                                             ^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- instancet.js:21:23
-
-Cannot instantiate mapped type [1] because Mapped Types only support objects, so mapped type [1] cannot use `A` [2] to
-instantiate a mapped type. [invalid-mapped-type]
-
-   instancet.js:21:23
-   21| type MappedInstance = {+[key in keyof A]: A[number]};
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   instancet.js:9:4
+   9|   (i: interface {foo: number}); // ERROR
+         ^
 
 References:
-   instancet.js:21:39
-   21| type MappedInstance = {+[key in keyof A]: A[number]};
-                                             ^ [2]
+   instancet.js:7:20
+   7|   declare const i: MappedInterface;
+                         ^^^^^^^^^^^^^^^ [1]
+   instancet.js:9:7
+   9|   (i: interface {foo: number}); // ERROR
+            ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- instancet.js:21:45
+Error ------------------------------------------------------------------------------------------------ instancet.js:10:4
 
-Cannot access number on `A` because an index signature declaring the expected key / value type is missing in `A` [1].
-[prop-missing]
+Cannot cast `i` to object type because mapped type [1] is not a subtype of object type [2]. Class instances are not
+subtypes of object types; consider rewriting object type [2] as an interface. [class-object-subtyping]
 
-   instancet.js:21:45
-   21| type MappedInstance = {+[key in keyof A]: A[number]};
-                                                   ^^^^^^
+   instancet.js:10:4
+   10|   (i: {+foo: number, ...}); // ERROR (class object subtyping)
+          ^
 
 References:
-   instancet.js:21:43
-   21| type MappedInstance = {+[key in keyof A]: A[number]};
-                                                 ^ [1]
+   instancet.js:7:20
+    7|   declare const i: MappedInterface;
+                          ^^^^^^^^^^^^^^^ [1]
+   instancet.js:10:7
+   10|   (i: {+foo: number, ...}); // ERROR (class object subtyping)
+             ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ instancet.js:33:4
+
+Cannot cast `inst` to interface type because property `foo` is read-only in mapped type [1] but writable in interface
+type [2]. [incompatible-variance]
+
+   instancet.js:33:4
+   33|   (inst: interface {foo: number}); // ERROR
+          ^^^^
+
+References:
+   instancet.js:31:23
+   31|   declare const inst: MappedInstance;
+                             ^^^^^^^^^^^^^^ [1]
+   instancet.js:33:10
+   33|   (inst: interface {foo: number}); // ERROR
+                ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ instancet.js:34:9
+
+Cannot get `inst['bar']` because property `bar` is missing in mapped type [1]. [prop-missing]
+
+   instancet.js:34:9
+   34|   (inst['bar']); // ERROR
+               ^^^^^
+
+References:
+   instancet.js:31:23
+   31|   declare const inst: MappedInstance;
+                             ^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ instancet.js:41:4
+
+Cannot cast `c` to interface type because property `bar` is read-only in mapped type [1] but writable in interface
+type [2]. [incompatible-variance]
+
+   instancet.js:41:4
+   41|   (c: interface {bar: number}); // ERROR
+          ^
+
+References:
+   instancet.js:39:20
+   39|   declare const c: MappedClass;
+                          ^^^^^^^^^^^ [1]
+   instancet.js:41:7
+   41|   (c: interface {bar: number}); // ERROR
+             ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------ no_explicit_exactness.js:7:20
@@ -1431,7 +1472,7 @@ References:
 
 
 
-Found 93 errors
+Found 95 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
