@@ -354,7 +354,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- extraction.js:25:32
 
-Cannot access number literal `0` on `Parameters` because function type [1] only has 0 elements, so index 0 is out of
+Cannot access number literal `0` on `Parameters` because tuple type [1] only has 0 elements, so index 0 is out of
 bounds. [invalid-tuple-index]
 
    extraction.js:25:32

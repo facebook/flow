@@ -480,7 +480,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
           (el :: els, t :: ts)
       )
     in
-    let arr_type =
+    let (reason, arr_type) =
       match rest_param with
       | None ->
         let elem_t =
@@ -490,7 +490,11 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
           | t0 :: t1 :: ts -> UnionT (reason, UnionRep.make t0 t1 ts)
         in
         let len = Base.List.length tuple_ts in
-        TupleAT { elem_t; elements = Base.List.rev tuple_elements_rev; arity = (len, len) }
+        let t =
+          TupleAT { elem_t; elements = Base.List.rev tuple_elements_rev; arity = (len, len) }
+        in
+        let reason = update_desc_reason (fun _ -> RTupleType) reason in
+        (reason, t)
       | Some (_, _, rest_param_t) ->
         let rest_elem_t =
           Tvar.mk_no_wrap_where cx reason (fun tout ->
@@ -513,7 +517,9 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
           | [] -> rest_elem_t
           | t :: ts -> UnionT (reason, UnionRep.make rest_elem_t t ts)
         in
-        ArrayAT (general, None)
+        let t = ArrayAT (general, None) in
+        let reason = update_desc_reason (fun _ -> RArray) reason in
+        (reason, t)
     in
     let solution = DefT (reason, bogus_trust (), ArrT arr_type) in
     Flow.flow_t cx (solution, tvar);

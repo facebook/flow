@@ -106,6 +106,7 @@ function rests() {
 
 function ResolveSpreadsToMultiflowSubtypeFull() {
   declare function f<TArguments: $ReadOnlyArray<mixed>>(fn: (...TArguments) => mixed): (...TArguments) => mixed
+  declare function params<TArguments: $ReadOnlyArray<mixed>>(fn: (...TArguments) => mixed): TArguments;
 
   function g(x: number): void {}
   const f1 = f(g);
@@ -121,6 +122,10 @@ function ResolveSpreadsToMultiflowSubtypeFull() {
   const f3 = f(i);
   f3(0, 1); // ok
   f3("") // error
+
+  const v1 = params(h);
+  (v1: [number, string]); // ok
+  (v1: empty); // error: tuple ~> empty
 }
 
 function Diffs() {
