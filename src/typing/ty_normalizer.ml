@@ -1657,13 +1657,7 @@ end = struct
       | T.ValuesType -> return (Ty.Utility (Ty.Values ty))
       | T.ElementType { index_type } ->
         let%map index = type__ ~env index_type in
-        (match index_type with
-        | T.DefT (_, _, T.SingletonStrT _) ->
-          (* `$ElementType<X, "foo">` is not equivalent to `X["foo"]`
-           * for instances. Indexed access produces PropertyType when
-           * the index is a string literal. *)
-          Ty.Utility (Ty.ElementType (ty, index))
-        | _ -> Ty.IndexedAccess { _object = ty; index; optional = false })
+        Ty.IndexedAccess { _object = ty; index; optional = false }
       | T.OptionalIndexedAccessNonMaybeType { index } ->
         let%map index' =
           match index with

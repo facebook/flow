@@ -419,7 +419,7 @@ type-destructor.js:78:6,78:22
 
 type-destructor.js:82:6
 Flags:
-type ElementTypeProps = $ElementType<Props, "name">
+type ElementTypeProps = Props["name"]
 = string
 type-destructor.js:82:6,82:21
 
@@ -681,7 +681,7 @@ type-destructor.js:78:6,78:22
 
 type-destructor.js:82:6
 Flags:
-type ElementTypeProps = $ElementType<Props, "name">
+type ElementTypeProps = Props["name"]
 = string
 type-destructor.js:82:6,82:21
 
@@ -920,7 +920,7 @@ mapped-type.js:40:6,40:17
 
 mapped-type.js:44:4
 Flags:
-{|bar: $ElementType<O, "bar">, foo: $ElementType<O, "foo">|}
+{|bar: O["bar"], foo: O["foo"]|}
 = {|bar: string, foo: number|}
 mapped-type.js:44:4,44:4
 
@@ -973,7 +973,7 @@ mapped-type.js:67:6,67:30
 
 mapped-type.js:71:4
 Flags:
-{|bar: $ElementType<O, "bar">, foo: $ElementType<O, "foo">|}
+{|bar: O["bar"], foo: O["foo"]|}
 = {|bar: string, foo: number|}
 mapped-type.js:71:4,71:4
 
