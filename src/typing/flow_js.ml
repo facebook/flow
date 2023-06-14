@@ -6543,13 +6543,13 @@ struct
     then
       match d with
       | ConditionalType _
-      | MappedType _ ->
-        Tvar_resolver.resolve cx result
-      | NonMaybeType
+      | MappedType _
       | PropertyType _
       | ElementType _
       | OptionalIndexedAccessNonMaybeType _
-      | OptionalIndexedAccessResultType _
+      | OptionalIndexedAccessResultType _ ->
+        Tvar_resolver.resolve cx result
+      | NonMaybeType
       | ReadOnlyType
       | PartialType
       | RequiredType
