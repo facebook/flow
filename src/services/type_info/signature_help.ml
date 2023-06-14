@@ -18,6 +18,11 @@ let parameter_name is_opt name =
 
 let string_of_ty = Ty_printer.string_of_t_single_line ~with_comments:false
 
+let string_of_return_t ~exact_by_default = function
+  | Ty.ReturnType t -> Ty_printer.string_of_t_single_line ~exact_by_default ~with_comments:false t
+  | Ty.TypeGuard (x, t) ->
+    x ^ " is " ^ Ty_printer.string_of_t_single_line ~exact_by_default ~with_comments:false t
+
 let documentation_of_param_infos name : Jsdoc.Param.t -> string =
   let open Jsdoc.Param in
   let open Utils_js in
@@ -89,7 +94,7 @@ let func_details ~jsdoc ~exact_by_default params rest_param return =
       in
       param_tys @ rest
   in
-  let return_ty = string_of_ty ~exact_by_default return in
+  let return_ty = string_of_return_t ~exact_by_default return in
   let func_documentation = Base.Option.bind jsdoc ~f:Find_documentation.documentation_of_jsdoc in
   { ServerProt.Response.param_tys; return_ty; func_documentation }
 

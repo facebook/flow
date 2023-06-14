@@ -617,7 +617,7 @@ module Make (Extra : BASE_STATS) = struct
                           ];
                       fun_params = [(_, Bound (_, b), { prm_optional = false })];
                       fun_rest_param = None;
-                      fun_return = Bound (_, r);
+                      fun_return = ReturnType (Bound (_, r));
                       fun_static = _;
                     },
                   t :: _

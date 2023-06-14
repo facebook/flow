@@ -10,7 +10,7 @@ val func_details :
   exact_by_default:bool ->
   (string option * Ty.t * Ty.fun_param) Base.List.t ->
   (string option * Ty.t) option ->
-  Ty.t ->
+  Ty.return_t ->
   ServerProt.Response.func_details_result
 
 val find_signatures :

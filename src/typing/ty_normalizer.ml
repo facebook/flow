@@ -787,7 +787,7 @@ end = struct
                     (Some "thisArg", explicit_any, non_opt_param);
                     (Some "argArray", explicit_any, opt_param);
                   ]
-                explicit_any
+                (ReturnType explicit_any)
             )
         else
           return Ty.(TypeOf FunProtoApply)
@@ -802,7 +802,7 @@ end = struct
                   ( Some "argArray",
                     Arr { arr_readonly = false; arr_literal = None; arr_elt_t = explicit_any }
                   )
-                explicit_any
+                (ReturnType explicit_any)
             )
         else
           return Ty.(TypeOf FunProtoBind)
@@ -817,7 +817,7 @@ end = struct
                   ( Some "argArray",
                     Arr { arr_readonly = false; arr_literal = None; arr_elt_t = explicit_any }
                   )
-                explicit_any
+                (ReturnType explicit_any)
             )
         else
           return Ty.(TypeOf FunProtoCall)
@@ -870,10 +870,19 @@ end = struct
 
     and fun_ty ~env static f fun_type_params =
       let%bind fun_static = type__ ~env static in
-      let { T.params; rest_param; return_t; _ } = f in
+      let { T.params; rest_param; return_t; predicate; _ } = f in
       let%bind fun_params = mapM (fun_param ~env) params in
       let%bind fun_rest_param = fun_rest_param_t ~env rest_param in
-      let%bind fun_return = type__ ~env return_t in
+      let%bind fun_return =
+        match predicate with
+        | Some (T.TypeGuardBased { param_name = (_, x); type_guard = t }) ->
+          let%map t = type__ ~env t in
+          Ty.TypeGuard (x, t)
+        | Some (T.PredBased _)
+        | None ->
+          let%map t = type__ ~env return_t in
+          Ty.ReturnType t
+      in
       return { Ty.fun_params; fun_rest_param; fun_return; fun_type_params; fun_static }
 
     and method_ty ~env t =
@@ -1326,17 +1335,18 @@ end = struct
                   ( Some "sources",
                     Arr { arr_readonly = false; arr_literal = None; arr_elt_t = explicit_any }
                   )
-                explicit_any
+                (ReturnType explicit_any)
             )
         (* Object.getPrototypeOf: (o: any): any *)
         | ObjectGetPrototypeOf ->
-          return Ty.(mk_fun ~params:[(Some "o", explicit_any, non_opt_param)] explicit_any)
+          return
+            Ty.(mk_fun ~params:[(Some "o", explicit_any, non_opt_param)] (ReturnType explicit_any))
         (* Object.setPrototypeOf: (o: any, p: any): any *)
         | ObjectSetPrototypeOf ->
           let params =
             [(Some "o", Ty.explicit_any, non_opt_param); (Some "p", Ty.explicit_any, non_opt_param)]
           in
-          return (mk_fun ~params Ty.explicit_any)
+          return (mk_fun ~params Ty.(ReturnType explicit_any))
         (* debugPrint: (_: any[]) => void *)
         | DebugPrint ->
           return
@@ -1349,12 +1359,13 @@ end = struct
                       non_opt_param
                     );
                   ]
-                Void
+                (ReturnType Void)
             )
         (* debugThrow: () => empty *)
-        | DebugThrow -> return (mk_fun (mk_empty Ty.EmptyType))
+        | DebugThrow -> return (mk_fun Ty.(ReturnType (mk_empty EmptyType)))
         (* debugSleep: (seconds: number) => void *)
-        | DebugSleep -> return Ty.(mk_fun ~params:[(Some "seconds", Num None, non_opt_param)] Void)
+        | DebugSleep ->
+          return Ty.(mk_fun ~params:[(Some "seconds", Num None, non_opt_param)] (ReturnType Void))
         (* reactPropType: any (TODO) *)
         | ReactPropType _ -> return Ty.explicit_any
         (*
@@ -1384,11 +1395,11 @@ end = struct
                 ]
               in
               let reactElement = generic_builtin_t (Reason.OrdinaryName "React$Element") [t] in
-              let f1 = mk_fun ~tparams ~params reactElement in
+              let f1 = mk_fun ~tparams ~params (ReturnType reactElement) in
               let params =
                 [(Some "config", t, non_opt_param); (Some "context", explicit_any, non_opt_param)]
               in
-              let sfc = mk_fun ~tparams ~params reactElement in
+              let sfc = mk_fun ~tparams ~params (ReturnType reactElement) in
               let params =
                 [
                   (Some "fn", sfc, non_opt_param);
@@ -1396,7 +1407,7 @@ end = struct
                   (Some "children", explicit_any, opt_param);
                 ]
               in
-              let f2 = mk_fun ~tparams ~params reactElement in
+              let f2 = mk_fun ~tparams ~params (ReturnType reactElement) in
               mk_inter (f1, [f2])
             )
         (* Fallback *)

@@ -223,15 +223,10 @@ let type_ options =
     let%map rest = mapM type_ rest in
     (Loc.none, T.Intersection { T.Intersection.types = (t0, t1, rest); comments = None })
   and function_ f =
-    let%bind return = type_ f.fun_return in
+    let%bind return = fun_return_t f.fun_return in
     let%bind params = fun_params f.fun_params f.fun_rest_param in
     let%map tparams = opt type_params f.fun_type_params in
-    {
-      T.Function.params;
-      return = Ast.Type.Function.TypeAnnotation return;
-      tparams;
-      comments = None;
-    }
+    { T.Function.params; return; tparams; comments = None }
   and fun_params params rest_param =
     let%bind params = mapM fun_param params in
     let%map rest = opt fun_rest_param rest_param in
@@ -251,6 +246,16 @@ let type_ options =
   and fun_rest_param (name, t) =
     let%map argument = fun_param (name, t, { prm_optional = false }) in
     (Loc.none, { T.Function.RestParam.argument; comments = None })
+  and fun_return_t = function
+    | ReturnType t ->
+      let%map t = type_ t in
+      Ast.Type.Function.TypeAnnotation t
+    | TypeGuard (x, t) ->
+      let%map t = type_ t in
+      T.Function.TypeGuard
+        ( Loc.none,
+          { T.TypeGuard.asserts = false; guard = (id_from_string x, Some t); comments = None }
+        )
   and obj_ o =
     let%bind properties = mapM obj_prop o.obj_props in
     let%map (exact, inexact, properties) =
@@ -442,7 +447,7 @@ let type_ options =
       {
         fun_params = [];
         fun_rest_param = None;
-        fun_return = t;
+        fun_return = ReturnType t;
         fun_type_params = None;
         fun_static = Ty.Top;
       }
@@ -451,7 +456,7 @@ let type_ options =
       {
         fun_params = [(None, t, { prm_optional = false })];
         fun_rest_param = None;
-        fun_return = Void;
+        fun_return = ReturnType Void;
         fun_type_params = None;
         fun_static = Ty.Top;
       }

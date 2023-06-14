@@ -1,3 +1,13 @@
+decls.js:1:6
+Flags:
+type G = (x: mixed) => x is number
+decls.js:1:6,1:6
+
+decls.js:3:10
+Flags:
+(x: mixed) => x is number
+decls.js:3:10,3:12
+
 test.js:27:11
 Flags:
 {

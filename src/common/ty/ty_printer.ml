@@ -233,7 +233,7 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
         list ~wrap:(Atom "(", Atom ")") ~sep:(Atom ",") ~trailing:false params;
         sep;
         pretty_space;
-        type_ ~depth fun_return;
+        return_t ~depth fun_return;
       ]
   and type_function_param ~depth (name, annot, { prm_optional }) =
     fuse
@@ -256,6 +256,10 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
         end;
         type_ ~depth annot;
       ]
+  and return_t ~depth t =
+    match t with
+    | ReturnType t -> type_ ~depth t
+    | TypeGuard (x, t) -> fuse_with_space [Atom x; Atom "is"; type_ ~depth t]
   and type_object_property =
     let to_key x =
       if property_key_quotes_needed x then

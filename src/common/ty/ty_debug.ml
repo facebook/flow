@@ -185,7 +185,12 @@ struct
       (dump_list (dump_param ~depth) fun_params)
       (dump_rest_params ~depth fun_rest_param)
       (dump_t ~depth fun_static)
-      (dump_t ~depth fun_return)
+      (dump_return_t ~depth fun_return)
+
+  and dump_return_t ~depth t =
+    match t with
+    | ReturnType t -> dump_t ~depth t
+    | TypeGuard (x, t) -> spf "%s is %s" x (dump_t ~depth t)
 
   and dump_field ~depth x t polarity optional =
     spf
@@ -522,9 +527,18 @@ struct
               | Some name -> [("restParamName", JSON_String name)]
               )
         );
-        ("returnType", json_of_t fun_return);
+        ("returnType", json_of_return_t fun_return);
         ("staticType", json_of_t fun_static);
       ]
+    and json_of_return_t = function
+      | ReturnType t -> Hh_json.(JSON_Object [("type_", json_of_t t)])
+      | TypeGuard (x, t) ->
+        Hh_json.(
+          JSON_Object
+            [
+              ("type_guard", JSON_Object [("type_parameter", JSON_String x); ("type_", json_of_t t)]);
+            ]
+        )
     and json_of_obj_t o =
       Hh_json.(
         let { obj_def_loc; obj_kind; obj_props; obj_literal; obj_frozen } = o in
