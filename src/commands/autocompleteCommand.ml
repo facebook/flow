@@ -171,7 +171,7 @@ let main
                 ~is_label_detail_supported:true
                 ~is_insert_replace_supported:true
                 ~index
-              %> Lsp_fmt.print_completionItem ~key:"<PLACEHOLDER_PROJECT_URL>"
+              %> Lsp_fmt.CompletionItemFmt.to_json ~key:"<PLACEHOLDER_PROJECT_URL>"
               %> Hh_json.print_json_endline ~pretty:true)
             items
       )

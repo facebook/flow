@@ -785,8 +785,15 @@ module CompletionItemLabelDetailsFmt = struct
       ]
 end
 
-let parse_completionItem (params : json option) : CompletionItemResolve.params =
-  Completion.(
+let string_of_markedString (acc : string) (marked : markedString) : string =
+  match marked with
+  | MarkedCode (lang, code) -> acc ^ "```" ^ lang ^ "\n" ^ code ^ "\n" ^ "```\n"
+  | MarkedString str -> acc ^ str ^ "\n"
+
+module CompletionItemFmt = struct
+  open Completion
+
+  let of_json (params : json option) : Completion.completionItem =
     let textEdit =
       match Jget.obj_opt params "textEdit" with
       | None -> None
@@ -824,15 +831,8 @@ let parse_completionItem (params : json option) : CompletionItemResolve.params =
       command;
       data = Jget.obj_opt params "data";
     }
-  )
 
-let string_of_markedString (acc : string) (marked : markedString) : string =
-  match marked with
-  | MarkedCode (lang, code) -> acc ^ "```" ^ lang ^ "\n" ^ code ^ "\n" ^ "```\n"
-  | MarkedString str -> acc ^ str ^ "\n"
-
-let print_completionItem ~key (item : Completion.completionItem) : json =
-  Completion.(
+  let to_json ~key (item : Completion.completionItem) : json =
     Jprint.object_opt
       [
         ("label", Some (JSON_String item.label));
@@ -881,7 +881,7 @@ let print_completionItem ~key (item : Completion.completionItem) : json =
         ("command", Base.Option.map item.command ~f:(print_command ~key));
         ("data", item.data);
       ]
-  )
+end
 
 (************************************************************************)
 (* textDocument/completion request                                      *)
@@ -912,7 +912,7 @@ module CompletionFmt = struct
     JSON_Object
       [
         ("isIncomplete", JSON_Bool r.isIncomplete);
-        ("items", JSON_Array (Base.List.map r.items ~f:(print_completionItem ~key)));
+        ("items", JSON_Array (Base.List.map r.items ~f:(CompletionItemFmt.to_json ~key)));
       ]
 end
 

@@ -78,10 +78,6 @@ val parse_hover : Hh_json.json option -> Lsp.Hover.params
 
 val print_hover : Lsp.Hover.result -> Hh_json.json
 
-val parse_completionItem : Hh_json.json option -> Lsp.CompletionItemResolve.params
-
-val print_completionItem : key:string -> Lsp.Completion.completionItem -> Hh_json.json
-
 val parse_findReferences : Hh_json.json option -> Lsp.FindReferences.params
 
 val parse_goToImplementation : Hh_json.json option -> Lsp.GoToImplementation.params
@@ -144,3 +140,9 @@ val print_lsp_response :
 val print_lsp_notification : Lsp.lsp_notification -> Hh_json.json
 
 val print_lsp : ?include_error_stack_trace:bool -> key:string -> Lsp.lsp_message -> Hh_json.json
+
+module CompletionItemFmt : sig
+  val of_json : Hh_json.json option -> Lsp.Completion.completionItem
+
+  val to_json : key:string -> Lsp.Completion.completionItem -> Hh_json.json
+end
