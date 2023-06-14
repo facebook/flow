@@ -181,9 +181,15 @@ let print_command ~key (command : Command.t) : json =
       ("arguments", JSON_Array command.arguments);
     ]
 
+(** Command names have to be globally unique, so [print_command_name] appends a
+    `key`, delimited by a colon. This is the inverse of that. *)
 let parse_command_name str =
-  let delim = String.index str ':' in
-  Lsp.Command.Command (String.sub str 0 delim)
+  let name =
+    match String.index_opt str ':' with
+    | Some delim -> String.sub str 0 delim
+    | None -> str
+  in
+  Lsp.Command.Command name
 
 let parse_command (json : json option) : Command.t =
   let open Command in
