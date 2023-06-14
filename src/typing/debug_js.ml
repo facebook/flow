@@ -745,7 +745,7 @@ and dump_use_t_ (depth, tvars) cx t =
         t
     | CallT { use_op; reason = _; call_action = ConcretizeCallee _; return_hint = _ } ->
       p ~extra:(spf "%s ConcretizeCallee" (string_of_use_op use_op)) t
-    | CallLatentPredT _ -> p t
+    | CallLatentPredT { sense; _ } -> p t ~extra:(spf "sense=%b" sense)
     | ChoiceKitUseT (_, TryFlow (_, spec)) -> p ~extra:(try_flow spec) t
     | ChoiceKitUseT (_, FullyResolveType id) -> p ~extra:(tvar id) t
     | CJSExtractNamedExportsT _ -> p t

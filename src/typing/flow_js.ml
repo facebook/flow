@@ -2367,14 +2367,13 @@ struct
             end
           | (Some (Some name, _), TypeGuardBased { param_name = (_, param_name); type_guard }) ->
             let t =
-              if not sense then
-                (* Only supports positive refinements. *)
-                tin
-              else if param_name <> name then
+              if param_name <> name then
                 (* This is not the refined parameter. *)
                 tin
-              else
+              else if sense then
                 intersect cx tin type_guard
+              else
+                type_guard_diff cx tin type_guard
             in
             rec_flow_t ~use_op:unknown_use cx trace (t, OpenT tout)
         end
@@ -9776,6 +9775,18 @@ struct
       else
         let r = update_desc_reason invalidate_rtype_alias (TypeUtil.reason_of_t t1) in
         IntersectionT (r, InterRep.make t2 t1 [])
+
+  (* This utility is expected to be used when negating the refinement of a type [t1]
+   * with a type guard `x is t2`. The only case considered here is that of t1 <: t2.
+   * This means that the positive branch will always be taken, and so we are left with
+   * `empty` in the negated case. *)
+  and type_guard_diff cx t1 t2 =
+    let quick_subtype = TypeUtil.quick_subtype (Context.trust_errors cx) in
+    if quick_subtype t1 t2 || speculative_subtyping_succeeds cx t1 t2 then
+      let r = update_desc_reason invalidate_rtype_alias (TypeUtil.reason_of_t t1) in
+      DefT (r, bogus_trust (), EmptyT)
+    else
+      t1
 
   and possible_concrete_types mk_concretization_target cx reason t =
     let id = Tvar.mk_no_wrap cx reason in

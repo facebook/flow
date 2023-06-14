@@ -123,3 +123,35 @@ function sentinel_multi_tag() {
       (x: B); // error A ~> B
   }
 }
+
+
+function negation() {
+  declare function isNumber(x: mixed): x is number;
+  declare function isString(x: mixed): x is string;
+
+  declare var x: number | string;
+
+  if (isNumber(x)) {
+    (x: number); // okay
+    (x: string); // error number ~> string
+  } else {
+    (x: string); // okay
+    (x: number); // error string ~> number
+  }
+
+  if (!isNumber(x)) {
+    (x: string); // okay
+    (x: number); // error string ~> number
+  } else {
+    (x: string); // error string ~> number
+    (x: number); // okay
+  }
+
+  if (isNumber(x) || isString(x)) {
+    (x: number); // error string ~> number
+    (x: string); // error number ~> string
+  } else {
+    (x: string); // okay empty ~> string
+    (x: number); // okay empty ~> number
+  }
+}
