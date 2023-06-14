@@ -52,7 +52,7 @@ declare var o4 : {["asdf"] : number};
 
 declare var o5 : {+["asdf"] : number};
 
-(o5 : interface {+[string] : number});
+(o5 : interface {+[string] : number}); // OK
 
 declare var o6 : {[string] : number};
 

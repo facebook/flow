@@ -1971,7 +1971,13 @@ module Make
         let reason = mk_reason (RIdentifier local_name) loc in
         Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
             let use_t =
-              GetPropT (unknown_use, reason, None, Named { reason; name = local_name }, tout)
+              GetPropT
+                ( unknown_use,
+                  reason,
+                  None,
+                  Named { reason; name = local_name; from_indexed_access = false },
+                  tout
+                )
             in
             Flow.flow cx (source_ns_t, use_t)
         )
@@ -6444,7 +6450,15 @@ module Make
                Flow.flow
                  cx
                  ( o,
-                   SetPropT (use_op, reason, Named { reason; name = x }, Assign, Normal, tvar, None)
+                   SetPropT
+                     ( use_op,
+                       reason,
+                       Named { reason; name = x; from_indexed_access = false },
+                       Assign,
+                       Normal,
+                       tvar,
+                       None
+                     )
                  )
          );
       ( o,

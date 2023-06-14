@@ -16,8 +16,8 @@ interface PropAndIndexer {
 {
   declare const x: PropAndIndexer;
   (x.foo: boolean); // OK
-  (x['foo']: boolean); // Should be ok, but currently isn't
-  x['foo'] = true; // Should be ok, but currently isn't
+  (x['foo']: boolean); // OK
+  x['foo'] = true; // OK
 }
 
 // Variance
@@ -94,7 +94,7 @@ interface A extends NumIndexer {
 }
 {
   declare const x: A;
-  (x['foo']: string); // Should be ok, but currently isn't
+  (x['foo']: string); // OK
   (x[1]: boolean); // OK
   x[1] = true; // OK
 }
@@ -107,9 +107,45 @@ interface B extends StrIndexer {
 }
 {
   declare const x: B;
-  (x['foo']: string); // Should be ok, but currently isn't
+  (x['foo']: string); // OK
   (x['bar']: boolean); // OK
   x['bar'] = true; // OK
+}
+
+interface Super {
+  bar: string;
+}
+interface C extends Super {
+  [string]: boolean;
+}
+{
+  declare const x: C;
+  (x.bar: string); // OK
+  (x['bar']: string); // OK
+}
+interface SuperWithMethod {
+  bar: string;
+  foo(): null;
+}
+interface D extends SuperWithMethod {
+  [string]: () => number;
+}
+{
+  declare const x: D;
+  (x.bar: string); // OK
+  (x['bar']: string); // OK
+  (x['bar']: empty); // ERROR
+  (x['xxx']: () => number); // OK
+
+  (x['bar'] = "foo"); // OK
+  (x.bar = "foo"); // OK
+
+  x.foo(); // OK
+  x['foo'](); // OK
+  (x['foo']: empty); // ERROR
+
+  (x['xxx'](): number); // OK
+  (x['xxx']: empty); // ERROR
 }
 
 // Methods
@@ -120,7 +156,7 @@ interface M {
 {
   declare const x: M;
   x.foo(); // OK
-  x['foo'](); // Should be ok, but currently isn't
+  x['foo'](); // OK
   (x['xxx']: boolean); // OK
 }
 interface M2 extends M {
@@ -129,8 +165,19 @@ interface M2 extends M {
 {
   declare const x: M2;
   x.bar(); // OK
-  x['bar'](); // Should be ok, but currently isn't
+  x['bar'](); // OK
   x.foo(); // OK
-  x['foo'](); // Should be ok, but currently isn't
+  x['foo'](); // OK
 }
 
+// $ReadOnly type util
+{
+  declare const x: $ReadOnly<interface {[Keys]: number}>;
+  declare const s: string;
+  x['a']; // OK
+  x['a'] = 1; // ERROR
+  x[true]; // ERROR
+
+  declare const y: {+a: number};
+  (y: $ReadOnly<interface {[string]: number}>); // OK
+}

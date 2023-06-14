@@ -1013,9 +1013,20 @@ module DeclareClassAcc = struct
     own: 'loc prop SMap.t;
     scalls: 'loc calls;
     calls: 'loc calls;
+    dict: 'loc parsed obj_annot_dict option;
+    static_dict: 'loc parsed obj_annot_dict option;
   }
 
-  let empty = { static = SMap.empty; proto = SMap.empty; own = SMap.empty; scalls = []; calls = [] }
+  let empty =
+    {
+      static = SMap.empty;
+      proto = SMap.empty;
+      own = SMap.empty;
+      scalls = [];
+      calls = [];
+      dict = None;
+      static_dict = None;
+    }
 
   let map_static f acc = { acc with static = f acc.static }
 
@@ -1030,16 +1041,15 @@ module DeclareClassAcc = struct
     else
       map_own f acc
 
-  let add_indexer ~static polarity k v acc =
-    let f props =
-      props
-      |> SMap.add "$key" (InterfaceField (None, k, polarity))
-      |> SMap.add "$value" (InterfaceField (None, v, polarity))
-    in
+  let add_indexer ~static dict acc =
     if static then
-      map_static f acc
+      match acc.static_dict with
+      | Some _ -> acc (* invalid: multiple indexers *)
+      | None -> { acc with static_dict = Some dict }
     else
-      map_own f acc
+      match acc.dict with
+      | Some _ -> acc (* invalid: multiple indexers *)
+      | None -> { acc with dict = Some dict }
 
   let add_proto_field name id_loc polarity t acc =
     map_proto (SMap.add name (InterfaceField (Some id_loc, t, polarity))) acc
@@ -1085,6 +1095,8 @@ module DeclareClassAcc = struct
         proto_props = acc.proto;
         static_calls = acc.scalls;
         calls = acc.calls;
+        dict = acc.dict;
+        static_dict = acc.static_dict;
       }
 end
 
@@ -1094,9 +1106,10 @@ module InterfaceAcc = struct
   type 'loc t = {
     props: 'loc prop SMap.t;
     calls: 'loc parsed list;
+    dict: 'loc parsed obj_annot_dict option;
   }
 
-  let empty = { props = SMap.empty; calls = [] }
+  let empty = { props = SMap.empty; calls = []; dict = None }
 
   let map_props f acc = { acc with props = f acc.props }
 
@@ -1104,13 +1117,10 @@ module InterfaceAcc = struct
     let f = SMap.add name (InterfaceField (Some id_loc, t, polarity)) in
     map_props f acc
 
-  let add_indexer polarity k v acc =
-    let f props =
-      props
-      |> SMap.add "$key" (InterfaceField (None, k, polarity))
-      |> SMap.add "$value" (InterfaceField (None, v, polarity))
-    in
-    map_props f acc
+  let add_indexer dict acc =
+    match acc.dict with
+    | Some _ -> acc (* invalid: multiple indexers *)
+    | None -> { acc with dict = Some dict }
 
   let append_method_helper m = function
     | Some (InterfaceMethod ms) -> Some (InterfaceMethod (Nel.cons m ms))
@@ -1132,7 +1142,7 @@ module InterfaceAcc = struct
     let f = List.cons t in
     { acc with calls = f acc.calls }
 
-  let interface_def extends { props; calls } = InterfaceSig { extends; props; calls }
+  let interface_def extends { props; calls; dict } = InterfaceSig { extends; props; calls; dict }
 end
 
 module ObjectLiteralAcc = struct
@@ -1474,6 +1484,17 @@ and setter_type opts scope tbls xs id_loc f =
     Set (id_loc, t)
   | _ -> failwith "unexpected setter"
 
+and indexer opts scope tbls xs dict =
+  let { T.Object.Indexer.id; key = k; value = v; static = _; variance; comments = _ } = dict in
+  let name =
+    match id with
+    | None -> None
+    | Some id -> Some (id_name id)
+  in
+  let key = annot opts scope tbls xs k in
+  let value = annot opts scope tbls xs v in
+  ObjDict { name; polarity = polarity variance; key; value }
+
 and object_type =
   let module O = T.Object in
   let module Acc = ObjAnnotAcc in
@@ -1608,16 +1629,8 @@ and object_type =
   in
 
   let dict opts scope tbls xs acc p =
-    let { O.Indexer.id; key = k; value = v; static = _; variance; comments = _ } = p in
-    let name =
-      match id with
-      | None -> None
-      | Some id -> Some (id_name id)
-    in
-    let key = annot opts scope tbls xs k in
-    let value = annot opts scope tbls xs v in
-    let d = ObjDict { name; polarity = polarity variance; key; value } in
-    Acc.add_dict d acc
+    let dict = indexer opts scope tbls xs p in
+    Acc.add_dict dict acc
   in
   let call opts scope tbls xs acc p =
     let { O.CallProperty.value = (fn_loc, f); static = _; comments = _ } = p in
@@ -1727,11 +1740,9 @@ and interface_props =
         let setter = setter_type opts scope tbls xs id_loc fn in
         Acc.add_accessor name setter acc)
   in
-  let dict opts scope tbls xs acc p =
-    let { O.Indexer.id = _; key; value; static = _; variance; comments = _ } = p in
-    let k = annot opts scope tbls xs key in
-    let v = annot opts scope tbls xs value in
-    Acc.add_indexer (polarity variance) k v acc
+  let interface_indexer opts scope tbls xs acc p =
+    let i = indexer opts scope tbls xs p in
+    Acc.add_indexer i acc
   in
   let call opts scope tbls xs acc p =
     let { O.CallProperty.value = (fn_loc, fn); static = _; comments = _ } = p in
@@ -1760,7 +1771,7 @@ and interface_props =
     List.fold_left
       (fun acc -> function
         | O.Property (_, p) -> prop opts scope tbls xs acc p
-        | O.Indexer (_, p) -> dict opts scope tbls xs acc p
+        | O.Indexer (_, p) -> interface_indexer opts scope tbls xs acc p
         | O.CallProperty (_, p) -> call opts scope tbls xs acc p
         | O.InternalSlot (_, p) -> slot opts scope tbls xs acc p
         | O.SpreadProperty _
@@ -1814,11 +1825,10 @@ and declare_class_props =
         let setter = setter_type opts scope tbls xs id_loc fn in
         Acc.add_accessor ~static name setter acc)
   in
-  let dict opts scope tbls xs acc p =
-    let { O.Indexer.id = _; key; value; static; variance; comments = _ } = p in
-    let k = annot opts scope tbls xs key in
-    let v = annot opts scope tbls xs value in
-    Acc.add_indexer ~static (polarity variance) k v acc
+  let class_indexer opts scope tbls xs acc p =
+    let { O.Indexer.static; _ } = p in
+    let i = indexer opts scope tbls xs p in
+    Acc.add_indexer ~static i acc
   in
   let call opts scope tbls xs acc p =
     let { O.CallProperty.value = (fn_loc, fn); static; comments = _ } = p in
@@ -1847,7 +1857,7 @@ and declare_class_props =
     List.fold_left
       (fun acc -> function
         | O.Property (_, p) -> prop opts scope tbls xs acc p
-        | O.Indexer (_, p) -> dict opts scope tbls xs acc p
+        | O.Indexer (_, p) -> class_indexer opts scope tbls xs acc p
         | O.CallProperty (_, p) -> call opts scope tbls xs acc p
         | O.InternalSlot (_, p) -> slot opts scope tbls xs acc p
         | O.SpreadProperty _

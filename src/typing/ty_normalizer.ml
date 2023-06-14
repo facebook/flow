@@ -598,7 +598,7 @@ end = struct
       env:Env.t -> Reason.reason -> Type.super -> Type.insttype -> (Ty.t, error_kind * string) t
 
     val convert_inline_interface :
-      env:Env.t -> Type.super -> T.Properties.id -> int option -> (Ty.t, error) t
+      env:Env.t -> Type.super -> T.Properties.id -> int option -> T.Object.dict -> (Ty.t, error) t
 
     val convert_obj_props_t :
       env:Env.t ->
@@ -1113,11 +1113,12 @@ end = struct
       Ty.Generic (symbol, kind, targs)
 
     and instance_t ~env r super inst =
-      let { T.inst_kind; own_props; inst_call_t; _ } = inst in
+      let { T.inst_kind; own_props; inst_call_t; inst_dict; _ } = inst in
       let desc = desc_of_reason ~unwrap:false r in
       match (inst_kind, desc) with
       | (_, Reason.RReactComponent) -> react_component_instance ~env own_props
-      | (T.InterfaceKind { inline = true }, _) -> inline_interface ~env super own_props inst_call_t
+      | (T.InterfaceKind { inline = true }, _) ->
+        inline_interface ~env super own_props inst_call_t inst_dict
       | (T.InterfaceKind { inline = false }, _) -> to_generic ~env Ty.InterfaceKind r inst
       | (T.ClassKind, _) -> to_generic ~env Ty.ClassKind r inst
 
@@ -1133,33 +1134,19 @@ end = struct
           (* Top-level syntax only allows generics in extends *)
           terr ~kind:BadInlineInterfaceExtends None
       in
-      let fix_dict_props props =
-        let (key, value, pole, props) =
-          List.fold_left
-            (fun (key, value, pole, ps) p ->
-              match p with
-              | Ty.NamedProp { name = OrdinaryName "$key"; prop = Ty.Field { t; _ }; _ } ->
-                (* The $key's polarity is fixed to neutral so we ignore it *)
-                (Some t, value, pole, ps)
-              | Ty.NamedProp { name = OrdinaryName "$value"; prop = Ty.Field { t; polarity; _ }; _ }
-                ->
-                (* The dictionary's polarity is determined by that of $value *)
-                (key, Some t, Some polarity, ps)
-              | _ -> (key, value, pole, p :: ps))
-            (None, None, None, [])
-            props
-        in
-        let props = List.rev props in
-        match (key, value, pole) with
-        | (Some dict_key, Some dict_value, Some dict_polarity) ->
-          (props, Some { Ty.dict_polarity; dict_name = None; dict_key; dict_value })
-        | (_, _, _) -> (props, None)
-      in
-      fun ~env super own_props inst_call_t ->
+      fun ~env super own_props inst_call_t inst_dict ->
         let%bind super = type__ ~env super in
         let%bind if_extends = extends super in
-        let%map if_props = obj_props_t ~env own_props inst_call_t in
-        let (if_props, if_dict) = fix_dict_props if_props in
+        let%bind if_props = obj_props_t ~env own_props inst_call_t in
+        let%map if_dict =
+          match inst_dict with
+          | Some { T.dict_polarity; dict_name; key; value } ->
+            let dict_polarity = type_polarity dict_polarity in
+            let%bind dict_key = type__ ~env key in
+            let%bind dict_value = type__ ~env value in
+            return (Some { Ty.dict_polarity; dict_name; dict_key; dict_value })
+          | None -> return None
+        in
         Ty.InlineInterface { Ty.if_extends; if_props; if_dict }
 
     (* The Class<T> utility type *)
@@ -1888,7 +1875,7 @@ end = struct
             ps
           | None -> return None
         in
-        let { T.inst_kind; own_props; inst_call_t; _ } = inst in
+        let { T.inst_kind; own_props; inst_call_t; inst_dict; _ } = inst in
         let desc = desc_of_reason ~unwrap:false r in
         match (inst_kind, desc) with
         | (_, Reason.RReactComponent) ->
@@ -1898,7 +1885,9 @@ end = struct
           let%map symbol = Reason_utils.instance_symbol env r in
           Ty.Decl (Ty.InterfaceDecl (symbol, ps))
         | (T.InterfaceKind { inline = true }, _) ->
-          let%map ty = TypeConverter.convert_inline_interface ~env super own_props inst_call_t in
+          let%map ty =
+            TypeConverter.convert_inline_interface ~env super own_props inst_call_t inst_dict
+          in
           Ty.Type ty
         | (T.ClassKind, _) ->
           let%map symbol = Reason_utils.instance_symbol env r in

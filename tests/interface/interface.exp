@@ -57,72 +57,13 @@ Multiple indexers are not supported. [unsupported-syntax]
         ^^^^^^^^^^^^^^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------------- indexer.js:19:4
+Error -------------------------------------------------------------------------------------------------- indexer.js:40:3
 
-Cannot cast `x['foo']` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot get `x['xxx']` because string `xxx` [1] is incompatible with literal union [2]. [incompatible-type]
 
-   indexer.js:19:4
-   19|   (x['foo']: boolean); // Should be ok, but currently isn't
-          ^^^^^^^^
-
-References:
-   indexer.js:13:13
-   13|   [number]: string;
-                   ^^^^^^ [1]
-   indexer.js:19:14
-   19|   (x['foo']: boolean); // Should be ok, but currently isn't
-                    ^^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------------- indexer.js:19:6
-
-Cannot get `x['foo']` because string [1] is incompatible with number [2]. [incompatible-type]
-
-   indexer.js:19:6
-   19|   (x['foo']: boolean); // Should be ok, but currently isn't
-            ^^^^^ [1]
-
-References:
-   indexer.js:13:4
-   13|   [number]: string;
-          ^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------------- indexer.js:20:5
-
-Cannot assign `true` to `x['foo']` because string [1] is incompatible with number [2]. [incompatible-type]
-
-   indexer.js:20:5
-   20|   x['foo'] = true; // Should be ok, but currently isn't
-           ^^^^^ [1]
-
-References:
-   indexer.js:13:4
-   13|   [number]: string;
-          ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------- indexer.js:20:14
-
-Cannot assign `true` to `x['foo']` because boolean [1] is incompatible with string [2]. [incompatible-type]
-
-   indexer.js:20:14
-   20|   x['foo'] = true; // Should be ok, but currently isn't
-                    ^^^^ [1]
-
-References:
-   indexer.js:13:13
-   13|   [number]: string;
-                   ^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------------- indexer.js:40:5
-
-Cannot get `x['xxx']` because string [1] is incompatible with literal union [2]. [incompatible-type]
-
-   indexer.js:40:5
+   indexer.js:40:3
    40|   x['xxx']; // ERROR
-           ^^^^^ [1]
+         ^^^^^^^^ [1]
 
 References:
    indexer.js:27:4
@@ -130,22 +71,21 @@ References:
           ^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- indexer.js:45:3
+Error -------------------------------------------------------------------------------------------------- indexer.js:45:5
 
-Cannot assign `1` to `x['a']` because an index signature declaring the expected key / value type is not writable.
-[cannot-write]
+Cannot assign `1` to `x['a']` because property `a` is not writable. [cannot-write]
 
    45|   x['a'] = 1; // ERROR
-         ^^^^^^
+           ^^^
 
 
-Error -------------------------------------------------------------------------------------------------- indexer.js:46:5
+Error -------------------------------------------------------------------------------------------------- indexer.js:46:3
 
-Cannot get `x['xxx']` because string [1] is incompatible with literal union [2]. [incompatible-type]
+Cannot get `x['xxx']` because string `xxx` [1] is incompatible with literal union [2]. [incompatible-type]
 
-   indexer.js:46:5
+   indexer.js:46:3
    46|   x['xxx']; // ERROR
-           ^^^^^ [1]
+         ^^^^^^^^ [1]
 
 References:
    indexer.js:30:5
@@ -153,21 +93,21 @@ References:
            ^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- indexer.js:50:3
+Error -------------------------------------------------------------------------------------------------- indexer.js:50:5
 
 Cannot get `x['a']` because an index signature declaring the expected key / value type is not readable. [cannot-read]
 
    50|   x['a']; // ERROR
-         ^^^^^^
+           ^^^
 
 
-Error -------------------------------------------------------------------------------------------------- indexer.js:52:5
+Error -------------------------------------------------------------------------------------------------- indexer.js:52:3
 
-Cannot assign `1` to `x['xxx']` because string [1] is incompatible with literal union [2]. [incompatible-type]
+Cannot assign `1` to `x['xxx']` because string `xxx` [1] is incompatible with literal union [2]. [incompatible-type]
 
-   indexer.js:52:5
+   indexer.js:52:3
    52|   x['xxx'] = 1; // ERROR
-           ^^^^^ [1]
+         ^^^^^^^^ [1]
 
 References:
    indexer.js:33:5
@@ -175,13 +115,13 @@ References:
            ^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- indexer.js:58:3
+Error -------------------------------------------------------------------------------------------------- indexer.js:58:5
 
 Cannot assign `1` to `x[s]` because an index signature declaring the expected key / value type is not writable.
 [cannot-write]
 
    58|   x[s] = 1; // ERROR
-         ^^^^
+           ^
 
 
 Error -------------------------------------------------------------------------------------------------- indexer.js:59:5
@@ -253,94 +193,92 @@ References:
                                  ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- indexer.js:97:4
+Error ------------------------------------------------------------------------------------------------- indexer.js:137:4
 
-Cannot cast `x['foo']` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x['bar']` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
-   indexer.js:97:4
-   97|   (x['foo']: string); // Should be ok, but currently isn't
-          ^^^^^^^^
-
-References:
-   indexer.js:90:13
-   90|   [number]: boolean;
-                   ^^^^^^^ [1]
-   indexer.js:97:14
-   97|   (x['foo']: string); // Should be ok, but currently isn't
-                    ^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------------- indexer.js:97:6
-
-Cannot get `x['foo']` because string [1] is incompatible with number [2]. [incompatible-type]
-
-   indexer.js:97:6
-   97|   (x['foo']: string); // Should be ok, but currently isn't
-            ^^^^^ [1]
-
-References:
-   indexer.js:90:4
-   90|   [number]: boolean;
-          ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------- indexer.js:110:4
-
-Cannot cast `x['foo']` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
-
-   indexer.js:110:4
-   110|   (x['foo']: string); // Should be ok, but currently isn't
+   indexer.js:137:4
+   137|   (x['bar']: empty); // ERROR
            ^^^^^^^^
 
 References:
-   indexer.js:103:13
-   103|   [string]: boolean;
-                    ^^^^^^^ [1]
-   indexer.js:110:14
-   110|   (x['foo']: string); // Should be ok, but currently isn't
-                     ^^^^^^ [2]
+   indexer.js:127:8
+   127|   bar: string;
+               ^^^^^^ [1]
+   indexer.js:137:14
+   137|   (x['bar']: empty); // ERROR
+                     ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- indexer.js:123:5
+Error ------------------------------------------------------------------------------------------------- indexer.js:145:4
 
-An index signature declaring the expected key / value type is missing in `M` [1]. [incompatible-use]
+Cannot cast `x['foo']` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
 
-   indexer.js:123:5
-   123|   x['foo'](); // Should be ok, but currently isn't
-            ^^^^^
-
-References:
-   indexer.js:121:20
-   121|   declare const x: M;
-                           ^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------- indexer.js:132:5
-
-An index signature declaring the expected key / value type is missing in `M2` [1]. [incompatible-use]
-
-   indexer.js:132:5
-   132|   x['bar'](); // Should be ok, but currently isn't
-            ^^^^^
+   indexer.js:145:4
+   145|   (x['foo']: empty); // ERROR
+           ^^^^^^^^
 
 References:
-   indexer.js:130:20
-   130|   declare const x: M2;
-                           ^^ [1]
+   indexer.js:128:3
+   128|   foo(): null;
+          ^^^^^^^^^^^ [1]
+   indexer.js:145:14
+   145|   (x['foo']: empty); // ERROR
+                     ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- indexer.js:134:5
+Error ------------------------------------------------------------------------------------------------- indexer.js:145:6
 
-An index signature declaring the expected key / value type is missing in `M2` [1]. [incompatible-use]
+Cannot get `x['foo']` because property `foo` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
 
-   indexer.js:134:5
-   134|   x['foo'](); // Should be ok, but currently isn't
-            ^^^^^
+   indexer.js:145:6
+   145|   (x['foo']: empty); // ERROR
+             ^^^^^ [1]
 
 References:
-   indexer.js:130:20
-   130|   declare const x: M2;
-                           ^^ [1]
+   indexer.js:128:3
+   128|   foo(): null;
+          ^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- indexer.js:148:4
+
+Cannot cast `x['xxx']` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   indexer.js:148:4
+   148|   (x['xxx']: empty); // ERROR
+           ^^^^^^^^
+
+References:
+   indexer.js:131:13
+   131|   [string]: () => number;
+                    ^^^^^^^^^^^^ [1]
+   indexer.js:148:14
+   148|   (x['xxx']: empty); // ERROR
+                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- indexer.js:178:5
+
+Cannot assign `1` to `x['a']` because property `a` is not writable. [cannot-write]
+
+   178|   x['a'] = 1; // ERROR
+            ^^^
+
+
+Error ------------------------------------------------------------------------------------------------- indexer.js:179:5
+
+Cannot get `x[true]` because boolean [1] is incompatible with literal union [2]. [incompatible-type]
+
+   indexer.js:179:5
+   179|   x[true]; // ERROR
+            ^^^^ [1]
+
+References:
+   indexer.js:175:42
+   175|   declare const x: $ReadOnly<interface {[Keys]: number}>;
+                                                 ^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- inline.js:5:6
@@ -1214,7 +1152,7 @@ References:
 
 
 
-Found 78 errors
+Found 74 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -407,6 +407,7 @@ class virtual ['a] t =
         initialized_fields;
         initialized_static_fields;
         inst_kind;
+        inst_dict;
       } =
         i
       in
@@ -424,11 +425,13 @@ class virtual ['a] t =
       let own_props' = self#props cx map_cx own_props in
       let proto_props' = self#props cx map_cx proto_props in
       let inst_call_t' = OptionUtils.ident_map (self#call_prop cx map_cx) inst_call_t in
+      let inst_dict' = OptionUtils.ident_map (self#dict_type cx map_cx) inst_dict in
       if
         type_args == type_args'
         && own_props == own_props'
         && proto_props == proto_props'
         && inst_call_t == inst_call_t'
+        && inst_dict == inst_dict'
       then
         i
       else
@@ -441,6 +444,7 @@ class virtual ['a] t =
           initialized_fields;
           initialized_static_fields;
           inst_kind;
+          inst_dict = inst_dict';
         }
 
     method type_param cx map_cx ({ reason; name; bound; polarity; default; is_this } as t) =

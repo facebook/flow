@@ -1853,10 +1853,7 @@ let polarity_explanation = function
 let mk_prop_message =
   Errors.Friendly.(
     function
-    | None
-    (* TODO the $-prefixed names should be internal *)
-    | Some ("$key" | "$value") ->
-      [text "an index signature declaring the expected key / value type"]
+    | None -> [text "an index signature declaring the expected key / value type"]
     | Some "$call" -> [text "a call signature declaring the expected parameter / return type"]
     | Some prop -> [text "property "; code prop]
   )

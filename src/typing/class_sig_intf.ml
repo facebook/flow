@@ -55,7 +55,10 @@ module type S = sig
   val add_field : static:bool -> string -> ALoc.t -> Polarity.t -> field -> t -> t
 
   (** Add indexer to signature. *)
-  val add_indexer : static:bool -> Polarity.t -> key:Type.t -> value:Type.t -> t -> t
+  val add_indexer : static:bool -> Type.dicttype -> t -> t
+
+  (** If there is an indexer. *)
+  val has_indexer : static:bool -> t -> bool
 
   (** Add static `name` field. *)
   val add_name_field : t -> t

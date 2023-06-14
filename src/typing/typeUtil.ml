@@ -299,7 +299,16 @@ and mod_reason_of_use_t f = function
   | PreprocessKitT (reason, tool) -> PreprocessKitT (f reason, tool)
   | InvariantT reason -> InvariantT (f reason)
   | LookupT
-      { reason; lookup_kind; try_ts_on_failure; propref; lookup_action; ids; method_accessible } ->
+      {
+        reason;
+        lookup_kind;
+        try_ts_on_failure;
+        propref;
+        lookup_action;
+        ids;
+        method_accessible;
+        ignore_dicts;
+      } ->
     LookupT
       {
         reason = f reason;
@@ -309,6 +318,7 @@ and mod_reason_of_use_t f = function
         lookup_action;
         ids;
         method_accessible;
+        ignore_dicts;
       }
   | MakeExactT (reason, t) -> MakeExactT (f reason, t)
   | MapTypeT (use_op, reason, kind, t) -> MapTypeT (use_op, f reason, kind, t)
@@ -754,7 +764,8 @@ let reason_of_propref = function
   | Named { reason; _ } -> reason
   | Computed t -> reason_of_t t
 
-let mk_named_prop ~reason name = Named { reason; name = OrdinaryName name }
+let mk_named_prop ~reason ?(from_indexed_access = false) name =
+  Named { reason; name = OrdinaryName name; from_indexed_access }
 
 let optional ?annot_loc ?(use_desc = false) t =
   let reason = update_desc_new_reason (fun desc -> ROptional desc) (reason_of_t t) in

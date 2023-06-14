@@ -23,7 +23,12 @@ let mk_object_type
   let (t, reason) =
     match interface with
     | Some (static, inst) ->
-      let inst = { inst with own_props = id } in
+      let inst_dict =
+        match flags.obj_kind with
+        | Indexed dict -> Some dict
+        | _ -> None
+      in
+      let inst = { inst with own_props = id; inst_dict } in
       (* Implemented/super interfaces are folded into the property map computed by the slice, so
            we effectively flatten the hierarchy in the output *)
       ( DefT
@@ -1262,32 +1267,14 @@ let resolved ~next ~recurse cx use_op reason resolve_tool tool x =
         recurse cx use_op reason resolve_tool tool t)
   )
 
-let interface_slice cx r intf id generics =
-  let (id, obj_kind) =
-    let props = Context.find_props cx id in
-    (* TODO $-prefixed names should be internal *)
-    match
-      ( NameUtils.Map.find_opt (OrdinaryName "$key") props,
-        NameUtils.Map.find_opt (OrdinaryName "$value") props
-      )
-    with
-    | ( Some (Field { type_ = key; polarity; _ }),
-        Some (Field { type_ = value; polarity = polarity'; _ })
-      )
-      when polarity = polarity' ->
-      let props =
-        props
-        (* TODO $-prefixed names should be internal *)
-        |> NameUtils.Map.remove (OrdinaryName "$key")
-        |> NameUtils.Map.remove (OrdinaryName "$value")
-      in
-      let id = Context.generate_property_map cx props in
-      let dict = { dict_name = None; key; value; dict_polarity = polarity } in
-      (id, Indexed dict)
-    | _ -> (id, Inexact)
+let interface_slice cx r ~static ~inst id generics =
+  let obj_kind =
+    match inst.inst_dict with
+    | Some dict -> Indexed dict
+    | None -> Inexact
   in
   let flags = { frozen = false; obj_kind } in
-  object_slice cx ~interface:(Some intf) r id flags generics
+  object_slice cx ~interface:(Some (static, inst)) r id flags generics
 
 let resolve
     (type a)
@@ -1326,7 +1313,7 @@ let resolve
       (r, _, InstanceT { static; super; implements = _; inst = { own_props; inst_kind; _ } as inst })
     ->
     let resolve_tool =
-      Super (interface_slice cx r (static, inst) own_props t_generic_id, resolve_tool)
+      Super (interface_slice cx r ~static ~inst own_props t_generic_id, resolve_tool)
     in
     begin
       match (tool, inst_kind) with
@@ -1507,13 +1494,12 @@ let super
     tool
     acc = function
   | DefT (r, _, InstanceT { static; super; implements = _; inst = { own_props; _ } as inst }) ->
-    let interface = (static, inst) in
     let { Object.reason; _ } = acc in
-    let slice = interface_slice cx r interface own_props Generic.spread_empty in
+    let slice = interface_slice cx r ~static ~inst own_props Generic.spread_empty in
     let acc = intersect2 reason acc slice in
     let acc =
       let (props, flags, generics) = acc in
-      { Object.reason; props; flags; generics; interface = Some interface }
+      { Object.reason; props; flags; generics; interface = Some (static, inst) }
     in
     let resolve_tool = Object.Super (acc, resolve_tool) in
     recurse cx use_op reason resolve_tool tool super

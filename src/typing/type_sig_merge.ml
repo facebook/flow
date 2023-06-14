@@ -1344,7 +1344,7 @@ and merge_tparam ~from_infer tps infer_tps file tp =
 and merge_op tps infer_tps file op = map_op (merge tps infer_tps file) op
 
 and merge_interface ~inline tps infer_tps file reason id def =
-  let (InterfaceSig { extends; props; calls }) = def in
+  let (InterfaceSig { extends; props; calls; dict }) = def in
   let super =
     let super_reason = Reason.(update_desc_reason (fun d -> RSuperOf d) reason) in
     let ts = List.map (merge tps infer_tps file) extends in
@@ -1389,6 +1389,7 @@ and merge_interface ~inline tps infer_tps file reason id def =
       let t = Type.(IntersectionT (reason, InterRep.make t0 t1 ts)) in
       Some (Context.make_call_prop file.cx t)
   in
+  let inst_dict = Option.map ~f:(merge_dict tps infer_tps file) dict in
   fun targs ->
     let open Type in
     let inst =
@@ -1401,6 +1402,7 @@ and merge_interface ~inline tps infer_tps file reason id def =
         initialized_fields = SSet.empty;
         initialized_static_fields = SSet.empty;
         inst_kind = InterfaceKind { inline };
+        inst_dict;
       }
     in
     DefT (reason, trust, InstanceT { static; super; implements = []; inst })
@@ -1507,6 +1509,7 @@ and merge_class tps infer_tps file reason id def =
         initialized_fields = SSet.empty;
         initialized_static_fields = SSet.empty;
         inst_kind = ClassKind;
+        inst_dict = None;
       }
     in
     let instance = DefT (reason, trust, InstanceT { static; super; implements; inst }) in
@@ -1811,6 +1814,8 @@ let merge_declare_class file reason id def =
           proto_props;
           static_calls;
           calls;
+          dict;
+          static_dict = _ (* We don't actually support static indexers yet. *);
         }
         ) =
     def
@@ -1869,6 +1874,7 @@ let merge_declare_class file reason id def =
         let t = Type.(IntersectionT (reason, InterRep.make t0 t1 ts)) in
         Some (Context.make_call_prop file.cx t)
     in
+    let inst_dict = Option.map ~f:(merge_dict tps infer_tps file) dict in
     let open Type in
     let inst =
       {
@@ -1880,6 +1886,7 @@ let merge_declare_class file reason id def =
         initialized_fields = SSet.empty;
         initialized_static_fields = SSet.empty;
         inst_kind = ClassKind;
+        inst_dict;
       }
     in
     let instance = DefT (reason, trust, InstanceT { static; super; implements; inst }) in

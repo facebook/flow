@@ -45,6 +45,7 @@ module Make
         getters = SMap.empty;
         setters = SMap.empty;
         calls = [];
+        dict = None;
       }
     in
     let constructor = [] in
@@ -162,10 +163,9 @@ module Make
   let add_field ~static name loc polarity field x =
     add_field' ~static name (Some loc, polarity, field) x
 
-  let add_indexer ~static polarity ~key ~value x =
-    x
-    |> add_field' ~static "$key" (None, Polarity.Neutral, Annot key)
-    |> add_field' ~static "$value" (None, polarity, Annot value)
+  let add_indexer ~static dict x = map_sig ~static (fun s -> { s with dict = Some dict }) x
+
+  let has_indexer ~static x = with_sig ~static (fun s -> Option.is_some s.dict) x
 
   let add_name_field x =
     let r = update_desc_reason (fun desc -> RNameProperty desc) x.instance.reason in
@@ -540,6 +540,7 @@ module Make
       initialized_fields;
       initialized_static_fields;
       inst_kind = inst_kind s;
+      inst_dict = s.instance.dict;
     }
 
   let mk_this self cx reason tparams =

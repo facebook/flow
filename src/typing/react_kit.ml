@@ -105,7 +105,12 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             None,
             (match literal with
             | Literal (_, name) ->
-              Named { reason = replace_desc_reason (RReactElement (Some name)) reason; name }
+              Named
+                {
+                  reason = replace_desc_reason (RReactElement (Some name)) reason;
+                  name;
+                  from_indexed_access = false;
+                }
             | _ -> Computed component),
             (reason, intrinsic)
           )
@@ -136,6 +141,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             lookup_action = LookupProp (unknown_use, prop);
             method_accessible = true;
             ids = Some Properties.Set.empty;
+            ignore_dicts = false;
           }
       )
 
@@ -167,6 +173,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             lookup_action = action;
             method_accessible = true;
             ids = Some Properties.Set.empty;
+            ignore_dicts = false;
           }
       )
 
@@ -598,6 +605,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                 lookup_action = action;
                 method_accessible = true;
                 ids = Some Properties.Set.empty;
+                ignore_dicts = false;
               }
           )
       in
@@ -646,6 +654,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                 lookup_action = action;
                 method_accessible = true;
                 ids = Some Properties.Set.empty;
+                ignore_dicts = false;
               }
           )
       in

@@ -291,33 +291,8 @@ module rec ConsGen : S = struct
   module Get_prop_helper = struct
     type r = Type.t
 
-    let perform_read_prop_action cx use_op propref p ureason =
-      match Property.read_t p with
-      | Some t -> reposition cx (loc_of_reason ureason) t
-      | None ->
-        let reason_prop = reason_of_propref propref in
-        let prop_name = name_of_propref propref in
-        let msg = Error_message.EPropNotReadable { reason_prop; prop_name; use_op } in
-        Flow_js_utils.add_output cx msg;
-        AnyT.error ureason
-
     let cg_lookup_ cx use_op t reason_op propref =
       ConsGen.elab_t cx t (Annot_LookupT (reason_op, use_op, propref))
-
-    let read_prop cx _trace options reason_prop reason_op l _super name pmap =
-      let { Flow_js_utils.Access_prop_options.use_op; _ } = options in
-      let propref = Named { reason = reason_prop; name } in
-      match NameUtils.Map.find_opt name pmap with
-      | Some p -> perform_read_prop_action cx use_op propref p reason_op
-      | None ->
-        let l =
-          (* munge names beginning with single _ *)
-          if Flow_js_utils.is_munged_prop_name cx name then
-            ObjProtoT (reason_of_t l)
-          else
-            l
-        in
-        cg_lookup_ cx use_op l reason_op propref
 
     let error_type _ _ = AnyT.error
 
@@ -340,14 +315,17 @@ module rec ConsGen : S = struct
       let { representation_t; _ } = enum in
       get_builtin_typeapp cx reason (OrdinaryName "$EnumProto") [enum_t; representation_t]
 
-    let cg_lookup cx _trace ~obj_t:_ t (reason_op, _kind, propref, use_op, _ids) =
+    let cg_lookup cx _trace ~obj_t:_ ~method_accessible:_ t (reason_op, _kind, propref, use_op, _ids)
+        =
       cg_lookup_ cx use_op t reason_op propref
 
     let cg_get_prop cx _trace t (use_op, access_reason, _, (prop_reason, name)) =
       ConsGen.elab_t
         cx
         t
-        (Annot_GetPropT (access_reason, use_op, Named { reason = prop_reason; name }))
+        (Annot_GetPropT
+           (access_reason, use_op, Named { reason = prop_reason; name; from_indexed_access = false })
+        )
   end
 
   module GetPropTKit = Flow_js_utils.GetPropT_kit (Get_prop_helper)
@@ -691,8 +669,8 @@ module rec ConsGen : S = struct
     (***********)
     | (DefT (_, _, ObjT o), Annot_GetValuesT reason) ->
       Flow_js_utils.get_values_type_of_obj_t cx o reason
-    | (DefT (_, _, InstanceT { inst = { own_props; _ }; _ }), Annot_GetValuesT reason) ->
-      Flow_js_utils.get_values_type_of_instance_t cx own_props reason
+    | (DefT (_, _, InstanceT { inst = { own_props; inst_dict; _ }; _ }), Annot_GetValuesT reason) ->
+      Flow_js_utils.get_values_type_of_instance_t cx own_props inst_dict reason
     (* Any will always be ok *)
     | (AnyT (_, src), Annot_GetValuesT reason) -> AnyT.why src reason
     (********************************)
@@ -892,14 +870,21 @@ module rec ConsGen : S = struct
     (* LookupT pt1 *)
     (***************)
     | ( DefT (_lreason, _, InstanceT { super; inst; _ }),
-        Annot_LookupT (reason_op, use_op, (Named { name; _ } as propref))
+        Annot_LookupT (reason_op, use_op, (Named _ as propref))
       ) ->
-      let own_props = Context.find_props cx inst.own_props in
-      let proto_props = Context.find_props cx inst.proto_props in
-      let pmap = NameUtils.Map.union own_props proto_props in
-      (match NameUtils.Map.find_opt name pmap with
-      | None -> Get_prop_helper.cg_lookup_ cx use_op super reason_op propref
-      | Some p -> GetPropTKit.perform_read_prop_action cx dummy_trace use_op propref p reason_op)
+      (match
+         GetPropTKit.get_instance_prop
+           cx
+           dummy_trace
+           ~use_op
+           ~ignore_dicts:true
+           inst
+           propref
+           reason_op
+       with
+      | Some (p, _) ->
+        GetPropTKit.perform_read_prop_action cx dummy_trace use_op propref p reason_op
+      | None -> Get_prop_helper.cg_lookup_ cx use_op super reason_op propref)
     | (DefT (_, _, InstanceT _), Annot_LookupT (_, _, Computed _)) -> error_unsupported cx t op
     | (DefT (_, _, ObjT o), Annot_LookupT (reason_op, use_op, propref)) ->
       (match GetPropTKit.get_obj_prop cx dummy_trace o propref reason_op with
@@ -930,10 +915,21 @@ module rec ConsGen : S = struct
     (************)
     (* GetPropT *)
     (************)
-    | ( DefT (r, _, InstanceT { super; inst; _ }),
+    | ( DefT (reason_instance, _, InstanceT { super; inst; _ }),
         Annot_GetPropT (reason_op, use_op, (Named _ as propref))
       ) ->
-      GetPropTKit.on_InstanceT cx dummy_trace ~l:t ~id:None r super inst use_op reason_op propref
+      GetPropTKit.read_instance_prop
+        cx
+        dummy_trace
+        ~use_op
+        ~instance_t:t
+        ~id:None
+        ~method_accessible:false
+        ~super
+        ~lookup_kind:(Strict reason_instance)
+        inst
+        propref
+        reason_op
     | (DefT (_, _, InstanceT _), Annot_GetPropT (_, _, Computed _)) -> error_unsupported cx t op
     | ( DefT (_, _, ObjT _),
         Annot_GetPropT (reason_op, _, Named { name = OrdinaryName "constructor"; _ })
@@ -1025,7 +1021,7 @@ module rec ConsGen : S = struct
     (* Enums *)
     (*********)
     | ( DefT (enum_reason, trust, EnumObjectT enum),
-        Annot_GetPropT (access_reason, use_op, Named { reason = prop_reason; name })
+        Annot_GetPropT (access_reason, use_op, Named { reason = prop_reason; name; _ })
       ) ->
       let access = (use_op, access_reason, None, (prop_reason, name)) in
       GetPropTKit.on_EnumObjectT cx dummy_trace enum_reason trust enum access
@@ -1047,7 +1043,7 @@ module rec ConsGen : S = struct
       when Flow_js_utils.is_function_prototype name ->
       Flow_js_utils.lookup_builtin_strict cx (OrdinaryName "Function") reason_op
     | ( (DefT (_, _, NullT) | ObjProtoT _ | FunProtoT _),
-        Annot_LookupT (reason_op, use_op, (Named { reason = reason_prop; name } as propref))
+        Annot_LookupT (reason_op, use_op, (Named { reason = reason_prop; name; _ } as propref))
       ) ->
       let error_message =
         Error_message.EPropNotFound
@@ -1172,14 +1168,24 @@ module rec ConsGen : S = struct
   and get_statics cx reason t = elab_t cx t (Annot_GetStaticsT reason)
 
   and get_prop cx use_op reason ?(op_reason = reason) name t =
-    elab_t cx t (Annot_GetPropT (op_reason, use_op, Named { reason; name }))
+    elab_t
+      cx
+      t
+      (Annot_GetPropT (op_reason, use_op, Named { reason; name; from_indexed_access = false }))
 
   and get_elem cx use_op reason ~key t = elab_t cx t (Annot_GetElemT (reason, use_op, key))
 
   and qualify_type cx use_op reason (reason_name, name) t =
     let open Type in
     let f id =
-      let t = elab_t cx t (Annot_GetPropT (reason, use_op, Named { reason = reason_name; name })) in
+      let t =
+        elab_t
+          cx
+          t
+          (Annot_GetPropT
+             (reason, use_op, Named { reason = reason_name; name; from_indexed_access = false })
+          )
+      in
       resolve_id cx reason id t
     in
     mk_lazy_tvar cx reason f

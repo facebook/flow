@@ -660,6 +660,7 @@ module rec TypeTerm : sig
         lookup_action: lookup_action;
         ids: Properties.Set.t option;
         method_accessible: bool;
+        ignore_dicts: bool;
       }
     (* operations on objects *)
     (* Resolves the object into which the properties are assigned *)
@@ -1284,6 +1285,7 @@ module rec TypeTerm : sig
     | Named of {
         reason: reason;
         name: name;
+        from_indexed_access: bool;
       }
     | Computed of t
 
@@ -1348,6 +1350,7 @@ module rec TypeTerm : sig
     initialized_fields: SSet.t;
     initialized_static_fields: SSet.t;
     inst_kind: instance_kind;
+    inst_dict: Object.dict;
   }
 
   and instance_kind =

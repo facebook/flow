@@ -61,7 +61,12 @@ module FlowJS : C = struct
 
   let get_prop cx use_op reason ?(op_reason = reason) name l =
     Tvar.mk_no_wrap_where cx op_reason (fun tout ->
-        Flow.flow cx (l, GetPropT (use_op, op_reason, None, Named { reason; name }, tout))
+        Flow.flow
+          cx
+          ( l,
+            GetPropT
+              (use_op, op_reason, None, Named { reason; name; from_indexed_access = false }, tout)
+          )
     )
 end
 
@@ -2815,16 +2820,23 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               ( append_call ~static t x,
                 CallProperty (loc, { CallProperty.value; static; comments }) :: rev_prop_asts
               )
-            | Indexer (loc, { Indexer.static; _ }) as indexer_prop when mem_field ~static "$key" x
-              ->
+            | Indexer (loc, { Indexer.static; _ }) as indexer_prop when has_indexer ~static x ->
               Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, MultipleIndexers));
               (x, Tast_utils.error_mapper#object_type_property indexer_prop :: rev_prop_asts)
             | Indexer (loc, indexer) ->
-              let { Indexer.key; value; static; variance; _ } = indexer in
+              let { Indexer.id; key; value; static; variance; _ } = indexer in
               let (((_, k), _) as key) = convert cx tparams_map infer_tparams_map key in
               let (((_, v), _) as value) = convert cx tparams_map infer_tparams_map value in
               let polarity = polarity cx variance in
-              ( add_indexer ~static polarity ~key:k ~value:v x,
+              let dict =
+                {
+                  Type.dict_name = Base.Option.map ~f:ident_name id;
+                  key = k;
+                  value = v;
+                  dict_polarity = polarity;
+                }
+              in
+              ( add_indexer ~static dict x,
                 Indexer (loc, { indexer with Indexer.key; value }) :: rev_prop_asts
               )
             | Ast.Type.Object.MappedType (loc, _) as prop ->

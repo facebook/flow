@@ -669,6 +669,7 @@ and tag_of_inst inst =
     proto_props = _;
     initialized_fields = _;
     initialized_static_fields = _;
+    inst_dict = _;
   } =
     inst
   in

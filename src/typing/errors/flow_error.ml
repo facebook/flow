@@ -688,12 +688,7 @@ let rec make_error_printable :
         unwrap_frame_without_loc loc frames use_op [text "the return value"]
       | Frame (IndexerKeyCompatibility { lower; _ }, use_op) ->
         unwrap_frame loc frames lower use_op [text "the indexer property's key"]
-      | Frame
-          ( PropertyCompatibility
-              (* TODO the $-prefixed names should be internal *)
-              { prop = None | Some (OrdinaryName ("$key" | "$value")); lower; _ },
-            use_op
-          ) ->
+      | Frame (PropertyCompatibility { prop = None; lower; _ }, use_op) ->
         unwrap_frame loc frames lower use_op [text "the indexer property"]
       | Frame (PropertyCompatibility { prop = Some (OrdinaryName "$call"); lower; _ }, use_op) ->
         unwrap_frame loc frames lower use_op [text "the callable signature"]
@@ -716,13 +711,11 @@ let rec make_error_printable :
           | _ -> loc_of_aloc (loc_of_reason reason)
         in
         let rec loop lower_loc = function
-          (* Don't match $key/$value/$call properties since they have special
+          (* Don't match $call properties since they have special
            * meaning. As defined above. *)
           | Frame (PropertyCompatibility { prop = Some prop; lower = lower'; _ }, use_op)
           (* TODO the $-prefixed names should be internal *)
-            when prop <> OrdinaryName "$key"
-                 && prop <> OrdinaryName "$value"
-                 && prop <> OrdinaryName "$call" ->
+            when prop <> OrdinaryName "$call" ->
             let lower_loc' = loc_of_prop_compatibility_reason lower_loc lower' use_op in
             (* Perform the same frame location unwrapping as we do in our
              * general code. *)

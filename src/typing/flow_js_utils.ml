@@ -360,15 +360,15 @@ let error_message_kind_of_lower = function
     None
 
 let error_message_kind_of_upper = function
-  | GetPropT (_, _, _, Named { reason; name }, _) ->
+  | GetPropT (_, _, _, Named { reason; name; _ }, _) ->
     Error_message.IncompatibleGetPropT (loc_of_reason reason, Some name)
   | GetPropT (_, _, _, Computed t, _) -> Error_message.IncompatibleGetPropT (loc_of_t t, None)
   | GetPrivatePropT (_, _, _, _, _, _) -> Error_message.IncompatibleGetPrivatePropT
-  | SetPropT (_, _, Named { reason; name }, _, _, _, _) ->
+  | SetPropT (_, _, Named { reason; name; _ }, _, _, _, _) ->
     Error_message.IncompatibleSetPropT (loc_of_reason reason, Some name)
   | SetPropT (_, _, Computed t, _, _, _, _) -> Error_message.IncompatibleSetPropT (loc_of_t t, None)
   | SetPrivatePropT (_, _, _, _, _, _, _, _, _) -> Error_message.IncompatibleSetPrivatePropT
-  | MethodT (_, _, _, Named { reason; name }, _, _) ->
+  | MethodT (_, _, _, Named { reason; name; _ }, _, _) ->
     Error_message.IncompatibleMethodT (loc_of_reason reason, Some name)
   | MethodT (_, _, _, Computed t, _, _) -> Error_message.IncompatibleMethodT (loc_of_t t, None)
   | CallT _ -> Error_message.IncompatibleCallT
@@ -1668,31 +1668,30 @@ end
 (* GetPropT helper *)
 (*******************)
 
-module Access_prop_options = struct
-  type t = {
-    use_op: Type.use_op;
-    previously_seen_props: Type.Properties.Set.t;
-    allow_method_access: bool;
-    lookup_kind: Type.lookup_kind;
-    (* Same `id` as in `GetPropT` and `TestPropT`: it represents some syntactic access. *)
-    id: ident option;
-  }
-end
+let rec unbind_this_method = function
+  | DefT (r, trust, FunT (static, ({ this_t = (this_t, This_Method { unbound = false }); _ } as ft)))
+    ->
+    DefT (r, trust, FunT (static, { ft with this_t = (this_t, This_Method { unbound = true }) }))
+  | DefT (r, trust, PolyT { tparams_loc; tparams; t_out; id }) ->
+    DefT (r, trust, PolyT { tparams_loc; tparams; t_out = unbind_this_method t_out; id })
+  | IntersectionT (r, rep) -> IntersectionT (r, InterRep.map unbind_this_method rep)
+  | t -> t
+
+let check_method_unbinding cx trace ~use_op ~method_accessible ~reason_op ~propref p =
+  match p with
+  | Method { key_loc; type_ = t }
+    when (not method_accessible)
+         && not (Context.allowed_method_unbinding cx (Reason.loc_of_reason reason_op)) ->
+    let reason_op = reason_of_propref propref in
+    add_output
+      cx
+      ~trace
+      (Error_message.EMethodUnbinding { use_op; reason_op; reason_prop = reason_of_t t });
+    Method { key_loc; type_ = unbind_this_method t }
+  | _ -> p
 
 module type Get_prop_helper_sig = sig
   type r
-
-  val read_prop :
-    Context.t ->
-    Type.trace ->
-    Access_prop_options.t ->
-    Reason.reason ->
-    Reason.reason ->
-    Type.t ->
-    Type.t ->
-    Reason.name ->
-    Type.property NameUtils.Map.t ->
-    r
 
   val dict_read_check : Context.t -> Type.trace -> use_op:Type.use_op -> Type.t * Type.t -> unit
 
@@ -1700,6 +1699,7 @@ module type Get_prop_helper_sig = sig
     Context.t ->
     Type.trace ->
     obj_t:Type.t ->
+    method_accessible:bool ->
     Type.t ->
     Reason.reason * Type.lookup_kind * Type.propref * use_op * Type.Properties.Set.t ->
     r
@@ -1729,37 +1729,66 @@ module type Get_prop_helper_sig = sig
 end
 
 module GetPropT_kit (F : Get_prop_helper_sig) = struct
-  let on_InstanceT cx trace ~l ~id r super insttype use_op reason_op propref =
-    match propref with
-    | Named { name = OrdinaryName "constructor"; _ } ->
-      F.return
+  let perform_read_prop_action cx trace use_op propref p ureason =
+    match Property.read_t p with
+    | Some t ->
+      let loc = loc_of_reason ureason in
+      F.return cx trace ~use_op:unknown_use (F.reposition cx ~trace loc t)
+    | None ->
+      let (reason_prop, prop_name) =
+        match propref with
+        | Named { reason; name; from_indexed_access = false } -> (reason, Some name)
+        | Named { reason; name = _; from_indexed_access = true } -> (reason, None)
+        | Computed t -> (reason_of_t t, None)
+      in
+      let msg = Error_message.EPropNotReadable { reason_prop; prop_name; use_op } in
+      add_output cx ~trace msg;
+      F.error_type cx trace ureason
+
+  let get_instance_prop cx trace ~use_op ~ignore_dicts inst propref reason_op =
+    let dict = inst.inst_dict in
+    let named_prop =
+      match propref with
+      | Named { name; _ } ->
+        let own_props = Context.find_props cx inst.own_props in
+        let proto_props = Context.find_props cx inst.proto_props in
+        let props = NameUtils.Map.union own_props proto_props in
+        NameUtils.Map.find_opt name props
+      | Computed _ -> None
+    in
+    match (named_prop, propref, dict) with
+    | (Some prop, _, _) -> Some (prop, PropertyMapProperty)
+    | (None, Named { name; from_indexed_access = true; _ }, Some { key; value; dict_polarity; _ })
+      when not ignore_dicts ->
+      F.dict_read_check cx trace ~use_op (string_key name reason_op, key);
+      Some (Field { key_loc = None; type_ = value; polarity = dict_polarity }, IndexerProperty)
+    | (None, Computed k, Some { key; value; dict_polarity; _ }) when not ignore_dicts ->
+      F.dict_read_check cx trace ~use_op (k, key);
+      Some (Field { key_loc = None; type_ = value; polarity = dict_polarity }, IndexerProperty)
+    | _ -> None
+
+  let read_instance_prop
+      cx trace ~use_op ~instance_t ~id ~method_accessible ~super ~lookup_kind inst propref reason_op
+      =
+    match get_instance_prop cx trace ~use_op ~ignore_dicts:true inst propref reason_op with
+    | Some (p, _target_kind) ->
+      let p = check_method_unbinding cx trace ~use_op ~method_accessible ~reason_op ~propref p in
+      Base.Option.iter id ~f:(Context.test_prop_hit cx);
+      perform_read_prop_action cx trace use_op propref p reason_op
+    | None ->
+      let super =
+        match name_of_propref propref with
+        | Some name when is_munged_prop_name cx name -> ObjProtoT (reason_of_t super)
+        | _ -> super
+      in
+      let ids = Properties.Set.of_list [inst.own_props; inst.proto_props] in
+      F.cg_lookup
         cx
         trace
-        ~use_op:unknown_use
-        (TypeUtil.class_type ?annot_loc:(annot_loc_of_reason r) l)
-    | Named { reason = reason_prop; name } ->
-      let own_props = Context.find_props cx insttype.own_props in
-      let proto_props = Context.find_props cx insttype.proto_props in
-      let fields = NameUtils.Map.union own_props proto_props in
-      let lookup_kind = Strict r in
-      let options =
-        {
-          Access_prop_options.use_op;
-          previously_seen_props = Properties.Set.of_list [insttype.own_props; insttype.proto_props];
-          allow_method_access = false;
-          lookup_kind;
-          id;
-        }
-      in
-      (* Instance methods cannot be unbound *)
-      F.read_prop cx trace options reason_prop reason_op l super name fields
-    | Computed _ ->
-      (* Instances don't have proper dictionary support. All computed accesses
-         are converted to named property access to `$key` and `$value` during
-         element resolution in ElemT. *)
-      let loc = loc_of_reason reason_op in
-      add_output cx ~trace Error_message.(EInternal (loc, InstanceLookupComputed));
-      F.error_type cx trace reason_op
+        ~obj_t:instance_t
+        ~method_accessible
+        super
+        (reason_op, lookup_kind, propref, use_op, ids)
 
   let on_EnumObjectT cx trace enum_reason trust enum access =
     let (_, access_reason, _, (prop_reason, member_name)) = access in
@@ -1824,18 +1853,6 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
       Some (Field { key_loc = None; type_ = value; polarity = dict_polarity }, IndexerProperty)
     | _ -> None
 
-  let perform_read_prop_action cx trace use_op propref p ureason =
-    match Property.read_t p with
-    | Some t ->
-      let loc = loc_of_reason ureason in
-      F.return cx trace ~use_op:unknown_use (F.reposition cx ~trace loc t)
-    | None ->
-      let reason_prop = reason_of_propref propref in
-      let prop_name = name_of_propref propref in
-      let msg = Error_message.EPropNotReadable { reason_prop; prop_name; use_op } in
-      add_output cx ~trace msg;
-      F.error_type cx trace ureason
-
   let read_obj_prop cx trace ~use_op o propref reason_obj reason_op lookup_info =
     let l = DefT (reason_obj, bogus_trust (), ObjT o) in
     match get_obj_prop cx trace o propref reason_op with
@@ -1844,7 +1861,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
       perform_read_prop_action cx trace use_op propref p reason_op
     | None ->
       (match propref with
-      | Named { reason = reason_prop; name } ->
+      | Named { reason = reason_prop; name; from_indexed_access = _ } ->
         let lookup_kind =
           match lookup_info with
           | Some (id, lookup_default_tout) when Obj_type.is_exact o.flags.obj_kind ->
@@ -1856,7 +1873,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
           | _ -> Strict reason_obj
         in
         let x = (reason_op, lookup_kind, propref, use_op, Properties.Set.singleton o.props_tmap) in
-        F.cg_lookup cx trace ~obj_t:l o.proto_t x
+        F.cg_lookup cx trace ~obj_t:l ~method_accessible:true o.proto_t x
       | Computed elem_t ->
         (match elem_t with
         | OpenT _ ->
@@ -1978,7 +1995,12 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
 let propref_for_elem_t = function
   | GenericT { bound = DefT (_, _, StrT (Literal (_, name))); reason; _ }
   | DefT (reason, _, StrT (Literal (_, name))) ->
-    Named { reason = replace_desc_reason (RProperty (Some name)) reason; name }
+    Named
+      {
+        reason = replace_desc_reason (RProperty (Some name)) reason;
+        name;
+        from_indexed_access = true;
+      }
   | l -> Computed l
 
 let keylist_of_props props reason_op =
@@ -2076,13 +2098,9 @@ let get_values_type_of_obj_t cx o reason =
   (* Create a union type from all our selected types. *)
   Type_mapper.union_flatten cx ts |> union_of_ts reason
 
-let remove_dict_from_props props =
-  props |> NameUtils.Map.remove (OrdinaryName "$key") |> NameUtils.Map.remove (OrdinaryName "$value")
-
-let get_values_type_of_instance_t cx own_props reason =
+let get_values_type_of_instance_t cx own_props dict reason =
   (* Find all of the props. *)
   let props = Context.find_props cx own_props in
-  let props_without_dict = remove_dict_from_props props in
   (* Get the read type for all readable properties and discard the rest. *)
   let ts =
     NameUtils.Map.fold
@@ -2090,19 +2108,16 @@ let get_values_type_of_instance_t cx own_props reason =
         match Property.read_t prop with
         | Some t -> t :: ts
         | _ -> ts)
-      props_without_dict
+      props
       []
   in
   let ts =
-    (* If these are physically equal, $key and $value were not present, and thus there is no indexer *)
-    if props == props_without_dict then
-      ts
-    else
-      match NameUtils.Map.find (OrdinaryName "$value") props with
-      | Field { type_ = dict_value; polarity; _ } when Polarity.compat (polarity, Polarity.Positive)
-        ->
-        dict_value :: ts
-      | _ -> ts
+    match dict with
+    | Some { value = dict_value; dict_polarity; _ }
+      when Polarity.compat (dict_polarity, Polarity.Positive) ->
+      dict_value :: ts
+    | None -> ts
+    | _ -> ts
   in
   (* Create a union type from all our selected types. *)
   Type_mapper.union_flatten cx ts |> union_of_ts reason

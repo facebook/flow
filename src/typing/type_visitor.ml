@@ -362,6 +362,7 @@ class ['a] t =
         initialized_fields = _;
         initialized_static_fields = _;
         inst_kind = _;
+        inst_dict;
       } =
         i
       in
@@ -374,6 +375,7 @@ class ['a] t =
       let acc = self#props cx pole acc own_props in
       let acc = self#props cx pole acc proto_props in
       let acc = self#opt (self#call_prop cx pole) acc inst_call_t in
+      let acc = self#opt (self#dict_type cx pole_TODO) acc inst_dict in
       acc
 
     method private export_types cx pole acc e =

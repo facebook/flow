@@ -362,6 +362,7 @@ let mk_private_method_eval_hint_test
                 initialized_fields = SSet.empty;
                 initialized_static_fields = SSet.empty;
                 inst_kind = ClassKind;
+                inst_dict = None;
               };
           }
       )

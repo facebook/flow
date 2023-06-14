@@ -76,6 +76,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
         initialized_fields = _;
         initialized_static_fields = _;
         inst_kind = _;
+        inst_dict;
       } =
         inst
       in
@@ -84,7 +85,8 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
       List.iter (check_polarity cx ?trace tparams polarity) implements;
       check_polarity_propmap cx ?trace tparams polarity own_props;
       check_polarity_propmap cx ?trace ~skip_ctor:true tparams polarity proto_props;
-      Base.Option.iter call_t ~f:(check_polarity_call cx ?trace tparams polarity)
+      Base.Option.iter call_t ~f:(check_polarity_call cx ?trace tparams polarity);
+      Base.Option.iter inst_dict ~f:(check_polarity_dict cx ?trace tparams polarity)
     (* We can ignore the statics of function annotations, since
      * they will always be "uninteresting," never containing a GenericT. *)
     | DefT (_, _, FunT (_static, f)) ->

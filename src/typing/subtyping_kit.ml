@@ -291,7 +291,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (* Properties in u must either exist in l, or match l's indexer. *)
     Context.iter_real_props cx uflds (fun name up ->
         let reason_prop = replace_desc_reason (RProperty (Some name)) ureason in
-        let propref = Named { reason = reason_prop; name } in
+        let propref = Named { reason = reason_prop; name; from_indexed_access = false } in
         let use_op' = use_op in
         let use_op =
           Frame
@@ -348,6 +348,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                     lookup_action = LookupProp (use_op, up);
                     method_accessible = true;
                     ids = None;
+                    ignore_dicts = false;
                   }
               )
           | _ ->
@@ -370,6 +371,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                     lookup_action = LookupProp (use_op, up);
                     method_accessible = true;
                     ids = None;
+                    ignore_dicts = false;
                   }
               ))
     );
@@ -411,7 +413,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                   | _ -> ()
                 else
                   let reason_prop = replace_desc_reason (RProperty (Some name)) lreason in
-                  let propref = Named { reason = reason_prop; name } in
+                  let propref = Named { reason = reason_prop; name; from_indexed_access = false } in
                   rec_flow_p cx ~trace ~use_op lreason ureason propref (lp, up)
               end;
               string_key name lreason :: keys)
@@ -971,6 +973,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
             lookup_action = MatchProp { use_op; drop_generic; prop_t = t };
             method_accessible = true;
             ids = Some Properties.Set.empty;
+            ignore_dicts = false;
           }
       in
       rec_flow cx trace (l, u)
@@ -1454,7 +1457,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           in
           let propref =
             let reason_prop = replace_desc_reason (RProperty (Some name)) ureason in
-            Named { reason = reason_prop; name }
+            Named { reason = reason_prop; name; from_indexed_access = false }
           in
           match NameUtils.Map.find_opt name lflds with
           | Some lp -> rec_flow_p cx ~trace ~use_op lreason ureason propref (lp, up)
@@ -1480,6 +1483,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                         lookup_action = LookupProp (use_op, up);
                         method_accessible = false;
                         ids = Some (Properties.Set.of_list [lown; lproto]);
+                        ignore_dicts = false;
                       }
                   )
               )

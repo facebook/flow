@@ -2319,7 +2319,7 @@ let%expect_test "interface_coverage" =
               name = "X"; polarity = Polarity.Neutral;
               bound = None; default = None},
             []));
-         def = InterfaceSig {extends = []; props = {}; calls = []}}
+         def = InterfaceSig {extends = []; props = {}; calls = []; dict = None}}
     1. DeclareClassBinding {id_loc = [2:21-22];
          name = "C";
          def =
@@ -2335,7 +2335,7 @@ let%expect_test "interface_coverage" =
                   targs = [(Annot (Any [3:11-14]))]},
                 Polarity.Neutral)) };
            proto_props = {}; static_calls = [];
-           calls = []}}
+           calls = []; dict = None; static_dict = None}}
   |}]
 
 let%expect_test "bound_coverage" =
@@ -3032,7 +3032,9 @@ let%expect_test "inline_interface" =
     0. TypeAlias {id_loc = [1:5-6]; name = "A";
          tparams = Mono;
          body =
-         (Annot (InlineInterface ([1:9-21], InterfaceSig {extends = []; props = {}; calls = []})))}
+         (Annot
+            (InlineInterface ([1:9-21],
+               InterfaceSig {extends = []; props = {}; calls = []; dict = None})))}
     1. TypeAlias {id_loc = [2:12-13];
          name = "B"; tparams = Mono;
          body =
@@ -3044,7 +3046,7 @@ let%expect_test "inline_interface" =
                  { "p" ->
                    (InterfaceField ((Some [2:38-39]), (
                       Annot (String [2:41-47])), Polarity.Neutral)) };
-                 calls = []}
+                 calls = []; dict = None}
                )))}
   |}]
 
@@ -3088,7 +3090,7 @@ let%expect_test "interface_optional" =
            { "p" ->
              (InterfaceField ((Some [1:21-22]), (
                 Annot (Optional (Annot (String [1:25-31])))), Polarity.Neutral)) };
-           calls = []}} |}]
+           calls = []; dict = None}} |}]
 
 let%expect_test "interface_method" =
   print_sig {|
@@ -3114,8 +3116,29 @@ let%expect_test "interface_method" =
                     return = (Annot (Void [1:26-30]));
                     predicate = None}),
                  [])) };
-           calls = []}}
+           calls = []; dict = None}}
   |}]
+
+let%expect_test "interface_indexer" =
+  print_sig {|
+    export interface I {[key: string]: number}
+  |};
+  [%expect {|
+    CJSModule {type_exports = [|(ExportTypeBinding 0)|];
+      exports = None;
+      info = CJSModuleInfo {type_export_keys = [|"I"|]; type_stars = []; strict = true}}
+
+    Local defs:
+    0. Interface {id_loc = [1:17-18];
+         name = "I"; tparams = Mono;
+         def =
+         InterfaceSig {extends = [];
+           props = {}; calls = [];
+           dict =
+           (Some ObjDict {name = (Some "key");
+                   polarity = Polarity.Neutral;
+                   key = (Annot (String [1:26-32]));
+                   value = (Annot (Number [1:35-41]))})}} |}]
 
 let%expect_test "object_annot_method" =
   print_sig {|
@@ -3569,7 +3592,7 @@ let%expect_test "class_extends" =
            mixins = []; implements = [];
            static_props = {}; own_props = {};
            proto_props = {}; static_calls = [];
-           calls = []}}
+           calls = []; dict = None; static_dict = None}}
     1. Variable {id_loc = [2:6-7]; name = "M";
          def =
          (Value
@@ -3607,7 +3630,7 @@ let%expect_test "class_extends" =
            mixins = []; implements = [];
            static_props = {}; own_props = {};
            proto_props = {}; static_calls = [];
-           calls = []}}
+           calls = []; dict = None; static_dict = None}}
     5. DeclareClassBinding {id_loc = [6:21-23];
          name = "C4";
          def =
@@ -3618,7 +3641,7 @@ let%expect_test "class_extends" =
            mixins = []; implements = [];
            static_props = {}; own_props = {};
            proto_props = {}; static_calls = [];
-           calls = []}} |}]
+           calls = []; dict = None; static_dict = None}} |}]
 
 let%expect_test "class_this" =
   print_sig {|
@@ -3682,7 +3705,8 @@ let%expect_test "declare_class_this" =
                     return = (Annot Bound {ref_loc = [2:7-11]; name = "this"});
                     predicate = None}),
                  [])) };
-           static_calls = []; calls = []}} |}]
+           static_calls = []; calls = [];
+           dict = None; static_dict = None}} |}]
 
 let%expect_test "existential" =
   print_sig {|
@@ -4824,7 +4848,7 @@ let%expect_test "declared_export_default_class_binding" =
            mixins = []; implements = [];
            static_props = {}; own_props = {};
            proto_props = {}; static_calls = [];
-           calls = []}} |}]
+           calls = []; dict = None; static_dict = None}} |}]
 
 let%expect_test "module_ref_prefix" =
   print_sig ~module_ref_prefix:"m#" {|
@@ -5176,7 +5200,7 @@ let%expect_test "builtin_cjs_module_with_implicit_exports" =
            mixins = []; implements = [];
            static_props = {}; own_props = {};
            proto_props = {}; static_calls = [];
-           calls = []}}
+           calls = []; dict = None; static_dict = None}}
     3. TypeAlias {id_loc = [5:15-16]; name = "T"; tparams = Mono; body = (Annot (Number [5:19-25]))}
     4. TypeAlias {id_loc = [6:22-23]; name = "U"; tparams = Mono; body = (Annot (String [6:26-32]))}
 
@@ -5440,7 +5464,8 @@ let%expect_test "this_param_4" =
                     return = (Annot (Void [2:22-26]));
                     predicate = None}),
                  [])) };
-           static_calls = []; calls = []}} |}]
+           static_calls = []; calls = [];
+           dict = None; static_dict = None}} |}]
 
 let%expect_test "this_param_5" =
   print_sig {|

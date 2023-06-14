@@ -260,6 +260,8 @@ type ('loc, 'a) declare_class_sig =
       proto_props: ('loc, 'a) interface_prop smap;
       static_calls: 'a list;
       calls: 'a list;
+      dict: 'a obj_annot_dict option;
+      static_dict: 'a obj_annot_dict option;
     }
 [@@deriving iter, map, show { with_path = false }]
 
@@ -268,6 +270,7 @@ type ('loc, 'a) interface_sig =
       extends: 'a list;
       props: ('loc, 'a) interface_prop smap;
       calls: 'a list;
+      dict: 'a obj_annot_dict option;
     }
 [@@deriving iter, map, show { with_path = false }]
 
