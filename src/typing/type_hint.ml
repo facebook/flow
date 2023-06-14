@@ -7,6 +7,7 @@
 
 open Reason
 open Type
+open TypeUtil
 open Hint
 open Utils_js
 module ImplicitInstantiation = Implicit_instantiation.Pierce (Flow_js.FlowJs)
@@ -298,11 +299,7 @@ and type_of_hint_decomposition cx op reason t =
 
   let get_constructor_type t =
     let get_constructor_method_type t =
-      SpeculationFlow.get_method_type_unsafe
-        cx
-        t
-        reason
-        (Named { reason; name = OrdinaryName "constructor" })
+      SpeculationFlow.get_method_type_unsafe cx t reason (mk_named_prop ~reason "constructor")
     in
     let mod_ctor_return instance_type = function
       | DefT
@@ -479,11 +476,7 @@ and type_of_hint_decomposition cx op reason t =
           reason
           (Computed (DefT (reason, bogus_trust (), StrT AnyLiteral)))
       | Decomp_MethodName name ->
-        SpeculationFlow.get_method_type_unsafe
-          cx
-          t
-          reason
-          (Named { reason; name = OrdinaryName name })
+        SpeculationFlow.get_method_type_unsafe cx t reason (mk_named_prop ~reason name)
       | Decomp_MethodPrivateName (name, class_stack) ->
         let env = Context.environment cx in
         Context.set_environment cx { env with Loc_env.class_stack };
@@ -505,12 +498,7 @@ and type_of_hint_decomposition cx op reason t =
         Tvar.mk_no_wrap_where cx reason (fun tout ->
             let use_t =
               GetPropT
-                ( unknown_use,
-                  reason,
-                  Some (Reason.mk_id ()),
-                  Named { reason; name = OrdinaryName name },
-                  tout
-                )
+                (unknown_use, reason, Some (Reason.mk_id ()), mk_named_prop ~reason name, tout)
             in
             SpeculationFlow.resolved_lower_flow_unsafe cx reason (t, use_t)
         )

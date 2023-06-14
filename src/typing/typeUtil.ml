@@ -754,6 +754,8 @@ let reason_of_propref = function
   | Named { reason; _ } -> reason
   | Computed t -> reason_of_t t
 
+let mk_named_prop ~reason name = Named { reason; name = OrdinaryName name }
+
 let optional ?annot_loc ?(use_desc = false) t =
   let reason = update_desc_new_reason (fun desc -> ROptional desc) (reason_of_t t) in
   let reason =

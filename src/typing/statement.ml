@@ -3551,7 +3551,7 @@ module Make
                     ( use_op,
                       reason,
                       reason_lookup,
-                      Named { reason = reason_prop; name = OrdinaryName name },
+                      mk_named_prop ~reason:reason_prop name,
                       CallM { methodcalltype; return_hint = Env.get_hint cx loc },
                       prop_t
                     )
@@ -3588,7 +3588,7 @@ module Make
         let lhs_t =
           Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
               let methodcalltype = mk_methodcalltype targts argts t in
-              let propref = Named { reason = super_reason; name = OrdinaryName "constructor" } in
+              let propref = mk_named_prop ~reason:super_reason "constructor" in
               let use_op =
                 Op
                   (FunCall
@@ -4527,7 +4527,7 @@ module Make
     let reason_prop = mk_reason (RProperty (Some (OrdinaryName name))) prop_loc in
     let reason_expr = mk_reason (RProperty (Some (OrdinaryName name))) expr_loc in
     let opt_methodcalltype = mk_opt_methodcalltype targts argts call_strict_arity in
-    let propref = Named { reason = reason_prop; name = OrdinaryName name } in
+    let propref = mk_named_prop ~reason:reason_prop name in
     let action =
       match opt_state with
       | NewChain ->
@@ -4594,7 +4594,7 @@ module Make
             let methodcalltype =
               mk_methodcalltype targts argts t ~meth_strict_arity:call_strict_arity
             in
-            let propref = Named { reason = reason_prop; name = OrdinaryName name } in
+            let propref = mk_named_prop ~reason:reason_prop name in
             Flow.flow
               cx
               ( obj_t,
@@ -5165,14 +5165,7 @@ module Make
         cx
         ( super_t,
           SetPropT
-            ( use_op,
-              reason,
-              Named { reason = prop_reason; name = OrdinaryName name },
-              mode,
-              Normal,
-              t,
-              Some prop_t
-            )
+            (use_op, reason, mk_named_prop ~reason:prop_reason name, mode, Normal, t, Some prop_t)
         );
       let property = Member.PropertyIdentifier ((prop_loc, prop_t), id) in
       ( (lhs_loc, prop_t),
@@ -5249,7 +5242,7 @@ module Make
               (SetPropT
                  ( use_op,
                    reason,
-                   Named { reason = prop_reason; name = OrdinaryName name },
+                   mk_named_prop ~reason:prop_reason name,
                    mode,
                    wr_ctx,
                    t,
@@ -5965,7 +5958,7 @@ module Make
               ( use_op,
                 reason,
                 reason_createElement,
-                Named { reason = reason_createElement; name = OrdinaryName "createElement" },
+                mk_named_prop ~reason:reason_createElement "createElement",
                 CallM
                   {
                     methodcalltype =
@@ -6181,9 +6174,9 @@ module Make
   and get_prop_opt_use ~cond reason ~use_op (prop_reason, name) =
     let id = mk_id () in
     if Base.Option.is_some cond then
-      OptTestPropT (use_op, reason, id, Named { reason = prop_reason; name = OrdinaryName name })
+      OptTestPropT (use_op, reason, id, mk_named_prop ~reason:prop_reason name)
     else
-      OptGetPropT (use_op, reason, Some id, Named { reason = prop_reason; name = OrdinaryName name })
+      OptGetPropT (use_op, reason, Some id, mk_named_prop ~reason:prop_reason name)
 
   and get_prop ~cond cx reason ~use_op tobj (prop_reason, name) =
     let opt_use = get_prop_opt_use ~cond reason ~use_op (prop_reason, name) in
@@ -6400,14 +6393,7 @@ module Make
         cx
         ( o,
           SetPropT
-            ( use_op,
-              reason,
-              Named { reason = prop_reason; name = OrdinaryName x },
-              Assign,
-              Normal,
-              ty,
-              Some prop_t
-            )
+            (use_op, reason, mk_named_prop ~reason:prop_reason x, Assign, Normal, ty, Some prop_t)
         );
       ( o,
         targs,

@@ -118,7 +118,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         | `Props -> "props"
         | `Instance -> "instance"
       in
-      Named { reason = replace_desc_reason (RCustom name) reason_op; name = OrdinaryName name }
+      let reason = replace_desc_reason (RCustom name) reason_op in
+      mk_named_prop ~reason name
     in
     (* TODO: if intrinsic is null, we will treat it like prototype termination,
      * but we should error like a GetPropT would instead. *)
@@ -142,13 +143,13 @@ module Kit (Flow : Flow_common.S) : REACT = struct
    * on the given polarity.
    *)
   let lookup_defaults cx trace component ~reason_op upper pole =
-    let name = OrdinaryName "defaultProps" in
+    let name = "defaultProps" in
     let reason_missing = replace_desc_reason RReactDefaultProps (reason_of_t component) in
-    let reason_prop = replace_desc_reason (RProperty (Some name)) reason_op in
+    let reason_prop = replace_desc_reason (RProperty (Some (OrdinaryName name))) reason_op in
     let lookup_kind =
       NonstrictReturning (Some (DefT (reason_missing, bogus_trust (), VoidT), upper), None)
     in
-    let propref = Named { reason = reason_prop; name } in
+    let propref = mk_named_prop ~reason:reason_prop name in
     let action =
       LookupProp (unknown_use, Field { key_loc = None; type_ = upper; polarity = pole })
     in
@@ -569,7 +570,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         let key_t = optional (maybe (get_builtin_type cx reason_key (OrdinaryName "React$Key"))) in
         (* Flow the config input key type to the key type. *)
         let lookup_kind = NonstrictReturning (None, None) in
-        let propref = Named { reason = reason_key; name = OrdinaryName "key" } in
+        let propref = mk_named_prop ~reason:reason_key "key" in
         let use_op =
           Frame
             ( PropertyCompatibility
@@ -617,7 +618,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         in
         (* Flow the config input ref type to the ref type. *)
         let lookup_kind = NonstrictReturning (None, None) in
-        let propref = Named { reason = reason_ref; name = OrdinaryName "ref" } in
+        let propref = mk_named_prop ~reason:reason_ref "ref" in
         let use_op =
           Frame
             ( PropertyCompatibility

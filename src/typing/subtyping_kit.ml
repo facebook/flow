@@ -444,10 +444,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
          behavior, which should be fixed, and this code removed. *)
       (match (lcall, ucall) with
       | (Some lcall, None) ->
-        let name = OrdinaryName "$call" in
+        let name = "$call" in
         let use_op =
           Frame
-            (PropertyCompatibility { prop = Some name; lower = lreason; upper = ureason }, use_op)
+            ( PropertyCompatibility
+                { prop = Some (OrdinaryName name); lower = lreason; upper = ureason },
+              use_op
+            )
         in
         let lp =
           match Context.find_call cx lcall with
@@ -461,8 +464,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
           | (Some lt, Some ut) -> rec_flow cx trace (lt, UseT (use_op, ut))
           | _ -> ()
         else
-          let reason_prop = replace_desc_reason (RProperty (Some name)) lreason in
-          let propref = Named { reason = reason_prop; name } in
+          let reason_prop = replace_desc_reason (RProperty (Some (OrdinaryName name))) lreason in
+          let propref = mk_named_prop ~reason:reason_prop name in
           rec_flow_p cx ~trace ~use_op lreason ureason propref (lp, up)
       | _ -> ()));
 
@@ -950,12 +953,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (* matching *)
     (************)
     | (MatchingPropT _, GenericT { bound; _ }) -> rec_flow_t cx trace ~use_op (l, bound)
-    | (MatchingPropT (reason, x, t), l) ->
+    | (MatchingPropT (reason, name, t), l) ->
       (* Things that can have properties are object-like (objects, instances,
        * and their exact versions). Notably, "meta" types like union, annot,
        * typeapp, eval, maybe, optional, and intersection should have boiled
        * away by this point. Generics should have been "unsealed" as well. *)
-      let propref = Named { reason; name = OrdinaryName x } in
+      let propref = mk_named_prop ~reason name in
       let lookup_kind = NonstrictReturning (None, None) in
       let drop_generic = true in
       let u =

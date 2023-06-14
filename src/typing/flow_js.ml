@@ -3166,7 +3166,7 @@ struct
           let ret =
             Tvar.mk_no_wrap_where cx reason_op (fun t ->
                 let funtype = mk_methodcalltype None args t in
-                let propref = Named { reason = reason_o; name = OrdinaryName "constructor" } in
+                let propref = mk_named_prop ~reason:reason_o "constructor" in
                 rec_flow
                   cx
                   trace
@@ -3414,7 +3414,7 @@ struct
                 (Error_message.EPrivateLookupFailed ((reason_op, reason_c), name, use_op))
             | Some p ->
               let action = WriteProp { use_op; obj_t = l; prop_tout; tin; write_ctx; mode } in
-              let propref = Named { reason = reason_op; name } in
+              let propref = mk_named_prop ~reason:reason_op x in
               perform_lookup_action cx trace propref p PropertyMapProperty reason_c reason_op action)
         | (DefT (_, _, InstanceT _), SetPropT (_, reason_op, Computed _, _, _, _, _)) ->
           (* Instances don't have proper dictionary support. All computed accesses
@@ -5687,8 +5687,7 @@ struct
           match bound with
           | DefT (_, _, InstanceT _) ->
             narrow_generic_tvar
-              (fun t_out' ->
-                GetPropT (op, r, id, Named { reason; name = OrdinaryName "constructor" }, t_out'))
+              (fun t_out' -> GetPropT (op, r, id, mk_named_prop ~reason "constructor", t_out'))
               t_out;
             true
           | _ -> false
@@ -6539,14 +6538,14 @@ struct
                 reason;
                 lookup_kind;
                 try_ts_on_failure = [];
-                propref = Named { reason; name = OrdinaryName name };
+                propref = mk_named_prop ~reason name;
                 lookup_action = action;
                 method_accessible = false;
                 ids = Some Properties.Set.empty;
               }
           in
           let getprop_ub () =
-            GetPropT (unknown_use, reason, Some id, Named { reason; name = OrdinaryName name }, tvar)
+            GetPropT (unknown_use, reason, Some id, mk_named_prop ~reason name, tvar)
           in
           if has_default then
             match curr_t with
@@ -7217,7 +7216,7 @@ struct
         let name = OrdinaryName prop_name in
         let perform_lookup_action p =
           let action = ReadProp { use_op; obj_t = l; tout } in
-          let propref = Named { reason = reason_op; name } in
+          let propref = mk_named_prop ~reason:reason_op prop_name in
           perform_lookup_action cx trace propref p PropertyMapProperty reason_c reason_op action
         in
         let field_maps =
