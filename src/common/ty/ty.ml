@@ -11,10 +11,14 @@ include Ty_ancestors
 type aloc = (ALoc.t[@printer (fun fmt loc -> fprintf fmt "%s" (ALoc.to_string_no_source loc))])
 [@@deriving show]
 
-(* WARNING to avoid VisitorsRuntime.StructuralMismatch exceptions when using
- * comparator_ty, make sure to override the respective fail_* method for every
- * variant type. To ensure that all such methods have been overridden, check the
- * file generated with
+exception Difference of int
+
+(* To avoid VisitorsRuntime.StructuralMismatch exceptions when using comparator_ty,
+ * we override the VisitorsRuntime.fail and raise `Difference 1` instead.
+ *
+ * Note that we still need to override the respective fail_* method for every Ty.t
+ * variant type to get the most accurate results. To ensure that all such methods
+ * have been overridden, check the file generated with
  *
  * ocamlfind ocamlopt \
  *  -ppx '\
@@ -26,6 +30,12 @@ type aloc = (ALoc.t[@printer (fun fmt loc -> fprintf fmt "%s" (ALoc.to_string_no
  * and make sure all fail_* methods in the iter_ty class are overridden in
  * comparator_ty.
  *)
+module VisitorsRuntime = struct
+  include VisitorsRuntime
+
+  let fail () = raise (Difference 1)
+end
+
 type t =
   | Bound of aloc * string
   | Generic of generic_t
@@ -356,8 +366,6 @@ type type_at_pos_result = {
   unevaluated: elt;
   evaluated: elt option; (* Evaluation may not be possible *)
 }
-
-exception Difference of int
 
 let assert0 i =
   if i == 0 then
