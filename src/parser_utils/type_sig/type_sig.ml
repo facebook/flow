@@ -581,14 +581,6 @@ type ('loc, 'a) annot =
       props: 'a;
       default: 'a;
     }
-  | ReactPropTypePrimitive of 'loc * 'a
-  | ReactPropTypePrimitiveRequired of 'loc * 'a
-  | ReactPropTypeArrayOf of 'loc
-  | ReactPropTypeInstanceOf of 'loc
-  | ReactPropTypeObjectOf of 'loc
-  | ReactPropTypeOneOf of 'loc
-  | ReactPropTypeOneOfType of 'loc
-  | ReactPropTypeShape of 'loc
   | ReactCreateClass of 'loc
   | ReactCreateElement of 'loc
   | ReactCloneElement of 'loc

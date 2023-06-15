@@ -2191,50 +2191,6 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
       Annot (ReactConfig { loc; props; default })
     | _ -> Err (loc, CheckError)
   end
-  | "React$PropType$Primitive" -> begin
-    match targs with
-    | Some (_, { arguments = [t]; _ }) ->
-      let t = annot opts scope tbls xs t in
-      Annot (ReactPropTypePrimitive (loc, t))
-    | _ -> Err (loc, CheckError)
-  end
-  | "React$PropType$Primitive$Required" -> begin
-    match targs with
-    | Some (_, { arguments = [t]; _ }) ->
-      let t = annot opts scope tbls xs t in
-      Annot (ReactPropTypePrimitiveRequired (loc, t))
-    | _ -> Err (loc, CheckError)
-  end
-  | "React$PropType$ArrayOf" -> begin
-    match targs with
-    | None -> Annot (ReactPropTypeArrayOf loc)
-    | _ -> Err (loc, CheckError)
-  end
-  | "React$PropType$InstanceOf" -> begin
-    match targs with
-    | None -> Annot (ReactPropTypeInstanceOf loc)
-    | _ -> Err (loc, CheckError)
-  end
-  | "React$PropType$ObjectOf" -> begin
-    match targs with
-    | None -> Annot (ReactPropTypeObjectOf loc)
-    | _ -> Err (loc, CheckError)
-  end
-  | "React$PropType$OneOf" -> begin
-    match targs with
-    | None -> Annot (ReactPropTypeOneOf loc)
-    | _ -> Err (loc, CheckError)
-  end
-  | "React$PropType$OneOfType" -> begin
-    match targs with
-    | None -> Annot (ReactPropTypeOneOfType loc)
-    | _ -> Err (loc, CheckError)
-  end
-  | "React$PropType$Shape" -> begin
-    match targs with
-    | None -> Annot (ReactPropTypeShape loc)
-    | _ -> Err (loc, CheckError)
-  end
   | "React$CreateClass" -> begin
     match targs with
     | None -> Annot (ReactCreateClass loc)

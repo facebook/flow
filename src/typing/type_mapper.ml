@@ -619,12 +619,6 @@ class virtual ['a] t =
 
     method private custom_fun_kind cx map_cx kind =
       match kind with
-      | ReactPropType (React.PropType.Primitive (b, t)) ->
-        let t' = self#type_ cx map_cx t in
-        if t' == t then
-          kind
-        else
-          ReactPropType (React.PropType.Primitive (b, t'))
       | ReactElementFactory t ->
         let t' = self#type_ cx map_cx t in
         if t' == t then
@@ -635,7 +629,6 @@ class virtual ['a] t =
       | ObjectGetPrototypeOf
       | ObjectSetPrototypeOf
       | Compose _
-      | ReactPropType _
       | ReactCreateElement
       | ReactCloneElement
       | DebugPrint

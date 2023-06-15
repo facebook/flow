@@ -850,32 +850,6 @@ and merge_annot tps infer_tps file = function
     let default = merge tps infer_tps file default in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (props, TypeDestructorT (use_op, reason, ReactConfigType default), id))
-  | ReactPropTypePrimitive (loc, t) ->
-    let reason = Reason.(mk_reason RFunctionType loc) in
-    let t = merge tps infer_tps file t in
-    Type.(CustomFunT (reason, ReactPropType (React.PropType.Primitive (false, t))))
-  | ReactPropTypePrimitiveRequired (loc, t) ->
-    let reason = Reason.(mk_reason RFunctionType loc) in
-    let t = merge tps infer_tps file t in
-    Type.(CustomFunT (reason, ReactPropType (React.PropType.Primitive (true, t))))
-  | ReactPropTypeArrayOf loc ->
-    let reason = Reason.(mk_reason RFunctionType loc) in
-    Type.(CustomFunT (reason, ReactPropType React.PropType.(Complex ArrayOf)))
-  | ReactPropTypeInstanceOf loc ->
-    let reason = Reason.(mk_reason RFunctionType loc) in
-    Type.(CustomFunT (reason, ReactPropType React.PropType.(Complex InstanceOf)))
-  | ReactPropTypeObjectOf loc ->
-    let reason = Reason.(mk_reason RFunctionType loc) in
-    Type.(CustomFunT (reason, ReactPropType React.PropType.(Complex ObjectOf)))
-  | ReactPropTypeOneOf loc ->
-    let reason = Reason.(mk_reason RFunctionType loc) in
-    Type.(CustomFunT (reason, ReactPropType React.PropType.(Complex OneOf)))
-  | ReactPropTypeOneOfType loc ->
-    let reason = Reason.(mk_reason RFunctionType loc) in
-    Type.(CustomFunT (reason, ReactPropType React.PropType.(Complex OneOfType)))
-  | ReactPropTypeShape loc ->
-    let reason = Reason.(mk_reason RFunctionType loc) in
-    Type.(CustomFunT (reason, ReactPropType React.(PropType.Complex PropType.Shape)))
   | ReactCreateClass loc -> Type.AnyT.at Type.Untyped loc
   | ReactCreateElement loc ->
     let reason = Reason.(mk_reason RFunctionType loc) in

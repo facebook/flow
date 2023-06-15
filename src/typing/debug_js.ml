@@ -131,29 +131,12 @@ let rec dump_t_ (depth, tvars) cx t =
     | Untyped -> "Untyped"
     | Placeholder -> "Placeholder"
   in
-  let custom_fun =
-    let react_prop_type =
-      React.PropType.(
-        let complex = function
-          | ArrayOf -> "ArrayOf"
-          | InstanceOf -> "InstanceOf"
-          | ObjectOf -> "ObjectOf"
-          | OneOf -> "OneOf"
-          | OneOfType -> "OneOfType"
-          | Shape -> "Shape"
-        in
-        function
-        | Primitive (is_required, t) -> spf "Primitive (%b, %s)" is_required (kid t)
-        | Complex kind -> complex kind
-      )
-    in
-    function
+  let custom_fun = function
     | ObjectAssign -> "ObjectAssign"
     | ObjectGetPrototypeOf -> "ObjectGetPrototypeOf"
     | ObjectSetPrototypeOf -> "ObjectSetPrototypeOf"
     | Compose false -> "Compose"
     | Compose true -> "ComposeReverse"
-    | ReactPropType p -> spf "ReactPropType (%s)" (react_prop_type p)
     | ReactCreateElement -> "ReactCreateElement"
     | ReactCloneElement -> "ReactCloneElement"
     | ReactElementFactory _ -> "ReactElementFactory"
@@ -403,37 +386,11 @@ and dump_use_t_ (depth, tvars) cx t =
   let use_kid use_t = dump_use_t_ (depth - 1, tvars) cx use_t in
   let tvar id = dump_tvar_ (depth - 1, tvars) cx id in
   let tout (reason, id) = spf "(%s, %s)" (string_of_reason reason) (tvar id) in
-  let prop p = dump_prop_ (depth - 1, tvars) cx p in
   let normalized_prop p = dump_normalized_prop_ (depth - 1, tvars) cx p in
   let string_of_use_op = string_of_use_op_rec in
   let call_arg_kid = function
     | Arg t -> kid t
     | SpreadArg t -> spf "...%s" (kid t)
-  in
-  let tlist ts = spf "[%s]" (String.concat "; " (Base.List.map ~f:kid ts)) in
-  let props map =
-    spf
-      "{%s}"
-      (String.concat
-         "; "
-         (NameUtils.Map.fold
-            (fun k p acc -> spf "%s = %s" (display_string_of_name k) (prop p) :: acc)
-            map
-            []
-         )
-      )
-  in
-  let _normalized_props map =
-    spf
-      "{%s}"
-      (String.concat
-         "; "
-         (NameUtils.Map.fold
-            (fun k p acc -> spf "%s = %s" (display_string_of_name k) (normalized_prop p) :: acc)
-            map
-            []
-         )
-      )
   in
   let propref = function
     | Named { reason; name; from_indexed_access = _ } ->
@@ -476,32 +433,6 @@ and dump_use_t_ (depth, tvars) cx t =
   in
   let react_kit =
     React.(
-      let resolved_object (_, pmap, _) = props pmap in
-      let resolve_array = function
-        | ResolveArray -> "ResolveArray"
-        | ResolveElem (todo, done_rev) -> spf "ResolveElem (%s, %s)" (tlist todo) (tlist done_rev)
-      in
-      let resolve_object = function
-        | ResolveObject -> "ResolveObject"
-        | ResolveDict (_, todo, acc) -> spf "ResolveDict (%s, %s)" (props todo) (resolved_object acc)
-        | ResolveProp (k, todo, acc) ->
-          spf
-            "ResolveProp (%s, %s, %s)"
-            (display_string_of_name k)
-            (props todo)
-            (resolved_object acc)
-      in
-      let simplify_prop_type =
-        SimplifyPropType.(
-          function
-          | ArrayOf -> "ArrayOf"
-          | InstanceOf -> "InstanceOf"
-          | ObjectOf -> "ObjectOf"
-          | OneOf tool -> spf "OneOf (%s)" (resolve_array tool)
-          | OneOfType tool -> spf "OneOfType (%s)" (resolve_array tool)
-          | Shape tool -> spf "Shape (%s)" (resolve_object tool)
-        )
-      in
       function
       | CreateElement0
           { clone = _; config; children = (children, children_spread); tout; return_hint = _ }
@@ -533,8 +464,6 @@ and dump_use_t_ (depth, tvars) cx t =
       | GetConfigType (default_props, tout) ->
         spf "GetConfigType (%s, %s)" (kid default_props) (kid tout)
       | GetRef tout -> spf "GetRef (%s)" (kid tout)
-      | SimplifyPropType (tool, tout) ->
-        spf "SimplifyPropType (%s, %s)" (simplify_prop_type tool) (kid tout)
     )
   in
   let slice { Object.reason = _; props; flags = { obj_kind; _ }; generics = _; interface = _ } =
@@ -1609,11 +1538,6 @@ let dump_error_message =
     | EInvalidReactConfigType { reason; use_op } ->
       spf
         "EInvalidReactConfigType { reason = %s; use_op = %s }"
-        (dump_reason cx reason)
-        (string_of_use_op use_op)
-    | EInvalidReactPropType { reason; use_op; tool = _ } ->
-      spf
-        "EInvalidReactPropType { reason = %s; use_op = %s; _ }"
         (dump_reason cx reason)
         (string_of_use_op use_op)
     | EReactElementFunArity (reason, _, _) ->

@@ -821,25 +821,6 @@ module rec ConsGen : S = struct
     (* Custom types *)
     (****************)
     | (DefT (reason, trust, CharSetT _), _) -> elab_t cx (StrT.why reason trust) op
-    | ( CustomFunT (_, ReactPropType (React.PropType.Primitive (false, t))),
-        Annot_GetPropT (reason_op, _, Named { name = OrdinaryName "isRequired"; _ })
-      ) ->
-      let prop_type = React.PropType.Primitive (true, t) in
-      CustomFunT (reason_op, ReactPropType prop_type)
-    | (CustomFunT (reason, ReactPropType (React.PropType.Primitive (req, _))), _)
-      when function_like_op op ->
-      let builtin_name =
-        if req then
-          "ReactPropsCheckType"
-        else
-          "ReactPropsChainableTypeChecker"
-      in
-      let l = get_builtin_type cx reason (OrdinaryName builtin_name) in
-      elab_t cx l op
-    | (CustomFunT (reason, ReactPropType (React.PropType.Complex kind)), _) when function_like_op op
-      ->
-      let l = get_builtin_prop_type cx reason kind in
-      elab_t cx l op
     | (CustomFunT (r, _), _) when function_like_op op -> elab_t cx (FunProtoT r) op
     (*****************)
     (* ObjTestProtoT *)
@@ -1113,20 +1094,6 @@ module rec ConsGen : S = struct
   and get_builtin_type cx reason ?(use_desc = false) name =
     let t = Flow_js_utils.lookup_builtin_strict cx name reason in
     mk_instance_raw cx reason ~use_desc ~reason_type:(reason_of_t t) t
-
-  and get_builtin_prop_type cx reason tool =
-    let x =
-      React.PropType.(
-        match tool with
-        | ArrayOf -> "React$PropTypes$arrayOf"
-        | InstanceOf -> "React$PropTypes$instanceOf"
-        | ObjectOf -> "React$PropTypes$objectOf"
-        | OneOf -> "React$PropTypes$oneOf"
-        | OneOfType -> "React$PropTypes$oneOfType"
-        | Shape -> "React$PropTypes$shape"
-      )
-    in
-    get_builtin_type cx reason (OrdinaryName x)
 
   and get_builtin cx ?trace:_ x reason =
     let builtin = Flow_js_utils.lookup_builtin_strict cx x reason in

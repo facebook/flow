@@ -1353,8 +1353,6 @@ end = struct
         (* debugSleep: (seconds: number) => void *)
         | DebugSleep ->
           return Ty.(mk_fun ~params:[(Some "seconds", Num None, non_opt_param)] (ReturnType Void))
-        (* reactPropType: any (TODO) *)
-        | ReactPropType _ -> return Ty.explicit_any
         (*
          * 1. Component class:
          *    <T>(name: ReactClass<T>, config: T, children?: any) => React$Element<T>
@@ -1409,7 +1407,6 @@ end = struct
         | ObjectSetPrototypeOf -> return (builtin_t (Reason.OrdinaryName "Object$SetPrototypeOf"))
         | Compose false -> return (builtin_t (Reason.OrdinaryName "$Compose"))
         | Compose true -> return (builtin_t (Reason.OrdinaryName "$ComposeReverse"))
-        | ReactPropType t -> react_prop_type ~env t
         | ReactCreateElement -> return (builtin_t (Reason.OrdinaryName "React$CreateElement"))
         | ReactCloneElement -> return (builtin_t (Reason.OrdinaryName "React$CloneElement"))
         | ReactElementFactory t ->
@@ -1425,28 +1422,6 @@ end = struct
         custom_fun_expanded ~env t
       else
         custom_fun_short ~env t
-
-    and react_prop_type ~env =
-      T.React.PropType.(
-        function
-        | Primitive (is_req, t) ->
-          let%map t = type__ ~env t in
-          generic_builtin_t
-            (Reason.OrdinaryName
-               ( if is_req then
-                 "React$PropType$Primitive$Required"
-               else
-                 "React$PropType$Primitive"
-               )
-            )
-            [t]
-        | Complex ArrayOf -> return (builtin_t (Reason.OrdinaryName "React$PropType$ArrayOf"))
-        | Complex InstanceOf -> return (builtin_t (Reason.OrdinaryName "React$PropType$ArrayOf"))
-        | Complex ObjectOf -> return (builtin_t (Reason.OrdinaryName "React$PropType$dbjectOf"))
-        | Complex OneOf -> return (builtin_t (Reason.OrdinaryName "React$PropType$OneOf"))
-        | Complex OneOfType -> return (builtin_t (Reason.OrdinaryName "React$PropType$OneOfType"))
-        | Complex Shape -> return (builtin_t (Reason.OrdinaryName "React$PropType$Shape"))
-      )
 
     and internal_t t =
       Type.(

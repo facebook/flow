@@ -189,7 +189,6 @@ type 'loc virtual_reason_desc =
   | RReactStatics
   | RReactDefaultProps
   | RReactState
-  | RReactPropTypes
   | RReactChildren
   | RReactChildrenOrType of 'loc virtual_reason_desc
   | RReactChildrenOrUndefinedOrType of 'loc virtual_reason_desc

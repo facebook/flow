@@ -286,9 +286,6 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     else
       Eval.generate_id ()
 
-  let mk_react_prop_type cx loc t_ast targs id kind =
-    mk_custom_fun cx loc t_ast targs id (ReactPropType (React.PropType.Complex kind))
-
   let add_unclear_type_error_if_not_lib_file cx loc =
     match ALoc.source loc with
     | Some file when not @@ File_key.is_lib_file file ->
@@ -1259,46 +1256,6 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                 )
                 targs
           )
-        | "React$PropType$Primitive" ->
-          check_type_arg_arity cx loc t_ast targs 1 (fun () ->
-              let (ts, typed_targs) = convert_type_params () in
-              let t = List.hd ts in
-              let prop_type = ReactPropType (React.PropType.Primitive (false, t)) in
-              let targ =
-                match targs with
-                | Some (_, { Ast.Type.TypeArgs.arguments = [t]; comments = _ }) -> t
-                | Some _
-                | None ->
-                  assert false
-              in
-              let ((_, prop_t), _) = mk_custom_fun cx loc targ None ident prop_type in
-              reconstruct_ast prop_t typed_targs
-          )
-        | "React$PropType$Primitive$Required" ->
-          check_type_arg_arity cx loc t_ast targs 1 (fun () ->
-              let (ts, typed_targs) = convert_type_params () in
-              let t = List.hd ts in
-              let prop_type = ReactPropType (React.PropType.Primitive (true, t)) in
-              let targ =
-                match targs with
-                | Some (_, { Ast.Type.TypeArgs.arguments = [t]; comments = _ }) -> t
-                | Some _
-                | None ->
-                  assert false
-              in
-              let ((_, prop_t), _) = mk_custom_fun cx loc targ None ident prop_type in
-              reconstruct_ast prop_t typed_targs
-          )
-        | "React$PropType$ArrayOf" ->
-          mk_react_prop_type cx loc t_ast targs ident React.PropType.ArrayOf
-        | "React$PropType$InstanceOf" ->
-          mk_react_prop_type cx loc t_ast targs ident React.PropType.InstanceOf
-        | "React$PropType$ObjectOf" ->
-          mk_react_prop_type cx loc t_ast targs ident React.PropType.ObjectOf
-        | "React$PropType$OneOf" -> mk_react_prop_type cx loc t_ast targs ident React.PropType.OneOf
-        | "React$PropType$OneOfType" ->
-          mk_react_prop_type cx loc t_ast targs ident React.PropType.OneOfType
-        | "React$PropType$Shape" -> mk_react_prop_type cx loc t_ast targs ident React.PropType.Shape
         | "React$CreateClass" ->
           check_type_arg_arity cx loc t_ast targs 0 (fun () ->
               let t = AnyT.at Untyped loc in

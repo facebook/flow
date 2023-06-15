@@ -239,7 +239,6 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
     | ObjectAssign
     | ObjectGetPrototypeOf
     | ObjectSetPrototypeOf
-    | ReactPropType _
     | DebugPrint
     | DebugThrow
     | DebugSleep ->

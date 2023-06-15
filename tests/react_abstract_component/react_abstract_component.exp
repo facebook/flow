@@ -336,8 +336,8 @@ References:
    create_element.js:15:32
     15| const refBad = React.createRef<string>();
                                        ^^^^^^ [2]
-   <BUILTINS>/react.js:240:6
-   240|   ): {|current: null | T|};
+   <BUILTINS>/react.js:239:6
+   239|   ): {|current: null | T|};
              ^^^^^^^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:189:6
    189|   | ((React$ElementRef<ElementType> | null) => mixed)
