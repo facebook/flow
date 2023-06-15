@@ -6462,6 +6462,7 @@ struct
       && not (Tvar_resolver.has_unresolved_tvars_in_destructors cx d)
     then
       match d with
+      | ReactCheckComponentConfig _
       | ConditionalType _
       | MappedType _
       | PropertyType _
@@ -6480,7 +6481,6 @@ struct
       | ReactElementConfigType
       | ReactElementRefType
       | ReactConfigType _
-      | ReactCheckComponentConfig _
       | IdxUnwrapType
       | LatentPred _
       | CallType _

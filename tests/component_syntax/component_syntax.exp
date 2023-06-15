@@ -431,6 +431,24 @@ References:
                  ^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------- component_type_checking.js:22:12
+
+Component property `foo` [1] is re-declared [2] within a spread [3]. Property names may only be have one definition
+within a component [invalid-component-prop]
+
+   component_type_checking.js:22:12
+   22|   ...rest: {foo: number}
+                  ^^^^^^^^^^^^^ [3]
+
+References:
+   component_type_checking.js:21:3
+   21|   foo: number,
+         ^^^ [1]
+   component_type_checking.js:22:13
+   22|   ...rest: {foo: number}
+                   ^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------- component_type_checking.js:26:4
 
 Cannot cast `rest` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
@@ -710,6 +728,24 @@ References:
    declared.js:58:51
    58| declare export default component DefaultExport(x: number);
                                                          ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ eager_config_checking.js:1:38
+
+Component property `foo` [1] is re-declared [2] within a spread [3]. Property names may only be have one definition
+within a component [invalid-component-prop]
+
+   eager_config_checking.js:1:38
+   1| component Foo(foo: number, ...props: {foo: number}) {
+                                           ^^^^^^^^^^^^^ [3]
+
+References:
+   eager_config_checking.js:1:15
+   1| component Foo(foo: number, ...props: {foo: number}) {
+                    ^^^ [1]
+   eager_config_checking.js:1:39
+   1| component Foo(foo: number, ...props: {foo: number}) {
+                                            ^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- errors.js:2:5
@@ -1600,7 +1636,7 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 109 errors
+Found 111 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

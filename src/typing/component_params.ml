@@ -90,15 +90,18 @@ module Make
               )
         )
     in
-    ( Type.(
-        EvalT
-          ( rest_t,
-            TypeDestructorT (unknown_use, config_reason, ReactCheckComponentConfig pmap),
-            Eval.generate_id ()
-          )
-      ),
-      instance
-    )
+    let config =
+      Type.(
+        Flow_js.mk_possibly_evaluated_destructor
+          cx
+          unknown_use
+          config_reason
+          rest_t
+          (ReactCheckComponentConfig pmap)
+          (Eval.generate_id ())
+      )
+    in
+    (config, instance)
 
   let eval cx { params_rev; rest; reconstruct } =
     let params = List.rev params_rev in
