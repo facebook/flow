@@ -6775,6 +6775,12 @@ struct
         rec_flow cx trace (t, GetKeysT (reason, UseT (unknown_use, tout)))
     )
 
+  and mk_possibly_evaluated_destructor cx use_op reason t d id =
+    let eval_t = EvalT (t, TypeDestructorT (use_op, reason, d), id) in
+    if Subst_name.Set.is_empty (Subst.free_var_finder cx eval_t) then
+      ignore @@ mk_type_destructor cx ~trace:Trace.dummy_trace use_op reason t d id;
+    eval_t
+
   and variance_check cx ?trace tparams polarity = function
     | ([], _)
     | (_, []) ->

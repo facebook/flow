@@ -358,11 +358,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
 
   (* converter *)
 
-  let mk_type_destructor cx use_op reason t d id =
-    let eval_t = EvalT (t, TypeDestructorT (use_op, reason, d), id) in
-    if Subst_name.Set.is_empty (Subst.free_var_finder cx eval_t) then
-      ignore @@ Flow_js.mk_type_destructor cx ~trace:Trace.dummy_trace use_op reason t d id;
-    eval_t
+  let mk_type_destructor = Flow_js.mk_possibly_evaluated_destructor
 
   let rec convert cx tparams_map infer_tparams_map =
     let open Ast.Type in

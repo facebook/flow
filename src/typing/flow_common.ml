@@ -257,6 +257,9 @@ module type EVAL = sig
     bool * Type.t
 
   val eval_keys : Context.t -> trace:Type.trace -> Reason.reason -> Type.t -> Type.t
+
+  val mk_possibly_evaluated_destructor :
+    Context.t -> Type.use_op -> Reason.reason -> Type.t -> Type.destructor -> Type.Eval.id -> Type.t
 end
 
 module type REACT = sig
