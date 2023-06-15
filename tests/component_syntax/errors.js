@@ -23,3 +23,5 @@ class Ext {
 }
 
 component lowercase() { return (42: any) } // error
+
+component HelloWorld(unannotated) { return } // error

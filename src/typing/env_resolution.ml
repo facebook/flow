@@ -741,6 +741,11 @@ let resolve_binding_partial cx reason loc b =
     (t, mk_use_op t)
   | Root (UnannotatedParameter reason) ->
     let t = AnyT (reason, AnyError (Some MissingAnnotation)) in
+    Flow_js.add_output
+      cx
+      (Error_message.EMissingLocalAnnotation
+         { reason; hint_available = false; from_generic_function = false }
+      );
     (t, mk_use_op t)
   | Root CatchUnannotated ->
     let reason = mk_reason (RCustom "unannotated catch parameter") loc in
@@ -1184,6 +1189,7 @@ let entries_of_def graph (kind, loc) =
   let open Name_def_ordering in
   let acc = EnvSet.singleton (kind, loc) in
   let add_from_bindings acc = function
+    | Root (UnannotatedParameter r) -> EnvSet.add (Env_api.FunctionParamLoc, loc_of_reason r) acc
     | Root (Annotation { param_loc = Some l; _ }) -> EnvSet.add (Env_api.FunctionParamLoc, l) acc
     | Root (Contextual { reason; _ }) ->
       let l = Reason.loc_of_reason reason in
