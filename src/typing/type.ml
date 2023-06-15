@@ -380,6 +380,7 @@ module rec TypeTerm : sig
         guard_type: 'loc virtual_reason;
         param_name: string;
       }
+    | ComponentRenderTypeCompatibility of { render_type: 'loc virtual_reason }
     | UnknownUse
 
   and 'loc virtual_frame_use_op =
@@ -3603,7 +3604,8 @@ let aloc_of_root_use_op : root_use_op -> ALoc.t = function
   | UpdateProperty { lhs = op; _ }
   | RefinementCheck { test = op; _ }
   | MatchingProp { op; _ }
-  | TypeGuardIncompatibility { guard_type = op; _ } ->
+  | TypeGuardIncompatibility { guard_type = op; _ }
+  | ComponentRenderTypeCompatibility { render_type = op } ->
     loc_of_reason op
   | EvalMappedType { mapped_type } -> loc_of_reason mapped_type
   | ReactGetIntrinsic _
@@ -3743,6 +3745,7 @@ let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
   | MatchingProp _ -> "MatchingProp"
   | EvalMappedType _ -> "EvalMappedType"
   | TypeGuardIncompatibility _ -> "TypeGuardIncompatibility"
+  | ComponentRenderTypeCompatibility _ -> "ComponentRenderTypeCompatibility"
   | UnknownUse -> "UnknownUse"
 
 let string_of_frame_use_op (type a) : a virtual_frame_use_op -> string = function

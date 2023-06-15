@@ -627,6 +627,8 @@ let rec mod_loc_of_virtual_use_op f =
     | EvalMappedType { mapped_type } -> EvalMappedType { mapped_type = mod_reason mapped_type }
     | TypeGuardIncompatibility { guard_type; param_name } ->
       TypeGuardIncompatibility { guard_type = mod_reason guard_type; param_name }
+    | ComponentRenderTypeCompatibility { render_type } ->
+      ComponentRenderTypeCompatibility { render_type = mod_reason render_type }
     | UnknownUse -> UnknownUse
   in
   let mod_loc_of_frame_use_op = function

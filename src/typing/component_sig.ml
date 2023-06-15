@@ -145,6 +145,18 @@ module Make
     let this_type = Type.implicit_mixed_this reason in
     let config_reason = update_desc_reason (fun desc -> RPropsOfComponent desc) reason in
     let (config, _instance) = F.config cx config_reason cparams in
+    let () =
+      (* render types must be a subtype of React.Node
+       * TODO(jmbrown): This check can be skipped if we track whether or not the renders type was
+       * explicitly annotated *)
+      let renders_reason = TypeUtil.reason_of_t renders_t in
+      let t =
+        Flow.get_builtin_type cx (TypeUtil.reason_of_t renders_t) (OrdinaryName "React$Node")
+      in
+      let use_op = Op (ComponentRenderTypeCompatibility { render_type = renders_reason }) in
+      Flow.flow cx (renders_t, UseT (use_op, t))
+    in
+
     let funtype =
       {
         Type.this_t = (this_type, This_Function);

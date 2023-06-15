@@ -7761,6 +7761,7 @@ struct
               | ReactGetIntrinsic _
               | MatchingProp _
               | TypeGuardIncompatibility _
+              | ComponentRenderTypeCompatibility _
               | UnknownUse ->
                 false)
             | UnifyFlip when not should_replace ->
