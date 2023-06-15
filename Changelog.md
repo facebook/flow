@@ -1,3 +1,26 @@
+### 0.209.0
+
+Likely to cause new Flow errors:
+* We removed support for React PropTypes. All related Flow builtin types like `React$PropType$Primitive` are deleted. React has deprecated PropTypes since [v15.5](https://legacy.reactjs.org/blog/2017/04/07/react-v15.5.0.html).
+* We will now catch errors related to generic indexed access types. [Example](https://flow.org/try#1N4Igxg9gdgZglgcxALlAJwKYEMwBcD6aArlLnALYYrgA2WAzvXGCADQgYAeOBARgJ74AJhhhYiNXClzEM7DFCLl602e0hQhcMtCw18ufgAcqyMTXpyOnE2goLcegHTksRk0IPHT5y-JsYdpSkzoYm+AhEWGhCKmZ6lgC+6hAi1DAkeHDQAAQIGLgAPADyyDnATpXJOQDSZQAkNRj89CUAfG0AFBC8AFZlxaw5ANZlNQCUAwDaNQC65QA6UDk5mLhEaMsAzADcOQD0+zkA6nA0NDmBaBBoOVAQAO5LiUtsIABugUzQ1O8ADE4AEx-AAcTgAjCBEkA)
+* Fixed issues with indexed access on interfaces/instances. Access with string literals will now access named properties. [example](https://flow.org/try#1N4Igxg9gdgZglgcxALlAJwKYEMwBcD6aArlLnALYYrgA2WAzvXGCADQgYAeOBARgJ74AJhhhYiNXClzEM7DFCLl602fM4AHDGgoLcWGgDpIUIXDLQD+XPy0oxNenI6btu0gcPksGrUOu2VMgOTupaOpQeRjZa+AhEWGhCKsEGTgC+7JAi1HCk2mJgGAAEAJLFwAA6UMXFMBAQyMWK5LzaANzVtQDa9DJ5CAC6TbwNNNhQnVDp1SJgdJjFJn3FnE2lU9UAFJzdAOT1EHvDzUptaACU7cUA9DfFAEKiEIu4ABZw9EtvWFAIcsUAO4MYq-YraNAvarVGIlADSxQAvMUDg09lNYcUACpIsrdOGDa53YoAVScX3eJTyIk42lYzQguGKlOaWEoQmKGkh4Rs2wAjE0sVdbvcnvVXh8vmAfn8AcCvmCIS82CAAG7aJjQaiqgAMhgATDqAOyGHUgdJAA)
+* We now require annotation for computed access of instances, when that access is directly exported.
+* The return annotation of a function can now reference a parameter name (e.g [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAJwKYEMwBcD6aArlLnALYYrgA2WAzvXGCADQgYAeOBARgJ74AJhhhYiNXClzEM7DFCLl602fM4AHDGgoLcWGgDpIUIXDLQD+XPy0oxNenI6btu0gcPksGrUOu2VMgOTupaOpQeRjZa+AhEWGhCKsgyRBgAvuyQItQAOrAkeHDQAAQwEBAAFJzIpYrkvNoAlHUxGBAwpZylwKUA9P31EKU00AjapVhQpdpoEGgFpaWYuERoM5wA3AUZBftQbCAAbtpM0NTe9LjaIBlAA)). This may cause new errors if the return type used to reference a name that aliases a parameter name. This will now be captured by the parameter and cause a [value-as-type] error.
+* We now error when using the name of a variable in its own annotation (e.g. `const x: typeof x = ...`). An exception is when the name of the variable appears under an object type constructor. For example, the annotation `const o: { f: typeof o } = ...` is allowed.
+
+Notable bug fixes:
+* Fix a bug in the previous version that makes declare let/const function scoped. We fixed it to be lexically scoped again.
+
+Library Definitions:
+* Array.flat will now have better typing support for flattening heterogeneous inputs. `e.g. [1, [1,2]].flat()` will now correctly have inferred type of `Array<number>`.
+* We added support for the following builtin types that are also found in TypeScript:
+  * [`ReturnType`](https://flow.org/en/docs/types/utilities/#toc-return-type)
+  * [`Parameters`](https://flow.org/en/docs/types/utilities/#toc-parameters)
+  * [`Exclude`](https://flow.org/en/docs/types/utilities/#toc-exclude)
+  * [`Extract`](https://flow.org/en/docs/types/utilities/#toc-extract)
+  * [`ThisParameterType`](https://flow.org/en/docs/types/utilities/#toc-this-parameter-type)
+  * [`OmitThisParameter`](https://flow.org/en/docs/types/utilities/#toc-omit-this-parameter-type)
+
 ### 0.208.1
 
 Notable bug fixes:
