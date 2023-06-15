@@ -190,6 +190,79 @@ const a: Person = {name: 'George', age: 123}; // OK
 const b: Person = {age: 123}; // ERROR: missing `name` property
 ```
 
+## `ReturnType<F>` <SinceVersion version="0.209" /> {#toc-return-type}
+
+This utility type extracts the return type from a given function type.
+
+```js flow-check
+declare function f(s: string, n: number): boolean;
+type Bool = ReturnType<typeof f>;
+(true: Bool);
+(1: Bool); // Error: number is not boolean
+```
+
+## `Parameters<F>` <SinceVersion version="0.209" /> {#toc-parameters}
+
+This utility type extracts the parameter types from a given function type into a [tuple type](../tuples/).
+
+```js flow-check
+declare function f(s: string, n: number): boolean;
+type Tuple = Parameters<typeof f>; // Evaluates to [string, number]
+('s': Tuple[0]);
+(1: Tuple[1]);
+(false: Tuple[2]); // Error: tuple type only has two elements
+```
+
+## `Exclude<T, U>` <SinceVersion version="0.209" /> {#toc-exclude}
+
+This utility type excludes all subtypes of `U` from `T`.
+
+```js flow-check
+type T = Exclude<1 | 2 | 3 | 4, 1 | 3>; // evaluates to 2 | 4
+(1: T); // error
+(2: T); // ok
+(3: T); // error
+(4: T); // ok
+```
+
+## `Extract<T, U>` <SinceVersion version="0.209" /> {#toc-extract}
+
+This utility type retains only subtypes of `U` from `T`.
+
+```js flow-check
+declare class Car {}
+declare class Animal {}
+declare class Dog extends Animal {}
+declare class Cat extends Animal {}
+type T = Extract<Car | Dog | Cat, Animal>; // evaluates to Dog | Cat
+(new Car(): T); // error
+(new Dog(): T); // ok
+(new Cat(): T); // ok
+```
+
+## `ThisParameterType<F>` <SinceVersion version="0.209" /> {#toc-this-parameter-type}
+
+This utility type extracts the type of the `this` parameter of a given function type.
+
+```js flow-check
+type T = ThisParameterType<(this: number, bar: string) => void>; // Evaluates to number
+('1': T); // error
+(2: T); // ok
+```
+
+## `OmitThisParameter<F>` <SinceVersion version="0.209" /> {#toc-omit-this-parameter-type}
+
+This utility type removes the `this` parameter from a given function type.
+
+```js flow-check
+type HasThisParamFun = (this: number, bar: string) => void;
+type NoThisParamFun = OmitThisParameter<HasThisParamFun> // Evaluates to (bar: string) => void
+declare const hasThisParam: HasThisParamFun;
+declare const noThisParam: NoThisParamFun;
+
+hasThisParam(''); // error: global object is not number
+noThisParam(''); // ok: no this type requirement
+```
 
 ## `$Exact<T>` {#toc-exact}
 
