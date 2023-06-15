@@ -53,7 +53,7 @@ declare component InlineRef(ref: number); // error
 declare component SpreadRef(...p: {ref: number}); // error
 <SpreadRef ref={1} />;
 
-declare export component Export(x: number): number;
+declare export component Export(x: number) renders number;
 
 declare export default component DefaultExport(x: number);
 

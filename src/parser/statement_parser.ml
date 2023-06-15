@@ -1169,7 +1169,7 @@ module Statement
         let renders = type_annotation_hint_remove_trailing env renders in
         (params, renders)
       else
-        let missing_annotation = Type.annotation_opt env in
+        let missing_annotation = Ast.Type.Missing (Peek.loc_skip_lookahead env) in
         (params, missing_annotation)
     in
 

@@ -451,7 +451,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
               let renders = type_annotation_hint_remove_trailing env renders in
               (params, renders)
             else
-              let missing_annotation = annotation_opt env in
+              let missing_annotation = Ast.Type.Missing (Peek.loc_skip_lookahead env) in
               (component_type_params_remove_trailing env params, missing_annotation)
           in
           Type.Component

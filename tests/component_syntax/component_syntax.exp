@@ -711,8 +711,8 @@ References:
    60| <Export />; // error
        ^^^^^^^^^^ [1]
    declared.js:56:16
-   56| declare export component Export(x: number): number;
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   56| declare export component Export(x: number) renders number;
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ declared.js:61:19
@@ -1200,7 +1200,7 @@ References:
    33| <Export />; // error
        ^^^^^^^^^^ [1]
    declared.js:56:32
-   56| declare export component Export(x: number): number;
+   56| declare export component Export(x: number) renders number;
                                       ^^^^^^^^^^^ [2]
 
 
