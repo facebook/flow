@@ -355,11 +355,6 @@ and 'loc t' =
       reason: 'loc virtual_reason;
       use_op: 'loc virtual_use_op;
     }
-  | EInvalidReactPropType of {
-      reason: 'loc virtual_reason;
-      use_op: 'loc virtual_use_op;
-      tool: React.SimplifyPropType.tool;
-    }
   | EReactElementFunArity of 'loc virtual_reason * string * int
   | EFunctionCallExtraArg of 'loc virtual_reason * 'loc virtual_reason * int * 'loc virtual_use_op
   | EUnsupportedSetProto of 'loc virtual_reason
@@ -921,8 +916,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     ENotAReactComponent { reason = map_reason reason; use_op = map_use_op use_op }
   | EInvalidReactConfigType { reason; use_op } ->
     EInvalidReactConfigType { reason = map_reason reason; use_op = map_use_op use_op }
-  | EInvalidReactPropType { reason; use_op; tool } ->
-    EInvalidReactPropType { reason = map_reason reason; use_op = map_use_op use_op; tool }
   | EFunctionCallExtraArg (rl, ru, n, op) ->
     EFunctionCallExtraArg (map_reason rl, map_reason ru, n, map_use_op op)
   | EDebugPrint (r, s) -> EDebugPrint (map_reason r, s)
@@ -1362,8 +1355,6 @@ let util_use_op_of_msg nope util = function
     util use_op (fun use_op -> ENotAReactComponent { reason; use_op })
   | EInvalidReactConfigType { reason; use_op } ->
     util use_op (fun use_op -> EInvalidReactConfigType { reason; use_op })
-  | EInvalidReactPropType { reason; use_op; tool } ->
-    util use_op (fun use_op -> EInvalidReactPropType { reason; use_op; tool })
   | EFunctionCallExtraArg (rl, ru, n, op) ->
     util op (fun op -> EFunctionCallExtraArg (rl, ru, n, op))
   | EPrimitiveAsInterface { use_op; reason; interface_reason; kind } ->
@@ -1741,7 +1732,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EFunctionCallExtraArg _
   | ENotAReactComponent _
   | EInvalidReactConfigType _
-  | EInvalidReactPropType _
   | EIncompatibleWithUseOp _
   | ETrustIncompatibleWithUseOp _
   | EEnumIncompatible _
@@ -3422,26 +3412,6 @@ let friendly_message_of_msg loc_of_aloc msg =
           @ refs blame_reasons;
         use_op;
       }
-  | EInvalidReactPropType { reason; use_op; tool } ->
-    React.(
-      React.SimplifyPropType.(
-        let is_not_prop_type = "is not a React propType" in
-        let msg =
-          match tool with
-          | ArrayOf -> is_not_prop_type
-          | InstanceOf -> "is not a class"
-          | ObjectOf -> is_not_prop_type
-          | OneOf ResolveArray -> "is not an array"
-          | OneOf (ResolveElem _) -> "is not a literal"
-          | OneOfType ResolveArray -> "is not an array"
-          | OneOfType (ResolveElem _) -> is_not_prop_type
-          | Shape ResolveObject -> "is not an object"
-          | Shape (ResolveDict _) -> is_not_prop_type
-          | Shape (ResolveProp _) -> is_not_prop_type
-        in
-        UseOp { loc = loc_of_reason reason; features = [ref reason; text (" " ^ msg)]; use_op }
-      )
-    )
   | EReactElementFunArity (_, fn, n) ->
     let features =
       [
@@ -5161,7 +5131,6 @@ let error_code_of_message err : error_code option =
   | EInvalidObjectKit _ -> Some NotAnObject
   | EInvalidPrototype _ -> Some NotAnObject
   | EInvalidReactConfigType _ -> Some InvalidReactConfig
-  | EInvalidReactPropType _ -> Some InvalidPropType
   | EInvalidTypeArgs (_, _) -> Some InvalidTypeArg
   | EInvalidTypeof _ -> Some IllegalTypeof
   | EInvalidInfer _ -> Some InvalidInfer

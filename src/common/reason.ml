@@ -231,7 +231,6 @@ type 'loc virtual_reason_desc =
   | RReactStatics
   | RReactDefaultProps
   | RReactState
-  | RReactPropTypes
   | RReactChildren
   | RReactChildrenOrType of 'loc virtual_reason_desc
   | RReactChildrenOrUndefinedOrType of 'loc virtual_reason_desc
@@ -329,7 +328,7 @@ let rec map_desc_locs f = function
   | RImplicitThis desc -> RImplicitThis (map_desc_locs f desc)
   | ( RObjectPatternRestProp | RArrayPatternRestProp | RCommonJSExports _ | RModule _
     | ROptionalChain | RReactProps | RReactElement _ | RReactClass | RReactComponent | RReactStatics
-    | RReactDefaultProps | RReactState | RReactPropTypes | RReactChildren ) as r ->
+    | RReactDefaultProps | RReactState | RReactChildren ) as r ->
     r
   | RReactChildrenOrType desc -> RReactChildrenOrType (map_desc_locs f desc)
   | RReactChildrenOrUndefinedOrType desc -> RReactChildrenOrUndefinedOrType (map_desc_locs f desc)
@@ -719,7 +718,6 @@ let rec string_of_desc = function
   | RReactStatics -> "statics of React class"
   | RReactDefaultProps -> "default props of React component"
   | RReactState -> "state of React component"
-  | RReactPropTypes -> "propTypes of React component"
   | RReactChildren -> "children array"
   | RReactChildrenOrType desc -> spf "children array or %s" (string_of_desc desc)
   | RReactChildrenOrUndefinedOrType desc -> spf "children array or %s" (string_of_desc desc)
@@ -1489,7 +1487,6 @@ let classification_of_reason r =
   | RReactStatics
   | RReactDefaultProps
   | RReactState
-  | RReactPropTypes
   | RReactChildren
   | RReactChildrenOrType _
   | RReactChildrenOrUndefinedOrType _

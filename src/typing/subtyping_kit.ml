@@ -1379,26 +1379,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
       )
     | (DefT (reason, trust, CharSetT _), _) -> rec_flow_t cx trace ~use_op (StrT.why reason trust, u)
     | (_, DefT (reason, trust, CharSetT _)) -> rec_flow_t cx trace ~use_op (l, StrT.why reason trust)
-    | ( CustomFunT (reason, ReactPropType (React.PropType.Primitive (req, _))),
-        (DefT (_, _, ObjT _) | DefT (_, _, FunT _) | AnyT _)
-      ) ->
-      let builtin_name =
-        if req then
-          "ReactPropsCheckType"
-        else
-          "ReactPropsChainableTypeChecker"
-      in
-      let l = get_builtin_type cx ~trace reason (OrdinaryName builtin_name) in
-      rec_flow_t cx trace ~use_op (l, u)
-    | ( CustomFunT (reason, ReactPropType (React.PropType.Complex kind)),
-        (DefT (_, _, ObjT _) | DefT (_, _, FunT _) | AnyT _)
-      ) ->
-      rec_flow_t cx trace ~use_op (get_builtin_prop_type cx ~trace reason kind, u)
-    | ( CustomFunT (_, ReactPropType (React.PropType.Primitive (is_req1, t1))),
-        CustomFunT (_, ReactPropType (React.PropType.Primitive (is_req2, t2)))
-      )
-      when (not is_req2) || is_req1 ->
-      rec_unify cx trace ~use_op t1 t2
     (* Custom functions are still functions, so they have all the prototype properties *)
     | (CustomFunT (r, _), AnyT _) -> rec_flow_t cx trace ~use_op (FunProtoT r, u)
     (*********************************************)

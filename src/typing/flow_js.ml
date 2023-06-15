@@ -2467,26 +2467,6 @@ struct
            extends clauses and at function call sites - without explicit type
            arguments, since typically they're easily inferred from context.
         *)
-        (* Special case for React.PropTypes.instanceOf arguments, which are an
-           exception to type arg arity strictness, because it's not possible to
-           provide args and we need to interpret the value as a type. *)
-        | ( DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; t_out = t; _ }),
-            ReactKitT
-              ( use_op,
-                reason_op,
-                (React.SimplifyPropType (React.SimplifyPropType.InstanceOf, _) as tool)
-              )
-          ) ->
-          let l =
-            instantiate_poly_default_args
-              cx
-              trace
-              ~use_op
-              ~reason_op
-              ~reason_tapp
-              (tparams_loc, ids, t)
-          in
-          ReactJs.run cx trace ~use_op reason_op l tool
         (* We are calling the static callable method of a class. We need to be careful
          * not to apply the targs at this point, because this PolyT represents the class
          * and not the static function that's being called. We implicitly instantiate
@@ -2788,9 +2768,9 @@ struct
         (* Special handlers for builtin functions *)
         | ( CustomFunT
               ( _,
-                ( ObjectAssign | ObjectGetPrototypeOf | ObjectSetPrototypeOf | ReactPropType _
-                | DebugPrint | DebugThrow | DebugSleep | Compose _ | ReactCreateElement
-                | ReactCloneElement | ReactElementFactory _ )
+                ( ObjectAssign | ObjectGetPrototypeOf | ObjectSetPrototypeOf | DebugPrint
+                | DebugThrow | DebugSleep | Compose _ | ReactCreateElement | ReactCloneElement
+                | ReactElementFactory _ )
               ),
             CallT { use_op; call_action = ConcretizeCallee tout; _ }
           ) ->
@@ -2840,60 +2820,6 @@ struct
             trace
             (BoolT.why reason_op |> with_trust bogus_trust, OpenT call_tout)
         | (DefT (reason, trust, CharSetT _), _) -> rec_flow cx trace (StrT.why reason trust, u)
-        (* React prop type functions are modeled as a custom function type in Flow,
-           so that Flow can exploit the extra information to gratuitously hardcode
-           best-effort static checking of dynamic prop type validation.
-
-           A prop type is either a primitive or some complex type, which is a
-           function that simplifies to a primitive prop type when called. *)
-        | ( CustomFunT (_, ReactPropType (React.PropType.Primitive (false, t))),
-            GetPropT (_, reason_op, _, Named { name = OrdinaryName "isRequired"; _ }, tout)
-          ) ->
-          let prop_type = React.PropType.Primitive (true, t) in
-          rec_flow_t
-            ~use_op:unknown_use
-            cx
-            trace
-            (CustomFunT (reason_op, ReactPropType prop_type), OpenT tout)
-        | (CustomFunT (reason, ReactPropType (React.PropType.Primitive (req, _))), _)
-          when function_like_op u ->
-          let builtin_name =
-            if req then
-              "ReactPropsCheckType"
-            else
-              "ReactPropsChainableTypeChecker"
-          in
-          let l = get_builtin_type cx ~trace reason (OrdinaryName builtin_name) in
-          rec_flow cx trace (l, u)
-        | ( CustomFunT (_, ReactPropType (React.PropType.Complex kind)),
-            CallT
-              {
-                use_op;
-                reason = reason_op;
-                call_action =
-                  Funcalltype { call_targs = None; call_args_tlist = arg1 :: _; call_tout; _ };
-                return_hint = _;
-              }
-          ) ->
-          React.(
-            let tool =
-              match kind with
-              | PropType.ArrayOf -> SimplifyPropType.ArrayOf
-              | PropType.InstanceOf -> SimplifyPropType.InstanceOf
-              | PropType.ObjectOf -> SimplifyPropType.ObjectOf
-              | PropType.OneOf -> SimplifyPropType.OneOf ResolveArray
-              | PropType.OneOfType -> SimplifyPropType.OneOfType ResolveArray
-              | PropType.Shape -> SimplifyPropType.Shape ResolveObject
-            in
-            let t = extract_non_spread cx ~trace arg1 in
-            rec_flow
-              cx
-              trace
-              (t, ReactKitT (use_op, reason_op, SimplifyPropType (tool, OpenT call_tout)))
-          )
-        | (CustomFunT (reason, ReactPropType (React.PropType.Complex kind)), _)
-          when function_like_op u ->
-          rec_flow cx trace (get_builtin_prop_type cx ~trace reason kind, u)
         | (_, ReactKitT (use_op, reason_op, tool)) -> ReactJs.run cx trace ~use_op reason_op l tool
         (* Facebookisms are special Facebook-specific functions that are not
            expressable with our current type syntax, so we've hacked in special
@@ -5880,10 +5806,6 @@ struct
       if Context.any_propagation cx then
         any_prop_to_function use_op funtype covariant_flow contravariant_flow;
       true
-    | ReactKitT (_, _, React.SimplifyPropType _) ->
-      (* Propagating through here causes exponential blowup. React PropTypes are deprecated
-         anyways, so it is not unreasonable to just not trust them *)
-      true
     | UseT (_, OpenT (_, id)) -> any_prop_tvar cx id
     (* AnnotTs are 0->1, so there's no need to propagate any inside them *)
     | UseT (_, AnnotT _) -> true
@@ -6028,7 +5950,6 @@ struct
       true
     (* TODO: Punt on these for now, but figure out whether these should fall through or not *)
     | UseT (_, CustomFunT (_, ReactElementFactory _))
-    | UseT (_, CustomFunT (_, ReactPropType _))
     | UseT (_, CustomFunT (_, ObjectAssign))
     | UseT (_, CustomFunT (_, ObjectGetPrototypeOf))
     | UseT (_, CustomFunT (_, ObjectSetPrototypeOf))
@@ -6124,7 +6045,6 @@ struct
       false
     (* TODO: Punt on these for now, but figure out whether these should fall through or not *)
     | CustomFunT (_, ReactElementFactory _)
-    | CustomFunT (_, ReactPropType _)
     | CustomFunT (_, ObjectAssign)
     | CustomFunT (_, ObjectGetPrototypeOf)
     | CustomFunT (_, ObjectSetPrototypeOf)
@@ -9454,20 +9374,6 @@ struct
   and get_builtin_type cx ?trace reason ?(use_desc = false) x =
     let t = get_builtin cx ?trace x reason in
     mk_instance cx ?trace reason ~use_desc t
-
-  and get_builtin_prop_type cx ?trace reason tool =
-    let x =
-      React.PropType.(
-        match tool with
-        | ArrayOf -> "React$PropTypes$arrayOf"
-        | InstanceOf -> "React$PropTypes$instanceOf"
-        | ObjectOf -> "React$PropTypes$objectOf"
-        | OneOf -> "React$PropTypes$oneOf"
-        | OneOfType -> "React$PropTypes$oneOfType"
-        | Shape -> "React$PropTypes$shape"
-      )
-    in
-    get_builtin_type cx ?trace reason (OrdinaryName x)
 
   and flow_all_in_union cx trace rep u =
     iter_union ~f:rec_flow ~init:() ~join:(fun _ _ -> ()) cx trace rep u

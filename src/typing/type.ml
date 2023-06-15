@@ -1513,7 +1513,6 @@ module rec TypeTerm : sig
     (* common community functions *)
     | Compose of bool
     (* 3rd party libs *)
-    | ReactPropType of React.PropType.t
     | ReactCreateElement
     | ReactCloneElement
     | ReactElementFactory of t
@@ -2720,16 +2719,6 @@ and React : sig
     | ResolveArray
     | ResolveElem of TypeTerm.t list * TypeTerm.t list
 
-  module SimplifyPropType : sig
-    type tool =
-      | ArrayOf
-      | InstanceOf
-      | ObjectOf
-      | OneOf of resolve_array
-      | OneOfType of resolve_array
-      | Shape of resolve_object
-  end
-
   type tool =
     | CreateElement0 of {
         clone: bool;
@@ -2756,7 +2745,6 @@ and React : sig
     | GetConfig of TypeTerm.t_out
     | GetConfigType of TypeTerm.t * TypeTerm.t_out
     | GetRef of TypeTerm.t_out
-    | SimplifyPropType of SimplifyPropType.tool * TypeTerm.t_out
 end =
   React
 

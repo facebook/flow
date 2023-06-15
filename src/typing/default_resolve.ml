@@ -53,8 +53,7 @@ let rec default_resolve_touts ~flow cx loc u =
     | GetProps tout
     | GetConfig tout
     | GetConfigType (_, tout)
-    | GetRef tout
-    | SimplifyPropType (_, tout) ->
+    | GetRef tout ->
       resolve tout
   in
   let resolve_spread_resolve resolve_tool =

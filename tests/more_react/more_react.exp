@@ -1,60 +1,3 @@
-Error -------------------------------------------------------------------------------------------- checkPropTypes.js:7:1
-
-Cannot call `checkPropTypes` because function [1] requires another argument. [incompatible-call]
-
-   checkPropTypes.js:7:1
-     7| checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }); // error: missing arguments
-        ^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/react.js:221:41
-                                                v---
-   221|   declare export function checkPropTypes<V>(
-   222|     propTypes : any,
-   223|     values: V,
-   224|     location: string,
-   225|     componentName: string,
-   226|     getStack: ?(() => ?string)
-   227|   ) : void;
-          -------^ [1]
-
-
-Error -------------------------------------------------------------------------------------------- checkPropTypes.js:8:1
-
-Cannot call `checkPropTypes` because function [1] requires another argument. [incompatible-call]
-
-   checkPropTypes.js:8:1
-     8| checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }, 'value'); // error: missing argument
-        ^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/react.js:221:41
-                                                v---
-   221|   declare export function checkPropTypes<V>(
-   222|     propTypes : any,
-   223|     values: V,
-   224|     location: string,
-   225|     componentName: string,
-   226|     getStack: ?(() => ?string)
-   227|   ) : void;
-          -------^ [1]
-
-
-Error ------------------------------------------------------------------------------------------ checkPropTypes.js:12:91
-
-Cannot call `checkPropTypes` with function bound to `getStack` because number [1] is incompatible with string [2] in the
-return value. [incompatible-call]
-
-   checkPropTypes.js:12:91
-    12| checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }, 'value', 'TestComponent', () => 123); // error: number ~> string
-                                                                                                  ^^^ [1]
-
-References:
-   <BUILTINS>/react.js:226:24
-   226|     getStack: ?(() => ?string)
-                               ^^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------ inexact_config.js:12:13
 
 Cannot create `Component2` element because property `bar` is missing in `Props` [1] but exists in props [2].
@@ -298,7 +241,7 @@ References:
 
 
 
-Found 16 errors
+Found 13 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

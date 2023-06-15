@@ -237,14 +237,11 @@ class ['a] t =
 
     method private custom_fun_kind cx acc =
       function
-      | ReactPropType (React.PropType.Primitive (_, t))
-      | ReactElementFactory t ->
-        self#type_ cx pole_TODO acc t
+      | ReactElementFactory t -> self#type_ cx pole_TODO acc t
       | ObjectAssign
       | ObjectGetPrototypeOf
       | ObjectSetPrototypeOf
       | Compose _
-      | ReactPropType _
       | ReactCreateElement
       | ReactCloneElement
       | DebugPrint

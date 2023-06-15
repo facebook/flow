@@ -52,8 +52,8 @@ References:
    forwardRef.js:19:32
     19| const badRef = React.createRef<HTMLDivElement>();
                                        ^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:240:6
-   240|   ): {|current: null | T|};
+   <BUILTINS>/react.js:239:6
+   239|   ): {|current: null | T|};
              ^^^^^^^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:189:6
    189|   | ((React$ElementRef<ElementType> | null) => mixed)
@@ -104,8 +104,8 @@ References:
    forwardRef.js:41:57
     41| const badUnionRef = React.createRef<HTMLButtonElement | HTMLDivElement>();
                                                                 ^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:240:6
-   240|   ): {|current: null | T|};
+   <BUILTINS>/react.js:239:6
+   239|   ): {|current: null | T|};
              ^^^^^^^^^^^^^^^^^^^^^ [4]
    <BUILTINS>/react.js:189:6
    189|   | ((React$ElementRef<ElementType> | null) => mixed)
