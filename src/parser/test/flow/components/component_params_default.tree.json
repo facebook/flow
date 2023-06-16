@@ -97,8 +97,8 @@
             "range":[48,66],
             "left":{
               "type":"Identifier",
-              "loc":{"source":null,"start":{"line":3,"column":16},"end":{"line":3,"column":21}},
-              "range":[48,53],
+              "loc":{"source":null,"start":{"line":3,"column":16},"end":{"line":3,"column":29}},
+              "range":[48,61],
               "name":"param",
               "typeAnnotation":{
                 "type":"TypeAnnotation",

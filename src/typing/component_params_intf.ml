@@ -17,7 +17,7 @@ module type Config = sig
 
   val eval_rest : Context.t -> Types.rest -> (ALoc.t * Type.t) Types.rest_ast
 
-  val param_type_with_name : Types.param -> (ALoc.t * string * Type.t) option
+  val param_type_with_name : Types.param -> ALoc.t * string * Type.t
 
   val rest_type : Types.rest -> Type.t
 end

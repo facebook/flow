@@ -1204,10 +1204,8 @@ with type t = Impl.t = struct
       let (loc, { name; local; default; shorthand }) = param in
       let name' =
         match name with
-        | Some (Identifier id) -> identifier id
-        | Some (StringLiteral id) -> string_literal id
-        | None ->
-          failwith "Internal Error: Expected value to exist for component declaration param name"
+        | Identifier id -> identifier id
+        | StringLiteral id -> string_literal id
       in
       let local' =
         match default with

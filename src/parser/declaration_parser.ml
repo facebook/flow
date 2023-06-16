@@ -136,22 +136,17 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
   let check_unique_component_formal_parameters env params =
     let (_, { Ast.Statement.ComponentDeclaration.Params.params; rest; comments = _ }) = params in
     let pattern_obj_props =
-      List.filter_map
+      List.map
         (fun (_, { Ast.Statement.ComponentDeclaration.Param.name; local; default; shorthand }) ->
           let key =
-            Option.map
-              (function
-                | Ast.Statement.ComponentDeclaration.Param.StringLiteral (_, lit) ->
-                  Ast.Pattern.Object.Property.StringLiteral (Loc.none, lit)
-                | Ast.Statement.ComponentDeclaration.Param.Identifier id ->
-                  Ast.Pattern.Object.Property.Identifier id)
-              name
+            match name with
+            | Ast.Statement.ComponentDeclaration.Param.StringLiteral (_, lit) ->
+              Ast.Pattern.Object.Property.StringLiteral (Loc.none, lit)
+            | Ast.Statement.ComponentDeclaration.Param.Identifier id ->
+              Ast.Pattern.Object.Property.Identifier id
           in
-          Option.map
-            (fun key ->
-              Ast.Pattern.Object.Property
-                (Loc.none, { Ast.Pattern.Object.Property.key; pattern = local; default; shorthand }))
-            key)
+          Ast.Pattern.Object.Property
+            (Loc.none, { Ast.Pattern.Object.Property.key; pattern = local; default; shorthand }))
         params
     in
     let obj_param =
@@ -533,57 +528,30 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
               Expect.token env (T_STRING (loc, value, raw, octal));
               let trailing = Eat.trailing_comments env in
               let name =
-                Some
-                  (Statement.ComponentDeclaration.Param.StringLiteral
-                     ( loc,
-                       {
-                         StringLiteral.value;
-                         raw;
-                         comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-                       }
-                     )
+                Statement.ComponentDeclaration.Param.StringLiteral
+                  ( loc,
+                    {
+                      StringLiteral.value;
+                      raw;
+                      comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+                    }
                   )
               in
               Expect.identifier env "as";
               let local = Parse.pattern env Parse_error.StrictParamName in
               (name, local, false)
-            (* propKey as localProp *)
-            | (T_IDENTIFIER _, T_IDENTIFIER { raw = "as"; _ }) ->
-              let name =
-                Some (Statement.ComponentDeclaration.Param.Identifier (identifier_name env))
-              in
+            | (_, T_IDENTIFIER { raw = "as"; _ }) ->
+              let name = Statement.ComponentDeclaration.Param.Identifier (identifier_name env) in
               Expect.identifier env "as";
-              let local = Parse.pattern env Parse_error.StrictParamName in
-              (name, local, false)
-            (* propKey: Type *)
-            | (T_IDENTIFIER _, T_COLON) ->
-              let (loc, id) = identifier_name env in
-              let name = Some (Statement.ComponentDeclaration.Param.Identifier (loc, id)) in
-              let annot = Parse.annot env in
-              let pattern_id =
-                {
-                  Pattern.Identifier.name = (loc, id);
-                  annot = Flow_ast.Type.Available annot;
-                  optional = false;
-                }
-              in
-              (name, (loc, Pattern.Identifier pattern_id), true)
-            (* propKey *)
-            | (T_IDENTIFIER _, _) ->
-              let (loc, id) = identifier_name env in
-              let name = Some (Statement.ComponentDeclaration.Param.Identifier (loc, id)) in
-              let pattern_id =
-                {
-                  Pattern.Identifier.name = (loc, id);
-                  annot = Flow_ast.Type.Missing Loc.{ loc with start = loc._end };
-                  optional = false;
-                }
-              in
-              (name, (loc, Pattern.Identifier pattern_id), true)
-            (* Some invalid prop key. Parse this as a local pattern with a None name *)
+              (name, Parse.pattern env Parse_error.StrictParamName, false)
             | (_, _) ->
-              let local = Parse.pattern env Parse_error.StrictParamName in
-              (None, local, false)
+              let id = Parse.identifier_with_type env Parse_error.StrictParamName in
+              (match id with
+              | (loc, ({ Ast.Pattern.Identifier.name; _ } as id)) ->
+                ( Ast.Statement.ComponentDeclaration.Param.Identifier name,
+                  (loc, Ast.Pattern.Identifier id),
+                  true
+                ))
           in
 
           let default =

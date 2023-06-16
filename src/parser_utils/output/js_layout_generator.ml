@@ -2154,10 +2154,9 @@ and component_param
   source_location_with_comments (loc, node)
 
 and component_param_name ~opts = function
-  | Some (Ast.Statement.ComponentDeclaration.Param.Identifier name) -> identifier name
-  | Some (Ast.Statement.ComponentDeclaration.Param.StringLiteral (loc, lit)) ->
+  | Ast.Statement.ComponentDeclaration.Param.Identifier name -> identifier name
+  | Ast.Statement.ComponentDeclaration.Param.StringLiteral (loc, lit) ->
     string_literal ~opts loc lit
-  | None -> failwith "Internal Error: Expected value to exist for component declaration param name"
 
 and component_renders ~opts return =
   match return with
@@ -4332,7 +4331,7 @@ and component_type_params ~opts (_, { Ast.Type.Component.Params.params; rest; co
         let (_, annot') = annot in
         ( loc,
           Comment_attachment.component_type_param_comment_bounds param,
-          component_type_param ~opts ~optional loc (Some name) annot'
+          component_type_param ~opts ~optional loc name annot'
         ))
       params
   in
@@ -4347,15 +4346,16 @@ and component_type_params ~opts (_, { Ast.Type.Component.Params.params; rest; co
             fuse
               [
                 Atom "...";
-                component_type_param
-                  ~opts
-                  ~optional
-                  loc
-                  (Option.map
-                     (fun i -> Ast.Statement.ComponentDeclaration.Param.Identifier i)
-                     argument
-                  )
-                  annot;
+                Base.Option.value_map
+                  ~default:(type_ ~opts annot)
+                  ~f:(fun i ->
+                    component_type_param
+                      ~opts
+                      ~optional
+                      loc
+                      (Ast.Statement.ComponentDeclaration.Param.Identifier i)
+                      annot)
+                  argument;
               ]
           )
       in
@@ -4381,16 +4381,13 @@ and component_type_params ~opts (_, { Ast.Type.Component.Params.params; rest; co
   wrap_and_indent (Atom "(", Atom ")") params_layout
 
 and component_type_param ~opts ~optional loc name annot =
+  let optional_layout =
+    match optional with
+    | true -> Atom "?"
+    | false -> Empty
+  in
   let name_layout =
-    match name with
-    | Some _ ->
-      let optional_layout =
-        match optional with
-        | true -> Atom "?"
-        | false -> Empty
-      in
-      fuse [component_param_name ~opts name; optional_layout; Atom ":"; pretty_space]
-    | None -> Empty
+    fuse [component_param_name ~opts name; optional_layout; Atom ":"; pretty_space]
   in
   source_location_with_comments (loc, fuse [name_layout; type_ ~opts annot])
 

@@ -317,7 +317,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Statement.ComponentDeclaration.Param in
       let (annot, { name; local; default; shorthand }) = param in
       let annot' = this#on_loc_annot annot in
-      let name' = Option.map ~f:this#component_param_name name in
+      let name' = this#component_param_name name in
       let local' = this#component_param_pattern local in
       let default' = this#default_opt default in
       (annot', { name = name'; local = local'; default = default'; shorthand })

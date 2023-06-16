@@ -616,7 +616,7 @@ class ['loc] mapper =
     method component_param (param : ('loc, 'loc) Ast.Statement.ComponentDeclaration.Param.t) =
       let open Ast.Statement.ComponentDeclaration.Param in
       let (loc, { name; local; default; shorthand }) = param in
-      let name' = map_opt this#component_param_name name in
+      let name' = this#component_param_name name in
       let local' = this#component_param_pattern local in
       let default' = this#default_opt default in
       if name == name' && local == local' && default == default' then

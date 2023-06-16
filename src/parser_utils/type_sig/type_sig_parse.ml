@@ -3136,10 +3136,9 @@ and component_def =
     let { C.Param.name; local = (_, patt); default; _ } = p in
     let (name, name_loc) =
       match name with
-      | Some (C.Param.Identifier (loc, { Ast.Identifier.name; _ }))
-      | Some (C.Param.StringLiteral (loc, { Ast.StringLiteral.value = name; _ })) ->
+      | C.Param.Identifier (loc, { Ast.Identifier.name; _ })
+      | C.Param.StringLiteral (loc, { Ast.StringLiteral.value = name; _ }) ->
         (name, loc)
-      | None -> failwith "Missing name"
     in
     let name_loc = push_loc tbls name_loc in
     let (_, t) = param opts scope tbls xs loc patt default in

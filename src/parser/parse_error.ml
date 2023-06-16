@@ -86,6 +86,7 @@ type t =
       method_: bool;
       private_: bool;
     }
+  | InvalidComponentParamName
   | InvalidFloatBigInt
   | InvalidIndexedAccess of { has_bracket: bool }
   | InvalidJSXAttributeValue
@@ -356,6 +357,8 @@ module PP = struct
           name
       in
       Printf.sprintf "Classes may not have %s%s named `%s`." static_modifier category name
+    | InvalidComponentParamName ->
+      "Component params must be an identifier. If you'd like to destructure, you should use `name as {destructure}`"
     | InvalidFloatBigInt -> "A bigint literal must be an integer"
     | InvalidIndexedAccess { has_bracket } ->
       let msg =

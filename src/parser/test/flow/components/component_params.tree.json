@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":7,"column":52}},
-  "range":[0,150],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":9,"column":34}},
+  "range":[0,186],
   "body":[
     {
       "type":"ComponentDeclaration",
@@ -81,8 +81,8 @@
           },
           "local":{
             "type":"Identifier",
-            "loc":{"source":null,"start":{"line":3,"column":16},"end":{"line":3,"column":21}},
-            "range":[43,48],
+            "loc":{"source":null,"start":{"line":3,"column":16},"end":{"line":3,"column":29}},
+            "range":[43,56],
             "name":"param",
             "typeAnnotation":{
               "type":"TypeAnnotation",
@@ -211,8 +211,8 @@
           },
           "local":{
             "type":"Identifier",
-            "loc":{"source":null,"start":{"line":7,"column":16},"end":{"line":7,"column":22}},
-            "range":[114,120],
+            "loc":{"source":null,"start":{"line":7,"column":16},"end":{"line":7,"column":31}},
+            "range":[114,129],
             "name":"param1",
             "typeAnnotation":{
               "type":"TypeAnnotation",
@@ -251,8 +251,8 @@
           },
           "local":{
             "type":"Identifier",
-            "loc":{"source":null,"start":{"line":7,"column":33},"end":{"line":7,"column":39}},
-            "range":[131,137],
+            "loc":{"source":null,"start":{"line":7,"column":33},"end":{"line":7,"column":48}},
+            "range":[131,146],
             "name":"param2",
             "typeAnnotation":{
               "type":"TypeAnnotation",
@@ -274,6 +274,60 @@
               }
             },
             "optional":false
+          },
+          "shorthand":true
+        }
+      ],
+      "rendersType":null,
+      "typeParameters":null
+    },
+    {
+      "type":"ComponentDeclaration",
+      "loc":{"source":null,"start":{"line":9,"column":0},"end":{"line":9,"column":34}},
+      "range":[152,186],
+      "body":{
+        "type":"BlockStatement",
+        "loc":{"source":null,"start":{"line":9,"column":32},"end":{"line":9,"column":34}},
+        "range":[184,186],
+        "body":[]
+      },
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":9,"column":10},"end":{"line":9,"column":15}},
+        "range":[162,167],
+        "name":"Comp4",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "params":[
+        {
+          "type":"ComponentParameter",
+          "loc":{"source":null,"start":{"line":9,"column":16},"end":{"line":9,"column":30}},
+          "range":[168,182],
+          "name":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":9,"column":16},"end":{"line":9,"column":21}},
+            "range":[168,173],
+            "name":"param",
+            "typeAnnotation":null,
+            "optional":false
+          },
+          "local":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":9,"column":16},"end":{"line":9,"column":30}},
+            "range":[168,182],
+            "name":"param",
+            "typeAnnotation":{
+              "type":"TypeAnnotation",
+              "loc":{"source":null,"start":{"line":9,"column":22},"end":{"line":9,"column":30}},
+              "range":[174,182],
+              "typeAnnotation":{
+                "type":"NumberTypeAnnotation",
+                "loc":{"source":null,"start":{"line":9,"column":24},"end":{"line":9,"column":30}},
+                "range":[176,182]
+              }
+            },
+            "optional":true
           },
           "shorthand":true
         }

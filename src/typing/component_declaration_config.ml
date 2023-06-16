@@ -26,9 +26,8 @@ struct
       | Some _ -> TypeUtil.optional t
     in
     match name with
-    | None -> None
-    | Some (Identifier (loc, { Ast.Identifier.name; _ })) -> Some (loc, name, mk_type t)
-    | Some (StringLiteral (loc, { Ast.StringLiteral.value; _ })) -> Some (loc, value, mk_type t)
+    | Identifier (loc, { Ast.Identifier.name; _ }) -> (loc, name, mk_type t)
+    | StringLiteral (loc, { Ast.StringLiteral.value; _ }) -> (loc, value, mk_type t)
 
   let rest_type (Rest { t; _ }) = t
 
@@ -68,9 +67,8 @@ struct
     let reconstruct_prop_name t =
       let open Ast.Statement.ComponentDeclaration.Param in
       match prop_name with
-      | Some (Identifier (loc, name)) -> Some (Identifier ((loc, t), name))
-      | Some (StringLiteral lit) -> Some (StringLiteral lit)
-      | None -> None
+      | Identifier (loc, name) -> Identifier ((loc, t), name)
+      | StringLiteral lit -> StringLiteral lit
     in
 
     match pattern with

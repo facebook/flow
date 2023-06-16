@@ -100,7 +100,7 @@ module DeclarationParamConfig = struct
         default: (ALoc.t, ALoc.t) Ast.Expression.t option;
         has_anno: bool;
         shorthand: bool;
-        name: (ALoc.t, ALoc.t) Ast.Statement.ComponentDeclaration.Param.param_name option;
+        name: (ALoc.t, ALoc.t) Ast.Statement.ComponentDeclaration.Param.param_name;
       }
 
   type rest =

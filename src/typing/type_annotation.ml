@@ -164,8 +164,8 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           t
       in
       match name with
-      | Identifier ((loc, _), { Ast.Identifier.name; _ }) -> Some (loc, name, t)
-      | StringLiteral (loc, { Ast.StringLiteral.value; _ }) -> Some (loc, value, t)
+      | Identifier ((loc, _), { Ast.Identifier.name; _ }) -> (loc, name, t)
+      | StringLiteral (loc, { Ast.StringLiteral.value; _ }) -> (loc, value, t)
 
     let rest_type (t, _) = t
 

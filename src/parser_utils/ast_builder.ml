@@ -585,7 +585,7 @@ module Statements = struct
     let local' = Base.Option.value ~default:(Patterns.identifier name) local in
     ( loc,
       {
-        name = Some (Identifier (Identifiers.identifier name));
+        name = Identifier (Identifiers.identifier name);
         local = local';
         default;
         shorthand = Base.Option.is_none local;
@@ -595,12 +595,7 @@ module Statements = struct
   let component_string_param ?(loc = Loc.none) ?default name local =
     let open Ast.Statement.ComponentDeclaration.Param in
     ( loc,
-      {
-        name = Some (StringLiteral (Loc.none, string_literal name));
-        local;
-        default;
-        shorthand = false;
-      }
+      { name = StringLiteral (Loc.none, string_literal name); local; default; shorthand = false }
     )
 
   let component_params ?(loc = Loc.none) ?rest ?comments params =

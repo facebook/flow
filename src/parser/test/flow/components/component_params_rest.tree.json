@@ -184,8 +184,8 @@
           },
           "local":{
             "type":"Identifier",
-            "loc":{"source":null,"start":{"line":7,"column":16},"end":{"line":7,"column":21}},
-            "range":[117,122],
+            "loc":{"source":null,"start":{"line":7,"column":16},"end":{"line":7,"column":29}},
+            "range":[117,130],
             "name":"param",
             "typeAnnotation":{
               "type":"TypeAnnotation",

@@ -985,7 +985,7 @@ and Statement : sig
       and ('M, 'T) t' = {
         (* Name should only be an Identifier or StringLiteral. However, we allow parsing
            it as an option to have better error messages. *)
-        name: ('M, 'T) param_name option;
+        name: ('M, 'T) param_name;
         local: ('M, 'T) Pattern.t;
         default: ('M, 'T) Expression.t option;
         shorthand: bool;
