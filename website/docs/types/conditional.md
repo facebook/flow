@@ -43,7 +43,7 @@ type T6 = TypeOf<(string)=>boolean>; // evaluates to 'function'
 type T7 = TypeOf<{foo: string}>; // evaluates to 'object'
 ```
 
-## Function return types dependend on input types {#toc-dependent-function-return}
+## Function return types dependent on input types {#toc-dependent-function-return}
 
 Conditional types also allow you to intuitively describe the conditions for choosing different function overloads:
 
