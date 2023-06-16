@@ -268,8 +268,8 @@ Cannot build a typed interface for this module. You should annotate the exports 
 determine the type of this JSX element. Please provide an annotation, e.g., by adding a type cast around this
 expression. [signature-verification-failure]
 
-   21| export const x = <f />;
-                        ^^^^^
+   21| export const x = <foo />;
+                        ^^^^^^^
 
 
 Error ---------------------------------------------------------------------------------------------- obj-pattern.js:3:19

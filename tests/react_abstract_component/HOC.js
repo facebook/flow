@@ -16,14 +16,14 @@ const TrivialWrap = TrivialHOC(Component);
 (TrivialWrap: React.AbstractComponent<{|foo?: number, bar: number|}, Component>);
 
 function WrapInDivWithExtraProp<Props, Instance>(
-  x: React.AbstractComponent<Props, Instance>,
+  X: React.AbstractComponent<Props, Instance>,
 ): React.AbstractComponent<{| ...Props, baz: number |}, void> {
   const C = (props: {|...Props, baz: number|}) =>
     <div>
       {props.baz}
-      <x {...props} />
+      <X {...props} />
     </div>;
-  C.defaultProps = {...x.defaultProps};
+  C.defaultProps = {...X.defaultProps};
   return C;
 }
 
@@ -31,14 +31,14 @@ const WrappedInDivWithExtraProp = WrapInDivWithExtraProp(Component); // Note, we
 (WrappedInDivWithExtraProp: React.AbstractComponent<{| foo?: number, bar: number, baz: number |}, void>);
 
 function AddPropWithDefault<Props, Instance>(
-  x: React.AbstractComponent<Props, Instance>
+  X: React.AbstractComponent<Props, Instance>
 ): React.AbstractComponent<{| ...Props, baz?:number |}, void> {
   const C = (props: {| ...Props, baz: number |}) =>
     <div>
       {props.baz}
-      <x {...props} />
+      <X {...props} />
     </div>;
-  C.defaultProps = {...x.defaultProps, baz: 3};
+  C.defaultProps = {...X.defaultProps, baz: 3};
   return C;
 }
 
