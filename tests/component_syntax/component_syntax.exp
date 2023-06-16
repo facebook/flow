@@ -1598,6 +1598,40 @@ References:
                      ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ signature.js:57:4
+
+Cannot cast `x` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
+
+   signature.js:57:4
+   57|   (x: number); // ERROR
+          ^
+
+References:
+   signature.js:53:7
+   53|   x?: number,
+             ^^^^^^ [1]
+   signature.js:57:7
+   57|   (x: number); // ERROR
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ signature.js:59:4
+
+Cannot cast `rest` to object type because undefined [1] is incompatible with object type [2]. [incompatible-cast]
+
+   signature.js:59:4
+   59|   (rest: {foo: number}); // ERROR, rest is optional in the body, as typed
+          ^^^^
+
+References:
+   signature.js:55:13
+   55|   ...rest?: {foo: number} // TODO: ERROR, rest params can't be optional
+                   ^^^^^^^^^^^^^ [1]
+   signature.js:59:10
+   59|   (rest: {foo: number}); // ERROR, rest is optional in the body, as typed
+                ^^^^^^^^^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------------------- statics.js:4:19
 
 Cannot assign `3` to `Foo.displayName` because number [1] is incompatible with string [2]. [incompatible-type]
@@ -1644,7 +1678,7 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 112 errors
+Found 114 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

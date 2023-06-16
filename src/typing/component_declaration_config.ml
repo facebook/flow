@@ -18,18 +18,35 @@ struct
   module Types = Component_sig_types.DeclarationParamConfig
   open Types
 
-  let param_type_with_name (Param { t; name; default; _ }) =
+  let param_type_with_name (Param { t; name; default; pattern; _ }) =
     let open Ast.Statement.ComponentDeclaration.Param in
-    let mk_type t =
-      match default with
-      | None -> t
-      | Some _ -> TypeUtil.optional t
+    let t =
+      match pattern with
+      | Id id ->
+        let { Ast.Pattern.Identifier.optional; _ } = id in
+        let t =
+          if optional || default <> None then
+            TypeUtil.optional t
+          else
+            t
+        in
+        t
+      | _ ->
+        if default <> None then
+          TypeUtil.optional t
+        else
+          t
     in
     match name with
-    | Identifier (loc, { Ast.Identifier.name; _ }) -> (loc, name, mk_type t)
-    | StringLiteral (loc, { Ast.StringLiteral.value; _ }) -> (loc, value, mk_type t)
+    | Identifier (loc, { Ast.Identifier.name; _ }) -> (loc, name, t)
+    | StringLiteral (loc, { Ast.StringLiteral.value; _ }) -> (loc, value, t)
 
-  let rest_type (Rest { t; _ }) = t
+  let rest_type (Rest { t; id; _ }) =
+    let { Ast.Pattern.Identifier.optional; _ } = id in
+    if optional then
+      TypeUtil.optional t
+    else
+      t
 
   let destruct cx ~use_op ~name_loc name default t =
     Base.Option.iter

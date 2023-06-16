@@ -49,4 +49,20 @@ component RenamedParams(
 const renamedGood = <RenamedParams foo={3} bar="str" non-ident="str" />; // OK!
 const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERROR 4x, bad foo type, bad bar type, no non-ident, extra baz
 
+component HasOptionalParams(
+  x?: number,
+  y: number = 3,
+  ...rest?: {foo: number} // TODO: ERROR, rest params can't be optional
+) {
+  (x: number); // ERROR
+  (y: number); // OK!
+  (rest: {foo: number}); // ERROR, rest is optional in the body, as typed
+  return;
+}
+
+const elNoArgs = <HasOptionalParams />;
+const elOnlyX = <HasOptionalParams x={3} />;
+const elOnlyY = <HasOptionalParams y={3} />;
+const elBoth = <HasOptionalParams x={3} y={3} />;
+
 module.exports = { InlineOnly, InexactRest, IndexedRest, DefaultProps, RenamedParams };
