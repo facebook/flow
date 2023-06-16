@@ -381,6 +381,7 @@ module rec TypeTerm : sig
         param_name: string;
       }
     | ComponentRenderTypeCompatibility of { render_type: 'loc virtual_reason }
+    | ComponentRestParamCompatibility of { rest_param: 'loc virtual_reason }
     | UnknownUse
 
   and 'loc virtual_frame_use_op =
@@ -3608,6 +3609,7 @@ let aloc_of_root_use_op : root_use_op -> ALoc.t = function
   | ComponentRenderTypeCompatibility { render_type = op } ->
     loc_of_reason op
   | EvalMappedType { mapped_type } -> loc_of_reason mapped_type
+  | ComponentRestParamCompatibility { rest_param } -> loc_of_reason rest_param
   | ReactGetIntrinsic _
   | Speculation _
   | UnknownUse
@@ -3746,6 +3748,7 @@ let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
   | EvalMappedType _ -> "EvalMappedType"
   | TypeGuardIncompatibility _ -> "TypeGuardIncompatibility"
   | ComponentRenderTypeCompatibility _ -> "ComponentRenderTypeCompatibility"
+  | ComponentRestParamCompatibility _ -> "ComponentRestParamCompatibility"
   | UnknownUse -> "UnknownUse"
 
 let string_of_frame_use_op (type a) : a virtual_frame_use_op -> string = function

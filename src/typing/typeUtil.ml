@@ -629,6 +629,8 @@ let rec mod_loc_of_virtual_use_op f =
       TypeGuardIncompatibility { guard_type = mod_reason guard_type; param_name }
     | ComponentRenderTypeCompatibility { render_type } ->
       ComponentRenderTypeCompatibility { render_type = mod_reason render_type }
+    | ComponentRestParamCompatibility { rest_param } ->
+      ComponentRestParamCompatibility { rest_param = mod_reason rest_param }
     | UnknownUse -> UnknownUse
   in
   let mod_loc_of_frame_use_op = function

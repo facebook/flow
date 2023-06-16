@@ -69,7 +69,36 @@ module Make
     let rest_t =
       match rest with
       | None -> Obj_type.mk_exact_empty cx config_reason
-      | Some rest -> C.rest_type rest
+      | Some rest ->
+        let t = C.rest_type rest in
+        (* The rest param must be an object type. *)
+        let () =
+          let inexact_empty_obj =
+            let flags = Type.{ obj_kind = Inexact; frozen = false } in
+            let call = None in
+            let pmap = Context.generate_property_map cx NameUtils.Map.empty in
+            let rest_param_reason = TypeUtil.reason_of_t t in
+            let use_op =
+              Type.(Op (ComponentRestParamCompatibility { rest_param = rest_param_reason }))
+            in
+            (* The reason doesn't matter because in our special use_op handling we do not
+             * reference the object reason *)
+            Type.(
+              UseT
+                ( use_op,
+                  mk_object_def_type
+                    ~reason:config_reason
+                    ~flags
+                    ~call
+                    pmap
+                    (ObjProtoT rest_param_reason)
+                )
+            )
+          in
+          Flow_js.flow cx (t, inexact_empty_obj)
+        in
+
+        t
     in
     let instance =
       match instance with

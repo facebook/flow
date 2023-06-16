@@ -1417,6 +1417,49 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
+Error ----------------------------------------------------------------------------------------- rest_constraints.js:1:21
+
+number [1] is not an object. [not-an-object]
+
+   1| component Foo(...x: number) { return null; } // ERROR, not an object
+                          ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- rest_constraints.js:1:21
+
+Cannot use number [1] as a component rest param. Component rest params must use an object type and cannot be optional.
+[incompatible-type]
+
+   1| component Foo(...x: number) { return null; } // ERROR, not an object
+                          ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- rest_constraints.js:2:22
+
+number [1] is not an object. [not-an-object]
+
+   2| component Bar(...x?: number) {return null; } // ERROR optional
+                           ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- rest_constraints.js:2:22
+
+Cannot use optional number [1] as a component rest param. Component rest params must use an object type and cannot be
+optional. [incompatible-type]
+
+   2| component Bar(...x?: number) {return null; } // ERROR optional
+                           ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- rest_constraints.js:3:22
+
+Cannot use optional object type [1] as a component rest param. Component rest params must use an object type and cannot
+be optional. [incompatible-type]
+
+   3| component Baz(...x?: {foo: number}) {return null; } // ERROR optional
+                           ^^^^^^^^^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------- signature.js:12:39
 
 Cannot create `InlineOnly` element because string [1] is incompatible with number [2] in property `foo`.
@@ -1598,6 +1641,15 @@ References:
                      ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- signature.js:55:13
+
+Cannot use optional object type [1] as a component rest param. Component rest params must use an object type and cannot
+be optional. [incompatible-type]
+
+   55|   ...rest?: {foo: number} // ERROR, rest params can't be optional
+                   ^^^^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------ signature.js:57:4
 
 Cannot cast `x` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
@@ -1625,7 +1677,7 @@ Cannot cast `rest` to object type because undefined [1] is incompatible with obj
 
 References:
    signature.js:55:13
-   55|   ...rest?: {foo: number} // TODO: ERROR, rest params can't be optional
+   55|   ...rest?: {foo: number} // ERROR, rest params can't be optional
                    ^^^^^^^^^^^^^ [1]
    signature.js:59:10
    59|   (rest: {foo: number}); // ERROR, rest is optional in the body, as typed
@@ -1678,7 +1730,7 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 114 errors
+Found 120 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

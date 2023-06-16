@@ -7768,6 +7768,7 @@ struct
               | MatchingProp _
               | TypeGuardIncompatibility _
               | ComponentRenderTypeCompatibility _
+              | ComponentRestParamCompatibility _
               | UnknownUse ->
                 false)
             | UnifyFlip when not should_replace ->

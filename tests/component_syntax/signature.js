@@ -52,7 +52,7 @@ const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERRO
 component HasOptionalParams(
   x?: number,
   y: number = 3,
-  ...rest?: {foo: number} // TODO: ERROR, rest params can't be optional
+  ...rest?: {foo: number} // ERROR, rest params can't be optional
 ) {
   (x: number); // ERROR
   (y: number); // OK!

@@ -623,6 +623,11 @@ let rec make_error_printable :
         in
         let frames = (all_frames, explanation :: explanations) in
         root loc frames guard_type message
+      | Op (ComponentRestParamCompatibility { rest_param = _ }) ->
+        (* Special-cased incompatibility error. This should be unreachable, but just in case
+         * our error messages can compose in a way that would miss the special case we'd rather
+         * output a bad error than crash. *)
+        unknown_root loc frames
       | Frame (ConstrainedAssignment { name; declaration; providers; array }, use_op) ->
         let noun =
           if array then
@@ -862,6 +867,11 @@ let rec make_error_printable :
   let mk_use_op_error_reason reason use_op message =
     mk_use_op_error (loc_of_reason reason) use_op message
   in
+  let mk_no_frame_or_explanation_error reason message =
+    let loc = loc_of_aloc (loc_of_reason reason) in
+    let code = code_of_error error in
+    mk_error ~trace_infos ~frames:[] ~explanations:[] loc code message
+  in
 
   (* Make a friendly error based on failed speculation. *)
   let mk_use_op_speculation_error loc use_op branches =
@@ -1009,6 +1019,15 @@ let rec make_error_printable :
           else
             [ref upper]
           )
+      | ComponentRestParamCompatibility { rest_param } ->
+        mk_no_frame_or_explanation_error
+          rest_param
+          [
+            text "Cannot use ";
+            ref rest_param;
+            text
+              " as a component rest param. Component rest params must use an object type and cannot be optional";
+          ]
       (* Default incompatibility. *)
       | _ -> begin
         match (desc_of_reason lower, desc_of_reason upper) with
