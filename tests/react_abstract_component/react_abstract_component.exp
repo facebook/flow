@@ -1,3 +1,19 @@
+Error ------------------------------------------------------------------------------------------------------ HOC.js:19:3
+
+The name of intrinsic element `x` [1] overlaps with a local definition [2] which has a type [1] that can be instantiated
+as an element. To avoid confusion between this definition and the intrinsic, rename the definition
+[react-intrinsic-overlap]
+
+   HOC.js:19:3
+   19|   x: React.AbstractComponent<Props, Instance>,
+         ^ [2]
+
+References:
+   HOC.js:24:8
+   24|       <x {...props} />
+              ^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------------- HOC.js:26:26
 
 Cannot get `x.defaultProps` because property `defaultProps` is missing in `React.AbstractComponentStatics` [1].
@@ -11,6 +27,22 @@ References:
    HOC.js:19:6
    19|   x: React.AbstractComponent<Props, Instance>,
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ HOC.js:34:3
+
+The name of intrinsic element `x` [1] overlaps with a local definition [2] which has a type [1] that can be instantiated
+as an element. To avoid confusion between this definition and the intrinsic, rename the definition
+[react-intrinsic-overlap]
+
+   HOC.js:34:3
+   34|   x: React.AbstractComponent<Props, Instance>
+         ^ [2]
+
+References:
+   HOC.js:39:8
+   39|       <x {...props} />
+              ^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- HOC.js:41:26
@@ -765,7 +797,7 @@ expression. [signature-verification-failure]
 
 
 
-Found 45 errors
+Found 47 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

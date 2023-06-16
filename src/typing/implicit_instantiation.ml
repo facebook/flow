@@ -282,6 +282,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | ImportNamedT _
     | ImportTypeofT _
     | AssertImportIsValueT _
+    | AssertNonComponentLikeT _
     | CJSExtractNamedExportsT _
     | CopyNamedExportsT _
     | CopyTypeExportsT _

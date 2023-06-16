@@ -3197,5 +3197,21 @@ References:
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------------- test.js:1015:20
 
-Found 179 errors
+The name of intrinsic element `div` [1] overlaps with a local definition [2] which has a type [1] that can be
+instantiated as an element. To avoid confusion between this definition and the intrinsic, rename the definition
+[react-intrinsic-overlap]
+
+   test.js:1015:20
+   1015|   declare function div(): React.Node;
+                            ^^^ [2]
+
+References:
+   test.js:1016:4
+   1016|   <div />; // Error
+            ^^^ [1]
+
+
+
+Found 180 errors

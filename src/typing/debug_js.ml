@@ -663,6 +663,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | AssertForInRHST _ -> p t
     | AssertImportIsValueT _ -> p t
     | AssertInstanceofRHST _ -> p t
+    | AssertNonComponentLikeT _ -> p t
     | AssertIterableT _ -> p t
     | BecomeT { reason = _; t = arg; empty_success = _ } -> p ~extra:(kid arg) t
     | BindT (use_op, _, _) -> p t ~extra:(string_of_use_op use_op)
@@ -1809,6 +1810,7 @@ let dump_error_message =
     | EReferenceInAnnotation _ -> "EReferenceInAnnotation"
     | EEmptyArrayNoProvider { loc } -> spf "EEmptyArrayNoProvider (%s)" (string_of_aloc loc)
     | EUnusedPromise { loc; _ } -> spf "EUnusedPromise (%s)" (string_of_aloc loc)
+    | EReactIntrinsicOverlap _ -> "EReactIntrinsicOverlap (_, _, _)"
     | EBigIntRShift3 reason -> spf "EBigIntRShift3 (%s)" (dump_reason cx reason)
     | EBigIntNumCoerce reason -> spf "EBigIntNumCoerce (%s)" (dump_reason cx reason)
     | EInvalidCatchParameterAnnotation loc ->

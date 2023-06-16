@@ -1001,3 +1001,17 @@ class ThisInJsxTag extends React.Component<{tag: () => React$MixedElement}> {
     return <this.props.tag />; // OK
   }
 }
+
+{
+  const div = 2/3;
+  <div />; // No error
+}
+
+{
+  <floob />; // No error
+}
+
+{
+  declare function div(): React.Node;
+  <div />; // Error
+}

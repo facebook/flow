@@ -5639,7 +5639,16 @@ module Make
           let c =
             if name = String.capitalize_ascii name then
               identifier cx (mk_ident ~comments:None name) loc
-            else
+            else begin
+              Env.intrinsic_ref cx (OrdinaryName name) loc
+              |> Base.Option.iter ~f:(fun (t, def_loc) ->
+                     Flow.flow
+                       cx
+                       ( t,
+                         AssertNonComponentLikeT
+                           (def_loc, mk_reason (RIdentifier (OrdinaryName name)) loc)
+                       )
+                 );
               let strt =
                 (* TODO: why are these different? *)
                 match jsx_mode with
@@ -5647,6 +5656,7 @@ module Make
                 | Options.Jsx_pragma _ -> StrT (Literal (None, OrdinaryName name))
               in
               DefT (mk_reason (RIdentifier (OrdinaryName name)) loc, make_trust (), strt)
+            end
           in
           let (o, attributes', unresolved_params, children) =
             jsx_mk_props

@@ -49,6 +49,7 @@ type lint_kind =
   | MixedImportAndRequire
   | ExportRenamedDefault
   | UnusedPromise
+  | ReactIntrinsicOverlap
 
 let string_of_sketchy_null_kind = function
   | SketchyNullBool
@@ -93,6 +94,7 @@ let string_of_kind = function
   | MixedImportAndRequire -> "mixed-import-and-require"
   | ExportRenamedDefault -> "export-renamed-default"
   | UnusedPromise -> "unused-promise"
+  | ReactIntrinsicOverlap -> "react-intrinsic-overlap"
 
 let kinds_of_string = function
   | "sketchy-null" ->
@@ -135,6 +137,7 @@ let kinds_of_string = function
   | "mixed-import-and-require" -> Some [MixedImportAndRequire]
   | "export-renamed-default" -> Some [ExportRenamedDefault]
   | "unused-promise" -> Some [UnusedPromise]
+  | "react-intrinsic-overlap" -> Some [ReactIntrinsicOverlap]
   | _ -> None
 
 module LintKind = struct

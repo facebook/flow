@@ -4366,6 +4366,37 @@ struct
         | (_, AssertBinaryInRHST _) when object_like l -> ()
         | (_, AssertBinaryInRHST _) ->
           add_output cx ~trace (Error_message.EBinaryInRHS (reason_of_t l))
+        (************************)
+        (* Assert non component *)
+        (************************)
+        | (DefT (reason_type, _, MixedT _), AssertNonComponentLikeT (def_loc, use_reason)) ->
+          add_output
+            cx
+            ~trace
+            Error_message.(
+              EReactIntrinsicOverlap
+                { use = use_reason; def = def_loc; type_ = loc_of_reason reason_type; mixed = true }
+            )
+        | ( DefT
+              ( reason_type,
+                _,
+                (ObjT { call_t = Some _; _ } | FunT _ | ClassT _ | ReactAbstractComponentT _)
+              ),
+            AssertNonComponentLikeT (def_loc, use_reason)
+          ) ->
+          add_output
+            cx
+            ~trace
+            Error_message.(
+              EReactIntrinsicOverlap
+                {
+                  use = use_reason;
+                  def = def_loc;
+                  type_ = loc_of_reason reason_type;
+                  mixed = false;
+                }
+            )
+        | (_, AssertNonComponentLikeT _) -> ()
         (******************)
         (* `for...in` RHS *)
         (******************)
@@ -5930,6 +5961,7 @@ struct
     | AssertForInRHST _
     | AssertImportIsValueT _
     | AssertInstanceofRHST _
+    | AssertNonComponentLikeT _
     | ComparatorT _
     | DebugPrintT _
     | DebugSleepT _

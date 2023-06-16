@@ -49,6 +49,7 @@ type lint_kind =
   | MixedImportAndRequire
   | ExportRenamedDefault
   | UnusedPromise
+  | ReactIntrinsicOverlap
 
 val string_of_kind : lint_kind -> string
 

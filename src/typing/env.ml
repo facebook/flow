@@ -574,6 +574,29 @@ let query_var ?(lookup_mode = ForValue) cx name ?desc loc =
   in
   read_entry_exn ~lookup_mode cx loc (mk_reason desc loc)
 
+let intrinsic_ref cx ?desc name loc =
+  let desc =
+    match desc with
+    | Some desc -> desc
+    | None -> RIdentifier name
+  in
+  let reason = mk_reason desc loc in
+  let read =
+    let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
+    match find_var_opt var_info loc with
+    | Error loc -> Error loc
+    | Ok { Env_api.def_loc; write_locs; val_kind; name; id } ->
+      (match (val_kind, name, def_loc) with
+      | (Some (Env_api.Type { imported = _ }), Some _, Some _)
+      | (_, _, None) ->
+        Error loc
+      | (_, _, Some def_loc) ->
+        Ok (res_of_state ~lookup_mode:ForValue cx env loc reason write_locs id None, def_loc))
+  in
+  match read with
+  | Error _ -> None
+  | Ok ((Ok x | Error (x, _)), def_loc) -> Some (Flow_js.reposition cx loc x, def_loc)
+
 let var_ref ?(lookup_mode = ForValue) cx ?desc name loc =
   let t = query_var ~lookup_mode cx name ?desc loc in
   Flow_js.reposition cx loc t

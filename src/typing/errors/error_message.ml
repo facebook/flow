@@ -582,6 +582,12 @@ and 'loc t' =
       spread: 'loc option;
       loc: 'loc;
     }
+  | EReactIntrinsicOverlap of {
+      use: 'loc virtual_reason;
+      def: 'loc;
+      type_: 'loc;
+      mixed: bool;
+    }
 
 and 'loc null_write = {
   null_loc: 'loc;
@@ -1262,6 +1268,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EDuplicateClassMember { loc = f loc; name; static }
   | EEmptyArrayNoProvider { loc } -> EEmptyArrayNoProvider { loc = f loc }
   | EUnusedPromise { loc; async } -> EUnusedPromise { loc = f loc; async }
+  | EReactIntrinsicOverlap { use; def; type_; mixed } ->
+    EReactIntrinsicOverlap { def = f def; use = map_reason use; type_ = f type_; mixed }
   | EBigIntRShift3 r -> EBigIntRShift3 (map_reason r)
   | EBigIntNumCoerce r -> EBigIntNumCoerce (map_reason r)
   | EInvalidCatchParameterAnnotation loc -> EInvalidCatchParameterAnnotation (f loc)
@@ -1525,6 +1533,7 @@ let util_use_op_of_msg nope util = function
   | EDuplicateClassMember _
   | EEmptyArrayNoProvider _
   | EUnusedPromise _
+  | EReactIntrinsicOverlap _
   | EBigIntRShift3 _
   | EBigIntNumCoerce _
   | EInvalidCatchParameterAnnotation _
@@ -1644,6 +1653,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ECodelessSuppression (loc, _)
   | EDocblockError (loc, _)
   | EImplicitInexactObject loc
+  | EReactIntrinsicOverlap { def = loc; _ }
   | EAmbiguousObjectType loc
   | EParseError (loc, _)
   | EInvalidLHSInAssignment loc
@@ -1799,6 +1809,7 @@ let kind_of_msg =
     | EMixedImportAndRequire _ -> LintError Lints.MixedImportAndRequire
     | EExportRenamedDefault _ -> LintError Lints.ExportRenamedDefault
     | EUnusedPromise _ -> LintError Lints.UnusedPromise
+    | EReactIntrinsicOverlap _ -> LintError Lints.ReactIntrinsicOverlap
     | EBadExportPosition _
     | EBadExportContext _ ->
       InferWarning ExportKind
@@ -4647,6 +4658,27 @@ let friendly_message_of_msg loc_of_aloc msg =
             ]
           );
       }
+  | EReactIntrinsicOverlap { use; def; type_; mixed } ->
+    Normal
+      {
+        features =
+          [
+            text "The name of intrinsic element ";
+            ref use;
+            text " overlaps with a ";
+            ref (mk_reason (RCustom "local definition") def);
+            text " which has a ";
+            ref (mk_reason (RCustom "type") type_);
+            text " that ";
+            ( if mixed then
+              text "may"
+            else
+              text "can"
+            );
+            text
+              " be instantiated as an element. To avoid confusion between this definition and the intrinsic, rename the definition";
+          ];
+      }
   | EBigIntRShift3 reason ->
     Normal
       {
@@ -5248,6 +5280,7 @@ let error_code_of_message err : error_code option =
   | EUnnecessaryInvariant _
   | EImplicitInexactObject _
   | EAmbiguousObjectType _
+  | EReactIntrinsicOverlap _
   | EUninitializedInstanceProperty _
   | EUnusedPromise _ -> begin
     match kind_of_msg err with

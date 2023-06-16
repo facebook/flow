@@ -56,6 +56,7 @@ and reason_of_use_t = function
   | AssertBinaryInRHST reason -> reason
   | AssertForInRHST reason -> reason
   | AssertInstanceofRHST reason -> reason
+  | AssertNonComponentLikeT (_, reason) -> reason
   | AssertIterableT { reason; _ } -> reason
   | AssertImportIsValueT (reason, _) -> reason
   | BecomeT { reason; _ } -> reason
@@ -223,6 +224,7 @@ and mod_reason_of_use_t f = function
   | AssertBinaryInRHST reason -> AssertBinaryInRHST (f reason)
   | AssertForInRHST reason -> AssertForInRHST (f reason)
   | AssertInstanceofRHST reason -> AssertInstanceofRHST (f reason)
+  | AssertNonComponentLikeT (loc, reason) -> AssertNonComponentLikeT (loc, f reason)
   | AssertIterableT ({ reason; _ } as contents) ->
     AssertIterableT { contents with reason = f reason }
   | AssertImportIsValueT (reason, name) -> AssertImportIsValueT (f reason, name)
@@ -482,6 +484,7 @@ let rec util_use_op_of_use_t :
   | AssertBinaryInRHST _
   | AssertForInRHST _
   | AssertInstanceofRHST _
+  | AssertNonComponentLikeT _
   | PredicateT (_, _)
   | GuardT (_, _, _)
   | StrictEqT _

@@ -2,3 +2,6 @@
 no_flowlib=false
 all=true
 exact_by_default=false
+
+[lints]
+react-intrinsic-overlap=error

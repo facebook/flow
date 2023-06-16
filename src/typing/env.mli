@@ -118,6 +118,9 @@ val var_ref :
   ALoc.t ->
   Type.t
 
+val intrinsic_ref :
+  Context.t -> ?desc:Reason.reason_desc -> Reason.name -> ALoc.t -> (Type.t * ALoc.t) option
+
 val read_class_self_type : Context.t -> ALoc.t -> Type.t
 
 val find_write : Context.t -> Env_api.With_ALoc.def_loc_type -> Reason.reason -> Type.t
