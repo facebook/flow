@@ -33,44 +33,9 @@ module.exports = (suite(
               isIncomplete: false,
               items: [
                 {
-                  label: 'function',
-                  kind: 14,
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 2,
-                        character: 0,
-                      },
-                      end: {
-                        line: 2,
-                        character: 8,
-                      },
-                    },
-                    newText: 'function',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'keyword',
-                      {
-                        token: 'fAUTO332',
-                        index: 0,
-                        session_requests: 1,
-                        typed_length: 1,
-                        completion: 'function',
-                        ac_type: 'Acid',
-                      },
-                    ],
-                  },
-                },
-                {
                   label: 'finally',
                   kind: 14,
-                  sortText: '00000000000000000001',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -93,7 +58,7 @@ module.exports = (suite(
                       'keyword',
                       {
                         token: 'fAUTO332',
-                        index: 1,
+                        index: 0,
                         session_requests: 1,
                         typed_length: 1,
                         completion: 'finally',
@@ -105,7 +70,7 @@ module.exports = (suite(
                 {
                   label: 'for',
                   kind: 14,
-                  sortText: '00000000000000000002',
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -128,10 +93,45 @@ module.exports = (suite(
                       'keyword',
                       {
                         token: 'fAUTO332',
-                        index: 2,
+                        index: 1,
                         session_requests: 1,
                         typed_length: 1,
                         completion: 'for',
+                        ac_type: 'Acid',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'function',
+                  kind: 14,
+                  sortText: '00000000000000000002',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 0,
+                      },
+                      end: {
+                        line: 2,
+                        character: 8,
+                      },
+                    },
+                    newText: 'function',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'keyword',
+                      {
+                        token: 'fAUTO332',
+                        index: 2,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: 'function',
                         ac_type: 'Acid',
                       },
                     ],
@@ -543,44 +543,9 @@ module.exports = (suite(
               isIncomplete: false,
               items: [
                 {
-                  label: 'function',
-                  kind: 14,
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 2,
-                        character: 0,
-                      },
-                      end: {
-                        line: 2,
-                        character: 8,
-                      },
-                    },
-                    newText: 'function',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'keyword',
-                      {
-                        token: 'fAUTO332',
-                        index: 0,
-                        session_requests: 1,
-                        typed_length: 1,
-                        completion: 'function',
-                        ac_type: 'Acid',
-                      },
-                    ],
-                  },
-                },
-                {
                   label: 'finally',
                   kind: 14,
-                  sortText: '00000000000000000001',
+                  sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -603,7 +568,7 @@ module.exports = (suite(
                       'keyword',
                       {
                         token: 'fAUTO332',
-                        index: 1,
+                        index: 0,
                         session_requests: 1,
                         typed_length: 1,
                         completion: 'finally',
@@ -615,7 +580,7 @@ module.exports = (suite(
                 {
                   label: 'for',
                   kind: 14,
-                  sortText: '00000000000000000002',
+                  sortText: '00000000000000000001',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -638,10 +603,45 @@ module.exports = (suite(
                       'keyword',
                       {
                         token: 'fAUTO332',
-                        index: 2,
+                        index: 1,
                         session_requests: 1,
                         typed_length: 1,
                         completion: 'for',
+                        ac_type: 'Acid',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'function',
+                  kind: 14,
+                  sortText: '00000000000000000002',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 0,
+                      },
+                      end: {
+                        line: 2,
+                        character: 8,
+                      },
+                    },
+                    newText: 'function',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'keyword',
+                      {
+                        token: 'fAUTO332',
+                        index: 2,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: 'function',
                         ac_type: 'Acid',
                       },
                     ],

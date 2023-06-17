@@ -701,10 +701,6 @@ module.exports = (suite(({addFile, flowCmd}) => [
                "type": ""
              },
              {
-               "name": "void",
-               "type": ""
-             },
-             {
                "name": "while",
                "type": ""
              },
@@ -914,10 +910,6 @@ module.exports = (suite(({addFile, flowCmd}) => [
             },
             {
               "name": "var",
-              "type": ""
-            },
-            {
-              "name": "void",
               "type": ""
             },
             {

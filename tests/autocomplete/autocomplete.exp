@@ -160,10 +160,10 @@ this2.js:5:6
 Flags: --pretty
 {
   "result":[
-    {"name":"typeof","type":""},
     {"name":"throw","type":""},
     {"name":"try","type":""},
     {"name":"type","type":""},
+    {"name":"typeof","type":""},
     {"name":"this","type":"this"}
   ]
 }
@@ -225,7 +225,6 @@ Flags: --pretty
     {"name":"type","type":""},
     {"name":"typeof","type":""},
     {"name":"var","type":""},
-    {"name":"void","type":""},
     {"name":"void","type":""},
     {"name":"while","type":""},
     {"name":"yield","type":""}
@@ -636,7 +635,6 @@ Flags: --pretty
     {"name":"type","type":""},
     {"name":"typeof","type":""},
     {"name":"var","type":""},
-    {"name":"void","type":""},
     {"name":"void","type":""},
     {"name":"while","type":""},
     {"name":"yield","type":""}
@@ -1191,10 +1189,10 @@ Flags: --pretty
 {
   "result":[
     {"name":"ThisIsAValue","type":"string"},
-    {"name":"typeof","type":""},
     {"name":"throw","type":""},
     {"name":"try","type":""},
-    {"name":"type","type":""}
+    {"name":"type","type":""},
+    {"name":"typeof","type":""}
   ]
 }
 
@@ -1268,7 +1266,6 @@ Flags: --pretty
     {"name":"type","type":""},
     {"name":"typeof","type":""},
     {"name":"var","type":""},
-    {"name":"void","type":""},
     {"name":"void","type":""},
     {"name":"while","type":""},
     {"name":"x","type":"any"},
@@ -3002,9 +2999,9 @@ Flags: --pretty
   "result":[
     {"name":"Fab","type":"enum Fab"},
     {"name":"Foo","type":"enum Foo"},
-    {"name":"function","type":""},
     {"name":"finally","type":""},
-    {"name":"for","type":""}
+    {"name":"for","type":""},
+    {"name":"function","type":""}
   ]
 }
 
@@ -4213,32 +4210,6 @@ Flags: --lsp
   }
 }
 {
-  "label":"void",
-  "kind":14,
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
-    "newText":"void"
-  },
-  "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":[
-      "textDocument/completion",
-      "keyword",
-      {
-        "token":null,
-        "index":45,
-        "session_requests":null,
-        "typed_length":null,
-        "completion":"void",
-        "ac_type":"Acid"
-      }
-    ]
-  }
-}
-{
   "label":"while",
   "kind":14,
   "sortText":"00000000000000000000",
@@ -4255,7 +4226,7 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":46,
+        "index":45,
         "session_requests":null,
         "typed_length":null,
         "completion":"while",
@@ -4285,7 +4256,7 @@ Flags: --lsp
       "local value identifier",
       {
         "token":null,
-        "index":47,
+        "index":46,
         "session_requests":null,
         "typed_length":null,
         "completion":"x",
@@ -4311,7 +4282,7 @@ Flags: --lsp
       "keyword",
       {
         "token":null,
-        "index":48,
+        "index":47,
         "session_requests":null,
         "typed_length":null,
         "completion":"yield",
@@ -11744,7 +11715,6 @@ Flags: --pretty
     {"name":"typeof","type":""},
     {"name":"var","type":""},
     {"name":"void","type":""},
-    {"name":"void","type":""},
     {"name":"while","type":""},
     {"name":"yield","type":""}
   ]
@@ -12715,9 +12685,9 @@ keywords_c.js:3:4
 Flags: --pretty
 {
   "result":[
-    {"name":"class","type":""},
     {"name":"case","type":""},
     {"name":"catch","type":""},
+    {"name":"class","type":""},
     {"name":"const","type":""},
     {"name":"continue","type":""}
   ]
@@ -12727,9 +12697,9 @@ keywords_f.js:3:4
 Flags: --pretty
 {
   "result":[
-    {"name":"function","type":""},
     {"name":"finally","type":""},
-    {"name":"for","type":""}
+    {"name":"for","type":""},
+    {"name":"function","type":""}
   ]
 }
 

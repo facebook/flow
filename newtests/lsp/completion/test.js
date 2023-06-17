@@ -1440,44 +1440,9 @@ module.exports = (suite(
                   },
                 },
                 {
-                  label: 'void',
-                  kind: 14,
-                  sortText: '00000000000000000040',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 10,
-                        character: 15,
-                      },
-                      end: {
-                        line: 10,
-                        character: 22,
-                      },
-                    },
-                    newText: 'void',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'keyword',
-                      {
-                        token: 'AUTO332',
-                        index: 40,
-                        session_requests: 1,
-                        typed_length: 0,
-                        completion: 'void',
-                        ac_type: 'Acid',
-                      },
-                    ],
-                  },
-                },
-                {
                   label: 'while',
                   kind: 14,
-                  sortText: '00000000000000000041',
+                  sortText: '00000000000000000040',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -1500,7 +1465,7 @@ module.exports = (suite(
                       'keyword',
                       {
                         token: 'AUTO332',
-                        index: 41,
+                        index: 40,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'while',
@@ -1513,7 +1478,7 @@ module.exports = (suite(
                   label: 'x',
                   kind: 6,
                   detail: 'number',
-                  sortText: '00000000000000000042',
+                  sortText: '00000000000000000041',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -1536,7 +1501,7 @@ module.exports = (suite(
                       'local value identifier',
                       {
                         token: 'AUTO332',
-                        index: 42,
+                        index: 41,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'x',
@@ -1548,7 +1513,7 @@ module.exports = (suite(
                 {
                   label: 'yield',
                   kind: 14,
-                  sortText: '00000000000000000043',
+                  sortText: '00000000000000000042',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -1571,7 +1536,7 @@ module.exports = (suite(
                       'keyword',
                       {
                         token: 'AUTO332',
-                        index: 43,
+                        index: 42,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'yield',
@@ -3482,44 +3447,9 @@ b.te
                   },
                 },
                 {
-                  label: 'void',
-                  kind: 14,
-                  sortText: '00000000000000000041',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 13,
-                        character: 15,
-                      },
-                      end: {
-                        line: 13,
-                        character: 22,
-                      },
-                    },
-                    newText: 'void',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'keyword',
-                      {
-                        token: 'AUTO332',
-                        index: 41,
-                        session_requests: 1,
-                        typed_length: 0,
-                        completion: 'void',
-                        ac_type: 'Acid',
-                      },
-                    ],
-                  },
-                },
-                {
                   label: 'while',
                   kind: 14,
-                  sortText: '00000000000000000042',
+                  sortText: '00000000000000000041',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -3542,7 +3472,7 @@ b.te
                       'keyword',
                       {
                         token: 'AUTO332',
-                        index: 42,
+                        index: 41,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'while',
@@ -3555,7 +3485,7 @@ b.te
                   label: 'x',
                   kind: 6,
                   detail: 'number',
-                  sortText: '00000000000000000043',
+                  sortText: '00000000000000000042',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -3578,7 +3508,7 @@ b.te
                       'local value identifier',
                       {
                         token: 'AUTO332',
-                        index: 43,
+                        index: 42,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'x',
@@ -3590,7 +3520,7 @@ b.te
                 {
                   label: 'yield',
                   kind: 14,
-                  sortText: '00000000000000000044',
+                  sortText: '00000000000000000043',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -3613,7 +3543,7 @@ b.te
                       'keyword',
                       {
                         token: 'AUTO332',
-                        index: 44,
+                        index: 43,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'yield',
@@ -5030,44 +4960,9 @@ b.te
                   },
                 },
                 {
-                  label: 'void',
-                  kind: 14,
-                  sortText: '00000000000000000039',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 9,
-                        character: 15,
-                      },
-                      end: {
-                        line: 9,
-                        character: 22,
-                      },
-                    },
-                    newText: 'void',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'keyword',
-                      {
-                        token: 'AUTO332',
-                        index: 39,
-                        session_requests: 1,
-                        typed_length: 0,
-                        completion: 'void',
-                        ac_type: 'Acid',
-                      },
-                    ],
-                  },
-                },
-                {
                   label: 'while',
                   kind: 14,
-                  sortText: '00000000000000000040',
+                  sortText: '00000000000000000039',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -5090,7 +4985,7 @@ b.te
                       'keyword',
                       {
                         token: 'AUTO332',
-                        index: 40,
+                        index: 39,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'while',
@@ -5103,7 +4998,7 @@ b.te
                   label: 'x',
                   kind: 6,
                   detail: 'number',
-                  sortText: '00000000000000000041',
+                  sortText: '00000000000000000040',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -5126,7 +5021,7 @@ b.te
                       'local value identifier',
                       {
                         token: 'AUTO332',
-                        index: 41,
+                        index: 40,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'x',
@@ -5138,7 +5033,7 @@ b.te
                 {
                   label: 'yield',
                   kind: 14,
-                  sortText: '00000000000000000042',
+                  sortText: '00000000000000000041',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -5161,7 +5056,7 @@ b.te
                       'keyword',
                       {
                         token: 'AUTO332',
-                        index: 42,
+                        index: 41,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'yield',

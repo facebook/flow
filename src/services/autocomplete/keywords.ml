@@ -23,14 +23,18 @@ let expression_keywords =
 
 let statement_keywords =
   [
+    "async";
+    "await";
     "break";
     "case";
     "catch";
+    "class";
     "const";
     "continue";
     "debugger";
     "declare";
     "default";
+    "delete";
     "do";
     "else";
     "enum";
@@ -38,10 +42,13 @@ let statement_keywords =
     "extends";
     "finally";
     "for";
+    "function";
     "if";
     "implements";
+    "import";
     "interface";
     "let";
+    "new";
     "opaque";
     "return";
     "static";
@@ -49,9 +56,11 @@ let statement_keywords =
     "throw";
     "try";
     "type";
+    "typeof";
     "var";
     "void";
     "while";
+    "yield";
   ]
 
 exception Found of context_node list
@@ -118,13 +127,13 @@ let completion_item_of_keyword loc keyword =
 let keywords_of_context loc context =
   let keywords =
     match context with
-    | Expression :: ExpressionStatement :: _ ->
-      Base.List.append expression_keywords statement_keywords
+    | Expression :: ExpressionStatement :: _
+    | Statement :: _ ->
+      statement_keywords
     | Expression :: Member :: _
     | Expression :: SwitchCase :: _ ->
       []
     | Expression :: _ -> expression_keywords
-    | Statement :: _ -> statement_keywords
     | _ -> []
   in
   Base.List.map ~f:(completion_item_of_keyword loc) keywords
