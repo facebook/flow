@@ -149,3 +149,5 @@ query_at_pos autocomplete "jsdoc_comment.js" 8 4 --lsp
 query_at_pos autocomplete "jsdoc_comment.js" 11 4 --lsp
 queries_in_file autocomplete "super_member.js" --pretty
 queries_in_file autocomplete "switch.js" --pretty
+queries_in_file autocomplete "keywords_c.js" --pretty
+queries_in_file autocomplete "keywords_f.js" --pretty

@@ -12711,3 +12711,25 @@ Flags: --pretty
   ]
 }
 
+keywords_c.js:3:4
+Flags: --pretty
+{
+  "result":[
+    {"name":"class","type":""},
+    {"name":"case","type":""},
+    {"name":"catch","type":""},
+    {"name":"const","type":""},
+    {"name":"continue","type":""}
+  ]
+}
+
+keywords_f.js:3:4
+Flags: --pretty
+{
+  "result":[
+    {"name":"function","type":""},
+    {"name":"finally","type":""},
+    {"name":"for","type":""}
+  ]
+}
+
