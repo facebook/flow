@@ -21,31 +21,42 @@ type context_node =
 let expression_keywords =
   ["async"; "await"; "class"; "delete"; "function"; "import"; "new"; "typeof"; "void"; "yield"]
 
+(** keywords to suggest in a statement (or expression statement) context, in
+    almost-alphabetical order.
+
+    the order here only matters amongst items with the same starting letter.
+    for example, const is more common than class, which is more common than
+    catch or continue; function is more common than finally.
+
+    this way, when you type `c` and Quick Suggest triggers, we'll suggest
+    [const, class, ...], instead of [case, catch, class, const, continue].
+    you can also trigger Quick Suggest without typing anything (cmd+space),
+    but that's sorted purely alphabetically. *)
 let statement_keywords =
   [
-    "async";
     "await";
+    "async";
     "break";
+    "const";
+    "class";
     "case";
     "catch";
-    "class";
-    "const";
     "continue";
+    "default";
     "debugger";
     "declare";
-    "default";
     "delete";
     "do";
     "else";
     "enum";
     "export";
     "extends";
-    "finally";
-    "for";
     "function";
+    "for";
+    "finally";
     "if";
-    "implements";
     "import";
+    "implements";
     "interface";
     "let";
     "new";

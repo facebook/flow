@@ -33,7 +33,7 @@ module.exports = (suite(
               isIncomplete: false,
               items: [
                 {
-                  label: 'finally',
+                  label: 'function',
                   kind: 14,
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
@@ -48,7 +48,7 @@ module.exports = (suite(
                         character: 8,
                       },
                     },
-                    newText: 'finally',
+                    newText: 'function',
                   },
                   command: {
                     title: '',
@@ -61,7 +61,7 @@ module.exports = (suite(
                         index: 0,
                         session_requests: 1,
                         typed_length: 1,
-                        completion: 'finally',
+                        completion: 'function',
                         ac_type: 'Acid',
                       },
                     ],
@@ -103,7 +103,7 @@ module.exports = (suite(
                   },
                 },
                 {
-                  label: 'function',
+                  label: 'finally',
                   kind: 14,
                   sortText: '00000000000000000002',
                   insertTextFormat: 1,
@@ -118,7 +118,7 @@ module.exports = (suite(
                         character: 8,
                       },
                     },
-                    newText: 'function',
+                    newText: 'finally',
                   },
                   command: {
                     title: '',
@@ -131,7 +131,7 @@ module.exports = (suite(
                         index: 2,
                         session_requests: 1,
                         typed_length: 1,
-                        completion: 'function',
+                        completion: 'finally',
                         ac_type: 'Acid',
                       },
                     ],
@@ -543,7 +543,7 @@ module.exports = (suite(
               isIncomplete: false,
               items: [
                 {
-                  label: 'finally',
+                  label: 'function',
                   kind: 14,
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
@@ -558,7 +558,7 @@ module.exports = (suite(
                         character: 8,
                       },
                     },
-                    newText: 'finally',
+                    newText: 'function',
                   },
                   command: {
                     title: '',
@@ -571,7 +571,7 @@ module.exports = (suite(
                         index: 0,
                         session_requests: 1,
                         typed_length: 1,
-                        completion: 'finally',
+                        completion: 'function',
                         ac_type: 'Acid',
                       },
                     ],
@@ -613,7 +613,7 @@ module.exports = (suite(
                   },
                 },
                 {
-                  label: 'function',
+                  label: 'finally',
                   kind: 14,
                   sortText: '00000000000000000002',
                   insertTextFormat: 1,
@@ -628,7 +628,7 @@ module.exports = (suite(
                         character: 8,
                       },
                     },
-                    newText: 'function',
+                    newText: 'finally',
                   },
                   command: {
                     title: '',
@@ -641,7 +641,7 @@ module.exports = (suite(
                         index: 2,
                         session_requests: 1,
                         typed_length: 1,
-                        completion: 'function',
+                        completion: 'finally',
                         ac_type: 'Acid',
                       },
                     ],

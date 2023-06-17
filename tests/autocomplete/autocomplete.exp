@@ -2999,9 +2999,9 @@ Flags: --pretty
   "result":[
     {"name":"Fab","type":"enum Fab"},
     {"name":"Foo","type":"enum Foo"},
-    {"name":"finally","type":""},
+    {"name":"function","type":""},
     {"name":"for","type":""},
-    {"name":"function","type":""}
+    {"name":"finally","type":""}
   ]
 }
 
@@ -12685,10 +12685,10 @@ keywords_c.js:3:4
 Flags: --pretty
 {
   "result":[
+    {"name":"const","type":""},
+    {"name":"class","type":""},
     {"name":"case","type":""},
     {"name":"catch","type":""},
-    {"name":"class","type":""},
-    {"name":"const","type":""},
     {"name":"continue","type":""}
   ]
 }
@@ -12697,9 +12697,9 @@ keywords_f.js:3:4
 Flags: --pretty
 {
   "result":[
-    {"name":"finally","type":""},
+    {"name":"function","type":""},
     {"name":"for","type":""},
-    {"name":"function","type":""}
+    {"name":"finally","type":""}
   ]
 }
 
