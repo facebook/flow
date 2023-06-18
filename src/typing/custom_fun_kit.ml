@@ -116,7 +116,13 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
       let funt =
         FunT
           ( dummy_static reason_op,
-            mk_functiontype reason_op [OpenT tin] ~rest_param:None ~def_reason:reason_op (OpenT tvar)
+            mk_functiontype
+              reason_op
+              [OpenT tin]
+              ~rest_param:None
+              ~def_reason:reason_op
+              ~predicate:None
+              (OpenT tvar)
           )
       in
       rec_flow_t ~use_op:unknown_use cx trace (DefT (reason_op, bogus_trust (), funt), tout)

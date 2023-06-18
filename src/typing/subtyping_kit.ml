@@ -1241,6 +1241,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                )
             )
           ~def_reason:reasonl
+          ~predicate:None
           (get_builtin_type cx reasonu (OrdinaryName "React$Node"))
       in
       let mixed = MixedT.why reasonu (bogus_trust ()) in

@@ -254,7 +254,7 @@ struct
     if not arrow then Base.Option.iter func_loc ~f:(Env.bind_function_this cx this_type);
     poly_type_of_tparams (Type.Poly.generate_id ()) tparams t
 
-  let methodtype cx method_this_loc this_default { T.reason; tparams; fparams; return_t; _ } =
+  let methodtype cx method_this_loc this_default { T.reason; kind; tparams; fparams; return_t; _ } =
     let params = F.value fparams in
     let (params_names, params_tlist) = List.split params in
     let rest_param = F.rest fparams in
@@ -263,6 +263,11 @@ struct
     Base.Option.both this_anno_t method_this_loc
     |> Base.Option.iter ~f:(fun (t, loc) -> Env.bind_function_this cx t loc);
     let param_this_t = Base.Option.value ~default:this_default this_anno_t in
+    let predicate =
+      match kind with
+      | Predicate p -> Some p
+      | _ -> None
+    in
     let t =
       DefT
         ( reason,
@@ -276,6 +281,7 @@ struct
                 ~rest_param
                 ~def_reason
                 ~params_names
+                ~predicate
                 (TypeUtil.type_t_of_annotated_or_inferred return_t)
             )
         )

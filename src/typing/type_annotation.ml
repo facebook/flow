@@ -1375,7 +1375,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                              ~rest_param:None
                              ~def_reason:fun_reason
                              ~params_names:key_strs
-                             ~predicate:(out_reason, emp, emp)
+                             ~predicate:(Some (PredBased (out_reason, emp, emp)))
                          )
                      )
                   )
