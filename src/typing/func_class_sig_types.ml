@@ -74,6 +74,15 @@ module Func = struct
     | Predicate of Type.fun_predicate
     | Ctor
 
+  let string_of_kind = function
+    | Ordinary -> "ordinary"
+    | Async -> "async"
+    | Generator _ -> "generator"
+    | AsyncGenerator _ -> "async generator"
+    | FieldInit _ -> "field initializer"
+    | Predicate _ -> "predicate"
+    | Ctor -> "constructor"
+
   module type S = sig
     module Config : Config.S
 

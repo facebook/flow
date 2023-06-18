@@ -295,6 +295,10 @@ and 'loc t' =
       param_reason: 'loc virtual_reason;
       call_locs: 'loc list;
     }
+  | ETypeGuardIncompatibleWithFunctionKind of {
+      loc: 'loc;
+      kind: string;
+    }
   | EInternal of 'loc * internal_error
   | EUnsupportedSyntax of 'loc * unsupported_syntax
   | EUseArrayLiteral of 'loc
@@ -1020,6 +1024,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         param_reason = map_reason param_reason;
         call_locs = Base.List.map ~f call_locs;
       }
+  | ETypeGuardIncompatibleWithFunctionKind { loc; kind } ->
+    ETypeGuardIncompatibleWithFunctionKind { loc = f loc; kind }
   | EFunPredInvalidIndex loc -> EFunPredInvalidIndex (f loc)
   | EInternal (loc, i) -> EInternal (f loc, i)
   | EUnsupportedSyntax (loc, u) -> EUnsupportedSyntax (f loc, u)
@@ -1543,6 +1549,7 @@ let util_use_op_of_msg nope util = function
   | ETupleRequiredAfterOptional _
   | ETypeGuardParamUnbound _
   | ETypeGuardFunctionParamHavoced _
+  | ETypeGuardIncompatibleWithFunctionKind _
   | ETypeGuardFunctionInvalidWrites _
   | EDuplicateComponentProp _
   | ERefComponentProp _ ->
@@ -1706,7 +1713,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EReferenceInAnnotation (loc, _, _)
   | EDuplicateComponentProp { spread = loc; _ }
   | ERefComponentProp { spread = None; loc }
-  | ERefComponentProp { spread = Some loc; _ } ->
+  | ERefComponentProp { spread = Some loc; _ }
+  | ETypeGuardIncompatibleWithFunctionKind { loc; _ } ->
     Some loc
   | EImplicitInstantiationWidenedError { reason_call; _ } -> Some (loc_of_reason reason_call)
   | ELintSetting (loc, _) -> Some loc
@@ -2830,6 +2838,9 @@ let friendly_message_of_msg loc_of_aloc msg =
           @ loc_str
           @ [text "."];
       }
+  | ETypeGuardIncompatibleWithFunctionKind { kind; _ } ->
+    Normal
+      { features = [text "Cannot declare a type guard on a(n) "; text kind; text " function."] }
   | EInternal (_, internal_error) ->
     let msg = string_of_internal_error internal_error in
     Normal { features = [text (spf "Internal error: %s" msg)] }
@@ -5131,7 +5142,8 @@ let error_code_of_message err : error_code option =
   | ETypeGuardIndexMismatch _
   | ETypeGuardParamUnbound _
   | ETypeGuardFunctionInvalidWrites _
-  | ETypeGuardFunctionParamHavoced _ ->
+  | ETypeGuardFunctionParamHavoced _
+  | ETypeGuardIncompatibleWithFunctionKind _ ->
     Some FunctionPredicate
   | EIdxArity _ -> Some InvalidIdx
   | EIdxUse _ -> Some InvalidIdx

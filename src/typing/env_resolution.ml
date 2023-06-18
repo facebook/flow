@@ -325,6 +325,7 @@ let resolve_annotated_function
       ~required_this_param_type:(Base.Option.some_if bind_this default_this)
       ~require_return_annot:false
       ~constructor:false
+      ~getset:false
       ~statics
       tparams_map
       reason
@@ -564,6 +565,7 @@ let resolve_binding_partial cx reason loc b =
         ~required_this_param_type:(Base.Option.some_if (not arrow) default_this)
         ~require_return_annot:false
         ~constructor:false
+        ~getset:false
         ~statics
         tparams_map
         reason_fun

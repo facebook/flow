@@ -6682,6 +6682,7 @@ module Make
                   cx
                   ~required_this_param_type:(Base.Option.some_if (not arrow) this_t)
                   ~constructor:false
+                  ~getset:false
                   ~require_return_annot:true
                   ~statics:SMap.empty
                   tparams_map
@@ -6728,12 +6729,13 @@ module Make
       | _ -> ());
       (field, annot_t, annot_ast, get_init)
     in
-    let mk_method cx ~constructor =
+    let mk_method cx ~constructor ~getset =
       mk_func_sig
         cx
         ~required_this_param_type:None
         ~require_return_annot:(not constructor)
         ~constructor
+        ~getset
         ~statics:SMap.empty
     in
     let mk_extends cx tparams_map = function
@@ -6956,6 +6958,7 @@ module Make
                   mk_method
                     cx
                     ~constructor:(kind = Method.Constructor)
+                    ~getset:(kind = Method.Get || kind = Method.Set)
                     tparams_map_with_this
                     reason
                     func
@@ -7697,6 +7700,7 @@ module Make
         ~required_this_param_type
         ~require_return_annot
         ~constructor
+        ~getset
         ~statics
         tparams_map
         reason
@@ -7746,15 +7750,35 @@ module Make
           Nonvoid_return.might_have_nonvoid_return loc func
           || (kind <> Ordinary && kind <> Async && kind <> Ctor)
         in
+        let type_guard_incompatible =
+          match kind with
+          | Async
+          | Generator _
+          | AsyncGenerator _
+          | FieldInit _
+          | Ctor ->
+            Some (Func_class_sig_types.Func.string_of_kind kind)
+          | _ when getset -> Some "getter/setter"
+          | _ -> None
+        in
         let (return_t, return, type_guard_opt) =
-          Anno.mk_return_type_annotation
-            cx
-            tparams_map
-            (Func_stmt_params.value fparams)
-            ret_reason
-            ~void_return:(not has_nonvoid_return)
-            ~async:(kind = Async)
-            return
+          match (return, type_guard_incompatible) with
+          | (Ast.Function.ReturnAnnot.TypeGuard (_, (loc, _)), Some kind) ->
+            let return_t = BoolT.at loc |> with_trust bogus_trust in
+            let return = Tast_utils.error_mapper#function_return_annotation return in
+            Flow_js_utils.add_output
+              cx
+              Error_message.(ETypeGuardIncompatibleWithFunctionKind { loc; kind });
+            (Annotated return_t, return, None)
+          | (_, _) ->
+            Anno.mk_return_type_annotation
+              cx
+              tparams_map
+              (Func_stmt_params.value fparams)
+              ret_reason
+              ~void_return:(not has_nonvoid_return)
+              ~async:(kind = Async)
+              return
         in
         (* Now that we've seen the return annotation we might need to update `kind`. *)
         let kind =
@@ -7862,6 +7886,7 @@ module Make
         ~required_this_param_type
         ~require_return_annot:false
         ~constructor:false
+        ~getset:false
         ~statics
         Subst_name.Map.empty
         reason

@@ -731,12 +731,42 @@ References:
           ^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------------- invalid.js:6:22
+
+Cannot return boolean because boolean [1] is incompatible with constructor void return [2]. [incompatible-return]
+
+   invalid.js:6:22
+   6|   constructor(x: A): x is C { // error no type guard on constructor
+                           ^^^^^^ [1]
+
+References:
+   invalid.js:6:20
+   6|   constructor(x: A): x is C { // error no type guard on constructor
+                         ^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- invalid.js:6:22
+
+Cannot declare a type guard on a(n) constructor function. [function-predicate]
+
+   6|   constructor(x: A): x is C { // error no type guard on constructor
+                           ^^^^^^
+
+
 Error -------------------------------------------------------------------------------------------------- invalid.js:9:12
 
-Cannot find type guard parameter `this` [1] in the parameters of this function (type). [function-predicate]
+Cannot declare a type guard on a(n) getter/setter function. [function-predicate]
 
-   9|   get p(): this is C {  // TODO error no type guard on getter
-                 ^^^^ [1]
+   9|   get p(): this is C {  // error no type guard on getter
+                 ^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- invalid.js:12:16
+
+Cannot declare a type guard on a(n) getter/setter function. [function-predicate]
+
+   12|   set q(x: A): x is C {  // error no type guard on setter
+                      ^^^^^^
 
 
 Error ------------------------------------------------------------------------------------------------- invalid.js:17:31
@@ -752,6 +782,126 @@ References:
    invalid.js:17:1
    17| function no_return(x: mixed): x is number {}
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- invalid.js:19:32
+
+Cannot declare a type guard on a(n) generator function. [function-predicate]
+
+   19| function *generator(x: mixed): x is number { // error
+                                      ^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- invalid.js:19:32
+
+`Generator` [1] is incompatible with boolean [2]. [incompatible-type]
+
+   invalid.js:19:32
+     19| function *generator(x: mixed): x is number { // error
+                                        ^^^^^^^^^^^ [2]
+
+References:
+   <BUILTINS>/core.js:1709:11
+   1709| interface Generator<+Yield,+Return,-Next> {
+                   ^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- invalid.js:19:32
+
+boolean [1], a primitive, cannot be used as a subtype of `$Iterable` [2]. You can wrap it in `new Boolean(...))` to turn
+it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
+
+   invalid.js:19:32
+     19| function *generator(x: mixed): x is number { // error
+                                        ^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:1704:11
+   1704| interface $Iterable<+Yield,+Return,-Next> {
+                   ^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- invalid.js:20:10
+
+Cannot return `(typeof x) == "number"` because `Generator` [1] is incompatible with boolean [2]. [incompatible-return]
+
+   invalid.js:20:10
+     20|   return typeof x == "number";
+                  ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:1709:11
+   1709| interface Generator<+Yield,+Return,-Next> {
+                   ^^^^^^^^^ [1]
+   invalid.js:19:32
+     19| function *generator(x: mixed): x is number { // error
+                                        ^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- invalid.js:25:4
+
+Cannot cast `x` to number because mixed [1] is incompatible with number [2]. [incompatible-cast]
+
+   invalid.js:25:4
+   25|   (x: number); // error no refining effect
+          ^
+
+References:
+   invalid.js:23:16
+   23| declare var x: mixed;
+                      ^^^^^ [1]
+   invalid.js:25:7
+   25|   (x: number); // error no refining effect
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- invalid.js:28:33
+
+Cannot declare a type guard on a(n) async function. [function-predicate]
+
+   28| async function async(x: mixed): x is number { // error
+                                       ^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- invalid.js:29:10
+
+Cannot return `(typeof x) == "number"` because `Promise` [1] is incompatible with boolean [2]. [incompatible-return]
+
+   invalid.js:29:10
+     29|   return typeof x == "number"
+                  ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:1878:15
+   1878| declare class Promise<+R = mixed> {
+                       ^^^^^^^ [1]
+   invalid.js:28:33
+     28| async function async(x: mixed): x is number { // error
+                                         ^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- invalid.js:33:12
+
+Cannot declare a type guard on a(n) getter function. [function-predicate]
+
+   33|   get p(): x is number;
+                  ^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- invalid.js:34:20
+
+Cannot declare a type guard on a(n) setter function. [function-predicate]
+
+   34|   set p(x: mixed): x is number;
+                          ^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- invalid.js:35:26
+
+Cannot declare a type guard on a(n) constructor function. [function-predicate]
+
+   35|   constructor(x: mixed): x is number;
+                                ^^^^^^^^^^^
 
 
 Error ------------------------------------------------------------------------------------------------- objects.js:14:14
@@ -1866,7 +2016,7 @@ Cannot find type guard parameter `x` [1] in the parameters of this function (typ
 
 
 
-Found 106 errors
+Found 119 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

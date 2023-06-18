@@ -352,6 +352,18 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       use_distributive_tparam_name cx name name_loc tparams_map
     | _ -> (None, tparams_map)
 
+  type method_kind =
+    | MethodKind
+    | ConstructorKind
+    | GetterKind
+    | SetterKind
+
+  let method_kind_to_string = function
+    | MethodKind -> "method"
+    | ConstructorKind -> "constructor"
+    | GetterKind -> "getter"
+    | SetterKind -> "setter"
+
   (**********************************)
   (* Transform annotations to types *)
   (**********************************)
@@ -1530,7 +1542,14 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       in
       let fparams = List.rev rev_params in
       let (return_t, return_ast, predicate) =
-        convert_return_annotation cx tparams_map infer_tparams_map params fparams return
+        convert_return_annotation
+          ~meth_kind:MethodKind
+          cx
+          tparams_map
+          infer_tparams_map
+          params
+          fparams
+          return
       in
       let statics_t =
         let reason = update_desc_reason (fun d -> RStatics d) reason in
@@ -2385,7 +2404,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     check_guard_type cx fparams (name, type_guard);
     (bool_t, guard', predicate)
 
-  and convert_return_annotation cx tparams_map infer_tparams_map params fparams return =
+  and convert_return_annotation ~meth_kind cx tparams_map infer_tparams_map params fparams return =
     let open T.Function in
     match return with
     | TypeAnnotation t_ast ->
@@ -2400,12 +2419,22 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           }
         )
       when Context.type_guards cx ->
-      check_guard_is_not_rest_param cx params (name, name_loc);
-      check_guard_appears_in_param_list cx params (name, name_loc);
-      let (bool_t, guard', predicate) =
-        convert_type_guard cx tparams_map infer_tparams_map fparams gloc x t comments
-      in
-      (bool_t, TypeGuard guard', predicate)
+      if meth_kind <> MethodKind then (
+        let bool_t = BoolT.at gloc |> with_trust_inference cx in
+        let return = Tast_utils.error_mapper#function_type_return_annotation return in
+        let kind = method_kind_to_string meth_kind in
+        Flow_js_utils.add_output
+          cx
+          Error_message.(ETypeGuardIncompatibleWithFunctionKind { loc = gloc; kind });
+        (bool_t, return, None)
+      ) else (
+        check_guard_is_not_rest_param cx params (name, name_loc);
+        check_guard_appears_in_param_list cx params (name, name_loc);
+        let (bool_t, guard', predicate) =
+          convert_type_guard cx tparams_map infer_tparams_map fparams gloc x t comments
+        in
+        (bool_t, TypeGuard guard', predicate)
+      )
     | TypeGuard (loc, guard) ->
       Flow_js_utils.add_output
         cx
@@ -2456,7 +2485,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let params_ast = Func_type_params.eval cx fparams in
       (fparams, Base.Option.value_exn params_ast)
     in
-    fun cx tparams_map infer_tparams_map loc func ->
+    fun ~meth_kind cx tparams_map infer_tparams_map loc func ->
       let { Ast.Type.Function.params; _ } = func in
       let (tparams, tparams_map, tparams_ast) =
         mk_type_param_declarations cx ~tparams_map ~infer_tparams_map func.tparams
@@ -2464,6 +2493,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let (fparams, params_ast) = convert_params cx tparams_map infer_tparams_map params in
       let (return_t, return_ast, predicate) =
         convert_return_annotation
+          ~meth_kind
           cx
           tparams_map
           infer_tparams_map
@@ -2823,12 +2853,19 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                         (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name)),
                       Ast.Type.Object.Property.Init (func_loc, Ast.Type.Function func)
                     ) ->
-                    let (fsig, func_ast) = mk_func_sig cx tparams_map infer_tparams_map loc func in
+                    let meth_kind =
+                      match name with
+                      | "constructor" -> ConstructorKind
+                      | _ -> MethodKind
+                    in
+                    let (fsig, func_ast) =
+                      mk_func_sig ~meth_kind cx tparams_map infer_tparams_map loc func
+                    in
                     let this_write_loc = None in
                     let ft = Func_type_sig.methodtype cx this_write_loc this fsig in
                     let append_method =
-                      match (static, name) with
-                      | (false, "constructor") -> append_constructor ~id_loc:(Some id_loc)
+                      match (static, meth_kind) with
+                      | (false, ConstructorKind) -> append_constructor ~id_loc:(Some id_loc)
                       | _ -> append_method ~static name ~id_loc ~this_write_loc
                     in
                     let open Ast.Type in
@@ -2881,7 +2918,9 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                       Ast.Type.Object.Property.Get (get_loc, func)
                     ) ->
                     Flow_js_utils.add_output cx (Error_message.EUnsafeGettersSetters loc);
-                    let (fsig, func_ast) = mk_func_sig cx tparams_map infer_tparams_map loc func in
+                    let (fsig, func_ast) =
+                      mk_func_sig ~meth_kind:GetterKind cx tparams_map infer_tparams_map loc func
+                    in
                     let prop_t =
                       TypeUtil.type_t_of_annotated_or_inferred fsig.Func_type_sig.Types.return_t
                     in
@@ -2902,7 +2941,9 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                       Ast.Type.Object.Property.Set (set_loc, func)
                     ) ->
                     Flow_js_utils.add_output cx (Error_message.EUnsafeGettersSetters loc);
-                    let (fsig, func_ast) = mk_func_sig cx tparams_map infer_tparams_map loc func in
+                    let (fsig, func_ast) =
+                      mk_func_sig ~meth_kind:SetterKind cx tparams_map infer_tparams_map loc func
+                    in
                     let prop_t =
                       match fsig with
                       | { Func_type_sig.Types.tparams = None; fparams; _ } ->

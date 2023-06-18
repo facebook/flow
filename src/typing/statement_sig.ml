@@ -133,6 +133,7 @@ module type S = sig
     required_this_param_type:Type.t option ->
     require_return_annot:bool ->
     constructor:bool ->
+    getset:bool ->
     statics:Env_api.EnvKey.t SMap.t ->
     Type.t Subst_name.Map.t ->
     Reason.reason ->
