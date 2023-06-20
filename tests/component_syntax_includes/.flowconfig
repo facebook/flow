@@ -1,0 +1,4 @@
+[options]
+experimental.component_syntax.typing.includes=<PROJECT_ROOT>/include.js
+all=true
+no_flowlib=false

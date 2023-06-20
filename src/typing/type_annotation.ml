@@ -3105,31 +3105,41 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       (cparams, Component_type_params.eval cx cparams)
     in
     fun cx reason tparams params renders ->
-      let (tparams, tparams_map, tparam_asts) = mk_type_param_declarations cx tparams in
-      let (cparams, params_ast) = mk_params cx tparams_map params in
-      let (ren_loc, renders_t, renders_ast) =
-        match renders with
-        | Ast.Type.Available (loc, annot) ->
-          let (((_, t), _) as renders_ast) = convert cx tparams_map ALocMap.empty annot in
-          (loc, t, Ast.Type.Available (loc, renders_ast))
-        | Ast.Type.Missing loc ->
-          let ren_reason = mk_reason RReturn loc in
-          let t = Flow.get_builtin_type cx ren_reason (OrdinaryName "React$Node") in
-          (loc, t, Ast.Type.Missing (loc, t))
-      in
-      let sig_ =
-        {
-          Component_type_sig_types.reason;
-          tparams;
-          cparams;
-          body = ();
-          renders_t;
-          ret_annot_loc = ren_loc;
-        }
-      in
-      let loc = loc_of_reason reason in
-      let t = Component_type_sig.component_type cx loc sig_ in
-      (t, tparam_asts, params_ast, renders_ast)
+      if not (Context.component_syntax cx) then begin
+        let loc = loc_of_reason reason in
+        Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, ComponentSyntax));
+        let t = AnyT.at (AnyError None) loc in
+        ( t,
+          Base.Option.map ~f:Tast_utils.error_mapper#type_params tparams,
+          Tast_utils.error_mapper#component_type_params params,
+          Tast_utils.error_mapper#type_annotation_hint renders
+        )
+      end else
+        let (tparams, tparams_map, tparam_asts) = mk_type_param_declarations cx tparams in
+        let (cparams, params_ast) = mk_params cx tparams_map params in
+        let (ren_loc, renders_t, renders_ast) =
+          match renders with
+          | Ast.Type.Available (loc, annot) ->
+            let (((_, t), _) as renders_ast) = convert cx tparams_map ALocMap.empty annot in
+            (loc, t, Ast.Type.Available (loc, renders_ast))
+          | Ast.Type.Missing loc ->
+            let ren_reason = mk_reason RReturn loc in
+            let t = Flow.get_builtin_type cx ren_reason (OrdinaryName "React$Node") in
+            (loc, t, Ast.Type.Missing (loc, t))
+        in
+        let sig_ =
+          {
+            Component_type_sig_types.reason;
+            tparams;
+            cparams;
+            body = ();
+            renders_t;
+            ret_annot_loc = ren_loc;
+          }
+        in
+        let loc = loc_of_reason reason in
+        let t = Component_type_sig.component_type cx loc sig_ in
+        (t, tparam_asts, params_ast, renders_ast)
 
   let mk_super cx tparams_map infer_tparams_map loc c targs =
     match targs with

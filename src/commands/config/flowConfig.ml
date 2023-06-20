@@ -49,7 +49,7 @@ module Opts = struct
     automatic_require_default: bool option;
     babel_loose_array_spread: bool option;
     channel_mode: [ `pipe | `socket ] option;
-    component_syntax: bool;
+    component_syntax: Options.component_syntax;
     component_syntax_includes: string list;
     conditional_type: bool option;
     direct_dependent_files_fix: bool option;
@@ -174,7 +174,7 @@ module Opts = struct
       automatic_require_default = None;
       babel_loose_array_spread = None;
       channel_mode = None;
-      component_syntax = false;
+      component_syntax = Options.Off;
       component_syntax_includes = [];
       conditional_type = None;
       direct_dependent_files_fix = None;
@@ -470,12 +470,36 @@ module Opts = struct
       ~multiple:true
       (fun opts v -> Ok { opts with haste_paths_includes = v :: opts.haste_paths_includes })
 
+  let component_syntax_parser =
+    let open Options in
+    enum
+      [
+        ("off", Off);
+        ("parsing", Parsing);
+        ("typing", FullSupport);
+        (* Compatibility with former boolean status here *)
+        ("false", Off);
+        ("true", FullSupport);
+      ]
+      (fun opts v -> Ok { opts with component_syntax = v })
+
   let component_syntax_includes_parser =
+    let open Options in
     string
       ~init:(fun opts -> { opts with component_syntax_includes = [] })
       ~multiple:true
       (fun opts v ->
-        Ok { opts with component_syntax_includes = v :: opts.component_syntax_includes })
+        let component_syntax =
+          match opts.component_syntax with
+          | Off -> Parsing
+          | _ -> opts.component_syntax
+        in
+        Ok
+          {
+            opts with
+            component_syntax;
+            component_syntax_includes = v :: opts.component_syntax_includes;
+          })
 
   let automatic_require_default_parser =
     boolean (fun opts v -> Ok { opts with automatic_require_default = Some v })
@@ -750,10 +774,8 @@ module Opts = struct
       ( "experimental.const_params",
         boolean (fun opts v -> Ok { opts with enable_const_params = Some v })
       );
-      ( "experimental.component_syntax",
-        boolean (fun opts v -> Ok { opts with component_syntax = v })
-      );
-      ("experimental.component_syntax.includes", component_syntax_includes_parser);
+      ("experimental.component_syntax", component_syntax_parser);
+      ("experimental.component_syntax.typing.includes", component_syntax_includes_parser);
       ("conditional_type", boolean (fun opts v -> Ok { opts with conditional_type = Some v }));
       ("experimental.mapped_type", boolean (fun opts v -> Ok { opts with mapped_type = v }));
       ("experimental.type_guards", boolean (fun opts v -> Ok { opts with type_guards = v }));

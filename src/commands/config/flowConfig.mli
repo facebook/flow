@@ -76,7 +76,7 @@ val babel_loose_array_spread : config -> bool option
 
 val channel_mode : config -> [ `pipe | `socket ] option
 
-val component_syntax : config -> bool
+val component_syntax : config -> Options.component_syntax
 
 val component_syntax_includes : config -> string list
 

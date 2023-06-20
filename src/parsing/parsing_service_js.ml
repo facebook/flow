@@ -85,7 +85,7 @@ let parse_source_file ~options ~force_use_strict content file =
   let parse_options =
     Some
       {
-        Parser_env.components = Options.component_syntax options;
+        Parser_env.components = Options.parse_component_syntax options;
         (*
          * Always parse ES proposal syntax. The user-facing config option to
          * ignore/warn/enable them is handled during inference so that a clean error

@@ -1231,7 +1231,7 @@ module Make
     | (loc, FunctionDeclaration func) ->
       let (_, _, node) = function_ loc func in
       node
-    | (loc, ComponentDeclaration component) ->
+    | (loc, ComponentDeclaration component) when Context.component_syntax cx ->
       error_on_this_uses_in_components cx component;
       let { ComponentDeclaration.id = (name_loc, { Ast.Identifier.name; _ }); _ } = component in
       if name <> String.capitalize_ascii name then
@@ -1243,6 +1243,9 @@ module Make
       let general = Env.read_declared_type cx reason name_loc in
       let (params_ast, body_ast) = Component_declaration_sig.toplevels cx component_sig in
       (loc, ComponentDeclaration (reconstruct_component params_ast body_ast general))
+    | (loc, ComponentDeclaration comp) ->
+      Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, ComponentSyntax));
+      (loc, ComponentDeclaration (Tast_utils.error_mapper#component_declaration comp))
     | (loc, EnumDeclaration enum) ->
       let enum_ast = enum_declaration cx loc enum in
       (loc, EnumDeclaration enum_ast)

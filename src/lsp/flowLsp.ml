@@ -1153,6 +1153,12 @@ let parse_and_cache (state : server_state) (uri : Lsp.DocumentUri.t) :
     let flowconfig = get_flowconfig state in
     let use_strict = FlowConfig.modules_are_use_strict flowconfig in
     let components = FlowConfig.component_syntax flowconfig in
+    let components_includes = FlowConfig.component_syntax_includes flowconfig in
+    let components =
+      match (components, components_includes) with
+      | (Options.Off, []) -> false
+      | _ -> true
+    in
     let module_ref_prefix = FlowConfig.haste_module_ref_prefix flowconfig in
     let module_ref_prefix_LEGACY_INTEROP =
       FlowConfig.haste_module_ref_prefix_LEGACY_INTEROP flowconfig

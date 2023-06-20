@@ -1,4 +1,4 @@
 [options]
-experimental.component_syntax=true
+experimental.component_syntax=typing
 all=true
 no_flowlib=false

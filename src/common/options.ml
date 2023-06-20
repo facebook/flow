@@ -34,6 +34,11 @@ type react_runtime =
   | ReactRuntimeAutomatic
   | ReactRuntimeClassic
 
+type component_syntax =
+  | Off
+  | Parsing
+  | FullSupport
+
 type format = {
   opt_bracket_spacing: bool;
   opt_single_quotes: bool;
@@ -63,7 +68,7 @@ type t = {
   opt_automatic_require_default: bool;
   opt_babel_loose_array_spread: bool;
   opt_channel_mode: [ `pipe | `socket ];
-  opt_component_syntax: bool;
+  opt_component_syntax: component_syntax;
   opt_component_syntax_includes: string list;
   opt_conditional_type: bool;
   opt_debug: bool;
@@ -161,10 +166,24 @@ let channel_mode opts = opts.opt_channel_mode
 
 let component_syntax opts = opts.opt_component_syntax
 
+let typecheck_component_syntax opts =
+  match opts.opt_component_syntax with
+  | Off
+  | Parsing ->
+    false
+  | FullSupport -> true
+
+let parse_component_syntax opts =
+  match opts.opt_component_syntax with
+  | Off -> false
+  | Parsing
+  | FullSupport ->
+    true
+
 let component_syntax_includes opts = opts.opt_component_syntax_includes
 
-let component_syntax_in_file opts file =
-  component_syntax opts
+let typecheck_component_syntax_in_file opts file =
+  typecheck_component_syntax opts
   || begin
        match component_syntax_includes opts with
        | [] -> false
