@@ -25,6 +25,7 @@ let metadata =
     automatic_require_default = false;
     babel_loose_array_spread = false;
     component_syntax = false;
+    component_syntax_includes = [];
     conditional_type = false;
     enable_const_params = false;
     enable_enums = true;

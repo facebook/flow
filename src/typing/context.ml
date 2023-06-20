@@ -34,6 +34,7 @@ type metadata = {
   automatic_require_default: bool;
   babel_loose_array_spread: bool;
   component_syntax: bool;
+  component_syntax_includes: string list;
   conditional_type: bool;
   enable_const_params: bool;
   enable_enums: bool;
@@ -240,6 +241,7 @@ let metadata_of_options options =
     automatic_require_default = Options.automatic_require_default options;
     babel_loose_array_spread = Options.babel_loose_array_spread options;
     component_syntax = Options.component_syntax options;
+    component_syntax_includes = Options.component_syntax_includes options;
     conditional_type = Options.conditional_type options;
     enable_const_params = Options.enable_const_params options;
     enable_enums = Options.enums options;
@@ -434,14 +436,23 @@ let babel_loose_array_spread cx = cx.metadata.babel_loose_array_spread
 
 let builtins cx = cx.ccx.builtins
 
-let component_syntax cx = cx.metadata.component_syntax
+let file cx = cx.file
+
+let in_dirlist cx dirs =
+  match dirs with
+  | [] -> false
+  | _ :: _ ->
+    let filename = File_key.to_string (file cx) in
+    let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
+    List.exists (fun str -> Base.String.is_prefix ~prefix:str normalized_filename) dirs
+
+let component_syntax cx =
+  cx.metadata.component_syntax || in_dirlist cx cx.metadata.component_syntax_includes
 
 let enable_const_params cx =
   cx.metadata.enable_const_params || cx.metadata.strict || cx.metadata.strict_local
 
 let enable_enums cx = cx.metadata.enable_enums
-
-let file cx = cx.file
 
 let enable_relay_integration cx =
   cx.metadata.enable_relay_integration

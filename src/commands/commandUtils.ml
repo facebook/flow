@@ -1326,6 +1326,10 @@ let make_options
     opt_max_literal_length = FlowConfig.max_literal_length flowconfig;
     opt_direct_dependent_files_fix;
     opt_component_syntax = FlowConfig.component_syntax flowconfig;
+    opt_component_syntax_includes =
+      Base.List.map
+        ~f:(Files.expand_project_root_token ~root)
+        (FlowConfig.component_syntax_includes flowconfig);
     opt_enable_const_params =
       Base.Option.value (FlowConfig.enable_const_params flowconfig) ~default:false;
     opt_enable_relay_integration = FlowConfig.relay_integration flowconfig;

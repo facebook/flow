@@ -107,6 +107,7 @@ let stub_metadata ~root ~checked =
     automatic_require_default = false;
     babel_loose_array_spread = false;
     component_syntax = false;
+    component_syntax_includes = [];
     conditional_type = false;
     type_guards = false;
     enable_const_params = false;

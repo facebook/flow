@@ -78,6 +78,8 @@ val channel_mode : config -> [ `pipe | `socket ] option
 
 val component_syntax : config -> bool
 
+val component_syntax_includes : config -> string list
+
 val conditional_type : config -> bool option
 
 val direct_dependent_files_fix : config -> bool option

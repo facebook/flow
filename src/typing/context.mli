@@ -68,6 +68,7 @@ type metadata = {
   automatic_require_default: bool;
   babel_loose_array_spread: bool;
   component_syntax: bool;
+  component_syntax_includes: string list;
   conditional_type: bool;
   enable_const_params: bool;
   enable_enums: bool;

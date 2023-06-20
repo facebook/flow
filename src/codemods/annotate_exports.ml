@@ -57,7 +57,7 @@ module SignatureVerification = struct
       acc
 
   let collect_annotations cctx ~preserve_literals ~default_any ~max_type_size ast =
-    let { Codemod_context.Typed.options; docblock; _ } = cctx in
+    let { Codemod_context.Typed.options; docblock; file; _ } = cctx in
     let prevent_munge =
       let should_munge = Options.should_munge_underscores options in
       Docblock.preventMunge docblock || not should_munge
@@ -72,7 +72,7 @@ module SignatureVerification = struct
         max_literal_len = Options.max_literal_length options;
         exact_by_default = Options.exact_by_default options;
         enable_enums = Options.enums options;
-        enable_component_syntax = Options.component_syntax options;
+        enable_component_syntax = Options.component_syntax_in_file options file;
         enable_relay_integration = Options.enable_relay_integration options;
         relay_integration_module_prefix = Options.relay_integration_module_prefix options;
         conditional_type = true;

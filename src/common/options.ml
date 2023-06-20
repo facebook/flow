@@ -64,6 +64,7 @@ type t = {
   opt_babel_loose_array_spread: bool;
   opt_channel_mode: [ `pipe | `socket ];
   opt_component_syntax: bool;
+  opt_component_syntax_includes: string list;
   opt_conditional_type: bool;
   opt_debug: bool;
   opt_direct_dependent_files_fix: bool;
@@ -159,6 +160,19 @@ let babel_loose_array_spread opts = opts.opt_babel_loose_array_spread
 let channel_mode opts = opts.opt_channel_mode
 
 let component_syntax opts = opts.opt_component_syntax
+
+let component_syntax_includes opts = opts.opt_component_syntax_includes
+
+let component_syntax_in_file opts file =
+  component_syntax opts
+  || begin
+       match component_syntax_includes opts with
+       | [] -> false
+       | dirs ->
+         let filename = File_key.to_string file in
+         let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
+         List.exists (fun str -> Base.String.is_prefix ~prefix:str normalized_filename) dirs
+     end
 
 let conditional_type opts = opts.opt_conditional_type
 
