@@ -243,6 +243,7 @@ type 'loc virtual_reason_desc =
   | RUnannotatedNext
   | RTypeGuardParam of string
   | RComponent of name
+  | RComponentType
   | RPropsOfComponent of 'loc virtual_reason_desc
 [@@deriving eq, show]
 
@@ -264,7 +265,7 @@ let rec map_desc_locs f = function
     | RFunction _ | RFunctionType | RFunctionBody | RFunctionCallType | RFunctionUnusedArgument
     | RJSXFunctionCall _ | RJSXIdentifier _ | RJSXElementProps _ | RJSXElement _ | RJSXText | RFbt
     | RUninitialized | RPossiblyUninitialized | RUnannotatedNext | REmptyArrayElement | RMappedType
-    | RTypeGuardParam _ | RComponent _ ) as r ->
+    | RTypeGuardParam _ | RComponent _ | RComponentType ) as r ->
     r
   | RFunctionCall desc -> RFunctionCall (map_desc_locs f desc)
   | RUnknownUnspecifiedProperty desc -> RUnknownUnspecifiedProperty (map_desc_locs f desc)
@@ -733,6 +734,7 @@ let rec string_of_desc = function
   | RUnannotatedNext -> "undefined (default `next` of unannotated generator function)"
   | RTypeGuardParam s -> spf "type guard parameter `%s`" s
   | RComponent name -> spf "component %s" (display_string_of_name name)
+  | RComponentType -> "component"
   | RPropsOfComponent desc -> spf "props of %s" (string_of_desc desc)
 
 let string_of_reason ?(strip_root = None) r =
@@ -1364,6 +1366,7 @@ let classification_of_reason r =
   | RTupleLength _
   | RTupleOutOfBoundsAccess _
   | RComponent _
+  | RComponentType
   | RPropsOfComponent _
   | RFunction _
   | RFunctionType

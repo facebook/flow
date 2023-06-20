@@ -201,6 +201,7 @@ type 'loc virtual_reason_desc =
   | RUnannotatedNext
   | RTypeGuardParam of string
   | RComponent of name
+  | RComponentType
   | RPropsOfComponent of 'loc virtual_reason_desc
 
 and reason_desc_function =

@@ -22,7 +22,7 @@ let metadata =
     any_propagation = true;
     automatic_require_default = false;
     babel_loose_array_spread = false;
-    component_syntax = false;
+    component_syntax = true;
     conditional_type = false;
     enable_const_params = false;
     enable_enums = true;
@@ -60,7 +60,7 @@ let parse_content file content =
   let parse_options =
     Some
       {
-        Parser_env.components = false;
+        Parser_env.components = true;
         enums = true;
         esproposal_decorators = true;
         types = true;
