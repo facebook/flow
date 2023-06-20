@@ -603,6 +603,7 @@ type ('loc, 'a) annot =
   | Trusted of 'loc * 'a
   | Private of 'loc * 'a
   | FunAnnot of 'loc * ('loc, 'a) fun_sig
+  | ComponentAnnot of 'loc * ('loc, 'a) component_sig
   | MappedTypeAnnot of {
       loc: 'loc;
       source_type: 'a;

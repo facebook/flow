@@ -944,6 +944,9 @@ and merge_annot tps infer_tps file = function
     let reason = Reason.(mk_annot_reason RFunctionType loc) in
     let statics = merge_fun_statics tps infer_tps file reason SMap.empty in
     merge_fun tps infer_tps file reason def statics
+  | ComponentAnnot (loc, def) ->
+    let reason = Reason.(mk_annot_reason RComponentType loc) in
+    merge_component tps infer_tps file reason def
   | ObjAnnot { loc; props; proto; obj_kind } ->
     let reason = Reason.(mk_annot_reason RObjectType loc) in
     let obj_kind =

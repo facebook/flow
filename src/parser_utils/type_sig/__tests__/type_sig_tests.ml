@@ -6184,3 +6184,74 @@ let%expect_test "declare_component_disabled" =
     Local defs:
     0. DisabledComponentBinding {id_loc = [1:25-28]; name = "Baz"}
     1. DisabledComponentBinding {id_loc = [2:33-36]; name = "Bar"} |}]
+
+let%expect_test "component_type" =
+  print_sig {|
+    type A = number
+    type B = string
+    declare export var Baz: component(x: A) renders B;
+    declare var Bar: component();
+    declare export default Bar;
+  |};
+  [%expect{|
+    ESModule {type_exports = [||];
+      exports =
+      [|(ExportBinding 2);
+        ExportDefault {default_loc = [5:15-22];
+          def = (TyRef (Unqualified LocalRef {ref_loc = [5:23-26]; index = 3}))}
+        |];
+      info =
+      ESModuleInfo {type_export_keys = [||];
+        type_stars = []; export_keys = [|"Baz"; "default"|];
+        stars = []; strict = true}}
+
+    Local defs:
+    0. TypeAlias {id_loc = [1:5-6]; name = "A"; tparams = Mono; body = (Annot (Number [1:9-15]))}
+    1. TypeAlias {id_loc = [2:5-6]; name = "B"; tparams = Mono; body = (Annot (String [2:9-15]))}
+    2. Variable {id_loc = [3:19-22];
+         name = "Baz";
+         def =
+         (Annot
+            (ComponentAnnot ([3:24-49],
+               ComponentSig {params_loc = [3:33-39];
+                 tparams = Mono;
+                 params =
+                 [ComponentParam {name = "x";
+                    name_loc = [3:34-35];
+                    t = (TyRef (Unqualified LocalRef {ref_loc = [3:37-38]; index = 0}))}
+                   ];
+                 rest_param = None;
+                 renders = (TyRef (Unqualified LocalRef {ref_loc = [3:48-49]; index = 1}))}
+               )))}
+    3. Variable {id_loc = [4:12-15];
+         name = "Bar";
+         def =
+         (Annot
+            (ComponentAnnot ([4:17-28],
+               ComponentSig {params_loc = [4:26-28];
+                 tparams = Mono; params = [];
+                 rest_param = None;
+                 renders = (TyRef (Unqualified BuiltinRef {ref_loc = [4:28]; name = "React$Node"}))}
+               )))} |}]
+
+let%expect_test "declare_component_disabled" =
+  print_sig ~enable_component_syntax:false {|
+    declare export var Baz: component();
+    declare var Bar: component();
+    declare export default Bar;
+  |};
+  [%expect{|
+    ESModule {type_exports = [||];
+      exports =
+      [|(ExportBinding 0);
+        ExportDefault {default_loc = [3:15-22];
+          def = (TyRef (Unqualified LocalRef {ref_loc = [3:23-26]; index = 1}))}
+        |];
+      info =
+      ESModuleInfo {type_export_keys = [||];
+        type_stars = []; export_keys = [|"Baz"; "default"|];
+        stars = []; strict = true}}
+
+    Local defs:
+    0. Variable {id_loc = [1:19-22]; name = "Baz"; def = (Annot (Any [1:24-35]))}
+    1. Variable {id_loc = [2:12-15]; name = "Bar"; def = (Annot (Any [2:17-28]))} |}]

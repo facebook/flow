@@ -1269,9 +1269,10 @@ and annot_with_loc opts scope tbls xs (loc, t) =
     | T.Function f ->
       let def = function_type opts scope tbls xs f in
       Annot (FunAnnot (loc, def))
-    | T.Component _ ->
-      (* TODO(jmbrown): add typechecking for component syntax *)
-      Annot (Any loc)
+    | T.Component { T.Component.tparams; params; renders; _ } when opts.enable_component_syntax ->
+      let def = component_type opts scope tbls tparams params renders in
+      Annot (ComponentAnnot (loc, def))
+    | T.Component _ -> Annot (Any loc)
     | T.Object o -> object_type opts scope tbls xs loc o
     | T.Interface
         {
@@ -1462,6 +1463,57 @@ and function_type_this_param opts scope tbls xs =
   | Some (_, { F.ThisParam.annot = (_, t); comments = _ }) ->
     let t = annot opts scope tbls xs t in
     Some t
+
+and component_type =
+  let param opts scope tbls xs (_, p) =
+    let module P = Ast.Type.Component.Param in
+    let { P.name; annot = (_, annot); optional; _ } = p in
+    let (name, name_loc) =
+      match name with
+      | Ast.Statement.ComponentDeclaration.Param.Identifier (loc, { Ast.Identifier.name; _ })
+      | Ast.Statement.ComponentDeclaration.Param.StringLiteral
+          (loc, { Ast.StringLiteral.value = name; _ }) ->
+        (name, loc)
+    in
+    let name_loc = push_loc tbls name_loc in
+    let t = function_component_type_param opts scope tbls xs annot optional in
+    ComponentParam { name; name_loc; t }
+  in
+  let rec params opts scope tbls xs acc = function
+    | [] -> List.rev acc
+    | p :: ps ->
+      let p = param opts scope tbls xs p in
+      params opts scope tbls xs (p :: acc) ps
+  in
+  let rest_param opts scope tbls xs (_, p) =
+    let module P = Ast.Type.Component.RestParam in
+    let { P.annot = t; _ } = p in
+    let t = annot opts scope tbls xs t in
+    ComponentRestParam { t }
+  in
+  let return opts scope tbls xs ret =
+    match ret with
+    | Ast.Type.Available (_, t) -> annot opts scope tbls xs t
+    | Ast.Type.Missing loc ->
+      let loc = push_loc tbls loc in
+      maybe_special_unqualified_generic opts scope tbls xs loc None loc "React$Node"
+  in
+  fun opts
+      scope
+      tbls
+      tps
+      (loc, { Ast.Type.Component.Params.params = ps; rest = rp; comments = _ })
+      r ->
+    let (xs, tparams) = tparams opts scope tbls SSet.empty tps in
+    let loc = push_loc tbls loc in
+    let params = params opts scope tbls xs [] ps in
+    let rest_param =
+      match rp with
+      | Some p -> Some (rest_param opts scope tbls xs p)
+      | None -> None
+    in
+    let renders = return opts scope tbls xs r in
+    ComponentSig { params_loc = loc; tparams; params; rest_param; renders }
 
 and getter_type opts scope tbls xs id_loc f =
   let module F = T.Function in
@@ -3182,61 +3234,11 @@ and component_def =
     let renders = return opts scope tbls xs r in
     ComponentSig { params_loc = loc; tparams; params; rest_param; renders }
 
-and declare_component_def =
-  let module C = Ast.Statement.DeclareComponent in
-  let param opts scope tbls xs (_, p) =
-    let module P = Ast.Type.Component.Param in
-    let { P.name; annot = (_, annot); optional; _ } = p in
-    let (name, name_loc) =
-      match name with
-      | Ast.Statement.ComponentDeclaration.Param.Identifier (loc, { Ast.Identifier.name; _ })
-      | Ast.Statement.ComponentDeclaration.Param.StringLiteral
-          (loc, { Ast.StringLiteral.value = name; _ }) ->
-        (name, loc)
-    in
-    let name_loc = push_loc tbls name_loc in
-    let t = function_component_type_param opts scope tbls xs annot optional in
-    ComponentParam { name; name_loc; t }
+and declare_component_def opts scope tbls f =
+  let { Ast.Statement.DeclareComponent.id = _; tparams = tps; params; renders = r; comments = _ } =
+    f
   in
-  let rec params opts scope tbls xs acc = function
-    | [] -> List.rev acc
-    | p :: ps ->
-      let p = param opts scope tbls xs p in
-      params opts scope tbls xs (p :: acc) ps
-  in
-  let rest_param opts scope tbls xs (_, p) =
-    let module P = Ast.Type.Component.RestParam in
-    let { P.annot = t; _ } = p in
-    let t = annot opts scope tbls xs t in
-    ComponentRestParam { t }
-  in
-  let return opts scope tbls xs ret =
-    match ret with
-    | Ast.Type.Available (_, t) -> annot opts scope tbls xs t
-    | Ast.Type.Missing loc ->
-      let loc = push_loc tbls loc in
-      maybe_special_unqualified_generic opts scope tbls xs loc None loc "React$Node"
-  in
-  fun opts scope tbls f ->
-    let {
-      C.id = _;
-      tparams = tps;
-      params = (loc, { Ast.Type.Component.Params.params = ps; rest = rp; comments = _ });
-      renders = r;
-      comments = _;
-    } =
-      f
-    in
-    let (xs, tparams) = tparams opts scope tbls SSet.empty tps in
-    let loc = push_loc tbls loc in
-    let params = params opts scope tbls xs [] ps in
-    let rest_param =
-      match rp with
-      | Some p -> Some (rest_param opts scope tbls xs p)
-      | None -> None
-    in
-    let renders = return opts scope tbls xs r in
-    ComponentSig { params_loc = loc; tparams; params; rest_param; renders }
+  component_type opts scope tbls tps params r
 
 and predicate opts scope tbls pnames =
   let open Option.Let_syntax in

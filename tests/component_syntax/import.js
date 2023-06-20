@@ -35,3 +35,9 @@ import DefaultExport from "./declared.js";
 
 import { NoRef }from "./names.js";
 <NoRef /> // no error
+
+import { Export as ExportType } from "./annotation.js";
+import DefaultExportType from "./annotation.js";
+
+<ExportType />; // error
+<DefaultExportType x={"a"} />; // error
