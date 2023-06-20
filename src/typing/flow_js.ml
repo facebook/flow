@@ -6495,6 +6495,7 @@ struct
     then
       match d with
       | ReactCheckComponentConfig _
+      | ReactCheckComponentRef
       | ConditionalType _
       | MappedType _
       | PropertyType _
@@ -6704,6 +6705,11 @@ struct
                   ObjKitT (use_op, reason, tool, Spread (options, state), OpenT tout)
                 )
               )
+            | ReactCheckComponentRef ->
+              UseT
+                ( use_op,
+                  get_builtin_typeapp cx reason (Reason.OrdinaryName "React$Ref") [OpenT tout]
+                )
             | ReactCheckComponentConfig pmap ->
               Object.(
                 let tool = Resolve Next in

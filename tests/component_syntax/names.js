@@ -19,7 +19,7 @@ type ROMSVType = {a: number}
 component RunningOutOfMetasyntaxticVariables(a: number, ...props: {...ROMSVType}) { return <div /> }; // Error
 <RunningOutOfMetasyntaxticVariables a={false} /> // Ok
 
-component NoRef(ref: string) { return <div /> }; // Error
+export component NoRef(ref: string) { return <div /> }; // Error
 <NoRef />
 
 component NoRefInSpread(...props: {ref: string}) { return <div /> }; // Error

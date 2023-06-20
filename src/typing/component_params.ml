@@ -104,16 +104,14 @@ module Make
       match instance with
       | None -> Type.(MixedT.make config_reason (bogus_trust ()))
       | Some instance ->
-        Tvar.mk_where cx config_reason (fun tvar ->
-            Flow_js.flow_t
-              cx
-              ( instance,
-                Flow_js.get_builtin_typeapp
-                  cx
-                  config_reason
-                  (Reason.OrdinaryName "React$Ref")
-                  [tvar]
-              )
+        Type.(
+          Flow_js.mk_possibly_evaluated_destructor
+            cx
+            unknown_use
+            config_reason
+            instance
+            ReactCheckComponentRef
+            (Eval.generate_id ())
         )
     in
     let config =

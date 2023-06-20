@@ -380,6 +380,7 @@ end = struct
         | SpreadType _
         | RestType _
         | ReactCheckComponentConfig _
+        | ReactCheckComponentRef
         | ValuesType
         | TypeMap _
         | ReactElementPropsType
@@ -1677,6 +1678,7 @@ end = struct
         Ty.Utility (Ty.Diff (ty, ty'))
       | T.SpreadType (target, operands, head_slice) -> spread ~env ty target operands head_slice
       | T.ReactCheckComponentConfig pmap -> check_component ~env ty pmap
+      | T.ReactCheckComponentRef -> return (Ty.Utility (Ty.ReactCheckComponentRef ty))
       | T.ReactElementPropsType -> return (Ty.Utility (Ty.ReactElementPropsType ty))
       | T.ReactElementConfigType -> return (Ty.Utility (Ty.ReactElementConfigType ty))
       | T.ReactElementRefType -> return (Ty.Utility (Ty.ReactElementRefType ty))

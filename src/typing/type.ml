@@ -1463,6 +1463,7 @@ module rec TypeTerm : sig
     | ReactElementRefType
     | ReactConfigType of t
     | ReactCheckComponentConfig of Property.t NameUtils.Map.t
+    | ReactCheckComponentRef
     | IdxUnwrapType
     | MappedType of {
         (* Homomorphic mapped types use an inline keyof: {[key in keyof O]: T} or a type parameter

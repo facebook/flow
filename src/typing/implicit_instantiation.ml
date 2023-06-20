@@ -233,6 +233,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       | IdxUnwrapType
       | MappedType _ (* TODO: Mapped Type reversals *)
       | ReactCheckComponentConfig _
+      | ReactCheckComponentRef
       | OptionalIndexedAccessNonMaybeType _
       | OptionalIndexedAccessResultType _ ->
         UpperNonT u)

@@ -32,3 +32,6 @@ import DefaultExport from "./declared.js";
 
 <Export />; // error
 <DefaultExport x={"a"} />; // error
+
+import { NoRef }from "./names.js";
+<NoRef /> // no error

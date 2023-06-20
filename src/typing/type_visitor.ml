@@ -205,6 +205,7 @@ class ['a] t =
       | ReactElementPropsType
       | ReactElementConfigType
       | ReactElementRefType
+      | ReactCheckComponentRef
       | IdxUnwrapType ->
         acc
       | ReactCheckComponentConfig map -> self#namemap (self#prop cx pole_TODO) acc map

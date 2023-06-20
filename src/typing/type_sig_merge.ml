@@ -1675,22 +1675,39 @@ and merge_component
     tps infer_tps file reason (ComponentSig { params_loc; tparams; params; rest_param; renders }) =
   let t (tps, _) =
     let open Type in
-    let pmap =
+    let (pmap, instance) =
       Base.List.fold
-        ~f:(fun acc param ->
+        ~f:(fun (acc, instance) param ->
           let (Type_sig.ComponentParam { name; name_loc; t }) = param in
           let t = merge tps infer_tps file t in
-          Type.Properties.add_field
-            (Reason.OrdinaryName name)
-            Polarity.Positive
-            (Some name_loc)
-            t
-            acc)
-        ~init:NameUtils.Map.empty
+          match name with
+          | "ref" -> (acc, Some t)
+          | _ ->
+            ( Type.Properties.add_field
+                (Reason.OrdinaryName name)
+                Polarity.Positive
+                (Some name_loc)
+                t
+                acc,
+              instance
+            ))
+        ~init:(NameUtils.Map.empty, None)
         params
     in
+    let config_reason = Reason.(mk_reason (RCustom "component config") params_loc) in
+    let _instance =
+      match instance with
+      | None -> Type.(MixedT.make config_reason (bogus_trust ()))
+      | Some instance ->
+        Type.(
+          EvalT
+            ( instance,
+              TypeDestructorT (unknown_use, config_reason, ReactCheckComponentRef),
+              Eval.generate_id ()
+            )
+        )
+    in
     let param =
-      let config_reason = Reason.(mk_reason (RCustom "component config") params_loc) in
       let rest_t =
         match rest_param with
         | None -> Obj_type.mk_exact_empty file.cx config_reason

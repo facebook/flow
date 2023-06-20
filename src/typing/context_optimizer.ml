@@ -187,6 +187,7 @@ class context_optimizer ~no_lowers =
         else
           ReactCheckComponentConfig map'
       | NonMaybeType -> t
+      | ReactCheckComponentRef -> t
       | PropertyType _ -> t
       | ElementType { index_type } ->
         let index_type' = self#type_ cx map_cx index_type in

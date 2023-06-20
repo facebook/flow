@@ -38,6 +38,7 @@ let string_of_destructor = function
   | OptionalIndexedAccessResultType _ -> "OptionalIndexedAccessResultType"
   | ReadOnlyType -> "ReadOnly"
   | ReactCheckComponentConfig _ -> "ReactCheckComponentConfig"
+  | ReactCheckComponentRef -> "ReactCheckComponentRef"
   | PartialType -> "PartialType"
   | RequiredType -> "RequiredType"
   | SpreadType _ -> "Spread"
