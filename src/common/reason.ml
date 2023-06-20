@@ -111,7 +111,6 @@ type 'loc virtual_reason_desc =
   | RUnionEnum
   | REnum of string (* name *)
   | REnumRepresentation of 'loc virtual_reason_desc
-  | RGetterSetterProperty
   | RThis
   | RThisType
   | RImplicitInstantiation
@@ -272,15 +271,15 @@ let rec map_desc_locs f = function
   | RUnaryOperator (s, desc) -> RUnaryOperator (s, map_desc_locs f desc)
   | RBinaryOperator (s, d1, d2) -> RBinaryOperator (s, map_desc_locs f d1, map_desc_locs f d2)
   | RLogical (s, d1, d2) -> RLogical (s, map_desc_locs f d1, map_desc_locs f d2)
-  | ( RTemplateString | RUnknownString | RUnionEnum | REnum _ | RGetterSetterProperty | RThis
-    | RThisType | RImplicitInstantiation | RTooFewArgs | RTooFewArgsExpectedRest
-    | RConstructorVoidReturn | RNewObject | RUnion | RUnionType | RIntersection | RIntersectionType
-    | RKeySet | RAnd | RConditional | RPrototype | RObjectPrototype | RFunctionPrototype
-    | RDestructuring | RDefaultValue | RConstructor | RReturn | RDefaultConstructor | RRegExp
-    | RSuper | RNoSuper | RDummyPrototype | RDummyThis | RTupleMap | RObjectMap | RType _
-    | RTypeof _ | RMethod _ | RMethodCall _ | RParameter _ | RRestParameter _ | RPatternParameter _
-    | RIdentifier _ | RUnknownParameter _ | RIdentifierAssignment _ | RPropertyAssignment _
-    | RProperty _ | RPrivateProperty _ | RMember _ | RPropertyIsAString _ | RMissingProperty _
+  | ( RTemplateString | RUnknownString | RUnionEnum | REnum _ | RThis | RThisType
+    | RImplicitInstantiation | RTooFewArgs | RTooFewArgsExpectedRest | RConstructorVoidReturn
+    | RNewObject | RUnion | RUnionType | RIntersection | RIntersectionType | RKeySet | RAnd
+    | RConditional | RPrototype | RObjectPrototype | RFunctionPrototype | RDestructuring
+    | RDefaultValue | RConstructor | RReturn | RDefaultConstructor | RRegExp | RSuper | RNoSuper
+    | RDummyPrototype | RDummyThis | RTupleMap | RObjectMap | RType _ | RTypeof _ | RMethod _
+    | RMethodCall _ | RParameter _ | RRestParameter _ | RPatternParameter _ | RIdentifier _
+    | RUnknownParameter _ | RIdentifierAssignment _ | RPropertyAssignment _ | RProperty _
+    | RPrivateProperty _ | RMember _ | RPropertyIsAString _ | RMissingProperty _
     | RUnknownProperty _ | RUndefinedProperty _ | RSomeProperty | RFieldInitializer _
     | RUntypedModule _ | RNamedImportedType _ | RImportStarType _ | RImportStarTypeOf _
     | RImportStar _ | RDefaultImportedType _ | RAsyncImport | RCode _ | RCustom _
@@ -586,7 +585,6 @@ let rec string_of_desc = function
   | RUnionEnum -> "literal union"
   | REnum name -> spf "enum `%s`" name
   | REnumRepresentation representation -> spf "%s enum" (string_of_desc representation)
-  | RGetterSetterProperty -> "getter/setter property"
   | RThis -> "this"
   | RThisType -> "`this` type"
   | RImplicitInstantiation -> "implicit instantiation"
@@ -1380,7 +1378,6 @@ let classification_of_reason r =
   | RUnaryOperator _
   | RBinaryOperator _
   | RLogical _
-  | RGetterSetterProperty
   | RThis
   | RThisType
   | RImplicitInstantiation
