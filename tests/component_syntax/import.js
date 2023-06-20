@@ -41,3 +41,9 @@ import DefaultExportType from "./annotation.js";
 
 <ExportType />; // error
 <DefaultExportType x={"a"} />; // error
+
+import { Poly } from "./poly.js";
+<Poly foo={1} bar={[2]} />;
+<Poly foo={"a"} bar={["a"]} />;
+<Poly foo={1} bar={["a"]} />;
+<Poly foo={1} bar={[1]} baz={(x: string) => {}} />;
