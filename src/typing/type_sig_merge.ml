@@ -182,6 +182,7 @@ let add_default_constructor reason extends props =
               ~this:(Type.implicit_mixed_this reason)
               ~rest_param:None
               ~def_reason:reason
+              ~predicate:None
           in
           Some
             Type.(Method { key_loc = None; type_ = DefT (reason, trust, FunT (statics, funtype)) })
@@ -916,7 +917,7 @@ and merge_annot tps infer_tps file = function
         ~rest_param:None
         ~def_reason:fun_reason
         ~params_names:key_strs
-        ~predicate:(out_reason, emp, emp)
+        ~predicate:(Some (PredBased (out_reason, emp, emp)))
     in
     DefT (fun_reason, trust, FunT (statics, functiontype))
   | Refine { loc; base; fn_pred; index } ->

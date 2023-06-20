@@ -4015,12 +4015,7 @@ let default_obj_assign_kind = ObjAssign { assert_exact = false }
 
 (* A method type is a function type with `this` specified. *)
 let mk_methodtype
-    this_t ?(subtyping = This_Function) tins ~rest_param ~def_reason ?params_names ?predicate tout =
-  let predicate =
-    match predicate with
-    | Some p -> Some (PredBased p)
-    | None -> None
-  in
+    this_t ?(subtyping = This_Function) tins ~rest_param ~def_reason ?params_names ~predicate tout =
   {
     this_t = (this_t, subtyping);
     params =

@@ -8903,7 +8903,7 @@ struct
         | Some trace -> trace
         | None -> failwith "All multiflows show have a trace"
       in
-      let { params; rest_param; return_t; def_reason; _ } = ft in
+      let { params; rest_param; return_t; def_reason; predicate; _ } = ft in
       let (args, spread_arg) = flatten_call_arg cx ~use_op reason_op resolved in
       let (params, rest_param) =
         multiflow_partial
@@ -8934,6 +8934,7 @@ struct
                   (dummy_this (loc_of_reason reason_op))
                   params_tlist
                   return_t
+                  ~predicate
                   ~rest_param
                   ~def_reason
                   ~params_names

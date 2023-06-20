@@ -2814,6 +2814,7 @@ module Make
                       ~rest_param:None
                       ~def_reason:reason
                       ~params_names:[]
+                      ~predicate:None
                       proto
                   )
               )

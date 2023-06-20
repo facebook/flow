@@ -1,3 +1,324 @@
+Error --------------------------------------------------------------------------------------------- class_imports.js:8:4
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   class_imports.js:8:4
+   8|   (x: string); // error number ~> string
+         ^
+
+References:
+   class_exports.js:2:21
+   2|   m(x: mixed): x is number {
+                          ^^^^^^ [1]
+   class_imports.js:8:7
+   8|   (x: string); // error number ~> string
+            ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- class_imports.js:14:4
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   class_imports.js:14:4
+   14|   (x: string); // error number ~> string
+          ^
+
+References:
+   class_exports.js:8:21
+    8|   m(x: mixed): x is number;
+                           ^^^^^^ [1]
+   class_imports.js:14:7
+   14|   (x: string); // error number ~> string
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- classes.js:15:14
+
+Cannot use type guard parameter `x` [1] because at this return point it is writen to in [2]. [function-predicate]
+
+   classes.js:15:14
+   15|       return typeof x === 'number'; // error param write reaching this return
+                    ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   classes.js:13:25
+   13|     invalid1(x: mixed): x is number {
+                               ^ [1]
+   classes.js:14:7
+   14|       x = 1;
+             ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- classes.js:18:25
+
+Cannot find type guard parameter `y` [1] in the parameters of this function (type). [function-predicate]
+
+   18|     invalid2(x: mixed): y is number { // error param missing
+                               ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- classes.js:23:14
+
+Cannot return `(typeof x) === 'number'` because number [1] is incompatible with string [2] in the type inferred for type
+guard parameter `x` [3]. [incompatible-return]
+
+   classes.js:23:14
+   23|       return typeof x === 'number'; // error number ~> string
+                    ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   classes.js:22:30
+   22|     invalid3(x: mixed): x is string {
+                                    ^^^^^^ [2]
+   classes.js:22:25
+   22|     invalid3(x: mixed): x is string {
+                               ^ [3]
+
+
+Error -------------------------------------------------------------------------------------------------- classes.js:30:6
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   classes.js:30:6
+   30|     (x: string); // error number ~> string
+            ^
+
+References:
+   classes.js:5:23
+    5|     m(x: mixed): x is number {
+                             ^^^^^^ [1]
+   classes.js:30:9
+   30|     (x: string); // error number ~> string
+               ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- classes.js:33:6
+
+Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   classes.js:33:6
+   33|     (x: number); // error string ~> number
+            ^
+
+References:
+   classes.js:9:30
+    9|     static s(x: mixed): x is string {
+                                    ^^^^^^ [1]
+   classes.js:33:9
+   33|     (x: number); // error string ~> number
+               ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- classes.js:40:5
+
+Cannot extend `C` [1] with `D1` because function [2], a non-predicate function, is incompatible with function [3], which
+is a predicate function in property `m`. [function-predicate]
+
+   classes.js:40:5
+           v----------------------------------------------------
+   40|     m(x: mixed): boolean { // error extends non-predicate
+   41|       return true;
+   42|     }
+           ^ [2]
+
+References:
+   classes.js:39:20
+   39|   class D1 extends C {
+                          ^ [1]
+   classes.js:5:5
+           v-------------------------
+    5|     m(x: mixed): x is number {
+    6|       return typeof x === 'number';
+    7|     }
+           ^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- classes.js:46:23
+
+Cannot extend `C` [1] with `D2` because mixed [2] is incompatible with number [3] in the type predicate of property `m`.
+[incompatible-extend]
+
+   classes.js:46:23
+   46|     m(x: mixed): x is mixed { // error extends
+                             ^^^^^ [2]
+
+References:
+   classes.js:45:20
+   45|   class D2 extends C {
+                          ^ [1]
+   classes.js:5:23
+    5|     m(x: mixed): x is number {
+                             ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- classes.js:52:14
+
+Cannot return `true` because mixed [1] is incompatible with number [2] in the type inferred for type guard parameter
+`x` [3]. [incompatible-return]
+
+   classes.js:52:14
+   52|       return true; // error mixed ~> number
+                    ^^^^
+
+References:
+   classes.js:51:10
+   51|     m(x: mixed): x is number {
+                ^^^^^ [1]
+   classes.js:51:23
+   51|     m(x: mixed): x is number {
+                             ^^^^^^ [2]
+   classes.js:51:18
+   51|     m(x: mixed): x is number {
+                        ^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- classes.js:67:23
+
+Cannot implement `I` [1] with `E1` because number [2] is incompatible with string [3] in the type predicate of property
+`n`. [incompatible-type]
+
+   classes.js:67:23
+   67|     n(x: mixed): x is number { // error number ~> string
+                             ^^^^^^ [2]
+
+References:
+   classes.js:63:23
+   63|   class E1 implements I {
+                             ^ [1]
+   classes.js:60:23
+   60|     n(x: mixed): x is string;
+                             ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- classes.js:81:23
+
+Cannot implement `IP` [1] with `E2` because string [2] is incompatible with number [3] in the type predicate of property
+`n`. [incompatible-type]
+
+   classes.js:81:23
+   81|     n(x: mixed): x is string { // error number ~> string
+                             ^^^^^^ [2]
+
+References:
+   classes.js:77:23
+   77|   class E2 implements IP<number> {
+                             ^^^^^^^^^^ [1]
+   classes.js:77:26
+   77|   class E2 implements IP<number> {
+                                ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------------- classes.js:98:6
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   classes.js:98:6
+   98|     (x: string); // error number ~> string
+            ^
+
+References:
+   classes.js:91:23
+   91|     m(x: mixed): x is number;
+                             ^^^^^^ [1]
+   classes.js:98:9
+   98|     (x: string); // error number ~> string
+               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- classes.js:102:6
+
+Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   classes.js:102:6
+   102|     (x: number); // error string ~> number
+             ^
+
+References:
+   classes.js:92:30
+    92|     static s(x: mixed): x is string;
+                                     ^^^^^^ [1]
+   classes.js:102:9
+   102|     (x: number); // error string ~> number
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- classes.js:107:5
+
+Cannot extend `C` [1] with `D1` because function [2], a non-predicate function, is incompatible with function type [3],
+which is a predicate function in property `m`. [function-predicate]
+
+   classes.js:107:5
+            v----------------------------------------------------
+   107|     m(x: mixed): boolean { // error extends non-predicate
+   108|       return true;
+   109|     }
+            ^ [2]
+
+References:
+   classes.js:106:20
+   106|   class D1 extends C {
+                           ^ [1]
+   classes.js:91:5
+    91|     m(x: mixed): x is number;
+            ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------ classes.js:113:23
+
+Cannot extend `C` [1] with `D2` because mixed [2] is incompatible with number [3] in the type predicate of property `m`.
+[incompatible-extend]
+
+   classes.js:113:23
+   113|     m(x: mixed): x is mixed { // error mixed ~> number
+                              ^^^^^ [2]
+
+References:
+   classes.js:112:20
+   112|   class D2 extends C {
+                           ^ [1]
+   classes.js:91:23
+    91|     m(x: mixed): x is number;
+                              ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------ classes.js:119:14
+
+Cannot return `true` because mixed [1] is incompatible with number [2] in the type inferred for type guard parameter
+`x` [3]. [incompatible-return]
+
+   classes.js:119:14
+   119|       return true; // error mixed ~> number
+                     ^^^^
+
+References:
+   classes.js:118:10
+   118|     m(x: mixed): x is number {
+                 ^^^^^ [1]
+   classes.js:118:23
+   118|     m(x: mixed): x is number {
+                              ^^^^^^ [2]
+   classes.js:118:18
+   118|     m(x: mixed): x is number {
+                         ^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- classes.js:134:6
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   classes.js:134:6
+   134|     (x: string); // error number ~> string
+             ^
+
+References:
+   classes.js:131:19
+   131|   const p = new P<number>();
+                          ^^^^^^ [1]
+   classes.js:134:9
+   134|     (x: string); // error number ~> string
+                ^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------- consistency.js:7:31
 
 Cannot declare a type predicate [1] for function [2] because boolean [1] is incompatible with implicitly-returned
@@ -431,6 +752,75 @@ References:
    invalid.js:17:1
    17| function no_return(x: mixed): x is number {}
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- objects.js:14:14
+
+Cannot use type guard parameter `x` [1] because at this return point it is writen to in [2]. [function-predicate]
+
+   objects.js:14:14
+   14|       return typeof x === 'number'; // error write reaches return
+                    ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   objects.js:12:24
+   12|     invalid(x: mixed): x is number {
+                              ^ [1]
+   objects.js:13:7
+   13|       x = 1;
+             ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- objects.js:20:6
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   objects.js:20:6
+   20|     (x: string); // error number ~> string
+            ^
+
+References:
+   objects.js:6:23
+    6|     m(x: mixed): x is number {
+                             ^^^^^^ [1]
+   objects.js:20:9
+   20|     (x: string); // error number ~> string
+               ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- objects.js:23:6
+
+Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   objects.js:23:6
+   23|     (x: number); // error string ~> number
+            ^
+
+References:
+   objects.js:9:23
+    9|     f(x: mixed): x is string {
+                             ^^^^^^ [1]
+   objects.js:23:9
+   23|     (x: number); // error string ~> number
+               ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- objects.js:29:4
+
+Cannot cast `obj` to object type because number [1] is incompatible with string [2] in the type predicate of property
+`m`. [incompatible-cast]
+
+   objects.js:29:4
+   29|   (obj: { // error number ~> string
+          ^^^
+
+References:
+   objects.js:6:23
+    6|     m(x: mixed): x is number {
+                             ^^^^^^ [1]
+   objects.js:30:23
+   30|     m(x: mixed): x is string,
+                             ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- patterns_and_rest.js:1:54
@@ -1476,7 +1866,7 @@ Cannot find type guard parameter `x` [1] in the parameters of this function (typ
 
 
 
-Found 84 errors
+Found 106 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
