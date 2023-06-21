@@ -12,6 +12,6 @@ all=true
 exact_by_default=false
 no_flowlib=false
 conditional_type=true
-experimental.mapped_type=true
+mapped_type=true
 
 [strict]

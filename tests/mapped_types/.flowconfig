@@ -1,4 +1,4 @@
 [options]
 all=true
-experimental.mapped_type=true
+mapped_type=true
 conditional_type=true

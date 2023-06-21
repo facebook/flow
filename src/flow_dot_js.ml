@@ -180,7 +180,7 @@ let merge_custom_check_config js_config_object metadata =
   let exact_by_default = Js.Unsafe.get js_config_object "exact_by_default" |> Js.to_bool in
   let enable_enums = Js.Unsafe.get js_config_object "enums" |> Js.to_bool in
   let conditional_type = Js.Unsafe.get js_config_object "conditional_type" |> Js.to_bool in
-  let mapped_type = Js.Unsafe.get js_config_object "experimental.mapped_type" |> Js.to_bool in
+  let mapped_type = Js.Unsafe.get js_config_object "mapped_type" |> Js.to_bool in
   let type_guards = Js.Unsafe.get js_config_object "experimental.type_guards" |> Js.to_bool in
   {
     metadata with
@@ -429,7 +429,7 @@ let () =
     "default": false
   },
   {
-    "key": "experimental.mapped_type",
+    "key": "mapped_type",
     "type": "bool",
     "default": false
   },

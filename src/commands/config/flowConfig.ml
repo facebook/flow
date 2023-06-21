@@ -777,8 +777,8 @@ module Opts = struct
       ("experimental.component_syntax", component_syntax_parser);
       ("experimental.component_syntax.typing.includes", component_syntax_includes_parser);
       ("conditional_type", boolean (fun opts v -> Ok { opts with conditional_type = Some v }));
-      ("experimental.mapped_type", boolean (fun opts v -> Ok { opts with mapped_type = v }));
       ("type_guards", boolean (fun opts v -> Ok { opts with type_guards = v }));
+      ("mapped_type", boolean (fun opts v -> Ok { opts with mapped_type = v }));
       ("experimental.direct_dependent_files_fix", direct_dependent_files_fix_parser);
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
       ("experimental.module.automatic_require_default", automatic_require_default_parser);
