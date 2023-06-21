@@ -1,4 +1,4 @@
 [options]
 all=true
-experimental.type_guards=true
+type_guards=true
 no_flowlib=false
