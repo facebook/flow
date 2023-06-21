@@ -1,0 +1,105 @@
+Error ------------------------------------------------------------------------------------------------------ omit.js:7:7
+
+Cannot get `noFoo.foo` because property `foo` is missing in `Omit` [1]. [prop-missing]
+
+   omit.js:7:7
+   7| noFoo.foo; // ERROR
+            ^^^
+
+References:
+   omit.js:6:22
+   6| declare const noFoo: OmitFoo;
+                           ^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- omit.js:12:12
+
+Cannot get `noFooOrBar.foo` because property `foo` is missing in `Omit` [1]. [prop-missing]
+
+   omit.js:12:12
+   12| noFooOrBar.foo; // ERROR
+                  ^^^
+
+References:
+   omit.js:11:27
+   11| declare const noFooOrBar: OmitFooAndBar;
+                                 ^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- omit.js:13:12
+
+Cannot get `noFooOrBar.bar` because property `bar` (did you mean `baz`?) is missing in `Omit` [1]. [prop-missing]
+
+   omit.js:13:12
+   13| noFooOrBar.bar; // ERROR
+                  ^^^
+
+References:
+   omit.js:11:27
+   11| declare const noFooOrBar: OmitFooAndBar;
+                                 ^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- pick.js:8:10
+
+Cannot assign `3` to `pickedO1.foo` because property `foo` is not writable. [cannot-write]
+
+   8| pickedO1.foo = 3; // ERROR: foo is read-only 
+               ^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ pick.js:9:2
+
+Cannot cast `pickedO1.bar` to string because undefined [1] is incompatible with string [2]. [incompatible-cast]
+
+   pick.js:9:2
+      9| (pickedO1.bar: string); // ERROR bar is optional
+          ^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:2726:55
+   2726| type Pick<O: {...}, Keys: $Keys<O>> = {[key in Keys]: O[key]};
+                                                               ^^^^^^ [1]
+   pick.js:9:16
+      9| (pickedO1.bar: string); // ERROR bar is optional
+                        ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- record.js:5:2
+
+Cannot cast `exact` to object type because property `bar` is missing in object type [1] but exists in `Record` [2].
+[prop-missing]
+
+   record.js:5:2
+   5| (exact: {foo: number}); // ERROR, mising bar
+       ^^^^^
+
+References:
+   record.js:5:9
+   5| (exact: {foo: number}); // ERROR, mising bar
+              ^^^^^^^^^^^^^ [1]
+   record.js:3:22
+   3| declare const exact: Exact;
+                           ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- record.js:10:2
+
+Cannot cast `indexed` to object type because indexed `Record` [1] is incompatible with exact object type [2].
+[incompatible-indexer]
+
+   record.js:10:2
+   10| (indexed: {foo: number}); // ERROR, missing indexer
+        ^^^^^^^
+
+References:
+   record.js:8:24
+    8| declare const indexed: Indexed;
+                              ^^^^^^^ [1]
+   record.js:10:11
+   10| (indexed: {foo: number}); // ERROR, missing indexer
+                 ^^^^^^^^^^^^^ [2]
+
+
+
+Found 7 errors

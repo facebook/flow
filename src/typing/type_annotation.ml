@@ -1605,7 +1605,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
             comments;
           }
       ) as ot ->
-      if not (Context.mapped_type cx) then (
+      if not (Context.mapped_type cx || Context.current_phase cx = Context.InitLib) then (
         Flow_js_utils.add_output
           cx
           Error_message.(EUnsupportedSyntax (obj_loc, Error_message.MappedType));
