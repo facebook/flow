@@ -6501,7 +6501,11 @@ struct
       | PropertyType _
       | ElementType _
       | OptionalIndexedAccessNonMaybeType _
-      | OptionalIndexedAccessResultType _ ->
+      | OptionalIndexedAccessResultType _
+      | ReactElementPropsType
+      | ReactElementConfigType
+      | ReactElementRefType
+      | ReactConfigType _ ->
         Tvar_resolver.resolve cx result
       | NonMaybeType
       | ReadOnlyType
@@ -6510,10 +6514,6 @@ struct
       | SpreadType _
       | RestType _
       | ValuesType
-      | ReactElementPropsType
-      | ReactElementConfigType
-      | ReactElementRefType
-      | ReactConfigType _
       | IdxUnwrapType
       | LatentPred _
       | CallType _
