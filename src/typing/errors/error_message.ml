@@ -4775,6 +4775,8 @@ let friendly_message_of_msg loc_of_aloc msg =
         {
           features =
             [
+              code "keyof";
+              text " is only supported when used inline in a mapped type. ";
               text "The equivalent of TypeScript's ";
               code "keyof";
               text " type operator in Flow is the ";

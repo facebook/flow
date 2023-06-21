@@ -133,8 +133,8 @@ don't have a variance annotation. [ts-syntax]
 
 Error ---------------------------------------------------------------------------------------------------- keyof.js:3:10
 
-The equivalent of TypeScript's `keyof` type operator in Flow is the `$Keys` utility type, used in the form `$Keys<T>`.
-[ts-syntax]
+`keyof` is only supported when used inline in a mapped type. The equivalent of TypeScript's `keyof` type operator in
+Flow is the `$Keys` utility type, used in the form `$Keys<T>`. [ts-syntax]
 
    3| type T = keyof O; // ERROR
                ^^^^^^^
