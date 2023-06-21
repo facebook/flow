@@ -8,7 +8,7 @@
 
 [options]
 all=true
-experimental.type_guards=true
+type_guards=true
 enums=true
 no_flowlib=false
 
