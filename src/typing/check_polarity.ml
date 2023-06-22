@@ -115,7 +115,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
     | DefT (_, _, ArrT (ArrayAT (t, None))) -> check_polarity cx ?trace tparams Polarity.Neutral t
     | DefT (_, _, ArrT (TupleAT { elements; _ })) ->
       List.iter
-        (fun (TupleElement { t; polarity = p; name = _; optional = _ }) ->
+        (fun (TupleElement { t; polarity = p; name = _; optional = _; reason = _ }) ->
           check_polarity cx ?trace tparams (Polarity.mult (polarity, p)) t)
         elements
     | DefT (_, _, ArrT (ROArrayAT t)) -> check_polarity cx ?trace tparams polarity t

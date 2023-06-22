@@ -141,8 +141,9 @@ type ('loc, 'a) component_sig =
     }
 [@@deriving iter, map, show { with_path = false }]
 
-type 'a tuple_element =
+type ('loc, 'a) tuple_element =
   | TupleElement of {
+      loc: 'loc;
       name: string option;
       t: 'a;
       polarity: Polarity.t;
@@ -467,7 +468,7 @@ type ('loc, 'a) annot =
     }
   | Tuple of {
       loc: 'loc;
-      elems_rev: 'a tuple_element tailrec_list;
+      elems_rev: ('loc, 'a) tuple_element tailrec_list;
       arity: int * int;
     }
   | Array of 'loc * 'a

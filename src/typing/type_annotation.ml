@@ -2309,8 +2309,9 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     | Ast.Type.Tuple.UnlabeledElement annot ->
       let (((_, t), _) as annot_ast) = convert cx tparams_map infer_tparams_map annot in
       let element_ast = (loc, Ast.Type.Tuple.UnlabeledElement annot_ast) in
+      let reason = mk_reason (RTupleElement { name = None }) loc in
       ( t,
-        TupleElement { name = None; t; polarity = Polarity.Neutral; optional = false },
+        TupleElement { name = None; t; polarity = Polarity.Neutral; optional = false; reason },
         element_ast,
         false
       )
@@ -2334,19 +2335,22 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
             { Ast.Type.Tuple.LabeledElement.name = id_name; annot = annot_ast; variance; optional }
         )
       in
+      let name = Some str_name in
+      let reason = mk_reason (RTupleElement { name }) loc in
       ( t,
-        TupleElement { name = Some str_name; t; polarity = polarity cx variance; optional },
+        TupleElement { name; t; polarity = polarity cx variance; optional; reason },
         element_ast,
         true
       )
     | Ast.Type.Tuple.SpreadElement spread_el ->
       Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, TupleSpreadElement));
       let t = AnyT.at (AnyError None) loc in
+      let reason = mk_reason (RTupleElement { name = None }) loc in
       let element_ast =
         (loc, Ast.Type.Tuple.SpreadElement (Tast_utils.error_mapper#tuple_spread_element spread_el))
       in
       ( t,
-        TupleElement { name = None; t; polarity = Polarity.Neutral; optional = false },
+        TupleElement { name = None; t; polarity = Polarity.Neutral; optional = false; reason },
         element_ast,
         true
       )

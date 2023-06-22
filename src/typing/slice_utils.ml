@@ -1453,8 +1453,8 @@ let resolve
     resolved ~next ~recurse cx use_op reason resolve_tool tool x
   | DefT (r, trust, ArrT (TupleAT { elem_t; elements; arity })) when tool = ReadOnly ->
     let elements =
-      Base.List.map elements ~f:(fun (TupleElement { t; name; polarity = _; optional }) ->
-          TupleElement { t; name; polarity = Polarity.Positive; optional }
+      Base.List.map elements ~f:(fun (TupleElement { t; name; polarity = _; optional; reason }) ->
+          TupleElement { t; name; polarity = Polarity.Positive; optional; reason }
       )
     in
     let def_reason =

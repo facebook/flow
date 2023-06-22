@@ -1038,7 +1038,7 @@ end = struct
       | (T.TupleAT { elements = elements'; _ }, _) ->
         let%map elements =
           mapM
-            (fun (T.TupleElement { name; t; polarity; optional }) ->
+            (fun (T.TupleElement { name; t; polarity; optional; reason = _ }) ->
               let t =
                 match t with
                 | T.OptionalT { type_; _ } when optional -> type_

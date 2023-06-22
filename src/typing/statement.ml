@@ -6342,9 +6342,8 @@ module Make
       let (((_, o), _) as e_ast) = expression cx e in
       let keys_t = get_keys ~arr_reason o in
       let values_t = get_values ~arr_reason o in
-      let elem_t =
-        UnionT (mk_reason (RTupleElement { name = None }) loc, UnionRep.make keys_t values_t [])
-      in
+      let elem_reason = mk_reason (RTupleElement { name = None }) loc in
+      let elem_t = UnionT (elem_reason, UnionRep.make keys_t values_t []) in
       let entry_t =
         DefT
           ( mk_reason RTupleType loc,
@@ -6361,6 +6360,7 @@ module Make
                            t = keys_t;
                            polarity = Polarity.Neutral;
                            optional = false;
+                           reason = elem_reason;
                          };
                        TupleElement
                          {
@@ -6368,6 +6368,7 @@ module Make
                            t = values_t;
                            polarity = Polarity.Neutral;
                            optional = false;
+                           reason = elem_reason;
                          };
                      ];
                    arity = (2, 2);

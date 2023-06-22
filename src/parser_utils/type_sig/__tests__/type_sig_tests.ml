@@ -3326,12 +3326,12 @@ let%expect_test "tuple_annot" =
          (Annot
             Tuple {loc = [1:16-32];
               elems_rev =
-              [TupleElement {name = None;
-                 t = (Annot (Number [1:25-31]));
+              [TupleElement {loc = [1:25-31];
+                 name = None; t = (Annot (Number [1:25-31]));
                  polarity = Polarity.Neutral;
                  optional = false};
-                TupleElement {name = None;
-                  t = (Annot (String [1:17-23]));
+                TupleElement {loc = [1:17-23];
+                  name = None; t = (Annot (String [1:17-23]));
                   polarity = Polarity.Neutral;
                   optional = false}
                 ];
@@ -3354,11 +3354,13 @@ let%expect_test "tuple_annot_labeled" =
          (Annot
             Tuple {loc = [1:16-42];
               elems_rev =
-              [TupleElement {name = (Some "bar");
+              [TupleElement {loc = [1:30-41];
+                 name = (Some "bar");
                  t = (Annot (Number [1:35-41]));
                  polarity = Polarity.Neutral;
                  optional = false};
-                TupleElement {name = (Some "foo");
+                TupleElement {loc = [1:17-28];
+                  name = (Some "foo");
                   t = (Annot (String [1:22-28]));
                   polarity = Polarity.Neutral;
                   optional = false}
@@ -3382,11 +3384,13 @@ let%expect_test "tuple_annot_variance" =
          (Annot
             Tuple {loc = [1:16-44];
               elems_rev =
-              [TupleElement {name = (Some "bar");
+              [TupleElement {loc = [1:31-43];
+                 name = (Some "bar");
                  t = (Annot (Number [1:37-43]));
                  polarity = Polarity.Negative;
                  optional = false};
-                TupleElement {name = (Some "foo");
+                TupleElement {loc = [1:17-29];
+                  name = (Some "foo");
                   t = (Annot (String [1:23-29]));
                   polarity = Polarity.Positive;
                   optional = false}
@@ -5680,11 +5684,12 @@ let%expect_test "optional_tuple_elements" =
          (Annot
             Tuple {loc = [1:16-39];
               elems_rev =
-              [TupleElement {name = (Some "b");
-                 t = (Annot (String [1:32-38]));
+              [TupleElement {loc = [1:28-38];
+                 name = (Some "b"); t = (Annot (String [1:32-38]));
                  polarity = Polarity.Neutral;
                  optional = true};
-                TupleElement {name = (Some "a");
+                TupleElement {loc = [1:17-26];
+                  name = (Some "a");
                   t = (Annot (Number [1:20-26]));
                   polarity = Polarity.Neutral;
                   optional = false}

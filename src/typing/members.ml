@@ -245,8 +245,10 @@ let rec merge_type cx =
                elements =
                  Base.List.map2_exn
                    ~f:
-                     (fun (TupleElement { name = name1; t = t1; polarity; optional })
-                          (TupleElement { name = name2; t = t2; polarity = _; optional = _ }) ->
+                     (fun (TupleElement { name = name1; t = t1; polarity; optional; reason = _ })
+                          (TupleElement
+                            { name = name2; t = t2; polarity = _; optional = _; reason = _ }
+                            ) ->
                      let name =
                        if name1 = name2 then
                          name1
@@ -254,7 +256,8 @@ let rec merge_type cx =
                          None
                      in
                      let t = merge_type cx (t1, t2) in
-                     TupleElement { name; t; polarity; optional })
+                     let reason = locationless_reason (RTupleElement { name }) in
+                     TupleElement { name; t; polarity; optional; reason })
                    ts1
                    ts2;
                arity = arity1;

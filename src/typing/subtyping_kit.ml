@@ -1578,12 +1578,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
         iter2opt
           (fun t1 t2 ->
             match (t1, t2) with
-            | ( Some (TupleElement { t = t1; polarity = p1; name = _; optional = _ }),
-                Some (TupleElement { t = t2; polarity = p2; name = _; optional = _ })
+            | ( Some (TupleElement { t = t1; polarity = p1; name = _; optional = _; reason = _ }),
+                Some (TupleElement { t = t2; polarity = p2; name = _; optional = _; reason = _ })
               ) ->
               tuple_element_compat t1 t2 p1 p2;
               n := !n + 1
-            | (None, Some (TupleElement { t = t2; polarity = p2; name = _; optional = _ })) ->
+            | ( None,
+                Some (TupleElement { t = t2; polarity = p2; name = _; optional = _; reason = _ })
+              ) ->
               let p1 = Polarity.Neutral in
               let t1 =
                 VoidT.make (replace_desc_new_reason (RTupleOutOfBoundsAccess !n) r1)
@@ -1614,7 +1616,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
                          Base.List.map
                            ~f:(fun t ->
                              TupleElement
-                               { name = None; polarity = Polarity.Neutral; t; optional = false })
+                               {
+                                 name = None;
+                                 polarity = Polarity.Neutral;
+                                 t;
+                                 optional = false;
+                                 reason = reason_of_t t;
+                               })
                            ts1;
                        arity = (len, len);
                      }

@@ -1167,6 +1167,7 @@ module rec TypeTerm : sig
 
   and tuple_element =
     | TupleElement of {
+        reason: reason;
         name: string option;
         t: t;
         polarity: Polarity.t;

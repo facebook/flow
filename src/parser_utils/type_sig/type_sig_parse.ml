@@ -1297,37 +1297,38 @@ and annot_with_loc opts scope tbls xs (loc, t) =
     | T.Tuple { T.Tuple.elements; _ } ->
       let (arity, req_after_opt, elems_rev, has_tuple_enhancements) =
         List.fold_left
-          (fun ((num_req, num_total), req_after_opt, elems, has_tuple_enhancements) elem ->
+          (fun ((num_req, num_total), req_after_opt, elems, has_tuple_enhancements) (loc, elem) ->
             let (elem_has_tuple_enhancements, elem) =
+              let loc = push_loc tbls loc in
               match elem with
-              | (_, T.Tuple.UnlabeledElement t) ->
+              | T.Tuple.UnlabeledElement t ->
                 ( false,
                   TupleElement
                     {
+                      loc;
                       name = None;
                       t = annot opts scope tbls xs t;
                       polarity = Polarity.Neutral;
                       optional = false;
                     }
                 )
-              | ( _,
-                  T.Tuple.LabeledElement
-                    { T.Tuple.LabeledElement.annot = t; name; variance; optional }
-                ) ->
+              | T.Tuple.LabeledElement
+                  { T.Tuple.LabeledElement.annot = t; name; variance; optional } ->
                 ( true,
                   TupleElement
                     {
+                      loc;
                       name = Some (id_name name);
                       t = annot opts scope tbls xs t;
                       polarity = polarity variance;
                       optional;
                     }
                 )
-              | (loc, T.Tuple.SpreadElement _) ->
-                let loc = push_loc tbls loc in
+              | T.Tuple.SpreadElement _ ->
                 ( true,
                   TupleElement
                     {
+                      loc;
                       name = None;
                       t = Annot (Any loc);
                       polarity = Polarity.Neutral;

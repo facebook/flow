@@ -501,7 +501,7 @@ and merge_annot tps infer_tps file = function
       Base.List.fold
         elems_rev
         ~init:([], [])
-        ~f:(fun (els, ts) (TupleElement { name; t; polarity; optional }) ->
+        ~f:(fun (els, ts) (TupleElement { loc; name; t; polarity; optional }) ->
           let t = merge tps infer_tps file t in
           let t =
             if optional then
@@ -509,7 +509,8 @@ and merge_annot tps infer_tps file = function
             else
               t
           in
-          let el = Type.TupleElement { name; t; polarity; optional } in
+          let reason = Reason.(mk_reason (RTupleElement { name })) loc in
+          let el = Type.TupleElement { reason; name; t; polarity; optional } in
           (el :: els, t :: ts)
       )
     in
