@@ -8,6 +8,7 @@ make print-switch
 make print-jsoo-version
 opam --version
 gcc -dumpfullversion -dumpversion
+echo "cache-breaker-1"
 cat flowtype.opam
 cat flow_parser.opam
 cat .circleci/config.yml
