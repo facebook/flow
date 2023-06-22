@@ -88,7 +88,7 @@ type 'loc virtual_reason_desc =
   | RArrayType
   | RROArrayType
   | RTupleType
-  | RTupleElement
+  | RTupleElement of { name: string option }
   | RTupleLength of int
   | RTupleOutOfBoundsAccess of int
   | RFunction of reason_desc_function
@@ -261,7 +261,7 @@ let rec map_desc_locs f = function
     | RNull | RVoidedNull | RSymbol | RExports | RNullOrVoid | RLongStringLit _ | RStringLit _
     | RNumberLit _ | RBigIntLit _ | RBooleanLit _ | RObject | RObjectLit | RObjectType
     | RObjectClassName | RInterfaceType | RArray | RArrayLit | REmptyArrayLit | RArrayType
-    | RROArrayType | RTupleType | RTupleElement | RTupleLength _ | RTupleOutOfBoundsAccess _
+    | RROArrayType | RTupleType | RTupleElement _ | RTupleLength _ | RTupleOutOfBoundsAccess _
     | RFunction _ | RFunctionType | RFunctionBody | RFunctionCallType | RFunctionUnusedArgument
     | RJSXFunctionCall _ | RJSXIdentifier _ | RJSXElementProps _ | RJSXElement _ | RJSXText | RFbt
     | RUninitialized | RPossiblyUninitialized | RUnannotatedNext | REmptyArrayElement | RMappedType
@@ -558,7 +558,13 @@ let rec string_of_desc = function
   | RArrayType -> "array type"
   | RROArrayType -> "read-only array type"
   | RTupleType -> "tuple type"
-  | RTupleElement -> "tuple element"
+  | RTupleElement { name } ->
+    let suffix =
+      match name with
+      | Some name -> spf " (labeled '%s')" name
+      | None -> ""
+    in
+    spf "%s%s" "tuple element" suffix
   | RTupleOutOfBoundsAccess i -> spf "undefined (out of bounds tuple access at index %d)" i
   | RTupleLength i -> spf "length `%d` (number) of tuple" i
   | RFunction func -> spf "%sfunction" (function_desc_prefix func)
@@ -1362,7 +1368,7 @@ let classification_of_reason r =
   | RMappedType
   | RObjectClassName
   | RInterfaceType
-  | RTupleElement
+  | RTupleElement _
   | RTupleLength _
   | RTupleOutOfBoundsAccess _
   | RComponent _

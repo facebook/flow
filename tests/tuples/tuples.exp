@@ -489,7 +489,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ optional.js:54:51
 
-Invalid tuple element [1], cannot have required tuple members after an optional one. [tuple-required-after-optional]
+Invalid tuple element (labeled 'c') [1], cannot have required tuple members after an optional one.
+[tuple-required-after-optional]
 
    54| type InvalidReqAfterOpt = [a: number, b?: string, c: string]; // ERROR
                                                          ^^^^^^^^^ [1]
@@ -497,7 +498,8 @@ Invalid tuple element [1], cannot have required tuple members after an optional 
 
 Error ------------------------------------------------------------------------------------------------ optional.js:59:59
 
-Invalid tuple element [1], cannot have required tuple members after an optional one. [tuple-required-after-optional]
+Invalid tuple element (labeled 'c') [1], cannot have required tuple members after an optional one.
+[tuple-required-after-optional]
 
    59| type InvalidReqAfterOptMultiple = [a: number, b?: string, c: string, d: boolean]; // ERROR (on first one)
                                                                  ^^^^^^^^^ [1]

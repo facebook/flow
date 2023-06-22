@@ -458,7 +458,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               convert_tuple_element cx tparams_map infer_tparams_map element
             in
             let (num_req, num_opt, req_after_opt) =
-              let (TupleElement { optional; _ }) = el in
+              let (TupleElement { optional; name; _ }) = el in
               if optional then
                 (num_req, num_opt + 1, req_after_opt)
               else
@@ -466,7 +466,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                   num_opt,
                   if num_opt > 0 && Option.is_none req_after_opt then
                     let (loc, _) = element in
-                    Some (mk_annot_reason RTupleElement loc)
+                    Some (mk_annot_reason (RTupleElement { name }) loc)
                   else
                     req_after_opt
                 )
@@ -491,7 +491,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         | Some reason -> error_type cx loc (Error_message.ETupleRequiredAfterOptional reason) t_ast
         | None ->
           let (ts, els, els_ast) = (List.rev ts_rev, List.rev els_rev, List.rev els_ast_rev) in
-          let element_reason = mk_annot_reason RTupleElement loc in
+          let element_reason = mk_annot_reason (RTupleElement { name = None }) loc in
           let elem_t =
             match ts with
             | [] -> EmptyT.why element_reason |> with_trust bogus_trust

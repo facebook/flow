@@ -52,7 +52,7 @@ type 'loc virtual_reason_desc =
   | RArrayType
   | RROArrayType
   | RTupleType
-  | RTupleElement
+  | RTupleElement of { name: string option }
   | RTupleLength of int
   | RTupleOutOfBoundsAccess of int
   | RFunction of reason_desc_function

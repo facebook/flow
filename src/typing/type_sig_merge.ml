@@ -495,7 +495,7 @@ and merge_annot tps infer_tps file = function
     Type.(IntersectionT (reason, InterRep.make t0 t1 ts))
   | Tuple { loc; elems_rev; arity } ->
     let reason = Reason.(mk_annot_reason RTupleType loc) in
-    let elem_reason = Reason.(mk_annot_reason RTupleElement loc) in
+    let elem_reason = Reason.(mk_annot_reason (RTupleElement { name = None }) loc) in
     (* NB: tail-recursive map in case of very large types *)
     let (elements, ts) =
       Base.List.fold
