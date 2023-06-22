@@ -386,7 +386,8 @@ jobs:
       - run:
           name: Init opam
           shell: C:/tools/cygwin/bin/bash.exe -leo pipefail
-          command: opam init default --bare --disable-sandboxing --no-setup
+          command: |
+            opam init --bare --disable-sandboxing --no-setup
       - run:
           name: Create opam switch
           shell: C:/tools/cygwin/bin/bash.exe -leo pipefail
