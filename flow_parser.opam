@@ -13,7 +13,7 @@ depends: [
   "dune" {>= "3.0"}
   "ppx_deriving" {build}
   "ppx_gen_rec" {build}
-  "sedlex" {>= "2.3"}
+  "sedlex" {>= "3.1"}
   "wtf8"
 ]
 dev-repo: "git+https://github.com/facebook/flow.git"
