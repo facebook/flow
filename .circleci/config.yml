@@ -396,7 +396,7 @@ jobs:
             PATH: /usr/local/bin:/usr/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
           command: |
              cd /cygdrive/c/Users/circleci/project
-             make deps
+             opam switch create . ocaml-variants.4.14.0+mingw64c --deps-only --yes --repos "default,https://github.com/ocaml-opam/opam-repository-mingw.git#opam2" -vvv
       - save_cache:
           key: opam-cache-{{ arch }}-{{ checksum "C:/tmp/flow/opamcachebreaker" }}
           paths:
