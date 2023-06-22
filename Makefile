@@ -51,7 +51,7 @@ all-homebrew:
 
 .PHONY: deps
 deps:
-	[ -d _opam ] || opam switch create . $(SWITCH) --deps-only --yes -vvv
+	[ -d _opam ] || opam switch create . $(SWITCH) --deps-only --yes -vvv --best-effort
 
 .PHONY: deps-js
 deps-js:
