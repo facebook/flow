@@ -1025,7 +1025,7 @@ end = struct
           mapM
             (fun t ->
               let%map t = type__ ~env t in
-              Ty.TupleElement { name = None; t; polarity = Ty.Neutral })
+              Ty.TupleElement { name = None; t; polarity = Ty.Neutral; optional = false })
             ts
         in
         Ty.Tup elements
@@ -1038,9 +1038,14 @@ end = struct
       | (T.TupleAT { elements = elements'; _ }, _) ->
         let%map elements =
           mapM
-            (fun (T.TupleElement { name; t; polarity }) ->
+            (fun (T.TupleElement { name; t; polarity; optional }) ->
+              let t =
+                match t with
+                | T.OptionalT { type_; _ } when optional -> type_
+                | _ -> t
+              in
               let%map t = type__ ~env t in
-              Ty.TupleElement { name; t; polarity = type_polarity polarity })
+              Ty.TupleElement { name; t; polarity = type_polarity polarity; optional })
             elements'
         in
         Ty.Tup elements

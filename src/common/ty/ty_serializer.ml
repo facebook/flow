@@ -107,7 +107,7 @@ let type_ options =
     | Tup elements ->
       let%map els =
         all
-          ((Base.List.mapi ~f:(fun i (TupleElement { name; t; polarity }) ->
+          ((Base.List.mapi ~f:(fun i (TupleElement { name; t; polarity; optional }) ->
                 let%map annot = type_ t in
                 let el =
                   match (name, polarity) with
@@ -117,7 +117,7 @@ let type_ options =
                         T.Tuple.LabeledElement.name = id_from_string name;
                         annot;
                         variance = variance_ polarity;
-                        optional = false;
+                        optional;
                       }
                   | (None, Neutral) -> T.Tuple.UnlabeledElement annot
                   | _ ->
@@ -129,7 +129,7 @@ let type_ options =
                         T.Tuple.LabeledElement.name;
                         annot;
                         variance = variance_ polarity;
-                        optional = false;
+                        optional;
                       }
                 in
                 (Loc.none, el)

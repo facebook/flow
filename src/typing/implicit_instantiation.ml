@@ -478,7 +478,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
   and reverse_resolve_spread_multiflow_subtype_full_no_resolution cx tvar reason params rest_param =
     let (tuple_elements_rev, tuple_ts) =
       Base.List.fold params ~init:([], []) ~f:(fun (els, ts) (name, t) ->
-          let el = TupleElement { name; t; polarity = Polarity.Neutral } in
+          let el = TupleElement { name; t; polarity = Polarity.Neutral; optional = false } in
           (el :: els, t :: ts)
       )
     in

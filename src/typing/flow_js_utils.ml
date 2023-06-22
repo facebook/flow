@@ -1911,7 +1911,9 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
       (value, ts, false, false)
     | TupleAT { elem_t; elements; arity = _ } ->
       let ts =
-        Base.List.map ~f:(fun (TupleElement { t; polarity; name }) -> (t, polarity, name)) elements
+        Base.List.map
+          ~f:(fun (TupleElement { t; polarity; name; optional = _ }) -> (t, polarity, name))
+          elements
       in
       (elem_t, Some ts, true, true)
     | ROArrayAT value -> (value, None, true, false)

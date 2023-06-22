@@ -1686,6 +1686,27 @@ type-destructor-trigger.js:11:7 = {
   "start":7,
   "end":27
 }
+tuple.js:3:6
+Flags: --pretty
+{
+  "types":{
+    "unevaluated":{"type":"type T = [1, b: 2, c?: 3]"},
+    "evaluated":{"type":"type T = [1, b: 2, c?: 3]"}
+  },
+  "reasons":[],
+  "loc":{
+    "source":"tuple.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":6,"offset":15},
+    "end":{"line":3,"column":6,"offset":16}
+  },
+  "path":"tuple.js",
+  "line":3,
+  "endline":3,
+  "start":6,
+  "end":6
+}
+
 unions.js:9:3 = {
   "types":{
     "unevaluated":{"type":"() => (number | string)"},

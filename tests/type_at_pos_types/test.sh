@@ -206,6 +206,9 @@ assert_ok "$FLOW" type-at-pos type-alias.js 34 6 --strip-root --pretty --expand-
 printf "type-destructor-trigger.js:11:7 = "
 assert_ok "$FLOW" type-at-pos type-destructor-trigger.js 11 7 --strip-root --pretty
 
+# tuple.js
+queries_in_file "type-at-pos" "tuple.js" --pretty
+
 # unions.js
 printf "unions.js:9:3 = "
 assert_ok "$FLOW" type-at-pos unions.js 9 3 --strip-root --pretty

@@ -313,7 +313,7 @@ struct
         spf
           "Tup (%s)"
           (dump_list
-             (fun (TupleElement { t; name = _; polarity = _ }) -> dump_t ~depth t)
+             (fun (TupleElement { t; name = _; polarity = _; optional = _ }) -> dump_t ~depth t)
              ~sep:","
              ts
           )
@@ -455,7 +455,8 @@ struct
             ( "types",
               JSON_Array
                 (Base.List.map
-                   ~f:(fun (TupleElement { t; name = _; polarity = _ }) -> json_of_t t)
+                   ~f:(fun (TupleElement { t; name = _; polarity = _; optional = _ }) ->
+                     json_of_t t)
                    ts
                 )
             );

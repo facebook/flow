@@ -178,6 +178,7 @@ and tuple_element =
       name: string option;
       t: t;
       polarity: polarity;
+      optional: bool;
     }
 (* caution: be sure to implement fail_tuple_element if >1 constructor! *)
 

@@ -342,7 +342,7 @@ class ['a] t =
         let acc = self#type_ cx P.Neutral acc elem_t in
         let acc =
           self#list
-            (fun acc (TupleElement { t; polarity = p; name = _ }) ->
+            (fun acc (TupleElement { t; polarity = p; name = _; optional = _ }) ->
               self#type_ cx (P.mult (pole, p)) acc t)
             acc
             elements

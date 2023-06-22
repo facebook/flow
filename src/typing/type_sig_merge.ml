@@ -509,7 +509,7 @@ and merge_annot tps infer_tps file = function
             else
               t
           in
-          let el = Type.TupleElement { name; t; polarity } in
+          let el = Type.TupleElement { name; t; polarity; optional } in
           (el :: els, t :: ts)
       )
     in

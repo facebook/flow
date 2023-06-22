@@ -3580,7 +3580,7 @@ struct
           | TupleAT { elements; _ } ->
             (* Object.assign(o, ...[x,y,z]) -> Object.assign(o, x, y, z) *)
             List.iteri
-              (fun n (TupleElement { t = from; polarity; name }) ->
+              (fun n (TupleElement { t = from; polarity; name; optional = _ }) ->
                 if not @@ Polarity.compat (polarity, Polarity.Positive) then
                   add_output
                     cx
@@ -3951,8 +3951,8 @@ struct
                   elem_t = f elem_t;
                   elements =
                     Base.List.map
-                      ~f:(fun (TupleElement { name; t; polarity }) ->
-                        TupleElement { name; t = f t; polarity })
+                      ~f:(fun (TupleElement { name; t; polarity; optional }) ->
+                        TupleElement { name; t = f t; polarity; optional })
                       elements;
                   arity;
                 }
@@ -5664,8 +5664,8 @@ struct
                  elem_t = any;
                  elements =
                    Base.List.map
-                     ~f:(fun (TupleElement { name; t; polarity }) ->
-                       TupleElement { name; t = only_any t; polarity })
+                     ~f:(fun (TupleElement { name; t; polarity; optional }) ->
+                       TupleElement { name; t = only_any t; polarity; optional })
                      elements;
                  arity;
                }
@@ -8223,8 +8223,8 @@ struct
           iter2opt
             (fun t1 t2 ->
               match (t1, t2) with
-              | ( Some (TupleElement { t = t1; polarity = p1; name = _ }),
-                  Some (TupleElement { t = t2; polarity = p2; name = _ })
+              | ( Some (TupleElement { t = t1; polarity = p1; name = _; optional = _ }),
+                  Some (TupleElement { t = t2; polarity = p2; name = _; optional = _ })
                 ) ->
                 if not @@ Polarity.equal (p1, p2) then
                   add_output
@@ -8854,7 +8854,8 @@ struct
                          elements =
                            Base.List.map
                              ~f:(fun t ->
-                               TupleElement { name = None; t; polarity = Polarity.Neutral })
+                               TupleElement
+                                 { name = None; t; polarity = Polarity.Neutral; optional = false })
                              tuple_types;
                          arity = (len, len);
                        }
@@ -8893,7 +8894,8 @@ struct
               let args =
                 List.rev_append
                   (List.map
-                     (fun (TupleElement { t; polarity = _; name = _ }) -> (t, generic))
+                     (fun (TupleElement { t; polarity = _; name = _; optional = _ }) ->
+                       (t, generic))
                      elements
                   )
                   args

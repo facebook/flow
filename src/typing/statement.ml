@@ -6353,9 +6353,20 @@ module Make
                    elem_t;
                    elements =
                      [
-                       TupleElement { name = Some "key"; t = keys_t; polarity = Polarity.Neutral };
                        TupleElement
-                         { name = Some "value"; t = values_t; polarity = Polarity.Neutral };
+                         {
+                           name = Some "key";
+                           t = keys_t;
+                           polarity = Polarity.Neutral;
+                           optional = false;
+                         };
+                       TupleElement
+                         {
+                           name = Some "value";
+                           t = values_t;
+                           polarity = Polarity.Neutral;
+                           optional = false;
+                         };
                      ];
                    arity = (2, 2);
                  }

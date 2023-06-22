@@ -1170,6 +1170,7 @@ module rec TypeTerm : sig
         name: string option;
         t: t;
         polarity: Polarity.t;
+        optional: bool;
       }
 
   and objtype = {

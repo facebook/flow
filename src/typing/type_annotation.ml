@@ -454,10 +454,11 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                (ts, els, els_ast, num_req, num_opt, req_after_opt, has_tuple_enhancements)
                element
              ->
-            let (t, el, el_ast, optional, elem_has_tuple_enhancements) =
+            let (t, el, el_ast, elem_has_tuple_enhancements) =
               convert_tuple_element cx tparams_map infer_tparams_map element
             in
             let (num_req, num_opt, req_after_opt) =
+              let (TupleElement { optional; _ }) = el in
               if optional then
                 (num_req, num_opt + 1, req_after_opt)
               else
@@ -2308,8 +2309,11 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     | Ast.Type.Tuple.UnlabeledElement annot ->
       let (((_, t), _) as annot_ast) = convert cx tparams_map infer_tparams_map annot in
       let element_ast = (loc, Ast.Type.Tuple.UnlabeledElement annot_ast) in
-      let optional = false in
-      (t, TupleElement { name = None; t; polarity = Polarity.Neutral }, element_ast, optional, false)
+      ( t,
+        TupleElement { name = None; t; polarity = Polarity.Neutral; optional = false },
+        element_ast,
+        false
+      )
     | Ast.Type.Tuple.LabeledElement
         { Ast.Type.Tuple.LabeledElement.name; annot; variance; optional } ->
       let (((_, annot_t), _) as annot_ast) = convert cx tparams_map infer_tparams_map annot in
@@ -2331,9 +2335,8 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         )
       in
       ( t,
-        TupleElement { name = Some str_name; t; polarity = polarity cx variance },
+        TupleElement { name = Some str_name; t; polarity = polarity cx variance; optional },
         element_ast,
-        optional,
         true
       )
     | Ast.Type.Tuple.SpreadElement spread_el ->
@@ -2342,8 +2345,11 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let element_ast =
         (loc, Ast.Type.Tuple.SpreadElement (Tast_utils.error_mapper#tuple_spread_element spread_el))
       in
-      let optional = false in
-      (t, TupleElement { name = None; t; polarity = Polarity.Neutral }, element_ast, optional, true)
+      ( t,
+        TupleElement { name = None; t; polarity = Polarity.Neutral; optional = false },
+        element_ast,
+        true
+      )
 
   and check_guard_is_not_rest_param cx params (param_name, name_loc) =
     let open T.Function in
