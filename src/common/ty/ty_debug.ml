@@ -148,6 +148,9 @@ struct
   and dump_list : 'a. ('a -> string) -> ?sep:string -> 'a list -> string =
    (fun f ?(sep = ", ") ls -> Base.List.map ~f ls |> String.concat sep)
 
+  and dump_listi : 'a. (int -> 'a -> string) -> ?sep:string -> 'a list -> string =
+   (fun f ?(sep = ", ") ls -> Base.List.mapi ~f ls |> String.concat sep)
+
   and dump_param_opt = function
     | { prm_optional = true } -> "?"
     | _ -> ""
@@ -191,6 +194,21 @@ struct
     match t with
     | ReturnType t -> dump_t ~depth t
     | TypeGuard (x, t) -> spf "%s is %s" x (dump_t ~depth t)
+
+  and dump_tuple_element ~depth i name t polarity optional =
+    if Base.Option.is_none name && polarity = Neutral && not optional then
+      dump_t ~depth t
+    else
+      spf
+        "%s%s%s: %s"
+        (dump_polarity polarity)
+        (Base.Option.value ~default:(spf "element_%d" i) name)
+        ( if optional then
+          "?"
+        else
+          ""
+        )
+        (dump_t ~depth t)
 
   and dump_field ~depth x t polarity optional =
     spf
@@ -309,13 +327,15 @@ struct
       | Fun f -> dump_fun_t ~depth f
       | Obj o -> dump_obj ~depth o
       | Arr a -> dump_arr ~depth a
-      | Tup ts ->
+      | Tup elements ->
         spf
           "Tup (%s)"
-          (dump_list
-             (fun (TupleElement { t; name = _; polarity = _; optional = _ }) -> dump_t ~depth t)
+          (dump_listi
+             (fun i -> function
+               | TupleElement { name; t; polarity; optional } ->
+                 dump_tuple_element ~depth i name t polarity optional)
              ~sep:","
-             ts
+             elements
           )
       | Union (_, t1, t2, ts) ->
         spf "Union (%s)" (dump_list (dump_t ~depth) ~sep:", " (Base.List.take (t1 :: t2 :: ts) 10))
@@ -450,14 +470,22 @@ struct
             );
             ("type", json_of_t arr_elt_t);
           ]
-        | Tup ts ->
+        | Tup elements ->
           [
-            ( "types",
+            ( "elements",
               JSON_Array
                 (Base.List.map
-                   ~f:(fun (TupleElement { t; name = _; polarity = _; optional = _ }) ->
-                     json_of_t t)
-                   ts
+                   ~f:(function
+                     | TupleElement { t; name; polarity; optional } ->
+                       JSON_Object
+                         [
+                           ("kind", JSON_String "TupleElement");
+                           ("name", JSON_String (Base.Option.value name ~default:""));
+                           ("t", json_of_t t);
+                           ("optional", JSON_Bool optional);
+                           ("polarity", json_of_polarity polarity);
+                         ])
+                   elements
                 )
             );
           ]
