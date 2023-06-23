@@ -387,7 +387,7 @@ jobs:
           name: Init opam
           shell: C:/tools/cygwin/bin/bash.exe -leo pipefail
           command: |
-            opam init default 'https://github.com/fdopen/opam-repository-mingw.git#opam2' --bare --disable-sandboxing --no-setup
+            opam init default 'https://github.com/ocaml-opam/opam-repository-mingw.git#opam2' --bare --disable-sandboxing --no-setup
       - run:
           name: Create opam switch
           shell: C:/tools/cygwin/bin/bash.exe -leo pipefail
