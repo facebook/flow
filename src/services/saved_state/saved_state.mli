@@ -65,7 +65,7 @@ val backtrace_of_invalid_reason : invalid_reason -> string option
 exception Invalid_saved_state of invalid_reason
 
 val save :
-  saved_state_filename:Path.t ->
+  saved_state_filename:File_path.t ->
   genv:ServerEnv.genv ->
   env:ServerEnv.env ->
   profiling:Profiling_js.running ->
@@ -73,7 +73,7 @@ val save :
 
 val load :
   workers:MultiWorkerLwt.worker list option ->
-  saved_state_filename:Path.t ->
+  saved_state_filename:File_path.t ->
   options:Options.t ->
   (Profiling_js.finished * saved_state_data) Lwt.t
 

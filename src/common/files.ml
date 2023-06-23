@@ -8,8 +8,8 @@
 (************** file filter utils ***************)
 
 type lib_dir =
-  | Prelude of Path.t
-  | Flowlib of Path.t
+  | Prelude of File_path.t
+  | Flowlib of File_path.t
 
 type options = {
   default_lib_dir: lib_dir option;
@@ -17,7 +17,7 @@ type options = {
   untyped: (string * Str.regexp) list;
   declarations: (string * Str.regexp) list;
   includes: Path_matcher.t;
-  lib_paths: Path.t list;
+  lib_paths: File_path.t list;
   module_file_exts: string list;
   module_resource_exts: SSet.t;
   node_resolver_dirnames: string list;
@@ -136,9 +136,9 @@ let realpath_ path =
 
 let make_path_absolute root path =
   if Filename.is_relative path then
-    Path.concat root path
+    File_path.concat root path
   else
-    Path.make path
+    File_path.make path
 
 type file_kind =
   | Reg of string
@@ -296,7 +296,7 @@ let make_next_files_and_symlinks
    of `paths`. *)
 let make_next_files_following_symlinks
     ~node_module_filter ~path_filter ~realpath_filter ~error_filter ~dir_filter ~sort paths =
-  let paths = Base.List.map ~f:Path.to_string paths in
+  let paths = Base.List.map ~f:File_path.to_string paths in
   let cb =
     ref
       (make_next_files_and_symlinks
@@ -397,7 +397,7 @@ let is_in_flowlib (options : options) : string -> bool =
       | Flowlib path ->
         path
     in
-    is_prefix (Path.to_string root)
+    is_prefix (File_path.to_string root)
 
 let init ?(flowlibs_only = false) (options : options) =
   let node_module_filter = is_node_module options in
@@ -417,7 +417,7 @@ let init ?(flowlibs_only = false) (options : options) =
         | Flowlib path ->
           path
       in
-      let is_in_flowlib = is_prefix (Path.to_string root) in
+      let is_in_flowlib = is_prefix (File_path.to_string root) in
       let is_valid_path = is_valid_path ~options in
       let filter path = is_in_flowlib path || is_valid_path path in
       (root :: libs, filter)
@@ -429,7 +429,7 @@ let init ?(flowlibs_only = false) (options : options) =
       []
     else
       let get_next lib =
-        let lib_str = Path.to_string lib in
+        let lib_str = File_path.to_string lib in
         (* TODO: better to parse json files, not ignore them *)
         let filter' path = (path = lib_str || filter path) && not (is_json_file path) in
         (* we do want to sort, but use SSet.elements later, which sorts anyway *)
@@ -487,9 +487,9 @@ let wanted ~options lib_fileset =
 
 let watched_paths options =
   Path_matcher.stems options.includes
-  |> Base.List.sort ~compare:Path.compare
+  |> Base.List.sort ~compare:File_path.compare
   |> Base.List.remove_consecutive_duplicates ~which_to_keep:`First ~equal:(fun stem prev_stem ->
-         Path.is_ancestor ~prefix:prev_stem stem
+         File_path.is_ancestor ~prefix:prev_stem stem
      )
 
 (**
@@ -515,7 +515,7 @@ let make_next_files ~root ~all ~sort ~subdir ~options ~libs =
     | None -> watched_paths options
     | Some subdir -> [subdir]
   in
-  let root_str = Path.to_string root in
+  let root_str = File_path.to_string root in
   let is_valid_path = is_valid_path ~options in
   let realpath_filter path = is_valid_path path && filter path in
   let path_filter =
@@ -532,7 +532,7 @@ let make_next_files ~root ~all ~sort ~subdir ~options ~libs =
       (* The subdir might contain symlinks outside of the subdir. To prevent
        * these files from being returned, we modify the path filter to check
        * that the realpath starts with the subdir *)
-      let subdir_str = Path.to_string subdir in
+      let subdir_str = File_path.to_string subdir in
       fun path ->
         String.starts_with ~prefix:subdir_str path
         && (String.starts_with ~prefix:root_str path || is_included options path)
@@ -693,7 +693,7 @@ let mkdirp path_str perm =
 
 (* Given a path, we want to know if it's in a node_modules/ directory or not. *)
 let is_within_node_modules ~root ~options =
-  let relative_path_parts = relative_path_parts (Path.to_string root) in
+  let relative_path_parts = relative_path_parts (File_path.to_string root) in
   let node_resolver_dirnames = node_resolver_dirnames options |> SSet.of_list in
   fun path ->
     (* We use paths that are relative to the root, so that we ignore ancestor directories *)
@@ -738,5 +738,5 @@ let canonicalize_filenames ~cwd ~handle_imaginary filenames =
     filenames
 
 let expand_project_root_token ~root =
-  let root = Path.to_string root |> Sys_utils.normalize_filename_dir_sep in
+  let root = File_path.to_string root |> Sys_utils.normalize_filename_dir_sep in
   (fun str -> str |> Str.split_delim project_root_token |> String.concat root)

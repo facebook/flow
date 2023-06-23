@@ -43,8 +43,10 @@ let parse_content file content =
     let converted =
       List.fold_left
         (fun acc parse_error ->
-          Errors.ConcreteLocPrintableErrorSet.add (error_of_parse_error file parse_error) acc)
-        Errors.ConcreteLocPrintableErrorSet.empty
+          Flow_errors_utils.ConcreteLocPrintableErrorSet.add
+            (error_of_parse_error file parse_error)
+            acc)
+        Flow_errors_utils.ConcreteLocPrintableErrorSet.empty
         parse_errors
     in
     Error converted
@@ -140,7 +142,7 @@ let stub_metadata ~root ~checked =
     use_mixed_in_catch_variables = false;
   }
 
-let master_cx_ref : (Path.t * Context.master_context) option ref = ref None
+let master_cx_ref : (File_path.t * Context.master_context) option ref = ref None
 
 let get_master_cx root =
   match !master_cx_ref with
@@ -150,7 +152,7 @@ let get_master_cx root =
     master_cx
 
 let init_builtins filenames =
-  let root = Path.dummy_path in
+  let root = File_path.dummy_path in
   let ccx = Context.(make_ccx (empty_master_cx ())) in
   let leader =
     let metadata = stub_metadata ~root ~checked:true in
@@ -231,8 +233,8 @@ let infer_and_merge ~root filename js_config_object docblock ast file_sig =
   (cx, typed_ast)
 
 let check_content ~filename ~content ~js_config_object =
-  let stdin_file = Some (Path.make_unsafe filename, content) in
-  let root = Path.dummy_path in
+  let stdin_file = Some (File_path.make_unsafe filename, content) in
+  let root = File_path.dummy_path in
   let filename = File_key.SourceFile filename in
   let (errors, warnings) =
     match parse_content filename content with
@@ -274,10 +276,10 @@ let check_content ~filename ~content ~js_config_object =
           ~unused:suppressions
       in
       (errors, warnings)
-    | Error parse_errors -> (parse_errors, Errors.ConcreteLocPrintableErrorSet.empty)
+    | Error parse_errors -> (parse_errors, Flow_errors_utils.ConcreteLocPrintableErrorSet.empty)
   in
   let strip_root = Some root in
-  Errors.Json_output.json_of_errors_with_context
+  Flow_errors_utils.Json_output.json_of_errors_with_context
     ~strip_root
     ~stdin_file
     ~offset_kind:Offset_utils.Utf8
@@ -310,7 +312,7 @@ let mk_loc file line col =
 
 let infer_type filename content line col js_config_object : Loc.t * (string, string) result =
   let filename = File_key.SourceFile filename in
-  let root = Path.dummy_path in
+  let root = File_path.dummy_path in
   match parse_content filename content with
   | Error _ -> failwith "parse error"
   | Ok (ast, file_sig) ->
@@ -350,7 +352,7 @@ let types_to_json types ~strip_root =
                  ("type", JSON_String str)
                  :: ("reasons", JSON_Array [])
                  :: ("loc", json_of_loc ~strip_root ~offset_table:None loc)
-                 :: Errors.deprecated_json_props_of_loc ~strip_root loc
+                 :: Flow_errors_utils.deprecated_json_props_of_loc ~strip_root loc
                in
                JSON_Object json_assoc
            )
@@ -361,7 +363,7 @@ let types_to_json types ~strip_root =
 
 let dump_types js_file js_content js_config_object =
   let filename = File_key.SourceFile (Js.to_string js_file) in
-  let root = Path.dummy_path in
+  let root = File_path.dummy_path in
   let content = Js.to_string js_content in
   match parse_content filename content with
   | Error _ -> failwith "parse error"

@@ -157,7 +157,7 @@ let rec instantiate_callee cx fn instantiation_hint =
         let call_args_tlist =
           let checked_t t loc =
             let reason = mk_reason (TypeUtil.reason_of_t t |> Reason.desc_of_reason) loc in
-            Env.find_write cx Env_api.ExpressionLoc reason
+            Type_env.find_write cx Env_api.ExpressionLoc reason
           in
           let rec loop i = function
             | [] -> []
@@ -480,7 +480,7 @@ and type_of_hint_decomposition cx op reason t =
       | Decomp_MethodPrivateName (name, class_stack) ->
         let env = Context.environment cx in
         Context.set_environment cx { env with Loc_env.class_stack };
-        let class_entries = Env.get_class_entries cx in
+        let class_entries = Type_env.get_class_entries cx in
         let t =
           Tvar.mk_where cx reason (fun prop_t ->
               SpeculationFlow.resolved_lower_flow_unsafe
@@ -503,7 +503,7 @@ and type_of_hint_decomposition cx op reason t =
             SpeculationFlow.resolved_lower_flow_unsafe cx reason (t, use_t)
         )
       | Decomp_ObjComputed reason ->
-        let key_t = Env.find_write cx Env_api.ExpressionLoc reason in
+        let key_t = Type_env.find_write cx Env_api.ExpressionLoc reason in
         Tvar.mk_no_wrap_where cx reason (fun tout ->
             let use_t = GetElemT { use_op = unknown_use; reason; from_annot = true; key_t; tout } in
             SpeculationFlow.resolved_lower_flow_unsafe cx reason (t, use_t)
@@ -533,7 +533,7 @@ and type_of_hint_decomposition cx op reason t =
                 | SingletonStr s -> DefT (reason, bogus_trust (), SingletonStrT (OrdinaryName s))
                 | SingletonBigInt n ->
                   DefT (reason, bogus_trust (), SingletonBigIntT (Some n, Int64.to_string n))
-                | Member reason -> Env.find_write cx Env_api.ExpressionLoc reason
+                | Member reason -> Type_env.find_write cx Env_api.ExpressionLoc reason
               in
               LeftP (SentinelProp prop, other_t)
             in

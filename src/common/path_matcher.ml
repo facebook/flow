@@ -5,16 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module PathMap : Flow_map.S with type key = Path.t = Flow_map.Make (struct
-  type t = Path.t
+module PathMap : Flow_map.S with type key = File_path.t = Flow_map.Make (struct
+  type t = File_path.t
 
-  let compare p1 p2 = String.compare (Path.to_string p1) (Path.to_string p2)
+  let compare p1 p2 = String.compare (File_path.to_string p1) (File_path.to_string p2)
 end)
 
 type t = {
   (* stems extracted from paths.
      NOTE: stored in reverse-insertion order! *)
-  stems: Path.t list;
+  stems: File_path.t list;
   (* map from stems to list of (original path, regexified path) *)
   stem_map: (string * Str.regexp) list PathMap.t;
 }
@@ -31,12 +31,12 @@ let path_stem =
   fun path ->
     (* strip filename *)
     let path =
-      if Path.file_exists path && not (Path.is_directory path) then
-        Path.parent path
+      if File_path.file_exists path && not (File_path.is_directory path) then
+        File_path.parent path
       else
         path
     in
-    let path_str = Path.to_string path in
+    let path_str = File_path.to_string path in
     (* strip back to non-wc prefix *)
     let stem =
       if Str.string_match wc path_str 0 then
@@ -44,7 +44,7 @@ let path_stem =
       else
         path_str
     in
-    Path.make stem
+    File_path.make stem
 
 (* translate a path with wildcards into a regex *)
 let path_patt =
@@ -52,7 +52,7 @@ let path_patt =
   let star2 = Str.regexp_string "**" in
   let qmark = Str.regexp_string "?" in
   fun path ->
-    let str = Path.to_string path |> Sys_utils.normalize_filename_dir_sep in
+    let str = File_path.to_string path |> Sys_utils.normalize_filename_dir_sep in
     (* because we accept both * and **, convert in 2 steps *)
     let results = Str.full_split star2 str in
     let results =
@@ -80,7 +80,7 @@ let dir_sep =
 (* helper - eliminate noncanonical entries where possible.
    no other normalization is done *)
 let fixup_path p =
-  let s = Path.to_string p in
+  let s = File_path.to_string p in
   let is_normalized =
     match Sys_utils.realpath s with
     | Some s' -> s' = s
@@ -113,14 +113,14 @@ let fixup_path p =
     in
     let entries = loop [] entries in
     let s = List.fold_left Filename.concat root entries in
-    Path.make s
+    File_path.make s
 
 (* adds `path` to the matcher, calculating the appropriate stem and pattern *)
 let add { stems; stem_map } path =
   let path = fixup_path path in
   let stem = path_stem path in
   let patt = path_patt path in
-  let pstr = Path.to_string path in
+  let pstr = File_path.to_string path in
   let (stems, stem_map) =
     match PathMap.find_opt stem stem_map with
     | None ->
@@ -134,7 +134,7 @@ let add { stems; stem_map } path =
 
 (* filters a list of prefixes into only the prefixes with which f starts *)
 let find_prefixes f =
-  List.filter (fun prefix -> String.starts_with ~prefix:(Path.to_string prefix) f)
+  List.filter (fun prefix -> String.starts_with ~prefix:(File_path.to_string prefix) f)
 
 (* find a match for f in a list of patterns, or none *)
 let rec match_patt f = function

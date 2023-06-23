@@ -54,7 +54,7 @@ let types_to_json ~file_content types ~strip_root =
                  ("type", JSON_String t)
                  :: ("reasons", JSON_Array [])
                  :: ("loc", json_of_loc ~strip_root ~offset_table loc)
-                 :: Errors.deprecated_json_props_of_loc ~strip_root loc
+                 :: Flow_errors_utils.deprecated_json_props_of_loc ~strip_root loc
                in
                JSON_Object json_assoc
            )

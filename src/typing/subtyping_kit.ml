@@ -1096,7 +1096,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           (Nel.to_list params2)
           ~init:(Subst_name.Map.empty, Subst_name.Map.empty)
           ~f:(fun (prev_map1, prev_map2) param1 param2 ->
-            let bound2 = Subst.subst cx ~use_op prev_map2 param2.bound in
+            let bound2 = Type_subst.subst cx ~use_op prev_map2 param2.bound in
             rec_flow cx trace (bound2, UseT (use_op, param1.bound));
             let (gen, map1) = Flow_js_utils.generic_bound cx prev_map1 param1 in
             let map2 = Subst_name.Map.add param2.name gen prev_map2 in
@@ -1108,8 +1108,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
        * -----------
        * We check t <: t' after substituting ai' for ai
        *)
-      let t1 = Subst.subst cx ~use_op map1 t1 in
-      let t2 = Subst.subst cx ~use_op map2 t2 in
+      let t1 = Type_subst.subst cx ~use_op map1 t1 in
+      let t2 = Type_subst.subst cx ~use_op map2 t2 in
       rec_flow_t ~use_op cx trace (t1, t2)
     (* general case **)
     | (_, DefT (_, _, PolyT { t_out = t; _ })) -> rec_flow cx trace (l, UseT (use_op, t))

@@ -64,12 +64,12 @@ let changes_since_mergebase =
     Base.List.fold
       ~init:acc
       ~f:(fun acc change ->
-        let path = Path.concat root change |> Path.to_string in
+        let path = File_path.concat root change |> File_path.to_string in
         SSet.add path acc)
       paths
   in
   let files_changed_since_mergebase_with vcs root mergebase_with =
-    let root_str = Path.to_string root in
+    let root_str = File_path.to_string root in
     match vcs with
     | Vcs.Git -> Git.files_changed_since_mergebase_with ~cwd:root_str mergebase_with
     | Vcs.Hg -> Hg.files_changed_since_mergebase_with ~cwd:root_str mergebase_with
@@ -97,7 +97,7 @@ let changes_since_mergebase =
       let%lwt (seen_roots, acc) =
         match Vcs.find_root path with
         | Some (vcs, root) ->
-          let root_str = Path.to_string root in
+          let root_str = File_path.to_string root in
           if SSet.mem root_str seen_roots then
             Lwt.return (seen_roots, acc)
           else

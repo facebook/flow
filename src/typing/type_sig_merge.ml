@@ -1310,7 +1310,7 @@ and merge_tparam ~from_infer tps infer_tps file tp =
     if from_infer && SMap.mem name tps then
       (* We perform the same alpha rename as the one in type_annotation.ml to
          distinguish infer tparam vs regular tparam that has the same name. *)
-      Subst.new_name
+      Type_subst.new_name
         (Subst_name.Name name)
         (tps |> SMap.keys |> List.map (fun n -> Subst_name.Name n) |> Subst_name.Set.of_list)
     else

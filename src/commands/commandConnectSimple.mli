@@ -23,13 +23,13 @@ type error =
   | Server_missing
   | Server_socket_missing
 
-val server_exists : flowconfig_name:string -> tmp_dir:string -> Path.t -> bool
+val server_exists : flowconfig_name:string -> tmp_dir:string -> File_path.t -> bool
 
 val connect_once :
   flowconfig_name:string ->
   client_handshake:SocketHandshake.client_handshake ->
   tmp_dir:string ->
-  Path.t ->
+  File_path.t ->
   (Timeout.in_channel * out_channel, error) result
 
 val busy_reason_to_string : busy_reason -> string

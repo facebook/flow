@@ -21,7 +21,7 @@ let mk_root flowconfig_name root =
   if flowconfig_name = default_flowconfig_name then
     root
   else
-    Path.concat root flowconfig_name
+    File_path.concat root flowconfig_name
 
 let digest_root_part root_part max_len =
   let len = String.length root_part in
@@ -42,9 +42,9 @@ let digest_root_part root_part max_len =
     Printf.sprintf "%s_%s_%s" prefix digest_part suffix
 
 let file_of_root ?max_root_part_len extension ~flowconfig_name ~tmp_dir root =
-  let tmp_dir = tmp_dir |> Path.make |> Path.to_string |> add_dir_sep in
+  let tmp_dir = tmp_dir |> File_path.make |> File_path.to_string |> add_dir_sep in
   let root = mk_root flowconfig_name root in
-  let root_part = String_utils.filename_escape (Path.to_string root) in
+  let root_part = String_utils.filename_escape (File_path.to_string root) in
   let root_part =
     match max_root_part_len with
     | None -> root_part
@@ -52,7 +52,7 @@ let file_of_root ?max_root_part_len extension ~flowconfig_name ~tmp_dir root =
   in
   Printf.sprintf "%s%s.%s" tmp_dir root_part extension
 
-let config_file flowconfig_name root = Path.to_string (Path.concat root flowconfig_name)
+let config_file flowconfig_name root = File_path.to_string (File_path.concat root flowconfig_name)
 
 (* Generating really long filenames can hit some limits. For example
  *

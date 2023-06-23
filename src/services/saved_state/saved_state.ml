@@ -117,7 +117,7 @@ let with_cache tbl key f =
  *)
 module Save : sig
   val save :
-    saved_state_filename:Path.t ->
+    saved_state_filename:File_path.t ->
     genv:ServerEnv.genv ->
     env:ServerEnv.env ->
     profiling:Profiling_js.running ->
@@ -291,7 +291,7 @@ end = struct
   let collect_data ~genv ~env ~profiling =
     let options = genv.ServerEnv.options in
     let reader = State_reader.create () in
-    let root = Options.root options |> Path.to_string in
+    let root = Options.root options |> File_path.to_string in
     let t = make ~root in
     let parsed_heaps =
       Profiling_js.with_timer profiling ~timer:"CollectParsed" ~f:(fun () ->
@@ -379,7 +379,7 @@ end = struct
     Hh_logger.info "Collecting data for saved state";
 
     let%lwt data = collect_data ~genv ~env ~profiling in
-    let filename = Path.to_string saved_state_filename in
+    let filename = File_path.to_string saved_state_filename in
     Files.mkdirp (Filename.dirname filename) 0o777;
     let%lwt fd = Lwt_unix.openfile filename [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_TRUNC] 0o666 in
     let%lwt header_bytes_written = write_version fd in
@@ -462,7 +462,7 @@ exception Invalid_saved_state of invalid_reason
 module Load : sig
   val load :
     workers:MultiWorkerLwt.worker list option ->
-    saved_state_filename:Path.t ->
+    saved_state_filename:File_path.t ->
     options:Options.t ->
     profiling:Profiling_js.running ->
     saved_state_data Lwt.t
@@ -604,7 +604,7 @@ end = struct
 
   (* Denormalize all the data *)
   let denormalize_data ~workers ~options ~data =
-    let root = Options.root options |> Path.to_string in
+    let root = Options.root options |> File_path.to_string in
     let denormalizer = FileDenormalizer.make ~root in
     let {
       flowconfig_hash;
@@ -670,7 +670,7 @@ end = struct
       }
 
   let load ~workers ~saved_state_filename ~options ~profiling =
-    let filename = Path.to_string saved_state_filename in
+    let filename = File_path.to_string saved_state_filename in
     Hh_logger.info "Reading saved-state file at %S" filename;
 
     MonitorRPC.status_update ~event:ServerStatus.Read_saved_state;

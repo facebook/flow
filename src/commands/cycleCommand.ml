@@ -38,7 +38,7 @@ let main base_flags option_values root strip_root types_only file () =
   let root = guess_root flowconfig_name root in
   let strip_root f =
     if strip_root then
-      Files.relative_path (Path.to_string root) f
+      Files.relative_path (File_path.to_string root) f
     else
       f
   in

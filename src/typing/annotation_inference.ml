@@ -6,7 +6,7 @@
  *)
 
 open Reason
-open Subst
+open Type_subst
 open Type
 open Type.AConstraint
 open TypeUtil

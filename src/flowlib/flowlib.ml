@@ -20,8 +20,8 @@ let contents no_flowlib : (string * string) array =
 let contents_list ~no_flowlib = contents no_flowlib |> Array.to_list
 
 type libdir =
-  | Flowlib of Path.t
-  | Prelude of Path.t
+  | Flowlib of File_path.t
+  | Prelude of File_path.t
 
 (** [libdir ~no_flowlib parent_dir] returns the directory under [parent_dir]
     within which the flowlib files will be extracted. This directory is
@@ -31,7 +31,7 @@ type libdir =
 let libdir ~no_flowlib parent_dir =
   let euid = Unix.geteuid () in
   let basename = Printf.sprintf "flowlib_%s_%d" (hash no_flowlib) euid in
-  let path = Path.concat parent_dir basename in
+  let path = File_path.concat parent_dir basename in
   if no_flowlib then
     Prelude path
   else
@@ -42,13 +42,13 @@ let path_of_libdir = function
   | Flowlib path -> path
 
 let mkdir libdir =
-  let path = path_of_libdir libdir |> Path.to_string in
+  let path = path_of_libdir libdir |> File_path.to_string in
   let parent_dir = Filename.dirname path in
   Sys_utils.mkdir_no_fail parent_dir;
   Sys_utils.mkdir_no_fail path
 
 let write_flowlib dir (filename, contents) =
-  let file = Path.(concat dir filename |> to_string) in
+  let file = File_path.(concat dir filename |> to_string) in
   Sys_utils.write_file ~file contents
 
 let extract libdir =

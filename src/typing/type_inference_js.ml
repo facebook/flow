@@ -406,7 +406,7 @@ let initialize_env
   Context.set_environment cx env;
   let components = NameDefOrdering.build_ordering cx ~autocomplete_hooks info name_def_graph in
   Base.List.iter ~f:(Cycles.handle_component cx name_def_graph) components;
-  Env.init_env cx toplevel_scope_kind;
+  Type_env.init_env cx toplevel_scope_kind;
   let env = Context.environment cx in
   Base.Option.iter local_exports_var ~f:(fun local_exports_var ->
       let loc = TypeUtil.loc_of_t local_exports_var in
@@ -618,7 +618,7 @@ let infer_lib_file ~exclude_syms ~lint_severities cx ast =
     Context.add_error_suppressions cx suppressions;
     List.iter (Flow_js.add_output cx) suppression_errors;
 
-    Env.init_builtins_from_libdef cx
+    Type_env.init_builtins_from_libdef cx
   with
   | Env_api.Env_invariant (loc, inv) ->
     let loc = Base.Option.value ~default:(fst aloc_ast) loc in

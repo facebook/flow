@@ -176,7 +176,7 @@ let is_relative_or_absolute r =
   || Str.string_match Files.parent_dir_name r 0
   || Str.string_match Files.absolute_path_regexp r 0
 
-let resolve_symlinks path = Path.to_string (Path.make path)
+let resolve_symlinks path = File_path.to_string (File_path.make path)
 
 let record_phantom_dependency mname dependency = function
   | None -> ()
@@ -310,7 +310,7 @@ module Node = struct
   let resolve_root_relative ~options ~reader ?phantom_acc import_str =
     if Options.node_resolver_allow_root_relative options then
       let dirnames = Options.node_resolver_root_relative_dirnames options in
-      let root = Options.root options |> Path.to_string in
+      let root = Options.root options |> File_path.to_string in
       let f dirname =
         let root =
           if dirname = "" then

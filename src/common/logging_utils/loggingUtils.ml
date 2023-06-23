@@ -46,7 +46,7 @@ let (set_server_options, dump_server_options) =
     let enabled_rollouts = Options.enabled_rollouts server_options in
     let debug = Options.is_debug_mode server_options in
     let log_saving = Options.log_saving server_options in
-    let log_file = Options.log_file server_options |> Path.to_string in
+    let log_file = Options.log_file server_options |> File_path.to_string in
     (lazy_mode, max_workers, long_lived_workers, enabled_rollouts, debug, log_saving, log_file)
   in
   let set_server_options ~server_options =

@@ -39,9 +39,10 @@ type errors = {
 }
 
 type collated_errors = {
-  collated_errorset: Errors.ConcreteLocPrintableErrorSet.t;
-  collated_warning_map: Errors.ConcreteLocPrintableErrorSet.t Utils_js.FilenameMap.t;
-  collated_suppressed_errors: (Loc.t Errors.printable_error * Loc_collections.LocSet.t) list;
+  collated_errorset: Flow_errors_utils.ConcreteLocPrintableErrorSet.t;
+  collated_warning_map: Flow_errors_utils.ConcreteLocPrintableErrorSet.t Utils_js.FilenameMap.t;
+  collated_suppressed_errors:
+    (Loc.t Flow_errors_utils.printable_error * Loc_collections.LocSet.t) list;
 }
 
 type env = {

@@ -55,8 +55,8 @@ let main (module Runnable : Codemod_runner.RUNNABLE) codemod_flags () =
     match root with
     | None -> CommandUtils.guess_root flowconfig_name (Some (List.hd filenames))
     | Some provided_root ->
-      let dir = Path.make provided_root in
-      if Path.file_exists (Path.concat dir flowconfig_name) then
+      let dir = File_path.make provided_root in
+      if File_path.file_exists (File_path.concat dir flowconfig_name) then
         dir
       else
         let msg = Utils_js.spf "Invalid root directory %s" provided_root in

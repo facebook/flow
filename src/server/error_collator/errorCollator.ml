@@ -22,7 +22,7 @@ open Utils_js
  *    checked set
  * *)
 let regenerate ~reader ~options =
-  let open Errors in
+  let open Flow_errors_utils in
   let root = Options.root options in
   let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
   let add_suppression_warnings checked unused warnings =
@@ -113,7 +113,7 @@ let regenerate ~reader ~options =
         |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file:duplicate
         |> Flow_error.make_error_printable Fun.id ~strip_root:(Some root)
       in
-      Errors.ConcreteLocPrintableErrorSet.add err acc
+      Flow_errors_utils.ConcreteLocPrintableErrorSet.add err acc
     in
     let f module_name (provider, duplicates) acc =
       let provider = Loc.{ source = Some provider; start = pos; _end = pos } in
@@ -161,7 +161,7 @@ let get_with_separate_warnings ~profiling ~reader ~options env =
 (* combine error maps into a single error set and a single warning set *)
 let get ~profiling ~reader ~options env =
   Profiling_js.with_timer ~timer:"CollateErrors" profiling ~f:(fun () ->
-      Errors.(
+      Flow_errors_utils.(
         let (errors, warning_map, suppressed_errors) =
           get_with_separate_warnings_no_profiling ~reader ~options env
         in

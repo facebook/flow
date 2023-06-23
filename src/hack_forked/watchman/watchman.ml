@@ -107,7 +107,7 @@ type init_settings = {
   defer_states: string list;  (** defer notifications while these states are asserted *)
   expression_terms: Hh_json.json list;  (** See watchman expression terms. *)
   mergebase_with: string;  (** symbolic commit to find changes against *)
-  roots: Path.t list;
+  roots: File_path.t list;
   should_track_mergebase: bool;
   subscribe_mode: subscribe_mode;
   subscription_prefix: string;
@@ -667,7 +667,7 @@ let get_clockspec ~debug_logging ~conn ~watch prior_clockspec =
 
 (** Watches a path. Returns the watch root and relative path to that path. *)
 let watch_project ~debug_logging ~conn root =
-  let query = J.strlist ["watch-project"; Path.to_string root] in
+  let query = J.strlist ["watch-project"; File_path.to_string root] in
   let%lwt response = request ~debug_logging ~conn query in
   match response with
   | Error _ as err -> Lwt.return err
@@ -690,7 +690,7 @@ let watch_paths ~debug_logging ~conn paths =
         let watch_roots = SSet.add watch_root watch_roots in
         Lwt.return (Ok (terms, watch_roots, failed_paths))
       | Error (Response_error _ as err) ->
-        let failed_paths = SMap.add (Path.to_string path) err failed_paths in
+        let failed_paths = SMap.add (File_path.to_string path) err failed_paths in
         Lwt.return (Ok (terms, watch_roots, failed_paths))
       | Error _ as err -> Lwt.return err)
     ~init:(Some [], SSet.empty, SMap.empty)
@@ -774,7 +774,7 @@ let re_init ?prior_clockspec settings =
   watch ~debug_logging ~conn settings.roots >>= fun watch ->
   get_clockspec ~debug_logging ~conn ~watch prior_clockspec >>= fun clockspec ->
   let subscription = subscription_name settings in
-  let vcs = Vcs.find (Path.make watch.watch_root) in
+  let vcs = Vcs.find (File_path.make watch.watch_root) in
   let should_track_mergebase =
     settings.should_track_mergebase && supports_scm_queries capabilities vcs
   in
@@ -1145,7 +1145,7 @@ module Testing = struct
       defer_states = [];
       expression_terms = [];
       mergebase_with = "hash";
-      roots = [Path.dummy_path];
+      roots = [File_path.dummy_path];
       should_track_mergebase = false;
       subscribe_mode = Defer_changes;
       subscription_prefix = "dummy_prefix";

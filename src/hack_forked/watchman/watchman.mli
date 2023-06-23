@@ -22,7 +22,7 @@ type init_settings = {
   defer_states: string list;  (** defer notifications while these states are asserted *)
   expression_terms: Hh_json.json list;  (** See watchman expression terms. *)
   mergebase_with: string;  (** symbolic commit to find changes against *)
-  roots: Path.t list;
+  roots: File_path.t list;
   should_track_mergebase: bool;
   subscribe_mode: subscribe_mode;
   subscription_prefix: string;

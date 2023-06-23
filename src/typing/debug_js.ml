@@ -1063,7 +1063,7 @@ let string_of_file cx =
   match Context.is_verbose cx with
   | false -> filename
   | true ->
-    let root_str = Path.to_string (Context.root cx) ^ Filename.dir_sep in
+    let root_str = File_path.to_string (Context.root cx) ^ Filename.dir_sep in
     if String.starts_with ~prefix:root_str filename then
       Files.relative_path root_str filename
     else

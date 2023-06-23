@@ -16,7 +16,7 @@ module Infer_type_options = struct
     verbose_normalizer: bool;
     max_depth: int;
     json: bool;
-    strip_root: Path.t option;
+    strip_root: File_path.t option;
     expanded: bool;
   }
 end
@@ -103,7 +103,7 @@ module Request = struct
         omit_targ_defaults: bool;
       }
     | RAGE of { files: string list }
-    | SAVE_STATE of { out: [ `File of Path.t | `Scm ] }
+    | SAVE_STATE of { out: [ `File of File_path.t | `Scm ] }
     | STATUS of { include_warnings: bool }
 
   let to_string = function
@@ -171,7 +171,7 @@ module Request = struct
       let out =
         match out with
         | `Scm -> "--scm"
-        | `File file -> Path.to_string file
+        | `File file -> File_path.to_string file
       in
       Printf.sprintf "save-state %s" out
 
@@ -274,9 +274,9 @@ module Response = struct
 
   type status_response =
     | ERRORS of {
-        errors: Errors.ConcreteLocPrintableErrorSet.t;
-        warnings: Errors.ConcreteLocPrintableErrorSet.t;
-        suppressed_errors: (Loc.t Errors.printable_error * Loc_collections.LocSet.t) list;
+        errors: Flow_errors_utils.ConcreteLocPrintableErrorSet.t;
+        warnings: Flow_errors_utils.ConcreteLocPrintableErrorSet.t;
+        suppressed_errors: (Loc.t Flow_errors_utils.printable_error * Loc_collections.LocSet.t) list;
       }
     | NO_ERRORS
     | NOT_COVERED

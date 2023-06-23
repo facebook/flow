@@ -32,7 +32,7 @@ let display_string_of_name = function
   | InternalName x -> spf ".%s" x
   | InternalModuleName x -> spf ".$module__%s" x
 
-let mk_id () = Ident.make ""
+let mk_id () = HeapIdent.make ""
 
 (* Reasons are included in types mainly for error reporting, but sometimes we
    also use reasons in types to recover information on the source code that
@@ -368,7 +368,7 @@ let string_of_source ?(strip_root = None) =
     | LibFile file -> begin
       match strip_root with
       | Some root ->
-        let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
+        let root_str = spf "%s%s" (File_path.to_string root) Filename.dir_sep in
         if String.starts_with ~prefix:root_str file then
           spf "[LIB] %s" (Files.relative_path root_str file)
         else
@@ -380,7 +380,7 @@ let string_of_source ?(strip_root = None) =
     | ResourceFile file -> begin
       match strip_root with
       | Some root ->
-        let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
+        let root_str = spf "%s%s" (File_path.to_string root) Filename.dir_sep in
         Files.relative_path root_str file
       | None -> file
     end

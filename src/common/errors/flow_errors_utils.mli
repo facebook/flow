@@ -101,7 +101,7 @@ val mk_speculation_error :
 val loc_of_printable_error : 'loc printable_error -> 'loc
 
 val patch_misplaced_error :
-  strip_root:Path.t option -> File_key.t -> 'loc printable_error -> 'loc printable_error
+  strip_root:File_path.t option -> File_key.t -> 'loc printable_error -> 'loc printable_error
 
 val kind_of_printable_error : 'loc printable_error -> error_kind
 
@@ -111,9 +111,10 @@ module ConcreteLocPrintableErrorSet : Flow_set.S with type elt = Loc.t printable
 
 (* formatters/printers *)
 
-type stdin_file = (Path.t * string) option
+type stdin_file = (File_path.t * string) option
 
-val deprecated_json_props_of_loc : strip_root:Path.t option -> Loc.t -> (string * Hh_json.json) list
+val deprecated_json_props_of_loc :
+  strip_root:File_path.t option -> Loc.t -> (string * Hh_json.json) list
 
 (* Some of the error printing functions consist only of named and optional arguments,
  * requiring an extra unit argument for disambiguation on partial application. For
@@ -137,7 +138,7 @@ module Cli_output : sig
     out_channel:out_channel ->
     flags:error_flags ->
     ?stdin_file:stdin_file ->
-    strip_root:Path.t option ->
+    strip_root:File_path.t option ->
     errors:ConcreteLocPrintableErrorSet.t ->
     warnings:ConcreteLocPrintableErrorSet.t ->
     lazy_msg:string option ->
@@ -148,7 +149,7 @@ module Cli_output : sig
     out_channel:out_channel ->
     flags:error_flags ->
     ?stdin_file:stdin_file ->
-    strip_root:Path.t option ->
+    strip_root:File_path.t option ->
     errors:ConcreteLocPrintableErrorSet.t ->
     warnings:ConcreteLocPrintableErrorSet.t ->
     lazy_msg:string option ->
@@ -164,7 +165,7 @@ module Json_output : sig
     | JsonV2
 
   val json_of_errors_with_context :
-    strip_root:Path.t option ->
+    strip_root:File_path.t option ->
     stdin_file:stdin_file ->
     suppressed_errors:(Loc.t printable_error * Loc_collections.LocSet.t) list ->
     ?version:json_version ->
@@ -175,7 +176,7 @@ module Json_output : sig
     Hh_json.json
 
   val full_status_json_of_errors :
-    strip_root:Path.t option ->
+    strip_root:File_path.t option ->
     suppressed_errors:(Loc.t printable_error * Loc_collections.LocSet.t) list ->
     ?version:json_version ->
     ?stdin_file:stdin_file ->
@@ -188,7 +189,7 @@ module Json_output : sig
 
   val print_errors :
     out_channel:out_channel ->
-    strip_root:Path.t option ->
+    strip_root:File_path.t option ->
     suppressed_errors:(Loc.t printable_error * Loc_collections.LocSet.t) list ->
     pretty:bool ->
     ?version:json_version ->
@@ -201,7 +202,7 @@ module Json_output : sig
 
   val format_errors :
     out_channel:out_channel ->
-    strip_root:Path.t option ->
+    strip_root:File_path.t option ->
     suppressed_errors:(Loc.t printable_error * Loc_collections.LocSet.t) list ->
     pretty:bool ->
     ?version:json_version ->
@@ -217,10 +218,10 @@ module Json_output : sig
 end
 
 module Vim_emacs_output : sig
-  val string_of_loc : strip_root:Path.t option -> Loc.t -> string
+  val string_of_loc : strip_root:File_path.t option -> Loc.t -> string
 
   val print_errors :
-    strip_root:Path.t option ->
+    strip_root:File_path.t option ->
     out_channel ->
     errors:ConcreteLocPrintableErrorSet.t ->
     warnings:ConcreteLocPrintableErrorSet.t ->

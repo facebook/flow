@@ -30,5 +30,6 @@ val printable_errors_of_file_artifacts_result :
   File_key.t ->
   (Types_js_types.file_artifacts, Flow_error.ErrorSet.t) result ->
   (* errors *)
-  Errors.ConcreteLocPrintableErrorSet.t * (* warnings *)
-                                          Errors.ConcreteLocPrintableErrorSet.t
+  Flow_errors_utils.ConcreteLocPrintableErrorSet.t
+  * (* warnings *)
+    Flow_errors_utils.ConcreteLocPrintableErrorSet.t

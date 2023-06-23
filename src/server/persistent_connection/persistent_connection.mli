@@ -46,8 +46,8 @@ val update_clients :
   errors_reason:LspProt.errors_reason ->
   calc_errors_and_warnings:
     (unit ->
-    Errors.ConcreteLocPrintableErrorSet.t
-    * Errors.ConcreteLocPrintableErrorSet.t Utils_js.FilenameMap.t
+    Flow_errors_utils.ConcreteLocPrintableErrorSet.t
+    * Flow_errors_utils.ConcreteLocPrintableErrorSet.t Utils_js.FilenameMap.t
     ) ->
   unit
 
@@ -63,15 +63,15 @@ val send_response : LspProt.response_with_metadata -> single_client -> unit
 val send_errors_if_subscribed :
   client:single_client ->
   errors_reason:LspProt.errors_reason ->
-  errors:Errors.ConcreteLocPrintableErrorSet.t ->
-  warnings:Errors.ConcreteLocPrintableErrorSet.t Utils_js.FilenameMap.t ->
+  errors:Flow_errors_utils.ConcreteLocPrintableErrorSet.t ->
+  warnings:Flow_errors_utils.ConcreteLocPrintableErrorSet.t Utils_js.FilenameMap.t ->
   unit
 
 (* getters/setters on single_client *)
 val subscribe_client :
   client:single_client ->
-  current_errors:Errors.ConcreteLocPrintableErrorSet.t ->
-  current_warnings:Errors.ConcreteLocPrintableErrorSet.t Utils_js.FilenameMap.t ->
+  current_errors:Flow_errors_utils.ConcreteLocPrintableErrorSet.t ->
+  current_warnings:Flow_errors_utils.ConcreteLocPrintableErrorSet.t Utils_js.FilenameMap.t ->
   unit
 
 val client_did_open : single_client -> files:(string * string) Nel.t -> bool

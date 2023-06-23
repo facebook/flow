@@ -253,14 +253,14 @@ let detect_matching_props_violations cx =
   let matching_props_checks =
     Base.List.filter_map (Context.matching_props cx) ~f:(fun (prop_name, other_loc, obj_loc) ->
         let env = Context.environment cx in
-        Env.check_readable cx Env_api.ExpressionLoc other_loc;
+        Type_env.check_readable cx Env_api.ExpressionLoc other_loc;
         let sentinel =
           Base.Option.value_exn (Loc_env.find_write env Env_api.ExpressionLoc other_loc)
         in
         match peek cx sentinel with
         (* Limit the check to promitive literal sentinels *)
         | [t] when is_lit t ->
-          let obj_t = Env.provider_type_for_def_loc cx env obj_loc in
+          let obj_t = Type_env.provider_type_for_def_loc cx env obj_loc in
           Some (TypeUtil.reason_of_t sentinel, prop_name, sentinel, obj_t)
         | _ -> None
     )
@@ -296,7 +296,7 @@ let detect_literal_subtypes =
       (fun (loc, check) ->
         let env = Context.environment cx in
         let u_def =
-          match Env.provider_type_for_def_loc cx env loc with
+          match Type_env.provider_type_for_def_loc cx env loc with
           | OpenT (r, id) -> Flow_js_utils.merge_tvar ~filter_empty:true ~no_lowers cx r id
           | t -> t
         in

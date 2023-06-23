@@ -35,7 +35,7 @@ let run_command command argv =
     Exit.(exit ~msg Commandline_usage_error)
 
 let expand_file_list ?options filenames =
-  let paths = Base.List.map ~f:Path.make filenames in
+  let paths = Base.List.map ~f:File_path.make filenames in
   let next_files =
     match paths with
     | [] -> (fun () -> [])
@@ -78,16 +78,16 @@ let print_version () =
   print_endlinef "Flow, a static type checker for JavaScript, version %s" Flow_version.version
 
 let expand_path file =
-  let path = Path.make file in
-  if Path.file_exists path then
-    Path.to_string path
+  let path = File_path.make file in
+  if File_path.file_exists path then
+    File_path.to_string path
   else
     let file = Filename.concat (Sys.getcwd ()) file in
-    let path = Path.make file in
-    if Path.file_exists path then
-      Path.to_string path
+    let path = File_path.make file in
+    if File_path.file_exists path then
+      File_path.to_string path
     else
-      let msg = Printf.sprintf "File not found: %s" (Path.to_string path) in
+      let msg = Printf.sprintf "File not found: %s" (File_path.to_string path) in
       Exit.(exit ~msg Input_error)
 
 let collect_error_flags
@@ -119,7 +119,7 @@ let collect_error_flags
   in
   main
     {
-      Errors.Cli_output.color;
+      Flow_errors_utils.Cli_output.color;
       include_warnings;
       max_warnings;
       one_line;
@@ -303,10 +303,10 @@ let from_flag =
       | None ->
         Base.Result.(
           let parent_cmdline =
-            Proc.get_proc_stat (Unix.getpid ()) >>= fun proc_stat ->
-            let ppid = proc_stat.Proc.ppid in
-            Proc.get_proc_stat ppid >>| fun parent_proc_stat ->
-            String.trim parent_proc_stat.Proc.cmdline
+            Proc_utils.get_proc_stat (Unix.getpid ()) >>= fun proc_stat ->
+            let ppid = proc_stat.Proc_utils.ppid in
+            Proc_utils.get_proc_stat ppid >>| fun parent_proc_stat ->
+            String.trim parent_proc_stat.Proc_utils.cmdline
           in
           (match parent_cmdline with
           | Ok cmdline -> Some ("parent cmdline: " ^ cmdline)
@@ -439,9 +439,9 @@ let ignore_version_flag prev =
 
 let log_file_flags =
   let normalize log_file =
-    let dirname = Path.make (Filename.dirname log_file) in
+    let dirname = File_path.make (Filename.dirname log_file) in
     let basename = Filename.basename log_file in
-    Path.concat dirname basename |> Path.to_string
+    File_path.concat dirname basename |> File_path.to_string
   in
   let collector main server_log_file monitor_log_file =
     main
@@ -601,7 +601,7 @@ let file_options =
         paths
     in
     (* Implicitly included paths are added only if they're not already being watched *)
-    let path_len path = path |> Path.to_string |> String.length in
+    let path_len path = path |> File_path.to_string |> String.length in
     let implicitly_included_paths_sorted =
       Base.List.sort ~compare:(fun a b -> path_len a - path_len b) (root :: lib_paths)
       (* Shortest path first *)
@@ -610,7 +610,7 @@ let file_options =
       ~f:(fun acc path ->
         (* If this include is already covered by an explicit include or a shorter implicit include,
          * then skip it *)
-        if Path_matcher.matches acc (Path.to_string path) then
+        if Path_matcher.matches acc (File_path.to_string path) then
           acc
         else
           Path_matcher.add acc path)
@@ -634,7 +634,8 @@ let file_options =
         ~init:[]
     in
     let config_libs =
-      if !has_explicit_flowtyped_lib = false && Sys.file_exists (Path.to_string flowtyped_path) then
+      if !has_explicit_flowtyped_lib = false && Sys.file_exists (File_path.to_string flowtyped_path)
+      then
         flowtyped_path :: config_libs
       else
         config_libs
@@ -816,10 +817,10 @@ let connect_and_json_flags =
     prev |> CommandSpec.ArgSpec.collect collect_connect_and_json |> connect_flags |> json_flags
 
 let server_log_file ~flowconfig_name ~tmp_dir root =
-  Path.make (Server_files_js.log_file ~flowconfig_name ~tmp_dir root)
+  File_path.make (Server_files_js.log_file ~flowconfig_name ~tmp_dir root)
 
 let monitor_log_file ~flowconfig_name ~tmp_dir root =
-  Path.make (Server_files_js.monitor_log_file ~flowconfig_name ~tmp_dir root)
+  File_path.make (Server_files_js.monitor_log_file ~flowconfig_name ~tmp_dir root)
 
 module Options_flags = struct
   type t = {
@@ -1142,7 +1143,12 @@ let json_version_flag prev =
     prev
     |> flag
          "--json-version"
-         (enum [("1", Errors.Json_output.JsonV1); ("2", Errors.Json_output.JsonV2)])
+         (enum
+            [
+              ("1", Flow_errors_utils.Json_output.JsonV1);
+              ("2", Flow_errors_utils.Json_output.JsonV2);
+            ]
+         )
          ~doc:"The version of the JSON format (defaults to 1)"
   )
 
@@ -1229,7 +1235,7 @@ let make_options
     ~saved_state_options_flags =
   let open Options_flags in
   let open Saved_state_flags in
-  let temp_dir = Path.make (get_temp_dir options_flags.Options_flags.temp_dir) in
+  let temp_dir = File_path.make (get_temp_dir options_flags.Options_flags.temp_dir) in
   let file_options =
     let no_flowlib = options_flags.no_flowlib in
     let { includes; ignores; libs; raw_lint_severities = _; untyped; declarations } =
@@ -1294,7 +1300,7 @@ let make_options
     Base.Option.value (FlowConfig.direct_dependent_files_fix flowconfig) ~default:true
   in
   let strict_mode = FlowConfig.strict_mode flowconfig in
-  let opt_temp_dir = Path.to_string temp_dir in
+  let opt_temp_dir = File_path.to_string temp_dir in
   let opt_log_file = server_log_file ~flowconfig_name ~tmp_dir:opt_temp_dir root in
   {
     Options.opt_flowconfig_name = flowconfig_name;
@@ -1441,7 +1447,7 @@ let make_options
   }
 
 let make_env flowconfig flowconfig_name connect_flags root =
-  let normalize dir = Path.(dir |> make |> to_string) in
+  let normalize dir = File_path.(dir |> make |> to_string) in
   let tmp_dir = get_temp_dir connect_flags.temp_dir |> normalize in
   let retries = connect_flags.retries in
   let expiry =
@@ -1481,16 +1487,16 @@ let make_env flowconfig flowconfig_name connect_flags root =
     rerun_on_mismatch;
   }
 
-let rec search_for_root config start recursion_limit : Path.t option =
-  if start = Path.parent start then
+let rec search_for_root config start recursion_limit : File_path.t option =
+  if start = File_path.parent start then
     None
   (* Reach fs root, nothing to do. *)
-  else if Path.file_exists (Path.concat start config) then
+  else if File_path.file_exists (File_path.concat start config) then
     Some start
   else if recursion_limit <= 0 then
     None
   else
-    search_for_root config (Path.parent start) (recursion_limit - 1)
+    search_for_root config (File_path.parent start) (recursion_limit - 1)
 
 (* Given a valid file or directory, find a valid Flow root directory *)
 (* NOTE: exits on invalid file or .flowconfig not found! *)
@@ -1515,9 +1521,9 @@ let guess_root flowconfig_name dir_or_file =
       else
         Filename.dirname dir_or_file
     in
-    match search_for_root flowconfig_name (Path.make dir) 50 with
+    match search_for_root flowconfig_name (File_path.make dir) 50 with
     | Some root ->
-      FlowEventLogger.set_root (Some (Path.to_string root));
+      FlowEventLogger.set_root (Some (File_path.to_string root));
       root
     | None ->
       let msg =
@@ -1544,14 +1550,14 @@ let find_a_root ?input ~base_flags root_arg =
 let get_the_root ?input ~base_flags root_arg =
   match root_arg with
   | Some provided_root ->
-    let root_dir = Path.make provided_root in
-    if Path.file_exists root_dir && Path.is_directory root_dir then
+    let root_dir = File_path.make provided_root in
+    if File_path.file_exists root_dir && File_path.is_directory root_dir then
       let flowconfig_name = Base_flags.(base_flags.flowconfig_name) in
-      let root_config = Path.concat root_dir flowconfig_name in
-      if Path.file_exists root_config then
+      let root_config = File_path.concat root_dir flowconfig_name in
+      if File_path.file_exists root_config then
         root_dir
       else
-        let msg = spf "Failed to open %s" @@ Path.to_string root_config in
+        let msg = spf "Failed to open %s" @@ File_path.to_string root_config in
         Exit.(exit ~msg Could_not_find_flowconfig)
     else
       let msg = spf "Invalid root directory %s" provided_root in
@@ -1570,15 +1576,15 @@ let convert_input_pos (line, column) =
 
 (* copied (and adapted) from Hack's ClientCheck module *)
 let get_path_of_file file =
-  let path = Path.make file in
-  if Path.file_exists path then
-    Path.to_string path
+  let path = File_path.make file in
+  if File_path.file_exists path then
+    File_path.to_string path
   else
     (* Filename.concat does not return a normalized path when the file does
        not exist. Thus, we do it on our own... *)
     let file = Files.normalize_path (Sys.getcwd ()) file in
-    let path = Path.make file in
-    Path.to_string path
+    let path = File_path.make file in
+    File_path.to_string path
 
 let get_file_from_filename_or_stdin ~cmd path = function
   | Some filename ->
@@ -1774,7 +1780,7 @@ let failwith_bad_response ~request ~response =
 
 let get_check_or_status_exit_code errors warnings max_warnings =
   Exit.(
-    Errors.(
+    Flow_errors_utils.(
       if ConcreteLocPrintableErrorSet.is_empty errors then
         match max_warnings with
         | Some x when ConcreteLocPrintableErrorSet.cardinal warnings > x -> Type_error

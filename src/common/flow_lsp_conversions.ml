@@ -260,10 +260,11 @@ let position_of_document_position { Lsp.TextDocumentPositionParams.position; _ }
 
 let diagnostics_of_flow_errors =
   let error_to_lsp
-      ~(severity : Lsp.PublishDiagnostics.diagnosticSeverity) (error : Loc.t Errors.printable_error)
-      : (Lsp.DocumentUri.t * Lsp.PublishDiagnostics.diagnostic) option =
-    let error = Errors.Lsp_output.lsp_of_error error in
-    match loc_to_lsp error.Errors.Lsp_output.loc with
+      ~(severity : Lsp.PublishDiagnostics.diagnosticSeverity)
+      (error : Loc.t Flow_errors_utils.printable_error) :
+      (Lsp.DocumentUri.t * Lsp.PublishDiagnostics.diagnostic) option =
+    let error = Flow_errors_utils.Lsp_output.lsp_of_error error in
+    match loc_to_lsp error.Flow_errors_utils.Lsp_output.loc with
     | Ok location ->
       let uri = location.Lsp.Location.uri in
       let related_to_lsp (loc, relatedMessage) =
@@ -272,16 +273,16 @@ let diagnostics_of_flow_errors =
         | Error _ -> None
       in
       let relatedInformation =
-        Base.List.filter_map error.Errors.Lsp_output.relatedLocations ~f:related_to_lsp
+        Base.List.filter_map error.Flow_errors_utils.Lsp_output.relatedLocations ~f:related_to_lsp
       in
       Some
         ( uri,
           {
             Lsp.PublishDiagnostics.range = location.Lsp.Location.range;
             severity = Some severity;
-            code = Lsp.PublishDiagnostics.StringCode error.Errors.Lsp_output.code;
+            code = Lsp.PublishDiagnostics.StringCode error.Flow_errors_utils.Lsp_output.code;
             source = Some "Flow";
-            message = error.Errors.Lsp_output.message;
+            message = error.Flow_errors_utils.Lsp_output.message;
             tags = [];
             relatedInformation;
             relatedLocations = relatedInformation (* legacy fb extension *);
@@ -296,5 +297,7 @@ let diagnostics_of_flow_errors =
       | None -> acc
     in
     Lsp.UriMap.empty
-    |> Errors.ConcreteLocPrintableErrorSet.fold (add Lsp.PublishDiagnostics.Error) errors
-    |> Errors.ConcreteLocPrintableErrorSet.fold (add Lsp.PublishDiagnostics.Warning) warnings
+    |> Flow_errors_utils.ConcreteLocPrintableErrorSet.fold (add Lsp.PublishDiagnostics.Error) errors
+    |> Flow_errors_utils.ConcreteLocPrintableErrorSet.fold
+         (add Lsp.PublishDiagnostics.Warning)
+         warnings

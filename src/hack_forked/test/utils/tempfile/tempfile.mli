@@ -7,4 +7,4 @@
 
 exception Out_of_retries
 
-val with_tempdir : (Path.t -> 'a) -> 'a
+val with_tempdir : (File_path.t -> 'a) -> 'a

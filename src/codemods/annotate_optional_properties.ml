@@ -235,7 +235,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
             (Flow_error.ErrorSet.singleton error)
             ~unused:suppressions
         in
-        Errors.ConcreteLocPrintableErrorSet.is_empty errors
+        Flow_errors_utils.ConcreteLocPrintableErrorSet.is_empty errors
       in
       prop_data <-
         Flow_error.ErrorSet.fold

@@ -34,7 +34,7 @@ module Make
   module Class_type_sig = Anno.Class_type_sig
   module Func_stmt_config = Func_stmt_config
   module Component_declaration_config = Component_declaration_config
-  open Env.LookupMode
+  open Type_env.LookupMode
 
   (*************)
   (* Utilities *)
@@ -128,7 +128,7 @@ module Make
                 Flow_js.flow_t cx (obj_t, tvar)
             )
           in
-          let (_, lazy_hint) = Env.get_hint cx (Reason.loc_of_reason reason) in
+          let (_, lazy_hint) = Type_env.get_hint cx (Reason.loc_of_reason reason) in
           lazy_hint reason |> Type_hint.with_hint_result ~ok:Base.Fn.id ~error:get_autocomplete_t
         else
           obj_t
@@ -196,7 +196,7 @@ module Make
         let l = Flow.widen_obj_type cx ~use_op reason t in
         Flow.flow cx (l, ObjKitT (use_op, reason, tool, Type.Object.Spread (target, state), tout));
         if obj_key_autocomplete acc then
-          let (_, lazy_hint) = Env.get_hint cx (Reason.loc_of_reason reason) in
+          let (_, lazy_hint) = Type_env.get_hint cx (Reason.loc_of_reason reason) in
           lazy_hint reason |> Type_hint.with_hint_result ~ok:Base.Fn.id ~error:(fun () -> tout)
         else
           tout
@@ -518,7 +518,7 @@ module Make
         let { Ast.Function.sig_loc; async; generator; _ } = func in
         let (name_loc, _) = id in
         let reason = func_reason ~async ~generator sig_loc in
-        let general = Env.read_declared_type cx reason name_loc in
+        let general = Type_env.read_declared_type cx reason name_loc in
         let (fn_type, func_ast) = mk_function_declaration cx ~general reason loc func in
         (fn_type, id, (loc, FunctionDeclaration func_ast))
     in
@@ -531,7 +531,7 @@ module Make
     | (loc, Expression { Expression.expression = e; directive; comments }) ->
       let expr = expression cx e in
       Base.List.iter (syntactically_unhandled_promises expr) ~f:(fun ((_, expr_t), _) ->
-          Context.mark_maybe_unused_promise cx loc expr_t ~async:(Env.in_async_scope cx)
+          Context.mark_maybe_unused_promise cx loc expr_t ~async:(Type_env.in_async_scope cx)
       );
       (loc, Expression { Expression.expression = expr; directive; comments })
     (* Refinements for `if` are derived by the following Hoare logic rule:
@@ -740,7 +740,7 @@ module Make
       let () =
         if not has_default then (
           if Base.Option.is_none fallthrough_case then
-            Env.init_let
+            Type_env.init_let
               cx
               ~use_op:unknown_use
               exhaustive_check_incomplete_out
@@ -794,7 +794,7 @@ module Make
       let discriminant_after_check =
         if not has_default then
           let refinement_key = Refinement.key ~allow_optional:true discriminant in
-          Env.discriminant_after_negated_cases cx switch_loc refinement_key
+          Type_env.discriminant_after_negated_cases cx switch_loc refinement_key
         else
           None
       in
@@ -1086,7 +1086,7 @@ module Make
                  }
               )
           in
-          Env.set_var cx ~use_op name_str t pat_loc;
+          Type_env.set_var cx ~use_op name_str t pat_loc;
           ( ForIn.LeftPattern
               ( (pat_loc, t),
                 Ast.Pattern.Identifier
@@ -1201,7 +1201,7 @@ module Make
                  }
               )
           in
-          Env.set_var cx ~use_op name_str elem_t pat_loc;
+          Type_env.set_var cx ~use_op name_str elem_t pat_loc;
           ( ForOf.LeftPattern
               ( (pat_loc, elem_t),
                 Ast.Pattern.Identifier
@@ -1240,7 +1240,7 @@ module Make
       let (component_sig, reconstruct_component) =
         mk_component_sig cx Subst_name.Map.empty reason component
       in
-      let general = Env.read_declared_type cx reason name_loc in
+      let general = Type_env.read_declared_type cx reason name_loc in
       let (params_ast, body_ast) = Component_declaration_sig.toplevels cx component_sig in
       (loc, ComponentDeclaration (reconstruct_component params_ast body_ast general))
     | (loc, ComponentDeclaration comp) ->
@@ -1278,7 +1278,7 @@ module Make
       let (name_loc, { Ast.Identifier.name; comments = _ }) = id in
       let name = OrdinaryName name in
       let reason = DescFormat.instance_reason name name_loc in
-      let general = Env.read_declared_type cx reason name_loc in
+      let general = Type_env.read_declared_type cx reason name_loc in
       (* ClassDeclarations are statements, so we will never have an annotation to push down here *)
       let (class_t, c_ast) = mk_class cx class_loc ~name_loc ~general reason c in
       let use_op =
@@ -1287,7 +1287,7 @@ module Make
              { var = Some (mk_reason (RIdentifier name) name_loc); init = reason_of_t class_t }
           )
       in
-      Env.init_implicit_let cx ~use_op class_t name_loc;
+      Type_env.init_implicit_let cx ~use_op class_t name_loc;
       (class_loc, ClassDeclaration c_ast)
     | ( loc,
         DeclareClass
@@ -1302,7 +1302,7 @@ module Make
              { var = Some (mk_reason (RIdentifier (OrdinaryName name)) loc); init = reason_of_t t }
           )
       in
-      Env.init_var cx ~use_op t name_loc;
+      Type_env.init_var cx ~use_op t name_loc;
       (loc, DeclareClass decl_ast)
     | ( loc,
         DeclareComponent
@@ -1321,7 +1321,7 @@ module Make
              { var = Some (mk_reason (RIdentifier (OrdinaryName name)) loc); init = reason_of_t t }
           )
       in
-      Env.init_var cx ~use_op t name_loc;
+      Type_env.init_var cx ~use_op t name_loc;
       (loc, DeclareComponent decl_ast)
     | (loc, DeclareEnum enum) ->
       let decl_ast = enum_declaration cx loc enum in
@@ -1346,7 +1346,7 @@ module Make
           | None ->
             Import_export.export_binding cx ?is_function name id_loc Ast.Statement.ExportValue
           | Some default_loc ->
-            let t = Env.get_var_declared_type ~lookup_mode:ForType cx name id_loc in
+            let t = Type_env.get_var_declared_type ~lookup_mode:ForType cx name id_loc in
             Import_export.export cx (OrdinaryName "default") default_loc t
         in
         (* error-handling around calls to `statement` is omitted here because we
@@ -1524,7 +1524,7 @@ module Make
               let stmt = statement cx (loc, stmt) in
               let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
               let t =
-                Env.get_var_declared_type ~lookup_mode:ForValue cx (OrdinaryName name) id_loc
+                Type_env.get_var_declared_type ~lookup_mode:ForValue cx (OrdinaryName name) id_loc
               in
               (id_loc, t, stmt)
             | _ -> failwith "unexpected default export declaration"
@@ -1953,7 +1953,7 @@ module Make
     in
     (* [declare] export [type] {foo [as bar]}; *)
     let export_ref loc local_name remote_name =
-      let t = Env.var_ref ~lookup_mode cx local_name loc in
+      let t = Type_env.var_ref ~lookup_mode cx local_name loc in
       match export_kind with
       | Ast.Statement.ExportType ->
         let reason = mk_reason (RType local_name) loc in
@@ -2109,12 +2109,12 @@ module Make
       let (body_loc, { Ast.Statement.Block.body = elements; comments = elements_comments }) =
         body
       in
-      let prev_scope_kind = Env.set_scope_kind cx Name_def.Ordinary in
+      let prev_scope_kind = Type_env.set_scope_kind cx Name_def.Ordinary in
       Context.push_declare_module cx (Module_info.empty_cjs_module ());
 
       let (elements_ast, elements_abnormal) = Toplevels.toplevels statement cx elements in
       let reason = mk_reason (RModule (OrdinaryName name)) id_loc in
-      Env.init_declare_module_synthetic_module_exports
+      Type_env.init_declare_module_synthetic_module_exports
         cx
         ~export_type:Import_export.export_type
         loc
@@ -2141,7 +2141,7 @@ module Make
           );
 
       Context.pop_declare_module cx;
-      ignore @@ Env.set_scope_kind cx prev_scope_kind;
+      ignore @@ Type_env.set_scope_kind cx prev_scope_kind;
 
       (module_t, ast)
 
@@ -2450,9 +2450,9 @@ module Make
   and variable cx kind ?if_uninitialized id init =
     let init_var =
       match kind with
-      | Ast.Variable.Const -> Env.init_const
-      | Ast.Variable.Let -> Env.init_let
-      | Ast.Variable.Var -> Env.init_var
+      | Ast.Variable.Const -> Type_env.init_const
+      | Ast.Variable.Let -> Type_env.init_let
+      | Ast.Variable.Var -> Type_env.init_var
     in
     let annot = Destructuring.type_of_pattern id in
     let has_anno =
@@ -2501,7 +2501,7 @@ module Make
         else if Base.Option.is_some init_ast || Base.Option.is_some if_uninitialized then
           (* TODO: When there is no annotation, we still need to populate `annot_t` when we can.
              In this case, we unify it with the type of the env entry binding. *)
-          Flow.unify cx annot_t (Env.read_declared_type cx id_reason id_loc);
+          Flow.unify cx annot_t (Type_env.read_declared_type cx id_reason id_loc);
         begin
           match init_opt with
           | Some (init_t, init_reason) ->
@@ -2509,7 +2509,7 @@ module Make
             init_var cx ~use_op init_t id_loc
           | None -> ()
         end;
-        let ast_t = Env.constraining_type ~default:annot_t cx id_loc in
+        let ast_t = Type_env.constraining_type ~default:annot_t cx id_loc in
         ( (ploc, ast_t),
           Ast.Pattern.Identifier
             {
@@ -2547,8 +2547,8 @@ module Make
                 t
               else (
                 init_var cx ~use_op t name_loc;
-                Env.constraining_type
-                  ~default:(Env.get_var_declared_type cx (OrdinaryName name) name_loc)
+                Type_env.constraining_type
+                  ~default:(Type_env.get_var_declared_type cx (OrdinaryName name) name_loc)
                   cx
                   name_loc
               )
@@ -2595,7 +2595,7 @@ module Make
   and empty_array cx loc =
     let reason = mk_reason REmptyArrayLit loc in
     let element_reason = mk_reason Reason.unknown_elem_empty_array_desc loc in
-    let (has_hint, lazy_hint) = Env.get_hint cx loc in
+    let (has_hint, lazy_hint) = Type_env.get_hint cx loc in
     let elemt = Tvar.mk cx element_reason in
     (* empty array, analogous to object with implicit properties *)
     ( if not has_hint then
@@ -2655,9 +2655,9 @@ module Make
     let open Ast.Expression in
     match Refinement.get ~allow_optional:true cx (loc, This this) loc with
     | Some t -> t
-    | None -> Env.var_ref cx (internal_name "this") loc
+    | None -> Type_env.var_ref cx (internal_name "this") loc
 
-  and super_ cx loc = Env.var_ref cx (internal_name "super") loc
+  and super_ cx loc = Type_env.var_ref cx (internal_name "super") loc
 
   and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
     let make_trust = Context.trust_constructor cx in
@@ -3030,11 +3030,11 @@ module Make
         match id with
         | None -> mk_function_expression cx reason ~needs_this_param:true ~general:tvar loc func
         | Some _ ->
-          let prev_scope_kind = Env.set_scope_kind cx Name_def.Ordinary in
+          let prev_scope_kind = Type_env.set_scope_kind cx Name_def.Ordinary in
           let (t, func) =
             mk_function_expression cx reason ~needs_this_param:true ~general:tvar loc func
           in
-          ignore @@ Env.set_scope_kind cx prev_scope_kind;
+          ignore @@ Type_env.set_scope_kind cx prev_scope_kind;
           (t, func)
       in
       Flow.flow_t cx (t, tvar);
@@ -3105,7 +3105,8 @@ module Make
                }
             )
         in
-        CallT { use_op; reason; call_action = Funcalltype ft; return_hint = Env.get_hint cx loc }
+        CallT
+          { use_op; reason; call_action = Funcalltype ft; return_hint = Type_env.get_hint cx loc }
       in
       Flow.flow cx (t, call_t);
 
@@ -3179,7 +3180,7 @@ module Make
                  { var = Some (mk_reason (RIdentifier name) name_loc); init = reason_of_t class_t }
               )
           in
-          Env.init_implicit_let cx ~use_op class_t name_loc
+          Type_env.init_implicit_let cx ~use_op class_t name_loc
         in
         Flow.flow_t cx (class_t, tvar);
         ((class_loc, class_t), Class c)
@@ -3195,7 +3196,7 @@ module Make
           (t, Some expr)
         | None -> (VoidT.at loc |> with_trust bogus_trust, None)
       in
-      ( (loc, Env.get_next cx loc),
+      ( (loc, Type_env.get_next cx loc),
         Yield
           {
             Yield.argument = argument_ast;
@@ -3206,7 +3207,7 @@ module Make
       )
     | Yield { Yield.argument; delegate = true; comments; result_out } ->
       let reason = mk_reason (RCustom "yield* delegate") loc in
-      let next = Env.get_next cx loc in
+      let next = Type_env.get_next cx loc in
       let (t, argument_ast) =
         match argument with
         | Some expr ->
@@ -3224,7 +3225,7 @@ module Make
       (* widen yield with the element type of the delegated-to iterable *)
       let targs = [yield; ret; next] in
       let (async, iterable_reason) =
-        if Env.in_async_scope cx then
+        if Type_env.in_async_scope cx then
           (true, mk_reason (RCustom "async iteration expected on AsyncIterable") loc)
         else
           (false, mk_reason (RCustom "iteration expected on Iterable") loc)
@@ -3377,7 +3378,7 @@ module Make
             arguments;
             comments;
           }
-        when not (Env.local_scope_entry_exists cx id_loc) ->
+        when not (Type_env.local_scope_entry_exists cx id_loc) ->
         let targs =
           Base.Option.map targs ~f:(fun (args_loc, args) ->
               (args_loc, snd (convert_call_targs cx Subst_name.Map.empty args))
@@ -3562,7 +3563,7 @@ module Make
                       reason,
                       reason_lookup,
                       mk_named_prop ~reason:reason_prop name,
-                      CallM { methodcalltype; return_hint = Env.get_hint cx loc },
+                      CallM { methodcalltype; return_hint = Type_env.get_hint cx loc },
                       prop_t
                     )
                 )
@@ -4275,7 +4276,7 @@ module Make
                                 use_op;
                                 reason = reason_call;
                                 call_action = Funcalltype app;
-                                return_hint = Env.get_hint cx loc;
+                                return_hint = Type_env.get_hint cx loc;
                               };
                           voided_out = OpenT t;
                         }
@@ -4285,7 +4286,7 @@ module Make
                           use_op;
                           reason = reason_call;
                           call_action = Funcalltype app;
-                          return_hint = Env.get_hint cx loc;
+                          return_hint = Type_env.get_hint cx loc;
                         }
                   in
                   Flow.flow cx (f, call_t)
@@ -4504,13 +4505,14 @@ module Make
         Flow.flow
           cx
           ( class_,
-            ConstructorT { use_op; reason; targs; args; tout; return_hint = Env.get_hint cx loc }
+            ConstructorT
+              { use_op; reason; targs; args; tout; return_hint = Type_env.get_hint cx loc }
           )
     )
 
   and func_call_opt_use cx loc reason ~use_op ?(call_strict_arity = true) targts argts =
     let opt_app = mk_opt_functioncalltype reason targts argts call_strict_arity in
-    let return_hint = Env.get_hint cx loc in
+    let return_hint = Type_env.get_hint cx loc in
     OptCallT { use_op; reason; opt_funcalltype = opt_app; return_hint }
 
   and func_call cx loc reason ~use_op ?(call_strict_arity = true) func_t targts argts =
@@ -4551,10 +4553,10 @@ module Make
             voided_out;
             return_hint = Type.hint_unavailable;
           }
-      | _ -> OptCallM { opt_methodcalltype; return_hint = Env.get_hint cx chain_loc }
+      | _ -> OptCallM { opt_methodcalltype; return_hint = Type_env.get_hint cx chain_loc }
     in
     if private_ then
-      let class_entries = Env.get_class_entries cx in
+      let class_entries = Type_env.get_class_entries cx in
       OptPrivateMethodT (use_op, reason, reason_expr, name, class_entries, false, action, prop_t)
     else
       OptMethodT (use_op, reason, reason_expr, propref, action, prop_t)
@@ -4652,7 +4654,7 @@ module Make
   and identifier_ cx name loc =
     let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
     let get_checking_mode_type () =
-      let t = Env.var_ref ~lookup_mode:ForValue cx (OrdinaryName name) loc in
+      let t = Type_env.var_ref ~lookup_mode:ForValue cx (OrdinaryName name) loc in
       (* We want to make sure that the reason description for the type we return
        * is always `RIdentifier name`. *)
       match (desc_of_t t, t) with
@@ -4668,7 +4670,7 @@ module Make
         Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (Flow.unify cx t)
     in
     if Type_inference_hooks_js.dispatch_id_hook cx name loc then
-      let (_, lazy_hint) = Env.get_hint cx loc in
+      let (_, lazy_hint) = Type_env.get_hint cx loc in
       lazy_hint reason
       |> Type_hint.with_hint_result ~ok:Base.Fn.id ~error:(fun () ->
              EmptyT.at loc |> with_trust bogus_trust
@@ -4682,7 +4684,7 @@ module Make
 
   and string_literal_value cx loc value =
     if Type_inference_hooks_js.dispatch_literal_hook cx loc then
-      let (_, lazy_hint) = Env.get_hint cx loc in
+      let (_, lazy_hint) = Type_env.get_hint cx loc in
       let hint = lazy_hint (mk_reason (RCustom "literal") loc) in
       let error () = EmptyT.at loc |> with_trust bogus_trust in
       Type_hint.with_hint_result hint ~ok:Base.Fn.id ~error
@@ -4847,7 +4849,7 @@ module Make
                }
             )
         in
-        Env.set_var cx ~use_op name result_t id_loc;
+        Type_env.set_var cx ~use_op name result_t id_loc;
         arg_ast
       | (lhs_loc, Ast.Expression.Member mem) ->
         (* Updating involves both reading and writing. We need to model both of these, and ensuring
@@ -5193,7 +5195,7 @@ module Make
       let lhs_reason = mk_expression_reason _object in
       let (o, _object) = typecheck_object _object in
       let wr_ctx =
-        match (_object, Env.var_scope_kind cx) with
+        match (_object, Type_env.var_scope_kind cx) with
         | ((_, This _), Name_def.Ctor) -> ThisInCtor
         | _ -> Normal
       in
@@ -5204,7 +5206,7 @@ module Make
         else
           let reason = mk_reason (RPropertyAssignment (Some name)) lhs_loc in
           (* flow type to object property itself *)
-          let class_entries = Env.get_class_entries cx in
+          let class_entries = Type_env.get_class_entries cx in
           let prop_reason = mk_reason (RPrivateProperty name) prop_loc in
           let prop_t = Tvar.mk cx prop_reason in
           let use_op =
@@ -5228,7 +5230,7 @@ module Make
      comments;
     } ->
       let wr_ctx =
-        match (_object, Env.var_scope_kind cx) with
+        match (_object, Type_env.var_scope_kind cx) with
         | ((_, This _), Name_def.Ctor) -> ThisInCtor
         | _ -> Normal
       in
@@ -5271,7 +5273,7 @@ module Make
             ),
             "exports"
           )
-          when not (Env.local_scope_entry_exists cx id_loc) ->
+          when not (Type_env.local_scope_entry_exists cx id_loc) ->
           (* module.exports has type `any` in theory, but shouldnt be treated as uncovered *)
           t
         | _ -> prop_t
@@ -5341,7 +5343,7 @@ module Make
                }
             )
         in
-        Env.set_var cx ~use_op name result_t id_loc
+        Type_env.set_var cx ~use_op name result_t id_loc
       | (lhs_loc, Ast.Pattern.Expression (_, Ast.Expression.Member mem)) ->
         let lhs_prop_reason = mk_pattern_reason lhs in
         let make_op ~lhs ~prop = Op (UpdateProperty { lhs; prop }) in
@@ -5512,7 +5514,7 @@ module Make
         mem
     | Identifier (loc, { Ast.Identifier.name; _ }) ->
       let use_op = Op (DeleteVar { var = mk_expression_reason target }) in
-      Env.set_var cx ~use_op name void loc;
+      Type_env.set_var cx ~use_op name void loc;
       expression cx target
     | _ ->
       let (((_, t), _) as target) = expression cx target in
@@ -5566,7 +5568,7 @@ module Make
         Flow.get_builtin_type cx reason (OrdinaryName "React$FragmentType")
       | Options.ReactRuntimeClassic ->
         let reason = mk_reason (RIdentifier (OrdinaryName "React.Fragment")) expr_loc in
-        let react = Env.var_ref ~lookup_mode:ForValue cx (OrdinaryName "React") expr_loc in
+        let react = Type_env.var_ref ~lookup_mode:ForValue cx (OrdinaryName "React") expr_loc in
         let use_op = Op (GetProperty reason) in
         get_prop ~cond:None cx reason ~use_op react (reason, "Fragment")
     in
@@ -5644,7 +5646,7 @@ module Make
             if name = String.capitalize_ascii name then
               identifier cx (mk_ident ~comments:None name) loc
             else begin
-              Env.intrinsic_ref cx (OrdinaryName name) loc
+              Type_env.intrinsic_ref cx (OrdinaryName name) loc
               |> Base.Option.iter ~f:(fun (t, def_loc) ->
                      Flow.flow
                        cx
@@ -5923,7 +5925,7 @@ module Make
 
   and jsx_desugar cx name component_t props attributes children locs =
     let (loc_element, loc_opening, loc_children) = locs in
-    let return_hint = Env.get_hint cx loc_element in
+    let return_hint = Type_env.get_hint cx loc_element in
     match Context.jsx cx with
     | Options.Jsx_react ->
       let reason = mk_reason (RReactElement (Some (OrdinaryName name))) loc_element in
@@ -5969,7 +5971,7 @@ module Make
                }
             )
         in
-        let react = Env.var_ref ~lookup_mode:ForValue cx (OrdinaryName "React") loc_element in
+        let react = Type_env.var_ref ~lookup_mode:ForValue cx (OrdinaryName "React") loc_element in
         let prop_t = Tvar.mk cx reason_createElement in
         Flow.flow
           cx
@@ -6056,7 +6058,7 @@ module Make
     function
     | (_, Identifier (_, { Ast.Identifier.name; comments = _ })) ->
       let desc = RJSXIdentifier (raw_jsx_expr, name) in
-      Env.var_ref ~lookup_mode:ForValue cx (OrdinaryName name) loc ~desc
+      Type_env.var_ref ~lookup_mode:ForValue cx (OrdinaryName name) loc ~desc
     | expr ->
       (* Oh well, we tried *)
       let ((_, t), _) = expression cx expr in
@@ -6181,7 +6183,7 @@ module Make
   and condition cx ~cond e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t = expression ~cond cx e
 
   and get_private_field_opt_use cx reason ~use_op name =
-    let class_entries = Env.get_class_entries cx in
+    let class_entries = Type_env.get_class_entries cx in
     OptGetPrivatePropT (use_op, reason, name, class_entries, false)
 
   (* Property lookups become non-strict when processing conditional expressions
@@ -6596,7 +6598,7 @@ module Make
     | None ->
       let def_reason = repos_reason class_loc reason in
       let this_in_class = Class_stmt_sig.This.in_class c in
-      let self = Env.read_class_self_type cx class_loc in
+      let self = Type_env.read_class_self_type cx class_loc in
       let (class_t, _, class_sig, class_ast_f) =
         mk_class_sig cx ~name_loc ~class_loc reason self c
       in
@@ -6853,7 +6855,7 @@ module Make
                        } =
                          i
                        in
-                       let c = Env.get_var ~lookup_mode:ForType cx name id_loc in
+                       let c = Type_env.get_var ~lookup_mode:ForType cx name id_loc in
                        let (typeapp, targs) =
                          match targs with
                          | None -> ((loc, c, None), None)
@@ -7288,12 +7290,12 @@ module Make
           };
         let elements = List.rev rev_elements in
         let (instance_this_default, static_this_default, super, static_super) =
-          Env.in_class_scope cx class_loc (fun () -> Class_stmt_sig.make_thises cx class_sig)
+          Type_env.in_class_scope cx class_loc (fun () -> Class_stmt_sig.make_thises cx class_sig)
         in
-        Env.bind_class_instance_this cx instance_this_default class_loc;
-        Env.bind_class_static_this cx static_this_default class_loc;
-        Env.bind_class_instance_super cx super class_loc;
-        Env.bind_class_static_super cx static_super class_loc;
+        Type_env.bind_class_instance_this cx instance_this_default class_loc;
+        Type_env.bind_class_static_this cx static_this_default class_loc;
+        Type_env.bind_class_instance_super cx super class_loc;
+        Type_env.bind_class_static_super cx static_super class_loc;
         let (class_t_internal, class_t) = Class_stmt_sig.classtype cx class_sig in
         ( class_t,
           class_t_internal,
@@ -7322,7 +7324,7 @@ module Make
         let t = Context.mk_placeholder cx reason in
         (t, Ast.Type.Missing (loc, t))
       | Ast.Type.Missing loc ->
-        let t = Env.find_write cx Env_api.FunctionParamLoc reason in
+        let t = Type_env.find_write cx Env_api.FunctionParamLoc reason in
         (t, Ast.Type.Missing (loc, t))
       | Ast.Type.Available annot ->
         let (t, ast_annot) = Anno.mk_type_available_annotation cx tparams_map annot in
@@ -7487,7 +7489,7 @@ module Make
       end;
       match pred_synth with
       | Name_def.FunctionPredicateSynthesizable (ret_loc, _) -> begin
-        match Env.predicate_refinement_maps cx ret_loc with
+        match Type_env.predicate_refinement_maps cx ret_loc with
         | Some (expr_reason, pmap, nmap) ->
           let reason = update_desc_reason (fun d -> RPredicateOf d) expr_reason in
           Func.Predicate (PredBased (reason, pmap, nmap))
@@ -7513,7 +7515,7 @@ module Make
         let t = Context.mk_placeholder cx reason in
         (t, Ast.Type.Missing (loc, t))
       | Ast.Type.Missing loc ->
-        let t = Env.find_write cx Env_api.FunctionParamLoc reason in
+        let t = Type_env.find_write cx Env_api.FunctionParamLoc reason in
         (t, Ast.Type.Missing (loc, t))
       | Ast.Type.Available annot ->
         let (t, ast_annot) = Anno.mk_type_available_annotation cx tparams_map annot in
@@ -7651,7 +7653,9 @@ module Make
         (* Each read corresponds to a return expression. *)
         Base.List.iter reads ~f:(fun (return_reason, { Env_api.write_locs; _ }, _) ->
             let return_loc = Reason.loc_of_reason return_reason in
-            match Env.type_guard_at_return cx param_reason ~param_loc ~return_loc write_locs with
+            match
+              Type_env.type_guard_at_return cx param_reason ~param_loc ~return_loc write_locs
+            with
             | Ok t ->
               let use_op =
                 Frame
@@ -7833,7 +7837,7 @@ module Make
           | _ -> (return_t, Base.Option.map ~f:Tast_utils.error_mapper#predicate predicate)
         in
         let return_t =
-          mk_inference_target_with_annots ~has_hint:(Env.has_hint cx ret_loc) return_t
+          mk_inference_target_with_annots ~has_hint:(Type_env.has_hint cx ret_loc) return_t
         in
         let () =
           if kind = Func_class_sig_types.Func.Ctor then
@@ -7850,7 +7854,7 @@ module Make
             SMap.fold
               (fun name (kind, loc) acc ->
                 let expr_t =
-                  Env.find_write cx kind (mk_reason (RIdentifier (OrdinaryName name)) loc)
+                  Type_env.find_write cx kind (mk_reason (RIdentifier (OrdinaryName name)) loc)
                 in
                 let field =
                   Field { key_loc = Some loc; type_ = expr_t; polarity = Polarity.Neutral }
@@ -8128,7 +8132,7 @@ module Make
                { var = Some (mk_reason (RIdentifier (OrdinaryName name)) name_loc); init = reason }
             )
         in
-        Env.init_implicit_const cx ~use_op t name_loc;
+        Type_env.init_implicit_const cx ~use_op t name_loc;
         t
       ) else (
         Flow.add_output cx (Error_message.EEnumsNotEnabled loc);

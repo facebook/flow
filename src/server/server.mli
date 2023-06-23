@@ -9,17 +9,18 @@ val check_once :
   init_id:string ->
   shared_mem_config:SharedMem.config ->
   format_errors:
-    (Errors.ConcreteLocPrintableErrorSet.t
+    (Flow_errors_utils.ConcreteLocPrintableErrorSet.t
      * (* errors *)
-       Errors.ConcreteLocPrintableErrorSet.t
+       Flow_errors_utils.ConcreteLocPrintableErrorSet.t
      * (* warnings *)
-     (Loc.t Errors.printable_error * Loc_collections.LocSet.t) list ->
+     (Loc.t Flow_errors_utils.printable_error * Loc_collections.LocSet.t) list ->
     (* suppressed errors *) Profiling_js.finished ->
     unit (* print errors *)
     ) ->
   ?focus_targets:Utils_js.FilenameSet.t ->
   Options.t ->
-  Errors.ConcreteLocPrintableErrorSet.t * (* errors *) Errors.ConcreteLocPrintableErrorSet.t
+  Flow_errors_utils.ConcreteLocPrintableErrorSet.t
+  * (* errors *) Flow_errors_utils.ConcreteLocPrintableErrorSet.t
 
 (* warnings *)
 

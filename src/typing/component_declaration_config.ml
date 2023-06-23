@@ -91,7 +91,7 @@ struct
     match pattern with
     | Id ({ Ast.Pattern.Identifier.name = ((name_loc, _), { Ast.Identifier.name; _ }); _ } as id) ->
       let reason = mk_reason (RIdentifier (OrdinaryName name)) name_loc in
-      let t = Env.find_write cx Env_api.OrdinaryNameLoc reason in
+      let t = Type_env.find_write cx Env_api.OrdinaryNameLoc reason in
       let default = eval_default cx ~always_flow_default:true t has_anno default in
       ( loc,
         {
@@ -137,7 +137,7 @@ struct
   let eval_rest cx (Rest { t = _; loc; ploc; id; has_anno = _ }) =
     let { Ast.Pattern.Identifier.name = ((name_loc, _), { Ast.Identifier.name; _ }); _ } = id in
     let reason = mk_reason (RIdentifier (OrdinaryName name)) name_loc in
-    let t = Env.find_write cx Env_api.OrdinaryNameLoc reason in
+    let t = Type_env.find_write cx Env_api.OrdinaryNameLoc reason in
     ( loc,
       {
         Ast.Statement.ComponentDeclaration.RestParam.argument =

@@ -233,25 +233,25 @@ val map_reason_locs : ('a -> 'b) -> 'a virtual_reason -> 'b virtual_reason
 
 val map_desc_locs : ('a -> 'b) -> 'a virtual_reason_desc -> 'b virtual_reason_desc
 
-val string_of_loc : ?strip_root:Path.t option -> Loc.t -> string
+val string_of_loc : ?strip_root:File_path.t option -> Loc.t -> string
 
-val string_of_aloc : ?strip_root:Path.t option -> ALoc.t -> string
+val string_of_aloc : ?strip_root:File_path.t option -> ALoc.t -> string
 
 val json_of_loc :
-  ?strip_root:Path.t option ->
+  ?strip_root:File_path.t option ->
   ?catch_offset_errors:bool ->
   offset_table:Offset_utils.t option ->
   Loc.t ->
   Hh_json.json
 
 val json_of_loc_props :
-  ?strip_root:Path.t option ->
+  ?strip_root:File_path.t option ->
   ?catch_offset_errors:bool ->
   offset_table:Offset_utils.t option ->
   Loc.t ->
   (string * Hh_json.json) list
 
-val json_of_source : ?strip_root:Path.t option -> File_key.t option -> Hh_json.json
+val json_of_source : ?strip_root:File_path.t option -> File_key.t option -> Hh_json.json
 
 val json_source_type_of_source : File_key.t option -> Hh_json.json
 
@@ -291,11 +291,11 @@ val is_lib_reason_def : reason -> bool
 
 val is_blamable_reason : reason -> bool
 
-val string_of_source : ?strip_root:Path.t option -> File_key.t -> string
+val string_of_source : ?strip_root:File_path.t option -> File_key.t -> string
 
-val string_of_reason : ?strip_root:Path.t option -> reason -> string
+val string_of_reason : ?strip_root:File_path.t option -> reason -> string
 
-val dump_reason : ?strip_root:Path.t option -> reason -> string
+val dump_reason : ?strip_root:File_path.t option -> reason -> string
 
 (* accessors *)
 val loc_of_reason : 'loc virtual_reason -> 'loc
@@ -375,4 +375,4 @@ val show_virtual_reason_desc :
 
 val show_reason_desc_function : reason_desc_function -> string
 
-val range_string_of_loc : strip_root:Path.t option -> Loc.t -> string
+val range_string_of_loc : strip_root:File_path.t option -> Loc.t -> string

@@ -1793,7 +1793,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
     None
 
 let kind_of_msg =
-  Errors.(
+  Flow_errors_utils.(
     function
     | EUntypedTypeImport _ -> LintError Lints.UntypedTypeImport
     | EUntypedImport _ -> LintError Lints.UntypedImport
@@ -1846,7 +1846,7 @@ let polarity_explanation = function
   | (Polarity.Neutral, Polarity.Neutral) -> failwith "unreachable"
 
 let mk_prop_message =
-  Errors.Friendly.(
+  Flow_errors_utils.Friendly.(
     function
     | None -> [text "an index signature declaring the expected key / value type"]
     | Some "$call" -> [text "a call signature declaring the expected parameter / return type"]
@@ -1854,7 +1854,7 @@ let mk_prop_message =
   )
 
 let mk_tuple_element_error_message loc_of_aloc ~reason ~index ~name kind =
-  let open Errors.Friendly in
+  let open Flow_errors_utils.Friendly in
   let index_ref =
     Reference ([Code (string_of_int index)], loc_of_aloc (def_loc_of_reason reason))
   in
@@ -1948,7 +1948,7 @@ type 'loc friendly_message_recipe =
       reason_lower: 'loc Reason.virtual_reason;
       reason_upper: 'loc Reason.virtual_reason;
       use_op: 'loc Type.virtual_use_op;
-      suggestion: Loc.t Errors.Friendly.message_feature list;
+      suggestion: Loc.t Flow_errors_utils.Friendly.message_feature list;
     }
   | PropMissing of {
       loc: 'loc;
@@ -1957,10 +1957,10 @@ type 'loc friendly_message_recipe =
       reason_obj: 'loc Reason.virtual_reason;
       use_op: 'loc Type.virtual_use_op;
     }
-  | Normal of { features: Loc.t Errors.Friendly.message_feature list }
+  | Normal of { features: Loc.t Flow_errors_utils.Friendly.message_feature list }
   | UseOp of {
       loc: 'loc;
-      features: Loc.t Errors.Friendly.message_feature list;
+      features: Loc.t Flow_errors_utils.Friendly.message_feature list;
       use_op: 'loc Type.virtual_use_op;
     }
   | PropPolarityMismatch of {
@@ -1973,10 +1973,10 @@ type 'loc friendly_message_recipe =
     }
 
 let friendly_message_of_msg loc_of_aloc msg =
-  let text = Errors.Friendly.text in
-  let code = Errors.Friendly.code in
-  let ref = Errors.Friendly.ref_map loc_of_aloc in
-  let desc = Errors.Friendly.desc in
+  let text = Flow_errors_utils.Friendly.text in
+  let code = Flow_errors_utils.Friendly.code in
+  let ref = Flow_errors_utils.Friendly.ref_map loc_of_aloc in
+  let desc = Flow_errors_utils.Friendly.desc in
   let msg_export prefix export_name =
     if export_name = "default" then
       (text "", text "the default export")
@@ -2510,7 +2510,7 @@ let friendly_message_of_msg loc_of_aloc msg =
       }
   | ETupleNonIntegerIndex { reason; index; use_op } ->
     let index_ref =
-      Errors.Friendly.(Reference ([Code index], loc_of_aloc (def_loc_of_reason reason)))
+      Flow_errors_utils.Friendly.(Reference ([Code index], loc_of_aloc (def_loc_of_reason reason)))
     in
     UseOp
       {
@@ -2592,7 +2592,7 @@ let friendly_message_of_msg loc_of_aloc msg =
         text " looks promising ";
         text "too. To fix add a type annotation ";
       ]
-      @ Errors.Friendly.conjunction_concat
+      @ Flow_errors_utils.Friendly.conjunction_concat
           ~conjunction:"or"
           (Base.List.map
              ~f:(fun case_r ->
@@ -2694,7 +2694,7 @@ let friendly_message_of_msg loc_of_aloc msg =
         loc = loc_of_reason invalid_reason;
         features =
           [ref invalid_reason; text " is incompatible with "; ref valid_reason; text " since "]
-          @ Errors.Friendly.conjunction_concat ~conjunction:"and" invalids;
+          @ Flow_errors_utils.Friendly.conjunction_concat ~conjunction:"and" invalids;
         use_op;
       }
   | EUnsupportedKeyInObjectType _ -> Normal { features = [text "Unsupported key in object type."] }
@@ -2971,7 +2971,7 @@ let friendly_message_of_msg loc_of_aloc msg =
     (* We can call to_loc here because reaching this point requires that everything else
        in the error message is concretized already; making Scopes polymorphic is not a good idea *)
     let x = mk_reason desc (ALoc.to_loc_exn entry_loc) in
-    let ref_x = Errors.Friendly.ref x in
+    let ref_x = Flow_errors_utils.Friendly.ref x in
     let type_as_value_msg () =
       [
         text "Cannot use type ";
@@ -3549,7 +3549,8 @@ let friendly_message_of_msg loc_of_aloc msg =
     in
     Normal { features }
   | EParseError (_, parse_error) ->
-    Normal { features = Errors.Friendly.message_of_string (Parse_error.PP.error parse_error) }
+    Normal
+      { features = Flow_errors_utils.Friendly.message_of_string (Parse_error.PP.error parse_error) }
   | EDocblockError (_, err) ->
     let features =
       match err with
@@ -4152,7 +4153,7 @@ let friendly_message_of_msg loc_of_aloc msg =
             )
             @ [text (spf "and %d others" (number_to_check - max_display_amount))]
           else
-            Errors.Friendly.conjunction_concat
+            Flow_errors_utils.Friendly.conjunction_concat
               (Base.List.map ~f:(fun member -> [code member]) left_to_check)
         in
         (text "the members " :: members_features)
@@ -4451,7 +4452,9 @@ let friendly_message_of_msg loc_of_aloc msg =
     UseOp { loc = loc_of_reason reason_class; features; use_op }
   | EMethodUnbinding { use_op; reason_op; reason_prop } ->
     let context =
-      Errors.Friendly.(Reference ([Text "context"], loc_of_aloc (def_loc_of_reason reason_prop)))
+      Flow_errors_utils.Friendly.(
+        Reference ([Text "context"], loc_of_aloc (def_loc_of_reason reason_prop))
+      )
     in
     UseOp
       {
@@ -5300,7 +5303,7 @@ let error_code_of_message err : error_code option =
   | EUninitializedInstanceProperty _
   | EUnusedPromise _ -> begin
     match kind_of_msg err with
-    | Errors.LintError kind -> Some (Error_codes.code_of_lint kind)
+    | Flow_errors_utils.LintError kind -> Some (Error_codes.code_of_lint kind)
     | _ -> None
   end
   | ETSSyntax _ -> Some TSSyntax

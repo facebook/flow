@@ -74,17 +74,17 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       }
 
   type args = {
-    root: Path.t;
+    root: File_path.t;
     output_json: bool;
-    output_json_version: Errors.Json_output.json_version option;
+    output_json_version: Flow_errors_utils.Json_output.json_version option;
     offset_style: CommandUtils.offset_style option;
     pretty: bool;
-    error_flags: Errors.Cli_output.error_flags;
+    error_flags: Flow_errors_utils.Cli_output.error_flags;
     strip_root: bool;
   }
 
   let check_status flowconfig_name (args : args) connect_flags =
-    let include_warnings = args.error_flags.Errors.Cli_output.include_warnings in
+    let include_warnings = args.error_flags.Flow_errors_utils.Cli_output.include_warnings in
     let request = ServerProt.Request.STATUS { include_warnings } in
     let (response, lazy_stats) =
       match connect_and_make_request flowconfig_name connect_flags args.root request with
@@ -99,7 +99,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     in
     let offset_kind = CommandUtils.offset_kind_of_offset_style args.offset_style in
     let print_json =
-      Errors.Json_output.print_errors
+      Flow_errors_utils.Json_output.print_errors
         ~out_channel:stdout
         ~strip_root
         ~pretty:args.pretty
@@ -127,15 +127,15 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         if args.output_json then
           print_json ~errors ~warnings ~suppressed_errors ()
         else if from = Some "vim" || from = Some "emacs" then
-          Errors.Vim_emacs_output.print_errors ~strip_root stdout ~errors ~warnings ()
+          Flow_errors_utils.Vim_emacs_output.print_errors ~strip_root stdout ~errors ~warnings ()
         else
           let errors =
             List.fold_left
-              (fun acc (error, _) -> Errors.ConcreteLocPrintableErrorSet.add error acc)
+              (fun acc (error, _) -> Flow_errors_utils.ConcreteLocPrintableErrorSet.add error acc)
               errors
               suppressed_errors
           in
-          Errors.Cli_output.print_errors
+          Flow_errors_utils.Cli_output.print_errors
             ~strip_root
             ~flags:error_flags
             ~out_channel:stdout
@@ -145,12 +145,16 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
             ()
       end;
       Exit.exit
-        (get_check_or_status_exit_code errors warnings error_flags.Errors.Cli_output.max_warnings)
+        (get_check_or_status_exit_code
+           errors
+           warnings
+           error_flags.Flow_errors_utils.Cli_output.max_warnings
+        )
     | ServerProt.Response.NO_ERRORS ->
       if args.output_json then
         print_json
-          ~errors:Errors.ConcreteLocPrintableErrorSet.empty
-          ~warnings:Errors.ConcreteLocPrintableErrorSet.empty
+          ~errors:Flow_errors_utils.ConcreteLocPrintableErrorSet.empty
+          ~warnings:Flow_errors_utils.ConcreteLocPrintableErrorSet.empty
           ~suppressed_errors:[]
           ()
       else (

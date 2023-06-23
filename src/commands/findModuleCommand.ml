@@ -53,7 +53,7 @@ let main base_flags option_values json pretty root strip_root wait_for_recheck m
         | Some (File_key.JsonFile file)
         | Some (File_key.ResourceFile file) ) ->
       if strip_root then
-        Files.relative_path (Path.to_string root) file
+        Files.relative_path (File_path.to_string root) file
       else
         file
     | ServerProt.Response.FIND_MODULE None -> "(unknown)"

@@ -14,7 +14,7 @@ let is_eden_posix dir =
      `/etc/eden/edenfs.rc`. It defaults to `~/.eden`, so a naive implementation
      would think everything in your home dir is in an eden mount! This folder
      does not have a `root` file. *)
-  let open Path in
+  let open File_path in
   file_exists (concat (concat dir ".eden") "root")
 
 let rec is_eden_win32 ~recursion_limit dir =
@@ -24,7 +24,7 @@ let rec is_eden_win32 ~recursion_limit dir =
      Inside an eden redirection, you're not in an eden mount but walking the
      parent dirs would cross back into the eden mount and return true
      incorrectly. Redirections on Windows are symlinks, so resolving the
-     parent dir symlink (as Path.parent does) will jump out of the eden mount
+     parent dir symlink (as File_path.parent does) will jump out of the eden mount
      and into wherever redirections' data lives, eventually returning false.
 
      There is also a .eden folder containing global state that is not an eden
@@ -32,7 +32,7 @@ let rec is_eden_win32 ~recursion_limit dir =
      to `C:\users\USER\.eden`, so a naive implementation would think everything
      in your home dir is in an eden mount! This folder has `config.json` and
      `config.toml`, but not an extensionless `config`. :shrug: *)
-  let open Path in
+  let open File_path in
   let parent_dir = parent dir in
   if dir = parent_dir then
     (* Reached fs root *)
@@ -47,7 +47,7 @@ let rec is_eden_win32 ~recursion_limit dir =
   else
     is_eden_win32 ~recursion_limit:(recursion_limit - 1) parent_dir
 
-let is_eden : Path.t -> bool =
+let is_eden : File_path.t -> bool =
   if Sys.win32 then
     is_eden_win32 ~recursion_limit:100
   else

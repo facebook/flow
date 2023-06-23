@@ -8,7 +8,7 @@
 module CCS = CommandConnectSimple
 
 type env = {
-  root: Path.t;
+  root: File_path.t;
   autostart: bool;
   retries: int;
   expiry: float option;
@@ -55,7 +55,7 @@ let start_flow_server env =
   in
   let exe = Sys.executable_name in
   let args =
-    [Path.to_string root]
+    [File_path.to_string root]
     |> arg_map "--sharedmemory-hash-table-pow" ~f:string_of_int shm_hash_table_pow
     |> arg "--lazy-mode" lazy_mode
     |> arg "--temp-dir" (Some tmp_dir)
@@ -193,10 +193,10 @@ let rec connect ~flowconfig_name ~client_handshake env retries start_time =
   | Error CCS.Server_socket_missing -> begin
     try
       if not env.quiet then
-        Utils_js.prerr_endlinef "Attempting to kill server for `%s`" (Path.to_string env.root);
+        Utils_js.prerr_endlinef "Attempting to kill server for `%s`" (File_path.to_string env.root);
       CommandMeanKill.mean_kill ~flowconfig_name ~tmp_dir:env.tmp_dir env.root;
       if not env.quiet then
-        Utils_js.prerr_endlinef "Successfully killed server for `%s`" (Path.to_string env.root);
+        Utils_js.prerr_endlinef "Successfully killed server for `%s`" (File_path.to_string env.root);
       let start_time = Unix.gettimeofday () in
       handle_missing_server ~flowconfig_name ~client_handshake env retries start_time
     with
@@ -207,14 +207,14 @@ let rec connect ~flowconfig_name ~client_handshake env retries start_time =
           | Some err -> prerr_endline err
           | None -> ()
       end;
-      let msg = Utils_js.spf "Failed to kill server for `%s`" (Path.to_string env.root) in
+      let msg = Utils_js.spf "Failed to kill server for `%s`" (File_path.to_string env.root) in
       Exit.(exit ~msg Kill_error)
   end
 
 and handle_missing_server ~flowconfig_name ~client_handshake env retries start_time =
   if env.autostart then (
     if not env.quiet then
-      Utils_js.prerr_endlinef "Launching Flow server for %s" (Path.to_string env.root);
+      Utils_js.prerr_endlinef "Launching Flow server for %s" (File_path.to_string env.root);
     let retries =
       match start_flow_server env with
       | Ok () ->
@@ -237,7 +237,7 @@ and handle_missing_server ~flowconfig_name ~client_handshake env retries start_t
     connect ~flowconfig_name ~client_handshake env retries start_time
   ) else
     let msg =
-      Utils_js.spf "\nError: There is no Flow server running in '%s'." (Path.to_string env.root)
+      Utils_js.spf "\nError: There is no Flow server running in '%s'." (File_path.to_string env.root)
     in
     Exit.(exit ~msg No_server_running)
 

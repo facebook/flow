@@ -31,14 +31,14 @@ val all_unused_locs : t -> Loc_collections.LocSet.t
 val universally_suppressed_codes : t -> CodeLocSet.t
 
 val filter_suppressed_errors :
-  root:Path.t ->
+  root:File_path.t ->
   file_options:Files.options option ->
   loc_of_aloc:(ALoc.t -> Loc.t) ->
   t ->
   Flow_error.ErrorSet.t ->
   unused:t ->
-  Errors.ConcreteLocPrintableErrorSet.t
-  * (Loc.t Errors.printable_error * Loc_collections.LocSet.t) list
+  Flow_errors_utils.ConcreteLocPrintableErrorSet.t
+  * (Loc.t Flow_errors_utils.printable_error * Loc_collections.LocSet.t) list
   * t
 
 (* We use an PrintableErrorSet here (as opposed to a ConcretePrintableErrorSet) because this operation happens

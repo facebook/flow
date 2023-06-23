@@ -69,7 +69,7 @@ let main
   if (not option_values.quiet) && verbose <> None then
     prerr_endline "NOTE: --verbose writes to the server log file";
 
-  let include_warnings = error_flags.Errors.Cli_output.include_warnings in
+  let include_warnings = error_flags.Flow_errors_utils.Cli_output.include_warnings in
   let request =
     ServerProt.Request.CHECK_FILE
       { input = file; verbose; force = all; include_warnings; wait_for_recheck }
@@ -81,8 +81,8 @@ let main
   in
   let stdin_file =
     match file with
-    | File_input.FileContent (None, contents) -> Some (Path.make_unsafe "-", contents)
-    | File_input.FileContent (Some path, contents) -> Some (Path.make path, contents)
+    | File_input.FileContent (None, contents) -> Some (File_path.make_unsafe "-", contents)
+    | File_input.FileContent (Some path, contents) -> Some (File_path.make path, contents)
     | _ -> None
   in
   let strip_root =
@@ -92,7 +92,7 @@ let main
       None
   in
   let print_json =
-    Errors.Json_output.print_errors
+    Flow_errors_utils.Json_output.print_errors
       ~out_channel:stdout
       ~strip_root
       ~pretty
@@ -105,7 +105,7 @@ let main
     if json then
       print_json ~errors ~warnings ~suppressed_errors ()
     else (
-      Errors.Cli_output.print_errors
+      Flow_errors_utils.Cli_output.print_errors
         ~out_channel:stdout
         ~flags:error_flags
         ~stdin_file
@@ -118,14 +118,18 @@ let main
       (* Return a successful exit code if there were only warnings. *)
       Exit.(
         exit
-          (get_check_or_status_exit_code errors warnings error_flags.Errors.Cli_output.max_warnings)
+          (get_check_or_status_exit_code
+             errors
+             warnings
+             error_flags.Flow_errors_utils.Cli_output.max_warnings
+          )
       )
     )
   | ServerProt.Response.NO_ERRORS ->
     if json then
       print_json
-        ~errors:Errors.ConcreteLocPrintableErrorSet.empty
-        ~warnings:Errors.ConcreteLocPrintableErrorSet.empty
+        ~errors:Flow_errors_utils.ConcreteLocPrintableErrorSet.empty
+        ~warnings:Flow_errors_utils.ConcreteLocPrintableErrorSet.empty
         ~suppressed_errors:[]
         ()
     else
@@ -134,8 +138,8 @@ let main
   | ServerProt.Response.NOT_COVERED ->
     if json then
       print_json
-        ~errors:Errors.ConcreteLocPrintableErrorSet.empty
-        ~warnings:Errors.ConcreteLocPrintableErrorSet.empty
+        ~errors:Flow_errors_utils.ConcreteLocPrintableErrorSet.empty
+        ~warnings:Flow_errors_utils.ConcreteLocPrintableErrorSet.empty
         ~suppressed_errors:[]
         ()
     else

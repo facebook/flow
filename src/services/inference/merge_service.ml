@@ -37,7 +37,7 @@ let sig_hash ~check_dirty_set ~root =
       | File_key.SourceFile path
       | File_key.JsonFile path
       | File_key.ResourceFile path ->
-        Files.relative_path (Path.to_string root) path
+        Files.relative_path (File_path.to_string root) path
     in
     Xx.hash file_string 0L
   in

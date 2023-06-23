@@ -7,7 +7,7 @@
 
 type t
 
-val init : Unix.file_descr * Unix.file_descr * Unix.file_descr -> string * Path.t list -> t
+val init : Unix.file_descr * Unix.file_descr * Unix.file_descr -> string * File_path.t list -> t
 
 val wait_until_ready : t -> unit Lwt.t
 

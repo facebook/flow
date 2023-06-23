@@ -255,17 +255,23 @@ let in_declarations ~file_options loc =
   | None -> false
   | Some (file, options) -> Files.is_declaration options (File_key.to_string file)
 
-let check ~root ~file_options (err : Loc.t Errors.printable_error) (suppressions : t) (unused : t) =
-  let loc = Errors.loc_of_printable_error err in
+let check
+    ~root
+    ~file_options
+    (err : Loc.t Flow_errors_utils.printable_error)
+    (suppressions : t)
+    (unused : t) =
+  let loc = Flow_errors_utils.loc_of_printable_error err in
   let code_opt =
-    Errors.code_of_printable_error err
+    Flow_errors_utils.code_of_printable_error err
     |> Base.Option.map ~f:(fun code -> CodeSet.singleton (Error_codes.string_of_code code, loc))
   in
   (* Ignore lint errors from node modules, and all errors from declarations directories. *)
   let ignore =
-    match Errors.kind_of_printable_error err with
-    | Errors.LintError _ -> in_node_modules ~root ~file_options (Errors.loc_of_printable_error err)
-    | _ -> in_declarations ~file_options (Errors.loc_of_printable_error err)
+    match Flow_errors_utils.kind_of_printable_error err with
+    | Flow_errors_utils.LintError _ ->
+      in_node_modules ~root ~file_options (Flow_errors_utils.loc_of_printable_error err)
+    | _ -> in_declarations ~file_options (Flow_errors_utils.loc_of_printable_error err)
   in
   match (ignore, code_opt) with
   | (true, _) -> None
@@ -273,8 +279,8 @@ let check ~root ~file_options (err : Loc.t Errors.printable_error) (suppressions
   | (_, Some codes) ->
     let (result, used, unused) = check_loc suppressions (Specific codes) (Err, unused) loc in
     let result =
-      match Errors.kind_of_printable_error err with
-      | Errors.RecursionLimitError ->
+      match Flow_errors_utils.kind_of_printable_error err with
+      | Flow_errors_utils.RecursionLimitError ->
         (* TODO: any related suppressions should not be considered used *)
         Err
       | _ -> result
@@ -304,9 +310,9 @@ let filter_suppressed_errors ~root ~file_options ~loc_of_aloc suppressions error
       | Some (severity, used, unused) ->
         (match severity with
         | Off -> (errors, (error, used) :: suppressed, unused)
-        | _ -> (Errors.ConcreteLocPrintableErrorSet.add error errors, suppressed, unused)))
+        | _ -> (Flow_errors_utils.ConcreteLocPrintableErrorSet.add error errors, suppressed, unused)))
     errors
-    (Errors.ConcreteLocPrintableErrorSet.empty, [], unused)
+    (Flow_errors_utils.ConcreteLocPrintableErrorSet.empty, [], unused)
 
 let update_suppressions current_suppressions new_suppressions =
   FilenameMap.fold
@@ -334,7 +340,7 @@ let filter_lints suppressions errors aloc_tables ~include_suppressions severity_
       (fun error (errors, warnings, suppressions) ->
         Severity.(
           match (msg_of_error error |> Error_message.kind_of_msg, loc_of_error error) with
-          | (Errors.LintError lint_kind, Some loc) ->
+          | (Flow_errors_utils.LintError lint_kind, Some loc) ->
             let loc = ALoc.to_loc_with_tables aloc_tables loc in
             begin
               match get_lint_settings severity_cover loc with

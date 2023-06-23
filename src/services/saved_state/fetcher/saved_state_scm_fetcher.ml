@@ -10,7 +10,7 @@ let string_of_vcs_error vcs = function
   | Vcs_utils.Errored msg -> msg
 
 let merge_base_and_timestamp vcs vcs_root =
-  let cwd = Path.to_string vcs_root in
+  let cwd = File_path.to_string vcs_root in
   (* TODO: use file_watcher_mergebase_with from flowconfig *)
   let merge_base_and_timestamp =
     match vcs with
@@ -24,7 +24,7 @@ let merge_base_and_timestamp vcs vcs_root =
   | Ok result -> Lwt.return_ok result
 
 let get_changes_since vcs vcs_root hash =
-  let cwd = Path.to_string vcs_root in
+  let cwd = File_path.to_string vcs_root in
   match%lwt
     match vcs with
     | Vcs.Hg -> Hg.files_changed_since ~cwd hash
@@ -34,7 +34,7 @@ let get_changes_since vcs vcs_root hash =
   | Error err -> Lwt.return_error err
 
 let saved_states_dir options root =
-  let root_str = Path.to_string root in
+  let root_str = File_path.to_string root in
   let dir = Filename.concat root_str ".flow.saved_states" in
   match Options.root_name options with
   | Some name -> Filename.concat dir (String_utils.filename_escape name)
@@ -152,7 +152,7 @@ let fetch ~options =
           | Some (saved_state_merge_base, saved_state_file) ->
             (match%lwt get_changes_since vcs vcs_root saved_state_merge_base with
             | Ok changed_files ->
-              let saved_state_filename = Path.make saved_state_file in
+              let saved_state_filename = File_path.make saved_state_file in
               let changed_files = SSet.of_list changed_files in
               let changed_files_count = SSet.cardinal changed_files in
               Hh_logger.info "Saved state path is %s" saved_state_file;

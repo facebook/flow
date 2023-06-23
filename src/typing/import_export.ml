@@ -87,7 +87,7 @@ let import_ns cx reason module_t =
    declared for exports or any other use of exports. *)
 
 let cjs_clobber cx loc t =
-  if Module_info.cjs_clobber (Context.module_info cx) loc then Env.set_module_exports cx t
+  if Module_info.cjs_clobber (Context.module_info cx) loc then Type_env.set_module_exports cx t
 
 let export cx = Module_info.export (Context.module_info cx)
 
@@ -100,8 +100,8 @@ let export_type_star cx = Module_info.export_type_star (Context.module_info cx)
 let export_binding cx ?is_function name loc = function
   | Flow_ast.Statement.ExportValue ->
     let t =
-      Env.get_var_declared_type
-        ~lookup_mode:Env.LookupMode.ForValue
+      Type_env.get_var_declared_type
+        ~lookup_mode:Type_env.LookupMode.ForValue
         ?is_declared_function:is_function
         cx
         name
@@ -110,8 +110,8 @@ let export_binding cx ?is_function name loc = function
     export cx name loc t
   | Flow_ast.Statement.ExportType ->
     let t =
-      Env.get_var_declared_type
-        ~lookup_mode:Env.LookupMode.ForType
+      Type_env.get_var_declared_type
+        ~lookup_mode:Type_env.LookupMode.ForType
         ?is_declared_function:is_function
         cx
         name
@@ -165,7 +165,7 @@ let mk_module_t =
       let info = Context.module_info cx in
       match info.kind with
       | CJS _ ->
-        Env.get_module_exports cx loc
+        Type_env.get_module_exports cx loc
         |> mk_commonjs_module_t cx reason reason
         |> export_named cx reason ExportType info.type_named
         |> copy_star_exports cx reason ([], info.type_star)

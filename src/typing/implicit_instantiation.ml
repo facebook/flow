@@ -860,7 +860,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
           else
             Observer.on_pinned_tparam cx tparam t
         in
-        let bound_t = Subst.subst cx ~use_op:unknown_use subst_map bound in
+        let bound_t = Type_subst.subst cx ~use_op:unknown_use subst_map bound in
         Flow.flow_t cx (t, bound_t);
         Subst_name.Map.add name result acc)
       inferred_targ_list
@@ -1039,7 +1039,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
         ~upper_unresolved:true
         use_op
         check_t
-        (Subst.subst cx ~use_op:unknown_use subst_map extends_t)
+        (Type_subst.subst cx ~use_op:unknown_use subst_map extends_t)
     then
       let (tparams_map, tparams_set) =
         Base.List.fold
@@ -1287,9 +1287,9 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
              cx
              trace
              ~use_op:frame
-             (inferred, Subst.subst cx ~use_op subst_map tparam.bound)
+             (inferred, Type_subst.subst cx ~use_op subst_map tparam.bound)
        );
-    reposition cx ~trace (loc_of_reason reason_tapp) (Subst.subst cx ~use_op subst_map poly_t)
+    reposition cx ~trace (loc_of_reason reason_tapp) (Type_subst.subst cx ~use_op subst_map poly_t)
 
   let run_call
       cx check ~return_hint:(_, lazy_hint) ?(cache = false) trace ~use_op ~reason_op ~reason_tapp =
@@ -1422,12 +1422,12 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
         with
         (* If the subtyping can succeed even when the GenericTs are still abstract, then it must
            succeed under every possible instantiation, so we can take the true branch. *)
-        | Some subst_map -> Subst.subst cx ~use_op:unknown_use subst_map true_t
+        | Some subst_map -> Type_subst.subst cx ~use_op:unknown_use subst_map true_t
         | None ->
           let free_vars =
             Subst_name.Set.union
-              (Subst.free_var_finder cx check_t)
-              (Subst.free_var_finder
+              (Type_subst.free_var_finder cx check_t)
+              (Type_subst.free_var_finder
                  cx
                  ~bound:
                    (tparams
@@ -1451,8 +1451,8 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
                   Subst_name.Map.add tparam.name (AnyT.placeholder reason) acc
               )
             in
-            let check_t = Subst.subst cx ~use_op:unknown_use any_subst_map check_t in
-            let extends_t = Subst.subst cx ~use_op:unknown_use any_subst_map extends_t in
+            let check_t = Type_subst.subst cx ~use_op:unknown_use any_subst_map check_t in
+            let extends_t = Type_subst.subst cx ~use_op:unknown_use any_subst_map extends_t in
             (match
                SpeculationKit.try_singleton_throw_on_failure
                  cx

@@ -9,19 +9,19 @@ type t =
   | Hg
   | Git
 
-let find_root : ?recursion_limit:int -> Path.t -> (t * Path.t) option =
+let find_root : ?recursion_limit:int -> File_path.t -> (t * File_path.t) option =
   let rec walk ~recursion_limit dir =
-    if dir = Path.parent dir then
+    if dir = File_path.parent dir then
       (* Reached fs root *)
       None
-    else if Path.file_exists (Path.concat dir ".hg") then
+    else if File_path.file_exists (File_path.concat dir ".hg") then
       Some (Hg, dir)
-    else if Path.file_exists (Path.concat dir ".git") then
+    else if File_path.file_exists (File_path.concat dir ".git") then
       Some (Git, dir)
     else if recursion_limit <= 0 then
       None
     else
-      walk ~recursion_limit:(recursion_limit - 1) (Path.parent dir)
+      walk ~recursion_limit:(recursion_limit - 1) (File_path.parent dir)
   in
   (fun ?(recursion_limit = 100) dir -> walk ~recursion_limit dir)
 

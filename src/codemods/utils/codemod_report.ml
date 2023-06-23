@@ -6,7 +6,7 @@
  *)
 
 type reporter_options = {
-  strip_root: Path.t option;
+  strip_root: File_path.t option;
   exact_by_default: bool;
 }
 

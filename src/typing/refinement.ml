@@ -71,5 +71,5 @@ include Keys
 (* get type refinement for expression, if it exists *)
 let get ~allow_optional cx expr loc =
   match key ~allow_optional expr with
-  | Some k -> Env.get_refinement cx k loc
+  | Some k -> Type_env.get_refinement cx k loc
   | None -> None

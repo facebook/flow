@@ -85,11 +85,11 @@ let main base_flags option_values json pretty root strip_root path wait_for_rech
       Hh_json.(
         let json =
           match locs with
-          | [loc] -> JSON_Object (Errors.deprecated_json_props_of_loc ~strip_root loc)
+          | [loc] -> JSON_Object (Flow_errors_utils.deprecated_json_props_of_loc ~strip_root loc)
           | locs ->
             JSON_Array
               (Base.List.map locs ~f:(fun loc ->
-                   JSON_Object (Errors.deprecated_json_props_of_loc ~strip_root loc)
+                   JSON_Object (Flow_errors_utils.deprecated_json_props_of_loc ~strip_root loc)
                )
               )
         in
@@ -99,7 +99,7 @@ let main base_flags option_values json pretty root strip_root path wait_for_rech
       let from = FlowEventLogger.get_from_I_AM_A_CLOWN () in
       if from = Some "vim" || from = Some "emacs" then
         Base.List.iter locs ~f:(fun loc ->
-            print_endline (Errors.Vim_emacs_output.string_of_loc ~strip_root loc)
+            print_endline (Flow_errors_utils.Vim_emacs_output.string_of_loc ~strip_root loc)
         )
       else
         Base.List.iter locs ~f:(fun loc ->

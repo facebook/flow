@@ -28,7 +28,7 @@ let find_subcommand =
     }
   in
   let main flowconfig_name json pretty root () =
-    let root = guess_root flowconfig_name root |> Path.to_string in
+    let root = guess_root flowconfig_name root |> File_path.to_string in
     FlowEventLogger.set_root (Some root);
     if json || pretty then
       Hh_json.(
@@ -69,12 +69,12 @@ let check_subcommand =
         let msg = Utils_js.spf "Could not find file %s" file in
         Exit.(exit ~msg Could_not_find_flowconfig)
       );
-      let root = Path.make (Filename.dirname file) in
-      (file, root |> Path.to_string)
+      let root = File_path.make (Filename.dirname file) in
+      (file, root |> File_path.to_string)
     | None ->
       let root = guess_root flowconfig_name root in
       let file = Server_files_js.config_file flowconfig_name root in
-      (file, root |> Path.to_string)
+      (file, root |> File_path.to_string)
   in
   let json_of_issue kind (line, msg) =
     Hh_json.(

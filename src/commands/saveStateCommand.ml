@@ -49,7 +49,7 @@ let main base_flags option_values root scm out () =
            { arg = "--out"; msg = "--out and --scm are mutually exclusive"; details = None }
         )
     | (Some true, None) -> `Scm
-    | (_, Some out) -> `File (Path.make (Files.imaginary_realpath out))
+    | (_, Some out) -> `File (File_path.make (Files.imaginary_realpath out))
   in
   let request = ServerProt.Request.SAVE_STATE { out } in
   match connect_and_make_request flowconfig_name option_values root request with

@@ -11,9 +11,9 @@ open Utils_js
 type printer =
   | Json of {
       pretty: bool;
-      version: Errors.Json_output.json_version option;
+      version: Flow_errors_utils.Json_output.json_version option;
     }
-  | Cli of Errors.Cli_output.error_flags
+  | Cli of Flow_errors_utils.Cli_output.error_flags
 
 (* helper - print errors. used in check-and-die runs *)
 let format_errors
@@ -23,7 +23,7 @@ let format_errors
     if include_warnings then
       warnings
     else
-      Errors.ConcreteLocPrintableErrorSet.empty
+      Flow_errors_utils.ConcreteLocPrintableErrorSet.empty
   in
   let suppressed_errors =
     if Options.include_suppressions options then
@@ -48,7 +48,7 @@ let format_errors
     match printer with
     | Json { pretty; version } ->
       let finish_formatting =
-        Errors.Json_output.format_errors
+        Flow_errors_utils.Json_output.format_errors
           ~out_channel:stdout
           ~strip_root
           ~pretty
@@ -67,12 +67,12 @@ let format_errors
     | Cli flags ->
       let errors =
         List.fold_left
-          (fun acc (error, _) -> Errors.ConcreteLocPrintableErrorSet.add error acc)
+          (fun acc (error, _) -> Flow_errors_utils.ConcreteLocPrintableErrorSet.add error acc)
           errors
           suppressed_errors
       in
       let () =
-        Errors.Cli_output.print_errors
+        Flow_errors_utils.Cli_output.print_errors
           ~out_channel:stdout
           ~flags
           ~strip_root
@@ -166,7 +166,7 @@ module CheckCommand = struct
 
     let shared_mem_config = shm_config shm_flags flowconfig in
     let format_errors =
-      let client_include_warnings = error_flags.Errors.Cli_output.include_warnings in
+      let client_include_warnings = error_flags.Flow_errors_utils.Cli_output.include_warnings in
       let printer =
         if json || Base.Option.is_some json_version || pretty then
           Json { pretty; version = json_version }
@@ -177,7 +177,11 @@ module CheckCommand = struct
     in
     let (errors, warnings) = Server.check_once options ~init_id ~shared_mem_config ~format_errors in
     Exit.exit
-      (get_check_or_status_exit_code errors warnings error_flags.Errors.Cli_output.max_warnings)
+      (get_check_or_status_exit_code
+         errors
+         warnings
+         error_flags.Flow_errors_utils.Cli_output.max_warnings
+      )
 
   let command = CommandSpec.command spec main
 end
@@ -294,12 +298,13 @@ module FocusCheckCommand = struct
     let shared_mem_config = shm_config shm_flags flowconfig in
     let focus_targets =
       SSet.fold
-        (fun file acc -> FilenameSet.add (File_key.SourceFile Path.(to_string (make file))) acc)
+        (fun file acc ->
+          FilenameSet.add (File_key.SourceFile File_path.(to_string (make file))) acc)
         filenames
         FilenameSet.empty
     in
     let format_errors =
-      let client_include_warnings = error_flags.Errors.Cli_output.include_warnings in
+      let client_include_warnings = error_flags.Flow_errors_utils.Cli_output.include_warnings in
       let printer =
         if json || Base.Option.is_some json_version || pretty then
           Json { pretty; version = json_version }
@@ -312,7 +317,11 @@ module FocusCheckCommand = struct
       Server.check_once options ~init_id ~shared_mem_config ~focus_targets ~format_errors
     in
     Exit.exit
-      (get_check_or_status_exit_code errors warnings error_flags.Errors.Cli_output.max_warnings)
+      (get_check_or_status_exit_code
+         errors
+         warnings
+         error_flags.Flow_errors_utils.Cli_output.max_warnings
+      )
 
   let command = CommandSpec.command spec main
 end

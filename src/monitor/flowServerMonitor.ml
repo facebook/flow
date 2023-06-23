@@ -224,7 +224,7 @@ let daemonize ~init_id ~wait ~on_spawn monitor_options =
   let flowconfig_name = Options.flowconfig_name server_options in
   let lock = Server_files_js.lock_file ~flowconfig_name ~tmp_dir root in
   ( if not (Lock.check lock) then
-    let msg = spf "Error: There is already a server running for %s" (Path.to_string root) in
+    let msg = spf "Error: There is already a server running for %s" (File_path.to_string root) in
     Exit.(exit ~msg Lock_stolen)
   );
 

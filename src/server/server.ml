@@ -38,7 +38,7 @@ let extract_flowlibs_or_exit options =
     | e ->
       let e = Exception.wrap e in
       let err = Exception.get_ctor_string e in
-      let libdir_str = libdir |> Flowlib.path_of_libdir |> Path.to_string in
+      let libdir_str = libdir |> Flowlib.path_of_libdir |> File_path.to_string in
       let msg = Printf.sprintf "Could not extract flowlib files into %s: %s" libdir_str err in
       Exit.(exit ~msg Could_not_extract_flowlibs))
   | None -> ()

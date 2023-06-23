@@ -40,11 +40,11 @@ let depgraph_subcommand =
     let flowconfig_name = base_flags.Base_flags.flowconfig_name in
     let root = CommandUtils.guess_root flowconfig_name path_opt in
     (* Create the outfile if it doesn't already exist *)
-    let outpath = Files.imaginary_realpath outfile |> Path.make |> Path.to_string in
+    let outpath = Files.imaginary_realpath outfile |> File_path.make |> File_path.to_string in
     (* connect to server *)
     let request =
       ServerProt.Request.GRAPH_DEP_GRAPH
-        { root = Path.to_string root; strip_root; outfile = outpath; types_only }
+        { root = File_path.to_string root; strip_root; outfile = outpath; types_only }
     in
     match connect_and_make_request flowconfig_name option_values root request with
     | ServerProt.Response.GRAPH_DEP_GRAPH (Error msg) -> Exit.(exit ~msg Unknown_error)

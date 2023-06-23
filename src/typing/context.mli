@@ -90,7 +90,7 @@ type metadata = {
   relay_integration_excludes: Str.regexp list;
   relay_integration_module_prefix: string option;
   relay_integration_module_prefix_includes: Str.regexp list;
-  root: Path.t;
+  root: File_path.t;
   strict_es6_import_export: bool;
   strict_es6_import_export_excludes: string list;
   strip_root: bool;
@@ -233,7 +233,7 @@ val in_react_server_component_file : t -> bool
 
 val recursion_limit : t -> int
 
-val root : t -> Path.t
+val root : t -> File_path.t
 
 val facebook_fbs : t -> string option
 

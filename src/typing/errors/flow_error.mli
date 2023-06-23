@@ -17,7 +17,7 @@ val source_file : 'loc t -> File_key.t
 
 val trace_reasons : 'loc t -> 'loc Reason.virtual_reason list
 
-val kind_of_error : 'loc t -> Errors.error_kind
+val kind_of_error : 'loc t -> Flow_errors_utils.error_kind
 
 val error_of_msg :
   trace_reasons:'loc Reason.virtual_reason list ->
@@ -37,13 +37,13 @@ val post_process_errors : ErrorSet.t -> ErrorSet.t
 
 val make_error_printable :
   ('loc -> Loc.t) ->
-  strip_root:Path.t option ->
+  strip_root:File_path.t option ->
   ?speculation:bool ->
   'loc t ->
-  Loc.t Errors.printable_error
+  Loc.t Flow_errors_utils.printable_error
 
 val make_errors_printable :
   (ALoc.t -> Loc.t) ->
-  strip_root:Path.t option ->
+  strip_root:File_path.t option ->
   ErrorSet.t ->
-  Errors.ConcreteLocPrintableErrorSet.t
+  Flow_errors_utils.ConcreteLocPrintableErrorSet.t

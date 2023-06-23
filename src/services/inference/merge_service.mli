@@ -26,7 +26,7 @@ type 'a merge_job =
 
 val sig_hash :
   check_dirty_set:bool ->
-  root:Path.t ->
+  root:File_path.t ->
   reader:Mutator_state_reader.t ->
   Parsing_heaps.component_file Nel.t ->
   Xx.hash

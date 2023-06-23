@@ -84,7 +84,7 @@ let make_options
     ?(flowconfig_hash = "")
     ?(flowconfig = FlowConfig.empty_config)
     ?lazy_mode
-    ?(root = Path.dummy_path)
+    ?(root = File_path.dummy_path)
     ?(options_flags = make_options_flags ())
     ?(saved_state_options_flags = make_saved_state_flags ())
     () =

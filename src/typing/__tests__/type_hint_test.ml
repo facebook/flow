@@ -47,7 +47,7 @@ let metadata =
     relay_integration_excludes = [];
     relay_integration_module_prefix = None;
     relay_integration_module_prefix_includes = [];
-    root = Path.dummy_path;
+    root = File_path.dummy_path;
     strict_es6_import_export = false;
     strict_es6_import_export_excludes = [];
     strip_root = true;
@@ -127,7 +127,7 @@ end = struct
     in
     let env = Loc_env.with_info Name_def.Global Loc_collections.ALocMap.empty info ALocMap.empty in
     Context.set_environment cx env;
-    Env.init_env cx Name_def.Global;
+    Type_env.init_env cx Name_def.Global;
     let ((_, t), _) = Annot.convert cx Subst_name.Map.empty t_ast in
     t
 end

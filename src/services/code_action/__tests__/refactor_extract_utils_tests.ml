@@ -71,7 +71,7 @@ let file_sig_of_ast ast =
   file_sig
 
 let dummy_context () =
-  let root = Path.dummy_path in
+  let root = File_path.dummy_path in
   let master_cx = Context.empty_master_cx () in
   let () =
     let reason =

@@ -6,17 +6,22 @@
  *)
 
 val make_next_files :
-  ?name:string -> ?filter:(string -> bool) -> ?others:Path.t list -> Path.t -> unit -> string list
+  ?name:string ->
+  ?filter:(string -> bool) ->
+  ?others:File_path.t list ->
+  File_path.t ->
+  unit ->
+  string list
 
 val find :
-  ?max_depth:int -> ?filter:(string -> bool) -> ?file_only:bool -> Path.t list -> string list
+  ?max_depth:int -> ?filter:(string -> bool) -> ?file_only:bool -> File_path.t list -> string list
 
-val find_with_name : ?max_depth:int -> ?file_only:bool -> Path.t list -> string -> string list
+val find_with_name : ?max_depth:int -> ?file_only:bool -> File_path.t list -> string -> string list
 
 val iter_files :
   ?max_depth:int ->
   ?filter:(string -> bool) ->
   ?file_only:bool ->
-  Path.t list ->
+  File_path.t list ->
   (string -> unit) ->
   unit

@@ -147,24 +147,24 @@ let resolve_hint cx loc hint =
     | ValueHint exp -> expression cx exp
     | ProvidersHint (loc, []) ->
       let env = Context.environment cx in
-      Env.check_readable cx Env_api.OrdinaryNameLoc loc;
+      Type_env.check_readable cx Env_api.OrdinaryNameLoc loc;
       Base.Option.value_exn (Loc_env.find_ordinary_write env loc)
     | ProvidersHint (l1, l2 :: rest) ->
       let env = Context.environment cx in
-      Env.check_readable cx Env_api.OrdinaryNameLoc l1;
-      Env.check_readable cx Env_api.OrdinaryNameLoc l2;
+      Type_env.check_readable cx Env_api.OrdinaryNameLoc l1;
+      Type_env.check_readable cx Env_api.OrdinaryNameLoc l2;
       let t1 = Base.Option.value_exn (Loc_env.find_ordinary_write env l1) in
       let t2 = Base.Option.value_exn (Loc_env.find_ordinary_write env l2) in
       let ts =
         Base.List.map rest ~f:(fun loc ->
-            Env.check_readable cx Env_api.OrdinaryNameLoc loc;
+            Type_env.check_readable cx Env_api.OrdinaryNameLoc loc;
             Base.Option.value_exn (Loc_env.find_ordinary_write env loc)
         )
       in
       UnionT (mk_reason (RCustom "providers") loc, UnionRep.make t1 t2 ts)
     | WriteLocHint (kind, loc) ->
       let env = Context.environment cx in
-      Env.check_readable cx kind loc;
+      Type_env.check_readable cx kind loc;
       Base.Option.value_exn (Loc_env.find_write env kind loc)
     | StringLiteralType name ->
       DefT
@@ -378,7 +378,7 @@ let resolve_binding_partial cx reason loc b =
   match b with
   | Root (Annotation { tparams_map; optional; has_default_expression; param_loc; annot }) ->
     let t = resolve_annotation cx tparams_map annot in
-    Base.Option.iter param_loc ~f:(Env.bind_function_param cx t);
+    Base.Option.iter param_loc ~f:(Type_env.bind_function_param cx t);
     let t =
       if optional && not has_default_expression then
         TypeUtil.optional t
@@ -654,8 +654,11 @@ let resolve_binding_partial cx reason loc b =
         let ts =
           ALocSet.elements array_providers
           |> Base.List.map ~f:(fun loc ->
-                 Env.check_readable cx Env_api.ArrayProviderLoc loc;
-                 Env.t_option_value_exn cx loc (Loc_env.find_write env Env_api.ArrayProviderLoc loc)
+                 Type_env.check_readable cx Env_api.ArrayProviderLoc loc;
+                 Type_env.t_option_value_exn
+                   cx
+                   loc
+                   (Loc_env.find_write env Env_api.ArrayProviderLoc loc)
              )
         in
         let constrain_t =
@@ -737,7 +740,7 @@ let resolve_binding_partial cx reason loc b =
           )
       | _ -> ()
     in
-    Env.bind_function_param cx t param_loc;
+    Type_env.bind_function_param cx t param_loc;
     let t =
       if optional && default_expression = None then
         TypeUtil.optional t
@@ -780,7 +783,7 @@ let resolve_binding_partial cx reason loc b =
         (* The key is used to generate a reason for read,
            and only the last prop in the chain matters. *)
         let key = (internal_name "_", [Key.Prop prop]) in
-        Env.get_refinement cx key prop_loc
+        Type_env.get_refinement cx key prop_loc
       | _ -> None
     in
     (match refined_type with
@@ -790,7 +793,7 @@ let resolve_binding_partial cx reason loc b =
       (t, mk_use_op t)
     | None ->
       let t =
-        Env.t_option_value_exn
+        Type_env.t_option_value_exn
           cx
           parent_loc
           (Loc_env.find_write (Context.environment cx) Env_api.PatternLoc parent_loc)
@@ -863,7 +866,7 @@ let resolve_inferred_function cx ~statics ~needs_this_param id_loc reason functi
 
 let resolve_class cx id_loc reason class_loc class_ =
   let cache = Context.node_cache cx in
-  let self = Env.read_class_self_type cx class_loc in
+  let self = Type_env.read_class_self_type cx class_loc in
   let ((class_t, class_t_internal, _, _) as sig_info) =
     Statement.mk_class_sig cx ~name_loc:id_loc ~class_loc reason self class_
   in
@@ -930,7 +933,7 @@ let resolve_op_assign cx ~exp_loc id_reason lhs op rhs =
 
 let resolve_update cx ~id_loc ~exp_loc id_reason =
   let reason = mk_reason (RCustom "update") exp_loc in
-  let id_t = Env.ref_entry_exn ~lookup_mode:Env.LookupMode.ForValue cx id_loc id_reason in
+  let id_t = Type_env.ref_entry_exn ~lookup_mode:Type_env.LookupMode.ForValue cx id_loc id_reason in
   let result_t =
     Tvar.mk_where cx reason (fun result_t ->
         Flow_js.flow cx (id_t, UnaryArithT { reason; result_t; kind = UnaryArithKind.Update })
@@ -1189,7 +1192,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
           (Debug_js.dump_t cx t);
       ]
       );
-  Env.resolve_env_entry ~use_op ~update_reason cx t def_kind id_loc
+  Type_env.resolve_env_entry ~use_op ~update_reason cx t def_kind id_loc
 
 let entries_of_def graph (kind, loc) =
   let open Name_def_ordering in
@@ -1270,7 +1273,7 @@ let init_type_param =
         Node_cache.set_tparam cache info;
         (name, tparam, t)
       | Class { class_loc; class_implicit_this_tparam = { tparams_map; class_tparams_loc }; _ } ->
-        let class_t = Env.read_class_self_type cx class_loc in
+        let class_t = Type_env.read_class_self_type cx class_loc in
         let (this_param, this_t) =
           let class_tparams =
             Base.Option.map class_tparams_loc ~f:(fun tparams_loc ->
@@ -1409,7 +1412,7 @@ let resolve_component cx graph component =
   let resolve_illegal entries =
     EnvSet.iter
       (fun (kind, loc) ->
-        Env.resolve_env_entry
+        Type_env.resolve_env_entry
           ~use_op:unknown_use
           ~update_reason:false
           cx

@@ -31,7 +31,7 @@ module type S = sig
     Type.t option * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.t option
 
   val convert_qualification :
-    ?lookup_mode:Env.LookupMode.t ->
+    ?lookup_mode:Type_env.LookupMode.t ->
     Context.t ->
     string ->
     (ALoc.t, ALoc.t) Flow_ast.Type.Generic.Identifier.t ->

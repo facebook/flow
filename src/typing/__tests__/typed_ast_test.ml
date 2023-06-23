@@ -45,7 +45,7 @@ let metadata =
     relay_integration_excludes = [];
     relay_integration_module_prefix = None;
     relay_integration_module_prefix_includes = [];
-    root = Path.dummy_path;
+    root = File_path.dummy_path;
     strict_es6_import_export = false;
     strict_es6_import_export_excludes = [];
     strip_root = true;
@@ -153,7 +153,7 @@ let diff_dir =
 let system_diff ~f prefix =
   let dump_stmts filename stmts =
     let stmts = f stmts in
-    let stmts_file = Path.to_string (Path.concat (Path.make diff_dir) filename) in
+    let stmts_file = File_path.to_string (File_path.concat (File_path.make diff_dir) filename) in
     let oc = open_out stmts_file in
     output_string oc stmts;
     close_out oc;
@@ -165,7 +165,9 @@ let system_diff ~f prefix =
         Disk.mkdir_p diff_dir;
         let stmts1_file = dump_stmts (prefix ^ "_A.js") stmts1 in
         let stmts2_file = dump_stmts (prefix ^ "_B.js") stmts2 in
-        let out_file = prefix ^ "_diff.txt" |> Path.concat (Path.make diff_dir) |> Path.to_string in
+        let out_file =
+          prefix ^ "_diff.txt" |> File_path.concat (File_path.make diff_dir) |> File_path.to_string
+        in
         let cmd = Utils_js.spf "diff -U7 %s %s > %s" stmts1_file stmts2_file out_file in
         match Sys.command cmd with
         | 0

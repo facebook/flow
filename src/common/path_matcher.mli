@@ -9,8 +9,8 @@ type t
 
 val empty : t
 
-val stems : t -> Path.t list
+val stems : t -> File_path.t list
 
-val add : t -> Path.t -> t
+val add : t -> File_path.t -> t
 
 val matches : t -> string -> bool

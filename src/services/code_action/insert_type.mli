@@ -32,7 +32,7 @@ type expected =
       error: Insert_type_utils.Error.validation_error;
       error_message: string;
     }
-  | FailedToTypeCheck of Errors.ConcreteLocPrintableErrorSet.t
+  | FailedToTypeCheck of Flow_errors_utils.ConcreteLocPrintableErrorSet.t
   | FailedToNormalize of (Loc.t * string)
   | FailedToImport of Insert_type_utils.Error.import_error
 

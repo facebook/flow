@@ -88,14 +88,14 @@ let main
     | Some s -> s
     | None ->
       CommandUtils.server_log_file ~flowconfig_name ~tmp_dir:(Options.temp_dir options) root
-      |> Path.to_string
+      |> File_path.to_string
   in
   let monitor_log_file =
     match monitor_log_file with
     | Some s -> s
     | None ->
       CommandUtils.monitor_log_file ~flowconfig_name ~tmp_dir:(Options.temp_dir options) root
-      |> Path.to_string
+      |> File_path.to_string
   in
   let on_spawn pid =
     if pretty || json then

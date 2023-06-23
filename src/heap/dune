@@ -35,7 +35,7 @@
 (library
  (name heap_ident)
  (wrapped false)
- (modules ident)
+ (modules heapIdent)
  (libraries collections heap_libc)
  (preprocess
   (pps ppx_deriving.std visitors.ppx)))

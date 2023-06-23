@@ -9,22 +9,22 @@ val default_flowconfig_name : string
 
 val default_temp_dir : string
 
-val config_file : string -> Path.t -> string
+val config_file : string -> File_path.t -> string
 
-val log_file : flowconfig_name:string -> tmp_dir:string -> Path.t -> string
+val log_file : flowconfig_name:string -> tmp_dir:string -> File_path.t -> string
 
-val dfind_log_file : flowconfig_name:string -> tmp_dir:string -> Path.t -> string
+val dfind_log_file : flowconfig_name:string -> tmp_dir:string -> File_path.t -> string
 
-val monitor_log_file : flowconfig_name:string -> tmp_dir:string -> Path.t -> string
+val monitor_log_file : flowconfig_name:string -> tmp_dir:string -> File_path.t -> string
 
-val lock_file : flowconfig_name:string -> tmp_dir:string -> Path.t -> string
+val lock_file : flowconfig_name:string -> tmp_dir:string -> File_path.t -> string
 
-val pids_file : flowconfig_name:string -> tmp_dir:string -> Path.t -> string
+val pids_file : flowconfig_name:string -> tmp_dir:string -> File_path.t -> string
 
-val socket_file : flowconfig_name:string -> tmp_dir:string -> Path.t -> string
+val socket_file : flowconfig_name:string -> tmp_dir:string -> File_path.t -> string
 
-val legacy2_socket_file : flowconfig_name:string -> tmp_dir:string -> Path.t -> string
+val legacy2_socket_file : flowconfig_name:string -> tmp_dir:string -> File_path.t -> string
 
-val legacy1_socket_file : flowconfig_name:string -> tmp_dir:string -> Path.t -> string
+val legacy1_socket_file : flowconfig_name:string -> tmp_dir:string -> File_path.t -> string
 
-val recheck_stats_file : flowconfig_name:string -> tmp_dir:string -> Path.t -> string
+val recheck_stats_file : flowconfig_name:string -> tmp_dir:string -> File_path.t -> string

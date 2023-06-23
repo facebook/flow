@@ -2031,8 +2031,8 @@ let applicable_error_codes ~reader ~cx comment_loc =
     Flow_error.ErrorSet.fold
       (fun err acc ->
         let err = Flow_error.make_error_printable loc_of_aloc ~strip_root err in
-        let loc = Errors.loc_of_printable_error err in
-        match Errors.code_of_printable_error err with
+        let loc = Flow_errors_utils.loc_of_printable_error err in
+        match Flow_errors_utils.code_of_printable_error err with
         | Some code when applies loc -> code :: acc
         | _ -> acc)
       (Context.errors cx)

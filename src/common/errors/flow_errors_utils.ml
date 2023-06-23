@@ -814,7 +814,7 @@ let to_pp = function
   | BlameM (loc, s) -> (loc, s)
   | CommentM s -> (Loc.none, s)
 
-type stdin_file = (Path.t * string) option
+type stdin_file = (File_path.t * string) option
 
 let append_trace_reasons message_list trace_reasons =
   match trace_reasons with
@@ -848,7 +848,7 @@ let relative_path ~strip_root filename =
     filename
   else
     match strip_root with
-    | Some root -> Files.relative_path (Path.to_string root) filename
+    | Some root -> Files.relative_path (File_path.to_string root) filename
     | None ->
       let relname = Files.relative_path (Sys.getcwd ()) filename in
       if String.length relname < String.length filename then
@@ -860,7 +860,7 @@ let relative_lib_path ~strip_root filename =
   let sep = Filename.dir_sep in
   match strip_root with
   | Some root ->
-    let root_str = Printf.sprintf "%s%s" (Path.to_string root) sep in
+    let root_str = Printf.sprintf "%s%s" (File_path.to_string root) sep in
     if String.starts_with ~prefix:root_str filename then
       relative_path ~strip_root filename
     else
@@ -901,7 +901,7 @@ let get_lines ~start ~len content =
 
 let read_file ~stdin_file filename =
   match stdin_file with
-  | Some (stdin_path, contents) when Path.to_string stdin_path = filename -> Some contents
+  | Some (stdin_path, contents) when File_path.to_string stdin_path = filename -> Some contents
   | _ ->
     if Filename.is_relative filename then
       failwith (Utils_js.spf "Expected absolute location, got %s" filename);

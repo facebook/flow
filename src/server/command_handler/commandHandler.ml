@@ -88,7 +88,7 @@ let try_with_json : (unit -> ('a, string) result * 'json) -> ('a, string) result
     (Error (Exception.to_string exn), None)
 
 let status_log errors =
-  if Errors.ConcreteLocPrintableErrorSet.is_empty errors then
+  if Flow_errors_utils.ConcreteLocPrintableErrorSet.is_empty errors then
     Hh_logger.info "Status: OK"
   else
     Hh_logger.info "Status: Error";
@@ -96,8 +96,8 @@ let status_log errors =
 
 let convert_errors ~errors ~warnings ~suppressed_errors =
   if
-    Errors.ConcreteLocPrintableErrorSet.is_empty errors
-    && Errors.ConcreteLocPrintableErrorSet.is_empty warnings
+    Flow_errors_utils.ConcreteLocPrintableErrorSet.is_empty errors
+    && Flow_errors_utils.ConcreteLocPrintableErrorSet.is_empty warnings
     && suppressed_errors = []
   then
     ServerProt.Response.NO_ERRORS
@@ -163,7 +163,7 @@ let check_that_we_care_about_this_file =
   in
   let check_file_included ~options ~file_options ~file_path () =
     let file_is_implicitly_included =
-      let root_str = spf "%s%s" (Path.to_string (Options.root options)) Filename.dir_sep in
+      let root_str = spf "%s%s" (File_path.to_string (Options.root options)) Filename.dir_sep in
       String.starts_with ~prefix:root_str file_path
     in
     if file_is_implicitly_included then
@@ -233,7 +233,7 @@ let get_status ~profiling ~reader ~options env =
       if Options.should_include_warnings options then
         warnings
       else
-        Errors.ConcreteLocPrintableErrorSet.empty
+        Flow_errors_utils.ConcreteLocPrintableErrorSet.empty
     in
     let suppressed_errors =
       if Options.include_suppressions options then
@@ -243,7 +243,8 @@ let get_status ~profiling ~reader ~options env =
     in
     (* TODO: check status.directory *)
     status_log errors;
-    FlowEventLogger.status_response ~num_errors:(Errors.ConcreteLocPrintableErrorSet.cardinal errors);
+    FlowEventLogger.status_response
+      ~num_errors:(Flow_errors_utils.ConcreteLocPrintableErrorSet.cardinal errors);
     convert_errors ~errors ~warnings ~suppressed_errors
   in
   (status_response, lazy_stats)
@@ -665,7 +666,7 @@ let collect_rage ~profiling ~options ~reader ~env ~files =
   (* env: errors *)
   let (errors, warnings, _) = ErrorCollator.get ~profiling ~reader ~options env in
   let json =
-    Errors.Json_output.json_of_errors_with_context
+    Flow_errors_utils.Json_output.json_of_errors_with_context
       ~strip_root:None
       ~stdin_file:None
       ~offset_kind:Offset_utils.Utf8
@@ -1118,14 +1119,14 @@ let handle_save_state ~options ~out ~genv ~profiling ~env =
     match out with
     | `Scm ->
       (match%lwt Saved_state_scm_fetcher.output_filename options with
-      | Ok file -> Lwt.return_ok (Path.make file)
+      | Ok file -> Lwt.return_ok (File_path.make file)
       | Error err -> Lwt.return_error err)
     | `File file -> Lwt.return_ok file
   in
   let%lwt result =
     match saved_state_filename with
     | Ok saved_state_filename ->
-      let out_str = Path.to_string saved_state_filename in
+      let out_str = File_path.to_string saved_state_filename in
       (match%lwt
          try_with_lwt (fun () -> save_state ~saved_state_filename ~genv ~env ~profiling)
        with
@@ -2436,7 +2437,7 @@ let handle_persistent_coverage ~options ~id ~params ~file_input ~metadata ~clien
     | Error reason -> Lwt.return (mk_lsp_error_response ~id:(Some id) ~reason metadata))
 
 let handle_persistent_rage ~reader ~genv ~id ~metadata ~client:_ ~profiling ~env =
-  let root = Path.to_string genv.ServerEnv.options.Options.opt_root in
+  let root = File_path.to_string genv.ServerEnv.options.Options.opt_root in
   let items =
     collect_rage ~profiling ~options:genv.ServerEnv.options ~reader ~env ~files:None
     |> Base.List.map ~f:(fun (title, data) -> { Lsp.Rage.title = Some (root ^ ":" ^ title); data })
@@ -2707,8 +2708,8 @@ let handle_live_errors_request =
                 (* If the LSP requests errors for a file for which we wouldn't normally emit errors
                  * then just return empty sets *)
                 Lwt.return
-                  ( Errors.ConcreteLocPrintableErrorSet.empty,
-                    Errors.ConcreteLocPrintableErrorSet.empty,
+                  ( Flow_errors_utils.ConcreteLocPrintableErrorSet.empty,
+                    Flow_errors_utils.ConcreteLocPrintableErrorSet.empty,
                     metadata
                   )
             in

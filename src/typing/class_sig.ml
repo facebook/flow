@@ -885,7 +885,7 @@ module Make
 
   (* Processes the bodies of instance and static class members. *)
   let toplevels cx x =
-    Env.in_class_scope cx x.class_loc (fun () ->
+    Type_env.in_class_scope cx x.class_loc (fun () ->
         let method_ ~set_asts f =
           let (params_ast, body_ast, init_ast) = F.toplevels cx f in
           Base.Option.iter init_ast ~f:(fun ((_, t), _) ->

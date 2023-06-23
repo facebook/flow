@@ -180,7 +180,7 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
             | desc -> desc
             )
             )
-        (Env.find_write cx Env_api.OrdinaryNameLoc reason)
+        (Type_env.find_write cx Env_api.OrdinaryNameLoc reason)
     in
     let use_op =
       Op
@@ -201,7 +201,7 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
     match p with
     | Ast.Pattern.Identifier
         { Ast.Pattern.Identifier.name = (name_loc, { Ast.Identifier.name; _ }); _ } ->
-      Env.find_write
+      Type_env.find_write
         cx
         Env_api.OrdinaryNameLoc
         (mk_reason (RIdentifier (OrdinaryName name)) name_loc)
@@ -209,7 +209,7 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
       (* Expression in pattern destructuring is unsupported syntax,
          so we shouldn't read the environment. *)
       AnyT.untyped (mk_reason RDestructuring loc)
-    | _ -> Env.find_write cx Env_api.PatternLoc (mk_reason RDestructuring loc)
+    | _ -> Type_env.find_write cx Env_api.PatternLoc (mk_reason RDestructuring loc)
 
   let rec pattern cx ~(f : callback) acc (loc, p) =
     let check_for_invalid_annot annot =
@@ -298,8 +298,8 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
     let acc = empty ~init ~annot:false rhs_t in
     let f ~use_op ~name_loc name _default t =
       (* TODO destructuring+defaults unsupported in assignment expressions *)
-      ignore Env.(set_var cx ~use_op name t name_loc);
-      Env.constraining_type ~default:t cx name_loc
+      ignore Type_env.(set_var cx ~use_op name t name_loc);
+      Type_env.constraining_type ~default:t cx name_loc
     in
     pattern cx ~f acc
 end

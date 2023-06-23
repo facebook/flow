@@ -355,12 +355,12 @@ let post_process_errors original_errors =
 let rec make_error_printable :
           'loc.
           ('loc -> Loc.t) ->
-          strip_root:Path.t option ->
+          strip_root:File_path.t option ->
           ?speculation:bool ->
           'loc t ->
-          Loc.t Errors.printable_error =
+          Loc.t Flow_errors_utils.printable_error =
  fun loc_of_aloc ~strip_root ?(speculation = false) error ->
-  let open Errors in
+  let open Flow_errors_utils in
   let { loc; msg; source_file; trace_reasons } = error in
   let kind = kind_of_msg msg in
   let mk_info reason extras =
@@ -1286,7 +1286,7 @@ let rec make_error_printable :
       raise (ImproperlyFormattedError (map_loc_of_error_message loc_of_aloc msg))
   in
   (* Patch errors that will be located in files other than source_file. *)
-  let loc = Errors.loc_of_printable_error printable_error in
+  let loc = Flow_errors_utils.loc_of_printable_error printable_error in
   let patched_printable_error =
     match Loc.source loc with
     | Some file
@@ -1299,6 +1299,6 @@ let rec make_error_printable :
 let make_errors_printable loc_of_aloc ~strip_root errors =
   let f err acc =
     let err = make_error_printable loc_of_aloc ~strip_root ~speculation:false err in
-    Errors.ConcreteLocPrintableErrorSet.add err acc
+    Flow_errors_utils.ConcreteLocPrintableErrorSet.add err acc
   in
-  ErrorSet.fold f errors Errors.ConcreteLocPrintableErrorSet.empty
+  ErrorSet.fold f errors Flow_errors_utils.ConcreteLocPrintableErrorSet.empty

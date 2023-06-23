@@ -77,7 +77,7 @@ module Annot : C = struct
 end
 
 module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
-  open Env.LookupMode
+  open Type_env.LookupMode
 
   module Func_type_params_config_types = struct
     type 'T ast = (ALoc.t, 'T) Ast.Type.Function.Params.t
@@ -122,15 +122,15 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     let is_rest_type_annotated _ = true
 
     let subst_param cx map (t, tast) =
-      let t = Subst.subst cx map t in
+      let t = Type_subst.subst cx map t in
       (t, tast)
 
     let subst_rest cx map (t, tast) =
-      let t = Subst.subst cx map t in
+      let t = Type_subst.subst cx map t in
       (t, tast)
 
     let subst_this cx map (t, tast) =
-      let t = Subst.subst cx map t in
+      let t = Type_subst.subst cx map t in
       (t, tast)
 
     let eval_param _cx (_, tast) = tast
@@ -281,7 +281,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     )
 
   let mk_eval_id cx loc =
-    if Env.in_toplevel_scope cx then
+    if Type_env.in_toplevel_scope cx then
       Context.make_aloc_id cx loc |> Eval.id_of_aloc_id
     else
       Eval.generate_id ()
@@ -799,7 +799,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               reconstruct_ast t None
           )
         | _
-          when Env.local_scope_entry_exists cx name_loc
+          when Type_env.local_scope_entry_exists cx name_loc
                && Context.current_phase cx <> Context.InitLib ->
           local_generic_type ()
         (* Temporary base types with literal information *)
@@ -1897,7 +1897,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let t = ConsGen.get_prop cx use_op id_reason (OrdinaryName name) m in
       (t, Qualified (loc, { qualification; id = ((id_loc, t), id_name) }))
     | Unqualified (loc, ({ Ast.Identifier.name; comments = _ } as id_name)) ->
-      let t = Env.get_var ~lookup_mode cx name loc in
+      let t = Type_env.get_var ~lookup_mode cx name loc in
       (t, Unqualified ((loc, t), id_name))
 
   and convert_typeof cx reason_prefix =
@@ -1919,7 +1919,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         if Type_inference_hooks_js.dispatch_id_hook cx name loc then
           Unsoundness.at InferenceHooks loc
         else
-          Env.get_var ~lookup_mode:ForTypeof cx name loc
+          Type_env.get_var ~lookup_mode:ForTypeof cx name loc
       in
       (t, Unqualified ((loc, t), id_name))
 
@@ -1992,7 +1992,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     end in
     let mk_object cx loc ~src_loc ~exact call dict pmap proto =
       let pmap =
-        if src_loc && Env.in_toplevel_scope cx then
+        if src_loc && Type_env.in_toplevel_scope cx then
           Context.make_source_property_map cx pmap loc
         else
           Context.generate_property_map cx pmap
@@ -2724,7 +2724,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         in
         let subst_name =
           if from_infer_type && Subst_name.Map.mem (Subst_name.Name name) tparams_map then
-            Subst.new_name
+            Type_subst.new_name
               (Subst_name.Name name)
               (tparams_map |> Subst_name.Map.keys |> Subst_name.Set.of_list)
           else
@@ -2761,7 +2761,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let tparams = tparam :: tparams in
       ( tparams,
         Subst_name.Map.add name t tparams_map,
-        Subst_name.Map.add name (Subst.subst cx bounds_map bound) bounds_map,
+        Subst_name.Map.add name (Type_subst.subst cx bounds_map bound) bounds_map,
         ast :: rev_asts
       )
     in
@@ -2787,11 +2787,11 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     else if name = "undefined" then
       VoidT.at loc |> with_trust_inference cx
     else
-      Env.var_ref ~lookup_mode:ForType cx (OrdinaryName name) loc
+      Type_env.var_ref ~lookup_mode:ForType cx (OrdinaryName name) loc
 
   and mk_interface_super
       cx tparams_map infer_tparams_map (loc, { Ast.Type.Generic.id; targs; comments }) =
-    let lookup_mode = Env.LookupMode.ForType in
+    let lookup_mode = Type_env.LookupMode.ForType in
     let (c, id) = convert_qualification ~lookup_mode cx "extends" id in
     let (typeapp, targs) =
       match targs with
@@ -3241,7 +3241,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let name = qualified_name id in
       let r = mk_annot_reason (RType (OrdinaryName name)) loc in
       let (i, id) =
-        let lookup_mode = Env.LookupMode.ForValue in
+        let lookup_mode = Type_env.LookupMode.ForValue in
         convert_qualification ~lookup_mode cx "mixins" id
       in
       let props_bag = ConsGen.mixin cx r i in
@@ -3279,7 +3279,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         let (extends, extends_ast) =
           match extends with
           | Some (loc, { Ast.Type.Generic.id; targs; comments }) ->
-            let lookup_mode = Env.LookupMode.ForValue in
+            let lookup_mode = Type_env.LookupMode.ForValue in
             let (i, id) = convert_qualification ~lookup_mode cx "mixins" id in
             let (t, targs) = mk_super cx tparams_map_with_this ALocMap.empty loc i targs in
             (Some t, Some (loc, { Ast.Type.Generic.id; targs; comments }))
@@ -3298,7 +3298,9 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               |> Base.List.map ~f:(fun (loc, i) ->
                      let { Interface.id = (id_loc, id_name_inner); targs } = i in
                      let { Ast.Identifier.name; comments = _ } = id_name_inner in
-                     let c = Env.get_var ~lookup_mode:Env.LookupMode.ForType cx name id_loc in
+                     let c =
+                       Type_env.get_var ~lookup_mode:Type_env.LookupMode.ForType cx name id_loc
+                     in
                      let (typeapp, targs) =
                        match targs with
                        | None -> ((loc, c, None), None)

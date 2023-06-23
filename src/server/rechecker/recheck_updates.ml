@@ -129,7 +129,7 @@ let did_content_change ~reader filename =
     not (Parsing_service_js.does_content_match_file_hash ~reader file content)
 
 let check_for_lib_changes ~reader ~all_libs ~root ~skip_incompatible updates =
-  let flow_typed_path = Path.to_string (Files.get_flowtyped_path root) in
+  let flow_typed_path = File_path.to_string (Files.get_flowtyped_path root) in
   let is_changed_lib filename =
     let is_lib = SSet.mem filename all_libs || filename = flow_typed_path in
     is_lib && did_content_change ~reader filename
@@ -182,7 +182,7 @@ let process_updates ?(skip_incompatible = false) ~options ~libs updates =
   in
   let root = Options.root options in
   let config_path = Server_files_js.config_file (Options.flowconfig_name options) root in
-  let sroot = Path.to_string root ^ Filename.dir_sep in
+  let sroot = File_path.to_string root ^ Filename.dir_sep in
   let want = Files.wanted ~options:file_options all_libs in
   let is_incompatible_package_json =
     is_incompatible_package_json ~options ~reader ~want ~sroot ~file_options

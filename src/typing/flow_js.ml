@@ -120,7 +120,7 @@ let expect_proper_def t =
 
 let expect_proper_def_use t = lift_to_use expect_proper_def t
 
-let subst = Subst.subst
+let subst = Type_subst.subst
 
 let check_canceled =
   let count = ref 0 in
@@ -3386,7 +3386,7 @@ struct
           (* BoundTs from private methods are not on the InstanceT due to scoping rules,
              so we need to substitute those BoundTs when the method is called. *)
           let scopes =
-            Subst.subst_class_bindings
+            Type_subst.subst_class_bindings
               cx
               (Subst_name.Map.singleton (Subst_name.Name "this") l)
               scopes
@@ -6815,7 +6815,7 @@ struct
 
   and mk_possibly_evaluated_destructor cx use_op reason t d id =
     let eval_t = EvalT (t, TypeDestructorT (use_op, reason, d), id) in
-    if Subst_name.Set.is_empty (Subst.free_var_finder cx eval_t) then
+    if Subst_name.Set.is_empty (Type_subst.free_var_finder cx eval_t) then
       ignore @@ mk_type_destructor cx ~trace:Trace.dummy_trace use_op reason t d id;
     eval_t
 

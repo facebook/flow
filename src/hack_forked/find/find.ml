@@ -55,7 +55,7 @@ let fold_files
     ?max_depth
     ?(filter = (fun _ -> true))
     ?(file_only = false)
-    (paths : Path.t list)
+    (paths : File_path.t list)
     (action : string -> t -> t)
     (init : t) =
   let rec fold depth acc dir =
@@ -79,7 +79,7 @@ let fold_files
         ~init:acc
         files
   in
-  let paths = Base.List.map paths ~f:Path.to_string in
+  let paths = Base.List.map paths ~f:File_path.to_string in
   Base.List.fold paths ~init ~f:(fold 0)
 
 let iter_files ?max_depth ?filter ?file_only paths action =
@@ -127,7 +127,7 @@ let make_next_files ?name:_ ?(filter = (fun _ -> true)) ?(others = []) root =
   in
   let state =
     let dirs =
-      Path.to_string root :: Base.List.map ~f:Path.to_string others
+      File_path.to_string root :: Base.List.map ~f:File_path.to_string others
       |> Base.List.filter_map ~f:(fun path ->
              Unix.(
                match lstat_kind path with

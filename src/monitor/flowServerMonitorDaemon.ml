@@ -129,7 +129,7 @@ let daemonize ~wait ~on_spawn ~init_id ~monitor_options (entry_point : entry_poi
   );
 
   let root_str =
-    monitor_options.FlowServerMonitorOptions.server_options |> Options.root |> Path.to_string
+    monitor_options.FlowServerMonitorOptions.server_options |> Options.root |> File_path.to_string
   in
   let { Daemon.pid; channels = (ic, oc) } =
     Daemon.spawn

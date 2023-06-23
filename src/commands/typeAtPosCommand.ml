@@ -60,7 +60,7 @@ let handle_response ~file_contents ~pretty ~strip_root response =
       ("types", json)
       :: ("reasons", JSON_Array [])
       :: ("loc", json_of_loc ~strip_root ~offset_table loc)
-      :: Errors.deprecated_json_props_of_loc ~strip_root loc
+      :: Flow_errors_utils.deprecated_json_props_of_loc ~strip_root loc
     in
     let json_assoc =
       match documentation with

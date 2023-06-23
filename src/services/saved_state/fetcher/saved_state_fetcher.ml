@@ -8,7 +8,7 @@
 type fetch_result =
   (* We successfully found saved state. Yay! *)
   | Saved_state of {
-      saved_state_filename: Path.t;
+      saved_state_filename: File_path.t;
       changed_files: SSet.t;
     }
   (* We did not attempt to find saved state. *)

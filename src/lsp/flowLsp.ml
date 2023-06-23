@@ -95,7 +95,7 @@ type open_file_info = {
 type initialized_env = {
   i_initialize_params: Lsp.Initialize.params;
   i_connect_params: connect_params;
-  i_root: Path.t;
+  i_root: File_path.t;
   i_version: string option;
   i_server_id: int;
   i_can_autostart_after_version_mismatch: bool;
@@ -192,7 +192,7 @@ let update_recent_summaries cenv summary =
   in
   { cenv with c_recent_summaries }
 
-let log_of_summaries ~(root : Path.t) (summaries : LspProt.telemetry_from_server list) :
+let log_of_summaries ~(root : File_path.t) (summaries : LspProt.telemetry_from_server list) :
     FlowEventLogger.persistent_delay =
   FlowEventLogger.(
     let init =
@@ -257,7 +257,7 @@ let log_of_summaries ~(root : Path.t) (summaries : LspProt.telemetry_from_server
               recheck_worst_cycle_size = Base.Option.map top_cycle ~f:(fun (_, size) -> size);
               recheck_worst_cycle_leader =
                 Base.Option.map top_cycle ~f:(fun (f, _) ->
-                    f |> File_key.to_string |> Files.relative_path (Path.to_string root)
+                    f |> File_key.to_string |> Files.relative_path (File_path.to_string root)
                 );
             }
         in
@@ -275,7 +275,7 @@ let log_of_summaries ~(root : Path.t) (summaries : LspProt.telemetry_from_server
     Base.List.fold summaries ~init ~f
   )
 
-let get_root (state : server_state) : Path.t = (get_ienv state).i_root
+let get_root (state : server_state) : File_path.t = (get_ienv state).i_root
 
 let get_flowconfig (state : server_state) : FlowConfig.config = (get_ienv state).i_flowconfig
 
@@ -497,7 +497,7 @@ let convert_to_client_uris =
           File_url.create path ^ "/"
         in
         let server_root =
-          let path = Path.to_string i_root in
+          let path = File_path.to_string i_root in
           File_url.create path ^ "/"
         in
         let mapper = server_message_mapper ~client_root ~server_root in
@@ -510,8 +510,8 @@ let convert_to_server_uris =
     uri
     |> Lsp.DocumentUri.to_string
     |> File_url.parse
-    |> Path.make
-    |> Path.to_string
+    |> File_path.make
+    |> File_path.to_string
     |> File_url.create
     |> Lsp.DocumentUri.of_string
   in
@@ -1317,7 +1317,7 @@ module RagePrint = struct
 
   let add_ienv (b : Buffer.t) (ienv : initialized_env) : unit =
     addline b "i_connect_params=" (ienv.i_connect_params |> string_of_connect_params);
-    addline b "i_root=" (ienv.i_root |> Path.to_string);
+    addline b "i_root=" (ienv.i_root |> File_path.to_string);
     addline b "i_version=" (ienv.i_version |> Base.Option.value ~default:"None");
     addline b "i_server_id=" (ienv.i_server_id |> string_of_int);
     addline
@@ -1423,10 +1423,10 @@ end
 let do_rage flowconfig_name (state : server_state) : Rage.result =
   Rage.(
     (* Some helpers to add various types of data to the rage output... *)
-    let add_file (items : rageItem list) (file : Path.t) : rageItem list =
+    let add_file (items : rageItem list) (file : File_path.t) : rageItem list =
       let data =
-        if Path.file_exists file then
-          let data = Path.cat file in
+        if File_path.file_exists file then
+          let data = File_path.cat file in
           (* cat even up to 1gig is workable even if ugly *)
           let len = String.length data in
           let max_len = 10 * 1024 * 1024 in
@@ -1436,9 +1436,9 @@ let do_rage flowconfig_name (state : server_state) : Rage.result =
           else
             String.sub data (len - max_len) max_len
         else
-          Printf.sprintf "File not found: %s" (Path.to_string file)
+          Printf.sprintf "File not found: %s" (File_path.to_string file)
       in
-      { title = Some (Path.to_string file); data } :: items
+      { title = Some (File_path.to_string file); data } :: items
     in
     let add_string (items : rageItem list) (data : string) : rageItem list =
       { title = None; data } :: items
@@ -1485,15 +1485,17 @@ let do_rage flowconfig_name (state : server_state) : Rage.result =
     let items =
       let root = ienv.i_root in
       let tmp_dir =
-        CommandUtils.get_temp_dir ienv.i_connect_params.temp_dir |> Path.make |> Path.to_string
+        CommandUtils.get_temp_dir ienv.i_connect_params.temp_dir
+        |> File_path.make
+        |> File_path.to_string
       in
       let server_log_file = CommandUtils.server_log_file ~flowconfig_name ~tmp_dir root in
       let monitor_log_file = CommandUtils.monitor_log_file ~flowconfig_name ~tmp_dir root in
       let items = add_file items server_log_file in
       let items = add_file items monitor_log_file in
       (* Let's pick up the old files in case user reported bug after a crash *)
-      let items = add_file items (Path.make (Path.to_string server_log_file ^ ".old")) in
-      let items = add_file items (Path.make (Path.to_string monitor_log_file ^ ".old")) in
+      let items = add_file items (File_path.make (File_path.to_string server_log_file ^ ".old")) in
+      let items = add_file items (File_path.make (File_path.to_string monitor_log_file ^ ".old")) in
       (* And the pids file *)
       let items =
         try
@@ -2394,7 +2396,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
   | ( Pre_init i_connect_params,
       Client_message (RequestMessage (id, InitializeRequest i_initialize_params), metadata)
     ) ->
-    let i_root = Lsp_helpers.get_root i_initialize_params |> Path.make in
+    let i_root = Lsp_helpers.get_root i_initialize_params |> File_path.make in
     (* TODO: use FlowConfig.get directly and send errors/warnings to the client instead
         of logging to stderr and exiting. *)
     let flowconfig = read_flowconfig_from_disk flowconfig_name i_root in
@@ -2578,7 +2580,7 @@ and main_log_command (state : state) (metadata : LspProt.metadata) : unit =
     match state with
     | Pre_init _
     | Post_shutdown ->
-      Path.dummy_path
+      File_path.dummy_path
     | Initialized state -> get_root state
   in
   let persistent_delay =

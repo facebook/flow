@@ -100,7 +100,7 @@ type t = {
   opt_include_warnings: bool;
   opt_lazy_mode: bool;
   opt_lint_severities: Severity.severity LintSettings.t;
-  opt_log_file: Path.t;
+  opt_log_file: File_path.t;
   opt_log_saving: log_saving SMap.t;
   opt_long_lived_workers: bool;
   opt_mapped_type: bool;
@@ -126,7 +126,7 @@ type t = {
   opt_relay_integration_excludes: Str.regexp list;
   opt_relay_integration_module_prefix: string option;
   opt_relay_integration_module_prefix_includes: Str.regexp list;
-  opt_root: Path.t;
+  opt_root: File_path.t;
   opt_root_name: string option;
   opt_saved_state_allow_reinit: bool;
   opt_saved_state_fetcher: saved_state_fetcher;

@@ -251,7 +251,7 @@ struct
       | None -> Obj_type.mk_with_proto cx reason (Type.FunProtoT reason) ~obj_kind:Type.Inexact
     in
     let t = DefT (reason, make_trust (), FunT (statics_t, funtype)) in
-    if not arrow then Base.Option.iter func_loc ~f:(Env.bind_function_this cx this_type);
+    if not arrow then Base.Option.iter func_loc ~f:(Type_env.bind_function_this cx this_type);
     poly_type_of_tparams (Type.Poly.generate_id ()) tparams t
 
   let methodtype cx method_this_loc this_default { T.reason; kind; tparams; fparams; return_t; _ } =
@@ -261,7 +261,7 @@ struct
     let def_reason = reason in
     let this_anno_t = F.this fparams in
     Base.Option.both this_anno_t method_this_loc
-    |> Base.Option.iter ~f:(fun (t, loc) -> Env.bind_function_this cx t loc);
+    |> Base.Option.iter ~f:(fun (t, loc) -> Type_env.bind_function_this cx t loc);
     let param_this_t = Base.Option.value ~default:this_default this_anno_t in
     let predicate =
       match kind with
@@ -322,7 +322,7 @@ struct
         | AsyncGenerator _ -> Name_def.AsyncGenerator
         | Ctor -> Name_def.Ctor
       in
-      Env.set_scope_kind cx var_scope_kind
+      Type_env.set_scope_kind cx var_scope_kind
     in
 
     (* add param bindings *)
@@ -565,7 +565,7 @@ struct
         Flow.flow cx (maybe_exhaustively_checked, implicit_return)
     );
 
-    ignore @@ Env.set_scope_kind cx prev_scope_kind;
+    ignore @@ Type_env.set_scope_kind cx prev_scope_kind;
 
     (* return a tuple of (function body AST option, field initializer AST option).
        - the function body option is Some _ if the Param sig's body was Some, and

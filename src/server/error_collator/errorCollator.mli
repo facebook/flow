@@ -10,15 +10,15 @@ val get_with_separate_warnings :
   reader:State_reader.t ->
   options:Options.t ->
   ServerEnv.env ->
-  Errors.ConcreteLocPrintableErrorSet.t
-  * Errors.ConcreteLocPrintableErrorSet.t Utils_js.FilenameMap.t
-  * (Loc.t Errors.printable_error * Loc_collections.LocSet.t) list
+  Flow_errors_utils.ConcreteLocPrintableErrorSet.t
+  * Flow_errors_utils.ConcreteLocPrintableErrorSet.t Utils_js.FilenameMap.t
+  * (Loc.t Flow_errors_utils.printable_error * Loc_collections.LocSet.t) list
 
 val get :
   profiling:Profiling_js.running ->
   reader:State_reader.t ->
   options:Options.t ->
   ServerEnv.env ->
-  Errors.ConcreteLocPrintableErrorSet.t
-  * Errors.ConcreteLocPrintableErrorSet.t
-  * (Loc.t Errors.printable_error * Loc_collections.LocSet.t) list
+  Flow_errors_utils.ConcreteLocPrintableErrorSet.t
+  * Flow_errors_utils.ConcreteLocPrintableErrorSet.t
+  * (Loc.t Flow_errors_utils.printable_error * Loc_collections.LocSet.t) list

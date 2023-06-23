@@ -138,7 +138,7 @@ let errors_of_file_artifacts ~options ~env ~loc_of_aloc ~filename ~file_artifact
     if Options.should_include_warnings options then
       warnings
     else
-      Errors.ConcreteLocPrintableErrorSet.empty
+      Flow_errors_utils.ConcreteLocPrintableErrorSet.empty
   in
   (errors, warnings)
 
@@ -154,7 +154,7 @@ let printable_errors_of_file_artifacts_result ~options ~env filename result =
     (errors, warnings)
   | Error errors ->
     let errors = Flow_error.make_errors_printable loc_of_aloc ~strip_root:(Some root) errors in
-    (errors, Errors.ConcreteLocPrintableErrorSet.empty)
+    (errors, Flow_errors_utils.ConcreteLocPrintableErrorSet.empty)
 
 (** Resolves dependencies specifically for checking contents, rather than for
     persisting in the heap. Notably, does not error if a required module is not

@@ -323,7 +323,7 @@ let run_merge_service
 (* We will create this callback for each recheck and call it after each check
    job with the results from the files in that job's batch. *)
 let mk_intermediate_result_callback ~reader ~options ~persistent_connections suppressions () =
-  let open Errors in
+  let open Flow_errors_utils in
   let loc_of_aloc = Parsing_heaps.Mutator_reader.loc_of_aloc ~reader in
   let root = Options.root options in
   let file_options = Some (Options.file_options options) in
@@ -962,7 +962,7 @@ end = struct
             ~strip_root:(Some (Options.root options))
             errors
         in
-        if not (Errors.ConcreteLocPrintableErrorSet.is_empty errors) then
+        if not (Flow_errors_utils.ConcreteLocPrintableErrorSet.is_empty errors) then
           Persistent_connection.update_clients
             ~clients:env.ServerEnv.connections
             ~errors_reason:LspProt.Recheck_streaming
@@ -1856,7 +1856,7 @@ let assert_valid_hashes updates invalid_hashes =
 let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options =
   with_transaction "init" @@ fun transaction reader ->
   let is_init = Option.is_none env in
-  let root = Options.root options |> Path.to_string in
+  let root = Options.root options |> File_path.to_string in
   let file_options = Options.file_options options in
 
   (* We don't want to walk the file system for the checked in files. But we still need to find the
@@ -2337,7 +2337,7 @@ let load_saved_state ~profiling ~workers options =
          "Saved state script reports %d files changed & we care about %d of them"
          (SSet.cardinal changed_files)
          (FilenameSet.cardinal updates);
-       FlowEventLogger.set_saved_state_filename (Path.to_string saved_state_filename);
+       FlowEventLogger.set_saved_state_filename (File_path.to_string saved_state_filename);
        FlowEventLogger.load_saved_state_success ~changed_files_count;
        let updates = CheckedSet.(add ~focused:updates empty) in
        Lwt.return_some (saved_state, updates)
@@ -2346,7 +2346,7 @@ let load_saved_state ~profiling ~workers options =
       let trace = Saved_state.backtrace_of_invalid_reason invalid_reason in
       let invalid_reason = Saved_state.invalid_reason_to_string invalid_reason in
       FlowEventLogger.load_saved_state_error
-        ~saved_state_filename:(Path.to_string saved_state_filename)
+        ~saved_state_filename:(File_path.to_string saved_state_filename)
         ~changed_files_count
         ~invalid_reason
         ~trace;

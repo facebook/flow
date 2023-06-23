@@ -76,13 +76,13 @@ let string_of_file_result_with_padding = function
   | ConfigFile -> "ConfigFile        "
 
 let explain ~flowconfig_name ~root ~options ~libs raw_file =
-  let file = raw_file |> Path.make |> Path.to_string in
-  let root_str = Path.to_string root in
+  let file = raw_file |> File_path.make |> File_path.to_string in
+  let root_str = File_path.to_string root in
   let result =
     if SSet.mem file libs then
       (* This is a lib file *)
       let flowtyped_path = Files.get_flowtyped_path root in
-      if String.starts_with ~prefix:(Path.to_string flowtyped_path) file then
+      if String.starts_with ~prefix:(File_path.to_string flowtyped_path) file then
         ImplicitLib
       else
         ExplicitLib
@@ -127,7 +127,7 @@ let make_options ~flowconfig ~root ~ignore_flag ~include_flag ~untyped_flag ~dec
     flowconfig
     ~root
     ~no_flowlib:true
-    ~temp_dir:(CommandUtils.get_temp_dir None |> Path.make)
+    ~temp_dir:(CommandUtils.get_temp_dir None |> File_path.make)
     ~ignores
     ~includes
     ~libs
@@ -139,7 +139,7 @@ let make_options ~flowconfig ~root ~ignore_flag ~include_flag ~untyped_flag ~dec
 let wanted ~root ~options libs file =
   Files.wanted ~options libs file
   &&
-  let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
+  let root_str = spf "%s%s" (File_path.to_string root) Filename.dir_sep in
   String.starts_with ~prefix:root_str file || Files.is_included options file
 
 (* Directories will return a closure that returns every file under that
@@ -150,11 +150,11 @@ let get_ls_files ~root ~all ~options ~libs ~imaginary = function
   | Some dir
     when try Sys.is_directory dir with
          | _ -> false ->
-    let subdir = Some (Path.make dir) in
+    let subdir = Some (File_path.make dir) in
     Files.make_next_files ~sort:true ~root ~all ~subdir ~options ~libs
   | Some file ->
     if (Sys.file_exists file || imaginary) && (all || wanted ~root ~options libs file) then
-      let file = file |> Path.make |> Path.to_string in
+      let file = file |> File_path.make |> File_path.to_string in
       let rec cb =
         ref (fun () ->
             (cb := (fun () -> []));
@@ -254,7 +254,7 @@ let main
          )
       |> concat_get_next
   in
-  let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
+  let root_str = spf "%s%s" (File_path.to_string root) Filename.dir_sep in
   let config_file_absolute = Server_files_js.config_file flowconfig_name root in
   let config_file_relative = Files.relative_path root_str config_file_absolute in
   let include_config_file =

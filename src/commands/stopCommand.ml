@@ -36,8 +36,8 @@ exception FailedToKillNicely
 let main base_flags temp_dir quiet root () =
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let root = guess_root flowconfig_name root in
-  let root_s = Path.to_string root in
-  let tmp_dir = get_temp_dir temp_dir |> Path.make |> Path.to_string in
+  let root_s = File_path.to_string root in
+  let tmp_dir = get_temp_dir temp_dir |> File_path.make |> File_path.to_string in
   if not quiet then prerr_endlinef "Trying to connect to server for `%s`" root_s;
   let client_handshake =
     let open SocketHandshake in
@@ -59,7 +59,7 @@ let main base_flags temp_dir quiet root () =
         if not quiet then
           prerr_endlinef
             "Told server for `%s` to die. Waiting for confirmation..."
-            (Path.to_string root);
+            (File_path.to_string root);
         let i = ref 0 in
         while CommandConnectSimple.server_exists ~flowconfig_name ~tmp_dir root do
           incr i;
@@ -68,7 +68,8 @@ let main base_flags temp_dir quiet root () =
           else
             raise FailedToKillNicely
         done;
-        if not quiet then prerr_endlinef "Successfully killed server for `%s`" (Path.to_string root)
+        if not quiet then
+          prerr_endlinef "Successfully killed server for `%s`" (File_path.to_string root)
       with
       | FailedToKillNicely ->
         let msg = spf "Failed to kill server nicely for `%s`" root_s in
@@ -83,9 +84,10 @@ let main base_flags temp_dir quiet root () =
     | Error Server_socket_missing -> begin
       try
         if not quiet then
-          prerr_endlinef "Attempting to meanly kill server for `%s`" (Path.to_string root);
+          prerr_endlinef "Attempting to meanly kill server for `%s`" (File_path.to_string root);
         CommandMeanKill.mean_kill ~flowconfig_name ~tmp_dir root;
-        if not quiet then prerr_endlinef "Successfully killed server for `%s`" (Path.to_string root)
+        if not quiet then
+          prerr_endlinef "Successfully killed server for `%s`" (File_path.to_string root)
       with
       | CommandMeanKill.FailedToKill err ->
         if not quiet then (

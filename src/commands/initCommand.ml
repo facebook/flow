@@ -43,10 +43,10 @@ let error (errs : (int * string) list) =
 let main base_flags flowconfig_flags options root () =
   let root =
     match root with
-    | None -> Sys.getcwd () |> Path.make
-    | Some root -> Path.make root
+    | None -> Sys.getcwd () |> File_path.make
+    | Some root -> File_path.make root
   in
-  FlowEventLogger.set_root (Some (Path.to_string root));
+  FlowEventLogger.set_root (Some (File_path.to_string root));
   let options =
     match options with
     | None -> []
