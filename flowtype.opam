@@ -18,7 +18,6 @@ depends: [
   "flow_parser" {= "0.209.1"}
   "inotify" {os = "linux" & >= "2.4.1"}
   "ounit2" {with-test}
-  "sedlex" {>= "2.3"}
   "lwt" {>= "5.4.0"}
   "lwt_log" {>= "1.1.1"}
   "lwt_ppx"

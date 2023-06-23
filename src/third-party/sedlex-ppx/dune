@@ -1,0 +1,10 @@
+(library
+ (name flow_sedlexing_ppx)
+ (package flow_parser)
+ (kind ppx_rewriter)
+ (libraries ppxlib flow_sedlexing)
+ (ppx_runtime_libraries flow_sedlexing)
+ (preprocess
+  (pps ppxlib.metaquot))
+ (flags
+  (:standard -w -9)))

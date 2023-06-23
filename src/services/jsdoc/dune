@@ -9,4 +9,4 @@
   flow_typing
   flow_state_heaps_parsing)
  (preprocess
-  (pps sedlex.ppx ppx_deriving.std ppx_let)))
+  (pps flow_sedlexing_ppx ppx_deriving.std ppx_let)))
