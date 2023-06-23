@@ -10,12 +10,12 @@
  * a file is created or accessed, we move it to the front of the list. When we
  * exceed the capacity of the cache, entries at the back of the list are
  * dropped. *)
-module Cache = Core_kernel.Hash_queue.Make (struct
+module Cache = Core.Hash_queue.Make (struct
   type t = File_key.t
 
   let hash = Hashtbl.hash
 
-  let sexp_of_t k = Core_kernel.Sexp.Atom (File_key.to_string k)
+  let sexp_of_t k = Core.Sexp.Atom (File_key.to_string k)
 
   let compare = File_key.compare
 end)
