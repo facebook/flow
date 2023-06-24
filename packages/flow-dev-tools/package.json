@@ -13,7 +13,7 @@
     "mkdirp": "^0.5.1",
     "rimraf": "^2.5.2",
     "sane": "^5.0.1",
-    "semver": "^5.6.0",
+    "semver": "^7.5.2",
     "vscode-jsonrpc": "^6.0.0",
     "vscode-uri": "^2.1.2"
   },
