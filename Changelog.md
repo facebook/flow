@@ -1,3 +1,23 @@
+### 0.210.0
+
+Likely to cause new Flow errors:
+* We further strictified React.Element and React refs related typing. You might also see some existing errors related to React.Element and React ref moved around. [Example](https://flow.org/try#1N4Igxg9gdgZglgcxALlAJwKYEMwBcD6aArlLnALYYrgA2WAzvXGCADQgYAeOBARgJ74AJhhhYiNXClzEM7DFCLl602e0hQhcMtCw18ufgAcqyMTXpyOnE2goLcegHTksRk0IPHT5y-JsYdpSkzoYm+AhEWGhCKmZ6lgC+6hAi1CJgdJgABABu0dlYyNkASth4ACQAojQYwbhlMAA8AORauS0AfADcADqaGJnRGHkFvMVlPNW19Y2t9EZYUF19UAAURdlhGBAw2bwAlN3ZAPQn2VAQAO7ZgWgQaPT9a+Nb3ruFR6fnlzd3D08oGwQLlAkxoNRXPRcIEQIkgA)
+
+New Features:
+* Added Pick, Omit, and Record utility types. [[try-flow]](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAJwKYEMwBcD6aArlLnALYYrgA2WAzvXGCADQgYAeOBARgJ74AJhhhYiNXClzEM7DFCLl602e0hQhcMtCw18ufgAcqyMTXpyOnE2goLcegHTksRk0IPHT5y-JsYdpSkzoYm+AhEWGhCKmZ6lgC+6hAi1GEYAAQA8pkAvJnAMBAQyJmK5LyBrJm80WUVVWiJANwAOlAdGZkACswA1gBiJfm9AwA82TUA5MUQ0wB87aTeOeTawxCj2eu4kzNzi8sdImB0mJka9LiZRgMYQmV9YEMlywAUdy8PZUUlDUomokAJTHTQYM7RLJXG4QXa4H5rDZvDrvOHaBGPQp1NAAyqBEFg7oAJQhEBigzQcIAyjI4FAEPRRqTIDFxrMStNMgAfTLTHHTGqNQJLDonCHnaHQa6ZTCsrEs8lCSk0ukM+gfOVK35zPFNGo4vUE0FsEAAN0CTGg1DNAAYnAAmW0ATictpAiSAA)
+
+Notable bug fixes:
+* Fixed a bug where `void` would appear in autocomplete suggestions more than once
+
+Misc:
+* Improved keyword autocomplete ordering
+
+Parser:
+
+Library Definitions:
+* Added missing CSSOM `replace` and `replaceSync`
+* Added `arrayBuffers` to Node libdefs for `process.memoryUsage()`'s return type
+
 ### 0.209.1
 
 Misc:
