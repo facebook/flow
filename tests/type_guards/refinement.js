@@ -155,3 +155,33 @@ function negation() {
     (x: number); // okay empty ~> number
   }
 }
+
+function any_input() {
+  declare function isNotMaybe<T>(value: ?T): value is T;
+
+  declare var maybeAny: ?any;
+
+  if (isNotMaybe(maybeAny)) {
+    (maybeAny: empty); // okay, we're filtering null and undefined
+  }
+}
+
+function any_filter() {
+  declare function isAny(value: mixed): value is any;
+
+  declare var maybeNumber: number;
+
+  if (isAny(maybeNumber)) {
+    (maybeNumber: empty); // error number ~> empty
+  }
+}
+
+function refine_any_to_type() {
+  declare function isNumber(value: mixed): value is number;
+
+  declare var anyVal: any;
+
+  if (isNumber(anyVal)) {
+    (anyVal: empty); // error number ~> empty
+  }
+}
