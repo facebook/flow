@@ -21,7 +21,7 @@ depends: [
   "lwt" {>= "5.4.0"}
   "lwt_log" {>= "1.1.1"}
   "lwt_ppx"
-  "ppxlib" {>= "0.26.0"}
+  "ppxlib" {= "0.28.0"}
   "ppx_let" {>= "0.14.0"}
   "ppx_deriving" {build}
   "ppx_gen_rec" {build}
