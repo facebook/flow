@@ -1906,9 +1906,9 @@ end
 let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
   let (value, ts, is_index_restricted, is_tuple) =
     match arrtype with
-    | ArrayAT (value, ts) ->
+    | ArrayAT { elem_t; tuple_view = ts } ->
       let ts = Base.Option.map ~f:(Base.List.map ~f:(fun t -> (t, Polarity.Neutral, None))) ts in
-      (value, ts, false, false)
+      (elem_t, ts, false, false)
     | TupleAT { elem_t; elements; arity = _ } ->
       let ts =
         Base.List.map

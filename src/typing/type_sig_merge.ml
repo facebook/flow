@@ -525,8 +525,8 @@ and merge_annot tps infer_tps file = function
     Type.(DefT (reason, trust, ArrT (TupleAT { elem_t; elements; arity })))
   | Array (loc, t) ->
     let reason = Reason.(mk_annot_reason RArrayType loc) in
-    let t = merge tps infer_tps file t in
-    Type.(DefT (reason, trust, ArrT (ArrayAT (t, None))))
+    let elem_t = merge tps infer_tps file t in
+    Type.(DefT (reason, trust, ArrT (ArrayAT { elem_t; tuple_view = None })))
   | ReadOnlyArray (loc, t) ->
     let reason = Reason.(mk_annot_reason RROArrayType loc) in
     let t = merge tps infer_tps file t in
@@ -587,8 +587,8 @@ and merge_annot tps infer_tps file = function
     | _ -> t)
   | TEMPORARY_Array (loc, t) ->
     let reason = Reason.(mk_annot_reason RArrayLit loc) in
-    let t = merge tps infer_tps file t in
-    Type.(DefT (reason, trust, ArrT (ArrayAT (t, None))))
+    let elem_t = merge tps infer_tps file t in
+    Type.(DefT (reason, trust, ArrT (ArrayAT { elem_t; tuple_view = None })))
   | AnyWithLowerBound (_loc, t) ->
     let t = merge tps infer_tps file t in
     Type.AnyT.annot (TypeUtil.reason_of_t t)
@@ -1190,12 +1190,12 @@ and merge_value tps infer_tps file = function
     let t = merge tps infer_tps file t in
     (* NB: tail-recursive map in case of very large literals *)
     let ts = Base.List.map ~f:(merge tps infer_tps file) ts in
-    let t =
+    let elem_t =
       match (t, ts) with
       | (t, []) -> t
       | (t0, t1 :: ts) -> Type.(UnionT (reason, UnionRep.make t0 t1 ts))
     in
-    Type.(DefT (reason, trust, ArrT (ArrayAT (t, None))))
+    Type.(DefT (reason, trust, ArrT (ArrayAT { elem_t; tuple_view = None })))
 
 and merge_accessor tps infer_tps file = function
   | Get (loc, t) ->

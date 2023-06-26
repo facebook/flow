@@ -246,15 +246,15 @@ let rec dump_t_ (depth, tvars) cx t =
           spf "Indexed {[%s]: %s}" (p ~reason:false key) (p ~reason:false value)
       in
       p ~trust:(Some trust) t ~extra:(spf "%s, %s" (Properties.string_of_id props_tmap) obj_kind)
-    | DefT (_, trust, ArrT (ArrayAT (elemt, None))) ->
-      p ~trust:(Some trust) ~extra:(spf "Array %s" (kid elemt)) t
-    | DefT (_, trust, ArrT (ArrayAT (elemt, Some tup))) ->
+    | DefT (_, trust, ArrT (ArrayAT { elem_t; tuple_view = None })) ->
+      p ~trust:(Some trust) ~extra:(spf "Array %s" (kid elem_t)) t
+    | DefT (_, trust, ArrT (ArrayAT { elem_t; tuple_view = Some tup })) ->
       p
         ~trust:(Some trust)
         ~extra:
           (spf
              "Array %s, %s"
-             (kid elemt)
+             (kid elem_t)
              (spf "[%s]" (String.concat "; " (Base.List.map ~f:kid tup)))
           )
         t

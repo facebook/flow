@@ -240,9 +240,9 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | UseT (_, t) -> UpperT t
     | ArrRestT (_, _, i, tout) ->
       (match get_t cx tout with
-      | DefT (r, _, ArrT (ArrayAT (_, None) | ROArrayAT _)) ->
+      | DefT (r, _, ArrT (ArrayAT { tuple_view = None; _ } | ROArrayAT _)) ->
         identity_reverse_upper_bound cx seen tvar r tout
-      | DefT (r, _, ArrT (ArrayAT (_, Some _) | TupleAT _)) when i = 0 ->
+      | DefT (r, _, ArrT (ArrayAT { tuple_view = Some _; _ } | TupleAT _)) when i = 0 ->
         identity_reverse_upper_bound cx seen tvar r tout
       | _ -> UpperEmpty)
     (* Call related upper bounds are ignored because there is not enough info to reverse. *)
@@ -523,12 +523,12 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
                 )
           )
         in
-        let general =
+        let elem_t =
           match tuple_ts with
           | [] -> rest_elem_t
           | t :: ts -> UnionT (reason, UnionRep.make rest_elem_t t ts)
         in
-        let t = ArrayAT (general, None) in
+        let t = ArrayAT { elem_t; tuple_view = None } in
         let reason = update_desc_reason (fun _ -> RArray) reason in
         (reason, t)
     in

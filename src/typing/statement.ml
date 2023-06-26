@@ -2741,13 +2741,13 @@ module Make
       | [] when Context.typing_mode cx <> Context.CheckingMode ->
         let reason = mk_reason REmptyArrayLit loc in
         let element_reason = mk_reason Reason.unknown_elem_empty_array_desc loc in
-        let elemt = Context.mk_placeholder cx element_reason in
-        ( (loc, DefT (reason, make_trust (), ArrT (ArrayAT (elemt, Some [])))),
+        let elem_t = Context.mk_placeholder cx element_reason in
+        ( (loc, DefT (reason, make_trust (), ArrT (ArrayAT { elem_t; tuple_view = Some [] }))),
           Array { Array.elements = []; comments }
         )
       | [] ->
-        let (reason, elemt) = empty_array cx loc in
-        ( (loc, DefT (reason, make_trust (), ArrT (ArrayAT (elemt, Some [])))),
+        let (reason, elem_t) = empty_array cx loc in
+        ( (loc, DefT (reason, make_trust (), ArrT (ArrayAT { elem_t; tuple_view = Some [] }))),
           Array { Array.elements = []; comments }
         )
       | elems ->
@@ -6328,14 +6328,18 @@ module Make
       let arr_reason = mk_reason RArrayType loc in
       let (((_, o), _) as e_ast) = expression cx e in
       let keys_t = get_keys ~arr_reason o in
-      ( DefT (arr_reason, bogus_trust (), ArrT (ArrayAT (keys_t, None))),
+      ( DefT (arr_reason, bogus_trust (), ArrT (ArrayAT { elem_t = keys_t; tuple_view = None })),
         None,
         (args_loc, { ArgList.arguments = [Expression e_ast]; comments })
       )
     | ("values", None, (args_loc, { ArgList.arguments = [Expression e]; comments })) ->
       let arr_reason = mk_reason RArrayType loc in
       let (((_, o), _) as e_ast) = expression cx e in
-      ( DefT (arr_reason, bogus_trust (), ArrT (ArrayAT (get_values ~arr_reason o, None))),
+      ( DefT
+          ( arr_reason,
+            bogus_trust (),
+            ArrT (ArrayAT { elem_t = get_values ~arr_reason o; tuple_view = None })
+          ),
         None,
         (args_loc, { ArgList.arguments = [Expression e_ast]; comments })
       )
@@ -6378,7 +6382,7 @@ module Make
               )
           )
       in
-      ( DefT (arr_reason, bogus_trust (), ArrT (ArrayAT (entry_t, None))),
+      ( DefT (arr_reason, bogus_trust (), ArrT (ArrayAT { elem_t = entry_t; tuple_view = None })),
         None,
         (args_loc, { ArgList.arguments = [Expression e_ast]; comments })
       )

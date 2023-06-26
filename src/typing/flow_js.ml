@@ -1972,7 +1972,7 @@ struct
                   else
                     `Iterable
               in
-              let element_tvar = Tvar.mk cx reason in
+              let elem_t = Tvar.mk cx reason in
               let resolve_to_type =
                 match resolve_to with
                 | `ArrayLike ->
@@ -1980,11 +1980,11 @@ struct
                     cx
                     (replace_desc_new_reason (RCustom "Array-like object expected for apply") reason)
                     (OrdinaryName "$ArrayLike")
-                    [element_tvar]
+                    [elem_t]
                 | `Iterable ->
                   let targs =
                     [
-                      element_tvar;
+                      elem_t;
                       Unsoundness.why ResolveSpread reason;
                       Unsoundness.why ResolveSpread reason;
                     ]
@@ -1998,11 +1998,11 @@ struct
                   DefT
                     ( replace_desc_new_reason (RCustom "Array expected for spread") reason,
                       bogus_trust (),
-                      ArrT (ROArrayAT element_tvar)
+                      ArrT (ROArrayAT elem_t)
                     )
               in
               rec_flow_t ~use_op:unknown_use cx trace (l, resolve_to_type);
-              ArrayAT (element_tvar, None)
+              ArrayAT { elem_t; tuple_view = None }
           in
           let elemt = elemt_of_arrtype arrtype in
           begin
@@ -2106,11 +2106,11 @@ struct
                     let new_arrtype =
                       match arrtype with
                       (* These can get us into constant folding loops *)
-                      | ArrayAT (elem_t, Some _)
+                      | ArrayAT { elem_t; tuple_view = Some _ }
                       | TupleAT { elem_t; _ } ->
-                        ArrayAT (elem_t, None)
+                        ArrayAT { elem_t; tuple_view = None }
                       (* These cannot *)
-                      | ArrayAT (_, None)
+                      | ArrayAT { tuple_view = None; _ }
                       | ROArrayAT _ ->
                         arrtype
                     in
@@ -3573,10 +3573,10 @@ struct
         | (DefT (reason_arr, _, ArrT arrtype), ObjAssignFromT (use_op, r, o, t, ObjSpreadAssign)) ->
         begin
           match arrtype with
-          | ArrayAT (elemt, None)
-          | ROArrayAT elemt ->
+          | ArrayAT { elem_t; tuple_view = None }
+          | ROArrayAT elem_t ->
             (* Object.assign(o, ...Array<x>) -> Object.assign(o, x) *)
-            rec_flow cx trace (elemt, ObjAssignFromT (use_op, r, o, t, default_obj_assign_kind))
+            rec_flow cx trace (elem_t, ObjAssignFromT (use_op, r, o, t, default_obj_assign_kind))
           | TupleAT { elements; _ } ->
             (* Object.assign(o, ...[x,y,z]) -> Object.assign(o, x, y, z) *)
             List.iteri
@@ -3590,7 +3590,7 @@ struct
                     );
                 rec_flow cx trace (from, ObjAssignFromT (use_op, r, o, t, default_obj_assign_kind)))
               elements
-          | ArrayAT (_, Some ts) ->
+          | ArrayAT { tuple_view = Some ts; _ } ->
             (* Object.assign(o, ...[x,y,z]) -> Object.assign(o, x, y, z) *)
             List.iter
               (fun from ->
@@ -3901,10 +3901,11 @@ struct
         | (DefT (_, trust, ArrT arrtype), ArrRestT (_, reason, i, tout)) ->
           let arrtype =
             match arrtype with
-            | ArrayAT (_, None)
+            | ArrayAT { tuple_view = None; _ }
             | ROArrayAT _ ->
               arrtype
-            | ArrayAT (elemt, Some ts) -> ArrayAT (elemt, Some (Base.List.drop ts i))
+            | ArrayAT { elem_t; tuple_view = Some ts } ->
+              ArrayAT { elem_t; tuple_view = Some (Base.List.drop ts i) }
             | TupleAT { elem_t; elements; arity = (num_req, num_total) } ->
               TupleAT
                 {
@@ -3944,7 +3945,9 @@ struct
           in
           let arrtype =
             match arrtype with
-            | ArrayAT (elemt, ts) -> ArrayAT (f elemt, Base.Option.map ~f:(Base.List.map ~f) ts)
+            | ArrayAT { elem_t; tuple_view } ->
+              ArrayAT
+                { elem_t = f elem_t; tuple_view = Base.Option.map ~f:(Base.List.map ~f) tuple_view }
             | TupleAT { elem_t; elements; arity } ->
               TupleAT
                 {
@@ -5119,10 +5122,10 @@ struct
         (**********************)
         (* Array library call *)
         (**********************)
-        | ( DefT (reason, _, ArrT (ArrayAT (t, _))),
+        | ( DefT (reason, _, ArrT (ArrayAT { elem_t; _ })),
             (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)
           ) ->
-          rec_flow cx trace (get_builtin_typeapp cx ~trace reason (OrdinaryName "Array") [t], u)
+          rec_flow cx trace (get_builtin_typeapp cx ~trace reason (OrdinaryName "Array") [elem_t], u)
         (*************************)
         (* Tuple "length" access *)
         (*************************)
@@ -5653,7 +5656,8 @@ struct
   and expand_any _cx any t =
     let only_any _ = any in
     match t with
-    | DefT (r, trust, ArrT (ArrayAT _)) -> DefT (r, trust, ArrT (ArrayAT (any, None)))
+    | DefT (r, trust, ArrT (ArrayAT _)) ->
+      DefT (r, trust, ArrT (ArrayAT { elem_t = any; tuple_view = None }))
     | DefT (r, trust, ArrT (TupleAT { elements; arity; _ })) ->
       DefT
         ( r,
@@ -8205,9 +8209,11 @@ struct
           resolve_id cx trace ~use_op:(unify_flip use_op) id t
         | (DefT (_, _, PolyT { id = id1; _ }), DefT (_, _, PolyT { id = id2; _ })) when id1 = id2 ->
           ()
-        | (DefT (_, _, ArrT (ArrayAT (t1, ts1))), DefT (_, _, ArrT (ArrayAT (t2, ts2)))) ->
-          let ts1 = Base.Option.value ~default:[] ts1 in
-          let ts2 = Base.Option.value ~default:[] ts2 in
+        | ( DefT (_, _, ArrT (ArrayAT { elem_t = t1; tuple_view = tv1 })),
+            DefT (_, _, ArrT (ArrayAT { elem_t = t2; tuple_view = tv2 }))
+          ) ->
+          let ts1 = Base.Option.value ~default:[] tv1 in
+          let ts2 = Base.Option.value ~default:[] tv2 in
           array_unify cx trace ~use_op (ts1, t1, ts2, t2)
         | ( DefT (r1, _, ArrT (TupleAT { elem_t = _; elements = elements1; arity = arity1 })),
             DefT (r2, _, ArrT (TupleAT { elem_t = _; elements = elements2; arity = arity2 }))
@@ -8624,7 +8630,11 @@ struct
           | Some (spread_arg_elemt, generic) ->
             let reason = reason_of_t spread_arg_elemt in
             let spread_array =
-              DefT (reason, bogus_trust (), ArrT (ArrayAT (spread_arg_elemt, None)))
+              DefT
+                ( reason,
+                  bogus_trust (),
+                  ArrT (ArrayAT { elem_t = spread_arg_elemt; tuple_view = None })
+                )
             in
             let spread_array =
               Base.Option.value_map
@@ -8710,13 +8720,13 @@ struct
              match param with
              | ResolvedSpreadArg (_, arrtype, generic) -> begin
                match arrtype with
-               | ArrayAT (_, None)
-               | ArrayAT (_, Some []) ->
+               | ArrayAT { tuple_view = None; _ }
+               | ArrayAT { tuple_view = Some []; _ } ->
                  (* The latter case corresponds to the empty array literal. If
                   * we folded over the empty tuple_types list, then this would
                   * cause an empty result. *)
                  param :: acc
-               | ArrayAT (_, Some tuple_types) ->
+               | ArrayAT { tuple_view = Some tuple_types; _ } ->
                  Base.List.fold_left
                    ~f:(fun acc elem -> ResolvedArg (elem, generic) :: acc)
                    ~init:acc
@@ -8742,7 +8752,7 @@ struct
             None
           )
     in
-    let finish_array cx ~use_op ?trace ~reason_op ~resolve_to resolved elemt tout =
+    let finish_array cx ~use_op ?trace ~reason_op ~resolve_to resolved elem_t tout =
       (* Did `any` flow to one of the rest parameters? If so, we need to resolve
        * to a type that is both a subtype and supertype of the desired type. *)
       let result =
@@ -8751,7 +8761,11 @@ struct
           (match resolve_to with
           (* Array<any> is a good enough any type for arrays *)
           | `Array ->
-            DefT (reason_op, bogus_trust (), ArrT (ArrayAT (AnyT.why any_src reason_op, None)))
+            DefT
+              ( reason_op,
+                bogus_trust (),
+                ArrT (ArrayAT { elem_t = AnyT.why any_src reason_op; tuple_view = None })
+              )
           (* Array literals can flow to a tuple. Arrays can't. So if the presence
            * of an `any` forces us to degrade an array literal to Array<any> then
            * we might get a new error. Since introducing `any`'s shouldn't cause
@@ -8787,14 +8801,14 @@ struct
             Generic.(
               List.fold_left
                 (fun (tset, generic_state) elem ->
-                  let (elemt, generic, ro) =
+                  let (elem_t, generic, ro) =
                     match elem with
                     | ResolvedSpreadArg (_, arrtype, generic) ->
                       (elemt_of_arrtype arrtype, generic, ro_of_arrtype arrtype)
-                    | ResolvedArg (elemt, generic) -> (elemt, generic, ArraySpread.NonROSpread)
+                    | ResolvedArg (elem_t, generic) -> (elem_t, generic, ArraySpread.NonROSpread)
                     | ResolvedAnySpreadArg _ -> failwith "Should not be hit"
                   in
-                  ( TypeExSet.add elemt tset,
+                  ( TypeExSet.add elem_t tset,
                     ArraySpread.merge
                       ~printer:
                         (print_if_verbose_lazy
@@ -8836,12 +8850,14 @@ struct
              have to do that pinning more carefully, and using an unresolved
              tvar instead of a union here doesn't conflict with those plans.
           *)
-          TypeExSet.elements tset |> List.iter (fun t -> flow cx (t, UseT (use_op, elemt)));
+          TypeExSet.elements tset |> List.iter (fun t -> flow cx (t, UseT (use_op, elem_t)));
 
           let t =
             match (tuple_types, resolve_to) with
-            | (_, `Array) -> DefT (reason_op, bogus_trust (), ArrT (ArrayAT (elemt, None)))
-            | (_, `Literal) -> DefT (reason_op, bogus_trust (), ArrT (ArrayAT (elemt, tuple_types)))
+            | (_, `Array) ->
+              DefT (reason_op, bogus_trust (), ArrT (ArrayAT { elem_t; tuple_view = None }))
+            | (_, `Literal) ->
+              DefT (reason_op, bogus_trust (), ArrT (ArrayAT { elem_t; tuple_view = tuple_types }))
             | (Some tuple_types, `Tuple) ->
               let len = Base.List.length tuple_types in
               DefT
@@ -8850,7 +8866,7 @@ struct
                   ArrT
                     (TupleAT
                        {
-                         elem_t = elemt;
+                         elem_t;
                          elements =
                            Base.List.map
                              ~f:(fun t ->
@@ -8867,7 +8883,8 @@ struct
                        }
                     )
                 )
-            | (None, `Tuple) -> DefT (reason_op, bogus_trust (), ArrT (ArrayAT (elemt, None)))
+            | (None, `Tuple) ->
+              DefT (reason_op, bogus_trust (), ArrT (ArrayAT { elem_t; tuple_view = None }))
           in
           Base.Option.value_map
             ~f:(fun id ->
@@ -8893,7 +8910,7 @@ struct
           | None ->
             (match resolved with
             | ResolvedArg (t, generic) :: rest -> flatten cx r ((t, generic) :: args) spread rest
-            | ResolvedSpreadArg (_, ArrayAT (_, Some ts), generic) :: rest ->
+            | ResolvedSpreadArg (_, ArrayAT { tuple_view = Some ts; _ }, generic) :: rest ->
               let args = List.rev_append (List.map (fun t -> (t, generic)) ts) args in
               flatten cx r args spread rest
             | ResolvedSpreadArg (_, TupleAT { elements; _ }, generic) :: rest ->

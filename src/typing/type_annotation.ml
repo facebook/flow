@@ -525,8 +525,8 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       )
     | (loc, Array { Array.argument = t; comments }) ->
       let r = mk_annot_reason RArrayType loc in
-      let (((_, elemt), _) as t_ast) = convert cx tparams_map infer_tparams_map t in
-      ( (loc, DefT (r, infer_trust cx, ArrT (ArrayAT (elemt, None)))),
+      let (((_, elem_t), _) as t_ast) = convert cx tparams_map infer_tparams_map t in
+      ( (loc, DefT (r, infer_trust cx, ArrT (ArrayAT { elem_t; tuple_view = None }))),
         Array { Array.argument = t_ast; comments }
       )
     | (loc, Conditional { Conditional.check_type; extends_type; true_type; false_type; comments })
@@ -850,18 +850,28 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         | "$TEMPORARY$array" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (elemts, targs) = convert_type_params () in
-              let elemt = List.hd elemts in
+              let elem_t = List.hd elemts in
               reconstruct_ast
-                (DefT (mk_annot_reason RArrayLit loc, infer_trust cx, ArrT (ArrayAT (elemt, None))))
+                (DefT
+                   ( mk_annot_reason RArrayLit loc,
+                     infer_trust cx,
+                     ArrT (ArrayAT { elem_t; tuple_view = None })
+                   )
+                )
                 targs
           )
         (* Array<T> *)
         | "Array" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (elemts, targs) = convert_type_params () in
-              let elemt = List.hd elemts in
+              let elem_t = List.hd elemts in
               reconstruct_ast
-                (DefT (mk_annot_reason RArrayType loc, infer_trust cx, ArrT (ArrayAT (elemt, None))))
+                (DefT
+                   ( mk_annot_reason RArrayType loc,
+                     infer_trust cx,
+                     ArrT (ArrayAT { elem_t; tuple_view = None })
+                   )
+                )
                 targs
           )
         (* $ReadOnlyArray<T> is the supertype of all tuples and all arrays *)

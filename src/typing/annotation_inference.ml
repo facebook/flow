@@ -1053,8 +1053,8 @@ module rec ConsGen : S = struct
     (************)
     (* GetPropT *)
     (************)
-    | (DefT (reason, _, ArrT (ArrayAT (t, _))), (Annot_GetPropT _ | Annot_LookupT _)) ->
-      let arr = get_builtin_typeapp cx reason (OrdinaryName "Array") [t] in
+    | (DefT (reason, _, ArrT (ArrayAT { elem_t; _ })), (Annot_GetPropT _ | Annot_LookupT _)) ->
+      let arr = get_builtin_typeapp cx reason (OrdinaryName "Array") [elem_t] in
       elab_t cx arr op
     | ( DefT (reason, trust, ArrT (TupleAT { arity; _ })),
         Annot_GetPropT (reason_op, _, Named { name = OrdinaryName "length"; _ })

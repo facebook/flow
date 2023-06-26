@@ -333,9 +333,9 @@ class ['a] t =
 
     method private arr_type cx pole acc =
       function
-      | ArrayAT (t, None) -> self#type_ cx P.Neutral acc t
-      | ArrayAT (t, Some ts) ->
-        let acc = self#type_ cx P.Neutral acc t in
+      | ArrayAT { elem_t; tuple_view = None } -> self#type_ cx P.Neutral acc elem_t
+      | ArrayAT { elem_t; tuple_view = Some ts } ->
+        let acc = self#type_ cx P.Neutral acc elem_t in
         let acc = self#list (self#type_ cx P.Neutral) acc ts in
         acc
       | TupleAT { elem_t; elements; arity = _ } ->

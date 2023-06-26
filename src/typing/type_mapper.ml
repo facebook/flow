@@ -722,15 +722,15 @@ class virtual ['a] t =
 
     method arr_type cx map_cx t =
       match t with
-      | ArrayAT (t', tlistopt) ->
-        let t'' = self#type_ cx map_cx t' in
-        let tlistopt' =
-          OptionUtils.ident_map (ListUtils.ident_map (self#type_ cx map_cx)) tlistopt
+      | ArrayAT { elem_t; tuple_view } ->
+        let elem_t' = self#type_ cx map_cx elem_t in
+        let tuple_view' =
+          OptionUtils.ident_map (ListUtils.ident_map (self#type_ cx map_cx)) tuple_view
         in
-        if t'' == t' && tlistopt' == tlistopt then
+        if elem_t' == elem_t && tuple_view' == tuple_view then
           t
         else
-          ArrayAT (t'', tlistopt')
+          ArrayAT { elem_t = elem_t'; tuple_view = tuple_view' }
       | TupleAT { elem_t; elements; arity } ->
         let elem_t' = self#type_ cx map_cx elem_t in
         let elements' =

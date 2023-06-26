@@ -439,8 +439,8 @@ let resolve_binding_partial cx reason loc b =
           resolve_prop ~bind_this ~prop_loc:sig_loc ~fn_loc:loc fn
         | Ast.Expression.Object obj -> mk_obj loc obj
         | Ast.Expression.Array { Ast.Expression.Array.elements = []; _ } ->
-          let (_, t) = Statement.empty_array cx loc in
-          DefT (reason, bogus_trust (), ArrT (ArrayAT (t, Some [])))
+          let (_, elem_t) = Statement.empty_array cx loc in
+          DefT (reason, bogus_trust (), ArrT (ArrayAT { elem_t; tuple_view = Some [] }))
         | Ast.Expression.Array { Ast.Expression.Array.elements; _ } ->
           (* TODO merge code with statement.ml implementation *)
           let array_elements cx undef_loc =
@@ -648,7 +648,7 @@ let resolve_binding_partial cx reason loc b =
     (func_type, use_op)
   | Root (EmptyArray { array_providers; arr_loc }) ->
     let env = Context.environment cx in
-    let (elem_t, elems, reason) =
+    let (elem_t, tuple_view, reason) =
       let element_reason = mk_reason Reason.unknown_elem_empty_array_desc loc in
       if ALocSet.cardinal array_providers > 0 then (
         let ts =
@@ -691,12 +691,12 @@ let resolve_binding_partial cx reason loc b =
         Context.add_constrained_write cx (elem_t, use_op, constrain_t);
         (elem_t, None, reason)
       ) else
-        let elemt = Tvar.mk cx element_reason in
+        let elem_t = Tvar.mk cx element_reason in
         Flow_js.add_output cx Error_message.(EEmptyArrayNoProvider { loc });
-        Flow_js.flow_t cx (EmptyT.make (mk_reason REmptyArrayElement loc) (bogus_trust ()), elemt);
-        (elemt, Some [], replace_desc_reason REmptyArrayLit reason)
+        Flow_js.flow_t cx (EmptyT.make (mk_reason REmptyArrayElement loc) (bogus_trust ()), elem_t);
+        (elem_t, Some [], replace_desc_reason REmptyArrayLit reason)
     in
-    let t = DefT (reason, bogus_trust (), ArrT (ArrayAT (elem_t, elems))) in
+    let t = DefT (reason, bogus_trust (), ArrT (ArrayAT { elem_t; tuple_view })) in
     let cache = Context.node_cache cx in
     let exp =
       ((arr_loc, t), Flow_ast.Expression.(Array { Array.elements = []; comments = None }))

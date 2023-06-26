@@ -331,7 +331,13 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             | Op (ReactCreateElementCall { children; _ }) -> children
             | _ -> loc_of_reason reason_op)
         in
-        Some (DefT (r, bogus_trust (), ArrT (ArrayAT (union_of_ts r (t :: ts), Some (t :: ts)))))
+        Some
+          (DefT
+             ( r,
+               bogus_trust (),
+               ArrT (ArrayAT { elem_t = union_of_ts r (t :: ts); tuple_view = Some (t :: ts) })
+             )
+          )
       (* If we only have a spread of unknown length then React may not pass in
        * children, React may pass in a single child, or React may pass in an array
        * of children. We need to model all of these possibilities. *)
@@ -344,7 +350,12 @@ module Kit (Flow : Flow_common.S) : REACT = struct
              {
                reason = r;
                type_ =
-                 union_of_ts r [spread; DefT (r, bogus_trust (), ArrT (ArrayAT (spread, None)))];
+                 union_of_ts
+                   r
+                   [
+                     spread;
+                     DefT (r, bogus_trust (), ArrT (ArrayAT { elem_t = spread; tuple_view = None }));
+                   ];
                use_desc = false;
              }
           )
@@ -363,7 +374,14 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         Some
           (union_of_ts
              r
-             [t; DefT (r, bogus_trust (), ArrT (ArrayAT (union_of_ts r [spread; t], None)))]
+             [
+               t;
+               DefT
+                 ( r,
+                   bogus_trust (),
+                   ArrT (ArrayAT { elem_t = union_of_ts r [spread; t]; tuple_view = None })
+                 );
+             ]
           )
       (* If we have two or more arguments and a spread argument of unknown length
        * then we want to return an array type where the element type is the union
@@ -377,7 +395,13 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             | Op (ReactCreateElementCall { children; _ }) -> children
             | _ -> loc_of_reason reason_op)
         in
-        Some (DefT (r, bogus_trust (), ArrT (ArrayAT (union_of_ts r (spread :: t :: ts), None))))
+        Some
+          (DefT
+             ( r,
+               bogus_trust (),
+               ArrT (ArrayAT { elem_t = union_of_ts r (spread :: t :: ts); tuple_view = None })
+             )
+          )
     in
     let config_check clone config children_args =
       (* Create the optional children input type from the children arguments. *)

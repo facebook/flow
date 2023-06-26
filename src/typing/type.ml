@@ -1149,7 +1149,10 @@ module rec TypeTerm : sig
   and pred_funcall_info = use_op * ALoc.t * t (* callee *) * targ list option * call_arg list
 
   and arrtype =
-    | ArrayAT of t * t list option
+    | ArrayAT of {
+        elem_t: t;
+        tuple_view: t list option;
+      }
     (* TupleAT of elemt * tuple_types. Why do tuples carry around elemt? Well, so
      * that they don't need to recompute their general type when you do
      * myTuple[expr]
@@ -3986,7 +3989,7 @@ let extract_getter_type = function
   | _ -> failwith "Getter property with unexpected type"
 
 let elemt_of_arrtype = function
-  | ArrayAT (elem_t, _)
+  | ArrayAT { elem_t; _ }
   | ROArrayAT elem_t
   | TupleAT { elem_t; _ } ->
     elem_t

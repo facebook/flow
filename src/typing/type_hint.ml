@@ -373,15 +373,15 @@ and type_of_hint_decomposition cx op reason t =
             (lazy [spf "Encountered placeholder type: %s" (Debug_js.dump_t cx ~depth:3 t)]);
           Context.mk_placeholder cx reason
         ) else
-          let elemt = Tvar.mk cx reason in
+          let elem_t = Tvar.mk cx reason in
           Context.run_in_implicit_instantiation_mode cx (fun () ->
               SpeculationFlow.flow_t_unsafe
                 cx
                 reason
                 ~upper_unresolved:false
-                (DefT (reason, bogus_trust (), ArrT (ArrayAT (elemt, Some []))), t)
+                (DefT (reason, bogus_trust (), ArrT (ArrayAT { elem_t; tuple_view = Some [] })), t)
           );
-          PinTypes.pin_type cx ~use_op:unknown_use reason elemt
+          PinTypes.pin_type cx ~use_op:unknown_use reason elem_t
       | Decomp_Await ->
         Tvar.mk_where cx reason (fun tout ->
             Flow_js.flow_t cx (t, tout);

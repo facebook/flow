@@ -212,9 +212,11 @@ let rec merge_type cx =
       let reason = locationless_reason (RCustom "object") in
       mk_object_def_type ~reason ~flags ~call id o1.proto_t
     | _ -> create_union (UnionRep.make t1 t2 []))
-  | (DefT (_, _, ArrT (ArrayAT (t1, ts1))), DefT (_, _, ArrT (ArrayAT (t2, ts2)))) ->
+  | ( DefT (_, _, ArrT (ArrayAT { elem_t = t1; tuple_view = tv1 })),
+      DefT (_, _, ArrT (ArrayAT { elem_t = t2; tuple_view = tv2 }))
+    ) ->
     let tuple_types =
-      match (ts1, ts2) with
+      match (tv1, tv2) with
       | (None, _)
       | (_, None) ->
         None
@@ -223,7 +225,7 @@ let rec merge_type cx =
     DefT
       ( locationless_reason (RCustom "array"),
         bogus_trust (),
-        ArrT (ArrayAT (merge_type cx (t1, t2), tuple_types))
+        ArrT (ArrayAT { elem_t = merge_type cx (t1, t2); tuple_view = tuple_types })
       )
   | ( DefT (_, _, ArrT (TupleAT { elem_t = t1; elements = ts1; arity = arity1 })),
       DefT (_, _, ArrT (TupleAT { elem_t = t2; elements = ts2; arity = arity2 }))
@@ -482,7 +484,7 @@ let rec extract_type cx this_t =
   | DefT (reason, _, ArrT arrtype) ->
     let (builtin, elem_t) =
       match arrtype with
-      | ArrayAT (elem_t, _) -> (get_builtin cx (OrdinaryName "Array") reason, elem_t)
+      | ArrayAT { elem_t; _ } -> (get_builtin cx (OrdinaryName "Array") reason, elem_t)
       | TupleAT { elem_t; _ }
       | ROArrayAT elem_t ->
         (get_builtin cx (OrdinaryName "$ReadOnlyArray") reason, elem_t)

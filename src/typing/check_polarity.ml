@@ -109,10 +109,11 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
       (match predicate with
       | Some (TypeGuardBased { type_guard = t; _ }) -> check_polarity cx ?trace tparams polarity t
       | _ -> ())
-    | DefT (_, _, ArrT (ArrayAT (_, Some _))) as t ->
+    | DefT (_, _, ArrT (ArrayAT { elem_t = _; tuple_view = Some _ })) as t ->
       (* This representation signifies a literal, which is not a type. *)
       raise (UnexpectedType (Debug_js.dump_t cx t))
-    | DefT (_, _, ArrT (ArrayAT (t, None))) -> check_polarity cx ?trace tparams Polarity.Neutral t
+    | DefT (_, _, ArrT (ArrayAT { elem_t; tuple_view = None })) ->
+      check_polarity cx ?trace tparams Polarity.Neutral elem_t
     | DefT (_, _, ArrT (TupleAT { elements; _ })) ->
       List.iter
         (fun (TupleElement { t; polarity = p; name = _; optional = _; reason = _ }) ->
