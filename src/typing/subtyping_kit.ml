@@ -1541,6 +1541,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let fresh =
         match desc_of_reason r1 with
         | RArrayLit
+        | REmptyArrayLit
         | RRestArrayLit _
         | RReactChildren ->
           true

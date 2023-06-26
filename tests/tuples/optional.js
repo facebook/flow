@@ -81,3 +81,9 @@ type InvalidReqAfterOptMultiple = [a: number, b?: string, c: string, d: boolean]
     (x: empty); // ERROR
   }
 }
+
+// Array initializers
+{
+  const x: [a?: 0] = [];
+  const y: [a?: 1] = [1];
+}
