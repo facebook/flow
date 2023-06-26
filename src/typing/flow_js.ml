@@ -8869,15 +8869,7 @@ struct
                          elem_t;
                          elements =
                            Base.List.map
-                             ~f:(fun t ->
-                               TupleElement
-                                 {
-                                   name = None;
-                                   t;
-                                   polarity = Polarity.Neutral;
-                                   optional = false;
-                                   reason = reason_of_t t;
-                                 })
+                             ~f:(fun t -> mk_tuple_element (reason_of_t t) t)
                              tuple_types;
                          arity = (len, len);
                        }

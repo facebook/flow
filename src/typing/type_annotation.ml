@@ -2320,11 +2320,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let (((_, t), _) as annot_ast) = convert cx tparams_map infer_tparams_map annot in
       let element_ast = (loc, Ast.Type.Tuple.UnlabeledElement annot_ast) in
       let reason = mk_reason (RTupleElement { name = None }) loc in
-      ( t,
-        TupleElement { name = None; t; polarity = Polarity.Neutral; optional = false; reason },
-        element_ast,
-        false
-      )
+      (t, mk_tuple_element reason t, element_ast, false)
     | Ast.Type.Tuple.LabeledElement
         { Ast.Type.Tuple.LabeledElement.name; annot; variance; optional } ->
       let (((_, annot_t), _) as annot_ast) = convert cx tparams_map infer_tparams_map annot in

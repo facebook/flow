@@ -1617,18 +1617,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                   (TupleAT
                      {
                        elem_t = t1;
-                       elements =
-                         Base.List.map
-                           ~f:(fun t ->
-                             TupleElement
-                               {
-                                 name = None;
-                                 polarity = Polarity.Neutral;
-                                 t;
-                                 optional = false;
-                                 reason = reason_of_t t;
-                               })
-                           ts1;
+                       elements = Base.List.map ~f:(fun t -> mk_tuple_element (reason_of_t t) t) ts1;
                        arity = (len, len);
                      }
                   )

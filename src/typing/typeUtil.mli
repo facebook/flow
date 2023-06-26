@@ -113,6 +113,9 @@ val tuple_length : reason -> Trust.trust_rep -> int * int -> Type.t
 
 val tuple_ts_of_elements : Type.tuple_element list -> Type.t list
 
+val mk_tuple_element :
+  ?name:string -> ?optional:bool -> ?polarity:Polarity.t -> reason -> Type.t -> Type.tuple_element
+
 val type_guard_of_predicate : Type.fun_predicate -> Type.t option
 
 val type_guard_of_funtype : Type.funtype -> Type.t option

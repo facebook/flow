@@ -6360,22 +6360,8 @@ module Make
                    elem_t;
                    elements =
                      [
-                       TupleElement
-                         {
-                           name = Some "key";
-                           t = keys_t;
-                           polarity = Polarity.Neutral;
-                           optional = false;
-                           reason = elem_reason;
-                         };
-                       TupleElement
-                         {
-                           name = Some "value";
-                           t = values_t;
-                           polarity = Polarity.Neutral;
-                           optional = false;
-                           reason = elem_reason;
-                         };
+                       mk_tuple_element ~name:"key" elem_reason keys_t;
+                       mk_tuple_element ~name:"value" elem_reason values_t;
                      ];
                    arity = (2, 2);
                  }

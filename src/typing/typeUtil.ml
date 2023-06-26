@@ -1015,6 +1015,9 @@ let tuple_length reason trust (num_req, num_total) =
 
 let tuple_ts_of_elements elements = Base.List.map ~f:(fun (TupleElement { t; _ }) -> t) elements
 
+let mk_tuple_element ?name ?(optional = false) ?(polarity = Polarity.Neutral) reason t =
+  TupleElement { reason; name; t; polarity; optional }
+
 let type_guard_of_predicate predicate =
   match predicate with
   | TypeGuardBased { type_guard = t; _ } -> Some t
