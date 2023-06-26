@@ -422,116 +422,94 @@ let rec repeat r = function
   | n, m -> Flow_sedlex.seq r (repeat r (n - 1, m - 1))
 
 let regexp_of_pattern env =
-    let rec char_pair_op func name p tuple =
-    (* Construct something like Sub(a,b) *)
+  let rec char_pair_op func name p tuple = (* Construct something like Sub(a,b) *)
     match tuple with
-      | Some { ppat_desc = Ppat_tuple [p0; p1] } -> begin
-          match func (aux p0) (aux p1) with
+      | Some {ppat_desc=Ppat_tuple (p0 :: p1 :: [])} ->
+        begin match func (aux p0) (aux p1) with
+        | Some r -> r
+        | None ->
+          err p.ppat_loc @@
+            "the "^name^" operator can only applied to single-character length regexps"
+        end
+      | _ -> err p.ppat_loc @@ "the "^name^" operator requires two arguments, like "^name^"(a,b)"
+  and aux p = (* interpret one pattern node *)
+    match p.ppat_desc with
+    | Ppat_or (p1, p2) -> Flow_sedlex.alt (aux p1) (aux p2)
+    | Ppat_tuple (p :: pl) ->
+        List.fold_left (fun r p -> Flow_sedlex.seq r (aux p))
+          (aux p)
+          pl
+    | Ppat_construct ({txt = Lident "Star"}, Some p) ->
+        Flow_sedlex.rep (aux p)
+    | Ppat_construct ({txt = Lident "Plus"}, Some p) ->
+        Flow_sedlex.plus (aux p)
+    | Ppat_construct
+        ({txt = Lident "Rep"},
+         Some {ppat_desc=Ppat_tuple[p0; {ppat_desc=Ppat_constant (i1 as i2)|Ppat_interval(i1, i2)}]}) ->
+         begin match i1, i2 with
+         | Pconst_integer(i1,_), Pconst_integer(i2,_) ->
+             let i1 = int_of_string i1 in
+             let i2 = int_of_string i2 in
+             if 0 <= i1 && i1 <= i2 then repeat (aux p0) (i1, i2)
+             else err p.ppat_loc "Invalid range for Rep operator"
+         | _ ->
+             err p.ppat_loc "Rep must take an integer constant or interval"
+         end
+    | Ppat_construct ({txt = Lident "Rep"}, _) ->
+        err p.ppat_loc "the Rep operator takes 2 arguments"
+    | Ppat_construct ({txt = Lident "Opt"}, Some p) ->
+        Flow_sedlex.alt Flow_sedlex.eps (aux p)
+    | Ppat_construct ({txt = Lident "Compl"}, arg) ->
+        begin match arg with
+        | Some p0 ->
+            begin match Flow_sedlex.compl (aux p0) with
             | Some r -> r
             | None ->
-                err p.ppat_loc @@ "the " ^ name
-                ^ " operator can only applied to single-character length \
-                   regexps"
+              err p.ppat_loc
+                "the Compl operator can only applied to a single-character length regexp"
+            end
+        | _ -> err p.ppat_loc "the Compl operator requires an argument"
         end
-      | _ ->
-          err p.ppat_loc @@ "the " ^ name
-          ^ " operator requires two arguments, like " ^ name ^ "(a,b)"
-  and aux p =
-    (* interpret one pattern node *)
-    match p.ppat_desc with
-      | Ppat_or (p1, p2) -> Flow_sedlex.alt (aux p1) (aux p2)
-      | Ppat_tuple (p :: pl) ->
-          List.fold_left (fun r p -> Flow_sedlex.seq r (aux p)) (aux p) pl
-      | Ppat_construct ({ txt = Lident "Star" }, Some (_, p)) ->
-          Flow_sedlex.rep (aux p)
-      | Ppat_construct ({ txt = Lident "Plus" }, Some (_, p)) ->
-          Flow_sedlex.plus (aux p)
-      | Ppat_construct
-          ( { txt = Lident "Rep" },
-            Some
-              ( _,
-                {
-                  ppat_desc =
-                    Ppat_tuple
-                      [
-                        p0;
-                        {
-                          ppat_desc =
-                            Ppat_constant (i1 as i2) | Ppat_interval (i1, i2);
-                        };
-                      ];
-                } ) ) -> begin
-          match (i1, i2) with
-            | Pconst_integer (i1, _), Pconst_integer (i2, _) ->
-                let i1 = int_of_string i1 in
-                let i2 = int_of_string i2 in
-                if 0 <= i1 && i1 <= i2 then repeat (aux p0) (i1, i2)
-                else err p.ppat_loc "Invalid range for Rep operator"
-            | _ ->
-                err p.ppat_loc "Rep must take an integer constant or interval"
+    | Ppat_construct ({ txt = Lident "Sub" }, arg) ->
+        char_pair_op Flow_sedlex.subtract "Sub" p arg
+    | Ppat_construct ({ txt = Lident "Intersect" }, arg) ->
+        char_pair_op Flow_sedlex.intersection "Intersect" p arg
+    | Ppat_construct ({txt = Lident "Chars"}, arg) ->
+        let const = match arg with
+          | Some {ppat_desc=Ppat_constant const} ->
+              Some (const)
+          | _ -> None
+        in
+        begin match const with
+        | Some (Pconst_string(s,_, _))->
+            let c = ref Cset.empty in
+            for i = 0 to String.length s - 1 do
+              c := Cset.union !c (Cset.singleton (Char.code s.[i]))
+            done;
+            Flow_sedlex.chars !c
+        | _ -> err p.ppat_loc "the Chars operator requires a string argument"
         end
-      | Ppat_construct ({ txt = Lident "Rep" }, _) ->
-          err p.ppat_loc "the Rep operator takes 2 arguments"
-      | Ppat_construct ({ txt = Lident "Opt" }, Some (_, p)) ->
-          Flow_sedlex.alt Flow_sedlex.eps (aux p)
-      | Ppat_construct ({ txt = Lident "Compl" }, arg) -> begin
-          match arg with
-            | Some (_, p0) -> begin
-                match Flow_sedlex.compl (aux p0) with
-                  | Some r -> r
-                  | None ->
-                      err p.ppat_loc
-                        "the Compl operator can only applied to a \
-                         single-character length regexp"
-              end
-            | _ -> err p.ppat_loc "the Compl operator requires an argument"
+    | Ppat_interval (i_start, i_end) ->
+        begin match  i_start, i_end with
+          | Pconst_char c1, Pconst_char c2 -> Flow_sedlex.chars (Cset.interval (Char.code c1) (Char.code c2))
+          | Pconst_integer(i1,_), Pconst_integer(i2,_) ->
+              Flow_sedlex.chars (Cset.interval (codepoint (int_of_string i1)) (codepoint (int_of_string i2)))
+          | _ -> err p.ppat_loc "this pattern is not a valid interval regexp"
         end
-      | Ppat_construct ({ txt = Lident "Sub" }, arg) ->
-          char_pair_op Flow_sedlex.subtract "Sub" p
-            (Option.map (fun (_, arg) -> arg) arg)
-      | Ppat_construct ({ txt = Lident "Intersect" }, arg) ->
-          char_pair_op Flow_sedlex.intersection "Intersect" p
-            (Option.map (fun (_, arg) -> arg) arg)
-      | Ppat_construct ({ txt = Lident "Chars" }, arg) -> (
-          let const =
-            match arg with
-              | Some (_, { ppat_desc = Ppat_constant const }) -> Some const
-              | _ -> None
-          in
-          match const with
-            | Some (Pconst_string (s, _, _)) ->
-                let c = ref Cset.empty in
-                for i = 0 to String.length s - 1 do
-                  c := Cset.union !c (Cset.singleton (Char.code s.[i]))
-                done;
-                Flow_sedlex.chars !c
-            | _ ->
-                err p.ppat_loc "the Chars operator requires a string argument")
-      | Ppat_interval (i_start, i_end) -> begin
-          match (i_start, i_end) with
-            | Pconst_char c1, Pconst_char c2 ->
-                Flow_sedlex.chars (Cset.interval (Char.code c1) (Char.code c2))
-            | Pconst_integer (i1, _), Pconst_integer (i2, _) ->
-                Flow_sedlex.chars
-                  (Cset.interval
-                     (codepoint (int_of_string i1))
-                     (codepoint (int_of_string i2)))
-            | _ -> err p.ppat_loc "this pattern is not a valid interval regexp"
+    | Ppat_constant (const) ->
+        begin match const with
+          | Pconst_string (s, _, _) -> regexp_for_string s
+          | Pconst_char c -> regexp_for_char c
+          | Pconst_integer(i,_) -> Flow_sedlex.chars (Cset.singleton (codepoint (int_of_string i)))
+          | _ -> err p.ppat_loc "this pattern is not a valid regexp"
         end
-      | Ppat_constant const -> begin
-          match const with
-            | Pconst_string (s, _, _) -> regexp_for_string s
-            | Pconst_char c -> regexp_for_char c
-            | Pconst_integer (i, _) ->
-                Flow_sedlex.chars (Cset.singleton (codepoint (int_of_string i)))
-            | _ -> err p.ppat_loc "this pattern is not a valid regexp"
+    | Ppat_var {txt=x} ->
+        begin try StringMap.find x env
+        with Not_found ->
+          err p.ppat_loc (Printf.sprintf "unbound regexp %s" x)
         end
-      | Ppat_var { txt = x } -> begin
-          try StringMap.find x env
-          with Not_found ->
-            err p.ppat_loc (Printf.sprintf "unbound regexp %s" x)
-        end
-      | _ -> err p.ppat_loc "this pattern is not a valid regexp"
+    | _ ->
+      err p.ppat_loc "this pattern is not a valid regexp"
   in
   aux
 

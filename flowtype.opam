@@ -12,7 +12,7 @@ depends: [
   "base" {>= "v0.14.1"}
   "base-unix"
   "base-bytes"
-  "core_kernel" {>= "v0.14.1" & <= "v0.15.0"}
+  "core_kernel" {>= "v0.14.1" & < "v0.15.0"}
   "dtoa" {>= "0.3.2"}
   "fileutils" {>= "0.6.3"}
   "flow_parser" {= "0.210.0"}
@@ -21,7 +21,7 @@ depends: [
   "lwt" {>= "5.4.0"}
   "lwt_log" {>= "1.1.1"}
   "lwt_ppx"
-  "ppxlib" {>= "0.26.0"}
+  "ppxlib"
   "ppx_let" {>= "0.14.0"}
   "ppx_deriving" {build}
   "ppx_gen_rec" {build}
