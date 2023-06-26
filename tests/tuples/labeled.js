@@ -9,3 +9,9 @@ type B = [string, bar: number];
 
 (["s", 1]: B); // OK
 (["s", true]: B); // ERROR
+
+// Labels are ignored - no cycles here
+{
+  declare const a: [foo: string];
+  const foo = [...a];
+}

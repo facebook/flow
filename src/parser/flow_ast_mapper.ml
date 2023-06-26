@@ -1739,24 +1739,23 @@ class ['loc] mapper =
 
     method tuple_labeled_element (t : ('loc, 'loc) Ast.Type.Tuple.LabeledElement.t) =
       let open Ast.Type.Tuple.LabeledElement in
+      (* Tuple element labels are not bindings so don't map over `name`. *)
       let { annot; name; variance; optional } = t in
       let annot' = this#type_ annot in
-      let name' = this#identifier name in
       let variance' = this#variance_opt variance in
-      if annot' == annot && name' == name && variance' == variance then
+      if annot' == annot && variance' == variance then
         t
       else
-        { annot = annot'; name = name'; variance = variance'; optional }
+        { annot = annot'; name; variance = variance'; optional }
 
     method tuple_spread_element (t : ('loc, 'loc) Ast.Type.Tuple.SpreadElement.t) =
       let open Ast.Type.Tuple.SpreadElement in
       let { annot; name } = t in
       let annot' = this#type_ annot in
-      let name' = map_opt this#identifier name in
-      if annot' == annot && name' == name then
+      if annot' == annot then
         t
       else
-        { annot = annot'; name = name' }
+        { annot = annot'; name }
 
     method array_type (t : ('loc, 'loc) Ast.Type.Array.t) =
       let open Ast.Type.Array in
