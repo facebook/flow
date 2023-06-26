@@ -340,15 +340,13 @@ class ['a] t =
         acc
       | TupleAT { elem_t; elements; arity = _ } ->
         let acc = self#type_ cx P.Neutral acc elem_t in
-        let acc =
-          self#list
-            (fun acc (TupleElement { t; polarity = p; reason = _; name = _; optional = _ }) ->
-              self#type_ cx (P.mult (pole, p)) acc t)
-            acc
-            elements
-        in
+        let acc = self#list (self#tuple_element cx pole) acc elements in
         acc
       | ROArrayAT t -> self#type_ cx pole acc t
+
+    method private tuple_element cx pole acc element =
+      let (TupleElement { t; polarity = p; reason = _; name = _; optional = _ }) = element in
+      self#type_ cx (P.mult (pole, p)) acc t
 
     method private inst_type cx pole acc i =
       let {

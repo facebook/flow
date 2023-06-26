@@ -733,16 +733,7 @@ class virtual ['a] t =
           ArrayAT { elem_t = elem_t'; tuple_view = tuple_view' }
       | TupleAT { elem_t; elements; arity } ->
         let elem_t' = self#type_ cx map_cx elem_t in
-        let elements' =
-          ListUtils.ident_map
-            (fun (TupleElement { reason; name; t; polarity; optional } as element) ->
-              let t' = self#type_ cx map_cx t in
-              if t' == t then
-                element
-              else
-                TupleElement { reason; name; t = t'; polarity; optional })
-            elements
-        in
+        let elements' = ListUtils.ident_map (self#tuple_element cx map_cx) elements in
         if elem_t' == elem_t && elements' == elements then
           t
         else
@@ -753,6 +744,14 @@ class virtual ['a] t =
           t
         else
           ROArrayAT t''
+
+    method private tuple_element cx map_cx element =
+      let (TupleElement { reason; name; t; polarity; optional }) = element in
+      let t' = self#type_ cx map_cx t in
+      if t' == t then
+        element
+      else
+        TupleElement { reason; name; t = t'; polarity; optional }
 
     method predicate cx map_cx p =
       match p with
