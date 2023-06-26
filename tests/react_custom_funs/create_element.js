@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 
 declare var any: any;
 
@@ -217,3 +217,7 @@ class M extends React.Component<{}> {}
 class N extends React.Component<{}> {}
 (React.createElement(M).type: typeof M); // OK
 (React.createElement(M).type: typeof N); // Error
+
+declare function P({children: [1, 2]}): void;
+React.createElement(P, null, 1, 2); // OK
+React.createElement(P, null, 1, 2, ...(any: Array<number>)); // ERROR
