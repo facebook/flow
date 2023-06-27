@@ -1667,6 +1667,62 @@ References:
                      ^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------- refinement.js:202:6
+
+Cannot cast `x` to empty because `$FbtResultBase` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   refinement.js:202:6
+   202|     (x: empty); // error Fbt ~> empty
+             ^
+
+References:
+   refinement.js:198:25
+   198|   declare var x: void | Fbt;
+                                ^^^ [1]
+   refinement.js:202:9
+   202|     (x: empty); // error Fbt ~> empty
+                ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:202:6
+
+Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   refinement.js:202:6
+   202|     (x: empty); // error Fbt ~> empty
+             ^
+
+References:
+   refinement.js:198:25
+   198|   declare var x: void | Fbt;
+                                ^^^ [1]
+   refinement.js:202:9
+   202|     (x: empty); // error Fbt ~> empty
+                ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:214:6
+
+Cannot cast `x` to `OpaqueOrString` because: [incompatible-cast]
+ - Either string [1] is incompatible with `OpaqueT` [2].
+ - Or `OpaqueT` [1] is incompatible with string [3].
+
+   refinement.js:214:6
+   214|     (x: OpaqueOrString); // TODO okay, currently imported opaque type is not filtered because it's underlying type is opaque to type-guard filtering
+             ^
+
+References:
+   refinement.js:211:25
+   211|   declare var x: void | OpaqueOrString;
+                                ^^^^^^^^^^^^^^ [1]
+   opaque_exports.js:17:30
+    17| export type OpaqueOrString = OpaqueT | string;
+                                     ^^^^^^^ [2]
+   opaque_exports.js:17:40
+    17| export type OpaqueOrString = OpaqueT | string;
+                                               ^^^^^^ [3]
+
+
 Error --------------------------------------------------------------------------------------------------- subst.js:10:15
 
 Cannot assign `funA(...)` to `x2` because `A` [1] is incompatible with `B` [2]. [incompatible-type]
@@ -2006,7 +2062,7 @@ Cannot find type guard parameter `x` [1] in the parameters of this function (typ
 
 
 
-Found 119 errors
+Found 122 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -700,6 +700,10 @@ and tag_of_t cx t =
   | OpenT _
   | AnnotT (_, _, _) ->
     Context.find_resolved cx t |> Base.Option.bind ~f:(tag_of_t cx)
+  | OpaqueT (r, { underlying_t = Some t; _ })
+    when ALoc.source (loc_of_reason r) = ALoc.source (def_loc_of_reason r) ->
+    tag_of_t cx t
+  | OpaqueT (_, { super_t = Some t; _ }) -> tag_of_t cx t
   (* Most of the types below should have boiled away thanks to concretization. *)
   | EvalT _
   | GenericT _
