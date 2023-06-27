@@ -590,6 +590,7 @@ module TypeTag = struct
     | StringTag
     | NumberTag
     | NullTag
+    | VoidTag
     | SymbolTag
     | ObjTag of { sentinel: sentinel_map }
     | FunTag
@@ -626,6 +627,7 @@ let sentinel_of_obj cx id =
 
 let rec tag_of_def_t cx = function
   | NullT -> Some (TypeTagSet.singleton NullTag)
+  | VoidT -> Some (TypeTagSet.singleton VoidTag)
   | SymbolT -> Some (TypeTagSet.singleton SymbolTag)
   | FunT _ -> Some (TypeTagSet.singleton FunTag)
   | SingletonBoolT _
@@ -650,7 +652,6 @@ let rec tag_of_def_t cx = function
   | PolyT { t_out; _ } -> tag_of_t cx t_out
   | EnumT _ -> Some (TypeTagSet.singleton EnumTag)
   | EmptyT -> Some TypeTagSet.empty
-  | VoidT
   | MixedT _
   | ClassT _
   | TypeT _
