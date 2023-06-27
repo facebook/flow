@@ -1,3 +1,5 @@
+(include_subdirs unqualified)
+
 (library
  (name collections)
  (package flow_parser)
