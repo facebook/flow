@@ -9648,12 +9648,36 @@ struct
       |> Base.Option.all
       |> Base.Option.map ~f:(Base.List.fold ~init:TSet.empty ~f:TSet.union)
     in
+    let is_any t =
+      match possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t t) t with
+      | [t] -> Type.is_any t
+      | _ -> false
+    in
+    let is_null t =
+      match possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t t) t with
+      | [DefT (_, _, NullT)] -> true
+      | _ -> false
+    in
+    let is_void t =
+      match possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t t) t with
+      | [DefT (_, _, VoidT)] -> true
+      | _ -> false
+    in
     match (t1_tags, t2_tags) with
     | (Some t1_tags, Some t2_tags) when not (Type_filter.tags_overlap t1_tags t2_tags) ->
       let r = update_desc_reason invalidate_rtype_alias (TypeUtil.reason_of_t t1) in
       DefT (r, bogus_trust (), EmptyT)
     | _ ->
-      if quick_subtype t1 t2 then
+      if is_any t1 then
+        t2
+      else if is_any t2 then
+        (* Filter out null and void types from the input if comparing with any *)
+        if is_null t1 || is_void t1 then
+          let r = update_desc_reason invalidate_rtype_alias (TypeUtil.reason_of_t t1) in
+          DefT (r, bogus_trust (), EmptyT)
+        else
+          t1
+      else if quick_subtype t1 t2 then
         t1
       else if quick_subtype t2 t1 then
         t2

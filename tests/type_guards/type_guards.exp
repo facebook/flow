@@ -1677,6 +1677,40 @@ References:
                 ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------- refinement.js:175:6
+
+Cannot cast `maybeNumber` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   refinement.js:175:6
+   175|     (maybeNumber: empty); // error number ~> empty
+             ^^^^^^^^^^^
+
+References:
+   refinement.js:172:28
+   172|   declare var maybeNumber: number;
+                                   ^^^^^^ [1]
+   refinement.js:175:19
+   175|     (maybeNumber: empty); // error number ~> empty
+                          ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:185:6
+
+Cannot cast `anyVal` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   refinement.js:185:6
+   185|     (anyVal: empty); // error number ~> empty
+             ^^^^^^
+
+References:
+   refinement.js:180:53
+   180|   declare function isNumber(value: mixed): value is number;
+                                                            ^^^^^^ [1]
+   refinement.js:185:14
+   185|     (anyVal: empty); // error number ~> empty
+                     ^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- subst.js:10:15
 
 Cannot assign `funA(...)` to `x2` because `A` [1] is incompatible with `B` [2]. [incompatible-type]
@@ -2016,7 +2050,7 @@ Cannot find type guard parameter `x` [1] in the parameters of this function (typ
 
 
 
-Found 119 errors
+Found 121 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
