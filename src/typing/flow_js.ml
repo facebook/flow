@@ -9658,9 +9658,8 @@ struct
       |> Base.Option.map ~f:(Base.List.fold ~init:TSet.empty ~f:TSet.union)
     in
     let is_any t =
-      match possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t t) t with
-      | [t] -> Type.is_any t
-      | _ -> false
+      let ts = possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t t) t in
+      List.exists Type.is_any ts
     in
     let is_null t =
       match possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t t) t with
