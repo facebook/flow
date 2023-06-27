@@ -185,3 +185,32 @@ function refine_any_to_type() {
     (anyVal: empty); // error number ~> empty
   }
 }
+
+function opaque_types() {
+  declare function isTruthy<A>(value: ?A): value is A;
+
+  declare class $FbtResultBase {}
+  declare opaque type FbtString: string;
+  declare type FbtElement = $FbtResultBase;
+  declare type FbtWithoutString = FbtString | FbtElement;
+  declare type Fbt = string | FbtWithoutString;
+
+  declare var x: void | Fbt;
+
+  if (isTruthy(x)) {
+    (x: Fbt); // okay
+    (x: empty); // error Fbt ~> empty
+  }
+}
+
+import type {OpaqueOrString} from './opaque_exports';
+
+function opaque_types_imported() {
+  declare function isTruthy<A>(value: ?A): value is A;
+
+  declare var x: void | OpaqueOrString;
+
+  if (isTruthy(x)) {
+    (x: OpaqueOrString); // TODO okay, currently imported opaque type is not filtered because it's underlying type is opaque to type-guard filtering
+  }
+}
