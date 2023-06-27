@@ -6,12 +6,12 @@
  *)
 
 (** Saves the default GC settings, which are restored by the workers. *)
-let default_gc_control = Caml.Gc.get ()
+let default_gc_control = Stdlib.Gc.get ()
 
 (** Workers can have more relaxed GC configs as they are short-lived processes,
     and this prevents the workers from inheriting GC settings the master needs. *)
 let worker_gc_control options =
-  let open Caml.Gc in
+  let open Stdlib.Gc in
   let {
     Options.gc_minor_heap_size;
     gc_major_heap_increment;

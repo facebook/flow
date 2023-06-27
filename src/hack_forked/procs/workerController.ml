@@ -60,7 +60,7 @@ let failure_to_string f =
   | Worker_quit s -> Printf.sprintf "(Worker_quit %s)" (status_string s)
 
 let () =
-  Caml.Printexc.register_printer @@ function
+  Stdlib.Printexc.register_printer @@ function
   | Worker_failed_to_send_job (Other_send_job_failure exn) ->
     Some (Printf.sprintf "Other_send_job_failure: %s" (Exception.to_string exn))
   | Worker_failed_to_send_job (Worker_already_exited status) ->
@@ -120,7 +120,7 @@ let spawn w =
 (* If the worker isn't prespawned, close the worker *)
 let close_noerr w h = if Option.is_none w.prespawned then Daemon.close_noerr h
 
-type 'a entry_state = 'a * Caml.Gc.control * SharedMem.handle * int * Worker.worker_mode
+type 'a entry_state = 'a * Stdlib.Gc.control * SharedMem.handle * int * Worker.worker_mode
 
 type 'a entry = ('a entry_state, request, void) Daemon.entry
 
@@ -131,7 +131,7 @@ let register_entry_point ~restore =
   let restore (st, gc_control, heap_handle, worker_id, worker_mode) =
     restore st ~worker_id;
     SharedMem.connect heap_handle ~worker_id;
-    Caml.Gc.set gc_control;
+    Stdlib.Gc.set gc_control;
     worker_mode
   in
   let name = Printf.sprintf "worker_%d" !entry_counter in
@@ -204,7 +204,7 @@ let send worker worker_pid outfd_lwt (f : 'a -> 'b) (x : 'a) : unit Lwt.t =
 
        By switching from Marshal_tools_lwt.to_fd_with_preamble to Marshal_tools.to_fd_with_preamble,
        the issue seems to have disappeared. *)
-    let _ = Marshal_tools.to_fd_with_preamble ~flags:[Caml.Marshal.Closures] outfd request in
+    let _ = Marshal_tools.to_fd_with_preamble ~flags:[Stdlib.Marshal.Closures] outfd request in
     Lwt.return_unit
   with
   | exn ->
@@ -262,16 +262,16 @@ let read (type result) worker_pid infd_lwt : (result * Measure.record_data) Lwt.
       | Some Exit.Hash_table_full -> raise SharedMem.Hash_table_full
       | Some Exit.Heap_full -> raise SharedMem.Heap_full
       | _ ->
-        let () = Caml.Printf.eprintf "Subprocess(%d): fail %d\n%!" worker_pid i in
+        let () = Stdlib.Printf.eprintf "Subprocess(%d): fail %d\n%!" worker_pid i in
         raise (Worker_failed (worker_pid, Worker_quit (Some (Unix.WEXITED i)))))
     | (_, Unix.WSTOPPED i) ->
-      let () = Caml.Printf.eprintf "Subprocess(%d): stopped %d\n%!" worker_pid i in
+      let () = Stdlib.Printf.eprintf "Subprocess(%d): stopped %d\n%!" worker_pid i in
       raise (Worker_failed (worker_pid, Worker_quit (Some (Unix.WSTOPPED i))))
     | (_, Unix.WSIGNALED i) ->
-      let () = Caml.Printf.eprintf "Subprocess(%d): signaled %d\n%!" worker_pid i in
+      let () = Stdlib.Printf.eprintf "Subprocess(%d): signaled %d\n%!" worker_pid i in
       raise (Worker_failed (worker_pid, Worker_quit (Some (Unix.WSIGNALED i))))
     | exception Unix.Unix_error (Unix.ECHILD, _, _) ->
-      let () = Caml.Printf.eprintf "Subprocess(%d): gone\n%!" worker_pid in
+      let () = Stdlib.Printf.eprintf "Subprocess(%d): gone\n%!" worker_pid in
       raise (Worker_failed (worker_pid, Worker_quit None)))
 
 (** Send a job to a worker

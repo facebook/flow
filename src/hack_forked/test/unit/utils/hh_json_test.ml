@@ -110,7 +110,7 @@ let test_jget_string () =
       ^ Printf.sprintf "string_exn: str=%B num=%B nul=%B abs=%B non=%B\n" str num nul abs non
     in
     let failed = Base.String.is_substring ~substring:"false" results in
-    if failed then Caml.Printf.eprintf "%s" results;
+    if failed then Stdlib.Printf.eprintf "%s" results;
     not failed
   )
 
@@ -133,7 +133,7 @@ let test_jget_number () =
       results ^ Printf.sprintf "float_opt: int=%B float=%B string=%B\n" fint ffloat fstring
     in
     let failed = Base.String.is_substring ~substring:"false" results in
-    if failed then Caml.Printf.eprintf "%s" results;
+    if failed then Stdlib.Printf.eprintf "%s" results;
     not failed
   )
 
@@ -229,7 +229,7 @@ let test_access_3_keys_one_object () =
     in
     match result with
     | Error access_failure ->
-      Caml.Printf.eprintf
+      Stdlib.Printf.eprintf
         "Error failed to parse. See: %s\n"
         (access_failure_to_string access_failure);
       false
@@ -262,7 +262,7 @@ let test_access_3_keys_one_object_wrong_type_middle () =
         "Not the access failure we expected";
       true
     | Ok (_, _) ->
-      Caml.Printf.eprintf "Expected failure, but successfully traversed json.\n";
+      Stdlib.Printf.eprintf "Expected failure, but successfully traversed json.\n";
       false
   )
 

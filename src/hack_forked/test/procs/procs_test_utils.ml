@@ -38,7 +38,7 @@ let make_workers n =
     | Ok handle -> handle
     | Error () -> raise SharedMem.Out_of_shared_memory
   in
-  let gc_control = Caml.Gc.get () in
+  let gc_control = Stdlib.Gc.get () in
   let workers =
     MultiWorkerLwt.make
       ~worker_mode
@@ -61,7 +61,7 @@ let run_interrupter limit =
       Unix.close fd_in;
       let rec aux x =
         match x with
-        | Some 0 -> Caml.exit 0
+        | Some 0 -> Stdlib.exit 0
         | _ ->
           let written = Unix.write_substring fd_out "!" 0 1 in
           assert (written = 1);

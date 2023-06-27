@@ -33,7 +33,7 @@ let asset_procfs_supported =
     | Some supported -> supported
     | None ->
       let supported =
-        if Sys.unix && Caml.Sys.file_exists "/proc" then
+        if Sys.unix && Stdlib.Sys.file_exists "/proc" then
           Ok ()
         else
           Error "Proc filesystem not supported"

@@ -113,7 +113,7 @@ let parse_stat stat_contents =
     |> List.fold_left ~init:SMap.empty ~f:(fun stats line ->
            match String.split line ~on:' ' with
            | [key; raw_stat] ->
-             Caml.int_of_string_opt raw_stat
+             Stdlib.int_of_string_opt raw_stat
              |> Base.Option.value_map ~default:stats ~f:(fun stat -> SMap.add key stat stats)
            | _ -> stats
        )
@@ -132,9 +132,9 @@ let parse_stat stat_contents =
 let get_stats_for_cgroup (cgroup_name : string) : (stats, string) Result.t Lwt.t =
   (* cgroup_name starts with a /, like /my_cgroup *)
   let dir = spf "%s%s" cgroup_dir cgroup_name in
-  let%lwt total_result = read_single_number_file (Caml.Filename.concat dir "memory.current")
-  and total_swap_result = read_single_number_file (Caml.Filename.concat dir "memory.swap.current")
-  and stat_contents_result = cat (Caml.Filename.concat dir "memory.stat") in
+  let%lwt total_result = read_single_number_file (Stdlib.Filename.concat dir "memory.current")
+  and total_swap_result = read_single_number_file (Stdlib.Filename.concat dir "memory.swap.current")
+  and stat_contents_result = cat (Stdlib.Filename.concat dir "memory.stat") in
   Lwt.return
     ( total_result >>= fun total ->
       total_swap_result >>= fun total_swap ->
