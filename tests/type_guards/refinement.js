@@ -214,3 +214,14 @@ function opaque_types_imported() {
     (x: OpaqueOrString); // TODO okay, currently imported opaque type is not filtered because it's underlying type is opaque to type-guard filtering
   }
 }
+
+function union_with_any() {
+  declare function isTruthy<A>(value: ?A): value is A;
+
+  declare var x: void | string | any;
+
+  if (isTruthy(x)) {
+    (x: string); // okay, type guard filters out void
+    (x: empty); // error string ~> empty
+  }
+}

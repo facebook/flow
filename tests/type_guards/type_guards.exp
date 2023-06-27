@@ -1723,6 +1723,23 @@ References:
                                                ^^^^^^ [3]
 
 
+Error ---------------------------------------------------------------------------------------------- refinement.js:225:6
+
+Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   refinement.js:225:6
+   225|     (x: empty); // error string ~> empty
+             ^
+
+References:
+   refinement.js:221:25
+   221|   declare var x: void | string | any;
+                                ^^^^^^ [1]
+   refinement.js:225:9
+   225|     (x: empty); // error string ~> empty
+                ^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- subst.js:10:15
 
 Cannot assign `funA(...)` to `x2` because `A` [1] is incompatible with `B` [2]. [incompatible-type]
@@ -2062,7 +2079,7 @@ Cannot find type guard parameter `x` [1] in the parameters of this function (typ
 
 
 
-Found 122 errors
+Found 123 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
