@@ -7,7 +7,8 @@
  * @format
  */
 
-import React, {useState, type MixedElement} from 'react';
+import * as React from 'react';
+import {useState, type MixedElement} from 'react';
 import clsx from 'clsx';
 import styles from './TryFlow.module.css';
 
@@ -48,7 +49,11 @@ function ErrorMessage({msg}: {msg: FlowJsErrorMessage}) {
   }
 }
 
-function ErrorMessageExtra({info}: {info: FlowJsErrorMessageInformation}) {
+function ErrorMessageExtra({
+  info,
+}: {
+  info: FlowJsErrorMessageInformation,
+}): React.Node {
   return (
     <ul>
       <li>

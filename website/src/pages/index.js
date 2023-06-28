@@ -15,6 +15,10 @@ import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import styles from './styles.module.css';
 
+// This import serves no runtime purposes, but we import it to force webpack to run babel on it,
+// so we can test whether babel can handle newer syntax.
+import '../js/parser-playground';
+
 export default function Home(): React.MixedElement {
   const context = useDocusaurusContext();
   const {siteConfig} = context;

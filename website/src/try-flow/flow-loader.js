@@ -26,7 +26,7 @@ declare type $JSXIntrinsics = {
 `.slice(1);
 
 function get(url: string) {
-  return new Promise(function(resolve, reject) {
+  return new Promise<[string, string]>(function(resolve, reject) {
     var req = new XMLHttpRequest();
     req.open('GET', url);
     req.onload = function() {
@@ -69,7 +69,7 @@ export function load(version: string): Promise<FlowJs> {
     `/flow/${version}/flowlib/react.js`,
     `/flow/${version}/flowlib/intl.js`,
   ];
-  const flowLoader = new Promise(function(resolve) {
+  const flowLoader = new Promise<[string, string]>(function(resolve) {
     requirejs([`/flow/${version}/flow.js`], resolve);
   });
   return Promise.all([flowLoader, ...libs.map(get)])

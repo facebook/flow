@@ -99,7 +99,7 @@ export default function TryFlow({
   const [flowVersion, setFlowVersion] = useState(
     initialState.version || defaultFlowVersion,
   );
-  const [errors, setErrors] = useState([]);
+  const [errors, setErrors] = useState<$ReadOnlyArray<FlowJsError>>([]);
   const [internalError, setInternalError] = useState('');
   const [astJSON, setASTJSON] = useState('{}');
   const [loading, setLoading] = useState(true);

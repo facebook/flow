@@ -2822,6 +2822,13 @@ babel-plugin-polyfill-regenerator@^0.4.0:
   dependencies:
     "@babel/helper-define-polyfill-provider" "^0.3.2"
 
+babel-plugin-syntax-hermes-parser@^0.13.1:
+  version "0.13.1"
+  resolved "https://registry.yarnpkg.com/babel-plugin-syntax-hermes-parser/-/babel-plugin-syntax-hermes-parser-0.13.1.tgz#d249f16a32d8a834b3daf6658838f953abdc9b0d"
+  integrity sha512-WzP3aeHBlVN5GaaKwKSwO369OpAO6uLE1ewkg9dc3PC+x3u0lqCohiyWohXgZppLrxMsNqEqTanxm0U9chi8hw==
+  dependencies:
+    hermes-parser "0.13.1"
+
 bail@^1.0.0:
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/bail/-/bail-1.0.5.tgz#b6fa133404a392cbc1f8c4bf63f5953351e7a776"
@@ -4770,6 +4777,18 @@ he@^1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/he/-/he-1.2.0.tgz#84ae65fa7eafb165fddb61566ae14baf05664f0f"
   integrity sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw==
+
+hermes-estree@0.13.1:
+  version "0.13.1"
+  resolved "https://registry.yarnpkg.com/hermes-estree/-/hermes-estree-0.13.1.tgz#3eeb518fd887e8cff441714824f7d19f260d4e5b"
+  integrity sha512-p2g4ZeAlPXG+toc+42v0oI4wA8aAiV5LGYlqmfnccC7GxhyxmLwpucxzvePkRoqqORLlf/FeLRQiOLM/B9Il5g==
+
+hermes-parser@0.13.1:
+  version "0.13.1"
+  resolved "https://registry.yarnpkg.com/hermes-parser/-/hermes-parser-0.13.1.tgz#0cdf277cfdcc30dec9a5a5b8b914a421fc643cf2"
+  integrity sha512-zOnYiplirFbwegKeK0P7JkTEHGhHmfHIIk3KbOaier4DYh4tO7nfqUPSsb5XHhW9uGLOwBaKCDmlbtCmN0gVxg==
+  dependencies:
+    hermes-estree "0.13.1"
 
 history@^4.9.0:
   version "4.10.1"

@@ -7,7 +7,8 @@
  * @format
  */
 
-import React, {useState, useEffect, useRef, type MixedElement} from 'react';
+import * as React from 'react';
+import {useState, useEffect, useRef, type MixedElement} from 'react';
 import clsx from 'clsx';
 import Highlight, {defaultProps} from 'prism-react-renderer';
 import copy from 'copy-text-to-clipboard';
@@ -62,7 +63,7 @@ export default function FlowCheckCodeBlock({
     setMounted(true);
   }, []);
 
-  const button = useRef(null);
+  const button = useRef<React.ElementRef<'button'> | null>(null);
   const prismTheme = usePrismTheme();
   // In case interleaved Markdown (e.g. when using CodeBlock as standalone component).
 

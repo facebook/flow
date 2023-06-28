@@ -9,6 +9,8 @@
 
 const getFlowErrors = require('./initialized-flow-provider');
 
+/*:: type UnwrapPromise<T> = T extends Promise<infer V> ? V : T */
+
 const transformNode = async (node /*: any */) => [
   {
     type: 'code',
@@ -30,7 +32,9 @@ const nodeForImport = {
 module.exports = () /*: any */ => {
   let transformed = false;
   let alreadyImported = false;
-  const transformer = async (node /*: any */) => {
+  const transformer = async (
+    node /*: any */,
+  ) /*: Promise<UnwrapPromise<ReturnType<typeof transformNode>> | null> */ => {
     if (
       node.type === 'import' &&
       node.value.includes('@site/src/components/FlowCheckCodeBlock')

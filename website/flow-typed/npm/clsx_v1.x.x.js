@@ -2,9 +2,9 @@
 // flow-typed version: c6154227d1/clsx_v1.x.x/flow_>=v0.104.x
 
 declare module 'clsx' {
-  declare type Classes = 
+  declare type Classes =
     | Array<Classes>
-    | { [className: string]: *, ... }
+    | { [className: string]: any, ... }
     | string
     | number
     | boolean

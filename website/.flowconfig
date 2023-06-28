@@ -14,3 +14,4 @@ libs
 [options]
 all=true
 exact_by_default=true
+conditional_type=true
