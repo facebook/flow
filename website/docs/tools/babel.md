@@ -9,9 +9,6 @@ takes just a few steps to set them up together.
 If you don't have Babel setup already, you can do that by following
 [this guide](http://babeljs.io/docs/setup/).
 
-We strongly recommend you to use `babel-plugin-syntax-hermes-parser`.
-The plugin will use `hermes-parser` to parse your code, a
-
 Once you have Babel setup, install `@babel/preset-flow` and `babel-plugin-syntax-hermes-parser` with either
 [Yarn](https://yarnpkg.com/) or [npm](https://www.npmjs.com/).
 
