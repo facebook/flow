@@ -1413,7 +1413,9 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
         with
         (* If the subtyping can succeed even when the GenericTs are still abstract, then it must
            succeed under every possible instantiation, so we can take the true branch. *)
-        | Some subst_map -> Type_subst.subst cx ~use_op:unknown_use subst_map true_t
+        | Some subst_map ->
+          Debug_js.Verbose.print_if_verbose cx ["Conditional type evaluates to the true branch."];
+          Type_subst.subst cx ~use_op:unknown_use subst_map true_t
         | None ->
           let free_vars =
             Subst_name.Set.union
@@ -1428,9 +1430,10 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
                  extends_t
               )
           in
-          if Subst_name.Set.is_empty free_vars then
+          if Subst_name.Set.is_empty free_vars then (
+            Debug_js.Verbose.print_if_verbose cx ["Conditional type evaluates to the false branch."];
             false_t
-          else
+          ) else
             let any_subst_map =
               Subst_name.Set.fold
                 (fun name acc -> Subst_name.Map.add name (AnyT.placeholder reason) acc)
@@ -1457,8 +1460,14 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
               (* When all the GenericT and infer types are replaced with any, and subtyping
                  check still cannot succeed, then we can safely conclude that, in every possible
                  instantiation, we will always take the false branch *)
+              Debug_js.Verbose.print_if_verbose
+                cx
+                [
+                  "Conditional type evaluates to the false branch because we will always enter the false branch.";
+                ];
               false_t
             | _ ->
+              Debug_js.Verbose.print_if_verbose cx ["Conditional type is kept abstract."];
               (* A conditional type with GenericTs in check type and extends type is tricky.
                  We cannot conservatively decide which branch we will take. To maintain
                  soundness in this general case, we make the type abstract. *)
