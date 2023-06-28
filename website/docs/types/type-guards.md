@@ -1,5 +1,5 @@
 ---
-title: User Defined Type Guards
+title: Type Guards
 slug: /types/type-guards
 ---
 
@@ -210,3 +210,13 @@ function isNumberError2(x: mixed): x is number {
   return typeof x === "number";
 }
 ```
+
+
+## Adoption {#toc-adoption}
+
+To use type guards, you need to upgrade your infrastructure so that it supports the syntax:
+
+- `flow` and `flow-parser`: 0.209.1. You need to explicitly enable it in your .flowconfig, under the `[options]` heading, add `type_guards=true`.
+- `prettier`: 3 (still in alpha)
+- `babel` with `babel-plugin-syntax-hermes-parser`. See [our Babel guide](../../tools/babel/) for setup instructions.
+- `eslint` with `hermes-eslint`. See [our ESLint guide](../../tools/eslint/) for setup instructions.

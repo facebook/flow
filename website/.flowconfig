@@ -15,3 +15,5 @@ libs
 all=true
 exact_by_default=true
 conditional_type=true
+mapped_type=true
+type_guards=true

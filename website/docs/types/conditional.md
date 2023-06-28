@@ -136,3 +136,12 @@ type Other = NonDistributiveTypeOf<string | null>; // evaluates to 'other'
 ```
 
 This trick works because Flow will only enable the distributive behavior of conditional type if the check type is a generic type. The example above does not choose any true branch of the conditional type, because `[string | null]` is not a subtype of `[null]`, `[void]`, or `[string]`, since tuples are [invariantly](../../lang/variance/#toc-invariance) typed.
+
+## Adoption {#toc-adoption}
+
+To use conditional types, you need to upgrade your infrastructure so that it supports the syntax:
+
+- `flow` and `flow-parser`: 0.208.0. You need to explicitly enable it in your .flowconfig, under the `[options]` heading, add `conditional_type=true`.
+- `prettier`: 3 (still in alpha)
+- `babel` with `babel-plugin-syntax-hermes-parser`. See [our Babel guide](../../tools/babel/) for setup instructions.
+- `eslint` with `hermes-eslint`. See [our ESLint guide](../../tools/eslint/) for setup instructions.
