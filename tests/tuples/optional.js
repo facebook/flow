@@ -87,3 +87,21 @@ type InvalidReqAfterOptMultiple = [a: number, b?: string, c: string, d: boolean]
   const x: [a?: 0] = [];
   const y: [a?: 1] = [1];
 }
+
+// Array rest
+{
+  declare const x: [a: 1, b: 2, c?: 3, d?: 4];
+
+  const [, ...rest0] = x;
+  (rest0: [b: 2, c?: 3, d?: 4]); // OK
+  (rest0: [a: 1, b: 2, c?: 3, d?: 4]); // ERROR
+  (rest0: [a: 1, b?: 3, c?: 4]); // ERROR
+
+  const [,,, ...rest1] = x;
+  (rest1: [d?: 4]); // OK
+  (rest1: [d?: empty]); // ERROR
+
+  const [,,,, ...rest2] = x;
+  (rest2: []); // OK
+  (rest2: [1]); // ERROR
+}
