@@ -1315,8 +1315,12 @@ let dump_error_message =
         (dump_reason cx reason1)
         (dump_reason cx reason2)
         (string_of_use_op use_op)
-    | ETupleRequiredAfterOptional reason ->
-      spf "ETupleRequiredAfterOptional (%s)" (dump_reason cx reason)
+    | ETupleRequiredAfterOptional { reason_tuple; reason_required; reason_optional } ->
+      spf
+        "ETupleRequiredAfterOptional {reason_tuple = %s; reason_required = %s; reason_optional = %s}"
+        (dump_reason cx reason_tuple)
+        (dump_reason cx reason_required)
+        (dump_reason cx reason_optional)
     | ETupleOutOfBounds { use_op; reason; reason_op; length; index } ->
       spf
         "ETupleOutOfBounds { use_op = %s; reason = %s; reason_op = %s; length = %d; index = %s }"

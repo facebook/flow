@@ -211,7 +211,11 @@ and 'loc t' =
       polarity_upper: Polarity.t;
       use_op: 'loc Type.virtual_use_op;
     }
-  | ETupleRequiredAfterOptional of 'loc virtual_reason
+  | ETupleRequiredAfterOptional of {
+      reason_tuple: 'loc virtual_reason;
+      reason_required: 'loc virtual_reason;
+      reason_optional: 'loc virtual_reason;
+    }
   | EROArrayWrite of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
   | EUnionSpeculationFailed of {
       use_op: 'loc virtual_use_op;
@@ -893,7 +897,13 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         polarity_upper;
         use_op = map_use_op use_op;
       }
-  | ETupleRequiredAfterOptional reason -> ETupleRequiredAfterOptional (map_reason reason)
+  | ETupleRequiredAfterOptional { reason_tuple; reason_required; reason_optional } ->
+    ETupleRequiredAfterOptional
+      {
+        reason_tuple = map_reason reason_tuple;
+        reason_required = map_reason reason_required;
+        reason_optional = map_reason reason_optional;
+      }
   | EROArrayWrite ((r1, r2), op) -> EROArrayWrite ((map_reason r1, map_reason r2), map_use_op op)
   | EUnionSpeculationFailed { use_op; reason; reason_op; branches } ->
     EUnionSpeculationFailed
@@ -1614,7 +1624,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EBigIntRShift3 reason
   | EBigIntNumCoerce reason
   | EInvalidBinaryArith { reason_out = reason; _ }
-  | ETupleRequiredAfterOptional reason
+  | ETupleRequiredAfterOptional { reason_tuple = reason; _ }
   | EPredicateInvalidParameter { pred_reason = reason; _ }
   | ETypeGuardParamUnbound reason
   | ETypeGuardFunctionInvalidWrites { reason; _ }
@@ -2464,12 +2474,16 @@ let friendly_message_of_msg loc_of_aloc msg =
           ];
         use_op;
       }
-  | ETupleRequiredAfterOptional reason ->
+  | ETupleRequiredAfterOptional { reason_tuple; reason_required; reason_optional } ->
     let features =
       [
         text "Invalid ";
-        ref reason;
-        text ", cannot have required tuple members after an optional one.";
+        ref reason_tuple;
+        text ", required ";
+        ref reason_required;
+        text " must be after optional ";
+        ref reason_optional;
+        text ".";
       ]
     in
     Normal { features }

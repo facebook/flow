@@ -446,29 +446,37 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       ((loc, t), ReadOnly (Tast_utils.error_mapper#readonly_type ro))
     | (loc, Tuple ({ Tuple.elements; comments } as tup)) as t_ast ->
       let reason = mk_annot_reason RTupleType loc in
-      let (ts_rev, els_rev, els_ast_rev, num_req, num_opt, req_after_opt, has_tuple_enhancements) =
+      let (ts_rev, els_rev, els_ast_rev, num_req, num_opt, req_after_opt, has_tuple_enhancements, _)
+          =
         Base.List.fold
           elements
-          ~init:([], [], [], 0, 0, None, false)
+          ~init:([], [], [], 0, 0, None, false, None)
           ~f:(fun
-               (ts, els, els_ast, num_req, num_opt, req_after_opt, has_tuple_enhancements)
+               ( ts,
+                 els,
+                 els_ast,
+                 num_req,
+                 num_opt,
+                 req_after_opt,
+                 has_tuple_enhancements,
+                 prev_element
+               )
                element
              ->
             let (t, el, el_ast, elem_has_tuple_enhancements) =
               convert_tuple_element cx tparams_map infer_tparams_map element
             in
             let (num_req, num_opt, req_after_opt) =
-              let (TupleElement { optional; name; _ }) = el in
+              let (TupleElement { optional; reason = reason_element; _ }) = el in
               if optional then
                 (num_req, num_opt + 1, req_after_opt)
               else
                 ( num_req + 1,
                   num_opt,
-                  if num_opt > 0 && Option.is_none req_after_opt then
-                    let (loc, _) = element in
-                    Some (mk_annot_reason (RTupleElement { name }) loc)
-                  else
-                    req_after_opt
+                  match (prev_element, req_after_opt) with
+                  | (Some (TupleElement { optional = true; reason = reason_optional; _ }), None) ->
+                    Some (reason_element, reason_optional)
+                  | _ -> req_after_opt
                 )
             in
             let has_tuple_enhancements = has_tuple_enhancements || elem_has_tuple_enhancements in
@@ -478,7 +486,8 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               num_req,
               num_opt,
               req_after_opt,
-              has_tuple_enhancements
+              has_tuple_enhancements,
+              Some el
             )
         )
       in
@@ -488,7 +497,14 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         ((loc, t), ast)
       else (
         match req_after_opt with
-        | Some reason -> error_type cx loc (Error_message.ETupleRequiredAfterOptional reason) t_ast
+        | Some (reason_required, reason_optional) ->
+          error_type
+            cx
+            loc
+            (Error_message.ETupleRequiredAfterOptional
+               { reason_tuple = reason; reason_required; reason_optional }
+            )
+            t_ast
         | None ->
           let (ts, els, els_ast) = (List.rev ts_rev, List.rev els_rev, List.rev els_ast_rev) in
           let element_reason = mk_annot_reason (RTupleElement { name = None }) loc in
