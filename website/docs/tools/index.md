@@ -11,5 +11,4 @@ import DocCardList from '@theme/DocCardList';
   {type: 'link', label: 'Babel', href: '/en/docs/tools/babel'},
   {type: 'link', label: 'ESLint', href: '/en/docs/tools/eslint'},
   {type: 'link', label: 'flow-remove-types', href: '/en/docs/tools/flow-remove-types'},
-  {type: 'link', label: 'Create React App', href: '/en/docs/tools/create-react-app'},
 ]} />
