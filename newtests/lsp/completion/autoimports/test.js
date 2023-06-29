@@ -1166,6 +1166,768 @@ module.exports = (suite(
       ),
     ]),
 
+    test('textDocument/completion on types', [
+      addFiles('foo.js', 'types.js', 'lib/builtins.js'),
+      addCode(`type Test = T`),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/test.js'},
+        position: {line: 2, character: 13},
+        context: {triggerKind: 1},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/completion',
+            result: {
+              isIncomplete: false,
+              items: [
+                {
+                  label: 'T',
+                  kind: 6,
+                  detail: 'Import type from ./types',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 12,
+                      },
+                      end: {
+                        line: 2,
+                        character: 13,
+                      },
+                    },
+                    newText: 'T',
+                  },
+                  additionalTextEdits: [
+                    {
+                      range: {
+                        start: {
+                          line: 2,
+                          character: 0,
+                        },
+                        end: {
+                          line: 2,
+                          character: 0,
+                        },
+                      },
+                      newText: 'import type { T } from "./types";\n\n',
+                    },
+                  ],
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'autoimport',
+                      {
+                        token: 'TAUTO332',
+                        index: 0,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: 'T',
+                        ac_type: 'Actype',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'Test',
+                  kind: 6,
+                  detail: 'type Test = any',
+                  sortText: '00000000000000000001',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 12,
+                      },
+                      end: {
+                        line: 2,
+                        character: 13,
+                      },
+                    },
+                    newText: 'Test',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'unqualified type: local type identifier',
+                      {
+                        token: 'TAUTO332',
+                        index: 1,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: 'Test',
+                        ac_type: 'Actype',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'Toodle',
+                  kind: 6,
+                  detail: 'Import type from ./types',
+                  sortText: '00000000000000000002',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 12,
+                      },
+                      end: {
+                        line: 2,
+                        character: 13,
+                      },
+                    },
+                    newText: 'Toodle',
+                  },
+                  additionalTextEdits: [
+                    {
+                      range: {
+                        start: {
+                          line: 2,
+                          character: 0,
+                        },
+                        end: {
+                          line: 2,
+                          character: 0,
+                        },
+                      },
+                      newText: 'import type { Toodle } from "./types";\n\n',
+                    },
+                  ],
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'autoimport',
+                      {
+                        token: 'TAUTO332',
+                        index: 2,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: 'Toodle',
+                        ac_type: 'Actype',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'TaggedTemplateLiteralArray',
+                  kind: 6,
+                  detail: '(global)',
+                  sortText: '00000000000000000003',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 12,
+                      },
+                      end: {
+                        line: 2,
+                        character: 13,
+                      },
+                    },
+                    newText: 'TaggedTemplateLiteralArray',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'global',
+                      {
+                        token: 'TAUTO332',
+                        index: 3,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: 'TaggedTemplateLiteralArray',
+                        ac_type: 'Actype',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'true',
+                  kind: 6,
+                  detail: 'true',
+                  sortText: '00000000000000000004',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 12,
+                      },
+                      end: {
+                        line: 2,
+                        character: 13,
+                      },
+                    },
+                    newText: 'true',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'TAUTO332',
+                        index: 4,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: 'true',
+                        ac_type: 'Actype',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$TupleMap',
+                  kind: 3,
+                  detail: '$TupleMap',
+                  sortText: '00000000000000000005',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 12,
+                      },
+                      end: {
+                        line: 2,
+                        character: 13,
+                      },
+                    },
+                    newText: '$TupleMap',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'TAUTO332',
+                        index: 5,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: '$TupleMap',
+                        ac_type: 'Actype',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$ElementType',
+                  kind: 3,
+                  detail: '$ElementType',
+                  sortText: '00000000000000000006',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 12,
+                      },
+                      end: {
+                        line: 2,
+                        character: 13,
+                      },
+                    },
+                    newText: '$ElementType',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'TAUTO332',
+                        index: 6,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: '$ElementType',
+                        ac_type: 'Actype',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$NonMaybeType',
+                  kind: 3,
+                  detail: '$NonMaybeType',
+                  sortText: '00000000000000000007',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 12,
+                      },
+                      end: {
+                        line: 2,
+                        character: 13,
+                      },
+                    },
+                    newText: '$NonMaybeType',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'TAUTO332',
+                        index: 7,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: '$NonMaybeType',
+                        ac_type: 'Actype',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$PropertyType',
+                  kind: 3,
+                  detail: '$PropertyType',
+                  sortText: '00000000000000000008',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 12,
+                      },
+                      end: {
+                        line: 2,
+                        character: 13,
+                      },
+                    },
+                    newText: '$PropertyType',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'TAUTO332',
+                        index: 8,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: '$PropertyType',
+                        ac_type: 'Actype',
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+    ]),
+
+    test('textDocument/completion on types with ranked autoimports', [
+      addFiles('foo.js', 'types.js', 'lib/builtins.js'),
+      addCode(`type Test = T`),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/test.js'},
+        position: {line: 2, character: 13},
+        context: {triggerKind: 1},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/completion',
+            result: {
+              isIncomplete: false,
+              items: [
+                {
+                  label: 'T',
+                  kind: 6,
+                  detail: 'Import type from ./types',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 12,
+                      },
+                      end: {
+                        line: 2,
+                        character: 13,
+                      },
+                    },
+                    newText: 'T',
+                  },
+                  additionalTextEdits: [
+                    {
+                      range: {
+                        start: {
+                          line: 2,
+                          character: 0,
+                        },
+                        end: {
+                          line: 2,
+                          character: 0,
+                        },
+                      },
+                      newText: 'import type { T } from "./types";\n\n',
+                    },
+                  ],
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'autoimport',
+                      {
+                        token: 'TAUTO332',
+                        index: 0,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: 'T',
+                        ac_type: 'Actype',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'Test',
+                  kind: 6,
+                  detail: 'type Test = any',
+                  sortText: '00000000000000000001',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 12,
+                      },
+                      end: {
+                        line: 2,
+                        character: 13,
+                      },
+                    },
+                    newText: 'Test',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'unqualified type: local type identifier',
+                      {
+                        token: 'TAUTO332',
+                        index: 1,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: 'Test',
+                        ac_type: 'Actype',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'TaggedTemplateLiteralArray',
+                  kind: 6,
+                  detail: '(global)',
+                  sortText: '00000000000000000002',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 12,
+                      },
+                      end: {
+                        line: 2,
+                        character: 13,
+                      },
+                    },
+                    newText: 'TaggedTemplateLiteralArray',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'global',
+                      {
+                        token: 'TAUTO332',
+                        index: 2,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: 'TaggedTemplateLiteralArray',
+                        ac_type: 'Actype',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'Toodle',
+                  kind: 6,
+                  detail: 'Import type from ./types',
+                  sortText: '00000000000000000003',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 12,
+                      },
+                      end: {
+                        line: 2,
+                        character: 13,
+                      },
+                    },
+                    newText: 'Toodle',
+                  },
+                  additionalTextEdits: [
+                    {
+                      range: {
+                        start: {
+                          line: 2,
+                          character: 0,
+                        },
+                        end: {
+                          line: 2,
+                          character: 0,
+                        },
+                      },
+                      newText: 'import type { Toodle } from "./types";\n\n',
+                    },
+                  ],
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'autoimport',
+                      {
+                        token: 'TAUTO332',
+                        index: 3,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: 'Toodle',
+                        ac_type: 'Actype',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'true',
+                  kind: 6,
+                  detail: 'true',
+                  sortText: '00000000000000000004',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 12,
+                      },
+                      end: {
+                        line: 2,
+                        character: 13,
+                      },
+                    },
+                    newText: 'true',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'TAUTO332',
+                        index: 4,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: 'true',
+                        ac_type: 'Actype',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$TupleMap',
+                  kind: 3,
+                  detail: '$TupleMap',
+                  sortText: '00000000000000000005',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 12,
+                      },
+                      end: {
+                        line: 2,
+                        character: 13,
+                      },
+                    },
+                    newText: '$TupleMap',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'TAUTO332',
+                        index: 5,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: '$TupleMap',
+                        ac_type: 'Actype',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$ElementType',
+                  kind: 3,
+                  detail: '$ElementType',
+                  sortText: '00000000000000000006',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 12,
+                      },
+                      end: {
+                        line: 2,
+                        character: 13,
+                      },
+                    },
+                    newText: '$ElementType',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'TAUTO332',
+                        index: 6,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: '$ElementType',
+                        ac_type: 'Actype',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$NonMaybeType',
+                  kind: 3,
+                  detail: '$NonMaybeType',
+                  sortText: '00000000000000000007',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 12,
+                      },
+                      end: {
+                        line: 2,
+                        character: 13,
+                      },
+                    },
+                    newText: '$NonMaybeType',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'TAUTO332',
+                        index: 7,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: '$NonMaybeType',
+                        ac_type: 'Actype',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '$PropertyType',
+                  kind: 3,
+                  detail: '$PropertyType',
+                  sortText: '00000000000000000008',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 2,
+                        character: 12,
+                      },
+                      end: {
+                        line: 2,
+                        character: 13,
+                      },
+                    },
+                    newText: '$PropertyType',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'TAUTO332',
+                        index: 8,
+                        session_requests: 1,
+                        typed_length: 1,
+                        completion: '$PropertyType',
+                        ac_type: 'Actype',
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+    ]).flowConfig('_flowconfig_ranked'),
+
     test('textDocument/completion should exclude reserved words', [
       addFiles('reserved.js'),
       addCode(`null`),
