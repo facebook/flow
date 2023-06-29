@@ -198,7 +198,7 @@ module.exports = {
         docs: {
           routeBasePath: 'en/docs',
           sidebarPath: require.resolve('./sidebars.js'),
-          editUrl: 'https://github.com/facebook/flow/edit/main/new_website/',
+          editUrl: 'https://github.com/facebook/flow/edit/main/website/',
           remarkPlugins: [
             [require('@docusaurus/remark-plugin-npm2yarn'), {sync: true}],
             require('./src/js/flow-check-remark-plugin'),
