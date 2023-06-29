@@ -118,14 +118,14 @@ class mapper target =
       super#identifier (loc, id)
   end
 
-let completion_item_of_keyword loc keyword =
+let completion_item_of_keyword ~edit_locs:(insert, replace) keyword =
   {
     ServerProt.Response.Completion.kind = Some Lsp.Completion.Keyword;
     name = keyword;
     labelDetail = None;
     description = None;
     itemDetail = None;
-    text_edit = Some { ServerProt.Response.newText = keyword; insert = loc; replace = loc };
+    text_edit = Some { ServerProt.Response.newText = keyword; insert; replace };
     additional_text_edits = [];
     sort_text = Some (Printf.sprintf "%020u" 0);
     preselect = false;
@@ -135,7 +135,7 @@ let completion_item_of_keyword loc keyword =
     insert_text_format = Lsp.Completion.PlainText;
   }
 
-let keywords_of_context loc context =
+let keywords_of_context ~edit_locs context =
   let keywords =
     match context with
     | Expression :: ExpressionStatement :: _
@@ -147,12 +147,12 @@ let keywords_of_context loc context =
     | Expression :: _ -> expression_keywords
     | _ -> []
   in
-  Base.List.map ~f:(completion_item_of_keyword loc) keywords
+  Base.List.map ~f:(completion_item_of_keyword ~edit_locs) keywords
 
-let keywords_at_loc ast loc =
+let keywords_at_loc ~edit_locs ast loc =
   let mapper = new mapper loc in
   try
     ignore (mapper#program ast);
     []
   with
-  | Found context -> keywords_of_context loc context
+  | Found context -> keywords_of_context ~edit_locs context

@@ -3021,7 +3021,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"async"
   },
   "command":{
@@ -3047,7 +3047,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"await"
   },
   "command":{
@@ -3158,7 +3158,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"break"
   },
   "command":{
@@ -3184,7 +3184,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"case"
   },
   "command":{
@@ -3210,7 +3210,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"catch"
   },
   "command":{
@@ -3236,7 +3236,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"class"
   },
   "command":{
@@ -3262,7 +3262,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"const"
   },
   "command":{
@@ -3288,7 +3288,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"continue"
   },
   "command":{
@@ -3314,7 +3314,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"debugger"
   },
   "command":{
@@ -3340,7 +3340,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"declare"
   },
   "command":{
@@ -3366,7 +3366,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"default"
   },
   "command":{
@@ -3420,7 +3420,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"delete"
   },
   "command":{
@@ -3446,7 +3446,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"do"
   },
   "command":{
@@ -3472,7 +3472,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"else"
   },
   "command":{
@@ -3498,7 +3498,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"enum"
   },
   "command":{
@@ -3524,7 +3524,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"export"
   },
   "command":{
@@ -3550,7 +3550,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"extends"
   },
   "command":{
@@ -3576,7 +3576,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"finally"
   },
   "command":{
@@ -3631,7 +3631,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"for"
   },
   "command":{
@@ -3657,7 +3657,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"function"
   },
   "command":{
@@ -3683,7 +3683,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"if"
   },
   "command":{
@@ -3709,7 +3709,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"implements"
   },
   "command":{
@@ -3735,7 +3735,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"import"
   },
   "command":{
@@ -3789,7 +3789,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"interface"
   },
   "command":{
@@ -3815,7 +3815,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"let"
   },
   "command":{
@@ -3841,7 +3841,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"new"
   },
   "command":{
@@ -3895,7 +3895,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"opaque"
   },
   "command":{
@@ -3953,7 +3953,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"return"
   },
   "command":{
@@ -3979,7 +3979,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"static"
   },
   "command":{
@@ -4005,7 +4005,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"switch"
   },
   "command":{
@@ -4059,7 +4059,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"throw"
   },
   "command":{
@@ -4085,7 +4085,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"try"
   },
   "command":{
@@ -4111,7 +4111,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"type"
   },
   "command":{
@@ -4137,7 +4137,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"typeof"
   },
   "command":{
@@ -4163,7 +4163,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"var"
   },
   "command":{
@@ -4189,7 +4189,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"void"
   },
   "command":{
@@ -4215,7 +4215,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"while"
   },
   "command":{
@@ -4271,7 +4271,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":10}},
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
     "newText":"yield"
   },
   "command":{
@@ -7911,7 +7911,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":7,"character":12},"end":{"line":7,"character":19}},
+    "range":{"start":{"line":7,"character":12},"end":{"line":7,"character":12}},
     "newText":"async"
   },
   "command":{
@@ -7937,7 +7937,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":7,"character":12},"end":{"line":7,"character":19}},
+    "range":{"start":{"line":7,"character":12},"end":{"line":7,"character":12}},
     "newText":"await"
   },
   "command":{
@@ -7963,7 +7963,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":7,"character":12},"end":{"line":7,"character":19}},
+    "range":{"start":{"line":7,"character":12},"end":{"line":7,"character":12}},
     "newText":"class"
   },
   "command":{
@@ -7989,7 +7989,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":7,"character":12},"end":{"line":7,"character":19}},
+    "range":{"start":{"line":7,"character":12},"end":{"line":7,"character":12}},
     "newText":"delete"
   },
   "command":{
@@ -8015,7 +8015,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":7,"character":12},"end":{"line":7,"character":19}},
+    "range":{"start":{"line":7,"character":12},"end":{"line":7,"character":12}},
     "newText":"function"
   },
   "command":{
@@ -8041,7 +8041,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":7,"character":12},"end":{"line":7,"character":19}},
+    "range":{"start":{"line":7,"character":12},"end":{"line":7,"character":12}},
     "newText":"import"
   },
   "command":{
@@ -8067,7 +8067,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":7,"character":12},"end":{"line":7,"character":19}},
+    "range":{"start":{"line":7,"character":12},"end":{"line":7,"character":12}},
     "newText":"new"
   },
   "command":{
@@ -8121,7 +8121,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":7,"character":12},"end":{"line":7,"character":19}},
+    "range":{"start":{"line":7,"character":12},"end":{"line":7,"character":12}},
     "newText":"typeof"
   },
   "command":{
@@ -8147,7 +8147,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":7,"character":12},"end":{"line":7,"character":19}},
+    "range":{"start":{"line":7,"character":12},"end":{"line":7,"character":12}},
     "newText":"void"
   },
   "command":{
@@ -8201,7 +8201,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":7,"character":12},"end":{"line":7,"character":19}},
+    "range":{"start":{"line":7,"character":12},"end":{"line":7,"character":12}},
     "newText":"yield"
   },
   "command":{
@@ -8724,7 +8724,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":9}},
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
     "newText":"async"
   },
   "command":{
@@ -8750,7 +8750,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":9}},
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
     "newText":"await"
   },
   "command":{
@@ -8776,7 +8776,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":9}},
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
     "newText":"class"
   },
   "command":{
@@ -8802,7 +8802,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":9}},
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
     "newText":"delete"
   },
   "command":{
@@ -8828,7 +8828,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":9}},
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
     "newText":"function"
   },
   "command":{
@@ -8854,7 +8854,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":9}},
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
     "newText":"import"
   },
   "command":{
@@ -8880,7 +8880,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":9}},
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
     "newText":"new"
   },
   "command":{
@@ -8906,7 +8906,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":9}},
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
     "newText":"typeof"
   },
   "command":{
@@ -8932,7 +8932,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":9}},
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
     "newText":"void"
   },
   "command":{
@@ -8958,7 +8958,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":9}},
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
     "newText":"yield"
   },
   "command":{
@@ -11757,7 +11757,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":22}},
+    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
     "newText":"async"
   },
   "command":{
@@ -11783,7 +11783,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":22}},
+    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
     "newText":"await"
   },
   "command":{
@@ -11809,7 +11809,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":22}},
+    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
     "newText":"class"
   },
   "command":{
@@ -11835,7 +11835,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":22}},
+    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
     "newText":"delete"
   },
   "command":{
@@ -11861,7 +11861,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":22}},
+    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
     "newText":"function"
   },
   "command":{
@@ -11887,7 +11887,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":22}},
+    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
     "newText":"import"
   },
   "command":{
@@ -11913,7 +11913,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":22}},
+    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
     "newText":"new"
   },
   "command":{
@@ -11939,7 +11939,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":22}},
+    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
     "newText":"typeof"
   },
   "command":{
@@ -11965,7 +11965,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":22}},
+    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
     "newText":"void"
   },
   "command":{
@@ -11991,7 +11991,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":22}},
+    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
     "newText":"yield"
   },
   "command":{
@@ -12112,7 +12112,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":10,"character":15},"end":{"line":10,"character":23}},
+    "range":{"start":{"line":10,"character":15},"end":{"line":10,"character":16}},
     "newText":"function"
   },
   "command":{
