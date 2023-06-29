@@ -50,6 +50,7 @@ type 'loc virtual_reason_desc =
   | RArrayLit
   | REmptyArrayLit
   | RArrayType
+  | RArrayElement
   | RROArrayType
   | RTupleType
   | RTupleElement of { name: string option }
