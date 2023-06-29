@@ -52,6 +52,7 @@ val ast_transforms_of_error :
 val code_actions_at_loc :
   options:Options.t ->
   lsp_init_params:Lsp.Initialize.params ->
+  imports_ranked_usage:bool ->
   env:ServerEnv.env ->
   reader:Parsing_heaps.Reader.reader ->
   cx:Context.t ->

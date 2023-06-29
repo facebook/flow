@@ -353,7 +353,14 @@ let preferred_import ~ast ~exports name loc =
   else
     None
 
-let suggest_imports ~options ~reader ~ast ~diagnostics ~exports ~name uri loc =
+let maybe_sort_by_usage ~imports_ranked_usage imports =
+  if imports_ranked_usage then
+    Base.List.stable_sort imports ~compare:(fun (_, a) (_, b) -> Int.compare b a)
+  else
+    imports
+
+let suggest_imports ~options ~reader ~ast ~diagnostics ~imports_ranked_usage ~exports ~name uri loc
+    =
   let open Lsp in
   let files =
     if Autofix_imports.loc_is_type ~ast loc then
@@ -373,36 +380,35 @@ let suggest_imports ~options ~reader ~ast ~diagnostics ~exports ~name uri loc =
           source = Some "Flow" && code = lsp_code && Lsp_helpers.ranges_overlap range error_range
       )
     in
-    let rev_actions =
-      Export_index.ExportMap.fold
-        (fun (source, export_kind) _num acc ->
-          match text_edits_of_import ~options ~reader ~src_dir ~ast export_kind name source with
-          | None -> acc
-          | Some { edits; title; from = _ } ->
-            let command =
-              CodeAction.Action
-                {
-                  CodeAction.title;
-                  kind = CodeActionKind.quickfix;
-                  diagnostics = relevant_diagnostics;
-                  action =
-                    CodeAction.BothEditThenCommand
-                      ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
-                        {
-                          Command.title = "";
-                          command = Command.Command "log";
-                          arguments =
-                            ["textDocument/codeAction"; "import"; title]
-                            |> List.map (fun str -> Hh_json.JSON_String str);
-                        }
-                      );
-                }
-            in
-            command :: acc)
-        files
-        []
-    in
-    Base.List.rev rev_actions
+    files
+    |> Export_index.ExportMap.bindings
+    |> maybe_sort_by_usage ~imports_ranked_usage
+    |> Base.List.fold ~init:[] ~f:(fun acc ((source, export_kind), _num) ->
+           match text_edits_of_import ~options ~reader ~src_dir ~ast export_kind name source with
+           | None -> acc
+           | Some { edits; title; from = _ } ->
+             let command =
+               CodeAction.Action
+                 {
+                   CodeAction.title;
+                   kind = CodeActionKind.quickfix;
+                   diagnostics = relevant_diagnostics;
+                   action =
+                     CodeAction.BothEditThenCommand
+                       ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+                         {
+                           Command.title = "";
+                           command = Command.Command "log";
+                           arguments =
+                             ["textDocument/codeAction"; "import"; title]
+                             |> List.map (fun str -> Hh_json.JSON_String str);
+                         }
+                       );
+                 }
+             in
+             command :: acc
+       )
+    |> Base.List.rev
 
 type ast_transform =
   cx:Context.t ->
@@ -805,7 +811,19 @@ let ast_transforms_of_error ~loc_of_aloc ?loc = function
     | _ -> [])
 
 let code_actions_of_errors
-    ~options ~reader ~cx ~file_sig ~env ~ast ~typed_ast ~diagnostics ~errors ~only uri loc =
+    ~options
+    ~reader
+    ~cx
+    ~file_sig
+    ~env
+    ~ast
+    ~typed_ast
+    ~diagnostics
+    ~errors
+    ~only
+    ~imports_ranked_usage
+    uri
+    loc =
   let include_quick_fixes = include_quick_fixes only in
   let (actions, has_missing_import) =
     Flow_error.ErrorSet.fold
@@ -827,6 +845,7 @@ let code_actions_of_errors
                   ~reader
                   ~ast
                   ~diagnostics
+                  ~imports_ranked_usage
                   ~exports (* TODO consider filtering out internal names *)
                   ~name:(Reason.display_string_of_name name)
                   uri
@@ -963,6 +982,7 @@ let organize_imports_code_action uri =
 let code_actions_at_loc
     ~options
     ~lsp_init_params
+    ~imports_ranked_usage
     ~env
     ~reader
     ~cx
@@ -1026,6 +1046,7 @@ let code_actions_at_loc
       ~diagnostics
       ~errors:(Context.errors cx)
       ~only
+      ~imports_ranked_usage
       uri
       loc
   in
