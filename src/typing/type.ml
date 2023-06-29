@@ -1591,6 +1591,10 @@ module rec TypeTerm : sig
     | ResolveSpreadsToMultiflowPartial of int * funtype * reason * t
     | ResolveSpreadsToCallT of funcalltype * t
 
+  and spread_array_resolve_to =
+    | ResolveToArrayLiteral
+    | ResolveToArray
+
   (* Add some flavor to the TypeT constructor. For now this information is only
    * used by the type normalizer. *)
   and type_t_kind =

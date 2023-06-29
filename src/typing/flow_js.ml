@@ -8760,7 +8760,7 @@ struct
         | Some any_src ->
           (match resolve_to with
           (* Array<any> is a good enough any type for arrays *)
-          | `Array ->
+          | ResolveToArray ->
             DefT
               ( reason_op,
                 bogus_trust (),
@@ -8770,17 +8770,13 @@ struct
            * of an `any` forces us to degrade an array literal to Array<any> then
            * we might get a new error. Since introducing `any`'s shouldn't cause
            * errors, this is bad. Instead, let's degrade array literals to `any` *)
-          | `Literal
-          (* There is no AnyTupleT type, so let's degrade to `any`. *)
-          | `Tuple ->
-            AnyT.why any_src reason_op)
+          | ResolveToArrayLiteral -> AnyT.why any_src reason_op)
         | None ->
           (* Spreads that resolve to tuples are flattened *)
           let elems = flatten_spread_args resolved in
           let tuple_types =
             match resolve_to with
-            | `Literal
-            | `Tuple ->
+            | ResolveToArrayLiteral ->
               elems
               (* If no spreads are left, then this is a tuple too! *)
               |> List.fold_left
@@ -8792,7 +8788,7 @@ struct
                      | (_, ResolvedAnySpreadArg _) -> failwith "Should not be hit")
                    (Some [])
               |> Base.Option.map ~f:List.rev
-            | `Array -> None
+            | ResolveToArray -> None
           in
 
           (* We infer the array's general element type by looking at the type of
@@ -8853,30 +8849,11 @@ struct
           TypeExSet.elements tset |> List.iter (fun t -> flow cx (t, UseT (use_op, elem_t)));
 
           let t =
-            match (tuple_types, resolve_to) with
-            | (_, `Array) ->
+            match resolve_to with
+            | ResolveToArray ->
               DefT (reason_op, bogus_trust (), ArrT (ArrayAT { elem_t; tuple_view = None }))
-            | (_, `Literal) ->
+            | ResolveToArrayLiteral ->
               DefT (reason_op, bogus_trust (), ArrT (ArrayAT { elem_t; tuple_view = tuple_types }))
-            | (Some tuple_types, `Tuple) ->
-              let len = Base.List.length tuple_types in
-              DefT
-                ( reason_op,
-                  bogus_trust (),
-                  ArrT
-                    (TupleAT
-                       {
-                         elem_t;
-                         elements =
-                           Base.List.map
-                             ~f:(fun t -> mk_tuple_element (reason_of_t t) t)
-                             tuple_types;
-                         arity = (len, len);
-                       }
-                    )
-                )
-            | (None, `Tuple) ->
-              DefT (reason_op, bogus_trust (), ArrT (ArrayAT { elem_t; tuple_view = None }))
           in
           Base.Option.value_map
             ~f:(fun id ->
@@ -9076,9 +9053,17 @@ struct
     fun cx ?trace ~use_op ~reason_op resolved resolve_to ->
       match resolve_to with
       | ResolveSpreadsToArrayLiteral (_, elem_t, tout) ->
-        finish_array cx ~use_op ?trace ~reason_op ~resolve_to:`Literal resolved elem_t tout
+        finish_array
+          cx
+          ~use_op
+          ?trace
+          ~reason_op
+          ~resolve_to:ResolveToArrayLiteral
+          resolved
+          elem_t
+          tout
       | ResolveSpreadsToArray (elem_t, tout) ->
-        finish_array cx ~use_op ?trace ~reason_op ~resolve_to:`Array resolved elem_t tout
+        finish_array cx ~use_op ?trace ~reason_op ~resolve_to:ResolveToArray resolved elem_t tout
       | ResolveSpreadsToMultiflowPartial (_, ft, call_reason, tout) ->
         finish_multiflow_partial cx ?trace ~use_op ~reason_op ft call_reason resolved tout
       | ResolveSpreadsToMultiflowCallFull (_, ft) ->
