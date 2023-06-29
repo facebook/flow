@@ -11,6 +11,9 @@ type options = {
   num_threads: int;
 
   max_results: int;
+
+  (** Whether to use the weights of each item *)
+  weighted: bool;
 }
 
 type match_result = {
@@ -33,6 +36,7 @@ let default_options = {
   first_match_can_be_weak = true;
   num_threads = 1;
   max_results = max_int;
+  weighted = false;
 }
 
 let search ?(options = default_options) query t : match_result list =

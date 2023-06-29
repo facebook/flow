@@ -80,6 +80,7 @@ void thread_worker(
   bool use_last_match,
   std::atomic<float>* min_score,
   size_t max_results,
+  bool use_weights,
   std::vector<MatcherBase::CandidateData> &candidates,
   size_t start,
   size_t end,
@@ -101,7 +102,8 @@ void thread_worker(
         min_score->load()
       );
       if (score > 0) {
-        float weighted_score = candidate.weight + powf(score, 4.0) * 1000.0;
+        float weighted_score =
+          use_weights ? candidate.weight + powf(score, 4.0) * 1000.0 : score;
         push_heap(
           result,
           weighted_score,
@@ -137,6 +139,7 @@ std::vector<MatchResult> MatcherBase::findMatches(const std::string &query,
   }
 
   bool first_match_can_be_weak = options.first_match_can_be_weak;
+  bool use_weights = options.weighted;
 
   MatchOptions matchOptions;
   matchOptions.first_match_can_be_weak = first_match_can_be_weak;
@@ -162,7 +165,7 @@ std::vector<MatchResult> MatcherBase::findMatches(const std::string &query,
   std::atomic<float> min_score(0);
   if (num_threads == 0 || candidates_.size() < 10000) {
     thread_worker(new_query, query_case, matchOptions, use_last_match, &min_score,
-                  max_results, candidates_, 0, candidates_.size(), combined);
+                  max_results, use_weights, candidates_, 0, candidates_.size(), combined);
   } else {
     std::vector<ResultHeap> thread_results(num_threads);
     std::vector<std::thread> threads;
@@ -181,6 +184,7 @@ std::vector<MatchResult> MatcherBase::findMatches(const std::string &query,
         use_last_match,
         &min_score,
         max_results,
+        use_weights,
         std::ref(candidates_),
         cur_start,
         cur_start + chunk_size,

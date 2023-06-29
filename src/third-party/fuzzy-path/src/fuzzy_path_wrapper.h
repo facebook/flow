@@ -22,6 +22,7 @@ typedef struct matcher_options {
   bool first_match_can_be_weak;
   size_t num_threads;
   size_t max_results;
+  bool weighted;
 } matcher_options_t;
 
 typedef struct match_result {
