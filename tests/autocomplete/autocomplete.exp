@@ -160,11 +160,11 @@ this2.js:5:6
 Flags: --pretty
 {
   "result":[
+    {"name":"this","type":"this"},
     {"name":"throw","type":""},
     {"name":"try","type":""},
     {"name":"type","type":""},
-    {"name":"typeof","type":""},
-    {"name":"this","type":"this"}
+    {"name":"typeof","type":""}
   ]
 }
 
@@ -1198,7 +1198,7 @@ Flags: --pretty
 
 identifier_type.js:7:4
 Flags: --pretty
-{"result":[{"name":"break","type":""},{"name":"baz","type":"bar"}]}
+{"result":[{"name":"baz","type":"bar"},{"name":"break","type":""}]}
 
 super.js:4:13
 Flags: --pretty
@@ -11473,8 +11473,8 @@ class_members.js:16:18
 Flags: --pretty
 {
   "result":[
-    {"name":"break","type":""},
     {"name":"bar","type":"number"},
+    {"name":"break","type":""},
     {"name":"this.been","type":"() => void"},
     {"name":"this.bye","type":"string"}
   ]
@@ -11484,8 +11484,8 @@ class_members.js:23:10
 Flags: --pretty
 {
   "result":[
-    {"name":"break","type":""},
     {"name":"bar","type":"number"},
+    {"name":"break","type":""},
     {"name":"this.baz","type":"() => void"},
     {"name":"this.boo","type":"string"}
   ]
@@ -11495,8 +11495,8 @@ class_members.js:36:10
 Flags: --pretty
 {
   "result":[
-    {"name":"break","type":""},
     {"name":"bar","type":"number"},
+    {"name":"break","type":""},
     {"name":"this.baz","type":"() => void"},
     {"name":"this.boo","type":"string"}
   ]
