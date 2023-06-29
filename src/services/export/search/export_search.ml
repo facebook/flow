@@ -128,39 +128,46 @@ let score_of_export kind count fuzzy_score =
 (** [take ~n:20 ~index matches] will return up to 20 search results,
     where each match in [matches] might contribute multiple results.
     sets [is_incomplete] if [n] is exceeded. *)
-let take =
-  let rec helper
-      ~weighted
-      ~n
-      ~query
-      acc
-      (seq : ((Export_index.source * Export_index.kind * string) * int * float) Seq.t) =
-    match seq () with
-    | Seq.Nil -> { results = Base.List.rev acc; is_incomplete = false }
-    | Seq.Cons (((source, kind, value), count, fuzzy_score), rest) ->
-      if n <= 0 then
-        { results = Base.List.rev acc; is_incomplete = true }
-      else
-        let score =
-          if weighted then
-            score_of_export kind count fuzzy_score
-          else
-            int_of_float (fuzzy_score *. 1000.0)
-        in
-        (match search_result_of_export ~query value source kind with
-        | Some result -> helper ~weighted ~n:(n - 1) ~query ((result, score) :: acc) rest
-        | None -> helper ~weighted ~n ~query acc rest)
+let take ~weighted ~n ~index ~query fuzzy_matches =
+  let rev_all =
+    Base.List.fold fuzzy_matches ~init:[] ~f:(fun acc { Fuzzy_path.value; score = fuzzy_score } ->
+        Export_index.ExportMap.fold
+          (fun (source, kind) count acc ->
+            match search_result_of_export ~query value source kind with
+            | Some result ->
+              let score =
+                if weighted then
+                  score_of_export kind count fuzzy_score
+                else
+                  int_of_float (fuzzy_score *. 1000.0)
+              in
+              (result, score) :: acc
+            | None -> acc)
+          (Export_index.find value index)
+          acc
+    )
   in
-  fun ~weighted ~n ~index ~query fuzzy_matches ->
-    let seq =
-      fuzzy_matches
-      |> List.to_seq
-      |> Seq.flat_map (fun { Fuzzy_path.value; score } ->
-             Export_index.find_seq value index
-             |> Seq.map (fun ((source, kind), count) -> ((source, kind, value), count, score))
-         )
-    in
-    helper ~weighted ~n ~query [] seq
+  let sorted =
+    (* sorts the highest scores to the front *)
+    Base.List.stable_sort rev_all ~compare:(fun (a, score_a) (b, score_b) ->
+        match Int.compare score_b score_a with
+        | 0 ->
+          (match String.compare a.name b.name with
+          | 0 ->
+            (match Export_index.compare_export (a.source, a.kind) (b.source, b.kind) with
+            | 0 ->
+              (* since rev_all is reversed, [a; b] where a and b have equal
+                 scores should return [b; a]. stable_sort wants to leave them
+                 in the original order. *)
+              1
+            | k -> k)
+          | k -> k)
+        | k -> k
+    )
+  in
+  let results = Base.List.take sorted n in
+  let is_incomplete = Base.List.length sorted > n in
+  { results; is_incomplete }
 
 let search ?(options = default_options) query { index; value_matcher; type_matcher } =
   let (matcher, query_txt) =
