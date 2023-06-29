@@ -18,6 +18,10 @@ let namespace = Export_index.Namespace
 
 let sf name = Export_index.File_key (File_key.SourceFile name)
 
+let global = Export_index.Global
+
+let declare_module name = Export_index.Builtin name
+
 let index =
   let open Export_index in
   empty
@@ -124,23 +128,38 @@ let tests =
       in
       assert_equal ~ctxt ~printer:show_search_results expected results
     );
-    ( "default_before_named_before_namespace" >:: fun ctxt ->
+    ( "sorted" >:: fun ctxt ->
+      let file_a = sf "path/to/a.js" in
+      let file_b = sf "path/to/b.js" in
+      let file_foo = sf "path/to/foo.js" in
+      let builtin_z = declare_module "z" in
+
       let index =
-        Export_index.empty
-        |> Export_index.add "FooBar" (sf "/a/FooBar.js") namespace
-        |> Export_index.add "FooBar" (sf "/a/FooBar.js") default
-        |> Export_index.add "FooBar" (sf "/a/FooBar.js") named
+        let open Export_index in
+        empty
+        |> add "foo" builtin_z Default
+        |> add "foo" file_a Named
+        |> add "foo" file_b Named
+        |> add "foo" file_foo Default
+        |> add "foo" file_foo Namespace
+        |> add "foo" global Named
       in
       let t = init index in
-      let results = search_values ~options:default_options "FooBar" t in
 
+      let results = search_values ~options:default_options "foo" t in
+
+      (* defaults before named before namespace, then
+         globals before builtins before source files *)
       let expected =
         mk_results
           ~is_incomplete:false
           [
-            ("FooBar", sf "/a/FooBar.js", default, 1003);
-            ("FooBar", sf "/a/FooBar.js", named, 1002);
-            ("FooBar", sf "/a/FooBar.js", namespace, 1001);
+            ("foo", builtin_z, default, 1003);
+            ("foo", file_foo, default, 1003);
+            ("foo", global, named, 1002);
+            ("foo", file_a, named, 1002);
+            ("foo", file_b, named, 1002);
+            ("foo", file_foo, namespace, 1001);
           ]
       in
       assert_equal ~ctxt ~printer:show_search_results expected results
