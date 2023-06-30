@@ -2417,7 +2417,7 @@ let autocomplete_get_results
     let result =
       match result with
       | AcResult { result; errors_to_log } ->
-        let keywords = Keywords.keywords_at_loc ast (ALoc.to_loc_exn ac_loc) in
+        let keywords = Keywords.keywords_at_loc ~edit_locs ast (ALoc.to_loc_exn ac_loc) in
         AcResult
           {
             result =

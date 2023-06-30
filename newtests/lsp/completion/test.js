@@ -79,7 +79,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'async',
@@ -114,7 +114,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'await',
@@ -185,7 +185,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'break',
@@ -220,7 +220,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'case',
@@ -255,7 +255,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'catch',
@@ -290,7 +290,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'class',
@@ -325,7 +325,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'const',
@@ -360,7 +360,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'continue',
@@ -395,7 +395,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'debugger',
@@ -430,7 +430,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'declare',
@@ -465,7 +465,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'default',
@@ -500,7 +500,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'delete',
@@ -535,7 +535,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'do',
@@ -570,7 +570,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'else',
@@ -605,7 +605,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'enum',
@@ -640,7 +640,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'export',
@@ -675,7 +675,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'extends',
@@ -710,7 +710,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'finally',
@@ -745,7 +745,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'for',
@@ -821,7 +821,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'function',
@@ -856,7 +856,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'if',
@@ -891,7 +891,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'implements',
@@ -926,7 +926,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'import',
@@ -961,7 +961,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'interface',
@@ -996,7 +996,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'let',
@@ -1031,7 +1031,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'new',
@@ -1066,7 +1066,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'opaque',
@@ -1101,7 +1101,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'return',
@@ -1136,7 +1136,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'static',
@@ -1171,7 +1171,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'switch',
@@ -1242,7 +1242,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'throw',
@@ -1277,7 +1277,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'try',
@@ -1312,7 +1312,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'type',
@@ -1347,7 +1347,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'typeof',
@@ -1382,7 +1382,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'var',
@@ -1417,7 +1417,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'void',
@@ -1452,7 +1452,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'while',
@@ -1523,7 +1523,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 10,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'yield',
@@ -2127,7 +2127,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'async',
@@ -2162,7 +2162,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'await',
@@ -2197,7 +2197,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'break',
@@ -2232,7 +2232,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'case',
@@ -2267,7 +2267,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'catch',
@@ -2302,7 +2302,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'class',
@@ -2337,7 +2337,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'const',
@@ -2372,7 +2372,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'continue',
@@ -2407,7 +2407,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'debugger',
@@ -2442,7 +2442,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'declare',
@@ -2477,7 +2477,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'default',
@@ -2512,7 +2512,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'delete',
@@ -2547,7 +2547,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'do',
@@ -2582,7 +2582,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'else',
@@ -2617,7 +2617,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'enum',
@@ -2652,7 +2652,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'export',
@@ -2687,7 +2687,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'extends',
@@ -2722,7 +2722,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'finally',
@@ -2793,7 +2793,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'for',
@@ -2828,7 +2828,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'function',
@@ -2863,7 +2863,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'if',
@@ -2898,7 +2898,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'implements',
@@ -2933,7 +2933,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'import',
@@ -2968,7 +2968,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'interface',
@@ -3003,7 +3003,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'let',
@@ -3038,7 +3038,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'new',
@@ -3073,7 +3073,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'opaque',
@@ -3108,7 +3108,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'return',
@@ -3143,7 +3143,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'static',
@@ -3178,7 +3178,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'switch',
@@ -3249,7 +3249,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'throw',
@@ -3284,7 +3284,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'try',
@@ -3319,7 +3319,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'type',
@@ -3354,7 +3354,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'typeof',
@@ -3389,7 +3389,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'var',
@@ -3424,7 +3424,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'void',
@@ -3459,7 +3459,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'while',
@@ -3530,7 +3530,7 @@ b.te
                       },
                       end: {
                         line: 13,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'yield',
@@ -3640,7 +3640,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'async',
@@ -3675,7 +3675,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'await',
@@ -3710,7 +3710,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'break',
@@ -3745,7 +3745,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'case',
@@ -3780,7 +3780,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'catch',
@@ -3815,7 +3815,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'class',
@@ -3850,7 +3850,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'const',
@@ -3885,7 +3885,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'continue',
@@ -3920,7 +3920,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'debugger',
@@ -3955,7 +3955,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'declare',
@@ -3990,7 +3990,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'default',
@@ -4025,7 +4025,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'delete',
@@ -4060,7 +4060,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'do',
@@ -4095,7 +4095,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'else',
@@ -4130,7 +4130,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'enum',
@@ -4165,7 +4165,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'export',
@@ -4200,7 +4200,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'extends',
@@ -4235,7 +4235,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'finally',
@@ -4306,7 +4306,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'for',
@@ -4341,7 +4341,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'function',
@@ -4376,7 +4376,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'if',
@@ -4411,7 +4411,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'implements',
@@ -4446,7 +4446,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'import',
@@ -4481,7 +4481,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'interface',
@@ -4516,7 +4516,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'let',
@@ -4551,7 +4551,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'new',
@@ -4586,7 +4586,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'opaque',
@@ -4621,7 +4621,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'return',
@@ -4656,7 +4656,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'static',
@@ -4691,7 +4691,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'switch',
@@ -4762,7 +4762,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'throw',
@@ -4797,7 +4797,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'try',
@@ -4832,7 +4832,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'type',
@@ -4867,7 +4867,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'typeof',
@@ -4902,7 +4902,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'var',
@@ -4937,7 +4937,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'void',
@@ -4972,7 +4972,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'while',
@@ -5043,7 +5043,7 @@ b.te
                       },
                       end: {
                         line: 9,
-                        character: 22,
+                        character: 15,
                       },
                     },
                     newText: 'yield',
@@ -5188,7 +5188,7 @@ b.te
                       },
                       end: {
                         line: 11,
-                        character: 8,
+                        character: 1,
                       },
                     },
                     newText: 'async',
@@ -5223,7 +5223,7 @@ b.te
                       },
                       end: {
                         line: 11,
-                        character: 8,
+                        character: 1,
                       },
                     },
                     newText: 'await',
@@ -5294,7 +5294,7 @@ b.te
                       },
                       end: {
                         line: 11,
-                        character: 8,
+                        character: 1,
                       },
                     },
                     newText: 'class',
@@ -5365,7 +5365,7 @@ b.te
                       },
                       end: {
                         line: 11,
-                        character: 8,
+                        character: 1,
                       },
                     },
                     newText: 'delete',
@@ -5400,7 +5400,7 @@ b.te
                       },
                       end: {
                         line: 11,
-                        character: 8,
+                        character: 1,
                       },
                     },
                     newText: 'function',
@@ -5435,7 +5435,7 @@ b.te
                       },
                       end: {
                         line: 11,
-                        character: 8,
+                        character: 1,
                       },
                     },
                     newText: 'import',
@@ -5470,7 +5470,7 @@ b.te
                       },
                       end: {
                         line: 11,
-                        character: 8,
+                        character: 1,
                       },
                     },
                     newText: 'new',
@@ -5541,7 +5541,7 @@ b.te
                       },
                       end: {
                         line: 11,
-                        character: 8,
+                        character: 1,
                       },
                     },
                     newText: 'typeof',
@@ -5576,7 +5576,7 @@ b.te
                       },
                       end: {
                         line: 11,
-                        character: 8,
+                        character: 1,
                       },
                     },
                     newText: 'void',
@@ -5611,7 +5611,7 @@ b.te
                       },
                       end: {
                         line: 11,
-                        character: 8,
+                        character: 1,
                       },
                     },
                     newText: 'yield',

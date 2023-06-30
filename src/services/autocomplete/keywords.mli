@@ -6,4 +6,7 @@
  *)
 
 val keywords_at_loc :
-  (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> ServerProt.Response.Completion.completion_item list
+  edit_locs:Loc.t * Loc.t ->
+  (Loc.t, Loc.t) Flow_ast.Program.t ->
+  Loc.t ->
+  ServerProt.Response.Completion.completion_item list

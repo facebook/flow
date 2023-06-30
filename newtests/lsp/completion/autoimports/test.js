@@ -45,7 +45,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 2,
-                        character: 8,
+                        character: 1,
                       },
                     },
                     newText: 'function',
@@ -80,7 +80,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 2,
-                        character: 8,
+                        character: 1,
                       },
                     },
                     newText: 'for',
@@ -115,7 +115,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 2,
-                        character: 8,
+                        character: 1,
                       },
                     },
                     newText: 'finally',
@@ -555,7 +555,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 2,
-                        character: 8,
+                        character: 1,
                       },
                     },
                     newText: 'function',
@@ -590,7 +590,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 2,
-                        character: 8,
+                        character: 1,
                       },
                     },
                     newText: 'for',
@@ -625,7 +625,7 @@ module.exports = (suite(
                       },
                       end: {
                         line: 2,
-                        character: 8,
+                        character: 1,
                       },
                     },
                     newText: 'finally',
