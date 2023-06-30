@@ -1297,6 +1297,14 @@ let autocomplete_unqualified_type
            | Ok _ -> (items_rev, errors_to_log))
          (items_rev, errors_to_log)
   in
+  let items_rev =
+    if imports_ranked_usage then
+      (* to maintain the order of the autoimports, we sort the non-imports
+          here, and then don't sort the whole list later. *)
+      filter_by_token_and_sort_rev token items_rev
+    else
+      items_rev
+  in
   let (items_rev, is_incomplete) =
     if imports then
       let locals =
@@ -1325,8 +1333,12 @@ let autocomplete_unqualified_type
     else
       (items_rev, false)
   in
-  (* TODO: this breaks imports_ranked_usage *)
-  let items_rev = filter_by_token_and_sort_rev token items_rev in
+  let items_rev =
+    if imports_ranked_usage then
+      items_rev
+    else
+      filter_by_token_and_sort_rev token items_rev
+  in
   let result = { ServerProt.Response.Completion.items = Base.List.rev items_rev; is_incomplete } in
   { result; errors_to_log }
 
