@@ -164,6 +164,52 @@ let tests =
       in
       assert_equal ~ctxt ~printer:show_search_results expected results
     );
+    ( "weights" >:: fun ctxt ->
+      let index =
+        let open Export_index in
+        empty
+        |> add "bar" (sf "bar.js") named
+        |> add "baz" (sf "baz.js") named
+        |> add "baz" (sf "baz.js") named
+        |> add "biz" (sf "biz.js") named
+        |> add "biz" (sf "biz.js") named
+        |> add "biz" (sf "biz.js") named
+        |> add "biz" (sf "biz2.js") named
+      in
+      let t = init index in
+
+      (* the fuzzy score of "b" is the same for "bar", "baz" and "biz" *)
+      let query = "b" in
+
+      (* with weights: the fuzzy scores tie, so the weights dominate *)
+      let results = search_values ~options:default_options query t in
+      let expected =
+        mk_results
+          ~is_incomplete:false
+          [
+            ("biz", sf "biz.js", named, 16);
+            (* TODO: fix out of order scores *)
+            ("biz", sf "biz2.js", named, 14);
+            ("baz", sf "baz.js", named, 15);
+            ("bar", sf "bar.js", named, 14);
+          ]
+      in
+      assert_equal ~ctxt ~printer:show_search_results expected results;
+
+      (* is_incomplete, with weights *)
+      let options = { default_options with max_results = 2 } in
+      let results = search_values ~options query t in
+      let expected =
+        mk_results
+          ~is_incomplete:true
+          [
+            ("biz", sf "biz.js", named, 16);
+            (* TODO: fix out of order scores. baz has a higher score! *)
+            ("biz", sf "biz2.js", named, 14);
+          ]
+      in
+      assert_equal ~ctxt ~printer:show_search_results expected results
+    );
   ]
 
 let suite = "export_search" >::: tests
