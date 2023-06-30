@@ -1,3 +1,9 @@
+### 0.210.2
+
+Notable bug fixes:
+* Fix a bug where autocompleting a keyword deleted the next 7 characters on the same line
+* "Fix" sorting of autoimports. An experimental option (`autoimports_ranked_by_usage=true`) to sort autoimports by how often they are imported was influencing the sorting even when the option was not enabled. This was likely an improvement, but it was a bug to not obey the option.
+
 ### 0.210.1
 
 Misc:
