@@ -764,10 +764,11 @@ let autocomplete_id
     ~options
     ~reader
     ~cx
-    ~ac_loc
+    ~ac_loc:ac_aloc
     ~file_sig
     ~ast
     ~typed_ast
+    ~include_keywords
     ~include_super
     ~include_this
     ~imports
@@ -778,7 +779,7 @@ let autocomplete_id
     ~token
     ~type_ =
   let open ServerProt.Response.Completion in
-  let ac_loc = loc_of_aloc ~reader ac_loc |> Autocomplete_sigil.remove_from_loc in
+  let ac_loc = loc_of_aloc ~reader ac_aloc |> Autocomplete_sigil.remove_from_loc in
   let exact_by_default = Context.exact_by_default cx in
   let genv = Ty_normalizer_env.mk_genv ~cx ~file:(Context.file cx) ~typed_ast ~file_sig in
   let upper_bound = upper_bound_t_of_t ~cx type_ in
@@ -875,6 +876,13 @@ let autocomplete_id
         insert_text_format = Lsp.Completion.PlainText;
       }
       :: items_rev
+    else
+      items_rev
+  in
+  let items_rev =
+    if include_keywords then
+      let keywords = Keywords.keywords_at_loc ~edit_locs ast (loc_of_aloc ~reader ac_aloc) in
+      Base.List.rev_append keywords items_rev
     else
       items_rev
   in
@@ -1289,7 +1297,6 @@ let autocomplete_unqualified_type
            | Ok _ -> (items_rev, errors_to_log))
          (items_rev, errors_to_log)
   in
-  let items_rev = filter_by_token_and_sort_rev token items_rev in
   let (items_rev, is_incomplete) =
     if imports then
       let locals =
@@ -1318,6 +1325,8 @@ let autocomplete_unqualified_type
     else
       (items_rev, false)
   in
+  (* TODO: this breaks imports_ranked_usage *)
+  let items_rev = filter_by_token_and_sort_rev token items_rev in
   let result = { ServerProt.Response.Completion.items = Base.List.rev items_rev; is_incomplete } in
   { result; errors_to_log }
 
@@ -1526,6 +1535,7 @@ let autocomplete_member
             ~file_sig
             ~ast
             ~typed_ast
+            ~include_keywords:false
             ~include_super
             ~include_this
             ~imports
@@ -1655,6 +1665,7 @@ let autocomplete_jsx_element
       ~file_sig
       ~ast
       ~typed_ast
+      ~include_keywords:false
       ~include_super:false
       ~include_this:false
       ~imports
@@ -2187,6 +2198,7 @@ let autocomplete_get_results
         autocomplete_comment ~reader ~cx ~edit_locs ~trigger_character ~token ~ast ~text ~loc
       | Ac_jsx_text -> AcEmpty "JSXText"
       | Ac_class_key { enclosing_class_t } ->
+        (* TODO: include keywords *)
         autocomplete_class_key
           ~reader
           ~options
@@ -2265,6 +2277,7 @@ let autocomplete_get_results
             ~file_sig
             ~ast
             ~typed_ast
+            ~include_keywords:true
             ~include_super
             ~include_this
             ~imports
@@ -2317,6 +2330,7 @@ let autocomplete_get_results
                   }
                   :: acc)
                 result_member.result.items
+              (* TODO: this breaks imports_ranked_usage! *)
               |> filter_by_token_and_sort_rev token
             in
             AcResult
@@ -2413,23 +2427,5 @@ let autocomplete_get_results
           ~token
           ~kind:`Type
           qtype
-    in
-    let result =
-      match result with
-      | AcResult { result; errors_to_log } ->
-        let keywords = Keywords.keywords_at_loc ~edit_locs ast (ALoc.to_loc_exn ac_loc) in
-        AcResult
-          {
-            result =
-              {
-                result with
-                ServerProt.Response.Completion.items =
-                  filter_by_token_and_sort
-                    token
-                    (keywords @ result.ServerProt.Response.Completion.items);
-              };
-            errors_to_log;
-          }
-      | x -> x
     in
     (Some token, Some ac_loc, string_of_autocomplete_type autocomplete_type, result)
