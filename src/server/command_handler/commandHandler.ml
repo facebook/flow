@@ -963,6 +963,13 @@ let linked_editing_range ~options ~env ~profiling ~params ~client =
         (Ok result, None)
     )
 
+let rank_autoimports_by_usage ~options client =
+  let client_config = Persistent_connection.client_config client in
+  match Persistent_connection.Client_config.rank_autoimports_by_usage client_config with
+  | `Default -> Options.autoimports_ranked_by_usage options
+  | `True -> true
+  | `False -> false
+
 let handle_autocomplete
     ~trigger_character
     ~reader
@@ -1176,6 +1183,7 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
         let uri = TextDocumentIdentifier.(textDocument.uri) in
         let loc = Flow_lsp_conversions.lsp_range_to_flow_loc ~source:file_key range in
         let lsp_init_params = Persistent_connection.lsp_initialize_params client in
+        let imports_ranked_usage = rank_autoimports_by_usage ~options client in
         let scope_info =
           Scope_builder.program ~enable_enums:(Context.enable_enums cx) ~with_types:false ast
         in
@@ -1183,6 +1191,7 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
           Code_action_service.code_actions_at_loc
             ~options
             ~lsp_init_params
+            ~imports_ranked_usage
             ~env
             ~reader
             ~cx
@@ -1842,13 +1851,6 @@ let handle_persistent_code_action_request
     Lwt.return
       (LspProt.LspFromServer (Some (ResponseMessage (id, CodeActionResult code_actions))), metadata)
   | Error reason -> Lwt.return (mk_lsp_error_response ~id:(Some id) ~reason metadata)
-
-let rank_autoimports_by_usage ~options client =
-  let client_config = Persistent_connection.client_config client in
-  match Persistent_connection.Client_config.rank_autoimports_by_usage client_config with
-  | `Default -> Options.autoimports_ranked_by_usage options
-  | `True -> true
-  | `False -> false
 
 let handle_persistent_autocomplete_lsp
     ~reader ~options ~id ~params ~file_input ~metadata ~client ~profiling ~env =
