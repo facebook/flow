@@ -11,6 +11,7 @@ type search_options = Fuzzy_path.options = {
   first_match_can_be_weak: bool;
   num_threads: int;
   max_results: int;
+  weighted: bool;
 }
 
 type search_result = {

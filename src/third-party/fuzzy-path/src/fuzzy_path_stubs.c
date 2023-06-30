@@ -100,6 +100,7 @@ value fuzzy_match(value matcher_val, value query_val, value options) {
     (bool)Bool_val(Field(options, 0)), // first_match_can_be_weak
     Int_val(Field(options, 1)), // num_threads
     Int_val(Field(options, 2)), // max_results
+    (bool)Bool_val(Field(options, 3)), // weighted
   };
 
   match_results_t results = matcher_find(matcher, query, opts);

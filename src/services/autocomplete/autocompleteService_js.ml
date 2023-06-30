@@ -897,10 +897,10 @@ let autocomplete_id
       else
         let locals = set_of_locals ~f:(fun ((name, _docs, _tags), _ty) -> name) identifiers in
         let { Export_search.results = auto_imports; is_incomplete } =
-          Export_search.search_values
-            ~options:default_autoimport_options
-            before
-            env.ServerEnv.exports
+          let options =
+            { default_autoimport_options with Export_search.weighted = imports_ranked_usage }
+          in
+          Export_search.search_values ~options before env.ServerEnv.exports
         in
         let items_rev =
           if imports_ranked_usage then
@@ -1314,7 +1314,10 @@ let autocomplete_unqualified_type
       in
       let { Export_search.results = auto_imports; is_incomplete } =
         let (before, _after) = Autocomplete_sigil.remove token in
-        Export_search.search_types ~options:default_autoimport_options before env.ServerEnv.exports
+        let options =
+          { default_autoimport_options with Export_search.weighted = imports_ranked_usage }
+        in
+        Export_search.search_types ~options before env.ServerEnv.exports
       in
       let items_rev =
         append_completion_items_of_autoimports

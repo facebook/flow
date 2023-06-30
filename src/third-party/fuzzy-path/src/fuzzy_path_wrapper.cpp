@@ -49,6 +49,7 @@ match_results_t matcher_find(matcher_t *m, const char *query, matcher_options_t 
   cpp_options.first_match_can_be_weak = options.first_match_can_be_weak;
   cpp_options.num_threads = options.num_threads;
   cpp_options.max_results = options.max_results;
+  cpp_options.weighted = options.weighted;
 
   std::string q(query);
   std::vector<MatchResult> matches = obj->findMatches(q, cpp_options);

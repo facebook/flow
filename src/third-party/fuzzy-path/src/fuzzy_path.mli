@@ -11,6 +11,8 @@ type options = {
   num_threads: int;
 
   max_results: int;
+
+  weighted: bool;
 }
 
 type match_result = {

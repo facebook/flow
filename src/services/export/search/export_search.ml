@@ -28,6 +28,7 @@ type search_options = Fuzzy_path.options = {
   first_match_can_be_weak: bool;
   num_threads: int;
   max_results: int;
+  weighted: bool;
 }
 
 let default_options : search_options =
@@ -112,34 +113,45 @@ let search_result_of_export ~query name source kind =
   | (Type _, (Default | Named | Namespace)) ->
     None
 
+let score_of_export kind count fuzzy_score =
+  let open Export_index in
+  let type_score =
+    match kind with
+    | Default -> 2
+    | Named
+    | NamedType ->
+      1
+    | Namespace -> 0
+  in
+  count + int_of_float ((fuzzy_score ** 4.0) *. 1000.0) + type_score
+
 (** [take ~n:20 ~index matches] will return up to 20 search results,
     where each match in [matches] might contribute multiple results.
     sets [is_incomplete] if [n] is exceeded. *)
 let take =
   let rec helper
-      ~n ~query acc (seq : ((Export_index.source * Export_index.kind * string) * int * float) Seq.t)
-      =
+      ~weighted
+      ~n
+      ~query
+      acc
+      (seq : ((Export_index.source * Export_index.kind * string) * int * float) Seq.t) =
     match seq () with
     | Seq.Nil -> { results = Base.List.rev acc; is_incomplete = false }
     | Seq.Cons (((source, kind, value), count, fuzzy_score), rest) ->
       if n <= 0 then
         { results = Base.List.rev acc; is_incomplete = true }
       else
-        let open Export_index in
-        let type_score =
-          match kind with
-          | Default -> 2
-          | Named
-          | NamedType ->
-            1
-          | Namespace -> 0
+        let score =
+          if weighted then
+            score_of_export kind count fuzzy_score
+          else
+            int_of_float (fuzzy_score *. 1000.0)
         in
-        let score = count + int_of_float ((fuzzy_score ** 4.0) *. 1000.0) + type_score in
         (match search_result_of_export ~query value source kind with
-        | Some result -> helper ~n:(n - 1) ~query ((result, score) :: acc) rest
-        | None -> helper ~n ~query acc rest)
+        | Some result -> helper ~weighted ~n:(n - 1) ~query ((result, score) :: acc) rest
+        | None -> helper ~weighted ~n ~query acc rest)
   in
-  fun ~n ~index ~query fuzzy_matches ->
+  fun ~weighted ~n ~index ~query fuzzy_matches ->
     let seq =
       fuzzy_matches
       |> List.to_seq
@@ -148,7 +160,7 @@ let take =
              |> Seq.map (fun ((source, kind), count) -> ((source, kind, value), count, score))
          )
     in
-    helper ~n ~query [] seq
+    helper ~weighted ~n ~query [] seq
 
 let search ?(options = default_options) query { index; value_matcher; type_matcher } =
   let (matcher, query_txt) =
@@ -168,7 +180,9 @@ let search ?(options = default_options) query { index; value_matcher; type_match
       options
   in
 
-  Fuzzy_path.search ~options query_txt matcher |> take ~n:max_results ~index ~query
+  let weighted = options.Fuzzy_path.weighted in
+
+  Fuzzy_path.search ~options query_txt matcher |> take ~weighted ~n:max_results ~index ~query
 
 let search_values ?options query t = search ?options (Value query) t
 
