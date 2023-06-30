@@ -204,10 +204,9 @@ let tests =
           ~is_incomplete:false
           [
             ("biz", sf "biz.js", named, 16);
-            (* TODO: fix out of order scores *)
-            ("biz", sf "biz2.js", named, 14);
             ("baz", sf "baz.js", named, 15);
             ("bar", sf "bar.js", named, 14);
+            ("biz", sf "biz2.js", named, 14);
           ]
       in
       assert_equal ~ctxt ~printer:show_search_results expected results;
@@ -228,11 +227,7 @@ let tests =
       let expected =
         mk_results
           ~is_incomplete:true
-          [
-            ("biz", sf "biz.js", named, 16);
-            (* TODO: fix out of order scores. baz has a higher score! *)
-            ("biz", sf "biz2.js", named, 14);
-          ]
+          [("biz", sf "biz.js", named, 16); ("baz", sf "baz.js", named, 15)]
       in
       assert_equal ~ctxt ~printer:show_search_results expected results
     );
