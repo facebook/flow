@@ -156,6 +156,27 @@ An annotation on rest parameter `args` is required because Flow cannot infer its
                ^^^^
 
 
+Error ---------------------------------------------------------------------------------------- typeapp_expansion.js:54:4
+
+Cannot cast `Spreaded` to `Opaque` because property `foo` is missing in object type [1] but exists in object type [2] in
+type argument `T` [3]. [prop-missing]
+
+   typeapp_expansion.js:54:4
+   54|   (Spreaded: Opaque<{}>); // error: {} ~> Foo
+          ^^^^^^^^
+
+References:
+   typeapp_expansion.js:54:21
+   54|   (Spreaded: Opaque<{}>); // error: {} ~> Foo
+                           ^^ [1]
+   typeapp_expansion.js:40:13
+   40|   ): Opaque<{...P2}>;
+                   ^^^^^^^ [2]
+   typeapp_expansion.js:31:31
+   31|   declare opaque type Opaque<-T>;
+                                     ^ [3]
+
+
 Error ------------------------------------------------------------------------ underconstrained_class_constructor.js:5:5
 
 Cannot call `A` because `T` [1] is underconstrained by new `A` [2]. Either add explicit type arguments or cast the
@@ -1006,4 +1027,4 @@ References:
 
 
 
-Found 64 errors
+Found 65 errors

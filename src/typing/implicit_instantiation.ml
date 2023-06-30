@@ -562,7 +562,11 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
                      UpperT (IntersectionT (upper_r, InterRep.append [t'] rep))
                    | (IntersectionT (_, rep), _) ->
                      UpperT (IntersectionT (upper_r, InterRep.append [t] rep))
-                   | (t', t) -> UpperT (IntersectionT (upper_r, InterRep.make t' t [])))
+                   | (t', t) ->
+                     if t' = t then
+                       UpperT t
+                     else
+                       UpperT (IntersectionT (upper_r, InterRep.make t' t [])))
                  | (UpperT _, UpperEmpty) -> acc
                  | (UpperEmpty, UpperEmpty) -> acc)
                UpperEmpty)
