@@ -35,7 +35,7 @@ type TypeOf<T> =
   T extends (...$ReadOnlyArray<empty>)=>mixed ? 'function' : 'object'
 
 type T1 = TypeOf<null>; // evaluates to 'null'
-type T2 = TypeOf<void>; // evaluates to 'void'
+type T2 = TypeOf<void>; // evaluates to 'undefined'
 type T3 = TypeOf<string>; // evaluates to 'string'
 type T4 = TypeOf<number>; // evaluates to 'number'
 type T5 = TypeOf<boolean>; // evaluates to 'boolean'
@@ -52,8 +52,8 @@ declare function wrap<T>(value: T): T extends string ? { type: 'string', value: 
                                   : T extends number ? { type: 'number', value: number }
                                   : { type: 'unsupported' }
 
-const v1 = wrap(3);   // has type { type: 'string', value: string }
-const v2 = wrap('4'); // has type { type: 'number', value: string }
+const v1 = wrap(3);   // has type { type: 'number', value: number }
+const v2 = wrap('4'); // has type { type: 'string', value: string }
 const v3 = wrap({});  // has type { type: 'unsupported' }
 ```
 
@@ -64,8 +64,8 @@ declare function wrap(value: string): { type: 'string', value: string }
 declare function wrap(value: number): { type: 'number', value: number }
 declare function wrap(value: mixed): { type: 'unsupported' }
 
-const v1 = wrap(3);   // has type { type: 'string', value: string }
-const v2 = wrap('4'); // has type { type: 'number', value: string }
+const v1 = wrap(3);   // has type { type: 'number', value: number }
+const v2 = wrap('4'); // has type { type: 'string', value: string }
 const v3 = wrap({});  // has type { type: 'unsupported' }
 ```
 

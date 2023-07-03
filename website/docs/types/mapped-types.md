@@ -33,7 +33,7 @@ this type evaluates to:
 ## Mapped Type Sources {#toc-mapped-type-sources}
 
 We call the type that comes after the `in` keyword the *source* of the mapped type. The source of
-a mapped type must be a subtype of `string | number | smybol`:
+a mapped type must be a subtype of `string | number | symbol`:
 ```js flow-check
 type MappedType = {[key in boolean]: number}; // ERROR!
 ```
@@ -41,7 +41,6 @@ type MappedType = {[key in boolean]: number}; // ERROR!
 Typically, you'll want to create a mapped type based on another object type. In this case, you
 should write your mapped type using an inline `keyof`:
 ```js flow-check
-
 type GetterOf<T> = () => T;
 type Obj = {foo: number, bar: string};
 type MappedObj = {[key in keyof Obj]: GetterOf<Obj[key]>};
@@ -86,7 +85,7 @@ type ObjWithBar = {bar: string};
 
 type DistributedMappedType = MakeAllValuesNumber<
   | ObjWithFoo
-  | ObjWithBar,
+  | ObjWithBar
 >; // = {foo: number} | {bar: number};
 
 // This mapped type uses a type parameter bound by $Keys
