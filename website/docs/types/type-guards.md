@@ -103,7 +103,7 @@ function filterError2(response: Array<Response>): Array<Error> {
   return result;
 }
 ```
-In `filterError1`, filtering produces `Array<Success>` that is not comparible with the expected return type `Array<Error>`.
+In `filterError1`, filtering produces `Array<Success>` that is not compatible with the expected return type `Array<Error>`.
 
 In `filterError2`, the predicate `response.type === 'success'` is used to refine `Response`s to `Success`s, not `Error`s.
 
