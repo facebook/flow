@@ -6513,17 +6513,17 @@ struct
     | ReactElementPropsType
     | ReactElementConfigType
     | ReactElementRefType
-    | ReactConfigType _ ->
-      true
-    | NonMaybeType
-    | ReadOnlyType
+    | ReactConfigType _
     | PartialType
     | RequiredType
-    | SpreadType _
     | RestType _
     | ValuesType
     | IdxUnwrapType
-    | LatentPred _
+    | LatentPred _ ->
+      true
+    | NonMaybeType
+    | SpreadType _
+    | ReadOnlyType
     | CallType _
     | TypeMap _ ->
       false
