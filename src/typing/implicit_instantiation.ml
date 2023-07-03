@@ -1396,11 +1396,17 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
          || Tvar_resolver.has_unresolved_tvars cx true_t
          || Tvar_resolver.has_unresolved_tvars cx false_t
          )
-    then
+    then (
+      Debug_js.Verbose.print_if_verbose
+        cx
+        [
+          "Conditional type refuses to evaluate because ";
+          "we are in implicit instantiation, and we don't have fully resolved inputs";
+        ];
       (* When we are in nested instantiation, we can't meaningfully decide which branch to take,
          so we will give up and produce placeholder instead. *)
       Context.mk_placeholder cx reason
-    else
+    ) else
       let t =
         match
           Context.run_in_implicit_instantiation_mode cx (fun () ->
