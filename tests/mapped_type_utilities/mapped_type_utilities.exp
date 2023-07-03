@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ omit.js:7:7
 
-Cannot get `noFoo.foo` because property `foo` is missing in `Omit` [1]. [prop-missing]
+Cannot get `noFoo.foo` because property `foo` is missing in `Pick` [1]. [prop-missing]
 
    omit.js:7:7
    7| noFoo.foo; // ERROR
@@ -14,7 +14,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- omit.js:12:12
 
-Cannot get `noFooOrBar.foo` because property `foo` is missing in `Omit` [1]. [prop-missing]
+Cannot get `noFooOrBar.foo` because property `foo` is missing in `Pick` [1]. [prop-missing]
 
    omit.js:12:12
    12| noFooOrBar.foo; // ERROR
@@ -28,7 +28,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- omit.js:13:12
 
-Cannot get `noFooOrBar.bar` because property `bar` (did you mean `baz`?) is missing in `Omit` [1]. [prop-missing]
+Cannot get `noFooOrBar.bar` because property `bar` (did you mean `baz`?) is missing in `Pick` [1]. [prop-missing]
 
    omit.js:13:12
    13| noFooOrBar.bar; // ERROR

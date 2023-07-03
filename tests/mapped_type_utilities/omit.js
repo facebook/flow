@@ -13,3 +13,5 @@ noFooOrBar.foo; // ERROR
 noFooOrBar.bar; // ERROR
 noFooOrBar.baz; // OK
 (noFooOrBar:{baz: number}); // OK
+
+const o: Omit<{ foo?: string, bar: number; }, "bar"> = {}; // OK
