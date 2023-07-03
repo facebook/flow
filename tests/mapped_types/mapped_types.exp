@@ -1,3 +1,186 @@
+Error ----------------------------------------------------------------------------------------------- deep_types.js:12:4
+
+Cannot cast `a` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   deep_types.js:12:4
+   12|   (a: empty); // error: number ~> empty
+          ^
+
+References:
+   deep_types.js:10:20
+   10|   declare const a: DeepPartialState<number>;
+                          ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   deep_types.js:12:7
+   12|   (a: empty); // error: number ~> empty
+             ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- deep_types.js:16:4
+
+Cannot cast `b` to object type because undefined [1] is incompatible with object type [2] in property `foo`.
+[incompatible-cast]
+
+   deep_types.js:16:4
+   16|   (b: {+foo: {+bar?: {+baz?: string}}}); // error: foo not optional
+          ^
+
+References:
+   deep_types.js:6:23
+    6|       [K in keyof T]: DeepPartialState<Partial<T>[K]>,
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   deep_types.js:16:14
+   16|   (b: {+foo: {+bar?: {+baz?: string}}}); // error: foo not optional
+                    ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- deep_types.js:17:4
+
+Cannot cast `b` to object type because undefined [1] is incompatible with object type [2] in property `foo.bar`.
+[incompatible-cast]
+
+   deep_types.js:17:4
+   17|   (b: {+foo?: {+bar: {+baz?: string}}}); // error: bar not optional
+          ^
+
+References:
+   deep_types.js:6:23
+    6|       [K in keyof T]: DeepPartialState<Partial<T>[K]>,
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   deep_types.js:17:22
+   17|   (b: {+foo?: {+bar: {+baz?: string}}}); // error: bar not optional
+                            ^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- deep_types.js:18:4
+
+Cannot cast `b` to object type because undefined [1] is incompatible with string [2] in property `foo.bar.baz`.
+[incompatible-cast]
+
+   deep_types.js:18:4
+   18|   (b: {+foo?: {+bar?: {+baz: string}}}); // error: baz not optional
+          ^
+
+References:
+   deep_types.js:6:23
+    6|       [K in keyof T]: DeepPartialState<Partial<T>[K]>,
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   deep_types.js:18:30
+   18|   (b: {+foo?: {+bar?: {+baz: string}}}); // error: baz not optional
+                                    ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- deep_types.js:44:4
+
+Cannot cast `obj` to empty because mapped type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   deep_types.js:44:4
+   44|   (obj: empty); // error
+          ^^^
+
+References:
+   deep_types.js:26:14
+                    v-------------
+   26|   const obj: DeepReadOnly<{
+   27|     arr: Array<{value: string, ...}>,
+   28|     nested: {
+   29|       value: string,
+   30|       doubleNested: {value: string, ...},
+   31|       ...
+   32|     },
+   33|     ...
+   34|   }> = {
+         -^ [1]
+   deep_types.js:44:9
+   44|   (obj: empty); // error
+               ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- deep_types.js:46:11
+
+Cannot call `obj.arr.push` because property `push` is missing in `$ReadOnlyArray` [1]. [prop-missing]
+
+   deep_types.js:46:11
+   46|   obj.arr.push({value: 'updated value'}); // error: Cannot mutate arrays.
+                 ^^^^
+
+References:
+   deep_types.js:23:39
+   23|   T extends {...} ? {+[K in keyof T]: DeepReadOnly<T[K]>} : T;
+                                             ^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- deep_types.js:47:14
+
+Cannot assign `'updated value'` to `obj.arr[0].value` because property `value` is not writable. [cannot-write]
+
+   47|   obj.arr[0].value = 'updated value'; // error: Cannot mutate objects in arrays.
+                    ^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- deep_types.js:48:7
+
+Cannot assign array literal to `obj.arr` because property `arr` is not writable. [cannot-write]
+
+   48|   obj.arr = []; // error: Cannot change top-level values.
+             ^^^
+
+
+Error ----------------------------------------------------------------------------------------------- deep_types.js:49:7
+
+Cannot assign `obj.nested` to `obj.nested` because property `nested` is not writable. [cannot-write]
+
+   49|   obj.nested = obj.nested; // error: Cannot change top-level values.
+             ^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- deep_types.js:50:14
+
+Cannot assign `'updated value'` to `obj.nested.value` because property `value` is not writable. [cannot-write]
+
+   50|   obj.nested.value = 'updated value'; // error: Cannot change nested values.
+                    ^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- deep_types.js:51:14
+
+Cannot assign `obj.nested.doubleNested` to `obj.nested.doubleNested` because property `doubleNested` is not writable.
+[cannot-write]
+
+   51|   obj.nested.doubleNested = obj.nested.doubleNested; // error: Cannot change nested values.
+                    ^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- deep_types.js:52:27
+
+Cannot assign `'updated value'` to `obj.nested.doubleNested.value` because property `value` is not writable.
+[cannot-write]
+
+   52|   obj.nested.doubleNested.value = 'updated value'; // error: Cannot change nested values.
+                                 ^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- deep_types.js:55:7
+
+Cannot call `arr.push` because property `push` is missing in `$ReadOnlyArray` [1]. [prop-missing]
+
+   deep_types.js:55:7
+   55|   arr.push('goodbye'); // error: Cannot mutate arrays.
+             ^^^^
+
+References:
+   deep_types.js:54:14
+   54|   const arr: DeepReadOnly<Array<string>> = ['hello', 'world'];
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- deep_types.js:56:3
+
+Cannot assign `'goodbye'` to `arr[0]` because read-only arrays cannot be written to. [cannot-write]
+
+   56|   arr[0] = 'goodbye'; // error: Cannot mutate values in arrays.
+         ^^^^^^
+
+
 Error -------------------------------------------------------------------------------------------- distributivity.js:8:4
 
 Cannot cast `o` to union type because: [incompatible-cast]
@@ -116,6 +299,402 @@ References:
    distributivity.js:29:12
    29|   (oMaybe: {-foo: number}); // ERROR
                   ^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- idx_replacement.js:30:10
+
+Cannot get `obj1.a.b` because property `b` is missing in null or undefined [1]. [incompatible-use]
+
+   idx_replacement.js:30:10
+   30|   obj1.a.b.c; // error
+                ^
+
+References:
+   idx_replacement.js:29:27
+   29|   declare const obj1: {a: ?{b: {c: number}}};
+                                 ^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:33:4
+
+Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-cast]
+
+   idx_replacement.js:33:4
+   33|   (idx(obj1, obj => obj.a.b.c): number); // error: result must be MaybeT
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   idx_replacement.js:24:4
+   24| ): ?UnboxDeepRequired<T2>;
+          ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   idx_replacement.js:33:33
+   33|   (idx(obj1, obj => obj.a.b.c): number); // error: result must be MaybeT
+                                       ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:34:4
+
+Cannot cast `idx(...)` to nullable string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   idx_replacement.js:34:4
+   34|   (idx(obj1, obj => obj.a.b.c): ?string); // error: number ~> string
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   idx_replacement.js:24:5
+   24| ): ?UnboxDeepRequired<T2>;
+           ^^^^^^^^^^^^^^^^^^^^^ [1]
+   idx_replacement.js:34:34
+   34|   (idx(obj1, obj => obj.a.b.c): ?string); // error: number ~> string
+                                        ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:35:4
+
+Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-cast]
+
+   idx_replacement.js:35:4
+   35|   (idx(obj1, obj => obj["a"].b.c): number); // error: result must be MaybeT
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   idx_replacement.js:24:4
+   24| ): ?UnboxDeepRequired<T2>;
+          ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   idx_replacement.js:35:36
+   35|   (idx(obj1, obj => obj["a"].b.c): number); // error: result must be MaybeT
+                                          ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- idx_replacement.js:36:24
+
+Cannot get `obj.notAProp` because property `notAProp` is missing in mapped type [1]. [prop-missing]
+
+   idx_replacement.js:36:24
+   36|   idx(obj1, obj => obj.notAProp); // error: prop-missing
+                              ^^^^^^^^
+
+References:
+   idx_replacement.js:23:34
+   23|   accessor: (prop: $NonMaybeType<DeepRequired<T1>>) => T2,
+                                        ^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- idx_replacement.js:37:24
+
+Cannot assign `null` to `obj.a` because property `a` is not writable. [cannot-write]
+
+   37|   idx(obj1, obj => obj.a = null); // error: invalid-idx
+                              ^
+
+
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:40:4
+
+Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-cast]
+
+   idx_replacement.js:40:4
+   40|   (idx(obj2, obj => obj.a.b.c): number); // error: result must be MaybeT
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   idx_replacement.js:24:4
+   24| ): ?UnboxDeepRequired<T2>;
+          ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   idx_replacement.js:40:33
+   40|   (idx(obj2, obj => obj.a.b.c): number); // error: result must be MaybeT
+                                       ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:43:4
+
+Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-cast]
+
+   idx_replacement.js:43:4
+   43|   (idx(obj3, obj => obj.a.b.c): number); // error: result must be MaybeT
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   idx_replacement.js:24:4
+   24| ): ?UnboxDeepRequired<T2>;
+          ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   idx_replacement.js:43:33
+   43|   (idx(obj3, obj => obj.a.b.c): number); // error: result must be MaybeT
+                                       ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:50:4
+
+Cannot cast `idx(...)` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+
+   idx_replacement.js:50:4
+   50|   (idx(ab, _ => _.a): empty); // error
+          ^^^^^^^^^^^^^^^^^
+
+References:
+   idx_replacement.js:24:4
+   24| ): ?UnboxDeepRequired<T2>;
+          ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   idx_replacement.js:50:23
+   50|   (idx(ab, _ => _.a): empty); // error
+                             ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:50:4
+
+Cannot cast `idx(...)` to empty because `void` (due to access of non-existent property `a`) [1] is incompatible with
+empty [2]. [incompatible-cast]
+
+   idx_replacement.js:50:4
+   50|   (idx(ab, _ => _.a): empty); // error
+          ^^^^^^^^^^^^^^^^^
+
+References:
+   idx_replacement.js:24:5
+   24| ): ?UnboxDeepRequired<T2>;
+           ^^^^^^^^^^^^^^^^^^^^^ [1]
+   idx_replacement.js:50:23
+   50|   (idx(ab, _ => _.a): empty); // error
+                             ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:50:4
+
+Cannot cast `idx(...)` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   idx_replacement.js:50:4
+   50|   (idx(ab, _ => _.a): empty); // error
+          ^^^^^^^^^^^^^^^^^
+
+References:
+   idx_replacement.js:24:5
+   24| ): ?UnboxDeepRequired<T2>;
+           ^^^^^^^^^^^^^^^^^^^^^ [1]
+   idx_replacement.js:50:23
+   50|   (idx(ab, _ => _.a): empty); // error
+                             ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:51:4
+
+Cannot cast `idx(...)` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+
+   idx_replacement.js:51:4
+   51|   (idx(ab, _ => _.b): empty); // error
+          ^^^^^^^^^^^^^^^^^
+
+References:
+   idx_replacement.js:24:4
+   24| ): ?UnboxDeepRequired<T2>;
+          ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   idx_replacement.js:51:23
+   51|   (idx(ab, _ => _.b): empty); // error
+                             ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:51:4
+
+Cannot cast `idx(...)` to empty because `void` (due to access of non-existent property `b`) [1] is incompatible with
+empty [2]. [incompatible-cast]
+
+   idx_replacement.js:51:4
+   51|   (idx(ab, _ => _.b): empty); // error
+          ^^^^^^^^^^^^^^^^^
+
+References:
+   idx_replacement.js:24:5
+   24| ): ?UnboxDeepRequired<T2>;
+           ^^^^^^^^^^^^^^^^^^^^^ [1]
+   idx_replacement.js:51:23
+   51|   (idx(ab, _ => _.b): empty); // error
+                             ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:51:4
+
+Cannot cast `idx(...)` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   idx_replacement.js:51:4
+   51|   (idx(ab, _ => _.b): empty); // error
+          ^^^^^^^^^^^^^^^^^
+
+References:
+   idx_replacement.js:24:5
+   24| ): ?UnboxDeepRequired<T2>;
+           ^^^^^^^^^^^^^^^^^^^^^ [1]
+   idx_replacement.js:51:23
+   51|   (idx(ab, _ => _.b): empty); // error
+                             ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:52:4
+
+Cannot cast `idx(...)` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+
+   idx_replacement.js:52:4
+   52|   (idx(ab, _ => _.c): empty); // error
+          ^^^^^^^^^^^^^^^^^
+
+References:
+   idx_replacement.js:24:4
+   24| ): ?UnboxDeepRequired<T2>;
+          ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   idx_replacement.js:52:23
+   52|   (idx(ab, _ => _.c): empty); // error
+                             ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:52:4
+
+Cannot cast `idx(...)` to empty because `void` (due to access of non-existent property `c`) [1] is incompatible with
+empty [2]. [incompatible-cast]
+
+   idx_replacement.js:52:4
+   52|   (idx(ab, _ => _.c): empty); // error
+          ^^^^^^^^^^^^^^^^^
+
+References:
+   idx_replacement.js:24:5
+   24| ): ?UnboxDeepRequired<T2>;
+           ^^^^^^^^^^^^^^^^^^^^^ [1]
+   idx_replacement.js:52:23
+   52|   (idx(ab, _ => _.c): empty); // error
+                             ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- idx_replacement.js:52:19
+
+Cannot get `_.c` because property `c` is missing in mapped type [1]. [prop-missing]
+
+   idx_replacement.js:52:19
+   52|   (idx(ab, _ => _.c): empty); // error
+                         ^
+
+References:
+   idx_replacement.js:23:34
+   23|   accessor: (prop: $NonMaybeType<DeepRequired<T1>>) => T2,
+                                        ^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:59:4
+
+Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-cast]
+
+   idx_replacement.js:59:4
+   59|   (idx(new Foo1(), o => o.a.b): number); // error: result must be MaybeT
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   idx_replacement.js:24:4
+   24| ): ?UnboxDeepRequired<T2>;
+          ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   idx_replacement.js:59:33
+   59|   (idx(new Foo1(), o => o.a.b): number); // error: result must be MaybeT
+                                       ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:59:4
+
+Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-cast]
+
+   idx_replacement.js:59:4
+   59|   (idx(new Foo1(), o => o.a.b): number); // error: result must be MaybeT
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   idx_replacement.js:55:29
+   55|   class Foo1 { a: ?Foo1; b: ?number; }
+                                   ^^^^^^^ [1]
+   idx_replacement.js:59:33
+   59|   (idx(new Foo1(), o => o.a.b): number); // error: result must be MaybeT
+                                       ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- idx_replacement.js:60:26
+
+Cannot assign `null` to `o.a` because property `a` is not writable. [cannot-write]
+
+   60|   idx(new Foo1(), o => o.a = null); // error: not writable
+                                ^
+
+
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:72:4
+
+Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-cast]
+
+   idx_replacement.js:72:4
+   72|   (idx(42, n => n): number); // error: result must be MaybeT
+          ^^^^^^^^^^^^^^^
+
+References:
+   idx_replacement.js:24:4
+   24| ): ?UnboxDeepRequired<T2>;
+          ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   idx_replacement.js:72:21
+   72|   (idx(42, n => n): number); // error: result must be MaybeT
+                           ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- idx_replacement.js:73:18
+
+Cannot get `n.nope` because property `nope` is missing in `Number` [1]. [prop-missing]
+
+   idx_replacement.js:73:18
+   73|   idx(42, n => n.nope); // error: prop-missing
+                        ^^^^
+
+References:
+   idx_replacement.js:23:34
+   23|   accessor: (prop: $NonMaybeType<DeepRequired<T1>>) => T2,
+                                        ^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- idx_replacement.js:80:18
+
+Cannot call `obj` because a call signature declaring the expected parameter / return type is missing in mapped type [1].
+[prop-missing]
+
+   idx_replacement.js:80:18
+   80|   idx({}, obj => obj()); // error
+                        ^^^
+
+References:
+   idx_replacement.js:23:34
+   23|   accessor: (prop: $NonMaybeType<DeepRequired<T1>>) => T2,
+                                        ^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:89:4
+
+Cannot cast `a` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   idx_replacement.js:89:4
+   89|   (a: empty); // error
+          ^
+
+References:
+   idx_replacement.js:85:40
+   85|   declare const props: { data: { +id: ?string } };
+                                              ^^^^^^ [1]
+   idx_replacement.js:89:7
+   89|   (a: empty); // error
+             ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:91:6
+
+Cannot cast `a` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   idx_replacement.js:91:6
+   91|     (a: empty); // error
+            ^
+
+References:
+   idx_replacement.js:85:40
+   85|   declare const props: { data: { +id: ?string } };
+                                              ^^^^^^ [1]
+   idx_replacement.js:91:9
+   91|     (a: empty); // error
+               ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- import.js:18:4
@@ -1472,7 +2051,7 @@ References:
 
 
 
-Found 95 errors
+Found 134 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
