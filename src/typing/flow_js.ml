@@ -6493,38 +6493,40 @@ struct
             f tvar
         )
     in
-    ( if
-      (not (Tvar_resolver.has_unresolved_tvars cx t))
+    if
+      is_fully_resolve_result_type_destructor_kind d
+      && (not (Tvar_resolver.has_unresolved_tvars cx t))
       && not (Tvar_resolver.has_unresolved_tvars_in_destructors cx d)
     then
-      match d with
-      | ReactCheckComponentConfig _
-      | ReactCheckComponentRef
-      | ConditionalType _
-      | MappedType _
-      | PropertyType _
-      | ElementType _
-      | OptionalIndexedAccessNonMaybeType _
-      | OptionalIndexedAccessResultType _
-      | ReactElementPropsType
-      | ReactElementConfigType
-      | ReactElementRefType
-      | ReactConfigType _ ->
-        Tvar_resolver.resolve cx result
-      | NonMaybeType
-      | ReadOnlyType
-      | PartialType
-      | RequiredType
-      | SpreadType _
-      | RestType _
-      | ValuesType
-      | IdxUnwrapType
-      | LatentPred _
-      | CallType _
-      | TypeMap _ ->
-        ()
-    );
+      Tvar_resolver.resolve cx result;
     (slingshot, result)
+
+  and is_fully_resolve_result_type_destructor_kind = function
+    | ReactCheckComponentConfig _
+    | ReactCheckComponentRef
+    | ConditionalType _
+    | MappedType _
+    | PropertyType _
+    | ElementType _
+    | OptionalIndexedAccessNonMaybeType _
+    | OptionalIndexedAccessResultType _
+    | ReactElementPropsType
+    | ReactElementConfigType
+    | ReactElementRefType
+    | ReactConfigType _ ->
+      true
+    | NonMaybeType
+    | ReadOnlyType
+    | PartialType
+    | RequiredType
+    | SpreadType _
+    | RestType _
+    | ValuesType
+    | IdxUnwrapType
+    | LatentPred _
+    | CallType _
+    | TypeMap _ ->
+      false
 
   and eval_destructor cx ~trace use_op reason t d tout =
     match d with
@@ -9360,7 +9362,13 @@ struct
           | None ->
             Tvar.mk_where cx reason (fun tvar ->
                 Cache.Eval.add_repos cx root defer_use_t id tvar;
-                flow_opt cx ?trace (t, ReposLowerT (reason, use_desc, UseT (unknown_use, tvar)))
+                flow_opt cx ?trace (t, ReposLowerT (reason, use_desc, UseT (unknown_use, tvar)));
+                let (TypeDestructorT (_, _, d)) = defer_use_t in
+                if
+                  is_fully_resolve_result_type_destructor_kind d
+                  && not (Tvar_resolver.has_unresolved_tvars cx t)
+                then
+                  Tvar_resolver.resolve cx tvar
             )
         end
       | MaybeT (r, t) ->
