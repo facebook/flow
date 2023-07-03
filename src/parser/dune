@@ -4,7 +4,7 @@
  (wrapped false)
  (modules
   (:standard \ flow_parser_js flow_parser_dot_js libflowparser))
- (libraries base flow_sedlexing_ppx wtf8 flow_sedlexing collections)
+ (libraries base wtf8 flow_sedlexing collections)
  (preprocess
   (pps ppx_gen_rec ppx_deriving.std flow_sedlexing_ppx)))
 
