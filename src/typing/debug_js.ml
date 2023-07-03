@@ -302,8 +302,21 @@ let rec dump_t_ (depth, tvars) cx t =
         ) ->
       p ~trust:(Some trust) ~extra:(spf "enum #%s" (ALoc.debug_to_string (enum_id :> ALoc.t))) t
     | AnnotT (_, arg, use_desc) -> p ~extra:(spf "use_desc=%b, %s" use_desc (kid arg)) t
-    | OpaqueT (_, { underlying_t = Some arg; _ }) -> p ~extra:(spf "%s" (kid arg)) t
-    | OpaqueT _ -> p t
+    | OpaqueT (_, { underlying_t; opaque_type_args; _ }) ->
+      p
+        ~extra:
+          (spf
+             "[%s]%s"
+             (String.concat
+                "; "
+                (Base.List.map opaque_type_args ~f:(fun (n, _, t, _) ->
+                     spf "%s=%s" (Subst_name.show n) (kid t)
+                 )
+                )
+             )
+             (Base.Option.value_map underlying_t ~default:"" ~f:(fun t -> spf " (%s)" (kid t)))
+          )
+        t
     | OptionalT { reason = _; type_ = arg; use_desc = _ } -> p ~extra:(kid arg) t
     | EvalT (arg, expr, id) ->
       p ~extra:(spf "%s, %s" (defer_use expr (kid arg)) (Eval.string_of_id id)) t
