@@ -22,7 +22,7 @@ To declare a global function that should be accessible throughout your project,
 use the `declare function` syntax in a libdef file:
 
 **flow-typed/myLibDef.js**
-```js
+```js flow-check
 declare function foo(a: number): string;
 ```
 
@@ -36,7 +36,7 @@ To declare a global class that should be accessible throughout your project,
 use the `declare class` syntax in a libdef file:
 
 **flow-typed/myLibDef.js**
-```js
+```js flow-check
 declare class URL {
   constructor(urlStr: string): URL;
   toString(): string;
@@ -52,11 +52,11 @@ class. Note that this class definition does not have any implementation details
 ## Declaring A Global Variable {#toc-declaring-a-global-variable}
 
 To declare a global variable that should be accessible throughout your project,
-use the `declare var` syntax in a libdef file:
+use the `declare var`, `declare let`, or `declare const` syntax in a libdef file:
 
 **flow-typed/myLibDef.js**
-```js
-declare var PI: number;
+```js flow-check
+declare const PI: number;
 ```
 
 This tells Flow that any code within the project can reference the `PI` global
@@ -68,7 +68,7 @@ To declare a global type that should be accessible throughout your project,
 use the `declare type` syntax in a libdef file:
 
 **flow-typed/myLibDef.js**
-```js
+```js flow-check
 declare type UserID = number;
 ```
 
@@ -81,7 +81,7 @@ Often, third-party code is organized in terms of modules rather than globals. To
 write a libdef that declares the presence of a module you'll want to use the
 `declare module` syntax:
 
-```js
+```js flow-check
 declare module "some-third-party-library" {
   // This is where we'll list the module's exported interface(s)
 }
@@ -102,15 +102,14 @@ differences between the two that need to be considered when using
 
 #### Declaring An ES Module {#toc-declaring-an-es-module}
 
-[ES modules](http://exploringjs.com/es6/ch_modules.html) have two kinds of
-exports: A **named** export and a **default** export. Flow supports the ability
-to declare either or both of these kinds of exports within a `declare module`
-body as follows:
+[ES modules](https://developer.mozilla.org/en-US/docs/web/javascript/reference/statements/export)
+have two kinds of exports: A **named** export and a **default** export. Flow supports the ability
+to declare either or both of these kinds of exports within a `declare module` body as follows:
 
 ###### Named Exports {#toc-named-exports}
 
 **flow-typed/some-es-module.js**
-```js
+```js flow-check
 declare module "some-es-module" {
   // Declares a named "concatPath" export
   declare export function concatPath(dirA: string, dirB: string): string;
@@ -122,7 +121,7 @@ Note that you can also declare other things inside the body of the
 `declare module` -- **but they will not be exported from the module**:
 
 **flow-typed/some-es-module.js**
-```js
+```js flow-check
 declare module "some-es-module" {
   // Defines the type of a Path class within this `declare module` body, but
   // does not export it. It can only be referenced by other things inside the
@@ -140,7 +139,7 @@ declare module "some-es-module" {
 ###### Default Exports {#toc-default-exports}
 
 **flow-typed/some-es-module.js**
-```js
+```js flow-check
 declare module "some-es-module" {
   declare class URL {
     constructor(urlStr: string): URL;
@@ -164,7 +163,7 @@ value). To describe the type of this single value within a `declare module`
 body, you'll use the `declare module.exports` syntax:
 
 **flow-typed/some-commonjs-module.js**
-```js
+```js flow-check
 declare module "some-commonjs-module" {
   // The export of this module is an object with a "concatPath" method
   declare module.exports: {
@@ -178,7 +177,7 @@ Note that you can also declare other things inside the body of the
 `declare module`, **but they will not be exported from the module**:
 
 **flow-typed/some-commonjs-module.js**
-```js
+```js flow-check
 declare module "some-commonjs-module" {
   // Defines the type of a Path class within this `declare module` body, but
   // does not export it. It can only be referenced by other things inside the

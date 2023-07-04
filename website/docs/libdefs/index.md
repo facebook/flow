@@ -10,7 +10,7 @@ Most real JavaScript programs depend on third-party code and not just code
 immediately under the control of the project. That means a project using Flow
 may need to reference outside code that either doesn't have type information or
 doesn't have accurate and/or precise type information. In order to handle this,
-Flow supports the concept of a "library definition" (AKA "libdef").
+Flow supports the concept of a "library definition" (a.k.a. "libdef").
 
 A libdef is a special file that informs Flow about the type signature of some
 specific third-party module or package of modules that your application uses.
@@ -28,18 +28,19 @@ normal JS files.
 >       configure Flow to look elsewhere for libdefs using the [`[libs]` section
 >       of your `.flowconfig`](../config/libs).
 
+You can also learn about [declaration files](../declarations).
+
 ## General Best Practices {#toc-general-best-practices}
 
-**Try to provide a libdef for each third-party library your project uses**
+**Try to provide a libdef for each third-party library your project uses.**
 
 If a third-party library that has no type information is used by your project,
 Flow will treat it like any other untyped dependency and mark all of its exports
-as `any`. Interestingly, this is the only place that Flow will implicitly inject
-`any` into your program.
+as `any`.
 
 Because of this behavior, it is a best practice to find or write libdefs for as
 many of the third-party libraries that you use as you can. We recommend checking
 out the `flow-typed`
-[tool and repository](https://github.com/flowtype/flow-typed/blob/master/README.md)
+[tool and repository](https://github.com/flow-typed/flow-typed/)
 , which helps you quickly find and install pre-existing libdefs for your
 third-party dependencies.
