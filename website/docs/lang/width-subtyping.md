@@ -4,20 +4,20 @@ slug: /lang/width-subtyping
 ---
 
 It's safe to use an object with "extra" properties in a position that is
-annotated with a specific set of properties, if that object type is inexact.
+annotated with a specific set of properties, if that object type is [inexact](../../types/objects/#exact-and-inexact-object-types).
 
 ```js flow-check
-function method(obj: {foo: string, ...}) {
+function func(obj: {foo: string, ...}) {
   // ...
 }
 
-method({
+func({
   foo: "test", // Works!
   bar: 42      // Works!
 });
 ```
 
-Within `method`, we know that `obj` has at least a property `foo` and the
+Within `func`, we know that `obj` has at least a property `foo` and the
 property access expression `obj.foo` will have type `string`.
 
 This is a kind of subtyping commonly referred to as "width subtyping" because
@@ -35,7 +35,7 @@ let obj2 = {foo: 'test', bar: 42};
 However, it's often useful to know that a property is definitely absent.
 
 ```js flow-check
-function method(obj: {foo: string, ...} | {bar: number, ...}) {
+function func(obj: {foo: string, ...} | {bar: number, ...}) {
   if (obj.foo) {
     (obj.foo: string); // Error!
   }
@@ -43,22 +43,22 @@ function method(obj: {foo: string, ...} | {bar: number, ...}) {
 ```
 
 The above code has a type error because Flow would also allow the call
-expression `method({foo: 1, bar: 2})`, because `{foo: number, bar: number}`
+expression `func({foo: 1, bar: 2})`, because `{foo: number, bar: number}`
 is a subtype of `{bar: number, ...}`, one of the members of the parameter's union
 type.
 
 For cases like this where it's useful to assert the absence of a property,
-You can use ["exact" object types](../../types/objects/#toc-exact-object-types).
+You can use [exact object types](../../types/objects/#exact-and-inexact-object-types).
 
 ```js flow-check
-function method(obj: {foo: string} | {bar: number}) {
+function func(obj: {foo: string} | {bar: number}) {
   if (obj.foo) {
     (obj.foo: string); // Works!
   }
 }
 ```
 
-[Exact object types](../../types/objects/#toc-exact-object-types) disable width
+[Exact object types](../../types/objects/#exact-and-inexact-object-types) disable width
 subtyping, and do not allow additional properties to exist.
 
 Using exact object types lets Flow know that no extra properties will exist at
