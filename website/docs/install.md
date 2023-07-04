@@ -22,7 +22,7 @@ choose between [Babel](http://babeljs.io/) and
 
 [Babel](http://babeljs.io/) is a compiler for JavaScript code that has
 support for Flow. Babel will take your Flow code and strip out any type
-annotations.
+annotations. Read more about [using Babel](../tools/babel).
 
 First install `@babel/core`, `@babel/cli`, and `@babel/preset-flow` with
 either [Yarn](https://yarnpkg.com/) or [npm](https://www.npmjs.com/).
@@ -45,7 +45,7 @@ to another directory by running:
 ./node_modules/.bin/babel src/ -d lib/
 ```
 
-You can add this to your `package.json` scripts easily.
+You can add this to your `package.json` scripts easily, alongside your `"devDependencies"` on Babel.
 
 ```json
 {
@@ -53,7 +53,7 @@ You can add this to your `package.json` scripts easily.
   "main": "lib/index.js",
   "scripts": {
     "build": "babel src/ -d lib/",
-    "prepublish": "{{include.package_manager}} run build"
+    "prepublish": "yarn run build"
   }
 }
 ```
@@ -83,7 +83,7 @@ to another directory by running:
 ./node_modules/.bin/flow-remove-types src/ -d lib/
 ```
 
-You can add this to your `package.json` scripts easily.
+You can add this to your `package.json` scripts easily, alongside your `"devDependencies"` on `flow-remove-types`.
 
 ```json
 {
@@ -91,7 +91,7 @@ You can add this to your `package.json` scripts easily.
   "main": "lib/index.js",
   "scripts": {
     "build": "flow-remove-types src/ -d lib/",
-    "prepublish": "{{include.package_manager}} run build"
+    "prepublish": "yarn run build"
   }
 }
 ```
@@ -157,3 +157,7 @@ npm run flow
 
 No errors!
 ```
+
+## Setup ESLint
+
+If you use ESLint, you can read [our page on ESLint](../tools/eslint) to set it up to support Flow.
