@@ -6,31 +6,33 @@ slug: /lang/types-and-expressions
 In JavaScript there are many types of values: numbers, strings, booleans,
 functions, objects, and more.
 
-```js
+```js flow-check
 (1234: number);
 ("hi": string);
 (true: boolean);
 ([1, 2]: Array<number>);
-({ prop: "value" }: Object);
-(function method() {}: Function);
+({prop: "value"}: {prop: string});
+(function func(s: string) {}: string => void);
 ```
 
 These values can be used in many different ways:
 
-```js
+```js flow-check
 1 + 2;
 "foo" + "bar";
 !true;
 [1, 2].push(3);
+const obj = {prop: "s"};
 let value = obj.prop;
 obj.prop = "value";
-method("value");
+function func(s: string) {}
+func("value");
 ```
 
 All of these different expressions create a new type which is a result of the
 types of values and the operations run on them.
 
-```js
+```js flow-check
 let num: number = 1 + 2;
 let str: string = "foo" + "bar";
 ```
