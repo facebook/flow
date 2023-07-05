@@ -12,10 +12,12 @@ considered *uncovered*, otherwise it is considered *covered*.
 
 To see why this metric was chosen for determining Flow's effectiveness, consider
 the example
-```js
+
+```js flow-check
 const one: any = 1;
 one();
 ```
+
 This code leads to a runtime type error, since we are attempting to perform a call
 on a number. Flow, however, does not flag an error here, because we have annotated
 variable `one` as `any`. Flow's checking is effectively turned off whenever `any`
@@ -32,10 +34,12 @@ could imagine a criterion that flags expressions as uncovered if *any* part of t
 type includes `any`, for example `Array<any>`. While there is value in a metric like
 this, the "uncovered" part of the type will typically be uncovered through various
 operations on values of this type. For example, in the code
-```js
-declare var arr: Array<any>;
+
+```js flow-check
+declare const arr: Array<any>;
 arr.forEach(x => {});
 ```
+
 the parameter `x` will be flagged as uncovered. Also, in practice, a strict criterion
 like this would be too noisy and rather expensive to compute on the fly.
 
@@ -46,10 +50,12 @@ An exception to this principle are union types: the type `number | any` is consi
 Unions merely encode an option among *a set of* other types. In that sense we are
 conservatively viewing an expression as uncovered, when at least one possible type
 of that expression causes limited checking. For example, in the code
-```js
+
+```js flow-check
 let x: number | any = 1;
 x = "a";
 ```
+
 Flow will let you assign anything to `x`, which reduces confidence in the use
 of `x` as a number. Thus `x` is considered uncovered.
 
@@ -66,15 +72,17 @@ the case of `any`.
 ## Command Line Use {#toc-command-line-use}
 
 To find out the coverage of a file foo.js with the following contents
-```js
-// @flow
+
+```js flow-check
 function add(one: any, two: any): number {
   return one + two;
 }
 
 add(1, 2);
 ```
+
 you can issue the following command
+
 ```
 $ flow coverage file.js
 Covered: 50.00% (5 of 10 expressions)
@@ -83,19 +91,29 @@ This output means that 5 out of the 10 nodes of this program were inferred to ha
 `any`. To see exactly which parts are uncovered you can also pass one of the following
 flags:
 * `--color`: This will print foo.js on the terminal with the uncovered locations in
-red color.
+red color. E.g. `flow coverage --color file.js`
 * `--json`: This will list out all location spans that are uncovered under
-the tag `"uncovered_locs"`.
+the tag `"uncovered_locs"`. E.g. `flow coverage --json file.js`
 
-Finally, as an example of dead code, consider the code
-```js
-function untypedAdd(one, two) {
-  return one + two;
+Finally, as an example of dead code, consider the code:
+
+```js flow-check
+function f(x: 'a' | 'b') {
+  if (x === 'a') {
+    // ...
+  } else if (x === 'b') {
+    // ...
+  } else {
+    x;
+  }
 }
 ```
-Note that function `untypedAdd` is never called, so `one` and `two` will be inferred to have
-type `empty`. In the colored version of this command these parts appear in blue color,
-and in the JSON version they are under the tag `"empty_locs"`.
+
+The final `else` clause should never be reached, as we've already checked for both members of the union.
+Because of this, `x` is inferred to have the type `empty` in that branch.
+
+In the colored version of this command, these parts appear in blue color,
+and in the JSON version they are under the field `"empty_locs"`.
 
 **Use on multiple files**
 
