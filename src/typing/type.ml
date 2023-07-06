@@ -1452,6 +1452,12 @@ module rec TypeTerm : sig
     | RequiredType
     | SpreadType of
         Object.Spread.target * Object.Spread.operand list * Object.Spread.operand_slice option
+    | SpreadTupleType of {
+        reason_tuple: reason;
+        reason_spread: reason;
+        resolved: resolved_param list;
+        unresolved: unresolved_param list;
+      }
     | RestType of Object.Rest.merge_mode * t
     | ValuesType
     | CallType of {
@@ -1578,6 +1584,7 @@ module rec TypeTerm : sig
     | ResolvedAnySpreadArg of reason * any_source
 
   and spread_resolve =
+    | ResolveSpreadsToTupleType of int * t * t (* elem type, array type *)
     (* Once we've finished resolving spreads, try to construct an array with known element types *)
     | ResolveSpreadsToArrayLiteral of int * t * t (* elem type, array type *)
     (* Once we've finished resolving spreads, try to construct a non-tuple array *)
@@ -1597,6 +1604,7 @@ module rec TypeTerm : sig
   and spread_array_resolve_to =
     | ResolveToArrayLiteral
     | ResolveToArray
+    | ResolveToTupleType
 
   (* Add some flavor to the TypeT constructor. For now this information is only
    * used by the type normalizer. *)
@@ -3902,6 +3910,7 @@ let string_of_use_ctor = function
       begin
         match rrt_resolve_to with
         | ResolveSpreadsToArray _ -> "ResolveSpreadsToArray"
+        | ResolveSpreadsToTupleType (id, _, _) -> spf "ResolveSpreadsToTupleType (%d)" id
         | ResolveSpreadsToArrayLiteral (id, _, _) -> spf "ResolveSpreadsToArrayLiteral (%d)" id
         | ResolveSpreadsToMultiflowCallFull _ -> "ResolveSpreadsToMultiflowCallFull"
         | ResolveSpreadsToMultiflowSubtypeFull _ -> "ResolveSpreadsToMultiflowSubtypeFull"

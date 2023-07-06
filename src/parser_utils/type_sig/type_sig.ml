@@ -149,6 +149,11 @@ type ('loc, 'a) tuple_element =
       polarity: Polarity.t;
       optional: bool;
     }
+  | TupleSpread of {
+      loc: 'loc;
+      name: string option;
+      t: 'a;
+    }
 [@@deriving iter, map, show { with_path = false }]
 
 type ('loc, 'a) obj_annot_proto =
@@ -469,7 +474,6 @@ type ('loc, 'a) annot =
   | Tuple of {
       loc: 'loc;
       elems_rev: ('loc, 'a) tuple_element tailrec_list;
-      arity: int * int;
     }
   | Array of 'loc * 'a
   | ReadOnlyArray of 'loc * 'a

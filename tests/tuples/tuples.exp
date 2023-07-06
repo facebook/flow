@@ -207,6 +207,38 @@ References:
                            ^^^^^^^^^^^^^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------------- import.js:7:9
+
+Cannot cast array literal to `T` because number [1] is incompatible with number literal `2` [2] in index 2.
+[incompatible-cast]
+
+   import.js:7:9
+   7| ([0, 1, 9]: T); // ERROR
+              ^ [1]
+
+References:
+   export.js:1:14
+   1| type A = [1, 2];
+                   ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- import.js:9:2
+
+Cannot cast `x` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   import.js:9:2
+   9| (x: empty); // ERROR
+       ^
+
+References:
+   import.js:8:18
+   8| declare const x: T;
+                       ^ [1]
+   import.js:9:5
+   9| (x: empty); // ERROR
+          ^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- labeled.js:5:3
 
 Cannot cast array literal to `A` because boolean [1] is incompatible with string [2] in index 0. [incompatible-cast]
@@ -879,20 +911,213 @@ References:
                         ^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- spread.js:3:11
+Error --------------------------------------------------------------------------------------------------- spread.js:10:4
 
-Tuple spread is not supported. [unsupported-syntax]
+Cannot cast array literal to `Same` because array literal [1] has 1 element but tuple type [2] has 2 elements.
+[invalid-tuple-arity]
 
-   3| type A = [...S]; // ERROR: syntax not supported
-                ^^^^
+   spread.js:10:4
+   10|   ([1]: Same); // ERROR: arity
+          ^^^ [1]
+
+References:
+   spread.js:10:9
+   10|   ([1]: Same); // ERROR: arity
+               ^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- spread.js:4:11
+Error --------------------------------------------------------------------------------------------------- spread.js:11:4
 
-Tuple spread is not supported. [unsupported-syntax]
+Cannot cast `x` to tuple type because tuple type [1] has 2 elements but tuple type [2] has 3 elements.
+[invalid-tuple-arity]
 
-   4| type B = [...foo: S]; // ERROR: syntax not supported
-                ^^^^^^^^^
+   spread.js:11:4
+   11|   (x: [1, 2, 3]); // ERROR: arity
+          ^
+
+References:
+   spread.js:7:20
+    7|   declare const x: Same;
+                          ^^^^ [1]
+   spread.js:11:7
+   11|   (x: [1, 2, 3]); // ERROR: arity
+             ^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- spread.js:13:8
+
+Cannot cast array literal to `Same` because number [1] is incompatible with number literal `2` [2] in index 1.
+[incompatible-cast]
+
+   spread.js:13:8
+   13|   ([1, 99]: Same); // ERROR: element type
+              ^^ [1]
+
+References:
+   spread.js:2:14
+    2| type A = [1, 2];
+                    ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- spread.js:22:4
+
+Cannot cast array literal to `Middle` because array literal [1] has 5 elements but tuple type [2] has 4 elements.
+[invalid-tuple-arity]
+
+   spread.js:22:4
+   22|   ([0, 1, 2, 3, 4]: Middle); // ERROR: arity
+          ^^^^^^^^^^^^^^^ [1]
+
+References:
+   spread.js:22:21
+   22|   ([0, 1, 2, 3, 4]: Middle); // ERROR: arity
+                           ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- spread.js:23:4
+
+Cannot cast `x` to tuple type because tuple type [1] has 4 elements but tuple type [2] has 3 elements.
+[invalid-tuple-arity]
+
+   spread.js:23:4
+   23|   (x: [0, 1, 2]); // ERROR: arity
+          ^
+
+References:
+   spread.js:19:20
+   19|   declare const x: Middle;
+                          ^^^^^^ [1]
+   spread.js:23:7
+   23|   (x: [0, 1, 2]); // ERROR: arity
+             ^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- spread.js:25:11
+
+Cannot cast array literal to `Middle` because number [1] is incompatible with number literal `2` [2] in index 2.
+[incompatible-cast]
+
+   spread.js:25:11
+   25|   ([0, 1, 99, 3]: Middle); // ERROR: element type
+                 ^^ [1]
+
+References:
+   spread.js:2:14
+    2| type A = [1, 2];
+                    ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- spread.js:30:31
+
+Invalid tuple type [1], required tuple element [2] must be after optional tuple element (labeled 'b') [3].
+[tuple-required-after-optional]
+
+   spread.js:30:31
+   30| type ReqAfterOptionalInline = [0, ...Optionals, 3]; // ERROR
+                                     ^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   spread.js:30:49
+   30| type ReqAfterOptionalInline = [0, ...Optionals, 3]; // ERROR
+                                                       ^ [2]
+   spread.js:29:25
+   29| type Optionals = [a: 1, b?: 2];
+                               ^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------------- spread.js:31:31
+
+Invalid tuple type [1], required tuple element [2] must be after optional tuple element (labeled 'b') [3].
+[tuple-required-after-optional]
+
+   spread.js:31:31
+   31| type ReqAfterOptionalSpread = [...Optionals, ...A]; // ERROR
+                                     ^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   spread.js:2:11
+    2| type A = [1, 2];
+                 ^ [2]
+   spread.js:29:25
+   29| type Optionals = [a: 1, b?: 2];
+                               ^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- spread.js:38:2
+
+Cannot cast array literal to `FromUnion` because: [incompatible-cast]
+ - Either array literal [1] has 2 elements but tuple type [2] has 3 elements.
+ - Or array literal [1] has 2 elements but tuple type [2] has 4 elements.
+
+   spread.js:38:2
+   38| ([0, 9]: FromUnion); // ERROR
+        ^^^^^^ [1]
+
+References:
+   spread.js:35:18
+   35| type FromUnion = [0, ...Union, 9]; // OK
+                        ^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- spread.js:41:23
+
+Cannot spread non-tuple (number literal `2` [1]) into tuple type. [tuple-invalid-type-spread]
+
+   spread.js:41:23
+   41| type InvalidSpread1 = [1, ...2]; // ERROR
+                             ^^^^^^^^^
+
+References:
+   spread.js:41:30
+   41| type InvalidSpread1 = [1, ...2]; // ERROR
+                                    ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- spread.js:47:23
+
+Cannot spread non-tuple (`Alias` [1]) into tuple type. [tuple-invalid-type-spread]
+
+   spread.js:47:23
+   47| type InvalidSpread2 = [1, ...Alias]; // ERROR
+                             ^^^^^^^^^^^^^
+
+References:
+   spread.js:47:30
+   47| type InvalidSpread2 = [1, ...Alias]; // ERROR
+                                    ^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- spread.js:70:9
+
+Cannot cast array literal to `WithTail` because number [1] is incompatible with number literal `3` [2] in index 2.
+[incompatible-cast]
+
+   spread.js:70:9
+   70| ([1, 2, 66]: WithTail<[2, 3]>); // ERROR
+               ^^ [1]
+
+References:
+   spread.js:70:27
+   70| ([1, 2, 66]: WithTail<[2, 3]>); // ERROR
+                                 ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- spread.js:73:1
+
+Cannot call `f` because `T` [1] is underconstrained by call of `f` [2]. Either add explicit type arguments or cast the
+expression to your expected type. [underconstrained-implicit-instantiation]
+
+   spread.js:73:1
+   73| f([1, 2, 3]); // ERROR: annotation required - reversal not yet implemented
+       ^
+
+References:
+   spread.js:72:20
+   72| declare function f<T>(xs: [1, ...T]): void;
+                          ^ [1]
+   spread.js:73:1
+   73| f([1, 2, 3]); // ERROR: annotation required - reversal not yet implemented
+       ^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- too-few.js:5:5
@@ -1647,4 +1872,4 @@ References:
 
 
 
-Found 104 errors
+Found 117 errors

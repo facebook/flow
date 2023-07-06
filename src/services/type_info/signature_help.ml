@@ -74,20 +74,40 @@ let func_details ~jsdoc ~exact_by_default params rest_param return =
       let rest =
         (* show the rest param's docs for all of the expanded params *)
         let param_documentation = documentation_of_param rest_param_name in
-        match t with
-        | Ty.Tup ts ->
-          Base.List.mapi
-            ~f:(fun i (Ty.TupleElement { name; t; polarity = _; optional = _ }) ->
-              let param_name =
-                match name with
-                | Some name -> name
-                | None ->
-                  Printf.sprintf "%s[%d]" (Base.Option.value rest_param_name ~default:"arg") i
-              in
-              let param_ty = string_of_ty ~exact_by_default t in
-              { ServerProt.Response.param_name; param_ty; param_documentation })
-            ts
-        | _ ->
+        (* Only show the result if there aren't any spreads, as in that case we
+           don't know which param index corresponds to which tuple element. *)
+        let els_result =
+          match t with
+          | Ty.Tup els ->
+            Base.List.fold
+              els
+              ~init:(Some (0, []))
+              ~f:(fun acc el ->
+                Base.Option.bind acc ~f:(fun (i, els) ->
+                    match el with
+                    | Ty.TupleElement { name; t; polarity = _; optional = _ } ->
+                      let param_name =
+                        match name with
+                        | Some name -> name
+                        | None ->
+                          Printf.sprintf
+                            "%s[%d]"
+                            (Base.Option.value rest_param_name ~default:"arg")
+                            i
+                      in
+                      Some (i + 1, (param_name, t) :: els)
+                    | Ty.TupleSpread _ -> None
+                ))
+          | _ -> None
+        in
+        match els_result with
+        | Some (_, els) ->
+          Base.List.rev els
+          |> Base.List.map ~f:(fun (param_name, t) ->
+                 let param_ty = string_of_ty ~exact_by_default t in
+                 { ServerProt.Response.param_name; param_ty; param_documentation }
+             )
+        | None ->
           let param_name = "..." ^ parameter_name false rest_param_name in
           let param_ty = string_of_ty ~exact_by_default t in
           [{ ServerProt.Response.param_name; param_ty; param_documentation }]

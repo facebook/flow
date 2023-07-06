@@ -107,34 +107,40 @@ let type_ options =
     | Tup elements ->
       let%map els =
         all
-          ((Base.List.mapi ~f:(fun i (TupleElement { name; t; polarity; optional }) ->
-                let%map annot = type_ t in
-                let el =
-                  match (name, polarity) with
-                  | (Some name, _) ->
-                    T.Tuple.LabeledElement
-                      {
-                        T.Tuple.LabeledElement.name = id_from_string name;
-                        annot;
-                        variance = variance_ polarity;
-                        optional;
-                      }
-                  | (None, Neutral) -> T.Tuple.UnlabeledElement annot
-                  | _ ->
-                    (* No label, but has polarity - e.g. `$ReadOnly<[string, number]>`
-                       We must make up a name. *)
-                    let name = id_from_string (Printf.sprintf "element_%d" i) in
-                    T.Tuple.LabeledElement
-                      {
-                        T.Tuple.LabeledElement.name;
-                        annot;
-                        variance = variance_ polarity;
-                        optional;
-                      }
-                in
-                (Loc.none, el)
-            )
-           )
+          (Base.List.mapi
+             ~f:
+               (fun i -> function
+                 | TupleElement { name; t; polarity; optional } ->
+                   let%map annot = type_ t in
+                   let el =
+                     match (name, polarity) with
+                     | (Some name, _) ->
+                       T.Tuple.LabeledElement
+                         {
+                           T.Tuple.LabeledElement.name = id_from_string name;
+                           annot;
+                           variance = variance_ polarity;
+                           optional;
+                         }
+                     | (None, Neutral) -> T.Tuple.UnlabeledElement annot
+                     | _ ->
+                       (* No label, but has polarity - e.g. `$ReadOnly<[string, number]>`
+                          We must make up a name. *)
+                       let name = id_from_string (Printf.sprintf "element_%d" i) in
+                       T.Tuple.LabeledElement
+                         {
+                           T.Tuple.LabeledElement.name;
+                           annot;
+                           variance = variance_ polarity;
+                           optional;
+                         }
+                   in
+                   (Loc.none, el)
+                 | TupleSpread { name; t } ->
+                   let%map annot = type_ t in
+                   let name = Base.Option.map ~f:id_from_string name in
+                   let el = T.Tuple.SpreadElement { T.Tuple.SpreadElement.name; annot } in
+                   (Loc.none, el))
              elements
           )
       in

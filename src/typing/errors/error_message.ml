@@ -216,6 +216,10 @@ and 'loc t' =
       reason_required: 'loc virtual_reason;
       reason_optional: 'loc virtual_reason;
     }
+  | ETupleInvalidTypeSpread of {
+      reason_spread: 'loc virtual_reason;
+      reason_arg: 'loc virtual_reason;
+    }
   | EROArrayWrite of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
   | EUnionSpeculationFailed of {
       use_op: 'loc virtual_use_op;
@@ -904,6 +908,9 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         reason_required = map_reason reason_required;
         reason_optional = map_reason reason_optional;
       }
+  | ETupleInvalidTypeSpread { reason_spread; reason_arg } ->
+    ETupleInvalidTypeSpread
+      { reason_spread = map_reason reason_spread; reason_arg = map_reason reason_arg }
   | EROArrayWrite ((r1, r2), op) -> EROArrayWrite ((map_reason r1, map_reason r2), map_use_op op)
   | EUnionSpeculationFailed { use_op; reason; reason_op; branches } ->
     EUnionSpeculationFailed
@@ -1558,6 +1565,7 @@ let util_use_op_of_msg nope util = function
   | EInvalidBinaryArith _
   | EInvalidMappedType _
   | ETupleRequiredAfterOptional _
+  | ETupleInvalidTypeSpread _
   | ETypeGuardParamUnbound _
   | ETypeGuardFunctionParamHavoced _
   | ETypeGuardIncompatibleWithFunctionKind _
@@ -1625,6 +1633,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EBigIntNumCoerce reason
   | EInvalidBinaryArith { reason_out = reason; _ }
   | ETupleRequiredAfterOptional { reason_tuple = reason; _ }
+  | ETupleInvalidTypeSpread { reason_spread = reason; _ }
   | EPredicateInvalidParameter { pred_reason = reason; _ }
   | ETypeGuardParamUnbound reason
   | ETypeGuardFunctionInvalidWrites { reason; _ }
@@ -2486,6 +2495,9 @@ let friendly_message_of_msg loc_of_aloc msg =
         text ".";
       ]
     in
+    Normal { features }
+  | ETupleInvalidTypeSpread { reason_arg; reason_spread = _ } ->
+    let features = [text "Cannot spread non-tuple ("; ref reason_arg; text ") into tuple type."] in
     Normal { features }
   | ENonLitArrayToTuple (reasons, use_op) ->
     let (lower, upper) = reasons in
@@ -5246,6 +5258,7 @@ let error_code_of_message err : error_code option =
   | ETrustIncompatibleWithUseOp _ -> Some Error_codes.IncompatibleTrust
   | ETupleArityMismatch _ -> Some InvalidTupleArity
   | ETupleRequiredAfterOptional _ -> Some TupleRequiredAfterOptional
+  | ETupleInvalidTypeSpread _ -> Some TupleInvalidTypeSpread
   | ETupleElementNotReadable _ -> Some CannotRead
   | ETupleElementNotWritable _ -> Some CannotWrite
   | ETupleElementPolarityMismatch _ -> Some IncompatibleVariance

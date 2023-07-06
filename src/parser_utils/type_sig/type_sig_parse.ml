@@ -1295,64 +1295,19 @@ and annot_with_loc opts scope tbls xs (loc, t) =
       let (_, result) = optional_indexed_access opts scope tbls xs (loc, ia) in
       result
     | T.Tuple { T.Tuple.elements; _ } ->
-      let (arity, req_after_opt, elems_rev, has_tuple_enhancements) =
+      let (has_tuple_enhancements, elems_rev) =
         List.fold_left
-          (fun ((num_req, num_total), req_after_opt, elems, has_tuple_enhancements) (loc, elem) ->
-            let (elem_has_tuple_enhancements, elem) =
-              let loc = push_loc tbls loc in
-              match elem with
-              | T.Tuple.UnlabeledElement t ->
-                ( false,
-                  TupleElement
-                    {
-                      loc;
-                      name = None;
-                      t = annot opts scope tbls xs t;
-                      polarity = Polarity.Neutral;
-                      optional = false;
-                    }
-                )
-              | T.Tuple.LabeledElement
-                  { T.Tuple.LabeledElement.annot = t; name; variance; optional } ->
-                ( true,
-                  TupleElement
-                    {
-                      loc;
-                      name = Some (id_name name);
-                      t = annot opts scope tbls xs t;
-                      polarity = polarity variance;
-                      optional;
-                    }
-                )
-              | T.Tuple.SpreadElement _ ->
-                ( true,
-                  TupleElement
-                    {
-                      loc;
-                      name = None;
-                      t = Annot (Any loc);
-                      polarity = Polarity.Neutral;
-                      optional = false;
-                    }
-                )
-            in
-            let (TupleElement { optional; _ }) = elem in
-            let (num_req, req_after_opt) =
-              if optional then
-                (num_req, req_after_opt)
-              else
-                let has_opt = num_total > num_req in
-                (num_req + 1, has_opt)
-            in
+          (fun (has_tuple_enhancements, elems_rev) elem ->
+            let (elem_has_tuple_enhancements, elem) = tuple_element opts scope tbls xs elem in
             let has_tuple_enhancements = has_tuple_enhancements || elem_has_tuple_enhancements in
-            ((num_req, num_total + 1), req_after_opt, elem :: elems, has_tuple_enhancements))
-          ((0, 0), false, [], false)
+            (has_tuple_enhancements, elem :: elems_rev))
+          (false, [])
           elements
       in
-      if req_after_opt || (has_tuple_enhancements && (not @@ opts.tuple_enhancements)) then
+      if has_tuple_enhancements && not opts.tuple_enhancements then
         Annot (Any loc)
       else
-        Annot (Tuple { loc; elems_rev; arity })
+        Annot (Tuple { loc; elems_rev })
     | T.Union { T.Union.types = (t0, t1, ts); _ } ->
       let t0 = annot opts scope tbls xs t0 in
       let t1 = annot opts scope tbls xs t1 in
@@ -1369,6 +1324,36 @@ and annot_with_loc opts scope tbls xs (loc, t) =
     | T.Exists _ -> Annot (Exists loc)
   in
   (loc, annot)
+
+and tuple_element opts scope tbls xs (loc, el) =
+  let loc = push_loc tbls loc in
+  match el with
+  | Ast.Type.Tuple.UnlabeledElement t ->
+    let t = annot opts scope tbls xs t in
+    (false, TupleElement { loc; name = None; t; polarity = Polarity.Neutral; optional = false })
+  | Ast.Type.Tuple.LabeledElement
+      { Ast.Type.Tuple.LabeledElement.name; annot = t; variance; optional } ->
+    let t = annot opts scope tbls xs t in
+    let t =
+      if not opts.tuple_enhancements then
+        Annot (Any loc)
+      else if optional then
+        Annot (Optional t)
+      else
+        t
+    in
+    let name = Some (id_name name) in
+    (true, TupleElement { loc; name; t; polarity = polarity variance; optional })
+  | Ast.Type.Tuple.SpreadElement { Ast.Type.Tuple.SpreadElement.name; annot = t } ->
+    let t = annot opts scope tbls xs t in
+    let t =
+      if not opts.tuple_enhancements then
+        Annot (Any loc)
+      else
+        t
+    in
+    let name = Base.Option.map ~f:id_name name in
+    (true, TupleSpread { loc; name; t })
 
 and type_guard_opt opts scope tbls xs guard =
   let (_, { T.TypeGuard.asserts = _; guard = (x, t_opt); _ }) = guard in

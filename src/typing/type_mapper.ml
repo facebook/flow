@@ -508,6 +508,49 @@ class virtual ['a] t =
           t
         else
           SpreadType (options, tlist', acc')
+      | SpreadTupleType { reason_tuple; reason_spread; resolved; unresolved } ->
+        let unresolved' =
+          ListUtils.ident_map
+            (fun unresolved_el ->
+              match unresolved_el with
+              | UnresolvedArg (element, generic) ->
+                let element' = self#tuple_element cx map_cx element in
+                if element' == element then
+                  unresolved_el
+                else
+                  UnresolvedArg (element', generic)
+              | UnresolvedSpreadArg t ->
+                let t' = self#type_ cx map_cx t in
+                if t' == t then
+                  unresolved_el
+                else
+                  UnresolvedSpreadArg t)
+            unresolved
+        in
+        let resolved' =
+          ListUtils.ident_map
+            (fun resolved_el ->
+              match resolved_el with
+              | ResolvedArg (element, generic) ->
+                let element' = self#tuple_element cx map_cx element in
+                if element' == element then
+                  resolved_el
+                else
+                  ResolvedArg (element', generic)
+              | ResolvedSpreadArg (reason, arr, generic) ->
+                let arr' = self#arr_type cx map_cx arr in
+                if arr' == arr then
+                  resolved_el
+                else
+                  ResolvedSpreadArg (reason, arr', generic)
+              | ResolvedAnySpreadArg _ -> resolved_el)
+            resolved
+        in
+        if resolved' == resolved && unresolved' == unresolved then
+          t
+        else
+          SpreadTupleType
+            { reason_tuple; reason_spread; resolved = resolved'; unresolved = unresolved' }
       | RestType (options, x) ->
         let x' = self#type_ cx map_cx x in
         if x' == x then

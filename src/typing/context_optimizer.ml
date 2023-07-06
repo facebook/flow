@@ -214,6 +214,7 @@ class context_optimizer ~no_lowers =
           t
         else
           SpreadType (options, tlist', acc')
+      | SpreadTupleType _ -> super#destructor cx map_cx t
       | RestType (options, x) ->
         let x' = self#type_ cx map_cx x in
         if x' == x then

@@ -493,36 +493,26 @@ and merge_annot tps infer_tps file = function
     (* NB: tail-recursive map in case of very large types *)
     let ts = Base.List.map ~f:(merge tps infer_tps file) ts in
     Type.(IntersectionT (reason, InterRep.make t0 t1 ts))
-  | Tuple { loc; elems_rev; arity } ->
+  | Tuple { loc; elems_rev } ->
     let reason = Reason.(mk_annot_reason RTupleType loc) in
-    let elem_reason = Reason.(mk_annot_reason (RTupleElement { name = None }) loc) in
-    (* NB: tail-recursive map in case of very large types *)
-    let (elements, ts) =
-      Base.List.fold
+    let unresolved =
+      List.rev_map
+        (function
+          | TupleElement { loc; name; t; polarity; optional } ->
+            let reason = Reason.(mk_reason (RTupleElement { name })) loc in
+            let t = merge tps infer_tps file t in
+            let elem = Type.TupleElement { name; t; polarity; optional; reason } in
+            Type.UnresolvedArg (elem, None)
+          | TupleSpread { loc = _; name = _; t } ->
+            let t = merge tps infer_tps file t in
+            Type.UnresolvedSpreadArg t)
         elems_rev
-        ~init:([], [])
-        ~f:(fun (els, ts) (TupleElement { loc; name; t; polarity; optional }) ->
-          let t = merge tps infer_tps file t in
-          let t =
-            if optional then
-              TypeUtil.optional t
-            else
-              t
-          in
-          let reason = Reason.(mk_reason (RTupleElement { name })) loc in
-          let el = Type.TupleElement { reason; name; t; polarity; optional } in
-          (el :: els, t :: ts)
-      )
     in
-    let elem_t =
-      match ts with
-      | [] -> Type.EmptyT.why elem_reason trust
-      | [t] -> t
-      | t0 :: t1 :: ts ->
-        let rep = Type.UnionRep.make t0 t1 ts in
-        Type.UnionT (elem_reason, rep)
+    let mk_type_destructor _cx use_op reason t destructor id =
+      Type.(EvalT (t, TypeDestructorT (use_op, reason, destructor), id))
     in
-    Type.(DefT (reason, trust, ArrT (TupleAT { elem_t; elements; arity })))
+    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
+    Flow_js_utils.mk_tuple_type file.cx ~id ~mk_type_destructor reason unresolved
   | Array (loc, t) ->
     let reason = Reason.(mk_annot_reason RArrayType loc) in
     let elem_t = merge tps infer_tps file t in

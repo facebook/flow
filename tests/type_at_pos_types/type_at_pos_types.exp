@@ -1707,6 +1707,27 @@ Flags: --pretty
   "end":6
 }
 
+tuple.js:6:6
+Flags: --pretty
+{
+  "types":{
+    "unevaluated":{"type":"type S = [0, ...T, d?: (void | 4)]"},
+    "evaluated":{"type":"type S = [0, 1, b: 2, c?: 3, d?: 4]"}
+  },
+  "reasons":[],
+  "loc":{
+    "source":"tuple.js",
+    "type":"SourceFile",
+    "start":{"line":6,"column":6,"offset":50},
+    "end":{"line":6,"column":6,"offset":51}
+  },
+  "path":"tuple.js",
+  "line":6,
+  "endline":6,
+  "start":6,
+  "end":6
+}
+
 unions.js:9:3 = {
   "types":{
     "unevaluated":{"type":"() => (number | string)"},

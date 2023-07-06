@@ -230,6 +230,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
                |> merge_lower_bounds cx
                |> use_t_result_of_t_option
            )
+      | SpreadTupleType _
       | IdxUnwrapType
       | MappedType _ (* TODO: Mapped Type reversals *)
       | ReactCheckComponentConfig _
@@ -360,6 +361,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       (match rrt_resolve_to with
       | ResolveSpreadsToMultiflowSubtypeFull (_, { params; rest_param; _ }) ->
         reverse_resolve_spread_multiflow_subtype_full_no_resolution cx tvar reason params rest_param
+      | ResolveSpreadsToTupleType _
       | ResolveSpreadsToArrayLiteral _
       | ResolveSpreadsToArray _
       | ResolveSpreadsToMultiflowCallFull _

@@ -3334,8 +3334,7 @@ let%expect_test "tuple_annot" =
                   name = None; t = (Annot (String [1:17-23]));
                   polarity = Polarity.Neutral;
                   optional = false}
-                ];
-              arity = (2, 2)})}
+                ]})}
   |}]
 
 let%expect_test "tuple_annot_labeled" =
@@ -3364,8 +3363,7 @@ let%expect_test "tuple_annot_labeled" =
                   t = (Annot (String [1:22-28]));
                   polarity = Polarity.Neutral;
                   optional = false}
-                ];
-              arity = (2, 2)})}
+                ]})}
   |}]
 
 let%expect_test "tuple_annot_variance" =
@@ -3394,8 +3392,7 @@ let%expect_test "tuple_annot_variance" =
                   t = (Annot (String [1:23-29]));
                   polarity = Polarity.Positive;
                   optional = false}
-                ];
-              arity = (2, 2)})}
+                ]})}
   |}]
 
 let%expect_test "cycle" =
@@ -5685,7 +5682,7 @@ let%expect_test "optional_tuple_elements" =
             Tuple {loc = [1:16-39];
               elems_rev =
               [TupleElement {loc = [1:28-38];
-                 name = (Some "b"); t = (Annot (String [1:32-38]));
+                 name = (Some "b"); t = (Annot (Optional (Annot (String [1:32-38]))));
                  polarity = Polarity.Neutral;
                  optional = true};
                 TupleElement {loc = [1:17-26];
@@ -5693,21 +5690,48 @@ let%expect_test "optional_tuple_elements" =
                   t = (Annot (Number [1:20-26]));
                   polarity = Polarity.Neutral;
                   optional = false}
-                ];
-              arity = (1, 2)})}
+                ]})}
   |}]
 
-let%expect_test "optional_tuple_elements_invalid" =
+let%expect_test "tuple_spread" =
   print_sig {|
-    export type T = [a?: number, b: string];
+    type S = [string, boolean];
+    export type T = [number, ...S];
   |};
   [%expect{|
-    CJSModule {type_exports = [|(ExportTypeBinding 0)|];
+    CJSModule {type_exports = [|(ExportTypeBinding 1)|];
       exports = None;
       info = CJSModuleInfo {type_export_keys = [|"T"|]; type_stars = []; strict = true}}
 
     Local defs:
-    0. TypeAlias {id_loc = [1:12-13]; name = "T"; tparams = Mono; body = (Annot (Any [1:16-39]))}
+    0. TypeAlias {id_loc = [1:5-6]; name = "S";
+         tparams = Mono;
+         body =
+         (Annot
+            Tuple {loc = [1:9-26];
+              elems_rev =
+              [TupleElement {loc = [1:18-25];
+                 name = None; t = (Annot (Boolean [1:18-25]));
+                 polarity = Polarity.Neutral;
+                 optional = false};
+                TupleElement {loc = [1:10-16];
+                  name = None; t = (Annot (String [1:10-16]));
+                  polarity = Polarity.Neutral;
+                  optional = false}
+                ]})}
+    1. TypeAlias {id_loc = [2:12-13];
+         name = "T"; tparams = Mono;
+         body =
+         (Annot
+            Tuple {loc = [2:16-30];
+              elems_rev =
+              [TupleSpread {loc = [2:25-29];
+                 name = None; t = (TyRef (Unqualified LocalRef {ref_loc = [2:28-29]; index = 0}))};
+                TupleElement {loc = [2:17-23];
+                  name = None; t = (Annot (Number [2:17-23]));
+                  polarity = Polarity.Neutral;
+                  optional = false}
+                ]})}
   |}]
 
 let%expect_test "mapped_types" =

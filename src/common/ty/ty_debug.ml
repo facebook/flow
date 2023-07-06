@@ -210,6 +210,10 @@ struct
         )
         (dump_t ~depth t)
 
+  and dump_tuple_spread ~depth name t =
+    let name = Base.Option.value_map name ~default:"" ~f:(fun name -> spf "%s: " name) in
+    spf "...%s%s" name (dump_t ~depth t)
+
   and dump_field ~depth x t polarity optional =
     spf
       "%s%s%s: %s"
@@ -333,7 +337,8 @@ struct
           (dump_listi
              (fun i -> function
                | TupleElement { name; t; polarity; optional } ->
-                 dump_tuple_element ~depth i name t polarity optional)
+                 dump_tuple_element ~depth i name t polarity optional
+               | TupleSpread { t; name } -> dump_tuple_spread ~depth name t)
              ~sep:","
              elements
           )
@@ -484,6 +489,13 @@ struct
                            ("t", json_of_t t);
                            ("optional", JSON_Bool optional);
                            ("polarity", json_of_polarity polarity);
+                         ]
+                     | TupleSpread { t; name } ->
+                       JSON_Object
+                         [
+                           ("kind", JSON_String "TupleSpread");
+                           ("name", JSON_String (Base.Option.value name ~default:""));
+                           ("t", json_of_t t);
                          ])
                    elements
                 )

@@ -180,7 +180,10 @@ and tuple_element =
       polarity: polarity;
       optional: bool;
     }
-(* caution: be sure to implement fail_tuple_element if >1 constructor! *)
+  | TupleSpread of {
+      name: string option;
+      t: t;
+    }
 
 and interface_t = {
   if_extends: generic_t list;
@@ -492,6 +495,8 @@ class ['A] comparator_ty =
 
     method! private fail_obj_kind env x y = fail_gen this#tag_of_obj_kind env x y
 
+    method! private fail_tuple_element env x y = fail_gen this#tag_of_tuple_element env x y
+
     method! private fail_prop env x y = fail_gen this#tag_of_prop env x y
 
     method! private fail_named_prop env x y = fail_gen this#tag_of_named_prop env x y
@@ -584,6 +589,11 @@ class ['A] comparator_ty =
       | InexactObj -> 1
       | IndexedObj _ -> 2
       | MappedTypeObj -> 3
+
+    method tag_of_tuple_element _ =
+      function
+      | TupleElement _ -> 0
+      | TupleSpread _ -> 1
 
     method tag_of_any_kind _ =
       function

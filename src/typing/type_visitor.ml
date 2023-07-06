@@ -216,6 +216,27 @@ class ['a] t =
       | SpreadType (_, ts, head_slice) ->
         let acc = self#list (self#object_kit_spread_operand cx) acc ts in
         self#opt (self#object_kit_spread_operand_slice cx) acc head_slice
+      | SpreadTupleType { resolved; unresolved; reason_tuple = _; reason_spread = _ } ->
+        let acc =
+          self#list
+            (fun acc resolved_el ->
+              match resolved_el with
+              | ResolvedArg (element, _) -> self#tuple_element cx pole_TODO acc element
+              | ResolvedSpreadArg (_, arr, _) -> self#arr_type cx pole_TODO acc arr
+              | ResolvedAnySpreadArg _ -> acc)
+            acc
+            resolved
+        in
+        let acc =
+          self#list
+            (fun acc unresolved_el ->
+              match unresolved_el with
+              | UnresolvedArg (element, _) -> self#tuple_element cx pole_TODO acc element
+              | UnresolvedSpreadArg t -> self#type_ cx pole_TODO acc t)
+            acc
+            unresolved
+        in
+        acc
       | RestType (_, t) -> self#type_ cx pole_TODO acc t
       | CallType { from_maptype = _; args } -> self#list (self#type_ cx pole_TODO) acc args
       | ConditionalType { distributive_tparam_name = _; infer_tparams; extends_t; true_t; false_t }

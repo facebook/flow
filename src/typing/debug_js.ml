@@ -42,6 +42,7 @@ let string_of_destructor = function
   | PartialType -> "PartialType"
   | RequiredType -> "RequiredType"
   | SpreadType _ -> "Spread"
+  | SpreadTupleType _ -> "SpreadTupleType"
   | RestType _ -> "Rest"
   | ValuesType -> "Values"
   | CallType _ -> "CallType"
@@ -864,6 +865,7 @@ and dump_use_t_ (depth, tvars) cx t =
       p t ~extra:(spf "use_desc=%b, %s" use_desc (use_kid (UseT (use_op, arg))))
     | ResolveSpreadT (use_op, _, { rrt_resolve_to; _ }) ->
       (match rrt_resolve_to with
+      | ResolveSpreadsToTupleType (_, elem_t, tout)
       | ResolveSpreadsToArrayLiteral (_, elem_t, tout)
       | ResolveSpreadsToArray (elem_t, tout) ->
         p ~extra:(spf "%s, %s, %s" (string_of_use_op use_op) (kid elem_t) (kid tout)) t
@@ -1340,6 +1342,11 @@ let dump_error_message =
         (dump_reason cx reason_tuple)
         (dump_reason cx reason_required)
         (dump_reason cx reason_optional)
+    | ETupleInvalidTypeSpread { reason_spread; reason_arg } ->
+      spf
+        "ETupleInvalidTypeSpread {reason_spread = %s; reason_arg = %s}"
+        (dump_reason cx reason_spread)
+        (dump_reason cx reason_arg)
     | ETupleOutOfBounds { use_op; reason; reason_op; length; index } ->
       spf
         "ETupleOutOfBounds { use_op = %s; reason = %s; reason_op = %s; length = %d; index = %s }"

@@ -2199,3 +2199,86 @@ let rec wraps_mapped_type cx = function
   | DefT (_, _, PolyT { t_out; _ }) -> wraps_mapped_type cx t_out
   | TypeAppT (_, _, t, _) -> wraps_mapped_type cx t
   | _ -> false
+
+(**********)
+(* Tuples *)
+(**********)
+
+let validate_tuple_elements cx ?trace ~reason_tuple ~error_on_req_after_opt elements =
+  let (valid, num_req, num_opt, _) =
+    Base.List.fold elements ~init:(true, 0, 0, None) ~f:(fun acc element ->
+        let (valid, num_req, num_opt, prev_element) = acc in
+        let (TupleElement { optional; reason = reason_element; _ }) = element in
+        if optional then
+          (valid, num_req, num_opt + 1, Some element)
+        else
+          let valid =
+            match prev_element with
+            | Some (TupleElement { optional = true; reason = reason_optional; _ }) when valid ->
+              if error_on_req_after_opt then
+                add_output
+                  cx
+                  ?trace
+                  (Error_message.ETupleRequiredAfterOptional
+                     { reason_tuple; reason_required = reason_element; reason_optional }
+                  );
+              false
+            | _ -> valid
+          in
+          (valid, num_req + 1, num_opt, Some element)
+    )
+  in
+  let arity = (num_req, num_req + num_opt) in
+  (valid, arity)
+
+let mk_tuple_type cx ?trace ~id ~mk_type_destructor reason elements =
+  let (resolved_rev, unresolved_rev, first_spread) =
+    Base.List.fold elements ~init:([], [], None) ~f:(fun (resolved, unresolved, first_spread) el ->
+        match (el, first_spread) with
+        | (UnresolvedArg (el, generic), None) ->
+          ((el, generic) :: resolved, unresolved, first_spread)
+        | (UnresolvedSpreadArg t, None) -> (resolved, unresolved, Some (reason, t))
+        | (_, Some _) -> (resolved, el :: unresolved, first_spread)
+    )
+  in
+  match first_spread with
+  | Some (reason_spread, spread_t) ->
+    let unresolved = List.rev unresolved_rev in
+    let resolved =
+      Base.List.rev_map ~f:(fun (el, generic) -> ResolvedArg (el, generic)) resolved_rev
+    in
+    mk_type_destructor
+      cx
+      unknown_use (* not used *)
+      reason
+      spread_t
+      (SpreadTupleType { reason_tuple = reason; reason_spread; resolved; unresolved })
+      id
+  | None ->
+    let elements = Base.List.rev_map ~f:fst resolved_rev in
+    let (valid, arity) =
+      validate_tuple_elements cx ?trace ~reason_tuple:reason ~error_on_req_after_opt:true elements
+    in
+    if valid then
+      let elem_t =
+        let ts = tuple_ts_of_elements elements in
+        let elem_t_reason = replace_desc_reason (RTupleElement { name = None }) reason in
+        (* If a tuple should be viewed as an array, what would the element type of
+           the array be?
+
+           Using a union here seems appealing but is wrong: setting elements
+           through arbitrary indices at the union type would be unsound, since it
+           might violate the projected types of the tuple at their corresponding
+           positions. This also shows why `mixed` doesn't work, either.
+
+           On the other hand, using the empty type would prevent writes, but admit
+           unsound reads.
+
+           The correct solution is to safely case a tuple type to a covariant
+           array interface whose element type would be a union.
+        *)
+        union_of_ts elem_t_reason ts
+      in
+      DefT (reason, bogus_trust (), ArrT (TupleAT { elem_t; elements; arity }))
+    else
+      AnyT.error reason

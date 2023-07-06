@@ -1971,6 +1971,7 @@ struct
                     `Array
                   else
                     `Iterable
+                | ResolveSpreadsToTupleType _ -> `Tuple
               in
               let elem_t = Tvar.mk cx reason in
               let resolve_to_type =
@@ -2000,6 +2001,14 @@ struct
                       bogus_trust (),
                       ArrT (ROArrayAT elem_t)
                     )
+                | `Tuple ->
+                  add_output
+                    cx
+                    ~trace
+                    (Error_message.ETupleInvalidTypeSpread
+                       { reason_spread = reason_op; reason_arg = reason }
+                    );
+                  AnyT.error reason
               in
               rec_flow_t ~use_op:unknown_use cx trace (l, resolve_to_type);
               ArrayAT { elem_t; tuple_view = None }
@@ -2010,6 +2019,7 @@ struct
             (* Any ResolveSpreadsTo* which does some sort of constant folding needs to
              * carry an id around to break the infinite recursion that constant
              * constant folding can trigger *)
+            | ResolveSpreadsToTupleType (id, elem_t, tout)
             | ResolveSpreadsToArrayLiteral (id, elem_t, tout) ->
               (* You might come across code like
                *
@@ -6533,6 +6543,7 @@ struct
     | PartialType
     | RequiredType
     | RestType _
+    | SpreadTupleType _
     | ValuesType
     | IdxUnwrapType
     | LatentPred _ ->
@@ -6727,6 +6738,18 @@ struct
                   ObjKitT (use_op, reason, tool, Spread (options, state), OpenT tout)
                 )
               )
+            | SpreadTupleType { reason_tuple; reason_spread = _; resolved; unresolved } ->
+              let elem_tout = Tvar.mk cx reason_tuple in
+              ResolveSpreadT
+                ( use_op,
+                  reason_tuple,
+                  {
+                    rrt_resolved = resolved;
+                    rrt_unresolved = unresolved;
+                    rrt_resolve_to =
+                      ResolveSpreadsToTupleType (Reason.mk_id (), elem_tout, OpenT tout);
+                  }
+                )
             | ReactCheckComponentRef ->
               UseT
                 ( use_op,
@@ -8806,14 +8829,18 @@ struct
            * of an `any` forces us to degrade an array literal to Array<any> then
            * we might get a new error. Since introducing `any`'s shouldn't cause
            * errors, this is bad. Instead, let's degrade array literals to `any` *)
-          | ResolveToArrayLiteral -> AnyT.why any_src reason_op)
+          | ResolveToArrayLiteral
+          (* There is no AnyTupleT type, so let's degrade to `any`. *)
+          | ResolveToTupleType ->
+            AnyT.why any_src reason_op)
         | None ->
           (* Spreads that resolve to tuples are flattened *)
           let (elems, spread_after_opt) = flatten_spread_args resolved in
 
           let tuple_elements =
             match resolve_to with
-            | ResolveToArrayLiteral ->
+            | ResolveToArrayLiteral
+            | ResolveToTupleType ->
               elems
               (* If no spreads are left, then this is a tuple too! *)
               |> List.fold_left
@@ -8900,32 +8927,36 @@ struct
             | (ResolveToArrayLiteral, _, true) ->
               DefT (reason_op, bogus_trust (), ArrT (ArrayAT { elem_t; tuple_view = None }))
             | (ResolveToArrayLiteral, Some elements, _) ->
-              let (req_after_opt, num_req, num_opt, _) =
-                Base.List.fold
+              let (valid, arity) =
+                validate_tuple_elements
+                  cx
+                  ?trace
+                  ~reason_tuple:reason_op
+                  ~error_on_req_after_opt:false
                   elements
-                  ~init:(false, 0, 0, None)
-                  ~f:(fun (req_after_opt, num_req, num_opt, prev_element) element ->
-                    let (TupleElement { optional; _ }) = element in
-                    if optional then
-                      (req_after_opt, num_req, num_opt + 1, Some element)
-                    else
-                      let req_after_opt =
-                        match prev_element with
-                        | Some (TupleElement { optional = true; _ }) -> true
-                        | _ -> req_after_opt
-                      in
-                      (req_after_opt, num_req + 1, num_opt, Some element)
-                )
               in
-              let arity = (num_req, num_req + num_opt) in
-              if req_after_opt then
-                DefT (reason_op, bogus_trust (), ArrT (ArrayAT { elem_t; tuple_view = None }))
-              else
+              if valid then
                 DefT
                   ( reason_op,
                     bogus_trust (),
                     ArrT (ArrayAT { elem_t; tuple_view = Some (elements, arity) })
                   )
+              else
+                DefT (reason_op, bogus_trust (), ArrT (ArrayAT { elem_t; tuple_view = None }))
+            | (ResolveToTupleType, Some elements, _) ->
+              let (valid, arity) =
+                validate_tuple_elements
+                  cx
+                  ?trace
+                  ~reason_tuple:reason_op
+                  ~error_on_req_after_opt:true
+                  elements
+              in
+              if valid then
+                DefT (reason_op, bogus_trust (), ArrT (TupleAT { elem_t; elements; arity }))
+              else
+                AnyT.error reason_op
+            | (ResolveToTupleType, None, _) -> AnyT.error reason_op
           in
           Base.Option.value_map
             ~f:(fun id ->
@@ -9123,6 +9154,16 @@ struct
     in
     fun cx ?trace ~use_op ~reason_op resolved resolve_to ->
       match resolve_to with
+      | ResolveSpreadsToTupleType (_, elem_t, tout) ->
+        finish_array
+          cx
+          ~use_op
+          ?trace
+          ~reason_op
+          ~resolve_to:ResolveToTupleType
+          resolved
+          elem_t
+          tout
       | ResolveSpreadsToArrayLiteral (_, elem_t, tout) ->
         finish_array
           cx

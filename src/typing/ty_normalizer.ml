@@ -378,6 +378,7 @@ end = struct
         | PartialType
         | RequiredType
         | SpreadType _
+        | SpreadTupleType _
         | RestType _
         | ReactCheckComponentConfig _
         | ReactCheckComponentRef
@@ -1541,6 +1542,45 @@ end = struct
         in
         mk_spread ty target prefix_tys head_slice
 
+    and tuple_spread ~env ty resolved unresolved =
+      let%bind head =
+        mapM
+          (function
+            | T.ResolvedArg (T.TupleElement { reason = _; name; t; polarity; optional }, _) ->
+              let%map t = type__ ~env t in
+              [Ty.TupleElement { name; t; polarity = type_polarity polarity; optional }]
+            | T.ResolvedSpreadArg (r, arr, _) ->
+              (match arr with
+              | T.TupleAT { elements; _ } ->
+                mapM
+                  (function
+                    | T.TupleElement { reason = _; name; t; polarity; optional } ->
+                      let%map t = type__ ~env t in
+                      Ty.TupleElement { name; t; polarity = type_polarity polarity; optional })
+                  elements
+              | _ ->
+                let%map t = arr_ty ~env r arr in
+                [Ty.TupleSpread { name = None; t }])
+            | T.ResolvedAnySpreadArg (reason, src) ->
+              let%map t = return (Ty.Any (any_t reason src)) in
+              [Ty.TupleSpread { name = None; t }])
+          resolved
+        >>| Base.List.concat
+      in
+      let spread_ty = Ty.TupleSpread { name = None; t = ty } in
+      let%bind tail =
+        mapM
+          (function
+            | T.UnresolvedArg (T.TupleElement { reason = _; name; t; polarity; optional }, _) ->
+              let%map t = type__ ~env t in
+              Ty.TupleElement { name; t; polarity = type_polarity polarity; optional }
+            | T.UnresolvedSpreadArg t ->
+              let%map t = type__ ~env t in
+              Ty.TupleSpread { name = None; t })
+          unresolved
+      in
+      return (Ty.Tup (head @ (spread_ty :: tail)))
+
     and check_component ~env ty pmap =
       let%bind map_props =
         NameUtils.Map.bindings pmap |> concat_fold_m (obj_prop_t ~env ?inherited:None ?source:None)
@@ -1674,6 +1714,7 @@ end = struct
         let%map ty' = type__ ~env t' in
         Ty.Utility (Ty.Diff (ty, ty'))
       | T.SpreadType (target, operands, head_slice) -> spread ~env ty target operands head_slice
+      | T.SpreadTupleType { resolved; unresolved; _ } -> tuple_spread ~env ty resolved unresolved
       | T.ReactCheckComponentConfig pmap -> check_component ~env ty pmap
       | T.ReactCheckComponentRef -> return (Ty.Utility (Ty.ReactCheckComponentRef ty))
       | T.ReactElementPropsType -> return (Ty.Utility (Ty.ReactElementPropsType ty))

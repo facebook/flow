@@ -258,6 +258,33 @@ and collect_of_destructor ?log_unresolved cx acc = function
       | Some head_slice ->
         collect_of_object_kit_spread_operand_slice ?log_unresolved cx acc head_slice
     end
+  | SpreadTupleType { resolved; unresolved; reason_tuple = _; reason_spread = _ } ->
+    let acc =
+      List.fold_left
+        (fun acc -> function
+          | UnresolvedArg (TupleElement { t; _ }, _)
+          | UnresolvedSpreadArg t ->
+            collect_of_type ?log_unresolved cx acc t)
+        acc
+        unresolved
+    in
+    List.fold_left
+      (fun acc -> function
+        | ResolvedArg (TupleElement { t; _ }, _) -> collect_of_type ?log_unresolved cx acc t
+        | ResolvedSpreadArg (_, arr, _) ->
+          (match arr with
+          | ArrayAT { elem_t; tuple_view = None } -> collect_of_type ?log_unresolved cx acc elem_t
+          | ArrayAT { elem_t; tuple_view = Some (elements, _) }
+          | TupleAT { elem_t; elements; arity = _ } ->
+            collect_of_types
+              ?log_unresolved
+              cx
+              acc
+              (elem_t :: TypeUtil.tuple_ts_of_elements elements)
+          | ROArrayAT elemt -> collect_of_type ?log_unresolved cx acc elemt)
+        | ResolvedAnySpreadArg _ -> acc)
+      acc
+      resolved
   | RestType (_, t) -> collect_of_type ?log_unresolved cx acc t
   | ValuesType -> acc
   | CallType { from_maptype = _; args = ts } -> collect_of_types ?log_unresolved cx acc ts
