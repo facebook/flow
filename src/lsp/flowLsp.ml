@@ -588,6 +588,7 @@ let show_status
     ~(shortMessage : string option)
     ~(progress : int option)
     ~(total : int option)
+    ?(backgroundColor : [ `error | `warning ] option)
     (ienv : initialized_env) : initialized_env =
   let use_status = Lsp_helpers.supports_status ienv.i_initialize_params in
   let actions = List.map titles ~f:(fun title -> { ShowMessageRequest.title }) in
@@ -597,6 +598,7 @@ let show_status
       shortMessage;
       progress;
       total;
+      backgroundColor;
     }
   in
   let (will_dismiss_old, will_show_new) = should_send_status ienv params in
@@ -951,6 +953,7 @@ let show_disconnected (code : FlowExit.t option) (message : string option) (env 
       ~shortMessage:None
       ~progress:None
       ~total:None
+      ~backgroundColor:`error
       env.d_ienv
   in
   Disconnected { env with d_ienv }

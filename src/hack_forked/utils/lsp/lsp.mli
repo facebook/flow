@@ -1080,6 +1080,7 @@ module ShowStatus : sig
     progress: int option;
     total: int option;
     shortMessage: string option;
+    backgroundColor: [ `error | `warning ] option;
   }
 end
 

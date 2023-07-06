@@ -719,21 +719,24 @@ let print_showStatus (r : ShowStatus.showStatusParams) : json =
   let print_action (action : ShowMessageRequest.messageActionItem) : json =
     JSON_Object [("title", JSON_String action.ShowMessageRequest.title)]
   in
-  let rr = r.ShowStatus.request in
+  let { ShowStatus.request = rr; progress; total; shortMessage; backgroundColor } = r in
   Jprint.object_opt
     [
       ("type", Some (int_ (MessageType.to_enum rr.ShowMessageRequest.type_)));
       ("actions", Some (JSON_Array (Base.List.map rr.ShowMessageRequest.actions ~f:print_action)));
       ("message", Some (JSON_String rr.ShowMessageRequest.message));
-      ("shortMessage", Base.Option.map r.ShowStatus.shortMessage ~f:string_);
+      ("shortMessage", Base.Option.map shortMessage ~f:string_);
       ( "progress",
-        Base.Option.map r.ShowStatus.progress ~f:(fun progress ->
+        Base.Option.map progress ~f:(fun progress ->
             Jprint.object_opt
-              [
-                ("numerator", Some (int_ progress));
-                ("denominator", Base.Option.map r.ShowStatus.total ~f:int_);
-              ]
+              [("numerator", Some (int_ progress)); ("denominator", Base.Option.map total ~f:int_)]
         )
+      );
+      ( "backgroundColor",
+        Base.Option.map backgroundColor ~f:(function
+            | `error -> JSON_String "error"
+            | `warning -> JSON_String "warning"
+            )
       );
     ]
 
