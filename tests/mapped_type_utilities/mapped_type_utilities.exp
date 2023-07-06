@@ -40,11 +40,39 @@ References:
                                  ^^^^^^^^^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------------- omit.js:30:9
+
+Cannot get `noFoo.foo` because property `foo` is missing in `Pick` [1]. [prop-missing]
+
+   omit.js:30:9
+   30|   noFoo.foo; // ERROR: omitted
+               ^^^
+
+References:
+   omit.js:28:24
+   28|   declare const noFoo: OmitInterface;
+                              ^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- omit.js:44:9
+
+Cannot get `noFoo.foo` because property `foo` is missing in `Pick` [1]. [prop-missing]
+
+   omit.js:44:9
+   44|   noFoo.foo; // ERROR: omitted
+               ^^^
+
+References:
+   omit.js:42:24
+   42|   declare const noFoo: OmitInstance;
+                              ^^^^^^^^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------------- pick.js:8:10
 
 Cannot assign `3` to `pickedO1.foo` because property `foo` is not writable. [cannot-write]
 
-   8| pickedO1.foo = 3; // ERROR: foo is read-only 
+   8| pickedO1.foo = 3; // ERROR: foo is read-only
                ^^^
 
 
@@ -57,12 +85,40 @@ Cannot cast `pickedO1.bar` to string because undefined [1] is incompatible with 
           ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2726:55
-   2726| type Pick<O: {...}, Keys: $Keys<O>> = {[key in Keys]: O[key]};
-                                                               ^^^^^^ [1]
+   <BUILTINS>/core.js:2726:62
+   2726| type Pick<O: interface {}, Keys: $Keys<O>> = {[key in Keys]: O[key]};
+                                                                      ^^^^^^ [1]
    pick.js:9:16
       9| (pickedO1.bar: string); // ERROR bar is optional
                         ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- pick.js:24:10
+
+Cannot get `picked.bar` because property `bar` is missing in `Pick` [1]. [prop-missing]
+
+   pick.js:24:10
+   24|   picked.bar; // ERROR: wasn't picked
+                ^^^
+
+References:
+   pick.js:22:25
+   22|   declare const picked: PickInterface;
+                               ^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- pick.js:36:10
+
+Cannot get `picked.bar` because property `bar` is missing in `Pick` [1]. [prop-missing]
+
+   pick.js:36:10
+   36|   picked.bar; // ERROR: wasn't picked
+                ^^^
+
+References:
+   pick.js:34:25
+   34|   declare const picked: PickInstance;
+                               ^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- record.js:5:2
@@ -102,4 +158,4 @@ References:
 
 
 
-Found 7 errors
+Found 11 errors

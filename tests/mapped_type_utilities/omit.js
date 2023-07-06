@@ -15,3 +15,31 @@ noFooOrBar.baz; // OK
 (noFooOrBar:{baz: number}); // OK
 
 const o: Omit<{ foo?: string, bar: number; }, "bar"> = {}; // OK
+
+// Interfaces
+interface I {
+  foo: string;
+  bar: number;
+  baz: number
+}
+
+type OmitInterface = Omit<I, 'foo'>;
+{
+  declare const noFoo: OmitInterface;
+  (noFoo: interface {bar: number; baz: number}); // OK
+  noFoo.foo; // ERROR: omitted
+}
+
+// Instances
+class C {
+  foo: string;
+  bar: number;
+  baz: number
+}
+
+type OmitInstance = Omit<C, 'foo'>;
+{
+  declare const noFoo: OmitInstance;
+  (noFoo: interface {bar: number; baz: number}); // OK
+  noFoo.foo; // ERROR: omitted
+}
