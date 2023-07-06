@@ -1463,6 +1463,42 @@ let resolve
       | _ -> reason
     in
     return cx use_op (DefT (def_reason, trust, ArrT (TupleAT { elem_t; elements; arity })))
+  | DefT (r, trust, ArrT (TupleAT { elem_t; elements; arity })) when tool = Partial ->
+    let elements =
+      Base.List.map elements ~f:(fun (TupleElement { t; name; polarity; optional = _; reason }) ->
+          let t = TypeUtil.optional t in
+          TupleElement { t; name; polarity; optional = true; reason }
+      )
+    in
+    let def_reason =
+      match desc_of_reason ~unwrap:false reason with
+      | RPartialOf _ -> r
+      | _ -> reason
+    in
+    let elem_t = union_of_ts (reason_of_t elem_t) (tuple_ts_of_elements elements) in
+    let (_, num_total) = arity in
+    let arity = (0, num_total) in
+    return cx use_op (DefT (def_reason, trust, ArrT (TupleAT { elem_t; elements; arity })))
+  | DefT (r, trust, ArrT (TupleAT { elem_t; elements; arity })) when tool = Required ->
+    let elements =
+      Base.List.map elements ~f:(fun (TupleElement { t; name; polarity; optional = _; reason }) ->
+          let t =
+            match t with
+            | OptionalT { type_; _ } -> type_
+            | _ -> t
+          in
+          TupleElement { t; name; polarity; optional = false; reason }
+      )
+    in
+    let def_reason =
+      match desc_of_reason ~unwrap:false reason with
+      | RRequiredOf _ -> r
+      | _ -> reason
+    in
+    let elem_t = union_of_ts (reason_of_t elem_t) (tuple_ts_of_elements elements) in
+    let (_, num_total) = arity in
+    let arity = (num_total, num_total) in
+    return cx use_op (DefT (def_reason, trust, ArrT (TupleAT { elem_t; elements; arity })))
   (* If we see an empty then propagate empty to tout. *)
   | DefT (r, trust, EmptyT) -> return cx use_op (EmptyT.make r trust)
   (* Propagate any. *)

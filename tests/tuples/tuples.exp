@@ -800,6 +800,36 @@ References:
                   ^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ optional.js:118:2
+
+Cannot cast array literal to `AllRequired` because empty array literal [1] has 0 elements but `AllRequired` [2] has 2
+elements. [invalid-tuple-arity]
+
+   optional.js:118:2
+   118| ([]: AllRequired); // ERROR
+         ^^ [1]
+
+References:
+   optional.js:118:6
+   118| ([]: AllRequired); // ERROR
+             ^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ optional.js:123:2
+
+Cannot cast array literal to required of `AllOptional` because empty array literal [1] has 0 elements but
+`AllOptional` [2] has 2 elements. [invalid-tuple-arity]
+
+   optional.js:123:2
+   123| ([]: Required<AllOptional>); // ERROR
+         ^^ [1]
+
+References:
+   optional.js:123:15
+   123| ([]: Required<AllOptional>); // ERROR
+                      ^^^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------ readonly-array.js:16:76
 
 Cannot return `tup` because number [1] is incompatible with string [2] in array element. [incompatible-return]
@@ -1872,4 +1902,4 @@ References:
 
 
 
-Found 117 errors
+Found 119 errors

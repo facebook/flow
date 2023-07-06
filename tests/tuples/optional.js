@@ -112,3 +112,13 @@ type InvalidReqAfterOptMultiple = [a: number, b?: string, c: string, d: boolean]
   type O = {a?: string};
   ([1, undefined]: [number, b?: O['a']]); // OK
 }
+
+// `Optional` & `Required`
+type AllRequired = [number, string];
+([]: AllRequired); // ERROR
+([]: Partial<AllRequired>); // OK
+
+type AllOptional = [a?: number, b?: string];
+([]: AllOptional); // OK
+([]: Required<AllOptional>); // ERROR
+([1, 's']: Required<AllOptional>); // OK
