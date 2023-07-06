@@ -950,7 +950,7 @@ module rec ConsGen : S = struct
       let value = elemt_of_arrtype arrtype in
       reposition cx (loc_of_reason reason_op) value
     | (DefT (_, _, NumT _), Annot_ElemT (reason_op, use_op, DefT (reason_tup, _, ArrT arrtype))) ->
-      let (value, _) =
+      let (value, _, _) =
         Flow_js_utils.array_elem_check
           ~write_action:false
           cx

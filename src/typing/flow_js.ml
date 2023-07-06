@@ -3876,7 +3876,7 @@ struct
               false
             | WriteElem _ -> true
           in
-          let (value, is_tuple) =
+          let (value, is_tuple, use_op) =
             array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype
           in
           perform_elem_action cx trace ~use_op ~restrict_deletes:is_tuple reason arr value action

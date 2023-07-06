@@ -1899,11 +1899,11 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
       (elem_t, Some ts, true, true)
     | ROArrayAT value -> (value, None, true, false)
   in
-  let (can_write_tuple, value) =
+  let (can_write_tuple, value, use_op) =
     match l with
     | DefT (index_reason, _, NumT (Literal (_, (float_value, _)))) -> begin
       match ts with
-      | None -> (false, value)
+      | None -> (false, value, use_op)
       | Some ts ->
         let index_string = Dtoa.ecma_string_of_float float_value in
         begin
@@ -1934,8 +1934,9 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
                   | (true, OptionalT { type_; _ }) -> type_
                   | _ -> value
                 in
-                (true, value)
-              | Some (value, _, _, _) -> (true, value)
+                let use_op = Frame (TupleAssignment { upper_optional = optional }, use_op) in
+                (true, value, use_op)
+              | Some (value, _, _, _) -> (true, value, use_op)
               | None ->
                 if is_tuple then (
                   add_output
@@ -1951,10 +1952,11 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
                        }
                     );
                   ( true,
-                    AnyT.error (mk_reason (RTupleOutOfBoundsAccess index) (loc_of_reason reason))
+                    AnyT.error (mk_reason (RTupleOutOfBoundsAccess index) (loc_of_reason reason)),
+                    use_op
                   )
                 ) else
-                  (true, value)
+                  (true, value, use_op)
             end
           | None ->
             (* not an integer index *)
@@ -1965,12 +1967,12 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
                 (Error_message.ETupleNonIntegerIndex
                    { use_op; reason = index_reason; index = index_string }
                 );
-              (true, AnyT.error reason)
+              (true, AnyT.error reason, use_op)
             ) else
-              (true, value)
+              (true, value, use_op)
         end
     end
-    | _ -> (false, value)
+    | _ -> (false, value, use_op)
   in
   ( if is_index_restricted && (not can_write_tuple) && write_action then
     let error =
@@ -1980,7 +1982,7 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
     in
     add_output cx ~trace error
   );
-  (value, is_tuple)
+  (value, is_tuple, use_op)
 
 let propref_for_elem_t = function
   | GenericT { bound = DefT (_, _, StrT (Literal (_, name))); reason; _ }

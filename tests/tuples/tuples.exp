@@ -372,7 +372,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ optional.js:26:16
 
-Cannot assign `undefined` to `withOpt[1]` because undefined [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `undefined` to `withOpt[1]` because you cannot assign undefined [1] to optional tuple element [2] (to do
+so, add `| void` to the tuple element type). [incompatible-type]
 
    optional.js:26:16
    26|   withOpt[1] = undefined; // ERROR
@@ -431,8 +432,8 @@ Cannot assign `undefined` to `withReadOnlyOpt[1]` because tuple element at index
 
 Error ------------------------------------------------------------------------------------------------ optional.js:32:24
 
-Cannot assign `undefined` to `withReadOnlyOpt[1]` because undefined [1] is incompatible with string [2].
-[incompatible-type]
+Cannot assign `undefined` to `withReadOnlyOpt[1]` because you cannot assign undefined [1] to optional tuple element [2]
+(to do so, add `| void` to the tuple element type). [incompatible-type]
 
    optional.js:32:24
    32|   withReadOnlyOpt[1] = undefined; // ERROR
@@ -497,8 +498,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:46:6
 
-Cannot cast array literal to `WithOpt` because undefined [1] is incompatible with string [2] in index 1.
-[incompatible-cast]
+Cannot cast array literal to `WithOpt` because you cannot assign undefined [1] to optional tuple element [2] (to do so,
+add `| void` to the tuple element type) in index 1. [incompatible-cast]
 
    optional.js:46:6
    46| ([1, undefined]: WithOpt); // ERROR
@@ -527,8 +528,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:51:6
 
-Cannot cast array literal to `WithReadOnlyOpt` because undefined [1] is incompatible with string [2] in index 1.
-[incompatible-cast]
+Cannot cast array literal to `WithReadOnlyOpt` because you cannot assign undefined [1] to optional tuple element [2] (to
+do so, add `| void` to the tuple element type) in index 1. [incompatible-cast]
 
    optional.js:51:6
    51| ([1, undefined]: WithReadOnlyOpt); // ERROR

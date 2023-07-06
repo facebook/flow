@@ -665,8 +665,10 @@ let rec mod_loc_of_virtual_use_op f =
       PropertyCompatibility { prop; lower = mod_reason lower; upper = mod_reason upper }
     | ReactConfigCheck -> ReactConfigCheck
     | ReactGetConfig o -> ReactGetConfig o
-    | TupleElementCompatibility { n; lower; upper } ->
-      TupleElementCompatibility { n; lower = mod_reason lower; upper = mod_reason upper }
+    | TupleElementCompatibility { n; lower; upper; lower_optional; upper_optional } ->
+      TupleElementCompatibility
+        { n; lower = mod_reason lower; upper = mod_reason upper; lower_optional; upper_optional }
+    | TupleAssignment { upper_optional } -> TupleAssignment { upper_optional }
     | TypeArgCompatibility { name; targ; lower; upper; polarity } ->
       TypeArgCompatibility
         {

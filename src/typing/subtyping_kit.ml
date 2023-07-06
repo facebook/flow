@@ -1571,7 +1571,17 @@ module Make (Flow : INPUT) : OUTPUT = struct
                  }
               );
           let use_op =
-            Frame (TupleElementCompatibility { n = !n; lower = r1; upper = r2 }, use_op)
+            Frame
+              ( TupleElementCompatibility
+                  {
+                    n = !n;
+                    lower = r1;
+                    upper = r2;
+                    lower_optional = optional1;
+                    upper_optional = optional2;
+                  },
+                use_op
+              )
           in
           (* We don't want to allow `undefined` when an element is marked as optional:
            * ```

@@ -445,7 +445,10 @@ module rec TypeTerm : sig
         n: int;
         lower: 'loc virtual_reason;
         upper: 'loc virtual_reason;
+        lower_optional: bool;
+        upper_optional: bool;
       }
+    | TupleAssignment of { upper_optional: bool }
     | TypeArgCompatibility of {
         name: Subst_name.t;
         targ: 'loc virtual_reason;
@@ -3786,6 +3789,7 @@ let string_of_frame_use_op (type a) : a virtual_frame_use_op -> string = functio
   | ReactConfigCheck -> "ReactConfigCheck"
   | ReactGetConfig _ -> "ReactGetConfig"
   | TupleElementCompatibility _ -> "TupleElementCompatibility"
+  | TupleAssignment _ -> "TupleAssignment"
   | TypeArgCompatibility _ -> "TypeArgCompatibility"
   | TypeParamBound _ -> "TypeParamBound"
   | UnifyFlip -> "UnifyFlip"
