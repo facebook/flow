@@ -1885,13 +1885,15 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
   let (value, ts, is_index_restricted, is_tuple) =
     match arrtype with
     | ArrayAT { elem_t; tuple_view = ts } ->
-      let ts = Base.Option.map ~f:(Base.List.map ~f:(fun t -> (t, Polarity.Neutral, None))) ts in
+      let ts =
+        Base.Option.map ~f:(Base.List.map ~f:(fun t -> (t, Polarity.Neutral, false, None))) ts
+      in
       (elem_t, ts, false, false)
     | TupleAT { elem_t; elements; arity = _ } ->
       let ts =
         Base.List.map
-          ~f:(fun (TupleElement { t; polarity; name; optional = _; reason = _ }) ->
-            (t, polarity, name))
+          ~f:(fun (TupleElement { t; polarity; name; optional; reason = _ }) ->
+            (t, polarity, optional, name))
           elements
       in
       (elem_t, Some ts, true, true)
@@ -1913,7 +1915,7 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
             in
             begin
               match value_opt with
-              | Some (value, polarity, name) when is_tuple ->
+              | Some (value, polarity, optional, name) when is_tuple ->
                 if write_action && (not @@ Polarity.compat (polarity, Polarity.Negative)) then
                   add_output
                     cx
@@ -1925,8 +1927,15 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
                     cx
                     ~trace
                     (Error_message.ETupleElementNotReadable { use_op; reason; index; name });
+                (* We don't allowing writing `undefined` to optional tuple elements.
+                 * User can add `| void` to the element type if they want this behavior. *)
+                let value =
+                  match (optional, value) with
+                  | (true, OptionalT { type_; _ }) -> type_
+                  | _ -> value
+                in
                 (true, value)
-              | Some (value, _, _) -> (true, value)
+              | Some (value, _, _, _) -> (true, value)
               | None ->
                 if is_tuple then (
                   add_output

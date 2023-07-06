@@ -1555,7 +1555,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         add_output cx ~trace (Error_message.ETupleArityMismatch ((r1, r2), arity1, arity2, use_op))
       else
         let n = ref 0 in
-        let tuple_element_compat t1 t2 p1 p2 =
+        let tuple_element_compat t1 t2 p1 p2 optional1 optional2 =
           if not (fresh || Polarity.compat (p1, p2)) then
             add_output
               cx
@@ -1573,6 +1573,20 @@ module Make (Flow : INPUT) : OUTPUT = struct
           let use_op =
             Frame (TupleElementCompatibility { n = !n; lower = r1; upper = r2 }, use_op)
           in
+          (* We don't want to allow `undefined` when an element is marked as optional:
+           * ```
+           * type T = [number, b?: string];
+           * ([0, undefined]: T); // Should error
+           * ([0]: T); // Should be ok
+           * ([0, 's']: T); // Should be ok
+           * ```
+           * A user can always add `| void` to the element type if they want to denote this.
+           *)
+          let (t1, t2) =
+            match (optional1, (optional2, t2)) with
+            | (false, (true, OptionalT { type_ = t2; _ })) -> (t1, t2)
+            | _ -> (t1, t2)
+          in
           match p2 with
           | Polarity.Positive -> rec_flow_t cx trace ~use_op (t1, t2)
           | Polarity.Negative -> rec_flow_t cx trace ~use_op (t2, t1)
@@ -1581,20 +1595,30 @@ module Make (Flow : INPUT) : OUTPUT = struct
         iter2opt
           (fun t1 t2 ->
             match (t1, t2) with
-            | ( Some (TupleElement { t = t1; polarity = p1; name = _; optional = _; reason = _ }),
-                Some (TupleElement { t = t2; polarity = p2; name = _; optional = _; reason = _ })
+            | ( Some
+                  (TupleElement
+                    { t = t1; polarity = p1; name = _; optional = optional1; reason = _ }
+                    ),
+                Some
+                  (TupleElement
+                    { t = t2; polarity = p2; name = _; optional = optional2; reason = _ }
+                    )
               ) ->
-              tuple_element_compat t1 t2 p1 p2;
+              tuple_element_compat t1 t2 p1 p2 optional1 optional2;
               n := !n + 1
             | ( None,
-                Some (TupleElement { t = t2; polarity = p2; name = _; optional = _; reason = _ })
+                Some
+                  (TupleElement
+                    { t = t2; polarity = p2; name = _; optional = optional2; reason = _ }
+                    )
               ) ->
               let p1 = Polarity.Neutral in
               let t1 =
                 VoidT.make (replace_desc_new_reason (RTupleOutOfBoundsAccess !n) r1)
                 |> with_trust bogus_trust
               in
-              tuple_element_compat t1 t2 p1 p2;
+              let optional1 = true in
+              tuple_element_compat t1 t2 p1 p2 optional1 optional2;
               n := !n + 1
             | _ -> ())
           (elements1, elements2)

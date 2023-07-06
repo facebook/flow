@@ -20,17 +20,17 @@ type WithReadOnlyOpt = [a: number, +b?: string];
   declare const withOpt: WithOpt;
   (withOpt: Single); // ERROR
   (withOpt: WithReadOnlyOpt); // OK
-
+  (withOpt: [a: number, b?: string]); // OK
   (withOpt.length: 1 | 2); // OK
   (withOpt.length: 2); // ERROR
+  withOpt[1] = undefined; // ERROR
 }
-
 {
   declare const withReadOnlyOpt: WithReadOnlyOpt;
   (withReadOnlyOpt: Single); // ERROR
   (withReadOnlyOpt: WithOpt); // ERROR
+  withReadOnlyOpt[1] = undefined; // ERROR
 }
-
 {
   declare const withWriteOnlyOpt: [a: number, -b?: string | boolean];
   (withWriteOnlyOpt: [a: number]); // ERROR
@@ -43,12 +43,12 @@ type WithReadOnlyOpt = [a: number, +b?: string];
 
 ([1]: WithOpt); // OK
 ([1, 's']: WithOpt); // OK
-([1, undefined]: WithOpt); // OK
+([1, undefined]: WithOpt); // ERROR
 ([1, true]: WithOpt); // ERROR
 
 ([1]: WithReadOnlyOpt); // OK
 ([1, 's']: WithReadOnlyOpt); // OK
-([1, undefined]: WithReadOnlyOpt); // OK
+([1, undefined]: WithReadOnlyOpt); // ERROR
 ([1, true]: WithReadOnlyOpt); // ERROR
 
 type InvalidReqAfterOpt = [a: number, b?: string, c: string]; // ERROR
@@ -104,4 +104,11 @@ type InvalidReqAfterOptMultiple = [a: number, b?: string, c: string, d: boolean]
   const [,,,, ...rest2] = x;
   (rest2: []); // OK
   (rest2: [1]); // ERROR
+}
+
+// `undefined` values
+{
+  ([1, undefined]: [number, b?: string | void]); // OK
+  type O = {a?: string};
+  ([1, undefined]: [number, b?: O['a']]); // OK
 }
