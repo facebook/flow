@@ -3,54 +3,40 @@ title: Nominal & Structural Typing
 slug: /lang/nominal-structural
 ---
 
-An important attribute of every type system is whether they are structural or
-nominal, they can even be mixed within a single type system. So it's important
-to know the difference.
-
-A type is something like a string, a boolean, an object, or a class. They have
-names and they have structures. Primitives like strings or booleans have a very
-simple structure and only go by one name.
-
-More complex types like object or classes have more complex structures. They
-each get their own name even if they sometimes have the same structure overall.
-
-A static type checker uses either the names or the structure of the types in
-order to compare them against other types. Checking against the name is nominal
-typing and checking against the structure is structural typing.
+A static type checker can use either the name (nominal typing) or the structure (structural typing)
+of types when comparing them against other types (like when checking if one is a [subtype](../subtypes) of another).
 
 ## Nominal typing {#toc-nominal-typing}
 
 Languages like C++, Java, and Swift have primarily nominal type systems.
 
 ```js
-// Pseudo code
+// Pseudo code: nominal system
 class Foo { method(input: string) { /* ... */ } }
 class Bar { method(input: string) { /* ... */ } }
 
 let foo: Foo = new Bar(); // Error!
 ```
 
-Here you can see a pseudo-example of a nominal type system erroring out when
-you're trying to put a `Bar` where a `Foo` is required because they have
-different names.
+In this pseudo-code example, the nominal type system errors even though both classes have a method of the same name and type.
+This is because the name (and declaration location) of the classes is different.
 
 ## Structural typing {#toc-structural-typing}
 
-Languages like OCaml and Elm have primarily structural type systems.
+Languages like Go and Elm have primarily structural type systems.
 
 ```js
-// Pseudo code
+// Pseudo code: structural system
 class Foo { method(input: string) { /* ... */ } }
 class Bar { method(input: string) { /* ... */ } }
 
 let foo: Foo = new Bar(); // Works!
 ```
 
-Here you can see a pseudo-example of a structural type system passing when
-you're trying to put a Bar where a `Foo` is required because their structure is
-exactly the same.
+In this pseudo-code example, the structural type system allows a `Bar` to be used as a `Foo`,
+since both classes have methods and fields of the same name and type.
 
-But as soon as you change the shape it will start to cause errors.
+If the shape of the classes differ however, then a structural system would produce an error:
 
 ```js
 // Pseudo code
@@ -60,23 +46,21 @@ class Bar { method(input: number) { /* ... */ } }
 let foo: Foo = new Bar(); // Error!
 ```
 
-It can get a little bit more complicated than this.
-
-We've demonstrated both nominal and structure typing of classes, but there are
+We've demonstrated both nominal and structural typing of classes, but there are
 also other complex types like objects and functions which can also be either
-nominal or structural. Even further, they can be different within the same type
-system (most of the languages listed before has features of both).
+nominally or structurally compared.
+Additionally, a type system may have aspects of both structural and nominal systems.
 
-For example, Flow uses structural typing for objects and functions, but nominal
-typing for classes.
+## In Flow
+
+Flow uses structural typing for objects and functions, but nominal typing for classes.
 
 ### Functions are structurally typed {#toc-functions-are-structurally-typed}
 
-When comparing a function type with a function it must have the same structure
+When comparing a [function type](../../types/functions) with a function it must have the same structure
 in order to be considered valid.
 
 ```js flow-check
-// @flow
 type FuncType = (input: string) => void;
 function func(input: string) { /* ... */ }
 let test: FuncType = func; // Works!
@@ -84,28 +68,27 @@ let test: FuncType = func; // Works!
 
 ### Objects are structurally typed {#toc-objects-are-structurally-typed}
 
-When comparing an object type with an object it must have the same structure
+When comparing an [object type](../../types/objects) with an object it must have the same structure
 in order to be considered valid.
 
 ```js flow-check
-type ObjType = { property: string };
-let obj = { property: "value" };
-let test: ObjType = obj;
+type ObjType = {property: string};
+let obj = {property: "value"};
+let test: ObjType = obj; // Works
 ```
 
 ### Classes are nominally typed {#toc-classes-are-nominally-typed}
 
-When you have two classes with the same structure, they still are not
+When you have two [classes](../../types/classes) with the same structure, they still are not
 considered equivalent because Flow uses nominal typing for classes.
 
 ```js flow-check
-// @flow
 class Foo { method(input: string) { /* ... */ } }
 class Bar { method(input: string) { /* ... */ } }
 let test: Foo = new Bar(); // Error!
 ```
 
-If you wanted to use a class structurally you could do that using an interface:
+If you wanted to use a class structurally you could do that using an [interface](../../types/interfaces):
 
 ```js flow-check
 interface Interface {
@@ -115,27 +98,44 @@ interface Interface {
 class Foo { method(input: string) { /* ... */ } }
 class Bar { method(input: string) { /* ... */ } }
 
-let test1: Interface = new Foo(); // Okay.
-let test2: Interface = new Bar(); // Okay.
+let test1: Interface = new Foo(); // Works
+let test2: Interface = new Bar(); // Works
 ```
 
-## Mixing nominal and structural typing {#toc-mixing-nominal-and-structural-typing}
+### Opaque types
+You can use [opaque types](../../types/opaque-types) to turn a previously structurally typed alias into a nominal one (outside of the file that it is defined).
 
-The design decision in Flow around mixing nominal and structural typing was
-chosen based on how objects, functions, and classes are already used in
-JavaScript.
+```js flow-check
+// A.js
+export type MyTypeAlias = string;
+export opaque type MyOpaqueType = string;
 
-The JavaScript language is a bunch of object-oriented ideas and functional
-ideas mixed together. Developer's usage of JavaScript tends to be mixed as
-well. Classes (or constructor functions) being the more object-oriented side
-and functions (as lambdas) and objects tend to be more on the functional side,
-developers use both simultaneously.
+const x: MyTypeAlias = "hi"; // Works
+const y: MyOpaqueType = "hi"; // Works
+```
 
-When someone writes a class, they are declaring a _thing_. This thing might
-have the same structure as something else but they still serve different
-purposes. Imagine two component classes that both have `render()` methods,
-these components could still have totally different purposes, but in a
-structural type system they'd be considered exactly the same.
+In a different file:
 
-Flow chooses what is natural for JavaScript, and should behave the way you
-expect it to.
+```js
+// B.js
+import type {MyTypeAlias, MyOpaqueType} from "A.js";
+
+const x: MyTypeAlias = "hi"; // Works
+const y: MyOpaqueType = "hi"; // Error! `MyOpaqueType` is not interchangable with `string`
+//                      ^^^^ Cannot assign "hi" to y because string is incompatible with MyOpaqueType
+```
+
+### Flow Enums
+
+[Flow Enums](../../enums) do not allow enum members with the same value, but which belong to different enums, to be used interchangeably.
+
+```js flow-check
+enum A {
+  X = "x",
+}
+enum B {
+  X = "x",
+}
+
+const a: A = B.X; // Error!
+```
