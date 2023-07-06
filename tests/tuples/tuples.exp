@@ -1170,6 +1170,132 @@ References:
                    ^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------- value-spread.js:6:4
+
+Cannot cast `y` to tuple type because array literal [1] has 4 elements but tuple type [2] has 3 elements.
+[invalid-tuple-arity]
+
+   value-spread.js:6:4
+   6|   (y: [0, 1, 2]); // ERROR
+         ^
+
+References:
+   value-spread.js:4:13
+   4|   const y = [0, ...x, 3];
+                  ^^^^^^^^^^^^ [1]
+   value-spread.js:6:7
+   6|   (y: [0, 1, 2]); // ERROR
+            ^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- value-spread.js:7:4
+
+Cannot cast `y` to tuple type because array literal [1] has 4 elements but tuple type [2] has 5 elements.
+[invalid-tuple-arity]
+
+   value-spread.js:7:4
+   7|   (y: [0, 1, 2, 3, 4]); // ERROR
+         ^
+
+References:
+   value-spread.js:4:13
+   4|   const y = [0, ...x, 3];
+                  ^^^^^^^^^^^^ [1]
+   value-spread.js:7:7
+   7|   (y: [0, 1, 2, 3, 4]); // ERROR
+            ^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- value-spread.js:8:4
+
+Cannot cast `y` to tuple type because number [1] is incompatible with number literal `999` [2] in index 3.
+[incompatible-cast]
+
+   value-spread.js:8:4
+   8|   (y: [0, 1, 2, 999]); // ERROR
+         ^
+
+References:
+   value-spread.js:4:23
+   4|   const y = [0, ...x, 3];
+                            ^ [1]
+   value-spread.js:8:17
+   8|   (y: [0, 1, 2, 999]); // ERROR
+                      ^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- value-spread.js:15:4
+
+Cannot cast `y` to tuple type because array literal [1] has 2-3 elements but tuple type [2] has 2 elements.
+[invalid-tuple-arity]
+
+   value-spread.js:15:4
+   15|   (y: [1, 2]); // ERROR
+          ^
+
+References:
+   value-spread.js:14:13
+   14|   const y = [0, ...x]; // OK
+                   ^^^^^^^^^ [1]
+   value-spread.js:15:7
+   15|   (y: [1, 2]); // ERROR
+             ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- value-spread.js:17:4
+
+Cannot cast `z` to tuple type because array literal [1] has an unknown number of elements, so is incompatible with tuple
+type [2]. [invalid-tuple-arity]
+
+   value-spread.js:17:4
+   17|   (z: [0, 1, 2, 3]); // ERROR
+          ^
+
+References:
+   value-spread.js:16:13
+   16|   const z = [0, ...x, 3];
+                   ^^^^^^^^^^^^ [1]
+   value-spread.js:17:7
+   17|   (z: [0, 1, 2, 3]); // ERROR
+             ^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- value-spread.js:24:4
+
+Cannot cast `z` to tuple type because array literal [1] has an unknown number of elements, so is incompatible with tuple
+type [2]. [invalid-tuple-arity]
+
+   value-spread.js:24:4
+   24|   (z: [0, 1, 2, 3]); // ERROR
+          ^
+
+References:
+   value-spread.js:23:13
+   23|   const z = [...x, ...y];
+                   ^^^^^^^^^^^^ [1]
+   value-spread.js:24:7
+   24|   (z: [0, 1, 2, 3]); // ERROR
+             ^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- value-spread.js:31:4
+
+Cannot cast `z` to tuple type because array literal [1] has an unknown number of elements, so is incompatible with tuple
+type [2]. [invalid-tuple-arity]
+
+   value-spread.js:31:4
+   31|   (z: [a?: 0, b?: 1, c?: 2]); // ERROR
+          ^
+
+References:
+   value-spread.js:30:13
+   30|   const z = [...x, ...y];
+                   ^^^^^^^^^^^^ [1]
+   value-spread.js:31:7
+   31|   (z: [a?: 0, b?: 1, c?: 2]); // ERROR
+             ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------------------- variance.js:5:2
 
 Cannot cast `a` to tuple type because tuple element at index `0` is read-only in `A` [1] but write-only in tuple
@@ -1521,4 +1647,4 @@ References:
 
 
 
-Found 97 errors
+Found 104 errors

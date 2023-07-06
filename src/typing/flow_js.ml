@@ -3590,8 +3590,9 @@ struct
                     );
                 rec_flow cx trace (from, ObjAssignFromT (use_op, r, o, t, default_obj_assign_kind)))
               elements
-          | ArrayAT { tuple_view = Some ts; _ } ->
+          | ArrayAT { tuple_view = Some (elements, _arity); _ } ->
             (* Object.assign(o, ...[x,y,z]) -> Object.assign(o, x, y, z) *)
+            let ts = tuple_ts_of_elements elements in
             List.iter
               (fun from ->
                 rec_flow cx trace (from, ObjAssignFromT (use_op, r, o, t, default_obj_assign_kind)))
@@ -3904,8 +3905,10 @@ struct
             | ArrayAT { tuple_view = None; _ }
             | ROArrayAT _ ->
               arrtype
-            | ArrayAT { elem_t; tuple_view = Some ts } ->
-              ArrayAT { elem_t; tuple_view = Some (Base.List.drop ts i) }
+            | ArrayAT { elem_t; tuple_view = Some (elements, (num_req, num_total)) } ->
+              let elements = Base.List.drop elements i in
+              let arity = (max (num_req - i) 0, max (num_total - i) 0) in
+              ArrayAT { elem_t; tuple_view = Some (elements, arity) }
             | TupleAT { elem_t; elements; arity = (num_req, num_total) } ->
               TupleAT
                 {
@@ -3947,7 +3950,20 @@ struct
             match arrtype with
             | ArrayAT { elem_t; tuple_view } ->
               ArrayAT
-                { elem_t = f elem_t; tuple_view = Base.Option.map ~f:(Base.List.map ~f) tuple_view }
+                {
+                  elem_t = f elem_t;
+                  tuple_view =
+                    Base.Option.map
+                      ~f:(fun (elements, arity) ->
+                        let elements =
+                          Base.List.map
+                            ~f:(fun (TupleElement { name; t; polarity; optional; reason }) ->
+                              TupleElement { name; t = f t; polarity; optional; reason })
+                            elements
+                        in
+                        (elements, arity))
+                      tuple_view;
+                }
             | TupleAT { elem_t; elements; arity } ->
               TupleAT
                 {
@@ -8214,8 +8230,18 @@ struct
         | ( DefT (_, _, ArrT (ArrayAT { elem_t = t1; tuple_view = tv1 })),
             DefT (_, _, ArrT (ArrayAT { elem_t = t2; tuple_view = tv2 }))
           ) ->
-          let ts1 = Base.Option.value ~default:[] tv1 in
-          let ts2 = Base.Option.value ~default:[] tv2 in
+          let ts1 =
+            Base.Option.value_map
+              ~default:[]
+              ~f:(fun (elements, _arity) -> tuple_ts_of_elements elements)
+              tv1
+          in
+          let ts2 =
+            Base.Option.value_map
+              ~default:[]
+              ~f:(fun (elements, _arity) -> tuple_ts_of_elements elements)
+              tv2
+          in
           array_unify cx trace ~use_op (ts1, t1, ts2, t2)
         | ( DefT (r1, _, ArrT (TupleAT { elem_t = _; elements = elements1; arity = arity1 })),
             DefT (r2, _, ArrT (TupleAT { elem_t = _; elements = elements2; arity = arity2 }))
@@ -8608,7 +8634,11 @@ struct
          * (and the spread argument if it exists). Then we're going to flow that
          * to the rest parameter *)
         let rev_elems =
-          List.rev_map (fun (arg, generic) -> UnresolvedArg (arg, generic)) unused_arglist
+          List.rev_map
+            (fun (arg, generic) ->
+              let reason = mk_reason RArrayElement (loc_of_t arg) in
+              UnresolvedArg (mk_tuple_element reason arg, generic))
+            unused_arglist
         in
         let unused_rest_param =
           match spread_arg with
@@ -8676,7 +8706,9 @@ struct
     let unresolved =
       Base.List.map
         ~f:(function
-          | Arg t -> UnresolvedArg (t, None)
+          | Arg t ->
+            let reason = mk_reason RArrayElement (loc_of_t t) in
+            UnresolvedArg (mk_tuple_element reason t, None)
           | SpreadArg t -> UnresolvedSpreadArg t)
         args
     in
@@ -8715,36 +8747,38 @@ struct
    * to resolve to. *)
   and finish_resolve_spread_list =
     (* Turn tuple rest params into single params *)
-    let flatten_spread_args list =
-      list
-      |> Base.List.fold_left
-           ~f:(fun acc param ->
-             match param with
-             | ResolvedSpreadArg (_, arrtype, generic) -> begin
-               match arrtype with
-               | ArrayAT { tuple_view = None; _ }
-               | ArrayAT { tuple_view = Some []; _ } ->
-                 (* The latter case corresponds to the empty array literal. If
-                  * we folded over the empty tuple_types list, then this would
-                  * cause an empty result. *)
-                 param :: acc
-               | ArrayAT { tuple_view = Some tuple_types; _ } ->
-                 Base.List.fold_left
-                   ~f:(fun acc elem -> ResolvedArg (elem, generic) :: acc)
-                   ~init:acc
-                   tuple_types
-               | TupleAT { elements; _ } ->
-                 Base.List.fold_left
-                   ~f:(fun acc (TupleElement { t; _ }) -> ResolvedArg (t, generic) :: acc)
-                   ~init:acc
-                   elements
-               | ROArrayAT _ -> param :: acc
-             end
-             | ResolvedAnySpreadArg _
-             | ResolvedArg _ ->
-               param :: acc)
-           ~init:[]
-      |> Base.List.rev
+    let flatten_spread_args args =
+      let (args_rev, spread_after_opt, _) =
+        Base.List.fold_left args ~init:([], false, false) ~f:(fun acc arg ->
+            let (args_rev, spread_after_opt, seen_opt) = acc in
+            match arg with
+            | ResolvedSpreadArg (_, arrtype, generic) -> begin
+              let spread_after_opt = spread_after_opt || seen_opt in
+              let (args_rev, seen_opt) =
+                match arrtype with
+                | ArrayAT { tuple_view = None; _ }
+                | ArrayAT { tuple_view = Some ([], _); _ } ->
+                  (* The latter case corresponds to the empty array literal. If
+                   * we folded over the empty tuple_types list, then this would
+                   * cause an empty result. *)
+                  (arg :: args_rev, seen_opt)
+                | ArrayAT { tuple_view = Some (elements, _); _ }
+                | TupleAT { elements; _ } ->
+                  Base.List.fold_left
+                    ~f:(fun (args_rev, seen_opt) (TupleElement { optional; _ } as elem) ->
+                      (ResolvedArg (elem, generic) :: args_rev, seen_opt || optional))
+                    ~init:(args_rev, seen_opt)
+                    elements
+                | ROArrayAT _ -> (arg :: args_rev, seen_opt)
+              in
+              (args_rev, spread_after_opt, seen_opt)
+            end
+            | ResolvedAnySpreadArg _ -> (arg :: args_rev, spread_after_opt, seen_opt)
+            | ResolvedArg (TupleElement { optional; _ }, _) ->
+              (arg :: args_rev, spread_after_opt, seen_opt || optional)
+        )
+      in
+      (List.rev args_rev, spread_after_opt)
     in
     let spread_resolved_to_any_src =
       List.find_map (function
@@ -8775,8 +8809,9 @@ struct
           | ResolveToArrayLiteral -> AnyT.why any_src reason_op)
         | None ->
           (* Spreads that resolve to tuples are flattened *)
-          let elems = flatten_spread_args resolved in
-          let tuple_types =
+          let (elems, spread_after_opt) = flatten_spread_args resolved in
+
+          let tuple_elements =
             match resolve_to with
             | ResolveToArrayLiteral ->
               elems
@@ -8786,7 +8821,14 @@ struct
                      match (acc, elem) with
                      | (None, _) -> None
                      | (_, ResolvedSpreadArg _) -> None
-                     | (Some tuple_types, ResolvedArg (t, _)) -> Some (t :: tuple_types)
+                     | (Some tuple_elements, ResolvedArg (elem, _)) ->
+                       (* Spreading array values into a fresh literal drops variance,
+                        * just like object spread. *)
+                       let elem =
+                         let (TupleElement { t; optional; name; reason; polarity = _ }) = elem in
+                         TupleElement { t; optional; name; reason; polarity = Polarity.Neutral }
+                       in
+                       Some (elem :: tuple_elements)
                      | (_, ResolvedAnySpreadArg _) -> failwith "Should not be hit")
                    (Some [])
               |> Base.Option.map ~f:List.rev
@@ -8803,7 +8845,8 @@ struct
                     match elem with
                     | ResolvedSpreadArg (_, arrtype, generic) ->
                       (elemt_of_arrtype arrtype, generic, ro_of_arrtype arrtype)
-                    | ResolvedArg (elem_t, generic) -> (elem_t, generic, ArraySpread.NonROSpread)
+                    | ResolvedArg (TupleElement { t = elem_t; _ }, generic) ->
+                      (elem_t, generic, ArraySpread.NonROSpread)
                     | ResolvedAnySpreadArg _ -> failwith "Should not be hit"
                   in
                   ( TypeExSet.add elem_t tset,
@@ -8851,11 +8894,38 @@ struct
           TypeExSet.elements tset |> List.iter (fun t -> flow cx (t, UseT (use_op, elem_t)));
 
           let t =
-            match resolve_to with
-            | ResolveToArray ->
+            match (resolve_to, tuple_elements, spread_after_opt) with
+            | (ResolveToArray, _, _)
+            | (ResolveToArrayLiteral, None, _)
+            | (ResolveToArrayLiteral, _, true) ->
               DefT (reason_op, bogus_trust (), ArrT (ArrayAT { elem_t; tuple_view = None }))
-            | ResolveToArrayLiteral ->
-              DefT (reason_op, bogus_trust (), ArrT (ArrayAT { elem_t; tuple_view = tuple_types }))
+            | (ResolveToArrayLiteral, Some elements, _) ->
+              let (req_after_opt, num_req, num_opt, _) =
+                Base.List.fold
+                  elements
+                  ~init:(false, 0, 0, None)
+                  ~f:(fun (req_after_opt, num_req, num_opt, prev_element) element ->
+                    let (TupleElement { optional; _ }) = element in
+                    if optional then
+                      (req_after_opt, num_req, num_opt + 1, Some element)
+                    else
+                      let req_after_opt =
+                        match prev_element with
+                        | Some (TupleElement { optional = true; _ }) -> true
+                        | _ -> req_after_opt
+                      in
+                      (req_after_opt, num_req + 1, num_opt, Some element)
+                )
+              in
+              let arity = (num_req, num_req + num_opt) in
+              if req_after_opt then
+                DefT (reason_op, bogus_trust (), ArrT (ArrayAT { elem_t; tuple_view = None }))
+              else
+                DefT
+                  ( reason_op,
+                    bogus_trust (),
+                    ArrT (ArrayAT { elem_t; tuple_view = Some (elements, arity) })
+                  )
           in
           Base.Option.value_map
             ~f:(fun id ->
@@ -8880,10 +8950,9 @@ struct
           match spread with
           | None ->
             (match resolved with
-            | ResolvedArg (t, generic) :: rest -> flatten cx r ((t, generic) :: args) spread rest
-            | ResolvedSpreadArg (_, ArrayAT { tuple_view = Some ts; _ }, generic) :: rest ->
-              let args = List.rev_append (List.map (fun t -> (t, generic)) ts) args in
-              flatten cx r args spread rest
+            | ResolvedArg (TupleElement { t; _ }, generic) :: rest ->
+              flatten cx r ((t, generic) :: args) spread rest
+            | ResolvedSpreadArg (_, ArrayAT { tuple_view = Some (elements, _); _ }, generic) :: rest
             | ResolvedSpreadArg (_, TupleAT { elements; _ }, generic) :: rest ->
               let args =
                 List.rev_append
@@ -8906,7 +8975,7 @@ struct
           | Some (tset, generic) ->
             let (elemt, generic', ro, rest) =
               match resolved with
-              | ResolvedArg (t, generic) :: rest ->
+              | ResolvedArg (TupleElement { t; _ }, generic) :: rest ->
                 (t, generic, Generic.ArraySpread.NonROSpread, rest)
               | ResolvedSpreadArg (_, arrtype, generic) :: rest ->
                 (elemt_of_arrtype arrtype, generic, ro_of_arrtype arrtype, rest)
@@ -9023,11 +9092,11 @@ struct
     (* This is used for things like Function.prototype.apply, whose second arg is
      * basically a spread argument that we'd like to resolve *)
     let finish_call_t cx ?trace ~use_op ~reason_op funcalltype resolved tin =
-      let flattened = flatten_spread_args resolved in
+      let (flattened, _) = flatten_spread_args resolved in
       let call_args_tlist =
         Base.List.map
           ~f:(function
-            | ResolvedArg (t, _) -> Arg t
+            | ResolvedArg (TupleElement { t; _ }, _) -> Arg t
             | ResolvedSpreadArg (r, arrtype, generic) ->
               let arr = DefT (r, bogus_trust (), ArrT arrtype) in
               let arr =

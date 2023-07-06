@@ -1531,8 +1531,18 @@ module Make (Flow : INPUT) : OUTPUT = struct
       ) ->
       let use_op = Frame (ArrayElementCompatibility { lower = r1; upper = r2 }, use_op) in
       let lit1 = desc_of_reason r1 = RArrayLit in
-      let ts1 = Base.Option.value ~default:[] tv1 in
-      let ts2 = Base.Option.value ~default:[] tv2 in
+      let ts1 =
+        Base.Option.value_map
+          ~default:[]
+          ~f:(fun (elements, _arity) -> tuple_ts_of_elements elements)
+          tv1
+      in
+      let ts2 =
+        Base.Option.value_map
+          ~default:[]
+          ~f:(fun (elements, _arity) -> tuple_ts_of_elements elements)
+          tv2
+      in
       array_flow cx trace use_op lit1 r1 (ts1, t1, ts2, t2)
     (* Tuples can flow to tuples with the same arity *)
     | ( DefT (r1, _, ArrT (TupleAT { elem_t = _; elements = elements1; arity = arity1 })),
@@ -1633,31 +1643,16 @@ module Make (Flow : INPUT) : OUTPUT = struct
             | _ -> ())
           (elements1, elements2)
     (* Arrays with known elements can flow to tuples *)
-    | ( DefT (r1, trust, ArrT (ArrayAT { elem_t = t1; tuple_view = tv1 })),
-        DefT (r2, _, ArrT (TupleAT _))
-      ) -> begin
-      match tv1 with
+    | (DefT (r1, trust, ArrT (ArrayAT { elem_t = t1; tuple_view })), DefT (r2, _, ArrT (TupleAT _)))
+      -> begin
+      match tuple_view with
       | None -> add_output cx ~trace (Error_message.ENonLitArrayToTuple ((r1, r2), use_op))
-      | Some ts1 ->
-        let len = Base.List.length ts1 in
+      | Some (elements, arity) ->
         rec_flow_t
           cx
           trace
           ~use_op
-          ( DefT
-              ( r1,
-                trust,
-                ArrT
-                  (TupleAT
-                     {
-                       elem_t = t1;
-                       elements = Base.List.map ~f:(fun t -> mk_tuple_element (reason_of_t t) t) ts1;
-                       arity = (len, len);
-                     }
-                  )
-              ),
-            u
-          )
+          (DefT (r1, trust, ArrT (TupleAT { elem_t = t1; elements; arity })), u)
     end
     (* Read only arrays are the super type of all tuples and arrays *)
     | ( DefT (r1, _, ArrT (ArrayAT { elem_t = t1; _ } | TupleAT { elem_t = t1; _ } | ROArrayAT t1)),

@@ -725,7 +725,15 @@ class virtual ['a] t =
       | ArrayAT { elem_t; tuple_view } ->
         let elem_t' = self#type_ cx map_cx elem_t in
         let tuple_view' =
-          OptionUtils.ident_map (ListUtils.ident_map (self#type_ cx map_cx)) tuple_view
+          OptionUtils.ident_map
+            (fun tuple_view ->
+              let (elements, arity) = tuple_view in
+              let elements' = ListUtils.ident_map (self#tuple_element cx map_cx) elements in
+              if elements' == elements then
+                tuple_view
+              else
+                (elements', arity))
+            tuple_view
         in
         if elem_t' == elem_t && tuple_view' == tuple_view then
           t

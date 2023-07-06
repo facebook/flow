@@ -248,14 +248,20 @@ let rec dump_t_ (depth, tvars) cx t =
       p ~trust:(Some trust) t ~extra:(spf "%s, %s" (Properties.string_of_id props_tmap) obj_kind)
     | DefT (_, trust, ArrT (ArrayAT { elem_t; tuple_view = None })) ->
       p ~trust:(Some trust) ~extra:(spf "Array %s" (kid elem_t)) t
-    | DefT (_, trust, ArrT (ArrayAT { elem_t; tuple_view = Some tup })) ->
+    | DefT (_, trust, ArrT (ArrayAT { elem_t; tuple_view = Some (elements, _arity) })) ->
       p
         ~trust:(Some trust)
         ~extra:
           (spf
              "Array %s, %s"
              (kid elem_t)
-             (spf "[%s]" (String.concat "; " (Base.List.map ~f:kid tup)))
+             (spf
+                "[%s]"
+                (String.concat
+                   ", "
+                   (Base.List.map ~f:(fun (TupleElement { t; _ }) -> kid t) elements)
+                )
+             )
           )
         t
     | DefT (_, trust, ArrT (TupleAT { elements; _ })) ->

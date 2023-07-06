@@ -1020,21 +1020,7 @@ end = struct
           None
       in
       match (elt_t, desc) with
-      | (T.ArrayAT { elem_t = _; tuple_view = Some ts }, RRestArrayLit _) ->
-        let%map elements =
-          mapM
-            (fun t ->
-              let%map t = type__ ~env t in
-              Ty.TupleElement { name = None; t; polarity = Ty.Neutral; optional = false })
-            ts
-        in
-        Ty.Tup elements
-      | (T.ArrayAT { elem_t; _ }, _) ->
-        let%map arr_elt_t = type__ ~env elem_t in
-        Ty.Arr { Ty.arr_readonly = false; arr_literal; arr_elt_t }
-      | (T.ROArrayAT t, _) ->
-        let%map t = type__ ~env t in
-        Ty.Arr { Ty.arr_readonly = true; arr_literal; arr_elt_t = t }
+      | (T.ArrayAT { elem_t = _; tuple_view = Some (elements', _) }, RRestArrayLit _)
       | (T.TupleAT { elements = elements'; _ }, _) ->
         let%map elements =
           mapM
@@ -1049,6 +1035,12 @@ end = struct
             elements'
         in
         Ty.Tup elements
+      | (T.ArrayAT { elem_t; _ }, _) ->
+        let%map arr_elt_t = type__ ~env elem_t in
+        Ty.Arr { Ty.arr_readonly = false; arr_literal; arr_elt_t }
+      | (T.ROArrayAT t, _) ->
+        let%map t = type__ ~env t in
+        Ty.Arr { Ty.arr_readonly = true; arr_literal; arr_elt_t = t }
 
     (* Used for instances of React.createClass(..) *)
     and react_component_instance =

@@ -180,7 +180,10 @@ let resolve_hint cx loc hint =
       let reason = mk_reason RDestructuring loc in
       let elem_spread_list =
         Base.List.map elements ~f:(function
-            | ArrayElementPatternHint h -> UnresolvedArg (resolve_hint_node h, None)
+            | ArrayElementPatternHint h ->
+              let t = resolve_hint_node h in
+              let reason = mk_reason RArrayElement loc in
+              UnresolvedArg (TypeUtil.mk_tuple_element reason t, None)
             | ArrayRestElementPatternHint h -> UnresolvedSpreadArg (resolve_hint_node h)
             )
       in
@@ -261,7 +264,7 @@ let resolve_hint cx loc hint =
            let children =
              Base.List.map
                ~f:(function
-                 | Type.UnresolvedArg (a, _) -> a
+                 | Type.UnresolvedArg (TupleElement { t; _ }, _) -> t
                  | Type.UnresolvedSpreadArg a -> TypeUtil.reason_of_t a |> AnyT.error)
                unresolved_params
            in
@@ -440,7 +443,7 @@ let resolve_binding_partial cx reason loc b =
         | Ast.Expression.Object obj -> mk_obj loc obj
         | Ast.Expression.Array { Ast.Expression.Array.elements = []; _ } ->
           let (_, elem_t) = Statement.empty_array cx loc in
-          DefT (reason, bogus_trust (), ArrT (ArrayAT { elem_t; tuple_view = Some [] }))
+          DefT (reason, bogus_trust (), ArrT (ArrayAT { elem_t; tuple_view = Some ([], (0, 0)) }))
         | Ast.Expression.Array { Ast.Expression.Array.elements; _ } ->
           (* TODO merge code with statement.ml implementation *)
           let array_elements cx undef_loc =
@@ -449,8 +452,13 @@ let resolve_binding_partial cx reason loc b =
                 match e with
                 | Expression e ->
                   let t = mk_expression e in
-                  UnresolvedArg (t, None)
-                | Hole _ -> UnresolvedArg (EmptyT.at undef_loc |> with_trust bogus_trust, None)
+                  let (loc, _) = e in
+                  let reason = mk_reason RArrayElement loc in
+                  UnresolvedArg (TypeUtil.mk_tuple_element reason t, None)
+                | Hole hole_loc ->
+                  let t = EmptyT.at undef_loc |> with_trust bogus_trust in
+                  let reason = mk_reason RArrayElement hole_loc in
+                  UnresolvedArg (TypeUtil.mk_tuple_element reason t, None)
                 | Spread (_, { Ast.Expression.SpreadElement.argument; comments = _ }) ->
                   let t = synthesizable_expression cx argument in
                   UnresolvedSpreadArg t
@@ -694,7 +702,7 @@ let resolve_binding_partial cx reason loc b =
         let elem_t = Tvar.mk cx element_reason in
         Flow_js.add_output cx Error_message.(EEmptyArrayNoProvider { loc });
         Flow_js.flow_t cx (EmptyT.make (mk_reason REmptyArrayElement loc) (bogus_trust ()), elem_t);
-        (elem_t, Some [], replace_desc_reason REmptyArrayLit reason)
+        (elem_t, Some ([], (0, 0)), replace_desc_reason REmptyArrayLit reason)
     in
     let t = DefT (reason, bogus_trust (), ArrT (ArrayAT { elem_t; tuple_view })) in
     let cache = Context.node_cache cx in

@@ -331,11 +331,17 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             | Op (ReactCreateElementCall { children; _ }) -> children
             | _ -> loc_of_reason reason_op)
         in
+        let ts = t :: ts in
+        let arity = Base.List.length ts in
+        let elements = Base.List.map ~f:(fun t -> mk_tuple_element (reason_of_t t) t) ts in
         Some
           (DefT
              ( r,
                bogus_trust (),
-               ArrT (ArrayAT { elem_t = union_of_ts r (t :: ts); tuple_view = Some (t :: ts) })
+               ArrT
+                 (ArrayAT
+                    { elem_t = union_of_ts r ts; tuple_view = Some (elements, (arity, arity)) }
+                 )
              )
           )
       (* If we only have a spread of unknown length then React may not pass in

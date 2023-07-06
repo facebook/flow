@@ -2580,10 +2580,13 @@ module Make
       (Base.List.map ~f:(fun e ->
            match e with
            | Expression e ->
-             let (((_, t), _) as e) = expression cx e in
-             (UnresolvedArg (t, None), Expression e)
+             let (((loc, t), _) as e) = expression cx e in
+             let reason = mk_reason RArrayElement loc in
+             (UnresolvedArg (mk_tuple_element reason t, None), Expression e)
            | Hole loc ->
-             (UnresolvedArg (EmptyT.at undef_loc |> with_trust bogus_trust, None), Hole loc)
+             let t = EmptyT.at undef_loc |> with_trust bogus_trust in
+             let reason = mk_reason RArrayElement loc in
+             (UnresolvedArg (mk_tuple_element reason t, None), Hole loc)
            | Spread (loc, { Ast.Expression.SpreadElement.argument; comments }) ->
              let (((_, t), _) as argument) = expression cx argument in
              ( UnresolvedSpreadArg t,
@@ -2742,12 +2745,16 @@ module Make
         let reason = mk_reason REmptyArrayLit loc in
         let element_reason = mk_reason Reason.unknown_elem_empty_array_desc loc in
         let elem_t = Context.mk_placeholder cx element_reason in
-        ( (loc, DefT (reason, make_trust (), ArrT (ArrayAT { elem_t; tuple_view = Some [] }))),
+        ( ( loc,
+            DefT (reason, make_trust (), ArrT (ArrayAT { elem_t; tuple_view = Some ([], (0, 0)) }))
+          ),
           Array { Array.elements = []; comments }
         )
       | [] ->
         let (reason, elem_t) = empty_array cx loc in
-        ( (loc, DefT (reason, make_trust (), ArrT (ArrayAT { elem_t; tuple_view = Some [] }))),
+        ( ( loc,
+            DefT (reason, make_trust (), ArrT (ArrayAT { elem_t; tuple_view = Some ([], (0, 0)) }))
+          ),
           Array { Array.elements = []; comments }
         )
       | elems ->
@@ -5932,7 +5939,7 @@ module Make
       let children =
         Base.List.map
           ~f:(function
-            | UnresolvedArg (a, _) -> a
+            | UnresolvedArg (TupleElement { t; _ }, _) -> t
             | UnresolvedSpreadArg a ->
               Flow.add_output cx Error_message.(EUnsupportedSyntax (loc_children, SpreadArgument));
               reason_of_t a |> AnyT.error)
@@ -6007,7 +6014,7 @@ module Make
         [Arg component_t; Arg props]
         @ Base.List.map
             ~f:(function
-              | UnresolvedArg (c, _) -> Arg c
+              | UnresolvedArg (TupleElement { t; _ }, _) -> Arg t
               | UnresolvedSpreadArg c -> SpreadArg c)
             children
       in
@@ -6070,18 +6077,21 @@ module Make
     match child with
     | Element e ->
       let (t, e) = jsx cx loc e in
-      (Some (UnresolvedArg (t, None)), (loc, Element e))
+      let reason = mk_reason RJSXChild loc in
+      (Some (UnresolvedArg (mk_tuple_element reason t, None)), (loc, Element e))
     | Fragment f ->
       let (t, f) = jsx_fragment cx loc f in
-      (Some (UnresolvedArg (t, None)), (loc, Fragment f))
+      let reason = mk_reason RJSXChild loc in
+      (Some (UnresolvedArg (mk_tuple_element reason t, None)), (loc, Fragment f))
     | ExpressionContainer ec ->
       ExpressionContainer.(
         let { expression = ex; ExpressionContainer.comments } = ec in
         let (unresolved_param, ex) =
           match ex with
           | Expression e ->
-            let (((_, t), _) as e) = expression cx e in
-            (Some (UnresolvedArg (t, None)), Expression e)
+            let (((loc, t), _) as e) = expression cx e in
+            let reason = mk_reason RJSXChild loc in
+            (Some (UnresolvedArg (mk_tuple_element reason t, None)), Expression e)
           | EmptyExpression -> (None, EmptyExpression)
         in
         ( unresolved_param,
@@ -6094,7 +6104,9 @@ module Make
     | Text { Text.value; raw } ->
       let unresolved_param_opt =
         match jsx_trim_text make_trust loc value with
-        | Some c -> Some (UnresolvedArg (c, None))
+        | Some c ->
+          let reason = mk_reason RJSXChild loc in
+          Some (UnresolvedArg (mk_tuple_element reason c, None))
         | None -> None
       in
       (unresolved_param_opt, (loc, Text { Text.value; raw }))

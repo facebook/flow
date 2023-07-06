@@ -98,6 +98,7 @@ type 'loc virtual_reason_desc =
   | RFunctionCall of 'loc virtual_reason_desc
   | RFunctionCallType
   | RFunctionUnusedArgument
+  | RJSXChild
   | RJSXFunctionCall of string
   | RJSXIdentifier of string * string
   | RJSXElementProps of string
@@ -264,9 +265,10 @@ let rec map_desc_locs f = function
     | RObjectClassName | RInterfaceType | RArray | RArrayLit | REmptyArrayLit | RArrayType
     | RArrayElement | RROArrayType | RTupleType | RTupleElement _ | RTupleLength _
     | RTupleOutOfBoundsAccess _ | RFunction _ | RFunctionType | RFunctionBody | RFunctionCallType
-    | RFunctionUnusedArgument | RJSXFunctionCall _ | RJSXIdentifier _ | RJSXElementProps _
-    | RJSXElement _ | RJSXText | RFbt | RUninitialized | RPossiblyUninitialized | RUnannotatedNext
-    | REmptyArrayElement | RMappedType | RTypeGuardParam _ | RComponent _ | RComponentType ) as r ->
+    | RFunctionUnusedArgument | RJSXChild | RJSXFunctionCall _ | RJSXIdentifier _
+    | RJSXElementProps _ | RJSXElement _ | RJSXText | RFbt | RUninitialized | RPossiblyUninitialized
+    | RUnannotatedNext | REmptyArrayElement | RMappedType | RTypeGuardParam _ | RComponent _
+    | RComponentType ) as r ->
     r
   | RFunctionCall desc -> RFunctionCall (map_desc_locs f desc)
   | RUnknownUnspecifiedProperty desc -> RUnknownUnspecifiedProperty (map_desc_locs f desc)
@@ -575,6 +577,7 @@ let rec string_of_desc = function
   | RFunctionCall d -> spf "call of %s" (string_of_desc d)
   | RFunctionCallType -> "`$Call`"
   | RFunctionUnusedArgument -> "unused function argument"
+  | RJSXChild -> "JSX child"
   | RJSXFunctionCall raw_jsx -> spf "`%s(...)`" raw_jsx
   | RJSXIdentifier (_, name) -> spf "`%s`" name
   | RJSXElement x ->
@@ -1383,6 +1386,7 @@ let classification_of_reason r =
   | RFunctionCall _
   | RFunctionCallType
   | RFunctionUnusedArgument
+  | RJSXChild
   | RJSXFunctionCall _
   | RJSXIdentifier _
   | RJSXElementProps _

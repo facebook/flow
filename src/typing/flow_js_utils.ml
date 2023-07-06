@@ -1882,40 +1882,31 @@ end
 (***************)
 
 let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
-  let (value, ts, is_index_restricted, is_tuple) =
+  let (elem_t, elements, is_index_restricted, is_tuple) =
     match arrtype with
-    | ArrayAT { elem_t; tuple_view = ts } ->
-      let ts =
-        Base.Option.map ~f:(Base.List.map ~f:(fun t -> (t, Polarity.Neutral, false, None))) ts
-      in
-      (elem_t, ts, false, false)
-    | TupleAT { elem_t; elements; arity = _ } ->
-      let ts =
-        Base.List.map
-          ~f:(fun (TupleElement { t; polarity; name; optional; reason = _ }) ->
-            (t, polarity, optional, name))
-          elements
-      in
-      (elem_t, Some ts, true, true)
-    | ROArrayAT value -> (value, None, true, false)
+    | ArrayAT { elem_t; tuple_view } ->
+      let elements = Base.Option.map ~f:(fun (elements, _arity) -> elements) tuple_view in
+      (elem_t, elements, false, false)
+    | TupleAT { elem_t; elements; arity = _ } -> (elem_t, Some elements, true, true)
+    | ROArrayAT elem_t -> (elem_t, None, true, false)
   in
   let (can_write_tuple, value, use_op) =
     match l with
     | DefT (index_reason, _, NumT (Literal (_, (float_value, _)))) -> begin
-      match ts with
-      | None -> (false, value, use_op)
-      | Some ts ->
+      match elements with
+      | None -> (false, elem_t, use_op)
+      | Some elements ->
         let index_string = Dtoa.ecma_string_of_float float_value in
         begin
           match int_of_string_opt index_string with
           | Some index ->
             let value_opt =
-              try List.nth_opt ts index with
+              try List.nth_opt elements index with
               | Invalid_argument _ -> None
             in
             begin
               match value_opt with
-              | Some (value, polarity, optional, name) when is_tuple ->
+              | Some (TupleElement { t; polarity; optional; name; reason = _ }) ->
                 if write_action && (not @@ Polarity.compat (polarity, Polarity.Negative)) then
                   add_output
                     cx
@@ -1929,14 +1920,13 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
                     (Error_message.ETupleElementNotReadable { use_op; reason; index; name });
                 (* We don't allowing writing `undefined` to optional tuple elements.
                  * User can add `| void` to the element type if they want this behavior. *)
-                let value =
-                  match (optional, value) with
+                let t =
+                  match (optional, t) with
                   | (true, OptionalT { type_; _ }) -> type_
-                  | _ -> value
+                  | _ -> t
                 in
                 let use_op = Frame (TupleAssignment { upper_optional = optional }, use_op) in
-                (true, value, use_op)
-              | Some (value, _, _, _) -> (true, value, use_op)
+                (true, t, use_op)
               | None ->
                 if is_tuple then (
                   add_output
@@ -1947,7 +1937,7 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
                          use_op;
                          reason;
                          reason_op = reason_tup;
-                         length = List.length ts;
+                         length = List.length elements;
                          index = index_string;
                        }
                     );
@@ -1956,7 +1946,7 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
                     use_op
                   )
                 ) else
-                  (true, value, use_op)
+                  (true, elem_t, use_op)
             end
           | None ->
             (* not an integer index *)
@@ -1969,14 +1959,14 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
                 );
               (true, AnyT.error reason, use_op)
             ) else
-              (true, value, use_op)
+              (true, elem_t, use_op)
         end
     end
-    | _ -> (false, value, use_op)
+    | _ -> (false, elem_t, use_op)
   in
   ( if is_index_restricted && (not can_write_tuple) && write_action then
     let error =
-      match ts with
+      match elements with
       | Some _ -> Error_message.ETupleUnsafeWrite { reason; use_op }
       | None -> Error_message.EROArrayWrite ((reason, reason_tup), use_op)
     in

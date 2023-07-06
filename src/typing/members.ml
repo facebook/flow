@@ -212,20 +212,45 @@ let rec merge_type cx =
       let reason = locationless_reason (RCustom "object") in
       mk_object_def_type ~reason ~flags ~call id o1.proto_t
     | _ -> create_union (UnionRep.make t1 t2 []))
-  | ( DefT (_, _, ArrT (ArrayAT { elem_t = t1; tuple_view = tv1 })),
-      DefT (_, _, ArrT (ArrayAT { elem_t = t2; tuple_view = tv2 }))
-    ) ->
-    let tuple_types =
-      match (tv1, tv2) with
-      | (None, _)
-      | (_, None) ->
-        None
-      | (Some ts1, Some ts2) -> Some (Base.List.map2_exn ~f:(merge_type cx |> curry) ts1 ts2)
+  | ( DefT (_, _, ArrT (ArrayAT { elem_t = t1; tuple_view = Some (elements1, arity1) })),
+      DefT (_, _, ArrT (ArrayAT { elem_t = t2; tuple_view = Some (elements2, arity2) }))
+    )
+    when arity1 = arity2
+         && List.for_all2
+              (fun (TupleElement { polarity = p1; optional = o1; _ })
+                   (TupleElement { polarity = p2; optional = o2; _ }) ->
+                Polarity.equal (p1, p2) && o1 = o2)
+              elements1
+              elements2 ->
+    let elements =
+      Base.List.map2_exn
+        ~f:
+          (fun (TupleElement { name = name1; t = t1; polarity; optional; reason = _ })
+               (TupleElement { name = name2; t = t2; polarity = _; optional = _; reason = _ }) ->
+          let name =
+            if name1 = name2 then
+              name1
+            else
+              None
+          in
+          let t = merge_type cx (t1, t2) in
+          let reason = locationless_reason (RTupleElement { name }) in
+          TupleElement { name; t; polarity; optional; reason })
+        elements1
+        elements2
     in
     DefT
       ( locationless_reason (RCustom "array"),
         bogus_trust (),
-        ArrT (ArrayAT { elem_t = merge_type cx (t1, t2); tuple_view = tuple_types })
+        ArrT (ArrayAT { elem_t = merge_type cx (t1, t2); tuple_view = Some (elements, arity1) })
+      )
+  | ( DefT (_, _, ArrT (ArrayAT { elem_t = t1; tuple_view = _ })),
+      DefT (_, _, ArrT (ArrayAT { elem_t = t2; tuple_view = _ }))
+    ) ->
+    DefT
+      ( locationless_reason (RCustom "array"),
+        bogus_trust (),
+        ArrT (ArrayAT { elem_t = merge_type cx (t1, t2); tuple_view = None })
       )
   | ( DefT (_, _, ArrT (TupleAT { elem_t = t1; elements = ts1; arity = arity1 })),
       DefT (_, _, ArrT (TupleAT { elem_t = t2; elements = ts2; arity = arity2 }))

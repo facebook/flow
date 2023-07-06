@@ -1154,7 +1154,7 @@ module rec TypeTerm : sig
   and arrtype =
     | ArrayAT of {
         elem_t: t;
-        tuple_view: t list option;
+        tuple_view: (tuple_element list * (int * int)) option;
       }
     (* TupleAT of elemt * tuple_types. Why do tuples carry around elemt? Well, so
      * that they don't need to recompute their general type when you do
@@ -1569,11 +1569,11 @@ module rec TypeTerm : sig
   }
 
   and unresolved_param =
-    | UnresolvedArg of t * Generic.id option
+    | UnresolvedArg of tuple_element * Generic.id option
     | UnresolvedSpreadArg of t
 
   and resolved_param =
-    | ResolvedArg of t * Generic.id option
+    | ResolvedArg of tuple_element * Generic.id option
     | ResolvedSpreadArg of reason * arrtype * Generic.id option
     | ResolvedAnySpreadArg of reason * any_source
 

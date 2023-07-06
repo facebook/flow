@@ -135,10 +135,9 @@ and collect_of_type ?log_unresolved cx acc = function
       | _ -> ts
     in
     collect_of_types ?log_unresolved cx acc ts
-  | DefT (_, _, ArrT (ArrayAT { elem_t; tuple_view })) ->
-    let ts = Base.Option.value ~default:[] tuple_view in
-    let ts = elem_t :: ts in
-    collect_of_types ?log_unresolved cx acc ts
+  | DefT (_, _, ArrT (ArrayAT { elem_t; tuple_view = None })) ->
+    collect_of_type ?log_unresolved cx acc elem_t
+  | DefT (_, _, ArrT (ArrayAT { elem_t; tuple_view = Some (elements, _) }))
   | DefT (_, _, ArrT (TupleAT { elem_t; elements; arity = _ })) ->
     collect_of_types ?log_unresolved cx acc (elem_t :: TypeUtil.tuple_ts_of_elements elements)
   | DefT (_, _, ArrT (ROArrayAT elemt)) -> collect_of_type ?log_unresolved cx acc elemt
