@@ -331,7 +331,7 @@ let mk_check_file
         lazy
           (Bin.read_hashed Bin.read_packed buf pos
           |> Pack.map_packed aloc
-          |> Merge.merge SMap.empty (Lazy.force file_rec)
+          |> Merge.merge_cjs_export_t (Lazy.force file_rec)
           )
       in
       let es_export buf pos =

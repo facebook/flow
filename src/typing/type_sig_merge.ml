@@ -1123,66 +1123,9 @@ and merge_value tps infer_tps file = function
     Type.(DefT (reason, trust, BoolT (Some lit)))
   | NullLit loc -> Type.NullT.at loc trust
   | ObjLit { loc; frozen; proto; props } ->
-    let reason = obj_lit_reason ~frozen loc in
-    let proto =
-      match proto with
-      | None -> Type.ObjProtoT reason
-      | Some (loc, t) ->
-        let reason = Reason.(mk_reason RPrototype loc) in
-        let proto = ConsGen.obj_test_proto file.cx reason (merge tps infer_tps file t) in
-        ConsGen.mk_typeof_annotation file.cx reason proto
-    in
-    let props =
-      SMap.map (merge_obj_value_prop tps infer_tps file) props |> NameUtils.namemap_of_smap
-    in
-    Obj_type.mk_with_proto file.cx reason proto ~obj_kind:Type.Exact ~props ~frozen
+    merge_object_lit ~for_export:false tps infer_tps file (loc, frozen, proto, props)
   | ObjSpreadLit { loc; frozen; proto; elems_rev } ->
-    let reason = obj_lit_reason ~frozen loc in
-    (* TODO: fix spread to use provided __proto__ prop *)
-    ignore proto;
-    let merge_slice props =
-      let prop_map =
-        SMap.map (merge_obj_value_prop tps infer_tps file) props |> NameUtils.namemap_of_smap
-      in
-      { Type.Object.Spread.reason; prop_map; dict = None; generics = Generic.spread_empty }
-    in
-    let merge_elem = function
-      | ObjValueSpreadElem t -> Type.Object.Spread.Type (merge tps infer_tps file t)
-      | ObjValueSpreadSlice props -> Type.Object.Spread.Slice (merge_slice props)
-    in
-    let (t, todo_rev, head_slice) =
-      let open Type.Object.Spread in
-      match Nel.map merge_elem elems_rev with
-      | (Type t, elems) -> (t, elems, None)
-      | (Slice slice, Type t :: elems) -> (t, elems, Some slice)
-      | _ -> failwith "unexpected spread"
-    in
-    let target =
-      let open Type.Object.Spread in
-      let make_seal =
-        if frozen then
-          Frozen
-        else
-          Sealed
-      in
-      Value { make_seal }
-    in
-    let use_op = Type.(Op (ObjectSpread { op = reason })) in
-    let acc =
-      match head_slice with
-      | Some slice -> [Type.Object.Spread.InlineSlice slice]
-      | None -> []
-    in
-    let state =
-      {
-        Type.Object.Spread.todo_rev;
-        acc;
-        spread_id = Reason.mk_id ();
-        union_reason = None;
-        curr_resolve_idx = 0;
-      }
-    in
-    ConsGen.object_spread file.cx use_op reason target state t
+    merge_obj_spread_lit ~for_export:false tps infer_tps file (loc, frozen, proto, elems_rev)
   | ArrayLit (loc, t, ts) ->
     let reason = Reason.(mk_reason RArrayLit loc) in
     let t = merge tps infer_tps file t in
@@ -1194,6 +1137,71 @@ and merge_value tps infer_tps file = function
       | (t0, t1 :: ts) -> Type.(UnionT (reason, UnionRep.make t0 t1 ts))
     in
     Type.(DefT (reason, trust, ArrT (ArrayAT { elem_t; tuple_view = None })))
+
+and merge_object_lit ~for_export tps infer_tps file (loc, frozen, proto, props) =
+  let reason = obj_lit_reason ~frozen loc in
+  let proto =
+    match proto with
+    | None -> Type.ObjProtoT reason
+    | Some (loc, t) ->
+      let reason = Reason.(mk_reason RPrototype loc) in
+      let proto = ConsGen.obj_test_proto file.cx reason (merge tps infer_tps file t) in
+      ConsGen.mk_typeof_annotation file.cx reason proto
+  in
+  let props =
+    SMap.mapi (merge_obj_value_prop ~for_export tps infer_tps file) props
+    |> NameUtils.namemap_of_smap
+  in
+  Obj_type.mk_with_proto file.cx reason proto ~obj_kind:Type.Exact ~props ~frozen
+
+and merge_obj_spread_lit ~for_export tps infer_tps file (loc, frozen, proto, elems_rev) =
+  let reason = obj_lit_reason ~frozen loc in
+  (* TODO: fix spread to use provided __proto__ prop *)
+  ignore proto;
+  let merge_slice props =
+    let prop_map =
+      SMap.mapi (merge_obj_value_prop ~for_export tps infer_tps file) props
+      |> NameUtils.namemap_of_smap
+    in
+    { Type.Object.Spread.reason; prop_map; dict = None; generics = Generic.spread_empty }
+  in
+  let merge_elem = function
+    | ObjValueSpreadElem t -> Type.Object.Spread.Type (merge tps infer_tps file t)
+    | ObjValueSpreadSlice props -> Type.Object.Spread.Slice (merge_slice props)
+  in
+  let (t, todo_rev, head_slice) =
+    let open Type.Object.Spread in
+    match Nel.map merge_elem elems_rev with
+    | (Type t, elems) -> (t, elems, None)
+    | (Slice slice, Type t :: elems) -> (t, elems, Some slice)
+    | _ -> failwith "unexpected spread"
+  in
+  let target =
+    let open Type.Object.Spread in
+    let make_seal =
+      if frozen then
+        Frozen
+      else
+        Sealed
+    in
+    Value { make_seal }
+  in
+  let use_op = Type.(Op (ObjectSpread { op = reason })) in
+  let acc =
+    match head_slice with
+    | Some slice -> [Type.Object.Spread.InlineSlice slice]
+    | None -> []
+  in
+  let state =
+    {
+      Type.Object.Spread.todo_rev;
+      acc;
+      spread_id = Reason.mk_id ();
+      union_reason = None;
+      curr_resolve_idx = 0;
+    }
+  in
+  ConsGen.object_spread file.cx use_op reason target state t
 
 and merge_accessor tps infer_tps file = function
   | Get (loc, t) ->
@@ -1207,7 +1215,20 @@ and merge_accessor tps infer_tps file = function
     let set_type = merge tps infer_tps file st in
     Type.GetSet { get_key_loc = Some gloc; get_type; set_key_loc = Some sloc; set_type }
 
-and merge_obj_value_prop tps infer_tps file = function
+and merge_obj_value_prop ~for_export tps infer_tps file key = function
+  | ObjValueField (id_loc, Pack.Ref ref, polarity) when for_export ->
+    merge_ref
+      file
+      (fun type_ ~ref_loc ~def_loc value_name ->
+        (* If name matches and prop loc is the name as ref loc, it must be shorthand syntax like
+           module.exports = { foo }.
+           In this case, we retain the def loc of foo *)
+        if key = value_name && id_loc = ref_loc then
+          Type.Field
+            { preferred_def_locs = Some (Nel.one def_loc); key_loc = Some id_loc; type_; polarity }
+        else
+          Type.Field { preferred_def_locs = None; key_loc = Some id_loc; type_; polarity })
+      ref
   | ObjValueField (id_loc, t, polarity) ->
     let type_ = merge tps infer_tps file t in
     Type.Field { preferred_def_locs = None; key_loc = Some id_loc; type_; polarity }
@@ -1985,3 +2006,15 @@ let merge_resource_module_t cx f loc =
   mk_commonjs_module_t cx reason (Context.is_strict cx) exports_t
 
 let merge tps = merge tps SMap.empty
+
+let merge_cjs_export_t file =
+  let tps = SMap.empty in
+  let infer_tps = SMap.empty in
+  function
+  (* We run a special code path for objects in cjs exports,
+   * in order to retain the original definition location of exported names *)
+  | Pack.Value (ObjLit { loc; frozen; proto; props }) ->
+    merge_object_lit ~for_export:true tps infer_tps file (loc, frozen, proto, props)
+  | Pack.Value (ObjSpreadLit { loc; frozen; proto; elems_rev }) ->
+    merge_obj_spread_lit ~for_export:true tps infer_tps file (loc, frozen, proto, elems_rev)
+  | packed -> merge tps file packed
