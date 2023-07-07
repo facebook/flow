@@ -216,22 +216,30 @@ class searcher ~(is_legit_require : ALoc.t * Type.t -> bool) ~(covers_target : A
 
     method! pattern ?kind ((pat_annot, p) as pat) =
       let open Flow_ast.Pattern in
-      ( if not in_require_declarator then
+      (* In const {foo: bar} = require('some_module'); foo and bar should jump to prop def of foo,
+         while in other cases, bar should be its own definition. *)
+      let is_id_pattern_of_obj_key_in_require_declarator = function
+        | (id_annot, Identifier _) -> in_require_declarator && annot_covers_target id_annot
+        | _ -> false
+      in
+      let () =
         match p with
         | Object { Object.properties; _ } ->
           List.iter
             Object.(
               function
-              | Property (_, { Property.key; _ }) -> begin
+              | Property (_, { Property.key; pattern; _ }) -> begin
                 match key with
                 | Property.StringLiteral (loc, { Flow_ast.StringLiteral.value = name; _ })
-                  when covers_target loc ->
+                  when covers_target loc || is_id_pattern_of_obj_key_in_require_declarator pattern
+                  ->
                   this#request
                     Get_def_request.(
                       Member { prop_name = name; object_type = pat_annot; force_instance = false }
                     )
                 | Property.Identifier (id_annot, { Flow_ast.Identifier.name; _ })
-                  when annot_covers_target id_annot ->
+                  when annot_covers_target id_annot
+                       || is_id_pattern_of_obj_key_in_require_declarator pattern ->
                   this#request
                     Get_def_request.(
                       Member { prop_name = name; object_type = pat_annot; force_instance = false }
@@ -242,7 +250,7 @@ class searcher ~(is_legit_require : ALoc.t * Type.t -> bool) ~(covers_target : A
             )
             properties
         | _ -> ()
-      );
+      in
       super#pattern ?kind pat
 
     method! pattern_identifier
