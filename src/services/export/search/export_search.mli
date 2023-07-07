@@ -21,8 +21,15 @@ type search_result = {
 }
 [@@deriving show]
 
+type search_result_scored = {
+  search_result: search_result;
+  score: float;
+  weight: int;
+}
+[@@deriving show]
+
 type search_results = {
-  results: (search_result * int) list;
+  results: search_result_scored list;
   is_incomplete: bool;
 }
 [@@deriving show]

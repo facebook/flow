@@ -13,23 +13,23 @@ struct MatcherOptions {
 };
 
 struct MatchResult {
-  float weighted_score;
+  int weight;
   float score;
   // We can't afford to copy strings around while we're ranking them.
   // These are not guaranteed to last very long and should be copied out ASAP.
   const std::string *value;
 
-  MatchResult(float weighted_score,
+  MatchResult(float weight,
               float score,
               const std::string *value)
-    : weighted_score(weighted_score), score(score), value(value) {}
+    : weight(weight), score(score), value(value) {}
 
   // Order small scores to the top of any priority queue.
   // We need a min-heap to maintain the top-N results.
   bool operator<(const MatchResult& other) const {
-    if (weighted_score == other.weighted_score) {
-      // In case of a tie, favor the stronger text match.
-      if (score == other.score) {
+    if (score == other.score) {
+      // In case of a tie, favor the higher weight.
+      if (weight == other.weight) {
         // In case of a tie, favour shorter strings.
         int length = value->length() - other.value->length();
         // In the case of a tie, favor lexicographically-earlier
@@ -38,9 +38,9 @@ struct MatchResult {
         }
         return length < 0;
       }
-      return score > other.score;
+      return weight > other.weight;
     }
-    return weighted_score > other.weighted_score;
+    return score > other.score;
   }
 };
 
