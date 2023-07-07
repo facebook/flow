@@ -1,3 +1,8 @@
+### 0.211.1
+
+Notable bug fixes:
+* Improve fuzzy matching of autoimports
+
 ### 0.211.0
 
 Likely to cause new Flow errors:
