@@ -264,6 +264,58 @@ hasThisParam(''); // error: global object is not number
 noThisParam(''); // ok: no this type requirement
 ```
 
+## `Pick<O, Keys>` <SinceVersion version="0.211" /> {#toc-pick}
+
+This utility type allows you to generate an object type using a subset of the fields from
+another object type.
+
+```js flow-check
+type O = {foo: number, bar: string, baz: boolean};
+type FooAndBar = Pick<O, 'foo' | 'bar'>;
+
+declare const fooAndBar: FooAndBar;
+fooAndBar.baz; // error: baz is missing
+(fooAndBar.foo: number); // ok
+(fooAndBar.bar: string); // ok
+```
+
+## `Omit<O, Keys>` <SinceVersion version="0.211" /> {#toc-omit}
+
+This utility type allows you to generate an object type by omitting the specified fields from
+another object type.
+```js flow-check
+type O = {foo: number, bar: string, baz: boolean};
+type JustBaz= Omit<O, 'foo' | 'bar'>;
+
+declare const justBaz: JustBaz;
+(justBaz.baz: boolean); // ok
+justBaz.foo; // error: missing foo
+justBaz.bar; // error: missing bar
+```
+
+## `Record<Keys, Type>` <SinceVersion version="0.211" /> {#toc-omit}
+
+This utility type allows you to generate an object type from a union of keys with the given
+`Type` for each field.
+```js flow-check
+type NumberRecord = Record<'foo' | 'bar', number>;
+declare const numberRecord: NumberRecord;
+(numberRecord.foo: number); // ok
+(numberRecord.bar: number); // ok
+numberRecord.baz; // error
+```
+
+Note that `Record` is different than using an indexer:
+```js flow-check
+type NumberRecord = Record<'foo' | 'bar', number>;
+type IndexedObject = {['foo' | 'bar']: number};
+
+// Record uses explicit fields, which means they are all required
+const rec: Record = {}; // error
+// Indexers do not have this same requirement
+const idx: IndexedObject = {}; // no error
+```
+
 ## `$Exact<T>` {#toc-exact}
 
 You can use `$Exact` to make an [inexact object type](../objects/#exact-and-inexact-object-types) exact:
