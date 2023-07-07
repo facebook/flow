@@ -423,108 +423,6 @@ type Name = $NonMaybeType<MaybeName>;
 (null: Name); // Error! `null` can't be annotated as Name because Name is not a maybe type
 ```
 
-## `$ObjMap<T, F>` {#toc-objmap}
-
-`ObjMap<T, F>` takes an [object type](../objects) `T`, and a [function type](../functions) `F`, and returns the object type obtained by mapping the type of each value in the object with the provided function type `F`. In other words, `$ObjMap` will [call](#toc-call) (at the type level) the given function type `F` for every property value type in `T`, and return the resulting object type from those calls.
-
-Let's see an example. Suppose you have a function called `run` that takes an object of thunks (functions in the form `() => A`) as input:
-
-```js flow-check
-function run<O: {[key: string]: (...$ReadOnlyArray<mixed>) => mixed}>(o: O): $FlowFixMe {
-  return Object.keys(o).reduce<{[string]: (...$ReadOnlyArray<mixed>) => mixed}>(
-    (acc, k) => ({...acc, [(k: string)]: o[k]()}),
-    {},
-  );
-}
-```
-
-The function's purpose is to run all the thunks and return an object made of values. What's the return type of this function?
-
-The keys are the same, but the values have a different type, namely the return type of each function.
-At a value level (the implementation of the function) we're essentially mapping over the object to produce new values for the keys.
-How to express this at a type level?
-
-This is where `ObjMap<T, F>` comes in handy
-
-```js flow-check
-// let's write a function type that takes a `() => V` and returns a `V` (its return type)
-type ExtractReturnType = <V>(() => V) => V;
-
-declare function run<O: {[key: string]: (...$ReadOnlyArray<mixed>) => mixed}>(o: O): $ObjMap<O, ExtractReturnType>;
-
-const o = {
-  a: () => true,
-  b: () => 'foo'
-};
-
-(run(o).a: boolean); // Works
-(run(o).b: string);  // Works
-(run(o).b: boolean); // Error! `b` is a string
-run(o).c;            // Error! `c` was not in the original object
-```
-
-This is extremely useful for expressing the return type of functions that manipulate objects values.
-You could use a similar approach (for instance) to provide the return type of bluebird's [`Promise.props`](http://bluebirdjs.com/docs/api/promise.props.html) function,
-which is like `Promise.all` but takes an object as input.
-
-Here's a possible declaration of this function, which is very similar to our first example:
-
-```js flow-check
-declare function props<A, O: {[key: string]: A}>(promises: O): Promise<$ObjMap<O, typeof $await>>;
-
-const promises = {a: Promise.resolve(42)};
-props(promises).then(o => {
-  (o.a: 42); // Works
-  (o.a: 43); // Error! Flow knows it's 42
-});
-```
-
-## `$ObjMapi<T, F>` {#toc-objmapi}
-
-`ObjMapi<T, F>` is similar to [`ObjMap<T, F>`](#toc-objmap). The difference is that function
-type `F` will be [called](#toc-call) with both the key and value types of the elements of
-the object type `T`, instead of just the value types. For example:
-
-```js flow-check
-const o = {
-  a: () => true,
-  b: () => 'foo'
-};
-
-type ExtractReturnObjectType = <K, V>(K, () => V) => { k: K, v: V };
-
-declare function run<O: {...}>(o: O): $ObjMapi<O, ExtractReturnObjectType>;
-
-(run(o).a: {k: 'a', v: boolean}); // Works
-(run(o).b: {k: 'b', v: string});  // Works
-(run(o).a: {k: 'b', v: boolean}); // Error! `a.k` is "a"
-(run(o).b: {k: 'b', v: number});  // Error! `b.v` is a string
-run(o).c;                         // Error! `c` was not in the original object
-```
-
-## `$ObjMapConst<O, T>` {#toc-objmapconst}
-
-`$ObjMapConst<Obj, T>` is a special case of `$ObjMap<Obj, F>`, when `F` is a constant
-function type, e.g. `() => T`. Instead of writing `$ObjMap<Obj, () => T>`, you
-can write `$ObjMapConst<Obj, T>`. For example:
-```js
-const obj = {
-  a: true,
-  b: 'foo'
-};
-
-declare function run<O: {...}>(o: O): $ObjMapConst<O, number>;
-
-// newObj is of type {a: number, b: number}
-const newObj = run(obj);
-
-(newObj.a: number); // Works
-(newObj.b: string); // Error! Property `b` is a number
-```
-
-Tip: Prefer using `$ObjMapConst` instead of `$ObjMap` (if possible) to fix certain
-kinds of `[invalid-exported-annotation]` errors.
-
 ## `$KeyMirror<O>` {#toc-keymirror}
 
 `$KeyMirror<Obj>` is a special case of `$ObjMapi<Obj, F>`, when `F` is the identity
@@ -742,3 +640,108 @@ function f<T>(input: $Shape<T>): $Shape<T> {
 
 This utility type is deprecated and will be deleted in the future -
 use [`Partial`](#toc-partial) instead.
+
+### `$ObjMap<T, F>` {#toc-objmap}
+NOTE: **Deprecated!** This utility is deprecated as of Flow version 0.211- please use [Mapped Types](../mapped-types) instead.
+
+`ObjMap<T, F>` takes an [object type](../objects) `T`, and a [function type](../functions) `F`, and returns the object type obtained by mapping the type of each value in the object with the provided function type `F`. In other words, `$ObjMap` will [call](#toc-call) (at the type level) the given function type `F` for every property value type in `T`, and return the resulting object type from those calls.
+
+Let's see an example. Suppose you have a function called `run` that takes an object of thunks (functions in the form `() => A`) as input:
+
+```js flow-check
+function run<O: {[key: string]: (...$ReadOnlyArray<mixed>) => mixed}>(o: O): $FlowFixMe {
+  return Object.keys(o).reduce<{[string]: (...$ReadOnlyArray<mixed>) => mixed}>(
+    (acc, k) => ({...acc, [(k: string)]: o[k]()}),
+    {},
+  );
+}
+```
+
+The function's purpose is to run all the thunks and return an object made of values. What's the return type of this function?
+
+The keys are the same, but the values have a different type, namely the return type of each function.
+At a value level (the implementation of the function) we're essentially mapping over the object to produce new values for the keys.
+How to express this at a type level?
+
+This is where `ObjMap<T, F>` comes in handy
+
+```js flow-check
+// let's write a function type that takes a `() => V` and returns a `V` (its return type)
+type ExtractReturnType = <V>(() => V) => V;
+
+declare function run<O: {[key: string]: (...$ReadOnlyArray<mixed>) => mixed}>(o: O): $ObjMap<O, ExtractReturnType>;
+
+const o = {
+  a: () => true,
+  b: () => 'foo'
+};
+
+(run(o).a: boolean); // Works
+(run(o).b: string);  // Works
+(run(o).b: boolean); // Error! `b` is a string
+run(o).c;            // Error! `c` was not in the original object
+```
+
+This is extremely useful for expressing the return type of functions that manipulate objects values.
+You could use a similar approach (for instance) to provide the return type of bluebird's [`Promise.props`](http://bluebirdjs.com/docs/api/promise.props.html) function,
+which is like `Promise.all` but takes an object as input.
+
+Here's a possible declaration of this function, which is very similar to our first example:
+
+```js flow-check
+declare function props<A, O: {[key: string]: A}>(promises: O): Promise<$ObjMap<O, typeof $await>>;
+
+const promises = {a: Promise.resolve(42)};
+props(promises).then(o => {
+  (o.a: 42); // Works
+  (o.a: 43); // Error! Flow knows it's 42
+});
+```
+
+### `$ObjMapi<T, F>` {#toc-objmapi}
+NOTE: **Deprecated!** This utility is deprecated as of Flow version 0.211- please use [Mapped Types](../mapped-types) instead.
+
+`ObjMapi<T, F>` is similar to [`ObjMap<T, F>`](#toc-objmap). The difference is that function
+type `F` will be [called](#toc-call) with both the key and value types of the elements of
+the object type `T`, instead of just the value types. For example:
+
+```js flow-check
+const o = {
+  a: () => true,
+  b: () => 'foo'
+};
+
+type ExtractReturnObjectType = <K, V>(K, () => V) => { k: K, v: V };
+
+declare function run<O: {...}>(o: O): $ObjMapi<O, ExtractReturnObjectType>;
+
+(run(o).a: {k: 'a', v: boolean}); // Works
+(run(o).b: {k: 'b', v: string});  // Works
+(run(o).a: {k: 'b', v: boolean}); // Error! `a.k` is "a"
+(run(o).b: {k: 'b', v: number});  // Error! `b.v` is a string
+run(o).c;                         // Error! `c` was not in the original object
+```
+
+### `$ObjMapConst<O, T>` {#toc-objmapconst}
+NOTE: **Deprecated!** This utility is deprecated as of Flow version 0.211- please use [Mapped Types](../mapped-types) instead.
+
+`$ObjMapConst<Obj, T>` is a special case of `$ObjMap<Obj, F>`, when `F` is a constant
+function type, e.g. `() => T`. Instead of writing `$ObjMap<Obj, () => T>`, you
+can write `$ObjMapConst<Obj, T>`. For example:
+```js
+const obj = {
+  a: true,
+  b: 'foo'
+};
+
+declare function run<O: {...}>(o: O): $ObjMapConst<O, number>;
+
+// newObj is of type {a: number, b: number}
+const newObj = run(obj);
+
+(newObj.a: number); // Works
+(newObj.b: string); // Error! Property `b` is a number
+```
+
+Tip: Prefer using `$ObjMapConst` instead of `$ObjMap` (if possible) to fix certain
+kinds of `[invalid-exported-annotation]` errors.
