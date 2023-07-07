@@ -97,19 +97,19 @@ let%expect_test "fuzzy_score" =
   test "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
   [%expect {|
     "a" ~> "a": 4
-    "A" ~> "A": 6
+    "A" ~> "A": 4
     "A" ~> "a": 2
-    "a" ~> "A": 4
+    "a" ~> "A": 2
     "a" ~> "ab": 2
     "A" ~> "AB": 2
     "a" ~> "Ab": 0
     "A" ~> "Ab": 2
     "ab" ~> "ab": 12
-    "AB" ~> "AB": 13
+    "AB" ~> "AB": 12
     "ab" ~> "abc": 10
-    "AB" ~> "ABC": 9
+    "AB" ~> "ABC": 10
     "ab" ~> "abA": 10
-    "CONST" ~> "CONST": 34
+    "CONST" ~> "CONST": 36
     "CONST" ~> "CxOxNxSxTx": 14
     "ABcD" ~> "ABcD": 28
     "ccm" ~> "cacmelCase": -1

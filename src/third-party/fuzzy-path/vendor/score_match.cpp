@@ -135,17 +135,11 @@ long do_score(
     is_gap_location = true;
   } else {
     score = 1;
-    is_gap_location = false;
+    is_gap_location = is_uppercase_at_pos(word_pos, word, word_lower);
   }
 
   if (score > 1 && pattern_pos == 0) {
     has_strong_first_match = true;
-  }
-
-  if (!is_gap_location) {
-    is_gap_location = is_uppercase_at_pos(word_pos, word, word_lower) ||
-        is_separator_at_pos(word, word_len, word_pos - 1) ||
-        is_whitespace_at_pos(word, word_len, word_pos - 1);
   }
 
   if (pattern_pos == 0) {
