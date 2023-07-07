@@ -1236,7 +1236,8 @@ module CJSRequireT_kit (F : Import_export_helper_sig) = struct
         let proto = ObjProtoT reason in
         let props =
           NameUtils.Map.map
-            (fun (key_loc, type_) -> Field { key_loc; type_; polarity = Polarity.Positive })
+            (fun (key_loc, type_) ->
+              Field { preferred_def_locs = None; key_loc; type_; polarity = Polarity.Positive })
             exports_tmap
         in
         Obj_type.mk_with_proto cx reason ~obj_kind:Exact ~frozen:true ~props proto
@@ -1261,7 +1262,8 @@ module ImportModuleNsTKit = struct
     let exports_tmap = Context.find_exports cx exports.exports_tmap in
     let props =
       NameUtils.Map.map
-        (fun (key_loc, type_) -> Field { key_loc; type_; polarity = Polarity.Positive })
+        (fun (key_loc, type_) ->
+          Field { preferred_def_locs = None; key_loc; type_; polarity = Polarity.Positive })
         exports_tmap
     in
     let props =
@@ -1271,7 +1273,9 @@ module ImportModuleNsTKit = struct
         match exports.cjs_export with
         | Some type_ ->
           (* TODO this Field should probably have a location *)
-          let p = Field { key_loc = None; type_; polarity = Polarity.Positive } in
+          let p =
+            Field { preferred_def_locs = None; key_loc = None; type_; polarity = Polarity.Positive }
+          in
           NameUtils.Map.add (OrdinaryName "default") p props
         | None -> props
     in
@@ -1739,10 +1743,18 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
     | (None, Named { name; from_indexed_access = true; _ }, Some { key; value; dict_polarity; _ })
       when not ignore_dicts ->
       F.dict_read_check cx trace ~use_op (string_key name reason_op, key);
-      Some (Field { key_loc = None; type_ = value; polarity = dict_polarity }, IndexerProperty)
+      Some
+        ( Field
+            { preferred_def_locs = None; key_loc = None; type_ = value; polarity = dict_polarity },
+          IndexerProperty
+        )
     | (None, Computed k, Some { key; value; dict_polarity; _ }) when not ignore_dicts ->
       F.dict_read_check cx trace ~use_op (k, key);
-      Some (Field { key_loc = None; type_ = value; polarity = dict_polarity }, IndexerProperty)
+      Some
+        ( Field
+            { preferred_def_locs = None; key_loc = None; type_ = value; polarity = dict_polarity },
+          IndexerProperty
+        )
     | _ -> None
 
   let read_instance_prop
@@ -2009,14 +2021,14 @@ let objt_to_obj_rest cx props_tmap ~obj_kind ~reason_op ~reason_obj xs =
   let props =
     NameUtils.Map.mapi
       (fun name -> function
-        | Field { key_loc; type_; polarity } ->
+        | Field { preferred_def_locs; key_loc; type_; polarity } ->
           if not @@ Polarity.compat (polarity, Polarity.Positive) then
             add_output
               cx
               (Error_message.EPropNotReadable
                  { reason_prop = reason_of_t type_; prop_name = Some name; use_op }
               );
-          Field { key_loc; type_; polarity = Polarity.Neutral }
+          Field { preferred_def_locs; key_loc; type_; polarity = Polarity.Neutral }
         | Set { key_loc = _; type_ } as p ->
           add_output
             cx

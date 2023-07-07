@@ -269,7 +269,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
               if is_method then
                 Method { key_loc; type_ = t }
               else
-                Field { key_loc; type_ = t; polarity })
+                Field { preferred_def_locs = None; key_loc; type_ = t; polarity })
             props
         in
         let flags =
@@ -314,7 +314,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
               if is_method then
                 Method { key_loc; type_ = t }
               else
-                Field { key_loc; type_ = t; polarity })
+                Field { preferred_def_locs = None; key_loc; type_ = t; polarity })
             props
         in
         let flags =
@@ -756,7 +756,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 if is_method then
                   Method { key_loc; type_ }
                 else
-                  Field { key_loc; type_; polarity = prop_polarity })
+                  Field { preferred_def_locs = None; key_loc; type_; polarity = prop_polarity })
               props_map
           in
           let id = Context.generate_property_map cx props in

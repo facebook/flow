@@ -194,7 +194,15 @@ let add_name_field reason =
     | Some _ as p -> p
     | None ->
       let open Type in
-      Some (Field { key_loc = None; type_ = StrT.why reason trust; polarity = Polarity.Neutral })
+      Some
+        (Field
+           {
+             preferred_def_locs = None;
+             key_loc = None;
+             type_ = StrT.why reason trust;
+             polarity = Polarity.Neutral;
+           }
+        )
   in
   SMap.update "name" f
 
@@ -1202,7 +1210,7 @@ and merge_accessor tps infer_tps file = function
 and merge_obj_value_prop tps infer_tps file = function
   | ObjValueField (id_loc, t, polarity) ->
     let type_ = merge tps infer_tps file t in
-    Type.Field { key_loc = Some id_loc; type_; polarity }
+    Type.Field { preferred_def_locs = None; key_loc = Some id_loc; type_; polarity }
   | ObjValueAccess x -> merge_accessor tps infer_tps file x
   | ObjValueMethod { id_loc; fn_loc; async; generator; def } ->
     let reason = Reason.func_reason ~async ~generator fn_loc in
@@ -1213,7 +1221,7 @@ and merge_obj_value_prop tps infer_tps file = function
 and merge_class_prop tps infer_tps file = function
   | ObjValueField (id_loc, t, polarity) ->
     let type_ = merge tps infer_tps file t in
-    Type.Field { key_loc = Some id_loc; type_; polarity }
+    Type.Field { preferred_def_locs = None; key_loc = Some id_loc; type_; polarity }
   | ObjValueAccess x -> merge_accessor tps infer_tps file x
   | ObjValueMethod { id_loc; fn_loc; async; generator; def } ->
     let reason = Reason.func_reason ~async ~generator fn_loc in
@@ -1224,7 +1232,7 @@ and merge_class_prop tps infer_tps file = function
 and merge_obj_annot_prop tps infer_tps file = function
   | ObjAnnotField (id_loc, t, polarity) ->
     let type_ = merge tps infer_tps file t in
-    Type.Field { key_loc = Some id_loc; type_; polarity }
+    Type.Field { preferred_def_locs = None; key_loc = Some id_loc; type_; polarity }
   | ObjAnnotAccess x -> merge_accessor tps infer_tps file x
   | ObjAnnotMethod { id_loc; fn_loc; def } ->
     let reason = Reason.(mk_annot_reason RFunctionType fn_loc) in
@@ -1235,7 +1243,7 @@ and merge_obj_annot_prop tps infer_tps file = function
 and merge_interface_prop tps infer_tps file = function
   | InterfaceField (id_loc, t, polarity) ->
     let t = merge tps infer_tps file t in
-    Type.Field { key_loc = id_loc; type_ = t; polarity }
+    Type.Field { preferred_def_locs = None; key_loc = id_loc; type_ = t; polarity }
   | InterfaceAccess x -> merge_accessor tps infer_tps file x
   | InterfaceMethod ms ->
     let merge_method fn_loc def =
@@ -1500,7 +1508,13 @@ and merge_fun_statics tps infer_tps file reason statics =
     SMap.map
       (fun (id_loc, t) ->
         let t = merge tps infer_tps file t in
-        Type.Field { key_loc = Some id_loc; type_ = t; polarity = Polarity.Neutral })
+        Type.Field
+          {
+            preferred_def_locs = None;
+            key_loc = Some id_loc;
+            type_ = t;
+            polarity = Polarity.Neutral;
+          })
       statics
     |> NameUtils.namemap_of_smap
   in
@@ -1680,7 +1694,7 @@ and merge_component
             ( Type.Properties.add_field
                 (Reason.OrdinaryName name)
                 Polarity.Positive
-                (Some name_loc)
+                ~key_loc:(Some name_loc)
                 t
                 acc,
               instance

@@ -922,7 +922,7 @@ let init_declare_module_synthetic_module_exports cx ~export_type loc reason =
               match val_kind with
               | Some Env_api.Value ->
                 let t = type_of_state ~lookup_mode:ForValue cx env loc reason write_locs id None in
-                Properties.add_field name Polarity.Positive (Some loc) t acc
+                Properties.add_field name Polarity.Positive ~key_loc:(Some loc) t acc
               | _ -> acc
           )
         in

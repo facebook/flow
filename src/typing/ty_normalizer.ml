@@ -949,7 +949,7 @@ end = struct
       in
       fun ~env ?(inherited = false) ?(source = Ty.Other) (x, p) ->
         match p with
-        | T.Field { key_loc; type_ = t; polarity } ->
+        | T.Field { preferred_def_locs = _; key_loc; type_ = t; polarity } ->
           if keep_field ~env t then
             let def_loc = Some (Base.Option.value key_loc ~default:(TypeUtil.loc_of_t t)) in
             let polarity = type_polarity polarity in

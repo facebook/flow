@@ -1032,7 +1032,7 @@ and dump_tvar_ (depth, tvars) cx id =
 and dump_prop_ (depth, tvars) cx p =
   let kid t = dump_t_ (depth, tvars) cx t in
   match p with
-  | Field { key_loc = _; type_; polarity } ->
+  | Field { preferred_def_locs = _; key_loc = _; type_; polarity } ->
     spf "Field (%s) %s" (Polarity.string polarity) (kid type_)
   | Get { key_loc = _; type_ } -> spf "Get %s" (kid type_)
   | Set { key_loc = _; type_ } -> spf "Set %s" (kid type_)

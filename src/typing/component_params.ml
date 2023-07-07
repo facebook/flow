@@ -58,7 +58,7 @@ module Make
             ( Type.Properties.add_field
                 (Reason.OrdinaryName key)
                 Polarity.Positive
-                (Some key_loc)
+                ~key_loc:(Some key_loc)
                 t
                 acc,
               instance

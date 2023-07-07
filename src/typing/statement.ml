@@ -2173,7 +2173,7 @@ module Make
           let key = translate_identifier_or_string_literal_key t key in
           let acc =
             ObjectExpressionAcc.add_prop
-              (Properties.add_field (OrdinaryName name) Polarity.Neutral (Some loc) t)
+              (Properties.add_field (OrdinaryName name) Polarity.Neutral ~key_loc:(Some loc) t)
               acc
           in
           (acc, key, value)
@@ -2322,7 +2322,15 @@ module Make
         (* No properties are added in this case. *)
         Obj_type.mk_exact_empty cx reason_obj
       | Named { name; _ } ->
-        let prop = Field { key_loc = None; type_ = value; polarity = Polarity.Neutral } in
+        let prop =
+          Field
+            {
+              preferred_def_locs = None;
+              key_loc = None;
+              type_ = value;
+              polarity = Polarity.Neutral;
+            }
+        in
         let props = NameUtils.Map.singleton name prop in
         let proto = NullT.make reason |> with_trust bogus_trust in
         Obj_type.mk_with_proto ~obj_kind:Exact cx reason_obj ~props proto
@@ -5862,7 +5870,12 @@ module Make
                 acc
               else
                 ObjectExpressionAcc.add_prop
-                  (Properties.add_field (OrdinaryName aname) Polarity.Neutral (Some id_loc) atype)
+                  (Properties.add_field
+                     (OrdinaryName aname)
+                     Polarity.Neutral
+                     ~key_loc:(Some id_loc)
+                     atype
+                  )
                   acc
             in
             let att =
@@ -5917,7 +5930,7 @@ module Make
           )
         in
         ObjectExpressionAcc.add_prop
-          (Properties.add_field (OrdinaryName "children") Polarity.Neutral None arr)
+          (Properties.add_field (OrdinaryName "children") Polarity.Neutral ~key_loc:None arr)
           acc
     in
     let t =
@@ -6311,7 +6324,15 @@ module Make
                     Flow.flow cx (spec, UseT (use_op, propdesc))
                 )
               in
-              let p = Field { key_loc = loc; type_ = t; polarity = Polarity.Neutral } in
+              let p =
+                Field
+                  {
+                    preferred_def_locs = None;
+                    key_loc = loc;
+                    type_ = t;
+                    polarity = Polarity.Neutral;
+                  }
+              in
               NameUtils.Map.add x p acc)
           pmap
           NameUtils.Map.empty
@@ -7859,7 +7880,13 @@ module Make
                   Type_env.find_write cx kind (mk_reason (RIdentifier (OrdinaryName name)) loc)
                 in
                 let field =
-                  Field { key_loc = Some loc; type_ = expr_t; polarity = Polarity.Neutral }
+                  Field
+                    {
+                      preferred_def_locs = None;
+                      key_loc = Some loc;
+                      type_ = expr_t;
+                      polarity = Polarity.Neutral;
+                    }
                 in
                 NameUtils.Map.add (OrdinaryName name) field acc)
               statics

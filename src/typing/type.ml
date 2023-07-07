@@ -1317,9 +1317,14 @@ module rec TypeTerm : sig
     dict_polarity: Polarity.t;
   }
 
-  (* Locations refer to the location of the identifier, if one exists *)
+  (* key_loc refer to the location of the identifier, if one exists,
+     preferred_def_locs refer to the (potentially multiple) def_loc that go-to-definition should
+     jump to. If the field is None, go-to-definition will jump to key_loc. The field should only
+     be populated if multiple def_locs make sense, or if we want to track fields where we want to
+     make an extra go-to-def jump for better UX. *)
   and property =
     | Field of {
+        preferred_def_locs: ALoc.t Nel.t option;
         key_loc: ALoc.t option;
         type_: t;
         polarity: Polarity.t;
@@ -1724,6 +1729,8 @@ and Property : sig
 
   val first_loc : t -> ALoc.t option
 
+  val def_locs : t -> ALoc.t Nel.t option
+
   val iter_t : (TypeTerm.t -> unit) -> t -> unit
 
   val fold_t : ('a -> TypeTerm.t -> 'a) -> 'a -> t -> 'a
@@ -1823,6 +1830,21 @@ end = struct
         in
         Some loc)
 
+  let def_locs = function
+    | Field { preferred_def_locs = Some locs; _ } -> Some locs
+    | Field { preferred_def_locs = None; key_loc; _ }
+    | Get { key_loc; _ }
+    | Set { key_loc; _ }
+    | Method { key_loc; _ } ->
+      Base.Option.map ~f:Nel.one key_loc
+    | GetSet { get_key_loc; set_key_loc; _ } ->
+      (match (get_key_loc, set_key_loc) with
+      | (None, None) -> None
+      | (Some loc, None)
+      | (None, Some loc) ->
+        Some (Nel.one loc)
+      | (Some loc1, Some loc2) -> Some (loc1, [loc2]))
+
   let iter_t f = function
     | Field { type_; _ }
     | Get { type_; _ }
@@ -1842,7 +1864,8 @@ end = struct
     | GetSet { get_type; set_type; _ } -> f (f acc get_type) set_type
 
   let map_t f = function
-    | Field { key_loc; type_; polarity } -> Field { key_loc; type_ = f type_; polarity }
+    | Field { preferred_def_locs; key_loc; type_; polarity } ->
+      Field { preferred_def_locs; key_loc; type_ = f type_; polarity }
     | Get { key_loc; type_ } -> Get { key_loc; type_ = f type_ }
     | Set { key_loc; type_ } -> Set { key_loc; type_ = f type_ }
     | GetSet { get_key_loc; get_type; set_key_loc; set_type } ->
@@ -1851,12 +1874,12 @@ end = struct
 
   let ident_map_t f p =
     match p with
-    | Field { key_loc; type_; polarity } ->
+    | Field { preferred_def_locs; key_loc; type_; polarity } ->
       let type_' = f type_ in
       if type_' == type_ then
         p
       else
-        Field { key_loc; type_ = type_'; polarity }
+        Field { preferred_def_locs; key_loc; type_ = type_'; polarity }
     | Get { key_loc; type_ } ->
       let type_' = f type_ in
       if type_' == type_ then
@@ -1901,7 +1924,14 @@ and Properties : sig
 
   type map = t Map.t
 
-  val add_field : name -> Polarity.t -> ALoc.t option -> TypeTerm.t -> t -> t
+  val add_field :
+    name ->
+    Polarity.t ->
+    ?preferred_def_locs:ALoc.t Nel.t ->
+    key_loc:ALoc.t option ->
+    TypeTerm.t ->
+    t ->
+    t
 
   val add_getter : name -> ALoc.t option -> TypeTerm.t -> t -> t
 
@@ -1945,7 +1975,8 @@ end = struct
 
   type map = t Map.t
 
-  let add_field x polarity key_loc type_ = NameUtils.Map.add x (Field { key_loc; type_; polarity })
+  let add_field x polarity ?preferred_def_locs ~key_loc type_ =
+    NameUtils.Map.add x (Field { preferred_def_locs; key_loc; type_; polarity })
 
   let add_getter x get_key_loc get_type map =
     NameUtils.Map.adjust
@@ -1982,13 +2013,15 @@ end = struct
 
   let map_fields f =
     NameUtils.Map.map (function
-        | Field { key_loc; type_; polarity } -> Field { key_loc; type_ = f type_; polarity }
+        | Field { preferred_def_locs; key_loc; type_; polarity } ->
+          Field { preferred_def_locs; key_loc; type_ = f type_; polarity }
         | p -> p
         )
 
   let mapi_fields f =
     NameUtils.Map.mapi (fun k -> function
-      | Field { key_loc; type_; polarity } -> Field { key_loc; type_ = f k type_; polarity }
+      | Field { preferred_def_locs; key_loc; type_; polarity } ->
+        Field { preferred_def_locs; key_loc; type_ = f k type_; polarity }
       | p -> p
     )
 end

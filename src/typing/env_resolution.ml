@@ -205,7 +205,12 @@ let resolve_hint cx loc hint =
         Base.List.fold properties ~init:(Statement.ObjectExpressionAcc.empty ()) ~f:(fun acc -> function
           | ObjectPropPatternHint (n, l, h) ->
             Statement.ObjectExpressionAcc.add_prop
-              (Properties.add_field (OrdinaryName n) Polarity.Neutral (Some l) (resolve_hint_node h))
+              (Properties.add_field
+                 (OrdinaryName n)
+                 Polarity.Neutral
+                 ~key_loc:(Some l)
+                 (resolve_hint_node h)
+              )
               acc
           | ObjectSpreadPropPatternHint h ->
             Statement.ObjectExpressionAcc.add_spread (resolve_hint_node h) acc
@@ -518,7 +523,12 @@ let resolve_binding_partial cx reason loc b =
                 ) ->
               let t = mk_expression value in
               Statement.ObjectExpressionAcc.add_prop
-                (Properties.add_field (OrdinaryName name) Polarity.Neutral (Some name_loc) t)
+                (Properties.add_field
+                   (OrdinaryName name)
+                   Polarity.Neutral
+                   ~key_loc:(Some name_loc)
+                   t
+                )
                 acc
             | _ -> failwith "Object not synthesizable"
         )

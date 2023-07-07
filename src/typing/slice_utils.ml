@@ -490,7 +490,7 @@ let spread_mk_object cx reason target { Object.reason = _; props; flags; generic
         if is_method then
           Method { key_loc; type_ = prop_t }
         else
-          Field { key_loc; type_ = prop_t; polarity = Polarity.Neutral })
+          Field { preferred_def_locs = None; key_loc; type_ = prop_t; polarity = Polarity.Neutral })
       props
   in
   let id = Context.generate_property_map cx props in
@@ -684,7 +684,8 @@ let check_config2 cx pmap { Object.reason; props; flags; generics; interface = _
           if is_method then
             Method { key_loc; type_ = prop_t }
           else
-            Field { key_loc; type_ = prop_t; polarity = Polarity.Neutral })
+            Field
+              { preferred_def_locs = None; key_loc; type_ = prop_t; polarity = Polarity.Neutral })
         props
     in
     let id = Context.generate_property_map cx props in
@@ -807,7 +808,13 @@ let object_rest
               if is_method then
                 Method { key_loc; type_ = optional t1 }
               else
-                Field { key_loc; type_ = optional t1; polarity = Polarity.Neutral }
+                Field
+                  {
+                    preferred_def_locs = None;
+                    key_loc;
+                    type_ = optional t1;
+                    polarity = Polarity.Neutral;
+                  }
             in
             Some p
           (* Otherwise if the object we are using to subtract has a non-optional own
@@ -837,7 +844,13 @@ let object_rest
               if is_method then
                 Method { key_loc; type_ = optional t1 }
               else
-                Field { key_loc; type_ = optional t1; polarity = Polarity.Neutral }
+                Field
+                  {
+                    preferred_def_locs = None;
+                    key_loc;
+                    type_ = optional t1;
+                    polarity = Polarity.Neutral;
+                  }
             in
             Some p
           (* If neither object has the prop then we don't add a prop to our
@@ -856,7 +869,7 @@ let object_rest
               if is_method then
                 Method { key_loc; type_ = t }
               else
-                Field { key_loc; type_ = t; polarity = Polarity.Neutral }
+                Field { preferred_def_locs = None; key_loc; type_ = t; polarity = Polarity.Neutral }
             in
             Some p
           | ( (Omit | ReactConfigMerge _),
@@ -868,7 +881,8 @@ let object_rest
               if is_method then
                 Method { key_loc; type_ = t }
               else
-                Field { key_loc; type_ = t; polarity = Polarity.Positive }
+                Field
+                  { preferred_def_locs = None; key_loc; type_ = t; polarity = Polarity.Positive }
             in
             Some p
           | ( Sound,
@@ -880,7 +894,7 @@ let object_rest
               if is_method then
                 Method { key_loc; type_ = t }
               else
-                Field { key_loc; type_ = t; polarity = Polarity.Neutral }
+                Field { preferred_def_locs = None; key_loc; type_ = t; polarity = Polarity.Neutral }
             in
             Some p
           | ( Sound,
@@ -892,7 +906,13 @@ let object_rest
               if is_method then
                 Method { key_loc; type_ = optional t }
               else
-                Field { key_loc; type_ = optional t; polarity = Polarity.Neutral }
+                Field
+                  {
+                    preferred_def_locs = None;
+                    key_loc;
+                    type_ = optional t;
+                    polarity = Polarity.Neutral;
+                  }
             in
             Some p
           (* Omit works like TypeScript's Omit<Obj, 'a' | 'b'> utility type:
@@ -927,7 +947,8 @@ let object_rest
               if is_method then
                 Method { key_loc; type_ = t1 }
               else
-                Field { key_loc; type_ = t1; polarity = Polarity.Neutral }
+                Field
+                  { preferred_def_locs = None; key_loc; type_ = t1; polarity = Polarity.Neutral }
             in
             Some p
           (* Using our same equation. Consider this case:
@@ -949,7 +970,13 @@ let object_rest
               if is_method then
                 Method { key_loc; type_ = optional t1 }
               else
-                Field { key_loc; type_ = optional t1; polarity = Polarity.Positive }
+                Field
+                  {
+                    preferred_def_locs = None;
+                    key_loc;
+                    type_ = optional t1;
+                    polarity = Polarity.Positive;
+                  }
             in
             Some p
           (* Omit works like TypeScript's Omit<Obj, 'a' | 'b'> utility type.
@@ -1052,7 +1079,7 @@ let object_read_only =
           if is_method then
             Method { key_loc; type_ = prop_t }
           else
-            Field { key_loc; type_ = prop_t; polarity })
+            Field { preferred_def_locs = None; key_loc; type_ = prop_t; polarity })
         props
     in
     let flags =
@@ -1097,17 +1124,21 @@ let object_update_optionality kind =
             Method { key_loc; type_ = prop_t }
           else
             match (prop_t, kind) with
-            | (OptionalT _, `Partial) -> Field { key_loc; type_ = prop_t; polarity }
+            | (OptionalT _, `Partial) ->
+              Field { preferred_def_locs = None; key_loc; type_ = prop_t; polarity }
             | (_, `Partial) ->
               Field
                 {
+                  preferred_def_locs = None;
                   key_loc;
                   type_ =
                     OptionalT { reason = reason_of_t prop_t; type_ = prop_t; use_desc = false };
                   polarity;
                 }
-            | (OptionalT { type_; _ }, `Required) -> Field { key_loc; type_; polarity }
-            | (_, `Required) -> Field { key_loc; type_ = prop_t; polarity })
+            | (OptionalT { type_; _ }, `Required) ->
+              Field { preferred_def_locs = None; key_loc; type_; polarity }
+            | (_, `Required) ->
+              Field { preferred_def_locs = None; key_loc; type_ = prop_t; polarity })
         props
     in
     let call = None in
@@ -1584,6 +1615,7 @@ let map_object
              let field =
                Field
                  {
+                   preferred_def_locs = None;
                    key_loc = None;
                    type_ = AnyT.why (AnyError None) reason;
                    polarity = Polarity.Neutral;
@@ -1607,6 +1639,7 @@ let map_object
              let field =
                Field
                  {
+                   preferred_def_locs = None;
                    key_loc = Some key_loc;
                    type_ = mk_prop_type key_t prop_optional;
                    polarity = variance;

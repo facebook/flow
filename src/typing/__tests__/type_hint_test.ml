@@ -576,6 +576,7 @@ let eval_hint_tests =
             Type.(
               Field
                 {
+                  preferred_def_locs = None;
                   key_loc = Some ALoc.none;
                   type_ = fun_t ~params:[] ~return_t:(VoidT.make dummy_reason (bogus_trust ()));
                   polarity = Polarity.Neutral;
@@ -589,6 +590,7 @@ let eval_hint_tests =
             Type.(
               Field
                 {
+                  preferred_def_locs = None;
                   key_loc = Some ALoc.none;
                   type_ = fun_t ~params:[] ~return_t:(VoidT.make dummy_reason (bogus_trust ()));
                   polarity = Polarity.Neutral;

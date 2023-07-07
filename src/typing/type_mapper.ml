@@ -900,12 +900,12 @@ class virtual ['a] t =
 
     method prop cx map_cx prop =
       match prop with
-      | Field { key_loc; type_; polarity } ->
+      | Field { preferred_def_locs; key_loc; type_; polarity } ->
         let type_' = self#type_ cx map_cx type_ in
         if type_' == type_ then
           prop
         else
-          Field { key_loc; type_ = type_'; polarity }
+          Field { preferred_def_locs; key_loc; type_ = type_'; polarity }
       | Method { key_loc; type_ } ->
         let type_' = self#type_ cx map_cx type_ in
         if type_' == type_ then

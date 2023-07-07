@@ -327,6 +327,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
             match up with
             | Field
                 {
+                  preferred_def_locs = _;
                   key_loc = _;
                   type_ = OptionalT { reason = _; type_ = ut; use_desc = _ };
                   polarity;
@@ -410,6 +411,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                 match lp with
                 | Field
                     {
+                      preferred_def_locs = _;
                       key_loc = _;
                       type_ = OptionalT { reason = _; type_ = lt; use_desc = _ };
                       polarity;

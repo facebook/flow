@@ -287,7 +287,8 @@ class ['a] t =
 
     method prop cx pole acc =
       function
-      | Field { key_loc = _; type_; polarity } -> self#type_ cx (P.mult (pole, polarity)) acc type_
+      | Field { preferred_def_locs = _; key_loc = _; type_; polarity } ->
+        self#type_ cx (P.mult (pole, polarity)) acc type_
       | Method { key_loc = _; type_ } -> self#type_ cx pole acc type_
       | Get { key_loc = _; type_ } -> self#type_ cx pole acc type_
       | Set { key_loc = _; type_ } -> self#type_ cx (P.inv pole) acc type_

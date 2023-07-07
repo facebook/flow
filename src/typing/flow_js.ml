@@ -8473,7 +8473,9 @@ struct
               key
             )
         );
-      let p2 = Field { key_loc = None; type_ = value; polarity = dict_polarity } in
+      let p2 =
+        Field { preferred_def_locs = None; key_loc = None; type_ = value; polarity = dict_polarity }
+      in
       unify_props cx trace ~use_op x prop_obj_reason dict_reason p p2
     | None ->
       let use_op =

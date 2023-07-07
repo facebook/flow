@@ -2026,7 +2026,11 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               if _method then
                 Properties.add_method (OrdinaryName name) (Some loc) t
               else
-                Properties.add_field (OrdinaryName name) (polarity cx variance) (Some loc) t
+                Properties.add_field
+                  (OrdinaryName name)
+                  (polarity cx variance)
+                  ~key_loc:(Some loc)
+                  t
             in
             (Acc.add_prop prop acc, prop_ast t)
         | Ast.Expression.Object.Property.NumberLiteral (loc, _)

@@ -335,7 +335,7 @@ module Make
       | Annot t -> t
       | Infer (fsig, _) -> F.gettertype fsig
     in
-    Type.Field { key_loc; type_; polarity }
+    Type.Field { preferred_def_locs = None; key_loc; type_; polarity }
 
   let to_method
       cx this_default { id_loc; this_write_loc; func_sig = fsig; set_asts = _; set_type = _ } =
