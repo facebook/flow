@@ -2219,8 +2219,10 @@ let handle_persistent_find_references
   | Ok result ->
     let r = FindReferencesResult result in
     let response = ResponseMessage (id, r) in
-    Lwt.return (LspProt.LspFromServer (Some response), metadata)
-  | Error reason -> Lwt.return (mk_lsp_error_response ~id:(Some id) ~reason metadata)
+    Lwt.return (env, LspProt.LspFromServer (Some response), metadata)
+  | Error reason ->
+    let (resp, metadata) = mk_lsp_error_response ~id:(Some id) ~reason metadata in
+    Lwt.return (env, resp, metadata)
 
 let handle_persistent_document_highlight
     ~genv ~reader ~options ~id ~params ~metadata ~client ~profiling ~env =
@@ -2318,8 +2320,10 @@ let handle_persistent_rename ~genv ~reader ~options ~id ~params ~metadata ~clien
   | Ok result ->
     let r = RenameResult result in
     let response = ResponseMessage (id, r) in
-    Lwt.return (LspProt.LspFromServer (Some response), metadata)
-  | Error reason -> Lwt.return (mk_lsp_error_response ~id:(Some id) ~reason metadata)
+    Lwt.return (env, LspProt.LspFromServer (Some response), metadata)
+  | Error reason ->
+    let (resp, metadata) = mk_lsp_error_response ~id:(Some id) ~reason metadata in
+    Lwt.return (env, resp, metadata)
 
 let handle_persistent_coverage ~options ~id ~params ~file_input ~metadata ~client ~profiling ~env =
   let textDocument = params.TypeCoverage.textDocument in
@@ -2878,17 +2882,15 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
     mk_parallelizable_persistent
       ~options
       (handle_persistent_signaturehelp_lsp ~reader ~options ~id ~params ~file_input ~metadata)
-  | LspToServer (RequestMessage (id, FindReferencesRequest params)) ->
-    mk_parallelizable_persistent
-      ~options
-      (handle_persistent_find_references ~genv ~reader ~options ~id ~params ~metadata)
   | LspToServer (RequestMessage (id, DocumentHighlightRequest params)) ->
     mk_parallelizable_persistent
       ~options
       (handle_persistent_document_highlight ~genv ~reader ~options ~id ~params ~metadata)
+  | LspToServer (RequestMessage (id, FindReferencesRequest params)) ->
+    Handle_nonparallelizable_persistent
+      (handle_persistent_find_references ~genv ~reader ~options ~id ~params ~metadata)
   | LspToServer (RequestMessage (id, RenameRequest params)) ->
-    mk_parallelizable_persistent
-      ~options
+    Handle_nonparallelizable_persistent
       (handle_persistent_rename ~genv ~reader ~options ~id ~params ~metadata)
   | LspToServer (RequestMessage (id, TypeCoverageRequest params)) ->
     (* Grab the file contents immediately in case of any future didChanges *)
