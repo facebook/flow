@@ -32,7 +32,22 @@ let test pattern word =
 [@@@ocamlformat "disable"]
 
 let%expect_test "fuzzyScore" =
+  test "a" "a";
+  test "A" "A";
+  test "A" "a";
+  test "a" "A";
+  test "a" "ab";
+  test "A" "AB";
+  test "a" "Ab";
+  test "A" "Ab";
+  test "ab" "ab";
+  test "AB" "AB";
+  test "ab" "abc";
+  test "AB" "ABC";
   test "ab" "abA";
+  test "CONST" "CONST";
+  test "CONST" "CxOxNxSxTx";
+  test "ABcD" "ABcD";
   test "ccm" "cacmelCase";
   test "bti" "the_black_knight";
   test "ccm" "camelCase";
@@ -84,10 +99,27 @@ let%expect_test "fuzzyScore" =
   test "fo" "bar/foo";
   test "fo" "bar\\foo";
   test "f" "Foo";
+  test "tiat" "this_is_a_test";
+  test "tiat" "ThisIsATest";
   test "ab" "axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxbxax";
   test "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
   [%expect {|
+    "a" ~> "a": 4
+    "A" ~> "A": 6
+    "A" ~> "a": 2
+    "a" ~> "A": 4
+    "a" ~> "ab": 2
+    "A" ~> "AB": 2
+    "a" ~> "Ab": 0
+    "A" ~> "Ab": 2
+    "ab" ~> "ab": 12
+    "AB" ~> "AB": 13
+    "ab" ~> "abc": 10
+    "AB" ~> "ABC": 9
     "ab" ~> "abA": 10
+    "CONST" ~> "CONST": 34
+    "CONST" ~> "CxOxNxSxTx": 14
+    "ABcD" ~> "ABcD": 28
     "ccm" ~> "cacmelCase": -1
     "bti" ~> "the_black_knight": none
     "ccm" ~> "camelCase": none
@@ -139,6 +171,8 @@ let%expect_test "fuzzyScore" =
     "fo" ~> "bar/foo": -5
     "fo" ~> "bar\\foo": -5
     "f" ~> "Foo": 0
+    "tiat" ~> "this_is_a_test": 1
+    "tiat" ~> "ThisIsATest": 1
     "ab" ~> "axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxbxax": -125
     "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" ~> "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx": 1020
   |}]
