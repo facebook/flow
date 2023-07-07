@@ -44,7 +44,7 @@ static value alloc_result(match_result_t *r) {
   CAMLlocal1(v);
   v = caml_alloc(2, 0);
   Store_field(v, 0, caml_copy_string(r->value));
-  Store_field(v, 1, caml_copy_double(r->score));
+  Store_field(v, 1, Val_long(r->score));
   // we don't currently need r->weight
   CAMLreturn(v);
 }
@@ -114,4 +114,25 @@ value fuzzy_match(value matcher_val, value query_val, value options) {
   }
 
   CAMLreturn (head);
+}
+
+value fuzzy_score(value haystack_v, value needle_v, value boost_full_match_v, value first_match_can_be_weak_v) {
+  CAMLparam4(haystack_v, needle_v, boost_full_match_v, first_match_can_be_weak_v);
+  CAMLlocal1(result);
+
+  const char *haystack = String_val(haystack_v);
+  const char *needle = String_val(needle_v);
+  bool boost_full_match = Bool_val(boost_full_match_v);
+  bool first_match_can_be_weak = Bool_val(first_match_can_be_weak);
+
+  long score = 0;
+  bool has_score = fuzzy_score_c(haystack, needle, boost_full_match, first_match_can_be_weak, &score);
+
+  if (has_score) {
+    result = caml_alloc_some(Val_long(score));
+  } else {
+    result = Val_none;
+  }
+
+  CAMLreturn(result);
 }

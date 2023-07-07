@@ -677,7 +677,7 @@ let append_completion_items_of_autoimports
       else
         let ranking_info =
           if show_ranking_info then
-            Some (Printf.sprintf "Score: %.4f\nUses: %d" score weight)
+            Some (Printf.sprintf "Score: %d\nUses: %d" score weight)
           else
             None
         in

@@ -23,7 +23,7 @@ type search_result = {
 
 type search_result_scored = {
   search_result: search_result;
-  score: float;
+  score: int;
   weight: int;
 }
 [@@deriving show]

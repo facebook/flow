@@ -1,3 +1,13 @@
 (test
  (name test)
- (libraries fuzzy_path ounit2))
+ (libraries fuzzy_path ounit2)
+ (modules test))
+
+(library
+ (name expect_test)
+ (libraries fuzzy_path)
+ (modules expect_test)
+ (flags
+  (:standard -w -40))
+ (inline_tests)
+ (preprocess (pps ppx_expect)))

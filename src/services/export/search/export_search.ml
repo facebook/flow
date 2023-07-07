@@ -20,8 +20,7 @@ type search_result = {
 
 type search_result_scored = {
   search_result: search_result;
-  score: float;
-      [@printer (fun fmt x -> x |> Base.Float.to_int64_preserve_order_exn |> Base.Int64.pp fmt)]
+  score: int;
   weight: int;
 }
 [@@deriving show]
@@ -146,7 +145,7 @@ let take ~weighted ~n ~index ~query fuzzy_matches =
   let sorted =
     (* sorts the highest scores to the front *)
     Base.List.stable_sort rev_all ~compare:(fun a b ->
-        match Float.compare b.score a.score with
+        match Int.compare b.score a.score with
         | 0 ->
           (match Int.compare b.weight a.weight with
           | 0 ->

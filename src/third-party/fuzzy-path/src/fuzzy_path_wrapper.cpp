@@ -11,6 +11,7 @@
 #include "fuzzy_path_wrapper.h"
 
 #include "../vendor/MatcherBase.h"
+#include "../vendor/score_match.h"
 
 struct matcher {
   void *obj;
@@ -116,4 +117,39 @@ size_t matcher_size(matcher_t *m) {
   }
   obj = static_cast<MatcherBase *>(m->obj);
   return obj->size();
+}
+
+inline std::string str_to_lower(const std::string &s) {
+  std::string lower(s);
+  for (auto& c : lower) {
+    if (c >= 'A' && c <= 'Z') {
+      c += 'a' - 'A';
+    }
+  }
+  return lower;
+}
+
+bool fuzzy_score_c(
+    const char* haystack,
+    const char* needle,
+    bool boost_full_match,
+    bool first_match_can_be_weak,
+    long* result) {
+  std::string haystack_str(haystack);
+  std::string haystack_lower = str_to_lower(haystack_str);
+
+  std::string needle_str(needle);
+  std::string needle_lower = str_to_lower(needle_str);
+
+  MatchOptions options;
+  options.boost_full_match = boost_full_match;
+  options.first_match_can_be_weak = first_match_can_be_weak;
+
+  return fuzzy_score(
+      haystack,
+      haystack_lower.c_str(),
+      needle,
+      needle_lower.c_str(),
+      options,
+      result);
 }

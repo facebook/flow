@@ -47,7 +47,7 @@ inline std::string str_to_lower(const std::string &s) {
 // Push a new entry on the heap while ensuring size <= max_results.
 void push_heap(ResultHeap &heap,
                int weight,
-               float score,
+               long score,
                const std::string *value,
                size_t max_results) {
   MatchResult result(weight, score, value);
@@ -78,7 +78,6 @@ void thread_worker(
   const std::string &query_case,
   const MatchOptions &options,
   bool use_last_match,
-  std::atomic<float>* min_score,
   size_t max_results,
   bool use_weights,
   std::vector<MatcherBase::CandidateData> &candidates,
@@ -93,15 +92,16 @@ void thread_worker(
       continue;
     }
     if ((bitmask & candidate.bitmask) == bitmask) {
-      float score = score_match(
+      long score = 0;
+      bool has_score = fuzzy_score(
         candidate.value.c_str(),
         candidate.lowercase.c_str(),
         query.c_str(),
         query_case.c_str(),
         options,
-        min_score->load()
+        &score
       );
-      if (score > 0) {
+      if (has_score) {
         int weight = use_weights ? candidate.weight : 0;
         push_heap(
           result,
@@ -110,17 +110,6 @@ void thread_worker(
           &candidate.value,
           max_results
         );
-        if (result.size() == max_results) {
-          float current_max = result.top().score;
-          float min_score_value = min_score->load();
-          // Unfortunately there's no thread-safe "max"...
-          // When running compare_exchange_weak it's possible that another
-          // thread wrote to it in the meantime, in which case we have to check
-          // again. Since it's always increasing this is guaranteed to converge.
-          while (current_max > min_score_value) {
-            min_score->compare_exchange_weak(min_score_value, current_max);
-          }
-        }
         candidate.last_match = true;
       } else {
         candidate.last_match = false;
@@ -141,6 +130,7 @@ std::vector<MatchResult> MatcherBase::findMatches(const std::string &query,
   bool use_weights = options.weighted;
 
   MatchOptions matchOptions;
+  matchOptions.boost_full_match = true;
   matchOptions.first_match_can_be_weak = first_match_can_be_weak;
 
   std::string new_query;
@@ -161,9 +151,8 @@ std::vector<MatchResult> MatcherBase::findMatches(const std::string &query,
   lastQueryFirstMatchCanBeWeak_ = first_match_can_be_weak;
 
   ResultHeap combined;
-  std::atomic<float> min_score(0);
   if (num_threads == 0 || candidates_.size() < 10000) {
-    thread_worker(new_query, query_case, matchOptions, use_last_match, &min_score,
+    thread_worker(new_query, query_case, matchOptions, use_last_match,
                   max_results, use_weights, candidates_, 0, candidates_.size(), combined);
   } else {
     std::vector<ResultHeap> thread_results(num_threads);
@@ -181,7 +170,6 @@ std::vector<MatchResult> MatcherBase::findMatches(const std::string &query,
         std::ref(query_case),
         std::ref(matchOptions),
         use_last_match,
-        &min_score,
         max_results,
         use_weights,
         std::ref(candidates_),

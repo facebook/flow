@@ -50,10 +50,7 @@ let tests =
     ( "case_insensitive" >:: fun ctxt ->
       let t = init index in
       let results = search_values "foobar" t in
-      let expected =
-        let score = Base.Int64.float_of_bits 4607182418800017408L in
-        mk_results [("FooBar", sf "/a/foobar.js", named, score, 0)]
-      in
+      let expected = mk_results [("FooBar", sf "/a/foobar.js", named, 39, 0)] in
       assert_equal ~ctxt ~printer:show_search_results expected results
     );
     ( "is_incomplete" >:: fun ctxt ->
@@ -91,7 +88,7 @@ let tests =
       let results = search_values "FooBar" t in
       let expected =
         mk_results
-          [("FooBar", sf "/a/f.js", named, 1., 0); ("FooBar", sf "/a/foobar.js", named, 1., 0)]
+          [("FooBar", sf "/a/f.js", named, 43, 0); ("FooBar", sf "/a/foobar.js", named, 43, 0)]
       in
       assert_equal ~ctxt ~printer:show_search_results expected results
     );
@@ -100,17 +97,11 @@ let tests =
       let t = init index in
 
       let results = search_values "FooBar" t in
-      let expected =
-        let score = Base.Int64.float_of_bits 4607182418800017408L in
-        mk_results [("FooBar", sf "/a/foobar.js", named, score, 0)]
-      in
+      let expected = mk_results [("FooBar", sf "/a/foobar.js", named, 43, 0)] in
       assert_equal ~ctxt ~printer:show_search_results expected results;
 
       let results = search_types "FooBar" t in
-      let expected =
-        let score = Base.Int64.float_of_bits 4607182418800017408L in
-        mk_results [("FooBar", sf "/a/f_type.js", named_type, score, 0)]
-      in
+      let expected = mk_results [("FooBar", sf "/a/f_type.js", named_type, 43, 0)] in
       assert_equal ~ctxt ~printer:show_search_results expected results
     );
     ( "max_results_filtered_by_kind" >:: fun ctxt ->
@@ -125,24 +116,22 @@ let tests =
 
       let results = search_values ~options "FooBar" t in
       let expected =
-        let score = Base.Int64.float_of_bits 4607182418800017408L in
         mk_results
           ~is_incomplete:true
           [
-            ("FooBar", sf "/a/foobar.js", named, score, 0);
-            ("FooBar", sf "/a/foobar_a.js", named, score, 0);
+            ("FooBar", sf "/a/foobar.js", named, 43, 0);
+            ("FooBar", sf "/a/foobar_a.js", named, 43, 0);
           ]
       in
       assert_equal ~ctxt ~printer:show_search_results expected results;
 
       let results = search_types ~options "FooBar" t in
       let expected =
-        let score = Base.Int64.float_of_bits 4607182418800017408L in
         mk_results
           ~is_incomplete:true
           [
-            ("FooBar", sf "/a/foobar_b.js", named_type, score, 0);
-            ("FooBar", sf "/a/foobar_c.js", named_type, score, 0);
+            ("FooBar", sf "/a/foobar_b.js", named_type, 43, 0);
+            ("FooBar", sf "/a/foobar_c.js", named_type, 43, 0);
           ]
       in
       assert_equal ~ctxt ~printer:show_search_results expected results
@@ -170,16 +159,15 @@ let tests =
       (* defaults before named before namespace, then
          globals before builtins before source files *)
       let expected =
-        let score = Base.Int64.float_of_bits 4607182418800017408L in
         mk_results
           ~is_incomplete:false
           [
-            ("foo", builtin_z, default, score, 0);
-            ("foo", file_foo, default, score, 0);
-            ("foo", global, named, score, 0);
-            ("foo", file_a, named, score, 0);
-            ("foo", file_b, named, score, 0);
-            ("foo", file_foo, namespace, score, 0);
+            ("foo", builtin_z, default, 20, 0);
+            ("foo", file_foo, default, 20, 0);
+            ("foo", global, named, 20, 0);
+            ("foo", file_a, named, 20, 0);
+            ("foo", file_b, named, 20, 0);
+            ("foo", file_foo, namespace, 20, 0);
           ]
       in
       assert_equal ~ctxt ~printer:show_search_results expected results
@@ -205,14 +193,13 @@ let tests =
       let options = { default_options with weighted = false } in
       let results = search_values ~options query t in
       let expected =
-        let score = Base.Int64.float_of_bits 4599676419600023552L in
         mk_results
           ~is_incomplete:false
           [
-            ("bar", sf "bar.js", named, score, 0);
-            ("baz", sf "baz.js", named, score, 0);
-            ("biz", sf "biz.js", named, score, 0);
-            ("biz", sf "biz2.js", named, score, 0);
+            ("bar", sf "bar.js", named, 2, 0);
+            ("baz", sf "baz.js", named, 2, 0);
+            ("biz", sf "biz.js", named, 2, 0);
+            ("biz", sf "biz2.js", named, 2, 0);
           ]
       in
       assert_equal ~ctxt ~printer:show_search_results expected results;
@@ -221,14 +208,13 @@ let tests =
       let options = { default_options with weighted = true } in
       let results = search_values ~options query t in
       let expected =
-        let score = Base.Int64.float_of_bits 4599676419600023552L in
         mk_results
           ~is_incomplete:false
           [
-            ("biz", sf "biz.js", named, score, 3);
-            ("baz", sf "baz.js", named, score, 2);
-            ("bar", sf "bar.js", named, score, 1);
-            ("biz", sf "biz2.js", named, score, 1);
+            ("biz", sf "biz.js", named, 2, 3);
+            ("baz", sf "baz.js", named, 2, 2);
+            ("bar", sf "bar.js", named, 2, 1);
+            ("biz", sf "biz2.js", named, 2, 1);
           ]
       in
       assert_equal ~ctxt ~printer:show_search_results expected results;
@@ -237,10 +223,9 @@ let tests =
       let options = { default_options with weighted = false; max_results = 2 } in
       let results = search_values ~options query t in
       let expected =
-        let score = Base.Int64.float_of_bits 4599676419600023552L in
         mk_results
           ~is_incomplete:true
-          [("bar", sf "bar.js", named, score, 0); ("baz", sf "baz.js", named, score, 0)]
+          [("bar", sf "bar.js", named, 2, 0); ("baz", sf "baz.js", named, 2, 0)]
       in
       assert_equal ~ctxt ~printer:show_search_results expected results;
 
@@ -248,10 +233,9 @@ let tests =
       let options = { default_options with weighted = true; max_results = 2 } in
       let results = search_values ~options query t in
       let expected =
-        let score = Base.Int64.float_of_bits 4599676419600023552L in
         mk_results
           ~is_incomplete:true
-          [("biz", sf "biz.js", named, score, 3); ("baz", sf "baz.js", named, score, 2)]
+          [("biz", sf "biz.js", named, 2, 3); ("baz", sf "baz.js", named, 2, 2)]
       in
       assert_equal ~ctxt ~printer:show_search_results expected results
     );

@@ -1,30 +1,33 @@
-#include "score_match.h"
-
-/**
- * This is mostly based on Greg Hurrell's implementation in
- * https://github.com/wincent/command-t/blob/master/ruby/command-t/match.c
- * with a few modifications and extra optimizations.
+/*
+ * Portions Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * Based on the TypeScript implementation from VSCode:
+ * https://github.com/microsoft/vscode/blob/e79a401ba5f6bc8eff07bfffaf4544e96f394837/src/vs/base/common/filters.ts#L574
+ * That implementation is...
+ *
+ *   Copyright (c) Microsoft Corporation. All rights reserved.
  */
+
+#include "score_match.h"
 
 #include <algorithm>
 #include <cstring>
 
-// memrchr is a non-standard extension only available in glibc.
-#if defined(__APPLE__) || defined(_WIN32) || defined(_WIN64)
-#include "memrchr.h"
-#endif
+const int MAX_LEN = 128;
 
-// Initial multiplier when a gap is used.
-const float BASE_DISTANCE_PENALTY = 0.6;
+thread_local int _minWordMatchPos[2 * MAX_LEN] {0};
 
-// penalty = BASE_DISTANCE_PENALTY - (dist - 1) * ADDITIONAL_DISTANCE_PENALTY.
-const float ADDITIONAL_DISTANCE_PENALTY = 0.05;
+thread_local int _maxWordMatchPos[2 * MAX_LEN] {0};
 
-// The lowest the distance penalty can go. Add epsilon for precision errors.
-const float MIN_DISTANCE_PENALTY = 0.2;
+enum Arrow { LeftLeft, Left, Diag };
 
-// Bail if the state space exceeds this limit.
-const size_t MAX_MEMO_SIZE = 10000;
+//  row 0 and column 0 are base cases, so these tables must be MAX_LEN + 1
+thread_local Arrow _arrows[MAX_LEN + 1][MAX_LEN + 1]{Diag};
+thread_local long _diag[MAX_LEN + 1][MAX_LEN + 1]{0};
+thread_local long _table[MAX_LEN + 1][MAX_LEN + 1]{0};
 
 // Convenience structure for passing around during recursion.
 struct MatchInfo {
@@ -34,128 +37,335 @@ struct MatchInfo {
   const char *needle;
   const char *needle_case;
   size_t needle_len;
-  int* last_match;
-  float *memo;
+  bool boost_full_match;
   bool first_match_can_be_weak;
-  float min_score;
 };
 
-/**
- * This algorithm essentially looks for an optimal matching
- * from needle characters to matching haystack characters. We assign a multiplier
- * to each character in the needle, and multiply the scores together in the end.
- *
- * The key insight is that we wish to reduce the distance between adjacent
- * matched characters in the haystack. Exact substring matches will receive a score
- * of 1, while gaps incur significant multiplicative penalties.
- *
- * We reduce the penalty for word boundaries. This includes:
- * - paths (a in /x/abc)
- * - hyphens/underscores (a in x-a or x_a)
- * - upper camelcase names (A in XyzAbc)
- *
- * See below for the exact cases and weights used.
- *
- * Computing the optimal matching is a relatively straight-forward
- * dynamic-programming problem, similar to the classic Levenshtein distance.
- * We use a memoized-recursive implementation, since the state space tends to
- * be relatively sparse in most practical use cases.
- */
-float recursive_match(const MatchInfo &m,
-                      const size_t haystack_idx,
-                      const size_t needle_idx,
-                      const float cur_score) {
-  if (needle_idx == m.needle_len) {
-    return 1;
+const long MAX_SAFE_INTEGER = 9007199254740991;
+
+bool is_separator_at_pos(const char* value, size_t value_len, size_t index) {
+  if (index < 0 || index >= value_len) {
+    return false;
   }
-
-  float &memoized = m.memo[needle_idx * m.haystack_len + haystack_idx];
-  if (memoized >= 0) {
-    return memoized;
+  switch (value[index]) {
+    case '_':
+    case '-':
+    case '.':
+    case ' ':
+    case '/':
+    case '\\':
+    case '\'':
+    case '"':
+    case ':':
+    case '$':
+    case '<':
+    case '>':
+    case '(':
+    case ')':
+    case '[':
+    case ']':
+    case '{':
+    case '}':
+      return true;
+    default:
+      return false;
   }
-
-  float score = 0;
-  char c = m.needle_case[needle_idx];
-
-  size_t lim = m.last_match[needle_idx];
-
-  // This is only used when needle_idx == haystack_idx == 0.
-  // It won't be accurate for any other run.
-  size_t last_slash = 0;
-  for (size_t j = haystack_idx; j <= lim; j++) {
-    char d = m.haystack_case[j];
-    if (needle_idx == 0 && (d == '/' || d == '\\')) {
-      last_slash = j;
-    }
-    if (c == d) {
-      // calculate score
-      float char_score = 1.0;
-      if (j > haystack_idx) {
-        char last = m.haystack[j - 1];
-        char curr = m.haystack[j]; // case matters, so get again
-        if (last == '/') {
-          char_score = 0.9;
-        } else if (last == '-' || last == '_' || last == ' ' ||
-                   (last >= '0' && last <= '9')) {
-          char_score = 0.8;
-        } else if (last >= 'a' && last <= 'z' && curr >= 'A' && curr <= 'Z') {
-          char_score = 0.8;
-        } else if (last == '.') {
-          char_score = 0.7;
-        } else if (needle_idx == 0) {
-          char_score = BASE_DISTANCE_PENALTY;
-          if (!m.first_match_can_be_weak) {
-            continue;
-          }
-        } else {
-          char_score = std::max(
-            MIN_DISTANCE_PENALTY,
-            BASE_DISTANCE_PENALTY -
-              (j - haystack_idx - 1) * ADDITIONAL_DISTANCE_PENALTY
-          );
-        }
-      }
-
-      float multiplier = char_score;
-      // Scale the score based on how much of the path was actually used.
-      // (We measure this via # of characters since the last slash.)
-      if (needle_idx == 0) {
-        multiplier /= float(m.haystack_len - last_slash);
-      }
-      float next_score = 1.0;
-      if (m.min_score > 0) {
-        next_score = cur_score * multiplier;
-        // Scores only decrease. If we can't pass the previous best, bail
-        if (next_score < m.min_score) {
-          // Ensure that score is non-zero:
-          // MatcherBase shouldn't exclude this from future searches.
-          if (score == 0) {
-            score = 1e-18;
-          }
-          continue;
-        }
-      }
-      float new_score =
-        multiplier * recursive_match(m, j + 1, needle_idx + 1, next_score);
-      if (new_score > score) {
-        score = new_score;
-        // Optimization: can't score better than 1.
-        if (new_score == 1) {
-          break;
-        }
-      }
-    }
-  }
-
-  return memoized = score;
 }
 
-float score_match(const char *haystack,
-                  const char *haystack_lower,
-                  const char *needle,
-                  const char *needle_lower,
-                  const MatchOptions &options,
-                  const float min_score) {
+bool is_whitespace_at_pos(const char* value, size_t value_len, size_t index) {
+  if (index < 0 || index >= value_len) {
+    return false;
+  }
+  return value[index] == ' ' || value[index] == '\t';
+}
+
+bool is_uppercase_at_pos(size_t pos, const char* word, const char* word_lower) {
+  return word[pos] != word_lower[pos];
+}
+
+// needle is the pattern being searched for
+// haystack is the word being matched against
+long do_score(
+    const MatchInfo& m,
+    const size_t haystack_idx,
+    const size_t needle_idx,
+    bool new_match_start,
+    bool& has_strong_first_match) {
+  const char* word = m.haystack;
+  const char* word_lower = m.haystack_case;
+  size_t word_len = m.haystack_len;
+  const size_t word_pos = haystack_idx;
+
+  const char* pattern = m.needle;
+  const char* pattern_lower = m.needle_case;
+  const size_t pattern_pos = needle_idx;
+
+  if (pattern_lower[pattern_pos] != word_lower[word_pos]) {
+    return MIN_SCORE;
+  }
+
+  long score;
+  bool is_gap_location;
+
+  if (word_pos == pattern_pos) {
+    // common prefix: `foobar <-> foobaz`
+    //                            ^^^^^
+    score = pattern[pattern_pos] == word[word_pos] ? 7 : 5;
+    is_gap_location = false;
+  } else if (
+      is_uppercase_at_pos(word_pos, word, word_lower) &&
+      (word_pos == 0 || !is_uppercase_at_pos(word_pos - 1, word, word_lower))) {
+    // hitting upper-case: `foo <-> forOthers`
+    //                              ^^ ^
+    score = pattern[pattern_pos] == word[word_pos] ? 7 : 5;
+    is_gap_location = true;
+  } else if (
+      is_separator_at_pos(word, word_len, word_pos) &&
+      (word_pos == 0 || !is_separator_at_pos(word, word_len, word_pos - 1))) {
+    // hitting a separator: `. <-> foo.bar`
+    //                                ^
+    score = 5;
+    is_gap_location = false;
+  } else if (
+      is_separator_at_pos(word, word_len, word_pos - 1) ||
+      is_whitespace_at_pos(word, word_len, word_pos - 1)) {
+    // post separator: `foo <-> bar_foo`
+    //                              ^^^
+    score = 5;
+    is_gap_location = true;
+  } else {
+    score = 1;
+    is_gap_location = false;
+  }
+
+  if (score > 1 && pattern_pos == 0) {
+    has_strong_first_match = true;
+  }
+
+  if (!is_gap_location) {
+    is_gap_location = is_uppercase_at_pos(word_pos, word, word_lower) ||
+        is_separator_at_pos(word, word_len, word_pos - 1) ||
+        is_whitespace_at_pos(word, word_len, word_pos - 1);
+  }
+
+  if (pattern_pos == 0) {
+    // first character in pattern
+    if (word_pos > 0) {
+      // the first pattern character would match a word character that is not at
+      // the word start so introduce a penalty to account for the gap preceding
+      // this match
+      score -= is_gap_location ? 3 : 5;
+    }
+  } else if (new_match_start) {
+    // this would be the beginning of a new match (i.e. there would be a gap
+    // before this location)
+    score += is_gap_location ? 2 : 0;
+  } else {
+    // this is part of a contiguous match, so give it a slight bonus, but do so
+    // only if it would not be a preferred gap location
+    score += is_gap_location ? 0 : 1;
+  }
+
+  if (word_pos + 1 == word_len) {
+    // we always penalize gaps, but this gives unfair advantages to a match that
+    // would match the last character in the word so pretend there is a gap
+    // after the last character in the word to normalize things
+    score -= is_gap_location ? 3 : 5;
+  }
+
+  return score;
+}
+
+bool isPatternInWord(const char* patternLow, size_t patternPos, size_t patternLen, const char* wordLow, size_t wordPos, size_t wordLen) {
+	while (patternPos < patternLen && wordPos < wordLen) {
+		if (patternLow[patternPos] == wordLow[wordPos]) {
+      // Remember the min word position for each pattern position
+      _minWordMatchPos[patternPos] = wordPos;
+			patternPos += 1;
+		}
+		wordPos += 1;
+	}
+	return patternPos == patternLen; // pattern must be exhausted
+}
+
+void _fillInMaxWordMatchPos(size_t patternLen, size_t wordLen, const char* patternLow, const char* wordLow) {
+	size_t patternPos = patternLen - 1;
+	size_t wordPos = wordLen - 1;
+  while (patternPos >= 0 && wordPos >= 0) {
+		if (patternLow[patternPos] == wordLow[wordPos]) {
+			_maxWordMatchPos[patternPos] = wordPos;
+      if (patternPos == 0) {
+        break;
+      }
+			patternPos--;
+		}
+    if (wordPos == 0) {
+      break;
+    }
+		wordPos--;
+	}
+}
+
+bool do_fuzzy_score(const MatchInfo& m, long* result) {
+  bool first_match_can_be_weak = m.first_match_can_be_weak;
+
+  // const char* pattern = m.needle;
+  const char* patternLow = m.needle_case;
+  const char* word = m.haystack;
+  const char* wordLow = m.haystack_case;
+
+  int patternLen = m.needle_len > MAX_LEN ? MAX_LEN : m.needle_len;
+  int wordLen = m.haystack_len > MAX_LEN ? MAX_LEN : m.haystack_len;
+
+	if (0 >= patternLen || 0 >= wordLen || patternLen > wordLen) {
+		return false;
+	}
+
+	// Run a simple check if the characters of pattern occur
+	// (in order) at all in word. If that isn't the case we
+	// stop because no match will be possible
+	if (!isPatternInWord(patternLow, 0, patternLen, wordLow, 0, wordLen)) {
+		return false;
+	}
+
+	// Find the max matching word position for each pattern position
+	// NOTE: the min matching word position was filled in above, in the `isPatternInWord` call
+	_fillInMaxWordMatchPos(patternLen, wordLen, patternLow, wordLow);
+
+	int row = 1;
+	int column = 1;
+	int patternPos = 0;
+	int wordPos = 0;
+
+	bool hasStrongFirstMatch = false;
+
+	// There will be a match, fill in tables
+	for (row = 1, patternPos = 0; patternPos < patternLen; row++, patternPos++) {
+
+		// Reduce search space to possible matching word positions and to possible access from next row
+		int minWordMatchPos = _minWordMatchPos[patternPos];
+		int maxWordMatchPos = _maxWordMatchPos[patternPos];
+		int nextMaxWordMatchPos = (patternPos + 1 < patternLen ? _maxWordMatchPos[patternPos + 1] : wordLen);
+
+		for (column = minWordMatchPos + 1, wordPos = minWordMatchPos; wordPos < nextMaxWordMatchPos; column++, wordPos++) {
+			long score = MIN_SCORE;
+			bool canComeDiag = false;
+
+			if (wordPos <= maxWordMatchPos) {
+				score = do_score(
+          m,
+          wordPos,
+          patternPos,
+          _diag[row - 1][column - 1] == 0,
+					hasStrongFirstMatch
+				);
+			}
+
+			long diagScore = 0;
+			if (score != MAX_SAFE_INTEGER) {
+				canComeDiag = true;
+				diagScore = score + _table[row - 1][column - 1];
+			}
+
+			bool canComeLeft = wordPos > minWordMatchPos;
+			long leftScore = canComeLeft ? _table[row][column - 1] + (_diag[row][column - 1] > 0 ? -5 : 0) : 0; // penalty for a gap start
+
+			bool canComeLeftLeft = wordPos > minWordMatchPos + 1 && _diag[row][column - 1] > 0;
+			long leftLeftScore = canComeLeftLeft ? _table[row][column - 2] + (_diag[row][column - 2] > 0 ? -5 : 0) : 0; // penalty for a gap start
+
+			if (canComeLeftLeft && (!canComeLeft || leftLeftScore >= leftScore) && (!canComeDiag || leftLeftScore >= diagScore)) {
+				// always prefer choosing left left to jump over a diagonal because that means a match is earlier in the word
+				_table[row][column] = leftLeftScore;
+				_arrows[row][column] = LeftLeft;
+				_diag[row][column] = 0;
+			} else if (canComeLeft && (!canComeDiag || leftScore >= diagScore)) {
+				// always prefer choosing left since that means a match is earlier in the word
+				_table[row][column] = leftScore;
+				_arrows[row][column] = Left;
+				_diag[row][column] = 0;
+			} else if (canComeDiag) {
+				_table[row][column] = diagScore;
+				_arrows[row][column] = Diag;
+				_diag[row][column] = _diag[row - 1][column - 1] + 1;
+			} else {
+				// not possible
+			}
+		}
+	}
+
+	if (!hasStrongFirstMatch && !first_match_can_be_weak) {
+		return false;
+	}
+
+	row--;
+	column--;
+
+	*result = _table[row][column];
+
+	int backwardsDiagLength = 0;
+	int maxMatchColumn = 0;
+
+	while (row >= 1) {
+		// Find the column where we go diagonally up
+		int diagColumn = column;
+		do {
+			long arrow = _arrows[row][diagColumn];
+			if (arrow == LeftLeft) {
+				diagColumn = diagColumn - 2;
+			} else if (arrow == Left) {
+				diagColumn = diagColumn - 1;
+			} else {
+				// found the diagonal
+				break;
+			}
+		} while (diagColumn >= 1);
+
+		// Overturn the "forwards" decision if keeping the "backwards" diagonal would give a better match
+		if (
+			backwardsDiagLength > 1 // only if we would have a contiguous match of 3 characters
+			&& patternLow[row - 1] == wordLow[column - 1] // only if we can do a contiguous match diagonally
+			&& !is_uppercase_at_pos(diagColumn - 1, word, wordLow) // only if the forwards chose diagonal is not an uppercase
+			&& backwardsDiagLength + 1 > _diag[row][diagColumn] // only if our contiguous match would be longer than the "forwards" contiguous match
+		) {
+			diagColumn = column;
+		}
+
+		if (diagColumn == column) {
+			// this is a contiguous match
+			backwardsDiagLength++;
+		} else {
+			backwardsDiagLength = 1;
+		}
+
+		if (!maxMatchColumn) {
+			// remember the last matched column
+			maxMatchColumn = diagColumn;
+		}
+
+		row--;
+		column = diagColumn - 1;
+	}
+
+	if (wordLen == patternLen && m.boost_full_match) {
+		// the word matches the pattern with all characters!
+		// giving the score a total match boost (to come up ahead other words)
+		*result += 2;
+	}
+
+	// Add 1 penalty for each skipped character in the word
+	int skippedCharsCount = maxMatchColumn - patternLen;
+	*result -= skippedCharsCount;
+
+  return true;
+}
+
+bool fuzzy_score(
+    const char* haystack,
+    const char* haystack_lower,
+    const char* needle,
+    const char* needle_lower,
+    const MatchOptions& options,
+    long* result) {
   if (!*needle) {
     return 1.0;
   }
@@ -163,65 +373,12 @@ float score_match(const char *haystack,
   MatchInfo m;
   m.haystack_len = strlen(haystack);
   m.needle_len = strlen(needle);
-  m.haystack_case = haystack_lower;
-  m.needle_case = needle_lower;
-  m.first_match_can_be_weak = options.first_match_can_be_weak;
-  m.min_score = min_score;
-
-#ifdef _WIN32
-  int *last_match = (int*)_alloca(m.needle_len * sizeof(int));
-#else
-  int last_match[m.needle_len];
-#endif
-  m.last_match = last_match;
-
-  // Check if the needle exists in the haystack at all.
-  // Simultaneously, we can figure out the last possible match for each needle
-  // character (which prunes the search space by a ton)
-  int hindex = m.haystack_len;
-  for (int i = m.needle_len - 1; i >= 0; i--) {
-    char* ptr = (char*)memrchr(m.haystack_case, m.needle_case[i], hindex);
-    if (ptr == nullptr) {
-      return 0;
-    }
-    hindex = ptr - m.haystack_case;
-    last_match[i] = hindex;
-  }
-
   m.haystack = haystack;
   m.needle = needle;
+  m.haystack_case = haystack_lower;
+  m.needle_case = needle_lower;
+  m.boost_full_match = options.boost_full_match;
+  m.first_match_can_be_weak = options.first_match_can_be_weak;
 
-  size_t memo_size = m.haystack_len * m.needle_len;
-  if (memo_size >= MAX_MEMO_SIZE) {
-    // Just return the initial match.
-    float penalty = 1.0;
-    for (size_t i = 1; i < m.needle_len; i++) {
-      int gap = last_match[i] - last_match[i - 1];
-      if (gap > 1) {
-        penalty *= std::max(
-          MIN_DISTANCE_PENALTY,
-          BASE_DISTANCE_PENALTY - (gap - 1) * ADDITIONAL_DISTANCE_PENALTY
-        );
-      }
-    }
-    return penalty * m.needle_len / m.haystack_len;
-  }
-
-#ifdef _WIN32
-  float *memo = (float*)_alloca(memo_size * sizeof(float));
-#else
-  float memo[memo_size];
-#endif
-  // This doesn't set the values to -2, but some negative number.
-  memset(memo, -2, sizeof(float) * memo_size);
-  m.memo = memo;
-
-  // Since we scaled by the length of haystack used,
-  // scale it back up by the needle length.
-  float score = m.needle_len * recursive_match(m, 0, 0, m.needle_len);
-  if (score <= 0) {
-    return 0.0;
-  }
-
-  return score;
+  return do_fuzzy_score(m, result);
 }

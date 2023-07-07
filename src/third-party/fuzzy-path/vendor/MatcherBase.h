@@ -14,7 +14,7 @@ struct MatcherOptions {
 
 struct MatchResult {
   int weight;
-  float score;
+  long score;
   // We can't afford to copy strings around while we're ranking them.
   // These are not guaranteed to last very long and should be copied out ASAP.
   const std::string *value;
