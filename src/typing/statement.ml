@@ -2310,7 +2310,7 @@ module Make
     in
     (acc.ObjectExpressionAcc.obj_pmap, List.rev rev_prop_asts)
 
-  and create_obj_with_computed_prop cx keys ~reason ~reason_key ~reason_obj value =
+  and create_obj_with_computed_prop cx key_loc keys ~reason ~reason_key ~reason_obj value =
     let single_key key =
       match Flow_js_utils.propref_for_elem_t key with
       | Computed elem_t ->
@@ -2321,12 +2321,12 @@ module Make
         Flow.flow cx (elem_t, check);
         (* No properties are added in this case. *)
         Obj_type.mk_exact_empty cx reason_obj
-      | Named { name; _ } ->
+      | Named { name; reason; _ } ->
         let prop =
           Field
             {
               preferred_def_locs = None;
-              key_loc = None;
+              key_loc = Some key_loc;
               type_ = value;
               polarity = Polarity.Neutral;
             }
@@ -2348,11 +2348,12 @@ module Make
        and use the root proto reason to build an error. *)
     let obj_proto = ObjProtoT reason in
     let mk_computed k key value =
+      let (key_loc, _e) = k in
       let keys = Flow.possible_concrete_types_for_computed_props cx reason key in
       let reason = reason_of_t key in
       let reason_key = Reason.mk_expression_reason k in
       let reason_obj = reason in
-      create_obj_with_computed_prop cx keys ~reason ~reason_key ~reason_obj value
+      create_obj_with_computed_prop cx key_loc keys ~reason ~reason_key ~reason_obj value
     in
     let (acc, rev_prop_asts) =
       List.fold_left
