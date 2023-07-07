@@ -611,7 +611,10 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
       | Some t -> Some (resolve_type cx t)
       | None -> None
     in
-    let named_exports = NameUtils.display_smap_of_namemap named_exports in
+    let named_exports =
+      NameUtils.display_smap_of_namemap named_exports
+      |> SMap.map (fun { name_loc; preferred_def_locs = _; type_ } -> (name_loc, type_))
+    in
     SuccessModule (named_exports, cjs_export)
   | Success (DefT (_, _, FunT (static, _))) ->
     Success (extract_members_as_map ~exclude_proto_members cx static)

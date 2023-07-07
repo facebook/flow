@@ -1990,7 +1990,7 @@ end = struct
             Some t)
       in
       let from_exports_tmap ~env exports_tmap =
-        let step (x, (_loc, t)) =
+        let step (x, { name_loc = _; preferred_def_locs = _; type_ = t }) =
           match%map toplevel ~env t with
           | Ty.Decl d -> d
           | Ty.Type t -> Ty.VariableDecl (x, t)

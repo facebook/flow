@@ -149,7 +149,7 @@ val get_next : Context.t -> ALoc.t -> Type.t
 
 val init_declare_module_synthetic_module_exports :
   Context.t ->
-  export_type:(Context.t -> Reason.name -> ALoc.t option -> Type.t -> unit) ->
+  export_type:(Context.t -> Reason.name -> name_loc:ALoc.t option -> Type.t -> unit) ->
   ALoc.t ->
   Reason.reason ->
   unit

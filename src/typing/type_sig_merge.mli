@@ -10,14 +10,14 @@ open Type_sig_collections
 
 type exports =
   | CJSExports of {
-      type_exports: (ALoc.t option * Type.t) Lazy.t SMap.t;
+      type_exports: Type.named_symbol Lazy.t SMap.t;
       exports: Type.t Lazy.t option;
       type_stars: (ALoc.t * Module_refs.index) list;
       strict: bool;
     }
   | ESExports of {
-      type_exports: (ALoc.t option * Type.t) Lazy.t SMap.t;
-      exports: (ALoc.t option * Type.t) Lazy.t SMap.t;
+      type_exports: Type.named_symbol Lazy.t SMap.t;
+      exports: Type.named_symbol Lazy.t SMap.t;
       type_stars: (ALoc.t * Module_refs.index) list;
       stars: (ALoc.t * Module_refs.index) list;
       strict: bool;
@@ -44,9 +44,9 @@ val merge_pattern : file -> ALoc.t Pack.pattern -> Type.t
 
 val merge_remote_ref : file -> Reason.t -> ALoc.t Pack.remote_ref -> Type.t
 
-val merge_export : file -> ALoc.t Pack.export -> ALoc.t option * Type.t
+val merge_export : file -> ALoc.t Pack.export -> Type.named_symbol
 
-val merge_type_export : file -> Reason.t -> ALoc.t Pack.type_export -> ALoc.t option * Type.t
+val merge_type_export : file -> Reason.t -> ALoc.t Pack.type_export -> Type.named_symbol
 
 val merge_exports : file -> Reason.t -> exports -> Type.t
 

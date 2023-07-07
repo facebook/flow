@@ -302,8 +302,10 @@ class ['a] t =
       self#type_ cx pole acc t
 
     method exports cx pole acc id =
-      let visit_pair acc (_loc, t) = self#type_ cx pole acc t in
-      Context.find_exports cx id |> self#namemap visit_pair acc
+      let visit acc { name_loc = _; preferred_def_locs = _; type_ } =
+        self#type_ cx pole acc type_
+      in
+      Context.find_exports cx id |> self#namemap visit acc
 
     method eval_id cx pole acc id =
       match Eval.Map.find_opt id (Context.evaluated cx) with

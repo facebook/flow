@@ -936,7 +936,7 @@ let init_declare_module_synthetic_module_exports cx ~export_type loc reason =
         match val_kind with
         | Some (Env_api.Type { imported = false }) ->
           let t = type_of_state ~lookup_mode:ForType cx env loc reason write_locs id None in
-          export_type cx name (Some loc) t
+          export_type cx name ~name_loc:(Some loc) t
         | _ -> ()
     )
 

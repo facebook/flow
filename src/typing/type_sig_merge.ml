@@ -21,14 +21,14 @@ module Flow_js = struct end
 
 type exports =
   | CJSExports of {
-      type_exports: (ALoc.t option * Type.t) Lazy.t SMap.t;
+      type_exports: Type.named_symbol Lazy.t SMap.t;
       exports: Type.t Lazy.t option;
       type_stars: (ALoc.t * Module_refs.index) list;
       strict: bool;
     }
   | ESExports of {
-      type_exports: (ALoc.t option * Type.t) Lazy.t SMap.t;
-      exports: (ALoc.t option * Type.t) Lazy.t SMap.t;
+      type_exports: Type.named_symbol Lazy.t SMap.t;
+      exports: Type.named_symbol Lazy.t SMap.t;
       type_stars: (ALoc.t * Module_refs.index) list;
       stars: (ALoc.t * Module_refs.index) list;
       strict: bool;
@@ -352,17 +352,17 @@ let rec merge_tyref file f = function
 let merge_type_export file reason = function
   | Pack.ExportTypeRef ref ->
     let f t ~ref_loc:_ ~def_loc name =
-      let t = ConsGen.assert_export_is_type file.cx reason name t in
-      (Some def_loc, t)
+      let type_ = ConsGen.assert_export_is_type file.cx reason name t in
+      { Type.name_loc = Some def_loc; preferred_def_locs = None; type_ }
     in
     merge_ref file f ref
   | Pack.ExportTypeBinding index ->
     let (lazy (loc, name, t)) = Local_defs.get file.local_defs index in
-    let t = ConsGen.assert_export_is_type file.cx reason name t in
-    (Some loc, t)
+    let type_ = ConsGen.assert_export_is_type file.cx reason name t in
+    { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
   | Pack.ExportTypeFrom index ->
-    let (lazy (loc, _name, t)) = Remote_refs.get file.remote_refs index in
-    (Some loc, t)
+    let (lazy (loc, _name, type_)) = Remote_refs.get file.remote_refs index in
+    { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
 
 let mk_commonjs_module_t cx reason strict t =
   let open Type in
@@ -1953,19 +1953,23 @@ let merge_def file reason = function
 let merge_export file = function
   | Pack.ExportRef ref
   | Pack.ExportDefault { default_loc = _; def = Pack.Ref ref } ->
-    merge_ref file (fun t ~ref_loc:_ ~def_loc _ -> (Some def_loc, t)) ref
+    merge_ref
+      file
+      (fun type_ ~ref_loc:_ ~def_loc _ ->
+        { Type.name_loc = Some def_loc; preferred_def_locs = None; type_ })
+      ref
   | Pack.ExportBinding index ->
-    let (lazy (loc, _name, t)) = Local_defs.get file.local_defs index in
-    (Some loc, t)
+    let (lazy (loc, _name, type_)) = Local_defs.get file.local_defs index in
+    { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
   | Pack.ExportDefault { default_loc; def } ->
-    let t = merge SMap.empty SMap.empty file def in
-    (Some default_loc, t)
+    let type_ = merge SMap.empty SMap.empty file def in
+    { Type.name_loc = Some default_loc; preferred_def_locs = None; type_ }
   | Pack.ExportDefaultBinding { default_loc = _; index } ->
-    let (lazy (loc, _name, t)) = Local_defs.get file.local_defs index in
-    (Some loc, t)
+    let (lazy (loc, _name, type_)) = Local_defs.get file.local_defs index in
+    { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
   | Pack.ExportFrom index ->
-    let (lazy (loc, _name, t)) = Remote_refs.get file.remote_refs index in
-    (Some loc, t)
+    let (lazy (loc, _name, type_)) = Remote_refs.get file.remote_refs index in
+    { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
 
 let merge_resource_module_t cx f loc =
   let (reason, exports_t) =

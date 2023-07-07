@@ -372,8 +372,8 @@ let rec dump_t_ (depth, tvars) cx t =
         ~extra:
           (Context.find_exports cx exports_tmap
           |> NameUtils.Map.bindings
-          |> Base.List.map ~f:(fun (name, (_, t)) ->
-                 kid t |> spf "%s: %s" (display_string_of_name name)
+          |> Base.List.map ~f:(fun (name, { preferred_def_locs = _; name_loc = _; type_ }) ->
+                 kid type_ |> spf "%s: %s" (display_string_of_name name)
              )
           |> String.concat ", "
           |> spf "[%s]"

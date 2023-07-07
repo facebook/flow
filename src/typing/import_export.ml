@@ -97,7 +97,7 @@ let export_type cx = Module_info.export_type (Context.module_info cx)
 
 let export_type_star cx = Module_info.export_type_star (Context.module_info cx)
 
-let export_binding cx ?is_function name loc = function
+let export_binding cx ?is_function name ?preferred_def_locs ~name_loc = function
   | Flow_ast.Statement.ExportValue ->
     let t =
       Type_env.get_var_declared_type
@@ -105,9 +105,9 @@ let export_binding cx ?is_function name loc = function
         ?is_declared_function:is_function
         cx
         name
-        loc
+        name_loc
     in
-    export cx name loc t
+    export cx name ?preferred_def_locs ~name_loc t
   | Flow_ast.Statement.ExportType ->
     let t =
       Type_env.get_var_declared_type
@@ -115,9 +115,9 @@ let export_binding cx ?is_function name loc = function
         ?is_declared_function:is_function
         cx
         name
-        loc
+        name_loc
     in
-    export_type cx name (Some loc) t
+    export_type cx name ?preferred_def_locs ~name_loc:(Some name_loc) t
 
 (* After we have seen all the export statements in a module, this function will
  * calculate a ModuleT type (or a tvar that resolves to one) describing the

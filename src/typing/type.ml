@@ -734,8 +734,7 @@ module rec TypeTerm : sig
     | CopyNamedExportsT of reason * t * t_out
     | CopyTypeExportsT of reason * t * t_out
     | CheckUntypedImportT of reason * import_kind
-    | ExportNamedT of
-        reason * (ALoc.t option * t) NameUtils.Map.t (* exports_tmap *) * export_kind * t_out
+    | ExportNamedT of reason * named_symbol NameUtils.Map.t (* exports_tmap *) * export_kind * t_out
     | ExportTypeT of reason * name (* export_name *) * t (* target_module_t *) * t_out
     | AssertExportIsTypeT of reason * name (* export name *) * t_out
     (* Map a FunT over a structure *)
@@ -1359,6 +1358,12 @@ module rec TypeTerm : sig
         get_type: t option;
         set_type: t option;
       }
+
+  and named_symbol = {
+    name_loc: ALoc.t option;
+    preferred_def_locs: ALoc.t Nel.t option;
+    type_: t;
+  }
 
   (* This has to go here so that Type doesn't depend on Scope *)
   and class_binding = {
@@ -2002,7 +2007,13 @@ end = struct
     NameUtils.Map.fold
       (fun x p tmap ->
         match Property.read_t p with
-        | Some t -> NameUtils.Map.add x (Property.read_loc p, t) tmap
+        | Some type_ ->
+          let preferred_def_locs =
+            match p with
+            | Field { preferred_def_locs; _ } -> preferred_def_locs
+            | _ -> None
+          in
+          NameUtils.Map.add x { name_loc = Property.read_loc p; preferred_def_locs; type_ } tmap
         | None -> tmap)
       pmap
       NameUtils.Map.empty
@@ -2079,7 +2090,7 @@ end = struct
 end
 
 and Exports : sig
-  type t = (ALoc.t option * TypeTerm.t) NameUtils.Map.t
+  type t = TypeTerm.named_symbol NameUtils.Map.t
 
   type id
 
@@ -2091,7 +2102,7 @@ and Exports : sig
 
   val string_of_id : id -> string
 end = struct
-  type t = (ALoc.t option * TypeTerm.t) NameUtils.Map.t
+  type t = TypeTerm.named_symbol NameUtils.Map.t
 
   type id = int
 
@@ -3005,8 +3016,7 @@ module AConstraint = struct
       }
     (* Exports *)
     | Annot_CJSExtractNamedExportsT of Reason.t * (Reason.t * TypeTerm.exporttypes * bool)
-    | Annot_ExportNamedT of
-        Reason.t * (ALoc.t option * TypeTerm.t) NameUtils.Map.t * TypeTerm.export_kind
+    | Annot_ExportNamedT of Reason.t * TypeTerm.named_symbol NameUtils.Map.t * TypeTerm.export_kind
     | Annot_ExportTypeT of Reason.t * Reason.name * TypeTerm.t
     | Annot_AssertExportIsTypeT of Reason.t * name
     | Annot_CopyNamedExportsT of Reason.t * TypeTerm.t

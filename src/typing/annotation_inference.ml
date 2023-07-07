@@ -100,7 +100,7 @@ module type S = sig
     Context.t ->
     Reason.reason ->
     Type.export_kind ->
-    (ALoc.t option * Type.t) NameUtils.Map.t ->
+    Type.named_symbol NameUtils.Map.t ->
     Type.t ->
     Type.t
 

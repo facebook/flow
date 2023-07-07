@@ -170,14 +170,14 @@ let substituter =
 
     method exports cx map_cx id =
       let exps = Context.find_exports cx id in
-      let map_loc_type_pair ((loc, t) as orig) =
-        let t' = self#type_ cx map_cx t in
-        if t == t' then
+      let map_named_symbol ({ name_loc; preferred_def_locs; type_ } as orig) =
+        let type_' = self#type_ cx map_cx type_ in
+        if type_ == type_' then
           orig
         else
-          (loc, t')
+          { name_loc; preferred_def_locs; type_ = type_' }
       in
-      let exps' = NameUtils.Map.ident_map map_loc_type_pair exps in
+      let exps' = NameUtils.Map.ident_map map_named_symbol exps in
       if exps == exps' then
         id
       else

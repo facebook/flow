@@ -30,11 +30,29 @@ and kind =
 
 let empty_cjs_module () = { kind = CJS None; type_named = NameUtils.Map.empty; type_star = [] }
 
-let export info name loc t =
+let export info name ?preferred_def_locs ~name_loc type_ =
   match info.kind with
-  | CJS None -> info.kind <- ES { named = NameUtils.Map.singleton name (Some loc, t); star = [] }
+  | CJS None ->
+    info.kind <-
+      ES
+        {
+          named =
+            NameUtils.Map.singleton
+              name
+              { Type.preferred_def_locs; name_loc = Some name_loc; type_ };
+          star = [];
+        }
   | ES { named; star } ->
-    info.kind <- ES { named = NameUtils.Map.add name (Some loc, t) named; star }
+    info.kind <-
+      ES
+        {
+          named =
+            NameUtils.Map.add
+              name
+              { Type.preferred_def_locs; name_loc = Some name_loc; type_ }
+              named;
+          star;
+        }
   | CJS (Some _) ->
     (* Indeterminate module. We already errored during parsing. *)
     ()
@@ -47,7 +65,9 @@ let export_star info loc module_t =
     (* Indeterminate module. We already errored during parsing. *)
     ()
 
-let export_type info name loc t = info.type_named <- NameUtils.Map.add name (loc, t) info.type_named
+let export_type info name ?preferred_def_locs ~name_loc type_ =
+  info.type_named <-
+    NameUtils.Map.add name { Type.preferred_def_locs; name_loc; type_ } info.type_named
 
 let export_type_star info loc module_t = info.type_star <- (loc, module_t) :: info.type_star
 

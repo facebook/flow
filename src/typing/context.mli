@@ -445,7 +445,7 @@ val set_prop : t -> Type.Properties.id -> Reason.name -> Type.Property.t -> unit
 
 val has_export : t -> Type.Exports.id -> Reason.name -> bool
 
-val set_export : t -> Type.Exports.id -> Reason.name -> ALoc.t option * Type.t -> unit
+val set_export : t -> Type.Exports.id -> Reason.name -> Type.named_symbol -> unit
 
 (* constructors *)
 val make_aloc_id : t -> ALoc.t -> ALoc.id
