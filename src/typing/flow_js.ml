@@ -6536,21 +6536,21 @@ struct
     | ElementType _
     | OptionalIndexedAccessNonMaybeType _
     | OptionalIndexedAccessResultType _
+    | NonMaybeType
     | ReactElementPropsType
     | ReactElementConfigType
     | ReactElementRefType
     | ReactConfigType _
+    | ReadOnlyType
     | PartialType
     | RequiredType
+    | SpreadType _
     | RestType _
     | SpreadTupleType _
     | ValuesType
     | IdxUnwrapType
     | LatentPred _ ->
       true
-    | NonMaybeType
-    | SpreadType _
-    | ReadOnlyType
     | CallType _
     | TypeMap _ ->
       false
