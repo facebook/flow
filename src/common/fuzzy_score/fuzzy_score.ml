@@ -173,19 +173,10 @@ let do_score
                                         ^^^ *)
         (5, true)
       else
-        (1, false)
+        (1, is_uppercase_at_pos word_pos word)
     in
 
     if score > 1 && pattern_pos = pattern_start then has_strong_first_match := true;
-
-    let is_gap_location =
-      if not is_gap_location then
-        is_uppercase_at_pos word_pos word
-        || is_separator_at_pos word (word_pos - 1)
-        || is_whitespace_at_pos word (word_pos - 1)
-      else
-        is_gap_location
-    in
 
     let score =
       if pattern_pos = pattern_start then
