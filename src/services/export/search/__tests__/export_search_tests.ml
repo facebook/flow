@@ -50,7 +50,7 @@ let tests =
     ( "case_insensitive" >:: fun ctxt ->
       let t = init index in
       let results = search_values "foobar" t in
-      let expected = mk_results [("FooBar", sf "/a/foobar.js", named, 39, 0)] in
+      let expected = mk_results [("FooBar", sf "/a/foobar.js", named, 40, 0)] in
       assert_equal ~ctxt ~printer:show_search_results expected results
     );
     ( "is_incomplete" >:: fun ctxt ->
@@ -88,7 +88,7 @@ let tests =
       let results = search_values "FooBar" t in
       let expected =
         mk_results
-          [("FooBar", sf "/a/f.js", named, 43, 0); ("FooBar", sf "/a/foobar.js", named, 43, 0)]
+          [("FooBar", sf "/a/f.js", named, 44, 0); ("FooBar", sf "/a/foobar.js", named, 44, 0)]
       in
       assert_equal ~ctxt ~printer:show_search_results expected results
     );
@@ -97,11 +97,11 @@ let tests =
       let t = init index in
 
       let results = search_values "FooBar" t in
-      let expected = mk_results [("FooBar", sf "/a/foobar.js", named, 43, 0)] in
+      let expected = mk_results [("FooBar", sf "/a/foobar.js", named, 44, 0)] in
       assert_equal ~ctxt ~printer:show_search_results expected results;
 
       let results = search_types "FooBar" t in
-      let expected = mk_results [("FooBar", sf "/a/f_type.js", named_type, 43, 0)] in
+      let expected = mk_results [("FooBar", sf "/a/f_type.js", named_type, 44, 0)] in
       assert_equal ~ctxt ~printer:show_search_results expected results
     );
     ( "max_results_filtered_by_kind" >:: fun ctxt ->
@@ -119,8 +119,8 @@ let tests =
         mk_results
           ~is_incomplete:true
           [
-            ("FooBar", sf "/a/foobar.js", named, 43, 0);
-            ("FooBar", sf "/a/foobar_a.js", named, 43, 0);
+            ("FooBar", sf "/a/foobar.js", named, 44, 0);
+            ("FooBar", sf "/a/foobar_a.js", named, 44, 0);
           ]
       in
       assert_equal ~ctxt ~printer:show_search_results expected results;
@@ -130,8 +130,8 @@ let tests =
         mk_results
           ~is_incomplete:true
           [
-            ("FooBar", sf "/a/foobar_b.js", named_type, 43, 0);
-            ("FooBar", sf "/a/foobar_c.js", named_type, 43, 0);
+            ("FooBar", sf "/a/foobar_b.js", named_type, 44, 0);
+            ("FooBar", sf "/a/foobar_c.js", named_type, 44, 0);
           ]
       in
       assert_equal ~ctxt ~printer:show_search_results expected results
