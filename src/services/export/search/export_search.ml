@@ -110,6 +110,11 @@ type query =
   | Value of string
   | Type of string
 
+let string_of_query = function
+  | Value str
+  | Type str ->
+    str
+
 let search_result_of_export ~query name source kind =
   let open Export_index in
   match (query, kind) with
@@ -119,6 +124,20 @@ let search_result_of_export ~query name source kind =
   | (Value _, NamedType)
   | (Type _, (Default | Named | Namespace)) ->
     None
+
+let compare_search_result ~compare_score a b =
+  match compare_score a b with
+  | 0 ->
+    (match Int.compare b.weight a.weight with
+    | 0 ->
+      (match String.compare a.search_result.name b.search_result.name with
+      | 0 ->
+        Export_index.compare_export
+          (a.search_result.source, a.search_result.kind)
+          (b.search_result.source, b.search_result.kind)
+      | k -> k)
+    | k -> k)
+  | k -> k
 
 (** [take ~n:20 ~index matches] will return up to 20 search results,
     where each match in [matches] might contribute multiple results.
@@ -143,31 +162,44 @@ let take ~weighted ~n ~index ~query fuzzy_matches =
     )
   in
   let sorted =
-    (* sorts the highest scores to the front *)
-    Base.List.stable_sort rev_all ~compare:(fun a b ->
-        match Int.compare b.score a.score with
-        | 0 ->
-          (match Int.compare b.weight a.weight with
-          | 0 ->
-            (match String.compare a.search_result.name b.search_result.name with
-            | 0 ->
-              (match
-                 Export_index.compare_export
-                   (a.search_result.source, a.search_result.kind)
-                   (b.search_result.source, b.search_result.kind)
-               with
-              | 0 ->
-                (* since rev_all is reversed, [a; b] where a and b have equal
-                   scores should return [b; a]. stable_sort wants to leave them
-                   in the original order. *)
-                1
-              | k -> k)
-            | k -> k)
-          | k -> k)
-        | k -> k
-    )
+    Base.List.stable_sort
+      rev_all
+      ~compare:
+        ((* sorts the highest scores to the front *)
+         let compare_score a b = Int.compare b.score a.score in
+         fun a b ->
+           match compare_search_result ~compare_score a b with
+           | 0 ->
+             (* since rev_all is reversed, [a; b] where a and b have equal
+                scores should return [b; a]. stable_sort wants to leave them
+                in the original order. *)
+             1
+           | k -> k
+        )
   in
-  let results = Base.List.take sorted n in
+  let top_n = Base.List.take sorted n in
+  let results =
+    if weighted then
+      (* Exact matches get a +2 boost in Fuzzy_path. Now that we've got the top
+         N results, we sort again without the boost to prevent rare-but-exact
+         matches from being suggested too highly.
+
+         For example, imagine a very common export [foo], a very rare
+         export [f], and some other export [blurf]. When a user types [f],
+         they probably want [foo]. Score-wise, they're sorted [f], [foo],
+         [blurf]. Without the boost, both [foo] and [f] have the same
+         score. We'd like to sort [foo] before [f] before [blurf]. *)
+      let adjust_score result =
+        if String.length result.search_result.name = String.length (string_of_query query) then
+          result.score - 2
+        else
+          result.score
+      in
+      let compare_score a b = Int.compare (adjust_score b) (adjust_score a) in
+      Base.List.stable_sort top_n ~compare:(compare_search_result ~compare_score)
+    else
+      top_n
+  in
   let is_incomplete = Base.List.length sorted > n in
   { results; is_incomplete }
 
