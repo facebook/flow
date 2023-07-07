@@ -180,23 +180,41 @@ let take ~weighted ~n ~index ~query fuzzy_matches =
   let top_n = Base.List.take sorted n in
   let results =
     if weighted then
-      (* Exact matches get a +2 boost in Fuzzy_path. Now that we've got the top
-         N results, we sort again without the boost to prevent rare-but-exact
-         matches from being suggested too highly.
+      (* Exact matches are always sorted first by Fuzzy_path. This results in
+         very rare exact matches beating out more common prefix matches.
 
-         For example, imagine a very common export [foo], a very rare
-         export [f], and some other export [blurf]. When a user types [f],
-         they probably want [foo]. Score-wise, they're sorted [f], [foo],
-         [blurf]. Without the boost, both [foo] and [f] have the same
-         score. We'd like to sort [foo] before [f] before [blurf]. *)
+         For the query `foo`, results `foo` and `foobar` are both contiguous
+         prefix matches with the same score, except the exact match gets a +2
+         boost.
+
+         We could ignore the boost and order these by weight, but that means
+         that exact matches can get buried deep in the list where the user
+         will be unlikely to find them. Since they can't keep typing to filter
+         (since it's already exact), they're kind of out of luck. So instead,
+         we potentially boost the first 3 inexact results by their score
+         ignoring the exactness boost, and then by weight.
+
+         For example, suppose the query is `foo` and an autoimport `foo` is
+         very rare, `foobar` is very common, and `barfoo` is somewhere in the
+         middle. Purely score-wise, it's sorted foo, foobar, barfoo. But we
+         remove the boost on foo, so it has the same score as foobar, and then
+         re-sort: foobar, foo, barfoo. *)
+      let is_exact result =
+        String.length result.search_result.name = String.length (string_of_query query)
+      in
+      let (exacts, rest) = Base.List.split_while top_n ~f:is_exact in
+      let (next_3, rest) = Base.List.split_n rest 3 in
       let adjust_score result =
-        if String.length result.search_result.name = String.length (string_of_query query) then
+        if is_exact result then
           result.score - 2
         else
           result.score
       in
       let compare_score a b = Int.compare (adjust_score b) (adjust_score a) in
-      Base.List.stable_sort top_n ~compare:(compare_search_result ~compare_score)
+      let top =
+        Base.List.stable_sort (exacts @ next_3) ~compare:(compare_search_result ~compare_score)
+      in
+      top @ rest
     else
       top_n
   in
