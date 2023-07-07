@@ -174,7 +174,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
                     name;
                     inherited = false;
                     source = Ty.Other;
-                    def_loc = None;
+                    def_locs = [];
                     prop = Ty.Field { t; optional = true; polarity = Ty.Neutral };
                   }
                 :: acc)

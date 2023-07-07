@@ -77,7 +77,7 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
     |> Base.List.fold_left ~init:(NameUtils.Map.empty, []) ~f:(fun (mems1, errs1) prop ->
            let (mems2, errs2) =
              match prop with
-             | NamedProp { name; prop; inherited; source; def_loc } ->
+             | NamedProp { name; prop; inherited; source; def_locs } ->
                ( NameUtils.Map.singleton
                    name
                    {
@@ -85,7 +85,7 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
                      inherited;
                      source;
                      from_nullable = false;
-                     def_locs = Base.Option.to_list def_loc;
+                     def_locs;
                    },
                  []
                )

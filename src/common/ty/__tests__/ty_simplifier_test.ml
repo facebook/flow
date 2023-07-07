@@ -36,7 +36,7 @@ module UnionSimplification = struct
                             Ty.Field { t = Ty.Num None; polarity = Ty.Neutral; optional = false };
                           inherited = false;
                           source = Ty.Other;
-                          def_loc = None;
+                          def_locs = [];
                         };
                     ];
                 },
@@ -55,7 +55,7 @@ module UnionSimplification = struct
                             Ty.Field { t = Ty.Num None; polarity = Ty.Neutral; optional = false };
                           inherited = false;
                           source = Ty.Other;
-                          def_loc = None;
+                          def_locs = [];
                         };
                     ];
                 },
@@ -78,7 +78,7 @@ module UnionSimplification = struct
                       prop = Ty.Field { t = Ty.Num None; polarity = Ty.Neutral; optional = false };
                       inherited = false;
                       source = Ty.Other;
-                      def_loc = None;
+                      def_locs = [];
                     };
                 ];
             }
@@ -109,7 +109,7 @@ module UnionSimplification = struct
                             Ty.Field { t = Ty.Num None; polarity = Ty.Positive; optional = false };
                           inherited = false;
                           source = Ty.Other;
-                          def_loc = None;
+                          def_locs = [];
                         };
                     ];
                 },
@@ -128,7 +128,7 @@ module UnionSimplification = struct
                             Ty.Field { t = Ty.Num None; polarity = Ty.Negative; optional = false };
                           inherited = false;
                           source = Ty.Other;
-                          def_loc = None;
+                          def_locs = [];
                         };
                     ];
                 },
@@ -172,7 +172,7 @@ module BotAndTopSimplification = struct
                               { t = Ty.Bot Ty.EmptyType; polarity = Ty.Neutral; optional = false };
                           inherited = false;
                           source = Ty.Other;
-                          def_loc = None;
+                          def_locs = [];
                         };
                     ];
                 },
@@ -196,7 +196,7 @@ module BotAndTopSimplification = struct
                               };
                           inherited = false;
                           source = Ty.Other;
-                          def_loc = None;
+                          def_locs = [];
                         };
                     ];
                 },
@@ -221,7 +221,7 @@ module BotAndTopSimplification = struct
                           { t = Ty.Bot Ty.EmptyType; polarity = Ty.Neutral; optional = false };
                       inherited = false;
                       source = Ty.Other;
-                      def_loc = None;
+                      def_locs = [];
                     };
                 ];
             }

@@ -333,7 +333,7 @@ let extract_instancet cx ty : (Type.t, string) result =
   )
 
 (* Must be called with the result from Members.extract_type *)
-let get_def_loc_from_extracted_type cx extracted_type name =
+let get_def_locs_from_extracted_type cx extracted_type name =
   extracted_type |> Members.extract_members cx |> Members.to_command_result >>| fun map ->
   match SMap.find_opt name map with
   | None -> None
@@ -349,25 +349,30 @@ let rec extract_def_loc ~loc_of_aloc cx ty name : (def_loc, string) result =
 
 (* The same as get_def_loc_from_extracted_type except it recursively checks for overridden
  * definitions of the member in superclasses and returns those as well *)
-and extract_def_loc_from_instancet ~loc_of_aloc cx extracted_type super name :
+and extract_def_locs_from_instancet ~loc_of_aloc cx extracted_type super name :
     (def_loc, string) result =
-  let current_class_def_loc = get_def_loc_from_extracted_type cx extracted_type name in
-  current_class_def_loc >>= function
+  let current_class_def_locs = get_def_locs_from_extracted_type cx extracted_type name in
+  current_class_def_locs >>= function
   | None -> Ok NoDefFound
-  | Some loc ->
-    let loc = loc_of_aloc loc in
+  | Some locs ->
+    let locs = Nel.map loc_of_aloc locs in
+    let map_found_class ~f locs =
+      match locs with
+      | (loc, []) -> Ok (FoundClass (f loc))
+      | locs -> Ok (FoundUnion (Nel.map (fun loc -> FoundClass (f loc)) locs))
+    in
     extract_def_loc ~loc_of_aloc cx super name >>= ( function
     | FoundClass lst ->
       (* Avoid duplicate entries. This can happen if a class does not override a method,
        * so the definition points to the method definition in the parent class. Then we
        * look at the parent class and find the same definition. *)
-      let lst =
+      let add loc =
         if Nel.hd lst = loc then
           lst
         else
           Nel.cons loc lst
       in
-      Ok (FoundClass lst)
+      map_found_class ~f:add locs
     | FoundObject _ -> Error "A superclass should be a class, not an object"
     | FoundUnion _ -> Error "A superclass should be a class, not a union"
     (* If the superclass does not have a definition for this method, or it is for some reason
@@ -376,18 +381,19 @@ and extract_def_loc_from_instancet ~loc_of_aloc cx extracted_type super name :
     | NoDefFound
     | UnsupportedType
     | AnyType ->
-      Ok (FoundClass (Nel.one loc)) )
+      map_found_class ~f:Nel.one locs )
 
 and extract_def_loc_resolved ~loc_of_aloc cx ty name : (def_loc, string) result =
   Members.(
     Type.(
       match extract_type cx ty with
       | Success (DefT (_, _, InstanceT { super; _ })) as extracted_type ->
-        extract_def_loc_from_instancet ~loc_of_aloc cx extracted_type super name
+        extract_def_locs_from_instancet ~loc_of_aloc cx extracted_type super name
       | (Success (DefT (_, _, ObjT _)) | SuccessModule _) as extracted_type ->
-        get_def_loc_from_extracted_type cx extracted_type name >>| ( function
+        get_def_locs_from_extracted_type cx extracted_type name >>| ( function
         | None -> NoDefFound
-        | Some loc -> FoundObject (loc_of_aloc loc) )
+        | Some (loc, []) -> FoundObject (loc_of_aloc loc)
+        | Some locs -> FoundUnion (Nel.map (fun loc -> FoundObject (loc_of_aloc loc)) locs) )
       | Success (UnionT (_, rep)) ->
         let union_members =
           UnionRep.members rep

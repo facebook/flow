@@ -631,7 +631,7 @@ struct
       Hh_json.(
         JSON_Object
           (match prop with
-          | NamedProp { name; prop; inherited; source; def_loc } ->
+          | NamedProp { name; prop; inherited; source; def_locs } ->
             [
               ("kind", JSON_String "NamedProp");
               ( "prop",
@@ -641,10 +641,9 @@ struct
                     ("prop", json_of_named_prop prop);
                     ("inherited", JSON_Bool inherited);
                     ("source", JSON_String (string_of_prop_source source));
-                    ( "def_loc",
-                      match def_loc with
-                      | None -> JSON_Null
-                      | Some loc -> JSON_String (string_of_aloc loc)
+                    ( "def_locs",
+                      JSON_Array
+                        (Base.List.map def_locs ~f:(fun loc -> JSON_String (string_of_aloc loc)))
                     );
                   ]
               );

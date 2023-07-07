@@ -21,9 +21,9 @@ type ('success, 'success_module) generic_t =
 
 type t =
   ( (* Success *)
-  (ALoc.t option * Type.t) SMap.t,
+  (ALoc.t Nel.t option * Type.t) SMap.t,
     (* SuccessModule *)
-  (ALoc.t option * Type.t) SMap.t * Type.t option
+  (ALoc.t Nel.t option * Type.t) SMap.t * Type.t option
   )
   generic_t
 
@@ -551,17 +551,16 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
           (* TODO: It isn't currently possible to return two types for a given
            * property in autocomplete, so for now we just return the getter
            * type. *)
-          let (loc, t) =
+          let t =
             match p with
-            | Field { key_loc = loc; type_ = t; _ }
-            | Get { key_loc = loc; type_ = t }
-            | Set { key_loc = loc; type_ = t }
-            (* arbitrarily use the location for the getter. maybe we can send both in the future *)
-            | GetSet { get_key_loc = loc; get_type = t; _ }
-            | Method { key_loc = loc; type_ = t } ->
-              (loc, t)
+            | Field { type_ = t; _ }
+            | Get { key_loc = _; type_ = t }
+            | Set { key_loc = _; type_ = t }
+            | GetSet { get_type = t; _ }
+            | Method { key_loc = _; type_ = t } ->
+              t
           in
-          SMap.add x (loc, t) acc)
+          SMap.add x (Property.def_locs p, t) acc)
         (find_props cx own_props)
         SMap.empty
     in
@@ -574,7 +573,7 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
           (fun x p acc ->
             match Property.read_t p with
             | Some t ->
-              let loc = Property.read_loc p in
+              let loc = Property.def_locs p in
               SMap.add x (loc, t) acc
             | None -> acc)
           (find_props cx proto_props)
@@ -596,9 +595,7 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
       SMap.fold
         (fun x p acc ->
           match Property.read_t p with
-          | Some t ->
-            let loc = Property.read_loc p in
-            SMap.add x (loc, t) acc
+          | Some t -> SMap.add x (Property.def_locs p, t) acc
           | None -> acc)
         (find_props cx flds)
         SMap.empty
@@ -613,7 +610,14 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
     in
     let named_exports =
       NameUtils.display_smap_of_namemap named_exports
-      |> SMap.map (fun { name_loc; preferred_def_locs = _; type_ } -> (name_loc, type_))
+      |> SMap.map (fun { name_loc; preferred_def_locs; type_ } ->
+             let def_locs =
+               match preferred_def_locs with
+               | Some _ -> preferred_def_locs
+               | None -> Base.Option.map ~f:Nel.one name_loc
+             in
+             (def_locs, type_)
+         )
     in
     SuccessModule (named_exports, cjs_export)
   | Success (DefT (_, _, FunT (static, _))) ->
@@ -635,7 +639,7 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
         (* `$EnumProto` has a null proto, so we set `exclude_proto_members` to true *)
         extract_members_as_map ~exclude_proto_members:true cx proto
     in
-    let result = SMap.map (fun member_loc -> (Some member_loc, enum_t)) members in
+    let result = SMap.map (fun member_loc -> (Some (Nel.one member_loc), enum_t)) members in
     Success (AugmentableSMap.augment proto_members ~with_bindings:result)
   | Success (IntersectionT (_, rep)) ->
     (* Intersection type should autocomplete for every property of

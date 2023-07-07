@@ -947,32 +947,61 @@ end = struct
         | Lookahead.LowerBounds [t] -> not (is_type_alias t)
         | _ -> true
       in
+      let def_locs ~fallback_t p =
+        match T.Property.def_locs p with
+        | None -> [TypeUtil.loc_of_t fallback_t]
+        | Some (hd, tl) -> hd :: tl
+      in
       fun ~env ?(inherited = false) ?(source = Ty.Other) (x, p) ->
         match p with
-        | T.Field { preferred_def_locs = _; key_loc; type_ = t; polarity } ->
-          if keep_field ~env t then
-            let def_loc = Some (Base.Option.value key_loc ~default:(TypeUtil.loc_of_t t)) in
+        | T.Field { preferred_def_locs = _; key_loc = _; type_; polarity } ->
+          if keep_field ~env type_ then
             let polarity = type_polarity polarity in
-            let%map (t, optional) = opt_t ~env t in
+            let%map (t, optional) = opt_t ~env type_ in
             let prop = Ty.Field { t; polarity; optional } in
-            [Ty.NamedProp { name = x; prop; inherited; source; def_loc }]
+            [
+              Ty.NamedProp
+                { name = x; prop; inherited; source; def_locs = def_locs ~fallback_t:type_ p };
+            ]
           else
             return []
-        | T.Method { key_loc; type_ = t } ->
+        | T.Method { key_loc = _; type_ = t } ->
           let%map tys = method_ty ~env t in
-          let def_loc = Some (Base.Option.value key_loc ~default:(TypeUtil.loc_of_t t)) in
           Base.List.map
             ~f:(fun ty ->
-              Ty.NamedProp { name = x; prop = Ty.Method ty; inherited; source; def_loc })
+              Ty.NamedProp
+                {
+                  name = x;
+                  prop = Ty.Method ty;
+                  inherited;
+                  source;
+                  def_locs = def_locs ~fallback_t:t p;
+                })
             tys
-        | T.Get { key_loc; type_ = t } ->
-          let def_loc = Some (Base.Option.value key_loc ~default:(TypeUtil.loc_of_t t)) in
-          let%map t = type__ ~env t in
-          [Ty.NamedProp { name = x; prop = Ty.Get t; inherited; source; def_loc }]
-        | T.Set { key_loc; type_ = t } ->
-          let def_loc = Some (Base.Option.value key_loc ~default:(TypeUtil.loc_of_t t)) in
-          let%map t = type__ ~env t in
-          [Ty.NamedProp { name = x; prop = Ty.Set t; inherited; source; def_loc }]
+        | T.Get { key_loc = _; type_ } ->
+          let%map t = type__ ~env type_ in
+          [
+            Ty.NamedProp
+              {
+                name = x;
+                prop = Ty.Get t;
+                inherited;
+                source;
+                def_locs = def_locs ~fallback_t:type_ p;
+              };
+          ]
+        | T.Set { key_loc = _; type_ } ->
+          let%map t = type__ ~env type_ in
+          [
+            Ty.NamedProp
+              {
+                name = x;
+                prop = Ty.Set t;
+                inherited;
+                source;
+                def_locs = def_locs ~fallback_t:type_ p;
+              };
+          ]
         | T.GetSet { get_key_loc; get_type; set_key_loc; set_type } ->
           let%bind p1 = obj_prop_t ~env (x, T.Get { key_loc = get_key_loc; type_ = get_type }) in
           let%map p2 = obj_prop_t ~env (x, T.Set { key_loc = set_key_loc; type_ = set_type }) in
@@ -2227,7 +2256,7 @@ end = struct
           (fun (name, loc) ->
             let prop = Ty.Field { t = enum_ty; polarity = Ty.Positive; optional = false } in
             Ty.NamedProp
-              { name = OrdinaryName name; prop; inherited; source = Ty.Other; def_loc = Some loc })
+              { name = OrdinaryName name; prop; inherited; source = Ty.Other; def_locs = [loc] })
           (SMap.bindings members)
       in
       Ty.Obj

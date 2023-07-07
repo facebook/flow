@@ -641,7 +641,7 @@ class patch_up_react_mapper ?(imports_react = false) () =
     method! on_prop loc prop =
       let prop =
         match prop with
-        | Ty.NamedProp { name; prop = named_prop; inherited; source; def_loc }
+        | Ty.NamedProp { name; prop = named_prop; inherited; source; def_locs }
           when Reason.is_internal_name name ->
           Hh_logger.warn
             "ShadowProp %s at %s"
@@ -649,7 +649,7 @@ class patch_up_react_mapper ?(imports_react = false) () =
             (Reason.string_of_loc loc);
           (* Shadow props appear as regular props *)
           let name = Reason.OrdinaryName (Reason.uninternal_name name) in
-          Ty.NamedProp { name; prop = named_prop; inherited; source; def_loc }
+          Ty.NamedProp { name; prop = named_prop; inherited; source; def_locs }
         | prop -> prop
       in
       super#on_prop loc prop

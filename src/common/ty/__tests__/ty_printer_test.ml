@@ -18,7 +18,7 @@ let tests =
                  prop = Ty.Get (Ty.Str None);
                  inherited = false;
                  source = Ty.Other;
-                 def_loc = None;
+                 def_locs = [];
                }
            in
            let obj =
@@ -42,7 +42,7 @@ let tests =
                  prop = Ty.Set (Ty.Str None);
                  inherited = false;
                  source = Ty.Other;
-                 def_loc = None;
+                 def_locs = [];
                }
            in
            let obj =

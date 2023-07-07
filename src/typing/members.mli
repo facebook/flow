@@ -15,16 +15,16 @@ type ('success, 'success_module) generic_t =
 
 type t =
   ( (* Success *)
-  (ALoc.t option * Type.t) SMap.t,
+  (ALoc.t Nel.t option * Type.t) SMap.t,
     (* SuccessModule *)
-  (ALoc.t option * Type.t) SMap.t * Type.t option
+  (ALoc.t Nel.t option * Type.t) SMap.t * Type.t option
   )
   generic_t
 
 (* For debugging purposes *)
 val string_of_extracted_type : (Type.t, Type.t) generic_t -> string
 
-val to_command_result : t -> ((ALoc.t option * Type.t) SMap.t, string) result
+val to_command_result : t -> ((ALoc.t Nel.t option * Type.t) SMap.t, string) result
 
 val extract : ?exclude_proto_members:bool -> Context.t -> Type.t -> t
 

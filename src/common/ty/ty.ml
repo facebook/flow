@@ -199,7 +199,7 @@ and prop =
       prop: named_prop;
       inherited: bool;
       source: prop_source;
-      def_loc: aloc option;
+      def_locs: aloc list;
     }
   | CallProp of fun_t
   | SpreadProp of t
@@ -421,8 +421,8 @@ class ['A] comparator_ty =
         (inherited_1 : bool)
         (source_0 : prop_source)
         (source_1 : prop_source)
-        (_def_loc_0 : aloc option)
-        (_def_loc_1 : aloc option) =
+        (_def_locs_0 : aloc list)
+        (_def_locs_1 : aloc list) =
       super#on_NamedProp
         env
         name_0
@@ -433,8 +433,8 @@ class ['A] comparator_ty =
         inherited_1
         source_0
         source_1
-        None
-        None
+        []
+        []
 
     method! on_obj_t env obj_1 obj_2 =
       super#on_obj_t env { obj_1 with obj_def_loc = None } { obj_2 with obj_def_loc = None }
