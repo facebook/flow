@@ -655,22 +655,9 @@ let append_completion_items_of_autoimports
     auto_imports
     acc =
   let src_dir = src_dir_of_loc ac_loc in
-  let sorted_auto_imports =
-    if imports_ranked_usage then
-      let open Export_search in
-      (* sort by score, then by name *)
-      auto_imports
-      |> Base.List.sort ~compare:(fun (import_a, score_a) (import_b, score_b) ->
-             match Int.compare score_a score_b with
-             | 0 -> String.compare import_a.name import_b.name
-             | score_diff -> -1 * score_diff
-         )
-    else
-      auto_imports
-  in
   Base.List.foldi
     ~init:acc
-    ~f:(fun i acc (auto_import, score) ->
+    ~f:(fun i acc { Export_search.search_result = auto_import; score; weight } ->
       let rank =
         (* after builtins *)
         if imports_ranked_usage then
@@ -690,7 +677,7 @@ let append_completion_items_of_autoimports
       else
         let ranking_info =
           if show_ranking_info then
-            Some (Printf.sprintf "Score: %d" score)
+            Some (Printf.sprintf "Score: %.4f\nUses: %d" score weight)
           else
             None
         in
@@ -706,7 +693,7 @@ let append_completion_items_of_autoimports
             rank
         in
         item :: acc)
-    sorted_auto_imports
+    auto_imports
 
 let compare_completion_items a b =
   let open ServerProt.Response.Completion in

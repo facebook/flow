@@ -18,8 +18,16 @@ type search_result = {
 }
 [@@deriving show]
 
+type search_result_scored = {
+  search_result: search_result;
+  score: float;
+      [@printer (fun fmt x -> x |> Base.Float.to_int64_preserve_order_exn |> Base.Int64.pp fmt)]
+  weight: int;
+}
+[@@deriving show]
+
 type search_results = {
-  results: (search_result * int) list;
+  results: search_result_scored list;
   is_incomplete: bool;
 }
 [@@deriving show]
@@ -113,35 +121,23 @@ let search_result_of_export ~query name source kind =
   | (Type _, (Default | Named | Namespace)) ->
     None
 
-let score_of_export kind count fuzzy_score =
-  let open Export_index in
-  let type_score =
-    match kind with
-    | Default -> 2
-    | Named
-    | NamedType ->
-      1
-    | Namespace -> 0
-  in
-  count + int_of_float ((fuzzy_score ** 4.0) *. 1000.0) + type_score
-
 (** [take ~n:20 ~index matches] will return up to 20 search results,
     where each match in [matches] might contribute multiple results.
     sets [is_incomplete] if [n] is exceeded. *)
 let take ~weighted ~n ~index ~query fuzzy_matches =
   let rev_all =
-    Base.List.fold fuzzy_matches ~init:[] ~f:(fun acc { Fuzzy_path.value; score = fuzzy_score } ->
+    Base.List.fold fuzzy_matches ~init:[] ~f:(fun acc { Fuzzy_path.value; score } ->
         Export_index.ExportMap.fold
           (fun (source, kind) count acc ->
             match search_result_of_export ~query value source kind with
-            | Some result ->
-              let score =
+            | Some search_result ->
+              let weight =
                 if weighted then
-                  score_of_export kind count fuzzy_score
+                  count
                 else
-                  int_of_float (fuzzy_score *. 1000.0)
+                  0
               in
-              (result, score) :: acc
+              { search_result; score; weight } :: acc
             | None -> acc)
           (Export_index.find value index)
           acc
@@ -149,17 +145,24 @@ let take ~weighted ~n ~index ~query fuzzy_matches =
   in
   let sorted =
     (* sorts the highest scores to the front *)
-    Base.List.stable_sort rev_all ~compare:(fun (a, score_a) (b, score_b) ->
-        match Int.compare score_b score_a with
+    Base.List.stable_sort rev_all ~compare:(fun a b ->
+        match Float.compare b.score a.score with
         | 0 ->
-          (match String.compare a.name b.name with
+          (match Int.compare b.weight a.weight with
           | 0 ->
-            (match Export_index.compare_export (a.source, a.kind) (b.source, b.kind) with
+            (match String.compare a.search_result.name b.search_result.name with
             | 0 ->
-              (* since rev_all is reversed, [a; b] where a and b have equal
-                 scores should return [b; a]. stable_sort wants to leave them
-                 in the original order. *)
-              1
+              (match
+                 Export_index.compare_export
+                   (a.search_result.source, a.search_result.kind)
+                   (b.search_result.source, b.search_result.kind)
+               with
+              | 0 ->
+                (* since rev_all is reversed, [a; b] where a and b have equal
+                   scores should return [b; a]. stable_sort wants to leave them
+                   in the original order. *)
+                1
+              | k -> k)
             | k -> k)
           | k -> k)
         | k -> k

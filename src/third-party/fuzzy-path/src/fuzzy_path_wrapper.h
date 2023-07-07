@@ -26,7 +26,7 @@ typedef struct matcher_options {
 } matcher_options_t;
 
 typedef struct match_result {
-  float weighted_score;
+  int weight;
   float score;
   // We can't afford to copy strings around while we're ranking them.
   // These are not guaranteed to last very long and should be copied out ASAP.

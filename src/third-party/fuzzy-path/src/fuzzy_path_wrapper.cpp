@@ -57,7 +57,7 @@ match_results_t matcher_find(matcher_t *m, const char *query, matcher_options_t 
   match_result_t *results = new match_result[matches.size()];
   for (size_t i = 0; i < matches.size(); i++) {
     results[i] = {
-      matches[i].weighted_score,
+      matches[i].weight,
       matches[i].score,
       matches[i].value->c_str()
     };

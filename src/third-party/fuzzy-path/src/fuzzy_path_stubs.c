@@ -45,7 +45,7 @@ static value alloc_result(match_result_t *r) {
   v = caml_alloc(2, 0);
   Store_field(v, 0, caml_copy_string(r->value));
   Store_field(v, 1, caml_copy_double(r->score));
-  // we don't currently need r->weighted_score
+  // we don't currently need r->weight
   CAMLreturn(v);
 }
 

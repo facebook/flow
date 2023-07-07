@@ -46,11 +46,11 @@ inline std::string str_to_lower(const std::string &s) {
 
 // Push a new entry on the heap while ensuring size <= max_results.
 void push_heap(ResultHeap &heap,
-               float weighted_score,
+               int weight,
                float score,
                const std::string *value,
                size_t max_results) {
-  MatchResult result(weighted_score, score, value);
+  MatchResult result(weight, score, value);
   if (heap.size() < max_results || result < heap.top()) {
     heap.push(std::move(result));
     if (heap.size() > max_results) {
@@ -102,11 +102,10 @@ void thread_worker(
         min_score->load()
       );
       if (score > 0) {
-        float weighted_score =
-          use_weights ? candidate.weight + powf(score, 4.0) * 1000.0 : score;
+        int weight = use_weights ? candidate.weight : 0;
         push_heap(
           result,
-          weighted_score,
+          weight,
           score,
           &candidate.value,
           max_results
@@ -199,7 +198,7 @@ std::vector<MatchResult> MatcherBase::findMatches(const std::string &query,
         auto &top = thread_results[i].top();
         push_heap(
           combined,
-          top.weighted_score,
+          top.weight,
           top.score,
           top.value,
           max_results
