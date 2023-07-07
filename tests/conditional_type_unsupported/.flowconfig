@@ -1,2 +1,3 @@
 [options]
 all=true
+conditional_type=false

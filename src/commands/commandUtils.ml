@@ -1341,7 +1341,7 @@ let make_options
     opt_enable_relay_integration = FlowConfig.relay_integration flowconfig;
     opt_enabled_rollouts = FlowConfig.enabled_rollouts flowconfig;
     opt_channel_mode = Base.Option.value ~default:`pipe (FlowConfig.channel_mode flowconfig);
-    opt_conditional_type = Base.Option.value (FlowConfig.conditional_type flowconfig) ~default:false;
+    opt_conditional_type = Base.Option.value (FlowConfig.conditional_type flowconfig) ~default:true;
     opt_mapped_type = FlowConfig.mapped_type flowconfig;
     opt_type_guards = FlowConfig.type_guards flowconfig;
     opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;
@@ -1393,7 +1393,7 @@ let make_options
     opt_trust_mode =
       Base.Option.value options_flags.trust_mode ~default:(FlowConfig.trust_mode flowconfig);
     opt_tuple_enhancements =
-      Base.Option.value (FlowConfig.tuple_enhancements flowconfig) ~default:false;
+      Base.Option.value (FlowConfig.tuple_enhancements flowconfig) ~default:true;
     opt_use_mixed_in_catch_variables =
       Base.Option.value (FlowConfig.use_mixed_in_catch_variables flowconfig) ~default:false;
     opt_react_runtime = FlowConfig.react_runtime flowconfig;

@@ -1,4 +1,2 @@
 [options]
 all=true
-mapped_type=true
-conditional_type=true

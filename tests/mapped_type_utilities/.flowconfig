@@ -1,5 +1,3 @@
 [options]
-mapped_type=true
-conditional_type=true
 all=true
 no_flowlib=false

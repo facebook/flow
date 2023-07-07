@@ -32,7 +32,7 @@ let stub_metadata ~root ~checked =
     babel_loose_array_spread = false;
     component_syntax = false;
     component_syntax_includes = [];
-    conditional_type = false;
+    conditional_type = true;
     enable_const_params = false;
     enable_enums = true;
     enable_relay_integration = false;
@@ -61,7 +61,7 @@ let stub_metadata ~root ~checked =
     trust_mode = Options.NoTrust;
     type_guards = true;
     use_mixed_in_catch_variables = false;
-    tuple_enhancements = false;
+    tuple_enhancements = true;
   }
 
 let dummy_filename = File_key.SourceFile ""
