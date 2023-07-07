@@ -17,10 +17,7 @@ type options = {
 
 type match_result = {
   value: string;
-
-  (** A number in the range (0-1]. Higher scores are more relevant.
-      0 denotes "no match" and will never be returned. *)
-  score: float;
+  score: int;
 }
 
 type t
@@ -36,3 +33,10 @@ val add_candidate : t -> string -> int -> t
 val add_candidates : t -> (string * int) list -> t
 
 val remove_candidates : t -> string list -> t
+
+val fuzzy_score :
+  ?boost_full_match:bool ->
+  ?first_match_can_be_weak:bool ->
+  pattern:string ->
+  string ->
+  int option

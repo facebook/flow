@@ -18,10 +18,7 @@ type options = {
 
 type match_result = {
   value: string;
-
-  (** A number in the range (0-1]. Higher scores are more relevant.
-      0 denotes "no match" and will never be returned. *)
-  score: float;
+  score: int;
 }
 
 type t
@@ -60,3 +57,12 @@ let init candidates =
   let t = ext_create () in
   let t = add_candidates t candidates in
   t
+
+external ext_fuzzy_score : string -> string -> bool -> bool -> int option = "fuzzy_score"
+
+let fuzzy_score
+    ?(boost_full_match = true)
+    ?(first_match_can_be_weak = false)
+    ~pattern
+    word =
+  ext_fuzzy_score word pattern boost_full_match first_match_can_be_weak

@@ -27,7 +27,7 @@ typedef struct matcher_options {
 
 typedef struct match_result {
   int weight;
-  float score;
+  long score;
   // We can't afford to copy strings around while we're ranking them.
   // These are not guaranteed to last very long and should be copied out ASAP.
   const char *value;
@@ -45,6 +45,13 @@ void matcher_remove_candidate(matcher_t *m, const char *candidate);
 void matcher_clear(matcher_t *m);
 void matcher_reserve(matcher_t *m, size_t n);
 size_t matcher_size(matcher_t *m);
+
+bool fuzzy_score_c(
+    const char* haystack,
+    const char* needle,
+    bool boost_full_match,
+    bool first_match_can_be_weak,
+    long* result);
 
 #ifdef __cplusplus
 }
