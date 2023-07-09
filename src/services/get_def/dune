@@ -8,4 +8,4 @@
   flow_service_inference_module
   flow_state_readers)
  (preprocess
-  (pps lwt_ppx)))
+  (pps lwt_ppx ppx_deriving.show)))

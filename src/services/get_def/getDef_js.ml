@@ -89,16 +89,24 @@ let rec process_request ~options ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_
       )
 
 module Depth = struct
-  let limit = 9999
+  let limit = 100
 
   type t = {
     length: int;
+    seen: Loc_collections.LocSet.t;
     locs: Loc.t list;
   }
 
-  let empty = { length = 0; locs = [] }
+  let empty = { length = 0; seen = Loc_collections.LocSet.empty; locs = [] }
 
-  let add loc { length; locs } = { length = length + 1; locs = loc :: locs }
+  let add loc { length; seen; locs } =
+    let locs = loc :: locs in
+    let seen' = Loc_collections.LocSet.add loc seen in
+    if seen == seen' then
+      (* cycle *)
+      Error locs
+    else
+      Ok { length = length + 1; seen = seen'; locs }
 end
 
 let get_def ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast requested_loc =
@@ -108,9 +116,10 @@ let get_def ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast requested_loc =
     SMap.exists (fun _ locs -> Nel.exists (fun loc -> loc = source_loc) locs) require_loc_map
   in
   let rec loop ~depth req_loc loop_name =
-    if depth.Depth.length > Depth.limit then
+    match Depth.add req_loc depth with
+    | Error locs ->
       let trace_str =
-        depth.Depth.locs |> Base.List.map ~f:Reason.string_of_loc |> Base.String.concat ~sep:"\n"
+        locs |> Base.List.map ~f:Reason.string_of_loc |> Base.String.concat ~sep:"\n"
       in
       let log_message =
         Printf.sprintf
@@ -119,9 +128,9 @@ let get_def ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast requested_loc =
           trace_str
       in
       Partial ([req_loc], loop_name, log_message)
-    else
+    | Ok depth ->
       let open Get_def_process_location in
-      match process_location_in_typed_ast ~is_legit_require ~typed_ast req_loc with
+      (match process_location_in_typed_ast ~is_legit_require ~typed_ast req_loc with
       | OwnDef (aloc, name) -> Def ([loc_of_aloc aloc], Some name)
       | Request request -> begin
         match
@@ -146,7 +155,7 @@ let get_def ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast requested_loc =
                  if Loc.equal req_loc res_loc || Loc.(res_loc.source <> requested_loc.source) then
                    Def ([res_loc], name)
                  else
-                   match loop ~depth:(Depth.add req_loc depth) res_loc name with
+                   match loop ~depth res_loc name with
                    | Bad_loc _ -> Def ([res_loc], name)
                    | Def_error msg -> Partial ([res_loc], name, msg)
                    | (Def _ | Partial _) as res -> res
@@ -167,6 +176,6 @@ let get_def ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast requested_loc =
         | Error msg -> Def_error msg
       end
       | Empty msg -> Bad_loc msg
-      | LocNotFound -> Bad_loc "not found"
+      | LocNotFound -> Bad_loc "not found")
   in
   loop ~depth:Depth.empty requested_loc None
