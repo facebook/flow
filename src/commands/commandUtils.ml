@@ -1423,6 +1423,7 @@ let make_options
       Base.Option.value (FlowConfig.autoimports_ranked_by_usage flowconfig) ~default:false;
     opt_flowconfig_hash = flowconfig_hash;
     opt_global_find_ref = Base.Option.value (FlowConfig.global_find_ref flowconfig) ~default:false;
+    opt_global_rename = Base.Option.value (FlowConfig.global_rename flowconfig) ~default:false;
     opt_gc_worker =
       {
         Options.gc_minor_heap_size =

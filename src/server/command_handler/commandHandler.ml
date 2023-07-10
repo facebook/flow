@@ -2124,12 +2124,12 @@ let global_find_references
        )
       )
 
-let find_references ~genv ~reader ~options ~env ~file_artifacts ~local_only file_key pos :
+let find_references ~genv ~reader ~options ~env ~file_artifacts ~global file_key pos :
     ((FindRefsTypes.find_refs_found option, string) result * Hh_json.json option) Lwt.t =
   let (parse_artifacts, typecheck_artifacts) = file_artifacts in
   let (line, col) = Flow_lsp_conversions.position_of_document_position pos in
   let%lwt refs =
-    if (not local_only) && Options.global_find_ref options then
+    if global then
       global_find_references
         ~genv
         ~reader
@@ -2169,22 +2169,14 @@ let find_references ~genv ~reader ~options ~env ~file_artifacts ~local_only file
   Lwt.return (refs, extra_data)
 
 let map_find_references_results
-    ~genv ~reader ~options ~client ~profiling ~env ~f ~local_only text_doc_position =
+    ~genv ~reader ~options ~client ~profiling ~env ~f ~global text_doc_position =
   let (file_artifacts_opt, extra_parse_data) =
     get_file_artifacts ~options ~client ~profiling ~env text_doc_position
   in
   match file_artifacts_opt with
   | Ok (Some (file_artifacts, file_key)) ->
     let%lwt (local_refs, extra_data) =
-      find_references
-        ~genv
-        ~reader
-        ~options
-        ~env
-        ~file_artifacts
-        ~local_only
-        file_key
-        text_doc_position
+      find_references ~genv ~reader ~options ~env ~file_artifacts ~global file_key text_doc_position
     in
     let mapped_refs =
       match local_refs with
@@ -2210,7 +2202,7 @@ let handle_persistent_find_references
       ~client
       ~profiling
       ~env
-      ~local_only:false
+      ~global:(Options.global_find_ref options)
       ~f:ref_to_location
       text_doc_position
   in
@@ -2243,7 +2235,7 @@ let handle_persistent_document_highlight
       ~profiling
       ~env
       ~f:ref_to_highlight
-      ~local_only:true
+      ~global:false
       params
   in
   let metadata = with_data ~extra_data metadata in
@@ -2270,7 +2262,7 @@ let handle_persistent_rename ~genv ~reader ~options ~id ~params ~metadata ~clien
           ~options
           ~env
           ~file_artifacts
-          ~local_only:false
+          ~global:(Options.global_rename options)
           file_key
           text_doc_position
       in
