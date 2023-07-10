@@ -10,6 +10,7 @@ type ('M, 'T) member_info = {
   object_type: 'T;
   force_instance: bool;
 }
+[@@deriving show]
 
 type ('M, 'T) t =
   | Identifier of {
@@ -24,3 +25,4 @@ type ('M, 'T) t =
       loc: 'M;
     }
   | Fail of string
+[@@deriving show]

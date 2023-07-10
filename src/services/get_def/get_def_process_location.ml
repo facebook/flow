@@ -10,11 +10,12 @@ exception Found
 
 (** This type is distinct from the one raised by the searcher because
   it would never make sense for the searcher to raise LocNotFound *)
-type result =
-  | OwnDef of ALoc.t * (* name *) string
-  | Request of (ALoc.t, ALoc.t * Type.t) Get_def_request.t
+type 'loc result =
+  | OwnDef of 'loc * (* name *) string
+  | Request of ('loc, 'loc * (Type.t[@opaque])) Get_def_request.t
   | Empty of string
   | LocNotFound
+[@@deriving show]
 
 (* here lies the difference between "Go to Definition" and "Go to Type Definition":
    the former should stop on annot_loc (where the value was annotated), while the
