@@ -264,8 +264,6 @@ and 'loc t' =
     }
   | EInvalidConstructor of 'loc virtual_reason
   | EUnsupportedKeyInObjectType of 'loc
-  | EPredAnnot of 'loc
-  | ERefineAnnot of 'loc
   | ETrustedAnnot of 'loc
   | EPrivateAnnot of 'loc
   | EPredicateFuncTooShort of {
@@ -1009,8 +1007,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EExportsAnnot loc -> EExportsAnnot (f loc)
   | ECharSetAnnot loc -> ECharSetAnnot (f loc)
   | EUnsupportedKeyInObjectType loc -> EUnsupportedKeyInObjectType (f loc)
-  | EPredAnnot loc -> EPredAnnot (f loc)
-  | ERefineAnnot loc -> ERefineAnnot (f loc)
   | ETrustedAnnot loc -> ETrustedAnnot (f loc)
   | EPrivateAnnot loc -> EPrivateAnnot (f loc)
   | EPredicateFuncTooShort { loc; pred_func; pred_func_param_num; index } ->
@@ -1454,8 +1450,6 @@ let util_use_op_of_msg nope util = function
   | EExportsAnnot _
   | ECharSetAnnot _
   | EUnsupportedKeyInObjectType _
-  | EPredAnnot _
-  | ERefineAnnot _
   | ETrustedAnnot _
   | EPrivateAnnot _
   | EPredicateFuncTooShort _
@@ -1708,8 +1702,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EInternal (loc, _)
   | EPrivateAnnot loc
   | ETrustedAnnot loc
-  | ERefineAnnot loc
-  | EPredAnnot loc
   | EUnsupportedKeyInObjectType loc
   | ECharSetAnnot loc
   | EExportsAnnot loc
@@ -2724,26 +2716,6 @@ let friendly_message_of_msg loc_of_aloc msg =
         use_op;
       }
   | EUnsupportedKeyInObjectType _ -> Normal { features = [text "Unsupported key in object type."] }
-  | EPredAnnot _ ->
-    let features =
-      [
-        text "Cannot use ";
-        code "$Pred";
-        text " because the first ";
-        text "type argument must be a number literal.";
-      ]
-    in
-    Normal { features }
-  | ERefineAnnot _ ->
-    let features =
-      [
-        text "Cannot use ";
-        code "$Refine";
-        text " because the third ";
-        text "type argument must be a number literal.";
-      ]
-    in
-    Normal { features }
   | ETrustedAnnot _ ->
     Normal { features = [text "Not a valid type to mark as "; code "$Trusted"; text "."] }
   | EPrivateAnnot _ ->
@@ -5234,7 +5206,6 @@ let error_code_of_message err : error_code option =
   (* We don't want these to be suppressible *)
   | EParseError (_, _) -> None
   | EPolarityMismatch _ -> Some IncompatibleVariance
-  | EPredAnnot _ -> Some InvalidPredTypeArg
   | EPrimitiveAsInterface _ -> Some IncompatibleType
   | EPrivateAnnot _ -> Some InvalidPrivateTypeArg
   | EPrivateLookupFailed _ -> Some Error_codes.PropMissing
@@ -5246,7 +5217,6 @@ let error_code_of_message err : error_code option =
   | EReactElementFunArity (_, _, _) -> Some MissingArg
   (* We don't want these to be suppressible *)
   | ERecursionLimit (_, _) -> None
-  | ERefineAnnot _ -> Some InvalidRefineTypeArg
   | EROArrayWrite _ -> Some CannotWrite
   | ESignatureVerification _ -> Some SignatureVerificationFailure
   | ESpeculationAmbiguous _ -> Some SpeculationAmbiguous

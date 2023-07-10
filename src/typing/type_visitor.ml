@@ -255,7 +255,6 @@ class ['a] t =
         | Homomorphic
         | Unspecialized ->
           acc)
-      | LatentPred (t, _) -> self#type_ cx pole_TODO acc t
 
     method private custom_fun_kind cx acc =
       function

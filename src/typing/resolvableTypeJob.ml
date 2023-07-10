@@ -307,7 +307,6 @@ and collect_of_destructor ?log_unresolved cx acc = function
   | ReactElementRefType
   | IdxUnwrapType ->
     acc
-  | LatentPred (t, _) -> collect_of_type ?log_unresolved cx acc t
 
 and collect_of_property ?log_unresolved cx name property acc =
   if is_internal_name name then

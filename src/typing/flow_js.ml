@@ -618,26 +618,6 @@ struct
               (reason, ConcretizeTypes (ConcretizeIntersectionT (unresolved, resolved, r, rep, u)))
           ) ->
           SpeculationKit.prep_try_intersection cx trace reason unresolved (t :: resolved) u r rep
-        (*****************************)
-        (* Refinement type subtyping *)
-        (*****************************)
-        | (_, RefineT (reason, fun_t, idx, tout)) ->
-          rec_flow
-            cx
-            trace
-            ( fun_t,
-              CallLatentPredT
-                {
-                  use_op = unknown_use;
-                  reason;
-                  targs = None;
-                  argts = [];
-                  sense = true;
-                  idx;
-                  tin = l;
-                  tout;
-                }
-            )
         (*************)
         (* Debugging *)
         (*************)
@@ -5427,8 +5407,7 @@ struct
     | SealGenericT _
     | ResolveUnionT _
     | EnumCastT _
-    | ArithT _
-    | RefineT _ ->
+    | ArithT _ ->
       false
     | BecomeT { empty_success; _ } -> empty_success
     | _ -> true
@@ -5931,7 +5910,6 @@ struct
     | PredicateT _
     | PrivateMethodT _
     | ReactKitT _
-    | RefineT _
     | ReposLowerT _
     | ReposUseT _
     | ResolveSpreadT _
@@ -6548,8 +6526,7 @@ struct
     | RestType _
     | SpreadTupleType _
     | ValuesType
-    | IdxUnwrapType
-    | LatentPred _ ->
+    | IdxUnwrapType ->
       true
     | CallType _
     | TypeMap _ ->
@@ -6850,7 +6827,6 @@ struct
                     OpenT tout
                   )
               )
-            | LatentPred (fun_t, idx) -> RefineT (reason, fun_t, idx, tout)
           ))
 
   and eval_keys cx ~trace reason t =

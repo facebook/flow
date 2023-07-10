@@ -1311,67 +1311,6 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         | "$Flow$DebugPrint" -> mk_custom_fun cx loc t_ast targs ident DebugPrint
         | "$Flow$DebugThrow" -> mk_custom_fun cx loc t_ast targs ident DebugThrow
         | "$Flow$DebugSleep" -> mk_custom_fun cx loc t_ast targs ident DebugSleep
-        (* You can specify in the .flowconfig the names of types that should be
-         * treated like any<actualType>. So if you have
-         * suppress_type=$FlowFixMe
-         *
-         * Then you can do
-         *
-         * var x: $FlowFixMe<number> = 123;
-         *)
-        | "$Pred" ->
-          let fun_reason = mk_annot_reason (RCustom "abstract predicate function") loc in
-          let static_reason = mk_reason (RCustom "abstract predicate static") loc in
-          let out_reason = mk_reason (RCustom "open predicate") loc in
-          check_type_arg_arity cx loc t_ast targs 1 (fun () ->
-              match convert_type_params () with
-              | ([DefT (_, _, SingletonNumT (f, _))], targs) ->
-                let n = Base.Int.of_float f in
-                let key_strs = Base.List.init n ~f:(fun i -> Some ("x_" ^ Base.Int.to_string i)) in
-                let emp = Key_map.empty in
-                let tins = Base.List.init n ~f:(fun _ -> Unsoundness.at FunctionPrototype loc) in
-                let tout = MixedT.at loc |> with_trust bogus_trust in
-                reconstruct_ast
-                  (DefT
-                     ( fun_reason,
-                       infer_trust cx,
-                       FunT
-                         ( dummy_static static_reason,
-                           mk_functiontype
-                             fun_reason
-                             tins
-                             tout
-                             ~rest_param:None
-                             ~def_reason:fun_reason
-                             ~params_names:key_strs
-                             ~predicate:(Some (PredBased (out_reason, emp, emp)))
-                         )
-                     )
-                  )
-                  targs
-              | _ -> error_type cx loc (Error_message.EPredAnnot loc) t_ast
-          )
-        | "$Refine" ->
-          check_type_arg_arity cx loc t_ast targs 3 (fun () ->
-              match convert_type_params () with
-              | ([base_t; fun_pred_t; DefT (rnum, _, SingletonNumT (f, _))], targs) ->
-                let idx = Base.Int.of_float f in
-                if idx < 1 then
-                  error_type cx loc (Error_message.EFunPredInvalidIndex (loc_of_reason rnum)) t_ast
-                else
-                  let reason = mk_reason (RCustom "refined type") loc in
-                  reconstruct_ast
-                    (mk_type_destructor
-                       cx
-                       (use_op reason)
-                       reason
-                       base_t
-                       (LatentPred (fun_pred_t, idx))
-                       (mk_eval_id cx loc)
-                    )
-                    targs
-              | _ -> error_type cx loc (Error_message.ERefineAnnot loc) t_ast
-          )
         | "$Trusted" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               match convert_type_params () with

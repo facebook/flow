@@ -1137,10 +1137,6 @@ Flags: --pretty
   ]
 }
 
-eval_predicate.js:5:3
-Flags: --pretty
-{"result":[{"name":"a","type":"number"}]}
-
 eval_destructor.js:5:3
 Flags: --pretty
 {"result":[{"name":"a","type":"number"}]}

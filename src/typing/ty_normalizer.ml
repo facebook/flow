@@ -388,8 +388,7 @@ end = struct
         | ReactElementConfigType
         | ReactElementRefType
         | ReactConfigType _
-        | IdxUnwrapType
-        | LatentPred _ ->
+        | IdxUnwrapType ->
           false)
       )
     | Env.EvaluateAll -> true
@@ -1768,10 +1767,6 @@ end = struct
             ~source:t
         in
         mapped_type ~env ty property_type mapped_type_flags homomorphic
-      | T.LatentPred (p, i) ->
-        let%bind t' = type__ ~env t in
-        let%map p' = type__ ~env p in
-        generic_builtin_t (Reason.OrdinaryName "$Refined") [t'; p'; Ty.NumLit (string_of_int i)]
 
     let rec type_ctor_ = type_ctor ~cont:type_ctor_
 

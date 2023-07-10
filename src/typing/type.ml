@@ -773,12 +773,6 @@ module rec TypeTerm : sig
         tin: t;
         tout: tvar;
       }
-    (*
-     * `RefineT (reason, fun_t, i, tvar)` is an instruction to refine an incoming
-     * flow using the predicate of function `fun_t` on the i-th position. The result
-     * will be stored in `tvar`, which is expected to be a type variable.
-     *)
-    | RefineT of reason * t * index * tvar
     (* Spread elements show up in a bunch of places: array literals, function
      * parameters, function call arguments, method arguments. constructor
      * arguments, etc. Often we have logic that depends on what the spread
@@ -1497,7 +1491,6 @@ module rec TypeTerm : sig
         property_type: t;
         mapped_type_flags: mapped_type_flags;
       }
-    | LatentPred of t * index
 
   and mapped_type_homomorphic_flag =
     | Homomorphic
@@ -3944,7 +3937,6 @@ let string_of_use_ctor = function
   | OrT _ -> "OrT"
   | PredicateT _ -> "PredicateT"
   | ReactKitT _ -> "ReactKitT"
-  | RefineT _ -> "RefineT"
   | ReposLowerT _ -> "ReposLowerT"
   | ReposUseT _ -> "ReposUseT"
   | ResolveSpreadT (_, _, { rrt_resolve_to; _ }) ->

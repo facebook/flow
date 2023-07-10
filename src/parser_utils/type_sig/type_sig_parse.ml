@@ -2311,28 +2311,6 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
     | None -> Annot (FlowDebugSleep loc)
     | _ -> Err (loc, CheckError)
   end
-  | "$Pred" -> begin
-    match targs with
-    | Some (_, { arguments = [(_, T.NumberLiteral { Ast.NumberLiteral.value; _ })]; _ }) ->
-      let n = Base.Int.of_float value in
-      Annot (Pred (loc, n))
-    | Some (_, { arguments = [(loc, _)]; _ }) ->
-      let loc = push_loc tbls loc in
-      Err (loc, CheckError)
-    | _ -> Err (loc, CheckError)
-  end
-  | "$Refine" -> begin
-    match targs with
-    | Some (_, { arguments = [base; pred; (_, T.NumberLiteral { Ast.NumberLiteral.value; _ })]; _ })
-      ->
-      let base = annot opts scope tbls xs base in
-      let fn_pred = annot opts scope tbls xs pred in
-      Annot (Refine { loc; base; fn_pred; index = Base.Int.of_float value })
-    | Some (_, { arguments = [_; _; (loc, _)]; _ }) ->
-      let loc = push_loc tbls loc in
-      Err (loc, CheckError)
-    | _ -> Err (loc, CheckError)
-  end
   | "$Trusted" -> begin
     match targs with
     | Some (_, { arguments = [t]; _ }) ->

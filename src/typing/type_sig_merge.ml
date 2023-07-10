@@ -898,33 +898,6 @@ and merge_annot tps infer_tps file = function
   | FlowDebugSleep loc ->
     let reason = Reason.(mk_reason RFunctionType loc) in
     Type.CustomFunT (reason, Type.DebugSleep)
-  | Pred (loc, n) ->
-    let open Type in
-    let fun_reason = Reason.(mk_annot_reason (RCustom "abstract predicate function") loc) in
-    let static_reason = Reason.(mk_reason (RCustom "abstract predicate static") loc) in
-    let out_reason = Reason.(mk_reason (RCustom "open predicate") loc) in
-    let key_strs = Base.List.init n ~f:(fun i -> Some ("x_" ^ Base.Int.to_string i)) in
-    let emp = Key_map.empty in
-    let tins = Base.List.init n ~f:(fun _ -> Unsoundness.at FunctionPrototype loc) in
-    let tout = MixedT.at loc trust in
-    let statics = dummy_static static_reason in
-    let functiontype =
-      mk_functiontype
-        fun_reason
-        tins
-        tout
-        ~rest_param:None
-        ~def_reason:fun_reason
-        ~params_names:key_strs
-        ~predicate:(Some (PredBased (out_reason, emp, emp)))
-    in
-    DefT (fun_reason, trust, FunT (statics, functiontype))
-  | Refine { loc; base; fn_pred; index } ->
-    let reason = Reason.(mk_reason (RCustom "refined type") loc) in
-    let base = merge tps infer_tps file base in
-    let fn_pred = merge tps infer_tps file fn_pred in
-    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
-    Type.(EvalT (base, TypeDestructorT (unknown_use, reason, LatentPred (fn_pred, index)), id))
   | Trusted (loc, t) -> begin
     match merge tps infer_tps file t with
     | Type.DefT (r, trust, def_t) ->

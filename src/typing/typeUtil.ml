@@ -121,7 +121,6 @@ and reason_of_use_t = function
   | PredicateT (_, (reason, _)) -> reason
   | PrivateMethodT (_, reason, _, _, _, _, _, _) -> reason
   | ReactKitT (_, reason, _) -> reason
-  | RefineT (reason, _, _, _) -> reason
   | ReposLowerT (reason, _, _) -> reason
   | ReposUseT (reason, _, _, _) -> reason
   | ResolveSpreadT (_, reason, _) -> reason
@@ -343,7 +342,6 @@ and mod_reason_of_use_t f = function
   | PrivateMethodT (use_op, call_reason, lookup_reason, props, cbs, static, action, prop_t) ->
     PrivateMethodT (use_op, f call_reason, lookup_reason, props, cbs, static, action, prop_t)
   | ReactKitT (use_op, reason, tool) -> ReactKitT (use_op, f reason, tool)
-  | RefineT (reason, ft, i, t) -> RefineT (f reason, ft, i, t)
   | ReposLowerT (reason, use_desc, t) -> ReposLowerT (f reason, use_desc, t)
   | ReposUseT (reason, use_desc, use_op, t) -> ReposUseT (f reason, use_desc, use_op, t)
   | ResolveSpreadT (use_op, reason_op, resolve) -> ResolveSpreadT (use_op, f reason_op, resolve)
@@ -524,7 +522,6 @@ let rec util_use_op_of_use_t :
   | OptionalChainT _
   | InvariantT _
   | CallLatentPredT _
-  | RefineT (_, _, _, _)
   | CondT (_, _, _, _)
   | ReactPropsToOut _
   | ReactInToProps _
