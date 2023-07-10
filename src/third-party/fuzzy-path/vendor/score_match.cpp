@@ -171,33 +171,33 @@ long do_score(
 }
 
 bool isPatternInWord(const char* patternLow, size_t patternPos, size_t patternLen, const char* wordLow, size_t wordPos, size_t wordLen) {
-	while (patternPos < patternLen && wordPos < wordLen) {
-		if (patternLow[patternPos] == wordLow[wordPos]) {
+  while (patternPos < patternLen && wordPos < wordLen) {
+    if (patternLow[patternPos] == wordLow[wordPos]) {
       // Remember the min word position for each pattern position
       _minWordMatchPos[patternPos] = wordPos;
-			patternPos += 1;
-		}
-		wordPos += 1;
-	}
-	return patternPos == patternLen; // pattern must be exhausted
+      patternPos += 1;
+    }
+    wordPos += 1;
+  }
+  return patternPos == patternLen; // pattern must be exhausted
 }
 
 void _fillInMaxWordMatchPos(size_t patternLen, size_t wordLen, const char* patternLow, const char* wordLow) {
-	size_t patternPos = patternLen - 1;
-	size_t wordPos = wordLen - 1;
+  size_t patternPos = patternLen - 1;
+  size_t wordPos = wordLen - 1;
   while (patternPos >= 0 && wordPos >= 0) {
-		if (patternLow[patternPos] == wordLow[wordPos]) {
-			_maxWordMatchPos[patternPos] = wordPos;
+    if (patternLow[patternPos] == wordLow[wordPos]) {
+      _maxWordMatchPos[patternPos] = wordPos;
       if (patternPos == 0) {
         break;
       }
-			patternPos--;
-		}
+      patternPos--;
+    }
     if (wordPos == 0) {
       break;
     }
-		wordPos--;
-	}
+    wordPos--;
+  }
 }
 
 bool do_fuzzy_score(const MatchInfo& m, long* result) {
@@ -211,144 +211,144 @@ bool do_fuzzy_score(const MatchInfo& m, long* result) {
   int patternLen = m.needle_len > MAX_LEN ? MAX_LEN : m.needle_len;
   int wordLen = m.haystack_len > MAX_LEN ? MAX_LEN : m.haystack_len;
 
-	if (0 >= patternLen || 0 >= wordLen || patternLen > wordLen) {
-		return false;
-	}
+  if (0 >= patternLen || 0 >= wordLen || patternLen > wordLen) {
+    return false;
+  }
 
-	// Run a simple check if the characters of pattern occur
-	// (in order) at all in word. If that isn't the case we
-	// stop because no match will be possible
-	if (!isPatternInWord(patternLow, 0, patternLen, wordLow, 0, wordLen)) {
-		return false;
-	}
+  // Run a simple check if the characters of pattern occur
+  // (in order) at all in word. If that isn't the case we
+  // stop because no match will be possible
+  if (!isPatternInWord(patternLow, 0, patternLen, wordLow, 0, wordLen)) {
+    return false;
+  }
 
-	// Find the max matching word position for each pattern position
-	// NOTE: the min matching word position was filled in above, in the `isPatternInWord` call
-	_fillInMaxWordMatchPos(patternLen, wordLen, patternLow, wordLow);
+  // Find the max matching word position for each pattern position
+  // NOTE: the min matching word position was filled in above, in the `isPatternInWord` call
+  _fillInMaxWordMatchPos(patternLen, wordLen, patternLow, wordLow);
 
-	int row = 1;
-	int column = 1;
-	int patternPos = 0;
-	int wordPos = 0;
+  int row = 1;
+  int column = 1;
+  int patternPos = 0;
+  int wordPos = 0;
 
-	bool hasStrongFirstMatch = false;
+  bool hasStrongFirstMatch = false;
 
-	// There will be a match, fill in tables
-	for (row = 1, patternPos = 0; patternPos < patternLen; row++, patternPos++) {
+  // There will be a match, fill in tables
+  for (row = 1, patternPos = 0; patternPos < patternLen; row++, patternPos++) {
 
-		// Reduce search space to possible matching word positions and to possible access from next row
-		int minWordMatchPos = _minWordMatchPos[patternPos];
-		int maxWordMatchPos = _maxWordMatchPos[patternPos];
-		int nextMaxWordMatchPos = (patternPos + 1 < patternLen ? _maxWordMatchPos[patternPos + 1] : wordLen);
+    // Reduce search space to possible matching word positions and to possible access from next row
+    int minWordMatchPos = _minWordMatchPos[patternPos];
+    int maxWordMatchPos = _maxWordMatchPos[patternPos];
+    int nextMaxWordMatchPos = (patternPos + 1 < patternLen ? _maxWordMatchPos[patternPos + 1] : wordLen);
 
-		for (column = minWordMatchPos + 1, wordPos = minWordMatchPos; wordPos < nextMaxWordMatchPos; column++, wordPos++) {
-			long score = MIN_SCORE;
-			bool canComeDiag = false;
+    for (column = minWordMatchPos + 1, wordPos = minWordMatchPos; wordPos < nextMaxWordMatchPos; column++, wordPos++) {
+      long score = MIN_SCORE;
+      bool canComeDiag = false;
 
-			if (wordPos <= maxWordMatchPos) {
-				score = do_score(
+      if (wordPos <= maxWordMatchPos) {
+        score = do_score(
           m,
           wordPos,
           patternPos,
           _diag[row - 1][column - 1] == 0,
-					hasStrongFirstMatch
-				);
-			}
+          hasStrongFirstMatch
+        );
+      }
 
-			long diagScore = 0;
-			if (score != MAX_SAFE_INTEGER) {
-				canComeDiag = true;
-				diagScore = score + _table[row - 1][column - 1];
-			}
+      long diagScore = 0;
+      if (score != MAX_SAFE_INTEGER) {
+        canComeDiag = true;
+        diagScore = score + _table[row - 1][column - 1];
+      }
 
-			bool canComeLeft = wordPos > minWordMatchPos;
-			long leftScore = canComeLeft ? _table[row][column - 1] + (_diag[row][column - 1] > 0 ? -5 : 0) : 0; // penalty for a gap start
+      bool canComeLeft = wordPos > minWordMatchPos;
+      long leftScore = canComeLeft ? _table[row][column - 1] + (_diag[row][column - 1] > 0 ? -5 : 0) : 0; // penalty for a gap start
 
-			bool canComeLeftLeft = wordPos > minWordMatchPos + 1 && _diag[row][column - 1] > 0;
-			long leftLeftScore = canComeLeftLeft ? _table[row][column - 2] + (_diag[row][column - 2] > 0 ? -5 : 0) : 0; // penalty for a gap start
+      bool canComeLeftLeft = wordPos > minWordMatchPos + 1 && _diag[row][column - 1] > 0;
+      long leftLeftScore = canComeLeftLeft ? _table[row][column - 2] + (_diag[row][column - 2] > 0 ? -5 : 0) : 0; // penalty for a gap start
 
-			if (canComeLeftLeft && (!canComeLeft || leftLeftScore >= leftScore) && (!canComeDiag || leftLeftScore >= diagScore)) {
-				// always prefer choosing left left to jump over a diagonal because that means a match is earlier in the word
-				_table[row][column] = leftLeftScore;
-				_arrows[row][column] = LeftLeft;
-				_diag[row][column] = 0;
-			} else if (canComeLeft && (!canComeDiag || leftScore >= diagScore)) {
-				// always prefer choosing left since that means a match is earlier in the word
-				_table[row][column] = leftScore;
-				_arrows[row][column] = Left;
-				_diag[row][column] = 0;
-			} else if (canComeDiag) {
-				_table[row][column] = diagScore;
-				_arrows[row][column] = Diag;
-				_diag[row][column] = _diag[row - 1][column - 1] + 1;
-			} else {
-				// not possible
-			}
-		}
-	}
+      if (canComeLeftLeft && (!canComeLeft || leftLeftScore >= leftScore) && (!canComeDiag || leftLeftScore >= diagScore)) {
+        // always prefer choosing left left to jump over a diagonal because that means a match is earlier in the word
+        _table[row][column] = leftLeftScore;
+        _arrows[row][column] = LeftLeft;
+        _diag[row][column] = 0;
+      } else if (canComeLeft && (!canComeDiag || leftScore >= diagScore)) {
+        // always prefer choosing left since that means a match is earlier in the word
+        _table[row][column] = leftScore;
+        _arrows[row][column] = Left;
+        _diag[row][column] = 0;
+      } else if (canComeDiag) {
+        _table[row][column] = diagScore;
+        _arrows[row][column] = Diag;
+        _diag[row][column] = _diag[row - 1][column - 1] + 1;
+      } else {
+        // not possible
+      }
+    }
+  }
 
-	if (!hasStrongFirstMatch && !first_match_can_be_weak) {
-		return false;
-	}
+  if (!hasStrongFirstMatch && !first_match_can_be_weak) {
+    return false;
+  }
 
-	row--;
-	column--;
+  row--;
+  column--;
 
-	*result = _table[row][column];
+  *result = _table[row][column];
 
-	int backwardsDiagLength = 0;
-	int maxMatchColumn = 0;
+  int backwardsDiagLength = 0;
+  int maxMatchColumn = 0;
 
-	while (row >= 1) {
-		// Find the column where we go diagonally up
-		int diagColumn = column;
-		do {
-			long arrow = _arrows[row][diagColumn];
-			if (arrow == LeftLeft) {
-				diagColumn = diagColumn - 2;
-			} else if (arrow == Left) {
-				diagColumn = diagColumn - 1;
-			} else {
-				// found the diagonal
-				break;
-			}
-		} while (diagColumn >= 1);
+  while (row >= 1) {
+    // Find the column where we go diagonally up
+    int diagColumn = column;
+    do {
+      long arrow = _arrows[row][diagColumn];
+      if (arrow == LeftLeft) {
+        diagColumn = diagColumn - 2;
+      } else if (arrow == Left) {
+        diagColumn = diagColumn - 1;
+      } else {
+        // found the diagonal
+        break;
+      }
+    } while (diagColumn >= 1);
 
-		// Overturn the "forwards" decision if keeping the "backwards" diagonal would give a better match
-		if (
-			backwardsDiagLength > 1 // only if we would have a contiguous match of 3 characters
-			&& patternLow[row - 1] == wordLow[column - 1] // only if we can do a contiguous match diagonally
-			&& !is_uppercase_at_pos(diagColumn - 1, word, wordLow) // only if the forwards chose diagonal is not an uppercase
-			&& backwardsDiagLength + 1 > _diag[row][diagColumn] // only if our contiguous match would be longer than the "forwards" contiguous match
-		) {
-			diagColumn = column;
-		}
+    // Overturn the "forwards" decision if keeping the "backwards" diagonal would give a better match
+    if (
+      backwardsDiagLength > 1 // only if we would have a contiguous match of 3 characters
+      && patternLow[row - 1] == wordLow[column - 1] // only if we can do a contiguous match diagonally
+      && !is_uppercase_at_pos(diagColumn - 1, word, wordLow) // only if the forwards chose diagonal is not an uppercase
+      && backwardsDiagLength + 1 > _diag[row][diagColumn] // only if our contiguous match would be longer than the "forwards" contiguous match
+    ) {
+      diagColumn = column;
+    }
 
-		if (diagColumn == column) {
-			// this is a contiguous match
-			backwardsDiagLength++;
-		} else {
-			backwardsDiagLength = 1;
-		}
+    if (diagColumn == column) {
+      // this is a contiguous match
+      backwardsDiagLength++;
+    } else {
+      backwardsDiagLength = 1;
+    }
 
-		if (!maxMatchColumn) {
-			// remember the last matched column
-			maxMatchColumn = diagColumn;
-		}
+    if (!maxMatchColumn) {
+      // remember the last matched column
+      maxMatchColumn = diagColumn;
+    }
 
-		row--;
-		column = diagColumn - 1;
-	}
+    row--;
+    column = diagColumn - 1;
+  }
 
-	if (wordLen == patternLen && m.boost_full_match) {
-		// the word matches the pattern with all characters!
-		// giving the score a total match boost (to come up ahead other words)
-		*result += 2;
-	}
+  if (wordLen == patternLen && m.boost_full_match) {
+    // the word matches the pattern with all characters!
+    // giving the score a total match boost (to come up ahead other words)
+    *result += 2;
+  }
 
-	// Add 1 penalty for each skipped character in the word
-	int skippedCharsCount = maxMatchColumn - patternLen;
-	*result -= skippedCharsCount;
+  // Add 1 penalty for each skipped character in the word
+  int skippedCharsCount = maxMatchColumn - patternLen;
+  *result -= skippedCharsCount;
 
   return true;
 }
