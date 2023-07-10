@@ -25,3 +25,19 @@ class Ext {
 component lowercase() { return (42: any) } // error
 
 component HelloWorld(unannotated) { return } // error
+
+component Outer() {
+    component Inner () { return null; } // lint error
+    function f() {
+        component FunctionNested() { return null; } // ok
+    }
+    class C {
+        m(): void {
+            component ClassNested() { return null; } // ok
+        }
+    }
+    if (true) {
+        component IfNested() { return null; } // lint error
+    }
+    return null;
+}

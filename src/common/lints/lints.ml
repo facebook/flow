@@ -50,6 +50,7 @@ type lint_kind =
   | ExportRenamedDefault
   | UnusedPromise
   | ReactIntrinsicOverlap
+  | NestedComponent
 
 let string_of_sketchy_null_kind = function
   | SketchyNullBool
@@ -95,6 +96,7 @@ let string_of_kind = function
   | ExportRenamedDefault -> "export-renamed-default"
   | UnusedPromise -> "unused-promise"
   | ReactIntrinsicOverlap -> "react-intrinsic-overlap"
+  | NestedComponent -> "nested-component"
 
 let kinds_of_string = function
   | "sketchy-null" ->
@@ -138,6 +140,7 @@ let kinds_of_string = function
   | "export-renamed-default" -> Some [ExportRenamedDefault]
   | "unused-promise" -> Some [UnusedPromise]
   | "react-intrinsic-overlap" -> Some [ReactIntrinsicOverlap]
+  | "nested-component" -> Some [NestedComponent]
   | _ -> None
 
 module LintKind = struct

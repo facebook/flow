@@ -1803,6 +1803,7 @@ let dump_error_message =
         (string_of_aloc component_loc)
     | EComponentCase loc -> spf "EComponentCase (%s)" (string_of_aloc loc)
     | EComponentMissingReturn r -> spf "EComponentMissingReturn (%s)" (dump_reason cx r)
+    | ENestedComponent r -> spf "ENestedComponent (%s)" (dump_reason cx r)
     | EInvalidDeclaration { declaration = r; _ } -> spf "EInvalidDeclaration %s" (dump_reason cx r)
     | EImportInternalReactServerModule loc ->
       spf "EImportInternalReactServerModule (%s)" (string_of_aloc loc)

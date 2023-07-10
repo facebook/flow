@@ -362,11 +362,14 @@ let resolve_annotated_function
     unknown_use
   )
 
-let resolve_annotated_component cx reason tparams_map component_loc component =
+let resolve_annotated_component cx scope_kind reason tparams_map component_loc component =
   if not (Context.component_syntax cx) then begin
     Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (component_loc, ComponentSyntax));
     (AnyT.at (AnyError None) component_loc, unknown_use)
-  end else
+  end else begin
+    if scope_kind = ComponentBody then begin
+      Flow_js_utils.add_output cx Error_message.(ENestedComponent reason)
+    end;
     let tparams_map = mk_tparams_map cx tparams_map in
     let { Ast.Statement.ComponentDeclaration.sig_loc; _ } = component in
     let ((component_sig, _) as sig_data) =
@@ -375,6 +378,7 @@ let resolve_annotated_component cx reason tparams_map component_loc component =
     let cache = Context.node_cache cx in
     Node_cache.set_component_sig cache sig_loc sig_data;
     (Statement.Component_declaration_sig.component_type cx component_loc component_sig, unknown_use)
+  end
 
 let rec binding_has_annot = function
   | Root (Annotation _) -> true
@@ -1132,7 +1136,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
     | ExpressionDef { cond_context = cond; expr; chain = false; hints = _ } ->
       resolve_write_expression cx ~cond expr
     | Component { component; component_loc; tparams_map } ->
-      resolve_annotated_component cx def_reason tparams_map component_loc component
+      resolve_annotated_component cx def_scope_kind def_reason tparams_map component_loc component
     | Function
         {
           function_;

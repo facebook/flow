@@ -2,3 +2,6 @@
 experimental.component_syntax=typing
 all=true
 no_flowlib=false
+
+[lints]
+nested-component=error

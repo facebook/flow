@@ -172,9 +172,11 @@ type error_code =
   | BigIntNumCoerce
   | InvalidComponentProp
   | ReactIntrinsicOverlap
+  | NestedComponent
 
 let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.ReactIntrinsicOverlap -> ReactIntrinsicOverlap
+  | Lints.NestedComponent -> NestedComponent
   | Lints.UntypedTypeImport -> UntypedTypeImport
   | Lints.UntypedImport -> UntypedImport
   | Lints.NonstrictImport -> NonstrictImport
@@ -365,6 +367,7 @@ let string_of_code : error_code -> string = function
   | LogicalAssignmentOperatorsNotSupported -> "logical-assignment-operators-not-supported"
   | UnusedPromise -> "unused-promise"
   | ReactIntrinsicOverlap -> "react-intrinsic-overlap"
+  | NestedComponent -> "nested-component"
   | BigIntRShift3 -> "bigint-unsigned-right-shift"
   | BigIntNumCoerce -> "bigint-num-coerce"
   | InvalidComponentProp -> "invalid-component-prop"

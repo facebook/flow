@@ -50,6 +50,7 @@ type lint_kind =
   | ExportRenamedDefault
   | UnusedPromise
   | ReactIntrinsicOverlap
+  | NestedComponent
 
 val string_of_kind : lint_kind -> string
 

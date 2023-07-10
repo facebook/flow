@@ -22,6 +22,7 @@ type scope_kind =
   | Module (* module scope *)
   | Global (* global scope *)
   | Ctor (* constructor function *)
+  | ComponentBody (* component syntax *)
 [@@deriving show]
 
 type class_stack = ALoc.t list

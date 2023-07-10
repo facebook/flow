@@ -1227,7 +1227,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
           let (body_loc, block) = body in
           ignore @@ this#block body_loc block;
           return_hint_stack <- old_stack)
-        Ordinary
+        ComponentBody
         ()
 
     method private visit_component_param

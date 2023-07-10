@@ -541,6 +541,7 @@ and 'loc t' =
     }
   | EComponentCase of 'loc
   | EComponentMissingReturn of 'loc virtual_reason
+  | ENestedComponent of 'loc virtual_reason
   | EInvalidDeclaration of {
       declaration: 'loc virtual_reason;
       null_write: 'loc null_write option;
@@ -1241,6 +1242,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EComponentThisReference { component_loc = f component_loc; this_loc = f this_loc }
   | EComponentCase loc -> EComponentCase (f loc)
   | EComponentMissingReturn r -> EComponentMissingReturn (map_reason r)
+  | ENestedComponent r -> ENestedComponent (map_reason r)
   | EInvalidDeclaration { declaration; null_write; possible_generic_escape_locs } ->
     EInvalidDeclaration
       {
@@ -1541,6 +1543,7 @@ let util_use_op_of_msg nope util = function
   | EComponentThisReference _
   | EComponentCase _
   | EComponentMissingReturn _
+  | ENestedComponent _
   | EInvalidDeclaration _
   | EInvalidGraphQL _
   | EDefinitionCycle _
@@ -1597,6 +1600,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EIdxArity reason
   | EIdxUse reason
   | EComponentMissingReturn reason
+  | ENestedComponent reason
   | EUnsupportedExact (_, reason)
   | EPolarityMismatch { reason; _ }
   | ENoNamedExport (reason, _, _, _)
@@ -4300,6 +4304,8 @@ let friendly_message_of_msg loc_of_aloc msg =
               " is not guaranteed to reach a return statement. An explicit return statement must be included for all possible branches.";
           ];
       }
+  | ENestedComponent _ ->
+    Normal { features = [text "Components may not be nested directly within other components."] }
   | EDuplicateClassMember { name; static; _ } ->
     let member_type =
       if static then
@@ -5298,6 +5304,7 @@ let error_code_of_message err : error_code option =
   | EAmbiguousObjectType _
   | EReactIntrinsicOverlap _
   | EUninitializedInstanceProperty _
+  | ENestedComponent _
   | EUnusedPromise _ -> begin
     match kind_of_msg err with
     | Flow_errors_utils.LintError kind -> Some (Error_codes.code_of_lint kind)

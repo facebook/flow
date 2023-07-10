@@ -1016,6 +1016,22 @@ Missing an annotation on `unannotated`. [missing-local-annot]
                             ^^^^^^^^^^^
 
 
+Error --------------------------------------------------------------------------------------------------- errors.js:30:5
+
+Components may not be nested directly within other components.
+
+   30|     component Inner () { return null; } // lint error
+           ^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- errors.js:40:9
+
+Components may not be nested directly within other components.
+
+   40|         component IfNested() { return null; } // lint error
+               ^^^^^^^^^^^^^^^^^^^^
+
+
 Error --------------------------------------------------------------------------------------------------- exhaust.js:4:5
 
 Cannot declare component because component NoReturn [1] is not guaranteed to reach a return statement. An explicit
@@ -2035,7 +2051,7 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 140 errors
+Found 142 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
