@@ -5,14 +5,7 @@ slug: /types/indexed-access
 
 Flow’s Indexed Access Types allow you to get the type of a property from an [object](../objects), [array](../arrays), or [tuple](../tuples) type.
 
-Indexed Access Types are a replacement for the [`$PropertyType`](../utilities#toc-propertytype) and [`$ElementType`](../utilities#toc-elementtype) utility types.
-If you're familiar with those utility types already, here is a quick conversion guide:
-- `$PropertyType<Obj, 'prop'>` &rarr;  `Obj['prop']`
-- `$ElementType<Obj, T>` &rarr; `Obj[T]`
-- `$ElementType<$PropertyType<Obj, 'prop'>, T>` &rarr; `Obj['prop'][T]`
-
-
-## Indexed Access Type Usage {#toc-indexed-access-type-usage}
+## Usage {#toc-indexed-access-type-usage}
 
 Access an object type's property:
 ```js flow-check
@@ -135,6 +128,12 @@ To use Indexed Access Types, you need to upgrade your infrastructure so that it 
 - `flow` and `flow-parser`: 0.155
 - `prettier`: 2.3.2
 - `babel`: 7.14
+
+Indexed Access Types are a replacement for the [`$PropertyType`](../utilities#toc-propertytype) and [`$ElementType`](../utilities#toc-elementtype) utility types.
+If you're familiar with those utility types already, here is a quick conversion guide:
+- `$PropertyType<Obj, 'prop'>` &rarr;  `Obj['prop']`
+- `$ElementType<Obj, T>` &rarr; `Obj[T]`
+- `$ElementType<$PropertyType<Obj, 'prop'>, T>` &rarr; `Obj['prop'][T]`
 
 We have created an ESLint rule that warns on `$ElementType` and `$PropertyType` usage and recommends Indexed Access Types instead.
 It includes an auto-fixer that can handle most cases. You can simply enable this rule on your codebase and autofix all existing issues.
