@@ -78,14 +78,6 @@ Cannot use type without exactly 2 type arguments. [nonpolymorphic-type-app]
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------- classes_lower.js:15:21
-
-Cannot use type without exactly 2 type arguments. [nonpolymorphic-type-app]
-
-   15| (ComponentNarrower: React$AbstractComponent<any, any, any>);
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
 Error -------------------------------------------------------------------------------------------- classes_lower.js:17:2
 
 Cannot cast `ComponentNarrower` to AbstractComponent because property `bar` is missing in object type [1] but exists in
@@ -765,7 +757,7 @@ expression. [signature-verification-failure]
 
 
 
-Found 45 errors
+Found 44 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
