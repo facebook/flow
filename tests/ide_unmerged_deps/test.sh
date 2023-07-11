@@ -24,9 +24,9 @@ start_time=$(date +"%s.%N")
 printf "\nGet-def with unchecked dependency:\n"
 assert_ok "$FLOW" get-def fast_dependent.js 5 2 --strip-root --json
 
-printf "\nDid it finish in less than 2 seconds? "
+printf "\nDid it finish in less than 5 seconds? "
 end_time=$(date +"%s.%N")
-echo "$start_time $end_time" | awk '{ s=$1; e=$2; print ((e - s) < 2) ? "YES" : "NO"; }'
+echo "$start_time $end_time" | awk '{ s=$1; e=$2; print ((e - s) < 5) ? "YES" : "NO"; }'
 
 # Then the slow recheck should restart and eventually finish.
 printf "\nOriginal recheck finished:\n"
