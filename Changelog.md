@@ -1,3 +1,19 @@
+### 0.212.0
+
+Likely to cause new Flow errors:
+* Flow is now stricter with regards to type checking of spreads, `$NonMaybeType`, and `$ReadOnly`. You might see new errors revealed as a result.
+* Experimental utility types `$Pred` and `$Refine` have been deleted. These are replaced by type guards.
+
+New Features:
+* Updated `Pick` and `Omit` to work on interfaces and instances.
+* Conditional types, mapped types, type guards, and tuple enhancements are now enabled by default.
+
+Notable bug fixes:
+* Prevented hover and go-to-definition requests that infinitely loop.
+
+IDE:
+- For imported names using `require`, go-to-definition will now jump to the location of the original definition's name.
+
 ### 0.211.1
 
 Notable bug fixes:
