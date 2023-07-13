@@ -79,19 +79,24 @@ If you want to create an enum type, [Flow Enums](../../enums) might be a better 
 
 ## `$ReadOnly<T>` {#toc-readonly}
 
-`$ReadOnly<T>` is a type that represents the read-only version of a given [object type](../objects/) `T`.
+`$ReadOnly<T>` is a type that represents the read-only version of a given [object type](../objects/)
+or [tuple type](../tuples) `T` (support for tuples is for Flow <SinceVersion version="0.212" />).
 A read-only object type is an object type whose keys are all [read-only](../objects/#read-only-object-properties).
+Similarly, a read-only tuple is one where each element is [read-only](../tuples/#variance-annotations-and-read-only-tuples).
 
-This means that the following two types are equivalent:
+This means that the following are equivalent:
 ```js flow-check
 type ReadOnlyObj = {
   +key: number,  // read-only field, marked by the `+` annotation
 };
+type ReadOnlyTuple = [+foo: number];
 ```
+&rarr;
 ```js flow-check
 type ReadOnlyObj = $ReadOnly<{
   key: number,
 }>;
+type ReadOnlyTuple = $ReadOnly<[number]>;
 ```
 
 This is useful when you need to use a read-only version of an object type you've already defined, without manually having to re-define and annotate each key as read-only. For example:
@@ -120,7 +125,7 @@ type Obj = {
 type MappedObj = $ReadOnly<$ObjMap<Obj, <T>(T) => Array<T>>> // Still read-only
 ```
 
-The `$ReadOnly` utility works on object types.
+The `$ReadOnly` utility works on object and tuple types.
 If you want to make other types read-only, you can use one of the following:
 - `Array<T>` -> [`$ReadOnlyArray<T>`](../arrays/#toc-readonlyarray)
 - `Set<T>` -> `$ReadOnlySet<T>`
@@ -134,6 +139,9 @@ This utility converts all of an object or interface's named fields to be optiona
 while maintaining all the object's other properties (e.g. exactness, variance).
 Use this utility instead of `$Shape`.
 
+Since Flow <SinceVersion version="0.212" />, it also converts all of a tuple type's elements to be [optional](../tuples/#optional-tuple-elements).
+
+Example for objects:
 ```js flow-check
 type Person = {
   name: string,
@@ -149,7 +157,13 @@ const c: PartialPerson = {name: 'George', age: 123}; // OK
 (c: Person); // ERROR: `PersonDetails` is not a `Person` (unlike with `$Shape`)
 ```
 
-A object of type `T` cannot be supplied to `Partial<T>`, due to mutability. You can resolve this by making the object [read-only](#toc-readonly):
+For tuples:
+```js flow-check
+type AllRequired = [number, string];
+([]: Partial<AllRequired>); // OK: like `[a?: number, b?: string]` now
+```
+
+A object or tuple of type `T` cannot be supplied to `Partial<T>`, due to mutability. You can resolve this by making the object [read-only](#toc-readonly):
 
 ```js flow-check
 type Person = {
@@ -176,8 +190,11 @@ Note: Up until Flow version 0.201, this utility type was named `$Partial`.
 ## `Required<T>` <SinceVersion version="0.201" /> {#toc-required}
 
 The `Required` utility type is the opposite of [`Partial`](#toc-partial):
-it converts all of an object or interface’s optional fields to be required. For example:
+it converts all of an object or interface’s optional fields to be required.
 
+Since Flow <SinceVersion version="0.212" />, it also converts all of a tuple type's elements to be [required](../tuples/#optional-tuple-elements).
+
+Example for objects:
 ```js flow-check
 type PartialPerson = {
   name?: string,
@@ -188,6 +205,12 @@ type Person = Required<PartialPerson>;
 
 const a: Person = {name: 'George', age: 123}; // OK
 const b: Person = {age: 123}; // ERROR: missing `name` property
+```
+
+For tuples:
+```js flow-check
+type AllOptional = [a?: number, b?: string];
+([]: Required<AllOptional>); // ERROR: like `[a: number, b: string]` now
 ```
 
 ## `ReturnType<F>` <SinceVersion version="0.209" /> {#toc-return-type}

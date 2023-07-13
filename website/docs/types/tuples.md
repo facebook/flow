@@ -6,6 +6,8 @@ slug: /types/tuples
 Tuple types represent a **fixed length** list, where the elements can have **different types**.
 This is in contrast to [array types](../arrays), which have an unknown length and all elements have the same type.
 
+## Tuple Basics
+
 JavaScript array literal values can be used to create both tuple and array types:
 
 ```js flow-check
@@ -88,6 +90,8 @@ const tuple1: [number, boolean, void] = [1, true, undefined];
 const tuple2: [number, boolean] = tuple1; // Error!
 ```
 
+[Optional elements](#optional-tuple-elements) make the arity into a range.
+
 ## Tuples don't match array types {#toc-tuples-don-t-match-array-types}
 
 Since Flow does not know the length of an array, an `Array<T>` type cannot be
@@ -126,3 +130,130 @@ tuple.join(', '); // Works!
 
 tuple.push(3); // Error!
 ```
+
+## Length refinement
+
+You can refine a [union](../unions) of tuples by their length:
+
+```js flow-check
+type Union = [number, string] | [boolean];
+function f(x: Union) {
+  if (x.length === 2) {
+    // `x` is `[number, string]`
+    const n: number = x[0]; // OK
+    const s: string = x[1]; // OK
+  } else {
+    // `x` is `[boolean]`
+    const b: boolean = x[0];
+  }
+}
+```
+
+## Tuple element labels
+
+> NOTE: This and the following sections require your tooling to be updated as described in the "Adoption" section at the end of this page.
+
+You can add a label to tuple elements. This label does not affect the type of the tuple element,
+but is useful in self-documenting the purpose of the tuple elements, especially when multiple elements have the same type.
+
+```js flow-check
+type Range = [x: number, y: number];
+```
+
+The label is also necessary to add a variance annotation or optionality modifier to an element (as without the label we would have parsing ambiguities).
+
+## Variance annotations and read-only tuples
+
+You can add [variance](../../lang/variance)  annotations (to denote read-only/write-only) on labeled tuple elements, just like on object properties:
+
+```js flow-check
+type T = [+foo: number, -bar: string];
+```
+
+This allows you to mark elements as read-only or write-only. For example:
+
+```js flow-check
+function f(readOnlyTuple: [+foo: number, +bar: string]) {
+  const n: number = readOnlyTuple[0]; // OK to read
+  readOnlyTuple[1] = 1; // ERROR! Cannot write
+}
+```
+
+You can also use the [`$ReadOnly`](../utilities/#toc-readonly)  on tuple types as a shorthand for marking each property as read-only:
+
+```js flow-check
+type T = $ReadOnly<[number, string]>; // Same as `[+a: number, +b: string]`
+```
+
+## Optional tuple elements
+
+You can mark tuple elements as optional with `?` after an element’s label. This allows you to omit the optional elements.
+Optional elements must be at the end of the tuple type, after all required elements.
+
+```js flow-check
+type T = [foo: number, bar?: string];
+([1, "s"]: T); // OK: has all elements
+([1]: T); // OK: skipping optional element
+```
+
+You cannot write `undefined` to the optional element - add `| void` to the element type if you want to do so:
+
+```js flow-check
+type T = [foo?: number, bar?: number | void];
+declare const x: T;
+x[0] = undefined; // ERROR
+([undefined]: T); // ERROR
+
+x[1] = undefined; // OK: we've added `| void` to the element type
+```
+
+You can also use the [`Partial`](../utilities/#toc-partial) and [`Required`](../utilities/#toc-required) utility types to make all elements optional or required respectively:
+
+```js flow-check
+type AllRequired = [number, string];
+([]: Partial<AllRequired>); // OK: like `[a?: number, b?: string]` now
+
+type AllOptional = [a?: number, b?: string];
+([]: Required<AllOptional>); // ERROR: like `[a: number, b: string]` now
+```
+
+Tuples with optional elements have an arity (length) that is a range rather than a single number. For example, `[number, b?: string]` has an length of 1-2.
+
+## Tuple spread
+
+You can spread a tuple type into another tuple type to make a longer tuple type:
+
+```js flow-check
+type A = [number, string];
+type T = [...A, boolean]; // Same as `[number, string, boolean]`
+([1, "s", true]: T); // OK
+```
+
+Tuple spreads preserve labels, variance, and optionality. You cannot spread arrays into tuples, only other tuples.
+
+At the value level, if you spread a tuple with optional elements into an array literal, then you cannot have anything after that spread and retain the tuple view of the array value.
+That is because a tuple with optional elements has a length that's a range, so we don't know at what index any subsequent values would be at.
+You can still type this value as the appropriate `Array<T>` type - only the tuple view of the value is affected.
+
+```js flow-check
+const a: [foo?: 1] = [];
+const b = [0, ...a, 2]; // At runtime this is `[0, 2]`
+(b: [0, 1 | void, 2]); // ERROR
+(b: Array<number | void>); // OK
+
+const c: [0, foo?: 1] = [0];
+const d: [bar?: 2] = [2];
+const e = [...c, ...d]; // At runtime this is `[0, 2]`
+(e: [0, foo?: 1, bar?: 2]); // ERROR
+(e: Array<number | void>); // OK
+```
+
+## Adoption
+
+To use labeled tuple elements (including optional elements and variance annotations on elements) and tuple spread elements,
+you need to upgrade your infrastructure so that it supports the syntax:
+
+- `flow` and `flow-parser`: 0.212.0. You need to explicitly enable it in your `.flowconfig`, under the `[options]` heading, add `tuple_enhancements=true`.
+- `prettier`: 3
+- `babel` with `babel-plugin-syntax-hermes-parser`. See [our Babel guide](../../tools/babel/) for setup instructions.
+- `eslint` with `hermes-eslint`. See [our ESLint guide](../../tools/eslint/) for setup instructions.
