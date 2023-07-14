@@ -1,6 +1,5 @@
 [options]
 all=false
-module.system=haste
 
 suppress_type=$FlowIssue
 suppress_type=$FlowFixMe

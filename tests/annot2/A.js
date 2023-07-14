@@ -1,9 +1,8 @@
 /**
- * @providesModule A
  * @flow
  */
 
-import type T from "T";
+import type T from "./T";
 
 export default class {
   p: T;

@@ -3,5 +3,4 @@ libs/
 
 [options]
 all=true
-module.system=haste
 no_flowlib=false

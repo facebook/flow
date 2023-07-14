@@ -1,4 +1,4 @@
-var C = require('test-lib');
+var C = require('./test-lib');
 
 // TODO: spurious error! (replacing C with number makes the error go away)
 // type Foo<X> = Array<C> | Array<?C>;
