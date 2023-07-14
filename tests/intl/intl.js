@@ -13,5 +13,6 @@ if (getCanonicalLocales) {
 const h = Intl.Unknown; // incorrect
 const i = Intl.Collator; // correct
 const j = Intl.DateTimeFormat; // correct
-const k = Intl.NumberFormat; // correct
-const l = Intl.PluralRules; // correct
+const k = Intl.Locale; // correct
+const l = Intl.NumberFormat; // correct
+const m = Intl.PluralRules; // correct
