@@ -1,2 +1,3 @@
 [options]
 experimental.global_find_ref=true
+experimental.global_rename=true

@@ -20,7 +20,7 @@ module.exports = (suite(
     lspRequestAndWaitUntilResponse,
     addFiles,
   }) => {
-    function snapshot(
+    function findAllRefsSnapshot(
       fixture: string,
       line: number,
       col: number,
@@ -32,7 +32,7 @@ module.exports = (suite(
         },
         position: {line: line, character: col},
       }).verifyLSPMessageSnapshot(
-        join(__dirname, '__snapshots__', expectedFile),
+        join(__dirname, '__snapshots__', 'references', expectedFile),
         [
           'textDocument/publishDiagnostics',
           'window/showStatus',
@@ -44,13 +44,27 @@ module.exports = (suite(
       join('__fixtures__', file),
     );
     return [
-      test('Properties defs and uses', [
+      test('Find all refs from properties', [
         addFiles(...fixtures),
         lspStartAndConnect(),
-        snapshot('use-prop-site-a.js', 5, 6, 'prop_defs_1.json'),
-        snapshot('use-prop-site-b.js', 5, 6, 'prop_defs_2.json'),
-        snapshot('identifiers-def.js', 2, 14, 'identifiers-def-1.json'),
-        snapshot('identifiers-def.js', 3, 17, 'identifiers-def-2.json'),
+        findAllRefsSnapshot('use-prop-site-a.js', 5, 6, 'prop_defs_1.json'),
+        findAllRefsSnapshot('use-prop-site-b.js', 5, 6, 'prop_defs_2.json'),
+      ]),
+      test('Find all refs from identifiers', [
+        addFiles(...fixtures),
+        lspStartAndConnect(),
+        findAllRefsSnapshot(
+          'identifiers-def.js',
+          2,
+          14,
+          'identifiers-def-1.json',
+        ),
+        findAllRefsSnapshot(
+          'identifiers-def.js',
+          3,
+          17,
+          'identifiers-def-2.json',
+        ),
       ]),
     ];
   },
