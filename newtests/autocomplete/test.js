@@ -538,7 +538,7 @@ module.exports = (suite(({addFile, flowCmd}) => [
 
     addFile("customfun.js"),
     flowCmd(
-      ['autocomplete', '--strip-root', '--json', 'customfun.js', '6', '1'],
+      ['autocomplete', '--strip-root', '--json', 'customfun.js', '5', '1'],
       'customfun.js',
     ).stdout(
        `
@@ -623,10 +623,6 @@ module.exports = (suite(({addFile, flowCmd}) => [
              {
                "name": "function",
                "type": ""
-             },
-             {
-               "name": "idx",
-               "type": "<IdxObject, IdxResult>(object: IdxObject, f: (_: IdxObject) => IdxResult) => ?IdxResult"
              },
              {
                "name": "if",

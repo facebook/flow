@@ -879,16 +879,6 @@ and merge_annot tps infer_tps file = function
     let t = merge tps infer_tps file t in
     let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
     Type.(EvalT (t, TypeDestructorT (use_op, reason, ReactElementRefType), id))
-  | FacebookismIdxUnwrapper (loc, t) ->
-    let reason = Reason.(mk_reason (RType (OrdinaryName "$Facebookism$IdxUnwrapper")) loc) in
-    let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
-    let t = merge tps infer_tps file t in
-    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
-    Type.(EvalT (t, TypeDestructorT (use_op, reason, IdxUnwrapType), id))
-  | FacebookismIdxWrapper (loc, t) ->
-    let reason = Reason.(mk_reason (RType (OrdinaryName "$Facebookism$IdxWrapper")) loc) in
-    let t = merge tps infer_tps file t in
-    Type.(DefT (reason, trust, IdxWrapper t))
   | FlowDebugPrint loc ->
     let reason = Reason.(mk_reason RFunctionType loc) in
     Type.CustomFunT (reason, Type.DebugPrint)

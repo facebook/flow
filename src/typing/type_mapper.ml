@@ -323,12 +323,6 @@ class virtual ['a] t =
           t
         else
           PolyT { tparams_loc; tparams = tparamlist'; t_out = t''; id = Type.Poly.generate_id () }
-      | IdxWrapper t' ->
-        let t'' = self#type_ cx map_cx t' in
-        if t' == t'' then
-          t
-        else
-          IdxWrapper t''
       | ReactAbstractComponentT { config; instance } ->
         let config' = self#type_ cx map_cx config in
         let instance' = self#type_ cx map_cx instance in
@@ -623,8 +617,7 @@ class virtual ['a] t =
             }
       | ReactElementPropsType
       | ReactElementConfigType
-      | ReactElementRefType
-      | IdxUnwrapType ->
+      | ReactElementRefType ->
         t
 
     method object_kit_spread_operand_slice

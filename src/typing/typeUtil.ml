@@ -94,8 +94,6 @@ and reason_of_use_t = function
   | GetStaticsT (reason, _) -> reason
   | GuardT (_, _, (r, _)) -> r
   | HasOwnPropT (_, reason, _) -> reason
-  | IdxUnMaybeifyT (reason, _) -> reason
-  | IdxUnwrap (reason, _) -> reason
   | ImplementsT (_, t) -> reason_of_t t
   | ImportDefaultT (reason, _, _, _, _) -> reason
   | ImportModuleNsT { reason; _ } -> reason
@@ -288,8 +286,6 @@ and mod_reason_of_use_t f = function
   | GetStaticsT (reason, t) -> GetStaticsT (f reason, t)
   | GuardT (pred, result, (reason, tvar)) -> GuardT (pred, result, (f reason, tvar))
   | HasOwnPropT (use_op, reason, t) -> HasOwnPropT (use_op, f reason, t)
-  | IdxUnMaybeifyT (reason, t_out) -> IdxUnMaybeifyT (f reason, t_out)
-  | IdxUnwrap (reason, t_out) -> IdxUnwrap (f reason, t_out)
   | ImplementsT (use_op, t) -> ImplementsT (use_op, mod_reason_of_t f t)
   | ImportDefaultT (reason, import_kind, name, t, is_strict) ->
     ImportDefaultT (f reason, import_kind, name, t, is_strict)
@@ -517,8 +513,6 @@ let rec util_use_op_of_use_t :
   | DebugPrintT _
   | DebugSleepT _
   | SentinelPropTestT (_, _, _, _, _)
-  | IdxUnwrap (_, _)
-  | IdxUnMaybeifyT (_, _)
   | OptionalChainT _
   | InvariantT _
   | CallLatentPredT _

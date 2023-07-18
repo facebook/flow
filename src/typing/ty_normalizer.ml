@@ -124,7 +124,6 @@ module NormalizerMonad : sig
   val run_imports : options:Env.options -> genv:Env.genv -> Ty.imported_ident ALocMap.t
 
   val run_expand_members :
-    idx_hook:(unit -> unit) ->
     force_instance:bool ->
     options:Env.options ->
     genv:Env.genv ->
@@ -387,8 +386,7 @@ end = struct
         | ReactElementPropsType
         | ReactElementConfigType
         | ReactElementRefType
-        | ReactConfigType _
-        | IdxUnwrapType ->
+        | ReactConfigType _ ->
           false)
       )
     | Env.EvaluateAll -> true
@@ -759,7 +757,6 @@ end = struct
       | TypeAppT (_, _, t, ts) -> type_app ~env t (Some ts)
       | DefT (r, _, InstanceT { super; inst; _ }) -> instance_t ~env r super inst
       | DefT (_, _, ClassT t) -> class_t ~env t
-      | DefT (_, _, IdxWrapper t) -> type__ ~env t
       | DefT (_, _, ReactAbstractComponentT { config; instance }) ->
         let%bind config = type__ ~env config in
         let%bind instance = type__ ~env instance in
@@ -1751,7 +1748,6 @@ end = struct
       | T.ReactConfigType default_props ->
         let%map default_props' = type__ ~env default_props in
         Ty.Utility (Ty.ReactConfigType (ty, default_props'))
-      | T.IdxUnwrapType -> return (Ty.Utility (Ty.IdxUnwrapType ty))
       | T.RestType ((T.Object.Rest.Omit | T.Object.Rest.ReactConfigMerge _), _) as d ->
         terr ~kind:BadEvalT ~msg:(Debug_js.string_of_destructor d) None
       | T.MappedType { property_type; mapped_type_flags; homomorphic; distributive_tparam_name } ->
@@ -2141,8 +2137,6 @@ end = struct
     |> normalize_imports ~options ~genv
 
   module type EXPAND_MEMBERS_CONVERTER = sig
-    val idx_hook : unit -> unit
-
     val force_instance : bool
   end
 
@@ -2318,9 +2312,6 @@ end = struct
             let env = { env with Env.seen_tvar_ids = ISet.add root_id env.Env.seen_tvar_ids } in
             type_variable ~env ~cont:(type__ ~inherited ~source ~imode) id'
       | AnnotT (_, t, _) -> type__ ~env ~inherited ~source ~imode t
-      | DefT (_, _, IdxWrapper t) ->
-        idx_hook ();
-        type__ ~env ~inherited ~source ~imode t
       | ThisTypeAppT (_, c, _, _) -> type__ ~env ~inherited ~source ~imode c
       | DefT (r, _, (NumT _ | SingletonNumT _)) -> primitive ~env r "Number"
       | DefT (r, _, (StrT _ | SingletonStrT _)) -> primitive ~env r "String"
@@ -2380,10 +2371,8 @@ end = struct
     let convert_t ~env t = type__ ~env ~inherited:false ~source:Ty.Other ~imode:IMUnset t
   end
 
-  let run_expand_members ~idx_hook ~force_instance =
+  let run_expand_members ~force_instance =
     let module Converter = ExpandMembersConverter (struct
-      let idx_hook = idx_hook
-
       let force_instance = force_instance
     end) in
     run_type_aux ~f:Converter.convert_t ~simpl:Ty_utils.simplify_type
@@ -2526,20 +2515,12 @@ let fold_hashtbl ~options ~genv ~f ~g ~htbl init =
   in
   result
 
-let expand_members ~idx_hook ~force_instance ~options ~genv scheme =
+let expand_members ~force_instance ~options ~genv scheme =
   print_normalizer_banner options;
   let imported_names = run_imports ~options ~genv in
   let { Type.TypeScheme.tparams_rev; type_ = t } = scheme in
   let (result, _) =
-    run_expand_members
-      ~options
-      ~genv
-      ~idx_hook
-      ~force_instance
-      ~imported_names
-      ~tparams_rev
-      State.empty
-      t
+    run_expand_members ~options ~genv ~force_instance ~imported_names ~tparams_rev State.empty t
   in
   result
 

@@ -206,7 +206,6 @@ class visitor =
       | DefT (_, t, ClassT _)
       | DefT (_, t, FunT _)
       | DefT (_, t, InstanceT _)
-      | DefT (_, t, IdxWrapper _)
       | DefT (_, t, MixedT _)
       | DefT (_, t, NumT _)
       | DefT (_, t, NullT)

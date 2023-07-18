@@ -85,8 +85,8 @@ Cannot cast `pickedO1.bar` to string because undefined [1] is incompatible with 
           ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2726:62
-   2726| type Pick<O: interface {}, Keys: $Keys<O>> = {[key in Keys]: O[key]};
+   <BUILTINS>/core.js:2722:62
+   2722| type Pick<O: interface {}, Keys: $Keys<O>> = {[key in Keys]: O[key]};
                                                                       ^^^^^^ [1]
    pick.js:9:16
       9| (pickedO1.bar: string); // ERROR bar is optional

@@ -376,7 +376,7 @@ let members_of_type
   in
   match ty_members with
   | Error error -> fail error
-  | Ok Ty_members.{ members; errors; in_idx } ->
+  | Ok Ty_members.{ members; errors } ->
     return
       ( members
         |> NameUtils.Map.bindings
@@ -385,10 +385,9 @@ let members_of_type
                let (document, tags) = documentation_and_tags_of_member ~reader ~typed_ast info in
                (name, document, tags, info)
            ),
-        (match errors with
+        match errors with
         | [] -> []
-        | _ :: _ -> Printf.sprintf "members_of_type %s" (Debug_js.dump_t cx type_) :: errors),
-        in_idx
+        | _ :: _ -> Printf.sprintf "members_of_type %s" (Debug_js.dump_t cx type_) :: errors
       )
 
 (* The fact that we need this feels convoluted.
@@ -1405,7 +1404,7 @@ let autocomplete_member
       ~tparams_rev
   with
   | Error err -> AcFatalError err
-  | Ok (mems, errors_to_log, in_idx) ->
+  | Ok (mems, errors_to_log) ->
     let items =
       mems
       |> Base.List.map
@@ -1429,17 +1428,15 @@ let autocomplete_member
              match
                ( from_nullable,
                  in_optional_chain,
-                 in_idx,
                  bracket_syntax,
                  member_loc,
                  name_is_valid_identifier
                )
              with
              (* TODO: only complete obj destructuring pattern when name is valid identifier *)
-             | (_, _, _, _, None, _)
-             | (false, _, _, None, _, true)
-             | (_, true, _, None, _, true)
-             | (_, _, true, None, _, true) ->
+             | (_, _, _, None, _)
+             | (false, _, None, _, true)
+             | (_, true, None, _, true) ->
                let ty =
                  if from_nullable && in_optional_chain then
                    opt_chain_ty
@@ -1454,9 +1451,8 @@ let autocomplete_member
                  ~log_info:"member"
                  (name, edit_locs)
                  ty
-             | (false, _, _, Some _, _, _)
-             | (_, true, _, Some _, _, _)
-             | (_, _, true, Some _, _, _) ->
+             | (false, _, Some _, _, _)
+             | (_, true, Some _, _, _) ->
                let insert_text = Lazy.force name_as_indexer in
                autocomplete_create_result
                  ~insert_text
@@ -1467,9 +1463,8 @@ let autocomplete_member
                  ~log_info:"bracket syntax member"
                  (insert_text, edit_locs)
                  ty
-             | (false, _, _, None, Some member_loc, false)
-             | (_, true, _, None, Some member_loc, false)
-             | (_, _, true, None, Some member_loc, false) ->
+             | (false, _, None, Some member_loc, false)
+             | (_, true, None, Some member_loc, false) ->
                let insert_text = Printf.sprintf "[%s]" (Lazy.force name_as_indexer) in
                let edit_loc = edit_loc_of_member_loc member_loc in
                autocomplete_create_result
@@ -1481,7 +1476,7 @@ let autocomplete_member
                  ~log_info:"dot-member switched to bracket-syntax member"
                  (insert_text, (edit_loc, edit_loc))
                  ty
-             | (true, false, false, _, Some member_loc, _) ->
+             | (true, false, _, Some member_loc, _) ->
                let opt_chain_name =
                  match (bracket_syntax, name_is_valid_identifier) with
                  | (None, true) -> Printf.sprintf "?.%s" name
@@ -1617,7 +1612,7 @@ let autocomplete_jsx_intrinsic ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams
         intrinsics_t
     with
     | Error err -> ([], [err])
-    | Ok (mems, errors_to_log, _) ->
+    | Ok (mems, errors_to_log) ->
       let items =
         Base.List.map mems ~f:(fun (name, documentation, tags, _) ->
             {
@@ -1778,7 +1773,7 @@ let autocomplete_jsx_attribute
   in
   match mems_result with
   | Error err -> AcFatalError err
-  | Ok (mems, errors_to_log, _) ->
+  | Ok (mems, errors_to_log) ->
     let items =
       mems
       |> Base.List.map ~f:(fun (name, documentation, tags, Ty_members.{ ty; _ }) ->
@@ -1844,7 +1839,7 @@ let unused_super_methods
     ~exclude_keys
     enclosing_class_t =
   let open Base.Result.Let_syntax in
-  let%bind (mems, errors_to_log, _) =
+  let%bind (mems, errors_to_log) =
     members_of_type
       ~reader
       ~exclude_proto_members:false
@@ -1882,7 +1877,7 @@ let autocomplete_class_key
   | Some enclosing_class_t -> begin
     match
       let open Base.Result.Let_syntax in
-      let%bind (existing_members, _, _) =
+      let%bind (existing_members, _) =
         members_of_type
           ~reader
           ~exclude_proto_members:true
@@ -1959,7 +1954,7 @@ let autocomplete_object_key
                 ~tparams_rev
             with
             | Error _ -> SSet.empty
-            | Ok (members, _, _) ->
+            | Ok (members, _) ->
               Base.List.map members ~f:(fun (name, _, _, _) -> name) |> SSet.of_list
           in
           SSet.union acc spread_keys
@@ -1980,7 +1975,7 @@ let autocomplete_object_key
         ~exclude_keys
         upper_bound
     in
-    let%bind (mems, mems_errors_to_log, _) =
+    let%bind (mems, mems_errors_to_log) =
       members_of_type
         ~reader
         ~exclude_keys

@@ -208,14 +208,6 @@ module.exports = (suite(
         snapshot('optional-chaining.js', 16, 6, 'optionalChaining_1.json'),
         snapshot('optional-chaining.js', 16, 10, 'optionalChaining_2.json'),
       ]),
-      test('Idx', [
-        addFiles(...fixtures),
-        lspStartAndConnect(),
-        snapshot('idx.js', 5, 4, 'idx_1.json'),
-        snapshot('idx.js', 11, 25, 'idx_2.json'),
-        snapshot('idx.js', 6, 6, 'idx_3.json'),
-        snapshot('idx.js', 11, 29, 'idx_4.json'),
-      ]),
       test('Unions', [
         addFiles(...fixtures),
         lspStartAndConnect(),

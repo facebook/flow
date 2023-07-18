@@ -275,8 +275,7 @@ class context_optimizer ~no_lowers =
             }
       | ReactElementPropsType
       | ReactElementConfigType
-      | ReactElementRefType
-      | IdxUnwrapType ->
+      | ReactElementRefType ->
         t
 
     method! type_ cx pole t =

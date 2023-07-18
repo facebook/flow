@@ -590,7 +590,7 @@ jsx-text.js:1:11
 Flags: --pretty
 {"result":[]}
 
-customfun.js:6:3
+customfun.js:5:3
 Flags: --pretty
 {
   "result":[
@@ -614,10 +614,6 @@ Flags: --pretty
     {"name":"finally","type":""},
     {"name":"for","type":""},
     {"name":"function","type":""},
-    {
-      "name":"idx",
-      "type":"<IdxObject, IdxResult>(object: IdxObject, f: (_: IdxObject) => IdxResult) => ?IdxResult"
-    },
     {"name":"if","type":""},
     {"name":"implements","type":""},
     {"name":"import","type":""},
@@ -914,10 +910,6 @@ Flags: --pretty
 optional_chaining_continue.js:13:19
 Flags: --pretty
 {"result":[{"name":"baz","type":"void | number"}]}
-
-idx.js:12:28
-Flags: --pretty
-{"result":[{"name":"bar","type":"string"}]}
 
 generic_alias.js:7:5
 Flags: --pretty

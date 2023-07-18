@@ -593,8 +593,6 @@ type ('loc, 'a) annot =
   | ReactElementProps of 'loc * 'a
   | ReactElementConfig of 'loc * 'a
   | ReactElementRef of 'loc * 'a
-  | FacebookismIdxUnwrapper of 'loc * 'a
-  | FacebookismIdxWrapper of 'loc * 'a
   | FlowDebugPrint of 'loc
   | FlowDebugThrow of 'loc
   | FlowDebugSleep of 'loc

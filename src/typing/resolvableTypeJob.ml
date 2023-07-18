@@ -206,7 +206,6 @@ and collect_of_type ?log_unresolved cx acc = function
     collect_of_type ?log_unresolved cx acc t
   | KeysT (_, t) -> collect_of_type ?log_unresolved cx acc t
   | MatchingPropT (_, _, t) -> collect_of_type ?log_unresolved cx acc t
-  | DefT (_, _, IdxWrapper t) -> collect_of_type ?log_unresolved cx acc t
   | GenericT { bound; _ } -> collect_of_type ?log_unresolved cx acc bound
   | DefT (_, _, NumT _)
   | DefT (_, _, StrT _)
@@ -304,8 +303,7 @@ and collect_of_destructor ?log_unresolved cx acc = function
     collect_of_type ?log_unresolved cx acc property_type
   | ReactElementPropsType
   | ReactElementConfigType
-  | ReactElementRefType
-  | IdxUnwrapType ->
+  | ReactElementRefType ->
     acc
 
 and collect_of_property ?log_unresolved cx name property acc =

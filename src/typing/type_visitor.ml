@@ -134,7 +134,6 @@ class ['a] t =
         let acc = self#nel (self#type_param cx pole) acc tparams in
         let acc = self#type_ cx pole acc t_out in
         acc
-      | IdxWrapper t -> self#type_ cx pole acc t
       | ReactAbstractComponentT { config; instance } ->
         let acc = self#type_ cx (P.inv pole) acc config in
         self#type_ cx pole acc instance
@@ -205,8 +204,7 @@ class ['a] t =
       | ReactElementPropsType
       | ReactElementConfigType
       | ReactElementRefType
-      | ReactCheckComponentRef
-      | IdxUnwrapType ->
+      | ReactCheckComponentRef ->
         acc
       | ReactCheckComponentConfig map -> self#namemap (self#prop cx pole_TODO) acc map
       | ReactConfigType default_props -> self#type_ cx pole_TODO acc default_props

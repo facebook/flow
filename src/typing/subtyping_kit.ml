@@ -617,7 +617,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (* common implicit conversions *)
     (*******************************)
     | (DefT (_, _, (NumT _ | SingletonNumT _)), DefT (_, _, NumT _)) -> ()
-    | (DefT (_, _, IdxWrapper _), _) -> ()
     | (DefT (r, trust, (NullT | VoidT)), MaybeT (_, tout)) ->
       rec_flow_t cx trace ~use_op (EmptyT.why r trust, tout)
     | (DefT (r, trust, MixedT Mixed_everything), MaybeT (_, tout)) ->

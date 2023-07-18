@@ -47,7 +47,6 @@ queries_in_file autocomplete "opaque_types.js" --pretty
 queries_in_file autocomplete "optional_chaining_middle.js" --pretty
 queries_in_file autocomplete "optional_chaining_new.js" --pretty
 queries_in_file autocomplete "optional_chaining_continue.js" --pretty
-queries_in_file autocomplete "idx.js" --pretty
 queries_in_file autocomplete "generic_alias.js" --pretty
 queries_in_file autocomplete "object_literal.js" --pretty
 queries_in_file autocomplete "optional_object.js" --pretty

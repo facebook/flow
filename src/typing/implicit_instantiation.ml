@@ -230,7 +230,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
                |> use_t_result_of_t_option
            )
       | SpreadTupleType _
-      | IdxUnwrapType
       | MappedType _ (* TODO: Mapped Type reversals *)
       | ReactCheckComponentConfig _
       | ReactCheckComponentRef
@@ -328,9 +327,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | ImplicitVoidReturnT _
     | CheckUnusedPromiseT _
     | WriteComputedObjPropCheckT _
-    (* We don't care about idx, as they are deprecated. *)
-    | IdxUnwrap _
-    | IdxUnMaybeifyT _
     (* When we have ChoiceKitUseT, we are already stuck. *)
     | ChoiceKitUseT _ ->
       UpperEmpty (* Remaining unhandled upper bounds *)

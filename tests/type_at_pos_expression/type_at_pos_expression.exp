@@ -42,28 +42,6 @@ dictionary.js:19:7 = {
   "start":7,
   "end":8
 }
-facebookism.js:3:8 = {
-  "types":{
-    "unevaluated":{
-      "type":"<IdxObject, IdxResult>(object: IdxObject, f: (_: IdxObject) => IdxResult) => ?$Facebookism$IdxUnwrapper<IdxResult>"
-    },
-    "evaluated":{
-      "type":"<IdxObject, IdxResult>(object: IdxObject, f: (_: IdxObject) => IdxResult) => ?IdxResult"
-    }
-  },
-  "reasons":[],
-  "loc":{
-    "source":"facebookism.js",
-    "type":"SourceFile",
-    "start":{"line":3,"column":7,"offset":16},
-    "end":{"line":3,"column":9,"offset":19}
-  },
-  "path":"facebookism.js",
-  "line":3,
-  "endline":3,
-  "start":7,
-  "end":9
-}
 jsx.js:7:12 = {
   "types":{"unevaluated":{"type":"\"div\""},"evaluated":{"type":"\"div\""}},
   "reasons":[],

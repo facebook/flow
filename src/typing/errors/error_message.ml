@@ -238,8 +238,6 @@ and 'loc t' =
   | EFunctionIncompatibleWithIndexer of
       ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
   | EUnsupportedExact of ('loc virtual_reason * 'loc virtual_reason)
-  | EIdxArity of 'loc virtual_reason
-  | EIdxUse of 'loc virtual_reason
   | EUnexpectedThisType of 'loc
   | ETypeParamArity of 'loc * int
   | ECallTypeArity of {
@@ -991,8 +989,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         cases = Base.List.map ~f:map_reason cases;
       }
   | EUnsupportedExact (r1, r2) -> EUnsupportedExact (map_reason r1, map_reason r2)
-  | EIdxArity r -> EIdxArity (map_reason r)
-  | EIdxUse r -> EIdxUse (map_reason r)
   | EUnexpectedThisType loc -> EUnexpectedThisType (f loc)
   | ETypeParamArity (loc, i) -> ETypeParamArity (f loc, i)
   | ECallTypeArity { call_loc; is_new; reason_arity; expected_arity } ->
@@ -1437,8 +1433,6 @@ let util_use_op_of_msg nope util = function
   | ENonStrictEqualityComparison _
   | ESpeculationAmbiguous _
   | EUnsupportedExact (_, _)
-  | EIdxArity _
-  | EIdxUse _
   | EUnexpectedThisType _
   | ETypeParamArity (_, _)
   | ECallTypeArity _
@@ -1597,8 +1591,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ERecursionLimit (reason, _)
   | EMissingAnnotation (reason, _)
   | EMissingLocalAnnotation { reason; _ }
-  | EIdxArity reason
-  | EIdxUse reason
   | EComponentMissingReturn reason
   | ENestedComponent reason
   | EUnsupportedExact (_, reason)
@@ -2647,25 +2639,6 @@ let friendly_message_of_msg loc_of_aloc msg =
       }
   | EUnsupportedExact (_, lower) ->
     Normal { features = [text "Cannot create exact type from "; ref lower; text "."] }
-  | EIdxArity _ ->
-    let features =
-      [
-        text "Cannot call ";
-        code "idx(...)";
-        text " because only exactly two ";
-        text "arguments are allowed.";
-      ]
-    in
-    Normal { features }
-  | EIdxUse _ ->
-    let features =
-      [
-        text "Illegal ";
-        code "idx";
-        text " operation: the callback can only access properties on the callback parameter.";
-      ]
-    in
-    Normal { features }
   | EUnexpectedThisType _ ->
     Normal { features = [text "Unexpected use of "; code "this"; text " type."] }
   | EPropertyTypeAnnot _ ->
@@ -5156,8 +5129,6 @@ let error_code_of_message err : error_code option =
   | ETypeGuardFunctionParamHavoced _
   | ETypeGuardIncompatibleWithFunctionKind _ ->
     Some FunctionPredicate
-  | EIdxArity _ -> Some InvalidIdx
-  | EIdxUse _ -> Some InvalidIdx
   | EImportTypeAsTypeof (_, _) -> Some InvalidImportType
   | EImportTypeAsValue (_, _) -> Some ImportTypeAsValue
   | EImportValueAsType (_, _) -> Some ImportValueAsType

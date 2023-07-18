@@ -655,7 +655,6 @@ let rec tag_of_def_t cx = function
   | MixedT _
   | ClassT _
   | TypeT _
-  | IdxWrapper _
   | ReactAbstractComponentT _
   | EnumObjectT _ ->
     None

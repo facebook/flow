@@ -227,8 +227,6 @@ module rec TypeTerm : sig
         t_out: t;
         id: Poly.id;
       }
-    (* Type that wraps object types for the CustomFunT(Idx) function *)
-    | IdxWrapper of t
     (* React$AbstractComponent<Config, Instance> *)
     | ReactAbstractComponentT of {
         config: t;
@@ -747,8 +745,6 @@ module rec TypeTerm : sig
     | DebugPrintT of reason
     | DebugSleepT of reason
     | SentinelPropTestT of reason * t * sense * UnionEnum.star * tvar
-    | IdxUnwrap of reason * t_out
-    | IdxUnMaybeifyT of reason * t_out
     | OptionalChainT of {
         reason: reason;
         lhs_reason: reason;
@@ -1482,7 +1478,6 @@ module rec TypeTerm : sig
     | ReactConfigType of t
     | ReactCheckComponentConfig of Property.t NameUtils.Map.t
     | ReactCheckComponentRef
-    | IdxUnwrapType
     | MappedType of {
         (* Homomorphic mapped types use an inline keyof: {[key in keyof O]: T} or a type parameter
          * bound by $Keys/keyof: type Homomorphic<Keys: $Keys<O>> = {[key in O]: T *)
@@ -3717,7 +3712,6 @@ let string_of_def_ctor = function
   | EnumT _ -> "EnumT"
   | EnumObjectT _ -> "EnumObjectT"
   | FunT _ -> "FunT"
-  | IdxWrapper _ -> "IdxWrapper"
   | InstanceT _ -> "InstanceT"
   | MixedT _ -> "MixedT"
   | NullT -> "NullT"
@@ -3903,8 +3897,6 @@ let string_of_use_ctor = function
   | GetStaticsT _ -> "GetStaticsT"
   | GuardT _ -> "GuardT"
   | HasOwnPropT _ -> "HasOwnPropT"
-  | IdxUnMaybeifyT _ -> "IdxUnMaybeifyT"
-  | IdxUnwrap _ -> "IdxUnwrap"
   | ImplementsT _ -> "ImplementsT"
   | ImportDefaultT _ -> "ImportDefaultT"
   | ImportModuleNsT _ -> "ImportModuleNsT"

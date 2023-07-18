@@ -612,7 +612,6 @@ module rec ConsGen : S = struct
     (************************************)
     (* Wildcards (idx, maybe, optional) *)
     (************************************)
-    | (DefT (_, _, IdxWrapper _), _)
     | (MaybeT _, _)
     | (OptionalT _, _) ->
       (* These are rare in practice. Will consider adding support if we hit this

@@ -294,7 +294,6 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
 type ty_members = {
   members: Ty.t member_info NameUtils.Map.t;
   errors: string list;
-  in_idx: bool;
 }
 
 let ty_normalizer_options =
@@ -312,19 +311,11 @@ let ty_normalizer_options =
 
 let extract ?(force_instance = false) ~cx ~typed_ast ~file_sig scheme =
   let genv = Ty_normalizer_env.mk_genv ~cx ~file:(Context.file cx) ~typed_ast ~file_sig in
-  let in_idx_ref = ref false in
-  let idx_hook () = in_idx_ref := true in
   match
-    Ty_normalizer.expand_members
-      ~idx_hook
-      ~force_instance
-      ~options:ty_normalizer_options
-      ~genv
-      scheme
+    Ty_normalizer.expand_members ~force_instance ~options:ty_normalizer_options ~genv scheme
   with
   | Error error -> Error (Ty_normalizer.error_to_string error)
   | Ok (Ty.Any _) -> Error "not enough type information to extract members"
   | Ok this_ty ->
     let (members, errors) = members_of_ty this_ty in
-    let in_idx = !in_idx_ref in
-    Ok { members; errors; in_idx }
+    Ok { members; errors }

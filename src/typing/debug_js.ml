@@ -56,7 +56,6 @@ let string_of_destructor = function
   | ReactElementConfigType -> "ReactElementConfig"
   | ReactElementRefType -> "ReactElementRef"
   | ReactConfigType _ -> "ReactConfig"
-  | IdxUnwrapType -> "IdxUnwrapType"
   | MappedType _ -> "MappedType"
 
 let string_of_destruct_kind = function
@@ -356,7 +355,6 @@ let rec dump_t_ (depth, tvars) cx t =
              (UnionRep.string_of_specialization rep)
           )
         t
-    | DefT (_, trust, IdxWrapper inner_obj) -> p ~trust:(Some trust) ~extra:(kid inner_obj) t
     | DefT (_, trust, ReactAbstractComponentT _) -> p ~trust:(Some trust) t
     | MatchingPropT (_, _, arg) -> p ~extra:(kid arg) t
     | KeysT (_, arg) -> p ~extra:(kid arg) t
@@ -803,8 +801,6 @@ and dump_use_t_ (depth, tvars) cx t =
         ~extra:(spf "%s, %s, %s" (string_of_predicate pred) (kid result) (tout sink))
         t
     | HasOwnPropT _ -> p t
-    | IdxUnMaybeifyT _ -> p t
-    | IdxUnwrap _ -> p t
     | ImportDefaultT _ -> p t
     | ImportModuleNsT { is_strict; _ } -> p ~extra:(spf "is_strict=%b" is_strict) t
     | ImportNamedT _ -> p t
@@ -1414,8 +1410,6 @@ let dump_error_message =
         (string_of_use_op use_op)
     | EUnsupportedExact (reason1, reason2) ->
       spf "EUnsupportedExact (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
-    | EIdxArity reason -> spf "EIdxArity (%s)" (dump_reason cx reason)
-    | EIdxUse reason -> spf "EIdxUse (%s)" (dump_reason cx reason)
     | EUnexpectedThisType loc -> spf "EUnexpectedThisType (%s)" (string_of_aloc loc)
     | ETypeParamArity (loc, expected) ->
       spf "ETypeParamArity (%s, %d)" (string_of_aloc loc) expected

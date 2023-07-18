@@ -65,16 +65,8 @@ val fold_hashtbl :
   'a ->
   'a
 
-(* `idx_hook` is a function that will be called if the given type is in an IdxWrapper;
-   Feels hacky, but idx isn't super important now that we have optional chaining.
-   `force_instance` controls whether ThisClassT will always expand its inner InstanceT's instance members *)
 val expand_members :
-  idx_hook:(unit -> unit) ->
-  force_instance:bool ->
-  options:options ->
-  genv:genv ->
-  Type.TypeScheme.t ->
-  (Ty.t, error) result
+  force_instance:bool -> options:options -> genv:genv -> Type.TypeScheme.t -> (Ty.t, error) result
 
 val expand_literal_union : options:options -> genv:genv -> Type.TypeScheme.t -> (Ty.t, error) result
 

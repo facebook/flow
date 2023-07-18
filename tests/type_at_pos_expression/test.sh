@@ -10,13 +10,6 @@ assert_ok "$FLOW" type-at-pos dictionary.js 3 7 --strip-root --pretty
 printf "dictionary.js:19:7 = "
 assert_ok "$FLOW" type-at-pos dictionary.js 19 7 --strip-root --pretty
 
-# facebookism.js
-printf "facebookism.js:3:8 = "
-assert_ok "$FLOW" type-at-pos facebookism.js 3 8 --strip-root --pretty
-# TODO `require`
-# printf "facebookism.js:3:14 = "
-# assert_ok "$FLOW" type-at-pos facebookism.js 3 14 --strip-root --pretty
-
 # jsx.js
 printf "jsx.js:7:12 = "
 assert_ok "$FLOW" type-at-pos jsx.js 7 12 --strip-root --pretty

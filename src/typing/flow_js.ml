@@ -839,98 +839,6 @@ struct
           | DefT (_, _, def_t) ->
             test def_t
           | _ -> ())
-        (* Unwrap idx() callback param *)
-        | (DefT (_, _, IdxWrapper obj), IdxUnwrap (_, t)) ->
-          rec_flow_t ~use_op:unknown_use cx trace (obj, t)
-        | (_, IdxUnwrap (_, t)) -> rec_flow_t ~use_op:unknown_use cx trace (l, t)
-        (* De-maybe-ify an idx() property access *)
-        | (MaybeT (_, inner_t), IdxUnMaybeifyT _)
-        | (OptionalT { reason = _; type_ = inner_t; use_desc = _ }, IdxUnMaybeifyT _) ->
-          rec_flow cx trace (inner_t, u)
-        | (DefT (_, _, NullT), IdxUnMaybeifyT _) -> ()
-        | (DefT (_, _, VoidT), IdxUnMaybeifyT _) -> ()
-        | (_, IdxUnMaybeifyT (_, t))
-          when match l with
-               | UnionT _
-               | IntersectionT _ ->
-                 false
-               | _ -> true ->
-          rec_flow_t ~use_op:unknown_use cx trace (l, t)
-        (* The set of valid uses of an idx() callback parameter. In general this
-           should be limited to the various forms of property access operations. *)
-        | (DefT (idx_reason, trust, IdxWrapper obj), ReposLowerT (reason_op, use_desc, u)) ->
-          let repositioned_obj =
-            Tvar.mk_where cx reason_op (fun t ->
-                rec_flow cx trace (obj, ReposLowerT (reason_op, use_desc, UseT (unknown_use, t)))
-            )
-          in
-          rec_flow cx trace (DefT (idx_reason, trust, IdxWrapper repositioned_obj), u)
-        | ( DefT (idx_reason, trust, IdxWrapper obj),
-            GetPropT (use_op, reason_op, _, propname, t_out)
-          ) ->
-          let de_maybed_obj =
-            Tvar.mk_where cx idx_reason (fun t ->
-                rec_flow cx trace (obj, IdxUnMaybeifyT (idx_reason, t))
-            )
-          in
-          let prop_type =
-            Tvar.mk_no_wrap_where cx reason_op (fun t ->
-                rec_flow cx trace (de_maybed_obj, GetPropT (use_op, reason_op, None, propname, t))
-            )
-          in
-          rec_flow_t
-            ~use_op:unknown_use
-            cx
-            trace
-            (DefT (idx_reason, trust, IdxWrapper prop_type), OpenT t_out)
-        | ( DefT (idx_reason, trust, IdxWrapper obj),
-            GetPrivatePropT (use_op, reason_op, name, class_bindings, static, t_out)
-          ) ->
-          let de_maybed_obj =
-            Tvar.mk_where cx idx_reason (fun t ->
-                rec_flow cx trace (obj, IdxUnMaybeifyT (idx_reason, t))
-            )
-          in
-          let prop_type =
-            Tvar.mk_no_wrap_where cx reason_op (fun t ->
-                rec_flow
-                  cx
-                  trace
-                  ( de_maybed_obj,
-                    GetPrivatePropT (use_op, reason_op, name, class_bindings, static, t)
-                  )
-            )
-          in
-          rec_flow_t
-            ~use_op:unknown_use
-            cx
-            trace
-            (DefT (idx_reason, trust, IdxWrapper prop_type), OpenT t_out)
-        | ( DefT (idx_reason, trust, IdxWrapper obj),
-            GetElemT { use_op; reason = reason_op; from_annot = annot; key_t = prop; tout = t_out }
-          ) ->
-          let de_maybed_obj =
-            Tvar.mk_where cx idx_reason (fun t ->
-                rec_flow cx trace (obj, IdxUnMaybeifyT (idx_reason, t))
-            )
-          in
-          let prop_type =
-            Tvar.mk_no_wrap_where cx reason_op (fun tout ->
-                rec_flow
-                  cx
-                  trace
-                  ( de_maybed_obj,
-                    GetElemT { use_op; reason = reason_op; from_annot = annot; key_t = prop; tout }
-                  )
-            )
-          in
-          rec_flow_t
-            ~use_op:unknown_use
-            cx
-            trace
-            (DefT (idx_reason, trust, IdxWrapper prop_type), OpenT t_out)
-        | (DefT (_, _, IdxWrapper _), _) ->
-          add_output cx ~trace (Error_message.EIdxUse (reason_of_use_t u))
         (******************************)
         (* optional chaining - part A *)
         (******************************)
@@ -5886,8 +5794,6 @@ struct
     | GuardT _
     | FilterOptionalT _
     | FilterMaybeT _
-    | IdxUnMaybeifyT _
-    | IdxUnwrap _
     | ImportDefaultT _
     | ImportModuleNsT _
     | ImportNamedT _
@@ -5934,7 +5840,6 @@ struct
     (* Should never occur, so we just defer to __flow to handle errors *)
     | UseT (_, InternalT _)
     | UseT (_, MatchingPropT _)
-    | UseT (_, DefT (_, _, IdxWrapper _))
     | UseT (_, ModuleT _)
     | ReactPropsToOut _
     | ReactInToProps _
@@ -6525,8 +6430,7 @@ struct
     | SpreadType _
     | RestType _
     | SpreadTupleType _
-    | ValuesType
-    | IdxUnwrapType ->
+    | ValuesType ->
       true
     | CallType _
     | TypeMap _ ->
@@ -6799,7 +6703,6 @@ struct
             | ReactElementRefType -> ReactKitT (use_op, reason, React.GetRef (OpenT tout))
             | ReactConfigType default_props ->
               ReactKitT (use_op, reason, React.GetConfigType (default_props, OpenT tout))
-            | IdxUnwrapType -> IdxUnwrap (reason, OpenT tout)
             | MappedType { property_type; mapped_type_flags; homomorphic; distributive_tparam_name }
               ->
               let (property_type, homomorphic) =
