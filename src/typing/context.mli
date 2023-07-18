@@ -85,7 +85,6 @@ type metadata = {
   max_workers: int;
   missing_module_generators: (Str.regexp * string) list;
   react_runtime: Options.react_runtime;
-  react_server_component_exts: SSet.t;
   recursion_limit: int;
   relay_integration_excludes: Str.regexp list;
   relay_integration_module_prefix: string option;
@@ -228,8 +227,6 @@ val call_props : t -> Type.t IMap.t
 val export_maps : t -> Type.Exports.map
 
 val react_runtime : t -> Options.react_runtime
-
-val in_react_server_component_file : t -> bool
 
 val recursion_limit : t -> int
 

@@ -1,6 +1,0 @@
-[options]
-all=true
-exact_by_default=false
-no_flowlib=false
-experimental.react.server_component_ext=.hybrid.js
-experimental.react.server_component_ext=.server.js

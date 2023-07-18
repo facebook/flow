@@ -4242,5 +4242,3 @@ end
 type annotated_or_inferred =
   | Annotated of TypeTerm.t
   | Inferred of TypeTerm.t
-
-let react_server_module_ref = "#flow-internal-react-server-module"

@@ -110,7 +110,6 @@ module Opts = struct
     node_resolver_dirnames: string list;
     node_resolver_root_relative_dirnames: string list;
     react_runtime: Options.react_runtime;
-    react_server_component_exts: SSet.t;
     recursion_limit: int;
     relay_integration: bool;
     relay_integration_excludes: string list;
@@ -164,8 +163,6 @@ module Opts = struct
     |> SSet.add ".mp4"
     |> SSet.add ".webm"
     |> SSet.add ".webp"
-
-  let react_server_component_exts = SSet.empty
 
   let default_options =
     {
@@ -237,7 +234,6 @@ module Opts = struct
       node_resolver_dirnames = ["node_modules"];
       node_resolver_root_relative_dirnames = [""];
       react_runtime = Options.ReactRuntimeClassic;
-      react_server_component_exts;
       recursion_limit = 10000;
       relay_integration = false;
       relay_integration_excludes = [];
@@ -673,14 +669,6 @@ module Opts = struct
       [("classic", Options.ReactRuntimeClassic); ("automatic", Options.ReactRuntimeAutomatic)]
       (fun opts react_runtime -> Ok { opts with react_runtime })
 
-  let react_server_component_exts_parser =
-    string
-      ~init:(fun opts -> { opts with react_server_component_exts = SSet.empty })
-      ~multiple:true
-      (fun opts v ->
-        let react_server_component_exts = SSet.add v opts.react_server_component_exts in
-        Ok { opts with react_server_component_exts })
-
   let relay_integration_excludes_parser =
     string
       ~init:(fun opts -> { opts with relay_integration_excludes = [] })
@@ -784,7 +772,6 @@ module Opts = struct
       ("experimental.direct_dependent_files_fix", direct_dependent_files_fix_parser);
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
       ("experimental.module.automatic_require_default", automatic_require_default_parser);
-      ("experimental.react.server_component_ext", react_server_component_exts_parser);
       ("experimental.strict_call_arity", enforce_strict_call_arity_parser);
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
       ("experimental.strict_es6_import_export.excludes", strict_es6_import_export_excludes_parser);
@@ -1533,8 +1520,6 @@ let node_resolver_dirnames c = c.options.Opts.node_resolver_dirnames
 let node_resolver_root_relative_dirnames c = c.options.Opts.node_resolver_root_relative_dirnames
 
 let react_runtime c = c.options.Opts.react_runtime
-
-let react_server_component_exts c = c.options.Opts.react_server_component_exts
 
 let recursion_limit c = c.options.Opts.recursion_limit
 

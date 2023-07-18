@@ -42,7 +42,6 @@ let metadata =
     max_workers = 0;
     missing_module_generators = [];
     react_runtime = Options.ReactRuntimeClassic;
-    react_server_component_exts = SSet.empty;
     recursion_limit = 10000;
     relay_integration_excludes = [];
     relay_integration_module_prefix = None;

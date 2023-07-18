@@ -1799,8 +1799,6 @@ let dump_error_message =
     | EComponentMissingReturn r -> spf "EComponentMissingReturn (%s)" (dump_reason cx r)
     | ENestedComponent r -> spf "ENestedComponent (%s)" (dump_reason cx r)
     | EInvalidDeclaration { declaration = r; _ } -> spf "EInvalidDeclaration %s" (dump_reason cx r)
-    | EImportInternalReactServerModule loc ->
-      spf "EImportInternalReactServerModule (%s)" (string_of_aloc loc)
     | EImplicitInstantiationUnderconstrainedError { use_op; _ } ->
       spf "EImplicitInstantiationUnderconstrainedError (%s)" (string_of_use_op use_op)
     | EImplicitInstantiationWidenedError _ -> "EImplicitInstantiationWidenedError"

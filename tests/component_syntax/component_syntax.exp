@@ -1312,8 +1312,8 @@ Cannot cast `Foo.displayName` to empty because null or undefined [1] is incompat
          ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:123:17
-   123|   displayName?: ?string,
+   <BUILTINS>/react.js:109:17
+   109|   displayName?: ?string,
                         ^^^^^^^ [1]
    import.js:21:19
     21| (Foo.displayName: empty); // error, displayName is a string
@@ -1329,8 +1329,8 @@ Cannot cast `Foo.displayName` to empty because undefined [1] is incompatible wit
          ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:123:17
-   123|   displayName?: ?string,
+   <BUILTINS>/react.js:109:17
+   109|   displayName?: ?string,
                         ^^^^^^^ [1]
    import.js:21:19
     21| (Foo.displayName: empty); // error, displayName is a string
@@ -1346,8 +1346,8 @@ Cannot cast `Foo.displayName` to empty because string [1] is incompatible with e
          ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:123:18
-   123|   displayName?: ?string,
+   <BUILTINS>/react.js:109:18
+   109|   displayName?: ?string,
                          ^^^^^^ [1]
    import.js:21:19
     21| (Foo.displayName: empty); // error, displayName is a string
@@ -1364,16 +1364,16 @@ Cannot get `Foo.randomProperty` because property `randomProperty` is missing in 
             ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:122:47
+   <BUILTINS>/react.js:108:47
                                                       v
-   122| declare type React$AbstractComponentStatics = {
-   123|   displayName?: ?string,
-   124|   // This is only on function components, but trying to access name when
-   125|   // displayName is undefined is a common pattern.
-   126|   name?: ?string,
-   127|   propTypes?: {[string] : any, ...},
-   128|   ...
-   129| };
+   108| declare type React$AbstractComponentStatics = {
+   109|   displayName?: ?string,
+   110|   // This is only on function components, but trying to access name when
+   111|   // displayName is undefined is a common pattern.
+   112|   name?: ?string,
+   113|   propTypes?: {[string] : any, ...},
+   114|   ...
+   115| };
         ^ [1]
 
 
@@ -2014,8 +2014,8 @@ Cannot assign `3` to `Foo.displayName` because number [1] is incompatible with s
                           ^ [1]
 
 References:
-   <BUILTINS>/react.js:123:18
-   123|   displayName?: ?string,
+   <BUILTINS>/react.js:109:18
+   109|   displayName?: ?string,
                          ^^^^^^ [2]
 
 
@@ -2029,16 +2029,16 @@ Cannot get `Foo.randomProperty` because property `randomProperty` is missing in 
             ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:122:47
+   <BUILTINS>/react.js:108:47
                                                       v
-   122| declare type React$AbstractComponentStatics = {
-   123|   displayName?: ?string,
-   124|   // This is only on function components, but trying to access name when
-   125|   // displayName is undefined is a common pattern.
-   126|   name?: ?string,
-   127|   propTypes?: {[string] : any, ...},
-   128|   ...
-   129| };
+   108| declare type React$AbstractComponentStatics = {
+   109|   displayName?: ?string,
+   110|   // This is only on function components, but trying to access name when
+   111|   // displayName is undefined is a common pattern.
+   112|   name?: ?string,
+   113|   propTypes?: {[string] : any, ...},
+   114|   ...
+   115| };
         ^ [1]
 
 

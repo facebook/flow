@@ -51,7 +51,6 @@ type metadata = {
   max_workers: int;
   missing_module_generators: (Str.regexp * string) list;
   react_runtime: Options.react_runtime;
-  react_server_component_exts: SSet.t;
   recursion_limit: int;
   relay_integration_excludes: Str.regexp list;
   relay_integration_module_prefix: string option;
@@ -258,7 +257,6 @@ let metadata_of_options options =
     max_workers = Options.max_workers options;
     missing_module_generators = Options.missing_module_generators options;
     react_runtime = Options.react_runtime options;
-    react_server_component_exts = Options.react_server_component_exts options;
     recursion_limit = Options.recursion_limit options;
     relay_integration_excludes = Options.relay_integration_excludes options;
     relay_integration_module_prefix = Options.relay_integration_module_prefix options;
@@ -539,11 +537,6 @@ let call_props cx = cx.ccx.sig_cx.call_props
 let export_maps cx = cx.ccx.sig_cx.export_maps
 
 let react_runtime cx = cx.metadata.react_runtime
-
-let in_react_server_component_file cx =
-  let file = file cx in
-  let exts = cx.metadata.react_server_component_exts in
-  SSet.exists (File_key.check_suffix file) exts
 
 let recursion_limit cx = cx.metadata.recursion_limit
 

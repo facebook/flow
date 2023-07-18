@@ -515,7 +515,6 @@ and 'loc t' =
       blame_reasons: 'loc virtual_reason list;
     }
   | EMalformedCode of 'loc
-  | EImportInternalReactServerModule of 'loc
   | EImplicitInstantiationUnderconstrainedError of {
       reason_call: 'loc virtual_reason;
       reason_tparam: 'loc virtual_reason;
@@ -1214,7 +1213,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         blame_reasons = Base.List.map ~f:map_reason blame_reasons;
       }
   | EMalformedCode loc -> EMalformedCode (f loc)
-  | EImportInternalReactServerModule loc -> EImportInternalReactServerModule (f loc)
   | EImplicitInstantiationUnderconstrainedError { reason_call; reason_tparam; bound; use_op } ->
     EImplicitInstantiationUnderconstrainedError
       {
@@ -1529,7 +1527,6 @@ let util_use_op_of_msg nope util = function
   | EEnumMemberUsedAsType _
   | EAssignConstLikeBinding _
   | EMalformedCode _
-  | EImportInternalReactServerModule _
   | EImplicitInstantiationWidenedError _
   | EClassToObject _
   | EMethodUnbinding _
@@ -1709,7 +1706,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EObjectThisReference (loc, _)
   | EComponentThisReference { this_loc = loc; _ }
   | EComponentCase loc
-  | EImportInternalReactServerModule loc
   | EInvalidGraphQL (loc, _)
   | EAnnotationInference (loc, _, _, _)
   | EAnnotationInferenceRecursive (loc, _)
@@ -4379,18 +4375,6 @@ let friendly_message_of_msg loc_of_aloc msg =
             |> Base.List.intersperse ~sep:(text ",")
             );
       }
-  | EImportInternalReactServerModule _ ->
-    Normal
-      {
-        features =
-          [
-            text "Do not import ";
-            code Type.react_server_module_ref;
-            text " directly. Instead, ensure you are in a React Server file and import ";
-            code "react";
-            text " normally.";
-          ];
-      }
   | EImplicitInstantiationUnderconstrainedError { reason_call; reason_tparam; use_op; bound = _ } ->
     UseOp
       {
@@ -5240,8 +5224,7 @@ let error_code_of_message err : error_code option =
   | EDuplicateComponentProp _ -> Some InvalidComponentProp
   | ERefComponentProp _ -> Some InvalidComponentProp
   | EMalformedCode _
-  | EUnusedSuppression _
-  | EImportInternalReactServerModule _ ->
+  | EUnusedSuppression _ ->
     None
   | EUseArrayLiteral _ -> Some IllegalNewArray
   | EAnyValueUsedAsType _

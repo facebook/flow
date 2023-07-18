@@ -328,11 +328,11 @@ References:
    create_element.js:15:32
     15| const refBad = React.createRef<string>();
                                        ^^^^^^ [2]
-   <BUILTINS>/react.js:239:6
-   239|   ): {|current: null | T|};
+   <BUILTINS>/react.js:225:6
+   225|   ): {|current: null | T|};
              ^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:189:6
-   189|   | ((React$ElementRef<ElementType> | null) => mixed)
+   <BUILTINS>/react.js:175:6
+   175|   | ((React$ElementRef<ElementType> | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -347,11 +347,11 @@ Cannot create `C` element because in property `key`: [incompatible-type]
                                                         ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:182:26
-   182| declare type React$Key = string | number;
+   <BUILTINS>/react.js:168:26
+   168| declare type React$Key = string | number;
                                  ^^^^^^ [2]
-   <BUILTINS>/react.js:182:35
-   182| declare type React$Key = string | number;
+   <BUILTINS>/react.js:168:35
+   168| declare type React$Key = string | number;
                                           ^^^^^^ [3]
 
 
@@ -578,16 +578,16 @@ Cannot assign `y` to `x[y]` because an index signature declaring the expected ke
           ^
 
 References:
-   <BUILTINS>/react.js:122:47
+   <BUILTINS>/react.js:108:47
                                                       v
-   122| declare type React$AbstractComponentStatics = {
-   123|   displayName?: ?string,
-   124|   // This is only on function components, but trying to access name when
-   125|   // displayName is undefined is a common pattern.
-   126|   name?: ?string,
-   127|   propTypes?: {[string] : any, ...},
-   128|   ...
-   129| };
+   108| declare type React$AbstractComponentStatics = {
+   109|   displayName?: ?string,
+   110|   // This is only on function components, but trying to access name when
+   111|   // displayName is undefined is a common pattern.
+   112|   name?: ?string,
+   113|   propTypes?: {[string] : any, ...},
+   114|   ...
+   115| };
         ^ [1]
 
 
@@ -600,8 +600,8 @@ Cannot call `x.displayName.toString` because property `toString` is missing in n
                         ^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:123:17
-   123|   displayName?: ?string,
+   <BUILTINS>/react.js:109:17
+   109|   displayName?: ?string,
                         ^^^^^^^ [1]
 
 
@@ -614,8 +614,8 @@ Cannot call `x.displayName.toString` because property `toString` is missing in u
                         ^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:123:17
-   123|   displayName?: ?string,
+   <BUILTINS>/react.js:109:17
+   109|   displayName?: ?string,
                         ^^^^^^^ [1]
 
 
@@ -643,16 +643,16 @@ Cannot get `x.definitelyNotHere` because property `definitelyNotHere` is missing
             ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:122:47
+   <BUILTINS>/react.js:108:47
                                                       v
-   122| declare type React$AbstractComponentStatics = {
-   123|   displayName?: ?string,
-   124|   // This is only on function components, but trying to access name when
-   125|   // displayName is undefined is a common pattern.
-   126|   name?: ?string,
-   127|   propTypes?: {[string] : any, ...},
-   128|   ...
-   129| };
+   108| declare type React$AbstractComponentStatics = {
+   109|   displayName?: ?string,
+   110|   // This is only on function components, but trying to access name when
+   111|   // displayName is undefined is a common pattern.
+   112|   name?: ?string,
+   113|   propTypes?: {[string] : any, ...},
+   114|   ...
+   115| };
         ^ [1]
 
 
@@ -665,8 +665,8 @@ Cannot assign `3` to `x.displayName` because number [1] is incompatible with str
                           ^ [1]
 
 References:
-   <BUILTINS>/react.js:123:18
-   123|   displayName?: ?string,
+   <BUILTINS>/react.js:109:18
+   109|   displayName?: ?string,
                          ^^^^^^ [2]
 
 
@@ -682,8 +682,8 @@ References:
    strict.js:4:11
      4| const c = <Component f = {3}/>;
                   ^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:163:29
-   163|   | React$AbstractComponent<empty, mixed>;
+   <BUILTINS>/react.js:149:29
+   149|   | React$AbstractComponent<empty, mixed>;
                                     ^^^^^ [2]
 
 
@@ -715,8 +715,8 @@ Cannot call `foo` with `ref` bound to `a` because mixed [1] is incompatible with
             ^^^
 
 References:
-   <BUILTINS>/react.js:163:36
-   163|   | React$AbstractComponent<empty, mixed>;
+   <BUILTINS>/react.js:149:36
+   149|   | React$AbstractComponent<empty, mixed>;
                                            ^^^^^ [1]
    strict.js:7:26
      7| declare function foo(a: ?React$Component<any, any>): void;
@@ -733,16 +733,16 @@ Cannot get `x.notOnEitherSFCOrClass` because property `notOnEitherSFCOrClass` is
                 ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:122:47
+   <BUILTINS>/react.js:108:47
                                                       v
-   122| declare type React$AbstractComponentStatics = {
-   123|   displayName?: ?string,
-   124|   // This is only on function components, but trying to access name when
-   125|   // displayName is undefined is a common pattern.
-   126|   name?: ?string,
-   127|   propTypes?: {[string] : any, ...},
-   128|   ...
-   129| };
+   108| declare type React$AbstractComponentStatics = {
+   109|   displayName?: ?string,
+   110|   // This is only on function components, but trying to access name when
+   111|   // displayName is undefined is a common pattern.
+   112|   name?: ?string,
+   113|   propTypes?: {[string] : any, ...},
+   114|   ...
+   115| };
         ^ [1]
 
 

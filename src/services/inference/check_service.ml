@@ -123,18 +123,9 @@ let copy_into dst_cx src_cx t =
   ()
 
 let unknown_module_t cx mref m =
-  let react_server_module_err = m = Modulename.String Type.react_server_module_ref in
   let desc = Reason.RCustom mref in
-  let m_name =
-    match m with
-    | Modulename.String ("react" | "React") when Context.in_react_server_component_file cx ->
-      Type.react_server_module_ref
-    | _ -> Modulename.to_string m
-  in
-  let m_name = Reason.internal_module_name m_name in
+  let m_name = Reason.internal_module_name (Modulename.to_string m) in
   fun loc ->
-    if react_server_module_err then
-      Flow_js.add_output cx (Error_message.EImportInternalReactServerModule loc);
     let reason = Reason.mk_reason desc loc in
     Flow_js_utils.lookup_builtin_strict cx m_name reason
 

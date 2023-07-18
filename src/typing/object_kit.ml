@@ -512,7 +512,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
          * add a positive variance annotation. We may consider marking that type as
          * constant in the future as well. *)
         let prop_polarity = Polarity.Neutral in
-        let finish cx trace ~use_op reason config defaults children =
+        let finish cx trace reason config defaults children =
           let {
             Object.reason = config_reason;
             props = config_props;
@@ -703,52 +703,6 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
               (props, flags, config_generics)
           in
           let call = None in
-          (* This code should not be here, but it has to be. In a React Server Component file,
-           * we need to check all the props against React$TransportValue. The ideal way to do
-           * this would be to take the final config object computed here and flow it to
-           * React$TransportObject. However, doing that directly can lead to a subtle bug that
-           * causes spurious errors. The config object produced here has a literal object
-           * reason-- and it should! It's a new fresh object. It's also important that this
-           * object is a literal so that it gets the less strict type checking behavior when
-           * flowing to the Component's props. Many Props types are not specified as
-           * read-only, so this literal reason is required in order to get the
-           * covariant property type checking.
-           *
-           * However, literal objects flowing to object types with optional properties will
-           * take on optional properties in the object types. This behavior is spooky, but
-           * in place because we do not have a proper aliasing analysis.
-           *
-           * In order to avoid accidentally comparing optional properties from the Props
-           * that may be adopted by the config to React$TransportValue, we flow each property
-           * to React$TransportValue directly. If a dictionary is present then we also flow
-           * the dict's value type to React$TransportValue. If the object is Inexact then
-           * we also flow mixed to React$TransportValue to represent properties that may
-           * exist but are not present in the type. This case will always error, but is
-           * unlikely to be hit because it requires an inexact object to be spread into
-           * the props in jsx.
-           *)
-          if Context.in_react_server_component_file cx then (
-            let reason_transport_value_reason =
-              replace_desc_reason (RCustom "React.TransportValue") reason
-            in
-            let react_transport_value =
-              get_builtin_type cx reason_transport_value_reason (OrdinaryName "React$TransportValue")
-            in
-            NameUtils.Map.iter
-              (fun _ (_, t, _) -> rec_flow_t cx trace ~use_op (t, react_transport_value))
-              props_map;
-            match flags.obj_kind with
-            | Exact -> ()
-            | Inexact ->
-              let r =
-                mk_reason
-                  (RUnknownUnspecifiedProperty (desc_of_reason reason))
-                  (loc_of_reason reason)
-              in
-              let mixed = DefT (r, bogus_trust (), MixedT Mixed_everything) in
-              rec_flow_t cx trace ~use_op (mixed, react_transport_value)
-            | Indexed d -> rec_flow_t cx trace ~use_op (d.value, react_transport_value)
-          );
           (* Finish creating our props object. *)
           let props =
             NameUtils.Map.map
@@ -783,7 +737,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           (* If we have no default props then finish our object and flow it to our
            * tout type. *)
           | Config { defaults = None; children } ->
-            let ts = Nel.map (fun x -> finish cx trace ~use_op reason x None children) x in
+            let ts = Nel.map (fun x -> finish cx trace reason x None children) x in
             let t =
               match ts with
               | (t, []) -> t
@@ -795,7 +749,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           | Defaults { config; children } ->
             let ts =
               Nel.map_concat
-                (fun c -> Nel.map (fun d -> finish cx trace ~use_op reason c (Some d) children) x)
+                (fun c -> Nel.map (fun d -> finish cx trace reason c (Some d) children) x)
                 config
             in
             let t =

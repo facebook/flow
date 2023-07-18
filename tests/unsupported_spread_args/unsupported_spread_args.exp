@@ -12,11 +12,11 @@ References:
    test.js:4:14
      4| const arr = [1,2,3];  // badly-positioned error
                      ^ [1]
-   <BUILTINS>/react.js:162:5
-   162|   | string
+   <BUILTINS>/react.js:148:5
+   148|   | string
             ^^^^^^ [2]
-   <BUILTINS>/react.js:163:5
-   163|   | React$AbstractComponent<empty, mixed>;
+   <BUILTINS>/react.js:149:5
+   149|   | React$AbstractComponent<empty, mixed>;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -62,11 +62,11 @@ References:
    test.js:4:14
      4| const arr = [1,2,3];  // badly-positioned error
                      ^ [1]
-   <BUILTINS>/react.js:162:5
-   162|   | string
+   <BUILTINS>/react.js:148:5
+   148|   | string
             ^^^^^^ [2]
-   <BUILTINS>/react.js:163:5
-   163|   | React$AbstractComponent<empty, mixed>;
+   <BUILTINS>/react.js:149:5
+   149|   | React$AbstractComponent<empty, mixed>;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -126,11 +126,11 @@ References:
    test.js:4:14
      4| const arr = [1,2,3];  // badly-positioned error
                      ^ [1]
-   <BUILTINS>/react.js:162:5
-   162|   | string
+   <BUILTINS>/react.js:148:5
+   148|   | string
             ^^^^^^ [2]
-   <BUILTINS>/react.js:163:5
-   163|   | React$AbstractComponent<empty, mixed>;
+   <BUILTINS>/react.js:149:5
+   149|   | React$AbstractComponent<empty, mixed>;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 

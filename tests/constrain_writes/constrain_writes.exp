@@ -261,8 +261,8 @@ References:
    wiki_examples.js:18:32
     18|   declare var OtherComponent: (OtherProps) => React.Node;
                                        ^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:169:62
-   169| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
+   <BUILTINS>/react.js:155:62
+   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
                                                                      ^ [3]
    wiki_examples.js:14:7
     14|   let element = <Component {...props} />
@@ -286,8 +286,8 @@ References:
    wiki_examples.js:12:28
     12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                    ^^^^^ [2]
-   <BUILTINS>/react.js:169:62
-   169| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
+   <BUILTINS>/react.js:155:62
+   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
                                                                      ^ [3]
    wiki_examples.js:14:7
     14|   let element = <Component {...props} />
@@ -311,8 +311,8 @@ References:
    wiki_examples.js:18:32
     18|   declare var OtherComponent: (OtherProps) => React.Node;
                                        ^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:169:29
-   169| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
+   <BUILTINS>/react.js:155:29
+   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
                                     ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
     14|   let element = <Component {...props} />
@@ -336,8 +336,8 @@ References:
    wiki_examples.js:12:28
     12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                    ^^^^^ [2]
-   <BUILTINS>/react.js:169:29
-   169| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
+   <BUILTINS>/react.js:155:29
+   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
                                     ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
     14|   let element = <Component {...props} />
@@ -361,8 +361,8 @@ References:
    wiki_examples.js:12:47
     12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                                       ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:169:29
-   169| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
+   <BUILTINS>/react.js:155:29
+   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
                                     ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
     14|   let element = <Component {...props} />
@@ -386,8 +386,8 @@ References:
    wiki_examples.js:12:47
     12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                                       ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:169:29
-   169| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
+   <BUILTINS>/react.js:155:29
+   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
                                     ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
     14|   let element = <Component {...props} />
@@ -411,8 +411,8 @@ References:
    wiki_examples.js:12:47
     12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                                       ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:169:29
-   169| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
+   <BUILTINS>/react.js:155:29
+   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
                                     ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
     14|   let element = <Component {...props} />
@@ -436,8 +436,8 @@ References:
    wiki_examples.js:12:47
     12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                                       ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:169:29
-   169| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
+   <BUILTINS>/react.js:155:29
+   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
                                     ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
     14|   let element = <Component {...props} />
@@ -461,8 +461,8 @@ References:
    wiki_examples.js:12:47
     12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                                       ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:169:29
-   169| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
+   <BUILTINS>/react.js:155:29
+   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
                                     ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
     14|   let element = <Component {...props} />
@@ -486,8 +486,8 @@ References:
    wiki_examples.js:12:47
     12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                                       ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:169:29
-   169| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
+   <BUILTINS>/react.js:155:29
+   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
                                     ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
     14|   let element = <Component {...props} />
@@ -512,8 +512,8 @@ References:
    wiki_examples.js:12:47
     12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                                       ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:169:29
-   169| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
+   <BUILTINS>/react.js:155:29
+   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
                                     ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
     14|   let element = <Component {...props} />

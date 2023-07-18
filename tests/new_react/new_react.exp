@@ -21,8 +21,8 @@ Cannot use `React.Component` [1] with fewer than 1 type argument. [missing-type-
                         ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:44:30
-   44| declare class React$Component<Props, State = void> {
+   <BUILTINS>/react.js:30:30
+   30| declare class React$Component<Props, State = void> {
                                     ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -35,8 +35,8 @@ Cannot use `React.Component` [1] with fewer than 1 type argument. [missing-type-
                         ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:44:30
-   44| declare class React$Component<Props, State = void> {
+   <BUILTINS>/react.js:30:30
+   30| declare class React$Component<Props, State = void> {
                                     ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -53,8 +53,8 @@ References:
    classes.js:7:19
     7| class Foo extends React.Component<Props, State> {
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:53:49
-   53|     partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
+   <BUILTINS>/react.js:39:49
+   39|     partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    classes.js:23:15
    23|   setState(o: { y_: string }): void { }
@@ -95,8 +95,8 @@ References:
    classes.js:7:19
     7| class Foo extends React.Component<Props, State> {
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:53:19
-   53|     partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
+   <BUILTINS>/react.js:39:19
+   39|     partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -174,11 +174,11 @@ References:
    classes.js:39:15
     39| var foo: $jsx<number> = <Foo/>;
                       ^^^^^^ [1]
-   <BUILTINS>/react.js:162:5
-   162|   | string
+   <BUILTINS>/react.js:148:5
+   148|   | string
             ^^^^^^ [2]
-   <BUILTINS>/react.js:163:5
-   163|   | React$AbstractComponent<empty, mixed>;
+   <BUILTINS>/react.js:149:5
+   149|   | React$AbstractComponent<empty, mixed>;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -353,8 +353,8 @@ Cannot get `this.state.x` because property `x` is missing in undefined [1]. [inc
                              ^
 
 References:
-   <BUILTINS>/react.js:44:46
-   44| declare class React$Component<Props, State = void> {
+   <BUILTINS>/react.js:30:46
+   30| declare class React$Component<Props, State = void> {
                                                     ^^^^ [1]
 
 
@@ -428,8 +428,8 @@ References:
    state6.js:11:59
    11| class MyComponent extends React.Component<{prop: number}, State> {
                                                                  ^^^^^ [2]
-   <BUILTINS>/react.js:53:20
-   53|     partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
+   <BUILTINS>/react.js:39:20
+   39|     partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
                           ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 

@@ -137,12 +137,6 @@ let load_lib_files ~ccx ~options ~reader files =
       let (_builtin_errors, _builtin_locs, builtins) =
         Type_sig_utils.parse_and_pack_builtins sig_opts ordered_asts
       in
-      let builtins =
-        (* hide #flow-internal-react-server-module module *)
-        let { Packed_type_sig.Builtins.modules; _ } = builtins in
-        let modules = SMap.remove Type.react_server_module_ref modules in
-        { builtins with Packed_type_sig.Builtins.modules }
-      in
       Exports.of_builtins builtins
     else
       Exports.empty
