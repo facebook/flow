@@ -1923,7 +1923,10 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
           (OpAssign { exp_loc = loc; lhs = left; op = operator; rhs = right });
         this#visit_expression ~hints:(expression_pattern_hints e) ~cond:NonConditionalContext right
       | (Some _operator, (Ast.Pattern.Array _ | Ast.Pattern.Object _)) ->
-        let (_ : (_, _) Ast.Pattern.t) = this#assignment_pattern (lhs_loc, lhs_node) in
+        (* [a] += 1;
+           ({b} += 1);
+           will have invalid-lhs errors, we shouldn't visit the LHS pattern.
+        *)
         this#visit_expression ~hints:(other_pattern_hints left) ~cond:NonConditionalContext right
 
     method! update_expression loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Update.t) =

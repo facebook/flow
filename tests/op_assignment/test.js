@@ -139,3 +139,9 @@ declare function invariant(boolean): empty;
   function alwaysThrows2(): number { y &&= invariant(false); } // Error
   function alwaysThrows3(): number { x ||= invariant(false); } // Error
 }
+
+// Illegal patterns
+{
+  [a] += 1; // error
+  ({b} += 1); // error
+}
