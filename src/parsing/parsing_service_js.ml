@@ -19,7 +19,6 @@ type result =
       tolerable_errors: File_sig.tolerable_error list;
       exports: Exports.t;
       imports: Imports.t;
-      cas_digest: Cas_digest.t option;
     }
   | Parse_recovered of {
       ast: (Loc.t, Loc.t) Flow_ast.Program.t;
@@ -221,25 +220,7 @@ let do_parse ~options ~docblock ?force_types ?force_use_strict ?(locs_to_dirtify
               tolerable_errors
               sig_errors
           in
-          (* add digest by distributed flag *)
-          let cas_digest =
-            if Options.distributed options then
-              Remote_execution.upload_blob type_sig
-            else
-              None
-          in
-          Parse_ok
-            {
-              ast;
-              requires;
-              file_sig;
-              locs;
-              type_sig;
-              tolerable_errors;
-              exports;
-              imports;
-              cas_digest;
-            }
+          Parse_ok { ast; requires; file_sig; locs; type_sig; tolerable_errors; exports; imports }
   with
   | e ->
     let e = Exception.wrap e in
@@ -364,17 +345,7 @@ let reducer
                 file_key
             with
             | Parse_ok
-                {
-                  ast;
-                  requires;
-                  file_sig;
-                  exports;
-                  imports;
-                  locs;
-                  type_sig;
-                  cas_digest;
-                  tolerable_errors;
-                } ->
+                { ast; requires; file_sig; exports; imports; locs; type_sig; tolerable_errors } ->
               let file_sig = (file_sig, tolerable_errors) in
               let module_name = exported_module file_key (`Module docblock) in
               let dirty_modules =
@@ -391,7 +362,6 @@ let reducer
                   file_sig
                   locs
                   type_sig
-                  cas_digest
               in
               let parsed = FilenameSet.add file_key acc.parsed in
               let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in

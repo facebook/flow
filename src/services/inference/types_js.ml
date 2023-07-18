@@ -558,15 +558,11 @@ end = struct
             ~files:(FilenameSet.elements files)
         in
         let job =
-          if Options.distributed options then
+          let mk_check () =
             let master_cx = Context_heaps.find_master () in
-            Remote_execution.distributed_check_job options master_cx
-          else
-            let mk_check () =
-              let master_cx = Context_heaps.find_master () in
-              Merge_service.mk_check options ~master_cx ~reader ~def_info ()
-            in
-            mk_job ~mk_check ~options ()
+            Merge_service.mk_check options ~master_cx ~reader ~def_info ()
+          in
+          mk_job ~mk_check ~options ()
         in
         let%lwt ret = MultiWorkerLwt.call workers ~job ~neutral:[] ~merge ~next in
         let { ServerEnv.merge_errors; warnings; _ } = errors in
@@ -1894,15 +1890,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
 
   let restore_parsed (fns, dirty_modules, invalid_hashes) (fn, parsed_file_data) =
     let { Saved_state.module_name; normalized_file_data } = parsed_file_data in
-    let {
-      Saved_state.hash;
-      exports;
-      requires;
-      resolved_modules;
-      phantom_dependencies;
-      imports;
-      cas_digest;
-    } =
+    let { Saved_state.hash; exports; requires; resolved_modules; phantom_dependencies; imports } =
       Saved_state.denormalize_file_data ~root normalized_file_data
     in
 
@@ -1926,7 +1914,6 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
         resolved_modules
         phantom_dependencies
         imports
-        cas_digest
     in
 
     let invalid_hashes =

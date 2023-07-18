@@ -50,9 +50,8 @@ type tag =
   | ALoc_table_tag
   | Requires_tag
   | Type_sig_tag
-  | Cas_digest_tag
   (* tags defined above this point are serialized+compressed *)
-  | Serialized_tag (* 20 -- see Serialized_tag in hh_shared.c *)
+  | Serialized_tag (* 19 -- see Serialized_tag in hh_shared.c *)
   | Serialized_ast_tag
   | Serialized_file_sig_tag
   | Serialized_exports_tag
@@ -68,7 +67,7 @@ let tag_val : tag -> int = Obj.magic
 let () =
   assert (tag_val Entity_tag = 0);
   assert (tag_val String_tag = 13);
-  assert (tag_val Serialized_tag = 20)
+  assert (tag_val Serialized_tag = 19)
 
 (* Addresses are relative to the hashtbl pointer, so the null address actually
  * points to the hash field of the first hashtbl entry, which is never a
@@ -1463,40 +1462,11 @@ module NewAPI = struct
 
   let read_package_info addr = read_compressed Serialized_package_info_tag addr
 
-  (** Cas digest  *)
-
-  let prepare_write_cas_digest cas_digest =
-    let { Cas_digest.sha1; bytelen } = cas_digest in
-    let buf = Buffer.create 24 in
-    Buffer.add_string buf sha1;
-    Leb128.Unsigned.write (Buffer.add_int8 buf) bytelen;
-    let cas_digest = Buffer.contents buf in
-    let size = string_size cas_digest in
-    let write chunk =
-      let addr = write_header chunk Cas_digest_tag size in
-      unsafe_write_string chunk cas_digest;
-      addr
-    in
-    (header_size + size, write)
-
-  let read_cas_digest addr =
-    let bytes = read_string_generic Cas_digest_tag addr 0 in
-    let sha1 = String.sub bytes 0 20 in
-    let read_byte =
-      let pos = ref 20 in
-      fun () ->
-        let byte = bytes.[!pos] in
-        incr pos;
-        Char.code byte
-    in
-    let bytelen = Leb128.Unsigned.read read_byte in
-    { Cas_digest.sha1; bytelen }
-
   (** Parse data *)
 
   let untyped_parse_size = 1 * addr_size
 
-  let typed_parse_size = 13 * addr_size
+  let typed_parse_size = 12 * addr_size
 
   let package_parse_size = 2 * addr_size
 
@@ -1509,7 +1479,7 @@ module NewAPI = struct
     (header_size + untyped_parse_size, write)
 
   let prepare_write_typed_parse =
-    let write chunk hash exports requires resolved_requires imports leader sig_hash cas_digest =
+    let write chunk hash exports requires resolved_requires imports leader sig_hash =
       let addr = write_header chunk Typed_tag typed_parse_size in
       unsafe_write_addr chunk hash;
       unsafe_write_addr chunk null_addr;
@@ -1523,9 +1493,6 @@ module NewAPI = struct
       unsafe_write_addr chunk imports;
       unsafe_write_addr chunk leader;
       unsafe_write_addr chunk sig_hash;
-      (match cas_digest with
-      | None -> unsafe_write_addr chunk null_addr
-      | Some cas_digest_addr -> unsafe_write_addr chunk cas_digest_addr);
       addr
     in
     (header_size + typed_parse_size, write)
@@ -1583,8 +1550,6 @@ module NewAPI = struct
 
   let sig_hash_addr parse = addr_offset parse 12
 
-  let cas_digest_addr parse = addr_offset parse 13
-
   let get_file_hash = get_generic file_hash_addr
 
   let get_ast = get_generic_opt ast_addr
@@ -1609,8 +1574,6 @@ module NewAPI = struct
 
   let get_sig_hash = get_generic sig_hash_addr
 
-  let get_cas_digest = get_generic_opt cas_digest_addr
-
   let set_ast = set_generic ast_addr
 
   let set_docblock = set_generic docblock_addr
@@ -1620,8 +1583,6 @@ module NewAPI = struct
   let set_type_sig = set_generic type_sig_addr
 
   let set_file_sig = set_generic file_sig_addr
-
-  let set_cas_digest = set_generic cas_digest_addr
 
   (** Haste info *)
 

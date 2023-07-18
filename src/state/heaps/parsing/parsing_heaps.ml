@@ -278,15 +278,6 @@ let read_imports parse : Imports.t =
   let deserialize x = Marshal.from_string x 0 in
   get_imports parse |> read_imports |> deserialize
 
-let read_cas_digest parse : Cas_digest.t option =
-  let open Heap in
-  get_cas_digest parse |> Option.map (fun addr -> read_cas_digest addr)
-
-let read_cas_digest_unsafe parse : Cas_digest.t =
-  match read_cas_digest parse with
-  | Some cas_digest -> cas_digest
-  | None -> raise (Requires_not_found "cas_digest")
-
 let read_package_info parse : (Package_json.t, unit) result =
   let open Heap in
   let deserialize x = Marshal.from_string x 0 in
@@ -729,7 +720,6 @@ let prepare_add_checked_file
     requires
     exports
     imports
-    cas_digest
     resolved_requires_opt_opt =
   let open Heap in
   let prepare_set_parse_data () =
@@ -750,13 +740,10 @@ let prepare_add_checked_file
     and+ requires = prepare_write_requires requires
     and+ exports = prepare_write_exports exports
     and+ imports = prepare_write_imports imports
-    and+ cas_digest = prepare_opt prepare_write_cas_digest cas_digest
     and+ parse = prepare_write_typed_parse
     and+ set_parse_data = prepare_set_parse_data () in
     fun resolved_requires leader sig_hash ->
-      let parse =
-        parse hash exports requires resolved_requires imports leader sig_hash cas_digest
-      in
+      let parse = parse hash exports requires resolved_requires imports leader sig_hash in
       set_parse_data parse;
       parse
   in
@@ -1145,8 +1132,7 @@ let add_parsed
     requires
     file_sig
     locs
-    type_sig
-    cas_digest : MSet.t =
+    type_sig : MSet.t =
   WorkerCancel.with_no_cancellations @@ fun () ->
   Heap.alloc
     (prepare_add_checked_file
@@ -1162,7 +1148,6 @@ let add_parsed
        requires
        exports
        imports
-       cas_digest
        None
     )
 
@@ -1218,8 +1203,6 @@ module type READER = sig
 
   val get_file_hash : reader:reader -> File_key.t -> Xx.hash option
 
-  val get_cas_digest : reader:reader -> File_key.t -> Cas_digest.t option
-
   val get_package_info : reader:reader -> File_key.t -> (Package_json.t, unit) result option
 
   val get_parse_unsafe :
@@ -1258,8 +1241,6 @@ module type READER = sig
   val get_type_sig_unsafe : reader:reader -> File_key.t -> type_sig
 
   val get_file_hash_unsafe : reader:reader -> File_key.t -> Xx.hash
-
-  val get_cas_digest_unsafe : reader:reader -> File_key.t -> Cas_digest.t
 
   val loc_of_aloc : reader:reader -> ALoc.t -> Loc.t
 end
@@ -1409,16 +1390,6 @@ module Mutator_reader = struct
     let* parse = get_old_parse ~reader addr in
     Some (read_file_hash parse)
 
-  let get_old_cas_digest ~reader file =
-    let* addr = get_file_addr file in
-    let* parse = get_old_typed_parse ~reader addr in
-    read_cas_digest parse
-
-  let get_cas_digest ~reader file =
-    let* addr = get_file_addr file in
-    let* parse = get_typed_parse ~reader addr in
-    read_cas_digest parse
-
   let get_package_info ~reader file =
     let* addr = get_file_addr file in
     let* parse = get_package_parse ~reader addr in
@@ -1506,11 +1477,6 @@ module Mutator_reader = struct
     let parse = get_parse_unsafe ~reader file addr in
     read_file_hash parse
 
-  let get_cas_digest_unsafe ~reader file =
-    let addr = get_file_addr_unsafe file in
-    let parse = get_typed_parse_unsafe ~reader file addr in
-    read_cas_digest_unsafe parse
-
   let loc_of_aloc = loc_of_aloc ~get_aloc_table_unsafe
 
   (* We choose the head file as the leader, and the tail as followers. It is
@@ -1551,7 +1517,6 @@ type worker_mutator = {
     File_sig.tolerable_t ->
     locs_tbl ->
     type_sig ->
-    Cas_digest.t option ->
     MSet.t;
   add_unparsed: File_key.t -> file_addr option -> Xx.hash -> string option -> MSet.t;
   add_package:
@@ -1823,11 +1788,6 @@ module Reader = struct
     let* parse = get_typed_parse ~reader addr in
     Some (read_imports parse)
 
-  let get_cas_digest ~reader file =
-    let* addr = get_file_addr file in
-    let* parse = get_typed_parse ~reader addr in
-    read_cas_digest parse
-
   let get_tolerable_file_sig ~reader file =
     let* addr = get_file_addr file in
     let* parse = get_typed_parse ~reader addr in
@@ -1914,11 +1874,6 @@ module Reader = struct
     let addr = get_file_addr_unsafe file in
     let parse = get_typed_parse_unsafe ~reader file addr in
     read_imports parse
-
-  let get_cas_digest_unsafe ~reader file =
-    let addr = get_file_addr_unsafe file in
-    let parse = get_typed_parse_unsafe ~reader file addr in
-    read_cas_digest_unsafe parse
 
   let get_tolerable_file_sig_unsafe ~reader file =
     let addr = get_file_addr_unsafe file in
@@ -2024,11 +1979,6 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     | Mutator_state_reader reader -> Mutator_reader.get_imports ~reader
     | State_reader reader -> Reader.get_imports ~reader
 
-  let get_cas_digest ~reader =
-    match reader with
-    | Mutator_state_reader reader -> Mutator_reader.get_cas_digest ~reader
-    | State_reader reader -> Reader.get_cas_digest ~reader
-
   let get_tolerable_file_sig ~reader =
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.get_tolerable_file_sig ~reader
@@ -2109,11 +2059,6 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     | Mutator_state_reader reader -> Mutator_reader.get_imports_unsafe ~reader
     | State_reader reader -> Reader.get_imports_unsafe ~reader
 
-  let get_cas_digest_unsafe ~reader =
-    match reader with
-    | Mutator_state_reader reader -> Mutator_reader.get_cas_digest_unsafe ~reader
-    | State_reader reader -> Reader.get_cas_digest_unsafe ~reader
-
   let get_tolerable_file_sig_unsafe ~reader =
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.get_tolerable_file_sig_unsafe ~reader
@@ -2160,8 +2105,7 @@ module Saved_state_mutator = struct
       requires
       resolved_modules
       phantom_dependencies
-      imports
-      cas_digest =
+      imports =
     let prepare_resolved_requires =
       let+ resolved_modules = prepare_write_resolved_modules resolved_modules
       and+ phantom_dependencies = prepare_write_phantom_dependencies phantom_dependencies in
@@ -2183,7 +2127,6 @@ module Saved_state_mutator = struct
          requires
          exports
          imports
-         cas_digest
          (Some (Some resolved_requires))
       )
 

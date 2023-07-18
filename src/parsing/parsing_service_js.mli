@@ -19,7 +19,6 @@ type result =
       tolerable_errors: File_sig.tolerable_error list;
       exports: Exports.t;
       imports: Imports.t;
-      cas_digest: Cas_digest.t option;
     }
   | Parse_recovered of {
       ast: (Loc.t, Loc.t) Flow_ast.Program.t;

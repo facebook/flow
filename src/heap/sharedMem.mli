@@ -288,12 +288,6 @@ module NewAPI : sig
 
   val read_package_info : [ `package_info ] addr -> string
 
-  (* cas_digest *)
-
-  val prepare_write_cas_digest : Cas_digest.t -> [ `cas_digest ] addr prep
-
-  val read_cas_digest : [ `cas_digest ] addr -> Cas_digest.t
-
   (* docblock *)
 
   val prepare_write_docblock : string -> [ `docblock ] addr prep
@@ -326,7 +320,6 @@ module NewAPI : sig
     [ `imports ] addr ->
     [ `file ] entity addr ->
     [ `int64 ] entity addr ->
-    [ `cas_digest ] addr option ->
     [ `typed ] parse addr
     )
     prep
@@ -366,8 +359,6 @@ module NewAPI : sig
 
   val get_sig_hash : [ `typed ] parse addr -> [ `int64 ] entity addr
 
-  val get_cas_digest : [ `typed ] parse addr -> [ `cas_digest ] addr option
-
   val get_package_info : [ `package ] parse addr -> [ `package_info ] addr
 
   val set_ast : [ `typed ] parse addr -> [ `ast ] addr -> unit
@@ -379,8 +370,6 @@ module NewAPI : sig
   val set_type_sig : [ `typed ] parse addr -> [ `type_sig ] addr -> unit
 
   val set_file_sig : [ `typed ] parse addr -> [ `file_sig ] addr -> unit
-
-  val set_cas_digest : [ `typed ] parse addr -> [ `cas_digest ] addr -> unit
 
   (* haste info *)
 

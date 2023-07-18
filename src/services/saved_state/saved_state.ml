@@ -14,7 +14,6 @@ type denormalized_file_data = {
   exports: Exports.t;
   hash: Xx.hash;
   imports: Imports.t;
-  cas_digest: Cas_digest.t option;
 }
 
 type normalized_file_data = denormalized_file_data
@@ -201,14 +200,14 @@ end = struct
     Base.List.map ~f imports
 
   let normalize_file_data
-      t { requires; resolved_modules; phantom_dependencies; exports; hash; imports; cas_digest } =
+      t { requires; resolved_modules; phantom_dependencies; exports; hash; imports } =
     let requires = Array.map (intern t) requires in
     let (resolved_modules, phantom_dependencies) =
       normalize_resolved_requires t resolved_modules phantom_dependencies
     in
     let exports = normalize_exports t exports in
     let imports = normalize_imports t imports in
-    { requires; resolved_modules; phantom_dependencies; exports; hash; imports; cas_digest }
+    { requires; resolved_modules; phantom_dependencies; exports; hash; imports }
 
   let normalize_parsed_data t { module_name; normalized_file_data } =
     let module_name = Option.map (intern t) module_name in
@@ -241,7 +240,6 @@ end = struct
             exports = Parsing_heaps.read_exports parse;
             hash = Parsing_heaps.read_file_hash parse;
             imports;
-            cas_digest = Parsing_heaps.read_cas_digest parse;
           };
       }
     in
@@ -565,12 +563,11 @@ end = struct
 
   (** Turns all the relative paths in a file's data back into absolute paths. *)
   let denormalize_file_data
-      ~root { requires; resolved_modules; phantom_dependencies; exports; hash; imports; cas_digest }
-      =
+      ~root { requires; resolved_modules; phantom_dependencies; exports; hash; imports } =
     let (resolved_modules, phantom_dependencies) =
       denormalize_resolved_requires ~root resolved_modules phantom_dependencies
     in
-    { requires; resolved_modules; phantom_dependencies; exports; hash; imports; cas_digest }
+    { requires; resolved_modules; phantom_dependencies; exports; hash; imports }
 
   let progress_fn real_total ~total:_ ~start ~length:_ =
     MonitorRPC.status_update

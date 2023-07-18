@@ -47,7 +47,6 @@
  (preprocess
   (pps ppx_deriving.std visitors.ppx))
  (libraries
-  cas_digest
   common_lz4
   heap_libc
   leb128
