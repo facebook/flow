@@ -388,9 +388,9 @@ let merge_component ~mutator ~options ~for_find_all_refs ~reader component =
 
 let mk_check_file options ~reader ~master_cx ~def_info () =
   let check_file =
-    let reader = Check_service.mk_heap_reader (Abstract_state_reader.Mutator_state_reader reader) in
+    let reader = Abstract_state_reader.Mutator_state_reader reader in
     let cache = Check_cache.create ~capacity:10000000 in
-    Check_service.mk_check_file reader ~options ~master_cx ~cache ()
+    Check_service.mk_check_file ~reader ~options ~master_cx ~cache ()
   in
   fun file ->
     let start_time = Unix.gettimeofday () in
@@ -482,8 +482,7 @@ let check_contents_context ~reader options master_cx file ast docblock file_sig 
     Module_js.imported_module ~options ~reader ~node_modules_containers file
   in
   let check_file =
-    let reader = Check_service.mk_heap_reader reader in
-    Check_service.mk_check_file reader ~options ~master_cx ~cache:check_contents_cache ()
+    Check_service.mk_check_file ~reader ~options ~master_cx ~cache:check_contents_cache ()
   in
   let (cx, tast, _) =
     check_file file resolve_require ast file_sig docblock aloc_table GetDefUtils.NoDefinition

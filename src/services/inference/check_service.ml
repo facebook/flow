@@ -7,11 +7,11 @@
 
 type module_ref = string
 
-type 'a resolve_require = module_ref -> 'a Parsing_heaps.resolved_module'
+type resolve_require = module_ref -> Parsing_heaps.dependency_addr Parsing_heaps.resolved_module'
 
-type 'a check_file =
+type check_file =
   File_key.t ->
-  'a resolve_require ->
+  resolve_require ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->
   File_sig.t ->
   Docblock.t ->
@@ -161,104 +161,15 @@ module Flow_js = struct end
 
 [@@@warning "+60"]
 
-module type READER = sig
-  type provider
-
-  type typed_parse
-
-  type dependency
-
-  val read_dependency : dependency -> Modulename.t
-
-  val get_provider : dependency -> provider option
-
-  val get_file_key : provider -> File_key.t
-
-  val get_typed_parse : provider -> typed_parse option
-
-  val get_leader_key : typed_parse -> File_key.t
-
-  val get_aloc_table : typed_parse -> ALoc.table
-
-  val get_docblock : typed_parse -> Docblock.t
-
-  val get_type_sig_buf : typed_parse -> Type_sig_bin.buf
-
-  val get_resolved_modules : typed_parse -> dependency Parsing_heaps.resolved_module' SMap.t
-
-  val loc_of_aloc : ALoc.t -> Loc.t
-end
-
-let mk_heap_reader reader =
-  let module Reader = struct
-    module Heap = SharedMem.NewAPI
-
-    type provider = File_key.t * Parsing_heaps.file_addr
-
-    type typed_parse = File_key.t * [ `typed ] Parsing_heaps.parse_addr
-
-    type dependency = Parsing_heaps.dependency_addr
-
-    let read_dependency = Parsing_heaps.read_dependency
-
-    let get_provider m =
-      match Parsing_heaps.Reader_dispatcher.get_provider ~reader m with
-      | None -> None
-      | Some dep_addr ->
-        let file_key =
-          try Parsing_heaps.read_file_key dep_addr with
-          | SharedMem.Invalid_header _ as exn ->
-            let exn = Exception.wrap exn in
-            Exception.raise_with_backtrace
-              (Failure
-                 (Printf.sprintf
-                    "Invalid provider for %s: %s"
-                    (Parsing_heaps.read_dependency_name m)
-                    (Exception.get_ctor_string exn)
-                 )
-              )
-              exn
-        in
-        Some (file_key, dep_addr)
-
-    let get_file_key (file_key, _) = file_key
-
-    let get_typed_parse (file_key, dep_addr) =
-      match Parsing_heaps.Reader_dispatcher.get_typed_parse ~reader dep_addr with
-      | None -> None
-      | Some parse -> Some (file_key, parse)
-
-    let get_leader_key (file_key, parse) =
-      Parsing_heaps.Reader_dispatcher.get_leader_unsafe ~reader file_key parse
-      |> Parsing_heaps.read_file_key
-
-    let get_aloc_table (file_key, parse) = Parsing_heaps.read_aloc_table_unsafe file_key parse
-
-    let get_docblock (file_key, parse) = Parsing_heaps.read_docblock_unsafe file_key parse
-
-    let get_type_sig_buf (_, parse) = Heap.type_sig_buf (Option.get (Heap.get_type_sig parse))
-
-    let get_resolved_modules (file_key, parse) =
-      Parsing_heaps.Reader_dispatcher.get_resolved_modules_unsafe ~reader Fun.id file_key parse
-
-    let loc_of_aloc =
-      match reader with
-      | Abstract_state_reader.State_reader reader -> Parsing_heaps.Reader.loc_of_aloc ~reader
-      | Abstract_state_reader.Mutator_state_reader reader ->
-        Parsing_heaps.Mutator_reader.loc_of_aloc ~reader
-  end in
-  (module Reader : READER with type dependency = Parsing_heaps.dependency_addr)
-
 (* This function is designed to be applied up to the unit argument and returns a
  * function which can be called repeatedly. The returned function closes over an
  * environment which defines caches that can be re-used when checking multiple
  * files. *)
-let mk_check_file
-    (type a) (module Reader : READER with type dependency = a) ~options ~master_cx ~cache () :
-    a check_file =
+let mk_check_file ~reader ~options ~master_cx ~cache () =
   let open Type_sig_collections in
   let module ConsGen = Annotation_inference.ConsGen in
   let module Merge = Type_sig_merge in
+  let module Heap = SharedMem.NewAPI in
   let module Pack = Type_sig_pack in
   let module Bin = Type_sig_bin in
   let base_metadata = Context.metadata_of_options options in
@@ -271,18 +182,23 @@ let mk_check_file
       let m = Option.value mapped_name ~default:mref in
       unknown_module_t cx mref (Modulename.String m)
     | Ok m ->
-      (match Reader.get_provider m with
-      | None -> unknown_module_t cx mref (Reader.read_dependency m)
-      | Some provider ->
-        (match Reader.get_file_key provider with
+      (match Parsing_heaps.Reader_dispatcher.get_provider ~reader m with
+      | None -> unknown_module_t cx mref (Parsing_heaps.read_dependency m)
+      | Some dep_addr ->
+        (match Parsing_heaps.read_file_key dep_addr with
         | File_key.ResourceFile f -> Merge.merge_resource_module_t cx f
         | dep_file ->
-          (match Reader.get_typed_parse provider with
+          (match Parsing_heaps.Reader_dispatcher.get_typed_parse ~reader dep_addr with
           | Some parse -> sig_module_t cx dep_file parse
           | None -> unchecked_module_t cx dep_file mref)))
   and sig_module_t cx file_key parse _loc =
     let create_file = dep_file file_key parse in
-    let leader = lazy (Reader.get_leader_key parse) in
+    let leader =
+      lazy
+        (Parsing_heaps.Reader_dispatcher.get_leader_unsafe ~reader file_key parse
+        |> Parsing_heaps.read_file_key
+        )
+    in
     let file = Check_cache.find_or_create cache ~leader ~master_cx ~create_file file_key in
     let t = file.Type_sig_merge.exports in
     copy_into cx file.Type_sig_merge.cx t;
@@ -294,20 +210,22 @@ let mk_check_file
   and dep_file file_key parse ccx =
     let source = Some file_key in
 
-    let aloc_table = lazy (Reader.get_aloc_table parse) in
+    let aloc_table = lazy (Parsing_heaps.read_aloc_table_unsafe file_key parse) in
 
     let aloc (loc : Locs.index) = ALoc.ALocRepresentationDoNotUse.make_keyed source (loc :> int) in
 
-    let buf = Reader.get_type_sig_buf parse in
+    let buf = Heap.type_sig_buf (Option.get (Heap.get_type_sig parse)) in
 
     let cx =
-      let docblock = Reader.get_docblock parse in
+      let docblock = Parsing_heaps.read_docblock_unsafe file_key parse in
       let metadata = Context.docblock_overrides docblock base_metadata in
       Context.make ccx metadata file_key aloc_table Context.Merging
     in
 
     let dependencies =
-      let resolved_modules = Reader.get_resolved_modules parse in
+      let resolved_modules =
+        Parsing_heaps.Reader_dispatcher.get_resolved_modules_unsafe ~reader Fun.id file_key parse
+      in
       let f buf pos =
         let mref = Bin.read_str buf pos in
         let m = SMap.find mref resolved_modules in
@@ -488,7 +406,7 @@ let mk_check_file
           (match def_info with
           | GetDefUtils.PropertyDefinition _ -> true
           | _ -> false)
-        ~loc_of_aloc:Reader.loc_of_aloc
+        ~loc_of_aloc:(Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader)
         ~f:(fun () ->
           let lint_severities = get_lint_severities metadata options in
           Type_inference_js.add_require_tvars cx file_sig;
@@ -501,7 +419,7 @@ let mk_check_file
     let find_refs_result =
       FindRefs_js.local_refs_for_global_find_refs
         ~options
-        ~loc_of_aloc:Reader.loc_of_aloc
+        ~loc_of_aloc:(Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader)
         (ast, file_sig, docblock)
         (Types_js_types.Typecheck_artifacts { cx; typed_ast; obj_to_obj_map })
         file_key

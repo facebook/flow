@@ -7,11 +7,11 @@
 
 type module_ref = string
 
-type 'a resolve_require = module_ref -> 'a Parsing_heaps.resolved_module'
+type resolve_require = module_ref -> Parsing_heaps.dependency_addr Parsing_heaps.resolved_module'
 
-type 'a check_file =
+type check_file =
   File_key.t ->
-  'a resolve_require ->
+  resolve_require ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->
   File_sig.t ->
   Docblock.t ->
@@ -21,41 +21,10 @@ type 'a check_file =
   * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
   * (FindRefsTypes.single_ref list, string) result
 
-module type READER = sig
-  type provider
-
-  type typed_parse
-
-  type dependency
-
-  val read_dependency : dependency -> Modulename.t
-
-  val get_provider : dependency -> provider option
-
-  val get_file_key : provider -> File_key.t
-
-  val get_typed_parse : provider -> typed_parse option
-
-  val get_leader_key : typed_parse -> File_key.t
-
-  val get_aloc_table : typed_parse -> ALoc.table
-
-  val get_docblock : typed_parse -> Docblock.t
-
-  val get_type_sig_buf : typed_parse -> Type_sig_bin.buf
-
-  val get_resolved_modules : typed_parse -> dependency Parsing_heaps.resolved_module' SMap.t
-
-  val loc_of_aloc : ALoc.t -> Loc.t
-end
-
-val mk_heap_reader :
-  Abstract_state_reader.t -> (module READER with type dependency = Parsing_heaps.dependency_addr)
-
 val mk_check_file :
-  (module READER with type dependency = 'a) ->
+  reader:Abstract_state_reader.t ->
   options:Options.t ->
   master_cx:Context.master_context ->
   cache:Check_cache.t ->
   unit ->
-  'a check_file
+  check_file
