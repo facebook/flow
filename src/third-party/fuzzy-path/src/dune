@@ -2,6 +2,7 @@
  (name fuzzy_path)
  (wrapped false)
  (foreign_archives ../fuzzy-path)
+ (libraries base)
  (c_library_flags
   (:include c_library_flags.sexp)))
 

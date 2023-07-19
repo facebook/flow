@@ -65,4 +65,8 @@ let fuzzy_score
     ?(first_match_can_be_weak = false)
     ~pattern
     word =
-  ext_fuzzy_score word pattern boost_full_match first_match_can_be_weak
+  ext_fuzzy_score
+    (Base.String.Search_pattern.(replace_all (create "\\") ~in_:word ~with_:"/"))
+    pattern
+    boost_full_match
+    first_match_can_be_weak
