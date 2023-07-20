@@ -196,7 +196,7 @@ let merge_custom_check_config js_config_object metadata =
     type_guards;
   }
 
-let infer_and_merge ~root filename js_config_object docblock ast =
+let infer_and_merge ~root filename js_config_object docblock ast file_sig =
   (* create cx *)
   let master_cx = get_master_cx root in
   let ccx = Context.make_ccx master_cx in
@@ -207,8 +207,16 @@ let infer_and_merge ~root filename js_config_object docblock ast =
   in
   (* flow.js does not use abstract locations, so this is not used *)
   let aloc_table = lazy (ALoc.empty_table filename) in
-  let resolve_require mref = Error (Reason.internal_module_name mref) in
+  let resolved_requires = ref SMap.empty in
+  let resolve_require mref = SMap.find mref !resolved_requires in
   let cx = Context.make ccx metadata filename aloc_table resolve_require Context.Checking in
+  resolved_requires :=
+    SMap.mapi
+      (fun mref _locs ->
+        let m_name = Reason.internal_module_name mref in
+        let builtins = Context.builtins cx in
+        Builtins.get_builtin builtins m_name ~on_missing:(fun () -> Error m_name))
+      (File_sig.require_loc_map file_sig);
   (* infer ast *)
   let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in
   let ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
@@ -228,11 +236,11 @@ let check_content ~filename ~content ~js_config_object =
   let filename = File_key.SourceFile filename in
   let (errors, warnings) =
     match parse_content filename content with
-    | Ok (ast, _file_sig) ->
+    | Ok (ast, file_sig) ->
       let (_, docblock) =
         Docblock_parser.(parse_docblock ~max_tokens:docblock_max_tokens filename content)
       in
-      let (cx, _) = infer_and_merge ~root filename js_config_object docblock ast in
+      let (cx, _) = infer_and_merge ~root filename js_config_object docblock ast file_sig in
       let suppressions = Error_suppressions.empty in
       (* TODO: support suppressions *)
       let errors = Context.errors cx in
@@ -309,7 +317,7 @@ let infer_type filename content line col js_config_object : Loc.t * (string, str
     let (_, docblock) =
       Docblock_parser.(parse_docblock ~max_tokens:docblock_max_tokens filename content)
     in
-    let (cx, typed_ast) = infer_and_merge ~root filename js_config_object docblock ast in
+    let (cx, typed_ast) = infer_and_merge ~root filename js_config_object docblock ast file_sig in
     let file = Context.file cx in
     let loc = mk_loc filename line col in
     let open Query_types in
@@ -361,7 +369,7 @@ let dump_types js_file js_content js_config_object =
     let (_, docblock) =
       Docblock_parser.(parse_docblock ~max_tokens:docblock_max_tokens filename content)
     in
-    let (cx, typed_ast) = infer_and_merge ~root filename js_config_object docblock ast in
+    let (cx, typed_ast) = infer_and_merge ~root filename js_config_object docblock ast file_sig in
     let printer = Ty_printer.string_of_elt_single_line ~exact_by_default:true in
     let types =
       Query_types.dump_types
