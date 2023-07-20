@@ -2311,13 +2311,15 @@ module Make
 
       method! pattern ?kind expr =
         let (ploc, _) = expr in
-        let write_entries =
-          EnvMap.add
-            (Env_api.PatternLoc, ploc)
-            (Env_api.AssigningWrite (mk_reason RDestructuring ploc))
-            env_state.write_entries
-        in
-        env_state <- { env_state with write_entries };
+        ( if Flow_ast_utils.pattern_has_binding expr then
+          let write_entries =
+            EnvMap.add
+              (Env_api.PatternLoc, ploc)
+              (Env_api.AssigningWrite (mk_reason RDestructuring ploc))
+              env_state.write_entries
+          in
+          env_state <- { env_state with write_entries }
+        );
         super#pattern ?kind expr
 
       method! pattern_identifier ?kind ident =

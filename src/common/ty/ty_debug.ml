@@ -72,7 +72,7 @@ let dump_any_unsoundness_kind = function
   | Unchecked -> "Unchecked"
   | Unimplemented -> "Unimplemented"
   | UnresolvedType -> "UnresolvedType"
-  | NonBindingParameter -> "NonBindingParameter"
+  | NonBindingPattern -> "NonBindingPattern"
 
 let dump_any_kind = function
   | Annotated _ -> "Annotated"

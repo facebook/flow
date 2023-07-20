@@ -236,7 +236,6 @@ type def =
     }
   | GeneratorNext of generator_annot option
   | DeclaredModule of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.DeclareModule.t
-  | NonBindingParam
   | MissingThisAnnot
 
 module Print = struct
@@ -360,7 +359,6 @@ module Print = struct
     | GeneratorNext _ -> "next"
     | Import { import_kind; source; import; source_loc = _; declare_module = _ } ->
       spf "import %s%s from %s" (string_of_import_kind import_kind) (string_of_import import) source
-    | NonBindingParam -> "nonbinding_param"
     | MissingThisAnnot -> "this (missing)"
 end
 

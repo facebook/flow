@@ -7,6 +7,8 @@
 
 include module type of Name_def_types
 
+val pattern_has_annot : (ALoc.t, ALoc.t) Ast.Pattern.t -> bool
+
 val show_scope_kind : scope_kind -> string
 
 val predicate_synthesizable :

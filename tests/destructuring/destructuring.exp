@@ -1347,6 +1347,62 @@ References:
              ^^^^ [1]
 
 
+Error -------------------------------------------------------------------------------------------- empty_patterns.js:5:4
+
+Unsupported expression pattern in destructuring. [unsupported-syntax]
+
+   5|   [m.foo] = (1: any); // only unsupported syntax error
+         ^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- empty_patterns.js:6:4
+
+Unsupported expression pattern in destructuring. [unsupported-syntax]
+
+   6|   [m.foo, {bar: [m.baz]}] = (1: any); // only unsupported syntax error
+         ^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- empty_patterns.js:6:18
+
+Unsupported expression pattern in destructuring. [unsupported-syntax]
+
+   6|   [m.foo, {bar: [m.baz]}] = (1: any); // only unsupported syntax error
+                       ^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ empty_patterns.js:11:15
+
+Missing an annotation on destructuring. [missing-local-annot]
+
+   11|   function f1({}): void {} // error: missing-local-annot
+                     ^^
+
+
+Error ------------------------------------------------------------------------------------------ empty_patterns.js:12:15
+
+Missing an annotation on destructuring. [missing-local-annot]
+
+   12|   function g1([]): void {} // error: missing-local-annot
+                     ^^
+
+
+Error ------------------------------------------------------------------------------------------ empty_patterns.js:13:15
+
+Missing an annotation on destructuring. [missing-local-annot]
+
+   13|   function f2({}) { return 1 } // error: missing-local-annot
+                     ^^
+
+
+Error ------------------------------------------------------------------------------------------ empty_patterns.js:14:15
+
+Missing an annotation on destructuring. [missing-local-annot]
+
+   14|   function g2([]) { return 1 } // error: missing-local-annot
+                     ^^
+
+
 Error ----------------------------------------------------------------------------------------------- object_rest.js:5:9
 
 Cannot assign `0` to `o1_rest.x` because property `x` is missing in rest of object pattern [1]. [prop-missing]
@@ -1421,7 +1477,7 @@ References:
 
 
 
-Found 96 errors
+Found 103 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

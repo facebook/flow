@@ -265,6 +265,8 @@ end = struct
   let pattern = fold_pattern ~default:() ~join:(fun _ _ -> ())
 end
 
+let pattern_has_annot p = p |> Destructure.type_of_pattern |> Base.Option.is_some
+
 let predicate_function_invalid_param_reasons params =
   let open Flow_ast in
   let open Reason in
@@ -1084,7 +1086,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
         this#add_binding
           (Env_api.FunctionParamLoc, loc)
           (mk_reason RDestructuring loc)
-          NonBindingParam;
+          (Binding (Root source));
       ignore @@ super#function_param (loc, { argument; default = None })
 
     method private visit_function_rest_param ~hints (expr : ('loc, 'loc) Ast.Function.RestParam.t) =
@@ -1295,7 +1297,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
         this#add_binding
           (Env_api.FunctionParamLoc, loc)
           (mk_reason RDestructuring loc)
-          NonBindingParam;
+          (Binding (Root source));
       ignore @@ super#component_param (loc, { local; default = None; shorthand; name })
 
     method private visit_component_rest_param
@@ -1353,7 +1355,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
         this#add_binding
           (Env_api.FunctionParamLoc, loc)
           (mk_reason RDestructuring loc)
-          NonBindingParam;
+          (Binding (Root source));
       ignore @@ super#component_rest_param param
 
     method visit_function_expr
