@@ -316,8 +316,8 @@ class requires_exports_calculator ~ast ~opts =
 
     method! call call_loc (expr : (Loc.t, Loc.t) Ast.Expression.Call.t) =
       let open Ast.Expression in
-      let { Call.callee; targs = _; arguments; comments = _ } = expr in
-      this#handle_call call_loc callee arguments None;
+      let { Call.callee; targs; arguments; comments = _ } = expr in
+      this#handle_call call_loc callee targs arguments None;
       super#call call_loc expr
 
     method! module_ref_literal loc lit =
@@ -687,16 +687,17 @@ class requires_exports_calculator ~ast ~opts =
       let open Ast.Expression in
       let bindings = this#require_pattern left in
       match right with
-      | (call_loc, Call { Call.callee; targs = _; arguments; comments = _ }) ->
-        this#handle_call call_loc callee arguments bindings
+      | (call_loc, Call { Call.callee; targs; arguments; comments = _ }) ->
+        this#handle_call call_loc callee targs arguments bindings
       | _ -> ()
 
-    method private handle_call call_loc callee arguments bindings =
+    method private handle_call call_loc callee targs arguments bindings =
       let open Ast.Expression in
       if not (this#visited_requires_with_bindings call_loc bindings) then (
         this#visit_requires_with_bindings call_loc bindings;
-        match (callee, arguments) with
+        match (callee, targs, arguments) with
         | ( (_, Identifier (loc, { Ast.Identifier.name = "require"; comments = _ })),
+            None,
             ( _,
               {
                 Ast.Expression.ArgList.arguments =

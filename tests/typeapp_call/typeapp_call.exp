@@ -320,13 +320,5 @@ Cannot call non-polymorphic function with type arguments. [nonpolymorphic-type-a
       ^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------------- require.js:1:17
 
-Cannot resolve module `foo`. [cannot-resolve-module]
-
-   1| require<string>("foo");
-                      ^^^^^
-
-
-
-Found 22 errors
+Found 21 errors

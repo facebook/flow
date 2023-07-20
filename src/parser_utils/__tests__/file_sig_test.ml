@@ -253,6 +253,13 @@ let tests =
              assert_substring_equal ~ctxt "require('foo')" source require_loc
            | _ -> assert_failure "Unexpected requires"
          );
+         ( "cjs_require_typeapp" >:: fun _ctxt ->
+           let source = "const Foo = require<X>('foo')" in
+           let { requires; _ } = visit source in
+           match requires with
+           | [] -> ()
+           | _ -> assert_failure "Unexpected requires"
+         );
          ( "cjs_module_ref" >:: fun ctxt ->
            let source = "moduleRefConsumer('m#foo')" in
            let parse_options =
