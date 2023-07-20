@@ -16,19 +16,16 @@ Cannot resolve module `./bar`. [cannot-resolve-module]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:15:2
 
-Cannot cast `require(...)` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `require(...)` to number because string is incompatible with number [1]. [incompatible-cast]
 
    test.js:15:2
    15| (require('./bar.png'): number); // error, string ~> number
         ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:15:10
-   15| (require('./bar.png'): number); // error, string ~> number
-                ^^^^^^^^^^^ [1]
    test.js:15:24
    15| (require('./bar.png'): number); // error, string ~> number
-                              ^^^^^^ [2]
+                              ^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:18:8
@@ -41,19 +38,16 @@ Cannot resolve module `./qux`. [cannot-resolve-module]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:19:2
 
-Cannot cast `require(...)` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `require(...)` to number because string is incompatible with number [1]. [incompatible-cast]
 
    test.js:19:2
    19| (require('./qux.webp'): number);  // error, string ~> number
         ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:19:10
-   19| (require('./qux.webp'): number);  // error, string ~> number
-                ^^^^^^^^^^^^ [1]
    test.js:19:25
    19| (require('./qux.webp'): number);  // error, string ~> number
-                               ^^^^^^ [2]
+                               ^^^^^^ [1]
 
 
 

@@ -52,7 +52,7 @@ val merge_exports : file -> Reason.t -> exports -> Type.t
 
 val merge_def : file -> Reason.t -> (ALoc.t, ALoc.t Pack.packed) Type_sig.def -> Type.t
 
-val merge_resource_module_t : Context.t -> string -> ALoc.t -> Type.t
+val merge_resource_module_t : Context.t -> File_key.t -> string -> Type.t
 
 val merge : tparams_map -> file -> ALoc.t Pack.packed -> Type.t
 

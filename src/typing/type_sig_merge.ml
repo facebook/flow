@@ -1955,17 +1955,19 @@ let merge_export file = function
     let (lazy (loc, _name, type_)) = Remote_refs.get file.remote_refs index in
     { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
 
-let merge_resource_module_t cx f loc =
-  let (reason, exports_t) =
-    match Utils_js.extension_of_filename f with
+let merge_resource_module_t cx file_key filename =
+  let exports_t =
+    match Utils_js.extension_of_filename filename with
     | Some ".css" ->
-      let reason = Reason.mk_reason Reason.RObjectType loc in
-      (reason, Type.AnyT.make Type.Untyped reason)
+      let reason = Reason.mk_reason Reason.RObjectType ALoc.none in
+      Type.AnyT.make Type.Untyped reason
     | Some _ ->
-      let reason = Reason.mk_reason Reason.RString loc in
-      (reason, Type.StrT.why reason |> Type.with_trust Type.bogus_trust)
+      let reason = Reason.mk_reason Reason.RString ALoc.none in
+      Type.StrT.why reason |> Type.with_trust Type.bogus_trust
     | _ -> failwith "How did we find a resource file without an extension?!"
   in
+  let file_loc = ALoc.of_loc { Loc.none with Loc.source = Some file_key } in
+  let reason = Reason.(mk_reason RExports file_loc) in
   mk_commonjs_module_t cx reason (Context.is_strict cx) exports_t
 
 let merge tps = merge tps SMap.empty

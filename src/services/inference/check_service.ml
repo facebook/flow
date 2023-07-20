@@ -177,7 +177,8 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
       | None -> unknown_module_t cx mref (Parsing_heaps.read_dependency m)
       | Some dep_addr ->
         (match Parsing_heaps.read_file_key dep_addr with
-        | File_key.ResourceFile f -> Merge.merge_resource_module_t cx f
+        | File_key.ResourceFile f as file_key ->
+          Fun.const (Merge.merge_resource_module_t cx file_key f)
         | dep_file ->
           (match Parsing_heaps.Reader_dispatcher.get_typed_parse ~reader dep_addr with
           | Some parse -> sig_module_t cx dep_file parse
