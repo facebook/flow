@@ -37,7 +37,7 @@ type exports =
 type file = {
   key: File_key.t;
   cx: Context.t;
-  dependencies: (string * (ALoc.t -> Type.t)) Module_refs.t;
+  dependencies: (string * Context.resolved_require Lazy.t) Module_refs.t;
   exports: Type.t;
   local_defs: (ALoc.t * string * Type.t) Lazy.t Local_defs.t;
   remote_refs: (ALoc.t * string * Type.t) Lazy.t Remote_refs.t;
@@ -206,26 +206,35 @@ let add_name_field reason =
   in
   SMap.update "name" f
 
+let get_module_t mref loc = function
+  | Ok t -> t
+  | Error _ ->
+    let reason = Reason.(mk_reason (RCustom mref) loc) in
+    Type.(AnyT.error_of_kind UnresolvedName reason)
+
 let require file loc index ~legacy_interop =
-  let (mref, mk_module_t) = Module_refs.get file.dependencies index in
+  let (mref, (lazy resolved_require)) = Module_refs.get file.dependencies index in
+  let module_t = get_module_t mref loc resolved_require in
   let reason = Reason.(mk_reason (RCommonJSExports mref) loc) in
-  ConsGen.cjs_require file.cx (mk_module_t loc) reason false legacy_interop
+  ConsGen.cjs_require file.cx module_t reason false legacy_interop
 
 let import file reason id_loc index kind ~remote ~local =
-  let (mref, mk_module_t) = Module_refs.get file.dependencies index in
-  let module_t = mk_module_t id_loc in
+  let (mref, (lazy resolved_require)) = Module_refs.get file.dependencies index in
+  let module_t = get_module_t mref id_loc resolved_require in
   if remote = "default" then
     ConsGen.import_default file.cx reason kind local mref false module_t
   else
     ConsGen.import_named file.cx reason kind remote mref false module_t
 
 let import_ns file reason id_loc index =
-  let (_, mk_module_t) = Module_refs.get file.dependencies index in
-  ConsGen.import_ns file.cx reason false (mk_module_t id_loc)
+  let (mref, (lazy resolved_require)) = Module_refs.get file.dependencies index in
+  let module_t = get_module_t mref id_loc resolved_require in
+  ConsGen.import_ns file.cx reason false module_t
 
 let import_typeof_ns file reason id_loc index =
-  let (_, mk_module_t) = Module_refs.get file.dependencies index in
-  let ns_t = ConsGen.import_ns file.cx reason false (mk_module_t id_loc) in
+  let (mref, (lazy resolved_require)) = Module_refs.get file.dependencies index in
+  let module_t = get_module_t mref id_loc resolved_require in
+  let ns_t = ConsGen.import_ns file.cx reason false module_t in
   ConsGen.import_typeof file.cx reason "*" ns_t
 
 let merge_enum file reason id_loc rep members has_unknown_members =
@@ -378,8 +387,8 @@ let mk_commonjs_module_t cx reason strict t =
 
 let merge_exports =
   let merge_star file (loc, index) =
-    let (_, mk_module_t) = Module_refs.get file.dependencies index in
-    (loc, mk_module_t loc)
+    let (mref, (lazy resolved_module)) = Module_refs.get file.dependencies index in
+    (loc, get_module_t mref loc resolved_module)
   in
   let mk_es_module_t file reason is_strict =
     let open Type in

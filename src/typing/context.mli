@@ -113,6 +113,10 @@ type typing_mode =
   | SynthesisMode
   | HintEvaluationMode
 
+type resolved_require = (Type.t, Reason.name) result
+
+type resolve_require = string -> resolved_require
+
 type voidable_check = {
   public_property_map: Type.Properties.id;
   private_property_map: Type.Properties.id;
@@ -127,7 +131,8 @@ val empty_master_cx : unit -> master_context
 
 val make_ccx : master_context -> component_t
 
-val make : component_t -> metadata -> File_key.t -> ALoc.table Lazy.t -> phase -> t
+val make :
+  component_t -> metadata -> File_key.t -> ALoc.table Lazy.t -> resolve_require -> phase -> t
 
 val metadata_of_options : Options.t -> metadata
 
@@ -192,7 +197,7 @@ val find_call : t -> int -> Type.t
 
 val find_exports : t -> Type.Exports.id -> Type.Exports.t
 
-val find_require : t -> ALoc.t -> Type.tvar
+val find_require : t -> string -> resolved_require
 
 val find_tvar : t -> Type.ident -> Type.Constraint.node
 
@@ -217,8 +222,6 @@ val severity_cover : t -> ExactCover.lint_severity_cover Utils_js.FilenameMap.t
 val max_trace_depth : t -> int
 
 val module_kind : t -> Module_info.kind
-
-val require_map : t -> Type.tvar ALocMap.t
 
 val property_maps : t -> Type.Properties.map
 
@@ -311,8 +314,6 @@ val reset_errors : t -> Flow_error.ErrorSet.t -> unit
 val add_error_suppressions : t -> Error_suppressions.t -> unit
 
 val add_severity_covers : t -> ExactCover.lint_severity_cover Utils_js.FilenameMap.t -> unit
-
-val add_require : t -> ALoc.t -> Type.tvar -> unit
 
 val add_property_map : t -> Type.Properties.id -> Type.Properties.t -> unit
 

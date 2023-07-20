@@ -13,20 +13,6 @@ module Ast = Flow_ast
 module NameResolver = Name_resolver.Make_of_flow (Context) (Flow_js_utils)
 module NameDefOrdering = Name_def_ordering.Make (Context) (Flow_js_utils)
 
-let add_require_tvars =
-  let add cx desc loc =
-    let loc = ALoc.of_loc loc in
-    let reason = Reason.mk_reason desc loc in
-    let id = Tvar.mk_no_wrap cx reason in
-    Context.add_require cx loc (reason, id)
-  in
-  fun cx file_sig ->
-    SMap.iter
-      (fun mref locs ->
-        let desc = Reason.RCustom mref in
-        Nel.iter (add cx desc) locs)
-      (File_sig.require_loc_map file_sig)
-
 (* Scan the list of comments to place suppressions on the appropriate locations.
     Because each comment can only contain a single code, in order to support
     suppressing multiple types of errors on one location we allow you to stack

@@ -5,13 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type module_ref = string
-
-type resolve_require = module_ref -> Parsing_heaps.dependency_addr Parsing_heaps.resolved_module'
+type resolved_module = Parsing_heaps.dependency_addr Parsing_heaps.resolved_module'
 
 type check_file =
   File_key.t ->
-  resolve_require ->
+  resolved_module SMap.t ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->
   File_sig.t ->
   Docblock.t ->

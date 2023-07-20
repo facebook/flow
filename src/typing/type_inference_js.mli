@@ -13,8 +13,6 @@ val scan_for_suppressions :
   * Error_suppressions.t
   * ALoc.t Error_message.t' list
 
-val add_require_tvars : Context.t -> File_sig.t -> unit
-
 (* Lint suppressions are handled iff lint_severities is Some. *)
 val infer_ast :
   lint_severities:Severity.severity LintSettings.t ->

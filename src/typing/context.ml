@@ -203,14 +203,16 @@ type typing_mode =
   | SynthesisMode
   | HintEvaluationMode
 
+type resolved_require = (Type.t, Reason.name) result
+
 type t = {
   ccx: component_t;
   file: File_key.t;
   mutable phase: phase;
   aloc_table: ALoc.table Lazy.t;
   metadata: metadata;
+  resolve_require: resolve_require;
   module_info: Module_info.t;
-  mutable require_map: Type.tvar ALocMap.t;
   trust_constructor: unit -> Trust.trust_rep;
   hint_map_arglist_cache: (ALoc.t * Type.call_arg) list ALocMap.t ref;
   hint_map_jsx_cache:
@@ -224,6 +226,8 @@ type t = {
   mutable typing_mode: typing_mode;
   node_cache: Node_cache.t;
 }
+
+and resolve_require = string -> resolved_require
 
 let metadata_of_options options =
   {
@@ -370,7 +374,7 @@ let make_ccx master_cx =
     allow_method_unbinding = ALocSet.empty;
   }
 
-let make ccx metadata file aloc_table phase =
+let make ccx metadata file aloc_table resolve_require phase =
   ccx.aloc_tables <- Utils_js.FilenameMap.add file aloc_table ccx.aloc_tables;
   {
     ccx;
@@ -378,8 +382,8 @@ let make ccx metadata file aloc_table phase =
     phase;
     aloc_table;
     metadata;
+    resolve_require;
     module_info = Module_info.empty_cjs_module ();
-    require_map = ALocMap.empty;
     trust_constructor = Trust.literal_trust;
     hint_map_arglist_cache = ref ALocMap.empty;
     hint_map_jsx_cache = Hashtbl.create 0;
@@ -494,9 +498,9 @@ let find_exports cx id =
   try Type.Exports.Map.find id cx.ccx.sig_cx.export_maps with
   | Not_found -> raise (Exports_not_found id)
 
-let find_require cx loc =
-  try ALocMap.find loc cx.require_map with
-  | Not_found -> raise (Require_not_found (ALoc.debug_to_string ~include_source:true loc))
+let find_require cx mref =
+  try cx.resolve_require mref with
+  | Not_found -> raise (Require_not_found mref)
 
 let find_tvar cx id =
   try IMap.find id cx.ccx.sig_cx.graph with
@@ -527,8 +531,6 @@ let include_suppressions cx = cx.metadata.include_suppressions
 let severity_cover cx = cx.ccx.severity_cover
 
 let max_trace_depth cx = cx.metadata.max_trace_depth
-
-let require_map cx = cx.require_map
 
 let property_maps cx = cx.ccx.sig_cx.property_maps
 
@@ -653,8 +655,6 @@ let add_error_suppressions cx suppressions =
 
 let add_severity_covers cx severity_covers =
   cx.ccx.severity_cover <- Utils_js.FilenameMap.union severity_covers cx.ccx.severity_cover
-
-let add_require cx loc tvar = cx.require_map <- ALocMap.add loc tvar cx.require_map
 
 let add_property_map cx id pmap =
   let property_maps = Type.Properties.Map.add id pmap cx.ccx.sig_cx.property_maps in

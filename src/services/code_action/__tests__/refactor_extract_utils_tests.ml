@@ -128,7 +128,8 @@ let dummy_context () =
   let ccx = Context.make_ccx master_cx in
   let metadata = stub_metadata ~root ~checked:true in
   let aloc_table = lazy (ALoc.empty_table dummy_filename) in
-  Context.make ccx metadata dummy_filename aloc_table Context.Checking
+  let resolve_require _ = raise Not_found in
+  Context.make ccx metadata dummy_filename aloc_table resolve_require Context.Checking
 
 let typed_ast_of_ast cx ast =
   let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in

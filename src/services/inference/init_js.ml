@@ -77,7 +77,8 @@ let infer_lib_file ~ccx ~options ~exclude_syms lib_file ast =
   in
   (* Lib files use only concrete locations, so this is not used. *)
   let aloc_table = lazy (ALoc.empty_table lib_file) in
-  let cx = Context.make ccx metadata lib_file aloc_table Context.InitLib in
+  let resolve_require mref = Error (Reason.internal_module_name mref) in
+  let cx = Context.make ccx metadata lib_file aloc_table resolve_require Context.InitLib in
   let syms = Infer.infer_lib_file cx ast ~exclude_syms ~lint_severities in
 
   if verbose != None then

@@ -73,15 +73,12 @@ let parse_content file content =
   let (ast, _parse_errors) =
     Parser_flow.program_file ~fail:false ~parse_options content (Some file)
   in
-  let (file_sig, _) = File_sig.program ~ast ~opts:File_sig.default_opts in
-  (ast, file_sig)
+  ast
 
 let before_and_after_stmts file_name =
   let content = Sys_utils.cat file_name in
   let file_key = File_key.SourceFile file_name in
-  let (((_, { Flow_ast.Program.statements = stmts; _ }) as ast), file_sig) =
-    parse_content file_key content
-  in
+  let ((_, { Flow_ast.Program.statements = stmts; _ }) as ast) = parse_content file_key content in
   (* Loading the entire libdefs here would be overkill, but the typed_ast tests do use Object
    * in a few tests. In order to avoid EBuiltinLookupFailed errors with an empty source location,
    * we manually add "Object" -> Any into the builtins map. We use the UnresolvedName any type
@@ -101,20 +98,10 @@ let before_and_after_stmts file_name =
   in
   let cx =
     let aloc_table = lazy (ALoc.empty_table file_key) in
+    let resolve_require mref = Error (Reason.internal_module_name mref) in
     let ccx = Context.(make_ccx master_cx) in
-    Context.make ccx metadata file_key aloc_table Context.Checking
+    Context.make ccx metadata file_key aloc_table resolve_require Context.Checking
   in
-  Type_inference_js.add_require_tvars cx file_sig;
-  let connect_requires mref =
-    Nel.iter (fun loc ->
-        let loc = ALoc.of_loc loc in
-        let reason = Reason.(mk_reason (RCustom mref) loc) in
-        let module_t = Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)) in
-        let (_, require_id) = Context.find_require cx loc in
-        Flow_js.resolve_id cx require_id module_t
-    )
-  in
-  SMap.iter connect_requires (File_sig.require_loc_map file_sig);
   let stmts = Base.List.map ~f:Ast_loc_utils.loc_to_aloc_mapper#statement stmts in
   let (_, { Flow_ast.Program.statements = t_stmts; _ }) =
     Type_inference_js.infer_ast

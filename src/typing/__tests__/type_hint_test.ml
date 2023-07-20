@@ -154,10 +154,8 @@ end = struct
           module_ref_prefix_LEGACY_INTEROP = None;
         }
     in
-
     let (ast, _) = Parser_flow.program_file ~fail:false ~parse_options content (Some file) in
-    let (fsig, _) = File_sig.program ~ast ~opts:File_sig.default_opts in
-    (ast, fsig)
+    ast
 
   (* No verbose mode during libdef init. *)
   let metadata = { metadata with Context.verbose = None }
@@ -169,10 +167,13 @@ end = struct
       |> List.fold_left
            (fun (_, exclude_syms) (filename, lib_content) ->
              let lib_file = File_key.LibFile filename in
-             let (ast, _file_sig) = parse_content lib_file lib_content in
+             let ast = parse_content lib_file lib_content in
              (* Lib files use only concrete locations, so this is not used. *)
              let aloc_table = lazy (ALoc.empty_table lib_file) in
-             let cx = Context.make ccx metadata lib_file aloc_table Context.Checking in
+             let resolve_require mref = Error (Reason.internal_module_name mref) in
+             let cx =
+               Context.make ccx metadata lib_file aloc_table resolve_require Context.Checking
+             in
              let syms =
                Type_inference_js.infer_lib_file
                  cx
@@ -206,20 +207,7 @@ end = struct
 
   let get_typed_ast cx content =
     let metadata = { metadata with Context.verbose = None } in
-    let (ast, file_sig) = parse_content dummy_filename content in
-    (* connect requires *)
-    Type_inference_js.add_require_tvars cx file_sig;
-    let connect_requires mref =
-      let module_name = Reason.internal_module_name mref in
-      Nel.iter (fun loc ->
-          let loc = ALoc.of_loc loc in
-          let reason = Reason.(mk_reason (RCustom mref) loc) in
-          let module_t = Flow_js_utils.lookup_builtin_strict cx module_name reason in
-          let (_, require_id) = Context.find_require cx loc in
-          Flow_js.resolve_id cx require_id module_t
-      )
-    in
-    SMap.iter connect_requires (File_sig.require_loc_map file_sig);
+    let ast = parse_content dummy_filename content in
     let ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
     let lint_severities =
       Merge_js.get_lint_severities metadata StrictModeSettings.empty LintSettings.empty_severities
@@ -240,6 +228,7 @@ end = struct
       let file = Context.file cx in
       let metadata = Context.metadata cx in
       let aloc_table = Utils_js.FilenameMap.find file (Context.aloc_tables cx) in
+      let resolve_require mref = Error (Reason.internal_module_name mref) in
       let ccx = Context.make_ccx (get_master_cx ()) in
       let t = reducer#type_ cx Polarity.Neutral t in
       Context.merge_into
@@ -252,7 +241,7 @@ end = struct
           export_maps = reducer#get_reduced_export_maps;
           evaluated = reducer#get_reduced_evaluated;
         };
-      let cx = Context.make ccx metadata file aloc_table Context.PostInference in
+      let cx = Context.make ccx metadata file aloc_table resolve_require Context.PostInference in
       (cx, t)
     | _ -> failwith "Must have a last statement that's an expression"
 end
@@ -278,6 +267,7 @@ let fun_t ~params ~return_t =
 let mk_cx ~verbose () =
   let master_cx = TypeLoader.get_master_cx () in
   let aloc_table = lazy (ALoc.empty_table dummy_filename) in
+  let resolve_require mref = Error (Reason.internal_module_name mref) in
   let ccx = Context.(make_ccx master_cx) in
   let metadata =
     if verbose then
@@ -285,7 +275,7 @@ let mk_cx ~verbose () =
     else
       { metadata with Context.verbose = None }
   in
-  Context.make ccx metadata dummy_filename aloc_table Context.Checking
+  Context.make ccx metadata dummy_filename aloc_table resolve_require Context.Checking
 
 let mk_hint base_t ops =
   ops

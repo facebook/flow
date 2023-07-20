@@ -48,17 +48,16 @@ let mk_commonjs_module_t cx reason_exports_module reason export_t =
         )
   )
 
-(* given a module name, return associated tvar in module map (failing if not
-   found); e.g., used to find tvars associated with requires *after* all
-   requires already have entries in the module map *)
-let require_t_of_ref_unsafe cx ?(declare_module = false) (loc, mref) =
+let get_module_t cx ?(declare_module = false) (loc, mref) =
   if declare_module || Context.in_declare_module cx then
-    Flow.get_builtin_module cx loc mref
+    OpenT (Flow.get_builtin_module cx loc mref)
   else
-    Context.find_require cx loc
-
-let get_module_t cx ?declare_module source =
-  OpenT (require_t_of_ref_unsafe cx ?declare_module source)
+    match Context.find_require cx mref with
+    | Ok t -> t
+    | Error m_name ->
+      let reason = Reason.(mk_reason (RCustom mref) loc) in
+      Flow_js_utils.lookup_builtin_strict_error cx m_name reason
+      |> Flow_js_utils.apply_env_errors cx loc
 
 let require cx ~legacy_interop require_loc module_ref module_t =
   let reason = mk_reason (RCommonJSExports module_ref) require_loc in

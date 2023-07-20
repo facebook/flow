@@ -406,9 +406,8 @@ let mk_check_file options ~reader ~master_cx ~def_info () =
       let resolved_modules =
         Parsing_heaps.Mutator_reader.get_resolved_modules_unsafe ~reader Fun.id file parse
       in
-      let resolve_require mref = SMap.find mref resolved_modules in
       let (cx, typed_ast, find_ref_result) =
-        check_file file resolve_require ast file_sig docblock aloc_table def_info
+        check_file file resolved_modules ast file_sig docblock aloc_table def_info
       in
       let coverage = Coverage.file_coverage ~cx typed_ast in
       let errors = Context.errors cx in
@@ -477,15 +476,16 @@ let check_contents_context ~reader options master_cx file ast docblock file_sig 
       | None -> ALoc.empty_table file)
   in
   let reader = Abstract_state_reader.State_reader reader in
-  let resolve_require =
+  let resolved_modules =
     let node_modules_containers = !Files.node_modules_containers in
-    Module_js.imported_module ~options ~reader ~node_modules_containers file
+    let f mref = Module_js.imported_module ~options ~reader ~node_modules_containers file mref in
+    SMap.mapi (fun mref _locs -> f mref) (File_sig.require_loc_map file_sig)
   in
   let check_file =
     Check_service.mk_check_file ~reader ~options ~master_cx ~cache:check_contents_cache ()
   in
   let (cx, tast, _) =
-    check_file file resolve_require ast file_sig docblock aloc_table GetDefUtils.NoDefinition
+    check_file file resolved_modules ast file_sig docblock aloc_table GetDefUtils.NoDefinition
   in
   (cx, tast)
 

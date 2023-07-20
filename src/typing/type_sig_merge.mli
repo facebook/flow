@@ -26,7 +26,7 @@ type exports =
 type file = {
   key: File_key.t;
   cx: Context.t;
-  dependencies: (string * (ALoc.t -> Type.t)) Module_refs.t;
+  dependencies: (string * Context.resolved_require Lazy.t) Module_refs.t;
   exports: Type.t;
   local_defs: (ALoc.t * string * Type.t) Lazy.t Local_defs.t;
   remote_refs: (ALoc.t * string * Type.t) Lazy.t Remote_refs.t;

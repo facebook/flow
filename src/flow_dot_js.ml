@@ -80,7 +80,10 @@ let load_lib_files ~ccx ~metadata files =
            | Ok (ast, _file_sig) ->
              (* Lib files use only concrete locations, so this is not used. *)
              let aloc_table = lazy (ALoc.empty_table lib_file) in
-             let cx = Context.make ccx metadata lib_file aloc_table Context.InitLib in
+             let resolve_require mref = Error (Reason.internal_module_name mref) in
+             let cx =
+               Context.make ccx metadata lib_file aloc_table resolve_require Context.InitLib
+             in
              let syms =
                Type_inference_js.infer_lib_file
                  cx
@@ -193,7 +196,7 @@ let merge_custom_check_config js_config_object metadata =
     type_guards;
   }
 
-let infer_and_merge ~root filename js_config_object docblock ast file_sig =
+let infer_and_merge ~root filename js_config_object docblock ast =
   (* create cx *)
   let master_cx = get_master_cx root in
   let ccx = Context.make_ccx master_cx in
@@ -204,20 +207,8 @@ let infer_and_merge ~root filename js_config_object docblock ast file_sig =
   in
   (* flow.js does not use abstract locations, so this is not used *)
   let aloc_table = lazy (ALoc.empty_table filename) in
-  let cx = Context.make ccx metadata filename aloc_table Context.Checking in
-  (* connect requires *)
-  Type_inference_js.add_require_tvars cx file_sig;
-  let connect_requires mref =
-    let module_name = Reason.internal_module_name mref in
-    Nel.iter (fun loc ->
-        let loc = ALoc.of_loc loc in
-        let reason = Reason.(mk_reason (RCustom mref) loc) in
-        let module_t = Flow_js_utils.lookup_builtin_strict cx module_name reason in
-        let (_, require_id) = Context.find_require cx loc in
-        Flow_js.resolve_id cx require_id module_t
-    )
-  in
-  SMap.iter connect_requires (File_sig.require_loc_map file_sig);
+  let resolve_require mref = Error (Reason.internal_module_name mref) in
+  let cx = Context.make ccx metadata filename aloc_table resolve_require Context.Checking in
   (* infer ast *)
   let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in
   let ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
@@ -237,11 +228,11 @@ let check_content ~filename ~content ~js_config_object =
   let filename = File_key.SourceFile filename in
   let (errors, warnings) =
     match parse_content filename content with
-    | Ok (ast, file_sig) ->
+    | Ok (ast, _file_sig) ->
       let (_, docblock) =
         Docblock_parser.(parse_docblock ~max_tokens:docblock_max_tokens filename content)
       in
-      let (cx, _) = infer_and_merge ~root filename js_config_object docblock ast file_sig in
+      let (cx, _) = infer_and_merge ~root filename js_config_object docblock ast in
       let suppressions = Error_suppressions.empty in
       (* TODO: support suppressions *)
       let errors = Context.errors cx in
@@ -318,7 +309,7 @@ let infer_type filename content line col js_config_object : Loc.t * (string, str
     let (_, docblock) =
       Docblock_parser.(parse_docblock ~max_tokens:docblock_max_tokens filename content)
     in
-    let (cx, typed_ast) = infer_and_merge ~root filename js_config_object docblock ast file_sig in
+    let (cx, typed_ast) = infer_and_merge ~root filename js_config_object docblock ast in
     let file = Context.file cx in
     let loc = mk_loc filename line col in
     let open Query_types in
@@ -370,7 +361,7 @@ let dump_types js_file js_content js_config_object =
     let (_, docblock) =
       Docblock_parser.(parse_docblock ~max_tokens:docblock_max_tokens filename content)
     in
-    let (cx, typed_ast) = infer_and_merge ~root filename js_config_object docblock ast file_sig in
+    let (cx, typed_ast) = infer_and_merge ~root filename js_config_object docblock ast in
     let printer = Ty_printer.string_of_elt_single_line ~exact_by_default:true in
     let types =
       Query_types.dump_types

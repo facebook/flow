@@ -702,22 +702,23 @@ let emit_cacheable_env_error cx loc err =
   in
   add_output cx err
 
+let lookup_builtin_strict_error cx x reason =
+  let potential_generator =
+    Context.missing_module_generators cx
+    |> Base.List.find ~f:(fun (pattern, _) -> Str.string_match pattern (uninternal_name x) 0)
+    |> Base.Option.map ~f:snd
+  in
+  Error
+    ( AnyT.error_of_kind UnresolvedName reason,
+      Nel.one
+        (Env_api.BuiltinLookupFailed
+           { reason_desc = desc_of_reason reason; name = x; potential_generator }
+        )
+    )
+
 let lookup_builtin_strict_result cx x reason =
   let builtins = Context.builtins cx in
-  Builtins.get_builtin builtins x ~on_missing:(fun () ->
-      let potential_generator =
-        Context.missing_module_generators cx
-        |> Base.List.find ~f:(fun (pattern, _) -> Str.string_match pattern (uninternal_name x) 0)
-        |> Base.Option.map ~f:snd
-      in
-      Error
-        ( AnyT.error_of_kind UnresolvedName reason,
-          Nel.one
-            (Env_api.BuiltinLookupFailed
-               { reason_desc = desc_of_reason reason; name = x; potential_generator }
-            )
-        )
-  )
+  Builtins.get_builtin builtins x ~on_missing:(fun () -> lookup_builtin_strict_error cx x reason)
 
 let apply_env_errors cx loc = function
   | Ok t -> t

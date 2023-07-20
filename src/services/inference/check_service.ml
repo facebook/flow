@@ -5,13 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type module_ref = string
-
-type resolve_require = module_ref -> Parsing_heaps.dependency_addr Parsing_heaps.resolved_module'
+type resolved_module = Parsing_heaps.dependency_addr Parsing_heaps.resolved_module'
 
 type check_file =
   File_key.t ->
-  resolve_require ->
+  resolved_module SMap.t ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->
   File_sig.t ->
   Docblock.t ->
@@ -122,12 +120,10 @@ let copy_into dst_cx src_cx t =
   let (_ : Context.t) = copier#type_ src_cx Polarity.Positive dst_cx t in
   ()
 
-let unknown_module_t cx mref m =
-  let desc = Reason.RCustom mref in
+let unknown_module_t cx _mref m =
   let m_name = Reason.internal_module_name (Modulename.to_string m) in
-  fun loc ->
-    let reason = Reason.mk_reason desc loc in
-    Flow_js_utils.lookup_builtin_strict cx m_name reason
+  let builtins = Context.builtins cx in
+  Builtins.get_builtin builtins m_name ~on_missing:(fun () -> Error m_name)
 
 let unchecked_module_t cx file_key mref =
   let desc = Reason.RUntypedModule mref in
@@ -135,14 +131,12 @@ let unchecked_module_t cx file_key mref =
   let loc = ALoc.of_loc Loc.{ none with source = Some file_key } in
   let reason = Reason.mk_reason desc loc in
   let default = Type.(AnyT (reason, Untyped)) in
-  Fun.const (Flow_js_utils.lookup_builtin_with_default cx m_name default)
+  Flow_js_utils.lookup_builtin_with_default cx m_name default
 
 let get_lint_severities metadata options =
   let lint_severities = Options.lint_severities options in
   let strict_mode = Options.strict_mode options in
   Merge_js.get_lint_severities metadata strict_mode lint_severities
-
-let resolve_require_id = Flow_js.resolve_id
 
 [@@@warning "-60"]
 
@@ -177,13 +171,12 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
       | None -> unknown_module_t cx mref (Parsing_heaps.read_dependency m)
       | Some dep_addr ->
         (match Parsing_heaps.read_file_key dep_addr with
-        | File_key.ResourceFile f as file_key ->
-          Fun.const (Merge.merge_resource_module_t cx file_key f)
+        | File_key.ResourceFile f as file_key -> Ok (Merge.merge_resource_module_t cx file_key f)
         | dep_file ->
           (match Parsing_heaps.Reader_dispatcher.get_typed_parse ~reader dep_addr with
-          | Some parse -> sig_module_t cx dep_file parse
-          | None -> unchecked_module_t cx dep_file mref)))
-  and sig_module_t cx file_key parse _loc =
+          | Some parse -> Ok (sig_module_t cx dep_file parse)
+          | None -> Ok (unchecked_module_t cx dep_file mref))))
+  and sig_module_t cx file_key parse =
     let create_file = dep_file file_key parse in
     let leader =
       lazy
@@ -208,20 +201,24 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
 
     let buf = Heap.type_sig_buf (Option.get (Heap.get_type_sig parse)) in
 
+    let resolved_modules =
+      Parsing_heaps.Reader_dispatcher.get_resolved_modules_unsafe ~reader Fun.id file_key parse
+    in
+
+    let resolved_requires = ref SMap.empty in
     let cx =
       let docblock = Parsing_heaps.read_docblock_unsafe file_key parse in
       let metadata = Context.docblock_overrides docblock base_metadata in
-      Context.make ccx metadata file_key aloc_table Context.Merging
+      let resolve_require mref = Lazy.force (SMap.find mref !resolved_requires) in
+      Context.make ccx metadata file_key aloc_table resolve_require Context.Merging
     in
 
+    resolved_requires := SMap.mapi (fun mref m -> lazy (dep_module_t cx mref m)) resolved_modules;
+
     let dependencies =
-      let resolved_modules =
-        Parsing_heaps.Reader_dispatcher.get_resolved_modules_unsafe ~reader Fun.id file_key parse
-      in
       let f buf pos =
         let mref = Bin.read_str buf pos in
-        let m = SMap.find mref resolved_modules in
-        (mref, dep_module_t cx mref m)
+        (mref, SMap.find mref !resolved_requires)
       in
       let pos = Bin.module_refs buf in
       Bin.read_tbl_generic f buf pos Module_refs.init
@@ -369,28 +366,15 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
     Lazy.force file_rec
   in
 
-  let connect_require cx resolve_require mref locs =
-    let m = resolve_require mref in
-    let module_t = dep_module_t cx mref m in
-    let connect loc =
-      let loc = ALoc.of_loc loc in
-      let module_t = module_t loc in
-      let (_, require_id) = Context.find_require cx loc in
-      resolve_require_id cx require_id module_t
-    in
-    Nel.iter connect locs
-  in
-
-  let connect_requires cx resolve_require file_sig =
-    SMap.iter (connect_require cx resolve_require) (File_sig.require_loc_map file_sig)
-  in
-
-  fun file_key resolve_require ast file_sig docblock aloc_table def_info ->
+  fun file_key resolved_modules ast file_sig docblock aloc_table def_info ->
     let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in
     let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
     let ccx = Context.make_ccx master_cx in
     let metadata = Context.docblock_overrides docblock base_metadata in
-    let cx = Context.make ccx metadata file_key aloc_table Context.Checking in
+    let resolved_requires = ref SMap.empty in
+    let resolve_require mref = SMap.find mref !resolved_requires in
+    let cx = Context.make ccx metadata file_key aloc_table resolve_require Context.Checking in
+    resolved_requires := SMap.mapi (dep_module_t cx) resolved_modules;
     ConsGen.set_dst_cx cx;
     let (typed_ast, obj_to_obj_map) =
       Obj_to_obj_hook.with_obj_to_obj_hook
@@ -401,8 +385,6 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
         ~loc_of_aloc:(Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader)
         ~f:(fun () ->
           let lint_severities = get_lint_severities metadata options in
-          Type_inference_js.add_require_tvars cx file_sig;
-          connect_requires cx resolve_require file_sig;
           let tast = Type_inference_js.infer_ast cx file_key comments aloc_ast ~lint_severities in
           Merge_js.post_merge_checks cx aloc_ast metadata;
           Context.reset_errors cx (Flow_error.post_process_errors (Context.errors cx));
