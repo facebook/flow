@@ -59,6 +59,29 @@ let fold_bindings_of_variable_declarations f acc declarations =
     acc
     declarations
 
+let rec pattern_has_binding =
+  let open Pattern in
+  let property =
+    let open Object in
+    function
+    | Property (_, { Property.pattern = p; _ })
+    | RestElement (_, { RestElement.argument = p; comments = _ }) ->
+      pattern_has_binding p
+  in
+  let element =
+    let open Array in
+    function
+    | Hole _ -> false
+    | Element (_, { Element.argument = p; default = _ })
+    | RestElement (_, { RestElement.argument = p; comments = _ }) ->
+      pattern_has_binding p
+  in
+  function
+  | (_, Identifier _) -> true
+  | (_, Object { Object.properties; _ }) -> List.exists property properties
+  | (_, Array { Array.elements; _ }) -> List.exists element elements
+  | (_, Expression _) -> false
+
 let partition_directives statements =
   let open Flow_ast.Statement in
   let rec helper directives = function

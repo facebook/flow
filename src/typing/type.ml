@@ -1042,7 +1042,7 @@ module rec TypeTerm : sig
     | Unchecked
     | Unimplemented
     | UnresolvedType
-    | NonBindingParameter
+    | NonBindingPattern
 
   and fun_param = string option * t
 

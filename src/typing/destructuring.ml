@@ -209,7 +209,9 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
       (* Expression in pattern destructuring is unsupported syntax,
          so we shouldn't read the environment. *)
       AnyT.untyped (mk_reason RDestructuring loc)
-    | _ -> Type_env.find_write cx Env_api.PatternLoc (mk_reason RDestructuring loc)
+    | _ when Flow_ast_utils.pattern_has_binding (loc, p) ->
+      Type_env.find_write cx Env_api.PatternLoc (mk_reason RDestructuring loc)
+    | _ -> Unsoundness.at Type.NonBindingPattern loc
 
   let rec pattern cx ~(f : callback) acc (loc, p) =
     let check_for_invalid_annot annot =

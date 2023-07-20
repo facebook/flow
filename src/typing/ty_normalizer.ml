@@ -864,7 +864,7 @@ end = struct
       | T.Unchecked -> Ty.Unchecked
       | T.Unimplemented -> Ty.Unimplemented
       | T.UnresolvedType -> Ty.UnresolvedType
-      | T.NonBindingParameter -> Ty.NonBindingParameter
+      | T.NonBindingPattern -> Ty.NonBindingPattern
 
     and fun_ty ~env static f fun_type_params =
       let%bind fun_static = type__ ~env static in

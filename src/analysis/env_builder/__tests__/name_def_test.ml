@@ -900,6 +900,56 @@ const {foo: [bar, baz = 3], hello: {world: flow}} = global;
       (2, 35) to (2, 48) => (val (2, 52) to (2, 58)).hello
     ] |}]
 
+let%expect_test "destructuring param empty 1" =
+  print_order_test {|
+function f([]) {}
+  |};
+  [%expect {|
+    (2, 11) to (2, 13) =>
+    (2, 9) to (2, 10) |}]
+
+let%expect_test "destructuring param empty 2" =
+  print_order_test {|
+function f([]) { return 1 }
+  |};
+  [%expect {|
+    (2, 11) to (2, 13) =>
+    (2, 9) to (2, 10) |}]
+
+let%expect_test "destructuring param empty 3" =
+  print_order_test {|
+function f([]: mixed) {}
+  |};
+  [%expect {|
+    (2, 9) to (2, 10) |}]
+
+let%expect_test "destructuring param empty 4" =
+  print_order_test {|
+function f([]: mixed) { return 1 }
+  |};
+  [%expect {|
+    (2, 9) to (2, 10) |}]
+
+let%expect_test "destructuring assignment empty" =
+  print_order_test {|
+function f() {
+  [] = 1;
+  return 1;
+}
+  |};
+  [%expect {|
+    (2, 9) to (2, 10) |}]
+
+let%expect_test "destructuring assignment illegal" =
+  print_order_test {|
+function f() {
+  [m.foo] = 1;
+  return 1;
+}
+  |};
+  [%expect {|
+    (2, 9) to (2, 10) |}]
+
 let%expect_test "destructuring order" =
   print_order_test {|
 const {foo: [bar, baz = 3], hello: {world: flow}} = global;

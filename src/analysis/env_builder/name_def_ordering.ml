@@ -415,6 +415,14 @@ struct
           end;
           expr
 
+        method! function_param param =
+          let open Ast.Function.Param in
+          let (loc, { argument; default = _ }) = param in
+          if (not (Flow_ast_utils.pattern_has_binding argument)) && not (pattern_has_annot argument)
+          then
+            this#add ~why:loc (Env_api.FunctionParamLoc, loc);
+          super#function_param param
+
         method visit_annotation_in_pattern (expr : ('loc, 'loc) Ast.Pattern.t) =
           let open Ast.Pattern in
           let (_, patt) = expr in
@@ -517,9 +525,12 @@ struct
 
         method function_param_annotated (param : ('loc, 'loc) Ast.Function.Param.t) =
           let open Ast.Function.Param in
-          let (_, { argument; default = _ }) = param in
+          let (loc, { argument; default = _ }) = param in
           (* Skip default *)
           let _ = this#function_param_pattern_annotated argument in
+          if (not (Flow_ast_utils.pattern_has_binding argument)) && not (pattern_has_annot argument)
+          then
+            this#add ~why:loc (Env_api.FunctionParamLoc, loc);
           param
 
         method function_rest_param_annotated (expr : ('loc, 'loc) Ast.Function.RestParam.t) =
@@ -1068,7 +1079,7 @@ struct
       in
       let depends_of_binding bind =
         let state =
-          if kind = Env_api.PatternLoc then
+          if kind = Env_api.PatternLoc || kind = Env_api.FunctionParamLoc then
             EnvMap.empty
           else
             depends_of_lhs id_loc None
@@ -1155,7 +1166,6 @@ struct
       | Enum _ ->
         (* Enums don't contain any code or type references, they're literal-like *) EnvMap.empty
       | Import _ -> (* same with all imports *) EnvMap.empty
-      | NonBindingParam -> EnvMap.empty
       | MissingThisAnnot -> EnvMap.empty
 
     (* Is the variable defined by this def able to be recursively depended on, e.g. created as a 0->1 tvar before being
@@ -1214,7 +1224,6 @@ struct
             _;
           }
       | Class _
-      | NonBindingParam
       | MissingThisAnnot
       | DeclaredComponent _
       | DeclaredClass _
@@ -1309,7 +1318,6 @@ struct
     | DeclaredComponent _
     | ExpressionDef _
     | DeclaredModule _
-    | NonBindingParam
     | MissingThisAnnot
     | GeneratorNext (Some _) ->
       []
