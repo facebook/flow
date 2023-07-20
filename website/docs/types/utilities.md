@@ -316,7 +316,7 @@ justBaz.foo; // error: missing foo
 justBaz.bar; // error: missing bar
 ```
 
-## `Record<Keys, Type>` <SinceVersion version="0.211" /> {#toc-omit}
+## `Record<Keys, Type>` <SinceVersion version="0.211" /> {#toc-record}
 
 This utility type allows you to generate an object type from a union of keys with the given
 `Type` for each field.
