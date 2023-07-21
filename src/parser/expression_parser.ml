@@ -519,66 +519,71 @@ module Expression
         collapse_stack (make_binary left right lop loc) loc rest
     in
     let rec helper env stack =
-      let (right_loc, (is_unary, right)) =
+      let (expr_loc, (is_unary, expr)) =
         with_loc
           (fun env ->
             let is_unary = peek_unary_op env <> None in
-            let right = unary_cover (env |> with_no_in false) in
-            (is_unary, right))
+            let expr = unary_cover (env |> with_no_in false) in
+            (is_unary, expr))
           env
       in
       let next = Peek.token env in
       ( if next = T_LESS_THAN then
-        match right with
+        match expr with
         | Cover_expr (_, Expression.JSXElement _) -> error env Parse_error.AdjacentJSXElements
         | _ -> ()
       );
-      let (stack, right) =
-        match next with
-        | T_IDENTIFIER { raw = ("as" | "satisfies") as keyword; _ } when should_parse_types env ->
-          Eat.token env;
-          let right = as_expression env right in
-          let (stack, expr) =
-            match stack with
-            | (left, (lop, lpri), lloc) :: rest when is_tighter lpri (Left_assoc 6) ->
-              let expr_loc = Loc.btwn lloc right_loc in
-              let expr = make_binary left right lop expr_loc in
-              (rest, expr)
-            | _ -> (stack, right)
-          in
-          let (expr_loc, _) = expr in
-          let (kind, end_loc) =
-            if keyword = "satisfies" then
-              let ((annot_loc, _) as annot) = Type._type env in
-              (Expression.TSTypeCast.Satisfies annot, annot_loc)
-            else if Peek.token env = T_CONST then (
-              let last_loc = Peek.loc env in
-              Eat.token env;
-              (Expression.TSTypeCast.AsConst, last_loc)
-            ) else
-              let ((annot_loc, _) as annot) = Type._type env in
-              (Expression.TSTypeCast.As annot, annot_loc)
-          in
-          let loc = Loc.btwn expr_loc end_loc in
-          ( stack,
-            Cover_expr
-              ( loc,
-                Expression.TSTypeCast
-                  { Expression.TSTypeCast.expression = expr; kind; comments = None }
-              )
-          )
-        | _ -> (stack, right)
+      let (stack, expr) =
+        let rec loop stack expr =
+          match Peek.token env with
+          | T_IDENTIFIER { raw = ("as" | "satisfies") as keyword; _ } when should_parse_types env ->
+            Eat.token env;
+            let expr = as_expression env expr in
+            let (stack, expr) =
+              match stack with
+              | (left, (lop, lpri), lloc) :: rest when is_tighter lpri (Left_assoc 6) ->
+                let expr_loc = Loc.btwn lloc expr_loc in
+                let expr = make_binary left expr lop expr_loc in
+                (rest, expr)
+              | _ -> (stack, expr)
+            in
+            let (expr_loc, _) = expr in
+            let (kind, end_loc) =
+              if keyword = "satisfies" then
+                let ((annot_loc, _) as annot) = Type._type env in
+                (Expression.TSTypeCast.Satisfies annot, annot_loc)
+              else if Peek.token env = T_CONST then (
+                let last_loc = Peek.loc env in
+                Eat.token env;
+                (Expression.TSTypeCast.AsConst, last_loc)
+              ) else
+                let ((annot_loc, _) as annot) = Type._type env in
+                (Expression.TSTypeCast.As annot, annot_loc)
+            in
+            let loc = Loc.btwn expr_loc end_loc in
+            let expr =
+              Cover_expr
+                ( loc,
+                  Expression.TSTypeCast
+                    { Expression.TSTypeCast.expression = expr; kind; comments = None }
+                )
+            in
+            loop stack expr
+          | _ -> (stack, expr)
+        in
+        loop stack expr
       in
+
       match (stack, binary_op env) with
-      | ([], None) -> right
+      | ([], None) -> expr
       | (_, None) ->
-        let right = as_expression env right in
-        Cover_expr (collapse_stack right right_loc stack)
+        let expr = as_expression env expr in
+        Cover_expr (collapse_stack expr expr_loc stack)
       | (_, Some (rop, rpri)) ->
         if is_unary && rop = Expression.Binary.Exp then
-          error_at env (right_loc, Parse_error.InvalidLHSInExponentiation);
-        let right = as_expression env right in
-        helper env (add_to_stack right (rop, rpri) right_loc stack)
+          error_at env (expr_loc, Parse_error.InvalidLHSInExponentiation);
+        let expr = as_expression env expr in
+        helper env (add_to_stack expr (rop, rpri) expr_loc stack)
     in
     (fun env -> helper env [])
 

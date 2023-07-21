@@ -11,3 +11,6 @@ a as T && b; // `(a as T) && b`
 a as T || b; // `(a as T) || b`
 a as T === b; // `(a as T) === b`
 a as const;
+a as T as S; // `(a as T) as S`
+a === b as T as S === c; // (a == ((b as T) as S)) === c
+a + b as T as S + c; // (((a + b) as T) as S) + c;
