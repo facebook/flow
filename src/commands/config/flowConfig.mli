@@ -146,6 +146,8 @@ val haste_paths_includes : config -> string list
 
 val haste_use_name_reducers : config -> bool
 
+val haste_dangerously_allow_surprising_js_flow_behavior : config -> bool
+
 val ignore_non_literal_requires : config -> bool
 
 val include_warnings : config -> bool
