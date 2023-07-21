@@ -1,3 +1,18 @@
+Error ----------------------------------------------------------------------- ExplicitProvidesModuleDifferentName.js:1:1
+
+This file is being illegally shadowed by the js.flow file [1]. This file can only be shadowed by a js.flow file in the
+same directory with the same base name. [duplicate-module]
+
+   ExplicitProvidesModuleDifferentName.js:1:1
+   1| /*
+      
+
+References:
+   ExplicitProvidesModuleDifferentNameDefinitions.js.flow:1:1
+   1| /*
+       [1]
+
+
 Error ------------------------------------------------------------------------------------- foo/bar/nested_test.js:10:27
 
 Cannot resolve module `annotation`. [cannot-resolve-module]
@@ -161,4 +176,4 @@ References:
 
 
 
-Found 10 errors
+Found 11 errors

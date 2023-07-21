@@ -107,6 +107,21 @@ References:
 
 
 Found 6 errors
+Error ----------------------------------------------------------------------- ExplicitProvidesModuleDifferentName.js:1:1
+
+This file is being illegally shadowed by the js.flow file [1]. This file can only be shadowed by a js.flow file in the
+same directory with the same base name. [duplicate-module]
+
+   ExplicitProvidesModuleDifferentName.js:1:1
+   1| /*
+      
+
+References:
+   ExplicitProvidesModuleDifferentNameDefinitions.js.flow:1:1
+   1| /*
+       [1]
+
+
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:7:2
 
 Cannot cast `docblock.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2]. [incompatible-cast]
@@ -212,7 +227,7 @@ References:
 
 
 
-Found 6 errors
+Found 7 errors
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:7:2
 
 Cannot cast `docblock.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
@@ -324,6 +339,21 @@ Found 6 errors
 
 
 ======Start off with the .js files and the .flow file======
+Error ----------------------------------------------------------------------- ExplicitProvidesModuleDifferentName.js:1:1
+
+This file is being illegally shadowed by the js.flow file [1]. This file can only be shadowed by a js.flow file in the
+same directory with the same base name. [duplicate-module]
+
+   ExplicitProvidesModuleDifferentName.js:1:1
+   1| /*
+      
+
+References:
+   ExplicitProvidesModuleDifferentNameDefinitions.js.flow:1:1
+   1| /*
+       [1]
+
+
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:7:2
 
 Cannot cast `docblock.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2]. [incompatible-cast]
@@ -429,7 +459,7 @@ References:
 
 
 
-Found 6 errors
+Found 7 errors
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:7:2
 
 Cannot cast `docblock.fun()` to boolean because `Implementation` [1] is incompatible with boolean [2].
@@ -538,6 +568,21 @@ References:
 
 
 Found 6 errors
+Error ----------------------------------------------------------------------- ExplicitProvidesModuleDifferentName.js:1:1
+
+This file is being illegally shadowed by the js.flow file [1]. This file can only be shadowed by a js.flow file in the
+same directory with the same base name. [duplicate-module]
+
+   ExplicitProvidesModuleDifferentName.js:1:1
+   1| /*
+      
+
+References:
+   ExplicitProvidesModuleDifferentNameDefinitions.js.flow:1:1
+   1| /*
+       [1]
+
+
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:7:2
 
 Cannot cast `docblock.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2]. [incompatible-cast]
@@ -643,7 +688,7 @@ References:
 
 
 
-Found 6 errors
+Found 7 errors
 
 
 ======Start off without the .js files and with the .flow file======
@@ -753,6 +798,21 @@ References:
 
 
 Found 6 errors
+Error ----------------------------------------------------------------------- ExplicitProvidesModuleDifferentName.js:1:1
+
+This file is being illegally shadowed by the js.flow file [1]. This file can only be shadowed by a js.flow file in the
+same directory with the same base name. [duplicate-module]
+
+   ExplicitProvidesModuleDifferentName.js:1:1
+   1| /*
+      
+
+References:
+   ExplicitProvidesModuleDifferentNameDefinitions.js.flow:1:1
+   1| /*
+       [1]
+
+
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:7:2
 
 Cannot cast `docblock.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2]. [incompatible-cast]
@@ -858,7 +918,7 @@ References:
 
 
 
-Found 6 errors
+Found 7 errors
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:7:2
 
 Cannot cast `docblock.fun()` to boolean because `Declaration` [1] is incompatible with boolean [2]. [incompatible-cast]

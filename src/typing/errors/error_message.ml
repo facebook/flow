@@ -3507,16 +3507,28 @@ let friendly_message_of_msg loc_of_aloc msg =
     in
     UseOp { loc = loc_of_reason reason; features = features @ annot_features; use_op }
   | EUnsupportedSetProto _ -> Normal { features = [text "Mutating this prototype is unsupported."] }
-  | EDuplicateModuleProvider { module_name; provider; _ } ->
+  | EDuplicateModuleProvider { module_name; provider; conflict } ->
+    let file_of_loc l = l |> loc_of_aloc |> Loc.source in
     let features =
-      [
-        text "Duplicate module provider for ";
-        code module_name;
-        text ". Change ";
-        text "either this module provider or the ";
-        ref (mk_reason (RCustom "current module provider") provider);
-        text ".";
-      ]
+      match (file_of_loc provider, file_of_loc conflict) with
+      | (Some provider_file, Some conflict_file)
+        when File_key.check_suffix provider_file Files.flow_ext
+             && File_key.check_suffix conflict_file ".js" ->
+        [
+          text "This file is being illegally shadowed by the ";
+          ref (mk_reason (RCustom "js.flow file") provider);
+          text ". This file can only be shadowed by a js.flow file ";
+          text "in the same directory with the same base name.";
+        ]
+      | _ ->
+        [
+          text "Duplicate module provider for ";
+          code module_name;
+          text ". Change ";
+          text "either this module provider or the ";
+          ref (mk_reason (RCustom "current module provider") provider);
+          text ".";
+        ]
     in
     Normal { features }
   | EParseError (_, parse_error) ->

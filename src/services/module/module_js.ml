@@ -33,8 +33,19 @@ let choose_provider_and_warn_about_duplicates =
     | (impl :: dup_impls, []) -> (Some (snd impl), warn_duplicate_providers m impl dup_impls errmap)
     (* Else use the first definition *)
     | ([], defn :: dup_defns) -> (Some (snd defn), warn_duplicate_providers m defn dup_defns errmap)
-    (* Don't complain about the first implementation being a duplicate *)
-    | (_impl :: dup_impls, defn :: dup_defns) ->
+    (* If both a definition and an implementation exist, choose between them. A
+     * definition only shadows the implementation with the same path, otherwise
+     * they are considered distinct providers. *)
+    | (impl :: dup_impls, defn :: dup_defns) ->
+      let (impl_key, _) = impl in
+      let (defn_key, _) = defn in
+      let (dup_impls, dup_defns) =
+        let k = File_key.compare impl_key (Files.chop_flow_ext defn_key) in
+        if k = 0 then
+          (dup_impls, dup_defns)
+        else
+          (impl :: dup_impls, dup_defns)
+      in
       let errmap =
         errmap
         |> warn_duplicate_providers m defn dup_impls

@@ -1,0 +1,17 @@
+Error --------------------------------------------------------------------------------------------------------- B.js:1:1
+
+This file is being illegally shadowed by the js.flow file [1]. This file can only be shadowed by a js.flow file in the
+same directory with the same base name. [duplicate-module]
+
+   B.js:1:1
+   1|
+      
+
+References:
+   C/B.js.flow:1:1
+   1|
+       [1]
+
+
+
+Found 1 error
