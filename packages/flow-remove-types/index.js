@@ -136,11 +136,17 @@ function resultPrinter(options, source, removedNodes) {
       return (result += source.slice(lastPos));
     },
     generateMap: function () {
+      if(!pretty){
+        console.info('flow-remove-types: "pretty" option is false, '
+          + 'and the current version will generate a sourcemap. previously, '
+          + 'the "mappings" attribute of sourcemap was an empty string.'
+        );
+      }
       return {
         version: 3,
         sources: ['source.js'],
         names: [],
-        mappings: pretty ? generateSourceMappings(removedNodes) : '',
+        mappings: generateSourceMappings(removedNodes),
       };
     },
   };
