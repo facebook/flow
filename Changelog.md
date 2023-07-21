@@ -1,3 +1,18 @@
+### 0.213.0
+
+Likely to cause new Flow errors:
+* Builtin idx support is removed. idx functions can now be typed with conditional type and mapped type. [The v3 release](https://github.com/facebook/idx/blob/main/CHANGELOG.md#300--2023-07-06) of idx contains these typing changes.
+* When using `module.system=haste`, it will now be an error if a `.js.flow` file shadows a `.js` file with a different path prefix.
+
+Notable bug fixes:
+* Fixed a bug that used to cause spurious internal errors when you have non-binding patterns. [example](https://flow.org/try#1N4Igxg9gdgZglgcxALlAJwKYEMwBcD6aArlLnALYYrgA2WAzvXGCADQgYAeOBARgJ74AJhhhYiNXClzEM7DFCLl602e0hQhcMtCw18ufgAcqyGUTkhyWIyaEHjp85cMn8CIljRCVZ2QF91CBFqETA6TAACADcvSPJkSKwofgBuAB0oTJgSPDhoSJgACgBKSOBMyMiAbXIAOhgICABdSIBeSIBGDKgqzFwiNF7uzP9MthBojDQmaGpogAY6gCZO5bqFkH8gA)
+
+Parser:
+* Fixed parsing of multiple `as`/`satisfies` casts in a row.
+
+Library Definitions:
+* Added support for `Intl.Locale` class
+
 ### 0.212.0
 
 Likely to cause new Flow errors:
