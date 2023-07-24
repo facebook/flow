@@ -1,0 +1,4 @@
+(library
+ (name flow_service_get_def_types)
+ (wrapped false)
+ (libraries flow_common))

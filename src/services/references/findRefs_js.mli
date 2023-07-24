@@ -21,5 +21,5 @@ val local_refs_for_global_find_refs :
   FindRefsUtils.ast_info ->
   Types_js_types.typecheck_artifacts ->
   File_key.t ->
-  GetDefUtils.def_info ->
+  FindRefsTypes.request ->
   (FindRefsTypes.find_refs_found, string) result

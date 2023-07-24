@@ -135,7 +135,7 @@ let recheck
             ~options
             ~workers
             ~updates
-            ~def_info:GetDefUtils.NoDefinition
+            ~find_ref_request:FindRefsTypes.empty_request
             ~files_to_force
             ~changed_mergebase
             ~missed_changes

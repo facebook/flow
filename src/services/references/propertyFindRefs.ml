@@ -8,6 +8,7 @@
 module Ast = Flow_ast
 open Loc_collections
 open GetDefUtils
+open Get_def_types
 
 let ( >>= ) = Base.Result.( >>= )
 

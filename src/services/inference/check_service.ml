@@ -14,7 +14,7 @@ type check_file =
   File_sig.t ->
   Docblock.t ->
   ALoc.table Lazy.t ->
-  GetDefUtils.def_info ->
+  FindRefsTypes.request ->
   Context.t
   * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
   * (FindRefsTypes.single_ref list, string) result
@@ -366,7 +366,7 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
     Lazy.force file_rec
   in
 
-  fun file_key resolved_modules ast file_sig docblock aloc_table def_info ->
+  fun file_key resolved_modules ast file_sig docblock aloc_table find_ref_request ->
     let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in
     let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
     let ccx = Context.make_ccx master_cx in
@@ -379,8 +379,8 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
     let (typed_ast, obj_to_obj_map) =
       Obj_to_obj_hook.with_obj_to_obj_hook
         ~enabled:
-          (match def_info with
-          | GetDefUtils.PropertyDefinition _ -> true
+          (match find_ref_request.FindRefsTypes.def_info with
+          | Get_def_types.PropertyDefinition _ -> true
           | _ -> false)
         ~loc_of_aloc:(Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader)
         ~f:(fun () ->
@@ -397,6 +397,6 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
         (ast, file_sig, docblock)
         (Types_js_types.Typecheck_artifacts { cx; typed_ast; obj_to_obj_map })
         file_key
-        def_info
+        find_ref_request
     in
     (cx, typed_ast, find_refs_result)

@@ -33,7 +33,8 @@ let find_local_refs ~reader ~options ~file_key ~parse_artifacts ~typecheck_artif
   let refs = Base.Option.map ~f:(fun refs -> sort_and_dedup refs) refs in
   Ok refs
 
-let local_refs_for_global_find_refs ~options ~loc_of_aloc ast_info type_info file_key def_info =
+let local_refs_for_global_find_refs
+    ~options ~loc_of_aloc ast_info type_info file_key { FindRefsTypes.def_info; kind = _ } =
   let var_refs () =
     let def_locs = GetDefUtils.all_locs_of_def_info def_info in
     let (ast, file_sig, _) = ast_info in
@@ -56,9 +57,9 @@ let local_refs_for_global_find_refs ~options ~loc_of_aloc ast_info type_info fil
     | (var_refs, Ok prop_refs) -> Ok (Base.List.unordered_append prop_refs var_refs)
   in
   match def_info with
-  | GetDefUtils.VariableDefinition (def_locs, name) ->
+  | Get_def_types.VariableDefinition (def_locs, name) ->
     let prop_refs =
-      match (Base.List.map def_locs ~f:(fun l -> GetDefUtils.ObjectProperty l), name) with
+      match (Base.List.map def_locs ~f:(fun l -> Get_def_types.ObjectProperty l), name) with
       | ([], _) -> Ok []
       | (_, None) -> Error "Name not available name to find property refs"
       | (hd :: tl, Some name) ->
@@ -70,7 +71,7 @@ let local_refs_for_global_find_refs ~options ~loc_of_aloc ast_info type_info fil
           ((hd, tl), name)
     in
     merge (var_refs (), prop_refs)
-  | GetDefUtils.PropertyDefinition props_info ->
+  | Get_def_types.PropertyDefinition props_info ->
     let prop_refs =
       PropertyFindRefs.property_find_refs_in_file
         ~loc_of_aloc
@@ -80,4 +81,4 @@ let local_refs_for_global_find_refs ~options ~loc_of_aloc ast_info type_info fil
         props_info
     in
     merge (var_refs (), prop_refs)
-  | GetDefUtils.NoDefinition -> Ok []
+  | Get_def_types.NoDefinition -> Ok []

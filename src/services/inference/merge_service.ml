@@ -386,7 +386,7 @@ let merge_component ~mutator ~options ~for_find_all_refs ~reader component =
     let duration = Unix.gettimeofday () -. start_time in
     (diff, Some (suppressions, duration))
 
-let mk_check_file options ~reader ~master_cx ~def_info () =
+let mk_check_file options ~reader ~master_cx ~find_ref_request () =
   let check_file =
     let reader = Abstract_state_reader.Mutator_state_reader reader in
     let cache = Check_cache.create ~capacity:10000000 in
@@ -407,7 +407,7 @@ let mk_check_file options ~reader ~master_cx ~def_info () =
         Parsing_heaps.Mutator_reader.get_resolved_modules_unsafe ~reader Fun.id file parse
       in
       let (cx, typed_ast, find_ref_result) =
-        check_file file resolved_modules ast file_sig docblock aloc_table def_info
+        check_file file resolved_modules ast file_sig docblock aloc_table find_ref_request
       in
       let coverage = Coverage.file_coverage ~cx typed_ast in
       let errors = Context.errors cx in
@@ -485,7 +485,7 @@ let check_contents_context ~reader options master_cx file ast docblock file_sig 
     Check_service.mk_check_file ~reader ~options ~master_cx ~cache:check_contents_cache ()
   in
   let (cx, tast, _) =
-    check_file file resolved_modules ast file_sig docblock aloc_table GetDefUtils.NoDefinition
+    check_file file resolved_modules ast file_sig docblock aloc_table FindRefsTypes.empty_request
   in
   (cx, tast)
 
@@ -546,11 +546,11 @@ let merge_runner
 
 let merge = merge_runner ~job:merge_component
 
-let mk_check options ~reader ~master_cx ~def_info () =
+let mk_check options ~reader ~master_cx ~find_ref_request () =
   let check_timeout = Options.merge_timeout options in
   (* TODO: add new option *)
   let interval = Base.Option.value_map ~f:(min 5.0) ~default:5.0 check_timeout in
-  let check_file = mk_check_file options ~master_cx ~reader ~def_info () in
+  let check_file = mk_check_file options ~master_cx ~reader ~find_ref_request () in
   fun file ->
     let file_str = File_key.to_string file in
     try

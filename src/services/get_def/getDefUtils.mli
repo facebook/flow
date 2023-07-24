@@ -5,16 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type single_property_def_info =
-  | ClassProperty of Loc.t
-  | ObjectProperty of Loc.t
-
-type property_def_info = single_property_def_info Nel.t * string
-
-type def_info =
-  | VariableDefinition of Loc.t list * string option
-  | PropertyDefinition of property_def_info
-  | NoDefinition
+open Get_def_types
 
 val get_object_literal_loc : Type.t -> ALoc.t option
 

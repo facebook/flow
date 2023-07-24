@@ -6,6 +6,7 @@
  *)
 
 open Utils_js
+open Get_def_types
 module Result = Base.Result
 
 let ( >>= ) = Result.( >>= )
@@ -243,21 +244,6 @@ module Def_kind_search = struct
     with
     | Found def_kind -> Some def_kind
 end
-
-type single_property_def_info =
-  | ClassProperty of Loc.t
-  (* An object was found. *)
-  | ObjectProperty of Loc.t
-
-(* If there are multiple relevant definition locations (e.g. the request was issued on an object
- * literal which is associated with multiple types) then there will be multiple locations in no
- * particular order. *)
-type property_def_info = single_property_def_info Nel.t * string (* name *)
-
-type def_info =
-  | VariableDefinition of Loc.t list * string option
-  | PropertyDefinition of property_def_info
-  | NoDefinition
 
 let loc_of_single_def_info = function
   | ClassProperty loc -> loc

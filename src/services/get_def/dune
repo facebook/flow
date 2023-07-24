@@ -5,6 +5,7 @@
   flow_parser_utils
   flow_procs
   flow_server_env
+  flow_service_get_def_types
   flow_service_inference_module
   flow_state_readers)
  (preprocess

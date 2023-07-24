@@ -2083,7 +2083,7 @@ let get_file_artifacts ~options ~client ~profiling ~env pos :
     | Ok file_artifacts -> (Ok (Some (file_artifacts, file_key)), None))
 
 let global_find_references
-    ~genv ~reader ~options ~env ~parse_artifacts ~typecheck_artifacts file_key line col =
+    ~genv ~reader ~options ~env ~parse_artifacts ~typecheck_artifacts ~kind file_key line col =
   let (Types_js_types.Parse_artifacts { ast; file_sig; docblock; _ }) = parse_artifacts in
   match
     GetDefUtils.get_def_info
@@ -2094,7 +2094,7 @@ let global_find_references
       (Loc.cursor (Some file_key) line col)
   with
   | Error s -> Lwt.return (Error s)
-  | Ok GetDefUtils.NoDefinition -> Lwt.return (Ok None)
+  | Ok Get_def_types.NoDefinition -> Lwt.return (Ok None)
   | Ok def_info ->
     let def_locs = GetDefUtils.all_locs_of_def_info def_info in
     let%lwt (profiling, (log_fn, _recheck_stats, results, _env)) =
@@ -2108,7 +2108,7 @@ let global_find_references
             ~options
             ~workers:genv.ServerEnv.workers
             ~updates:checked_set
-            ~def_info
+            ~find_ref_request:{ FindRefsTypes.def_info; kind }
             ~files_to_force:CheckedSet.empty
             ~changed_mergebase:None
             ~missed_changes:false
@@ -2124,7 +2124,7 @@ let global_find_references
        )
       )
 
-let find_references ~genv ~reader ~options ~env ~file_artifacts ~global file_key pos :
+let find_references ~genv ~reader ~options ~env ~file_artifacts ~global ~kind file_key pos :
     ((FindRefsTypes.find_refs_found option, string) result * Hh_json.json option) Lwt.t =
   let (parse_artifacts, typecheck_artifacts) = file_artifacts in
   let (line, col) = Flow_lsp_conversions.position_of_document_position pos in
@@ -2137,6 +2137,7 @@ let find_references ~genv ~reader ~options ~env ~file_artifacts ~global file_key
         ~env
         ~parse_artifacts
         ~typecheck_artifacts
+        ~kind
         file_key
         line
         col
@@ -2176,7 +2177,16 @@ let map_find_references_results
   match file_artifacts_opt with
   | Ok (Some (file_artifacts, file_key)) ->
     let%lwt (local_refs, extra_data) =
-      find_references ~genv ~reader ~options ~env ~file_artifacts ~global file_key text_doc_position
+      find_references
+        ~genv
+        ~reader
+        ~options
+        ~env
+        ~file_artifacts
+        ~global
+        ~kind:FindRefsTypes.FindReferences
+        file_key
+        text_doc_position
     in
     let mapped_refs =
       match local_refs with
@@ -2264,6 +2274,7 @@ let handle_persistent_rename ~genv ~reader ~options ~id ~params ~metadata ~clien
           ~env
           ~file_artifacts
           ~global
+          ~kind:FindRefsTypes.Rename
           file_key
           text_doc_position
       in

@@ -471,7 +471,7 @@ module Check_files : sig
     reader:Parsing_heaps.Mutator_reader.reader ->
     options:Options.t ->
     profiling:Profiling_js.running ->
-    def_info:GetDefUtils.def_info ->
+    find_ref_request:FindRefsTypes.request ->
     workers:MultiWorkerLwt.worker list option ->
     errors:ServerEnv.errors ->
     updated_suppressions:Error_suppressions.t ->
@@ -498,7 +498,7 @@ end = struct
       ~reader
       ~options
       ~profiling
-      ~def_info
+      ~find_ref_request
       ~workers
       ~errors
       ~updated_suppressions
@@ -560,7 +560,7 @@ end = struct
         let job =
           let mk_check () =
             let master_cx = Context_heaps.find_master () in
-            Merge_service.mk_check options ~master_cx ~reader ~def_info ()
+            Merge_service.mk_check options ~master_cx ~reader ~find_ref_request ()
           in
           mk_job ~mk_check ~options ()
         in
@@ -827,7 +827,7 @@ module Recheck : sig
     options:Options.t ->
     workers:MultiWorkerLwt.worker list option ->
     updates:CheckedSet.t ->
-    def_info:GetDefUtils.def_info ->
+    find_ref_request:FindRefsTypes.request ->
     files_to_force:CheckedSet.t ->
     changed_mergebase:bool option ->
     will_be_checked_files:CheckedSet.t ref ->
@@ -848,7 +848,7 @@ module Recheck : sig
     options:Options.t ->
     workers:MultiWorkerLwt.worker list option ->
     updates:CheckedSet.t ->
-    def_info:GetDefUtils.def_info ->
+    def_info:Get_def_types.def_info ->
     files_to_force:CheckedSet.t ->
     env:ServerEnv.env ->
     ServerEnv.env Lwt.t
@@ -1473,7 +1473,7 @@ end = struct
       ~options
       ~for_find_all_refs
       ~workers
-      ~def_info
+      ~find_ref_request
       ~will_be_checked_files
       ~changed_mergebase
       ~intermediate_values
@@ -1580,7 +1580,7 @@ end = struct
         ~reader
         ~options
         ~profiling
-        ~def_info
+        ~find_ref_request
         ~workers
         ~errors
         ~updated_suppressions
@@ -1639,11 +1639,12 @@ end = struct
       ~options
       ~workers
       ~updates
-      ~def_info
+      ~find_ref_request
       ~files_to_force
       ~changed_mergebase
       ~will_be_checked_files
       ~env =
+    let { FindRefsTypes.def_info; kind = _ } = find_ref_request in
     let%lwt (env, intermediate_values) =
       try%lwt
         recheck_parse_and_update_dependency_info
@@ -1661,10 +1662,10 @@ end = struct
     in
     let for_find_all_refs =
       match def_info with
-      | GetDefUtils.VariableDefinition _
-      | GetDefUtils.PropertyDefinition _ ->
+      | Get_def_types.VariableDefinition _
+      | Get_def_types.PropertyDefinition _ ->
         true
-      | GetDefUtils.NoDefinition -> false
+      | Get_def_types.NoDefinition -> false
     in
     recheck_merge
       ~profiling
@@ -1673,7 +1674,7 @@ end = struct
       ~options
       ~for_find_all_refs
       ~workers
-      ~def_info
+      ~find_ref_request
       ~will_be_checked_files
       ~changed_mergebase
       ~intermediate_values
@@ -1718,7 +1719,7 @@ let recheck_impl
     ~workers
     ~updates
     env
-    ~def_info
+    ~find_ref_request
     ~files_to_force
     ~changed_mergebase
     ~will_be_checked_files =
@@ -1733,7 +1734,7 @@ let recheck_impl
               ~workers
               ~updates
               ~env
-              ~def_info
+              ~find_ref_request
               ~files_to_force
               ~changed_mergebase
               ~will_be_checked_files
@@ -2146,7 +2147,7 @@ let handle_updates_since_saved_state ~profiling ~workers ~options ~libs_ok updat
               ~options
               ~workers
               ~updates
-              ~def_info:GetDefUtils.NoDefinition
+              ~find_ref_request:FindRefsTypes.empty_request
               ~files_to_force
               ~changed_mergebase:None
               ~will_be_checked_files:(ref files_to_force)
@@ -2170,7 +2171,7 @@ let handle_updates_since_saved_state ~profiling ~workers ~options ~libs_ok updat
             ~options
             ~workers
             ~updates:updated_files
-            ~def_info:GetDefUtils.NoDefinition
+            ~def_info:Get_def_types.NoDefinition
             ~files_to_force:CheckedSet.empty
             ~env
         with
@@ -2428,7 +2429,7 @@ let recheck
     ~options
     ~workers
     ~updates
-    ~def_info
+    ~find_ref_request
     ~files_to_force
     ~changed_mergebase
     ~missed_changes
@@ -2447,7 +2448,7 @@ let recheck
         ~options
         ~workers
         ~updates
-        ~def_info
+        ~find_ref_request
         ~files_to_force
         ~changed_mergebase
         ~will_be_checked_files
@@ -2513,7 +2514,7 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
           ~reader
           ~options
           ~profiling
-          ~def_info:GetDefUtils.NoDefinition
+          ~find_ref_request:FindRefsTypes.empty_request
           ~workers
           ~errors
           ~updated_suppressions

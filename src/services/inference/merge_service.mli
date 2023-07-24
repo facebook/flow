@@ -70,7 +70,7 @@ val mk_check :
   Options.t ->
   reader:Parsing_heaps.Mutator_reader.reader ->
   master_cx:Context.master_context ->
-  def_info:GetDefUtils.def_info ->
+  find_ref_request:FindRefsTypes.request ->
   unit ->
   File_key.t ->
   Types_js_types.check_result option unit_result

@@ -26,7 +26,7 @@ val recheck :
   options:Options.t ->
   workers:MultiWorkerLwt.worker list option ->
   updates:CheckedSet.t ->
-  def_info:GetDefUtils.def_info ->
+  find_ref_request:FindRefsTypes.request ->
   files_to_force:CheckedSet.t ->
   changed_mergebase:bool option ->
   missed_changes:bool ->
