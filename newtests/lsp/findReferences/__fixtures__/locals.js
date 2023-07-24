@@ -26,3 +26,9 @@ const A = require('./to_be_imported');
 A.a;
 const AA = {BB:A};
 AA.BB.a;
+
+type Props = {foo: string};
+function MyComponent({foo}: Props) {
+  return <div />;
+}
+<MyComponent foo={42} />;

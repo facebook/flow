@@ -1,0 +1,44 @@
+{
+  "method": "textDocument/references",
+  "result": [
+    {
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/locals.js",
+      "range": {
+        "start": {
+          "line": 29,
+          "character": 14
+        },
+        "end": {
+          "line": 29,
+          "character": 17
+        }
+      }
+    },
+    {
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/locals.js",
+      "range": {
+        "start": {
+          "line": 30,
+          "character": 22
+        },
+        "end": {
+          "line": 30,
+          "character": 25
+        }
+      }
+    },
+    {
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/locals.js",
+      "range": {
+        "start": {
+          "line": 33,
+          "character": 13
+        },
+        "end": {
+          "line": 33,
+          "character": 16
+        }
+      }
+    }
+  ]
+}

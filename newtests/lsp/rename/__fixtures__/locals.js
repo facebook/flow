@@ -32,3 +32,9 @@ const localVar = 1;
 const aliasedVar = 1;
 export {localVar}
 export {aliasedVar as newAlias}
+
+type Props = {foo: string};
+function MyComponent({foo}: Props) {
+  return <div />;
+}
+<MyComponent foo={42} />;

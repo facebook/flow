@@ -119,6 +119,13 @@ class rename_mapper
       | Get _
       | Set _ ->
         super#object_property prop
+
+    method! jsx_attribute_name name =
+      let open Ast.JSX.Attribute in
+      match name with
+      | Identifier (loc, { Ast.JSX.Identifier.name = _; comments }) when LocMap.mem loc targets ->
+        Identifier (loc, { Ast.JSX.Identifier.name = new_name; comments })
+      | _ -> super#jsx_attribute_name name
   end
 
 let rename ~global ~targets ~new_name ast =
