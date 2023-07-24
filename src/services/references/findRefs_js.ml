@@ -34,22 +34,26 @@ let find_local_refs ~reader ~options ~file_key ~parse_artifacts ~typecheck_artif
   Ok refs
 
 let local_refs_for_global_find_refs
-    ~options ~loc_of_aloc ast_info type_info file_key { FindRefsTypes.def_info; kind = _ } =
+    ~options ~loc_of_aloc ast_info type_info file_key { FindRefsTypes.def_info; kind } =
   let var_refs () =
     let def_locs = GetDefUtils.all_locs_of_def_info def_info in
     let (ast, file_sig, _) = ast_info in
     let (Types_js_types.Typecheck_artifacts { cx; typed_ast; _ }) = type_info in
-    let scope_info =
-      Scope_builder.program ~enable_enums:(Options.enums options) ~with_types:true ast
-    in
     let { LocalImportRefSearcher.local_locs = import_def_locs; remote_locs } =
       LocalImportRefSearcher.search ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast def_locs
     in
-    Base.List.unordered_append
-      (Base.List.map remote_locs ~f:(fun l -> (FindRefsTypes.Local, l)))
-      (VariableFindRefs.local_find_refs scope_info (import_def_locs @ def_locs)
-      |> Base.Option.value ~default:[]
-      )
+    match kind with
+    | FindRefsTypes.Rename ->
+      Base.List.map (remote_locs @ import_def_locs) ~f:(fun l -> (FindRefsTypes.Local, l))
+    | FindRefsTypes.FindReferences ->
+      let scope_info =
+        Scope_builder.program ~enable_enums:(Options.enums options) ~with_types:true ast
+      in
+      Base.List.unordered_append
+        (Base.List.map remote_locs ~f:(fun l -> (FindRefsTypes.Local, l)))
+        (VariableFindRefs.local_find_refs scope_info (import_def_locs @ def_locs)
+        |> Base.Option.value ~default:[]
+        )
   in
   let merge = function
     | ([], prop_refs) -> prop_refs

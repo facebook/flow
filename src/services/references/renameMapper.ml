@@ -15,8 +15,8 @@ let get_rename_order name new_name ref_kind =
     (new_name, name)
   | FindRefsTypes.Local -> (name, new_name)
 
-class rename_mapper ~(targets : FindRefsTypes.ref_kind Loc_collections.LocMap.t) ~(new_name : string)
-  =
+class rename_mapper
+  ~global ~(targets : FindRefsTypes.ref_kind Loc_collections.LocMap.t) ~(new_name : string) =
   object (_this)
     inherit [Loc.t] Flow_ast_mapper.mapper as super
 
@@ -31,14 +31,24 @@ class rename_mapper ~(targets : FindRefsTypes.ref_kind Loc_collections.LocMap.t)
     method! import_named_specifier ~import_kind specifier =
       let open Flow_ast.Statement.ImportDeclaration in
       let { local; remote = (loc, _) as remote; remote_name_def_loc; kind } = specifier in
-      match local with
-      | Some _ -> super#import_named_specifier ~import_kind specifier
-      | None ->
-        if LocMap.mem loc targets then
-          let localName = Ast_builder.Identifiers.identifier new_name in
-          { local = Some localName; remote; remote_name_def_loc; kind }
-        else
-          specifier
+      if global then
+        match local with
+        | Some _ -> super#import_named_specifier ~import_kind specifier
+        | None ->
+          if LocMap.mem loc targets then
+            let new_remote = Ast_builder.Identifiers.identifier new_name in
+            { local = Some remote; remote = new_remote; remote_name_def_loc; kind }
+          else
+            specifier
+      else
+        match local with
+        | Some _ -> super#import_named_specifier ~import_kind specifier
+        | None ->
+          if LocMap.mem loc targets then
+            let localName = Ast_builder.Identifiers.identifier new_name in
+            { local = Some localName; remote; remote_name_def_loc; kind }
+          else
+            specifier
 
     method! export_named_declaration_specifier specifier =
       let open Ast.Statement.ExportNamedDeclaration.ExportSpecifier in
@@ -111,6 +121,6 @@ class rename_mapper ~(targets : FindRefsTypes.ref_kind Loc_collections.LocMap.t)
         super#object_property prop
   end
 
-let rename ~targets ~new_name ast =
-  let s = new rename_mapper ~targets ~new_name in
+let rename ~global ~targets ~new_name ast =
+  let s = new rename_mapper ~global ~targets ~new_name in
   s#program ast

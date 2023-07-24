@@ -14,20 +14,7 @@
               "character": 38
             }
           },
-          "newText": "import { a, b as NEW_NAME } from \"./identifiers-def\";"
-        },
-        {
-          "range": {
-            "start": {
-              "line": 6,
-              "character": 0
-            },
-            "end": {
-              "line": 6,
-              "character": 1
-            }
-          },
-          "newText": "NEW_NAME"
+          "newText": "import { a, NEW_NAME as b } from \"./identifiers-def\";"
         }
       ],
       "<PLACEHOLDER_PROJECT_URL>/__fixtures__/identifiers-def.js": [

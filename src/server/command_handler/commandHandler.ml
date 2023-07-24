@@ -2303,7 +2303,9 @@ let handle_persistent_rename ~genv ~reader ~options ~id ~params ~metadata ~clien
               | Types_js_types.Parse_artifacts { ast; _ } -> [ast]
           in
           let diff_of_ast ast =
-            Flow_ast_differ.program ast (RenameMapper.rename ~targets:ref_map ~new_name:newName ast)
+            Flow_ast_differ.program
+              ast
+              (RenameMapper.rename ~global ~targets:ref_map ~new_name:newName ast)
           in
           let all_diffs = Base.List.bind asts ~f:diff_of_ast in
           let opts =

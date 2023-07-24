@@ -9,6 +9,7 @@
 Renames the target refs with the `new_name`
 *)
 val rename :
+  global:bool ->
   targets:FindRefsTypes.ref_kind Loc_collections.LocMap.t ->
   new_name:string ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->
