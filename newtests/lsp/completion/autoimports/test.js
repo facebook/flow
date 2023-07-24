@@ -938,93 +938,185 @@ module.exports = (suite(
                     ],
                   },
                 },
-                {
-                  label: 'Function',
-                  kind: 6,
-                  detail: '(global)',
-                  sortText: '00000000000000000009',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 2,
-                        character: 0,
-                      },
-                      end: {
-                        line: 2,
-                        character: 1,
-                      },
-                    },
-                    newText: 'Function',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'global',
+                ...(process.platform === 'win32'
+                  ? [
                       {
-                        token: 'fAUTO332',
-                        index: 9,
-                        session_requests: 1,
-                        typed_length: 1,
-                        completion: 'Function',
-                        ac_type: 'Acid',
-                      },
-                    ],
-                  },
-                },
-                {
-                  label: 'barFoo',
-                  kind: 6,
-                  detail: 'Import from ./bar',
-                  sortText: '00000000000000000010',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {
-                        line: 2,
-                        character: 0,
-                      },
-                      end: {
-                        line: 2,
-                        character: 1,
-                      },
-                    },
-                    newText: 'barFoo',
-                  },
-                  additionalTextEdits: [
-                    {
-                      range: {
-                        start: {
-                          line: 2,
-                          character: 0,
+                        label: 'barFoo',
+                        kind: 6,
+                        detail: 'Import from ./bar',
+                        sortText: '00000000000000000009',
+                        insertTextFormat: 1,
+                        textEdit: {
+                          range: {
+                            start: {
+                              line: 2,
+                              character: 0,
+                            },
+                            end: {
+                              line: 2,
+                              character: 1,
+                            },
+                          },
+                          newText: 'barFoo',
                         },
-                        end: {
-                          line: 2,
-                          character: 0,
+                        additionalTextEdits: [
+                          {
+                            range: {
+                              start: {
+                                line: 2,
+                                character: 0,
+                              },
+                              end: {
+                                line: 2,
+                                character: 0,
+                              },
+                            },
+                            newText: 'import { barFoo } from "./bar";\n\n',
+                          },
+                        ],
+                        command: {
+                          title: '',
+                          command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                          arguments: [
+                            'textDocument/completion',
+                            'autoimport',
+                            {
+                              token: 'fAUTO332',
+                              index: 9,
+                              session_requests: 1,
+                              typed_length: 1,
+                              completion: 'barFoo',
+                              ac_type: 'Acid',
+                            },
+                          ],
                         },
                       },
-                      newText: 'import { barFoo } from "./bar";\n\n',
-                    },
-                  ],
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'autoimport',
                       {
-                        token: 'fAUTO332',
-                        index: 10,
-                        session_requests: 1,
-                        typed_length: 1,
-                        completion: 'barFoo',
-                        ac_type: 'Acid',
+                        label: 'Function',
+                        kind: 6,
+                        detail: '(global)',
+                        sortText: '00000000000000000010',
+                        insertTextFormat: 1,
+                        textEdit: {
+                          range: {
+                            start: {
+                              line: 2,
+                              character: 0,
+                            },
+                            end: {
+                              line: 2,
+                              character: 1,
+                            },
+                          },
+                          newText: 'Function',
+                        },
+                        command: {
+                          title: '',
+                          command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                          arguments: [
+                            'textDocument/completion',
+                            'global',
+                            {
+                              token: 'fAUTO332',
+                              index: 10,
+                              session_requests: 1,
+                              typed_length: 1,
+                              completion: 'Function',
+                              ac_type: 'Acid',
+                            },
+                          ],
+                        },
                       },
-                    ],
-                  },
-                },
+                    ]
+                  : [
+                      {
+                        label: 'Function',
+                        kind: 6,
+                        detail: '(global)',
+                        sortText: '00000000000000000009',
+                        insertTextFormat: 1,
+                        textEdit: {
+                          range: {
+                            start: {
+                              line: 2,
+                              character: 0,
+                            },
+                            end: {
+                              line: 2,
+                              character: 1,
+                            },
+                          },
+                          newText: 'Function',
+                        },
+                        command: {
+                          title: '',
+                          command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                          arguments: [
+                            'textDocument/completion',
+                            'global',
+                            {
+                              token: 'fAUTO332',
+                              index: 9,
+                              session_requests: 1,
+                              typed_length: 1,
+                              completion: 'Function',
+                              ac_type: 'Acid',
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        label: 'barFoo',
+                        kind: 6,
+                        detail: 'Import from ./bar',
+                        sortText: '00000000000000000010',
+                        insertTextFormat: 1,
+                        textEdit: {
+                          range: {
+                            start: {
+                              line: 2,
+                              character: 0,
+                            },
+                            end: {
+                              line: 2,
+                              character: 1,
+                            },
+                          },
+                          newText: 'barFoo',
+                        },
+                        additionalTextEdits: [
+                          {
+                            range: {
+                              start: {
+                                line: 2,
+                                character: 0,
+                              },
+                              end: {
+                                line: 2,
+                                character: 0,
+                              },
+                            },
+                            newText: 'import { barFoo } from "./bar";\n\n',
+                          },
+                        ],
+                        command: {
+                          title: '',
+                          command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                          arguments: [
+                            'textDocument/completion',
+                            'autoimport',
+                            {
+                              token: 'fAUTO332',
+                              index: 10,
+                              session_requests: 1,
+                              typed_length: 1,
+                              completion: 'barFoo',
+                              ac_type: 'Acid',
+                            },
+                          ],
+                        },
+                      },
+                    ]),
               ],
             },
           },
