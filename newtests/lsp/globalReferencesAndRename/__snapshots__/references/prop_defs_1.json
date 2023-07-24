@@ -41,6 +41,32 @@
       }
     },
     {
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-a.js",
+      "range": {
+        "start": {
+          "line": 7,
+          "character": 22
+        },
+        "end": {
+          "line": 7,
+          "character": 25
+        }
+      }
+    },
+    {
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-a.js",
+      "range": {
+        "start": {
+          "line": 10,
+          "character": 13
+        },
+        "end": {
+          "line": 10,
+          "character": 16
+        }
+      }
+    },
+    {
       "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-b.js",
       "range": {
         "start": {

@@ -56,6 +56,32 @@
             }
           },
           "newText": "NEW_NAME"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 7,
+              "character": 21
+            },
+            "end": {
+              "line": 7,
+              "character": 31
+            }
+          },
+          "newText": "{NEW_NAME: bar}: Foo"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 10,
+              "character": 13
+            },
+            "end": {
+              "line": 10,
+              "character": 16
+            }
+          },
+          "newText": "NEW_NAME"
         }
       ],
       "<PLACEHOLDER_PROJECT_URL>/__fixtures__/prop-def.js": [
