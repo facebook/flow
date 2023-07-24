@@ -1,3 +1,8 @@
+### 0.213.1
+
+Notable bug fixes:
+* Fixed a bug where local find references do not return references in jsx props.
+
 ### 0.213.0
 
 Likely to cause new Flow errors:
