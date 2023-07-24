@@ -81,6 +81,11 @@ module.exports = (suite(
         snapshot('locals.js', 30, 8, 'exports_1.json'),
         snapshot('locals.js', 31, 8, 'exports_2.json'),
       ]),
+      test('JSX Props', [
+        addFiles(...fixtures),
+        lspStartAndConnect(),
+        snapshot('locals.js', 35, 16, 'jsx_props.json'),
+      ]),
     ];
   },
 ): Suite);

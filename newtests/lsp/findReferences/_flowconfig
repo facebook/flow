@@ -1,1 +1,2 @@
 [options]
+react.runtime=automatic

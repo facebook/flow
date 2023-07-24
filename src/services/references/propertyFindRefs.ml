@@ -41,10 +41,18 @@ end = struct
     builder#eval builder#program ast
 end
 
+let annot_of_jsx_name =
+  let open Flow_ast.JSX in
+  function
+  | Identifier (annot, _)
+  | NamespacedName (_, NamespacedName.{ name = (annot, _); _ })
+  | MemberExpression (_, MemberExpression.{ property = (annot, _); _ }) ->
+    annot
+
 module Potential_refs_search = struct
   exception Found_import of ALoc.t
 
-  class searcher ~(target_name : string) ~(potential_refs : Type.t ALocMap.t ref) =
+  class searcher cx ~(target_name : string) ~(potential_refs : Type.t ALocMap.t ref) =
     object (_this)
       inherit
         [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
@@ -89,6 +97,36 @@ module Potential_refs_search = struct
           ());
         super#member expr
 
+      method! jsx_opening_element elt =
+        let open Flow_ast.JSX in
+        let (_, Opening.{ name = component_name; attributes; _ }) = elt in
+        List.iter
+          (function
+            | Opening.Attribute
+                ( _,
+                  {
+                    Attribute.name =
+                      Attribute.Identifier
+                        ((loc, _), { Identifier.name = attribute_name; comments = _ });
+                    _;
+                  }
+                )
+              when attribute_name = target_name ->
+              let (_, component_t) = annot_of_jsx_name component_name in
+              let reason = Reason.mk_reason (Reason.RCustom "") loc in
+              let props_object =
+                Tvar.mk_where cx reason (fun tvar ->
+                    let use_op = Type.Op Type.UnknownUse in
+                    Flow_js.flow
+                      cx
+                      (component_t, Type.ReactKitT (use_op, reason, Type.React.GetConfig tvar))
+                )
+              in
+              potential_refs := ALocMap.add loc props_object !potential_refs
+            | _ -> ())
+          attributes;
+        super#jsx_opening_element elt
+
       method! pattern ?kind expr =
         let ((_, ty), patt) = expr in
         let _ =
@@ -123,8 +161,8 @@ module Potential_refs_search = struct
         super#pattern ?kind expr
     end
 
-  let search ~target_name ~potential_refs ast =
-    let s = new searcher ~target_name ~potential_refs in
+  let search cx ~target_name ~potential_refs ast =
+    let s = new searcher cx ~target_name ~potential_refs in
     let _ = s#program ast in
     ()
 end
@@ -217,7 +255,7 @@ let property_find_refs_in_file ~loc_of_aloc ast_info type_info file_key (props_i
   if not has_symbol then
     Ok local_defs
   else (
-    Potential_refs_search.search ~target_name:name ~potential_refs typed_ast;
+    Potential_refs_search.search cx ~target_name:name ~potential_refs typed_ast;
     let literal_prop_refs_result =
       (* Lazy to avoid this computation if there are no potentially-relevant object literals to
        * examine *)
