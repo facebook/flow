@@ -1,0 +1,50 @@
+{
+  "method": "textDocument/rename",
+  "result": {
+    "changes": {
+      "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-a.js": [
+        {
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 0
+            },
+            "end": {
+              "line": 2,
+              "character": 38
+            }
+          },
+          "newText": "import { a, b as NEW_NAME } from \"./identifiers-def\";"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 6,
+              "character": 0
+            },
+            "end": {
+              "line": 6,
+              "character": 1
+            }
+          },
+          "newText": "NEW_NAME"
+        }
+      ],
+      "<PLACEHOLDER_PROJECT_URL>/__fixtures__/identifiers-def.js": [
+        {
+          "range": {
+            "start": {
+              "line": 3,
+              "character": 16
+            },
+            "end": {
+              "line": 3,
+              "character": 17
+            }
+          },
+          "newText": "NEW_NAME"
+        }
+      ]
+    }
+  }
+}

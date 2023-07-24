@@ -2255,33 +2255,46 @@ let handle_persistent_rename ~genv ~reader ~options ~id ~params ~metadata ~clien
     in
     match file_artifacts_opt with
     | Ok (Some (file_artifacts, file_key)) ->
-      let%lwt (local_refs, extra_data) =
+      let global = Options.global_rename options in
+      let%lwt (all_refs, extra_data) =
         find_references
           ~genv
           ~reader
           ~options
           ~env
           ~file_artifacts
-          ~global:(Options.global_rename options)
+          ~global
           file_key
           text_doc_position
       in
       let (parse_artifacts, _typecheck_artifacts) = file_artifacts in
       let edits =
-        match local_refs with
+        match all_refs with
         | Ok (Some refs) ->
-          let ast =
-            match parse_artifacts with
-            | Types_js_types.Parse_artifacts { ast; _ } -> ast
-          in
-          let ref_map =
+          let (ref_map, files) =
             List.fold_left
-              (fun acc (ref_kind, loc) -> Loc_collections.LocMap.add loc ref_kind acc)
-              Loc_collections.LocMap.empty
+              (fun (ref_map, files) (ref_kind, loc) ->
+                ( Loc_collections.LocMap.add loc ref_kind ref_map,
+                  loc
+                  |> Loc.source
+                  |> Base.Option.value_map ~default:files ~f:(fun f -> FilenameSet.add f files)
+                ))
+              (Loc_collections.LocMap.empty, FilenameSet.empty)
               refs
           in
-          let new_ast = RenameMapper.rename ~targets:ref_map ~new_name:newName ast in
-          let diff = Flow_ast_differ.program ast new_ast in
+          let asts =
+            if global then
+              files
+              |> FilenameSet.elements
+              |> Base.List.filter_map ~f:(Parsing_heaps.Reader.get_ast ~reader)
+            else
+              match parse_artifacts with
+              | Types_js_types.Parse_artifacts { ast; _ } -> [ast]
+          in
+          let diff_of_ast ast =
+            Flow_ast_differ.program ast (RenameMapper.rename ~targets:ref_map ~new_name:newName ast)
+          in
+          let all_diffs = Base.List.bind asts ~f:diff_of_ast in
           let opts =
             Js_layout_generator.
               {
@@ -2290,14 +2303,20 @@ let handle_persistent_rename ~genv ~reader ~options ~id ~params ~metadata ~clien
                 single_quotes = Options.format_single_quotes options;
               }
           in
-          let edits =
-            Replacement_printer.mk_loc_patch_ast_differ ~opts diff
-            |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
+          let changes =
+            Base.List.fold_right
+              (Replacement_printer.mk_loc_patch_ast_differ ~opts all_diffs)
+              ~init:UriMap.empty
+              ~f:(fun (loc, newText) acc ->
+                match Flow_lsp_conversions.loc_to_lsp loc |> Base.Result.ok with
+                | None -> acc
+                | Some { Location.uri; range } ->
+                  let edits = UriMap.find_opt uri acc |> Base.Option.value ~default:[] in
+                  let edits = { TextEdit.range; newText } :: edits in
+                  UriMap.add uri edits acc
+            )
           in
-          Ok
-            {
-              WorkspaceEdit.changes = UriMap.singleton textDocument.TextDocumentIdentifier.uri edits;
-            }
+          Ok { WorkspaceEdit.changes }
         | Ok None ->
           (* e.g. if it was requested on a place that's not even an identifier *)
           Ok { WorkspaceEdit.changes = UriMap.empty }

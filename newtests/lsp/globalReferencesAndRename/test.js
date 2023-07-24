@@ -40,6 +40,27 @@ module.exports = (suite(
         ],
       );
     }
+    function globalRenameSnapshot(
+      fixture: string,
+      line: number,
+      col: number,
+      expectedFile: string,
+    ) {
+      return lspRequestAndWaitUntilResponse('textDocument/rename', {
+        textDocument: {
+          uri: `<PLACEHOLDER_PROJECT_URL>/__fixtures__/${fixture}`,
+        },
+        position: {line: line, character: col},
+        newName: 'NEW_NAME',
+      }).verifyLSPMessageSnapshot(
+        join(__dirname, '__snapshots__', 'rename', expectedFile),
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      );
+    }
     const fixtures = readdirSync(join(__dirname, '__fixtures__')).map(file =>
       join('__fixtures__', file),
     );
@@ -60,6 +81,36 @@ module.exports = (suite(
           'identifiers-def-1.json',
         ),
         findAllRefsSnapshot(
+          'identifiers-def.js',
+          3,
+          17,
+          'identifiers-def-2.json',
+        ),
+      ]),
+      test('Global rename property 1', [
+        addFiles(...fixtures),
+        lspStartAndConnect(),
+        globalRenameSnapshot('use-prop-site-a.js', 5, 6, 'prop_defs_1.json'),
+      ]),
+      test('Global rename property 2', [
+        addFiles(...fixtures),
+        lspStartAndConnect(),
+        globalRenameSnapshot('use-prop-site-b.js', 5, 6, 'prop_defs_2.json'),
+      ]),
+      test('Global rename identifier 1', [
+        addFiles(...fixtures),
+        lspStartAndConnect(),
+        globalRenameSnapshot(
+          'identifiers-def.js',
+          2,
+          14,
+          'identifiers-def-1.json',
+        ),
+      ]),
+      test('Global rename identifier 2', [
+        addFiles(...fixtures),
+        lspStartAndConnect(),
+        globalRenameSnapshot(
           'identifiers-def.js',
           3,
           17,

@@ -1,0 +1,169 @@
+{
+  "method": "textDocument/rename",
+  "result": {
+    "changes": {
+      "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-b.js": [
+        {
+          "range": {
+            "start": {
+              "line": 4,
+              "character": 2
+            },
+            "end": {
+              "line": 4,
+              "character": 3
+            }
+          },
+          "newText": "NEW_NAME"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 6,
+              "character": 6
+            },
+            "end": {
+              "line": 6,
+              "character": 7
+            }
+          },
+          "newText": "NEW_NAME"
+        }
+      ],
+      "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-a.js": [
+        {
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 0
+            },
+            "end": {
+              "line": 2,
+              "character": 38
+            }
+          },
+          "newText": "import { a as NEW_NAME, b } from \"./identifiers-def\";"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 3,
+              "character": 13
+            },
+            "end": {
+              "line": 3,
+              "character": 14
+            }
+          },
+          "newText": "NEW_NAME"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 5,
+              "character": 0
+            },
+            "end": {
+              "line": 5,
+              "character": 1
+            }
+          },
+          "newText": "NEW_NAME"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 7,
+              "character": 0
+            },
+            "end": {
+              "line": 7,
+              "character": 1
+            }
+          },
+          "newText": "NEW_NAME"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 10,
+              "character": 9
+            },
+            "end": {
+              "line": 10,
+              "character": 10
+            }
+          },
+          "newText": "NEW_NAME"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 10,
+              "character": 12
+            },
+            "end": {
+              "line": 10,
+              "character": 13
+            }
+          },
+          "newText": "NEW_NAME"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 11,
+              "character": 2
+            },
+            "end": {
+              "line": 11,
+              "character": 3
+            }
+          },
+          "newText": "NEW_NAME"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 12,
+              "character": 8
+            },
+            "end": {
+              "line": 12,
+              "character": 11
+            }
+          },
+          "newText": "{a: NEW_NAME}"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 13,
+              "character": 2
+            },
+            "end": {
+              "line": 13,
+              "character": 3
+            }
+          },
+          "newText": "NEW_NAME"
+        }
+      ],
+      "<PLACEHOLDER_PROJECT_URL>/__fixtures__/identifiers-def.js": [
+        {
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 13
+            },
+            "end": {
+              "line": 2,
+              "character": 14
+            }
+          },
+          "newText": "NEW_NAME"
+        }
+      ]
+    }
+  }
+}
