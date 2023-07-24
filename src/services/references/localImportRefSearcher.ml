@@ -7,6 +7,11 @@
 
 open Loc_collections
 
+type search_result = {
+  local_locs: Loc.t list;
+  remote_locs: Loc.t list;
+}
+
 let search ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast def_locs =
   let open File_sig in
   let require_name_locs =
@@ -36,17 +41,24 @@ let search ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast def_locs =
         acc
     )
   in
-  require_name_locs
-  |> Base.List.fold ~init:LocSet.empty ~f:(fun acc (remote_loc, local_loc) ->
-         match GetDef_js.get_def ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast remote_loc with
-         | GetDef_js.Get_def_result.Def (locs, _)
-         | GetDef_js.Get_def_result.Partial (locs, _, _) ->
-           if Base.List.exists locs ~f:(Base.List.mem def_locs ~equal:Loc.equal) then
-             acc |> LocSet.add remote_loc |> LocSet.add local_loc
-           else
-             acc
-         | GetDef_js.Get_def_result.Bad_loc _
-         | GetDef_js.Get_def_result.Def_error _ ->
-           acc
-     )
-  |> LocSet.elements
+  let (local_locs, remote_locs) =
+    Base.List.fold
+      require_name_locs
+      ~init:(LocSet.empty, LocSet.empty)
+      ~f:(fun ((local_locs, remote_locs) as acc) (remote_loc, local_loc) ->
+        match GetDef_js.get_def ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast remote_loc with
+        | GetDef_js.Get_def_result.Def (locs, _)
+        | GetDef_js.Get_def_result.Partial (locs, _, _) ->
+          if Base.List.exists locs ~f:(Base.List.mem def_locs ~equal:Loc.equal) then
+            if Loc.equal remote_loc local_loc then
+              (LocSet.add local_loc local_locs, remote_locs)
+            else
+              (local_locs, LocSet.add remote_loc remote_locs)
+          else
+            acc
+        | GetDef_js.Get_def_result.Bad_loc _
+        | GetDef_js.Get_def_result.Def_error _ ->
+          acc
+    )
+  in
+  { local_locs = LocSet.elements local_locs; remote_locs = LocSet.elements remote_locs }

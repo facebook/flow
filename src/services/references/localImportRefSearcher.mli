@@ -5,6 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+type search_result = {
+  local_locs: Loc.t list;
+  remote_locs: Loc.t list;
+}
+
 val search :
   options:Options.t ->
   loc_of_aloc:(ALoc.t -> Loc.t) ->
@@ -13,4 +18,4 @@ val search :
   ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   Loc.t list ->
-  Loc.t list
+  search_result

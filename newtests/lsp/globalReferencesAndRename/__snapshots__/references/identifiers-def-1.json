@@ -32,11 +32,11 @@
       "range": {
         "start": {
           "line": 3,
-          "character": 13
+          "character": 8
         },
         "end": {
           "line": 3,
-          "character": 14
+          "character": 9
         }
       }
     },
@@ -49,19 +49,6 @@
         },
         "end": {
           "line": 5,
-          "character": 1
-        }
-      }
-    },
-    {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-a.js",
-      "range": {
-        "start": {
-          "line": 7,
-          "character": 0
-        },
-        "end": {
-          "line": 7,
           "character": 1
         }
       }

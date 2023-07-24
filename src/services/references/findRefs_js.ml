@@ -41,11 +41,14 @@ let local_refs_for_global_find_refs ~options ~loc_of_aloc ast_info type_info fil
     let scope_info =
       Scope_builder.program ~enable_enums:(Options.enums options) ~with_types:true ast
     in
-    let import_def_locs =
+    let { LocalImportRefSearcher.local_locs = import_def_locs; remote_locs } =
       LocalImportRefSearcher.search ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast def_locs
     in
-    VariableFindRefs.local_find_refs scope_info (import_def_locs @ def_locs)
-    |> Base.Option.value ~default:[]
+    Base.List.unordered_append
+      (Base.List.map remote_locs ~f:(fun l -> (FindRefsTypes.Local, l)))
+      (VariableFindRefs.local_find_refs scope_info (import_def_locs @ def_locs)
+      |> Base.Option.value ~default:[]
+      )
   in
   let merge = function
     | ([], prop_refs) -> prop_refs
