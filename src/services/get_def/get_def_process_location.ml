@@ -132,14 +132,16 @@ class searcher ~(is_legit_require : ALoc.t * Type.t -> bool) ~(covers_target : A
       } =
         decl
       in
-      ( if
-        annot_covers_target remote_annot
-        || Base.Option.exists local ~f:(fun (local_annot, _) -> annot_covers_target local_annot)
-      then
+      ( if annot_covers_target remote_annot then
         match remote_name_def_loc with
         | Some l -> this#own_def l name
-        | None ->
-          this#request (Get_def_request.Fail "unresolvable remote def_loc for import name specifier")
+        | None -> this#own_def (fst remote_annot) "default"
+      );
+      Base.Option.iter local ~f:(fun (local_annot, _) ->
+          if annot_covers_target local_annot then
+            match remote_name_def_loc with
+            | Some l -> this#own_def l name
+            | None -> this#own_def (fst local_annot) "default"
       );
       decl
 
@@ -150,9 +152,7 @@ class searcher ~(is_legit_require : ALoc.t * Type.t -> bool) ~(covers_target : A
           if annot_covers_target annot then
             match remote_default_name_def_loc with
             | Some l -> this#own_def l "default"
-            | None ->
-              this#request
-                (Get_def_request.Fail "unresolvable remote def_loc for import default specifier")
+            | None -> this#own_def (fst annot) "default"
       );
       Base.Option.iter specifiers ~f:(function
           | ImportNamedSpecifiers _ -> ()

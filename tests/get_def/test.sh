@@ -112,7 +112,7 @@ assert_ok "$FLOW" get-def imports.js 11 4 --strip-root --pretty
 
 # import type {DoesNotExist} from "./doesNotExist";
 #                ^
-printf "imports of non-existent module leads to error = "
+printf "imports of non-existent module leads to itself = "
 assert_ok "$FLOW" get-def imports.js 14 17 --strip-root --pretty
 
 # const x: DoesNotExist<number> = "foo";

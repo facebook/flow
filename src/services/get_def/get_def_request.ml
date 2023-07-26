@@ -24,5 +24,4 @@ type ('M, 'T) t =
       name: string;
       loc: 'M;
     }
-  | Fail of string
 [@@deriving show]

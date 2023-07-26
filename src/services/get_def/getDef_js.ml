@@ -39,7 +39,6 @@ let extract_member_def ~loc_of_aloc ~cx ~file_sig ~typed_ast ~force_instance typ
 let rec process_request ~options ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_ast ~file_sig :
     (ALoc.t, ALoc.t * Type.t) Get_def_request.t -> (Loc.t Nel.t * string option, string) result =
   function
-  | Get_def_request.Fail reason -> Error reason
   | Get_def_request.Identifier { name; loc = (aloc, type_) } ->
     let loc = loc_of_aloc aloc in
     let scope_info =
