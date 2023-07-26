@@ -1,0 +1,5 @@
+[options]
+all=true
+experimental.multi_platform.extensions=.ios
+experimental.multi_platform.extensions=.android
+experimental.multi_platform.extensions=.native

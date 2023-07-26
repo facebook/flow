@@ -187,6 +187,8 @@ val module_system : config -> Options.module_system
 
 val modules_are_use_strict : config -> bool
 
+val multi_platform_extensions : config -> string list
+
 val munge_underscores : config -> bool
 
 val no_flowlib : config -> bool

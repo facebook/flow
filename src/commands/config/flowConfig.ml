@@ -104,6 +104,7 @@ module Opts = struct
     module_resource_exts: SSet.t;
     module_system: Options.module_system;
     modules_are_use_strict: bool;
+    multi_platform_extensions: string list;
     munge_underscores: bool;
     no_flowlib: bool;
     node_main_fields: string list;
@@ -229,6 +230,7 @@ module Opts = struct
       module_resource_exts;
       module_system = Options.Node;
       modules_are_use_strict = false;
+      multi_platform_extensions = [];
       munge_underscores = false;
       no_flowlib = false;
       node_main_fields = ["main"];
@@ -407,6 +409,14 @@ module Opts = struct
             ^ v
             ^ "' since it ends with the reserved extension '"
             ^ Files.flow_ext
+            ^ "'"
+            )
+        else if Base.List.mem opts.multi_platform_extensions v ~equal:String.equal then
+          Error
+            ("Cannot use file extension '"
+            ^ v
+            ^ "' since it conflicts with the multiplatform extension '"
+            ^ v
             ^ "'"
             )
         else if Base.List.mem opts.module_file_exts v ~equal:String.equal then
@@ -617,6 +627,32 @@ module Opts = struct
       [("node", Options.Node); ("haste", Options.Haste)]
       (fun opts v -> Ok { opts with module_system = v })
 
+  let multi_platform_extensions_parser =
+    string
+      ~init:(fun opts -> { opts with multi_platform_extensions = [] })
+      ~multiple:true
+      (fun opts v ->
+        if String.ends_with ~suffix:Files.flow_ext v then
+          Error
+            ("Cannot use file extension '"
+            ^ v
+            ^ "' since it ends with the reserved extension '"
+            ^ Files.flow_ext
+            ^ "'"
+            )
+        else if Base.List.mem opts.module_file_exts v ~equal:String.equal then
+          Error
+            ("Cannot use file extension '"
+            ^ v
+            ^ "' since it conflicts with the module extension '"
+            ^ v
+            ^ "'"
+            )
+        else if Base.List.mem opts.multi_platform_extensions v ~equal:String.equal then
+          Ok opts
+        else
+          Ok { opts with multi_platform_extensions = v :: opts.multi_platform_extensions })
+
   let name_mapper_parser =
     mapping
       ~multiple:true
@@ -790,6 +826,7 @@ module Opts = struct
         boolean (fun opts v -> Ok { opts with global_find_ref = Some v })
       );
       ("experimental.global_rename", boolean (fun opts v -> Ok { opts with global_rename = Some v }));
+      ("experimental.multi_platform.extensions", multi_platform_extensions_parser);
       ("facebook.fbs", string (fun opts v -> Ok { opts with facebook_fbs = Some v }));
       ("facebook.fbt", string (fun opts v -> Ok { opts with facebook_fbt = Some v }));
       ("file_watcher", file_watcher_parser);
@@ -1519,6 +1556,8 @@ let module_resource_exts c = c.options.Opts.module_resource_exts
 let module_system c = c.options.Opts.module_system
 
 let modules_are_use_strict c = c.options.Opts.modules_are_use_strict
+
+let multi_platform_extensions c = c.options.Opts.multi_platform_extensions
 
 let munge_underscores c = c.options.Opts.munge_underscores
 

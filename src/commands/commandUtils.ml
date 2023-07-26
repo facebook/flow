@@ -672,6 +672,7 @@ let file_options =
       lib_paths;
       module_file_exts = FlowConfig.module_file_exts flowconfig;
       module_resource_exts = FlowConfig.module_resource_exts flowconfig;
+      multi_platform_extensions = FlowConfig.multi_platform_extensions flowconfig;
       node_resolver_dirnames = FlowConfig.node_resolver_dirnames flowconfig;
     }
 
