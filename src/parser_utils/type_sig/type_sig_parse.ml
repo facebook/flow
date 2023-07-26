@@ -2215,10 +2215,14 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
   end
   | "React$AbstractComponent" -> begin
     match targs with
-    | Some (_, { arguments = [config; instance]; _ }) ->
+    | Some (_, { arguments = config :: targs; _ }) ->
       let config = annot opts scope tbls xs config in
-      let instance = annot opts scope tbls xs instance in
-      Annot (ReactAbstractComponent { loc; config; instance })
+      (match targs with
+      | [] -> Annot (ReactAbstractComponent { loc; config; instance = None })
+      | [instance] ->
+        let instance = Some (annot opts scope tbls xs instance) in
+        Annot (ReactAbstractComponent { loc; config; instance })
+      | _ -> Err (loc, CheckError))
     | _ -> Err (loc, CheckError)
   end
   | "React$Config" -> begin

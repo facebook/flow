@@ -850,7 +850,20 @@ and merge_annot tps infer_tps file = function
   | ReactAbstractComponent { loc; config; instance } ->
     let reason = Reason.(mk_reason (RCustom "AbstractComponent") loc) in
     let config = merge tps infer_tps file config in
-    let instance = merge tps infer_tps file instance in
+    let instance =
+      match instance with
+      | Some instance -> merge tps infer_tps file instance
+      | None ->
+        let reason =
+          Reason.(
+            update_desc_new_reason (fun desc_type ->
+                RDefaultTypeArgumentAtIndex { desc_type; desc_default = RMixed; position = 2 }
+            )
+          )
+            reason
+        in
+        Type.(MixedT.make reason (bogus_trust ()))
+    in
     Type.(DefT (reason, trust, ReactAbstractComponentT { config; instance }))
   | ReactConfig { loc; props; default } ->
     let reason = Reason.(mk_reason RReactConfig loc) in

@@ -247,6 +247,11 @@ type 'loc virtual_reason_desc =
   | RComponent of name
   | RComponentType
   | RPropsOfComponent of 'loc virtual_reason_desc
+  | RDefaultTypeArgumentAtIndex of {
+      desc_type: 'loc virtual_reason_desc;
+      desc_default: 'loc virtual_reason_desc;
+      position: int;
+    }
 [@@deriving eq, show]
 
 and reason_desc_function =
@@ -341,6 +346,13 @@ let rec map_desc_locs f = function
   | RWidenedObjProp desc -> RWidenedObjProp (map_desc_locs f desc)
   | RUnionBranching (desc, i) -> RUnionBranching (map_desc_locs f desc, i)
   | RPropsOfComponent desc -> RPropsOfComponent (map_desc_locs f desc)
+  | RDefaultTypeArgumentAtIndex { desc_type; desc_default; position } ->
+    RDefaultTypeArgumentAtIndex
+      {
+        desc_type = map_desc_locs f desc_type;
+        desc_default = map_desc_locs f desc_default;
+        position;
+      }
 
 type 'loc virtual_reason = {
   desc: 'loc virtual_reason_desc;
@@ -747,6 +759,25 @@ let rec string_of_desc = function
   | RComponent name -> spf "component %s" (display_string_of_name name)
   | RComponentType -> "component"
   | RPropsOfComponent desc -> spf "props of %s" (string_of_desc desc)
+  | RDefaultTypeArgumentAtIndex { desc_type; desc_default; position } ->
+    let position_suffix =
+      match position with
+      | 11 -> "th"
+      | 12 -> "th"
+      | 13 -> "th"
+      | _ ->
+        (match position mod 10 with
+        | 1 -> "st"
+        | 2 -> "nd"
+        | 3 -> "rd"
+        | _ -> "th")
+    in
+    spf
+      "%s (default type argument for %s's %i%s position)"
+      (string_of_desc desc_default)
+      (string_of_desc desc_type)
+      position
+      position_suffix
 
 let string_of_reason ?(strip_root = None) r =
   let spos = string_of_aloc ~strip_root (loc_of_reason r) in
@@ -1380,6 +1411,7 @@ let classification_of_reason r =
   | RComponent _
   | RComponentType
   | RPropsOfComponent _
+  | RDefaultTypeArgumentAtIndex _
   | RFunction _
   | RFunctionType
   | RFunctionBody

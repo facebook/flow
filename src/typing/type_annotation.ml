@@ -1191,19 +1191,36 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         | "$Compose" -> mk_custom_fun cx loc t_ast targs ident (Compose false)
         | "$ComposeReverse" -> mk_custom_fun cx loc t_ast targs ident (Compose true)
         | "React$AbstractComponent" ->
-          check_type_arg_arity cx loc t_ast targs 2 (fun () ->
-              let (ts, targs) = convert_type_params () in
-              let config = List.nth ts 0 in
-              let instance = List.nth ts 1 in
-              reconstruct_ast
-                (DefT
-                   ( mk_reason (RCustom "AbstractComponent") loc,
-                     infer_trust cx,
-                     ReactAbstractComponentT { config; instance }
-                   )
-                )
-                targs
-          )
+          let reason = mk_reason (RCustom "AbstractComponent") loc in
+          (match targs with
+          | None
+          | Some (_, { Ast.Type.TypeArgs.arguments = []; comments = _ }) ->
+            error_type cx loc (Error_message.ETypeParamMinArity (loc, 1)) t_ast
+          | Some (_, { Ast.Type.TypeArgs.arguments; comments = _ }) when List.length arguments > 2
+            ->
+            error_type cx loc (Error_message.ETooManyTypeArgs (reason, reason, 2)) t_ast
+          | _ ->
+            let (ts, targs) = convert_type_params () in
+            let config = List.nth ts 0 in
+            let instance =
+              Base.Option.value
+                (List.nth_opt ts 1)
+                ~default:
+                  (let reason =
+                     Reason.(
+                       update_desc_new_reason (fun desc_type ->
+                           RDefaultTypeArgumentAtIndex
+                             { desc_type; desc_default = RMixed; position = 2 }
+                       )
+                     )
+                       reason
+                   in
+                   MixedT.make reason (bogus_trust ())
+                  )
+            in
+            reconstruct_ast
+              (DefT (reason, infer_trust cx, ReactAbstractComponentT { config; instance }))
+              targs)
         | "React$Config" ->
           check_type_arg_arity cx loc t_ast targs 2 (fun () ->
               let (ts, targs) = convert_type_params () in

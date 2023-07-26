@@ -205,6 +205,11 @@ type 'loc virtual_reason_desc =
   | RComponent of name
   | RComponentType
   | RPropsOfComponent of 'loc virtual_reason_desc
+  | RDefaultTypeArgumentAtIndex of {
+      desc_type: 'loc virtual_reason_desc;
+      desc_default: 'loc virtual_reason_desc;
+      position: int;
+    }
 
 and reason_desc_function =
   | RAsync
