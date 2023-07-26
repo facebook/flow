@@ -4,16 +4,19 @@ import * as React from 'react';
 
 class Component extends React.Component<{|foo: number, bar: number|}> {
   static defaultProps: {| foo: number |} = {foo: 3};
+  render(): number {
+    return 3;
+  }
 }
 
-function TrivialHOC<Props, Instance>(
-  x: React.AbstractComponent<Props, Instance>,
-): React.AbstractComponent<Props, Instance> {
+function TrivialHOC<Props, Instance, Renders>(
+  x: React.AbstractComponent<Props, Instance, Renders>,
+): React.AbstractComponent<Props, Instance, Renders> {
   return x;
 }
 
 const TrivialWrap = TrivialHOC(Component);
-(TrivialWrap: React.AbstractComponent<{|foo?: number, bar: number|}, Component>);
+(TrivialWrap: React.AbstractComponent<{|foo?: number, bar: number|}, Component, number>); // All ok!
 
 function WrapInDivWithExtraProp<Props, Instance>(
   X: React.AbstractComponent<Props, Instance>,

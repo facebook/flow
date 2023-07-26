@@ -24,3 +24,13 @@ class Subclass extends Component {}
 (Subclass: React$AbstractComponent<any, Component, any>); // Error, Instance is covariant
 (Component: React$AbstractComponent<any, Subclass, any>); // Ok, Instance is covariant
 (Subclass : React$AbstractComponent<any, Subclass, any>);
+
+class SpecificRender extends React.Component<{}> {
+  render(): number {
+    return 3;
+  }
+}
+
+(SpecificRender: React$AbstractComponent<{}, SpecificRender, number>);
+(SpecificRender: React$AbstractComponent<{}, SpecificRender, React$Node>); // Ok, covariant type argument
+(SpecificRender: React$AbstractComponent<{}, SpecificRender, string>); // Error, number ~> string

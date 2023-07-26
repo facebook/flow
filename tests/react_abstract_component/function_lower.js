@@ -26,3 +26,10 @@ function NotAFunctionComponent(x: Props) {
 }
 
 (NotAFunctionComponent: React$AbstractComponent<Props, void, React$Node>);
+
+function SpecificRender(): number {
+  return 3;
+}
+(SpecificRender: React$AbstractComponent<{}, void, number>);
+(SpecificRender: React$AbstractComponent<{}, void, React$Node>); // OK, covariant type argument
+(SpecificRender: React$AbstractComponent<{}, void, string>); // ERROR, number ~> string

@@ -1,30 +1,30 @@
-Error ----------------------------------------------------------------------------------------------------- HOC.js:26:26
+Error ----------------------------------------------------------------------------------------------------- HOC.js:29:26
 
 Cannot get `X.defaultProps` because property `defaultProps` is missing in `React.AbstractComponentStatics` [1].
 [prop-missing]
 
-   HOC.js:26:26
-   26|   C.defaultProps = {...X.defaultProps};
+   HOC.js:29:26
+   29|   C.defaultProps = {...X.defaultProps};
                                 ^^^^^^^^^^^^
 
 References:
-   HOC.js:19:6
-   19|   X: React.AbstractComponent<Props, Instance>,
+   HOC.js:22:6
+   22|   X: React.AbstractComponent<Props, Instance>,
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- HOC.js:41:26
+Error ----------------------------------------------------------------------------------------------------- HOC.js:44:26
 
 Cannot get `X.defaultProps` because property `defaultProps` is missing in `React.AbstractComponentStatics` [1].
 [prop-missing]
 
-   HOC.js:41:26
-   41|   C.defaultProps = {...X.defaultProps, baz: 3};
+   HOC.js:44:26
+   44|   C.defaultProps = {...X.defaultProps, baz: 3};
                                 ^^^^^^^^^^^^
 
 References:
-   HOC.js:34:6
-   34|   X: React.AbstractComponent<Props, Instance>
+   HOC.js:37:6
+   37|   X: React.AbstractComponent<Props, Instance>
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -286,6 +286,24 @@ References:
    classes_lower.js:25:42
    25| (Component: React$AbstractComponent<any, Subclass, any>); // Ok, Instance is covariant
                                                 ^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- classes_lower.js:36:2
+
+Cannot cast `SpecificRender` to AbstractComponent because number [1] is incompatible with string [2].
+[incompatible-cast]
+
+   classes_lower.js:36:2
+   36| (SpecificRender: React$AbstractComponent<{}, SpecificRender, string>); // Error, number ~> string
+        ^^^^^^^^^^^^^^
+
+References:
+   classes_lower.js:29:13
+   29|   render(): number {
+                   ^^^^^^ [1]
+   classes_lower.js:36:62
+   36| (SpecificRender: React$AbstractComponent<{}, SpecificRender, string>); // Error, number ~> string
+                                                                    ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- config.js:13:2
@@ -698,6 +716,24 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
+Error ------------------------------------------------------------------------------------------- function_lower.js:35:2
+
+Cannot cast `SpecificRender` to AbstractComponent because number [1] is incompatible with string [2].
+[incompatible-cast]
+
+   function_lower.js:35:2
+   35| (SpecificRender: React$AbstractComponent<{}, void, string>); // ERROR, number ~> string
+        ^^^^^^^^^^^^^^
+
+References:
+   function_lower.js:30:28
+   30| function SpecificRender(): number {
+                                  ^^^^^^ [1]
+   function_lower.js:35:52
+   35| (SpecificRender: React$AbstractComponent<{}, void, string>); // ERROR, number ~> string
+                                                          ^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------- get_set_elem.js:6:3
 
 Cannot assign `y` to `x[y]` because an index signature declaring the expected key / value type is missing in
@@ -887,7 +923,7 @@ expression. [signature-verification-failure]
 
 
 
-Found 50 errors
+Found 52 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
