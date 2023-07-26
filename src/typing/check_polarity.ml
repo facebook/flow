@@ -158,9 +158,10 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
        * checking the type args once the root type is resolved. *)
       let reason = reason_of_t c in
       Flow.flow_opt cx ?trace (c, VarianceCheckT (reason, tparams, targs, polarity))
-    | DefT (_, _, ReactAbstractComponentT { config; instance }) ->
+    | DefT (_, _, ReactAbstractComponentT { config; instance; renders }) ->
       check_polarity cx ?trace tparams (Polarity.inv polarity) config;
-      check_polarity cx ?trace tparams polarity instance
+      check_polarity cx ?trace tparams polarity instance;
+      check_polarity cx ?trace tparams polarity renders
     | KeysT (_, t) -> check_polarity cx ?trace tparams Polarity.Positive t
     (* TODO *)
     | CustomFunT _

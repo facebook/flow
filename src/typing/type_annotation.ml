@@ -1196,30 +1196,42 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           | None
           | Some (_, { Ast.Type.TypeArgs.arguments = []; comments = _ }) ->
             error_type cx loc (Error_message.ETypeParamMinArity (loc, 1)) t_ast
-          | Some (_, { Ast.Type.TypeArgs.arguments; comments = _ }) when List.length arguments > 2
+          | Some (_, { Ast.Type.TypeArgs.arguments; comments = _ }) when List.length arguments > 3
             ->
             error_type cx loc (Error_message.ETooManyTypeArgs (reason, reason, 2)) t_ast
           | _ ->
             let (ts, targs) = convert_type_params () in
             let config = List.nth ts 0 in
+            let mk_default_type_argument_reason_at_position desc_default position =
+              Reason.(
+                update_desc_new_reason (fun desc_type ->
+                    RDefaultTypeArgumentAtIndex { desc_type; desc_default; position }
+                )
+              )
+                reason
+            in
             let instance =
               Base.Option.value
                 (List.nth_opt ts 1)
                 ~default:
-                  (let reason =
-                     Reason.(
-                       update_desc_new_reason (fun desc_type ->
-                           RDefaultTypeArgumentAtIndex
-                             { desc_type; desc_default = RMixed; position = 2 }
-                       )
-                     )
-                       reason
-                   in
+                  (let reason = mk_default_type_argument_reason_at_position RMixed 2 in
                    MixedT.make reason (bogus_trust ())
                   )
             in
+            let renders =
+              Base.Option.value
+                (List.nth_opt ts 2)
+                ~default:
+                  (let reason =
+                     mk_default_type_argument_reason_at_position
+                       (RIdentifier (OrdinaryName "React$Node"))
+                       3
+                   in
+                   Flow.get_builtin_type cx ~use_desc:true reason (OrdinaryName "React$Node")
+                  )
+            in
             reconstruct_ast
-              (DefT (reason, infer_trust cx, ReactAbstractComponentT { config; instance }))
+              (DefT (reason, infer_trust cx, ReactAbstractComponentT { config; instance; renders }))
               targs)
         | "React$Config" ->
           check_type_arg_arity cx loc t_ast targs 2 (fun () ->

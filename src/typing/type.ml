@@ -227,10 +227,11 @@ module rec TypeTerm : sig
         t_out: t;
         id: Poly.id;
       }
-    (* React$AbstractComponent<Config, Instance> *)
+    (* React$AbstractComponent<Config, Instance, ReturnElement> *)
     | ReactAbstractComponentT of {
         config: t;
         instance: t;
+        renders: t;
       }
     (* Enum types *)
     | EnumT of enum_t

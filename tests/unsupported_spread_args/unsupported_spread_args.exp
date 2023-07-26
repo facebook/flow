@@ -16,8 +16,8 @@ References:
    148|   | string
             ^^^^^^ [2]
    <BUILTINS>/react.js:149:5
-   149|   | React$AbstractComponent<empty, mixed>;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   149|   | React$AbstractComponent<empty, mixed, React$Node>;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:8:7
@@ -66,8 +66,8 @@ References:
    148|   | string
             ^^^^^^ [2]
    <BUILTINS>/react.js:149:5
-   149|   | React$AbstractComponent<empty, mixed>;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   149|   | React$AbstractComponent<empty, mixed, React$Node>;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:9:7
@@ -130,8 +130,8 @@ References:
    148|   | string
             ^^^^^^ [2]
    <BUILTINS>/react.js:149:5
-   149|   | React$AbstractComponent<empty, mixed>;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   149|   | React$AbstractComponent<empty, mixed, React$Node>;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:13:67

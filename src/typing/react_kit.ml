@@ -15,6 +15,9 @@ module type REACT = sig
 
   val component_class : Context.t -> Reason.reason -> Type.t -> Type.t
 
+  val subtype_class_component_render :
+    Context.t -> Type.trace -> use_op:Type.use_op -> Type.t -> reason_op:reason -> Type.t -> unit
+
   val get_config :
     Context.t ->
     Type.trace ->
@@ -143,6 +146,36 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             ignore_dicts = false;
           }
       )
+
+  let subtype_class_component_render
+      cx trace ~use_op class_component_instance ~reason_op upper_render =
+    let name = "render" in
+    let reason_prop = replace_desc_reason (RMethod (Some name)) reason_op in
+    let propref =
+      Named { reason = reason_prop; name = OrdinaryName name; from_indexed_access = false }
+    in
+    let tvar = Tvar.mk_no_wrap cx reason_op in
+    let action =
+      CallM
+        {
+          methodcalltype =
+            {
+              meth_generic_this = None;
+              meth_targs = None;
+              meth_args_tlist = [];
+              meth_tout = (reason_op, tvar);
+              meth_strict_arity = true;
+            };
+          return_hint = Type.hint_unavailable;
+        }
+    in
+    let fn = Tvar.mk cx reason_op in
+    (* Call the `render` method. *)
+    rec_flow
+      cx
+      trace
+      (class_component_instance, MethodT (unknown_use, reason_op, reason_op, propref, action, fn));
+    rec_flow_t cx trace ~use_op (OpenT (reason_op, tvar), upper_render)
 
   (* Lookup the defaultProps of a component and flow with upper depending
    * on the given polarity.

@@ -847,24 +847,43 @@ and merge_annot tps infer_tps file = function
   | ComposeReverse loc ->
     let reason = Reason.(mk_reason RFunctionType loc) in
     Type.CustomFunT (reason, Type.Compose true)
-  | ReactAbstractComponent { loc; config; instance } ->
+  | ReactAbstractComponent { loc; config; instance; renders } ->
     let reason = Reason.(mk_reason (RCustom "AbstractComponent") loc) in
     let config = merge tps infer_tps file config in
-    let instance =
-      match instance with
-      | Some instance -> merge tps infer_tps file instance
-      | None ->
-        let reason =
-          Reason.(
-            update_desc_new_reason (fun desc_type ->
-                RDefaultTypeArgumentAtIndex { desc_type; desc_default = RMixed; position = 2 }
-            )
-          )
-            reason
-        in
-        Type.(MixedT.make reason (bogus_trust ()))
+    let mk_default_type_argument_reason_at_position desc_default position =
+      Reason.(
+        update_desc_new_reason (fun desc_type ->
+            RDefaultTypeArgumentAtIndex { desc_type; desc_default; position }
+        )
+      )
+        reason
     in
-    Type.(DefT (reason, trust, ReactAbstractComponentT { config; instance }))
+    let instance =
+      Base.Option.value_map
+        ~f:(merge tps infer_tps file)
+        ~default:
+          (let reason = mk_default_type_argument_reason_at_position Reason.RMixed 2 in
+           Type.(MixedT.make reason (bogus_trust ()))
+          )
+        instance
+    in
+    let renders =
+      Base.Option.value_map
+        ~f:(merge tps infer_tps file)
+        ~default:
+          (let reason =
+             mk_default_type_argument_reason_at_position
+               Reason.(RIdentifier (OrdinaryName "React$Node"))
+               3
+           in
+           ConsGen.mk_instance
+             file.cx
+             reason
+             (Flow_js_utils.lookup_builtin_strict file.cx (Reason.OrdinaryName "React$Node") reason)
+          )
+        renders
+    in
+    Type.(DefT (reason, trust, ReactAbstractComponentT { config; instance; renders }))
   | ReactConfig { loc; props; default } ->
     let reason = Reason.(mk_reason RReactConfig loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in

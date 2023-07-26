@@ -15,15 +15,15 @@ type NotTheRightConfig = {+baz: number, +qux: number};
 declare var z: NotTheRightConfig;
 (z: React$Config<Props, DefaultProps>); // Error, configs don't match
 
-function HOC<Config, Instance>(
-    x: React$AbstractComponent<Config, Instance>,
-): React$AbstractComponent<Config, Instance> {
+function HOC<Config, Instance, TRenders: React$Node>(
+    x: React$AbstractComponent<Config, Instance, TRenders>,
+): React$AbstractComponent<Config, Instance, TRenders> {
   return x;
 }
 
-function HOC2<Props: {}, DefaultProps: {}, Instance>(
-    x: React$AbstractComponent<React$Config<Props, DefaultProps>, Instance>,
-): React$AbstractComponent<React$Config<Props, DefaultProps>, Instance> {
+function HOC2<Props: {}, DefaultProps: {}, Instance, TRenders: React$Node>(
+    x: React$AbstractComponent<React$Config<Props, DefaultProps>, Instance, TRenders>,
+): React$AbstractComponent<React$Config<Props, DefaultProps>, Instance, TRenders> {
   return x;
 }
 

@@ -196,11 +196,13 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       | ReactElementConfigType ->
         merge_lower_or_upper_bounds r (OpenT tout)
         |> bind_use_t_result ~f:(fun config ->
+               let react_node = Flow.get_builtin_type cx r (OrdinaryName "React$Node") in
                UpperT
                  (DefT
                     ( r,
                       bogus_trust (),
-                      ReactAbstractComponentT { config; instance = MixedT.why r (bogus_trust ()) }
+                      ReactAbstractComponentT
+                        { config; instance = MixedT.why r (bogus_trust ()); renders = react_node }
                     )
                  )
            )

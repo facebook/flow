@@ -628,7 +628,7 @@ let eval_hint_tests =
     "jsx_props_of_abstract_component"
     >:: mk_eval_hint_test
           ~expected:"{+bar: string, +foo: number}"
-          "React$AbstractComponent<{+bar: string, +foo: number}, mixed>"
+          "React$AbstractComponent<{+bar: string, +foo: number}, mixed, React$Node>"
           [Decomp_JsxProps];
     "jsx_props_select"
     >:: mk_eval_hint_test
@@ -642,8 +642,8 @@ let eval_hint_tests =
           [Decomp_ObjSpread; Decomp_JsxProps];
     "jsx_ref_function"
     >:: mk_eval_hint_test
-          ~expected:"React$ElementRef<React$AbstractComponent<{...}, string>> | null"
-          "React$AbstractComponent<{...}, string>"
+          ~expected:"React$ElementRef<React$AbstractComponent<{...}, string, React$Node>> | null"
+          "React$AbstractComponent<{...}, string, React$Node>"
           [Decomp_FuncParam ([None], 0, None); Decomp_JsxRef];
     "jsx_fragment_ref"
     >:: mk_eval_hint_test_with_type_setup

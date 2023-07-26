@@ -1161,6 +1161,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
      *  1. configu <: configl
      *  2. default_propsl = default_propsu
      *  3. instancel <: instanceu
+     *  4. rendersl <: rendersu
      *
      *  2. is necessary because we allow the default props of a component to be read and
      *  written.
@@ -1179,11 +1180,15 @@ module Make (Flow : INPUT) : OUTPUT = struct
      *  3. Is necessary because we need to ensure the ref passed in is compatible with the instance
      *  type of the component. React will assign ref.current to the instance of the component, so we
      *  need to ensure that the type we assign is compatible with the type ref.current.
+     *
+     *  4. Is necessary because we need to ensure the element returned from the render function is
+     *  compatible with any places that the component can be rendered. This is often used by
+     *  components that only accept specific components as children.
      *)
 
     (* Class component ~> AbstractComponent *)
     | ( DefT (reasonl, _, ClassT this),
-        DefT (_reasonu, _, ReactAbstractComponentT { config; instance })
+        DefT (_, _, ReactAbstractComponentT { config; instance; renders })
       ) ->
       (* Contravariant config check *)
       Flow.react_get_config
@@ -1196,10 +1201,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
         Polarity.Negative
         config;
       (* check instancel <: instanceu *)
-      rec_flow_t cx trace ~use_op (this, instance)
+      rec_flow_t cx trace ~use_op (this, instance);
+
+      (* check rendersl <: rendersu *)
+      Flow.react_subtype_class_component_render cx trace ~use_op this ~reason_op:reasonl renders
     (* Function Component ~> AbstractComponent *)
     | ( DefT (reasonl, _, FunT (_, { return_t; _ })),
-        DefT (_reasonu, _, ReactAbstractComponentT { config; instance })
+        DefT (_reasonu, _, ReactAbstractComponentT { config; instance; renders })
       ) ->
       (* Function components will not always have an annotation, so the config may
        * never resolve. To determine config compatibility, we instead
@@ -1216,6 +1224,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
       (* Ensure this is a function component *)
       rec_flow_t ~use_op cx trace (return_t, get_builtin_type cx reasonl (OrdinaryName "React$Node"));
 
+      (* check rendered elements are covariant *)
+      rec_flow_t cx trace ~use_op (return_t, renders);
+
       (* A function component instance type is always void, so flow void to instance *)
       rec_flow_t
         cx
@@ -1224,12 +1235,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
         (VoidT.make (replace_desc_new_reason RVoid reasonl) |> with_trust bogus_trust, instance)
     (* Object Component ~> AbstractComponent *)
     | ( DefT (reasonl, _, ObjT { call_t = Some id; _ }),
-        DefT (reasonu, trust, ReactAbstractComponentT { config; instance })
+        DefT (reasonu, trust, ReactAbstractComponentT { config; instance; renders })
       ) ->
       rec_flow cx trace (l, ReactKitT (use_op, reasonl, React.ConfigCheck config));
 
-      (* Ensure the callable signature's return type is compatible with React.Node. We
-       * do this by flowing it to (...empty): React.Node *)
+      (* Ensure the callable signature's return type is compatible with the rendered element (renders). We
+       * do this by flowing it to (...empty): renders *)
       let funtype =
         mk_functiontype
           reasonu
@@ -1243,7 +1254,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
             )
           ~def_reason:reasonl
           ~predicate:None
-          (get_builtin_type cx reasonu (OrdinaryName "React$Node"))
+          renders
       in
       let mixed = MixedT.why reasonu (bogus_trust ()) in
       rec_flow_t
@@ -1259,11 +1270,20 @@ module Make (Flow : INPUT) : OUTPUT = struct
         ~use_op
         (VoidT.make (replace_desc_new_reason RVoid reasonl) |> with_trust bogus_trust, instance)
     (* AbstractComponent ~> AbstractComponent *)
-    | ( DefT (_reasonl, _, ReactAbstractComponentT { config = configl; instance = instancel }),
-        DefT (_reasonu, _, ReactAbstractComponentT { config = configu; instance = instanceu })
+    | ( DefT
+          ( _reasonl,
+            _,
+            ReactAbstractComponentT { config = configl; instance = instancel; renders = rendersl }
+          ),
+        DefT
+          ( _reasonu,
+            _,
+            ReactAbstractComponentT { config = configu; instance = instanceu; renders = rendersu }
+          )
       ) ->
       rec_flow_t cx trace ~use_op (configu, configl);
-      rec_flow_t cx trace ~use_op (instancel, instanceu)
+      rec_flow_t cx trace ~use_op (instancel, instanceu);
+      rec_flow_t cx trace ~use_op (rendersl, rendersu)
     (***********************************************)
     (* function types deconstruct into their parts *)
     (***********************************************)

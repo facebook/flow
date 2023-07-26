@@ -580,6 +580,7 @@ type ('loc, 'a) annot =
       loc: 'loc;
       config: 'a;
       instance: 'a option;
+      renders: 'a option;
     }
   | ReactConfig of {
       loc: 'loc;

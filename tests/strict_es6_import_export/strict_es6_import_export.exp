@@ -264,8 +264,8 @@ References:
    foo.js
    ^^^^^^ [1]
    <BUILTINS>/react.js:149:5
-   149|   | React$AbstractComponent<empty, mixed>;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   149|   | React$AbstractComponent<empty, mixed, React$Node>;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:148:5
    148|   | string
             ^^^^^^ [3]

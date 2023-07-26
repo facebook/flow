@@ -367,7 +367,7 @@ Cannot call `React.cloneElement` because props [1] is incompatible with empty [2
 
 References:
    <BUILTINS>/react.js:149:29
-   149|   | React$AbstractComponent<empty, mixed>;
+   149|   | React$AbstractComponent<empty, mixed, React$Node>;
                                     ^^^^^ [2]
 
 
@@ -724,8 +724,8 @@ References:
    148|   | string
             ^^^^^^ [2]
    <BUILTINS>/react.js:149:5
-   149|   | React$AbstractComponent<empty, mixed>;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   149|   | React$AbstractComponent<empty, mixed, React$Node>;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------- create_element.js:9:21
@@ -751,8 +751,8 @@ References:
    148|   | string
             ^^^^^^ [2]
    <BUILTINS>/react.js:149:5
-   149|   | React$AbstractComponent<empty, mixed>;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   149|   | React$AbstractComponent<empty, mixed, React$Node>;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------ create_element.js:10:21
@@ -775,8 +775,8 @@ Cannot instantiate `React.Element` because in type argument `ElementType`: [inco
 
 References:
    <BUILTINS>/react.js:149:5
-   149|   | React$AbstractComponent<empty, mixed>;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   149|   | React$AbstractComponent<empty, mixed, React$Node>;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:148:5
    148|   | string
             ^^^^^^ [3]

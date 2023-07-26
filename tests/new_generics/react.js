@@ -39,14 +39,14 @@ function hoc<Props, Component: React.ComponentType<Props>>(
 }
 
 function HOC<Config, Instance>(
-  x: React$AbstractComponent<Config, Instance>,
-): React$AbstractComponent<Config, Instance> {
+  x: React.AbstractComponent<Config, Instance>,
+): React.AbstractComponent<Config, Instance> {
   return x;
 }
 
 function HOC2<Props: {}, DefaultProps: {}, Instance>(
-  x: React$AbstractComponent<React$Config<Props, DefaultProps>, Instance>,
-): React$AbstractComponent<React$Config<Props, DefaultProps>, Instance> {
+  x: React.AbstractComponent<React$Config<Props, DefaultProps>, Instance>,
+): React.AbstractComponent<React$Config<Props, DefaultProps>, Instance> {
   return x;
 }
 

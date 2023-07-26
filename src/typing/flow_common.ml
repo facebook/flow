@@ -263,6 +263,9 @@ module type EVAL = sig
 end
 
 module type REACT = sig
+  val react_subtype_class_component_render :
+    Context.t -> Type.trace -> use_op:Type.use_op -> Type.t -> reason_op:reason -> Type.t -> unit
+
   val react_get_config :
     Context.t ->
     Type.trace ->

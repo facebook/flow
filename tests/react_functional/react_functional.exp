@@ -61,8 +61,8 @@ References:
    148|   | string
             ^^^^^^ [2]
    <BUILTINS>/react.js:149:5
-   149|   | React$AbstractComponent<empty, mixed>;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   149|   | React$AbstractComponent<empty, mixed, React$Node>;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 

@@ -757,13 +757,14 @@ end = struct
       | TypeAppT (_, _, t, ts) -> type_app ~env t (Some ts)
       | DefT (r, _, InstanceT { super; inst; _ }) -> instance_t ~env r super inst
       | DefT (_, _, ClassT t) -> class_t ~env t
-      | DefT (_, _, ReactAbstractComponentT { config; instance }) ->
+      | DefT (_, _, ReactAbstractComponentT { config; instance; renders }) ->
         let%bind config = type__ ~env config in
         let%bind instance = type__ ~env instance in
+        let%bind renders = type__ ~env renders in
         return
           (generic_talias
              (Ty_symbol.builtin_symbol (Reason.OrdinaryName "React$AbstractComponent"))
-             (Some [config; instance])
+             (Some [config; instance; renders])
           )
       | ThisClassT (_, t, _, _) -> this_class_t ~env t
       | ThisTypeAppT (_, c, _, ts) -> type_app ~env c ts

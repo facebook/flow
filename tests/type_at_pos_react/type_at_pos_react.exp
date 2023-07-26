@@ -1,4 +1,4 @@
-lazy_ref.js:14:9 = {default: React$AbstractComponent<empty, {moo(x: string): void}>}
+lazy_ref.js:14:9 = {default: React$AbstractComponent<empty, {moo(x: string): void}, React$Node>}
 lazy_ref.js:14:9,14:9
 lazy_ref.js:19:9 = Promise<{+default: (x: Props) => Element<(x: Props) => Node>}>
 lazy_ref.js:19:9,19:9
@@ -107,5 +107,5 @@ Flags:
 React$CreateElement
 react.js:4:7,4:19
 
-react_abstract_component.js:3:15 = React$AbstractComponent<any, any>
+react_abstract_component.js:3:15 = React$AbstractComponent<any, any, any>
 react_abstract_component.js:3:15,3:15

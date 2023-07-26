@@ -5740,9 +5740,10 @@ struct
     | UseT (use_op, ExactT (_, t)) ->
       covariant_flow ~use_op t;
       true
-    | UseT (use_op, DefT (_, _, ReactAbstractComponentT { config; instance })) ->
+    | UseT (use_op, DefT (_, _, ReactAbstractComponentT { config; instance; renders })) ->
       contravariant_flow ~use_op config;
       covariant_flow ~use_op instance;
+      covariant_flow ~use_op renders;
       true
     (* Some types just need to be expanded and filled with any types *)
     | UseT (use_op, (DefT (_, _, ArrT (ArrayAT _)) as t))
@@ -5935,9 +5936,10 @@ struct
     | DefT (_, _, TypeT (_, t)) ->
       covariant_flow ~use_op t;
       true
-    | DefT (_, _, ReactAbstractComponentT { config; instance }) ->
+    | DefT (_, _, ReactAbstractComponentT { config; instance; renders }) ->
       contravariant_flow ~use_op config;
       covariant_flow ~use_op instance;
+      covariant_flow ~use_op renders;
       true
     | GenericT { bound; _ } ->
       covariant_flow ~use_op bound;
@@ -9720,6 +9722,8 @@ module rec FlowJs : Flow_common.S = struct
   let widen_obj_type = ObjectKit.widen_obj_type
 
   let perform_read_prop_action = GetPropTKit.perform_read_prop_action
+
+  let react_subtype_class_component_render = React.subtype_class_component_render
 
   let react_get_config = React.get_config
 
