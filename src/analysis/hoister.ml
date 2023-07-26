@@ -82,7 +82,8 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
         super#statement stmt
       | (_, FunctionDeclaration _)
       | (_, ComponentDeclaration _)
-      | (_, DeclareFunction _) ->
+      | (_, DeclareFunction _)
+      | (_, DeclareComponent _) ->
         this#flowmin_compatibility_statement stmt
       | _ -> this#nonlexical_statement stmt
 
@@ -173,6 +174,12 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
         | None -> ()
       end;
       expr
+
+    method! declare_component _loc (stmt : ('loc, 'loc) Ast.Statement.DeclareComponent.t) =
+      let open Ast.Statement.DeclareComponent in
+      let { id; _ } = stmt in
+      this#add_component_binding id;
+      stmt
 
     method! component_declaration _loc (stmt : ('loc, 'loc) Ast.Statement.ComponentDeclaration.t) =
       let open Ast.Statement.ComponentDeclaration in

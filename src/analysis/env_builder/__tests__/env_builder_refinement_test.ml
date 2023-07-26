@@ -6999,6 +6999,31 @@ let%expect_test "declare_component" =
           (3, 20) to (3, 23): (`Foo`)
         }] |}]
 
+let%expect_test "declare_component2" =
+  print_ssa_test {|
+declare component Y();
+
+component X() {
+    return <Y />;
+}
+
+<Y />;
+|};
+    [%expect{|
+      [
+        (5, 11) to (5, 16) => {
+          Global React
+        };
+        (5, 12) to (5, 13) => {
+          (2, 18) to (2, 19): (`Y`)
+        };
+        (8, 0) to (8, 5) => {
+          Global React
+        };
+        (8, 1) to (8, 2) => {
+          (2, 18) to (2, 19): (`Y`)
+        }] |}]
+
 let%expect_test "lowercase jsx" =
   print_ssa_test {|
   const div = 42;
