@@ -51,7 +51,9 @@ let parse_content file content =
     in
     Error converted
   else
-    let (fsig, _tolerable_errors) = File_sig.program ~ast ~opts:File_sig.default_opts in
+    let (fsig, _tolerable_errors) =
+      File_sig.program ~file_key:file ~ast ~opts:File_sig.default_opts
+    in
     Ok (ast, fsig)
 
 let array_of_list f lst = Array.of_list (List.map f lst)

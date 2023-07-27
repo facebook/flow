@@ -190,7 +190,7 @@ let set_cjs_exports mod_exp_loc msig errs =
 (* Subclass of the AST visitor class that calculates requires and exports. Initializes with the
    scope builder class.
 *)
-class requires_exports_calculator ~ast ~opts =
+class requires_exports_calculator ~file_key:_ ~ast ~opts =
   object (this)
     inherit [tolerable_t, Loc.t] visitor ~init:(empty, []) as super
 
@@ -781,8 +781,8 @@ let filter_irrelevant_errors ~module_kind tolerable_errors =
         | _ -> true)
       tolerable_errors
 
-let program ~ast ~opts =
-  let walk = new requires_exports_calculator ~ast ~opts in
+let program ~file_key ~ast ~opts =
+  let walk = new requires_exports_calculator ~file_key ~ast ~opts in
   let (fsig, tolerable_errors) = walk#eval walk#program ast in
   let module_kind = fsig.module_kind in
   (fsig, filter_irrelevant_errors ~module_kind tolerable_errors)

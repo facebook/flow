@@ -12,13 +12,13 @@ let visit ?parse_options ?(opts = default_opts) source =
   (* allow parse errors. we still need file sigs on invalid ASTs in Type_contents. *)
   let fail = false in
   let (ast, _) = Parser_flow.program ~fail ~parse_options source in
-  fst (program ~ast ~opts)
+  fst (program ~file_key:(File_key.SourceFile "test.js") ~ast ~opts)
 
 let visit_err ?parse_options ?(opts = default_opts) source =
   (* allow parse errors; we still need file sigs on invalid ASTs in Type_contents. *)
   let fail = false in
   let (ast, _) = Parser_flow.program ~fail ~parse_options source in
-  match program ~ast ~opts with
+  match program ~file_key:(File_key.SourceFile "test.js") ~ast ~opts with
   | (_, []) -> assert_failure "Unexpected success"
   | (_, [e]) -> e
   | _ -> assert_failure "Unexpected multiple errors"

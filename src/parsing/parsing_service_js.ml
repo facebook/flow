@@ -162,7 +162,7 @@ let parse_file_sig options file ast =
       relay_integration_module_prefix;
     }
   in
-  File_sig.program ~ast ~opts:file_sig_opts
+  File_sig.program ~file_key:file ~ast ~opts:file_sig_opts
 
 let parse_type_sig options docblock locs_to_dirtify file ast =
   let sig_opts = Type_sig_options.of_options options docblock locs_to_dirtify file in

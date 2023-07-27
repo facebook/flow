@@ -120,7 +120,8 @@ val empty : t
 
 val default_opts : options
 
-val program : ast:(Loc.t, Loc.t) Flow_ast.Program.t -> opts:options -> tolerable_t
+val program :
+  file_key:File_key.t -> ast:(Loc.t, Loc.t) Flow_ast.Program.t -> opts:options -> tolerable_t
 
 (* Use for debugging; not for exposing info to the end user *)
 val to_string : t -> string

@@ -85,7 +85,7 @@ let get_rename_edits ~reader ~options ~old_haste_name ~new_haste_name old_file_k
           Base.Option.value_map ast' ~default:uri_map_result ~f:(fun ast ->
               let%bind.Base.Result uri_map = uri_map_result in
               let%bind.Base.Result uri = Flow_lsp_conversions.file_key_to_uri (Some file_key) in
-              let (dependent_file_sig, _) = File_sig.program ~ast ~opts in
+              let (dependent_file_sig, _) = File_sig.program ~file_key ~ast ~opts in
               let edits = get_edits_for_file ~old_haste_name ~new_haste_name dependent_file_sig in
               Ok (Lsp.UriMap.add uri edits uri_map)
           ))
