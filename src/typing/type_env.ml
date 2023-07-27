@@ -608,37 +608,8 @@ let read_class_self_type cx loc =
 
 let is_global_var cx loc =
   let { Loc_env.var_info; _ } = Context.environment cx in
-  let rec local_def_exists states =
-    Base.List.exists
-      ~f:(function
-        | Env_api.With_ALoc.Undefined _ -> true
-        | Env_api.With_ALoc.Number _ -> true
-        | Env_api.With_ALoc.DeclaredFunction _ -> true
-        | Env_api.With_ALoc.Uninitialized _ -> true
-        | Env_api.With_ALoc.EmptyArray _ -> true
-        | Env_api.With_ALoc.Write _ -> true
-        | Env_api.With_ALoc.IllegalWrite _ -> true
-        | Env_api.With_ALoc.Unreachable _ -> true
-        | Env_api.With_ALoc.Undeclared _ -> true
-        | Env_api.With_ALoc.Refinement { refinement_id = _; writes; write_id = _ } ->
-          local_def_exists writes
-        | Env_api.With_ALoc.Projection _ -> true
-        | Env_api.With_ALoc.GlobalThis _ -> true
-        | Env_api.With_ALoc.IllegalThis _ -> true
-        | Env_api.With_ALoc.FunctionThis _ -> true
-        | Env_api.With_ALoc.ClassInstanceThis _ -> true
-        | Env_api.With_ALoc.ClassStaticThis _ -> true
-        | Env_api.With_ALoc.ClassInstanceSuper _ -> true
-        | Env_api.With_ALoc.ClassStaticSuper _ -> true
-        | Env_api.With_ALoc.Exports -> true
-        | Env_api.With_ALoc.ModuleScoped _ -> true
-        | Env_api.With_ALoc.Global _ -> false)
-      states
-    |> not
-  in
   match find_var_opt var_info loc with
-  | Ok { Env_api.def_loc = _; write_locs; val_kind = _; name = _; id = _ } ->
-    local_def_exists write_locs
+  | Ok read -> Env_api.With_ALoc.is_global_var read
   | Error _ -> false
 
 let local_scope_entry_exists cx loc = not (is_global_var cx loc)

@@ -254,6 +254,8 @@ module type S = sig
 
   val has_assigning_write : def_loc_type * L.t -> env_entry EnvMap.t -> bool
 
+  val is_global_var : read -> bool
+
   val write_locs_of_read_loc : values -> read_loc -> write_locs
 
   val writes_of_write_loc : for_type:bool -> Provider_api.info -> write_loc -> EnvKey.t list
@@ -540,6 +542,36 @@ module Make
     | Some NonAssigningWrite
     | None ->
       false
+
+  let is_global_var { write_locs; _ } =
+    let rec no_local_defs states =
+      Base.List.for_all
+        ~f:(function
+          | Global _ -> true
+          | Refinement { refinement_id = _; writes; write_id = _ } -> no_local_defs writes
+          | Undefined _
+          | Number _
+          | DeclaredFunction _
+          | Uninitialized _
+          | EmptyArray _
+          | Write _
+          | IllegalWrite _
+          | Unreachable _
+          | Undeclared _
+          | Projection _
+          | GlobalThis _
+          | IllegalThis _
+          | FunctionThis _
+          | ClassInstanceThis _
+          | ClassStaticThis _
+          | ClassInstanceSuper _
+          | ClassStaticSuper _
+          | Exports
+          | ModuleScoped _ ->
+            false)
+        states
+    in
+    no_local_defs write_locs
 
   let write_locs_of_read_loc values read_loc =
     let { write_locs; def_loc = _; val_kind = _; name = _; id = _ } = L.LMap.find read_loc values in
