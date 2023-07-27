@@ -30,7 +30,7 @@ module type S = sig
     | ClassInstanceSuperLoc
     | ClassStaticSuperLoc
     | GlobalExportsLoc
-    | DeclareModuleExportsLoc
+    | CJSModuleExportsLoc
   [@@deriving show]
 
   type autocomplete_hooks = {
@@ -327,7 +327,7 @@ module Make
     | ClassInstanceSuperLoc
     | ClassStaticSuperLoc
     | GlobalExportsLoc
-    | DeclareModuleExportsLoc
+    | CJSModuleExportsLoc
   [@@deriving show]
 
   type autocomplete_hooks = {

@@ -553,7 +553,7 @@ let find_write cx kind reason =
 
 let get_module_exports cx loc =
   let env = Context.environment cx in
-  t_option_value_exn cx loc (Loc_env.find_write env Env_api.DeclareModuleExportsLoc loc)
+  t_option_value_exn cx loc (Loc_env.find_write env Env_api.CJSModuleExportsLoc loc)
 
 let get_refinement cx key loc =
   let reason = mk_reason (Key.reason_desc key) loc in
@@ -756,7 +756,7 @@ let set_module_exports cx t =
   let env = Context.environment cx in
   Base.Option.iter
     env.Loc_env.declare_module_exports_write_loc
-    ~f:(unify_write_entry cx ~use_op:unknown_use t Env_api.DeclareModuleExportsLoc)
+    ~f:(unify_write_entry cx ~use_op:unknown_use t Env_api.CJSModuleExportsLoc)
 
 let bind_function_param cx t loc =
   unify_write_entry cx ~use_op:Type.unknown_use t Env_api.FunctionParamLoc loc

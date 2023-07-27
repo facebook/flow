@@ -1241,7 +1241,7 @@ let entries_of_def graph (kind, loc) =
   in
   match EnvMap.find (kind, loc) graph with
   | (Binding b, _, _, _) -> add_from_bindings acc b
-  | (DeclaredModule (loc, _), _, _, _) -> EnvSet.add (Env_api.DeclareModuleExportsLoc, loc) acc
+  | (DeclaredModule (loc, _), _, _, _) -> EnvSet.add (Env_api.CJSModuleExportsLoc, loc) acc
   | (Class { this_super_write_locs; _ }, _, _, _) -> EnvSet.union this_super_write_locs acc
   | ( Function
         {
