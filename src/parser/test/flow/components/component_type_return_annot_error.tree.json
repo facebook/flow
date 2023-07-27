@@ -2,11 +2,7 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":1,"column":22},"end":{"line":1,"column":23}},
-      "message":"Unexpected token `:`, expected the token `;`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":22},"end":{"line":1,"column":23}},
-      "message":"Unexpected token `:`, expected the start of a statement"
+      "message":"Components use `renders` instead of `:` to annotate the render type of a component."
     }
   ],
   "type":"Program",
@@ -15,8 +11,8 @@
   "body":[
     {
       "type":"TypeAlias",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":22}},
-      "range":[0,22],
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":31}},
+      "range":[0,31],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":1,"column":5},"end":{"line":1,"column":8}},
@@ -28,27 +24,22 @@
       "typeParameters":null,
       "right":{
         "type":"ComponentTypeAnnotation",
-        "loc":{"source":null,"start":{"line":1,"column":11},"end":{"line":1,"column":22}},
-        "range":[11,22],
+        "loc":{"source":null,"start":{"line":1,"column":11},"end":{"line":1,"column":30}},
+        "range":[11,30],
         "params":[],
         "rest":null,
-        "rendersType":null,
+        "rendersType":{
+          "type":"TypeAnnotation",
+          "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":30}},
+          "range":[24,30],
+          "typeAnnotation":{
+            "type":"NumberTypeAnnotation",
+            "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":30}},
+            "range":[24,30]
+          }
+        },
         "typeParameters":null
       }
-    },
-    {
-      "type":"ExpressionStatement",
-      "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":31}},
-      "range":[24,31],
-      "expression":{
-        "type":"Identifier",
-        "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":30}},
-        "range":[24,30],
-        "name":"number",
-        "typeAnnotation":null,
-        "optional":false
-      },
-      "directive":null
     }
   ],
   "comments":[]

@@ -2,11 +2,7 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":1,"column":23},"end":{"line":1,"column":24}},
-      "message":"Unexpected token `:`, expected the token `;`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":23},"end":{"line":1,"column":24}},
-      "message":"Unexpected token `:`, expected the start of a statement"
+      "message":"Components use `renders` instead of `:` to annotate the render type of a component."
     }
   ],
   "type":"Program",
@@ -15,8 +11,8 @@
   "body":[
     {
       "type":"DeclareComponent",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":23}},
-      "range":[0,23],
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":32}},
+      "range":[0,32],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":1,"column":18},"end":{"line":1,"column":21}},
@@ -28,22 +24,17 @@
       "params":[],
       "rest":null,
       "params":[],
-      "rendersType":null,
-      "typeParameters":null
-    },
-    {
-      "type":"ExpressionStatement",
-      "loc":{"source":null,"start":{"line":1,"column":25},"end":{"line":1,"column":32}},
-      "range":[25,32],
-      "expression":{
-        "type":"Identifier",
+      "rendersType":{
+        "type":"TypeAnnotation",
         "loc":{"source":null,"start":{"line":1,"column":25},"end":{"line":1,"column":31}},
         "range":[25,31],
-        "name":"number",
-        "typeAnnotation":null,
-        "optional":false
+        "typeAnnotation":{
+          "type":"NumberTypeAnnotation",
+          "loc":{"source":null,"start":{"line":1,"column":25},"end":{"line":1,"column":31}},
+          "range":[25,31]
+        }
       },
-      "directive":null
+      "typeParameters":null
     }
   ],
   "comments":[]

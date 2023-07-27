@@ -451,7 +451,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
               let renders = type_annotation_hint_remove_trailing env renders in
               (params, renders)
             else
-              let missing_annotation = Ast.Type.Missing (Peek.loc_skip_lookahead env) in
+              let missing_annotation = renders_annotation_opt env in
               (component_type_params_remove_trailing env params, missing_annotation)
           in
           Type.Component
@@ -1882,6 +1882,11 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
 
   and renders_annotation_opt env =
     match Peek.token env with
+    | T_COLON ->
+      if not (should_parse_types env) then error env Parse_error.UnexpectedTypeAnnotation;
+      error env Parse_error.InvalidComponentRenderAnnotation;
+      Eat.token env;
+      Type.Available (with_loc (fun env -> _type env) env)
     | T_IDENTIFIER { raw = "renders"; _ } ->
       if not (should_parse_types env) then error env Parse_error.UnexpectedTypeAnnotation;
       Eat.token env;
