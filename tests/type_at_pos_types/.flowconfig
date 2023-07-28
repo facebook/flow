@@ -9,7 +9,6 @@
 [options]
 all=true
 exact_by_default=false
-tuple_enhancements=true
 no_flowlib=false
 
 [strict]

@@ -1,3 +1,2 @@
 [options]
 exact_by_default=false
-tuple_enhancements=true
