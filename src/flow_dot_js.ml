@@ -115,8 +115,6 @@ let stub_metadata ~root ~checked =
     babel_loose_array_spread = false;
     component_syntax = true;
     component_syntax_includes = [];
-    conditional_type = true;
-    type_guards = true;
     enable_const_params = false;
     enable_enums = true;
     enable_relay_integration = false;
@@ -126,7 +124,6 @@ let stub_metadata ~root ~checked =
     facebook_fbt = None;
     facebook_module_interop = false;
     ignore_non_literal_requires = false;
-    mapped_type = true;
     max_literal_length = 100;
     max_trace_depth = 0;
     max_workers = 0;
@@ -160,8 +157,6 @@ let init_builtins filenames =
   let ccx = Context.(make_ccx (empty_master_cx ())) in
   let leader =
     let metadata = stub_metadata ~root ~checked:true in
-    (* Temporarily enabling type-guards just in libdefs *)
-    let metadata = { metadata with Context.type_guards = true } in
     load_lib_files ~ccx ~metadata filenames
   in
   let master_cx =
@@ -185,18 +180,7 @@ let merge_custom_check_config js_config_object metadata =
   in
   let exact_by_default = Js.Unsafe.get js_config_object "exact_by_default" |> Js.to_bool in
   let enable_enums = Js.Unsafe.get js_config_object "enums" |> Js.to_bool in
-  let conditional_type = Js.Unsafe.get js_config_object "conditional_type" |> Js.to_bool in
-  let mapped_type = Js.Unsafe.get js_config_object "mapped_type" |> Js.to_bool in
-  let type_guards = Js.Unsafe.get js_config_object "type_guards" |> Js.to_bool in
-  {
-    metadata with
-    Context.react_runtime;
-    exact_by_default;
-    enable_enums;
-    conditional_type;
-    mapped_type;
-    type_guards;
-  }
+  { metadata with Context.react_runtime; exact_by_default; enable_enums }
 
 let infer_and_merge ~root filename js_config_object docblock ast file_sig =
   (* create cx *)
@@ -422,21 +406,6 @@ let () =
   },
   {
     "key": "enums",
-    "type": "bool",
-    "default": true
-  },
-  {
-    "key": "conditional_type",
-    "type": "bool",
-    "default": true
-  },
-  {
-    "key": "mapped_type",
-    "type": "bool",
-    "default": true
-  },
-  {
-    "key": "type_guards",
     "type": "bool",
     "default": true
   }

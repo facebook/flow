@@ -70,7 +70,6 @@ type t = {
   opt_channel_mode: [ `pipe | `socket ];
   opt_component_syntax: component_syntax;
   opt_component_syntax_includes: string list;
-  opt_conditional_type: bool;
   opt_debug: bool;
   opt_direct_dependent_files_fix: bool;
   opt_enable_const_params: bool;
@@ -104,7 +103,6 @@ type t = {
   opt_log_file: File_path.t;
   opt_log_saving: log_saving SMap.t;
   opt_long_lived_workers: bool;
-  opt_mapped_type: bool;
   opt_max_files_checked_per_worker: int;
   opt_max_header_tokens: int;
   opt_max_literal_length: int;
@@ -143,7 +141,6 @@ type t = {
   opt_traces: int;
   opt_trust_mode: trust_mode;
   opt_tuple_enhancements: bool;
-  opt_type_guards: bool;
   opt_use_mixed_in_catch_variables: bool;
   opt_verbose: Verbose.t option;
   opt_wait_for_recheck: bool;
@@ -192,8 +189,6 @@ let typecheck_component_syntax_in_file opts file =
          let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
          List.exists (fun str -> Base.String.is_prefix ~prefix:str normalized_filename) dirs
      end
-
-let conditional_type opts = opts.opt_conditional_type
 
 let direct_dependent_files_fix opts = opts.opt_direct_dependent_files_fix
 
@@ -260,8 +255,6 @@ let log_file opts = opts.opt_log_file
 let log_saving opts = opts.opt_log_saving
 
 let long_lived_workers opts = opts.opt_long_lived_workers
-
-let mapped_type opts = opts.opt_mapped_type
 
 let max_files_checked_per_worker opts = opts.opt_max_files_checked_per_worker
 
@@ -341,8 +334,6 @@ let temp_dir opts = opts.opt_temp_dir
 let trust_mode opts = opts.opt_trust_mode
 
 let tuple_enhancements opts = opts.opt_tuple_enhancements
-
-let type_guards opts = opts.opt_type_guards
 
 let use_mixed_in_catch_variables opts = opts.opt_use_mixed_in_catch_variables
 

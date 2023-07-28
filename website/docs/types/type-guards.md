@@ -216,7 +216,7 @@ function isNumberError2(x: mixed): x is number {
 
 To use type guards, you need to upgrade your infrastructure so that it supports the syntax:
 
-- `flow` and `flow-parser`: 0.209.1. You need to explicitly enable it in your .flowconfig, under the `[options]` heading, add `type_guards=true`.
+- `flow` and `flow-parser`: 0.209.1. Between v0.209.1 to v0.211.1, you need to explicitly enable it in your .flowconfig, under the `[options]` heading, add `type_guards=true`.
 - `prettier`: 3
 - `babel` with `babel-plugin-syntax-hermes-parser`. See [our Babel guide](../../tools/babel/) for setup instructions.
 - `eslint` with `hermes-eslint`. See [our ESLint guide](../../tools/eslint/) for setup instructions.

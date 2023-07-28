@@ -1261,11 +1261,8 @@ and annot_with_loc opts scope tbls xs (loc, t) =
     | T.BooleanLiteral { Ast.BooleanLiteral.value; _ } -> Annot (SingletonBoolean (loc, value))
     | T.Nullable { T.Nullable.argument; _ } -> Annot (Maybe (loc, annot opts scope tbls xs argument))
     | T.Array { T.Array.argument; _ } -> Annot (Array (loc, annot opts scope tbls xs argument))
-    | T.Conditional t when opts.conditional_type -> conditional_type opts scope tbls xs (loc, t)
-    | T.Infer t when opts.conditional_type -> infer_type opts scope tbls xs (loc, t)
-    | T.Conditional _
-    | T.Infer _ ->
-      Annot (Any loc)
+    | T.Conditional t -> conditional_type opts scope tbls xs (loc, t)
+    | T.Infer t -> infer_type opts scope tbls xs (loc, t)
     | T.Function f ->
       let def = function_type opts scope tbls xs f in
       Annot (FunAnnot (loc, def))
@@ -1375,11 +1372,8 @@ and return_annot opts scope tbls xs = function
   | T.Function.TypeAnnotation r -> (annot opts scope tbls xs r, None)
   | T.Function.TypeGuard ((loc, _) as g) ->
     let loc = push_loc tbls loc in
-    if opts.type_guards then
-      let guard = type_guard_or_predicate_of_type_guard opts scope tbls xs g in
-      (Annot (Boolean loc), guard)
-    else
-      (Annot (Any loc), None)
+    let guard = type_guard_or_predicate_of_type_guard opts scope tbls xs g in
+    (Annot (Boolean loc), guard)
 
 and function_type opts scope tbls xs f =
   let module F = T.Function in
@@ -1614,8 +1608,7 @@ and object_type =
      * accidentally shadow a tparam in source_type *)
     match optional with
     | Ast.Type.Object.MappedType.(
-        PlusOptional | Ast.Type.Object.MappedType.Optional | NoOptionalFlag)
-      when opts.mapped_type ->
+        PlusOptional | Ast.Type.Object.MappedType.Optional | NoOptionalFlag) ->
       let (key_loc, key_name) =
         let ( _,
               {

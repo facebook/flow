@@ -24,7 +24,6 @@ let metadata =
     babel_loose_array_spread = false;
     component_syntax = true;
     component_syntax_includes = [];
-    conditional_type = false;
     enable_const_params = false;
     enable_enums = true;
     enable_relay_integration = false;
@@ -34,7 +33,6 @@ let metadata =
     facebook_fbt = None;
     facebook_module_interop = false;
     ignore_non_literal_requires = false;
-    mapped_type = true;
     max_literal_length = 100;
     max_trace_depth = 0;
     max_workers = 0;
@@ -51,7 +49,6 @@ let metadata =
     suppress_types = SSet.empty;
     trust_mode = Options.NoTrust;
     tuple_enhancements = true;
-    type_guards = true;
     use_mixed_in_catch_variables = false;
   }
 

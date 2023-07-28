@@ -80,8 +80,6 @@ val component_syntax : config -> Options.component_syntax
 
 val component_syntax_includes : config -> string list
 
-val conditional_type : config -> bool option
-
 val direct_dependent_files_fix : config -> bool option
 
 val emoji : config -> bool option
@@ -159,8 +157,6 @@ val log_saving : config -> Options.log_saving SMap.t
 
 val long_lived_workers : config -> bool
 
-val mapped_type : config -> bool
-
 val max_files_checked_per_worker : config -> int
 
 val max_header_tokens : config -> int
@@ -236,8 +232,6 @@ val traces : config -> int
 val trust_mode : config -> Options.trust_mode
 
 val tuple_enhancements : config -> bool option
-
-val type_guards : config -> bool
 
 val use_mixed_in_catch_variables : config -> bool option
 

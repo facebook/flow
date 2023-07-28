@@ -75,10 +75,7 @@ module SignatureVerification = struct
         enable_component_syntax = Options.typecheck_component_syntax_in_file options file;
         enable_relay_integration = Options.enable_relay_integration options;
         relay_integration_module_prefix = Options.relay_integration_module_prefix options;
-        conditional_type = true;
-        mapped_type = true;
         tuple_enhancements = true;
-        type_guards = true;
         locs_to_dirtify = [];
       }
     in

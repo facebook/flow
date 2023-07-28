@@ -51,7 +51,6 @@ module Opts = struct
     channel_mode: [ `pipe | `socket ] option;
     component_syntax: Options.component_syntax;
     component_syntax_includes: string list;
-    conditional_type: bool option;
     direct_dependent_files_fix: bool option;
     emoji: bool option;
     enable_const_params: bool option;
@@ -90,7 +89,6 @@ module Opts = struct
     lazy_mode: lazy_mode option;
     log_saving: Options.log_saving SMap.t;
     long_lived_workers: bool;
-    mapped_type: bool;
     max_files_checked_per_worker: int;
     max_header_tokens: int;
     max_literal_length: int;
@@ -127,7 +125,6 @@ module Opts = struct
     traces: int;
     trust_mode: Options.trust_mode;
     tuple_enhancements: bool option;
-    type_guards: bool;
     use_mixed_in_catch_variables: bool option;
     wait_for_recheck: bool;
     watchman_defer_states: string list;
@@ -175,7 +172,6 @@ module Opts = struct
       channel_mode = None;
       component_syntax = Options.Off;
       component_syntax_includes = [];
-      conditional_type = None;
       direct_dependent_files_fix = None;
       emoji = None;
       enable_const_params = None;
@@ -215,7 +211,6 @@ module Opts = struct
       lazy_mode = None;
       log_saving = SMap.empty;
       long_lived_workers = false;
-      mapped_type = true;
       max_files_checked_per_worker = 100;
       max_header_tokens = 10;
       max_literal_length = 100;
@@ -252,7 +247,6 @@ module Opts = struct
       traces = 0;
       trust_mode = Options.NoTrust;
       tuple_enhancements = None;
-      type_guards = true;
       use_mixed_in_catch_variables = None;
       wait_for_recheck = false;
       watchman_defer_states = [];
@@ -802,9 +796,6 @@ module Opts = struct
       );
       ("experimental.component_syntax", component_syntax_parser);
       ("experimental.component_syntax.typing.includes", component_syntax_includes_parser);
-      ("conditional_type", boolean (fun opts v -> Ok { opts with conditional_type = Some v }));
-      ("type_guards", boolean (fun opts v -> Ok { opts with type_guards = v }));
-      ("mapped_type", boolean (fun opts v -> Ok { opts with mapped_type = v }));
       ("experimental.direct_dependent_files_fix", direct_dependent_files_fix_parser);
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
       ("experimental.module.automatic_require_default", automatic_require_default_parser);
@@ -1439,8 +1430,6 @@ let component_syntax c = c.options.Opts.component_syntax
 
 let component_syntax_includes c = c.options.Opts.component_syntax_includes
 
-let conditional_type c = c.options.Opts.conditional_type
-
 let direct_dependent_files_fix c = c.options.Opts.direct_dependent_files_fix
 
 let emoji c = c.options.Opts.emoji
@@ -1518,8 +1507,6 @@ let log_saving c = c.options.Opts.log_saving
 
 let long_lived_workers c = c.options.Opts.long_lived_workers
 
-let mapped_type c = c.options.Opts.mapped_type
-
 let max_files_checked_per_worker c = c.options.Opts.max_files_checked_per_worker
 
 let max_header_tokens c = c.options.Opts.max_header_tokens
@@ -1596,8 +1583,6 @@ let traces c = c.options.Opts.traces
 let trust_mode c = c.options.Opts.trust_mode
 
 let tuple_enhancements c = c.options.Opts.tuple_enhancements
-
-let type_guards c = c.options.Opts.type_guards
 
 let use_mixed_in_catch_variables c = c.options.Opts.use_mixed_in_catch_variables
 

@@ -476,122 +476,101 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         Array { Array.argument = t_ast; comments }
       )
     | (loc, Conditional { Conditional.check_type; extends_type; true_type; false_type; comments })
-      as t_ast ->
-      if Context.conditional_type cx || Context.current_phase cx = Context.InitLib then
-        let (distributive_tparam_name, tparams_map) =
-          use_distributive_tparam_name_from_ast cx check_type tparams_map
-        in
-        let (((_, check_t), _) as check_type) =
-          convert cx tparams_map infer_tparams_map check_type
-        in
-        let hoisted_infer_types = Infer_type_hoister.hoist_infer_types extends_type in
-        let (tparams_rev, additional_true_type_tparams_map, extends_infer_tparams_map, _) =
-          Base.List.fold
-            hoisted_infer_types
-            ~init:([], Subst_name.Map.empty, ALocMap.empty, Subst_name.Map.empty)
-            ~f:(fun
-                 (tparams_rev, additional_true_type_tparams_map, infer_tparams_map, infer_bounds_map)
-                 (_, { Infer.tparam; _ })
-               ->
-              let subst_name =
-                let (_, { TypeParam.name = (_, { Ast.Identifier.name; _ }); _ }) = tparam in
-                Subst_name.Name name
-              in
-              let (tparam_tast, tparam, t) =
-                mk_type_param cx ~from_infer_type:true tparams_map ALocMap.empty tparam
-              in
-              let ( tparams_rev,
-                    additional_true_type_tparams_map,
-                    infer_tparams_map,
-                    infer_bounds_map
-                  ) =
-                match Subst_name.Map.find_opt subst_name infer_bounds_map with
-                | Some existing_bound ->
-                  Flow.unify
-                    cx
-                    ~use_op:
-                      (Op
-                         (InferBoundCompatibilityCheck
-                            { bound = reason_of_t tparam.bound; infer = reason_of_t t }
-                         )
-                      )
-                    tparam.bound
-                    existing_bound;
-                  let t = Subst_name.Map.find subst_name additional_true_type_tparams_map in
-                  ( tparams_rev,
-                    additional_true_type_tparams_map,
-                    ALocMap.add (fst tparam_tast) (tparam_tast, t) infer_tparams_map,
-                    infer_bounds_map
-                  )
-                | None ->
-                  ( tparam :: tparams_rev,
-                    Subst_name.Map.add subst_name t additional_true_type_tparams_map,
-                    ALocMap.add (fst tparam_tast) (tparam_tast, t) infer_tparams_map,
-                    Subst_name.Map.add subst_name tparam.bound infer_bounds_map
-                  )
-              in
-              (tparams_rev, additional_true_type_tparams_map, infer_tparams_map, infer_bounds_map)
-          )
-        in
-        let infer_tparams = List.rev tparams_rev in
-        let (((_, extends_t), _) as extends_type) =
-          convert cx tparams_map extends_infer_tparams_map extends_type
-        in
-        let (((_, true_t), _) as true_type) =
-          convert
-            cx
-            (Subst_name.Map.union additional_true_type_tparams_map tparams_map)
-            infer_tparams_map
-            true_type
-        in
-        let (((_, false_t), _) as false_type) =
-          convert cx tparams_map infer_tparams_map false_type
-        in
-        let t =
-          let reason = mk_reason RConditionalType loc in
-          let use_op =
-            Op
-              (ConditionalTypeEval
-                 {
-                   check_type_reason = reason_of_t check_t;
-                   extends_type_reason = reason_of_t extends_t;
-                 }
-              )
-          in
-          let destructor =
-            ConditionalType { distributive_tparam_name; infer_tparams; extends_t; true_t; false_t }
-          in
-          mk_type_destructor cx use_op reason check_t destructor (mk_eval_id cx loc)
-        in
-        ( (loc, t),
-          Conditional { Conditional.check_type; extends_type; true_type; false_type; comments }
+      ->
+      let (distributive_tparam_name, tparams_map) =
+        use_distributive_tparam_name_from_ast cx check_type tparams_map
+      in
+      let (((_, check_t), _) as check_type) = convert cx tparams_map infer_tparams_map check_type in
+      let hoisted_infer_types = Infer_type_hoister.hoist_infer_types extends_type in
+      let (tparams_rev, additional_true_type_tparams_map, extends_infer_tparams_map, _) =
+        Base.List.fold
+          hoisted_infer_types
+          ~init:([], Subst_name.Map.empty, ALocMap.empty, Subst_name.Map.empty)
+          ~f:(fun
+               (tparams_rev, additional_true_type_tparams_map, infer_tparams_map, infer_bounds_map)
+               (_, { Infer.tparam; _ })
+             ->
+            let subst_name =
+              let (_, { TypeParam.name = (_, { Ast.Identifier.name; _ }); _ }) = tparam in
+              Subst_name.Name name
+            in
+            let (tparam_tast, tparam, t) =
+              mk_type_param cx ~from_infer_type:true tparams_map ALocMap.empty tparam
+            in
+            let (tparams_rev, additional_true_type_tparams_map, infer_tparams_map, infer_bounds_map)
+                =
+              match Subst_name.Map.find_opt subst_name infer_bounds_map with
+              | Some existing_bound ->
+                Flow.unify
+                  cx
+                  ~use_op:
+                    (Op
+                       (InferBoundCompatibilityCheck
+                          { bound = reason_of_t tparam.bound; infer = reason_of_t t }
+                       )
+                    )
+                  tparam.bound
+                  existing_bound;
+                let t = Subst_name.Map.find subst_name additional_true_type_tparams_map in
+                ( tparams_rev,
+                  additional_true_type_tparams_map,
+                  ALocMap.add (fst tparam_tast) (tparam_tast, t) infer_tparams_map,
+                  infer_bounds_map
+                )
+              | None ->
+                ( tparam :: tparams_rev,
+                  Subst_name.Map.add subst_name t additional_true_type_tparams_map,
+                  ALocMap.add (fst tparam_tast) (tparam_tast, t) infer_tparams_map,
+                  Subst_name.Map.add subst_name tparam.bound infer_bounds_map
+                )
+            in
+            (tparams_rev, additional_true_type_tparams_map, infer_tparams_map, infer_bounds_map)
         )
-      else
-        error_type
+      in
+      let infer_tparams = List.rev tparams_rev in
+      let (((_, extends_t), _) as extends_type) =
+        convert cx tparams_map extends_infer_tparams_map extends_type
+      in
+      let (((_, true_t), _) as true_type) =
+        convert
           cx
-          loc
-          (Error_message.EUnsupportedSyntax (loc, Error_message.ConditionalType))
-          t_ast
-    | (loc, Infer { Infer.tparam; comments }) as t_ast ->
-      if Context.conditional_type cx || Context.current_phase cx = Context.InitLib then
-        let (tparam_loc, { TypeParam.name = (name_loc, _); _ }) = tparam in
-        let { Loc_env.var_info; _ } = Context.environment cx in
-        match
-          Env_api.EnvMap.find_opt (Env_api.OrdinaryNameLoc, name_loc) var_info.Env_api.env_entries
-        with
-        | Some Env_api.NonAssigningWrite ->
-          let tparam = Tast_utils.error_mapper#type_param tparam in
-          let t = AnyT.error (mk_reason (RCustom "invalid infer type") loc) in
-          ((loc, t), Infer { Infer.tparam; comments })
-        | _ ->
-          let (tparam, t) = ALocMap.find tparam_loc infer_tparams_map in
-          ((loc, t), Infer { Infer.tparam; comments })
-      else
-        error_type
-          cx
-          loc
-          (Error_message.EUnsupportedSyntax (loc, Error_message.ConditionalType))
-          t_ast
+          (Subst_name.Map.union additional_true_type_tparams_map tparams_map)
+          infer_tparams_map
+          true_type
+      in
+      let (((_, false_t), _) as false_type) = convert cx tparams_map infer_tparams_map false_type in
+      let t =
+        let reason = mk_reason RConditionalType loc in
+        let use_op =
+          Op
+            (ConditionalTypeEval
+               {
+                 check_type_reason = reason_of_t check_t;
+                 extends_type_reason = reason_of_t extends_t;
+               }
+            )
+        in
+        let destructor =
+          ConditionalType { distributive_tparam_name; infer_tparams; extends_t; true_t; false_t }
+        in
+        mk_type_destructor cx use_op reason check_t destructor (mk_eval_id cx loc)
+      in
+      ( (loc, t),
+        Conditional { Conditional.check_type; extends_type; true_type; false_type; comments }
+      )
+    | (loc, Infer { Infer.tparam; comments }) ->
+      let (tparam_loc, { TypeParam.name = (name_loc, _); _ }) = tparam in
+      let { Loc_env.var_info; _ } = Context.environment cx in
+      (match
+         Env_api.EnvMap.find_opt (Env_api.OrdinaryNameLoc, name_loc) var_info.Env_api.env_entries
+       with
+      | Some Env_api.NonAssigningWrite ->
+        let tparam = Tast_utils.error_mapper#type_param tparam in
+        let t = AnyT.error (mk_reason (RCustom "invalid infer type") loc) in
+        ((loc, t), Infer { Infer.tparam; comments })
+      | _ ->
+        let (tparam, t) = ALocMap.find tparam_loc infer_tparams_map in
+        ((loc, t), Infer { Infer.tparam; comments }))
     | (loc, (StringLiteral { Ast.StringLiteral.value; _ } as t_ast)) ->
       let t =
         if Type_inference_hooks_js.dispatch_literal_hook cx loc then
@@ -1514,22 +1493,17 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
             comments;
           }
       ) as ot ->
-      if not (Context.mapped_type cx || Context.current_phase cx = Context.InitLib) then (
-        Flow_js_utils.add_output
-          cx
-          Error_message.(EUnsupportedSyntax (obj_loc, Error_message.MappedType));
-        Tast_utils.error_mapper#type_ ot
-      ) else if
-          (* Mapped types are implemented with the following limitations:
-             * 1. Mapped types cannot be declared with additional properties
-             * 2. Mapped types do not support explicit exact or inexact modifiers
-             * 3. Mapped types do not yet support optional property removal via -?
-             * 4. Mapped types must use an inline keyof
-             * All of these conditions are checked in this case, and the extra properties
-             * case is additionally checked in the normal object type case. If any of these
-             * conditions are violated then the result is Any *)
-          exact || inexact
-        then (
+      if
+        (* Mapped types are implemented with the following limitations:
+           * 1. Mapped types cannot be declared with additional properties
+           * 2. Mapped types do not support explicit exact or inexact modifiers
+           * 3. Mapped types do not yet support optional property removal via -?
+           * 4. Mapped types must use an inline keyof
+           * All of these conditions are checked in this case, and the extra properties
+           * case is additionally checked in the normal object type case. If any of these
+           * conditions are violated then the result is Any *)
+        exact || inexact
+      then (
         Flow_js_utils.add_output
           cx
           Error_message.(EInvalidMappedType { loc = obj_loc; kind = ExplicitExactOrInexact });
@@ -1677,11 +1651,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
              (false, None)
       in
       (match mapped_type_loc with
-      | Some mapped_type_loc ->
-        if not (Context.mapped_type cx) then
-          Flow_js_utils.add_output
-            cx
-            Error_message.(EUnsupportedSyntax (mapped_type_loc, Error_message.MappedType));
+      | Some _ ->
         Flow_js_utils.add_output
           cx
           Error_message.(EInvalidMappedType { loc; kind = ExtraProperties });
@@ -2342,8 +2312,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
             asserts = false;
             comments;
           }
-        )
-      when Context.type_guards cx ->
+        ) ->
       if meth_kind <> MethodKind then (
         let bool_t = BoolT.at gloc |> with_trust_inference cx in
         let return = Tast_utils.error_mapper#function_type_return_annotation return in
@@ -2484,8 +2453,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let (t, ast_annot) = mk_type_available_annotation cx tparams_map annot in
       (Annotated t, Ast.Function.ReturnAnnot.Available ast_annot, None)
     | Ast.Function.ReturnAnnot.TypeGuard
-        (loc, (gloc, { T.TypeGuard.guard = (id_name, Some t); asserts = false; comments }))
-      when Context.type_guards cx ->
+        (loc, (gloc, { T.TypeGuard.guard = (id_name, Some t); asserts = false; comments })) ->
       let (bool_t, guard', predicate) =
         convert_type_guard cx tparams_map ALocMap.empty params gloc id_name t comments
       in

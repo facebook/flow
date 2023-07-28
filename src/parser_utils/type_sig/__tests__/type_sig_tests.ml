@@ -214,9 +214,6 @@ let sig_options
     ?(enable_enums = true)
     ?(enable_component_syntax = true)
     ?(enable_relay_integration = false)
-    ?(conditional_type = true)
-    ?(type_guards = true)
-    ?(mapped_type = true)
     ?relay_integration_module_prefix
     ?(tuple_enhancements = true)
     ?(locs_to_dirtify = [])
@@ -233,9 +230,6 @@ let sig_options
     enable_component_syntax;
     enable_relay_integration;
     relay_integration_module_prefix;
-    conditional_type;
-    type_guards;
-    mapped_type;
     tuple_enhancements;
     locs_to_dirtify;
   }
@@ -256,8 +250,6 @@ let print_sig
     ?enable_enums
     ?enable_component_syntax
     ?enable_relay_integration
-    ?conditional_type
-    ?mapped_type
     ?relay_integration_module_prefix
     ?tuple_enhancements
     ?locs_to_dirtify
@@ -274,8 +266,6 @@ let print_sig
       ?enable_enums
       ?enable_component_syntax
       ?enable_relay_integration
-      ?conditional_type
-      ?mapped_type
       ?relay_integration_module_prefix
       ?tuple_enhancements
       ?locs_to_dirtify
@@ -5869,22 +5859,6 @@ let%expect_test "mapped_types_invalid" =
 
     Local defs:
     0. TypeAlias {id_loc = [2:12-13]; name = "T"; tparams = Mono; body = (Annot (Any [2:17-43]))}
-    1. TypeAlias {id_loc = [3:12-13]; name = "U"; tparams = Mono; body = (Annot (Any [3:16-55]))}
-  |}]
-
-let%expect_test "mapped_types_disabled" =
-  print_sig ~mapped_type:false {|
-    type O = {foo: number, bar: string};
-    export type T = {[key in keyof O]: O[key]};
-    export type U = {[key in keyof O]: O[key], foo: number};
-  |};
-  [%expect{|
-    CJSModule {type_exports = [|(ExportTypeBinding 0); (ExportTypeBinding 1)|];
-      exports = None;
-      info = CJSModuleInfo {type_export_keys = [|"T"; "U"|]; type_stars = []; strict = true}}
-
-    Local defs:
-    0. TypeAlias {id_loc = [2:12-13]; name = "T"; tparams = Mono; body = (Annot (Any [2:17-41]))}
     1. TypeAlias {id_loc = [3:12-13]; name = "U"; tparams = Mono; body = (Annot (Any [3:16-55]))}
   |}]
 

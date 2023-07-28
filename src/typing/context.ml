@@ -35,7 +35,6 @@ type metadata = {
   babel_loose_array_spread: bool;
   component_syntax: bool;
   component_syntax_includes: string list;
-  conditional_type: bool;
   enable_const_params: bool;
   enable_enums: bool;
   enable_relay_integration: bool;
@@ -45,7 +44,6 @@ type metadata = {
   facebook_fbt: string option;
   facebook_module_interop: bool;
   ignore_non_literal_requires: bool;
-  mapped_type: bool;
   max_literal_length: int;
   max_trace_depth: int;
   max_workers: int;
@@ -62,7 +60,6 @@ type metadata = {
   suppress_types: SSet.t;
   trust_mode: Options.trust_mode;
   tuple_enhancements: bool;
-  type_guards: bool;
   use_mixed_in_catch_variables: bool;
 }
 
@@ -245,7 +242,6 @@ let metadata_of_options options =
     babel_loose_array_spread = Options.babel_loose_array_spread options;
     component_syntax = Options.typecheck_component_syntax options;
     component_syntax_includes = Options.component_syntax_includes options;
-    conditional_type = Options.conditional_type options;
     enable_const_params = Options.enable_const_params options;
     enable_enums = Options.enums options;
     enable_relay_integration = Options.enable_relay_integration options;
@@ -255,7 +251,6 @@ let metadata_of_options options =
     facebook_fbt = Options.facebook_fbt options;
     facebook_module_interop = Options.facebook_module_interop options;
     ignore_non_literal_requires = Options.should_ignore_non_literal_requires options;
-    mapped_type = Options.mapped_type options;
     max_literal_length = Options.max_literal_length options;
     max_trace_depth = Options.max_trace_depth options;
     max_workers = Options.max_workers options;
@@ -273,7 +268,6 @@ let metadata_of_options options =
     suppress_types = Options.suppress_types options;
     trust_mode = Options.trust_mode options;
     tuple_enhancements = Options.tuple_enhancements options;
-    type_guards = Options.type_guards options;
     use_mixed_in_catch_variables = Options.use_mixed_in_catch_variables options;
   }
 
@@ -477,12 +471,6 @@ let evaluated cx = cx.ccx.sig_cx.evaluated
 let goals cx = cx.ccx.goal_map
 
 let exact_by_default cx = cx.metadata.exact_by_default
-
-let conditional_type cx = cx.metadata.conditional_type
-
-let mapped_type cx = cx.metadata.mapped_type
-
-let type_guards cx = cx.metadata.type_guards
 
 let aloc_tables cx = cx.ccx.aloc_tables
 

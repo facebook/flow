@@ -69,7 +69,6 @@ type metadata = {
   babel_loose_array_spread: bool;
   component_syntax: bool;
   component_syntax_includes: string list;
-  conditional_type: bool;
   enable_const_params: bool;
   enable_enums: bool;
   enable_relay_integration: bool;
@@ -79,7 +78,6 @@ type metadata = {
   facebook_fbt: string option;
   facebook_module_interop: bool;
   ignore_non_literal_requires: bool;
-  mapped_type: bool;
   max_literal_length: int;
   max_trace_depth: int;
   max_workers: int;
@@ -96,7 +94,6 @@ type metadata = {
   suppress_types: SSet.t;
   trust_mode: Options.trust_mode;
   tuple_enhancements: bool;
-  type_guards: bool;
   use_mixed_in_catch_variables: bool;
 }
 
@@ -178,12 +175,6 @@ val evaluated : t -> Type.t Type.Eval.Map.t
 val goals : t -> Type.t IMap.t
 
 val exact_by_default : t -> bool
-
-val conditional_type : t -> bool
-
-val mapped_type : t -> bool
-
-val type_guards : t -> bool
 
 val file : t -> File_key.t
 
