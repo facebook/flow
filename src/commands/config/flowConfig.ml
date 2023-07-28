@@ -85,7 +85,6 @@ module Opts = struct
     haste_paths_excludes: string list;
     haste_paths_includes: string list;
     haste_use_name_reducers: bool;
-    haste_dangerously_allow_surprising_js_flow_behavior: bool;
     ignore_non_literal_requires: bool;
     include_warnings: bool;
     lazy_mode: lazy_mode option;
@@ -211,7 +210,6 @@ module Opts = struct
       haste_paths_excludes = ["\\(.*\\)?/node_modules/.*"];
       haste_paths_includes = ["<PROJECT_ROOT>/.*"];
       haste_use_name_reducers = false;
-      haste_dangerously_allow_surprising_js_flow_behavior = false;
       ignore_non_literal_requires = false;
       include_warnings = false;
       lazy_mode = None;
@@ -560,11 +558,6 @@ module Opts = struct
       ~init:(fun opts -> { opts with haste_use_name_reducers = false })
       (fun opts v -> Ok { opts with haste_use_name_reducers = v })
 
-  let haste_dangerously_allow_surprising_js_flow_behavior_parser =
-    boolean
-      ~init:(fun opts -> { opts with haste_dangerously_allow_surprising_js_flow_behavior = false })
-      (fun opts v -> Ok { opts with haste_dangerously_allow_surprising_js_flow_behavior = v })
-
   let gc_worker_major_heap_increment_parser =
     uint (fun opts v -> Ok { opts with gc_worker_major_heap_increment = Some v })
 
@@ -865,9 +858,6 @@ module Opts = struct
       ("module.system.haste.paths.excludes", haste_paths_excludes_parser);
       ("module.system.haste.paths.includes", haste_paths_includes_parser);
       ("module.system.haste.use_name_reducers", haste_use_name_reducers_parser);
-      ( "module.system.haste.dangerously_allow_surprising_js_flow_behavior",
-        haste_dangerously_allow_surprising_js_flow_behavior_parser
-      );
       ("module.system.node.allow_root_relative", node_resolver_allow_root_relative_parser);
       ("module.system.node.main_field", node_main_field_parser);
       ("module.system.node.resolve_dirname", node_resolve_dirname_parser);
@@ -1514,9 +1504,6 @@ let haste_paths_excludes c = c.options.Opts.haste_paths_excludes
 let haste_paths_includes c = c.options.Opts.haste_paths_includes
 
 let haste_use_name_reducers c = c.options.Opts.haste_use_name_reducers
-
-let haste_dangerously_allow_surprising_js_flow_behavior c =
-  c.options.Opts.haste_dangerously_allow_surprising_js_flow_behavior
 
 let ignore_non_literal_requires c = c.options.Opts.ignore_non_literal_requires
 

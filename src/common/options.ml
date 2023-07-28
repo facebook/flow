@@ -96,7 +96,6 @@ type t = {
   opt_haste_paths_excludes: string list;
   opt_haste_paths_includes: string list;
   opt_haste_use_name_reducers: bool;
-  opt_haste_dangerously_allow_surprising_js_flow_behavior: bool;
   opt_ignore_non_literal_requires: bool;
   opt_include_suppressions: bool;
   opt_include_warnings: bool;
@@ -245,9 +244,6 @@ let haste_paths_excludes opts = opts.opt_haste_paths_excludes
 let haste_paths_includes opts = opts.opt_haste_paths_includes
 
 let haste_use_name_reducers opts = opts.opt_haste_use_name_reducers
-
-let haste_dangerously_allow_surprising_js_flow_behavior opts =
-  opts.opt_haste_dangerously_allow_surprising_js_flow_behavior
 
 let include_suppressions opts = opts.opt_include_suppressions
 

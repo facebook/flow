@@ -1375,8 +1375,6 @@ let make_options
         ~f:(Files.expand_project_root_token ~root)
         (FlowConfig.haste_paths_includes flowconfig);
     opt_haste_use_name_reducers = FlowConfig.haste_use_name_reducers flowconfig;
-    opt_haste_dangerously_allow_surprising_js_flow_behavior =
-      FlowConfig.haste_dangerously_allow_surprising_js_flow_behavior flowconfig;
     opt_file_options = file_options;
     opt_lint_severities = lint_severities;
     opt_strict_mode = strict_mode;

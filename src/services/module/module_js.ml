@@ -21,7 +21,7 @@ let choose_provider_and_warn_about_duplicates =
     | [] -> acc
     | (f, _) :: fs -> SMap.add m (provider, (f, List.map fst fs)) acc
   in
-  fun ~allow_surprising_js_flow_behavior m errmap providers fallback ->
+  fun m errmap providers fallback ->
     let (definitions, implementations) =
       let f (key, _) = Files.has_flow_ext key in
       List.partition f providers
@@ -41,7 +41,7 @@ let choose_provider_and_warn_about_duplicates =
       let (defn_key, _) = defn in
       let (dup_impls, dup_defns) =
         let k = File_key.compare impl_key (Files.chop_flow_ext defn_key) in
-        if k = 0 || allow_surprising_js_flow_behavior then
+        if k = 0 then
           (dup_impls, dup_defns)
         else
           (impl :: dup_impls, dup_defns)
@@ -172,7 +172,6 @@ module type MODULE_SYSTEM = sig
      files with that exported name. also check for duplicates and
      generate warnings, as dictated by module system rules. *)
   val choose_provider :
-    allow_surprising_js_flow_behavior:bool ->
     (* module name *)
     string ->
     (* set of candidate provider files *)
@@ -368,14 +367,9 @@ module Node = struct
   (* in node, file names are module names, as guaranteed by
      our implementation of exported_name, so anything but a
      singleton provider set is craziness. *)
-  let choose_provider ~allow_surprising_js_flow_behavior m files errmap =
+  let choose_provider m files errmap =
     let fallback () = None in
-    choose_provider_and_warn_about_duplicates
-      ~allow_surprising_js_flow_behavior
-      m
-      errmap
-      files
-      fallback
+    choose_provider_and_warn_about_duplicates m errmap files fallback
 end
 
 (****************** Haste module system *********************)
@@ -528,7 +522,7 @@ module Haste : MODULE_SYSTEM = struct
      arbitrary mock, if any exist. if multiple non-mock providers exist,
      we pick one arbitrarily and issue duplicate module warnings for the
      rest. *)
-  let choose_provider ~allow_surprising_js_flow_behavior m files errmap =
+  let choose_provider m files errmap =
     match files with
     | [] -> (None, errmap)
     | [(_, p)] -> (Some p, errmap)
@@ -538,12 +532,7 @@ module Haste : MODULE_SYSTEM = struct
         List.partition f files
       in
       let fallback () = Some (snd (List.hd mocks)) in
-      choose_provider_and_warn_about_duplicates
-        ~allow_surprising_js_flow_behavior
-        m
-        errmap
-        non_mocks
-        fallback
+      choose_provider_and_warn_about_duplicates m errmap non_mocks fallback
 end
 
 (****************** module system switch *********************)
@@ -579,12 +568,7 @@ let imported_module ~options ~reader ~node_modules_containers file ?phantom_acc 
 
 let choose_provider ~options m files errmap =
   let module M = (val get_module_system options) in
-  M.choose_provider
-    ~allow_surprising_js_flow_behavior:
-      (Options.haste_dangerously_allow_surprising_js_flow_behavior options)
-    m
-    files
-    errmap
+  M.choose_provider m files errmap
 
 (******************)
 (***** public *****)
