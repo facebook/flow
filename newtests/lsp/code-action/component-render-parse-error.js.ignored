@@ -1,0 +1,4 @@
+//@flow
+component Foo(): number {
+  return 3;
+}

@@ -739,6 +739,114 @@ module.exports = (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
+    test('provide quickfix for component render type parse error', [
+      addFile(
+        'component-render-parse-error.js.ignored',
+        'component-render-parse-error.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/component-render-parse-error.js',
+        },
+        range: {
+          start: {
+            line: 1,
+            character: 15,
+          },
+          end: {
+            line: 1,
+            character: 15,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [
+            {
+              range: {
+                start: {
+                  line: 1,
+                  character: 15,
+                },
+                end: {
+                  line: 1,
+                  character: 16,
+                },
+              },
+              message:
+                'Components use `renders` instead of `:` to annotate the render type of a component.',
+              severity: 1,
+              code: 'ParseError',
+              relatedInformation: [],
+              source: 'Flow',
+            },
+          ],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Replace `:` with `renders`',
+                kind: 'quickfix',
+                diagnostics: [
+                  {
+                    range: {
+                      start: {
+                        line: 1,
+                        character: 15,
+                      },
+                      end: {
+                        line: 1,
+                        character: 16,
+                      },
+                    },
+                    severity: 1,
+                    code: 'ParseError',
+                    source: 'Flow',
+                    message:
+                      'Components use `renders` instead of `:` to annotate the render type of a component.',
+                    relatedInformation: [],
+                    relatedLocations: [],
+                  },
+                ],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/component-render-parse-error.js':
+                      [
+                        {
+                          range: {
+                            start: {
+                              line: 1,
+                              character: 15,
+                            },
+                            end: {
+                              line: 1,
+                              character: 16,
+                            },
+                          },
+                          newText: ' renders',
+                        },
+                      ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'fix_parse_error',
+                    'Replace `:` with `renders`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
     test('provide quickfix for ClassObject errors', [
       addFile('class-object-subtype.js.ignored', 'class-object-subtype.js'),
       lspStartAndConnect(),

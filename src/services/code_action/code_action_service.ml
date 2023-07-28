@@ -906,39 +906,62 @@ let code_actions_of_errors
   else
     actions
 
+let code_action_for_parser_error_with_suggestion
+    acc diagnostics uri ~error_loc ~editor_loc title newText =
+  if Loc.intersects error_loc editor_loc then
+    let error_range = Flow_lsp_conversions.loc_to_lsp_range error_loc in
+    let open Lsp in
+    let relevant_diagnostics =
+      diagnostics |> List.filter (fun PublishDiagnostics.{ range; _ } -> range = error_range)
+    in
+    let textEdit = TextEdit.{ range = error_range; newText } in
+    CodeAction.Action
+      {
+        CodeAction.title;
+        kind = CodeActionKind.quickfix;
+        diagnostics = relevant_diagnostics;
+        action =
+          CodeAction.BothEditThenCommand
+            ( WorkspaceEdit.{ changes = UriMap.singleton uri [textEdit] },
+              {
+                Command.title = "";
+                command = Command.Command "log";
+                arguments =
+                  ["textDocument/codeAction"; "fix_parse_error"; title]
+                  |> List.map (fun str -> Hh_json.JSON_String str);
+              }
+            );
+      }
+    :: acc
+  else
+    acc
+
 let code_actions_of_parse_errors ~diagnostics ~uri ~loc parse_errors =
   Base.List.fold_left
     ~f:(fun acc parse_error ->
       match parse_error with
       | (error_loc, Parse_error.UnexpectedTokenWithSuggestion (token, suggestion)) ->
-        if Loc.intersects error_loc loc then
-          let title = Printf.sprintf "Replace `%s` with `%s`" token suggestion in
-          let error_range = Flow_lsp_conversions.loc_to_lsp_range error_loc in
-          let open Lsp in
-          let relevant_diagnostics =
-            diagnostics |> List.filter (fun PublishDiagnostics.{ range; _ } -> range = error_range)
-          in
-          let textEdit = TextEdit.{ range = error_range; newText = suggestion } in
-          CodeAction.Action
-            {
-              CodeAction.title;
-              kind = CodeActionKind.quickfix;
-              diagnostics = relevant_diagnostics;
-              action =
-                CodeAction.BothEditThenCommand
-                  ( WorkspaceEdit.{ changes = UriMap.singleton uri [textEdit] },
-                    {
-                      Command.title = "";
-                      command = Command.Command "log";
-                      arguments =
-                        ["textDocument/codeAction"; "fix_parse_error"; title]
-                        |> List.map (fun str -> Hh_json.JSON_String str);
-                    }
-                  );
-            }
-          :: acc
-        else
+        let title = Printf.sprintf "Replace `%s` with `%s`" token suggestion in
+        code_action_for_parser_error_with_suggestion
           acc
+          diagnostics
+          uri
+          ~error_loc
+          ~editor_loc:loc
+          title
+          suggestion
+      | (error_loc, Parse_error.InvalidComponentRenderAnnotation) ->
+        let title = Printf.sprintf "Replace `:` with `renders`" in
+        (* The leading " " is intentional here. Most people will write component Foo(): T and not component Foo() : T,
+         * so it would be nice if we could return formatted code in the common case *)
+        code_action_for_parser_error_with_suggestion
+          acc
+          diagnostics
+          uri
+          ~error_loc
+          ~editor_loc:loc
+          title
+          " renders"
       | _ -> acc)
     ~init:[]
     parse_errors
