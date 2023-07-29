@@ -7,14 +7,6 @@
 
 open Export_index
 
-let camelize str =
-  match String.split_on_char '-' str with
-  | [] -> str
-  | [str] -> str
-  | hd :: rest ->
-    let parts = hd :: Base.List.map ~f:String.capitalize_ascii rest in
-    String.concat "" parts
-
 let string_of_modulename modulename =
   let str = Modulename.to_string modulename in
   (* for filenames: /foo/bar/baz.bliffl.js -> baz.bliff.js
@@ -27,7 +19,7 @@ let string_of_modulename modulename =
     | None -> str
   in
   (* convert hyphens to camel case *)
-  camelize stripped
+  Utils_js.camelize stripped
 
 let entries_of_exports =
   let rec helper ~module_name exports (acc : (string * Export_index.kind) list) =
