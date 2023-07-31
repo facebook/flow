@@ -545,7 +545,7 @@ module RefactorProgramMappers = struct
           super#statement_fork_point stmt
     end
 
-  class extract_to_function_refactor_mapper
+  class extract_statements_to_function_refactor_mapper
     ~target_body_loc
     ~extracted_statements_loc
     ~function_call_statements
@@ -579,14 +579,14 @@ module RefactorProgramMappers = struct
           super#function_body block
     end
 
-  let extract_to_function
+  let extract_statements_to_function
       ~target_body_loc
       ~extracted_statements_loc
       ~function_call_statements
       ~function_declaration_statement
       ast =
     let mapper =
-      new extract_to_function_refactor_mapper
+      new extract_statements_to_function_refactor_mapper
         ~target_body_loc
         ~extracted_statements_loc
         ~function_call_statements
@@ -594,7 +594,7 @@ module RefactorProgramMappers = struct
     in
     mapper#program ast
 
-  class extract_to_method_refactor_mapper
+  class extract_statements_to_method_refactor_mapper
     ~target_body_loc ~extracted_statements_loc ~function_call_statements ~method_declaration =
     object (_this)
       inherit
@@ -614,10 +614,10 @@ module RefactorProgramMappers = struct
           super#class_body block
     end
 
-  let extract_to_method
+  let extract_statements_to_method
       ~target_body_loc ~extracted_statements_loc ~function_call_statements ~method_declaration ast =
     let mapper =
-      new extract_to_method_refactor_mapper
+      new extract_statements_to_method_refactor_mapper
         ~target_body_loc
         ~extracted_statements_loc
         ~function_call_statements
@@ -660,7 +660,7 @@ module RefactorProgramMappers = struct
         )
     end
 
-  class extract_to_constant_refactor_mapper
+  class extract_expression_to_constant_refactor_mapper
     ~statement_loc ~expression_loc ~expression_replacement ~constant_definition =
     object (this)
       inherit replace_original_expression_mapper ~expression_loc ~expression_replacement as super
@@ -673,10 +673,10 @@ module RefactorProgramMappers = struct
           super#statement_fork_point stmt
     end
 
-  let extract_to_constant
+  let extract_expression_to_constant
       ~statement_loc ~expression_loc ~expression_replacement ~constant_definition ast =
     let mapper =
-      new extract_to_constant_refactor_mapper
+      new extract_expression_to_constant_refactor_mapper
         ~statement_loc
         ~expression_loc
         ~expression_replacement
@@ -684,7 +684,7 @@ module RefactorProgramMappers = struct
     in
     mapper#program ast
 
-  class extract_to_class_field_refactor_mapper
+  class extract_expression_to_class_field_refactor_mapper
     ~class_body_loc ~expression_loc ~expression_replacement ~field_definition =
     object (_this)
       inherit replace_original_expression_mapper ~expression_loc ~expression_replacement as super
@@ -703,10 +703,10 @@ module RefactorProgramMappers = struct
           super#class_body block
     end
 
-  let extract_to_class_field
+  let extract_expression_to_class_field
       ~class_body_loc ~expression_loc ~expression_replacement ~field_definition ast =
     let mapper =
-      new extract_to_class_field_refactor_mapper
+      new extract_expression_to_class_field_refactor_mapper
         ~class_body_loc
         ~expression_loc
         ~expression_replacement
@@ -714,8 +714,8 @@ module RefactorProgramMappers = struct
     in
     mapper#program ast
 
-  class extract_to_type_alias_refactor_mapper ~statement_loc ~type_loc ~type_replacement ~type_alias
-    =
+  class extract_type_to_type_alias_refactor_mapper
+    ~statement_loc ~type_loc ~type_replacement ~type_alias =
     object (this)
       inherit [Loc.t] Flow_ast_mapper.mapper as super
 
@@ -733,9 +733,9 @@ module RefactorProgramMappers = struct
           super#statement_fork_point stmt
     end
 
-  let extract_to_type_alias ~statement_loc ~type_loc ~type_replacement ~type_alias ast =
+  let extract_type_to_type_alias ~statement_loc ~type_loc ~type_replacement ~type_alias ast =
     let mapper =
-      new extract_to_type_alias_refactor_mapper
+      new extract_type_to_type_alias_refactor_mapper
         ~statement_loc
         ~type_loc
         ~type_replacement

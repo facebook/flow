@@ -314,7 +314,7 @@ let create_refactor_for_statements
       let method_declaration =
         Ast_builder.Classes.method_ ~id:new_function_name extracted_function
       in
-      RefactorProgramMappers.extract_to_method
+      RefactorProgramMappers.extract_statements_to_method
         ~target_body_loc
         ~extracted_statements_loc
         ~function_call_statements
@@ -336,7 +336,7 @@ let create_refactor_for_statements
       let function_declaration_statement =
         (Loc.none, Flow_ast.Statement.FunctionDeclaration extracted_function)
       in
-      RefactorProgramMappers.extract_to_function
+      RefactorProgramMappers.extract_statements_to_function
         ~target_body_loc
         ~extracted_statements_loc
         ~function_call_statements
@@ -527,7 +527,7 @@ let extract_from_statements_refactors
         ~extracted_statements
         ~extracted_statements_loc
 
-let create_extract_to_class_field_refactors
+let create_extract_expression_to_class_field_refactors
     ~scope_info
     ~defs_with_scopes_of_local_uses
     ~extracted_expression_loc
@@ -558,7 +558,7 @@ let create_extract_to_class_field_refactors
         |> Expressions.member
       in
       let field_definition = Ast_builder.Classes.property ~id:new_property_name expression in
-      RefactorProgramMappers.extract_to_class_field
+      RefactorProgramMappers.extract_expression_to_class_field
         ~class_body_loc:body_loc
         ~expression_loc:extracted_expression_loc
         ~expression_replacement
@@ -567,7 +567,7 @@ let create_extract_to_class_field_refactors
     in
     [{ title; new_ast; added_imports = [] }]
 
-let create_extract_to_constant_refactor
+let create_expression_extract_to_constant_refactor
     ~scope_info
     ~defs_with_scopes_of_local_uses
     ~extracted_expression_loc
@@ -589,7 +589,7 @@ let create_extract_to_constant_refactor
       {
         title;
         new_ast =
-          RefactorProgramMappers.extract_to_constant
+          RefactorProgramMappers.extract_expression_to_constant
             ~statement_loc
             ~expression_loc:extracted_expression_loc
             ~expression_replacement:(Ast_builder.Expressions.identifier new_local_name)
@@ -629,7 +629,7 @@ let extract_from_expression_refactors
       ~extracted_loc:extracted_expression_loc
   in
   let create_extract_to_constant_refactor =
-    create_extract_to_constant_refactor
+    create_expression_extract_to_constant_refactor
       ~scope_info
       ~defs_with_scopes_of_local_uses
       ~extracted_expression_loc
@@ -645,7 +645,7 @@ let extract_from_expression_refactors
       List.filter_map create_extract_to_constant_refactor constant_insertion_points
   | Some ({ InsertionPointCollectors.body_loc = class_body_loc; _ } as class_insertion_point) ->
     let extract_to_class_field_refactors =
-      create_extract_to_class_field_refactors
+      create_extract_expression_to_class_field_refactors
         ~scope_info
         ~defs_with_scopes_of_local_uses
         ~extracted_expression_loc
@@ -669,7 +669,7 @@ let extract_from_expression_refactors
       extract_to_class_field_refactors
       @ List.filter_map create_extract_to_constant_refactor constant_insertion_points
 
-let extract_to_type_alias_refactors
+let extract_from_type_refactors
     ~ast
     ~cx
     ~file
@@ -745,7 +745,7 @@ let extract_to_type_alias_refactors
       in
       Statements.type_alias ?tparams ~name:new_type_name type_
     in
-    RefactorProgramMappers.extract_to_type_alias
+    RefactorProgramMappers.extract_type_to_type_alias
       ~statement_loc:directly_containing_statement_loc
       ~type_loc
       ~type_replacement
@@ -792,21 +792,13 @@ let provide_available_refactors
       ~f:(extract_from_expression_refactors ~ast ~cx ~typed_ast ~reader ~create_unique_name)
       extracted_expression
   in
-  let extract_to_type_alias_refactors =
+  let extract_from_type_refactors =
     Base.Option.value_map
       ~default:[]
       ~f:
-        (extract_to_type_alias_refactors
-           ~ast
-           ~cx
-           ~file
-           ~file_sig
-           ~typed_ast
-           ~reader
-           ~create_unique_name
-        )
+        (extract_from_type_refactors ~ast ~cx ~file ~file_sig ~typed_ast ~reader ~create_unique_name)
       extracted_type
   in
   extract_from_statements_refactors
   @ extract_from_expression_refactors
-  @ extract_to_type_alias_refactors
+  @ extract_from_type_refactors

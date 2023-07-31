@@ -86,23 +86,23 @@ module InformationCollectors : sig
 end
 
 module RefactorProgramMappers : sig
-  val extract_to_function :
+  val extract_statements_to_function :
     target_body_loc:Loc.t ->
     extracted_statements_loc:Loc.t ->
-    function_call_statements:(Loc.t, Loc.t) Flow_ast_mapper.Ast.Statement.t list ->
+    function_call_statements:(Loc.t, Loc.t) Flow_ast.Statement.t list ->
     function_declaration_statement:(Loc.t, Loc.t) Flow_ast.Statement.t ->
-    (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t ->
-    (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t
+    (Loc.t, Loc.t) Flow_ast.Program.t ->
+    (Loc.t, Loc.t) Flow_ast.Program.t
 
-  val extract_to_method :
+  val extract_statements_to_method :
     target_body_loc:Loc.t ->
     extracted_statements_loc:Loc.t ->
-    function_call_statements:(Loc.t, Loc.t) Flow_ast_mapper.Ast.Statement.t list ->
-    method_declaration:(Loc.t, Loc.t) Flow_ast_mapper.Ast.Class.Body.element ->
-    (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t ->
-    (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t
+    function_call_statements:(Loc.t, Loc.t) Flow_ast.Statement.t list ->
+    method_declaration:(Loc.t, Loc.t) Flow_ast.Class.Body.element ->
+    (Loc.t, Loc.t) Flow_ast.Program.t ->
+    (Loc.t, Loc.t) Flow_ast.Program.t
 
-  val extract_to_constant :
+  val extract_expression_to_constant :
     statement_loc:Loc.t ->
     expression_loc:Loc.t ->
     expression_replacement:(Loc.t, Loc.t) Flow_ast.Expression.t ->
@@ -110,7 +110,7 @@ module RefactorProgramMappers : sig
     (Loc.t, Loc.t) Flow_ast.Program.t ->
     (Loc.t, Loc.t) Flow_ast.Program.t
 
-  val extract_to_class_field :
+  val extract_expression_to_class_field :
     class_body_loc:Loc.t ->
     expression_loc:Loc.t ->
     expression_replacement:(Loc.t, Loc.t) Flow_ast.Expression.t ->
@@ -118,7 +118,7 @@ module RefactorProgramMappers : sig
     (Loc.t, Loc.t) Flow_ast.Program.t ->
     (Loc.t, Loc.t) Flow_ast.Program.t
 
-  val extract_to_type_alias :
+  val extract_type_to_type_alias :
     statement_loc:Loc.t ->
     type_loc:Loc.t ->
     type_replacement:(Loc.t, Loc.t) Flow_ast.Type.t ->
