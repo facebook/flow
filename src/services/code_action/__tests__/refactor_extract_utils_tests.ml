@@ -69,12 +69,12 @@ let file_sig_of_ast ast =
 let dummy_context () =
   let root = File_path.dummy_path in
   let master_cx = Context.empty_master_cx () in
+  let reason =
+    let loc = ALoc.none in
+    let desc = Reason.RCustom "Explicit any used in refactor_extract_functioon tests" in
+    Reason.mk_reason desc loc
+  in
   let () =
-    let reason =
-      let loc = ALoc.none in
-      let desc = Reason.RCustom "Explicit any used in refactor_extract_functioon tests" in
-      Reason.mk_reason desc loc
-    in
     (* Add builtins that will be used by tests. *)
     Builtins.set_builtin
       ~flow_t:(fun _ -> ())
@@ -125,7 +125,7 @@ let dummy_context () =
   let ccx = Context.make_ccx master_cx in
   let metadata = stub_metadata ~root ~checked:true in
   let aloc_table = lazy (ALoc.empty_table dummy_filename) in
-  let resolve_require _ = raise Not_found in
+  let resolve_require _ = Ok (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))) in
   Context.make ccx metadata dummy_filename aloc_table resolve_require Context.Checking
 
 let typed_ast_of_ast cx ast =

@@ -1080,6 +1080,130 @@ function test() {
       in
       assert_refactored ~ctxt expected source (mk_loc (1, 28) (1, 29))
     );
+    ( "jsx_extract_toplevel" >:: fun ctxt ->
+      let source = {|import React from 'react';
+function test() {
+  return <div />;
+}|} in
+      let expected =
+        [
+          ( "Extract to constant in function 'test'",
+            {|
+import React from "react";
+function test() {
+  const newLocal = <div />;
+  return newLocal;
+}
+            |}
+          );
+          ( "Extract to constant in module scope",
+            {|
+import React from "react";
+const newLocal = <div />;
+function test() {
+  return newLocal;
+}
+            |}
+          );
+        ]
+      in
+      assert_refactored ~ctxt expected source (mk_loc (3, 9) (3, 16))
+    );
+    ( "jsx_extract_nested_element" >:: fun ctxt ->
+      let source =
+        {|import React from 'react';
+function test() {
+  return (
+    <div>
+      <div>hi</div>
+    </div>
+  );
+}|}
+      in
+      let expected =
+        [
+          ( "Extract to constant in function 'test'",
+            {|
+import React from "react";
+function test() {
+  const newLocal = <div>hi</div>;
+  return (
+    <div>
+      {newLocal}
+    </div>
+  );
+}
+            |}
+          );
+          ( "Extract to constant in module scope",
+            {|
+import React from "react";
+const newLocal = <div>hi</div>;
+function test() {
+  return (
+    <div>
+      {newLocal}
+    </div>
+  );
+}
+            |}
+          );
+        ]
+      in
+      assert_refactored ~ctxt expected source (mk_loc (5, 6) (5, 19))
+    );
+    ( "jsx_extract_nested_fragment" >:: fun ctxt ->
+      let source =
+        {|import React from 'react';
+function test() {
+  return (
+    <div>
+      <>
+        <div>hi</div>
+        <div>hi</div>
+      </>
+    </div>
+  );
+}|}
+      in
+      let expected =
+        [
+          ( "Extract to constant in function 'test'",
+            {|
+import React from "react";
+function test() {
+  const newLocal = <>
+    <div>hi</div>
+    <div>hi</div>
+  </>;
+  return (
+    <div>
+      {newLocal}
+    </div>
+  );
+}
+            |}
+          );
+          ( "Extract to constant in module scope",
+            {|
+import React from "react";
+const newLocal = <>
+  <div>hi</div>
+  <div>hi</div>
+</>;
+function test() {
+  return (
+    <div>
+      {newLocal}
+    </div>
+  );
+}
+            |}
+          );
+        ]
+      in
+      assert_refactored ~ctxt expected source (mk_loc (5, 6) (8, 9))
+    );
     (* Testing that we won't extract constant to scopes that will result in undefined variables. *)
     ( "constant_extract_with_scoping_issues" >:: fun ctxt ->
       let source =

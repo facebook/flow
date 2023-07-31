@@ -322,6 +322,52 @@ module AstExtractor = struct
           (* In all other cases, selection is illegal. *)
           expr
 
+      method! jsx_child child =
+        let open Flow_ast.JSX in
+        let (loc, child') = child in
+        ( loc,
+          match child' with
+          | Element elem -> Element (this#visit_jsx_element loc elem)
+          | Fragment frag -> Fragment (this#visit_jsx_fragment loc frag)
+          | ExpressionContainer expr -> ExpressionContainer (this#jsx_expression expr)
+          | SpreadChild spread -> SpreadChild (this#jsx_spread_child spread)
+          | Text _ as child' -> child'
+        )
+
+      (* We treat jsx_element like an expression, and follow similar extraction logic. *)
+      method visit_jsx_element loc elem =
+        if this#valid_single_selection loc then
+          let () =
+            collected_expression <-
+              Some
+                {
+                  constant_insertion_points;
+                  expression = (loc, Flow_ast.Expression.JSXElement elem);
+                }
+          in
+          elem
+        else if Loc.contains loc extract_range then
+          super#jsx_element elem
+        else
+          elem
+
+      (* We treat jsx_fragment like an expression, and follow similar extraction logic. *)
+      method visit_jsx_fragment loc elem =
+        if this#valid_single_selection loc then
+          let () =
+            collected_expression <-
+              Some
+                {
+                  constant_insertion_points;
+                  expression = (loc, Flow_ast.Expression.JSXFragment elem);
+                }
+          in
+          elem
+        else if Loc.contains loc extract_range then
+          super#jsx_fragment elem
+        else
+          elem
+
       method! type_ t =
         let (type_loc, _) = t in
         if this#valid_single_selection type_loc then
@@ -589,6 +635,29 @@ module RefactorProgramMappers = struct
           expression_replacement
         else
           super#expression expr
+
+      method! jsx_child child =
+        let open Flow_ast.JSX in
+        let (loc, child') = child in
+        ( loc,
+          match child' with
+          | Element _
+          | Fragment _ ->
+            (match expression_replacement with
+            | (_, Flow_ast.Expression.JSXElement e) -> Element e
+            | (_, Flow_ast.Expression.JSXFragment f) -> Fragment f
+            | _ ->
+              ExpressionContainer
+                {
+                  ExpressionContainer.expression =
+                    ExpressionContainer.Expression expression_replacement;
+                  comments = None;
+                })
+          | ExpressionContainer _
+          | SpreadChild _
+          | Text _ ->
+            child'
+        )
     end
 
   class extract_to_constant_refactor_mapper
