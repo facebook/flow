@@ -962,6 +962,28 @@ let code_actions_of_parse_errors ~diagnostics ~uri ~loc parse_errors =
           ~editor_loc:loc
           title
           " renders"
+      | (error_loc, Parse_error.InvalidComponentStringParameterBinding { optional; name }) ->
+        let title = "Use as-renaming" in
+        let replacement =
+          Utils_js.(
+            spf
+              " as %s%s"
+              (camelize name)
+              ( if optional then
+                "?"
+              else
+                ":"
+              )
+          )
+        in
+        code_action_for_parser_error_with_suggestion
+          acc
+          diagnostics
+          uri
+          ~error_loc
+          ~editor_loc:loc
+          title
+          replacement
       | _ -> acc)
     ~init:[]
     parse_errors

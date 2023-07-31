@@ -739,6 +739,228 @@ module.exports = (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
+    test(
+      'provide quickfix for component optional string param names with as renaming',
+      [
+        addFile(
+          'component-as-renaming-with-optional-parse-error.js.ignored',
+          'component-as-renaming-with-optional-parse-error.js',
+        ),
+        lspStartAndConnect(),
+        lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/component-as-renaming-with-optional-parse-error.js',
+          },
+          range: {
+            start: {
+              line: 1,
+              character: 23,
+            },
+            end: {
+              line: 1,
+              character: 23,
+            },
+          },
+          context: {
+            only: ['quickfix'],
+            diagnostics: [
+              {
+                range: {
+                  start: {
+                    line: 1,
+                    character: 23,
+                  },
+                  end: {
+                    line: 1,
+                    character: 24,
+                  },
+                },
+                message:
+                  "You must use `'string-key' as localBinding?: <TYPE>` for props with invalid identifier names.",
+                severity: 1,
+                code: 'ParseError',
+                relatedInformation: [],
+                source: 'Flow',
+              },
+            ],
+          },
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/codeAction',
+              result: [
+                {
+                  title: 'Use as-renaming',
+                  kind: 'quickfix',
+                  diagnostics: [
+                    {
+                      range: {
+                        start: {
+                          line: 1,
+                          character: 23,
+                        },
+                        end: {
+                          line: 1,
+                          character: 24,
+                        },
+                      },
+                      severity: 1,
+                      code: 'ParseError',
+                      source: 'Flow',
+                      message:
+                        "You must use `'string-key' as localBinding?: <TYPE>` for props with invalid identifier names.",
+                      relatedInformation: [],
+                      relatedLocations: [],
+                    },
+                  ],
+                  edit: {
+                    changes: {
+                      '<PLACEHOLDER_PROJECT_URL>/component-as-renaming-with-optional-parse-error.js':
+                        [
+                          {
+                            range: {
+                              start: {
+                                line: 1,
+                                character: 23,
+                              },
+                              end: {
+                                line: 1,
+                                character: 24,
+                              },
+                            },
+                            newText: ' as dataId?',
+                          },
+                        ],
+                    },
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/codeAction',
+                      'fix_parse_error',
+                      'Use as-renaming',
+                    ],
+                  },
+                },
+              ],
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            ...lspIgnoreStatusAndCancellation,
+          ],
+        ),
+      ],
+    ),
+    test('provide quickfix for component string param names with as renaming', [
+      addFile(
+        'component-as-renaming-parse-error.js.ignored',
+        'component-as-renaming-parse-error.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/component-as-renaming-parse-error.js',
+        },
+        range: {
+          start: {
+            line: 1,
+            character: 23,
+          },
+          end: {
+            line: 1,
+            character: 23,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [
+            {
+              range: {
+                start: {
+                  line: 1,
+                  character: 23,
+                },
+                end: {
+                  line: 1,
+                  character: 24,
+                },
+              },
+              message:
+                "You must use `'string-key' as localBinding: <TYPE>` for props with invalid identifier names.",
+              severity: 1,
+              code: 'ParseError',
+              relatedInformation: [],
+              source: 'Flow',
+            },
+          ],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Use as-renaming',
+                kind: 'quickfix',
+                diagnostics: [
+                  {
+                    range: {
+                      start: {
+                        line: 1,
+                        character: 23,
+                      },
+                      end: {
+                        line: 1,
+                        character: 24,
+                      },
+                    },
+                    severity: 1,
+                    code: 'ParseError',
+                    source: 'Flow',
+                    message:
+                      "You must use `'string-key' as localBinding: <TYPE>` for props with invalid identifier names.",
+                    relatedInformation: [],
+                    relatedLocations: [],
+                  },
+                ],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/component-as-renaming-parse-error.js':
+                      [
+                        {
+                          range: {
+                            start: {
+                              line: 1,
+                              character: 23,
+                            },
+                            end: {
+                              line: 1,
+                              character: 24,
+                            },
+                          },
+                          newText: ' as dataId:',
+                        },
+                      ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'fix_parse_error',
+                    'Use as-renaming',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
     test('provide quickfix for component render type parse error', [
       addFile(
         'component-render-parse-error.js.ignored',
