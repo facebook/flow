@@ -523,7 +523,9 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
           let (name, local, shorthand) =
             match (Peek.token env, Peek.ith_token ~i:1 env) with
             (* "prop-key" as propKey *)
-            | (T_STRING (loc, value, raw, octal), T_IDENTIFIER { raw = "as"; _ }) ->
+            | ( T_STRING (loc, value, raw, octal),
+                ((T_COLON | T_PLING | T_IDENTIFIER { raw = "as"; _ }) as next_token)
+              ) ->
               if octal then strict_error env Parse_error.StrictOctalLiteral;
               Expect.token env (T_STRING (loc, value, raw, octal));
               let trailing = Eat.trailing_comments env in
@@ -537,9 +539,30 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
                     }
                   )
               in
-              Expect.identifier env "as";
-              let local = Parse.pattern env Parse_error.StrictParamName in
-              (name, local, false)
+              (match next_token with
+              | T_COLON
+              | T_PLING ->
+                (* This is an error probably due to someone learning component syntax. Let's make a
+                 * good error message and supply a quick fix *)
+                let optional = next_token = T_PLING in
+                error
+                  env
+                  Parse_error.(InvalidComponentStringParameterBinding { optional; name = value });
+                if optional then Eat.token env;
+                let loc = Peek.loc env in
+                let fallback_ident = (loc, { Ast.Identifier.name = ""; comments = None }) in
+                let annot = Type.annotation_opt env in
+                let local =
+                  ( loc,
+                    Ast.Pattern.Identifier
+                      { Ast.Pattern.Identifier.name = fallback_ident; annot; optional }
+                  )
+                in
+                (name, local, false)
+              | _ ->
+                Eat.token env;
+                let local = Parse.pattern env Parse_error.StrictParamName in
+                (name, local, false))
             | (_, T_IDENTIFIER { raw = "as"; _ }) ->
               let name = Statement.ComponentDeclaration.Param.Identifier (identifier_name env) in
               Expect.identifier env "as";

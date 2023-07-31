@@ -88,6 +88,10 @@ type t =
     }
   | InvalidComponentParamName
   | InvalidComponentRenderAnnotation
+  | InvalidComponentStringParameterBinding of {
+      optional: bool;
+      name: string;
+    }
   | InvalidFloatBigInt
   | InvalidIndexedAccess of { has_bracket: bool }
   | InvalidJSXAttributeValue
@@ -362,6 +366,17 @@ module PP = struct
       "Component params must be an identifier. If you'd like to destructure, you should use `name as {destructure}`"
     | InvalidComponentRenderAnnotation ->
       "Components use `renders` instead of `:` to annotate the render type of a component."
+    | InvalidComponentStringParameterBinding { optional; name } ->
+      let camelized_name = Parse_error_utils.camelize name in
+      Printf.sprintf
+        "String params require local bindings using `as` renaming. You can use `'%s' as %s%s: <TYPE>` "
+        name
+        camelized_name
+        ( if optional then
+          "?"
+        else
+          ""
+        )
     | InvalidFloatBigInt -> "A bigint literal must be an integer"
     | InvalidIndexedAccess { has_bracket } ->
       let msg =

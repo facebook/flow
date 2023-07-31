@@ -314,10 +314,4 @@ let in_flow_test =
   | None ->
     false
 
-let camelize str =
-  match String.split_on_char '-' str with
-  | [] -> str
-  | [str] -> str
-  | hd :: rest ->
-    let parts = hd :: Base.List.map ~f:String.capitalize_ascii rest in
-    String.concat "" parts
+let camelize = Parse_error_utils.camelize
