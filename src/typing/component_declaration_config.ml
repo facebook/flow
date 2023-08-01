@@ -41,8 +41,12 @@ struct
     | Identifier (loc, { Ast.Identifier.name; _ }) -> (loc, name, t)
     | StringLiteral (loc, { Ast.StringLiteral.value; _ }) -> (loc, value, t)
 
-  let rest_type (Rest { t; id; _ }) =
-    let { Ast.Pattern.Identifier.optional; _ } = id in
+  let rest_type (Rest { t; pattern; _ }) =
+    let optional =
+      match pattern with
+      | Id { Ast.Pattern.Identifier.optional; _ } -> optional
+      | _ -> false
+    in
     if optional then
       TypeUtil.optional t
     else
@@ -134,15 +138,40 @@ struct
         }
       )
 
-  let eval_rest cx (Rest { t = _; loc; ploc; id; has_anno = _ }) =
-    let { Ast.Pattern.Identifier.name = ((name_loc, _), { Ast.Identifier.name; _ }); _ } = id in
-    let reason = mk_reason (RIdentifier (OrdinaryName name)) name_loc in
-    let t = Type_env.find_write cx Env_api.OrdinaryNameLoc reason in
-    ( loc,
-      {
-        Ast.Statement.ComponentDeclaration.RestParam.argument =
-          ((ploc, t), Ast.Pattern.Identifier id);
-        comments = None;
-      }
-    )
+  let eval_rest cx (Rest { t; loc; ploc; pattern; has_anno }) =
+    match pattern with
+    | Id id ->
+      ( loc,
+        {
+          Ast.Statement.ComponentDeclaration.RestParam.argument =
+            ((ploc, t), Ast.Pattern.Identifier id);
+          comments = None;
+        }
+      )
+    | Object { annot; properties; comments } ->
+      let properties =
+        let init = Destructuring.empty t ~annot:has_anno in
+        let f = destruct cx in
+        Destructuring.object_properties cx ~f ~parent_loc:ploc init properties
+      in
+      ( loc,
+        {
+          Ast.Statement.ComponentDeclaration.RestParam.argument =
+            ((ploc, t), Ast.Pattern.Object { Ast.Pattern.Object.properties; annot; comments });
+          comments = None;
+        }
+      )
+    | Array { annot; elements; comments } ->
+      let elements =
+        let init = Destructuring.empty t ~annot:has_anno in
+        let f = destruct cx in
+        Destructuring.array_elements cx ~f init elements
+      in
+      ( loc,
+        {
+          Ast.Statement.ComponentDeclaration.RestParam.argument =
+            ((ploc, t), Ast.Pattern.Array { Ast.Pattern.Array.elements; annot; comments });
+          comments = None;
+        }
+      )
 end

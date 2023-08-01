@@ -7416,12 +7416,36 @@ module Make
         in
         Ok
           (Component_sig_types.DeclarationParamConfig.Rest
-             { t; loc; ploc; id; has_anno = has_param_anno }
+             {
+               t;
+               loc;
+               ploc;
+               pattern = Component_sig_types.DeclarationParamConfig.Id id;
+               has_anno = has_param_anno;
+             }
           )
-      | Ast.Pattern.Object _
-      | Ast.Pattern.Array _
-      | Ast.Pattern.Expression _ ->
-        Error Error_message.(EInternal (ploc, RestParameterNotIdentifierPattern))
+      | Ast.Pattern.Object { Ast.Pattern.Object.annot; properties; comments } ->
+        let reason = mk_reason RDestructuring ploc in
+        let (t, annot) = mk_param_annot cx tparams_map reason annot in
+        let pattern =
+          Component_sig_types.DeclarationParamConfig.Object { annot; properties; comments }
+        in
+        Ok
+          (Component_sig_types.DeclarationParamConfig.Rest
+             { t; loc; ploc; pattern; has_anno = has_param_anno }
+          )
+      | Ast.Pattern.Array { Ast.Pattern.Array.annot; elements; comments } ->
+        Flow_js.add_output cx Error_message.(EInvalidComponentRestParam ploc);
+        let reason = mk_reason RDestructuring ploc in
+        let (t, annot) = mk_param_annot cx tparams_map reason annot in
+        let pattern =
+          Component_sig_types.DeclarationParamConfig.Array { annot; elements; comments }
+        in
+        Ok
+          (Component_sig_types.DeclarationParamConfig.Rest
+             { t; loc; ploc; pattern; has_anno = has_param_anno }
+          )
+      | Ast.Pattern.Expression _ -> Error Error_message.(EInvalidComponentRestParam ploc)
     in
     let mk_params cx tparams_map params =
       let (loc, { Ast.Statement.ComponentDeclaration.Params.params; rest; comments }) = params in

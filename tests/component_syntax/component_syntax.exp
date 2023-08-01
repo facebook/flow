@@ -1781,6 +1781,106 @@ be optional. [incompatible-type]
                            ^^^^^^^^^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------- rest_constraints.js:6:23
+
+Cannot assign boolean to `baz` because boolean [1] is incompatible with number [2]. [incompatible-type]
+
+   rest_constraints.js:6:23
+   6|   ...{foo, bar, baz = false}: {foo: number, bar: number, baz?: number} // ERROR bad default for baz
+                            ^^^^^ [1]
+
+References:
+   rest_constraints.js:6:64
+   6|   ...{foo, bar, baz = false}: {foo: number, bar: number, baz?: number} // ERROR bad default for baz
+                                                                     ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ rest_constraints.js:9:4
+
+Cannot cast `bar` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   rest_constraints.js:9:4
+   9|   (bar: string); // ERROR
+         ^^^
+
+References:
+   rest_constraints.js:6:50
+   6|   ...{foo, bar, baz = false}: {foo: number, bar: number, baz?: number} // ERROR bad default for baz
+                                                       ^^^^^^ [1]
+   rest_constraints.js:9:9
+   9|   (bar: string); // ERROR
+              ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- rest_constraints.js:13:30
+
+You may only use an identifier or a destructured object as a component rest param. [invalid-component-prop]
+
+   13| component DestructuredArr(...[foo, bar]: {foo: number, bar: number}) { // ERROR destructure array
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------- rest_constraints.js:17:42
+
+You may only use an identifier or a destructured object as a component rest param. [invalid-component-prop]
+
+   17| component DestructuredArrWithArrAnnot(...[foo, bar]: [number, number]) { // ERROR destructure array, array not an object
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------- rest_constraints.js:17:54
+
+tuple type [1] is not an object. [not-an-object]
+
+   17| component DestructuredArrWithArrAnnot(...[foo, bar]: [number, number]) { // ERROR destructure array, array not an object
+                                                            ^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- rest_constraints.js:17:54
+
+Cannot use tuple type [1] as a component rest param. Component rest params must use an object type and cannot be
+optional. [incompatible-type]
+
+   17| component DestructuredArrWithArrAnnot(...[foo, bar]: [number, number]) { // ERROR destructure array, array not an object
+                                                            ^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- rest_constraints.js:22:2
+
+Cannot create `DestructuredArr` element because property `bar` is missing in props [1] but exists in object type [2].
+[prop-missing]
+
+   rest_constraints.js:22:2
+   22| <DestructuredArr />; // ERROR because annot still provides a valid config type
+        ^^^^^^^^^^^^^^^
+
+References:
+   rest_constraints.js:22:1
+   22| <DestructuredArr />; // ERROR because annot still provides a valid config type
+       ^^^^^^^^^^^^^^^^^^^ [1]
+   rest_constraints.js:13:42
+   13| component DestructuredArr(...[foo, bar]: {foo: number, bar: number}) { // ERROR destructure array
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- rest_constraints.js:22:2
+
+Cannot create `DestructuredArr` element because property `foo` is missing in props [1] but exists in object type [2].
+[prop-missing]
+
+   rest_constraints.js:22:2
+   22| <DestructuredArr />; // ERROR because annot still provides a valid config type
+        ^^^^^^^^^^^^^^^
+
+References:
+   rest_constraints.js:22:1
+   22| <DestructuredArr />; // ERROR because annot still provides a valid config type
+       ^^^^^^^^^^^^^^^^^^^ [1]
+   rest_constraints.js:13:42
+   13| component DestructuredArr(...[foo, bar]: {foo: number, bar: number}) { // ERROR destructure array
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------- signature.js:12:39
 
 Cannot create `InlineOnly` element because string [1] is incompatible with number [2] in property `foo`.
@@ -2051,7 +2151,7 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 142 errors
+Found 150 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

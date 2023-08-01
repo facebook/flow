@@ -596,6 +596,7 @@ and 'loc t' =
       type_: 'loc;
       mixed: bool;
     }
+  | EInvalidComponentRestParam of 'loc
 
 and 'loc null_write = {
   null_loc: 'loc;
@@ -1286,6 +1287,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUnusedPromise { loc; async } -> EUnusedPromise { loc = f loc; async }
   | EReactIntrinsicOverlap { use; def; type_; mixed } ->
     EReactIntrinsicOverlap { def = f def; use = map_reason use; type_ = f type_; mixed }
+  | EInvalidComponentRestParam loc -> EInvalidComponentRestParam (f loc)
   | EBigIntRShift3 r -> EBigIntRShift3 (map_reason r)
   | EBigIntNumCoerce r -> EBigIntNumCoerce (map_reason r)
   | EInvalidCatchParameterAnnotation loc -> EInvalidCatchParameterAnnotation (f loc)
@@ -1546,6 +1548,7 @@ let util_use_op_of_msg nope util = function
   | EEmptyArrayNoProvider _
   | EUnusedPromise _
   | EReactIntrinsicOverlap _
+  | EInvalidComponentRestParam _
   | EBigIntRShift3 _
   | EBigIntNumCoerce _
   | EInvalidCatchParameterAnnotation _
@@ -1668,6 +1671,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EDocblockError (loc, _)
   | EImplicitInexactObject loc
   | EReactIntrinsicOverlap { def = loc; _ }
+  | EInvalidComponentRestParam loc
   | EAmbiguousObjectType loc
   | EParseError (loc, _)
   | EInvalidLHSInAssignment loc
@@ -4668,6 +4672,14 @@ let friendly_message_of_msg loc_of_aloc msg =
               " be instantiated as an element. To avoid confusion between this definition and the intrinsic, rename the definition";
           ];
       }
+  | EInvalidComponentRestParam _ ->
+    Normal
+      {
+        features =
+          [
+            text "You may only use an identifier or a destructured object as a component rest param.";
+          ];
+      }
   | EBigIntRShift3 reason ->
     Normal
       {
@@ -5235,6 +5247,7 @@ let error_code_of_message err : error_code option =
   | EInvalidMappedType _ -> Some InvalidMappedType
   | EDuplicateComponentProp _ -> Some InvalidComponentProp
   | ERefComponentProp _ -> Some InvalidComponentProp
+  | EInvalidComponentRestParam _ -> Some InvalidComponentProp
   | EMalformedCode _
   | EUnusedSuppression _ ->
     None

@@ -108,7 +108,7 @@ module DeclarationParamConfig = struct
         t: Type.t;
         loc: ALoc.t;
         ploc: ALoc.t;
-        id: (ALoc.t, ALoc.t * Type.t) Ast.Pattern.Identifier.t;
+        pattern: pattern;
         has_anno: bool;
       }
 end
