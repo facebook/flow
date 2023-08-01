@@ -601,9 +601,163 @@ let create_expression_extract_to_constant_refactor
         added_imports = [];
       }
 
+let create_expression_extract_to_react_component_refactor
+    ~scope_info
+    ~defs_with_scopes_of_local_uses
+    ~type_synthesizer_context
+    ~extracted_expression_loc
+    ~expression
+    ~new_component_name
+    ~ast =
+  let undefined_variables =
+    VariableAnalysis.undefined_variables_after_extraction
+      ~scope_info
+      ~defs_with_scopes_of_local_uses
+      ~new_function_target_scope_loc:None
+      ~extracted_loc:extracted_expression_loc
+  in
+  let { TypeSynthesizer.type_param_synthesizer; type_synthesizer; added_imports } =
+    TypeSynthesizer.create_type_synthesizer_with_import_adder type_synthesizer_context
+  in
+  let open Base.Option.Let_syntax in
+  let open Ast_builder in
+  let%bind (typed_props, tparams_set) =
+    Base.List.fold_until
+      (Base.List.rev undefined_variables)
+      ~init:([], TypeParamSet.empty)
+      ~finish:Option.some
+      ~f:(fun (props, used_tparam_set) (def, loc) ->
+        match type_synthesizer loc with
+        | Ok (Some (tparams_rev, type_)) ->
+          Base.Continue_or_stop.Continue
+            ((def, type_) :: props, TypeParamSet.add_all tparams_rev used_tparam_set)
+        | Error _
+        | Ok None ->
+          Base.Continue_or_stop.Stop None
+    )
+  in
+  let%bind tparams =
+    let tparams = TypeParamSet.elements tparams_set in
+    Base.List.fold_until
+      tparams
+      ~init:[]
+      ~finish:(fun tparams ->
+        if Base.List.is_empty tparams then
+          Some None
+        else
+          Some (Some (Types.type_params (List.rev tparams))))
+      ~f:(fun acc tparam ->
+        match type_param_synthesizer tparams tparam with
+        | Ok tparam -> Base.Continue_or_stop.Continue (tparam :: acc)
+        | Error _ -> Base.Continue_or_stop.Stop None)
+  in
+  let added_imports = added_imports () in
+  let component_declaration_statement =
+    let open Flow_ast.Pattern in
+    let function_body =
+      Flow_ast.Function.BodyBlock
+        ( Loc.none,
+          { Flow_ast.Statement.Block.body = [Statements.return (Some expression)]; comments = None }
+        )
+    in
+    let params =
+      if Base.List.is_empty undefined_variables then
+        None
+      else
+        let properties =
+          Base.List.map undefined_variables ~f:(fun (def, _) ->
+              Object.Property
+                ( Loc.none,
+                  {
+                    Object.Property.key = Object.Property.Identifier (Identifiers.identifier def);
+                    pattern = Patterns.identifier def;
+                    default = None;
+                    shorthand = true;
+                  }
+                )
+          )
+        in
+        let properties_annot =
+          Base.List.map typed_props ~f:(fun (def, t) ->
+              Flow_ast.Type.Object.Property
+                (Types.Objects.property
+                   (Flow_ast.Expression.Object.Property.Identifier (Identifiers.identifier def))
+                   (Flow_ast.Type.Object.Property.Init t)
+                )
+          )
+        in
+        let annot =
+          Flow_ast.Type.Available
+            ( Loc.none,
+              ( Loc.none,
+                Flow_ast.Type.Generic
+                  {
+                    Flow_ast.Type.Generic.id =
+                      Flow_ast.Type.Generic.Identifier.Unqualified
+                        (Identifiers.identifier "$ReadOnly");
+                    targs =
+                      Some
+                        (Types.type_args
+                           (* Do not use explicit bar or ... *)
+                           [Types.object_ ~exact:false ~inexact:false properties_annot]
+                        );
+                    comments = None;
+                  }
+              )
+            )
+        in
+        Some
+          (Functions.params
+             [Functions.param (Loc.none, Object { Object.properties; annot; comments = None })]
+          )
+    in
+    ( Loc.none,
+      Flow_ast.Statement.FunctionDeclaration
+        (Functions.make
+           ~id:(Some (Identifiers.identifier new_component_name))
+           ?params
+           ?tparams
+           ~body:function_body
+           ()
+        )
+    )
+  in
+  let expression_replacement =
+    let attrs =
+      let open Flow_ast.JSX in
+      Base.List.map typed_props ~f:(fun (name, _) ->
+          let container =
+            Attribute.ExpressionContainer
+              ( Loc.none,
+                {
+                  ExpressionContainer.expression =
+                    ExpressionContainer.Expression (Expressions.identifier name);
+                  comments = None;
+                }
+              )
+          in
+          JSXs.attr (JSXs.attr_identifier name) (Some container)
+      )
+    in
+    ( Loc.none,
+      Flow_ast.Expression.JSXElement
+        (JSXs.element ~selfclosing:true ~attrs (JSXs.identifier new_component_name))
+    )
+  in
+  let new_ast =
+    RefactorProgramMappers.extract_expression_to_react_component
+      ~expression_loc:extracted_expression_loc
+      ~expression_replacement
+      ~component_declaration_statement
+      ast
+  in
+  Some { title = "Extract to react component"; new_ast; added_imports }
+
 let extract_from_expression_refactors
     ~ast
     ~cx
+    ~file
+    ~file_sig
     ~typed_ast
     ~reader
     ~create_unique_name
@@ -628,6 +782,28 @@ let extract_from_expression_refactors
       ~reader
       ~extracted_loc:extracted_expression_loc
   in
+  let extract_to_react_component_refactors =
+    match (has_this_super, expression) with
+    | (false, (_, Flow_ast.Expression.(JSXElement _ | JSXFragment _))) ->
+      let locs =
+        defs_with_scopes_of_local_uses
+        |> List.map (fun ({ Scope_api.Def.locs = (def_loc, _); _ }, _) -> def_loc)
+        |> LocSet.of_list
+      in
+      let type_synthesizer_context =
+        TypeSynthesizer.create_synthesizer_context ~cx ~file ~file_sig ~typed_ast ~reader ~locs
+      in
+      create_expression_extract_to_react_component_refactor
+        ~scope_info
+        ~defs_with_scopes_of_local_uses
+        ~type_synthesizer_context
+        ~extracted_expression_loc
+        ~expression
+        ~new_component_name:(create_unique_name "NewComponent")
+        ~ast
+      |> Base.Option.to_list
+    | _ -> []
+  in
   let create_extract_to_constant_refactor =
     create_expression_extract_to_constant_refactor
       ~scope_info
@@ -642,7 +818,8 @@ let extract_from_expression_refactors
     if has_this_super then
       []
     else
-      List.filter_map create_extract_to_constant_refactor constant_insertion_points
+      extract_to_react_component_refactors
+      @ List.filter_map create_extract_to_constant_refactor constant_insertion_points
   | Some ({ InsertionPointCollectors.body_loc = class_body_loc; _ } as class_insertion_point) ->
     let extract_to_class_field_refactors =
       create_extract_expression_to_class_field_refactors
@@ -666,7 +843,8 @@ let extract_from_expression_refactors
               None)
           constant_insertion_points
     else
-      extract_to_class_field_refactors
+      extract_to_react_component_refactors
+      @ extract_to_class_field_refactors
       @ List.filter_map create_extract_to_constant_refactor constant_insertion_points
 
 let extract_from_type_refactors
@@ -789,7 +967,16 @@ let provide_available_refactors
   let extract_from_expression_refactors =
     Base.Option.value_map
       ~default:[]
-      ~f:(extract_from_expression_refactors ~ast ~cx ~typed_ast ~reader ~create_unique_name)
+      ~f:
+        (extract_from_expression_refactors
+           ~ast
+           ~cx
+           ~file
+           ~file_sig
+           ~typed_ast
+           ~reader
+           ~create_unique_name
+        )
       extracted_expression
   in
   let extract_from_type_refactors =

@@ -660,6 +660,33 @@ module RefactorProgramMappers = struct
         )
     end
 
+  class extract_expression_to_react_component_refactor_mapper
+    ~expression_loc ~expression_replacement ~component_declaration_statement =
+    object (_this)
+      inherit replace_original_expression_mapper ~expression_loc ~expression_replacement as super
+
+      method! program program =
+        let open Flow_ast.Program in
+        let (program_loc, program_body) = program in
+        ( program_loc,
+          {
+            program_body with
+            statements =
+              super#statement_list program_body.statements @ [component_declaration_statement];
+          }
+        )
+    end
+
+  let extract_expression_to_react_component
+      ~expression_loc ~expression_replacement ~component_declaration_statement ast =
+    let mapper =
+      new extract_expression_to_react_component_refactor_mapper
+        ~expression_loc
+        ~expression_replacement
+        ~component_declaration_statement
+    in
+    mapper#program ast
+
   class extract_expression_to_constant_refactor_mapper
     ~statement_loc ~expression_loc ~expression_replacement ~constant_definition =
     object (this)

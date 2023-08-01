@@ -1087,6 +1087,17 @@ function test() {
 }|} in
       let expected =
         [
+          ( "Extract to react component",
+            {|
+import React from "react";
+function test() {
+  return <NewComponent />;
+}
+function NewComponent() {
+  return <div />;
+}
+            |}
+          );
           ( "Extract to constant in function 'test'",
             {|
 import React from "react";
@@ -1109,6 +1120,42 @@ function test() {
       in
       assert_refactored ~ctxt expected source (mk_loc (3, 9) (3, 16))
     );
+    ( "jsx_extract_with_generic_props" >:: fun ctxt ->
+      let source =
+        {|import React from 'react';
+function test<T>(world: T): any {
+  const name = "Flow";
+  return <div>Hello {world}, I am {name}.</div>;
+}|}
+      in
+      let expected =
+        [
+          ( "Extract to react component",
+            {|
+import React from "react";
+function test<T>(world: T): any {
+  const name = "Flow";
+  return <NewComponent world={world} name={name} />;
+}
+function NewComponent<T>({world, name}: $ReadOnly<{ world: T, name: string }>) {
+  return <div>Hello {world}, I am {name}.</div>;
+}
+            |}
+          );
+          ( "Extract to constant in function 'test'",
+            {|
+import React from "react";
+function test<T>(world: T): any {
+  const name = "Flow";
+  const newLocal = <div>Hello {world}, I am {name}.</div>;
+  return newLocal;
+}
+            |}
+          );
+        ]
+      in
+      assert_refactored ~ctxt expected source (mk_loc (4, 9) (4, 47))
+    );
     ( "jsx_extract_nested_element" >:: fun ctxt ->
       let source =
         {|import React from 'react';
@@ -1122,6 +1169,21 @@ function test() {
       in
       let expected =
         [
+          ( "Extract to react component",
+            {|
+import React from "react";
+function test() {
+  return (
+    <div>
+      <NewComponent />
+    </div>
+  );
+}
+function NewComponent() {
+  return <div>hi</div>;
+}
+            |}
+          );
           ( "Extract to constant in function 'test'",
             {|
 import React from "react";
@@ -1168,6 +1230,24 @@ function test() {
       in
       let expected =
         [
+          ( "Extract to react component",
+            {|
+import React from "react";
+function test() {
+  return (
+    <div>
+      <NewComponent />
+    </div>
+  );
+}
+function NewComponent() {
+  return <>
+    <div>hi</div>
+    <div>hi</div>
+  </>;
+}
+            |}
+          );
           ( "Extract to constant in function 'test'",
             {|
 import React from "react";

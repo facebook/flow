@@ -102,6 +102,13 @@ module RefactorProgramMappers : sig
     (Loc.t, Loc.t) Flow_ast.Program.t ->
     (Loc.t, Loc.t) Flow_ast.Program.t
 
+  val extract_expression_to_react_component :
+    expression_loc:Loc.t ->
+    expression_replacement:(Loc.t, Loc.t) Flow_ast.Expression.t ->
+    component_declaration_statement:(Loc.t, Loc.t) Flow_ast.Statement.t ->
+    (Loc.t, Loc.t) Flow_ast.Program.t ->
+    (Loc.t, Loc.t) Flow_ast.Program.t
+
   val extract_expression_to_constant :
     statement_loc:Loc.t ->
     expression_loc:Loc.t ->
