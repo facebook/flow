@@ -60,7 +60,6 @@ let sig_opts =
     enable_component_syntax = true;
     enable_relay_integration = false;
     relay_integration_module_prefix = None;
-    tuple_enhancements = true;
     locs_to_dirtify = [];
   }
 

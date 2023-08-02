@@ -93,7 +93,6 @@ type metadata = {
   strip_root: bool;
   suppress_types: SSet.t;
   trust_mode: Options.trust_mode;
-  tuple_enhancements: bool;
   use_mixed_in_catch_variables: bool;
 }
 
@@ -524,8 +523,6 @@ val iter_annot_dependent_set : t -> (int -> Type.AConstraint.op -> unit) -> ISet
 type cache_snapshot
 
 val take_cache_snapshot : t -> cache_snapshot
-
-val tuple_enhancements : t -> bool
 
 val restore_cache_snapshot : t -> cache_snapshot -> unit
 

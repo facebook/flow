@@ -215,7 +215,6 @@ let sig_options
     ?(enable_component_syntax = true)
     ?(enable_relay_integration = false)
     ?relay_integration_module_prefix
-    ?(tuple_enhancements = true)
     ?(locs_to_dirtify = [])
     () =
   {
@@ -230,7 +229,6 @@ let sig_options
     enable_component_syntax;
     enable_relay_integration;
     relay_integration_module_prefix;
-    tuple_enhancements;
     locs_to_dirtify;
   }
 
@@ -251,7 +249,6 @@ let print_sig
     ?enable_component_syntax
     ?enable_relay_integration
     ?relay_integration_module_prefix
-    ?tuple_enhancements
     ?locs_to_dirtify
     contents_indent =
   let contents = dedent_trim contents_indent in
@@ -267,7 +264,6 @@ let print_sig
       ?enable_component_syntax
       ?enable_relay_integration
       ?relay_integration_module_prefix
-      ?tuple_enhancements
       ?locs_to_dirtify
       ()
   in

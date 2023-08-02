@@ -140,7 +140,6 @@ type t = {
   opt_temp_dir: string;
   opt_traces: int;
   opt_trust_mode: trust_mode;
-  opt_tuple_enhancements: bool;
   opt_use_mixed_in_catch_variables: bool;
   opt_verbose: Verbose.t option;
   opt_wait_for_recheck: bool;
@@ -332,8 +331,6 @@ let suppress_types opts = opts.opt_suppress_types
 let temp_dir opts = opts.opt_temp_dir
 
 let trust_mode opts = opts.opt_trust_mode
-
-let tuple_enhancements opts = opts.opt_tuple_enhancements
 
 let use_mixed_in_catch_variables opts = opts.opt_use_mixed_in_catch_variables
 

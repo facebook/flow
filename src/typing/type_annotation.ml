@@ -444,31 +444,20 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         (Error_message.ETSSyntax { kind = Error_message.TSReadonlyType arg_kind; loc });
       let t = AnyT.at (AnyError None) loc in
       ((loc, t), ReadOnly (Tast_utils.error_mapper#readonly_type ro))
-    | (loc, Tuple ({ Tuple.elements; comments } as tup)) ->
+    | (loc, Tuple { Tuple.elements; comments }) ->
       let reason = mk_annot_reason RTupleType loc in
-      let (has_tuple_enhancements, unresolved_rev, els_asts_rev) =
-        Base.List.fold
-          elements
-          ~init:(false, [], [])
-          ~f:(fun (has_tuple_enhancements, unresolved, els_asts) element ->
-            let (elem_has_tuple_enhancements, el, el_ast) =
-              convert_tuple_element cx tparams_map infer_tparams_map element
-            in
+      let (unresolved_rev, els_asts_rev) =
+        Base.List.fold elements ~init:([], []) ~f:(fun (unresolved, els_asts) element ->
+            let (el, el_ast) = convert_tuple_element cx tparams_map infer_tparams_map element in
             let unresolved = el :: unresolved in
             let els_asts = el_ast :: els_asts in
-            let has_tuple_enhancements = has_tuple_enhancements || elem_has_tuple_enhancements in
-            (has_tuple_enhancements, unresolved, els_asts)
+            (unresolved, els_asts)
         )
       in
-      if has_tuple_enhancements && (not @@ Context.tuple_enhancements cx) then
-        let t = AnyT.at (AnyError None) loc in
-        let ast = Tuple (Tast_utils.error_mapper#tuple_type tup) in
-        ((loc, t), ast)
-      else
-        let (unresolved, els_asts) = (List.rev unresolved_rev, List.rev els_asts_rev) in
-        let id = mk_eval_id cx loc in
-        let t = Flow_js_utils.mk_tuple_type cx ~id ~mk_type_destructor reason unresolved in
-        ((loc, t), Tuple { Tuple.elements = els_asts; comments })
+      let (unresolved, els_asts) = (List.rev unresolved_rev, List.rev els_asts_rev) in
+      let id = mk_eval_id cx loc in
+      let t = Flow_js_utils.mk_tuple_type cx ~id ~mk_type_destructor reason unresolved in
+      ((loc, t), Tuple { Tuple.elements = els_asts; comments })
     | (loc, Array { Array.argument = t; comments }) ->
       let r = mk_annot_reason RArrayType loc in
       let (((_, elem_t), _) as t_ast) = convert cx tparams_map infer_tparams_map t in
@@ -2192,15 +2181,12 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let (((_, t), _) as annot_ast) = convert cx tparams_map infer_tparams_map annot in
       let element_ast = (loc, Ast.Type.Tuple.UnlabeledElement annot_ast) in
       let reason = mk_reason (RTupleElement { name = None }) loc in
-      (false, UnresolvedArg (mk_tuple_element reason t, None), element_ast)
+      (UnresolvedArg (mk_tuple_element reason t, None), element_ast)
     | Ast.Type.Tuple.LabeledElement
         { Ast.Type.Tuple.LabeledElement.name; annot; variance; optional } ->
       let (((_, annot_t), _) as annot_ast) = convert cx tparams_map infer_tparams_map annot in
       let t =
-        if not @@ Context.tuple_enhancements cx then (
-          Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, TupleLabeledElement));
-          AnyT.at (AnyError None) loc
-        ) else if optional then
+        if optional then
           TypeUtil.optional annot_t
         else
           annot_t
@@ -2215,20 +2201,12 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       in
       let name = Some str_name in
       let reason = mk_reason (RTupleElement { name }) loc in
-      ( true,
-        UnresolvedArg
+      ( UnresolvedArg
           (TupleElement { name; t; polarity = polarity cx variance; optional; reason }, None),
         element_ast
       )
     | Ast.Type.Tuple.SpreadElement { Ast.Type.Tuple.SpreadElement.name; annot } ->
       let (((_, t), _) as annot_ast) = convert cx tparams_map infer_tparams_map annot in
-      let t =
-        if not @@ Context.tuple_enhancements cx then (
-          Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, TupleSpreadElement));
-          AnyT.at (AnyError None) loc
-        ) else
-          t
-      in
       let name =
         match name with
         | Some (name_loc, name_ast) -> Some ((name_loc, t), name_ast)
@@ -2237,7 +2215,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let element_ast =
         (loc, Ast.Type.Tuple.SpreadElement { Ast.Type.Tuple.SpreadElement.name; annot = annot_ast })
       in
-      (true, UnresolvedSpreadArg t, element_ast)
+      (UnresolvedSpreadArg t, element_ast)
 
   and check_guard_is_not_rest_param cx params (param_name, name_loc) =
     let open T.Function in

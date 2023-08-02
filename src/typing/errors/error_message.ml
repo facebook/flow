@@ -698,8 +698,6 @@ and unsupported_syntax =
   | SpreadArgument
   | ImportDynamicArgument
   | IllegalName
-  | TupleLabeledElement
-  | TupleSpreadElement
   | UserDefinedTypeGuards
   | UnsupportedInternalSlot of {
       name: string;
@@ -2875,8 +2873,6 @@ let friendly_message_of_msg loc_of_aloc msg =
       | ExplicitProtoAfterCall -> [text "Unexpected prototype after call property."]
       | SpreadArgument -> [text "A spread argument is unsupported here."]
       | IllegalName -> [text "Illegal name."]
-      | TupleLabeledElement -> [text "Labeled tuple elements are not supported."]
-      | TupleSpreadElement -> [text "Tuple spread is not supported."]
       | UserDefinedTypeGuards -> [text "User defined type guards are not yet supported."]
       | UnsupportedInternalSlot { name; static = false } ->
         [text "Unsupported internal slot "; code name; text "."]

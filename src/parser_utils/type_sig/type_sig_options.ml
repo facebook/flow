@@ -18,7 +18,6 @@ type t = {
   enable_relay_integration: bool;
   relay_integration_module_prefix: string option;
   locs_to_dirtify: Loc.t list;
-  tuple_enhancements: bool;
 }
 
 let of_options options docblock locs_to_dirtify file =
@@ -60,7 +59,6 @@ let of_options options docblock locs_to_dirtify file =
     exact_by_default = Options.exact_by_default options;
     enable_enums = Options.enums options;
     enable_component_syntax = Options.typecheck_component_syntax_in_file options file;
-    tuple_enhancements = Options.tuple_enhancements options;
   }
 
 let builtin_options options =
@@ -85,6 +83,5 @@ let builtin_options options =
     exact_by_default = Options.exact_by_default options;
     enable_enums = Options.enums options;
     enable_component_syntax = Options.typecheck_component_syntax options;
-    tuple_enhancements = Options.tuple_enhancements options;
     locs_to_dirtify = [];
   }

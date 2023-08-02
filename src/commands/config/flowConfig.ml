@@ -124,7 +124,6 @@ module Opts = struct
     suppress_types: SSet.t;
     traces: int;
     trust_mode: Options.trust_mode;
-    tuple_enhancements: bool option;
     use_mixed_in_catch_variables: bool option;
     wait_for_recheck: bool;
     watchman_defer_states: string list;
@@ -246,7 +245,6 @@ module Opts = struct
       suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
       traces = 0;
       trust_mode = Options.NoTrust;
-      tuple_enhancements = None;
       use_mixed_in_catch_variables = None;
       wait_for_recheck = false;
       watchman_defer_states = [];
@@ -765,9 +763,6 @@ module Opts = struct
       [("check", Options.CheckTrust); ("silent", Options.SilentTrust); ("none", Options.NoTrust)]
       (fun opts trust_mode -> Ok { opts with trust_mode })
 
-  let tuple_enhancements_parser =
-    boolean (fun opts v -> Ok { opts with tuple_enhancements = Some v })
-
   let use_mixed_in_catch_variables_parser =
     boolean (fun opts v -> Ok { opts with use_mixed_in_catch_variables = Some v })
 
@@ -875,7 +870,6 @@ module Opts = struct
       ("trust_mode", trust_mode_parser);
       ("types_first.max_files_checked_per_worker", max_files_checked_per_worker_parser);
       ("types_first.max_seconds_for_check_per_worker", max_seconds_for_check_per_worker_parser);
-      ("tuple_enhancements", tuple_enhancements_parser);
       ("use_mixed_in_catch_variables", use_mixed_in_catch_variables_parser);
       ("wait_for_recheck", boolean (fun opts v -> Ok { opts with wait_for_recheck = v }));
     ]
@@ -1581,8 +1575,6 @@ let suppress_types c = c.options.Opts.suppress_types
 let traces c = c.options.Opts.traces
 
 let trust_mode c = c.options.Opts.trust_mode
-
-let tuple_enhancements c = c.options.Opts.tuple_enhancements
 
 let use_mixed_in_catch_variables c = c.options.Opts.use_mixed_in_catch_variables
 
