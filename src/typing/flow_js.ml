@@ -6405,38 +6405,11 @@ struct
         )
     in
     if
-      is_fully_resolve_result_type_destructor_kind d
-      && (not (Tvar_resolver.has_unresolved_tvars cx t))
+      (not (Tvar_resolver.has_unresolved_tvars cx t))
       && not (Tvar_resolver.has_unresolved_tvars_in_destructors cx d)
     then
       Tvar_resolver.resolve cx result;
     (slingshot, result)
-
-  and is_fully_resolve_result_type_destructor_kind = function
-    | ReactCheckComponentConfig _
-    | ReactCheckComponentRef
-    | ConditionalType _
-    | MappedType _
-    | PropertyType _
-    | ElementType _
-    | OptionalIndexedAccessNonMaybeType _
-    | OptionalIndexedAccessResultType _
-    | NonMaybeType
-    | ReactElementPropsType
-    | ReactElementConfigType
-    | ReactElementRefType
-    | ReactConfigType _
-    | ReadOnlyType
-    | PartialType
-    | RequiredType
-    | SpreadType _
-    | RestType _
-    | SpreadTupleType _
-    | ValuesType ->
-      true
-    | CallType _
-    | TypeMap _ ->
-      false
 
   and eval_destructor cx ~trace use_op reason t d tout =
     match d with
@@ -9356,12 +9329,7 @@ struct
             Tvar.mk_where cx reason (fun tvar ->
                 Cache.Eval.add_repos cx root defer_use_t id tvar;
                 flow_opt cx ?trace (t, ReposLowerT (reason, use_desc, UseT (unknown_use, tvar)));
-                let (TypeDestructorT (_, _, d)) = defer_use_t in
-                if
-                  is_fully_resolve_result_type_destructor_kind d
-                  && not (Tvar_resolver.has_unresolved_tvars cx t)
-                then
-                  Tvar_resolver.resolve cx tvar
+                if not (Tvar_resolver.has_unresolved_tvars cx t) then Tvar_resolver.resolve cx tvar
             )
         end
       | MaybeT (r, t) ->
