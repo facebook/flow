@@ -345,6 +345,10 @@ let new_metadata (state : state) (message : Jsonrpc.message) : LspProt.metadata 
     | Some (Shown (_, params)) -> Some params.ShowStatus.request.ShowMessageRequest.message
   in
   let lsp_id = message.Jsonrpc.id |> Base.Option.map ~f:Lsp_fmt.parse_id in
+  (* Meta-specific property that is set on requests and notifications by our
+     internal VS Code extension to provide end-to-end telemetry.
+     https://fburl.com/code/wdoqo479 *)
+  let activity_key = Hh_json_helpers.Jget.obj_opt (Some message.Jsonrpc.json) "activityKey" in
   {
     LspProt.empty_metadata with
     LspProt.start_wall_time = message.Jsonrpc.timestamp;
@@ -356,6 +360,7 @@ let new_metadata (state : state) (message : Jsonrpc.message) : LspProt.metadata 
     start_lsp_state_reason;
     lsp_method_name = Jsonrpc.(message.method_);
     lsp_id;
+    activity_key;
   }
 
 let edata_of_exception exn =
@@ -2542,6 +2547,7 @@ and main_log_command (state : state) (metadata : LspProt.metadata) : unit =
     lsp_method_name = method_name;
     interaction_tracking_id = _;
     lsp_id;
+    activity_key;
   } =
     metadata
   in
@@ -2606,6 +2612,7 @@ and main_log_command (state : state) (metadata : LspProt.metadata) : unit =
       ~server_profiling
       ~client_duration
       ~wall_start
+      ~activity_key
       ~error:None
   | Some (LspProt.ExpectedError, msg, stack) ->
     FlowEventLogger.persistent_command_success
@@ -2620,6 +2627,7 @@ and main_log_command (state : state) (metadata : LspProt.metadata) : unit =
       ~server_profiling
       ~client_duration
       ~wall_start
+      ~activity_key
       ~error:(Some (msg, stack))
   | Some (LspProt.UnexpectedError, msg, stack) ->
     FlowEventLogger.persistent_command_failure
@@ -2632,24 +2640,28 @@ and main_log_command (state : state) (metadata : LspProt.metadata) : unit =
       ~server_profiling
       ~client_duration
       ~wall_start
+      ~activity_key
       ~error:(msg, stack)
 
 and main_log_error ~(expected : bool) (msg : string) (stack : string) (event : event option) : unit
     =
   let error = (msg, Utils.Callstack stack) in
   let client_context = FlowEventLogger.get_context () in
-  let request =
+  let (request, activity_key) =
     match event with
     | Some (Client_message (_, metadata)) ->
-      Some (metadata.LspProt.start_json_truncated |> Hh_json.json_to_string)
+      let request = metadata.LspProt.start_json_truncated |> Hh_json.json_to_string in
+      let activity_key = metadata.LspProt.activity_key in
+      (Some request, activity_key)
     | Some (Server_message _)
     | Some Tick
     | None ->
-      None
+      (None, None)
   in
-  match expected with
-  | true -> FlowEventLogger.persistent_expected_error ~request ~client_context ~error
-  | false -> FlowEventLogger.persistent_unexpected_error ~request ~client_context ~error
+  if expected then
+    FlowEventLogger.persistent_expected_error ~request ~client_context ~activity_key ~error
+  else
+    FlowEventLogger.persistent_unexpected_error ~request ~client_context ~activity_key ~error
 
 and main_handle_error (exn : Exception.t) (state : state) (event : event option) : state =
   let stack = Exception.get_full_backtrace_string 500 exn in

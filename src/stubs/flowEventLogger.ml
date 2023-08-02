@@ -125,6 +125,7 @@ let persistent_command_success
     ~server_profiling:_
     ~client_duration:_
     ~wall_start:_
+    ~activity_key:_
     ~error:_ =
   ()
 
@@ -138,12 +139,13 @@ let persistent_command_failure
     ~server_profiling:_
     ~client_duration:_
     ~wall_start:_
+    ~activity_key:_
     ~error:_ =
   ()
 
-let persistent_expected_error ~request:_ ~client_context:_ ~error:_ = ()
+let persistent_expected_error ~request:_ ~client_context:_ ~activity_key:_ ~error:_ = ()
 
-let persistent_unexpected_error ~request:_ ~client_context:_ ~error:_ = ()
+let persistent_unexpected_error ~request:_ ~client_context:_ ~activity_key:_ ~error:_ = ()
 
 let saved_state_fb_fetcher_success
     ~repo_root:_

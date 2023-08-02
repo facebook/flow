@@ -42,6 +42,7 @@ type metadata = {
   interaction_tracking_id: int option;
   (* JSON-RPC id of corresponding LSP request *)
   lsp_id: Lsp.lsp_id option;
+  activity_key: Hh_json.json option;
 }
 
 (** For LSP work-items, we keep metadata about requests, to help us log better telemetry.
@@ -63,6 +64,7 @@ let empty_metadata =
     lsp_method_name = "";
     interaction_tracking_id = None;
     lsp_id = None;
+    activity_key = None;
   }
 
 type request =
