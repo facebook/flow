@@ -253,7 +253,7 @@ const e = [...c, ...d]; // At runtime this is `[0, 2]`
 To use labeled tuple elements (including optional elements and variance annotations on elements) and tuple spread elements,
 you need to upgrade your infrastructure so that it supports the syntax:
 
-- `flow` and `flow-parser`: 0.212.0. You need to explicitly enable it in your `.flowconfig`, under the `[options]` heading, add `tuple_enhancements=true`.
+- `flow` and `flow-parser`: 0.212.0
 - `prettier`: 3
 - `babel` with `babel-plugin-syntax-hermes-parser`. See [our Babel guide](../../tools/babel/) for setup instructions.
 - `eslint` with `hermes-eslint`. See [our ESLint guide](../../tools/eslint/) for setup instructions.
