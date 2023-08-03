@@ -1,3 +1,19 @@
+### 0.214.0
+
+Likely to cause new Flow errors:
+* Flow now has stricter behavior with `$Call`, `$ObjMap`, `$ObjMapi`, `$ObjMapConst`, `$TupleMap`. Previously hidden type errors might be revealed now.
+* You can no longer disable `tuple_ehancements`, `conditional_type`, `mapped_type`, `type_guards` in flowconfig, since these options have been removed. They were enabled by default since v0.212.0.
+
+IDE:
+* We now provide a new refactor that extracts JSX elements into a new React component.
+* Extract to constant refactors now works for nested JSX elements and fragments.
+
+Notable bug fixes:
+* Added default type arguments for the built-in `React$AbstractComponent` to match the `React.AbstractComponent` type alias in our libdefs. [[try-flow]](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAJwKYEMwBcD6aArlLnALYYrgA2WAzvXGCADQgYAeOBARgJ74AJhhhYiNXClzEM7DFCLl602e0hQhcMtCw18ufgAcqyGUTkhyWIyaEHjp85cMn8CIljRCVZ2QF91CBFqVwwAAgBBAGFwgF5wgCVsPAASSN56GR5oiHIjaAVcAB5gIzQII2RwxXJeDDR-AD4AbnCAenbwgHc4GhoaiHCaaAQG8IaKtDYQADcGpmhqWYAGADoAJgBGAGY1rZB-IA)
+
+Library Definitions:
+* Added `parseArgs` to the Node.js `util` module library definition
+
 ### 0.213.1
 
 Notable bug fixes:
