@@ -12,10 +12,7 @@ continuing.
 [higher-order component pattern]: https://facebook.github.io/react/docs/higher-order-components.html
 [React documentation on higher-order components]: https://facebook.github.io/react/docs/higher-order-components.html
 
-In 0.89.0, we introduced [`React.AbstractComponent`](../types/#toc-react-abstractcomponent), which
-gives you more expressive power when writing HOCs and library definitions.
-
-Let's take a look at how you can type some example HOCs.
+You can make use of the [`React.AbstractComponent`](../types/#toc-react-abstractcomponent) type to annotate your higher order components.
 
 ### The Trivial HOC {#toc-the-trivial-hoc}
 
@@ -38,10 +35,7 @@ do anything at all. Let's take a look at some more complex examples.
 
 A common use case for higher-order components is to inject a prop.
 The HOC automatically sets a prop and returns a component which no longer requires
-that prop. For example, consider a navigation prop, or in the case of
-[`react-redux` a `store` prop][]. How would one type this?
-
-[`react-redux` a `store` prop]: https://github.com/reactjs/react-redux/blob/master/docs/api.md#connectmapstatetoprops-mapdispatchtoprops-mergeprops-options
+that prop. For example, consider a navigation prop. How would one type this?
 
 To remove a prop from the config, we can take a component that includes the
 prop and return a component that does not. It's best to construct these
@@ -62,16 +56,19 @@ function injectProp<Config>(
   };
 }
 
-class MyComponent extends React.Component<{
+function MyComponent(props: {
   a: number,
   b: number,
   ...InjectedProps,
-}> {}
+}): React.Node {}
 
 const MyEnhancedComponent = injectProp(MyComponent);
 
-// We don't need to pass in `foo` even though `MyComponent` requires it.
-<MyEnhancedComponent a={1} b={2} />;
+// We don't need to pass in `foo` even though `MyComponent` requires it:
+<MyEnhancedComponent a={1} b={2} />; // OK
+
+// We still require `a` and `b`:
+<MyEnhancedComponent a={1} />; // ERROR
 ```
 
 ### Preserving the Instance Type of a Component {#toc-preserving-the-instance-type-of-a-component}
@@ -95,6 +92,7 @@ function injectProp<Config>(
   };
 }
 
+// A class component in this example
 class MyComponent extends React.Component<{
   a: number,
   b: number,
@@ -145,6 +143,7 @@ const ref = React.createRef<MyComponent>();
 ### Exporting Wrapped Components {#toc-exporting-wrapped-components}
 
 If you try to export a wrapped component, chances are that you'll run into a missing annotation error:
+
 ```js flow-check
 import * as React from 'react';
 
@@ -154,31 +153,16 @@ function trivialHOC<Config: {...}>(
   return Component;
 }
 
-type DefaultProps = {foo: number};
-type Props = {...DefaultProps, bar: number};
+type Props = $ReadOnly<{bar: number, foo?: number}>;
 
-class MyComponent extends React.Component<Props> {
-  static defaultProps: DefaultProps = {foo: 3};
-}
+function MyComponent({bar, foo = 3}: Props): React.Node {}
 
-// Error, missing annotation for Config.
-const MyEnhancedComponent = trivialHOC(MyComponent);
-
-module.exports = MyEnhancedComponent;
+export const MyEnhancedComponent = trivialHOC(MyComponent); // ERROR
 ```
 
-If your component has no `defaultProps`, you can use `Props` as a type argument for `Config`.
+You can add an annotation to your exported component using `React.AbstractComponent`:
 
-If your component does have `defaultProps`, you don't want to just add `Props`
-as a type argument to `trivialHOC` because that will get rid of the
-`defaultProps` information that flow has about your component.
-
-This is where [`React.Config<Props, DefaultProps>`](../types/#toc-react-config)
-comes in handy! We can use the type for Props and DefaultProps to calculate the
-`Config` type for our component.
-
-```js
-//@flow
+```js flow-check
 import * as React from 'react';
 
 function trivialHOC<Config: {...}>(
@@ -187,15 +171,9 @@ function trivialHOC<Config: {...}>(
   return Component;
 }
 
-type DefaultProps = {foo: number};
-type Props = {...DefaultProps, bar: number};
+type Props = $ReadOnly<{bar: number, foo?: number}>;
 
-class MyComponent extends React.Component<Props> {
-  static defaultProps: DefaultProps = {foo: 3};
-}
+function MyComponent({bar, foo = 3}: Props): React.Node {}
 
-const MyEnhancedComponent = trivialHOC<React.Config<Props, DefaultProps>>(MyComponent);
-
-// Ok!
-module.exports = MyEnhancedComponent;
+export const MyEnhancedComponent: React.AbstractComponent<Props> = trivialHOC(MyComponent); // OK
 ```
