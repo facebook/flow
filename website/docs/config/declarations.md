@@ -8,18 +8,15 @@ definitions only compatible with a certain version of Flow. In those cases it
 may be useful to use type information from the third-party libraries without
 typechecking their contents.
 
-### `[declarations]` {#toc-declarations}
-
 The `[declarations]` section in a `.flowconfig` file tells Flow to parse files
 matching the specified regular expressions in _declaration mode_. In declaration
 mode the code is not typechecked. However, the signatures of functions, classes,
 etc are extracted and used by the typechecker when checking other code.
 
 Conceptually one can think of declaration mode as if Flow still typechecks the
-files but acts as if there is a comment that matches
-[`suppress_comment`](../options/#toc-suppress-comment-regex) on every line.
+files but acts as if there is a `$FlowFixMe` comment on every line.
 
-See also `[untyped]`(untyped) for not typechecking files, and instead using `any` for all contents.
+See also [`[untyped]`](../untyped) for not typechecking files, and instead using `any` for all contents.
 
 Things to keep in mind:
 
@@ -44,10 +41,10 @@ This `[declarations]` section will parse in declaration mode:
 2.  Any file or directory under `.*/src/foo` or under `.*/src/bar`
 3.  Any file that ends with the extension `.decl.js`
 
-Starting with Flow v0.23.0, you may use the `<PROJECT_ROOT>` placeholder in
-your regular expressions. At runtime, Flow will treat the placeholder as if it
-were the absolute path to the project's root directory. This is useful for
-writing regular expressions that are relative rather than absolute.
+You may use the `<PROJECT_ROOT>` placeholder in your regular expressions.
+At runtime, Flow will treat the placeholder as if it were the absolute
+path to the project's root directory. This is useful for writing regular
+expressions that are relative rather than absolute.
 
 For example, you can write:
 

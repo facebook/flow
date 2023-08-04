@@ -14,20 +14,20 @@ The `.flowconfig` uses a custom format that vaguely resembles INI files.
 
 The `.flowconfig` consists of different sections:
 
+* [`[version]`](./version)
+* [`[options]`](./options)
 * [`[include]`](./include)
 * [`[ignore]`](./ignore)
 * [`[untyped]`](./untyped)
+* [`[declarations]`](./declarations)
 * [`[libs]`](./libs)
 * [`[lints]`](./lints)
-* [`[options]`](./options)
-* [`[version]`](./version)
-* [`[declarations]`](./declarations)
 * [`[strict]`](../strict/#toc-enabling-flow-strict-in-a-flowconfig)
 
 ### Comments {#toc-comments}
 
-Comment support was added in v0.23.0. Lines beginning with zero or more spaces
-followed by an `#` or `;` or `💩` are ignored. For example:
+Lines beginning with zero or more spaces followed by an `#` or `;` or `💩` are
+ignored. For example:
 
 ```
 # This is a comment

@@ -3,9 +3,6 @@ title: .flowconfig [include]
 slug: /config/include
 ---
 
-Flow needs to know which files to read and watch for changes. This set of files
-is determined by taking all included files and excluding all the ignored files.
-
 The `[include]` section in a `.flowconfig` file tells Flow to include the
 specified files or directories. Including a directory recursively includes all
 the files under that directory. Symlinks are followed as long as they lead to a

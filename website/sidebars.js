@@ -138,14 +138,14 @@ module.exports = {
       label: 'Configuration',
       items: [
         'config/index',
+        'config/version',
+        'config/options',
         'config/include',
         'config/ignore',
         'config/untyped',
+        'config/declarations',
         'config/libs',
         'config/lints',
-        'config/options',
-        'config/version',
-        'config/declarations',
       ],
     },
     {

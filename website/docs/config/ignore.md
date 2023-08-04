@@ -3,11 +3,6 @@ title: .flowconfig [ignore]
 slug: /config/ignore
 ---
 
-Flow needs to know which files to read and watch for changes. This set of files
-is determined by taking all included files and excluding all the ignored files.
-
-### `[ignore]` {#toc-ignore}
-
 The `[ignore]` section in a `.flowconfig` file tells Flow to ignore files
 matching the specified regular expressions when type checking your code. By
 default, nothing is ignored.
@@ -35,10 +30,10 @@ This `[ignore]` section will ignore:
 2. Any file or directory under `.*/src/foo` or under `.*/src/bar`
 3. Any file that ends with the extension `.ignore.js`
 
-Starting with Flow v0.23.0, you may use the `<PROJECT_ROOT>` placeholder in
-your regular expressions. At runtime, Flow will treat the placeholder as if it
-were the absolute path to the project's root directory. This is useful for
-writing regular expressions that are relative rather than absolute.
+You may use the `<PROJECT_ROOT>` placeholder in your regular expressions.
+At runtime, Flow will treat the placeholder as if it were the absolute
+path to the project's root directory. This is useful for writing regular
+expressions that are relative rather than absolute.
 
 For example, you can write:
 
