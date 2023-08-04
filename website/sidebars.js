@@ -62,7 +62,6 @@ module.exports = {
       type: 'category',
       label: 'Type System',
       items: [
-        'lang/index',
         'lang/types-and-expressions',
         'lang/variables',
         'lang/subtypes',
