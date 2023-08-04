@@ -757,7 +757,9 @@ end = struct
       | TypeAppT (_, _, t, ts) -> type_app ~env t (Some ts)
       | DefT (r, _, InstanceT { super; inst; _ }) -> instance_t ~env r super inst
       | DefT (_, _, ClassT t) -> class_t ~env t
-      | DefT (_, _, ReactAbstractComponentT { config; instance; renders }) ->
+      | DefT (_, _, ReactAbstractComponentT { config; instance; renders; component_kind = _ }) ->
+        (* TODO(jmbrown): We do not have a type-level syntax for nominal components yet. When we do
+           * we should use that representation to print Nominal components. *)
         let%bind config = type__ ~env config in
         let%bind instance = type__ ~env instance in
         let%bind renders = type__ ~env renders in

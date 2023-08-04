@@ -1188,7 +1188,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
 
     (* Class component ~> AbstractComponent *)
     | ( DefT (reasonl, _, ClassT this),
-        DefT (_, _, ReactAbstractComponentT { config; instance; renders })
+        DefT
+          (_, _, ReactAbstractComponentT { config; instance; renders; component_kind = Structural })
       ) ->
       (* Contravariant config check *)
       Flow.react_get_config
@@ -1207,7 +1208,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
       Flow.react_subtype_class_component_render cx trace ~use_op this ~reason_op:reasonl renders
     (* Function Component ~> AbstractComponent *)
     | ( DefT (reasonl, _, FunT (_, { return_t; _ })),
-        DefT (_reasonu, _, ReactAbstractComponentT { config; instance; renders })
+        DefT
+          ( _reasonu,
+            _,
+            ReactAbstractComponentT { config; instance; renders; component_kind = Structural }
+          )
       ) ->
       (* Function components will not always have an annotation, so the config may
        * never resolve. To determine config compatibility, we instead
@@ -1235,7 +1240,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
         (VoidT.make (replace_desc_new_reason RVoid reasonl) |> with_trust bogus_trust, instance)
     (* Object Component ~> AbstractComponent *)
     | ( DefT (reasonl, _, ObjT { call_t = Some id; _ }),
-        DefT (reasonu, trust, ReactAbstractComponentT { config; instance; renders })
+        DefT
+          ( reasonu,
+            trust,
+            ReactAbstractComponentT { config; instance; renders; component_kind = Structural }
+          )
       ) ->
       rec_flow cx trace (l, ReactKitT (use_op, reasonl, React.ConfigCheck config));
 
@@ -1273,17 +1282,44 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | ( DefT
           ( _reasonl,
             _,
-            ReactAbstractComponentT { config = configl; instance = instancel; renders = rendersl }
+            ReactAbstractComponentT
+              {
+                config = configl;
+                instance = instancel;
+                renders = rendersl;
+                component_kind = Structural | Nominal _;
+              }
           ),
         DefT
           ( _reasonu,
             _,
-            ReactAbstractComponentT { config = configu; instance = instanceu; renders = rendersu }
+            ReactAbstractComponentT
+              {
+                config = configu;
+                instance = instanceu;
+                renders = rendersu;
+                component_kind = Structural;
+              }
           )
       ) ->
       rec_flow_t cx trace ~use_op (configu, configl);
       rec_flow_t cx trace ~use_op (instancel, instanceu);
       rec_flow_t cx trace ~use_op (rendersl, rendersu)
+    | ( DefT
+          ( _,
+            _,
+            ReactAbstractComponentT
+              { config = _; instance = _; renders = _; component_kind = Nominal id1 }
+          ),
+        DefT
+          ( _,
+            _,
+            ReactAbstractComponentT
+              { config = _; instance = _; renders = _; component_kind = Nominal id2 }
+          )
+      )
+      when ALoc.equal_id id1 id2 ->
+      ()
     (***********************************************)
     (* function types deconstruct into their parts *)
     (***********************************************)

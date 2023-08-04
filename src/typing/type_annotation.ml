@@ -1199,7 +1199,13 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                   )
             in
             reconstruct_ast
-              (DefT (reason, infer_trust cx, ReactAbstractComponentT { config; instance; renders }))
+              (DefT
+                 ( reason,
+                   infer_trust cx,
+                   ReactAbstractComponentT
+                     { config; instance; renders; component_kind = Structural }
+                 )
+              )
               targs)
         | "React$Config" ->
           check_type_arg_arity cx loc t_ast targs 2 (fun () ->
@@ -3005,6 +3011,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
             body = ();
             renders_t;
             ret_annot_loc = ren_loc;
+            id_loc = None;
           }
         in
         let loc = loc_of_reason reason in

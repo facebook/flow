@@ -134,7 +134,7 @@ class ['a] t =
         let acc = self#nel (self#type_param cx pole) acc tparams in
         let acc = self#type_ cx pole acc t_out in
         acc
-      | ReactAbstractComponentT { config; instance; renders } ->
+      | ReactAbstractComponentT { config; instance; renders; component_kind = _ } ->
         let acc = self#type_ cx (P.inv pole) acc config in
         let acc = self#type_ cx pole acc instance in
         let acc = self#type_ cx pole acc renders in

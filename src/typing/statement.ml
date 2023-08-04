@@ -7504,6 +7504,7 @@ module Make
             let t = Flow.get_builtin_type cx ret_reason (OrdinaryName "React$Node") in
             (loc, t, Ast.Type.Missing (loc, t))
         in
+        let (id_loc, name) = id in
         ( {
             Component_sig_types.Component_declaration_sig_types.reason;
             tparams;
@@ -7511,9 +7512,9 @@ module Make
             body;
             renders_t;
             ret_annot_loc = ret_loc;
+            id_loc = Some id_loc;
           },
           fun params body component_type ->
-            let (id_loc, name) = id in
             {
               component with
               Ast.Statement.ComponentDeclaration.id = ((id_loc, component_type), name);

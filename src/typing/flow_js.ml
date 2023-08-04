@@ -5740,7 +5740,10 @@ struct
     | UseT (use_op, ExactT (_, t)) ->
       covariant_flow ~use_op t;
       true
-    | UseT (use_op, DefT (_, _, ReactAbstractComponentT { config; instance; renders })) ->
+    | UseT
+        ( use_op,
+          DefT (_, _, ReactAbstractComponentT { config; instance; renders; component_kind = _ })
+        ) ->
       contravariant_flow ~use_op config;
       covariant_flow ~use_op instance;
       covariant_flow ~use_op renders;
@@ -5936,7 +5939,7 @@ struct
     | DefT (_, _, TypeT (_, t)) ->
       covariant_flow ~use_op t;
       true
-    | DefT (_, _, ReactAbstractComponentT { config; instance; renders }) ->
+    | DefT (_, _, ReactAbstractComponentT { config; instance; renders; component_kind = _ }) ->
       contravariant_flow ~use_op config;
       covariant_flow ~use_op instance;
       covariant_flow ~use_op renders;

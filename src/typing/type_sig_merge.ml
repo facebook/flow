@@ -884,7 +884,13 @@ and merge_annot tps infer_tps file = function
           )
         renders
     in
-    Type.(DefT (reason, trust, ReactAbstractComponentT { config; instance; renders }))
+    Type.(
+      DefT
+        ( reason,
+          trust,
+          ReactAbstractComponentT { config; instance; renders; component_kind = Structural }
+        )
+    )
   | ReactConfig { loc; props; default } ->
     let reason = Reason.(mk_reason RReactConfig loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
@@ -950,7 +956,7 @@ and merge_annot tps infer_tps file = function
     merge_fun tps infer_tps file reason def statics
   | ComponentAnnot (loc, def) ->
     let reason = Reason.(mk_annot_reason RComponentType loc) in
-    merge_component tps infer_tps file reason def
+    merge_component tps infer_tps file reason def None
   | ObjAnnot { loc; props; proto; obj_kind } ->
     let reason = Reason.(mk_annot_reason RObjectType loc) in
     let obj_kind =
@@ -1706,7 +1712,12 @@ and merge_fun
   merge_tparams_targs tps infer_tps file reason t tparams
 
 and merge_component
-    tps infer_tps file reason (ComponentSig { params_loc; tparams; params; rest_param; renders }) =
+    tps
+    infer_tps
+    file
+    reason
+    (ComponentSig { params_loc; tparams; params; rest_param; renders })
+    id_opt =
   let t (tps, _) =
     let open Type in
     let (pmap, instance) =
@@ -1757,7 +1768,15 @@ and merge_component
         )
     in
     let renders = merge tps infer_tps file renders in
-    DefT (reason, trust, ReactAbstractComponentT { config = param; instance; renders })
+    let component_kind =
+      match id_opt with
+      | None -> Structural
+      | Some loc ->
+        let id = Context.make_aloc_id file.cx loc in
+        Nominal id
+    in
+    DefT
+      (reason, trust, ReactAbstractComponentT { config = param; instance; renders; component_kind })
   in
   merge_tparams_targs tps infer_tps file reason t tparams
 
@@ -1950,8 +1969,8 @@ let merge_def file reason = function
     merge_fun SMap.empty SMap.empty file reason def statics
   | DeclareFun { id_loc; fn_loc; name = _; def; tail } ->
     merge_declare_fun file ((id_loc, fn_loc, def), tail)
-  | ComponentBinding { id_loc = _; name = _; fn_loc = _; def } ->
-    merge_component SMap.empty SMap.empty file reason def
+  | ComponentBinding { id_loc; name = _; fn_loc = _; def } ->
+    merge_component SMap.empty SMap.empty file reason def (Some id_loc)
   | Variable { id_loc = _; name = _; def } -> merge SMap.empty SMap.empty file def
   | DisabledComponentBinding _
   | DisabledEnumBinding _ ->

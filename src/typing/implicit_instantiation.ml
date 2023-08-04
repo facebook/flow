@@ -202,7 +202,12 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
                     ( r,
                       bogus_trust (),
                       ReactAbstractComponentT
-                        { config; instance = MixedT.why r (bogus_trust ()); renders = react_node }
+                        {
+                          config;
+                          instance = MixedT.why r (bogus_trust ());
+                          renders = react_node;
+                          component_kind = Structural;
+                        }
                     )
                  )
            )

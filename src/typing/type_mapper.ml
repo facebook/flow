@@ -323,14 +323,15 @@ class virtual ['a] t =
           t
         else
           PolyT { tparams_loc; tparams = tparamlist'; t_out = t''; id = Type.Poly.generate_id () }
-      | ReactAbstractComponentT { config; instance; renders } ->
+      | ReactAbstractComponentT { config; instance; renders; component_kind } ->
         let config' = self#type_ cx map_cx config in
         let instance' = self#type_ cx map_cx instance in
         let renders' = self#type_ cx map_cx renders in
         if config' == config && instance' == instance && renders' == renders then
           t
         else
-          ReactAbstractComponentT { config = config'; instance = instance'; renders = renders' }
+          ReactAbstractComponentT
+            { config = config'; instance = instance'; renders = renders'; component_kind }
 
     method defer_use_type cx map_cx t =
       match t with

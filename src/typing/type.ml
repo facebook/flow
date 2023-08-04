@@ -232,10 +232,15 @@ module rec TypeTerm : sig
         config: t;
         instance: t;
         renders: t;
+        component_kind: component_kind;
       }
     (* Enum types *)
     | EnumT of enum_t
     | EnumObjectT of enum_t
+
+  and component_kind =
+    | Structural
+    | Nominal of ALoc.id
 
   and hint_eval_result =
     | HintAvailable of t * Hint.hint_kind

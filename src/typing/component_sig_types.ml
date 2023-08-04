@@ -135,6 +135,7 @@ module ComponentSig = struct
     type component_params_tast = (ALoc.t * Type.t) Config.ast
 
     type t = {
+      id_loc: ALoc.t option;
       reason: Reason.t;
       tparams: Type.typeparams;
       cparams: component_params;
@@ -156,6 +157,7 @@ module ComponentSig = struct
     type component_params_tast = (ALoc.t * Type.t) Config.ast
 
     type t = {
+      id_loc: ALoc.t option;
       reason: Reason.t;
       tparams: Type.typeparams;
       cparams: component_params;

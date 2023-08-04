@@ -1,0 +1,12 @@
+component.js:1:11
+Flags:
+React$AbstractComponent<{+foo: number}, mixed, React$Node>
+= React$AbstractComponent<{+foo: number}, mixed, React$Node>
+component.js:1:11,1:13
+
+component.js:3:11
+Flags:
+React$AbstractComponent<{+bar: string}, mixed, number>
+= React$AbstractComponent<{+bar: string}, mixed, number>
+component.js:3:11,3:13
+

@@ -141,7 +141,7 @@ module Make
     (params_ast, body_ast)
 
   let component_type cx _component_loc x =
-    let { T.reason; tparams; cparams; renders_t; _ } = x in
+    let { T.reason; tparams; cparams; renders_t; id_loc; _ } = x in
     let config_reason = update_desc_reason (fun desc -> RPropsOfComponent desc) reason in
     let instance_reason = update_desc_reason (fun desc -> RInstanceOfComponent desc) reason in
     let (config, instance) = F.config_and_instance cx ~config_reason ~instance_reason cparams in
@@ -156,10 +156,19 @@ module Make
       let use_op = Op (ComponentRenderTypeCompatibility { render_type = renders_reason }) in
       Flow.flow cx (renders_t, UseT (use_op, t))
     in
-
+    let component_kind =
+      match id_loc with
+      | None -> Structural
+      | Some id_loc ->
+        let opaque_id = Context.make_aloc_id cx id_loc in
+        Nominal opaque_id
+    in
     let t =
       DefT
-        (reason, bogus_trust (), ReactAbstractComponentT { config; instance; renders = renders_t })
+        ( reason,
+          bogus_trust (),
+          ReactAbstractComponentT { config; instance; renders = renders_t; component_kind }
+        )
     in
     poly_type_of_tparams (Type.Poly.generate_id ()) tparams t
 end
