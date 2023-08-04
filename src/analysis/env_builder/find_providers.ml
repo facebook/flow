@@ -368,7 +368,7 @@ end = struct
       | ({ entries; _ } as hd) :: tl when SMap.mem var entries ->
         ( SMap.find var entries,
           var_scopes_off,
-          hd :: tl,
+          Some (hd :: tl),
           fun entry ->
             List.append
               (List.rev rev_head)
@@ -379,7 +379,7 @@ end = struct
       | [({ entries; kind = Var; _ } as hd)] ->
         ( empty_entry var Bindings.Var,
           var_scopes_off,
-          [hd],
+          None,
           fun entry ->
             List.append (List.rev rev_head) [{ hd with entries = SMap.add var entry entries }]
             |> Nel.of_list_exn
@@ -1155,14 +1155,17 @@ end = struct
         (* Adding providers in generic functions can potentially cause generic-escape issues,
            so we consevatively prevent them from being providers. *)
         let possible_generic_escape =
-          match
-            (find_polymorphic_scope (Nel.to_list env), find_polymorphic_scope def_scopes_stack)
-          with
-          | (Some _, None) -> true
-          | (Some assign_scope, Some declare_scope)
-            when assign_scope.kind = Polymorphic && assign_scope != declare_scope ->
-            true
-          | _ -> false
+          match def_scopes_stack with
+          | None -> false (* Not a generic escape if the variable is a global *)
+          | Some def_scopes_stack ->
+            (match
+               (find_polymorphic_scope (Nel.to_list env), find_polymorphic_scope def_scopes_stack)
+             with
+            | (Some _, None) -> true
+            | (Some assign_scope, Some declare_scope)
+              when assign_scope.kind = Polymorphic && assign_scope != declare_scope ->
+              true
+            | _ -> false)
         in
         let write_state = mk_state var_scopes_off in
         let extended_state =

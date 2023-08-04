@@ -52,3 +52,7 @@ function fa<T>(a: T, b: boolean): T {
 function hh<X>({a}: {a: X}): X {
   return a;
 }
+
+function whhh<X>() {
+  nonexistantGlobal = 42; // error
+}

@@ -248,6 +248,14 @@ References:
            ^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- func.js:57:3
+
+Cannot resolve name `nonexistantGlobal`. [cannot-resolve-name]
+
+   57|   nonexistantGlobal = 42; // error
+         ^^^^^^^^^^^^^^^^^
+
+
 Error ---------------------------------------------------------------------------------------------------- import.js:9:9
 
 Cannot assign `id(...)` to `x` because mixed [1] is incompatible with number [2]. All writes to `x` must be compatible
@@ -766,7 +774,7 @@ References:
 
 
 
-Found 44 errors
+Found 45 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
