@@ -13,7 +13,7 @@ semantics than would be expected.
 ### `ambiguous-object-type` {#toc-ambiguous-object-type}
 Triggers when you use object type syntax without explicitly specifying exactness or inexactness.
 
-This lint setting is ignored when [`exact_by_default`](../../config/options/#toc-exact-by-default-boolean) is set to `false`.
+This lint setting is ignored when [`exact_by_default`](../../config/options/#toc-exact-by-default) is set to `false`.
 
 ```js flow-check
 // flowlint ambiguous-object-type:error
