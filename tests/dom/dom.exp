@@ -1014,13 +1014,13 @@ Cannot call `document.createNodeIterator` because: [incompatible-call]
  - Either string [1] is incompatible with literal union [2] in the return value of property `acceptNode`.
  - Or number [3] is incompatible with number literal `133` [4].
 
-   traversal.js:195:14
-    195|     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
+   traversal.js:188:14
+    188|     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                       ^^^^^^^^^^^^^^^^^^
 
 References:
-   traversal.js:195:74
-    195|     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
+   traversal.js:188:74
+    188|     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                   ^^^^^^^^ [1]
    <BUILTINS>/dom.js:4311:1
          v--------------------------------
@@ -1028,8 +1028,8 @@ References:
    4312| typeof NodeFilter.FILTER_REJECT |
    4313| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
-   traversal.js:195:48
-    195|     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
+   traversal.js:188:48
+    188|     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                         ^^ [3]
    <BUILTINS>/dom.js:1596:68
    1596|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 133, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Text|Element|Comment>;
@@ -1398,11 +1398,11 @@ References:
    traversal.js:195:72
     195|     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                 ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:4308:1
+   <BUILTINS>/dom.js:4311:1
          v--------------------------------
-   4308| typeof NodeFilter.FILTER_ACCEPT |
-   4309| typeof NodeFilter.FILTER_REJECT |
-   4310| typeof NodeFilter.FILTER_SKIP;
+   4311| typeof NodeFilter.FILTER_ACCEPT |
+   4312| typeof NodeFilter.FILTER_REJECT |
+   4313| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
    traversal.js:195:46
     195|     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
