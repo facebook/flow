@@ -119,7 +119,8 @@ let rec not_exists cx t =
         | SingletonStrT _
         | StrT (Literal _ | Truthy)
         | EnumT { representation_t = DefT (_, _, StrT Truthy); _ }
-        | ArrT _ | ObjT _ | InstanceT _ | EnumObjectT _ | FunT _ | SingletonNumT _
+        | ArrT _ | ObjT _ | InstanceT _ | EnumObjectT _ | FunT _ | ReactAbstractComponentT _
+        | SingletonNumT _
         | NumT (Literal _ | Truthy)
         | EnumT { representation_t = DefT (_, _, NumT Truthy); _ }
         | EnumT { representation_t = DefT (_, _, BigIntT Truthy); _ }
