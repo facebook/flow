@@ -184,6 +184,10 @@ A class or function component with config `Config` may be used in places that ex
 This is Flow's most abstract representation of a React component, and is most useful for
 writing HOCs and library definitions.
 
+## `React.ComponentType<Config>` {#toc-react-componenttype}
+
+This is the same as [`React.AbstractComponent`](#toc-react-abstractcomponent), but only specifies the first type argument.
+
 ## `React.ElementType` {#toc-react-elementtype}
 
 Similar to [`React.AbstractComponent<Props>`](#toc-react-abstractcomponent) except it also
