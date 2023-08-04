@@ -57,7 +57,8 @@ let def_reason = function
     Type.DescFormat.instance_reason (Reason.OrdinaryName name) id_loc
   | FunBinding { fn_loc; async; generator; _ } -> Reason.func_reason ~async ~generator fn_loc
   | DeclareFun { id_loc; _ } -> Reason.(mk_reason RFunctionType id_loc)
-  | ComponentBinding { fn_loc; _ } -> Reason.func_reason ~async:false ~generator:false fn_loc
+  | ComponentBinding { fn_loc; name; _ } ->
+    Reason.(mk_reason (RComponent (OrdinaryName name)) fn_loc)
   | DisabledComponentBinding { id_loc; name } ->
     Reason.(mk_reason (RIdentifier (OrdinaryName name)) id_loc)
   | Variable { id_loc; name; _ } -> Reason.(mk_reason (RIdentifier (OrdinaryName name)) id_loc)
@@ -1727,15 +1728,18 @@ and merge_component
         ~init:(NameUtils.Map.empty, None)
         params
     in
-    let config_reason = Reason.(mk_reason (RCustom "component config") params_loc) in
-    let _instance =
+    let config_reason = Reason.(mk_reason (RPropsOfComponent (desc_of_reason reason)) params_loc) in
+    let instance_reason =
+      Reason.(mk_reason (RInstanceOfComponent (desc_of_reason reason)) params_loc)
+    in
+    let instance =
       match instance with
-      | None -> Type.(MixedT.make config_reason (bogus_trust ()))
+      | None -> Type.(MixedT.make instance_reason (bogus_trust ()))
       | Some instance ->
         Type.(
           EvalT
             ( instance,
-              TypeDestructorT (unknown_use, config_reason, ReactCheckComponentRef),
+              TypeDestructorT (unknown_use, instance_reason, ReactCheckComponentRef),
               Eval.generate_id ()
             )
         )
@@ -1752,28 +1756,8 @@ and merge_component
           Eval.generate_id ()
         )
     in
-    let params = [(None, param)] in
-    let return_t = merge tps infer_tps file renders in
-    let this_t = Type.implicit_mixed_this reason in
-    let this_status = Type.This_Function in
-    let funtype =
-      {
-        this_t = (this_t, this_status);
-        params;
-        rest_param = None;
-        return_t;
-        predicate = None;
-        def_reason = reason;
-      }
-    in
-    let statics =
-      Flow_js_utils.lookup_builtin_strict
-        file.cx
-        (Reason.OrdinaryName "React$AbstractComponentStatics")
-        reason
-    in
-    let statics = ConsGen.mk_instance file.cx reason statics in
-    DefT (reason, trust, FunT (statics, funtype))
+    let renders = merge tps infer_tps file renders in
+    DefT (reason, trust, ReactAbstractComponentT { config = param; instance; renders })
   in
   merge_tparams_targs tps infer_tps file reason t tparams
 

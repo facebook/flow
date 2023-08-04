@@ -24,7 +24,12 @@ module type S = sig
 
   val add_rest : Config_types.rest -> Types.t -> Types.t
 
-  val config : Context.t -> Reason.reason -> Types.t -> Type.t * Type.t
+  val config_and_instance :
+    Context.t ->
+    config_reason:Reason.reason ->
+    instance_reason:Reason.reason ->
+    Types.t ->
+    Type.t * Type.t
 
   val eval : Context.t -> Types.t -> (ALoc.t * Type.t) Config_types.ast
 end
@@ -43,7 +48,7 @@ module Make
 
   let add_rest r x = { x with rest = Some r }
 
-  let config cx config_reason { params_rev; rest; reconstruct = _ } =
+  let config_and_instance cx ~config_reason ~instance_reason { params_rev; rest; reconstruct = _ } =
     let (pmap, instance) =
       List.fold_left
         (fun (acc, instance) p ->
@@ -102,13 +107,13 @@ module Make
     in
     let instance =
       match instance with
-      | None -> Type.(MixedT.make config_reason (bogus_trust ()))
+      | None -> Type.(MixedT.make instance_reason (bogus_trust ()))
       | Some instance ->
         Type.(
           Flow_js.mk_possibly_evaluated_destructor
             cx
             unknown_use
-            config_reason
+            instance_reason
             instance
             ReactCheckComponentRef
             (Eval.generate_id ())

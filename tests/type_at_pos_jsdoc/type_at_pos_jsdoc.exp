@@ -1486,8 +1486,8 @@ Flags: --strip-root --pretty
 {
   "documentation":"This is the component Foo!",
   "types":{
-    "unevaluated":{"type":"({}) => React$Node"},
-    "evaluated":{"type":"({}) => React$Node"}
+    "unevaluated":{"type":"React$AbstractComponent<{}, mixed, React$Node>"},
+    "evaluated":{"type":"React$AbstractComponent<{}, mixed, React$Node>"}
   },
   "reasons":[],
   "loc":{

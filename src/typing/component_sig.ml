@@ -142,9 +142,9 @@ module Make
 
   let component_type cx _component_loc x =
     let { T.reason; tparams; cparams; renders_t; _ } = x in
-    let this_type = Type.implicit_mixed_this reason in
     let config_reason = update_desc_reason (fun desc -> RPropsOfComponent desc) reason in
-    let (config, _instance) = F.config cx config_reason cparams in
+    let instance_reason = update_desc_reason (fun desc -> RInstanceOfComponent desc) reason in
+    let (config, instance) = F.config_and_instance cx ~config_reason ~instance_reason cparams in
     let () =
       (* render types must be a subtype of React.Node
        * TODO(jmbrown): This check can be skipped if we track whether or not the renders type was
@@ -157,20 +157,9 @@ module Make
       Flow.flow cx (renders_t, UseT (use_op, t))
     in
 
-    let funtype =
-      {
-        Type.this_t = (this_type, This_Function);
-        params = [(None, config)];
-        rest_param = None;
-        return_t = renders_t;
-        predicate = None;
-        def_reason = reason;
-      }
+    let t =
+      DefT
+        (reason, bogus_trust (), ReactAbstractComponentT { config; instance; renders = renders_t })
     in
-    let statics_t =
-      Flow_js.get_builtin_type cx reason (OrdinaryName "React$AbstractComponentStatics")
-    in
-    let make_trust = Context.trust_constructor cx in
-    let t = DefT (reason, make_trust (), FunT (statics_t, funtype)) in
     poly_type_of_tparams (Type.Poly.generate_id ()) tparams t
 end

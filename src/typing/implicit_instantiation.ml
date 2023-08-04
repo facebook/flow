@@ -870,12 +870,12 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     let (marked_tparams, _) = visitor#type_ cx Positive (Marked.empty, tparam_names) return_t in
     check_instantiation cx ~tparams ~marked_tparams ~implicit_instantiation
 
-  let check_react_fun cx ~tparams ~tparams_map ~params ~implicit_instantiation =
-    match params with
-    | [] ->
+  let check_react_fun cx ~tparams ~tparams_map ~props ~implicit_instantiation =
+    match props with
+    | None ->
       let marked_tparams = Marked.empty in
       check_instantiation cx ~tparams ~marked_tparams ~implicit_instantiation
-    | (_, props) :: _ ->
+    | Some props ->
       (* The return of a React component when it is createElement-ed isn't actually the return type denoted on the
        * component. Instead, it is a React.Element<typeof Component>. In order to get the
        * polarities for the type parameters in the return, it is sufficient to look at the Props
@@ -906,10 +906,17 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     in
     let (inferred_targ_list, marked_tparams, tout) =
       match get_t cx t with
+      | DefT (_, _, ReactAbstractComponentT { config; _ }) ->
+        check_react_fun cx ~tparams ~tparams_map ~props:(Some config) ~implicit_instantiation
       | DefT (_, _, FunT (_, funtype)) ->
         (match operation with
         | (_, _, Check.Jsx _) ->
-          check_react_fun cx ~tparams ~tparams_map ~params:funtype.params ~implicit_instantiation
+          let props =
+            match funtype.params with
+            | (_, props) :: _ -> Some props
+            | [] -> None
+          in
+          check_react_fun cx ~tparams ~tparams_map ~props ~implicit_instantiation
         | _ -> check_fun cx ~tparams ~tparams_map ~return_t:funtype.return_t ~implicit_instantiation)
       | ThisClassT (_, DefT (_, _, InstanceT _), _, _) ->
         (match operation with
