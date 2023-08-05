@@ -8,6 +8,8 @@
  */
 
 import * as React from 'react';
+import Link from '@docusaurus/Link';
+
 import type FlowJsServices from './flow-services';
 import styles from './TryFlow.module.css';
 
@@ -61,7 +63,17 @@ export default function TryFlowConfigEditor({
             )}
           </td>
           <td className={styles.tryEditorConfigLabelCell}>
-            <label for={item.key}>{item.key}</label>
+            <label for={item.key}>
+              <div className={styles.tryEditorConfigLabel}>{item.key}</div>
+              {item.desc != null ? (
+                <div>
+                  {item.desc}
+                  {item.link != null ? (
+                    <Link to={`/en/docs/config/options/${item.link}`}>[docs]</a>
+                  ) : null}
+                </div>
+              ) : null}
+            </label>
           </td>
         </tr>
       ))}
