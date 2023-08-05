@@ -171,15 +171,32 @@ let init_builtins filenames =
  *
  * Precondition: the js_config_object must be validated by try-flow to match the schema shape. *)
 let merge_custom_check_config js_config_object metadata =
+  let babel_loose_array_spread =
+    Js.Unsafe.get js_config_object "babel_loose_array_spread" |> Js.to_bool
+  in
+  let enable_const_params =
+    Js.Unsafe.get js_config_object "experimental.const_params" |> Js.to_bool
+  in
+  let enable_enums = Js.Unsafe.get js_config_object "enums" |> Js.to_bool in
+  let exact_by_default = Js.Unsafe.get js_config_object "exact_by_default" |> Js.to_bool in
   let react_runtime =
     match Js.Unsafe.get js_config_object "react_runtime" |> Js.to_string with
     | "automatic" -> Options.ReactRuntimeAutomatic
     | "classic" -> Options.ReactRuntimeClassic
     | s -> failwith ("Unsupported config option: " ^ s)
   in
-  let exact_by_default = Js.Unsafe.get js_config_object "exact_by_default" |> Js.to_bool in
-  let enable_enums = Js.Unsafe.get js_config_object "enums" |> Js.to_bool in
-  { metadata with Context.react_runtime; exact_by_default; enable_enums }
+  let use_mixed_in_catch_variables =
+    Js.Unsafe.get js_config_object "use_mixed_in_catch_variables" |> Js.to_bool
+  in
+  {
+    metadata with
+    Context.babel_loose_array_spread;
+    enable_const_params;
+    enable_enums;
+    exact_by_default;
+    react_runtime;
+    use_mixed_in_catch_variables;
+  }
 
 let infer_and_merge ~root filename js_config_object docblock ast file_sig =
   (* create cx *)
@@ -393,10 +410,14 @@ let () =
        {|
 [
   {
-    "key": "react_runtime",
-    "type": "enum",
-    "choices": ["classic", "automatic"],
-    "default": "classic"
+    "key": "babel_loose_array_spread",
+    "type": "bool",
+    "default": false
+  },
+  {
+    "key": "enums",
+    "type": "bool",
+    "default": true
   },
   {
     "key": "exact_by_default",
@@ -404,9 +425,20 @@ let () =
     "default": true
   },
   {
-    "key": "enums",
+    "key": "experimental.const_params",
     "type": "bool",
-    "default": true
+    "default": false
+  },
+  {
+    "key": "react_runtime",
+    "type": "enum",
+    "choices": ["classic", "automatic"],
+    "default": "classic"
+  },
+  {
+    "key": "use_mixed_in_catch_variables",
+    "type": "bool",
+    "default": false
   }
 ]
 |}
