@@ -13,18 +13,21 @@ type kind =
   | NamedType
   | Namespace
   | Unknown
+[@@deriving show { with_path = false }]
 
 type source =
   | Unresolved_source of string
   | Global
+[@@deriving show { with_path = false }]
 
 type import = {
   export: string;
   source: source;
   kind: kind;
 }
+[@@deriving show { with_path = false }]
 
-type t = import list
+type t = import list [@@deriving show { with_path = false }]
 
 let add_globals (globals : SSet.t) (imports : t) =
   SSet.fold (fun export acc -> { export; kind = Unknown; source = Global } :: acc) globals imports

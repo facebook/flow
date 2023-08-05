@@ -13,13 +13,15 @@ type denormalized_file_data = {
   hash: Xx.hash;
   imports: Imports.t;
 }
+[@@deriving show]
 
-type normalized_file_data
+type normalized_file_data [@@deriving show]
 
 type parsed_file_data = {
   module_name: string option;
   normalized_file_data: normalized_file_data;
 }
+[@@deriving show]
 
 type unparsed_file_data = {
   unparsed_module_name: string option;

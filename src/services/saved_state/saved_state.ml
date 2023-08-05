@@ -15,14 +15,16 @@ type denormalized_file_data = {
   hash: Xx.hash;
   imports: Imports.t;
 }
+[@@deriving show]
 
-type normalized_file_data = denormalized_file_data
+type normalized_file_data = denormalized_file_data [@@deriving show]
 
 (* For each parsed file, this is what we will save *)
 type parsed_file_data = {
   module_name: string option;
   normalized_file_data: normalized_file_data;
 }
+[@@deriving show]
 
 (* We also need to store the info for unparsed files *)
 type unparsed_file_data = {

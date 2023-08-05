@@ -25,9 +25,9 @@ type dependency_addr = SharedMem.NewAPI.dependency SharedMem.addr
 
 type resolved_module_addr = SharedMem.NewAPI.resolved_module SharedMem.addr
 
-type 'a resolved_module' = ('a, string option) Result.t
+type 'a resolved_module' = ('a, string option) result [@@deriving show]
 
-type resolved_module = Modulename.t resolved_module'
+type resolved_module = Modulename.t resolved_module' [@@deriving show]
 
 type component_file = File_key.t * file_addr * [ `typed ] parse_addr
 

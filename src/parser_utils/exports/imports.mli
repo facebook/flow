@@ -11,18 +11,21 @@ type kind =
   | NamedType
   | Namespace
   | Unknown
+[@@deriving show { with_path = false }]
 
 type source =
   | Unresolved_source of string
   | Global
+[@@deriving show { with_path = false }]
 
 type import = {
   export: string;
   source: source;
   kind: kind;
 }
+[@@deriving show { with_path = false }]
 
-type t = import list
+type t = import list [@@deriving show { with_path = false }]
 
 val of_file_sig : File_sig.t -> t
 
