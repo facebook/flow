@@ -9,6 +9,7 @@
 
 import * as React from 'react';
 import type FlowJsServices from './flow-services';
+import styles from './TryFlow.module.css';
 
 type Props = $ReadOnly<{
   flowService: ?FlowJsServices,
@@ -26,11 +27,10 @@ export default function TryFlowConfigEditor({
     return 'Configuration is not supported on this version of Flow.';
   }
   return (
-    <div>
+    <table>
       {flowService.schema.map(item => (
-        <div key={item.key}>
-          <span>
-            <span>{item.key} </span>
+        <tr key={item.key}>
+          <td className={styles.tryEditorConfigInputCell}>
             {item.type === 'enum' ? (
               <select
                 value={flowService.config[item.key]}
@@ -47,21 +47,24 @@ export default function TryFlowConfigEditor({
                 ))}
               </select>
             ) : (
-              <select
-                value={flowService.config[item.key] ? 'true' : 'false'}
+              <input
+                type="checkbox"
+                id={item.key}
+                checked={flowService.config[item.key]}
                 onChange={(event: SyntheticInputEvent<>) => {
                   setConfig({
                     ...flowService.config,
-                    [item.key]: event.target.value === 'true',
+                    [item.key]: event.target.checked,
                   });
-                }}>
-                <option value="true">true</option>
-                <option value="false">false</option>
-              </select>
+                }}
+              />
             )}
-          </span>
-        </div>
+          </td>
+          <td className={styles.tryEditorConfigLabelCell}>
+            <label for={item.key}>{item.key}</label>
+          </td>
+        </tr>
       ))}
-    </div>
+    </table>
   );
 }

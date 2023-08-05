@@ -17,7 +17,29 @@
     height: calc(100vh - var(--ifm-navbar-height) - 40px);
     z-index: 10;
     background-color: white;
-    padding: 1rem;
+}
+
+.tryEditorConfig table {
+    display: table;
+    width: 100%;
+}
+
+.tryEditorConfig tr:first-child {
+    border: none;
+}
+
+.tryEditorConfig td {
+    border-top: none;
+    border-left: none;
+    border-right: none;
+}
+
+.tryEditorConfigInputCell {
+    text-align: right;
+}
+
+.tryEditorConfigLabelCell {
+    width: 100%;
 }
 
 .resetBanner {
