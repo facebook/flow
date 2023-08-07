@@ -352,6 +352,30 @@ class searcher ~(is_legit_require : ALoc.t * Type.t -> bool) ~(covers_target : A
       if annot_covers_target annot then this#own_def (loc_of_annot annot) name;
       id
 
+    method! object_key_string_literal literal =
+      let (annot, _) = literal in
+      (* TODO: this should be supported *)
+      if annot_covers_target annot then this#found_empty "object key (literal)";
+      literal
+
+    method! object_key_number_literal literal =
+      let (annot, _) = literal in
+      (* TODO: this should be supported *)
+      if annot_covers_target annot then this#found_empty "object key (literal)";
+      literal
+
+    method! object_key_bigint_literal literal =
+      let (annot, _) = literal in
+      (* TODO: this should be supported *)
+      if annot_covers_target annot then this#found_empty "object key (literal)";
+      literal
+
+    method! object_key_private_name name =
+      let (loc, _) = name in
+      (* TODO: this should be supported *)
+      if covers_target loc then this#found_empty "object key (private)";
+      name
+
     (* for object properties using the shorthand {variableName} syntax,
      * process the value before the key so that the explicit-non-find in this#object_key_identifier
      * doesn't make us miss the variable *)

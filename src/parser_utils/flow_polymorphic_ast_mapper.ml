@@ -2098,7 +2098,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       | NumberLiteral literal -> NumberLiteral (this#object_key_number_literal literal)
       | BigIntLiteral literal -> BigIntLiteral (this#object_key_bigint_literal literal)
       | Identifier ident -> Identifier (this#object_key_identifier ident)
-      | PrivateName ident -> PrivateName (this#private_name ident)
+      | PrivateName ident -> PrivateName (this#object_key_private_name ident)
       | Computed computed -> Computed (this#object_key_computed computed)
 
     method object_key_string_literal literal =
@@ -2115,6 +2115,9 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method object_key_identifier (ident : ('M, 'T) Ast.Identifier.t) : ('N, 'U) Ast.Identifier.t =
       this#t_identifier ident
+
+    method object_key_private_name (key : 'M Ast.PrivateName.t) : 'N Ast.PrivateName.t =
+      this#private_name key
 
     method object_key_computed (key : ('M, 'T) Ast.ComputedKey.t) : ('N, 'U) Ast.ComputedKey.t =
       this#computed_key key
