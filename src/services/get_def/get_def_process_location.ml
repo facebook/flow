@@ -215,6 +215,18 @@ class searcher ~(is_legit_require : ALoc.t * Type.t -> bool) ~(covers_target : A
         this#request (Get_def_request.Identifier { name; loc = annot });
       super#jsx_element_name_identifier id
 
+    method! jsx_element_name_namespaced ns =
+      let (loc, _) = ns in
+      (* TODO: this should be supported *)
+      if covers_target loc then this#found_empty "jsx element (namespaced)";
+      super#jsx_element_name_namespaced ns
+
+    method! jsx_element_name_member_expression expr =
+      let (loc, _) = expr in
+      (* TODO: this should be supported *)
+      if covers_target loc then this#found_empty "jsx element (member)";
+      super#jsx_member_expression expr
+
     method! pattern ?kind ((pat_annot, p) as pat) =
       let open Flow_ast.Pattern in
       (* In const {foo: bar} = require('some_module'); foo and bar should jump to prop def of foo,
@@ -426,6 +438,12 @@ class searcher ~(is_legit_require : ALoc.t * Type.t -> bool) ~(covers_target : A
       let (annot, _) = lit in
       if annot_covers_target annot then this#found_empty "jsx attribute literal";
       lit
+
+    method! jsx_attribute_name_namespaced name =
+      let (loc, _) = name in
+      (* TODO: this should be supported *)
+      if covers_target loc then this#found_empty "jsx attribute (namespaced)";
+      name
 
     method! jsx_child child =
       let (loc, c) = child in
