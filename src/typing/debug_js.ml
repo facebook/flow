@@ -356,6 +356,7 @@ let rec dump_t_ (depth, tvars) cx t =
           )
         t
     | DefT (_, trust, ReactAbstractComponentT _) -> p ~trust:(Some trust) t
+    | DefT (_, trust, RendersT _) -> p ~trust:(Some trust) t
     | MatchingPropT (_, _, arg) -> p ~extra:(kid arg) t
     | KeysT (_, arg) -> p ~extra:(kid arg) t
     | DefT (_, trust, SingletonStrT s) ->

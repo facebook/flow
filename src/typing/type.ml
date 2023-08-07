@@ -234,6 +234,10 @@ module rec TypeTerm : sig
         renders: t;
         component_kind: component_kind;
       }
+    | RendersT of {
+        component_opaque_id: ALoc.id;
+        super: t;
+      }
     (* Enum types *)
     | EnumT of enum_t
     | EnumObjectT of enum_t
@@ -3725,6 +3729,7 @@ let string_of_def_ctor = function
   | ObjT _ -> "ObjT"
   | PolyT _ -> "PolyT"
   | ReactAbstractComponentT _ -> "ReactAbstractComponentT"
+  | RendersT _ -> "RendersT"
   | SingletonBoolT _ -> "SingletonBoolT"
   | SingletonNumT _ -> "SingletonNumT"
   | SingletonStrT _ -> "SingletonStrT"

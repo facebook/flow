@@ -139,6 +139,7 @@ class ['a] t =
         let acc = self#type_ cx pole acc instance in
         let acc = self#type_ cx pole acc renders in
         acc
+      | RendersT { component_opaque_id = _; super } -> self#type_ cx pole acc super
 
     method targ cx pole acc =
       function

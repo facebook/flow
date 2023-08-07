@@ -657,6 +657,7 @@ let rec tag_of_def_t cx = function
   | ClassT _
   | TypeT _
   | ReactAbstractComponentT _
+  | RendersT _
   | EnumObjectT _ ->
     None
 

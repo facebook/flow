@@ -195,6 +195,8 @@ and collect_of_type ?log_unresolved cx acc = function
     collect_of_types ?log_unresolved cx acc ts
   | DefT (_, _, ReactAbstractComponentT { config; instance; renders; component_kind = _ }) ->
     collect_of_types ?log_unresolved cx acc [config; instance; renders]
+  | DefT (_, _, RendersT { component_opaque_id = _; super }) ->
+    collect_of_type ?log_unresolved cx acc super
   | OpaqueT (_, { underlying_t; super_t; _ }) ->
     let acc = Base.Option.fold underlying_t ~init:acc ~f:(collect_of_type ?log_unresolved cx) in
     let acc = Base.Option.fold super_t ~init:acc ~f:(collect_of_type ?log_unresolved cx) in

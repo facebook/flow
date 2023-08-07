@@ -768,6 +768,12 @@ end = struct
              (Ty_symbol.builtin_symbol (Reason.OrdinaryName "React$AbstractComponent"))
              (Some [config; instance; renders])
           )
+      | DefT (_, _, RendersT _) ->
+        (* TODO(jmbrown): Ty normalization for render types *)
+        terr
+          ~kind:UnsupportedTypeCtor
+          ~msg:"Normalization is not yet supported for render types"
+          None
       | ThisClassT (_, t, _, _) -> this_class_t ~env t
       | ThisTypeAppT (_, c, _, ts) -> type_app ~env c ts
       | KeysT (r, t) -> keys_t ~env ~cont:type__ r t

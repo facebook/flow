@@ -212,6 +212,7 @@ class visitor =
       | DefT (_, t, SymbolT)
       | DefT (_, t, ObjT _)
       | DefT (_, t, ReactAbstractComponentT _)
+      | DefT (_, t, RendersT _)
       | DefT (_, t, SingletonNumT _)
       | DefT (_, t, SingletonStrT _)
       | DefT (_, t, SingletonBigIntT _)

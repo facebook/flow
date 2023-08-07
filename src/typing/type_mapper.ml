@@ -332,6 +332,12 @@ class virtual ['a] t =
         else
           ReactAbstractComponentT
             { config = config'; instance = instance'; renders = renders'; component_kind }
+      | RendersT { component_opaque_id; super } ->
+        let super' = self#type_ cx map_cx super in
+        if super' == super then
+          t
+        else
+          RendersT { component_opaque_id; super = super' }
 
     method defer_use_type cx map_cx t =
       match t with
