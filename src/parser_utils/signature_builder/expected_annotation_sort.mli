@@ -7,6 +7,7 @@
 
 type t =
   | ArrayPattern
+  | ObjectPattern
   | FunctionReturn
   | Property of { name: string }
   | VariableDefinition of { name: string }

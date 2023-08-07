@@ -2982,10 +2982,33 @@ and rest_param opts scope tbls xs param_loc p =
         t
     in
     Some (name, loc, t)
-  | P.Object _
-  | P.Array _
-  | P.Expression _ ->
-    None
+  | P.Object { P.Object.annot = t; _ } ->
+    let loc = push_loc tbls param_loc in
+    let t =
+      annot_or_hint
+        ~err_loc:(Some loc)
+        ~sort:Expected_annotation_sort.ObjectPattern
+        opts
+        scope
+        tbls
+        xs
+        t
+    in
+    Some (None, loc, t)
+  | P.Array { P.Array.annot = t; _ } ->
+    let loc = push_loc tbls param_loc in
+    let t =
+      annot_or_hint
+        ~err_loc:(Some loc)
+        ~sort:Expected_annotation_sort.ArrayPattern
+        opts
+        scope
+        tbls
+        xs
+        t
+    in
+    Some (None, loc, t)
+  | P.Expression _ -> None
 
 and function_def_helper =
   let module F = Ast.Function in

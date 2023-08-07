@@ -9,6 +9,7 @@ let spf = Printf.sprintf
 
 type t =
   | ArrayPattern
+  | ObjectPattern
   | FunctionReturn
   | Property of { name: string }
   | VariableDefinition of { name: string }
@@ -16,6 +17,7 @@ type t =
 
 let to_string = function
   | ArrayPattern -> "array pattern"
+  | ObjectPattern -> "object pattern"
   | FunctionReturn -> "function return"
   | Property { name } -> spf "property `%s`" name
   | VariableDefinition { name } -> spf "declaration of variable `%s`" name

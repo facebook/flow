@@ -1623,12 +1623,12 @@ Cannot create `Poly` element because string [1] is incompatible with number [2] 
 `baz`. [incompatible-type]
 
    import.js:49:34
-   49| <Poly foo={1} bar={[1]} baz={(x: string) => {}} />; // error
+   49| <Poly foo={1} bar={[1]} baz={(x: string) => {}} />;
                                         ^^^^^^ [1]
 
 References:
    import.js:49:12
-   49| <Poly foo={1} bar={[1]} baz={(x: string) => {}} />; // error
+   49| <Poly foo={1} bar={[1]} baz={(x: string) => {}} />;
                   ^ [2]
 
 
@@ -1638,28 +1638,13 @@ Cannot create `Poly` element because string [1] is incompatible with number [2] 
 `baz`. [incompatible-type]
 
    import.js:49:34
-   49| <Poly foo={1} bar={[1]} baz={(x: string) => {}} />; // error
+   49| <Poly foo={1} bar={[1]} baz={(x: string) => {}} />;
                                         ^^^^^^ [1]
 
 References:
    import.js:49:21
-   49| <Poly foo={1} bar={[1]} baz={(x: string) => {}} />; // error
+   49| <Poly foo={1} bar={[1]} baz={(x: string) => {}} />;
                            ^ [2]
-
-
-Error -------------------------------------------------------------------------------------------------- import.js:54:21
-
-Cannot create `Inst` element because string [1] is incompatible with number [2] in index 0 of property `bar`.
-[incompatible-type]
-
-   import.js:54:21
-   54| <Inst foo={1} bar={['a']} /> // error
-                           ^^^ [1]
-
-References:
-   import.js:52:26
-   52| type InstType = PolyType<number>;
-                                ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- names.js:4:36
@@ -2468,7 +2453,7 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 169 errors
+Found 168 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
