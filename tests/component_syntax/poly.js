@@ -7,4 +7,4 @@ export component Poly<T>(foo: T, bar: [T], ...props: { baz?: (T) => void}) {
 <Poly foo={1} bar={[2]} />;
 <Poly foo={"a"} bar={["a"]} />;
 <Poly foo={1} bar={["a"]} />;
-<Poly foo={1} bar={[1]} baz={(x: string) => {}} />;
+<Poly foo={1} bar={[1]} baz={(x: string) => {}} />; //error

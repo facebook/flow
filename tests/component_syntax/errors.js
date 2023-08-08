@@ -41,3 +41,11 @@ component Outer() {
     }
     return null;
 }
+
+Baz(); // error
+
+component Poly<T>() { return null; }
+Poly(); // error
+Poly<number>(); // error
+
+(Baz: React$AbstractComponent<mixed, empty>);

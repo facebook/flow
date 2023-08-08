@@ -685,7 +685,7 @@ let check_config2 cx pmap { Object.reason; props; flags; generics; interface = _
             Method { key_loc; type_ = prop_t }
           else
             Field
-              { preferred_def_locs = None; key_loc; type_ = prop_t; polarity = Polarity.Neutral })
+              { preferred_def_locs = None; key_loc; type_ = prop_t; polarity = Polarity.Positive })
         props
     in
     let id = Context.generate_property_map cx props in

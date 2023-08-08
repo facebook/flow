@@ -1195,7 +1195,7 @@ module ImportTypeofTKit = struct
             {
               tparams_loc;
               tparams = typeparams;
-              t_out = (DefT (_, _, ClassT _) | DefT (_, _, FunT _)) as lower_t;
+              t_out = DefT (_, _, (ClassT _ | FunT _ | ReactAbstractComponentT _)) as lower_t;
               id;
             }
         ) ->

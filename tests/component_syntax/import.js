@@ -46,4 +46,9 @@ import { Poly } from "./poly.js";
 <Poly foo={1} bar={[2]} />;
 <Poly foo={"a"} bar={["a"]} />;
 <Poly foo={1} bar={["a"]} />;
-<Poly foo={1} bar={[1]} baz={(x: string) => {}} />;
+<Poly foo={1} bar={[1]} baz={(x: string) => {}} />; // error
+
+import { typeof Poly as PolyType } from "./poly.js";
+type InstType = PolyType<number>;
+declare var Inst: InstType;
+<Inst foo={1} bar={['a']} /> // error

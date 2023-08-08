@@ -1218,6 +1218,7 @@ end = struct
         let%bind (env, ps) = type_params_t ~env typeparams in
         let%map fun_t = fun_ty ~env static f ps in
         Ty.Fun fun_t
+      | DefT (_, _, ReactAbstractComponentT _) -> type__ ~env t
       | _ -> terr ~kind:BadPoly (Some t)
 
     and exact_t ~env t = type__ ~env t >>| Ty.mk_exact
