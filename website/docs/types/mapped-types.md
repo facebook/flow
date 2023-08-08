@@ -105,7 +105,7 @@ type MaybeMapped = Distributive<?Obj>;// = ?{foo: number}
 ({foo: 3}: MaybeMapped); // OK
 ```
 
-## Property Modifiers {#toc-basic-usage}
+## Property Modifiers {#toc-property-modifiers}
 
 You can also add `+` or `-` variance modifiers and the optionality modifier `?` in mapped types:
 ```js flow-check
