@@ -21,7 +21,7 @@ flow.registerFile(libFile, `declare var MyGlobal: string;`);
 flow.initBuiltins([libFile]);
 
 const config = {
-  react_runtime: 'classic',
+  'react.runtime': 'classic',
   exact_by_default: true,
 };
 

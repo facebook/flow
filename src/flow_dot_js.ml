@@ -128,7 +128,7 @@ let stub_metadata ~root ~checked =
     max_trace_depth = 0;
     max_workers = 0;
     missing_module_generators = [];
-    react_runtime = Options.ReactRuntimeClassic;
+    react_runtime = Options.ReactRuntimeAutomatic;
     recursion_limit = 10000;
     relay_integration_excludes = [];
     relay_integration_module_prefix = None;
@@ -180,7 +180,7 @@ let merge_custom_check_config js_config_object metadata =
   let enable_enums = Js.Unsafe.get js_config_object "enums" |> Js.to_bool in
   let exact_by_default = Js.Unsafe.get js_config_object "exact_by_default" |> Js.to_bool in
   let react_runtime =
-    match Js.Unsafe.get js_config_object "react_runtime" |> Js.to_string with
+    match Js.Unsafe.get js_config_object "react.runtime" |> Js.to_string with
     | "automatic" -> Options.ReactRuntimeAutomatic
     | "classic" -> Options.ReactRuntimeClassic
     | s -> failwith ("Unsupported config option: " ^ s)
@@ -438,10 +438,10 @@ let () =
     "link": "#toc-experimental-const-params"
   },
   {
-    "key": "react_runtime",
+    "key": "react.runtime",
     "type": "enum",
     "choices": ["classic", "automatic"],
-    "default": "classic",
+    "default": "automatic",
     "desc": "Selecting 'automatic' enables auto-importing of React functions required for JSX.",
     "link": "#toc-react-runtime"
   },
