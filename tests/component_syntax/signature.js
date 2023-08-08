@@ -65,4 +65,9 @@ const elOnlyX = <HasOptionalParams x={3} />;
 const elOnlyY = <HasOptionalParams y={3} />;
 const elBoth = <HasOptionalParams x={3} y={3} />;
 
-module.exports = { InlineOnly, InexactRest, IndexedRest, DefaultProps, RenamedParams };
+component Destruct(foo: number, ...{bar}: {bar: number}) {
+  return null;
+}
+<Destruct foo={3} bar={3} />;
+
+module.exports = { InlineOnly, InexactRest, IndexedRest, DefaultProps, RenamedParams, Destruct };
