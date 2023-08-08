@@ -13,6 +13,11 @@ import Link from '@docusaurus/Link';
 import type FlowJsServices from './flow-services';
 import styles from './TryFlow.module.css';
 
+function DocsLink({id}: {id: string}): React.Node {
+  const link = id.toLowerCase().replace(/[^a-z]/g, '-');
+  return <Link to={`/en/docs/config/options/#toc-${link}`}>[docs]</Link>;
+}
+
 type Props = $ReadOnly<{
   flowService: ?FlowJsServices,
   setConfig: ({[string]: mixed}) => void,
@@ -68,9 +73,7 @@ export default function TryFlowConfigEditor({
               {item.desc != null ? (
                 <div>
                   {item.desc}
-                  {item.link != null ? (
-                    <Link to={`/en/docs/config/options/${item.link}`}>[docs]</a>
-                  ) : null}
+                  <DocsLink id={item.key} />
                 </div>
               ) : null}
             </label>

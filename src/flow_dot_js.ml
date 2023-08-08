@@ -413,44 +413,38 @@ let () =
     "key": "babel_loose_array_spread",
     "type": "bool",
     "default": false,
-    "desc": "Only allow array spread with arrays, not arbitrary iterables.",
-    "link": "#toc-babel-loose-array-spread"
+    "desc": "Only allow array spread with arrays, not arbitrary iterables."
   },
   {
     "key": "enums",
     "type": "bool",
     "default": true,
-    "desc": "Enable support for Flow Enums.",
-    "link": "#toc-enums"
+    "desc": "Enable support for Flow Enums."
   },
   {
     "key": "exact_by_default",
     "type": "bool",
     "default": true,
-    "desc": "Treat object types as exact by default.",
-    "link": "#toc-exact-by-default"
+    "desc": "Treat object types as exact by default."
   },
   {
     "key": "experimental.const_params",
     "type": "bool",
     "default": false,
-    "desc": "Treat all function parameters as const bindings, banning reassignment.",
-    "link": "#toc-experimental-const-params"
+    "desc": "Treat all function parameters as const bindings, banning reassignment."
   },
   {
     "key": "react.runtime",
     "type": "enum",
     "choices": ["classic", "automatic"],
     "default": "automatic",
-    "desc": "Selecting 'automatic' enables auto-importing of React functions required for JSX.",
-    "link": "#toc-react-runtime"
+    "desc": "Selecting 'automatic' enables auto-importing of React functions required for JSX."
   },
   {
     "key": "use_mixed_in_catch_variables",
     "type": "bool",
     "default": false,
-    "desc": "Changes the default type of 'catch' variables from 'any' to 'mixed'.",
-    "link": "#toc-use-mixed-in-catch-variables"
+    "desc": "Changes the default type of 'catch' variables from 'any' to 'mixed'."
   }
 ]
 |}

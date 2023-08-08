@@ -46,8 +46,9 @@ declare type FlowJsConfigSchema = Array<
       type: 'enum',
       choices: Array<string>,
       default: string,
+      desc?: string,
     }
-  | {key: string, type: 'bool', default: boolean},
+  | {key: string, type: 'bool', default: boolean, desc?: string},
 >;
 
 declare type FlowJs = {
