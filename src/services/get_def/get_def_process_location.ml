@@ -351,6 +351,12 @@ class searcher ~(is_legit_require : ALoc.t * Type.t -> bool) ~(covers_target : A
            fields. *)
         super#type_ (annot, t)
 
+    method! type_param_identifier id =
+      let (loc, _) = id in
+      (* TODO: a type param is a definition and should point at itself *)
+      if covers_target loc then this#found_empty "type param";
+      super#type_param_identifier id
+
     method! module_ref_literal mref =
       let { Flow_ast.ModuleRefLiteral.require_out; _ } = mref in
       if annot_covers_target require_out then
