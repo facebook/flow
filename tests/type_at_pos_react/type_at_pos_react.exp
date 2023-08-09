@@ -1,4 +1,4 @@
-lazy_ref.js:14:9 = {default: React$AbstractComponent<empty, {moo(x: string): void}, React$Node>}
+lazy_ref.js:14:9 = {default: React$AbstractComponent<empty, {moo(x: string): void}, null>}
 lazy_ref.js:14:9,14:9
 lazy_ref.js:19:9 = Promise<{+default: (x: Props) => Element<(x: Props) => Node>}>
 lazy_ref.js:19:9,19:9
