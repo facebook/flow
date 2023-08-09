@@ -623,7 +623,7 @@ let func_own_props = SSet.of_list ["toString"; "arguments"; "caller"; "length"; 
 
 module Eq_test = Eq_test.Make (Scope_api.With_ALoc) (Ssa_api.With_ALoc) (Env_api.With_ALoc)
 
-class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_scope =
+class def_finder ~autocomplete_hooks env_info toplevel_scope =
   let fail loc str = raise Env_api.(Env_invariant (Some loc, ASTStructureOverride str)) in
 
   object (this)
@@ -652,7 +652,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
       )
 
     method add_binding kind_and_loc reason src =
-      if Env_api.has_assigning_write kind_and_loc env_entries then
+      if Env_api.has_assigning_write kind_and_loc env_info.Env_api.env_entries then
         this#force_add_binding kind_and_loc reason src
 
     method add_ordinary_binding loc = this#add_binding (Env_api.OrdinaryNameLoc, loc)
@@ -818,7 +818,11 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
           )
           :: xs ->
           let state =
-            if Env_api.has_assigning_write (Env_api.OrdinaryNameLoc, id_loc) env_entries then
+            if
+              Env_api.has_assigning_write
+                (Env_api.OrdinaryNameLoc, id_loc)
+                env_info.Env_api.env_entries
+            then
               let visit statics = this#visit_function_declaration ~statics loc func in
               SMap.update
                 name
@@ -906,7 +910,11 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
             | _ -> false
           in
           let state =
-            if Env_api.has_assigning_write (Env_api.OrdinaryNameLoc, id_loc) env_entries then
+            if
+              Env_api.has_assigning_write
+                (Env_api.OrdinaryNameLoc, id_loc)
+                env_info.Env_api.env_entries
+            then
               let visit statics =
                 this#visit_function_expr
                   ~func_hints:[]
@@ -959,7 +967,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
             (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name = (name_loc, _); _ })
           ) ->
           let { Provider_api.array_providers; _ } =
-            Base.Option.value_exn (Provider_api.providers_of_def providers name_loc)
+            Base.Option.value_exn (Provider_api.providers_of_def env_info.Env_api.providers name_loc)
           in
           (Some (EmptyArray { array_providers; arr_loc }), [])
         | ( None,
@@ -1828,8 +1836,8 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
       in
       let rec other_pattern_hint_opt = function
         | (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name = (id_loc, _); _ })
-          when not @@ Env_api.Provider_api.is_provider providers id_loc ->
-          Env_api.Provider_api.providers_of_def providers id_loc
+          when not @@ Env_api.Provider_api.is_provider env_info.Env_api.providers id_loc ->
+          Env_api.Provider_api.providers_of_def env_info.Env_api.providers id_loc
           |> Base.Option.value_map ~f:(fun x -> x.Env_api.Provider_api.providers) ~default:[]
           |> Base.List.map ~f:(fun { Env_api.Provider_api.reason; _ } -> Reason.loc_of_reason reason)
           |> Nel.of_list
@@ -2290,7 +2298,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
                   }
               )
               when (* Use the type of the callee directly as hint if the member access is refined *)
-                   not (Loc_sig.ALocS.LMap.mem loc env_values) ->
+                   not (Loc_sig.ALocS.LMap.mem loc env_info.Env_api.env_values) ->
               let base_hint = [Hint_t (ValueHint _object, ExpectedTypeHint)] in
               (match property with
               | Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name; comments = _ })
@@ -2386,7 +2394,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
 
     method private visit_member_expression ~cond ~hints loc mem =
       begin
-        match EnvMap.find_opt_ordinary loc env_entries with
+        match EnvMap.find_opt_ordinary loc env_info.Env_api.env_entries with
         | Some (Env_api.AssigningWrite reason) ->
           this#add_ordinary_binding
             loc
@@ -2402,7 +2410,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
 
     method private visit_optional_member_expression ~cond ~hints loc mem =
       begin
-        match EnvMap.find_opt_ordinary loc env_entries with
+        match EnvMap.find_opt_ordinary loc env_info.Env_api.env_entries with
         | Some (Env_api.AssigningWrite reason) ->
           this#add_ordinary_binding
             loc
@@ -2655,7 +2663,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
 
     method private visit_expression ~hints ~cond ((loc, expr) as exp) =
       let hints =
-        match EnvMap.find_opt (Env_api.ArrayProviderLoc, loc) env_entries with
+        match EnvMap.find_opt (Env_api.ArrayProviderLoc, loc) env_info.Env_api.env_entries with
         | Some (Env_api.AssigningWrite reason) ->
           this#add_binding
             (Env_api.ArrayProviderLoc, loc)
@@ -2671,7 +2679,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
           hints
       in
       begin
-        match EnvMap.find_opt (Env_api.ExpressionLoc, loc) env_entries with
+        match EnvMap.find_opt (Env_api.ExpressionLoc, loc) env_info.Env_api.env_entries with
         | Some (Env_api.AssigningWrite reason) ->
           this#add_binding
             (Env_api.ExpressionLoc, loc)
@@ -2686,7 +2694,7 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
         let scope_kind = func_scope_kind x in
         this#in_new_tparams_env (fun () ->
             this#visit_function ~func_hints:hints ~scope_kind x;
-            match EnvMap.find_opt_ordinary loc env_entries with
+            match EnvMap.find_opt_ordinary loc env_info.Env_api.env_entries with
             | Some (Env_api.AssigningWrite reason) ->
               let def =
                 def_of_function
@@ -2967,8 +2975,6 @@ class def_finder ~autocomplete_hooks env_entries env_values providers toplevel_s
       res
   end
 
-let find_defs ~autocomplete_hooks env_entries env_values providers toplevel_scope_kind ast =
-  let finder =
-    new def_finder ~autocomplete_hooks env_entries env_values providers toplevel_scope_kind
-  in
+let find_defs ~autocomplete_hooks env_info toplevel_scope_kind ast =
+  let finder = new def_finder ~autocomplete_hooks env_info toplevel_scope_kind in
   finder#eval finder#program ast
