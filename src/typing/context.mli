@@ -77,6 +77,7 @@ type metadata = {
   facebook_fbs: string option;
   facebook_fbt: string option;
   facebook_module_interop: bool;
+  file_options: Files.options;
   ignore_non_literal_requires: bool;
   max_literal_length: int;
   max_trace_depth: int;

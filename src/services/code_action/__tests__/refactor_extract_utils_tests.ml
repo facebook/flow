@@ -17,6 +17,20 @@ let pretty_print layout =
   let source = Pretty_printer.print ~source_maps:None ~skip_endline:true layout in
   Source.contents source
 
+let file_options =
+  {
+    Files.default_lib_dir = None;
+    ignores = [];
+    untyped = [];
+    declarations = [];
+    includes = Path_matcher.empty;
+    lib_paths = [];
+    module_file_exts = [];
+    module_resource_exts = SSet.empty;
+    multi_platform_extensions = [];
+    node_resolver_dirnames = ["node_modules"];
+  }
+
 let stub_metadata ~root ~checked =
   {
     Context.checked (* local *);
@@ -40,6 +54,7 @@ let stub_metadata ~root ~checked =
     facebook_fbs = None;
     facebook_fbt = None;
     facebook_module_interop = false;
+    file_options;
     ignore_non_literal_requires = false;
     max_literal_length = 100;
     max_trace_depth = 0;

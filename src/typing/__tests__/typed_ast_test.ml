@@ -32,6 +32,19 @@ let metadata =
     facebook_fbs = None;
     facebook_fbt = None;
     facebook_module_interop = false;
+    file_options =
+      {
+        Files.default_lib_dir = None;
+        ignores = [];
+        untyped = [];
+        declarations = [];
+        includes = Path_matcher.empty;
+        lib_paths = [];
+        module_file_exts = [];
+        module_resource_exts = SSet.empty;
+        multi_platform_extensions = [];
+        node_resolver_dirnames = ["node_modules"];
+      };
     ignore_non_literal_requires = false;
     max_literal_length = 100;
     max_trace_depth = 0;

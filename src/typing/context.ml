@@ -43,6 +43,7 @@ type metadata = {
   facebook_fbs: string option;
   facebook_fbt: string option;
   facebook_module_interop: bool;
+  file_options: Files.options;
   ignore_non_literal_requires: bool;
   max_literal_length: int;
   max_trace_depth: int;
@@ -249,6 +250,7 @@ let metadata_of_options options =
     facebook_fbs = Options.facebook_fbs options;
     facebook_fbt = Options.facebook_fbt options;
     facebook_module_interop = Options.facebook_module_interop options;
+    file_options = Options.file_options options;
     ignore_non_literal_requires = Options.should_ignore_non_literal_requires options;
     max_literal_length = Options.max_literal_length options;
     max_trace_depth = Options.max_trace_depth options;
