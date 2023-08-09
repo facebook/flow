@@ -22,6 +22,7 @@ and options = {
   enable_relay_integration: bool;
   haste_module_ref_prefix: string option;
   haste_module_ref_prefix_LEGACY_INTEROP: string option;
+  multi_platform_extensions: string list;
   relay_integration_module_prefix: string option;
 }
 
@@ -81,6 +82,7 @@ let default_opts =
     enable_enums = false;
     haste_module_ref_prefix = None;
     haste_module_ref_prefix_LEGACY_INTEROP = None;
+    multi_platform_extensions = [];
     relay_integration_module_prefix = None;
   }
 

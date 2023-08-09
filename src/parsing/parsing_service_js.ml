@@ -147,6 +147,7 @@ let parse_file_sig options file ast =
   let enable_relay_integration =
     enable_relay_integration && Relay_options.enabled_for_file relay_integration_excludes file
   in
+  let multi_platform_extensions = (Options.file_options options).Files.multi_platform_extensions in
   let relay_integration_module_prefix =
     Relay_options.module_prefix_for_file
       relay_integration_module_prefix_includes
@@ -159,6 +160,7 @@ let parse_file_sig options file ast =
       enable_relay_integration;
       haste_module_ref_prefix;
       haste_module_ref_prefix_LEGACY_INTEROP;
+      multi_platform_extensions;
       relay_integration_module_prefix;
     }
   in
