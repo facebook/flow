@@ -32,6 +32,9 @@ module.exports = {
 };
 ```
 
+In the above config the order of the `extends` plugins is important as `plugin:ft-flow/recommended`
+disables some rules from `eslint:recommended` so it needs to be defined after to work correctly.
+
 For more information about configuring ESLint, [check out the ESLint docs](https://eslint.org/).
 
 You can then lint your codebase with:
