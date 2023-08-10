@@ -18,7 +18,7 @@ yarn add --dev @babel/preset-flow babel-plugin-syntax-hermes-parser
 npm install --save-dev @babel/preset-flow babel-plugin-syntax-hermes-parser
 ```
 
-Then add `flow` to your Babel presets config.
+Then add the `@babel/preset-flow` preset and `babel-plugin-syntax-hermes-parser` plugin to your Babel config.
 
 ```json
 {
