@@ -315,9 +315,13 @@ class searcher ~(is_legit_require : ALoc.t * Type.t -> bool) ~(covers_target : A
         | Null _
         | Symbol _
         | Number _
+        | NumberLiteral _
         | BigInt _
+        | BigIntLiteral _
         | String _
+        | StringLiteral _
         | Boolean _
+        | BooleanLiteral _
         | Exists _
         | Unknown _
         | Never _
@@ -339,11 +343,7 @@ class searcher ~(is_legit_require : ALoc.t * Type.t -> bool) ~(covers_target : A
         | OptionalIndexedAccess _
         | Union _
         | Intersection _
-        | Tuple _
-        | StringLiteral _
-        | NumberLiteral _
-        | BigIntLiteral _
-        | BooleanLiteral _ ->
+        | Tuple _ ->
           super#type_ (annot, t)
       else
         (* it is tempting to not recurse here, but comments are not included in

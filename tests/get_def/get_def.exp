@@ -292,6 +292,18 @@ imports_from_cjs.js:11:17
 Flags:
 [LIB] libs/lib.js:9:5,9:7
 
+type_literals.js:1:12
+Flags:
+
+type_literals.js:3:11
+Flags:
+
+type_literals.js:5:11
+Flags:
+
+type_literals.js:7:11
+Flags:
+
 utilities.js:5:8
 Flags:
 utilities.js:1:20,1:22
