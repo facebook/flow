@@ -2,8 +2,12 @@
 
 const F = require('./library');
 
-enum E {Foo, Bar}
+enum E {
 //   ^
+  Foo,
+// ^
+  Bar,
+}
 
 const a = E.Foo;
 //        ^

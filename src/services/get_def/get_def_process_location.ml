@@ -363,6 +363,11 @@ class searcher ~(is_legit_require : ALoc.t * Type.t -> bool) ~(covers_target : A
       else
         super#module_ref_literal mref
 
+    method! enum_member_identifier id =
+      let (loc, { Flow_ast.Identifier.name; comments = _ }) = id in
+      if covers_target loc then this#own_def loc name;
+      super#enum_member_identifier id
+
     (* object keys would normally hit this#t_identifier; this circumvents that. *)
     method! object_key_identifier id =
       let (annot, { Flow_ast.Identifier.name; comments = _ }) = id in
