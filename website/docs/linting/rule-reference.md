@@ -222,7 +222,7 @@ async function bar() {
 }
 
 function baz() {
-  foo().catch(handleError); // ok
+  foo().catch(err => {console.log(err)}); // ok
   foo(); // error
 }
 ```
