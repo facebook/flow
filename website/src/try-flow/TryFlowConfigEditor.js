@@ -50,7 +50,7 @@ function TryFlowConfigRows({
     <>
       {schema.length > 0 ? (
         <tr>
-          <td colspan={2}>
+          <td colSpan={2}>
             <h3>{name}</h3>
           </td>
         </tr>
@@ -88,7 +88,7 @@ function TryFlowConfigRows({
             )}
           </td>
           <td className={styles.tryEditorConfigLabelCell}>
-            <label for={item.key}>
+            <label htmlFor={item.key}>
               <div className={styles.tryEditorConfigLabel}>{item.key}</div>
               {item.desc != null ? (
                 <div>
@@ -128,18 +128,20 @@ export default function TryFlowConfigEditor({
   );
   return (
     <table>
-      <TryFlowConfigRows
-        name="Options"
-        schema={optionsSchema}
-        config={flowService.config}
-        setConfig={setConfig}
-      />
-      <TryFlowConfigRows
-        name="Lints"
-        schema={lintsSchema}
-        config={flowService.config}
-        setConfig={setConfig}
-      />
+      <tbody>
+        <TryFlowConfigRows
+          name="Options"
+          schema={optionsSchema}
+          config={flowService.config}
+          setConfig={setConfig}
+        />
+        <TryFlowConfigRows
+          name="Lints"
+          schema={lintsSchema}
+          config={flowService.config}
+          setConfig={setConfig}
+        />
+      </tbody>
     </table>
   );
 }
