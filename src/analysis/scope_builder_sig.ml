@@ -30,6 +30,8 @@ module type S = sig
     -> object
          inherit [Acc.t, L.t] Flow_ast_visitor.visitor
 
+         method in_toplevel_scope : bool
+
          method with_bindings : 'a. ?lexical:bool -> L.t -> L.t Bindings.t -> ('a -> 'a) -> 'a -> 'a
 
          method component_body_with_params :

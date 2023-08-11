@@ -175,6 +175,9 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
 
       val mutable counter = 0
 
+      method in_toplevel_scope =
+        Base.List.mem ~equal:( = ) Api.toplevel_scopes (Base.Option.value_exn current_scope_opt)
+
       method private next =
         let result = counter in
         counter <- counter + 1;

@@ -184,6 +184,8 @@ module Make
 
     val is_global : t -> bool
 
+    val is_exports : t -> bool
+
     val is_undeclared : t -> bool
 
     val is_undeclared_or_skipped : t -> bool
@@ -291,6 +293,11 @@ module Make
     let is_global t =
       match t.write_state with
       | Global _ -> true
+      | _ -> false
+
+    let is_exports t =
+      match t.write_state with
+      | Exports -> true
       | _ -> false
 
     let is_undeclared t =
@@ -902,6 +909,7 @@ module Make
     (* Track parameter binding def_locs currently being processed, so that we can
        error when these appear in the corresponding annotation. *)
     current_bindings: string L.LMap.t;
+    cjs_exports_state: Env_api.cjs_exports_state;
   }
 
   type pattern_write_kind =
@@ -1315,14 +1323,18 @@ module Make
           else
             let filename = Context.file cx in
             let global_exports_loc = Loc.{ none with source = Some filename } |> ALoc.of_loc in
-            EnvMap.singleton
-              (Env_api.GlobalExportsLoc, global_exports_loc)
-              (Env_api.AssigningWrite
-                 (mk_reason
-                    (RModule (OrdinaryName (File_key.to_string filename)))
-                    global_exports_loc
+            EnvMap.empty
+            |> EnvMap.add
+                 (Env_api.GlobalExportsLoc, global_exports_loc)
+                 (Env_api.AssigningWrite
+                    (mk_reason
+                       (RModule (OrdinaryName (File_key.to_string filename)))
+                       global_exports_loc
+                    )
                  )
-              )
+            |> EnvMap.add
+                 (Env_api.CJSModuleExportsLoc, global_exports_loc)
+                 (Env_api.AssigningWrite (mk_reason RExports global_exports_loc))
         in
         {
           values = L.LMap.empty;
@@ -1345,6 +1357,7 @@ module Make
           jsx_base_name;
           pred_func_map = L.LMap.empty;
           current_bindings = L.LMap.empty;
+          cjs_exports_state = Env_api.CJSExportNames SMap.empty;
         }
 
       method jsx_base_name = env_state.jsx_base_name
@@ -1366,6 +1379,8 @@ module Make
       method type_guard_consistency_maps = env_state.type_guard_consistency_maps
 
       method pred_func_map = env_state.pred_func_map
+
+      method cjs_exports_state = env_state.cjs_exports_state
 
       method private is_assigning_write key =
         match EnvMap.find_opt key env_state.write_entries with
@@ -2570,7 +2585,7 @@ module Make
       (* This function should be called _after_ a member expression is assigned a value.
        * It havocs other heap refinements depending on the name of the member and then adds
        * a write to the heap refinement entry for that member expression *)
-      method assign_expression lhs rhs =
+      method assign_expression ~operator lhs rhs =
         match lhs with
         | (loc, Flow_ast.Expression.Member member) ->
           (* Use super member to visit sub-expressions to avoid record a read of the member. *)
@@ -2588,7 +2603,86 @@ module Make
               in
               env_state <- { env_state with write_entries }
             | _ -> ()
-          end
+          end;
+          let is_global_module () = Val.is_global !((this#env_read "module").val_ref) in
+          let is_global_exports () = Val.is_exports !((this#env_read "exports").val_ref) in
+          (match (operator, member) with
+          (* module.exports = ... *)
+          | ( None,
+              {
+                Ast.Expression.Member._object =
+                  ( _,
+                    Ast.Expression.Identifier (_, { Ast.Identifier.name = "module"; comments = _ })
+                  );
+                property =
+                  Ast.Expression.Member.PropertyIdentifier
+                    (_, { Ast.Identifier.name = "exports"; comments = _ });
+                comments = _;
+              }
+            )
+            when is_global_module () ->
+            if this#in_toplevel_scope then
+              env_state <- { env_state with cjs_exports_state = Env_api.CJSModuleExports loc }
+          (* module.exports.foo = ... *)
+          | ( None,
+              {
+                Ast.Expression.Member._object =
+                  ( _,
+                    Ast.Expression.Member
+                      {
+                        Ast.Expression.Member._object =
+                          ( _,
+                            Ast.Expression.Identifier
+                              (_, { Ast.Identifier.name = "module"; comments = _ })
+                          );
+                        property =
+                          Ast.Expression.Member.PropertyIdentifier
+                            (_, { Ast.Identifier.name = "exports"; comments = _ });
+                        comments = _;
+                      }
+                  );
+                property =
+                  Ast.Expression.Member.PropertyIdentifier
+                    (key_loc, { Ast.Identifier.name; comments = _ });
+                comments = _;
+              }
+            )
+            when is_global_module () ->
+            if this#in_toplevel_scope then (
+              match env_state.cjs_exports_state with
+              | Env_api.CJSModuleExports _ -> ()
+              | Env_api.CJSExportNames named ->
+                env_state <-
+                  {
+                    env_state with
+                    cjs_exports_state = Env_api.CJSExportNames (SMap.add name (key_loc, loc) named);
+                  }
+            )
+          (* exports.foo = ... *)
+          | ( None,
+              {
+                Ast.Expression.Member._object =
+                  ( _,
+                    Ast.Expression.Identifier (_, { Ast.Identifier.name = "exports"; comments = _ })
+                  );
+                property =
+                  Ast.Expression.Member.PropertyIdentifier
+                    (key_loc, { Ast.Identifier.name; comments = _ });
+                comments = _;
+              }
+            )
+            when is_global_exports () ->
+            if this#in_toplevel_scope then (
+              match env_state.cjs_exports_state with
+              | Env_api.CJSModuleExports _ -> ()
+              | Env_api.CJSExportNames named ->
+                env_state <-
+                  {
+                    env_state with
+                    cjs_exports_state = Env_api.CJSExportNames (SMap.add name (key_loc, loc) named);
+                  }
+            )
+          | _ -> ())
         | _ -> statement_error
 
       method assign_member ~delete lhs_member lhs_loc assigned_val val_reason =
@@ -2689,7 +2783,7 @@ module Make
                 ignore @@ this#binding_pattern_track_object_destructuring ?kind:None ~acc:right left
               | (_, Expression e) ->
                 (* given `o.x = e`, read o then read e *)
-                this#assign_expression e right
+                this#assign_expression ~operator e right
             end
           | Some
               ( PlusAssign | MinusAssign | MultAssign | ExpAssign | DivAssign | ModAssign
@@ -2706,7 +2800,7 @@ module Make
               | (_, Expression e) ->
                 (* given `o.x += e`, read o then read e *)
                 ignore @@ this#pattern_expression e;
-                this#assign_expression e right
+                this#assign_expression ~operator e right
               | (_, (Object _ | Array _)) -> statement_error
             end
           | Some ((OrAssign | AndAssign | NullishAssign) as operator) ->
@@ -5942,6 +6036,7 @@ module Make
         type_guard_consistency_maps = env_walk#type_guard_consistency_maps;
         refinement_of_id = env_walk#refinement_of_id;
         pred_func_map = env_walk#pred_func_map;
+        cjs_exports_state = env_walk#cjs_exports_state;
       }
     )
 

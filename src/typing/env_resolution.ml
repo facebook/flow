@@ -1048,6 +1048,45 @@ let resolve_declare_module cx loc module_ =
   Context.set_environment cx { env with Loc_env.declare_module_exports_write_loc = old_dme_loc };
   (t, unknown_use)
 
+let resolve_cjs_exports_type cx reason = function
+  | Env_api.CJSModuleExports loc ->
+    let env = Context.environment cx in
+    Type_env.t_option_value_exn cx loc (Loc_env.find_ordinary_write env loc)
+  | Env_api.CJSExportNames named ->
+    let env = Context.environment cx in
+    let props =
+      SMap.fold
+        (fun name (key_loc, def_loc) acc ->
+          let type_ =
+            Type_env.t_option_value_exn cx def_loc (Loc_env.find_ordinary_write env def_loc)
+          in
+          NameUtils.Map.add
+            (OrdinaryName name)
+            (Field
+               {
+                 preferred_def_locs = None;
+                 key_loc = Some key_loc;
+                 polarity = Polarity.Positive;
+                 type_;
+               }
+            )
+            acc)
+        named
+        NameUtils.Map.empty
+    in
+    Obj_type.mk_with_proto
+      cx
+      reason
+      (Type.ObjProtoT reason)
+      ~obj_kind:Type.Exact
+      ~frozen:false
+      ~props
+
+let resolve_cjs_exports_type cx reason state =
+  ( Tvar.mk_fully_resolved_lazy cx reason (lazy (resolve_cjs_exports_type cx reason state)),
+    unknown_use
+  )
+
 let resolve_enum cx id_loc enum_reason enum_loc enum =
   if Context.enable_enums cx then
     let enum_t = Statement.mk_enum cx ~enum_reason id_loc enum in
@@ -1194,6 +1233,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
     | TypeParam _ -> resolve_type_param cx id_loc
     | GeneratorNext gen -> resolve_generator_next cx def_reason gen
     | DeclaredModule (loc, module_) -> resolve_declare_module cx loc module_
+    | CJSModuleExportsType state -> resolve_cjs_exports_type cx def_reason state
     | MissingThisAnnot -> (AnyT.at (AnyError None) id_loc, unknown_use)
   in
   let update_reason =

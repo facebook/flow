@@ -2975,6 +2975,12 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
       res
   end
 
-let find_defs ~autocomplete_hooks env_info toplevel_scope_kind ast =
+let find_defs ~autocomplete_hooks env_info toplevel_scope_kind file ast =
   let finder = new def_finder ~autocomplete_hooks env_info toplevel_scope_kind in
+  let { Env_api.cjs_exports_state; _ } = env_info in
+  let loc = { Loc.none with Loc.source = Some file } |> ALoc.of_loc in
+  finder#add_binding
+    (Env_api.CJSModuleExportsLoc, loc)
+    (mk_reason RExports loc)
+    (CJSModuleExportsType cjs_exports_state);
   finder#eval finder#program ast
