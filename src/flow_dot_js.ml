@@ -211,6 +211,33 @@ let merge_custom_check_config js_config_object metadata =
     use_mixed_in_catch_variables;
   }
 
+(* Keep this in sync with configSchema below. *)
+let supported_lints =
+  [
+    "deprecated-type";
+    "sketchy-null";
+    "sketchy-number";
+    "unclear-type";
+    "unnecessary-invariant";
+    "unnecessary-optional-chain";
+    "unsafe-getters-setters";
+    "unused-promise";
+  ]
+
+let merge_custom_lint_config js_config_object severities =
+  Base.List.fold supported_lints ~init:severities ~f:(fun acc lint ->
+      let enabled = Js.Unsafe.get js_config_object lint |> Js.to_bool in
+      if enabled then
+        match Lints.kinds_of_string lint with
+        | Some kinds ->
+          Base.List.fold kinds ~init:acc ~f:(fun acc lint_kind ->
+              LintSettings.set_value lint_kind (Severity.Err, None) acc
+          )
+        | None -> acc
+      else
+        acc
+  )
+
 let infer_and_merge ~root filename js_config_object docblock ast file_sig =
   (* create cx *)
   let master_cx = get_master_cx root in
@@ -237,8 +264,9 @@ let infer_and_merge ~root filename js_config_object docblock ast file_sig =
   let ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   let lint_severities =
     let base_severities = LintSettings.empty_severities in
+    let severities = merge_custom_lint_config js_config_object base_severities in
     let strict_mode = StrictModeSettings.empty in
-    Merge_js.get_lint_severities metadata strict_mode base_severities
+    Merge_js.get_lint_severities metadata strict_mode severities
   in
   let typed_ast = Type_inference_js.infer_ast cx filename comments ast ~lint_severities in
   Merge_js.post_merge_checks cx ast metadata;
@@ -424,30 +452,35 @@ let () =
 [
   {
     "key": "babel_loose_array_spread",
+    "kind": "option",
     "type": "bool",
     "default": false,
     "desc": "Only allow array spread with arrays, not arbitrary iterables."
   },
   {
     "key": "enums",
+    "kind": "option",
     "type": "bool",
     "default": true,
     "desc": "Enable support for Flow Enums."
   },
   {
     "key": "exact_by_default",
+    "kind": "option",
     "type": "bool",
     "default": true,
     "desc": "Treat object types as exact by default."
   },
   {
     "key": "experimental.const_params",
+    "kind": "option",
     "type": "bool",
     "default": false,
     "desc": "Treat all function parameters as const bindings, banning reassignment."
   },
   {
     "key": "react.runtime",
+    "kind": "option",
     "type": "enum",
     "choices": ["classic", "automatic"],
     "default": "automatic",
@@ -455,9 +488,66 @@ let () =
   },
   {
     "key": "use_mixed_in_catch_variables",
+    "kind": "option",
     "type": "bool",
     "default": false,
     "desc": "Changes the default type of 'catch' variables from 'any' to 'mixed'."
+  },
+  {
+    "key": "deprecated-type",
+    "kind": "lint",
+    "type": "bool",
+    "default": false,
+    "desc": "Error on the deprecated type annotations."
+  },
+  {
+    "key": "sketchy-null",
+    "kind": "lint",
+    "type": "bool",
+    "default": false,
+    "desc": "Error on conditional checks that can be either 'null'/'undefined' or falsy."
+  },
+  {
+    "key": "sketchy-number",
+    "kind": "lint",
+    "type": "bool",
+    "default": false,
+    "desc": "Error when a number appears in the left hand side of an '&&' expression."
+  },
+  {
+    "key": "unclear-type",
+    "kind": "lint",
+    "type": "bool",
+    "default": false,
+    "desc": "Error on the unsafe 'any', 'Object', and 'Function' type annotations."
+  },
+  {
+    "key": "unnecessary-invariant",
+    "kind": "lint",
+    "type": "bool",
+    "default": false,
+    "desc": "Error when a usage of 'invariant' is unnecessary."
+  },
+  {
+    "key": "unnecessary-optional-chain",
+    "kind": "lint",
+    "type": "bool",
+    "default": false,
+    "desc": "Error when an optional chain '?.' is unnecessary."
+  },
+  {
+    "key": "unsafe-getters-setters",
+    "kind": "lint",
+    "type": "bool",
+    "default": false,
+    "desc": "Error on usage of object getters and setters."
+  },
+  {
+    "key": "unused-promise",
+    "kind": "lint",
+    "type": "bool",
+    "default": false,
+    "desc": "Error when a promise is unused."
   }
 ]
 |}

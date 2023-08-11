@@ -43,12 +43,19 @@ declare type FlowJsParseOptions = {
 declare type FlowJsConfigSchema = Array<
   | {
       key: string,
+      kind: 'option' | 'lint',
       type: 'enum',
       choices: Array<string>,
       default: string,
       desc?: string,
     }
-  | {key: string, type: 'bool', default: boolean, desc?: string},
+  | {
+      key: string,
+      kind: 'option' | 'lint',
+      type: 'bool',
+      default: boolean,
+      desc?: string,
+    },
 >;
 
 declare type FlowJs = {

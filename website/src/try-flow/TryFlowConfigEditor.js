@@ -13,9 +13,21 @@ import Link from '@docusaurus/Link';
 import type FlowJsServices from './flow-services';
 import styles from './TryFlow.module.css';
 
-function DocsLink({id}: {id: string}): React.Node {
-  const link = id.toLowerCase().replace(/[^a-z]/g, '-');
-  return <Link to={`/en/docs/config/options/#toc-${link}`}>[docs]</Link>;
+function DocsLink({
+  kind,
+  id,
+}: {
+  kind: 'option' | 'lint',
+  id: string,
+}): React.Node {
+  let href;
+  if (kind === 'lint') {
+    href = `/en/docs/linting/rule-reference/#toc-${id}`;
+  } else {
+    const fragment = id.toLowerCase().replace(/[^a-z]/g, '-');
+    href = `/en/docs/config/options/#toc-${fragment}`;
+  }
+  return <Link to={href}>[docs]</Link>;
 }
 
 type Props = $ReadOnly<{
@@ -23,27 +35,35 @@ type Props = $ReadOnly<{
   setConfig: ({[string]: mixed}) => void,
 }>;
 
-export default function TryFlowConfigEditor({
-  flowService,
+function TryFlowConfigRows({
+  name,
+  schema,
+  config,
   setConfig,
-}: Props): React.Node {
-  if (flowService == null) {
-    return 'Loading Flow configuration schema';
-  }
-  if (flowService?.schema == null) {
-    return 'Configuration is not supported on this version of Flow.';
-  }
+}: {
+  name: string,
+  schema: FlowJsConfigSchema,
+  config: {[string]: mixed},
+  setConfig: ({[string]: mixed}) => void,
+}): React.Node {
   return (
-    <table>
-      {flowService.schema.map(item => (
+    <>
+      {schema.length > 0 ? (
+        <tr>
+          <td colspan={2}>
+            <h3>{name}</h3>
+          </td>
+        </tr>
+      ) : null}
+      {schema.map(item => (
         <tr key={item.key}>
           <td className={styles.tryEditorConfigInputCell}>
             {item.type === 'enum' ? (
               <select
-                value={flowService.config[item.key]}
+                value={config[item.key]}
                 onChange={(event: SyntheticInputEvent<>) => {
                   setConfig({
-                    ...flowService.config,
+                    ...config,
                     [item.key]: event.target.value,
                   });
                 }}>
@@ -57,10 +77,10 @@ export default function TryFlowConfigEditor({
               <input
                 type="checkbox"
                 id={item.key}
-                checked={flowService.config[item.key]}
+                checked={config[item.key]}
                 onChange={(event: SyntheticInputEvent<>) => {
                   setConfig({
-                    ...flowService.config,
+                    ...config,
                     [item.key]: event.target.checked,
                   });
                 }}
@@ -73,13 +93,53 @@ export default function TryFlowConfigEditor({
               {item.desc != null ? (
                 <div>
                   {item.desc}
-                  <DocsLink id={item.key} />
+                  <DocsLink id={item.key} kind={item.kind} />
                 </div>
               ) : null}
             </label>
           </td>
         </tr>
       ))}
+    </>
+  );
+}
+
+export default function TryFlowConfigEditor({
+  flowService,
+  setConfig,
+}: Props): React.Node {
+  if (flowService == null) {
+    return 'Loading Flow configuration schema';
+  }
+  if (flowService?.schema == null) {
+    return 'Configuration is not supported on this version of Flow.';
+  }
+  const [optionsSchema, lintsSchema] = flowService.schema.reduce<
+    [FlowJsConfigSchema, FlowJsConfigSchema],
+  >(
+    ([optionsSchema, lintsSchema], config) => {
+      if (config.kind === 'lint') {
+        return [optionsSchema, lintsSchema.concat(config)];
+      } else {
+        return [optionsSchema.concat(config), lintsSchema];
+      }
+    },
+    [[], []],
+  );
+  return (
+    <table>
+      <TryFlowConfigRows
+        name="Options"
+        schema={optionsSchema}
+        config={flowService.config}
+        setConfig={setConfig}
+      />
+      <TryFlowConfigRows
+        name="Lints"
+        schema={lintsSchema}
+        config={flowService.config}
+        setConfig={setConfig}
+      />
     </table>
   );
 }
