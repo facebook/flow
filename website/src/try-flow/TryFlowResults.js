@@ -93,32 +93,34 @@ export default function TryFlowResults({
 
   return (
     <div className={styles.results}>
-      <ul className={styles.toolbar}>
-        <li
-          className={clsx(
-            styles.tab,
-            activeToolbarTab === 'errors' && styles.selectedTab,
-          )}
-          onClick={() => setActiveToolbarTab('errors')}>
-          Errors
-        </li>
-        <li
-          className={clsx(
-            styles.tab,
-            activeToolbarTab === 'json' && styles.selectedTab,
-          )}
-          onClick={() => setActiveToolbarTab('json')}>
-          JSON
-        </li>
-        <li
-          className={clsx(
-            styles.tab,
-            activeToolbarTab === 'ast' && styles.selectedTab,
-          )}
-          onClick={() => setActiveToolbarTab('ast')}>
-          AST
-        </li>
-        <li className={styles.version}>
+      <div className={styles.toolbar}>
+        <ul className={styles.tabs}>
+          <li
+            className={clsx(
+              styles.tab,
+              activeToolbarTab === 'errors' && styles.selectedTab,
+            )}
+            onClick={() => setActiveToolbarTab('errors')}>
+            Errors
+          </li>
+          <li
+            className={clsx(
+              styles.tab,
+              activeToolbarTab === 'json' && styles.selectedTab,
+            )}
+            onClick={() => setActiveToolbarTab('json')}>
+            JSON
+          </li>
+          <li
+            className={clsx(
+              styles.tab,
+              activeToolbarTab === 'ast' && styles.selectedTab,
+            )}
+            onClick={() => setActiveToolbarTab('ast')}>
+            AST
+          </li>
+        </ul>
+        <div className={styles.version}>
           {flowVersion !== flowVersions[0] &&
           flowVersion !== flowVersions[1] ? (
             <span className={styles.versionWarning}>old version selected</span>
@@ -130,8 +132,8 @@ export default function TryFlowResults({
               </option>
             ))}
           </select>
-        </li>
-      </ul>
+        </div>
+      </div>
       {activeToolbarTab === 'errors' && (
         <pre className={clsx(styles.resultBody, styles.errors)}>
           <ul>

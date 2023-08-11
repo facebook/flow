@@ -11,6 +11,12 @@
     position: relative;
 }
 
+.toolbar {
+    display: flex;
+    background: #fff;
+    border-bottom: 1px solid #ddd;
+}
+
 .tryEditorConfig {
     position: absolute;
     width: 100%;
@@ -91,48 +97,47 @@
     font-size: 12px;
     background: #f7f7f7;
     border-left: 1px solid #ddd;
+}
+
+.resultBody {
+    display: flex;
+    flex: 1;
+    height: calc(100vh - var(--ifm-navbar-height) - 40px);
     overflow: auto;
 }
 
-.toolbar {
-    position: relative;
-    background: #fff;
-    border-bottom: 1px solid #ddd;
+.tabs {
+    display: flex;
     list-style: none;
     margin: 0;
     padding: 0;
 }
 
-.toolbar:after {
-    content: "";
-    display: block;
-    clear: both;
-}
-
 .tab {
     border-right: 1px solid #ddd;
     cursor: pointer;
-    float: left;
     font-size: 14px;
     font-weight: bold;
     padding: 7px 15px;
 }
 
 .version {
-    position: absolute;
-    right: 5px;
-    top: 0px;
-    line-height: 36px;
+    margin-left: auto;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    align-items: center;
+    margin-right: 10px;
 }
 
 .versionWarning {
-    padding-right: 10px;
     color: red;
 }
 
 .selectedTab {
     background: white;
     border-bottom: 2px solid #404040;
+    margin-bottom: -1px; /* cover up container bottom border */
 }
 
 .loader {

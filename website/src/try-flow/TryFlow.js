@@ -201,24 +201,26 @@ export default function TryFlow({
     <div className={styles.tryEditor}>
       <div className={styles.code}>
         <div className={styles.editorContainer}>
-          <ul className={styles.toolbar}>
-            <li
-              className={clsx(
-                styles.tab,
-                activeToolbarTab === 'code' && styles.selectedTab,
-              )}
-              onClick={() => setActiveToolbarTab('code')}>
-              Code
-            </li>
-            <li
-              className={clsx(
-                styles.tab,
-                activeToolbarTab === 'config' && styles.selectedTab,
-              )}
-              onClick={() => setActiveToolbarTab('config')}>
-              Config
-            </li>
-          </ul>
+          <div className={styles.toolbar}>
+            <ul className={styles.tabs}>
+              <li
+                className={clsx(
+                  styles.tab,
+                  activeToolbarTab === 'code' && styles.selectedTab,
+                )}
+                onClick={() => setActiveToolbarTab('code')}>
+                Code
+              </li>
+              <li
+                className={clsx(
+                  styles.tab,
+                  activeToolbarTab === 'config' && styles.selectedTab,
+                )}
+                onClick={() => setActiveToolbarTab('config')}>
+                Config
+              </li>
+            </ul>
+          </div>
           {initialStateFromStorage && (
             <div className={styles.resetBanner}>
               <span>Do you want to recover from the last saved state?</span>
