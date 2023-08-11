@@ -20,11 +20,11 @@ import createTokensProvider from './tokens-theme-provider';
 import flowLanguageConfiguration from './flow-configuration.json';
 
 const TRY_FLOW_LAST_CONTENT_STORAGE_KEY = 'tryFlowLastContent';
-const DEFAULT_FLOW_PROGRAM = `/* @flow */
-
+const DEFAULT_FLOW_PROGRAM = `
 function foo(x: ?number): string {
   if (x) {
-    return x;
+    return x; // Error: number is not a string
+    // Fix: return String(x);
   }
   return "default string";
 }
@@ -79,7 +79,11 @@ function setHashedValue(
 
 const initialStateFromURI = getHashedValue(location.hash);
 const initialState: InitialStateFromHash = initialStateFromURI || {
-  code: DEFAULT_FLOW_PROGRAM,
+  // Only default to an example if we haven't used Try Flow before
+  code:
+    localStorage.getItem(TRY_FLOW_LAST_CONTENT_STORAGE_KEY) != null
+      ? ''
+      : DEFAULT_FLOW_PROGRAM,
   version: null,
   config: null,
 };
