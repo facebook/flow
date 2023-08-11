@@ -195,6 +195,14 @@ export default function TryFlow({
 
     // update the URL
     setHashedValue(flowService, flowVersion, value);
+
+    // If we've made non-whitespace edits, remove notice to recover from storage.
+    if (
+      initialStateFromStorage != null &&
+      value.replace(/\s/g, '') !== initialState.code.replace(/\s/g, '')
+    ) {
+      setInitialStateFromStorage(null);
+    }
   }
 
   return (
@@ -220,22 +228,16 @@ export default function TryFlow({
                 Config
               </li>
             </ul>
-          </div>
-          {initialStateFromStorage && (
-            <div className={styles.resetBanner}>
-              <span>Do you want to recover from the last saved state?</span>
-              <div>
-                <button
-                  style={{marginRight: '0.5rem'}}
-                  onClick={resetFromStorage}>
-                  Recover
-                </button>
+            {initialStateFromStorage && (
+              <div className={styles.resetBanner}>
+                <span>Recover from last saved state?</span>
+                <button onClick={resetFromStorage}>Recover</button>
                 <button onClick={() => setInitialStateFromStorage(null)}>
                   Ignore
                 </button>
               </div>
-            </div>
-          )}
+            )}
+          </div>
           <div
             style={{display: activeToolbarTab === 'config' ? 'block' : 'none'}}
             className={styles.tryEditorConfig}>

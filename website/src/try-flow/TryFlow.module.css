@@ -15,6 +15,7 @@
     display: flex;
     background: #fff;
     border-bottom: 1px solid #ddd;
+    font-size: 14px;
 }
 
 .tryEditorConfig {
@@ -65,15 +66,12 @@
 }
 
 .resetBanner {
-    position: absolute;
     display: flex;
-    justify-content: space-between;
-    z-index: 1;
-    width: 100%;
-    padding: 1rem;
-    background-color: white;
-    border: 1px solid #ddd;
-    bottom: 0;
+    margin-left: auto;
+    margin-right: 10px;
+    justify-content: flex-end;
+    gap: 10px;
+    align-items: center;
 }
 
 .tryEditor {
@@ -116,7 +114,6 @@
 .tab {
     border-right: 1px solid #ddd;
     cursor: pointer;
-    font-size: 14px;
     font-weight: bold;
     padding: 7px 15px;
 }
