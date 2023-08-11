@@ -182,6 +182,22 @@ class searcher ~(is_legit_require : ALoc.t * Type.t -> bool) ~(covers_target : A
       end;
       super#member expr
 
+    method! indexed_access_type expr =
+      let open Flow_ast.Type.IndexedAccess in
+      let { _object; index; comments = _ } = expr in
+      (match index with
+      | (annot, Flow_ast.Type.StringLiteral { Flow_ast.StringLiteral.value; _ })
+        when annot_covers_target annot ->
+        let (obj_annot, _) = _object in
+        let result =
+          Get_def_request.(
+            Member { prop_name = value; object_type = obj_annot; force_instance = false }
+          )
+        in
+        this#request result
+      | _ -> ());
+      super#indexed_access_type expr
+
     method! t_identifier ((loc, { Flow_ast.Identifier.name; _ }) as id) =
       if annot_covers_target loc then this#request (Get_def_request.Identifier { name; loc });
       super#t_identifier id

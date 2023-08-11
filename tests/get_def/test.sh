@@ -240,6 +240,7 @@ assert_ok "$FLOW" get-def destructuring.js 5 14 --strip-root --pretty
 queries_in_file "get-def" "annot.js"
 queries_in_file "get-def" "exports.js" --pretty
 queries_in_file "get-def" "identifier.js"
+queries_in_file "get-def" "indexed_access.js"
 queries_in_file "get-def" "literals.js"
 queries_in_file "get-def" "require.js"
 queries_in_file "get-def" "imports_from_cjs.js"

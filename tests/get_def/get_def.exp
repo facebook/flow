@@ -152,6 +152,14 @@ identifier.js:11:11
 Flags:
 identifier.js:3:10,3:16
 
+indexed_access.js:5:13
+Flags:
+indexed_access.js:2:3,2:5
+
+indexed_access.js:8:10
+Flags:
+indexed_access.js:1:6,1:6
+
 literals.js:3:4
 Flags:
 helpers/Foo.js:6:18,6:18
