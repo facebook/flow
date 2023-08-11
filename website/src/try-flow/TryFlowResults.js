@@ -119,6 +119,10 @@ export default function TryFlowResults({
           AST
         </li>
         <li className={styles.version}>
+          {flowVersion !== flowVersions[0] &&
+          flowVersion !== flowVersions[1] ? (
+            <span className={styles.versionWarning}>old version selected</span>
+          ) : null}
           <select value={flowVersion} onChange={changeFlowVersion}>
             {flowVersions.map(version => (
               <option key={version} value={version}>

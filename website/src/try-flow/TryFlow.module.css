@@ -125,6 +125,11 @@
     line-height: 36px;
 }
 
+.versionWarning {
+    padding-right: 10px;
+    color: red;
+}
+
 .selectedTab {
     background: white;
     border-bottom: 2px solid #404040;
