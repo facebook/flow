@@ -114,15 +114,19 @@ export default function TryFlow({
 
   useEffect(() => {
     setLoading(true);
-    FlowJsServices.init(flowVersion).then(f => {
-      setFlowService(existing =>
-        existing == null
-          ? // Only the initial init will use the config encoded in the starting URI
-            f.withUpdatedConfig(initialState.config)
-          : f,
-      );
-      setLoading(false);
-    });
+    FlowJsServices.init(flowVersion)
+      .then(f => {
+        setFlowService(existing =>
+          existing == null
+            ? // Only the initial init will use the config encoded in the starting URI
+              f.withUpdatedConfig(initialState.config)
+            : f,
+        );
+        setLoading(false);
+      })
+      .catch(e => {
+        setInternalError(JSON.stringify(e));
+      });
   }, [flowVersion]);
 
   useEffect(() => {
