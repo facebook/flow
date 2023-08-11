@@ -284,8 +284,7 @@ let check_content ~filename ~content ~js_config_object =
         Docblock_parser.(parse_docblock ~max_tokens:docblock_max_tokens filename content)
       in
       let (cx, _) = infer_and_merge ~root filename js_config_object docblock ast file_sig in
-      let suppressions = Error_suppressions.empty in
-      (* TODO: support suppressions *)
+      let suppressions = Context.error_suppressions cx in
       let errors = Context.errors cx in
       let severity_cover = Context.severity_cover cx in
       let include_suppressions = Context.include_suppressions cx in
