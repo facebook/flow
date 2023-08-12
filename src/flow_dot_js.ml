@@ -150,7 +150,7 @@ let stub_metadata ~root ~checked =
     strict_es6_import_export = false;
     strict_es6_import_export_excludes = [];
     strip_root = true;
-    suppress_types = SSet.empty;
+    suppress_types = SSet.of_list ["$FlowFixMe"; "$FlowIssue"; "$FlowIgnore"; "$FlowExpectedError"];
     trust_mode = Options.NoTrust;
     use_mixed_in_catch_variables = false;
   }
