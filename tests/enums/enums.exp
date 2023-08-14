@@ -1417,8 +1417,8 @@ References:
    exhaustive-check.js:3:6
       3| enum E {
               ^ [2]
-   <BUILTINS>/core.js:2551:3
-   2551|   isValid(this: TEnumObject, input: ?TRepresentation): boolean,
+   <BUILTINS>/core.js:2559:3
+   2559|   isValid(this: TEnumObject, input: ?TRepresentation): boolean,
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -2079,15 +2079,15 @@ Cannot get `E.nonExistent` because property `nonExistent` is missing in `$EnumPr
            ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2548:56
+   <BUILTINS>/core.js:2556:56
                                                                 v-
-   2548| type $EnumProto<TEnumObject, TEnum, TRepresentation> = {|
-   2549|   cast(this: TEnumObject, input: ?TRepresentation): void | TEnum,
-   2550|   getName(this: TEnumObject, input: TEnum): string,
-   2551|   isValid(this: TEnumObject, input: ?TRepresentation): boolean,
-   2552|   members(this: TEnumObject): Iterator<TEnum>,
-   2553|   __proto__: null,
-   2554| |}
+   2556| type $EnumProto<TEnumObject, TEnum, TRepresentation> = {|
+   2557|   cast(this: TEnumObject, input: ?TRepresentation): void | TEnum,
+   2558|   getName(this: TEnumObject, input: TEnum): string,
+   2559|   isValid(this: TEnumObject, input: ?TRepresentation): boolean,
+   2560|   members(this: TEnumObject): Iterator<TEnum>,
+   2561|   __proto__: null,
+   2562| |}
          -^ [1]
 
 
@@ -2100,15 +2100,15 @@ Cannot call `E.nonExistent` because property `nonExistent` is missing in `$EnumP
            ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2548:56
+   <BUILTINS>/core.js:2556:56
                                                                 v-
-   2548| type $EnumProto<TEnumObject, TEnum, TRepresentation> = {|
-   2549|   cast(this: TEnumObject, input: ?TRepresentation): void | TEnum,
-   2550|   getName(this: TEnumObject, input: TEnum): string,
-   2551|   isValid(this: TEnumObject, input: ?TRepresentation): boolean,
-   2552|   members(this: TEnumObject): Iterator<TEnum>,
-   2553|   __proto__: null,
-   2554| |}
+   2556| type $EnumProto<TEnumObject, TEnum, TRepresentation> = {|
+   2557|   cast(this: TEnumObject, input: ?TRepresentation): void | TEnum,
+   2558|   getName(this: TEnumObject, input: TEnum): string,
+   2559|   isValid(this: TEnumObject, input: ?TRepresentation): boolean,
+   2560|   members(this: TEnumObject): Iterator<TEnum>,
+   2561|   __proto__: null,
+   2562| |}
          -^ [1]
 
 
@@ -2135,15 +2135,15 @@ Cannot call `E.A` because property `A` is missing in `$EnumProto` [1]. [prop-mis
            ^
 
 References:
-   <BUILTINS>/core.js:2548:56
+   <BUILTINS>/core.js:2556:56
                                                                 v-
-   2548| type $EnumProto<TEnumObject, TEnum, TRepresentation> = {|
-   2549|   cast(this: TEnumObject, input: ?TRepresentation): void | TEnum,
-   2550|   getName(this: TEnumObject, input: TEnum): string,
-   2551|   isValid(this: TEnumObject, input: ?TRepresentation): boolean,
-   2552|   members(this: TEnumObject): Iterator<TEnum>,
-   2553|   __proto__: null,
-   2554| |}
+   2556| type $EnumProto<TEnumObject, TEnum, TRepresentation> = {|
+   2557|   cast(this: TEnumObject, input: ?TRepresentation): void | TEnum,
+   2558|   getName(this: TEnumObject, input: TEnum): string,
+   2559|   isValid(this: TEnumObject, input: ?TRepresentation): boolean,
+   2560|   members(this: TEnumObject): Iterator<TEnum>,
+   2561|   __proto__: null,
+   2562| |}
          -^ [1]
 
 
@@ -2156,15 +2156,15 @@ Cannot call `E.toString` because property `toString` is missing in `$EnumProto` 
            ^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2548:56
+   <BUILTINS>/core.js:2556:56
                                                                 v-
-   2548| type $EnumProto<TEnumObject, TEnum, TRepresentation> = {|
-   2549|   cast(this: TEnumObject, input: ?TRepresentation): void | TEnum,
-   2550|   getName(this: TEnumObject, input: TEnum): string,
-   2551|   isValid(this: TEnumObject, input: ?TRepresentation): boolean,
-   2552|   members(this: TEnumObject): Iterator<TEnum>,
-   2553|   __proto__: null,
-   2554| |}
+   2556| type $EnumProto<TEnumObject, TEnum, TRepresentation> = {|
+   2557|   cast(this: TEnumObject, input: ?TRepresentation): void | TEnum,
+   2558|   getName(this: TEnumObject, input: TEnum): string,
+   2559|   isValid(this: TEnumObject, input: ?TRepresentation): boolean,
+   2560|   members(this: TEnumObject): Iterator<TEnum>,
+   2561|   __proto__: null,
+   2562| |}
          -^ [1]
 
 
@@ -2177,8 +2177,8 @@ Cannot cast `E.getName(...)` to boolean because string [1] is incompatible with 
           ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2550:45
-   2550|   getName(this: TEnumObject, input: TEnum): string,
+   <BUILTINS>/core.js:2558:45
+   2558|   getName(this: TEnumObject, input: TEnum): string,
                                                      ^^^^^^ [1]
    methods.js:43:18
      43| (E.getName(E.B): boolean); // Error - wrong type

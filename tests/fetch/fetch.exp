@@ -721,17 +721,17 @@ References:
    <BUILTINS>/bom.js:1555:62
    1555| type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView | ReadableStream;
                                                                       ^^^^^^^^^^^ [5]
-   <BUILTINS>/core.js:1998:20
-   1998| type $TypedArray = $TypedArrayNumber | BigInt64Array | BigUint64Array;
+   <BUILTINS>/core.js:2006:20
+   2006| type $TypedArray = $TypedArrayNumber | BigInt64Array | BigUint64Array;
                             ^^^^^^^^^^^^^^^^^ [6]
-   <BUILTINS>/core.js:1998:40
-   1998| type $TypedArray = $TypedArrayNumber | BigInt64Array | BigUint64Array;
+   <BUILTINS>/core.js:2006:40
+   2006| type $TypedArray = $TypedArrayNumber | BigInt64Array | BigUint64Array;
                                                 ^^^^^^^^^^^^^ [7]
-   <BUILTINS>/core.js:1998:56
-   1998| type $TypedArray = $TypedArrayNumber | BigInt64Array | BigUint64Array;
+   <BUILTINS>/core.js:2006:56
+   2006| type $TypedArray = $TypedArrayNumber | BigInt64Array | BigUint64Array;
                                                                 ^^^^^^^^^^^^^^ [8]
-   <BUILTINS>/core.js:1994:39
-   1994| type $ArrayBufferView = $TypedArray | DataView;
+   <BUILTINS>/core.js:2002:39
+   2002| type $ArrayBufferView = $TypedArray | DataView;
                                                ^^^^^^^^ [9]
    <BUILTINS>/bom.js:1555:95
    1555| type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView | ReadableStream;

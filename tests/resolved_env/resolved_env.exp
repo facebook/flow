@@ -36,8 +36,8 @@ expression to your expected type. [underconstrained-implicit-instantiation]
                      ^^^^^^^^^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/core.js:1979:25
-   1979| declare function $await<T>(p: Promise<T> | T): T;
+   <BUILTINS>/core.js:1987:25
+   1987| declare function $await<T>(p: Promise<T> | T): T;
                                  ^ [1]
 
 
