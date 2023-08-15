@@ -71,7 +71,6 @@ let print_values refinement_of_id =
     | ClassStaticThis _ -> "This(static)"
     | ClassInstanceSuper _ -> "Super(instance)"
     | ClassStaticSuper _ -> "Super(static)"
-    | Exports -> "Exports"
     | ModuleScoped name -> "ModuleScoped " ^ name
     | Global name -> "Global " ^ name
     | Unreachable _ -> "unreachable"
@@ -6060,7 +6059,7 @@ exports.foo = 1;
     [%expect {|
       [
         (2, 0) to (2, 7) => {
-          Exports
+          Global exports
         }] |}]
 
 let%expect_test "module_dot_export_special" =
@@ -6073,7 +6072,7 @@ module.exports;
           Global module
         };
         (2, 0) to (2, 14) => {
-          Exports
+          Global exports
         }] |}]
 
 let%expect_test "exports_as_global" =

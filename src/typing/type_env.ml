@@ -419,9 +419,6 @@ and res_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
                      (Reason.loc_of_reason reason |> Reason.string_of_aloc);
                  ];
                Ok (find_write_exn Env_api.ClassStaticSuperLoc reason)
-             | (Env_api.With_ALoc.Exports, _) ->
-               let file_loc = Loc.{ none with source = Some (Context.file cx) } |> ALoc.of_loc in
-               Ok (checked_find_loc_env_write cx Env_api.GlobalExportsLoc file_loc)
              | (Env_api.With_ALoc.ModuleScoped _, _) -> Ok Type.(AnyT.at AnnotatedAny loc)
              | (Env_api.With_ALoc.Unreachable loc, _) ->
                let reason = mk_reason (RCustom "unreachable value") loc in
@@ -839,15 +836,7 @@ let init_env cx toplevel_scope_kind =
          var_info.Env_api.env_entries
   in
   let env =
-    {
-      env with
-      Loc_env.scope_kind = toplevel_scope_kind;
-      readable =
-        Env_api.EnvSet.singleton
-          ( Env_api.GlobalExportsLoc,
-            Loc.{ none with source = Some (Context.file cx) } |> ALoc.of_loc
-          );
-    }
+    { env with Loc_env.scope_kind = toplevel_scope_kind; readable = Env_api.EnvSet.empty }
   in
   Context.set_environment cx env
 

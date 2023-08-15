@@ -29,7 +29,6 @@ module type S = sig
     | ClassStaticThisLoc
     | ClassInstanceSuperLoc
     | ClassStaticSuperLoc
-    | GlobalExportsLoc
     | CJSModuleExportsLoc
   [@@deriving show]
 
@@ -87,7 +86,6 @@ module type S = sig
     | ClassStaticThis of L.t Reason.virtual_reason
     | ClassInstanceSuper of L.t Reason.virtual_reason
     | ClassStaticSuper of L.t Reason.virtual_reason
-    | Exports
     | ModuleScoped of string
     | Global of string
     | Projection of L.t
@@ -331,7 +329,6 @@ module Make
     | ClassStaticThisLoc
     | ClassInstanceSuperLoc
     | ClassStaticSuperLoc
-    | GlobalExportsLoc
     | CJSModuleExportsLoc
   [@@deriving show]
 
@@ -390,7 +387,6 @@ module Make
     | ClassStaticThis of L.t Reason.virtual_reason
     | ClassInstanceSuper of L.t Reason.virtual_reason
     | ClassStaticSuper of L.t Reason.virtual_reason
-    | Exports
     | ModuleScoped of string
     | Global of string
     | Projection of L.t
@@ -577,7 +573,6 @@ module Make
           | ClassStaticThis _
           | ClassInstanceSuper _
           | ClassStaticSuper _
-          | Exports
           | ModuleScoped _ ->
             false)
         states
@@ -607,7 +602,6 @@ module Make
     | ClassStaticThis r -> [(ClassStaticThisLoc, Reason.loc_of_reason r)]
     | ClassInstanceSuper r -> [(ClassInstanceSuperLoc, Reason.loc_of_reason r)]
     | ClassStaticSuper r -> [(ClassStaticSuperLoc, Reason.loc_of_reason r)]
-    | Exports -> []
     | ModuleScoped _ -> []
     | Global _ -> []
     | Projection l -> [(OrdinaryNameLoc, l)]

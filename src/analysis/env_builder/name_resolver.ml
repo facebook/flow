@@ -135,8 +135,6 @@ module Make
 
     val class_static_super : ALoc.t virtual_reason -> t
 
-    val exports : t
-
     val module_scoped : string -> t
 
     val global : string -> t
@@ -184,8 +182,6 @@ module Make
 
     val is_global : t -> bool
 
-    val is_exports : t -> bool
-
     val is_undeclared : t -> bool
 
     val is_undeclared_or_skipped : t -> bool
@@ -212,7 +208,6 @@ module Make
       | ClassStaticThis of ALoc.t virtual_reason
       | ClassInstanceSuper of ALoc.t virtual_reason
       | ClassStaticSuper of ALoc.t virtual_reason
-      | Exports
       | ModuleScoped of string
       | Global of string
       | Loc of ALoc.t virtual_reason
@@ -268,7 +263,6 @@ module Make
       | ClassStaticThis _ -> "This(static)"
       | ClassInstanceSuper _ -> "Super(instance)"
       | ClassStaticSuper _ -> "Super(static)"
-      | Exports -> "Exports"
       | ModuleScoped name -> "ModuleScoped " ^ name
       | Global name -> "Global " ^ name
       | Undefined _ -> "undefined"
@@ -293,11 +287,6 @@ module Make
     let is_global t =
       match t.write_state with
       | Global _ -> true
-      | _ -> false
-
-    let is_exports t =
-      match t.write_state with
-      | Exports -> true
       | _ -> false
 
     let is_undeclared t =
@@ -426,7 +415,6 @@ module Make
       | ClassStaticThis _
       | ClassInstanceSuper _
       | ClassStaticSuper _
-      | Exports
       | ModuleScoped _
       | Global _
       | Loc _
@@ -469,8 +457,6 @@ module Make
     let class_instance_super reason = mk_with_write_state @@ ClassInstanceSuper reason
 
     let class_static_super reason = mk_with_write_state @@ ClassStaticSuper reason
-
-    let exports = mk_with_write_state @@ Exports
 
     let module_scoped name = mk_with_write_state @@ ModuleScoped name
 
@@ -522,7 +508,6 @@ module Make
           | Refinement { refinement_id; val_t } ->
             Env_api.Refinement
               { writes = simplify_val val_t; refinement_id; write_id = Some val_t.id }
-          | Exports -> Env_api.Exports
           | ModuleScoped name -> Env_api.ModuleScoped name
           | Global name -> Env_api.Global name
           | PHI _ ->
@@ -568,7 +553,6 @@ module Make
         | ClassStaticThis _ -> []
         | ClassInstanceSuper _ -> []
         | ClassStaticSuper _ -> []
-        | Exports -> []
         | ModuleScoped _ -> []
         | Global _ -> []
         | Projection _ -> []
@@ -1117,20 +1101,6 @@ module Make
             kind = Bindings.Var;
           }
        )
-    |> ( if not is_lib then
-         SMap.add
-           "exports"
-           {
-             val_ref = ref Val.exports;
-             havoc = Val.exports;
-             writes_by_closure_provider_val = None;
-             def_loc = None;
-             heap_refinements = ref HeapRefinementMap.empty;
-             kind = Bindings.Var;
-           }
-       else
-         Base.Fn.id
-       )
     |>
     if not is_lib then
       SMap.add
@@ -1141,7 +1111,7 @@ module Make
           writes_by_closure_provider_val = None;
           def_loc = None;
           heap_refinements =
-            ref (HeapRefinementMap.singleton [RefinementKey.Prop "exports"] Val.exports);
+            ref (HeapRefinementMap.singleton [RefinementKey.Prop "exports"] (Val.global "exports"));
           kind = Bindings.Var;
         }
     else
@@ -1322,19 +1292,11 @@ module Make
             EnvMap.empty
           else
             let filename = Context.file cx in
-            let global_exports_loc = Loc.{ none with source = Some filename } |> ALoc.of_loc in
+            let loc_none_with_file = Loc.{ none with source = Some filename } |> ALoc.of_loc in
             EnvMap.empty
             |> EnvMap.add
-                 (Env_api.GlobalExportsLoc, global_exports_loc)
-                 (Env_api.AssigningWrite
-                    (mk_reason
-                       (RModule (OrdinaryName (File_key.to_string filename)))
-                       global_exports_loc
-                    )
-                 )
-            |> EnvMap.add
-                 (Env_api.CJSModuleExportsLoc, global_exports_loc)
-                 (Env_api.AssigningWrite (mk_reason RExports global_exports_loc))
+                 (Env_api.CJSModuleExportsLoc, loc_none_with_file)
+                 (Env_api.AssigningWrite (mk_reason RExports loc_none_with_file))
         in
         {
           values = L.LMap.empty;
@@ -2605,7 +2567,7 @@ module Make
             | _ -> ()
           end;
           let is_global_module () = Val.is_global !((this#env_read "module").val_ref) in
-          let is_global_exports () = Val.is_exports !((this#env_read "exports").val_ref) in
+          let is_global_exports () = Val.is_global !((this#env_read "exports").val_ref) in
           (match (operator, member) with
           (* module.exports = ... *)
           | ( None,

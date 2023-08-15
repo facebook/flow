@@ -15,7 +15,7 @@ c.js:3:16,3:16
 
 cjs.js:7:4
 Flags:
-module
+{-[key: string]: mixed}
 cjs.js:7:1,7:7
 
 es_exports2.js:1:9

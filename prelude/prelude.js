@@ -86,3 +86,5 @@ declare var module: {
   exports: any,
   ...
 };
+
+declare var exports: {-[key: string]: mixed};

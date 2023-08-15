@@ -366,8 +366,7 @@ let infer_core cx statements =
     Flow_js.add_output cx Error_message.(EInternal (loc, AbnormalControlFlow)));
   stmts
 
-let initialize_env
-    ~lib ?(exclude_syms = NameUtils.Set.empty) ?local_exports_var cx aloc_ast toplevel_scope_kind =
+let initialize_env ~lib ?(exclude_syms = NameUtils.Set.empty) cx aloc_ast toplevel_scope_kind =
   let (_abrupt_completion, info) = NameResolver.program_with_scope cx ~lib ~exclude_syms aloc_ast in
   let autocomplete_hooks =
     {
@@ -388,16 +387,6 @@ let initialize_env
   let components = NameDefOrdering.build_ordering cx ~autocomplete_hooks info name_def_graph in
   Base.List.iter ~f:(Cycles.handle_component cx name_def_graph) components;
   Type_env.init_env cx toplevel_scope_kind;
-  let env = Context.environment cx in
-  Base.Option.iter local_exports_var ~f:(fun local_exports_var ->
-      let loc = TypeUtil.loc_of_t local_exports_var in
-      let t =
-        Base.Option.value_exn
-          ~message:(ALoc.debug_to_string ~include_source:true loc)
-          (Loc_env.find_write env Env_api.GlobalExportsLoc loc)
-      in
-      Flow_js.unify cx t local_exports_var
-  );
   let { Loc_env.scope_kind; class_stack; _ } = Context.environment cx in
   Base.List.iter ~f:(Env_resolution.resolve_component cx name_def_graph) components;
   Debug_js.Verbose.print_if_verbose_lazy cx (lazy ["Finished all components"]);
@@ -420,28 +409,8 @@ let infer_ast ~lint_severities cx filename comments aloc_ast =
     aloc_ast
   in
 
-  let file_loc = Loc.{ none with source = Some filename } |> ALoc.of_loc in
-  let reason = Reason.mk_reason Reason.RExports file_loc in
-  let dict =
-    {
-      Type.key = Type.StrT.make reason (Trust.bogus_trust ());
-      value = Type.MixedT.make reason (Trust.bogus_trust ());
-      dict_name = None;
-      dict_polarity = Polarity.Negative;
-    }
-  in
-  let init_exports = Obj_type.mk cx ~obj_kind:(Type.Indexed dict) reason in
-  let reason_exports_module =
-    Reason.mk_reason Reason.(RModule (OrdinaryName (File_key.to_string filename))) file_loc
-  in
-  let local_exports_var =
-    Tvar.mk_no_wrap_where cx reason_exports_module (fun (_, id) ->
-        Flow_js.resolve_id cx id init_exports
-    )
-  in
-
   try
-    initialize_env ~lib:false ~local_exports_var cx aloc_ast Name_def.Module;
+    initialize_env ~lib:false cx aloc_ast Name_def.Module;
 
     (* infer *)
     let typed_statements = infer_core cx aloc_statements in
