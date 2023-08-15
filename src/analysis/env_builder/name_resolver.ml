@@ -2585,11 +2585,13 @@ module Make
             when is_global_module () ->
             if this#in_toplevel_scope then
               env_state <- { env_state with cjs_exports_state = Env_api.CJSModuleExports loc }
+            else
+              add_output (Error_message.EBadExportPosition loc)
           (* module.exports.foo = ... *)
           | ( None,
               {
                 Ast.Expression.Member._object =
-                  ( _,
+                  ( module_exports_loc,
                     Ast.Expression.Member
                       {
                         Ast.Expression.Member._object =
@@ -2610,7 +2612,7 @@ module Make
               }
             )
             when is_global_module () ->
-            if this#in_toplevel_scope then (
+            if this#in_toplevel_scope then
               match env_state.cjs_exports_state with
               | Env_api.CJSModuleExports _ -> ()
               | Env_api.CJSExportNames named ->
@@ -2619,12 +2621,13 @@ module Make
                     env_state with
                     cjs_exports_state = Env_api.CJSExportNames (SMap.add name (key_loc, loc) named);
                   }
-            )
+            else
+              add_output (Error_message.EBadExportPosition module_exports_loc)
           (* exports.foo = ... *)
           | ( None,
               {
                 Ast.Expression.Member._object =
-                  ( _,
+                  ( exports_loc,
                     Ast.Expression.Identifier (_, { Ast.Identifier.name = "exports"; comments = _ })
                   );
                 property =
@@ -2634,7 +2637,7 @@ module Make
               }
             )
             when is_global_exports () ->
-            if this#in_toplevel_scope then (
+            if this#in_toplevel_scope then
               match env_state.cjs_exports_state with
               | Env_api.CJSModuleExports _ -> ()
               | Env_api.CJSExportNames named ->
@@ -2643,7 +2646,8 @@ module Make
                     env_state with
                     cjs_exports_state = Env_api.CJSExportNames (SMap.add name (key_loc, loc) named);
                   }
-            )
+            else
+              add_output (Error_message.EBadExportPosition exports_loc)
           | _ -> ())
         | _ -> statement_error
 

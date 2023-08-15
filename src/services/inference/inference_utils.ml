@@ -50,7 +50,6 @@ let error_of_file_sig_tolerable_error ~source_file err =
   let flow_err =
     match err with
     | IndeterminateModuleType loc -> Error_message.EIndeterminateModuleType (ALoc.of_loc loc)
-    | BadExportPosition loc -> Error_message.EBadExportPosition (ALoc.of_loc loc)
     | BadExportContext (name, loc) -> Error_message.EBadExportContext (name, ALoc.of_loc loc)
     | SignatureVerificationError sve ->
       Error_message.ESignatureVerification (Signature_error.map ALoc.of_loc sve)

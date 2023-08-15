@@ -65,8 +65,6 @@ and module_kind =
 
 type tolerable_error =
   | IndeterminateModuleType of Loc.t
-  (* e.g. `module.exports.foo = 4` when not at the top level *)
-  | BadExportPosition of Loc.t
   (* e.g. `foo(module)`, dangerous because `module` is aliased *)
   | BadExportContext of string (* offending identifier *) * Loc.t
   | SignatureVerificationError of Loc.t Signature_error.t
@@ -548,11 +546,10 @@ class requires_exports_calculator ~file_key:_ ~ast ~opts =
       super#declare_export_declaration stmt_loc decl
 
     method! assignment loc (expr : (Loc.t, Loc.t) Ast.Expression.Assignment.t) =
-      this#handle_assignment ~is_toplevel:false loc expr;
+      this#handle_assignment loc expr;
       expr
 
-    method handle_assignment
-        ~(is_toplevel : bool) loc (expr : (Loc.t, Loc.t) Ast.Expression.Assignment.t) =
+    method handle_assignment loc (expr : (Loc.t, Loc.t) Ast.Expression.Assignment.t) =
       let open Ast.Expression in
       let open Ast.Expression.Assignment in
       let { operator; left; right; comments = _ } = expr in
@@ -577,8 +574,7 @@ class requires_exports_calculator ~file_key:_ ~ast ~opts =
         )
         when not (Scope_api.is_local_use scope_info module_loc) ->
         this#handle_cjs_default_export module_loc mod_exp_loc;
-        ignore (this#expression right);
-        if not is_toplevel then this#add_tolerable_error (BadExportPosition mod_exp_loc)
+        ignore (this#expression right)
       (* exports.foo = ... *)
       | ( None,
           ( _,
@@ -625,8 +621,7 @@ class requires_exports_calculator ~file_key:_ ~ast ~opts =
         )
         when not (Scope_api.is_local_use scope_info module_loc) ->
         this#add_cjs_export mod_exp_loc;
-        ignore (this#expression right);
-        if not is_toplevel then this#add_tolerable_error (BadExportPosition mod_exp_loc)
+        ignore (this#expression right)
       (* module = ... *)
       | ( None,
           ( _,
@@ -745,7 +740,7 @@ class requires_exports_calculator ~file_key:_ ~ast ~opts =
         let open Expression in
         match expr with
         | (loc, Assignment assg) ->
-          this#handle_assignment ~is_toplevel:true loc assg;
+          this#handle_assignment loc assg;
           expr
         | _ -> this#expression expr
       in
@@ -766,20 +761,18 @@ class requires_exports_calculator ~file_key:_ ~ast ~opts =
   end
 
 (* Now that we've determined the kind of the export, we can filter out
-   BadExportPosition and BadExportContext from ES modules. These errors are only
+   BadExportContext from ES modules. These errors are only
    relevant for CommonJS modules, since their goal is to capture aliasing of
    `module` and `module.exports`. For ES modules these uses should be allowed,
    so we discard these errors to allow more flexibility. Note that this pass only
-   accummulates BadExportPosition and BadExportContext errors. *)
+   accummulates BadExportContext errors. *)
 let filter_irrelevant_errors ~module_kind tolerable_errors =
   match module_kind with
   | CommonJS _ -> tolerable_errors
   | ES ->
     List.filter
       (function
-        | BadExportPosition _
-        | BadExportContext _ ->
-          false
+        | BadExportContext _ -> false
         | _ -> true)
       tolerable_errors
 

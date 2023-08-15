@@ -10,14 +10,6 @@ Cannot use block statements in a library file. The statement will be ignored. [u
       ^
 
 
-Error ------------------------------------------------------------------------------------------------- libs/libs.js:4:3
-
-Exports can only appear at the top level [invalid-export]
-
-   4|   exports.foo = 5;
-        ^^^^^^^
-
-
 Error ---------------------------------------------------------------------------------------- bad-default-export.js:4:3
 
 Exports can only appear at the top level [invalid-export]
@@ -27,7 +19,7 @@ Exports can only appear at the top level [invalid-export]
 
 
 
-Found 3 errors
+Found 2 errors
 FLOW CHECK-CONTENTS:
 Error ---------------------------------------------------------------------------------------- bad-default-export.js:4:3
 

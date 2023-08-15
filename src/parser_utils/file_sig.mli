@@ -108,8 +108,6 @@ and module_kind =
 
 type tolerable_error =
   | IndeterminateModuleType of Loc.t
-  (* e.g. `module.exports.foo = 4` when not at the top level *)
-  | BadExportPosition of Loc.t
   (* e.g. `foo(module)`, dangerous because `module` is aliased *)
   | BadExportContext of string (* offending identifier *) * Loc.t
   | SignatureVerificationError of Loc.t Signature_error.t
