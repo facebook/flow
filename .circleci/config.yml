@@ -495,7 +495,8 @@ jobs:
       - run:
           name: Install Yarn
           command: |
-            choco install yarn -y --source https://chocolatey.org/api/v2/
+            choco install nodejs -y
+            choco install yarn -y
             yarn --version
       - run:
           name: Install tool deps from yarn
