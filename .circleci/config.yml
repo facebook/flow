@@ -494,11 +494,12 @@ jobs:
           at: .
       - run:
           name: Install Yarn
-          command: choco install yarn -y
+          command: |
+            choco install yarn -y
+            Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
       - run:
           name: Install tool deps from yarn
           command: |
-            Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
             cd packages/flow-dev-tools
             yarn install --ignore-scripts --pure-lockfile
       - run:
