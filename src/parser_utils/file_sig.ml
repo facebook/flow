@@ -12,18 +12,18 @@ module Scope_api = Scope_api.With_Loc
 module Scope_builder = Scope_builder.With_Loc
 module Loc = Loc_sig.LocS
 
+type options = {
+  enable_enums: bool;
+  enable_relay_integration: bool;
+  file_options: Files.options;
+  haste_module_ref_prefix: string option;
+  haste_module_ref_prefix_LEGACY_INTEROP: string option;
+  relay_integration_module_prefix: string option;
+}
+
 type t = {
   requires: require list;
   module_kind: module_kind;
-}
-
-and options = {
-  enable_enums: bool;
-  enable_relay_integration: bool;
-  haste_module_ref_prefix: string option;
-  haste_module_ref_prefix_LEGACY_INTEROP: string option;
-  multi_platform_extensions: string list;
-  relay_integration_module_prefix: string option;
 }
 
 and require =
@@ -78,9 +78,9 @@ let default_opts =
   {
     enable_relay_integration = false;
     enable_enums = false;
+    file_options = Files.default_options;
     haste_module_ref_prefix = None;
     haste_module_ref_prefix_LEGACY_INTEROP = None;
-    multi_platform_extensions = [];
     relay_integration_module_prefix = None;
   }
 

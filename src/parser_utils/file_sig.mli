@@ -5,20 +5,20 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+type options = {
+  enable_enums: bool;
+  enable_relay_integration: bool;
+  file_options: Files.options;
+  haste_module_ref_prefix: string option;
+  haste_module_ref_prefix_LEGACY_INTEROP: string option;
+  relay_integration_module_prefix: string option;
+}
+
 (* We can extract the observable interface of a module by extracting information
  * about what it requires and what it exports. *)
 type t = {
   requires: require list;
   module_kind: module_kind;
-}
-
-and options = {
-  enable_enums: bool;
-  enable_relay_integration: bool;
-  haste_module_ref_prefix: string option;
-  haste_module_ref_prefix_LEGACY_INTEROP: string option;
-  multi_platform_extensions: string list;
-  relay_integration_module_prefix: string option;
 }
 
 (* We track information about dependencies for each unique module reference in a
