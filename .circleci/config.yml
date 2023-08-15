@@ -498,7 +498,7 @@ jobs:
       - run:
           name: Install tool deps from yarn
           command: |
-            refreshenv
+            Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
             cd packages/flow-dev-tools
             yarn install --ignore-scripts --pure-lockfile
       - run:
