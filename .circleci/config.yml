@@ -495,8 +495,7 @@ jobs:
       - run:
           name: Install Yarn
           command: |
-            choco install nodejs-lts --force -y
-            choco install yarn -y
+            corepack enable
             yarn --version
       - run:
           name: Install tool deps from yarn
