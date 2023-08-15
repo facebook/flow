@@ -494,9 +494,11 @@ jobs:
           at: .
       - run:
           name: Install Yarn
-          command: npm install --global yarn
+          shell: bash
+          command: choco install yarn -y
       - run:
           name: Install tool deps from yarn
+          shell: bash
           command: |
             cd packages/flow-dev-tools
             yarn install --ignore-scripts --pure-lockfile
