@@ -495,7 +495,7 @@ jobs:
       - run:
           name: Install Yarn
           command: |
-            choco install nodejs -y
+            choco install nodejs-lts --force -y
             choco install yarn -y
             yarn --version
       - run:
