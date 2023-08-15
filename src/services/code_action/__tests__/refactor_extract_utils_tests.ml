@@ -17,19 +17,7 @@ let pretty_print layout =
   let source = Pretty_printer.print ~source_maps:None ~skip_endline:true layout in
   Source.contents source
 
-let file_options =
-  {
-    Files.default_lib_dir = None;
-    ignores = [];
-    untyped = [];
-    declarations = [];
-    includes = Path_matcher.empty;
-    lib_paths = [];
-    module_file_exts = [];
-    module_resource_exts = SSet.empty;
-    multi_platform_extensions = [];
-    node_resolver_dirnames = ["node_modules"];
-  }
+let file_options = Files.default_options
 
 let stub_metadata ~root ~checked =
   {

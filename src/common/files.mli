@@ -24,6 +24,8 @@ type options = {
   node_resolver_dirnames: string list;
 }
 
+val default_options : options
+
 val default_lib_dir : options -> lib_dir option
 
 val ignores : options -> (string * Str.regexp) list

@@ -24,6 +24,20 @@ type options = {
   node_resolver_dirnames: string list;
 }
 
+let default_options =
+  {
+    default_lib_dir = None;
+    ignores = [];
+    untyped = [];
+    declarations = [];
+    includes = Path_matcher.empty;
+    lib_paths = [];
+    module_file_exts = [];
+    module_resource_exts = SSet.empty;
+    multi_platform_extensions = [];
+    node_resolver_dirnames = ["node_modules"];
+  }
+
 let default_lib_dir options = options.default_lib_dir
 
 let ignores options = options.ignores
