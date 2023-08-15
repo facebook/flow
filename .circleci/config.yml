@@ -495,8 +495,8 @@ jobs:
       - run:
           name: Install Yarn
           command: |
-            choco install yarn -y
-            Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
+            choco install yarn -y --source https://chocolatey.org/api/v2/
+            yarn --version
       - run:
           name: Install tool deps from yarn
           command: |
