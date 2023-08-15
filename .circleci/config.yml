@@ -374,7 +374,7 @@ jobs:
           name: Create cache breaker
           shell: C:/tools/cygwin/bin/bash.exe -leo pipefail
           command: |
-            cd /cygdrive/c/Users/circleci/project
+            cd "$CIRCLE_WORKING_DIRECTORY"
             /usr/bin/make print-switch > /cygdrive/c/tmp/flow/opamcachebreaker
             /usr/local/bin/opam --version >> /cygdrive/c/tmp/flow/opamcachebreaker
             /usr/bin/cat flowtype.opam >> /cygdrive/c/tmp/flow/opamcachebreaker
@@ -407,7 +407,7 @@ jobs:
           environment:
             PATH: /usr/local/bin:/usr/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
           command: |
-             cd /cygdrive/c/Users/circleci/project
+             cd "$CIRCLE_WORKING_DIRECTORY"
              eval $(opam env)
              make bin/flow.exe dist/flow.zip
              mkdir -p bin/win64 && cp bin/flow.exe bin/win64/flow.exe
@@ -418,7 +418,7 @@ jobs:
           environment:
             PATH: /usr/local/bin:/usr/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
           command: |
-            cd /cygdrive/c/Users/circleci/project
+            cd "$CIRCLE_WORKING_DIRECTORY"
             eval $(opam env)
             dune build src/parser/test/run_tests.exe
             cp _build/default/src/parser/test/run_tests.exe bin/win64/run_parser_tests.exe
