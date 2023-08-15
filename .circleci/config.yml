@@ -494,9 +494,7 @@ jobs:
           at: .
       - run:
           name: Install Yarn
-          command: |
-            choco install nodejs-lts -y
-            choco install yarn -y
+          command: npm install --global yarn
       - run:
           name: Install tool deps from yarn
           command: |
