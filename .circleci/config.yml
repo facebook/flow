@@ -505,7 +505,7 @@ jobs:
           name: Install tool deps from yarn
           command: |
             cd packages/flow-dev-tools
-            yarn.cmd install --ignore-scripts --pure-lockfile
+            yarn install --ignore-scripts --pure-lockfile
       - run:
           name: Run tool tests
           shell: bash
