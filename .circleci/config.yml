@@ -494,12 +494,12 @@ jobs:
           at: .
       - run:
           name: Install Yarn
-          command: choco install yarn -y -v
+          command: choco install yarn -y
       - run:
           name: Install tool deps from yarn
           command: |
             cd packages/flow-dev-tools
-            yarn install --ignore-scripts --pure-lockfile
+            yarn.cmd install --ignore-scripts --pure-lockfile
       - run:
           name: Run tool tests
           shell: bash
