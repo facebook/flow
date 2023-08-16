@@ -53,6 +53,8 @@ and ('t, 'targs, 'args, 'props, 'children) hint_decomposition =
   | Decomp_ObjComputed of Reason.t
   (* Hint on `{ ...e }` becomes hint on `e` *)
   | Decomp_ObjSpread
+  (* Type of `obj` becomes type of `obj.#privateName` *)
+  | Decomp_PrivateProp of string * ALoc.t list
   (* Hint on array literal `[e]` becomes hint on `e` *)
   | Decomp_ArrElement of int option
   (* Hint on array literal `[...e]` becomes hint on `e` *)
@@ -117,6 +119,7 @@ let string_of_hint_unknown_kind = function
   | Decomp_ObjProp _ -> "Decomp_ObjProp"
   | Decomp_ObjComputed _ -> "Decomp_ObjComputed"
   | Decomp_ObjSpread -> "Decomp_ObjSpread"
+  | Decomp_PrivateProp _ -> "Decomp_PrivateProp"
   | Decomp_ArrElement None -> "Decomp_ArrElement (no index)"
   | Decomp_ArrElement (Some i) -> Utils_js.spf "Decomp_ArrElement (%d)" i
   | Decomp_ArrSpread i -> Utils_js.spf "Decomp_ArrSpread (%d)" i
@@ -175,6 +178,7 @@ let rec map_decomp_op ~map_base_hint ~map_targs ~map_arg_list ~map_jsx = functio
   | Decomp_ObjProp prop -> Decomp_ObjProp prop
   | Decomp_ObjComputed l -> Decomp_ObjComputed l
   | Decomp_ObjSpread -> Decomp_ObjSpread
+  | Decomp_PrivateProp (prop, class_stack) -> Decomp_PrivateProp (prop, class_stack)
   | Decomp_ArrElement o -> Decomp_ArrElement o
   | Decomp_ArrSpread o -> Decomp_ArrSpread o
   | Decomp_EmptyArrayElement -> Decomp_EmptyArrayElement

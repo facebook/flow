@@ -1824,9 +1824,10 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
           (match property with
           | Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name; comments = _ }) ->
             decompose_hints (Decomp_ObjProp name) [Hint_t (ValueHint _object, ExpectedTypeHint)]
-          | Ast.Expression.Member.PropertyPrivateName _ ->
-            (* TODO create a hint based on the current class. *)
-            []
+          | Ast.Expression.Member.PropertyPrivateName (_, { Ast.PrivateName.name; _ }) ->
+            decompose_hints
+              (Decomp_PrivateProp (name, class_stack))
+              [Hint_t (ValueHint _object, ExpectedTypeHint)]
           | Ast.Expression.Member.PropertyExpression expr ->
             decompose_hints
               (Decomp_ObjComputed (mk_expression_reason expr))

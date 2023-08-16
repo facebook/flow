@@ -522,6 +522,20 @@ and type_of_hint_decomposition cx op reason t =
             in
             SpeculationFlow.resolved_lower_flow_unsafe cx reason (t, use_t)
         )
+      | Decomp_PrivateProp (name, class_stack) ->
+        let env = Context.environment cx in
+        Context.set_environment cx { env with Loc_env.class_stack };
+        let class_entries = Type_env.get_class_entries cx in
+        let t =
+          Tvar.mk_no_wrap_where cx reason (fun prop_t ->
+              SpeculationFlow.resolved_lower_flow_unsafe
+                cx
+                reason
+                (t, GetPrivatePropT (unknown_use, reason, name, class_entries, false, prop_t))
+          )
+        in
+        Context.set_environment cx env;
+        t
       | Decomp_SentinelRefinement checks ->
         (match SMap.elements checks with
         | [] -> t

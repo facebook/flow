@@ -40,6 +40,7 @@ and ('t, 'targs, 'args, 'props, 'children) hint_decomposition =
   | Decomp_ObjProp of string
   | Decomp_ObjComputed of Reason.t
   | Decomp_ObjSpread
+  | Decomp_PrivateProp of string * ALoc.t list
   | Decomp_ArrElement of int option
   | Decomp_ArrSpread of int
   | Decomp_EmptyArrayElement
