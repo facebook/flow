@@ -493,8 +493,14 @@ jobs:
       - attach_workspace:
           at: .
       - run:
-          name: Install Yarn
-          command: choco install yarn -y
+          name: Turn off nvm
+          command: nvm off
+      - run:
+          name: Install Node LTS
+          command: choco install nodejs-lts -y
+      - run:
+          name: Enable Corepack
+          command: corepack enable
       - run:
           name: Install tool deps from yarn
           command: |
