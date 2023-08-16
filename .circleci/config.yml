@@ -494,7 +494,7 @@ jobs:
           at: .
       - run:
           name: Install Yarn
-          command: choco install yarn -y
+          command: choco install yarn -y -v
       - run:
           name: Install tool deps from yarn
           command: |
