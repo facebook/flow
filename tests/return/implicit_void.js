@@ -399,3 +399,36 @@ function g19(x: string): number { // Error
   }
 }
 g19('b');
+
+function g20(x: number, y: bool): number { // Error
+  switch (x) {
+    case 1:
+      if (y) {
+        break;
+      } else {
+      }
+    default:
+      return 1;
+  }
+}
+
+function g21(x: number, b: boolean): number { // Error
+  switch (x) {
+    case 1:
+      if (b) {
+        break;
+      }
+      return 1;
+    default:
+      return 2;
+  }
+}
+
+function g22(b: boolean): number { // Error
+    do {
+      if (b) {
+        continue;
+      }
+      return 1;
+    } while (false);
+}

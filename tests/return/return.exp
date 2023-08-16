@@ -224,6 +224,33 @@ undefined. [incompatible-return]
                                  ^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------ implicit_void.js:403:35
+
+Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
+undefined. [incompatible-return]
+
+   403| function g20(x: number, y: bool): number { // Error
+                                          ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ implicit_void.js:415:38
+
+Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
+undefined. [incompatible-return]
+
+   415| function g21(x: number, b: boolean): number { // Error
+                                             ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ implicit_void.js:427:27
+
+Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
+undefined. [incompatible-return]
+
+   427| function g22(b: boolean): number { // Error
+                                  ^^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------------- void.js:12:2
 
 Cannot cast `f(...)` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
@@ -242,4 +269,4 @@ References:
 
 
 
-Found 25 errors
+Found 28 errors

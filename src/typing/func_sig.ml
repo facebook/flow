@@ -392,12 +392,12 @@ struct
         )
     in
 
-    let (statements, reconstruct_body) =
+    let (statements, reconstruct_body, maybe_implicit_void_return) =
       let open Ast.Statement in
       match body with
-      | None -> ([], Fun.const None)
+      | None -> ([], Fun.const None, true)
       | Some (Ast.Function.BodyBlock (loc, { Block.body; comments })) ->
-        (body, (fun body -> Some (Ast.Function.BodyBlock (loc, { Block.body; comments }))))
+        (body, (fun body -> Some (Ast.Function.BodyBlock (loc, { Block.body; comments }))), true)
       | Some (Ast.Function.BodyExpression expr) ->
         ( [
             ( fst expr,
@@ -408,7 +408,8 @@ struct
           | [(_, Return { Return.argument = Some expr; comments = _; return_out = _ })]
           | [(_, Expression { Expression.expression = expr; _ })] ->
             Some (Ast.Function.BodyExpression expr)
-          | _ -> failwith "expected return body")
+          | _ -> failwith "expected return body"),
+          false
         )
     in
     let (has_return_annot, return_t) =
@@ -419,25 +420,12 @@ struct
     in
 
     (* statement visit pass *)
-    let (statements_ast, statements_abnormal) =
-      Toplevels.toplevels Statement.statement cx statements
-    in
+    let (statements_ast, _) = Toplevels.toplevels Statement.statement cx statements in
 
-    let maybe_void =
-      Abnormal.(
-        match statements_abnormal with
-        | Some Return -> false
-        | Some Throw -> false (* NOTE *)
-        | Some (Break _)
-        | Some (Continue _) ->
-          failwith "Illegal toplevel abnormal directive"
-        | None -> true
-      )
-    in
     let body_ast = reconstruct_body statements_ast in
     (* build return type for void funcs *)
     let (init_ast, exhaust) =
-      if maybe_void then
+      if maybe_implicit_void_return then
         let loc = loc_of_t return_t in
         (* Some branches add an ImplicitTypeParam frame to force our flow_use_op
          * algorithm to pick use_ops outside the provided loc. *)
