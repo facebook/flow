@@ -13,7 +13,7 @@ aliases:
         ignore: /.*/
 
 orbs:
-  win: circleci/windows@4.1.0
+  win: circleci/windows@5.0.0
 
   opam_windows:
     commands:
@@ -493,8 +493,14 @@ jobs:
       - attach_workspace:
           at: .
       - run:
-          name: Install Yarn
-          command: choco install yarn
+          name: Turn off nvm
+          command: nvm off
+      - run:
+          name: Install Node LTS
+          command: choco install nodejs-lts -y
+      - run:
+          name: Enable Corepack
+          command: corepack enable
       - run:
           name: Install tool deps from yarn
           command: |
@@ -503,7 +509,9 @@ jobs:
       - run:
           name: Run tool tests
           shell: bash
-          command: ./tool test --bin bin/win64/flow.exe --parallelism 1
+          command: |
+            cd "$CIRCLE_WORKING_DIRECTORY"
+            ./tool test --bin bin/win64/flow.exe --parallelism 1
 
   ounit_test_linux:
     executor: linux-opam
