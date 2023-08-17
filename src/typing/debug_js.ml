@@ -1113,7 +1113,6 @@ let dump_error_message =
   let open Error_message in
   let string_of_use_op = string_of_use_op_rec in
   let dump_internal_error = function
-    | AbnormalControlFlow -> "AbnormalControlFlow"
     | UnconstrainedTvar _ -> "UnconstrainedTvar"
     | UnexpectedModuleT _ -> "UnexpectedModuleT"
     | PlaceholderTypeInChecking -> "PlaceholderTypeInChecking"

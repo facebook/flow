@@ -354,16 +354,7 @@ module Statement = Fix_statement.Statement_
 
 (* core inference, assuming setup and teardown happens elsewhere *)
 let infer_core cx statements =
-  let (stmts, abnormal) = Toplevels.toplevels Statement.statement cx statements in
-  (match abnormal with
-  | None
-  | Some Abnormal.Throw ->
-    (* throw is allowed as a top-level statement *)
-    ()
-  | Some _ ->
-    (* should never happen *)
-    let loc = Loc.{ none with source = Some (Context.file cx) } |> ALoc.of_loc in
-    Flow_js.add_output cx Error_message.(EInternal (loc, AbnormalControlFlow)));
+  let (stmts, _) = Toplevels.toplevels Statement.statement cx statements in
   stmts
 
 let initialize_env ~lib ?(exclude_syms = NameUtils.Set.empty) cx aloc_ast toplevel_scope_kind =

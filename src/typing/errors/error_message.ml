@@ -642,7 +642,6 @@ and docblock_error =
   | InvalidJSXRuntimeAttribute
 
 and internal_error =
-  | AbnormalControlFlow
   | MethodNotAFunction
   | OptionalMethod
   | UnsupportedGuardPredicate of string
@@ -1876,7 +1875,6 @@ let enum_name_of_reason reason =
   | _ -> None
 
 let string_of_internal_error = function
-  | AbnormalControlFlow -> "abnormal control flow"
   | UnconstrainedTvar None -> "unconstrained tvar during tvar resolution"
   | UnconstrainedTvar (Some i) -> spf "unconstrained tvar (%d) during tvar resolution" i
   | UnexpectedModuleT s -> spf "unexpected module type: %s" s
