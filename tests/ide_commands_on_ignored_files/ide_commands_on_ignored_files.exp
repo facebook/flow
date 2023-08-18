@@ -1,0 +1,36 @@
+get def should not work for ignored files
+[]
+type-at-pos should not work for ignored files
+{
+  "types":null,
+  "reasons":[],
+  "loc":{
+    "source":null,
+    "type":null,
+    "start":{"line":0,"column":1,"offset":0},
+    "end":{"line":0,"column":0,"offset":0}
+  },
+  "path":"",
+  "line":0,
+  "endline":0,
+  "start":1,
+  "end":0
+}
+get def should not work for noflow files
+[]
+type-at-pos should not work for noflow files
+{
+  "types":null,
+  "reasons":[],
+  "loc":{
+    "source":null,
+    "type":null,
+    "start":{"line":0,"column":1,"offset":0},
+    "end":{"line":0,"column":0,"offset":0}
+  },
+  "path":"",
+  "line":0,
+  "endline":0,
+  "start":1,
+  "end":0
+}
