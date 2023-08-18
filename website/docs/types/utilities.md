@@ -492,60 +492,6 @@ const arr = [() => 'foo', () => 'bar'];
 (run(arr)[1]: boolean); // Error!
 ```
 
-## `$Call<F, T...>` {#toc-call}
-
-`$Call<F, T...>` is a type that represents the result of calling the given [function type](../functions) `F` with 0 or more arguments `T...`.
-This is analogous to calling a function at runtime (or more specifically, it's analogous to calling [`Function.prototype.call`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)), but at the type level; this means that function type calls happens statically, i.e. not at runtime.
-
-Let's see a couple of examples:
-```js flow-check
-// Takes an object type, returns the type of its `prop` key
-type ExtractPropType = <T>({prop: T, ...}) => T;
-type Obj = {prop: number};
-type PropType = $Call<ExtractPropType, Obj>;  // Call `ExtractPropType` with `Obj` as an argument
-type Nope = $Call<ExtractPropType, {nope: number}>;  // Error! Argument doesn't match `Obj`.
-
-(5: PropType); // Works
-(true: PropType);  // Error! PropType is a number
-```
-
-```js flow-check
-// Takes a function type, and returns its return type
-type ExtractReturnType = <R>(() => R) => R;
-type Fn = () => number;
-type ReturnType = $Call<ExtractReturnType, Fn>;
-
-(5: ReturnType);  // Works
-(true: ReturnType);  // Error! ReturnType is a number
-```
-
-`$Call` can be very powerful because it allows you to make calls in type-land that you would otherwise have to do at runtime.
-The type-land calls happen statically and will be erased at runtime.
-
-```js flow-check
-// Getting return types:
-function getFirstValue<V>(map: Map<string, V>): ?V {
-  for (const [key, value] of map.entries()) {
-    return value;
-  }
-  return null;
-}
-
-// Using $Call, we can get the actual return type of the function above:
-type Value = $Call<typeof getFirstValue, Map<string, number>>;
-
-(5: Value);
-(true: Value);  // Error! Value is a `number`
-
-// We could generalize it further:
-type GetMapValue<M> =
-  $Call<typeof getFirstValue, M>;
-
-(5: GetMapValue<Map<string, number>>);
-(true: GetMapValue<Map<string, boolean>>);
-(true: GetMapValue<Map<string, number>>);  // Error! value is a `number`
-```
-
 ## `Class<T>` {#toc-class}
 
 Given a type `T` representing instances of a class `C`, the type `Class<T>` is the type of the class `C`.
@@ -663,6 +609,61 @@ function f<T>(input: $Shape<T>): $Shape<T> {
 
 This utility type is deprecated and will be deleted in the future -
 use [`Partial`](#toc-partial) instead.
+
+### `$Call<F, T...>` {#toc-call}
+NOTE: **Deprecated!** This utility is deprecated as of Flow version 0.208 - please use [Conditional Types](../conditional) or [Indexed Access Types](../indexed-access) to extract types instead.
+
+`$Call<F, T...>` is a type that represents the result of calling the given [function type](../functions) `F` with 0 or more arguments `T...`.
+This is analogous to calling a function at runtime (or more specifically, it's analogous to calling [`Function.prototype.call`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)), but at the type level; this means that function type calls happens statically, i.e. not at runtime.
+
+Let's see a couple of examples:
+```js flow-check
+// Takes an object type, returns the type of its `prop` key
+type ExtractPropType = <T>({prop: T, ...}) => T;
+type Obj = {prop: number};
+type PropType = $Call<ExtractPropType, Obj>;  // Call `ExtractPropType` with `Obj` as an argument
+type Nope = $Call<ExtractPropType, {nope: number}>;  // Error! Argument doesn't match `Obj`.
+
+(5: PropType); // Works
+(true: PropType);  // Error! PropType is a number
+```
+
+```js flow-check
+// Takes a function type, and returns its return type
+type ExtractReturnType = <R>(() => R) => R;
+type Fn = () => number;
+type ReturnType = $Call<ExtractReturnType, Fn>;
+
+(5: ReturnType);  // Works
+(true: ReturnType);  // Error! ReturnType is a number
+```
+
+`$Call` can be very powerful because it allows you to make calls in type-land that you would otherwise have to do at runtime.
+The type-land calls happen statically and will be erased at runtime.
+
+```js flow-check
+// Getting return types:
+function getFirstValue<V>(map: Map<string, V>): ?V {
+  for (const [key, value] of map.entries()) {
+    return value;
+  }
+  return null;
+}
+
+// Using $Call, we can get the actual return type of the function above:
+type Value = $Call<typeof getFirstValue, Map<string, number>>;
+
+(5: Value);
+(true: Value);  // Error! Value is a `number`
+
+// We could generalize it further:
+type GetMapValue<M> =
+  $Call<typeof getFirstValue, M>;
+
+(5: GetMapValue<Map<string, number>>);
+(true: GetMapValue<Map<string, boolean>>);
+(true: GetMapValue<Map<string, number>>);  // Error! value is a `number`
+```
 
 ### `$ObjMap<T, F>` {#toc-objmap}
 NOTE: **Deprecated!** This utility is deprecated as of Flow version 0.211- please use [Mapped Types](../mapped-types) instead.
