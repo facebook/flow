@@ -653,12 +653,12 @@ module Make
       in
 
       (* traverse case list, get list of control flow exits and list of ASTs *)
-      let (exits_rev, cases_ast_rev, fallthrough_case, has_default) =
+      let (exits_rev, cases_ast_rev, has_default) =
         cases
         |> Base.List.fold_left
-             ~init:([], [], None, false)
+             ~init:([], [], false)
              ~f:(fun
-                  (exits, cases_ast, _fallthrough_case, has_default)
+                  (exits, cases_ast, has_default)
                   (loc, { Switch.Case.test; consequent; comments })
                 ->
                (* compute predicates implied by case expr or default *)
@@ -706,51 +706,16 @@ module Make
                (* process statements, track control flow exits: exit will be an
                   unconditional exit. *)
                let (consequent_ast, exit) = Toplevels.toplevels statement cx consequent in
-               (* track fallthrough to next case and/or break to switch end *)
-               let falls_through =
-                 match exit with
-                 | Some Abnormal.Throw
-                 | Some Abnormal.Return
-                 | Some (Abnormal.Break _)
-                 | Some (Abnormal.Continue _) ->
-                   false
-                 | None -> true
-               in
-               (* save state for fallthrough *)
-               let fallthrough_case =
-                 if falls_through then
-                   Some loc
-                 else
-                   None
-               in
 
                ( exit :: exits,
                  (loc, { Switch.Case.test = test_ast; consequent = consequent_ast; comments })
                  :: cases_ast,
-                 fallthrough_case,
                  has_default || Base.Option.is_none test
                )
            )
       in
       let cases_ast = List.rev cases_ast_rev in
       let exits = List.rev exits_rev in
-      (* If no default was present, record a write to maybe_exhaustively_checked and then update
-       * the switch state to account for this write in the total/partial writes. We need to also
-       * merge in the fallthrough case if one existed. *)
-      let () =
-        if not has_default then (
-          if Base.Option.is_none fallthrough_case then
-            Type_env.init_let
-              cx
-              ~use_op:unknown_use
-              exhaustive_check_incomplete_out
-              (loc_of_t exhaustive_check_incomplete_out);
-          (* If we handle the fallthrough case explicitly here then there is no need to merge
-           * in those changes a second time. Instead, we set the fallthrough_case to None *)
-          ()
-        ) else
-          ()
-      in
 
       (* abnormal exit: if every case exits abnormally the same way (or falls
           through to a case that does), then the switch as a whole exits that way.
