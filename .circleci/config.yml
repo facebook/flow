@@ -508,7 +508,6 @@ jobs:
             yarn install --ignore-scripts --pure-lockfile
       - run:
           name: Run tool tests
-          shell: C:/tools/cygwin/bin/bash.exe -leo pipefail
           command: |
             cd "$CIRCLE_WORKING_DIRECTORY"
             ./tool test --bin bin/win64/flow.exe --parallelism 1
