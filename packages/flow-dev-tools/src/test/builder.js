@@ -516,6 +516,7 @@ class TestBuilder {
   sanitizeIncomingLSPMessage(params: any): any {
     // LSP sends back document URLs, to files within the test project
     const dirUrl = this.getDirUrl();
+    console.error(dirUrl);
     const replaceDir = (str: string): string => {
       let out = str;
       let index;
@@ -525,6 +526,7 @@ class TestBuilder {
           '<PLACEHOLDER_PROJECT_URL>' +
           out.substr(index + dirUrl.length);
       }
+      console.log('before\n', out, '\nAfter\n', str);
       return out;
     };
 
