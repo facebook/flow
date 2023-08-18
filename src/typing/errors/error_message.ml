@@ -160,6 +160,10 @@ and 'loc t' =
       potential_generator: string option;
     }
   | EPrivateLookupFailed of ('loc virtual_reason * 'loc virtual_reason) * name * 'loc virtual_use_op
+  | EPlatformSpecificImplementationModuleLookupFailed of {
+      loc: 'loc;
+      name: string;
+    }
   | EAdditionMixed of 'loc virtual_reason * 'loc virtual_use_op
   | EComparison of ('loc virtual_reason * 'loc virtual_reason)
   | ENonStrictEqualityComparison of ('loc virtual_reason * 'loc virtual_reason)
@@ -862,6 +866,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EBuiltinLookupFailed { reason = map_reason reason; name; potential_generator }
   | EPrivateLookupFailed ((r1, r2), x, op) ->
     EPrivateLookupFailed ((map_reason r1, map_reason r2), x, map_use_op op)
+  | EPlatformSpecificImplementationModuleLookupFailed { loc; name } ->
+    EPlatformSpecificImplementationModuleLookupFailed { loc = f loc; name }
   | EAdditionMixed (r, op) -> EAdditionMixed (map_reason r, map_use_op op)
   | ETupleArityMismatch ((r1, r2), l, i, op) ->
     ETupleArityMismatch ((map_reason r1, map_reason r2), l, i, map_use_op op)
@@ -1426,6 +1432,7 @@ let util_use_op_of_msg nope util = function
   | EValueUsedAsType _
   | EPolarityMismatch { reason = _; name = _; expected_polarity = _; actual_polarity = _ }
   | EBuiltinLookupFailed _
+  | EPlatformSpecificImplementationModuleLookupFailed _
   | EComparison (_, _)
   | ENonStrictEqualityComparison _
   | ESpeculationAmbiguous _
@@ -1745,6 +1752,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEnumMemberDuplicateValue { loc; _ } -> Some loc
   | ESpeculationAmbiguous { reason; _ } -> Some (loc_of_reason reason)
   | EBuiltinLookupFailed { reason; _ } -> Some (loc_of_reason reason)
+  | EPlatformSpecificImplementationModuleLookupFailed { loc; _ } -> Some loc
   | EDuplicateClassMember { loc; _ } -> Some loc
   | EEmptyArrayNoProvider { loc } -> Some loc
   | EUnusedPromise { loc; _ } -> Some loc
@@ -2403,7 +2411,6 @@ let friendly_message_of_msg loc_of_aloc msg =
       else
         [text "Cannot resolve name "; code (display_string_of_name name); text "."]
     in
-
     Normal { features }
   | EPrivateLookupFailed (reasons, x, use_op) ->
     PropMissing
@@ -2414,6 +2421,16 @@ let friendly_message_of_msg loc_of_aloc msg =
         use_op;
         suggestion = None;
       }
+  | EPlatformSpecificImplementationModuleLookupFailed { loc = _; name } ->
+    let features =
+      [
+        text "Cannot resolve platform-specific implementation module ";
+        code name;
+        text ". ";
+        text "All platform-specific implementations must exist for this interface.";
+      ]
+    in
+    Normal { features }
   | EAdditionMixed (reason, use_op) ->
     UseOp
       {
@@ -5068,6 +5085,7 @@ let error_code_of_message err : error_code option =
     else
       Some CannotResolveName
   end
+  | EPlatformSpecificImplementationModuleLookupFailed _ -> Some CannotResolveModule
   | ECallTypeArity _ -> Some NonpolymorphicTypeArg
   | ECannotDelete _ -> Some CannotDelete
   | ECannotResolveOpenTvar _ -> Some CannotInferType

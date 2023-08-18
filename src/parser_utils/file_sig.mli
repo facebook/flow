@@ -50,6 +50,8 @@ and require =
    * empty, but modeled as a separate variant to ensure use sites handle this
    * case if necessary. *)
   | Import0 of { source: Loc.t Flow_ast_utils.source }
+  (* A synthetic import declaration without a source location *)
+  | ImportSynthetic of { source: string }
   (* import declaration with specifiers *)
   | Import of {
       import_loc: Loc.t;
@@ -125,7 +127,7 @@ val program :
 (* Use for debugging; not for exposing info to the end user *)
 val to_string : t -> string
 
-val require_loc_map : t -> Loc.t Nel.t SMap.t
+val require_loc_map : t -> Loc.t list SMap.t
 
 (* Only the keys returned by `require_loc_map` *)
 val require_set : t -> SSet.t

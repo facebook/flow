@@ -48,6 +48,7 @@ let from_require require (acc : acc_t) =
     |> from_imported_locs_map ~import_mode:Ty.TypeofMode typesof
   | ImportDynamic _
   | Import0 _
+  | ImportSynthetic _
   | ExportFrom _ ->
     acc
 

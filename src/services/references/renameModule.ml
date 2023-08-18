@@ -42,7 +42,8 @@ let get_loc_to_replacement_map ~old_haste_name ~new_haste_name file_sig =
         if old_haste_name = mref then
           Loc_collections.LocMap.add loc new_haste_name acc
         else
-          acc)
+          acc
+      | ImportSynthetic _ -> acc)
     Loc_collections.LocMap.empty
     requires
 

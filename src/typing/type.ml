@@ -310,6 +310,10 @@ module rec TypeTerm : sig
         from: 'loc virtual_reason;
         target: 'loc virtual_reason;
       }
+    | ConformToCommonInterface of {
+        self: 'loc virtual_reason;
+        common_interface_module: 'loc virtual_reason;
+      }
     | DeleteProperty of {
         lhs: 'loc virtual_reason;
         prop: 'loc virtual_reason;
@@ -3655,6 +3659,7 @@ let aloc_of_root_use_op : root_use_op -> ALoc.t = function
   | ClassMethodDefinition { def = op; _ }
   | ClassImplementsCheck { def = op; _ }
   | Coercion { from = op; _ }
+  | ConformToCommonInterface { self = op; _ }
   | DeleteProperty { lhs = op; _ }
   | DeleteVar { var = op; _ }
   | FunCall { op; _ }
@@ -3793,6 +3798,7 @@ let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
   | ClassOwnProtoCheck _ -> "ClassOwnProtoCheck"
   | ClassMethodDefinition _ -> "ClassMethodDefinition"
   | Coercion _ -> "Coercion"
+  | ConformToCommonInterface _ -> "ConformToCommonInterface"
   | DeleteProperty _ -> "DeleteProperty"
   | DeleteVar _ -> "DeleteVar"
   | FunCall _ -> "FunCall"

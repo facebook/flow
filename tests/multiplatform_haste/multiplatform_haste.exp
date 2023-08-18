@@ -1,0 +1,47 @@
+Error ----------------------------------------------------------------------------------------- shadowing.android.js:1:1
+
+Cannot conform to common interface module because property `MyType` is missing in self [1] but exists in common
+interface [2]. [prop-missing]
+
+   shadowing.android.js:1:1
+   1|
+       [1]
+
+References:
+   shadowing.js.flow
+   ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- shadowing.ios.jsx:1:1
+
+Cannot conform to common interface module because property `MyType` is missing in self [1] but exists in common
+interface [2]. [prop-missing]
+
+   shadowing.ios.jsx:1:1
+   1|
+       [1]
+
+References:
+   shadowing.js.flow
+   ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- test_interface_import.js:8:2
+
+Cannot cast `o1` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test_interface_import.js:8:2
+   8| (o1: empty); // error
+       ^^
+
+References:
+   test_interface_import.js:6:17
+   6| declare var o1: MyType;
+                      ^^^^^^ [1]
+   test_interface_import.js:8:6
+   8| (o1: empty); // error
+           ^^^^^ [2]
+
+
+
+Found 3 errors

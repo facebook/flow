@@ -496,6 +496,12 @@ let rec make_error_printable :
           root loc frames def [text "Cannot shadow proto "; ref proto])
       | Op (Coercion { from; target }) ->
         root loc frames from [text "Cannot coerce "; desc from; text " to "; desc target]
+      | Op (ConformToCommonInterface { self; common_interface_module }) ->
+        root
+          loc
+          frames
+          self
+          [text "Cannot conform to common interface "; desc common_interface_module]
       | Op (FunCall { op; fn; _ }) ->
         root_with_specific_reason loc frames op fn [text "Cannot call "; desc fn]
       | Op (FunCallMethod { op; fn; prop; _ }) ->
