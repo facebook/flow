@@ -484,18 +484,73 @@ module Haste : MODULE_SYSTEM = struct
       record_phantom_dependency mname dependency phantom_acc;
       None
 
+  let resolve_haste_module_disallow_platform_specific_haste_modules_under_multiplatform
+      ~options ~reader ?phantom_acc ~dir r =
+    let dependency = resolve_haste_module ~options ~reader ?phantom_acc ~dir r in
+    let file_options = Options.file_options options in
+    if file_options.Files.multi_platform then
+      match Option.map Parsing_heaps.read_dependency dependency with
+      | Some (Modulename.String mname as module_name)
+        when Base.List.exists file_options.Files.multi_platform_extensions ~f:(fun ext ->
+                 String.ends_with ~suffix:ext mname
+             ) ->
+        (* If we don't allow an import to resolve a platform specific import, but we did find one,
+           we should fail to resolve. This restriction only applies to Haste modules because Metro
+           cannot resolve them.
+           TODO: could we provide a better error than just failing to resolve? *)
+        record_phantom_dependency module_name dependency phantom_acc;
+        None
+      | _ -> dependency
+    else
+      dependency
+
   let resolve_import ~options ~reader node_modules_containers f ?phantom_acc r =
     let file = File_key.to_string f in
     let dir = Filename.dirname file in
     if is_relative_or_absolute r then
       Node.resolve_relative ~options ~reader ?phantom_acc dir r
     else
-      lazy_seq
-        [
-          lazy (resolve_haste_module ~options ~reader ?phantom_acc ~dir r);
-          lazy (Node.resolve_root_relative ~options ~reader ?phantom_acc r);
-          lazy (Node.node_module ~options ~reader node_modules_containers file ?phantom_acc dir r);
-        ]
+      let file_options = Options.file_options options in
+      if not file_options.Files.multi_platform then
+        lazy_seq
+          [
+            lazy (resolve_haste_module ~options ~reader ?phantom_acc ~dir r);
+            lazy (Node.resolve_root_relative ~options ~reader ?phantom_acc r);
+            lazy (Node.node_module ~options ~reader node_modules_containers file ?phantom_acc dir r);
+          ]
+      else
+        match Files.platform_specific_extension_opt ~options:file_options file with
+        | None ->
+          lazy_seq
+            [
+              lazy
+                (resolve_haste_module_disallow_platform_specific_haste_modules_under_multiplatform
+                   ~options
+                   ~reader
+                   ?phantom_acc
+                   ~dir
+                   r
+                );
+              lazy (Node.resolve_root_relative ~options ~reader ?phantom_acc r);
+              lazy
+                (Node.node_module ~options ~reader node_modules_containers file ?phantom_acc dir r);
+            ]
+        | Some ext ->
+          lazy_seq
+            [
+              lazy (resolve_haste_module ~options ~reader ?phantom_acc ~dir (r ^ ext));
+              lazy
+                (resolve_haste_module_disallow_platform_specific_haste_modules_under_multiplatform
+                   ~options
+                   ~reader
+                   ?phantom_acc
+                   ~dir
+                   r
+                );
+              lazy (Node.resolve_root_relative ~options ~reader ?phantom_acc r);
+              lazy
+                (Node.node_module ~options ~reader node_modules_containers file ?phantom_acc dir r);
+            ]
 
   let imported_module ~options ~reader node_modules_containers file ?phantom_acc r =
     (* For historical reasons, the Haste module system always picks the first

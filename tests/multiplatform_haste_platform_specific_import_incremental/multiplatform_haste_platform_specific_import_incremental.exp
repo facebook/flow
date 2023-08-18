@@ -1,0 +1,129 @@
+In this test setup, we start with an iOS specific file and a common interface file with more general signature.
+An iOS file tries to import the logical module and expect the more specific type, which should pass.
+A general file tries to import the logical module and expect the more specific type, which should fail.
+
+Error --------------------------------------------------------------------------------------------------- General.js:3:2
+
+Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   General.js:3:2
+   3| (a: string);
+       ^
+
+References:
+   A.js.flow:1:34
+   1| declare export const a: string | number; // more general than platform-specific definition
+                                       ^^^^^^ [1]
+   General.js:3:5
+   3| (a: string);
+          ^^^^^^ [2]
+
+
+
+Found 1 error
+
+
+
+Remove A.ios.js
+Both iOSOnly and General should error.
+Error --------------------------------------------------------------------------------------------------- General.js:3:2
+
+Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   General.js:3:2
+   3| (a: string);
+       ^
+
+References:
+   A.js.flow:1:34
+   1| declare export const a: string | number; // more general than platform-specific definition
+                                       ^^^^^^ [1]
+   General.js:3:5
+   3| (a: string);
+          ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- iOSOnly.ios.js:3:2
+
+Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   iOSOnly.ios.js:3:2
+   3| (a: string);
+       ^
+
+References:
+   A.js.flow:1:34
+   1| declare export const a: string | number; // more general than platform-specific definition
+                                       ^^^^^^ [1]
+   iOSOnly.ios.js:3:5
+   3| (a: string);
+          ^^^^^^ [2]
+
+
+
+Found 2 errors
+
+
+
+Restore A.ios.js and remove A.js.flow
+General should error with unbound module.
+Error -------------------------------------------------------------------------------------------------- General.js:1:17
+
+Cannot resolve module `A`. [cannot-resolve-module]
+
+   1| import {a} from 'A';
+                      ^^^
+
+
+
+Found 1 error
+
+
+
+Remove both A.ios.js and remove A.js.flow
+Both iOSOnly and General should error with unbound module.
+Error -------------------------------------------------------------------------------------------------- General.js:1:17
+
+Cannot resolve module `A`. [cannot-resolve-module]
+
+   1| import {a} from 'A';
+                      ^^^
+
+
+Error ---------------------------------------------------------------------------------------------- iOSOnly.ios.js:1:17
+
+Cannot resolve module `A`. [cannot-resolve-module]
+
+   1| import {a} from 'A';
+                      ^^^
+
+
+
+Found 2 errors
+
+
+
+Add back both A.ios.js and remove A.js.flow
+Only General should error.
+Error --------------------------------------------------------------------------------------------------- General.js:3:2
+
+Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   General.js:3:2
+   3| (a: string);
+       ^
+
+References:
+   A.js.flow:1:34
+   1| declare export const a: string | number; // more general than platform-specific definition
+                                       ^^^^^^ [1]
+   General.js:3:5
+   3| (a: string);
+          ^^^^^^ [2]
+
+
+
+Found 1 error
+
+
+
