@@ -47,7 +47,7 @@ inline std::string str_to_lower(const std::string &s) {
 // Push a new entry on the heap while ensuring size <= max_results.
 void push_heap(ResultHeap &heap,
                int weight,
-               long score,
+               int64_t score,
                const std::string *value,
                size_t max_results) {
   MatchResult result(weight, score, value);
@@ -92,7 +92,7 @@ void thread_worker(
       continue;
     }
     if ((bitmask & candidate.bitmask) == bitmask) {
-      long score = 0;
+      int64_t score = 0;
       bool has_score = fuzzy_score(
         candidate.value.c_str(),
         candidate.lowercase.c_str(),

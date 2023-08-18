@@ -14,6 +14,7 @@ extern "C" {
 
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 struct matcher;
 typedef struct matcher matcher_t;
@@ -51,7 +52,7 @@ bool fuzzy_score_c(
     const char* needle,
     bool boost_full_match,
     bool first_match_can_be_weak,
-    long* result);
+    int64_t* result);
 
 #ifdef __cplusplus
 }

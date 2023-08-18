@@ -134,7 +134,7 @@ bool fuzzy_score_c(
     const char* needle,
     bool boost_full_match,
     bool first_match_can_be_weak,
-    long* result) {
+    int64_t* result) {
   std::string haystack_str(haystack);
   std::string haystack_lower = str_to_lower(haystack_str);
 
