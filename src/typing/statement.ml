@@ -3669,22 +3669,25 @@ module Make
            be ok for the most part since this is the most common way to call
            invariant. It's worth experimenting with whether people use invariant
            in other ways, and if not, restricting it to this pattern. *)
-        let arguments =
+        let (t, arguments) =
           match (targs, arguments) with
           | (None, (args_loc, { ArgList.arguments = []; comments = args_comments })) ->
+            let t = EmptyT.at loc |> with_trust bogus_trust in
             (* invariant() is treated like a throw *)
-            Abnormal.throw_expr_control_flow_exception
-              loc
-              ( (loc, VoidT.at loc |> with_trust bogus_trust),
-                Ast.Expression.Call
-                  {
-                    Call.callee;
-                    targs;
-                    arguments = (args_loc, { ArgList.arguments = []; comments = args_comments });
-                    comments;
-                  }
-              )
-              Abnormal.Throw
+            ( t,
+              Abnormal.throw_expr_control_flow_exception
+                loc
+                ( (loc, t),
+                  Ast.Expression.Call
+                    {
+                      Call.callee;
+                      targs;
+                      arguments = (args_loc, { ArgList.arguments = []; comments = args_comments });
+                      comments;
+                    }
+                )
+                Abnormal.Throw
+            )
           | ( None,
               ( args_loc,
                 {
@@ -3703,24 +3706,27 @@ module Make
               Base.List.map ~f:(Base.Fn.compose snd (expression_or_spread cx)) arguments
             in
             let lit_exp = expression cx lit_exp in
-            Abnormal.throw_expr_control_flow_exception
-              loc
-              ( (loc, VoidT.at loc |> with_trust bogus_trust),
-                Ast.Expression.Call
-                  {
-                    Call.callee;
-                    targs;
-                    arguments =
-                      ( args_loc,
-                        {
-                          ArgList.arguments = Expression lit_exp :: arguments;
-                          comments = args_comments;
-                        }
-                      );
-                    comments;
-                  }
-              )
-              Abnormal.Throw
+            let t = EmptyT.at loc |> with_trust bogus_trust in
+            ( t,
+              Abnormal.throw_expr_control_flow_exception
+                loc
+                ( (loc, t),
+                  Ast.Expression.Call
+                    {
+                      Call.callee;
+                      targs;
+                      arguments =
+                        ( args_loc,
+                          {
+                            ArgList.arguments = Expression lit_exp :: arguments;
+                            comments = args_comments;
+                          }
+                        );
+                      comments;
+                    }
+                )
+                Abnormal.Throw
+            )
           | ( None,
               ( args_loc,
                 { ArgList.arguments = Expression cond :: arguments; comments = args_comments }
@@ -3732,13 +3738,17 @@ module Make
             let (((_, cond_t), _) as cond) = condition ~cond:OtherTest cx cond in
             let reason = mk_reason (RFunctionCall (desc_of_t callee_t)) loc in
             Flow.flow cx (cond_t, InvariantT reason);
-            ( args_loc,
-              { ArgList.arguments = Expression cond :: arguments; comments = args_comments }
+            let t = VoidT.at loc |> with_trust bogus_trust in
+            ( t,
+              ( args_loc,
+                { ArgList.arguments = Expression cond :: arguments; comments = args_comments }
+              )
             )
           | (_, (_, { ArgList.arguments = Spread _ :: _; comments = _ })) ->
             ignore (arg_list cx arguments);
             Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, InvariantSpreadArgument));
-            Tast_utils.error_mapper#arg_list arguments
+            let t = AnyT.at (AnyError None) loc in
+            (t, Tast_utils.error_mapper#arg_list arguments)
           | (Some _, arguments) ->
             ignore (arg_list cx arguments);
             Flow.add_output
@@ -3752,10 +3762,10 @@ module Make
                     expected_arity = 0;
                   }
               );
-            Tast_utils.error_mapper#arg_list arguments
+            let t = AnyT.at (AnyError None) loc in
+            (t, Tast_utils.error_mapper#arg_list arguments)
         in
-        let lhs_t = VoidT.at loc |> with_trust bogus_trust in
-        Some ((loc, lhs_t), call_ast { Call.callee; targs; arguments; comments } lhs_t)
+        Some ((loc, t), call_ast { Call.callee; targs; arguments; comments } t)
       | Member
           {
             Member._object = (super_loc, Super super);
