@@ -510,7 +510,7 @@ jobs:
           name: Run tool tests
           command: |
             cd "$CIRCLE_WORKING_DIRECTORY"
-            ./tool test --bin bin/win64/flow.exe --parallelism 1
+            node packages/flow-dev-tools/bin/tool test --bin bin/win64/flow.exe --parallelism 1
 
   ounit_test_linux:
     executor: linux-opam
