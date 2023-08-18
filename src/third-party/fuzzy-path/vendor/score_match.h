@@ -16,7 +16,7 @@
 #include <cstddef>
 #include <string>
 
-const long MIN_SCORE = -9007199254740991;
+const int64_t MIN_SCORE = -9007199254740991;
 
 struct MatchOptions {
   bool boost_full_match;
@@ -33,4 +33,4 @@ bool fuzzy_score(
     const char* needle,
     const char* needle_lower,
     const MatchOptions& options,
-    long* result);
+    int64_t* result);
