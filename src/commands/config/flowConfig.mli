@@ -181,6 +181,8 @@ val module_system : config -> Options.module_system
 
 val modules_are_use_strict : config -> bool
 
+val multi_platform : config -> bool option
+
 val multi_platform_extensions : config -> string list
 
 val munge_underscores : config -> bool
