@@ -619,7 +619,10 @@ module Opts = struct
       ~init:(fun opts -> { opts with multi_platform_extensions = [] })
       ~multiple:true
       (fun opts v ->
-        if String.ends_with ~suffix:Files.flow_ext v then
+        if opts.module_system = Options.Haste && not opts.haste_use_name_reducers then
+          Error
+            "Cannot set multi-platform extensions without `module.system.haste.use_name_reducers=true`."
+        else if String.ends_with ~suffix:Files.flow_ext v then
           Error
             ("Cannot use file extension '"
             ^ v

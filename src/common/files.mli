@@ -63,6 +63,8 @@ val platform_specific_implementation_mrefs_of_possibly_interface_file :
 val relative_interface_mref_of_possibly_platform_specific_file :
   options:options -> File_key.t -> string option
 
+val platform_specific_extension_opt : options:options -> string -> string option
+
 val is_json_file : string -> bool
 
 val is_flow_file : options:options -> string -> bool

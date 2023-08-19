@@ -134,6 +134,13 @@ let relative_interface_mref_of_possibly_platform_specific_file ~options file =
   else
     None
 
+let platform_specific_extension_opt ~options filename =
+  Base.List.find options.multi_platform_extensions ~f:(fun platform_ext ->
+      Base.List.exists options.module_file_exts ~f:(fun module_ext ->
+          Base.String.is_suffix filename ~suffix:(platform_ext ^ module_ext)
+      )
+  )
+
 let is_json_file filename = Utils_js.extension_of_filename filename = Some ".json"
 
 (* This is the set of file extensions which we watch for changes *)

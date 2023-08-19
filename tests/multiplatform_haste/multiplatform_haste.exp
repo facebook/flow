@@ -18,12 +18,42 @@ Cannot conform to common interface module because property `MyType` is missing i
 interface [2]. [prop-missing]
 
    shadowing.ios.jsx:1:1
-   1|
-       [1]
+   1| export const iosOnly = true;
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
    shadowing.js.flow
    ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- shadowing.ios.jsx:1:1
+
+Cannot conform to common interface module because property `default` is missing in self [1] but exists in common
+interface [2]. [prop-missing]
+
+   shadowing.ios.jsx:1:1
+   1| export const iosOnly = true;
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   shadowing.js.flow
+   ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- test_interface_import.js:3:8
+
+Cannot resolve module `shadowing.ios`. [cannot-resolve-module]
+
+   3| import 'shadowing.ios'; // error, platform specific files cannot be explicitly imported in Haste, since metro doesn't support it
+             ^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------- test_interface_import.js:4:8
+
+Cannot resolve module `shadowing.android`. [cannot-resolve-module]
+
+   4| import 'shadowing.android'; // error, platform specific files cannot be explicitly imported in Haste, since metro doesn't support it
+             ^^^^^^^^^^^^^^^^^^^
 
 
 Error ------------------------------------------------------------------------------------- test_interface_import.js:8:2
@@ -44,4 +74,4 @@ References:
 
 
 
-Found 3 errors
+Found 6 errors
