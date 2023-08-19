@@ -112,7 +112,7 @@ let get_def ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast requested_loc =
   let require_loc_map = File_sig.require_loc_map file_sig in
   let is_legit_require (source_aloc, _) =
     let source_loc = loc_of_aloc source_aloc in
-    SMap.exists (fun _ locs -> Nel.exists (fun loc -> loc = source_loc) locs) require_loc_map
+    SMap.exists (fun _ locs -> List.exists (fun loc -> loc = source_loc) locs) require_loc_map
   in
   let rec loop ~depth req_loc loop_name =
     match Depth.add req_loc depth with

@@ -1,0 +1,175 @@
+========================================================================================================================
+We start with an interface conformance error in Android file
+========================================================================================================================
+Error ------------------------------------------------------------------------------------------------ A.android.js:1:38
+
+Cannot conform to common interface module because string [1] is incompatible with number [2] in the return value of
+property `default`. [incompatible-type]
+
+   A.android.js:1:38
+   1| declare export default function A(): string;
+                                           ^^^^^^ [1]
+
+References:
+   A.js.flow:1:38
+   1| declare export default function A(): number;
+                                           ^^^^^^ [2]
+
+
+
+Found 1 error
+
+
+
+========================================================================================================================
+Fix the interface conformance error in Android file
+========================================================================================================================
+All interface conformance errors are fixed.
+No errors!
+
+
+
+========================================================================================================================
+Introduce an interface conformance error in iOS file
+========================================================================================================================
+Now we have an interface conformance error in iOS file.
+Error ---------------------------------------------------------------------------------------------------- A.ios.js:1:38
+
+Cannot conform to common interface module because string [1] is incompatible with number [2] in the return value of
+property `default`. [incompatible-type]
+
+   A.ios.js:1:38
+   1| declare export default function A(): string;
+                                           ^^^^^^ [1]
+
+References:
+   A.js.flow:1:38
+   1| declare export default function A(): number;
+                                           ^^^^^^ [2]
+
+
+
+Found 1 error
+
+
+
+========================================================================================================================
+Change interface file to get a different set of conformance errors
+========================================================================================================================
+Now we have an interface conformance error in Android file, but not in iOS file.
+Error ------------------------------------------------------------------------------------------------ A.android.js:1:38
+
+Cannot conform to common interface module because number [1] is incompatible with string [2] in the return value of
+property `default`. [incompatible-type]
+
+   A.android.js:1:38
+   1| declare export default function A(): number;
+                                           ^^^^^^ [1]
+
+References:
+   A.js.flow:1:38
+   1| declare export default function A(): string;
+                                           ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- import_A.js:3:2
+
+Cannot cast `f()` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   import_A.js:3:2
+   3| (f(): number);
+       ^^^
+
+References:
+   A.js.flow:1:38
+   1| declare export default function A(): string;
+                                           ^^^^^^ [1]
+   import_A.js:3:7
+   3| (f(): number);
+            ^^^^^^ [2]
+
+
+
+Found 2 errors
+
+
+
+========================================================================================================================
+Deleting interface file, all conformance error disappears, but A cannot be imported without platform extension
+========================================================================================================================
+Error ------------------------------------------------------------------------------------------------- import_A.js:1:15
+
+Cannot resolve module `./A`. [cannot-resolve-module]
+
+   1| import f from './A';
+                    ^^^^^
+
+
+
+Found 1 error
+
+
+
+========================================================================================================================
+Add back interface file
+========================================================================================================================
+Error ------------------------------------------------------------------------------------------------ A.android.js:1:38
+
+Cannot conform to common interface module because number [1] is incompatible with string [2] in the return value of
+property `default`. [incompatible-type]
+
+   A.android.js:1:38
+   1| declare export default function A(): number;
+                                           ^^^^^^ [1]
+
+References:
+   A.js.flow:1:38
+   1| declare export default function A(): string;
+                                           ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- import_A.js:3:2
+
+Cannot cast `f()` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   import_A.js:3:2
+   3| (f(): number);
+       ^^^
+
+References:
+   A.js.flow:1:38
+   1| declare export default function A(): string;
+                                           ^^^^^^ [1]
+   import_A.js:3:7
+   3| (f(): number);
+            ^^^^^^ [2]
+
+
+
+Found 2 errors
+
+
+
+========================================================================================================================
+Fix all type errors
+========================================================================================================================
+No errors!
+========================================================================================================================
+Delete android file
+========================================================================================================================
+Error ---------------------------------------------------------------------------------------------------- A.js.flow:0:1
+
+Cannot resolve platform-specific implementation module `./A.android`. All platform-specific implementations must exist
+for this interface. [cannot-resolve-module]
+
+
+
+
+Found 1 error
+
+
+
+========================================================================================================================
+Add back android file
+========================================================================================================================
+No errors!

@@ -38,6 +38,7 @@ and require =
       import_loc: Loc.t;
     }
   | Import0 of { source: Loc.t Ast_utils.source }
+  | ImportSynthetic of { source: string }
   | Import of {
       import_loc: Loc.t;
       source: Loc.t Ast_utils.source;
@@ -122,6 +123,7 @@ let to_string t =
           (PP.string_of_option string_of_require_bindings bindings)
       | ImportDynamic _ -> "ImportDynamic"
       | Import0 _ -> "Import0"
+      | ImportSynthetic _ -> "ImportSynthetic"
       | Import _ -> "Import"
       | ExportFrom _ -> "ExportFrom"
     in
@@ -144,12 +146,13 @@ let require_loc_map msig =
   List.fold_left
     (fun acc require ->
       match require with
+      | ImportSynthetic { source } -> SMap.add source [] acc ~combine:List.rev_append
       | Require { source = (loc, mref); _ }
       | ImportDynamic { source = (loc, mref); _ }
       | Import0 { source = (loc, mref) }
       | Import { source = (loc, mref); _ }
       | ExportFrom { source = (loc, mref) } ->
-        SMap.add mref (Nel.one loc) acc ~combine:Nel.rev_append)
+        SMap.add mref [loc] acc ~combine:List.rev_append)
     SMap.empty
     msig.requires
 
@@ -190,7 +193,7 @@ let set_cjs_exports mod_exp_loc msig errs =
 (* Subclass of the AST visitor class that calculates requires and exports. Initializes with the
    scope builder class.
 *)
-class requires_exports_calculator ~file_key:_ ~ast ~opts =
+class requires_exports_calculator ~file_key ~ast ~opts =
   object (this)
     inherit [tolerable_t, Loc.t] visitor ~init:(empty, []) as super
 
@@ -233,6 +236,24 @@ class requires_exports_calculator ~file_key:_ ~ast ~opts =
 
     method private add_tolerable_error (err : tolerable_error) =
       this#update_acc (fun (fsig, errs) -> (fsig, err :: errs))
+
+    method add_multiplatform_synthetic_imports =
+      match
+        Files.platform_specific_implementation_mrefs_of_possibly_interface_file
+          ~options:opts.file_options
+          file_key
+      with
+      | Some sources ->
+        Base.List.iter sources ~f:(fun source -> this#add_require (ImportSynthetic { source }))
+      | None ->
+        (match
+           Files.relative_interface_mref_of_possibly_platform_specific_file
+             ~options:opts.file_options
+             file_key
+         with
+        | Some imported_interface_module_name ->
+          this#add_require (ImportSynthetic { source = imported_interface_module_name })
+        | None -> ())
 
     method! expression (expr : (Loc.t, Loc.t) Ast.Expression.t) =
       let open Ast.Expression in
@@ -778,6 +799,7 @@ let filter_irrelevant_errors ~module_kind tolerable_errors =
 
 let program ~file_key ~ast ~opts =
   let walk = new requires_exports_calculator ~file_key ~ast ~opts in
+  walk#add_multiplatform_synthetic_imports;
   let (fsig, tolerable_errors) = walk#eval walk#program ast in
   let module_kind = fsig.module_kind in
   (fsig, filter_irrelevant_errors ~module_kind tolerable_errors)

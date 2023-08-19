@@ -1,1 +1,19 @@
-Found 0 errors
+Error ------------------------------------------------------------------------------------- test_interface_import.js:5:2
+
+Cannot cast `o1` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test_interface_import.js:5:2
+   5| (o1: empty); // error
+       ^^
+
+References:
+   test_interface_import.js:3:17
+   3| declare var o1: MyType;
+                      ^^^^^^ [1]
+   test_interface_import.js:5:6
+   5| (o1: empty); // error
+           ^^^^^ [2]
+
+
+
+Found 1 error

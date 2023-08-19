@@ -7702,6 +7702,7 @@ struct
               | ClassMethodDefinition _
               | ClassImplementsCheck _
               | ClassOwnProtoCheck _
+              | ConformToCommonInterface _
               | GeneratorYield _
               | ReactCreateElementCall _
               | ReactGetIntrinsic _

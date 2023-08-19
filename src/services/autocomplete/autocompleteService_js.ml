@@ -1585,6 +1585,7 @@ let should_autoimport_react ~options ~imports ~file_sig =
                 named
             | Require { bindings = None; _ }
             | Import0 _
+            | ImportSynthetic _
             | ImportDynamic _
             | ExportFrom _ ->
               false)

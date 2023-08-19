@@ -1253,8 +1253,14 @@ end
 
 module ImportModuleNsTKit = struct
   (* import * as X from 'SomeModule'; *)
-  let on_ModuleT cx trace (reason_op, is_strict) (module_reason, exports, imported_is_strict) =
-    check_nonstrict_import cx trace is_strict imported_is_strict reason_op;
+  let on_ModuleT
+      cx
+      trace
+      ?(is_common_interface_module = false)
+      (reason_op, is_strict)
+      (module_reason, exports, imported_is_strict) =
+    if not is_common_interface_module then
+      check_nonstrict_import cx trace is_strict imported_is_strict reason_op;
     let reason =
       module_reason
       |> Reason.repos_reason (loc_of_reason reason_op)
@@ -1289,6 +1295,8 @@ module ImportModuleNsTKit = struct
             dict_name = None;
             dict_polarity = Polarity.Neutral;
           }
+      else if is_common_interface_module then
+        Inexact
       else
         Exact
     in

@@ -92,6 +92,46 @@ let is_prefix prefix =
   in
   (fun path -> path = prefix || String.starts_with ~prefix:prefix_with_sep path)
 
+let platform_specific_implementation_mrefs_of_possibly_interface_file ~options file =
+  if (not (Base.List.is_empty options.multi_platform_extensions)) && has_flow_ext file then
+    let file = chop_flow_ext file in
+    Base.List.find_map options.module_file_exts ~f:(fun module_file_ext ->
+        if File_key.check_suffix file module_file_ext then
+          let base =
+            File_key.chop_suffix file module_file_ext |> File_key.to_string |> Filename.basename
+          in
+          let implementation_mrefs =
+            Base.List.map options.multi_platform_extensions ~f:(fun platform_ext ->
+                "./" ^ base ^ platform_ext
+            )
+          in
+          Some implementation_mrefs
+        else
+          None
+    )
+  else
+    None
+
+let relative_interface_mref_of_possibly_platform_specific_file ~options file =
+  if not (Base.List.is_empty options.multi_platform_extensions) then
+    Base.List.find_map options.module_file_exts ~f:(fun module_filt_ext ->
+        if File_key.check_suffix file module_filt_ext then
+          let file = File_key.chop_suffix file module_filt_ext in
+          Base.List.find_map options.multi_platform_extensions ~f:(fun platform_ext ->
+              if File_key.check_suffix file platform_ext then
+                let base =
+                  File_key.chop_suffix file platform_ext |> File_key.to_string |> Filename.basename
+                in
+                Some ("./" ^ base)
+              else
+                None
+          )
+        else
+          None
+    )
+  else
+    None
+
 let is_json_file filename = Utils_js.extension_of_filename filename = Some ".json"
 
 (* This is the set of file extensions which we watch for changes *)

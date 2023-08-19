@@ -393,6 +393,81 @@ let initialize_env ~lib ?(exclude_syms = NameUtils.Set.empty) cx aloc_ast toplev
   let env = Context.environment cx in
   Context.set_environment cx { env with Loc_env.scope_kind; class_stack }
 
+let check_multiplatform_conformance cx filename prog_aloc =
+  let file_options = (Context.metadata cx).Context.file_options in
+  let file_loc = Loc.{ none with source = Some filename } |> ALoc.of_loc in
+  match
+    Files.relative_interface_mref_of_possibly_platform_specific_file ~options:file_options filename
+  with
+  | Some imported_interface_module_name ->
+    let open Type in
+    (match Context.find_require cx imported_interface_module_name with
+    | Error _ ->
+      (* It's ok if a platform speicific implementation file doesn't have an interface.
+       * It just makes the module non-importable without platform extension. *)
+      ()
+    | Ok interface_module_t ->
+      let get_exports_t ~is_common_interface_module reason module_t =
+        match Flow_js.possible_concrete_types_for_inspection cx reason module_t with
+        | [ModuleT m] ->
+          Flow_js_utils.ImportModuleNsTKit.on_ModuleT
+            cx
+            Trace.dummy_trace
+            ~is_common_interface_module
+            (reason, false)
+            m
+        | _ -> AnyT.make Untyped reason
+      in
+      let interface_t =
+        let reason = Reason.(mk_reason (RCustom "common interface") prog_aloc) in
+        get_exports_t ~is_common_interface_module:true reason interface_module_t
+      in
+      let self_t =
+        let reason = Reason.(mk_reason (RCustom "self") prog_aloc) in
+        let source_module_t = Import_export.mk_module_t cx reason file_loc in
+        get_exports_t ~is_common_interface_module:false reason source_module_t
+      in
+      (* We need to fully resolve the type to prevent tvar widening. *)
+      Tvar_resolver.resolve cx interface_t;
+      Tvar_resolver.resolve cx self_t;
+      let use_op =
+        Op
+          (ConformToCommonInterface
+             {
+               self = Reason.(mk_reason RExports prog_aloc);
+               common_interface_module = Reason.(mk_reason (RCustom "module") prog_aloc);
+             }
+          )
+      in
+      Flow_js.flow cx (self_t, UseT (use_op, interface_t)))
+  | None ->
+    (match
+       Files.platform_specific_implementation_mrefs_of_possibly_interface_file
+         ~options:file_options
+         filename
+     with
+    | None -> ()
+    | Some impl_mrefs ->
+      let module_exists mref = Base.Result.is_ok @@ Context.find_require cx mref in
+      let mrefs_with_existence_status =
+        List.map (fun mref -> (mref, module_exists mref)) impl_mrefs
+      in
+      if List.for_all (fun (_, exists) -> not exists) mrefs_with_existence_status then
+        (* We are fine if no implementation file exist.
+         * The .js.flow file might be declaring a builtin module. *)
+        ()
+      else
+        (* If one implementation file exist, then all platform specific implementations must exist. *)
+        Base.List.iter mrefs_with_existence_status ~f:(fun (impl_mref, exist) ->
+            if not exist then
+              Flow_js_utils.add_output
+                cx
+                Error_message.(
+                  EPlatformSpecificImplementationModuleLookupFailed
+                    { loc = file_loc; name = impl_mref }
+                )
+        ))
+
 (* build module graph *)
 (* Lint suppressions are handled iff lint_severities is Some. *)
 let infer_ast ~lint_severities cx filename comments aloc_ast =
@@ -433,6 +508,7 @@ let infer_ast ~lint_severities cx filename comments aloc_ast =
       )
     in
 
+    check_multiplatform_conformance cx filename prog_aloc;
     Exists_marker.mark cx program;
     program
   with

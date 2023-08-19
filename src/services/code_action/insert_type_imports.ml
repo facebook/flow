@@ -769,6 +769,7 @@ end = struct
         | Import _
         | ImportDynamic _
         | Import0 _
+        | ImportSynthetic _
         | ExportFrom _ ->
           ()
       in
