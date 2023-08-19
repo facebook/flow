@@ -63,7 +63,7 @@ type t =
       enum_name: string;
       member_name: string;
     }
-  | EnumStringMemberInconsistentlyInitailized of { enum_name: string }
+  | EnumStringMemberInconsistentlyInitialized of { enum_name: string }
   | EnumInvalidConstPrefix
   | ExpectedJSXClosingTag of string
   | ExpectedPatternFoundExpression
@@ -309,7 +309,7 @@ module PP = struct
         "Number enum members need to be initialized, e.g. `%s = 1,` in enum `%s`."
         member_name
         enum_name
-    | EnumStringMemberInconsistentlyInitailized { enum_name } ->
+    | EnumStringMemberInconsistentlyInitialized { enum_name } ->
       Printf.sprintf
         "String enum members need to consistently either all use initializers, or use no initializers, in enum %s."
         enum_name
