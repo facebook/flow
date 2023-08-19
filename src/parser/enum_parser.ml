@@ -303,13 +303,13 @@ end = struct
     | _ when defaulted_len > initialized_len ->
       List.iter
         (fun (loc, _) ->
-          error_at env (loc, Parse_error.EnumStringMemberInconsistentlyInitailized { enum_name }))
+          error_at env (loc, Parse_error.EnumStringMemberInconsistentlyInitialized { enum_name }))
         string_members;
       defaulted_body ()
     | _ ->
       List.iter
         (fun (loc, _) ->
-          error_at env (loc, Parse_error.EnumStringMemberInconsistentlyInitailized { enum_name }))
+          error_at env (loc, Parse_error.EnumStringMemberInconsistentlyInitialized { enum_name }))
         defaulted_members;
       initialized_body ()
 
