@@ -509,7 +509,7 @@ jobs:
       - run:
           name: Run tool tests
           command: |
-            cd $(Resolve-Path "$CIRCLE_WORKING_DIRECTORY")
+            cd $(Resolve-Path .)
             node packages/flow-dev-tools/bin/tool test --bin bin/win64/flow.exe --parallelism 1
 
   ounit_test_linux:
