@@ -17,6 +17,19 @@
     {
       "range": {
         "start": {
+          "line": 35,
+          "character": 17
+        },
+        "end": {
+          "line": 35,
+          "character": 18
+        }
+      },
+      "kind": 1
+    },
+    {
+      "range": {
+        "start": {
           "line": 36,
           "character": 25
         },

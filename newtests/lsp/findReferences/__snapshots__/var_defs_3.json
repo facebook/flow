@@ -26,6 +26,32 @@
           "character": 1
         }
       }
+    },
+    {
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/locals.js",
+      "range": {
+        "start": {
+          "line": 25,
+          "character": 2
+        },
+        "end": {
+          "line": 25,
+          "character": 3
+        }
+      }
+    },
+    {
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/locals.js",
+      "range": {
+        "start": {
+          "line": 27,
+          "character": 6
+        },
+        "end": {
+          "line": 27,
+          "character": 7
+        }
+      }
     }
   ]
 }
