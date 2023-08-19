@@ -1,0 +1,165 @@
+================================================================================
+No --all flag and implicit root
+================================================================================
+1. Assumes current directory is root, and there's no .flowconfig
+Could not find a .flowconfig in . or any of its parent directories.
+See "flow init --help" for more info
+
+
+2. Infers root and only shows included files in src directory
+.flowconfig
+explicit_lib.js
+flow-typed/implicit_lib.js
+implicitly_included.js
+
+3. Infers root and will show included files in both directories
+../other/explicitly_included.js
+.flowconfig
+explicit_lib.js
+flow-typed/implicit_lib.js
+implicitly_included.js
+
+4. Infers root from first arg, which is not a flow root
+Could not find a .flowconfig in . or any of its parent directories.
+See "flow init --help" for more info
+
+
+5. Won't show files that don't exist
+
+================================================================================
+Explicit root will not filter out files in other/
+================================================================================
+../other/explicitly_included.js
+.flowconfig
+explicit_lib.js
+flow-typed/implicit_lib.js
+implicitly_included.js
+
+================================================================================
+--all should all libs, included files, and explicitly ignored files
+================================================================================
+../other/explicitly_included.js
+.flowconfig
+explicit_lib.js
+explicitly_ignored.js
+flow-typed/implicit_lib.js
+implicitly_included.js
+
+================================================================================
+Implicit/Explicit Included/Ignored/Lib should be correct
+================================================================================
+ExplicitLib           explicit_lib.js
+ExplicitlyIgnored     explicitly_ignored.js
+ExplicitlyIncluded    ../other/explicitly_included.js
+ImplicitLib           flow-typed/implicit_lib.js
+ImplicitlyIgnored     ../other/implicitly_ignored.js
+ImplicitlyIncluded    implicitly_included.js
+
+================================================================================
+JSON output without --explain should be an array
+================================================================================
+[
+  "../other/explicitly_included.js",
+  "../other/implicitly_ignored.js",
+  ".flowconfig",
+  "explicit_lib.js",
+  "explicitly_ignored.js",
+  "flow-typed/implicit_lib.js",
+  "implicitly_included.js"
+]
+
+================================================================================
+JSON output with --explain should be JSON object
+================================================================================
+{
+  "../other/explicitly_included.js": {
+    "explanation": "ExplicitlyIncluded"
+  },
+  "../other/implicitly_ignored.js": {
+    "explanation": "ImplicitlyIgnored"
+  },
+  ".flowconfig": {
+    "explanation": "ConfigFile"
+  },
+  "explicit_lib.js": {
+    "explanation": "ExplicitLib"
+  },
+  "explicitly_ignored.js": {
+    "explanation": "ExplicitlyIgnored"
+  },
+  "flow-typed/implicit_lib.js": {
+    "explanation": "ImplicitLib"
+  },
+  "implicitly_included.js": {
+    "explanation": "ImplicitlyIncluded"
+  }
+}
+
+================================================================================
+Listing files over stdin
+================================================================================
+1. Same as if we passed src/ and other/explicitly_include.js from the command line'
+../other/explicitly_included.js
+.flowconfig
+explicit_lib.js
+explicitly_ignored.js
+flow-typed/implicit_lib.js
+implicitly_included.js
+
+2. flow ls will combine command line with the input file
+../other/explicitly_included.js
+../other/implicitly_ignored.js
+.flowconfig
+explicit_lib.js
+explicitly_ignored.js
+flow-typed/implicit_lib.js
+implicitly_included.js
+
+================================================================================
+Input file on disk
+================================================================================
+1. Same as if we passed src/ and other/explicitly_include.js from the command line'
+../other/explicitly_included.js
+.flowconfig
+explicit_lib.js
+explicitly_ignored.js
+flow-typed/implicit_lib.js
+implicitly_included.js
+
+2. flow ls will combine command line with the input file
+../other/explicitly_included.js
+../other/implicitly_ignored.js
+.flowconfig
+explicit_lib.js
+explicitly_ignored.js
+flow-typed/implicit_lib.js
+implicitly_included.js
+
+================================================================================
+Non-existent files and directories
+================================================================================
+1. We try to use foobar to infer the root, so we complain when it doesnt exist
+Could not find file or directory src/foobar; canceling search for .flowconfig.
+See "flow init --help" for more info
+
+2. We just filter out non-existent files
+implicitly_included.js
+
+3. With --imaginary we include non-existent files. Non-existent files are never considered to be libs.
+foobar
+implicitly_included.js
+flow-typed/baz.js
+
+4. --explain should work with --imaginary as expected. Non-existent files are never considered to be libs.
+ImplicitlyIncluded    foobar
+ImplicitlyIncluded    baz
+ImplicitlyIncluded    implicitly_included.js
+ImplicitlyIncluded    flow-typed/baz
+
+5. We just filter out non-existent files. --all does not imply --imaginary
+implicitly_included.js
+
+6. ../foobar is implicitly ignored and only listed with the --all flag
+ImplicitlyIgnored     ../foobar
+ImplicitlyIncluded    foobar
+ImplicitlyIncluded    implicitly_included.js
