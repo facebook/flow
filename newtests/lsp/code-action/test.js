@@ -2699,7 +2699,7 @@ module.exports = (suite(
             ],
           },
         ],
-        ['textDocument/publishDiagnostics'],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('provide autoimport for missing import', [
@@ -2819,7 +2819,7 @@ module.exports = (suite(
             ],
           },
         ],
-        ['textDocument/publishDiagnostics'],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('provide quickfix for `never` type', [
@@ -2884,7 +2884,7 @@ module.exports = (suite(
             ],
           },
         ],
-        ['textDocument/publishDiagnostics'],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('provide quickfix for `undefined` type', [
@@ -2949,7 +2949,7 @@ module.exports = (suite(
             ],
           },
         ],
-        ['textDocument/publishDiagnostics'],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('provide quickfix for `keyof`', [
@@ -3014,7 +3014,7 @@ module.exports = (suite(
             ],
           },
         ],
-        ['textDocument/publishDiagnostics'],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('provide quickfix for `extends` in type param', [
@@ -3079,7 +3079,7 @@ module.exports = (suite(
             ],
           },
         ],
-        ['textDocument/publishDiagnostics'],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('provide quickfix for `readonly` variance', [
@@ -3144,7 +3144,7 @@ module.exports = (suite(
             ],
           },
         ],
-        ['textDocument/publishDiagnostics'],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('provide quickfix for `in` variance', [
@@ -3209,7 +3209,7 @@ module.exports = (suite(
             ],
           },
         ],
-        ['textDocument/publishDiagnostics'],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('provide quickfix for `out` variance', [
@@ -3274,7 +3274,7 @@ module.exports = (suite(
             ],
           },
         ],
-        ['textDocument/publishDiagnostics'],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('provide quickfix for `in out` variance', [
@@ -3339,7 +3339,7 @@ module.exports = (suite(
             ],
           },
         ],
-        ['textDocument/publishDiagnostics'],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('provide quickfix for `as` type cast', [
@@ -3404,7 +3404,7 @@ module.exports = (suite(
             ],
           },
         ],
-        ['textDocument/publishDiagnostics'],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('provide quickfix for `satisfies` type cast', [
@@ -3472,7 +3472,7 @@ module.exports = (suite(
             ],
           },
         ],
-        ['textDocument/publishDiagnostics'],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('provide quickfix for `readonly` array type', [
@@ -3540,7 +3540,7 @@ module.exports = (suite(
             ],
           },
         ],
-        ['textDocument/publishDiagnostics'],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('provide quickfix for `readonly` tuple type', [
@@ -3608,7 +3608,7 @@ module.exports = (suite(
             ],
           },
         ],
-        ['textDocument/publishDiagnostics'],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('provide quickfix for `Readonly` type', [
@@ -3673,7 +3673,7 @@ module.exports = (suite(
             ],
           },
         ],
-        ['textDocument/publishDiagnostics'],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('provide quickfix for `ReadonlyArray` type', [
@@ -3738,7 +3738,7 @@ module.exports = (suite(
             ],
           },
         ],
-        ['textDocument/publishDiagnostics'],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('provide quickfix for `ReadonlyMap` type', [
@@ -3803,7 +3803,7 @@ module.exports = (suite(
             ],
           },
         ],
-        ['textDocument/publishDiagnostics'],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('provide quickfix for `ReadonlySet` type', [
@@ -3868,7 +3868,7 @@ module.exports = (suite(
             ],
           },
         ],
-        ['textDocument/publishDiagnostics'],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('provide quickfix for `NonNullable` type', [
@@ -3933,7 +3933,7 @@ module.exports = (suite(
             ],
           },
         ],
-        ['textDocument/publishDiagnostics'],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('provide codeAction for inserting jsdocs', [
@@ -3990,7 +3990,7 @@ module.exports = (suite(
             ],
           },
         ],
-        ['textDocument/publishDiagnostics'],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
       lspRequestAndWaitUntilResponse('textDocument/codeAction', {
         textDocument: {
@@ -4043,7 +4043,7 @@ module.exports = (suite(
             ],
           },
         ],
-        ['textDocument/publishDiagnostics'],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
       lspRequestAndWaitUntilResponse('textDocument/codeAction', {
         textDocument: {
@@ -4095,7 +4095,7 @@ module.exports = (suite(
             ],
           },
         ],
-        ['textDocument/publishDiagnostics'],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('provide codeAction for refactoring arrow functions', [
@@ -4154,7 +4154,7 @@ module.exports = (suite(
             ],
           },
         ],
-        ['textDocument/publishDiagnostics'],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
       lspRequestAndWaitUntilResponse('textDocument/codeAction', {
         textDocument: {
@@ -4206,7 +4206,7 @@ module.exports = (suite(
             ],
           },
         ],
-        ['textDocument/publishDiagnostics'],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('provide quickfix for `$Partial`', [
@@ -4271,7 +4271,7 @@ module.exports = (suite(
             ],
           },
         ],
-        ['textDocument/publishDiagnostics'],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('provide quickfix for `$Shape`', [
@@ -4336,7 +4336,7 @@ module.exports = (suite(
             ],
           },
         ],
-        ['textDocument/publishDiagnostics'],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('provide quickfix for class member access', [
@@ -4404,7 +4404,7 @@ module.exports = (suite(
             ],
           },
         ],
-        ['textDocument/publishDiagnostics'],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
       lspRequestAndWaitUntilResponse('textDocument/codeAction', {
         textDocument: {
@@ -4465,7 +4465,7 @@ module.exports = (suite(
             ],
           },
         ],
-        ['textDocument/publishDiagnostics'],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
       lspRequestAndWaitUntilResponse('textDocument/codeAction', {
         textDocument: {
@@ -4492,7 +4492,7 @@ module.exports = (suite(
             result: [],
           },
         ],
-        ['textDocument/publishDiagnostics'],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
   ],
