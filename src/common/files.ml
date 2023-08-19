@@ -20,6 +20,7 @@ type options = {
   lib_paths: File_path.t list;
   module_file_exts: string list;
   module_resource_exts: SSet.t;
+  multi_platform: bool;
   multi_platform_extensions: string list;
   node_resolver_dirnames: string list;
 }
@@ -34,6 +35,7 @@ let default_options =
     lib_paths = [];
     module_file_exts = [];
     module_resource_exts = SSet.empty;
+    multi_platform = false;
     multi_platform_extensions = [];
     node_resolver_dirnames = ["node_modules"];
   }
@@ -93,7 +95,7 @@ let is_prefix prefix =
   (fun path -> path = prefix || String.starts_with ~prefix:prefix_with_sep path)
 
 let platform_specific_implementation_mrefs_of_possibly_interface_file ~options file =
-  if (not (Base.List.is_empty options.multi_platform_extensions)) && has_flow_ext file then
+  if options.multi_platform && has_flow_ext file then
     let file = chop_flow_ext file in
     Base.List.find_map options.module_file_exts ~f:(fun module_file_ext ->
         if File_key.check_suffix file module_file_ext then
@@ -113,7 +115,7 @@ let platform_specific_implementation_mrefs_of_possibly_interface_file ~options f
     None
 
 let relative_interface_mref_of_possibly_platform_specific_file ~options file =
-  if not (Base.List.is_empty options.multi_platform_extensions) then
+  if options.multi_platform then
     Base.List.find_map options.module_file_exts ~f:(fun module_filt_ext ->
         if File_key.check_suffix file module_filt_ext then
           let file = File_key.chop_suffix file module_filt_ext in

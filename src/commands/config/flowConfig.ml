@@ -101,6 +101,7 @@ module Opts = struct
     module_resource_exts: SSet.t;
     module_system: Options.module_system;
     modules_are_use_strict: bool;
+    multi_platform: bool option;
     multi_platform_extensions: string list;
     munge_underscores: bool;
     no_flowlib: bool;
@@ -222,6 +223,7 @@ module Opts = struct
       module_resource_exts;
       module_system = Options.Node;
       modules_are_use_strict = false;
+      multi_platform = None;
       multi_platform_extensions = [];
       munge_underscores = false;
       no_flowlib = false;
@@ -805,6 +807,9 @@ module Opts = struct
         boolean (fun opts v -> Ok { opts with global_find_ref = Some v })
       );
       ("experimental.global_rename", boolean (fun opts v -> Ok { opts with global_rename = Some v }));
+      ( "experimental.multi_platform",
+        boolean (fun opts v -> Ok { opts with multi_platform = Some v })
+      );
       ("experimental.multi_platform.extensions", multi_platform_extensions_parser);
       ("facebook.fbs", string (fun opts v -> Ok { opts with facebook_fbs = Some v }));
       ("facebook.fbt", string (fun opts v -> Ok { opts with facebook_fbt = Some v }));
@@ -1524,6 +1529,8 @@ let module_resource_exts c = c.options.Opts.module_resource_exts
 let module_system c = c.options.Opts.module_system
 
 let modules_are_use_strict c = c.options.Opts.modules_are_use_strict
+
+let multi_platform c = c.options.Opts.multi_platform
 
 let multi_platform_extensions c = c.options.Opts.multi_platform_extensions
 

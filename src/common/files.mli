@@ -20,6 +20,7 @@ type options = {
   lib_paths: File_path.t list;
   module_file_exts: string list;
   module_resource_exts: SSet.t;
+  multi_platform: bool;
   multi_platform_extensions: string list;
   node_resolver_dirnames: string list;
 }

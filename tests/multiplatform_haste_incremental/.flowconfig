@@ -4,5 +4,6 @@ all=true
 module.system=haste
 module.system.haste.use_name_reducers=true
 
+experimental.multi_platform=true
 experimental.multi_platform.extensions=.ios
 experimental.multi_platform.extensions=.android
