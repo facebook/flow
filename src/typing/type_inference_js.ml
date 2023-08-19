@@ -395,6 +395,9 @@ let initialize_env ~lib ?(exclude_syms = NameUtils.Set.empty) cx aloc_ast toplev
 
 let check_multiplatform_conformance cx filename prog_aloc =
   let file_options = (Context.metadata cx).Context.file_options in
+  let self_sig_loc =
+    Import_export.module_exports_sig_loc cx |> Base.Option.value ~default:prog_aloc
+  in
   let file_loc = Loc.{ none with source = Some filename } |> ALoc.of_loc in
   match
     Files.relative_interface_mref_of_possibly_platform_specific_file ~options:file_options filename
@@ -419,11 +422,11 @@ let check_multiplatform_conformance cx filename prog_aloc =
         | _ -> AnyT.make Untyped reason
       in
       let interface_t =
-        let reason = Reason.(mk_reason (RCustom "common interface") prog_aloc) in
+        let reason = Reason.(mk_reason (RCustom "common interface") self_sig_loc) in
         get_exports_t ~is_common_interface_module:true reason interface_module_t
       in
       let self_t =
-        let reason = Reason.(mk_reason (RCustom "self") prog_aloc) in
+        let reason = Reason.(mk_reason (RCustom "self") self_sig_loc) in
         let source_module_t = Import_export.mk_module_t cx reason file_loc in
         get_exports_t ~is_common_interface_module:false reason source_module_t
       in
@@ -434,8 +437,8 @@ let check_multiplatform_conformance cx filename prog_aloc =
         Op
           (ConformToCommonInterface
              {
-               self = Reason.(mk_reason RExports prog_aloc);
-               common_interface_module = Reason.(mk_reason (RCustom "module") prog_aloc);
+               self = Reason.(mk_reason RExports self_sig_loc);
+               common_interface_module = Reason.(mk_reason (RCustom "module") self_sig_loc);
              }
           )
       in

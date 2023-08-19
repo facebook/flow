@@ -174,3 +174,31 @@ let mk_module_t =
         |> export_named cx reason ExportType info.type_named
         |> copy_star_exports cx reason (star, info.type_star)
   )
+
+(* A best effort way to pick a location as the signature location of the module.
+ * - For cjs, we will first try to pick the location of module.exports, then
+ *   fallback to the first module.exports prop assignment
+ * - For esm, we will first try to pick the location of default exports, then
+ *   fallback to the first export. *)
+let module_exports_sig_loc cx =
+  let { Module_info.kind; _ } = Context.module_info cx in
+  match kind with
+  | Module_info.CJS _ ->
+    let { Loc_env.var_info = { Env_api.cjs_exports_state; _ }; _ } = Context.environment cx in
+    (match cjs_exports_state with
+    | Env_api.CJSModuleExports l -> Some l
+    | Env_api.CJSExportNames names ->
+      names
+      |> SMap.values
+      |> Base.List.map ~f:fst
+      |> Base.List.sort ~compare:ALoc.compare
+      |> Base.List.hd)
+  | Module_info.ES { named; _ } ->
+    (match NameUtils.Map.find_opt (Reason.OrdinaryName "default") named with
+    | Some { Type.name_loc; _ } -> name_loc
+    | None ->
+      named
+      |> NameUtils.Map.values
+      |> Base.List.filter_map ~f:(fun { Type.name_loc; _ } -> name_loc)
+      |> Base.List.sort ~compare:ALoc.compare
+      |> Base.List.hd)

@@ -38,3 +38,5 @@ val export_binding :
 val export_star : Context.t -> ALoc.t -> Type.t -> unit
 
 val export_type_star : Context.t -> ALoc.t -> Type.t -> unit
+
+val module_exports_sig_loc : Context.t -> ALoc.t option
