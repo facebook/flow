@@ -2149,6 +2149,7 @@ let find_references ~genv ~reader ~options ~env ~file_artifacts ~global ~kind fi
           ~file_key
           ~parse_artifacts
           ~typecheck_artifacts
+          ~kind
           ~line
           ~col
       in

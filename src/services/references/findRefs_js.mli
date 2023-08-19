@@ -11,11 +11,12 @@ val find_local_refs :
   file_key:File_key.t ->
   parse_artifacts:Types_js_types.parse_artifacts ->
   typecheck_artifacts:Types_js_types.typecheck_artifacts ->
+  kind:FindRefsTypes.kind ->
   line:int ->
   col:int ->
   (FindRefsTypes.find_refs_ok, string) result
 
-val local_refs_for_global_find_refs :
+val local_refs_of_find_ref_request :
   options:Options.t ->
   loc_of_aloc:(ALoc.t -> Loc.t) ->
   FindRefsUtils.ast_info ->

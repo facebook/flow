@@ -19,6 +19,19 @@
         {
           "range": {
             "start": {
+              "line": 14,
+              "character": 17
+            },
+            "end": {
+              "line": 14,
+              "character": 18
+            }
+          },
+          "newText": "NEW_NAME"
+        },
+        {
+          "range": {
+            "start": {
               "line": 15,
               "character": 25
             },

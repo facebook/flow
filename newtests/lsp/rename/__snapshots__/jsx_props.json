@@ -27,7 +27,7 @@
               "character": 33
             }
           },
-          "newText": "{NEW_NAME: foo}: Props"
+          "newText": "{foo: NEW_NAME}: Props"
         },
         {
           "range": {

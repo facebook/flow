@@ -12,28 +12,7 @@
 let sort_and_dedup refs =
   Base.List.dedup_and_sort ~compare:(fun (_, loc1) (_, loc2) -> Loc.compare loc1 loc2) refs
 
-let find_local_refs ~reader ~options ~file_key ~parse_artifacts ~typecheck_artifacts ~line ~col =
-  let open Base.Result.Let_syntax in
-  let loc = Loc.cursor (Some file_key) line col in
-  let ast_info =
-    match parse_artifacts with
-    | Types_js_types.Parse_artifacts { ast; file_sig; docblock; _ } -> (ast, file_sig, docblock)
-  in
-  (* Start by running local variable find references *)
-  let (Types_js_types.Parse_artifacts { ast; _ }) = parse_artifacts in
-  let scope_info =
-    Scope_builder.program ~enable_enums:(Options.enums options) ~with_types:true ast
-  in
-  let var_refs = VariableFindRefs.local_find_refs scope_info [loc] in
-  let%bind refs =
-    match var_refs with
-    | Some _ -> Ok var_refs
-    | None -> PropertyFindRefs.find_local_refs ~reader file_key ast_info typecheck_artifacts loc
-  in
-  let refs = Base.Option.map ~f:(fun refs -> sort_and_dedup refs) refs in
-  Ok refs
-
-let local_refs_for_global_find_refs
+let local_refs_of_find_ref_request
     ~options ~loc_of_aloc ast_info type_info file_key { FindRefsTypes.def_info; kind = _ } =
   let var_refs prop_refs =
     let def_locs = GetDefUtils.all_locs_of_def_info def_info in
@@ -88,3 +67,32 @@ let local_refs_for_global_find_refs
     in
     merge_with_var_refs prop_refs
   | Get_def_types.NoDefinition -> Ok []
+
+let find_local_refs
+    ~reader ~options ~file_key ~parse_artifacts ~typecheck_artifacts ~kind ~line ~col =
+  let open Base.Result.Let_syntax in
+  let ast_info =
+    match parse_artifacts with
+    | Types_js_types.Parse_artifacts { ast; file_sig; docblock; _ } -> (ast, file_sig, docblock)
+  in
+  let%bind def_info =
+    GetDefUtils.get_def_info
+      ~options
+      ~reader
+      ast_info
+      typecheck_artifacts
+      (Loc.cursor (Some file_key) line col)
+  in
+  match def_info with
+  | Get_def_types.NoDefinition -> Ok None
+  | _ ->
+    let%bind refs =
+      local_refs_of_find_ref_request
+        ~options
+        ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
+        ast_info
+        typecheck_artifacts
+        file_key
+        { FindRefsTypes.def_info; kind }
+    in
+    Ok (Some (sort_and_dedup refs))
