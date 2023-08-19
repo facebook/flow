@@ -41,7 +41,7 @@ struct MatchInfo {
   bool first_match_can_be_weak;
 };
 
-const long MAX_SAFE_INTEGER = 9007199254740991;
+const int64_t MAX_SAFE_INTEGER = 9007199254740991;
 
 bool is_separator_at_pos(const char* value, size_t value_len, size_t index) {
   if (index < 0 || index >= value_len) {
@@ -85,7 +85,7 @@ bool is_uppercase_at_pos(size_t pos, const char* word, const char* word_lower) {
 
 // needle is the pattern being searched for
 // haystack is the word being matched against
-long do_score(
+int64_t do_score(
     const MatchInfo& m,
     const size_t haystack_idx,
     const size_t needle_idx,
@@ -104,7 +104,7 @@ long do_score(
     return MIN_SCORE;
   }
 
-  long score;
+  int64_t score;
   bool is_gap_location;
 
   if (word_pos == pattern_pos) {
@@ -200,7 +200,7 @@ void _fillInMaxWordMatchPos(size_t patternLen, size_t wordLen, const char* patte
   }
 }
 
-bool do_fuzzy_score(const MatchInfo& m, long* result) {
+bool do_fuzzy_score(const MatchInfo& m, int64_t* result) {
   bool first_match_can_be_weak = m.first_match_can_be_weak;
 
   // const char* pattern = m.needle;
@@ -242,7 +242,7 @@ bool do_fuzzy_score(const MatchInfo& m, long* result) {
     int nextMaxWordMatchPos = (patternPos + 1 < patternLen ? _maxWordMatchPos[patternPos + 1] : wordLen);
 
     for (column = minWordMatchPos + 1, wordPos = minWordMatchPos; wordPos < nextMaxWordMatchPos; column++, wordPos++) {
-      long score = MIN_SCORE;
+      int64_t score = MIN_SCORE;
       bool canComeDiag = false;
 
       if (wordPos <= maxWordMatchPos) {
@@ -255,17 +255,17 @@ bool do_fuzzy_score(const MatchInfo& m, long* result) {
         );
       }
 
-      long diagScore = 0;
+      int64_t diagScore = 0;
       if (score != MAX_SAFE_INTEGER) {
         canComeDiag = true;
         diagScore = score + _table[row - 1][column - 1];
       }
 
       bool canComeLeft = wordPos > minWordMatchPos;
-      long leftScore = canComeLeft ? _table[row][column - 1] + (_diag[row][column - 1] > 0 ? -5 : 0) : 0; // penalty for a gap start
+      int64_t leftScore = canComeLeft ? _table[row][column - 1] + (_diag[row][column - 1] > 0 ? -5 : 0) : 0; // penalty for a gap start
 
       bool canComeLeftLeft = wordPos > minWordMatchPos + 1 && _diag[row][column - 1] > 0;
-      long leftLeftScore = canComeLeftLeft ? _table[row][column - 2] + (_diag[row][column - 2] > 0 ? -5 : 0) : 0; // penalty for a gap start
+      int64_t leftLeftScore = canComeLeftLeft ? _table[row][column - 2] + (_diag[row][column - 2] > 0 ? -5 : 0) : 0; // penalty for a gap start
 
       if (canComeLeftLeft && (!canComeLeft || leftLeftScore >= leftScore) && (!canComeDiag || leftLeftScore >= diagScore)) {
         // always prefer choosing left left to jump over a diagonal because that means a match is earlier in the word
@@ -303,7 +303,7 @@ bool do_fuzzy_score(const MatchInfo& m, long* result) {
     // Find the column where we go diagonally up
     int diagColumn = column;
     do {
-      long arrow = _arrows[row][diagColumn];
+      int64_t arrow = _arrows[row][diagColumn];
       if (arrow == LeftLeft) {
         diagColumn = diagColumn - 2;
       } else if (arrow == Left) {
@@ -359,7 +359,7 @@ bool fuzzy_score(
     const char* needle,
     const char* needle_lower,
     const MatchOptions& options,
-    long* result) {
+    int64_t* result) {
   if (!*needle) {
     return 1.0;
   }
