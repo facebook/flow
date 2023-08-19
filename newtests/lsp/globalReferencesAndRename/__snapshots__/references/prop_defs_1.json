@@ -57,12 +57,51 @@
       "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-a.js",
       "range": {
         "start": {
-          "line": 10,
+          "line": 8,
+          "character": 2
+        },
+        "end": {
+          "line": 8,
+          "character": 5
+        }
+      }
+    },
+    {
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-a.js",
+      "range": {
+        "start": {
+          "line": 11,
           "character": 13
         },
         "end": {
-          "line": 10,
+          "line": 11,
           "character": 16
+        }
+      }
+    },
+    {
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-a.js",
+      "range": {
+        "start": {
+          "line": 13,
+          "character": 7
+        },
+        "end": {
+          "line": 13,
+          "character": 10
+        }
+      }
+    },
+    {
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-a.js",
+      "range": {
+        "start": {
+          "line": 14,
+          "character": 12
+        },
+        "end": {
+          "line": 14,
+          "character": 15
         }
       }
     },
