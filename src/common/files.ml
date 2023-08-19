@@ -141,6 +141,19 @@ let platform_specific_extension_opt ~options filename =
       )
   )
 
+let chop_platform_suffix ~options file =
+  Base.List.find_map options.multi_platform_extensions ~f:(fun platform_ext ->
+      Base.List.find_map options.module_file_exts ~f:(fun module_ext ->
+          let ext = platform_ext ^ module_ext in
+          if File_key.check_suffix file ext then
+            let file = File_key.chop_suffix file ext in
+            Some (File_key.with_suffix file module_ext)
+          else
+            None
+      )
+  )
+  |> Base.Option.value ~default:file
+
 let is_json_file filename = Utils_js.extension_of_filename filename = Some ".json"
 
 (* This is the set of file extensions which we watch for changes *)

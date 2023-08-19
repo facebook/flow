@@ -1,3 +1,18 @@
+Error --------------------------------------------------------------------------------------------------------- A.js:1:1
+
+Duplicate module provider for `A`. Change either this module provider or the current module provider [1].
+[duplicate-module]
+
+   A.js:1:1
+   1|
+      
+
+References:
+   A.ios.js:1:1
+   1|
+       [1]
+
+
 Error --------------------------------------------------------------------------------------------------------- B.js:1:1
 
 This file is being illegally shadowed by the js.flow file [1]. This file can only be shadowed by a js.flow file in the
@@ -14,4 +29,4 @@ References:
 
 
 
-Found 1 error
+Found 2 errors

@@ -21,7 +21,7 @@ let choose_provider_and_warn_about_duplicates =
     | [] -> acc
     | (f, _) :: fs -> SMap.add m (provider, (f, List.map fst fs)) acc
   in
-  fun m errmap providers fallback ->
+  fun ~options m errmap providers fallback ->
     let (definitions, implementations) =
       let f (key, _) = Files.has_flow_ext key in
       List.partition f providers
@@ -39,16 +39,21 @@ let choose_provider_and_warn_about_duplicates =
     | (impl :: dup_impls, defn :: dup_defns) ->
       let (impl_key, _) = impl in
       let (defn_key, _) = defn in
-      let (dup_impls, dup_defns) =
-        let k = File_key.compare impl_key (Files.chop_flow_ext defn_key) in
-        if k = 0 then
-          (dup_impls, dup_defns)
+      let errmap =
+        if
+          Files.chop_flow_ext defn_key
+          = Files.chop_platform_suffix ~options:(Options.file_options options) impl_key
+        then
+          errmap
         else
-          (impl :: dup_impls, dup_defns)
+          (* For illegal shadow errors, we error on the pair .js.flow and .js *)
+          warn_duplicate_providers m defn [impl] errmap
       in
       let errmap =
         errmap
-        |> warn_duplicate_providers m defn dup_impls
+        (* For duplicate provider errors, we error on either two implementation files
+         * or on two declaration files *)
+        |> warn_duplicate_providers m impl dup_impls
         |> warn_duplicate_providers m defn dup_defns
       in
       (Some (snd defn), errmap)
@@ -172,6 +177,7 @@ module type MODULE_SYSTEM = sig
      files with that exported name. also check for duplicates and
      generate warnings, as dictated by module system rules. *)
   val choose_provider :
+    options:Options.t ->
     (* module name *)
     string ->
     (* set of candidate provider files *)
@@ -367,9 +373,9 @@ module Node = struct
   (* in node, file names are module names, as guaranteed by
      our implementation of exported_name, so anything but a
      singleton provider set is craziness. *)
-  let choose_provider m files errmap =
+  let choose_provider ~options m files errmap =
     let fallback () = None in
-    choose_provider_and_warn_about_duplicates m errmap files fallback
+    choose_provider_and_warn_about_duplicates ~options m errmap files fallback
 end
 
 (****************** Haste module system *********************)
@@ -577,7 +583,7 @@ module Haste : MODULE_SYSTEM = struct
      arbitrary mock, if any exist. if multiple non-mock providers exist,
      we pick one arbitrarily and issue duplicate module warnings for the
      rest. *)
-  let choose_provider m files errmap =
+  let choose_provider ~options m files errmap =
     match files with
     | [] -> (None, errmap)
     | [(_, p)] -> (Some p, errmap)
@@ -587,7 +593,7 @@ module Haste : MODULE_SYSTEM = struct
         List.partition f files
       in
       let fallback () = Some (snd (List.hd mocks)) in
-      choose_provider_and_warn_about_duplicates m errmap non_mocks fallback
+      choose_provider_and_warn_about_duplicates ~options m errmap non_mocks fallback
 end
 
 (****************** module system switch *********************)
@@ -623,7 +629,7 @@ let imported_module ~options ~reader ~node_modules_containers file ?phantom_acc 
 
 let choose_provider ~options m files errmap =
   let module M = (val get_module_system options) in
-  M.choose_provider m files errmap
+  M.choose_provider ~options m files errmap
 
 (******************)
 (***** public *****)
