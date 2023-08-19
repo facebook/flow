@@ -1,3 +1,70 @@
+Error --------------------------------------------------------------------------- cjs_conformance_errors.android.js:1:16
+
+Cannot conform to common interface module because exports [1] is incompatible with string [2] in property `default`.
+[incompatible-type]
+
+   cjs_conformance_errors.android.js:1:16
+   1| module.exports.foo = 1;
+                     ^^^
+
+References:
+   cjs_conformance_errors.android.js
+   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   cjs_conformance_errors.js.flow:1:25
+   1| declare module.exports: string;
+                              ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- cjs_conformance_errors.ios.js:1:1
+
+Cannot conform to common interface module because number [1] is incompatible with string [2] in property `default`.
+[incompatible-type]
+
+   cjs_conformance_errors.ios.js:1:1
+   1| module.exports = 1;
+      ^^^^^^^^^^^^^^
+
+References:
+   cjs_conformance_errors.ios.js:1:18
+   1| module.exports = 1;
+                       ^ [1]
+   cjs_conformance_errors.js.flow:1:25
+   1| declare module.exports: string;
+                              ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------- esm_conformance_errors.android.js:1:16
+
+Cannot conform to common interface module because property `a` is missing in self [1] but exists in common
+interface [2]. [prop-missing]
+
+   esm_conformance_errors.android.js:1:16
+   1| export default 3;
+                     ^ [1]
+
+References:
+   esm_conformance_errors.js.flow
+   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------- esm_conformance_errors.ios.js:1:14
+
+Cannot conform to common interface module because number [1] is incompatible with string [2] in property `a`.
+[incompatible-type]
+
+   esm_conformance_errors.ios.js:1:14
+   1| export const a = 3;
+                   ^
+
+References:
+   esm_conformance_errors.ios.js:1:18
+   1| export const a = 3;
+                       ^ [1]
+   esm_conformance_errors.js.flow:1:25
+   1| declare export const a: string;
+                              ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------- missing_one_impl.js.flow:0:1
 
 Cannot resolve platform-specific implementation module `./missing_one_impl.android`. All platform-specific
@@ -87,4 +154,4 @@ Cannot resolve module `./allow_no_interface`. [cannot-resolve-module]
 
 
 
-Found 7 errors
+Found 11 errors

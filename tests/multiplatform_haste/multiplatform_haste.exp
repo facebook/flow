@@ -12,28 +12,28 @@ References:
    ^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- shadowing.ios.jsx:1:1
+Error ------------------------------------------------------------------------------------------- shadowing.ios.jsx:1:14
 
 Cannot conform to common interface module because property `MyType` is missing in self [1] but exists in common
 interface [2]. [prop-missing]
 
-   shadowing.ios.jsx:1:1
+   shadowing.ios.jsx:1:14
    1| export const iosOnly = true;
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                   ^^^^^^^ [1]
 
 References:
    shadowing.js.flow
    ^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- shadowing.ios.jsx:1:1
+Error ------------------------------------------------------------------------------------------- shadowing.ios.jsx:1:14
 
 Cannot conform to common interface module because property `default` is missing in self [1] but exists in common
 interface [2]. [prop-missing]
 
-   shadowing.ios.jsx:1:1
+   shadowing.ios.jsx:1:14
    1| export const iosOnly = true;
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                   ^^^^^^^ [1]
 
 References:
    shadowing.js.flow
