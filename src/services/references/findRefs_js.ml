@@ -34,31 +34,33 @@ let find_local_refs ~reader ~options ~file_key ~parse_artifacts ~typecheck_artif
   Ok refs
 
 let local_refs_for_global_find_refs
-    ~options ~loc_of_aloc ast_info type_info file_key { FindRefsTypes.def_info; kind } =
-  let var_refs () =
+    ~options ~loc_of_aloc ast_info type_info file_key { FindRefsTypes.def_info; kind = _ } =
+  let var_refs prop_refs =
     let def_locs = GetDefUtils.all_locs_of_def_info def_info in
     let (ast, file_sig, _) = ast_info in
     let (Types_js_types.Typecheck_artifacts { cx; typed_ast; _ }) = type_info in
     let { LocalImportRefSearcher.local_locs = import_def_locs; remote_locs } =
       LocalImportRefSearcher.search ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast def_locs
     in
-    match kind with
-    | FindRefsTypes.Rename ->
-      Base.List.map (remote_locs @ import_def_locs) ~f:(fun l -> (FindRefsTypes.Local, l))
-    | FindRefsTypes.FindReferences ->
-      let scope_info =
-        Scope_builder.program ~enable_enums:(Options.enums options) ~with_types:true ast
-      in
-      Base.List.unordered_append
-        (Base.List.map remote_locs ~f:(fun l -> (FindRefsTypes.Local, l)))
-        (VariableFindRefs.local_find_refs scope_info (import_def_locs @ def_locs)
-        |> Base.Option.value ~default:[]
-        )
+    let scope_info =
+      Scope_builder.program ~enable_enums:(Options.enums options) ~with_types:true ast
+    in
+    (* Property refs might contain binding destructuring pattern identifiers.
+     * We should find all local references of them. *)
+    let prop_ref_locs = Base.List.map prop_refs ~f:snd in
+    let starting_locs = Base.List.join [prop_ref_locs; import_def_locs; def_locs] in
+    Base.List.unordered_append
+      (Base.List.map remote_locs ~f:(fun l -> (FindRefsTypes.Local, l)))
+      (VariableFindRefs.local_find_refs scope_info starting_locs |> Base.Option.value ~default:[])
   in
-  let merge = function
-    | ([], prop_refs) -> prop_refs
-    | ((_ :: _ as var_refs), Error _) -> Ok var_refs
-    | (var_refs, Ok prop_refs) -> Ok (Base.List.unordered_append prop_refs var_refs)
+  let merge_with_var_refs = function
+    | Ok prop_refs ->
+      let var_refs = var_refs prop_refs in
+      Ok (Base.List.unordered_append prop_refs var_refs)
+    | Error e ->
+      (match var_refs [] with
+      | [] -> Error e
+      | results -> Ok results)
   in
   match def_info with
   | Get_def_types.VariableDefinition (def_locs, name) ->
@@ -74,7 +76,7 @@ let local_refs_for_global_find_refs
           file_key
           ((hd, tl), name)
     in
-    merge (var_refs (), prop_refs)
+    merge_with_var_refs prop_refs
   | Get_def_types.PropertyDefinition props_info ->
     let prop_refs =
       PropertyFindRefs.property_find_refs_in_file
@@ -84,5 +86,5 @@ let local_refs_for_global_find_refs
         file_key
         props_info
     in
-    merge (var_refs (), prop_refs)
+    merge_with_var_refs prop_refs
   | Get_def_types.NoDefinition -> Ok []

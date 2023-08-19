@@ -68,17 +68,56 @@
               "character": 31
             }
           },
-          "newText": "{NEW_NAME: bar}: Foo"
+          "newText": "{bar: NEW_NAME}: Foo"
         },
         {
           "range": {
             "start": {
-              "line": 10,
+              "line": 8,
+              "character": 2
+            },
+            "end": {
+              "line": 8,
+              "character": 5
+            }
+          },
+          "newText": "NEW_NAME"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 11,
               "character": 13
             },
             "end": {
-              "line": 10,
+              "line": 11,
               "character": 16
+            }
+          },
+          "newText": "NEW_NAME"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 13,
+              "character": 6
+            },
+            "end": {
+              "line": 13,
+              "character": 11
+            }
+          },
+          "newText": "{bar: NEW_NAME}"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 14,
+              "character": 12
+            },
+            "end": {
+              "line": 14,
+              "character": 15
             }
           },
           "newText": "NEW_NAME"
