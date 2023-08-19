@@ -1,11 +1,6 @@
 [ignore]
 .*/ignore/.*
 
-[include]
-
-[libs]
-
 [options]
-exact_by_default=false
+all=false
 no_flowlib=true
-
