@@ -1343,7 +1343,14 @@ let autocomplete_unqualified_type
     due to parse errors. See tests/autocomplete/bracket_syntax_3.js for example. *)
 let fix_loc_of_string_token token loc =
   match quote_kind token with
-  | Some _ -> { loc with Loc._end = loc.Loc.start }
+  | Some _ ->
+    (match Autocomplete_sigil.remove_opt token with
+    (* Do not edit the loc if the token is an empty string token.
+     * An empty string token is not likely to be a locally incomplete string token. *)
+    | Some ("\"", "\"")
+    | Some ("'", "'") ->
+      loc
+    | _ -> { loc with Loc._end = loc.Loc.start })
   | None -> loc
 
 let fix_locs_of_string_token token (insert_loc, replace_loc) =
@@ -1376,6 +1383,19 @@ let print_name_as_indexer ~options ~token name =
         )
   in
   print_expression ~options ~token expression
+
+let print_name_as_indexer_with_edit_locs ~options ~token ~edit_locs name =
+  let (opt_single_quotes, edit_locs) =
+    autocomplete_create_string_literal_edit_controls
+      ~prefer_single_quotes:(Options.format_single_quotes options)
+      ~edit_locs
+      ~token
+  in
+  let options =
+    let open Options in
+    { options with opt_format = { options.opt_format with opt_single_quotes } }
+  in
+  (print_name_as_indexer ~options ~token name, edit_locs)
 
 let autocomplete_member
     ~env
@@ -1461,7 +1481,9 @@ let autocomplete_member
                  ty
              | (false, _, Some _, _, _)
              | (_, true, Some _, _, _) ->
-               let insert_text = Lazy.force name_as_indexer in
+               let (insert_text, edit_locs) =
+                 print_name_as_indexer_with_edit_locs ~options ~token ~edit_locs name
+               in
                autocomplete_create_result
                  ~insert_text
                  ~rank

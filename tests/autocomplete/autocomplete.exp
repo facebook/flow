@@ -10360,7 +10360,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":3,"character":23},"end":{"line":3,"character":23}},
+    "range":{"start":{"line":3,"character":23},"end":{"line":3,"character":25}},
     "newText":"'foo'"
   },
   "command":{
@@ -10391,7 +10391,7 @@ Flags: --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":3,"character":23},"end":{"line":3,"character":23}},
+    "range":{"start":{"line":3,"character":23},"end":{"line":3,"character":25}},
     "newText":"\"foo\""
   },
   "command":{
