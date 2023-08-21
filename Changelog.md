@@ -1,3 +1,20 @@
+### 0.215.0
+
+Likely to cause new Flow errors:
+* Improved analysis determining if a function has an implicit void return. As a result, some incorrectly typed code will no longer type check. ([example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+IFkolXpUCWewUEAwhCQgRDH8wEH4hMnwROHlsNnw4KHwwSLAAC3wANyo4LFxscWQuHgMNZmwsiRSAWglaY1cq-hIAa2wJXNpG4Vxcdvdu3v7B0RxKUYMhKDBSqmbWwIq3eagoOrKSKgH0wtMMPznY7d2SfcoBiEZ-aG5G3Ix085AF-ZhsRoRehqUEiNMgSQHlSruBZxJrMcJwMhzAC+-EgGiCMAWyjg0AABDBiAAKeTIXHCEQzXi42iktDEXAASlJ5JmuOAAB0oLjcSQAO5wPo5XHEhlsznc7lZMi4gCMyHFEu5cBgwtooo5XMVErQni6AG4FYqkbi8NKNVrcUjDbiNFodPLNYqWBIhJQuTKDZqrVAkTEQPkTCQcVAghF7CYQEigA))
+* Fixed a bug where global assignments in generics wouldn't flag errors. ([example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+IFkolXpUCWewUEAwhCQgRDH8wEH4hMnwROHlsNnw4KHwwSLAAC3wANyo4LFxscWQuHgMNZmwsiRSAWglaY1cq-hIAa2wJXNpG4Vxcdvdu3v7B0RxKUYMhKDBSqmbWwIq3eagoOrKSKgH0wtMMPznY7d2SfcoBiEZ-aG5G3Ix085AF-ZhsRoRehqUEiNMgSQHlSruBZxJrMcJwMhzAC+-EgGiCMAWyjg0AABAB3HJEgA8AA0AHwACgAlLjgAAdKC43FQaAKBGWPwAcSImFwuIAvLiACwAJgA3LiAPRS3EmSgQSiMpExED5EwkHFQIIRewmEBIoA))
+
+New features:
+* Flow now supports contextual typing for class private property assignments. ([example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAJwKYEMwBcD6aArlLnALYYrgA2WAzvXGCADQgYAeOBARgJ74AJhhhYiNXClzEM7DFCLl602QF92kEdTB1GAAgBiECPuAAdKPv0BiXljTJ9AQTRos-ADyLyvDGgA+fQBefQBtAF0AbktLaxgTAAoASjM4631cAAs4egA6OwcQ8Oj0tUs1NhAAN38maGpqgAY8gCYARgAWPKaQNSA))
+
+IDE:
+* Local find all references will now return a more comprehensive result list.
+* Go to definition now supports indexed access types.
+
+Library Definitions:
+* Added [inert attribute](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/inert), [`showPicker()` method](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/showPicker) and
+[`hasPointerCapture()` method](https://developer.mozilla.org/en-US/docs/Web/API/Element/hasPointerCapture)
+
 ### 0.214.0
 
 Likely to cause new Flow errors:
