@@ -10350,6 +10350,68 @@ Flags: --lsp
   }
 }
 
+indexed-access-3.js:4:25
+Flags: --lsp
+{
+  "label":"'foo'",
+  "labelDetails":{"detail":": string"},
+  "kind":6,
+  "detail":"string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":23},"end":{"line":3,"character":23}},
+    "newText":"'foo'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'foo'",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+
+indexed-access-4.js:4:25
+Flags: --lsp
+{
+  "label":"\"foo\"",
+  "labelDetails":{"detail":": string"},
+  "kind":6,
+  "detail":"string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":23},"end":{"line":3,"character":23}},
+    "newText":"\"foo\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"\"foo\"",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+
 indexed-access-optional-1.js:7:14
 Flags: --lsp
 {
