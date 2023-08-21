@@ -13,7 +13,7 @@ aliases:
         ignore: /.*/
 
 orbs:
-  win: circleci/windows@5.0.0
+  win: circleci/windows@2.4.0
 
   opam_windows:
     commands:
@@ -509,9 +509,7 @@ jobs:
       - run:
           name: Run tool tests
           shell: bash
-          command: |
-            cd "$CIRCLE_WORKING_DIRECTORY"
-            ./tool test --bin bin/win64/flow.exe --parallelism 1
+          command: node packages/flow-dev-tools/bin/tool test --bin bin/win64/flow.exe --parallelism 1
 
   ounit_test_linux:
     executor: linux-opam
