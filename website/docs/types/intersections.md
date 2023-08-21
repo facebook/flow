@@ -1,5 +1,5 @@
 ---
-title: Intersection Types
+title: Intersections
 slug: /types/intersections
 ---
 

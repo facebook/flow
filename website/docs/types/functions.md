@@ -1,5 +1,5 @@
 ---
-title: Function Types
+title: Functions
 slug: /types/functions
 ---
 

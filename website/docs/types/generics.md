@@ -1,5 +1,5 @@
 ---
-title: Generic Types
+title: Generics
 slug: /types/generics
 ---
 

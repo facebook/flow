@@ -1,5 +1,5 @@
 ---
-title: Class Types
+title: Classes
 slug: /types/classes
 ---
 

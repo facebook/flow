@@ -1,5 +1,5 @@
 ---
-title: Object Types
+title: Objects
 slug: /types/objects
 ---
 

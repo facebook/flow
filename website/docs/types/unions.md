@@ -1,5 +1,5 @@
 ---
-title: Union Types
+title: Unions
 slug: /types/unions
 ---
 

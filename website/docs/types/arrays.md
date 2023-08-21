@@ -1,5 +1,5 @@
 ---
-title: Array Types
+title: Arrays
 slug: /types/arrays
 ---
 

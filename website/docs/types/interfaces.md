@@ -1,5 +1,5 @@
 ---
-title: Interface Types
+title: Interfaces
 slug: /types/interfaces
 ---
 

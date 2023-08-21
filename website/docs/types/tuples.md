@@ -1,5 +1,5 @@
 ---
-title: Tuple Types
+title: Tuples
 slug: /types/tuples
 ---
 
