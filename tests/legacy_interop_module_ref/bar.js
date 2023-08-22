@@ -1,3 +1,2 @@
-// @flow
-("a#Foo" : $Flow$ModuleRef<{ default: "default", named: "named" }>);
-("b#Foo" : $Flow$ModuleRef<"default">);
+("a#foo" : $Flow$ModuleRef<{ default: "default", named: "named" }>);
+("b#foo" : $Flow$ModuleRef<"default">);

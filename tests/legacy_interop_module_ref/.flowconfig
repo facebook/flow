@@ -2,6 +2,5 @@
 all=true
 
 module.system=haste
-module.system.haste.use_name_reducers=false
 module.system.haste.module_ref_prefix=a#
 module.system.haste.module_ref_prefix_LEGACY_INTEROP=b#
