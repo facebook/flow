@@ -205,7 +205,7 @@ module Opts = struct
         [(Str.regexp "^\\(.*/\\)?\\([a-zA-Z0-9$_.-]+\\)\\.js\\(\\.flow\\)?$", "\\2")];
       haste_paths_excludes = ["\\(.*\\)?/node_modules/.*"];
       haste_paths_includes = ["<PROJECT_ROOT>/.*"];
-      haste_use_name_reducers = false;
+      haste_use_name_reducers = true;
       ignore_non_literal_requires = false;
       include_warnings = false;
       lazy_mode = None;
