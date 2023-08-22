@@ -1,7 +1,5 @@
 
-/* @providesModule Bar */
-
-var Qux = require('Qux');
+var Qux = require('./Qux');
 
 class Bar {
   y:number;

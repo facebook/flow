@@ -1,5 +1,4 @@
 /**
- * @providesModule Exists
  * @flow
  */
 

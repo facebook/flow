@@ -66,25 +66,25 @@ require.js:49:8
 Flags:
 Parent.js:4:18,4:28
 
-react.js:11:3
+react_jsx.js:11:3
 Flags:
-react.js:6:7,6:7
+react_jsx.js:6:7,6:7
 
-react.js:14:5
+react_jsx.js:14:5
 Flags:
-react.js:5:16,5:16
+react_jsx.js:5:16,5:16
 
-react.js:17:8
+react_jsx.js:17:8
 Flags:
-react.js:9:5,9:7
+react_jsx.js:9:5,9:7
 
-react.js:21:4
+react_jsx.js:21:4
 Flags:
-react.js:21:3,21:5
+react_jsx.js:21:3,21:5
 
-react.js:24:12
+react_jsx.js:24:12
 Flags:
-react.js:9:5,9:7
+react_jsx.js:9:5,9:7
 
 override.js:8:19
 Flags:

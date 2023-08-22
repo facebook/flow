@@ -468,21 +468,6 @@
 [0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m [0m[0m[0m[0;2m13[0m[0;2m|[0m[0m [0m[0;2m  c: [0m[36mstring[0m[0;2m,[0m[0m
 [0m[0m
 [0m[0m
-[0m[31mError ----------------------------------------------------------------------------------------- haste_dupes/dupe2.js:1:1[0m[0m
-[0m[0m
-[0m[0mDuplicate[0m[0m [0m[0mmodule[0m[0m [0m[0mprovider[0m[0m [0m[0mfor[0m[0m [0m[0m[0m[0;1mdupe[0m[0m.[0m[0m [0m[0mChange[0m[0m [0m[0m[0m[0meither[0m[0m [0m[0mthis[0m[0m [0m[0mmodule[0m[0m [0m[0mprovider[0m[0m [0m[0mor[0m[0m [0m[0mthe[0m[0m [0m[0m[0m[0;4mcurrent[0m[0;4m [0m[0;4mmodule[0m[0;4m [0m[0;4mprovider[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m.[0m[0m[0m[0m
-[0m[0m[[0m[0mduplicate-module[0m[0m][0m[0m
-[0m[0m
-[0m[0m     [0m[0mhaste_dupes/dupe2.js
-[0m[0m     [0m[0m[0m[0;2m1[0m[0;2m|[0m[0m [0m[0;2m[0m[31m[0m[0;2m/**[0m[0m
-[0m[0m     [0m[0m[0m[0;2m2[0m[0;2m|[0m[0m [0m[0;2m * @providesModule dupe[0m[0m
-[0m[0m     [0m[0m[0m[0;2m3[0m[0;2m|[0m[0m [0m[0;2m * @format[0m[0m
-[0m[0m     [0m[0m[0m[0;2m4[0m[0;2m|[0m[0m [0m[0;2m * @flow[0m[0m
-[0m[0m
-[0m[0m     [0m[0mhaste_dupes/dupe1.js
-[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m [0m[0m[0m[0;2m1[0m[0;2m|[0m[0m [0m[0;2m[0m[36m[0m[0;2m/**[0m[0m
-[0m[0m
-[0m[0m
 [0m[31mError ------------------------------------------------------------------------------------------------ large_locs.js:6:2[0m[0m
 [0m[0m
 [0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mtemplate[0m[0m [0m[0mstring[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mempty[0m[0m[0m[0m [0m[0mbecause[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mempty[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
@@ -4070,7 +4055,7 @@
 [0m[0m
 [0m[0m
 [0m
-Found 243 errors and 1 warning
+Found 242 errors and 1 warning
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

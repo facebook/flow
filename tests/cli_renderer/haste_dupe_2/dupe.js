@@ -1,5 +1,4 @@
 /**
- * @providesModule dupe
  * @format
  * @flow
  */

@@ -7,7 +7,7 @@
 queries_in_file get-def "destructuring.js"
 queries_in_file get-def "assignment.js"
 queries_in_file get-def "require.js"
-queries_in_file get-def "react.js"
+queries_in_file get-def "react_jsx.js"
 queries_in_file get-def "override.js"
 queries_in_file get-def "import.js"
 queries_in_file get-def "module_ref.js"

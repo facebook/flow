@@ -1,5 +1,3 @@
-/* @providesModule Demo */
-
 class A {
   x: number; // instance field declaration
   constructor(x: number) { this.x = x; }

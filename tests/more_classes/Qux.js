@@ -1,6 +1,3 @@
-
-/* @providesModule Qux */
-
 class Qux {
   w:number;
 

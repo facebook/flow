@@ -1,5 +1,0 @@
-/**
- * @providesModule dupe
- * @format
- * @flow
- */

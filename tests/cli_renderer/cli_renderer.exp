@@ -441,17 +441,17 @@ References:
             ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- haste_dupes/dupe2.js:1:1
+Error ----------------------------------------------------------------------------------------- haste_dupe_2/dupe.js:1:1
 
 Duplicate module provider for `dupe`. Change either this module provider or the current module provider [1].
 [duplicate-module]
 
-   haste_dupes/dupe2.js:1:1
+   haste_dupe_2/dupe.js:1:1
    1| /**
       
 
 References:
-   haste_dupes/dupe1.js:1:1
+   haste_dupe_1/dupe.js:1:1
    1| /**
        [1]
 

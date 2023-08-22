@@ -1,6 +1,4 @@
 /**
- * @providesModule buffer
- *
  * Not in flow.
  * If this module is successfully imported/required, its
  * type will be Any, so arbitraty uses won't cause errors.

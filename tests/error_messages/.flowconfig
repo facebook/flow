@@ -1,4 +1,3 @@
 [options]
-module.system=haste
 all=true
 max_literal_length=20

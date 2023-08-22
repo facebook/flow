@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<13ca42bbc7fe91f15057861e18a77d88>>
+ * @generated SignedSource<<33298c34d39567a13d7a85b7bc6c9759>>
  *
  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  * !! This file is a check-in of a static_upstream project!      !!
@@ -12,7 +12,6 @@
  * !!    static_upstream.                                        !!
  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  *
- * @providesModule XControllerURIBuilder
  * @typechecks
  */
 

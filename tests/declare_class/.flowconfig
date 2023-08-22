@@ -3,4 +3,3 @@ lib
 
 [options]
 all=true
-module.system=haste

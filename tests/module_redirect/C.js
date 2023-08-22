@@ -1,5 +1,4 @@
 /**
- * @providesModule C
  * @flow
  */
 
