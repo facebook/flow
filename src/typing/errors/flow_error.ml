@@ -497,6 +497,16 @@ let rec make_error_printable :
       | Op (Coercion { from; target }) ->
         root loc frames from [text "Cannot coerce "; desc from; text " to "; desc target]
       | Op (ConformToCommonInterface { self; common_interface_module }) ->
+        let frames =
+          let explanation =
+            [
+              text "Read the docs on Flow's multi-platform support for more information: ";
+              text "https://flow.org/en/docs/react/multiplatform";
+            ]
+          in
+          let (all_frames, explanations) = frames in
+          (all_frames, explanation :: explanations)
+        in
         root
           loc
           frames

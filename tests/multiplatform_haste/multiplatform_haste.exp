@@ -1,7 +1,8 @@
 Error ----------------------------------------------------------------------------------------- shadowing.android.js:1:1
 
 Cannot conform to common interface module because property `MyType` is missing in self [1] but exists in common
-interface [2]. [prop-missing]
+interface [2]. Read the docs on Flow's multi-platform support for more information:
+https://flow.org/en/docs/react/multiplatform. [prop-missing]
 
    shadowing.android.js:1:1
    1|
@@ -15,7 +16,8 @@ References:
 Error ------------------------------------------------------------------------------------------- shadowing.ios.jsx:1:14
 
 Cannot conform to common interface module because property `MyType` is missing in self [1] but exists in common
-interface [2]. [prop-missing]
+interface [2]. Read the docs on Flow's multi-platform support for more information:
+https://flow.org/en/docs/react/multiplatform. [prop-missing]
 
    shadowing.ios.jsx:1:14
    1| export const iosOnly = true;
@@ -29,7 +31,8 @@ References:
 Error ------------------------------------------------------------------------------------------- shadowing.ios.jsx:1:14
 
 Cannot conform to common interface module because property `default` is missing in self [1] but exists in common
-interface [2]. [prop-missing]
+interface [2]. Read the docs on Flow's multi-platform support for more information:
+https://flow.org/en/docs/react/multiplatform. [prop-missing]
 
    shadowing.ios.jsx:1:14
    1| export const iosOnly = true;
