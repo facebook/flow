@@ -7,7 +7,6 @@
 [options]
 all=true
 module.system=haste
-module.system.haste.use_name_reducers=true
 
 module.name_mapper='1Doesnt\(Exist\)' -> '\1s'
 module.name_mapper='1Doesnt\(Exist\)' -> '\1s2'

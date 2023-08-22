@@ -2,7 +2,6 @@
 all=true
 
 module.system=haste
-module.system.haste.use_name_reducers=true
 # get basename
 module.system.haste.name_reducers='^.*/\([a-zA-Z0-9$_.-]+\.js\(\.flow\)?\)$' -> '\1'
 # strip .js or .js.flow suffix
