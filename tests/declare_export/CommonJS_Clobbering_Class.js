@@ -1,8 +1,3 @@
-/**
- * @providesModule CommonJS_Clobbering_Class
- * @flow
- */
-
 class Base {
   static baseProp: number;
 }

@@ -1,8 +1,3 @@
-/**
- * @providesModule CommonJS_Clobbering_Lit
- * @flow
- */
-
 module.exports = {
   numberValue1: 1,
   numberValue2: 2,

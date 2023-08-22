@@ -1,8 +1,3 @@
-/**
- * @providesModule ES6_Default_NamedClass1
- * @flow
- */
-
 declare export default class FooImpl { givesANum(): number; };
 
 // Regression test for https://github.com/facebook/flow/issues/511

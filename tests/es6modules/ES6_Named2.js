@@ -1,8 +1,3 @@
-/**
- * @providesModule ES6_Named2
- * @flow
- */
-
 const specifierNumber4 = 1;
 const specifierNumber5 = 2;
 const groupedSpecifierNumber3 = 1;
