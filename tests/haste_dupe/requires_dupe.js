@@ -2,4 +2,4 @@
  * depends on doubly-provided module
  * @flow
  */
-var dupe = require('Dupe');
+var dupe = require('dupe');
