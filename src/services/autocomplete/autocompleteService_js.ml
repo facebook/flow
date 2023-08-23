@@ -521,6 +521,25 @@ let quote_kind token =
     | '"' -> Some `Double
     | _ -> None
 
+(* Use the given token to tweak the edit range to respect existing quotations
+ * and avoid overridding existing quotations *)
+let autocomplete_create_string_literal_edit_controls ~prefer_single_quotes ~edit_locs ~token =
+  let prefer_single_quotes =
+    (* If the user already typed a quote, use that kind regardless of the config option *)
+    match quote_kind token with
+    | Some `Single -> true
+    | Some `Double -> false
+    | None -> prefer_single_quotes
+  in
+  let edit_locs =
+    (* When completing a string literal, always replace. Inserting is likely to produce
+       an invalid string which is probably not what the user wnats. *)
+    match quote_kind token with
+    | Some _ -> (snd edit_locs, snd edit_locs)
+    | None -> edit_locs
+  in
+  (prefer_single_quotes, edit_locs)
+
 let autocomplete_literals
     ~prefer_single_quotes ~cx ~genv ~tparams_rev ~edit_locs ~upper_bound ~token =
   let scheme = { Type.TypeScheme.tparams_rev; type_ = upper_bound } in
@@ -530,21 +549,10 @@ let autocomplete_literals
   in
   let exact_by_default = Context.exact_by_default cx in
   let literals = literals_of_ty [] upper_bound_ty in
+  let (prefer_single_quotes, edit_locs) =
+    autocomplete_create_string_literal_edit_controls ~prefer_single_quotes ~edit_locs ~token
+  in
   Base.List.map literals ~f:(fun ty ->
-      let prefer_single_quotes =
-        (* If the user already typed a quote, use that kind regardless of the config option *)
-        match quote_kind token with
-        | Some `Single -> true
-        | Some `Double -> false
-        | None -> prefer_single_quotes
-      in
-      let edit_locs =
-        (* When completing a string literal, always replace. Inserting is likely to produce
-           an invalid string which is probably not what the user wnats. *)
-        match quote_kind token with
-        | Some _ -> (snd edit_locs, snd edit_locs)
-        | None -> edit_locs
-      in
       (* TODO: since we're inserting values, we shouldn't really be using the Ty_printer *)
       let name =
         Ty_printer.string_of_t_single_line
