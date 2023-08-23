@@ -2429,7 +2429,9 @@ let friendly_message_of_msg loc_of_aloc msg =
         text "Cannot resolve platform-specific implementation module ";
         code name;
         text ". ";
-        text "All platform-specific implementations must exist for this interface.";
+        text "All platform-specific implementations must exist for this interface. ";
+        text "Read the docs on Flow's multi-platform support for more information: ";
+        text "https://flow.org/en/docs/react/multiplatform";
       ]
     in
     Normal { features }

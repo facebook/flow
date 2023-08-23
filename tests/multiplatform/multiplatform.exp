@@ -1,6 +1,7 @@
 Error --------------------------------------------------------------------------- cjs_conformance_errors.android.js:1:16
 
 Cannot conform to common interface module because exports [1] is incompatible with string [2] in property `default`.
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 [incompatible-type]
 
    cjs_conformance_errors.android.js:1:16
@@ -17,7 +18,8 @@ References:
 
 Error -------------------------------------------------------------------------------- cjs_conformance_errors.ios.js:1:1
 
-Cannot conform to common interface module because number [1] is incompatible with string [2] in property `default`.
+Cannot conform to common interface module because number [1] is incompatible with string [2] in property `default`. Read
+the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 [incompatible-type]
 
    cjs_conformance_errors.ios.js:1:1
@@ -36,7 +38,8 @@ References:
 Error --------------------------------------------------------------------------- esm_conformance_errors.android.js:1:16
 
 Cannot conform to common interface module because property `a` is missing in self [1] but exists in common
-interface [2]. [prop-missing]
+interface [2]. Read the docs on Flow's multi-platform support for more information:
+https://flow.org/en/docs/react/multiplatform. [prop-missing]
 
    esm_conformance_errors.android.js:1:16
    1| export default 3;
@@ -49,7 +52,8 @@ References:
 
 Error ------------------------------------------------------------------------------- esm_conformance_errors.ios.js:1:14
 
-Cannot conform to common interface module because number [1] is incompatible with string [2] in property `a`.
+Cannot conform to common interface module because number [1] is incompatible with string [2] in property `a`. Read the
+docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 [incompatible-type]
 
    esm_conformance_errors.ios.js:1:14
@@ -68,14 +72,16 @@ References:
 Error ------------------------------------------------------------------------------------- missing_one_impl.js.flow:0:1
 
 Cannot resolve platform-specific implementation module `./missing_one_impl.android`. All platform-specific
-implementations must exist for this interface. [cannot-resolve-module]
+implementations must exist for this interface. Read the docs on Flow's multi-platform support for more information:
+https://flow.org/en/docs/react/multiplatform [cannot-resolve-module]
 
 
 
 Error ----------------------------------------------------------------------------------------- shadowing.android.js:1:1
 
 Cannot conform to common interface module because property `MyType` is missing in self [1] but exists in common
-interface [2]. [prop-missing]
+interface [2]. Read the docs on Flow's multi-platform support for more information:
+https://flow.org/en/docs/react/multiplatform. [prop-missing]
 
    shadowing.android.js:1:1
    1|
@@ -89,7 +95,8 @@ References:
 Error --------------------------------------------------------------------------------------------- shadowing.ios.js:1:1
 
 Cannot conform to common interface module because property `MyType` is missing in self [1] but exists in common
-interface [2]. [prop-missing]
+interface [2]. Read the docs on Flow's multi-platform support for more information:
+https://flow.org/en/docs/react/multiplatform. [prop-missing]
 
    shadowing.ios.js:1:1
    1|
@@ -103,7 +110,8 @@ References:
 Error ------------------------------------------------------------------------------------ shadowing_cjs.android.cjs:1:1
 
 Cannot conform to common interface module because property `MyType` is missing in self [1] but exists in common
-interface [2]. [prop-missing]
+interface [2]. Read the docs on Flow's multi-platform support for more information:
+https://flow.org/en/docs/react/multiplatform. [prop-missing]
 
    shadowing_cjs.android.cjs:1:1
    1|
@@ -117,7 +125,8 @@ References:
 Error ---------------------------------------------------------------------------------------- shadowing_cjs.ios.cjs:1:1
 
 Cannot conform to common interface module because property `MyType` is missing in self [1] but exists in common
-interface [2]. [prop-missing]
+interface [2]. Read the docs on Flow's multi-platform support for more information:
+https://flow.org/en/docs/react/multiplatform. [prop-missing]
 
    shadowing_cjs.ios.cjs:1:1
    1|
