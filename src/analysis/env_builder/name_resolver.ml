@@ -2064,14 +2064,30 @@ module Make
         match hd_completion_state with
         | None -> ()
         | Some abrupt_completion ->
-          if
-            List.for_all
-              (function
-                | None -> false
-                | Some abrupt_completion' -> abrupt_completion = abrupt_completion')
+          let merged_completion_state =
+            Base.List.fold
               tl_completion_states
-          then
-            raise (AbruptCompletion.Exn abrupt_completion)
+              ~init:(Some abrupt_completion)
+              ~f:(fun acc completion_state ->
+                match (acc, completion_state) with
+                | (Some abrupt_completion1, Some abrupt_completion2)
+                  when abrupt_completion1 = abrupt_completion2 ->
+                  Some abrupt_completion1
+                | (Some AbruptCompletion.Throw, Some AbruptCompletion.Return)
+                | (Some AbruptCompletion.Return, Some AbruptCompletion.Throw) ->
+                  Some AbruptCompletion.Return
+                | ( Some (AbruptCompletion.Break opt_label1),
+                    Some (AbruptCompletion.Continue opt_label2)
+                  )
+                | ( Some (AbruptCompletion.Continue opt_label1),
+                    Some (AbruptCompletion.Break opt_label2)
+                  )
+                  when opt_label1 = opt_label2 ->
+                  Some (AbruptCompletion.Continue opt_label1)
+                | _ -> None
+            )
+          in
+          this#from_completion merged_completion_state
 
       (* Given a filter for particular abrupt completions to expect, find the saved
          environments corresponding to them, and merge those environments with the
@@ -4545,11 +4561,35 @@ module Make
         end;
         super#statement stmt
 
-      (* Function declarations are hoisted to the top of a block, so that they may be considered
-         initialized before they are read. *)
       method! statement_list (stmts : (ALoc.t, ALoc.t) Ast.Statement.t list) =
-        ignore
-        @@ super#statement_list (Flow_ast_utils.hoist_function_and_component_declarations stmts);
+        (* Function declarations are hoisted to the top of a block, so that they may be considered
+           initialized before they are read. *)
+        let stmts_hoisted = Flow_ast_utils.hoist_function_and_component_declarations stmts in
+        (* If there is any abnormal control flow, add errors on any statements that are
+           lexically after the place where abnormal control was raised. *)
+        let abrupt_completion =
+          Base.List.fold stmts_hoisted ~init:None ~f:(fun abrupt_completion stmt ->
+              if Base.Option.is_some abrupt_completion then (
+                (match stmt with
+                | (_, Ast.Statement.Empty _) -> ()
+                | (_, Ast.Statement.VariableDeclaration decl) ->
+                  let open Ast.Statement.VariableDeclaration in
+                  Base.List.iter decl.declarations ~f:(function
+                      | (_, { Declarator.init = Some (loc, _); _ }) ->
+                        add_output (Error_message.EUnreachable loc)
+                      | _ -> ()
+                      )
+                | (loc, _) -> add_output (Error_message.EUnreachable loc));
+                abrupt_completion
+              ) else
+                try
+                  ignore @@ this#statement stmt;
+                  None
+                with
+                | AbruptCompletion.Exn abrupt_completion -> Some abrupt_completion
+          )
+        in
+        this#from_completion abrupt_completion;
         stmts
 
       (* WHen the refinement scope we push is non-empty we want to make sure that the variables

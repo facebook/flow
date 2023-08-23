@@ -5,10 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-(* accumulates a list of previous statements' ASTs in reverse order *)
-(* can raise Abnormal.(Exn (Stmts _, _)). *)
 module Ast = Flow_ast
-module Flow = Flow_js
 
 let toplevels statement cx stmts =
   (* Find the first statement that causes abnormal control flow in the *original* ordering *)
@@ -29,29 +26,6 @@ let toplevels statement cx stmts =
           (acc, stmt)
     )
   in
-  (* If there was any abnormal control flow, add errors on any statements that are
-     lexically after the place where abnormal control was raised *)
   match abnormal with
-  | Some (n, abnormal) ->
-    let warn_unreachable loc = Flow.add_output cx (Error_message.EUnreachable loc) in
-    Base.List.iteri
-      ~f:
-        (fun i -> function
-          | (_, Ast.Statement.Empty _)
-          | (_, Ast.Statement.FunctionDeclaration _) ->
-            ()
-          | (_, Ast.Statement.VariableDeclaration d) when i > n ->
-            Ast.Statement.VariableDeclaration.(
-              d.declarations
-              |> List.iter
-                   Declarator.(
-                     function
-                     | (_, { init = Some ((loc, _), _); _ }) -> warn_unreachable loc
-                     | _ -> ()
-                   )
-            )
-          | (loc, _) when i > n -> warn_unreachable loc
-          | _ -> ())
-      stmts;
-    (stmts, Some abnormal)
+  | Some (_, abnormal) -> (stmts, Some abnormal)
   | None -> (stmts, None)
