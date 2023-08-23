@@ -1,3 +1,8 @@
+### 0.215.1
+
+Notable bug fixes:
+* We fixed a bug that causes us to insert extra quote in autocomplete string literal in indexed access types.
+
 ### 0.215.0
 
 Likely to cause new Flow errors:
