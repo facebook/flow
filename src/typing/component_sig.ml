@@ -69,36 +69,21 @@ struct
     in
 
     (* statement visit pass *)
-    let (statements_ast, statements_abnormal) =
-      Toplevels.toplevels Statement.statement cx statements
-    in
-
-    let maybe_void =
-      match statements_abnormal with
-      | Some Abnormal.Return -> false
-      | Some Abnormal.Throw -> false (* NOTE *)
-      | Some (Abnormal.Break _)
-      | Some (Abnormal.Continue _) ->
-        failwith "Illegal toplevel abnormal directive"
-      | None -> true
-    in
+    let (statements_ast, _) = Toplevels.toplevels Statement.statement cx statements in
 
     let exhaust =
-      if maybe_void then
-        let use_op = unknown_use in
-        let (exhaustive, undeclared) = Context.exhaustive_check cx body_loc in
-        if undeclared then begin
-          Flow_js_utils.add_output cx Error_message.(EComponentMissingReturn reason_cmp);
-          None
-        end else
-          Some
-            ( Tvar.mk cx (replace_desc_reason (RCustom "maybe_exhaustively_checked") reason_cmp),
-              exhaustive,
-              ImplicitVoidReturnT
-                { use_op; reason = reason_of_t renders_t; action = NoImplicitReturns reason_cmp }
-            )
-      else
+      let use_op = unknown_use in
+      let (exhaustive, undeclared) = Context.exhaustive_check cx body_loc in
+      if undeclared then begin
+        Flow_js_utils.add_output cx Error_message.(EComponentMissingReturn reason_cmp);
         None
+      end else
+        Some
+          ( Tvar.mk cx (replace_desc_reason (RCustom "maybe_exhaustively_checked") reason_cmp),
+            exhaustive,
+            ImplicitVoidReturnT
+              { use_op; reason = reason_of_t renders_t; action = NoImplicitReturns reason_cmp }
+          )
     in
 
     let body_ast = reconstruct_body statements_ast in

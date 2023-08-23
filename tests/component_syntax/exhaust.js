@@ -52,3 +52,13 @@ import * as React from 'react';
         }
     }
 }
+
+{
+  component C(x: number, b: boolean) { // ERROR
+    switch (x) {
+      default:
+        if (b) break;
+        return <div />;
+    }
+  }
+}

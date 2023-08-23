@@ -1188,6 +1188,15 @@ return statement must be included for all possible branches. [component-missing-
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error -------------------------------------------------------------------------------------------------- exhaust.js:57:3
+
+Cannot declare component because component C [1] is not guaranteed to reach a return statement. An explicit return
+statement must be included for all possible branches. [component-missing-return]
+
+   57|   component C(x: number, b: boolean) { // ERROR
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error --------------------------------------------------------------------------------------------- export_syntax.js:3:8
 
 Cannot declare component because component C [1] is not guaranteed to reach a return statement. An explicit return
@@ -2453,7 +2462,7 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 168 errors
+Found 169 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
