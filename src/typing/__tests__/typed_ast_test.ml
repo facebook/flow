@@ -231,7 +231,12 @@ let test_case relative_path file_name _ =
  * from the parsed AST. *)
 let blocklist =
   SSet.of_list
-    ["invariant_reachability/index.js"; "return/implicit_void.js"; "sealed_tvars/abnormal.js"]
+    [
+      "invariant_reachability/index.js";
+      "return/implicit_void.js";
+      "sealed_tvars/abnormal.js";
+      "abnormal/return-throw.js";
+    ]
 
 let tests root =
   let files = CommandUtils.expand_file_list [root] in
