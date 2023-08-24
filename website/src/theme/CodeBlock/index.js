@@ -13,7 +13,12 @@ import FlowCheckCodeBlock from '../../components/FlowCheckCodeBlock';
 
 export default function CodeBlock(props: any): React.MixedElement {
   return props.className === 'language-flow' ? (
+    // Use our custom code block to display inline errors
     <FlowCheckCodeBlock {...props} />
+  ) : props.className === 'language-js' ||
+    props.className === 'language-jsx' ? (
+    // Use TS syntax highlighting for Flow code
+    <OriginalCodeBlock {...props} className="language-tsx" />
   ) : (
     <OriginalCodeBlock {...props} />
   );

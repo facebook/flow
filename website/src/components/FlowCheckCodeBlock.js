@@ -69,7 +69,7 @@ export default function FlowCheckCodeBlock({
 
   const content = Array.isArray(children) ? children.join('') : children;
 
-  const language = 'jsx';
+  const language = 'tsx';
   const code = content.replace(/\n$/, '');
   const lineWidths = code.split('\n').map(line => line.length);
 
