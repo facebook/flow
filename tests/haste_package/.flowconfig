@@ -1,4 +1,5 @@
 [options]
 all=true
 module.system=haste
-module.system.haste.use_name_reducers=false
+module.system.haste.paths.excludes=<PROJECT_ROOT>/subdir/node_modules/.*
+module.system.haste.paths.excludes=<PROJECT_ROOT>/subdir/non_haste_pkg/.*
