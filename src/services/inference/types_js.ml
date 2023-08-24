@@ -2293,13 +2293,10 @@ let load_saved_state ~profiling ~workers options =
   in
   Profiling_js.merge ~from:fetch_profiling ~into:profiling;
   match fetch_result with
-  | Saved_state_fetcher.No_saved_state ->
-    Hh_logger.info "No saved state available";
-    Lwt.return_none
-  | Saved_state_fetcher.Saved_state_error ->
-    Hh_logger.info "Failed to load saved state";
+  | Saved_state_fetcher.No_saved_state -> Lwt.return (Error "No saved state available")
+  | Saved_state_fetcher.Saved_state_error msg ->
     exit_if_no_fallback options;
-    Lwt.return_none
+    Lwt.return (Error msg)
   | Saved_state_fetcher.Saved_state { saved_state_filename; changed_files } ->
     let changed_files_count = SSet.cardinal changed_files in
     (try%lwt
@@ -2328,7 +2325,7 @@ let load_saved_state ~profiling ~workers options =
        FlowEventLogger.set_saved_state_filename (File_path.to_string saved_state_filename);
        FlowEventLogger.load_saved_state_success ~changed_files_count;
        let updates = CheckedSet.(add ~focused:updates empty) in
-       Lwt.return_some (saved_state, updates)
+       Lwt.return (Ok (saved_state, updates))
      with
     | Saved_state.Invalid_saved_state invalid_reason ->
       let trace = Saved_state.backtrace_of_invalid_reason invalid_reason in
@@ -2340,16 +2337,17 @@ let load_saved_state ~profiling ~workers options =
         ~trace;
       let msg = spf "Failed to load saved state: %s" invalid_reason in
       exit_if_no_fallback ~msg options;
-      Lwt.return_none)
+      Lwt.return (Error msg))
 
 let init ~profiling ~workers options =
   let start_time = Unix.gettimeofday () in
   let%lwt (env, libs_ok) =
     match%lwt load_saved_state ~profiling ~workers options with
-    | None ->
+    | Error msg ->
       (* Either there is no saved state or we failed to load it for some reason *)
+      Hh_logger.info "Failed to load saved state: %s" msg;
       init_from_scratch ~profiling ~workers options
-    | Some (saved_state, updates) ->
+    | Ok (saved_state, updates) ->
       (* We loaded a saved state successfully! We are awesome! *)
       let%lwt (env, libs_ok) =
         init_from_saved_state ~profiling ~workers ~saved_state ~updates options
@@ -2370,18 +2368,19 @@ let reinit ~profiling ~workers ~options ~updates ~files_to_force ~will_be_checke
     if Options.saved_state_allow_reinit options then
       load_saved_state ~profiling ~workers options
     else
-      Lwt.return_none
+      Lwt.return (Error "Reinit from saved state is disabled")
   with
-  | None ->
+  | Error msg ->
     (* Either there is no saved state or we failed to load it for some reason *)
+    Hh_logger.info "Failed to load saved state: %s" msg;
 
     (* TODO: fully re-initializing from scratch doesn't make sense. instead, we should
        recrawl to find the files that changed (since the file watcher can't tell us)
        and recheck all of that.
 
        for now, we exit and get restarted from scratch like we've done historically. *)
-    Exit.exit ~msg:"File watcher missed changes" Exit.File_watcher_missed_changes
-  | Some (saved_state, updates_since_saved_state) ->
+    Exit.exit ~msg Exit.File_watcher_missed_changes
+  | Ok (saved_state, updates_since_saved_state) ->
     (* We loaded a saved state successfully! We are awesome! *)
     Hh_logger.info "Reinitializing from saved state";
     let%lwt (env, libs_ok) =

@@ -134,35 +134,35 @@ let pick_saved_state options root merge_base timestamp =
   you could even imagine a virtual file system that fetches the states
   from a remote source on demand. *)
 let fetch ~options =
-  Profiling_js.with_profiling_lwt ~label:"FetchSavedState" ~should_print_summary:false (fun _ ->
-      let root = Options.root options in
-      match Vcs.find_root root with
-      | None ->
-        Hh_logger.error "Unable to detect a source control root: no .git or .hg folder";
-        Lwt.return Saved_state_fetcher.Saved_state_error
-      | Some (vcs, vcs_root) ->
-        (match%lwt merge_base_and_timestamp vcs vcs_root with
-        | Error msg ->
-          Hh_logger.error "%s" msg;
-          Lwt.return Saved_state_fetcher.Saved_state_error
-        | Ok (merge_base, timestamp) ->
-          Hh_logger.info "Saved state merge base hash is %S" merge_base;
-          (match pick_saved_state options root merge_base timestamp with
-          | None -> Lwt.return Saved_state_fetcher.No_saved_state
-          | Some (saved_state_merge_base, saved_state_file) ->
-            (match%lwt get_changes_since vcs vcs_root saved_state_merge_base with
-            | Ok changed_files ->
-              let saved_state_filename = File_path.make saved_state_file in
-              let changed_files = SSet.of_list changed_files in
-              let changed_files_count = SSet.cardinal changed_files in
-              Hh_logger.info "Saved state path is %s" saved_state_file;
-              Hh_logger.info "%d files changed since saved state was created" changed_files_count;
-              Lwt.return (Saved_state_fetcher.Saved_state { saved_state_filename; changed_files })
-            | Error err ->
-              let msg = string_of_vcs_error vcs err in
-              Hh_logger.error "Failed to fetch files changed since the saved state: %s" msg;
-              Lwt.return Saved_state_fetcher.Saved_state_error)))
-  )
+  Profiling_js.with_profiling_lwt ~label:"FetchSavedState" ~should_print_summary:false @@ fun _ ->
+  let root = Options.root options in
+  match Vcs.find_root root with
+  | None ->
+    let msg = "Unable to detect a source control root: no .git or .hg folder" in
+    Lwt.return (Saved_state_fetcher.Saved_state_error msg)
+  | Some (vcs, vcs_root) ->
+    (match%lwt merge_base_and_timestamp vcs vcs_root with
+    | Error msg -> Lwt.return (Saved_state_fetcher.Saved_state_error msg)
+    | Ok (merge_base, timestamp) ->
+      Hh_logger.info "Saved state merge base hash is %S" merge_base;
+      (match pick_saved_state options root merge_base timestamp with
+      | None -> Lwt.return Saved_state_fetcher.No_saved_state
+      | Some (saved_state_merge_base, saved_state_file) ->
+        (match%lwt get_changes_since vcs vcs_root saved_state_merge_base with
+        | Ok changed_files ->
+          let saved_state_filename = File_path.make saved_state_file in
+          let changed_files = SSet.of_list changed_files in
+          let changed_files_count = SSet.cardinal changed_files in
+          Hh_logger.info "Saved state path is %s" saved_state_file;
+          Hh_logger.info "%d files changed since saved state was created" changed_files_count;
+          Lwt.return (Saved_state_fetcher.Saved_state { saved_state_filename; changed_files })
+        | Error err ->
+          let msg =
+            Printf.sprintf
+              "Failed to fetch files changed since the saved state: %s"
+              (string_of_vcs_error vcs err)
+          in
+          Lwt.return (Saved_state_fetcher.Saved_state_error msg))))
 
 let output_filename options =
   let root = Options.root options in

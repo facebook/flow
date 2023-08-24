@@ -14,7 +14,7 @@ type fetch_result =
   (* We did not attempt to find saved state. *)
   | No_saved_state
   (* We should have been able to find saved state , but for some reason we could not. *)
-  | Saved_state_error
+  | Saved_state_error of string
 
 module type FETCHER = sig
   val fetch : options:Options.t -> (Profiling_js.finished * fetch_result) Lwt.t
