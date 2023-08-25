@@ -1,4 +1,3 @@
 // @flow
-// @providesModule File
 
-import {x} from 'Dependency';
+import {x} from 'dependency';
