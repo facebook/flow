@@ -149,6 +149,7 @@ and reason_of_use_t = function
   | ResolveUnionT { reason; _ } -> reason
   | CheckUnusedPromiseT { reason; _ } -> reason
   | WriteComputedObjPropCheckT { reason; _ } -> reason
+  | PromoteRendersRepresentationT { reason; _ } -> reason
 
 (* helper: we want the tvar id as well *)
 (* NOTE: uncalled for now, because ids are nondetermistic
@@ -205,6 +206,8 @@ and mod_reason_of_defer_use_t f = function
 and mod_reason_of_use_t f = function
   | UseT (_, t) -> UseT (Op UnknownUse, mod_reason_of_t f t)
   | CheckUnusedPromiseT { reason; async } -> CheckUnusedPromiseT { reason = f reason; async }
+  | PromoteRendersRepresentationT { use_op; reason; tout; resolved_obj } ->
+    PromoteRendersRepresentationT { use_op; reason = f reason; tout; resolved_obj }
   | WriteComputedObjPropCheckT { reason; reason_key; value_t; err_on_str_or_num_key } ->
     WriteComputedObjPropCheckT
       {
@@ -466,6 +469,8 @@ let rec util_use_op_of_use_t :
   | MakeExactT (r, Lower (op, t)) -> util op (fun op -> MakeExactT (r, Lower (op, t)))
   | AssertIterableT ({ use_op; _ } as contents) ->
     util use_op (fun use_op -> AssertIterableT { contents with use_op })
+  | PromoteRendersRepresentationT ({ use_op; _ } as contents) ->
+    util use_op (fun use_op -> PromoteRendersRepresentationT { contents with use_op })
   | MakeExactT (_, _)
   | CallElemT (_, _, _, _, _)
   | GetStaticsT (_, _)

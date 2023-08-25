@@ -206,6 +206,7 @@ class ['a] t =
       | RequiredType
       | ReactElementPropsType
       | ReactElementConfigType
+      | ReactPromoteRendersRepresentation
       | ReactElementRefType
       | ReactCheckComponentRef ->
         acc

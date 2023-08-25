@@ -852,6 +852,12 @@ module rec TypeTerm : sig
         value_t: t;
         err_on_str_or_num_key: (use_op * reason) option;
       }
+    | PromoteRendersRepresentationT of {
+        use_op: use_op;
+        reason: reason;
+        tout: t;
+        resolved_obj: t option;
+      }
 
   and implicit_return_action =
     | PropagateVoid of {
@@ -1489,6 +1495,7 @@ module rec TypeTerm : sig
     | ReactElementPropsType
     | ReactElementConfigType
     | ReactElementRefType
+    | ReactPromoteRendersRepresentation
     | ReactConfigType of t
     | ReactCheckComponentConfig of Property.t NameUtils.Map.t
     | ReactCheckComponentRef
@@ -3989,6 +3996,7 @@ let string_of_use_ctor = function
   | OptionalIndexedAccessT _ -> "OptionalIndexedAccessT"
   | CheckUnusedPromiseT _ -> "CheckUnusedPromiseT"
   | WriteComputedObjPropCheckT _ -> "WriteComputedObjPropCheckT"
+  | PromoteRendersRepresentationT _ -> "PromoteRendersRepresentationT"
 
 let string_of_binary_test = function
   | InstanceofTest -> "instanceof"

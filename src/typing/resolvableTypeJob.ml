@@ -305,7 +305,8 @@ and collect_of_destructor ?log_unresolved cx acc = function
     collect_of_type ?log_unresolved cx acc property_type
   | ReactElementPropsType
   | ReactElementConfigType
-  | ReactElementRefType ->
+  | ReactElementRefType
+  | ReactPromoteRendersRepresentation ->
     acc
 
 and collect_of_property ?log_unresolved cx name property acc =

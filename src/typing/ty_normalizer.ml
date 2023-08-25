@@ -386,6 +386,7 @@ end = struct
         | ReactElementPropsType
         | ReactElementConfigType
         | ReactElementRefType
+        | ReactPromoteRendersRepresentation
         | ReactConfigType _ ->
           false)
       )
@@ -1754,6 +1755,11 @@ end = struct
       | T.ReactCheckComponentRef -> return (Ty.Utility (Ty.ReactCheckComponentRef ty))
       | T.ReactElementPropsType -> return (Ty.Utility (Ty.ReactElementPropsType ty))
       | T.ReactElementConfigType -> return (Ty.Utility (Ty.ReactElementConfigType ty))
+      | T.ReactPromoteRendersRepresentation ->
+        terr
+          ~kind:BadEvalT
+          ~msg:"Normalization for ReactPromoteRendersRepresentation is unsupported"
+          None
       | T.ReactElementRefType -> return (Ty.Utility (Ty.ReactElementRefType ty))
       | T.ReactConfigType default_props ->
         let%map default_props' = type__ ~env default_props in

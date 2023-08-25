@@ -625,7 +625,8 @@ class virtual ['a] t =
             }
       | ReactElementPropsType
       | ReactElementConfigType
-      | ReactElementRefType ->
+      | ReactElementRefType
+      | ReactPromoteRendersRepresentation ->
         t
 
     method object_kit_spread_operand_slice

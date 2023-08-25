@@ -54,6 +54,7 @@ let string_of_destructor = function
   | TypeMap (ObjectMapConst _) -> "ObjectMapConst"
   | ReactElementPropsType -> "ReactElementProps"
   | ReactElementConfigType -> "ReactElementConfig"
+  | ReactPromoteRendersRepresentation -> "ReactPromoteRendersRepresentation"
   | ReactElementRefType -> "ReactElementRef"
   | ReactConfigType _ -> "ReactConfig"
   | MappedType _ -> "MappedType"
@@ -983,6 +984,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | CheckUnusedPromiseT { reason; _ } -> spf "CheckUnusedPromiseT (%s)" (string_of_reason reason)
     | WriteComputedObjPropCheckT { reason; _ } ->
       spf "WriteComputedObjPropCheckT (%s)" (string_of_reason reason)
+    | PromoteRendersRepresentationT _ -> "PromoteRendersRepresentationT"
 
 and dump_tvar_ (depth, tvars) cx id =
   if ISet.mem id tvars then

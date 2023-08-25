@@ -238,6 +238,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
            )
       | SpreadTupleType _
       | MappedType _ (* TODO: Mapped Type reversals *)
+      | ReactPromoteRendersRepresentation
       | ReactCheckComponentConfig _
       | ReactCheckComponentRef
       | OptionalIndexedAccessNonMaybeType _
@@ -334,6 +335,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | ImplicitVoidReturnT _
     | CheckUnusedPromiseT _
     | WriteComputedObjPropCheckT _
+    | PromoteRendersRepresentationT _
     (* When we have ChoiceKitUseT, we are already stuck. *)
     | ChoiceKitUseT _ ->
       UpperEmpty (* Remaining unhandled upper bounds *)

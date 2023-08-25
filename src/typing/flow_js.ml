@@ -2527,6 +2527,64 @@ struct
             get_builtin_type cx ~trace r (OrdinaryName "React$AbstractComponentStatics")
           in
           rec_flow cx trace (statics, u)
+        (* Render Type Promotion *)
+        (* A named AbstractComponent is turned into its corresponding render type *)
+        | ( DefT (r, _, ReactAbstractComponentT { component_kind = Nominal id; renders = super; _ }),
+            PromoteRendersRepresentationT { reason = _; tout; resolved_obj; use_op }
+          ) ->
+          (match resolved_obj with
+          | Some obj ->
+            (* renders {+type: Foo, ...}. Let's make sure this is a valid React element *)
+            let mixed_element = get_builtin_type cx ~trace r (OrdinaryName "React$MixedElement") in
+            rec_flow_t cx trace ~use_op (obj, mixed_element)
+          | None ->
+            (* renders Foo case. Nothing left to check here *)
+            ());
+          let result =
+            DefT
+              (* TODO(jmbrown): Better reason *)
+              (r, bogus_trust (), RendersT { component_opaque_id = Some id; super })
+          in
+          (* Intentional unknown_use when flowing to tout *)
+          rec_flow_t cx trace ~use_op:unknown_use (result, tout)
+        | ( DefT (_, _, ObjT { props_tmap; _ }),
+            PromoteRendersRepresentationT { use_op; reason; tout; resolved_obj = None }
+          ) ->
+          let props = Context.find_props cx props_tmap in
+          let type_field = NameUtils.Map.find_opt (OrdinaryName "type") props in
+          let type_t =
+            Base.Option.value_map
+              ~f:(fun type_field -> Property.read_t type_field)
+              ~default:None
+              type_field
+          in
+          (match type_t with
+          (* Intentional unknown_use when flowing to tout *)
+          | None -> rec_flow_t cx trace ~use_op:unknown_use (l, tout)
+          | Some t ->
+            rec_flow
+              cx
+              trace
+              (t, PromoteRendersRepresentationT { use_op; reason; tout; resolved_obj = Some l }))
+        | ( DefT (_, _, RendersT { component_opaque_id = None; super }),
+            PromoteRendersRepresentationT { use_op = _; reason = _; tout = _; resolved_obj = None }
+          ) ->
+          let promotion_eval_t =
+            EvalT
+              ( super,
+                TypeDestructorT (unknown_use, reason_of_t super, ReactPromoteRendersRepresentation),
+                Eval.generate_id ()
+              )
+          in
+          rec_flow cx trace (promotion_eval_t, u)
+        | (_, PromoteRendersRepresentationT { use_op = _; reason = _; tout; resolved_obj }) ->
+          let result =
+            match resolved_obj with
+            | Some t -> t
+            | None -> l
+          in
+          (* Intentional unknown_use when flowing to tout *)
+          rec_flow_t cx trace ~use_op:unknown_use (result, tout)
         (******************)
         (* React GetProps *)
         (******************)
@@ -5735,6 +5793,10 @@ struct
       if Context.any_propagation cx then
         rec_flow_t cx trace ~use_op:unknown_use (AnyT.why (AnyT.source any) reason, OpenT t);
       true
+    | PromoteRendersRepresentationT { use_op = _; tout; reason = _; resolved_obj = _ } ->
+      (* Intentional unknown_use for tout *)
+      covariant_flow ~use_op:unknown_use tout;
+      true
     | UseT (use_op, DefT (_, _, ArrT (ROArrayAT t))) (* read-only arrays are covariant *)
     | UseT (use_op, DefT (_, _, ClassT t)) (* mk_instance ~for_type:false *)
     | UseT (use_op, ExactT (_, t)) ->
@@ -6679,6 +6741,9 @@ struct
             | ReactElementPropsType -> ReactKitT (use_op, reason, React.GetProps (OpenT tout))
             | ReactElementConfigType -> ReactKitT (use_op, reason, React.GetConfig (OpenT tout))
             | ReactElementRefType -> ReactKitT (use_op, reason, React.GetRef (OpenT tout))
+            | ReactPromoteRendersRepresentation ->
+              PromoteRendersRepresentationT
+                { use_op; reason; tout = OpenT tout; resolved_obj = None }
             | ReactConfigType default_props ->
               ReactKitT (use_op, reason, React.GetConfigType (default_props, OpenT tout))
             | MappedType { property_type; mapped_type_flags; homomorphic; distributive_tparam_name }
