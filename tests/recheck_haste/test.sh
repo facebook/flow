@@ -8,22 +8,22 @@ mkdir tmp
 cp ./*.js tmp/
 
 printf "\nTest A:\n"
-# Rename A1.js to A2.js
-mv A1.js A2.js
-assert_ok "$FLOW" force-recheck A1.js A2.js
+# Move A1.js to dir1A/A1.js
+mv A1.js dir1A/A1.js
+assert_ok "$FLOW" force-recheck A1.js dir1A/A1.js
 
-# Ensure that A2.js @providesModule A2
-cp tmp1A/A2.js A2.js
-assert_ok "$FLOW" force-recheck A2.js
+# Make A1 become B
+mv dir1A/A1.js B.js
+assert_ok "$FLOW" force-recheck B.js dir1B/A1.js
 
-# Update A3.js to require('A2')
+# Update A3.js to require('B')
 cp tmp2A/A3.js A3.js
 assert_ok "$FLOW" force-recheck A3.js
 
 assert_ok "$FLOW" status
 
 # clean up
-rm A2.js
+rm B.js
 cp tmp/A1.js A1.js
 cp tmp/A3.js A3.js
 # Done A

@@ -1,4 +1,3 @@
 /**
- * @providesModule B
  * @flow
  */
