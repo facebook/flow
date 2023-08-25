@@ -57,6 +57,7 @@ and reason_of_use_t = function
   | AssertForInRHST reason -> reason
   | AssertInstanceofRHST reason -> reason
   | AssertNonComponentLikeT (_, reason) -> reason
+  | AssertValidRendersArgumentT reason -> reason
   | AssertIterableT { reason; _ } -> reason
   | AssertImportIsValueT (reason, _) -> reason
   | BecomeT { reason; _ } -> reason
@@ -228,6 +229,7 @@ and mod_reason_of_use_t f = function
   | AssertForInRHST reason -> AssertForInRHST (f reason)
   | AssertInstanceofRHST reason -> AssertInstanceofRHST (f reason)
   | AssertNonComponentLikeT (loc, reason) -> AssertNonComponentLikeT (loc, f reason)
+  | AssertValidRendersArgumentT reason -> AssertValidRendersArgumentT (f reason)
   | AssertIterableT ({ reason; _ } as contents) ->
     AssertIterableT { contents with reason = f reason }
   | AssertImportIsValueT (reason, name) -> AssertImportIsValueT (f reason, name)
@@ -489,6 +491,7 @@ let rec util_use_op_of_use_t :
   | AssertForInRHST _
   | AssertInstanceofRHST _
   | AssertNonComponentLikeT _
+  | AssertValidRendersArgumentT _
   | PredicateT (_, _)
   | GuardT (_, _, _)
   | StrictEqT _
@@ -634,8 +637,8 @@ let rec mod_loc_of_virtual_use_op f =
     | EvalMappedType { mapped_type } -> EvalMappedType { mapped_type = mod_reason mapped_type }
     | TypeGuardIncompatibility { guard_type; param_name } ->
       TypeGuardIncompatibility { guard_type = mod_reason guard_type; param_name }
-    | ComponentRenderTypeCompatibility { render_type } ->
-      ComponentRenderTypeCompatibility { render_type = mod_reason render_type }
+    | RenderTypeInstantiation { render_type } ->
+      RenderTypeInstantiation { render_type = mod_reason render_type }
     | ComponentRestParamCompatibility { rest_param } ->
       ComponentRestParamCompatibility { rest_param = mod_reason rest_param }
     | UnknownUse -> UnknownUse

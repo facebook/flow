@@ -516,9 +516,15 @@ let rec make_error_printable :
         root_with_specific_reason loc frames op fn [text "Cannot call "; desc fn]
       | Op (FunCallMethod { op; fn; prop; _ }) ->
         root_with_specific_reason loc frames op prop [text "Cannot call "; desc fn]
-      | Op (ComponentRenderTypeCompatibility { render_type }) ->
+      | Op (RenderTypeInstantiation { render_type }) ->
         let frames =
-          let explanation = [text "Render types must be a subtype of "; code "React.Node"] in
+          let explanation =
+            [
+              text "Render types must be a subtype of ";
+              code "React.Node";
+              text " or a reference to a component-syntax component";
+            ]
+          in
           let (all_frames, explanations) = frames in
           (all_frames, explanation :: explanations)
         in

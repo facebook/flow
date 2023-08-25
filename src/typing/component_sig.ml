@@ -138,7 +138,7 @@ module Make
       let t =
         Flow.get_builtin_type cx (TypeUtil.reason_of_t renders_t) (OrdinaryName "React$Node")
       in
-      let use_op = Op (ComponentRenderTypeCompatibility { render_type = renders_reason }) in
+      let use_op = Op (RenderTypeInstantiation { render_type = renders_reason }) in
       Flow.flow cx (renders_t, UseT (use_op, t))
     in
     let component_kind =

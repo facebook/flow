@@ -684,6 +684,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | AssertImportIsValueT _ -> p t
     | AssertInstanceofRHST _ -> p t
     | AssertNonComponentLikeT _ -> p t
+    | AssertValidRendersArgumentT _ -> p t
     | AssertIterableT _ -> p t
     | BecomeT { reason = _; t = arg; empty_success = _ } -> p ~extra:(kid arg) t
     | BindT (use_op, _, _) -> p t ~extra:(string_of_use_op use_op)

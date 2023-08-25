@@ -1,0 +1,30 @@
+Error ----------------------------------------------------------------------------------- validate_instantiation.js:2:19
+
+Cannot use object type [1] as a render type because: [incompatible-type]
+ - Either property `key` is missing in object type [1] but exists in `React.Element` [2].
+ - Or object type [1] is incompatible with `React.Portal` [3].
+ - Or property `@@iterator` is missing in object type [1] but exists in `$Iterable` [4].
+
+Render types must be a subtype of `React.Node` or a reference to a component-syntax component.
+
+   validate_instantiation.js:2:19
+    2| type Y = $Renders<{}>; // ERROR
+                         ^^ [1]
+
+References:
+   <BUILTINS>/react.js:21:5
+   21|   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:22:5
+   22|   | React$Portal
+           ^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:23:5
+   23|   | Iterable<?React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+
+Found 1 error
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

@@ -1300,6 +1300,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               let (ts, targs) = convert_type_params () in
               let t = List.hd ts in
               let reason = mk_reason (RRenderType (desc_of_reason (reason_of_t t))) loc in
+              Flow.flow cx (t, AssertValidRendersArgumentT (reason_of_t t));
               let renders_t =
                 DefT (reason, bogus_trust (), RendersT { component_opaque_id = None; super = t })
               in
