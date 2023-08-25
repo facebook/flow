@@ -1,8 +1,8 @@
 /**
- * Parse errors, imported, not in flow, provides module.
- * Should see a parse error in this file, and module
- * not found in client.
- * @providesModule Foo
+ * Parse errors, imported, not in flow.
+ * Should see a parse error in this file, but module
+ * should be found in client.
+ *
  * @noflow
  */
 function f(s: string): string { ### // illegal token

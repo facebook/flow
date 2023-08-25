@@ -1,4 +1,3 @@
 [options]
 all=false
 module.system=haste
-module.system.haste.use_name_reducers=false
