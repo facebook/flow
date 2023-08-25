@@ -1,6 +1,0 @@
-/*
- * @providesModule ExplicitProvidesModuleDifferentName
- * @flow
- */
-
-declare export function fun(): number;

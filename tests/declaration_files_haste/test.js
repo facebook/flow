@@ -3,12 +3,6 @@
 var Implicit = require('ImplicitProvidesModule');
 (Implicit.fun(): string);
 
-var ExplicitSameName = require('ExplicitProvidesModuleSameName');
-(ExplicitSameName.fun(): string);
-
-var ExplicitDifferentName = require('ExplicitProvidesModuleDifferentName');
-(ExplicitDifferentName.fun(): string);
-
 // Flow.js and Flow.js.flow are both @flow
 var Flow = require('Flow');
 (Flow.x: empty); // error: should be number

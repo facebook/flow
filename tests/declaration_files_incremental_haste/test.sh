@@ -6,14 +6,12 @@
 
 OVERLAPPING_FILES="
   A.js
-  ExplicitProvidesModuleSameName.js
   ImplicitProvidesModule.js
   external/_d3/min.js
   node_modules/qux/corge/lib/index.js
-  node_modules/qux/docblock.js
 "
-DECL_FILES="$(echo "$OVERLAPPING_FILES" | sed -e "s/\.js/.js.flow/g") ExplicitProvidesModuleDifferentNameDefinitions.js.flow"
-IMPL_FILES="$OVERLAPPING_FILES ExplicitProvidesModuleDifferentName.js md5.js ws/index.js ws/test/client.js"
+DECL_FILES="$(echo "$OVERLAPPING_FILES" | sed -e "s/\.js/.js.flow/g")"
+IMPL_FILES="$OVERLAPPING_FILES md5.js ws/index.js ws/test/client.js"
 
 ignore_files() {
   for file in $1; do

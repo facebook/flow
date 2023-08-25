@@ -1,3 +1,2 @@
-// @providesModule ImplicitProvidesModule
 // @flow
 declare export function fun(): number;
