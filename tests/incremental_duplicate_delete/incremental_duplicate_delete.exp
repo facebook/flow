@@ -2,13 +2,13 @@
 Initial status:
 No errors!
 
-Copy A.js to B.js:
-Error --------------------------------------------------------------------------------------------------------- B.js:1:1
+Copy A.js to nested/A.js:
+Error -------------------------------------------------------------------------------------------------- nested/A.js:1:1
 
 Duplicate module provider for `A`. Change either this module provider or the current module provider [1].
 [duplicate-module]
 
-   B.js:1:1
+   nested/A.js:1:1
    1| /**
       
 
@@ -24,7 +24,7 @@ Found 1 error
 Delete A.js:
 No errors!
 
-Move B.js to A.js:
+Move nested/A.js to A.js:
 No errors!
 
 Done!
