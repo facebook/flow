@@ -206,6 +206,7 @@ type 'loc virtual_reason_desc =
   | RComponentType
   | RPropsOfComponent of 'loc virtual_reason_desc
   | RInstanceOfComponent of 'loc virtual_reason_desc
+  | RRenderTypeOfComponent of 'loc virtual_reason_desc
   | RDefaultTypeArgumentAtIndex of {
       desc_type: 'loc virtual_reason_desc;
       desc_default: 'loc virtual_reason_desc;

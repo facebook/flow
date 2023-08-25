@@ -248,6 +248,7 @@ type 'loc virtual_reason_desc =
   | RComponentType
   | RPropsOfComponent of 'loc virtual_reason_desc
   | RInstanceOfComponent of 'loc virtual_reason_desc
+  | RRenderTypeOfComponent of 'loc virtual_reason_desc
   | RDefaultTypeArgumentAtIndex of {
       desc_type: 'loc virtual_reason_desc;
       desc_default: 'loc virtual_reason_desc;
@@ -349,6 +350,7 @@ let rec map_desc_locs f = function
   | RUnionBranching (desc, i) -> RUnionBranching (map_desc_locs f desc, i)
   | RPropsOfComponent desc -> RPropsOfComponent (map_desc_locs f desc)
   | RInstanceOfComponent desc -> RInstanceOfComponent (map_desc_locs f desc)
+  | RRenderTypeOfComponent desc -> RRenderTypeOfComponent (map_desc_locs f desc)
   | RDefaultTypeArgumentAtIndex { desc_type; desc_default; position } ->
     RDefaultTypeArgumentAtIndex
       {
@@ -764,6 +766,7 @@ let rec string_of_desc = function
   | RComponentType -> "component"
   | RPropsOfComponent desc -> spf "props of %s" (string_of_desc desc)
   | RInstanceOfComponent desc -> spf "instance of %s" (string_of_desc desc)
+  | RRenderTypeOfComponent desc -> spf "render type of %s" (string_of_desc desc)
   | RDefaultTypeArgumentAtIndex { desc_type; desc_default; position } ->
     let position_suffix =
       match position with
@@ -1419,6 +1422,7 @@ let classification_of_reason r =
   | RPropsOfComponent _
   | RRenderType _
   | RInstanceOfComponent _
+  | RRenderTypeOfComponent _
   | RDefaultTypeArgumentAtIndex _
   | RFunction _
   | RFunctionType

@@ -570,6 +570,37 @@ Cannot declare `M` [1] because the name is already bound. [name-already-bound]
              ^ [1]
 
 
+Error ------------------------------------------------------------------------------- component_in_type_position.js:9:16
+
+Cannot assign `Bar` to `y` because component Bar [1] is incompatible with component Foo [2]. [incompatible-type]
+
+   component_in_type_position.js:9:16
+   9| const y: Foo = Bar; // ERROR! Bar ~> Foo
+                     ^^^
+
+References:
+   component_in_type_position.js:7:1
+   7| component Bar() {return null}
+      ^^^^^^^^^^^^^^^ [1]
+   component_in_type_position.js:9:10
+   9| const y: Foo = Bar; // ERROR! Bar ~> Foo
+               ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------ component_in_type_position.js:14:18
+
+Cannot use component Poly [1] without 1 type argument. [missing-type-arg]
+
+   component_in_type_position.js:14:18
+   14| type NoArgPoly = Poly; // ERROR!
+                        ^^^^
+
+References:
+   component_in_type_position.js:11:15
+   11| component Poly<T>() { return null }
+                     ^^^ [1]
+
+
 Error ---------------------------------------------------------------------------------- component_type_checking.js:10:4
 
 Cannot cast `foo` to string because number [1] is incompatible with string [2]. [incompatible-cast]
@@ -2462,7 +2493,7 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 169 errors
+Found 171 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
