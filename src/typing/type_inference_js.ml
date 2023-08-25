@@ -352,11 +352,6 @@ module Statement = Fix_statement.Statement_
 (* Driver *)
 (**********)
 
-(* core inference, assuming setup and teardown happens elsewhere *)
-let infer_core cx statements =
-  let (stmts, _) = Toplevels.toplevels Statement.statement cx statements in
-  stmts
-
 let initialize_env ~lib ?(exclude_syms = NameUtils.Set.empty) cx aloc_ast toplevel_scope_kind =
   let (_abrupt_completion, info) = NameResolver.program_with_scope cx ~lib ~exclude_syms aloc_ast in
   let autocomplete_hooks =
@@ -481,8 +476,7 @@ let infer_ast ~lint_severities cx filename comments aloc_ast =
   try
     initialize_env ~lib:false cx aloc_ast Name_def.Module;
 
-    (* infer *)
-    let typed_statements = infer_core cx aloc_statements in
+    let typed_statements = Statement.statement_list cx aloc_statements in
 
     let (severity_cover, suppressions, suppression_errors) =
       scan_for_suppressions ~in_libdef:false lint_severities [(filename, comments)]

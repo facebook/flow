@@ -69,7 +69,7 @@ struct
     in
 
     (* statement visit pass *)
-    let (statements_ast, _) = Toplevels.toplevels Statement.statement cx statements in
+    let statements_ast = Statement.statement_list cx statements in
 
     let exhaust =
       let use_op = unknown_use in

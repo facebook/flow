@@ -437,7 +437,6 @@ module Make
    * flow to check types/create graphs for merge-time checking
    ***************************************************************)
 
-  (* can raise Abnormal.(Exn (Stmt _, _)) *)
   let rec statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
     let open Ast.Statement in
     let variables cx decls =
@@ -453,7 +452,6 @@ module Make
         { declarations; kind; comments }
       )
     in
-    let check cx b = Toplevels.toplevels statement cx b.Block.body in
     let catch_clause cx catch_clause =
       let { Try.CatchClause.param; body = (b_loc, b); comments } = catch_clause in
       let open Ast.Pattern in
@@ -481,35 +479,31 @@ module Make
               Flow.add_output cx (Error_message.EInvalidCatchParameterAnnotation loc);
               (AnyT.why CatchAny r, Tast_utils.error_mapper#type_annotation_hint annot)
           in
-          let (stmts, abnormal_opt) = check cx b in
-          ( {
-              Try.CatchClause.param =
-                Some
-                  ( (loc, t),
-                    Ast.Pattern.Identifier
-                      {
-                        Ast.Pattern.Identifier.name = ((name_loc, t), id);
-                        annot = ast_annot;
-                        optional;
-                      }
-                  );
-              body = (b_loc, { Block.body = stmts; comments = b.Block.comments });
-              comments;
-            },
-            abnormal_opt
-          )
+          let body = statement_list cx b.Block.body in
+          {
+            Try.CatchClause.param =
+              Some
+                ( (loc, t),
+                  Ast.Pattern.Identifier
+                    {
+                      Ast.Pattern.Identifier.name = ((name_loc, t), id);
+                      annot = ast_annot;
+                      optional;
+                    }
+                );
+            body = (b_loc, { Block.body; comments = b.Block.comments });
+            comments;
+          }
         | (loc, _) ->
           Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, CatchParameterDeclaration));
-          (Tast_utils.error_mapper#catch_clause catch_clause, None))
+          Tast_utils.error_mapper#catch_clause catch_clause)
       | None ->
-        let (stmts, abnormal_opt) = check cx b in
-        ( {
-            Try.CatchClause.param = None;
-            body = (b_loc, { Block.body = stmts; comments = b.Block.comments });
-            comments;
-          },
-          abnormal_opt
-        )
+        let body = statement_list cx b.Block.body in
+        {
+          Try.CatchClause.param = None;
+          body = (b_loc, { Block.body; comments = b.Block.comments });
+          comments;
+        }
     in
     let function_ loc func =
       match func with
@@ -525,9 +519,8 @@ module Make
     function
     | (_, Empty _) as stmt -> stmt
     | (loc, Block { Block.body; comments }) ->
-      let (body, abnormal_opt) = Toplevels.toplevels statement cx body in
-      Abnormal.check_stmt_control_flow_exception
-        ((loc, Block { Block.body; comments }), abnormal_opt)
+      let body = statement_list cx body in
+      (loc, Block { Block.body; comments })
     | (loc, Expression { Expression.expression = e; directive; comments }) ->
       let expr = expression cx e in
       Base.List.iter (syntactically_unhandled_promises expr) ~f:(fun ((_, expr_t), _) ->
@@ -544,91 +537,17 @@ module Make
     *)
     | (loc, If { If.test; consequent; alternate; comments }) ->
       let test_ast = condition ~cond:OtherTest cx test in
-      let (then_ast, then_abnormal) =
-        Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx consequent)
+      let then_ast = statement cx consequent in
+      let else_ast =
+        Base.Option.map alternate ~f:(fun (loc, { If.Alternate.body; comments }) ->
+            (loc, { If.Alternate.body = statement cx body; comments })
+        )
       in
-      let (else_ast, else_abnormal) =
-        match alternate with
-        | None -> (None, None)
-        | Some (loc, { If.Alternate.body; comments }) ->
-          let (body_ast, else_abnormal) =
-            Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx body)
-          in
-          (Some (loc, { If.Alternate.body = body_ast; comments }), else_abnormal)
-      in
-
-      let ast =
-        (loc, If { If.test = test_ast; consequent = then_ast; alternate = else_ast; comments })
-      in
-      (* handle control flow in cases where we've thrown from both sides *)
-      begin
-        match (then_abnormal, else_abnormal) with
-        | (Some Abnormal.Throw, Some Abnormal.Return)
-        | (Some Abnormal.Return, Some Abnormal.Throw) ->
-          Abnormal.throw_stmt_control_flow_exception ast Abnormal.Return
-        | (Some then_exn, Some else_exn) when then_exn = else_exn ->
-          Abnormal.throw_stmt_control_flow_exception ast then_exn
-        | (Some (Abnormal.Break then_opt_label), Some (Abnormal.Continue else_opt_label))
-        | (Some (Abnormal.Continue then_opt_label), Some (Abnormal.Break else_opt_label))
-          when then_opt_label = else_opt_label ->
-          Abnormal.throw_stmt_control_flow_exception ast (Abnormal.Continue then_opt_label)
-        | _ -> ast
-      end
-    | ( top_loc,
-        Labeled
-          { Labeled.label = (_, { Ast.Identifier.name; comments = _ }) as lab_ast; body; comments }
-      ) ->
-      (match body with
-      | (loc, While _)
-      | (loc, DoWhile _)
-      | (loc, For _)
-      | (loc, ForIn _) ->
-        ignore loc;
-        let label = Some name in
-
-        let (body_ast, body_abnormal) =
-          Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx body)
-          |> Abnormal.ignore_break_or_continue_to_label label
-        in
-        let ast = (top_loc, Labeled { Labeled.label = lab_ast; body = body_ast; comments }) in
-        ignore
-          ( Abnormal.check_stmt_control_flow_exception (ast, body_abnormal)
-            : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t
-            );
-
-        ast
-      | _ ->
-        let label = Some name in
-        let (body_ast, body_abnormal) =
-          Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx body)
-          |> Abnormal.ignore_break_to_label label
-        in
-        let ast = (top_loc, Labeled { Labeled.label = lab_ast; body = body_ast; comments }) in
-        ignore
-          ( Abnormal.check_stmt_control_flow_exception (ast, body_abnormal)
-            : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t
-            );
-
-        ast)
-    | (loc, Break { Break.label; comments }) ->
-      (* save environment at unlabeled breaks, prior to activation clearing *)
-      let (label_opt, label_ast) =
-        match label with
-        | None -> (None, None)
-        | Some ((_, { Ast.Identifier.name; comments = _ }) as lab_ast) -> (Some name, Some lab_ast)
-      in
-      let ast = (loc, Break { Break.label = label_ast; comments }) in
-      let abnormal = Abnormal.Break label_opt in
-      Abnormal.throw_stmt_control_flow_exception ast abnormal
-    | (loc, Continue { Continue.label; comments }) ->
-      let (label_opt, label_ast) =
-        match label with
-        | None -> (None, None)
-        | Some ((_, { Ast.Identifier.name; comments = _ }) as lab_ast) -> (Some name, Some lab_ast)
-      in
-      let ast = (loc, Continue { Continue.label = label_ast; comments }) in
-      let abnormal = Abnormal.Continue label_opt in
-      Abnormal.throw_stmt_control_flow_exception ast abnormal
+      (loc, If { If.test = test_ast; consequent = then_ast; alternate = else_ast; comments })
+    | (loc, Labeled { Labeled.label; body; comments }) ->
+      (loc, Labeled { Labeled.label; body = statement cx body; comments })
+    | (loc, Break { Break.label; comments }) -> (loc, Break { Break.label; comments })
+    | (loc, Continue { Continue.label; comments }) -> (loc, Continue { Continue.label; comments })
     | (loc, With _) as s ->
       Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, WithStatement));
       Tast_utils.error_mapper#statement s
@@ -651,16 +570,11 @@ module Make
       let exhaustive_check_incomplete_out =
         Tvar.mk cx (mk_reason (RCustom "exhaustive check incomplete out") switch_loc)
       in
-
-      (* traverse case list, get list of control flow exits and list of ASTs *)
-      let (exits_rev, cases_ast_rev, has_default) =
+      let (cases_ast_rev, has_default) =
         cases
         |> Base.List.fold_left
-             ~init:([], [], false)
-             ~f:(fun
-                  (exits, cases_ast, has_default)
-                  (loc, { Switch.Case.test; consequent; comments })
-                ->
+             ~init:([], false)
+             ~f:(fun (cases_ast, has_default) (loc, { Switch.Case.test; consequent; comments }) ->
                (* compute predicates implied by case expr or default *)
                let test_ast =
                  match test with
@@ -702,58 +616,15 @@ module Make
                    in
                    Some expr_ast
                in
-
-               (* process statements, track control flow exits: exit will be an
-                  unconditional exit. *)
-               let (consequent_ast, exit) = Toplevels.toplevels statement cx consequent in
-
-               ( exit :: exits,
-                 (loc, { Switch.Case.test = test_ast; consequent = consequent_ast; comments })
+               let consequent_ast = statement_list cx consequent in
+               ( (loc, { Switch.Case.test = test_ast; consequent = consequent_ast; comments })
                  :: cases_ast,
                  has_default || Base.Option.is_none test
                )
            )
       in
       let cases_ast = List.rev cases_ast_rev in
-      let exits = List.rev exits_rev in
 
-      (* abnormal exit: if every case exits abnormally the same way (or falls
-          through to a case that does), then the switch as a whole exits that way.
-         (as with if/else, we merge `throw` into `return` when both appear) *)
-      let uniform_switch_exit case_exits =
-        let rec loop = function
-          | (acc, fallthrough, []) ->
-            (* end of cases: if nothing is falling through, we made it *)
-            if fallthrough then
-              None
-            else
-              acc
-          | (_, _, Some (Abnormal.Break _) :: _) ->
-            (* break wrecks everything *)
-            None
-          | (acc, _, None :: exits) ->
-            (* begin or continue to fall through *)
-            loop (acc, true, exits)
-          | (acc, _, exit :: exits) when exit = acc ->
-            (* current case exits the same way as prior cases *)
-            loop (acc, acc = None, exits)
-          | (Some Abnormal.Throw, _, Some Abnormal.Return :: exits)
-          | (Some Abnormal.Return, _, Some Abnormal.Throw :: exits) ->
-            (* fuzz throw into return *)
-            loop (Some Abnormal.Return, false, exits)
-          | (None, _, exit :: exits) ->
-            (* terminate an initial sequence of fall-thruugh cases *)
-            (* (later sequences will have acc = Some _ ) *)
-            loop (exit, false, exits)
-          | (_, _, _) ->
-            (* the new case exits differently from previous ones - fail *)
-            None
-        in
-        if has_default then
-          loop (None, false, case_exits)
-        else
-          None
-      in
       let enum_exhaustive_check = enum_exhaustive_check_of_switch_cases cases_ast in
       let ((_, discriminant_t), _) = discriminant_ast in
       let discriminant_after_check =
@@ -777,20 +648,15 @@ module Make
       (* We need to fully resolve all types attached to AST,
          because the post inference pass might inspect them. *)
       Tvar_resolver.resolve cx exhaustive_check_incomplete_out;
-      let ast =
-        ( switch_loc,
-          Switch
-            {
-              Switch.discriminant = discriminant_ast;
-              cases = cases_ast;
-              comments;
-              exhaustive_out = (exhaustive_out, exhaustive_check_incomplete_out);
-            }
-        )
-      in
-      (match uniform_switch_exit exits with
-      | None -> ast
-      | Some abnormal -> Abnormal.throw_stmt_control_flow_exception ast abnormal)
+      ( switch_loc,
+        Switch
+          {
+            Switch.discriminant = discriminant_ast;
+            cases = cases_ast;
+            comments;
+            exhaustive_out = (exhaustive_out, exhaustive_check_incomplete_out);
+          }
+      )
     (*******************************************************)
     | (loc, Return { Return.argument; comments; return_out }) ->
       let (t, argument_ast) =
@@ -800,122 +666,27 @@ module Make
           let (((_, t), _) as ast) = expression cx expr in
           (t, Some ast)
       in
-      Abnormal.throw_stmt_control_flow_exception
-        (loc, Return { Return.argument = argument_ast; comments; return_out = (return_out, t) })
-        Abnormal.Return
+      (loc, Return { Return.argument = argument_ast; comments; return_out = (return_out, t) })
     | (loc, Throw { Throw.argument; comments }) ->
-      let argument_ast = expression cx argument in
-      Abnormal.throw_stmt_control_flow_exception
-        (loc, Throw { Throw.argument = argument_ast; comments })
-        Abnormal.Throw
-    (***************************************************************************)
-    (* Try-catch-finally statements have a lot of control flow possibilities. (To
-     simplify matters, a missing catch block is considered to to be a catch
-     block that throws, and a missing finally block is considered to be an empty
-     block.)
-
-     A try block may either
-
-     * exit normally: in this case, it proceeds to the finally block.
-
-     * exit abnormally: in this case, it proceeds to the catch block.
-
-     A catch block may either:
-
-     * exit normally: in this case, it proceeds to the finally block.
-
-     * exit abnormally: in this case, it proceeds to the finally block and
-     throws at the end of the finally block.
-
-     A finally block may either:
-
-     * exit normally: in this case, the try-catch-finally statement exits
-     normally. (Note that to be in this case, either the try block exited
-     normally, or it didn't and the catch block exited normally.)
-
-     * exit abnormally: in this case, the try-catch-finally statement exits
-     abnormally.
-
-     Based on these possibilities, approximations for the local state at various
-     points in a try-catch-finally statement can be derived.
-
-     * The start of a catch block is reachable via anywhere in the try
-     block. Thus, the local state must be conservative.
-
-     * The start of a finally block is reachable via the end of the try block,
-     or anywhere in the catch block. Thus, the local state must be conservative.
-
-     * The end of a try-catch-finally statement is reachable via the end of the
-     finally block. However, in this case we can assume that either
-
-     ** the try block exited normally, in which case the local state at the
-     start of the finally block is the same as the local state at the end of the
-     try block.
-
-     ** the catch block exited normally, in which case the local state at the
-     start of the finally block is the same as the local state at the end of
-     the catch block.
-
-     Thus, a finally block should be analyzed twice, with each of the following
-     assumptions for the local state at its start: (1) conservative (to model
-     abnormal exits in the try or catch blocks); (2) whatever is at the end of
-     the try block merged with whatever is at the end of the catch block (for
-     normal exits in the try and catch blocks).
-
-     Important to understand: since (1) is conservative, it should produce
-     errors whenever (2) does, so that's not why we do them separately.
-     But since (2) models exactly the states from which subsequent code is
-     reachable, we can use its tighter approximation as the basis for
-     subsequent analysis without loss of soundness.
-     *)
+      (loc, Throw { Throw.argument = expression cx argument; comments })
     (***************************************************************************)
     | (loc, Try { Try.block = (b_loc, b); handler; finalizer; comments }) ->
-      let (try_block_ast, try_abnormal) = Toplevels.toplevels statement cx b.Block.body in
-      (* traverse catch block, save exceptions *)
-      let (catch_ast, catch_abnormal) =
-        match handler with
-        | None ->
-          (* a missing catch is equivalent to a catch that always throws *)
-          (None, Some Abnormal.Throw)
-        | Some (h_loc, h) ->
-          let (catch_block_ast, catch_abnormal) = catch_clause cx h in
-          (Some (h_loc, catch_block_ast), catch_abnormal)
-      in
-      let (finally_ast, finally_abnormal) =
-        match finalizer with
-        | None -> (None, None)
-        | Some (f_loc, { Block.body; comments }) ->
-          let (finally_block_ast, finally_abnormal) = Toplevels.toplevels statement cx body in
-          (Some (f_loc, { Block.body = finally_block_ast; comments }), finally_abnormal)
-      in
-
-      let ast =
-        ( loc,
-          Try
-            {
-              Try.block = (b_loc, { Block.body = try_block_ast; comments = b.Block.comments });
-              handler = catch_ast;
-              finalizer = finally_ast;
-              comments;
-            }
+      let try_block_ast = statement_list cx b.Block.body in
+      let catch_ast = Base.Option.map handler ~f:(fun (h_loc, h) -> (h_loc, catch_clause cx h)) in
+      let finally_ast =
+        Base.Option.map finalizer ~f:(fun (f_loc, { Block.body; comments }) ->
+            (f_loc, { Block.body = statement_list cx body; comments })
         )
       in
-      (* if finally has abnormal control flow, we throw here *)
-      ignore
-        ( Abnormal.check_stmt_control_flow_exception (ast, finally_abnormal)
-          : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t
-          );
-
-      (* other ways we throw due to try/catch abends *)
-      begin
-        match (try_abnormal, catch_abnormal) with
-        | (Some (Abnormal.Throw as try_abnormal), Some Abnormal.Throw)
-        | (Some (Abnormal.Return as try_abnormal), Some _) ->
-          Abnormal.throw_stmt_control_flow_exception ast try_abnormal
-        | (Some Abnormal.Throw, Some (Abnormal.Return as catch_abnormal)) ->
-          Abnormal.throw_stmt_control_flow_exception ast catch_abnormal
-        | _ -> ast
-      end
+      ( loc,
+        Try
+          {
+            Try.block = (b_loc, { Block.body = try_block_ast; comments = b.Block.comments });
+            handler = catch_ast;
+            finalizer = finally_ast;
+            comments;
+          }
+      )
     (***************************************************************************)
     (* Refinements for `while` are derived by the following Hoare logic rule:
 
@@ -929,10 +700,7 @@ module Make
     | (loc, While { While.test; body; comments }) ->
       (* generate loop test preds and their complements *)
       let test_ast = condition ~cond:OtherTest cx test in
-      (* traverse loop body - after this, body_env = Post' *)
-      let (body_ast, _) =
-        Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx body)
-      in
+      let body_ast = statement cx body in
       (loc, While { While.test = test_ast; body = body_ast; comments })
     (***************************************************************************)
     (* Refinements for `do-while` are derived by the following Hoare logic rule:
@@ -945,13 +713,9 @@ module Make
     *)
     (***************************************************************************)
     | (loc, DoWhile { DoWhile.body; test; comments }) ->
-      let (body_ast, body_abnormal) =
-        Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx body)
-        |> Abnormal.ignore_break_or_continue_to_label None
-      in
+      let body_ast = statement cx body in
       let test_ast = condition ~cond:OtherTest cx test in
-      let ast = (loc, DoWhile { DoWhile.body = body_ast; test = test_ast; comments }) in
-      Abnormal.check_stmt_control_flow_exception (ast, body_abnormal)
+      (loc, DoWhile { DoWhile.body = body_ast; test = test_ast; comments })
     (***************************************************************************)
     (* Refinements for `for` are derived by the following Hoare logic rule:
 
@@ -981,9 +745,7 @@ module Make
           let expr_ast = condition ~cond:OtherTest cx expr in
           Some expr_ast
       in
-      let (body_ast, _) =
-        Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx body)
-      in
+      let body_ast = statement cx body in
       let update_ast = Base.Option.map ~f:(expression cx) update in
       ( loc,
         For { For.init = init_ast; test = test_ast; update = update_ast; body = body_ast; comments }
@@ -1075,10 +837,7 @@ module Make
       let ((_, right_t), _) = right_ast in
       Flow.flow cx (right_t, AssertForInRHST reason);
 
-      let (body_ast, _) =
-        Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx body)
-      in
-
+      let body_ast = statement cx body in
       (loc, ForIn { ForIn.left = left_ast; right = right_ast; body = body_ast; each; comments })
     | (loc, ForOf { ForOf.left; right; body; await; comments }) ->
       let reason_desc =
@@ -1187,10 +946,7 @@ module Make
           Flow.add_output cx Error_message.(EInternal (loc, ForOfLHS));
           (Tast_utils.error_mapper#for_of_statement_lhs left, right_ast)
       in
-      let (body_ast, _) =
-        Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx body)
-      in
-
+      let body_ast = statement cx body in
       (loc, ForOf { ForOf.left = left_ast; right = right_ast; body = body_ast; await; comments })
     | (_, Debugger _) as stmt -> stmt
     | (loc, FunctionDeclaration func) ->
@@ -1314,8 +1070,6 @@ module Make
             let t = Type_env.get_var_declared_type ~lookup_mode:ForType cx name name_loc in
             Import_export.export cx (OrdinaryName "default") ~name_loc:default_loc t
         in
-        (* error-handling around calls to `statement` is omitted here because we
-           don't expect declarations to have abnormal control flow *)
         let f = function
           | D.Variable (loc, ({ DeclareVariable.id; _ } as v)) ->
             let (name_loc, { Ast.Identifier.name; comments = _ }) = id in
@@ -1623,6 +1377,12 @@ module Make
             comments;
           }
       )
+
+  and statement_list cx stmts =
+    Base.List.map stmts ~f:(fun stmt ->
+        let (stmt, _) = Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx stmt) in
+        stmt
+    )
 
   and for_of_elemt cx right_t reason await =
     let elem_t = Tvar.mk cx reason in
@@ -2077,7 +1837,7 @@ module Make
       let prev_scope_kind = Type_env.set_scope_kind cx Name_def.Ordinary in
       Context.push_declare_module cx (Module_info.empty_cjs_module ());
 
-      let (elements_ast, elements_abnormal) = Toplevels.toplevels statement cx elements in
+      let elements_ast = statement_list cx elements in
       let reason = mk_reason (RModule (OrdinaryName name)) id_loc in
       Type_env.init_declare_module_synthetic_module_exports
         cx
@@ -2100,11 +1860,6 @@ module Make
           comments;
         }
       in
-      ignore
-        ( Abnormal.check_stmt_control_flow_exception ((loc, DeclareModule ast), elements_abnormal)
-          : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t
-          );
-
       Context.pop_declare_module cx;
       ignore @@ Type_env.set_scope_kind cx prev_scope_kind;
 
@@ -2596,7 +2351,7 @@ module Make
     );
     (reason, elemt)
 
-  (* can raise Abnormal.(Exn (Stmt _, _))
+  (* can raise Abnormal.(Exn (_, _))
    * annot should become a Type.t option when we have the ability to
    * inspect annotations and recurse into them *)
   and expression ?cond cx (loc, e) =
@@ -2968,13 +2723,6 @@ module Make
            objects, calls on functions) are often represented as unresolved tvars,
            where they could be pinned down to resolved types.
         *)
-        | _ ->
-          (* The only kind of abnormal control flow that should be raised from
-             an expression is a Throw. The other kinds (return, break, continue)
-             can only arise from statements, and while statements can appear within
-             expressions (eg function expressions), any abnormals will be handled
-             before they get here. *)
-          assert_false "Unexpected abnormal control flow from within expression"
       in
 
       (* TODO call loc_of_predicate on some pred?
@@ -2986,7 +2734,7 @@ module Make
       begin
         match (then_abnormal, else_abnormal) with
         | (Some then_exn, Some else_exn) when then_exn = else_exn ->
-          Abnormal.throw_expr_control_flow_exception loc ast then_exn
+          Abnormal.throw_expr_control_flow_exception loc ast
         | _ -> ast
       end
     | Assignment { Assignment.operator; left; right; comments } ->
@@ -3651,7 +3399,6 @@ module Make
                       comments;
                     }
                 )
-                Abnormal.Throw
             )
           | ( None,
               ( args_loc,
@@ -3690,7 +3437,6 @@ module Make
                       comments;
                     }
                 )
-                Abnormal.Throw
             )
           | ( None,
               ( args_loc,
@@ -5034,7 +4780,6 @@ module Make
         match right_abnormal with
         | Some Abnormal.Throw -> EmptyT.at loc |> with_trust bogus_trust
         | None -> t2
-        | Some _ -> assert_false "Unexpected abnormal control flow from within expression"
       in
       let reason = mk_reason (RLogical ("||", desc_of_t t1, desc_of_t t2)) loc in
       ( Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
@@ -5051,7 +4796,6 @@ module Make
         match right_abnormal with
         | Some Abnormal.Throw -> EmptyT.at loc |> with_trust bogus_trust
         | None -> t2
-        | Some _ -> assert_false "Unexpected abnormal control flow from within expression"
       in
       let reason = mk_reason (RLogical ("&&", desc_of_t t1, desc_of_t t2)) loc in
       ( Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
@@ -5068,7 +4812,6 @@ module Make
         match right_abnormal with
         | Some Abnormal.Throw -> EmptyT.at loc |> with_trust bogus_trust
         | None -> t2
-        | Some _ -> assert_false "Unexpected abnormal control flow from within expression"
       in
       let reason = mk_reason (RLogical ("??", desc_of_t t1, desc_of_t t2)) loc in
       ( Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
@@ -5408,7 +5151,6 @@ module Make
             match right_abnormal with
             | Some Abnormal.Throw -> EmptyT.at loc |> with_trust bogus_trust
             | None -> rhs_t
-            | Some _ -> assert_false "Unexpected abnormal control flow from within expression"
           in
           let result_t =
             Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
@@ -5426,7 +5168,6 @@ module Make
             match right_abnormal with
             | Some Abnormal.Throw -> EmptyT.at loc |> with_trust bogus_trust
             | None -> rhs_t
-            | Some _ -> assert_false "Unexpected abnormal control flow from within expression"
           in
           let result_t =
             Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
@@ -5445,7 +5186,6 @@ module Make
             match right_abnormal with
             | Some Abnormal.Throw -> EmptyT.at loc |> with_trust bogus_trust
             | None -> rhs_t
-            | Some _ -> assert_false "Unexpected abnormal control flow from within expression"
           in
           let result_t =
             Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->

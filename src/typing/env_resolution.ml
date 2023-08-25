@@ -938,7 +938,6 @@ let resolve_op_assign cx ~exp_loc id_reason lhs op rhs =
       match right_abnormal with
       | Some Abnormal.Throw -> EmptyT.at exp_loc |> with_trust bogus_trust
       | None -> rhs_t
-      | Some _ -> assert_false "Unexpected abnormal control flow from within expression"
     in
     let result_t =
       let ub t =

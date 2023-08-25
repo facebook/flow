@@ -420,7 +420,7 @@ struct
     in
 
     (* statement visit pass *)
-    let (statements_ast, _) = Toplevels.toplevels Statement.statement cx statements in
+    let statements_ast = Statement.statement_list cx statements in
 
     let body_ast = reconstruct_body statements_ast in
     (* build return type for void funcs *)
