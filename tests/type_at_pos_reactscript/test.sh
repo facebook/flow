@@ -4,5 +4,5 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-# lazy_ref.js
 queries_in_file "type-at-pos" "component.js"
+queries_in_file "type-at-pos" "render_types.js"

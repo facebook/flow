@@ -44,6 +44,7 @@ let string_of_ctor_t = function
   | CharSet _ -> "CharSet"
   | Conditional _ -> "Conditional"
   | Infer _ -> "Infer"
+  | Renders _ -> "Renders"
 
 let string_of_ctor_decl = function
   | TypeAliasDecl _ -> "TypeAlias"
@@ -376,6 +377,7 @@ struct
           "Infer (%s, %s)"
           (dump_symbol s)
           (Base.Option.value_map ~default:"None" ~f:(dump_t ~depth) b)
+      | Renders t -> spf "Renders (%s)" (dump_t ~depth t)
 
   and dump_class_decl ~depth (name, ps) =
     spf "Class (name=%s, params= %s)" (dump_symbol name) (dump_type_params ~depth ps)
@@ -535,6 +537,7 @@ struct
             ("name", json_of_symbol s);
             ("bound", Base.Option.value_map ~default:JSON_Null ~f:json_of_t b);
           ]
+        | Renders t -> [("argument", json_of_t t)]
       )
     and json_of_generic (s, k, targs_opt) =
       json_of_targs targs_opt

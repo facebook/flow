@@ -192,7 +192,9 @@ let type_ options =
     | TypeOf (TSymbol name) ->
       let%map id = id_from_symbol name in
       just' (T.Typeof { T.Typeof.argument = mk_typeof_expr id; comments = None })
-    | TypeOf _ ->
+    | TypeOf _
+    | Renders _ ->
+      (* Renders AST representation is not yet committed *)
       Error (Utils_js.spf "Unsupported type constructor `%s`." (Ty_debug.string_of_ctor_t t))
   and generic x targs =
     let%bind id = id_from_symbol x in

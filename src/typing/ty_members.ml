@@ -288,7 +288,8 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
   | IndexedAccess _
   | CharSet _
   | Conditional _
-  | Infer _ ->
+  | Infer _
+  | Renders _ ->
     (NameUtils.Map.empty, [])
 
 type ty_members = {

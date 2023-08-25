@@ -75,6 +75,7 @@ type t =
       false_type: t;
     }
   | Infer of symbol * t option
+  | Renders of t
 
 (* Recursive variable *)
 and generic_t = symbol * gen_kind * t list option
@@ -559,6 +560,7 @@ class ['A] comparator_ty =
       | CharSet _ -> 27
       | Conditional _ -> 28
       | Infer _ -> 29
+      | Renders _ -> 30
 
     method tag_of_decl _ =
       function
@@ -784,7 +786,8 @@ let mk_exact ty =
   | Tup _
   | InlineInterface _
   | CharSet _
-  | Infer _ ->
+  | Infer _
+  | Renders _ ->
     ty
   (* Do not nest $Exact *)
   | Utility (Exact _) -> ty

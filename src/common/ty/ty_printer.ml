@@ -193,6 +193,7 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
               option ~f:(fun t -> fuse [space; Atom "extends"; space; type_ ~depth t]) b;
             ];
         ]
+    | Renders t -> fuse [Atom "renders"; space; type_ ~depth t]
   and type_generic ~depth g =
     let ({ sym_name = name; _ }, _, targs) = g in
     let name = identifier name in

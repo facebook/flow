@@ -769,8 +769,11 @@ end = struct
              (Ty_symbol.builtin_symbol (Reason.OrdinaryName "React$AbstractComponent"))
              (Some [config; instance; renders])
           )
+      | DefT (_, _, RendersT { component_opaque_id = None; super }) ->
+        let%bind t = type__ ~env super in
+        return (Ty.Renders t)
       | DefT (_, _, RendersT _) ->
-        (* TODO(jmbrown): Ty normalization for render types *)
+        (* TODO(jmbrown): Ty normalization for render types with an id *)
         terr
           ~kind:UnsupportedTypeCtor
           ~msg:"Normalization is not yet supported for render types"

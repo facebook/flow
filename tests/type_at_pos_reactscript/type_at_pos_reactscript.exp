@@ -10,3 +10,13 @@ React$AbstractComponent<{+bar: string}, mixed, number>
 = React$AbstractComponent<{+bar: string}, mixed, number>
 component.js:3:11,3:13
 
+render_types.js:1:6
+Flags:
+type X = renders null
+render_types.js:1:6,1:6
+
+render_types.js:3:6
+Flags:
+type Y = renders (null | number)
+render_types.js:3:6,3:6
+
