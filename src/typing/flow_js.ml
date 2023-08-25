@@ -5797,6 +5797,15 @@ struct
       (* Intentional unknown_use for tout *)
       covariant_flow ~use_op:unknown_use tout;
       true
+    | TryRenderTypePromotionT { use_op; reason; original_ub; tried_promotion = _ } ->
+      let u =
+        match original_ub with
+        | Renders { component_opaque_id; super } ->
+          UseT (use_op, DefT (reason, bogus_trust (), RendersT { component_opaque_id; super }))
+        | Other u -> u
+      in
+      rec_flow cx trace (any, u);
+      true
     | UseT (use_op, DefT (_, _, ArrT (ROArrayAT t))) (* read-only arrays are covariant *)
     | UseT (use_op, DefT (_, _, ClassT t)) (* mk_instance ~for_type:false *)
     | UseT (use_op, ExactT (_, t)) ->

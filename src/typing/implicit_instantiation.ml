@@ -336,6 +336,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | CheckUnusedPromiseT _
     | WriteComputedObjPropCheckT _
     | PromoteRendersRepresentationT _
+    | TryRenderTypePromotionT _
     (* When we have ChoiceKitUseT, we are already stuck. *)
     | ChoiceKitUseT _ ->
       UpperEmpty (* Remaining unhandled upper bounds *)

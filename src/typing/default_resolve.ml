@@ -200,3 +200,4 @@ let rec default_resolve_touts ~flow cx loc u =
   | CheckUnusedPromiseT _ -> _TODO
   | WriteComputedObjPropCheckT _ -> ()
   | PromoteRendersRepresentationT { tout; _ } -> resolve tout
+  | TryRenderTypePromotionT _ -> ()

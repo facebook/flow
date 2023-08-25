@@ -858,6 +858,21 @@ module rec TypeTerm : sig
         tout: t;
         resolved_obj: t option;
       }
+    (* Given an ObjT props ~> RendersT, we emit an props.type ~> TryRenderTypePromotionT u
+     * to resolve the type field. If it becomes a named abstract component *)
+    | TryRenderTypePromotionT of {
+        use_op: use_op;
+        reason: reason;
+        original_ub: try_render_type_promotion_ub;
+        tried_promotion: bool;
+      }
+
+  and try_render_type_promotion_ub =
+    | Renders of {
+        component_opaque_id: ALoc.id option;
+        super: t;
+      }
+    | Other of use_t
 
   and implicit_return_action =
     | PropagateVoid of {
@@ -3997,6 +4012,7 @@ let string_of_use_ctor = function
   | CheckUnusedPromiseT _ -> "CheckUnusedPromiseT"
   | WriteComputedObjPropCheckT _ -> "WriteComputedObjPropCheckT"
   | PromoteRendersRepresentationT _ -> "PromoteRendersRepresentationT"
+  | TryRenderTypePromotionT _ -> "TryRenderTypePromotionT"
 
 let string_of_binary_test = function
   | InstanceofTest -> "instanceof"
