@@ -561,6 +561,16 @@ end = struct
         let msg = "could not extract instance name from reason: " ^ desc in
         terr ~kind:BadInstanceT ~msg None
 
+    let component_symbol env reason =
+      match desc_of_reason reason with
+      | RComponent name ->
+        let symbol = symbol_from_reason env reason name in
+        return symbol
+      | desc ->
+        let desc = Reason.show_virtual_reason_desc (fun _ _ -> ()) desc in
+        let msg = "could not extract component name from reason: " ^ desc in
+        terr ~kind:UnsupportedTypeCtor ~msg None
+
     let module_symbol_opt env reason =
       match desc_of_reason reason with
       | RModule name ->
@@ -758,9 +768,11 @@ end = struct
       | TypeAppT (_, _, t, ts) -> type_app ~env t (Some ts)
       | DefT (r, _, InstanceT { super; inst; _ }) -> instance_t ~env r super inst
       | DefT (_, _, ClassT t) -> class_t ~env t
+      | DefT (reason, _, ReactAbstractComponentT { component_kind = Nominal _; _ })
+        when Env.(env.under_render_type) ->
+        let%bind symbol = Reason_utils.component_symbol env reason in
+        return (Ty.Generic (symbol, Ty.ComponentKind, None))
       | DefT (_, _, ReactAbstractComponentT { config; instance; renders; component_kind = _ }) ->
-        (* TODO(jmbrown): We do not have a type-level syntax for nominal components yet. When we do
-           * we should use that representation to print Nominal components. *)
         let%bind config = type__ ~env config in
         let%bind instance = type__ ~env instance in
         let%bind renders = type__ ~env renders in
@@ -770,7 +782,7 @@ end = struct
              (Some [config; instance; renders])
           )
       | DefT (_, _, RendersT { component_opaque_id = None; super }) ->
-        let%bind t = type__ ~env super in
+        let%bind t = type__ ~env:(Env.set_under_render_type true env) super in
         return (Ty.Renders t)
       | DefT (_, _, RendersT _) ->
         (* TODO(jmbrown): Ty normalization for render types with an id *)

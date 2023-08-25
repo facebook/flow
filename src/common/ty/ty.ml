@@ -135,6 +135,7 @@ and gen_kind =
   | InterfaceKind
   | TypeAliasKind
   | EnumKind
+  | ComponentKind
 
 and fun_t = {
   fun_params: (string option * t * fun_param) list;
@@ -582,6 +583,7 @@ class ['A] comparator_ty =
       | InterfaceKind -> 1
       | TypeAliasKind -> 2
       | EnumKind -> 3
+      | ComponentKind -> 4
 
     method tag_of_obj_kind _ =
       function
@@ -810,6 +812,7 @@ let debug_string_of_generic_kind = function
   | InterfaceKind -> "interface"
   | TypeAliasKind -> "type alias"
   | EnumKind -> "enum"
+  | ComponentKind -> "component"
 
 let string_of_utility_ctor = function
   | Keys _ -> "$Keys"
