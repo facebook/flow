@@ -2,4 +2,4 @@
  * @flow
  */
 
-require('Foo');
+require('foo');

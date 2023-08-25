@@ -2,6 +2,6 @@
 
 // Importing using the haste name which will not change even if the file
 // path to the provider does change.
-import x from 'HasteName';
+import x from 'a';
 
 export default x;
