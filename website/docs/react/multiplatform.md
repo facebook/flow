@@ -112,7 +112,7 @@ Flow will ensure that the module types of both `Image.ios.js` and `./Image.andro
 
 Sometimes you might target desktop platforms in addition to iOS and Android, and you only have a special implementation for one platform, and all the other platforms will use the fallback implementation in a `.js` file. For example:
 
-```jsx title=MyImage.js
+```jsx title=Image.js
 import * as React from 'react';
 import DefaultImage from 'react-native/Libraries/Image';
 
