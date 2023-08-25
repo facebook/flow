@@ -235,7 +235,7 @@ module rec TypeTerm : sig
         component_kind: component_kind;
       }
     | RendersT of {
-        component_opaque_id: ALoc.id;
+        component_opaque_id: ALoc.id option;
         super: t;
       }
     (* Enum types *)
