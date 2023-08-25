@@ -83,7 +83,6 @@ module Opts = struct
     haste_name_reducers: (Str.regexp * string) list;
     haste_paths_excludes: string list;
     haste_paths_includes: string list;
-    haste_use_name_reducers: bool;
     ignore_non_literal_requires: bool;
     include_warnings: bool;
     lazy_mode: lazy_mode option;
@@ -205,7 +204,6 @@ module Opts = struct
         [(Str.regexp "^\\(.*/\\)?\\([a-zA-Z0-9$_.-]+\\)\\.js\\(\\.flow\\)?$", "\\2")];
       haste_paths_excludes = ["\\(.*\\)?/node_modules/.*"];
       haste_paths_includes = ["<PROJECT_ROOT>/.*"];
-      haste_use_name_reducers = true;
       ignore_non_literal_requires = false;
       include_warnings = false;
       lazy_mode = None;
@@ -547,10 +545,8 @@ module Opts = struct
   let haste_module_ref_prefix_LEGACY_INTEROP_parser =
     string (fun opts v -> Ok { opts with haste_module_ref_prefix_LEGACY_INTEROP = Some v })
 
-  let haste_use_name_reducers_parser =
-    boolean
-      ~init:(fun opts -> { opts with haste_use_name_reducers = false })
-      (fun opts v -> Ok { opts with haste_use_name_reducers = v })
+  (* TODO: delete the config parsing support once all internal usages are migrated. *)
+  let haste_use_name_reducers_parser = enum [("true", true)] (fun opts _ -> Ok opts)
 
   let gc_worker_major_heap_increment_parser =
     uint (fun opts v -> Ok { opts with gc_worker_major_heap_increment = Some v })
@@ -619,10 +615,7 @@ module Opts = struct
       ~init:(fun opts -> { opts with multi_platform_extensions = [] })
       ~multiple:true
       (fun opts v ->
-        if opts.module_system = Options.Haste && not opts.haste_use_name_reducers then
-          Error
-            "Cannot set multi-platform extensions without `module.system.haste.use_name_reducers=true`."
-        else if String.ends_with ~suffix:Files.flow_ext v then
+        if String.ends_with ~suffix:Files.flow_ext v then
           Error
             ("Cannot use file extension '"
             ^ v
@@ -1493,8 +1486,6 @@ let haste_name_reducers c = c.options.Opts.haste_name_reducers
 let haste_paths_excludes c = c.options.Opts.haste_paths_excludes
 
 let haste_paths_includes c = c.options.Opts.haste_paths_includes
-
-let haste_use_name_reducers c = c.options.Opts.haste_use_name_reducers
 
 let ignore_non_literal_requires c = c.options.Opts.ignore_non_literal_requires
 

@@ -142,8 +142,6 @@ val haste_paths_excludes : config -> string list
 
 val haste_paths_includes : config -> string list
 
-val haste_use_name_reducers : config -> bool
-
 val ignore_non_literal_requires : config -> bool
 
 val include_warnings : config -> bool

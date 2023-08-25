@@ -427,7 +427,7 @@ module Haste : MODULE_SYSTEM = struct
       | File_key.SourceFile _ ->
         if is_mock file then
           Some (short_module_name_of file)
-        else if Options.haste_use_name_reducers options then
+        else
           (* Standardize \ to / in path for Windows *)
           let normalized_file_name =
             Sys_utils.normalize_filename_dir_sep (File_key.to_string file)
@@ -436,11 +436,6 @@ module Haste : MODULE_SYSTEM = struct
             Some (haste_name options normalized_file_name)
           else
             None
-        else (
-          match info with
-          | `Module info -> Docblock.providesModule info
-          | _ -> None
-        )
       | File_key.JsonFile path ->
         (match info with
         | `Package pkg when Package_json.haste_commonjs pkg || not (is_within_node_modules path) ->

@@ -1372,7 +1372,6 @@ let make_options
       Base.List.map
         ~f:(Files.expand_project_root_token ~root)
         (FlowConfig.haste_paths_includes flowconfig);
-    opt_haste_use_name_reducers = FlowConfig.haste_use_name_reducers flowconfig;
     opt_file_options = file_options;
     opt_lint_severities = lint_severities;
     opt_strict_mode = strict_mode;
