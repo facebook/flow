@@ -12,14 +12,14 @@ start_flow .
 printf "\\nError should refer to test/node_modules/foo.js\\n"
 assert_errors "$FLOW" status --strip-root
 
-printf "\\nRemoving foo1.js should make error refer to foo2.js\\n"
-mv foo1.js tmp/foo1.js
-assert_ok "$FLOW" force-recheck foo1.js
+printf "\\nRemoving foo1.js should make error refer to foo2/foo.js\\n"
+mv foo1/foo.js tmp/foo1.js
+assert_ok "$FLOW" force-recheck foo1/foo.js
 assert_errors "$FLOW" status --strip-root
 
-printf "\\nAdding foo1.js should make error refer to foo1.js\\n"
-mv tmp/foo1.js foo1.js
-assert_ok "$FLOW" force-recheck foo1.js
+printf "\\nAdding foo1.js should make error refer to foo1/foo.js\\n"
+mv tmp/foo1.js foo1/foo.js
+assert_ok "$FLOW" force-recheck foo1/foo.js
 assert_errors "$FLOW" status --strip-root
 
 assert_ok "$FLOW" stop
