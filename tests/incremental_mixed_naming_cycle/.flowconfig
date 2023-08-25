@@ -1,7 +1,0 @@
-[ignore]
-<PROJECT_ROOT>/tmp*
-
-[options]
-all=true
-module.system=haste
-module.system.haste.use_name_reducers=false
