@@ -211,6 +211,7 @@ type 'loc virtual_reason_desc =
       desc_default: 'loc virtual_reason_desc;
       position: int;
     }
+  | RRenderType of 'loc virtual_reason_desc
 
 and reason_desc_function =
   | RAsync

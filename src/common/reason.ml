@@ -253,6 +253,7 @@ type 'loc virtual_reason_desc =
       desc_default: 'loc virtual_reason_desc;
       position: int;
     }
+  | RRenderType of 'loc virtual_reason_desc
 [@@deriving eq, show]
 
 and reason_desc_function =
@@ -355,6 +356,7 @@ let rec map_desc_locs f = function
         desc_default = map_desc_locs f desc_default;
         position;
       }
+  | RRenderType desc -> RRenderType (map_desc_locs f desc)
 
 type 'loc virtual_reason = {
   desc: 'loc virtual_reason_desc;
@@ -781,6 +783,7 @@ let rec string_of_desc = function
       (string_of_desc desc_type)
       position
       position_suffix
+  | RRenderType desc -> spf "renders %s" (string_of_desc desc)
 
 let string_of_reason ?(strip_root = None) r =
   let spos = string_of_aloc ~strip_root (loc_of_reason r) in
@@ -1414,6 +1417,7 @@ let classification_of_reason r =
   | RComponent _
   | RComponentType
   | RPropsOfComponent _
+  | RRenderType _
   | RInstanceOfComponent _
   | RDefaultTypeArgumentAtIndex _
   | RFunction _
