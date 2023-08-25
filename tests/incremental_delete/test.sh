@@ -46,14 +46,14 @@ mv tmp/unchecked.js .
 assert_ok "$FLOW" force-recheck --no-auto-start unchecked.js
 assert_errors "$FLOW" status --no-auto-start .
 
-printf "\nDelete dupe2.js:\n"
-mv dupe2.js tmp
-assert_ok "$FLOW" force-recheck --no-auto-start dupe2.js
+printf "\nDelete dupe2/Dupe.js:\n"
+mv dupe2/Dupe.js tmp
+assert_ok "$FLOW" force-recheck --no-auto-start dupe2/Dupe.js
 assert_errors "$FLOW" status --no-auto-start .
 
-printf "\nRestore dupe2.js:\n"
-mv tmp/dupe2.js .
-assert_ok "$FLOW" force-recheck --no-auto-start dupe2.js
+printf "\nRestore dupe2/Dupe.js:\n"
+mv tmp/Dupe.js dupe2
+assert_ok "$FLOW" force-recheck --no-auto-start dupe2/Dupe.js
 assert_errors "$FLOW" status --no-auto-start .
 
 rmdir tmp

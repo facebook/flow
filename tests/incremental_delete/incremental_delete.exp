@@ -48,17 +48,17 @@ References:
              ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- dupe2.js:1:1
+Error ------------------------------------------------------------------------------------------------ dupe2/Dupe.js:1:1
 
 Duplicate module provider for `Dupe`. Change either this module provider or the current module provider [1].
 [duplicate-module]
 
-   dupe2.js:1:1
+   dupe2/Dupe.js:1:1
    1| /**
       
 
 References:
-   dupe1.js:1:1
+   dupe1/Dupe.js:1:1
    1| /**
        [1]
 
@@ -98,17 +98,17 @@ References:
              ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- dupe2.js:1:1
+Error ------------------------------------------------------------------------------------------------ dupe2/Dupe.js:1:1
 
 Duplicate module provider for `Dupe`. Change either this module provider or the current module provider [1].
 [duplicate-module]
 
-   dupe2.js:1:1
+   dupe2/Dupe.js:1:1
    1| /**
       
 
 References:
-   dupe1.js:1:1
+   dupe1/Dupe.js:1:1
    1| /**
        [1]
 
@@ -131,17 +131,17 @@ References:
              ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- dupe2.js:1:1
+Error ------------------------------------------------------------------------------------------------ dupe2/Dupe.js:1:1
 
 Duplicate module provider for `Dupe`. Change either this module provider or the current module provider [1].
 [duplicate-module]
 
-   dupe2.js:1:1
+   dupe2/Dupe.js:1:1
    1| /**
       
 
 References:
-   dupe1.js:1:1
+   dupe1/Dupe.js:1:1
    1| /**
        [1]
 
@@ -181,17 +181,17 @@ References:
              ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- dupe2.js:1:1
+Error ------------------------------------------------------------------------------------------------ dupe2/Dupe.js:1:1
 
 Duplicate module provider for `Dupe`. Change either this module provider or the current module provider [1].
 [duplicate-module]
 
-   dupe2.js:1:1
+   dupe2/Dupe.js:1:1
    1| /**
       
 
 References:
-   dupe1.js:1:1
+   dupe1/Dupe.js:1:1
    1| /**
        [1]
 
@@ -248,17 +248,17 @@ References:
              ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- dupe2.js:1:1
+Error ------------------------------------------------------------------------------------------------ dupe2/Dupe.js:1:1
 
 Duplicate module provider for `Dupe`. Change either this module provider or the current module provider [1].
 [duplicate-module]
 
-   dupe2.js:1:1
+   dupe2/Dupe.js:1:1
    1| /**
       
 
 References:
-   dupe1.js:1:1
+   dupe1/Dupe.js:1:1
    1| /**
        [1]
 
@@ -315,17 +315,17 @@ References:
              ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- dupe2.js:1:1
+Error ------------------------------------------------------------------------------------------------ dupe2/Dupe.js:1:1
 
 Duplicate module provider for `Dupe`. Change either this module provider or the current module provider [1].
 [duplicate-module]
 
-   dupe2.js:1:1
+   dupe2/Dupe.js:1:1
    1| /**
       
 
 References:
-   dupe1.js:1:1
+   dupe1/Dupe.js:1:1
    1| /**
        [1]
 
@@ -382,26 +382,26 @@ References:
              ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- dupe2.js:1:1
+Error ------------------------------------------------------------------------------------------------ dupe2/Dupe.js:1:1
 
 Duplicate module provider for `Dupe`. Change either this module provider or the current module provider [1].
 [duplicate-module]
 
-   dupe2.js:1:1
+   dupe2/Dupe.js:1:1
    1| /**
       
 
 References:
-   dupe1.js:1:1
+   dupe1/Dupe.js:1:1
    1| /**
        [1]
 
 
 Error --------------------------------------------------------------------------------------- requires_unchecked.js:5:25
 
-Cannot resolve module `Unchecked`. [cannot-resolve-module]
+Cannot resolve module `unchecked`. [cannot-resolve-module]
 
-   5| var unchecked = require('Unchecked');
+   5| var unchecked = require('unchecked');
                               ^^^^^^^^^^^
 
 
@@ -457,17 +457,17 @@ References:
              ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- dupe2.js:1:1
+Error ------------------------------------------------------------------------------------------------ dupe2/Dupe.js:1:1
 
 Duplicate module provider for `Dupe`. Change either this module provider or the current module provider [1].
 [duplicate-module]
 
-   dupe2.js:1:1
+   dupe2/Dupe.js:1:1
    1| /**
       
 
 References:
-   dupe1.js:1:1
+   dupe1/Dupe.js:1:1
    1| /**
        [1]
 
@@ -475,7 +475,7 @@ References:
 
 Found 4 errors
 
-Delete dupe2.js:
+Delete dupe2/Dupe.js:
 Error -------------------------------------------------------------------------------------------------------- a.js:2:17
 
 Cannot assign `0` to `a` because number [1] is incompatible with string [2]. [incompatible-type]
@@ -527,7 +527,7 @@ References:
 
 Found 3 errors
 
-Restore dupe2.js:
+Restore dupe2/Dupe.js:
 Error -------------------------------------------------------------------------------------------------------- a.js:2:17
 
 Cannot assign `0` to `a` because number [1] is incompatible with string [2]. [incompatible-type]
@@ -576,17 +576,17 @@ References:
              ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- dupe2.js:1:1
+Error ------------------------------------------------------------------------------------------------ dupe2/Dupe.js:1:1
 
 Duplicate module provider for `Dupe`. Change either this module provider or the current module provider [1].
 [duplicate-module]
 
-   dupe2.js:1:1
+   dupe2/Dupe.js:1:1
    1| /**
       
 
 References:
-   dupe1.js:1:1
+   dupe1/Dupe.js:1:1
    1| /**
        [1]
 
