@@ -1,42 +1,42 @@
-Error ---------------------------------------------------------------------------------------------------- Sigma.js:13:7
+Error ---------------------------------------------------------------------------------------------------- Sigma.js:10:7
 
 Cannot call `x.c` because property `c` is missing in `B` [1]. [prop-missing]
 
-   Sigma.js:13:7
-   13|     x.c(); // error
+   Sigma.js:10:7
+   10|     x.c(); // error
              ^
 
 References:
-   Sigma.js:10:16
-   10| function bar(x:B) {
+   Sigma.js:7:16
+    7| function bar(x:B) {
                       ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- Sigma.js:21:7
+
+Cannot call `x.d` because property `d` is missing in `C` [1]. [prop-missing]
+
+   Sigma.js:21:7
+   21|     x.d(); // error
+             ^
+
+References:
+   Sigma.js:5:7
+    5| class C extends B { c() {} }
+             ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- Sigma.js:24:7
 
-Cannot call `x.d` because property `d` is missing in `C` [1]. [prop-missing]
-
-   Sigma.js:24:7
-   24|     x.d(); // error
-             ^
-
-References:
-   Sigma.js:8:7
-    8| class C extends B { c() {} }
-             ^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------------- Sigma.js:27:7
-
 Cannot call `x.c` because property `c` is missing in `A` [1]. [prop-missing]
 
-   Sigma.js:27:7
-   27|     x.c(); // error
+   Sigma.js:24:7
+   24|     x.c(); // error
              ^
 
 References:
-   Sigma.js:19:16
-   19| function foo(x:A) {
+   Sigma.js:16:16
+   16| function foo(x:A) {
                       ^ [1]
 
 

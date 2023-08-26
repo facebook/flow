@@ -24,8 +24,8 @@ Cannot call `takesAString` with `A.numberValue` bound to `str` because number [1
                    ^^^^^^^^^^^^^
 
 References:
-   A.js:6:23
-   6| exports.numberValue = 42;
+   A.js:5:23
+   5| exports.numberValue = 42;
                             ^^ [1]
    require.js:4:28
    4| function takesAString(str: string): void {}

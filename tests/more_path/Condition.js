@@ -1,5 +1,3 @@
-/* @providesModule Condition */
-
 function f(x:number) { }
 function g() { return (42 || "hello"); }
 

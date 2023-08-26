@@ -7,8 +7,8 @@ Cannot cast `x` to string because number [1] is incompatible with string [2]. [i
        ^
 
 References:
-   foo/a.js:5:16
-   5| export default 0;
+   foo/a.js:4:16
+   4| export default 0;
                      ^ [1]
    c.js:5:5
    5| (x: string);
@@ -26,8 +26,8 @@ Cannot cast `x` to string because number [1] is incompatible with string [2]. [i
        ^
 
 References:
-   bar/a.js:5:16
-   5| export default 0;
+   bar/a.js:4:16
+   4| export default 0;
                      ^ [1]
    c.js:5:5
    5| (x: string);

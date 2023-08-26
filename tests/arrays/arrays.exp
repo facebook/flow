@@ -1,14 +1,14 @@
-Error ---------------------------------------------------------------------------------------------------- Arrays.js:8:8
+Error ---------------------------------------------------------------------------------------------------- Arrays.js:5:8
 
 Cannot assign `"..."` to `a[1]` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   Arrays.js:8:8
-   8| a[1] = "..."; // no error under old inference, error under LTI
+   Arrays.js:5:8
+   5| a[1] = "..."; // no error under old inference, error under LTI
              ^^^^^ [1]
 
 References:
-   Arrays.js:7:8
-   7| a[0] = 1;
+   Arrays.js:4:8
+   4| a[0] = 1;
              ^ [2]
 
 

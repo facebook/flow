@@ -1,6 +1,3 @@
-
-/* @providesModule Arith */
-
 function num(x:number) { }
 
 function str(x:string) { }

@@ -30,8 +30,8 @@ Cannot cast `foo` to empty because string [1] is incompatible with empty [2]. [i
        ^^^
 
 References:
-   foo.js:3:18
-   3| module.exports = "";
+   foo.js:2:18
+   2| module.exports = "";
                        ^^ [1]
    test.js:3:7
    3| (foo: empty);

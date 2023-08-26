@@ -8,8 +8,8 @@ Cannot cast `pkg` to string because number [1] is incompatible with string [2]. 
        ^^^
 
 References:
-   package.js:6:16
-   6| export default 123;
+   package.js:5:16
+   5| export default 123;
                      ^^^ [1]
    test.js:4:7
    4| (pkg: string); // error
@@ -44,8 +44,8 @@ Cannot cast `pkg` to string because number [1] is incompatible with string [2]. 
        ^^^
 
 References:
-   package.js:6:16
-   6| export default 123;
+   package.js:5:16
+   5| export default 123;
                      ^^^ [1]
    test.js:4:7
    4| (pkg: string); // error
@@ -122,8 +122,8 @@ Cannot cast `pkg` to string because number [1] is incompatible with string [2]. 
        ^^^
 
 References:
-   package.js:6:16
-   6| export default 123;
+   package.js:5:16
+   5| export default 123;
                      ^^^ [1]
    test.js:4:7
    4| (pkg: string); // error

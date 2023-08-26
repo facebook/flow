@@ -1,4 +1,3 @@
-/* @noflow
- * @providesModule A */
+/* @noflow */
 
 (0: string);

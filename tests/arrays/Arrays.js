@@ -1,6 +1,3 @@
-
-/* @providesModule Arrays */
-
 function foo(x:string) { }
 
 var a = [];

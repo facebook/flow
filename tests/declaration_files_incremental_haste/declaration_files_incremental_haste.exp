@@ -43,8 +43,8 @@ Cannot cast `Implicit.fun()` to boolean because `Implementation` [1] is incompat
        ^^^^^^^^^^^^^^
 
 References:
-   ImplicitProvidesModule.js:7:26
-   7| module.exports.fun = (): Implementation => new Implementation;
+   ImplicitProvidesModule.js:6:26
+   6| module.exports.fun = (): Implementation => new Implementation;
                                ^^^^^^^^^^^^^^ [1]
    test.js:4:18
    4| (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -96,8 +96,8 @@ Cannot cast `Implicit.fun()` to boolean because `Declaration` [1] is incompatibl
        ^^^^^^^^^^^^^^
 
 References:
-   ImplicitProvidesModule.js.flow:3:32
-   3| declare export function fun(): Declaration;
+   ImplicitProvidesModule.js.flow:2:32
+   2| declare export function fun(): Declaration;
                                      ^^^^^^^^^^^ [1]
    test.js:4:18
    4| (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -150,8 +150,8 @@ Cannot cast `Implicit.fun()` to boolean because `Implementation` [1] is incompat
        ^^^^^^^^^^^^^^
 
 References:
-   ImplicitProvidesModule.js:7:26
-   7| module.exports.fun = (): Implementation => new Implementation;
+   ImplicitProvidesModule.js:6:26
+   6| module.exports.fun = (): Implementation => new Implementation;
                                ^^^^^^^^^^^^^^ [1]
    test.js:4:18
    4| (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -206,8 +206,8 @@ Cannot cast `Implicit.fun()` to boolean because `Declaration` [1] is incompatibl
        ^^^^^^^^^^^^^^
 
 References:
-   ImplicitProvidesModule.js.flow:3:32
-   3| declare export function fun(): Declaration;
+   ImplicitProvidesModule.js.flow:2:32
+   2| declare export function fun(): Declaration;
                                      ^^^^^^^^^^^ [1]
    test.js:4:18
    4| (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -260,8 +260,8 @@ Cannot cast `Implicit.fun()` to boolean because `Implementation` [1] is incompat
        ^^^^^^^^^^^^^^
 
 References:
-   ImplicitProvidesModule.js:7:26
-   7| module.exports.fun = (): Implementation => new Implementation;
+   ImplicitProvidesModule.js:6:26
+   6| module.exports.fun = (): Implementation => new Implementation;
                                ^^^^^^^^^^^^^^ [1]
    test.js:4:18
    4| (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -313,8 +313,8 @@ Cannot cast `Implicit.fun()` to boolean because `Declaration` [1] is incompatibl
        ^^^^^^^^^^^^^^
 
 References:
-   ImplicitProvidesModule.js.flow:3:32
-   3| declare export function fun(): Declaration;
+   ImplicitProvidesModule.js.flow:2:32
+   2| declare export function fun(): Declaration;
                                      ^^^^^^^^^^^ [1]
    test.js:4:18
    4| (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -369,8 +369,8 @@ Cannot cast `Implicit.fun()` to boolean because `Declaration` [1] is incompatibl
        ^^^^^^^^^^^^^^
 
 References:
-   ImplicitProvidesModule.js.flow:3:32
-   3| declare export function fun(): Declaration;
+   ImplicitProvidesModule.js.flow:2:32
+   2| declare export function fun(): Declaration;
                                      ^^^^^^^^^^^ [1]
    test.js:4:18
    4| (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -422,8 +422,8 @@ Cannot cast `Implicit.fun()` to boolean because `Declaration` [1] is incompatibl
        ^^^^^^^^^^^^^^
 
 References:
-   ImplicitProvidesModule.js.flow:3:32
-   3| declare export function fun(): Declaration;
+   ImplicitProvidesModule.js.flow:2:32
+   2| declare export function fun(): Declaration;
                                      ^^^^^^^^^^^ [1]
    test.js:4:18
    4| (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
@@ -475,8 +475,8 @@ Cannot cast `Implicit.fun()` to boolean because `Declaration` [1] is incompatibl
        ^^^^^^^^^^^^^^
 
 References:
-   ImplicitProvidesModule.js.flow:3:32
-   3| declare export function fun(): Declaration;
+   ImplicitProvidesModule.js.flow:2:32
+   2| declare export function fun(): Declaration;
                                      ^^^^^^^^^^^ [1]
    test.js:4:18
    4| (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean

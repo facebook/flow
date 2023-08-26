@@ -7,8 +7,8 @@ Cannot cast `foo` to string because number [1] is incompatible with string [2]. 
        ^^^
 
 References:
-   foo.js:2:18
-   2| module.exports = 0;
+   foo.js:1:18
+   1| module.exports = 0;
                        ^ [1]
    test.js:2:7
    2| (foo: string);

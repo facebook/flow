@@ -1,51 +1,68 @@
-Error ---------------------------------------------------------------------------------------------------- Arith.js:13:7
+Error ---------------------------------------------------------------------------------------------------- Arith.js:10:7
 
 Cannot call `num` with `x + y` bound to `x` because string [1] is incompatible with number [2]. [incompatible-call]
 
-   Arith.js:13:7
-   13|   num(x+y); // error
+   Arith.js:10:7
+   10|   num(x+y); // error
              ^^^ [1]
 
 References:
-   Arith.js:4:16
-    4| function num(x:number) { }
+   Arith.js:1:16
+    1| function num(x:number) { }
                       ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- Arith.js:15:7
+Error ---------------------------------------------------------------------------------------------------- Arith.js:12:7
 
 Cannot call `str` with `x + x` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
 
-   Arith.js:15:7
-   15|   str(x+x); // error
+   Arith.js:12:7
+   12|   str(x+x); // error
              ^^^ [1]
 
 References:
-   Arith.js:6:16
-    6| function str(x:string) { }
+   Arith.js:3:16
+    3| function str(x:string) { }
                       ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- Arith.js:16:7
+Error ---------------------------------------------------------------------------------------------------- Arith.js:13:7
 
 Cannot use operator `+` with operands object literal [1] and string [2] [unsafe-addition]
 
-   Arith.js:16:7
-   16|   str(z+y); // error
+   Arith.js:13:7
+   13|   str(z+y); // error
              ^^^
 
 References:
-   Arith.js:11:11
-   11|   var z = {};
+   Arith.js:8:11
+    8|   var z = {};
                  ^^ [1]
-   Arith.js:10:11
-   10|   var y = "...";
+   Arith.js:7:11
+    7|   var y = "...";
                  ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:18:7
+
+Cannot use operator `+` with operands null or undefined [1] and number [2] [unsafe-addition]
+
+   Arith.js:18:7
+   18|   num(x + y);
+             ^^^^^
+
+References:
+   Arith.js:17:18
+   17| function bar0(x: ?number, y: number) {
+                        ^^^^^^^ [1]
+   Arith.js:17:30
+   17| function bar0(x: ?number, y: number) {
+                                    ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:21:7
 
-Cannot use operator `+` with operands null or undefined [1] and number [2] [unsafe-addition]
+Cannot use operator `+` with operands number [1] and null or undefined [2] [unsafe-addition]
 
    Arith.js:21:7
    21|   num(x + y);
@@ -53,597 +70,580 @@ Cannot use operator `+` with operands null or undefined [1] and number [2] [unsa
 
 References:
    Arith.js:20:18
-   20| function bar0(x: ?number, y: number) {
-                        ^^^^^^^ [1]
-   Arith.js:20:30
-   20| function bar0(x: ?number, y: number) {
-                                    ^^^^^^ [2]
+   20| function bar1(x: number, y: ?number) {
+                        ^^^^^^ [1]
+   Arith.js:20:29
+   20| function bar1(x: number, y: ?number) {
+                                   ^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- Arith.js:24:7
+Error ---------------------------------------------------------------------------------------------------- Arith.js:26:7
 
-Cannot use operator `+` with operands number [1] and null or undefined [2] [unsafe-addition]
+Cannot use operator `+` with operands undefined [1] and number [2] [unsafe-addition]
 
-   Arith.js:24:7
-   24|   num(x + y);
+   Arith.js:26:7
+   26|   num(x + y);
              ^^^^^
 
 References:
-   Arith.js:23:18
-   23| function bar1(x: number, y: ?number) {
-                        ^^^^^^ [1]
-   Arith.js:23:29
-   23| function bar1(x: number, y: ?number) {
-                                   ^^^^^^^ [2]
+   Arith.js:25:19
+   25| function bar2(x?: number, y: number) {
+                         ^^^^^^ [1]
+   Arith.js:25:30
+   25| function bar2(x?: number, y: number) {
+                                    ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:29:7
 
-Cannot use operator `+` with operands undefined [1] and number [2] [unsafe-addition]
+Cannot use operator `+` with operands number [1] and undefined [2] [unsafe-addition]
 
    Arith.js:29:7
    29|   num(x + y);
              ^^^^^
 
 References:
-   Arith.js:28:19
-   28| function bar2(x?: number, y: number) {
-                         ^^^^^^ [1]
-   Arith.js:28:30
-   28| function bar2(x?: number, y: number) {
-                                    ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- Arith.js:32:7
-
-Cannot use operator `+` with operands number [1] and undefined [2] [unsafe-addition]
-
-   Arith.js:32:7
-   32|   num(x + y);
-             ^^^^^
-
-References:
-   Arith.js:31:18
-   31| function bar3(x: number, y?: number) {
+   Arith.js:28:18
+   28| function bar3(x: number, y?: number) {
                         ^^^^^^ [1]
-   Arith.js:31:30
-   31| function bar3(x: number, y?: number) {
+   Arith.js:28:30
+   28| function bar3(x: number, y?: number) {
                                     ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- Arith.js:37:7
+Error ---------------------------------------------------------------------------------------------------- Arith.js:34:7
 
 Cannot use operator `+` with operands null or undefined [1] and number [2] [unsafe-addition]
 
-   Arith.js:37:7
-   37|   num(x + y);
+   Arith.js:34:7
+   34|   num(x + y);
              ^^^^^
 
 References:
-   Arith.js:36:19
-   36| function bar4(x?: ?number, y: number) {
+   Arith.js:33:19
+   33| function bar4(x?: ?number, y: number) {
                          ^^^^^^^ [1]
-   Arith.js:36:31
-   36| function bar4(x?: ?number, y: number) {
+   Arith.js:33:31
+   33| function bar4(x?: ?number, y: number) {
+                                     ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:34:7
+
+Cannot use operator `+` with operands undefined [1] and number [2] [unsafe-addition]
+
+   Arith.js:34:7
+   34|   num(x + y);
+             ^^^^^
+
+References:
+   Arith.js:33:19
+   33| function bar4(x?: ?number, y: number) {
+                         ^^^^^^^ [1]
+   Arith.js:33:31
+   33| function bar4(x?: ?number, y: number) {
                                      ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:37:7
 
-Cannot use operator `+` with operands undefined [1] and number [2] [unsafe-addition]
+Cannot use operator `+` with operands number [1] and null or undefined [2] [unsafe-addition]
 
    Arith.js:37:7
    37|   num(x + y);
              ^^^^^
 
 References:
-   Arith.js:36:19
-   36| function bar4(x?: ?number, y: number) {
-                         ^^^^^^^ [1]
-   Arith.js:36:31
-   36| function bar4(x?: ?number, y: number) {
-                                     ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- Arith.js:40:7
-
-Cannot use operator `+` with operands number [1] and null or undefined [2] [unsafe-addition]
-
-   Arith.js:40:7
-   40|   num(x + y);
-             ^^^^^
-
-References:
-   Arith.js:39:18
-   39| function bar5(x: number, y?: ?number) {
+   Arith.js:36:18
+   36| function bar5(x: number, y?: ?number) {
                         ^^^^^^ [1]
-   Arith.js:39:30
-   39| function bar5(x: number, y?: ?number) {
+   Arith.js:36:30
+   36| function bar5(x: number, y?: ?number) {
                                     ^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- Arith.js:40:7
+Error ---------------------------------------------------------------------------------------------------- Arith.js:37:7
 
 Cannot use operator `+` with operands number [1] and undefined [2] [unsafe-addition]
 
-   Arith.js:40:7
-   40|   num(x + y);
+   Arith.js:37:7
+   37|   num(x + y);
              ^^^^^
 
 References:
-   Arith.js:39:18
-   39| function bar5(x: number, y?: ?number) {
+   Arith.js:36:18
+   36| function bar5(x: number, y?: ?number) {
                         ^^^^^^ [1]
-   Arith.js:39:30
-   39| function bar5(x: number, y?: ?number) {
+   Arith.js:36:30
+   36| function bar5(x: number, y?: ?number) {
                                     ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:40:5
+
+Cannot use operator `+` with operands null [1] and null [2] [unsafe-addition]
+
+   Arith.js:40:5
+   40| num(null + null); // === 0
+           ^^^^^^^^^^^
+
+References:
+   Arith.js:40:5
+   40| num(null + null); // === 0
+           ^^^^ [1]
+   Arith.js:40:12
+   40| num(null + null); // === 0
+                  ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:41:5
+
+Cannot use operator `+` with operands undefined [1] and undefined [2] [unsafe-addition]
+
+   Arith.js:41:5
+   41| num(undefined + undefined); // === NaN
+           ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   Arith.js:41:5
+   41| num(undefined + undefined); // === NaN
+           ^^^^^^^^^ [1]
+   Arith.js:41:17
+   41| num(undefined + undefined); // === NaN
+                       ^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:43:5
 
-Cannot use operator `+` with operands null [1] and null [2] [unsafe-addition]
+Cannot use operator `+` with operands null [1] and number [2] [unsafe-addition]
 
    Arith.js:43:5
-   43| num(null + null); // === 0
-           ^^^^^^^^^^^
+   43| num(null + 1); // === 1
+           ^^^^^^^^
 
 References:
    Arith.js:43:5
-   43| num(null + null); // === 0
+   43| num(null + 1); // === 1
            ^^^^ [1]
    Arith.js:43:12
-   43| num(null + null); // === 0
-                  ^^^^ [2]
+   43| num(null + 1); // === 1
+                  ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:44:5
 
-Cannot use operator `+` with operands undefined [1] and undefined [2] [unsafe-addition]
+Cannot use operator `+` with operands number [1] and null [2] [unsafe-addition]
 
    Arith.js:44:5
-   44| num(undefined + undefined); // === NaN
-           ^^^^^^^^^^^^^^^^^^^^^
+   44| num(1 + null); // === 1
+           ^^^^^^^^
 
 References:
    Arith.js:44:5
-   44| num(undefined + undefined); // === NaN
+   44| num(1 + null); // === 1
+           ^ [1]
+   Arith.js:44:9
+   44| num(1 + null); // === 1
+               ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:45:5
+
+Cannot use operator `+` with operands undefined [1] and number [2] [unsafe-addition]
+
+   Arith.js:45:5
+   45| num(undefined + 1); // === NaN
+           ^^^^^^^^^^^^^
+
+References:
+   Arith.js:45:5
+   45| num(undefined + 1); // === NaN
            ^^^^^^^^^ [1]
-   Arith.js:44:17
-   44| num(undefined + undefined); // === NaN
-                       ^^^^^^^^^ [2]
+   Arith.js:45:17
+   45| num(undefined + 1); // === NaN
+                       ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:46:5
 
-Cannot use operator `+` with operands null [1] and number [2] [unsafe-addition]
+Cannot use operator `+` with operands number [1] and undefined [2] [unsafe-addition]
 
    Arith.js:46:5
-   46| num(null + 1); // === 1
-           ^^^^^^^^
+   46| num(1 + undefined); // === NaN
+           ^^^^^^^^^^^^^
 
 References:
    Arith.js:46:5
-   46| num(null + 1); // === 1
-           ^^^^ [1]
-   Arith.js:46:12
-   46| num(null + 1); // === 1
-                  ^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- Arith.js:47:5
-
-Cannot use operator `+` with operands number [1] and null [2] [unsafe-addition]
-
-   Arith.js:47:5
-   47| num(1 + null); // === 1
-           ^^^^^^^^
-
-References:
-   Arith.js:47:5
-   47| num(1 + null); // === 1
+   46| num(1 + undefined); // === NaN
            ^ [1]
-   Arith.js:47:9
-   47| num(1 + null); // === 1
-               ^^^^ [2]
+   Arith.js:46:9
+   46| num(1 + undefined); // === NaN
+               ^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:48:5
 
-Cannot use operator `+` with operands undefined [1] and number [2] [unsafe-addition]
+Cannot use operator `+` with operands null [1] and boolean [2] [unsafe-addition]
 
    Arith.js:48:5
-   48| num(undefined + 1); // === NaN
-           ^^^^^^^^^^^^^
+   48| num(null + true); // === 1
+           ^^^^^^^^^^^
 
 References:
    Arith.js:48:5
-   48| num(undefined + 1); // === NaN
-           ^^^^^^^^^ [1]
-   Arith.js:48:17
-   48| num(undefined + 1); // === NaN
-                       ^ [2]
+   48| num(null + true); // === 1
+           ^^^^ [1]
+   Arith.js:48:12
+   48| num(null + true); // === 1
+                  ^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:49:5
 
-Cannot use operator `+` with operands number [1] and undefined [2] [unsafe-addition]
+Cannot use operator `+` with operands boolean [1] and null [2] [unsafe-addition]
 
    Arith.js:49:5
-   49| num(1 + undefined); // === NaN
-           ^^^^^^^^^^^^^
+   49| num(true + null); // === 1
+           ^^^^^^^^^^^
 
 References:
    Arith.js:49:5
-   49| num(1 + undefined); // === NaN
-           ^ [1]
-   Arith.js:49:9
-   49| num(1 + undefined); // === NaN
-               ^^^^^^^^^ [2]
+   49| num(true + null); // === 1
+           ^^^^ [1]
+   Arith.js:49:12
+   49| num(true + null); // === 1
+                  ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:50:5
+
+Cannot use operator `+` with operands undefined [1] and boolean [2] [unsafe-addition]
+
+   Arith.js:50:5
+   50| num(undefined + true); // === NaN
+           ^^^^^^^^^^^^^^^^
+
+References:
+   Arith.js:50:5
+   50| num(undefined + true); // === NaN
+           ^^^^^^^^^ [1]
+   Arith.js:50:17
+   50| num(undefined + true); // === NaN
+                       ^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:51:5
 
-Cannot use operator `+` with operands null [1] and boolean [2] [unsafe-addition]
+Cannot use operator `+` with operands boolean [1] and undefined [2] [unsafe-addition]
 
    Arith.js:51:5
-   51| num(null + true); // === 1
-           ^^^^^^^^^^^
+   51| num(true + undefined); // === NaN
+           ^^^^^^^^^^^^^^^^
 
 References:
    Arith.js:51:5
-   51| num(null + true); // === 1
+   51| num(true + undefined); // === NaN
            ^^^^ [1]
    Arith.js:51:12
-   51| num(null + true); // === 1
-                  ^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- Arith.js:52:5
-
-Cannot use operator `+` with operands boolean [1] and null [2] [unsafe-addition]
-
-   Arith.js:52:5
-   52| num(true + null); // === 1
-           ^^^^^^^^^^^
-
-References:
-   Arith.js:52:5
-   52| num(true + null); // === 1
-           ^^^^ [1]
-   Arith.js:52:12
-   52| num(true + null); // === 1
-                  ^^^^ [2]
+   51| num(true + undefined); // === NaN
+                  ^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:53:5
 
-Cannot use operator `+` with operands undefined [1] and boolean [2] [unsafe-addition]
+Cannot use operator `+` with operands string [1] and boolean [2] [unsafe-addition]
 
    Arith.js:53:5
-   53| num(undefined + true); // === NaN
-           ^^^^^^^^^^^^^^^^
+   53| str("foo" + true); // error
+           ^^^^^^^^^^^^
 
 References:
    Arith.js:53:5
-   53| num(undefined + true); // === NaN
-           ^^^^^^^^^ [1]
-   Arith.js:53:17
-   53| num(undefined + true); // === NaN
-                       ^^^^ [2]
+   53| str("foo" + true); // error
+           ^^^^^ [1]
+   Arith.js:53:13
+   53| str("foo" + true); // error
+                   ^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:54:5
 
-Cannot use operator `+` with operands boolean [1] and undefined [2] [unsafe-addition]
+Cannot use operator `+` with operands boolean [1] and string [2] [unsafe-addition]
 
    Arith.js:54:5
-   54| num(true + undefined); // === NaN
-           ^^^^^^^^^^^^^^^^
+   54| str(true + "foo"); // error
+           ^^^^^^^^^^^^
 
 References:
    Arith.js:54:5
-   54| num(true + undefined); // === NaN
+   54| str(true + "foo"); // error
            ^^^^ [1]
    Arith.js:54:12
-   54| num(true + undefined); // === NaN
-                  ^^^^^^^^^ [2]
+   54| str(true + "foo"); // error
+                  ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:55:5
+
+Cannot use operator `+` with operands string [1] and null [2] [unsafe-addition]
+
+   Arith.js:55:5
+   55| str("foo" + null); // error
+           ^^^^^^^^^^^^
+
+References:
+   Arith.js:55:5
+   55| str("foo" + null); // error
+           ^^^^^ [1]
+   Arith.js:55:13
+   55| str("foo" + null); // error
+                   ^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:56:5
 
-Cannot use operator `+` with operands string [1] and boolean [2] [unsafe-addition]
+Cannot use operator `+` with operands null [1] and string [2] [unsafe-addition]
 
    Arith.js:56:5
-   56| str("foo" + true); // error
+   56| str(null + "foo"); // error
            ^^^^^^^^^^^^
 
 References:
    Arith.js:56:5
-   56| str("foo" + true); // error
-           ^^^^^ [1]
-   Arith.js:56:13
-   56| str("foo" + true); // error
-                   ^^^^ [2]
+   56| str(null + "foo"); // error
+           ^^^^ [1]
+   Arith.js:56:12
+   56| str(null + "foo"); // error
+                  ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:57:5
 
-Cannot use operator `+` with operands boolean [1] and string [2] [unsafe-addition]
+Cannot use operator `+` with operands string [1] and undefined [2] [unsafe-addition]
 
    Arith.js:57:5
-   57| str(true + "foo"); // error
-           ^^^^^^^^^^^^
+   57| str("foo" + undefined); // error
+           ^^^^^^^^^^^^^^^^^
 
 References:
    Arith.js:57:5
-   57| str(true + "foo"); // error
-           ^^^^ [1]
-   Arith.js:57:12
-   57| str(true + "foo"); // error
-                  ^^^^^ [2]
+   57| str("foo" + undefined); // error
+           ^^^^^ [1]
+   Arith.js:57:13
+   57| str("foo" + undefined); // error
+                   ^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:58:5
 
-Cannot use operator `+` with operands string [1] and null [2] [unsafe-addition]
-
-   Arith.js:58:5
-   58| str("foo" + null); // error
-           ^^^^^^^^^^^^
-
-References:
-   Arith.js:58:5
-   58| str("foo" + null); // error
-           ^^^^^ [1]
-   Arith.js:58:13
-   58| str("foo" + null); // error
-                   ^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- Arith.js:59:5
-
-Cannot use operator `+` with operands null [1] and string [2] [unsafe-addition]
-
-   Arith.js:59:5
-   59| str(null + "foo"); // error
-           ^^^^^^^^^^^^
-
-References:
-   Arith.js:59:5
-   59| str(null + "foo"); // error
-           ^^^^ [1]
-   Arith.js:59:12
-   59| str(null + "foo"); // error
-                  ^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- Arith.js:60:5
-
-Cannot use operator `+` with operands string [1] and undefined [2] [unsafe-addition]
-
-   Arith.js:60:5
-   60| str("foo" + undefined); // error
-           ^^^^^^^^^^^^^^^^^
-
-References:
-   Arith.js:60:5
-   60| str("foo" + undefined); // error
-           ^^^^^ [1]
-   Arith.js:60:13
-   60| str("foo" + undefined); // error
-                   ^^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- Arith.js:61:5
-
 Cannot use operator `+` with operands undefined [1] and string [2] [unsafe-addition]
 
-   Arith.js:61:5
-   61| str(undefined + "foo"); // error
+   Arith.js:58:5
+   58| str(undefined + "foo"); // error
            ^^^^^^^^^^^^^^^^^
 
 References:
-   Arith.js:61:5
-   61| str(undefined + "foo"); // error
+   Arith.js:58:5
+   58| str(undefined + "foo"); // error
            ^^^^^^^^^ [1]
-   Arith.js:61:17
-   61| str(undefined + "foo"); // error
+   Arith.js:58:17
+   58| str(undefined + "foo"); // error
                        ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:62:6
+
+Cannot use operator `+` with operands mixed [1] and mixed [2] [unsafe-addition]
+
+   Arith.js:62:6
+   62|     (x + y); // error
+            ^^^^^
+
+References:
+   Arith.js:61:15
+   61|   function(x: mixed, y: mixed) {
+                     ^^^^^ [1]
+   Arith.js:61:25
+   61|   function(x: mixed, y: mixed) {
+                               ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:63:6
+
+Cannot use operator `+` with operands mixed [1] and number [2] [unsafe-addition]
+
+   Arith.js:63:6
+   63|     (x + 0); // error
+            ^^^^^
+
+References:
+   Arith.js:61:15
+   61|   function(x: mixed, y: mixed) {
+                     ^^^^^ [1]
+   Arith.js:63:10
+   63|     (x + 0); // error
+                ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:64:6
+
+Cannot use operator `+` with operands number [1] and mixed [2] [unsafe-addition]
+
+   Arith.js:64:6
+   64|     (0 + x); // error
+            ^^^^^
+
+References:
+   Arith.js:64:6
+   64|     (0 + x); // error
+            ^ [1]
+   Arith.js:61:15
+   61|   function(x: mixed, y: mixed) {
+                     ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:65:6
 
-Cannot use operator `+` with operands mixed [1] and mixed [2] [unsafe-addition]
+Cannot use operator `+` with operands mixed [1] and string [2] [unsafe-addition]
 
    Arith.js:65:6
-   65|     (x + y); // error
-            ^^^^^
+   65|     (x + ""); // error
+            ^^^^^^
 
 References:
-   Arith.js:64:15
-   64|   function(x: mixed, y: mixed) {
+   Arith.js:61:15
+   61|   function(x: mixed, y: mixed) {
                      ^^^^^ [1]
-   Arith.js:64:25
-   64|   function(x: mixed, y: mixed) {
-                               ^^^^^ [2]
+   Arith.js:65:10
+   65|     (x + ""); // error
+                ^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:66:6
 
-Cannot use operator `+` with operands mixed [1] and number [2] [unsafe-addition]
+Cannot use operator `+` with operands string [1] and mixed [2] [unsafe-addition]
 
    Arith.js:66:6
-   66|     (x + 0); // error
-            ^^^^^
+   66|     ("" + x); // error
+            ^^^^^^
 
 References:
-   Arith.js:64:15
-   64|   function(x: mixed, y: mixed) {
-                     ^^^^^ [1]
-   Arith.js:66:10
-   66|     (x + 0); // error
-                ^ [2]
+   Arith.js:66:6
+   66|     ("" + x); // error
+            ^^ [1]
+   Arith.js:61:15
+   61|   function(x: mixed, y: mixed) {
+                     ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:67:6
 
-Cannot use operator `+` with operands number [1] and mixed [2] [unsafe-addition]
+Cannot use operator `+` with operands mixed [1] and object literal [2] [unsafe-addition]
 
    Arith.js:67:6
-   67|     (0 + x); // error
-            ^^^^^
+   67|     (x + {}); // error
+            ^^^^^^
 
 References:
-   Arith.js:67:6
-   67|     (0 + x); // error
-            ^ [1]
-   Arith.js:64:15
-   64|   function(x: mixed, y: mixed) {
-                     ^^^^^ [2]
+   Arith.js:61:15
+   61|   function(x: mixed, y: mixed) {
+                     ^^^^^ [1]
+   Arith.js:67:10
+   67|     (x + {}); // error
+                ^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:68:6
 
-Cannot use operator `+` with operands mixed [1] and string [2] [unsafe-addition]
-
-   Arith.js:68:6
-   68|     (x + ""); // error
-            ^^^^^^
-
-References:
-   Arith.js:64:15
-   64|   function(x: mixed, y: mixed) {
-                     ^^^^^ [1]
-   Arith.js:68:10
-   68|     (x + ""); // error
-                ^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- Arith.js:69:6
-
-Cannot use operator `+` with operands string [1] and mixed [2] [unsafe-addition]
-
-   Arith.js:69:6
-   69|     ("" + x); // error
-            ^^^^^^
-
-References:
-   Arith.js:69:6
-   69|     ("" + x); // error
-            ^^ [1]
-   Arith.js:64:15
-   64|   function(x: mixed, y: mixed) {
-                     ^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- Arith.js:70:6
-
-Cannot use operator `+` with operands mixed [1] and object literal [2] [unsafe-addition]
-
-   Arith.js:70:6
-   70|     (x + {}); // error
-            ^^^^^^
-
-References:
-   Arith.js:64:15
-   64|   function(x: mixed, y: mixed) {
-                     ^^^^^ [1]
-   Arith.js:70:10
-   70|     (x + {}); // error
-                ^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- Arith.js:71:6
-
 Cannot use operator `+` with operands object literal [1] and mixed [2] [unsafe-addition]
 
-   Arith.js:71:6
-   71|     ({} + x); // error
+   Arith.js:68:6
+   68|     ({} + x); // error
             ^^^^^^
 
 References:
-   Arith.js:71:6
-   71|     ({} + x); // error
+   Arith.js:68:6
+   68|     ({} + x); // error
             ^^ [1]
-   Arith.js:64:15
-   64|   function(x: mixed, y: mixed) {
+   Arith.js:61:15
+   61|   function(x: mixed, y: mixed) {
                      ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:72:6
+
+Cannot use operator `+` with operands number [1] and object literal [2] [unsafe-addition]
+
+   Arith.js:72:6
+   72|     (1 + {}); // error
+            ^^^^^^
+
+References:
+   Arith.js:72:6
+   72|     (1 + {}); // error
+            ^ [1]
+   Arith.js:72:10
+   72|     (1 + {}); // error
+                ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:73:6
+
+Cannot use operator `+` with operands object literal [1] and number [2] [unsafe-addition]
+
+   Arith.js:73:6
+   73|     ({} + 1); // error
+            ^^^^^^
+
+References:
+   Arith.js:73:6
+   73|     ({} + 1); // error
+            ^^ [1]
+   Arith.js:73:11
+   73|     ({} + 1); // error
+                 ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- Arith.js:74:6
+
+Cannot use operator `+` with operands string [1] and object literal [2] [unsafe-addition]
+
+   Arith.js:74:6
+   74|     ("1" + {}); // error
+            ^^^^^^^^
+
+References:
+   Arith.js:74:6
+   74|     ("1" + {}); // error
+            ^^^ [1]
+   Arith.js:74:12
+   74|     ("1" + {}); // error
+                  ^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:75:6
 
-Cannot use operator `+` with operands number [1] and object literal [2] [unsafe-addition]
-
-   Arith.js:75:6
-   75|     (1 + {}); // error
-            ^^^^^^
-
-References:
-   Arith.js:75:6
-   75|     (1 + {}); // error
-            ^ [1]
-   Arith.js:75:10
-   75|     (1 + {}); // error
-                ^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- Arith.js:76:6
-
-Cannot use operator `+` with operands object literal [1] and number [2] [unsafe-addition]
-
-   Arith.js:76:6
-   76|     ({} + 1); // error
-            ^^^^^^
-
-References:
-   Arith.js:76:6
-   76|     ({} + 1); // error
-            ^^ [1]
-   Arith.js:76:11
-   76|     ({} + 1); // error
-                 ^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- Arith.js:77:6
-
-Cannot use operator `+` with operands string [1] and object literal [2] [unsafe-addition]
-
-   Arith.js:77:6
-   77|     ("1" + {}); // error
-            ^^^^^^^^
-
-References:
-   Arith.js:77:6
-   77|     ("1" + {}); // error
-            ^^^ [1]
-   Arith.js:77:12
-   77|     ("1" + {}); // error
-                  ^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- Arith.js:78:6
-
 Cannot use operator `+` with operands object literal [1] and string [2] [unsafe-addition]
 
-   Arith.js:78:6
-   78|     ({} + "1"); // error
+   Arith.js:75:6
+   75|     ({} + "1"); // error
             ^^^^^^^^
 
 References:
-   Arith.js:78:6
-   78|     ({} + "1"); // error
+   Arith.js:75:6
+   75|     ({} + "1"); // error
             ^^ [1]
-   Arith.js:78:11
-   78|     ({} + "1"); // error
+   Arith.js:75:11
+   75|     ({} + "1"); // error
                  ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- Arith.js:90:13
+Error --------------------------------------------------------------------------------------------------- Arith.js:87:13
 
 Cannot get `(x + y).length` because property `length` is missing in `Number` [1]. [prop-missing]
 
-   Arith.js:90:13
-    90|     (x + y).length; // error
+   Arith.js:87:13
+    87|     (x + y).length; // error
                     ^^^^^^
 
 References:
@@ -652,12 +652,12 @@ References:
                       ^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- Arith.js:91:13
+Error --------------------------------------------------------------------------------------------------- Arith.js:88:13
 
 Cannot get `(1 + 2).length` because property `length` is missing in `Number` [1]. [prop-missing]
 
-   Arith.js:91:13
-    91|     (1 + 2).length; // error
+   Arith.js:88:13
+    88|     (1 + 2).length; // error
                     ^^^^^^
 
 References:

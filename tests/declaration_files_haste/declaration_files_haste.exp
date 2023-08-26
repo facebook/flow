@@ -62,16 +62,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `Flow.x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    test.js:8:2
-    8| (Flow.x: empty); // error: should be number
-        ^^^^^^
+   8| (Flow.x: empty); // error: should be number
+       ^^^^^^
 
 References:
-   pragmas/Flow.js.flow:10:17
-   10| export const x: number = 123;
-                       ^^^^^^ [1]
+   pragmas/Flow.js.flow:9:17
+   9| export const x: number = 123;
+                      ^^^^^^ [1]
    test.js:8:10
-    8| (Flow.x: empty); // error: should be number
-                ^^^^^ [2]
+   8| (Flow.x: empty); // error: should be number
+               ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:20:2
@@ -83,8 +83,8 @@ Cannot cast `NotFlowShadowed.x` to empty because number [1] is incompatible with
         ^^^^^^^^^^^^^^^^^
 
 References:
-   pragmas/NotFlowShadowed.js.flow:9:17
-    9| export const x: number = 123;
+   pragmas/NotFlowShadowed.js.flow:8:17
+    8| export const x: number = 123;
                        ^^^^^^ [1]
    test.js:20:21
    20| (NotFlowShadowed.x: empty); // error: should be number

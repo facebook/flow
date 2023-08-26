@@ -1,2 +1,1 @@
 // @flow
-// @providesModule Foo
