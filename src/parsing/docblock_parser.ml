@@ -14,7 +14,6 @@ let docblock_max_tokens = 10
 type docblock_error_kind =
   | MultipleFlowAttributes
   | InvalidFlowMode of string
-  | MultipleProvidesModuleAttributes
   | MultipleJSXAttributes
   | InvalidJSXAttribute of string option
   | MultipleJSXRuntimeAttributes
@@ -74,14 +73,6 @@ let extract_docblock =
             ((loc, MultipleFlowAttributes) :: errors, info)
           else
             (errors, { info with flow = Some OptOut })
-        in
-        parse_attributes acc xs
-      | (loc, "@providesModule") :: (_, m) :: xs ->
-        let acc =
-          if info.providesModule <> None then
-            ((loc, MultipleProvidesModuleAttributes) :: errors, info)
-          else
-            (errors, { info with providesModule = Some m })
         in
         parse_attributes acc xs
       | (_, "@preventMunge") :: xs ->

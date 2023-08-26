@@ -639,7 +639,6 @@ and assigned_const_like_binding_type =
 and docblock_error =
   | MultipleFlowAttributes
   | InvalidFlowMode of string
-  | MultipleProvidesModuleAttributes
   | MultipleJSXAttributes
   | InvalidJSXAttribute of string option
   | MultipleJSXRuntimeAttributes
@@ -3574,13 +3573,6 @@ let friendly_message_of_msg loc_of_aloc msg =
           code "@flow strict-local";
           text ".";
         ]
-      | MultipleProvidesModuleAttributes ->
-        [
-          text "Unexpected ";
-          code "@providesModule";
-          text " declaration. ";
-          text "Only one per file is allowed.";
-        ]
       | MultipleJSXAttributes ->
         [
           text "Unexpected ";
@@ -5108,7 +5100,6 @@ let error_code_of_message err : error_code option =
     match err with
     | MultipleFlowAttributes -> Some DuplicateFlowDecl
     | InvalidFlowMode _ -> Some InvalidFlowModeDecl
-    | MultipleProvidesModuleAttributes -> Some DuplicateProvideModuleDecl
     | MultipleJSXAttributes -> Some DuplicateJsxDecl
     | InvalidJSXAttribute _ -> Some InvalidJsxDecl
     | MultipleJSXRuntimeAttributes -> Some DuplicateJsxRuntimeDecl

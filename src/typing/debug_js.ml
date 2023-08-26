@@ -1600,7 +1600,6 @@ let dump_error_message =
         (match err with
         | MultipleFlowAttributes -> "MultipleFlowAttributes"
         | InvalidFlowMode _ -> "InvalidFlowMode"
-        | MultipleProvidesModuleAttributes -> "MultipleProvidesModuleAttributes"
         | MultipleJSXAttributes -> "MultipleJSXAttributes"
         | InvalidJSXAttribute _ -> "InvalidJSXAttribute"
         | MultipleJSXRuntimeAttributes -> "MultipleJSXRuntimeAttributes"

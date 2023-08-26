@@ -14,8 +14,6 @@ let error_of_docblock_error ~source_file (loc, err) =
         match err with
         | Docblock_parser.MultipleFlowAttributes -> Error_message.MultipleFlowAttributes
         | Docblock_parser.InvalidFlowMode s -> Error_message.InvalidFlowMode s
-        | Docblock_parser.MultipleProvidesModuleAttributes ->
-          Error_message.MultipleProvidesModuleAttributes
         | Docblock_parser.MultipleJSXAttributes -> Error_message.MultipleJSXAttributes
         | Docblock_parser.InvalidJSXAttribute first_error ->
           Error_message.InvalidJSXAttribute first_error

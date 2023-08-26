@@ -32,7 +32,6 @@ type error_code =
   | DuplicateJsxDecl
   | DuplicateJsxRuntimeDecl
   | DuplicateModule
-  | DuplicateProvideModuleDecl
   | EmptyArrayNoAnnot
   | EnumValueAsType
   | EscapedGeneric
@@ -231,7 +230,6 @@ let string_of_code : error_code -> string = function
   | DuplicateJsxDecl -> "duplicate-jsx-decl"
   | DuplicateJsxRuntimeDecl -> "duplicate-jsx-runtime-decl"
   | DuplicateModule -> "duplicate-module"
-  | DuplicateProvideModuleDecl -> "duplicate-provide-module-decl"
   | EnumValueAsType -> "enum-value-as-type"
   | EscapedGeneric -> "escaped-generic"
   | ExponentialSpread -> "exponential-spread"

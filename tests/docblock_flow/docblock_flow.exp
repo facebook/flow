@@ -37,22 +37,6 @@ Unexpected `@flow` declaration. Only one per file is allowed. [duplicate-flow-de
          ^^^^^^^
 
 
-Error --------------------------------------------------------------------------------- multiple_providesModule_1.js:3:4
-
-Unexpected `@providesModule` declaration. Only one per file is allowed. [duplicate-provide-module-decl]
-
-   3|  * @providesModule Bar
-         ^^^^^^^^^^^^^^^
-
-
-Error --------------------------------------------------------------------------------- multiple_providesModule_2.js:6:4
-
-Unexpected `@providesModule` declaration. Only one per file is allowed. [duplicate-provide-module-decl]
-
-   6|  * @providesModule Bar
-         ^^^^^^^^^^^^^^^
-
-
 Error -------------------------------------------------------------------------------------- use_strict_with_flow.js:4:2
 
 Cannot cast empty string to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
@@ -82,4 +66,4 @@ References:
 
 
 
-Found 8 errors
+Found 6 errors

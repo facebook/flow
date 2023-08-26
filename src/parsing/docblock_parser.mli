@@ -8,7 +8,6 @@
 type docblock_error_kind =
   | MultipleFlowAttributes
   | InvalidFlowMode of string
-  | MultipleProvidesModuleAttributes
   | MultipleJSXAttributes
   | InvalidJSXAttribute of string option
   | MultipleJSXRuntimeAttributes

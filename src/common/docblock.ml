@@ -25,20 +25,16 @@ type jsx_runtime_pragma =
 type t = {
   flow: flow_mode option;
   preventMunge: bool;
-  providesModule: string option;
   jsx: jsx_pragma option;
   jsxRuntime: jsx_runtime_pragma option;
 }
 
-let default_info =
-  { flow = None; preventMunge = false; providesModule = None; jsx = None; jsxRuntime = None }
+let default_info = { flow = None; preventMunge = false; jsx = None; jsxRuntime = None }
 
 (* accessors *)
 let flow info = info.flow
 
 let preventMunge info = info.preventMunge
-
-let providesModule info = info.providesModule
 
 let jsx info = info.jsx
 
@@ -80,11 +76,5 @@ let json_of_docblock info =
       else
         JSON_Null
     in
-    let providesModule =
-      match providesModule info with
-      | Some str -> JSON_String str
-      | None -> JSON_Null
-    in
-    JSON_Object
-      [("flow", flow); ("preventMunge", preventsMunge); ("providesModule", providesModule)]
+    JSON_Object [("flow", flow); ("preventMunge", preventsMunge)]
   )
