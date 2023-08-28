@@ -1832,124 +1832,20 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- nominal.js:17:2
 
-Cannot cast `Foo` to `React.AbstractComponent` because undefined [1] is incompatible with null [2]. [incompatible-cast]
-
-   nominal.js:17:2
-   17| (Foo: React.AbstractComponent<{}, mixed, null>); // ERROR, default render is React.Node
-        ^^^
-
-References:
-   <BUILTINS>/react.js:16:5
-   16|   | void
-           ^^^^ [1]
-   nominal.js:17:42
-   17| (Foo: React.AbstractComponent<{}, mixed, null>); // ERROR, default render is React.Node
-                                                ^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------------- nominal.js:17:2
-
-Cannot cast `Foo` to `React.AbstractComponent` because boolean [1] is incompatible with null [2]. [incompatible-cast]
-
-   nominal.js:17:2
-   17| (Foo: React.AbstractComponent<{}, mixed, null>); // ERROR, default render is React.Node
-        ^^^
-
-References:
-   <BUILTINS>/react.js:18:5
-   18|   | boolean
-           ^^^^^^^ [1]
-   nominal.js:17:42
-   17| (Foo: React.AbstractComponent<{}, mixed, null>); // ERROR, default render is React.Node
-                                                ^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------------- nominal.js:17:2
-
-Cannot cast `Foo` to `React.AbstractComponent` because number [1] is incompatible with null [2]. [incompatible-cast]
-
-   nominal.js:17:2
-   17| (Foo: React.AbstractComponent<{}, mixed, null>); // ERROR, default render is React.Node
-        ^^^
-
-References:
-   <BUILTINS>/react.js:19:5
-   19|   | number
-           ^^^^^^ [1]
-   nominal.js:17:42
-   17| (Foo: React.AbstractComponent<{}, mixed, null>); // ERROR, default render is React.Node
-                                                ^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------------- nominal.js:17:2
-
-Cannot cast `Foo` to `React.AbstractComponent` because string [1] is incompatible with null [2]. [incompatible-cast]
-
-   nominal.js:17:2
-   17| (Foo: React.AbstractComponent<{}, mixed, null>); // ERROR, default render is React.Node
-        ^^^
-
-References:
-   <BUILTINS>/react.js:20:5
-   20|   | string
-           ^^^^^^ [1]
-   nominal.js:17:42
-   17| (Foo: React.AbstractComponent<{}, mixed, null>); // ERROR, default render is React.Node
-                                                ^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------------- nominal.js:17:2
-
 Cannot cast `Foo` to `React.AbstractComponent` because `React.Element` [1] is incompatible with null [2].
 [incompatible-cast]
 
    nominal.js:17:2
-   17| (Foo: React.AbstractComponent<{}, mixed, null>); // ERROR, default render is React.Node
-        ^^^
+    17| (Foo: React.AbstractComponent<{}, mixed, null>); // ERROR, default render is React.Node
+         ^^^
 
 References:
-   <BUILTINS>/react.js:21:5
-   21|   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:162:35
+   162| declare type React$MixedElement = React$Element<React$ElementType>;
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    nominal.js:17:42
-   17| (Foo: React.AbstractComponent<{}, mixed, null>); // ERROR, default render is React.Node
-                                                ^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------------- nominal.js:17:2
-
-Cannot cast `Foo` to `React.AbstractComponent` because `React.Portal` [1] is incompatible with null [2].
-[incompatible-cast]
-
-   nominal.js:17:2
-   17| (Foo: React.AbstractComponent<{}, mixed, null>); // ERROR, default render is React.Node
-        ^^^
-
-References:
-   <BUILTINS>/react.js:22:5
-   22|   | React$Portal
-           ^^^^^^^^^^^^ [1]
-   nominal.js:17:42
-   17| (Foo: React.AbstractComponent<{}, mixed, null>); // ERROR, default render is React.Node
-                                                ^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------------- nominal.js:17:2
-
-Cannot cast `Foo` to `React.AbstractComponent` because `$Iterable` [1] is incompatible with null [2].
-[incompatible-cast]
-
-   nominal.js:17:2
-   17| (Foo: React.AbstractComponent<{}, mixed, null>); // ERROR, default render is React.Node
-        ^^^
-
-References:
-   <BUILTINS>/react.js:23:5
-   23|   | Iterable<?React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^^ [1]
-   nominal.js:17:42
-   17| (Foo: React.AbstractComponent<{}, mixed, null>); // ERROR, default render is React.Node
-                                                ^^^^ [2]
+    17| (Foo: React.AbstractComponent<{}, mixed, null>); // ERROR, default render is React.Node
+                                                 ^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- nominal.js:18:2
@@ -1998,6 +1894,27 @@ References:
    poly.js:10:21
    10| <Poly foo={1} bar={[1]} baz={(x: string) => {}} />; //error
                            ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- poly.js:13:2
+
+Cannot cast `x` to `Poly` because number [1] is incompatible with string [2] in type argument `T` [3].
+[incompatible-cast]
+
+   poly.js:13:2
+   13| (x: Poly<string>);
+        ^
+
+References:
+   poly.js:12:23
+   12| declare const x: Poly<number>;
+                             ^^^^^^ [1]
+   poly.js:13:10
+   13| (x: Poly<string>);
+                ^^^^^^ [2]
+   poly.js:3:23
+    3| export component Poly<T>(foo: T, bar: [T], ...props: { baz?: (T) => void}) {
+                             ^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- props_reason.js:6:43
@@ -2058,6 +1975,31 @@ References:
 Error --------------------------------------------------------------------------------------- render_constraints.js:1:34
 
 Cannot use object type [1] as a render type because: [incompatible-type]
+ - Either inexact object type [1] is incompatible with exact `React.Element` [2].
+ - Or object type [1] is incompatible with `React.Portal` [3].
+ - Or property `@@iterator` is missing in object type [1] but exists in `$Iterable` [4].
+
+Render types must be a subtype of `React.Node` or a reference to a component-syntax component.
+
+   render_constraints.js:1:34
+    1| component Foo(x: number) renders {...} { // ERROR, {...} not a subtype of React.Node
+                                        ^^^^^ [1]
+
+References:
+   <BUILTINS>/react.js:21:5
+   21|   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:22:5
+   22|   | React$Portal
+           ^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:23:5
+   23|   | Iterable<?React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Error --------------------------------------------------------------------------------------- render_constraints.js:1:34
+
+Cannot use renders object type [1] as a render type because: [incompatible-type]
  - Either inexact object type [1] is incompatible with exact `React.Element` [2].
  - Or object type [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in object type [1] but exists in `$Iterable` [4].
@@ -2493,7 +2435,7 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 171 errors
+Found 167 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

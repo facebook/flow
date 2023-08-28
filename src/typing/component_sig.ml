@@ -118,15 +118,22 @@ module Make
   module Config = C
   module ComponentBody = B
 
+  let mk_render_type cx renders_t =
+    Flow.flow cx (renders_t, AssertValidRendersArgumentT (reason_of_t renders_t));
+    let reason = update_desc_reason (fun desc -> RRenderType desc) (reason_of_t renders_t) in
+    TypeUtil.mk_renders_type reason renders_t
+
   let toplevels cx x =
     let { T.reason = reason_cmp; cparams; body; ret_annot_loc = _; renders_t; _ } = x in
     (* add param bindings *)
+    let renders_t = mk_render_type cx renders_t in
     let params_ast = F.eval cx cparams in
     let body_ast = B.eval cx reason_cmp renders_t body in
     (params_ast, body_ast)
 
   let component_type cx _component_loc x =
     let { T.reason; tparams; cparams; renders_t; id_loc; _ } = x in
+    let renders_t = mk_render_type cx renders_t in
     let config_reason = update_desc_reason (fun desc -> RPropsOfComponent desc) reason in
     let instance_reason = update_desc_reason (fun desc -> RInstanceOfComponent desc) reason in
     let (config, instance) = F.config_and_instance cx ~config_reason ~instance_reason cparams in

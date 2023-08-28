@@ -1,13 +1,28 @@
 component.js:1:11
 Flags:
-React$AbstractComponent<{+foo: number}, mixed, React$Node>
-= React$AbstractComponent<{+foo: number}, mixed, React$Node>
+React$AbstractComponent<{+foo: number}, mixed, renders React$Node>
+= React$AbstractComponent<
+  {+foo: number},
+  mixed,
+  renders ?(
+    boolean
+    |
+    number
+    |
+    string
+    |
+    {+key: (React$Key | null), +props: any, +ref: any, +type: any}
+    |
+    React$Portal
+    |
+    $Iterable<?React$Node, void, void>),
+>
 component.js:1:11,1:13
 
 component.js:3:11
 Flags:
-React$AbstractComponent<{+bar: string}, mixed, number>
-= React$AbstractComponent<{+bar: string}, mixed, number>
+React$AbstractComponent<{+bar: string}, mixed, renders number>
+= React$AbstractComponent<{+bar: string}, mixed, renders number>
 component.js:3:11,3:13
 
 render_types.js:1:6

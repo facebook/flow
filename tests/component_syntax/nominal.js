@@ -21,4 +21,5 @@ component Baz(foo: number) renders null {
   return null;
 }
 
-(Baz: React.AbstractComponent<{foo: number}, mixed, null>); // OK
+(Baz: React.AbstractComponent<{foo: number}, mixed, $Renders<Baz>>); // OK
+(Baz: React.AbstractComponent<{foo: number}, mixed, $Renders<null>>); // OK

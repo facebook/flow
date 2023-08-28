@@ -1288,15 +1288,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
         (VoidT.make (replace_desc_new_reason RVoid reasonl) |> with_trust bogus_trust, instance)
     (* AbstractComponent ~> AbstractComponent *)
     | ( DefT
-          ( _reasonl,
+          ( reasonl,
             _,
             ReactAbstractComponentT
-              {
-                config = configl;
-                instance = instancel;
-                renders = rendersl;
-                component_kind = Structural | Nominal _;
-              }
+              { config = configl; instance = instancel; renders = rendersl; component_kind }
           ),
         DefT
           ( _reasonu,
@@ -1312,22 +1307,41 @@ module Make (Flow : INPUT) : OUTPUT = struct
       ) ->
       rec_flow_t cx trace ~use_op (configu, configl);
       rec_flow_t cx trace ~use_op (instancel, instanceu);
+      let rendersl =
+        match component_kind with
+        | Nominal id ->
+          let reason = update_desc_reason (fun desc -> RRenderType desc) reasonl in
+          DefT (reason, bogus_trust (), RendersT (NominalRenders { id; super = rendersl }))
+        | Structural -> rendersl
+      in
       rec_flow_t cx trace ~use_op (rendersl, rendersu)
     | ( DefT
           ( _,
             _,
             ReactAbstractComponentT
-              { config = _; instance = _; renders = _; component_kind = Nominal id1 }
+              {
+                config = configl;
+                instance = instancel;
+                renders = rendersl;
+                component_kind = Nominal idl;
+              }
           ),
         DefT
           ( _,
             _,
             ReactAbstractComponentT
-              { config = _; instance = _; renders = _; component_kind = Nominal id2 }
+              {
+                config = configu;
+                instance = instanceu;
+                renders = rendersu;
+                component_kind = Nominal idu;
+              }
           )
       )
-      when ALoc.equal_id id1 id2 ->
-      ()
+      when ALoc.equal_id idl idu ->
+      rec_flow_t cx trace ~use_op (configu, configl);
+      rec_flow_t cx trace ~use_op (instancel, instanceu);
+      rec_flow_t cx trace ~use_op (rendersl, rendersu)
     (* Subtyping inside the Renders world happens in these rules +
      * TryPromoteRendersRepresentation Renders *)
     | ( DefT (reasonl, _, RendersT (NominalRenders { id = id1; super })),
