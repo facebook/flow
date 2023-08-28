@@ -37,8 +37,8 @@ References:
    lazy.js:6:1
      6| function FunctionComponent(x: Props): React.Node { return null }
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:293:22
-   293|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance, React$Node>, ... }>,
+   <BUILTINS>/react.js:297:22
+   297|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance, React$Node>, ... }>,
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -55,8 +55,8 @@ References:
    lazy.js:7:7
      7| class ClassComponent extends React.Component<Props> {}
               ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:293:22
-   293|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance, React$Node>, ... }>,
+   <BUILTINS>/react.js:297:22
+   297|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance, React$Node>, ... }>,
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -73,8 +73,8 @@ References:
    lazy.js:6:1
       6| function FunctionComponent(x: Props): React.Node { return null }
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:293:30
-    293|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance, React$Node>, ... }>,
+   <BUILTINS>/react.js:297:30
+    297|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance, React$Node>, ... }>,
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:1878:24
    1878| declare class Promise<+R = mixed> {
@@ -94,8 +94,8 @@ References:
    lazy.js:7:7
       7| class ClassComponent extends React.Component<Props> {}
                ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:293:30
-    293|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance, React$Node>, ... }>,
+   <BUILTINS>/react.js:297:30
+    297|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance, React$Node>, ... }>,
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:1878:24
    1878| declare class Promise<+R = mixed> {

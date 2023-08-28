@@ -14,8 +14,8 @@ References:
    test.js:21:29
     21| const Foo1 = create(create1<{||}>(Foo));
                                     ^^^^ [2]
-   <BUILTINS>/react.js:233:38
-   233|   declare export type ComponentType<-P> = React$ComponentType<P>;
+   <BUILTINS>/react.js:237:38
+   237|   declare export type ComponentType<-P> = React$ComponentType<P>;
                                              ^ [3]
 
 

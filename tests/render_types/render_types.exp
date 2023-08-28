@@ -1,3 +1,17 @@
+Error ---------------------------------------------------------------------------------------------------- import.js:5:2
+
+Cannot cast `x` to renders `Bar` because `Foo` [1] does not render `Bar` [2]. [incompatible-cast]
+
+   import.js:5:2
+   5| (x: $Renders<Bar>); // ERROR
+       ^ [1]
+
+References:
+   import.js:5:5
+   5| (x: $Renders<Bar>); // ERROR
+          ^^^^^^^^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:20:4
 
 Cannot cast `rendersFooOrBar` to `typeof rendersFooOrRendersBar` because: [incompatible-cast]
@@ -547,7 +561,7 @@ References:
 
 
 
-Found 33 errors
+Found 34 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
