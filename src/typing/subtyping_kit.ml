@@ -1405,6 +1405,38 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let l = TypeUtil.structural_render_type_arg renders_reasonl structurel in
       let u = TypeUtil.structural_render_type_arg renders_reasonu structureu in
       rec_flow_t cx trace ~use_op (l, u)
+    (* Try to do structural subtyping. If that fails promote to a render type *)
+    | (DefT (reason_obj, _, ObjT _), DefT (renders_r, _, RendersT (NominalRenders { id; super })))
+      ->
+      rec_flow
+        cx
+        trace
+        ( l,
+          TryRenderTypePromotionT
+            {
+              use_op;
+              reason = renders_r;
+              reason_obj;
+              upper_renders = NominalRenders { id; super };
+              tried_promotion = false;
+            }
+        )
+    | (DefT (reason_obj, _, ObjT _), DefT (renders_r, _, RendersT (StructuralRenders structure))) ->
+      let t = TypeUtil.structural_render_type_arg renders_r structure in
+      if not (speculative_subtyping_succeeds cx l t) then
+        rec_flow
+          cx
+          trace
+          ( l,
+            TryRenderTypePromotionT
+              {
+                use_op;
+                reason = renders_r;
+                reason_obj;
+                upper_renders = StructuralRenders structure;
+                tried_promotion = false;
+              }
+          )
     (* given x <: y, x <: renders y. The only case in which this is not true is when `x` is a component reference,
      * Foo <: renders Foo fails in that case. Since the RHS is in its canonical form we know that we're safe
      * to Flow the LHS to the structural type on the RHS *)

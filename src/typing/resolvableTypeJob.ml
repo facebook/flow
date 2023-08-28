@@ -311,7 +311,8 @@ and collect_of_destructor ?log_unresolved cx acc = function
   | ReactElementPropsType
   | ReactElementConfigType
   | ReactElementRefType
-  | ReactPromoteRendersRepresentation { should_distribute = _ } ->
+  | ReactPromoteRendersRepresentation { should_distribute = _; promote_structural_components = _ }
+    ->
     acc
 
 and collect_of_property ?log_unresolved cx name property acc =

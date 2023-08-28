@@ -1577,7 +1577,14 @@ struct
           rec_flow_t cx trace ~use_op:unknown_use (UnionT (reason, rep), OpenT tout)
         | ( UnionT (reason, rep),
             PromoteRendersRepresentationT
-              { reason = _; resolved_obj = None; use_op = _; tout; should_distribute = true }
+              {
+                reason = _;
+                resolved_obj = None;
+                use_op = _;
+                tout;
+                should_distribute = true;
+                promote_structural_components;
+              }
           ) ->
           let rep =
             UnionRep.ident_map
@@ -1587,7 +1594,8 @@ struct
                   TypeDestructorT
                     ( unknown_use,
                       reason,
-                      ReactPromoteRendersRepresentation { should_distribute = false }
+                      ReactPromoteRendersRepresentation
+                        { should_distribute = false; promote_structural_components }
                     )
                 in
                 EvalT (t, destructor, Eval.generate_id ()))
@@ -2554,7 +2562,14 @@ struct
         (* A named AbstractComponent is turned into its corresponding render type *)
         | ( DefT (r, _, ReactAbstractComponentT { component_kind = Nominal id; renders = super; _ }),
             PromoteRendersRepresentationT
-              { reason; tout; resolved_obj; use_op; should_distribute = _ }
+              {
+                reason;
+                tout;
+                resolved_obj;
+                use_op;
+                should_distribute = _;
+                promote_structural_components = _;
+              }
           ) ->
           (match resolved_obj with
           | Some obj ->
@@ -2571,7 +2586,14 @@ struct
           rec_flow_t cx trace ~use_op:unknown_use (result, tout)
         | ( DefT (_, _, ObjT { props_tmap; _ }),
             PromoteRendersRepresentationT
-              { use_op; reason; tout; resolved_obj = None; should_distribute }
+              {
+                use_op;
+                reason;
+                tout;
+                resolved_obj = None;
+                should_distribute;
+                promote_structural_components;
+              }
           ) ->
           let props = Context.find_props cx props_tmap in
           let type_field = NameUtils.Map.find_opt (OrdinaryName "type") props in
@@ -2584,27 +2606,74 @@ struct
           (match type_t with
           (* Intentional unknown_use when flowing to tout *)
           | None -> rec_flow_t cx trace ~use_op:unknown_use (l, tout)
+          | Some t when promote_structural_components ->
+            (* We only want to promote if this is actually a React element, otherwise we want
+             * to flow the original object to the tout.
+             *
+             * We perform a speculative subtyping check and then use ComponentRenders to
+             * extract the render type of the component. This type gets forwarded to
+             * TryRenderTypePromotionT, and we continue with renders subtyping if we get a RendersT
+             * from ComponentRenders, otherwise we error, as we've already checked for structural
+             * compatibility in subtyping kit. *)
+            let mixed_element =
+              get_builtin_type cx ~trace ~use_desc:true reason (OrdinaryName "React$MixedElement")
+            in
+            if speculative_subtyping_succeeds cx l mixed_element then
+              let render_type =
+                get_builtin_typeapp cx reason (OrdinaryName "React$ComponentRenders") [t]
+              in
+              rec_flow_t cx trace ~use_op:unknown_use (render_type, tout)
+            else
+              rec_flow_t cx trace ~use_op:unknown_use (l, tout)
           | Some t ->
             rec_flow
               cx
               trace
               ( t,
                 PromoteRendersRepresentationT
-                  { use_op; reason; tout; resolved_obj = Some l; should_distribute }
+                  {
+                    use_op;
+                    reason;
+                    tout;
+                    resolved_obj = Some l;
+                    should_distribute;
+                    promote_structural_components;
+                  }
               ))
         | ( DefT (_, _, (RendersT (NominalRenders _) as renders)),
             PromoteRendersRepresentationT
-              { use_op = _; reason; tout; resolved_obj = _; should_distribute = _ }
+              {
+                use_op = _;
+                reason;
+                tout;
+                resolved_obj = _;
+                should_distribute = _;
+                promote_structural_components = _;
+              }
           ) ->
           rec_flow_t cx trace ~use_op:unknown_use (DefT (reason, bogus_trust (), renders), tout)
         | ( DefT (renders_reason, _, RendersT (StructuralRenders structural)),
             PromoteRendersRepresentationT
-              { use_op = _; reason = _; tout = _; resolved_obj = None; should_distribute = _ }
+              {
+                use_op = _;
+                reason = _;
+                tout = _;
+                resolved_obj = None;
+                should_distribute = _;
+                promote_structural_components = _;
+              }
           ) ->
           rec_flow cx trace (TypeUtil.structural_render_type_arg renders_reason structural, u)
         | ( _,
             PromoteRendersRepresentationT
-              { use_op = _; reason; tout; resolved_obj; should_distribute }
+              {
+                use_op = _;
+                reason;
+                tout;
+                resolved_obj;
+                should_distribute;
+                promote_structural_components = _;
+              }
           ) ->
           let result =
             let t =
@@ -2670,6 +2739,50 @@ struct
           ->
           ReactJs.err_incompatible cx trace ~use_op:unknown_use r (React.GetProps props);
           rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason_op, props)
+        | ( _,
+            TryRenderTypePromotionT
+              { use_op; reason; reason_obj; upper_renders; tried_promotion = false }
+          ) ->
+          let promotion_eval_t =
+            EvalT
+              ( l,
+                TypeDestructorT
+                  ( use_op,
+                    reason,
+                    ReactPromoteRendersRepresentation
+                      { should_distribute = true; promote_structural_components = true }
+                  ),
+                Eval.generate_id ()
+              )
+          in
+          rec_flow
+            cx
+            trace
+            ( promotion_eval_t,
+              TryRenderTypePromotionT
+                { use_op; reason; reason_obj; upper_renders; tried_promotion = true }
+            )
+        (**** Renders Subtyping Cont. *****)
+        (* We successfully promoted an ObjT to a Render type. Proceed with normal RendersT subtyping *)
+        | ( DefT (_, _, RendersT _),
+            TryRenderTypePromotionT
+              { use_op; reason; reason_obj; upper_renders; tried_promotion = true }
+          ) ->
+          let l = reposition_reason cx ~trace reason_obj ~use_desc:true l in
+          let renders_t = DefT (reason, bogus_trust (), RendersT upper_renders) in
+          rec_flow_t cx trace ~use_op (l, renders_t)
+        (* We did not successfully promote the ObjT and we have a RendersT on the RHS. We already
+         * tried to do structural subtyping, so this is an error *)
+        | ( _,
+            TryRenderTypePromotionT
+              { use_op; reason; reason_obj; upper_renders = _; tried_promotion = true }
+          ) ->
+          add_output
+            cx
+            ~trace
+            (Error_message.EIncompatibleWithUseOp
+               { reason_lower = reason_obj; reason_upper = reason; use_op }
+            )
         (***********************************************)
         (* function types deconstruct into their parts *)
         (***********************************************)
@@ -5847,14 +5960,10 @@ struct
       if Context.any_propagation cx then
         rec_flow_t cx trace ~use_op:unknown_use (AnyT.why (AnyT.source any) reason, OpenT t);
       true
-    | TryRenderTypePromotionT { use_op; reason; original_ub; tried_promotion = _ } ->
-      let u =
-        match original_ub with
-        | Renders canonical_form ->
-          UseT (use_op, DefT (reason, bogus_trust (), RendersT canonical_form))
-        | Other u -> u
-      in
-      rec_flow cx trace (any, u);
+    | TryRenderTypePromotionT { use_op; reason_obj; reason = _; upper_renders; tried_promotion = _ }
+      ->
+      let renders = DefT (reason_obj, bogus_trust (), RendersT upper_renders) in
+      covariant_flow ~use_op renders;
       true
     | UseT (use_op, DefT (_, _, ArrT (ROArrayAT t))) (* read-only arrays are covariant *)
     | UseT (use_op, DefT (_, _, ClassT t)) (* mk_instance ~for_type:false *)
@@ -6560,13 +6669,21 @@ struct
       in
       (* Intentional unknown_use for the tout Flow *)
       rec_flow cx trace (t, UseT (unknown_use, OpenT tout))
-    | ReactPromoteRendersRepresentation { should_distribute = true } ->
+    | ReactPromoteRendersRepresentation { should_distribute = true; promote_structural_components }
+      ->
       rec_flow
         cx
         trace
         ( t,
           PromoteRendersRepresentationT
-            { use_op; reason; tout = OpenT tout; resolved_obj = None; should_distribute = true }
+            {
+              use_op;
+              reason;
+              tout = OpenT tout;
+              resolved_obj = None;
+              should_distribute = true;
+              promote_structural_components;
+            }
         )
     | _ ->
       let destruct_union ?(f = (fun t -> t)) r members upper =
@@ -6810,9 +6927,17 @@ struct
             | ReactElementPropsType -> ReactKitT (use_op, reason, React.GetProps (OpenT tout))
             | ReactElementConfigType -> ReactKitT (use_op, reason, React.GetConfig (OpenT tout))
             | ReactElementRefType -> ReactKitT (use_op, reason, React.GetRef (OpenT tout))
-            | ReactPromoteRendersRepresentation { should_distribute } ->
+            | ReactPromoteRendersRepresentation { should_distribute; promote_structural_components }
+              ->
               PromoteRendersRepresentationT
-                { use_op; reason; tout = OpenT tout; resolved_obj = None; should_distribute }
+                {
+                  use_op;
+                  reason;
+                  tout = OpenT tout;
+                  resolved_obj = None;
+                  should_distribute;
+                  promote_structural_components;
+                }
             | ReactConfigType default_props ->
               ReactKitT (use_op, reason, React.GetConfigType (default_props, OpenT tout))
             | MappedType { property_type; mapped_type_flags; homomorphic; distributive_tparam_name }

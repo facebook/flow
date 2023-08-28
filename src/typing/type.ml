@@ -888,19 +888,18 @@ module rec TypeTerm : sig
         tout: t;
         resolved_obj: t option;
         should_distribute: bool;
+        promote_structural_components: bool;
       }
     (* Given an ObjT props ~> RendersT, we emit an props.type ~> TryRenderTypePromotionT u
-     * to resolve the type field. If it becomes a named abstract component *)
+     * to try to promote the element type into a render type. If no suitable type is found
+     * then we try normal structural subtyping against the render type *)
     | TryRenderTypePromotionT of {
         use_op: use_op;
         reason: reason;
-        original_ub: try_render_type_promotion_ub;
+        reason_obj: reason;
         tried_promotion: bool;
+        upper_renders: canonical_renders_form;
       }
-
-  and try_render_type_promotion_ub =
-    | Renders of canonical_renders_form
-    | Other of use_t
 
   and implicit_return_action =
     | PropagateVoid of {
@@ -1538,7 +1537,10 @@ module rec TypeTerm : sig
     | ReactElementPropsType
     | ReactElementConfigType
     | ReactElementRefType
-    | ReactPromoteRendersRepresentation of { should_distribute: bool }
+    | ReactPromoteRendersRepresentation of {
+        should_distribute: bool;
+        promote_structural_components: bool;
+      }
     | ReactConfigType of t
     | ReactCheckComponentConfig of Property.t NameUtils.Map.t
     | ReactCheckComponentRef
