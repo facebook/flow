@@ -146,6 +146,10 @@ module type BUILTINS = sig
 end
 
 module type SUBTYPING = sig
+  val speculative_subtyping_succeeds : Context.t -> Type.t -> Type.t -> bool
+
+  val possible_concrete_types_for_inspection : Context.t -> Reason.reason -> Type.t -> Type.t list
+
   val reposition_reason :
     Context.t -> ?trace:Type.trace -> Reason.reason -> ?use_desc:bool -> Type.t -> Type.t
 

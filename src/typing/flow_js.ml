@@ -5101,6 +5101,17 @@ struct
             reason_inst
             (own_props, proto_props, inst_call_t, inst_dict);
           rec_flow cx trace (l, UseT (use_op, super))
+        (* Render Type Misc Uses *)
+        | (DefT (r, _, RendersT (NominalRenders _)), u) ->
+          let mixed_element = get_builtin_type cx ~trace r (OrdinaryName "React$MixedElement") in
+          rec_flow cx trace (mixed_element, u)
+        | (DefT (r, _, RendersT (StructuralRenders (SingletonRenders _))), u) ->
+          let node = get_builtin_type cx ~trace r (OrdinaryName "React$Node") in
+          rec_flow cx trace (node, u)
+        | (DefT (r, _, RendersT (StructuralRenders (UnionRenders rep))), u) ->
+          (* TODO(jmbrown): A specialized use_t for exiting would be better *)
+          let l = UnionT (r, UnionRep.ident_map (TypeUtil.mk_renders_type r) rep) in
+          rec_flow cx trace (l, u)
         (***********************)
         (* Object library call *)
         (***********************)

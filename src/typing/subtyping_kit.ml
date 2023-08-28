@@ -926,6 +926,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
       when let ts = Type_mapper.union_flatten cx @@ UnionRep.members rep in
            List.exists (TypeUtil.quick_subtype (Context.trust_errors cx) l) ts ->
       ()
+    | (DefT (renders_r, _, RendersT _), UnionT (r, rep)) ->
+      (* This is a tricky case. It's not clear if there will be a matching RendersT in the union,
+       * and in that case we should behave like React.Node because all Render types are subtypes
+       * of React.Node. So we kick off intersection speculation to try the renders type against the
+       * union and fall back to React.Node if it fails *)
+      let node = get_builtin_type cx ~trace renders_r (OrdinaryName "React$Node") in
+      if not (speculative_subtyping_succeeds cx node u) then
+        SpeculationKit.try_union cx trace use_op l r rep
     | (_, UnionT (r, rep)) ->
       (* Try the branches of the union in turn, with the goal of selecting the
        * correct branch. This process is reused for intersections as well. See
@@ -1320,6 +1328,84 @@ module Make (Flow : INPUT) : OUTPUT = struct
       )
       when ALoc.equal_id id1 id2 ->
       ()
+    (* Subtyping inside the Renders world happens in these rules +
+     * TryPromoteRendersRepresentation Renders *)
+    | ( DefT (_reasonl, _, RendersT (NominalRenders { id = id1; super })),
+        DefT (_reasonu, _, RendersT (NominalRenders { id = id2; super = _ }))
+      ) ->
+      if ALoc.equal_id id1 id2 then
+        ()
+      else
+        rec_flow_t cx trace ~use_op (super, u)
+    | ( DefT (reasonl, _, RendersT (NominalRenders { id; super })),
+        DefT (_reasonu, _, RendersT (StructuralRenders structural))
+      ) ->
+      (* Similar to the RendersT ~> UnionT case, this one is tricky. There are three ways to satisfy
+       * this constraint:
+       * 1. structural is UnionRenders union containing a RendersT with a matching id
+       * 2. mixed element is a subtype of u
+       * 3. super is a subtype of u
+       *
+       * To perform this check, we preprocess structural to figure out if it has a RendersT with a
+       * matching id. If not, we continue with React.MixedElement ~> u, and if that fails then
+       * super ~> u
+       *)
+      let has_id_in_possible_types =
+        match structural with
+        | SingletonRenders _ -> false
+        | UnionRenders rep ->
+          let possible_types =
+            Flow.possible_concrete_types_for_inspection cx reasonl (UnionT (reasonl, rep))
+          in
+          possible_types
+          |> List.exists (fun t ->
+                 match t with
+                 | DefT (_, _, RendersT (NominalRenders { id = component_id; super = _ }))
+                   when component_id = id ->
+                   true
+                 | _ -> false
+             )
+      in
+      if not has_id_in_possible_types then
+        let mixed_element =
+          get_builtin_type cx ~trace reasonl (OrdinaryName "React$MixedElement")
+        in
+        if not (speculative_subtyping_succeeds cx mixed_element u) then
+          rec_flow_t cx trace ~use_op (super, u)
+    | ( DefT (renders_reason, _, RendersT (StructuralRenders structure)),
+        DefT (_, _, RendersT (NominalRenders _))
+      ) ->
+      let t = TypeUtil.structural_render_type_arg renders_reason structure in
+      rec_flow_t cx trace ~use_op (t, u)
+    | ( DefT (renders_reasonl, _, RendersT (StructuralRenders (UnionRenders _ as structurel))),
+        DefT (_renders_reasonu, _, RendersT (StructuralRenders _))
+      ) ->
+      let l = TypeUtil.structural_render_type_arg renders_reasonl structurel in
+      rec_flow_t cx trace ~use_op (l, u)
+    | ( DefT (renders_reasonl, _, RendersT (StructuralRenders structurel)),
+        DefT (renders_reasonu, _, RendersT (StructuralRenders structureu))
+      ) ->
+      let l = TypeUtil.structural_render_type_arg renders_reasonl structurel in
+      let u = TypeUtil.structural_render_type_arg renders_reasonu structureu in
+      rec_flow_t cx trace ~use_op (l, u)
+    (* given x <: y, x <: renders y. The only case in which this is not true is when `x` is a component reference,
+     * Foo <: renders Foo fails in that case. Since the RHS is in its canonical form we know that we're safe
+     * to Flow the LHS to the structural type on the RHS *)
+    | (l, DefT (renders_reason, _, RendersT (StructuralRenders structure))) ->
+      let t = TypeUtil.structural_render_type_arg renders_reason structure in
+      rec_flow_t cx trace ~use_op (l, t)
+    (* Exiting the renders world *)
+    | (DefT (r, _, RendersT (NominalRenders _)), u) ->
+      let mixed_element = get_builtin_type cx ~trace r (OrdinaryName "React$MixedElement") in
+      rec_flow_t cx trace ~use_op (mixed_element, u)
+    | (DefT (r, _, RendersT (StructuralRenders (SingletonRenders _))), u) ->
+      let node = get_builtin_type cx ~trace r (OrdinaryName "React$Node") in
+      rec_flow_t cx trace ~use_op (node, u)
+    | (DefT (renders_reason, _, RendersT (StructuralRenders (UnionRenders rep))), u) ->
+      (* TODO(jmbrown): This is not the most performant way to handle this. We should make a
+       * use_t for exiting render types *)
+      let rep = UnionRep.ident_map (fun t -> mk_renders_type renders_reason t) rep in
+      rec_flow_t cx trace ~use_op (UnionT (renders_reason, rep), u)
     (***********************************************)
     (* function types deconstruct into their parts *)
     (***********************************************)
