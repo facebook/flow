@@ -386,7 +386,7 @@ end = struct
         | ReactElementPropsType
         | ReactElementConfigType
         | ReactElementRefType
-        | ReactPromoteRendersRepresentation
+        | ReactPromoteRendersRepresentation _
         | ReactConfigType _ ->
           false)
       )
@@ -781,10 +781,15 @@ end = struct
              (Ty_symbol.builtin_symbol (Reason.OrdinaryName "React$AbstractComponent"))
              (Some [config; instance; renders])
           )
-      | DefT (_, _, RendersT { component_opaque_id = None; super }) ->
-        let%bind t = type__ ~env:(Env.set_under_render_type true env) super in
+      | DefT (r, _, RendersT (StructuralRenders structural)) ->
+        let t =
+          match structural with
+          | SingletonRenders t -> t
+          | UnionRenders rep -> UnionT (r, rep)
+        in
+        let%bind t = type__ ~env:(Env.set_under_render_type true env) t in
         return (Ty.Renders t)
-      | DefT (_, _, RendersT _) ->
+      | DefT (_, _, RendersT (NominalRenders _)) ->
         (* TODO(jmbrown): Ty normalization for render types with an id *)
         terr
           ~kind:UnsupportedTypeCtor
@@ -1712,7 +1717,12 @@ end = struct
           }
         | _ -> env
       in
-      let%bind ty = type__ ~env t in
+      let arg_env =
+        match d with
+        | T.ReactPromoteRendersRepresentation _ -> Env.set_under_render_type true env
+        | _ -> env
+      in
+      let%bind ty = type__ ~env:arg_env t in
       match d with
       | T.NonMaybeType -> return (Ty.Utility (Ty.NonMaybeType ty))
       | T.ReadOnlyType -> return (Ty.Utility (Ty.ReadOnly ty))
@@ -1770,11 +1780,7 @@ end = struct
       | T.ReactCheckComponentRef -> return (Ty.Utility (Ty.ReactCheckComponentRef ty))
       | T.ReactElementPropsType -> return (Ty.Utility (Ty.ReactElementPropsType ty))
       | T.ReactElementConfigType -> return (Ty.Utility (Ty.ReactElementConfigType ty))
-      | T.ReactPromoteRendersRepresentation ->
-        terr
-          ~kind:BadEvalT
-          ~msg:"Normalization for ReactPromoteRendersRepresentation is unsupported"
-          None
+      | T.ReactPromoteRendersRepresentation _ -> return (Ty.Renders ty)
       | T.ReactElementRefType -> return (Ty.Utility (Ty.ReactElementRefType ty))
       | T.ReactConfigType default_props ->
         let%map default_props' = type__ ~env default_props in

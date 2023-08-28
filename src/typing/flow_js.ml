@@ -1575,6 +1575,29 @@ struct
           in
           let rep = UnionRep.make (f t0) (f t1) (Base.List.map ts ~f) in
           rec_flow_t cx trace ~use_op:unknown_use (UnionT (reason, rep), OpenT tout)
+        | ( UnionT (reason, rep),
+            PromoteRendersRepresentationT
+              { reason = _; resolved_obj = None; use_op = _; tout; should_distribute = true }
+          ) ->
+          let rep =
+            UnionRep.ident_map
+              (fun t ->
+                let reason = update_desc_reason (fun desc -> RRenderType desc) (reason_of_t t) in
+                let destructor =
+                  TypeDestructorT
+                    ( unknown_use,
+                      reason,
+                      ReactPromoteRendersRepresentation { should_distribute = false }
+                    )
+                in
+                EvalT (t, destructor, Eval.generate_id ()))
+              rep
+          in
+          let reason = update_desc_reason (fun desc -> RRenderType desc) reason in
+          let renders_t =
+            DefT (reason, bogus_trust (), RendersT (StructuralRenders (UnionRenders rep)))
+          in
+          rec_flow_t cx trace ~use_op:unknown_use (renders_t, tout)
         | (UnionT (_, rep), _)
           when match u with
                (* For l.key !== sentinel when sentinel has a union type, don't split the union. This
@@ -2530,25 +2553,25 @@ struct
         (* Render Type Promotion *)
         (* A named AbstractComponent is turned into its corresponding render type *)
         | ( DefT (r, _, ReactAbstractComponentT { component_kind = Nominal id; renders = super; _ }),
-            PromoteRendersRepresentationT { reason = _; tout; resolved_obj; use_op }
+            PromoteRendersRepresentationT
+              { reason; tout; resolved_obj; use_op; should_distribute = _ }
           ) ->
           (match resolved_obj with
           | Some obj ->
             (* renders {+type: Foo, ...}. Let's make sure this is a valid React element *)
-            let mixed_element = get_builtin_type cx ~trace r (OrdinaryName "React$MixedElement") in
+            let mixed_element =
+              get_builtin_type cx ~trace ~use_desc:true r (OrdinaryName "React$MixedElement")
+            in
             rec_flow_t cx trace ~use_op (obj, mixed_element)
           | None ->
             (* renders Foo case. Nothing left to check here *)
             ());
-          let result =
-            DefT
-              (* TODO(jmbrown): Better reason *)
-              (r, bogus_trust (), RendersT { component_opaque_id = Some id; super })
-          in
+          let result = DefT (reason, bogus_trust (), RendersT (NominalRenders { id; super })) in
           (* Intentional unknown_use when flowing to tout *)
           rec_flow_t cx trace ~use_op:unknown_use (result, tout)
         | ( DefT (_, _, ObjT { props_tmap; _ }),
-            PromoteRendersRepresentationT { use_op; reason; tout; resolved_obj = None }
+            PromoteRendersRepresentationT
+              { use_op; reason; tout; resolved_obj = None; should_distribute }
           ) ->
           let props = Context.find_props cx props_tmap in
           let type_field = NameUtils.Map.find_opt (OrdinaryName "type") props in
@@ -2565,23 +2588,34 @@ struct
             rec_flow
               cx
               trace
-              (t, PromoteRendersRepresentationT { use_op; reason; tout; resolved_obj = Some l }))
-        | ( DefT (_, _, RendersT { component_opaque_id = None; super }),
-            PromoteRendersRepresentationT { use_op = _; reason = _; tout = _; resolved_obj = None }
+              ( t,
+                PromoteRendersRepresentationT
+                  { use_op; reason; tout; resolved_obj = Some l; should_distribute }
+              ))
+        | ( DefT (_, _, (RendersT (NominalRenders _) as renders)),
+            PromoteRendersRepresentationT
+              { use_op = _; reason; tout; resolved_obj = _; should_distribute = _ }
           ) ->
-          let promotion_eval_t =
-            EvalT
-              ( super,
-                TypeDestructorT (unknown_use, reason_of_t super, ReactPromoteRendersRepresentation),
-                Eval.generate_id ()
-              )
-          in
-          rec_flow cx trace (promotion_eval_t, u)
-        | (_, PromoteRendersRepresentationT { use_op = _; reason = _; tout; resolved_obj }) ->
+          rec_flow_t cx trace ~use_op:unknown_use (DefT (reason, bogus_trust (), renders), tout)
+        | ( DefT (renders_reason, _, RendersT (StructuralRenders structural)),
+            PromoteRendersRepresentationT
+              { use_op = _; reason = _; tout = _; resolved_obj = None; should_distribute = _ }
+          ) ->
+          rec_flow cx trace (TypeUtil.structural_render_type_arg renders_reason structural, u)
+        | ( _,
+            PromoteRendersRepresentationT
+              { use_op = _; reason; tout; resolved_obj; should_distribute }
+          ) ->
           let result =
-            match resolved_obj with
-            | Some t -> t
-            | None -> l
+            let t =
+              match resolved_obj with
+              | Some t -> t
+              | None -> l
+            in
+            if should_distribute then
+              DefT (reason, bogus_trust (), RendersT (StructuralRenders (SingletonRenders t)))
+            else
+              t
           in
           (* Intentional unknown_use when flowing to tout *)
           rec_flow_t cx trace ~use_op:unknown_use (result, tout)
@@ -5802,15 +5836,11 @@ struct
       if Context.any_propagation cx then
         rec_flow_t cx trace ~use_op:unknown_use (AnyT.why (AnyT.source any) reason, OpenT t);
       true
-    | PromoteRendersRepresentationT { use_op = _; tout; reason = _; resolved_obj = _ } ->
-      (* Intentional unknown_use for tout *)
-      covariant_flow ~use_op:unknown_use tout;
-      true
     | TryRenderTypePromotionT { use_op; reason; original_ub; tried_promotion = _ } ->
       let u =
         match original_ub with
-        | Renders { component_opaque_id; super } ->
-          UseT (use_op, DefT (reason, bogus_trust (), RendersT { component_opaque_id; super }))
+        | Renders canonical_form ->
+          UseT (use_op, DefT (reason, bogus_trust (), RendersT canonical_form))
         | Other u -> u
       in
       rec_flow cx trace (any, u);
@@ -5899,6 +5929,7 @@ struct
     | OrT _
     | PredicateT _
     | PrivateMethodT _
+    | PromoteRendersRepresentationT _
     | ReactKitT _
     | ReposLowerT _
     | ReposUseT _
@@ -6518,6 +6549,14 @@ struct
       in
       (* Intentional unknown_use for the tout Flow *)
       rec_flow cx trace (t, UseT (unknown_use, OpenT tout))
+    | ReactPromoteRendersRepresentation { should_distribute = true } ->
+      rec_flow
+        cx
+        trace
+        ( t,
+          PromoteRendersRepresentationT
+            { use_op; reason; tout = OpenT tout; resolved_obj = None; should_distribute = true }
+        )
     | _ ->
       let destruct_union ?(f = (fun t -> t)) r members upper =
         let destructor = TypeDestructorT (use_op, reason, d) in
@@ -6760,9 +6799,9 @@ struct
             | ReactElementPropsType -> ReactKitT (use_op, reason, React.GetProps (OpenT tout))
             | ReactElementConfigType -> ReactKitT (use_op, reason, React.GetConfig (OpenT tout))
             | ReactElementRefType -> ReactKitT (use_op, reason, React.GetRef (OpenT tout))
-            | ReactPromoteRendersRepresentation ->
+            | ReactPromoteRendersRepresentation { should_distribute } ->
               PromoteRendersRepresentationT
-                { use_op; reason; tout = OpenT tout; resolved_obj = None }
+                { use_op; reason; tout = OpenT tout; resolved_obj = None; should_distribute }
             | ReactConfigType default_props ->
               ReactKitT (use_op, reason, React.GetConfigType (default_props, OpenT tout))
             | MappedType { property_type; mapped_type_flags; homomorphic; distributive_tparam_name }

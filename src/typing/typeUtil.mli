@@ -119,3 +119,7 @@ val mk_tuple_element :
 val type_guard_of_predicate : Type.fun_predicate -> Type.t option
 
 val type_guard_of_funtype : Type.funtype -> Type.t option
+
+val structural_render_type_arg : reason -> Type.structural_renders -> Type.t
+
+val mk_renders_type : reason -> Type.t -> Type.t

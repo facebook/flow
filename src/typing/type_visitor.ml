@@ -139,7 +139,10 @@ class ['a] t =
         let acc = self#type_ cx pole acc instance in
         let acc = self#type_ cx pole acc renders in
         acc
-      | RendersT { component_opaque_id = _; super } -> self#type_ cx pole acc super
+      | RendersT (NominalRenders { id = _; super }) -> self#type_ cx pole acc super
+      | RendersT (StructuralRenders (SingletonRenders t)) -> self#type_ cx pole acc t
+      | RendersT (StructuralRenders (UnionRenders rep)) ->
+        self#list (self#type_ cx pole) acc (UnionRep.members rep)
 
     method targ cx pole acc =
       function
@@ -206,7 +209,7 @@ class ['a] t =
       | RequiredType
       | ReactElementPropsType
       | ReactElementConfigType
-      | ReactPromoteRendersRepresentation
+      | ReactPromoteRendersRepresentation { should_distribute = _ }
       | ReactElementRefType
       | ReactCheckComponentRef ->
         acc

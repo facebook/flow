@@ -234,13 +234,42 @@ module rec TypeTerm : sig
         renders: t;
         component_kind: component_kind;
       }
-    | RendersT of {
-        component_opaque_id: ALoc.id option;
-        super: t;
-      }
+    | RendersT of canonical_renders_form
     (* Enum types *)
     | EnumT of enum_t
     | EnumObjectT of enum_t
+
+  (* A syntactic render type "renders T" uses an EvalT to be translated into a canonical form.
+   * The subtyping rules are much simpler to understand in these forms, so we use the
+   * ReactPromoteRendersRepresentation type destructor to take a syntactic render type and turn it
+   * into a RendersT (it will ALWAYS return a RendersT) of one of the canonical forms.
+   *
+   * The Structural (SingletonRenders t) form guarantees that if you evaluate t you will not
+   * get back a RendersT or a UnionT.
+   *
+   * The Structural (UnionRenders) form guarantees that none of the elements are themselves a
+   * *structural* RendersT, but they may be nominal RendersTs.
+   *
+   * Nominal render types make no guarantees about their super and they can be any type.
+   * In practice, the only way to introduce Nominal render types is component syntax, and
+   * components always use a render type as the `super`.
+   *
+   * Given component Foo:
+   *  * renders Foo would produce NominalRenders
+   *  * renders (Foo | Foo) would produce a Structural UnionRenders with two Nominal elements
+   *  * renders (Foo | number) would produce a Structural UnionRenders with number and Nominal Foo
+   *  * renders number would produce a Structural SingletonRenders
+   *)
+  and structural_renders =
+    | SingletonRenders of t
+    | UnionRenders of UnionRep.t
+
+  and canonical_renders_form =
+    | NominalRenders of {
+        id: ALoc.id;
+        super: t;
+      }
+    | StructuralRenders of structural_renders
 
   and component_kind =
     | Structural
@@ -858,6 +887,7 @@ module rec TypeTerm : sig
         reason: reason;
         tout: t;
         resolved_obj: t option;
+        should_distribute: bool;
       }
     (* Given an ObjT props ~> RendersT, we emit an props.type ~> TryRenderTypePromotionT u
      * to resolve the type field. If it becomes a named abstract component *)
@@ -869,10 +899,7 @@ module rec TypeTerm : sig
       }
 
   and try_render_type_promotion_ub =
-    | Renders of {
-        component_opaque_id: ALoc.id option;
-        super: t;
-      }
+    | Renders of canonical_renders_form
     | Other of use_t
 
   and implicit_return_action =
@@ -1511,7 +1538,7 @@ module rec TypeTerm : sig
     | ReactElementPropsType
     | ReactElementConfigType
     | ReactElementRefType
-    | ReactPromoteRendersRepresentation
+    | ReactPromoteRendersRepresentation of { should_distribute: bool }
     | ReactConfigType of t
     | ReactCheckComponentConfig of Property.t NameUtils.Map.t
     | ReactCheckComponentRef

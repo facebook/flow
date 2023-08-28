@@ -238,7 +238,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
            )
       | SpreadTupleType _
       | MappedType _ (* TODO: Mapped Type reversals *)
-      | ReactPromoteRendersRepresentation
+      | ReactPromoteRendersRepresentation _
       | ReactCheckComponentConfig _
       | ReactCheckComponentRef
       | OptionalIndexedAccessNonMaybeType _

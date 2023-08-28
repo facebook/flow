@@ -1301,9 +1301,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               let t = List.hd ts in
               let reason = mk_reason (RRenderType (desc_of_reason (reason_of_t t))) loc in
               Flow.flow cx (t, AssertValidRendersArgumentT (reason_of_t t));
-              let renders_t =
-                DefT (reason, bogus_trust (), RendersT { component_opaque_id = None; super = t })
-              in
+              let renders_t = TypeUtil.mk_renders_type reason t in
               reconstruct_ast renders_t targs
           )
         | "$Flow$DebugPrint" -> mk_custom_fun cx loc t_ast targs ident DebugPrint

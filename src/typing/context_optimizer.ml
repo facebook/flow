@@ -276,7 +276,7 @@ class context_optimizer ~no_lowers =
       | ReactElementPropsType
       | ReactElementConfigType
       | ReactElementRefType
-      | ReactPromoteRendersRepresentation ->
+      | ReactPromoteRendersRepresentation _ ->
         t
 
     method! type_ cx pole t =

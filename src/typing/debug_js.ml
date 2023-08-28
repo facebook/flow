@@ -54,7 +54,7 @@ let string_of_destructor = function
   | TypeMap (ObjectMapConst _) -> "ObjectMapConst"
   | ReactElementPropsType -> "ReactElementProps"
   | ReactElementConfigType -> "ReactElementConfig"
-  | ReactPromoteRendersRepresentation -> "ReactPromoteRendersRepresentation"
+  | ReactPromoteRendersRepresentation _ -> "ReactPromoteRendersRepresentation"
   | ReactElementRefType -> "ReactElementRef"
   | ReactConfigType _ -> "ReactConfig"
   | MappedType _ -> "MappedType"

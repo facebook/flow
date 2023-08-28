@@ -195,7 +195,12 @@ and collect_of_type ?log_unresolved cx acc = function
     collect_of_types ?log_unresolved cx acc ts
   | DefT (_, _, ReactAbstractComponentT { config; instance; renders; component_kind = _ }) ->
     collect_of_types ?log_unresolved cx acc [config; instance; renders]
-  | DefT (_, _, RendersT { component_opaque_id = _; super }) ->
+  | DefT (_, _, RendersT (StructuralRenders (SingletonRenders t))) ->
+    collect_of_type ?log_unresolved cx acc t
+  | DefT (_, _, RendersT (StructuralRenders (UnionRenders rep))) ->
+    let ts = UnionRep.members rep in
+    collect_of_types ?log_unresolved cx acc ts
+  | DefT (_, _, RendersT (NominalRenders { id = _; super })) ->
     collect_of_type ?log_unresolved cx acc super
   | OpaqueT (_, { underlying_t; super_t; _ }) ->
     let acc = Base.Option.fold underlying_t ~init:acc ~f:(collect_of_type ?log_unresolved cx) in
@@ -306,7 +311,7 @@ and collect_of_destructor ?log_unresolved cx acc = function
   | ReactElementPropsType
   | ReactElementConfigType
   | ReactElementRefType
-  | ReactPromoteRendersRepresentation ->
+  | ReactPromoteRendersRepresentation { should_distribute = _ } ->
     acc
 
 and collect_of_property ?log_unresolved cx name property acc =

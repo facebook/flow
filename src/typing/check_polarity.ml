@@ -162,8 +162,12 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
       check_polarity cx ?trace tparams (Polarity.inv polarity) config;
       check_polarity cx ?trace tparams polarity instance;
       check_polarity cx ?trace tparams polarity renders
-    | DefT (_, _, RendersT { component_opaque_id = _; super }) ->
+    | DefT (_, _, RendersT (NominalRenders { id = _; super })) ->
       check_polarity cx ?trace tparams polarity super
+    | DefT (_, _, RendersT (StructuralRenders (SingletonRenders t))) ->
+      check_polarity cx ?trace tparams polarity t
+    | DefT (_, _, RendersT (StructuralRenders (UnionRenders rep))) ->
+      List.iter (check_polarity cx ?trace tparams polarity) (UnionRep.members rep)
     | KeysT (_, t) -> check_polarity cx ?trace tparams Polarity.Positive t
     (* TODO *)
     | CustomFunT _

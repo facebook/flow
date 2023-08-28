@@ -332,12 +332,33 @@ class virtual ['a] t =
         else
           ReactAbstractComponentT
             { config = config'; instance = instance'; renders = renders'; component_kind }
-      | RendersT { component_opaque_id; super } ->
+      | RendersT canonical_form ->
+        let canonical_form' = self#canonical_renders_form cx map_cx canonical_form in
+        if canonical_form' == canonical_form then
+          t
+        else
+          RendersT canonical_form'
+
+    method private canonical_renders_form cx map_cx t =
+      match t with
+      | NominalRenders { id; super } ->
         let super' = self#type_ cx map_cx super in
         if super' == super then
           t
         else
-          RendersT { component_opaque_id; super = super' }
+          NominalRenders { id; super = super' }
+      | StructuralRenders (SingletonRenders arg) ->
+        let arg' = self#type_ cx map_cx arg in
+        if arg' == arg then
+          t
+        else
+          StructuralRenders (SingletonRenders arg')
+      | StructuralRenders (UnionRenders rep) ->
+        let rep' = UnionRep.ident_map (self#type_ cx map_cx) rep in
+        if rep' == rep then
+          t
+        else
+          StructuralRenders (UnionRenders rep')
 
     method defer_use_type cx map_cx t =
       match t with
@@ -626,7 +647,7 @@ class virtual ['a] t =
       | ReactElementPropsType
       | ReactElementConfigType
       | ReactElementRefType
-      | ReactPromoteRendersRepresentation ->
+      | ReactPromoteRendersRepresentation { should_distribute = _ } ->
         t
 
     method object_kit_spread_operand_slice

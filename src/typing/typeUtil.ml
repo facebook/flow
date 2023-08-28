@@ -208,8 +208,9 @@ and mod_reason_of_defer_use_t f = function
 and mod_reason_of_use_t f = function
   | UseT (_, t) -> UseT (Op UnknownUse, mod_reason_of_t f t)
   | CheckUnusedPromiseT { reason; async } -> CheckUnusedPromiseT { reason = f reason; async }
-  | PromoteRendersRepresentationT { use_op; reason; tout; resolved_obj } ->
-    PromoteRendersRepresentationT { use_op; reason = f reason; tout; resolved_obj }
+  | PromoteRendersRepresentationT { use_op; reason; tout; resolved_obj; should_distribute } ->
+    PromoteRendersRepresentationT
+      { use_op; reason = f reason; tout; resolved_obj; should_distribute }
   | TryRenderTypePromotionT { use_op; reason; original_ub; tried_promotion } ->
     TryRenderTypePromotionT { use_op; reason = f reason; original_ub; tried_promotion }
   | WriteComputedObjPropCheckT { reason; reason_key; value_t; err_on_str_or_num_key } ->
@@ -1036,3 +1037,14 @@ let type_guard_of_funtype f =
   match f.predicate with
   | Some p -> type_guard_of_predicate p
   | None -> None
+
+let structural_render_type_arg renders_reason = function
+  | SingletonRenders t -> t
+  | UnionRenders rep -> UnionT (renders_reason, rep)
+
+let mk_renders_type reason t =
+  let destructor =
+    TypeDestructorT
+      (unknown_use, reason, ReactPromoteRendersRepresentation { should_distribute = true })
+  in
+  EvalT (t, destructor, Eval.generate_id ())
