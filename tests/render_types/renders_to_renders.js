@@ -1,6 +1,6 @@
 //@flow
-component Foo() renders null { return null }
-component Bar() { return null }
+component Foo() renders $Renders<null> { return null }
+component Bar() renders $Renders<React$Node> { return null }
 component Baz() renders $Renders<Foo> { return (null: any) }
 component Qux() renders $Renders<Foo | Bar> { return (null: any) }
 

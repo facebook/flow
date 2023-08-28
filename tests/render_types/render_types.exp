@@ -1,40 +1,31 @@
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:20:4
 
 Cannot cast `rendersFooOrBar` to `typeof rendersFooOrRendersBar` because: [incompatible-cast]
- - Either undefined [1] is incompatible with renders `Foo` [2].
- - Or null [3] is incompatible with renders `Bar` [4].
+ - Either `Bar` [1] does not render `Foo` [2].
+ - Or `Foo` [1] does not render `Bar` [3].
 
    renders_to_renders.js:20:4
    20|   (rendersFooOrBar: typeof rendersFooOrRendersBar); // ERROR
-          ^^^^^^^^^^^^^^^
+          ^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:16:5
-   16|   | void
-           ^^^^ [1]
    renders_to_renders.js:12:39
    12| declare const rendersFooOrRendersBar: $Renders<Foo> | $Renders<Bar>;
                                              ^^^^^^^^^^^^^ [2]
-   renders_to_renders.js:2:25
-    2| component Foo() renders null { return null }
-                               ^^^^ [3]
    renders_to_renders.js:12:55
    12| declare const rendersFooOrRendersBar: $Renders<Foo> | $Renders<Bar>;
-                                                             ^^^^^^^^^^^^^ [4]
+                                                             ^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:28:4
 
-Cannot cast `rendersFoo` to renders `Bar` because null [1] is incompatible with renders `Bar` [2]. [incompatible-cast]
+Cannot cast `rendersFoo` to renders `Bar` because `Foo` [1] does not render `Bar` [2]. [incompatible-cast]
 
    renders_to_renders.js:28:4
    28|   (rendersFoo: $Renders<Bar>); // ERROR
-          ^^^^^^^^^^
+          ^^^^^^^^^^ [1]
 
 References:
-   renders_to_renders.js:2:25
-    2| component Foo() renders null { return null }
-                               ^^^^ [1]
    renders_to_renders.js:28:16
    28|   (rendersFoo: $Renders<Bar>); // ERROR
                       ^^^^^^^^^^^^^ [2]
@@ -42,17 +33,14 @@ References:
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:29:4
 
-Cannot cast `rendersFoo` to renders `React.Element` because null [1] is incompatible with renders `React.Element` [2].
+Cannot cast `rendersFoo` to renders `React.Element` because `Foo` [1] does not render `React.Element` [2].
 [incompatible-cast]
 
    renders_to_renders.js:29:4
    29|   (rendersFoo: $Renders<React$Element<Bar>>); // ERROR
-          ^^^^^^^^^^
+          ^^^^^^^^^^ [1]
 
 References:
-   renders_to_renders.js:2:25
-    2| component Foo() renders null { return null }
-                               ^^^^ [1]
    renders_to_renders.js:29:16
    29|   (rendersFoo: $Renders<React$Element<Bar>>); // ERROR
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
@@ -60,17 +48,13 @@ References:
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:34:4
 
-Cannot cast `rendersFoo` to renders renders `Bar` because null [1] is incompatible with renders renders `Bar` [2].
-[incompatible-cast]
+Cannot cast `rendersFoo` to renders renders `Bar` because `Foo` [1] does not render `Bar` [2]. [incompatible-cast]
 
    renders_to_renders.js:34:4
    34|   (rendersFoo: $Renders<$Renders<Bar>>); // ERROR
-          ^^^^^^^^^^
+          ^^^^^^^^^^ [1]
 
 References:
-   renders_to_renders.js:2:25
-    2| component Foo() renders null { return null }
-                               ^^^^ [1]
    renders_to_renders.js:34:16
    34|   (rendersFoo: $Renders<$Renders<Bar>>); // ERROR
                       ^^^^^^^^^^^^^^^^^^^^^^^ [2]
@@ -78,17 +62,14 @@ References:
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:35:4
 
-Cannot cast `rendersFoo` to renders renders `React.Element` because null [1] is incompatible with renders renders
-`React.Element` [2]. [incompatible-cast]
+Cannot cast `rendersFoo` to renders renders `React.Element` because `Foo` [1] does not render `React.Element` [2].
+[incompatible-cast]
 
    renders_to_renders.js:35:4
    35|   (rendersFoo: $Renders<$Renders<React$Element<Bar>>>); // ERROR
-          ^^^^^^^^^^
+          ^^^^^^^^^^ [1]
 
 References:
-   renders_to_renders.js:2:25
-    2| component Foo() renders null { return null }
-                               ^^^^ [1]
    renders_to_renders.js:35:16
    35|   (rendersFoo: $Renders<$Renders<React$Element<Bar>>>); // ERROR
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
@@ -97,171 +78,14 @@ References:
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:46:4
 
 Cannot cast `rendersQux` to renders union type because: [incompatible-cast]
- - Either undefined [1] is incompatible with renders `Foo` [2].
- - Or undefined [1] is incompatible with renders `Baz` [3].
+ - Either `Qux` [1] does not render `Foo` [2].
+ - Or `Qux` [1] does not render `Baz` [3].
 
    renders_to_renders.js:46:4
    46|   (rendersQux: $Renders<Foo | Baz>); // ERROR
-          ^^^^^^^^^^
+          ^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:16:5
-   16|   | void
-           ^^^^ [1]
-   renders_to_renders.js:46:25
-   46|   (rendersQux: $Renders<Foo | Baz>); // ERROR
-                               ^^^ [2]
-   renders_to_renders.js:46:31
-   46|   (rendersQux: $Renders<Foo | Baz>); // ERROR
-                                     ^^^ [3]
-
-
-Error --------------------------------------------------------------------------------------- renders_to_renders.js:46:4
-
-Cannot cast `rendersQux` to renders union type because: [incompatible-cast]
- - Either null [1] is incompatible with renders `Foo` [2].
- - Or null [1] is incompatible with renders `Baz` [3].
-
-   renders_to_renders.js:46:4
-   46|   (rendersQux: $Renders<Foo | Baz>); // ERROR
-          ^^^^^^^^^^
-
-References:
-   <BUILTINS>/react.js:17:5
-   17|   | null
-           ^^^^ [1]
-   renders_to_renders.js:46:25
-   46|   (rendersQux: $Renders<Foo | Baz>); // ERROR
-                               ^^^ [2]
-   renders_to_renders.js:46:31
-   46|   (rendersQux: $Renders<Foo | Baz>); // ERROR
-                                     ^^^ [3]
-
-
-Error --------------------------------------------------------------------------------------- renders_to_renders.js:46:4
-
-Cannot cast `rendersQux` to renders union type because: [incompatible-cast]
- - Either boolean [1] is incompatible with renders `Foo` [2].
- - Or boolean [1] is incompatible with renders `Baz` [3].
-
-   renders_to_renders.js:46:4
-   46|   (rendersQux: $Renders<Foo | Baz>); // ERROR
-          ^^^^^^^^^^
-
-References:
-   <BUILTINS>/react.js:18:5
-   18|   | boolean
-           ^^^^^^^ [1]
-   renders_to_renders.js:46:25
-   46|   (rendersQux: $Renders<Foo | Baz>); // ERROR
-                               ^^^ [2]
-   renders_to_renders.js:46:31
-   46|   (rendersQux: $Renders<Foo | Baz>); // ERROR
-                                     ^^^ [3]
-
-
-Error --------------------------------------------------------------------------------------- renders_to_renders.js:46:4
-
-Cannot cast `rendersQux` to renders union type because: [incompatible-cast]
- - Either number [1] is incompatible with renders `Foo` [2].
- - Or number [1] is incompatible with renders `Baz` [3].
-
-   renders_to_renders.js:46:4
-   46|   (rendersQux: $Renders<Foo | Baz>); // ERROR
-          ^^^^^^^^^^
-
-References:
-   <BUILTINS>/react.js:19:5
-   19|   | number
-           ^^^^^^ [1]
-   renders_to_renders.js:46:25
-   46|   (rendersQux: $Renders<Foo | Baz>); // ERROR
-                               ^^^ [2]
-   renders_to_renders.js:46:31
-   46|   (rendersQux: $Renders<Foo | Baz>); // ERROR
-                                     ^^^ [3]
-
-
-Error --------------------------------------------------------------------------------------- renders_to_renders.js:46:4
-
-Cannot cast `rendersQux` to renders union type because: [incompatible-cast]
- - Either string [1] is incompatible with renders `Foo` [2].
- - Or string [1] is incompatible with renders `Baz` [3].
-
-   renders_to_renders.js:46:4
-   46|   (rendersQux: $Renders<Foo | Baz>); // ERROR
-          ^^^^^^^^^^
-
-References:
-   <BUILTINS>/react.js:20:5
-   20|   | string
-           ^^^^^^ [1]
-   renders_to_renders.js:46:25
-   46|   (rendersQux: $Renders<Foo | Baz>); // ERROR
-                               ^^^ [2]
-   renders_to_renders.js:46:31
-   46|   (rendersQux: $Renders<Foo | Baz>); // ERROR
-                                     ^^^ [3]
-
-
-Error --------------------------------------------------------------------------------------- renders_to_renders.js:46:4
-
-Cannot cast `rendersQux` to renders union type because: [incompatible-cast]
- - Either `React.Element` [1] is incompatible with renders `Foo` [2].
- - Or `React.Element` [1] is incompatible with renders `Baz` [3].
-
-   renders_to_renders.js:46:4
-   46|   (rendersQux: $Renders<Foo | Baz>); // ERROR
-          ^^^^^^^^^^
-
-References:
-   <BUILTINS>/react.js:21:5
-   21|   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ [1]
-   renders_to_renders.js:46:25
-   46|   (rendersQux: $Renders<Foo | Baz>); // ERROR
-                               ^^^ [2]
-   renders_to_renders.js:46:31
-   46|   (rendersQux: $Renders<Foo | Baz>); // ERROR
-                                     ^^^ [3]
-
-
-Error --------------------------------------------------------------------------------------- renders_to_renders.js:46:4
-
-Cannot cast `rendersQux` to renders union type because: [incompatible-cast]
- - Either `React.Portal` [1] is incompatible with renders `Foo` [2].
- - Or `React.Portal` [1] is incompatible with renders `Baz` [3].
-
-   renders_to_renders.js:46:4
-   46|   (rendersQux: $Renders<Foo | Baz>); // ERROR
-          ^^^^^^^^^^
-
-References:
-   <BUILTINS>/react.js:22:5
-   22|   | React$Portal
-           ^^^^^^^^^^^^ [1]
-   renders_to_renders.js:46:25
-   46|   (rendersQux: $Renders<Foo | Baz>); // ERROR
-                               ^^^ [2]
-   renders_to_renders.js:46:31
-   46|   (rendersQux: $Renders<Foo | Baz>); // ERROR
-                                     ^^^ [3]
-
-
-Error --------------------------------------------------------------------------------------- renders_to_renders.js:46:4
-
-Cannot cast `rendersQux` to renders union type because: [incompatible-cast]
- - Either `$Iterable` [1] is incompatible with renders `Foo` [2].
- - Or `$Iterable` [1] is incompatible with renders `Baz` [3].
-
-   renders_to_renders.js:46:4
-   46|   (rendersQux: $Renders<Foo | Baz>); // ERROR
-          ^^^^^^^^^^
-
-References:
-   <BUILTINS>/react.js:23:5
-   23|   | Iterable<?React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^^ [1]
    renders_to_renders.js:46:25
    46|   (rendersQux: $Renders<Foo | Baz>); // ERROR
                                ^^^ [2]
@@ -272,17 +96,13 @@ References:
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:58:4
 
-Cannot cast `rendersBazOrBaz` to renders `Bar` because null [1] is incompatible with renders `Bar` [2].
-[incompatible-cast]
+Cannot cast `rendersBazOrBaz` to renders `Bar` because `Baz` [1] does not render `Bar` [2]. [incompatible-cast]
 
    renders_to_renders.js:58:4
    58|   (rendersBazOrBaz: $Renders<Bar>); // ERROR
-          ^^^^^^^^^^^^^^^
+          ^^^^^^^^^^^^^^^ [1]
 
 References:
-   renders_to_renders.js:2:25
-    2| component Foo() renders null { return null }
-                               ^^^^ [1]
    renders_to_renders.js:58:21
    58|   (rendersBazOrBaz: $Renders<Bar>); // ERROR
                            ^^^^^^^^^^^^^ [2]
@@ -291,171 +111,14 @@ References:
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:66:4
 
 Cannot cast `rendersFooOrBar` to renders union type because: [incompatible-cast]
- - Either undefined [1] is incompatible with renders `Foo` [2].
- - Or undefined [1] is incompatible with renders `Baz` [3].
+ - Either `Bar` [1] does not render `Foo` [2].
+ - Or `Bar` [1] does not render `Baz` [3].
 
    renders_to_renders.js:66:4
    66|   (rendersFooOrBar: $Renders<Foo | Baz>); // ERROR
-          ^^^^^^^^^^^^^^^
+          ^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:16:5
-   16|   | void
-           ^^^^ [1]
-   renders_to_renders.js:66:30
-   66|   (rendersFooOrBar: $Renders<Foo | Baz>); // ERROR
-                                    ^^^ [2]
-   renders_to_renders.js:66:36
-   66|   (rendersFooOrBar: $Renders<Foo | Baz>); // ERROR
-                                          ^^^ [3]
-
-
-Error --------------------------------------------------------------------------------------- renders_to_renders.js:66:4
-
-Cannot cast `rendersFooOrBar` to renders union type because: [incompatible-cast]
- - Either null [1] is incompatible with renders `Foo` [2].
- - Or null [1] is incompatible with renders `Baz` [3].
-
-   renders_to_renders.js:66:4
-   66|   (rendersFooOrBar: $Renders<Foo | Baz>); // ERROR
-          ^^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/react.js:17:5
-   17|   | null
-           ^^^^ [1]
-   renders_to_renders.js:66:30
-   66|   (rendersFooOrBar: $Renders<Foo | Baz>); // ERROR
-                                    ^^^ [2]
-   renders_to_renders.js:66:36
-   66|   (rendersFooOrBar: $Renders<Foo | Baz>); // ERROR
-                                          ^^^ [3]
-
-
-Error --------------------------------------------------------------------------------------- renders_to_renders.js:66:4
-
-Cannot cast `rendersFooOrBar` to renders union type because: [incompatible-cast]
- - Either boolean [1] is incompatible with renders `Foo` [2].
- - Or boolean [1] is incompatible with renders `Baz` [3].
-
-   renders_to_renders.js:66:4
-   66|   (rendersFooOrBar: $Renders<Foo | Baz>); // ERROR
-          ^^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/react.js:18:5
-   18|   | boolean
-           ^^^^^^^ [1]
-   renders_to_renders.js:66:30
-   66|   (rendersFooOrBar: $Renders<Foo | Baz>); // ERROR
-                                    ^^^ [2]
-   renders_to_renders.js:66:36
-   66|   (rendersFooOrBar: $Renders<Foo | Baz>); // ERROR
-                                          ^^^ [3]
-
-
-Error --------------------------------------------------------------------------------------- renders_to_renders.js:66:4
-
-Cannot cast `rendersFooOrBar` to renders union type because: [incompatible-cast]
- - Either number [1] is incompatible with renders `Foo` [2].
- - Or number [1] is incompatible with renders `Baz` [3].
-
-   renders_to_renders.js:66:4
-   66|   (rendersFooOrBar: $Renders<Foo | Baz>); // ERROR
-          ^^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/react.js:19:5
-   19|   | number
-           ^^^^^^ [1]
-   renders_to_renders.js:66:30
-   66|   (rendersFooOrBar: $Renders<Foo | Baz>); // ERROR
-                                    ^^^ [2]
-   renders_to_renders.js:66:36
-   66|   (rendersFooOrBar: $Renders<Foo | Baz>); // ERROR
-                                          ^^^ [3]
-
-
-Error --------------------------------------------------------------------------------------- renders_to_renders.js:66:4
-
-Cannot cast `rendersFooOrBar` to renders union type because: [incompatible-cast]
- - Either string [1] is incompatible with renders `Foo` [2].
- - Or string [1] is incompatible with renders `Baz` [3].
-
-   renders_to_renders.js:66:4
-   66|   (rendersFooOrBar: $Renders<Foo | Baz>); // ERROR
-          ^^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/react.js:20:5
-   20|   | string
-           ^^^^^^ [1]
-   renders_to_renders.js:66:30
-   66|   (rendersFooOrBar: $Renders<Foo | Baz>); // ERROR
-                                    ^^^ [2]
-   renders_to_renders.js:66:36
-   66|   (rendersFooOrBar: $Renders<Foo | Baz>); // ERROR
-                                          ^^^ [3]
-
-
-Error --------------------------------------------------------------------------------------- renders_to_renders.js:66:4
-
-Cannot cast `rendersFooOrBar` to renders union type because: [incompatible-cast]
- - Either `React.Element` [1] is incompatible with renders `Foo` [2].
- - Or `React.Element` [1] is incompatible with renders `Baz` [3].
-
-   renders_to_renders.js:66:4
-   66|   (rendersFooOrBar: $Renders<Foo | Baz>); // ERROR
-          ^^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/react.js:21:5
-   21|   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ [1]
-   renders_to_renders.js:66:30
-   66|   (rendersFooOrBar: $Renders<Foo | Baz>); // ERROR
-                                    ^^^ [2]
-   renders_to_renders.js:66:36
-   66|   (rendersFooOrBar: $Renders<Foo | Baz>); // ERROR
-                                          ^^^ [3]
-
-
-Error --------------------------------------------------------------------------------------- renders_to_renders.js:66:4
-
-Cannot cast `rendersFooOrBar` to renders union type because: [incompatible-cast]
- - Either `React.Portal` [1] is incompatible with renders `Foo` [2].
- - Or `React.Portal` [1] is incompatible with renders `Baz` [3].
-
-   renders_to_renders.js:66:4
-   66|   (rendersFooOrBar: $Renders<Foo | Baz>); // ERROR
-          ^^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/react.js:22:5
-   22|   | React$Portal
-           ^^^^^^^^^^^^ [1]
-   renders_to_renders.js:66:30
-   66|   (rendersFooOrBar: $Renders<Foo | Baz>); // ERROR
-                                    ^^^ [2]
-   renders_to_renders.js:66:36
-   66|   (rendersFooOrBar: $Renders<Foo | Baz>); // ERROR
-                                          ^^^ [3]
-
-
-Error --------------------------------------------------------------------------------------- renders_to_renders.js:66:4
-
-Cannot cast `rendersFooOrBar` to renders union type because: [incompatible-cast]
- - Either `$Iterable` [1] is incompatible with renders `Foo` [2].
- - Or `$Iterable` [1] is incompatible with renders `Baz` [3].
-
-   renders_to_renders.js:66:4
-   66|   (rendersFooOrBar: $Renders<Foo | Baz>); // ERROR
-          ^^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/react.js:23:5
-   23|   | Iterable<?React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^^ [1]
    renders_to_renders.js:66:30
    66|   (rendersFooOrBar: $Renders<Foo | Baz>); // ERROR
                                     ^^^ [2]
@@ -466,7 +129,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:72:4
 
-Cannot cast `Foo` to renders `Foo` because component Foo [1] is incompatible with renders `Foo` [2]. [incompatible-cast]
+Cannot cast `Foo` to renders `Foo` because component Foo [1] does not render `Foo` [2]. [incompatible-cast]
 
    renders_to_renders.js:72:4
    72|   (Foo: $Renders<Foo>); // ERROR
@@ -474,8 +137,8 @@ Cannot cast `Foo` to renders `Foo` because component Foo [1] is incompatible wit
 
 References:
    renders_to_renders.js:2:1
-    2| component Foo() renders null { return null }
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+    2| component Foo() renders $Renders<null> { return null }
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    renders_to_renders.js:72:9
    72|   (Foo: $Renders<Foo>); // ERROR
                ^^^^^^^^^^^^^ [2]
@@ -884,7 +547,7 @@ References:
 
 
 
-Found 47 errors
+Found 33 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

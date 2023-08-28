@@ -1112,6 +1112,19 @@ let rec make_error_printable :
             ]
           in
           make_error lower message
+        | (lower_desc, RRenderType upper_desc) ->
+          (* We replace the desc of the reason so we can say "LHS" does not render "RHS" instead of
+           * "LHS" does not render "renders RHS" *)
+          let rec loop = function
+            | RRenderType desc -> loop desc
+            | desc -> desc
+          in
+          let lower_desc = loop lower_desc in
+          let lower_r = replace_desc_reason lower_desc lower in
+          let upper_desc = loop upper_desc in
+          let upper_r = replace_desc_reason upper_desc upper in
+          let message = [ref lower_r; text " does not render "; ref upper_r] in
+          make_error lower message
         | _ -> make_error lower [ref lower; text " is incompatible with "; ref upper]
       end)
   in

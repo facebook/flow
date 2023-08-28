@@ -931,7 +931,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
        * and in that case we should behave like React.Node because all Render types are subtypes
        * of React.Node. So we kick off intersection speculation to try the renders type against the
        * union and fall back to React.Node if it fails *)
-      let node = get_builtin_type cx ~trace renders_r (OrdinaryName "React$Node") in
+      let node = get_builtin_type cx ~trace ~use_desc:true renders_r (OrdinaryName "React$Node") in
       if not (speculative_subtyping_succeeds cx node u) then
         SpeculationKit.try_union cx trace use_op l r rep
     | (_, UnionT (r, rep)) ->
@@ -1330,12 +1330,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
       ()
     (* Subtyping inside the Renders world happens in these rules +
      * TryPromoteRendersRepresentation Renders *)
-    | ( DefT (_reasonl, _, RendersT (NominalRenders { id = id1; super })),
+    | ( DefT (reasonl, _, RendersT (NominalRenders { id = id1; super })),
         DefT (_reasonu, _, RendersT (NominalRenders { id = id2; super = _ }))
       ) ->
       if ALoc.equal_id id1 id2 then
         ()
       else
+        (* We reposition the super using l's reason for better error messages *)
+        let super = reposition_reason cx ~trace reasonl ~use_desc:true super in
         rec_flow_t cx trace ~use_op (super, u)
     | ( DefT (reasonl, _, RendersT (NominalRenders { id; super })),
         DefT (_reasonu, _, RendersT (StructuralRenders structural))
@@ -1371,6 +1373,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           get_builtin_type cx ~trace reasonl (OrdinaryName "React$MixedElement")
         in
         if not (speculative_subtyping_succeeds cx mixed_element u) then
+          let super = reposition_reason cx ~trace reasonl ~use_desc:true super in
           rec_flow_t cx trace ~use_op (super, u)
     | ( DefT (renders_reason, _, RendersT (StructuralRenders structure)),
         DefT (_, _, RendersT (NominalRenders _))

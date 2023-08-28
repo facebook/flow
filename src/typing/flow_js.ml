@@ -9498,6 +9498,16 @@ struct
       | ExactT (r, t) ->
         let r = mod_reason r in
         ExactT (r, recurse seen t)
+      | DefT (r, trust, RendersT (StructuralRenders (UnionRenders rep))) ->
+        let r = mod_reason r in
+        DefT
+          ( r,
+            trust,
+            RendersT (StructuralRenders (UnionRenders (UnionRep.ident_map (recurse seen) rep)))
+          )
+      | DefT (r, trust, RendersT (StructuralRenders (SingletonRenders t))) ->
+        let r = mod_reason r in
+        DefT (r, trust, RendersT (StructuralRenders (SingletonRenders (recurse seen t))))
       | t -> mod_reason_of_t mod_reason t
     in
     recurse IMap.empty t
