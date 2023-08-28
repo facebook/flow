@@ -4147,7 +4147,7 @@ let mk_methodcalltype targs args ?meth_generic_this ?(meth_strict_arity = true) 
   bound to some type. Currently, if the function's `this` parameter is not
   explicitly annotated we model this unsoundly using `any`, but if it is
   then we create a methodtype with a specific `this` type. *)
-let mk_boundfunctiontype ~this = mk_methodtype this
+let mk_boundfunctiontype ~this = mk_methodtype ~subtyping:(This_Method { unbound = false }) this
 
 (** A function type is a method type whose `this` parameter has been
   bound to to the global object. Currently, if the function's `this` parameter is not

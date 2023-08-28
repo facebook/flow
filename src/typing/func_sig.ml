@@ -276,7 +276,6 @@ struct
             ( dummy_static reason,
               mk_boundfunctiontype
                 ~this:param_this_t
-                ~subtyping:(This_Method { unbound = false })
                 params_tlist
                 ~rest_param
                 ~def_reason
