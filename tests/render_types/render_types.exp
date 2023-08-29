@@ -116,6 +116,36 @@ References:
           ^^^^^^^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- poly.js:11:2
+
+Cannot cast `el` to renders undefined because `React.Element` [1] is incompatible with undefined [2].
+[incompatible-cast]
+
+   poly.js:11:2
+   11| (el: $Renders<void>); // error
+        ^^ [1]
+
+References:
+   poly.js:11:15
+   11| (el: $Renders<void>); // error
+                     ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- poly.js:19:37
+
+Cannot create `FooContainer` element because `React.Element` [1] does not render `Foo` [2] in property `children`.
+[incompatible-type]
+
+   poly.js:19:37
+   19| const transitiveBad = <FooContainer><Fragment><Bar /></Fragment></FooContainer>; // error
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   poly.js:16:34
+   16| component FooContainer(children: $Renders<Foo>) { return null };
+                                        ^^^^^^^^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:20:4
 
 Cannot cast `rendersFooOrBar` to `typeof rendersFooOrRendersBar` because: [incompatible-cast]
@@ -665,7 +695,7 @@ References:
 
 
 
-Found 40 errors
+Found 42 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

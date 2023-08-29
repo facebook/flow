@@ -2623,51 +2623,68 @@ struct
                 promote_structural_components;
               }
           ) ->
-          let props = Context.find_props cx props_tmap in
-          let type_field = NameUtils.Map.find_opt (OrdinaryName "type") props in
-          let type_t =
-            Base.Option.value_map
-              ~f:(fun type_field -> Property.read_t type_field)
-              ~default:None
-              type_field
-          in
-          (match type_t with
-          (* Intentional unknown_use when flowing to tout *)
-          | None -> rec_flow_t cx trace ~use_op:unknown_use (l, tout)
-          | Some t when promote_structural_components ->
-            (* We only want to promote if this is actually a React element, otherwise we want
-             * to flow the original object to the tout.
-             *
-             * We perform a speculative subtyping check and then use ComponentRenders to
-             * extract the render type of the component. This type gets forwarded to
-             * TryRenderTypePromotionT, and we continue with renders subtyping if we get a RendersT
-             * from ComponentRenders, otherwise we error, as we've already checked for structural
-             * compatibility in subtyping kit. *)
-            let mixed_element =
-              get_builtin_type cx ~trace ~use_desc:true reason (OrdinaryName "React$MixedElement")
-            in
-            if speculative_subtyping_succeeds cx l mixed_element then
-              let render_type =
-                get_builtin_typeapp cx reason (OrdinaryName "React$ComponentRenders") [t]
-              in
-              rec_flow_t cx trace ~use_op:unknown_use (render_type, tout)
-            else
-              rec_flow_t cx trace ~use_op:unknown_use (l, tout)
-          | Some t ->
+          (match Context.find_monomorphized_component cx props_tmap with
+          | Some mono_component ->
             rec_flow
               cx
               trace
-              ( t,
+              ( mono_component,
                 PromoteRendersRepresentationT
                   {
                     use_op;
                     reason;
                     tout;
-                    resolved_obj = Some l;
                     should_distribute;
                     promote_structural_components;
+                    resolved_obj = Some l;
                   }
-              ))
+              )
+          | None ->
+            let props = Context.find_props cx props_tmap in
+            let type_field = NameUtils.Map.find_opt (OrdinaryName "type") props in
+            let type_t =
+              Base.Option.value_map
+                ~f:(fun type_field -> Property.read_t type_field)
+                ~default:None
+                type_field
+            in
+            (match type_t with
+            (* Intentional unknown_use when flowing to tout *)
+            | None -> rec_flow_t cx trace ~use_op:unknown_use (l, tout)
+            | Some t when promote_structural_components ->
+              (* We only want to promote if this is actually a React element, otherwise we want
+               * to flow the original object to the tout.
+               *
+               * We perform a speculative subtyping check and then use ComponentRenders to
+               * extract the render type of the component. This type gets forwarded to
+               * TryRenderTypePromotionT, and we continue with renders subtyping if we get a RendersT
+               * from ComponentRenders, otherwise we error, as we've already checked for structural
+               * compatibility in subtyping kit. *)
+              let mixed_element =
+                get_builtin_type cx ~trace ~use_desc:true reason (OrdinaryName "React$MixedElement")
+              in
+              if speculative_subtyping_succeeds cx l mixed_element then
+                let render_type =
+                  get_builtin_typeapp cx reason (OrdinaryName "React$ComponentRenders") [t]
+                in
+                rec_flow_t cx trace ~use_op:unknown_use (render_type, tout)
+              else
+                rec_flow_t cx trace ~use_op:unknown_use (l, tout)
+            | Some t ->
+              rec_flow
+                cx
+                trace
+                ( t,
+                  PromoteRendersRepresentationT
+                    {
+                      use_op;
+                      reason;
+                      tout;
+                      resolved_obj = Some l;
+                      should_distribute;
+                      promote_structural_components;
+                    }
+                )))
         | ( DefT (_, _, (RendersT (NominalRenders _) as renders)),
             PromoteRendersRepresentationT
               {
