@@ -3701,48 +3701,6 @@ let replace_speculation_root_use_op =
     | Ok use_op -> use_op
     | Error use_op -> use_op
 
-let aloc_of_root_use_op : root_use_op -> ALoc.t = function
-  | InitField { op; _ }
-  | ObjectSpread { op }
-  | ObjectRest { op }
-  | ObjectChain { op }
-  | Arith { op; _ }
-  | AssignVar { init = op; _ }
-  | Cast { lower = op; _ }
-  | ClassExtendsCheck { def = op; _ }
-  | ClassMethodDefinition { def = op; _ }
-  | ClassImplementsCheck { def = op; _ }
-  | Coercion { from = op; _ }
-  | ConformToCommonInterface { self = op; _ }
-  | DeleteProperty { lhs = op; _ }
-  | DeleteVar { var = op; _ }
-  | FunCall { op; _ }
-  | FunCallMethod { op; _ }
-  | FunReturnStatement { value = op }
-  | FunImplicitReturn { upper = op; _ }
-  | GeneratorYield { value = op }
-  | GetProperty op
-  | IndexedTypeAccess { index = op; _ }
-  | InferBoundCompatibilityCheck { bound = op; _ }
-  | ConditionalTypeEval { check_type_reason = op; _ }
-  | JSXCreateElement { op; _ }
-  | ReactCreateElementCall { op; _ }
-  | TypeApplication { type_ = op }
-  | SetProperty { value = op; _ }
-  | UpdateProperty { lhs = op; _ }
-  | RefinementCheck { test = op; _ }
-  | MatchingProp { op; _ }
-  | TypeGuardIncompatibility { guard_type = op; _ }
-  | RenderTypeInstantiation { render_type = op } ->
-    loc_of_reason op
-  | EvalMappedType { mapped_type } -> loc_of_reason mapped_type
-  | ComponentRestParamCompatibility { rest_param } -> loc_of_reason rest_param
-  | ReactGetIntrinsic _
-  | Speculation _
-  | UnknownUse
-  | ClassOwnProtoCheck _ ->
-    ALoc.none
-
 (* Printing some types in parseable form relies on particular formats in
    corresponding reason descriptions. The following module formalizes the
    relevant conventions.
