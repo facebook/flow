@@ -181,24 +181,33 @@ let mk_module_t =
  * - For esm, we will first try to pick the location of default exports, then
  *   fallback to the first export. *)
 let module_exports_sig_loc cx =
-  let { Module_info.kind; _ } = Context.module_info cx in
+  let { Module_info.kind; type_named; _ } = Context.module_info cx in
+  let first_loc_of_named_exports named =
+    named
+    |> NameUtils.Map.values
+    |> Base.List.filter_map ~f:(fun { Type.name_loc; _ } -> name_loc)
+    |> Base.List.sort ~compare:ALoc.compare
+    |> Base.List.hd
+  in
   match kind with
   | Module_info.CJS _ ->
     let { Loc_env.var_info = { Env_api.cjs_exports_state; _ }; _ } = Context.environment cx in
     (match cjs_exports_state with
     | Env_api.CJSModuleExports l -> Some l
     | Env_api.CJSExportNames names ->
-      names
-      |> SMap.values
-      |> Base.List.map ~f:fst
-      |> Base.List.sort ~compare:ALoc.compare
-      |> Base.List.hd)
+      (match
+         names
+         |> SMap.values
+         |> Base.List.map ~f:fst
+         |> Base.List.sort ~compare:ALoc.compare
+         |> Base.List.hd
+       with
+      | None -> first_loc_of_named_exports type_named
+      | loc -> loc))
   | Module_info.ES { named; _ } ->
     (match NameUtils.Map.find_opt (Reason.OrdinaryName "default") named with
     | Some { Type.name_loc; _ } -> name_loc
     | None ->
-      named
-      |> NameUtils.Map.values
-      |> Base.List.filter_map ~f:(fun { Type.name_loc; _ } -> name_loc)
-      |> Base.List.sort ~compare:ALoc.compare
-      |> Base.List.hd)
+      (match first_loc_of_named_exports named with
+      | None -> first_loc_of_named_exports type_named
+      | loc -> loc))
