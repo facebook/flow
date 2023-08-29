@@ -328,6 +328,8 @@ val add_missing_local_annot_lower_bound : t -> ALoc.t -> Type.t -> unit
 
 val add_voidable_check : t -> voidable_check -> unit
 
+val add_monomorphized_component : t -> Type.Properties.id -> Type.t -> unit
+
 val set_evaluated : t -> Type.t Type.Eval.Map.t -> unit
 
 val set_goals : t -> Type.t IMap.t -> unit
@@ -516,6 +518,8 @@ val add_avar : t -> int -> Type.AConstraint.t -> unit
 val find_avar : t -> int -> Type.AConstraint.t
 
 val find_avar_opt : t -> int -> Type.AConstraint.t option
+
+val find_monomorphized_component : t -> Type.Properties.id -> Type.t option
 
 val remove_avar : t -> int -> unit
 

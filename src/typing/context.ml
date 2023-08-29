@@ -180,6 +180,12 @@ type component_t = {
   mutable in_implicit_instantiation: bool;
   (* Temporarily allow method unbinding in the following locs *)
   mutable allow_method_unbinding: ALocSet.t;
+  (* React.Element does not store the monomorphized version of a component to support
+   * cloning polymorphic elements. We need to know the monomorphized version of a component
+   * to determine the render type of an element of a polymorphic component, so we keep track
+   * of the monomorphized version here by mapping the Element's object id to the monomorphized
+   * component *)
+  mutable monomorphized_components: Type.t Type.Properties.Map.t;
 }
 [@@warning "-69"]
 
@@ -366,6 +372,7 @@ let make_ccx master_cx =
     exhaustive_checks = ALocMap.empty;
     in_implicit_instantiation = false;
     allow_method_unbinding = ALocSet.empty;
+    monomorphized_components = Type.Properties.Map.empty;
   }
 
 let make ccx metadata file aloc_table resolve_require phase =
@@ -683,6 +690,9 @@ let add_env_cache_entry cx ~for_value id t =
 
 let add_voidable_check cx voidable_check =
   cx.ccx.voidable_checks <- voidable_check :: cx.ccx.voidable_checks
+
+let add_monomorphized_component cx id t =
+  cx.ccx.monomorphized_components <- Type.Properties.Map.add id t cx.ccx.monomorphized_components
 
 let add_missing_local_annot_lower_bound cx loc t =
   let missing_local_annot_lower_bounds = cx.ccx.missing_local_annot_lower_bounds in
@@ -1058,6 +1068,9 @@ let add_avar cx id node = cx.ccx.annot_graph <- IMap.add id node cx.ccx.annot_gr
 let find_avar cx id = IMap.find id cx.ccx.annot_graph
 
 let find_avar_opt cx id = IMap.find_opt id cx.ccx.annot_graph
+
+let find_monomorphized_component cx id =
+  Type.Properties.Map.find_opt id cx.ccx.monomorphized_components
 
 let remove_avar cx id = cx.ccx.annot_graph <- IMap.remove id cx.ccx.annot_graph
 
