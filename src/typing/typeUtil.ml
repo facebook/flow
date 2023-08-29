@@ -629,7 +629,7 @@ let rec mod_loc_of_virtual_use_op f =
         { op = mod_reason op; component = mod_reason component; children = f children }
     | ReactGetIntrinsic { literal } -> ReactGetIntrinsic { literal = mod_reason literal }
     | Speculation op -> Speculation (mod_loc_of_virtual_use_op f op)
-    | TypeApplication { type' } -> TypeApplication { type' = mod_reason type' }
+    | TypeApplication { type_ } -> TypeApplication { type_ = mod_reason type_ }
     | SetProperty { lhs; prop; value } ->
       SetProperty { lhs = mod_reason lhs; prop = mod_reason prop; value = mod_reason value }
     | UpdateProperty { lhs; prop } ->
@@ -876,13 +876,13 @@ let typeapp_with_use_op reason use_op t targs =
   TypeAppT (reason, use_op, t, targs)
 
 let typeapp reason t targs =
-  let use_op = Op (TypeApplication { type' = reason }) in
+  let use_op = Op (TypeApplication { type_ = reason }) in
   typeapp_with_use_op reason use_op t targs
 
 let typeapp_annot loc t targs =
   let desc = RTypeApp (desc_of_t t) in
   let reason = mk_annot_reason desc loc in
-  let use_op = Op (TypeApplication { type' = reason }) in
+  let use_op = Op (TypeApplication { type_ = reason }) in
   TypeAppT (reason, use_op, t, targs)
 
 (* An implicit typeapp is not a product of some source level type application,
@@ -895,7 +895,7 @@ let implicit_typeapp ?annot_loc t targs =
     | Some annot_loc -> annot_reason ~annot_loc @@ repos_reason annot_loc reason
     | None -> reason
   in
-  let use_op = Op (TypeApplication { type' = reason }) in
+  let use_op = Op (TypeApplication { type_ = reason }) in
   TypeAppT (reason, use_op, t, targs)
 
 let this_typeapp ?annot_loc t this targs =

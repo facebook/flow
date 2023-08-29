@@ -396,7 +396,7 @@ module rec TypeTerm : sig
       }
     | ReactGetIntrinsic of { literal: 'loc virtual_reason }
     | Speculation of 'loc virtual_use_op
-    | TypeApplication of { type': 'loc virtual_reason }
+    | TypeApplication of { type_: 'loc virtual_reason }
     | SetProperty of {
         lhs: 'loc virtual_reason;
         prop: 'loc virtual_reason;
@@ -3726,7 +3726,7 @@ let aloc_of_root_use_op : root_use_op -> ALoc.t = function
   | ConditionalTypeEval { check_type_reason = op; _ }
   | JSXCreateElement { op; _ }
   | ReactCreateElementCall { op; _ }
-  | TypeApplication { type' = op }
+  | TypeApplication { type_ = op }
   | SetProperty { value = op; _ }
   | UpdateProperty { lhs = op; _ }
   | RefinementCheck { test = op; _ }

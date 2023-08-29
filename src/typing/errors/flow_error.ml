@@ -606,8 +606,8 @@ let rec make_error_printable :
           [text "Cannot create "; desc component; text " element"]
       | Op (ReactGetIntrinsic { literal }) ->
         root loc frames literal [text "Cannot create "; desc literal; text " element"]
-      | Op (TypeApplication { type' }) ->
-        root loc frames type' [text "Cannot instantiate "; desc type']
+      | Op (TypeApplication { type_ }) ->
+        root loc frames type_ [text "Cannot instantiate "; desc type_]
       | Op (SetProperty { prop; value; lhs; _ }) ->
         let loc_reason =
           if Loc.contains (loc_of_aloc (loc_of_reason lhs)) loc then

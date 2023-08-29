@@ -671,7 +671,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         )
       in
 
-      let use_op reason = Op (TypeApplication { type' = reason }) in
+      let use_op reason = Op (TypeApplication { type_ = reason }) in
       let local_generic_type () =
         let reason = mk_reason (RType (OrdinaryName name)) loc in
         let c = type_identifier cx name name_loc in
