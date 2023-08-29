@@ -744,6 +744,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
                   targs = Some call_targs;
                   tout = new_tout;
                   return_hint = Type.hint_unavailable;
+                  record_monomorphized_result = false;
                 }
             )
         in

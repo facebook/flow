@@ -2866,6 +2866,7 @@ and React : sig
          * syntax support for explicit type arguments on React component instantiations *)
         targs: TypeTerm.targ list option;
         return_hint: TypeTerm.lazy_hint_t;
+        record_monomorphized_result: bool;
       }
     | ConfigCheck of TypeTerm.t
     | GetProps of TypeTerm.t_out

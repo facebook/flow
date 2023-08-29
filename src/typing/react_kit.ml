@@ -526,7 +526,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         )
       )
     in
-    let create_element clone component config children_args tout =
+    let create_element clone component config children_args record_monomorphized_result tout =
       config_check clone config children_args;
 
       (* If our config is void or null then we want to replace it with an
@@ -648,18 +648,25 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           ~annot_loc
           (replace_desc_reason (RType (OrdinaryName "React$Element")) reason_op)
       in
-      rec_flow_t
-        ~use_op:unknown_use
-        cx
-        trace
-        ( get_builtin_typeapp
-            cx
-            ~trace
-            elem_reason
-            (OrdinaryName "React$Element")
-            [component; Tvar.mk_where cx reason_op props_to_tout],
-          tout
-        )
+      let elem =
+        get_builtin_typeapp
+          cx
+          ~trace
+          elem_reason
+          (OrdinaryName "React$Element")
+          [component; Tvar.mk_where cx reason_op props_to_tout]
+      in
+      (* Concretize to an ObjT so that we can asssociate the monomorphized component with the props id *)
+      let () =
+        let result = Flow.singleton_concrete_type_for_inspection cx elem_reason elem in
+        match result with
+        | ExactT (_, DefT (_, _, ObjT { props_tmap; _ })) ->
+          if record_monomorphized_result then Context.add_monomorphized_component cx props_tmap l
+        | _ ->
+          (*TODO(jmbrown): Internal Error *)
+          ()
+      in
+      rec_flow_t ~use_op:unknown_use cx trace (elem, tout)
     in
     let get_config = get_config cx trace l ~use_op ~reason_op u Polarity.Positive in
     let get_config_with_props_and_defaults default_props tout =
@@ -718,8 +725,18 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     in
     match u with
     | CreateElement0 _ -> failwith "handled elsewhere"
-    | CreateElement { clone; component; config; children; tout; targs = _; return_hint = _ } ->
-      create_element clone component config children tout
+    | CreateElement
+        {
+          clone;
+          component;
+          config;
+          children;
+          tout;
+          targs = _;
+          return_hint = _;
+          record_monomorphized_result;
+        } ->
+      create_element clone component config children record_monomorphized_result tout
     | ConfigCheck config -> config_check false config ([], None)
     | GetProps tout -> props_to_tout tout
     | GetConfig tout -> get_config tout

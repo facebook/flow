@@ -465,6 +465,7 @@ and dump_use_t_ (depth, tvars) cx t =
             tout;
             targs = _;
             return_hint = _;
+            record_monomorphized_result = _;
           } ->
         p
           ~extra:

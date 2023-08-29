@@ -1089,7 +1089,16 @@ struct
           ) ->
           let tool =
             React.CreateElement
-              { clone; component = l; config; children; tout; targs = None; return_hint }
+              {
+                clone;
+                component = l;
+                config;
+                children;
+                tout;
+                targs = None;
+                return_hint;
+                record_monomorphized_result = false;
+              }
           in
           rec_flow cx trace (l, ReactKitT (use_op, reason_op, tool))
         (*********************)
@@ -2485,7 +2494,17 @@ struct
             ReactKitT
               ( use_op,
                 reason_op,
-                React.CreateElement { clone; component; config; children; return_hint; targs; tout }
+                React.CreateElement
+                  {
+                    clone;
+                    component;
+                    config;
+                    children;
+                    return_hint;
+                    targs;
+                    tout;
+                    record_monomorphized_result = _;
+                  }
               )
           ) ->
           let lparts = (reason_tapp, tparams_loc, ids, t) in
@@ -2500,7 +2519,16 @@ struct
               ( use_op,
                 reason_op,
                 React.CreateElement
-                  { clone; component; config; children; return_hint; targs = None; tout }
+                  {
+                    clone;
+                    component;
+                    config;
+                    children;
+                    return_hint;
+                    targs = None;
+                    tout;
+                    record_monomorphized_result = true;
+                  }
               )
           in
           rec_flow cx trace (t_, u)
