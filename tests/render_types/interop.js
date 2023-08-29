@@ -7,19 +7,19 @@ component Bar() renders React.Element<typeof Foo> {
   return <Foo />; // OK
 }
 
-(<Bar />: $Renders<React.Element<typeof Foo>>); // OK
+(<Bar />: renders React.Element<typeof Foo>); // OK
 
-function Baz(): $Renders<React.Element<Bar>> { return <Bar />; }
+function Baz(): renders React.Element<Bar> { return <Bar />; } // OK
 component Qux() { return null; }
-(<Baz />: $Renders<Bar>); // OK
-(<Baz />: $Renders<Qux>); // ERROR
+(<Baz />: renders Bar); // OK
+(<Baz />: renders Qux); // ERROR
 
-function RendersBaz(): $Renders<React.Element<typeof Baz>> {
+function RendersBaz(): renders React.Element<typeof Baz> {
   return <Baz />;
 }
-(<RendersBaz />: $Renders<Bar>); // OK
-(<RendersBaz />: $Renders<Qux>); // ERROR
+(<RendersBaz />: renders Bar); // OK
+(<RendersBaz />: renders Qux); // ERROR
 
-function LongerChain(): $Renders<React.Element<typeof RendersBaz>> { return <RendersBaz />; }
-(<LongerChain />: $Renders<Bar>); // OK
-(<LongerChain />: $Renders<Qux>); // ERROR
+function LongerChain(): renders React.Element<typeof RendersBaz> { return <RendersBaz />; }
+(<LongerChain />: renders Bar); // OK
+(<LongerChain />: renders Qux); // ERROR

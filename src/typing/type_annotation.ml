@@ -431,10 +431,12 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       Flow_js_utils.add_output cx (Error_message.ETSSyntax { kind = Error_message.TSKeyof; loc });
       let t = AnyT.at (AnyError None) loc in
       ((loc, t), Keyof (Tast_utils.error_mapper#keyof_type keyof))
-    | (loc, Renders renders) ->
-      (* TODO(jmbrown): Dedicated renders syntax type checking *)
-      let t = AnyT.at (AnyError None) loc in
-      ((loc, t), Renders (Tast_utils.error_mapper#render_type renders))
+    | (loc, Renders { Renders.comments; argument }) ->
+      let (((_, t), _) as t_ast) = convert cx tparams_map infer_tparams_map argument in
+      let reason = mk_reason (RRenderType (desc_of_reason (reason_of_t t))) loc in
+      Flow.flow cx (t, AssertValidRendersArgumentT (reason_of_t t));
+      let renders_t = TypeUtil.mk_renders_type reason t in
+      ((loc, renders_t), Renders { Renders.comments; argument = t_ast })
     | (loc, ReadOnly ro) ->
       let { ReadOnly.argument; _ } = ro in
       let arg_kind =
@@ -1298,15 +1300,6 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                    (mk_eval_id cx loc)
                 )
                 targs
-          )
-        | "$Renders" ->
-          check_type_arg_arity cx loc t_ast targs 1 (fun () ->
-              let (ts, targs) = convert_type_params () in
-              let t = List.hd ts in
-              let reason = mk_reason (RRenderType (desc_of_reason (reason_of_t t))) loc in
-              Flow.flow cx (t, AssertValidRendersArgumentT (reason_of_t t));
-              let renders_t = TypeUtil.mk_renders_type reason t in
-              reconstruct_ast renders_t targs
           )
         | "$Flow$DebugPrint" -> mk_custom_fun cx loc t_ast targs ident DebugPrint
         | "$Flow$DebugThrow" -> mk_custom_fun cx loc t_ast targs ident DebugThrow

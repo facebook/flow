@@ -1,11 +1,13 @@
-type X = $Renders<null>;
+type X = renders null;
 //   ^
-type Y = $Renders<null | number>;
+type Y = renders (null | number);
 //   ^
 component Foo() { return null }
 component Bar() { return null }
 
-type Z = $Renders<Foo>;
+type Z = renders Foo;
 //   ^
-type U = $Renders<Foo | Bar>;
+type U = renders (Foo | Bar);
+//   ^
+type V = renders Foo | Bar;
 //   ^

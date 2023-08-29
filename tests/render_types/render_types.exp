@@ -1,15 +1,29 @@
-Error ---------------------------------------------------------------------------------------------------- import.js:5:2
+Error ---------------------------------------------------------------------------------------------------- import.js:6:2
 
-Cannot cast `x` to renders `Bar` because `Foo` [1] does not render `Bar` [2]. [incompatible-cast]
+Cannot cast `<Foo />` to renders `Bar` because `React.Element` [1] does not render `Bar` [2]. [incompatible-cast]
 
-   import.js:5:2
-   5| (x: $Renders<Bar>); // ERROR
-       ^ [1]
+   import.js:6:2
+   6| (<Foo />: renders Bar); // ERROR
+       ^^^^^^^ [1]
 
 References:
-   import.js:5:5
-   5| (x: $Renders<Bar>); // ERROR
-          ^^^^^^^^^^^^^ [2]
+   import.js:6:11
+   6| (<Foo />: renders Bar); // ERROR
+                ^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- import.js:7:2
+
+Cannot cast `<Bar />` to renders `Foo` because `React.Element` [1] does not render `Foo` [2]. [incompatible-cast]
+
+   import.js:7:2
+   7| (<Bar />: renders Foo); // ERROR
+       ^^^^^^^ [1]
+
+References:
+   import.js:7:11
+   7| (<Bar />: renders Foo); // ERROR
+                ^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- interop.js:15:2
@@ -17,13 +31,13 @@ Error --------------------------------------------------------------------------
 Cannot cast `<Baz />` to renders `Qux` because `React.Element` [1] does not render `Qux` [2]. [incompatible-cast]
 
    interop.js:15:2
-   15| (<Baz />: $Renders<Qux>); // ERROR
+   15| (<Baz />: renders Qux); // ERROR
         ^^^^^^^ [1]
 
 References:
    interop.js:15:11
-   15| (<Baz />: $Renders<Qux>); // ERROR
-                 ^^^^^^^^^^^^^ [2]
+   15| (<Baz />: renders Qux); // ERROR
+                 ^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- interop.js:21:2
@@ -31,13 +45,13 @@ Error --------------------------------------------------------------------------
 Cannot cast `<RendersBaz />` to renders `Qux` because `React.Element` [1] does not render `Qux` [2]. [incompatible-cast]
 
    interop.js:21:2
-   21| (<RendersBaz />: $Renders<Qux>); // ERROR
+   21| (<RendersBaz />: renders Qux); // ERROR
         ^^^^^^^^^^^^^^ [1]
 
 References:
    interop.js:21:18
-   21| (<RendersBaz />: $Renders<Qux>); // ERROR
-                        ^^^^^^^^^^^^^ [2]
+   21| (<RendersBaz />: renders Qux); // ERROR
+                        ^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- interop.js:25:2
@@ -46,13 +60,13 @@ Cannot cast `<LongerChain />` to renders `Qux` because `React.Element` [1] does 
 [incompatible-cast]
 
    interop.js:25:2
-   25| (<LongerChain />: $Renders<Qux>); // ERROR
+   25| (<LongerChain />: renders Qux); // ERROR
         ^^^^^^^^^^^^^^^ [1]
 
 References:
    interop.js:25:19
-   25| (<LongerChain />: $Renders<Qux>); // ERROR
-                         ^^^^^^^^^^^^^ [2]
+   25| (<LongerChain />: renders Qux); // ERROR
+                         ^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------- no_any_with_renders_react_node.js:5:10
@@ -87,7 +101,7 @@ Cannot cast `x` to renders `React.Element` because object type [1] does not rend
 [incompatible-cast]
 
    no_spoofing_element_types.js:3:2
-   3| (x: $Renders<React$Element<typeof Foo>>); // ERROR!
+   3| (x: renders React$Element<typeof Foo>); // ERROR!
        ^
 
 References:
@@ -95,8 +109,8 @@ References:
    2| declare const x: {+type: typeof Foo};
                        ^^^^^^^^^^^^^^^^^^^ [1]
    no_spoofing_element_types.js:3:5
-   3| (x: $Renders<React$Element<typeof Foo>>); // ERROR!
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   3| (x: renders React$Element<typeof Foo>); // ERROR!
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------- no_spoofing_element_types.js:7:2
@@ -104,7 +118,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `y` to renders `Bar` because object type [1] does not render `Bar` [2]. [incompatible-cast]
 
    no_spoofing_element_types.js:7:2
-   7| (y: $Renders<Bar>); // ERROR! TODO better error message
+   7| (y: renders Bar); // ERROR! TODO better error message
        ^
 
 References:
@@ -112,8 +126,8 @@ References:
    6| declare const y: {+type: Bar};
                        ^^^^^^^^^^^^ [1]
    no_spoofing_element_types.js:7:5
-   7| (y: $Renders<Bar>); // ERROR! TODO better error message
-          ^^^^^^^^^^^^^ [2]
+   7| (y: renders Bar); // ERROR! TODO better error message
+          ^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- poly.js:11:2
@@ -122,13 +136,13 @@ Cannot cast `el` to renders undefined because `React.Element` [1] is incompatibl
 [incompatible-cast]
 
    poly.js:11:2
-   11| (el: $Renders<void>); // error
+   11| (el: renders void); // error
         ^^ [1]
 
 References:
-   poly.js:11:15
-   11| (el: $Renders<void>); // error
-                     ^^^^ [2]
+   poly.js:11:14
+   11| (el: renders void); // error
+                    ^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- poly.js:19:37
@@ -142,8 +156,8 @@ Cannot create `FooContainer` element because `React.Element` [1] does not render
 
 References:
    poly.js:16:34
-   16| component FooContainer(children: $Renders<Foo>) { return null };
-                                        ^^^^^^^^^^^^^ [2]
+   16| component FooContainer(children: renders Foo) { return null };
+                                        ^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:20:4
@@ -158,11 +172,11 @@ Cannot cast `rendersFooOrBar` to `typeof rendersFooOrRendersBar` because: [incom
 
 References:
    renders_to_renders.js:12:39
-   12| declare const rendersFooOrRendersBar: $Renders<Foo> | $Renders<Bar>;
-                                             ^^^^^^^^^^^^^ [2]
-   renders_to_renders.js:12:55
-   12| declare const rendersFooOrRendersBar: $Renders<Foo> | $Renders<Bar>;
-                                                             ^^^^^^^^^^^^^ [3]
+   12| declare const rendersFooOrRendersBar: renders Foo | renders Bar;
+                                             ^^^^^^^^^^^ [2]
+   renders_to_renders.js:12:53
+   12| declare const rendersFooOrRendersBar: renders Foo | renders Bar;
+                                                           ^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:28:4
@@ -170,13 +184,13 @@ Error --------------------------------------------------------------------------
 Cannot cast `rendersFoo` to renders `Bar` because `Foo` [1] does not render `Bar` [2]. [incompatible-cast]
 
    renders_to_renders.js:28:4
-   28|   (rendersFoo: $Renders<Bar>); // ERROR
+   28|   (rendersFoo: renders Bar); // ERROR
           ^^^^^^^^^^ [1]
 
 References:
    renders_to_renders.js:28:16
-   28|   (rendersFoo: $Renders<Bar>); // ERROR
-                      ^^^^^^^^^^^^^ [2]
+   28|   (rendersFoo: renders Bar); // ERROR
+                      ^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:29:4
@@ -185,13 +199,13 @@ Cannot cast `rendersFoo` to renders `React.Element` because `Foo` [1] does not r
 [incompatible-cast]
 
    renders_to_renders.js:29:4
-   29|   (rendersFoo: $Renders<React$Element<Bar>>); // ERROR
+   29|   (rendersFoo: renders React$Element<Bar>); // ERROR
           ^^^^^^^^^^ [1]
 
 References:
    renders_to_renders.js:29:16
-   29|   (rendersFoo: $Renders<React$Element<Bar>>); // ERROR
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   29|   (rendersFoo: renders React$Element<Bar>); // ERROR
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:34:4
@@ -199,13 +213,13 @@ Error --------------------------------------------------------------------------
 Cannot cast `rendersFoo` to renders renders `Bar` because `Foo` [1] does not render `Bar` [2]. [incompatible-cast]
 
    renders_to_renders.js:34:4
-   34|   (rendersFoo: $Renders<$Renders<Bar>>); // ERROR
+   34|   (rendersFoo: renders renders Bar); // ERROR
           ^^^^^^^^^^ [1]
 
 References:
    renders_to_renders.js:34:16
-   34|   (rendersFoo: $Renders<$Renders<Bar>>); // ERROR
-                      ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   34|   (rendersFoo: renders renders Bar); // ERROR
+                      ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:35:4
@@ -214,13 +228,13 @@ Cannot cast `rendersFoo` to renders renders `React.Element` because `Foo` [1] do
 [incompatible-cast]
 
    renders_to_renders.js:35:4
-   35|   (rendersFoo: $Renders<$Renders<React$Element<Bar>>>); // ERROR
+   35|   (rendersFoo: renders renders React$Element<Bar>); // ERROR
           ^^^^^^^^^^ [1]
 
 References:
    renders_to_renders.js:35:16
-   35|   (rendersFoo: $Renders<$Renders<React$Element<Bar>>>); // ERROR
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   35|   (rendersFoo: renders renders React$Element<Bar>); // ERROR
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:46:4
@@ -230,15 +244,15 @@ Cannot cast `rendersQux` to renders union type because: [incompatible-cast]
  - Or `Qux` [1] does not render `Baz` [3].
 
    renders_to_renders.js:46:4
-   46|   (rendersQux: $Renders<Foo | Baz>); // ERROR
+   46|   (rendersQux: renders (Foo | Baz)); // ERROR
           ^^^^^^^^^^ [1]
 
 References:
    renders_to_renders.js:46:25
-   46|   (rendersQux: $Renders<Foo | Baz>); // ERROR
+   46|   (rendersQux: renders (Foo | Baz)); // ERROR
                                ^^^ [2]
    renders_to_renders.js:46:31
-   46|   (rendersQux: $Renders<Foo | Baz>); // ERROR
+   46|   (rendersQux: renders (Foo | Baz)); // ERROR
                                      ^^^ [3]
 
 
@@ -247,13 +261,13 @@ Error --------------------------------------------------------------------------
 Cannot cast `rendersBazOrBaz` to renders `Bar` because `Baz` [1] does not render `Bar` [2]. [incompatible-cast]
 
    renders_to_renders.js:58:4
-   58|   (rendersBazOrBaz: $Renders<Bar>); // ERROR
+   58|   (rendersBazOrBaz: renders Bar); // ERROR
           ^^^^^^^^^^^^^^^ [1]
 
 References:
    renders_to_renders.js:58:21
-   58|   (rendersBazOrBaz: $Renders<Bar>); // ERROR
-                           ^^^^^^^^^^^^^ [2]
+   58|   (rendersBazOrBaz: renders Bar); // ERROR
+                           ^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:66:4
@@ -263,15 +277,15 @@ Cannot cast `rendersFooOrBar` to renders union type because: [incompatible-cast]
  - Or `Bar` [1] does not render `Baz` [3].
 
    renders_to_renders.js:66:4
-   66|   (rendersFooOrBar: $Renders<Foo | Baz>); // ERROR
+   66|   (rendersFooOrBar: renders (Foo | Baz)); // ERROR
           ^^^^^^^^^^^^^^^ [1]
 
 References:
    renders_to_renders.js:66:30
-   66|   (rendersFooOrBar: $Renders<Foo | Baz>); // ERROR
+   66|   (rendersFooOrBar: renders (Foo | Baz)); // ERROR
                                     ^^^ [2]
    renders_to_renders.js:66:36
-   66|   (rendersFooOrBar: $Renders<Foo | Baz>); // ERROR
+   66|   (rendersFooOrBar: renders (Foo | Baz)); // ERROR
                                           ^^^ [3]
 
 
@@ -280,16 +294,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `Foo` to renders `Foo` because component Foo [1] does not render `Foo` [2]. [incompatible-cast]
 
    renders_to_renders.js:72:4
-   72|   (Foo: $Renders<Foo>); // ERROR
+   72|   (Foo: renders Foo); // ERROR
           ^^^
 
 References:
    renders_to_renders.js:2:1
-    2| component Foo() renders $Renders<null> { return null }
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+    2| component Foo() renders null { return null }
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    renders_to_renders.js:72:9
-   72|   (Foo: $Renders<Foo>); // ERROR
-               ^^^^^^^^^^^^^ [2]
+   72|   (Foo: renders Foo); // ERROR
+               ^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:81:4
@@ -302,7 +316,7 @@ Cannot cast `rendersFooOrBar` to empty because `React.Element` [1] is incompatib
 
 References:
    renders_to_renders.js:11:41
-   11| declare const rendersFooOrBar: $Renders<Foo | Bar>;
+   11| declare const rendersFooOrBar: renders (Foo | Bar);
                                                ^^^^^^^^^ [1]
    renders_to_renders.js:81:21
    81|   (rendersFooOrBar: empty); // ERROR
@@ -319,9 +333,9 @@ Cannot cast `rendersNode` to `React.MixedElement` because `React.Portal` [1] is 
           ^^^^^^^^^^^
 
 References:
-   renders_to_renders.js:10:37
-   10| declare const rendersNode: $Renders<React$Node>;
-                                           ^^^^^^^^^^ [1]
+   renders_to_renders.js:10:36
+   10| declare const rendersNode: renders React$Node;
+                                          ^^^^^^^^^^ [1]
    renders_to_renders.js:84:17
    84|   (rendersNode: React$MixedElement); // ERROR
                        ^^^^^^^^^^^^^^^^^^ [2]
@@ -337,9 +351,9 @@ Cannot cast `rendersNode` to `React.MixedElement` because boolean [1] is incompa
           ^^^^^^^^^^^
 
 References:
-   renders_to_renders.js:10:37
-   10| declare const rendersNode: $Renders<React$Node>;
-                                           ^^^^^^^^^^ [1]
+   renders_to_renders.js:10:36
+   10| declare const rendersNode: renders React$Node;
+                                          ^^^^^^^^^^ [1]
    renders_to_renders.js:84:17
    84|   (rendersNode: React$MixedElement); // ERROR
                        ^^^^^^^^^^^^^^^^^^ [2]
@@ -355,9 +369,9 @@ Cannot cast `rendersNode` to `React.MixedElement` because null [1] is incompatib
           ^^^^^^^^^^^
 
 References:
-   renders_to_renders.js:10:37
-   10| declare const rendersNode: $Renders<React$Node>;
-                                           ^^^^^^^^^^ [1]
+   renders_to_renders.js:10:36
+   10| declare const rendersNode: renders React$Node;
+                                          ^^^^^^^^^^ [1]
    renders_to_renders.js:84:17
    84|   (rendersNode: React$MixedElement); // ERROR
                        ^^^^^^^^^^^^^^^^^^ [2]
@@ -373,9 +387,9 @@ Cannot cast `rendersNode` to `React.MixedElement` because number [1] is incompat
           ^^^^^^^^^^^
 
 References:
-   renders_to_renders.js:10:37
-   10| declare const rendersNode: $Renders<React$Node>;
-                                           ^^^^^^^^^^ [1]
+   renders_to_renders.js:10:36
+   10| declare const rendersNode: renders React$Node;
+                                          ^^^^^^^^^^ [1]
    renders_to_renders.js:84:17
    84|   (rendersNode: React$MixedElement); // ERROR
                        ^^^^^^^^^^^^^^^^^^ [2]
@@ -391,9 +405,9 @@ Cannot cast `rendersNode` to `React.MixedElement` because string [1] is incompat
           ^^^^^^^^^^^
 
 References:
-   renders_to_renders.js:10:37
-   10| declare const rendersNode: $Renders<React$Node>;
-                                           ^^^^^^^^^^ [1]
+   renders_to_renders.js:10:36
+   10| declare const rendersNode: renders React$Node;
+                                          ^^^^^^^^^^ [1]
    renders_to_renders.js:84:17
    84|   (rendersNode: React$MixedElement); // ERROR
                        ^^^^^^^^^^^^^^^^^^ [2]
@@ -409,9 +423,9 @@ Cannot cast `rendersNode` to `React.MixedElement` because undefined [1] is incom
           ^^^^^^^^^^^
 
 References:
-   renders_to_renders.js:10:37
-   10| declare const rendersNode: $Renders<React$Node>;
-                                           ^^^^^^^^^^ [1]
+   renders_to_renders.js:10:36
+   10| declare const rendersNode: renders React$Node;
+                                          ^^^^^^^^^^ [1]
    renders_to_renders.js:84:17
    84|   (rendersNode: React$MixedElement); // ERROR
                        ^^^^^^^^^^^^^^^^^^ [2]
@@ -427,9 +441,9 @@ Cannot cast `rendersNode` to `React.MixedElement` because inexact `$Iterable` [1
           ^^^^^^^^^^^
 
 References:
-   renders_to_renders.js:10:37
-   10| declare const rendersNode: $Renders<React$Node>;
-                                           ^^^^^^^^^^ [1]
+   renders_to_renders.js:10:36
+   10| declare const rendersNode: renders React$Node;
+                                          ^^^^^^^^^^ [1]
    renders_to_renders.js:84:17
    84|   (rendersNode: React$MixedElement); // ERROR
                        ^^^^^^^^^^^^^^^^^^ [2]
@@ -445,7 +459,7 @@ Cannot cast `rendersNullOrNull` to null because `$Iterable` [1] is incompatible 
 
 References:
    renders_to_renders.js:86:45
-   86|   declare const rendersNullOrNull: $Renders<null | null>;
+   86|   declare const rendersNullOrNull: renders (null | null);
                                                    ^^^^^^^^^^^ [1]
    renders_to_renders.js:87:23
    87|   (rendersNullOrNull: null); // ERROR
@@ -462,7 +476,7 @@ Cannot cast `rendersNullOrNull` to null because `React.Element` [1] is incompati
 
 References:
    renders_to_renders.js:86:45
-   86|   declare const rendersNullOrNull: $Renders<null | null>;
+   86|   declare const rendersNullOrNull: renders (null | null);
                                                    ^^^^^^^^^^^ [1]
    renders_to_renders.js:87:23
    87|   (rendersNullOrNull: null); // ERROR
@@ -479,7 +493,7 @@ Cannot cast `rendersNullOrNull` to null because `React.Portal` [1] is incompatib
 
 References:
    renders_to_renders.js:86:45
-   86|   declare const rendersNullOrNull: $Renders<null | null>;
+   86|   declare const rendersNullOrNull: renders (null | null);
                                                    ^^^^^^^^^^^ [1]
    renders_to_renders.js:87:23
    87|   (rendersNullOrNull: null); // ERROR
@@ -496,7 +510,7 @@ Cannot cast `rendersNullOrNull` to null because boolean [1] is incompatible with
 
 References:
    renders_to_renders.js:86:45
-   86|   declare const rendersNullOrNull: $Renders<null | null>;
+   86|   declare const rendersNullOrNull: renders (null | null);
                                                    ^^^^^^^^^^^ [1]
    renders_to_renders.js:87:23
    87|   (rendersNullOrNull: null); // ERROR
@@ -513,7 +527,7 @@ Cannot cast `rendersNullOrNull` to null because number [1] is incompatible with 
 
 References:
    renders_to_renders.js:86:45
-   86|   declare const rendersNullOrNull: $Renders<null | null>;
+   86|   declare const rendersNullOrNull: renders (null | null);
                                                    ^^^^^^^^^^^ [1]
    renders_to_renders.js:87:23
    87|   (rendersNullOrNull: null); // ERROR
@@ -530,7 +544,7 @@ Cannot cast `rendersNullOrNull` to null because string [1] is incompatible with 
 
 References:
    renders_to_renders.js:86:45
-   86|   declare const rendersNullOrNull: $Renders<null | null>;
+   86|   declare const rendersNullOrNull: renders (null | null);
                                                    ^^^^^^^^^^^ [1]
    renders_to_renders.js:87:23
    87|   (rendersNullOrNull: null); // ERROR
@@ -547,7 +561,7 @@ Cannot cast `rendersNullOrNull` to null because undefined [1] is incompatible wi
 
 References:
    renders_to_renders.js:86:45
-   86|   declare const rendersNullOrNull: $Renders<null | null>;
+   86|   declare const rendersNullOrNull: renders (null | null);
                                                    ^^^^^^^^^^^ [1]
    renders_to_renders.js:87:23
    87|   (rendersNullOrNull: null); // ERROR
@@ -563,9 +577,9 @@ Cannot get `rendersNode.props` because property `props` is missing in `$Iterable
                      ^^^^^
 
 References:
-   renders_to_renders.js:10:37
-   10| declare const rendersNode: $Renders<React$Node>;
-                                           ^^^^^^^^^^ [1]
+   renders_to_renders.js:10:36
+   10| declare const rendersNode: renders React$Node;
+                                          ^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:89:15
@@ -577,9 +591,9 @@ Cannot get `rendersNode.props` because property `props` is missing in `Boolean` 
                      ^^^^^
 
 References:
-   renders_to_renders.js:10:37
-   10| declare const rendersNode: $Renders<React$Node>;
-                                           ^^^^^^^^^^ [1]
+   renders_to_renders.js:10:36
+   10| declare const rendersNode: renders React$Node;
+                                          ^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:89:15
@@ -591,9 +605,9 @@ Cannot get `rendersNode.props` because property `props` is missing in `Number` [
                      ^^^^^
 
 References:
-   renders_to_renders.js:10:37
-   10| declare const rendersNode: $Renders<React$Node>;
-                                           ^^^^^^^^^^ [1]
+   renders_to_renders.js:10:36
+   10| declare const rendersNode: renders React$Node;
+                                          ^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:89:15
@@ -605,9 +619,9 @@ Cannot get `rendersNode.props` because property `props` is missing in `React.Por
                      ^^^^^
 
 References:
-   renders_to_renders.js:10:37
-   10| declare const rendersNode: $Renders<React$Node>;
-                                           ^^^^^^^^^^ [1]
+   renders_to_renders.js:10:36
+   10| declare const rendersNode: renders React$Node;
+                                          ^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:89:15
@@ -619,9 +633,9 @@ Cannot get `rendersNode.props` because property `props` is missing in `String` [
                      ^^^^^
 
 References:
-   renders_to_renders.js:10:37
-   10| declare const rendersNode: $Renders<React$Node>;
-                                           ^^^^^^^^^^ [1]
+   renders_to_renders.js:10:36
+   10| declare const rendersNode: renders React$Node;
+                                          ^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:89:15
@@ -633,9 +647,9 @@ Cannot get `rendersNode.props` because property `props` is missing in null [1]. 
                      ^^^^^
 
 References:
-   renders_to_renders.js:10:37
-   10| declare const rendersNode: $Renders<React$Node>;
-                                           ^^^^^^^^^^ [1]
+   renders_to_renders.js:10:36
+   10| declare const rendersNode: renders React$Node;
+                                          ^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:89:15
@@ -647,9 +661,9 @@ Cannot get `rendersNode.props` because property `props` is missing in undefined 
                      ^^^^^
 
 References:
-   renders_to_renders.js:10:37
-   10| declare const rendersNode: $Renders<React$Node>;
-                                           ^^^^^^^^^^ [1]
+   renders_to_renders.js:10:36
+   10| declare const rendersNode: renders React$Node;
+                                          ^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:95:4
@@ -669,7 +683,7 @@ References:
                        ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------- validate_instantiation.js:2:19
+Error ----------------------------------------------------------------------------------- validate_instantiation.js:2:18
 
 Cannot use object type [1] as a render type because: [incompatible-type]
  - Either property `key` is missing in object type [1] but exists in `React.Element` [2].
@@ -678,9 +692,9 @@ Cannot use object type [1] as a render type because: [incompatible-type]
 
 Render types must be a subtype of `React.Node` or a reference to a component-syntax component.
 
-   validate_instantiation.js:2:19
-    2| type Y = $Renders<{}>; // ERROR
-                         ^^ [1]
+   validate_instantiation.js:2:18
+    2| type Y = renders {}; // ERROR
+                        ^^ [1]
 
 References:
    <BUILTINS>/react.js:21:5
@@ -695,7 +709,7 @@ References:
 
 
 
-Found 42 errors
+Found 43 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

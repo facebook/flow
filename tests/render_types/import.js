@@ -1,5 +1,7 @@
 import {Foo, type RendersFoo} from './export'
 import * as React from 'react';
+(<Foo />: RendersFoo); // OK
+
 component Bar() { return null }
-declare const x: $Renders<Foo>;
-(x: $Renders<Bar>); // ERROR
+(<Foo />: renders Bar); // ERROR
+(<Bar />: renders Foo); // ERROR

@@ -7,13 +7,13 @@ component Fragment<T: React.Node>(children: T) renders T {
 }
 
 const el = <Fragment>{null}</Fragment>;
-(el: $Renders<null>); // no error
-(el: $Renders<void>); // error
+(el: renders null); // no error
+(el: renders void); // error
 
 component Foo() { return null }
 component Bar() {return null }
 
-component FooContainer(children: $Renders<Foo>) { return null };
+component FooContainer(children: renders Foo) { return null };
 
 const transitive = <FooContainer><Fragment><Foo /></Fragment></FooContainer>; // ok
 const transitiveBad = <FooContainer><Fragment><Bar /></Fragment></FooContainer>; // error
@@ -22,7 +22,7 @@ component Baz() renders Foo { return <Foo /> }
 
 const doubleTransitive = <FooContainer><Fragment><Baz /></Fragment></FooContainer>; // ok
 
-component Menu(children: $Renders<React.ChildrenArray<$Renders<MenuItem>>>) { return null; }
+component Menu(children: renders React.ChildrenArray<renders MenuItem>) { return null; }
 component MenuItem() { return null; }
 
 const menu = ( // OK!

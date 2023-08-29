@@ -1,2 +1,2 @@
 export component Foo() { return null }
-export type RendersFoo = $Renders<Foo>;
+export type RendersFoo = renders Foo;

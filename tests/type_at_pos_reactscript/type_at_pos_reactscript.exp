@@ -45,3 +45,8 @@ Flags:
 type U = renders (Foo | Bar)
 render_types.js:10:6,10:6
 
+render_types.js:12:6
+Flags:
+type V = renders Foo | React$AbstractComponent<{}, mixed, renders React$Node>
+render_types.js:12:6,12:6
+

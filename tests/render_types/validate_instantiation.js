@@ -1,6 +1,6 @@
-type X = $Renders<null>; // OK!
-type Y = $Renders<{}>; // ERROR
+type X = renders null; // OK!
+type Y = renders {}; // ERROR
 
 component Foo() { return null }
 
-type Z = $Renders<Foo>; // OK!
+type Z = renders Foo; // OK!
