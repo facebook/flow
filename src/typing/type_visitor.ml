@@ -377,6 +377,7 @@ class ['a] t =
     method private inst_type cx pole acc i =
       let {
         class_id = _;
+        class_name = _;
         type_args;
         own_props;
         proto_props;

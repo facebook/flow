@@ -666,6 +666,7 @@ and tag_of_inst inst =
     inst_call_t;
     inst_kind;
     class_id = _;
+    class_name = _;
     type_args = _;
     own_props = _;
     proto_props = _;

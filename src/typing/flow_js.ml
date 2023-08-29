@@ -5967,6 +5967,7 @@ struct
       implements
       {
         class_id = _;
+        class_name = _;
         type_args;
         own_props;
         proto_props;

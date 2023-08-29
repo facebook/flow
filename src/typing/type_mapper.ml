@@ -423,6 +423,7 @@ class virtual ['a] t =
     method inst_type cx map_cx i =
       let {
         class_id;
+        class_name;
         type_args;
         own_props;
         proto_props;
@@ -460,6 +461,7 @@ class virtual ['a] t =
       else
         {
           class_id;
+          class_name;
           type_args = type_args';
           own_props = own_props';
           proto_props = proto_props';

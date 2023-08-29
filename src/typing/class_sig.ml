@@ -33,7 +33,7 @@ module Make
   module Func = F
   open Types
 
-  let empty id class_loc reason tparams tparams_map super =
+  let empty id class_name class_loc reason tparams tparams_map super =
     let empty_sig reason =
       {
         reason;
@@ -54,7 +54,7 @@ module Make
       empty_sig reason
     in
     let instance = empty_sig reason in
-    { id; class_loc; tparams; tparams_map; super; constructor; static; instance }
+    { id; class_name; class_loc; tparams; tparams_map; super; constructor; static; instance }
 
   let structural x =
     match x.super with
@@ -533,6 +533,7 @@ module Make
     in
     {
       Type.class_id = s.id;
+      class_name = s.class_name;
       type_args;
       own_props = Context.generate_property_map cx (NameUtils.namemap_of_smap fields);
       proto_props = Context.generate_property_map cx (NameUtils.namemap_of_smap methods);

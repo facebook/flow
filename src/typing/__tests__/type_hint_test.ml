@@ -342,6 +342,7 @@ let mk_private_method_eval_hint_test
             inst =
               {
                 class_id = ALoc.id_none;
+                class_name = None;
                 type_args = [];
                 own_props = Context.generate_property_map cx NameUtils.Map.empty;
                 proto_props = Context.generate_property_map cx NameUtils.Map.empty;

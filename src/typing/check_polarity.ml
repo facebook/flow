@@ -69,6 +69,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
     | DefT (_, _, InstanceT { static; super; implements; inst }) ->
       let {
         class_id = _;
+        class_name = _;
         type_args = _;
         own_props;
         proto_props;

@@ -1034,7 +1034,7 @@ and merge_annot tps infer_tps file = function
   | InlineInterface (loc, def) ->
     let reason = Reason.(mk_annot_reason RInterfaceType loc) in
     let id = ALoc.id_none in
-    merge_interface ~inline:true tps infer_tps file reason id def []
+    merge_interface ~inline:true tps infer_tps file reason None id def []
   | MappedTypeAnnot
       { loc; source_type; property_type; key_tparam; variance; optional; inline_keyof } ->
     let source_type = merge tps infer_tps file source_type in
@@ -1105,7 +1105,7 @@ and merge_value tps infer_tps file = function
     let name = "<<anonymous class>>" in
     let reason = Type.DescFormat.instance_reason (Reason.OrdinaryName name) loc in
     let id = Context.make_aloc_id file.cx loc in
-    merge_class tps infer_tps file reason id def
+    merge_class tps infer_tps file reason None id def
   | FunExpr { loc; async; generator; def; statics } ->
     let reason = Reason.func_reason ~async ~generator loc in
     let statics = merge_fun_statics tps infer_tps file reason statics in
@@ -1358,7 +1358,7 @@ and merge_tparam ~from_infer tps infer_tps file tp =
 
 and merge_op tps infer_tps file op = map_op (merge tps infer_tps file) op
 
-and merge_interface ~inline tps infer_tps file reason id def =
+and merge_interface ~inline tps infer_tps file reason class_name id def =
   let (InterfaceSig { extends; props; calls; dict }) = def in
   let super =
     let super_reason = Reason.(update_desc_reason (fun d -> RSuperOf d) reason) in
@@ -1410,6 +1410,7 @@ and merge_interface ~inline tps infer_tps file reason id def =
     let inst =
       {
         class_id = id;
+        class_name;
         type_args = targs;
         own_props = Context.generate_property_map file.cx own_props;
         proto_props = Context.generate_property_map file.cx proto_props;
@@ -1475,7 +1476,7 @@ and merge_class_mixin =
       let targs = List.map (merge tps infer_tps file) targs in
       TypeUtil.this_typeapp ~annot_loc:loc t this (Some targs)
 
-and merge_class tps infer_tps file reason id def =
+and merge_class tps infer_tps file reason class_name id def =
   let (ClassSig { tparams; extends; implements; static_props; own_props; proto_props }) = def in
   let this_reason = Reason.(replace_desc_reason RThisType reason) in
   let this_class_t tps targs rec_type =
@@ -1517,6 +1518,7 @@ and merge_class tps infer_tps file reason id def =
     let inst =
       {
         class_id = id;
+        class_name;
         type_args = targs;
         own_props;
         proto_props;
@@ -1841,7 +1843,7 @@ let merge_opaque_type file reason id name tparams bound body =
   in
   merge_tparams_targs SMap.empty SMap.empty file reason t tparams
 
-let merge_declare_class file reason id def =
+let merge_declare_class file reason class_name id def =
   let infer_tps = SMap.empty in
   let (DeclareClassSig
         {
@@ -1919,6 +1921,7 @@ let merge_declare_class file reason id def =
     let inst =
       {
         class_id = id;
+        class_name = Some class_name;
         type_args = targs;
         own_props;
         proto_props;
@@ -1963,19 +1966,19 @@ let merge_def file reason = function
   | OpaqueType { id_loc; name; tparams; body; bound } ->
     let id = Context.make_aloc_id file.cx id_loc in
     merge_opaque_type file reason id name tparams bound body
-  | Interface { id_loc; name = _; tparams; def } ->
+  | Interface { id_loc; name; tparams; def } ->
     let id = Context.make_aloc_id file.cx id_loc in
     let t (tps, targs) =
-      let t = merge_interface ~inline:false tps SMap.empty file reason id def targs in
+      let t = merge_interface ~inline:false tps SMap.empty file reason (Some name) id def targs in
       TypeUtil.class_type t
     in
     merge_tparams_targs SMap.empty SMap.empty file reason t tparams
-  | ClassBinding { id_loc; name = _; def } ->
+  | ClassBinding { id_loc; name; def } ->
     let id = Context.make_aloc_id file.cx id_loc in
-    merge_class SMap.empty SMap.empty file reason id def
-  | DeclareClassBinding { id_loc; name = _; def } ->
+    merge_class SMap.empty SMap.empty file reason (Some name) id def
+  | DeclareClassBinding { id_loc; name; def } ->
     let id = Context.make_aloc_id file.cx id_loc in
-    merge_declare_class file reason id def
+    merge_declare_class file reason name id def
   | FunBinding { id_loc = _; name = _; async = _; generator = _; fn_loc = _; def; statics } ->
     let statics = merge_fun_statics SMap.empty SMap.empty file reason statics in
     merge_fun SMap.empty SMap.empty file reason def statics

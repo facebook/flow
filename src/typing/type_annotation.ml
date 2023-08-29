@@ -1693,7 +1693,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           in
           Class_type_sig.Types.Interface { Class_type_sig.Types.inline = true; extends; callable }
         in
-        (Class_type_sig.empty id loc reason None tparams_map super, extend_asts)
+        (Class_type_sig.empty id None loc reason None tparams_map super, extend_asts)
       in
       let (iface_sig, property_asts) =
         add_interface_properties
@@ -3049,6 +3049,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     let self = Tvar.mk cx reason in
     let (tparams, tparams_map, tparams_ast) = mk_type_param_declarations cx tparams in
     let (iface_sig, extends_ast) =
+      let class_name = id_name.Ast.Identifier.name in
       let id = Context.make_aloc_id cx id_loc in
       let (extends, extends_ast) =
         extends |> Base.List.map ~f:(mk_interface_super cx tparams_map ALocMap.empty) |> List.split
@@ -3065,7 +3066,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         in
         Interface { inline = false; extends; callable }
       in
-      (empty id intf_loc reason tparams tparams_map super, extends_ast)
+      (empty id (Some class_name) intf_loc reason tparams tparams_map super, extends_ast)
     in
     (* TODO: interfaces don't have a name field, or even statics *)
     let iface_sig = add_name_field iface_sig in
@@ -3128,7 +3129,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       | None -> false
       | Some source -> File_key.is_lib_file source
     in
-    fun cx class_loc reason decl ->
+    fun cx class_loc class_name reason decl ->
       let {
         Ast.Statement.DeclareClass.id = (id_loc, id_name) as ident;
         tparams;
@@ -3199,7 +3200,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           in
           Class { Class_type_sig.Types.extends; mixins; implements; this_t; this_tparam }
         in
-        ( empty id class_loc reason tparams tparams_map super,
+        ( empty id (Some class_name) class_loc reason tparams tparams_map super,
           extends_ast,
           mixins_ast,
           implements_ast

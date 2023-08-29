@@ -1427,6 +1427,7 @@ module rec TypeTerm : sig
   }
 
   and insttype = {
+    class_name: string option;
     class_id: ALoc.id;
     type_args: (Subst_name.t * reason * t * Polarity.t) list;
     own_props: Properties.id;

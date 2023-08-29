@@ -1742,7 +1742,7 @@ module Make
         decl
       in
       let reason = DescFormat.instance_reason (OrdinaryName name) name_loc in
-      let (class_sig, class_t, decl_ast) = Anno.mk_declare_class_sig cx loc reason decl in
+      let (class_sig, class_t, decl_ast) = Anno.mk_declare_class_sig cx loc name reason decl in
       let t = interface_helper cx loc (class_sig, class_t) in
       (t, decl_ast)
 
@@ -6509,6 +6509,7 @@ module Make
         let tparams_map_with_this =
           Subst_name.Map.add (Subst_name.Name "this") this_t tparams_map
         in
+        let class_name = Base.Option.map id ~f:(fun (_, { Ast.Identifier.name; _ }) -> name) in
         let (class_sig, extends_ast_f, implements_ast) =
           let id = Context.make_aloc_id cx name_loc in
           let (extends, extends_ast_f) = mk_extends cx tparams_map_with_this extends in
@@ -6549,7 +6550,10 @@ module Make
           let super =
             Class { Class_stmt_sig_types.extends; mixins = []; implements; this_t; this_tparam }
           in
-          (empty id class_loc reason tparams tparams_map super, extends_ast_f, implements_ast)
+          ( empty id class_name class_loc reason tparams tparams_map super,
+            extends_ast_f,
+            implements_ast
+          )
         in
         (* In case there is no constructor, pick up a default one. *)
         let class_sig =
