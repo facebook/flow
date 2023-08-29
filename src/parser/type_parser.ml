@@ -462,6 +462,19 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
               comments = Flow_ast_utils.mk_comments_opt ~leading ();
             })
         env
+    | T_IDENTIFIER { raw = "renders"; _ } ->
+      with_loc
+        (fun env ->
+          let leading = Peek.comments env in
+          Eat.token env;
+          let trailing = Eat.trailing_comments env in
+          let argument = prefix env in
+          Type.Renders
+            {
+              Type.Renders.argument;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+            })
+        env
     | T_IDENTIFIER _
     | T_EXTENDS (* `extends` is reserved, but recover by treating it as an identifier *)
     | T_STATIC (* `static` is reserved, but recover by treating it as an identifier *) ->

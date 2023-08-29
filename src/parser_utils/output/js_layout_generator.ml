@@ -4006,7 +4006,10 @@ and type_keyof ~opts loc { Ast.Type.Keyof.argument; comments } =
   layout_node_with_comments_opt loc comments (fuse [Atom "keyof"; space; type_ ~opts argument])
 
 and flow_type_operator ~opts loc comments operator operand =
-  layout_node_with_comments_opt loc comments (fuse [Atom operator; space; type_ ~opts operand])
+  layout_node_with_comments_opt
+    loc
+    comments
+    (fuse [Atom operator; space; type_with_parens ~opts operand])
 
 and type_readonly ~opts loc { Ast.Type.ReadOnly.argument; comments } =
   layout_node_with_comments_opt loc comments (fuse [Atom "readonly"; space; type_ ~opts argument])

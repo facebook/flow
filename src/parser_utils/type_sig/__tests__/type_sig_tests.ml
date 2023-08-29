@@ -6254,3 +6254,38 @@ let%expect_test "declare_component_disabled" =
     Local defs:
     0. Variable {id_loc = [1:19-22]; name = "Baz"; def = (Annot (Any [1:24-35]))}
     1. Variable {id_loc = [2:12-15]; name = "Bar"; def = (Annot (Any [2:17-28]))} |}]
+
+let%expect_test "render_types" =
+  print_sig {|
+    export type X = renders number;
+    export type Y = renders number | string;
+    export type Z = renders (number | string);
+  |};
+  [%expect{|
+    CJSModule {
+      type_exports = [|(ExportTypeBinding 0); (ExportTypeBinding 1); (ExportTypeBinding 2)|];
+      exports = None;
+      info = CJSModuleInfo {type_export_keys = [|"X"; "Y"; "Z"|]; type_stars = []; strict = true}}
+
+    Local defs:
+    0. TypeAlias {id_loc = [1:12-13];
+         name = "X"; tparams = Mono;
+         body = (Annot (Renders ([1:16-30], (Annot (Number [1:24-30])))))}
+    1. TypeAlias {id_loc = [2:12-13];
+         name = "Y"; tparams = Mono;
+         body =
+         (Annot
+            Union {loc = [2:16-39]; t0 = (Annot (Renders ([2:16-30], (Annot (Number [2:24-30])))));
+              t1 = (Annot (String [2:33-39]));
+              ts = []})}
+    2. TypeAlias {id_loc = [3:12-13];
+         name = "Z"; tparams = Mono;
+         body =
+         (Annot
+            (Renders ([3:16-41],
+               (Annot
+                  Union {loc = [3:25-40];
+                    t0 = (Annot (Number [3:25-31]));
+                    t1 = (Annot (String [3:34-40]));
+                    ts = []})
+               )))} |}]

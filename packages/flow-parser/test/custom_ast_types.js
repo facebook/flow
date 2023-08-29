@@ -20,6 +20,12 @@ function custom_ast_types(fork) {
   /////////
   // flow
   /////////
+  def('TypeOperator')
+    .bases('FlowType')
+    .build('operator', 'typeAnnotation')
+    .field('operator', String)
+    .field('typeAnnotation', def('FlowType'));
+
   def('ObjectTypeAnnotation').field('properties', [
     or(
       def('ObjectTypeProperty'),
