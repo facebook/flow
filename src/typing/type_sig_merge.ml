@@ -943,6 +943,12 @@ and merge_annot tps infer_tps file = function
       Type.(DefT (reason, trust, def_t))
     | _ -> Type.(AnyT.at (AnyError None) loc)
   end
+  | Renders (loc, t) ->
+    let t = merge tps infer_tps file t in
+    let reason =
+      Reason.(mk_annot_reason (RRenderType (desc_of_reason (TypeUtil.reason_of_t t))) loc)
+    in
+    TypeUtil.mk_renders_type reason t
   | Private (loc, t) -> begin
     match merge tps infer_tps file t with
     | Type.DefT (r, trust, def_t) ->

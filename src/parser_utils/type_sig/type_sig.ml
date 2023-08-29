@@ -524,6 +524,7 @@ type ('loc, 'a) annot =
   | Partial of 'loc * 'a
   | Required of 'loc * 'a
   | Keys of 'loc * 'a
+  | Renders of 'loc * 'a
   | Values of 'loc * 'a
   | Exact of 'loc * 'a
   | Rest of 'loc * 'a * 'a

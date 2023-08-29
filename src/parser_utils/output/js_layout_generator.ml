@@ -4005,6 +4005,9 @@ and type_typeof ~opts:_ loc { Ast.Type.Typeof.argument; comments } =
 and type_keyof ~opts loc { Ast.Type.Keyof.argument; comments } =
   layout_node_with_comments_opt loc comments (fuse [Atom "keyof"; space; type_ ~opts argument])
 
+and flow_type_operator ~opts loc comments operator operand =
+  layout_node_with_comments_opt loc comments (fuse [Atom operator; space; type_ ~opts operand])
+
 and type_readonly ~opts loc { Ast.Type.ReadOnly.argument; comments } =
   layout_node_with_comments_opt loc comments (fuse [Atom "readonly"; space; type_ ~opts argument])
 
@@ -4150,6 +4153,8 @@ and type_ ~opts ((loc, t) : (Loc.t, Loc.t) Ast.Type.t) =
       | T.Intersection t -> type_intersection ~opts loc t
       | T.Typeof t -> type_typeof ~opts loc t
       | T.Keyof t -> type_keyof ~opts loc t
+      | T.Renders { T.Renders.comments; argument } ->
+        flow_type_operator ~opts loc comments "renders" argument
       | T.ReadOnly t -> type_readonly ~opts loc t
       | T.Tuple t -> type_tuple ~opts loc t
       | T.StringLiteral lit -> string_literal ~opts loc lit

@@ -511,6 +511,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method keyof_type : ('M, 'T) Ast.Type.Keyof.t -> ('N, 'U) Ast.Type.Keyof.t
 
+    method render_type : ('M, 'T) Ast.Type.Renders.t -> ('N, 'U) Ast.Type.Renders.t
+
     method readonly_type : ('M, 'T) Ast.Type.ReadOnly.t -> ('N, 'U) Ast.Type.ReadOnly.t
 
     method label_identifier : ('M, 'M) Ast.Identifier.t -> ('N, 'N) Ast.Identifier.t

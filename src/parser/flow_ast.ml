@@ -463,6 +463,14 @@ and Type : sig
     [@@deriving show]
   end
 
+  module Renders : sig
+    type ('M, 'T) t = {
+      argument: ('M, 'T) Type.t;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   module ReadOnly : sig
     type ('M, 'T) t = {
       argument: ('M, 'T) Type.t;
@@ -563,6 +571,7 @@ and Type : sig
     | Intersection of ('M, 'T) Intersection.t
     | Typeof of ('M, 'T) Typeof.t
     | Keyof of ('M, 'T) Keyof.t
+    | Renders of ('M, 'T) Renders.t
     | ReadOnly of ('M, 'T) ReadOnly.t
     | Tuple of ('M, 'T) Tuple.t
     | StringLiteral of 'M StringLiteral.t

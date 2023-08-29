@@ -1960,6 +1960,8 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         Typeof { t with Typeof.comments = merge_comments comments }
       | Keyof ({ Keyof.comments; _ } as t) ->
         Keyof { t with Keyof.comments = merge_comments comments }
+      | Renders ({ Renders.comments; _ } as t) ->
+        Renders { t with Renders.comments = merge_comments comments }
       | ReadOnly ({ ReadOnly.comments; _ } as t) ->
         ReadOnly { t with ReadOnly.comments = merge_comments comments }
       | Tuple ({ Tuple.comments; _ } as t) ->

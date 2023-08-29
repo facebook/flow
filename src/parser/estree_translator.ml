@@ -1594,6 +1594,8 @@ with type t = Impl.t = struct
         | Intersection t -> intersection_type (loc, t)
         | Typeof t -> typeof_type (loc, t)
         | Keyof t -> keyof_type (loc, t)
+        | Renders { Type.Renders.comments; argument } ->
+          flow_type_operator loc comments "renders" argument
         | ReadOnly t -> read_only_type (loc, t)
         | Tuple t -> tuple_type (loc, t)
         | StringLiteral s -> string_literal_type (loc, s)
@@ -1918,6 +1920,12 @@ with type t = Impl.t = struct
       node "QualifiedTypeofIdentifier" loc [("qualification", qualification); ("id", identifier id)]
     and keyof_type (loc, { Type.Keyof.argument; comments }) =
       node ?comments "KeyofTypeAnnotation" loc [("argument", _type argument)]
+    and flow_type_operator loc comments operator operand =
+      node
+        ?comments
+        "TypeOperator"
+        loc
+        [("operator", string operator); ("typeAnnotation", _type operand)]
     and read_only_type (loc, { Type.ReadOnly.argument; comments }) =
       node ?comments "ReadOnlyTypeAnnotation" loc [("argument", _type argument)]
     and tuple_type (loc, { Type.Tuple.elements; comments }) =

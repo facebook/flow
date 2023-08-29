@@ -359,7 +359,8 @@ class searcher ~(is_legit_require : ALoc.t * Type.t -> bool) ~(covers_target : A
         | OptionalIndexedAccess _
         | Union _
         | Intersection _
-        | Tuple _ ->
+        | Tuple _
+        | Renders _ ->
           super#type_ (annot, t)
       else
         (* it is tempting to not recurse here, but comments are not included in

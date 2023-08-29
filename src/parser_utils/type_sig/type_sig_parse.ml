@@ -1305,6 +1305,9 @@ and annot_with_loc opts scope tbls xs (loc, t) =
       let ts_rev = List.rev_map (annot opts scope tbls xs) ts in
       Annot (Intersection { loc; t0; t1; ts = List.rev ts_rev })
     | T.Typeof { T.Typeof.argument = t; _ } -> typeof scope tbls loc t
+    | T.Renders { T.Renders.comments = _; argument } ->
+      let t = annot opts scope tbls xs argument in
+      Annot (Renders (loc, t))
     | T.Keyof _ -> Annot (Any loc)
     | T.ReadOnly _ -> Annot (Any loc)
     | T.Exists _ -> Annot (Exists loc)

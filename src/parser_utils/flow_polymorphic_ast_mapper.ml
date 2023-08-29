@@ -1293,6 +1293,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments' = this#syntax_opt comments in
       { argument = argument'; comments = comments' }
 
+    method render_type (t : ('M, 'T) Ast.Type.Renders.t) : ('N, 'U) Ast.Type.Renders.t =
+      let open Ast.Type.Renders in
+      let { argument; comments } = t in
+      let argument' = this#type_ argument in
+      let comments' = this#syntax_opt comments in
+      { argument = argument'; comments = comments' }
+
     method readonly_type (t : ('M, 'T) Ast.Type.ReadOnly.t) : ('N, 'U) Ast.Type.ReadOnly.t =
       let open Ast.Type.ReadOnly in
       let { argument; comments } = t in
@@ -1447,6 +1454,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | Infer t' -> Infer (this#infer_type t')
         | Typeof t' -> Typeof (this#typeof_type t')
         | Keyof t' -> Keyof (this#keyof_type t')
+        | Renders t' -> Renders (this#render_type t')
         | ReadOnly t' -> ReadOnly (this#readonly_type t')
         | Function ft -> Function (this#function_type ft)
         | Component c -> Component (this#component_type c)

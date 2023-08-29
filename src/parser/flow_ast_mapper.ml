@@ -1709,6 +1709,16 @@ class ['loc] mapper =
       else
         { argument = argument'; comments = comments' }
 
+    method render_type (t : ('loc, 'loc) Ast.Type.Renders.t) =
+      let open Ast.Type.Renders in
+      let { argument; comments } = t in
+      let argument' = this#type_ argument in
+      let comments' = this#syntax_opt comments in
+      if argument == argument' && comments == comments' then
+        t
+      else
+        { argument = argument'; comments = comments' }
+
     method readonly_type (t : ('loc, 'loc) Ast.Type.ReadOnly.t) =
       let open Ast.Type.ReadOnly in
       let { argument; comments } = t in
@@ -1825,6 +1835,7 @@ class ['loc] mapper =
       | (loc, Infer t') -> id this#infer_type t' t (fun t' -> (loc, Infer t'))
       | (loc, Typeof t') -> id this#typeof_type t' t (fun t' -> (loc, Typeof t'))
       | (loc, Keyof t') -> id this#keyof_type t' t (fun t' -> (loc, Keyof t'))
+      | (loc, Renders t') -> id this#render_type t' t (fun t' -> (loc, Renders t'))
       | (loc, ReadOnly t') -> id this#readonly_type t' t (fun t' -> (loc, ReadOnly t'))
       | (loc, Function ft) -> id_loc this#function_type loc ft t (fun ft -> (loc, Function ft))
       | (loc, Component ct) -> id_loc this#component_type loc ct t (fun ct -> (loc, Component ct))
