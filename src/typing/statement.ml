@@ -10,10 +10,7 @@ module Tast_utils = Typed_ast_utils
 (* This module contains the traversal functions which set up subtyping
    constraints for every expression, statement, and declaration form in a
    JavaScript AST; the subtyping constraints are themselves solved in module
-   Flow_js. It also manages environments, including not only the maintenance of
-   scope information for every function (pushing/popping scopes, looking up
-   variables) but also flow-sensitive information about local variables at every
-   point inside a function (and when to narrow or widen their types). *)
+   Flow_js. *)
 
 module Flow = Flow_js
 open Utils_js
@@ -527,14 +524,6 @@ module Make
           Context.mark_maybe_unused_promise cx loc expr_t ~async:(Type_env.in_async_scope cx)
       );
       (loc, Expression { Expression.expression = expr; directive; comments })
-    (* Refinements for `if` are derived by the following Hoare logic rule:
-
-       [Pre & c] S1 [Post1]
-       [Pre & ~c] S2 [Post2]
-       Post = Post1 | Post2
-       ----------------------------
-       [Pre] if c S1 else S2 [Post]
-    *)
     | (loc, If { If.test; consequent; alternate; comments }) ->
       let test_ast = condition ~cond:OtherTest cx test in
       let then_ast = statement cx consequent in
@@ -563,9 +552,7 @@ module Make
     | (loc, OpaqueType otype) ->
       let (_, opaque_type_ast) = opaque_type cx loc otype in
       (loc, OpaqueType opaque_type_ast)
-    (*******************************************************)
     | (switch_loc, Switch { Switch.discriminant; cases; comments; exhaustive_out }) ->
-      (* typecheck discriminant *)
       let discriminant_ast = expression cx discriminant in
       let exhaustive_check_incomplete_out =
         Tvar.mk cx (mk_reason (RCustom "exhaustive check incomplete out") switch_loc)
@@ -575,7 +562,6 @@ module Make
         |> Base.List.fold_left
              ~init:([], false)
              ~f:(fun (cases_ast, has_default) (loc, { Switch.Case.test; consequent; comments }) ->
-               (* compute predicates implied by case expr or default *)
                let test_ast =
                  match test with
                  | None -> None
@@ -657,7 +643,6 @@ module Make
             exhaustive_out = (exhaustive_out, exhaustive_check_incomplete_out);
           }
       )
-    (*******************************************************)
     | (loc, Return { Return.argument; comments; return_out }) ->
       let (t, argument_ast) =
         match argument with
@@ -669,7 +654,6 @@ module Make
       (loc, Return { Return.argument = argument_ast; comments; return_out = (return_out, t) })
     | (loc, Throw { Throw.argument; comments }) ->
       (loc, Throw { Throw.argument = expression cx argument; comments })
-    (***************************************************************************)
     | (loc, Try { Try.block = (b_loc, b); handler; finalizer; comments }) ->
       let try_block_ast = statement_list cx b.Block.body in
       let catch_ast = Base.Option.map handler ~f:(fun (h_loc, h) -> (h_loc, catch_clause cx h)) in
@@ -687,48 +671,14 @@ module Make
             comments;
           }
       )
-    (***************************************************************************)
-    (* Refinements for `while` are derived by the following Hoare logic rule:
-
-       [Pre' & c] S [Post']
-       Pre' = Pre | Post'
-       Post = Pre' & ~c
-       ----------------------
-       [Pre] while c S [Post]
-    *)
-    (***************************************************************************)
     | (loc, While { While.test; body; comments }) ->
-      (* generate loop test preds and their complements *)
       let test_ast = condition ~cond:OtherTest cx test in
       let body_ast = statement cx body in
       (loc, While { While.test = test_ast; body = body_ast; comments })
-    (***************************************************************************)
-    (* Refinements for `do-while` are derived by the following Hoare logic rule:
-
-       [Pre'] S [Post']
-       Pre' = Pre | (Post' & c)
-       Post = Post' & ~c
-       -------------------------
-       [Pre] do S while c [Post]
-    *)
-    (***************************************************************************)
     | (loc, DoWhile { DoWhile.body; test; comments }) ->
       let body_ast = statement cx body in
       let test_ast = condition ~cond:OtherTest cx test in
       (loc, DoWhile { DoWhile.body = body_ast; test = test_ast; comments })
-    (***************************************************************************)
-    (* Refinements for `for` are derived by the following Hoare logic rule:
-
-       [Pre] i [Init]
-       [Pre' & c] S;u [Post']
-       Pre' = Init | Post'
-       Post = Pre' & ~c
-       --------------------------
-       [Pre] for (i;c;u) S [Post]
-
-       NOTE: This rule is similar to that for `while`.
-    *)
-    (***************************************************************************)
     | (loc, For { For.init; test; update; body; comments }) ->
       let init_ast =
         match init with
@@ -750,17 +700,6 @@ module Make
       ( loc,
         For { For.init = init_ast; test = test_ast; update = update_ast; body = body_ast; comments }
       )
-    (***************************************************************************)
-    (* Refinements for `for-in` are derived by the following Hoare logic rule:
-
-       [Pre] o [Init]
-       [Pre'] S [Post']
-       Pre' = Init | Post'
-       Post = Pre'
-       --------------------------
-       [Pre] for (i in o) S [Post]
-    *)
-    (***************************************************************************)
     | (loc, ForIn { ForIn.left; right; body; each; comments }) ->
       let reason = mk_reason (RCustom "for-in") loc in
       let eval_right () =
@@ -4763,11 +4702,6 @@ module Make
      * If the LHS does not throw, and the RHS does throw, then we cannot say that the
      * entire expression throws, because we only evaluate the RHS depending on the value of the LHS.
      * Thus, we catch abnormal control flow exceptions on the RHS and do not rethrow them.
-     *
-     * Note that the only kind of abnormal control flow that should be raised from an
-     * expression is a Throw. The other kinds (Return, Break, Continue) can only arise from
-     * statements, and while statements can appear within expressions (e.g. function expressions),
-     * any abnormals will be handled before they get here.
      *)
     match operator with
     | Or ->
@@ -5034,8 +4968,6 @@ module Make
   (* traverse simple assignment expressions (`lhs = rhs`) *)
   and simple_assignment cx _loc lhs rhs =
     let (((_, t), _) as typed_rhs) = expression cx rhs in
-    (* update env, add constraints arising from LHS structure,
-       handle special cases, etc. *)
     let lhs =
       match lhs with
       | (lhs_loc, Ast.Pattern.Expression (pat_loc, Ast.Expression.Member mem)) ->
