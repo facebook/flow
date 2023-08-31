@@ -20,16 +20,17 @@ type Props = $ReadOnly<{className: string}>;
 export default function BlogPostItemHeaderTitle({
   className,
 }: Props): React.Node {
-  const {metadata, isBlogPostPage} = useBlogPost();
+  const {metadata} = useBlogPost();
   const {permalink, title, frontMatter} = metadata;
   const mediumLink = frontMatter['medium-link'];
+  const isBlogPostPage = mediumLink == null;
   const TitleHeading = isBlogPostPage ? 'h1' : 'h2';
   return (
     <TitleHeading className={clsx(styles.title, className)} itemProp="headline">
       {isBlogPostPage ? (
         title
       ) : (
-        <Link itemProp="url" to={mediumLink || permalink}>
+        <Link itemProp="url" to={mediumLink}>
           {title}
         </Link>
       )}
