@@ -8,6 +8,7 @@
  */
 
 import React, {useState, useEffect, useRef, type MixedElement} from 'react';
+import {useBaseUrlUtils} from '@docusaurus/useBaseUrl';
 import clsx from 'clsx';
 import Editor from '@monaco-editor/react';
 import * as LZString from 'lz-string';
@@ -95,6 +96,7 @@ export default function TryFlow({
   defaultFlowVersion: string,
   flowVersions: $ReadOnlyArray<string>,
 }): MixedElement {
+  const {withBaseUrl} = useBaseUrlUtils();
   const [initialStateFromStorage, setInitialStateFromStorage] = useState(
     initialStateFromURI == null
       ? getHashedValue(localStorage.getItem(TRY_FLOW_LAST_CONTENT_STORAGE_KEY))
@@ -114,7 +116,7 @@ export default function TryFlow({
 
   useEffect(() => {
     setLoading(true);
-    FlowJsServices.init(flowVersion)
+    FlowJsServices.init(withBaseUrl, flowVersion)
       .then(f => {
         setFlowService(existing =>
           existing == null

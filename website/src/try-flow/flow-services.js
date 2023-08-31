@@ -27,8 +27,13 @@ export default class FlowJsServices {
   // Invariant: config is always legal under the current _flow.
   config: {[string]: mixed};
 
-  static init(version: string): Promise<FlowJsServices> {
-    return initFlowLocally(version).then(flow => new FlowJsServices(flow));
+  static init(
+    withBaseUrl: string => string,
+    version: string,
+  ): Promise<FlowJsServices> {
+    return initFlowLocally(withBaseUrl, version).then(
+      flow => new FlowJsServices(flow),
+    );
   }
 
   constructor(flow: FlowJs) {

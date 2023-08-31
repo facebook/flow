@@ -44,7 +44,7 @@ function get(url: string) {
   });
 }
 
-export function load(version: string): Promise<FlowJs> {
+export function load(withBaseUrl: string => string, version: string): Promise<FlowJs> {
   const cached = versionCache.get(version);
   if (cached) {
     return Promise.resolve(cached);
@@ -53,7 +53,7 @@ export function load(version: string): Promise<FlowJs> {
     version === 'master'
     ? Infinity
     : parseInt(version.split('.')[1], 10);
-  const libs = majorVersion <= 54 ? [
+  const libs = (majorVersion <= 54 ? [
     `/flow/${version}/flowlib/core.js`,
     `/flow/${version}/flowlib/bom.js`,
     `/flow/${version}/flowlib/cssom.js`,
@@ -68,9 +68,9 @@ export function load(version: string): Promise<FlowJs> {
     `/flow/${version}/flowlib/core.js`,
     `/flow/${version}/flowlib/react.js`,
     `/flow/${version}/flowlib/intl.js`,
-  ];
+  ]).map(withBaseUrl);
   const flowLoader = new Promise<[string, string]>(function(resolve) {
-    requirejs([`/flow/${version}/flow.js`], resolve);
+    requirejs([withBaseUrl(`/flow/${version}/flow.js`)], resolve);
   });
   return Promise.all([flowLoader, ...libs.map(get)])
     .then(function([_flow, ...contents]) {
