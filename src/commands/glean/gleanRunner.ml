@@ -694,7 +694,7 @@ let declaration_infos ~root ~write_root ~scope_info ~file ~file_sig ~cx ~reader 
           (var_infos, member_infos, type_info :: type_infos))
   )
 
-let file_of_string_modules ~root ~write_root ~options ~docblock ~file:file_key =
+let file_of_string_modules ~root ~write_root ~options ~file:file_key =
   let open Base.List.Let_syntax in
   let%bind file =
     match Module.of_file_key ~root ~write_root file_key |> remove_dot_flow_suffix with
@@ -702,7 +702,7 @@ let file_of_string_modules ~root ~write_root ~options ~docblock ~file:file_key =
     | _ -> []
   in
   let%bind string =
-    match Module_js.exported_module ~options file_key (`Module docblock) with
+    match Module_js.exported_module ~options file_key `Unknown with
     | Some string -> return string
     | None -> []
   in
@@ -761,7 +761,7 @@ let make ~output_dir ~write_root =
       { report; combine; empty }
 
     let visit ~options ast ctx =
-      let Codemod_context.Typed.{ typed_ast; cx; file; file_sig; docblock; type_sig; _ } = ctx in
+      let Codemod_context.Typed.{ typed_ast; cx; file; file_sig; type_sig; _ } = ctx in
       let root = Options.root options in
       let reader = State_reader.create () in
       let resolved_modules =
@@ -806,9 +806,7 @@ let make ~output_dir ~write_root =
       let type_declaration_reference =
         type_declaration_references ~root ~write_root ~reader ~cx ~typed_ast
       in
-      let file_of_string_module =
-        file_of_string_modules ~root ~write_root ~options ~docblock ~file
-      in
+      let file_of_string_module = file_of_string_modules ~root ~write_root ~options ~file in
       let file_lines = file_liness ~root ~write_root ~file in
       let output_file =
         let file_name = Printf.sprintf "%d.json" (Unix.getpid ()) in

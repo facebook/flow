@@ -150,8 +150,7 @@ let package_incompatible ~reader filename new_package =
 type phantom_acc = Parsing_heaps.dependency_addr option Modulename.Map.t ref
 
 type exported_module_info =
-  [ `Module of Docblock.t
-  | `Package of Package_json.t
+  [ `Package of Package_json.t
   | `Unknown
   ]
 

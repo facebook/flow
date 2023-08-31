@@ -6,8 +6,7 @@
  *)
 
 type exported_module_info =
-  [ `Module of Docblock.t
-  | `Package of Package_json.t
+  [ `Package of Package_json.t
   | `Unknown
   ]
 

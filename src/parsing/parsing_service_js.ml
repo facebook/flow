@@ -349,7 +349,7 @@ let reducer
             | Parse_ok
                 { ast; requires; file_sig; exports; imports; locs; type_sig; tolerable_errors } ->
               let file_sig = (file_sig, tolerable_errors) in
-              let module_name = exported_module file_key (`Module docblock) in
+              let module_name = exported_module file_key `Unknown in
               let dirty_modules =
                 worker_mutator.Parsing_heaps.add_parsed
                   file_key
@@ -369,11 +369,11 @@ let reducer
               let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
               { acc with parsed; dirty_modules }
             | Parse_recovered { parse_errors = (error, _); _ } ->
-              let module_name = exported_module file_key (`Module docblock) in
+              let module_name = exported_module file_key `Unknown in
               let failure = Parse_error error in
               fold_failed acc worker_mutator file_key file_opt hash module_name failure
             | Parse_exn exn ->
-              let module_name = exported_module file_key (`Module docblock) in
+              let module_name = exported_module file_key `Unknown in
               let failure = Uncaught_exception exn in
               fold_failed acc worker_mutator file_key file_opt hash module_name failure
             | Parse_skip (Skip_package_json result) ->
@@ -399,7 +399,7 @@ let reducer
               { acc with package_json; dirty_modules }
             | Parse_skip Skip_non_flow_file
             | Parse_skip Skip_resource_file ->
-              let module_name = exported_module file_key (`Module docblock) in
+              let module_name = exported_module file_key `Unknown in
               let dirty_modules =
                 worker_mutator.Parsing_heaps.add_unparsed file_key file_opt hash module_name
               in
@@ -407,8 +407,8 @@ let reducer
               let dirty_modules = Modulename.Set.union dirty_modules acc.dirty_modules in
               { acc with unparsed; dirty_modules }
           end
-        | (docblock_errors, docblock) ->
-          let module_name = exported_module file_key (`Module docblock) in
+        | (docblock_errors, _docblock) ->
+          let module_name = exported_module file_key `Unknown in
           let dirty_modules =
             worker_mutator.Parsing_heaps.add_unparsed file_key file_opt hash module_name
           in
