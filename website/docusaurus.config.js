@@ -83,12 +83,14 @@ module.exports = {
           label: 'Docs',
           position: 'left',
         },
-        {
-          to: 'try/',
-          activeBasePath: 'try',
-          label: 'Try',
-          position: 'left',
-        },
+        process.env.INTERNAL_STATIC_DOCS
+          ? {to: 'https://flow.org/try', label: 'Try', position: 'left'}
+          : {
+              to: 'try/',
+              activeBasePath: 'try',
+              label: 'Try',
+              position: 'left',
+            },
         {
           to: 'blog/',
           label: 'Blog',
