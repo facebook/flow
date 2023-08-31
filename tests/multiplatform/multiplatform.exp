@@ -16,20 +16,17 @@ References:
                               ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------- cjs_conformance_errors.ios.js:1:1
+Error ------------------------------------------------------------------------------- cjs_conformance_errors.ios.js:1:18
 
 Cannot conform to common interface module because number [1] is incompatible with string [2] in property `default`. Read
 the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 [incompatible-type]
 
-   cjs_conformance_errors.ios.js:1:1
-   1| module.exports = 1;
-      ^^^^^^^^^^^^^^
-
-References:
    cjs_conformance_errors.ios.js:1:18
    1| module.exports = 1;
                        ^ [1]
+
+References:
    cjs_conformance_errors.js.flow:1:25
    1| declare module.exports: string;
                               ^^^^^^ [2]
@@ -43,27 +40,27 @@ https://flow.org/en/docs/react/multiplatform. [prop-missing]
 
    esm_conformance_errors.android.js:1:16
    1| export default 3;
-                     ^ [1]
+                     ^
 
 References:
+   esm_conformance_errors.android.js:1:1
+   1| export default 3;
+      ^^^^^^^^^^^^^^^^^ [1]
    esm_conformance_errors.js.flow
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- esm_conformance_errors.ios.js:1:14
+Error ------------------------------------------------------------------------------- esm_conformance_errors.ios.js:1:18
 
 Cannot conform to common interface module because number [1] is incompatible with string [2] in property `a`. Read the
 docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 [incompatible-type]
 
-   esm_conformance_errors.ios.js:1:14
-   1| export const a = 3;
-                   ^
-
-References:
    esm_conformance_errors.ios.js:1:18
    1| export const a = 3;
                        ^ [1]
+
+References:
    esm_conformance_errors.js.flow:1:25
    1| declare export const a: string;
                               ^^^^^^ [2]

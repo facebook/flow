@@ -589,9 +589,9 @@ let rec mod_loc_of_virtual_use_op f =
       ClassOwnProtoCheck
         { prop; own_loc = Base.Option.map ~f own_loc; proto_loc = Base.Option.map ~f proto_loc }
     | Coercion { from; target } -> Coercion { from = mod_reason from; target = mod_reason target }
-    | ConformToCommonInterface { self; common_interface_module } ->
+    | ConformToCommonInterface { self_sig_loc; self_module_loc } ->
       ConformToCommonInterface
-        { self = mod_reason self; common_interface_module = mod_reason common_interface_module }
+        { self_sig_loc = f self_sig_loc; self_module_loc = f self_module_loc }
     | DeleteProperty { lhs; prop } ->
       DeleteProperty { lhs = mod_reason lhs; prop = mod_reason prop }
     | DeleteVar { var } -> DeleteVar { var = mod_reason var }

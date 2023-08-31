@@ -408,26 +408,18 @@ let check_multiplatform_conformance cx filename prog_aloc =
         | _ -> AnyT.make Untyped reason
       in
       let interface_t =
-        let reason = Reason.(mk_reason (RCustom "common interface") self_sig_loc) in
+        let reason = Reason.(mk_reason (RCustom "common interface") prog_aloc) in
         get_exports_t ~is_common_interface_module:true reason interface_module_t
       in
       let self_t =
-        let reason = Reason.(mk_reason (RCustom "self") self_sig_loc) in
+        let reason = Reason.(mk_reason (RCustom "self") prog_aloc) in
         let source_module_t = Import_export.mk_module_t cx reason file_loc in
         get_exports_t ~is_common_interface_module:false reason source_module_t
       in
       (* We need to fully resolve the type to prevent tvar widening. *)
       Tvar_resolver.resolve cx interface_t;
       Tvar_resolver.resolve cx self_t;
-      let use_op =
-        Op
-          (ConformToCommonInterface
-             {
-               self = Reason.(mk_reason RExports self_sig_loc);
-               common_interface_module = Reason.(mk_reason (RCustom "module") self_sig_loc);
-             }
-          )
-      in
+      let use_op = Op (ConformToCommonInterface { self_sig_loc; self_module_loc = prog_aloc }) in
       Flow_js.flow cx (self_t, UseT (use_op, interface_t)))
   | None ->
     (match

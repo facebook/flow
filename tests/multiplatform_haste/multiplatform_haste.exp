@@ -21,9 +21,12 @@ https://flow.org/en/docs/react/multiplatform. [prop-missing]
 
    shadowing.ios.jsx:1:14
    1| export const iosOnly = true;
-                   ^^^^^^^ [1]
+                   ^^^^^^^
 
 References:
+   shadowing.ios.jsx:1:1
+   1| export const iosOnly = true;
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    shadowing.js.flow
    ^^^^^^^^^^^^^^^^^ [2]
 
@@ -36,9 +39,12 @@ https://flow.org/en/docs/react/multiplatform. [prop-missing]
 
    shadowing.ios.jsx:1:14
    1| export const iosOnly = true;
-                   ^^^^^^^ [1]
+                   ^^^^^^^
 
 References:
+   shadowing.ios.jsx:1:1
+   1| export const iosOnly = true;
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    shadowing.js.flow
    ^^^^^^^^^^^^^^^^^ [2]
 
