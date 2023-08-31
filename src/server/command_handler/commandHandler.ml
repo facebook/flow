@@ -2565,14 +2565,14 @@ let handle_persistent_rename_file_imports
   let (result, extra_data) =
     let file_key = file_key_of_file_input ~options file_input in
     (* This only works for haste modules right now *)
-    let old_haste_name = Module_js.exported_module ~options file_key `Unknown in
+    let old_haste_name = Module_js.exported_module ~options file_key ~package_info:None in
     let new_flowpath =
       Flow_lsp_conversions.lsp_DocumentIdentifier_to_flow_path
         { TextDocumentIdentifier.uri = params.RenameFiles.newUri }
     in
     (* The type or contents of the file isn't changing, just the path *)
     let new_file_key = File_key.map (fun _ -> new_flowpath) file_key in
-    let new_haste_name = Module_js.exported_module ~options new_file_key `Unknown in
+    let new_haste_name = Module_js.exported_module ~options new_file_key ~package_info:None in
     match (old_haste_name, new_haste_name) with
     | (Some old_haste_name, Some new_haste_name) ->
       let edits =

@@ -702,7 +702,7 @@ let file_of_string_modules ~root ~write_root ~options ~file:file_key =
     | _ -> []
   in
   let%bind string =
-    match Module_js.exported_module ~options file_key `Unknown with
+    match Module_js.exported_module ~options file_key ~package_info:None with
     | Some string -> return string
     | None -> []
   in

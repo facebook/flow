@@ -149,16 +149,13 @@ let package_incompatible ~reader filename new_package =
 
 type phantom_acc = Parsing_heaps.dependency_addr option Modulename.Map.t ref
 
-type exported_module_info =
-  [ `Package of Package_json.t
-  | `Unknown
-  ]
+type package_info = Package_json.t option
 
 (* Specification of a module system. Currently this signature is sufficient to
    model both Haste and Node, but should be further generalized. *)
 module type MODULE_SYSTEM = sig
   (* Given a file and docblock info, make the name of the module it exports. *)
-  val exported_module : Options.t -> File_key.t -> exported_module_info -> string option
+  val exported_module : Options.t -> File_key.t -> package_info:package_info -> string option
 
   (* Given a file and a reference in it to an imported module, make the name of
      the module it refers to. If given an optional reference to an accumulator,
@@ -201,7 +198,7 @@ let record_phantom_dependency mname dependency = function
 (****************** Node module system *********************)
 
 module Node = struct
-  let exported_module _ _ _ = None
+  let exported_module _ _ ~package_info:_ = None
 
   let path_if_exists ~reader ~file_options phantom_acc path =
     let path = resolve_symlinks path in
@@ -421,7 +418,7 @@ module Haste : MODULE_SYSTEM = struct
   let exported_module options =
     let is_haste_file = is_haste_file options in
     let is_within_node_modules = is_within_node_modules options in
-    fun file (info : exported_module_info) ->
+    fun file ~package_info ->
       match file with
       | File_key.SourceFile _ ->
         if is_mock file then
@@ -436,8 +433,8 @@ module Haste : MODULE_SYSTEM = struct
           else
             None
       | File_key.JsonFile path ->
-        (match info with
-        | `Package pkg when Package_json.haste_commonjs pkg || not (is_within_node_modules path) ->
+        (match package_info with
+        | Some pkg when Package_json.haste_commonjs pkg || not (is_within_node_modules path) ->
           Package_json.name pkg
         | _ -> None)
       | _ ->
