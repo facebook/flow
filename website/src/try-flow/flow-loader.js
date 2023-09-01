@@ -26,20 +26,26 @@ declare type $JSXIntrinsics = {
 `.slice(1);
 
 function get(url: string) {
-  return new Promise<[string, string]>(function(resolve, reject) {
-    var req = new XMLHttpRequest();
-    req.open('GET', url);
-    req.onload = function() {
-      if (req.status == 200) {
+  return new Promise<[string, string]>((resolve, reject) => {
+    const req = new XMLHttpRequest();
+    req.timeout = 5000;
+    req.onload = () => {
+      if (req.status === 200) {
         resolve([url, req.response]);
-      }
-      else {
+      } else {
         reject(Error(req.statusText));
       }
     };
-    req.onerror = function() {
-      reject(Error("Network Error"));
+    req.onerror = () => {
+      reject("Network error");
     };
+    req.ontimeout = () => {
+      reject("Network timed out");
+    };
+    req.onabort = () => {
+      reject("Network request aborted");
+    };
+    req.open('GET', url);
     req.send();
   });
 }
@@ -69,12 +75,12 @@ export function load(withBaseUrl: string => string, version: string): Promise<Fl
     `/flow/${version}/flowlib/react.js`,
     `/flow/${version}/flowlib/intl.js`,
   ]).map(withBaseUrl);
-  const flowLoader = new Promise<[string, string]>(function(resolve) {
-    requirejs([withBaseUrl(`/flow/${version}/flow.js`)], resolve);
+  const flowLoader = new Promise<[string, string]>(resolve => {
+      requirejs([withBaseUrl(`/flow/${version}/flow.js`)], resolve);
   });
   return Promise.all([flowLoader, ...libs.map(get)])
-    .then(function([_flow, ...contents]) {
-      contents.forEach(function(nameAndContent) {
+    .then(([_flow, ...contents]) => {
+      contents.forEach(nameAndContent => {
         self.flow.registerFile(nameAndContent[0], nameAndContent[1]);
       });
       self.flow.registerFile('try-lib.js', TRY_LIB_CONTENTS);
@@ -86,8 +92,5 @@ export function load(withBaseUrl: string => string, version: string): Promise<Fl
       versionCache.set(version, self.flow);
       // $FlowFixMe[cannot-resolve-name]
       return flow;
-    })
-    .catch(function(err) {
-      throw err;
     });
 }
