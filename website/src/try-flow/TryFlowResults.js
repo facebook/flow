@@ -90,7 +90,6 @@ export default function TryFlowResults({
   ast,
 }: Props): MixedElement {
   const [activeToolbarTab, setActiveToolbarTab] = useState('errors');
-
   return (
     <div className={styles.results}>
       <div className={styles.toolbar}>
@@ -134,7 +133,16 @@ export default function TryFlowResults({
           </select>
         </div>
       </div>
-      {activeToolbarTab === 'errors' && (
+      {loading && (
+        <div>
+          <div className={styles.loader}>
+            <div className={styles.bounce1}></div>
+            <div className={styles.bounce2}></div>
+            <div></div>
+          </div>
+        </div>
+      )}
+      {!loading && activeToolbarTab === 'errors' && (
         <pre className={clsx(styles.resultBody, styles.errors)}>
           <ul>
             {internalError ? (
@@ -157,23 +165,13 @@ export default function TryFlowResults({
           </ul>
         </pre>
       )}
-      {activeToolbarTab === 'json' && (
+      {!loading && activeToolbarTab === 'json' && (
         <pre className={styles.resultBody}>
           {JSON.stringify(errors, null, 2)}
         </pre>
       )}
-      {activeToolbarTab === 'ast' && (
+      {!loading && activeToolbarTab === 'ast' && (
         <pre className={styles.resultBody}>{ast}</pre>
-      )}
-
-      {loading && (
-        <div>
-          <div className={styles.loader}>
-            <div className={styles.bounce1}></div>
-            <div className={styles.bounce2}></div>
-            <div></div>
-          </div>
-        </div>
       )}
     </div>
   );

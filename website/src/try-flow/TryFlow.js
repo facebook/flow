@@ -127,6 +127,7 @@ export default function TryFlow({
         setLoading(false);
       })
       .catch(e => {
+        setLoading(false);
         setInternalError(JSON.stringify(e));
       });
   }, [flowVersion]);
