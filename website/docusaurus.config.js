@@ -7,6 +7,7 @@
  * @format
  */
 
+const webpack = require('webpack');
 const allFlowVersions = require('./src/js/flow-versions');
 
 /** @type {import('@docusaurus/types').DocusaurusConfig} */
@@ -45,6 +46,20 @@ module.exports = {
                 },
               ],
             },
+          };
+        },
+      };
+    },
+    function enableSomeEnvVarsAsBuildTimeConstants() {
+      return {
+        name: 'enableSomeEnvVarsAsBuildTimeConstants',
+        configureWebpack() {
+          return {
+            plugins: [
+              new webpack.EnvironmentPlugin({
+                INTERNAL_STATIC_DOCS: process.env.INTERNAL_STATIC_DOCS || false,
+              }),
+            ],
           };
         },
       };
