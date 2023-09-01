@@ -4,4 +4,4 @@ declare const x: {+type: typeof Foo};
 
 component Bar() { return null }
 declare const y: {+type: Bar};
-(y: renders Bar); // ERROR! TODO better error message
+(y: renders React$Element<typeof Bar>); // ERROR! TODO better error message
