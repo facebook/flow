@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
+ * @noflow
  * @format
  */
 
@@ -85,7 +86,8 @@ module.exports = {
         'react/refs',
         'react/hoc',
         'react/types',
-      ],
+        process.env.INTERNAL_STATIC_DOCS && 'react/multiplatform',
+      ].filter(Boolean),
     },
     {
       type: 'category',

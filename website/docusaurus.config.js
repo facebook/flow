@@ -51,12 +51,14 @@ module.exports = {
     },
   ],
   themeConfig: {
-    algolia: {
-      appId: 'P6T3E8XPGT',
-      apiKey: '01f111c0b2980e54f1307e982fa2c218',
-      indexName: 'flow',
-      contextualSearch: true,
-    },
+    algolia: process.env.INTERNAL_STATIC_DOCS
+      ? undefined
+      : {
+          appId: 'P6T3E8XPGT',
+          apiKey: '01f111c0b2980e54f1307e982fa2c218',
+          indexName: 'flow',
+          contextualSearch: true,
+        },
     prism: {
       theme: require('prism-react-renderer/themes/github'),
     },
@@ -216,10 +218,9 @@ module.exports = {
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
         },
-        googleAnalytics: {
-          trackingID: 'UA-49208336-4',
-          anonymizeIP: true,
-        },
+        googleAnalytics: process.env.INTERNAL_STATIC_DOCS
+          ? undefined
+          : {trackingID: 'UA-49208336-4', anonymizeIP: true},
       },
     ],
   ],
