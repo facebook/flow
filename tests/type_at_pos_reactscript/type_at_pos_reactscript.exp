@@ -42,11 +42,14 @@ render_types.js:8:6,8:6
 
 render_types.js:10:6
 Flags:
-type U = renders (Foo | Bar)
+type U = renders (React$Element<Foo> | React$Element<Bar>)
 render_types.js:10:6,10:6
 
 render_types.js:12:6
 Flags:
-type V = renders Foo | React$AbstractComponent<{}, mixed, renders React$Node>
+type V = 
+  renders React$Element<Foo>
+  |
+  React$Element<React$AbstractComponent<{}, mixed, renders React$Node>>
 render_types.js:12:6,12:6
 

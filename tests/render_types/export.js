@@ -1,2 +1,2 @@
 export component Foo() { return null }
-export type RendersFoo = renders Foo;
+export type RendersFoo = renders React$Element<typeof Foo>;
