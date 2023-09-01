@@ -645,7 +645,7 @@ and evaluate_hints cx reason hints =
     cx
     ( lazy
       [
-        spf "Hint %s evalutes to" (string_of_hints ~on_hint:(Debug_js.dump_t cx ~depth:3) hints);
+        spf "Hint %s evaluates to" (string_of_hints ~on_hint:(Debug_js.dump_t cx ~depth:3) hints);
         (match result with
         | HintAvailable (t, ExpectedTypeHint) ->
           spf "ExpectedTypeHint: %s" (Debug_js.dump_t cx ~depth:3 t)
