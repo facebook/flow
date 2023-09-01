@@ -681,6 +681,26 @@ struct
                   OptionalT { reason = r; type_ = annot use_desc u; use_desc = use_desc_optional_t }
                 )
             )
+        | ( DefT (r, _, RendersT (StructuralRenders (UnionRenders rep))),
+            ReposUseT (reason, use_desc, use_op, l)
+          ) ->
+          let rep = UnionRep.ident_map (annot use_desc) rep in
+          let loc = loc_of_reason reason in
+          let annot_loc = annot_loc_of_reason reason in
+          let r = opt_annot_reason ?annot_loc @@ repos_reason loc r in
+          let r =
+            if use_desc then
+              replace_desc_reason (desc_of_reason reason) r
+            else
+              r
+          in
+          rec_flow
+            cx
+            trace
+            ( l,
+              UseT
+                (use_op, DefT (r, bogus_trust (), RendersT (StructuralRenders (UnionRenders rep))))
+            )
         (* Waits for a def type to become concrete, repositions it as an upper UseT
            using the stored reason. This can be used to store a reason as it flows
            through a tvar. *)
@@ -2602,9 +2622,7 @@ struct
           (match resolved_obj with
           | Some obj ->
             (* renders {+type: Foo, ...}. Let's make sure this is a valid React element *)
-            let mixed_element =
-              get_builtin_type cx ~trace ~use_desc:true r (OrdinaryName "React$MixedElement")
-            in
+            let mixed_element = get_builtin_type cx ~trace r (OrdinaryName "React$MixedElement") in
             rec_flow_t cx trace ~use_op (obj, mixed_element)
           | None ->
             (* renders Foo case. Nothing left to check here *)
@@ -2661,11 +2679,11 @@ struct
                * from ComponentRenders, otherwise we error, as we've already checked for structural
                * compatibility in subtyping kit. *)
               let mixed_element =
-                get_builtin_type cx ~trace ~use_desc:true reason (OrdinaryName "React$MixedElement")
+                get_builtin_type cx ~trace reason (OrdinaryName "React$MixedElement")
               in
               if speculative_subtyping_succeeds cx l mixed_element then
                 let render_type =
-                  get_builtin_typeapp cx reason (OrdinaryName "React$ComponentRenders") [t]
+                  get_builtin_typeapp cx (reason_of_t l) (OrdinaryName "React$ComponentRenders") [t]
                 in
                 rec_flow_t cx trace ~use_op:unknown_use (render_type, tout)
               else

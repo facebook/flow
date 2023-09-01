@@ -73,6 +73,9 @@ declare const rendersBazOrBaz: renders (Baz | Baz);
   (3: renders (null | number)); // OK
   declare const x: React$Element<()=>React$Node>;
   (x: renders typeof x); // OK
+  declare const mixedElement: React$MixedElement;
+  // The test below ensures repositioning does not hit unsoundness in speculation
+  (mixedElement: renders (React$Element<typeof Foo> | React$Element<typeof Bar>)); // ERROR
 }
 
 /* Exit Structural Render Types */
