@@ -1636,7 +1636,9 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           Tast_utils.error_mapper#type_ ot)
     | (loc, Component { Component.params; tparams; renders; comments }) ->
       let reason = mk_reason RComponentType loc in
-      let (t, tparams, params, renders) = mk_component cx reason tparams params renders in
+      let (t, tparams, params, renders) =
+        mk_component cx reason ~tparams_map tparams params renders
+      in
       ((loc, t), Component { Component.params; tparams; renders; comments })
     | (loc, Object { Object.exact; properties; inexact; comments }) as ot ->
       let exact_by_default = Context.exact_by_default cx in
@@ -2986,7 +2988,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       in
       (cparams, Component_type_params.eval cx cparams)
     in
-    fun cx reason tparams params renders ->
+    fun cx reason ~tparams_map tparams params renders ->
       if not (Context.component_syntax cx) then begin
         let loc = loc_of_reason reason in
         Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, ComponentSyntax));
@@ -2997,7 +2999,9 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           Tast_utils.error_mapper#type_annotation_hint renders
         )
       end else
-        let (tparams, tparams_map, tparam_asts) = mk_type_param_declarations cx tparams in
+        let (tparams, tparams_map, tparam_asts) =
+          mk_type_param_declarations cx ~tparams_map tparams
+        in
         let (cparams, params_ast) = mk_params cx tparams_map params in
         let (ren_loc, renders_t, renders_ast) =
           match renders with
@@ -3097,7 +3101,9 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     let { Ast.Statement.DeclareComponent.tparams; renders; params; id; comments } = component in
     let (id_loc, ({ Ast.Identifier.name; _ } as id)) = id in
     let reason = mk_reason (RComponent (OrdinaryName name)) loc in
-    let (t, tparam_asts, params_ast, renders_ast) = mk_component cx reason tparams params renders in
+    let (t, tparam_asts, params_ast, renders_ast) =
+      mk_component cx reason ~tparams_map:Subst_name.Map.empty tparams params renders
+    in
     ( t,
       {
         Ast.Statement.DeclareComponent.tparams = tparam_asts;
