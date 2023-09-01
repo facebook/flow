@@ -37,7 +37,7 @@ render_types.js:3:6,3:6
 
 render_types.js:8:6
 Flags:
-type Z = renders Foo
+type Z = renders React$Element<Foo>
 render_types.js:8:6,8:6
 
 render_types.js:10:6

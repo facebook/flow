@@ -23,10 +23,10 @@ declare const rendersBazOrBaz: renders (React$Element<typeof Baz> | React$Elemen
 /* Nominal ~> Nominal */
 {
   (rendersFoo: renders React$Element<typeof Bar>); // ERROR
-  (rendersFoo: renders React$Element<Bar>); // ERROR
+  (rendersFoo: renders React$Element<typeof Bar>); // ERROR
   (rendersBaz: typeof rendersFoo); // OK
   (rendersFoo: renders renders React$Element<typeof Bar>); // ERROR
-  (rendersFoo: renders renders React$Element<Bar>); // ERROR
+  (rendersFoo: renders renders React$Element<typeof Bar>); // ERROR
   (rendersBaz: renders typeof rendersFoo); // OK
 }
 

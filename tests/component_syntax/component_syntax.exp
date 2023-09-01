@@ -570,35 +570,22 @@ Cannot declare `M` [1] because the name is already bound. [name-already-bound]
              ^ [1]
 
 
-Error ------------------------------------------------------------------------------- component_in_type_position.js:9:16
+Error ------------------------------------------------------------------------------- component_in_type_position.js:5:10
 
-Cannot assign `Bar` to `y` because component Bar [1] is incompatible with component Foo [2]. [incompatible-type]
+Cannot use `Foo` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
-   component_in_type_position.js:9:16
+   5| const x: Foo = Foo; // OK!
+               ^^^
+
+
+Error ------------------------------------------------------------------------------- component_in_type_position.js:9:10
+
+Cannot use `Foo` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`. [value-as-type]
+
    9| const y: Foo = Bar; // ERROR! Bar ~> Foo
-                     ^^^
-
-References:
-   component_in_type_position.js:7:1
-   7| component Bar() {return null}
-      ^^^^^^^^^^^^^^^ [1]
-   component_in_type_position.js:9:10
-   9| const y: Foo = Bar; // ERROR! Bar ~> Foo
-               ^^^ [2]
-
-
-Error ------------------------------------------------------------------------------ component_in_type_position.js:14:18
-
-Cannot use component Poly [1] without 1 type argument. [missing-type-arg]
-
-   component_in_type_position.js:14:18
-   14| type NoArgPoly = Poly; // ERROR!
-                        ^^^^
-
-References:
-   component_in_type_position.js:11:15
-   11| component Poly<T>() { return null }
-                     ^^^ [1]
+               ^^^
 
 
 Error ---------------------------------------------------------------------------------- component_type_checking.js:10:4
@@ -1896,27 +1883,6 @@ References:
                            ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- poly.js:13:2
-
-Cannot cast `x` to `Poly` because number [1] is incompatible with string [2] in type argument `T` [3].
-[incompatible-cast]
-
-   poly.js:13:2
-   13| (x: Poly<string>);
-        ^
-
-References:
-   poly.js:12:23
-   12| declare const x: Poly<number>;
-                             ^^^^^^ [1]
-   poly.js:13:10
-   13| (x: Poly<string>);
-                ^^^^^^ [2]
-   poly.js:3:23
-    3| export component Poly<T>(foo: T, bar: [T], ...props: { baz?: (T) => void}) {
-                             ^ [3]
-
-
 Error --------------------------------------------------------------------------------------------- props_reason.js:6:43
 
 Cannot assign `Foo` to `a` because mixed [1] is incompatible with props of component Foo [2]. [incompatible-type]
@@ -2435,7 +2401,7 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 167 errors
+Found 166 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

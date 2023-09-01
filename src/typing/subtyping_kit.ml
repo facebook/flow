@@ -1878,15 +1878,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (DefT (enum_reason, _, EnumT _), DefT (reason, _, TypeT (_, t))) ->
       rec_unify cx trace ~use_op (AnyT.error reason) t;
       add_output cx ~trace Error_message.(EEnumMemberUsedAsType { reason; enum_reason })
-    | ( DefT
-          ( _,
-            _,
-            ReactAbstractComponentT
-              { config = _; instance = _; renders = _; component_kind = Nominal _ }
-          ),
-        DefT (_, _, TypeT (_, t))
-      ) ->
-      rec_unify cx trace ~use_op l t
     (* non-class/function values used in annotations are errors *)
     | (_, DefT (reason_use, _, TypeT (_, t))) ->
       (match l with

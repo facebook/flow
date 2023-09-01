@@ -128,8 +128,8 @@ Cannot cast `y` to renders `React.Element` because object type [1] does not rend
 
 References:
    no_spoofing_element_types.js:6:18
-   6| declare const y: {+type: Bar};
-                       ^^^^^^^^^^^^ [1]
+   6| declare const y: {+type: typeof Bar};
+                       ^^^^^^^^^^^^^^^^^^^ [1]
    no_spoofing_element_types.js:7:5
    7| (y: renders React$Element<typeof Bar>); // ERROR! TODO better error message
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
@@ -205,13 +205,13 @@ Cannot cast `rendersFoo` to renders `React.Element` because `React.Element` [1] 
 [incompatible-cast]
 
    renders_to_renders.js:26:4
-   26|   (rendersFoo: renders React$Element<Bar>); // ERROR
+   26|   (rendersFoo: renders React$Element<typeof Bar>); // ERROR
           ^^^^^^^^^^ [1]
 
 References:
    renders_to_renders.js:26:16
-   26|   (rendersFoo: renders React$Element<Bar>); // ERROR
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   26|   (rendersFoo: renders React$Element<typeof Bar>); // ERROR
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:28:4
@@ -235,13 +235,13 @@ Cannot cast `rendersFoo` to renders renders `React.Element` because `React.Eleme
 `React.Element` [2]. [incompatible-cast]
 
    renders_to_renders.js:29:4
-   29|   (rendersFoo: renders renders React$Element<Bar>); // ERROR
+   29|   (rendersFoo: renders renders React$Element<typeof Bar>); // ERROR
           ^^^^^^^^^^ [1]
 
 References:
    renders_to_renders.js:29:16
-   29|   (rendersFoo: renders renders React$Element<Bar>); // ERROR
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   29|   (rendersFoo: renders renders React$Element<typeof Bar>); // ERROR
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:39:4
