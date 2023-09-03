@@ -95,8 +95,8 @@ Cannot return `Array.isArray(...)` because boolean [1] is incompatible with stri
                                                        ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1063:33
-   1063|     static isArray(obj: mixed): boolean;
+   <BUILTINS>/core.js:1092:33
+   1092|     static isArray(obj: mixed): boolean;
                                          ^^^^^^^ [1]
    sanity-return-type.js:1:32
       1| declare function f2(x: mixed): string %checks(Array.isArray(x));
