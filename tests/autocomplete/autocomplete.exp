@@ -1032,8 +1032,18 @@ Flags: --pretty
       "type":"void | ((start: number, deleteCount?: number, ...items: Array<T>) => Array<T>)"
     },
     {"name":"?.toLocaleString","type":"void | (() => string)"},
+    {"name":"?.toReversed","type":"void | (() => Array<T>)"},
+    {
+      "name":"?.toSorted",
+      "type":"void | ((compareFn?: (a: T, b: T) => number) => Array<T>)"
+    },
+    {
+      "name":"?.toSpliced",
+      "type":"void | (<S, Item: ($ReadOnlyArray<S> | S)>(start: number, deleteCount?: number, ...items: Array<Item>) => Array<(T | S)>)"
+    },
     {"name":"?.unshift","type":"void | ((...items: Array<T>) => number)"},
-    {"name":"?.values","type":"void | (() => Iterator<T>)"}
+    {"name":"?.values","type":"void | (() => Iterator<T>)"},
+    {"name":"?.with","type":"void | ((index: number, value: T) => Array<T>)"}
   ]
 }
 
@@ -1124,8 +1134,15 @@ Flags: --pretty
       "type":"(start: number, deleteCount?: number, ...items: Array<T>) => Array<T>"
     },
     {"name":"toLocaleString","type":"() => string"},
+    {"name":"toReversed","type":"() => Array<T>"},
+    {"name":"toSorted","type":"(compareFn?: (a: T, b: T) => number) => Array<T>"},
+    {
+      "name":"toSpliced",
+      "type":"<S, Item: ($ReadOnlyArray<S> | S)>(start: number, deleteCount?: number, ...items: Array<Item>) => Array<(T | S)>"
+    },
     {"name":"unshift","type":"(...items: Array<T>) => number"},
-    {"name":"values","type":"() => Iterator<T>"}
+    {"name":"values","type":"() => Iterator<T>"},
+    {"name":"with","type":"(index: number, value: T) => Array<T>"}
   ]
 }
 

@@ -107,8 +107,8 @@ References:
    array_lib.js:46:4
      46|   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
             ^^ [1]
-   <BUILTINS>/core.js:1319:13
-   1319|     length: number;
+   <BUILTINS>/core.js:1348:13
+   1348|     length: number;
                      ^^^^^^ [2]
 
 
@@ -124,8 +124,8 @@ References:
    array_lib.js:47:4
      47|   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
             ^^ [1]
-   <BUILTINS>/core.js:1319:13
-   1319|     length: number;
+   <BUILTINS>/core.js:1348:13
+   1348|     length: number;
                      ^^^^^^ [2]
 
 
@@ -139,8 +139,8 @@ Cannot cast `Array.from(...)` to array type because string [1] is incompatible w
             ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1104:37
-   1104|     static from(str: string): Array<string>;
+   <BUILTINS>/core.js:1133:37
+   1133|     static from(str: string): Array<string>;
                                              ^^^^^^ [1]
    array_lib.js:59:30
      59|   (Array.from("abcd"): Array<empty>); // ERROR

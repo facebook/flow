@@ -42,8 +42,8 @@ References:
    class.js:23:39
      23|   *stmt_return_err(): Generator<void, number, void> {
                                                ^^^^^^ [2]
-   <BUILTINS>/core.js:1709:29
-   1709| interface Generator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1738:29
+   1738| interface Generator<+Yield,+Return,-Next> {
                                      ^^^^^^ [3]
 
 
@@ -125,14 +125,14 @@ of property `@@iterator`. [incompatible-type-arg]
                     ^^
 
 References:
-   <BUILTINS>/core.js:1702:38
-   1702| type Iterator<+T> = $Iterator<T,void,void>;
+   <BUILTINS>/core.js:1731:38
+   1731| type Iterator<+T> = $Iterator<T,void,void>;
                                               ^^^^ [1]
    class.js:71:71
      71|   *delegate_next_iterable(xs: Array<number>): Generator<number, void, string> {
                                                                                ^^^^^^ [2]
-   <BUILTINS>/core.js:1698:37
-   1698| interface $Iterator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1727:37
+   1727| interface $Iterator<+Yield,+Return,-Next> {
                                              ^^^^ [3]
 
 
@@ -374,8 +374,8 @@ References:
    generators.js:22:46
      22| function *stmt_return_err(): Generator<void, number, void> {
                                                       ^^^^^^ [2]
-   <BUILTINS>/core.js:1709:29
-   1709| interface Generator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1738:29
+   1738| interface Generator<+Yield,+Return,-Next> {
                                      ^^^^^^ [3]
 
 
@@ -679,8 +679,8 @@ Cannot cast `refuse_return_result.value` to string because undefined [1] is inco
             ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1689:14
-   1689|     +value?: Return,
+   <BUILTINS>/core.js:1718:14
+   1718|     +value?: Return,
                       ^^^^^^ [1]
    return.js:20:32
      20|   (refuse_return_result.value: string); // error: number | void ~> string
