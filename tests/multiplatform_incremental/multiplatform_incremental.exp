@@ -1,20 +1,17 @@
 ========================================================================================================================
 We start with an interface conformance error in Android file
 ========================================================================================================================
-Error ------------------------------------------------------------------------------------------------ A.android.js:1:16
+Error ------------------------------------------------------------------------------------------------ A.android.js:1:38
 
 Cannot conform to common interface module because string [1] is incompatible with number [2] in the return value of
 property `default`. Read the docs on Flow's multi-platform support for more information:
 https://flow.org/en/docs/react/multiplatform. [incompatible-type]
 
-   A.android.js:1:16
-   1| declare export default function A(): string;
-                     ^^^^^^^
-
-References:
    A.android.js:1:38
    1| declare export default function A(): string;
                                            ^^^^^^ [1]
+
+References:
    A.js.flow:1:38
    1| declare export default function A(): number;
                                            ^^^^^^ [2]
@@ -37,20 +34,17 @@ No errors!
 Introduce an interface conformance error in iOS file
 ========================================================================================================================
 Now we have an interface conformance error in iOS file.
-Error ---------------------------------------------------------------------------------------------------- A.ios.js:1:16
+Error ---------------------------------------------------------------------------------------------------- A.ios.js:1:38
 
 Cannot conform to common interface module because string [1] is incompatible with number [2] in the return value of
 property `default`. Read the docs on Flow's multi-platform support for more information:
 https://flow.org/en/docs/react/multiplatform. [incompatible-type]
 
-   A.ios.js:1:16
-   1| declare export default function A(): string;
-                     ^^^^^^^
-
-References:
    A.ios.js:1:38
    1| declare export default function A(): string;
                                            ^^^^^^ [1]
+
+References:
    A.js.flow:1:38
    1| declare export default function A(): number;
                                            ^^^^^^ [2]
@@ -65,20 +59,17 @@ Found 1 error
 Change interface file to get a different set of conformance errors
 ========================================================================================================================
 Now we have an interface conformance error in Android file, but not in iOS file.
-Error ------------------------------------------------------------------------------------------------ A.android.js:1:16
+Error ------------------------------------------------------------------------------------------------ A.android.js:1:38
 
 Cannot conform to common interface module because number [1] is incompatible with string [2] in the return value of
 property `default`. Read the docs on Flow's multi-platform support for more information:
 https://flow.org/en/docs/react/multiplatform. [incompatible-type]
 
-   A.android.js:1:16
-   1| declare export default function A(): number;
-                     ^^^^^^^
-
-References:
    A.android.js:1:38
    1| declare export default function A(): number;
                                            ^^^^^^ [1]
+
+References:
    A.js.flow:1:38
    1| declare export default function A(): string;
                                            ^^^^^^ [2]
@@ -125,20 +116,17 @@ Found 1 error
 ========================================================================================================================
 Add back interface file
 ========================================================================================================================
-Error ------------------------------------------------------------------------------------------------ A.android.js:1:16
+Error ------------------------------------------------------------------------------------------------ A.android.js:1:38
 
 Cannot conform to common interface module because number [1] is incompatible with string [2] in the return value of
 property `default`. Read the docs on Flow's multi-platform support for more information:
 https://flow.org/en/docs/react/multiplatform. [incompatible-type]
 
-   A.android.js:1:16
-   1| declare export default function A(): number;
-                     ^^^^^^^
-
-References:
    A.android.js:1:38
    1| declare export default function A(): number;
                                            ^^^^^^ [1]
+
+References:
    A.js.flow:1:38
    1| declare export default function A(): string;
                                            ^^^^^^ [2]

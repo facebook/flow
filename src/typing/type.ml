@@ -340,8 +340,8 @@ module rec TypeTerm : sig
         target: 'loc virtual_reason;
       }
     | ConformToCommonInterface of {
-        self: 'loc virtual_reason;
-        common_interface_module: 'loc virtual_reason;
+        self_sig_loc: 'loc;
+        self_module_loc: 'loc;
       }
     | DeleteProperty of {
         lhs: 'loc virtual_reason;
