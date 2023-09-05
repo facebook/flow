@@ -987,6 +987,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | WriteComputedObjPropCheckT { reason; _ } ->
       spf "WriteComputedObjPropCheckT (%s)" (string_of_reason reason)
     | PromoteRendersRepresentationT _ -> "PromoteRendersRepresentationT"
+    | ConvertEmptyPropsToMixedT _ -> "ConvertEmptyPropsToMixedT"
     | TryRenderTypePromotionT _ -> "TryRenderTypePromotionT"
 
 and dump_tvar_ (depth, tvars) cx id =

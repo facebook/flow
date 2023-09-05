@@ -245,8 +245,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         (OrdinaryField { type_ = tout; polarity = Polarity.Positive })
     (* any and any specializations *)
     | AnyT (reason, src) -> rec_flow_t ~use_op:unknown_use cx trace (AnyT.why src reason, tout)
-    | DefT (reason, trust, ReactAbstractComponentT _) ->
-      rec_flow_t ~use_op:unknown_use cx trace (MixedT.why reason trust, tout)
+    | DefT (reason, _, ReactAbstractComponentT { config; _ }) ->
+      rec_flow cx trace (config, ConvertEmptyPropsToMixedT (reason, tout))
     (* ...otherwise, error. *)
     | _ ->
       err_incompatible cx trace ~use_op (reason_of_t component) u;

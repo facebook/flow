@@ -1883,6 +1883,82 @@ References:
                            ^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- poly.js:13:2
+
+Cannot cast `x` to `Poly` because number [1] is incompatible with string [2] in type argument `T` [3].
+[incompatible-cast]
+
+   poly.js:13:2
+   13| (x: Poly<string>);
+        ^
+
+References:
+   poly.js:12:23
+   12| declare const x: Poly<number>;
+                             ^^^^^^ [1]
+   poly.js:13:10
+   13| (x: Poly<string>);
+                ^^^^^^ [2]
+   poly.js:3:23
+    3| export component Poly<T>(foo: T, bar: [T], ...props: { baz?: (T) => void}) {
+                             ^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- poly.js:13:5
+
+Cannot use `Poly` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`. [value-as-type]
+
+   13| (x: Poly<string>);
+           ^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- poly.js:25:25
+
+Cannot create `Foo` element because string literal `number` [1] is incompatible with string [2] in the first parameter
+of property `setTV`. [incompatible-type]
+
+   poly.js:25:25
+   25|     return (<Foo setTV={set /* error */}>
+                               ^^^
+
+References:
+   poly.js:24:24
+   24|     declare const set: 'number' => void;
+                              ^^^^^^^^ [1]
+   poly.js:26:19
+   26|         <BRB foo={'out'} />
+                         ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- poly.js:32:10
+
+Cannot get `el.props.bar` because property `bar` is missing in object type [1]. [prop-missing]
+
+   poly.js:32:10
+   32| el.props.bar; // error
+                ^^^
+
+References:
+   poly.js:30:42
+   30| declare const C: React.AbstractComponent<{foo: string}>;
+                                                ^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- poly.js:34:16
+
+Cannot get `el_empty.props.bar` because property `bar` is missing in empty [1]. [incompatible-use]
+
+   poly.js:34:16
+   34| el_empty.props.bar; // error
+                      ^^^
+
+References:
+   poly.js:33:55
+   33| const el_empty: React.Element<React$AbstractComponent<empty>> = el;
+                                                             ^^^^^ [1]
+
+
 Error --------------------------------------------------------------------------------------------- props_reason.js:6:43
 
 Cannot assign `Foo` to `a` because mixed [1] is incompatible with props of component Foo [2]. [incompatible-type]
@@ -2401,7 +2477,7 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 166 errors
+Found 171 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

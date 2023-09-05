@@ -890,6 +890,11 @@ module rec TypeTerm : sig
         should_distribute: bool;
         promote_structural_components: bool;
       }
+    (* When extracting the props of an abstract component, we don't want to produce empty, even
+       when the config type of the component is empty, because that would allow unsound access
+       to the props. This utility passes through everything else but converts empty to mixed.
+       A better approach here may be to prevent these kinds of operations entirely *)
+    | ConvertEmptyPropsToMixedT of reason * t
     (* Given an ObjT props ~> RendersT, we emit an props.type ~> TryRenderTypePromotionT u
      * to try to promote the element type into a render type. If no suitable type is found
      * then we try normal structural subtyping against the render type *)
@@ -4003,6 +4008,7 @@ let string_of_use_ctor = function
   | CheckUnusedPromiseT _ -> "CheckUnusedPromiseT"
   | WriteComputedObjPropCheckT _ -> "WriteComputedObjPropCheckT"
   | PromoteRendersRepresentationT _ -> "PromoteRendersRepresentationT"
+  | ConvertEmptyPropsToMixedT _ -> "ConvertEmptyPropsToMixedT"
   | TryRenderTypePromotionT _ -> "TryRenderTypePromotionT"
 
 let string_of_binary_test = function

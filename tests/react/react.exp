@@ -1,15 +1,15 @@
 Error ----------------------------------------------------------------------------------------- abstractelement.js:13:11
 
-Cannot get `e.props.a` because property `a` is missing in mixed [1]. [incompatible-use]
+Cannot get `e.props.a` because property `a` is missing in empty [1]. [incompatible-use]
 
    abstractelement.js:13:11
     13|   e.props.a; // error
                   ^
 
 References:
-   <BUILTINS>/react.js:162:49
-   162| declare type React$MixedElement = React$Element<React$ElementType>;
-                                                        ^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:149:29
+   149|   | React$AbstractComponent<empty, mixed, React$Node>;
+                                    ^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- createContext.js:16:24
@@ -340,6 +340,24 @@ References:
    element_config.js:46:39
    46| class J extends React.Component<{p?: ?number}> {
                                              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------- element_with_component_type.js:6:2
+
+Cannot cast `<Foo />` to `React.Element` because property `b` is missing in object type [1] but exists in object
+type [2] in property `props`. [prop-missing]
+
+   element_with_component_type.js:6:2
+   6| (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
+       ^^^^^^^^^^^^^
+
+References:
+   element_with_component_type.js:3:35
+   3| class Foo extends React.Component<{a: number}> {}
+                                        ^^^^^^^^^^^ [1]
+   element_with_component_type.js:6:51
+   6| (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
+                                                        ^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------- element_with_component_type.js:6:2
@@ -2535,7 +2553,7 @@ References:
 
 
 
-Found 127 errors
+Found 128 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

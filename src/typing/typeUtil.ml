@@ -151,6 +151,7 @@ and reason_of_use_t = function
   | CheckUnusedPromiseT { reason; _ } -> reason
   | WriteComputedObjPropCheckT { reason; _ } -> reason
   | PromoteRendersRepresentationT { reason; _ } -> reason
+  | ConvertEmptyPropsToMixedT (reason, _) -> reason
   | TryRenderTypePromotionT { reason; _ } -> reason
 
 (* helper: we want the tvar id as well *)
@@ -208,6 +209,7 @@ and mod_reason_of_defer_use_t f = function
 and mod_reason_of_use_t f = function
   | UseT (_, t) -> UseT (Op UnknownUse, mod_reason_of_t f t)
   | CheckUnusedPromiseT { reason; async } -> CheckUnusedPromiseT { reason = f reason; async }
+  | ConvertEmptyPropsToMixedT (reason, t) -> ConvertEmptyPropsToMixedT (f reason, t)
   | PromoteRendersRepresentationT
       { use_op; reason; tout; resolved_obj; should_distribute; promote_structural_components } ->
     PromoteRendersRepresentationT
@@ -497,6 +499,7 @@ let rec util_use_op_of_use_t :
   | ComparatorT _
   | UnaryArithT _
   | AssertBinaryInLHST _
+  | ConvertEmptyPropsToMixedT _
   | AssertBinaryInRHST _
   | AssertForInRHST _
   | AssertInstanceofRHST _

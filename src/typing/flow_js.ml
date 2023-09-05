@@ -631,6 +631,10 @@ struct
             Unix.sleepf (min !n 1.0);
             n := !n -. 1.
           done
+        | (DefT (reason, _, EmptyT), ConvertEmptyPropsToMixedT (_, tout)) ->
+          rec_flow_t cx trace ~use_op:unknown_use (MixedT.make reason (bogus_trust ()), tout)
+        | (_, ConvertEmptyPropsToMixedT (_, tout)) ->
+          rec_flow_t cx trace ~use_op:unknown_use (l, tout)
         (***************)
         (* annotations *)
         (***************)
@@ -5593,6 +5597,7 @@ struct
     | SealGenericT _
     | ResolveUnionT _
     | EnumCastT _
+    | ConvertEmptyPropsToMixedT _
     | ArithT _ ->
       false
     | BecomeT { empty_success; _ } -> empty_success
@@ -6138,6 +6143,7 @@ struct
     | UseT (_, UnionT _)
     | UseT (_, IntersectionT _) (* Already handled in the wildcard case in __flow *)
     | UseT (_, TypeDestructorTriggerT _)
+    | ConvertEmptyPropsToMixedT _
     | CheckUnusedPromiseT _ ->
       false
     | UseT (use_op, DefT (_, _, ObjT obj)) ->
