@@ -35,11 +35,11 @@ let local_refs_of_find_ref_request
   let merge_with_var_refs = function
     | Ok prop_refs ->
       let var_refs = var_refs prop_refs in
-      Ok (Base.List.unordered_append prop_refs var_refs)
+      Ok (FindRefsTypes.FoundReferences (Base.List.unordered_append prop_refs var_refs))
     | Error e ->
       (match var_refs [] with
       | [] -> Error e
-      | results -> Ok results)
+      | results -> Ok (FindRefsTypes.FoundReferences results))
   in
   match def_info with
   | Get_def_types.VariableDefinition (def_locs, name) ->
@@ -66,7 +66,7 @@ let local_refs_of_find_ref_request
         props_info
     in
     merge_with_var_refs prop_refs
-  | Get_def_types.NoDefinition -> Ok []
+  | Get_def_types.NoDefinition no_def_reason -> Ok (FindRefsTypes.NoDefinition no_def_reason)
 
 let find_local_refs
     ~reader ~options ~file_key ~parse_artifacts ~typecheck_artifacts ~kind ~line ~col =
@@ -84,7 +84,7 @@ let find_local_refs
       typecheck_artifacts
       (Loc.cursor (Some file_key) line col)
   in
-  let%bind refs =
+  let%bind result =
     local_refs_of_find_ref_request
       ~options
       ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
@@ -93,4 +93,9 @@ let find_local_refs
       file_key
       { FindRefsTypes.def_info; kind }
   in
-  Ok (Some (sort_and_dedup refs))
+  let result =
+    match result with
+    | FindRefsTypes.FoundReferences refs -> FindRefsTypes.FoundReferences (sort_and_dedup refs)
+    | FindRefsTypes.NoDefinition no_def_reason -> FindRefsTypes.NoDefinition no_def_reason
+  in
+  Ok result

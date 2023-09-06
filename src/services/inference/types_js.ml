@@ -1665,7 +1665,7 @@ end = struct
       | Get_def_types.VariableDefinition _
       | Get_def_types.PropertyDefinition _ ->
         true
-      | Get_def_types.NoDefinition -> false
+      | Get_def_types.NoDefinition _ -> false
     in
     recheck_merge
       ~profiling
@@ -2171,7 +2171,7 @@ let handle_updates_since_saved_state ~profiling ~workers ~options ~libs_ok updat
             ~options
             ~workers
             ~updates:updated_files
-            ~def_info:Get_def_types.NoDefinition
+            ~def_info:(Get_def_types.NoDefinition None)
             ~files_to_force:CheckedSet.empty
             ~env
         with
