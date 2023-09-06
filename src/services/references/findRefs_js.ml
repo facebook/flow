@@ -79,6 +79,7 @@ let find_local_refs
     GetDefUtils.get_def_info
       ~options
       ~reader
+      ~purpose:Get_def_types.Purpose.FindReferences
       ast_info
       typecheck_artifacts
       (Loc.cursor (Some file_key) line col)

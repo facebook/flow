@@ -20,5 +20,6 @@ val get_def :
   file_sig:File_sig.t ->
   ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
+  purpose:Get_def_types.Purpose.t ->
   Loc.t ->
   Get_def_result.t

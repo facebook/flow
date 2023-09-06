@@ -52,7 +52,17 @@ let search ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast def_locs =
       require_name_locs
       ~init:(LocSet.empty, LocSet.empty)
       ~f:(fun ((local_locs, remote_locs) as acc) (remote_loc, local_loc) ->
-        match GetDef_js.get_def ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast remote_loc with
+        match
+          GetDef_js.get_def
+            ~options
+            ~loc_of_aloc
+            ~cx
+            ~file_sig
+            ~ast
+            ~typed_ast
+            ~purpose:Get_def_types.Purpose.FindReferences
+            remote_loc
+        with
         | GetDef_js.Get_def_result.Def (locs, _)
         | GetDef_js.Get_def_result.Partial (locs, _, _) ->
           if Base.List.exists locs ~f:(Base.List.mem def_locs ~equal:Loc.equal) then
