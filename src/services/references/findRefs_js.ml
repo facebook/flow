@@ -46,7 +46,7 @@ let local_refs_of_find_ref_request
     let prop_refs =
       match (Base.List.map def_locs ~f:(fun l -> Get_def_types.ObjectProperty l), name) with
       | ([], _) -> Ok []
-      | (_, None) -> Error "Name not available name to find property refs"
+      | (_, None) -> Error "No available names to find property refs"
       | (hd :: tl, Some name) ->
         PropertyFindRefs.property_find_refs_in_file
           ~loc_of_aloc
