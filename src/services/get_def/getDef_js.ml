@@ -90,22 +90,48 @@ let rec process_request ~options ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_
 module Depth = struct
   let limit = 100
 
+  type error =
+    | Cycle of Loc.t list
+    | DepthExceeded of Loc.t list
+
   type t = {
-    length: int;
-    seen: Loc_collections.LocSet.t;
-    locs: Loc.t list;
+    mutable length: int;
+    mutable seen: Loc_collections.LocSet.t;
+    mutable results: Get_def_result.t Loc_collections.LocMap.t;
+    mutable locs: Loc.t list;
   }
 
-  let empty = { length = 0; seen = Loc_collections.LocSet.empty; locs = [] }
+  type ok =
+    | NoResult
+    | CachedResult of Get_def_result.t
 
-  let add loc { length; seen; locs } =
-    let locs = loc :: locs in
-    let seen' = Loc_collections.LocSet.add loc seen in
-    if seen == seen' then
-      (* cycle *)
-      Error locs
-    else
-      Ok { length = length + 1; seen = seen'; locs }
+  let empty () =
+    {
+      length = 0;
+      seen = Loc_collections.LocSet.empty;
+      locs = [];
+      results = Loc_collections.LocMap.empty;
+    }
+
+  let add loc ({ length; seen; locs; results } as depth) =
+    match Loc_collections.LocMap.find_opt loc results with
+    | None ->
+      let locs = loc :: locs in
+      let seen' = Loc_collections.LocSet.add loc seen in
+      if seen == seen' then
+        Error (Cycle locs)
+      else if length >= limit then
+        Error (DepthExceeded locs)
+      else (
+        depth.seen <- seen';
+        depth.length <- length + 1;
+        depth.locs <- locs;
+        Ok NoResult
+      )
+    | Some result -> Ok (CachedResult result)
+
+  let cache_result loc result ({ results; _ } as depth) =
+    depth.results <- Loc_collections.LocMap.add loc result results
 end
 
 let get_def ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast requested_loc =
@@ -116,65 +142,76 @@ let get_def ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast requested_loc =
   in
   let rec loop ~depth req_loc loop_name =
     match Depth.add req_loc depth with
-    | Error locs ->
-      let trace_str =
+    | Error error ->
+      let trace_of_locs locs =
         locs |> Base.List.map ~f:Reason.string_of_loc |> Base.String.concat ~sep:"\n"
       in
       let log_message =
-        Printf.sprintf
-          "GetDef_js loop depth exceeded %d. Trace (most recent first):\n%s"
-          Depth.limit
-          trace_str
+        match error with
+        | Depth.DepthExceeded locs ->
+          Printf.sprintf
+            "GetDef_js loop depth exceeded %d. Trace (most recent first):\n%s"
+            Depth.limit
+            (trace_of_locs locs)
+        | Depth.Cycle locs ->
+          Printf.sprintf
+            "GetDef_js cycle detected. Trace (most recent first):\n%s"
+            (trace_of_locs locs)
       in
       Partial ([req_loc], loop_name, log_message)
-    | Ok depth ->
+    | Ok (Depth.CachedResult result) -> result
+    | Ok Depth.NoResult ->
       let open Get_def_process_location in
-      (match process_location_in_typed_ast ~is_legit_require ~typed_ast req_loc with
-      | OwnDef (aloc, name) -> Def ([loc_of_aloc aloc], Some name)
-      | Request request -> begin
-        match
-          process_request
-            ~options
-            ~loc_of_aloc
-            ~cx
-            ~is_legit_require
-            ~ast
-            ~typed_ast
-            ~file_sig
-            request
-        with
-        | Ok (res_locs, name) ->
-          res_locs
-          |> Nel.map (fun res_loc ->
-                 (* two scenarios where we stop trying to recur:
-                    - when req_loc = res_loc, meaning we've reached a fixed point so
-                      continuing would make us infinite loop
-                    - when res_loc is not in the file the request originated from, meaning
-                      the typed_ast we have is the wrong one to recur with *)
-                 if Loc.equal req_loc res_loc || Loc.(res_loc.source <> requested_loc.source) then
-                   Def ([res_loc], name)
-                 else
-                   match loop ~depth res_loc name with
-                   | Bad_loc _ -> Def ([res_loc], name)
-                   | Def_error msg -> Partial ([res_loc], name, msg)
-                   | (Def _ | Partial _) as res -> res
-             )
-          |> Nel.reduce (fun res1 res2 ->
-                 match (res1, res2) with
-                 | (Def (locs1, n), Def (locs2, _)) ->
-                   Def (Base.List.unordered_append locs1 locs2, n)
-                 | (Partial (locs1, n, msg1), Partial (locs2, _, msg2)) ->
-                   Partial (Base.List.unordered_append locs1 locs2, n, msg1 ^ msg2)
-                 | (Def (locs1, n), Partial (locs2, _, msg))
-                 | (Partial (locs1, n, msg), Def (locs2, _)) ->
-                   Partial (Base.List.unordered_append locs1 locs2, n, msg)
-                 | ((Bad_loc _ | Def_error _), other)
-                 | (other, (Bad_loc _ | Def_error _)) ->
-                   other
-             )
-        | Error msg -> Def_error msg
-      end
-      | Empty msg -> Bad_loc msg
-      | LocNotFound -> Bad_loc "not found")
+      let result =
+        match process_location_in_typed_ast ~is_legit_require ~typed_ast req_loc with
+        | OwnDef (aloc, name) -> Def ([loc_of_aloc aloc], Some name)
+        | Request request -> begin
+          match
+            process_request
+              ~options
+              ~loc_of_aloc
+              ~cx
+              ~is_legit_require
+              ~ast
+              ~typed_ast
+              ~file_sig
+              request
+          with
+          | Ok (res_locs, name) ->
+            res_locs
+            |> Nel.map (fun res_loc ->
+                   (* two scenarios where we stop trying to recur:
+                      - when req_loc = res_loc, meaning we've reached a fixed point so
+                        continuing would make us infinite loop
+                      - when res_loc is not in the file the request originated from, meaning
+                        the typed_ast we have is the wrong one to recur with *)
+                   if Loc.equal req_loc res_loc || Loc.(res_loc.source <> requested_loc.source) then
+                     Def ([res_loc], name)
+                   else
+                     match loop ~depth res_loc name with
+                     | Bad_loc _ -> Def ([res_loc], name)
+                     | Def_error msg -> Partial ([res_loc], name, msg)
+                     | (Def _ | Partial _) as res -> res
+               )
+            |> Nel.reduce (fun res1 res2 ->
+                   match (res1, res2) with
+                   | (Def (locs1, n), Def (locs2, _)) ->
+                     Def (Base.List.unordered_append locs1 locs2, n)
+                   | (Partial (locs1, n, msg1), Partial (locs2, _, msg2)) ->
+                     Partial (Base.List.unordered_append locs1 locs2, n, msg1 ^ msg2)
+                   | (Def (locs1, n), Partial (locs2, _, msg))
+                   | (Partial (locs1, n, msg), Def (locs2, _)) ->
+                     Partial (Base.List.unordered_append locs1 locs2, n, msg)
+                   | ((Bad_loc _ | Def_error _), other)
+                   | (other, (Bad_loc _ | Def_error _)) ->
+                     other
+               )
+          | Error msg -> Def_error msg
+        end
+        | Empty msg -> Bad_loc msg
+        | LocNotFound -> Bad_loc "not found"
+      in
+      Depth.cache_result req_loc result depth;
+      result
   in
-  loop ~depth:Depth.empty requested_loc None
+  loop ~depth:(Depth.empty ()) requested_loc None

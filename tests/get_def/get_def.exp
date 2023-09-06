@@ -336,3 +336,10 @@ utilities.js:35:8
 Flags:
 utilities.js:1:20,1:22
 
+parse_error_component.js:3:29
+Flags:
+parse_error_component.js:3:26,3:28
+
+parse_error_component.js:10:30
+Flags:
+
