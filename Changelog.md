@@ -1,3 +1,14 @@
+### 0.216.0
+
+Likely to cause new Flow errors:
+* The ability to configure `module.system.haste.use_name_reducers=false` is removed. For now this option defaults to `true` and can only be set to `true`. The option to set the only possible value will be removed in a future release.
+
+Notable bug fixes:
+* Fixed cases where hovering over a parser error could cause the Flow server to appear to hang.
+
+Library Definitions:
+* Add [`USB` web API](https://developer.mozilla.org/en-US/docs/Web/API/USBDevice) definitions.
+
 ### 0.215.1
 
 Notable bug fixes:
