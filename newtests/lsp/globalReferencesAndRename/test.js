@@ -86,6 +86,12 @@ module.exports = (suite(
           17,
           'identifiers-def-2.json',
         ),
+        findAllRefsSnapshot(
+          'use-exported-identifiers-site-b.js',
+          8,
+          12,
+          'identifiers-def-3.json',
+        ),
       ]),
       test('Global rename property 1', [
         addFiles(...fixtures),

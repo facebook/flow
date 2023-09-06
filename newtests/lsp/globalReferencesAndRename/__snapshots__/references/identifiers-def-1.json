@@ -143,6 +143,32 @@
           "character": 7
         }
       }
+    },
+    {
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-b.js",
+      "range": {
+        "start": {
+          "line": 9,
+          "character": 2
+        },
+        "end": {
+          "line": 9,
+          "character": 3
+        }
+      }
+    },
+    {
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-b.js",
+      "range": {
+        "start": {
+          "line": 11,
+          "character": 6
+        },
+        "end": {
+          "line": 11,
+          "character": 7
+        }
+      }
     }
   ]
 }

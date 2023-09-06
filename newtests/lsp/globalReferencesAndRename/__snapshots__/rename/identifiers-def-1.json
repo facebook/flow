@@ -28,6 +28,32 @@
             }
           },
           "newText": "NEW_NAME"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 9,
+              "character": 2
+            },
+            "end": {
+              "line": 9,
+              "character": 3
+            }
+          },
+          "newText": "NEW_NAME"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 11,
+              "character": 6
+            },
+            "end": {
+              "line": 11,
+              "character": 7
+            }
+          },
+          "newText": "NEW_NAME"
         }
       ],
       "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-a.js": [
