@@ -23,8 +23,8 @@ let search ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast def_locs =
             Base.List.fold names ~init:acc ~f:(fun acc (_, bindings) -> loop acc bindings)
         in
         loop acc bindings
-      | Import { named; types; _ } ->
-        let add map acc =
+      | Import { named; types; ns; _ } ->
+        let add_map map acc =
           SMap.fold
             (fun _ ->
               SMap.fold (fun _ nel acc ->
@@ -33,7 +33,12 @@ let search ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast def_locs =
             map
             acc
         in
-        acc |> add named |> add types
+        let acc =
+          match ns with
+          | None -> acc
+          | Some (loc, _) -> (loc, loc) :: acc
+        in
+        acc |> add_map named |> add_map types
       | Require { bindings = None; _ }
       | ImportDynamic _
       | Import0 _

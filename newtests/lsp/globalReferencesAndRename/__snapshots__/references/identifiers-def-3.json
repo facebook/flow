@@ -1,7 +1,18 @@
 {
   "method": "textDocument/references",
-  "error": {
-    "message": "Flow encountered an unexpected error while handling this request. See the Flow logs for more details.",
-    "code": -32001
-  }
+  "result": [
+    {
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/identifiers-def.js",
+      "range": {
+        "start": {
+          "line": 0,
+          "character": 0
+        },
+        "end": {
+          "line": 0,
+          "character": 0
+        }
+      }
+    }
+  ]
 }

@@ -17,7 +17,10 @@ type ('M, 'T) t =
       name: string;
       loc: 'T;
     }
-  | Type of 'T
+  | Type of {
+      annot: 'T;
+      name: string option;
+    }
   | Member of ('M, 'T) member_info
   | JsxAttribute of {
       component_t: 'T;
