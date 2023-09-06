@@ -57,6 +57,10 @@ deps:
 deps-js:
 	opam install js_of_ocaml.$(JS_OF_OCAML_VERSION)
 
+.PHONY: deps-test
+deps-test:
+	opam install ounit2.2.2.4
+
 clean:
 	if command -v dune >/dev/null; then dune clean; fi
 	rm -rf _build
