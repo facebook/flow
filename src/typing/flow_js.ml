@@ -4581,10 +4581,6 @@ struct
                 }
             )
         | (_, AssertNonComponentLikeT _) -> ()
-        | (l, AssertValidRendersArgumentT reason) ->
-          let node = get_builtin_type cx ~trace reason (OrdinaryName "React$Node") in
-          let use_op = Op (RenderTypeInstantiation { render_type = reason }) in
-          rec_flow_t cx trace ~use_op (l, node)
         (******************)
         (* `for...in` RHS *)
         (******************)
@@ -6170,7 +6166,6 @@ struct
     | AssertImportIsValueT _
     | AssertInstanceofRHST _
     | AssertNonComponentLikeT _
-    | AssertValidRendersArgumentT _
     | ComparatorT _
     | DebugPrintT _
     | DebugSleepT _

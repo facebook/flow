@@ -632,7 +632,6 @@ module rec TypeTerm : sig
         targs: t list;
       }
     | AssertNonComponentLikeT of ALoc.t * reason
-    | AssertValidRendersArgumentT of reason
     (* operation specifying a type refinement via a predicate *)
     | PredicateT of predicate * tvar
     (* like PredicateT, GuardT guards a subsequent flow with a predicate on an
@@ -3887,7 +3886,6 @@ let string_of_use_ctor = function
   | AssertForInRHST _ -> "AssertForInRHST"
   | AssertInstanceofRHST _ -> "AssertInstanceofRHST"
   | AssertNonComponentLikeT _ -> "AssertNonComponentLikeT"
-  | AssertValidRendersArgumentT _ -> "AssertValidRendersArgumentT"
   | AssertIterableT _ -> "AssertIterableT"
   | AssertImportIsValueT _ -> "AssertImportIsValueT"
   | BecomeT _ -> "BecomeT"

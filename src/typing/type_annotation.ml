@@ -434,7 +434,10 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     | (loc, Renders { Renders.comments; argument }) ->
       let (((_, t), _) as t_ast) = convert cx tparams_map infer_tparams_map argument in
       let reason = mk_reason (RRenderType (desc_of_reason (reason_of_t t))) loc in
-      Flow.flow cx (t, AssertValidRendersArgumentT (reason_of_t t));
+      let renders_reason = reason_of_t t in
+      let node = Flow.get_builtin_type cx renders_reason (OrdinaryName "React$Node") in
+      let use_op = Op (RenderTypeInstantiation { render_type = renders_reason }) in
+      Flow.flow cx (t, UseT (use_op, node));
       let renders_t = TypeUtil.mk_renders_type reason t in
       ((loc, renders_t), Renders { Renders.comments; argument = t_ast })
     | (loc, ReadOnly ro) ->

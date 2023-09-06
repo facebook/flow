@@ -119,8 +119,11 @@ module Make
   module ComponentBody = B
 
   let mk_render_type cx renders_t =
-    Flow.flow cx (renders_t, AssertValidRendersArgumentT (reason_of_t renders_t));
-    let reason = update_desc_reason (fun desc -> RRenderType desc) (reason_of_t renders_t) in
+    let renders_reason = reason_of_t renders_t in
+    let node = Flow.get_builtin_type cx renders_reason (OrdinaryName "React$Node") in
+    let use_op = Op (RenderTypeInstantiation { render_type = renders_reason }) in
+    Flow.flow cx (renders_t, UseT (use_op, node));
+    let reason = update_desc_reason (fun desc -> RRenderType desc) renders_reason in
     TypeUtil.mk_renders_type reason renders_t
 
   let toplevels cx x =

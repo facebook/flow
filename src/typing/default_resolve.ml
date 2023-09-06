@@ -115,8 +115,7 @@ let rec default_resolve_touts ~flow cx loc u =
   | AssertBinaryInRHST _
   | AssertForInRHST _
   | AssertInstanceofRHST _
-  | AssertNonComponentLikeT _
-  | AssertValidRendersArgumentT _ ->
+  | AssertNonComponentLikeT _ ->
     ()
   | AssertIterableT { targs; _ } -> Base.List.iter ~f:resolve targs
   | PredicateT (_, tvar)
