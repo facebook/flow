@@ -84,16 +84,13 @@ let find_local_refs
       typecheck_artifacts
       (Loc.cursor (Some file_key) line col)
   in
-  match def_info with
-  | Get_def_types.NoDefinition -> Ok None
-  | _ ->
-    let%bind refs =
-      local_refs_of_find_ref_request
-        ~options
-        ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
-        ast_info
-        typecheck_artifacts
-        file_key
-        { FindRefsTypes.def_info; kind }
-    in
-    Ok (Some (sort_and_dedup refs))
+  let%bind refs =
+    local_refs_of_find_ref_request
+      ~options
+      ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
+      ast_info
+      typecheck_artifacts
+      file_key
+      { FindRefsTypes.def_info; kind }
+  in
+  Ok (Some (sort_and_dedup refs))
