@@ -398,5 +398,9 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
         (Types_js_types.Typecheck_artifacts { cx; typed_ast; obj_to_obj_map })
         file_key
         find_ref_request
+      |> Base.Result.map ~f:(function
+             | FindRefsTypes.FoundReferences refs -> refs
+             | FindRefsTypes.NoDefinition _ -> []
+             )
     in
     (cx, typed_ast, find_refs_result)

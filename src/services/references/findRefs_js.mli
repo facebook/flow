@@ -23,4 +23,4 @@ val local_refs_of_find_ref_request :
   Types_js_types.typecheck_artifacts ->
   File_key.t ->
   FindRefsTypes.request ->
-  (FindRefsTypes.find_refs_found, string) result
+  (FindRefsTypes.find_refs_ok, string) result

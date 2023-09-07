@@ -2096,7 +2096,8 @@ let global_find_references
       (Loc.cursor (Some file_key) line col)
   with
   | Error s -> Lwt.return (Error s)
-  | Ok Get_def_types.NoDefinition -> Lwt.return (Ok None)
+  | Ok (Get_def_types.NoDefinition no_def_reason) ->
+    Lwt.return (Ok (FindRefsTypes.NoDefinition no_def_reason))
   | Ok def_info ->
     let def_locs = GetDefUtils.all_locs_of_def_info def_info in
     let%lwt (profiling, (log_fn, _recheck_stats, results, _env)) =
@@ -2122,15 +2123,15 @@ let global_find_references
     let result_compare (_, l1) (_, l2) = Loc.compare l1 l2 in
     Lwt.return
       (Base.Result.map results ~f:(fun r ->
-           Some (Base.List.dedup_and_sort ~compare:result_compare r)
+           FindRefsTypes.FoundReferences (Base.List.dedup_and_sort ~compare:result_compare r)
        )
       )
 
 let find_references ~genv ~reader ~options ~env ~file_artifacts ~global ~kind file_key pos :
-    ((FindRefsTypes.find_refs_found option, string) result * Hh_json.json option) Lwt.t =
+    ((FindRefsTypes.find_refs_ok, string) result * Hh_json.json option) Lwt.t =
   let (parse_artifacts, typecheck_artifacts) = file_artifacts in
   let (line, col) = Flow_lsp_conversions.position_of_document_position pos in
-  let%lwt refs =
+  let%lwt refs_results =
     if global then
       global_find_references
         ~genv
@@ -2158,19 +2159,26 @@ let find_references ~genv ~reader ~options ~env ~file_artifacts ~global ~kind fi
       Lwt.return results
   in
   let extra_data =
-    Some
-      (Hh_json.JSON_Object
-         [
-           ( "result",
-             Hh_json.JSON_String
-               (match refs with
-               | Ok _ -> "SUCCESS"
-               | _ -> "FAILURE")
-           );
-         ]
-      )
+    match refs_results with
+    | Ok (FindRefsTypes.FoundReferences _) ->
+      Some (Hh_json.JSON_Object [("result", Hh_json.JSON_String "SUCCESS")])
+    | Ok (FindRefsTypes.NoDefinition no_def_reason) ->
+      Some
+        (Hh_json.JSON_Object
+           [
+             ("result", Hh_json.JSON_String "BAD_LOC");
+             ( "error",
+               Hh_json.JSON_String (Base.Option.value ~default:"No reason given" no_def_reason)
+             );
+           ]
+        )
+    | Error msg ->
+      Some
+        (Hh_json.JSON_Object
+           [("result", Hh_json.JSON_String "FAILURE"); ("error", Hh_json.JSON_String msg)]
+        )
   in
-  Lwt.return (refs, extra_data)
+  Lwt.return (refs_results, extra_data)
 
 let map_find_references_results
     ~genv ~reader ~options ~client ~profiling ~env ~f ~global text_doc_position =
@@ -2193,10 +2201,8 @@ let map_find_references_results
     in
     let mapped_refs =
       match local_refs with
-      | Ok (Some refs) -> Ok (Base.List.filter_map ~f refs)
-      | Ok None ->
-        (* e.g. if it was requested on a place that's not even an identifier *)
-        Ok []
+      | Ok (FindRefsTypes.FoundReferences refs) -> Ok (Base.List.filter_map ~f refs)
+      | Ok (FindRefsTypes.NoDefinition _) -> Ok []
       | Error _ as err -> err
     in
     Lwt.return (mapped_refs, extra_data)
@@ -2284,7 +2290,7 @@ let handle_persistent_rename ~genv ~reader ~options ~id ~params ~metadata ~clien
       let (parse_artifacts, _typecheck_artifacts) = file_artifacts in
       let edits =
         match all_refs with
-        | Ok (Some refs) ->
+        | Ok (FindRefsTypes.FoundReferences refs) ->
           let (ref_map, files) =
             List.fold_left
               (fun (ref_map, files) (ref_kind, loc) ->
@@ -2333,7 +2339,7 @@ let handle_persistent_rename ~genv ~reader ~options ~id ~params ~metadata ~clien
             )
           in
           Ok { WorkspaceEdit.changes }
-        | Ok None ->
+        | Ok (FindRefsTypes.NoDefinition _) ->
           (* e.g. if it was requested on a place that's not even an identifier *)
           Ok { WorkspaceEdit.changes = UriMap.empty }
         | Error _ as err -> err

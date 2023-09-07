@@ -254,7 +254,7 @@ let all_locs_of_property_def_info (props_info, _) = props_info |> Nel.map loc_of
 let all_locs_of_def_info = function
   | VariableDefinition (locs, _) -> locs
   | PropertyDefinition props_info -> props_info |> all_locs_of_property_def_info |> Nel.to_list
-  | NoDefinition -> []
+  | NoDefinition _ -> []
 
 type def_loc =
   (* We found a class property. Include all overridden implementations. Superclass implementations
@@ -504,6 +504,5 @@ let get_def_info ~options ~reader ~purpose (ast, file_sig, _) type_info loc :
     | GetDef_js.Get_def_result.Def (locs, name)
     | GetDef_js.Get_def_result.Partial (locs, name, _) ->
       Ok (VariableDefinition (locs, name))
-    | GetDef_js.Get_def_result.Bad_loc error
-    | GetDef_js.Get_def_result.Def_error error ->
-      Error error)
+    | GetDef_js.Get_def_result.Bad_loc error -> Ok (NoDefinition (Some error))
+    | GetDef_js.Get_def_result.Def_error error -> Error error)

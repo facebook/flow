@@ -19,4 +19,4 @@ val find_local_refs :
   FindRefsUtils.ast_info ->
   Types_js_types.typecheck_artifacts ->
   Loc.t ->
-  (FindRefsTypes.find_refs_ok, string) result
+  (FindRefsTypes.find_refs_found option, string) result

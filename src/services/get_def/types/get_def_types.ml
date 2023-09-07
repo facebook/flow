@@ -17,7 +17,7 @@ type property_def_info = single_property_def_info Nel.t * string
 type def_info =
   | VariableDefinition of Loc.t list * string option
   | PropertyDefinition of property_def_info
-  | NoDefinition
+  | NoDefinition of string option (* Reason of expected no definition *)
 
 module Purpose = struct
   type t =

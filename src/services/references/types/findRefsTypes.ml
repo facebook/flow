@@ -19,7 +19,9 @@ type single_ref = ref_kind * Loc.t
 
 type find_refs_found = single_ref list
 
-type find_refs_ok = find_refs_found option
+type find_refs_ok =
+  | FoundReferences of find_refs_found
+  | NoDefinition of string option
 
 type kind =
   | FindReferences
@@ -30,4 +32,4 @@ type request = {
   kind: kind;
 }
 
-let empty_request = { def_info = Get_def_types.NoDefinition; kind = FindReferences }
+let empty_request = { def_info = Get_def_types.NoDefinition None; kind = FindReferences }
