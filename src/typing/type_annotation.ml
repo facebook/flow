@@ -428,6 +428,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         match targs with
         | None -> (None, None)
         | Some (l, { TypeArgs.arguments; comments }) ->
+          Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (l, TypeOfTypeArguments));
           let (targs, targs_ast) = convert_list cx tparams_map infer_tparams_map arguments in
           (Some targs, Some (l, { TypeArgs.arguments = targs_ast; comments }))
       in

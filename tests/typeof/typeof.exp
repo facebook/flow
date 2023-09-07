@@ -148,5 +148,21 @@ References:
                       ^^^^^ [3]
 
 
+Error ----------------------------------------------------------------------------------------------- with-targs.js:2:35
 
-Found 10 errors
+`typeof` annotation with type arguments is not supported yet. The type arguments will be ignored. [unsupported-syntax]
+
+   2| declare const FooClass: typeof Foo<string>;
+                                        ^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- with-targs.js:5:31
+
+`typeof` annotation with type arguments is not supported yet. The type arguments will be ignored. [unsupported-syntax]
+
+   5| declare const barF: typeof bar<string>;
+                                    ^^^^^^^^
+
+
+
+Found 12 errors

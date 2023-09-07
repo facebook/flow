@@ -408,12 +408,14 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         match typeof_arg env with
         | None -> Type.Any None
         | Some argument ->
+          let targs =
+            if Peek.is_line_terminator env then
+              None
+            else
+              type_args env
+          in
           Type.Typeof
-            {
-              Type.Typeof.argument;
-              targs = None;
-              comments = Flow_ast_utils.mk_comments_opt ~leading ();
-            })
+            { Type.Typeof.argument; targs; comments = Flow_ast_utils.mk_comments_opt ~leading () })
       env
 
   and primary env =
