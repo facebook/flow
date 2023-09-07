@@ -1,3 +1,447 @@
+Error --------------------------------------------------------------------------------------------- classes.ios.js:47:65
+
+Cannot conform to common interface module because `SameShapeDifferentNominalHierarchy22` [1] is incompatible with
+`SameShapeDifferentNominalHierarchy2` [2] in property `SameShapeDifferentNominalHierarchy`. Read the docs on Flow's
+multi-platform support for more information: https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+
+   classes.ios.js:47:65
+   47| declare export class SameShapeDifferentNominalHierarchy extends SameShapeDifferentNominalHierarchy22 { // error
+                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   classes.js.flow:44:65
+   44| declare export class SameShapeDifferentNominalHierarchy extends SameShapeDifferentNominalHierarchy2 {
+                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- classes.ios.js:65:22
+
+Cannot conform to common interface module because `GenericDifferentSizedTypeParametersError1` [1] is incompatible with
+`GenericDifferentSizedTypeParametersError1` [2] in property `GenericDifferentSizedTypeParametersError1`. Read the docs
+on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+
+   classes.ios.js:65:22
+   65| declare export class GenericDifferentSizedTypeParametersError1<T1, T2> { // error
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   classes.js.flow:62:22
+   62| declare export class GenericDifferentSizedTypeParametersError1<T2> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- classes.ios.js:69:22
+
+Cannot conform to common interface module because `GenericDifferentSizedTypeParametersError2` [1] is incompatible with
+`GenericDifferentSizedTypeParametersError2` [2] in property `GenericDifferentSizedTypeParametersError2`. Read the docs
+on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+
+   classes.ios.js:69:22
+   69| declare export class GenericDifferentSizedTypeParametersError2<T1> { // error
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   classes.js.flow:66:22
+   66| declare export class GenericDifferentSizedTypeParametersError2<T1, T2> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- classes.ios.js:73:40
+
+Cannot conform to common interface module because string [1] is incompatible with number [2] in type argument `T1` [3]
+of property `generic1`. Read the docs on Flow's multi-platform support for more information:
+https://flow.org/en/docs/react/multiplatform. [incompatible-type-arg]
+
+   classes.ios.js:73:40
+   73| declare export const generic1: Generic<string>; // error
+                                              ^^^^^^ [1]
+
+References:
+   classes.js.flow:70:40
+   70| declare export const generic1: Generic<number>;
+                                              ^^^^^^ [2]
+   classes.ios.js:52:30
+   52| declare export class Generic<T1> {
+                                    ^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- classes.ios.js:74:32
+
+Cannot conform to common interface module because `GenericDifferentSizedTypeParametersError1` [1] is incompatible with
+`GenericDifferentSizedTypeParametersError1` [2] in property `generic2`. Read the docs on Flow's multi-platform support
+for more information: https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+
+   classes.ios.js:74:32
+   74| declare export const generic2: GenericDifferentSizedTypeParametersError1<string, string>; // error
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   classes.js.flow:71:32
+   71| declare export const generic2: GenericDifferentSizedTypeParametersError1<number>;
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- classes.ios.js:75:32
+
+Cannot conform to common interface module because `GenericDifferentSizedTypeParametersError2` [1] is incompatible with
+`GenericDifferentSizedTypeParametersError2` [2] in property `generic3`. Read the docs on Flow's multi-platform support
+for more information: https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+
+   classes.ios.js:75:32
+   75| declare export const generic3: GenericDifferentSizedTypeParametersError2<string>; // error
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   classes.js.flow:72:32
+   72| declare export const generic3: GenericDifferentSizedTypeParametersError2<number, number>;
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- classes.ios.js:3:22
+
+Cannot implement `ImplHasExtra` [1] with `ImplHasExtra` because property `bar` is missing in `ImplHasExtra` [1] but
+exists in `ImplHasExtra` [2]. [prop-missing]
+
+   classes.ios.js:3:22
+   3| declare export class ImplHasExtra { // ok
+                           ^^^^^^^^^^^^ [2]
+
+References:
+   classes.js.flow:3:22
+   3| declare export class ImplHasExtra {}
+                           ^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- classes.ios.js:3:22
+
+Cannot implement `ImplHasExtra` [1] with `ImplHasExtra` because property `foo` is missing in `ImplHasExtra` [1] but
+exists in `ImplHasExtra` [2]. [prop-missing]
+
+   classes.ios.js:3:22
+   3| declare export class ImplHasExtra { // ok
+                           ^^^^^^^^^^^^ [2]
+
+References:
+   classes.js.flow:3:22
+   3| declare export class ImplHasExtra {}
+                           ^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- classes.ios.js:8:22
+
+Cannot implement `ImplHasDifferentSig` [1] with `ImplHasDifferentSig` because string [2] is incompatible with number [3]
+in property `bar`. [incompatible-type]
+
+   classes.ios.js:8:22
+   8| declare export class ImplHasDifferentSig { // error
+                           ^^^^^^^^^^^^^^^^^^^
+
+References:
+   classes.js.flow:5:22
+   5| declare export class ImplHasDifferentSig {
+                           ^^^^^^^^^^^^^^^^^^^ [1]
+   classes.ios.js:9:15
+   9|   static bar: string;
+                    ^^^^^^ [2]
+   classes.js.flow:6:15
+   6|   static bar: number;
+                    ^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- classes.ios.js:8:22
+
+Cannot implement `ImplHasDifferentSig` [1] with `ImplHasDifferentSig` because string [2] is incompatible with number [3]
+in property `foo`. [incompatible-type]
+
+   classes.ios.js:8:22
+    8| declare export class ImplHasDifferentSig { // error
+                            ^^^^^^^^^^^^^^^^^^^
+
+References:
+   classes.js.flow:5:22
+    5| declare export class ImplHasDifferentSig {
+                            ^^^^^^^^^^^^^^^^^^^ [1]
+   classes.ios.js:10:10
+   10|   foo(): string
+                ^^^^^^ [2]
+   classes.js.flow:7:10
+    7|   foo(): number
+                ^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- classes.ios.js:30:41
+
+Cannot implement `BadDeepHierarchy1` [1] with `BadDeepHierarchy1` because number [2] is incompatible with boolean [3] in
+property `foo`. [incompatible-type]
+
+   classes.ios.js:30:41
+   30| declare class BadDeepHierarchy2 extends BadDeepHierarchy1 { // error
+                                               ^^^^^^^^^^^^^^^^^
+
+References:
+   classes.js.flow:27:41
+   27| declare class BadDeepHierarchy2 extends BadDeepHierarchy1 {
+                                               ^^^^^^^^^^^^^^^^^ [1]
+   classes.ios.js:27:10
+   27|   foo(): number; /* boolean in interface file */
+                ^^^^^^ [2]
+   classes.js.flow:24:10
+   24|   foo(): boolean;
+                ^^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- classes.ios.js:30:41
+
+Cannot implement `BadDeepHierarchy1` [1] with `BadDeepHierarchy1` because number [2] is incompatible with boolean [3] in
+the return value of property `s1`. [incompatible-type]
+
+   classes.ios.js:30:41
+   30| declare class BadDeepHierarchy2 extends BadDeepHierarchy1 { // error
+                                               ^^^^^^^^^^^^^^^^^
+
+References:
+   classes.js.flow:27:41
+   27| declare class BadDeepHierarchy2 extends BadDeepHierarchy1 {
+                                               ^^^^^^^^^^^^^^^^^ [1]
+   classes.ios.js:28:16
+   28|   static s1(): number; /* boolean in interface file */
+                      ^^^^^^ [2]
+   classes.js.flow:25:16
+   25|   static s1(): boolean;
+                      ^^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- classes.ios.js:34:22
+
+Cannot implement `BadDeepHierarchy` [1] with `BadDeepHierarchy` because boolean [2] is incompatible with string [3] in
+property `baz`. [incompatible-type]
+
+   classes.ios.js:34:22
+   34| declare export class BadDeepHierarchy extends BadDeepHierarchy2 { // error
+                            ^^^^^^^^^^^^^^^^
+
+References:
+   classes.js.flow:31:22
+   31| declare export class BadDeepHierarchy extends BadDeepHierarchy2 {
+                            ^^^^^^^^^^^^^^^^ [1]
+   classes.ios.js:35:10
+   35|   baz(): boolean; /* string in interface file */
+                ^^^^^^^ [2]
+   classes.js.flow:32:10
+   32|   baz(): string;
+                ^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- classes.ios.js:34:22
+
+Cannot implement `BadDeepHierarchy` [1] with `BadDeepHierarchy` because boolean [2] is incompatible with string [3] in
+the return value of property `s3`. [incompatible-type]
+
+   classes.ios.js:34:22
+   34| declare export class BadDeepHierarchy extends BadDeepHierarchy2 { // error
+                            ^^^^^^^^^^^^^^^^
+
+References:
+   classes.js.flow:31:22
+   31| declare export class BadDeepHierarchy extends BadDeepHierarchy2 {
+                            ^^^^^^^^^^^^^^^^ [1]
+   classes.ios.js:36:16
+   36|   static s3(): boolean; /* string in interface file */
+                      ^^^^^^^ [2]
+   classes.js.flow:33:16
+   33|   static s3(): string;
+                      ^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- classes.ios.js:34:47
+
+Cannot implement `BadDeepHierarchy2` [1] with `BadDeepHierarchy2` because string [2] is incompatible with number [3] in
+property `bar`. [incompatible-type]
+
+   classes.ios.js:34:47
+   34| declare export class BadDeepHierarchy extends BadDeepHierarchy2 { // error
+                                                     ^^^^^^^^^^^^^^^^^
+
+References:
+   classes.js.flow:31:47
+   31| declare export class BadDeepHierarchy extends BadDeepHierarchy2 {
+                                                     ^^^^^^^^^^^^^^^^^ [1]
+   classes.ios.js:31:10
+   31|   bar(): string; /* number in interface file */
+                ^^^^^^ [2]
+   classes.js.flow:28:10
+   28|   bar(): number;
+                ^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- classes.ios.js:34:47
+
+Cannot implement `BadDeepHierarchy2` [1] with `BadDeepHierarchy2` because string [2] is incompatible with number [3] in
+the return value of property `s2`. [incompatible-type]
+
+   classes.ios.js:34:47
+   34| declare export class BadDeepHierarchy extends BadDeepHierarchy2 { // error
+                                                     ^^^^^^^^^^^^^^^^^
+
+References:
+   classes.js.flow:31:47
+   31| declare export class BadDeepHierarchy extends BadDeepHierarchy2 {
+                                                     ^^^^^^^^^^^^^^^^^ [1]
+   classes.ios.js:32:16
+   32|   static s2(): string; /* number in interface file */
+                      ^^^^^^ [2]
+   classes.js.flow:29:16
+   29|   static s2(): number;
+                      ^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- classes.ios.js:56:22
+
+Cannot implement `GenericVsNonGeneric` [1] with `GenericVsNonGeneric` because mixed [2] is incompatible with number [3]
+in property `foo`. [incompatible-type]
+
+   classes.ios.js:56:22
+   56| declare export class GenericVsNonGeneric<T1> { // error
+                            ^^^^^^^^^^^^^^^^^^^
+
+References:
+   classes.js.flow:53:22
+   53| declare export class GenericVsNonGeneric<T1> {
+                            ^^^^^^^^^^^^^^^^^^^ [1]
+   classes.ios.js:57:10
+   57|   foo(): T1;
+                ^^ [2]
+   classes.js.flow:54:10
+   54|   foo(): number;
+                ^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- classes.ios.js:56:22
+
+Cannot implement `GenericVsNonGeneric` [1] with `GenericVsNonGeneric` because number [2] is incompatible with `T1` [3]
+in property `foo`. This property is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+
+   classes.ios.js:56:22
+   56| declare export class GenericVsNonGeneric<T1> { // error
+                            ^^^^^^^^^^^^^^^^^^^
+
+References:
+   classes.js.flow:53:22
+   53| declare export class GenericVsNonGeneric<T1> {
+                            ^^^^^^^^^^^^^^^^^^^ [1]
+   classes.js.flow:54:10
+   54|   foo(): number;
+                ^^^^^^ [2]
+   classes.ios.js:57:10
+   57|   foo(): T1;
+                ^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- classes.ios.js:60:22
+
+Cannot implement `GenericSwitchedTparams` [1] with `GenericSwitchedTparams` because mixed [2] is incompatible with
+`T1` [3] in property `bar`. [incompatible-type]
+
+   classes.ios.js:60:22
+   60| declare export class GenericSwitchedTparams<T1, T2> { // error
+                            ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   classes.js.flow:57:22
+   57| declare export class GenericSwitchedTparams<T1, T2> {
+                            ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   classes.ios.js:62:10
+   62|   bar(): T2;
+                ^^ [2]
+   classes.js.flow:59:10
+   59|   bar(): T1;
+                ^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- classes.ios.js:60:22
+
+Cannot implement `GenericSwitchedTparams` [1] with `GenericSwitchedTparams` because mixed [2] is incompatible with
+`T2` [3] in property `bar`. This property is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+
+   classes.ios.js:60:22
+   60| declare export class GenericSwitchedTparams<T1, T2> { // error
+                            ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   classes.js.flow:57:22
+   57| declare export class GenericSwitchedTparams<T1, T2> {
+                            ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   classes.js.flow:59:10
+   59|   bar(): T1;
+                ^^ [2]
+   classes.ios.js:62:10
+   62|   bar(): T2;
+                ^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- classes.ios.js:60:22
+
+Cannot implement `GenericSwitchedTparams` [1] with `GenericSwitchedTparams` because mixed [2] is incompatible with
+`T2` [3] in property `foo`. [incompatible-type]
+
+   classes.ios.js:60:22
+   60| declare export class GenericSwitchedTparams<T1, T2> { // error
+                            ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   classes.js.flow:57:22
+   57| declare export class GenericSwitchedTparams<T1, T2> {
+                            ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   classes.ios.js:61:10
+   61|   foo(): T1;
+                ^^ [2]
+   classes.js.flow:58:10
+   58|   foo(): T2;
+                ^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- classes.ios.js:60:22
+
+Cannot implement `GenericSwitchedTparams` [1] with `GenericSwitchedTparams` because mixed [2] is incompatible with
+`T1` [3] in property `foo`. This property is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+
+   classes.ios.js:60:22
+   60| declare export class GenericSwitchedTparams<T1, T2> { // error
+                            ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   classes.js.flow:57:22
+   57| declare export class GenericSwitchedTparams<T1, T2> {
+                            ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   classes.js.flow:58:10
+   58|   foo(): T2;
+                ^^ [2]
+   classes.ios.js:61:10
+   61|   foo(): T1;
+                ^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- classes.ios.js:73:40
+
+Cannot implement `Generic` [1] with `Generic` because string [2] is incompatible with number [3] in property `foo`.
+[incompatible-type]
+
+   classes.ios.js:73:40
+   73| declare export const generic1: Generic<string>; // error
+                                              ^^^^^^ [2]
+
+References:
+   classes.js.flow:70:32
+   70| declare export const generic1: Generic<number>;
+                                      ^^^^^^^^^^^^^^^ [1]
+   classes.js.flow:70:40
+   70| declare export const generic1: Generic<number>;
+                                              ^^^^^^ [3]
+
+
 Error ------------------------------------------------------------------------------------------ opaque_type.ios.js:3:41
 
 Cannot conform to common interface module because string [1] is incompatible with number [2] in  of property
@@ -224,4 +668,4 @@ References:
 
 
 
-Found 14 errors
+Found 37 errors

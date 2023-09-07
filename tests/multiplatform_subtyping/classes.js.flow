@@ -1,0 +1,72 @@
+declare export class Empty {}
+
+declare export class ImplHasExtra {}
+
+declare export class ImplHasDifferentSig {
+  static bar: number;
+  foo(): number
+}
+
+declare class GoodDeepHierarchy1 {
+  foo(): boolean;
+  static s1(): boolean;
+}
+declare class GoodDeepHierarchy2 extends GoodDeepHierarchy1 {
+  bar(): number;
+  static s2(): number;
+}
+declare export class GoodDeepHierarchy extends GoodDeepHierarchy2 {
+  baz(): string;
+  static s3(): string;
+}
+
+declare class BadDeepHierarchy1 {
+  foo(): boolean;
+  static s1(): boolean;
+}
+declare class BadDeepHierarchy2 extends BadDeepHierarchy1 {
+  bar(): number;
+  static s2(): number;
+}
+declare export class BadDeepHierarchy extends BadDeepHierarchy2 {
+  baz(): string;
+  static s3(): string;
+}
+
+declare class SameShapeDifferentNominalHierarchy1 {
+  foo(): boolean;
+  static s1(): boolean;
+}
+declare class SameShapeDifferentNominalHierarchy2 extends SameShapeDifferentNominalHierarchy1 {
+  bar(): number;
+  static s2(): number;
+}
+declare export class SameShapeDifferentNominalHierarchy extends SameShapeDifferentNominalHierarchy2 {
+  baz(): string;
+  static s3(): string;
+}
+
+declare export class Generic<T2> {
+  foo(): T2;
+}
+
+declare export class GenericVsNonGeneric<T1> {
+  foo(): number;
+}
+
+declare export class GenericSwitchedTparams<T1, T2> {
+  foo(): T2;
+  bar(): T1;
+}
+
+declare export class GenericDifferentSizedTypeParametersError1<T2> {
+  foo(): T2;
+}
+
+declare export class GenericDifferentSizedTypeParametersError2<T1, T2> {
+  foo(): T2;
+}
+
+declare export const generic1: Generic<number>;
+declare export const generic2: GenericDifferentSizedTypeParametersError1<number>;
+declare export const generic3: GenericDifferentSizedTypeParametersError2<number, number>;

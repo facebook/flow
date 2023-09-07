@@ -3146,13 +3146,24 @@ struct
         (**************************************************)
         (* instances of classes follow declared hierarchy *)
         (**************************************************)
-        | ( DefT (reason, _, InstanceT { super; implements; inst; _ }),
+        | ( DefT (reason, _, InstanceT { super; implements; inst; static }),
             ExtendsUseT
               ( use_op,
                 reason_op,
                 try_ts_on_failure,
                 l,
-                (DefT (_, _, InstanceT { inst = inst_super; _ }) as u)
+                ( DefT
+                    ( reason_u,
+                      _,
+                      InstanceT
+                        {
+                          inst = inst_super;
+                          static = static_super;
+                          super = super_super;
+                          implements = _super_impls;
+                        }
+                    ) as u
+                )
               )
           ) ->
           if ALoc.equal_id inst.class_id inst_super.class_id then
@@ -3166,7 +3177,48 @@ struct
                 reason_op
             in
             flow_type_args cx trace ~use_op reason ureason tmap1 tmap2
-          else
+          else if
+            (* We are subtyping a class from platform-specific impl file against the interface file *)
+            TypeUtil.nominal_id_have_same_logical_module
+              ~file_options:Context.((metadata cx).file_options)
+              (inst.class_id, inst.class_name)
+              (inst_super.class_id, inst_super.class_name)
+            && List.length inst.type_args = List.length inst_super.type_args
+          then (
+            let implements_use_op =
+              Op (ClassImplementsCheck { def = reason; name = reason; implements = reason_u })
+            in
+            (* We need to ensure that the shape of the class instances match. *)
+            let inst_type_to_obj_type reason inst =
+              inst_type_to_obj_type
+                cx
+                reason
+                (inst.own_props, inst.proto_props, inst.inst_call_t, inst.inst_dict)
+            in
+            rec_unify
+              cx
+              trace
+              ~use_op:implements_use_op
+              (inst_type_to_obj_type reason inst)
+              (inst_type_to_obj_type reason_u inst_super);
+            (* We need to ensure that the shape of the class statics match. *)
+            let spread_of reason t =
+              (* Spread to keep only own props and own methods. *)
+              let id = Eval.generate_id () in
+              let destructor = SpreadType (Object.Spread.Annot { make_exact = false }, [], None) in
+              mk_possibly_evaluated_destructor cx unknown_use reason t destructor id
+            in
+            rec_unify
+              cx
+              trace
+              ~use_op:implements_use_op
+              (spread_of reason static)
+              (spread_of reason_u static_super);
+            (* We need to ensure that the classes have the same nominal hierarchy *)
+            rec_flow_t cx trace ~use_op (super, super_super);
+            (* We need to ensure that the classes have the matching targs *)
+            flow_type_args cx trace ~use_op reason reason_u inst.type_args inst_super.type_args
+          ) else
             (* If this instance type has declared implementations, any structural
                tests have already been performed at the declaration site. We can
                then use the ExtendsT use type to search for a nominally matching
@@ -6315,6 +6367,29 @@ struct
       targs1
       targs2
 
+  and inst_type_to_obj_type cx reason_struct (own_props_id, proto_props_id, call_id, inst_dict) =
+    let own_props = Context.find_props cx own_props_id in
+    let proto_props = Context.find_props cx proto_props_id in
+    let props_tmap = Properties.generate_id () in
+    Context.add_property_map cx props_tmap (NameUtils.Map.union own_props proto_props);
+    (* Interfaces with an indexer type are indexed, all others are inexact *)
+    let obj_kind =
+      match inst_dict with
+      | Some d -> Indexed d
+      | None -> Inexact
+    in
+    let o =
+      {
+        flags = { obj_kind; frozen = false };
+        props_tmap;
+        (* Interfaces have no prototype *)
+        proto_t = ObjProtoT reason_struct;
+        call_t = call_id;
+        reachable_targs = [];
+      }
+    in
+    DefT (reason_struct, bogus_trust (), ObjT o)
+
   (* dispatch checks to verify that lower satisfies the structural
      requirements given in the tuple. *)
   (* TODO: own_props/proto_props is misleading, since they come from interfaces,
@@ -6336,25 +6411,8 @@ struct
               reachable_targs = lreachable_targs;
             }
         ) ->
-      let own_props = Context.find_props cx own_props_id in
-      let proto_props = Context.find_props cx proto_props_id in
-      let props_tmap = Properties.generate_id () in
-      Context.add_property_map cx props_tmap (NameUtils.Map.union own_props proto_props);
-      (* Interfaces with an indexer type are indexed, all others are inexact *)
-      let obj_kind =
-        match inst_dict with
-        | Some d -> Indexed d
-        | None -> Inexact
-      in
       let o =
-        {
-          flags = { obj_kind; frozen = false };
-          props_tmap;
-          (* Interfaces have no prototype *)
-          proto_t = ObjProtoT reason_struct;
-          call_t = call_id;
-          reachable_targs = [];
-        }
+        inst_type_to_obj_type cx reason_struct (own_props_id, proto_props_id, call_id, inst_dict)
       in
       let lower =
         DefT
@@ -6370,7 +6428,7 @@ struct
               }
           )
       in
-      rec_flow_t cx trace ~use_op (lower, DefT (reason_struct, bogus_trust (), ObjT o))
+      rec_flow_t cx trace ~use_op (lower, o)
     | _ ->
       inst_structural_subtype
         cx
