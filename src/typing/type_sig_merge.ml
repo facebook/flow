@@ -551,10 +551,12 @@ and merge_annot tps infer_tps file = function
   | SingletonBoolean (loc, b) ->
     let reason = Reason.(mk_annot_reason (RBooleanLit b) loc) in
     Type.(DefT (reason, trust, SingletonBoolT b))
-  | Typeof { loc; qname; t } ->
+  | Typeof { loc; qname; t; targs } ->
     let qname = String.concat "." qname in
     let reason = Reason.(mk_reason (RTypeof qname) loc) in
     let t = merge tps infer_tps file t in
+    let targs = Option.map ~f:(List.map (merge tps infer_tps file)) targs in
+    ignore targs;
     ConsGen.mk_typeof_annotation file.cx reason t
   | Bound { ref_loc; name } ->
     let t =

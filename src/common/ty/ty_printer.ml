@@ -154,7 +154,8 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
     | BigIntLit raw -> Atom raw
     | InlineInterface { if_extends; if_props; if_dict } ->
       type_interface ~depth if_extends if_props if_dict
-    | TypeOf pv -> fuse [Atom "typeof"; space; builtin_value pv]
+    | TypeOf (pv, targs) ->
+      fuse [Atom "typeof"; space; builtin_value pv; option ~f:(type_args ~depth) targs]
     | CharSet s ->
       fuse [Atom "$CharSet"; Atom "<"; fuse (in_quotes ~prefer_single_quotes s); Atom ">"]
     | Conditional { check_type; extends_type; true_type; false_type } ->

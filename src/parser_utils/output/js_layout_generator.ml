@@ -3988,7 +3988,7 @@ and type_indexed_access
 and type_nullable ~opts loc { Ast.Type.Nullable.argument; comments } =
   layout_node_with_comments_opt loc comments (fuse [Atom "?"; type_with_parens ~opts argument])
 
-and type_typeof ~opts:_ loc { Ast.Type.Typeof.argument; comments } =
+and type_typeof ~opts loc { Ast.Type.Typeof.argument; targs; comments } =
   let rec generic_identifier =
     let open Ast.Type.Typeof.Target in
     function
@@ -4000,7 +4000,7 @@ and type_typeof ~opts:_ loc { Ast.Type.Typeof.argument; comments } =
   layout_node_with_comments_opt
     loc
     comments
-    (fuse [Atom "typeof"; space; generic_identifier argument])
+    (fuse [Atom "typeof"; space; generic_identifier argument; option (type_args ~opts) targs])
 
 and type_keyof ~opts loc { Ast.Type.Keyof.argument; comments } =
   layout_node_with_comments_opt loc comments (fuse [Atom "keyof"; space; type_ ~opts argument])

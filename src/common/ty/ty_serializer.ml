@@ -189,9 +189,10 @@ let type_ options =
           }
       in
       just' (T.Infer { T.Infer.tparam; comments = None })
-    | TypeOf (TSymbol name) ->
-      let%map id = id_from_symbol name in
-      just' (T.Typeof { T.Typeof.argument = mk_typeof_expr id; comments = None })
+    | TypeOf (TSymbol name, targs) ->
+      let%bind id = id_from_symbol name in
+      let%map targs = opt type_arguments targs in
+      just' (T.Typeof { T.Typeof.argument = mk_typeof_expr id; targs; comments = None })
     | TypeOf _
     | Renders _ ->
       (* Renders AST representation is not yet committed *)

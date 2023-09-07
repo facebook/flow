@@ -269,7 +269,7 @@ end = struct
 
   let non_opt_param = Ty.{ prm_optional = false }
 
-  let mk_fun ?(params = []) ?rest ?tparams ?(static = Ty.(TypeOf FunProto)) ret =
+  let mk_fun ?(params = []) ?rest ?tparams ?(static = Ty.(TypeOf (FunProto, None))) ret =
     Ty.(
       Fun
         {
@@ -802,8 +802,8 @@ end = struct
       | TypeDestructorTriggerT (_, r, _, _, _) ->
         let loc = Reason.def_loc_of_reason r in
         return (mk_empty (Ty.EmptyTypeDestructorTriggerT loc))
-      | ObjProtoT _ -> return Ty.(TypeOf ObjProto)
-      | FunProtoT _ -> return Ty.(TypeOf FunProto)
+      | ObjProtoT _ -> return Ty.(TypeOf (ObjProto, None))
+      | FunProtoT _ -> return Ty.(TypeOf (FunProto, None))
       | FunProtoApplyT _ ->
         if Env.expand_internal_types env then
           (* Function.prototype.apply: (thisArg: any, argArray?: any): any *)
@@ -818,7 +818,7 @@ end = struct
                 (ReturnType explicit_any)
             )
         else
-          return Ty.(TypeOf FunProtoApply)
+          return Ty.(TypeOf (FunProtoApply, None))
       | FunProtoBindT _ ->
         if Env.expand_internal_types env then
           (* Function.prototype.bind: (thisArg: any, ...argArray: Array<any>): any *)
@@ -833,7 +833,7 @@ end = struct
                 (ReturnType explicit_any)
             )
         else
-          return Ty.(TypeOf FunProtoBind)
+          return Ty.(TypeOf (FunProtoBind, None))
       | FunProtoCallT _ ->
         if Env.expand_internal_types env then
           (* Function.prototype.call: (thisArg: any, ...argArray: Array<any>): any *)
@@ -848,11 +848,11 @@ end = struct
                 (ReturnType explicit_any)
             )
         else
-          return Ty.(TypeOf FunProtoCall)
+          return Ty.(TypeOf (FunProtoCall, None))
       | NullProtoT _ -> return Ty.Null
       | DefT (reason, _, EnumObjectT _) ->
         let%map symbol = Reason_utils.local_type_alias_symbol env reason in
-        Ty.TypeOf (Ty.TSymbol symbol)
+        Ty.TypeOf (Ty.TSymbol symbol, None)
       | DefT (reason, _, EnumT _) ->
         let%map symbol = Reason_utils.local_type_alias_symbol env reason in
         Ty.Generic (symbol, Ty.EnumKind, None)
@@ -1180,8 +1180,8 @@ end = struct
       let rec extends = function
         | Ty.Generic g -> return [g]
         | Ty.Inter (t1, t2, ts) -> mapM extends (t1 :: t2 :: ts) >>| Base.List.concat
-        | Ty.TypeOf Ty.ObjProto (* interface {} *)
-        | Ty.TypeOf Ty.FunProto (* interface { (): void } *) ->
+        | Ty.TypeOf (Ty.ObjProto, _) (* interface {} *)
+        | Ty.TypeOf (Ty.FunProto, _) (* interface { (): void } *) ->
           (* Do not contribute to the extends clause *)
           return []
         | _ ->
@@ -1219,7 +1219,7 @@ end = struct
       match t with
       | DefT (r, _, InstanceT { inst = { inst_kind = ClassKind; _ }; _ }) ->
         let%map symbol = Reason_utils.instance_symbol env r in
-        Ty.TypeOf (Ty.TSymbol symbol)
+        Ty.TypeOf (Ty.TSymbol symbol, None)
       | _ -> terr ~kind:BadThisClassT ~msg:(string_of_ctor t) (Some t)
 
     and type_params_t ~env tparams =
@@ -2125,7 +2125,7 @@ end = struct
     let def_loc_of_ty = function
       | Utility (Class (Generic ({ sym_def_loc; _ }, _, None)))
       (* This is an acceptable proxy only if the class is not polymorphic *)
-      | TypeOf (TSymbol { sym_def_loc; _ }) ->
+      | TypeOf (TSymbol { sym_def_loc; _ }, None) ->
         Some sym_def_loc
       | _ -> None
     in

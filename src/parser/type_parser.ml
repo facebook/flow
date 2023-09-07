@@ -409,7 +409,11 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         | None -> Type.Any None
         | Some argument ->
           Type.Typeof
-            { Type.Typeof.argument; comments = Flow_ast_utils.mk_comments_opt ~leading () })
+            {
+              Type.Typeof.argument;
+              targs = None;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ();
+            })
       env
 
   and primary env =

@@ -485,6 +485,7 @@ type ('loc, 'a) annot =
       loc: 'loc;
       qname: string list;
       t: 'a;
+      targs: 'a list option;
     }
   | Bound of {
       ref_loc: 'loc;

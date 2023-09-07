@@ -90,8 +90,9 @@ function custom_ast_types(fork) {
 
   def('TypeofTypeAnnotation')
     .bases('FlowType')
-    .build('argument')
-    .field('argument', or(def('Identifier'), def('QualifiedTypeofIdentifier')));
+    .build('argument', 'typeArguments')
+    .field('argument', or(def('Identifier'), def('QualifiedTypeofIdentifier')))
+    .field('typeArguments', or(undefined, def('TypeParameterInstantiation')));
 
   def('QualifiedTypeofIdentifier')
     .bases('Node')

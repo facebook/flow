@@ -1671,13 +1671,14 @@ class ['loc] mapper =
 
     method typeof_type (t : ('loc, 'loc) Ast.Type.Typeof.t) =
       let open Ast.Type.Typeof in
-      let { argument; comments } = t in
+      let { argument; targs; comments } = t in
       let argument' = this#typeof_expression argument in
+      let targs' = map_opt this#type_args targs in
       let comments' = this#syntax_opt comments in
-      if argument == argument' && comments == comments' then
+      if argument == argument' && targs = targs' && comments == comments' then
         t
       else
-        { argument = argument'; comments = comments' }
+        { argument = argument'; targs = targs'; comments = comments' }
 
     method typeof_expression (git : ('loc, 'loc) Ast.Type.Typeof.Target.t) =
       let open Ast.Type.Typeof.Target in

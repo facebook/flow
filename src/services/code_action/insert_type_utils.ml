@@ -507,7 +507,7 @@ module Validator = struct
         | Ty.Utility (Ty.ReactElementConfigType (Ty.Fun _)) ->
           env := ReactElementConfigFunArg :: !env;
           Ty.explicit_any
-        | Ty.TypeOf (Ty.TSymbol symbol)
+        | Ty.TypeOf (Ty.TSymbol symbol, _)
         | Ty.Generic (symbol, _, _) ->
           let { Ty.sym_anonymous; sym_def_loc; _ } = symbol in
           if sym_anonymous then (

@@ -420,12 +420,20 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       ( (loc, IntersectionT (mk_annot_reason RIntersectionType loc, rep)),
         Intersection { Intersection.types = (t0_ast, t1_ast, ts_ast); comments }
       )
-    | (loc, Typeof { Typeof.argument = qualification; comments }) ->
+    | (loc, Typeof { Typeof.argument = qualification; targs; comments }) ->
       let (valtype, qualification_ast) = convert_typeof cx "typeof-annotation" qualification in
       let desc = RTypeof (typeof_name qualification) in
       let reason = mk_reason desc loc in
+      let (targs, targs_ast) =
+        match targs with
+        | None -> (None, None)
+        | Some (l, { TypeArgs.arguments; comments }) ->
+          let (targs, targs_ast) = convert_list cx tparams_map infer_tparams_map arguments in
+          (Some targs, Some (l, { TypeArgs.arguments = targs_ast; comments }))
+      in
+      ignore targs;
       ( (loc, ConsGen.mk_typeof_annotation cx reason valtype),
-        Typeof { Typeof.argument = qualification_ast; comments }
+        Typeof { Typeof.argument = qualification_ast; targs = targs_ast; comments }
       )
     | (loc, Keyof keyof) ->
       Flow_js_utils.add_output cx (Error_message.ETSSyntax { kind = Error_message.TSKeyof; loc });

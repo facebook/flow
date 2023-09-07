@@ -1263,10 +1263,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method typeof_type (t : ('M, 'T) Ast.Type.Typeof.t) : ('N, 'U) Ast.Type.Typeof.t =
       let open Ast.Type.Typeof in
-      let { argument; comments } = t in
+      let { argument; targs; comments } = t in
       let argument' = this#typeof_expression argument in
+      let targs' = Option.map ~f:this#type_args targs in
       let comments' = this#syntax_opt comments in
-      { argument = argument'; comments = comments' }
+      { argument = argument'; targs = targs'; comments = comments' }
 
     method typeof_expression (git : ('M, 'T) Ast.Type.Typeof.Target.t) =
       let open Ast.Type.Typeof.Target in

@@ -60,7 +60,7 @@ type t =
   | Union of bool (* from annotation *) * t * t * t list
   | Inter of t * t * t list
   | InlineInterface of interface_t
-  | TypeOf of builtin_or_symbol
+  | TypeOf of builtin_or_symbol * t list option
   | Utility of utility
   | CharSet of string
   | IndexedAccess of {

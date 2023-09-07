@@ -259,5 +259,5 @@ let typify_elt = function
   | Ty.Type ty -> Some ty
   | Ty.Decl (Ty.ClassDecl (s, _))
   | Ty.Decl (Ty.EnumDecl s) ->
-    Some (Ty.TypeOf (Ty.TSymbol s))
+    Some (Ty.TypeOf (Ty.TSymbol s, None))
   | Ty.Decl _ -> None

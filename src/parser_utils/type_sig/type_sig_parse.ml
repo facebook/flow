@@ -1212,25 +1212,25 @@ let rec sequence f = function
   | _ :: exprs -> sequence f exprs
 
 let typeof =
-  let rec finish tbls typeof_loc t qname = function
-    | [] -> Annot (Typeof { loc = typeof_loc; qname; t })
+  let rec finish tbls typeof_loc t qname targs = function
+    | [] -> Annot (Typeof { loc = typeof_loc; qname; t; targs })
     | (id_loc, x) :: chain ->
       let id_loc = push_loc tbls id_loc in
       let t = Eval (id_loc, t, GetProp x) in
-      finish tbls typeof_loc t (x :: qname) chain
+      finish tbls typeof_loc t (x :: qname) targs chain
   in
-  let rec loop scope tbls typeof_loc chain = function
+  let rec loop scope tbls typeof_loc targs chain = function
     | T.Typeof.Target.Qualified
         (_, { T.Typeof.Target.qualification; id = (id_loc, { Ast.Identifier.name; comments = _ }) })
       ->
-      loop scope tbls typeof_loc ((id_loc, name) :: chain) qualification
+      loop scope tbls typeof_loc targs ((id_loc, name) :: chain) qualification
     | T.Typeof.Target.Unqualified id ->
       let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
       let id_loc = push_loc tbls id_loc in
       let t = val_ref scope id_loc name in
-      finish tbls typeof_loc t [name] chain
+      finish tbls typeof_loc t [name] targs chain
   in
-  (fun scope tbls typeof_loc expr -> loop scope tbls typeof_loc [] expr)
+  (fun scope tbls typeof_loc expr targs -> loop scope tbls typeof_loc targs [] expr)
 
 let rec annot opts scope tbls xs (loc, t) =
   let (_, annot) = annot_with_loc opts scope tbls xs (loc, t) in
@@ -1304,7 +1304,13 @@ and annot_with_loc opts scope tbls xs (loc, t) =
       let t1 = annot opts scope tbls xs t1 in
       let ts_rev = List.rev_map (annot opts scope tbls xs) ts in
       Annot (Intersection { loc; t0; t1; ts = List.rev ts_rev })
-    | T.Typeof { T.Typeof.argument = t; _ } -> typeof scope tbls loc t
+    | T.Typeof { T.Typeof.argument = t; targs; _ } ->
+      let targs =
+        Option.map
+          ~f:(fun (_, { T.TypeArgs.arguments; _ }) -> List.map (annot opts scope tbls xs) arguments)
+          targs
+      in
+      typeof scope tbls loc t targs
     | T.Renders { T.Renders.comments = _; argument } ->
       let t = annot opts scope tbls xs argument in
       Annot (Renders (loc, t))

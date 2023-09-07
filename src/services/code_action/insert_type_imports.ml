@@ -531,26 +531,28 @@ end = struct
             method! on_t env t =
               match t with
               | Ty.TypeOf
-                  (Ty.TSymbol
-                    ( {
-                        Ty.sym_provenance =
-                          Ty.Remote { Ty.imported_as = None | Some (_, _, Ty.TypeMode) };
-                        sym_anonymous = false;
-                        _;
-                      } as s
-                    )
-                    ) ->
+                  ( Ty.TSymbol
+                      ( {
+                          Ty.sym_provenance =
+                            Ty.Remote { Ty.imported_as = None | Some (_, _, Ty.TypeMode) };
+                          sym_anonymous = false;
+                          _;
+                        } as s
+                      ),
+                    None
+                  ) ->
                 let local = self#convert_symbol ValueUseMode s in
                 Ty.Generic (local, Ty.ClassKind, None)
               | Ty.TypeOf
-                  (Ty.TSymbol
-                    {
-                      Ty.sym_provenance =
-                        Ty.Remote { Ty.imported_as = Some (sym_def_loc, sym_name, Ty.TypeofMode) };
-                      sym_anonymous = false;
-                      _;
-                    }
-                    ) ->
+                  ( Ty.TSymbol
+                      {
+                        Ty.sym_provenance =
+                          Ty.Remote { Ty.imported_as = Some (sym_def_loc, sym_name, Ty.TypeofMode) };
+                        sym_anonymous = false;
+                        _;
+                      },
+                    None
+                  ) ->
                 let local =
                   {
                     Ty.sym_provenance = Ty.Local;

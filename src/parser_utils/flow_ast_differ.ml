@@ -2821,11 +2821,12 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       (loc : Loc.t) (t1 : (Loc.t, Loc.t) Ast.Type.Typeof.t) (t2 : (Loc.t, Loc.t) Ast.Type.Typeof.t)
       : node change list option =
     let open Ast.Type.Typeof in
-    let { argument = argument1; comments = comments1 } = t1 in
-    let { argument = argument2; comments = comments2 } = t2 in
+    let { argument = argument1; targs = targs1; comments = comments1 } = t1 in
+    let { argument = argument2; targs = targs2; comments = comments2 } = t2 in
     let argument_diff = diff_if_changed_ret_opt typeof_expr argument1 argument2 in
+    let targs_diff = diff_if_changed_opt type_args targs1 targs2 in
     let comments_diff = syntax_opt loc comments1 comments2 in
-    join_diff_list [argument_diff; comments_diff]
+    join_diff_list [argument_diff; targs_diff; comments_diff]
   and typeof_expr
       (git1 : (Loc.t, Loc.t) Ast.Type.Typeof.Target.t)
       (git2 : (Loc.t, Loc.t) Ast.Type.Typeof.Target.t) : node change list option =

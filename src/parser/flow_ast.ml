@@ -450,6 +450,7 @@ and Type : sig
 
     type ('M, 'T) t = {
       argument: ('M, 'T) Target.t;
+      targs: ('M, 'T) Type.TypeArgs.t option;
       comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]

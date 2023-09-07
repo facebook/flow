@@ -1270,7 +1270,8 @@ let%expect_test "typeof_dependencies" =
              (ObjValueField ([3:2-3],
                 (Annot
                    Typeof {loc = [3:5-13];
-                     qname = ["x"]; t = (Ref LocalRef {ref_loc = [3:12-13]; index = 0})}),
+                     qname = ["x"]; t = (Ref LocalRef {ref_loc = [3:12-13]; index = 0});
+                     targs = None}),
                 Polarity.Neutral)) }}}
   |}]
 
@@ -1306,7 +1307,8 @@ let%expect_test "typeof_dependencies_check" =
              (ObjValueField ([3:2-3],
                 (Annot
                    Typeof {loc = [3:5-13];
-                     qname = ["x"]; t = (Ref LocalRef {ref_loc = [3:12-13]; index = 0})}),
+                     qname = ["x"]; t = (Ref LocalRef {ref_loc = [3:12-13]; index = 0});
+                     targs = None}),
                 Polarity.Neutral)) }}}
 
     Errors:
@@ -1481,7 +1483,8 @@ let%expect_test "import_default_dependencies" =
              (ObjValueField ([3:2-3],
                 (Annot
                    Typeof {loc = [3:5-13];
-                     qname = ["x"]; t = (Ref RemoteRef {ref_loc = [3:12-13]; index = 0})}),
+                     qname = ["x"]; t = (Ref RemoteRef {ref_loc = [3:12-13]; index = 0});
+                     targs = None}),
                 Polarity.Neutral)) }}}
 
     Remote refs:
@@ -2522,7 +2525,8 @@ let%expect_test "function_return" =
                 (Some (Annot
                          Typeof {loc = [2:23-31];
                            qname = ["n"];
-                           t = (Ref LocalRef {ref_loc = [2:30-31]; index = 0})}));
+                           t = (Ref LocalRef {ref_loc = [2:30-31]; index = 0});
+                           targs = None}));
                 default = None},
               []));
            params =
@@ -2570,7 +2574,8 @@ let%expect_test "function_return_2" =
                          (Annot
                             Typeof {loc = [2:24-32];
                               qname = ["n"];
-                              t = (Ref LocalRef {ref_loc = [2:31-32]; index = 0})})}
+                              t = (Ref LocalRef {ref_loc = [2:31-32]; index = 0});
+                              targs = None})}
                         ];
                       rest_param = None;
                       this_param = None;
@@ -3444,7 +3449,8 @@ let%expect_test "typeof loc" =
               (Eval ([1:25-26],
                  (Eval ([1:23-24], (Ref BuiltinRef {ref_loc = [1:21-22]; name = "o"}),
                     (GetProp "p"))),
-                 (GetProp "q")))})} |}]
+                 (GetProp "q")));
+              targs = None})} |}]
 
 let%expect_test "qualified_generic_typeapp_loc" =
   print_sig {|

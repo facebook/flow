@@ -356,7 +356,7 @@ struct
           "InlineInterface (%s, %s)"
           (dump_list (dump_generic ~depth) if_extends)
           (spf "{ %s %s }" (dump_list (dump_prop ~depth) if_props) dict)
-      | TypeOf v -> spf "Typeof (%s)" (builtin_value v)
+      | TypeOf (v, ts) -> spf "Typeof (%s, %s)" (builtin_value v) (dump_generics ~depth ts)
       | Utility u -> dump_utility ~depth u
       | IndexedAccess { _object; index; optional } ->
         spf
@@ -516,7 +516,7 @@ struct
               ("dict", Base.Option.value_map if_dict ~f:(fun d -> json_of_dict d) ~default:JSON_Null);
             ]
           )
-        | TypeOf b -> [("name", json_of_builtin_value b)]
+        | TypeOf (b, targs) -> ("name", json_of_builtin_value b) :: json_of_targs targs
         | Utility u -> json_of_utility u
         | IndexedAccess { _object; index; optional } ->
           [

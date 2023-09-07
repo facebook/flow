@@ -1909,8 +1909,13 @@ with type t = Impl.t = struct
         "IntersectionTypeAnnotation"
         loc
         [("types", array_of_list _type (t0 :: t1 :: ts))]
-    and typeof_type (loc, { Type.Typeof.argument; comments }) =
-      node ?comments "TypeofTypeAnnotation" loc [("argument", typeof_expr argument)]
+    and typeof_type (loc, { Type.Typeof.argument; targs; comments }) =
+      let targs_field =
+        match targs with
+        | None -> []
+        | Some targs -> [("typeArguments", type_args targs)]
+      in
+      node ?comments "TypeofTypeAnnotation" loc (("argument", typeof_expr argument) :: targs_field)
     and typeof_expr id =
       match id with
       | Type.Typeof.Target.Unqualified id -> identifier id
