@@ -524,7 +524,7 @@ jobs:
       - create-opam-switch
       - run:
           name: Install extra deps from opam
-          command: opam install ounit2.2.2.4 | cat
+          command: make deps-test | cat
       # let build-linux save the cache
       # - save-opam-cache
       - run:
@@ -552,7 +552,7 @@ jobs:
       - create-opam-switch
       - run:
           name: Install extra deps from opam
-          command: opam install ounit2.2.2.4 | cat
+          command: make deps-test | cat
       # let build-mac save the cache
       # - save-opam-cache
       - run:
