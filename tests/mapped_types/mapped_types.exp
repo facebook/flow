@@ -368,7 +368,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- idx_replacement.js:36:24
 
-Cannot get `obj.notAProp` because property `notAProp` is missing in mapped type [1]. [prop-missing]
+Cannot get `obj.notAProp` because property `notAProp` is missing in `DeepRequired` [1]. [prop-missing]
 
    idx_replacement.js:36:24
    36|   idx(obj1, obj => obj.notAProp); // error: prop-missing
@@ -563,7 +563,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- idx_replacement.js:52:19
 
-Cannot get `_.c` because property `c` is missing in mapped type [1]. [prop-missing]
+Cannot get `_.c` because property `c` is missing in `DeepRequired` [1]. [prop-missing]
 
    idx_replacement.js:52:19
    52|   (idx(ab, _ => _.c): empty); // error
@@ -636,7 +636,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- idx_replacement.js:73:18
 
-Cannot get `n.nope` because property `nope` is missing in `Number` [1]. [prop-missing]
+Cannot get `n.nope` because property `nope` is missing in `DeepRequired` [1]. [prop-missing]
 
    idx_replacement.js:73:18
    73|   idx(42, n => n.nope); // error: prop-missing
@@ -650,8 +650,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- idx_replacement.js:80:18
 
-Cannot call `obj` because a call signature declaring the expected parameter / return type is missing in mapped type [1].
-[prop-missing]
+Cannot call `obj` because a call signature declaring the expected parameter / return type is missing in
+`DeepRequired` [1]. [prop-missing]
 
    idx_replacement.js:80:18
    80|   idx({}, obj => obj()); // error

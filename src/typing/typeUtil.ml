@@ -698,6 +698,8 @@ let rec mod_loc_of_virtual_use_op f =
           upper = mod_reason upper;
         }
     | TypeParamBound o -> TypeParamBound o
+    | OpaqueTypeBound { opaque_t_reason } ->
+      OpaqueTypeBound { opaque_t_reason = mod_reason opaque_t_reason }
     | TypePredicateCompatibility -> TypePredicateCompatibility
     | InferredTypeForTypeGuardParameter reason ->
       InferredTypeForTypeGuardParameter (mod_reason reason)

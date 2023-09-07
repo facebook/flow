@@ -15,7 +15,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- importtest.js:5:12
 
-Cannot return `y` because number [1] is incompatible with `SuperOpaque` [2]. [incompatible-return]
+Cannot return `y` because `SuperType` [1] is incompatible with `SuperOpaque` [2]. [incompatible-return]
 
    importtest.js:5:12
    5|     return y;
@@ -49,7 +49,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- importtest.js:25:12
 
-Cannot return `x` because `PolyFoo` [1] is incompatible with `PolyBar` [2]. [incompatible-return]
+Cannot return `x` because `PolyGood` [1] is incompatible with `PolyBar` [2]. [incompatible-return]
 
    importtest.js:25:12
    25|     return x;
@@ -66,16 +66,16 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- importtest.js:29:12
 
-Cannot return `x` because number [1] is incompatible with string [2] in type argument `T` [3]. [incompatible-return]
+Cannot return `x` because `PolyGood` [1] is incompatible with string [2] in type argument `T` [3]. [incompatible-return]
 
    importtest.js:29:12
    29|     return x;
                   ^
 
 References:
-   importtest.js:28:28
+   importtest.js:28:19
    28| function test7(x: PolyGood<number>): PolyFoo<string> { // Error: number ~> string
-                                  ^^^^^^ [1]
+                         ^^^^^^^^^^^^^^^^ [1]
    importtest.js:28:46
    28| function test7(x: PolyGood<number>): PolyFoo<string> { // Error: number ~> string
                                                     ^^^^^^ [2]

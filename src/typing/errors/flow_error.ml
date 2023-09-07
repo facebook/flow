@@ -252,8 +252,8 @@ let flip_frame = function
       }
   | TypeArgCompatibility c -> TypeArgCompatibility { c with lower = c.upper; upper = c.lower }
   | ( CallFunCompatibility _ | TupleMapFunCompatibility _ | TupleAssignment _
-    | ObjMapFunCompatibility _ | ObjMapiFunCompatibility _ | TypeParamBound _ | FunMissingArg _
-    | ImplicitTypeParam | ReactGetConfig _ | UnifyFlip | ConstrainedAssignment _
+    | ObjMapFunCompatibility _ | ObjMapiFunCompatibility _ | TypeParamBound _ | OpaqueTypeBound _
+    | FunMissingArg _ | ImplicitTypeParam | ReactGetConfig _ | UnifyFlip | ConstrainedAssignment _
     | MappedTypeKeyCompatibility _ | TypePredicateCompatibility
     | InferredTypeForTypeGuardParameter _ ) as use_op ->
     use_op
@@ -451,6 +451,12 @@ let rec make_error_printable :
   let code = Friendly.code in
   let ref = Friendly.ref_map loc_of_aloc in
   let desc = Friendly.desc in
+  let rec mod_lower_reason_according_to_use_ops lower = function
+    | Frame (OpaqueTypeBound { opaque_t_reason }, use_op) ->
+      mod_lower_reason_according_to_use_ops opaque_t_reason use_op
+    | Frame (_, use_op) -> mod_lower_reason_according_to_use_ops lower use_op
+    | Op _ -> lower
+  in
   (* Unwrap a use_op for the friendly error format. Takes the smallest location
    * where we found the error and a use_op which we will unwrap. *)
   let unwrap_use_ops =
@@ -808,6 +814,7 @@ let rec make_error_printable :
       | Frame (InferredTypeForTypeGuardParameter param, use_op) ->
         unwrap_frame_without_loc loc frames use_op [text "the type inferred for "; ref param]
       | Frame (FunCompatibility { lower; _ }, use_op) -> next_with_loc loc frames lower use_op
+      | Frame (OpaqueTypeBound { opaque_t_reason = _ }, use_op) -> loop loc frames use_op
       | Frame (FunMissingArg _, use_op)
       | Frame (ImplicitTypeParam, use_op)
       | Frame (ReactConfigCheck, use_op)
@@ -962,6 +969,7 @@ let rec make_error_printable :
       in
       mk_use_op_error_reason reason use_op message
     in
+    let lower = mod_lower_reason_according_to_use_ops lower use_op in
     match use_op with
     (* Add a custom message for Coercion root_use_ops that does not include the
      * upper bound. *)
@@ -1203,6 +1211,7 @@ let rec make_error_printable :
       (* Otherwise this is a general property missing error. *)
       | _ -> (prop_loc, lower, None, use_op)
     in
+    let lower = mod_lower_reason_according_to_use_ops lower use_op in
     (* If we were subtyping that add to the error message so our user knows what
      * object required the missing property. *)
     let prop_message = mk_prop_message prop in
@@ -1234,6 +1243,7 @@ let rec make_error_printable :
    * instead of specifically an upper type. This error handles all use
    * incompatibilities in general. *)
   let mk_incompatible_use_error use_loc use_kind lower upper use_op =
+    let lower = mod_lower_reason_according_to_use_ops lower use_op in
     let nope msg = mk_use_op_error use_loc use_op [ref lower; text (" " ^ msg)] in
     match use_kind with
     | IncompatibleElemTOfArrT -> nope "is not an array index"

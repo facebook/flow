@@ -2071,7 +2071,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (* opaque types supertype *)
     (**************************)
     (* Opaque types may be treated as their supertype when they are a lower bound for a use *)
-    | (OpaqueT (_, { super_t = Some t; _ }), _) -> rec_flow_t cx trace ~use_op (t, u)
+    | (OpaqueT (opaque_t_reason, { super_t = Some t; _ }), _) ->
+      rec_flow_t cx trace ~use_op:(Frame (OpaqueTypeBound { opaque_t_reason }, use_op)) (t, u)
     (***********************************************************)
     (* coercion                                                *)
     (***********************************************************)

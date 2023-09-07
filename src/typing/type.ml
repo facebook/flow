@@ -502,6 +502,7 @@ module rec TypeTerm : sig
         polarity: Polarity.t;
       }
     | TypeParamBound of { name: Subst_name.t }
+    | OpaqueTypeBound of { opaque_t_reason: 'loc virtual_reason }
     | TypePredicateCompatibility
     | InferredTypeForTypeGuardParameter of 'loc virtual_reason
     | UnifyFlip
@@ -3868,6 +3869,7 @@ let string_of_frame_use_op (type a) : a virtual_frame_use_op -> string = functio
   | TupleAssignment _ -> "TupleAssignment"
   | TypeArgCompatibility _ -> "TypeArgCompatibility"
   | TypeParamBound _ -> "TypeParamBound"
+  | OpaqueTypeBound _ -> "OpaqueTypeBound"
   | UnifyFlip -> "UnifyFlip"
   | TypePredicateCompatibility -> "TypePredicateCompatibility"
   | InferredTypeForTypeGuardParameter _ -> "InferredTypeForTypeGuardParameter"

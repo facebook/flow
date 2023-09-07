@@ -1686,6 +1686,23 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:202:6
 
+Cannot cast `x` to empty because `FbtString` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   refinement.js:202:6
+   202|     (x: empty); // error Fbt ~> empty
+             ^
+
+References:
+   refinement.js:198:25
+   198|   declare var x: void | Fbt;
+                                ^^^ [1]
+   refinement.js:202:9
+   202|     (x: empty); // error Fbt ~> empty
+                ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:202:6
+
 Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    refinement.js:202:6
@@ -2079,7 +2096,7 @@ Cannot find type guard parameter `x` [1] in the parameters of this function (typ
 
 
 
-Found 123 errors
+Found 124 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

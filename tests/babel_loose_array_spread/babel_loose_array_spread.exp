@@ -101,7 +101,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ iterables.js:12:5
 
-`$Iterable` [1] is incompatible with `$ReadOnlyArray` [2]. [incompatible-type]
+`OpaqueIterable` [1] is incompatible with `$ReadOnlyArray` [2]. [incompatible-type]
 
    iterables.js:12:5
     12| [...oit]; // Error
@@ -118,7 +118,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ iterables.js:13:6
 
-`$Iterable` [1] is incompatible with `$ReadOnlyArray` [2]. [incompatible-type]
+`OpaqueIterable` [1] is incompatible with `$ReadOnlyArray` [2]. [incompatible-type]
 
    iterables.js:13:6
     13| f(...oit); // Error
@@ -135,7 +135,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- iterables.js:14:17
 
-`$Iterable` [1] is incompatible with `$ReadOnlyArray` [2]. [incompatible-type]
+`OpaqueIterable` [1] is incompatible with `$ReadOnlyArray` [2]. [incompatible-type]
 
    iterables.js:14:17
     14| f.bind(null, ...oit); // Error

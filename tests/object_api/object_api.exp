@@ -465,7 +465,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:74:4
 
-Cannot cast `Object.keys(...)[0]` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `Object.keys(...)[0]` to empty because `OpaqueKeyWithSupertype1` [1] is incompatible with empty [2].
+[incompatible-cast]
 
    object_keys.js:74:4
    74|   (Object.keys(opaqueDict)[0]: empty); // ERROR
