@@ -8,8 +8,8 @@ Cannot get `React.ProfilerOnRenderFnType` because property `ProfilerOnRenderFnTy
                                  ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:206:16
-   206| declare module react {
+   <BUILTINS>/react.js:216:16
+   216| declare module react {
                        ^^^^^ [1]
 
 
@@ -26,13 +26,13 @@ References:
    profiler.js:17:12
     17| const _b = <React.Profiler />; // Error, id and onRender are required
                    ^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:393:56
+   <BUILTINS>/react.js:404:56
                                                                v-
-   393|   declare export var Profiler: React$AbstractComponent<{|
-   394|     +children?: React$Node,
-   395|     +id: string,
-   396|     +onRender: ProfilerOnRenderFnType,
-   397|   |}, void, React$Node>;
+   404|   declare export var Profiler: React$AbstractComponent<{|
+   405|     +children?: React$Node,
+   406|     +id: string,
+   407|     +onRender: ProfilerOnRenderFnType,
+   408|   |}, void, React$Node>;
           -^ [2]
 
 
@@ -49,13 +49,13 @@ References:
    profiler.js:17:12
     17| const _b = <React.Profiler />; // Error, id and onRender are required
                    ^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:393:56
+   <BUILTINS>/react.js:404:56
                                                                v-
-   393|   declare export var Profiler: React$AbstractComponent<{|
-   394|     +children?: React$Node,
-   395|     +id: string,
-   396|     +onRender: ProfilerOnRenderFnType,
-   397|   |}, void, React$Node>;
+   404|   declare export var Profiler: React$AbstractComponent<{|
+   405|     +children?: React$Node,
+   406|     +id: string,
+   407|     +onRender: ProfilerOnRenderFnType,
+   408|   |}, void, React$Node>;
           -^ [2]
 
 

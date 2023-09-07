@@ -37,8 +37,8 @@ References:
    lazy.js:6:1
      6| function FunctionComponent(x: Props): React.Node { return null }
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:297:22
-   297|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance, React$Node>, ... }>,
+   <BUILTINS>/react.js:308:22
+   308|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance, React$Node>, ... }>,
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -55,8 +55,8 @@ References:
    lazy.js:7:7
      7| class ClassComponent extends React.Component<Props> {}
               ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:297:22
-   297|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance, React$Node>, ... }>,
+   <BUILTINS>/react.js:308:22
+   308|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance, React$Node>, ... }>,
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -73,8 +73,8 @@ References:
    lazy.js:6:1
       6| function FunctionComponent(x: Props): React.Node { return null }
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:297:30
-    297|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance, React$Node>, ... }>,
+   <BUILTINS>/react.js:308:30
+    308|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance, React$Node>, ... }>,
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:1907:24
    1907| declare class Promise<+R = mixed> {
@@ -94,8 +94,8 @@ References:
    lazy.js:7:7
       7| class ClassComponent extends React.Component<Props> {}
                ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:297:30
-    297|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance, React$Node>, ... }>,
+   <BUILTINS>/react.js:308:30
+    308|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance, React$Node>, ... }>,
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:1907:24
    1907| declare class Promise<+R = mixed> {
@@ -320,6 +320,29 @@ References:
                             ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ memo_ref.js:14:42
+
+Cannot call `React.forwardRef` with `Demo` bound to `render` because in the second parameter: [incompatible-call]
+ - Either property `current` is write-only in object type [1] but readable in object type [2].
+ - Or a call signature declaring the expected parameter / return type is missing in object type [1] but exists in
+   function type [3].
+
+   memo_ref.js:14:42
+    14| const Memo = React.memo(React.forwardRef(Demo));
+                                                 ^^^^
+
+References:
+   <BUILTINS>/react.js:298:12
+   298|       ref: React$RefSetter<Instance>,
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   memo_ref.js:7:33
+     7| function Demo(props: {}, ref: ?({current: (T | null), ...} | ((inst: (T | null)) => mixed))) {
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   memo_ref.js:7:63
+     7| function Demo(props: {}, ref: ?({current: (T | null), ...} | ((inst: (T | null)) => mixed))) {
+                                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
 Error ------------------------------------------------------------------------------------------------ memo_ref.js:18:43
 
 Cannot call `ref.moo` with `0` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
@@ -335,7 +358,7 @@ References:
 
 
 
-Found 19 errors
+Found 20 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

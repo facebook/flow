@@ -346,8 +346,8 @@ References:
    <BUILTINS>/react.js:162:49
    162| declare type React$MixedElement = React$Element<React$ElementType>;
                                                         ^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:203:32
-   203| type React$ComponentRenders<T: React$AbstractComponent<empty>> =
+   <BUILTINS>/react.js:213:32
+   213| type React$ComponentRenders<T: React$AbstractComponent<empty>> =
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 

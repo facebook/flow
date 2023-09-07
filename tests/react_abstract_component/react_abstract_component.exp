@@ -154,8 +154,8 @@ Cannot return `x` because `React.Portal` [1] is incompatible with number [2]. [i
                  ^
 
 References:
-   <BUILTINS>/react.js:198:21
-   198| declare opaque type React$Portal;
+   <BUILTINS>/react.js:208:21
+   208| declare opaque type React$Portal;
                             ^^^^^^^^^^^^ [1]
    arity.js:20:107
     20| function defaultsErrorMessages(x: React$AbstractComponent<empty>): React$AbstractComponent<empty, number, number> {
@@ -476,11 +476,11 @@ References:
    create_element.js:23:32
     23| const refBad = React.createRef<string>();
                                        ^^^^^^ [2]
-   <BUILTINS>/react.js:229:6
-   229|   ): {|current: null | T|};
+   <BUILTINS>/react.js:239:6
+   239|   ): {|current: null | T|};
              ^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:175:6
-   175|   | ((React$ElementRef<ElementType> | null) => mixed)
+   <BUILTINS>/react.js:176:6
+   176|   | ((React$ElementRef<ElementType> | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
