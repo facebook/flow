@@ -1,0 +1,4 @@
+{
+  "method": "textDocument/documentHighlight",
+  "result": []
+}

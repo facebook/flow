@@ -128,6 +128,16 @@ module.exports = (suite(
         // Method call within a class that has type params
         snapshot('locals.js', 97, 10, 'methods_5.json'),
       ]),
+      test('Local uses of import', [
+        addFiles(...fixtures),
+        lspStartAndConnect(),
+        // Use of import namespace
+        snapshot('locals.js', 101, 15, 'use_namespace_import_1.json'),
+        snapshot('locals.js', 102, 1, 'use_namespace_import_2.json'),
+        // Use of default import
+        snapshot('locals.js', 103, 15, 'use_default_import_1.json'),
+        snapshot('locals.js', 104, 1, 'use_default_import_2.json'),
+      ]),
       test('Class inheritance', [
         addFiles(...fixtures),
         lspStartAndConnect(),

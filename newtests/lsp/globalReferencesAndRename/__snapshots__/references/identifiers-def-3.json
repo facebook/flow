@@ -1,0 +1,7 @@
+{
+  "method": "textDocument/references",
+  "error": {
+    "message": "Flow encountered an unexpected error while handling this request. See the Flow logs for more details.",
+    "code": -32001
+  }
+}

@@ -98,3 +98,8 @@ class WithTypeParams<X, Y> {
     this.bar();
   }
 }
+
+import * as Externals1 from './external';
+Externals1;
+import External2 from './external-default';
+External2;
