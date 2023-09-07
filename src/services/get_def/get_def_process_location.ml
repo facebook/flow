@@ -119,7 +119,8 @@ class searcher ~(is_legit_require : ALoc.t * Type.t -> bool) ~(covers_target : A
       this#with_in_require_declarator has_require (fun () -> super#variable_declarator ~kind x)
 
     method! import_source source_annot lit =
-      if annot_covers_target source_annot then this#request (Get_def_request.Type source_annot);
+      if annot_covers_target source_annot then
+        this#request (Get_def_request.Type { annot = source_annot; name = None });
       super#import_source source_annot lit
 
     method! import_named_specifier ~import_kind:_ decl =
@@ -156,13 +157,15 @@ class searcher ~(is_legit_require : ALoc.t * Type.t -> bool) ~(covers_target : A
       );
       Base.Option.iter specifiers ~f:(function
           | ImportNamedSpecifiers _ -> ()
-          | ImportNamespaceSpecifier (l, _) ->
-            if covers_target l then this#request (Get_def_request.Type (fst source))
+          | ImportNamespaceSpecifier (l, (_, { Flow_ast.Identifier.name; _ })) ->
+            if covers_target l then
+              this#request (Get_def_request.Type { annot = fst source; name = Some name })
           );
       super#import_declaration loc decl
 
     method! export_source source_annot lit =
-      if annot_covers_target source_annot then this#request (Get_def_request.Type source_annot);
+      if annot_covers_target source_annot then
+        this#request (Get_def_request.Type { annot = source_annot; name = None });
       super#export_source source_annot lit
 
     method! member expr =
@@ -286,7 +289,7 @@ class searcher ~(is_legit_require : ALoc.t * Type.t -> bool) ~(covers_target : A
         ?kind (annot, ({ Flow_ast.Identifier.name; comments = _ } as name_node)) =
       if kind != None && annot_covers_target annot then
         if in_require_declarator then
-          this#request (Get_def_request.Type annot)
+          this#request (Get_def_request.Type { annot; name = Some name })
         else
           this#own_def (loc_of_annot annot) name;
       super#pattern_identifier ?kind (annot, name_node)
@@ -312,7 +315,7 @@ class searcher ~(is_legit_require : ALoc.t * Type.t -> bool) ~(covers_target : A
               _;
             }
           when is_legit_require source_annot ->
-          this#request (Get_def_request.Type annot)
+          this#request (Get_def_request.Type { annot; name = None })
         | _ -> super#expression (annot, expr)
       else
         (* it is tempting to not recurse here, but comments are not included in
@@ -376,7 +379,7 @@ class searcher ~(is_legit_require : ALoc.t * Type.t -> bool) ~(covers_target : A
     method! module_ref_literal mref =
       let { Flow_ast.ModuleRefLiteral.require_out; _ } = mref in
       if annot_covers_target require_out then
-        this#request (Get_def_request.Type require_out)
+        this#request (Get_def_request.Type { annot = require_out; name = None })
       else
         super#module_ref_literal mref
 

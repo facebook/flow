@@ -60,13 +60,13 @@ let rec process_request ~options ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_
         ~ast
         ~typed_ast
         ~file_sig
-        (Get_def_request.Type (aloc, type_))
+        (Get_def_request.Type { annot = (aloc, type_); name = Some name })
     | _ :: _ :: _ -> Error "Scope builder found multiple matching identifiers")
   | Get_def_request.(Member { prop_name = name; object_type = (_loc, t); force_instance }) ->
     extract_member_def ~loc_of_aloc ~cx ~file_sig ~typed_ast ~force_instance t name
-  | Get_def_request.Type (_, v) ->
+  | Get_def_request.Type { annot = (_, v); name } ->
     Get_def_process_location.process_type_request cx v
-    |> Base.Result.map ~f:(fun aloc -> (Nel.one (loc_of_aloc aloc), None))
+    |> Base.Result.map ~f:(fun aloc -> (Nel.one (loc_of_aloc aloc), name))
   | Get_def_request.JsxAttribute { component_t = (_, component_t); name; loc } ->
     let reason = Reason.mk_reason (Reason.RCustom name) loc in
     let props_object =
