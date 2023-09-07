@@ -649,7 +649,7 @@ References:
 
 Error --------------------------------------------------------------------------------- component_type_checking.js:17:10
 
-Cannot return `null` because null [1] is incompatible with undefined [2]. [incompatible-return]
+Cannot return `null` because null [1] does not render undefined [2]. [incompatible-return]
 
    component_type_checking.js:17:10
    17|   return null; // ERROR
@@ -1819,8 +1819,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- nominal.js:17:2
 
-Cannot cast `Foo` to `React.AbstractComponent` because `React.Element` [1] is incompatible with null [2].
-[incompatible-cast]
+Cannot cast `Foo` to `React.AbstractComponent` because `React.Element` [1] does not render null [2]. [incompatible-cast]
 
    nominal.js:17:2
     17| (Foo: React.AbstractComponent<{}, mixed, null>); // ERROR, default render is React.Node

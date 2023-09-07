@@ -505,6 +505,7 @@ module rec TypeTerm : sig
     | OpaqueTypeBound of { opaque_t_reason: 'loc virtual_reason }
     | TypePredicateCompatibility
     | InferredTypeForTypeGuardParameter of 'loc virtual_reason
+    | RendersCompatibility
     | UnifyFlip
 
   and 'loc virtual_use_op =
@@ -3872,6 +3873,7 @@ let string_of_frame_use_op (type a) : a virtual_frame_use_op -> string = functio
   | OpaqueTypeBound _ -> "OpaqueTypeBound"
   | UnifyFlip -> "UnifyFlip"
   | TypePredicateCompatibility -> "TypePredicateCompatibility"
+  | RendersCompatibility -> "RendersCompatibility"
   | InferredTypeForTypeGuardParameter _ -> "InferredTypeForTypeGuardParameter"
 
 let string_of_use_op (type a) : a virtual_use_op -> string = function

@@ -703,6 +703,7 @@ let rec mod_loc_of_virtual_use_op f =
     | TypePredicateCompatibility -> TypePredicateCompatibility
     | InferredTypeForTypeGuardParameter reason ->
       InferredTypeForTypeGuardParameter (mod_reason reason)
+    | RendersCompatibility -> RendersCompatibility
     | UnifyFlip -> UnifyFlip
   in
   function

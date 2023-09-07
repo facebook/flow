@@ -107,7 +107,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- arity.js:21:10
 
-Cannot return `x` because `$Iterable` [1] is incompatible with number [2]. [incompatible-return]
+Cannot return `x` because `$Iterable` [1] does not render number [2]. [incompatible-return]
 
    arity.js:21:10
      21|   return x; // ERROR 2x
@@ -124,7 +124,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- arity.js:21:10
 
-Cannot return `x` because `React.Element` [1] is incompatible with number [2]. [incompatible-return]
+Cannot return `x` because `React.Element` [1] does not render number [2]. [incompatible-return]
 
    arity.js:21:10
     21|   return x; // ERROR 2x
@@ -147,7 +147,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- arity.js:21:10
 
-Cannot return `x` because `React.Portal` [1] is incompatible with number [2]. [incompatible-return]
+Cannot return `x` because `React.Portal` [1] does not render number [2]. [incompatible-return]
 
    arity.js:21:10
     21|   return x; // ERROR 2x
@@ -164,8 +164,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- arity.js:21:10
 
-Cannot return `x` because `React.Node` (default type argument for AbstractComponent's 3rd position) [1] is incompatible
-with number [2]. [incompatible-return]
+Cannot return `x` because `React.Node` (default type argument for AbstractComponent's 3rd position) [1] does not render
+number [2]. [incompatible-return]
 
    arity.js:21:10
    21|   return x; // ERROR 2x

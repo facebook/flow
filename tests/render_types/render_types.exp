@@ -137,8 +137,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- poly.js:11:2
 
-Cannot cast `el` to renders undefined because `React.Element` [1] is incompatible with undefined [2].
-[incompatible-cast]
+Cannot cast `el` to renders undefined because `React.Element` [1] does not render undefined [2]. [incompatible-cast]
 
    poly.js:11:2
    11| (el: renders void); // error
@@ -247,8 +246,8 @@ References:
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:39:4
 
 Cannot cast `rendersQux` to renders union type because: [incompatible-cast]
- - Either renders `React.Element` [1] is incompatible with renders `React.Element` [2].
- - Or renders `React.Element` [1] is incompatible with renders `React.Element` [3].
+ - Either `React.Element` [1] does not render renders `React.Element` [2].
+ - Or `React.Element` [1] does not render renders `React.Element` [3].
 
    renders_to_renders.js:39:4
    39|   (rendersQux: renders (React$Element<typeof Foo> | React$Element<typeof Baz>)); // ERROR
@@ -281,8 +280,8 @@ References:
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:59:4
 
 Cannot cast `rendersFooOrBar` to renders union type because: [incompatible-cast]
- - Either renders `React.Element` [1] is incompatible with renders `React.Element` [2].
- - Or renders `React.Element` [1] is incompatible with renders `React.Element` [3].
+ - Either `React.Element` [1] does not render renders `React.Element` [2].
+ - Or `React.Element` [1] does not render renders `React.Element` [3].
 
    renders_to_renders.js:59:4
    59|   (rendersFooOrBar: renders (React$Element<typeof Foo> | React$Element<typeof Baz>)); // ERROR

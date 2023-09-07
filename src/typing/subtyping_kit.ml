@@ -1346,7 +1346,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           DefT (reason, bogus_trust (), RendersT (NominalRenders { id; super = rendersl }))
         | Structural -> rendersl
       in
-      rec_flow_t cx trace ~use_op (rendersl, rendersu)
+      rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (rendersl, rendersu)
     | ( DefT
           ( _,
             _,
@@ -1373,7 +1373,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       when ALoc.equal_id idl idu ->
       rec_flow_t cx trace ~use_op (configu, configl);
       rec_flow_t cx trace ~use_op (instancel, instanceu);
-      rec_flow_t cx trace ~use_op (rendersl, rendersu)
+      rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (rendersl, rendersu)
     (* Subtyping inside the Renders world happens in these rules +
      * TryPromoteRendersRepresentation Renders *)
     | ( DefT (reasonl, _, RendersT (NominalRenders { id = id1; super })),
@@ -1384,7 +1384,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       else
         (* We reposition the super using l's reason for better error messages *)
         let super = reposition_reason cx ~trace reasonl ~use_desc:true super in
-        rec_flow_t cx trace ~use_op (super, u)
+        rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (super, u)
     | ( DefT (reasonl, _, RendersT (NominalRenders { id; super })),
         DefT (_reasonu, _, RendersT (StructuralRenders structural))
       ) ->
@@ -1420,23 +1420,23 @@ module Make (Flow : INPUT) : OUTPUT = struct
         in
         if not (speculative_subtyping_succeeds cx mixed_element u) then
           let super = reposition_reason cx ~trace reasonl ~use_desc:true super in
-          rec_flow_t cx trace ~use_op (super, u)
+          rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (super, u)
     | ( DefT (renders_reason, _, RendersT (StructuralRenders structure)),
         DefT (_, _, RendersT (NominalRenders _))
       ) ->
       let t = TypeUtil.structural_render_type_arg renders_reason structure in
-      rec_flow_t cx trace ~use_op (t, u)
+      rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (t, u)
     | ( DefT (renders_reasonl, _, RendersT (StructuralRenders (UnionRenders _ as structurel))),
         DefT (_renders_reasonu, _, RendersT (StructuralRenders _))
       ) ->
       let l = TypeUtil.structural_render_type_arg renders_reasonl structurel in
-      rec_flow_t cx trace ~use_op (l, u)
+      rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (l, u)
     | ( DefT (renders_reasonl, _, RendersT (StructuralRenders structurel)),
         DefT (renders_reasonu, _, RendersT (StructuralRenders structureu))
       ) ->
       let l = TypeUtil.structural_render_type_arg renders_reasonl structurel in
       let u = TypeUtil.structural_render_type_arg renders_reasonu structureu in
-      rec_flow_t cx trace ~use_op (l, u)
+      rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (l, u)
     (* Try to do structural subtyping. If that fails promote to a render type *)
     | (DefT (reason_obj, _, ObjT _), DefT (renders_r, _, RendersT (NominalRenders { id; super })))
       ->
@@ -1446,7 +1446,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         ( l,
           TryRenderTypePromotionT
             {
-              use_op;
+              use_op = Frame (RendersCompatibility, use_op);
               reason = renders_r;
               reason_obj;
               upper_renders = NominalRenders { id; super };
@@ -1462,7 +1462,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           ( l,
             TryRenderTypePromotionT
               {
-                use_op;
+                use_op = Frame (RendersCompatibility, use_op);
                 reason = renders_r;
                 reason_obj;
                 upper_renders = StructuralRenders structure;
@@ -1474,7 +1474,18 @@ module Make (Flow : INPUT) : OUTPUT = struct
      * to Flow the LHS to the structural type on the RHS *)
     | (l, DefT (renders_reason, _, RendersT (StructuralRenders structure))) ->
       let t = TypeUtil.structural_render_type_arg renders_reason structure in
-      rec_flow_t cx trace ~use_op (l, t)
+      rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (l, t)
+    | (l, DefT (_, _, RendersT _)) ->
+      add_output
+        cx
+        ~trace
+        (Error_message.EIncompatibleWithUseOp
+           {
+             reason_lower = reason_of_t l;
+             reason_upper = reason_of_t u;
+             use_op = Frame (RendersCompatibility, use_op);
+           }
+        )
     (* Exiting the renders world *)
     | (DefT (r, _, RendersT (NominalRenders _)), u) ->
       let mixed_element = get_builtin_type cx ~trace r (OrdinaryName "React$MixedElement") in

@@ -255,7 +255,7 @@ let flip_frame = function
     | ObjMapFunCompatibility _ | ObjMapiFunCompatibility _ | TypeParamBound _ | OpaqueTypeBound _
     | FunMissingArg _ | ImplicitTypeParam | ReactGetConfig _ | UnifyFlip | ConstrainedAssignment _
     | MappedTypeKeyCompatibility _ | TypePredicateCompatibility
-    | InferredTypeForTypeGuardParameter _ ) as use_op ->
+    | InferredTypeForTypeGuardParameter _ | RendersCompatibility ) as use_op ->
     use_op
 
 let post_process_errors original_errors =
@@ -825,7 +825,8 @@ let rec make_error_printable :
       | Frame (ObjMapFunCompatibility _, use_op)
       | Frame (ObjMapiFunCompatibility _, use_op)
       | Frame (MappedTypeKeyCompatibility _, use_op)
-      | Frame (TupleAssignment _, use_op) ->
+      | Frame (TupleAssignment _, use_op)
+      | Frame (RendersCompatibility, use_op) ->
         loop loc frames use_op
     and next_with_loc loc frames frame_reason use_op =
       (* Skip this use_op, don't add a frame, but do use the loc to reposition
@@ -1057,6 +1058,19 @@ let rec make_error_printable :
         | _ -> [ref def; text " requires another argument from "; ref op]
       in
       make_error op message
+    | Frame (RendersCompatibility, _) ->
+      (* We replace the desc of the reason so we can say "LHS" does not render "RHS" instead of
+       * "LHS" does not render "renders RHS" *)
+      let rec loop = function
+        | RRenderType desc -> loop desc
+        | desc -> desc
+      in
+      let lower_desc = loop (desc_of_reason lower) in
+      let lower_r = replace_desc_reason lower_desc lower in
+      let upper_desc = loop (desc_of_reason upper) in
+      let upper_r = replace_desc_reason upper_desc upper in
+      let message = [ref lower_r; text " does not render "; ref upper_r] in
+      make_error lower message
     | _ ->
       let root_use_op = root_of_use_op use_op in
       (match root_use_op with
@@ -1124,19 +1138,6 @@ let rec make_error_printable :
               text ")";
             ]
           in
-          make_error lower message
-        | (lower_desc, RRenderType upper_desc) ->
-          (* We replace the desc of the reason so we can say "LHS" does not render "RHS" instead of
-           * "LHS" does not render "renders RHS" *)
-          let rec loop = function
-            | RRenderType desc -> loop desc
-            | desc -> desc
-          in
-          let lower_desc = loop lower_desc in
-          let lower_r = replace_desc_reason lower_desc lower in
-          let upper_desc = loop upper_desc in
-          let upper_r = replace_desc_reason upper_desc upper in
-          let message = [ref lower_r; text " does not render "; ref upper_r] in
           make_error lower message
         | _ -> make_error lower [ref lower; text " is incompatible with "; ref upper]
       end)
