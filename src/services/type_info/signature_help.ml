@@ -291,6 +291,7 @@ let find_signatures ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc =
           ~file_sig
           ~ast
           ~typed_ast
+          ~purpose:Get_def_types.Purpose.GoToDefinition
           callee_loc
       with
       | Def ([getdef_loc], _)

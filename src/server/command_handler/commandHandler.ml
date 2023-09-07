@@ -425,6 +425,7 @@ let get_def_of_check_result ~options ~reader ~profiling ~check_result (file, lin
         ~file_sig
         ~ast
         ~typed_ast
+        ~purpose:Get_def_types.Purpose.GoToDefinition
         loc
       |> fun result ->
       let open GetDef_js.Get_def_result in
@@ -2089,6 +2090,7 @@ let global_find_references
     GetDefUtils.get_def_info
       ~options
       ~reader
+      ~purpose:Get_def_types.Purpose.FindReferences
       (ast, file_sig, docblock)
       typecheck_artifacts
       (Loc.cursor (Some file_key) line col)

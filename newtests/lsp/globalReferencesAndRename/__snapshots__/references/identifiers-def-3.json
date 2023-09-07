@@ -2,15 +2,41 @@
   "method": "textDocument/references",
   "result": [
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/identifiers-def.js",
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-b.js",
       "range": {
         "start": {
-          "line": 0,
+          "line": 8,
+          "character": 12
+        },
+        "end": {
+          "line": 8,
+          "character": 13
+        }
+      }
+    },
+    {
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-b.js",
+      "range": {
+        "start": {
+          "line": 9,
           "character": 0
         },
         "end": {
-          "line": 0,
-          "character": 0
+          "line": 9,
+          "character": 1
+        }
+      }
+    },
+    {
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-b.js",
+      "range": {
+        "start": {
+          "line": 10,
+          "character": 16
+        },
+        "end": {
+          "line": 10,
+          "character": 17
         }
       }
     }

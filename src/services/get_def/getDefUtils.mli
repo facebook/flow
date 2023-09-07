@@ -33,6 +33,7 @@ val get_property_def_info :
 val get_def_info :
   options:Options.t ->
   reader:Parsing_heaps.Reader.reader ->
+  purpose:Purpose.t ->
   FindRefsUtils.ast_info ->
   Types_js_types.typecheck_artifacts ->
   Loc.t ->

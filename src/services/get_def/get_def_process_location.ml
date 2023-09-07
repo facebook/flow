@@ -66,7 +66,8 @@ let annot_of_jsx_name =
   | MemberExpression (_, MemberExpression.{ property = (annot, _); _ }) ->
     annot
 
-class searcher ~(is_legit_require : ALoc.t * Type.t -> bool) ~(covers_target : ALoc.t -> bool) =
+class searcher
+  ~(is_legit_require : ALoc.t * Type.t -> bool) ~(covers_target : ALoc.t -> bool) ~purpose =
   let loc_of_annot (loc, _) = loc in
   let annot_covers_target annot = covers_target (loc_of_annot annot) in
   object (this)
@@ -157,9 +158,13 @@ class searcher ~(is_legit_require : ALoc.t * Type.t -> bool) ~(covers_target : A
       );
       Base.Option.iter specifiers ~f:(function
           | ImportNamedSpecifiers _ -> ()
-          | ImportNamespaceSpecifier (l, (_, { Flow_ast.Identifier.name; _ })) ->
-            if covers_target l then
-              this#request (Get_def_request.Type { annot = fst source; name = Some name })
+          | ImportNamespaceSpecifier (l, ((name_loc, _), { Flow_ast.Identifier.name; _ })) ->
+            if covers_target l then (
+              match purpose with
+              | Get_def_types.Purpose.GoToDefinition ->
+                this#request (Get_def_request.Type { annot = fst source; name = Some name })
+              | Get_def_types.Purpose.FindReferences -> ignore @@ this#own_def name_loc name
+            )
           );
       super#import_declaration loc decl
 
@@ -482,9 +487,9 @@ class searcher ~(is_legit_require : ALoc.t * Type.t -> bool) ~(covers_target : A
       | _ -> super#jsx_child child
   end
 
-let process_location_in_typed_ast ~typed_ast ~is_legit_require loc =
+let process_location_in_typed_ast ~typed_ast ~is_legit_require ~purpose loc =
   let covers_target test_loc = Reason.in_range loc (ALoc.to_loc_exn test_loc) in
-  let searcher = new searcher ~is_legit_require ~covers_target in
+  let searcher = new searcher ~is_legit_require ~covers_target ~purpose in
   (try ignore (searcher#program typed_ast) with
   | Found -> ());
   searcher#found_loc

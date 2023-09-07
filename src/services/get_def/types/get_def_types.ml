@@ -18,3 +18,9 @@ type def_info =
   | VariableDefinition of Loc.t list * string option
   | PropertyDefinition of property_def_info
   | NoDefinition
+
+module Purpose = struct
+  type t =
+    | GoToDefinition
+    | FindReferences
+end
