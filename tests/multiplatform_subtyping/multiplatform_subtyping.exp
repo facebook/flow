@@ -1,0 +1,227 @@
+Error ------------------------------------------------------------------------------------------ opaque_type.ios.js:3:41
+
+Cannot conform to common interface module because string [1] is incompatible with number [2] in  of property
+`OpaqueType3`. Read the docs on Flow's multi-platform support for more information:
+https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+
+   opaque_type.ios.js:3:41
+   3| declare export opaque type OpaqueType3: string; // error: string ~> number
+                                              ^^^^^^ [1]
+
+References:
+   opaque_type.js.flow:3:41
+   3| declare export opaque type OpaqueType3: number;
+                                              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ opaque_type.ios.js:4:41
+
+Cannot conform to common interface module because `OpaqueType4` [1] is incompatible with string [2] in  of property
+`OpaqueType4`. Read the docs on Flow's multi-platform support for more information:
+https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+
+   opaque_type.ios.js:4:41
+   4| declare export opaque type OpaqueType4: string; // error: mixed ~> string (invariant subtyping)
+                                              ^^^^^^ [2]
+
+References:
+   opaque_type.js.flow:4:28
+   4| declare export opaque type OpaqueType4;
+                                 ^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ opaque_type.ios.js:5:28
+
+Cannot conform to common interface module because `OpaqueType5` [1] is incompatible with number [2] in  of property
+`OpaqueType5`. Read the docs on Flow's multi-platform support for more information:
+https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+
+   opaque_type.ios.js:5:28
+   5| declare export opaque type OpaqueType5; // error: mixed ~> number
+                                 ^^^^^^^^^^^ [1]
+
+References:
+   opaque_type.js.flow:5:41
+   5| declare export opaque type OpaqueType5: number;
+                                              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ opaque_type.ios.js:9:26
+
+Cannot conform to common interface module because string [1] is incompatible with number [2] in  of property `o3`. Read
+the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[incompatible-type]
+
+   opaque_type.ios.js:9:26
+   9| declare export const o3: OpaqueType3; // error: string ~> number
+                               ^^^^^^^^^^^ [1]
+
+References:
+   opaque_type.js.flow:9:26
+   9| declare export const o3: OpaqueType3;
+                               ^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- opaque_type.ios.js:10:26
+
+Cannot conform to common interface module because `OpaqueType4` [1] is incompatible with string [2] in  of property
+`o4`. Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[incompatible-type]
+
+   opaque_type.ios.js:10:26
+   10| declare export const o4: OpaqueType4; // error: mixed ~> string (invariant subtyping)
+                                ^^^^^^^^^^^ [2]
+
+References:
+   opaque_type.js.flow:10:26
+   10| declare export const o4: OpaqueType4;
+                                ^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- opaque_type.ios.js:11:26
+
+Cannot conform to common interface module because `OpaqueType5` [1] is incompatible with number [2] in  of property
+`o5`. Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[incompatible-type]
+
+   opaque_type.ios.js:11:26
+   11| declare export const o5: OpaqueType5; // error: mixed ~> number
+                                ^^^^^^^^^^^ [1]
+
+References:
+   opaque_type.js.flow:11:26
+   11| declare export const o5: OpaqueType5;
+                                ^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- opaque_type.ios.js:18:56
+
+Cannot conform to common interface module because mixed [1] is incompatible with `T2` [2] in  of property
+`GenericOpaqueType6`. Read the docs on Flow's multi-platform support for more information:
+https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+
+   opaque_type.ios.js:18:56
+   18| declare export opaque type GenericOpaqueType6<T1, T2>: [T2, T2]; // error
+                                                              ^^^^^^^^
+
+References:
+   opaque_type.js.flow:18:57
+   18| declare export opaque type GenericOpaqueType6<T1, T2>: [T1, T2];
+                                                               ^^ [1]
+   opaque_type.ios.js:18:57
+   18| declare export opaque type GenericOpaqueType6<T1, T2>: [T2, T2]; // error
+                                                               ^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- opaque_type.ios.js:18:57
+
+Cannot conform to common interface module because mixed [1] is incompatible with `T1` [2] in  of property
+`GenericOpaqueType6`. Read the docs on Flow's multi-platform support for more information:
+https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+
+   opaque_type.ios.js:18:57
+   18| declare export opaque type GenericOpaqueType6<T1, T2>: [T2, T2]; // error
+                                                               ^^ [1]
+
+References:
+   opaque_type.js.flow:18:57
+   18| declare export opaque type GenericOpaqueType6<T1, T2>: [T1, T2];
+                                                               ^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- opaque_type.ios.js:22:27
+
+Cannot conform to common interface module because `GenericOpaqueType3` [1] is incompatible with `GenericOpaqueType3` [2]
+in property `go3`. Read the docs on Flow's multi-platform support for more information:
+https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+
+   opaque_type.ios.js:22:27
+   22| declare export const go3: GenericOpaqueType3<string, string>; // error
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   opaque_type.js.flow:22:27
+   22| declare export const go3: GenericOpaqueType3<string>;
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- opaque_type.ios.js:23:27
+
+Cannot conform to common interface module because `GenericOpaqueType4` [1] is incompatible with `GenericOpaqueType4` [2]
+in property `go4`. Read the docs on Flow's multi-platform support for more information:
+https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+
+   opaque_type.ios.js:23:27
+   23| declare export const go4: GenericOpaqueType4<string>; // error
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   opaque_type.js.flow:23:27
+   23| declare export const go4: GenericOpaqueType4<string, string>;
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- opaque_type.ios.js:25:46
+
+Cannot conform to common interface module because number [1] is incompatible with string [2] in  of property `go6`. Read
+the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[incompatible-type]
+
+   opaque_type.ios.js:25:46
+   25| declare export const go6: GenericOpaqueType5<number, string>; // error: non-matching targs
+                                                    ^^^^^^ [1]
+
+References:
+   opaque_type.js.flow:25:46
+   25| declare export const go6: GenericOpaqueType5<string, number>;
+                                                    ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- opaque_type.ios.js:25:54
+
+Cannot conform to common interface module because string [1] is incompatible with number [2] in  of property `go6`. Read
+the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[incompatible-type]
+
+   opaque_type.ios.js:25:54
+   25| declare export const go6: GenericOpaqueType5<number, string>; // error: non-matching targs
+                                                            ^^^^^^ [1]
+
+References:
+   opaque_type.js.flow:25:54
+   25| declare export const go6: GenericOpaqueType5<string, number>;
+                                                            ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- opaque_type.js.flow:15:28
+
+Cannot use `GenericOpaqueType3` [1] without 2 type arguments.. (FLOW BUG: This is a misplaced error. The original error
+was raised in file `opaque_type.ios.js`) [missing-type-arg]
+
+   opaque_type.js.flow:15:28
+   15| declare export opaque type GenericOpaqueType3<T1>; // error: misplaced, should be in opaque_type.ios.js
+                                  ^^^^^^^^^^^^^^^^^^
+
+References:
+   opaque_type.ios.js:15:46
+   15| declare export opaque type GenericOpaqueType3<T1, T2>; // should error, but misplaced in opaque_type.js.flow
+                                                    ^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- opaque_type.js.flow:16:28
+
+Cannot use `GenericOpaqueType4` [1] without 1 type argument.. (FLOW BUG: This is a misplaced error. The original error
+was raised in file `opaque_type.ios.js`) [missing-type-arg]
+
+   opaque_type.js.flow:16:28
+   16| declare export opaque type GenericOpaqueType4<T1, T2>; // error: misplaced, should be in opaque_type.ios.js
+                                  ^^^^^^^^^^^^^^^^^^
+
+References:
+   opaque_type.ios.js:16:46
+   16| declare export opaque type GenericOpaqueType4<T1>; // should error, but misplaced in opaque_type.js.flow
+                                                    ^^^^ [1]
+
+
+
+Found 14 errors

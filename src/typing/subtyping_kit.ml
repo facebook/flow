@@ -712,6 +712,38 @@ module Make (Flow : INPUT) : OUTPUT = struct
       )
       when ALoc.equal_id id1 id2 ->
       flow_type_args cx trace ~use_op lreason ureason ltargs utargs
+    (* If the opaque type are from the same logical module, we need to do some structural validation
+       in additional to type_args check. *)
+    | ( OpaqueT
+          ( lreason,
+            { opaque_id = id1; opaque_name = name1; opaque_type_args = ltargs; super_t = super1; _ }
+          ),
+        OpaqueT
+          ( ureason,
+            { opaque_id = id2; opaque_name = name2; opaque_type_args = utargs; super_t = super2; _ }
+          )
+      )
+      when TypeUtil.nominal_id_have_same_logical_module
+             ~file_options:Context.((metadata cx).file_options)
+             (id1, Some name1)
+             (id2, Some name2)
+           && List.length ltargs = List.length utargs ->
+      (* Check super *)
+      begin
+        let super1 = Base.Option.value super1 ~default:(MixedT.make lreason (bogus_trust ())) in
+        let super2 = Base.Option.value super2 ~default:(MixedT.make ureason (bogus_trust ())) in
+        let use_op =
+          Frame
+            ( OpaqueTypeSuperCompatibility { lower = reason_of_t super1; upper = reason_of_t super2 },
+              use_op
+            )
+        in
+        rec_unify cx trace ~use_op super1 super2
+      end;
+      (* Do not check underlying type even if we have access to them, because underlying types
+       * are not visible across module boundaries. *)
+      (* Check targs *)
+      flow_type_args cx trace ~use_op lreason ureason ltargs utargs
     (* If the type is still in the same file it was defined, we allow it to
      * expose its underlying type information *)
     | (OpaqueT (r, { underlying_t = Some t; _ }), _)

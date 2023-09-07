@@ -51,6 +51,14 @@ val bigint_literal_eq : Type.bigint_literal -> Type.bigint_literal Type.literal 
 
 val boolean_literal_eq : bool -> bool option -> bool
 
+(* Under a multiplatform world, we might have two nominal constructs under two different
+ * files, but they are logically the same thing. e.g. class Foo under A.ios.js and A.js.flow.
+ *
+ * [nominal_id_have_same_logical_module ~file_options a b] tells us whether in the multiplatform world,
+ * [a] and [b] are the same logical module. *)
+val nominal_id_have_same_logical_module :
+  file_options:Files.options -> ALoc.id * string option -> ALoc.id * string option -> bool
+
 val quick_subtype : bool -> Type.t -> Type.t -> bool
 
 val reason_of_propref : Type.propref -> reason

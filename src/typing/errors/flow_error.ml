@@ -237,6 +237,8 @@ let flip_frame = function
   | FunRestParam c -> FunRestParam { lower = c.upper; upper = c.lower }
   | FunReturn c -> FunReturn { lower = c.upper; upper = c.lower }
   | IndexerKeyCompatibility c -> IndexerKeyCompatibility { lower = c.upper; upper = c.lower }
+  | OpaqueTypeSuperCompatibility c ->
+    OpaqueTypeSuperCompatibility { lower = c.upper; upper = c.lower }
   | PropertyCompatibility c -> PropertyCompatibility { c with lower = c.upper; upper = c.lower }
   | ReactConfigCheck -> ReactConfigCheck
   | TupleElementCompatibility c ->
@@ -731,6 +733,8 @@ let rec make_error_printable :
         unwrap_frame_without_loc loc frames use_op [text "the return value"]
       | Frame (IndexerKeyCompatibility { lower; _ }, use_op) ->
         unwrap_frame loc frames lower use_op [text "the indexer property's key"]
+      | Frame (OpaqueTypeSuperCompatibility { lower; _ }, use_op) ->
+        unwrap_frame loc frames lower use_op []
       | Frame (PropertyCompatibility { prop = None; lower; _ }, use_op) ->
         unwrap_frame loc frames lower use_op [text "the indexer property"]
       | Frame (PropertyCompatibility { prop = Some (OrdinaryName "$call"); lower; _ }, use_op) ->

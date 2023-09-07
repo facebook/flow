@@ -675,6 +675,8 @@ let rec mod_loc_of_virtual_use_op f =
     | ObjMapFunCompatibility { value } -> ObjMapFunCompatibility { value = mod_reason value }
     | ObjMapiFunCompatibility { key; value } ->
       ObjMapiFunCompatibility { key = mod_reason key; value = mod_reason value }
+    | OpaqueTypeSuperCompatibility { lower; upper } ->
+      OpaqueTypeSuperCompatibility { lower = mod_reason lower; upper = mod_reason upper }
     | MappedTypeKeyCompatibility { source_type; mapped_type } ->
       MappedTypeKeyCompatibility
         { source_type = mod_reason source_type; mapped_type = mod_reason mapped_type }
@@ -746,6 +748,22 @@ let bigint_literal_eq (x, _) = function
 let boolean_literal_eq x = function
   | Some y -> x = y
   | None -> false
+
+let nominal_id_have_same_logical_module
+    ~file_options
+    ((a_id, a_name) : ALoc.id * string option)
+    ((b_id, b_name) : ALoc.id * string option) =
+  let matching_platform_specific_impl_and_interface_file_key a_src b_src =
+    Files.has_flow_ext a_src
+    && Files.chop_flow_ext a_src = Files.chop_platform_suffix ~options:file_options b_src
+  in
+  match (a_name, b_name, ALoc.source (a_id :> ALoc.t), ALoc.source (b_id :> ALoc.t)) with
+  | (Some a_name, Some b_name, Some a_src, Some b_src) ->
+    a_name = b_name
+    && (matching_platform_specific_impl_and_interface_file_key a_src b_src
+       || matching_platform_specific_impl_and_interface_file_key b_src a_src
+       )
+  | _ -> false
 
 let trust_subtype_fixed tr1 tr2 =
   match (Trust.expand tr1, Trust.expand tr2) with
