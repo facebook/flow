@@ -1,3 +1,8 @@
+### 0.216.1
+
+Notable bug fixes:
+* We fixed local find references for namespace imported variables. It will no longer error or return empty results.
+
 ### 0.216.0
 
 Likely to cause new Flow errors:
