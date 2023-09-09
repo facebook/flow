@@ -915,8 +915,8 @@ Cannot assign `params.get(...)` to `b` because null [1] is incompatible with str
                            ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:1545:24
-   1545|     get(name: string): null | string;
+   <BUILTINS>/bom.js:1548:24
+   1548|     get(name: string): null | string;
                                 ^^^^ [1]
    URLSearchParams.js:8:10
       8| const b: string = params.get('foo'); // incorrect
