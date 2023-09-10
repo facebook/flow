@@ -13,13 +13,18 @@
         "src/flow_parser_node.cc",
       ],
       "include_dirs": [
+        "<!(opam var lib)/ocaml",
         "include/",
-        "<!(node -e \"require('nan')\")",
+        "node_modules/node-addon-api",
+        "<!(node -e \"require('node-addon-api').include\")",
       ],
       "libraries": [
+        "-L<!(opam var lib)/ocaml",
         "-L../lib/<(platform)",
         "-lflowparser",
+        "-lunix"
       ],
+      'defines': [ 'NAPI_DISABLE_CPP_EXCEPTIONS' ],
       "conditions": [
         ['OS=="mac"', {
           "xcode_settings": {

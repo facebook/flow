@@ -8,7 +8,7 @@
   "license": "MIT",
   "dependencies": {
     "bindings": "^1.5.0",
-    "nan": "^2.14.1"
+    "node-addon-api": "^7.0.0"
   },
   "scripts": {
     "prepack": "make download && make dist",
@@ -31,6 +31,8 @@
     "linux"
   ],
   "cpu": [
-    "x64"
+    "x64",
+    "arm64",
+    "arm"
   ]
 }
