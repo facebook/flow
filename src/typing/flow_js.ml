@@ -642,7 +642,11 @@ struct
         (* Special cases where we want to recursively concretize types within the
            lower bound. *)
         | (UnionT (r, rep), ReposUseT (reason, use_desc, use_op, l)) ->
-          let rep = UnionRep.ident_map (annot use_desc) rep in
+          let rep =
+            UnionRep.ident_map
+              (annot ~in_implicit_instantiation:(Context.in_implicit_instantiation cx) use_desc)
+              rep
+          in
           let loc = loc_of_reason reason in
           let annot_loc = annot_loc_of_reason reason in
           let r = opt_annot_reason ?annot_loc @@ repos_reason loc r in
@@ -663,7 +667,21 @@ struct
             else
               r
           in
-          rec_flow cx trace (l, UseT (use_op, MaybeT (r, annot use_desc u)))
+          rec_flow
+            cx
+            trace
+            ( l,
+              UseT
+                ( use_op,
+                  MaybeT
+                    ( r,
+                      annot
+                        ~in_implicit_instantiation:(Context.in_implicit_instantiation cx)
+                        use_desc
+                        u
+                    )
+                )
+            )
         | ( OptionalT { reason = r; type_ = u; use_desc = use_desc_optional_t },
             ReposUseT (reason, use_desc, use_op, l)
           ) ->
@@ -682,13 +700,26 @@ struct
             ( l,
               UseT
                 ( use_op,
-                  OptionalT { reason = r; type_ = annot use_desc u; use_desc = use_desc_optional_t }
+                  OptionalT
+                    {
+                      reason = r;
+                      type_ =
+                        annot
+                          ~in_implicit_instantiation:(Context.in_implicit_instantiation cx)
+                          use_desc
+                          u;
+                      use_desc = use_desc_optional_t;
+                    }
                 )
             )
         | ( DefT (r, _, RendersT (StructuralRenders (UnionRenders rep))),
             ReposUseT (reason, use_desc, use_op, l)
           ) ->
-          let rep = UnionRep.ident_map (annot use_desc) rep in
+          let rep =
+            UnionRep.ident_map
+              (annot ~in_implicit_instantiation:(Context.in_implicit_instantiation cx) use_desc)
+              rep
+          in
           let loc = loc_of_reason reason in
           let annot_loc = annot_loc_of_reason reason in
           let r = opt_annot_reason ?annot_loc @@ repos_reason loc r in

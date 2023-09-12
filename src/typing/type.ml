@@ -4092,8 +4092,9 @@ let ro_of_arrtype = function
   | ArrayAT _ -> Generic.ArraySpread.NonROSpread
   | _ -> Generic.ArraySpread.ROSpread
 
-let annot use_desc = function
-  | OpenT (r, _) as t -> AnnotT (r, t, use_desc)
+let annot ~in_implicit_instantiation use_desc = function
+  | OpenT (r, _) as t when not (is_instantiable_reason r && in_implicit_instantiation) ->
+    AnnotT (r, t, use_desc)
   | t -> t
 
 (* The following functions are used as constructors for function types and
