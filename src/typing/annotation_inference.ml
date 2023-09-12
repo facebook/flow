@@ -39,6 +39,7 @@ let object_like_op = function
   | Annot_ObjKeyMirror _
   | Annot_ObjMapConst _
   | Annot_GetKeysT _
+  | Annot_DeepReadOnlyT _
   | Annot_ToStringT _
   | Annot__Future_added_value__ _ ->
     false
@@ -442,6 +443,9 @@ module rec ConsGen : S = struct
     match (t, op) with
     | (EvalT (t, TypeDestructorT (use_op, reason, ReadOnlyType), _), _) ->
       let t = make_readonly cx use_op reason t in
+      elab_t cx t op
+    | (EvalT (t, TypeDestructorT (_, reason, ReactDRO), _), _) ->
+      let t = elab_t cx t (Annot_DeepReadOnlyT reason) in
       elab_t cx t op
     | (EvalT (t, TypeDestructorT (use_op, reason, PartialType), _), _) ->
       let t = make_partial cx use_op reason t in
@@ -878,6 +882,20 @@ module rec ConsGen : S = struct
         GetPropTKit.perform_read_prop_action cx dummy_trace use_op propref p reason_op
       | None -> Get_prop_helper.cg_lookup_ cx use_op o.proto_t reason_op propref)
     | (AnyT _, Annot_LookupT (reason_op, _use_op, _propref)) -> AnyT.untyped reason_op
+    (************)
+    (* DRO *)
+    (************)
+    | (DefT (r, t, ObjT ({ Type.flags; _ } as o)), Annot_DeepReadOnlyT _) ->
+      DefT (r, t, ObjT { o with Type.flags = { flags with react_dro = true } })
+    | ( DefT (r, trust, ArrT (TupleAT { elem_t; elements; arity; react_dro = _ })),
+        Annot_DeepReadOnlyT _
+      ) ->
+      DefT (r, trust, ArrT (TupleAT { elem_t; elements; arity; react_dro = true }))
+    | (DefT (r, trust, ArrT (ArrayAT { elem_t; tuple_view; react_dro = _ })), Annot_DeepReadOnlyT _)
+      ->
+      DefT (r, trust, ArrT (ArrayAT { elem_t; tuple_view; react_dro = true }))
+    | (DefT (r, trust, ArrT (ROArrayAT (t, _))), Annot_DeepReadOnlyT _) ->
+      DefT (r, trust, ArrT (ROArrayAT (t, true)))
     (************)
     (* ObjRestT *)
     (************)
