@@ -837,6 +837,8 @@ let check_untyped_import cx import_kind lreason ureason =
     add_output cx message
   | _ -> ()
 
+let obj_is_readonlyish { Type.react_dro; frozen; _ } = react_dro || frozen
+
 (* Fix a this-abstracted instance type by tying a "knot": assume that the
    fixpoint is some `this`, substitute it as This in the instance type, and
    finally unify it with the instance type. Return the class type wrapping the
@@ -2006,6 +2008,10 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
     end
     | _ -> (false, elem_t, use_op)
   in
+  begin
+    if write_action && react_dro then
+      add_output cx ~trace (Error_message.EROArrayWrite ((reason, reason_tup), use_op))
+  end;
   ( if is_index_restricted && (not can_write_tuple) && write_action then
     let error =
       match elements with
