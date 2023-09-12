@@ -4088,7 +4088,7 @@ struct
               )
         (* o.x = ... has the additional effect of o[_] = ... **)
         | (DefT (_, _, ObjT { flags; _ }), SetPropT (use_op, _, propref, _, _, _, _))
-          when obj_is_readonlyish flags ->
+          when obj_is_readonlyish flags && not (is_exception_to_react_dro propref) ->
           let reason_prop = reason_of_propref propref in
           let prop_name = name_of_propref propref in
           add_output cx ~trace (Error_message.EPropNotWritable { reason_prop; prop_name; use_op })

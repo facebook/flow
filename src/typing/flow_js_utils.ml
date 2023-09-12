@@ -839,6 +839,10 @@ let check_untyped_import cx import_kind lreason ureason =
 
 let obj_is_readonlyish { Type.react_dro; frozen; _ } = react_dro || frozen
 
+let is_exception_to_react_dro = function
+  | Named { name = OrdinaryName "current"; _ } -> true
+  | _ -> false
+
 (* Fix a this-abstracted instance type by tying a "knot": assume that the
    fixpoint is some `this`, substitute it as This in the instance type, and
    finally unify it with the instance type. Return the class type wrapping the
@@ -1741,7 +1745,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
     | Some t ->
       let loc = loc_of_reason ureason in
       let t =
-        if react_dro then
+        if react_dro && not (is_exception_to_react_dro propref) then
           F.mk_react_dro cx use_op t
         else
           t
