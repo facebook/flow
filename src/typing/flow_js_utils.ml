@@ -1716,6 +1716,8 @@ module type Get_prop_helper_sig = sig
     Type.t ->
     Type.t
 
+  val mk_react_dro : Context.t -> use_op -> Type.t -> Type.t
+
   val enum_proto :
     Context.t -> Type.trace -> reason:Reason.t -> Reason.t * Trust.trust_rep * Type.enum_t -> Type.t
 
@@ -1732,10 +1734,16 @@ module type Get_prop_helper_sig = sig
 end
 
 module GetPropT_kit (F : Get_prop_helper_sig) = struct
-  let perform_read_prop_action cx trace use_op propref p ureason =
+  let perform_read_prop_action cx trace use_op propref p ureason react_dro =
     match Property.read_t_of_property_type p with
     | Some t ->
       let loc = loc_of_reason ureason in
+      let t =
+        if react_dro then
+          F.mk_react_dro cx use_op t
+        else
+          t
+      in
       F.return cx trace ~use_op:unknown_use (F.reposition cx ~trace loc t)
     | None ->
       let (reason_prop, prop_name) =
@@ -1785,7 +1793,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
     | Some (p, _target_kind) ->
       let p = check_method_unbinding cx trace ~use_op ~method_accessible ~reason_op ~propref p in
       Base.Option.iter id ~f:(Context.test_prop_hit cx);
-      perform_read_prop_action cx trace use_op propref (Property.type_ p) reason_op
+      perform_read_prop_action cx trace use_op propref (Property.type_ p) reason_op false
     | None ->
       let super =
         match name_of_propref propref with
@@ -1869,7 +1877,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
     match get_obj_prop cx trace o propref reason_op with
     | Some (p, _target_kind) ->
       Base.Option.iter ~f:(fun (id, _) -> Context.test_prop_hit cx id) lookup_info;
-      perform_read_prop_action cx trace use_op propref p reason_op
+      perform_read_prop_action cx trace use_op propref p reason_op o.flags.react_dro
     | None ->
       (match propref with
       | Named { reason = reason_prop; name; from_indexed_access = _ } ->
@@ -1915,13 +1923,14 @@ end
 (***************)
 
 let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
-  let (elem_t, elements, is_index_restricted, is_tuple) =
+  let (elem_t, elements, is_index_restricted, is_tuple, react_dro) =
     match arrtype with
-    | ArrayAT { elem_t; tuple_view; react_dro = _ } ->
+    | ArrayAT { elem_t; tuple_view; react_dro } ->
       let elements = Base.Option.map ~f:(fun (elements, _arity) -> elements) tuple_view in
-      (elem_t, elements, false, false)
-    | TupleAT { elem_t; elements; arity = _; react_dro = _ } -> (elem_t, Some elements, true, true)
-    | ROArrayAT (elem_t, _) -> (elem_t, None, true, false)
+      (elem_t, elements, false, false, react_dro)
+    | TupleAT { elem_t; elements; arity = _; react_dro } ->
+      (elem_t, Some elements, true, true, react_dro)
+    | ROArrayAT (elem_t, react_dro) -> (elem_t, None, true, false, react_dro)
   in
   let (can_write_tuple, value, use_op) =
     match l with
@@ -2005,7 +2014,7 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
     in
     add_output cx ~trace error
   );
-  (value, is_tuple, use_op)
+  (value, is_tuple, use_op, react_dro)
 
 let propref_for_elem_t = function
   | GenericT { bound = DefT (_, _, StrT (Literal (_, name))); reason; _ }

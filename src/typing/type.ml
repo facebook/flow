@@ -3100,7 +3100,7 @@ module AConstraint = struct
     | Annot_GetElemT of Reason.t * TypeTerm.use_op * TypeTerm.t (* key *)
     | Annot_ElemT of Reason.t * TypeTerm.use_op * TypeTerm.t (* read action only *)
     | Annot_GetStaticsT of Reason.t
-    | Annot_LookupT of Reason.t * TypeTerm.use_op * TypeTerm.propref
+    | Annot_LookupT of Reason.t * TypeTerm.use_op * TypeTerm.propref * TypeTerm.t
     | Annot_MakeExactT of Reason.t
     | Annot_ObjKitT of Reason.t * TypeTerm.use_op * Object.resolve_tool * Object.tool
     | Annot_ObjTestProtoT of Reason.t
@@ -3235,7 +3235,7 @@ module AConstraint = struct
     | Annot_GetElemT (r, _, _)
     | Annot_ElemT (r, _, _)
     | Annot_GetStaticsT r
-    | Annot_LookupT (r, _, _)
+    | Annot_LookupT (r, _, _, _)
     | Annot_MakeExactT r
     | Annot_ObjKitT (r, _, _, _)
     | Annot_ObjTestProtoT r
@@ -3258,7 +3258,7 @@ module AConstraint = struct
     | Annot_GetPropT (_, use_op, _)
     | Annot_GetElemT (_, use_op, _)
     | Annot_ElemT (_, use_op, _)
-    | Annot_LookupT (_, use_op, _)
+    | Annot_LookupT (_, use_op, _, _)
     | Annot_ObjKitT (_, use_op, _, _) ->
       Some use_op
     | Annot_ThisSpecializeT _

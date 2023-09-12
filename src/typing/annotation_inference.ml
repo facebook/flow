@@ -292,8 +292,8 @@ module rec ConsGen : S = struct
   module Get_prop_helper = struct
     type r = Type.t
 
-    let cg_lookup_ cx use_op t reason_op propref =
-      ConsGen.elab_t cx t (Annot_LookupT (reason_op, use_op, propref))
+    let cg_lookup_ cx use_op t reason_op propref objt =
+      ConsGen.elab_t cx t (Annot_LookupT (reason_op, use_op, propref, objt))
 
     let error_type _ _ = AnyT.error
 
@@ -316,9 +316,9 @@ module rec ConsGen : S = struct
       let { representation_t; _ } = enum in
       get_builtin_typeapp cx reason (OrdinaryName "$EnumProto") [enum_t; representation_t]
 
-    let cg_lookup cx _trace ~obj_t:_ ~method_accessible:_ t (reason_op, _kind, propref, use_op, _ids)
+    let cg_lookup cx _trace ~obj_t ~method_accessible:_ t (reason_op, _kind, propref, use_op, _ids)
         =
-      cg_lookup_ cx use_op t reason_op propref
+      cg_lookup_ cx use_op t reason_op propref obj_t
 
     let cg_get_prop cx _trace t (use_op, access_reason, _, (prop_reason, name)) =
       ConsGen.elab_t
@@ -327,6 +327,8 @@ module rec ConsGen : S = struct
         (Annot_GetPropT
            (access_reason, use_op, Named { reason = prop_reason; name; from_indexed_access = false })
         )
+
+    let mk_react_dro cx _use_op t = ConsGen.elab_t cx t (Annot_DeepReadOnlyT (reason_of_t t))
   end
 
   module GetPropTKit = Flow_js_utils.GetPropT_kit (Get_prop_helper)
@@ -854,8 +856,13 @@ module rec ConsGen : S = struct
     (* LookupT pt1 *)
     (***************)
     | ( DefT (_lreason, _, InstanceT { super; inst; _ }),
-        Annot_LookupT (reason_op, use_op, (Named _ as propref))
+        Annot_LookupT (reason_op, use_op, (Named _ as propref), objt)
       ) ->
+      let react_dro =
+        match objt with
+        | DefT (_, _, ObjT o) -> o.flags.react_dro
+        | _ -> false
+      in
       (match
          GetPropTKit.get_instance_prop
            cx
@@ -874,14 +881,20 @@ module rec ConsGen : S = struct
           propref
           (Property.type_ p)
           reason_op
-      | None -> Get_prop_helper.cg_lookup_ cx use_op super reason_op propref)
-    | (DefT (_, _, InstanceT _), Annot_LookupT (_, _, Computed _)) -> error_unsupported cx t op
-    | (DefT (_, _, ObjT o), Annot_LookupT (reason_op, use_op, propref)) ->
+          react_dro
+      | None -> Get_prop_helper.cg_lookup_ cx use_op super reason_op propref objt)
+    | (DefT (_, _, InstanceT _), Annot_LookupT (_, _, Computed _, _)) -> error_unsupported cx t op
+    | (DefT (_, _, ObjT o), Annot_LookupT (reason_op, use_op, propref, objt)) ->
+      let react_dro =
+        match objt with
+        | DefT (_, _, ObjT o) -> o.flags.react_dro
+        | _ -> false
+      in
       (match GetPropTKit.get_obj_prop cx dummy_trace o propref reason_op with
       | Some (p, _) ->
-        GetPropTKit.perform_read_prop_action cx dummy_trace use_op propref p reason_op
-      | None -> Get_prop_helper.cg_lookup_ cx use_op o.proto_t reason_op propref)
-    | (AnyT _, Annot_LookupT (reason_op, _use_op, _propref)) -> AnyT.untyped reason_op
+        GetPropTKit.perform_read_prop_action cx dummy_trace use_op propref p reason_op react_dro
+      | None -> Get_prop_helper.cg_lookup_ cx use_op o.proto_t reason_op propref objt)
+    | (AnyT _, Annot_LookupT (reason_op, _use_op, _propref, _)) -> AnyT.untyped reason_op
     (************)
     (* DRO *)
     (************)
@@ -967,7 +980,7 @@ module rec ConsGen : S = struct
       let value = elemt_of_arrtype arrtype in
       reposition cx (loc_of_reason reason_op) value
     | (DefT (_, _, NumT _), Annot_ElemT (reason_op, use_op, DefT (reason_tup, _, ArrT arrtype))) ->
-      let (value, _, _) =
+      let (value, _, _, _) =
         Flow_js_utils.array_elem_check
           ~write_action:false
           cx
@@ -1036,14 +1049,14 @@ module rec ConsGen : S = struct
     (***************)
     (* LookupT pt2 *)
     (***************)
-    | (ObjProtoT _, Annot_LookupT (reason_op, _, Named { name; _ }))
+    | (ObjProtoT _, Annot_LookupT (reason_op, _, Named { name; _ }, _))
       when Flow_js_utils.is_object_prototype_method name ->
       Flow_js_utils.lookup_builtin_strict cx (OrdinaryName "Object") reason_op
-    | (FunProtoT _, Annot_LookupT (reason_op, _, Named { name; _ }))
+    | (FunProtoT _, Annot_LookupT (reason_op, _, Named { name; _ }, _))
       when Flow_js_utils.is_function_prototype name ->
       Flow_js_utils.lookup_builtin_strict cx (OrdinaryName "Function") reason_op
     | ( (DefT (_, _, NullT) | ObjProtoT _ | FunProtoT _),
-        Annot_LookupT (reason_op, use_op, Named { reason = reason_prop; name; _ })
+        Annot_LookupT (reason_op, use_op, Named { reason = reason_prop; name; _ }, _)
       ) ->
       let error_message =
         Error_message.EPropNotFound

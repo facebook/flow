@@ -290,8 +290,14 @@ struct
     function
     | LookupProp (use_op, up) -> rec_flow_p cx ~trace ~use_op lreason ureason propref (p, up)
     | SuperProp (use_op, lp) -> rec_flow_p cx ~trace ~use_op ureason lreason propref (lp, p)
-    | ReadProp { use_op; obj_t = _; tout } ->
-      FlowJs.perform_read_prop_action cx trace use_op propref p ureason tout
+    | ReadProp { use_op; obj_t; tout } ->
+      let react_dro =
+        match obj_t with
+        | OpenT _ -> failwith "Expected concrete type"
+        | DefT (_, _, ObjT o) -> o.flags.react_dro
+        | _ -> false
+      in
+      FlowJs.perform_read_prop_action cx trace use_op propref p ureason react_dro tout
     | WriteProp { use_op; obj_t = _; tin; write_ctx; prop_tout; mode } -> begin
       match (Property.write_t_of_property_type ~ctx:write_ctx p, target_kind, mode) with
       | (Some t, IndexerProperty, Delete) ->
@@ -337,6 +343,10 @@ struct
       reason
       (OrdinaryName "$EnumProto")
       [enum_object_t; enum_t; representation_t]
+
+  let mk_react_dro cx use_op t =
+    let id = Eval.generate_id () in
+    FlowJs.mk_possibly_evaluated_destructor cx use_op (reason_of_t t) t ReactDRO id
 
   module Get_prop_helper = struct
     type r = Type.tvar -> unit
@@ -384,6 +394,8 @@ struct
               v
             )
         )
+
+    let mk_react_dro = mk_react_dro
   end
 
   module GetPropTKit = GetPropT_kit (Get_prop_helper)
@@ -4178,27 +4190,43 @@ struct
          * error when `tup[0] = 123` does not. *)
         | (AnyT _, ElemT (use_op, reason_op, (DefT (reason_tup, _, ArrT arrtype) as arr), action))
           ->
-          begin
+          let react_dro =
             match (action, arrtype) with
             | (WriteElem _, ROArrayAT _) ->
               let reasons = (reason_op, reason_tup) in
-              add_output cx ~trace (Error_message.EROArrayWrite (reasons, use_op))
-            | _ -> ()
-          end;
+              add_output cx ~trace (Error_message.EROArrayWrite (reasons, use_op));
+              false
+            | ( ReadElem _,
+                (ROArrayAT (_, react_dro) | TupleAT { react_dro; _ } | ArrayAT { react_dro; _ })
+              ) ->
+              react_dro
+            | _ -> false
+          in
           let value = elemt_of_arrtype arrtype in
+          let value =
+            if react_dro then
+              mk_react_dro cx use_op value
+            else
+              value
+          in
           perform_elem_action cx trace ~use_op ~restrict_deletes:false reason_op arr value action
         | ( DefT (_, _, NumT _),
             ElemT (use_op, reason, (DefT (reason_tup, _, ArrT arrtype) as arr), action)
           ) ->
-          let write_action =
+          let (write_action, read_action) =
             match action with
-            | ReadElem _
-            | CallElem _ ->
-              false
-            | WriteElem _ -> true
+            | ReadElem _ -> (false, true)
+            | CallElem _ -> (false, false)
+            | WriteElem _ -> (true, false)
           in
-          let (value, is_tuple, use_op) =
+          let (value, is_tuple, use_op, react_dro) =
             array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype
+          in
+          let value =
+            if react_dro && read_action then
+              mk_react_dro cx use_op value
+            else
+              value
           in
           perform_elem_action cx trace ~use_op ~restrict_deletes:is_tuple reason arr value action
         | ( DefT (_, _, ArrT _),

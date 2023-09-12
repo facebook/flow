@@ -141,6 +141,7 @@ module type BUILTINS = sig
     Type.propref ->
     Type.property_type ->
     Reason.reason ->
+    bool ->
     Type.tvar ->
     unit
 end
