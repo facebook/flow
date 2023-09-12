@@ -374,6 +374,7 @@ end = struct
         | ConditionalType _ ->
           true
         | ReadOnlyType
+        | ReactDRO
         | PartialType
         | RequiredType
         | SpreadType _
@@ -1724,6 +1725,7 @@ end = struct
       in
       let%bind ty = type__ ~env:arg_env t in
       match d with
+      | T.ReactDRO -> return ty
       | T.NonMaybeType -> return (Ty.Utility (Ty.NonMaybeType ty))
       | T.ReadOnlyType -> return (Ty.Utility (Ty.ReadOnly ty))
       | T.PartialType -> return (Ty.Utility (Ty.Partial ty))

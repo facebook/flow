@@ -190,6 +190,7 @@ let rec default_resolve_touts ~flow cx loc u =
   | EnumCastT _
   | EnumExhaustiveCheckT _ ->
     ()
+  | DeepReadOnlyT tvar -> resolve_tvar tvar
   | FilterOptionalT (_, t)
   | FilterMaybeT (_, t) ->
     resolve t

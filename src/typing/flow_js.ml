@@ -968,6 +968,78 @@ struct
               (match Type_filter.not_exists cx l with
               | DefT (_, _, EmptyT) -> false
               | _ -> true)
+        (*************)
+        (* DRO *)
+        (*************)
+        | (OptionalT ({ type_; _ } as o), DeepReadOnlyT ((r, _) as tout)) ->
+          rec_flow_t
+            cx
+            trace
+            ~use_op:unknown_use
+            ( OptionalT
+                {
+                  o with
+                  type_ =
+                    Tvar.mk_no_wrap_where cx r (fun tvar ->
+                        rec_flow cx trace (type_, DeepReadOnlyT tvar)
+                    );
+                },
+              OpenT tout
+            )
+        | (MaybeT (rl, t), DeepReadOnlyT ((r, _) as tout)) ->
+          rec_flow_t
+            cx
+            trace
+            ~use_op:unknown_use
+            ( MaybeT
+                ( rl,
+                  Tvar.mk_no_wrap_where cx r (fun tvar -> rec_flow cx trace (t, DeepReadOnlyT tvar))
+                ),
+              OpenT tout
+            )
+        | (UnionT (reason, rep), DeepReadOnlyT tout) ->
+          let dro_union =
+            map_union
+              ~f:(fun cx trace t tout ->
+                let tout = open_tvar tout in
+                rec_flow cx trace (t, DeepReadOnlyT tout))
+              cx
+              trace
+              rep
+              reason
+          in
+          rec_flow_t ~use_op:unknown_use cx trace (dro_union, OpenT tout)
+        | (DefT (r, t, ObjT ({ Type.flags; _ } as o)), DeepReadOnlyT tout) ->
+          rec_flow_t
+            ~use_op:unknown_use
+            cx
+            trace
+            (DefT (r, t, ObjT { o with Type.flags = { flags with react_dro = true } }), OpenT tout)
+        | ( DefT (r, trust, ArrT (TupleAT { elem_t; elements; arity; react_dro = _ })),
+            DeepReadOnlyT tout
+          ) ->
+          rec_flow_t
+            ~use_op:unknown_use
+            cx
+            trace
+            ( DefT (r, trust, ArrT (TupleAT { elem_t; elements; arity; react_dro = true })),
+              OpenT tout
+            )
+        | (DefT (r, trust, ArrT (ArrayAT { elem_t; tuple_view; react_dro = _ })), DeepReadOnlyT tout)
+          ->
+          rec_flow_t
+            ~use_op:unknown_use
+            cx
+            trace
+            (DefT (r, trust, ArrT (ArrayAT { elem_t; tuple_view; react_dro = true })), OpenT tout)
+        | (DefT (r, trust, ArrT (ROArrayAT (t, _))), DeepReadOnlyT tout) ->
+          rec_flow_t
+            ~use_op:unknown_use
+            cx
+            trace
+            (DefT (r, trust, ArrT (ROArrayAT (t, true))), OpenT tout)
+        | ((IntersectionT _ | OpaqueT _ | DefT (_, _, PolyT _)), DeepReadOnlyT tout) ->
+          rec_flow_t ~use_op:unknown_use cx trace (l, OpenT tout)
         (***************)
         (* maybe types *)
         (***************)
@@ -5550,6 +5622,7 @@ struct
         | (_, WriteComputedObjPropCheckT { reason = _; reason_key; _ }) ->
           let reason = reason_of_t l in
           add_output cx ~trace (Error_message.EObjectComputedPropertyAssign (reason, reason_key))
+        | (_, DeepReadOnlyT tout) -> rec_flow_t ~use_op:unknown_use cx trace (l, OpenT tout)
         | _ ->
           add_output
             cx
@@ -5821,6 +5894,9 @@ struct
           ~use_op
           (fun t_out' -> UseT (use_op, OptionalT { opt with type_ = t_out' }))
           t_out;
+        true
+      | DeepReadOnlyT t_out ->
+        narrow_generic_tvar (fun t_out' -> DeepReadOnlyT t_out') t_out;
         true
       | FilterMaybeT (use_op, t_out) ->
         narrow_generic (fun t_out' -> FilterMaybeT (use_op, t_out')) t_out;
@@ -6178,6 +6254,7 @@ struct
     | GuardT _
     | FilterOptionalT _
     | FilterMaybeT _
+    | DeepReadOnlyT _
     | ImportDefaultT _
     | ImportModuleNsT _
     | ImportNamedT _
@@ -7032,6 +7109,7 @@ struct
                 )
               )
             | ReadOnlyType -> Object.(ObjKitT (use_op, reason, Resolve Next, ReadOnly, OpenT tout))
+            | ReactDRO -> DeepReadOnlyT tout
             | PartialType -> Object.(ObjKitT (use_op, reason, Resolve Next, Partial, OpenT tout))
             | RequiredType -> Object.(ObjKitT (use_op, reason, Resolve Next, Required, OpenT tout))
             | ValuesType -> GetValuesT (reason, OpenT tout)

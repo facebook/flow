@@ -200,6 +200,7 @@ class ['a] t =
     method destructor cx acc =
       function
       | NonMaybeType
+      | ReactDRO
       | OptionalIndexedAccessResultType _
       | OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessStrLitIndex _ }
       | PropertyType _

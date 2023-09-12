@@ -860,6 +860,7 @@ module rec TypeTerm : sig
       }
     | FilterOptionalT of use_op * t
     | FilterMaybeT of use_op * t
+    | DeepReadOnlyT of tvar
     | ImplicitVoidReturnT of {
         use_op: use_op;
         reason: reason;
@@ -1558,6 +1559,7 @@ module rec TypeTerm : sig
     | ReactConfigType of t
     | ReactCheckComponentConfig of Property.t NameUtils.Map.t
     | ReactCheckComponentRef
+    | ReactDRO
     | MappedType of {
         (* Homomorphic mapped types use an inline keyof: {[key in keyof O]: T} or a type parameter
          * bound by $Keys/keyof: type Homomorphic<Keys: $Keys<O>> = {[key in O]: T *)
@@ -4013,6 +4015,7 @@ let string_of_use_ctor = function
   | ResolveUnionT _ -> "ResolveUnionT"
   | FilterOptionalT _ -> "FilterOptionalT"
   | FilterMaybeT _ -> "FilterMaybeT"
+  | DeepReadOnlyT _ -> "DeepReadOnlyT"
   | SealGenericT _ -> "SealGenericT"
   | OptionalIndexedAccessT _ -> "OptionalIndexedAccessT"
   | CheckUnusedPromiseT _ -> "CheckUnusedPromiseT"
