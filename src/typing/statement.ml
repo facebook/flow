@@ -2414,14 +2414,22 @@ module Make
         let element_reason = mk_reason Reason.unknown_elem_empty_array_desc loc in
         let elem_t = Context.mk_placeholder cx element_reason in
         ( ( loc,
-            DefT (reason, make_trust (), ArrT (ArrayAT { elem_t; tuple_view = Some ([], (0, 0)) }))
+            DefT
+              ( reason,
+                make_trust (),
+                ArrT (ArrayAT { elem_t; tuple_view = Some ([], (0, 0)); react_dro = false })
+              )
           ),
           Array { Array.elements = []; comments }
         )
       | [] ->
         let (reason, elem_t) = empty_array cx loc in
         ( ( loc,
-            DefT (reason, make_trust (), ArrT (ArrayAT { elem_t; tuple_view = Some ([], (0, 0)) }))
+            DefT
+              ( reason,
+                make_trust (),
+                ArrT (ArrayAT { elem_t; tuple_view = Some ([], (0, 0)); react_dro = false })
+              )
           ),
           Array { Array.elements = []; comments }
         )
@@ -6009,7 +6017,11 @@ module Make
       let arr_reason = mk_reason RArrayType loc in
       let (((_, o), _) as e_ast) = expression cx e in
       let keys_t = get_keys ~arr_reason o in
-      ( DefT (arr_reason, bogus_trust (), ArrT (ArrayAT { elem_t = keys_t; tuple_view = None })),
+      ( DefT
+          ( arr_reason,
+            bogus_trust (),
+            ArrT (ArrayAT { elem_t = keys_t; tuple_view = None; react_dro = false })
+          ),
         None,
         (args_loc, { ArgList.arguments = [Expression e_ast]; comments })
       )
@@ -6019,7 +6031,8 @@ module Make
       ( DefT
           ( arr_reason,
             bogus_trust (),
-            ArrT (ArrayAT { elem_t = get_values ~arr_reason o; tuple_view = None })
+            ArrT
+              (ArrayAT { elem_t = get_values ~arr_reason o; tuple_view = None; react_dro = false })
           ),
         None,
         (args_loc, { ArgList.arguments = [Expression e_ast]; comments })
@@ -6039,6 +6052,7 @@ module Make
               (TupleAT
                  {
                    elem_t;
+                   react_dro = false;
                    elements =
                      [
                        mk_tuple_element ~name:"key" elem_reason keys_t;
@@ -6049,7 +6063,11 @@ module Make
               )
           )
       in
-      ( DefT (arr_reason, bogus_trust (), ArrT (ArrayAT { elem_t = entry_t; tuple_view = None })),
+      ( DefT
+          ( arr_reason,
+            bogus_trust (),
+            ArrT (ArrayAT { elem_t = entry_t; tuple_view = None; react_dro = false })
+          ),
         None,
         (args_loc, { ArgList.arguments = [Expression e_ast]; comments })
       )

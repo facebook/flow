@@ -1076,7 +1076,7 @@ end = struct
           None
       in
       match (elt_t, desc) with
-      | (T.ArrayAT { elem_t = _; tuple_view = Some (elements', _) }, RRestArrayLit _)
+      | (T.ArrayAT { elem_t = _; tuple_view = Some (elements', _); react_dro = _ }, RRestArrayLit _)
       | (T.TupleAT { elements = elements'; _ }, _) ->
         let%map elements =
           mapM
@@ -1094,7 +1094,7 @@ end = struct
       | (T.ArrayAT { elem_t; _ }, _) ->
         let%map arr_elt_t = type__ ~env elem_t in
         Ty.Arr { Ty.arr_readonly = false; arr_literal; arr_elt_t }
-      | (T.ROArrayAT t, _) ->
+      | (T.ROArrayAT (t, _), _) ->
         let%map t = type__ ~env t in
         Ty.Arr { Ty.arr_readonly = true; arr_literal; arr_elt_t = t }
 

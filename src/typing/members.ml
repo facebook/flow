@@ -208,12 +208,26 @@ let rec merge_type cx =
           map2
       in
       let id = Context.generate_property_map cx map in
-      let flags = { frozen = o1.flags.frozen && o2.flags.frozen; obj_kind } in
+      let flags =
+        {
+          frozen = o1.flags.frozen && o2.flags.frozen;
+          obj_kind;
+          react_dro = o1.flags.react_dro && o2.flags.react_dro;
+        }
+      in
       let reason = locationless_reason (RCustom "object") in
       mk_object_def_type ~reason ~flags ~call id o1.proto_t
     | _ -> create_union (UnionRep.make t1 t2 []))
-  | ( DefT (_, _, ArrT (ArrayAT { elem_t = t1; tuple_view = Some (elements1, arity1) })),
-      DefT (_, _, ArrT (ArrayAT { elem_t = t2; tuple_view = Some (elements2, arity2) }))
+  | ( DefT
+        ( _,
+          _,
+          ArrT (ArrayAT { elem_t = t1; tuple_view = Some (elements1, arity1); react_dro = dro1 })
+        ),
+      DefT
+        ( _,
+          _,
+          ArrT (ArrayAT { elem_t = t2; tuple_view = Some (elements2, arity2); react_dro = dro2 })
+        )
     )
     when arity1 = arity2
          && List.for_all2
@@ -242,18 +256,26 @@ let rec merge_type cx =
     DefT
       ( locationless_reason (RCustom "array"),
         bogus_trust (),
-        ArrT (ArrayAT { elem_t = merge_type cx (t1, t2); tuple_view = Some (elements, arity1) })
+        ArrT
+          (ArrayAT
+             {
+               elem_t = merge_type cx (t1, t2);
+               tuple_view = Some (elements, arity1);
+               react_dro = dro1 && dro2;
+             }
+          )
       )
-  | ( DefT (_, _, ArrT (ArrayAT { elem_t = t1; tuple_view = _ })),
-      DefT (_, _, ArrT (ArrayAT { elem_t = t2; tuple_view = _ }))
+  | ( DefT (_, _, ArrT (ArrayAT { elem_t = t1; tuple_view = _; react_dro = dro1 })),
+      DefT (_, _, ArrT (ArrayAT { elem_t = t2; tuple_view = _; react_dro = dro2 }))
     ) ->
     DefT
       ( locationless_reason (RCustom "array"),
         bogus_trust (),
-        ArrT (ArrayAT { elem_t = merge_type cx (t1, t2); tuple_view = None })
+        ArrT
+          (ArrayAT { elem_t = merge_type cx (t1, t2); tuple_view = None; react_dro = dro1 && dro2 })
       )
-  | ( DefT (_, _, ArrT (TupleAT { elem_t = t1; elements = ts1; arity = arity1 })),
-      DefT (_, _, ArrT (TupleAT { elem_t = t2; elements = ts2; arity = arity2 }))
+  | ( DefT (_, _, ArrT (TupleAT { elem_t = t1; elements = ts1; arity = arity1; react_dro = dro1 })),
+      DefT (_, _, ArrT (TupleAT { elem_t = t2; elements = ts2; arity = arity2; react_dro = dro2 }))
     )
     when arity1 = arity2
          && List.for_all2
@@ -269,6 +291,7 @@ let rec merge_type cx =
           (TupleAT
              {
                elem_t = merge_type cx (t1, t2);
+               react_dro = dro1 && dro2;
                elements =
                  Base.List.map2_exn
                    ~f:
@@ -291,11 +314,11 @@ let rec merge_type cx =
              }
           )
       )
-  | (DefT (_, _, ArrT (ROArrayAT elemt1)), DefT (_, _, ArrT (ROArrayAT elemt2))) ->
+  | (DefT (_, _, ArrT (ROArrayAT (elemt1, dro1))), DefT (_, _, ArrT (ROArrayAT (elemt2, dro2)))) ->
     DefT
       ( locationless_reason (RCustom "read only array"),
         bogus_trust (),
-        ArrT (ROArrayAT (merge_type cx (elemt1, elemt2)))
+        ArrT (ROArrayAT (merge_type cx (elemt1, elemt2), dro1 && dro2))
       )
   | (MaybeT (_, t1), MaybeT (_, t2))
   | (MaybeT (_, t1), t2)
@@ -511,7 +534,7 @@ let rec extract_type cx this_t =
       match arrtype with
       | ArrayAT { elem_t; _ } -> (get_builtin cx (OrdinaryName "Array") reason, elem_t)
       | TupleAT { elem_t; _ }
-      | ROArrayAT elem_t ->
+      | ROArrayAT (elem_t, _) ->
         (get_builtin cx (OrdinaryName "$ReadOnlyArray") reason, elem_t)
     in
     let array_t = resolve_type cx builtin in

@@ -501,7 +501,13 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
         in
         let len = Base.List.length tuple_ts in
         let t =
-          TupleAT { elem_t; elements = Base.List.rev tuple_elements_rev; arity = (len, len) }
+          TupleAT
+            {
+              elem_t;
+              elements = Base.List.rev tuple_elements_rev;
+              arity = (len, len);
+              react_dro = false;
+            }
         in
         let reason = update_desc_reason (fun _ -> RTupleType) reason in
         (reason, t)
@@ -527,7 +533,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
           | [] -> rest_elem_t
           | t :: ts -> UnionT (reason, UnionRep.make rest_elem_t t ts)
         in
-        let t = ArrayAT { elem_t; tuple_view = None } in
+        let t = ArrayAT { elem_t; tuple_view = None; react_dro = false } in
         let reason = update_desc_reason (fun _ -> RArray) reason in
         (reason, t)
     in

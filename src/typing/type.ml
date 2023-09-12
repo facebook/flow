@@ -1214,6 +1214,7 @@ module rec TypeTerm : sig
 
   and arrtype =
     | ArrayAT of {
+        react_dro: bool; (* Should elements of this array be treated as propagating read-only *)
         elem_t: t;
         tuple_view: (tuple_element list * (int * int)) option;
       }
@@ -1222,6 +1223,7 @@ module rec TypeTerm : sig
      * myTuple[expr]
      *)
     | TupleAT of {
+        react_dro: bool; (* As ArrayAT *)
         elem_t: t;
         elements: tuple_element list;
         (* Arity represents the range of valid arities, considering optional elements.
@@ -1230,7 +1232,7 @@ module rec TypeTerm : sig
       }
     (* ROArrayAT(elemt) is the super type for all tuples and arrays for which
      * elemt is a supertype of every element type *)
-    | ROArrayAT of t
+    | ROArrayAT of t * (* react_dro, as above *) bool
 
   and tuple_element =
     | TupleElement of {
@@ -1368,6 +1370,7 @@ module rec TypeTerm : sig
 
   and flags = {
     frozen: bool;
+    react_dro: bool;
     obj_kind: obj_kind;
   }
 
@@ -4084,7 +4087,7 @@ let extract_getter_type = function
 
 let elemt_of_arrtype = function
   | ArrayAT { elem_t; _ }
-  | ROArrayAT elem_t
+  | ROArrayAT (elem_t, _)
   | TupleAT { elem_t; _ } ->
     elem_t
 
@@ -4179,7 +4182,7 @@ let mk_opt_methodcalltype
     ?opt_meth_generic_this opt_meth_targs opt_meth_args_tlist opt_meth_strict_arity =
   { opt_meth_generic_this; opt_meth_targs; opt_meth_args_tlist; opt_meth_strict_arity }
 
-let default_flags = { obj_kind = Exact; frozen = false }
+let default_flags = { obj_kind = Exact; frozen = false; react_dro = false }
 
 let mk_objecttype ?(flags = default_flags) ~call pmap proto =
   { flags; proto_t = proto; props_tmap = pmap; call_t = call; reachable_targs = [] }

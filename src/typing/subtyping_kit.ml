@@ -1761,8 +1761,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (********************************************)
 
     (* Arrays can flow to arrays *)
-    | ( DefT (r1, _, ArrT (ArrayAT { elem_t = t1; tuple_view = tv1 })),
-        DefT (r2, _, ArrT (ArrayAT { elem_t = t2; tuple_view = tv2 }))
+    | ( DefT (r1, _, ArrT (ArrayAT { elem_t = t1; tuple_view = tv1; react_dro = _ })),
+        DefT (r2, _, ArrT (ArrayAT { elem_t = t2; tuple_view = tv2; react_dro = _ }))
       ) ->
       let use_op = Frame (ArrayElementCompatibility { lower = r1; upper = r2 }, use_op) in
       let lit1 = desc_of_reason r1 = RArrayLit in
@@ -1780,8 +1780,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
       in
       array_flow cx trace use_op lit1 r1 (ts1, t1, ts2, t2)
     (* Tuples can flow to tuples with the same arity *)
-    | ( DefT (r1, _, ArrT (TupleAT { elem_t = _; elements = elements1; arity = arity1 })),
-        DefT (r2, _, ArrT (TupleAT { elem_t = _; elements = elements2; arity = arity2 }))
+    | ( DefT
+          (r1, _, ArrT (TupleAT { elem_t = _; elements = elements1; arity = arity1; react_dro = _ })),
+        DefT
+          (r2, _, ArrT (TupleAT { elem_t = _; elements = elements2; arity = arity2; react_dro = _ }))
       ) ->
       let fresh =
         match desc_of_reason r1 with
@@ -1878,8 +1880,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
             | _ -> ())
           (elements1, elements2)
     (* Arrays with known elements can flow to tuples *)
-    | (DefT (r1, trust, ArrT (ArrayAT { elem_t = t1; tuple_view })), DefT (r2, _, ArrT (TupleAT _)))
-      -> begin
+    | ( DefT (r1, trust, ArrT (ArrayAT { elem_t = t1; tuple_view; react_dro })),
+        DefT (r2, _, ArrT (TupleAT _))
+      ) -> begin
       match tuple_view with
       | None -> add_output cx ~trace (Error_message.ENonLitArrayToTuple ((r1, r2), use_op))
       | Some (elements, arity) ->
@@ -1887,18 +1890,19 @@ module Make (Flow : INPUT) : OUTPUT = struct
           cx
           trace
           ~use_op
-          (DefT (r1, trust, ArrT (TupleAT { elem_t = t1; elements; arity })), u)
+          (DefT (r1, trust, ArrT (TupleAT { elem_t = t1; elements; arity; react_dro })), u)
     end
     (* Read only arrays are the super type of all tuples and arrays *)
-    | ( DefT (r1, _, ArrT (ArrayAT { elem_t = t1; _ } | TupleAT { elem_t = t1; _ } | ROArrayAT t1)),
-        DefT (r2, _, ArrT (ROArrayAT t2))
+    | ( DefT
+          (r1, _, ArrT (ArrayAT { elem_t = t1; _ } | TupleAT { elem_t = t1; _ } | ROArrayAT (t1, _))),
+        DefT (r2, _, ArrT (ROArrayAT (t2, _)))
       ) ->
       let use_op = Frame (ArrayElementCompatibility { lower = r1; upper = r2 }, use_op) in
       rec_flow cx trace (t1, UseT (use_op, t2))
     | (DefT (_, _, InstanceT _), DefT (r2, _, ArrT (ArrayAT { elem_t; _ }))) ->
       let arrt = get_builtin_typeapp cx ~trace r2 (OrdinaryName "Array") [elem_t] in
       rec_flow cx trace (l, UseT (use_op, arrt))
-    | (DefT (_, _, InstanceT _), DefT (r2, _, ArrT (ROArrayAT elemt))) ->
+    | (DefT (_, _, InstanceT _), DefT (r2, _, ArrT (ROArrayAT (elemt, _)))) ->
       let arrt = get_builtin_typeapp cx ~trace r2 (OrdinaryName "$ReadOnlyArray") [elemt] in
       rec_flow cx trace (l, UseT (use_op, arrt))
     (**************************************************)

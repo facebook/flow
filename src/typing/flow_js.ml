@@ -1982,7 +1982,7 @@ struct
                   DefT
                     ( replace_desc_new_reason (RCustom "Array expected for spread") reason,
                       bogus_trust (),
-                      ArrT (ROArrayAT elem_t)
+                      ArrT (ROArrayAT (elem_t, false))
                     )
                 | `Tuple ->
                   add_output
@@ -1994,7 +1994,7 @@ struct
                   AnyT.error reason
               in
               rec_flow_t ~use_op:unknown_use cx trace (l, resolve_to_type);
-              ArrayAT { elem_t; tuple_view = None }
+              ArrayAT { elem_t; tuple_view = None; react_dro = false }
           in
           let elemt = elemt_of_arrtype arrtype in
           begin
@@ -2099,9 +2099,9 @@ struct
                     let new_arrtype =
                       match arrtype with
                       (* These can get us into constant folding loops *)
-                      | ArrayAT { elem_t; tuple_view = Some _ }
-                      | TupleAT { elem_t; _ } ->
-                        ArrayAT { elem_t; tuple_view = None }
+                      | ArrayAT { elem_t; tuple_view = Some _; react_dro }
+                      | TupleAT { elem_t; react_dro; _ } ->
+                        ArrayAT { elem_t; tuple_view = None; react_dro }
                       (* These cannot *)
                       | ArrayAT { tuple_view = None; _ }
                       | ROArrayAT _ ->
@@ -3821,8 +3821,8 @@ struct
         | (DefT (reason_arr, _, ArrT arrtype), ObjAssignFromT (use_op, r, o, t, ObjSpreadAssign)) ->
         begin
           match arrtype with
-          | ArrayAT { elem_t; tuple_view = None }
-          | ROArrayAT elem_t ->
+          | ArrayAT { elem_t; tuple_view = None; react_dro = _ }
+          | ROArrayAT (elem_t, _) ->
             (* Object.assign(o, ...Array<x>) -> Object.assign(o, x) *)
             rec_flow cx trace (elem_t, ObjAssignFromT (use_op, r, o, t, default_obj_assign_kind))
           | TupleAT { elements; _ } ->
@@ -4153,16 +4153,17 @@ struct
             | ArrayAT { tuple_view = None; _ }
             | ROArrayAT _ ->
               arrtype
-            | ArrayAT { elem_t; tuple_view = Some (elements, (num_req, num_total)) } ->
+            | ArrayAT { elem_t; tuple_view = Some (elements, (num_req, num_total)); react_dro } ->
               let elements = Base.List.drop elements i in
               let arity = (max (num_req - i) 0, max (num_total - i) 0) in
-              ArrayAT { elem_t; tuple_view = Some (elements, arity) }
-            | TupleAT { elem_t; elements; arity = (num_req, num_total) } ->
+              ArrayAT { elem_t; tuple_view = Some (elements, arity); react_dro }
+            | TupleAT { elem_t; elements; arity = (num_req, num_total); react_dro } ->
               TupleAT
                 {
                   elem_t;
                   elements = Base.List.drop elements i;
                   arity = (max (num_req - i) 0, max (num_total - i) 0);
+                  react_dro;
                 }
           in
           let a = DefT (reason, trust, ArrT arrtype) in
@@ -4196,10 +4197,11 @@ struct
           in
           let arrtype =
             match arrtype with
-            | ArrayAT { elem_t; tuple_view } ->
+            | ArrayAT { elem_t; tuple_view; react_dro } ->
               ArrayAT
                 {
                   elem_t = f elem_t;
+                  react_dro;
                   tuple_view =
                     Base.Option.map
                       ~f:(fun (elements, arity) ->
@@ -4212,10 +4214,11 @@ struct
                         (elements, arity))
                       tuple_view;
                 }
-            | TupleAT { elem_t; elements; arity } ->
+            | TupleAT { elem_t; elements; arity; react_dro } ->
               TupleAT
                 {
                   elem_t = f elem_t;
+                  react_dro;
                   elements =
                     Base.List.map
                       ~f:(fun (TupleElement { name; t; polarity; optional; reason }) ->
@@ -4223,7 +4226,7 @@ struct
                       elements;
                   arity;
                 }
-            | ROArrayAT elemt -> ROArrayAT (f elemt)
+            | ROArrayAT (elemt, dro) -> ROArrayAT (f elemt, dro)
           in
           let t =
             let reason = replace_desc_reason RArrayType reason_op in
@@ -4239,7 +4242,7 @@ struct
                 Eval.generate_id ()
               )
           in
-          let t = DefT (reason, bogus_trust (), ArrT (ROArrayAT elemt)) in
+          let t = DefT (reason, bogus_trust (), ArrT (ROArrayAT (elemt, false))) in
           rec_flow cx trace (t, MapTypeT (use_op, reason, TupleMap funt, tout))
         | (DefT (_, trust, ObjT o), MapTypeT (use_op, reason_op, ObjectMap funt, tout)) ->
           let map_t _ t =
@@ -5412,7 +5415,7 @@ struct
         (*************************)
         (* Tuple "length" access *)
         (*************************)
-        | ( DefT (reason, trust, ArrT (TupleAT { elem_t = _; elements = _; arity })),
+        | ( DefT (reason, trust, ArrT (TupleAT { elem_t = _; elements = _; arity; react_dro = _ })),
             GetPropT (_, _, _, Named { name = OrdinaryName "length"; _ }, tout)
           ) ->
           GetPropTKit.on_array_length cx trace reason trust arity (reason_of_use_t u) tout
@@ -5940,14 +5943,15 @@ struct
     let only_any _ = any in
     match t with
     | DefT (r, trust, ArrT (ArrayAT _)) ->
-      DefT (r, trust, ArrT (ArrayAT { elem_t = any; tuple_view = None }))
-    | DefT (r, trust, ArrT (TupleAT { elements; arity; _ })) ->
+      DefT (r, trust, ArrT (ArrayAT { elem_t = any; tuple_view = None; react_dro = false }))
+    | DefT (r, trust, ArrT (TupleAT { elements; arity; react_dro; _ })) ->
       DefT
         ( r,
           trust,
           ArrT
             (TupleAT
                {
+                 react_dro;
                  elem_t = any;
                  elements =
                    Base.List.map
@@ -6111,7 +6115,7 @@ struct
       let renders = DefT (reason_obj, bogus_trust (), RendersT upper_renders) in
       covariant_flow ~use_op renders;
       true
-    | UseT (use_op, DefT (_, _, ArrT (ROArrayAT t))) (* read-only arrays are covariant *)
+    | UseT (use_op, DefT (_, _, ArrT (ROArrayAT (t, _)))) (* read-only arrays are covariant *)
     | UseT (use_op, DefT (_, _, ClassT t)) (* mk_instance ~for_type:false *)
     | UseT (use_op, ExactT (_, t)) ->
       covariant_flow ~use_op t;
@@ -6313,7 +6317,7 @@ struct
       (* Keys cannot be tainted by any *)
       true
     | DefT (_, _, ClassT t)
-    | DefT (_, _, ArrT (ROArrayAT t))
+    | DefT (_, _, ArrT (ROArrayAT (t, _)))
     | DefT (_, _, TypeT (_, t)) ->
       covariant_flow ~use_op t;
       true
@@ -6419,7 +6423,7 @@ struct
     in
     let o =
       {
-        flags = { obj_kind; frozen = false };
+        flags = { obj_kind; frozen = false; react_dro = false };
         props_tmap;
         (* Interfaces have no prototype *)
         proto_t = ObjProtoT reason_struct;
@@ -6443,7 +6447,7 @@ struct
           ltrust,
           ObjT
             {
-              flags = { obj_kind = lkind; frozen = lfrozen };
+              flags = { obj_kind = lkind; frozen = lfrozen; react_dro = _ };
               props_tmap = lprops;
               proto_t = lproto;
               call_t = lcall;
@@ -6459,7 +6463,7 @@ struct
             ltrust,
             ObjT
               {
-                flags = { obj_kind = lkind; frozen = lfrozen };
+                flags = { obj_kind = lkind; frozen = lfrozen; react_dro = false };
                 props_tmap = lprops;
                 proto_t = lproto;
                 call_t = lcall;
@@ -8016,7 +8020,7 @@ struct
           (* TODO: add test for sentinel test on implements *)
           flow_sentinel sense own_props obj s
         (* tuple.length ===/!== literal value *)
-        | DefT (reason, trust, ArrT (TupleAT { elem_t = _; elements = _; arity }))
+        | DefT (reason, trust, ArrT (TupleAT { elem_t = _; elements = _; arity; react_dro = _ }))
           when key = "length" ->
           let test =
             let desc = RMatchingProp (key, desc_of_sentinel s) in
@@ -8519,8 +8523,8 @@ struct
           resolve_id cx trace ~use_op:(unify_flip use_op) id t
         | (DefT (_, _, PolyT { id = id1; _ }), DefT (_, _, PolyT { id = id2; _ })) when id1 = id2 ->
           ()
-        | ( DefT (_, _, ArrT (ArrayAT { elem_t = t1; tuple_view = tv1 })),
-            DefT (_, _, ArrT (ArrayAT { elem_t = t2; tuple_view = tv2 }))
+        | ( DefT (_, _, ArrT (ArrayAT { elem_t = t1; tuple_view = tv1; react_dro = _ })),
+            DefT (_, _, ArrT (ArrayAT { elem_t = t2; tuple_view = tv2; react_dro = _ }))
           ) ->
           let ts1 =
             Base.Option.value_map
@@ -8535,8 +8539,16 @@ struct
               tv2
           in
           array_unify cx trace ~use_op (ts1, t1, ts2, t2)
-        | ( DefT (r1, _, ArrT (TupleAT { elem_t = _; elements = elements1; arity = arity1 })),
-            DefT (r2, _, ArrT (TupleAT { elem_t = _; elements = elements2; arity = arity2 }))
+        | ( DefT
+              ( r1,
+                _,
+                ArrT (TupleAT { elem_t = _; elements = elements1; arity = arity1; react_dro = _ })
+              ),
+            DefT
+              ( r2,
+                _,
+                ArrT (TupleAT { elem_t = _; elements = elements2; arity = arity2; react_dro = _ })
+              )
           ) ->
           let (num_req1, num_total1) = arity1 in
           let (num_req2, num_total2) = arity2 in
@@ -8959,7 +8971,7 @@ struct
               DefT
                 ( reason,
                   bogus_trust (),
-                  ArrT (ArrayAT { elem_t = spread_arg_elemt; tuple_view = None })
+                  ArrT (ArrayAT { elem_t = spread_arg_elemt; tuple_view = None; react_dro = false })
                 )
             in
             let spread_array =
@@ -9094,7 +9106,10 @@ struct
             DefT
               ( reason_op,
                 bogus_trust (),
-                ArrT (ArrayAT { elem_t = AnyT.why any_src reason_op; tuple_view = None })
+                ArrT
+                  (ArrayAT
+                     { elem_t = AnyT.why any_src reason_op; tuple_view = None; react_dro = false }
+                  )
               )
           (* Array literals can flow to a tuple. Arrays can't. So if the presence
            * of an `any` forces us to degrade an array literal to Array<any> then
@@ -9196,7 +9211,11 @@ struct
             | (ResolveToArray, _, _)
             | (ResolveToArrayLiteral, None, _)
             | (ResolveToArrayLiteral, _, true) ->
-              DefT (reason_op, bogus_trust (), ArrT (ArrayAT { elem_t; tuple_view = None }))
+              DefT
+                ( reason_op,
+                  bogus_trust (),
+                  ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = false })
+                )
             | (ResolveToArrayLiteral, Some elements, _) ->
               let (valid, arity) =
                 validate_tuple_elements
@@ -9210,10 +9229,14 @@ struct
                 DefT
                   ( reason_op,
                     bogus_trust (),
-                    ArrT (ArrayAT { elem_t; tuple_view = Some (elements, arity) })
+                    ArrT (ArrayAT { elem_t; tuple_view = Some (elements, arity); react_dro = false })
                   )
               else
-                DefT (reason_op, bogus_trust (), ArrT (ArrayAT { elem_t; tuple_view = None }))
+                DefT
+                  ( reason_op,
+                    bogus_trust (),
+                    ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = false })
+                  )
             | (ResolveToTupleType, Some elements, _) ->
               let (valid, arity) =
                 validate_tuple_elements
@@ -9224,7 +9247,11 @@ struct
                   elements
               in
               if valid then
-                DefT (reason_op, bogus_trust (), ArrT (TupleAT { elem_t; elements; arity }))
+                DefT
+                  ( reason_op,
+                    bogus_trust (),
+                    ArrT (TupleAT { elem_t; elements; arity; react_dro = false })
+                  )
               else
                 AnyT.error reason_op
             | (ResolveToTupleType, None, _) -> AnyT.error reason_op

@@ -135,12 +135,12 @@ and collect_of_type ?log_unresolved cx acc = function
       | _ -> ts
     in
     collect_of_types ?log_unresolved cx acc ts
-  | DefT (_, _, ArrT (ArrayAT { elem_t; tuple_view = None })) ->
+  | DefT (_, _, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = _ })) ->
     collect_of_type ?log_unresolved cx acc elem_t
-  | DefT (_, _, ArrT (ArrayAT { elem_t; tuple_view = Some (elements, _) }))
-  | DefT (_, _, ArrT (TupleAT { elem_t; elements; arity = _ })) ->
+  | DefT (_, _, ArrT (ArrayAT { elem_t; tuple_view = Some (elements, _); react_dro = _ }))
+  | DefT (_, _, ArrT (TupleAT { elem_t; elements; arity = _; react_dro = _ })) ->
     collect_of_types ?log_unresolved cx acc (elem_t :: TypeUtil.tuple_ts_of_elements elements)
-  | DefT (_, _, ArrT (ROArrayAT elemt)) -> collect_of_type ?log_unresolved cx acc elemt
+  | DefT (_, _, ArrT (ROArrayAT (elemt, _))) -> collect_of_type ?log_unresolved cx acc elemt
   | DefT
       ( _,
         _,
@@ -279,15 +279,16 @@ and collect_of_destructor ?log_unresolved cx acc = function
         | ResolvedArg (TupleElement { t; _ }, _) -> collect_of_type ?log_unresolved cx acc t
         | ResolvedSpreadArg (_, arr, _) ->
           (match arr with
-          | ArrayAT { elem_t; tuple_view = None } -> collect_of_type ?log_unresolved cx acc elem_t
-          | ArrayAT { elem_t; tuple_view = Some (elements, _) }
-          | TupleAT { elem_t; elements; arity = _ } ->
+          | ArrayAT { elem_t; tuple_view = None; react_dro = _ } ->
+            collect_of_type ?log_unresolved cx acc elem_t
+          | ArrayAT { elem_t; tuple_view = Some (elements, _); react_dro = _ }
+          | TupleAT { elem_t; elements; arity = _; react_dro = _ } ->
             collect_of_types
               ?log_unresolved
               cx
               acc
               (elem_t :: TypeUtil.tuple_ts_of_elements elements)
-          | ROArrayAT elemt -> collect_of_type ?log_unresolved cx acc elemt)
+          | ROArrayAT (elemt, _) -> collect_of_type ?log_unresolved cx acc elemt)
         | ResolvedAnySpreadArg _ -> acc)
       acc
       resolved

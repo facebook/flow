@@ -246,9 +246,10 @@ let rec dump_t_ (depth, tvars) cx t =
           spf "Indexed {[%s]: %s}" (p ~reason:false key) (p ~reason:false value)
       in
       p ~trust:(Some trust) t ~extra:(spf "%s, %s" (Properties.string_of_id props_tmap) obj_kind)
-    | DefT (_, trust, ArrT (ArrayAT { elem_t; tuple_view = None })) ->
+    | DefT (_, trust, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = _ })) ->
       p ~trust:(Some trust) ~extra:(spf "Array %s" (kid elem_t)) t
-    | DefT (_, trust, ArrT (ArrayAT { elem_t; tuple_view = Some (elements, _arity) })) ->
+    | DefT (_, trust, ArrT (ArrayAT { elem_t; tuple_view = Some (elements, _arity); react_dro = _ }))
+      ->
       p
         ~trust:(Some trust)
         ~extra:
@@ -273,7 +274,7 @@ let rec dump_t_ (depth, tvars) cx t =
              (String.concat ", " (Base.List.map ~f:(fun (TupleElement { t; _ }) -> kid t) elements))
           )
         t
-    | DefT (_, trust, ArrT (ROArrayAT elemt)) ->
+    | DefT (_, trust, ArrT (ROArrayAT (elemt, _))) ->
       p ~trust:(Some trust) ~extra:(spf "ReadOnlyArray %s" (kid elemt)) t
     | DefT (_, trust, CharSetT chars) ->
       p ~trust:(Some trust) ~extra:(spf "<%S>" (String_utils.CharSet.to_string chars)) t
@@ -538,7 +539,7 @@ and dump_use_t_ (depth, tvars) cx t =
       | None -> Exact
       | Some d -> Indexed d
     in
-    let flags = { obj_kind; frozen = false } in
+    let flags = { obj_kind; frozen = false; react_dro = false } in
     slice { Object.reason; props; flags; generics = Generic.spread_empty; interface = None }
   in
   let object_kit =

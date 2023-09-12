@@ -479,7 +479,9 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     | (loc, Array { Array.argument = t; comments }) ->
       let r = mk_annot_reason RArrayType loc in
       let (((_, elem_t), _) as t_ast) = convert cx tparams_map infer_tparams_map t in
-      ( (loc, DefT (r, infer_trust cx, ArrT (ArrayAT { elem_t; tuple_view = None }))),
+      ( ( loc,
+          DefT (r, infer_trust cx, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = false }))
+        ),
         Array { Array.argument = t_ast; comments }
       )
     | (loc, Conditional { Conditional.check_type; extends_type; true_type; false_type; comments })
@@ -787,7 +789,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                 (DefT
                    ( mk_annot_reason RArrayLit loc,
                      infer_trust cx,
-                     ArrT (ArrayAT { elem_t; tuple_view = None })
+                     ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = false })
                    )
                 )
                 targs
@@ -801,7 +803,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                 (DefT
                    ( mk_annot_reason RArrayType loc,
                      infer_trust cx,
-                     ArrT (ArrayAT { elem_t; tuple_view = None })
+                     ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = false })
                    )
                 )
                 targs
@@ -812,7 +814,12 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               let (elemts, targs) = convert_type_params () in
               let elemt = List.hd elemts in
               reconstruct_ast
-                (DefT (mk_annot_reason RROArrayType loc, infer_trust cx, ArrT (ROArrayAT elemt)))
+                (DefT
+                   ( mk_annot_reason RROArrayType loc,
+                     infer_trust cx,
+                     ArrT (ROArrayAT (elemt, false))
+                   )
+                )
                 targs
           )
         (* $PropertyType<T, 'x'> acts as the type of 'x' in object type T *)
@@ -1765,7 +1772,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         | Indexed _ -> o.flags.obj_kind
         | _ -> Exact
       in
-      DefT (r, trust, ObjT { o with flags = { obj_kind; frozen = false } })
+      DefT (r, trust, ObjT { o with flags = { obj_kind; frozen = false; react_dro = false } })
     | EvalT (l, TypeDestructorT (use_op, r, SpreadType (_, ts, head_slice)), id) ->
       let r = replace_desc_reason RObjectLit r in
       let target =
@@ -1900,7 +1907,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           else
             Inexact
       in
-      let flags = { obj_kind; frozen = false } in
+      let flags = { obj_kind; frozen = false; react_dro = false } in
       DefT
         ( mk_annot_reason RObjectType loc,
           infer_trust cx,

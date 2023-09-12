@@ -79,7 +79,7 @@ module Make
         (* The rest param must be an object type. *)
         let () =
           let inexact_empty_obj =
-            let flags = Type.{ obj_kind = Inexact; frozen = false } in
+            let flags = Type.{ obj_kind = Inexact; frozen = false; react_dro = true } in
             let call = None in
             let pmap = Context.generate_property_map cx NameUtils.Map.empty in
             let rest_param_reason = TypeUtil.reason_of_t t in

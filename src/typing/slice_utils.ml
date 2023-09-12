@@ -439,7 +439,13 @@ let spread2
         else
           Inexact
     in
-    let flags = { frozen = flags1.frozen && flags2.frozen; obj_kind } in
+    let flags =
+      {
+        frozen = flags1.frozen && flags2.frozen;
+        obj_kind;
+        react_dro = flags1.react_dro && flags2.react_dro;
+      }
+    in
     let generics = Generic.spread_append generics1 generics2 in
     let inexact_reason =
       match (exact1, exact2) with
@@ -471,7 +477,7 @@ let spread =
         | Some d -> Indexed d
         | None -> Exact
       in
-      let flags = { obj_kind; frozen = false } in
+      let flags = { obj_kind; frozen = false; react_dro = false } in
       let props = NameUtils.Map.mapi (read_prop reason flags) prop_map in
       Nel.one (true, None, { Object.reason; props; flags; generics; interface = None })
   in
@@ -510,7 +516,7 @@ let spread_mk_object cx reason target { Object.reason = _; props; flags; generic
       | _ -> Inexact
     in
     let frozen = sealed = Object.Spread.Frozen in
-    { obj_kind; frozen }
+    { obj_kind; frozen; react_dro = flags.react_dro }
   in
   let proto = ObjProtoT reason in
   let call = None in
@@ -675,7 +681,7 @@ let check_config2 cx pmap { Object.reason; props; flags; generics; interface = _
       else
         Inexact
   in
-  let flags = { frozen = flags.frozen; obj_kind } in
+  let flags = { frozen = flags.frozen; obj_kind; react_dro = flags.react_dro } in
   match props with
   | Ok props ->
     let props =
@@ -1034,7 +1040,7 @@ let object_rest
       | (Indexed _, Some d) -> Indexed d
       | _ -> Inexact
     in
-    let flags = { frozen = false; obj_kind } in
+    let flags = { frozen = false; obj_kind; react_dro = flags1.react_dro } in
     let generics = Generic.spread_subtract generics1 generics2 in
     let id = Context.generate_property_map cx props in
     let proto = ObjProtoT r1 in
@@ -1267,7 +1273,13 @@ let intersect2
           Inexact
         )
   in
-  let flags = { frozen = flags1.frozen || flags2.frozen; obj_kind } in
+  let flags =
+    {
+      frozen = flags1.frozen || flags2.frozen;
+      obj_kind;
+      react_dro = flags1.react_dro || flags2.react_dro;
+    }
+  in
   let generics = Generic.spread_append generics1 generics2 in
   (props, flags, generics)
 
@@ -1304,7 +1316,7 @@ let interface_slice cx r ~static ~inst id generics =
     | Some dict -> Indexed dict
     | None -> Inexact
   in
-  let flags = { frozen = false; obj_kind } in
+  let flags = { frozen = false; obj_kind; react_dro = false } in
   object_slice cx ~interface:(Some (static, inst)) r id flags generics
 
 let resolve
@@ -1399,7 +1411,7 @@ let resolve
   (* Mirroring Object.assign() and {...null} semantics, treat null/void as
    * empty objects. *)
   | DefT (_, _, (NullT | VoidT)) ->
-    let flags = { frozen = true; obj_kind = Exact } in
+    let flags = { frozen = true; obj_kind = Exact; react_dro = false } in
     let x =
       Nel.one
         {
@@ -1422,7 +1434,7 @@ let resolve
          | Spread _ ->
            true
          | _ -> false ->
-    let flags = { frozen = true; obj_kind = Exact } in
+    let flags = { frozen = true; obj_kind = Exact; react_dro = false } in
     let x =
       Nel.one
         {
@@ -1443,7 +1455,7 @@ let resolve
    *)
   | DefT (r, _, MixedT _) as t ->
     (* TODO(jmbrown): This should be Inexact *)
-    let flags = { frozen = true; obj_kind = Exact } in
+    let flags = { frozen = true; obj_kind = Exact; react_dro = false } in
     let x =
       match tool with
       | ObjectWiden _
@@ -1482,7 +1494,7 @@ let resolve
           }
     in
     resolved ~next ~recurse cx use_op reason resolve_tool tool x
-  | DefT (r, trust, ArrT (TupleAT { elem_t; elements; arity })) when tool = ReadOnly ->
+  | DefT (r, trust, ArrT (TupleAT { elem_t; elements; arity; react_dro })) when tool = ReadOnly ->
     let elements =
       Base.List.map elements ~f:(fun (TupleElement { t; name; polarity = _; optional; reason }) ->
           TupleElement { t; name; polarity = Polarity.Positive; optional; reason }
@@ -1493,8 +1505,11 @@ let resolve
       | RReadOnlyType -> r
       | _ -> reason
     in
-    return cx use_op (DefT (def_reason, trust, ArrT (TupleAT { elem_t; elements; arity })))
-  | DefT (r, trust, ArrT (TupleAT { elem_t; elements; arity })) when tool = Partial ->
+    return
+      cx
+      use_op
+      (DefT (def_reason, trust, ArrT (TupleAT { elem_t; elements; arity; react_dro })))
+  | DefT (r, trust, ArrT (TupleAT { elem_t; elements; arity; react_dro })) when tool = Partial ->
     let elements =
       Base.List.map elements ~f:(fun (TupleElement { t; name; polarity; optional = _; reason }) ->
           let t = TypeUtil.optional t in
@@ -1509,8 +1524,11 @@ let resolve
     let elem_t = union_of_ts (reason_of_t elem_t) (tuple_ts_of_elements elements) in
     let (_, num_total) = arity in
     let arity = (0, num_total) in
-    return cx use_op (DefT (def_reason, trust, ArrT (TupleAT { elem_t; elements; arity })))
-  | DefT (r, trust, ArrT (TupleAT { elem_t; elements; arity })) when tool = Required ->
+    return
+      cx
+      use_op
+      (DefT (def_reason, trust, ArrT (TupleAT { elem_t; elements; arity; react_dro })))
+  | DefT (r, trust, ArrT (TupleAT { elem_t; elements; arity; react_dro })) when tool = Required ->
     let elements =
       Base.List.map elements ~f:(fun (TupleElement { t; name; polarity; optional = _; reason }) ->
           let t =
@@ -1529,7 +1547,10 @@ let resolve
     let elem_t = union_of_ts (reason_of_t elem_t) (tuple_ts_of_elements elements) in
     let (_, num_total) = arity in
     let arity = (num_total, num_total) in
-    return cx use_op (DefT (def_reason, trust, ArrT (TupleAT { elem_t; elements; arity })))
+    return
+      cx
+      use_op
+      (DefT (def_reason, trust, ArrT (TupleAT { elem_t; elements; arity; react_dro })))
   (* If we see an empty then propagate empty to tout. *)
   | DefT (r, trust, EmptyT) -> return cx use_op (EmptyT.make r trust)
   (* Propagate any. *)

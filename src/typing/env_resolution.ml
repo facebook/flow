@@ -452,7 +452,11 @@ let resolve_binding_partial cx reason loc b =
         | Ast.Expression.Object obj -> mk_obj loc obj
         | Ast.Expression.Array { Ast.Expression.Array.elements = []; _ } ->
           let (_, elem_t) = Statement.empty_array cx loc in
-          DefT (reason, bogus_trust (), ArrT (ArrayAT { elem_t; tuple_view = Some ([], (0, 0)) }))
+          DefT
+            ( reason,
+              bogus_trust (),
+              ArrT (ArrayAT { elem_t; tuple_view = Some ([], (0, 0)); react_dro = false })
+            )
         | Ast.Expression.Array { Ast.Expression.Array.elements; _ } ->
           (* TODO merge code with statement.ml implementation *)
           let array_elements cx undef_loc =
@@ -718,7 +722,9 @@ let resolve_binding_partial cx reason loc b =
         Flow_js.flow_t cx (EmptyT.make (mk_reason REmptyArrayElement loc) (bogus_trust ()), elem_t);
         (elem_t, Some ([], (0, 0)), replace_desc_reason REmptyArrayLit reason)
     in
-    let t = DefT (reason, bogus_trust (), ArrT (ArrayAT { elem_t; tuple_view })) in
+    let t =
+      DefT (reason, bogus_trust (), ArrT (ArrayAT { elem_t; tuple_view; react_dro = false }))
+    in
     let cache = Context.node_cache cx in
     let exp =
       ((arr_loc, t), Flow_ast.Expression.(Array { Array.elements = []; comments = None }))

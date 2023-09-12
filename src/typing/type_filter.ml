@@ -494,7 +494,7 @@ let array t =
     DefT
       ( replace_desc_new_reason RROArrayType r,
         trust,
-        ArrT (ROArrayAT (DefT (r, trust, MixedT Mixed_everything)))
+        ArrT (ROArrayAT (DefT (r, trust, MixedT Mixed_everything), false))
       )
   | DefT (_, _, ArrT _)
   | AnyT _ ->

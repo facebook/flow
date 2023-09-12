@@ -785,7 +785,7 @@ class virtual ['a] t =
 
     method arr_type cx map_cx t =
       match t with
-      | ArrayAT { elem_t; tuple_view } ->
+      | ArrayAT { elem_t; tuple_view; react_dro } ->
         let elem_t' = self#type_ cx map_cx elem_t in
         let tuple_view' =
           OptionUtils.ident_map
@@ -801,20 +801,20 @@ class virtual ['a] t =
         if elem_t' == elem_t && tuple_view' == tuple_view then
           t
         else
-          ArrayAT { elem_t = elem_t'; tuple_view = tuple_view' }
-      | TupleAT { elem_t; elements; arity } ->
+          ArrayAT { elem_t = elem_t'; tuple_view = tuple_view'; react_dro }
+      | TupleAT { elem_t; elements; arity; react_dro } ->
         let elem_t' = self#type_ cx map_cx elem_t in
         let elements' = ListUtils.ident_map (self#tuple_element cx map_cx) elements in
         if elem_t' == elem_t && elements' == elements then
           t
         else
-          TupleAT { elem_t = elem_t'; elements = elements'; arity }
-      | ROArrayAT t' ->
+          TupleAT { elem_t = elem_t'; elements = elements'; arity; react_dro }
+      | ROArrayAT (t', dro) ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then
           t
         else
-          ROArrayAT t''
+          ROArrayAT (t'', dro)
 
     method private tuple_element cx map_cx element =
       let (TupleElement { reason; name; t; polarity; optional }) = element in

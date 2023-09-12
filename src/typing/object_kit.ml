@@ -144,7 +144,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
         in
         Indexed { dict_name = None; key = key_t; value = mixed; dict_polarity = Polarity.Neutral }
     in
-    let flags = { frozen = false; obj_kind } in
+    let flags = { frozen = false; obj_kind; react_dro = false } in
     let interface = None in
     let obj_reason = replace_desc_reason RObjectType reason in
     let slice = { Object.reason = obj_reason; props; flags; generics; interface } in
@@ -470,7 +470,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
               | (true, _) -> Exact
               | _ -> Inexact
             in
-            let flags = { obj_kind; frozen = false } in
+            let flags = { obj_kind; frozen = false; react_dro = false } in
             let props =
               NameUtils.Map.map
                 (fun (t, m) ->
@@ -664,7 +664,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                   else
                     Inexact
               in
-              let flags = { frozen = true; obj_kind } in
+              let flags = { frozen = true; obj_kind; react_dro = true } in
               let generics = Generic.spread_append config_generics defaults_generics in
               (props, flags, generics)
             (* Otherwise turn our slice props map into an object props. *)
@@ -699,7 +699,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                       Inexact
                     )
               in
-              let flags = { frozen = true; obj_kind } in
+              let flags = { frozen = true; obj_kind; react_dro = true } in
               (props, flags, config_generics)
           in
           let call = None in

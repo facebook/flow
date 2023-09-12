@@ -1917,11 +1917,11 @@ end
 let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
   let (elem_t, elements, is_index_restricted, is_tuple) =
     match arrtype with
-    | ArrayAT { elem_t; tuple_view } ->
+    | ArrayAT { elem_t; tuple_view; react_dro = _ } ->
       let elements = Base.Option.map ~f:(fun (elements, _arity) -> elements) tuple_view in
       (elem_t, elements, false, false)
-    | TupleAT { elem_t; elements; arity = _ } -> (elem_t, Some elements, true, true)
-    | ROArrayAT elem_t -> (elem_t, None, true, false)
+    | TupleAT { elem_t; elements; arity = _; react_dro = _ } -> (elem_t, Some elements, true, true)
+    | ROArrayAT (elem_t, _) -> (elem_t, None, true, false)
   in
   let (can_write_tuple, value, use_op) =
     match l with
@@ -2312,6 +2312,6 @@ let mk_tuple_type cx ?trace ~id ~mk_type_destructor reason elements =
         *)
         union_of_ts elem_t_reason ts
       in
-      DefT (reason, bogus_trust (), ArrT (TupleAT { elem_t; elements; arity }))
+      DefT (reason, bogus_trust (), ArrT (TupleAT { elem_t; elements; arity; react_dro = false }))
     else
       AnyT.error reason
