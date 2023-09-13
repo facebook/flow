@@ -3,7 +3,7 @@ title: Empty
 slug: /types/empty
 ---
 
-The `empty` type has no values. It is the subtype of all other types (i.e. the [bottom type](https://en.wikipedia.org/wiki/Bottom_type)).
+The `empty` type has no values. It is the [subtype of all other types](../../lang/type-hierarchy) (i.e. the [bottom type](https://en.wikipedia.org/wiki/Bottom_type)).
 In this way it is the opposite of [`mixed`](../mixed), which is the supertype of all types.
 
 It is not common to annotate your code using `empty`. However, there are a couple of situations that it might be useful:

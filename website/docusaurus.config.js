@@ -22,6 +22,10 @@ module.exports = {
   organizationName: 'facebook', // Usually your GitHub org/user name.
   projectName: 'flow', // Usually your repo name.
   trailingSlash: true,
+  markdown: {
+    mermaid: true,
+  },
+  themes: ['@docusaurus/theme-mermaid'],
   plugins: [
     function polyfillNodeBuiltinsForFlowJS(context, options) {
       return {

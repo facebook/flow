@@ -66,6 +66,7 @@ module.exports = {
         'lang/types-and-expressions',
         'lang/variables',
         'lang/subtypes',
+        'lang/type-hierarchy',
         'lang/variance',
         'lang/nominal-structural',
         'lang/depth-subtyping',

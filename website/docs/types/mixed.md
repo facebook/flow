@@ -3,7 +3,7 @@ title: Mixed
 slug: /types/mixed
 ---
 
-`mixed` is the supertype of all types. All values are `mixed`.
+`mixed` is the [supertype of all types](../../lang/type-hierarchy). All values are `mixed`.
 However, this means that very few operations are permitted on it, without refining to some more specific type.
 That's because the valid operations on `mixed` must be valid for all types.
 
