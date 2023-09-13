@@ -428,38 +428,44 @@ References:
 
 Error ------------------------------------------------------------------------------- element_with_component_type.js:6:2
 
-Cannot cast `<Foo />` to `React.Element` because property `b` is missing in object type [1] but exists in object
-type [2] in property `props`. [prop-missing]
+Cannot cast `<Foo />` to `React.Element` because property `a` is missing in object type [1] but exists in object
+type [2] in type argument `ElementType` [3]. [prop-missing]
 
    element_with_component_type.js:6:2
-   6| (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
-       ^^^^^^^^^^^^^
+     6| (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
+         ^^^^^^^^^^^^^
 
 References:
-   element_with_component_type.js:3:35
-   3| class Foo extends React.Component<{a: number}> {}
-                                        ^^^^^^^^^^^ [1]
    element_with_component_type.js:6:51
-   6| (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
-                                                        ^^^^^^^^^^^ [2]
+     6| (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
+                                                          ^^^^^^^^^^^ [1]
+   element_with_component_type.js:3:35
+     3| class Foo extends React.Component<{a: number}> {}
+                                          ^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:155:36
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                                           ^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------- element_with_component_type.js:6:2
 
-Cannot cast `<Foo />` to `React.Element` because property `a` is missing in object type [1] but exists in object
-type [2] in property `type`. [prop-missing]
+Cannot cast `<Foo />` to `React.Element` because property `b` is missing in object type [1] but exists in object
+type [2] in type argument `P` [3]. [prop-missing]
 
    element_with_component_type.js:6:2
-   6| (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
-       ^^^^^^^^^^^^^
+     6| (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
+         ^^^^^^^^^^^^^
 
 References:
-   element_with_component_type.js:6:51
-   6| (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
-                                                        ^^^^^^^^^^^ [1]
    element_with_component_type.js:3:35
-   3| class Foo extends React.Component<{a: number}> {}
-                                        ^^^^^^^^^^^ [2]
+     3| class Foo extends React.Component<{a: number}> {}
+                                          ^^^^^^^^^^^ [1]
+   element_with_component_type.js:6:51
+     6| (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
+                                                          ^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:155:69
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                                                                            ^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------- hoc.js:9:8

@@ -1488,7 +1488,7 @@ Flags: --strip-root --pretty
   "types":{
     "unevaluated":{"type":"React$AbstractComponent<{}, mixed, renders React$Node>"},
     "evaluated":{
-      "type":"React$AbstractComponent<{}, mixed, renders ?(boolean | number | string | {+key: (React$Key | null), +props: any, +ref: any, +type: any} | React$Portal | $Iterable<?React$Node, void, void>)>"
+      "type":"React$AbstractComponent<{}, mixed, renders ?(boolean | number | string | React$Element | React$Portal | $Iterable<?React$Node, void, void>)>"
     }
   },
   "reasons":[],

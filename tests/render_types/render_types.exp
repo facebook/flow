@@ -76,21 +76,21 @@ References:
 Error --------------------------------------------------------------------------- no_any_with_renders_react_node.js:5:10
 
 Cannot return `Bar` because: [incompatible-return]
- - Either property `name` is missing in `React.Element` [1] but exists in statics of `Bar` [2].
- - Or class `Bar` [2] is incompatible with `React.Portal` [3].
- - Or property `@@iterator` is missing in class `Bar` [2] but exists in `$Iterable` [4].
+ - Either class `Bar` [1] is incompatible with `React.Element` [2].
+ - Or class `Bar` [1] is incompatible with `React.Portal` [3].
+ - Or property `@@iterator` is missing in class `Bar` [1] but exists in `$Iterable` [4].
 
    no_any_with_renders_react_node.js:5:10
     5|   return Bar; // ERROR
                 ^^^
 
 References:
-   <BUILTINS>/react.js:21:5
-   21|   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ [1]
    no_any_with_renders_react_node.js:3:7
     3| class Bar {}
-             ^^^ [2]
+             ^^^ [1]
+   <BUILTINS>/react.js:21:5
+   21|   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:22:5
    22|   | React$Portal
            ^^^^^^^^^^^^ [3]
@@ -112,9 +112,9 @@ References:
    no_spoofing_element_types.js:2:18
    2| declare const x: {+type: typeof Foo};
                        ^^^^^^^^^^^^^^^^^^^ [1]
-   no_spoofing_element_types.js:3:5
+   no_spoofing_element_types.js:3:13
    3| (x: renders React$Element<typeof Foo>); // ERROR!
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------- no_spoofing_element_types.js:7:2
@@ -369,6 +369,24 @@ References:
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:80:4
 
+Cannot cast `rendersNode` to `React.MixedElement` because `$Iterable` [1] is incompatible with `React.Element` [2].
+[incompatible-cast]
+
+   renders_to_renders.js:80:4
+   80|   (rendersNode: React$MixedElement); // ERROR
+          ^^^^^^^^^^^
+
+References:
+   renders_to_renders.js:9:36
+    9| declare const rendersNode: renders React$Node;
+                                          ^^^^^^^^^^ [1]
+   renders_to_renders.js:80:17
+   80|   (rendersNode: React$MixedElement); // ERROR
+                       ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- renders_to_renders.js:80:4
+
 Cannot cast `rendersNode` to `React.MixedElement` because `React.Portal` [1] is incompatible with `React.Element` [2].
 [incompatible-cast]
 
@@ -461,24 +479,6 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `rendersNode` to `React.MixedElement` because undefined [1] is incompatible with `React.Element` [2].
 [incompatible-cast]
-
-   renders_to_renders.js:80:4
-   80|   (rendersNode: React$MixedElement); // ERROR
-          ^^^^^^^^^^^
-
-References:
-   renders_to_renders.js:9:36
-    9| declare const rendersNode: renders React$Node;
-                                          ^^^^^^^^^^ [1]
-   renders_to_renders.js:80:17
-   80|   (rendersNode: React$MixedElement); // ERROR
-                       ^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------- renders_to_renders.js:80:4
-
-Cannot cast `rendersNode` to `React.MixedElement` because inexact `$Iterable` [1] is incompatible with exact
-`React.Element` [2]. [incompatible-exact]
 
    renders_to_renders.js:80:4
    80|   (rendersNode: React$MixedElement); // ERROR
@@ -730,7 +730,7 @@ References:
 Error ----------------------------------------------------------------------------------- validate_instantiation.js:2:18
 
 Cannot use object type [1] as a render type because: [incompatible-type]
- - Either property `key` is missing in object type [1] but exists in `React.Element` [2].
+ - Either object type [1] is incompatible with `React.Element` [2].
  - Or object type [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in object type [1] but exists in `$Iterable` [4].
 

@@ -678,7 +678,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       let () =
         let result = Flow.singleton_concrete_type_for_inspection cx elem_reason elem in
         match result with
-        | ExactT (_, DefT (_, _, ObjT { props_tmap; _ })) ->
+        | OpaqueT (_, { super_t = Some (ExactT (_, DefT (_, _, ObjT { props_tmap; _ }))); _ }) ->
           if record_monomorphized_result then Context.add_monomorphized_component cx props_tmap l
         | _ ->
           (*TODO(jmbrown): Internal Error *)

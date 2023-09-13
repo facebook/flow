@@ -261,9 +261,9 @@ References:
    wiki_examples.js:18:32
     18|   declare var OtherComponent: (OtherProps) => React.Node;
                                        ^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:155:62
-   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
-                                                                     ^ [3]
+   <BUILTINS>/react.js:155:69
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                                                                            ^ [3]
    wiki_examples.js:14:7
     14|   let element = <Component {...props} />
               ^^^^^^^ [4]
@@ -286,9 +286,9 @@ References:
    wiki_examples.js:12:28
     12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                    ^^^^^ [2]
-   <BUILTINS>/react.js:155:62
-   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
-                                                                     ^ [3]
+   <BUILTINS>/react.js:155:69
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                                                                            ^ [3]
    wiki_examples.js:14:7
     14|   let element = <Component {...props} />
               ^^^^^^^ [4]
@@ -311,9 +311,9 @@ References:
    wiki_examples.js:18:32
     18|   declare var OtherComponent: (OtherProps) => React.Node;
                                        ^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:155:29
-   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
-                                    ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:155:36
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                                           ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
     14|   let element = <Component {...props} />
               ^^^^^^^ [4]
@@ -336,9 +336,34 @@ References:
    wiki_examples.js:12:28
     12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                    ^^^^^ [2]
-   <BUILTINS>/react.js:155:29
-   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
-                                    ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:155:36
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                                           ^^^^^^^^^^^ [3]
+   wiki_examples.js:14:7
+    14|   let element = <Component {...props} />
+              ^^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------- wiki_examples.js:23:14
+
+Cannot assign `<OtherComponent />` to `element` because `$Iterable` [1] is incompatible with `React.Element` [2] in the
+return value of type argument `ElementType` [3]. All writes to `element` must be compatible with the type of its
+initializer [4]. Add an annotation to `element` [4] if a different type is desired. [incompatible-type-arg]
+
+   wiki_examples.js:23:14
+    23|   element = <OtherComponent {...other_props} />; // Error
+                     ^^^^^^^^^^^^^^
+
+References:
+   wiki_examples.js:18:47
+    18|   declare var OtherComponent: (OtherProps) => React.Node;
+                                                      ^^^^^^^^^^ [1]
+   wiki_examples.js:12:47
+    12|   let Component = ({prop}: Props) => { return <>{prop}</> }
+                                                      ^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:155:36
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                                           ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
     14|   let element = <Component {...props} />
               ^^^^^^^ [4]
@@ -361,9 +386,9 @@ References:
    wiki_examples.js:12:47
     12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                                       ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:155:29
-   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
-                                    ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:155:36
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                                           ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
     14|   let element = <Component {...props} />
               ^^^^^^^ [4]
@@ -386,9 +411,9 @@ References:
    wiki_examples.js:12:47
     12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                                       ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:155:29
-   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
-                                    ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:155:36
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                                           ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
     14|   let element = <Component {...props} />
               ^^^^^^^ [4]
@@ -411,9 +436,9 @@ References:
    wiki_examples.js:12:47
     12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                                       ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:155:29
-   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
-                                    ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:155:36
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                                           ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
     14|   let element = <Component {...props} />
               ^^^^^^^ [4]
@@ -436,9 +461,9 @@ References:
    wiki_examples.js:12:47
     12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                                       ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:155:29
-   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
-                                    ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:155:36
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                                           ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
     14|   let element = <Component {...props} />
               ^^^^^^^ [4]
@@ -461,9 +486,9 @@ References:
    wiki_examples.js:12:47
     12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                                       ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:155:29
-   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
-                                    ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:155:36
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                                           ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
     14|   let element = <Component {...props} />
               ^^^^^^^ [4]
@@ -486,35 +511,9 @@ References:
    wiki_examples.js:12:47
     12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                                       ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:155:29
-   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
-                                    ^^^^^^^^^^^ [3]
-   wiki_examples.js:14:7
-    14|   let element = <Component {...props} />
-              ^^^^^^^ [4]
-
-
-Error ------------------------------------------------------------------------------------------- wiki_examples.js:23:14
-
-Cannot assign `<OtherComponent />` to `element` because inexact `$Iterable` [1] is incompatible with exact
-`React.Element` [2] in the return value of type argument `ElementType` [3]. All writes to `element` must be compatible
-with the type of its initializer [4]. Add an annotation to `element` [4] if a different type is desired.
-[incompatible-exact]
-
-   wiki_examples.js:23:14
-    23|   element = <OtherComponent {...other_props} />; // Error
-                     ^^^^^^^^^^^^^^
-
-References:
-   wiki_examples.js:18:47
-    18|   declare var OtherComponent: (OtherProps) => React.Node;
-                                                      ^^^^^^^^^^ [1]
-   wiki_examples.js:12:47
-    12|   let Component = ({prop}: Props) => { return <>{prop}</> }
-                                                      ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:155:29
-   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
-                                    ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:155:36
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                                           ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
     14|   let element = <Component {...props} />
               ^^^^^^^ [4]

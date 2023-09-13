@@ -124,22 +124,16 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- arity.js:21:10
 
-Cannot return `x` because `React.Element` [1] does not render number [2]. [incompatible-return]
+Cannot return `x` because `React.Element` [1] is incompatible with number [2]. [incompatible-return]
 
    arity.js:21:10
     21|   return x; // ERROR 2x
                  ^
 
 References:
-   <BUILTINS>/react.js:155:101
-                                                                                                            v-
-   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
-   156|   +type: ElementType,
-   157|   +props: P,
-   158|   +key: React$Key | null,
-   159|   +ref: any,
-   160| |};
-        -^ [1]
+   <BUILTINS>/react.js:155:21
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                            ^^^^^^^^^^^^^ [1]
    arity.js:20:107
     20| function defaultsErrorMessages(x: React$AbstractComponent<empty>): React$AbstractComponent<empty, number, number> {
                                                                                                                   ^^^^^^ [2]
@@ -667,21 +661,21 @@ References:
 Error ------------------------------------------------------------------------------------------ function_lower.js:25:10
 
 All branches are incompatible: [incompatible-type]
- - Either property `name` is missing in `React.Element` [1] but exists in statics of `NotAComponent` [2].
- - Or class `NotAComponent` [2] is incompatible with `React.Portal` [3].
- - Or property `@@iterator` is missing in class `NotAComponent` [2] but exists in `$Iterable` [4].
+ - Either class `NotAComponent` [1] is incompatible with `React.Element` [2].
+ - Or class `NotAComponent` [1] is incompatible with `React.Portal` [3].
+ - Or property `@@iterator` is missing in class `NotAComponent` [1] but exists in `$Iterable` [4].
 
    function_lower.js:25:10
    25|   return NotAComponent; // Error, not a component
                 ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:21:5
-   21|   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ [1]
    function_lower.js:22:7
    22| class NotAComponent {};
-             ^^^^^^^^^^^^^ [2]
+             ^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:21:5
+   21|   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:22:5
    22|   | React$Portal
            ^^^^^^^^^^^^ [3]
@@ -693,21 +687,21 @@ References:
 Error ------------------------------------------------------------------------------------------- function_lower.js:28:2
 
 Cannot cast `NotAFunctionComponent` to AbstractComponent because: [incompatible-cast]
- - Either property `name` is missing in `React.Element` [1] but exists in statics of `NotAComponent` [2].
- - Or class `NotAComponent` [2] is incompatible with `React.Portal` [3].
- - Or property `@@iterator` is missing in class `NotAComponent` [2] but exists in `$Iterable` [4].
+ - Either class `NotAComponent` [1] is incompatible with `React.Element` [2].
+ - Or class `NotAComponent` [1] is incompatible with `React.Portal` [3].
+ - Or property `@@iterator` is missing in class `NotAComponent` [1] but exists in `$Iterable` [4].
 
    function_lower.js:28:2
    28| (NotAFunctionComponent: React$AbstractComponent<Props, void, React$Node>);
         ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:21:5
-   21|   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ [1]
    function_lower.js:22:7
    22| class NotAComponent {};
-             ^^^^^^^^^^^^^ [2]
+             ^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:21:5
+   21|   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:22:5
    22|   | React$Portal
            ^^^^^^^^^^^^ [3]

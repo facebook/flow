@@ -768,6 +768,27 @@ let builtin_promise_class_id cx =
     end
   | _ -> None
 
+let builtin_react_element_opaque_id cx =
+  let t_opt = lookup_builtin_opt cx (OrdinaryName "React$Element") in
+  match t_opt with
+  | Some (OpenT (_, id)) ->
+    let (_, constraints) = Context.find_constraints cx id in
+    begin
+      match constraints with
+      | Constraint.FullyResolved
+          (lazy
+            (DefT
+              ( _,
+                _,
+                PolyT { t_out = DefT (_, _, TypeT (OpaqueKind, OpaqueT (_, { opaque_id; _ }))); _ }
+              )
+              )
+            ) ->
+        Some opaque_id
+      | _ -> None
+    end
+  | _ -> None
+
 (**
  * Determines whether a property name should be considered "munged"/private when
  * the `munge_underscores` config option is set.

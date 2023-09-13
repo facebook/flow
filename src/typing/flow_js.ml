@@ -2754,7 +2754,8 @@ struct
           let result = DefT (reason, bogus_trust (), RendersT (NominalRenders { id; super })) in
           (* Intentional unknown_use when flowing to tout *)
           rec_flow_t cx trace ~use_op:unknown_use (result, tout)
-        | ( DefT (_, _, ObjT { props_tmap; _ }),
+        | ( OpaqueT
+              (_, { opaque_id; super_t = Some (ExactT (_, DefT (_, _, ObjT { props_tmap; _ }))); _ }),
             PromoteRendersRepresentationT
               {
                 use_op;
@@ -2764,7 +2765,8 @@ struct
                 should_distribute;
                 promote_structural_components;
               }
-          ) ->
+          )
+          when Some opaque_id = Flow_js_utils.builtin_react_element_opaque_id cx ->
           (match Context.find_monomorphized_component cx props_tmap with
           | Some mono_component ->
             rec_flow

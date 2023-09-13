@@ -184,20 +184,23 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:39:26
 
-Cannot assign `<Foo />` to `foo` because class `Foo` [1] is incompatible with number [2] in property `type`.
-[incompatible-type]
+Cannot assign `<Foo />` to `foo` because class `Foo` [1] is incompatible with number [2] in type argument
+`ElementType` [3]. [incompatible-type-arg]
 
    classes.js:39:26
-   39| var foo: $jsx<number> = <Foo/>;
-                                ^^^
+    39| var foo: $jsx<number> = <Foo/>;
+                                 ^^^
 
 References:
    classes.js:7:7
-    7| class Foo extends React.Component<Props, State> {
-             ^^^ [1]
+     7| class Foo extends React.Component<Props, State> {
+              ^^^ [1]
    classes.js:39:15
-   39| var foo: $jsx<number> = <Foo/>;
-                     ^^^^^^ [2]
+    39| var foo: $jsx<number> = <Foo/>;
+                      ^^^^^^ [2]
+   <BUILTINS>/react.js:155:36
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                                           ^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:39:26

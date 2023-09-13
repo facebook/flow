@@ -11,7 +11,7 @@ React$AbstractComponent<{+foo: number}, mixed, renders React$Node>
     |
     string
     |
-    {+key: (React$Key | null), +props: any, +ref: any, +type: any}
+    React$Element
     |
     React$Portal
     |

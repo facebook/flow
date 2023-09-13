@@ -1438,8 +1438,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let u = TypeUtil.structural_render_type_arg renders_reasonu structureu in
       rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (l, u)
     (* Try to do structural subtyping. If that fails promote to a render type *)
-    | (DefT (reason_obj, _, ObjT _), DefT (renders_r, _, RendersT (NominalRenders { id; super })))
-      ->
+    | (OpaqueT (reason_opaque, _), DefT (renders_r, _, RendersT (NominalRenders { id; super }))) ->
       rec_flow
         cx
         trace
@@ -1448,12 +1447,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
             {
               use_op = Frame (RendersCompatibility, use_op);
               reason = renders_r;
-              reason_obj;
+              reason_obj = reason_opaque;
               upper_renders = NominalRenders { id; super };
               tried_promotion = false;
             }
         )
-    | (DefT (reason_obj, _, ObjT _), DefT (renders_r, _, RendersT (StructuralRenders structure))) ->
+    | (OpaqueT (reason_opaque, _), DefT (renders_r, _, RendersT (StructuralRenders structure))) ->
       let t = TypeUtil.structural_render_type_arg renders_r structure in
       if not (speculative_subtyping_succeeds cx l t) then
         rec_flow
@@ -1464,7 +1463,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
               {
                 use_op = Frame (RendersCompatibility, use_op);
                 reason = renders_r;
-                reason_obj;
+                reason_obj = reason_opaque;
                 upper_renders = StructuralRenders structure;
                 tried_promotion = false;
               }

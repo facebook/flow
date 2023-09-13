@@ -19,7 +19,7 @@ References:
 Error ------------------------------------------------------------------------------------------- commonjs-pascal.js:6:2
 
 Cannot cast object literal to `Node` because: [incompatible-cast]
- - Either property `key` is missing in object literal [1] but exists in `React.Element` [2].
+ - Either object literal [1] is incompatible with `React.Element` [2].
  - Or object literal [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
 
@@ -74,7 +74,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- commonjs.js:6:2
 
 Cannot cast object literal to `Node` because: [incompatible-cast]
- - Either property `key` is missing in object literal [1] but exists in `React.Element` [2].
+ - Either object literal [1] is incompatible with `React.Element` [2].
  - Or object literal [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
 
@@ -129,7 +129,7 @@ References:
 Error ----------------------------------------------------------------------------------------- es-default-pascal.js:6:2
 
 Cannot cast object literal to `Node` because: [incompatible-cast]
- - Either property `key` is missing in object literal [1] but exists in `React.Element` [2].
+ - Either object literal [1] is incompatible with `React.Element` [2].
  - Or object literal [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
 
@@ -337,7 +337,7 @@ References:
 Error --------------------------------------------------------------------------------------- es-namespace-pascal.js:6:2
 
 Cannot cast object literal to `Node` because: [incompatible-cast]
- - Either property `key` is missing in object literal [1] but exists in `React.Element` [2].
+ - Either object literal [1] is incompatible with `React.Element` [2].
  - Or object literal [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
 
@@ -392,7 +392,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- es-namespace.js:6:2
 
 Cannot cast object literal to `Node` because: [incompatible-cast]
- - Either property `key` is missing in object literal [1] but exists in `React.Element` [2].
+ - Either object literal [1] is incompatible with `React.Element` [2].
  - Or object literal [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
 

@@ -1275,10 +1275,7 @@ subst.js:18:7 = {
   "end":8
 }
 subst.js:21:7 = {
-  "types":{
-    "unevaluated":{"type":"{|+key: (React$Key | null), +props: any, +ref: any, +type: any|}"},
-    "evaluated":null
-  },
+  "types":{"unevaluated":{"type":"React$Element"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"subst.js",

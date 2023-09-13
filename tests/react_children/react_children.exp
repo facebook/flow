@@ -205,18 +205,18 @@ References:
 Error ---------------------------------------------------------------------------------------- builtin_intrinsic.js:25:4
 
 Cannot create `builtin` element because in property `children`: [incompatible-type]
- - Either property `a` is missing in `React.Element` [1] but exists in object literal [2].
- - Or object literal [2] is incompatible with `React.Portal` [3].
- - Or property `@@iterator` is missing in object literal [2] but exists in `$Iterable` [4].
+ - Either object literal [1] is incompatible with `React.Element` [2].
+ - Or object literal [1] is incompatible with `React.Portal` [3].
+ - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
 
    builtin_intrinsic.js:25:4
    25|   {{a: 1, b: 2, c: 3}}
-          ^^^^^^^^^^^^^^^^^^ [2]
+          ^^^^^^^^^^^^^^^^^^ [1]
 
 References:
    <BUILTINS>/react.js:21:5
    21|   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ [1]
+           ^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:22:5
    22|   | React$Portal
            ^^^^^^^^^^^^ [3]
@@ -282,18 +282,18 @@ References:
 Error ------------------------------------------------------------------------------------------------ component.js:41:4
 
 Cannot create `MyComponent` element because in property `children`: [incompatible-type]
- - Either property `a` is missing in `React.Element` [1] but exists in object literal [2].
- - Or object literal [2] is incompatible with `React.Portal` [3].
- - Or property `@@iterator` is missing in object literal [2] but exists in `$Iterable` [4].
+ - Either object literal [1] is incompatible with `React.Element` [2].
+ - Or object literal [1] is incompatible with `React.Portal` [3].
+ - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
 
    component.js:41:4
    41|   {{a: 1, b: 2, c: 3}}
-          ^^^^^^^^^^^^^^^^^^ [2]
+          ^^^^^^^^^^^^^^^^^^ [1]
 
 References:
    <BUILTINS>/react.js:21:5
    21|   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ [1]
+           ^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:22:5
    22|   | React$Portal
            ^^^^^^^^^^^^ [3]
@@ -1026,73 +1026,88 @@ References:
 Error ----------------------------------------------------------------------------------------------------- tabs.js:67:9
 
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
- - Either `NotTab` [1] is incompatible with `Tab` [2] in property `type`.
- - Or `React.Element` [3] is incompatible with array type [4].
+ - Either `NotTab` [1] is incompatible with `Tab` [2] in type argument `ElementType` [3].
+ - Or `React.Element` [4] is incompatible with array type [5].
 
    tabs.js:67:9
-   67| <TabBar><NotTab/></TabBar>; // Error: We can only have tab components.
-               ^^^^^^^^^ [3]
+    67| <TabBar><NotTab/></TabBar>; // Error: We can only have tab components.
+                ^^^^^^^^^ [4]
 
 References:
    tabs.js:11:7
-   11| class NotTab extends React.Component<{}, void> {}
-             ^^^^^^ [1]
+    11| class NotTab extends React.Component<{}, void> {}
+              ^^^^^^ [1]
    tabs.js:10:7
-   10| class Tab extends React.Component<{}, void> {}
-             ^^^ [2]
+    10| class Tab extends React.Component<{}, void> {}
+              ^^^ [2]
+   <BUILTINS>/react.js:155:36
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                                           ^^^^^^^^^^^ [3]
    tabs.js:18:5
-   18|   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
-           ^^^^^^^^^^^^^^^^^ [4]
+    18|   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
+            ^^^^^^^^^^^^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- tabs.js:68:9
 
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
- - Either `NotTab` [1] is incompatible with `Tab` [2] in property `type` of array element.
- - Or children array [3] is incompatible with `React.Element` [4].
+ - Either `NotTab` [1] is incompatible with `Tab` [2] in type argument `ElementType` [3] of array element.
+ - Or `React.Element` [4] is incompatible with array type [5] in array element.
 
    tabs.js:68:9
-   68| <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
-               ^^^^^^^^^^^^^^^^^^ [3]
+    68| <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
+                ^^^^^^^^^^^^^^^^^^
 
 References:
    tabs.js:11:7
-   11| class NotTab extends React.Component<{}, void> {}
-             ^^^^^^ [1]
+    11| class NotTab extends React.Component<{}, void> {}
+              ^^^^^^ [1]
    tabs.js:10:7
-   10| class Tab extends React.Component<{}, void> {}
-             ^^^ [2]
-   tabs.js:17:5
-   17|   | React$Element<typeof Tab>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+    10| class Tab extends React.Component<{}, void> {}
+              ^^^ [2]
+   <BUILTINS>/react.js:155:36
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                                           ^^^^^^^^^^^ [3]
+   tabs.js:68:9
+    68| <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
+                ^^^^^^^^^ [4]
+   tabs.js:18:5
+    18|   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
+            ^^^^^^^^^^^^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- tabs.js:71:9
 
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
- - Either `NotTab` [1] is incompatible with `Tab` [2] in property `type` of array element.
- - Or children array [3] is incompatible with `React.Element` [4].
+ - Either `NotTab` [1] is incompatible with `Tab` [2] in type argument `ElementType` [3] of array element.
+ - Or `React.Element` [4] is incompatible with array type [5] in array element.
 
    tabs.js:71:9
-               v
-   71| <TabBar>
-   72|   <Tab/>
-   73|   <NotTab/>
-   74|   <Tab/>
-   75|   <Tab/>
-   76| </TabBar>;
-       ^ [3]
+                v
+    71| <TabBar>
+    72|   <Tab/>
+    73|   <NotTab/>
+    74|   <Tab/>
+    75|   <Tab/>
+    76| </TabBar>;
+        ^
 
 References:
    tabs.js:11:7
-   11| class NotTab extends React.Component<{}, void> {}
-             ^^^^^^ [1]
+    11| class NotTab extends React.Component<{}, void> {}
+              ^^^^^^ [1]
    tabs.js:10:7
-   10| class Tab extends React.Component<{}, void> {}
-             ^^^ [2]
-   tabs.js:17:5
-   17|   | React$Element<typeof Tab>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+    10| class Tab extends React.Component<{}, void> {}
+              ^^^ [2]
+   <BUILTINS>/react.js:155:36
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                                           ^^^^^^^^^^^ [3]
+   tabs.js:73:3
+    73|   <NotTab/>
+          ^^^^^^^^^ [4]
+   tabs.js:18:5
+    18|   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
+            ^^^^^^^^^^^^^^^^^ [5]
 
 
 Error ------------------------------------------------------------------------------------------------------ text.js:9:2
@@ -1551,17 +1566,17 @@ References:
 Error ----------------------------------------------------------------------------------------------------- view.js:32:4
 
 Cannot create `View` element because in property `children`: [incompatible-type]
- - Either property `a` is missing in `React.Element` [1] but exists in object literal [2].
- - Or object literal [2] is incompatible with array type [3].
+ - Either object literal [1] is incompatible with `React.Element` [2].
+ - Or object literal [1] is incompatible with array type [3].
 
    view.js:32:4
    32|   {{a: 1, b: 2, c: 3}}
-          ^^^^^^^^^^^^^^^^^^ [2]
+          ^^^^^^^^^^^^^^^^^^ [1]
 
 References:
    view.js:9:5
     9|   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ [1]
+           ^^^^^^^^^^^^^^^^^^ [2]
    view.js:10:5
    10|   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]

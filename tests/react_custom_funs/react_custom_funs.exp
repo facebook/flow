@@ -16,62 +16,16 @@ string [1] is incompatible with `React.Element` [1]. [incompatible-type]
 
 Error ------------------------------------------------------------------------------------------- clone_element.js:22:20
 
-Property `key` is missing in object literal [1] but exists in `React.Element` [2]. [prop-missing]
+object literal [1] is incompatible with `React.Element` [2]. [incompatible-type]
 
    clone_element.js:22:20
     22| React.cloneElement({ type: any }); // Error: Not a valid element type.
                            ^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:155:101
-                                                                                                            v-
-   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
-   156|   +type: ElementType,
-   157|   +props: P,
-   158|   +key: React$Key | null,
-   159|   +ref: any,
-   160| |};
-        -^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- clone_element.js:22:20
-
-Property `props` is missing in object literal [1] but exists in `React.Element` [2]. [prop-missing]
-
-   clone_element.js:22:20
-    22| React.cloneElement({ type: any }); // Error: Not a valid element type.
-                           ^^^^^^^^^^^^^ [1]
-
-References:
-   <BUILTINS>/react.js:155:101
-                                                                                                            v-
-   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
-   156|   +type: ElementType,
-   157|   +props: P,
-   158|   +key: React$Key | null,
-   159|   +ref: any,
-   160| |};
-        -^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- clone_element.js:22:20
-
-Property `ref` is missing in object literal [1] but exists in `React.Element` [2]. [prop-missing]
-
-   clone_element.js:22:20
-    22| React.cloneElement({ type: any }); // Error: Not a valid element type.
-                           ^^^^^^^^^^^^^ [1]
-
-References:
-   <BUILTINS>/react.js:155:101
-                                                                                                            v-
-   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
-   156|   +type: ElementType,
-   157|   +props: P,
-   158|   +key: React$Key | null,
-   159|   +ref: any,
-   160| |};
-        -^ [2]
+   <BUILTINS>/react.js:155:21
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                            ^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- clone_element.js:26:2
@@ -373,6 +327,23 @@ References:
 
 Error ------------------------------------------------------------------------------------------ clone_element.js:106:22
 
+`$Iterable` [1] is incompatible with `React.Element` [2]. [incompatible-type]
+
+   clone_element.js:106:22
+   106|   React.cloneElement(el); // ERROR
+                             ^^
+
+References:
+   clone_element.js:105:21
+   105|   declare const el: React.Node;
+                            ^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:155:21
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                            ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ clone_element.js:106:22
+
 `React.Portal` [1] is incompatible with `React.Element` [2]. [incompatible-type]
 
    clone_element.js:106:22
@@ -383,15 +354,9 @@ References:
    clone_element.js:105:21
    105|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:155:101
-                                                                                                            v-
-   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
-   156|   +type: ElementType,
-   157|   +props: P,
-   158|   +key: React$Key | null,
-   159|   +ref: any,
-   160| |};
-        -^ [2]
+   <BUILTINS>/react.js:155:21
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                            ^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ clone_element.js:106:22
@@ -406,15 +371,9 @@ References:
    clone_element.js:105:21
    105|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:155:101
-                                                                                                            v-
-   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
-   156|   +type: ElementType,
-   157|   +props: P,
-   158|   +key: React$Key | null,
-   159|   +ref: any,
-   160| |};
-        -^ [2]
+   <BUILTINS>/react.js:155:21
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                            ^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ clone_element.js:106:22
@@ -429,15 +388,9 @@ References:
    clone_element.js:105:21
    105|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:155:101
-                                                                                                            v-
-   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
-   156|   +type: ElementType,
-   157|   +props: P,
-   158|   +key: React$Key | null,
-   159|   +ref: any,
-   160| |};
-        -^ [2]
+   <BUILTINS>/react.js:155:21
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                            ^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ clone_element.js:106:22
@@ -452,15 +405,9 @@ References:
    clone_element.js:105:21
    105|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:155:101
-                                                                                                            v-
-   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
-   156|   +type: ElementType,
-   157|   +props: P,
-   158|   +key: React$Key | null,
-   159|   +ref: any,
-   160| |};
-        -^ [2]
+   <BUILTINS>/react.js:155:21
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                            ^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ clone_element.js:106:22
@@ -475,15 +422,9 @@ References:
    clone_element.js:105:21
    105|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:155:101
-                                                                                                            v-
-   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
-   156|   +type: ElementType,
-   157|   +props: P,
-   158|   +key: React$Key | null,
-   159|   +ref: any,
-   160| |};
-        -^ [2]
+   <BUILTINS>/react.js:155:21
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                            ^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ clone_element.js:106:22
@@ -498,38 +439,26 @@ References:
    clone_element.js:105:21
    105|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:155:101
-                                                                                                            v-
-   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
-   156|   +type: ElementType,
-   157|   +props: P,
-   158|   +key: React$Key | null,
-   159|   +ref: any,
-   160| |};
-        -^ [2]
+   <BUILTINS>/react.js:155:21
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                            ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ clone_element.js:106:22
+Error ------------------------------------------------------------------------------------------ clone_element.js:107:22
 
-Inexact `$Iterable` [1] is incompatible with exact `React.Element` [2]. [incompatible-exact]
+`$Iterable` [1] is incompatible with `React.Element` [2]. [incompatible-type]
 
-   clone_element.js:106:22
-   106|   React.cloneElement(el); // ERROR
+   clone_element.js:107:22
+   107|   React.cloneElement(el, {}); // ERROR
                              ^^
 
 References:
    clone_element.js:105:21
    105|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:155:101
-                                                                                                            v-
-   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
-   156|   +type: ElementType,
-   157|   +props: P,
-   158|   +key: React$Key | null,
-   159|   +ref: any,
-   160| |};
-        -^ [2]
+   <BUILTINS>/react.js:155:21
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                            ^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ clone_element.js:107:22
@@ -544,15 +473,9 @@ References:
    clone_element.js:105:21
    105|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:155:101
-                                                                                                            v-
-   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
-   156|   +type: ElementType,
-   157|   +props: P,
-   158|   +key: React$Key | null,
-   159|   +ref: any,
-   160| |};
-        -^ [2]
+   <BUILTINS>/react.js:155:21
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                            ^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ clone_element.js:107:22
@@ -567,15 +490,9 @@ References:
    clone_element.js:105:21
    105|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:155:101
-                                                                                                            v-
-   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
-   156|   +type: ElementType,
-   157|   +props: P,
-   158|   +key: React$Key | null,
-   159|   +ref: any,
-   160| |};
-        -^ [2]
+   <BUILTINS>/react.js:155:21
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                            ^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ clone_element.js:107:22
@@ -590,15 +507,9 @@ References:
    clone_element.js:105:21
    105|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:155:101
-                                                                                                            v-
-   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
-   156|   +type: ElementType,
-   157|   +props: P,
-   158|   +key: React$Key | null,
-   159|   +ref: any,
-   160| |};
-        -^ [2]
+   <BUILTINS>/react.js:155:21
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                            ^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ clone_element.js:107:22
@@ -613,15 +524,9 @@ References:
    clone_element.js:105:21
    105|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:155:101
-                                                                                                            v-
-   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
-   156|   +type: ElementType,
-   157|   +props: P,
-   158|   +key: React$Key | null,
-   159|   +ref: any,
-   160| |};
-        -^ [2]
+   <BUILTINS>/react.js:155:21
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                            ^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ clone_element.js:107:22
@@ -636,15 +541,9 @@ References:
    clone_element.js:105:21
    105|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:155:101
-                                                                                                            v-
-   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
-   156|   +type: ElementType,
-   157|   +props: P,
-   158|   +key: React$Key | null,
-   159|   +ref: any,
-   160| |};
-        -^ [2]
+   <BUILTINS>/react.js:155:21
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                            ^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ clone_element.js:107:22
@@ -659,38 +558,9 @@ References:
    clone_element.js:105:21
    105|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:155:101
-                                                                                                            v-
-   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
-   156|   +type: ElementType,
-   157|   +props: P,
-   158|   +key: React$Key | null,
-   159|   +ref: any,
-   160| |};
-        -^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ clone_element.js:107:22
-
-Inexact `$Iterable` [1] is incompatible with exact `React.Element` [2]. [incompatible-exact]
-
-   clone_element.js:107:22
-   107|   React.cloneElement(el, {}); // ERROR
-                             ^^
-
-References:
-   clone_element.js:105:21
-   105|   declare const el: React.Node;
-                            ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:155:101
-                                                                                                            v-
-   155| declare type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>> = {|
-   156|   +type: ElementType,
-   157|   +props: P,
-   158|   +key: React$Key | null,
-   159|   +ref: any,
-   160| |};
-        -^ [2]
+   <BUILTINS>/react.js:155:21
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                            ^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- create_element.js:5:1
@@ -3735,7 +3605,7 @@ References:
 
 
 
-Found 220 errors
+Found 218 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

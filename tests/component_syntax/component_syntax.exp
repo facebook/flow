@@ -1899,7 +1899,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- nominal.js:17:2
 
-Cannot cast `Foo` to `React.AbstractComponent` because `React.Element` [1] does not render null [2]. [incompatible-cast]
+Cannot cast `Foo` to `React.AbstractComponent` because `React.Element` [1] is incompatible with null [2].
+[incompatible-cast]
 
    nominal.js:17:2
     17| (Foo: React.AbstractComponent<{}, mixed, null>); // ERROR, default render is React.Node
@@ -2231,32 +2232,7 @@ Cannot resolve name `React`. [cannot-resolve-name]
 Error --------------------------------------------------------------------------------------- render_constraints.js:1:34
 
 Cannot use object type [1] as a render type because: [incompatible-type]
- - Either inexact object type [1] is incompatible with exact `React.Element` [2].
- - Or object type [1] is incompatible with `React.Portal` [3].
- - Or property `@@iterator` is missing in object type [1] but exists in `$Iterable` [4].
-
-Render types must be a subtype of `React.Node` or a reference to a component-syntax component.
-
-   render_constraints.js:1:34
-    1| component Foo(x: number) renders {...} { // ERROR, {...} not a subtype of React.Node
-                                        ^^^^^ [1]
-
-References:
-   <BUILTINS>/react.js:21:5
-   21|   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:22:5
-   22|   | React$Portal
-           ^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:23:5
-   23|   | Iterable<?React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^^ [4]
-
-
-Error --------------------------------------------------------------------------------------- render_constraints.js:1:34
-
-Cannot use renders object type [1] as a render type because: [incompatible-type]
- - Either inexact object type [1] is incompatible with exact `React.Element` [2].
+ - Either object type [1] is incompatible with `React.Element` [2].
  - Or object type [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in object type [1] but exists in `$Iterable` [4].
 
@@ -2691,7 +2667,7 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 184 errors
+Found 183 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

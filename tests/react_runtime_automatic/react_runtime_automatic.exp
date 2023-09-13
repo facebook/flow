@@ -37,73 +37,85 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:9:45
 
 Cannot assign `<Component />` to `z` because property `bar` is missing in `Props` [1] but exists in object type [2] in
-property `props`. [prop-missing]
+type argument `P` [3]. [prop-missing]
 
    test.js:9:45
-   9| const z: React$Element<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
-                                                  ^^^^^^^^^^^^^^^^^^^^^
+     9| const z: React$Element<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
+                                                    ^^^^^^^^^^^^^^^^^^^^^
 
 References:
    test.js:4:27
-   4| function Component(props: Props): React$Node { return null }
-                                ^^^^^ [1]
+     4| function Component(props: Props): React$Node { return null }
+                                  ^^^^^ [1]
    test.js:5:28
-   5| function Component2(props: {| bar: number |}): React$Node { return null }
-                                 ^^^^^^^^^^^^^^^^^ [2]
+     5| function Component2(props: {| bar: number |}): React$Node { return null }
+                                   ^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:155:69
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                                                                            ^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:9:45
 
 Cannot assign `<Component />` to `z` because property `foo` is missing in object type [1] but exists in `Props` [2] in
-property `props`. [prop-missing]
+type argument `P` [3]. [prop-missing]
 
    test.js:9:45
-   9| const z: React$Element<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
-                                                  ^^^^^^^^^^^^^^^^^^^^^
+     9| const z: React$Element<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
+                                                    ^^^^^^^^^^^^^^^^^^^^^
 
 References:
    test.js:5:28
-   5| function Component2(props: {| bar: number |}): React$Node { return null }
-                                 ^^^^^^^^^^^^^^^^^ [1]
+     5| function Component2(props: {| bar: number |}): React$Node { return null }
+                                   ^^^^^^^^^^^^^^^^^ [1]
    test.js:4:27
-   4| function Component(props: Props): React$Node { return null }
-                                ^^^^^ [2]
+     4| function Component(props: Props): React$Node { return null }
+                                  ^^^^^ [2]
+   <BUILTINS>/react.js:155:69
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                                                                            ^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:9:46
 
 Cannot assign `<Component />` to `z` because property `bar` is missing in `Props` [1] but exists in object type [2] in
-the first parameter of property `type`. [prop-missing]
+the first parameter of type argument `ElementType` [3]. [prop-missing]
 
    test.js:9:46
-   9| const z: React$Element<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
-                                                   ^^^^^^^^^
+     9| const z: React$Element<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
+                                                     ^^^^^^^^^
 
 References:
    test.js:4:27
-   4| function Component(props: Props): React$Node { return null }
-                                ^^^^^ [1]
+     4| function Component(props: Props): React$Node { return null }
+                                  ^^^^^ [1]
    test.js:5:28
-   5| function Component2(props: {| bar: number |}): React$Node { return null }
-                                 ^^^^^^^^^^^^^^^^^ [2]
+     5| function Component2(props: {| bar: number |}): React$Node { return null }
+                                   ^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:155:36
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                                           ^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:9:46
 
 Cannot assign `<Component />` to `z` because property `foo` is missing in object type [1] but exists in `Props` [2] in
-the first parameter of property `type`. [prop-missing]
+the first parameter of type argument `ElementType` [3]. [prop-missing]
 
    test.js:9:46
-   9| const z: React$Element<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
-                                                   ^^^^^^^^^
+     9| const z: React$Element<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
+                                                     ^^^^^^^^^
 
 References:
    test.js:5:28
-   5| function Component2(props: {| bar: number |}): React$Node { return null }
-                                 ^^^^^^^^^^^^^^^^^ [1]
+     5| function Component2(props: {| bar: number |}): React$Node { return null }
+                                   ^^^^^^^^^^^^^^^^^ [1]
    test.js:4:27
-   4| function Component(props: Props): React$Node { return null }
-                                ^^^^^ [2]
+     4| function Component(props: Props): React$Node { return null }
+                                  ^^^^^ [2]
+   <BUILTINS>/react.js:155:36
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                                           ^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:9:46
