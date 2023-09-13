@@ -54,11 +54,7 @@ module Make
         (fun (acc, instance) p ->
           let key_and_t = C.param_type_with_name p in
           match key_and_t with
-          | (key_loc, "ref", t) ->
-            Flow_js_utils.add_output
-              cx
-              Error_message.(ERefComponentProp { spread = None; loc = key_loc });
-            (acc, Some t)
+          | (_, "ref", t) -> (acc, Some t)
           | (key_loc, key, t) ->
             ( Type.Properties.add_field
                 (Reason.OrdinaryName key)

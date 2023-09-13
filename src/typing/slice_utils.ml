@@ -665,7 +665,7 @@ let check_config2 cx pmap { Object.reason; props; flags; generics; interface = _
                let loc = Base.Option.value ~default:(reason_of_t prop_t |> loc_of_reason) key_loc in
                raise
                  (InvalidConfig
-                    (Error_message.ERefComponentProp { spread = Some (loc_of_reason reason); loc })
+                    (Error_message.ERefComponentProp { spread = loc_of_reason reason; loc })
                  )
              | (_, Some p1, None) ->
                let p1 = read_prop reason flags x p1 in

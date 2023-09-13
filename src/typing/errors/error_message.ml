@@ -591,7 +591,7 @@ and 'loc t' =
       second: 'loc;
     }
   | ERefComponentProp of {
-      spread: 'loc option;
+      spread: 'loc;
       loc: 'loc;
     }
   | EReactIntrinsicOverlap of {
@@ -1306,8 +1306,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EInvalidMappedType { loc; kind } -> EInvalidMappedType { loc = f loc; kind }
   | EDuplicateComponentProp { spread; first; second } ->
     EDuplicateComponentProp { spread = f spread; first = map_reason first; second = f second }
-  | ERefComponentProp { spread; loc } ->
-    ERefComponentProp { spread = Base.Option.map ~f spread; loc = f loc }
+  | ERefComponentProp { spread; loc } -> ERefComponentProp { spread = f spread; loc = f loc }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1724,8 +1723,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ETSSyntax { loc; _ }
   | EReferenceInAnnotation (loc, _, _)
   | EDuplicateComponentProp { spread = loc; _ }
-  | ERefComponentProp { spread = None; loc }
-  | ERefComponentProp { spread = Some loc; _ }
+  | ERefComponentProp { spread = loc; _ }
   | ETypeGuardIncompatibleWithFunctionKind { loc; _ } ->
     Some loc
   | EImplicitInstantiationWidenedError { reason_call; _ } -> Some (loc_of_reason reason_call)
@@ -4963,18 +4961,7 @@ let friendly_message_of_msg loc_of_aloc msg =
       ]
     in
     Normal { features }
-  | ERefComponentProp { spread = None; loc } ->
-    let features =
-      [
-        text "Component syntax does not support ";
-        ref (mk_reason (RCustom "ref properties") loc);
-        text ". Use a ";
-        code "forwardRef";
-        text "-style component definition instead";
-      ]
-    in
-    Normal { features }
-  | ERefComponentProp { spread = Some spread; loc } ->
+  | ERefComponentProp { spread; loc } ->
     let features =
       [
         text "Components do not support ";
