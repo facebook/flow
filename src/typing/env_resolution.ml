@@ -455,7 +455,7 @@ let resolve_binding_partial cx reason loc b =
           DefT
             ( reason,
               bogus_trust (),
-              ArrT (ArrayAT { elem_t; tuple_view = Some ([], (0, 0)); react_dro = false })
+              ArrT (ArrayAT { elem_t; tuple_view = Some ([], (0, 0)); react_dro = None })
             )
         | Ast.Expression.Array { Ast.Expression.Array.elements; _ } ->
           (* TODO merge code with statement.ml implementation *)
@@ -723,7 +723,7 @@ let resolve_binding_partial cx reason loc b =
         (elem_t, Some ([], (0, 0)), replace_desc_reason REmptyArrayLit reason)
     in
     let t =
-      DefT (reason, bogus_trust (), ArrT (ArrayAT { elem_t; tuple_view; react_dro = false }))
+      DefT (reason, bogus_trust (), ArrT (ArrayAT { elem_t; tuple_view; react_dro = None }))
     in
     let cache = Context.node_cache cx in
     let exp =

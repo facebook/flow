@@ -505,7 +505,7 @@ class virtual ['a] t =
         else
           ReactCheckComponentConfig map'
       | ReactCheckComponentRef
-      | ReactDRO
+      | ReactDRO _
       | NonMaybeType
       | PropertyType _
       | OptionalIndexedAccessResultType _

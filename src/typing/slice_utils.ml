@@ -100,6 +100,11 @@ let make_optional_with_possible_missing_props propname missing_prop1 missing_pro
   else
     TypeUtil.optional ?annot_loc:None ~use_desc:false
 
+let merge_dro a b =
+  match (a, b) with
+  | (Some x, Some _) -> Some x
+  | _ -> None
+
 (*******************************)
 (* Shared Object Kit Utilities *)
 (*******************************)
@@ -443,7 +448,7 @@ let spread2
       {
         frozen = flags1.frozen && flags2.frozen;
         obj_kind;
-        react_dro = flags1.react_dro && flags2.react_dro;
+        react_dro = merge_dro flags1.react_dro flags2.react_dro;
       }
     in
     let generics = Generic.spread_append generics1 generics2 in
@@ -477,7 +482,7 @@ let spread =
         | Some d -> Indexed d
         | None -> Exact
       in
-      let flags = { obj_kind; frozen = false; react_dro = false } in
+      let flags = { obj_kind; frozen = false; react_dro = None } in
       let props = NameUtils.Map.mapi (read_prop reason flags) prop_map in
       Nel.one (true, None, { Object.reason; props; flags; generics; interface = None })
   in
@@ -1277,7 +1282,7 @@ let intersect2
     {
       frozen = flags1.frozen || flags2.frozen;
       obj_kind;
-      react_dro = flags1.react_dro || flags2.react_dro;
+      react_dro = Base.Option.first_some flags1.react_dro flags2.react_dro;
     }
   in
   let generics = Generic.spread_append generics1 generics2 in
@@ -1316,7 +1321,7 @@ let interface_slice cx r ~static ~inst id generics =
     | Some dict -> Indexed dict
     | None -> Inexact
   in
-  let flags = { frozen = false; obj_kind; react_dro = false } in
+  let flags = { frozen = false; obj_kind; react_dro = None } in
   object_slice cx ~interface:(Some (static, inst)) r id flags generics
 
 let resolve
@@ -1411,7 +1416,7 @@ let resolve
   (* Mirroring Object.assign() and {...null} semantics, treat null/void as
    * empty objects. *)
   | DefT (_, _, (NullT | VoidT)) ->
-    let flags = { frozen = true; obj_kind = Exact; react_dro = false } in
+    let flags = { frozen = true; obj_kind = Exact; react_dro = None } in
     let x =
       Nel.one
         {
@@ -1434,7 +1439,7 @@ let resolve
          | Spread _ ->
            true
          | _ -> false ->
-    let flags = { frozen = true; obj_kind = Exact; react_dro = false } in
+    let flags = { frozen = true; obj_kind = Exact; react_dro = None } in
     let x =
       Nel.one
         {
@@ -1455,7 +1460,7 @@ let resolve
    *)
   | DefT (r, _, MixedT _) as t ->
     (* TODO(jmbrown): This should be Inexact *)
-    let flags = { frozen = true; obj_kind = Exact; react_dro = false } in
+    let flags = { frozen = true; obj_kind = Exact; react_dro = None } in
     let x =
       match tool with
       | ObjectWiden _

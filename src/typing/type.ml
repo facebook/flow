@@ -432,6 +432,7 @@ module rec TypeTerm : sig
         providers: 'loc list;
         array: bool;
       }
+    | ReactPropsDeepReadOnly of 'loc
     | ArrayElementCompatibility of {
         lower: 'loc virtual_reason;
         upper: 'loc virtual_reason;
@@ -860,7 +861,7 @@ module rec TypeTerm : sig
       }
     | FilterOptionalT of use_op * t
     | FilterMaybeT of use_op * t
-    | DeepReadOnlyT of tvar
+    | DeepReadOnlyT of tvar * ALoc.t
     | ImplicitVoidReturnT of {
         use_op: use_op;
         reason: reason;
@@ -1215,7 +1216,8 @@ module rec TypeTerm : sig
 
   and arrtype =
     | ArrayAT of {
-        react_dro: bool; (* Should elements of this array be treated as propagating read-only *)
+        react_dro: ALoc.t option;
+            (* Should elements of this array be treated as propagating read-only, and if so, what location is responsible *)
         elem_t: t;
         tuple_view: (tuple_element list * (int * int)) option;
       }
@@ -1224,7 +1226,7 @@ module rec TypeTerm : sig
      * myTuple[expr]
      *)
     | TupleAT of {
-        react_dro: bool; (* As ArrayAT *)
+        react_dro: ALoc.t option; (* As ArrayAT *)
         elem_t: t;
         elements: tuple_element list;
         (* Arity represents the range of valid arities, considering optional elements.
@@ -1233,7 +1235,7 @@ module rec TypeTerm : sig
       }
     (* ROArrayAT(elemt) is the super type for all tuples and arrays for which
      * elemt is a supertype of every element type *)
-    | ROArrayAT of t * (* react_dro, as above *) bool
+    | ROArrayAT of t * (* react_dro, as above *) ALoc.t option
 
   and tuple_element =
     | TupleElement of {
@@ -1371,7 +1373,7 @@ module rec TypeTerm : sig
 
   and flags = {
     frozen: bool;
-    react_dro: bool;
+    react_dro: ALoc.t option;
     obj_kind: obj_kind;
   }
 
@@ -1559,7 +1561,7 @@ module rec TypeTerm : sig
     | ReactConfigType of t
     | ReactCheckComponentConfig of Property.t NameUtils.Map.t
     | ReactCheckComponentRef
-    | ReactDRO
+    | ReactDRO of ALoc.t
     | MappedType of {
         (* Homomorphic mapped types use an inline keyof: {[key in keyof O]: T} or a type parameter
          * bound by $Keys/keyof: type Homomorphic<Keys: $Keys<O>> = {[key in O]: T *)
@@ -3115,7 +3117,7 @@ module AConstraint = struct
     | Annot_NotT of Reason.t
     | Annot_ObjKeyMirror of Reason.t
     | Annot_ObjMapConst of Reason.t * TypeTerm.t
-    | Annot_DeepReadOnlyT of Reason.t
+    | Annot_DeepReadOnlyT of Reason.t * ALoc.t
     | Annot_GetKeysT of Reason.t
     | Annot_ToStringT of {
         orig_t: TypeTerm.t option;
@@ -3249,7 +3251,7 @@ module AConstraint = struct
     | Annot_ToStringT { reason = r; _ }
     | Annot_ObjRestT (r, _)
     | Annot_GetValuesT r
-    | Annot_DeepReadOnlyT r
+    | Annot_DeepReadOnlyT (r, _)
     | Annot__Future_added_value__ r ->
       r
 
@@ -3858,6 +3860,7 @@ let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
 
 let string_of_frame_use_op (type a) : a virtual_frame_use_op -> string = function
   | ConstrainedAssignment _ -> "ConstrainedAssignment"
+  | ReactPropsDeepReadOnly _ -> "ReactPropsDeepReadOnly"
   | ArrayElementCompatibility _ -> "ArrayElementCompatibility"
   | FunCompatibility _ -> "FunCompatibility"
   | FunMissingArg _ -> "FunMissingArg"
@@ -4189,7 +4192,7 @@ let mk_opt_methodcalltype
     ?opt_meth_generic_this opt_meth_targs opt_meth_args_tlist opt_meth_strict_arity =
   { opt_meth_generic_this; opt_meth_targs; opt_meth_args_tlist; opt_meth_strict_arity }
 
-let default_flags = { obj_kind = Exact; frozen = false; react_dro = false }
+let default_flags = { obj_kind = Exact; frozen = false; react_dro = None }
 
 let mk_objecttype ?(flags = default_flags) ~call pmap proto =
   { flags; proto_t = proto; props_tmap = pmap; call_t = call; reachable_targs = [] }

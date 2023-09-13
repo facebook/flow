@@ -837,7 +837,7 @@ let check_untyped_import cx import_kind lreason ureason =
     add_output cx message
   | _ -> ()
 
-let obj_is_readonlyish { Type.react_dro; frozen; _ } = react_dro || frozen
+let obj_is_readonlyish { Type.react_dro; frozen; _ } = Base.Option.is_some react_dro || frozen
 
 let is_exception_to_react_dro = function
   | Named { name = OrdinaryName "current"; _ } -> true
@@ -1722,7 +1722,7 @@ module type Get_prop_helper_sig = sig
     Type.t ->
     Type.t
 
-  val mk_react_dro : Context.t -> use_op -> Type.t -> Type.t
+  val mk_react_dro : Context.t -> use_op -> ALoc.t -> Type.t -> Type.t
 
   val enum_proto :
     Context.t -> Type.trace -> reason:Reason.t -> Reason.t * Trust.trust_rep * Type.enum_t -> Type.t
@@ -1745,10 +1745,9 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
     | Some t ->
       let loc = loc_of_reason ureason in
       let t =
-        if react_dro && not (is_exception_to_react_dro propref) then
-          F.mk_react_dro cx use_op t
-        else
-          t
+        match react_dro with
+        | Some loc when not (is_exception_to_react_dro propref) -> F.mk_react_dro cx use_op loc t
+        | _ -> t
       in
       F.return cx trace ~use_op:unknown_use (F.reposition cx ~trace loc t)
     | None ->
@@ -1799,7 +1798,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
     | Some (p, _target_kind) ->
       let p = check_method_unbinding cx trace ~use_op ~method_accessible ~reason_op ~propref p in
       Base.Option.iter id ~f:(Context.test_prop_hit cx);
-      perform_read_prop_action cx trace use_op propref (Property.type_ p) reason_op false
+      perform_read_prop_action cx trace use_op propref (Property.type_ p) reason_op None
     | None ->
       let super =
         match name_of_propref propref with
@@ -2013,8 +2012,15 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
     | _ -> (false, elem_t, use_op)
   in
   begin
-    if write_action && react_dro then
-      add_output cx ~trace (Error_message.EROArrayWrite ((reason, reason_tup), use_op))
+    match react_dro with
+    | Some loc when write_action ->
+      add_output
+        cx
+        ~trace
+        (Error_message.EROArrayWrite
+           ((reason, reason_tup), Frame (ReactPropsDeepReadOnly loc, use_op))
+        )
+    | _ -> ()
   end;
   ( if is_index_restricted && (not can_write_tuple) && write_action then
     let error =
@@ -2331,6 +2337,6 @@ let mk_tuple_type cx ?trace ~id ~mk_type_destructor reason elements =
         *)
         union_of_ts elem_t_reason ts
       in
-      DefT (reason, bogus_trust (), ArrT (TupleAT { elem_t; elements; arity; react_dro = false }))
+      DefT (reason, bogus_trust (), ArrT (TupleAT { elem_t; elements; arity; react_dro = None }))
     else
       AnyT.error reason

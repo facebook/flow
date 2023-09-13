@@ -382,7 +382,7 @@ and type_of_hint_decomposition cx op reason t =
                 ( DefT
                     ( reason,
                       bogus_trust (),
-                      ArrT (ArrayAT { elem_t; tuple_view = Some ([], (0, 0)); react_dro = false })
+                      ArrT (ArrayAT { elem_t; tuple_view = Some ([], (0, 0)); react_dro = None })
                     ),
                   t
                 )

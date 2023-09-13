@@ -295,7 +295,7 @@ struct
         match obj_t with
         | OpenT _ -> failwith "Expected concrete type"
         | DefT (_, _, ObjT o) -> o.flags.react_dro
-        | _ -> false
+        | _ -> None
       in
       FlowJs.perform_read_prop_action cx trace use_op propref p ureason react_dro tout
     | WriteProp { use_op; obj_t = _; tin; write_ctx; prop_tout; mode } -> begin
@@ -344,9 +344,9 @@ struct
       (OrdinaryName "$EnumProto")
       [enum_object_t; enum_t; representation_t]
 
-  let mk_react_dro cx use_op t =
+  let mk_react_dro cx use_op props_loc t =
     let id = Eval.generate_id () in
-    FlowJs.mk_possibly_evaluated_destructor cx use_op (reason_of_t t) t ReactDRO id
+    FlowJs.mk_possibly_evaluated_destructor cx use_op (reason_of_t t) t (ReactDRO props_loc) id
 
   module Get_prop_helper = struct
     type r = Type.tvar -> unit
@@ -983,7 +983,7 @@ struct
         (*************)
         (* DRO *)
         (*************)
-        | (OptionalT ({ type_; _ } as o), DeepReadOnlyT ((r, _) as tout)) ->
+        | (OptionalT ({ type_; _ } as o), DeepReadOnlyT (((r, _) as tout), props_loc)) ->
           rec_flow_t
             cx
             trace
@@ -993,64 +993,71 @@ struct
                   o with
                   type_ =
                     Tvar.mk_no_wrap_where cx r (fun tvar ->
-                        rec_flow cx trace (type_, DeepReadOnlyT tvar)
+                        rec_flow cx trace (type_, DeepReadOnlyT (tvar, props_loc))
                     );
                 },
               OpenT tout
             )
-        | (MaybeT (rl, t), DeepReadOnlyT ((r, _) as tout)) ->
+        | (MaybeT (rl, t), DeepReadOnlyT (((r, _) as tout), props_loc)) ->
           rec_flow_t
             cx
             trace
             ~use_op:unknown_use
             ( MaybeT
                 ( rl,
-                  Tvar.mk_no_wrap_where cx r (fun tvar -> rec_flow cx trace (t, DeepReadOnlyT tvar))
+                  Tvar.mk_no_wrap_where cx r (fun tvar ->
+                      rec_flow cx trace (t, DeepReadOnlyT (tvar, props_loc))
+                  )
                 ),
               OpenT tout
             )
-        | (UnionT (reason, rep), DeepReadOnlyT tout) ->
+        | (UnionT (reason, rep), DeepReadOnlyT (tout, props_loc)) ->
           let dro_union =
             map_union
               ~f:(fun cx trace t tout ->
                 let tout = open_tvar tout in
-                rec_flow cx trace (t, DeepReadOnlyT tout))
+                rec_flow cx trace (t, DeepReadOnlyT (tout, props_loc)))
               cx
               trace
               rep
               reason
           in
           rec_flow_t ~use_op:unknown_use cx trace (dro_union, OpenT tout)
-        | (DefT (r, t, ObjT ({ Type.flags; _ } as o)), DeepReadOnlyT tout) ->
+        | (DefT (r, t, ObjT ({ Type.flags; _ } as o)), DeepReadOnlyT (tout, props_loc)) ->
           rec_flow_t
             ~use_op:unknown_use
             cx
             trace
-            (DefT (r, t, ObjT { o with Type.flags = { flags with react_dro = true } }), OpenT tout)
+            ( DefT (r, t, ObjT { o with Type.flags = { flags with react_dro = Some props_loc } }),
+              OpenT tout
+            )
         | ( DefT (r, trust, ArrT (TupleAT { elem_t; elements; arity; react_dro = _ })),
-            DeepReadOnlyT tout
+            DeepReadOnlyT (tout, props_loc)
           ) ->
           rec_flow_t
             ~use_op:unknown_use
             cx
             trace
-            ( DefT (r, trust, ArrT (TupleAT { elem_t; elements; arity; react_dro = true })),
+            ( DefT (r, trust, ArrT (TupleAT { elem_t; elements; arity; react_dro = Some props_loc })),
               OpenT tout
             )
-        | (DefT (r, trust, ArrT (ArrayAT { elem_t; tuple_view; react_dro = _ })), DeepReadOnlyT tout)
-          ->
+        | ( DefT (r, trust, ArrT (ArrayAT { elem_t; tuple_view; react_dro = _ })),
+            DeepReadOnlyT (tout, props_loc)
+          ) ->
           rec_flow_t
             ~use_op:unknown_use
             cx
             trace
-            (DefT (r, trust, ArrT (ArrayAT { elem_t; tuple_view; react_dro = true })), OpenT tout)
-        | (DefT (r, trust, ArrT (ROArrayAT (t, _))), DeepReadOnlyT tout) ->
+            ( DefT (r, trust, ArrT (ArrayAT { elem_t; tuple_view; react_dro = Some props_loc })),
+              OpenT tout
+            )
+        | (DefT (r, trust, ArrT (ROArrayAT (t, _))), DeepReadOnlyT (tout, props_loc)) ->
           rec_flow_t
             ~use_op:unknown_use
             cx
             trace
-            (DefT (r, trust, ArrT (ROArrayAT (t, true))), OpenT tout)
-        | ((IntersectionT _ | OpaqueT _ | DefT (_, _, PolyT _)), DeepReadOnlyT tout) ->
+            (DefT (r, trust, ArrT (ROArrayAT (t, Some props_loc))), OpenT tout)
+        | ((IntersectionT _ | OpaqueT _ | DefT (_, _, PolyT _)), DeepReadOnlyT (tout, _)) ->
           rec_flow_t ~use_op:unknown_use cx trace (l, OpenT tout)
         (***************)
         (* maybe types *)
@@ -2066,7 +2073,7 @@ struct
                   DefT
                     ( replace_desc_new_reason (RCustom "Array expected for spread") reason,
                       bogus_trust (),
-                      ArrT (ROArrayAT (elem_t, false))
+                      ArrT (ROArrayAT (elem_t, None))
                     )
                 | `Tuple ->
                   add_output
@@ -2078,7 +2085,7 @@ struct
                   AnyT.error reason
               in
               rec_flow_t ~use_op:unknown_use cx trace (l, resolve_to_type);
-              ArrayAT { elem_t; tuple_view = None; react_dro = false }
+              ArrayAT { elem_t; tuple_view = None; react_dro = None }
           in
           let elemt = elemt_of_arrtype arrtype in
           begin
@@ -4080,6 +4087,11 @@ struct
               )
           ) ->
           if obj_is_readonlyish flags then
+            let use_op =
+              match flags.react_dro with
+              | Some loc -> Frame (ReactPropsDeepReadOnly loc, use_op)
+              | None -> use_op
+            in
             add_output
               cx
               ~trace
@@ -4091,6 +4103,11 @@ struct
           when obj_is_readonlyish flags && not (is_exception_to_react_dro propref) ->
           let reason_prop = reason_of_propref propref in
           let prop_name = name_of_propref propref in
+          let use_op =
+            match flags.react_dro with
+            | Some loc -> Frame (ReactPropsDeepReadOnly loc, use_op)
+            | None -> use_op
+          in
           add_output cx ~trace (Error_message.EPropNotWritable { reason_prop; prop_name; use_op })
         | (DefT (reason_obj, _, ObjT o), SetPropT (use_op, reason_op, propref, mode, _, tin, prop_t))
           ->
@@ -4193,23 +4210,29 @@ struct
           let react_dro =
             match (action, arrtype) with
             | ( WriteElem _,
-                (ROArrayAT _ | TupleAT { react_dro = true; _ } | ArrayAT { react_dro = true; _ })
+                (ROArrayAT _ | TupleAT { react_dro = Some _; _ } | ArrayAT { react_dro = Some _; _ })
               ) ->
               let reasons = (reason_op, reason_tup) in
+              let use_op =
+                match arrtype with
+                | TupleAT { react_dro = Some loc; _ }
+                | ArrayAT { react_dro = Some loc; _ } ->
+                  Frame (ReactPropsDeepReadOnly loc, use_op)
+                | _ -> use_op
+              in
               add_output cx ~trace (Error_message.EROArrayWrite (reasons, use_op));
-              false
+              None
             | ( ReadElem _,
                 (ROArrayAT (_, react_dro) | TupleAT { react_dro; _ } | ArrayAT { react_dro; _ })
               ) ->
               react_dro
-            | _ -> false
+            | _ -> None
           in
           let value = elemt_of_arrtype arrtype in
           let value =
-            if react_dro then
-              mk_react_dro cx use_op value
-            else
-              value
+            match react_dro with
+            | Some loc -> mk_react_dro cx use_op loc value
+            | None -> value
           in
           perform_elem_action cx trace ~use_op ~restrict_deletes:false reason_op arr value action
         | ( DefT (_, _, NumT _),
@@ -4225,10 +4248,9 @@ struct
             array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype
           in
           let value =
-            if react_dro && read_action then
-              mk_react_dro cx use_op value
-            else
-              value
+            match react_dro with
+            | Some loc when read_action -> mk_react_dro cx use_op loc value
+            | _ -> value
           in
           perform_elem_action cx trace ~use_op ~restrict_deletes:is_tuple reason arr value action
         | ( DefT (_, _, ArrT _),
@@ -4344,7 +4366,7 @@ struct
                 Eval.generate_id ()
               )
           in
-          let t = DefT (reason, bogus_trust (), ArrT (ROArrayAT (elemt, false))) in
+          let t = DefT (reason, bogus_trust (), ArrT (ROArrayAT (elemt, None))) in
           rec_flow cx trace (t, MapTypeT (use_op, reason, TupleMap funt, tout))
         | (DefT (_, trust, ObjT o), MapTypeT (use_op, reason_op, ObjectMap funt, tout)) ->
           let map_t _ t =
@@ -5652,7 +5674,7 @@ struct
         | (_, WriteComputedObjPropCheckT { reason = _; reason_key; _ }) ->
           let reason = reason_of_t l in
           add_output cx ~trace (Error_message.EObjectComputedPropertyAssign (reason, reason_key))
-        | (_, DeepReadOnlyT tout) -> rec_flow_t ~use_op:unknown_use cx trace (l, OpenT tout)
+        | (_, DeepReadOnlyT (tout, _)) -> rec_flow_t ~use_op:unknown_use cx trace (l, OpenT tout)
         | _ ->
           add_output
             cx
@@ -5925,8 +5947,8 @@ struct
           (fun t_out' -> UseT (use_op, OptionalT { opt with type_ = t_out' }))
           t_out;
         true
-      | DeepReadOnlyT t_out ->
-        narrow_generic_tvar (fun t_out' -> DeepReadOnlyT t_out') t_out;
+      | DeepReadOnlyT (t_out, props_loc) ->
+        narrow_generic_tvar (fun t_out' -> DeepReadOnlyT (t_out', props_loc)) t_out;
         true
       | FilterMaybeT (use_op, t_out) ->
         narrow_generic (fun t_out' -> FilterMaybeT (use_op, t_out')) t_out;
@@ -6049,7 +6071,7 @@ struct
     let only_any _ = any in
     match t with
     | DefT (r, trust, ArrT (ArrayAT _)) ->
-      DefT (r, trust, ArrT (ArrayAT { elem_t = any; tuple_view = None; react_dro = false }))
+      DefT (r, trust, ArrT (ArrayAT { elem_t = any; tuple_view = None; react_dro = None }))
     | DefT (r, trust, ArrT (TupleAT { elements; arity; react_dro; _ })) ->
       DefT
         ( r,
@@ -6530,7 +6552,7 @@ struct
     in
     let o =
       {
-        flags = { obj_kind; frozen = false; react_dro = false };
+        flags = { obj_kind; frozen = false; react_dro = None };
         props_tmap;
         (* Interfaces have no prototype *)
         proto_t = ObjProtoT reason_struct;
@@ -6570,7 +6592,7 @@ struct
             ltrust,
             ObjT
               {
-                flags = { obj_kind = lkind; frozen = lfrozen; react_dro = false };
+                flags = { obj_kind = lkind; frozen = lfrozen; react_dro = None };
                 props_tmap = lprops;
                 proto_t = lproto;
                 call_t = lcall;
@@ -7139,7 +7161,7 @@ struct
                 )
               )
             | ReadOnlyType -> Object.(ObjKitT (use_op, reason, Resolve Next, ReadOnly, OpenT tout))
-            | ReactDRO -> DeepReadOnlyT tout
+            | ReactDRO props_loc -> DeepReadOnlyT (tout, props_loc)
             | PartialType -> Object.(ObjKitT (use_op, reason, Resolve Next, Partial, OpenT tout))
             | RequiredType -> Object.(ObjKitT (use_op, reason, Resolve Next, Required, OpenT tout))
             | ValuesType -> GetValuesT (reason, OpenT tout)
@@ -9079,7 +9101,7 @@ struct
               DefT
                 ( reason,
                   bogus_trust (),
-                  ArrT (ArrayAT { elem_t = spread_arg_elemt; tuple_view = None; react_dro = false })
+                  ArrT (ArrayAT { elem_t = spread_arg_elemt; tuple_view = None; react_dro = None })
                 )
             in
             let spread_array =
@@ -9216,7 +9238,7 @@ struct
                 bogus_trust (),
                 ArrT
                   (ArrayAT
-                     { elem_t = AnyT.why any_src reason_op; tuple_view = None; react_dro = false }
+                     { elem_t = AnyT.why any_src reason_op; tuple_view = None; react_dro = None }
                   )
               )
           (* Array literals can flow to a tuple. Arrays can't. So if the presence
@@ -9322,7 +9344,7 @@ struct
               DefT
                 ( reason_op,
                   bogus_trust (),
-                  ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = false })
+                  ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = None })
                 )
             | (ResolveToArrayLiteral, Some elements, _) ->
               let (valid, arity) =
@@ -9337,13 +9359,13 @@ struct
                 DefT
                   ( reason_op,
                     bogus_trust (),
-                    ArrT (ArrayAT { elem_t; tuple_view = Some (elements, arity); react_dro = false })
+                    ArrT (ArrayAT { elem_t; tuple_view = Some (elements, arity); react_dro = None })
                   )
               else
                 DefT
                   ( reason_op,
                     bogus_trust (),
-                    ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = false })
+                    ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = None })
                   )
             | (ResolveToTupleType, Some elements, _) ->
               let (valid, arity) =
@@ -9358,7 +9380,7 @@ struct
                 DefT
                   ( reason_op,
                     bogus_trust (),
-                    ArrT (TupleAT { elem_t; elements; arity; react_dro = false })
+                    ArrT (TupleAT { elem_t; elements; arity; react_dro = None })
                   )
               else
                 AnyT.error reason_op

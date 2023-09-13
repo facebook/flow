@@ -31,7 +31,7 @@ let string_of_selector = function
   | Default -> "Default"
 
 let string_of_destructor = function
-  | ReactDRO -> "ReactDRO"
+  | ReactDRO _ -> "ReactDRO"
   | NonMaybeType -> "NonMaybeType"
   | PropertyType { name; _ } -> spf "PropertyType %s" (display_string_of_name name)
   | ElementType _ -> "ElementType"
@@ -540,7 +540,7 @@ and dump_use_t_ (depth, tvars) cx t =
       | None -> Exact
       | Some d -> Indexed d
     in
-    let flags = { obj_kind; frozen = false; react_dro = false } in
+    let flags = { obj_kind; frozen = false; react_dro = None } in
     slice { Object.reason; props; flags; generics = Generic.spread_empty; interface = None }
   in
   let object_kit =
@@ -942,7 +942,7 @@ and dump_use_t_ (depth, tvars) cx t =
       p ~extra:check_str t
     | FilterOptionalT (_, arg) -> p ~reason:false ~extra:(kid arg) t
     | FilterMaybeT (_, arg) -> p ~reason:false ~extra:(kid arg) t
-    | DeepReadOnlyT (_, tv) -> p ~extra:(tvar tv) t
+    | DeepReadOnlyT ((_, tv), _) -> p ~extra:(tvar tv) t
     | SealGenericT { name; cont = Lower (_, l); _ } ->
       p ~extra:(spf "%s <~ %s" (Subst_name.string_of_subst_name name) (kid l)) t
     | SealGenericT { name; cont = Upper u; _ } ->

@@ -212,7 +212,13 @@ let rec merge_type cx =
         {
           frozen = o1.flags.frozen && o2.flags.frozen;
           obj_kind;
-          react_dro = o1.flags.react_dro && o2.flags.react_dro;
+          react_dro =
+            ( if Base.Option.is_some o1.flags.react_dro && Base.Option.is_some o1.flags.react_dro
+            then
+              o1.flags.react_dro
+            else
+              None
+            );
         }
       in
       let reason = locationless_reason (RCustom "object") in
@@ -261,7 +267,12 @@ let rec merge_type cx =
              {
                elem_t = merge_type cx (t1, t2);
                tuple_view = Some (elements, arity1);
-               react_dro = dro1 && dro2;
+               react_dro =
+                 ( if Base.Option.is_some dro1 && Base.Option.is_some dro2 then
+                   dro1
+                 else
+                   None
+                 );
              }
           )
       )
@@ -272,7 +283,18 @@ let rec merge_type cx =
       ( locationless_reason (RCustom "array"),
         bogus_trust (),
         ArrT
-          (ArrayAT { elem_t = merge_type cx (t1, t2); tuple_view = None; react_dro = dro1 && dro2 })
+          (ArrayAT
+             {
+               elem_t = merge_type cx (t1, t2);
+               tuple_view = None;
+               react_dro =
+                 ( if Base.Option.is_some dro1 && Base.Option.is_some dro2 then
+                   dro1
+                 else
+                   None
+                 );
+             }
+          )
       )
   | ( DefT (_, _, ArrT (TupleAT { elem_t = t1; elements = ts1; arity = arity1; react_dro = dro1 })),
       DefT (_, _, ArrT (TupleAT { elem_t = t2; elements = ts2; arity = arity2; react_dro = dro2 }))
@@ -291,7 +313,12 @@ let rec merge_type cx =
           (TupleAT
              {
                elem_t = merge_type cx (t1, t2);
-               react_dro = dro1 && dro2;
+               react_dro =
+                 ( if Base.Option.is_some dro1 && Base.Option.is_some dro2 then
+                   dro1
+                 else
+                   None
+                 );
                elements =
                  Base.List.map2_exn
                    ~f:
@@ -318,7 +345,15 @@ let rec merge_type cx =
     DefT
       ( locationless_reason (RCustom "read only array"),
         bogus_trust (),
-        ArrT (ROArrayAT (merge_type cx (elemt1, elemt2), dro1 && dro2))
+        ArrT
+          (ROArrayAT
+             ( merge_type cx (elemt1, elemt2),
+               if Base.Option.is_some dro1 && Base.Option.is_some dro2 then
+                 dro1
+               else
+                 None
+             )
+          )
       )
   | (MaybeT (_, t1), MaybeT (_, t2))
   | (MaybeT (_, t1), t2)

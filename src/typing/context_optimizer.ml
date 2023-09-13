@@ -205,7 +205,7 @@ class context_optimizer ~no_lowers =
       | OptionalIndexedAccessResultType _ -> t
       | ReadOnlyType -> t
       | RequiredType
-      | ReactDRO
+      | ReactDRO _
       | PartialType ->
         t
       | SpreadType (options, tlist, acc) ->

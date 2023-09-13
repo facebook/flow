@@ -255,7 +255,8 @@ let flip_frame = function
     | ObjMapFunCompatibility _ | ObjMapiFunCompatibility _ | TypeParamBound _ | OpaqueTypeBound _
     | FunMissingArg _ | ImplicitTypeParam | ReactGetConfig _ | UnifyFlip | ConstrainedAssignment _
     | MappedTypeKeyCompatibility _ | TypePredicateCompatibility
-    | InferredTypeForTypeGuardParameter _ | RendersCompatibility ) as use_op ->
+    | InferredTypeForTypeGuardParameter _ | RendersCompatibility | ReactPropsDeepReadOnly _ ) as
+    use_op ->
     use_op
 
 let post_process_errors original_errors =
@@ -667,6 +668,15 @@ let rec make_error_printable :
          * our error messages can compose in a way that would miss the special case we'd rather
          * output a bad error than crash. *)
         unknown_root loc frames
+      | Frame (ReactPropsDeepReadOnly props_loc, use_op) ->
+        let message =
+          [
+            text "React ";
+            ref (mk_reason (RCustom "component properties") props_loc);
+            text " and their nested props and elements cannot be written to";
+          ]
+        in
+        explanation loc frames use_op message
       | Frame (ConstrainedAssignment { name; declaration; providers; array }, use_op) ->
         let noun =
           if array then

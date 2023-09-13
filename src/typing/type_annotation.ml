@@ -480,7 +480,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let r = mk_annot_reason RArrayType loc in
       let (((_, elem_t), _) as t_ast) = convert cx tparams_map infer_tparams_map t in
       ( ( loc,
-          DefT (r, infer_trust cx, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = false }))
+          DefT (r, infer_trust cx, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = None }))
         ),
         Array { Array.argument = t_ast; comments }
       )
@@ -789,7 +789,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                 (DefT
                    ( mk_annot_reason RArrayLit loc,
                      infer_trust cx,
-                     ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = false })
+                     ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = None })
                    )
                 )
                 targs
@@ -803,7 +803,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                 (DefT
                    ( mk_annot_reason RArrayType loc,
                      infer_trust cx,
-                     ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = false })
+                     ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = None })
                    )
                 )
                 targs
@@ -815,10 +815,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               let elemt = List.hd elemts in
               reconstruct_ast
                 (DefT
-                   ( mk_annot_reason RROArrayType loc,
-                     infer_trust cx,
-                     ArrT (ROArrayAT (elemt, false))
-                   )
+                   (mk_annot_reason RROArrayType loc, infer_trust cx, ArrT (ROArrayAT (elemt, None)))
                 )
                 targs
           )
@@ -940,7 +937,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               let t = List.hd ts in
               let reason = mk_reason RReadOnlyType loc in
               reconstruct_ast
-                (mk_type_destructor cx (use_op reason) reason t ReactDRO (mk_eval_id cx loc))
+                (mk_type_destructor cx (use_op reason) reason t (ReactDRO loc) (mk_eval_id cx loc))
                 targs
           )
         (* $Keys<T> is the set of keys of T *)
@@ -1782,7 +1779,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         | Indexed _ -> o.flags.obj_kind
         | _ -> Exact
       in
-      DefT (r, trust, ObjT { o with flags = { obj_kind; frozen = false; react_dro = false } })
+      DefT (r, trust, ObjT { o with flags = { obj_kind; frozen = false; react_dro = None } })
     | EvalT (l, TypeDestructorT (use_op, r, SpreadType (_, ts, head_slice)), id) ->
       let r = replace_desc_reason RObjectLit r in
       let target =
@@ -1917,7 +1914,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           else
             Inexact
       in
-      let flags = { obj_kind; frozen = false; react_dro = false } in
+      let flags = { obj_kind; frozen = false; react_dro = None } in
       DefT
         ( mk_annot_reason RObjectType loc,
           infer_trust cx,

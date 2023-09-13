@@ -328,7 +328,8 @@ module rec ConsGen : S = struct
            (access_reason, use_op, Named { reason = prop_reason; name; from_indexed_access = false })
         )
 
-    let mk_react_dro cx _use_op t = ConsGen.elab_t cx t (Annot_DeepReadOnlyT (reason_of_t t))
+    let mk_react_dro cx _use_op props_loc t =
+      ConsGen.elab_t cx t (Annot_DeepReadOnlyT (reason_of_t t, props_loc))
   end
 
   module GetPropTKit = Flow_js_utils.GetPropT_kit (Get_prop_helper)
@@ -446,8 +447,8 @@ module rec ConsGen : S = struct
     | (EvalT (t, TypeDestructorT (use_op, reason, ReadOnlyType), _), _) ->
       let t = make_readonly cx use_op reason t in
       elab_t cx t op
-    | (EvalT (t, TypeDestructorT (_, reason, ReactDRO), _), _) ->
-      let t = elab_t cx t (Annot_DeepReadOnlyT reason) in
+    | (EvalT (t, TypeDestructorT (_, reason, ReactDRO props_loc), _), _) ->
+      let t = elab_t cx t (Annot_DeepReadOnlyT (reason, props_loc)) in
       elab_t cx t op
     | (EvalT (t, TypeDestructorT (use_op, reason, PartialType), _), _) ->
       let t = make_partial cx use_op reason t in
@@ -861,7 +862,7 @@ module rec ConsGen : S = struct
       let react_dro =
         match objt with
         | DefT (_, _, ObjT o) -> o.flags.react_dro
-        | _ -> false
+        | _ -> None
       in
       (match
          GetPropTKit.get_instance_prop
@@ -888,7 +889,7 @@ module rec ConsGen : S = struct
       let react_dro =
         match objt with
         | DefT (_, _, ObjT o) -> o.flags.react_dro
-        | _ -> false
+        | _ -> None
       in
       (match GetPropTKit.get_obj_prop cx dummy_trace o propref reason_op with
       | Some (p, _) ->
@@ -898,17 +899,18 @@ module rec ConsGen : S = struct
     (************)
     (* DRO *)
     (************)
-    | (DefT (r, t, ObjT ({ Type.flags; _ } as o)), Annot_DeepReadOnlyT _) ->
-      DefT (r, t, ObjT { o with Type.flags = { flags with react_dro = true } })
+    | (DefT (r, t, ObjT ({ Type.flags; _ } as o)), Annot_DeepReadOnlyT (_, props_loc)) ->
+      DefT (r, t, ObjT { o with Type.flags = { flags with react_dro = Some props_loc } })
     | ( DefT (r, trust, ArrT (TupleAT { elem_t; elements; arity; react_dro = _ })),
-        Annot_DeepReadOnlyT _
+        Annot_DeepReadOnlyT (_, props_loc)
       ) ->
-      DefT (r, trust, ArrT (TupleAT { elem_t; elements; arity; react_dro = true }))
-    | (DefT (r, trust, ArrT (ArrayAT { elem_t; tuple_view; react_dro = _ })), Annot_DeepReadOnlyT _)
-      ->
-      DefT (r, trust, ArrT (ArrayAT { elem_t; tuple_view; react_dro = true }))
-    | (DefT (r, trust, ArrT (ROArrayAT (t, _))), Annot_DeepReadOnlyT _) ->
-      DefT (r, trust, ArrT (ROArrayAT (t, true)))
+      DefT (r, trust, ArrT (TupleAT { elem_t; elements; arity; react_dro = Some props_loc }))
+    | ( DefT (r, trust, ArrT (ArrayAT { elem_t; tuple_view; react_dro = _ })),
+        Annot_DeepReadOnlyT (_, props_loc)
+      ) ->
+      DefT (r, trust, ArrT (ArrayAT { elem_t; tuple_view; react_dro = Some props_loc }))
+    | (DefT (r, trust, ArrT (ROArrayAT (t, _))), Annot_DeepReadOnlyT (_, props_loc)) ->
+      DefT (r, trust, ArrT (ROArrayAT (t, Some props_loc)))
     (************)
     (* ObjRestT *)
     (************)

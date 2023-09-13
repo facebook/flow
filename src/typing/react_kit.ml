@@ -376,7 +376,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                     {
                       elem_t = union_of_ts r ts;
                       tuple_view = Some (elements, (arity, arity));
-                      react_dro = false;
+                      react_dro = None;
                     }
                  )
              )
@@ -400,7 +400,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                      DefT
                        ( r,
                          bogus_trust (),
-                         ArrT (ArrayAT { elem_t = spread; tuple_view = None; react_dro = false })
+                         ArrT (ArrayAT { elem_t = spread; tuple_view = None; react_dro = None })
                        );
                    ];
                use_desc = false;
@@ -428,7 +428,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                    bogus_trust (),
                    ArrT
                      (ArrayAT
-                        { elem_t = union_of_ts r [spread; t]; tuple_view = None; react_dro = false }
+                        { elem_t = union_of_ts r [spread; t]; tuple_view = None; react_dro = None }
                      )
                  );
              ]
@@ -454,7 +454,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                     {
                       elem_t = union_of_ts r (spread :: t :: ts);
                       tuple_view = None;
-                      react_dro = false;
+                      react_dro = None;
                     }
                  )
              )

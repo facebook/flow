@@ -1013,18 +1013,32 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- dro.js:2:5
 
-Cannot assign `42` to `a.x.y` because property `y` is not writable. [cannot-write]
+Cannot assign `42` to `a.x.y` because property `y` is not writable. React component properties [1] and their nested
+props and elements cannot be written to. [cannot-write]
 
+   dro.js:2:5
    2| a.x.y = 42; // error
           ^
+
+References:
+   dro.js:1:18
+   1| declare const a: $ReactDeepReadOnly<{x: {y: number}}>;
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------- dro.js:3:3
 
-Cannot assign `42` to `a.x` because property `x` is not writable. [cannot-write]
+Cannot assign `42` to `a.x` because property `x` is not writable. React component properties [1] and their nested props
+and elements cannot be written to. [cannot-write]
 
+   dro.js:3:3
    3| a.x = 42; // error
         ^
+
+References:
+   dro.js:1:18
+   1| declare const a: $ReactDeepReadOnly<{x: {y: number}}>;
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:10:2
@@ -1046,34 +1060,62 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:11:3
 
-Cannot assign `0` to `w.v` because property `v` is not writable. [cannot-write]
+Cannot assign `0` to `w.v` because property `v` is not writable. React component properties [1] and their nested props
+and elements cannot be written to. [cannot-write]
 
+   dro.js:11:3
    11| w.v = 0; // error
          ^
+
+References:
+   dro.js:5:18
+    5| declare const x: $ReactDeepReadOnly<{x: {a: number}, y: Array<{w: {v: number}}>}>;
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:12:5
 
-Cannot assign `42` to `x.x.a` because property `a` is not writable. [cannot-write]
+Cannot assign `42` to `x.x.a` because property `a` is not writable. React component properties [1] and their nested
+props and elements cannot be written to. [cannot-write]
 
+   dro.js:12:5
    12| x.x.a = 42; // error
            ^
+
+References:
+   dro.js:5:18
+    5| declare const x: $ReactDeepReadOnly<{x: {a: number}, y: Array<{w: {v: number}}>}>;
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:13:5
 
-Cannot assign array literal to `x.x.y` because property `y` is not writable. [cannot-write]
+Cannot assign array literal to `x.x.y` because property `y` is not writable. React component properties [1] and their
+nested props and elements cannot be written to. [cannot-write]
 
+   dro.js:13:5
    13| x.x.y = []; // error
            ^
+
+References:
+   dro.js:5:18
+    5| declare const x: $ReactDeepReadOnly<{x: {a: number}, y: Array<{w: {v: number}}>}>;
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:14:3
 
-Cannot assign `42` to `x.x` because property `x` is not writable. [cannot-write]
+Cannot assign `42` to `x.x` because property `x` is not writable. React component properties [1] and their nested props
+and elements cannot be written to. [cannot-write]
 
+   dro.js:14:3
    14| x.x = (42: any);
          ^
+
+References:
+   dro.js:5:18
+    5| declare const x: $ReactDeepReadOnly<{x: {a: number}, y: Array<{w: {v: number}}>}>;
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------ eager_config_checking.js:1:38

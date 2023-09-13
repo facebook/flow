@@ -534,11 +534,11 @@ and merge_annot tps infer_tps file = function
   | Array (loc, t) ->
     let reason = Reason.(mk_annot_reason RArrayType loc) in
     let elem_t = merge tps infer_tps file t in
-    Type.(DefT (reason, trust, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = false })))
+    Type.(DefT (reason, trust, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = None })))
   | ReadOnlyArray (loc, t) ->
     let reason = Reason.(mk_annot_reason RROArrayType loc) in
     let t = merge tps infer_tps file t in
-    Type.(DefT (reason, trust, ArrT (ROArrayAT (t, false))))
+    Type.(DefT (reason, trust, ArrT (ROArrayAT (t, None))))
   | SingletonString (loc, str) ->
     let reason = Reason.(mk_annot_reason (RStringLit (OrdinaryName str)) loc) in
     Type.(DefT (reason, trust, SingletonStrT (Reason.OrdinaryName str)))
@@ -598,7 +598,7 @@ and merge_annot tps infer_tps file = function
   | TEMPORARY_Array (loc, t) ->
     let reason = Reason.(mk_annot_reason RArrayLit loc) in
     let elem_t = merge tps infer_tps file t in
-    Type.(DefT (reason, trust, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = false })))
+    Type.(DefT (reason, trust, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = None })))
   | AnyWithLowerBound (_loc, t) ->
     let t = merge tps infer_tps file t in
     Type.AnyT.annot (TypeUtil.reason_of_t t)
@@ -1155,7 +1155,7 @@ and merge_value tps infer_tps file = function
       | (t, []) -> t
       | (t0, t1 :: ts) -> Type.(UnionT (reason, UnionRep.make t0 t1 ts))
     in
-    Type.(DefT (reason, trust, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = false })))
+    Type.(DefT (reason, trust, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = None })))
 
 and merge_object_lit ~for_export tps infer_tps file (loc, frozen, proto, props) =
   let reason = obj_lit_reason ~frozen loc in

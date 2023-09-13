@@ -2417,7 +2417,7 @@ module Make
             DefT
               ( reason,
                 make_trust (),
-                ArrT (ArrayAT { elem_t; tuple_view = Some ([], (0, 0)); react_dro = false })
+                ArrT (ArrayAT { elem_t; tuple_view = Some ([], (0, 0)); react_dro = None })
               )
           ),
           Array { Array.elements = []; comments }
@@ -2428,7 +2428,7 @@ module Make
             DefT
               ( reason,
                 make_trust (),
-                ArrT (ArrayAT { elem_t; tuple_view = Some ([], (0, 0)); react_dro = false })
+                ArrT (ArrayAT { elem_t; tuple_view = Some ([], (0, 0)); react_dro = None })
               )
           ),
           Array { Array.elements = []; comments }
@@ -6020,7 +6020,7 @@ module Make
       ( DefT
           ( arr_reason,
             bogus_trust (),
-            ArrT (ArrayAT { elem_t = keys_t; tuple_view = None; react_dro = false })
+            ArrT (ArrayAT { elem_t = keys_t; tuple_view = None; react_dro = None })
           ),
         None,
         (args_loc, { ArgList.arguments = [Expression e_ast]; comments })
@@ -6031,8 +6031,7 @@ module Make
       ( DefT
           ( arr_reason,
             bogus_trust (),
-            ArrT
-              (ArrayAT { elem_t = get_values ~arr_reason o; tuple_view = None; react_dro = false })
+            ArrT (ArrayAT { elem_t = get_values ~arr_reason o; tuple_view = None; react_dro = None })
           ),
         None,
         (args_loc, { ArgList.arguments = [Expression e_ast]; comments })
@@ -6052,7 +6051,7 @@ module Make
               (TupleAT
                  {
                    elem_t;
-                   react_dro = false;
+                   react_dro = None;
                    elements =
                      [
                        mk_tuple_element ~name:"key" elem_reason keys_t;
@@ -6066,7 +6065,7 @@ module Make
       ( DefT
           ( arr_reason,
             bogus_trust (),
-            ArrT (ArrayAT { elem_t = entry_t; tuple_view = None; react_dro = false })
+            ArrT (ArrayAT { elem_t = entry_t; tuple_view = None; react_dro = None })
           ),
         None,
         (args_loc, { ArgList.arguments = [Expression e_ast]; comments })
