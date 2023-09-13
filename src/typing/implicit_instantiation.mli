@@ -122,6 +122,9 @@ module type KIT = sig
     true_t:Type.t ->
     false_t:Type.t ->
     Type.t
+
+  val run_ref_extractor :
+    Context.t -> use_op:Type.use_op -> reason:Reason.reason -> Type.t -> Type.t
 end
 
 module Kit (Flow : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instantiation_helper_sig) :

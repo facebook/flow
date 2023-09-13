@@ -1247,6 +1247,9 @@ struct
               }
           in
           rec_flow cx trace (l, ReactKitT (use_op, reason_op, tool))
+        | (_, ExtractReactRefT (reason, tout)) ->
+          let t_ = ImplicitInstantiationKit.run_ref_extractor cx ~use_op:unknown_use ~reason l in
+          rec_flow_t cx ~use_op:unknown_use trace (t_, tout)
         (*********************)
         (* type applications *)
         (*********************)
@@ -6396,6 +6399,7 @@ struct
     | StrictEqT _
     | EqT _
     | HasOwnPropT _
+    | ExtractReactRefT _
     | ImplementsT _
     | InvariantT _
     | SetPrivatePropT _
@@ -7142,11 +7146,7 @@ struct
                       ResolveSpreadsToTupleType (Reason.mk_id (), elem_tout, OpenT tout);
                   }
                 )
-            | ReactCheckComponentRef ->
-              UseT
-                ( use_op,
-                  get_builtin_typeapp cx reason (Reason.OrdinaryName "React$Ref") [OpenT tout]
-                )
+            | ReactCheckComponentRef -> ExtractReactRefT (reason, OpenT tout)
             | ReactCheckComponentConfig pmap ->
               Object.(
                 let tool = Resolve Next in

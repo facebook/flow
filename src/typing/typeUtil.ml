@@ -138,6 +138,7 @@ and reason_of_use_t = function
   | VarianceCheckT (reason, _, _, _) -> reason
   | TypeCastT (_, t) -> reason_of_t t
   | FilterOptionalT (_, t) -> reason_of_t t
+  | ExtractReactRefT (reason, _) -> reason
   | FilterMaybeT (_, t) -> reason_of_t t
   | DeepReadOnlyT ((r, _), _) -> r
   | ConcretizeTypeAppsT (_, _, (_, _, _, reason), _) -> reason
@@ -390,6 +391,7 @@ and mod_reason_of_use_t f = function
   | CondT (reason, then_t, else_t, tout) -> CondT (f reason, then_t, else_t, tout)
   | ReactPropsToOut (reason, t) -> ReactPropsToOut (f reason, t)
   | ReactInToProps (reason, t) -> ReactInToProps (f reason, t)
+  | ExtractReactRefT (reason, t) -> ExtractReactRefT (f reason, t)
   | DestructuringT (reason, a, s, t, id) -> DestructuringT (f reason, a, s, t, id)
   | ResolveUnionT { reason; resolved; unresolved; upper; id } ->
     ResolveUnionT { reason = f reason; resolved; unresolved; upper; id }
@@ -536,6 +538,7 @@ let rec util_use_op_of_use_t :
   | AssertExportIsTypeT (_, _, _)
   | ChoiceKitUseT (_, _)
   | PreprocessKitT (_, _)
+  | ExtractReactRefT _
   | DebugPrintT _
   | DebugSleepT _
   | SentinelPropTestT (_, _, _, _, _)

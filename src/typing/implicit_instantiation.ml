@@ -89,15 +89,15 @@ module type S = sig
     'acc
 end
 
+let get_t cx =
+  let no_lowers _cx r = Type.Unsoundness.merged_any r in
+  function
+  | OpenT (r, id) -> Flow_js_utils.merge_tvar ~no_lowers cx r id
+  | t -> t
+
 module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
   module Flow = Flow
   module SpeculationKit = Speculation_kit.Make (Flow)
-
-  let get_t cx =
-    let no_lowers _cx r = Type.Unsoundness.merged_any r in
-    function
-    | OpenT (r, id) -> Flow_js_utils.merge_tvar ~no_lowers cx r id
-    | t -> t
 
   (* This visitor records the polarities at which BoundTs are found. We follow the bounds of each
    * type parameter as well, since some type params are only used in the bounds of another.
@@ -355,6 +355,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | ReactInToProps _
     | FilterOptionalT _
     | FilterMaybeT _
+    | ExtractReactRefT _
     | SealGenericT _ ->
       UpperNonT u
     | DeepReadOnlyT (((r, _) as tout), _) -> identity_reverse_upper_bound cx seen tvar r (OpenT tout)
@@ -704,7 +705,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
         in
         loop ([], []) tparams explicit_targs
     in
-    let (inferred_targ_list, use_t, tout) =
+    let (inferred_targ_list, lower_t, use_t, tout) =
       match op with
       | Check.Call calltype ->
         let new_tout = Tvar.mk_no_wrap cx reason_op in
@@ -720,7 +721,16 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
               return_hint = Type.hint_unavailable;
             }
         in
-        (inferred_targ_list, call_t, OpenT (reason_op, new_tout))
+        (inferred_targ_list, lhs, call_t, Some (OpenT (reason_op, new_tout)))
+      | Check.SubtypeLowerPoly u ->
+        let (_, inferred_targ_list) = merge_targs None in
+        let targs = Base.List.map ~f:(fun (_, t, _, _) -> t) inferred_targ_list in
+        Flow.flow cx (lhs, UseT (use_op, u));
+        ( inferred_targ_list,
+          Flow.mk_typeapp_instance_annot cx ~use_op ~reason_op ~reason_tapp lhs targs,
+          UseT (use_op, u),
+          None
+        )
       | Check.Constructor (explicit_targs, call_args) ->
         let new_tout = Tvar.mk cx reason_op in
         let (call_targs, inferred_targ_list) = merge_targs explicit_targs in
@@ -735,7 +745,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
               return_hint = Type.hint_unavailable;
             }
         in
-        (inferred_targ_list, constructor_t, new_tout)
+        (inferred_targ_list, lhs, constructor_t, Some new_tout)
       | Check.Jsx { clone; component; config; targs; children } ->
         let new_tout = Tvar.mk cx reason_op in
         let (call_targs, inferred_targ_list) = merge_targs targs in
@@ -756,9 +766,9 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
                 }
             )
         in
-        (inferred_targ_list, react_kit_t, new_tout)
+        (inferred_targ_list, lhs, react_kit_t, Some new_tout)
     in
-    Flow.flow cx (lhs, use_t);
+    Flow.flow cx (lower_t, use_t);
     (inferred_targ_list, marked_tparams, tout)
 
   let pin_type cx ~use_op tparam polarity ~default_bound instantiation_reason t =
@@ -923,34 +933,35 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       List.fold_left (fun map x -> Subst_name.Map.add x.name x map) Subst_name.Map.empty tparams
     in
     let (inferred_targ_list, marked_tparams, tout) =
-      match get_t cx t with
-      | DefT (_, _, ReactAbstractComponentT { config; _ }) ->
+      let (_, _, op_kind) = operation in
+      match (get_t cx t, op_kind) with
+      | (_, Check.SubtypeLowerPoly _) ->
+        let marked_tparams = Marked.empty in
+        check_instantiation cx ~tparams ~marked_tparams ~implicit_instantiation
+      | (DefT (_, _, ReactAbstractComponentT { config; _ }), _) ->
         check_react_fun cx ~tparams ~tparams_map ~props:(Some config) ~implicit_instantiation
-      | DefT (_, _, FunT (_, funtype)) ->
-        (match operation with
-        | (_, _, Check.Jsx _) ->
-          let props =
-            match funtype.params with
-            | (_, props) :: _ -> Some props
-            | [] -> None
-          in
-          check_react_fun cx ~tparams ~tparams_map ~props ~implicit_instantiation
-        | _ -> check_fun cx ~tparams ~tparams_map ~return_t:funtype.return_t ~implicit_instantiation)
-      | ThisClassT (_, DefT (_, _, InstanceT _), _, _) ->
-        (match operation with
-        | (_, reason_op, Check.Call _) ->
-          (* This case is hit when calling a static function. We will implicitly
-           * instantiate the type variables on the class, but using an instance's
-           * type params in a static method does not make sense. We ignore this case
-           * intentionally *)
-          ([], Marked.empty, Tvar.mk cx reason_op)
-        | (_, _, _) -> check_instance cx ~tparams ~implicit_instantiation)
+      | (DefT (_, _, FunT (_, funtype)), Check.Jsx _) ->
+        let props =
+          match funtype.params with
+          | (_, props) :: _ -> Some props
+          | [] -> None
+        in
+        check_react_fun cx ~tparams ~tparams_map ~props ~implicit_instantiation
+      | (DefT (_, _, FunT (_, funtype)), _) ->
+        check_fun cx ~tparams ~tparams_map ~return_t:funtype.return_t ~implicit_instantiation
+      | (ThisClassT (_, DefT (_, _, InstanceT _), _, _), Check.Call _) ->
+        (* This case is hit when calling a static function. We will implicitly
+         * instantiate the type variables on the class, but using an instance's
+         * type params in a static method does not make sense. We ignore this case
+         * intentionally *)
+        ([], Marked.empty, None)
+      | (ThisClassT (_, DefT (_, _, InstanceT _), _, _), _) ->
+        check_instance cx ~tparams ~implicit_instantiation
       | _ ->
         (* There are no other valid cases of implicit instantiation, but it is still possible
            reach this case via non-sensical cases that usually are downstream of some other error.
            Since there's no reasonable thing to do in these cases we just ignore it. *)
-        let (_, reason_op, _) = operation in
-        ([], Marked.empty, AnyT.error reason_op)
+        ([], Marked.empty, None)
     in
     (inferred_targ_list, marked_tparams, tparams_map, tout)
 
@@ -964,9 +975,11 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
         let errors_before_using_return_hint = Context.errors cx in
         let has_new_errors = init_errors != errors_before_using_return_hint in
         let (inferred_targ_list, marked_tparams, tparams_map, has_new_errors) =
-          match return_hint with
-          | None -> (inferred_targ_list, marked_tparams, tparams_map, has_new_errors)
-          | Some (hint, kind) ->
+          match (return_hint, tout) with
+          | (_, None)
+          | (None, _) ->
+            (inferred_targ_list, marked_tparams, tparams_map, has_new_errors)
+          | (Some (hint, kind), Some tout) ->
             (* Protect the effect of return hint constraining against speculative exns *)
             let speculative_exn =
               match Flow.flow_t cx (tout, hint) with
@@ -1264,6 +1277,9 @@ module type KIT = sig
     true_t:Type.t ->
     false_t:Type.t ->
     Type.t
+
+  val run_ref_extractor :
+    Context.t -> use_op:Type.use_op -> reason:Reason.reason -> Type.t -> Type.t
 end
 
 module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instantiation_helper_sig) :
@@ -1383,6 +1399,28 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
       Context.run_in_synthesis_mode cx f |> snd
     else
       f ()
+
+  let run_ref_extractor cx ~use_op ~reason t =
+    let lhs = Flow.get_builtin cx (OrdinaryName "React$RefSetter") reason in
+    match get_t cx lhs with
+    | DefT (_, _, PolyT { tparams_loc; tparams = ({ name; _ }, []) as ids; t_out; _ }) ->
+      let poly_t = (tparams_loc, ids, t_out) in
+      let check =
+        {
+          Implicit_instantiation_check.lhs;
+          poly_t;
+          operation = (use_op, reason, Implicit_instantiation_check.SubtypeLowerPoly t);
+        }
+      in
+      Context.run_in_implicit_instantiation_mode cx (fun () ->
+          let map = Pierce.solve_targs cx ~use_op ~allow_underconstrained:false check in
+          let { inferred; _ } = Subst_name.Map.find name map in
+          inferred
+      )
+    | _ ->
+      (* If the internal definition for React$RefSetter isn't polymorphic, either we're running with
+         no-flowlib or things have gone majorly sideways. Either way, just use mixed *)
+      MixedT.make reason (bogus_trust ())
 
   let run_monomorphize cx trace ~use_op ~reason_op ~reason_tapp tparams t =
     let subst_map =

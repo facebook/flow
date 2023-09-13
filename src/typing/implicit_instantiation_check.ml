@@ -8,6 +8,8 @@
 type poly_t = ALoc.t * Type.typeparam Nel.t * Type.t
 
 type operation =
+  | SubtypeLowerPoly of
+      Type.t (* When we want to infer a targ on a lower bound that will flow into this type.t *)
   | Call of Type.funcalltype
   | Constructor of Type.targ list option * Type.call_arg list
   | Jsx of {
