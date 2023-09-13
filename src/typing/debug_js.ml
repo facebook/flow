@@ -1538,6 +1538,7 @@ let dump_error_message =
         (dump_reason cx reason_op)
         (string_of_use_op use_op)
     | EInvalidTypeof (loc, name) -> spf "EInvalidTypeof (%s, %S)" (string_of_aloc loc) name
+    | EInvalidRef (loc, name) -> spf "EInvalidRef (%s, %S)" (string_of_aloc loc) name
     | EBinaryInLHS reason -> spf "EBinaryInLHS (%s)" (dump_reason cx reason)
     | EBinaryInRHS reason -> spf "EBinaryInRHS (%s)" (dump_reason cx reason)
     | EArithmeticOperand reason -> spf "EArithmeticOperand (%s)" (dump_reason cx reason)

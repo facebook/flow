@@ -83,3 +83,7 @@ import * as React from 'react';
         );
     }
 }
+
+component Bad<T>(ref: React$RefSetter<T>) { return null };
+
+component Bad2<T>(ref: React$RefSetter<Array<Array<Array<T>>>>) { return null };

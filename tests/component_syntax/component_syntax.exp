@@ -2195,6 +2195,22 @@ References:
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
+Error ---------------------------------------------------------------------------------------------------- refs.js:87:18
+
+Cannot use `T` in a `ref` property because it is a type parameter. The `ref` property cannot be generic. [invalid-ref]
+
+   87| component Bad<T>(ref: React$RefSetter<T>) { return null };
+                        ^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- refs.js:89:19
+
+Cannot use `T` in a `ref` property because it is a type parameter. The `ref` property cannot be generic. [invalid-ref]
+
+   89| component Bad2<T>(ref: React$RefSetter<Array<Array<Array<T>>>>) { return null };
+                         ^^^
+
+
 Error --------------------------------------------------------------------------------------- render_constraints.js:1:34
 
 Cannot use object type [1] as a render type because: [incompatible-type]
@@ -2658,7 +2674,7 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 180 errors
+Found 182 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

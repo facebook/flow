@@ -139,7 +139,9 @@ module Make
     let renders_t = mk_render_type cx renders_t in
     let config_reason = update_desc_reason (fun desc -> RPropsOfComponent desc) reason in
     let instance_reason = update_desc_reason (fun desc -> RInstanceOfComponent desc) reason in
-    let (config, instance) = F.config_and_instance cx ~config_reason ~instance_reason cparams in
+    let (config, instance) =
+      F.config_and_instance cx ~config_reason ~instance_reason ~tparams cparams
+    in
     let () =
       (* render types must be a subtype of React.Node
        * TODO(jmbrown): This check can be skipped if we track whether or not the renders type was

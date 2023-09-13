@@ -28,11 +28,36 @@ module type S = sig
     Context.t ->
     config_reason:Reason.reason ->
     instance_reason:Reason.reason ->
+    tparams:Type.typeparams ->
     Types.t ->
     Type.t * Type.t
 
   val eval : Context.t -> Types.t -> (ALoc.t * Type.t) Config_types.ast
 end
+
+exception Found of string
+
+let tparam_finder =
+  let open Type in
+  object
+    inherit [Subst_name.Set.t] Type_visitor.t as super
+
+    method! type_ cx pole tparam_names =
+      function
+      | GenericT { name = s; _ } as t ->
+        if Subst_name.Set.mem s tparam_names then
+          raise (Found (Subst_name.string_of_subst_name s))
+        else
+          super#type_ cx pole tparam_names t
+      (* We remove any tparam names from the map when entering a PolyT to avoid naming conflicts. *)
+      | DefT (_, _, PolyT { tparams; _ }) as t ->
+        let tparam_names' =
+          Nel.fold_left (fun names x -> Subst_name.Set.remove x.name names) tparam_names tparams
+        in
+        let (_ : Subst_name.Set.t) = super#type_ cx pole tparam_names' t in
+        tparam_names
+      | t -> super#type_ cx pole tparam_names t
+  end
 
 module Make
     (CT : Component_sig_types.ParamConfig.S)
@@ -48,13 +73,34 @@ module Make
 
   let add_rest r x = { x with rest = Some r }
 
-  let config_and_instance cx ~config_reason ~instance_reason { params_rev; rest; reconstruct = _ } =
+  let config_and_instance
+      cx ~config_reason ~instance_reason ~tparams { params_rev; rest; reconstruct = _ } =
     let (pmap, instance) =
       List.fold_left
         (fun (acc, instance) p ->
           let key_and_t = C.param_type_with_name p in
           match key_and_t with
-          | (_, "ref", t) -> (acc, Some t)
+          | (key_loc, "ref", t) ->
+            let ref =
+              match tparams with
+              | None -> Some t
+              | Some (_, ({ Type.name; _ }, tps)) ->
+                let names =
+                  Base.List.fold
+                    ~f:(fun acc { Type.name; _ } -> Subst_name.Set.add name acc)
+                    ~init:(Subst_name.Set.singleton name)
+                    tps
+                in
+                (try
+                   let (_ : Subst_name.Set.t) = tparam_finder#type_ cx Polarity.Neutral names t in
+                   Some t
+                 with
+                | Found name -> begin
+                  Flow_js_utils.add_output cx Error_message.(EInvalidRef (key_loc, name));
+                  None
+                end)
+            in
+            (acc, ref)
           | (key_loc, key, t) ->
             ( Type.Properties.add_field
                 (Reason.OrdinaryName key)
