@@ -155,6 +155,8 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
   end
 
   module Component_type_params_config = struct
+    let read_react _ _ = ()
+
     let param_type_with_name (t, (_, { Ast.Type.Component.Param.name; optional; _ })) =
       let open Ast.Statement.ComponentDeclaration.Param in
       let t =

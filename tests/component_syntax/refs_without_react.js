@@ -1,0 +1,1 @@
+component Foo(ref: any) { }

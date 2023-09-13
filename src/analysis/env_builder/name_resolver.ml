@@ -5663,6 +5663,23 @@ module Make
           ignore @@ this#expression ast
         | _ -> ()
 
+      method! component_param param =
+        let (_, { Ast.Statement.ComponentDeclaration.Param.name; _ }) = param in
+        begin
+          match (name, Context.react_runtime cx, env_state.jsx_base_name, Context.jsx cx) with
+          | ( ( Ast.Statement.ComponentDeclaration.Param.Identifier
+                  (loc, { Ast.Identifier.name = "ref"; _ })
+              | Ast.Statement.ComponentDeclaration.Param.StringLiteral
+                  (loc, { Ast.StringLiteral.value = "ref"; _ }) ),
+              Options.ReactRuntimeClassic,
+              Some name,
+              Options.Jsx_react
+            ) ->
+            this#any_identifier loc name
+          | _ -> ()
+        end;
+        super#component_param param
+
       method! jsx_element loc expr =
         let open Ast.JSX in
         let { opening_element = (_, { Opening.attributes = opening_attributes; _ }); _ } = expr in
@@ -5864,6 +5881,23 @@ module Make
           ignore @@ this#expression ast
         | _ -> ()
 
+      method! component_param param =
+        let (_, { Ast.Statement.ComponentDeclaration.Param.name; _ }) = param in
+        begin
+          match (name, Context.react_runtime cx, jsx_base_name, Context.jsx cx) with
+          | ( ( Ast.Statement.ComponentDeclaration.Param.Identifier
+                  (loc, { Ast.Identifier.name = "ref"; _ })
+              | Ast.Statement.ComponentDeclaration.Param.StringLiteral
+                  (loc, { Ast.StringLiteral.value = "ref"; _ }) ),
+              Options.ReactRuntimeClassic,
+              Some name,
+              Options.Jsx_react
+            ) ->
+            this#any_identifier loc name
+          | _ -> ()
+        end;
+        super#component_param param
+
       method! jsx_element loc expr =
         let open Ast.JSX in
         let { opening_element; closing_element; _ } = expr in
@@ -5972,10 +6006,6 @@ module Make
       method! component_declaration loc expr =
         this#mark_dead_write (Env_api.FunctionThisLoc, loc);
         super#component_declaration loc expr
-
-      method! component_param_pattern patt =
-        this#visit_function_or_component_param_pattern patt;
-        patt
 
       method! lambda ~is_arrow ~fun_loc ~generator_return_loc params return predicate body =
         let loc =

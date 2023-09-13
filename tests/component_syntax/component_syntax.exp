@@ -2211,6 +2211,23 @@ Cannot use `T` in a `ref` property because it is a type parameter. The `ref` pro
                          ^^^
 
 
+Error ---------------------------------------------------------------------------------------- refs_without_react.js:1:1
+
+Cannot declare component because component Foo [1] is not guaranteed to reach a return statement. An explicit return
+statement must be included for all possible branches. [component-missing-return]
+
+   1| component Foo(ref: any) { }
+      ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------- refs_without_react.js:1:15
+
+Cannot resolve name `React`. [cannot-resolve-name]
+
+   1| component Foo(ref: any) { }
+                    ^^^
+
+
 Error --------------------------------------------------------------------------------------- render_constraints.js:1:34
 
 Cannot use object type [1] as a render type because: [incompatible-type]
@@ -2674,7 +2691,7 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 182 errors
+Found 184 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

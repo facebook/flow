@@ -327,6 +327,26 @@ struct
           this#jsx_function_call loc;
           super#jsx_fragment loc expr
 
+        method component_ref_param_maybe param =
+          let (_, { Ast.Statement.ComponentDeclaration.Param.name; _ }) = param in
+          begin
+            match (name, Context.react_runtime cx, Context.jsx cx) with
+            | ( ( Ast.Statement.ComponentDeclaration.Param.Identifier
+                    (loc, { Ast.Identifier.name = "ref"; _ })
+                | Ast.Statement.ComponentDeclaration.Param.StringLiteral
+                    (loc, { Ast.StringLiteral.value = "ref"; _ }) ),
+                Options.ReactRuntimeClassic,
+                Options.Jsx_react
+              ) ->
+              let writes = this#find_writes ~for_type:false loc in
+              Base.List.iter ~f:(this#add ~why:loc) writes
+            | _ -> ()
+          end
+
+        method! component_param param =
+          this#component_ref_param_maybe param;
+          super#component_param param
+
         (* Skip names in function parameter types (e.g. declared functions) *)
         method! function_param_type (fpt : ('loc, 'loc) Ast.Type.Function.Param.t) =
           let open Ast.Type.Function.Param in
@@ -505,6 +525,7 @@ struct
           let open Ast.Statement.ComponentDeclaration.Param in
           let (_, { local; _ }) = param in
           let _ = this#function_param_pattern_annotated local in
+          this#component_ref_param_maybe param;
           param
 
         method component_rest_param_annotated

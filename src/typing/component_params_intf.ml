@@ -20,4 +20,6 @@ module type Config = sig
   val param_type_with_name : Types.param -> ALoc.t * string * Type.t
 
   val rest_type : Types.rest -> Type.t
+
+  val read_react : Context.t -> ALoc.t -> unit
 end

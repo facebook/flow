@@ -7043,3 +7043,18 @@ let%expect_test "lowercase jsx" =
         (4, 3) to (4, 8) => {
           Global floop
         }] |}]
+
+let%expect_test "component forwardref" =
+  print_ssa_test {|
+const React = require('react');
+component Foo(ref: any) { } // should read
+declare component Foo(ref: any); // should not read
+  |};
+    [%expect {|
+      [
+        (2, 14) to (2, 21) => {
+          Global require
+        };
+        (3, 14) to (3, 17) => {
+          (2, 6) to (2, 11): (`React`)
+        }] |}]

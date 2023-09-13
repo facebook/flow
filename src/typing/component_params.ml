@@ -83,7 +83,7 @@ module Make
           | (key_loc, "ref", t) ->
             let ref =
               match tparams with
-              | None -> Some t
+              | None -> Some (key_loc, t)
               | Some (_, ({ Type.name; _ }, tps)) ->
                 let names =
                   Base.List.fold
@@ -93,7 +93,7 @@ module Make
                 in
                 (try
                    let (_ : Subst_name.Set.t) = tparam_finder#type_ cx Polarity.Neutral names t in
-                   Some t
+                   Some (key_loc, t)
                  with
                 | Found name -> begin
                   Flow_js_utils.add_output cx Error_message.(EInvalidRef (key_loc, name));
@@ -157,7 +157,8 @@ module Make
     let instance =
       match instance with
       | None -> Type.(MixedT.make instance_reason (bogus_trust ()))
-      | Some instance ->
+      | Some (key_loc, instance) ->
+        C.read_react cx key_loc;
         Type.(
           Flow_js.mk_possibly_evaluated_destructor
             cx
