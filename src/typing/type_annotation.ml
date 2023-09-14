@@ -1200,7 +1200,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
             error_type cx loc (Error_message.ETypeParamMinArity (loc, 1)) t_ast
           | Some (_, { Ast.Type.TypeArgs.arguments; comments = _ }) when List.length arguments > 3
             ->
-            error_type cx loc (Error_message.ETooManyTypeArgs (reason, reason, 2)) t_ast
+            error_type cx loc (Error_message.ETooManyTypeArgs (reason, reason, 3)) t_ast
           | _ ->
             let (ts, targs) = convert_type_params () in
             let config = List.nth ts 0 in

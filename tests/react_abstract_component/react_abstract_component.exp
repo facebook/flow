@@ -64,7 +64,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- arity.js:11:19
 
-Cannot use AbstractComponent [1] with more than 2 type arguments. [extra-type-arg]
+Cannot use AbstractComponent [1] with more than 3 type arguments. [extra-type-arg]
 
    11| function test3(x: React$AbstractComponent<any,any,any,any>) { // Too many targs
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
