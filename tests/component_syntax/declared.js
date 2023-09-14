@@ -59,3 +59,7 @@ declare export default component DefaultExport(x: number);
 
 <Export />; // error
 <DefaultExport x={"a"} />; // error
+
+declare component Poly<T>();
+
+type PolyT = component<T>();

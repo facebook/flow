@@ -403,13 +403,13 @@ struct
           let _ = map_opt this#type_params tparams in
           ()
 
-        method declare_component_def (expr : ('loc, 'loc) Ast.Statement.DeclareComponent.t) =
+        method! declare_component _ (expr : ('loc, 'loc) Ast.Statement.DeclareComponent.t) =
           let { Ast.Statement.DeclareComponent.params; renders; tparams; _ } = expr in
           let open Flow_ast_mapper in
           let _ = this#type_annotation_hint renders in
           let _ = map_opt this#type_params tparams in
           let _ = this#component_type_params params in
-          ()
+          expr
 
         method function_param_pattern_annotated (expr : ('loc, 'loc) Ast.Pattern.t) =
           let open Ast.Pattern in

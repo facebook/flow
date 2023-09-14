@@ -741,6 +741,27 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         );
         expr
 
+      method! declare_component loc (expr : (L.t, L.t) Ast.Statement.DeclareComponent.t) =
+        let skip_scope =
+          flowmin_compatibility
+          &&
+          let visit = new with_or_eval_visitor in
+          visit#eval (visit#declare_component loc) expr
+        in
+        if not skip_scope then (
+          let open Ast.Statement.DeclareComponent in
+          let { id = ident; tparams; params; renders; comments = _ } = expr in
+          ignore @@ this#component_identifier ident;
+          this#scoped_type_params
+            ~hoist_op:this#hoist_annotations
+            tparams
+            ~in_tparam_scope:(fun () ->
+              let _ = this#component_type_params params in
+              this#hoist_annotations (fun () -> ignore @@ this#type_annotation_hint renders)
+          )
+        );
+        expr
+
       method! function_declaration loc (expr : (L.t, L.t) Ast.Function.t) =
         let skip_scope =
           flowmin_compatibility
@@ -896,6 +917,17 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         in
         this#scoped_type_params tparams ~in_tparam_scope;
         ft
+
+      method! component_type _loc (t : ('loc, 'loc) Ast.Type.Component.t) =
+        let open Ast.Type.Component in
+        let { tparams; params; renders; comments = _ } = t in
+        let in_tparam_scope () =
+          let _params' = this#component_type_params params in
+          let _renders' = this#type_annotation_hint renders in
+          ()
+        in
+        this#scoped_type_params tparams ~in_tparam_scope;
+        t
 
       method! object_mapped_type_property mt =
         let open Ast.Type.Object.MappedType in
