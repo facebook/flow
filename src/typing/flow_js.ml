@@ -2737,20 +2737,17 @@ struct
           rec_flow cx trace (statics, u)
         (* Render Type Promotion *)
         (* A named AbstractComponent is turned into its corresponding render type *)
-        | ( DefT (r, _, ReactAbstractComponentT { component_kind = Nominal id; renders = super; _ }),
+        | ( DefT (_, _, ReactAbstractComponentT { component_kind = Nominal id; renders = super; _ }),
             PromoteRendersRepresentationT
               {
                 reason;
                 tout;
-                resolved_obj = Some obj;
-                use_op;
+                resolved_obj = Some _;
+                use_op = _;
                 should_distribute = _;
                 promote_structural_components = _;
               }
           ) ->
-          (* renders {+type: Foo, ...}. Let's make sure this is a valid React element *)
-          let mixed_element = get_builtin_type cx ~trace r (OrdinaryName "React$MixedElement") in
-          rec_flow_t cx trace ~use_op (obj, mixed_element);
           let result = DefT (reason, bogus_trust (), RendersT (NominalRenders { id; super })) in
           (* Intentional unknown_use when flowing to tout *)
           rec_flow_t cx trace ~use_op:unknown_use (result, tout)
