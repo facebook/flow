@@ -1508,32 +1508,29 @@ type-destructors.js:7:32-43: type DefaultProps = {age: number, ...}
 elem_call.js:4:1-5: {[key: string]: () => T}
 elem_call.js:4:1-5: {[key: string]: () => T}
 elem_call.js:4:1-10: () => T
-elem_call.js:4:1-14: T
+elem_call.js:4:1-12: T
 elem_call.js:4:7-9: string
 elem_call.js:4:7-9: string
-elem_call.js:4:12-13: string
 elem_call.js:7:1-5: ?{[key: string]: () => T}
 elem_call.js:7:1-5: ?{[key: string]: () => T}
 elem_call.js:7:1-12: () => T
 elem_call.js:7:1-12: ?{[key: string]: () => T}
-elem_call.js:7:1-16: void | T
-elem_call.js:7:1-16: T
+elem_call.js:7:1-14: void | T
+elem_call.js:7:1-14: T
 elem_call.js:7:9-11: string
 elem_call.js:7:9-11: string
-elem_call.js:7:14-15: string
 elem_call.js:10:1-5: ?{[key: string]: () => T}
 elem_call.js:10:1-5: ?{[key: string]: () => T}
 elem_call.js:10:1-12: () => T
 elem_call.js:10:1-12: ?{[key: string]: () => T}
-elem_call.js:10:1-18: void | T
-elem_call.js:10:1-18: T
+elem_call.js:10:1-16: void | T
+elem_call.js:10:1-16: T
 elem_call.js:10:9-11: string
 elem_call.js:10:9-11: string
-elem_call.js:10:16-17: string
 elem_call.js:13:1-5: {[key: string]: <T>(T) => T}
 elem_call.js:13:1-5: {[key: string]: <T>(T) => T}
-elem_call.js:13:1-7: <T>(T) => T
-elem_call.js:13:7: <T>(T) => T
-elem_call.js:13:8-10: string
-elem_call.js:13:8-10: string
-elem_call.js:13:14-15: string
+elem_call.js:13:1-10: <T>(T) => T
+elem_call.js:13:1-14: string
+elem_call.js:13:7-9: string
+elem_call.js:13:7-9: string
+elem_call.js:13:12-13: string
