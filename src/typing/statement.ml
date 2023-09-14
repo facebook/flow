@@ -4057,8 +4057,7 @@ module Make
             let get_mem_t arg_and_elem_ts reason obj_t =
               Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason_call (fun t ->
                   let use = apply_opt_use (get_opt_use arg_and_elem_ts reason obj_t) t in
-                  Flow.flow cx (obj_t, use);
-                  Flow.flow_t cx (obj_t, prop_t)
+                  Flow.flow cx (obj_t, use)
               )
             in
             let eval_args_and_expr () =
@@ -4333,7 +4332,7 @@ module Make
           }
       | _ -> OptCallM { opt_methodcalltype; return_hint = Type.hint_unavailable }
     in
-    OptCallElemT (use_op, reason_call, reason_lookup, elem_t, action)
+    OptCallElemT (use_op, reason_call, reason_lookup, elem_t, prop_t, action)
 
   and identifier_ cx name loc =
     let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in

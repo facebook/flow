@@ -42,7 +42,7 @@ let rec default_resolve_touts ~flow cx loc u =
     match action with
     | ReadElem (_, tvar) -> resolve_tvar tvar
     | WriteElem (_, topt, _) -> map_opt resolve topt
-    | CallElem (_, action) -> resolve_method_action action
+    | CallElem (_, _, action) -> resolve_method_action action
   in
   let resolve_react_tool tool =
     let open React in
@@ -94,7 +94,7 @@ let rec default_resolve_touts ~flow cx loc u =
     resolve_tvar tvar
   | SetElemT (_, _, _, _, _, topt) -> map_opt resolve topt
   | GetElemT { tout; _ } -> resolve_tvar tout
-  | CallElemT (_, _, _, _, action) -> resolve_method_action action
+  | CallElemT (_, _, _, _, _, action) -> resolve_method_action action
   | GetStaticsT tvar
   | GetProtoT (_, tvar) ->
     resolve_tvar tvar

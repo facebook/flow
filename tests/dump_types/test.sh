@@ -14,3 +14,6 @@ assert_ok "$FLOW" dump-types --strip-root type-destructors.js | grep '^type-dest
 
 echo "=== type-destructors.js (--evaluate-type-destructors) ==="
 assert_ok "$FLOW" dump-types --strip-root --evaluate-type-destructors type-destructors.js | grep '^type-destructors.js:7'
+
+echo "=== elem_call.js ==="
+assert_ok "$FLOW" dump-types --strip-root elem_call.js | grep '^elem_call.js:\(4\|7\|10\|13\)'

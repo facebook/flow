@@ -582,7 +582,8 @@ module rec TypeTerm : sig
         key_t: t;
         tout: tvar;
       }
-    | CallElemT of use_op * (* call *) reason * (* lookup *) reason * t * method_action
+    | CallElemT of
+        use_op * (* call *) reason * (* lookup *) reason * t * (* elem t *) t * method_action
     | GetStaticsT of tvar
     | GetProtoT of reason * tvar
     | SetProtoT of reason * t
@@ -998,7 +999,8 @@ module rec TypeTerm : sig
     | OptGetPrivatePropT of use_op * reason * string * class_binding list * bool
     | OptTestPropT of use_op * reason * ident * propref
     | OptGetElemT of use_op * reason * bool (* from annot *) * t
-    | OptCallElemT of use_op * (* call *) reason * (* lookup *) reason * t * opt_method_action
+    | OptCallElemT of
+        use_op * (* call *) reason * (* lookup *) reason * t * (* prop_t *) t * opt_method_action
 
   and opt_state =
     | NonOptional
@@ -1357,7 +1359,7 @@ module rec TypeTerm : sig
   and elem_action =
     | ReadElem of bool (* annot *) * tvar
     | WriteElem of t * t option (* tout *) * set_mode
-    | CallElem of reason * method_action
+    | CallElem of reason * t (* elem type *) * method_action
 
   and propref =
     | Named of {
@@ -4257,7 +4259,8 @@ let apply_opt_use opt_use t_out =
   | OptTestPropT (u, r, i, p) -> TestPropT (u, r, i, p, t_out)
   | OptGetElemT (use_op, reason, from_annot, key_t) ->
     GetElemT { use_op; reason; from_annot; key_t; tout = t_out }
-  | OptCallElemT (u, r1, r2, elt, call) -> CallElemT (u, r1, r2, elt, apply_opt_action call t_out)
+  | OptCallElemT (u, r1, r2, elt, prop_t, call) ->
+    CallElemT (u, r1, r2, elt, prop_t, apply_opt_action call t_out)
 
 let mk_enum_type ~trust reason enum =
   let reason =
