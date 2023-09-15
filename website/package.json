@@ -19,6 +19,7 @@
     "@monaco-editor/react": "^4.4.5",
     "@svgr/webpack": "^5.5.0",
     "clsx": "^1.2.1",
+    "docusaurus-plugin-internaldocs-fb": "1.4.0",
     "file-loader": "^6.2.0",
     "lz-string": "^1.4.4",
     "monaco-editor": "^0.34.0",

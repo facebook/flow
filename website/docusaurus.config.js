@@ -7,6 +7,7 @@
  * @format
  */
 
+const {fbContent} = require('docusaurus-plugin-internaldocs-fb/internal');
 const webpack = require('webpack');
 const allFlowVersions = require('./src/js/flow-versions');
 
@@ -213,20 +214,26 @@ module.exports = {
        INCLUDE_PAST_RELEASES env var is not on. In that case, we default to master. */
     flowVersion: allFlowVersions[1] || allFlowVersions[0],
     allFlowVersions,
+    fbRepoName: 'fbsource',
   },
   presets: [
     [
-      '@docusaurus/preset-classic',
+      require.resolve('docusaurus-plugin-internaldocs-fb/docusaurus-preset'),
       {
         docs: {
           routeBasePath: 'en/docs',
           sidebarPath: require.resolve('./sidebars.js'),
-          editUrl: 'https://github.com/facebook/flow/edit/main/website/',
+          editUrl: fbContent({
+            internal:
+              'https://www.internalfb.com/code/fbsource/fbcode/flow/website/',
+            external: 'https://github.com/facebook/flow/edit/main/website/',
+          }),
           remarkPlugins: [
             [require('@docusaurus/remark-plugin-npm2yarn'), {sync: true}],
             require('./src/js/flow-check-remark-plugin'),
           ],
         },
+        staticDocsProject: 'flow',
         blog: {
           path: 'blog',
           postsPerPage: 50,
