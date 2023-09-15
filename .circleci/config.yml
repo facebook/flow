@@ -702,6 +702,7 @@ jobs:
 
   website_deploy:
     executor: flow-website
+    resource_class: large
     steps:
     - attach_workspace:
         at: ~/flow
