@@ -602,7 +602,7 @@ let generic_of_tparam cx ~f { bound; name; reason = param_reason; is_this = _; _
         opt_annot_reason ?annot_loc @@ mk_reason desc param_loc)
       bound
   in
-  GenericT { reason = reason_of_t bound; name; id; bound }
+  GenericT { reason = param_reason; name; id; bound }
 
 let generic_bound cx prev_map ({ name; _ } as tparam) =
   let generic = generic_of_tparam cx ~f:(subst cx prev_map) tparam in

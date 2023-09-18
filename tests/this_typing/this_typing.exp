@@ -1303,7 +1303,8 @@ References:
 
 Error ---------------------------------------------------------------------------------- incompatible_this_param.js:3:10
 
-Cannot define method `foo2` [1] on `A` because class `A` [2] is incompatible with number [3]. [incompatible-type]
+Cannot define method `foo2` [1] on `A` because class `this` type [2] is incompatible with number [3].
+[incompatible-type]
 
    incompatible_this_param.js:3:10
    3|   static foo2(this : number) {} // error
@@ -1320,7 +1321,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- incompatible_this_param.js:5:10
 
-Cannot define method `foo4` [1] on `A` because class `A` [2] is incompatible with `A` [3]. [incompatible-type]
+Cannot define method `foo4` [1] on `A` because class `this` type [2] is incompatible with `A` [3]. [incompatible-type]
 
    incompatible_this_param.js:5:10
    5|   static foo4(this : A) {} // error
@@ -1371,7 +1372,8 @@ References:
 
 Error --------------------------------------------------------------------------------- incompatible_this_param.js:14:10
 
-Cannot define method `foo2` [1] on `B` because class `B` [2] is incompatible with number [3]. [incompatible-type]
+Cannot define method `foo2` [1] on `B` because class `this` type [2] is incompatible with number [3].
+[incompatible-type]
 
    incompatible_this_param.js:14:10
    14|   static foo2(this : number) : void, // error
@@ -1388,7 +1390,7 @@ References:
 
 Error --------------------------------------------------------------------------------- incompatible_this_param.js:16:10
 
-Cannot define method `foo4` [1] on `B` because class `B` [2] is incompatible with `B` [3]. [incompatible-type]
+Cannot define method `foo4` [1] on `B` because class `this` type [2] is incompatible with `B` [3]. [incompatible-type]
 
    incompatible_this_param.js:16:10
    16|   static foo4(this : B) : void, // error

@@ -952,7 +952,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- tparams.js:21:38
 
-Cannot instantiate `$Rest` because mixed [1] is incompatible with `B` [2]. [incompatible-type]
+Cannot instantiate `$Rest` because `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
    tparams.js:21:38
    21| function removex<A, B>(a: A): [$Rest<A, {p: B}>, B] {

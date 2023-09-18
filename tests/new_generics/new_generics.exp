@@ -553,7 +553,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- exact.js:6:4
 
-Cannot cast `x` to `X` because inexact object type [1] is incompatible with exact `X` [2]. [incompatible-exact]
+Cannot cast `x` to `X` because inexact `X` [1] is incompatible with exact `X` [2]. [incompatible-exact]
 
    exact.js:6:4
    6|   (x: $Exact<X>); // nope

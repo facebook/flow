@@ -1372,7 +1372,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- type_generic.js:1:37
 
-Cannot instantiate `$Rest` because mixed [1] is incompatible with `B` [2]. [incompatible-type]
+Cannot instantiate `$Rest` because `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
    type_generic.js:1:37
    1| function remove<A, B>(a: A): [$Rest<A, {p: B}>, B] {

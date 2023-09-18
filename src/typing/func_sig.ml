@@ -412,10 +412,9 @@ struct
         )
     in
     let (has_return_annot, return_t) =
-      match (return_t, kind) with
-      | (Inferred t, _) -> (false, t)
-      | (Annotated t, (Async | Generator _ | AsyncGenerator _)) -> (true, t)
-      | (Annotated t, _) -> (true, t)
+      match return_t with
+      | Inferred t -> (false, t)
+      | Annotated t -> (true, t)
     in
 
     (* statement visit pass *)

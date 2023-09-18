@@ -153,8 +153,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ duplicate_infer.js:1:89
 
-Cannot use number as the bound of infer type number because number [1] is incompatible with string [2].
-[incompatible-type]
+Cannot use number as the bound of infer type `Y` because number [1] is incompatible with string [2]. [incompatible-type]
 
    duplicate_infer.js:1:89
    1| type DuplicatInfer1 = [string, number] extends [infer Y extends string, infer Y extends number] ? Y : empty; // error: string = number
