@@ -120,3 +120,12 @@
   position: relative;
   vertical-align: middle;
 }
+
+@media (min-width: 1680px) {
+  .docusaurus-mermaid-container {
+    /* Make mermaid graphs use up all the width available so that they are legible. */
+    margin-left: calc(-50vw + var(--doc-sidebar-width) + var(--ifm-container-width-xl) / 2);
+    margin-right: calc(-50vw + var(--ifm-container-width-xl) /  2);
+    max-width: initial !important;
+  }
+}
