@@ -15,3 +15,13 @@ x.x = (42: any);
 
 declare const rr: $ReactDeepReadOnly<{current: number}>;
 rr.current = 42; // ok
+
+declare const w3: $ReactDeepReadOnly<{a: {b: number}, c: number}>;
+const w2 = {...w3};
+w2.c = 42; // ok
+w2.a.b = 42; // error
+
+declare const v3: $ReactDeepReadOnly<Array<{a: number}>>;
+const v2 = [...v3];
+v2[0] = {a: 42}; // ok
+v2[1].a = 42; //error

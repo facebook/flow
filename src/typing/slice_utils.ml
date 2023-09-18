@@ -495,13 +495,24 @@ let spread =
 
 let spread_mk_object cx reason target { Object.reason = _; props; flags; generics; interface = _ } =
   let open Object.Spread in
+  let mk_dro t =
+    match flags.react_dro with
+    | Some l -> EvalT (t, TypeDestructorT (unknown_use, reason, ReactDRO l), Eval.generate_id ())
+    | None -> t
+  in
   let props =
     NameUtils.Map.map
       (fun { Object.prop_t; is_method; is_own = _; polarity = _; key_loc } ->
         if is_method then
-          Method { key_loc; type_ = prop_t }
+          Method { key_loc; type_ = mk_dro prop_t }
         else
-          Field { preferred_def_locs = None; key_loc; type_ = prop_t; polarity = Polarity.Neutral })
+          Field
+            {
+              preferred_def_locs = None;
+              key_loc;
+              type_ = mk_dro prop_t;
+              polarity = Polarity.Neutral;
+            })
       props
   in
   let id = Context.generate_property_map cx props in
@@ -521,7 +532,7 @@ let spread_mk_object cx reason target { Object.reason = _; props; flags; generic
       | _ -> Inexact
     in
     let frozen = sealed = Object.Spread.Frozen in
-    { obj_kind; frozen; react_dro = flags.react_dro }
+    { obj_kind; frozen; react_dro = None }
   in
   let proto = ObjProtoT reason in
   let call = None in
