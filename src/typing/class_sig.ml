@@ -554,7 +554,7 @@ module Make
       | _ ->
         let open Type in
         let (_, targs) = Flow_js_utils.mk_tparams cx (TypeParams.to_list tparams) in
-        TypeUtil.typeapp reason self targs
+        TypeUtil.typeapp ~use_desc:false reason self targs
     in
     let this_reason = replace_desc_reason RThisType reason in
     let this_tp =
@@ -583,7 +583,7 @@ module Make
             | None ->
               let reason = annot_reason ~annot_loc @@ repos_reason annot_loc (reason_of_t c) in
               Flow.mk_instance cx reason c
-            | Some targs -> typeapp_annot annot_loc c targs)
+            | Some targs -> typeapp_annot ~use_desc:false annot_loc c targs)
           extends
       in
       (* If the interface definition includes a callable property, add the
@@ -672,7 +672,7 @@ module Make
                 annot_reason ~annot_loc @@ repos_reason annot_loc (TypeUtil.reason_of_t c)
               in
               Flow.mk_instance cx reason c
-            | Some targs -> TypeUtil.typeapp_annot annot_loc c targs)
+            | Some targs -> TypeUtil.typeapp_annot ~use_desc:false annot_loc c targs)
           implements
     in
     let (initialized_static_fields, static_objtype) = statictype cx static_proto x in
@@ -738,7 +738,7 @@ module Make
             | None ->
               let reason = annot_reason ~annot_loc @@ repos_reason annot_loc (reason_of_t c) in
               Flow.mk_instance cx reason c
-            | Some targs -> typeapp_annot annot_loc c targs
+            | Some targs -> typeapp_annot ~use_desc:false annot_loc c targs
           in
           let use_op =
             Op (ClassImplementsCheck { def = def_reason; name = reason; implements = reason_of_t i })

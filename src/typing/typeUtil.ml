@@ -901,19 +901,19 @@ let poly_type_of_tparams id tparams t =
   | None -> t
   | Some (tparams_loc, tparams_nel) -> poly_type id tparams_loc tparams_nel t
 
-let typeapp_with_use_op reason use_op t targs =
+let typeapp_with_use_op ~use_desc reason use_op t targs =
   let reason = replace_desc_reason (RTypeApp (desc_of_t t)) reason in
-  TypeAppT { reason; use_op; type_ = t; targs; use_desc = false }
+  TypeAppT { reason; use_op; type_ = t; targs; use_desc }
 
-let typeapp reason t targs =
+let typeapp ~use_desc reason t targs =
   let use_op = Op (TypeApplication { type_ = reason }) in
-  typeapp_with_use_op reason use_op t targs
+  typeapp_with_use_op ~use_desc reason use_op t targs
 
-let typeapp_annot loc t targs =
+let typeapp_annot ~use_desc loc t targs =
   let desc = RTypeApp (desc_of_t t) in
   let reason = mk_annot_reason desc loc in
   let use_op = Op (TypeApplication { type_ = reason }) in
-  TypeAppT { reason; use_op; type_ = t; targs; use_desc = false }
+  TypeAppT { reason; use_op; type_ = t; targs; use_desc }
 
 (* An implicit typeapp is not a product of some source level type application,
  * but merely a tool for some other functionality, e.g.

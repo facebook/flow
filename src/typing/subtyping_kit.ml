@@ -677,7 +677,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         );
         TypeAppExpansion.pop cx
       )
-    | (TypeAppT { reason = reason_tapp; use_op = use_op_tapp; type_; targs; use_desc = _ }, _) ->
+    | (TypeAppT { reason = reason_tapp; use_op = use_op_tapp; type_; targs; use_desc }, _) ->
       if TypeAppExpansion.push_unless_loop cx (type_, targs) then (
         let reason_op = reason_of_t u in
         let t =
@@ -685,13 +685,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
             ~trace
             cx
             reason_tapp
-            ~use_desc:false
+            ~use_desc
             (mk_typeapp_instance cx ~trace ~use_op:use_op_tapp ~reason_op ~reason_tapp type_ targs)
         in
         rec_flow_t cx trace ~use_op (t, u);
         TypeAppExpansion.pop cx
       )
-    | (_, TypeAppT { reason = reason_tapp; use_op = use_op_tapp; type_; targs; use_desc = _ }) ->
+    | (_, TypeAppT { reason = reason_tapp; use_op = use_op_tapp; type_; targs; use_desc }) ->
       if TypeAppExpansion.push_unless_loop cx (type_, targs) then (
         let reason_op = reason_of_t l in
         let t =
@@ -702,7 +702,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
          * that for us, because ts may not be 0->1, so using them to make an Annot would break
          * invariants that we rely on. In particular, it would force us to traverse AnnotTs to
          * do any propagation, which is extremely costly. *)
-        rec_flow cx trace (t, ReposUseT (reason_tapp, false, use_op, l));
+        rec_flow cx trace (t, ReposUseT (reason_tapp, use_desc, use_op, l));
         TypeAppExpansion.pop cx
       )
     (**********************)

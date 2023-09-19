@@ -1614,7 +1614,7 @@ let map_object
   let mk_prop_type key_t prop_optional =
     (* We persist the original use_op here so that errors involving the typeapp are positioned
      * at the use site and not the typeapp site *)
-    let t = typeapp_with_use_op (reason_of_t poly_prop) use_op poly_prop [key_t] in
+    let t = typeapp_with_use_op ~use_desc:false (reason_of_t poly_prop) use_op poly_prop [key_t] in
     match mapped_type_optionality with
     | MakeOptional -> optional t
     | RemoveOptional ->

@@ -70,7 +70,7 @@ let get_fully_resolved_type cx id =
 
 let get_builtin_typeapp cx reason x targs =
   let t = Flow_js_utils.lookup_builtin_strict cx x reason in
-  TypeUtil.typeapp reason t targs
+  TypeUtil.typeapp ~use_desc:false reason t targs
 
 module type S = sig
   val mk_typeof_annotation : Context.t -> ?trace:Type.trace -> Reason.t -> Type.t -> Type.t

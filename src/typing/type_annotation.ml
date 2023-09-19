@@ -2572,7 +2572,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       (ConsGen.mk_instance cx reason c, None)
     | Some (loc, { Ast.Type.TypeArgs.arguments = targs; comments }) ->
       let (targs, targs_ast) = convert_list cx tparams_map infer_tparams_map targs in
-      ( typeapp_annot annot_loc c targs,
+      ( typeapp_annot ~use_desc:false annot_loc c targs,
         Some (loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments })
       )
 

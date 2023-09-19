@@ -9754,7 +9754,7 @@ struct
 
   and get_builtin_typeapp cx ?trace reason x targs =
     let t = get_builtin cx ?trace x reason in
-    typeapp reason t targs
+    typeapp ~use_desc:false reason t targs
 
   (* Specialize a polymorphic class, make an instance of the specialized class. *)
   and mk_typeapp_instance_annot cx ?trace ~use_op ~reason_op ~reason_tapp ?(cache = false) c ts =

@@ -740,7 +740,7 @@ let lookup_builtin_opt cx x =
 
 let lookup_builtin_typeapp cx reason x targs =
   let t = lookup_builtin_strict cx x reason in
-  typeapp reason t targs
+  typeapp ~use_desc:false reason t targs
 
 let builtin_promise_class_id cx =
   let promise_t = lookup_builtin_opt cx (OrdinaryName "Promise") in
