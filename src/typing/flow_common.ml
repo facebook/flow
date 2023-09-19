@@ -122,7 +122,7 @@ module type BUILTINS = sig
   val get_builtin_tvar : Context.t -> ?trace:Type.trace -> name -> reason -> Type.ident
 
   val get_builtin_typeapp :
-    Context.t -> ?trace:Type.trace -> reason -> name -> Type.t list -> Type.t
+    Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> name -> Type.t list -> Type.t
 
   val get_builtin_module : Context.t -> ?trace:Type.trace -> ALoc.t -> string -> Type.tvar
 

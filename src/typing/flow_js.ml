@@ -9752,9 +9752,9 @@ struct
     let builtin = Flow_js_utils.lookup_builtin_with_default cx x default in
     Tvar.mk_where cx (reason_of_t default) (fun t -> flow_t cx (builtin, t))
 
-  and get_builtin_typeapp cx ?trace reason x targs =
+  and get_builtin_typeapp cx ?trace reason ?(use_desc = false) x targs =
     let t = get_builtin cx ?trace x reason in
-    typeapp ~use_desc:false reason t targs
+    typeapp ~use_desc reason t targs
 
   (* Specialize a polymorphic class, make an instance of the specialized class. *)
   and mk_typeapp_instance_annot cx ?trace ~use_op ~reason_op ~reason_tapp ?(cache = false) c ts =

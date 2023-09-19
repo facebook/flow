@@ -46,7 +46,8 @@ module Cache : sig
   val summarize_flow_constraint : Context.t -> (string * int) list
 end
 
-val get_builtin_typeapp : Context.t -> ?trace:Type.trace -> reason -> name -> Type.t list -> Type.t
+val get_builtin_typeapp :
+  Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> name -> Type.t list -> Type.t
 
 val mk_typeapp_instance_annot :
   Context.t ->
