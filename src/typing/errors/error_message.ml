@@ -675,7 +675,6 @@ and internal_error =
 
 and unsupported_syntax =
   | AnnotationInsideDestructuring
-  | ConditionalType
   | ExistsType
   | MetaPropertyExpression
   | ObjectPropertyLiteralNonString
@@ -689,7 +688,6 @@ and unsupported_syntax =
   | DestructuringObjectPropertyLiteralNonString
   | DestructuringExpressionPattern
   | JSXTypeArgs
-  | MappedType
   | PredicateDeclarationForImplementation
   | PredicateDeclarationWithoutExpression
   | PredicateDeclarationAnonymousParameters
@@ -2841,7 +2839,6 @@ let friendly_message_of_msg loc_of_aloc msg =
     let features =
       match unsupported_syntax with
       | MetaPropertyExpression -> [text "Not supported."]
-      | ConditionalType -> [text "Conditional types are not yet supported."]
       | ExistsType ->
         [
           text "The existential type ";
@@ -2874,7 +2871,6 @@ let friendly_message_of_msg loc_of_aloc msg =
         [text "Unsupported non-string literal object property in destructuring."]
       | DestructuringExpressionPattern -> [text "Unsupported expression pattern in destructuring."]
       | JSXTypeArgs -> [text "Flow doesn't support JSX type arguments."]
-      | MappedType -> [text "Mapped Types are not yet supported."]
       | PredicateDeclarationForImplementation ->
         [text "Cannot declare predicate when a function body is present."]
       | PredicateDeclarationWithoutExpression ->
