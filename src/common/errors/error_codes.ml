@@ -159,6 +159,7 @@ type error_code =
   | UnsafeGettersSetters
   | UnsupportedSyntax
   | UnsupportedStatementInLibdef
+  | UnsupportedVarianceAnnotation
   | UntypedImport
   | UntypedTypeImport
   | ValueAsType
@@ -358,6 +359,7 @@ let string_of_code : error_code -> string = function
   | UnsafeGettersSetters -> "unsafe-getters-setters"
   | UnsupportedSyntax -> "unsupported-syntax"
   | UnsupportedStatementInLibdef -> "unsupported-statement-in-lib"
+  | UnsupportedVarianceAnnotation -> "unsupported-variance-annotation"
   | UntypedImport -> "untyped-import"
   | UntypedTypeImport -> "untyped-type-import"
   | ValueAsType -> "value-as-type"

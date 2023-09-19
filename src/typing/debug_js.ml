@@ -1524,6 +1524,8 @@ let dump_error_message =
     | EToplevelLibraryImport loc -> spf "EToplevelLibraryImport (%s)" (string_of_aloc loc)
     | EUnsupportedStatementInLibdef (loc, s) ->
       spf "EUnsupportedStatementInLibdef (%s, %s)" (string_of_aloc loc) s
+    | EUnsupportedVarianceAnnotation (loc, s) ->
+      spf "EUnsupportedVarianceAnnotation (%s, %s)" (string_of_aloc loc) s
     | EExportRenamedDefault { loc; name; is_reexport } ->
       spf
         "EExportRenamedDefault { loc = %s; name = %s; is_reexport = %B }"

@@ -73,6 +73,38 @@ References:
                         ^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------------- fun.js:12:20
+
+Variance modifiers cannot appear on a type parameter of a function. [unsupported-variance-annotation]
+
+   12| function func_decl<+T>(): void {} // error
+                          ^
+
+
+Error ----------------------------------------------------------------------------------------------------- fun.js:13:29
+
+Variance modifiers cannot appear on a type parameter of a function. [unsupported-variance-annotation]
+
+   13| const func_expr = function <+T>() {} // error
+                                   ^
+
+
+Error ----------------------------------------------------------------------------------------------------- fun.js:14:21
+
+Variance modifiers cannot appear on a type parameter of a function. [unsupported-variance-annotation]
+
+   14| const arrow_expr = <+T>() => {} // error
+                           ^
+
+
+Error ----------------------------------------------------------------------------------------------------- fun.js:15:19
+
+Variance modifiers cannot appear on a type parameter of a function. [unsupported-variance-annotation]
+
+   15| const obj = { arg<+T>(): void {} } // error
+                         ^
+
+
 Error ----------------------------------------------------------------------------------------------- implements.js:2:26
 
 Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
@@ -86,6 +118,14 @@ References:
    implements.js:2:10
    2| class C<+T> implements I<T> {} // Error: +T in a negative position
                ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- method.js:3:7
+
+Variance modifiers cannot appear on a type parameter of a function type. [unsupported-variance-annotation]
+
+   3|   x: <+X>(x: F<X>) => void; 
+            ^
 
 
 Error --------------------------------------------------------------------------------------------------- method.js:3:16
@@ -224,4 +264,4 @@ References:
 
 
 
-Found 15 errors
+Found 20 errors

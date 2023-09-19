@@ -374,6 +374,17 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
 
   let mk_type_destructor = Flow_js.mk_possibly_evaluated_destructor
 
+  let error_on_unsupported_variance_annotation cx ~kind tparams =
+    Base.Option.iter tparams ~f:(fun (_, { Ast.Type.TypeParams.params; _ }) ->
+        Base.List.iter params ~f:(fun (_, { Ast.Type.TypeParam.variance; _ }) ->
+            Base.Option.iter variance ~f:(fun (loc, _) ->
+                Flow_js_utils.add_output
+                  cx
+                  Error_message.(EUnsupportedVarianceAnnotation (loc, kind))
+            )
+        )
+    )
+
   let rec convert cx tparams_map infer_tparams_map =
     let open Ast.Type in
     function
@@ -1394,6 +1405,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let (params_loc, { Function.Params.params = ps; rest; this_; comments = params_comments }) =
         params
       in
+      error_on_unsupported_variance_annotation cx ~kind:"function type" tparams;
       let (tparams, tparams_map, tparams_ast) =
         mk_type_param_declarations cx ~tparams_map ~infer_tparams_map tparams
       in

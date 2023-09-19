@@ -140,4 +140,7 @@ module type S = sig
     Error_message.t ->
     (ALoc.t, ALoc.t) Flow_ast.Type.t ->
     (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.t
+
+  val error_on_unsupported_variance_annotation :
+    Context.t -> kind:string -> (ALoc.t, ALoc.t) Flow_ast.Type.TypeParams.t option -> unit
 end

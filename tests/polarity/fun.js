@@ -8,3 +8,8 @@ type RetNeg<-T> = () => T; // Error: -T in positive position
 type RetPos<+T> = () => T; // OK
 type FlipRetNeg<-T> = (() => T) => void; // OK
 type FlipRetPos<+T> = (() => T) => void; // Error: +T in negative position
+
+function func_decl<+T>(): void {} // error
+const func_expr = function <+T>() {} // error
+const arrow_expr = <+T>() => {} // error
+const obj = { arg<+T>(): void {} } // error

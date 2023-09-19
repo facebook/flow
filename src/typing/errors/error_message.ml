@@ -332,6 +332,7 @@ and 'loc t' =
   | EMixedImportAndRequire of 'loc * 'loc virtual_reason
   | EToplevelLibraryImport of 'loc
   | EUnsupportedStatementInLibdef of 'loc * string
+  | EUnsupportedVarianceAnnotation of 'loc * string
   | EExportRenamedDefault of {
       loc: 'loc;
       name: string option;
@@ -1062,6 +1063,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EMixedImportAndRequire (loc, r) -> EMixedImportAndRequire (f loc, map_reason r)
   | EToplevelLibraryImport loc -> EToplevelLibraryImport (f loc)
   | EUnsupportedStatementInLibdef (loc, k) -> EUnsupportedStatementInLibdef (f loc, k)
+  | EUnsupportedVarianceAnnotation (loc, k) -> EUnsupportedVarianceAnnotation (f loc, k)
   | EExportRenamedDefault { loc; name; is_reexport } ->
     EExportRenamedDefault { loc = f loc; name; is_reexport }
   | EUnreachable loc -> EUnreachable (f loc)
@@ -1478,6 +1480,7 @@ let util_use_op_of_msg nope util = function
   | EMixedImportAndRequire _
   | EToplevelLibraryImport _
   | EUnsupportedStatementInLibdef _
+  | EUnsupportedVarianceAnnotation _
   | EExportRenamedDefault _
   | EUnreachable _
   | EInvalidTypeof (_, _)
@@ -1694,6 +1697,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EMixedImportAndRequire (loc, _)
   | EToplevelLibraryImport loc
   | EUnsupportedStatementInLibdef (loc, _)
+  | EUnsupportedVarianceAnnotation (loc, _)
   | EExportRenamedDefault { loc; _ }
   | EIndeterminateModuleType loc
   | EEnumsNotEnabled loc
@@ -3186,6 +3190,12 @@ let friendly_message_of_msg loc_of_aloc msg =
             text " statements in a library file. ";
             text "The statement will be ignored.";
           ];
+      }
+  | EUnsupportedVarianceAnnotation (_, kind) ->
+    Normal
+      {
+        features =
+          [text "Variance modifiers cannot appear on a type parameter of a "; text kind; text "."];
       }
   | EExportRenamedDefault { loc = _; name; is_reexport } ->
     let reexport_message () =
@@ -5193,6 +5203,7 @@ let error_code_of_message err : error_code option =
   | EMixedImportAndRequire _ -> Some MixedImportAndRequire
   | EToplevelLibraryImport _ -> Some ToplevelLibraryImport
   | EUnsupportedStatementInLibdef _ -> Some UnsupportedStatementInLibdef
+  | EUnsupportedVarianceAnnotation _ -> Some UnsupportedVarianceAnnotation
   | ENoDefaultExport (_, _, _) -> Some MissingExport
   | ENoNamedExport (_, _, _, _) -> Some MissingExport
   | ENonConstVarExport _ -> Some NonConstVarExport
