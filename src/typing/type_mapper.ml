@@ -85,13 +85,13 @@ class virtual ['a] t =
           t
         else
           ThisTypeAppT (r, t1', t2', tlist_opt')
-      | TypeAppT (r, op, t', ts) ->
-        let t'' = self#type_ cx map_cx t' in
-        let ts' = ListUtils.ident_map (self#type_ cx map_cx) ts in
-        if t' == t'' && ts == ts' then
+      | TypeAppT { reason; use_op; type_; targs; use_desc } ->
+        let type_' = self#type_ cx map_cx type_ in
+        let targs' = ListUtils.ident_map (self#type_ cx map_cx) targs in
+        if type_ == type_' && targs == targs' then
           t
         else
-          TypeAppT (r, op, t'', ts')
+          TypeAppT { reason; use_op; type_ = type_'; targs = targs'; use_desc }
       | ExactT (r, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then

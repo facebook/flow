@@ -529,9 +529,9 @@ let rec extract_type cx this_t =
     let inst_t = instantiate_poly_t cx c ts_opt in
     let inst_t = instantiate_type inst_t in
     extract_type cx inst_t
-  | TypeAppT (_, _, c, ts) ->
-    let c = resolve_type cx c in
-    let inst_t = instantiate_poly_t cx c (Some ts) in
+  | TypeAppT { reason = _; use_op = _; type_; targs; use_desc = _ } ->
+    let c = resolve_type cx type_ in
+    let inst_t = instantiate_poly_t cx c (Some targs) in
     let inst_t = instantiate_type inst_t in
     extract_type cx inst_t
   | DefT (_, _, PolyT { t_out = sub_type; _ }) ->

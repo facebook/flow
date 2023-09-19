@@ -126,7 +126,8 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
           let (marked, _) = self#type_ cx pole (marked, tparam_names') t in
           (* TODO(jmbrown): Handle defaults on type parameters *)
           (marked, tparam_names)
-        | TypeAppT (_, _, c, ts) -> self#typeapp ts cx pole acc c
+        | TypeAppT { reason = _; use_op = _; type_; targs; use_desc = _ } ->
+          self#typeapp targs cx pole acc type_
         (* ThisTypeAppT is created from a new expression, which cannot
          * be used as an annotation, so we do not special case it like
          * we do with TypeAppT

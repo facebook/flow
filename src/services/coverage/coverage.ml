@@ -172,7 +172,7 @@ class visitor =
       | AnnotT (_, t, _)
       | ExactT (_, t)
       | DefT (_, _, PolyT { t_out = t; _ })
-      | TypeAppT (_, _, t, _)
+      | TypeAppT { reason = _; use_op = _; type_ = t; targs = _; use_desc = _ }
       | DefT (_, _, TypeT (_, t))
       | GenericT { bound = t; _ }
       | ThisClassT (_, t, _, _)

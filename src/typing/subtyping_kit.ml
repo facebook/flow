@@ -664,7 +664,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
      * The next step happens back in flow_js.ml, at the cases for a
      * ConcretizeTypeAppsT use type.
      *)
-    | (TypeAppT (r1, op1, c1, ts1), TypeAppT (r2, op2, c2, ts2)) ->
+    | ( TypeAppT { reason = r1; use_op = op1; type_ = c1; targs = ts1; use_desc = _ },
+        TypeAppT { reason = r2; use_op = op2; type_ = c2; targs = ts2; use_desc = _ }
+      ) ->
       if TypeAppExpansion.push_unless_loop cx (c1, ts1) then (
         if TypeAppExpansion.push_unless_loop cx (c2, ts2) then (
           rec_flow
@@ -675,8 +677,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
         );
         TypeAppExpansion.pop cx
       )
-    | (TypeAppT (reason_tapp, use_op_tapp, c, ts), _) ->
-      if TypeAppExpansion.push_unless_loop cx (c, ts) then (
+    | (TypeAppT { reason = reason_tapp; use_op = use_op_tapp; type_; targs; use_desc = _ }, _) ->
+      if TypeAppExpansion.push_unless_loop cx (type_, targs) then (
         let reason_op = reason_of_t u in
         let t =
           reposition_reason
@@ -684,15 +686,17 @@ module Make (Flow : INPUT) : OUTPUT = struct
             cx
             reason_tapp
             ~use_desc:false
-            (mk_typeapp_instance cx ~trace ~use_op:use_op_tapp ~reason_op ~reason_tapp c ts)
+            (mk_typeapp_instance cx ~trace ~use_op:use_op_tapp ~reason_op ~reason_tapp type_ targs)
         in
         rec_flow_t cx trace ~use_op (t, u);
         TypeAppExpansion.pop cx
       )
-    | (_, TypeAppT (reason_tapp, use_op_tapp, c, ts)) ->
-      if TypeAppExpansion.push_unless_loop cx (c, ts) then (
+    | (_, TypeAppT { reason = reason_tapp; use_op = use_op_tapp; type_; targs; use_desc = _ }) ->
+      if TypeAppExpansion.push_unless_loop cx (type_, targs) then (
         let reason_op = reason_of_t l in
-        let t = mk_typeapp_instance cx ~trace ~use_op:use_op_tapp ~reason_op ~reason_tapp c ts in
+        let t =
+          mk_typeapp_instance cx ~trace ~use_op:use_op_tapp ~reason_op ~reason_tapp type_ targs
+        in
         (* We do the slingshot trick here so that we flow l to the results of making the typeapp
          * instead of adding another lower bound to t. We can't use an Annot here, which would do
          * that for us, because ts may not be 0->1, so using them to make an Annot would break

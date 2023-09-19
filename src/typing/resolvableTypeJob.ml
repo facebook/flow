@@ -97,8 +97,8 @@ and collect_of_type ?log_unresolved cx acc = function
       | Some targs -> collect_of_types ?log_unresolved cx acc targs
     in
     acc
-  | TypeAppT (_, _, t, targs) ->
-    let acc = collect_of_binding ?log_unresolved cx acc t in
+  | TypeAppT { reason = _; use_op = _; type_; targs; use_desc = _ } ->
+    let acc = collect_of_binding ?log_unresolved cx acc type_ in
     let acc = collect_of_types ?log_unresolved cx acc targs in
     acc
   | EvalT (t, TypeDestructorT (_, _, d), _) ->

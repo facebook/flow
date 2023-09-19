@@ -506,10 +506,12 @@ module rec ConsGen : S = struct
       let tc = specialize_class cx c reason_op reason_tapp ts in
       let t = this_specialize cx reason_tapp this tc in
       elab_t cx t op
-    | (TypeAppT (reason_tapp, typeapp_use_op, c, ts), Annot_UseT_TypeT _) ->
+    | ( TypeAppT { reason = reason_tapp; use_op = typeapp_use_op; type_; targs; use_desc = _ },
+        Annot_UseT_TypeT _
+      ) ->
       (* NOTE omitting TypeAppExpansion.push_unless_loop check. *)
       let reason_op = Type.AConstraint.reason_of_op op in
-      let t = mk_typeapp_instance cx ~use_op:typeapp_use_op ~reason_op ~reason_tapp c ts in
+      let t = mk_typeapp_instance cx ~use_op:typeapp_use_op ~reason_op ~reason_tapp type_ targs in
       elab_t cx t op
     | (DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; _ }), Annot_UseT_TypeT reason) ->
       Flow_js_utils.add_output
@@ -632,10 +634,10 @@ module rec ConsGen : S = struct
       let tc = specialize_class cx c reason_op reason_tapp ts in
       let t = this_specialize cx reason_tapp this tc in
       elab_t cx t op
-    | (TypeAppT (reason_tapp, typeapp_use_op, c, ts), _) ->
+    | (TypeAppT { reason = reason_tapp; use_op = typeapp_use_op; type_; targs; use_desc = _ }, _) ->
       (* NOTE omitting TypeAppExpansion.push_unless_loop check. *)
       let reason_op = Type.AConstraint.reason_of_op op in
-      let t = mk_typeapp_instance cx ~use_op:typeapp_use_op ~reason_op ~reason_tapp c ts in
+      let t = mk_typeapp_instance cx ~use_op:typeapp_use_op ~reason_op ~reason_tapp type_ targs in
       elab_t cx t op
     (****************)
     (* Opaque types *)

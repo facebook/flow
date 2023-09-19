@@ -766,7 +766,8 @@ end = struct
       | UnionT (_, rep) -> app_union ~from_bounds:false ~f:(type__ ~env ?id) rep
       | IntersectionT (_, rep) -> app_intersection ~f:(type__ ~env ?id) rep
       | DefT (_, _, PolyT { tparams = ps; t_out = t; _ }) -> poly_ty ~env t ps
-      | TypeAppT (_, _, t, ts) -> type_app ~env t (Some ts)
+      | TypeAppT { reason = _; use_op = _; type_; targs; use_desc = _ } ->
+        type_app ~env type_ (Some targs)
       | DefT (r, _, InstanceT { super; inst; _ }) -> instance_t ~env r super inst
       | DefT (_, _, ClassT t) -> class_t ~env t
       | DefT (reason, _, ReactAbstractComponentT { component_kind = Nominal _; _ })
@@ -1303,7 +1304,9 @@ end = struct
         | DefT (_, _, ClassT (DefT (r, _, InstanceT { inst; _ }))) ->
           instance_app ~env r inst tparams targs
         | DefT (r, _, TypeT (kind, _)) -> type_t_app ~env r kind tparams targs
-        | DefT (_, _, ClassT (TypeAppT (_, _, t, _))) -> type_app ~env t targs
+        | DefT (_, _, ClassT (TypeAppT { reason = _; use_op = _; type_; targs = _; use_desc = _ }))
+          ->
+          type_app ~env type_ targs
         | _ ->
           let msg = "PolyT:" ^ Type.string_of_ctor t in
           terr ~kind:BadTypeApp ~msg None
@@ -1983,7 +1986,9 @@ end = struct
            The initial abstraction is wrapper within an abstraction and a type application.
            The current case unwraps the abstraction and application to reveal the
            initial imported type. *)
-        | DefT (_, _, ClassT (TypeAppT (_, _, t, _))) -> toplevel ~env t
+        | DefT (_, _, ClassT (TypeAppT { reason = _; use_op = _; type_; targs = _; use_desc = _ }))
+          ->
+          toplevel ~env type_
         (* Type Aliases *)
         | DefT (r, _, TypeT (kind, t)) ->
           let%bind (env, ps) = TypeConverter.convert_type_params_t ~env tparams in
@@ -2378,8 +2383,8 @@ end = struct
       | UnionT (_, rep) ->
         app_union ~from_bounds:false ~f:(type__ ~env ?id ~inherited ~source ~imode) rep
       | DefT (_, _, FunT (static, _)) -> type__ ~env ~inherited ~source ~imode static
-      | TypeAppT (r, use_op, t, ts) ->
-        type_app_t ~env ~cont:(type__ ~inherited ~source ~imode) r use_op t ts
+      | TypeAppT { reason; use_op; type_; targs; use_desc = _ } ->
+        type_app_t ~env ~cont:(type__ ~inherited ~source ~imode) reason use_op type_ targs
       | DefT (_, _, TypeT (_, t)) -> type__ ~env ~inherited ~source ~imode t
       | OptionalT { type_ = t; _ } -> optional_t ~env ?id ~cont:(type__ ~inherited ~source ~imode) t
       | EvalT (t, d, id') ->
@@ -2447,7 +2452,8 @@ end = struct
       | AnnotT (_, t, _) -> type__ ~env ?id t
       | UnionT (_, rep) -> app_union ~from_bounds:false ~f:(type__ ~env ?id) rep
       | IntersectionT (_, rep) -> app_intersection ~f:(type__ ~env ?id) rep
-      | TypeAppT (r, use_op, t, ts) -> type_app_t ~env ~cont:type__ r use_op t ts
+      | TypeAppT { reason; use_op; type_; targs; use_desc = _ } ->
+        type_app_t ~env ~cont:type__ reason use_op type_ targs
       | EvalT (t, d, id') ->
         if id = Some (EvalKey id') then
           return Ty.(Bot (NoLowerWithUpper NoUpper))

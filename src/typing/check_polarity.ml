@@ -150,15 +150,15 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
        * type of the extended class is looked up from the environment, and will
        * not contain any type parameters in scope -- only concrete types. *)
       ()
-    | ThisTypeAppT (_, c, _, Some targs)
-    | TypeAppT (_, _, c, targs) ->
+    | ThisTypeAppT (_, type_, _, Some targs)
+    | TypeAppT { reason = _; use_op = _; type_; targs; use_desc = _ } ->
       (* Type arguments in a typeapp might contain a GenericT, but the root type
        * which defines the type parameters is not necessarily resolved at this
        * point. We need to know the polarity of the type parameters in order to
        * know the position of any found GenericTs. This constraint will continue
        * checking the type args once the root type is resolved. *)
-      let reason = reason_of_t c in
-      Flow.flow_opt cx ?trace (c, VarianceCheckT (reason, tparams, targs, polarity))
+      let reason = reason_of_t type_ in
+      Flow.flow_opt cx ?trace (type_, VarianceCheckT (reason, tparams, targs, polarity))
     | DefT (_, _, ReactAbstractComponentT { config; instance; renders; component_kind = _ }) ->
       check_polarity cx ?trace tparams (Polarity.inv polarity) config;
       check_polarity cx ?trace tparams polarity instance;

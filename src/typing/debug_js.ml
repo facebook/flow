@@ -328,8 +328,8 @@ let rec dump_t_ (depth, tvars) cx t =
     | OptionalT { reason = _; type_ = arg; use_desc = _ } -> p ~extra:(kid arg) t
     | EvalT (arg, expr, id) ->
       p ~extra:(spf "%s, %s" (defer_use expr (kid arg)) (Eval.string_of_id id)) t
-    | TypeAppT (_, _, base, args) ->
-      p ~extra:(spf "%s, [%s]" (kid base) (String.concat "; " (Base.List.map ~f:kid args))) t
+    | TypeAppT { reason = _; use_op = _; type_; targs; use_desc = _ } ->
+      p ~extra:(spf "%s, [%s]" (kid type_) (String.concat "; " (Base.List.map ~f:kid targs))) t
     | ThisTypeAppT (_, base, this, args_opt) ->
       p
         ~reason:false

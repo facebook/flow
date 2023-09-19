@@ -268,10 +268,10 @@ let substituter =
               t
             else
               ThisClassT (reason, this_, i, name)
-          | TypeAppT (r, op, c, ts) ->
-            let c' = self#type_ cx map_cx c in
-            let ts' = ListUtils.ident_map (self#type_ cx map_cx) ts in
-            if c == c' && ts == ts' then
+          | TypeAppT { reason; use_op = op; type_; targs; use_desc } ->
+            let type_' = self#type_ cx map_cx type_ in
+            let targs' = ListUtils.ident_map (self#type_ cx map_cx) targs in
+            if type_' == type_ && targs' == targs then
               t
             else
               (* If the TypeAppT changed then one of the type arguments had a
@@ -279,7 +279,7 @@ let substituter =
                * so we can point at the op which instantiated the types that
                * were substituted. *)
               let use_op = Base.Option.value use_op ~default:op in
-              TypeAppT (r, use_op, c', ts')
+              TypeAppT { reason; use_op; type_ = type_'; targs = targs'; use_desc }
           | EvalT (x, TypeDestructorT (op, r, d), _) ->
             let x' = self#type_ cx map_cx x in
             let d' = self#destructor cx map_cx d in

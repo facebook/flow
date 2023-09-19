@@ -1278,11 +1278,23 @@ struct
           instantiate_this_class cx trace reason_tapp tc this (Upper u)
         | (TypeAppT _, ReposLowerT (reason, use_desc, u)) ->
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
-        | (TypeAppT (reason_tapp, use_op, c, ts), MethodT (_, _, _, _, _, _))
-        | (TypeAppT (reason_tapp, use_op, c, ts), PrivateMethodT (_, _, _, _, _, _, _, _)) ->
+        | ( TypeAppT { reason = reason_tapp; use_op; type_; targs; use_desc = _ },
+            MethodT (_, _, _, _, _, _)
+          )
+        | ( TypeAppT { reason = reason_tapp; use_op; type_; targs; use_desc = _ },
+            PrivateMethodT (_, _, _, _, _, _, _, _)
+          ) ->
           let reason_op = reason_of_use_t u in
           let t =
-            mk_typeapp_instance_annot cx ~trace ~use_op ~reason_op ~reason_tapp ~cache:true c ts
+            mk_typeapp_instance_annot
+              cx
+              ~trace
+              ~use_op
+              ~reason_op
+              ~reason_tapp
+              ~cache:true
+              type_
+              targs
           in
           rec_flow cx trace (t, u)
         (* This is the second step in checking a TypeAppT (c, ts) ~> TypeAppT (c, ts).
@@ -1368,10 +1380,12 @@ struct
               ts2
           in
           rec_flow cx trace (t1, UseT (use_op, t2))
-        | (TypeAppT (reason_tapp, use_op, c, ts), _) ->
-          if TypeAppExpansion.push_unless_loop cx (c, ts) then (
+        | (TypeAppT { reason = reason_tapp; use_op; type_; targs; use_desc = _ }, _) ->
+          if TypeAppExpansion.push_unless_loop cx (type_, targs) then (
             let reason_op = reason_of_use_t u in
-            let t = mk_typeapp_instance_annot cx ~trace ~use_op ~reason_op ~reason_tapp c ts in
+            let t =
+              mk_typeapp_instance_annot cx ~trace ~use_op ~reason_op ~reason_tapp type_ targs
+            in
             rec_flow cx trace (t, u);
             TypeAppExpansion.pop cx
           )
@@ -7000,7 +7014,13 @@ struct
       (* Specialize TypeAppTs before evaluating them so that we can handle special
          cases. Like the union case below. mk_typeapp_instance will return an AnnotT
          which will be fully resolved using the AnnotT case above. *)
-      | GenericT { bound = TypeAppT (_, use_op_tapp, c, ts); reason = reason_tapp; id; name } ->
+      | GenericT
+          {
+            bound = TypeAppT { reason = _; use_op = use_op_tapp; type_; targs; use_desc = _ };
+            reason = reason_tapp;
+            id;
+            name;
+          } ->
         let destructor = TypeDestructorT (use_op, reason, d) in
         let t =
           mk_typeapp_instance_annot
@@ -7009,8 +7029,8 @@ struct
             ~use_op:use_op_tapp
             ~reason_op:reason
             ~reason_tapp
-            c
-            ts
+            type_
+            targs
         in
         rec_flow
           cx
@@ -7018,7 +7038,7 @@ struct
           ( Cache.Eval.id cx (GenericT { bound = t; name; id; reason = reason_tapp }) destructor,
             UseT (use_op, OpenT tout)
           )
-      | TypeAppT (reason_tapp, use_op_tapp, c, ts) ->
+      | TypeAppT { reason = reason_tapp; use_op = use_op_tapp; type_; targs; use_desc = _ } ->
         let destructor = TypeDestructorT (use_op, reason, d) in
         let t =
           mk_typeapp_instance_annot
@@ -7027,8 +7047,8 @@ struct
             ~use_op:use_op_tapp
             ~reason_op:reason
             ~reason_tapp
-            c
-            ts
+            type_
+            targs
         in
         rec_flow_t cx trace ~use_op:unknown_use (Cache.Eval.id cx t destructor, OpenT tout)
       (* If we are destructuring a union, evaluating the destructor on the union
@@ -8792,7 +8812,9 @@ struct
             funtype1.params
             funtype2.params;
           rec_unify cx trace ~use_op funtype1.return_t funtype2.return_t
-        | (TypeAppT (_, _, c1, ts1), TypeAppT (_, _, c2, ts2))
+        | ( TypeAppT { reason = _; use_op = _; type_ = c1; targs = ts1; use_desc = _ },
+            TypeAppT { reason = _; use_op = _; type_ = c2; targs = ts2; use_desc = _ }
+          )
           when c1 = c2 && List.length ts1 = List.length ts2 ->
           List.iter2 (rec_unify cx trace ~use_op) ts1 ts2
         | (AnnotT (_, OpenT (_, id1), _), AnnotT (_, OpenT (_, id2), _)) -> begin

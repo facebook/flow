@@ -2276,7 +2276,8 @@ let rec wraps_mapped_type cx = function
       wraps_mapped_type cx t
     | _ -> false)
   | DefT (_, _, PolyT { t_out; _ }) -> wraps_mapped_type cx t_out
-  | TypeAppT (_, _, t, _) -> wraps_mapped_type cx t
+  | TypeAppT { reason = _; use_op = _; type_; targs = _; use_desc = _ } ->
+    wraps_mapped_type cx type_
   | _ -> false
 
 (**********)

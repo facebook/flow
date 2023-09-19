@@ -37,7 +37,7 @@ let rec reason_of_t = function
   | OpaqueT (reason, _) -> reason
   | ThisClassT (reason, _, _, _) -> reason
   | ThisTypeAppT (reason, _, _, _) -> reason
-  | TypeAppT (reason, _, _, _) -> reason
+  | TypeAppT { reason; _ } -> reason
   | AnyT (reason, _) -> reason
   | UnionT (reason, _) -> reason
   | IntersectionT (reason, _) -> reason
@@ -202,7 +202,8 @@ let rec mod_reason_of_t f = function
   | OpaqueT (reason, opaquetype) -> OpaqueT (f reason, opaquetype)
   | ThisClassT (reason, t, is_this, this_name) -> ThisClassT (f reason, t, is_this, this_name)
   | ThisTypeAppT (reason, t1, t2, t3) -> ThisTypeAppT (f reason, t1, t2, t3)
-  | TypeAppT (reason, t1, t2, t3) -> TypeAppT (f reason, t1, t2, t3)
+  | TypeAppT { reason; use_op; type_; targs; use_desc } ->
+    TypeAppT { reason = f reason; use_op; type_; targs; use_desc }
 
 and mod_reason_of_defer_use_t f = function
   | TypeDestructorT (use_op, reason, s) -> TypeDestructorT (use_op, f reason, s)
@@ -902,7 +903,7 @@ let poly_type_of_tparams id tparams t =
 
 let typeapp_with_use_op reason use_op t targs =
   let reason = replace_desc_reason (RTypeApp (desc_of_t t)) reason in
-  TypeAppT (reason, use_op, t, targs)
+  TypeAppT { reason; use_op; type_ = t; targs; use_desc = false }
 
 let typeapp reason t targs =
   let use_op = Op (TypeApplication { type_ = reason }) in
@@ -912,7 +913,7 @@ let typeapp_annot loc t targs =
   let desc = RTypeApp (desc_of_t t) in
   let reason = mk_annot_reason desc loc in
   let use_op = Op (TypeApplication { type_ = reason }) in
-  TypeAppT (reason, use_op, t, targs)
+  TypeAppT { reason; use_op; type_ = t; targs; use_desc = false }
 
 (* An implicit typeapp is not a product of some source level type application,
  * but merely a tool for some other functionality, e.g.
@@ -925,7 +926,7 @@ let implicit_typeapp ?annot_loc t targs =
     | None -> reason
   in
   let use_op = Op (TypeApplication { type_ = reason }) in
-  TypeAppT (reason, use_op, t, targs)
+  TypeAppT { reason; use_op; type_ = t; targs; use_desc = false }
 
 let this_typeapp ?annot_loc t this targs =
   let reason =

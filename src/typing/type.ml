@@ -86,7 +86,13 @@ module rec TypeTerm : sig
     (* this instantiation *)
     | ThisTypeAppT of reason * t * t * t list option
     (* type application *)
-    | TypeAppT of reason * use_op * t * t list
+    | TypeAppT of {
+        reason: reason;
+        use_op: use_op;
+        type_: t;
+        targs: t list;
+        use_desc: bool;
+      }
     (* exact *)
     | ExactT of reason * t
     | FunProtoT of reason (* Function.prototype *)
