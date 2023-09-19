@@ -6,7 +6,7 @@ declare export class C<K, +V> {
   static <K, V>(iter: Array<[K, V]>): C<K, V>;
 }
 
-declare function foo<K, +V>(_: void): C<K, V>;
+declare function foo<K, V>(_: void): C<K, V>;
 declare function foo<K, V>(iter: Array<[K, V]>): C<K, V>;
 
 declare var any_: any;

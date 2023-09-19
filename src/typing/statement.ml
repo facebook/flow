@@ -7471,6 +7471,7 @@ module Make
         let kind =
           function_kind cx ~body ~constructor ~async ~generator ~predicate ~params ~ret_loc
         in
+        Anno.error_on_unsupported_variance_annotation cx ~kind:"function" tparams;
         let (tparams, tparams_map, tparams_ast) =
           Anno.mk_type_param_declarations cx ~tparams_map tparams
         in

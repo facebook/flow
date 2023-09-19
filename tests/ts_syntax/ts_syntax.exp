@@ -114,9 +114,25 @@ The equivalent of TypeScript's `in` variance annotation is `-` in Flow. [ts-synt
                          ^^
 
 
+Error ------------------------------------------------------------------------------------------ in_out_variance.js:1:20
+
+Variance modifiers cannot appear on a type parameter of a function type. [unsupported-variance-annotation]
+
+   1| declare function f<in A>(A): void; // ERROR
+                         ^^
+
+
 Error ------------------------------------------------------------------------------------------ in_out_variance.js:2:20
 
 The equivalent of TypeScript's `out` variance annotation is `+` in Flow. [ts-syntax]
+
+   2| declare function f<out A>(): A; // ERROR
+                         ^^^
+
+
+Error ------------------------------------------------------------------------------------------ in_out_variance.js:2:20
+
+Variance modifiers cannot appear on a type parameter of a function type. [unsupported-variance-annotation]
 
    2| declare function f<out A>(): A; // ERROR
                          ^^^
@@ -126,6 +142,14 @@ Error --------------------------------------------------------------------------
 
 The equivalent of TypeScript's `in out` variance annotation in Flow is to simply leave it out - it's the default if you
 don't have a variance annotation. [ts-syntax]
+
+   3| declare function f<in out A>(A): A; // ERROR
+                         ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ in_out_variance.js:3:20
+
+Variance modifiers cannot appear on a type parameter of a function type. [unsupported-variance-annotation]
 
    3| declare function f<in out A>(A): A; // ERROR
                          ^^^^^^
@@ -320,4 +344,4 @@ The equivalent of TypeScript's `unknown` type in Flow is `mixed`. [ts-syntax]
 
 
 
-Found 37 errors
+Found 40 errors
