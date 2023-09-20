@@ -446,7 +446,7 @@ function compare(esprima, flow, env) {
       env.diff('Wrong null', esprima, flow);
     }
   } else if (esprima instanceof RegExp) {
-    if (!flow instanceof RegExp) {
+    if (!(flow instanceof RegExp)) {
       env.diff('type', 'RegExp', flow_type);
       return;
     }
