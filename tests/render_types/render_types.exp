@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- import.js:6:2
 
-Cannot cast `<Foo />` to renders `React.Element` because `React.Element` [1] does not render `React.Element` [2].
+Cannot cast `<Foo />` to renders `React.Element` because `Foo` element [1] does not render `React.Element` [2].
 [incompatible-cast]
 
    import.js:6:2
@@ -15,7 +15,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- import.js:7:2
 
-Cannot cast `<Bar />` to renders `React.Element` because `React.Element` [1] does not render `React.Element` [2].
+Cannot cast `<Bar />` to renders `React.Element` because `Bar` element [1] does not render `React.Element` [2].
 [incompatible-cast]
 
    import.js:7:2
@@ -137,7 +137,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- poly.js:11:2
 
-Cannot cast `el` to renders undefined because `React.Element` [1] does not render undefined [2]. [incompatible-cast]
+Cannot cast `el` to renders undefined because `Fragment` element [1] does not render undefined [2]. [incompatible-cast]
 
    poly.js:11:2
    11| (el: renders void); // error
@@ -151,7 +151,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- poly.js:19:37
 
-Cannot create `FooContainer` element because `React.Element` [1] does not render `React.Element` [2] in property
+Cannot create `FooContainer` element because `Fragment` element [1] does not render `React.Element` [2] in property
 `children`. [incompatible-type]
 
    poly.js:19:37
