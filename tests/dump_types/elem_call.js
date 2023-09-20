@@ -11,3 +11,7 @@ dict2?.[key]?.();
 
 declare var dict3: { [key: string]: <T>(T) => T, ... };
 dict3[key]("");
+
+declare var dict4: { [key: 'a' ]: () => {} } | void;
+declare var b: 'b';
+dict4[b]();
