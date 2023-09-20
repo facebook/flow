@@ -18,6 +18,8 @@ module type INPUT = sig
 
   include Flow_common.BUILTINS
 
+  include Flow_common.EVAL
+
   include Flow_common.SUBTYPING
 
   include Flow_common.REACT
@@ -1928,6 +1930,35 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (DefT (enum_reason, _, EnumT _), DefT (reason, _, TypeT (_, t))) ->
       rec_unify cx trace ~use_op (AnyT.error reason) t;
       add_output cx ~trace Error_message.(EEnumMemberUsedAsType { reason; enum_reason })
+    | ( DefT (reasonl, _, ReactAbstractComponentT { component_kind = Nominal _; _ }),
+        DefT (r, _, TypeT (_, t))
+      ) ->
+      (* a component syntax value annotation becomes an element of that component *)
+      let elem =
+        let props =
+          let reason = update_desc_new_reason (fun desc -> RPropsOfComponent desc) reasonl in
+          mk_possibly_evaluated_destructor
+            cx
+            use_op
+            reason
+            l
+            ReactElementPropsType
+            (Eval.generate_id ())
+        in
+        let elem_reason =
+          let desc = react_element_desc_of_component_reason reasonl in
+          let annot_loc = loc_of_reason r in
+          annot_reason ~annot_loc (replace_desc_reason desc r)
+        in
+        get_builtin_typeapp
+          cx
+          ~trace
+          ~use_desc:true
+          elem_reason
+          (OrdinaryName "React$Element")
+          [l; props]
+      in
+      rec_unify cx trace ~use_op elem t
     (* non-class/function values used in annotations are errors *)
     | (_, DefT (reason_use, _, TypeT (_, t))) ->
       (match l with

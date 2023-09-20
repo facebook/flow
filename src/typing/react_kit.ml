@@ -661,20 +661,16 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           )
       in
       let annot_loc = loc_of_reason reason_op in
-      let (elem_reason, use_desc) =
-        let (desc, use_desc) =
-          match desc_of_reason (reason_of_t l) with
-          | RComponent name -> (RReactElement (Some name), true)
-          | _ -> (RType (OrdinaryName "React$Element"), false)
-        in
-        (annot_reason ~annot_loc (replace_desc_reason desc reason_op), use_desc)
+      let elem_reason =
+        let desc = react_element_desc_of_component_reason (reason_of_t l) in
+        annot_reason ~annot_loc (replace_desc_reason desc reason_op)
       in
       let elem =
         get_builtin_typeapp
           cx
           ~trace
           elem_reason
-          ~use_desc
+          ~use_desc:true
           (OrdinaryName "React$Element")
           [component; Tvar.mk_where cx reason_op props_to_tout]
       in

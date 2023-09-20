@@ -1572,6 +1572,11 @@ let invalidate_rtype_alias = function
   | RTypeAlias (name, Some _, desc) -> RTypeAlias (name, None, desc)
   | desc -> desc
 
+let react_element_desc_of_component_reason reason =
+  match desc_of_reason reason with
+  | RComponent name -> RReactElement (Some name)
+  | _ -> RType (OrdinaryName "React$Element")
+
 let range_string_of_loc ~strip_root loc =
   Loc.(
     let file =

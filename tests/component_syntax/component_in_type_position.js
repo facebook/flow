@@ -1,9 +1,11 @@
 //@flow
+import * as React from 'react';
+export component Foo() { return null }
 
-component Foo() { return null }
+const x: Foo = Foo; // ERROR
+const fooElem: Foo = <Foo />; // OK
 
-const x: Foo = Foo; // OK!
-
-component Bar() {return null}
-
-const y: Foo = Bar; // ERROR! Bar ~> Foo
+export component Poly<T>(prop: T) { return null }
+const polyElem: Poly<number> = <Poly prop={3} />; // OK
+const polyElemBad: Poly<number> = <Poly prop="STRING" />; // ERROR
+type PolyNoTargs = Poly; // ERROR

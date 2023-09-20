@@ -10,6 +10,8 @@ module type INPUT = sig
 
   include Flow_common.BUILTINS
 
+  include Flow_common.EVAL
+
   include Flow_common.SUBTYPING
 
   include Flow_common.REACT
