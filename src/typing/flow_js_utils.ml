@@ -368,13 +368,13 @@ let error_message_kind_of_upper = function
     Error_message.IncompatibleSetPropT (loc_of_reason reason, Some name)
   | SetPropT (_, _, Computed t, _, _, _, _) -> Error_message.IncompatibleSetPropT (loc_of_t t, None)
   | SetPrivatePropT (_, _, _, _, _, _, _, _, _) -> Error_message.IncompatibleSetPrivatePropT
-  | MethodT (_, _, _, Named { reason; name; _ }, _, _) ->
+  | MethodT (_, _, _, Named { reason; name; _ }, _) ->
     Error_message.IncompatibleMethodT (loc_of_reason reason, Some name)
-  | MethodT (_, _, _, Computed t, _, _) -> Error_message.IncompatibleMethodT (loc_of_t t, None)
+  | MethodT (_, _, _, Computed t, _) -> Error_message.IncompatibleMethodT (loc_of_t t, None)
   | CallT _ -> Error_message.IncompatibleCallT
   | GetElemT { key_t; _ } -> Error_message.IncompatibleGetElemT (loc_of_t key_t)
   | SetElemT (_, _, t, _, _, _) -> Error_message.IncompatibleSetElemT (loc_of_t t)
-  | CallElemT (_, _, _, t, _, _) -> Error_message.IncompatibleCallElemT (loc_of_t t)
+  | CallElemT (_, _, _, t, _) -> Error_message.IncompatibleCallElemT (loc_of_t t)
   | ElemT (_, _, DefT (_, _, ArrT _), _) -> Error_message.IncompatibleElemTOfArrT
   | ObjAssignFromT (_, _, _, _, ObjSpreadAssign) -> Error_message.IncompatibleObjAssignFromTSpread
   | ObjAssignFromT _ -> Error_message.IncompatibleObjAssignFromT
@@ -2370,3 +2370,27 @@ let mk_tuple_type cx ?trace ~id ~mk_type_destructor reason elements =
       DefT (reason, bogus_trust (), ArrT (TupleAT { elem_t; elements; arity; react_dro = None }))
     else
       AnyT.error reason
+
+let add_specialized_callee cx l specialized_callee =
+  (* Avoid recording results computed during implicit instantiation. We redo the
+   * call after the instantiation portion using the concretized results. We will
+   * record that latter call result. *)
+  if not (Context.in_implicit_instantiation cx) then
+    match specialized_callee with
+    | None -> ()
+    | Some (Specialized_callee data) ->
+      (match Context.speculation_id cx with
+      | Some id
+      (* It is possible that the call we are inspecting was initiated in a speculative
+       * state. It is important to compare with the state during the beginning of the
+       * call to determine if this is a true speculative candidate. *)
+        when Some id <> data.init_speculation_state ->
+        data.speculative_candidates <- (l, id) :: data.speculative_candidates
+      | _ -> data.finalized <- l :: data.finalized)
+
+let add_specialized_callee_use cx l =
+  let open Type in
+  function
+  | CallT { call_action = Funcalltype { call_specialized_callee; _ }; _ } ->
+    add_specialized_callee cx l call_specialized_callee
+  | _ -> ()

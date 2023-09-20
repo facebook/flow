@@ -658,7 +658,7 @@ and dump_use_t_ (depth, tvars) cx t =
         (String.concat "; " (Base.List.map ~f:call_arg_kid meth_args_tlist))
         (string_of_reason call_r)
         (tvar call_tvar)
-    | NoMethodAction -> "NoMethodAction"
+    | NoMethodAction _ -> "NoMethodAction"
   in
   if depth = 0 then
     string_of_use_ctor t
@@ -690,7 +690,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | AssertIterableT _ -> p t
     | BecomeT { reason = _; t = arg; empty_success = _ } -> p ~extra:(kid arg) t
     | BindT (use_op, _, _) -> p t ~extra:(string_of_use_op use_op)
-    | CallElemT (_, _, _, _, _, _) -> p t
+    | CallElemT (_, _, _, _, _) -> p t
     | CallT
         {
           use_op;
@@ -833,9 +833,9 @@ and dump_use_t_ (depth, tvars) cx t =
         t
     | MakeExactT _ -> p t
     | MapTypeT _ -> p t
-    | MethodT (_, _, _, prop, action, _) ->
+    | MethodT (_, _, _, prop, action) ->
       p ~extra:(spf "(%s, %s)" (propref prop) (method_action action)) t
-    | PrivateMethodT (_, _, _, prop, _, _, action, _) ->
+    | PrivateMethodT (_, _, _, prop, _, _, action) ->
       p ~extra:(spf "(%s), (%s)" prop (method_action action)) t
     | MixinT (_, arg) -> p ~extra:(kid arg) t
     | NotT (_, arg) -> p ~extra:(tout arg) t

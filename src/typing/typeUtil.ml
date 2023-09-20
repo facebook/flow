@@ -61,7 +61,7 @@ and reason_of_use_t = function
   | AssertImportIsValueT (reason, _) -> reason
   | BecomeT { reason; _ } -> reason
   | BindT (_, reason, _) -> reason
-  | CallElemT (_, reason, _, _, _, _) -> reason
+  | CallElemT (_, reason, _, _, _) -> reason
   | CallLatentPredT { reason; _ } -> reason
   | CallT { reason; _ } -> reason
   | ChoiceKitUseT (reason, _) -> reason
@@ -104,7 +104,7 @@ and reason_of_use_t = function
   | LookupT { reason; _ } -> reason
   | MakeExactT (reason, _) -> reason
   | MapTypeT (_, reason, _, _) -> reason
-  | MethodT (_, reason, _, _, _, _) -> reason
+  | MethodT (_, reason, _, _, _) -> reason
   | MixinT (reason, _) -> reason
   | NotT (reason, _) -> reason
   | NullishCoalesceT (reason, _, _) -> reason
@@ -117,7 +117,7 @@ and reason_of_use_t = function
   | OptionalIndexedAccessT { reason; _ } -> reason
   | OrT (reason, _, _) -> reason
   | PredicateT (_, (reason, _)) -> reason
-  | PrivateMethodT (_, reason, _, _, _, _, _, _) -> reason
+  | PrivateMethodT (_, reason, _, _, _, _, _) -> reason
   | ReactKitT (_, reason, _) -> reason
   | ReposLowerT (reason, _, _) -> reason
   | ReposUseT (reason, _, _, _) -> reason
@@ -248,8 +248,8 @@ and mod_reason_of_use_t f = function
   | AssertImportIsValueT (reason, name) -> AssertImportIsValueT (f reason, name)
   | BecomeT { reason; t; empty_success } -> BecomeT { reason = f reason; t; empty_success }
   | BindT (use_op, reason, ft) -> BindT (use_op, f reason, ft)
-  | CallElemT (use_op, reason_call, reason_lookup, t, prop_t, ft) ->
-    CallElemT (use_op, f reason_call, reason_lookup, t, prop_t, ft)
+  | CallElemT (use_op, reason_call, reason_lookup, t, action) ->
+    CallElemT (use_op, f reason_call, reason_lookup, t, action)
   | CallLatentPredT ({ reason; _ } as contents) ->
     CallLatentPredT { contents with reason = f reason }
   | CallT { use_op; reason; call_action; return_hint } ->
@@ -340,8 +340,8 @@ and mod_reason_of_use_t f = function
       }
   | MakeExactT (reason, t) -> MakeExactT (f reason, t)
   | MapTypeT (use_op, reason, kind, t) -> MapTypeT (use_op, f reason, kind, t)
-  | MethodT (use_op, reason_call, reason_lookup, name, ft, tm) ->
-    MethodT (use_op, f reason_call, reason_lookup, name, ft, tm)
+  | MethodT (use_op, reason_call, reason_lookup, name, ft) ->
+    MethodT (use_op, f reason_call, reason_lookup, name, ft)
   | MixinT (reason, inst) -> MixinT (f reason, inst)
   | NotT (reason, t) -> NotT (f reason, t)
   | NullishCoalesceT (reason, t1, t2) -> NullishCoalesceT (f reason, t1, t2)
@@ -356,8 +356,8 @@ and mod_reason_of_use_t f = function
     OptionalIndexedAccessT { x with reason = f reason }
   | OrT (reason, t1, t2) -> OrT (f reason, t1, t2)
   | PredicateT (pred, (reason, t)) -> PredicateT (pred, (f reason, t))
-  | PrivateMethodT (use_op, call_reason, lookup_reason, props, cbs, static, action, prop_t) ->
-    PrivateMethodT (use_op, f call_reason, lookup_reason, props, cbs, static, action, prop_t)
+  | PrivateMethodT (use_op, call_reason, lookup_reason, props, cbs, static, action) ->
+    PrivateMethodT (use_op, f call_reason, lookup_reason, props, cbs, static, action)
   | ReactKitT (use_op, reason, tool) -> ReactKitT (use_op, f reason, tool)
   | ReposLowerT (reason, use_desc, t) -> ReposLowerT (f reason, use_desc, t)
   | ReposUseT (reason, use_desc, use_op, t) -> ReposUseT (f reason, use_desc, use_op, t)
@@ -400,17 +400,15 @@ and mod_reason_of_use_t f = function
 and mod_reason_of_opt_use_t f = function
   | OptCallT { use_op; reason; opt_funcalltype; return_hint } ->
     OptCallT { use_op; reason = f reason; opt_funcalltype; return_hint }
-  | OptMethodT (op, r1, r2, ref, action, prop_tout) ->
-    OptMethodT (op, f r1, r2, ref, action, prop_tout)
-  | OptPrivateMethodT (op, r1, r2, props, cbs, static, action, prop_tout) ->
-    OptPrivateMethodT (op, f r1, r2, props, cbs, static, action, prop_tout)
+  | OptMethodT (op, r1, r2, ref, action) -> OptMethodT (op, f r1, r2, ref, action)
+  | OptPrivateMethodT (op, r1, r2, props, cbs, static, action) ->
+    OptPrivateMethodT (op, f r1, r2, props, cbs, static, action)
   | OptGetPropT (use_op, reason, id, n) -> OptGetPropT (use_op, f reason, id, n)
   | OptGetPrivatePropT (use_op, reason, name, bindings, static) ->
     OptGetPrivatePropT (use_op, f reason, name, bindings, static)
   | OptTestPropT (use_op, reason, id, n) -> OptTestPropT (use_op, f reason, id, n)
   | OptGetElemT (use_op, reason, annot, it) -> OptGetElemT (use_op, f reason, annot, it)
-  | OptCallElemT (use_op, r1, r2, elt, prop_t, call) ->
-    OptCallElemT (use_op, f r1, r2, elt, prop_t, call)
+  | OptCallElemT (use_op, r1, r2, elt, call) -> OptCallElemT (use_op, f r1, r2, elt, call)
 
 let rec util_use_op_of_use_t :
           'a. (use_t -> 'a) -> (use_t -> use_op -> (use_op -> use_t) -> 'a) -> use_t -> 'a =
@@ -443,9 +441,9 @@ let rec util_use_op_of_use_t :
     )
   | CallT { use_op; reason; call_action; return_hint } ->
     util use_op (fun use_op -> CallT { use_op; reason; call_action; return_hint })
-  | MethodT (op, r1, r2, p, f, tm) -> util op (fun op -> MethodT (op, r1, r2, p, f, tm))
-  | PrivateMethodT (op, r1, r2, x, c, s, a, p) ->
-    util op (fun op -> PrivateMethodT (op, r1, r2, x, c, s, a, p))
+  | MethodT (op, r1, r2, p, f) -> util op (fun op -> MethodT (op, r1, r2, p, f))
+  | PrivateMethodT (op, r1, r2, x, c, s, a) ->
+    util op (fun op -> PrivateMethodT (op, r1, r2, x, c, s, a))
   | SetPropT (op, r, p, m, w, t, tp) -> util op (fun op -> SetPropT (op, r, p, m, w, t, tp))
   | SetPrivatePropT (op, r, s, m, c, b, x, t, tp) ->
     util op (fun op -> SetPrivatePropT (op, r, s, m, c, b, x, t, tp))
@@ -495,7 +493,7 @@ let rec util_use_op_of_use_t :
   | TryRenderTypePromotionT ({ use_op; _ } as contents) ->
     util use_op (fun use_op -> TryRenderTypePromotionT { contents with use_op })
   | MakeExactT (_, _)
-  | CallElemT (_, _, _, _, _, _)
+  | CallElemT (_, _, _, _, _)
   | GetStaticsT (_, _)
   | GetProtoT (_, _)
   | SetProtoT (_, _)
@@ -1091,3 +1089,7 @@ let mk_renders_type reason t =
       )
   in
   EvalT (t, destructor, Eval.generate_id ())
+
+let type_of_specialized_callee reason specialized_callee =
+  let (Specialized_callee { finalized; _ }) = specialized_callee in
+  union_of_ts reason finalized

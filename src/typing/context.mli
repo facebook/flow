@@ -532,3 +532,5 @@ val take_cache_snapshot : t -> cache_snapshot
 val restore_cache_snapshot : t -> cache_snapshot -> unit
 
 val use_mixed_in_catch_variables : t -> bool
+
+val new_specialized_callee : t -> Type.specialized_callee

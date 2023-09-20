@@ -69,6 +69,7 @@ let synthesis_speculation_call cx call_reason (reason, rep) targs argts =
         call_strict_arity = true;
         call_speculation_hint_state = Some call_speculation_hint_state;
         call_kind = RegularCallKind;
+        call_specialized_callee = None;
       }
   in
   let use = CallT { use_op; reason = call_reason; call_action; return_hint = hint_unavailable } in
@@ -191,6 +192,7 @@ let rec instantiate_callee cx fn instantiation_hint =
               call_strict_arity = true;
               call_speculation_hint_state = None;
               call_kind = RegularCallKind;
+              call_specialized_callee = None;
             }
         in
         let subst_map =
@@ -494,7 +496,7 @@ and type_of_hint_decomposition cx op reason t =
                 reason
                 ( t,
                   PrivateMethodT
-                    (unknown_use, reason, reason, name, class_entries, false, NoMethodAction, prop_t)
+                    (unknown_use, reason, reason, name, class_entries, false, NoMethodAction prop_t)
                 )
           )
         in

@@ -167,14 +167,14 @@ module Kit (Flow : Flow_common.S) : REACT = struct
               meth_strict_arity = true;
             };
           return_hint = Type.hint_unavailable;
+          specialized_callee = None;
         }
     in
-    let fn = Tvar.mk cx reason_op in
     (* Call the `render` method. *)
     rec_flow
       cx
       trace
-      (class_component_instance, MethodT (unknown_use, reason_op, reason_op, propref, action, fn));
+      (class_component_instance, MethodT (unknown_use, reason_op, reason_op, propref, action));
     rec_flow_t cx trace ~use_op (OpenT (reason_op, tvar), upper_render)
 
   (* Lookup the defaultProps of a component and flow with upper depending

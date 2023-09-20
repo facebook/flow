@@ -1342,6 +1342,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
               call_strict_arity;
               call_speculation_hint_state;
               call_kind = (MapTypeKind | CallTypeKind) as call_kind;
+              call_specialized_callee;
             }
         )
         when Context.in_implicit_instantiation cx ->
@@ -1369,6 +1370,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
             call_strict_arity;
             call_speculation_hint_state;
             call_kind;
+            call_specialized_callee;
           }
         in
         ({ check with Check.operation = (use_op, reason, Check.Call fun_type) }, true)

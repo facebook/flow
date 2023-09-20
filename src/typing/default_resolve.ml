@@ -7,12 +7,22 @@
 
 open Type
 
-let rec default_resolve_touts ~flow cx loc u =
+let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
   let _TODO = () in
   let any = AnyT.at (AnyError None) loc in
   let resolve t = flow (any, t) in
   let resolve_tvar t = flow (any, OpenT t) in
   let map_opt f t = Base.Option.iter ~f t in
+  let resolve_specialized_callee x =
+    let resolve_callee =
+      match resolve_callee with
+      | None -> any
+      | Some (r, []) -> DefT (r, bogus_trust (), MixedT Mixed_everything)
+      | Some (_, [t]) -> t
+      | Some (r, t1 :: t2 :: ts) -> IntersectionT (r, InterRep.make t1 t2 ts)
+    in
+    Flow_js_utils.add_specialized_callee cx resolve_callee x
+  in
   let resolve_method_action action =
     match action with
     | ChainM
@@ -23,11 +33,15 @@ let rec default_resolve_touts ~flow cx loc u =
           methodcalltype = { meth_tout; _ };
           voided_out = tout;
           return_hint = _;
+          specialized_callee;
         } ->
       resolve tout;
-      resolve_tvar meth_tout
-    | CallM { methodcalltype = { meth_tout; _ }; return_hint = _ } -> resolve_tvar meth_tout
-    | NoMethodAction -> ()
+      resolve_tvar meth_tout;
+      resolve_specialized_callee specialized_callee
+    | CallM { methodcalltype = { meth_tout; _ }; return_hint = _; specialized_callee } ->
+      resolve_tvar meth_tout;
+      resolve_specialized_callee specialized_callee
+    | NoMethodAction tout -> resolve tout
   in
   let resolve_lookup_action action =
     match action with
@@ -42,7 +56,7 @@ let rec default_resolve_touts ~flow cx loc u =
     match action with
     | ReadElem (_, tvar) -> resolve_tvar tvar
     | WriteElem (_, topt, _) -> map_opt resolve topt
-    | CallElem (_, _, action) -> resolve_method_action action
+    | CallElem (_, action) -> resolve_method_action action
   in
   let resolve_react_tool tool =
     let open React in
@@ -75,15 +89,21 @@ let rec default_resolve_touts ~flow cx loc u =
   in
   match u with
   | UseT _ -> _TODO
-  | BindT (_, _, { call_tout; _ })
-  | CallT { use_op = _; reason = _; call_action = Funcalltype { call_tout; _ }; return_hint = _ } ->
-    resolve_tvar call_tout
+  | BindT (_, _, { call_tout; _ }) -> resolve_tvar call_tout
+  | CallT
+      {
+        use_op = _;
+        reason = _;
+        call_action = Funcalltype { call_tout; call_specialized_callee; _ };
+        return_hint = _;
+      } ->
+    resolve_tvar call_tout;
+    resolve_specialized_callee call_specialized_callee
   | CallT { use_op = _; reason = _; call_action = ConcretizeCallee tout; return_hint = _ } ->
     resolve_tvar tout
   | ConditionalT { tout; _ } -> resolve_tvar tout
-  | MethodT (_, _, _, _, action, tout)
-  | PrivateMethodT (_, _, _, _, _, _, action, tout) ->
-    resolve tout;
+  | MethodT (_, _, _, _, action)
+  | PrivateMethodT (_, _, _, _, _, _, action) ->
     resolve_method_action action
   | SetPropT (_, _, _, _, _, _, topt)
   | SetPrivatePropT (_, _, _, _, _, _, _, _, topt) ->
@@ -94,7 +114,7 @@ let rec default_resolve_touts ~flow cx loc u =
     resolve_tvar tvar
   | SetElemT (_, _, _, _, _, topt) -> map_opt resolve topt
   | GetElemT { tout; _ } -> resolve_tvar tout
-  | CallElemT (_, _, _, _, _, action) -> resolve_method_action action
+  | CallElemT (_, _, _, _, action) -> resolve_method_action action
   | GetStaticsT tvar
   | GetProtoT (_, tvar) ->
     resolve_tvar tvar

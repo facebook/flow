@@ -1081,3 +1081,8 @@ let iter_annot_dependent_set cx f set =
       let op = Type.AConstraint.to_annot_op_exn constraints in
       f i op)
     set
+
+let new_specialized_callee cx =
+  let open Type in
+  Specialized_callee
+    { init_speculation_state = speculation_id cx; finalized = []; speculative_candidates = [] }

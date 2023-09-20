@@ -113,6 +113,28 @@ module Make (Flow : INPUT) : OUTPUT = struct
       call_callee_hint_ref := new_callee_hint
     | _ -> ()
 
+  let rec log_specialized_use cx use case speculation_id =
+    match use with
+    | CallT { call_action = Funcalltype { call_specialized_callee = Some c; _ }; _ }
+    | MethodT
+        ( _,
+          _,
+          _,
+          _,
+          (CallM { specialized_callee = Some c; _ } | ChainM { specialized_callee = Some c; _ })
+        ) ->
+      let (Specialized_callee data) = c in
+      let spec_id = (speculation_id, case.Speculation_state.case_id) in
+      Base.List.find data.speculative_candidates ~f:(fun (_, spec_id') -> spec_id = spec_id')
+      |> Base.Option.iter ~f:(fun (l, _) -> data.finalized <- l :: data.finalized)
+    | OptionalChainT { t_out; _ } -> log_specialized_use cx t_out case speculation_id
+    | _ -> ()
+
+  let log_specialized_callee cx spec case speculation_id =
+    match spec with
+    | IntersectionCases (_, use) -> log_specialized_use cx use case speculation_id
+    | _ -> ()
+
   (** Entry points into the process of trying different branches of union and
       intersection types.
 
@@ -636,6 +658,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
               let reason_lower = mk_intersection_reason r ls in
               Default_resolve.default_resolve_touts
                 ~flow:(flow_t cx)
+                ~resolve_callee:(r, ls)
                 cx
                 (loc_of_reason reason_lower)
                 upper;
@@ -830,6 +853,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
    * an UnknownUse. *)
   and fire_actions cx trace spec case speculation_id =
     log_synthesis_result cx trace case speculation_id;
+    log_specialized_callee cx spec case speculation_id;
 
     case.Speculation_state.actions
     |> List.iter (function

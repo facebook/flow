@@ -229,7 +229,7 @@ module Callee_finder = struct
                   )
                 in
                 let propref = TypeUtil.mk_named_prop ~reason "constructor" in
-                let use_t = MethodT (unknown_use, reason, reason, propref, NoMethodAction, t_out) in
+                let use_t = MethodT (unknown_use, reason, reason, propref, NoMethodAction t_out) in
                 Flow_js.flow cx (instance, use_t)
             )
           in

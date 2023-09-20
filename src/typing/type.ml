@@ -552,7 +552,7 @@ module rec TypeTerm : sig
       }
     (* The last position is an optional type that probes into the type of the
        method called. This will be primarily used for type-table bookkeeping. *)
-    | MethodT of use_op * (* call *) reason * (* lookup *) reason * propref * method_action * t
+    | MethodT of use_op * (* call *) reason * (* lookup *) reason * propref * method_action
     (* Similar to above, but stores information necessary to resolve a private method. *)
     | PrivateMethodT of
         use_op
@@ -562,7 +562,6 @@ module rec TypeTerm : sig
         * class_binding list
         * (* static *) bool
         * method_action
-        * t (* prop_t *)
     (* Similar to the last element of the MethodT *)
     | SetPropT of use_op * reason * propref * set_mode * write_ctx * t * t option
     (* The boolean flag indicates whether or not it is a static lookup. We cannot know this when
@@ -588,8 +587,7 @@ module rec TypeTerm : sig
         key_t: t;
         tout: tvar;
       }
-    | CallElemT of
-        use_op * (* call *) reason * (* lookup *) reason * t * (* elem t *) t * method_action
+    | CallElemT of use_op * (* call *) reason * (* lookup *) reason * t * method_action
     | GetStaticsT of tvar
     | GetProtoT of reason * tvar
     | SetProtoT of reason * t
@@ -990,8 +988,7 @@ module rec TypeTerm : sig
         opt_funcalltype: opt_funcalltype;
         return_hint: lazy_hint_t;
       }
-    | OptMethodT of
-        use_op * (* call *) reason * (* lookup *) reason * propref * opt_method_action * t
+    | OptMethodT of use_op * (* call *) reason * (* lookup *) reason * propref * opt_method_action
     | OptPrivateMethodT of
         use_op
         * (* call *) reason
@@ -1000,13 +997,11 @@ module rec TypeTerm : sig
         * class_binding list
         * bool
         * opt_method_action
-        * t
     | OptGetPropT of use_op * reason * ident option * propref
     | OptGetPrivatePropT of use_op * reason * string * class_binding list * bool
     | OptTestPropT of use_op * reason * ident * propref
     | OptGetElemT of use_op * reason * bool (* from annot *) * t
-    | OptCallElemT of
-        use_op * (* call *) reason * (* lookup *) reason * t * (* prop_t *) t * opt_method_action
+    | OptCallElemT of use_op * (* call *) reason * (* lookup *) reason * t * opt_method_action
 
   and opt_state =
     | NonOptional
@@ -1017,6 +1012,7 @@ module rec TypeTerm : sig
     | CallM of {
         methodcalltype: methodcalltype;
         return_hint: lazy_hint_t;
+        specialized_callee: specialized_callee option;
       }
     | ChainM of {
         exp_reason: reason;
@@ -1025,13 +1021,15 @@ module rec TypeTerm : sig
         methodcalltype: methodcalltype;
         voided_out: t_out;
         return_hint: lazy_hint_t;
+        specialized_callee: specialized_callee option;
       }
-    | NoMethodAction
+    | NoMethodAction of t
 
   and opt_method_action =
     | OptCallM of {
         opt_methodcalltype: opt_methodcalltype;
         return_hint: lazy_hint_t;
+        specialized_callee: specialized_callee option;
       }
     | OptChainM of {
         exp_reason: reason;
@@ -1040,8 +1038,9 @@ module rec TypeTerm : sig
         opt_methodcalltype: opt_methodcalltype;
         voided_out: t_out;
         return_hint: lazy_hint_t;
+        specialized_callee: specialized_callee option;
       }
-    | OptNoMethodAction
+    | OptNoMethodAction of t
 
   and predicate =
     | AndP of predicate * predicate
@@ -1182,6 +1181,31 @@ module rec TypeTerm : sig
     | CallTypeKind
     | RegularCallKind
 
+  (* speculation id * case id *)
+  and spec_state = int * int
+
+  (* This mutable structure will collect information on the specialized form of the
+   * callee type of a function call. For example, when calling a function with type
+   * `<X>(x: Array<X>) => X`, with `[""]`, it will collect `(x: Array<string>) => string`.
+   * This type will be used to populate the TAST for the callee expression.
+   *
+   * When recording types not under speculation, then the results will be appended
+   * to the [finalized] list.
+   *
+   * Under speculation we can't really commit to the specialized function we are
+   * calling during a speculative branch. We record the type as a "speculative
+   * candidate", and include the speculative state under which this addition was
+   * made. After speculation is done (at the "fire action" part of Speculation_kit)
+   * we determine if the branch was successful, and if so, we promote the type to
+   * the finalized list.
+   *)
+  and specialized_callee =
+    | Specialized_callee of {
+        mutable finalized: t list;
+        mutable speculative_candidates: (t * spec_state) list;
+        init_speculation_state: spec_state option;
+      }
+
   (* Used by CallT and similar constructors *)
   and funcalltype = {
     call_this_t: t;
@@ -1191,6 +1215,7 @@ module rec TypeTerm : sig
     call_strict_arity: bool;
     call_speculation_hint_state: speculation_hint_state ref option;
     call_kind: call_kind;
+    call_specialized_callee: specialized_callee option;
   }
 
   and methodcalltype = {
@@ -1208,7 +1233,7 @@ module rec TypeTerm : sig
     | ImplicitArg of tvar
     | ExplicitArg of t
 
-  and opt_funcalltype = t * targ list option * call_arg list * bool
+  and opt_funcalltype = t * targ list option * call_arg list * bool * specialized_callee option
 
   and opt_methodcalltype = {
     opt_meth_generic_this: t option;
@@ -1365,7 +1390,7 @@ module rec TypeTerm : sig
   and elem_action =
     | ReadElem of bool (* annot *) * tvar
     | WriteElem of t * t option (* tout *) * set_mode
-    | CallElem of reason * t (* elem type *) * method_action
+    | CallElem of reason * method_action
 
   and propref =
     | Named of {
@@ -4190,11 +4215,13 @@ let mk_boundfunctioncalltype ~call_kind this targs args ?(call_strict_arity = tr
     call_strict_arity;
     call_speculation_hint_state = None;
     call_kind;
+    call_specialized_callee = None;
   }
 
 let mk_functioncalltype ~call_kind reason = mk_boundfunctioncalltype ~call_kind (global_this reason)
 
-let mk_opt_functioncalltype reason targs args strict = (global_this reason, targs, args, strict)
+let mk_opt_functioncalltype reason targs args strict instantiation_probe =
+  (global_this reason, targs, args, strict, instantiation_probe)
 
 let mk_opt_boundfunctioncalltype this targs args strict = (this, targs, args, strict)
 
@@ -4211,7 +4238,7 @@ let mk_object_def_type ~reason ?(flags = default_flags) ~call pmap proto =
   let reason = update_desc_reason invalidate_rtype_alias reason in
   DefT (reason, bogus_trust (), ObjT (mk_objecttype ~flags ~call pmap proto))
 
-let apply_opt_funcalltype (this, targs, args, strict) t_out =
+let apply_opt_funcalltype (this, targs, args, strict, t_callee) t_out =
   Funcalltype
     {
       call_this_t = this;
@@ -4221,6 +4248,7 @@ let apply_opt_funcalltype (this, targs, args, strict) t_out =
       call_strict_arity = strict;
       call_speculation_hint_state = None;
       call_kind = RegularCallKind;
+      call_specialized_callee = t_callee;
     }
 
 let apply_opt_methodcalltype
@@ -4238,9 +4266,23 @@ let create_intersection rep = IntersectionT (locationless_reason (RCustom "inter
 
 let apply_opt_action action t_out =
   match action with
-  | OptCallM { opt_methodcalltype; return_hint } ->
-    CallM { methodcalltype = apply_opt_methodcalltype opt_methodcalltype t_out; return_hint }
-  | OptChainM { exp_reason; lhs_reason; this; opt_methodcalltype; voided_out; return_hint } ->
+  | OptCallM { opt_methodcalltype; return_hint; specialized_callee } ->
+    CallM
+      {
+        methodcalltype = apply_opt_methodcalltype opt_methodcalltype t_out;
+        return_hint;
+        specialized_callee;
+      }
+  | OptChainM
+      {
+        exp_reason;
+        lhs_reason;
+        this;
+        opt_methodcalltype;
+        voided_out;
+        return_hint;
+        specialized_callee;
+      } ->
     ChainM
       {
         exp_reason;
@@ -4249,15 +4291,15 @@ let apply_opt_action action t_out =
         methodcalltype = apply_opt_methodcalltype opt_methodcalltype t_out;
         voided_out;
         return_hint;
+        specialized_callee;
       }
-  | OptNoMethodAction -> NoMethodAction
+  | OptNoMethodAction t -> NoMethodAction t
 
 let apply_opt_use opt_use t_out =
   match opt_use with
-  | OptMethodT (op, r1, r2, ref, action, prop_tout) ->
-    MethodT (op, r1, r2, ref, apply_opt_action action t_out, prop_tout)
-  | OptPrivateMethodT (op, r1, r2, p, scopes, static, action, prop_tout) ->
-    PrivateMethodT (op, r1, r2, p, scopes, static, apply_opt_action action t_out, prop_tout)
+  | OptMethodT (op, r1, r2, ref, action) -> MethodT (op, r1, r2, ref, apply_opt_action action t_out)
+  | OptPrivateMethodT (op, r1, r2, p, scopes, static, action) ->
+    PrivateMethodT (op, r1, r2, p, scopes, static, apply_opt_action action t_out)
   | OptCallT { use_op; reason; opt_funcalltype = f; return_hint } ->
     CallT { use_op; reason; call_action = apply_opt_funcalltype f t_out; return_hint }
   | OptGetPropT (u, r, i, p) -> GetPropT (u, r, i, p, t_out)
@@ -4265,8 +4307,7 @@ let apply_opt_use opt_use t_out =
   | OptTestPropT (u, r, i, p) -> TestPropT (u, r, i, p, t_out)
   | OptGetElemT (use_op, reason, from_annot, key_t) ->
     GetElemT { use_op; reason; from_annot; key_t; tout = t_out }
-  | OptCallElemT (u, r1, r2, elt, prop_t, call) ->
-    CallElemT (u, r1, r2, elt, prop_t, apply_opt_action call t_out)
+  | OptCallElemT (u, r1, r2, elt, call) -> CallElemT (u, r1, r2, elt, apply_opt_action call t_out)
 
 let mk_enum_type ~trust reason enum =
   let reason =
@@ -4280,7 +4321,9 @@ let mk_enum_type ~trust reason enum =
   DefT (reason, trust, EnumT enum)
 
 let call_of_method_app
-    call_this_t { meth_generic_this; meth_targs; meth_args_tlist; meth_tout; meth_strict_arity } =
+    call_this_t
+    call_specialized_callee
+    { meth_generic_this; meth_targs; meth_args_tlist; meth_tout; meth_strict_arity } =
   {
     call_this_t = Base.Option.value ~default:call_this_t meth_generic_this;
     call_targs = meth_targs;
@@ -4289,6 +4332,7 @@ let call_of_method_app
     call_strict_arity = meth_strict_arity;
     call_speculation_hint_state = None;
     call_kind = RegularCallKind;
+    call_specialized_callee;
   }
 
 module TypeParams : sig

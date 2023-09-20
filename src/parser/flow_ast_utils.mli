@@ -134,3 +134,6 @@ val string_of_binary_operator : Flow_ast.Expression.Binary.operator -> string
 val loc_of_annotation_or_hint : ('loc, 'loc) Flow_ast.Type.annotation_or_hint -> 'loc
 
 val loc_of_return_annot : ('loc, 'loc) Flow_ast.Function.ReturnAnnot.t -> 'loc
+
+val push_toplevel_type :
+  't -> ('loc, 'loc * 't) Flow_ast.Expression.t -> ('loc, 'loc * 't) Flow_ast.Expression.t

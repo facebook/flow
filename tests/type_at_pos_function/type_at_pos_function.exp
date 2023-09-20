@@ -246,8 +246,8 @@ function-poly-2.js:5:5 = {
 }
 function-poly-2.js:6:5 = {
   "types":{
-    "unevaluated":{"type":"<T>(x: T, z: (TOuter | T)) => T"},
-    "evaluated":{"type":"<T>(x: T, z: (TOuter | T)) => T"}
+    "unevaluated":{"type":"(x: T, z: (TOuter | T)) => T"},
+    "evaluated":{"type":"(x: T, z: (TOuter | T)) => T"}
   },
   "reasons":[],
   "loc":{
@@ -279,8 +279,8 @@ function-poly-2.js:7:12 = {
 }
 function-poly-2.js:9:13 = {
   "types":{
-    "unevaluated":{"type":"<T>(x: T, z: (TOuter | T)) => T"},
-    "evaluated":{"type":"<T>(x: T, z: (TOuter | T)) => T"}
+    "unevaluated":{"type":"(x: number, z: (TOuter | number)) => number"},
+    "evaluated":{"type":"(x: number, z: (TOuter | number)) => number"}
   },
   "reasons":[],
   "loc":{

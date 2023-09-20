@@ -397,3 +397,30 @@ let loc_of_return_annot =
   | Available (_, (loc, _))
   | TypeGuard (loc, _) ->
     loc
+
+(* Apply type [t] at the toplevel of expression [exp]. This is straightforward overall
+ * except for the case of Identifier and Member, where we push the type within the
+ * identifier and member property type position as well. This is to ensure that
+ * type-at-pos searcher will detect the updated type. *)
+let push_toplevel_type t exp =
+  let open Flow_ast.Expression in
+  let push_toplevel_identifier id =
+    let ((id_loc, _), id) = id in
+    ((id_loc, t), id)
+  in
+  let push_to_member mem =
+    match mem with
+    | { Member.property = Member.PropertyIdentifier id; _ } ->
+      { mem with Member.property = Member.PropertyIdentifier (push_toplevel_identifier id) }
+    | p -> p
+  in
+  let ((loc, _), e) = exp in
+  let e' =
+    match e with
+    | Identifier id -> Identifier (push_toplevel_identifier id)
+    | Member member -> Member (push_to_member member)
+    | OptionalMember ({ OptionalMember.member; _ } as omem) ->
+      OptionalMember { omem with OptionalMember.member = push_to_member member }
+    | _ -> e
+  in
+  ((loc, t), e')

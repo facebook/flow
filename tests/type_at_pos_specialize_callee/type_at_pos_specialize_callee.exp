@@ -1,16 +1,16 @@
 file.js:20:14
 Flags:
-F1 & F2 & F3
+F1
 file.js:20:14,20:16
 
 file.js:22:14
 Flags:
-F1 & F2 & F3
+(x: Array<string>) => O1
 file.js:22:14,22:16
 
 file.js:24:14
 Flags:
-F1 & F2 & F3
+F3
 file.js:24:14,24:16
 
 file.js:26:17
@@ -20,17 +20,17 @@ file.js:26:17,26:19
 
 file.js:33:14
 Flags:
-F1 & F2 & F3
+F1
 file.js:33:14,33:16
 
 file.js:35:14
 Flags:
-F1 & F2 & F3
+(x: Array<string>) => O1
 file.js:35:14,35:16
 
 file.js:37:14
 Flags:
-F1 & F2 & F3
+F3
 file.js:37:14,37:16
 
 file.js:39:17
@@ -40,17 +40,17 @@ file.js:39:17,39:19
 
 file.js:46:14
 Flags:
-F1 & F2 & F3
+F1
 file.js:46:14,46:16
 
 file.js:48:14
 Flags:
-F1 & F2 & F3
+(x: Array<string>) => O1
 file.js:48:14,48:16
 
 file.js:50:14
 Flags:
-F1 & F2 & F3
+F3
 file.js:50:14,50:16
 
 file.js:52:17
@@ -60,17 +60,17 @@ file.js:52:17,52:19
 
 file.js:58:13
 Flags:
-F1 | G1
+G1 | F1
 file.js:58:13,58:15
 
 file.js:65:14
 Flags:
-((F1 | G1)) & F2
+G1
 file.js:65:14,65:16
 
 file.js:67:14
 Flags:
-((F1 | G1)) & F2
+(x: Array<string>) => O1
 file.js:67:14,67:16
 
 file.js:69:14
@@ -85,47 +85,47 @@ file.js:71:17,71:19
 
 file.js:77:13
 Flags:
-<X>(x: X) => X
+(x: number) => number
 file.js:77:13,77:15
 
 file.js:83:13
 Flags:
-?(<X>(x: X) => X)
+?((x: number) => number)
 file.js:83:13,83:15
 
 file.js:92:14
 Flags:
-((F1 & F2 & F3)) | ((G1 & G2 & G3))
+G1 | F1
 file.js:92:14,92:16
 
 file.js:94:14
 Flags:
-((F1 & F2 & F3)) | ((G1 & G2 & G3))
+((x: Array<string>) => P1) | ((x: Array<string>) => O1)
 file.js:94:14,94:16
 
 file.js:96:14
 Flags:
-((F1 & F2 & F3)) | ((G1 & G2 & G3))
+G3 | F3
 file.js:96:14,96:16
 
 file.js:98:17
 Flags:
-((F1 & F2 & F3)) | ((G1 & G2 & G3))
+((G1 & G2 & G3)) | ((F1 & F2 & F3))
 file.js:98:17,98:19
 
 file.js:110:16
 Flags:
-((x: number) => O1) & (<A>(x: Array<A>) => O1) & ((x: string) => O2)
+(x: number) => O1
 file.js:110:16,110:18
 
 file.js:112:16
 Flags:
-((x: number) => O1) & (<A>(x: Array<A>) => O1) & ((x: string) => O2)
+(x: Array<string>) => O1
 file.js:112:16,112:18
 
 file.js:114:16
 Flags:
-((x: number) => O1) & (<A>(x: Array<A>) => O1) & ((x: string) => O2)
+(x: string) => O2
 file.js:114:16,114:18
 
 file.js:116:19
@@ -135,17 +135,17 @@ file.js:116:19,116:21
 
 file.js:127:16
 Flags:
-((x: number) => O1) & (<A>(x: Array<A>) => O1) & ((x: string) => O2)
+(x: number) => O1
 file.js:127:16,127:18
 
 file.js:129:16
 Flags:
-((x: number) => O1) & (<A>(x: Array<A>) => O1) & ((x: string) => O2)
+(x: Array<string>) => O1
 file.js:129:16,129:18
 
 file.js:131:16
 Flags:
-((x: number) => O1) & (<A>(x: Array<A>) => O1) & ((x: string) => O2)
+(x: string) => O2
 file.js:131:16,131:18
 
 file.js:133:19
@@ -160,7 +160,7 @@ file.js:139:14,139:16
 
 file.js:141:18
 Flags:
-?(<X>(x: X) => X)
+?((x: number) => number)
 file.js:141:18,141:20
 
 file.js:149:13
@@ -170,27 +170,27 @@ file.js:149:13,149:15
 
 file.js:156:18
 Flags:
-any | (<V>(x: V) => V)
+((x: number) => number) | any
 file.js:156:18,156:18
 
 file.js:164:17
 Flags:
-any (implicit)
+any (explicit)
 file.js:164:17,164:17
 
 file.js:166:17
 Flags:
-<V>(x: V) => V
+(x: number) => number
 file.js:166:17,166:17
 
 file.js:174:18
 Flags:
-any (implicit)
+any (explicit)
 file.js:174:18,174:18
 
 file.js:176:18
 Flags:
-<V>(x: V) => V
+(x: number) => number
 file.js:176:18,176:18
 
 file.js:182:5
@@ -205,7 +205,7 @@ file.js:195:21,195:28
 
 file.js:201:5
 Flags:
-any | (() => mixed)
+() => mixed
 file.js:201:5,201:7
 
 file.js:207:4

@@ -909,10 +909,12 @@ struct
         (******************************)
         (* optional chaining - part A *)
         (******************************)
-        | (DefT (_, _, VoidT), OptionalChainT { reason; lhs_reason; voided_out; _ }) ->
+        | (DefT (_, _, VoidT), OptionalChainT { reason; lhs_reason; voided_out; t_out; _ }) ->
+          Flow_js_utils.add_specialized_callee_use cx l t_out;
           Context.mark_optional_chain cx (loc_of_reason reason) lhs_reason ~useful:true;
           rec_flow_t ~use_op:unknown_use cx trace (l, voided_out)
-        | (DefT (r, trust, NullT), OptionalChainT { reason; lhs_reason; voided_out; _ }) ->
+        | (DefT (r, trust, NullT), OptionalChainT { reason; lhs_reason; voided_out; t_out; _ }) ->
+          Flow_js_utils.add_specialized_callee_use cx l t_out;
           let void =
             match desc_of_reason r with
             | RNull ->
@@ -1279,10 +1281,10 @@ struct
         | (TypeAppT _, ReposLowerT (reason, use_desc, u)) ->
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
         | ( TypeAppT { reason = reason_tapp; use_op; type_; targs; use_desc = _ },
-            MethodT (_, _, _, _, _, _)
+            MethodT (_, _, _, _, _)
           )
         | ( TypeAppT { reason = reason_tapp; use_op; type_; targs; use_desc = _ },
-            PrivateMethodT (_, _, _, _, _, _, _, _)
+            PrivateMethodT (_, _, _, _, _, _, _)
           ) ->
           let reason_op = reason_of_use_t u in
           let t =
@@ -2718,7 +2720,7 @@ struct
           in
           let unify_bounds =
             match u with
-            | MethodT (_, _, _, _, NoMethodAction, _) -> true
+            | MethodT (_, _, _, _, NoMethodAction _) -> true
             | _ -> false
           in
           let (t_, _) =
@@ -3008,10 +3010,12 @@ struct
             call_strict_arity;
             call_speculation_hint_state = _;
             call_kind = _;
+            call_specialized_callee;
           } =
             calltype
           in
           rec_flow cx trace (o2, UseT (use_op, o1));
+          Flow_js_utils.add_specialized_callee cx l call_specialized_callee;
 
           Base.Option.iter call_targs ~f:(fun _ ->
               add_output
@@ -3056,9 +3060,11 @@ struct
             call_strict_arity = _;
             call_speculation_hint_state = _;
             call_kind = _;
+            call_specialized_callee;
           } =
             calltype
           in
+          Flow_js_utils.add_specialized_callee cx l call_specialized_callee;
           let src = any_mod_src_keep_placeholder Untyped src in
           let any = AnyT.why src reason_fundef in
           rec_flow_t cx ~use_op trace (call_this_t, any);
@@ -3185,9 +3191,11 @@ struct
             call_strict_arity = _;
             call_speculation_hint_state = _;
             call_kind = _;
+            call_specialized_callee;
           } =
             calltype
           in
+          Flow_js_utils.add_specialized_callee cx l call_specialized_callee;
           (* None of the supported custom funs are polymorphic, so error here
              instead of threading targs into spread resolution. *)
           Base.Option.iter call_targs ~f:(fun _ ->
@@ -3218,18 +3226,18 @@ struct
             args
             (ResolveSpreadsToCustomFunCall (mk_id (), kind, OpenT tout, return_hint))
         | ( CustomFunT (_, (ObjectAssign | ObjectGetPrototypeOf | ObjectSetPrototypeOf)),
-            MethodT (use_op, reason_call, _, Named { name = OrdinaryName "call"; _ }, action, prop_t)
+            MethodT (use_op, reason_call, _, Named { name = OrdinaryName "call"; _ }, action)
           ) ->
-          apply_method_action cx trace ~prop_t l use_op reason_call l action
+          apply_method_action cx trace l use_op reason_call l action
         (* Custom functions are still functions, so they have all the prototype properties *)
-        | (CustomFunT (reason, _), MethodT (use_op, call_r, lookup_r, propref, action, prop_t)) ->
+        | (CustomFunT (reason, _), MethodT (use_op, call_r, lookup_r, propref, action)) ->
           let method_type =
             Tvar.mk_no_wrap_where cx lookup_r (fun tout ->
                 let u = GetPropT (use_op, lookup_r, None, propref, tout) in
                 rec_flow cx trace (FunProtoT reason, u)
             )
           in
-          apply_method_action cx trace ~prop_t method_type use_op call_r l action
+          apply_method_action cx trace method_type use_op call_r l action
         | (CustomFunT (r, _), _) when function_like_op u -> rec_flow cx trace (FunProtoT r, u)
         (****************************************)
         (* You can cast an object to a function *)
@@ -3385,8 +3393,6 @@ struct
                     }
                 )
           );
-          let prop_t = Tvar.mk cx reason_o in
-
           (* call this.constructor(args) *)
           let ret =
             Tvar.mk_no_wrap_where cx reason_op (fun t ->
@@ -3402,8 +3408,7 @@ struct
                         reason_o,
                         propref,
                         (* TODO(jmbrown) return_hint threading unblocked by ConstructorT *)
-                        CallM { methodcalltype = funtype; return_hint },
-                        prop_t
+                        CallM { methodcalltype = funtype; return_hint; specialized_callee = None }
                       )
                   )
             )
@@ -3430,7 +3435,7 @@ struct
           rec_flow_t cx trace ~use_op (AnyT.error reason_op, t)
         (* Since we don't know the signature of a method on AnyT, assume every
            parameter is an AnyT. *)
-        | (AnyT (_, src), MethodT (_, _, _, propref, NoMethodAction, prop_t)) ->
+        | (AnyT (_, src), MethodT (_, _, _, propref, NoMethodAction prop_t)) ->
           let src = any_mod_src_keep_placeholder Untyped src in
           rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src (reason_of_propref propref), prop_t)
         | ( AnyT (_, src),
@@ -3439,19 +3444,23 @@ struct
                 reason_op,
                 _,
                 _,
-                CallM { methodcalltype = { meth_args_tlist; meth_tout; _ }; return_hint = _ },
-                prop_t
+                CallM
+                  {
+                    methodcalltype = { meth_args_tlist; meth_tout; _ };
+                    return_hint = _;
+                    specialized_callee;
+                  }
               )
           ) ->
           let src = any_mod_src_keep_placeholder Untyped src in
           let any = AnyT.why src reason_op in
           call_args_iter (fun t -> rec_flow cx trace (t, UseT (use_op, any))) meth_args_tlist;
-          rec_flow_t cx trace ~use_op:unknown_use (any, prop_t);
+          Flow_js_utils.add_specialized_callee cx l specialized_callee;
           rec_flow_t cx trace ~use_op:unknown_use (any, OpenT meth_tout)
-        | (AnyT (_, src), MethodT (use_op, reason_op, _, _, (ChainM _ as chain), prop_t)) ->
+        | (AnyT (_, src), MethodT (use_op, reason_op, _, _, (ChainM _ as chain))) ->
           let src = any_mod_src_keep_placeholder Untyped src in
           let any = AnyT.why src reason_op in
-          apply_method_action cx trace ~prop_t any use_op reason_op l chain
+          apply_method_action cx trace any use_op reason_op l chain
         (*************************)
         (* statics can be read   *)
         (*************************)
@@ -3692,7 +3701,7 @@ struct
         (* ... and their methods called *)
         (********************************)
         | ( DefT (reason_instance, _, InstanceT { super; inst; _ }),
-            MethodT (use_op, reason_call, reason_lookup, propref, action, prop_t)
+            MethodT (use_op, reason_call, reason_lookup, propref, action)
           ) ->
           let funt =
             Tvar.mk_no_wrap_where cx reason_lookup (fun tout ->
@@ -3728,10 +3737,10 @@ struct
              `CallT` will set its own ops during the call. if `funt` is something
              else, then something like `VoidT ~> CallT` doesn't need the op either
              because we want to point at the call and undefined thing. *)
-          apply_method_action cx trace ~prop_t funt use_op reason_call l action
+          apply_method_action cx trace funt use_op reason_call l action
         | ( DefT (reason_c, _, InstanceT { inst; _ }),
             PrivateMethodT
-              (use_op, reason_op, reason_lookup, prop_name, scopes, static, method_action, prop_t)
+              (use_op, reason_op, reason_lookup, prop_name, scopes, static, method_action)
           ) ->
           (* BoundTs from private methods are not on the InstanceT due to scoping rules,
              so we need to substitute those BoundTs when the method is called. *)
@@ -3762,7 +3771,7 @@ struct
             ~scopes
             ~static
             ~tout:(reason_lookup, tvar);
-          apply_method_action cx trace ~prop_t funt use_op reason_op l method_action
+          apply_method_action cx trace funt use_op reason_op l method_action
         (*
            In traditional type systems, object types are not extensible.  E.g., an
            object {x: 0, y: ""} has type {x: number; y: string}. While it is
@@ -4156,11 +4165,11 @@ struct
         (* ... and their methods called *)
         (********************************)
         | ( DefT (_, _, ObjT _),
-            MethodT (_, reason_call, _, Named { name = OrdinaryName "constructor"; _ }, _, prop_t)
+            MethodT (_, reason_call, _, Named { name = OrdinaryName "constructor"; _ }, action)
           ) ->
-          rec_flow_t cx ~use_op:unknown_use trace (AnyT.untyped reason_call, prop_t)
+          add_specialized_callee_method_action cx trace (AnyT.untyped reason_call) action
         | ( DefT (reason_obj, _, ObjT o),
-            MethodT (use_op, reason_call, reason_lookup, propref, action, prop_t)
+            MethodT (use_op, reason_call, reason_lookup, propref, action)
           ) ->
           let t =
             Tvar.mk_no_wrap_where cx reason_lookup (fun tout ->
@@ -4176,7 +4185,7 @@ struct
                   tout
             )
           in
-          apply_method_action cx trace ~prop_t t use_op reason_call l action
+          apply_method_action cx trace t use_op reason_call l action
         (******************************************)
         (* strings may have their characters read *)
         (******************************************)
@@ -4202,9 +4211,9 @@ struct
           ) ->
           rec_flow cx trace (key_t, ElemT (use_op, reason_op, l, ReadElem (from_annot, tout)))
         | ( (DefT (_, _, (ObjT _ | ArrT _ | InstanceT _)) | AnyT _),
-            CallElemT (use_op, reason_call, reason_lookup, key, prop_t, action)
+            CallElemT (use_op, reason_call, reason_lookup, key, action)
           ) ->
-          let action = CallElem (reason_call, prop_t, action) in
+          let action = CallElem (reason_call, action) in
           rec_flow cx trace (key, ElemT (use_op, reason_lookup, l, action))
         | (_, ElemT (use_op, reason_op, (DefT (_, _, (ObjT _ | InstanceT _)) as obj), action)) ->
           elem_action_on_obj cx trace ~use_op l obj reason_op action
@@ -4271,9 +4280,9 @@ struct
           ) ->
           ()
         | ( DefT (_, _, ArrT _),
-            MethodT (_, reason_call, _, Named { name = OrdinaryName "constructor"; _ }, _, prop_t)
+            MethodT (_, reason_call, _, Named { name = OrdinaryName "constructor"; _ }, action)
           ) ->
-          rec_flow_t cx trace ~use_op:unknown_use (AnyT.untyped reason_call, prop_t)
+          add_specialized_callee_method_action cx trace (AnyT.untyped reason_call) action
         (* computed properties *)
         | (t, PreprocessKitT (reason, ConcretizeTypes (ConcretizeComputedPropsT tvar))) ->
           rec_flow_t cx trace ~use_op:unknown_use (t, OpenT (reason, tvar))
@@ -4627,9 +4636,11 @@ struct
             call_strict_arity = _;
             call_speculation_hint_state = _;
             call_kind = _;
+            call_specialized_callee;
           } =
             calltype
           in
+          Flow_js_utils.add_specialized_callee cx l call_specialized_callee;
           (* TODO: closure *)
           rec_flow_t cx trace ~use_op (o2, o1);
 
@@ -4651,9 +4662,11 @@ struct
             call_strict_arity = _;
             call_speculation_hint_state = _;
             call_kind = _;
+            call_specialized_callee;
           } =
             calltype
           in
+          Flow_js_utils.add_specialized_callee cx l call_specialized_callee;
           let src = any_mod_src_keep_placeholder Untyped src in
           rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src reason, call_this_t);
           call_args_iter
@@ -4873,7 +4886,7 @@ struct
         (* functions statics *)
         (*********************)
         | ( DefT (reason, _, FunT (static, _)),
-            MethodT (use_op, reason_call, reason_lookup, propref, action, prop_t)
+            MethodT (use_op, reason_call, reason_lookup, propref, action)
           ) ->
           let method_type =
             Tvar.mk_no_wrap_where cx reason_lookup (fun tout ->
@@ -4881,7 +4894,7 @@ struct
                 rec_flow cx trace (static, ReposLowerT (reason, false, u))
             )
           in
-          apply_method_action cx trace ~prop_t method_type use_op reason_call l action
+          apply_method_action cx trace method_type use_op reason_call l action
         | (DefT (reason, _, FunT (static, _)), _) when object_like_op u ->
           rec_flow cx trace (static, ReposLowerT (reason, false, u))
         (*****************************************)
@@ -4913,14 +4926,14 @@ struct
           let u = SetPrivatePropT (use_op, reason_op, x, mode, scopes, true, wr_ctx, tout, tp) in
           rec_flow cx trace (instance, ReposLowerT (reason, false, u))
         | ( DefT (reason, _, ClassT instance),
-            PrivateMethodT (use_op, reason_op, reason_lookup, prop_name, scopes, _, action, tp)
+            PrivateMethodT (use_op, reason_op, reason_lookup, prop_name, scopes, _, action)
           ) ->
           let u =
-            PrivateMethodT (use_op, reason_op, reason_lookup, prop_name, scopes, true, action, tp)
+            PrivateMethodT (use_op, reason_op, reason_lookup, prop_name, scopes, true, action)
           in
           rec_flow cx trace (instance, ReposLowerT (reason, false, u))
         | ( DefT (reason, _, ClassT instance),
-            MethodT (use_op, reason_call, reason_lookup, propref, action, prop_t)
+            MethodT (use_op, reason_call, reason_lookup, propref, action)
           ) ->
           let statics = (reason, Tvar.mk_no_wrap cx reason) in
           rec_flow cx trace (instance, GetStaticsT statics);
@@ -4930,7 +4943,7 @@ struct
                 rec_flow cx trace (OpenT statics, ReposLowerT (reason, false, u))
             )
           in
-          apply_method_action cx trace ~prop_t method_type use_op reason_call l action
+          apply_method_action cx trace method_type use_op reason_call l action
         | (DefT (reason, _, ClassT instance), _) when object_like_op u ->
           let statics = (reason, Tvar.mk_no_wrap cx reason) in
           rec_flow cx trace (instance, GetStaticsT statics);
@@ -4972,7 +4985,7 @@ struct
         | (DefT (_, _, EnumObjectT _), TestPropT (_, reason, _, prop, tout)) ->
           rec_flow cx trace (l, GetPropT (Op (GetProperty reason), reason, None, prop, tout))
         | ( DefT (enum_reason, trust, EnumObjectT enum),
-            MethodT (use_op, call_reason, lookup_reason, (Named _ as propref), action, prop_t)
+            MethodT (use_op, call_reason, lookup_reason, (Named _ as propref), action)
           ) ->
           let t =
             Tvar.mk_no_wrap_where cx lookup_reason (fun tout ->
@@ -4984,7 +4997,7 @@ struct
                   )
             )
           in
-          apply_method_action cx trace ~prop_t t use_op call_reason l action
+          apply_method_action cx trace t use_op call_reason l action
         | (DefT (enum_reason, _, EnumObjectT _), GetElemT { key_t; tout; _ }) ->
           let reason = reason_of_t key_t in
           add_output
@@ -5607,16 +5620,16 @@ struct
             );
           rec_flow cx trace (AnyT.make (AnyError None) lreason, u)
         (* Special cases of FunT *)
-        | (FunProtoApplyT reason, MethodT (use_op, call_r, lookup_r, propref, action, prop_t))
-        | (FunProtoBindT reason, MethodT (use_op, call_r, lookup_r, propref, action, prop_t))
-        | (FunProtoCallT reason, MethodT (use_op, call_r, lookup_r, propref, action, prop_t)) ->
+        | (FunProtoApplyT reason, MethodT (use_op, call_r, lookup_r, propref, action))
+        | (FunProtoBindT reason, MethodT (use_op, call_r, lookup_r, propref, action))
+        | (FunProtoCallT reason, MethodT (use_op, call_r, lookup_r, propref, action)) ->
           let method_type =
             Tvar.mk_no_wrap_where cx lookup_r (fun tout ->
                 let u = GetPropT (use_op, lookup_r, None, propref, tout) in
                 rec_flow cx trace (FunProtoT reason, u)
             )
           in
-          apply_method_action cx trace ~prop_t method_type use_op call_r l action
+          apply_method_action cx trace method_type use_op call_r l action
         | (FunProtoApplyT reason, _)
         | (FunProtoBindT reason, _)
         | (FunProtoCallT reason, _) ->
@@ -5692,8 +5705,14 @@ struct
                  branches = [];
                }
             );
+          let resolve_callee =
+            match u with
+            | CallT _ -> Some (reason_of_t l, [l])
+            | _ -> None
+          in
           Default_resolve.default_resolve_touts
             ~flow:(rec_flow_t cx trace ~use_op:unknown_use)
+            ?resolve_callee
             cx
             (reason_of_t l |> loc_of_reason)
             u
@@ -5866,9 +5885,23 @@ struct
       | _ -> false
     in
     let update_action_meth_generic_this l = function
-      | CallM { methodcalltype = mct; return_hint } ->
-        CallM { methodcalltype = { mct with meth_generic_this = Some l }; return_hint }
-      | ChainM { exp_reason; lhs_reason; this; methodcalltype = mct; voided_out; return_hint } ->
+      | CallM { methodcalltype = mct; return_hint; specialized_callee } ->
+        CallM
+          {
+            methodcalltype = { mct with meth_generic_this = Some l };
+            return_hint;
+            specialized_callee;
+          }
+      | ChainM
+          {
+            exp_reason;
+            lhs_reason;
+            this;
+            methodcalltype = mct;
+            voided_out;
+            return_hint;
+            specialized_callee;
+          } ->
         ChainM
           {
             exp_reason;
@@ -5877,8 +5910,9 @@ struct
             methodcalltype = { mct with meth_generic_this = Some l };
             voided_out;
             return_hint;
+            specialized_callee;
           }
-      | NoMethodAction -> NoMethodAction
+      | NoMethodAction t -> NoMethodAction t
     in
     if
       match bound with
@@ -6012,10 +6046,10 @@ struct
           distribute_union_intersection ()
         else
           wait_for_concrete_bound ()
-      | MethodT (op, r1, r2, prop, action, prop_t) ->
+      | MethodT (op, r1, r2, prop, action) ->
         let l = make_generic bound in
         let action' = update_action_meth_generic_this l action in
-        let u' = MethodT (op, r1, r2, prop, action', prop_t) in
+        let u' = MethodT (op, r1, r2, prop, action') in
         let consumed =
           if is_concrete bound && not (is_literal_type bound) then
             distribute_union_intersection ~upper:u' ()
@@ -6024,10 +6058,10 @@ struct
         in
         if not consumed then rec_flow cx trace (reposition_reason cx reason bound, u');
         true
-      | PrivateMethodT (op, r1, r2, prop, scopes, static, action, prop_t) ->
+      | PrivateMethodT (op, r1, r2, prop, scopes, static, action) ->
         let l = make_generic bound in
         let action' = update_action_meth_generic_this l action in
-        let u' = PrivateMethodT (op, r1, r2, prop, scopes, static, action', prop_t) in
+        let u' = PrivateMethodT (op, r1, r2, prop, scopes, static, action') in
         let consumed =
           if is_concrete bound && not (is_literal_type bound) then
             distribute_union_intersection ~upper:u' ()
@@ -7594,8 +7628,8 @@ struct
     | WriteElem (tin, tout, mode) ->
       rec_flow cx trace (obj, SetPropT (use_op, reason_op, propref, mode, Normal, tin, None));
       Base.Option.iter ~f:(fun t -> rec_flow_t cx trace ~use_op:unknown_use (obj, t)) tout
-    | CallElem (reason_call, prop_t, ft) ->
-      rec_flow cx trace (obj, MethodT (use_op, reason_call, reason_op, propref, ft, prop_t))
+    | CallElem (reason_call, ft) ->
+      rec_flow cx trace (obj, MethodT (use_op, reason_call, reason_op, propref, ft))
 
   and writelike_obj_prop cx trace ~use_op o propref reason_obj reason_op prop_t action =
     match GetPropTKit.get_obj_prop cx trace o propref reason_op with
@@ -9637,21 +9671,29 @@ struct
       | ResolveSpreadsToCallT (funcalltype, tin) ->
         finish_call_t cx ?trace ~use_op ~reason_op funcalltype resolved tin
 
-  and apply_method_action cx trace ~prop_t l use_op reason_call this_arg action =
-    rec_flow_t cx trace ~use_op:unknown_use (l, prop_t);
+  and apply_method_action cx trace l use_op reason_call this_arg action =
     match action with
-    | CallM { methodcalltype = app; return_hint } ->
+    | CallM { methodcalltype = app; return_hint; specialized_callee } ->
       let u =
         CallT
           {
             use_op;
             reason = reason_call;
-            call_action = Funcalltype (call_of_method_app this_arg app);
+            call_action = Funcalltype (call_of_method_app this_arg specialized_callee app);
             return_hint;
           }
       in
       rec_flow cx trace (l, u)
-    | ChainM { exp_reason; lhs_reason; this; methodcalltype = app; voided_out = vs; return_hint } ->
+    | ChainM
+        {
+          exp_reason;
+          lhs_reason;
+          this;
+          methodcalltype = app;
+          voided_out = vs;
+          return_hint;
+          specialized_callee;
+        } ->
       let u =
         OptionalChainT
           {
@@ -9663,14 +9705,14 @@ struct
                 {
                   use_op;
                   reason = reason_call;
-                  call_action = Funcalltype (call_of_method_app this_arg app);
+                  call_action = Funcalltype (call_of_method_app this_arg specialized_callee app);
                   return_hint;
                 };
             voided_out = vs;
           }
       in
       rec_flow cx trace (l, u)
-    | NoMethodAction -> ()
+    | NoMethodAction prop_t -> rec_flow_t cx trace ~use_op:unknown_use (l, prop_t)
 
   and perform_elem_action cx trace ~use_op ~restrict_deletes reason_op l value action =
     match (action, restrict_deletes) with
@@ -9688,8 +9730,8 @@ struct
         trace
         (tin, UseT (use_op, VoidT.why (reason_of_t value) |> with_trust literal_trust));
       Base.Option.iter ~f:(fun t -> rec_flow_t cx trace ~use_op:unknown_use (l, t)) tout
-    | (CallElem (reason_call, prop_t, action), _) ->
-      apply_method_action cx trace ~prop_t value use_op reason_call l action
+    | (CallElem (reason_call, action), _) ->
+      apply_method_action cx trace value use_op reason_call l action
 
   (* builtins, contd. *)
   (* get_builtin has different behavior depending on which file you're using it from. If we are
@@ -10275,6 +10317,12 @@ struct
 
   and possible_concrete_types_for_inspection cx t =
     possible_concrete_types (fun ident -> ConcretizeForInspection ident) cx t
+
+  and add_specialized_callee_method_action cx trace l = function
+    | CallM { specialized_callee; _ }
+    | ChainM { specialized_callee; _ } ->
+      Flow_js_utils.add_specialized_callee cx l specialized_callee
+    | NoMethodAction prop_t -> rec_flow_t cx ~use_op:unknown_use trace (l, prop_t)
 
   include CheckPolarity
   include TrustChecking

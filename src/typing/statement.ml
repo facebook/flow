@@ -3215,7 +3215,7 @@ module Make
         let meth_generic_this = Tvar.mk cx reason in
         let (targts, targs) = convert_call_targs_opt cx targs in
         let (argts, arguments_ast) = arg_list cx arguments in
-        let prop_t = Tvar.mk cx reason_prop in
+        let specialized_callee = Context.new_specialized_callee cx in
         let lhs_t =
           Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
               let methodcalltype = mk_methodcalltype ~meth_generic_this targts argts t in
@@ -3239,12 +3239,17 @@ module Make
                       reason,
                       reason_lookup,
                       mk_named_prop ~reason:reason_prop name,
-                      CallM { methodcalltype; return_hint = Type_env.get_hint cx loc },
-                      prop_t
+                      CallM
+                        {
+                          methodcalltype;
+                          return_hint = Type_env.get_hint cx loc;
+                          specialized_callee = Some specialized_callee;
+                        }
                     )
                 )
           )
         in
+        let prop_t = TypeUtil.type_of_specialized_callee reason_lookup specialized_callee in
         Some
           ( (loc, lhs_t),
             call_ast
@@ -3271,7 +3276,6 @@ module Make
         let (argts, arguments_ast) = arg_list cx arguments in
 
         let super_reason = reason_of_t super_t in
-        let prop_t = Tvar.mk cx (reason_of_t super_t) in
         let lhs_t =
           Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
               let methodcalltype = mk_methodcalltype targts argts t in
@@ -3295,8 +3299,12 @@ module Make
                       reason,
                       super_reason,
                       propref,
-                      CallM { methodcalltype; return_hint = Type.hint_unavailable },
-                      prop_t
+                      CallM
+                        {
+                          methodcalltype;
+                          return_hint = Type.hint_unavailable;
+                          specialized_callee = None;
+                        }
                     )
                 )
           )
@@ -3654,6 +3662,17 @@ module Make
         end
       | ContinueChain -> handle_continue_chain conf (optional_chain ~cond:None cx object_)
     in
+    let specialize_callee callee specialized_callee =
+      let (Specialized_callee { finalized; _ }) = specialized_callee in
+      if Base.List.is_empty finalized then
+        callee
+      else
+        (* If the type of the callee has been specialized (due to implicit
+         * instantiation or overload resolution) then use that type. *)
+        let ((_, t_init), _) = callee in
+        let t = union_of_ts (reason_of_t t_init) finalized in
+        Flow_ast_utils.push_toplevel_type t callee
+    in
     match try_non_chain cx loc e' ~call_ast ~member_ast with
     | Some (((_, lhs_t), _) as res) ->
       (* Nothing to do with respect to optional chaining, because we're in a
@@ -3873,6 +3892,7 @@ module Make
         ) ->
         let (targts, targs) = convert_call_targs_opt cx targs in
         let expr_reason = mk_expression_reason ex in
+        let specialized_callee = Context.new_specialized_callee cx in
         let ( filtered_out,
               lookup_voided_out,
               call_voided_out,
@@ -3924,6 +3944,7 @@ module Make
                 loc
                 targts
                 argts
+                (Some specialized_callee)
             in
             let test_hooks obj_t =
               if Type_inference_hooks_js.dispatch_member_hook cx name prop_loc obj_t then
@@ -4053,6 +4074,7 @@ module Make
                 targts
                 argts
                 elem_t
+                (Some specialized_callee)
             in
             let get_mem_t arg_and_elem_ts reason obj_t =
               Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason_call (fun t ->
@@ -4106,24 +4128,20 @@ module Make
               Base.List.iter voided_out ~f:(fun out -> Flow.flow_t cx (out, t))
           )
         in
-        ( filtered_out,
-          voided_out,
-          ( (loc, lhs_t),
-            call_ast
-              {
-                Call.callee =
-                  ( (lookup_loc, prop_t),
-                    receiver_ast
-                      { Member._object = object_ast; property; comments = member_comments }
-                      obj_filtered_out
-                  );
-                targs;
-                arguments = argument_asts;
-                comments;
-              }
-              filtered_out
+        let callee =
+          ( (lookup_loc, prop_t),
+            receiver_ast
+              { Member._object = object_ast; property; comments = member_comments }
+              obj_filtered_out
           )
-        )
+        in
+        let callee = specialize_callee callee specialized_callee in
+        let call =
+          ( (loc, lhs_t),
+            call_ast { Call.callee; targs; arguments = argument_asts; comments } filtered_out
+          )
+        in
+        (filtered_out, voided_out, call)
       (* e1(e2...) *)
       | (Call { Call.callee; targs; arguments; comments }, None) ->
         let (targts, targs) = convert_call_targs_opt cx targs in
@@ -4138,7 +4156,10 @@ module Make
                }
             )
         in
-        let get_opt_use argts reason _ = func_call_opt_use cx loc reason ~use_op targts argts in
+        let spec_callee = Context.new_specialized_callee cx in
+        let get_opt_use argts reason _ =
+          func_call_opt_use cx loc reason ~use_op targts argts (Some spec_callee)
+        in
         let get_reason lhs_t = mk_reason (RFunctionCall (desc_of_t lhs_t)) loc in
         let get_result argts reason f =
           Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
@@ -4162,6 +4183,7 @@ module Make
           handle_chaining conf opt_state callee loc ~this_reason:(mk_expression_reason ex)
         in
         let exp callee =
+          let callee = specialize_callee callee spec_callee in
           call_ast { Call.callee; targs; arguments = argument_asts; comments } filtered_out
         in
         (filtered_out, voided_out, ((loc, lhs_t), exp object_ast))
@@ -4193,13 +4215,18 @@ module Make
           )
     )
 
-  and func_call_opt_use cx loc reason ~use_op ?(call_strict_arity = true) targts argts =
-    let opt_app = mk_opt_functioncalltype reason targts argts call_strict_arity in
+  and func_call_opt_use
+      cx loc reason ~use_op ?(call_strict_arity = true) targts argts specialized_callee =
+    let opt_app =
+      mk_opt_functioncalltype reason targts argts call_strict_arity specialized_callee
+    in
     let return_hint = Type_env.get_hint cx loc in
     OptCallT { use_op; reason; opt_funcalltype = opt_app; return_hint }
 
-  and func_call cx loc reason ~use_op ?(call_strict_arity = true) func_t targts argts =
-    let opt_use = func_call_opt_use cx loc reason ~use_op ~call_strict_arity targts argts in
+  and func_call cx loc reason ~use_op ?(call_strict_arity = true) func_t targts argts t_callee =
+    let opt_use =
+      func_call_opt_use cx loc reason ~use_op ~call_strict_arity targts argts t_callee
+    in
     Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
         Flow.flow cx (func_t, apply_opt_use opt_use t)
     )
@@ -4217,7 +4244,8 @@ module Make
       (expr, name)
       chain_loc
       targts
-      argts =
+      argts
+      specialized_callee =
     let (expr_loc, _) = expr in
     let reason_prop = mk_reason (RProperty (Some (OrdinaryName name))) prop_loc in
     let reason_expr = mk_reason (RProperty (Some (OrdinaryName name))) expr_loc in
@@ -4235,14 +4263,17 @@ module Make
             opt_methodcalltype;
             voided_out;
             return_hint = Type.hint_unavailable;
+            specialized_callee;
           }
-      | _ -> OptCallM { opt_methodcalltype; return_hint = Type_env.get_hint cx chain_loc }
+      | _ ->
+        OptCallM
+          { opt_methodcalltype; return_hint = Type_env.get_hint cx chain_loc; specialized_callee }
     in
     if private_ then
       let class_entries = Type_env.get_class_entries cx in
-      OptPrivateMethodT (use_op, reason, reason_expr, name, class_entries, false, action, prop_t)
+      OptPrivateMethodT (use_op, reason, reason_expr, name, class_entries, false, action)
     else
-      OptMethodT (use_op, reason, reason_expr, propref, action, prop_t)
+      OptMethodT (use_op, reason, reason_expr, propref, action)
 
   (* returns (type of method itself, type returned from method) *)
   and method_call
@@ -4282,8 +4313,8 @@ module Make
       )
     | None ->
       let reason_prop = mk_reason (RProperty (Some (OrdinaryName name))) prop_loc in
-      let prop_t = Tvar.mk cx reason_prop in
-      ( prop_t,
+      let specialized_callee = Context.new_specialized_callee cx in
+      let out =
         Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
             let reason_expr = mk_reason (RProperty (Some (OrdinaryName name))) expr_loc in
             let methodcalltype =
@@ -4298,12 +4329,18 @@ module Make
                     reason,
                     reason_expr,
                     propref,
-                    CallM { methodcalltype; return_hint = Type.hint_unavailable },
-                    prop_t
+                    CallM
+                      {
+                        methodcalltype;
+                        return_hint = Type.hint_unavailable;
+                        specialized_callee = Some specialized_callee;
+                      }
                   )
               )
         )
-      )
+      in
+      let prop_t = TypeUtil.type_of_specialized_callee reason_prop specialized_callee in
+      (prop_t, out)
 
   and elem_call_opt_use
       opt_state
@@ -4316,7 +4353,8 @@ module Make
       ~reason_chain
       targts
       argts
-      elem_t =
+      elem_t
+      specialized_callee =
     let opt_methodcalltype = mk_opt_methodcalltype targts argts true in
     let action =
       match opt_state with
@@ -4329,10 +4367,12 @@ module Make
             opt_methodcalltype;
             voided_out;
             return_hint = Type.hint_unavailable;
+            specialized_callee;
           }
-      | _ -> OptCallM { opt_methodcalltype; return_hint = Type.hint_unavailable }
+      | _ ->
+        OptCallM { opt_methodcalltype; return_hint = Type.hint_unavailable; specialized_callee }
     in
-    OptCallElemT (use_op, reason_call, reason_lookup, elem_t, prop_t, action)
+    OptCallElemT (use_op, reason_call, reason_lookup, elem_t, action)
 
   and identifier_ cx name loc =
     let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
@@ -4504,7 +4544,7 @@ module Make
              }
           )
       in
-      ( func_call cx loc reason ~use_op await None [Arg arg],
+      ( func_call cx loc reason ~use_op await None [Arg arg] None,
         { operator = Await; argument = argument_ast; comments }
       )
 
@@ -5647,7 +5687,6 @@ module Make
             )
         in
         let react = Type_env.var_ref ~lookup_mode:ForValue cx (OrdinaryName "React") loc_element in
-        let prop_t = Tvar.mk cx reason_createElement in
         Flow.flow
           cx
           ( react,
@@ -5664,8 +5703,8 @@ module Make
                         ([Arg component_t; Arg props] @ Base.List.map ~f:(fun c -> Arg c) children)
                         tvar;
                     return_hint;
-                  },
-                prop_t
+                    specialized_callee = None;
+                  }
               )
           ));
       OpenT tvar
@@ -5711,7 +5750,7 @@ module Make
           )
       | _ ->
         let f = jsx_pragma_expression cx raw_jsx_expr loc_element jsx_expr in
-        func_call cx loc_element reason ~use_op ~call_strict_arity:false f None argts)
+        func_call cx loc_element reason ~use_op ~call_strict_arity:false f None argts None)
 
   (* The @jsx pragma specifies a left hand side expression EXPR such that
    *

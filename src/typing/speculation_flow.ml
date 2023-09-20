@@ -59,14 +59,14 @@ let resolved_upper_flow_t_unsafe cx r (l, u) =
 
 let get_method_type_unsafe cx t reason propref =
   Tvar.mk_where cx reason (fun prop_t ->
-      let use_t = MethodT (unknown_use, reason, reason, propref, NoMethodAction, prop_t) in
+      let use_t = MethodT (unknown_use, reason, reason, propref, NoMethodAction prop_t) in
       resolved_lower_flow_unsafe cx reason (t, use_t)
   )
 
 let get_method_type_opt cx t reason propref =
   match
     Tvar.mk_where cx reason (fun prop_t ->
-        let use_t = MethodT (unknown_use, reason, reason, propref, NoMethodAction, prop_t) in
+        let use_t = MethodT (unknown_use, reason, reason, propref, NoMethodAction prop_t) in
         resolved_lower_flow_unsafe cx reason (t, use_t)
     )
   with
