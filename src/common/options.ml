@@ -70,6 +70,7 @@ type t = {
   opt_channel_mode: [ `pipe | `socket ];
   opt_component_syntax: component_syntax;
   opt_component_syntax_includes: string list;
+  opt_component_syntax_deep_read_only: bool;
   opt_debug: bool;
   opt_direct_dependent_files_fix: bool;
   opt_enable_const_params: bool;
@@ -160,6 +161,8 @@ let babel_loose_array_spread opts = opts.opt_babel_loose_array_spread
 let channel_mode opts = opts.opt_channel_mode
 
 let component_syntax opts = opts.opt_component_syntax
+
+let component_syntax_deep_read_only opts = opts.opt_component_syntax_deep_read_only
 
 let typecheck_component_syntax opts =
   match opts.opt_component_syntax with

@@ -34,6 +34,7 @@ let stub_metadata ~root ~checked =
     babel_loose_array_spread = false;
     component_syntax = false;
     component_syntax_includes = [];
+    component_syntax_deep_read_only = false;
     enable_const_params = false;
     enable_enums = true;
     enable_relay_integration = false;

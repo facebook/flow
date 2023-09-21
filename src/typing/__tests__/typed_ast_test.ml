@@ -24,6 +24,7 @@ let metadata =
     babel_loose_array_spread = false;
     component_syntax = true;
     component_syntax_includes = [];
+    component_syntax_deep_read_only = false;
     enable_const_params = false;
     enable_enums = true;
     enable_relay_integration = false;

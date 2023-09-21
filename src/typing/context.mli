@@ -69,6 +69,7 @@ type metadata = {
   babel_loose_array_spread: bool;
   component_syntax: bool;
   component_syntax_includes: string list;
+  component_syntax_deep_read_only: bool;
   enable_const_params: bool;
   enable_enums: bool;
   enable_relay_integration: bool;
@@ -155,6 +156,8 @@ val babel_loose_array_spread : t -> bool
 val builtins : t -> Builtins.t
 
 val component_syntax : t -> bool
+
+val component_syntax_deep_read_only : t -> bool
 
 val enable_const_params : t -> bool
 

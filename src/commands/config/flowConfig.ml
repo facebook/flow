@@ -51,6 +51,7 @@ module Opts = struct
     channel_mode: [ `pipe | `socket ] option;
     component_syntax: Options.component_syntax;
     component_syntax_includes: string list;
+    component_syntax_deep_read_only: bool;
     direct_dependent_files_fix: bool option;
     emoji: bool option;
     enable_const_params: bool option;
@@ -171,6 +172,7 @@ module Opts = struct
       channel_mode = None;
       component_syntax = Options.Off;
       component_syntax_includes = [];
+      component_syntax_deep_read_only = false;
       direct_dependent_files_fix = None;
       emoji = None;
       enable_const_params = None;
@@ -501,6 +503,9 @@ module Opts = struct
             component_syntax_includes = v :: opts.component_syntax_includes;
           })
 
+  let component_syntax_deep_read_only_parser =
+    boolean (fun opts v -> Ok { opts with component_syntax_deep_read_only = v })
+
   let automatic_require_default_parser =
     boolean (fun opts v -> Ok { opts with automatic_require_default = Some v })
 
@@ -789,6 +794,7 @@ module Opts = struct
       );
       ("experimental.component_syntax", component_syntax_parser);
       ("experimental.component_syntax.typing.includes", component_syntax_includes_parser);
+      ("experimental.component_syntax.deep_read_only", component_syntax_deep_read_only_parser);
       ("experimental.direct_dependent_files_fix", direct_dependent_files_fix_parser);
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
       ("experimental.module.automatic_require_default", automatic_require_default_parser);
@@ -1424,6 +1430,8 @@ let channel_mode c = c.options.Opts.channel_mode
 let component_syntax c = c.options.Opts.component_syntax
 
 let component_syntax_includes c = c.options.Opts.component_syntax_includes
+
+let component_syntax_deep_read_only c = c.options.Opts.component_syntax_deep_read_only
 
 let direct_dependent_files_fix c = c.options.Opts.direct_dependent_files_fix
 

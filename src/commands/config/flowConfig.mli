@@ -80,6 +80,8 @@ val component_syntax : config -> Options.component_syntax
 
 val component_syntax_includes : config -> string list
 
+val component_syntax_deep_read_only : config -> bool
+
 val direct_dependent_files_fix : config -> bool option
 
 val emoji : config -> bool option
