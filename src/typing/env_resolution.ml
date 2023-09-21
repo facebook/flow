@@ -59,7 +59,7 @@ let resolve_annotation cx tparams_map ?(react_deep_read_only = None) anno =
   let (t, anno) = Anno.mk_type_available_annotation cx tparams_map anno in
   let t =
     match react_deep_read_only with
-    | Some param_loc ->
+    | Some param_loc when Context.component_syntax_deep_read_only cx ->
       Flow_js.mk_possibly_evaluated_destructor
         cx
         unknown_use
@@ -67,7 +67,7 @@ let resolve_annotation cx tparams_map ?(react_deep_read_only = None) anno =
         t
         (ReactDRO param_loc)
         (Eval.generate_id ())
-    | None -> t
+    | _ -> t
   in
   if Context.typing_mode cx = Context.CheckingMode then Node_cache.set_annotation cache anno;
   t
