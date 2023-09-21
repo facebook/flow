@@ -1458,10 +1458,11 @@ let dump_error_message =
         (dump_reason cx reason)
         (dump_reason cx valid)
         (string_of_use_op use_op)
-    | EInvalidRendersTypeArgument { loc; invalid_type_reason } ->
+    | EInvalidRendersTypeArgument { loc; invalid_render_type_kind; invalid_type_reason } ->
       spf
-        "EInvalidRendersTypeArgument { loc = %s; invalid_type_reason = %s }"
+        "EInvalidRendersTypeArgument { loc = %s; invalid_render_type_kind = %s; invalid_type_reason = %s }"
         (string_of_aloc loc)
+        (string_of_invalid_render_type_kind invalid_render_type_kind)
         (dump_reason cx invalid_type_reason)
     | EUnsupportedKeyInObjectType loc -> spf "EUnsupportedKeyInObjectType (%s)" (string_of_aloc loc)
     | ETrustedAnnot loc -> spf "ETrustedAnnot (%s)" (string_of_aloc loc)

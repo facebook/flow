@@ -27,3 +27,10 @@ component BadComponentRenders() renders React$Element<typeof Baz> {return <Baz /
 
 component PermittedGenericRenders<T: React$Node>(children: T) renders T { return children } // ok
 type BannedGenericRenders<T: React$Node> = renders T; // error
+
+type BadSpecificRenders1 = renders (false | null | void); // error
+type BadSpecificRenders2 = renders (Array<React$Element<typeof Foo>>); // error
+type BadSpecificRenders3 = renders ($ReadOnlyArray<React$Element<typeof Foo>>); // error
+type BadSpecificRenders4 = renders (Iterable<React$Element<typeof Foo>>); // error
+type BadSpecificRenders5 = renders (React.ChildrenArray<React$Element<typeof Foo>>); // error
+type BadSpecificRenders6 = renders (React.ChildrenArray<React$Element<typeof Foo> | null>); // error

@@ -605,6 +605,7 @@ and 'loc t' =
   | EInvalidComponentRestParam of 'loc
   | EInvalidRendersTypeArgument of {
       loc: 'loc;
+      invalid_render_type_kind: invalid_render_type_kind;
       invalid_type_reason: 'loc virtual_reason;
     }
 
@@ -767,11 +768,25 @@ and invalid_mapped_type_error_kind =
   | ExplicitExactOrInexact
   | RemoveOptionality
 
+and invalid_render_type_kind =
+  | InvalidRendersNullVoidFalse
+  | InvalidRendersIterable
+  | InvalidRendersNonNonimalElement
+  | InvalidRendersGenericT
+  | UncategorizedInvalidRenders
+
 let string_of_assigned_const_like_binding_type = function
   | ClassNameBinding -> "class"
   | FunctionNameBinding -> "function"
   | DeclaredFunctionNameBinding -> "declared function"
   | ComponentNameBinding -> "component"
+
+let string_of_invalid_render_type_kind = function
+  | InvalidRendersNullVoidFalse -> "null | void | false"
+  | InvalidRendersIterable -> "iterable"
+  | InvalidRendersNonNonimalElement -> "non-nominal"
+  | InvalidRendersGenericT -> "generic"
+  | UncategorizedInvalidRenders -> "uncategorized"
 
 let map_loc_of_exponential_spread_reason_group f { first_reason; second_reason } =
   { first_reason = f first_reason; second_reason = Base.Option.map ~f second_reason }
@@ -1313,9 +1328,13 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EDuplicateComponentProp { spread; first; second } ->
     EDuplicateComponentProp { spread = f spread; first = map_reason first; second = f second }
   | ERefComponentProp { spread; loc } -> ERefComponentProp { spread = f spread; loc = f loc }
-  | EInvalidRendersTypeArgument { loc; invalid_type_reason } ->
+  | EInvalidRendersTypeArgument { loc; invalid_render_type_kind; invalid_type_reason } ->
     EInvalidRendersTypeArgument
-      { loc = f loc; invalid_type_reason = map_reason invalid_type_reason }
+      {
+        loc = f loc;
+        invalid_render_type_kind;
+        invalid_type_reason = map_reason invalid_type_reason;
+      }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -5003,9 +5022,35 @@ let friendly_message_of_msg loc_of_aloc msg =
       ]
     in
     Normal { features }
-  | EInvalidRendersTypeArgument { loc = _; invalid_type_reason } ->
+  | EInvalidRendersTypeArgument { loc = _; invalid_render_type_kind; invalid_type_reason } ->
+    let additional_explanation =
+      match invalid_render_type_kind with
+      | InvalidRendersNullVoidFalse ->
+        [
+          text " Only elements of a component-syntax components can appear in renders. ";
+          text "If you want to express the idea of renders zero or one item, please use ";
+          code "renders?";
+          text " instead.";
+        ]
+      | InvalidRendersIterable ->
+        [
+          text " Only elements of a component-syntax components can appear in renders. ";
+          text "If you want to express the idea of renders zero or more items, please use ";
+          code "renders*";
+          text " instead.";
+        ]
+      | InvalidRendersNonNonimalElement ->
+        [text " Only elements of a component-syntax components can appear in renders."]
+      | InvalidRendersGenericT ->
+        [
+          text
+            " Generic type renders are only allowed in renders declaration of component syntax components.";
+        ]
+      | UncategorizedInvalidRenders -> []
+    in
     let features =
       [text "Cannot use "; ref invalid_type_reason; text " as the type argument of renders type."]
+      @ additional_explanation
     in
     Normal { features }
 

@@ -389,20 +389,77 @@ let validate_renders_type_arguments cx =
     | _ ->
       Flow_js_utils.add_output
         cx
-        Error_message.(EInvalidRendersTypeArgument { loc; invalid_type_reason })
+        Error_message.(
+          EInvalidRendersTypeArgument
+            { loc; invalid_render_type_kind = InvalidRendersNonNonimalElement; invalid_type_reason }
+        )
   in
   let validate_element ~allow_generic loc = function
-    | GenericT _ when allow_generic -> ()
+    | GenericT { reason; _ } ->
+      if allow_generic then
+        ()
+      else
+        Flow_js_utils.add_output
+          cx
+          Error_message.(
+            EInvalidRendersTypeArgument
+              {
+                loc;
+                invalid_render_type_kind = InvalidRendersGenericT;
+                invalid_type_reason = reason;
+              }
+          )
     | OpaqueT (r, { opaque_id; opaque_type_args = (_, _, component_t, _) :: _; _ })
       when Flow_js_utils.builtin_react_element_opaque_id cx = Some opaque_id ->
       Flow_js.possible_concrete_types_for_inspection cx r component_t
       |> Base.List.iter ~f:(validate_component_in_element loc r)
-    | t ->
+    | DefT (invalid_type_reason, _, BoolT (Some false))
+    | DefT (invalid_type_reason, _, SingletonBoolT false)
+    | DefT (invalid_type_reason, _, NullT)
+    | DefT (invalid_type_reason, _, VoidT) ->
       Flow_js_utils.add_output
         cx
         Error_message.(
-          EInvalidRendersTypeArgument { loc; invalid_type_reason = TypeUtil.reason_of_t t }
+          EInvalidRendersTypeArgument
+            { loc; invalid_render_type_kind = InvalidRendersNullVoidFalse; invalid_type_reason }
         )
+    | DefT (invalid_type_reason, _, ArrT _) ->
+      Flow_js_utils.add_output
+        cx
+        Error_message.(
+          EInvalidRendersTypeArgument
+            { loc; invalid_render_type_kind = InvalidRendersIterable; invalid_type_reason }
+        )
+    | t ->
+      let r = TypeUtil.reason_of_t t in
+      if
+        Flow_js.FlowJs.speculative_subtyping_succeeds
+          cx
+          t
+          (Flow_js.get_builtin_typeapp
+             cx
+             r
+             (OrdinaryName "$Iterable")
+             [AnyT.error r; AnyT.error r; AnyT.error r]
+          )
+      then
+        Flow_js_utils.add_output
+          cx
+          Error_message.(
+            EInvalidRendersTypeArgument
+              { loc; invalid_render_type_kind = InvalidRendersIterable; invalid_type_reason = r }
+          )
+      else
+        Flow_js_utils.add_output
+          cx
+          Error_message.(
+            EInvalidRendersTypeArgument
+              {
+                loc;
+                invalid_render_type_kind = UncategorizedInvalidRenders;
+                invalid_type_reason = r;
+              }
+          )
   in
   let validate_arg (loc, allow_generic, t) =
     Tvar_resolver.resolve cx t;
