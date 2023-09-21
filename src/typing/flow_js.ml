@@ -9184,8 +9184,17 @@ struct
   (* Now that everything is resolved, we can construct whatever type we're trying
    * to resolve to. *)
   and finish_resolve_spread_list =
+    let propagate_dro cx elem arrtype =
+      match arrtype with
+      | ROArrayAT (_, Some l)
+      | ArrayAT { react_dro = Some l; _ }
+      | TupleAT { react_dro = Some l; _ } ->
+        mk_react_dro cx unknown_use l elem
+      | _ -> elem
+    in
+
     (* Turn tuple rest params into single params *)
-    let flatten_spread_args args =
+    let flatten_spread_args cx args =
       let (args_rev, spread_after_opt, _) =
         Base.List.fold_left args ~init:([], false, false) ~f:(fun acc arg ->
             let (args_rev, spread_after_opt, seen_opt) = acc in
@@ -9203,7 +9212,8 @@ struct
                 | ArrayAT { tuple_view = Some (elements, _); _ }
                 | TupleAT { elements; _ } ->
                   Base.List.fold_left
-                    ~f:(fun (args_rev, seen_opt) (TupleElement { optional; _ } as elem) ->
+                    ~f:(fun (args_rev, seen_opt) (TupleElement ({ optional; t; _ } as elem)) ->
+                      let elem = TupleElement { elem with t = propagate_dro cx t arrtype } in
                       (ResolvedArg (elem, generic) :: args_rev, seen_opt || optional))
                     ~init:(args_rev, seen_opt)
                     elements
@@ -9253,7 +9263,7 @@ struct
             AnyT.why any_src reason_op)
         | None ->
           (* Spreads that resolve to tuples are flattened *)
-          let (elems, spread_after_opt) = flatten_spread_args resolved in
+          let (elems, spread_after_opt) = flatten_spread_args cx resolved in
 
           let tuple_elements =
             match resolve_to with
@@ -9289,7 +9299,10 @@ struct
                   let (elem_t, generic, ro) =
                     match elem with
                     | ResolvedSpreadArg (_, arrtype, generic) ->
-                      (elemt_of_arrtype arrtype, generic, ro_of_arrtype arrtype)
+                      ( propagate_dro cx (elemt_of_arrtype arrtype) arrtype,
+                        generic,
+                        ro_of_arrtype arrtype
+                      )
                     | ResolvedArg (TupleElement { t = elem_t; _ }, generic) ->
                       (elem_t, generic, ArraySpread.NonROSpread)
                     | ResolvedAnySpreadArg _ -> failwith "Should not be hit"
@@ -9553,7 +9566,7 @@ struct
     (* This is used for things like Function.prototype.apply, whose second arg is
      * basically a spread argument that we'd like to resolve *)
     let finish_call_t cx ?trace ~use_op ~reason_op funcalltype resolved tin =
-      let (flattened, _) = flatten_spread_args resolved in
+      let (flattened, _) = flatten_spread_args cx resolved in
       let call_args_tlist =
         Base.List.map
           ~f:(function

@@ -1100,6 +1100,36 @@ References:
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------------ dro.js:22:6
+
+Cannot assign `42` to `w2.a.b` because property `b` is not writable. React component properties [1] and their nested
+props and elements cannot be written to. [cannot-write]
+
+   dro.js:22:6
+   22| w2.a.b = 42; // error
+            ^
+
+References:
+   dro.js:19:19
+   19| declare const w3: $ReactDeepReadOnly<{a: {b: number}, c: number}>;
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ dro.js:27:7
+
+Cannot assign `42` to `v2[1].a` because property `a` is not writable. React component properties [1] and their nested
+props and elements cannot be written to. [cannot-write]
+
+   dro.js:27:7
+   27| v2[1].a = 42; //error
+             ^
+
+References:
+   dro.js:24:19
+   24| declare const v3: $ReactDeepReadOnly<Array<{a: number}>>;
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------ eager_config_checking.js:1:38
 
 Component property `foo` [1] is re-declared [2] within a spread [3]. Property names may only be have one definition
@@ -2667,7 +2697,7 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 183 errors
+Found 185 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
