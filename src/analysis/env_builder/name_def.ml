@@ -956,6 +956,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                    tparams_map = ALocMap.empty;
                    optional = false;
                    has_default_expression = false;
+                   react_deep_read_only = false;
                    param_loc = None;
                    annot;
                  }
@@ -1007,6 +1008,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                    tparams_map = ALocMap.empty;
                    optional = false;
                    has_default_expression = false;
+                   react_deep_read_only = false;
                    param_loc = None;
                    annot;
                  }
@@ -1054,6 +1056,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
               tparams_map = tparams;
               optional;
               has_default_expression = Base.Option.is_some default_expression;
+              react_deep_read_only = false;
               param_loc = Some param_loc;
               annot;
             }
@@ -1109,6 +1112,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
               tparams_map = tparams;
               optional = false;
               has_default_expression = false;
+              react_deep_read_only = false;
               param_loc = Some param_loc;
               annot;
             }
@@ -1143,6 +1147,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                    tparams_map = tparams;
                    optional = false;
                    has_default_expression = false;
+                   react_deep_read_only = false;
                    param_loc = None;
                    annot;
                  }
@@ -1169,6 +1174,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                 tparams_map = ALocMap.empty;
                 optional = false;
                 has_default_expression = false;
+                react_deep_read_only = false;
                 param_loc = None;
                 annot;
               }
@@ -1266,6 +1272,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
               tparams_map = tparams;
               optional;
               has_default_expression = Base.Option.is_some default_expression;
+              react_deep_read_only = true;
               param_loc = Some param_loc;
               annot;
             }
@@ -1327,6 +1334,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
               tparams_map = tparams;
               optional;
               has_default_expression = false;
+              react_deep_read_only = true;
               param_loc = Some param_loc;
               annot;
             }
@@ -1787,6 +1795,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                      tparams_map = ALocMap.empty;
                      optional = false;
                      has_default_expression = false;
+                     react_deep_read_only = false;
                      param_loc = None;
                      annot;
                    }
@@ -1986,6 +1995,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                   tparams_map = ALocMap.empty;
                   optional = false;
                   has_default_expression = false;
+                  react_deep_read_only = false;
                   param_loc = None;
                   annot;
                 }
@@ -2019,6 +2029,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                   tparams_map = ALocMap.empty;
                   optional = false;
                   has_default_expression = false;
+                  react_deep_read_only = false;
                   param_loc = None;
                   annot;
                 }

@@ -85,6 +85,7 @@ type root =
       tparams_map: tparams_map;
       optional: bool;
       has_default_expression: bool;
+      react_deep_read_only: bool;
       param_loc: ALoc.t option;
       annot: (ALoc.t, ALoc.t) Ast.Type.annotation;
     }

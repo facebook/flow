@@ -25,3 +25,19 @@ declare const v3: $ReactDeepReadOnly<Array<{a: number}>>;
 const v2 = [...v3];
 v2[0] = {a: 42}; // ok
 v2[1].a = 42; //error
+
+import * as React from 'react';
+
+component Foo1(x: { y: number}) {
+    x.y = 42 // error;
+    return null;
+}
+component Foo2(...rest: {bar: number, baz: Array<string>, qux:[number, Array<string>]}) {
+    rest.bar = 42; // error;
+    rest.baz.push("hello"); // TODO
+    rest.qux[0] = 42; // error
+    rest.qux[1].pop(); // error
+    return null;
+}
+
+component A(x: {bar: number}) { return <A x={x} />; }; // ok
