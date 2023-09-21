@@ -1,3 +1,20 @@
+### 0.217.0
+
+Likely to cause new Flow errors:
+* Flow will now ban variance annotations in function or function type parameters. [example](https://flow.org/try#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+IFkolXpUCWewUEAwhCQgRDH8wEH4hMnwROHlsNnw4KHwwSLAAC3wANyo4LFxscWQuHgMNZmwsiRSAWglaY1cq-hIAa2wJXNpG4Vxcdvdu3v7B0RxKUYMhKDBSqmbWwIq3eagoOrKSKgH0wtMMPznY7d2SfcoBiEZ-aG5G3Ix085AF-ZhsRoRehqUEiNMgSQHlSruBZxJrMcJwMhzAC+-EgGiCMAWyjg0AABFQEAAFUgAHgA1AAVAB8AAp5MhcRSAJQM-IQOBsXHAJG4gD0vNxmEubAAOlAYiB8iYSDjxchJQAGKwAJgAjAA2KyqkBIoA)
+* `React.Element` is now opaque, but we still expose some of its internal structure via the bound on the opaque type. You should not depend on the internal structure. In a future release, we plan to make `React.Element` truly opaque.
+* Fixed an issue with implicit instantiation in operations over unions that caused many errors to be missed.
+* Changed the ref params on `forwardRef` and `useImperativeHandle` to be write-only. Patterns that rely on refining these params to an object and reading the ref field are misusing these APIs. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+IFkolXpUCWewUEAwhCQgRDH8wEH4hMnwROHlsNnw4KHwwSLAAC3wANyo4LFxscWQuHgMNZmwsiRSAWglaY1cq-hIAa2wJXNpG4Vxcdvdu3v7B0RxKUYMhKDBSqmbWwIq3eagoOrKSKgH0wtMMPznY7d2SfcoBiEZ-aG5G3Ix085AF-ZhsRoRehqUEiNMgSQHlSruBZxJrMcJwMhzAC+-EgGiCZkYEEoEgABAAqXEYEi4gBKrGUuJglHCuIA5J5lHSANwAHSg7I0Syo2Fx3OuuIAEgAVACyABkAKKlcx+XHAJHs9kwBbKODQXEAYXCWJ2fgA6nAJDlyTAABTs3G4uGMEjIeUo3GW3EsGDIZ1WgA+8rAQmoFntQ1wuO9Iol0uwsokvFxVjjiqgVq9uLNZqDIaFYqlMosAEpcQBeAB8uMSyTYud47PzwCVidxcBgKddNj9LDlAEIC7igzXcQB6fu4gDucGGuJMNMoHY9Ls0rf9fmZTvrCatLAkfsTQbZUAT7PJXisMGxw6obFNZu1Il1FkNxtNud3MRA+RMJHVUCCEXsJhASKAA)
+* `React.ElementProps` is now more precise when applied to `AbstractComponent`s, resulting in the config type of the component rather than `mixed`. This will cause errors when elements of components with different props are passed into `React.Element<>` types.
+
+Parser:
+* We now parse type arguments after `typeof` annotations. e.g. `typeof MyGenericClass<string, number>`. Type checking for this syntax is still not supported.
+
+Library Definitions:
+* Update `URLSearchParams` definitions (thanks @pascalduez).
+* Update `AbortSignal` definitions (thanks @pascalduez).
+* Add `Array` copying methods (`toReversed`, `toSorted`, `toSpliced` and `with`) the `$ReadOnlyArray` class definitions (thanks @pascalduez).
+
 ### 0.216.1
 
 Notable bug fixes:
