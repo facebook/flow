@@ -372,6 +372,48 @@ let check_constrained_writes cx =
     Flow_error.ErrorSet.iter (Context.add_error cx) new_errors
   )
 
+let validate_renders_type_arguments cx =
+  let open Type in
+  let open Reason in
+  let rec validate_component_in_element loc invalid_type_reason = function
+    | DefT (_, _, PolyT { tparams_loc; tparams; t_out; id = _ }) ->
+      let subst_map =
+        tparams
+        |> Nel.to_list
+        |> Base.List.fold ~init:Subst_name.Map.empty ~f:(fun acc tparam ->
+               Subst_name.Map.add tparam.name (Unsoundness.at Unchecked tparams_loc) acc
+           )
+      in
+      validate_component_in_element loc invalid_type_reason (Type_subst.subst cx subst_map t_out)
+    | DefT (_, _, ReactAbstractComponentT { component_kind = Nominal _; _ }) -> ()
+    | _ ->
+      Flow_js_utils.add_output
+        cx
+        Error_message.(EInvalidRendersTypeArgument { loc; invalid_type_reason })
+  in
+  let validate_element ~allow_generic loc = function
+    | GenericT _ when allow_generic -> ()
+    | OpaqueT (r, { opaque_id; opaque_type_args = (_, _, component_t, _) :: _; _ })
+      when Flow_js_utils.builtin_react_element_opaque_id cx = Some opaque_id ->
+      Flow_js.possible_concrete_types_for_inspection cx r component_t
+      |> Base.List.iter ~f:(validate_component_in_element loc r)
+    | t ->
+      Flow_js_utils.add_output
+        cx
+        Error_message.(
+          EInvalidRendersTypeArgument { loc; invalid_type_reason = TypeUtil.reason_of_t t }
+        )
+  in
+  let validate_arg (loc, allow_generic, t) =
+    Tvar_resolver.resolve cx t;
+    Flow_js.possible_concrete_types_for_inspection
+      cx
+      (mk_reason (RCustom "render type argument") loc)
+      t
+    |> Base.List.iter ~f:(fun t -> validate_element ~allow_generic loc t)
+  in
+  Context.renders_type_argument_validations cx |> Base.List.iter ~f:validate_arg
+
 let get_lint_severities metadata strict_mode lint_severities =
   if metadata.Context.strict || metadata.Context.strict_local then
     StrictModeSettings.fold
@@ -391,6 +433,7 @@ let get_lint_severities metadata strict_mode lint_severities =
  *)
 let post_merge_checks cx ast metadata =
   check_constrained_writes cx;
+  validate_renders_type_arguments cx;
   detect_sketchy_null_checks cx;
   detect_non_voidable_properties cx;
   detect_test_prop_misses cx;

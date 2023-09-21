@@ -209,6 +209,10 @@ val relay_integration_module_prefix : config -> string option
 
 val relay_integration_module_prefix_includes : config -> string list
 
+val renders_type_validation : config -> bool
+
+val renders_type_validation_includes : config -> string list
+
 val required_version : config -> string option
 
 val root_name : config -> string option

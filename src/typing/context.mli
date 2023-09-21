@@ -89,6 +89,8 @@ type metadata = {
   relay_integration_excludes: Str.regexp list;
   relay_integration_module_prefix: string option;
   relay_integration_module_prefix_includes: Str.regexp list;
+  renders_type_validation: bool;
+  renders_type_validation_includes: string list;
   root: File_path.t;
   strict_es6_import_export: bool;
   strict_es6_import_export_excludes: string list;
@@ -257,6 +259,8 @@ val literal_subtypes : t -> (ALoc.t * Env_api.literal_check) list
 
 val constrained_writes : t -> (Type.t * Type.use_op * Type.t) list
 
+val renders_type_argument_validations : t -> (ALoc.t * bool * Type.t) list
+
 val missing_local_annot_lower_bounds : t -> Type.t Nel.t ALocFuzzyMap.t
 
 val verbose : t -> Verbose.t option
@@ -326,6 +330,8 @@ val add_matching_props : t -> string * ALoc.t * ALoc.t -> unit
 val add_literal_subtypes : t -> ALoc.t * Env_api.literal_check -> unit
 
 val add_constrained_write : t -> Type.t * Type.use_op * Type.t -> unit
+
+val add_renders_type_argument_validation : t -> allow_generic_t:bool -> ALoc.t -> Type.t -> unit
 
 val add_missing_local_annot_lower_bound : t -> ALoc.t -> Type.t -> unit
 

@@ -55,6 +55,8 @@ type metadata = {
   relay_integration_excludes: Str.regexp list;
   relay_integration_module_prefix: string option;
   relay_integration_module_prefix_includes: Str.regexp list;
+  renders_type_validation: bool;
+  renders_type_validation_includes: string list;
   root: File_path.t;
   strict_es6_import_export: bool;
   strict_es6_import_export_excludes: string list;
@@ -166,6 +168,7 @@ type component_t = {
   mutable literal_subtypes: (ALoc.t * Env_api.literal_check) list;
   mutable matching_props: (string * ALoc.t * ALoc.t) list;
   mutable constrained_writes: (Type.t * Type.use_op * Type.t) list;
+  mutable renders_type_argument_validations: (ALoc.t * bool * Type.t) list;
   mutable global_value_cache:
     (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result NameUtils.Map.t;
   mutable env_value_cache: (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result IMap.t;
@@ -270,6 +273,8 @@ let metadata_of_options options =
     relay_integration_module_prefix = Options.relay_integration_module_prefix options;
     relay_integration_module_prefix_includes =
       Options.relay_integration_module_prefix_includes options;
+    renders_type_validation = Options.renders_type_validation options;
+    renders_type_validation_includes = Options.renders_type_validation_includes options;
     root = Options.root options;
     strict_es6_import_export = Options.strict_es6_import_export options;
     strict_es6_import_export_excludes = Options.strict_es6_import_export_excludes options;
@@ -344,6 +349,7 @@ let make_ccx master_cx =
     matching_props = [];
     literal_subtypes = [];
     constrained_writes = [];
+    renders_type_argument_validations = [];
     global_value_cache = NameUtils.Map.empty;
     env_value_cache = IMap.empty;
     env_type_cache = IMap.empty;
@@ -471,6 +477,9 @@ let relay_integration_module_prefix cx =
     (file cx)
     cx.metadata.relay_integration_module_prefix
 
+let enable_renders_type_validation cx =
+  cx.metadata.renders_type_validation || in_dirlist cx cx.metadata.renders_type_validation_includes
+
 let enforce_strict_call_arity cx = cx.metadata.enforce_strict_call_arity
 
 let errors cx = cx.ccx.errors
@@ -560,6 +569,8 @@ let suppress_types cx = cx.metadata.suppress_types
 let literal_subtypes cx = cx.ccx.literal_subtypes
 
 let constrained_writes cx = cx.ccx.constrained_writes
+
+let renders_type_argument_validations cx = cx.ccx.renders_type_argument_validations
 
 let global_value_cache_find_opt cx name = NameUtils.Map.find_opt name cx.ccx.global_value_cache
 
@@ -682,6 +693,11 @@ let add_matching_props cx c = cx.ccx.matching_props <- c :: cx.ccx.matching_prop
 let add_literal_subtypes cx c = cx.ccx.literal_subtypes <- c :: cx.ccx.literal_subtypes
 
 let add_constrained_write cx c = cx.ccx.constrained_writes <- c :: cx.ccx.constrained_writes
+
+let add_renders_type_argument_validation cx ~allow_generic_t loc t =
+  if enable_renders_type_validation cx then
+    cx.ccx.renders_type_argument_validations <-
+      (loc, allow_generic_t, t) :: cx.ccx.renders_type_argument_validations
 
 let add_global_value_cache_entry cx name t =
   cx.ccx.global_value_cache <- NameUtils.Map.add name t cx.ccx.global_value_cache

@@ -54,6 +54,8 @@ let stub_metadata ~root ~checked =
     relay_integration_excludes = [];
     relay_integration_module_prefix = None;
     relay_integration_module_prefix_includes = [];
+    renders_type_validation = false;
+    renders_type_validation_includes = [];
     root;
     strict_es6_import_export = false;
     strict_es6_import_export_excludes = [];

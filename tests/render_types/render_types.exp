@@ -752,8 +752,153 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
+Error ----------------------------------------------------------------------------------- validation/validation.js:18:22
 
-Found 45 errors
+Cannot use `React.Element` [1] as the type argument of renders type. [invalid-render]
+
+   18| type RBad1 = renders React$Element<typeof Baz>; // error
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------- validation/validation.js:19:22
+
+Cannot use `React.Element` [1] as the type argument of renders type. [invalid-render]
+
+   19| type RBad2 = renders React$Element<typeof Boz>; // error
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------- validation/validation.js:20:22
+
+Cannot use number literal `1` [1] as the type argument of renders type. [invalid-render]
+
+   20| type RBad3 = renders 1; // error
+                            ^ [1]
+
+
+Error ----------------------------------------------------------------------------------- validation/validation.js:21:22
+
+Cannot use `$Iterable` [1] as the type argument of renders type. [invalid-render]
+
+   21| type RBad4 = renders React$Node; // error
+                            ^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------- validation/validation.js:21:22
+
+Cannot use `React.Element` [1] as the type argument of renders type. [invalid-render]
+
+   21| type RBad4 = renders React$Node; // error
+                            ^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------- validation/validation.js:21:22
+
+Cannot use `React.Portal` [1] as the type argument of renders type. [invalid-render]
+
+   21| type RBad4 = renders React$Node; // error
+                            ^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------- validation/validation.js:21:22
+
+Cannot use boolean [1] as the type argument of renders type. [invalid-render]
+
+   21| type RBad4 = renders React$Node; // error
+                            ^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------- validation/validation.js:21:22
+
+Cannot use null [1] as the type argument of renders type. [invalid-render]
+
+   21| type RBad4 = renders React$Node; // error
+                            ^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------- validation/validation.js:21:22
+
+Cannot use number [1] as the type argument of renders type. [invalid-render]
+
+   21| type RBad4 = renders React$Node; // error
+                            ^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------- validation/validation.js:21:22
+
+Cannot use string [1] as the type argument of renders type. [invalid-render]
+
+   21| type RBad4 = renders React$Node; // error
+                            ^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------- validation/validation.js:21:22
+
+Cannot use undefined [1] as the type argument of renders type. [invalid-render]
+
+   21| type RBad4 = renders React$Node; // error
+                            ^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------- validation/validation.js:22:22
+
+Cannot use `Error` [1] as a render type because: [incompatible-type]
+ - Either `Error` [1] is incompatible with `React.Element` [2].
+ - Or `Error` [1] is incompatible with `React.Portal` [3].
+ - Or property `@@iterator` is missing in `Error` [1] but exists in `$Iterable` [4].
+
+Render types must be a subtype of `React.Node` or a reference to a component-syntax component.
+
+   validation/validation.js:22:22
+   22| type RBad5 = renders Error; // error
+                            ^^^^^ [1]
+
+References:
+   <BUILTINS>/react.js:21:5
+   21|   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:22:5
+   22|   | React$Portal
+           ^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:23:5
+   23|   | Iterable<?React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Error ----------------------------------------------------------------------------------- validation/validation.js:22:22
+
+Cannot use `Error` [1] as the type argument of renders type. [invalid-render]
+
+   22| type RBad5 = renders Error; // error
+                            ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------- validation/validation.js:23:35
+
+Cannot use `React.Element` [1] as the type argument of renders type. [invalid-render]
+
+   23| type RBad6 = component () renders React$Element<typeof Baz>; // error
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------- validation/validation.js:26:41
+
+Cannot use `React.Element` [1] as the type argument of renders type. [invalid-render]
+
+   26| component BadComponentRenders() renders React$Element<typeof Baz> {return <Baz />} // error
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------- validation/validation.js:29:52
+
+Cannot use `T` [1] as the type argument of renders type. [invalid-render]
+
+   29| type BannedGenericRenders<T: React$Node> = renders T; // error
+                                                          ^ [1]
+
+
+
+Found 61 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

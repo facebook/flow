@@ -603,6 +603,10 @@ and 'loc t' =
       mixed: bool;
     }
   | EInvalidComponentRestParam of 'loc
+  | EInvalidRendersTypeArgument of {
+      loc: 'loc;
+      invalid_type_reason: 'loc virtual_reason;
+    }
 
 and 'loc null_write = {
   null_loc: 'loc;
@@ -1309,6 +1313,9 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EDuplicateComponentProp { spread; first; second } ->
     EDuplicateComponentProp { spread = f spread; first = map_reason first; second = f second }
   | ERefComponentProp { spread; loc } -> ERefComponentProp { spread = f spread; loc = f loc }
+  | EInvalidRendersTypeArgument { loc; invalid_type_reason } ->
+    EInvalidRendersTypeArgument
+      { loc = f loc; invalid_type_reason = map_reason invalid_type_reason }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1569,7 +1576,8 @@ let util_use_op_of_msg nope util = function
   | ETypeGuardIncompatibleWithFunctionKind _
   | ETypeGuardFunctionInvalidWrites _
   | EDuplicateComponentProp _
-  | ERefComponentProp _ ->
+  | ERefComponentProp _
+  | EInvalidRendersTypeArgument _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1738,6 +1746,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ESketchyNullLint { loc; _ } -> Some loc
   | ECallTypeArity { call_loc; _ } -> Some call_loc
   | EMissingTypeArgs { reason_op; _ } -> Some (loc_of_reason reason_op)
+  | EInvalidRendersTypeArgument { loc; _ } -> Some loc
   | ESignatureVerification sve ->
     Signature_error.(
       (match sve with
@@ -4994,6 +5003,11 @@ let friendly_message_of_msg loc_of_aloc msg =
       ]
     in
     Normal { features }
+  | EInvalidRendersTypeArgument { loc = _; invalid_type_reason } ->
+    let features =
+      [text "Cannot use "; ref invalid_type_reason; text " as the type argument of renders type."]
+    in
+    Normal { features }
 
 let defered_in_speculation = function
   | EUntypedTypeImport _
@@ -5292,6 +5306,7 @@ let error_code_of_message err : error_code option =
   | EBigIntRShift3 _ -> Some BigIntRShift3
   | EBigIntNumCoerce _ -> Some BigIntNumCoerce
   | EInvalidCatchParameterAnnotation _ -> Some InvalidCatchParameterAnnotation
+  | EInvalidRendersTypeArgument _ -> Some InvalidRendersTypeArgument
   (* lints should match their lint name *)
   | EUntypedTypeImport _
   | EUntypedImport _

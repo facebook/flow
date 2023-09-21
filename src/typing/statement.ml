@@ -7203,7 +7203,8 @@ module Make
         let (ret_loc, renders_t, renders_ast) =
           match renders with
           | Ast.Type.Available (loc, annot) ->
-            let (((_, t), _) as renders_ast) = Anno.convert cx tparams_map annot in
+            let (((arg_loc, t), _) as renders_ast) = Anno.convert cx tparams_map annot in
+            Context.add_renders_type_argument_validation cx ~allow_generic_t:true arg_loc t;
             (loc, t, Ast.Type.Available (loc, renders_ast))
           | Ast.Type.Missing loc ->
             let ret_reason = mk_reason RReturn loc in

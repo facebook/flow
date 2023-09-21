@@ -454,7 +454,8 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let t = AnyT.at (AnyError None) loc in
       ((loc, t), Keyof (Tast_utils.error_mapper#keyof_type keyof))
     | (loc, Renders { Renders.comments; argument }) ->
-      let (((_, t), _) as t_ast) = convert cx tparams_map infer_tparams_map argument in
+      let (((argument_loc, t), _) as t_ast) = convert cx tparams_map infer_tparams_map argument in
+      Context.add_renders_type_argument_validation cx ~allow_generic_t:false argument_loc t;
       let reason = mk_reason (RRenderType (desc_of_reason (reason_of_t t))) loc in
       let renders_reason = reason_of_t t in
       let node = Flow.get_builtin_type cx renders_reason (OrdinaryName "React$Node") in
@@ -3046,7 +3047,8 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         let (ren_loc, renders_t, renders_ast) =
           match renders with
           | Ast.Type.Available (loc, annot) ->
-            let (((_, t), _) as renders_ast) = convert cx tparams_map ALocMap.empty annot in
+            let (((arg_loc, t), _) as renders_ast) = convert cx tparams_map ALocMap.empty annot in
+            Context.add_renders_type_argument_validation cx ~allow_generic_t:true arg_loc t;
             (loc, t, Ast.Type.Available (loc, renders_ast))
           | Ast.Type.Missing loc ->
             let ren_reason = mk_reason RReturn loc in

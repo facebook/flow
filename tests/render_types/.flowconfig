@@ -2,3 +2,4 @@
 all=true
 no_flowlib=false
 experimental.component_syntax=typing
+experimental.renders_type_validation.includes=<PROJECT_ROOT>/validation/

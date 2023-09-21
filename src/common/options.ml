@@ -124,6 +124,8 @@ type t = {
   opt_relay_integration_excludes: Str.regexp list;
   opt_relay_integration_module_prefix: string option;
   opt_relay_integration_module_prefix_includes: Str.regexp list;
+  opt_renders_type_validation: bool;
+  opt_renders_type_validation_includes: string list;
   opt_root: File_path.t;
   opt_root_name: string option;
   opt_saved_state_allow_reinit: bool;
@@ -293,6 +295,10 @@ let relay_integration_module_prefix opts = opts.opt_relay_integration_module_pre
 
 let relay_integration_module_prefix_includes opts =
   opts.opt_relay_integration_module_prefix_includes
+
+let renders_type_validation opts = opts.opt_renders_type_validation
+
+let renders_type_validation_includes opts = opts.opt_renders_type_validation_includes
 
 let root opts = opts.opt_root
 

@@ -115,6 +115,8 @@ module Opts = struct
     relay_integration_excludes: string list;
     relay_integration_module_prefix: string option;
     relay_integration_module_prefix_includes: string list;
+    renders_type_validation: bool;
+    renders_type_validation_includes: string list;
     root_name: string option;
     saved_state_allow_reinit: bool option;
     saved_state_fetcher: Options.saved_state_fetcher;
@@ -237,6 +239,8 @@ module Opts = struct
       relay_integration_excludes = [];
       relay_integration_module_prefix = None;
       relay_integration_module_prefix_includes = ["<PROJECT_ROOT>/.*"];
+      renders_type_validation = false;
+      renders_type_validation_includes = [];
       root_name = None;
       saved_state_allow_reinit = None;
       saved_state_fetcher = Options.Dummy_fetcher;
@@ -505,6 +509,20 @@ module Opts = struct
 
   let component_syntax_deep_read_only_parser =
     boolean (fun opts v -> Ok { opts with component_syntax_deep_read_only = v })
+
+  let renders_type_validation_parser =
+    boolean (fun opts v -> Ok { opts with renders_type_validation = v })
+
+  let renders_type_validation_includes_parser =
+    string
+      ~init:(fun opts -> { opts with renders_type_validation_includes = [] })
+      ~multiple:true
+      (fun opts v ->
+        Ok
+          {
+            opts with
+            renders_type_validation_includes = v :: opts.renders_type_validation_includes;
+          })
 
   let automatic_require_default_parser =
     boolean (fun opts v -> Ok { opts with automatic_require_default = Some v })
@@ -795,6 +813,8 @@ module Opts = struct
       ("experimental.component_syntax", component_syntax_parser);
       ("experimental.component_syntax.typing.includes", component_syntax_includes_parser);
       ("experimental.component_syntax.deep_read_only", component_syntax_deep_read_only_parser);
+      ("experimental.renders_type_validation", renders_type_validation_parser);
+      ("experimental.renders_type_validation.includes", renders_type_validation_includes_parser);
       ("experimental.direct_dependent_files_fix", direct_dependent_files_fix_parser);
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
       ("experimental.module.automatic_require_default", automatic_require_default_parser);
@@ -1560,6 +1580,10 @@ let relay_integration_module_prefix c = c.options.Opts.relay_integration_module_
 
 let relay_integration_module_prefix_includes c =
   c.options.Opts.relay_integration_module_prefix_includes
+
+let renders_type_validation c = c.options.Opts.renders_type_validation
+
+let renders_type_validation_includes c = c.options.Opts.renders_type_validation_includes
 
 let required_version c = c.version
 
