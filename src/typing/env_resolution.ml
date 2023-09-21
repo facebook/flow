@@ -53,10 +53,22 @@ let expression cx ?cond exp =
   in
   t
 
-let resolve_annotation cx tparams_map anno =
+let resolve_annotation cx tparams_map ?(react_deep_read_only = None) anno =
   let cache = Context.node_cache cx in
   let tparams_map = mk_tparams_map cx tparams_map in
   let (t, anno) = Anno.mk_type_available_annotation cx tparams_map anno in
+  let t =
+    match react_deep_read_only with
+    | Some param_loc ->
+      Flow_js.mk_possibly_evaluated_destructor
+        cx
+        unknown_use
+        (TypeUtil.reason_of_t t)
+        t
+        (ReactDRO param_loc)
+        (Eval.generate_id ())
+    | None -> t
+  in
   if Context.typing_mode cx = Context.CheckingMode then Node_cache.set_annotation cache anno;
   t
 
@@ -388,8 +400,22 @@ let rec binding_has_annot = function
 let resolve_binding_partial cx reason loc b =
   let mk_use_op t = Op (AssignVar { var = Some reason; init = TypeUtil.reason_of_t t }) in
   match b with
-  | Root (Annotation { tparams_map; optional; has_default_expression; param_loc; annot }) ->
-    let t = resolve_annotation cx tparams_map annot in
+  | Root
+      (Annotation
+        { tparams_map; optional; has_default_expression; param_loc; annot; react_deep_read_only }
+        ) ->
+    let t =
+      resolve_annotation
+        cx
+        tparams_map
+        ?react_deep_read_only:
+          ( if react_deep_read_only then
+            Some param_loc
+          else
+            None
+          )
+        annot
+    in
     Base.Option.iter param_loc ~f:(Type_env.bind_function_param cx t);
     let t =
       if optional && not has_default_expression then

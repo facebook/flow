@@ -1164,6 +1164,51 @@ References:
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------------ dro.js:32:7
+
+Cannot assign `42` to `x.y` because property `y` is not writable. React component properties [1] and their nested props
+and elements cannot be written to. [cannot-write]
+
+   dro.js:32:7
+   32|     x.y = 42 // error;
+             ^
+
+References:
+   dro.js:31:16
+   31| component Foo1(x: { y: number}) {
+                      ^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- dro.js:36:10
+
+Cannot assign `42` to `rest.bar` because property `bar` is not writable. React component properties [1] and their nested
+props and elements cannot be written to. [cannot-write]
+
+   dro.js:36:10
+   36|     rest.bar = 42; // error;
+                ^^^
+
+References:
+   dro.js:35:19
+   35| component Foo2(...rest: {bar: number, baz: Array<string>, qux:[number, Array<string>]}) {
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ dro.js:38:5
+
+Cannot assign `42` to `rest.qux[0]` because read-only arrays cannot be written to. React component properties [1] and
+their nested props and elements cannot be written to. [cannot-write]
+
+   dro.js:38:5
+   38|     rest.qux[0] = 42; // error
+           ^^^^^^^^^^^
+
+References:
+   dro.js:35:19
+   35| component Foo2(...rest: {bar: number, baz: Array<string>, qux:[number, Array<string>]}) {
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------ eager_config_checking.js:1:38
 
 Component property `foo` [1] is re-declared [2] within a spread [3]. Property names may only be have one definition
@@ -2764,7 +2809,7 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 187 errors
+Found 190 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
