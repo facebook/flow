@@ -9982,7 +9982,7 @@ struct
         OptionalT { reason; type_ = recurse seen t; use_desc }
       | UnionT (r, rep) ->
         let r = mod_reason r in
-        let rep = UnionRep.ident_map (recurse seen) rep in
+        let rep = UnionRep.ident_map ~always_keep_source:true (recurse seen) rep in
         UnionT (r, rep)
       | OpaqueT (r, opaquetype) ->
         let r = mod_reason r in

@@ -503,7 +503,7 @@ and merge_annot tps infer_tps file = function
     let t1 = merge tps infer_tps file t1 in
     (* NB: tail-recursive map in case of very large types *)
     let ts = Base.List.map ~f:(merge tps infer_tps file) ts in
-    Type.(UnionT (reason, UnionRep.make t0 t1 ts))
+    Type.(UnionT (reason, UnionRep.make ~source_aloc:(Context.make_aloc_id file.cx loc) t0 t1 ts))
   | Intersection { loc; t0; t1; ts } ->
     let reason = Reason.(mk_annot_reason RIntersectionType loc) in
     let t0 = merge tps infer_tps file t0 in
@@ -1153,7 +1153,10 @@ and merge_value tps infer_tps file = function
     let elem_t =
       match (t, ts) with
       | (t, []) -> t
-      | (t0, t1 :: ts) -> Type.(UnionT (reason, UnionRep.make t0 t1 ts))
+      | (t0, t1 :: ts) ->
+        Type.(
+          UnionT (reason, UnionRep.make ~source_aloc:(Context.make_aloc_id file.cx loc) t0 t1 ts)
+        )
     in
     Type.(DefT (reason, trust, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = None })))
 

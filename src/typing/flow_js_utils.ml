@@ -499,7 +499,8 @@ let union_optimization_guard =
   let rec union_optimization_guard_impl seen cx ~equiv comparator l u =
     match (l, u) with
     | (UnionT (_, rep1), UnionT (_, rep2)) ->
-      rep1 = rep2
+      UnionRep.same_source rep1 rep2
+      || UnionRep.same_structure rep1 rep2
       || (* Try O(n) check, then O(n log n) check, then O(n^2) check *)
       begin
         (* Only optimize for enums, since this is the only fast path examined below.

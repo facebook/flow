@@ -421,7 +421,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let (((_, t0), _) as t0_ast) = convert cx tparams_map infer_tparams_map t0 in
       let (((_, t1), _) as t1_ast) = convert cx tparams_map infer_tparams_map t1 in
       let (ts, ts_ast) = convert_list cx tparams_map infer_tparams_map ts in
-      let rep = UnionRep.make t0 t1 ts in
+      let rep = UnionRep.make ~source_aloc:(Context.make_aloc_id cx loc) t0 t1 ts in
       ( (loc, UnionT (mk_annot_reason RUnionType loc, rep)),
         Union { Union.types = (t0_ast, t1_ast, ts_ast); comments }
       )
