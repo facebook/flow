@@ -339,20 +339,20 @@ class virtual ['a] t =
         else
           RendersT canonical_form'
 
-    method private canonical_renders_form cx map_cx t =
-      match t with
+    method private canonical_renders_form cx map_cx form =
+      match form with
       | NominalRenders { renders_id; renders_super } ->
         let renders_super' = self#type_ cx map_cx renders_super in
         if renders_super' == renders_super then
-          t
+          form
         else
           NominalRenders { renders_id; renders_super = renders_super' }
-      | StructuralRenders arg ->
-        let arg' = self#type_ cx map_cx arg in
-        if arg' == arg then
-          t
+      | StructuralRenders { renders_variant; renders_structural_type } ->
+        let renders_structural_type' = self#type_ cx map_cx renders_structural_type in
+        if renders_structural_type' == renders_structural_type then
+          form
         else
-          StructuralRenders arg'
+          StructuralRenders { renders_variant; renders_structural_type = renders_structural_type' }
 
     method defer_use_type cx map_cx t =
       match t with

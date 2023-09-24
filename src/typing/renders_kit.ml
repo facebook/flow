@@ -38,7 +38,9 @@ module Make (Flow : INPUT) = struct
           trace
           ~use_op:(Frame (RendersCompatibility, use_op))
           (super, reconstruct_render_type reasonu u)
-    | (NominalRenders { renders_id = _; renders_super }, StructuralRenders t) ->
+    | ( NominalRenders { renders_id = _; renders_super },
+        StructuralRenders { renders_variant = RendersNormal; renders_structural_type = t }
+      ) ->
       if not (speculative_subtyping_succeeds cx (reconstruct_render_type reasonl l) t) then
         let mixed_element =
           get_builtin_type cx ~trace reasonl (OrdinaryName "React$MixedElement")
@@ -47,13 +49,7 @@ module Make (Flow : INPUT) = struct
         if not (speculative_subtyping_succeeds cx mixed_element u_type) then
           let super = reposition_reason cx ~trace reasonl ~use_desc:true renders_super in
           rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (super, u_type)
-    | (StructuralRenders t, NominalRenders _) ->
-      rec_flow_t
-        cx
-        trace
-        ~use_op:(Frame (RendersCompatibility, use_op))
-        (t, reconstruct_render_type reasonu u)
-    | (StructuralRenders t, StructuralRenders _) ->
+    | (StructuralRenders { renders_variant = RendersNormal; renders_structural_type = t }, _) ->
       rec_flow_t
         cx
         trace

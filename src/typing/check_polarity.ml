@@ -165,7 +165,9 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
       check_polarity cx ?trace tparams polarity renders
     | DefT (_, _, RendersT (NominalRenders { renders_id = _; renders_super })) ->
       check_polarity cx ?trace tparams polarity renders_super
-    | DefT (_, _, RendersT (StructuralRenders t)) -> check_polarity cx ?trace tparams polarity t
+    | DefT (_, _, RendersT (StructuralRenders { renders_variant = _; renders_structural_type = t }))
+      ->
+      check_polarity cx ?trace tparams polarity t
     | KeysT (_, t) -> check_polarity cx ?trace tparams Polarity.Positive t
     (* TODO *)
     | CustomFunT _

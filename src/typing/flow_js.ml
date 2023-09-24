@@ -724,7 +724,12 @@ struct
                     }
                 )
             )
-        | ( DefT (r, _, RendersT (StructuralRenders (UnionT (_, rep)))),
+        | ( DefT
+              ( r,
+                _,
+                RendersT
+                  (StructuralRenders { renders_variant; renders_structural_type = UnionT (_, rep) })
+              ),
             ReposUseT (reason, use_desc, use_op, l)
           ) ->
           let rep =
@@ -745,7 +750,17 @@ struct
             cx
             trace
             ( l,
-              UseT (use_op, DefT (r, bogus_trust (), RendersT (StructuralRenders (UnionT (r, rep)))))
+              UseT
+                ( use_op,
+                  DefT
+                    ( r,
+                      bogus_trust (),
+                      RendersT
+                        (StructuralRenders
+                           { renders_variant; renders_structural_type = UnionT (r, rep) }
+                        )
+                    )
+                )
             )
         (* Waits for a def type to become concrete, repositions it as an upper UseT
            using the stored reason. This can be used to store a reason as it flows
@@ -1776,7 +1791,17 @@ struct
           in
           let reason = update_desc_reason (fun desc -> RRenderType desc) reason in
           let renders_t =
-            DefT (reason, bogus_trust (), RendersT (StructuralRenders (UnionT (reason, rep))))
+            DefT
+              ( reason,
+                bogus_trust (),
+                RendersT
+                  (StructuralRenders
+                     {
+                       renders_variant = RendersNormal;
+                       renders_structural_type = UnionT (reason, rep);
+                     }
+                  )
+              )
           in
           rec_flow_t cx trace ~use_op:unknown_use (renders_t, tout)
         | (UnionT (_, rep), _)
@@ -2878,7 +2903,14 @@ struct
               | None -> l
             in
             if should_distribute then
-              DefT (reason, bogus_trust (), RendersT (StructuralRenders t))
+              DefT
+                ( reason,
+                  bogus_trust (),
+                  RendersT
+                    (StructuralRenders
+                       { renders_variant = RendersNormal; renders_structural_type = t }
+                    )
+                )
             else
               t
           in
@@ -5505,7 +5537,16 @@ struct
             get_builtin_type cx ~trace renders_reason (OrdinaryName "React$MixedElement")
           in
           rec_flow cx trace (mixed_element, u)
-        | (DefT (r, _, RendersT (StructuralRenders t)), u) ->
+        | ( DefT
+              ( r,
+                _,
+                RendersT
+                  (StructuralRenders
+                    { renders_variant = RendersNormal; renders_structural_type = t }
+                    )
+              ),
+            u
+          ) ->
           let u' = ExitRendersT { renders_reason = r; u } in
           rec_flow cx trace (t, u')
         | (_, ExitRendersT { renders_reason; u }) ->
@@ -9994,9 +10035,16 @@ struct
       | ExactT (r, t) ->
         let r = mod_reason r in
         ExactT (r, recurse seen t)
-      | DefT (r, trust, RendersT (StructuralRenders t)) ->
+      | DefT
+          (r, trust, RendersT (StructuralRenders { renders_variant; renders_structural_type = t }))
+        ->
         let r = mod_reason r in
-        DefT (r, trust, RendersT (StructuralRenders (recurse seen t)))
+        DefT
+          ( r,
+            trust,
+            RendersT
+              (StructuralRenders { renders_variant; renders_structural_type = recurse seen t })
+          )
       | t -> mod_reason_of_t mod_reason t
     in
     recurse IMap.empty t

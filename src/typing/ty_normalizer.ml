@@ -783,10 +783,7 @@ end = struct
              (Ty_symbol.builtin_symbol (Reason.OrdinaryName "React$AbstractComponent"))
              (Some [config; instance; renders])
           )
-      | DefT (_, _, RendersT (StructuralRenders t)) ->
-        let%bind t = type__ ~env:(Env.set_under_render_type true env) t in
-        return (Ty.Renders t)
-      | DefT (_, _, RendersT (NominalRenders _)) ->
+      | DefT (_, _, RendersT _) ->
         (* TODO(jmbrown): Ty normalization for render types with an id *)
         terr
           ~kind:UnsupportedTypeCtor

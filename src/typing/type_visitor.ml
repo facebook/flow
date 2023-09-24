@@ -141,7 +141,8 @@ class ['a] t =
         acc
       | RendersT (NominalRenders { renders_id = _; renders_super }) ->
         self#type_ cx pole acc renders_super
-      | RendersT (StructuralRenders t) -> self#type_ cx pole acc t
+      | RendersT (StructuralRenders { renders_variant = _; renders_structural_type = t }) ->
+        self#type_ cx pole acc t
 
     method targ cx pole acc =
       function

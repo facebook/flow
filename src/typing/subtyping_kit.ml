@@ -1388,7 +1388,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (DefT (reasonl, _, RendersT r1), DefT (reasonu, _, RendersT r2)) ->
       RendersKit.rec_renders cx trace ~use_op ((reasonl, r1), (reasonu, r2))
     (* Try to do structural subtyping. If that fails promote to a render type *)
-    | (OpaqueT (reason_opaque, _), DefT (renders_r, _, RendersT (NominalRenders nominal))) ->
+    | (OpaqueT (reason_opaque, _), DefT (renders_r, _, RendersT (NominalRenders _ as form))) ->
       rec_flow
         cx
         trace
@@ -1398,11 +1398,17 @@ module Make (Flow : INPUT) : OUTPUT = struct
               use_op = Frame (RendersCompatibility, use_op);
               reason = renders_r;
               reason_obj = reason_opaque;
-              upper_renders = NominalRenders nominal;
+              upper_renders = form;
               tried_promotion = false;
             }
         )
-    | (OpaqueT (reason_opaque, _), DefT (renders_r, _, RendersT (StructuralRenders t))) ->
+    | ( OpaqueT (reason_opaque, _),
+        DefT
+          ( renders_r,
+            _,
+            RendersT (StructuralRenders { renders_variant = _; renders_structural_type = t } as form)
+          )
+      ) ->
       if not (speculative_subtyping_succeeds cx l t) then
         rec_flow
           cx
@@ -1413,14 +1419,20 @@ module Make (Flow : INPUT) : OUTPUT = struct
                 use_op = Frame (RendersCompatibility, use_op);
                 reason = renders_r;
                 reason_obj = reason_opaque;
-                upper_renders = StructuralRenders t;
+                upper_renders = form;
                 tried_promotion = false;
               }
           )
     (* given x <: y, x <: renders y. The only case in which this is not true is when `x` is a component reference,
      * Foo <: renders Foo fails in that case. Since the RHS is in its canonical form we know that we're safe
      * to Flow the LHS to the structural type on the RHS *)
-    | (l, DefT (_renders_reason, _, RendersT (StructuralRenders t))) ->
+    | ( l,
+        DefT
+          ( _renders_reason,
+            _,
+            RendersT (StructuralRenders { renders_variant = _; renders_structural_type = t })
+          )
+      ) ->
       rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (l, t)
     | (l, DefT (_, _, RendersT _)) ->
       add_output
@@ -1437,7 +1449,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (DefT (r, _, RendersT (NominalRenders _)), u) ->
       let mixed_element = get_builtin_type cx ~trace r (OrdinaryName "React$MixedElement") in
       rec_flow_t cx trace ~use_op (mixed_element, u)
-    | (DefT (r, _, RendersT (StructuralRenders t)), u) ->
+    | ( DefT
+          ( r,
+            _,
+            RendersT
+              (StructuralRenders { renders_variant = RendersNormal; renders_structural_type = t })
+          ),
+        u
+      ) ->
       let u' = ExitRendersT { renders_reason = r; u = UseT (use_op, u) } in
       rec_flow cx trace (t, u')
     (***********************************************)

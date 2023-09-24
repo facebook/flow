@@ -269,7 +269,12 @@ module rec TypeTerm : sig
         renders_id: ALoc.id;
         renders_super: t;
       }
-    | StructuralRenders of t
+    | StructuralRenders of {
+        renders_variant: renders_variant;
+        renders_structural_type: t;
+      }
+
+  and renders_variant = RendersNormal
 
   and component_kind =
     | Structural
