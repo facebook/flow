@@ -783,12 +783,7 @@ end = struct
              (Ty_symbol.builtin_symbol (Reason.OrdinaryName "React$AbstractComponent"))
              (Some [config; instance; renders])
           )
-      | DefT (r, _, RendersT (StructuralRenders structural)) ->
-        let t =
-          match structural with
-          | SingletonRenders t -> t
-          | UnionRenders rep -> UnionT (r, rep)
-        in
+      | DefT (_, _, RendersT (StructuralRenders t)) ->
         let%bind t = type__ ~env:(Env.set_under_render_type true env) t in
         return (Ty.Renders t)
       | DefT (_, _, RendersT (NominalRenders _)) ->

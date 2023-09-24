@@ -250,11 +250,9 @@ module rec TypeTerm : sig
    * ReactPromoteRendersRepresentation type destructor to take a syntactic render type and turn it
    * into a RendersT (it will ALWAYS return a RendersT) of one of the canonical forms.
    *
-   * The Structural (SingletonRenders t) form guarantees that if you evaluate t you will not
-   * get back a RendersT or a UnionT.
-   *
-   * The Structural (UnionRenders) form guarantees that none of the elements are themselves a
-   * *structural* RendersT, but they may be nominal RendersTs.
+   * The Structural (t) form guarantees that if you evaluate t you will not
+   * get back a RendersT. If the argument is a UnionT, none of the members of that UnionT
+   * will be Strcutrual RendersTs, but there may be nominal RendersTs in the union.
    *
    * Nominal render types make no guarantees about their super and they can be any type.
    * In practice, the only way to introduce Nominal render types is component syntax, and
@@ -262,20 +260,16 @@ module rec TypeTerm : sig
    *
    * Given component Foo:
    *  * renders Foo would produce NominalRenders
-   *  * renders (Foo | Foo) would produce a Structural UnionRenders with two Nominal elements
-   *  * renders (Foo | number) would produce a Structural UnionRenders with number and Nominal Foo
-   *  * renders number would produce a Structural SingletonRenders
+   *  * renders (Foo | Foo) would produce a Structural UnionT with two Nominal elements
+   *  * renders (Foo | number) would produce a Structural UnionT with number and Nominal Foo
+   *  * renders number would produce a Structural number 
    *)
-  and structural_renders =
-    | SingletonRenders of t
-    | UnionRenders of UnionRep.t
-
   and canonical_renders_form =
     | NominalRenders of {
         id: ALoc.id;
         super: t;
       }
-    | StructuralRenders of structural_renders
+    | StructuralRenders of t
 
   and component_kind =
     | Structural

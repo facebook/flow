@@ -347,18 +347,12 @@ class virtual ['a] t =
           t
         else
           NominalRenders { id; super = super' }
-      | StructuralRenders (SingletonRenders arg) ->
+      | StructuralRenders arg ->
         let arg' = self#type_ cx map_cx arg in
         if arg' == arg then
           t
         else
-          StructuralRenders (SingletonRenders arg')
-      | StructuralRenders (UnionRenders rep) ->
-        let rep' = UnionRep.ident_map (self#type_ cx map_cx) rep in
-        if rep' == rep then
-          t
-        else
-          StructuralRenders (UnionRenders rep')
+          StructuralRenders arg'
 
     method defer_use_type cx map_cx t =
       match t with

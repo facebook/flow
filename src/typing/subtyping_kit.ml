@@ -1392,11 +1392,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
         let super = reposition_reason cx ~trace reasonl ~use_desc:true super in
         rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (super, u)
     | ( DefT (reasonl, _, RendersT (NominalRenders { id; super })),
-        DefT (_reasonu, _, RendersT (StructuralRenders structural))
+        DefT (_reasonu, _, RendersT (StructuralRenders t))
       ) ->
       (* Similar to the RendersT ~> UnionT case, this one is tricky. There are three ways to satisfy
        * this constraint:
-       * 1. structural is UnionRenders union containing a RendersT with a matching id
+       * 1. structural is a union containing a RendersT with a matching id
        * 2. mixed element is a subtype of u
        * 3. super is a subtype of u
        *
@@ -1405,20 +1405,15 @@ module Make (Flow : INPUT) : OUTPUT = struct
        * super ~> u
        *)
       let has_id_in_possible_types =
-        match structural with
-        | SingletonRenders _ -> false
-        | UnionRenders rep ->
-          let possible_types =
-            Flow.possible_concrete_types_for_inspection cx reasonl (UnionT (reasonl, rep))
-          in
-          possible_types
-          |> List.exists (fun t ->
-                 match t with
-                 | DefT (_, _, RendersT (NominalRenders { id = component_id; super = _ }))
-                   when component_id = id ->
-                   true
-                 | _ -> false
-             )
+        let possible_types = Flow.possible_concrete_types_for_inspection cx reasonl t in
+        possible_types
+        |> List.exists (fun t ->
+               match t with
+               | DefT (_, _, RendersT (NominalRenders { id = component_id; super = _ }))
+                 when component_id = id ->
+                 true
+               | _ -> false
+           )
       in
       if not has_id_in_possible_types then
         let mixed_element =
@@ -1427,22 +1422,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
         if not (speculative_subtyping_succeeds cx mixed_element u) then
           let super = reposition_reason cx ~trace reasonl ~use_desc:true super in
           rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (super, u)
-    | ( DefT (renders_reason, _, RendersT (StructuralRenders structure)),
-        DefT (_, _, RendersT (NominalRenders _))
-      ) ->
-      let t = TypeUtil.structural_render_type_arg renders_reason structure in
+    | (DefT (_, _, RendersT (StructuralRenders t)), DefT (_, _, RendersT (NominalRenders _))) ->
       rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (t, u)
-    | ( DefT (renders_reasonl, _, RendersT (StructuralRenders (UnionRenders _ as structurel))),
+    | ( DefT (_renders_reasonl, _, RendersT (StructuralRenders t)),
         DefT (_renders_reasonu, _, RendersT (StructuralRenders _))
       ) ->
-      let l = TypeUtil.structural_render_type_arg renders_reasonl structurel in
-      rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (l, u)
-    | ( DefT (renders_reasonl, _, RendersT (StructuralRenders structurel)),
-        DefT (renders_reasonu, _, RendersT (StructuralRenders structureu))
-      ) ->
-      let l = TypeUtil.structural_render_type_arg renders_reasonl structurel in
-      let u = TypeUtil.structural_render_type_arg renders_reasonu structureu in
-      rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (l, u)
+      rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (t, u)
     (* Try to do structural subtyping. If that fails promote to a render type *)
     | (OpaqueT (reason_opaque, _), DefT (renders_r, _, RendersT (NominalRenders { id; super }))) ->
       rec_flow
@@ -1458,8 +1443,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
               tried_promotion = false;
             }
         )
-    | (OpaqueT (reason_opaque, _), DefT (renders_r, _, RendersT (StructuralRenders structure))) ->
-      let t = TypeUtil.structural_render_type_arg renders_r structure in
+    | (OpaqueT (reason_opaque, _), DefT (renders_r, _, RendersT (StructuralRenders t))) ->
       if not (speculative_subtyping_succeeds cx l t) then
         rec_flow
           cx
@@ -1470,15 +1454,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
                 use_op = Frame (RendersCompatibility, use_op);
                 reason = renders_r;
                 reason_obj = reason_opaque;
-                upper_renders = StructuralRenders structure;
+                upper_renders = StructuralRenders t;
                 tried_promotion = false;
               }
           )
     (* given x <: y, x <: renders y. The only case in which this is not true is when `x` is a component reference,
      * Foo <: renders Foo fails in that case. Since the RHS is in its canonical form we know that we're safe
      * to Flow the LHS to the structural type on the RHS *)
-    | (l, DefT (renders_reason, _, RendersT (StructuralRenders structure))) ->
-      let t = TypeUtil.structural_render_type_arg renders_reason structure in
+    | (l, DefT (_renders_reason, _, RendersT (StructuralRenders t))) ->
       rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (l, t)
     | (l, DefT (_, _, RendersT _)) ->
       add_output
@@ -1496,7 +1479,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let mixed_element = get_builtin_type cx ~trace r (OrdinaryName "React$MixedElement") in
       rec_flow_t cx trace ~use_op (mixed_element, u)
     | (DefT (r, _, RendersT (StructuralRenders t)), u) ->
-      let t = TypeUtil.structural_render_type_arg r t in
       let u' = ExitRendersT { renders_reason = r; u = UseT (use_op, u) } in
       rec_flow cx trace (t, u')
     (***********************************************)

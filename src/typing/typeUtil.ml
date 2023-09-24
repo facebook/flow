@@ -1078,10 +1078,6 @@ let type_guard_of_funtype f =
   | Some p -> type_guard_of_predicate p
   | None -> None
 
-let structural_render_type_arg renders_reason = function
-  | SingletonRenders t -> t
-  | UnionRenders rep -> UnionT (renders_reason, rep)
-
 let mk_renders_type reason t =
   let destructor =
     TypeDestructorT
