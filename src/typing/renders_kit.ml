@@ -38,30 +38,8 @@ module Make (Flow : INPUT) = struct
           trace
           ~use_op:(Frame (RendersCompatibility, use_op))
           (super, reconstruct_render_type reasonu u)
-    | (NominalRenders { renders_id; renders_super }, StructuralRenders t) ->
-      (* Similar to the RendersT ~> UnionT case, this one is tricky. There are three ways to satisfy
-       * this constraint:
-       * 1. structural is a union containing a RendersT with a matching id
-       * 2. mixed element is a subtype of u
-       * 3. super is a subtype of u
-       *
-       * To perform this check, we preprocess structural to figure out if it has a RendersT with a
-       * matching id. If not, we continue with React.MixedElement ~> u, and if that fails then
-       * super ~> u
-       *)
-      let has_id_in_possible_types =
-        let possible_types = Flow.possible_concrete_types_for_inspection cx reasonl t in
-        possible_types
-        |> List.exists (fun t ->
-               match t with
-               | DefT
-                   (_, _, RendersT (NominalRenders { renders_id = component_id; renders_super = _ }))
-                 when component_id = renders_id ->
-                 true
-               | _ -> false
-           )
-      in
-      if not has_id_in_possible_types then
+    | (NominalRenders { renders_id = _; renders_super }, StructuralRenders t) ->
+      if not (speculative_subtyping_succeeds cx (reconstruct_render_type reasonl l) t) then
         let mixed_element =
           get_builtin_type cx ~trace reasonl (OrdinaryName "React$MixedElement")
         in

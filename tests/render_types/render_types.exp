@@ -246,8 +246,8 @@ References:
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:39:4
 
 Cannot cast `rendersQux` to renders union type because: [incompatible-cast]
- - Either `React.Element` [1] does not render renders `React.Element` [2].
- - Or `React.Element` [1] does not render renders `React.Element` [3].
+ - Either `React.Element` [1] does not render `React.Element` [2].
+ - Or `React.Element` [1] does not render `React.Element` [3].
 
    renders_to_renders.js:39:4
    39|   (rendersQux: renders (React$Element<typeof Foo> | React$Element<typeof Baz>)); // ERROR
@@ -280,8 +280,8 @@ References:
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:59:4
 
 Cannot cast `rendersFooOrBar` to renders union type because: [incompatible-cast]
- - Either `React.Element` [1] does not render renders `React.Element` [2].
- - Or `React.Element` [1] does not render renders `React.Element` [3].
+ - Either `React.Element` [1] does not render `React.Element` [2].
+ - Or `React.Element` [1] does not render `React.Element` [3].
 
    renders_to_renders.js:59:4
    59|   (rendersFooOrBar: renders (React$Element<typeof Foo> | React$Element<typeof Baz>)); // ERROR

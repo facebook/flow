@@ -2848,7 +2848,7 @@ struct
                       promote_structural_components;
                     }
                 )))
-        | ( DefT (_, _, (RendersT (NominalRenders _) as renders)),
+        | ( DefT (_, _, (RendersT _ as renders)),
             PromoteRendersRepresentationT
               {
                 use_op = _;
@@ -2860,18 +2860,6 @@ struct
               }
           ) ->
           rec_flow_t cx trace ~use_op:unknown_use (DefT (reason, bogus_trust (), renders), tout)
-        | ( DefT (_, _, RendersT (StructuralRenders t)),
-            PromoteRendersRepresentationT
-              {
-                use_op = _;
-                reason = _;
-                tout = _;
-                resolved_obj = None;
-                should_distribute = _;
-                promote_structural_components = _;
-              }
-          ) ->
-          rec_flow cx trace (t, u)
         | ( _,
             PromoteRendersRepresentationT
               {
