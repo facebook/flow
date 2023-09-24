@@ -6,7 +6,6 @@
  *)
 
 open Type
-open Reason
 
 module type INPUT = sig
   include Flow_common.BASE
@@ -42,13 +41,9 @@ module Make (Flow : INPUT) = struct
         StructuralRenders { renders_variant = RendersNormal; renders_structural_type = t }
       ) ->
       if not (speculative_subtyping_succeeds cx (reconstruct_render_type reasonl l) t) then
-        let mixed_element =
-          get_builtin_type cx ~trace reasonl (OrdinaryName "React$MixedElement")
-        in
         let u_type = reconstruct_render_type reasonu u in
-        if not (speculative_subtyping_succeeds cx mixed_element u_type) then
-          let super = reposition_reason cx ~trace reasonl ~use_desc:true renders_super in
-          rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (super, u_type)
+        let super = reposition_reason cx ~trace reasonl ~use_desc:true renders_super in
+        rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (super, u_type)
     | (StructuralRenders { renders_variant = RendersNormal; renders_structural_type = t }, _) ->
       rec_flow_t
         cx
