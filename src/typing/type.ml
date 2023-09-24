@@ -918,6 +918,10 @@ module rec TypeTerm : sig
         tried_promotion: bool;
         upper_renders: canonical_renders_form;
       }
+    | ExitRendersT of {
+        renders_reason: reason;
+        u: use_t;
+      }
 
   and implicit_return_action =
     | PropagateVoid of {
@@ -4084,6 +4088,7 @@ let string_of_use_ctor = function
   | PromoteRendersRepresentationT _ -> "PromoteRendersRepresentationT"
   | ConvertEmptyPropsToMixedT _ -> "ConvertEmptyPropsToMixedT"
   | TryRenderTypePromotionT _ -> "TryRenderTypePromotionT"
+  | ExitRendersT _ -> "ExitRendersT"
 
 let string_of_binary_test = function
   | InstanceofTest -> "instanceof"

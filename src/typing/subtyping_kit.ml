@@ -1495,14 +1495,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (DefT (r, _, RendersT (NominalRenders _)), u) ->
       let mixed_element = get_builtin_type cx ~trace r (OrdinaryName "React$MixedElement") in
       rec_flow_t cx trace ~use_op (mixed_element, u)
-    | (DefT (r, _, RendersT (StructuralRenders (SingletonRenders _))), u) ->
-      let node = get_builtin_type cx ~trace r (OrdinaryName "React$Node") in
-      rec_flow_t cx trace ~use_op (node, u)
-    | (DefT (renders_reason, _, RendersT (StructuralRenders (UnionRenders rep))), u) ->
-      (* TODO(jmbrown): This is not the most performant way to handle this. We should make a
-       * use_t for exiting render types *)
-      let rep = UnionRep.ident_map (fun t -> mk_renders_type renders_reason t) rep in
-      rec_flow_t cx trace ~use_op (UnionT (renders_reason, rep), u)
+    | (DefT (r, _, RendersT (StructuralRenders t)), u) ->
+      let t = TypeUtil.structural_render_type_arg r t in
+      let u' = ExitRendersT { renders_reason = r; u = UseT (use_op, u) } in
+      rec_flow cx trace (t, u')
     (***********************************************)
     (* function types deconstruct into their parts *)
     (***********************************************)

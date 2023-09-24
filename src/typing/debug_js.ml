@@ -992,6 +992,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | PromoteRendersRepresentationT _ -> "PromoteRendersRepresentationT"
     | ConvertEmptyPropsToMixedT _ -> "ConvertEmptyPropsToMixedT"
     | TryRenderTypePromotionT _ -> "TryRenderTypePromotionT"
+    | ExitRendersT _ -> "ExitRendersT"
 
 and dump_tvar_ (depth, tvars) cx id =
   if ISet.mem id tvars then

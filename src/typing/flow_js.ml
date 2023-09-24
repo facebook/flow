@@ -5505,16 +5505,19 @@ struct
             (own_props, proto_props, inst_call_t, inst_dict);
           rec_flow cx trace (l, UseT (use_op, super))
         (* Render Type Misc Uses *)
-        | (DefT (r, _, RendersT (NominalRenders _)), u) ->
-          let mixed_element = get_builtin_type cx ~trace r (OrdinaryName "React$MixedElement") in
+        | (DefT (_, _, RendersT (NominalRenders _)), ExitRendersT { renders_reason; u })
+        | (DefT (renders_reason, _, RendersT (NominalRenders _)), u) ->
+          let mixed_element =
+            get_builtin_type cx ~trace renders_reason (OrdinaryName "React$MixedElement")
+          in
           rec_flow cx trace (mixed_element, u)
-        | (DefT (r, _, RendersT (StructuralRenders (SingletonRenders _))), u) ->
-          let node = get_builtin_type cx ~trace r (OrdinaryName "React$Node") in
+        | (DefT (r, _, RendersT (StructuralRenders t)), u) ->
+          let t = TypeUtil.structural_render_type_arg r t in
+          let u' = ExitRendersT { renders_reason = r; u } in
+          rec_flow cx trace (t, u')
+        | (_, ExitRendersT { renders_reason; u }) ->
+          let node = get_builtin_type cx ~trace renders_reason (OrdinaryName "React$Node") in
           rec_flow cx trace (node, u)
-        | (DefT (r, _, RendersT (StructuralRenders (UnionRenders rep))), u) ->
-          (* TODO(jmbrown): A specialized use_t for exiting would be better *)
-          let l = UnionT (r, UnionRep.ident_map (TypeUtil.mk_renders_type r) rep) in
-          rec_flow cx trace (l, u)
         (***********************)
         (* Object library call *)
         (***********************)
@@ -6282,6 +6285,7 @@ struct
       let renders = DefT (reason_obj, bogus_trust (), RendersT upper_renders) in
       covariant_flow ~use_op renders;
       true
+    | ExitRendersT { renders_reason = _; u } -> any_propagated cx trace any u
     | UseT (use_op, DefT (_, _, ArrT (ROArrayAT (t, _)))) (* read-only arrays are covariant *)
     | UseT (use_op, DefT (_, _, ClassT t)) (* mk_instance ~for_type:false *)
     | UseT (use_op, ExactT (_, t)) ->

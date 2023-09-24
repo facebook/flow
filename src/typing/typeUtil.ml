@@ -154,6 +154,7 @@ and reason_of_use_t = function
   | PromoteRendersRepresentationT { reason; _ } -> reason
   | ConvertEmptyPropsToMixedT (reason, _) -> reason
   | TryRenderTypePromotionT { reason; _ } -> reason
+  | ExitRendersT { renders_reason; _ } -> renders_reason
 
 (* helper: we want the tvar id as well *)
 (* NOTE: uncalled for now, because ids are nondetermistic
@@ -396,6 +397,7 @@ and mod_reason_of_use_t f = function
   | DestructuringT (reason, a, s, t, id) -> DestructuringT (f reason, a, s, t, id)
   | ResolveUnionT { reason; resolved; unresolved; upper; id } ->
     ResolveUnionT { reason = f reason; resolved; unresolved; upper; id }
+  | ExitRendersT { renders_reason; u } -> ExitRendersT { renders_reason = f renders_reason; u }
 
 and mod_reason_of_opt_use_t f = function
   | OptCallT { use_op; reason; opt_funcalltype; return_hint } ->
@@ -550,6 +552,7 @@ let rec util_use_op_of_use_t :
   | ReactInToProps _
   | DestructuringT _
   | ResolveUnionT _
+  | ExitRendersT _
   | EnumExhaustiveCheckT _
   | SealGenericT _
   | CheckUnusedPromiseT _

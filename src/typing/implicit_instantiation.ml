@@ -340,6 +340,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | PromoteRendersRepresentationT _
     | ConvertEmptyPropsToMixedT _
     | TryRenderTypePromotionT _
+    | ExitRendersT _
     (* When we have ChoiceKitUseT, we are already stuck. *)
     | ChoiceKitUseT _ ->
       UpperEmpty (* Remaining unhandled upper bounds *)
