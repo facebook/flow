@@ -43,6 +43,7 @@ end
 module Make (Flow : INPUT) : OUTPUT = struct
   open Flow
   module SpeculationKit = Speculation_kit.Make (Flow)
+  module RendersKit = Renders_kit.Make (Flow)
 
   let flow_all_in_union cx trace rep u =
     iter_union ~f:rec_flow ~init:() ~join:(fun _ _ -> ()) cx trace rep u
@@ -1384,55 +1385,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
       rec_flow_t cx trace ~use_op (configu, configl);
       rec_flow_t cx trace ~use_op (instancel, instanceu);
       rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (rendersl, rendersu)
-    (* Subtyping inside the Renders world happens in these rules +
-     * TryPromoteRendersRepresentation Renders *)
-    | ( DefT (reasonl, _, RendersT (NominalRenders { renders_id = id1; renders_super })),
-        DefT (_reasonu, _, RendersT (NominalRenders { renders_id = id2; renders_super = _ }))
-      ) ->
-      if ALoc.equal_id id1 id2 then
-        ()
-      else
-        (* We reposition the super using l's reason for better error messages *)
-        let super = reposition_reason cx ~trace reasonl ~use_desc:true renders_super in
-        rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (super, u)
-    | ( DefT (reasonl, _, RendersT (NominalRenders { renders_id; renders_super })),
-        DefT (_reasonu, _, RendersT (StructuralRenders t))
-      ) ->
-      (* Similar to the RendersT ~> UnionT case, this one is tricky. There are three ways to satisfy
-       * this constraint:
-       * 1. structural is a union containing a RendersT with a matching id
-       * 2. mixed element is a subtype of u
-       * 3. super is a subtype of u
-       *
-       * To perform this check, we preprocess structural to figure out if it has a RendersT with a
-       * matching id. If not, we continue with React.MixedElement ~> u, and if that fails then
-       * super ~> u
-       *)
-      let has_id_in_possible_types =
-        let possible_types = Flow.possible_concrete_types_for_inspection cx reasonl t in
-        possible_types
-        |> List.exists (fun t ->
-               match t with
-               | DefT
-                   (_, _, RendersT (NominalRenders { renders_id = component_id; renders_super = _ }))
-                 when component_id = renders_id ->
-                 true
-               | _ -> false
-           )
-      in
-      if not has_id_in_possible_types then
-        let mixed_element =
-          get_builtin_type cx ~trace reasonl (OrdinaryName "React$MixedElement")
-        in
-        if not (speculative_subtyping_succeeds cx mixed_element u) then
-          let super = reposition_reason cx ~trace reasonl ~use_desc:true renders_super in
-          rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (super, u)
-    | (DefT (_, _, RendersT (StructuralRenders t)), DefT (_, _, RendersT (NominalRenders _))) ->
-      rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (t, u)
-    | ( DefT (_renders_reasonl, _, RendersT (StructuralRenders t)),
-        DefT (_renders_reasonu, _, RendersT (StructuralRenders _))
-      ) ->
-      rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (t, u)
+    | (DefT (reasonl, _, RendersT r1), DefT (reasonu, _, RendersT r2)) ->
+      RendersKit.rec_renders cx trace ~use_op ((reasonl, r1), (reasonu, r2))
     (* Try to do structural subtyping. If that fails promote to a render type *)
     | (OpaqueT (reason_opaque, _), DefT (renders_r, _, RendersT (NominalRenders nominal))) ->
       rec_flow
