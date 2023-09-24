@@ -139,7 +139,8 @@ class ['a] t =
         let acc = self#type_ cx pole acc instance in
         let acc = self#type_ cx pole acc renders in
         acc
-      | RendersT (NominalRenders { id = _; super }) -> self#type_ cx pole acc super
+      | RendersT (NominalRenders { renders_id = _; renders_super }) ->
+        self#type_ cx pole acc renders_super
       | RendersT (StructuralRenders t) -> self#type_ cx pole acc t
 
     method targ cx pole acc =

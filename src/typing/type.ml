@@ -266,8 +266,8 @@ module rec TypeTerm : sig
    *)
   and canonical_renders_form =
     | NominalRenders of {
-        id: ALoc.id;
-        super: t;
+        renders_id: ALoc.id;
+        renders_super: t;
       }
     | StructuralRenders of t
 

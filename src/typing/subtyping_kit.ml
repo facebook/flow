@@ -1347,9 +1347,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
       rec_flow_t cx trace ~use_op (instancel, instanceu);
       let rendersl =
         match component_kind with
-        | Nominal id ->
+        | Nominal renders_id ->
           let reason = update_desc_reason (fun desc -> RRenderType desc) reasonl in
-          DefT (reason, bogus_trust (), RendersT (NominalRenders { id; super = rendersl }))
+          DefT
+            ( reason,
+              bogus_trust (),
+              RendersT (NominalRenders { renders_id; renders_super = rendersl })
+            )
         | Structural -> rendersl
       in
       rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (rendersl, rendersu)
@@ -1382,16 +1386,16 @@ module Make (Flow : INPUT) : OUTPUT = struct
       rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (rendersl, rendersu)
     (* Subtyping inside the Renders world happens in these rules +
      * TryPromoteRendersRepresentation Renders *)
-    | ( DefT (reasonl, _, RendersT (NominalRenders { id = id1; super })),
-        DefT (_reasonu, _, RendersT (NominalRenders { id = id2; super = _ }))
+    | ( DefT (reasonl, _, RendersT (NominalRenders { renders_id = id1; renders_super })),
+        DefT (_reasonu, _, RendersT (NominalRenders { renders_id = id2; renders_super = _ }))
       ) ->
       if ALoc.equal_id id1 id2 then
         ()
       else
         (* We reposition the super using l's reason for better error messages *)
-        let super = reposition_reason cx ~trace reasonl ~use_desc:true super in
+        let super = reposition_reason cx ~trace reasonl ~use_desc:true renders_super in
         rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (super, u)
-    | ( DefT (reasonl, _, RendersT (NominalRenders { id; super })),
+    | ( DefT (reasonl, _, RendersT (NominalRenders { renders_id; renders_super })),
         DefT (_reasonu, _, RendersT (StructuralRenders t))
       ) ->
       (* Similar to the RendersT ~> UnionT case, this one is tricky. There are three ways to satisfy
@@ -1409,8 +1413,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
         possible_types
         |> List.exists (fun t ->
                match t with
-               | DefT (_, _, RendersT (NominalRenders { id = component_id; super = _ }))
-                 when component_id = id ->
+               | DefT
+                   (_, _, RendersT (NominalRenders { renders_id = component_id; renders_super = _ }))
+                 when component_id = renders_id ->
                  true
                | _ -> false
            )
@@ -1420,7 +1425,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           get_builtin_type cx ~trace reasonl (OrdinaryName "React$MixedElement")
         in
         if not (speculative_subtyping_succeeds cx mixed_element u) then
-          let super = reposition_reason cx ~trace reasonl ~use_desc:true super in
+          let super = reposition_reason cx ~trace reasonl ~use_desc:true renders_super in
           rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (super, u)
     | (DefT (_, _, RendersT (StructuralRenders t)), DefT (_, _, RendersT (NominalRenders _))) ->
       rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (t, u)
@@ -1429,7 +1434,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       ) ->
       rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (t, u)
     (* Try to do structural subtyping. If that fails promote to a render type *)
-    | (OpaqueT (reason_opaque, _), DefT (renders_r, _, RendersT (NominalRenders { id; super }))) ->
+    | (OpaqueT (reason_opaque, _), DefT (renders_r, _, RendersT (NominalRenders nominal))) ->
       rec_flow
         cx
         trace
@@ -1439,7 +1444,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
               use_op = Frame (RendersCompatibility, use_op);
               reason = renders_r;
               reason_obj = reason_opaque;
-              upper_renders = NominalRenders { id; super };
+              upper_renders = NominalRenders nominal;
               tried_promotion = false;
             }
         )

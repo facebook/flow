@@ -2752,7 +2752,12 @@ struct
           rec_flow cx trace (statics, u)
         (* Render Type Promotion *)
         (* A named AbstractComponent is turned into its corresponding render type *)
-        | ( DefT (_, _, ReactAbstractComponentT { component_kind = Nominal id; renders = super; _ }),
+        | ( DefT
+              ( _,
+                _,
+                ReactAbstractComponentT
+                  { component_kind = Nominal renders_id; renders = renders_super; _ }
+              ),
             PromoteRendersRepresentationT
               {
                 reason;
@@ -2763,7 +2768,9 @@ struct
                 promote_structural_components = _;
               }
           ) ->
-          let result = DefT (reason, bogus_trust (), RendersT (NominalRenders { id; super })) in
+          let result =
+            DefT (reason, bogus_trust (), RendersT (NominalRenders { renders_id; renders_super }))
+          in
           (* Intentional unknown_use when flowing to tout *)
           rec_flow_t cx trace ~use_op:unknown_use (result, tout)
         | ( OpaqueT
