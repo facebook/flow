@@ -63,6 +63,7 @@ type metadata = {
   strict: bool;
   strict_local: bool;
   verbose: Verbose.t option;
+  slow_to_check_logging: Slow_to_check_logging.t;
   (* global *)
   any_propagation: bool;
   automatic_require_default: bool;
@@ -264,6 +265,8 @@ val renders_type_argument_validations : t -> (ALoc.t * bool * Type.t) list
 val missing_local_annot_lower_bounds : t -> Type.t Nel.t ALocFuzzyMap.t
 
 val verbose : t -> Verbose.t option
+
+val slow_to_check_logging : t -> Slow_to_check_logging.t
 
 val max_workers : t -> int
 

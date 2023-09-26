@@ -548,8 +548,16 @@ let merge = merge_runner ~job:merge_component
 
 let mk_check options ~reader ~master_cx ~find_ref_request () =
   let check_timeout = Options.merge_timeout options in
-  (* TODO: add new option *)
-  let interval = Base.Option.value_map ~f:(min 5.0) ~default:5.0 check_timeout in
+  let slow_to_check_file_interval =
+    (Options.slow_to_check_logging options).Slow_to_check_logging.slow_files_logging_internal
+    |> Base.Option.value ~default:5.0
+  in
+  let interval =
+    Base.Option.value_map
+      ~f:(min slow_to_check_file_interval)
+      ~default:slow_to_check_file_interval
+      check_timeout
+  in
   let check_file = mk_check_file options ~master_cx ~reader ~find_ref_request () in
   fun file ->
     let file_str = File_key.to_string file in

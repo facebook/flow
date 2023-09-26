@@ -1527,24 +1527,43 @@ let resolve_component cx graph component =
   Debug_js.Verbose.print_if_verbose_lazy
     cx
     (lazy [Utils_js.spf "Resolving component %s" (string_of_component graph component)]);
-  let entries_for_resolution =
-    let entries = entries_of_component graph component in
-    let ({ Loc_env.readable; _ } as env) = Context.environment cx in
-    Context.set_environment
-      cx
-      { env with Loc_env.readable = EnvSet.union entries readable; under_resolution = entries };
-    entries
+  let log_slow_to_check ~f =
+    match Context.slow_to_check_logging cx with
+    | { Slow_to_check_logging.slow_components_logging_threshold = Some threshold; _ } ->
+      let start_time = Unix.gettimeofday () in
+      let result = f () in
+      let end_time = Unix.gettimeofday () in
+      let run_time = end_time -. start_time in
+      if run_time > threshold then
+        Hh_logger.info
+          "[%d] Slow CHECK component %s (%f seconds)"
+          (Sys_utils.get_pretty_pid ())
+          (string_of_component graph component)
+          run_time;
+      result
+    | _ -> f ()
   in
-  resolve_component_type_params cx graph component;
-  let () =
-    match component with
-    | IllegalSCC _ -> resolve_illegal entries_for_resolution
-    | Singleton elt -> resolve_element elt
-    | ResolvableSCC elts -> Nel.iter (fun elt -> resolve_element elt) elts
+  let f () =
+    let entries_for_resolution =
+      let entries = entries_of_component graph component in
+      let ({ Loc_env.readable; _ } as env) = Context.environment cx in
+      Context.set_environment
+        cx
+        { env with Loc_env.readable = EnvSet.union entries readable; under_resolution = entries };
+      entries
+    in
+    resolve_component_type_params cx graph component;
+    let () =
+      match component with
+      | IllegalSCC _ -> resolve_illegal entries_for_resolution
+      | Singleton elt -> resolve_element elt
+      | ResolvableSCC elts -> Nel.iter (fun elt -> resolve_element elt) elts
+    in
+    let env = Context.environment cx in
+    EnvSet.iter
+      (fun (kind, loc) ->
+        Loc_env.find_write env kind loc |> Base.Option.iter ~f:(Tvar_resolver.resolve cx))
+      entries_for_resolution;
+    Debug_js.Verbose.print_if_verbose_lazy cx (lazy ["Finished resolving component"])
   in
-  let env = Context.environment cx in
-  EnvSet.iter
-    (fun (kind, loc) ->
-      Loc_env.find_write env kind loc |> Base.Option.iter ~f:(Tvar_resolver.resolve cx))
-    entries_for_resolution;
-  Debug_js.Verbose.print_if_verbose_lazy cx (lazy ["Finished resolving component"])
+  log_slow_to_check ~f
