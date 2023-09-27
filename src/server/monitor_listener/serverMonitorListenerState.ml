@@ -65,6 +65,13 @@ and recheck_files =
               as part of the init so we shouldn't fail if they are included
               in the files changed since mergebase. *)
     }
+  | GlobalFindRef of {
+      request: FindRefsTypes.request;
+      client: Persistent_connection.single_client;
+      references_to_lsp_response:
+        (FindRefsTypes.single_ref list, string) result -> LspProt.response * LspProt.metadata;
+      def_locs: Loc.t list;
+    }
   | DependenciesToPrioritize of FilenameSet.t
   | FilesToReinit of {
       files_to_prioritize: FilenameSet.t;
@@ -85,6 +92,9 @@ let push_files_to_prioritize changed_files = push_recheck_msg (ChangedFiles (cha
 
 let push_files_to_force_focused_and_recheck files =
   push_recheck_msg (FilesToForceFocusedAndRecheck { files; skip_incompatible = false })
+
+let push_global_find_ref_request ~request ~client ~references_to_lsp_response def_locs =
+  push_recheck_msg (GlobalFindRef { request; client; references_to_lsp_response; def_locs })
 
 (** [push_lazy_init files] triggers a recheck of [files]. It should be called
     immediately after a lazy init, and [files] should be the files changed
@@ -113,6 +123,12 @@ type recheck_workload = {
   files_to_prioritize: FilenameSet.t;
   files_to_recheck: FilenameSet.t;
   files_to_force: CheckedSet.t;
+  find_ref_command:
+    ( FindRefsTypes.request
+    * Persistent_connection.single_client
+    * ((FindRefsTypes.single_ref list, string) result -> LspProt.response * LspProt.metadata)
+    )
+    option;
   metadata: MonitorProt.file_watcher_metadata;
 }
 
@@ -125,13 +141,15 @@ let empty_recheck_workload =
     files_to_prioritize = FilenameSet.empty;
     files_to_recheck = FilenameSet.empty;
     files_to_force = CheckedSet.empty;
+    find_ref_command = None;
     metadata = MonitorProt.empty_file_watcher_metadata;
   }
 
 let recheck_acc = ref empty_recheck_workload
 
 (** Updates [workload] while maintaining physical equality if there's nothing to do *)
-let update ?files_to_prioritize ?files_to_recheck ?files_to_force ?metadata workload =
+let update
+    ?files_to_prioritize ?files_to_recheck ?files_to_force ?find_ref_command ?metadata workload =
   let orig_workload = workload in
   let workload =
     match files_to_prioritize with
@@ -173,6 +191,15 @@ let update ?files_to_prioritize ?files_to_recheck ?files_to_force ?metadata work
         workload
       else
         { workload with files_to_force }
+    | None -> workload
+  in
+  let workload =
+    match find_ref_command with
+    | Some _ ->
+      if workload.find_ref_command = find_ref_command then
+        workload
+      else
+        { workload with find_ref_command }
     | None -> workload
   in
   let workload =
@@ -252,6 +279,12 @@ let recheck_fetch ~process_updates ~get_forced ~priority =
                let focused = FilenameSet.diff updates (get_forced () |> CheckedSet.focused) in
                let files_to_force = CheckedSet.add ~focused CheckedSet.empty in
                update ~files_to_recheck:updates ~files_to_force workload
+             | GlobalFindRef { request; client; references_to_lsp_response; def_locs } ->
+               let files_to_recheck = FilenameSet.of_list (List.filter_map Loc.source def_locs) in
+               update
+                 ~files_to_recheck
+                 ~find_ref_command:(request, client, references_to_lsp_response)
+                 workload
              | DependenciesToPrioritize dependencies ->
                let to_prioritize = CheckedSet.add ~dependencies CheckedSet.empty in
                let files_to_force =
@@ -297,6 +330,12 @@ let requeue_workload workload =
       files_to_prioritize = FilenameSet.union workload.files_to_prioritize prev.files_to_prioritize;
       files_to_recheck = FilenameSet.union workload.files_to_recheck prev.files_to_recheck;
       files_to_force = CheckedSet.union workload.files_to_force prev.files_to_force;
+      find_ref_command =
+        (match (workload.find_ref_command, prev.find_ref_command) with
+        | (None, r)
+        | (r, None)
+        | (r, _) ->
+          r);
       metadata = MonitorProt.merge_file_watcher_metadata prev.metadata workload.metadata;
     }
   in
