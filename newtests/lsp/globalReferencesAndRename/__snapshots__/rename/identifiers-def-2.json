@@ -7,14 +7,14 @@
           "range": {
             "start": {
               "line": 2,
-              "character": 0
+              "character": 10
             },
             "end": {
               "line": 2,
-              "character": 38
+              "character": 11
             }
           },
-          "newText": "import { a, NEW_NAME as b } from \"./identifiers-def\";"
+          "newText": "NEW_NAME"
         },
         {
           "range": {

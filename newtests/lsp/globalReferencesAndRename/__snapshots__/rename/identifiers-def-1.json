@@ -61,14 +61,14 @@
           "range": {
             "start": {
               "line": 2,
-              "character": 0
+              "character": 8
             },
             "end": {
               "line": 2,
-              "character": 38
+              "character": 9
             }
           },
-          "newText": "import { NEW_NAME as a, b } from \"./identifiers-def\";"
+          "newText": "NEW_NAME"
         },
         {
           "range": {
