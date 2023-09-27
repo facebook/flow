@@ -106,7 +106,7 @@ only be a `string` inside of the `if` statement. This is known as a
 [refinement](../../lang/refinements/).
 
 ## Versus `any`
-`mixed` is safe while [`any`](../any) is not. While both accept all values, but `any` also unsafely allows all operations.
+`mixed` is safe, while [`any`](../any) is not. Both accept all values, but `any` also unsafely allows all operations.
 
 ## Versus `empty`
 `mixed` is the opposite of [`empty`](../empty):
