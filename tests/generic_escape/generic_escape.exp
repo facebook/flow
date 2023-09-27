@@ -431,8 +431,8 @@ the expression to your expected type. [underconstrained-implicit-instantiation]
                     ^^^^^
 
 References:
-   <BUILTINS>/core.js:931:21
-   931| declare class Array<T> extends $ReadOnlyArray<T> {
+   <BUILTINS>/core.js:948:21
+   948| declare class Array<T> extends $ReadOnlyArray<T> {
                             ^ [1]
    misc.js:3:9
      3| var e = new Array(10);

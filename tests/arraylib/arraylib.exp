@@ -107,8 +107,8 @@ References:
    array_lib.js:46:4
      46|   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
             ^^ [1]
-   <BUILTINS>/core.js:1348:13
-   1348|     length: number;
+   <BUILTINS>/core.js:1377:13
+   1377|     length: number;
                      ^^^^^^ [2]
 
 
@@ -124,8 +124,8 @@ References:
    array_lib.js:47:4
      47|   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
             ^^ [1]
-   <BUILTINS>/core.js:1348:13
-   1348|     length: number;
+   <BUILTINS>/core.js:1377:13
+   1377|     length: number;
                      ^^^^^^ [2]
 
 
@@ -139,8 +139,8 @@ Cannot cast `Array.from(...)` to array type because string [1] is incompatible w
             ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1133:37
-   1133|     static from(str: string): Array<string>;
+   <BUILTINS>/core.js:1150:37
+   1150|     static from(str: string): Array<string>;
                                              ^^^^^^ [1]
    array_lib.js:59:30
      59|   (Array.from("abcd"): Array<empty>); // ERROR
@@ -184,8 +184,8 @@ Cannot call `arr.at` because function [1] requires another argument. [incompatib
             ^^
 
 References:
-   <BUILTINS>/core.js:701:5
-   701|     at(index: number): T | void;
+   <BUILTINS>/core.js:708:5
+   708|     at(index: number): T | void;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -198,8 +198,8 @@ Cannot call `arr.at` with `"1"` bound to `index` because string [1] is incompati
                ^^^ [1]
 
 References:
-   <BUILTINS>/core.js:701:15
-   701|     at(index: number): T | void;
+   <BUILTINS>/core.js:708:15
+   708|     at(index: number): T | void;
                       ^^^^^^ [2]
 
 
@@ -212,8 +212,8 @@ Cannot call `roArr.at` because function [1] requires another argument. [incompat
               ^^
 
 References:
-   <BUILTINS>/core.js:701:5
-   701|     at(index: number): T | void;
+   <BUILTINS>/core.js:708:5
+   708|     at(index: number): T | void;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -227,8 +227,8 @@ Cannot call `roArr.at` with `"1"` bound to `index` because string [1] is incompa
                  ^^^ [1]
 
 References:
-   <BUILTINS>/core.js:701:15
-   701|     at(index: number): T | void;
+   <BUILTINS>/core.js:708:15
+   708|     at(index: number): T | void;
                       ^^^^^^ [2]
 
 
@@ -364,8 +364,8 @@ Cannot assign `arr3.flat(...)` to `result3_2` because mixed [1] is incompatible 
                                          ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:843:32
-   843|     flat(depth: number): Array<mixed>;
+   <BUILTINS>/core.js:860:32
+   860|     flat(depth: number): Array<mixed>;
                                        ^^^^^ [1]
    flat.js:20:24
     20| const result3_2: Array<number> = arr3.flat(2); // Error - don't support this
@@ -382,8 +382,8 @@ Cannot assign `arr2.flat(...)` to `result2_6` because mixed [1] is incompatible 
                                          ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:843:32
-   843|     flat(depth: number): Array<mixed>;
+   <BUILTINS>/core.js:860:32
+   860|     flat(depth: number): Array<mixed>;
                                        ^^^^^ [1]
    flat.js:25:24
     25| const result2_6: Array<number> = arr2.flat(x); // Error - don't support this

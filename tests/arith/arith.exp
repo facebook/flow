@@ -647,8 +647,8 @@ Cannot get `(x + y).length` because property `length` is missing in `Number` [1]
                     ^^^^^^
 
 References:
-   <BUILTINS>/core.js:376:15
-   376| declare class Number {
+   <BUILTINS>/core.js:383:15
+   383| declare class Number {
                       ^^^^^^ [1]
 
 
@@ -661,8 +661,8 @@ Cannot get `(1 + 2).length` because property `length` is missing in `Number` [1]
                     ^^^^^^
 
 References:
-   <BUILTINS>/core.js:376:15
-   376| declare class Number {
+   <BUILTINS>/core.js:383:15
+   383| declare class Number {
                       ^^^^^^ [1]
 
 

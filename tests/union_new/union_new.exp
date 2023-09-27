@@ -202,8 +202,8 @@ References:
    test20.js:14:2
      14| [""].reduce((acc,str) => acc * str.length);
           ^^ [1]
-   <BUILTINS>/core.js:1348:13
-   1348|     length: number;
+   <BUILTINS>/core.js:1377:13
+   1377|     length: number;
                      ^^^^^^ [2]
 
 

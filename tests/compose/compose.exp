@@ -7,8 +7,8 @@ Cannot cast `compose(...)(...)` to empty because string [1] is incompatible with
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:478:31
-   478|     toString(radix?: number): string;
+   <BUILTINS>/core.js:485:31
+   485|     toString(radix?: number): string;
                                       ^^^^^^ [1]
    basic.js:4:44
      4| (compose((n: number) => n.toString())(42): empty); // Error: string ~> empty
@@ -24,8 +24,8 @@ Cannot cast `composeReverse(...)(...)` to empty because string [1] is incompatib
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:478:31
-   478|     toString(radix?: number): string;
+   <BUILTINS>/core.js:485:31
+   485|     toString(radix?: number): string;
                                       ^^^^^^ [1]
    basic.js:6:51
      6| (composeReverse((n: number) => n.toString())(42): empty); // Error: string ~> empty
@@ -63,8 +63,8 @@ Cannot call `compose` with compose intermediate value bound to `n` because strin
           ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:478:31
-   478|     toString(radix?: number): string;
+   <BUILTINS>/core.js:485:31
+   485|     toString(radix?: number): string;
                                       ^^^^^^ [1]
    basic.js:9:7
      9|   (n: number) => n * 5, // Error: string cannot be multiplied.
@@ -84,8 +84,8 @@ Cannot cast `composeReverse(...)(...)` to empty because string [1] is incompatib
         ----^
 
 References:
-   <BUILTINS>/core.js:478:31
-   478|     toString(radix?: number): string;
+   <BUILTINS>/core.js:485:31
+   485|     toString(radix?: number): string;
                                       ^^^^^^ [1]
    basic.js:16:8
     16| )(42): empty); // Error: string ~> empty
@@ -105,8 +105,8 @@ References:
    recompose.js:22:27
     22|   myEnhancer((props: {|p: string|}) => ({
                                   ^^^^^^ [1]
-   <BUILTINS>/core.js:648:14
-   648|     round(x: number): number,
+   <BUILTINS>/core.js:655:14
+   655|     round(x: number): number,
                      ^^^^^^ [2]
 
 
