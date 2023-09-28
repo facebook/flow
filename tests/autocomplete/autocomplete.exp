@@ -16,6 +16,7 @@ Flags: --pretty
   "result":[
     {"name":"[Symbol.iterator]","type":"() => Iterator<string>"},
     {"name":"anchor","type":"(name: string) => string"},
+    {"name":"at","type":"(index: number) => (string | void)"},
     {"name":"charAt","type":"(pos: number) => string"},
     {"name":"charCodeAt","type":"(index: number) => number"},
     {"name":"codePointAt","type":"(index: number) => number"},
@@ -653,6 +654,7 @@ Flags: --pretty
   "result":[
     {"name":"[Symbol.iterator]","type":"() => Iterator<string>"},
     {"name":"anchor","type":"(name: string) => string"},
+    {"name":"at","type":"(index: number) => (string | void)"},
     {"name":"charAt","type":"(pos: number) => string"},
     {"name":"charCodeAt","type":"(index: number) => number"},
     {"name":"codePointAt","type":"(index: number) => number"},
@@ -978,6 +980,10 @@ Flags: --pretty
       "name":"?.findLast",
       "type":"void | (<This>(callbackfn: (value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg: This) => (T | void))"
     },
+    {
+      "name":"?.findLastIndex",
+      "type":"void | (<This>(callbackfn: (value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg: This) => number)"
+    },
     {"name":"?.flat","type":"void | ((depth: number) => Array<mixed>)"},
     {
       "name":"?.flatMap",
@@ -1082,6 +1088,10 @@ Flags: --pretty
     {
       "name":"findLast",
       "type":"<This>(callbackfn: (value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg: This) => (T | void)"
+    },
+    {
+      "name":"findLastIndex",
+      "type":"<This>(callbackfn: (value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg: This) => number"
     },
     {"name":"flat","type":"(depth: number) => Array<mixed>"},
     {

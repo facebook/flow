@@ -18,8 +18,8 @@ References:
    no_source.js:13:8
     13|   +z : (x: FooPlus) => boolean = (x) => { return true; }
                ^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/core.js:367:15
-   367| declare class Boolean {
+   <BUILTINS>/core.js:374:15
+   374| declare class Boolean {
                       ^^^^^^^ [4]
 
 
