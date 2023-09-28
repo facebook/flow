@@ -26,6 +26,14 @@ val push_files_to_prioritize : SSet.t -> unit
 
 val push_files_to_force_focused_and_recheck : SSet.t -> unit
 
+val push_global_find_ref_request :
+  request:FindRefsTypes.request ->
+  client:Persistent_connection.single_client ->
+  references_to_lsp_response:
+    ((FindRefsTypes.single_ref list, string) result -> LspProt.response * LspProt.metadata) ->
+  Loc.t list ->
+  unit
+
 val push_dependencies_to_prioritize : Utils_js.FilenameSet.t -> unit
 
 val push_after_reinit :
@@ -41,6 +49,12 @@ type recheck_workload = {
   files_to_prioritize: Utils_js.FilenameSet.t;
   files_to_recheck: Utils_js.FilenameSet.t;
   files_to_force: CheckedSet.t;
+  find_ref_command:
+    ( FindRefsTypes.request
+    * Persistent_connection.single_client
+    * ((FindRefsTypes.single_ref list, string) result -> LspProt.response * LspProt.metadata)
+    )
+    option;
   metadata: MonitorProt.file_watcher_metadata;
 }
 

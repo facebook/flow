@@ -119,29 +119,41 @@ let recheck
     genv
     env
     ?(files_to_force = CheckedSet.empty)
+    ~find_ref_command
     ~changed_mergebase
     ~missed_changes
     ~will_be_checked_files
     updates =
   let options = genv.ServerEnv.options in
   let workers = genv.ServerEnv.workers in
+  let (find_ref_request, find_ref_transformer_with_client) =
+    match find_ref_command with
+    | Some (r, client, f) -> (r, Some (f, client))
+    | None -> (FindRefsTypes.empty_request, None)
+  in
   let%lwt (profiling, (log_recheck_event, recheck_stats, env)) =
     let should_print_summary = Options.should_profile options in
     Profiling_js.with_profiling_lwt ~label:"Recheck" ~should_print_summary (fun profiling ->
         send_start_recheck env;
-        let%lwt (log_recheck_event, recheck_stats, _find_ref_results, env) =
+        let%lwt (log_recheck_event, recheck_stats, find_ref_results, env) =
           Types_js.recheck
             ~profiling
             ~options
             ~workers
             ~updates
-            ~find_ref_request:FindRefsTypes.empty_request
+            ~find_ref_request
             ~files_to_force
             ~changed_mergebase
             ~missed_changes
             ~will_be_checked_files
             env
         in
+        Base.Option.iter find_ref_transformer_with_client ~f:(fun (transformer, client) ->
+            let server_logging_context = Some (FlowEventLogger.get_context ()) in
+            let (resp, metadata) = transformer find_ref_results in
+            let metadata = { metadata with LspProt.server_logging_context } in
+            Persistent_connection.send_response (resp, metadata) client
+        );
         send_end_recheck ~profiling ~options env;
         Lwt.return (log_recheck_event, recheck_stats, env)
     )
@@ -256,6 +268,7 @@ let rec recheck_single ~recheck_count genv env =
     files_to_recheck;
     files_to_prioritize;
     files_to_force;
+    find_ref_command;
   } =
     workload
   in
@@ -308,6 +321,7 @@ let rec recheck_single ~recheck_count genv env =
             ~changed_mergebase
             ~missed_changes
             ~will_be_checked_files
+            ~find_ref_command
             files_to_recheck
         with
         | exn ->
