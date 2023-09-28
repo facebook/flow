@@ -35,9 +35,9 @@ class rename_mapper
         match local with
         | Some _ -> super#import_named_specifier ~import_kind specifier
         | None ->
+          let new_remote = Ast_builder.Identifiers.identifier new_name in
           if LocMap.mem loc targets then
-            let new_remote = Ast_builder.Identifiers.identifier new_name in
-            { local = Some remote; remote = new_remote; remote_name_def_loc; kind }
+            { local = None; remote = new_remote; remote_name_def_loc; kind }
           else
             specifier
       else
