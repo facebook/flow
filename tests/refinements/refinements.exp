@@ -3040,8 +3040,8 @@ expected type. [underconstrained-implicit-instantiation]
                       ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2016:25
-   2016| declare function $await<T>(p: Promise<T> | T): T;
+   <BUILTINS>/core.js:2045:25
+   2045| declare function $await<T>(p: Promise<T> | T): T;
                                  ^ [1]
    issue-7104.js:20:7
      20|       return (box: empty).value; // underconstrained-implicit-instantiation error in LTI due to lack of empty propagation
@@ -4964,8 +4964,8 @@ References:
    tagged_union.js:107:34
    107|     x: Array<string>, y: string, z: number, q: boolean,
                                          ^ [2]
-   <BUILTINS>/core.js:478:5
-   478|     toString(radix?: number): string;
+   <BUILTINS>/core.js:485:5
+   485|     toString(radix?: number): string;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -5013,8 +5013,8 @@ References:
    tagged_union.js:107:45
    107|     x: Array<string>, y: string, z: number, q: boolean,
                                                     ^ [2]
-   <BUILTINS>/core.js:371:5
-   371|     valueOf(): boolean;
+   <BUILTINS>/core.js:378:5
+   378|     valueOf(): boolean;
             ^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -5062,8 +5062,8 @@ References:
    tagged_union.js:108:29
    108|     r: Object, s: Function, t: () => void
                                     ^ [2]
-   <BUILTINS>/core.js:355:17
-   355|     proto call: Function$Prototype$Call; // (thisArg: any, ...argArray: Array<any>) => any
+   <BUILTINS>/core.js:362:17
+   362|     proto call: Function$Prototype$Call; // (thisArg: any, ...argArray: Array<any>) => any
                         ^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -6046,8 +6046,8 @@ Cannot get `x[0]` because an index signature declaring the expected key / value 
             ^^^^
 
 References:
-   <BUILTINS>/core.js:367:15
-   367| declare class Boolean {
+   <BUILTINS>/core.js:374:15
+   374| declare class Boolean {
                       ^^^^^^^ [1]
 
 

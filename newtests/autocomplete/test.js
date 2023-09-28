@@ -91,6 +91,10 @@ module.exports = (suite(({addFile, flowCmd}) => [
                "type": "(name: string) => string"
              },
              {
+               "name": "at",
+               "type": "(index: number) => (string | void)"
+             },
+             {
                "name": "charAt",
                "type": "(pos: number) => string"
              },
