@@ -23,12 +23,7 @@ let try_finalize f x finally y =
   res
 
 let make_workers n =
-  let worker_mode =
-    if Sys.win32 then
-      Worker.Spawned
-    else
-      Worker.Prespawned_should_fork
-  in
+  let worker_mode = Worker.Prespawned_long_lived in
   let default_sharedmem_config =
     let gig = 1024 * 1024 * 1024 in
     { SharedMem.heap_size = 20 * gig; hash_table_pow = 18 }

@@ -17,14 +17,12 @@ open Worker
  * because the amount of workers is limited and to make the load-balancing
  * of tasks better (cf multiWorker.ml)
  *
- * On Unix, we "spawn" workers when initializing Hack. Then, this
+ * On Unix, we "spawn" workers when initializing Flow. Then, this
  * worker, "fork" a clone process for each incoming request.
  * The forked "clone" will die after processing a single request.
  *
- * On Windows, we do not "prespawn" when initializing Hack, but we just
- * allocate all the required information into a record. Then, we
- * spawn a worker for each incoming request. It will also die after
- * one request.
+ * On Windows, we also "prespawn" when initializing Flow, but we just
+ * just handle all requests in the spawned process without forking for each job.
  *
  * A worker never handle more than one request at a time.
  *
@@ -91,10 +89,8 @@ type worker = {
   mutable killed: bool;
   (* Sanity check: is the worker currently busy ? *)
   mutable busy: bool;
-  (* On Unix, a reference to the 'prespawned' worker. *)
-  prespawned: (void, request) Daemon.handle option;
-  (* On Windows, a function to spawn a worker. *)
-  spawn: unit -> (void, request) Daemon.handle;
+  (* A reference to the prespawned worker. *)
+  handle: (void, request) Daemon.handle;
 }
 [@@warning "-69"]
 
@@ -110,15 +106,6 @@ let mark_busy w =
 
 (* Mark the worker as free *)
 let mark_free w = w.busy <- false
-
-(* If the worker isn't prespawned, spawn the worker *)
-let spawn w =
-  match w.prespawned with
-  | None -> w.spawn ()
-  | Some handle -> handle
-
-(* If the worker isn't prespawned, close the worker *)
-let close_noerr w h = if Option.is_none w.prespawned then Daemon.close_noerr h
 
 type 'a entry_state = 'a * Stdlib.Gc.control * SharedMem.handle * int * Worker.worker_mode
 
@@ -145,17 +132,10 @@ let register_entry_point ~restore =
 let workers = ref []
 
 (* Build one worker. *)
-let make_one worker_mode spawn id =
+let make_one spawn id =
   if id >= max_workers then failwith "Too many workers";
-
-  let prespawned =
-    match worker_mode with
-    | Spawned -> None
-    | Prespawned_long_lived
-    | Prespawned_should_fork ->
-      Some (spawn ())
-  in
-  let worker = { id; busy = false; killed = false; prespawned; spawn } in
+  let handle = spawn () in
+  let worker = { id; busy = false; killed = false; handle } in
   workers := worker :: !workers;
   worker
 
@@ -176,7 +156,7 @@ let make ~worker_mode ~channel_mode ~saved_state ~entry ~nbr_procs ~gc_control ~
   let pretty_pid = Sys_utils.get_pretty_pid () in
   for n = 1 to nbr_procs do
     let name = Printf.sprintf "worker process %d/%d for server %d" n nbr_procs pretty_pid in
-    made_workers := make_one worker_mode (spawn n name) n :: !made_workers
+    made_workers := make_one (spawn n name) n :: !made_workers
   done;
   !made_workers
 
@@ -281,15 +261,12 @@ let read (type result) worker_pid infd_lwt : (result * Measure.record_data) Lwt.
 let call w (f : 'a -> 'b) (x : 'a) : 'b Lwt.t =
   if is_killed w then Printf.ksprintf failwith "killed worker (%d)" (worker_id w);
   mark_busy w;
-
-  (* Spawn the worker, if not prespawned. *)
-  let ({ Daemon.pid = worker_pid; channels = (inc, outc) } as h) = spawn w in
+  let { Daemon.pid = worker_pid; channels = (inc, outc) } = w.handle in
   let infd = Lwt_unix.of_unix_file_descr (Daemon.descr_of_in_channel inc) in
   let outfd = Lwt_unix.of_unix_file_descr (Daemon.descr_of_out_channel outc) in
   try%lwt
     let%lwt () = send w worker_pid outfd f x in
     let%lwt (res, measure_data) = read worker_pid infd in
-    close_noerr w h;
     Measure.merge (Measure.deserialize measure_data);
     mark_free w;
     Lwt.return res
@@ -297,7 +274,6 @@ let call w (f : 'a -> 'b) (x : 'a) : 'b Lwt.t =
   | exn ->
     let exn = Exception.wrap exn in
     (* No matter what, always close and mark worker as free when we're done *)
-    close_noerr w h;
     mark_free w;
     Exception.reraise exn
 
@@ -308,7 +284,7 @@ let call w (f : 'a -> 'b) (x : 'a) : 'b Lwt.t =
 let kill w =
   if not (is_killed w) then (
     w.killed <- true;
-    Base.Option.iter ~f:Daemon.kill w.prespawned
+    Daemon.kill w.handle
   )
 
 let killall () = List.iter ~f:kill !workers

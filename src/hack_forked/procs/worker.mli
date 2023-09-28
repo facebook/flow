@@ -12,7 +12,6 @@ and serializer = { send: 'a. 'a -> unit }
 type worker_mode =
   | Prespawned_long_lived
   | Prespawned_should_fork
-  | Spawned
 
 type job_status = Job_terminated of Unix.process_status
 

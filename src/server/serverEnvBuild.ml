@@ -77,10 +77,8 @@ let make_genv ~options ~init_id handle =
     if num_workers > 0 then
       let gc_control = worker_gc_control options in
       let worker_mode =
-        if Options.long_lived_workers options then
+        if Sys.win32 || Options.long_lived_workers options then
           Worker.Prespawned_long_lived
-        else if Sys.win32 then
-          Worker.Spawned
         else
           Worker.Prespawned_should_fork
       in

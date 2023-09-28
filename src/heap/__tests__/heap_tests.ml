@@ -629,12 +629,7 @@ let () =
   in
   Daemon.check_entry_point ();
 
-  let worker_mode =
-    if Sys.win32 then
-      Worker.Spawned
-    else
-      Worker.Prespawned_should_fork
-  in
+  let worker_mode = Worker.Prespawned_long_lived in
   let num_workers = 4 in
   let config = { heap_size = 10 * 1024 * 1024; hash_table_pow = 20 } in
   let heap_handle = Result.get_ok (init ~num_workers config) in

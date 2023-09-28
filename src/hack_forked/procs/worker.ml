@@ -23,7 +23,6 @@ and serializer = { send: 'a. 'a -> unit }
 type worker_mode =
   | Prespawned_long_lived
   | Prespawned_should_fork
-  | Spawned
 
 type job_status = Job_terminated of Unix.process_status
 
@@ -225,7 +224,6 @@ let worker_main restore state (ic, oc) =
   let infd = Daemon.descr_of_in_channel ic in
   let outfd = Daemon.descr_of_out_channel oc in
   (match restore state with
-  | Spawned -> worker_job_main infd outfd
   | Prespawned_should_fork ->
     (* see dummy_closure above *)
     ignore Marshal.(from_bytes (to_bytes dummy_closure [Closures]) 0);
