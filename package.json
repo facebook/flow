@@ -14,5 +14,6 @@
   "scripts": {
     "prepublish": "yarn workspace flow-parser run prepublish"
   },
+  "packageManager": "yarn@1.22.19",
   "devDependencies": {}
 }
