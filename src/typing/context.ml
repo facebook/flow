@@ -29,6 +29,7 @@ type metadata = {
   strict: bool;
   strict_local: bool;
   verbose: Verbose.t option;
+  slow_to_check_logging: Slow_to_check_logging.t;
   (* global *)
   any_propagation: bool;
   automatic_require_default: bool;
@@ -243,6 +244,7 @@ let metadata_of_options options =
     strict = false;
     strict_local = false;
     verbose = Options.verbose options;
+    slow_to_check_logging = Options.slow_to_check_logging options;
     (* global *)
     any_propagation = Options.any_propagation options;
     automatic_require_default = Options.automatic_require_default options;
@@ -583,6 +585,8 @@ let trust_mode cx = cx.metadata.trust_mode
 let use_mixed_in_catch_variables cx = cx.metadata.use_mixed_in_catch_variables
 
 let verbose cx = cx.metadata.verbose
+
+let slow_to_check_logging cx = cx.metadata.slow_to_check_logging
 
 let max_workers cx = cx.metadata.max_workers
 

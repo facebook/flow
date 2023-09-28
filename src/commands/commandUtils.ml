@@ -393,6 +393,42 @@ let verbose_flags =
       |> flag "--verbose-flowlib" truthy ~doc:"Print verbose info while initializing the flowlib"
     )
 
+let slow_to_check_logging_flags =
+  let collector
+      main
+      slow_files_logging_interval
+      slow_components_logging_threshold
+      slow_expressions_logging_threshold =
+    main
+      {
+        Slow_to_check_logging.slow_files_logging_internal =
+          Option.map float_of_int slow_files_logging_interval;
+        slow_components_logging_threshold =
+          Option.map float_of_int slow_components_logging_threshold;
+        slow_expressions_logging_threshold =
+          Option.map float_of_int slow_expressions_logging_threshold;
+      }
+  in
+  fun prev ->
+    CommandSpec.ArgSpec.(
+      prev
+      |> collect collector
+      |> flag
+           "--log-slow-files-interval"
+           int
+           ~doc:"Specify the interval in seconds to log slow to check files. (default: 5 seconds)"
+      |> flag
+           "--log-slow-components-threshold"
+           int
+           ~doc:
+             "Specify the threshold in seconds to log slow to check component. (default to not logging anything)"
+      |> flag
+           "--log-slow-expressions-threshold"
+           int
+           ~doc:
+             "Specify the threshold in seconds to log slow to check expressions. (default to not logging anything)"
+    )
+
 let quiet_flag prev =
   CommandSpec.ArgSpec.(prev |> flag "--quiet" truthy ~doc:"Suppress output about server startup")
 
@@ -837,6 +873,7 @@ module Options_flags = struct
     no_flowlib: bool;
     profile: bool;
     quiet: bool;
+    slow_to_check_logging: Slow_to_check_logging.t;
     strip_root: bool;
     temp_dir: string option;
     traces: int option;
@@ -904,6 +941,7 @@ let options_flags =
       max_warnings
       flowconfig_flags
       verbose
+      slow_to_check_logging
       strip_root
       temp_dir
       quiet
@@ -932,6 +970,7 @@ let options_flags =
         max_warnings;
         flowconfig_flags;
         verbose;
+        slow_to_check_logging;
         strip_root;
         temp_dir;
         quiet;
@@ -969,6 +1008,7 @@ let options_flags =
       |> warning_flags
       |> flowconfig_flags
       |> verbose_flags
+      |> slow_to_check_logging_flags
       |> strip_root_flag
       |> temp_dir_flag
       |> quiet_flag
@@ -1406,6 +1446,7 @@ let make_options
         (FlowConfig.relay_integration_module_prefix_includes flowconfig);
     opt_max_files_checked_per_worker = FlowConfig.max_files_checked_per_worker flowconfig;
     opt_max_seconds_for_check_per_worker = FlowConfig.max_seconds_for_check_per_worker flowconfig;
+    opt_slow_to_check_logging = options_flags.slow_to_check_logging;
     opt_strict_es6_import_export = FlowConfig.strict_es6_import_export flowconfig;
     opt_strict_es6_import_export_excludes =
       Base.List.map

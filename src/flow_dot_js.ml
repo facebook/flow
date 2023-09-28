@@ -109,6 +109,7 @@ let stub_metadata ~root ~checked =
     strict = false;
     strict_local = false;
     verbose = None;
+    slow_to_check_logging = Slow_to_check_logging.default;
     (* global *)
     any_propagation = true;
     automatic_require_default = false;

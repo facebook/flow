@@ -2294,33 +2294,52 @@ module Make
    * annot should become a Type.t option when we have the ability to
    * inspect annotations and recurse into them *)
   and expression ?cond cx (loc, e) =
-    let node_cache = Context.node_cache cx in
-    let (((_, t), _) as res) =
-      match Node_cache.get_expression node_cache loc with
-      | Some node ->
-        Debug_js.Verbose.print_if_verbose_lazy
-          cx
-          (lazy [spf "Expression cache hit at %s" (ALoc.debug_to_string loc)]);
-        node
-      | None ->
-        let res = expression_ ~cond cx loc e in
-        if not (Context.typing_mode cx <> Context.CheckingMode) then begin
-          let cache = Context.constraint_cache cx in
-          cache := FlowSet.empty;
-          Node_cache.set_expression node_cache res
-        end;
-        res
+    let log_slow_to_check ~f =
+      match Context.slow_to_check_logging cx with
+      | { Slow_to_check_logging.slow_expressions_logging_threshold = Some threshold; _ } ->
+        let start_time = Unix.gettimeofday () in
+        let result = f () in
+        let end_time = Unix.gettimeofday () in
+        let run_time = end_time -. start_time in
+        if run_time > threshold then
+          Hh_logger.info
+            "[%d] Slow CHECK expression at %s (%f seconds)"
+            (Sys_utils.get_pretty_pid ())
+            (ALoc.debug_to_string ~include_source:true loc)
+            run_time;
+        result
+      | _ -> f ()
     in
-    (* We need to fully resolve all types attached to AST,
-       because the post inference pass might inspect them. *)
-    (match res with
-    | (_, Ast.Expression.OptionalCall { Ast.Expression.OptionalCall.filtered_out = (_, t); _ })
-    | (_, Ast.Expression.OptionalMember { Ast.Expression.OptionalMember.filtered_out = (_, t); _ })
-    | (_, Ast.Expression.Yield { Ast.Expression.Yield.result_out = (_, t); _ }) ->
-      Tvar_resolver.resolve cx t
-    | _ -> ());
-    Tvar_resolver.resolve cx t;
-    res
+    let f () =
+      let node_cache = Context.node_cache cx in
+      let (((_, t), _) as res) =
+        match Node_cache.get_expression node_cache loc with
+        | Some node ->
+          Debug_js.Verbose.print_if_verbose_lazy
+            cx
+            (lazy [spf "Expression cache hit at %s" (ALoc.debug_to_string loc)]);
+          node
+        | None ->
+          let res = expression_ ~cond cx loc e in
+          if not (Context.typing_mode cx <> Context.CheckingMode) then begin
+            let cache = Context.constraint_cache cx in
+            cache := FlowSet.empty;
+            Node_cache.set_expression node_cache res
+          end;
+          res
+      in
+      (* We need to fully resolve all types attached to AST,
+         because the post inference pass might inspect them. *)
+      (match res with
+      | (_, Ast.Expression.OptionalCall { Ast.Expression.OptionalCall.filtered_out = (_, t); _ })
+      | (_, Ast.Expression.OptionalMember { Ast.Expression.OptionalMember.filtered_out = (_, t); _ })
+      | (_, Ast.Expression.Yield { Ast.Expression.Yield.result_out = (_, t); _ }) ->
+        Tvar_resolver.resolve cx t
+      | _ -> ());
+      Tvar_resolver.resolve cx t;
+      res
+    in
+    log_slow_to_check ~f
 
   and this_ cx loc this =
     let open Ast.Expression in

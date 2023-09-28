@@ -55,6 +55,7 @@ let make_options_flags
     traces;
     trust_mode;
     verbose;
+    slow_to_check_logging = Slow_to_check_logging.default;
     wait_for_recheck;
     include_suppressions;
     estimate_recheck_time;

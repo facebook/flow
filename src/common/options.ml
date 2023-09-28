@@ -132,6 +132,7 @@ type t = {
   opt_saved_state_no_fallback: bool;
   opt_saved_state_skip_version_check: bool;
   opt_saved_state_verify: bool;
+  opt_slow_to_check_logging: Slow_to_check_logging.t;
   opt_strict_es6_import_export: bool;
   opt_strict_es6_import_export_excludes: string list;
   opt_strict_mode: StrictModeSettings.t;
@@ -319,6 +320,8 @@ let should_munge_underscores opts = opts.opt_munge_underscores
 let should_profile opts = opts.opt_profile && not opts.opt_quiet
 
 let should_strip_root opts = opts.opt_strip_root
+
+let slow_to_check_logging opts = opts.opt_slow_to_check_logging
 
 let strict_es6_import_export opts = opts.opt_strict_es6_import_export
 
