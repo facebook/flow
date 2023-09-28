@@ -1,3 +1,8 @@
+### 0.217.1
+
+Notable bug fixes:
+* Previously, while global find ref/rename (`experimental.global_find_ref=true`/`experimental.global_rename=true`) is ongoing, all other IDE services will be blocked. We fixed it so that other IDE requests can still be served.
+
 ### 0.217.0
 
 Likely to cause new Flow errors:
