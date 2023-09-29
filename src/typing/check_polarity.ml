@@ -169,6 +169,21 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
       ->
       check_polarity cx ?trace tparams polarity t
     | KeysT (_, t) -> check_polarity cx ?trace tparams Polarity.Positive t
+    | EvalT (t, TypeDestructorT (use_op, r, ReadOnlyType), _) ->
+      let out =
+        Tvar.mk_no_wrap_where cx r (fun tvar ->
+            Flow.eval_destructor
+              cx
+              ~trace:(Base.Option.value trace ~default:Trace.dummy_trace)
+              use_op
+              r
+              t
+              ReadOnlyType
+              tvar
+        )
+      in
+      Flow.possible_concrete_types_for_inspection cx r out
+      |> Base.List.iter ~f:(check_polarity cx ?trace tparams Polarity.Positive)
     (* TODO *)
     | CustomFunT _
     | EvalT _ ->

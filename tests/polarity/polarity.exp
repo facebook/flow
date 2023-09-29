@@ -263,5 +263,49 @@ References:
                     ^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------- readonly.js:3:38
 
-Found 20 errors
+Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   readonly.js:3:38
+   3| type Invalid1<+T> = $ReadOnly<{foo: (T) => void}>; // error
+                                           ^
+
+References:
+   readonly.js:3:16
+   3| type Invalid1<+T> = $ReadOnly<{foo: (T) => void}>; // error
+                     ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- readonly.js:4:37
+
+Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
+[incompatible-variance]
+
+   readonly.js:4:37
+   4| type Invalid2<-T> = $ReadOnly<{foo: T}>; // error
+                                          ^
+
+References:
+   readonly.js:4:16
+   4| type Invalid2<-T> = $ReadOnly<{foo: T}>; // error
+                     ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- readonly.js:6:46
+
+Inexact `T` [1] is incompatible with exact object type [2]. [incompatible-exact]
+
+   readonly.js:6:46
+   6| type TriggersEval<+T: {...}> = $ReadOnly<{...T}>; // error: inexact vs exact
+                                                   ^ [1]
+
+References:
+   readonly.js:6:42
+   6| type TriggersEval<+T: {...}> = $ReadOnly<{...T}>; // error: inexact vs exact
+                                               ^^^^^^ [2]
+
+
+
+Found 23 errors
