@@ -1,0 +1,5 @@
+[options]
+all=true
+no_flowlib=true
+module.system=haste
+module.system.haste.paths.excludes=<PROJECT_ROOT>/__fixtures__/haste_pkg

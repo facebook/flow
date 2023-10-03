@@ -233,6 +233,14 @@ let find_ancestor_rev =
 let path_matches expected actual =
   expected = actual || (Filename.is_relative actual && actual = "./" ^ expected)
 
+let string_of_path_parts parts =
+  let str = String.concat "/" parts in
+  let str' = String_utils.rstrip str "/index.js" in
+  if str == str' then
+    String_utils.rstrip str ".js"
+  else
+    str'
+
 (** [node_path ~node_resolver_dirnames ~reader src_dir require_path] converts absolute path
     [require_path] into a Node-compatible "require" path relative to [src_dir], taking into
     account node's hierarchical search for [node_modules].
@@ -250,14 +258,6 @@ let node_path ~node_resolver_dirnames ~reader ~src_dir require_path =
   let require_path = String_utils.rstrip require_path Files.flow_ext in
   let src_parts = Files.split_path src_dir in
   let req_parts = Files.split_path require_path in
-  let string_of_parts parts =
-    let str = String.concat "/" parts in
-    let str' = String_utils.rstrip str "/index.js" in
-    if str == str' then
-      String_utils.rstrip str ".js"
-    else
-      str'
-  in
   let (ancestor_rev, to_src, to_req) = find_ancestor_rev src_parts req_parts in
   match to_req with
   | node_modules :: package_dir :: rest when List.mem node_modules node_resolver_dirnames ->
@@ -266,7 +266,7 @@ let node_path ~node_resolver_dirnames ~reader ~src_dir require_path =
     in
     (match main_of_package ~reader package_path with
     | Some main when path_matches (String.concat "/" rest) main -> package_dir
-    | _ -> string_of_parts (package_dir :: rest))
+    | _ -> string_of_path_parts (package_dir :: rest))
   | _ ->
     let parts =
       if Base.List.is_empty to_src then
@@ -275,7 +275,7 @@ let node_path ~node_resolver_dirnames ~reader ~src_dir require_path =
         (* add `..` for each dir in `to_src`, to relativize `to_req` *)
         Base.List.fold_left ~f:(fun path _ -> Filename.parent_dir_name :: path) ~init:to_req to_src
     in
-    string_of_parts parts
+    string_of_path_parts parts
 
 (** [path_of_modulename src_dir t] converts the Modulename.t [t] to a string
     suitable for importing [t] from a file in [src_dir]. that is, if it is a
@@ -288,6 +288,31 @@ let path_of_modulename ~node_resolver_dirnames ~reader src_dir file_key = functi
         let path = File_key.to_string (Files.chop_flow_ext file_key) in
         node_path ~node_resolver_dirnames ~reader ~src_dir path)
       src_dir
+
+let haste_package_path ~reader ~src_dir require_path =
+  match String.split_on_char '/' require_path |> Base.List.rev with
+  | [] -> None
+  | base :: parent_dir_names ->
+    let rec f acc remaining =
+      match remaining with
+      | [] -> None
+      | package_name_candidate :: parent_dir_names ->
+        let dependency = Parsing_heaps.get_dependency (Modulename.String package_name_candidate) in
+        (match Option.bind dependency (Parsing_heaps.Reader.get_provider ~reader) with
+        | Some addr when Parsing_heaps.Reader.is_package_file ~reader addr ->
+          let package_path =
+            String.concat "/" (List.rev (package_name_candidate :: parent_dir_names))
+          in
+          if Base.String.is_prefix ~prefix:package_path src_dir then
+            None
+          else
+            Some
+              (match main_of_package ~reader package_path with
+              | Some main when path_matches (String.concat "/" acc) main -> package_name_candidate
+              | _ -> string_of_path_parts (package_name_candidate :: acc))
+        | _ -> f (package_name_candidate :: acc) parent_dir_names)
+    in
+    f [base] parent_dir_names
 
 type text_edits = {
   title: string;
@@ -308,7 +333,15 @@ let from_of_source ~options ~reader ~src_dir source =
       (match Parsing_heaps.Reader.get_parse ~reader addr with
       | None -> None
       | Some _ ->
-        let module_name = Parsing_heaps.Reader.get_haste_name ~reader addr in
+        let module_name =
+          match Parsing_heaps.Reader.get_haste_name ~reader addr with
+          | Some module_name -> Some module_name
+          | None when Options.module_system options = Options.Haste ->
+            Base.Option.bind src_dir ~f:(fun src_dir ->
+                haste_package_path ~reader ~src_dir (File_key.to_string (Files.chop_flow_ext from))
+            )
+          | None -> None
+        in
         let node_resolver_dirnames = Options.file_options options |> Files.node_resolver_dirnames in
         path_of_modulename ~node_resolver_dirnames ~reader src_dir from module_name))
 

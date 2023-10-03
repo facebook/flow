@@ -1,0 +1,59 @@
+{
+  "method": "textDocument/completion",
+  "result": {
+    "isIncomplete": false,
+    "items": [
+      {
+        "label": "eee",
+        "kind": 6,
+        "detail": "Import from haste_pkg",
+        "sortText": "00000000000000000000",
+        "insertTextFormat": 1,
+        "textEdit": {
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 0
+            },
+            "end": {
+              "line": 2,
+              "character": 3
+            }
+          },
+          "newText": "eee"
+        },
+        "additionalTextEdits": [
+          {
+            "range": {
+              "start": {
+                "line": 2,
+                "character": 0
+              },
+              "end": {
+                "line": 2,
+                "character": 0
+              }
+            },
+            "newText": "import { eee } from \"haste_pkg\";\n\n"
+          }
+        ],
+        "command": {
+          "title": "",
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "arguments": [
+            "textDocument/completion",
+            "autoimport",
+            {
+              "token": "eeeAUTO332",
+              "index": 0,
+              "session_requests": 1,
+              "typed_length": 3,
+              "completion": "eee",
+              "ac_type": "Acid"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
