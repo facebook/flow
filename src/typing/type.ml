@@ -274,7 +274,9 @@ module rec TypeTerm : sig
         renders_structural_type: t;
       }
 
-  and renders_variant = RendersNormal
+  and renders_variant =
+    | RendersNormal
+    | RendersMaybe
 
   and component_kind =
     | Structural

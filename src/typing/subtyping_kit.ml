@@ -1387,6 +1387,15 @@ module Make (Flow : INPUT) : OUTPUT = struct
       rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (rendersl, rendersu)
     | (DefT (reasonl, _, RendersT r1), DefT (reasonu, _, RendersT r2)) ->
       RendersKit.rec_renders cx trace ~use_op ((reasonl, r1), (reasonu, r2))
+    | ( DefT (_, _, (NullT | VoidT | BoolT (Some false))),
+        DefT
+          ( _,
+            _,
+            RendersT
+              (StructuralRenders { renders_variant = RendersMaybe; renders_structural_type = _ })
+          )
+      ) ->
+      ()
     (* Try to do structural subtyping. If that fails promote to a render type *)
     | (OpaqueT (reason_opaque, _), DefT (renders_r, _, RendersT (NominalRenders _ as form))) ->
       rec_flow

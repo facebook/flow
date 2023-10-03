@@ -164,6 +164,105 @@ References:
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- renders_maybe.js:13:2
+
+Cannot cast `<Bar />` to renders `MenuItem` because `Bar` element [1] does not render `MenuItem` [2].
+[incompatible-cast]
+
+   renders_maybe.js:13:2
+   13| (<Bar />: RendersHuh<MenuItem>); // ERROR
+        ^^^^^^^ [1]
+
+References:
+   renders_maybe.js:13:11
+   13| (<Bar />: RendersHuh<MenuItem>); // ERROR
+                 ^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- renders_maybe.js:20:2
+
+Cannot cast `Bad` to renders `MenuItem` because `Bar` [1] does not render `MenuItem` [2]. [incompatible-cast]
+
+   renders_maybe.js:20:2
+   20| (Bad: RendersHuh<MenuItem>); // ERROR
+        ^^^ [1]
+
+References:
+   renders_maybe.js:20:7
+   20| (Bad: RendersHuh<MenuItem>); // ERROR
+             ^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- renders_maybe.js:27:2
+
+Cannot cast `rendersMaybeMenuItem` to renders `MenuItem` because `MenuItem` [1] does not render `MenuItem` [2].
+[incompatible-cast]
+
+   renders_maybe.js:27:2
+   27| (rendersMaybeMenuItem: renders MenuItem); // ERROR
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   renders_maybe.js:26:37
+   26| declare const rendersMaybeMenuItem: RendersHuh<MenuItem>;
+                                           ^^^^^^^^^^^^^^^^^^^^ [1]
+   renders_maybe.js:27:24
+   27| (rendersMaybeMenuItem: renders MenuItem); // ERROR
+                              ^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- renders_maybe.js:31:2
+
+Cannot cast `rendersMaybeUnion` to renders `MenuItem` because union type [1] does not render `MenuItem` [2].
+[incompatible-cast]
+
+   renders_maybe.js:31:2
+   31| (rendersMaybeUnion: renders MenuItem); // ERROR
+        ^^^^^^^^^^^^^^^^^
+
+References:
+   renders_maybe.js:30:34
+   30| declare const rendersMaybeUnion: RendersHuh<MenuItem | Bar>;
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   renders_maybe.js:31:21
+   31| (rendersMaybeUnion: renders MenuItem); // ERROR
+                           ^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- renders_maybe.js:31:2
+
+Cannot cast `rendersMaybeUnion` to renders `MenuItem` because `Bar` [1] does not render `MenuItem` [2].
+[incompatible-cast]
+
+   renders_maybe.js:31:2
+   31| (rendersMaybeUnion: renders MenuItem); // ERROR
+        ^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   renders_maybe.js:31:21
+   31| (rendersMaybeUnion: renders MenuItem); // ERROR
+                           ^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- renders_maybe.js:38:2
+
+Cannot cast `rendersMaybeMenuItem` to renders union type because: [incompatible-cast]
+ - Either `MenuItem` [1] does not render `Bar` [2].
+ - Or renders `MenuItem` [1] is incompatible with boolean literal `false` [3].
+
+   renders_maybe.js:38:2
+   38| (rendersMaybeMenuItem: renders (null | false | void | Bar)); // ERROR
+        ^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   renders_maybe.js:38:55
+   38| (rendersMaybeMenuItem: renders (null | false | void | Bar)); // ERROR
+                                                             ^^^ [2]
+   renders_maybe.js:38:40
+   38| (rendersMaybeMenuItem: renders (null | false | void | Bar)); // ERROR
+                                              ^^^^^ [3]
+
+
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:19:4
 
 Cannot cast `rendersFooOrBar` to `typeof rendersFooOrRendersBar` because: [incompatible-cast]
@@ -1013,7 +1112,7 @@ can appear in renders. If you want to express the idea of renders zero or more i
 
 
 
-Found 70 errors
+Found 76 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
