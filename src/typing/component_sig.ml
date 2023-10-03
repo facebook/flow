@@ -124,7 +124,7 @@ module Make
     let use_op = Op (RenderTypeInstantiation { render_type = renders_reason }) in
     Flow.flow cx (renders_t, UseT (use_op, node));
     let reason = update_desc_reason (fun desc -> RRenderType desc) renders_reason in
-    TypeUtil.mk_renders_type reason renders_t
+    TypeUtil.mk_renders_type reason RendersNormal renders_t
 
   let toplevels cx x =
     let { T.reason = reason_cmp; cparams; body; ret_annot_loc = _; renders_t; _ } = x in

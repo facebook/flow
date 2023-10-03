@@ -211,7 +211,7 @@ class ['a] t =
       | ReactElementPropsType
       | ReactElementConfigType
       | ReactPromoteRendersRepresentation
-          { should_distribute = _; promote_structural_components = _ }
+          { should_distribute = _; promote_structural_components = _; renders_variant = _ }
       | ReactElementRefType
       | ReactCheckComponentRef ->
         acc

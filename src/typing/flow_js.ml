@@ -1772,6 +1772,7 @@ struct
                 tout;
                 should_distribute = true;
                 promote_structural_components;
+                renders_variant;
               }
           ) ->
           let rep =
@@ -1783,7 +1784,11 @@ struct
                     ( unknown_use,
                       reason,
                       ReactPromoteRendersRepresentation
-                        { should_distribute = false; promote_structural_components }
+                        {
+                          should_distribute = false;
+                          promote_structural_components;
+                          renders_variant;
+                        }
                     )
                 in
                 EvalT (t, destructor, Eval.generate_id ()))
@@ -1796,10 +1801,7 @@ struct
                 bogus_trust (),
                 RendersT
                   (StructuralRenders
-                     {
-                       renders_variant = RendersNormal;
-                       renders_structural_type = UnionT (reason, rep);
-                     }
+                     { renders_variant; renders_structural_type = UnionT (reason, rep) }
                   )
               )
           in
@@ -2791,6 +2793,7 @@ struct
                 use_op = _;
                 should_distribute = _;
                 promote_structural_components = _;
+                renders_variant = _;
               }
           ) ->
           let result =
@@ -2807,6 +2810,7 @@ struct
                 tout;
                 resolved_obj = None;
                 should_distribute;
+                renders_variant;
                 promote_structural_components;
               }
           )
@@ -2823,6 +2827,7 @@ struct
                     reason;
                     tout;
                     should_distribute;
+                    renders_variant;
                     promote_structural_components;
                     resolved_obj = Some l;
                   }
@@ -2870,6 +2875,7 @@ struct
                       tout;
                       resolved_obj = Some l;
                       should_distribute;
+                      renders_variant;
                       promote_structural_components;
                     }
                 )))
@@ -2882,6 +2888,7 @@ struct
                 resolved_obj = _;
                 should_distribute = _;
                 promote_structural_components = _;
+                renders_variant = _;
               }
           ) ->
           rec_flow_t cx trace ~use_op:unknown_use (DefT (reason, bogus_trust (), renders), tout)
@@ -2894,6 +2901,7 @@ struct
                 resolved_obj;
                 should_distribute;
                 promote_structural_components = _;
+                renders_variant;
               }
           ) ->
           let result =
@@ -2906,10 +2914,7 @@ struct
               DefT
                 ( reason,
                   bogus_trust (),
-                  RendersT
-                    (StructuralRenders
-                       { renders_variant = RendersNormal; renders_structural_type = t }
-                    )
+                  RendersT (StructuralRenders { renders_variant; renders_structural_type = t })
                 )
             else
               t
@@ -2978,7 +2983,11 @@ struct
                   ( use_op,
                     reason,
                     ReactPromoteRendersRepresentation
-                      { should_distribute = true; promote_structural_components = true }
+                      {
+                        should_distribute = true;
+                        promote_structural_components = true;
+                        renders_variant = RendersNormal;
+                      }
                   ),
                 Eval.generate_id ()
               )
@@ -7032,8 +7041,8 @@ struct
       in
       (* Intentional unknown_use for the tout Flow *)
       rec_flow cx trace (t, UseT (unknown_use, OpenT tout))
-    | ReactPromoteRendersRepresentation { should_distribute = true; promote_structural_components }
-      ->
+    | ReactPromoteRendersRepresentation
+        { should_distribute = true; promote_structural_components; renders_variant } ->
       rec_flow
         cx
         trace
@@ -7046,6 +7055,7 @@ struct
               resolved_obj = None;
               should_distribute = true;
               promote_structural_components;
+              renders_variant;
             }
         )
     | _ ->
@@ -7293,8 +7303,8 @@ struct
             | ReactElementPropsType -> ReactKitT (use_op, reason, React.GetProps (OpenT tout))
             | ReactElementConfigType -> ReactKitT (use_op, reason, React.GetConfig (OpenT tout))
             | ReactElementRefType -> ReactKitT (use_op, reason, React.GetRef (OpenT tout))
-            | ReactPromoteRendersRepresentation { should_distribute; promote_structural_components }
-              ->
+            | ReactPromoteRendersRepresentation
+                { should_distribute; promote_structural_components; renders_variant } ->
               PromoteRendersRepresentationT
                 {
                   use_op;
@@ -7303,6 +7313,7 @@ struct
                   resolved_obj = None;
                   should_distribute;
                   promote_structural_components;
+                  renders_variant;
                 }
             | ReactConfigType default_props ->
               ReactKitT (use_op, reason, React.GetConfigType (default_props, OpenT tout))

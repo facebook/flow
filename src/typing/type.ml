@@ -901,6 +901,7 @@ module rec TypeTerm : sig
         resolved_obj: t option;
         should_distribute: bool;
         promote_structural_components: bool;
+        renders_variant: renders_variant;
       }
     (* When extracting the props of an abstract component, we don't want to produce empty, even
        when the config type of the component is empty, because that would allow unsound access
@@ -1594,6 +1595,7 @@ module rec TypeTerm : sig
     | ReactPromoteRendersRepresentation of {
         should_distribute: bool;
         promote_structural_components: bool;
+        renders_variant: renders_variant;
       }
     | ReactConfigType of t
     | ReactCheckComponentConfig of Property.t NameUtils.Map.t

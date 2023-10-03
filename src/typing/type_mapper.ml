@@ -645,7 +645,7 @@ class virtual ['a] t =
       | ReactElementConfigType
       | ReactElementRefType
       | ReactPromoteRendersRepresentation
-          { should_distribute = _; promote_structural_components = _ } ->
+          { should_distribute = _; promote_structural_components = _; renders_variant = _ } ->
         t
 
     method object_kit_spread_operand_slice

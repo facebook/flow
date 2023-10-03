@@ -461,7 +461,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let node = Flow.get_builtin_type cx renders_reason (OrdinaryName "React$Node") in
       let use_op = Op (RenderTypeInstantiation { render_type = renders_reason }) in
       Flow.flow cx (t, UseT (use_op, node));
-      let renders_t = TypeUtil.mk_renders_type reason t in
+      let renders_t = TypeUtil.mk_renders_type reason RendersNormal t in
       ((loc, renders_t), Renders { Renders.comments; argument = t_ast })
     | (loc, ReadOnly ro) ->
       let { ReadOnly.argument; _ } = ro in

@@ -950,7 +950,7 @@ and merge_annot tps infer_tps file = function
     let reason =
       Reason.(mk_annot_reason (RRenderType (desc_of_reason (TypeUtil.reason_of_t t))) loc)
     in
-    TypeUtil.mk_renders_type reason t
+    TypeUtil.mk_renders_type reason Type.RendersNormal t
   | Private (loc, t) -> begin
     match merge tps infer_tps file t with
     | Type.DefT (r, trust, def_t) ->
@@ -1785,7 +1785,7 @@ and merge_component
       let reason =
         Reason.(update_desc_reason (fun desc -> RRenderType desc) (TypeUtil.reason_of_t t))
       in
-      TypeUtil.mk_renders_type reason t
+      TypeUtil.mk_renders_type reason Type.RendersNormal t
     in
     let component_kind =
       match id_opt with

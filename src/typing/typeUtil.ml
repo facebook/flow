@@ -214,7 +214,15 @@ and mod_reason_of_use_t f = function
   | CheckUnusedPromiseT { reason; async } -> CheckUnusedPromiseT { reason = f reason; async }
   | ConvertEmptyPropsToMixedT (reason, t) -> ConvertEmptyPropsToMixedT (f reason, t)
   | PromoteRendersRepresentationT
-      { use_op; reason; tout; resolved_obj; should_distribute; promote_structural_components } ->
+      {
+        use_op;
+        reason;
+        tout;
+        resolved_obj;
+        should_distribute;
+        promote_structural_components;
+        renders_variant;
+      } ->
     PromoteRendersRepresentationT
       {
         use_op;
@@ -223,6 +231,7 @@ and mod_reason_of_use_t f = function
         resolved_obj;
         should_distribute;
         promote_structural_components;
+        renders_variant;
       }
   | TryRenderTypePromotionT { use_op; reason; reason_obj; upper_renders; tried_promotion } ->
     TryRenderTypePromotionT
@@ -1078,13 +1087,13 @@ let type_guard_of_funtype f =
   | Some p -> type_guard_of_predicate p
   | None -> None
 
-let mk_renders_type reason t =
+let mk_renders_type reason renders_variant t =
   let destructor =
     TypeDestructorT
       ( unknown_use,
         reason,
         ReactPromoteRendersRepresentation
-          { should_distribute = true; promote_structural_components = false }
+          { should_distribute = true; promote_structural_components = false; renders_variant }
       )
   in
   EvalT (t, destructor, Eval.generate_id ())

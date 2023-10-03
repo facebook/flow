@@ -128,6 +128,6 @@ val type_guard_of_predicate : Type.fun_predicate -> Type.t option
 
 val type_guard_of_funtype : Type.funtype -> Type.t option
 
-val mk_renders_type : reason -> Type.t -> Type.t
+val mk_renders_type : reason -> Type.renders_variant -> Type.t -> Type.t
 
 val type_of_specialized_callee : Reason.reason -> Type.specialized_callee -> Type.t
