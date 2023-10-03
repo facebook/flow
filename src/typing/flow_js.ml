@@ -2791,13 +2791,23 @@ struct
                 tout;
                 resolved_obj = Some _;
                 use_op = _;
-                should_distribute = _;
+                should_distribute;
                 promote_structural_components = _;
-                renders_variant = _;
+                renders_variant;
               }
           ) ->
           let result =
-            DefT (reason, bogus_trust (), RendersT (NominalRenders { renders_id; renders_super }))
+            let t =
+              DefT (reason, bogus_trust (), RendersT (NominalRenders { renders_id; renders_super }))
+            in
+            if should_distribute then
+              DefT
+                ( reason,
+                  bogus_trust (),
+                  RendersT (StructuralRenders { renders_variant; renders_structural_type = t })
+                )
+            else
+              t
           in
           (* Intentional unknown_use when flowing to tout *)
           rec_flow_t cx trace ~use_op:unknown_use (result, tout)

@@ -223,9 +223,9 @@ Cannot cast `rendersFoo` to renders renders `React.Element` because `React.Eleme
           ^^^^^^^^^^ [1]
 
 References:
-   renders_to_renders.js:28:16
+   renders_to_renders.js:28:24
    28|   (rendersFoo: renders renders React$Element<typeof Bar>); // ERROR
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:29:4
@@ -238,9 +238,9 @@ Cannot cast `rendersFoo` to renders renders `React.Element` because `React.Eleme
           ^^^^^^^^^^ [1]
 
 References:
-   renders_to_renders.js:29:16
+   renders_to_renders.js:29:24
    29|   (rendersFoo: renders renders React$Element<typeof Bar>); // ERROR
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:39:4
