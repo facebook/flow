@@ -1766,7 +1766,7 @@ struct
         | ( UnionT (reason, rep),
             PromoteRendersRepresentationT
               {
-                reason = _;
+                reason = renders_reason;
                 resolved_obj = None;
                 use_op = _;
                 tout;
@@ -1797,7 +1797,7 @@ struct
           let reason = update_desc_reason (fun desc -> RRenderType desc) reason in
           let renders_t =
             DefT
-              ( reason,
+              ( renders_reason,
                 bogus_trust (),
                 RendersT
                   (StructuralRenders
