@@ -1678,7 +1678,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     | (loc, Component { Component.params; tparams; renders; comments }) ->
       let reason = mk_reason RComponentType loc in
       let (t, tparams, params, renders) =
-        mk_component cx reason ~tparams_map tparams params renders
+        mk_component cx reason ~tparams_map ~id_loc:None tparams params renders
       in
       ((loc, t), Component { Component.params; tparams; renders; comments })
     | (loc, Object { Object.exact; properties; inexact; comments }) as ot ->
@@ -3029,7 +3029,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       in
       (cparams, Component_type_params.eval cx cparams)
     in
-    fun cx reason ~tparams_map tparams params renders ->
+    fun cx reason ~tparams_map ~id_loc tparams params renders ->
       if not (Context.component_syntax cx) then begin
         let loc = loc_of_reason reason in
         Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, ComponentSyntax));
@@ -3063,7 +3063,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
             body = ();
             renders_t;
             ret_annot_loc = ren_loc;
-            id_loc = None;
+            id_loc;
           }
         in
         let loc = loc_of_reason reason in
@@ -3144,7 +3144,14 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     let (id_loc, ({ Ast.Identifier.name; _ } as id)) = id in
     let reason = mk_reason (RComponent (OrdinaryName name)) loc in
     let (t, tparam_asts, params_ast, renders_ast) =
-      mk_component cx reason ~tparams_map:Subst_name.Map.empty tparams params renders
+      mk_component
+        cx
+        reason
+        ~tparams_map:Subst_name.Map.empty
+        ~id_loc:(Some id_loc)
+        tparams
+        params
+        renders
     in
     ( t,
       {

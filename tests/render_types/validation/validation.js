@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-component Foo() {return 0}
+declare component Foo();
 component Bar<T>() {return 0}
 declare function Baz(): React$Node;
 declare class Boz extends React$Component<{}> {}
