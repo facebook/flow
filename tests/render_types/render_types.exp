@@ -879,16 +879,6 @@ Cannot use number literal `1` [1] as the type argument of renders type. [invalid
 
 Error ----------------------------------------------------------------------------------- validation/validation.js:21:22
 
-Cannot use `$Iterable` [1] as the type argument of renders type. Only elements of a component-syntax components can
-appear in renders. If you want to express the idea of renders zero or more items, please use `renders*` instead.
-[invalid-render]
-
-   21| type RBad4 = renders React$Node; // error
-                            ^^^^^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------- validation/validation.js:21:22
-
 Cannot use `React.Element` [1] as the type argument of renders type. Only elements of a component-syntax components can
 appear in renders. [invalid-render]
 
@@ -914,8 +904,9 @@ Cannot use boolean [1] as the type argument of renders type. [invalid-render]
 
 Error ----------------------------------------------------------------------------------- validation/validation.js:21:22
 
-Cannot use null [1] as the type argument of renders type. Only elements of a component-syntax components can appear in
-renders. If you want to express the idea of renders zero or one item, please use `renders?` instead. [invalid-render]
+Cannot use null [1], undefined [1] and `$Iterable` [1] as the type argument of renders type. Only elements of a
+component-syntax components can appear in renders. If you want to express the idea of renders zero or more items, please
+use `renders*` instead. [invalid-render]
 
    21| type RBad4 = renders React$Node; // error
                             ^^^^^^^^^^ [1]
@@ -932,15 +923,6 @@ Cannot use number [1] as the type argument of renders type. [invalid-render]
 Error ----------------------------------------------------------------------------------- validation/validation.js:21:22
 
 Cannot use string [1] as the type argument of renders type. [invalid-render]
-
-   21| type RBad4 = renders React$Node; // error
-                            ^^^^^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------- validation/validation.js:21:22
-
-Cannot use undefined [1] as the type argument of renders type. Only elements of a component-syntax components can appear
-in renders. If you want to express the idea of renders zero or one item, please use `renders?` instead. [invalid-render]
 
    21| type RBad4 = renders React$Node; // error
                             ^^^^^^^^^^ [1]
@@ -1008,9 +990,9 @@ component syntax components. [invalid-render]
 
 Error ----------------------------------------------------------------------------------- validation/validation.js:31:37
 
-Cannot use boolean literal `false` [1] as the type argument of renders type. Only elements of a component-syntax
-components can appear in renders. If you want to express the idea of renders zero or one item, please use `renders?`
-instead. [invalid-render]
+Cannot use boolean literal `false` [1], null [2] and undefined [3] as the type argument of renders type. Only elements
+of a component-syntax components can appear in renders. If you want to express the idea of renders zero or one item,
+please use `renders?` instead. [invalid-render]
 
    validation/validation.js:31:37
    31| type BadSpecificRenders1 = renders (false | null | void); // error
@@ -1020,36 +1002,12 @@ References:
    validation/validation.js:31:37
    31| type BadSpecificRenders1 = renders (false | null | void); // error
                                            ^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------- validation/validation.js:31:37
-
-Cannot use null [1] as the type argument of renders type. Only elements of a component-syntax components can appear in
-renders. If you want to express the idea of renders zero or one item, please use `renders?` instead. [invalid-render]
-
-   validation/validation.js:31:37
-   31| type BadSpecificRenders1 = renders (false | null | void); // error
-                                           ^^^^^^^^^^^^^^^^^^^
-
-References:
    validation/validation.js:31:45
    31| type BadSpecificRenders1 = renders (false | null | void); // error
-                                                   ^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------- validation/validation.js:31:37
-
-Cannot use undefined [1] as the type argument of renders type. Only elements of a component-syntax components can appear
-in renders. If you want to express the idea of renders zero or one item, please use `renders?` instead. [invalid-render]
-
-   validation/validation.js:31:37
-   31| type BadSpecificRenders1 = renders (false | null | void); // error
-                                           ^^^^^^^^^^^^^^^^^^^
-
-References:
+                                                   ^^^^ [2]
    validation/validation.js:31:52
    31| type BadSpecificRenders1 = renders (false | null | void); // error
-                                                          ^^^^ [1]
+                                                          ^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------- validation/validation.js:32:37
@@ -1094,25 +1052,16 @@ can appear in renders. If you want to express the idea of renders zero or more i
 
 Error ----------------------------------------------------------------------------------- validation/validation.js:36:37
 
-Cannot use null [1] as the type argument of renders type. Only elements of a component-syntax components can appear in
-renders. If you want to express the idea of renders zero or one item, please use `renders?` instead. [invalid-render]
-
-   36| type BadSpecificRenders6 = renders (React.ChildrenArray<React$Element<typeof Foo> | null>); // error
-                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------- validation/validation.js:36:37
-
-Cannot use read-only array type [1] as the type argument of renders type. Only elements of a component-syntax components
-can appear in renders. If you want to express the idea of renders zero or more items, please use `renders*` instead.
-[invalid-render]
+Cannot use read-only array type [1] and null [1] as the type argument of renders type. Only elements of a
+component-syntax components can appear in renders. If you want to express the idea of renders zero or more items, please
+use `renders*` instead. [invalid-render]
 
    36| type BadSpecificRenders6 = renders (React.ChildrenArray<React$Element<typeof Foo> | null>); // error
                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 
-Found 76 errors
+Found 71 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

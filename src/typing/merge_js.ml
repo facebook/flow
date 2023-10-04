@@ -391,7 +391,11 @@ let validate_renders_type_arguments cx =
         cx
         Error_message.(
           EInvalidRendersTypeArgument
-            { loc; invalid_render_type_kind = InvalidRendersNonNonimalElement; invalid_type_reason }
+            {
+              loc;
+              invalid_render_type_kind = InvalidRendersNonNonimalElement;
+              invalid_type_reasons = Nel.one invalid_type_reason;
+            }
         )
   in
   let validate_element ~allow_generic loc = function
@@ -406,30 +410,21 @@ let validate_renders_type_arguments cx =
               {
                 loc;
                 invalid_render_type_kind = InvalidRendersGenericT;
-                invalid_type_reason = reason;
+                invalid_type_reasons = Nel.one reason;
               }
-          )
+          );
+      None
     | OpaqueT (r, { opaque_id; opaque_type_args = (_, _, component_t, _) :: _; _ })
       when Flow_js_utils.builtin_react_element_opaque_id cx = Some opaque_id ->
       Flow_js.possible_concrete_types_for_inspection cx r component_t
-      |> Base.List.iter ~f:(validate_component_in_element loc r)
+      |> Base.List.iter ~f:(validate_component_in_element loc r);
+      None
     | DefT (invalid_type_reason, _, BoolT (Some false))
     | DefT (invalid_type_reason, _, SingletonBoolT false)
     | DefT (invalid_type_reason, _, NullT)
     | DefT (invalid_type_reason, _, VoidT) ->
-      Flow_js_utils.add_output
-        cx
-        Error_message.(
-          EInvalidRendersTypeArgument
-            { loc; invalid_render_type_kind = InvalidRendersNullVoidFalse; invalid_type_reason }
-        )
-    | DefT (invalid_type_reason, _, ArrT _) ->
-      Flow_js_utils.add_output
-        cx
-        Error_message.(
-          EInvalidRendersTypeArgument
-            { loc; invalid_render_type_kind = InvalidRendersIterable; invalid_type_reason }
-        )
+      Some (invalid_type_reason, `InvalidRendersNullVoidFalse)
+    | DefT (invalid_type_reason, _, ArrT _) -> Some (invalid_type_reason, `InvalidRendersIterable)
     | t ->
       let r = TypeUtil.reason_of_t t in
       if
@@ -443,13 +438,8 @@ let validate_renders_type_arguments cx =
              [AnyT.error r; AnyT.error r; AnyT.error r]
           )
       then
-        Flow_js_utils.add_output
-          cx
-          Error_message.(
-            EInvalidRendersTypeArgument
-              { loc; invalid_render_type_kind = InvalidRendersIterable; invalid_type_reason = r }
-          )
-      else
+        Some (r, `InvalidRendersIterable)
+      else (
         Flow_js_utils.add_output
           cx
           Error_message.(
@@ -457,9 +447,11 @@ let validate_renders_type_arguments cx =
               {
                 loc;
                 invalid_render_type_kind = UncategorizedInvalidRenders;
-                invalid_type_reason = r;
+                invalid_type_reasons = Nel.one r;
               }
-          )
+          );
+        None
+      )
   in
   let validate_arg (loc, allow_generic, t) =
     Tvar_resolver.resolve cx t;
@@ -467,7 +459,38 @@ let validate_renders_type_arguments cx =
       cx
       (mk_reason (RCustom "render type argument") loc)
       t
-    |> Base.List.iter ~f:(fun t -> validate_element ~allow_generic loc t)
+    |> Base.List.fold ~init:None ~f:(fun acc t ->
+           match (acc, validate_element ~allow_generic loc t) with
+           | (None, None) -> None
+           | (None, Some (r, k)) -> Some (Nel.one r, k)
+           | (Some (rs, k), None) -> Some (rs, k)
+           | (Some (rs, k1), Some (r, k2)) ->
+             let k =
+               match (k1, k2) with
+               | (`InvalidRendersNullVoidFalse, `InvalidRendersNullVoidFalse) ->
+                 `InvalidRendersNullVoidFalse
+               | (`InvalidRendersIterable, `InvalidRendersIterable)
+               | (`InvalidRendersIterable, `InvalidRendersNullVoidFalse)
+               | (`InvalidRendersNullVoidFalse, `InvalidRendersIterable) ->
+                 `InvalidRendersIterable
+             in
+             Some (Nel.cons r rs, k)
+       )
+    |> Base.Option.iter ~f:(fun (invalid_type_reasons, kind) ->
+           Flow_js_utils.add_output
+             cx
+             Error_message.(
+               EInvalidRendersTypeArgument
+                 {
+                   loc;
+                   invalid_render_type_kind =
+                     (match kind with
+                     | `InvalidRendersNullVoidFalse -> Error_message.InvalidRendersNullVoidFalse
+                     | `InvalidRendersIterable -> Error_message.InvalidRendersIterable);
+                   invalid_type_reasons;
+                 }
+             )
+       )
   in
   Context.renders_type_argument_validations cx |> Base.List.iter ~f:validate_arg
 

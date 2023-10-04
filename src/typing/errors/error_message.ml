@@ -606,7 +606,7 @@ and 'loc t' =
   | EInvalidRendersTypeArgument of {
       loc: 'loc;
       invalid_render_type_kind: invalid_render_type_kind;
-      invalid_type_reason: 'loc virtual_reason;
+      invalid_type_reasons: 'loc virtual_reason Nel.t;
     }
 
 and 'loc null_write = {
@@ -1328,12 +1328,12 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EDuplicateComponentProp { spread; first; second } ->
     EDuplicateComponentProp { spread = f spread; first = map_reason first; second = f second }
   | ERefComponentProp { spread; loc } -> ERefComponentProp { spread = f spread; loc = f loc }
-  | EInvalidRendersTypeArgument { loc; invalid_render_type_kind; invalid_type_reason } ->
+  | EInvalidRendersTypeArgument { loc; invalid_render_type_kind; invalid_type_reasons } ->
     EInvalidRendersTypeArgument
       {
         loc = f loc;
         invalid_render_type_kind;
-        invalid_type_reason = map_reason invalid_type_reason;
+        invalid_type_reasons = Nel.map map_reason invalid_type_reasons;
       }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
@@ -5022,7 +5022,7 @@ let friendly_message_of_msg loc_of_aloc msg =
       ]
     in
     Normal { features }
-  | EInvalidRendersTypeArgument { loc = _; invalid_render_type_kind; invalid_type_reason } ->
+  | EInvalidRendersTypeArgument { loc = _; invalid_render_type_kind; invalid_type_reasons } ->
     let additional_explanation =
       match invalid_render_type_kind with
       | InvalidRendersNullVoidFalse ->
@@ -5048,8 +5048,15 @@ let friendly_message_of_msg loc_of_aloc msg =
         ]
       | UncategorizedInvalidRenders -> []
     in
+    let rec refs = function
+      | (r, []) -> [ref r]
+      | (r1, [r2]) -> [ref r1; text " and "; ref r2]
+      | (r1, r2 :: rs) -> [ref r1; text ", "] @ refs (r2, rs)
+    in
     let features =
-      [text "Cannot use "; ref invalid_type_reason; text " as the type argument of renders type."]
+      [text "Cannot use "]
+      @ refs invalid_type_reasons
+      @ [text " as the type argument of renders type."]
       @ additional_explanation
     in
     Normal { features }
