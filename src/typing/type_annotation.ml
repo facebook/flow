@@ -1257,7 +1257,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (ts, targs) = convert_type_params () in
               let t = List.nth ts 0 in
-              let reason = mk_reason (RRenderType (desc_of_reason (reason_of_t t))) loc in
+              let reason = mk_reason (RRenderMaybeType (desc_of_reason (reason_of_t t))) loc in
               let renders_reason = reason_of_t t in
               let node = Flow.get_builtin_type cx renders_reason (OrdinaryName "React$Node") in
               let use_op_instantiation =

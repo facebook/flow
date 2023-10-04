@@ -255,6 +255,8 @@ type 'loc virtual_reason_desc =
       position: int;
     }
   | RRenderType of 'loc virtual_reason_desc
+  | RRenderMaybeType of 'loc virtual_reason_desc
+  | RRendersNothing
 [@@deriving eq, show]
 
 and reason_desc_function =
@@ -359,6 +361,8 @@ let rec map_desc_locs f = function
         position;
       }
   | RRenderType desc -> RRenderType (map_desc_locs f desc)
+  | RRenderMaybeType desc -> RRenderMaybeType (map_desc_locs f desc)
+  | RRendersNothing -> RRendersNothing
 
 type 'loc virtual_reason = {
   desc: 'loc virtual_reason_desc;
@@ -787,6 +791,8 @@ let rec string_of_desc = function
       position
       position_suffix
   | RRenderType desc -> spf "renders %s" (string_of_desc desc)
+  | RRenderMaybeType desc -> spf "renders? %s" (string_of_desc desc)
+  | RRendersNothing -> "a value that renders nothing"
 
 let string_of_reason ?(strip_root = None) r =
   let spos = string_of_aloc ~strip_root (loc_of_reason r) in
@@ -1421,6 +1427,8 @@ let classification_of_reason r =
   | RComponentType
   | RPropsOfComponent _
   | RRenderType _
+  | RRenderMaybeType _
+  | RRendersNothing
   | RInstanceOfComponent _
   | RRenderTypeOfComponent _
   | RDefaultTypeArgumentAtIndex _

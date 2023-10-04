@@ -213,6 +213,8 @@ type 'loc virtual_reason_desc =
       position: int;
     }
   | RRenderType of 'loc virtual_reason_desc
+  | RRenderMaybeType of 'loc virtual_reason_desc
+  | RRendersNothing
 
 and reason_desc_function =
   | RAsync

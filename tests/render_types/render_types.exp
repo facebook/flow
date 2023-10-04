@@ -166,7 +166,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- renders_maybe.js:13:2
 
-Cannot cast `<Bar />` to renders `MenuItem` because `Bar` element [1] does not render `MenuItem` [2].
+Cannot cast `<Bar />` to renders? `MenuItem` because `Bar` element [1] does not render `MenuItem` [2].
 [incompatible-cast]
 
    renders_maybe.js:13:2
@@ -181,7 +181,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- renders_maybe.js:20:2
 
-Cannot cast `Bad` to renders `MenuItem` because `Bar` [1] does not render `MenuItem` [2]. [incompatible-cast]
+Cannot cast `Bad` to renders? `MenuItem` because `Bar` [1] does not render `MenuItem` [2]. [incompatible-cast]
 
    renders_maybe.js:20:2
    20| (Bad: RendersHuh<MenuItem>); // ERROR
@@ -195,8 +195,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- renders_maybe.js:27:2
 
-Cannot cast `rendersMaybeMenuItem` to renders `MenuItem` because `MenuItem` [1] does not render `MenuItem` [2].
-[incompatible-cast]
+Cannot cast `rendersMaybeMenuItem` to renders `MenuItem` because a value that renders nothing [1] does not render
+`MenuItem` [2]. [incompatible-cast]
 
    renders_maybe.js:27:2
    27| (rendersMaybeMenuItem: renders MenuItem); // ERROR
@@ -213,8 +213,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- renders_maybe.js:31:2
 
-Cannot cast `rendersMaybeUnion` to renders `MenuItem` because union type [1] does not render `MenuItem` [2].
-[incompatible-cast]
+Cannot cast `rendersMaybeUnion` to renders `MenuItem` because a value that renders nothing [1] does not render
+`MenuItem` [2]. [incompatible-cast]
 
    renders_maybe.js:31:2
    31| (rendersMaybeUnion: renders MenuItem); // ERROR
@@ -248,7 +248,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `rendersMaybeMenuItem` to renders union type because: [incompatible-cast]
  - Either `MenuItem` [1] does not render `Bar` [2].
- - Or renders `MenuItem` [1] is incompatible with boolean literal `false` [3].
+ - Or renders? `MenuItem` [1] is incompatible with boolean literal `false` [3].
 
    renders_maybe.js:38:2
    38| (rendersMaybeMenuItem: renders (null | false | void | Bar)); // ERROR
