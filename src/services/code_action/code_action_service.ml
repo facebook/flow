@@ -206,7 +206,7 @@ let refactor_arrow_function_code_actions ~ast ~scope_info ~options ~only uri loc
     []
 
 let main_of_package ~reader package_dir =
-  let file_key = File_key.JsonFile (package_dir ^ "/package.json") in
+  let file_key = File_key.JsonFile (package_dir ^ Filename.dir_sep ^ "package.json") in
   match Parsing_heaps.Reader.get_package_info ~reader file_key with
   | Some (Ok package) -> Package_json.main package
   | Some (Error _)
@@ -290,9 +290,10 @@ let path_of_modulename ~node_resolver_dirnames ~reader src_dir file_key = functi
       src_dir
 
 let haste_package_path ~reader ~src_dir require_path =
-  match String.split_on_char '/' require_path |> Base.List.rev with
+  match Files.split_path require_path |> Base.List.rev with
   | [] -> None
   | base :: parent_dir_names ->
+    let src_parts = Files.split_path src_dir in
     let rec f acc remaining =
       match remaining with
       | [] -> None
@@ -300,14 +301,21 @@ let haste_package_path ~reader ~src_dir require_path =
         let dependency = Parsing_heaps.get_dependency (Modulename.String package_name_candidate) in
         (match Option.bind dependency (Parsing_heaps.Reader.get_provider ~reader) with
         | Some addr when Parsing_heaps.Reader.is_package_file ~reader addr ->
-          let package_path =
-            String.concat "/" (List.rev (package_name_candidate :: parent_dir_names))
+          let package_path_parts = List.rev (package_name_candidate :: parent_dir_names) in
+          let within_package =
+            match find_ancestor_rev package_path_parts src_parts with
+            (* src is completely within package_path if they have a common ancestor,
+               and additional relative path required to get to package path is empty. *)
+            | (_, [], _) -> true
+            | _ -> false
           in
-          if Base.String.is_prefix ~prefix:package_path src_dir then
+          if within_package then
             None
           else
             Some
-              (match main_of_package ~reader package_path with
+              (match
+                 main_of_package ~reader (String.concat Filename.dir_sep package_path_parts)
+               with
               | Some main when path_matches (String.concat "/" acc) main -> package_name_candidate
               | _ -> string_of_path_parts (package_name_candidate :: acc))
         | _ -> f (package_name_candidate :: acc) parent_dir_names)
