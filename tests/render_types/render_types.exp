@@ -1,31 +1,97 @@
-Error ---------------------------------------------------------------------------------------------------- import.js:6:2
+Error ---------------------------------------------------------------------------------------------------- import.js:7:2
 
 Cannot cast `<Foo />` to renders `React.Element` because `Foo` element [1] does not render `React.Element` [2].
 [incompatible-cast]
 
-   import.js:6:2
-   6| (<Foo />: renders React.Element<typeof Bar>); // ERROR
-       ^^^^^^^ [1]
-
-References:
-   import.js:6:11
-   6| (<Foo />: renders React.Element<typeof Bar>); // ERROR
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- import.js:7:2
-
-Cannot cast `<Bar />` to renders `React.Element` because `Bar` element [1] does not render `React.Element` [2].
-[incompatible-cast]
-
    import.js:7:2
-   7| (<Bar />: renders React.Element<typeof Foo>); // ERROR
+   7| (<Foo />: renders React.Element<typeof Bar>); // ERROR
        ^^^^^^^ [1]
 
 References:
    import.js:7:11
-   7| (<Bar />: renders React.Element<typeof Foo>); // ERROR
+   7| (<Foo />: renders React.Element<typeof Bar>); // ERROR
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- import.js:8:2
+
+Cannot cast `<Bar />` to renders `React.Element` because `Bar` element [1] does not render `React.Element` [2].
+[incompatible-cast]
+
+   import.js:8:2
+   8| (<Bar />: renders React.Element<typeof Foo>); // ERROR
+       ^^^^^^^ [1]
+
+References:
+   import.js:8:11
+   8| (<Bar />: renders React.Element<typeof Foo>); // ERROR
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- import.js:10:2
+
+Cannot cast `<MaybeNumber />` to renders number because a value that renders nothing [1] does not render number [2].
+[incompatible-cast]
+
+   import.js:10:2
+   10| (<MaybeNumber />: renders number); // ERROR
+        ^^^^^^^^^^^^^^^ [1]
+
+References:
+   import.js:10:27
+   10| (<MaybeNumber />: renders number); // ERROR
+                                 ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- import.js:14:2
+
+Cannot cast `<StarNumber />` to renders number because `$ReadOnlyArray` [1] does not render number [2].
+[incompatible-cast]
+
+   import.js:14:2
+    14| (<StarNumber />: renders number); // ERROR
+         ^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:698:15
+   698| declare class $ReadOnlyArray<+T> {
+                      ^^^^^^^^^^^^^^ [1]
+   import.js:14:26
+    14| (<StarNumber />: renders number); // ERROR
+                                 ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- import.js:14:2
+
+Cannot cast `<StarNumber />` to renders number because a value that renders nothing [1] does not render number [2].
+[incompatible-cast]
+
+   import.js:14:2
+   14| (<StarNumber />: renders number); // ERROR
+        ^^^^^^^^^^^^^^ [1]
+
+References:
+   import.js:14:26
+   14| (<StarNumber />: renders number); // ERROR
+                                ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- import.js:15:2
+
+Cannot cast `<StarNumber />` to renders? number because `$ReadOnlyArray` [1] does not render number [2].
+[incompatible-cast]
+
+   import.js:15:2
+    15| (<StarNumber />: renders? number); // ERROR
+         ^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:698:15
+   698| declare class $ReadOnlyArray<+T> {
+                      ^^^^^^^^^^^^^^ [1]
+   import.js:15:27
+    15| (<StarNumber />: renders? number); // ERROR
+                                  ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- interop.js:15:2
@@ -1098,7 +1164,7 @@ use `renders*` instead. [invalid-render]
 
 
 
-Found 74 errors
+Found 78 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

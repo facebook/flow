@@ -1311,10 +1311,9 @@ and annot_with_loc opts scope tbls xs (loc, t) =
           targs
       in
       typeof scope tbls loc t targs
-    (* TODO(jmbrown): Type-sig for renders variants *)
-    | T.Renders { T.Renders.comments = _; argument; variant = _ } ->
+    | T.Renders { T.Renders.comments = _; argument; variant } ->
       let t = annot opts scope tbls xs argument in
-      Annot (Renders (loc, t))
+      Annot (Renders (loc, t, variant))
     | T.Keyof _ -> Annot (Any loc)
     | T.ReadOnly _ -> Annot (Any loc)
     | T.Exists _ -> Annot (Exists loc)
@@ -1464,15 +1463,18 @@ and component_type =
   in
   let renders opts scope tbls xs ret =
     match ret with
-    | Ast.Type.AvailableRenders (loc, { Ast.Type.Renders.comments = _; variant = _; argument }) ->
+    | Ast.Type.AvailableRenders (loc, { Ast.Type.Renders.comments = _; variant; argument }) ->
       let loc = push_loc tbls loc in
       let t = annot opts scope tbls xs argument in
-      Annot (Renders (loc, t))
+      Annot (Renders (loc, t, variant))
     | Ast.Type.MissingRenders loc ->
       let loc = push_loc tbls loc in
       Annot
         (Renders
-           (loc, maybe_special_unqualified_generic opts scope tbls xs loc None loc "React$Node")
+           ( loc,
+             maybe_special_unqualified_generic opts scope tbls xs loc None loc "React$Node",
+             Ast.Type.Renders.Normal
+           )
         )
   in
   fun opts
@@ -3175,15 +3177,18 @@ and component_def =
   in
   let renders opts scope tbls xs ret =
     match ret with
-    | Ast.Type.AvailableRenders (loc, { Ast.Type.Renders.comments = _; variant = _; argument }) ->
+    | Ast.Type.AvailableRenders (loc, { Ast.Type.Renders.comments = _; variant; argument }) ->
       let loc = push_loc tbls loc in
       let t = annot opts scope tbls xs argument in
-      Annot (Renders (loc, t))
+      Annot (Renders (loc, t, variant))
     | Ast.Type.MissingRenders loc ->
       let loc = push_loc tbls loc in
       Annot
         (Renders
-           (loc, maybe_special_unqualified_generic opts scope tbls xs loc None loc "React$Node")
+           ( loc,
+             maybe_special_unqualified_generic opts scope tbls xs loc None loc "React$Node",
+             Ast.Type.Renders.Normal
+           )
         )
   in
   fun opts scope tbls f ->

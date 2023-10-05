@@ -5952,7 +5952,8 @@ let%expect_test "component" =
            renders =
            (Annot
               (Renders ([1:15],
-                 (TyRef (Unqualified BuiltinRef {ref_loc = [1:15]; name = "React$Node"})))))}}
+                 (TyRef (Unqualified BuiltinRef {ref_loc = [1:15]; name = "React$Node"})),
+                 Flow_ast.Type.Renders.Normal)))}}
 
   |}]
 
@@ -5997,7 +5998,8 @@ let%expect_test "component2" =
            renders =
            (Annot
               (Renders ([2:40],
-                 (TyRef (Unqualified BuiltinRef {ref_loc = [2:40]; name = "React$Node"})))))}}
+                 (TyRef (Unqualified BuiltinRef {ref_loc = [2:40]; name = "React$Node"})),
+                 Flow_ast.Type.Renders.Normal)))}}
 
   |}]
 
@@ -6030,7 +6032,8 @@ let%expect_test "component3" =
            renders =
            (Annot
               (Renders ([1:19],
-                 (TyRef (Unqualified BuiltinRef {ref_loc = [1:19]; name = "React$Node"})))))}}
+                 (TyRef (Unqualified BuiltinRef {ref_loc = [1:19]; name = "React$Node"})),
+                 Flow_ast.Type.Renders.Normal)))}}
     1. ComponentBinding {id_loc = [2:10-13];
          name = "Baz"; fn_loc = [2:0-69];
          def =
@@ -6044,8 +6047,8 @@ let%expect_test "component3" =
                    t = (TyRef (Unqualified BuiltinRef {ref_loc = [2:48-52]; name = "Rest"}))});
            renders =
            (Annot
-              (Renders ([2:54-69], (TyRef (Unqualified LocalRef {ref_loc = [2:62-69]; index = 0}))
-                 )))}}
+              (Renders ([2:54-69], (TyRef (Unqualified LocalRef {ref_loc = [2:62-69]; index = 0})),
+                 Flow_ast.Type.Renders.Normal)))}}
 
   |}]
 
@@ -6082,7 +6085,10 @@ let%expect_test "component4" =
               name_loc = [1:17-21]; t = (Annot Bound {ref_loc = [1:23-24]; name = "T"})}
              ];
            rest_param = None;
-           renders = (Annot (Renders ([1:26-35], (Annot Bound {ref_loc = [1:34-35]; name = "T"}))))}}
+           renders =
+           (Annot
+              (Renders ([1:26-35], (Annot Bound {ref_loc = [1:34-35]; name = "T"}),
+                 Flow_ast.Type.Renders.Normal)))}}
   |}]
 
 let%expect_test "component_5" =
@@ -6108,7 +6114,8 @@ let%expect_test "component_5" =
            renders =
            (Annot
               (Renders ([1:23],
-                 (TyRef (Unqualified BuiltinRef {ref_loc = [1:23]; name = "React$Node"})))))}}
+                 (TyRef (Unqualified BuiltinRef {ref_loc = [1:23]; name = "React$Node"})),
+                 Flow_ast.Type.Renders.Normal)))}}
     1. ComponentBinding {id_loc = [2:25-28];
          name = "Bar"; fn_loc = [2:15-31];
          def =
@@ -6118,7 +6125,8 @@ let%expect_test "component_5" =
            renders =
            (Annot
               (Renders ([2:31],
-                 (TyRef (Unqualified BuiltinRef {ref_loc = [2:31]; name = "React$Node"})))))}}
+                 (TyRef (Unqualified BuiltinRef {ref_loc = [2:31]; name = "React$Node"})),
+                 Flow_ast.Type.Renders.Normal)))}}
 
   |}]
 
@@ -6186,7 +6194,8 @@ let%expect_test "declare_component" =
            renders =
            (Annot
               (Renders ([1:31],
-                 (TyRef (Unqualified BuiltinRef {ref_loc = [1:31]; name = "React$Node"})))))}}
+                 (TyRef (Unqualified BuiltinRef {ref_loc = [1:31]; name = "React$Node"})),
+                 Flow_ast.Type.Renders.Normal)))}}
     1. ComponentBinding {id_loc = [2:33-36];
          name = "Bar"; fn_loc = [2:23-40];
          def =
@@ -6196,7 +6205,8 @@ let%expect_test "declare_component" =
            renders =
            (Annot
               (Renders ([2:39],
-                 (TyRef (Unqualified BuiltinRef {ref_loc = [2:39]; name = "React$Node"})))))}} |}]
+                 (TyRef (Unqualified BuiltinRef {ref_loc = [2:39]; name = "React$Node"})),
+                 Flow_ast.Type.Renders.Normal)))}} |}]
 
 let%expect_test "declare_component_disabled" =
   print_sig ~enable_component_syntax:false {|
@@ -6254,7 +6264,8 @@ let%expect_test "component_type" =
                  renders =
                  (Annot
                     (Renders ([3:40-49],
-                       (TyRef (Unqualified LocalRef {ref_loc = [3:48-49]; index = 1})))))}
+                       (TyRef (Unqualified LocalRef {ref_loc = [3:48-49]; index = 1})),
+                       Flow_ast.Type.Renders.Normal)))}
                )))}
     3. Variable {id_loc = [4:12-15];
          name = "Bar";
@@ -6267,7 +6278,8 @@ let%expect_test "component_type" =
                  renders =
                  (Annot
                     (Renders ([4:28],
-                       (TyRef (Unqualified BuiltinRef {ref_loc = [4:28]; name = "React$Node"})))))}
+                       (TyRef (Unqualified BuiltinRef {ref_loc = [4:28]; name = "React$Node"})),
+                       Flow_ast.Type.Renders.Normal)))}
                )))} |}]
 
 let%expect_test "declare_component_disabled" =
@@ -6307,12 +6319,16 @@ let%expect_test "render_types" =
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
          name = "X"; tparams = Mono;
-         body = (Annot (Renders ([1:16-30], (Annot (Number [1:24-30])))))}
+         body =
+         (Annot (Renders ([1:16-30], (Annot (Number [1:24-30])), Flow_ast.Type.Renders.Normal)))}
     1. TypeAlias {id_loc = [2:12-13];
          name = "Y"; tparams = Mono;
          body =
          (Annot
-            Union {loc = [2:16-39]; t0 = (Annot (Renders ([2:16-30], (Annot (Number [2:24-30])))));
+            Union {loc = [2:16-39];
+              t0 =
+              (Annot
+                 (Renders ([2:16-30], (Annot (Number [2:24-30])), Flow_ast.Type.Renders.Normal)));
               t1 = (Annot (String [2:33-39]));
               ts = []})}
     2. TypeAlias {id_loc = [3:12-13];
@@ -6324,5 +6340,79 @@ let%expect_test "render_types" =
                   Union {loc = [3:25-40];
                     t0 = (Annot (Number [3:25-31]));
                     t1 = (Annot (String [3:34-40]));
-                    ts = []})
-               )))} |}]
+                    ts = []}),
+               Flow_ast.Type.Renders.Normal)))} |}]
+
+let%expect_test "render_maybe_types" =
+  print_sig {|
+    export type X = renders? number;
+    export type Y = renders? number | string;
+    export type Z = renders? (number | string);
+    export type C = component() renders? number;
+    declare export component Foo() renders? number;
+    export component Bar() renders? number { return null }
+  |};
+  [%expect{|
+    ESModule {
+      type_exports =
+      [|(ExportTypeBinding 3); (ExportTypeBinding 0); (
+        ExportTypeBinding 1); (ExportTypeBinding 2)|];
+      exports = [|(ExportBinding 5); (ExportBinding 4)|];
+      info =
+      ESModuleInfo {type_export_keys = [|"C"; "X"; "Y"; "Z"|];
+        type_stars = []; export_keys = [|"Bar"; "Foo"|];
+        stars = []; strict = true}}
+
+    Local defs:
+    0. TypeAlias {id_loc = [1:12-13];
+         name = "X"; tparams = Mono;
+         body =
+         (Annot (Renders ([1:16-31], (Annot (Number [1:25-31])), Flow_ast.Type.Renders.Maybe)))}
+    1. TypeAlias {id_loc = [2:12-13];
+         name = "Y"; tparams = Mono;
+         body =
+         (Annot
+            Union {loc = [2:16-40];
+              t0 =
+              (Annot (Renders ([2:16-31], (Annot (Number [2:25-31])), Flow_ast.Type.Renders.Maybe)));
+              t1 = (Annot (String [2:34-40]));
+              ts = []})}
+    2. TypeAlias {id_loc = [3:12-13];
+         name = "Z"; tparams = Mono;
+         body =
+         (Annot
+            (Renders ([3:16-42],
+               (Annot
+                  Union {loc = [3:26-41];
+                    t0 = (Annot (Number [3:26-32]));
+                    t1 = (Annot (String [3:35-41]));
+                    ts = []}),
+               Flow_ast.Type.Renders.Maybe)))}
+    3. TypeAlias {id_loc = [4:12-13];
+         name = "C"; tparams = Mono;
+         body =
+         (Annot
+            (ComponentAnnot ([4:16-43],
+               ComponentSig {params_loc = [4:25-27];
+                 tparams = Mono; params = [];
+                 rest_param = None;
+                 renders =
+                 (Annot
+                    (Renders ([4:28-43], (Annot (Number [4:37-43])), Flow_ast.Type.Renders.Maybe)))}
+               )))}
+    4. ComponentBinding {id_loc = [5:25-28];
+         name = "Foo"; fn_loc = [5:15-47];
+         def =
+         ComponentSig {params_loc = [5:28-30];
+           tparams = Mono; params = [];
+           rest_param = None;
+           renders =
+           (Annot (Renders ([5:31-46], (Annot (Number [5:40-46])), Flow_ast.Type.Renders.Maybe)))}}
+    5. ComponentBinding {id_loc = [6:17-20];
+         name = "Bar"; fn_loc = [6:7-38];
+         def =
+         ComponentSig {params_loc = [6:20-22];
+           tparams = Mono; params = [];
+           rest_param = None;
+           renders =
+           (Annot (Renders ([6:23-38], (Annot (Number [6:32-38])), Flow_ast.Type.Renders.Maybe)))}} |}]
