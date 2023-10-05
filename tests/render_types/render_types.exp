@@ -265,7 +265,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- renders_star.js:8:2
 
-Cannot cast `true` to renders `MenuItem` because boolean [1] does not render `MenuItem` [2]. [incompatible-cast]
+Cannot cast `true` to renders* `MenuItem` because boolean [1] does not render `MenuItem` [2]. [incompatible-cast]
 
    renders_star.js:8:2
    8| (true: RendersStar<MenuItem>); // ERROR
@@ -279,7 +279,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- renders_star.js:25:2
 
-Cannot cast `rendersHuhBad` to renders `MenuItem` because `Bad` [1] does not render `MenuItem` [2]. [incompatible-cast]
+Cannot cast `rendersHuhBad` to renders* `MenuItem` because `Bad` [1] does not render `MenuItem` [2]. [incompatible-cast]
 
    renders_star.js:25:2
    25| (rendersHuhBad: RendersStar<MenuItem>); // ERROR
@@ -293,7 +293,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- renders_star.js:30:35
 
-Cannot cast array literal to renders `MenuItem` because `Bad` element [1] does not render `MenuItem` [2].
+Cannot cast array literal to renders* `MenuItem` because `Bad` element [1] does not render `MenuItem` [2].
 [incompatible-cast]
 
    renders_star.js:30:35

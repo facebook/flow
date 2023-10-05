@@ -256,6 +256,7 @@ type 'loc virtual_reason_desc =
     }
   | RRenderType of 'loc virtual_reason_desc
   | RRenderMaybeType of 'loc virtual_reason_desc
+  | RRenderStarType of 'loc virtual_reason_desc
   | RRendersNothing
 [@@deriving eq, show]
 
@@ -362,6 +363,7 @@ let rec map_desc_locs f = function
       }
   | RRenderType desc -> RRenderType (map_desc_locs f desc)
   | RRenderMaybeType desc -> RRenderMaybeType (map_desc_locs f desc)
+  | RRenderStarType desc -> RRenderStarType (map_desc_locs f desc)
   | RRendersNothing -> RRendersNothing
 
 type 'loc virtual_reason = {
@@ -792,6 +794,7 @@ let rec string_of_desc = function
       position_suffix
   | RRenderType desc -> spf "renders %s" (string_of_desc desc)
   | RRenderMaybeType desc -> spf "renders? %s" (string_of_desc desc)
+  | RRenderStarType desc -> spf "renders* %s" (string_of_desc desc)
   | RRendersNothing -> "a value that renders nothing"
 
 let string_of_reason ?(strip_root = None) r =
@@ -1428,6 +1431,7 @@ let classification_of_reason r =
   | RPropsOfComponent _
   | RRenderType _
   | RRenderMaybeType _
+  | RRenderStarType _
   | RRendersNothing
   | RInstanceOfComponent _
   | RRenderTypeOfComponent _

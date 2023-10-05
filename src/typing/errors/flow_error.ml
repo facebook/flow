@@ -1074,6 +1074,7 @@ let rec make_error_printable :
       let rec loop = function
         | RRenderType desc -> loop desc
         | RRenderMaybeType desc -> loop desc
+        | RRenderStarType desc -> loop desc
         | desc -> desc
       in
       let lower_desc = loop (desc_of_reason lower) in

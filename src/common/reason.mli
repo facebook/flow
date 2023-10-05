@@ -214,6 +214,7 @@ type 'loc virtual_reason_desc =
     }
   | RRenderType of 'loc virtual_reason_desc
   | RRenderMaybeType of 'loc virtual_reason_desc
+  | RRenderStarType of 'loc virtual_reason_desc
   | RRendersNothing
 
 and reason_desc_function =
