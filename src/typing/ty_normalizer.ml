@@ -1777,7 +1777,14 @@ end = struct
       | T.ReactCheckComponentRef -> return (Ty.Utility (Ty.ReactCheckComponentRef ty))
       | T.ReactElementPropsType -> return (Ty.Utility (Ty.ReactElementPropsType ty))
       | T.ReactElementConfigType -> return (Ty.Utility (Ty.ReactElementConfigType ty))
-      | T.ReactPromoteRendersRepresentation _ -> return (Ty.Renders ty)
+      | T.ReactPromoteRendersRepresentation { renders_variant; _ } ->
+        let variant =
+          match renders_variant with
+          | T.RendersNormal -> Ty.RendersNormal
+          | T.RendersMaybe -> Ty.RendersMaybe
+          | T.RendersStar -> Ty.RendersStar
+        in
+        return (Ty.Renders (ty, variant))
       | T.ReactElementRefType -> return (Ty.Utility (Ty.ReactElementRefType ty))
       | T.ReactConfigType default_props ->
         let%map default_props' = type__ ~env default_props in

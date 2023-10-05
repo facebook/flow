@@ -11,3 +11,9 @@ type U = renders (React$Element<typeof Foo> | React$Element<typeof Bar>);
 //   ^
 type V = renders React$Element<typeof Foo> | React$Element<typeof Bar>;
 //   ^
+
+type MaybeRenders = renders? number;
+//   ^
+
+type StarRenders = renders* number;
+//   ^

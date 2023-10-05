@@ -75,7 +75,7 @@ type t =
       false_type: t;
     }
   | Infer of symbol * t option
-  | Renders of t
+  | Renders of t * renders_kind
 
 (* Recursive variable *)
 and generic_t = symbol * gen_kind * t list option
@@ -282,6 +282,11 @@ and utility =
   | ReactElementRefType of t
   | ReactCheckComponentRef of t
   | ReactConfigType of t * t
+
+and renders_kind =
+  | RendersNormal
+  | RendersMaybe
+  | RendersStar
 
 and polarity =
   | Positive

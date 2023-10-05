@@ -377,7 +377,7 @@ struct
           "Infer (%s, %s)"
           (dump_symbol s)
           (Base.Option.value_map ~default:"None" ~f:(dump_t ~depth) b)
-      | Renders t -> spf "Renders (%s)" (dump_t ~depth t)
+      | Renders (t, _) -> spf "Renders (%s)" (dump_t ~depth t)
 
   and dump_class_decl ~depth (name, ps) =
     spf "Class (name=%s, params= %s)" (dump_symbol name) (dump_type_params ~depth ps)
@@ -537,7 +537,16 @@ struct
             ("name", json_of_symbol s);
             ("bound", Base.Option.value_map ~default:JSON_Null ~f:json_of_t b);
           ]
-        | Renders t -> [("argument", json_of_t t)]
+        | Renders (t, variant) ->
+          [
+            ("argument", json_of_t t);
+            ( "variant",
+              match variant with
+              | RendersNormal -> Hh_json.JSON_String "normal"
+              | RendersMaybe -> Hh_json.JSON_String "maybe"
+              | RendersStar -> Hh_json.JSON_String "star"
+            );
+          ]
       )
     and json_of_generic (s, k, targs_opt) =
       json_of_targs targs_opt
