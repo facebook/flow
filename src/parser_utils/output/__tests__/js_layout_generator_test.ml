@@ -2996,6 +2996,10 @@ let tests =
          ( "render_types" >:: fun ctxt ->
            assert_statement_string ~ctxt ~pretty:true "type X = renders number;";
            assert_statement_string ~ctxt ~pretty:true "type X = renders (number | string);";
-           assert_statement_string ~ctxt ~pretty:false "type X=renders (number|string);"
+           assert_statement_string ~ctxt ~pretty:false "type X=renders (number|string);";
+           assert_statement_string ~ctxt ~pretty:true "type X = renders? number;";
+           assert_statement_string ~ctxt ~pretty:false "type X=renders? number;";
+           assert_statement_string ~ctxt ~pretty:true "type X = renders* number;";
+           assert_statement_string ~ctxt ~pretty:false "type X=renders* number;"
          );
        ]

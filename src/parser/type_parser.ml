@@ -468,7 +468,9 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
               comments = Flow_ast_utils.mk_comments_opt ~leading ();
             })
         env
-    | T_IDENTIFIER { raw = "renders"; _ } ->
+    | T_IDENTIFIER { raw = "renders"; _ }
+    | T_RENDERS_QUESTION
+    | T_RENDERS_STAR ->
       with_loc (fun env -> Type.Renders (render_type env)) env
     | T_IDENTIFIER _
     | T_EXTENDS (* `extends` is reserved, but recover by treating it as an identifier *)
@@ -751,13 +753,22 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
 
   and render_type env =
     let leading = Peek.comments env in
+    let variant =
+      match Peek.token env with
+      | T_IDENTIFIER { raw = "renders"; _ } -> Type.Renders.Normal
+      | T_RENDERS_QUESTION -> Type.Renders.Maybe
+      | T_RENDERS_STAR -> Type.Renders.Star
+      | _ ->
+        failwith
+          "You should only call render_type after making sure the next token is a renders variant"
+    in
     Eat.token env;
     let trailing = Eat.trailing_comments env in
     let argument = prefix env in
     {
       Type.Renders.argument;
       comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-      variant = Type.Renders.Normal;
+      variant;
     }
 
   and anonymous_function_param _env annot =
@@ -953,6 +964,12 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         (* () or is definitely a param list *)
         ParamList
           { Ast.Type.Function.Params.this_ = None; params = []; rest = None; comments = None }
+      | T_RENDERS_QUESTION ->
+        (match Peek.ith_token ~i:1 env with
+        | T_COLON ->
+          (* Ok this is definitely a parameter *)
+          ParamList (function_param_list_without_parens env [])
+        | _ -> Type (_type env))
       | T_IDENTIFIER { raw = "renders"; _ } ->
         (match Peek.ith_token ~i:1 env with
         | T_PLING
@@ -1915,7 +1932,9 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       let (loc, argument) = with_loc _type env in
       Type.AvailableRenders
         (loc, { Ast.Type.Renders.argument; variant = Ast.Type.Renders.Normal; comments = None })
-    | T_IDENTIFIER { raw = "renders"; _ } ->
+    | T_IDENTIFIER { raw = "renders"; _ }
+    | T_RENDERS_QUESTION
+    | T_RENDERS_STAR ->
       if not (should_parse_types env) then error env Parse_error.UnexpectedTypeAnnotation;
       let (loc, renders) = with_loc ~start_loc:(Peek.loc env) render_type env in
       Type.AvailableRenders (loc, renders)
