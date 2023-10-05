@@ -1594,8 +1594,14 @@ with type t = Impl.t = struct
         | Intersection t -> intersection_type (loc, t)
         | Typeof t -> typeof_type (loc, t)
         | Keyof t -> keyof_type (loc, t)
-        | Renders { Type.Renders.comments; argument } ->
-          flow_type_operator loc comments "renders" argument
+        | Renders { Type.Renders.comments; variant; argument } ->
+          let operator =
+            match variant with
+            | Type.Renders.Normal -> "renders"
+            | Type.Renders.Maybe -> "renders?"
+            | Type.Renders.Star -> "renders*"
+          in
+          flow_type_operator loc comments operator argument
         | ReadOnly t -> read_only_type (loc, t)
         | Tuple t -> tuple_type (loc, t)
         | StringLiteral s -> string_literal_type (loc, s)

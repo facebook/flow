@@ -4156,8 +4156,14 @@ and type_ ~opts ((loc, t) : (Loc.t, Loc.t) Ast.Type.t) =
       | T.Intersection t -> type_intersection ~opts loc t
       | T.Typeof t -> type_typeof ~opts loc t
       | T.Keyof t -> type_keyof ~opts loc t
-      | T.Renders { T.Renders.comments; argument } ->
-        flow_type_operator ~opts loc comments "renders" argument
+      | T.Renders { T.Renders.comments; argument; variant } ->
+        let operator =
+          match variant with
+          | T.Renders.Normal -> "renders"
+          | T.Renders.Maybe -> "renders?"
+          | T.Renders.Star -> "renders*"
+        in
+        flow_type_operator ~opts loc comments operator argument
       | T.ReadOnly t -> type_readonly ~opts loc t
       | T.Tuple t -> type_tuple ~opts loc t
       | T.StringLiteral lit -> string_literal ~opts loc lit

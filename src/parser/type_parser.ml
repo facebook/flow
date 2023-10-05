@@ -479,6 +479,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
             {
               Type.Renders.argument;
               comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+              variant = Type.Renders.Normal;
             })
         env
     | T_IDENTIFIER _

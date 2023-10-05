@@ -1712,13 +1712,13 @@ class ['loc] mapper =
 
     method render_type (t : ('loc, 'loc) Ast.Type.Renders.t) =
       let open Ast.Type.Renders in
-      let { argument; comments } = t in
+      let { argument; variant; comments } = t in
       let argument' = this#type_ argument in
       let comments' = this#syntax_opt comments in
       if argument == argument' && comments == comments' then
         t
       else
-        { argument = argument'; comments = comments' }
+        { argument = argument'; comments = comments'; variant }
 
     method readonly_type (t : ('loc, 'loc) Ast.Type.ReadOnly.t) =
       let open Ast.Type.ReadOnly in

@@ -453,7 +453,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       Flow_js_utils.add_output cx (Error_message.ETSSyntax { kind = Error_message.TSKeyof; loc });
       let t = AnyT.at (AnyError None) loc in
       ((loc, t), Keyof (Tast_utils.error_mapper#keyof_type keyof))
-    | (loc, Renders { Renders.comments; argument }) ->
+    | (loc, Renders { Renders.comments; argument; variant }) ->
       let (((argument_loc, t), _) as t_ast) = convert cx tparams_map infer_tparams_map argument in
       Context.add_renders_type_argument_validation cx ~allow_generic_t:false argument_loc t;
       let reason = mk_reason (RRenderType (desc_of_reason (reason_of_t t))) loc in
@@ -461,8 +461,14 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let node = Flow.get_builtin_type cx renders_reason (OrdinaryName "React$Node") in
       let use_op = Op (RenderTypeInstantiation { render_type = renders_reason }) in
       Flow.flow cx (t, UseT (use_op, node));
-      let renders_t = TypeUtil.mk_renders_type reason RendersNormal t in
-      ((loc, renders_t), Renders { Renders.comments; argument = t_ast })
+      let renders_variant =
+        match variant with
+        | Renders.Normal -> RendersNormal
+        | Renders.Maybe -> RendersMaybe
+        | Renders.Star -> RendersStar
+      in
+      let renders_t = TypeUtil.mk_renders_type reason renders_variant t in
+      ((loc, renders_t), Renders { Renders.comments; argument = t_ast; variant })
     | (loc, ReadOnly ro) ->
       let { ReadOnly.argument; _ } = ro in
       let arg_kind =

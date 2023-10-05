@@ -1311,7 +1311,8 @@ and annot_with_loc opts scope tbls xs (loc, t) =
           targs
       in
       typeof scope tbls loc t targs
-    | T.Renders { T.Renders.comments = _; argument } ->
+    (* TODO(jmbrown): Type-sig for renders variants *)
+    | T.Renders { T.Renders.comments = _; argument; variant = _ } ->
       let t = annot opts scope tbls xs argument in
       Annot (Renders (loc, t))
     | T.Keyof _ -> Annot (Any loc)

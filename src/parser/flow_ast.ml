@@ -465,9 +465,16 @@ and Type : sig
   end
 
   module Renders : sig
+    type variant =
+      | Normal
+      | Maybe
+      | Star
+    [@@deriving show]
+
     type ('M, 'T) t = {
       argument: ('M, 'T) Type.t;
       comments: ('M, unit) Syntax.t option;
+      variant: variant;
     }
     [@@deriving show]
   end
