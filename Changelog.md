@@ -1,3 +1,22 @@
+### 0.218.0
+
+Likely to cause new Flow errors:
+* We start to validate variance inside `$ReadOnly`, which is previously completely unchecked. It also results in Flow complaining about some incorrect bounds. [example](https://flow.org/try#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+IFkolXpUCWewUEAwhCQgRDH8wEH4hMnwROHlsNnw4KHwwSLAAC3wANyo4LFxscWQuHgMNZmwsiRSAWglaY1cq-hIAa2wJXNpG4Vxcdvdu3v7B0RxKUYMhKDBSqmbWwIq3eagoOrKSKgH0wtMMPznY7d2SfcoBiEZ-aG5G3Ix085AF-ZhsRoRehqUEiNMgSQHlSruBZxJrMcJwMhzAC+-EgGiCLWMAAIAGrcOBsACMAB4ANQAFQAfFiALxYgAkACVWGwAPJQXC0YnAGDEZBY8lIykAbixAHoxViIF0ADp+Na4-FsABMxMaVNpDOZ7HZnO5vIg-IAFOSAJS06n5CAEoWiiVS2Xy7EASSghVwBJJFOpdKZLN1XJ5fKxJvNNMt1rYtvFkpMlAglDlmOwWNd7oJqvVPq1-o5gYN-MFIpjWLjCblSYV5NMCH+QIAou6yeT+cArO2hZq-Tq89z21Yi3bY9QE-z0govFj8iRS4plHKYiB8iYSHBoEEIvYTCAkUA)
+
+New Features:
+* Hover types will now show a specialized version of the callee expression at a call to a generic or intersection-typed function.
+
+Notable bug fixes:
+* improve coverage accuracy for the element access portion on element calls, `obj[m](arg)`.
+
+Misc:
+* We slightly optimized Flow's performance of subtyping check between two union types.
+
+Library Definitions:
+* Add defintions `Array.prototype.findLastIndex()`, `String.prototype.at()`, `TypedArray.prototype.at()` and `Object.hasOwn()` (thanks @pascalduez).
+* Update `URL` defintions (thanks @pascalduez).
+* Add typing for cause option in Error constructor.
+
 ### 0.217.2
 
 This is same as 0.217.1, but we have some issue publishing 0.217.1 to npm, so we will publish this new version instead.
