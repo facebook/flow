@@ -4005,7 +4005,7 @@ and type_typeof ~opts loc { Ast.Type.Typeof.argument; targs; comments } =
 and type_keyof ~opts loc { Ast.Type.Keyof.argument; comments } =
   layout_node_with_comments_opt loc comments (fuse [Atom "keyof"; space; type_ ~opts argument])
 
-and render_type ~opts loc { Ast.Type.Renders.comments; argument; variant } =
+and render_type ~opts loc { Ast.Type.Renders.operator_loc = _; comments; argument; variant } =
   let operator =
     match variant with
     | Ast.Type.Renders.Normal -> "renders"

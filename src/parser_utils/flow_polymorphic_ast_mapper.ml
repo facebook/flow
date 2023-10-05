@@ -1303,10 +1303,15 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method render_type (t : ('M, 'T) Ast.Type.Renders.t) : ('N, 'U) Ast.Type.Renders.t =
       let open Ast.Type.Renders in
-      let { argument; comments; variant } = t in
+      let { operator_loc; argument; comments; variant } = t in
       let argument' = this#type_ argument in
       let comments' = this#syntax_opt comments in
-      { argument = argument'; comments = comments'; variant }
+      {
+        operator_loc = this#on_loc_annot operator_loc;
+        argument = argument';
+        comments = comments';
+        variant;
+      }
 
     method readonly_type (t : ('M, 'T) Ast.Type.ReadOnly.t) : ('N, 'U) Ast.Type.ReadOnly.t =
       let open Ast.Type.ReadOnly in

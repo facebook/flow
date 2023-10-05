@@ -94,7 +94,8 @@ module Types = struct
   let return_type_annotation t = Ast.Type.Function.TypeAnnotation t
 
   let component_renders_annotation ?(loc = Loc.none) variant argument =
-    Ast.Type.AvailableRenders (loc, { Ast.Type.Renders.comments = None; variant; argument })
+    Ast.Type.AvailableRenders
+      (loc, { Ast.Type.Renders.operator_loc = Loc.none; comments = None; variant; argument })
 
   let return_type_guard_annotation ?(loc = Loc.none) ?comments x t =
     Ast.Type.Function.TypeGuard

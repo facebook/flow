@@ -15,4 +15,6 @@ val documentation_of_jsdoc : Jsdoc.t -> string option
 
 val def_loc_to_comment_loc_map : (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t Loc_sig.LocS.LMap.t
 
+val hardcoded_documentation_at_loc : (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> string option
+
 val module_doc_loc : (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t option

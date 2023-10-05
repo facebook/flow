@@ -1922,7 +1922,7 @@ with type t = Impl.t = struct
     and renders_annotation = function
       | Ast.Type.AvailableRenders (loc, v) -> render_type loc v
       | Ast.Type.MissingRenders _ -> null
-    and render_type loc { Type.Renders.comments; variant; argument } =
+    and render_type loc { Type.Renders.operator_loc = _; comments; variant; argument } =
       let operator =
         match variant with
         | Type.Renders.Normal -> "renders"

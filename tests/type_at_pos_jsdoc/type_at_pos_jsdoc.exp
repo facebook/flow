@@ -1503,3 +1503,117 @@ Flags: --strip-root --pretty
   "end":5
 }
 
+render_types.js:1:12
+Flags: --strip-root --pretty
+{
+  "documentation":"`renders A` means that it will eventually render exactly one React element `A`.",
+  "types":null,
+  "reasons":[],
+  "loc":{
+    "source":null,
+    "type":null,
+    "start":{"line":0,"column":1,"offset":0},
+    "end":{"line":0,"column":0,"offset":0}
+  },
+  "path":"",
+  "line":0,
+  "endline":0,
+  "start":1,
+  "end":0
+}
+
+render_types.js:3:12
+Flags: --strip-root --pretty
+{
+  "documentation":"`renders? A` means that it will eventually render zero or one React element `A`.",
+  "types":null,
+  "reasons":[],
+  "loc":{
+    "source":null,
+    "type":null,
+    "start":{"line":0,"column":1,"offset":0},
+    "end":{"line":0,"column":0,"offset":0}
+  },
+  "path":"",
+  "line":0,
+  "endline":0,
+  "start":1,
+  "end":0
+}
+
+render_types.js:5:12
+Flags: --strip-root --pretty
+{
+  "documentation":"`renders* A` means that it will eventually render any amount of `A`.",
+  "types":null,
+  "reasons":[],
+  "loc":{
+    "source":null,
+    "type":null,
+    "start":{"line":0,"column":1,"offset":0},
+    "end":{"line":0,"column":0,"offset":0}
+  },
+  "path":"",
+  "line":0,
+  "endline":0,
+  "start":1,
+  "end":0
+}
+
+render_types.js:8:27
+Flags: --strip-root --pretty
+{
+  "documentation":"`renders A` means that it will eventually render exactly one React element `A`.",
+  "types":null,
+  "reasons":[],
+  "loc":{
+    "source":null,
+    "type":null,
+    "start":{"line":0,"column":1,"offset":0},
+    "end":{"line":0,"column":0,"offset":0}
+  },
+  "path":"",
+  "line":0,
+  "endline":0,
+  "start":1,
+  "end":0
+}
+
+render_types.js:10:27
+Flags: --strip-root --pretty
+{
+  "documentation":"`renders? A` means that it will eventually render zero or one React element `A`.",
+  "types":null,
+  "reasons":[],
+  "loc":{
+    "source":null,
+    "type":null,
+    "start":{"line":0,"column":1,"offset":0},
+    "end":{"line":0,"column":0,"offset":0}
+  },
+  "path":"",
+  "line":0,
+  "endline":0,
+  "start":1,
+  "end":0
+}
+
+render_types.js:12:27
+Flags: --strip-root --pretty
+{
+  "documentation":"`renders* A` means that it will eventually render any amount of `A`.",
+  "types":null,
+  "reasons":[],
+  "loc":{
+    "source":null,
+    "type":null,
+    "start":{"line":0,"column":1,"offset":0},
+    "end":{"line":0,"column":0,"offset":0}
+  },
+  "path":"",
+  "line":0,
+  "endline":0,
+  "start":1,
+  "end":0
+}
+

@@ -1846,7 +1846,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       tparams_map
       infer_tparams_map
       loc
-      { Ast.Type.Renders.comments; argument; variant } =
+      { Ast.Type.Renders.operator_loc; comments; argument; variant } =
     let (((argument_loc, t), _) as t_ast) = convert cx tparams_map infer_tparams_map argument in
     Context.add_renders_type_argument_validation cx ~allow_generic_t argument_loc t;
     let reason_desc =
@@ -1869,7 +1869,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       | Renders.Star -> RendersStar
     in
     let renders_t = TypeUtil.mk_renders_type reason renders_variant t in
-    (renders_t, { Ast.Type.Renders.comments; argument = t_ast; variant })
+    (renders_t, { Ast.Type.Renders.operator_loc; comments; argument = t_ast; variant })
 
   and convert_object =
     let obj_proto_t = ObjProtoT (locationless_reason RObjectPrototype) in

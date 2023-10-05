@@ -472,6 +472,7 @@ and Type : sig
     [@@deriving show]
 
     type ('M, 'T) t = {
+      operator_loc: 'M;
       argument: ('M, 'T) Type.t;
       comments: ('M, unit) Syntax.t option;
       variant: variant;

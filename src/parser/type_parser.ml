@@ -762,11 +762,13 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         failwith
           "You should only call render_type after making sure the next token is a renders variant"
     in
+    let operator_loc = Peek.loc env in
     Eat.token env;
     let trailing = Eat.trailing_comments env in
     let argument = prefix env in
     {
-      Type.Renders.argument;
+      Type.Renders.operator_loc;
+      argument;
       comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
       variant;
     }
@@ -1926,12 +1928,20 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
   and renders_annotation_opt env =
     match Peek.token env with
     | T_COLON ->
+      let operator_loc = Peek.loc env in
       if not (should_parse_types env) then error env Parse_error.UnexpectedTypeAnnotation;
       error env Parse_error.InvalidComponentRenderAnnotation;
       Eat.token env;
       let (loc, argument) = with_loc _type env in
       Type.AvailableRenders
-        (loc, { Ast.Type.Renders.argument; variant = Ast.Type.Renders.Normal; comments = None })
+        ( loc,
+          {
+            Ast.Type.Renders.operator_loc;
+            argument;
+            variant = Ast.Type.Renders.Normal;
+            comments = None;
+          }
+        )
     | T_IDENTIFIER { raw = "renders"; _ }
     | T_RENDERS_QUESTION
     | T_RENDERS_STAR ->

@@ -49,7 +49,7 @@ let replace_comments_of_statement ~comments =
       | other -> other
       )
 
-class documentation_searcher find =
+class jsdoc_documentation_searcher find =
   object (this)
     inherit [unit, Loc.t] Flow_ast_visitor.visitor ~init:() as super
 
@@ -249,7 +249,7 @@ let find_jsdoc target_loc found_loc comments =
     Base.Option.iter (Jsdoc.of_comments comments) ~f:(fun jsdoc -> raise (FoundJsdoc jsdoc))
 
 let search_jsdoc def_loc ast =
-  let searcher = new documentation_searcher (find_jsdoc def_loc) in
+  let searcher = new jsdoc_documentation_searcher (find_jsdoc def_loc) in
   try
     ignore (searcher#program ast);
     None
@@ -314,6 +314,36 @@ let documentation_of_jsdoc jsdoc =
   | [] -> None
   | _ -> Some (String.concat "\n\n" documentation_strings)
 
+class hardcoded_documentation_searcher find =
+  object (_this)
+    inherit [unit, Loc.t] Flow_ast_visitor.visitor ~init:() as super
+
+    method! render_type t =
+      let open Flow_ast.Type.Renders in
+      let { operator_loc; variant; _ } = t in
+      let doc =
+        match variant with
+        | Normal ->
+          "`renders A` means that it will eventually render exactly one React element `A`."
+        | Maybe ->
+          "`renders? A` means that it will eventually render zero or one React element `A`."
+        | Star -> "`renders* A` means that it will eventually render any amount of `A`."
+      in
+      find operator_loc doc;
+      super#render_type t
+  end
+
+exception FoundHardcodedDocumentation of string
+
+let hardcoded_documentation_at_loc ast target_loc =
+  let find loc doc = if Loc.contains loc target_loc then raise (FoundHardcodedDocumentation doc) in
+  let searcher = new hardcoded_documentation_searcher find in
+  try
+    ignore (searcher#program ast);
+    None
+  with
+  | FoundHardcodedDocumentation doc -> Some doc
+
 let def_loc_to_comment_loc_map ast =
   let map_ref = ref Loc_sig.LocS.LMap.empty in
   let add_to_map def_loc =
@@ -323,7 +353,7 @@ let def_loc_to_comment_loc_map ast =
         )
     )
   in
-  let searcher = new documentation_searcher add_to_map in
+  let searcher = new jsdoc_documentation_searcher add_to_map in
   ignore (searcher#program ast);
   !map_ref
 

@@ -17,3 +17,4 @@ queries_in_file "type-at-pos" "parse_error.js" --strip-root --pretty
 queries_in_file "type-at-pos" "types.js" --strip-root --pretty
 queries_in_file "type-at-pos" "redeclare_import.js" --strip-root --pretty
 queries_in_file "type-at-pos" "components.js" --strip-root --pretty
+queries_in_file "type-at-pos" "render_types.js" --strip-root --pretty

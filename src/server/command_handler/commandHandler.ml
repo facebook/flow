@@ -547,8 +547,9 @@ let infer_type
       let json_props = add_cache_hit_data_to_json [] did_hit_cache in
       (Error err_str, Some (Hh_json.JSON_Object json_props))
     | Ok
-        ((Parse_artifacts { file_sig; _ }, Typecheck_artifacts { cx; typed_ast; _ }) as check_result)
-      ->
+        ( (Parse_artifacts { file_sig; ast; _ }, Typecheck_artifacts { cx; typed_ast; _ }) as
+        check_result
+        ) ->
       let ((loc, tys), type_at_pos_json_props) =
         Type_info_service.type_at_pos
           ~cx
@@ -571,12 +572,25 @@ let infer_type
               (file_key, line, column)
         )
       in
-      let documentation =
+      let get_def_documentation =
         match getdef_loc_result with
         | Ok [getdef_loc] ->
           Find_documentation.jsdoc_of_getdef_loc ~current_ast:typed_ast ~reader getdef_loc
           |> Base.Option.bind ~f:Find_documentation.documentation_of_jsdoc
         | _ -> None
+      in
+      let hardcoded_documentation =
+        Find_documentation.hardcoded_documentation_at_loc
+          ast
+          (Loc.cursor (Some file_key) line column)
+      in
+      let documentation =
+        match (get_def_documentation, hardcoded_documentation) with
+        | (None, None) -> None
+        | (Some d, None)
+        | (None, Some d) ->
+          Some d
+        | (Some d1, Some d2) -> Some (d1 ^ "\n\n" ^ d2)
       in
       let json_props =
         ("documentation", Hh_json.JSON_Bool (Base.Option.is_some documentation))
@@ -1950,9 +1964,9 @@ let handle_persistent_infer_type
       | _ :: _ as contents -> contents
     in
     let r =
-      match (range, tys) with
-      | (None, ServerProt.Response.Infer_type_string None) -> None
-      | (_, _) -> Some { Lsp.Hover.contents; range }
+      match (range, tys, documentation) with
+      | (None, ServerProt.Response.Infer_type_string None, None) -> None
+      | (_, _, _) -> Some { Lsp.Hover.contents; range }
     in
     let response = ResponseMessage (id, HoverResult r) in
     Lwt.return (LspProt.LspFromServer (Some response), metadata)

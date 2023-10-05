@@ -1311,7 +1311,7 @@ and annot_with_loc opts scope tbls xs (loc, t) =
           targs
       in
       typeof scope tbls loc t targs
-    | T.Renders { T.Renders.comments = _; argument; variant } ->
+    | T.Renders { T.Renders.operator_loc = _; comments = _; argument; variant } ->
       let t = annot opts scope tbls xs argument in
       Annot (Renders (loc, t, variant))
     | T.Keyof _ -> Annot (Any loc)
@@ -1463,7 +1463,8 @@ and component_type =
   in
   let renders opts scope tbls xs ret =
     match ret with
-    | Ast.Type.AvailableRenders (loc, { Ast.Type.Renders.comments = _; variant; argument }) ->
+    | Ast.Type.AvailableRenders
+        (loc, { Ast.Type.Renders.operator_loc = _; comments = _; variant; argument }) ->
       let loc = push_loc tbls loc in
       let t = annot opts scope tbls xs argument in
       Annot (Renders (loc, t, variant))
@@ -3177,7 +3178,8 @@ and component_def =
   in
   let renders opts scope tbls xs ret =
     match ret with
-    | Ast.Type.AvailableRenders (loc, { Ast.Type.Renders.comments = _; variant; argument }) ->
+    | Ast.Type.AvailableRenders
+        (loc, { Ast.Type.Renders.operator_loc = _; comments = _; variant; argument }) ->
       let loc = push_loc tbls loc in
       let t = annot opts scope tbls xs argument in
       Annot (Renders (loc, t, variant))
