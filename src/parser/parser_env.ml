@@ -788,7 +788,9 @@ let token_is_type_identifier env t =
     | T_INFER
     | T_IS
     | T_ASSERTS
-    | T_VOID ->
+    | T_VOID
+    | T_RENDERS_QUESTION
+    | T_RENDERS_STAR ->
       false
     (* syntax *)
     | T_LCURLY

@@ -1766,6 +1766,8 @@ let type_token env lexbuf =
   (* Variance annotations *)
   | '+' -> Token (env, T_PLUS)
   | '-' -> Token (env, T_MINUS)
+  | "renders?" -> Token (env, T_RENDERS_QUESTION)
+  | "renders*" -> Token (env, T_RENDERS_STAR)
   (* Identifiers *)
   | js_id_start ->
     let start_offset = Sedlexing.lexeme_start lexbuf in
