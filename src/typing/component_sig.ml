@@ -118,25 +118,15 @@ module Make
   module Config = C
   module ComponentBody = B
 
-  let mk_render_type cx renders_t =
-    let renders_reason = reason_of_t renders_t in
-    let node = Flow.get_builtin_type cx renders_reason (OrdinaryName "React$Node") in
-    let use_op = Op (RenderTypeInstantiation { render_type = renders_reason }) in
-    Flow.flow cx (renders_t, UseT (use_op, node));
-    let reason = update_desc_reason (fun desc -> RRenderType desc) renders_reason in
-    TypeUtil.mk_renders_type reason RendersNormal renders_t
-
   let toplevels cx x =
     let { T.reason = reason_cmp; cparams; body; ret_annot_loc = _; renders_t; _ } = x in
     (* add param bindings *)
-    let renders_t = mk_render_type cx renders_t in
     let params_ast = F.eval cx cparams in
     let body_ast = B.eval cx reason_cmp renders_t body in
     (params_ast, body_ast)
 
   let component_type cx _component_loc x =
     let { T.reason; tparams; cparams; renders_t; id_loc; _ } = x in
-    let renders_t = mk_render_type cx renders_t in
     let config_reason = update_desc_reason (fun desc -> RPropsOfComponent desc) reason in
     let instance_reason = update_desc_reason (fun desc -> RInstanceOfComponent desc) reason in
     let (config, instance) =

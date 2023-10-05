@@ -81,6 +81,10 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method component_param_pattern : ('M, 'T) Flow_ast.Pattern.t -> ('N, 'U) Ast.Pattern.t
 
+    method component_renders_annotation :
+      ('M, 'T) Ast.Type.component_renders_annotation ->
+      ('N, 'U) Ast.Type.component_renders_annotation
+
     method component_rest_param :
       ('M, 'T) Ast.Statement.ComponentDeclaration.RestParam.t ->
       ('N, 'U) Ast.Statement.ComponentDeclaration.RestParam.t

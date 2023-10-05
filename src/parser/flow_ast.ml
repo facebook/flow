@@ -256,7 +256,7 @@ and Type : sig
     type ('M, 'T) t = {
       tparams: ('M, 'T) Type.TypeParams.t option;
       params: ('M, 'T) Params.t;
-      renders: ('M, 'T) Type.annotation_or_hint;
+      renders: ('M, 'T) Type.component_renders_annotation;
       comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
@@ -602,6 +602,11 @@ and Type : sig
   and ('M, 'T) annotation_or_hint =
     | Missing of 'T
     | Available of ('M, 'T) Type.annotation
+  [@@deriving show]
+
+  and ('M, 'T) component_renders_annotation =
+    | MissingRenders of 'T
+    | AvailableRenders of 'M * ('M, 'T) Type.Renders.t
   [@@deriving show]
 
   module TypeParam : sig
@@ -1029,7 +1034,7 @@ and Statement : sig
       id: ('M, 'T) Identifier.t;
       tparams: ('M, 'T) Type.TypeParams.t option;
       params: ('M, 'T) Params.t;
-      renders: ('M, 'T) Type.annotation_or_hint;
+      renders: ('M, 'T) Type.component_renders_annotation;
       body: 'M * ('M, 'T) Statement.Block.t;
       comments: ('M, unit) Syntax.t option;
       (* Location of the signature portion of a component, e.g.
@@ -1070,7 +1075,7 @@ and Statement : sig
       id: ('M, 'T) Identifier.t;
       tparams: ('M, 'T) Type.TypeParams.t option;
       params: ('M, 'T) Type.Component.Params.t;
-      renders: ('M, 'T) Type.annotation_or_hint;
+      renders: ('M, 'T) Type.component_renders_annotation;
       comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]

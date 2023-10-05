@@ -577,7 +577,7 @@ class ['loc] mapper =
       let tparams' = map_opt this#type_params tparams in
       let params' = this#component_params params in
       let body' = this#component_body body in
-      let renders' = this#type_annotation_hint renders in
+      let renders' = this#component_renders_annotation renders in
       let comments' = this#syntax_opt comments in
       if
         ident == ident'
@@ -722,7 +722,7 @@ class ['loc] mapper =
       let ident' = this#component_identifier ident in
       let tparams' = map_opt this#type_params tparams in
       let params' = this#component_type_params params in
-      let renders' = this#type_annotation_hint renders in
+      let renders' = this#component_renders_annotation renders in
       let comments' = this#syntax_opt comments in
       if
         ident == ident'
@@ -746,7 +746,7 @@ class ['loc] mapper =
       let { tparams; params; renders; comments } = t in
       let tparams' = map_opt this#type_params tparams in
       let params' = this#component_type_params params in
-      let renders' = this#type_annotation_hint renders in
+      let renders' = this#component_renders_annotation renders in
       let comments' = this#syntax_opt comments in
       if tparams == tparams' && params == params' && renders == renders' && comments == comments'
       then
@@ -1869,6 +1869,17 @@ class ['loc] mapper =
       match return with
       | Available annot -> id this#type_annotation annot return (fun a -> Available a)
       | Missing _loc -> return
+
+    method component_renders_annotation (renders : ('M, 'T) Ast.Type.component_renders_annotation) =
+      let open Ast.Type in
+      match renders with
+      | AvailableRenders (loc, render_type) ->
+        let render_type' = this#render_type render_type in
+        if render_type' == render_type then
+          renders
+        else
+          AvailableRenders (loc, render_type')
+      | MissingRenders _loc -> renders
 
     method function_declaration loc (stmt : ('loc, 'loc) Ast.Function.t) = this#function_ loc stmt
 

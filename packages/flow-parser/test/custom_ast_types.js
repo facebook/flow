@@ -142,7 +142,7 @@ function custom_ast_types(fork) {
     .field('typeParameters', or(def('TypeParameterDeclaration'), null))
     .field('params', [def('ComponentTypeParameter')])
     .field('rest', or(def('ComponentTypeParameter'), null))
-    .field('rendersType', or(def('TypeAnnotation'), null));
+    .field('rendersType', or(def('TypeOperator'), null));
 
   def('ComponentTypeAnnotation')
     .bases('FlowType')
@@ -150,7 +150,7 @@ function custom_ast_types(fork) {
     .field('typeParameters', or(def('TypeParameterDeclaration'), null))
     .field('params', [def('ComponentTypeParameter')])
     .field('rest', or(def('ComponentTypeParameter'), null))
-    .field('rendersType', or(def('TypeAnnotation'), null));
+    .field('rendersType', or(def('TypeOperator'), null));
 
   def('ComponentTypeParameter')
     .build('name', 'annotation', 'optional')
@@ -181,7 +181,7 @@ function custom_ast_types(fork) {
     .field('id', def('Identifier'))
     .field('typeParameters', or(def('TypeParameterDeclaration'), null))
     .field('params', [or(def('ComponentParameter'), def('RestElement'))])
-    .field('rendersType', or(def('TypeAnnotation'), null))
+    .field('rendersType', or(def('TypeOperator'), null))
     .field('body', def('BlockStatement'));
 
   def('ComponentParameter')

@@ -453,22 +453,11 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       Flow_js_utils.add_output cx (Error_message.ETSSyntax { kind = Error_message.TSKeyof; loc });
       let t = AnyT.at (AnyError None) loc in
       ((loc, t), Keyof (Tast_utils.error_mapper#keyof_type keyof))
-    | (loc, Renders { Renders.comments; argument; variant }) ->
-      let (((argument_loc, t), _) as t_ast) = convert cx tparams_map infer_tparams_map argument in
-      Context.add_renders_type_argument_validation cx ~allow_generic_t:false argument_loc t;
-      let reason = mk_reason (RRenderType (desc_of_reason (reason_of_t t))) loc in
-      let renders_reason = reason_of_t t in
-      let node = Flow.get_builtin_type cx renders_reason (OrdinaryName "React$Node") in
-      let use_op = Op (RenderTypeInstantiation { render_type = renders_reason }) in
-      Flow.flow cx (t, UseT (use_op, node));
-      let renders_variant =
-        match variant with
-        | Renders.Normal -> RendersNormal
-        | Renders.Maybe -> RendersMaybe
-        | Renders.Star -> RendersStar
+    | (loc, Renders renders) ->
+      let (t, renders_ast) =
+        convert_render_type cx ~allow_generic_t:false tparams_map infer_tparams_map loc renders
       in
-      let renders_t = TypeUtil.mk_renders_type reason renders_variant t in
-      ((loc, renders_t), Renders { Renders.comments; argument = t_ast; variant })
+      ((loc, t), Renders renders_ast)
     | (loc, ReadOnly ro) ->
       let { ReadOnly.argument; _ } = ro in
       let arg_kind =
@@ -1879,6 +1868,30 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       in
       (t, Unqualified ((loc, t), id_name))
 
+  and convert_render_type
+      cx
+      ~allow_generic_t
+      tparams_map
+      infer_tparams_map
+      loc
+      { Ast.Type.Renders.comments; argument; variant } =
+    let (((argument_loc, t), _) as t_ast) = convert cx tparams_map infer_tparams_map argument in
+    Context.add_renders_type_argument_validation cx ~allow_generic_t argument_loc t;
+    let reason = mk_reason (RRenderType (desc_of_reason (reason_of_t t))) loc in
+    let renders_reason = reason_of_t t in
+    let node = Flow.get_builtin_type cx renders_reason (OrdinaryName "React$Node") in
+    let use_op = Op (RenderTypeInstantiation { render_type = renders_reason }) in
+    Flow.flow cx (t, UseT (use_op, node));
+    let renders_variant =
+      let open Ast.Type in
+      match variant with
+      | Renders.Normal -> RendersNormal
+      | Renders.Maybe -> RendersMaybe
+      | Renders.Star -> RendersStar
+    in
+    let renders_t = TypeUtil.mk_renders_type reason renders_variant t in
+    (renders_t, { Ast.Type.Renders.comments; argument = t_ast; variant })
+
   and convert_object =
     let obj_proto_t = ObjProtoT (locationless_reason RObjectPrototype) in
     let fun_proto_t = FunProtoT (locationless_reason RFunctionPrototype) in
@@ -3071,7 +3084,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         ( t,
           Base.Option.map ~f:Tast_utils.error_mapper#type_params tparams,
           Tast_utils.error_mapper#component_type_params params,
-          Tast_utils.error_mapper#type_annotation_hint renders
+          Tast_utils.error_mapper#component_renders_annotation renders
         )
       end else
         let (tparams, tparams_map, tparam_asts) =
@@ -3080,14 +3093,16 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         let (cparams, params_ast) = mk_params cx tparams_map params in
         let (ren_loc, renders_t, renders_ast) =
           match renders with
-          | Ast.Type.Available (loc, annot) ->
-            let (((arg_loc, t), _) as renders_ast) = convert cx tparams_map ALocMap.empty annot in
-            Context.add_renders_type_argument_validation cx ~allow_generic_t:true arg_loc t;
-            (loc, t, Ast.Type.Available (loc, renders_ast))
-          | Ast.Type.Missing loc ->
+          | Ast.Type.AvailableRenders (loc, annot) ->
+            let (t, renders_ast) =
+              convert_render_type cx ~allow_generic_t:true tparams_map ALocMap.empty loc annot
+            in
+            (loc, t, Ast.Type.AvailableRenders (loc, renders_ast))
+          | Ast.Type.MissingRenders loc ->
             let ren_reason = mk_reason RReturn loc in
             let t = Flow.get_builtin_type cx ren_reason (OrdinaryName "React$Node") in
-            (loc, t, Ast.Type.Missing (loc, t))
+            let renders_t = TypeUtil.mk_renders_type ren_reason RendersNormal t in
+            (loc, renders_t, Ast.Type.MissingRenders (loc, renders_t))
         in
         let sig_ =
           {
@@ -3337,6 +3352,9 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
   let convert cx tparams_map = convert cx tparams_map ALocMap.empty
 
   let convert_list cx tparams_map = convert_list cx tparams_map ALocMap.empty
+
+  let convert_render_type cx ~allow_generic_t tparams_map =
+    convert_render_type cx ~allow_generic_t tparams_map ALocMap.empty
 
   let mk_super cx tparams_map = mk_super cx tparams_map ALocMap.empty
 

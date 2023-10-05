@@ -736,7 +736,9 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             ~in_tparam_scope:(fun () ->
               this#component_body_with_params ~component_loc:loc body params;
               if with_types then
-                this#hoist_annotations (fun () -> ignore @@ this#type_annotation_hint renders)
+                this#hoist_annotations (fun () ->
+                    ignore @@ this#component_renders_annotation renders
+                )
           )
         );
         expr
@@ -757,7 +759,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             tparams
             ~in_tparam_scope:(fun () ->
               let _ = this#component_type_params params in
-              this#hoist_annotations (fun () -> ignore @@ this#type_annotation_hint renders)
+              this#hoist_annotations (fun () -> ignore @@ this#component_renders_annotation renders)
           )
         );
         expr
@@ -923,7 +925,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         let { tparams; params; renders; comments = _ } = t in
         let in_tparam_scope () =
           let _params' = this#component_type_params params in
-          let _renders' = this#type_annotation_hint renders in
+          let _renders' = this#component_renders_annotation renders in
           ()
         in
         this#scoped_type_params tparams ~in_tparam_scope;

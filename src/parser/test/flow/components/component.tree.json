@@ -103,9 +103,10 @@
       },
       "params":[],
       "rendersType":{
-        "type":"TypeAnnotation",
-        "loc":{"source":null,"start":{"line":7,"column":31},"end":{"line":7,"column":44}},
-        "range":[135,148],
+        "type":"TypeOperator",
+        "loc":{"source":null,"start":{"line":7,"column":23},"end":{"line":7,"column":44}},
+        "range":[127,148],
+        "operator":"renders",
         "typeAnnotation":{
           "type":"GenericTypeAnnotation",
           "loc":{"source":null,"start":{"line":7,"column":31},"end":{"line":7,"column":44}},

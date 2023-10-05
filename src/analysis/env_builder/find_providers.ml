@@ -651,7 +651,7 @@ end = struct
             let _tparams' = map_opt this#type_params tparams in
             let _params' = this#component_params params in
             let _body' = this#component_body body in
-            let _renders' = this#type_annotation_hint renders in
+            let _renders' = this#component_renders_annotation renders in
             let _comments' = this#syntax_opt comments in
             expr)
           loc
@@ -980,7 +980,7 @@ end = struct
             let _tparams' = map_opt this#type_params tparams in
             let _params' = this#component_params params in
             let _body' = this#component_body body in
-            let _renders' = this#type_annotation_hint renders in
+            let _renders' = this#component_renders_annotation renders in
             let _comments' = this#syntax_opt comments in
             expr)
           loc

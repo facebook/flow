@@ -89,9 +89,10 @@
       "rest":null,
       "params":[],
       "rendersType":{
-        "type":"TypeAnnotation",
-        "loc":{"source":null,"start":{"line":7,"column":33},"end":{"line":7,"column":46}},
-        "range":[136,149],
+        "type":"TypeOperator",
+        "loc":{"source":null,"start":{"line":7,"column":25},"end":{"line":7,"column":46}},
+        "range":[128,149],
+        "operator":"renders",
         "typeAnnotation":{
           "type":"GenericTypeAnnotation",
           "loc":{"source":null,"start":{"line":7,"column":33},"end":{"line":7,"column":46}},

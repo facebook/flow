@@ -37,7 +37,7 @@ module type TYPE = sig
 
   val annotation_opt : env -> (Loc.t, Loc.t) Ast.Type.annotation_or_hint
 
-  val renders_annotation_opt : env -> (Loc.t, Loc.t) Ast.Type.annotation_or_hint
+  val renders_annotation_opt : env -> (Loc.t, Loc.t) Ast.Type.component_renders_annotation
 
   val function_return_annotation_opt : env -> (Loc.t, Loc.t) Ast.Function.ReturnAnnot.t
 
@@ -454,7 +454,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           let (params, renders) =
             if Peek.is_renders_ident env then
               let renders = renders_annotation_opt env in
-              let renders = type_annotation_hint_remove_trailing env renders in
+              let renders = component_renders_annotation_remove_trailing env renders in
               (params, renders)
             else
               let missing_annotation = renders_annotation_opt env in
@@ -469,19 +469,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
             })
         env
     | T_IDENTIFIER { raw = "renders"; _ } ->
-      with_loc
-        (fun env ->
-          let leading = Peek.comments env in
-          Eat.token env;
-          let trailing = Eat.trailing_comments env in
-          let argument = prefix env in
-          Type.Renders
-            {
-              Type.Renders.argument;
-              comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-              variant = Type.Renders.Normal;
-            })
-        env
+      with_loc (fun env -> Type.Renders (render_type env)) env
     | T_IDENTIFIER _
     | T_EXTENDS (* `extends` is reserved, but recover by treating it as an identifier *)
     | T_STATIC (* `static` is reserved, but recover by treating it as an identifier *) ->
@@ -760,6 +748,17 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
               comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
             })
         env
+
+  and render_type env =
+    let leading = Peek.comments env in
+    Eat.token env;
+    let trailing = Eat.trailing_comments env in
+    let argument = prefix env in
+    {
+      Type.Renders.argument;
+      comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+      variant = Type.Renders.Normal;
+    }
 
   and anonymous_function_param _env annot =
     (fst annot, Type.Function.Param.{ name = None; annot; optional = false })
@@ -1913,12 +1912,14 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       if not (should_parse_types env) then error env Parse_error.UnexpectedTypeAnnotation;
       error env Parse_error.InvalidComponentRenderAnnotation;
       Eat.token env;
-      Type.Available (with_loc (fun env -> _type env) env)
+      let (loc, argument) = with_loc _type env in
+      Type.AvailableRenders
+        (loc, { Ast.Type.Renders.argument; variant = Ast.Type.Renders.Normal; comments = None })
     | T_IDENTIFIER { raw = "renders"; _ } ->
       if not (should_parse_types env) then error env Parse_error.UnexpectedTypeAnnotation;
-      Eat.token env;
-      Type.Available (with_loc (fun env -> _type env) env)
-    | _ -> Type.Missing (Peek.loc_skip_lookahead env)
+      let (loc, renders) = with_loc ~start_loc:(Peek.loc env) render_type env in
+      Type.AvailableRenders (loc, renders)
+    | _ -> Type.MissingRenders (Peek.loc_skip_lookahead env)
 
   and add_comments (loc, t) leading trailing =
     let merge_comments inner =

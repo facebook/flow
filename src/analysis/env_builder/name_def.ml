@@ -1223,19 +1223,20 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
           Base.Option.iter component_tparams ~f:(fun tparams -> ignore @@ this#type_params tparams);
           Base.List.iter ~f:this#visit_component_param params_list;
           Base.Option.iter ~f:this#visit_component_rest_param rest;
-          ignore @@ this#type_annotation_hint renders;
+          ignore @@ this#component_renders_annotation renders;
 
           let renders_loc =
             match renders with
-            | Ast.Type.Available (loc, _)
-            | Ast.Type.Missing loc ->
+            | Ast.Type.AvailableRenders (loc, _)
+            | Ast.Type.MissingRenders loc ->
               loc
           in
           let renders_hint =
             match renders with
-            | Ast.Type.Available annot ->
+            | Ast.Type.AvailableRenders (loc, renders) ->
+              let annot = (loc, (loc, Ast.Type.Renders renders)) in
               [Hint_t (AnnotationHint (tparams, annot), ExpectedTypeHint)]
-            | Ast.Type.Missing _ -> []
+            | Ast.Type.MissingRenders _ -> []
           in
           this#record_hint renders_loc renders_hint;
           let old_stack = return_hint_stack in

@@ -1166,7 +1166,7 @@ module Statement
     let (params, renders) =
       if Peek.is_renders_ident env then
         let renders = Type.renders_annotation_opt env in
-        let renders = type_annotation_hint_remove_trailing env renders in
+        let renders = component_renders_annotation_remove_trailing env renders in
         (params, renders)
       else
         let missing_annotation = Type.renders_annotation_opt env in
@@ -1177,7 +1177,9 @@ module Statement
       match semicolon env with
       | Explicit comments -> (comments, renders)
       | Implicit { remove_trailing; _ } ->
-        ([], remove_trailing renders (fun remover annot -> remover#type_annotation_hint annot))
+        ( [],
+          remove_trailing renders (fun remover annot -> remover#component_renders_annotation annot)
+        )
     in
     {
       Statement.DeclareComponent.id;

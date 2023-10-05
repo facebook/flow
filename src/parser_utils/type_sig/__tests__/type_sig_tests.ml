@@ -5949,7 +5949,10 @@ let%expect_test "component" =
          ComponentSig {params_loc = [1:13-15];
            tparams = Mono; params = [];
            rest_param = None;
-           renders = (TyRef (Unqualified BuiltinRef {ref_loc = [1:15]; name = "React$Node"}))}}
+           renders =
+           (Annot
+              (Renders ([1:15],
+                 (TyRef (Unqualified BuiltinRef {ref_loc = [1:15]; name = "React$Node"})))))}}
 
   |}]
 
@@ -5991,7 +5994,10 @@ let%expect_test "component2" =
            rest_param =
            (Some ComponentRestParam {
                    t = (TyRef (Unqualified LocalRef {ref_loc = [2:35-39]; index = 0}))});
-           renders = (TyRef (Unqualified BuiltinRef {ref_loc = [2:40]; name = "React$Node"}))}}
+           renders =
+           (Annot
+              (Renders ([2:40],
+                 (TyRef (Unqualified BuiltinRef {ref_loc = [2:40]; name = "React$Node"})))))}}
 
   |}]
 
@@ -6021,7 +6027,10 @@ let%expect_test "component3" =
          ComponentSig {params_loc = [1:17-19];
            tparams = Mono; params = [];
            rest_param = None;
-           renders = (TyRef (Unqualified BuiltinRef {ref_loc = [1:19]; name = "React$Node"}))}}
+           renders =
+           (Annot
+              (Renders ([1:19],
+                 (TyRef (Unqualified BuiltinRef {ref_loc = [1:19]; name = "React$Node"})))))}}
     1. ComponentBinding {id_loc = [2:10-13];
          name = "Baz"; fn_loc = [2:0-69];
          def =
@@ -6033,7 +6042,10 @@ let%expect_test "component3" =
            rest_param =
            (Some ComponentRestParam {
                    t = (TyRef (Unqualified BuiltinRef {ref_loc = [2:48-52]; name = "Rest"}))});
-           renders = (TyRef (Unqualified LocalRef {ref_loc = [2:62-69]; index = 0}))}}
+           renders =
+           (Annot
+              (Renders ([2:54-69], (TyRef (Unqualified LocalRef {ref_loc = [2:62-69]; index = 0}))
+                 )))}}
 
   |}]
 
@@ -6069,7 +6081,8 @@ let%expect_test "component4" =
            [ComponentParam {name = "prop";
               name_loc = [1:17-21]; t = (Annot Bound {ref_loc = [1:23-24]; name = "T"})}
              ];
-           rest_param = None; renders = (Annot Bound {ref_loc = [1:34-35]; name = "T"})}}
+           rest_param = None;
+           renders = (Annot (Renders ([1:26-35], (Annot Bound {ref_loc = [1:34-35]; name = "T"}))))}}
   |}]
 
 let%expect_test "component_5" =
@@ -6092,14 +6105,20 @@ let%expect_test "component_5" =
          ComponentSig {params_loc = [1:21-23];
            tparams = Mono; params = [];
            rest_param = None;
-           renders = (TyRef (Unqualified BuiltinRef {ref_loc = [1:23]; name = "React$Node"}))}}
+           renders =
+           (Annot
+              (Renders ([1:23],
+                 (TyRef (Unqualified BuiltinRef {ref_loc = [1:23]; name = "React$Node"})))))}}
     1. ComponentBinding {id_loc = [2:25-28];
          name = "Bar"; fn_loc = [2:15-31];
          def =
          ComponentSig {params_loc = [2:29-31];
            tparams = Mono; params = [];
            rest_param = None;
-           renders = (TyRef (Unqualified BuiltinRef {ref_loc = [2:31]; name = "React$Node"}))}}
+           renders =
+           (Annot
+              (Renders ([2:31],
+                 (TyRef (Unqualified BuiltinRef {ref_loc = [2:31]; name = "React$Node"})))))}}
 
   |}]
 
@@ -6164,14 +6183,20 @@ let%expect_test "declare_component" =
          ComponentSig {params_loc = [1:29-31];
            tparams = Mono; params = [];
            rest_param = None;
-           renders = (TyRef (Unqualified BuiltinRef {ref_loc = [1:31]; name = "React$Node"}))}}
+           renders =
+           (Annot
+              (Renders ([1:31],
+                 (TyRef (Unqualified BuiltinRef {ref_loc = [1:31]; name = "React$Node"})))))}}
     1. ComponentBinding {id_loc = [2:33-36];
          name = "Bar"; fn_loc = [2:23-40];
          def =
          ComponentSig {params_loc = [2:37-39];
            tparams = Mono; params = [];
            rest_param = None;
-           renders = (TyRef (Unqualified BuiltinRef {ref_loc = [2:39]; name = "React$Node"}))}} |}]
+           renders =
+           (Annot
+              (Renders ([2:39],
+                 (TyRef (Unqualified BuiltinRef {ref_loc = [2:39]; name = "React$Node"})))))}} |}]
 
 let%expect_test "declare_component_disabled" =
   print_sig ~enable_component_syntax:false {|
@@ -6226,7 +6251,10 @@ let%expect_test "component_type" =
                     t = (TyRef (Unqualified LocalRef {ref_loc = [3:37-38]; index = 0}))}
                    ];
                  rest_param = None;
-                 renders = (TyRef (Unqualified LocalRef {ref_loc = [3:48-49]; index = 1}))}
+                 renders =
+                 (Annot
+                    (Renders ([3:40-49],
+                       (TyRef (Unqualified LocalRef {ref_loc = [3:48-49]; index = 1})))))}
                )))}
     3. Variable {id_loc = [4:12-15];
          name = "Bar";
@@ -6236,7 +6264,10 @@ let%expect_test "component_type" =
                ComponentSig {params_loc = [4:26-28];
                  tparams = Mono; params = [];
                  rest_param = None;
-                 renders = (TyRef (Unqualified BuiltinRef {ref_loc = [4:28]; name = "React$Node"}))}
+                 renders =
+                 (Annot
+                    (Renders ([4:28],
+                       (TyRef (Unqualified BuiltinRef {ref_loc = [4:28]; name = "React$Node"})))))}
                )))} |}]
 
 let%expect_test "declare_component_disabled" =

@@ -857,7 +857,7 @@ with type t = Impl.t = struct
           ("params", component_type_params param_list);
           ("rest", option component_type_rest_param rest);
           ("params", component_type_params param_list);
-          ("rendersType", hint type_annotation renders);
+          ("rendersType", renders_annotation renders);
           ("typeParameters", option type_parameter_declaration tparams);
         ]
     and component_type (loc, component) =
@@ -882,7 +882,7 @@ with type t = Impl.t = struct
         [
           ("params", component_type_params param_list);
           ("rest", option component_type_rest_param rest);
-          ("rendersType", hint type_annotation renders);
+          ("rendersType", renders_annotation renders);
           ("typeParameters", option type_parameter_declaration tparams);
         ]
     and component_type_params params =
@@ -1161,11 +1161,6 @@ with type t = Impl.t = struct
       } =
         component
       in
-      let renders =
-        match renders with
-        | Ast.Type.Missing _ -> None
-        | Ast.Type.Available t -> Some t
-      in
       let comments =
         Flow_ast_utils.merge_comments
           ~outer:component_comments
@@ -1179,7 +1174,7 @@ with type t = Impl.t = struct
           ("body", block body);
           ("id", identifier id);
           ("params", component_params params);
-          ("rendersType", option type_annotation renders);
+          ("rendersType", renders_annotation renders);
           ("typeParameters", option type_parameter_declaration tparams);
         ]
     and component_params =
@@ -1594,14 +1589,7 @@ with type t = Impl.t = struct
         | Intersection t -> intersection_type (loc, t)
         | Typeof t -> typeof_type (loc, t)
         | Keyof t -> keyof_type (loc, t)
-        | Renders { Type.Renders.comments; variant; argument } ->
-          let operator =
-            match variant with
-            | Type.Renders.Normal -> "renders"
-            | Type.Renders.Maybe -> "renders?"
-            | Type.Renders.Star -> "renders*"
-          in
-          flow_type_operator loc comments operator argument
+        | Renders renders -> render_type loc renders
         | ReadOnly t -> read_only_type (loc, t)
         | Tuple t -> tuple_type (loc, t)
         | StringLiteral s -> string_literal_type (loc, s)
@@ -1931,6 +1919,17 @@ with type t = Impl.t = struct
       node "QualifiedTypeofIdentifier" loc [("qualification", qualification); ("id", identifier id)]
     and keyof_type (loc, { Type.Keyof.argument; comments }) =
       node ?comments "KeyofTypeAnnotation" loc [("argument", _type argument)]
+    and renders_annotation = function
+      | Ast.Type.AvailableRenders (loc, v) -> render_type loc v
+      | Ast.Type.MissingRenders _ -> null
+    and render_type loc { Type.Renders.comments; variant; argument } =
+      let operator =
+        match variant with
+        | Type.Renders.Normal -> "renders"
+        | Type.Renders.Maybe -> "renders?"
+        | Type.Renders.Star -> "renders*"
+      in
+      flow_type_operator loc comments operator argument
     and flow_type_operator loc comments operator operand =
       node
         ?comments

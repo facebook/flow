@@ -1780,13 +1780,7 @@ and merge_component
           Eval.generate_id ()
         )
     in
-    let renders =
-      let t = merge tps infer_tps file renders in
-      let reason =
-        Reason.(update_desc_reason (fun desc -> RRenderType desc) (TypeUtil.reason_of_t t))
-      in
-      TypeUtil.mk_renders_type reason Type.RendersNormal t
-    in
+    let renders = merge tps infer_tps file renders in
     let component_kind =
       match id_opt with
       | None -> Structural

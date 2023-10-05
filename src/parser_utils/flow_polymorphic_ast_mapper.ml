@@ -277,7 +277,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let ident' = this#component_identifier ident in
       this#type_params_opt tparams (fun tparams' ->
           let params' = this#component_params params in
-          let renders' = this#type_annotation_hint renders in
+          let renders' = this#component_renders_annotation renders in
           let body' = this#component_body body in
           let comments' = this#syntax_opt comments in
           let sig_loc' = this#on_loc_annot sig_loc in
@@ -543,7 +543,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let ident' = this#t_identifier ident in
       this#type_params_opt tparams (fun tparams' ->
           let params' = this#component_type_params params in
-          let renders' = this#type_annotation_hint renders in
+          let renders' = this#component_renders_annotation renders in
           let comments' = this#syntax_opt comments in
           {
             id = ident';
@@ -559,7 +559,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let { params; renders; tparams; comments } = t in
       this#type_params_opt tparams (fun tparams' ->
           let params' = this#component_type_params params in
-          let renders' = this#type_annotation_hint renders in
+          let renders' = this#component_renders_annotation renders in
           let comments' = this#syntax_opt comments in
           { params = params'; renders = renders'; tparams = tparams'; comments = comments' }
       )
@@ -1293,6 +1293,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let argument' = this#type_ argument in
       let comments' = this#syntax_opt comments in
       { argument = argument'; comments = comments' }
+
+    method component_renders_annotation (renders : ('M, 'T) Ast.Type.component_renders_annotation) =
+      let open Ast.Type in
+      match renders with
+      | AvailableRenders (loc, renders) ->
+        AvailableRenders (this#on_loc_annot loc, this#render_type renders)
+      | MissingRenders loc -> MissingRenders (this#on_type_annot loc)
 
     method render_type (t : ('M, 'T) Ast.Type.Renders.t) : ('N, 'U) Ast.Type.Renders.t =
       let open Ast.Type.Renders in

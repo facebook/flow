@@ -1462,12 +1462,18 @@ and component_type =
     let t = annot opts scope tbls xs t in
     ComponentRestParam { t }
   in
-  let return opts scope tbls xs ret =
+  let renders opts scope tbls xs ret =
     match ret with
-    | Ast.Type.Available (_, t) -> annot opts scope tbls xs t
-    | Ast.Type.Missing loc ->
+    | Ast.Type.AvailableRenders (loc, { Ast.Type.Renders.comments = _; variant = _; argument }) ->
       let loc = push_loc tbls loc in
-      maybe_special_unqualified_generic opts scope tbls xs loc None loc "React$Node"
+      let t = annot opts scope tbls xs argument in
+      Annot (Renders (loc, t))
+    | Ast.Type.MissingRenders loc ->
+      let loc = push_loc tbls loc in
+      Annot
+        (Renders
+           (loc, maybe_special_unqualified_generic opts scope tbls xs loc None loc "React$Node")
+        )
   in
   fun opts
       scope
@@ -1483,7 +1489,7 @@ and component_type =
       | Some p -> Some (rest_param opts scope tbls xs p)
       | None -> None
     in
-    let renders = return opts scope tbls xs r in
+    let renders = renders opts scope tbls xs r in
     ComponentSig { params_loc = loc; tparams; params; rest_param; renders }
 
 and getter_type opts scope tbls xs id_loc f =
@@ -3167,12 +3173,18 @@ and component_def =
       let p = param opts scope tbls xs p in
       params opts scope tbls xs (p :: acc) ps
   in
-  let return opts scope tbls xs ret =
+  let renders opts scope tbls xs ret =
     match ret with
-    | Ast.Type.Available (_, t) -> annot opts scope tbls xs t
-    | Ast.Type.Missing loc ->
+    | Ast.Type.AvailableRenders (loc, { Ast.Type.Renders.comments = _; variant = _; argument }) ->
       let loc = push_loc tbls loc in
-      maybe_special_unqualified_generic opts scope tbls xs loc None loc "React$Node"
+      let t = annot opts scope tbls xs argument in
+      Annot (Renders (loc, t))
+    | Ast.Type.MissingRenders loc ->
+      let loc = push_loc tbls loc in
+      Annot
+        (Renders
+           (loc, maybe_special_unqualified_generic opts scope tbls xs loc None loc "React$Node")
+        )
   in
   fun opts scope tbls f ->
     let {
@@ -3196,7 +3208,7 @@ and component_def =
         Base.Option.map ~f:(fun (_, _, t) -> ComponentRestParam { t }) rp
       | None -> None
     in
-    let renders = return opts scope tbls xs r in
+    let renders = renders opts scope tbls xs r in
     ComponentSig { params_loc = loc; tparams; params; rest_param; renders }
 
 and declare_component_def opts scope tbls f =

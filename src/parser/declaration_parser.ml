@@ -647,7 +647,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
                   component_params_remove_trailing env params
               in
               let renders = Type.renders_annotation_opt env in
-              let renders = type_annotation_hint_remove_trailing env renders in
+              let renders = component_renders_annotation_remove_trailing env renders in
               (tparams, id, params, renders, leading))
             env
         in

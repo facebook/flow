@@ -7221,14 +7221,16 @@ module Make
         let cparams = mk_params cx tparams_map params in
         let (ret_loc, renders_t, renders_ast) =
           match renders with
-          | Ast.Type.Available (loc, annot) ->
-            let (((arg_loc, t), _) as renders_ast) = Anno.convert cx tparams_map annot in
-            Context.add_renders_type_argument_validation cx ~allow_generic_t:true arg_loc t;
-            (loc, t, Ast.Type.Available (loc, renders_ast))
-          | Ast.Type.Missing loc ->
+          | Ast.Type.AvailableRenders (loc, annot) ->
+            let (t, renders_ast) =
+              Anno.convert_render_type cx ~allow_generic_t:true tparams_map loc annot
+            in
+            (loc, t, Ast.Type.AvailableRenders (loc, renders_ast))
+          | Ast.Type.MissingRenders loc ->
             let ret_reason = mk_reason RReturn loc in
             let t = Flow.get_builtin_type cx ret_reason (OrdinaryName "React$Node") in
-            (loc, t, Ast.Type.Missing (loc, t))
+            let renders_t = TypeUtil.mk_renders_type ret_reason RendersNormal t in
+            (loc, renders_t, Ast.Type.MissingRenders (loc, renders_t))
         in
         let (id_loc, name) = id in
         ( {

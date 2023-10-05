@@ -49,7 +49,9 @@ let tests =
     );
     ( "component_with_renders" >:: fun ctxt ->
       let body = (Loc.none, { Flow_ast.Statement.Block.body = []; comments = None }) in
-      let renders = Some (Flow_ast.Type.Available (T.annotation @@ T.mixed ())) in
+      let renders =
+        Some (T.component_renders_annotation Flow_ast.Type.Renders.Normal (T.mixed ()))
+      in
       let ast = S.component_declaration ~tparams:type_params ?renders "Comp" body in
       let layout = Js_layout_generator.statement ~opts ast in
       assert_output ~ctxt "component Comp<T>() renders mixed{}" layout;
@@ -134,7 +136,9 @@ let tests =
       assert_output ~ctxt ~pretty:true "declare component Comp();" layout
     );
     ( "declare_component_with_renders_annot" >:: fun ctxt ->
-      let renders = Some (Flow_ast.Type.Available (T.annotation @@ T.mixed ())) in
+      let renders =
+        Some (T.component_renders_annotation Flow_ast.Type.Renders.Normal (T.mixed ()))
+      in
       let ast = S.declare_component ?renders "Comp" in
       let layout = Js_layout_generator.statement ~opts ast in
       assert_output ~ctxt "declare component Comp() renders mixed;" layout;

@@ -37,6 +37,14 @@ module type S = sig
     (ALoc.t, ALoc.t) Flow_ast.Type.Generic.Identifier.t ->
     Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.Generic.Identifier.t
 
+  val convert_render_type :
+    Context.t ->
+    allow_generic_t:bool ->
+    Type.t Subst_name.Map.t ->
+    Env_api.With_ALoc.L.t ->
+    (ALoc.t, ALoc.t) Flow_ast.Type.Renders.t ->
+    Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.Renders.t
+
   val mk_super :
     Context.t ->
     Type.t Subst_name.Map.t ->

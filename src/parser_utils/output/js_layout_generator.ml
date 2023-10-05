@@ -2160,9 +2160,9 @@ and component_param_name ~opts = function
 
 and component_renders ~opts return =
   match return with
-  | Ast.Type.Missing _ -> Empty
-  | Ast.Type.Available (loc, renders) ->
-    source_location_with_comments (loc, fuse [space; Atom "renders"; space; type_ ~opts renders])
+  | Ast.Type.MissingRenders _ -> Empty
+  | Ast.Type.AvailableRenders (loc, renders) ->
+    source_location_with_comments (loc, fuse [space; render_type ~opts loc renders])
 
 and class_method
     ~opts
@@ -4005,6 +4005,15 @@ and type_typeof ~opts loc { Ast.Type.Typeof.argument; targs; comments } =
 and type_keyof ~opts loc { Ast.Type.Keyof.argument; comments } =
   layout_node_with_comments_opt loc comments (fuse [Atom "keyof"; space; type_ ~opts argument])
 
+and render_type ~opts loc { Ast.Type.Renders.comments; argument; variant } =
+  let operator =
+    match variant with
+    | Ast.Type.Renders.Normal -> "renders"
+    | Ast.Type.Renders.Maybe -> "renders?"
+    | Ast.Type.Renders.Star -> "renders*"
+  in
+  flow_type_operator ~opts loc comments operator argument
+
 and flow_type_operator ~opts loc comments operator operand =
   layout_node_with_comments_opt
     loc
@@ -4156,14 +4165,7 @@ and type_ ~opts ((loc, t) : (Loc.t, Loc.t) Ast.Type.t) =
       | T.Intersection t -> type_intersection ~opts loc t
       | T.Typeof t -> type_typeof ~opts loc t
       | T.Keyof t -> type_keyof ~opts loc t
-      | T.Renders { T.Renders.comments; argument; variant } ->
-        let operator =
-          match variant with
-          | T.Renders.Normal -> "renders"
-          | T.Renders.Maybe -> "renders?"
-          | T.Renders.Star -> "renders*"
-        in
-        flow_type_operator ~opts loc comments operator argument
+      | T.Renders renders -> render_type ~opts loc renders
       | T.ReadOnly t -> type_readonly ~opts loc t
       | T.Tuple t -> type_tuple ~opts loc t
       | T.StringLiteral lit -> string_literal ~opts loc lit

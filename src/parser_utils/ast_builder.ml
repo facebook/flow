@@ -93,6 +93,9 @@ module Types = struct
 
   let return_type_annotation t = Ast.Type.Function.TypeAnnotation t
 
+  let component_renders_annotation ?(loc = Loc.none) variant argument =
+    Ast.Type.AvailableRenders (loc, { Ast.Type.Renders.comments = None; variant; argument })
+
   let return_type_guard_annotation ?(loc = Loc.none) ?comments x t =
     Ast.Type.Function.TypeGuard
       (loc, { Ast.Type.TypeGuard.asserts = false; guard = (x, Some t); comments })
@@ -603,7 +606,7 @@ module Statements = struct
 
   let component_declaration ?(loc = Loc.none) ?tparams ?params ?renders ?comments id body =
     let params' = Base.Option.value ~default:(component_params []) params in
-    let renders' = Base.Option.value ~default:(Ast.Type.Missing Loc.none) renders in
+    let renders' = Base.Option.value ~default:(Ast.Type.MissingRenders Loc.none) renders in
     ( loc,
       ComponentDeclaration
         {
@@ -624,7 +627,8 @@ module Statements = struct
     (loc, { Ast.Type.Component.Params.params; rest; comments })
 
   let declare_component
-      ?(loc = Loc.none) ?tparams ?params ?comments ?(renders = Ast.Type.Missing Loc.none) id =
+      ?(loc = Loc.none) ?tparams ?params ?comments ?(renders = Ast.Type.MissingRenders Loc.none) id
+      =
     let params' = Base.Option.value ~default:(component_type_params []) params in
     ( loc,
       DeclareComponent

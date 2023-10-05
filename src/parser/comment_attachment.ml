@@ -452,6 +452,10 @@ let type_annotation_hint_remove_trailing env annot =
   let { remove_trailing; _ } = trailing_and_remover env in
   remove_trailing annot (fun remover annot -> remover#type_annotation_hint annot)
 
+let component_renders_annotation_remove_trailing env annot =
+  let { remove_trailing; _ } = trailing_and_remover env in
+  remove_trailing annot (fun remover annot -> remover#component_renders_annotation annot)
+
 let return_annotation_remove_trailing env annot =
   let { remove_trailing; _ } = trailing_and_remover env in
   remove_trailing annot (fun remover annot -> remover#function_return_annotation annot)
