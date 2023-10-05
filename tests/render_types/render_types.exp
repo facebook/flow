@@ -170,13 +170,13 @@ Cannot cast `<Bar />` to renders? `MenuItem` because `Bar` element [1] does not 
 [incompatible-cast]
 
    renders_maybe.js:13:2
-   13| (<Bar />: RendersHuh<MenuItem>); // ERROR
+   13| (<Bar />: renders? MenuItem); // ERROR
         ^^^^^^^ [1]
 
 References:
    renders_maybe.js:13:11
-   13| (<Bar />: RendersHuh<MenuItem>); // ERROR
-                 ^^^^^^^^^^^^^^^^^^^^ [2]
+   13| (<Bar />: renders? MenuItem); // ERROR
+                 ^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- renders_maybe.js:20:2
@@ -184,13 +184,13 @@ Error --------------------------------------------------------------------------
 Cannot cast `Bad` to renders? `MenuItem` because `Bar` [1] does not render `MenuItem` [2]. [incompatible-cast]
 
    renders_maybe.js:20:2
-   20| (Bad: RendersHuh<MenuItem>); // ERROR
+   20| (Bad: renders? MenuItem); // ERROR
         ^^^ [1]
 
 References:
    renders_maybe.js:20:7
-   20| (Bad: RendersHuh<MenuItem>); // ERROR
-             ^^^^^^^^^^^^^^^^^^^^ [2]
+   20| (Bad: renders? MenuItem); // ERROR
+             ^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- renders_maybe.js:27:2
@@ -204,8 +204,8 @@ Cannot cast `rendersMaybeMenuItem` to renders `MenuItem` because a value that re
 
 References:
    renders_maybe.js:26:37
-   26| declare const rendersMaybeMenuItem: RendersHuh<MenuItem>;
-                                           ^^^^^^^^^^^^^^^^^^^^ [1]
+   26| declare const rendersMaybeMenuItem: renders? MenuItem;
+                                           ^^^^^^^^^^^^^^^^^ [1]
    renders_maybe.js:27:24
    27| (rendersMaybeMenuItem: renders MenuItem); // ERROR
                               ^^^^^^^^^^^^^^^^ [2]
@@ -222,8 +222,8 @@ Cannot cast `rendersMaybeUnion` to renders `MenuItem` because a value that rende
 
 References:
    renders_maybe.js:30:34
-   30| declare const rendersMaybeUnion: RendersHuh<MenuItem | Bar>;
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   30| declare const rendersMaybeUnion: renders? (MenuItem | Bar);
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    renders_maybe.js:31:21
    31| (rendersMaybeUnion: renders MenuItem); // ERROR
                            ^^^^^^^^^^^^^^^^ [2]
@@ -268,27 +268,21 @@ Error --------------------------------------------------------------------------
 Cannot cast `true` to renders* `MenuItem` because boolean [1] does not render `MenuItem` [2]. [incompatible-cast]
 
    renders_star.js:8:2
-   8| (true: RendersStar<MenuItem>); // ERROR
+   8| (true: renders* MenuItem); // ERROR
        ^^^^ [1]
 
 References:
    renders_star.js:8:8
-   8| (true: RendersStar<MenuItem>); // ERROR
-             ^^^^^^^^^^^^^^^^^^^^^ [2]
+   8| (true: renders* MenuItem); // ERROR
+             ^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- renders_star.js:25:2
+Error -------------------------------------------------------------------------------------------- renders_star.js:24:30
 
-Cannot cast `rendersHuhBad` to renders* `MenuItem` because `Bad` [1] does not render `MenuItem` [2]. [incompatible-cast]
+Cannot resolve name `RendersHuh`. [cannot-resolve-name]
 
-   renders_star.js:25:2
-   25| (rendersHuhBad: RendersStar<MenuItem>); // ERROR
-        ^^^^^^^^^^^^^ [1]
-
-References:
-   renders_star.js:25:17
-   25| (rendersHuhBad: RendersStar<MenuItem>); // ERROR
-                       ^^^^^^^^^^^^^^^^^^^^^ [2]
+   24| declare const rendersHuhBad: RendersHuh<Bad>;
+                                    ^^^^^^^^^^
 
 
 Error -------------------------------------------------------------------------------------------- renders_star.js:30:35
@@ -297,13 +291,13 @@ Cannot cast array literal to renders* `MenuItem` because `Bad` element [1] does 
 [incompatible-cast]
 
    renders_star.js:30:35
-   30| ([<MenuItem />, <BlueMenuItem />, <Bad />]: RendersStar<MenuItem>); // ERROR
+   30| ([<MenuItem />, <BlueMenuItem />, <Bad />]: renders* MenuItem); // ERROR
                                          ^^^^^^^ [1]
 
 References:
    renders_star.js:30:45
-   30| ([<MenuItem />, <BlueMenuItem />, <Bad />]: RendersStar<MenuItem>); // ERROR
-                                                   ^^^^^^^^^^^^^^^^^^^^^ [2]
+   30| ([<MenuItem />, <BlueMenuItem />, <Bad />]: renders* MenuItem); // ERROR
+                                                   ^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:19:4

@@ -1248,34 +1248,6 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                  )
               )
               targs)
-        | "RendersHuh" ->
-          check_type_arg_arity cx loc t_ast targs 1 (fun () ->
-              let (ts, targs) = convert_type_params () in
-              let t = List.nth ts 0 in
-              let reason = mk_reason (RRenderMaybeType (desc_of_reason (reason_of_t t))) loc in
-              let renders_reason = reason_of_t t in
-              let node = Flow.get_builtin_type cx renders_reason (OrdinaryName "React$Node") in
-              let use_op_instantiation =
-                Op (RenderTypeInstantiation { render_type = renders_reason })
-              in
-              Flow.flow cx (t, UseT (use_op_instantiation, node));
-              let renders_t = TypeUtil.mk_renders_type reason RendersMaybe t in
-              reconstruct_ast renders_t targs
-          )
-        | "RendersStar" ->
-          check_type_arg_arity cx loc t_ast targs 1 (fun () ->
-              let (ts, targs) = convert_type_params () in
-              let t = List.nth ts 0 in
-              let reason = mk_reason (RRenderStarType (desc_of_reason (reason_of_t t))) loc in
-              let renders_reason = reason_of_t t in
-              let node = Flow.get_builtin_type cx renders_reason (OrdinaryName "React$Node") in
-              let use_op_instantiation =
-                Op (RenderTypeInstantiation { render_type = renders_reason })
-              in
-              Flow.flow cx (t, UseT (use_op_instantiation, node));
-              let renders_t = TypeUtil.mk_renders_type reason RendersStar t in
-              reconstruct_ast renders_t targs
-          )
         | "React$Config" ->
           check_type_arg_arity cx loc t_ast targs 2 (fun () ->
               let (ts, targs) = convert_type_params () in
@@ -1877,7 +1849,14 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       { Ast.Type.Renders.comments; argument; variant } =
     let (((argument_loc, t), _) as t_ast) = convert cx tparams_map infer_tparams_map argument in
     Context.add_renders_type_argument_validation cx ~allow_generic_t argument_loc t;
-    let reason = mk_reason (RRenderType (desc_of_reason (reason_of_t t))) loc in
+    let reason_desc =
+      let arg_desc = desc_of_reason (reason_of_t t) in
+      match variant with
+      | Ast.Type.Renders.Normal -> RRenderType arg_desc
+      | Ast.Type.Renders.Maybe -> RRenderMaybeType arg_desc
+      | Ast.Type.Renders.Star -> RRenderStarType arg_desc
+    in
+    let reason = mk_reason reason_desc loc in
     let renders_reason = reason_of_t t in
     let node = Flow.get_builtin_type cx renders_reason (OrdinaryName "React$Node") in
     let use_op = Op (RenderTypeInstantiation { render_type = renders_reason }) in
