@@ -953,6 +953,13 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         (* () or is definitely a param list *)
         ParamList
           { Ast.Type.Function.Params.this_ = None; params = []; rest = None; comments = None }
+      | T_IDENTIFIER { raw = "renders"; _ } ->
+        (match Peek.ith_token ~i:1 env with
+        | T_PLING
+        | T_COLON ->
+          (* Ok this is definitely a parameter *)
+          ParamList (function_param_list_without_parens env [])
+        | _ -> Type (_type env))
       | T_IDENTIFIER _
       | T_STATIC (* `static` is reserved in strict mode, but still an identifier *) ->
         (* This could be a function parameter or a generic type *)
