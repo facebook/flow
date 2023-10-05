@@ -277,6 +277,7 @@ module rec TypeTerm : sig
   and renders_variant =
     | RendersNormal
     | RendersMaybe
+    | RendersStar
 
   and component_kind =
     | Structural

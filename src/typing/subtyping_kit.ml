@@ -1392,10 +1392,21 @@ module Make (Flow : INPUT) : OUTPUT = struct
           ( _,
             _,
             RendersT
-              (StructuralRenders { renders_variant = RendersMaybe; renders_structural_type = _ })
+              (StructuralRenders
+                { renders_variant = RendersMaybe | RendersStar; renders_structural_type = _ }
+                )
           )
       ) ->
       ()
+    | ( DefT (_, _, ArrT (ArrayAT { elem_t = t; _ } | TupleAT { elem_t = t; _ } | ROArrayAT (t, _))),
+        DefT
+          ( _,
+            _,
+            RendersT
+              (StructuralRenders { renders_variant = RendersStar; renders_structural_type = _ })
+          )
+      ) ->
+      rec_flow_t cx trace ~use_op (t, u)
     (* Try to do structural subtyping. If that fails promote to a render type *)
     | (OpaqueT (reason_opaque, _), DefT (renders_r, _, RendersT (NominalRenders _ as form))) ->
       rec_flow

@@ -39,13 +39,17 @@ module Make (Flow : INPUT) = struct
           (super, reconstruct_render_type reasonu u)
     | ( NominalRenders { renders_id = _; renders_super },
         StructuralRenders
-          { renders_variant = RendersNormal | RendersMaybe; renders_structural_type = t }
+          {
+            renders_variant = RendersNormal | RendersMaybe | RendersStar;
+            renders_structural_type = t;
+          }
       ) ->
       if not (speculative_subtyping_succeeds cx (reconstruct_render_type reasonl l) t) then
         let u_type = reconstruct_render_type reasonu u in
         let super = reposition_reason cx ~trace reasonl ~use_desc:true renders_super in
         rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (super, u_type)
-    | ( StructuralRenders { renders_variant = RendersMaybe; renders_structural_type = _ },
+    | ( StructuralRenders
+          { renders_variant = RendersMaybe | RendersStar; renders_structural_type = _ },
         NominalRenders _
       ) ->
       Flow_js_utils.add_output
@@ -73,12 +77,34 @@ module Make (Flow : INPUT) = struct
         rec_flow_t cx trace ~use_op (void_t, u_type);
         let false_t = DefT (reason, bogus_trust (), BoolT (Some false)) in
         rec_flow_t cx trace ~use_op (false_t, u_type)
-      | RendersMaybe -> ());
+      | RendersMaybe -> ()
+      | RendersStar -> ());
       rec_renders
         cx
         trace
         ~use_op
         ( (reasonl, StructuralRenders { renders_variant = RendersNormal; renders_structural_type }),
+          (reasonu, u)
+        )
+    | ( StructuralRenders { renders_variant = RendersStar; renders_structural_type = t },
+        StructuralRenders { renders_variant; renders_structural_type = _ }
+      ) ->
+      (match renders_variant with
+      | RendersNormal
+      | RendersMaybe ->
+        let renders_star = reconstruct_render_type reasonl l in
+        let roa =
+          Flow.get_builtin_typeapp cx reasonl Reason.(OrdinaryName "$ReadOnlyArray") [renders_star]
+        in
+        rec_flow_t cx trace ~use_op (roa, reconstruct_render_type reasonu u)
+      | RendersStar -> ());
+      rec_renders
+        cx
+        trace
+        ~use_op
+        ( ( reasonl,
+            StructuralRenders { renders_variant = RendersMaybe; renders_structural_type = t }
+          ),
           (reasonu, u)
         )
 end
