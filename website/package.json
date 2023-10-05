@@ -32,7 +32,7 @@
   "devDependencies": {
     "@babel/preset-flow": "^7.16.7",
     "@docusaurus/remark-plugin-npm2yarn": "^2.0.1",
-    "babel-plugin-syntax-hermes-parser": "^0.13.1",
+    "babel-plugin-syntax-hermes-parser": "0.16.0",
     "flow-typed": "^3.7.0",
     "raw-loader": "^4.0.2"
   },
