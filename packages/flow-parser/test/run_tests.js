@@ -80,9 +80,11 @@ function apply_filters(sections) {
 }
 
 function get_esprima_tests() {
-  var spec = require(argv['esprima-tests']
-    ? path.resolve(argv['esprima-tests'])
-    : '../../../src/parser/test/esprima_tests.js');
+  var spec = require(
+    argv['esprima-tests']
+      ? path.resolve(argv['esprima-tests'])
+      : '../../../src/parser/test/esprima_tests.js',
+  );
 
   var sections = {};
   for (var section_name in spec.sections) {
