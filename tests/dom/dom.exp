@@ -7,8 +7,8 @@ Cannot call `ctx.moveTo` with `'0'` bound to `x` because string [1] is incompati
                         ^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:2448:13
-   2448|   moveTo(x: number, y: number): void;
+   <BUILTINS>/dom.js:2456:13
+   2456|   moveTo(x: number, y: number): void;
                      ^^^^^^ [2]
 
 
@@ -21,8 +21,8 @@ Cannot call `ctx.moveTo` with `'1'` bound to `y` because string [1] is incompati
                              ^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:2448:24
-   2448|   moveTo(x: number, y: number): void;
+   <BUILTINS>/dom.js:2456:24
+   2456|   moveTo(x: number, y: number): void;
                                 ^^^^^^ [2]
 
 
@@ -489,8 +489,8 @@ Cannot get `el.className` because property `className` is missing in null [1]. [
             ^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:3380:43
-   3380|   [index: number | string]: HTMLElement | null;
+   <BUILTINS>/dom.js:3388:43
+   3388|   [index: number | string]: HTMLElement | null;
                                                    ^^^^ [1]
 
 
@@ -503,8 +503,8 @@ Cannot get `el.className` because property `className` is missing in null [1]. [
             ^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:3380:43
-   3380|   [index: number | string]: HTMLElement | null;
+   <BUILTINS>/dom.js:3388:43
+   3388|   [index: number | string]: HTMLElement | null;
                                                    ^^^^ [1]
 
 
@@ -522,11 +522,11 @@ References:
    HTMLInputElement.js:7:28
       7|     el.setRangeText('foo', 123); // end is required
                                     ^^^ [1]
-   <BUILTINS>/dom.js:3773:45
-   3773|   setRangeText(replacement: string, start?: void, end?: void, selectMode?: void): void;
+   <BUILTINS>/dom.js:3781:45
+   3781|   setRangeText(replacement: string, start?: void, end?: void, selectMode?: void): void;
                                                      ^^^^ [2]
-   <BUILTINS>/dom.js:3774:3
-   3774|   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
+   <BUILTINS>/dom.js:3782:3
+   3782|   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    HTMLInputElement.js:7:5
       7|     el.setRangeText('foo', 123); // end is required
@@ -547,14 +547,14 @@ References:
    HTMLInputElement.js:10:38
      10|     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
                                               ^^^^^^^ [1]
-   <BUILTINS>/dom.js:3774:78
-   3774|   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
+   <BUILTINS>/dom.js:3782:78
+   3782|   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
                                                                                       ^^^^^^^^^^^^^ [2]
    HTMLInputElement.js:10:28
      10|     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
                                     ^^^ [3]
-   <BUILTINS>/dom.js:3773:45
-   3773|   setRangeText(replacement: string, start?: void, end?: void, selectMode?: void): void;
+   <BUILTINS>/dom.js:3781:45
+   3781|   setRangeText(replacement: string, start?: void, end?: void, selectMode?: void): void;
                                                      ^^^^ [4]
 
 
@@ -567,8 +567,8 @@ Cannot get `form.action` because property `action` is missing in null [1]. [inco
               ^^^^^^
 
 References:
-   <BUILTINS>/dom.js:3840:27
-   3840|   form: HTMLFormElement | null;
+   <BUILTINS>/dom.js:3848:27
+   3848|   form: HTMLFormElement | null;
                                    ^^^^ [1]
 
 
@@ -581,8 +581,8 @@ Cannot get `item.value` because property `value` is missing in null [1]. [incomp
               ^^^^^
 
 References:
-   <BUILTINS>/dom.js:3858:44
-   3858|   item(index: number): HTMLOptionElement | null;
+   <BUILTINS>/dom.js:3866:44
+   3866|   item(index: number): HTMLOptionElement | null;
                                                     ^^^^ [1]
 
 
@@ -595,8 +595,8 @@ Cannot get `item.value` because property `value` is missing in null [1]. [incomp
               ^^^^^
 
 References:
-   <BUILTINS>/dom.js:3859:48
-   3859|   namedItem(name: string): HTMLOptionElement | null;
+   <BUILTINS>/dom.js:3867:48
+   3867|   namedItem(name: string): HTMLOptionElement | null;
                                                         ^^^^ [1]
 
 
@@ -1022,11 +1022,11 @@ References:
    traversal.js:188:74
     188|     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                   ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:4383:1
+   <BUILTINS>/dom.js:4391:1
          v--------------------------------
-   4383| typeof NodeFilter.FILTER_ACCEPT |
-   4384| typeof NodeFilter.FILTER_REJECT |
-   4385| typeof NodeFilter.FILTER_SKIP;
+   4391| typeof NodeFilter.FILTER_ACCEPT |
+   4392| typeof NodeFilter.FILTER_REJECT |
+   4393| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
    traversal.js:188:48
     188|     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
@@ -1398,11 +1398,11 @@ References:
    traversal.js:195:72
     195|     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                 ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:4383:1
+   <BUILTINS>/dom.js:4391:1
          v--------------------------------
-   4383| typeof NodeFilter.FILTER_ACCEPT |
-   4384| typeof NodeFilter.FILTER_REJECT |
-   4385| typeof NodeFilter.FILTER_SKIP;
+   4391| typeof NodeFilter.FILTER_ACCEPT |
+   4392| typeof NodeFilter.FILTER_REJECT |
+   4393| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
    traversal.js:195:46
     195|     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
