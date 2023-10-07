@@ -33,6 +33,4 @@ class ['a] t :
     method destructor : Context.t -> 'a -> Type.destructor -> 'a
 
     method type_param : Context.t -> Polarity.t -> 'a -> Type.typeparam -> 'a
-
-    method class_binding : Context.t -> 'a -> Type.class_binding -> 'a
   end

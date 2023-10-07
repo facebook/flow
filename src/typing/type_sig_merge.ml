@@ -1430,6 +1430,10 @@ and merge_interface ~inline tps infer_tps file reason class_name id def =
         initialized_static_fields = SSet.empty;
         inst_kind = InterfaceKind { inline };
         inst_dict;
+        class_private_fields = Context.generate_property_map file.cx NameUtils.Map.empty;
+        class_private_methods = Context.generate_property_map file.cx NameUtils.Map.empty;
+        class_private_static_fields = Context.generate_property_map file.cx NameUtils.Map.empty;
+        class_private_static_methods = Context.generate_property_map file.cx NameUtils.Map.empty;
       }
     in
     DefT (reason, trust, InstanceT { static; super; implements = []; inst })
@@ -1538,6 +1542,10 @@ and merge_class tps infer_tps file reason class_name id def =
         initialized_static_fields = SSet.empty;
         inst_kind = ClassKind;
         inst_dict = None;
+        class_private_fields = Context.generate_property_map file.cx NameUtils.Map.empty;
+        class_private_methods = Context.generate_property_map file.cx NameUtils.Map.empty;
+        class_private_static_fields = Context.generate_property_map file.cx NameUtils.Map.empty;
+        class_private_static_methods = Context.generate_property_map file.cx NameUtils.Map.empty;
       }
     in
     let instance = DefT (reason, trust, InstanceT { static; super; implements; inst }) in
@@ -1935,6 +1943,10 @@ let merge_declare_class file reason class_name id def =
         initialized_static_fields = SSet.empty;
         inst_kind = ClassKind;
         inst_dict;
+        class_private_fields = Context.generate_property_map file.cx NameUtils.Map.empty;
+        class_private_methods = Context.generate_property_map file.cx NameUtils.Map.empty;
+        class_private_static_fields = Context.generate_property_map file.cx NameUtils.Map.empty;
+        class_private_static_methods = Context.generate_property_map file.cx NameUtils.Map.empty;
       }
     in
     let instance = DefT (reason, trust, InstanceT { static; super; implements; inst }) in

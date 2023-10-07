@@ -3666,9 +3666,9 @@ struct
           else
             let map =
               if static then
-                scope.class_private_static_fields
+                inst.class_private_static_fields
               else
-                scope.class_private_fields
+                inst.class_private_fields
             in
             let name = OrdinaryName x in
             (match NameUtils.Map.find_opt name (Context.find_props cx map) with
@@ -3787,14 +3787,6 @@ struct
             PrivateMethodT
               (use_op, reason_op, reason_lookup, prop_name, scopes, static, method_action)
           ) ->
-          (* BoundTs from private methods are not on the InstanceT due to scoping rules,
-             so we need to substitute those BoundTs when the method is called. *)
-          let scopes =
-            Type_subst.subst_class_bindings
-              cx
-              (Subst_name.Map.singleton (Subst_name.Name "this") l)
-              scopes
-          in
           let tvar = Tvar.mk_no_wrap cx reason_lookup in
           let funt = OpenT (reason_lookup, tvar) in
           let l =
@@ -6303,6 +6295,10 @@ struct
         initialized_static_fields = _;
         inst_kind;
         inst_dict = _;
+        class_private_fields = _;
+        class_private_methods = _;
+        class_private_static_fields = _;
+        class_private_static_methods = _;
       } =
     any_prop_to_type_args cx trace ~use_op any ~covariant_flow ~contravariant_flow type_args;
     match inst_kind with
@@ -7648,18 +7644,18 @@ struct
         in
         let field_maps =
           if static then
-            scope.class_private_static_fields
+            instance.class_private_static_fields
           else
-            scope.class_private_fields
+            instance.class_private_fields
         in
         (match NameUtils.Map.find_opt name (Context.find_props cx field_maps) with
         | Some p -> perform_lookup_action (Property.type_ p)
         | None ->
           let method_maps =
             if static then
-              scope.class_private_static_methods
+              instance.class_private_static_methods
             else
-              scope.class_private_methods
+              instance.class_private_methods
           in
           (match NameUtils.Map.find_opt name (Context.find_props cx method_maps) with
           | Some p ->

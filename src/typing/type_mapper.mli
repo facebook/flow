@@ -58,8 +58,6 @@ class virtual ['a] t :
     method type_param : Context.t -> 'a -> Type.typeparam -> Type.typeparam
 
     method type_map : Context.t -> 'a -> Type.type_map -> Type.type_map
-
-    method class_binding : Context.t -> 'a -> Type.class_binding -> Type.class_binding
   end
 
 val union_flatten : Context.t -> Type.t list -> Type.t list

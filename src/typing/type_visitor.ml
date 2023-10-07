@@ -387,6 +387,10 @@ class ['a] t =
         initialized_static_fields = _;
         inst_kind = _;
         inst_dict;
+        class_private_fields;
+        class_private_static_fields;
+        class_private_methods;
+        class_private_static_methods;
       } =
         i
       in
@@ -400,28 +404,16 @@ class ['a] t =
       let acc = self#props cx pole acc proto_props in
       let acc = self#opt (self#call_prop cx pole) acc inst_call_t in
       let acc = self#opt (self#dict_type cx pole_TODO) acc inst_dict in
+      let acc = self#props cx pole_TODO acc class_private_fields in
+      let acc = self#props cx pole_TODO acc class_private_static_fields in
+      let acc = self#props cx pole_TODO acc class_private_methods in
+      let acc = self#props cx pole_TODO acc class_private_static_methods in
       acc
 
     method private export_types cx pole acc e =
       let { exports_tmap; cjs_export; has_every_named_export = _ } = e in
       let acc = self#exports cx pole acc exports_tmap in
       let acc = self#opt (self#type_ cx pole) acc cjs_export in
-      acc
-
-    method class_binding
-        cx
-        acc
-        {
-          class_private_fields;
-          class_private_static_fields;
-          class_private_methods;
-          class_private_static_methods;
-          _;
-        } =
-      let acc = self#props cx pole_TODO acc class_private_fields in
-      let acc = self#props cx pole_TODO acc class_private_static_fields in
-      let acc = self#props cx pole_TODO acc class_private_methods in
-      let acc = self#props cx pole_TODO acc class_private_static_methods in
       acc
 
     method private type_map cx acc =

@@ -121,5 +121,70 @@ References:
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:69:22
 
-Found 8 errors
+Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   test.js:69:22
+   69|   #private_contra(x: T) { } // error, polarity
+                            ^
+
+References:
+   test.js:64:10
+   64| class C<+T> {
+                ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:75:11
+
+Cannot assign `c2.#private()` to `x` because number [1] is incompatible with string [2] in type argument `T` [3]. All
+writes to `x` must be compatible with the type of its initializer [4]. Add an annotation to `x` [4] if a different type
+is desired. [incompatible-type-arg]
+
+   test.js:75:11
+   75|       x = c2.#private(); // error
+                 ^^^^^^^^^^^^^
+
+References:
+   test.js:73:27
+   73|       declare const c2: C<number>;
+                                 ^^^^^^ [1]
+   test.js:72:26
+   72|       declare const c: C<string>;
+                                ^^^^^^ [2]
+   test.js:64:10
+   64| class C<+T> {
+                ^ [3]
+   test.js:74:11
+   74|       let x = c.#private();
+                 ^ [4]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:85:5
+
+Cannot assign `c2.public()` to `x` because number [1] is incompatible with string [2] in type argument `T` [3]. All
+writes to `x` must be compatible with the type of its initializer [4]. Add an annotation to `x` [4] if a different type
+is desired. [incompatible-type-arg]
+
+   test.js:85:5
+   85| x = c2.public(); // error
+           ^^^^^^^^^^^
+
+References:
+   test.js:82:21
+   82| declare const c2: C<number>;
+                           ^^^^^^ [1]
+   test.js:81:20
+   81| declare const c: C<string>;
+                          ^^^^^^ [2]
+   test.js:64:10
+   64| class C<+T> {
+                ^ [3]
+   test.js:84:5
+   84| let x = c.public();
+           ^ [4]
+
+
+
+Found 11 errors

@@ -406,10 +406,6 @@ let subst cx ?use_op ?(force = true) map ty =
   let map = Subst_name.Map.map (fun t -> TypeSubst (t, free_var_finder cx t)) map in
   substituter#type_ cx (map, force, use_op) ty
 
-let subst_class_bindings cx ?use_op ?(force = true) map cbs =
-  let map = Subst_name.Map.map (fun t -> TypeSubst (t, free_var_finder cx t)) map in
-  ListUtils.ident_map (substituter#class_binding cx (map, force, use_op)) cbs
-
 let subst_destructor cx ?use_op ?(force = true) map des =
   let map = Subst_name.Map.map (fun t -> TypeSubst (t, free_var_finder cx t)) map in
   substituter#destructor cx (map, force, use_op) des

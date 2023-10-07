@@ -60,3 +60,26 @@ class PrivateMethodUnbound {
     PrivateMethodUnbound.#bar;
   }
 }
+
+class C<+T> {
+  #private(): this {
+      return this;
+  }
+
+  #private_contra(x: T) { } // error, polarity
+
+  public(): this {
+      declare const c: C<string>;
+      declare const c2: C<number>;
+      let x = c.#private();
+      x = c2.#private(); // error
+
+      return this.#private();
+  }
+}
+
+declare const c: C<string>;
+declare const c2: C<number>;
+
+let x = c.public();
+x = c2.public(); // error

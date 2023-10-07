@@ -318,15 +318,7 @@ let mk_private_method_eval_hint_test
     | Some property ->
       NameUtils.Map.singleton (OrdinaryName "bar") property |> Context.generate_property_map cx
   in
-  let class_bindings =
-    {
-      class_binding_id = ALoc.id_none;
-      class_private_fields = mk_propertries private_field;
-      class_private_static_fields = mk_propertries private_static_field;
-      class_private_methods = mk_propertries private_method;
-      class_private_static_methods = mk_propertries private_static_method;
-    }
-  in
+  let class_bindings = { class_binding_id = ALoc.id_none } in
   let class_stack_loc = ALoc.none in
   Context.set_environment
     cx
@@ -355,6 +347,10 @@ let mk_private_method_eval_hint_test
                 initialized_static_fields = SSet.empty;
                 inst_kind = ClassKind;
                 inst_dict = None;
+                class_private_fields = mk_propertries private_field;
+                class_private_static_fields = mk_propertries private_static_field;
+                class_private_methods = mk_propertries private_method;
+                class_private_static_methods = mk_propertries private_static_method;
               };
           }
       )

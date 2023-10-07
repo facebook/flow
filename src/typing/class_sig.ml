@@ -387,10 +387,11 @@ module Make
         s.methods
     in
     let () =
+      let private_this_default x = Type.(AnyT.make (Unsound BoundFunctionThis) x.F.Types.reason) in
       SMap.iter
         (fun _name { id_loc; this_write_loc; func_sig = x; set_asts = _; set_type } ->
           Base.Option.iter id_loc ~f:(fun _loc ->
-              set_type (F.methodtype cx this_write_loc (this_default x) x)
+              set_type (F.methodtype cx this_write_loc (private_this_default x) x)
           ))
         s.private_methods
     in
@@ -531,6 +532,9 @@ module Make
       let loc = loc_of_reason s.instance.reason in
       elements cx ~this:(this_or_mixed loc s) ?constructor s.instance s.super
     in
+    let private_this_type ({ reason; _ } : signature) =
+      Type.(AnyT.make (Unsound BoundFunctionThis) reason)
+    in
     {
       Type.class_id = s.id;
       class_name = s.class_name;
@@ -542,6 +546,15 @@ module Make
       initialized_static_fields;
       inst_kind = inst_kind s;
       inst_dict = s.instance.dict;
+      class_private_fields = fields_to_prop_map cx s.instance.private_fields;
+      class_private_static_fields = fields_to_prop_map cx s.static.private_fields;
+      class_private_methods =
+        methods_to_prop_map
+          ~cx
+          ~this_default:(private_this_type s.instance)
+          s.instance.private_methods;
+      class_private_static_methods =
+        methods_to_prop_map ~cx ~this_default:(private_this_type s.static) s.static.private_methods;
     }
 
   let mk_this self cx reason tparams =
@@ -835,18 +848,7 @@ module Make
     let poly t = poly_type_of_tparams (Type.Poly.generate_id ()) x.tparams t in
     (poly t_inner, poly t_outer)
 
-  let mk_class_binding cx x =
-    let instance_this_type = this_or_mixed_of_t ~static:false x in
-    let static_this_type = this_or_mixed_of_t ~static:true x in
-    {
-      Type.class_binding_id = x.id;
-      class_private_fields = fields_to_prop_map cx x.instance.private_fields;
-      class_private_static_fields = fields_to_prop_map cx x.static.private_fields;
-      class_private_methods =
-        methods_to_prop_map ~cx ~this_default:instance_this_type x.instance.private_methods;
-      class_private_static_methods =
-        methods_to_prop_map ~cx ~this_default:static_this_type x.static.private_methods;
-    }
+  let mk_class_binding _cx x = { Type.class_binding_id = x.id }
 
   let make_thises cx x =
     let open Type in

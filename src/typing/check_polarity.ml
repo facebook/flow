@@ -78,6 +78,10 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
         initialized_static_fields = _;
         inst_kind = _;
         inst_dict;
+        class_private_fields;
+        class_private_static_fields = _;
+        class_private_methods;
+        class_private_static_methods = _;
       } =
         inst
       in
@@ -86,6 +90,8 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
       List.iter (check_polarity cx ?trace tparams polarity) implements;
       check_polarity_propmap cx ?trace tparams polarity own_props;
       check_polarity_propmap cx ?trace ~skip_ctor:true tparams polarity proto_props;
+      check_polarity_propmap cx ?trace tparams polarity class_private_fields;
+      check_polarity_propmap cx ?trace tparams polarity class_private_methods;
       Base.Option.iter call_t ~f:(check_polarity_call cx ?trace tparams polarity);
       Base.Option.iter inst_dict ~f:(check_polarity_dict cx ?trace tparams polarity)
     (* We can ignore the statics of function annotations, since

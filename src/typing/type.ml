@@ -262,7 +262,7 @@ module rec TypeTerm : sig
    *  * renders Foo would produce NominalRenders
    *  * renders (Foo | Foo) would produce a Structural UnionT with two Nominal elements
    *  * renders (Foo | number) would produce a Structural UnionT with number and Nominal Foo
-   *  * renders number would produce a Structural number 
+   *  * renders number would produce a Structural number
    *)
   and canonical_renders_form =
     | NominalRenders of {
@@ -1475,13 +1475,7 @@ module rec TypeTerm : sig
   }
 
   (* This has to go here so that Type doesn't depend on Scope *)
-  and class_binding = {
-    class_binding_id: ALoc.id;
-    class_private_fields: Properties.id;
-    class_private_static_fields: Properties.id;
-    class_private_methods: Properties.id;
-    class_private_static_methods: Properties.id;
-  }
+  and class_binding = { class_binding_id: ALoc.id }
 
   and insttype = {
     class_name: string option;
@@ -1494,6 +1488,10 @@ module rec TypeTerm : sig
     initialized_static_fields: SSet.t;
     inst_kind: instance_kind;
     inst_dict: Object.dict;
+    class_private_fields: Properties.id;
+    class_private_static_fields: Properties.id;
+    class_private_methods: Properties.id;
+    class_private_static_methods: Properties.id;
   }
 
   and instance_kind =

@@ -673,6 +673,10 @@ and tag_of_inst inst =
     initialized_fields = _;
     initialized_static_fields = _;
     inst_dict = _;
+    class_private_fields = _;
+    class_private_methods = _;
+    class_private_static_fields = _;
+    class_private_static_methods = _;
   } =
     inst
   in
