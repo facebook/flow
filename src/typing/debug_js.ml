@@ -1459,10 +1459,15 @@ let dump_error_message =
         (dump_reason cx reason)
         (dump_reason cx valid)
         (string_of_use_op use_op)
-    | EInvalidRendersTypeArgument { loc; invalid_render_type_kind; invalid_type_reasons } ->
+    | EInvalidRendersTypeArgument
+        { loc; renders_variant; invalid_render_type_kind; invalid_type_reasons } ->
       spf
-        "EInvalidRendersTypeArgument { loc = %s; invalid_render_type_kind = %s; invalid_type_reasons = [%s] }"
+        "EInvalidRendersTypeArgument { loc = %s; renders_variant = %s, invalid_render_type_kind = %s; invalid_type_reasons = [%s] }"
         (string_of_aloc loc)
+        (match renders_variant with
+        | Flow_ast.Type.Renders.Normal -> "renders"
+        | Flow_ast.Type.Renders.Maybe -> "renders?"
+        | Flow_ast.Type.Renders.Star -> "renders*")
         (string_of_invalid_render_type_kind invalid_render_type_kind)
         (invalid_type_reasons
         |> Nel.to_list

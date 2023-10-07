@@ -1848,7 +1848,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       loc
       { Ast.Type.Renders.operator_loc; comments; argument; variant } =
     let (((argument_loc, t), _) as t_ast) = convert cx tparams_map infer_tparams_map argument in
-    Context.add_renders_type_argument_validation cx ~allow_generic_t argument_loc t;
+    Context.add_renders_type_argument_validation cx ~allow_generic_t argument_loc variant t;
     let reason_desc =
       let arg_desc = desc_of_reason (reason_of_t t) in
       match variant with

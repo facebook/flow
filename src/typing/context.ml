@@ -169,7 +169,8 @@ type component_t = {
   mutable literal_subtypes: (ALoc.t * Env_api.literal_check) list;
   mutable matching_props: (string * ALoc.t * ALoc.t) list;
   mutable constrained_writes: (Type.t * Type.use_op * Type.t) list;
-  mutable renders_type_argument_validations: (ALoc.t * bool * Type.t) list;
+  mutable renders_type_argument_validations:
+    (ALoc.t * Flow_ast.Type.Renders.variant * bool * Type.t) list;
   mutable global_value_cache:
     (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result NameUtils.Map.t;
   mutable env_value_cache: (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result IMap.t;
@@ -698,10 +699,10 @@ let add_literal_subtypes cx c = cx.ccx.literal_subtypes <- c :: cx.ccx.literal_s
 
 let add_constrained_write cx c = cx.ccx.constrained_writes <- c :: cx.ccx.constrained_writes
 
-let add_renders_type_argument_validation cx ~allow_generic_t loc t =
+let add_renders_type_argument_validation cx ~allow_generic_t loc variant t =
   if enable_renders_type_validation cx then
     cx.ccx.renders_type_argument_validations <-
-      (loc, allow_generic_t, t) :: cx.ccx.renders_type_argument_validations
+      (loc, variant, allow_generic_t, t) :: cx.ccx.renders_type_argument_validations
 
 let add_global_value_cache_entry cx name t =
   cx.ccx.global_value_cache <- NameUtils.Map.add name t cx.ccx.global_value_cache

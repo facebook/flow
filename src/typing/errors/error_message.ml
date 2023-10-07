@@ -605,6 +605,7 @@ and 'loc t' =
   | EInvalidComponentRestParam of 'loc
   | EInvalidRendersTypeArgument of {
       loc: 'loc;
+      renders_variant: Flow_ast.Type.Renders.variant;
       invalid_render_type_kind: invalid_render_type_kind;
       invalid_type_reasons: 'loc virtual_reason Nel.t;
     }
@@ -1328,10 +1329,12 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EDuplicateComponentProp { spread; first; second } ->
     EDuplicateComponentProp { spread = f spread; first = map_reason first; second = f second }
   | ERefComponentProp { spread; loc } -> ERefComponentProp { spread = f spread; loc = f loc }
-  | EInvalidRendersTypeArgument { loc; invalid_render_type_kind; invalid_type_reasons } ->
+  | EInvalidRendersTypeArgument
+      { loc; renders_variant; invalid_render_type_kind; invalid_type_reasons } ->
     EInvalidRendersTypeArgument
       {
         loc = f loc;
+        renders_variant;
         invalid_render_type_kind;
         invalid_type_reasons = Nel.map map_reason invalid_type_reasons;
       }
@@ -5022,31 +5025,51 @@ let friendly_message_of_msg loc_of_aloc msg =
       ]
     in
     Normal { features }
-  | EInvalidRendersTypeArgument { loc = _; invalid_render_type_kind; invalid_type_reasons } ->
+  | EInvalidRendersTypeArgument
+      { loc = _; renders_variant; invalid_render_type_kind; invalid_type_reasons } ->
     let additional_explanation =
-      match invalid_render_type_kind with
-      | InvalidRendersNullVoidFalse ->
+      match (invalid_render_type_kind, renders_variant) with
+      | (InvalidRendersNonNonimalElement, _) ->
+        [text " Only elements of a component-syntax components can appear in renders."]
+      | (InvalidRendersNullVoidFalse, Flow_ast.Type.Renders.Maybe) ->
         [
           text " Only elements of a component-syntax components can appear in renders. ";
-          text "If you want to express the idea of renders zero or one item, please use ";
+          code "renders?";
+          text " already includes React nodes that render nothing.";
+        ]
+      | (InvalidRendersNullVoidFalse, Flow_ast.Type.Renders.Star) ->
+        [
+          text " Only elements of a component-syntax components can appear in renders. ";
+          code "renders*";
+          text " already includes React nodes that render nothing.";
+        ]
+      | (InvalidRendersIterable, Flow_ast.Type.Renders.Star) ->
+        [
+          text " Only elements of a component-syntax components can appear in renders. ";
+          code "renders*";
+          text
+            " already models rendering any amount of children in all possible nesting structures.";
+        ]
+      | (InvalidRendersNullVoidFalse, _) ->
+        [
+          text " Only elements of a component-syntax components can appear in renders. ";
+          text "If you want to express the idea of rendering zero or one item, please use ";
           code "renders?";
           text " instead.";
         ]
-      | InvalidRendersIterable ->
+      | (InvalidRendersIterable, _) ->
         [
           text " Only elements of a component-syntax components can appear in renders. ";
-          text "If you want to express the idea of renders zero or more items, please use ";
+          text "If you want to express the idea of rendering zero or more items, please use ";
           code "renders*";
           text " instead.";
         ]
-      | InvalidRendersNonNonimalElement ->
-        [text " Only elements of a component-syntax components can appear in renders."]
-      | InvalidRendersGenericT ->
+      | (InvalidRendersGenericT, _) ->
         [
           text
-            " Generic type renders are only allowed in renders declaration of component syntax components.";
+            " Generic type renders are only allowed in rendering declaration of component syntax components.";
         ]
-      | UncategorizedInvalidRenders -> []
+      | (UncategorizedInvalidRenders, _) -> []
     in
     let rec refs = function
       | (r, []) -> [ref r]

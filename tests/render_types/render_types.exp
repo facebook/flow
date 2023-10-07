@@ -954,6 +954,174 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
+Error ----------------------------------------------------------------------------------- validation/autofixable.js:7:23
+
+Cannot use boolean literal `false` [1], null [2] and undefined [3] as the type argument of renders type. Only elements
+of a component-syntax components can appear in renders. If you want to express the idea of rendering zero or one item,
+please use `renders?` instead. [invalid-render]
+
+   validation/autofixable.js:7:23
+   7| type RBad1 = renders (Foo | null | void | false);
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   validation/autofixable.js:7:43
+   7| type RBad1 = renders (Foo | null | void | false);
+                                                ^^^^^ [1]
+   validation/autofixable.js:7:29
+   7| type RBad1 = renders (Foo | null | void | false);
+                                  ^^^^ [2]
+   validation/autofixable.js:7:36
+   7| type RBad1 = renders (Foo | null | void | false);
+                                         ^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------- validation/autofixable.js:8:23
+
+Cannot use read-only array type [1], array type [2], array type [3], `$Iterable` [4] and `Set` [5] as the type argument
+of renders type. Only elements of a component-syntax components can appear in renders. If you want to express the idea
+of rendering zero or more items, please use `renders*` instead. [invalid-render]
+
+   validation/autofixable.js:8:23
+   8| type RBad2 = renders (Foo | Array<Foo> | Foo[] | $ReadOnlyArray<Foo> | Set<Foo> | Iterable<Foo>);
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   validation/autofixable.js:8:50
+   8| type RBad2 = renders (Foo | Array<Foo> | Foo[] | $ReadOnlyArray<Foo> | Set<Foo> | Iterable<Foo>);
+                                                       ^^^^^^^^^^^^^^^^^^^ [1]
+   validation/autofixable.js:8:42
+   8| type RBad2 = renders (Foo | Array<Foo> | Foo[] | $ReadOnlyArray<Foo> | Set<Foo> | Iterable<Foo>);
+                                               ^^^^^ [2]
+   validation/autofixable.js:8:29
+   8| type RBad2 = renders (Foo | Array<Foo> | Foo[] | $ReadOnlyArray<Foo> | Set<Foo> | Iterable<Foo>);
+                                  ^^^^^^^^^^ [3]
+   validation/autofixable.js:8:83
+   8| type RBad2 = renders (Foo | Array<Foo> | Foo[] | $ReadOnlyArray<Foo> | Set<Foo> | Iterable<Foo>);
+                                                                                        ^^^^^^^^^^^^^ [4]
+   validation/autofixable.js:8:72
+   8| type RBad2 = renders (Foo | Array<Foo> | Foo[] | $ReadOnlyArray<Foo> | Set<Foo> | Iterable<Foo>);
+                                                                             ^^^^^^^^ [5]
+
+
+Error ----------------------------------------------------------------------------------- validation/autofixable.js:9:23
+
+Cannot use array type [1] and null [2] as the type argument of renders type. Only elements of a component-syntax
+components can appear in renders. If you want to express the idea of rendering zero or more items, please use `renders*`
+instead. [invalid-render]
+
+   validation/autofixable.js:9:23
+   9| type RBad3 = renders (Foo | Array<Foo> | null);
+                            ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   validation/autofixable.js:9:29
+   9| type RBad3 = renders (Foo | Array<Foo> | null);
+                                  ^^^^^^^^^^ [1]
+   validation/autofixable.js:9:42
+   9| type RBad3 = renders (Foo | Array<Foo> | null);
+                                               ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- validation/autofixable.js:10:22
+
+Cannot use array type [1] as the type argument of renders type. Only elements of a component-syntax components can
+appear in renders. If you want to express the idea of rendering zero or more items, please use `renders*` instead.
+[invalid-render]
+
+   10| type RBad4 = renders Array<Foo>;
+                            ^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------- validation/autofixable.js:11:24
+
+Cannot use null [1] as the type argument of renders type. Only elements of a component-syntax components can appear in
+renders. `renders?` already includes React nodes that render nothing. [invalid-render]
+
+   validation/autofixable.js:11:24
+   11| type RBad5 = renders? (Foo | null);
+                              ^^^^^^^^^^
+
+References:
+   validation/autofixable.js:11:30
+   11| type RBad5 = renders? (Foo | null);
+                                    ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------- validation/autofixable.js:12:23
+
+Cannot use null or undefined [1] and null or undefined [1] as the type argument of renders type. Only elements of a
+component-syntax components can appear in renders. `renders?` already includes React nodes that render nothing.
+[invalid-render]
+
+   12| type RBad6 = renders? ?Foo;
+                             ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------- validation/autofixable.js:13:23
+
+Cannot use array type [1] as the type argument of renders type. Only elements of a component-syntax components can
+appear in renders. If you want to express the idea of rendering zero or more items, please use `renders*` instead.
+[invalid-render]
+
+   13| type RBad7 = renders? Array<Foo>;
+                             ^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------- validation/autofixable.js:14:23
+
+Cannot use array type [1] as the type argument of renders type. Only elements of a component-syntax components can
+appear in renders. `renders*` already models rendering any amount of children in all possible nesting structures.
+[invalid-render]
+
+   14| type RBad8 = renders* Array<Foo>;
+                             ^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------- validation/autofixable.js:15:24
+
+Cannot use null [1] as the type argument of renders type. Only elements of a component-syntax components can appear in
+renders. `renders*` already includes React nodes that render nothing. [invalid-render]
+
+   validation/autofixable.js:15:24
+   15| type RBad9 = renders* (Foo | null);
+                              ^^^^^^^^^^
+
+References:
+   validation/autofixable.js:15:30
+   15| type RBad9 = renders* (Foo | null);
+                                    ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------- validation/autofixable.js:16:24
+
+Cannot use null [1] as the type argument of renders type. Only elements of a component-syntax components can appear in
+renders. If you want to express the idea of rendering zero or one item, please use `renders?` instead. [invalid-render]
+
+   validation/autofixable.js:16:24
+   16| type RBad10 = renders (Foo | null | 1);
+                              ^^^^^^^^^^^^^^
+
+References:
+   validation/autofixable.js:16:30
+   16| type RBad10 = renders (Foo | null | 1);
+                                    ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------- validation/autofixable.js:16:24
+
+Cannot use number literal `1` [1] as the type argument of renders type. [invalid-render]
+
+   validation/autofixable.js:16:24
+   16| type RBad10 = renders (Foo | null | 1);
+                              ^^^^^^^^^^^^^^
+
+References:
+   validation/autofixable.js:16:37
+   16| type RBad10 = renders (Foo | null | 1);
+                                           ^ [1]
+
+
 Error ----------------------------------------------------------------------------------- validation/validation.js:18:22
 
 Cannot use `React.Element` [1] as the type argument of renders type. Only elements of a component-syntax components can
@@ -1008,8 +1176,8 @@ Cannot use boolean [1] as the type argument of renders type. [invalid-render]
 Error ----------------------------------------------------------------------------------- validation/validation.js:21:22
 
 Cannot use null [1], undefined [1] and `$Iterable` [1] as the type argument of renders type. Only elements of a
-component-syntax components can appear in renders. If you want to express the idea of renders zero or more items, please
-use `renders*` instead. [invalid-render]
+component-syntax components can appear in renders. If you want to express the idea of rendering zero or more items,
+please use `renders*` instead. [invalid-render]
 
    21| type RBad4 = renders React$Node; // error
                             ^^^^^^^^^^ [1]
@@ -1084,8 +1252,8 @@ appear in renders. [invalid-render]
 
 Error ----------------------------------------------------------------------------------- validation/validation.js:29:52
 
-Cannot use `T` [1] as the type argument of renders type. Generic type renders are only allowed in renders declaration of
-component syntax components. [invalid-render]
+Cannot use `T` [1] as the type argument of renders type. Generic type renders are only allowed in rendering declaration
+of component syntax components. [invalid-render]
 
    29| type BannedGenericRenders<T: React$Node> = renders T; // error
                                                           ^ [1]
@@ -1094,7 +1262,7 @@ component syntax components. [invalid-render]
 Error ----------------------------------------------------------------------------------- validation/validation.js:31:37
 
 Cannot use boolean literal `false` [1], null [2] and undefined [3] as the type argument of renders type. Only elements
-of a component-syntax components can appear in renders. If you want to express the idea of renders zero or one item,
+of a component-syntax components can appear in renders. If you want to express the idea of rendering zero or one item,
 please use `renders?` instead. [invalid-render]
 
    validation/validation.js:31:37
@@ -1116,7 +1284,7 @@ References:
 Error ----------------------------------------------------------------------------------- validation/validation.js:32:37
 
 Cannot use array type [1] as the type argument of renders type. Only elements of a component-syntax components can
-appear in renders. If you want to express the idea of renders zero or more items, please use `renders*` instead.
+appear in renders. If you want to express the idea of rendering zero or more items, please use `renders*` instead.
 [invalid-render]
 
    32| type BadSpecificRenders2 = renders (Array<React$Element<typeof Foo>>); // error
@@ -1126,7 +1294,7 @@ appear in renders. If you want to express the idea of renders zero or more items
 Error ----------------------------------------------------------------------------------- validation/validation.js:33:37
 
 Cannot use read-only array type [1] as the type argument of renders type. Only elements of a component-syntax components
-can appear in renders. If you want to express the idea of renders zero or more items, please use `renders*` instead.
+can appear in renders. If you want to express the idea of rendering zero or more items, please use `renders*` instead.
 [invalid-render]
 
    33| type BadSpecificRenders3 = renders ($ReadOnlyArray<React$Element<typeof Foo>>); // error
@@ -1136,7 +1304,7 @@ can appear in renders. If you want to express the idea of renders zero or more i
 Error ----------------------------------------------------------------------------------- validation/validation.js:34:37
 
 Cannot use `$Iterable` [1] as the type argument of renders type. Only elements of a component-syntax components can
-appear in renders. If you want to express the idea of renders zero or more items, please use `renders*` instead.
+appear in renders. If you want to express the idea of rendering zero or more items, please use `renders*` instead.
 [invalid-render]
 
    34| type BadSpecificRenders4 = renders (Iterable<React$Element<typeof Foo>>); // error
@@ -1146,7 +1314,7 @@ appear in renders. If you want to express the idea of renders zero or more items
 Error ----------------------------------------------------------------------------------- validation/validation.js:35:37
 
 Cannot use read-only array type [1] as the type argument of renders type. Only elements of a component-syntax components
-can appear in renders. If you want to express the idea of renders zero or more items, please use `renders*` instead.
+can appear in renders. If you want to express the idea of rendering zero or more items, please use `renders*` instead.
 [invalid-render]
 
    35| type BadSpecificRenders5 = renders (React.ChildrenArray<React$Element<typeof Foo>>); // error
@@ -1156,15 +1324,15 @@ can appear in renders. If you want to express the idea of renders zero or more i
 Error ----------------------------------------------------------------------------------- validation/validation.js:36:37
 
 Cannot use read-only array type [1] and null [1] as the type argument of renders type. Only elements of a
-component-syntax components can appear in renders. If you want to express the idea of renders zero or more items, please
-use `renders*` instead. [invalid-render]
+component-syntax components can appear in renders. If you want to express the idea of rendering zero or more items,
+please use `renders*` instead. [invalid-render]
 
    36| type BadSpecificRenders6 = renders (React.ChildrenArray<React$Element<typeof Foo> | null>); // error
                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 
-Found 78 errors
+Found 89 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -375,7 +375,7 @@ let check_constrained_writes cx =
 let validate_renders_type_arguments cx =
   let open Type in
   let open Reason in
-  let rec validate_component_in_element loc invalid_type_reason = function
+  let rec validate_component_in_element loc renders_variant invalid_type_reason = function
     | DefT (_, _, PolyT { tparams_loc; tparams; t_out; id = _ }) ->
       let subst_map =
         tparams
@@ -384,7 +384,11 @@ let validate_renders_type_arguments cx =
                Subst_name.Map.add tparam.name (Unsoundness.at Unchecked tparams_loc) acc
            )
       in
-      validate_component_in_element loc invalid_type_reason (Type_subst.subst cx subst_map t_out)
+      validate_component_in_element
+        loc
+        renders_variant
+        invalid_type_reason
+        (Type_subst.subst cx subst_map t_out)
     | DefT (_, _, ReactAbstractComponentT { component_kind = Nominal _; _ }) -> ()
     | _ ->
       Flow_js_utils.add_output
@@ -393,12 +397,13 @@ let validate_renders_type_arguments cx =
           EInvalidRendersTypeArgument
             {
               loc;
+              renders_variant;
               invalid_render_type_kind = InvalidRendersNonNonimalElement;
               invalid_type_reasons = Nel.one invalid_type_reason;
             }
         )
   in
-  let validate_element ~allow_generic loc = function
+  let validate_element ~allow_generic loc renders_variant = function
     | GenericT { reason; _ } ->
       if allow_generic then
         ()
@@ -409,6 +414,7 @@ let validate_renders_type_arguments cx =
             EInvalidRendersTypeArgument
               {
                 loc;
+                renders_variant;
                 invalid_render_type_kind = InvalidRendersGenericT;
                 invalid_type_reasons = Nel.one reason;
               }
@@ -417,7 +423,7 @@ let validate_renders_type_arguments cx =
     | OpaqueT (r, { opaque_id; opaque_type_args = (_, _, component_t, _) :: _; _ })
       when Flow_js_utils.builtin_react_element_opaque_id cx = Some opaque_id ->
       Flow_js.possible_concrete_types_for_inspection cx r component_t
-      |> Base.List.iter ~f:(validate_component_in_element loc r);
+      |> Base.List.iter ~f:(validate_component_in_element loc renders_variant r);
       None
     | DefT (invalid_type_reason, _, BoolT (Some false))
     | DefT (invalid_type_reason, _, SingletonBoolT false)
@@ -446,6 +452,7 @@ let validate_renders_type_arguments cx =
             EInvalidRendersTypeArgument
               {
                 loc;
+                renders_variant;
                 invalid_render_type_kind = UncategorizedInvalidRenders;
                 invalid_type_reasons = Nel.one r;
               }
@@ -453,14 +460,14 @@ let validate_renders_type_arguments cx =
         None
       )
   in
-  let validate_arg (loc, allow_generic, t) =
+  let validate_arg (loc, renders_variant, allow_generic, t) =
     Tvar_resolver.resolve cx t;
     Flow_js.possible_concrete_types_for_inspection
       cx
       (mk_reason (RCustom "render type argument") loc)
       t
     |> Base.List.fold ~init:None ~f:(fun acc t ->
-           match (acc, validate_element ~allow_generic loc t) with
+           match (acc, validate_element ~allow_generic loc renders_variant t) with
            | (None, None) -> None
            | (None, Some (r, k)) -> Some (Nel.one r, k)
            | (Some (rs, k), None) -> Some (rs, k)
@@ -483,6 +490,7 @@ let validate_renders_type_arguments cx =
                EInvalidRendersTypeArgument
                  {
                    loc;
+                   renders_variant;
                    invalid_render_type_kind =
                      (match kind with
                      | `InvalidRendersNullVoidFalse -> Error_message.InvalidRendersNullVoidFalse

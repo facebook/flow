@@ -260,7 +260,8 @@ val literal_subtypes : t -> (ALoc.t * Env_api.literal_check) list
 
 val constrained_writes : t -> (Type.t * Type.use_op * Type.t) list
 
-val renders_type_argument_validations : t -> (ALoc.t * bool * Type.t) list
+val renders_type_argument_validations :
+  t -> (ALoc.t * Flow_ast.Type.Renders.variant * bool * Type.t) list
 
 val missing_local_annot_lower_bounds : t -> Type.t Nel.t ALocFuzzyMap.t
 
@@ -334,7 +335,8 @@ val add_literal_subtypes : t -> ALoc.t * Env_api.literal_check -> unit
 
 val add_constrained_write : t -> Type.t * Type.use_op * Type.t -> unit
 
-val add_renders_type_argument_validation : t -> allow_generic_t:bool -> ALoc.t -> Type.t -> unit
+val add_renders_type_argument_validation :
+  t -> allow_generic_t:bool -> ALoc.t -> Flow_ast.Type.Renders.variant -> Type.t -> unit
 
 val add_missing_local_annot_lower_bound : t -> ALoc.t -> Type.t -> unit
 
