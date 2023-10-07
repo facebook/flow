@@ -4495,5 +4495,515 @@ module.exports = (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
+    test('provide quickfix for invalid render arguments', [
+      addFile('invalid-renders.js.ignored', 'invalid-renders.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/invalid-renders.js',
+        },
+        range: {
+          start: {line: 7, character: 24},
+          end: {line: 7, character: 24},
+        },
+        context: {only: ['quickfix'], diagnostics: []},
+      }).verifyAllLSPMessagesInStep(
+        [{method: 'textDocument/codeAction', result: []}],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/invalid-renders.js',
+        },
+        range: {
+          start: {line: 8, character: 24},
+          end: {line: 8, character: 24},
+        },
+        context: {only: ['quickfix'], diagnostics: []},
+      }).verifyAllLSPMessagesInStep(
+        [{method: 'textDocument/codeAction', result: []}],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/invalid-renders.js',
+        },
+        range: {
+          start: {line: 9, character: 24},
+          end: {line: 9, character: 24},
+        },
+        context: {only: ['quickfix'], diagnostics: []},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Switch to `renders?`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/invalid-renders.js': [
+                      {
+                        range: {
+                          start: {line: 9, character: 13},
+                          end: {line: 9, character: 48},
+                        },
+                        newText: 'renders? Foo',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'switch_to_renders_maybe',
+                    'Switch to `renders?`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/invalid-renders.js',
+        },
+        range: {
+          start: {line: 10, character: 24},
+          end: {line: 10, character: 24},
+        },
+        context: {only: ['quickfix'], diagnostics: []},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [],
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/invalid-renders.js',
+        },
+        range: {
+          start: {line: 11, character: 24},
+          end: {line: 11, character: 24},
+        },
+        context: {only: ['quickfix'], diagnostics: []},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Switch to `renders*`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/invalid-renders.js': [
+                      {
+                        range: {
+                          start: {line: 11, character: 13},
+                          end: {line: 11, character: 96},
+                        },
+                        newText: 'renders* Foo',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'switch_to_renders_star',
+                    'Switch to `renders*`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/invalid-renders.js',
+        },
+        range: {
+          start: {line: 12, character: 24},
+          end: {line: 12, character: 24},
+        },
+        context: {only: ['quickfix'], diagnostics: []},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Switch to `renders*`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/invalid-renders.js': [
+                      {
+                        range: {
+                          start: {line: 12, character: 13},
+                          end: {line: 12, character: 53},
+                        },
+                        newText: 'renders* Foo',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'switch_to_renders_star',
+                    'Switch to `renders*`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/invalid-renders.js',
+        },
+        range: {
+          start: {line: 13, character: 24},
+          end: {line: 13, character: 24},
+        },
+        context: {only: ['quickfix'], diagnostics: []},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Switch to `renders*`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/invalid-renders.js': [
+                      {
+                        range: {
+                          start: {line: 13, character: 13},
+                          end: {line: 13, character: 31},
+                        },
+                        newText: 'renders* Foo',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'switch_to_renders_star',
+                    'Switch to `renders*`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/invalid-renders.js',
+        },
+        range: {
+          start: {line: 14, character: 24},
+          end: {line: 14, character: 24},
+        },
+        context: {only: ['quickfix'], diagnostics: []},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Simplify `renders?`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/invalid-renders.js': [
+                      {
+                        range: {
+                          start: {line: 14, character: 13},
+                          end: {line: 14, character: 34},
+                        },
+                        newText: 'renders? Foo',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'simplify_renders_maybe',
+                    'Simplify `renders?`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/invalid-renders.js',
+        },
+        range: {
+          start: {line: 15, character: 24},
+          end: {line: 15, character: 24},
+        },
+        context: {only: ['quickfix'], diagnostics: []},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Switch to `renders*`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/invalid-renders.js': [
+                      {
+                        range: {
+                          start: {line: 15, character: 13},
+                          end: {line: 15, character: 32},
+                        },
+                        newText: 'renders* Foo',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'switch_to_renders_star',
+                    'Switch to `renders*`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/invalid-renders.js',
+        },
+        range: {
+          start: {line: 16, character: 24},
+          end: {line: 16, character: 24},
+        },
+        context: {only: ['quickfix'], diagnostics: []},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Simplify `renders*`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/invalid-renders.js': [
+                      {
+                        range: {
+                          start: {line: 16, character: 13},
+                          end: {line: 16, character: 32},
+                        },
+                        newText: 'renders* Foo',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'simplify_renders_star',
+                    'Simplify `renders*`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/invalid-renders.js',
+        },
+        range: {
+          start: {line: 17, character: 26},
+          end: {line: 17, character: 26},
+        },
+        context: {only: ['quickfix'], diagnostics: []},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Switch to `renders?`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/invalid-renders.js': [
+                      {
+                        range: {
+                          start: {line: 17, character: 14},
+                          end: {line: 17, character: 38},
+                        },
+                        newText: 'renders? (Foo | 1)',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'switch_to_renders_maybe',
+                    'Switch to `renders?`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/invalid-renders.js',
+        },
+        range: {
+          start: {line: 18, character: 26},
+          end: {line: 18, character: 26},
+        },
+        context: {only: ['quickfix'], diagnostics: []},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Simplify `renders*`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/invalid-renders.js': [
+                      {
+                        range: {
+                          start: {line: 18, character: 14},
+                          end: {line: 18, character: 35},
+                        },
+                        newText: 'renders* Foo',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'simplify_renders_star',
+                    'Simplify `renders*`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+    ]),
   ],
 ): Suite);

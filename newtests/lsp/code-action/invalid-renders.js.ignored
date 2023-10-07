@@ -1,0 +1,19 @@
+// @flow
+
+import * as React from 'react';
+
+component Foo() {return 0}
+declare function Bar(): React$Node;
+
+type RBad0 = renders React.Node; // no fix
+type RBad1 = renders React.Element<typeof Bar>; // no fix
+type RBad2 = renders (Foo | null | void | false); // -> renders? Foo
+type RBad3 = renders (null | void | false); // no fix
+type RBad4 = renders (Foo | Array<Foo> | Foo[] | $ReadOnlyArray<Foo> | Set<Foo> | Iterable<Foo>); // -> renders* Foo
+type RBad5 = renders (Foo | Array<Foo> | null | ?Foo); // -> renders* Foo
+type RBad6 = renders Array<Foo>; // -> renders* Foo
+type RBad7 = renders? (Foo | null); // -> renders? Foo
+type RBad8 = renders? Array<Foo>; // -> renders* Foo
+type RBad9 = renders* Array<Foo>; // -> renders* Foo
+type RBad10 = renders (Foo | null | 1); // -> renders? (Foo | 1)
+type RBad11 = renders* (Foo | null); // -> renders* Foo

@@ -2,6 +2,7 @@
 exact_by_default=false
 enums=true
 experimental.component_syntax=typing
+experimental.renders_type_validation=true
 
 [lints]
 unused-promise=error

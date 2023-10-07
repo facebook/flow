@@ -500,27 +500,32 @@ let autofix_in_upstream_file
   >>| Flow_ast_differ.program ast
   >>| Replacement_printer.mk_loc_patch_ast_differ ~opts:(layout_options options)
   >>| Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
-  >>| fun edits ->
-  let open Lsp in
-  CodeAction.Action
-    {
-      CodeAction.title;
-      kind = CodeActionKind.quickfix;
-      (* Handing back the diagnostics we were given is a placeholder for
-         eventually generating the diagnostics for the errors we are fixing *)
-      diagnostics;
-      action =
-        CodeAction.BothEditThenCommand
-          ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
-            {
-              Command.title = "";
-              command = Command.Command "log";
-              arguments =
-                ["textDocument/codeAction"; diagnostic_title; title]
-                |> List.map (fun str -> Hh_json.JSON_String str);
-            }
-          );
-    }
+  >>= fun edits ->
+  match edits with
+  | [] -> None
+  | _ :: _ ->
+    let open Lsp in
+    Some
+      (CodeAction.Action
+         {
+           CodeAction.title;
+           kind = CodeActionKind.quickfix;
+           (* Handing back the diagnostics we were given is a placeholder for
+              eventually generating the diagnostics for the errors we are fixing *)
+           diagnostics;
+           action =
+             CodeAction.BothEditThenCommand
+               ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+                 {
+                   Command.title = "";
+                   command = Command.Command "log";
+                   arguments =
+                     ["textDocument/codeAction"; diagnostic_title; title]
+                     |> List.map (fun str -> Hh_json.JSON_String str);
+                 }
+               );
+         }
+      )
 
 let loc_opt_intersects ~loc ~error_loc =
   match loc with
@@ -793,6 +798,55 @@ let ast_transforms_of_error ~loc_of_aloc ?loc = function
           target_loc = error_loc;
         };
       ]
+    else
+      []
+  | Error_message.EInvalidRendersTypeArgument
+      { loc = error_loc; renders_variant; invalid_type_reasons = _; invalid_render_type_kind } ->
+    if loc_opt_intersects ~error_loc ~loc then
+      match (renders_variant, invalid_render_type_kind) with
+      | ( Flow_ast.Type.Renders.Star,
+          (Error_message.InvalidRendersNullVoidFalse | Error_message.InvalidRendersIterable)
+        ) ->
+        [
+          {
+            title = "Simplify `renders*`";
+            diagnostic_title = "simplify_renders_star";
+            transform =
+              untyped_ast_transform Autofix_renders_variant.to_renders_star_with_best_effort_fixes;
+            target_loc = error_loc;
+          };
+        ]
+      | (Flow_ast.Type.Renders.Maybe, Error_message.InvalidRendersNullVoidFalse) ->
+        [
+          {
+            title = "Simplify `renders?`";
+            diagnostic_title = "simplify_renders_maybe";
+            transform =
+              untyped_ast_transform Autofix_renders_variant.to_renders_maybe_with_best_effort_fixes;
+            target_loc = error_loc;
+          };
+        ]
+      | (_, Error_message.InvalidRendersNullVoidFalse) ->
+        [
+          {
+            title = "Switch to `renders?`";
+            diagnostic_title = "switch_to_renders_maybe";
+            transform =
+              untyped_ast_transform Autofix_renders_variant.to_renders_maybe_with_best_effort_fixes;
+            target_loc = error_loc;
+          };
+        ]
+      | (_, Error_message.InvalidRendersIterable) ->
+        [
+          {
+            title = "Switch to `renders*`";
+            diagnostic_title = "switch_to_renders_star";
+            transform =
+              untyped_ast_transform Autofix_renders_variant.to_renders_star_with_best_effort_fixes;
+            target_loc = error_loc;
+          };
+        ]
+      | _ -> []
     else
       []
   | Error_message.EBuiltinLookupFailed { name; reason; _ } ->
