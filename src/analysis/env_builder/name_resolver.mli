@@ -33,8 +33,8 @@ module type S = sig
     Env_api.values * (int -> Env_api.refinement)
 end
 
-module Make_Test_With_Cx (Context : C) :
+module Make (Context : C) (_ : F with type cx = Context.t) :
   S with module Env_api = Env_api.With_ALoc and type cx = Context.t
 
-module Make_of_flow (Context : C) (_ : F with type cx = Context.t) :
+module Make_Test_With_Cx (Context : C) :
   S with module Env_api = Env_api.With_ALoc and type cx = Context.t

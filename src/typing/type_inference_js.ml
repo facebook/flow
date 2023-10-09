@@ -10,7 +10,7 @@ module Ast = Flow_ast
 
 (* infer phase services *)
 
-module NameResolver = Name_resolver.Make_of_flow (Context) (Flow_js_utils)
+module NameResolver = Name_resolver.Make (Context) (Flow_js_utils)
 module NameDefOrdering = Name_def_ordering.Make (Context) (Flow_js_utils)
 
 (* Scan the list of comments to place suppressions on the appropriate locations.

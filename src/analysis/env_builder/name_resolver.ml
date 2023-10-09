@@ -53,33 +53,21 @@ module type S = sig
 end
 
 module PostInferenceCheck = Env_api
+module Scope_api = Scope_api.With_ALoc
+module Ssa_api = Ssa_api.With_ALoc
+module Env_api = Env_api.With_ALoc
+module Provider_api = Env_api.Provider_api
+module Scope_builder = Scope_builder.With_ALoc
+module Ssa_builder = Ssa_builder.With_ALoc
+module Invalidation_api = Invalidation_api.With_ALoc
+module Eq_test = Eq_test.Make (Scope_api) (Ssa_api) (Env_api)
+module EnvMap = Env_api.EnvMap
+open Scope_builder
+open Env_api.Refi
 
-module Make
-    (Scope_api : Scope_api_sig.S with module L = Loc_sig.ALocS)
-    (Ssa_api : Ssa_api.S with module L = Loc_sig.ALocS)
-    (Env_api : Env_api.S
-                 with module L = Loc_sig.ALocS
-                  and module Scope_api = Scope_api
-                  and module Ssa_api = Ssa_api)
-    (Context : C)
-    (FlowAPIUtils : F with type cx = Context.t) :
+module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
   S with module Env_api = Env_api and type cx = Context.t = struct
-  module Scope_builder :
-    Scope_builder_sig.S with module L = Loc_sig.ALocS and module Api = Scope_api =
-    Scope_builder.Make (Loc_sig.ALocS) (Scope_api)
-
-  module Provider_api :
-    Provider_api.S with type info = Env_api.Provider_api.info and module L = Loc_sig.ALocS =
-    Env_api.Provider_api
-
-  module Ssa_builder = Ssa_builder.Make (Loc_sig.ALocS) (Ssa_api) (Scope_builder)
-  module Invalidation_api =
-    Invalidation_api.Make (Loc_sig.ALocS) (Scope_api) (Ssa_api) (Provider_api)
   module Env_api = Env_api
-  module Eq_test = Eq_test.Make (Scope_api) (Ssa_api) (Env_api)
-  module EnvMap = Env_api.EnvMap
-  open Scope_builder
-  open Env_api.Refi
 
   type cx = Context.t
 
@@ -6089,6 +6077,4 @@ module DummyFlow (Context : C) = struct
   let add_output _ ?trace _ = ignore trace
 end
 
-module Make_Test_With_Cx (Context : C) =
-  Make (Scope_api.With_ALoc) (Ssa_api.With_ALoc) (Env_api.With_ALoc) (Context) (DummyFlow (Context))
-module Make_of_flow = Make (Scope_api.With_ALoc) (Ssa_api.With_ALoc) (Env_api.With_ALoc)
+module Make_Test_With_Cx (Context : C) = Make (Context) (DummyFlow (Context))

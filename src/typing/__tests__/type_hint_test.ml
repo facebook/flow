@@ -92,7 +92,7 @@ end = struct
 
   module Statement = Fix_statement.Statement_
   module Annot = Type_annotation.Make (Type_annotation.FlowJS) (Statement)
-  module NameResolver = Name_resolver.Make_of_flow (Context) (Flow_js_utils)
+  module NameResolver = Name_resolver.Make (Context) (Flow_js_utils)
 
   let parse cx content =
     let (program_loc, t_ast) = parse_type content in
