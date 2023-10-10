@@ -87,6 +87,8 @@ module.exports = {
         'react/refs',
         'react/hoc',
         'react/types',
+        process.env.INTERNAL_STATIC_DOCS && 'react/facebook/component-syntax',
+        process.env.INTERNAL_STATIC_DOCS && 'react/facebook/render-types',
         process.env.INTERNAL_STATIC_DOCS && 'react/multiplatform',
       ].filter(Boolean),
     },
