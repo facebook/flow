@@ -5,15 +5,15 @@ type Y = renders (null | number);
 component Foo() { return null }
 component Bar() { return null }
 
-type Z = renders React$Element<typeof Foo>;
+type Z = renders Foo; 
 //   ^
-type U = renders (React$Element<typeof Foo> | React$Element<typeof Bar>);
+type U = renders (Foo | Bar);
 //   ^
-type V = renders React$Element<typeof Foo> | React$Element<typeof Bar>;
-//   ^
-
-type MaybeRenders = renders? number;
+type V = renders Foo | Bar;
 //   ^
 
-type StarRenders = renders* number;
+type MaybeRenders = renders? Foo;
+//   ^
+
+type StarRenders = renders* Foo;
 //   ^

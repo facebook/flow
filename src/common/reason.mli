@@ -184,7 +184,10 @@ type 'loc virtual_reason_desc =
   | RModule of name
   | ROptionalChain
   | RReactProps
-  | RReactElement of name option
+  | RReactElement of {
+      name_opt: name option;
+      from_component_syntax: bool;
+    }
   | RReactClass
   | RReactComponent
   | RReactStatics

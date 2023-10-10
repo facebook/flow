@@ -30,29 +30,60 @@ render_types.js:3:6,3:6
 
 render_types.js:8:6
 Flags:
-type Z = renders React$Element<Foo>
+type Z = renders Foo
 render_types.js:8:6,8:6
 
 render_types.js:10:6
 Flags:
-type U = renders (React$Element<Foo> | React$Element<Bar>)
+type U = renders (Foo | Bar)
 render_types.js:10:6,10:6
 
 render_types.js:12:6
 Flags:
-type V = 
-  renders React$Element<Foo>
-  |
-  React$Element<React$AbstractComponent<{}, mixed, renders React$Node>>
+type V = renders Foo | Bar
 render_types.js:12:6,12:6
 
 render_types.js:15:6
 Flags:
-type MaybeRenders = renders? number
+type MaybeRenders = renders? Foo
 render_types.js:15:6,15:17
 
 render_types.js:18:6
 Flags:
-type StarRenders = renders* number
+type StarRenders = renders* Foo
 render_types.js:18:6,18:16
 
+render_types.js:8:7 = {
+  "types":{
+    "unevaluated":{
+      "expanded":{
+        "kind":"TypeAlias",
+        "name":{"provenance":{"kind":"Local","loc":"render_types.js:8:6"},"name":"Z"},
+        "typeParams":null,
+        "body":{
+          "kind":"Renders",
+          "argument":{
+            "kind":"Generic",
+            "type":{"provenance":{"kind":"Local","loc":"render_types.js:5:1-15"},"name":"Foo"},
+            "generic_kind":"type alias"
+          },
+          "variant":"normal"
+        }
+      },
+      "type":"type Z = renders Foo"
+    },
+    "evaluated":null
+  },
+  "reasons":[],
+  "loc":{
+    "source":"render_types.js",
+    "type":"SourceFile",
+    "start":{"line":8,"column":6,"offset":141},
+    "end":{"line":8,"column":6,"offset":142}
+  },
+  "path":"render_types.js",
+  "line":8,
+  "endline":8,
+  "start":6,
+  "end":6
+}

@@ -226,7 +226,10 @@ type 'loc virtual_reason_desc =
   | ROptionalChain
   | RReactProps
   (* TODO React element names should not allow internal names *)
-  | RReactElement of name option
+  | RReactElement of {
+      name_opt: name option;
+      from_component_syntax: bool;
+    }
   | RReactClass
   | RReactComponent
   | RReactStatics
@@ -743,8 +746,8 @@ let rec string_of_desc = function
   | RModule x -> spf "module `%s`" (display_string_of_name x)
   | ROptionalChain -> "optional chain"
   | RReactProps -> "props"
-  | RReactElement x ->
-    (match x with
+  | RReactElement { name_opt; from_component_syntax = _ } ->
+    (match name_opt with
     | Some x -> spf "`%s` element" (display_string_of_name x)
     | None -> "React element")
   | RReactClass -> "React class"
@@ -1587,7 +1590,7 @@ let invalidate_rtype_alias = function
 
 let react_element_desc_of_component_reason reason =
   match desc_of_reason reason with
-  | RComponent name -> RReactElement (Some name)
+  | RComponent name -> RReactElement { name_opt = Some name; from_component_syntax = true }
   | _ -> RType (OrdinaryName "React$Element")
 
 let range_string_of_loc ~strip_root loc =

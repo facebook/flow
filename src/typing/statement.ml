@@ -5398,7 +5398,12 @@ module Make
         else
           let reason =
             match jsx_mode with
-            | Options.Jsx_react -> mk_reason (RReactElement (Some (OrdinaryName name))) loc_element
+            | Options.Jsx_react ->
+              mk_reason
+                (RReactElement
+                   { name_opt = Some (OrdinaryName name); from_component_syntax = false }
+                )
+                loc_element
             | Options.Jsx_pragma _ -> mk_reason (RJSXElement (Some name)) loc_element
           in
           let c =
@@ -5438,7 +5443,9 @@ module Make
           (t, name, attributes', children)
       | (MemberExpression member, Options.Jsx_react, _) ->
         let name = jsx_title_member_to_string member in
-        let el = RReactElement (Some (OrdinaryName name)) in
+        let el =
+          RReactElement { name_opt = Some (OrdinaryName name); from_component_syntax = false }
+        in
         let reason = mk_reason el loc_element in
         let m_expr = jsx_title_member_to_expression member in
         let ((m_loc, t), m_expr') = expression cx m_expr in
@@ -5692,7 +5699,11 @@ module Make
     let return_hint = Type_env.get_hint cx loc_element in
     match Context.jsx cx with
     | Options.Jsx_react ->
-      let reason = mk_reason (RReactElement (Some (OrdinaryName name))) loc_element in
+      let reason =
+        mk_reason
+          (RReactElement { name_opt = Some (OrdinaryName name); from_component_syntax = false })
+          loc_element
+      in
       let children =
         Base.List.map
           ~f:(function

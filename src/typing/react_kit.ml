@@ -109,7 +109,10 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             | Literal (_, name) ->
               Named
                 {
-                  reason = replace_desc_reason (RReactElement (Some name)) reason;
+                  reason =
+                    replace_desc_reason
+                      (RReactElement { name_opt = Some name; from_component_syntax = false })
+                      reason;
                   name;
                   from_indexed_access = false;
                 }

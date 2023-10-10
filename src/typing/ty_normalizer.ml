@@ -766,8 +766,16 @@ end = struct
       | UnionT (_, rep) -> app_union ~from_bounds:false ~f:(type__ ~env ?id) rep
       | IntersectionT (_, rep) -> app_intersection ~f:(type__ ~env ?id) rep
       | DefT (_, _, PolyT { tparams = ps; t_out = t; _ }) -> poly_ty ~env t ps
-      | TypeAppT { reason = _; use_op = _; type_; targs; use_desc = _ } ->
-        type_app ~env type_ (Some targs)
+      | TypeAppT { reason; use_op = _; type_; targs; use_desc = _ } ->
+        (match (desc_of_reason reason, targs) with
+        | ( RTypeApp (RReactElement { name_opt = Some name; from_component_syntax = true }),
+            component :: _
+          ) ->
+          return
+            (Ty.Generic
+               (symbol_from_reason env (TypeUtil.reason_of_t component) name, Ty.TypeAliasKind, None)
+            )
+        | _ -> type_app ~env type_ (Some targs))
       | DefT (r, _, InstanceT { super; inst; _ }) -> instance_t ~env r super inst
       | DefT (_, _, ClassT t) -> class_t ~env t
       | DefT (reason, _, ReactAbstractComponentT { component_kind = Nominal _; _ })
