@@ -52,3 +52,23 @@ function definitely_not_assignable_choose_false_branch<T>(x: T): Set<T> extends 
 
 (definitely_not_assignable_choose_false_branch(''): string); // ok
 (definitely_not_assignable_choose_false_branch(''): number); // error: string ~> number
+
+function union_as_upper_bound() {
+  type ConditionalWithoutInfer<T> =
+    T extends string
+    ? 'string'
+    : 'other';
+
+  declare function getConditionalWithoutInfer<T>(T): ConditionalWithoutInfer<T>;
+  <T>(t:T): 'string' | 'other' =>  getConditionalWithoutInfer(t); // ok
+  <T: number>(t:T): 'string' | 'other' => getConditionalWithoutInfer(t); // ok
+  <T: string>(t:T): 'string' | 'other' => getConditionalWithoutInfer(t); // ok
+
+  type ConditionalWithInfer<T> =
+    T extends [infer X]
+    ? X
+    : 'other';
+
+  declare function getConditionalWithInfer<T>(v: T): ConditionalWithInfer<T>;
+  <T>(t:T): T[0] | 'other' => getConditionalWithInfer(t); // error
+}

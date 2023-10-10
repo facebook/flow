@@ -1550,7 +1550,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
               let name = Subst_name.Synthetic ("conditional type", []) in
               let id = Context.make_generic_id cx name (loc_of_reason reason) in
               let reason = update_desc_reason invalidate_rtype_alias reason in
-              let bound = MixedT.make reason (bogus_trust ()) in
+              let bound = UnionT (reason, UnionRep.make true_t false_t []) in
               GenericT { reason; name; id; bound })
       in
       reposition cx ~trace (loc_of_reason reason) t

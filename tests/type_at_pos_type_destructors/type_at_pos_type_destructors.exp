@@ -61,7 +61,7 @@ Flags:
 type T8<T> = T extends {bar: <T>(T) => void, foo: infer T, ...}
   ? string
   : number
-= mixed
+= string | number
 conditional-types.js:29:6,29:7
 
 conditional-types.js:34:5
