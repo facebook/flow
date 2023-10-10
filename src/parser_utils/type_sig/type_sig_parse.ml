@@ -2716,6 +2716,7 @@ let rec expression opts scope tbls (loc, expr) =
     Value (FunExpr { loc; async; generator; def; statics })
   | E.TypeCast { E.TypeCast.expression = _; annot = (_, t); comments = _ } ->
     annot opts scope tbls SSet.empty t
+  | E.AsExpression _ -> Annot (Any loc)
   | E.TSTypeCast _ -> Annot (Any loc)
   | E.Object { E.Object.properties; comments = _ } ->
     object_literal opts scope tbls loc ~frozen:false properties

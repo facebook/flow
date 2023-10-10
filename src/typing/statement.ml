@@ -2407,11 +2407,16 @@ module Make
       let use_op = Op (Cast { lower = mk_expression_reason e; upper = reason_of_t t }) in
       Flow.flow cx (infer_t, TypeCastT (use_op, t));
       ((loc, t), TypeCast { TypeCast.expression = e'; annot = annot'; comments })
+    | AsExpression cast ->
+      Flow_js_utils.add_output
+        cx
+        (Error_message.ETSSyntax { kind = Error_message.TSTypeCast `As; loc });
+      let t = AnyT.at (AnyError None) loc in
+      ((loc, t), AsExpression (Tast_utils.error_mapper#as_expression cast))
     | TSTypeCast ({ TSTypeCast.kind; _ } as cast) ->
       let error_kind =
         match kind with
         | TSTypeCast.AsConst -> `AsConst
-        | TSTypeCast.As _ -> `As
         | TSTypeCast.Satisfies _ -> `Satisfies
       in
       Flow_js_utils.add_output

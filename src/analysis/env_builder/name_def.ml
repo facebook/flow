@@ -581,6 +581,7 @@ let expression_is_definitely_synthesizable ~autocomplete_hooks =
     | Ast.Expression.TemplateLiteral _
     | Ast.Expression.This _
     | Ast.Expression.TypeCast _
+    | Ast.Expression.AsExpression _
     | Ast.Expression.TSTypeCast _
     | Ast.Expression.Update _
     | Ast.Expression.Yield _ ->
@@ -2765,6 +2766,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
       | Ast.Expression.TemplateLiteral _
       | Ast.Expression.This _
       | Ast.Expression.TypeCast _
+      | Ast.Expression.AsExpression _
       | Ast.Expression.TSTypeCast _
       | Ast.Expression.Update _
       | Ast.Expression.Yield _ ->

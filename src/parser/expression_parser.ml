@@ -88,6 +88,7 @@ module Expression
     | (_, Object _) ->
       true
     | (_, ArrowFunction _)
+    | (_, AsExpression _)
     | (_, Assignment _)
     | (_, Binary _)
     | (_, Call _)
@@ -305,6 +306,7 @@ module Expression
       true
     | (_, Array _)
     | (_, ArrowFunction _)
+    | (_, AsExpression _)
     | (_, Assignment _)
     | (_, Binary _)
     | (_, Call _)
@@ -548,25 +550,43 @@ module Expression
               | _ -> (stack, expr)
             in
             let (expr_loc, _) = expr in
-            let (kind, end_loc) =
+            let expr =
               if keyword = "satisfies" then
                 let ((annot_loc, _) as annot) = Type._type env in
-                (Expression.TSTypeCast.Satisfies annot, annot_loc)
+                let loc = Loc.btwn expr_loc annot_loc in
+                Cover_expr
+                  ( loc,
+                    Expression.TSTypeCast
+                      {
+                        Expression.TSTypeCast.expression = expr;
+                        kind = Expression.TSTypeCast.Satisfies annot;
+                        comments = None;
+                      }
+                  )
               else if Peek.token env = T_CONST then (
-                let last_loc = Peek.loc env in
+                let loc = Loc.btwn expr_loc (Peek.loc env) in
                 Eat.token env;
-                (Expression.TSTypeCast.AsConst, last_loc)
+                Cover_expr
+                  ( loc,
+                    Expression.TSTypeCast
+                      {
+                        Expression.TSTypeCast.expression = expr;
+                        kind = Expression.TSTypeCast.AsConst;
+                        comments = None;
+                      }
+                  )
               ) else
                 let ((annot_loc, _) as annot) = Type._type env in
-                (Expression.TSTypeCast.As annot, annot_loc)
-            in
-            let loc = Loc.btwn expr_loc end_loc in
-            let expr =
-              Cover_expr
-                ( loc,
-                  Expression.TSTypeCast
-                    { Expression.TSTypeCast.expression = expr; kind; comments = None }
-                )
+                let loc = Loc.btwn expr_loc annot_loc in
+                Cover_expr
+                  ( loc,
+                    Expression.AsExpression
+                      {
+                        Expression.AsExpression.expression = expr;
+                        annot = (annot_loc, annot);
+                        comments = None;
+                      }
+                  )
             in
             loop stack expr
           | _ -> (stack, expr)

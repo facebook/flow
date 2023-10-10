@@ -209,6 +209,8 @@ class ['loc] mapper =
       | (loc, Array x) -> id_loc this#array loc x expr (fun x -> (loc, Array x))
       | (loc, ArrowFunction x) ->
         id_loc this#arrow_function loc x expr (fun x -> (loc, ArrowFunction x))
+      | (loc, AsExpression x) ->
+        id_loc this#as_expression loc x expr (fun x -> (loc, AsExpression x))
       | (loc, Assignment x) -> id_loc this#assignment loc x expr (fun x -> (loc, Assignment x))
       | (loc, Binary x) -> id_loc this#binary loc x expr (fun x -> (loc, Binary x))
       | (loc, Call x) -> id_loc this#call loc x expr (fun x -> (loc, Call x))
@@ -272,6 +274,17 @@ class ['loc] mapper =
       | Hole _ -> element
 
     method arrow_function loc (expr : ('loc, 'loc) Ast.Function.t) = this#function_ loc expr
+
+    method as_expression _loc (expr : ('loc, 'loc) Ast.Expression.AsExpression.t) =
+      let open Ast.Expression.AsExpression in
+      let { expression; annot; comments } = expr in
+      let expression' = this#expression expression in
+      let annot' = this#type_annotation annot in
+      let comments' = this#syntax_opt comments in
+      if expression' == expression && annot' == annot && comments' == comments then
+        expr
+      else
+        { expression = expression'; annot = annot'; comments = comments' }
 
     method assignment _loc (expr : ('loc, 'loc) Ast.Expression.Assignment.t) =
       let open Ast.Expression.Assignment in
@@ -3050,12 +3063,6 @@ class ['loc] mapper =
       let kind' =
         match kind with
         | AsConst -> kind
-        | As annot ->
-          let annot' = this#type_ annot in
-          if annot == annot' then
-            kind
-          else
-            As annot'
         | Satisfies annot ->
           let annot' = this#type_ annot in
           if annot == annot' then

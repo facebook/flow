@@ -1376,7 +1376,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       | ((loc, TypeCast t1), (_, TypeCast t2)) -> Some (type_cast loc t1 t2)
       | ((loc, Logical l1), (_, Logical l2)) -> logical loc l1 l2
       | ((loc, Array arr1), (_, Array arr2)) -> array loc arr1 arr2
-      | ((_, TSTypeCast _), (_, TypeCast _)) -> None
+      | ((_, (AsExpression _ | TSTypeCast _)), (_, TypeCast _)) -> None
       | (expr, (loc, TypeCast t2)) -> Some (type_cast_added parent expr loc t2)
       | ((loc, Update update1), (_, Update update2)) -> update loc update1 update2
       | ((loc, Sequence seq1), (_, Sequence seq2)) -> sequence loc seq1 seq2

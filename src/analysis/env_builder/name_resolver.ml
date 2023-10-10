@@ -5525,6 +5525,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           expression
         | Array _
         | ArrowFunction _
+        | AsExpression _
         | Class _
         | Conditional _
         | Function _

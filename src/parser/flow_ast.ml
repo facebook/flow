@@ -1651,10 +1651,18 @@ and Expression : sig
     [@@deriving show]
   end
 
+  module AsExpression : sig
+    type ('M, 'T) t = {
+      expression: ('M, 'T) Expression.t;
+      annot: ('M, 'T) Type.annotation;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   module TSTypeCast : sig
     type ('M, 'T) kind =
       | AsConst
-      | As of ('M, 'T) Type.t
       | Satisfies of ('M, 'T) Type.t
     [@@deriving show]
 
@@ -1696,6 +1704,7 @@ and Expression : sig
   and ('M, 'T) t' =
     | Array of ('M, 'T) Array.t
     | ArrowFunction of ('M, 'T) Function.t
+    | AsExpression of ('M, 'T) AsExpression.t
     | Assignment of ('M, 'T) Assignment.t
     | Binary of ('M, 'T) Binary.t
     | Call of ('M, 'T) Call.t

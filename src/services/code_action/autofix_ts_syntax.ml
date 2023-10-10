@@ -54,7 +54,7 @@ class mapper target_loc kind =
     method! expression e =
       let open Flow_ast.Expression in
       match e with
-      | (loc, TSTypeCast { TSTypeCast.expression; kind = TSTypeCast.As annot; comments })
+      | (loc, AsExpression { AsExpression.expression; annot = (_, annot); comments })
         when kind = `AsExpression && this#is_target loc ->
         let expression = super#expression expression in
         let annot = super#type_ annot in
