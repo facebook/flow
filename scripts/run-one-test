@@ -156,6 +156,7 @@ start_flow_unsafe () {
         --log-file "$abs_log_file" \
         --monitor-log-file "$abs_monitor_log_file" \
         --long-lived-workers "$long_lived_workers" \
+        $incr_error_collation_flag \
         "$@"
       return $?
     else
@@ -172,6 +173,7 @@ start_flow_unsafe () {
       --log-file "$abs_log_file" \
       --monitor-log-file "$abs_monitor_log_file" \
       --long-lived-workers "$long_lived_workers" \
+      $incr_error_collation_flag \
       "$@"
     return $?
   fi
@@ -285,6 +287,7 @@ runtest() {
         start_args=""
         file_watcher="none"
         wait_for_recheck="true"
+        incr_error_collation_flag=""
 
         if [ -e ".testconfig" ]
         then
@@ -363,6 +366,10 @@ runtest() {
             flowlib=""
         fi
 
+        if [[ "$incr_error_collation" -eq 1 ]]; then
+          incr_error_collation_flag="--incremental-error-collation"
+        fi
+
         if [ -f .flowconfig ] && ! grep -q -E "all=(true|false)" .flowconfig; then
           return $RUNTEST_MISSING_ALL_OPTION
         fi
@@ -388,6 +395,7 @@ runtest() {
               --log-file "$abs_log_file" \
               --monitor-log-file "$abs_monitor_log_file" \
               --long-lived-workers "$long_lived_workers" \
+              $incr_error_collation_flag \
 
             local SAVED_STATE_FILENAME="$root/.flow.saved_state"
             local CHANGES_FILENAME="$root/.flow.saved_state_file_changes"
@@ -413,6 +421,7 @@ runtest() {
                 $flowlib \
                 --strip-root --show-all-errors \
                 --long-lived-workers "$long_lived_workers" \
+                $incr_error_collation_flag \
                  1>> "$abs_out_file" 2>> "$stderr_dest"
               st=$?
             fi

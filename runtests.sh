@@ -25,6 +25,8 @@ show_help() {
   echo "        quiet output (hides status, just prints results)"
   echo "    -s"
   echo "        test saved state"
+  echo "    -i"
+  echo "        test incremental error collation"
   echo "    -L"
   echo "        test long-lived workers"
   echo "    -v"
@@ -46,13 +48,14 @@ fi
 OPTIND=1
 record=0
 saved_state=0
+incr_error_collation=0
 verbose=0
 quiet=0
 relative="."
 check_only=0
 long_lived_workers=0
-export saved_state filter check_only long_lived_workers
-while getopts "b:d:f:clqxrsLt:vh?" opt; do
+export saved_state incr_error_collation filter check_only long_lived_workers
+while getopts "b:d:f:clqxrsiLt:vh?" opt; do
   case "$opt" in
   b)
     FLOW="$OPTARG"
@@ -81,6 +84,9 @@ while getopts "b:d:f:clqxrsLt:vh?" opt; do
   s)
     saved_state=1
     printf "Testing saved state by running all tests using saved state\\n"
+    ;;
+  i)
+    incr_error_collation=1
     ;;
   L)
     long_lived_workers=1
