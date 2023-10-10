@@ -51,7 +51,6 @@ let sig_opts =
   {
     Type_sig_options.suppress_types = SSet.empty;
     munge = false;
-    ignore_static_propTypes = false;
     facebook_keyMirror = false;
     facebook_fbt = None;
     max_literal_len = 100;

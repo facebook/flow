@@ -8,7 +8,6 @@
 type t = {
   suppress_types: SSet.t;
   munge: bool;
-  ignore_static_propTypes: bool;
   facebook_keyMirror: bool;
   facebook_fbt: string option;
   max_literal_len: int;
@@ -23,11 +22,6 @@ type t = {
 
 let of_options options docblock locs_to_dirtify file =
   let munge = Options.should_munge_underscores options && not (Docblock.preventMunge docblock) in
-  (* NOTE: This is a temporary hack that makes the signature verifier ignore any static
-     property named `propTypes` in any class. It should be killed with fire or replaced with
-     something that only works for React classes, in which case we must make a corresponding
-     change in the type system that enforces that any such property is private. *)
-  let ignore_static_propTypes = true in
   (* NOTE: This is a Facebook-specific hack that makes the signature verifier and generator
      recognize and process a custom `keyMirror` function that makes an enum out of the keys
      of an object. *)
@@ -49,7 +43,6 @@ let of_options options docblock locs_to_dirtify file =
   in
   {
     munge;
-    ignore_static_propTypes;
     facebook_keyMirror;
     enable_relay_integration;
     relay_integration_module_prefix;
@@ -64,18 +57,12 @@ let of_options options docblock locs_to_dirtify file =
   }
 
 let builtin_options options =
-  (* NOTE: This is a temporary hack that makes the signature verifier ignore any static
-     property named `propTypes` in any class. It should be killed with fire or replaced with
-     something that only works for React classes, in which case we must make a corresponding
-     change in the type system that enforces that any such property is private. *)
-  let ignore_static_propTypes = true in
   (* NOTE: This is a Facebook-specific hack that makes the signature verifier and generator
      recognize and process a custom `keyMirror` function that makes an enum out of the keys
      of an object. *)
   let facebook_keyMirror = true in
   {
     munge = false;
-    ignore_static_propTypes;
     facebook_keyMirror;
     enable_relay_integration = false;
     relay_integration_module_prefix = None;

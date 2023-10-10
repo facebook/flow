@@ -66,7 +66,6 @@ module SignatureVerification = struct
       {
         Type_sig_options.suppress_types = Options.suppress_types options;
         munge = not prevent_munge;
-        ignore_static_propTypes = true;
         facebook_keyMirror = true;
         facebook_fbt = Options.facebook_fbt options;
         max_literal_len = Options.max_literal_length options;

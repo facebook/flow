@@ -206,7 +206,6 @@ let parse_options ~module_ref_prefix ~module_ref_prefix_LEGACY_INTEROP =
 let sig_options
     ?(suppress_types = SSet.empty)
     ?(munge = false)
-    ?(ignore_static_propTypes = false)
     ?(facebook_keyMirror = false)
     ?facebook_fbt
     ?(max_literal_len = 100)
@@ -221,7 +220,6 @@ let sig_options
   {
     Type_sig_options.suppress_types;
     munge;
-    ignore_static_propTypes;
     facebook_keyMirror;
     facebook_fbt;
     max_literal_len;
@@ -240,7 +238,6 @@ let parse_and_pack_module ~parse_options ~strict sig_opts contents =
 
 let print_sig
     ?munge
-    ?ignore_static_propTypes
     ?facebook_fbt
     ?facebook_keyMirror
     ?exact_by_default
@@ -257,7 +254,6 @@ let print_sig
   let sig_opts =
     sig_options
       ?munge
-      ?ignore_static_propTypes
       ?facebook_fbt
       ?facebook_keyMirror
       ?exact_by_default
@@ -2016,35 +2012,6 @@ let%expect_test "munged_fields_not_ignored" =
     (SigError
        (Signature_error.ExpectedAnnotation ([2:2-31],
           Expected_annotation_sort.Property {name = "_method"})))
-  |}]
-
-let%expect_test "propTypes_static_ignored" =
-  print_sig ~ignore_static_propTypes:true {|
-    class C {
-      static propTypes = {}
-    }
-    export default C;
-  |};
-  [%expect {|
-    ESModule {type_exports = [||];
-      exports =
-      [|ExportDefault {default_loc = [4:7-14];
-          def = (Ref LocalRef {ref_loc = [4:15-16]; index = 0})}
-        |];
-      info =
-      ESModuleInfo {type_export_keys = [||];
-        type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true}}
-
-    Local defs:
-    0. ClassBinding {id_loc = [1:6-7];
-         name = "C";
-         def =
-         ClassSig {tparams = Mono; extends = ClassImplicitExtends;
-           implements = [];
-           static_props =
-           { "propTypes" -> (ObjValueField ([2:9-18], (Annot (Any [2:18])), Polarity.Neutral)) };
-           proto_props = {}; own_props = {}}}
   |}]
 
 let%expect_test "propTypes_static_failure" =
