@@ -85,7 +85,9 @@ let rec synthesizable_expression cx ?cond exp =
   | (loc, ModuleRefLiteral lit) ->
     let (t, _lit) = Statement.module_ref_literal cx loc lit in
     t
-  | (_, Ast.Expression.TypeCast { TypeCast.annot; _ }) -> resolve_annotation cx ALocMap.empty annot
+  | (_, AsExpression { AsExpression.annot; _ })
+  | (_, TypeCast { TypeCast.annot; _ }) ->
+    resolve_annotation cx ALocMap.empty annot
   | ( loc,
       Ast.Expression.Member
         {

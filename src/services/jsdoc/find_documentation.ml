@@ -215,7 +215,11 @@ class jsdoc_documentation_searcher find =
       match declaration with
       | Declaration stmt ->
         stmt |> replace_comments_of_statement ~comments |> this#statement |> ignore
-      | Expression (_, TypeCast TypeCast.{ annot = (_, (loc, _)); _ })
+      | Expression
+          ( _,
+            ( TypeCast TypeCast.{ annot = (_, (loc, _)); _ }
+            | AsExpression AsExpression.{ annot = (_, (loc, _)); _ } )
+          )
       | Expression (loc, _) ->
         find loc comments
       );

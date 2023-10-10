@@ -800,6 +800,9 @@ module Expressions = struct
   let typecast ?(loc = Loc.none) ?comments expression annotation =
     (loc, TypeCast { TypeCast.expression; annot = Types.annotation annotation; comments })
 
+  let as_expression ?(loc = Loc.none) ?comments expression annotation =
+    (loc, AsExpression { AsExpression.expression; annot = Types.annotation annotation; comments })
+
   let yield ?(loc = Loc.none) ?comments ~delegate expr =
     (loc, Yield { Yield.argument = expr; comments; delegate; result_out = loc })
 

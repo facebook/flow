@@ -102,6 +102,7 @@ type error_code =
   | InvalidTupleIndex
   | InvalidTupleMap
   | InvalidTypeArg
+  | InvalidTypeCastSyntax
   | InvalidTypeOf
   | InvalidTempType
   | LintSetting
@@ -302,6 +303,7 @@ let string_of_code : error_code -> string = function
   | InvalidTupleIndex -> "invalid-tuple-index"
   | InvalidTupleMap -> "invalid-tuple-map"
   | InvalidTypeArg -> "invalid-type-arg"
+  | InvalidTypeCastSyntax -> "invalid-type-cast-syntax"
   | InvalidTypeOf -> "invalid-typeof"
   | InvalidTempType -> "invalid-temp-type"
   | LintSetting -> "lint-setting"

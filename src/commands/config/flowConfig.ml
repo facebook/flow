@@ -48,6 +48,7 @@ module Opts = struct
     autoimports_ranked_by_usage: bool option;
     automatic_require_default: bool option;
     babel_loose_array_spread: bool option;
+    casting_syntax: Options.CastingSyntax.t option;
     channel_mode: [ `pipe | `socket ] option;
     component_syntax: Options.component_syntax;
     component_syntax_includes: string list;
@@ -172,6 +173,7 @@ module Opts = struct
       automatic_require_default = None;
       babel_loose_array_spread = None;
       channel_mode = None;
+      casting_syntax = None;
       component_syntax = Options.Off;
       component_syntax_includes = [];
       component_syntax_deep_read_only = false;
@@ -376,6 +378,15 @@ module Opts = struct
 
   let max_seconds_for_check_per_worker_parser =
     uint (fun opts v -> Ok { opts with max_seconds_for_check_per_worker = float v })
+
+  let casting_syntax_parser =
+    enum
+      [
+        ("colon", Options.CastingSyntax.Colon);
+        ("as", Options.CastingSyntax.As);
+        ("both", Options.CastingSyntax.Both);
+      ]
+      (fun opts v -> Ok { opts with casting_syntax = Some v })
 
   let channel_mode_parser ~enabled =
     enum
@@ -803,6 +814,7 @@ module Opts = struct
         boolean (fun opts v -> Ok { opts with autoimports_ranked_by_usage = Some v })
       );
       ("babel_loose_array_spread", babel_loose_array_spread_parser);
+      ("casting_syntax", casting_syntax_parser);
       ("emoji", boolean (fun opts v -> Ok { opts with emoji = Some v }));
       ("enums", boolean (fun opts v -> Ok { opts with enums = v }));
       ("estimate_recheck_time", estimate_recheck_time_parser);
@@ -1444,6 +1456,8 @@ let autoimports_ranked_by_usage c = c.options.Opts.autoimports_ranked_by_usage
 let automatic_require_default c = c.options.Opts.automatic_require_default
 
 let babel_loose_array_spread c = c.options.Opts.babel_loose_array_spread
+
+let casting_syntax c = c.options.Opts.casting_syntax
 
 let channel_mode c = c.options.Opts.channel_mode
 

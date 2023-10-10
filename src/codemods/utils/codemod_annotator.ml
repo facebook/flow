@@ -144,6 +144,7 @@ module Make (Extra : BASE_STATS) = struct
     ~merge_arrays
     ?(exact_by_default = Options.exact_by_default cctx.Codemod_context.Typed.options)
     ?(suppress_types = Options.suppress_types cctx.Codemod_context.Typed.options)
+    ?(casting_syntax = Options.casting_syntax cctx.Codemod_context.Typed.options)
     ?(imports_react =
       Insert_type_imports.ImportsHelper.imports_react cctx.Codemod_context.Typed.file_sig)
     () =
@@ -315,7 +316,12 @@ module Make (Extra : BASE_STATS) = struct
         | (expr_loc, _) ->
           Acc.debug expr_loc (Debug.Add_annotation Debug.Expr);
           this#annotate_node loc ty (fun annot ->
-              (expr_loc, TypeCast TypeCast.{ expression; annot; comments = None })
+              let open Options.CastingSyntax in
+              match casting_syntax with
+              | Colon -> (expr_loc, TypeCast TypeCast.{ expression; annot; comments = None })
+              | As
+              | Both ->
+                (expr_loc, AsExpression AsExpression.{ expression; annot; comments = None })
           )
 
       method private add_unannotated_loc_warnings lmap =

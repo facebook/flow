@@ -25,6 +25,7 @@ let metadata =
     any_propagation = true;
     automatic_require_default = false;
     babel_loose_array_spread = false;
+    casting_syntax = Options.CastingSyntax.Colon;
     component_syntax = false;
     component_syntax_includes = [];
     component_syntax_deep_read_only = false;

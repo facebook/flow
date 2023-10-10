@@ -2401,19 +2401,42 @@ module Make
     | Logical l ->
       let (t, l) = logical cx loc ~cond l in
       ((loc, t), Logical l)
-    | TypeCast { TypeCast.expression = e; annot; comments } ->
-      let (t, annot') = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
-      let (((_, infer_t), _) as e') = expression cx e in
-      let use_op = Op (Cast { lower = mk_expression_reason e; upper = reason_of_t t }) in
-      Flow.flow cx (infer_t, TypeCastT (use_op, t));
-      ((loc, t), TypeCast { TypeCast.expression = e'; annot = annot'; comments })
-    | AsExpression cast ->
-      Flow_js_utils.add_output
-        cx
-        (Error_message.ETSSyntax { kind = Error_message.TSTypeCast `As; loc });
-      let t = AnyT.at (AnyError None) loc in
-      ((loc, t), AsExpression (Tast_utils.error_mapper#as_expression cast))
+    | TypeCast ({ TypeCast.expression = e; annot; comments } as cast) ->
+      let casting_syntax = Context.casting_syntax cx in
+      let open Options.CastingSyntax in
+      (match casting_syntax with
+      | Colon
+      | Both ->
+        let (t, annot') = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
+        let (((_, infer_t), _) as e') = expression cx e in
+        let use_op = Op (Cast { lower = mk_expression_reason e; upper = reason_of_t t }) in
+        Flow.flow cx (infer_t, TypeCastT (use_op, t));
+        ((loc, t), TypeCast { TypeCast.expression = e'; annot = annot'; comments })
+      | As ->
+        Flow_js_utils.add_output
+          cx
+          (Error_message.EInvalidTypeCastSyntax { loc; enabled_casting_syntax = casting_syntax });
+        let t = AnyT.at (AnyError None) loc in
+        ((loc, t), TypeCast (Tast_utils.error_mapper#type_cast cast)))
+    | AsExpression ({ AsExpression.expression = e; annot; comments } as cast) ->
+      let casting_syntax = Context.casting_syntax cx in
+      let open Options.CastingSyntax in
+      (match casting_syntax with
+      | As
+      | Both ->
+        let (t, annot') = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
+        let (((_, infer_t), _) as e') = expression cx e in
+        let use_op = Op (Cast { lower = mk_expression_reason e; upper = reason_of_t t }) in
+        Flow.flow cx (infer_t, TypeCastT (use_op, t));
+        ((loc, t), AsExpression { AsExpression.expression = e'; annot = annot'; comments })
+      | Colon ->
+        Flow_js_utils.add_output
+          cx
+          (Error_message.EInvalidTypeCastSyntax { loc; enabled_casting_syntax = casting_syntax });
+        let t = AnyT.at (AnyError None) loc in
+        ((loc, t), AsExpression (Tast_utils.error_mapper#as_expression cast)))
     | TSTypeCast ({ TSTypeCast.kind; _ } as cast) ->
+      let enabled_casting_syntax = Context.casting_syntax cx in
       let error_kind =
         match kind with
         | TSTypeCast.AsConst -> `AsConst
@@ -2421,7 +2444,9 @@ module Make
       in
       Flow_js_utils.add_output
         cx
-        (Error_message.ETSSyntax { kind = Error_message.TSTypeCast error_kind; loc });
+        (Error_message.ETSSyntax
+           { kind = Error_message.TSTypeCast { kind = error_kind; enabled_casting_syntax }; loc }
+        );
       let t = AnyT.at (AnyError None) loc in
       ((loc, t), TSTypeCast (Tast_utils.error_mapper#ts_type_cast cast))
     | Member _ -> subscript ~cond cx ex

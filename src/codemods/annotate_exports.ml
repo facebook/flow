@@ -74,6 +74,7 @@ module SignatureVerification = struct
         enable_enums = Options.enums options;
         enable_component_syntax = Options.typecheck_component_syntax_in_file options file;
         enable_relay_integration = Options.enable_relay_integration options;
+        casting_syntax = Options.casting_syntax options;
         relay_integration_module_prefix = Options.relay_integration_module_prefix options;
         locs_to_dirtify = [];
       }
@@ -150,6 +151,7 @@ module Acc = Acc (SignatureVerificationErrorStats)
 let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_context.Typed.t) =
   let lint_severities = Codemod_context.Typed.lint_severities cctx in
   let flowfixme_ast = Codemod_context.Typed.flowfixme_ast ~lint_severities cctx in
+
   object (this)
     inherit
       Codemod_exports_annotator.mapper
@@ -213,6 +215,8 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
       | _ -> super#variable_declarator ~kind decl
 
     method! private expression (expr : (Loc.t, Loc.t) Ast.Expression.t) =
+      let { Codemod_context.Typed.options; _ } = cctx in
+      let casting_syntax = Options.casting_syntax options in
       let expr = super#expression expr in
       let (loc, _) = expr in
       match LMap.find_opt loc sig_verification_loc_tys with
@@ -220,14 +224,20 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
         let f = this#annotate_expr in
         let error e =
           let (loc, _) = e in
-          ( loc,
-            Ast.Expression.TypeCast
-              {
-                Ast.Expression.TypeCast.expression = e;
-                annot = (Loc.none, flowfixme_ast);
-                comments = None;
-              }
-          )
+          let annot = (Loc.none, flowfixme_ast) in
+          let open Options.CastingSyntax in
+          match casting_syntax with
+          | Colon ->
+            ( loc,
+              Ast.Expression.TypeCast
+                { Ast.Expression.TypeCast.expression = e; annot; comments = None }
+            )
+          | As
+          | Both ->
+            ( loc,
+              Ast.Expression.AsExpression
+                { Ast.Expression.AsExpression.expression = e; annot; comments = None }
+            )
         in
         this#opt_annotate ~f ~error ~expr:(Some expr) loc type_entry expr
       | None -> expr

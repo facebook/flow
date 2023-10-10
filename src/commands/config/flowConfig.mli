@@ -74,6 +74,8 @@ val automatic_require_default : config -> bool option
 
 val babel_loose_array_spread : config -> bool option
 
+val casting_syntax : config -> Options.CastingSyntax.t option
+
 val channel_mode : config -> [ `pipe | `socket ] option
 
 val component_syntax : config -> Options.component_syntax

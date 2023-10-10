@@ -1889,6 +1889,7 @@ let dump_error_message =
       spf "EDuplicateComponentProp (%s)" (dump_reason cx first)
     | ERefComponentProp { loc; _ } -> spf "ERefComponentProp (%s)" (string_of_aloc loc)
     | EInvalidComponentRestParam loc -> spf "EInvalidComponentRestParam (%s)" (string_of_aloc loc)
+    | EInvalidTypeCastSyntax { loc; _ } -> spf "EInvalidTypeCastSyntax (%s)" (string_of_aloc loc)
 
 module Verbose = struct
   let verbose_in_file cx verbose =

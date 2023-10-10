@@ -34,6 +34,7 @@ type metadata = {
   any_propagation: bool;
   automatic_require_default: bool;
   babel_loose_array_spread: bool;
+  casting_syntax: Options.CastingSyntax.t;
   component_syntax: bool;
   component_syntax_includes: string list;
   component_syntax_deep_read_only: bool;
@@ -253,6 +254,7 @@ let metadata_of_options options =
     any_propagation = Options.any_propagation options;
     automatic_require_default = Options.automatic_require_default options;
     babel_loose_array_spread = Options.babel_loose_array_spread options;
+    casting_syntax = Options.casting_syntax options;
     component_syntax = Options.typecheck_component_syntax options;
     component_syntax_includes = Options.component_syntax_includes options;
     component_syntax_deep_read_only = Options.component_syntax_deep_read_only options;
@@ -459,6 +461,8 @@ let in_dirlist cx dirs =
     let filename = File_key.to_string (file cx) in
     let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
     List.exists (fun str -> Base.String.is_prefix ~prefix:str normalized_filename) dirs
+
+let casting_syntax cx = cx.metadata.casting_syntax
 
 let component_syntax cx =
   cx.metadata.component_syntax || in_dirlist cx cx.metadata.component_syntax_includes

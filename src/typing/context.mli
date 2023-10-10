@@ -68,6 +68,7 @@ type metadata = {
   any_propagation: bool;
   automatic_require_default: bool;
   babel_loose_array_spread: bool;
+  casting_syntax: Options.CastingSyntax.t;
   component_syntax: bool;
   component_syntax_includes: string list;
   component_syntax_deep_read_only: bool;
@@ -157,6 +158,8 @@ val max_literal_length : t -> int
 val babel_loose_array_spread : t -> bool
 
 val builtins : t -> Builtins.t
+
+val casting_syntax : t -> Options.CastingSyntax.t
 
 val component_syntax : t -> bool
 

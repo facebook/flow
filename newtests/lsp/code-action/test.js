@@ -3407,6 +3407,75 @@ module.exports = (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
+    test('provide quickfix for `(x: T)` type cast', [
+      addFile('fix-colon-cast.js.ignored', 'fix-colon-cast.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-colon-cast.js',
+        },
+        range: {
+          start: {
+            line: 2,
+            character: 0,
+          },
+          end: {
+            line: 2,
+            character: 14,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Convert to `as` expression `<expr> as <type>`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/fix-colon-cast.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 2,
+                            character: 0,
+                          },
+                          end: {
+                            line: 2,
+                            character: 14,
+                          },
+                        },
+                        newText: '"foo" as mixed',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'convert_colon_cast',
+                    'Convert to `as` expression `<expr> as <type>`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+    ]).flowConfig('_flowconfig_casting_syntax'),
     test('provide quickfix for `satisfies` type cast', [
       addFile(
         'fix-satisfies-expression.js.ignored',

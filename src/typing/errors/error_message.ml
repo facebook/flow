@@ -609,6 +609,10 @@ and 'loc t' =
       invalid_render_type_kind: invalid_render_type_kind;
       invalid_type_reasons: 'loc virtual_reason Nel.t;
     }
+  | EInvalidTypeCastSyntax of {
+      loc: 'loc;
+      enabled_casting_syntax: Options.CastingSyntax.t;
+    }
 
 and 'loc null_write = {
   null_loc: 'loc;
@@ -759,7 +763,10 @@ and ts_syntax_kind =
   | TSTypeParamExtends
   | TSReadonlyVariance
   | TSInOutVariance of [ `In | `Out | `InOut ]
-  | TSTypeCast of [ `AsConst | `As | `Satisfies ]
+  | TSTypeCast of {
+      kind: [ `AsConst | `Satisfies ];
+      enabled_casting_syntax: Options.CastingSyntax.t;
+    }
   | TSReadonlyType of [ `Tuple | `Array ] option
 
 and invalid_mapped_type_error_kind =
@@ -1338,6 +1345,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         invalid_render_type_kind;
         invalid_type_reasons = Nel.map map_reason invalid_type_reasons;
       }
+  | EInvalidTypeCastSyntax { loc; enabled_casting_syntax } ->
+    EInvalidTypeCastSyntax { loc = f loc; enabled_casting_syntax }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1599,7 +1608,8 @@ let util_use_op_of_msg nope util = function
   | ETypeGuardFunctionInvalidWrites _
   | EDuplicateComponentProp _
   | ERefComponentProp _
-  | EInvalidRendersTypeArgument _ ->
+  | EInvalidRendersTypeArgument _
+  | EInvalidTypeCastSyntax _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1769,6 +1779,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ECallTypeArity { call_loc; _ } -> Some call_loc
   | EMissingTypeArgs { reason_op; _ } -> Some (loc_of_reason reason_op)
   | EInvalidRendersTypeArgument { loc; _ } -> Some loc
+  | EInvalidTypeCastSyntax { loc; _ } -> Some loc
   | ESignatureVerification sve ->
     Signature_error.(
       (match sve with
@@ -1964,6 +1975,16 @@ let string_of_internal_error = function
     spf "Did not find %s in name_resolver environment, please report this to the Flow team" x
   | ImplicitInstantiationInvariant str ->
     "Implicit instantiation issue, please report this to the Flow team: " ^ str
+
+let type_casting_examples enabled_casting_syntax =
+  let example_as = "<expr> as <type>" in
+  let example_colon = "(<expr>: <type>)" in
+  let open Options.CastingSyntax in
+  match enabled_casting_syntax with
+  | Colon
+  | Both ->
+    (example_colon, example_as)
+  | As -> (example_as, example_colon)
 
 (* Friendly messages are created differently based on the specific error they come from, so
    we collect the ingredients here and pass them to make_error_printable *)
@@ -4903,35 +4924,28 @@ let friendly_message_of_msg loc_of_aloc msg =
               text "it's the default if you don't have a variance annotation.";
             ];
         }
-    | TSTypeCast kind ->
-      let keyword =
+    | TSTypeCast { kind; enabled_casting_syntax } ->
+      let (example, _) = type_casting_examples enabled_casting_syntax in
+      let features =
         match kind with
-        | `AsConst
-        | `As ->
-          "as"
-        | `Satisfies -> "satisfies"
-      in
-      let features =
-        [
-          text "The closest equivalent of TypeScript's ";
-          code keyword;
-          text " cast in Flow has the form ";
-          code "(<expr>: <type>)";
-          text " - using a colon and wrapped in parentheses.";
-        ]
-      in
-      let features =
-        if kind = `AsConst then
-          features
-          @ [
-              text " ";
-              text "Flow does not have an equivalent of ";
-              code "as const";
-              text ". ";
-              text "Try adding an annotation instead.";
-            ]
-        else
-          features
+        | `AsConst ->
+          [
+            text "Flow does not have an equivalent of ";
+            code "as const";
+            text ". ";
+            text "Try adding a type annotation instead. ";
+            text "You can cast an expression to a type using the form ";
+            code example;
+            text ".";
+          ]
+        | `Satisfies ->
+          [
+            text "The closest equivalent of TypeScript's ";
+            code "satisfies";
+            text " expression in Flow is to do a cast in the form ";
+            code example;
+            text ".";
+          ]
       in
       Normal { features }
     | TSReadonlyType (Some arg_kind) ->
@@ -5081,6 +5095,18 @@ let friendly_message_of_msg loc_of_aloc msg =
       @ refs invalid_type_reasons
       @ [text " as the type argument of renders type."]
       @ additional_explanation
+    in
+    Normal { features }
+  | EInvalidTypeCastSyntax { enabled_casting_syntax; _ } ->
+    let (valid, invalid) = type_casting_examples enabled_casting_syntax in
+    let features =
+      [
+        text "Invalid type cast syntax. Use the form ";
+        code valid;
+        text " instead of the form ";
+        code invalid;
+        text ".";
+      ]
     in
     Normal { features }
 
@@ -5404,3 +5430,4 @@ let error_code_of_message err : error_code option =
     | _ -> None
   end
   | ETSSyntax _ -> Some TSSyntax
+  | EInvalidTypeCastSyntax _ -> Some InvalidTypeCastSyntax

@@ -60,6 +60,13 @@ type log_saving = {
   rate: float;
 }
 
+module CastingSyntax = struct
+  type t =
+    | Colon
+    | As
+    | Both
+end
+
 type t = {
   opt_all: bool;
   opt_any_propagation: bool;
@@ -67,6 +74,7 @@ type t = {
   opt_autoimports_ranked_by_usage: bool;
   opt_automatic_require_default: bool;
   opt_babel_loose_array_spread: bool;
+  opt_casting_syntax: CastingSyntax.t;
   opt_channel_mode: [ `pipe | `socket ];
   opt_component_syntax: component_syntax;
   opt_component_syntax_includes: string list;
@@ -160,6 +168,8 @@ let autoimports_ranked_by_usage opts = opts.opt_autoimports_ranked_by_usage
 let automatic_require_default opts = opts.opt_automatic_require_default
 
 let babel_loose_array_spread opts = opts.opt_babel_loose_array_spread
+
+let casting_syntax opts = opts.opt_casting_syntax
 
 let channel_mode opts = opts.opt_channel_mode
 

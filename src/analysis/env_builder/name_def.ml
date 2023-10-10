@@ -384,10 +384,14 @@ let rec obj_properties_synthesizable
     | Ast.Expression.ModuleRefLiteral _
     | Ast.Expression.Identifier _
     | Ast.Expression.TypeCast _
+    | Ast.Expression.AsExpression _
     | Ast.Expression.Member
         {
           Ast.Expression.Member._object =
-            (_, (Ast.Expression.Identifier _ | Ast.Expression.TypeCast _));
+            ( _,
+              ( Ast.Expression.Identifier _ | Ast.Expression.TypeCast _
+              | Ast.Expression.AsExpression _ )
+            );
           property = Ast.Expression.Member.PropertyIdentifier _;
           _;
         } ->
@@ -2443,14 +2447,21 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
       let { member; optional = _; filtered_out = _ } = mem in
       ignore @@ super#member loc member
 
-    method! type_cast _ expr =
-      let open Ast.Expression.TypeCast in
-      let { expression; annot; comments = _ } = expr in
+    method private cast annot expression =
       this#visit_expression
         ~hints:[Hint_t (AnnotationHint (ALocMap.empty, annot), ExpectedTypeHint)]
         ~cond:NonConditionalContext
         expression;
-      ignore @@ this#type_annotation annot;
+      ignore @@ this#type_annotation annot
+
+    method! type_cast _ expr =
+      let { Ast.Expression.TypeCast.annot; expression; comments = _ } = expr in
+      this#cast annot expression;
+      expr
+
+    method! as_expression _ expr =
+      let { Ast.Expression.AsExpression.annot; expression; comments = _ } = expr in
+      this#cast annot expression;
       expr
 
     method! unary_expression loc _ = fail loc "Should be visited by visit_unary_expression"

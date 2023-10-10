@@ -1,7 +1,7 @@
 Error -------------------------------------------------------------------------------------------------------- as.js:4:1
 
-The closest equivalent of TypeScript's `as` cast in Flow has the form `(<expr>: <type>)` - using a colon and wrapped in
-parentheses. [ts-syntax]
+Invalid type cast syntax. Use the form `(<expr>: <type>)` instead of the form `<expr> as <type>`.
+[invalid-type-cast-syntax]
 
    4| m as T; // ERROR
       ^^^^^^
@@ -9,8 +9,8 @@ parentheses. [ts-syntax]
 
 Error -------------------------------------------------------------------------------------------------------- as.js:8:6
 
-The closest equivalent of TypeScript's `as` cast in Flow has the form `(<expr>: <type>)` - using a colon and wrapped in
-parentheses. [ts-syntax]
+Invalid type cast syntax. Use the form `(<expr>: <type>)` instead of the form `<expr> as <type>`.
+[invalid-type-cast-syntax]
 
    8| b || m as T; // ERROR
            ^^^^^^
@@ -18,8 +18,8 @@ parentheses. [ts-syntax]
 
 Error -------------------------------------------------------------------------------------------------------- as.js:9:6
 
-The closest equivalent of TypeScript's `as` cast in Flow has the form `(<expr>: <type>)` - using a colon and wrapped in
-parentheses. [ts-syntax]
+Invalid type cast syntax. Use the form `(<expr>: <type>)` instead of the form `<expr> as <type>`.
+[invalid-type-cast-syntax]
 
    9| b && m as T; // ERROR
            ^^^^^^
@@ -27,8 +27,8 @@ parentheses. [ts-syntax]
 
 Error ------------------------------------------------------------------------------------------------------- as.js:10:7
 
-The closest equivalent of TypeScript's `as` cast in Flow has the form `(<expr>: <type>)` - using a colon and wrapped in
-parentheses. [ts-syntax]
+Invalid type cast syntax. Use the form `(<expr>: <type>)` instead of the form `<expr> as <type>`.
+[invalid-type-cast-syntax]
 
    10| b === m as T; // ERROR
              ^^^^^^
@@ -36,8 +36,8 @@ parentheses. [ts-syntax]
 
 Error ------------------------------------------------------------------------------------------------------- as.js:13:5
 
-The closest equivalent of TypeScript's `as` cast in Flow has the form `(<expr>: <type>)` - using a colon and wrapped in
-parentheses. [ts-syntax]
+Invalid type cast syntax. Use the form `(<expr>: <type>)` instead of the form `<expr> as <type>`.
+[invalid-type-cast-syntax]
 
    13| x = m as T; // ERROR
            ^^^^^^
@@ -45,8 +45,8 @@ parentheses. [ts-syntax]
 
 Error ------------------------------------------------------------------------------------------------------- as.js:17:1
 
-The closest equivalent of TypeScript's `as` cast in Flow has the form `(<expr>: <type>)` - using a colon and wrapped in
-parentheses. [ts-syntax]
+Invalid type cast syntax. Use the form `(<expr>: <type>)` instead of the form `<expr> as <type>`.
+[invalid-type-cast-syntax]
 
    17| new C as T; // ERROR
        ^^^^^^^^^^
@@ -54,8 +54,8 @@ parentheses. [ts-syntax]
 
 Error ------------------------------------------------------------------------------------------------------- as.js:20:1
 
-The closest equivalent of TypeScript's `as` cast in Flow has the form `(<expr>: <type>)` - using a colon and wrapped in
-parentheses. [ts-syntax]
+Invalid type cast syntax. Use the form `(<expr>: <type>)` instead of the form `<expr> as <type>`.
+[invalid-type-cast-syntax]
 
    20| n + n as T; // ERROR
        ^^^^^^^^^^
@@ -63,8 +63,8 @@ parentheses. [ts-syntax]
 
 Error ------------------------------------------------------------------------------------------------------- as.js:22:1
 
-The closest equivalent of TypeScript's `as` cast in Flow has the form `(<expr>: <type>)` - using a colon and wrapped in
-parentheses. [ts-syntax]
+Invalid type cast syntax. Use the form `(<expr>: <type>)` instead of the form `<expr> as <type>`.
+[invalid-type-cast-syntax]
 
    22| n as T + n; // ERROR
        ^^^^^^
@@ -72,8 +72,8 @@ parentheses. [ts-syntax]
 
 Error ------------------------------------------------------------------------------------------------------- as.js:23:1
 
-The closest equivalent of TypeScript's `as` cast in Flow has the form `(<expr>: <type>)` - using a colon and wrapped in
-parentheses. [ts-syntax]
+Invalid type cast syntax. Use the form `(<expr>: <type>)` instead of the form `<expr> as <type>`.
+[invalid-type-cast-syntax]
 
    23| n as T && n; // ERROR
        ^^^^^^
@@ -81,8 +81,8 @@ parentheses. [ts-syntax]
 
 Error ------------------------------------------------------------------------------------------------------- as.js:24:1
 
-The closest equivalent of TypeScript's `as` cast in Flow has the form `(<expr>: <type>)` - using a colon and wrapped in
-parentheses. [ts-syntax]
+Invalid type cast syntax. Use the form `(<expr>: <type>)` instead of the form `<expr> as <type>`.
+[invalid-type-cast-syntax]
 
    24| n as T || n; // ERROR
        ^^^^^^
@@ -90,8 +90,8 @@ parentheses. [ts-syntax]
 
 Error ------------------------------------------------------------------------------------------------------- as.js:25:1
 
-The closest equivalent of TypeScript's `as` cast in Flow has the form `(<expr>: <type>)` - using a colon and wrapped in
-parentheses. [ts-syntax]
+Invalid type cast syntax. Use the form `(<expr>: <type>)` instead of the form `<expr> as <type>`.
+[invalid-type-cast-syntax]
 
    25| n as T === n; // ERROR
        ^^^^^^
@@ -99,8 +99,8 @@ parentheses. [ts-syntax]
 
 Error ------------------------------------------------------------------------------------------------------- as.js:27:1
 
-The closest equivalent of TypeScript's `as` cast in Flow has the form `(<expr>: <type>)` - using a colon and wrapped in
-parentheses. Flow does not have an equivalent of `as const`. Try adding an annotation instead. [ts-syntax]
+Flow does not have an equivalent of `as const`. Try adding a type annotation instead. You can cast an expression to a
+type using the form `(<expr>: <type>)`. [ts-syntax]
 
    27| n as const; // ERROR
        ^^^^^^^^^^
@@ -275,8 +275,8 @@ The equivalent of TypeScript's `ReadonlySet` type in Flow is `$ReadOnlySet`. [ts
 
 Error ------------------------------------------------------------------------------------------------- satisfies.js:4:1
 
-The closest equivalent of TypeScript's `satisfies` cast in Flow has the form `(<expr>: <type>)` - using a colon and
-wrapped in parentheses. [ts-syntax]
+The closest equivalent of TypeScript's `satisfies` expression in Flow is to do a cast in the form `(<expr>: <type>)`.
+[ts-syntax]
 
    4| m satisfies T; // ERROR
       ^^^^^^^^^^^^^

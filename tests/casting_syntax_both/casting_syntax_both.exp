@@ -1,0 +1,36 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:12:3
+
+Cannot cast `x` to boolean because number [1] is incompatible with boolean [2]. [incompatible-cast]
+
+   test.js:12:3
+   12|   x as boolean; // ERROR
+         ^
+
+References:
+   test.js:11:13
+   11|   const x = 1;
+                   ^ [1]
+   test.js:12:8
+   12|   x as boolean; // ERROR
+              ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:22:4
+
+Cannot cast `x` to boolean because number [1] is incompatible with boolean [2]. [incompatible-cast]
+
+   test.js:22:4
+   22|   (x: boolean); // ERROR
+          ^
+
+References:
+   test.js:21:13
+   21|   const x = 1;
+                   ^ [1]
+   test.js:22:7
+   22|   (x: boolean); // ERROR
+             ^^^^^^^ [2]
+
+
+
+Found 2 errors

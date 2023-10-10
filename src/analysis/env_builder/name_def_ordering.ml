@@ -959,7 +959,8 @@ struct
           let rec depends_of_synthesizable_expression state ((exp_loc, exp) as expression) =
             match exp with
             | Ast.Expression.Object obj -> loop state obj
-            | Ast.Expression.TypeCast { Ast.Expression.TypeCast.annot; _ } ->
+            | Ast.Expression.TypeCast { Ast.Expression.TypeCast.annot; _ }
+            | Ast.Expression.AsExpression { Ast.Expression.AsExpression.annot; _ } ->
               depends_of_annotation ALocMap.empty annot state
             | Ast.Expression.Array { Ast.Expression.Array.elements; _ } ->
               Base.List.fold elements ~init:state ~f:(fun state -> function

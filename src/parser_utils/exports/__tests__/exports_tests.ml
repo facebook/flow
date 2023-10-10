@@ -59,6 +59,7 @@ let sig_opts =
     enable_enums = true;
     enable_component_syntax = true;
     enable_relay_integration = false;
+    casting_syntax = Options.CastingSyntax.Colon;
     relay_integration_module_prefix = None;
     locs_to_dirtify = [];
   }

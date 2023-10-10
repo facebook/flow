@@ -734,25 +734,27 @@ let ast_transforms_of_error ~loc_of_aloc ?loc = function
       ]
     else
       []
-  | Error_message.ETSSyntax { kind = Error_message.TSTypeCast `As; loc = error_loc } ->
+  | Error_message.ETSSyntax
+      {
+        kind = Error_message.TSTypeCast { kind = `Satisfies; enabled_casting_syntax };
+        loc = error_loc;
+      } ->
     if loc_opt_intersects ~error_loc ~loc then
+      let title =
+        let open Options.CastingSyntax in
+        match enabled_casting_syntax with
+        | As
+        | Both ->
+          "Convert to `as` expression `<expr> as <type>`"
+        | Colon -> "Convert to type cast `(<expr>: <type>)`"
+      in
       [
         {
-          title = "Convert to type cast `(<expr>: <type>)`";
-          diagnostic_title = "convert_as_expression";
-          transform = untyped_ast_transform Autofix_ts_syntax.convert_as_expression;
-          target_loc = error_loc;
-        };
-      ]
-    else
-      []
-  | Error_message.ETSSyntax { kind = Error_message.TSTypeCast `Satisfies; loc = error_loc } ->
-    if loc_opt_intersects ~error_loc ~loc then
-      [
-        {
-          title = "Convert to type cast `(<expr>: <type>)`";
+          title;
           diagnostic_title = "convert_satisfies_expression";
-          transform = untyped_ast_transform Autofix_ts_syntax.convert_satisfies_expression;
+          transform =
+            untyped_ast_transform
+              (Autofix_casting_syntax.convert_satisfies_expression ~enabled_casting_syntax);
           target_loc = error_loc;
         };
       ]
@@ -779,6 +781,33 @@ let ast_transforms_of_error ~loc_of_aloc ?loc = function
           title = "Convert to `$ReadOnly`";
           diagnostic_title = "convert_readonly_tuple_type";
           transform = untyped_ast_transform Autofix_ts_syntax.convert_readonly_tuple_type;
+          target_loc = error_loc;
+        };
+      ]
+    else
+      []
+  | Error_message.EInvalidTypeCastSyntax { loc = error_loc; enabled_casting_syntax } ->
+    if loc_opt_intersects ~error_loc ~loc then
+      let (title, diagnostic_title, fix) =
+        let open Options.CastingSyntax in
+        match enabled_casting_syntax with
+        | As
+        | Both ->
+          ( "Convert to `as` expression `<expr> as <type>`",
+            "convert_colon_cast",
+            Autofix_casting_syntax.convert_colon_cast
+          )
+        | Colon ->
+          ( "Convert to type cast `(<expr>: <type>)`",
+            "convert_as_expression",
+            Autofix_casting_syntax.convert_as_expression
+          )
+      in
+      [
+        {
+          title;
+          diagnostic_title;
+          transform = untyped_ast_transform (fix ~enabled_casting_syntax);
           target_loc = error_loc;
         };
       ]

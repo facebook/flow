@@ -15,6 +15,7 @@ type t = {
   exact_by_default: bool;
   enable_enums: bool;
   enable_component_syntax: bool;
+  casting_syntax: Options.CastingSyntax.t;
   enable_relay_integration: bool;
   relay_integration_module_prefix: string option;
   locs_to_dirtify: Loc.t list;
@@ -59,6 +60,7 @@ let of_options options docblock locs_to_dirtify file =
     exact_by_default = Options.exact_by_default options;
     enable_enums = Options.enums options;
     enable_component_syntax = Options.typecheck_component_syntax_in_file options file;
+    casting_syntax = Options.casting_syntax options;
   }
 
 let builtin_options options =
@@ -83,5 +85,6 @@ let builtin_options options =
     exact_by_default = Options.exact_by_default options;
     enable_enums = Options.enums options;
     enable_component_syntax = Options.typecheck_component_syntax options;
+    casting_syntax = Options.casting_syntax options;
     locs_to_dirtify = [];
   }
