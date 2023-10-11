@@ -56,6 +56,7 @@ enum DefaultedStringEnum {
    * first member of a defaulted string enum
    */
   Member1,
+//  ^
   /**
    * second member of a defaulted string enum
    */
@@ -70,6 +71,7 @@ enum InitializedStringEnum {
    * first member of an initialized string enum
    */
   Member1 = '?',
+//  ^
   /**
    * second member of an initialized string enum
    */
@@ -84,6 +86,7 @@ enum NumberEnum {
    * first member of a number enum
    */
   Member1 = 15,
+//  ^
   /**
    * second member of a number enum
    */
@@ -98,6 +101,7 @@ enum BooleanEnum {
    * first member of a boolean enum
    */
   Member1 = true,
+//  ^
   /**
    * second member of a boolean enum
    */
@@ -109,11 +113,12 @@ enum BooleanEnum {
  */
 enum SymbolEnum of symbol {
   /**
-   * first member of a boolean enum
+   * first member of a symbol enum
    */
   Member1,
+//  ^
   /**
-   * second member of a boolean enum
+   * second member of a symbol enum
    */
   Member2,
 }

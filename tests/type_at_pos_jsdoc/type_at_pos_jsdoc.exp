@@ -799,7 +799,7 @@ Flags: --strip-root --pretty
 objects-requires.js:89:15
 Flags: --strip-root --pretty
 {
-  "documentation":"first member of a boolean enum",
+  "documentation":"first member of a symbol enum",
   "types":{"unevaluated":{"type":"SymbolEnum"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -818,7 +818,7 @@ Flags: --strip-root --pretty
 objects-requires.js:91:15
 Flags: --strip-root --pretty
 {
-  "documentation":"second member of a boolean enum",
+  "documentation":"second member of a symbol enum",
   "types":{"unevaluated":{"type":"SymbolEnum"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -834,7 +834,102 @@ Flags: --strip-root --pretty
   "end":18
 }
 
-objects.js:163:5
+objects.js:58:5
+Flags: --strip-root --pretty
+{
+  "documentation":"first member of a defaulted string enum",
+  "types":null,
+  "reasons":[],
+  "loc":{
+    "source":null,
+    "type":null,
+    "start":{"line":0,"column":1,"offset":0},
+    "end":{"line":0,"column":0,"offset":0}
+  },
+  "path":"",
+  "line":0,
+  "endline":0,
+  "start":1,
+  "end":0
+}
+
+objects.js:73:5
+Flags: --strip-root --pretty
+{
+  "documentation":"first member of an initialized string enum",
+  "types":null,
+  "reasons":[],
+  "loc":{
+    "source":null,
+    "type":null,
+    "start":{"line":0,"column":1,"offset":0},
+    "end":{"line":0,"column":0,"offset":0}
+  },
+  "path":"",
+  "line":0,
+  "endline":0,
+  "start":1,
+  "end":0
+}
+
+objects.js:88:5
+Flags: --strip-root --pretty
+{
+  "documentation":"first member of a number enum",
+  "types":null,
+  "reasons":[],
+  "loc":{
+    "source":null,
+    "type":null,
+    "start":{"line":0,"column":1,"offset":0},
+    "end":{"line":0,"column":0,"offset":0}
+  },
+  "path":"",
+  "line":0,
+  "endline":0,
+  "start":1,
+  "end":0
+}
+
+objects.js:103:5
+Flags: --strip-root --pretty
+{
+  "documentation":"first member of a boolean enum",
+  "types":null,
+  "reasons":[],
+  "loc":{
+    "source":null,
+    "type":null,
+    "start":{"line":0,"column":1,"offset":0},
+    "end":{"line":0,"column":0,"offset":0}
+  },
+  "path":"",
+  "line":0,
+  "endline":0,
+  "start":1,
+  "end":0
+}
+
+objects.js:118:5
+Flags: --strip-root --pretty
+{
+  "documentation":"first member of a symbol enum",
+  "types":null,
+  "reasons":[],
+  "loc":{
+    "source":null,
+    "type":null,
+    "start":{"line":0,"column":1,"offset":0},
+    "end":{"line":0,"column":0,"offset":0}
+  },
+  "path":"",
+  "line":0,
+  "endline":0,
+  "start":1,
+  "end":0
+}
+
+objects.js:168:5
 Flags: --strip-root --pretty
 {
   "documentation":"identifier property of an object literal",
@@ -843,17 +938,17 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"objects.js",
     "type":"SourceFile",
-    "start":{"line":163,"column":5,"offset":2412},
-    "end":{"line":163,"column":5,"offset":2413}
+    "start":{"line":168,"column":5,"offset":2440},
+    "end":{"line":168,"column":5,"offset":2441}
   },
   "path":"objects.js",
-  "line":163,
-  "endline":163,
+  "line":168,
+  "endline":168,
   "start":5,
   "end":5
 }
 
-objects.js:165:5
+objects.js:170:5
 Flags: --strip-root --pretty
 {
   "documentation":"literal property of an object literal",
@@ -862,17 +957,17 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"objects.js",
     "type":"SourceFile",
-    "start":{"line":165,"column":5,"offset":2425},
-    "end":{"line":165,"column":5,"offset":2426}
+    "start":{"line":170,"column":5,"offset":2453},
+    "end":{"line":170,"column":5,"offset":2454}
   },
   "path":"objects.js",
-  "line":165,
-  "endline":165,
+  "line":170,
+  "endline":170,
   "start":5,
   "end":5
 }
 
-objects.js:167:5
+objects.js:172:5
 Flags: --strip-root --pretty
 {
   "documentation":"computed property of an object literal",
@@ -881,17 +976,17 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"objects.js",
     "type":"SourceFile",
-    "start":{"line":167,"column":5,"offset":2438},
-    "end":{"line":167,"column":5,"offset":2439}
+    "start":{"line":172,"column":5,"offset":2466},
+    "end":{"line":172,"column":5,"offset":2467}
   },
   "path":"objects.js",
-  "line":167,
-  "endline":167,
+  "line":172,
+  "endline":172,
   "start":5,
   "end":5
 }
 
-objects.js:169:5
+objects.js:174:5
 Flags: --strip-root --pretty
 {
   "documentation":"annotated getter property of an object literal",
@@ -900,17 +995,17 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"objects.js",
     "type":"SourceFile",
-    "start":{"line":169,"column":5,"offset":2451},
-    "end":{"line":169,"column":5,"offset":2452}
+    "start":{"line":174,"column":5,"offset":2479},
+    "end":{"line":174,"column":5,"offset":2480}
   },
   "path":"objects.js",
-  "line":169,
-  "endline":169,
+  "line":174,
+  "endline":174,
   "start":5,
   "end":5
 }
 
-objects.js:173:5
+objects.js:178:5
 Flags: --strip-root --pretty
 {
   "documentation":"method property of an object literal",
@@ -919,17 +1014,17 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"objects.js",
     "type":"SourceFile",
-    "start":{"line":173,"column":5,"offset":2536},
-    "end":{"line":173,"column":5,"offset":2537}
+    "start":{"line":178,"column":5,"offset":2564},
+    "end":{"line":178,"column":5,"offset":2565}
   },
   "path":"objects.js",
-  "line":173,
-  "endline":173,
+  "line":178,
+  "endline":178,
   "start":5,
   "end":5
 }
 
-objects.js:175:5
+objects.js:180:5
 Flags: --strip-root --pretty
 {
   "documentation":"async method property of an object literal",
@@ -938,12 +1033,12 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"objects.js",
     "type":"SourceFile",
-    "start":{"line":175,"column":5,"offset":2549},
-    "end":{"line":175,"column":5,"offset":2550}
+    "start":{"line":180,"column":5,"offset":2577},
+    "end":{"line":180,"column":5,"offset":2578}
   },
   "path":"objects.js",
-  "line":175,
-  "endline":175,
+  "line":180,
+  "endline":180,
   "start":5,
   "end":5
 }

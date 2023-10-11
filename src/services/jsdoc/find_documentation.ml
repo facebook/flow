@@ -178,8 +178,9 @@ class jsdoc_documentation_searcher find =
 
     method! enum_defaulted_member member =
       let open Flow_ast.Statement.EnumDeclaration.DefaultedMember in
-      let (loc, { id = (_, Flow_ast.Identifier.{ comments; _ }) }) = member in
+      let (loc, { id = (id_loc, Flow_ast.Identifier.{ comments; _ }) }) = member in
       find loc comments;
+      find id_loc comments;
       member
 
     method enum_initialized_member
@@ -188,8 +189,9 @@ class jsdoc_documentation_searcher find =
           ('a, Loc.t) Flow_ast.Statement.EnumDeclaration.InitializedMember.t =
       fun member ->
         let open Flow_ast.Statement.EnumDeclaration.InitializedMember in
-        let (loc, { id = (_, Flow_ast.Identifier.{ comments; _ }); _ }) = member in
+        let (loc, { id = (id_loc, Flow_ast.Identifier.{ comments; _ }); _ }) = member in
         find loc comments;
+        find id_loc comments;
         member
 
     method! enum_boolean_member member = this#enum_initialized_member member
