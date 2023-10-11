@@ -1,3 +1,8 @@
+### 0.218.1
+
+New Features:
+* Error collation during rechecks should become faster thanks to incremental computation. (Available with the flag `--incremental-error-collation`.)
+
 ### 0.218.0
 
 Likely to cause new Flow errors:
