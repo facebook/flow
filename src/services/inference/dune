@@ -12,6 +12,7 @@
   flow_procs
   flow_saved_state_fb_fetcher
   flow_server_env
+  flow_server_error_collator
   flow_server_find_refs
   flow_server_files
   flow_server_monitor_listener_state

@@ -86,6 +86,7 @@ module Opts = struct
     haste_paths_includes: string list;
     ignore_non_literal_requires: bool;
     include_warnings: bool;
+    incremental_error_collation: bool;
     lazy_mode: lazy_mode option;
     log_saving: Options.log_saving SMap.t;
     long_lived_workers: bool;
@@ -210,6 +211,7 @@ module Opts = struct
       haste_paths_includes = ["<PROJECT_ROOT>/.*"];
       ignore_non_literal_requires = false;
       include_warnings = false;
+      incremental_error_collation = false;
       lazy_mode = None;
       log_saving = SMap.empty;
       long_lived_workers = false;
@@ -852,6 +854,9 @@ module Opts = struct
       ("gc.worker.space_overhead", gc_worker_space_overhead_parser);
       ("gc.worker.window_size", gc_worker_window_size_parser);
       ("include_warnings", boolean (fun opts v -> Ok { opts with include_warnings = v }));
+      ( "incremental_error_collation",
+        boolean (fun opts v -> Ok { opts with incremental_error_collation = v })
+      );
       ("lazy_mode", lazy_mode_parser);
       ("log_saving", log_saving_parser);
       ("max_header_tokens", uint (fun opts v -> Ok { opts with max_header_tokens = v }));
@@ -1518,6 +1523,8 @@ let haste_paths_includes c = c.options.Opts.haste_paths_includes
 let ignore_non_literal_requires c = c.options.Opts.ignore_non_literal_requires
 
 let include_warnings c = c.options.Opts.include_warnings
+
+let incremental_error_collation c = c.options.Opts.incremental_error_collation
 
 let lazy_mode c = c.options.Opts.lazy_mode
 

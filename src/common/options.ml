@@ -98,6 +98,7 @@ type t = {
   opt_ignore_non_literal_requires: bool;
   opt_include_suppressions: bool;
   opt_include_warnings: bool;
+  opt_incremental_error_collation: bool;
   opt_lazy_mode: bool;
   opt_lint_severities: Severity.severity LintSettings.t;
   opt_log_file: File_path.t;
@@ -243,6 +244,8 @@ let haste_paths_excludes opts = opts.opt_haste_paths_excludes
 let haste_paths_includes opts = opts.opt_haste_paths_includes
 
 let include_suppressions opts = opts.opt_include_suppressions
+
+let incremental_error_collation opts = opts.opt_incremental_error_collation
 
 let is_debug_mode opts = opts.opt_debug
 
