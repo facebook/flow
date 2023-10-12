@@ -1007,7 +1007,12 @@ module Make
             Import_export.export_binding cx ?is_function name ~name_loc Ast.Statement.ExportValue
           | Some default_loc ->
             let t = Type_env.get_var_declared_type ~lookup_mode:ForType cx name name_loc in
-            Import_export.export cx (OrdinaryName "default") ~name_loc:default_loc t
+            Import_export.export
+              cx
+              (OrdinaryName "default")
+              ~name_loc:default_loc
+              ~is_type_only_export:false
+              t
         in
         let f = function
           | D.Variable (loc, ({ DeclareVariable.id; _ } as v)) ->
@@ -1046,7 +1051,12 @@ module Make
           | D.DefaultType (loc, t) ->
             let default_loc = Base.Option.value_exn default in
             let (((_, t), _) as t_ast) = Anno.convert cx Subst_name.Map.empty (loc, t) in
-            Import_export.export cx (OrdinaryName "default") ~name_loc:default_loc t;
+            Import_export.export
+              cx
+              (OrdinaryName "default")
+              ~name_loc:default_loc
+              ~is_type_only_export:true
+              t;
             D.DefaultType t_ast
           | D.NamedType (loc, ({ TypeAlias.id; _ } as t)) ->
             let (name_loc, { Ast.Identifier.name; comments = _ }) = id in
@@ -1192,7 +1202,12 @@ module Make
           let (((loc, t), _) as expr) = expression cx expr in
           (loc, t, D.Expression expr)
       in
-      Import_export.export cx (OrdinaryName "default") ~name_loc:export_loc t;
+      Import_export.export
+        cx
+        (OrdinaryName "default")
+        ~name_loc:export_loc
+        ~is_type_only_export:false
+        t;
       (loc, ExportDefaultDeclaration { ExportDefaultDeclaration.default; declaration; comments })
     | (import_loc, ImportDeclaration import_decl) ->
       let { ImportDeclaration.source; specifiers; default; import_kind; comments } = import_decl in
@@ -1629,7 +1644,7 @@ module Make
         Import_export.export_type cx remote_name ~name_loc:(Some loc) t;
         t
       | Ast.Statement.ExportValue ->
-        Import_export.export cx remote_name ~name_loc:loc t;
+        Import_export.export cx remote_name ~name_loc:loc ~is_type_only_export:false t;
         t
     in
     (* [declare] export [type] {foo [as bar]} from 'module' *)
@@ -1654,7 +1669,7 @@ module Make
         Import_export.export_type cx remote_name ~name_loc:(Some loc) t;
         t
       | Ast.Statement.ExportValue ->
-        Import_export.export cx remote_name ~name_loc:loc t;
+        Import_export.export cx remote_name ~name_loc:loc ~is_type_only_export:false t;
         t
     in
     let export_specifier export (loc, { E.ExportSpecifier.local; exported }) =
@@ -1691,7 +1706,12 @@ module Make
       let ((_, module_t), _) = Base.Option.value_exn source in
       let reason = mk_reason (RIdentifier (OrdinaryName name)) id_loc in
       let ns_t = Import_export.import_ns cx reason module_t in
-      Import_export.export cx (OrdinaryName name) ~name_loc:loc module_t;
+      let is_type_only_export =
+        match export_kind with
+        | Ast.Statement.ExportValue -> false
+        | Ast.Statement.ExportType -> true
+      in
+      Import_export.export cx (OrdinaryName name) ~name_loc:loc ~is_type_only_export module_t;
       E.ExportBatchSpecifier (specifier_loc, Some ((id_loc, ns_t), id))
     (* [declare] export [type] * from "source"; *)
     | E.ExportBatchSpecifier (specifier_loc, None) ->

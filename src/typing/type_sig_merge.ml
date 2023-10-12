@@ -363,16 +363,16 @@ let merge_type_export file reason = function
   | Pack.ExportTypeRef ref ->
     let f t ~ref_loc:_ ~def_loc name =
       let type_ = ConsGen.assert_export_is_type file.cx reason name t in
-      { Type.name_loc = Some def_loc; preferred_def_locs = None; type_ }
+      { Type.name_loc = Some def_loc; preferred_def_locs = None; is_type_only_export = true; type_ }
     in
     merge_ref file f ref
   | Pack.ExportTypeBinding index ->
     let (lazy (loc, name, t)) = Local_defs.get file.local_defs index in
     let type_ = ConsGen.assert_export_is_type file.cx reason name t in
-    { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
+    { Type.name_loc = Some loc; preferred_def_locs = None; is_type_only_export = true; type_ }
   | Pack.ExportTypeFrom index ->
     let (lazy (loc, _name, type_)) = Remote_refs.get file.remote_refs index in
-    { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
+    { Type.name_loc = Some loc; preferred_def_locs = None; is_type_only_export = true; type_ }
 
 let mk_commonjs_module_t cx reason strict t =
   let open Type in
@@ -2016,20 +2016,30 @@ let merge_export file = function
     merge_ref
       file
       (fun type_ ~ref_loc:_ ~def_loc _ ->
-        { Type.name_loc = Some def_loc; preferred_def_locs = None; type_ })
+        {
+          Type.name_loc = Some def_loc;
+          preferred_def_locs = None;
+          is_type_only_export = false;
+          type_;
+        })
       ref
   | Pack.ExportBinding index ->
     let (lazy (loc, _name, type_)) = Local_defs.get file.local_defs index in
-    { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
+    { Type.name_loc = Some loc; preferred_def_locs = None; is_type_only_export = false; type_ }
   | Pack.ExportDefault { default_loc; def } ->
     let type_ = merge SMap.empty SMap.empty file def in
-    { Type.name_loc = Some default_loc; preferred_def_locs = None; type_ }
+    {
+      Type.name_loc = Some default_loc;
+      preferred_def_locs = None;
+      is_type_only_export = false;
+      type_;
+    }
   | Pack.ExportDefaultBinding { default_loc = _; index } ->
     let (lazy (loc, _name, type_)) = Local_defs.get file.local_defs index in
-    { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
+    { Type.name_loc = Some loc; preferred_def_locs = None; is_type_only_export = false; type_ }
   | Pack.ExportFrom index ->
     let (lazy (loc, _name, type_)) = Remote_refs.get file.remote_refs index in
-    { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
+    { Type.name_loc = Some loc; preferred_def_locs = None; is_type_only_export = false; type_ }
 
 let merge_resource_module_t cx file_key filename =
   let exports_t =

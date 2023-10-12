@@ -1273,7 +1273,7 @@ module CJSRequireT_kit (F : Import_export_helper_sig) = struct
         let proto = ObjProtoT reason in
         let props =
           NameUtils.Map.map
-            (fun { preferred_def_locs; name_loc; type_ } ->
+            (fun { preferred_def_locs; name_loc; is_type_only_export = _; type_ } ->
               Field { preferred_def_locs; key_loc = name_loc; type_; polarity = Polarity.Positive })
             exports_tmap
         in
@@ -1281,7 +1281,7 @@ module CJSRequireT_kit (F : Import_export_helper_sig) = struct
       in
       if automatic_require_default then
         match NameUtils.Map.find_opt (OrdinaryName "default") exports_tmap with
-        | Some { preferred_def_locs = _; name_loc = _; type_ } -> type_
+        | Some { preferred_def_locs = _; name_loc = _; is_type_only_export = _; type_ } -> type_
         | _ -> mk_exports_object ()
       else
         mk_exports_object ()
@@ -1305,7 +1305,7 @@ module ImportModuleNsTKit = struct
     let exports_tmap = Context.find_exports cx exports.exports_tmap in
     let props =
       NameUtils.Map.map
-        (fun { preferred_def_locs; name_loc; type_ } ->
+        (fun { preferred_def_locs; name_loc; is_type_only_export = _; type_ } ->
           Field { preferred_def_locs; key_loc = name_loc; type_; polarity = Polarity.Positive })
         exports_tmap
     in
@@ -1357,7 +1357,8 @@ module ImportDefaultTKit = struct
       | None ->
         let exports_tmap = Context.find_exports cx exports.exports_tmap in
         (match NameUtils.Map.find_opt (OrdinaryName "default") exports_tmap with
-        | Some { preferred_def_locs = _; name_loc; type_ } -> (name_loc, type_)
+        | Some { preferred_def_locs = _; is_type_only_export = _; name_loc; type_ } ->
+          (name_loc, type_)
         | None ->
           (*
            * A common error while using `import` syntax is to forget or
@@ -1424,13 +1425,13 @@ module ImportNamedTKit = struct
       | Some type_ ->
         NameUtils.Map.add
           (OrdinaryName "default")
-          { preferred_def_locs = None; name_loc = None; type_ }
+          { preferred_def_locs = None; name_loc = None; is_type_only_export = false; type_ }
           exports_tmap
       | None -> exports_tmap
     in
     let has_every_named_export = exports.has_every_named_export in
     match (import_kind, NameUtils.Map.find_opt (OrdinaryName export_name) exports_tmap) with
-    | (ImportType, Some { preferred_def_locs = _; name_loc; type_ }) ->
+    | (ImportType, Some { preferred_def_locs = _; is_type_only_export = _; name_loc; type_ }) ->
       ( name_loc,
         with_concretized_type
           cx
@@ -1446,7 +1447,7 @@ module ImportNamedTKit = struct
           (ImportTypeTKit.on_concrete_type cx trace reason export_name)
           (AnyT.untyped reason)
       )
-    | (ImportTypeof, Some { preferred_def_locs = _; name_loc; type_ }) ->
+    | (ImportTypeof, Some { preferred_def_locs = _; is_type_only_export = _; name_loc; type_ }) ->
       ( name_loc,
         with_concretized_type
           cx
@@ -1462,7 +1463,7 @@ module ImportNamedTKit = struct
           (ImportTypeofTKit.on_concrete_type cx trace ~mk_typeof_annotation reason export_name)
           (AnyT.untyped reason)
       )
-    | (ImportValue, Some { preferred_def_locs = _; name_loc; type_ }) ->
+    | (ImportValue, Some { preferred_def_locs = _; is_type_only_export = _; name_loc; type_ }) ->
       assert_import_is_value cx trace reason export_name type_;
       (name_loc, type_)
     | (ImportValue, None) when has_every_named_export ->
@@ -1614,7 +1615,7 @@ module CopyTypeExportsT_kit (F : Import_export_helper_sig) = struct
     (* Remove locations. TODO at some point we may want to include them here. *)
     let source_exports =
       NameUtils.Map.map
-        (fun { name_loc = _; preferred_def_locs = _; type_ } -> type_)
+        (fun { name_loc = _; preferred_def_locs = _; is_type_only_export = _; type_ } -> type_)
         source_exports
     in
     let target_module_t =
@@ -1651,7 +1652,7 @@ module ExportTypeT_kit (F : Import_export_helper_sig) = struct
       let named =
         NameUtils.Map.singleton
           export_name
-          { preferred_def_locs = None; name_loc = None; type_ = l }
+          { preferred_def_locs = None; name_loc = None; is_type_only_export = true; type_ = l }
       in
       F.export_named cx trace (reason, named, ReExport) target_module_t
     else
