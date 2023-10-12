@@ -54,10 +54,10 @@ import {foo, bar} from './export.graphql';
 /* TODO should annotate x with `LocalFoo?.["f"]?.["g"]?.["h"]?.[0]?.["i"]` or equivalent type.
  * Currently the annotated type is missing the `?`. This seems to be a problem with the
  * inferred/normalized type -- not the graphql transform. */
-export const x: { ... } = foo()?.f?.g?.h?.[0]?.i;
+export const x: $NonMaybeType<LocalFoo?.["f"]?.["g"]?.["h"]?.[0]?.["i"]> = foo()?.f?.g?.h?.[0]?.i;
 
 /* should annotate x with `$IMPORTED_TYPE$_Bar["f"]["g"]["h"][0]["i"]` */
-export const y: { ... } = bar().f.g.h[0].i;
+export const y: Bar["f"]["g"]["h"][0]["i"] = bar().f.g.h[0].i;
 
 
 === Diff between codemod-ed & autofix-ed ===
@@ -66,12 +66,4 @@ export const y: { ... } = bar().f.g.h[0].i;
 < import type { Bar } from "./export.graphql";import type {Foo as LocalFoo} from './export.graphql';
 ---
 > import type {Foo as LocalFoo} from './export.graphql';
-9c9
-< export const x: $NonMaybeType<LocalFoo?.["f"]?.["g"]?.["h"]?.[0]?.["i"]> = foo()?.f?.g?.h?.[0]?.i;
----
-> export const x: { ... } = foo()?.f?.g?.h?.[0]?.i;
-12c12
-< export const y: Bar["f"]["g"]["h"][0]["i"] = bar().f.g.h[0].i;
----
-> export const y: { ... } = bar().f.g.h[0].i;
 

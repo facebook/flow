@@ -4,7 +4,7 @@
 const React = require("react");
 
 const foo = () => <fbt />;
-module.exports = (foo(): FbtElement);
+module.exports = (foo(): Fbt);
 > flow status
 No errors!
 > flow status tmp

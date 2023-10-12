@@ -156,8 +156,8 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
       Codemod_exports_annotator.mapper
         cctx
         ~default_any
-        ~generalize_maybe:false
-        ~generalize_react_mixed_element:false
+        ~generalize_maybe:true
+        ~generalize_react_mixed_element:true
         ~lint_severities
         ~max_type_size
         ~preserve_literals

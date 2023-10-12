@@ -1241,11 +1241,17 @@ class type_normalization_hardcoded_fixes_mapper
               } as symbol
             ),
             kind,
-            (Some [(Ty.Str _ | Ty.StrLit _)] as args_opt)
+            Some [(Ty.Str _ | Ty.StrLit _)]
           )
-        when is_react_loc sym_def_loc ->
-        let symbol = { symbol with Ty.sym_name = Reason.OrdinaryName "Element" } in
-        this#on_t env Ty.(Generic (symbol, kind, args_opt))
+        when is_react_loc sym_def_loc && imports_react ->
+        let name =
+          if imports_react then
+            "React.MixedElement"
+          else
+            "React$MixedElement"
+        in
+        let symbol = { symbol with Ty.sym_name = Reason.OrdinaryName name } in
+        this#on_t env Ty.(Generic (symbol, kind, None))
       (* E.g. React$Element<typeof A> will become React.MixedElement or React.Node.
          The reason for this conversion is that it's a common idiom to keep SomeComponentClass to
          a local scope (e.g. that of a function) which would make the annotation ill-formed. *)
@@ -1263,9 +1269,14 @@ class type_normalization_hardcoded_fixes_mapper
         when is_react_loc sym_def_loc ->
         let name =
           if generalize_react_mixed_element then
-            "MixedElement"
+            if imports_react then
+              "React.MixedElement"
+            else
+              "React$MixedElement"
+          else if imports_react then
+            "React.Node"
           else
-            "Node"
+            "React$Node"
         in
         let symbol = { symbol with Ty.sym_name = Reason.OrdinaryName name } in
         this#on_t env Ty.(Generic (symbol, kind, None))

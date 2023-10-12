@@ -8,7 +8,7 @@ const React = require('react');
 
 type Props = {}
 
-module.exports = (): React.Node => {
+module.exports = (): React.MixedElement => {
   class Abc extends React.Component<Props> { }
   return <Abc/>;
 }
@@ -19,7 +19,19 @@ module.exports = (): React.Node => {
 const React = require('react');
 
 declare var div: React$Element<'div'>;
-module.exports = (): React.Element<"div"> => div;
+module.exports = (): React.MixedElement => div;
+
+>>> ./element-no-react-star-import.js
+// @flow
+
+import React from 'react';
+
+type Props = {}
+
+export default (): React$MixedElement => {
+  class Abc extends React.Component<Props> { }
+  return <Abc/>;
+}
 
 >>> ./no-import.js
 // @flow
@@ -66,11 +78,11 @@ module.exports = (): {|
 >>> Launching report...
 
 Stats:
-  Files changed:                            5
-  Number of annotations added:              6
-  Total size of annotations:               20
-  Number of sig. ver. errors:               6
-  Number of annotations required:           6
+  Files changed:                            6
+  Number of annotations added:              7
+  Total size of annotations:               23
+  Number of sig. ver. errors:               7
+  Number of annotations required:           7
   Number of annotations skipped:            0
 
 Errors:
@@ -100,7 +112,7 @@ const React = require('react');
 
 type Props = {}
 
-module.exports = (): React$Element<typeof Abc, Props> => {
+module.exports = (): React.MixedElement => {
   class Abc extends React.Component<Props> { }
   return <Abc/>;
 }
@@ -111,7 +123,19 @@ module.exports = (): React$Element<typeof Abc, Props> => {
 const React = require('react');
 
 declare var div: React$Element<'div'>;
-module.exports = (): React$Element<"div"> => div;
+module.exports = (): React.MixedElement => div;
+
+>>> ./element-no-react-star-import.js
+// @flow
+
+import React from 'react';
+
+type Props = {}
+
+export default (): React$MixedElement => {
+  class Abc extends React.Component<Props> { }
+  return <Abc/>;
+}
 
 >>> ./no-import.js
 // @flow
@@ -157,18 +181,6 @@ module.exports = (): {
 
 
 === Diff between codemod-ed & autofix-ed ===
->>> ./element-component.js
-7c7
-< module.exports = (): React.Node => {
----
-> module.exports = (): React$Element<typeof Abc, Props> => {
-
->>> ./element-div.js
-6c6
-< module.exports = (): React.Element<"div"> => div;
----
-> module.exports = (): React$Element<"div"> => div;
-
 >>> ./no-import.js
 3,4c3
 < import type { ComponentType } from "react";
