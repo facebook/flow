@@ -35,7 +35,6 @@ type exports =
     }
 
 type file = {
-  key: File_key.t;
   cx: Context.t;
   dependencies: (string * Context.resolved_require Lazy.t) Module_refs.t;
   exports: Type.t;
