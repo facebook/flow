@@ -106,7 +106,7 @@ let export_binding cx ?is_function name ?preferred_def_locs ~name_loc = function
         name
         name_loc
     in
-    export cx name ?preferred_def_locs ~name_loc t
+    export cx name ?preferred_def_locs ~name_loc ~is_type_only_export:false t
   | Flow_ast.Statement.ExportType ->
     let t =
       Type_env.get_var_declared_type

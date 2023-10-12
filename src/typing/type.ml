@@ -1471,6 +1471,7 @@ module rec TypeTerm : sig
   and named_symbol = {
     name_loc: ALoc.t option;
     preferred_def_locs: ALoc.t Nel.t option;
+    is_type_only_export: bool;
     type_: t;
   }
 
@@ -2125,7 +2126,15 @@ end = struct
             | Field { preferred_def_locs; _ } -> preferred_def_locs
             | _ -> None
           in
-          NameUtils.Map.add x { name_loc = Property.read_loc p; preferred_def_locs; type_ } tmap
+          NameUtils.Map.add
+            x
+            {
+              name_loc = Property.read_loc p;
+              preferred_def_locs;
+              is_type_only_export = false;
+              type_;
+            }
+            tmap
         | None -> tmap)
       pmap
       NameUtils.Map.empty

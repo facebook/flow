@@ -30,7 +30,7 @@ and kind =
 
 let empty_cjs_module () = { kind = CJS None; type_named = NameUtils.Map.empty; type_star = [] }
 
-let export info name ?preferred_def_locs ~name_loc type_ =
+let export info name ?preferred_def_locs ~name_loc ~is_type_only_export type_ =
   match info.kind with
   | CJS None ->
     info.kind <-
@@ -39,7 +39,7 @@ let export info name ?preferred_def_locs ~name_loc type_ =
           named =
             NameUtils.Map.singleton
               name
-              { Type.preferred_def_locs; name_loc = Some name_loc; type_ };
+              { Type.preferred_def_locs; name_loc = Some name_loc; is_type_only_export; type_ };
           star = [];
         }
   | ES { named; star } ->
@@ -49,7 +49,7 @@ let export info name ?preferred_def_locs ~name_loc type_ =
           named =
             NameUtils.Map.add
               name
-              { Type.preferred_def_locs; name_loc = Some name_loc; type_ }
+              { Type.preferred_def_locs; name_loc = Some name_loc; is_type_only_export; type_ }
               named;
           star;
         }
@@ -67,7 +67,10 @@ let export_star info loc module_t =
 
 let export_type info name ?preferred_def_locs ~name_loc type_ =
   info.type_named <-
-    NameUtils.Map.add name { Type.preferred_def_locs; name_loc; type_ } info.type_named
+    NameUtils.Map.add
+      name
+      { Type.preferred_def_locs; name_loc; is_type_only_export = true; type_ }
+      info.type_named
 
 let export_type_star info loc module_t = info.type_star <- (loc, module_t) :: info.type_star
 

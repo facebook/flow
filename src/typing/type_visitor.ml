@@ -308,7 +308,7 @@ class ['a] t =
       self#type_ cx pole acc t
 
     method exports cx pole acc id =
-      let visit acc { name_loc = _; preferred_def_locs = _; type_ } =
+      let visit acc { name_loc = _; preferred_def_locs = _; is_type_only_export = _; type_ } =
         self#type_ cx pole acc type_
       in
       Context.find_exports cx id |> self#namemap visit acc

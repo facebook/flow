@@ -153,13 +153,13 @@ class context_optimizer ~no_lowers =
       else
         let tmap = Context.find_exports cx id in
         let map_p p =
-          let { name_loc; preferred_def_locs; type_ } = p in
+          let { name_loc; preferred_def_locs; is_type_only_export; type_ } = p in
           export_reason <- Some (reason_of_t type_);
           let type_' = self#type_ cx pole type_ in
           if type_ == type_' then
             p
           else
-            { name_loc; preferred_def_locs; type_ = type_' }
+            { name_loc; preferred_def_locs; is_type_only_export; type_ = type_' }
         in
         reduced_export_maps <- Exports.Map.add id tmap reduced_export_maps;
         let tmap' = NameUtils.Map.ident_map map_p tmap in

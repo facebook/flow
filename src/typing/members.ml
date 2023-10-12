@@ -668,7 +668,7 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
     in
     let named_exports =
       NameUtils.display_smap_of_namemap named_exports
-      |> SMap.map (fun { name_loc; preferred_def_locs; type_ } ->
+      |> SMap.map (fun { name_loc; preferred_def_locs; is_type_only_export = _; type_ } ->
              let def_locs =
                match preferred_def_locs with
                | Some _ -> preferred_def_locs

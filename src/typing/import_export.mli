@@ -16,7 +16,13 @@ val import_ns : Context.t -> Reason.t -> Type.t -> Type.t
 val cjs_clobber : Context.t -> ALoc.t -> Type.t -> unit
 
 val export :
-  Context.t -> Reason.name -> ?preferred_def_locs:ALoc.t Nel.t -> name_loc:ALoc.t -> Type.t -> unit
+  Context.t ->
+  Reason.name ->
+  ?preferred_def_locs:ALoc.t Nel.t ->
+  name_loc:ALoc.t ->
+  is_type_only_export:bool ->
+  Type.t ->
+  unit
 
 val export_type :
   Context.t ->
