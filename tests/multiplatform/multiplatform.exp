@@ -76,7 +76,7 @@ https://flow.org/en/docs/react/multiplatform [cannot-resolve-module]
 
 Error ----------------------------------------------------------------------------------------- shadowing.android.js:1:1
 
-Cannot conform to common interface module because property `MyType` is missing in self [1] but exists in common
+Cannot conform to common interface module because property `myValue` is missing in self [1] but exists in common
 interface [2]. Read the docs on Flow's multi-platform support for more information:
 https://flow.org/en/docs/react/multiplatform. [prop-missing]
 
@@ -91,7 +91,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- shadowing.ios.js:1:1
 
-Cannot conform to common interface module because property `MyType` is missing in self [1] but exists in common
+Cannot conform to common interface module because property `myValue` is missing in self [1] but exists in common
 interface [2]. Read the docs on Flow's multi-platform support for more information:
 https://flow.org/en/docs/react/multiplatform. [prop-missing]
 
@@ -106,7 +106,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ shadowing_cjs.android.cjs:1:1
 
-Cannot conform to common interface module because property `MyType` is missing in self [1] but exists in common
+Cannot conform to common interface module because property `myValue` is missing in self [1] but exists in common
 interface [2]. Read the docs on Flow's multi-platform support for more information:
 https://flow.org/en/docs/react/multiplatform. [prop-missing]
 
@@ -121,7 +121,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- shadowing_cjs.ios.cjs:1:1
 
-Cannot conform to common interface module because property `MyType` is missing in self [1] but exists in common
+Cannot conform to common interface module because property `myValue` is missing in self [1] but exists in common
 interface [2]. Read the docs on Flow's multi-platform support for more information:
 https://flow.org/en/docs/react/multiplatform. [prop-missing]
 

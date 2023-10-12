@@ -1,0 +1,4 @@
+export class A {}
+export type B = A; // type only export, allowed to be missing
+export interface C {} // type only export, allowed to be missing
+export type * from './classes'; // type only export, allowed to be missing
