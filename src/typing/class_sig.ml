@@ -784,17 +784,14 @@ module Make
         match SMap.find_opt x proto with
         | None -> ()
         | Some p2 ->
+          let prop = OrdinaryName x in
           let use_op =
             Op
               (ClassOwnProtoCheck
-                 {
-                   prop = OrdinaryName x;
-                   own_loc = Property.first_loc p1;
-                   proto_loc = Property.first_loc p2;
-                 }
+                 { prop; own_loc = Property.first_loc p1; proto_loc = Property.first_loc p2 }
               )
           in
-          let propref = mk_named_prop ~reason x in
+          let propref = mk_named_prop ~reason prop in
           Flow.flow_p cx ~use_op reason reason propref (Property.type_ p1, Property.type_ p2))
       own;
 

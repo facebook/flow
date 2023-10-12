@@ -324,9 +324,7 @@ module rec ConsGen : S = struct
       ConsGen.elab_t
         cx
         t
-        (Annot_GetPropT
-           (access_reason, use_op, Named { reason = prop_reason; name; from_indexed_access = false })
-        )
+        (Annot_GetPropT (access_reason, use_op, mk_named_prop ~reason:prop_reason name))
 
     let mk_react_dro cx _use_op props_loc t =
       ConsGen.elab_t cx t (Annot_DeepReadOnlyT (reason_of_t t, props_loc))
@@ -1163,23 +1161,14 @@ module rec ConsGen : S = struct
   and get_statics cx reason t = elab_t cx t (Annot_GetStaticsT reason)
 
   and get_prop cx use_op reason ?(op_reason = reason) name t =
-    elab_t
-      cx
-      t
-      (Annot_GetPropT (op_reason, use_op, Named { reason; name; from_indexed_access = false }))
+    elab_t cx t (Annot_GetPropT (op_reason, use_op, mk_named_prop ~reason name))
 
   and get_elem cx use_op reason ~key t = elab_t cx t (Annot_GetElemT (reason, use_op, key))
 
   and qualify_type cx use_op reason (reason_name, name) t =
-    let open Type in
     let f id =
       let t =
-        elab_t
-          cx
-          t
-          (Annot_GetPropT
-             (reason, use_op, Named { reason = reason_name; name; from_indexed_access = false })
-          )
+        elab_t cx t (Annot_GetPropT (reason, use_op, mk_named_prop ~reason:reason_name name))
       in
       resolve_id cx reason id t
     in

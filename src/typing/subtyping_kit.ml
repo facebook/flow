@@ -294,7 +294,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (* Properties in u must either exist in l, or match l's indexer. *)
     Context.iter_real_props cx uflds (fun name up ->
         let reason_prop = replace_desc_reason (RProperty (Some name)) ureason in
-        let propref = Named { reason = reason_prop; name; from_indexed_access = false } in
+        let propref = mk_named_prop ~reason:reason_prop name in
         let use_op' = use_op in
         let use_op =
           Frame
@@ -431,8 +431,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
                   | (Some lt, Some ut) -> rec_flow cx trace (lt, UseT (use_op, ut))
                   | _ -> ()
                 else
-                  let reason_prop = replace_desc_reason (RProperty (Some name)) lreason in
-                  let propref = Named { reason = reason_prop; name; from_indexed_access = false } in
+                  let propref =
+                    mk_named_prop ~reason:(replace_desc_reason (RProperty (Some name)) lreason) name
+                  in
                   rec_flow_p cx ~trace ~use_op lreason ureason propref (lp, up)
               end;
               string_key name lreason :: keys)
@@ -485,7 +486,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
           | (Some lt, Some ut) -> rec_flow cx trace (lt, UseT (use_op, ut))
           | _ -> ()
         else
-          let reason_prop = replace_desc_reason (RProperty (Some (OrdinaryName name))) lreason in
+          let name = OrdinaryName name in
+          let reason_prop = replace_desc_reason (RProperty (Some name)) lreason in
           let propref = mk_named_prop ~reason:reason_prop name in
           rec_flow_p cx ~trace ~use_op lreason ureason propref (lp, up)
       | _ -> ()));
@@ -1022,7 +1024,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
        * and their exact versions). Notably, "meta" types like union, annot,
        * typeapp, eval, maybe, optional, and intersection should have boiled
        * away by this point. Generics should have been "unsealed" as well. *)
-      let propref = mk_named_prop ~reason name in
+      let propref = mk_named_prop ~reason (OrdinaryName name) in
       let lookup_kind = NonstrictReturning (None, None) in
       let drop_generic = true in
       let u =
@@ -1667,8 +1669,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
               (PropertyCompatibility { prop = Some name; lower = lreason; upper = ureason }, use_op)
           in
           let propref =
-            let reason_prop = replace_desc_reason (RProperty (Some name)) ureason in
-            Named { reason = reason_prop; name; from_indexed_access = false }
+            mk_named_prop ~reason:(replace_desc_reason (RProperty (Some name)) ureason) name
           in
           match NameUtils.Map.find_opt name lflds with
           | Some lp ->

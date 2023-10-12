@@ -63,7 +63,7 @@ val quick_subtype : bool -> Type.t -> Type.t -> bool
 
 val reason_of_propref : Type.propref -> reason
 
-val mk_named_prop : reason:reason -> ?from_indexed_access:bool -> string -> Type.propref
+val mk_named_prop : reason:reason -> ?from_indexed_access:bool -> name -> Type.propref
 
 val optional : ?annot_loc:ALoc.t -> ?use_desc:bool -> Type.t -> Type.t
 

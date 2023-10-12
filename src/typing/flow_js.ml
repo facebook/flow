@@ -385,15 +385,7 @@ struct
       FlowJs.rec_flow
         cx
         trace
-        ( t,
-          GetPropT
-            ( use_op,
-              access_reason,
-              id,
-              Named { reason = prop_reason; name; from_indexed_access = false },
-              v
-            )
-        )
+        (t, GetPropT (use_op, access_reason, id, mk_named_prop ~reason:prop_reason name, v))
 
     let mk_react_dro = mk_react_dro
   end
@@ -977,7 +969,7 @@ struct
                 ( use_op,
                   reason,
                   None,
-                  Named { reason = reason_op; name; from_indexed_access = true },
+                  mk_named_prop ~reason:reason_op ~from_indexed_access:true name,
                   tout_tvar
                 )
             | OptionalIndexedAccessTypeIndex key_t ->
@@ -3442,7 +3434,7 @@ struct
           let ret =
             Tvar.mk_no_wrap_where cx reason_op (fun t ->
                 let funtype = mk_methodcalltype None args t in
-                let propref = mk_named_prop ~reason:reason_o "constructor" in
+                let propref = mk_named_prop ~reason:reason_o (OrdinaryName "constructor") in
                 rec_flow
                   cx
                   trace
@@ -3679,7 +3671,7 @@ struct
                 (Error_message.EPrivateLookupFailed ((reason_op, reason_c), name, use_op))
             | Some p ->
               let action = WriteProp { use_op; obj_t = l; prop_tout; tin; write_ctx; mode } in
-              let propref = mk_named_prop ~reason:reason_op x in
+              let propref = mk_named_prop ~reason:reason_op name in
               perform_lookup_action
                 cx
                 trace
@@ -3897,7 +3889,7 @@ struct
               in
               match Property.read_t p with
               | Some t ->
-                let propref = Named { reason = reason_prop; name; from_indexed_access = false } in
+                let propref = mk_named_prop ~reason:reason_prop name in
                 let t = filter_optional cx ~trace reason_prop t in
                 rec_flow
                   cx
@@ -3927,7 +3919,7 @@ struct
           |> NameUtils.Map.iter (fun name p ->
                  match Property.read_t p with
                  | Some t ->
-                   let propref = Named { reason = reason_op; name; from_indexed_access = false } in
+                   let propref = mk_named_prop ~reason:reason_op name in
                    rec_flow
                      cx
                      trace
@@ -6066,12 +6058,13 @@ struct
         else
           wait_for_concrete_bound ()
       (* Support "new this.constructor ()" *)
-      | GetPropT (op, r, id, Named { reason; name = OrdinaryName "constructor"; _ }, t_out) ->
+      | GetPropT (op, r, id, Named { reason; name = OrdinaryName "constructor" as name; _ }, t_out)
+        ->
         if is_concrete bound then
           match bound with
           | DefT (_, _, InstanceT _) ->
             narrow_generic_tvar
-              (fun t_out' -> GetPropT (op, r, id, mk_named_prop ~reason "constructor", t_out'))
+              (fun t_out' -> GetPropT (op, r, id, mk_named_prop ~reason name, t_out'))
               t_out;
             true
           | _ -> false
@@ -6727,10 +6720,10 @@ struct
            match p with
            | Field { type_ = OptionalT _ as t; polarity; _ } ->
              let propref =
-               let reason_prop =
+               let reason =
                  update_desc_reason (fun desc -> ROptional (RPropertyOf (name, desc))) reason_struct
                in
-               Named { reason = reason_prop; name; from_indexed_access = false }
+               mk_named_prop ~reason name
              in
              let polarity =
                if lit then
@@ -6758,10 +6751,10 @@ struct
                )
            | _ ->
              let propref =
-               let reason_prop =
+               let reason =
                  update_desc_reason (fun desc -> RPropertyOf (name, desc)) reason_struct
                in
-               Named { reason = reason_prop; name; from_indexed_access = false }
+               mk_named_prop ~reason name
              in
              rec_flow
                cx
@@ -6789,10 +6782,8 @@ struct
                )
            in
            let propref =
-             let reason_prop =
-               update_desc_reason (fun desc -> RPropertyOf (name, desc)) reason_struct
-             in
-             Named { reason = reason_prop; name; from_indexed_access = false }
+             let reason = update_desc_reason (fun desc -> RPropertyOf (name, desc)) reason_struct in
+             mk_named_prop ~reason name
            in
            rec_flow
              cx
@@ -6851,7 +6842,7 @@ struct
       else
         t
     in
-    let propref = Named { reason = reason_prop; name = x; from_indexed_access = false } in
+    let propref = mk_named_prop ~reason:reason_prop x in
     FlowJs.rec_flow
       cx
       trace
@@ -6905,6 +6896,7 @@ struct
       ( curr_t,
         match s with
         | Prop (name, has_default) ->
+          let name = OrdinaryName name in
           let lookup_ub () =
             let use_op = unknown_use in
             let action = ReadProp { use_op; obj_t = curr_t; tout = tvar } in
@@ -7192,13 +7184,7 @@ struct
               FilterMaybeT (unknown_use, OpenT tout)
             | PropertyType { name; _ } ->
               let reason_op = replace_desc_reason (RProperty (Some name)) reason in
-              GetPropT
-                ( use_op,
-                  reason,
-                  None,
-                  Named { reason = reason_op; name; from_indexed_access = false },
-                  tout
-                )
+              GetPropT (use_op, reason, None, mk_named_prop ~reason:reason_op name, tout)
             | ElementType { index_type; _ } ->
               GetElemT { use_op; reason; from_annot = true; key_t = index_type; tout }
             | OptionalIndexedAccessNonMaybeType { index } ->
@@ -7639,7 +7625,7 @@ struct
         let name = OrdinaryName prop_name in
         let perform_lookup_action p =
           let action = ReadProp { use_op; obj_t = l; tout } in
-          let propref = mk_named_prop ~reason:reason_op prop_name in
+          let propref = mk_named_prop ~reason:reason_op name in
           perform_lookup_action cx trace propref p PropertyMapProperty reason_c reason_op action
         in
         let field_maps =

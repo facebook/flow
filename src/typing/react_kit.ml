@@ -107,15 +107,12 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             None,
             (match literal with
             | Literal (_, name) ->
-              Named
-                {
-                  reason =
-                    replace_desc_reason
-                      (RReactElement { name_opt = Some name; from_component_syntax = false })
-                      reason;
-                  name;
-                  from_indexed_access = false;
-                }
+              let reason =
+                replace_desc_reason
+                  (RReactElement { name_opt = Some name; from_component_syntax = false })
+                  reason
+              in
+              mk_named_prop ~reason name
             | _ -> Computed component),
             (reason, intrinsic)
           )
@@ -129,7 +126,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         | `Instance -> "instance"
       in
       let reason = replace_desc_reason (RCustom name) reason_op in
-      mk_named_prop ~reason name
+      mk_named_prop ~reason (OrdinaryName name)
     in
     (* TODO: if intrinsic is null, we will treat it like prototype termination,
      * but we should error like a GetPropT would instead. *)
@@ -154,9 +151,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       cx trace ~use_op class_component_instance ~reason_op upper_render =
     let name = "render" in
     let reason_prop = replace_desc_reason (RMethod (Some name)) reason_op in
-    let propref =
-      Named { reason = reason_prop; name = OrdinaryName name; from_indexed_access = false }
-    in
+    let propref = mk_named_prop ~reason:reason_prop (OrdinaryName name) in
     let tvar = Tvar.mk_no_wrap cx reason_op in
     let action =
       CallM
@@ -184,9 +179,9 @@ module Kit (Flow : Flow_common.S) : REACT = struct
    * on the given polarity.
    *)
   let lookup_defaults cx trace component ~reason_op upper pole =
-    let name = "defaultProps" in
+    let name = OrdinaryName "defaultProps" in
     let reason_missing = replace_desc_reason RReactDefaultProps (reason_of_t component) in
-    let reason_prop = replace_desc_reason (RProperty (Some (OrdinaryName name))) reason_op in
+    let reason_prop = replace_desc_reason (RProperty (Some name)) reason_op in
     let lookup_kind =
       NonstrictReturning (Some (DefT (reason_missing, bogus_trust (), VoidT), upper), None)
     in
@@ -582,15 +577,12 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         let key_t = optional (maybe (get_builtin_type cx reason_key (OrdinaryName "React$Key"))) in
         (* Flow the config input key type to the key type. *)
         let lookup_kind = NonstrictReturning (None, None) in
-        let propref = mk_named_prop ~reason:reason_key "key" in
+        let prop_name = OrdinaryName "key" in
+        let propref = mk_named_prop ~reason:reason_key prop_name in
         let use_op =
           Frame
             ( PropertyCompatibility
-                {
-                  prop = Some (OrdinaryName "key");
-                  lower = reason_of_t normalized_config;
-                  upper = reason_key;
-                },
+                { prop = Some prop_name; lower = reason_of_t normalized_config; upper = reason_key },
               use_op
             )
         in
@@ -631,15 +623,12 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         in
         (* Flow the config input ref type to the ref type. *)
         let lookup_kind = NonstrictReturning (None, None) in
-        let propref = mk_named_prop ~reason:reason_ref "ref" in
+        let prop_name = OrdinaryName "ref" in
+        let propref = mk_named_prop ~reason:reason_ref prop_name in
         let use_op =
           Frame
             ( PropertyCompatibility
-                {
-                  prop = Some (OrdinaryName "ref");
-                  lower = reason_of_t normalized_config;
-                  upper = reason_ref;
-                },
+                { prop = Some prop_name; lower = reason_of_t normalized_config; upper = reason_ref },
               use_op
             )
         in

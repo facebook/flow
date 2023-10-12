@@ -61,12 +61,7 @@ module FlowJS : C = struct
 
   let get_prop cx use_op reason ?(op_reason = reason) name l =
     Tvar.mk_no_wrap_where cx op_reason (fun tout ->
-        Flow.flow
-          cx
-          ( l,
-            GetPropT
-              (use_op, op_reason, None, Named { reason; name; from_indexed_access = false }, tout)
-          )
+        Flow.flow cx (l, GetPropT (use_op, op_reason, None, mk_named_prop ~reason name, tout))
     )
 end
 

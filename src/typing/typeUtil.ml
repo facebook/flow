@@ -831,7 +831,7 @@ let reason_of_propref = function
   | Computed t -> reason_of_t t
 
 let mk_named_prop ~reason ?(from_indexed_access = false) name =
-  Named { reason; name = OrdinaryName name; from_indexed_access }
+  Named { reason; name; from_indexed_access }
 
 let optional ?annot_loc ?(use_desc = false) t =
   let reason = update_desc_new_reason (fun desc -> ROptional desc) (reason_of_t t) in

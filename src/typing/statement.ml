@@ -1638,13 +1638,7 @@ module Make
         let reason = mk_reason (RIdentifier local_name) loc in
         Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
             let use_t =
-              GetPropT
-                ( unknown_use,
-                  reason,
-                  None,
-                  Named { reason; name = local_name; from_indexed_access = false },
-                  tout
-                )
+              GetPropT (unknown_use, reason, None, mk_named_prop ~reason local_name, tout)
             in
             Flow.flow cx (source_ns_t, use_t)
         )
@@ -3258,8 +3252,9 @@ module Make
             comments;
           } ->
         let reason = mk_reason (RMethodCall (Some name)) loc in
-        let reason_lookup = mk_reason (RProperty (Some (OrdinaryName name))) callee_loc in
-        let reason_prop = mk_reason (RProperty (Some (OrdinaryName name))) ploc in
+        let name = OrdinaryName name in
+        let reason_lookup = mk_reason (RProperty (Some name)) callee_loc in
+        let reason_prop = mk_reason (RProperty (Some name)) ploc in
         let super_t = super_ cx super_loc in
         let meth_generic_this = Tvar.mk cx reason in
         let (targts, targs) = convert_call_targs_opt cx targs in
@@ -3328,7 +3323,7 @@ module Make
         let lhs_t =
           Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
               let methodcalltype = mk_methodcalltype targts argts t in
-              let propref = mk_named_prop ~reason:super_reason "constructor" in
+              let propref = mk_named_prop ~reason:super_reason (OrdinaryName "constructor") in
               let use_op =
                 Op
                   (FunCall
@@ -4296,10 +4291,11 @@ module Make
       argts
       specialized_callee =
     let (expr_loc, _) = expr in
-    let reason_prop = mk_reason (RProperty (Some (OrdinaryName name))) prop_loc in
-    let reason_expr = mk_reason (RProperty (Some (OrdinaryName name))) expr_loc in
+    let prop_name = OrdinaryName name in
+    let reason_prop = mk_reason (RProperty (Some prop_name)) prop_loc in
+    let reason_expr = mk_reason (RProperty (Some prop_name)) expr_loc in
     let opt_methodcalltype = mk_opt_methodcalltype targts argts call_strict_arity in
-    let propref = mk_named_prop ~reason:reason_prop name in
+    let propref = mk_named_prop ~reason:reason_prop prop_name in
     let action =
       match opt_state with
       | NewChain ->
@@ -4361,11 +4357,12 @@ module Make
         )
       )
     | None ->
-      let reason_prop = mk_reason (RProperty (Some (OrdinaryName name))) prop_loc in
+      let name = OrdinaryName name in
+      let reason_prop = mk_reason (RProperty (Some name)) prop_loc in
       let specialized_callee = Context.new_specialized_callee cx in
       let out =
         Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
-            let reason_expr = mk_reason (RProperty (Some (OrdinaryName name))) expr_loc in
+            let reason_expr = mk_reason (RProperty (Some name)) expr_loc in
             let methodcalltype =
               mk_methodcalltype targts argts t ~meth_strict_arity:call_strict_arity
             in
@@ -4931,7 +4928,8 @@ module Make
      comments;
     } ->
       let reason = mk_reason (RPropertyAssignment (Some name)) lhs_loc in
-      let prop_reason = mk_reason (RProperty (Some (OrdinaryName name))) prop_loc in
+      let prop_name = OrdinaryName name in
+      let prop_reason = mk_reason (RProperty (Some prop_name)) prop_loc in
       let super_t = super_ cx super_loc in
       let prop_t = Tvar.mk cx prop_reason in
       let use_op =
@@ -4941,7 +4939,14 @@ module Make
         cx
         ( super_t,
           SetPropT
-            (use_op, reason, mk_named_prop ~reason:prop_reason name, mode, Normal, t, Some prop_t)
+            ( use_op,
+              reason,
+              mk_named_prop ~reason:prop_reason prop_name,
+              mode,
+              Normal,
+              t,
+              Some prop_t
+            )
         );
       let property = Member.PropertyIdentifier ((prop_loc, prop_t), id) in
       ( (lhs_loc, prop_t),
@@ -5006,7 +5011,8 @@ module Make
           Unsoundness.at InferenceHooks prop_loc
         else
           let reason = mk_reason (RPropertyAssignment (Some name)) lhs_loc in
-          let prop_reason = mk_reason (RProperty (Some (OrdinaryName name))) prop_loc in
+          let prop_name = OrdinaryName name in
+          let prop_reason = mk_reason (RProperty (Some prop_name)) prop_loc in
           (* flow type to object property itself *)
           let prop_t = Tvar.mk cx prop_reason in
           let use_op =
@@ -5018,7 +5024,7 @@ module Make
               (SetPropT
                  ( use_op,
                    reason,
-                   mk_named_prop ~reason:prop_reason name,
+                   mk_named_prop ~reason:prop_reason prop_name,
                    mode,
                    wr_ctx,
                    t,
@@ -5733,9 +5739,8 @@ module Make
         in
         Flow.flow cx (jsx_fun, CallT { use_op; reason; call_action; return_hint })
       | Options.ReactRuntimeClassic ->
-        let reason_createElement =
-          mk_reason (RProperty (Some (OrdinaryName "createElement"))) loc_element
-        in
+        let prop_name = OrdinaryName "createElement" in
+        let reason_createElement = mk_reason (RProperty (Some prop_name)) loc_element in
         let use_op =
           Op
             (ReactCreateElementCall
@@ -5754,7 +5759,7 @@ module Make
               ( use_op,
                 reason,
                 reason_createElement,
-                mk_named_prop ~reason:reason_createElement "createElement",
+                mk_named_prop ~reason:reason_createElement prop_name,
                 CallM
                   {
                     methodcalltype =
@@ -5974,10 +5979,11 @@ module Make
   *)
   and get_prop_opt_use ~cond reason ~use_op (prop_reason, name) =
     let id = mk_id () in
+    let prop_name = OrdinaryName name in
     if Base.Option.is_some cond then
-      OptTestPropT (use_op, reason, id, mk_named_prop ~reason:prop_reason name)
+      OptTestPropT (use_op, reason, id, mk_named_prop ~reason:prop_reason prop_name)
     else
-      OptGetPropT (use_op, reason, Some id, mk_named_prop ~reason:prop_reason name)
+      OptGetPropT (use_op, reason, Some id, mk_named_prop ~reason:prop_reason prop_name)
 
   and get_prop ~cond cx reason ~use_op tobj (prop_reason, name) =
     let opt_use = get_prop_opt_use ~cond reason ~use_op (prop_reason, name) in
@@ -6208,14 +6214,22 @@ module Make
       let (((_, o), _) as e_ast) = expression cx e in
       let key_ast = expression cx key in
       let (((_, spec), _) as config_ast) = expression cx config in
-      let prop_reason = mk_reason (RProperty (Some (OrdinaryName x))) ploc in
+      let prop_name = OrdinaryName x in
+      let prop_reason = mk_reason (RProperty (Some prop_name)) ploc in
       Flow.flow cx (spec, UseT (use_op, propdesc));
       let prop_t = Tvar.mk cx prop_reason in
       Flow.flow
         cx
         ( o,
           SetPropT
-            (use_op, reason, mk_named_prop ~reason:prop_reason x, Assign, Normal, ty, Some prop_t)
+            ( use_op,
+              reason,
+              mk_named_prop ~reason:prop_reason prop_name,
+              Assign,
+              Normal,
+              ty,
+              Some prop_t
+            )
         );
       ( o,
         targs,
@@ -6265,17 +6279,7 @@ module Make
                Flow.flow cx (spec, UseT (use_op, propdesc));
                Flow.flow
                  cx
-                 ( o,
-                   SetPropT
-                     ( use_op,
-                       reason,
-                       Named { reason; name = x; from_indexed_access = false },
-                       Assign,
-                       Normal,
-                       tvar,
-                       None
-                     )
-                 )
+                 (o, SetPropT (use_op, reason, mk_named_prop ~reason x, Assign, Normal, tvar, None))
          );
       ( o,
         None,

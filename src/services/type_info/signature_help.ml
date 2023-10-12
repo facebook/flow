@@ -228,7 +228,7 @@ module Callee_finder = struct
                       Flow_js.flow_t cx (class_t, DefT (reason, bogus_trust (), ClassT instance))
                   )
                 in
-                let propref = TypeUtil.mk_named_prop ~reason "constructor" in
+                let propref = TypeUtil.mk_named_prop ~reason (OrdinaryName "constructor") in
                 let use_t = MethodT (unknown_use, reason, reason, propref, NoMethodAction t_out) in
                 Flow_js.flow cx (instance, use_t)
             )

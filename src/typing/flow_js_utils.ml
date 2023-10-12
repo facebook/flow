@@ -2065,12 +2065,8 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
 let propref_for_elem_t = function
   | GenericT { bound = DefT (_, _, StrT (Literal (_, name))); reason; _ }
   | DefT (reason, _, StrT (Literal (_, name))) ->
-    Named
-      {
-        reason = replace_desc_reason (RProperty (Some name)) reason;
-        name;
-        from_indexed_access = true;
-      }
+    let reason = replace_desc_reason (RProperty (Some name)) reason in
+    mk_named_prop ~reason ~from_indexed_access:true name
   | l -> Computed l
 
 let keylist_of_props props reason_op =
