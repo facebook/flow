@@ -167,9 +167,11 @@ end = struct
                c = prev_c && possibly_expanding_targs prev_tss tss
            )
       in
-      if loop then
+      if loop then (
+        if Context.is_verbose cx then
+          prerr_endlinef "encountered the same TypeAppT again: %s" (show_entry (c, tss));
         false
-      else (
+      ) else (
         stack := (c, tss) :: !stack;
         if Context.is_verbose cx then prerr_endlinef "typeapp stack entry: %s" (show_entry (c, tss));
         true
