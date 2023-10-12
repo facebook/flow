@@ -1,1 +1,2 @@
 export type MyType = string;
+declare export const myValue: string;

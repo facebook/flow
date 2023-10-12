@@ -1304,10 +1304,17 @@ module ImportModuleNsTKit = struct
     in
     let exports_tmap = Context.find_exports cx exports.exports_tmap in
     let props =
-      NameUtils.Map.map
-        (fun { preferred_def_locs; name_loc; is_type_only_export = _; type_ } ->
-          Field { preferred_def_locs; key_loc = name_loc; type_; polarity = Polarity.Positive })
+      NameUtils.Map.fold
+        (fun name { preferred_def_locs; name_loc; is_type_only_export; type_ } acc ->
+          if is_type_only_export && is_common_interface_module then
+            acc
+          else
+            NameUtils.Map.add
+              name
+              (Field { preferred_def_locs; key_loc = name_loc; type_; polarity = Polarity.Positive })
+              acc)
         exports_tmap
+        NameUtils.Map.empty
     in
     let props =
       if Context.facebook_module_interop cx then
