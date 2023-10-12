@@ -189,14 +189,27 @@ let fixme_ambiguous_types = (new fixme_ambiguous_types_mapper)#on_t ()
 let simplify = Ty_utils.simplify_type ~merge_kinds:true ~sort:true
 
 (* Generate an equivalent Flow_ast.Type *)
-let serialize ?(imports_react = false) ~exact_by_default loc ty =
-  let mapper = new Utils.stylize_ty_mapper ~imports_react () in
+let serialize ~cx ~file_sig ~typed_ast ?(imports_react = false) ~exact_by_default loc ty =
+  let mapper =
+    new Utils.type_normalization_hardcoded_fixes_mapper
+      ~cx
+      ~file_sig
+      ~typed_ast
+      ~lint_severities:LintSettings.empty_severities
+      ~suppress_types:SSet.empty (* Make autofix insert any *)
+      ~imports_react
+      ~preserve_literals:Utils.PreserveLiterals.Auto
+      ~generalize_maybe:true
+      ~generalize_react_mixed_element:true
+      ~add_warning:(fun _ _ -> ()
+    )
+  in
   let ast_result = mapper#on_t loc ty |> simplify |> Ty_serializer.(type_ { exact_by_default }) in
   match ast_result with
   | Ok ast -> Utils.patch_up_type_ast ast
   | Error msg -> raise (unexpected (FailedToSerialize { ty; error_message = msg }))
 
-let remove_ambiguous_types ~ambiguity_strategy ~exact_by_default ty loc =
+let remove_ambiguous_types ~cx ~file_sig ~typed_ast ~ambiguity_strategy ~exact_by_default ty loc =
   let open Autofix_options in
   match ambiguity_strategy with
   | Fail -> begin
@@ -206,8 +219,12 @@ let remove_ambiguous_types ~ambiguity_strategy ~exact_by_default ty loc =
       @@ expected
       @@ MulipleTypesPossibleAtPoint
            {
-             specialized = specialize_temporary_types ty |> serialize ~exact_by_default loc;
-             generalized = generalize_temporary_types ty |> serialize ~exact_by_default loc;
+             specialized =
+               specialize_temporary_types ty
+               |> serialize ~cx ~file_sig ~typed_ast ~exact_by_default loc;
+             generalized =
+               generalize_temporary_types ty
+               |> serialize ~cx ~file_sig ~typed_ast ~exact_by_default loc;
            }
   end
   | Generalize -> generalize_temporary_types ty
@@ -400,7 +417,14 @@ let synth_type
         raise (expected err)
       | (_, []) -> ()
     in
-    remove_ambiguous_types ~ambiguity_strategy ~exact_by_default ty type_loc
+    remove_ambiguous_types
+      ~cx
+      ~file_sig
+      ~typed_ast
+      ~ambiguity_strategy
+      ~exact_by_default
+      ty
+      type_loc
   in
   let ty =
     let elt = normalize ~cx ~file_sig ~typed_ast ~omit_targ_defaults type_loc type_scheme in
@@ -420,7 +444,9 @@ let synth_type
       Hh_logger.error "Insert type: %s" (Insert_type_utils.Error.serialize e);
       ty
   in
-  (type_loc, serialize ~imports_react ~exact_by_default type_loc import_fixed_ty)
+  ( type_loc,
+    serialize ~cx ~file_sig ~typed_ast ~imports_react ~exact_by_default type_loc import_fixed_ty
+  )
 
 let type_to_string t =
   Js_layout_generator.type_ ~opts:Js_layout_generator.default_opts t

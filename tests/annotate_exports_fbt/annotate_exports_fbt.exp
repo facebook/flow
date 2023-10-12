@@ -45,13 +45,7 @@ Warnings:
 const React = require("react");
 
 const foo = () => <fbt />;
-module.exports = (foo(): FbtElement);
+module.exports = (foo(): Fbt);
 
 
 === Diff between codemod-ed & autofix-ed ===
->>> ./a.js
-6c6
-< module.exports = (foo(): Fbt);
----
-> module.exports = (foo(): FbtElement);
-
