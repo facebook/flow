@@ -107,7 +107,7 @@ let validate_ty cctx ~max_type_size ty =
 (* Used to infer the type for an annotation from an error loc *)
 let get_ty cctx ~preserve_literals loc =
   let lits =
-    Codemod_hardcoded_ty_fixes.PreserveLiterals.(
+    PreserveLiterals.(
       match preserve_literals with
       | Always
       | Auto ->
@@ -131,7 +131,7 @@ let get_validated_ty cctx ~preserve_literals ~max_type_size loc =
 module Make (Extra : BASE_STATS) = struct
   module Stats = Stats (Extra)
   module Acc = Acc (Extra)
-  module Hardcoded_Ty_Fixes = Codemod_hardcoded_ty_fixes.Make (Extra)
+  module Hardcoded_Ty_Fixes = Insert_type_utils.MakeHardcodedFixes (Extra)
 
   class virtual mapper
     (cctx : Codemod_context.Typed.t)
@@ -171,8 +171,11 @@ module Make (Extra : BASE_STATS) = struct
       method private replace_type_node_with_ty =
         let run loc ty =
           let (acc', ty) =
+            let { Codemod_context.Typed.cx; file_sig; typed_ast; _ } = cctx in
             Hardcoded_Ty_Fixes.run
-              ~cctx
+              ~cx
+              ~file_sig
+              ~typed_ast
               ~lint_severities
               ~suppress_types
               ~imports_react
@@ -209,8 +212,11 @@ module Make (Extra : BASE_STATS) = struct
             ('a, Error.kind) result =
         let run loc ty =
           let (acc', ty) =
+            let { Codemod_context.Typed.cx; file_sig; typed_ast; _ } = cctx in
             Hardcoded_Ty_Fixes.run
-              ~cctx
+              ~cx
+              ~file_sig
+              ~typed_ast
               ~lint_severities
               ~suppress_types
               ~imports_react
