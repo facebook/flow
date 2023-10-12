@@ -17,99 +17,99 @@ Getters and setters can have side effects and are unsafe. [unsafe-getters-setter
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------- <BUILTINS>/dom.js:1733:3
-
-Getters and setters can have side effects and are unsafe. [unsafe-getters-setters]
-
-   1733|   get innerHTML(): string;
-           ^^^^^^^^^^^^^^^^^^^^^^^
-
-
 Error ----------------------------------------------------------------------------------------- <BUILTINS>/dom.js:1734:3
 
 Getters and setters can have side effects and are unsafe. [unsafe-getters-setters]
 
-   1734|   set innerHTML(value: string | TrustedHTML): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   1734|   get innerHTML(): string;
+           ^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------- <BUILTINS>/dom.js:1740:3
+Error ----------------------------------------------------------------------------------------- <BUILTINS>/dom.js:1735:3
 
 Getters and setters can have side effects and are unsafe. [unsafe-getters-setters]
 
-   1740|   get outerHTML(): string;
-           ^^^^^^^^^^^^^^^^^^^^^^^
+   1735|   set innerHTML(value: string | TrustedHTML): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error ----------------------------------------------------------------------------------------- <BUILTINS>/dom.js:1741:3
 
 Getters and setters can have side effects and are unsafe. [unsafe-getters-setters]
 
-   1741|   set outerHTML(value: string | TrustedHTML): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   1741|   get outerHTML(): string;
+           ^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------- <BUILTINS>/dom.js:2070:3
+Error ----------------------------------------------------------------------------------------- <BUILTINS>/dom.js:1742:3
 
 Getters and setters can have side effects and are unsafe. [unsafe-getters-setters]
 
-   2070|   get innerHTML(): string;
-           ^^^^^^^^^^^^^^^^^^^^^^^
+   1742|   set outerHTML(value: string | TrustedHTML): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error ----------------------------------------------------------------------------------------- <BUILTINS>/dom.js:2071:3
 
 Getters and setters can have side effects and are unsafe. [unsafe-getters-setters]
 
-   2071|   set innerHTML(value: string | TrustedHTML): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   2071|   get innerHTML(): string;
+           ^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------- <BUILTINS>/dom.js:3438:3
+Error ----------------------------------------------------------------------------------------- <BUILTINS>/dom.js:2072:3
 
 Getters and setters can have side effects and are unsafe. [unsafe-getters-setters]
 
-   3438|   get srcdoc(): string;
-           ^^^^^^^^^^^^^^^^^^^^
+   2072|   set innerHTML(value: string | TrustedHTML): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error ----------------------------------------------------------------------------------------- <BUILTINS>/dom.js:3439:3
 
 Getters and setters can have side effects and are unsafe. [unsafe-getters-setters]
 
-   3439|   set srcdoc(value: string | TrustedHTML): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   3439|   get srcdoc(): string;
+           ^^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------- <BUILTINS>/dom.js:3950:3
+Error ----------------------------------------------------------------------------------------- <BUILTINS>/dom.js:3440:3
 
 Getters and setters can have side effects and are unsafe. [unsafe-getters-setters]
 
-   3950|   get src(): string;
-           ^^^^^^^^^^^^^^^^^
+   3440|   set srcdoc(value: string | TrustedHTML): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error ----------------------------------------------------------------------------------------- <BUILTINS>/dom.js:3951:3
 
 Getters and setters can have side effects and are unsafe. [unsafe-getters-setters]
 
-   3951|   set src(value: string | TrustedScriptURL): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   3951|   get src(): string;
+           ^^^^^^^^^^^^^^^^^
 
 
 Error ----------------------------------------------------------------------------------------- <BUILTINS>/dom.js:3952:3
 
 Getters and setters can have side effects and are unsafe. [unsafe-getters-setters]
 
-   3952|   get text(): string;
-           ^^^^^^^^^^^^^^^^^^
+   3952|   set src(value: string | TrustedScriptURL): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error ----------------------------------------------------------------------------------------- <BUILTINS>/dom.js:3953:3
 
 Getters and setters can have side effects and are unsafe. [unsafe-getters-setters]
 
-   3953|   set text(value: string | TrustedScript): void;
+   3953|   get text(): string;
+           ^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------- <BUILTINS>/dom.js:3954:3
+
+Getters and setters can have side effects and are unsafe. [unsafe-getters-setters]
+
+   3954|   set text(value: string | TrustedScript): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
