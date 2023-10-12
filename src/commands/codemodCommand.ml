@@ -118,7 +118,7 @@ module Annotate_exports_command = struct
     "Annotates parts of input that are visible from the exports as required by Flow types-first mode."
 
   let spec =
-    let module Literals = Codemod_hardcoded_ty_fixes.PreserveLiterals in
+    let module Literals = Insert_type_utils.PreserveLiterals in
     let preserve_string_literals_level =
       Literals.[("always", Always); ("never", Never); ("auto", Auto)]
     in
@@ -195,7 +195,7 @@ module Annotate_optional_properties_command = struct
   let doc = "Inserts optional properties on object definitions where properties are missing."
 
   let spec =
-    let module Literals = Codemod_hardcoded_ty_fixes.PreserveLiterals in
+    let module Literals = Insert_type_utils.PreserveLiterals in
     let preserve_string_literals_level =
       Literals.[("always", Always); ("never", Never); ("auto", Auto)]
     in
