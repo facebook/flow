@@ -1806,6 +1806,8 @@ struct
                | PredicateT (NotP (RightP (SentinelProp _, _)), _)
                | WriteComputedObjPropCheckT _ ->
                  false
+               | ConditionalT { distributive_tparam_name; _ } ->
+                 Option.is_some distributive_tparam_name
                | _ -> true ->
           flow_all_in_union cx trace rep u
         | (_, FilterOptionalT (use_op, u)) -> rec_flow_t cx trace ~use_op (l, u)
@@ -7077,6 +7079,11 @@ struct
         let void = VoidT.make reason |> with_trust bogus_trust in
         destruct_union ?f reason [t; void] upper
       in
+      let should_destruct_union () =
+        match d with
+        | ConditionalType { distributive_tparam_name; _ } -> Option.is_some distributive_tparam_name
+        | _ -> true
+      in
       (match t with
       | GenericT { bound = OpaqueT (_, { underlying_t = Some t; _ }); reason = r; id; name }
         when ALoc.source (loc_of_reason r) = ALoc.source (def_loc_of_reason r) ->
@@ -7137,23 +7144,26 @@ struct
          Instead, we preserve the union by pushing down the destructor onto the
          branches of the unions.
       *)
-      | UnionT (r, rep) -> destruct_union r (UnionRep.members rep) (UseT (unknown_use, OpenT tout))
-      | GenericT { reason; bound = UnionT (_, rep); id; name } ->
+      | UnionT (r, rep) when should_destruct_union () ->
+        destruct_union r (UnionRep.members rep) (UseT (unknown_use, OpenT tout))
+      | GenericT { reason; bound = UnionT (_, rep); id; name } when should_destruct_union () ->
         destruct_union
           ~f:(fun bound -> GenericT { reason = reason_of_t bound; bound; id; name })
           reason
           (UnionRep.members rep)
           (UseT (use_op, OpenT tout))
-      | MaybeT (r, t) -> destruct_maybe r t (UseT (unknown_use, OpenT tout))
-      | GenericT { reason; bound = MaybeT (_, t); id; name } ->
+      | MaybeT (r, t) when should_destruct_union () ->
+        destruct_maybe r t (UseT (unknown_use, OpenT tout))
+      | GenericT { reason; bound = MaybeT (_, t); id; name } when should_destruct_union () ->
         destruct_maybe
           ~f:(fun bound -> GenericT { reason = reason_of_t bound; bound; id; name })
           reason
           t
           (UseT (use_op, OpenT tout))
-      | OptionalT { reason = r; type_ = t; use_desc = _ } ->
+      | OptionalT { reason = r; type_ = t; use_desc = _ } when should_destruct_union () ->
         destruct_optional r t (UseT (unknown_use, OpenT tout))
-      | GenericT { reason; bound = OptionalT { reason = _; type_ = t; use_desc = _ }; id; name } ->
+      | GenericT { reason; bound = OptionalT { reason = _; type_ = t; use_desc = _ }; id; name }
+        when should_destruct_union () ->
         destruct_optional
           ~f:(fun bound -> GenericT { reason = reason_of_t bound; bound; id; name })
           reason
