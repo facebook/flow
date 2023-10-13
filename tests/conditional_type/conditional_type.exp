@@ -832,6 +832,23 @@ References:
         ^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------- non_distributive.js:23:4
+
+Cannot cast `v` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   non_distributive.js:23:4
+   23|   (v: string); // error: number ~> string
+          ^
+
+References:
+   non_distributive.js:21:20
+   21|   declare const v: Mapped<{foo: string | number}>;
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   non_distributive.js:23:7
+   23|   (v: string); // error: number ~> string
+             ^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- subst.js:4:4
 
 Cannot cast `num` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
@@ -940,7 +957,7 @@ References:
 
 
 
-Found 61 errors
+Found 62 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
