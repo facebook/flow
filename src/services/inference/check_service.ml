@@ -353,8 +353,7 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
     let rec file_rec =
       lazy
         {
-          Type_sig_merge.key = file_key;
-          cx;
+          Type_sig_merge.cx;
           dependencies;
           exports = exports file_rec;
           local_defs = local_defs file_rec;
