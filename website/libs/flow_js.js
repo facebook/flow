@@ -36,6 +36,7 @@ declare type FlowJsParseOptions = {
   esproposal_export_star_as: boolean,
   esproposal_optional_chaining: boolean,
   esproposal_nullish_coalescing: boolean,
+  components?: boolean,
   enums?: boolean,
   types?: boolean,
 };

@@ -17,6 +17,7 @@ const PARSE_OPTIONS: FlowJsParseOptions = {
   esproposal_optional_chaining: true,
   esproposal_nullish_coalescing: true,
   enums: true,
+  components: true,
   types: true,
 };
 
@@ -85,7 +86,7 @@ export default class FlowJsServices {
     return this._flow.typeAtPos(filename, body, line, col, this.config);
   }
 
-  parseAstToJsonString(body: string): string {
-    return JSON.stringify(this._flow.parse(body, PARSE_OPTIONS), null, 2);
+  parseAstToJsonString(body: string): interface {} {
+    return this._flow.parse(body, PARSE_OPTIONS);
   }
 }

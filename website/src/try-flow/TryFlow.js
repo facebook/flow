@@ -107,7 +107,9 @@ export default function TryFlow({
   );
   const [errors, setErrors] = useState<$ReadOnlyArray<FlowJsError>>([]);
   const [internalError, setInternalError] = useState('');
-  const [astJSON, setASTJSON] = useState('{}');
+  const [cursorPosition, setCursorPosition] =
+    useState<?{lineNumber: number, column: number}>(null);
+  const [ast, setAST] = useState<interface {} | string>({});
   const [loading, setLoading] = useState(true);
   const [flowService, setFlowService] = useState((null: ?FlowJsServices));
   const [activeToolbarTab, setActiveToolbarTab] = useState(
@@ -196,13 +198,13 @@ export default function TryFlow({
       setInternalError('');
       setErrors(errors);
       if (flowService?.supportsParse) {
-        setASTJSON(flowService.parseAstToJsonString(value));
+        setAST(flowService.parseAstToJsonString(value));
       }
     } catch (e) {
       console.error(e);
       setInternalError(JSON.stringify(e));
       setErrors([]);
-      setASTJSON('{}');
+      setAST({});
     }
 
     // update the URL
@@ -215,6 +217,14 @@ export default function TryFlow({
     ) {
       setInitialStateFromStorage(null);
     }
+  }
+
+  function onMount(editor: any) {
+    forceRecheck();
+
+    editor.onDidChangeCursorPosition(e => {
+      setCursorPosition(e.position);
+    });
   }
 
   return (
@@ -266,7 +276,7 @@ export default function TryFlow({
             theme="vs-light"
             height="calc(100vh - var(--ifm-navbar-height) - 40px)"
             onChange={forceRecheck}
-            onMount={forceRecheck}
+            onMount={onMount}
             options={{
               minimap: {enabled: false},
               hover: {enabled: true, above: false},
@@ -283,9 +293,17 @@ export default function TryFlow({
         loading={loading}
         errors={errors}
         internalError={internalError}
+        cursorPosition={
+          cursorPosition != null
+            ? {
+                line: cursorPosition.lineNumber,
+                column: cursorPosition.column - 1,
+              }
+            : null
+        }
         ast={
           flowService?.supportsParse
-            ? astJSON
+            ? ast
             : 'AST output is not supported in this version of Flow.'
         }
       />

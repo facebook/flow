@@ -7,8 +7,11 @@
  * @format
  */
 
+import type {CollapsedFieldProps} from 'react-json-view';
+
 import * as React from 'react';
 import {useState, type MixedElement} from 'react';
+import ReactJson from 'react-json-view';
 import clsx from 'clsx';
 import styles from './TryFlow.module.css';
 
@@ -70,6 +73,42 @@ function ErrorMessageExtra({
   );
 }
 
+type Position = {line: number, column: number};
+
+function comparePosition(a: Position, b: Position): number {
+  if (a.line > b.line) {
+    return 1;
+  } else if (a.line < b.line) {
+    return -1;
+  } else if (a.column > b.column) {
+    return 1;
+  } else if (a.column < b.column) {
+    return -1;
+  } else {
+    return 0;
+  }
+}
+
+function shouldCollapse(cursorPosition: Position, json: mixed): boolean {
+  if (
+    typeof json === 'object' &&
+    json != null &&
+    typeof json.loc === 'object'
+  ) {
+    const loc: {start: Position, end: Position} = (json.loc: any);
+    if (
+      comparePosition(loc.start, cursorPosition) <= 0 &&
+      comparePosition(cursorPosition, loc.end) <= 0
+    ) {
+      return false;
+    }
+  }
+  if (Array.isArray(json)) {
+    return json.every(child => shouldCollapse(cursorPosition, child));
+  }
+  return true;
+}
+
 type Props = {
   flowVersion: string,
   flowVersions: $ReadOnlyArray<string>,
@@ -77,7 +116,8 @@ type Props = {
   loading: boolean,
   errors: $ReadOnlyArray<FlowJsError>,
   internalError: string,
-  ast: string,
+  cursorPosition: ?Position,
+  ast: interface {} | string,
 };
 
 export default function TryFlowResults({
@@ -87,9 +127,11 @@ export default function TryFlowResults({
   loading,
   errors,
   internalError,
+  cursorPosition,
   ast,
 }: Props): MixedElement {
   const [activeToolbarTab, setActiveToolbarTab] = useState('errors');
+
   return (
     <div className={styles.results}>
       <div className={styles.toolbar}>
@@ -170,9 +212,25 @@ export default function TryFlowResults({
           {JSON.stringify(errors, null, 2)}
         </pre>
       )}
-      {!loading && activeToolbarTab === 'ast' && (
-        <pre className={styles.resultBody}>{ast}</pre>
-      )}
+      {!loading &&
+        activeToolbarTab === 'ast' &&
+        (typeof ast === 'string' ? (
+          <pre className={styles.resultBody}>{ast}</pre>
+        ) : (
+          <ReactJson
+            src={ast}
+            indentWidth={2}
+            quotesOnKeys={false}
+            displayDataTypes={false}
+            enableClipboard={false}
+            shouldCollapse={field => {
+              if (cursorPosition == null) {
+                return false;
+              }
+              return shouldCollapse(cursorPosition, field.src);
+            }}
+          />
+        ))}
     </div>
   );
 }
