@@ -165,7 +165,7 @@ let pp_builtins
         remote_refs;
         pattern_defs;
         patterns;
-        globals = _;
+        globals;
         modules;
       }
     ) =
@@ -176,6 +176,7 @@ let pp_builtins
   pp_remote_refs pp_loc fmt remote_refs;
   pp_pattern_defs pp_loc fmt pattern_defs [||];
   pp_patterns pp_loc fmt patterns;
+  SMap.iter (fun name _ -> fprintf fmt "@.Builtin global %s" name) globals;
   SMap.iter
     (fun name m ->
       fprintf fmt "@.Builtin module %s:@." name;
@@ -5038,7 +5039,9 @@ let%expect_test "builtins" =
     Local defs:
     0. Variable {id_loc = [1:12-13];
          name = "x"; def = (TyRef (Unqualified LocalRef {ref_loc = [1:15-16]; index = 1}))}
-    1. TypeAlias {id_loc = [2:5-6]; name = "T"; tparams = Mono; body = (Annot (String [2:9-15]))} |}]
+    1. TypeAlias {id_loc = [2:5-6]; name = "T"; tparams = Mono; body = (Annot (String [2:9-15]))}
+
+    Builtin global T |}]
 
 let%expect_test "builtin_cjs_module" =
   print_builtins [{|
@@ -5051,6 +5054,7 @@ let%expect_test "builtin_cjs_module" =
     Local defs:
     0. TypeAlias {id_loc = [1:5-6]; name = "T"; tparams = Mono; body = (Annot (String [1:9-15]))}
 
+    Builtin global T
     Builtin module foo:
     [2:0-4:1] CJSModule {type_exports = [||];
                 exports = (Some (TyRef (Unqualified LocalRef {ref_loc = [3:26-27]; index = 0})));
@@ -5318,7 +5322,9 @@ let%expect_test "builtin_pattern" =
 
     Patterns:
     0. (PDef 0)
-    1. PropP {id_loc = [2:7-8]; name = "p"; def = 0} |}]
+    1. PropP {id_loc = [2:7-8]; name = "p"; def = 0}
+
+    Builtin global o |}]
 
 let%expect_test "this_param_1" =
   print_sig {|
