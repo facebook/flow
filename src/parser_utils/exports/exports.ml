@@ -178,7 +178,7 @@ module Eval = struct
       object AND it has a [name] field; [None] otherwise. *)
   and get_field type_sig seen (name : string) (evaled : 'a evaled) : 'a evaled =
     match evaled with
-    | Value (ObjLit { props; _ }) ->
+    | Value (ObjLit { props; _ } | DeclareModuleImplicitlyExportedObject { props; _ }) ->
       (match field_of_obj_props name props with
       | Some p -> packed type_sig seen p
       | None -> Nothing)
@@ -259,7 +259,8 @@ module CJS = struct
 
   (** only objects can be destructured on import *)
   let exports_of_value acc type_sig = function
-    | ObjLit { props; _ } ->
+    | ObjLit { props; _ }
+    | DeclareModuleImplicitlyExportedObject { props; _ } ->
       SMap.fold
         (fun name value acc ->
           (* only property names that are valid identifier names can currently be

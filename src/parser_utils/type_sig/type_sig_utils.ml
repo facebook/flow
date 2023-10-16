@@ -49,9 +49,9 @@ let pack_builtins (tbls, (globals, modules)) =
   let (patterns, _) = Patterns.copy Pack.pack_pattern patterns in
   let globals = SMap.map Pack.pack_builtin globals in
   let modules =
-    SMap.map
-      (fun m ->
-        let (loc, module_kind) = Pack.pack_builtin_module cx m in
+    SMap.mapi
+      (fun name m ->
+        let (loc, module_kind) = Pack.pack_builtin_module cx name m in
         { Packed_type_sig.Builtins.loc; module_kind })
       modules
   in
@@ -92,7 +92,7 @@ let merge_locs loc0 loc1 =
       (Loc.debug_to_string ~include_source:true loc0)
       (Loc.debug_to_string ~include_source:true loc1)
 
-let pack ~locs_to_dirtify (tbls, file_loc, exports) =
+let pack ~locs_to_dirtify source (tbls, file_loc, exports) =
   let { Parse.locs; module_refs; local_defs; remote_refs; pattern_defs; patterns } = tbls in
   (* mark *)
   Mark.mark_exports ~locs_to_dirtify file_loc exports;
@@ -111,7 +111,13 @@ let pack ~locs_to_dirtify (tbls, file_loc, exports) =
   let (remote_refs, _) = Remote_refs.copy Pack.pack_remote_binding remote_refs in
   let (pattern_defs, dirty_pattern_defs) = Pattern_defs.copy (Pack.pack_parsed cx) pattern_defs in
   let (patterns, _) = Patterns.copy Pack.pack_pattern patterns in
-  let module_kind = Pack.pack_exports cx file_loc exports in
+  let module_kind =
+    Pack.pack_exports
+      cx
+      file_loc
+      (Base.Option.value_map source ~default:"<unnamed>" ~f:File_key.to_string)
+      exports
+  in
   ( cx.Pack.errs,
     locs,
     {
@@ -127,6 +133,9 @@ let pack ~locs_to_dirtify (tbls, file_loc, exports) =
   )
 
 let parse_and_pack_module ~strict opts source ast =
-  pack ~locs_to_dirtify:opts.Type_sig_options.locs_to_dirtify (parse_module ~strict source opts ast)
+  pack
+    ~locs_to_dirtify:opts.Type_sig_options.locs_to_dirtify
+    source
+    (parse_module ~strict source opts ast)
 
 let parse_and_pack_builtins opts ordered_asts = pack_builtins (parse_libs opts ordered_asts)

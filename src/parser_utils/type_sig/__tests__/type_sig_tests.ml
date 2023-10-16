@@ -5223,19 +5223,22 @@ let%expect_test "builtin_cjs_module_with_implicit_exports" =
     [1:15-18] CJSModule {type_exports = [|(ExportTypeBinding 3); (ExportTypeBinding 4)|];
                 exports =
                 (Some (Value
-                         ObjLit {loc = [1:15-18];
-                           frozen = true;
-                           proto = None;
+                         DeclareModuleImplicitlyExportedObject {
+                           loc = [1:15-18];
+                           module_name = "foo";
                            props =
                            { "Y" ->
                              (ObjValueField ([1:15-18],
-                                (Ref LocalRef {ref_loc = [1:15-18]; index = 2}), Polarity.Neutral));
+                                (Ref LocalRef {ref_loc = [1:15-18]; index = 2}), Polarity.Positive
+                                ));
                              "f" ->
                              (ObjValueField ([1:15-18],
-                                (Ref LocalRef {ref_loc = [1:15-18]; index = 1}), Polarity.Neutral));
+                                (Ref LocalRef {ref_loc = [1:15-18]; index = 1}), Polarity.Positive
+                                ));
                              "x" ->
                              (ObjValueField ([1:15-18],
-                                (Ref LocalRef {ref_loc = [1:15-18]; index = 0}), Polarity.Neutral)) }}));
+                                (Ref LocalRef {ref_loc = [1:15-18]; index = 0}), Polarity.Positive
+                                )) }}));
                 info =
                 CJSModuleInfo {type_export_keys = [|"T"; "U"|]; type_stars = []; strict = true}} |}]
 

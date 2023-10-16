@@ -424,6 +424,11 @@ type ('loc, 'a) value =
   | BooleanVal of 'loc
   | BooleanLit of 'loc * bool
   | NullLit of 'loc
+  | DeclareModuleImplicitlyExportedObject of {
+      loc: 'loc;
+      module_name: string;
+      props: ('loc, 'a) obj_value_prop smap;
+    }
   | ObjLit of {
       loc: 'loc;
       frozen: bool;

@@ -414,7 +414,7 @@ and pack_pattern = function
     let def = Patterns.index_exn def in
     ArrRestP { loc; i; def }
 
-and pack_exports cx file_loc (P.Exports { kind; types; type_stars; strict }) =
+and pack_exports cx file_loc module_name (P.Exports { kind; types; type_stars; strict }) =
   let (type_export_keys, type_exports) = pack_smap pack_type_export types in
   let type_stars = List.map pack_star type_stars in
   match kind with
@@ -445,10 +445,12 @@ and pack_exports cx file_loc (P.Exports { kind; types; type_stars; strict }) =
         (fun binding ->
           let index = Local_defs.index_exn binding in
           let t = Ref (LocalRef { ref_loc = file_loc; index }) in
-          ObjValueField (file_loc, t, Polarity.Neutral))
+          ObjValueField (file_loc, t, Polarity.Positive))
         props
     in
-    let exports = Some (Value (ObjLit { loc = file_loc; frozen = true; proto = None; props })) in
+    let exports =
+      Some (Value (DeclareModuleImplicitlyExportedObject { loc = file_loc; module_name; props }))
+    in
     let info = CJSModuleInfo { type_export_keys; type_stars; strict } in
     CJSModule { type_exports; exports; info }
   | P.ESModule { names; stars } ->
@@ -511,7 +513,7 @@ and pack_builtin = function
   | P.LocalBinding b -> Local_defs.index_exn b
   | P.RemoteBinding _ -> failwith "unexpected remote builtin"
 
-and pack_builtin_module cx (loc, exports) =
-  let module_kind = pack_exports cx loc exports in
+and pack_builtin_module cx name (loc, exports) =
+  let module_kind = pack_exports cx loc name exports in
   let loc = pack_loc loc in
   (loc, module_kind)

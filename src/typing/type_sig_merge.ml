@@ -1146,6 +1146,8 @@ and merge_value tps infer_tps file = function
     let reason = Reason.(mk_reason RBoolean loc) in
     Type.(DefT (reason, trust, BoolT (Some lit)))
   | NullLit loc -> Type.NullT.at loc trust
+  | DeclareModuleImplicitlyExportedObject { loc; module_name; props } ->
+    merge_declare_module_implicitly_exported_object tps infer_tps file (loc, module_name, props)
   | ObjLit { loc; frozen; proto; props } ->
     merge_object_lit ~for_export:false tps infer_tps file (loc, frozen, proto, props)
   | ObjSpreadLit { loc; frozen; proto; elems_rev } ->
@@ -1164,6 +1166,15 @@ and merge_value tps infer_tps file = function
         )
     in
     Type.(DefT (reason, trust, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = None })))
+
+and merge_declare_module_implicitly_exported_object tps infer_tps file (loc, module_name, props) =
+  let reason = Reason.(mk_reason (RModule (OrdinaryName module_name)) loc) in
+  let proto = Type.ObjProtoT reason in
+  let props =
+    SMap.mapi (merge_obj_value_prop ~for_export:true tps infer_tps file) props
+    |> NameUtils.namemap_of_smap
+  in
+  Obj_type.mk_with_proto file.cx reason proto ~obj_kind:Type.Exact ~props ~frozen:false
 
 and merge_object_lit ~for_export tps infer_tps file (loc, frozen, proto, props) =
   let reason = obj_lit_reason ~frozen loc in
