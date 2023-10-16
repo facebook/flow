@@ -22,14 +22,8 @@ React.cloneElement('nope'); // Error: Not a valid element type.
 React.cloneElement({ type: any }); // Error: Not a valid element type.
 React.cloneElement(a); // OK: `a` is an element.
 
-(React.cloneElement(a).type: Class<A>); // OK: `a` has a type of `A`.
-(React.cloneElement(a).type: Class<B>); // Error: `a` has a type of `A`.
-(React.cloneElement(a).props.foo: number); // OK
-(React.cloneElement(a).props.bar: empty); // Error: `bar` does not exist.
-(React.cloneElement(a).props.foo: string); // Error: `foo` is number.
-(React.cloneElement(b).props.foo: number); // OK
-(React.cloneElement(b).props.bar: number); // OK
-(React.cloneElement(b).props.foo: string); // Error: `foo` is number.
+(React.cloneElement(a): Element<Class<A>>); // OK
+(React.cloneElement(a): Element<Class<B>>); // Error: A ~> B
 
 React.cloneElement(a, {}); // OK
 React.cloneElement(a, undefined); // OK

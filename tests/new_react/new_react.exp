@@ -7,9 +7,9 @@ Cannot assign `3` to `x.foo` because property `foo` is missing in function [1]. 
          ^^^
 
 References:
-   argless_function.js:9:8
-    9| var x: React.ElementProps<typeof Component> = element.props;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   argless_function.js:9:18
+    9| declare const x: React.ElementProps<typeof Component>;
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------- bad_default_props.js:15:18

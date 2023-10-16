@@ -29,14 +29,10 @@ React.createElement(A, undefined); // Error: `foo` and `bar` are missing.
 React.createElement(B, undefined); // Error: `foo` and `bar` are missing.
 React.createElement(A, null); // Error: `foo` and `bar` are missing.
 React.createElement(B, null); // Error: `foo` and `bar` are missing.
-(React.createElement(A, {foo: 1, bar: 2}).type: Class<A>); // OK
-(React.createElement(B, {foo: 1, bar: 2}).type: typeof B); // OK
-(React.createElement(A, {foo: 1, bar: 2}).props.foo: number); // OK
-(React.createElement(B, {foo: 1, bar: 2}).props.foo: number); // OK
-(React.createElement(A, {foo: 1, bar: 2}).props.foo: boolean); // Error: `foo`
-                                                               // is `number`.
-(React.createElement(B, {foo: 1, bar: 2}).props.foo: boolean); // Error: `foo`
-                                                               // is `number`.
+(React.createElement(A, {foo: 1, bar: 2}): React.Element<Class<A>, {foo: number, bar: number}>); // OK
+(React.createElement(B, {foo: 1, bar: 2}): React.Element<typeof B>); // OK
+(React.createElement(A, {foo: 1, bar: 2}): React.Element<Class<A>, {foo: boolean, bar: number}>); // error
+(React.createElement(B, {foo: 1, bar: 2}): React.Element<typeof B, {foo: boolean, bar: number}>); // error
 React.createElement(A, {foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
 React.createElement(B, {foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
 React.createElement(A); // Error: Missing `foo` and `bar`.
@@ -60,8 +56,8 @@ React.createElement(D, {
 });
 React.createElement(C, {foo: 42}); // OK: `bar` is in `defaultProps`.
 React.createElement(D, {foo: 42}); // OK: `bar` is in `defaultProps`.
-(React.createElement(C, {foo: 42}).props.bar: number); // OK
-(React.createElement(D, {foo: 42}).props.bar: number); // OK
+(React.createElement(C, {foo: 42}): React.Element<Class<C>, {foo: number, bar: number}>); // OK
+(React.createElement(D, {foo: 42}): React.Element<typeof D, {foo: number, bar: number}>); // OK
 
 React.createElement(any, {whateverYouWant: 'yes'}); // OK
 
@@ -215,8 +211,8 @@ React.createElement(L, {foo: 1, bar: 2, children: '3'}); // Error
 
 class M extends React.Component<{}> {}
 class N extends React.Component<{}> {}
-(React.createElement(M).type: typeof M); // OK
-(React.createElement(M).type: typeof N); // Error
+(React.createElement(M): React.Element<Class<M>, any>); // OK
+(React.createElement(M): React.Element<Class<N>, any>); // Error
 
 declare function P({children: [1, 2]}): void;
 React.createElement(P, null, 1, 2); // OK

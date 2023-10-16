@@ -12,10 +12,7 @@ class Parent extends React.Component<{
 }> {
   render(): React.Node {
     React.Children.map(this.props.children, (child) => {
-      console.log(child.props);
-    });
-    React.Children.map(this.props.children, (child: Element<typeof Child>) => {
-      console.log(child.props);
+      ((child: Element<typeof Child>)); // ok
     });
     return null;
   }
