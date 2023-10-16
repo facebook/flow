@@ -75,6 +75,7 @@ module SignatureVerification = struct
         enable_relay_integration = Options.enable_relay_integration options;
         casting_syntax = Options.casting_syntax options;
         relay_integration_module_prefix = Options.relay_integration_module_prefix options;
+        for_builtins = false;
         locs_to_dirtify = [];
       }
     in

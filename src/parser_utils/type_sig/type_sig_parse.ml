@@ -1958,7 +1958,7 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
   | name when SSet.mem name xs ->
     (* TODO: error if targs <> None *)
     Annot (Bound { ref_loc; name })
-  | name when Option.is_some (Scope.lookup scope name) ->
+  | name when (not opts.for_builtins) && Option.is_some (Scope.lookup scope name) ->
     let name = Unqualified (Ref { ref_loc; name; scope; resolved = None }) in
     nominal_type opts scope tbls xs loc name targs
   | "Array" -> begin

@@ -216,6 +216,7 @@ let sig_options
     ?(enable_relay_integration = false)
     ?(casting_syntax = Options.CastingSyntax.Colon)
     ?relay_integration_module_prefix
+    ?(for_builtins = false)
     ?(locs_to_dirtify = [])
     () =
   {
@@ -230,6 +231,7 @@ let sig_options
     enable_relay_integration;
     casting_syntax;
     relay_integration_module_prefix;
+    for_builtins;
     locs_to_dirtify;
   }
 
@@ -249,6 +251,7 @@ let print_sig
     ?enable_component_syntax
     ?enable_relay_integration
     ?relay_integration_module_prefix
+    ?for_builtins
     ?locs_to_dirtify
     contents_indent =
   let contents = dedent_trim contents_indent in
@@ -263,6 +266,7 @@ let print_sig
       ?enable_component_syntax
       ?enable_relay_integration
       ?relay_integration_module_prefix
+      ?for_builtins
       ?locs_to_dirtify
       ()
   in
@@ -283,7 +287,7 @@ let print_builtins ordered_contents_indent =
         ast)
       ordered_contents_indent
   in
-  let sig_opts = sig_options () in
+  let sig_opts = sig_options ~for_builtins:true () in
   let builtins = Type_sig_utils.parse_and_pack_builtins sig_opts ordered_asts in
   let fmt = make_test_formatter () in
   pp_builtins fmt builtins
@@ -5042,6 +5046,49 @@ let%expect_test "builtins" =
     1. TypeAlias {id_loc = [2:5-6]; name = "T"; tparams = Mono; body = (Annot (String [2:9-15]))}
 
     Builtin global T |}]
+
+let%expect_test "builtins_ignore_name_def_for_use_special_cased_names" =
+  print_builtins [{|
+    type T1 = Array<string>;
+    type T2 = $ReadOnly<{foo: bar}>;
+    declare class Array {}
+    type $ReadOnly = number;
+  |}];
+  [%expect {|
+    Local defs:
+    0. TypeAlias {id_loc = [1:5-7]; name = "T1";
+         tparams = Mono; body = (Annot (Array ([1:10-23], (Annot (String [1:16-22])))))}
+    1. TypeAlias {id_loc = [2:5-7]; name = "T2";
+         tparams = Mono;
+         body =
+         (Annot
+            (ReadOnly ([2:10-31],
+               (Annot
+                  ObjAnnot {loc = [2:20-30];
+                    obj_kind = InexactObj;
+                    props =
+                    { "foo" ->
+                      (ObjAnnotField ([2:21-24],
+                         (TyRef (Unqualified BuiltinRef {ref_loc = [2:26-29]; name = "bar"})),
+                         Polarity.Neutral)) };
+                    proto = ObjAnnotImplicitProto})
+               )))}
+    2. DeclareClassBinding {id_loc = [3:14-19];
+         name = "Array";
+         def =
+         DeclareClassSig {tparams = Mono;
+           extends = ClassImplicitExtends;
+           mixins = []; implements = [];
+           static_props = {}; own_props = {};
+           proto_props = {}; static_calls = [];
+           calls = []; dict = None; static_dict = None}}
+    3. TypeAlias {id_loc = [4:5-14];
+         name = "$ReadOnly"; tparams = Mono;
+         body = (Annot (Number [4:17-23]))}
+
+    Builtin global $ReadOnly
+    Builtin global Array
+    Builtin global T1 |}]
 
 let%expect_test "builtin_cjs_module" =
   print_builtins [{|

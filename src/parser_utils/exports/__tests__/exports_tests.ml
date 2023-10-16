@@ -60,6 +60,7 @@ let sig_opts =
     enable_relay_integration = false;
     casting_syntax = Options.CastingSyntax.Colon;
     relay_integration_module_prefix = None;
+    for_builtins = false;
     locs_to_dirtify = [];
   }
 
