@@ -5103,7 +5103,7 @@ let%expect_test "builtin_cjs_module" =
 
     Builtin global T
     Builtin module foo:
-    [2:0-4:1] CJSModule {type_exports = [||];
+    [2:15-18] CJSModule {type_exports = [||];
                 exports = (Some (TyRef (Unqualified LocalRef {ref_loc = [3:26-27]; index = 0})));
                 info = CJSModuleInfo {type_export_keys = [||]; type_stars = []; strict = true}} |}]
 
@@ -5118,7 +5118,7 @@ let%expect_test "builtin_cjs_module_unused_type" =
   |}];
   [%expect {|
     Builtin module foo:
-    [1:0-4:1] CJSModule {type_exports = [||];
+    [1:15-18] CJSModule {type_exports = [||];
                 exports = (Some (Annot (String [3:26-32])));
                 info = CJSModuleInfo {type_export_keys = [||]; type_stars = []; strict = true}} |}]
 
@@ -5135,7 +5135,7 @@ let%expect_test "builtin_cjs_module_unused_type_exported" =
     0. TypeAlias {id_loc = [2:22-23]; name = "T"; tparams = Mono; body = (Annot (Number [2:26-32]))}
 
     Builtin module foo:
-    [1:0-4:1] CJSModule {type_exports = [|(ExportTypeBinding 0)|];
+    [1:15-18] CJSModule {type_exports = [|(ExportTypeBinding 0)|];
                 exports = (Some (Annot (String [3:26-32])));
                 info = CJSModuleInfo {type_export_keys = [|"T"|]; type_stars = []; strict = true}} |}]
 
@@ -5153,7 +5153,7 @@ let%expect_test "builtin_cjs_module_used_type" =
     0. TypeAlias {id_loc = [2:15-16]; name = "T"; tparams = Mono; body = (Annot (Number [2:19-25]))}
 
     Builtin module foo:
-    [1:0-4:1] CJSModule {type_exports = [||];
+    [1:15-18] CJSModule {type_exports = [||];
                 exports = (Some (TyRef (Unqualified LocalRef {ref_loc = [3:26-27]; index = 0})));
                 info = CJSModuleInfo {type_export_keys = [||]; type_stars = []; strict = true}} |}]
 
@@ -5170,7 +5170,7 @@ let%expect_test "builtin_cjs_module_used_type_exported" =
     0. TypeAlias {id_loc = [2:22-23]; name = "T"; tparams = Mono; body = (Annot (Number [2:26-32]))}
 
     Builtin module foo:
-    [1:0-4:1] CJSModule {type_exports = [|(ExportTypeBinding 0)|];
+    [1:15-18] CJSModule {type_exports = [|(ExportTypeBinding 0)|];
                 exports = (Some (TyRef (Unqualified LocalRef {ref_loc = [3:26-27]; index = 0})));
                 info = CJSModuleInfo {type_export_keys = [|"T"|]; type_stars = []; strict = true}} |}]
 
@@ -5218,22 +5218,22 @@ let%expect_test "builtin_cjs_module_with_implicit_exports" =
     4. TypeAlias {id_loc = [6:22-23]; name = "U"; tparams = Mono; body = (Annot (String [6:26-32]))}
 
     Builtin module foo:
-    [1:0-7:1] CJSModule {type_exports = [|(ExportTypeBinding 3); (ExportTypeBinding 4)|];
+    [1:15-18] CJSModule {type_exports = [|(ExportTypeBinding 3); (ExportTypeBinding 4)|];
                 exports =
                 (Some (Value
-                         ObjLit {loc = [1:0-7:1];
+                         ObjLit {loc = [1:15-18];
                            frozen = true;
                            proto = None;
                            props =
                            { "Y" ->
-                             (ObjValueField ([1:0-7:1],
-                                (Ref LocalRef {ref_loc = [1:0-7:1]; index = 2}), Polarity.Neutral));
+                             (ObjValueField ([1:15-18],
+                                (Ref LocalRef {ref_loc = [1:15-18]; index = 2}), Polarity.Neutral));
                              "f" ->
-                             (ObjValueField ([1:0-7:1],
-                                (Ref LocalRef {ref_loc = [1:0-7:1]; index = 1}), Polarity.Neutral));
+                             (ObjValueField ([1:15-18],
+                                (Ref LocalRef {ref_loc = [1:15-18]; index = 1}), Polarity.Neutral));
                              "x" ->
-                             (ObjValueField ([1:0-7:1],
-                                (Ref LocalRef {ref_loc = [1:0-7:1]; index = 0}), Polarity.Neutral)) }}));
+                             (ObjValueField ([1:15-18],
+                                (Ref LocalRef {ref_loc = [1:15-18]; index = 0}), Polarity.Neutral)) }}));
                 info =
                 CJSModuleInfo {type_export_keys = [|"T"; "U"|]; type_stars = []; strict = true}} |}]
 
@@ -5245,7 +5245,7 @@ let%expect_test "builtin_es_module_default" =
   |}];
   [%expect {|
     Builtin module foo:
-    [1:0-3:1] ESModule {type_exports = [||];
+    [1:15-18] ESModule {type_exports = [||];
                 exports =
                 [|ExportDefault {default_loc = [2:17-24]; def = (Annot (String [2:25-31]))}|];
                 info =
@@ -5276,14 +5276,14 @@ let%expect_test "builtin_module_import_typeof" =
     0. ImportTypeof {id_loc = [5:17-18]; name = "x"; index = 0; remote = "x"}
 
     Builtin module bar:
-    [4:0-7:1] ESModule {type_exports = [||];
+    [4:15-18] ESModule {type_exports = [||];
                 exports = [|(ExportBinding 1)|];
                 info =
                 ESModuleInfo {type_export_keys = [||];
                   type_stars = []; export_keys = [|"y"|];
                   stars = []; strict = true}}
     Builtin module foo:
-    [1:0-3:1] ESModule {type_exports = [||];
+    [1:15-18] ESModule {type_exports = [||];
                 exports = [|(ExportBinding 0)|];
                 info =
                 ESModuleInfo {type_export_keys = [||];
@@ -5309,14 +5309,14 @@ let%expect_test "builtin_toplevel_import" =
          name = "y"; def = (TyRef (Unqualified BuiltinRef {ref_loc = [6:24-25]; name = "x"}))}
 
     Builtin module bar:
-    [5:0-7:1] ESModule {type_exports = [||];
+    [5:15-18] ESModule {type_exports = [||];
                 exports = [|(ExportBinding 1)|];
                 info =
                 ESModuleInfo {type_export_keys = [||];
                   type_stars = []; export_keys = [|"y"|];
                   stars = []; strict = true}}
     Builtin module foo:
-    [1:0-3:1] ESModule {type_exports = [||];
+    [1:15-18] ESModule {type_exports = [||];
                 exports = [|(ExportBinding 0)|];
                 info =
                 ESModuleInfo {type_export_keys = [||];
@@ -5337,7 +5337,7 @@ let%expect_test "builtin_module_export_specifiers" =
     1. Variable {id_loc = [3:14-15]; name = "y"; def = (Annot (String [3:18-24]))}
 
     Builtin module foo:
-    [1:0-5:1] ESModule {type_exports = [||];
+    [1:15-20] ESModule {type_exports = [||];
                 exports =
                 [|(ExportRef LocalRef {ref_loc = [4:18-19]; index = 0});
                   (ExportRef LocalRef {ref_loc = [4:21-22]; index = 1})|];
