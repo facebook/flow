@@ -826,9 +826,23 @@ module Scope = struct
   let finalize_declare_module_exports_exn = function
     | DeclareModule { names; exports; parent = _ } as scope ->
       (match exports with
-      | Exports { kind = CJSModule _ | CJSModuleProps _ | ESModule _; _ } ->
+      | Exports { kind = ESModule _; _ } ->
         (* has explicit exports so do nothing here *)
         ()
+      | Exports { kind = CJSModule _ | CJSModuleProps _; _ } ->
+        (* Always auto export all local types for CJS declare modules *)
+        modify_exports
+          (fun exports ->
+            SMap.iter
+              (fun name binding ->
+                match binding with
+                | LocalBinding node ->
+                  (match Local_defs.value node with
+                  | TypeBinding _ -> Exports.add_type name (ExportTypeBinding node) exports
+                  | _ -> ())
+                | RemoteBinding _ -> ())
+              names)
+          scope
       | Exports { kind = UnknownModule; _ } ->
         (* add a CJS export for each declared binding *)
         modify_exports

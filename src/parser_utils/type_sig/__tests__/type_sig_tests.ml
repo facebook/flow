@@ -5107,9 +5107,8 @@ let%expect_test "builtin_cjs_module" =
                 exports = (Some (TyRef (Unqualified LocalRef {ref_loc = [3:26-27]; index = 0})));
                 info = CJSModuleInfo {type_export_keys = [||]; type_stars = []; strict = true}} |}]
 
-let%expect_test "builtin_cjs_module_unused_type" =
-  (* `T` is not exported because `declare module.exports` means that
-     unused exports must be explicitly exported. *)
+let%expect_test "builtin_cjs_module_auto_export_type" =
+  (* All types in cjs modules are auto exported. *)
   print_builtins [{|
     declare module foo {
       declare type T = number;
@@ -5117,10 +5116,13 @@ let%expect_test "builtin_cjs_module_unused_type" =
     }
   |}];
   [%expect {|
+    Local defs:
+    0. TypeAlias {id_loc = [2:15-16]; name = "T"; tparams = Mono; body = (Annot (Number [2:19-25]))}
+
     Builtin module foo:
-    [1:15-18] CJSModule {type_exports = [||];
+    [1:15-18] CJSModule {type_exports = [|(ExportTypeBinding 0)|];
                 exports = (Some (Annot (String [3:26-32])));
-                info = CJSModuleInfo {type_export_keys = [||]; type_stars = []; strict = true}} |}]
+                info = CJSModuleInfo {type_export_keys = [|"T"|]; type_stars = []; strict = true}} |}]
 
 let%expect_test "builtin_cjs_module_unused_type_exported" =
   (* T is exported because it has an `export` keyword *)
@@ -5153,9 +5155,9 @@ let%expect_test "builtin_cjs_module_used_type" =
     0. TypeAlias {id_loc = [2:15-16]; name = "T"; tparams = Mono; body = (Annot (Number [2:19-25]))}
 
     Builtin module foo:
-    [1:15-18] CJSModule {type_exports = [||];
+    [1:15-18] CJSModule {type_exports = [|(ExportTypeBinding 0)|];
                 exports = (Some (TyRef (Unqualified LocalRef {ref_loc = [3:26-27]; index = 0})));
-                info = CJSModuleInfo {type_export_keys = [||]; type_stars = []; strict = true}} |}]
+                info = CJSModuleInfo {type_export_keys = [|"T"|]; type_stars = []; strict = true}} |}]
 
 let%expect_test "builtin_cjs_module_used_type_exported" =
   (* `T` is exported because it has an `export` keyword, and is also reachable via the default export *)
