@@ -1,17 +1,3 @@
-Error ----------------------------------------------------------------------------------------- abstractelement.js:13:11
-
-Cannot get `e.props.a` because property `a` is missing in empty [1]. [incompatible-use]
-
-   abstractelement.js:13:11
-    13|   e.props.a; // error
-                  ^
-
-References:
-   <BUILTINS>/react.js:149:29
-   149|   | React$AbstractComponent<empty, mixed, React$Node>;
-                                    ^^^^^ [1]
-
-
 Error ---------------------------------------------------------------------------------- contravariant_refsetter.js:11:2
 
 Cannot cast `x` to `React.RefSetter` because in type argument `T` [1]: [incompatible-cast]
@@ -2641,7 +2627,7 @@ References:
 
 
 
-Found 131 errors
+Found 130 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

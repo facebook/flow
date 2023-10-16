@@ -29,12 +29,12 @@ aFactory(undefined); // Error: `foo` and `bar` are missing.
 bFactory(undefined); // Error: `foo` and `bar` are missing.
 aFactory(null); // Error: `foo` and `bar` are missing.
 bFactory(null); // Error: `foo` and `bar` are missing.
-(aFactory({foo: 1, bar: 2}).type: Class<A>); // OK
-(bFactory({foo: 1, bar: 2}).type: typeof B); // OK
-(aFactory({foo: 1, bar: 2}).props.foo: number); // OK
-(bFactory({foo: 1, bar: 2}).props.foo: number); // OK
-(aFactory({foo: 1, bar: 2}).props.foo: boolean); // Error: `foo` is `number`.
-(bFactory({foo: 1, bar: 2}).props.foo: boolean); // Error: `foo` is `number`.
+(aFactory({foo: 1, bar: 2}): React$Element<Class<A>>); // OK
+(bFactory({foo: 1, bar: 2}): React$Element<typeof B>); // OK
+(aFactory({foo: 1, bar: 2}): React$Element<Class<A>, {foo: number, bar: number}>); // OK
+(bFactory({foo: 1, bar: 2}): React$Element<typeof B, {foo: number, bar: number}>); // OK
+(aFactory({foo: 1, bar: 2}): React$Element<Class<A>, {foo: boolean, bar: number}>); // Error: `foo` is `number`.
+(bFactory({foo: 1, bar: 2}): React$Element<typeof B, {foo: boolean, bar: number}>); // Error: `foo` is `number`.
 aFactory({foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
 bFactory({foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
 aFactory(); // Error: Missing `foo` and `bar`.
@@ -61,8 +61,8 @@ dFactory({
 });
 cFactory({foo: 42}); // OK: `bar` is in `defaultProps`.
 dFactory({foo: 42}); // OK: `bar` is in `defaultProps`.
-(cFactory({foo: 42}).props.bar: number); // OK
-(dFactory({foo: 42}).props.bar: number); // OK
+(cFactory({foo: 42}): React$Element<Class<C>, {foo: number, bar: number}>); // OK
+(dFactory({foo: 42}): React$Element<typeof D, {foo: number, bar: number}>); // OK
 
 const anyFactory = React.createFactory(any);
 
@@ -212,5 +212,5 @@ lFactory({foo: 1, bar: 2, children: '3'}); // Error
 class M extends React.Component<{}> {}
 class N extends React.Component<{}> {}
 const mFactory = React.createFactory(M);
-(mFactory().type: typeof M); // OK
-(mFactory().type: typeof N); // Error
+(mFactory(): React$Element<Class<M>>); // OK
+(mFactory(): React$Element<Class<N>>); // Error

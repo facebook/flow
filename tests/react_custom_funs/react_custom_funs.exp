@@ -28,90 +28,82 @@ References:
                             ^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- clone_element.js:26:2
+Error ------------------------------------------------------------------------------------------- clone_element.js:26:21
 
-Cannot cast `React.cloneElement(...).type` to statics of `B` because `A` [1] is incompatible with `B` [2].
-[incompatible-cast]
+Cannot cast `React.cloneElement(...)` to `Element` because `A` [1] is incompatible with `B` [2] in type argument
+`ElementType` [3]. [incompatible-cast]
 
-   clone_element.js:26:2
-   26| (React.cloneElement(a).type: Class<B>); // Error: `a` has a type of `A`.
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+   clone_element.js:26:21
+    26| (React.cloneElement(a): Element<Class<B>>); // Error: A ~> B
+                            ^
 
 References:
    clone_element.js:14:30
-   14| declare var a: Element<Class<A>>;
-                                    ^ [1]
-   clone_element.js:26:36
-   26| (React.cloneElement(a).type: Class<B>); // Error: `a` has a type of `A`.
-                                          ^ [2]
+    14| declare var a: Element<Class<A>>;
+                                     ^ [1]
+   clone_element.js:26:39
+    26| (React.cloneElement(a): Element<Class<B>>); // Error: A ~> B
+                                              ^ [2]
+   <BUILTINS>/react.js:155:36
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                                           ^^^^^^^^^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------------- clone_element.js:26:2
+Error ------------------------------------------------------------------------------------------- clone_element.js:26:21
 
-Cannot cast `React.cloneElement(...).type` to statics of `B` because property `bar` is missing in object type [1] but
-exists in object type [2]. [prop-missing]
+Cannot cast `React.cloneElement(...)` to `Element` because property `bar` is missing in object type [1] but exists in
+object type [2] in type argument `ElementType` [3]. [prop-missing]
 
-   clone_element.js:26:2
-   26| (React.cloneElement(a).type: Class<B>); // Error: `a` has a type of `A`.
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+   clone_element.js:26:21
+    26| (React.cloneElement(a): Element<Class<B>>); // Error: A ~> B
+                            ^
 
 References:
    clone_element.js:6:33
-    6| class A extends React.Component<{foo: number}, void> {}
-                                       ^^^^^^^^^^^^^ [1]
+     6| class A extends React.Component<{foo: number}, void> {}
+                                        ^^^^^^^^^^^^^ [1]
    clone_element.js:7:33
-    7| class B extends React.Component<{foo: number, bar: number}, void> {}
-                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+     7| class B extends React.Component<{foo: number, bar: number}, void> {}
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:155:36
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                                           ^^^^^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------- clone_element.js:28:30
+Error ------------------------------------------------------------------------------------------- clone_element.js:26:21
 
-Cannot get `React.cloneElement(...).props.bar` because property `bar` is missing in object type [1]. [prop-missing]
+Cannot cast `React.cloneElement(...)` to `Element` because property `bar` is missing in object type [1] but exists in
+object type [2] in type argument `P` [3]. [prop-missing]
 
-   clone_element.js:28:30
-   28| (React.cloneElement(a).props.bar: empty); // Error: `bar` does not exist.
-                                    ^^^
+   clone_element.js:26:21
+    26| (React.cloneElement(a): Element<Class<B>>); // Error: A ~> B
+                            ^
 
 References:
    clone_element.js:6:33
-    6| class A extends React.Component<{foo: number}, void> {}
-                                       ^^^^^^^^^^^^^ [1]
+     6| class A extends React.Component<{foo: number}, void> {}
+                                        ^^^^^^^^^^^^^ [1]
+   clone_element.js:7:33
+     7| class B extends React.Component<{foo: number, bar: number}, void> {}
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:155:69
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                                                                            ^ [3]
 
 
-Error -------------------------------------------------------------------------------------------- clone_element.js:29:2
+Error ------------------------------------------------------------------------------------------- clone_element.js:33:29
 
-Cannot cast `React.cloneElement(...).props.foo` to string because number [1] is incompatible with string [2].
-[incompatible-cast]
+Cannot call `React.cloneElement` because string [1] is incompatible with number [2] in property `foo`.
+[incompatible-call]
 
-   clone_element.js:29:2
-   29| (React.cloneElement(a).props.foo: string); // Error: `foo` is number.
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   clone_element.js:33:29
+   33| React.cloneElement(a, {foo: '1'}); // Error: `foo` is a number.
+                                   ^^^ [1]
 
 References:
    clone_element.js:6:39
     6| class A extends React.Component<{foo: number}, void> {}
-                                             ^^^^^^ [1]
-   clone_element.js:29:35
-   29| (React.cloneElement(a).props.foo: string); // Error: `foo` is number.
-                                         ^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------- clone_element.js:32:2
-
-Cannot cast `React.cloneElement(...).props.foo` to string because number [1] is incompatible with string [2].
-[incompatible-cast]
-
-   clone_element.js:32:2
-   32| (React.cloneElement(b).props.foo: string); // Error: `foo` is number.
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   clone_element.js:7:39
-    7| class B extends React.Component<{foo: number, bar: number}, void> {}
-                                             ^^^^^^ [1]
-   clone_element.js:32:35
-   32| (React.cloneElement(b).props.foo: string); // Error: `foo` is number.
-                                         ^^^^^^ [2]
+                                             ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- clone_element.js:39:29
@@ -120,22 +112,7 @@ Cannot call `React.cloneElement` because string [1] is incompatible with number 
 [incompatible-call]
 
    clone_element.js:39:29
-   39| React.cloneElement(a, {foo: '1'}); // Error: `foo` is a number.
-                                   ^^^ [1]
-
-References:
-   clone_element.js:6:39
-    6| class A extends React.Component<{foo: number}, void> {}
-                                             ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- clone_element.js:45:29
-
-Cannot call `React.cloneElement` because string [1] is incompatible with number [2] in property `foo`.
-[incompatible-call]
-
-   clone_element.js:45:29
-   45| React.cloneElement(b, {foo: '1'}); // Error: `foo` is a number.
+   39| React.cloneElement(b, {foo: '1'}); // Error: `foo` is a number.
                                    ^^^ [1]
 
 References:
@@ -144,13 +121,13 @@ References:
                                              ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- clone_element.js:51:34
+Error ------------------------------------------------------------------------------------------- clone_element.js:45:34
 
 Cannot call `React.cloneElement` because string [1] is incompatible with number [2] in property `children`.
 [incompatible-call]
 
-   clone_element.js:51:34
-   51| React.cloneElement(c, {children: '42'}); // Error: `children` is a number.
+   clone_element.js:45:34
+   45| React.cloneElement(c, {children: '42'}); // Error: `children` is a number.
                                         ^^^^ [1]
 
 References:
@@ -159,67 +136,67 @@ References:
                                                   ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- clone_element.js:55:23
+Error ------------------------------------------------------------------------------------------- clone_element.js:49:23
 
 Cannot call `React.cloneElement` because children array [1] is incompatible with number [2] in property `children`.
 [incompatible-call]
 
-   clone_element.js:55:23
-   55| React.cloneElement(c, {}, 1, 2, 3); // Error: `children` is not an array.
+   clone_element.js:49:23
+   49| React.cloneElement(c, {}, 1, 2, 3); // Error: `children` is not an array.
                              ^^
 
 References:
-   clone_element.js:55:1
-   55| React.cloneElement(c, {}, 1, 2, 3); // Error: `children` is not an array.
+   clone_element.js:49:1
+   49| React.cloneElement(c, {}, 1, 2, 3); // Error: `children` is not an array.
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    clone_element.js:8:44
     8| class C extends React.Component<{children: number}, void> {}
                                                   ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- clone_element.js:56:23
+Error ------------------------------------------------------------------------------------------- clone_element.js:50:23
 
 Cannot call `React.cloneElement` because children array [1] is incompatible with number [2] in property `children`.
 [incompatible-call]
 
-   clone_element.js:56:23
-   56| React.cloneElement(c, undefined, 1, 2, 3); // Error: `children` is not an array.
+   clone_element.js:50:23
+   50| React.cloneElement(c, undefined, 1, 2, 3); // Error: `children` is not an array.
                              ^^^^^^^^^
 
 References:
-   clone_element.js:56:1
-   56| React.cloneElement(c, undefined, 1, 2, 3); // Error: `children` is not an array.
+   clone_element.js:50:1
+   50| React.cloneElement(c, undefined, 1, 2, 3); // Error: `children` is not an array.
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    clone_element.js:8:44
     8| class C extends React.Component<{children: number}, void> {}
                                                   ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- clone_element.js:57:23
+Error ------------------------------------------------------------------------------------------- clone_element.js:51:23
 
 Cannot call `React.cloneElement` because children array [1] is incompatible with number [2] in property `children`.
 [incompatible-call]
 
-   clone_element.js:57:23
-   57| React.cloneElement(c, null, 1, 2, 3); // Error: `children` is not an array.
+   clone_element.js:51:23
+   51| React.cloneElement(c, null, 1, 2, 3); // Error: `children` is not an array.
                              ^^^^
 
 References:
-   clone_element.js:57:1
-   57| React.cloneElement(c, null, 1, 2, 3); // Error: `children` is not an array.
+   clone_element.js:51:1
+   51| React.cloneElement(c, null, 1, 2, 3); // Error: `children` is not an array.
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    clone_element.js:8:44
     8| class C extends React.Component<{children: number}, void> {}
                                                   ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- clone_element.js:61:34
+Error ------------------------------------------------------------------------------------------- clone_element.js:55:34
 
 Cannot call `React.cloneElement` because number [1] is incompatible with array type [2] in property `children`.
 [incompatible-call]
 
-   clone_element.js:61:34
-   61| React.cloneElement(d, {children: 42}); // Error: `children` is an array.
+   clone_element.js:55:34
+   55| React.cloneElement(d, {children: 42}); // Error: `children` is an array.
                                         ^^ [1]
 
 References:
@@ -228,95 +205,95 @@ References:
                                                   ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- clone_element.js:63:23
+Error ------------------------------------------------------------------------------------------- clone_element.js:57:23
 
 Cannot call `React.cloneElement` because number [1] is incompatible with array type [2] in property `children`.
 [incompatible-call]
 
-   clone_element.js:63:23
-   63| React.cloneElement(d, {}, 42); // Error: `children` is an array.
+   clone_element.js:57:23
+   57| React.cloneElement(d, {}, 42); // Error: `children` is an array.
                              ^^
 
 References:
-   clone_element.js:63:27
-   63| React.cloneElement(d, {}, 42); // Error: `children` is an array.
+   clone_element.js:57:27
+   57| React.cloneElement(d, {}, 42); // Error: `children` is an array.
                                  ^^ [1]
    clone_element.js:9:44
     9| class D extends React.Component<{children: Array<number>}, void> {}
                                                   ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- clone_element.js:64:23
+Error ------------------------------------------------------------------------------------------- clone_element.js:58:23
 
 Cannot call `React.cloneElement` because number [1] is incompatible with array type [2] in property `children`.
 [incompatible-call]
 
-   clone_element.js:64:23
-   64| React.cloneElement(d, undefined, 42); // Error: `children` is an array.
+   clone_element.js:58:23
+   58| React.cloneElement(d, undefined, 42); // Error: `children` is an array.
                              ^^^^^^^^^
 
 References:
-   clone_element.js:64:34
-   64| React.cloneElement(d, undefined, 42); // Error: `children` is an array.
+   clone_element.js:58:34
+   58| React.cloneElement(d, undefined, 42); // Error: `children` is an array.
                                         ^^ [1]
    clone_element.js:9:44
     9| class D extends React.Component<{children: Array<number>}, void> {}
                                                   ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- clone_element.js:65:23
+Error ------------------------------------------------------------------------------------------- clone_element.js:59:23
 
 Cannot call `React.cloneElement` because number [1] is incompatible with array type [2] in property `children`.
 [incompatible-call]
 
-   clone_element.js:65:23
-   65| React.cloneElement(d, null, 42); // Error: `children` is an array.
+   clone_element.js:59:23
+   59| React.cloneElement(d, null, 42); // Error: `children` is an array.
                              ^^^^
 
 References:
-   clone_element.js:65:29
-   65| React.cloneElement(d, null, 42); // Error: `children` is an array.
+   clone_element.js:59:29
+   59| React.cloneElement(d, null, 42); // Error: `children` is an array.
                                    ^^ [1]
    clone_element.js:9:44
     9| class D extends React.Component<{children: Array<number>}, void> {}
                                                   ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- clone_element.js:77:40
+Error ------------------------------------------------------------------------------------------- clone_element.js:71:40
 
 Cannot call `React.cloneElement` because string [1] is incompatible with number [2] in property `p`. [incompatible-call]
 
-   clone_element.js:77:40
-   77| React.cloneElement(<SFC p={0} />, { p: "bad" }); // Error: string ~> number
+   clone_element.js:71:40
+   71| React.cloneElement(<SFC p={0} />, { p: "bad" }); // Error: string ~> number
                                               ^^^^^ [1]
 
 References:
-   clone_element.js:76:26
-   76| function SFC(props: { p: number }) { return null };
+   clone_element.js:70:26
+   70| function SFC(props: { p: number }) { return null };
                                 ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- clone_element.js:83:27
+Error ------------------------------------------------------------------------------------------- clone_element.js:77:27
 
 Cannot call `React.cloneElement` because property `bar` is missing in object type [1] but exists in props [2].
 [prop-missing]
 
-   clone_element.js:83:27
-   83| React.cloneElement(exact, {foo: 1, bar: 2}); // ERROR
+   clone_element.js:77:27
+   77| React.cloneElement(exact, {foo: 1, bar: 2}); // ERROR
                                  ^^^^^^^^^^^^^^^^ [2]
 
 References:
-   clone_element.js:80:24
-   80| declare function Exact({|foo: number|}): void;
+   clone_element.js:74:24
+   74| declare function Exact({|foo: number|}): void;
                               ^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------ clone_element.js:100:26
+Error ------------------------------------------------------------------------------------------- clone_element.js:94:26
 
 Cannot call `React.cloneElement` because props [1] is incompatible with empty [2]. [incompatible-call]
 
-   clone_element.js:100:26
-   100|   React.cloneElement(el, {}); // ERROR
+   clone_element.js:94:26
+    94|   React.cloneElement(el, {}); // ERROR
                                  ^^ [1]
 
 References:
@@ -325,238 +302,238 @@ References:
                                     ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ clone_element.js:106:22
+Error ------------------------------------------------------------------------------------------ clone_element.js:100:22
 
 `$Iterable` [1] is incompatible with `React.Element` [2]. [incompatible-type]
 
-   clone_element.js:106:22
-   106|   React.cloneElement(el); // ERROR
+   clone_element.js:100:22
+   100|   React.cloneElement(el); // ERROR
                              ^^
 
 References:
-   clone_element.js:105:21
-   105|   declare const el: React.Node;
+   clone_element.js:99:21
+    99|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
    <BUILTINS>/react.js:155:21
    155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
                             ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ clone_element.js:106:22
+Error ------------------------------------------------------------------------------------------ clone_element.js:100:22
 
 `React.Portal` [1] is incompatible with `React.Element` [2]. [incompatible-type]
 
-   clone_element.js:106:22
-   106|   React.cloneElement(el); // ERROR
+   clone_element.js:100:22
+   100|   React.cloneElement(el); // ERROR
                              ^^
 
 References:
-   clone_element.js:105:21
-   105|   declare const el: React.Node;
+   clone_element.js:99:21
+    99|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
    <BUILTINS>/react.js:155:21
    155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
                             ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ clone_element.js:106:22
+Error ------------------------------------------------------------------------------------------ clone_element.js:100:22
 
 boolean [1] is incompatible with `React.Element` [2]. [incompatible-type]
 
-   clone_element.js:106:22
-   106|   React.cloneElement(el); // ERROR
+   clone_element.js:100:22
+   100|   React.cloneElement(el); // ERROR
                              ^^
 
 References:
-   clone_element.js:105:21
-   105|   declare const el: React.Node;
+   clone_element.js:99:21
+    99|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
    <BUILTINS>/react.js:155:21
    155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
                             ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ clone_element.js:106:22
+Error ------------------------------------------------------------------------------------------ clone_element.js:100:22
 
 null [1] is incompatible with `React.Element` [2]. [incompatible-type]
 
-   clone_element.js:106:22
-   106|   React.cloneElement(el); // ERROR
+   clone_element.js:100:22
+   100|   React.cloneElement(el); // ERROR
                              ^^
 
 References:
-   clone_element.js:105:21
-   105|   declare const el: React.Node;
+   clone_element.js:99:21
+    99|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
    <BUILTINS>/react.js:155:21
    155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
                             ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ clone_element.js:106:22
+Error ------------------------------------------------------------------------------------------ clone_element.js:100:22
 
 number [1] is incompatible with `React.Element` [2]. [incompatible-type]
 
-   clone_element.js:106:22
-   106|   React.cloneElement(el); // ERROR
+   clone_element.js:100:22
+   100|   React.cloneElement(el); // ERROR
                              ^^
 
 References:
-   clone_element.js:105:21
-   105|   declare const el: React.Node;
+   clone_element.js:99:21
+    99|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
    <BUILTINS>/react.js:155:21
    155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
                             ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ clone_element.js:106:22
+Error ------------------------------------------------------------------------------------------ clone_element.js:100:22
 
 string [1] is incompatible with `React.Element` [2]. [incompatible-type]
 
-   clone_element.js:106:22
-   106|   React.cloneElement(el); // ERROR
+   clone_element.js:100:22
+   100|   React.cloneElement(el); // ERROR
                              ^^
 
 References:
-   clone_element.js:105:21
-   105|   declare const el: React.Node;
+   clone_element.js:99:21
+    99|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
    <BUILTINS>/react.js:155:21
    155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
                             ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ clone_element.js:106:22
+Error ------------------------------------------------------------------------------------------ clone_element.js:100:22
 
 undefined [1] is incompatible with `React.Element` [2]. [incompatible-type]
 
-   clone_element.js:106:22
-   106|   React.cloneElement(el); // ERROR
+   clone_element.js:100:22
+   100|   React.cloneElement(el); // ERROR
                              ^^
 
 References:
-   clone_element.js:105:21
-   105|   declare const el: React.Node;
+   clone_element.js:99:21
+    99|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
    <BUILTINS>/react.js:155:21
    155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
                             ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ clone_element.js:107:22
+Error ------------------------------------------------------------------------------------------ clone_element.js:101:22
 
 `$Iterable` [1] is incompatible with `React.Element` [2]. [incompatible-type]
 
-   clone_element.js:107:22
-   107|   React.cloneElement(el, {}); // ERROR
+   clone_element.js:101:22
+   101|   React.cloneElement(el, {}); // ERROR
                              ^^
 
 References:
-   clone_element.js:105:21
-   105|   declare const el: React.Node;
+   clone_element.js:99:21
+    99|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
    <BUILTINS>/react.js:155:21
    155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
                             ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ clone_element.js:107:22
+Error ------------------------------------------------------------------------------------------ clone_element.js:101:22
 
 `React.Portal` [1] is incompatible with `React.Element` [2]. [incompatible-type]
 
-   clone_element.js:107:22
-   107|   React.cloneElement(el, {}); // ERROR
+   clone_element.js:101:22
+   101|   React.cloneElement(el, {}); // ERROR
                              ^^
 
 References:
-   clone_element.js:105:21
-   105|   declare const el: React.Node;
+   clone_element.js:99:21
+    99|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
    <BUILTINS>/react.js:155:21
    155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
                             ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ clone_element.js:107:22
+Error ------------------------------------------------------------------------------------------ clone_element.js:101:22
 
 boolean [1] is incompatible with `React.Element` [2]. [incompatible-type]
 
-   clone_element.js:107:22
-   107|   React.cloneElement(el, {}); // ERROR
+   clone_element.js:101:22
+   101|   React.cloneElement(el, {}); // ERROR
                              ^^
 
 References:
-   clone_element.js:105:21
-   105|   declare const el: React.Node;
+   clone_element.js:99:21
+    99|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
    <BUILTINS>/react.js:155:21
    155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
                             ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ clone_element.js:107:22
+Error ------------------------------------------------------------------------------------------ clone_element.js:101:22
 
 null [1] is incompatible with `React.Element` [2]. [incompatible-type]
 
-   clone_element.js:107:22
-   107|   React.cloneElement(el, {}); // ERROR
+   clone_element.js:101:22
+   101|   React.cloneElement(el, {}); // ERROR
                              ^^
 
 References:
-   clone_element.js:105:21
-   105|   declare const el: React.Node;
+   clone_element.js:99:21
+    99|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
    <BUILTINS>/react.js:155:21
    155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
                             ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ clone_element.js:107:22
+Error ------------------------------------------------------------------------------------------ clone_element.js:101:22
 
 number [1] is incompatible with `React.Element` [2]. [incompatible-type]
 
-   clone_element.js:107:22
-   107|   React.cloneElement(el, {}); // ERROR
+   clone_element.js:101:22
+   101|   React.cloneElement(el, {}); // ERROR
                              ^^
 
 References:
-   clone_element.js:105:21
-   105|   declare const el: React.Node;
+   clone_element.js:99:21
+    99|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
    <BUILTINS>/react.js:155:21
    155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
                             ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ clone_element.js:107:22
+Error ------------------------------------------------------------------------------------------ clone_element.js:101:22
 
 string [1] is incompatible with `React.Element` [2]. [incompatible-type]
 
-   clone_element.js:107:22
-   107|   React.cloneElement(el, {}); // ERROR
+   clone_element.js:101:22
+   101|   React.cloneElement(el, {}); // ERROR
                              ^^
 
 References:
-   clone_element.js:105:21
-   105|   declare const el: React.Node;
+   clone_element.js:99:21
+    99|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
    <BUILTINS>/react.js:155:21
    155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
                             ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ clone_element.js:107:22
+Error ------------------------------------------------------------------------------------------ clone_element.js:101:22
 
 undefined [1] is incompatible with `React.Element` [2]. [incompatible-type]
 
-   clone_element.js:107:22
-   107|   React.cloneElement(el, {}); // ERROR
+   clone_element.js:101:22
+   101|   React.cloneElement(el, {}); // ERROR
                              ^^
 
 References:
-   clone_element.js:105:21
-   105|   declare const el: React.Node;
+   clone_element.js:99:21
+    99|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
    <BUILTINS>/react.js:155:21
    155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
@@ -832,140 +809,161 @@ References:
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- create_element.js:36:2
+Error ------------------------------------------------------------------------------------------- create_element.js:34:2
 
-Cannot cast `React.createElement(...).props.foo` to boolean because number [1] is incompatible with boolean [2].
-[incompatible-cast]
+Cannot cast `React.createElement(...)` to `React.Element` because number [1] is incompatible with boolean [2] in
+property `foo` of type argument `P` [3]. [incompatible-cast]
 
-   create_element.js:36:2
-   36| (React.createElement(A, {foo: 1, bar: 2}).props.foo: boolean); // Error: `foo`
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   create_element.js:34:2
+    34| (React.createElement(A, {foo: 1, bar: 2}): React.Element<Class<A>, {foo: boolean, bar: number}>); // error
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    create_element.js:13:39
-   13| class A extends React.Component<{foo: number, bar: number}> {}
-                                             ^^^^^^ [1]
-   create_element.js:36:54
-   36| (React.createElement(A, {foo: 1, bar: 2}).props.foo: boolean); // Error: `foo`
-                                                            ^^^^^^^ [2]
+    13| class A extends React.Component<{foo: number, bar: number}> {}
+                                              ^^^^^^ [1]
+   create_element.js:34:74
+    34| (React.createElement(A, {foo: 1, bar: 2}): React.Element<Class<A>, {foo: boolean, bar: number}>); // error
+                                                                                 ^^^^^^^ [2]
+   <BUILTINS>/react.js:155:69
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                                                                            ^ [3]
 
 
-Error ------------------------------------------------------------------------------------------- create_element.js:38:2
+Error ------------------------------------------------------------------------------------------- create_element.js:35:2
 
-Cannot cast `React.createElement(...).props.foo` to boolean because number [1] is incompatible with boolean [2].
-[incompatible-cast]
+Cannot cast `React.createElement(...)` to `React.Element` because number [1] is incompatible with boolean [2] in
+property `foo` of type argument `P` [3]. [incompatible-cast]
 
-   create_element.js:38:2
-   38| (React.createElement(B, {foo: 1, bar: 2}).props.foo: boolean); // Error: `foo`
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   create_element.js:35:2
+    35| (React.createElement(B, {foo: 1, bar: 2}): React.Element<typeof B, {foo: boolean, bar: number}>); // error
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    create_element.js:14:25
-   14| function B(props: {foo: number, bar: number}) { return null }
-                               ^^^^^^ [1]
-   create_element.js:38:54
-   38| (React.createElement(B, {foo: 1, bar: 2}).props.foo: boolean); // Error: `foo`
-                                                            ^^^^^^^ [2]
+    14| function B(props: {foo: number, bar: number}) { return null }
+                                ^^^^^^ [1]
+   create_element.js:35:74
+    35| (React.createElement(B, {foo: 1, bar: 2}): React.Element<typeof B, {foo: boolean, bar: number}>); // error
+                                                                                 ^^^^^^^ [2]
+   <BUILTINS>/react.js:155:69
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                                                                            ^ [3]
 
 
-Error ------------------------------------------------------------------------------------------ create_element.js:40:42
-
-Cannot get `React.createElement(...).nope` because property `nope` is missing in `React.Element` [1]. [prop-missing]
-
-   create_element.js:40:42
-   40| React.createElement(A, {foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
-                                                ^^^^
-
-References:
-   create_element.js:40:1
-   40| React.createElement(A, {foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------ create_element.js:41:42
+Error ------------------------------------------------------------------------------------------ create_element.js:36:42
 
 Cannot get `React.createElement(...).nope` because property `nope` is missing in `React.Element` [1]. [prop-missing]
 
-   create_element.js:41:42
-   41| React.createElement(B, {foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
+   create_element.js:36:42
+   36| React.createElement(A, {foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
                                                 ^^^^
 
 References:
-   create_element.js:41:1
-   41| React.createElement(B, {foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
+   create_element.js:36:1
+   36| React.createElement(A, {foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- create_element.js:42:7
+Error ------------------------------------------------------------------------------------------ create_element.js:37:42
+
+Cannot get `React.createElement(...).nope` because property `nope` is missing in `React.Element` [1]. [prop-missing]
+
+   create_element.js:37:42
+   37| React.createElement(B, {foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
+                                                ^^^^
+
+References:
+   create_element.js:37:1
+   37| React.createElement(B, {foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- create_element.js:38:7
 
 Cannot call `React.createElement` because property `bar` is missing in props [1] but exists in object type [2].
 [prop-missing]
 
-   create_element.js:42:7
-   42| React.createElement(A); // Error: Missing `foo` and `bar`.
+   create_element.js:38:7
+   38| React.createElement(A); // Error: Missing `foo` and `bar`.
              ^^^^^^^^^^^^^
 
 References:
-   create_element.js:42:1
-   42| React.createElement(A); // Error: Missing `foo` and `bar`.
+   create_element.js:38:1
+   38| React.createElement(A); // Error: Missing `foo` and `bar`.
        ^^^^^^^^^^^^^^^^^^^^^^ [1]
    create_element.js:13:33
    13| class A extends React.Component<{foo: number, bar: number}> {}
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- create_element.js:42:7
+Error ------------------------------------------------------------------------------------------- create_element.js:38:7
 
 Cannot call `React.createElement` because property `foo` is missing in props [1] but exists in object type [2].
 [prop-missing]
 
-   create_element.js:42:7
-   42| React.createElement(A); // Error: Missing `foo` and `bar`.
+   create_element.js:38:7
+   38| React.createElement(A); // Error: Missing `foo` and `bar`.
              ^^^^^^^^^^^^^
 
 References:
-   create_element.js:42:1
-   42| React.createElement(A); // Error: Missing `foo` and `bar`.
+   create_element.js:38:1
+   38| React.createElement(A); // Error: Missing `foo` and `bar`.
        ^^^^^^^^^^^^^^^^^^^^^^ [1]
    create_element.js:13:33
    13| class A extends React.Component<{foo: number, bar: number}> {}
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- create_element.js:43:7
+Error ------------------------------------------------------------------------------------------- create_element.js:39:7
 
 Cannot call `React.createElement` because property `bar` is missing in props [1] but exists in object type [2].
 [prop-missing]
 
-   create_element.js:43:7
-   43| React.createElement(B); // Error: Missing `foo` and `bar`.
+   create_element.js:39:7
+   39| React.createElement(B); // Error: Missing `foo` and `bar`.
              ^^^^^^^^^^^^^
 
 References:
-   create_element.js:43:1
-   43| React.createElement(B); // Error: Missing `foo` and `bar`.
+   create_element.js:39:1
+   39| React.createElement(B); // Error: Missing `foo` and `bar`.
        ^^^^^^^^^^^^^^^^^^^^^^ [1]
    create_element.js:14:19
    14| function B(props: {foo: number, bar: number}) { return null }
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- create_element.js:43:7
+Error ------------------------------------------------------------------------------------------- create_element.js:39:7
 
 Cannot call `React.createElement` because property `foo` is missing in props [1] but exists in object type [2].
 [prop-missing]
 
-   create_element.js:43:7
-   43| React.createElement(B); // Error: Missing `foo` and `bar`.
+   create_element.js:39:7
+   39| React.createElement(B); // Error: Missing `foo` and `bar`.
              ^^^^^^^^^^^^^
 
 References:
-   create_element.js:43:1
-   43| React.createElement(B); // Error: Missing `foo` and `bar`.
+   create_element.js:39:1
+   39| React.createElement(B); // Error: Missing `foo` and `bar`.
        ^^^^^^^^^^^^^^^^^^^^^^ [1]
    create_element.js:14:19
    14| function B(props: {foo: number, bar: number}) { return null }
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- create_element.js:51:8
+
+Cannot call `React.createElement` because string [1] is incompatible with number [2] in property `bar`.
+[incompatible-call]
+
+   create_element.js:51:8
+   51|   bar: 'Hello, world!', // Error: `bar` is a string.
+              ^^^^^^^^^^^^^^^ [1]
+
+References:
+   create_element.js:41:52
+   41| class C extends React.Component<{foo: number, bar: number}> {
+                                                          ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- create_element.js:55:8
@@ -978,86 +976,143 @@ Cannot call `React.createElement` because string [1] is incompatible with number
               ^^^^^^^^^^^^^^^ [1]
 
 References:
-   create_element.js:45:52
-   45| class C extends React.Component<{foo: number, bar: number}> {
-                                                          ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- create_element.js:59:8
-
-Cannot call `React.createElement` because string [1] is incompatible with number [2] in property `bar`.
-[incompatible-call]
-
-   create_element.js:59:8
-   59|   bar: 'Hello, world!', // Error: `bar` is a string.
-              ^^^^^^^^^^^^^^^ [1]
-
-References:
-   create_element.js:48:38
-   48| function D(props: {foo: number, bar: number}) { return null }
+   create_element.js:44:38
+   44| function D(props: {foo: number, bar: number}) { return null }
                                             ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ create_element.js:69:24
+Error ------------------------------------------------------------------------------------------ create_element.js:65:24
 
 Cannot call `React.createElement` because property `children` is missing in props [1] but exists in object type [2].
 [prop-missing]
 
-   create_element.js:69:24
-   69| React.createElement(E, {}); // Error
+   create_element.js:65:24
+   65| React.createElement(E, {}); // Error
                               ^^ [1]
 
 References:
-   create_element.js:68:33
-   68| class E extends React.Component<{children: number}> {}
+   create_element.js:64:33
+   64| class E extends React.Component<{children: number}> {}
                                        ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ create_element.js:70:24
+Error ------------------------------------------------------------------------------------------ create_element.js:66:24
 
 Cannot call `React.createElement` because property `children` is missing in props [1] but exists in object type [2].
 [prop-missing]
 
-   create_element.js:70:24
-   70| React.createElement(E, undefined); // Error
+   create_element.js:66:24
+   66| React.createElement(E, undefined); // Error
                               ^^^^^^^^^ [1]
 
 References:
-   create_element.js:68:33
-   68| class E extends React.Component<{children: number}> {}
+   create_element.js:64:33
+   64| class E extends React.Component<{children: number}> {}
+                                       ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ create_element.js:67:24
+
+Cannot call `React.createElement` because property `children` is missing in props [1] but exists in object type [2].
+[prop-missing]
+
+   create_element.js:67:24
+   67| React.createElement(E, null); // Error
+                              ^^^^ [1]
+
+References:
+   create_element.js:64:33
+   64| class E extends React.Component<{children: number}> {}
                                        ^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ create_element.js:71:24
 
-Cannot call `React.createElement` because property `children` is missing in props [1] but exists in object type [2].
-[prop-missing]
+Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
+[incompatible-call]
 
    create_element.js:71:24
-   71| React.createElement(E, null); // Error
-                              ^^^^ [1]
+   71| React.createElement(E, {}, 1, 2); // Error
+                              ^^
 
 References:
-   create_element.js:68:33
-   68| class E extends React.Component<{children: number}> {}
-                                       ^^^^^^^^^^^^^^^^^^ [2]
+   create_element.js:71:1
+   71| React.createElement(E, {}, 1, 2); // Error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   create_element.js:64:44
+   64| class E extends React.Component<{children: number}> {}
+                                                  ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ create_element.js:75:24
+Error ------------------------------------------------------------------------------------------ create_element.js:72:24
 
 Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
 [incompatible-call]
 
-   create_element.js:75:24
-   75| React.createElement(E, {}, 1, 2); // Error
+   create_element.js:72:24
+   72| React.createElement(E, undefined, 1, 2); // Error
+                              ^^^^^^^^^
+
+References:
+   create_element.js:72:1
+   72| React.createElement(E, undefined, 1, 2); // Error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   create_element.js:64:44
+   64| class E extends React.Component<{children: number}> {}
+                                                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ create_element.js:73:24
+
+Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
+[incompatible-call]
+
+   create_element.js:73:24
+   73| React.createElement(E, null, 1, 2); // Error
+                              ^^^^
+
+References:
+   create_element.js:73:1
+   73| React.createElement(E, null, 1, 2); // Error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   create_element.js:64:44
+   64| class E extends React.Component<{children: number}> {}
+                                                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ create_element.js:74:24
+
+Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
+[incompatible-call]
+
+   create_element.js:74:24
+   74| React.createElement(E, {}, 1, 2, 3); // Error
                               ^^
 
 References:
-   create_element.js:75:1
-   75| React.createElement(E, {}, 1, 2); // Error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   create_element.js:68:44
-   68| class E extends React.Component<{children: number}> {}
+   create_element.js:74:1
+   74| React.createElement(E, {}, 1, 2, 3); // Error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   create_element.js:64:44
+   64| class E extends React.Component<{children: number}> {}
+                                                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ create_element.js:75:24
+
+Cannot call `React.createElement` because array literal [1] is incompatible with number [2] in property `children`.
+[incompatible-call]
+
+   create_element.js:75:24
+   75| React.createElement(E, {}, [1, 2]); // Error
+                              ^^
+
+References:
+   create_element.js:75:28
+   75| React.createElement(E, {}, [1, 2]); // Error
+                                  ^^^^^^ [1]
+   create_element.js:64:44
+   64| class E extends React.Component<{children: number}> {}
                                                   ^^^^^^ [2]
 
 
@@ -1067,833 +1122,812 @@ Cannot call `React.createElement` because children array [1] is incompatible wit
 [incompatible-call]
 
    create_element.js:76:24
-   76| React.createElement(E, undefined, 1, 2); // Error
-                              ^^^^^^^^^
+   76| React.createElement(E, {}, [1, 2], [3, 4]); // Error
+                              ^^
 
 References:
    create_element.js:76:1
-   76| React.createElement(E, undefined, 1, 2); // Error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   create_element.js:68:44
-   68| class E extends React.Component<{children: number}> {}
+   76| React.createElement(E, {}, [1, 2], [3, 4]); // Error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   create_element.js:64:44
+   64| class E extends React.Component<{children: number}> {}
                                                   ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ create_element.js:77:24
 
-Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
-[incompatible-call]
+Cannot call `React.createElement` because property `children` is missing in props [1] but exists in object type [2].
+[prop-missing]
 
    create_element.js:77:24
-   77| React.createElement(E, null, 1, 2); // Error
-                              ^^^^
+   77| React.createElement(E, {}, ...[]); // Error
+                              ^^ [1]
 
 References:
-   create_element.js:77:1
-   77| React.createElement(E, null, 1, 2); // Error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   create_element.js:68:44
-   68| class E extends React.Component<{children: number}> {}
-                                                  ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ create_element.js:78:24
-
-Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
-[incompatible-call]
-
-   create_element.js:78:24
-   78| React.createElement(E, {}, 1, 2, 3); // Error
-                              ^^
-
-References:
-   create_element.js:78:1
-   78| React.createElement(E, {}, 1, 2, 3); // Error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   create_element.js:68:44
-   68| class E extends React.Component<{children: number}> {}
-                                                  ^^^^^^ [2]
+   create_element.js:64:33
+   64| class E extends React.Component<{children: number}> {}
+                                       ^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ create_element.js:79:24
 
-Cannot call `React.createElement` because array literal [1] is incompatible with number [2] in property `children`.
+Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
 [incompatible-call]
 
    create_element.js:79:24
-   79| React.createElement(E, {}, [1, 2]); // Error
+   79| React.createElement(E, {}, ...[1, 2]); // Error
                               ^^
 
 References:
-   create_element.js:79:28
-   79| React.createElement(E, {}, [1, 2]); // Error
-                                  ^^^^^^ [1]
-   create_element.js:68:44
-   68| class E extends React.Component<{children: number}> {}
+   create_element.js:79:1
+   79| React.createElement(E, {}, ...[1, 2]); // Error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   create_element.js:64:44
+   64| class E extends React.Component<{children: number}> {}
                                                   ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ create_element.js:80:24
 
-Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
-[incompatible-call]
+Cannot call `React.createElement` because children array or array [1] is incompatible with number [2] in property
+`children`. [incompatible-call]
 
    create_element.js:80:24
-   80| React.createElement(E, {}, [1, 2], [3, 4]); // Error
+   80| React.createElement(E, {}, ...(any: Array<number>)); // Error
                               ^^
 
 References:
    create_element.js:80:1
-   80| React.createElement(E, {}, [1, 2], [3, 4]); // Error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   create_element.js:68:44
-   68| class E extends React.Component<{children: number}> {}
-                                                  ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ create_element.js:81:24
-
-Cannot call `React.createElement` because property `children` is missing in props [1] but exists in object type [2].
-[prop-missing]
-
-   create_element.js:81:24
-   81| React.createElement(E, {}, ...[]); // Error
-                              ^^ [1]
-
-References:
-   create_element.js:68:33
-   68| class E extends React.Component<{children: number}> {}
-                                       ^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ create_element.js:83:24
-
-Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
-[incompatible-call]
-
-   create_element.js:83:24
-   83| React.createElement(E, {}, ...[1, 2]); // Error
-                              ^^
-
-References:
-   create_element.js:83:1
-   83| React.createElement(E, {}, ...[1, 2]); // Error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   create_element.js:68:44
-   68| class E extends React.Component<{children: number}> {}
-                                                  ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ create_element.js:84:24
-
-Cannot call `React.createElement` because children array or array [1] is incompatible with number [2] in property
-`children`. [incompatible-call]
-
-   create_element.js:84:24
-   84| React.createElement(E, {}, ...(any: Array<number>)); // Error
-                              ^^
-
-References:
-   create_element.js:84:1
-   84| React.createElement(E, {}, ...(any: Array<number>)); // Error
+   80| React.createElement(E, {}, ...(any: Array<number>)); // Error
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   create_element.js:68:44
-   68| class E extends React.Component<{children: number}> {}
+   create_element.js:64:44
+   64| class E extends React.Component<{children: number}> {}
                                                   ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ create_element.js:84:24
+Error ------------------------------------------------------------------------------------------ create_element.js:80:24
 
 Cannot call `React.createElement` because undefined [1] is incompatible with number [2] in property `children`.
 [incompatible-call]
 
-   create_element.js:84:24
-   84| React.createElement(E, {}, ...(any: Array<number>)); // Error
+   create_element.js:80:24
+   80| React.createElement(E, {}, ...(any: Array<number>)); // Error
                               ^^
 
 References:
-   create_element.js:84:1
-   84| React.createElement(E, {}, ...(any: Array<number>)); // Error
+   create_element.js:80:1
+   80| React.createElement(E, {}, ...(any: Array<number>)); // Error
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   create_element.js:68:44
-   68| class E extends React.Component<{children: number}> {}
+   create_element.js:64:44
+   64| class E extends React.Component<{children: number}> {}
+                                                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ create_element.js:82:24
+
+Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
+[incompatible-call]
+
+   create_element.js:82:24
+   82| React.createElement(E, {}, 1, ...[2]); // Error
+                              ^^
+
+References:
+   create_element.js:82:1
+   82| React.createElement(E, {}, 1, ...[2]); // Error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   create_element.js:64:44
+   64| class E extends React.Component<{children: number}> {}
+                                                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ create_element.js:83:24
+
+Cannot call `React.createElement` because children array or number [1] is incompatible with number [2] in property
+`children`. [incompatible-call]
+
+   create_element.js:83:24
+   83| React.createElement(E, {}, 1, ...(any: Array<number>)); // Error
+                              ^^
+
+References:
+   create_element.js:83:1
+   83| React.createElement(E, {}, 1, ...(any: Array<number>)); // Error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   create_element.js:64:44
+   64| class E extends React.Component<{children: number}> {}
                                                   ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ create_element.js:86:24
 
-Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
-[incompatible-call]
+Cannot call `React.createElement` because property `children` is missing in props [1] but exists in object type [2].
+[prop-missing]
 
    create_element.js:86:24
-   86| React.createElement(E, {}, 1, ...[2]); // Error
-                              ^^
+   86| React.createElement(F, {}); // Error
+                              ^^ [1]
 
 References:
-   create_element.js:86:1
-   86| React.createElement(E, {}, 1, ...[2]); // Error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   create_element.js:68:44
-   68| class E extends React.Component<{children: number}> {}
-                                                  ^^^^^^ [2]
+   create_element.js:85:33
+   85| class F extends React.Component<{children: Array<number>}> {}
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ create_element.js:87:24
 
-Cannot call `React.createElement` because children array or number [1] is incompatible with number [2] in property
-`children`. [incompatible-call]
+Cannot call `React.createElement` because property `children` is missing in props [1] but exists in object type [2].
+[prop-missing]
 
    create_element.js:87:24
-   87| React.createElement(E, {}, 1, ...(any: Array<number>)); // Error
+   87| React.createElement(F, undefined); // Error
+                              ^^^^^^^^^ [1]
+
+References:
+   create_element.js:85:33
+   85| class F extends React.Component<{children: Array<number>}> {}
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ create_element.js:88:24
+
+Cannot call `React.createElement` because property `children` is missing in props [1] but exists in object type [2].
+[prop-missing]
+
+   create_element.js:88:24
+   88| React.createElement(F, null); // Error
+                              ^^^^ [1]
+
+References:
+   create_element.js:85:33
+   85| class F extends React.Component<{children: Array<number>}> {}
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ create_element.js:89:24
+
+Cannot call `React.createElement` because number [1] is incompatible with array type [2] in property `children`.
+[incompatible-call]
+
+   create_element.js:89:24
+   89| React.createElement(F, {}, 1); // Error
                               ^^
 
 References:
-   create_element.js:87:1
-   87| React.createElement(E, {}, 1, ...(any: Array<number>)); // Error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   create_element.js:68:44
-   68| class E extends React.Component<{children: number}> {}
-                                                  ^^^^^^ [2]
+   create_element.js:89:28
+   89| React.createElement(F, {}, 1); // Error
+                                  ^ [1]
+   create_element.js:85:44
+   85| class F extends React.Component<{children: Array<number>}> {}
+                                                  ^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ create_element.js:90:24
 
-Cannot call `React.createElement` because property `children` is missing in props [1] but exists in object type [2].
-[prop-missing]
+Cannot call `React.createElement` because number [1] is incompatible with array type [2] in property `children`.
+[incompatible-call]
 
    create_element.js:90:24
-   90| React.createElement(F, {}); // Error
-                              ^^ [1]
+   90| React.createElement(F, undefined, 1); // Error
+                              ^^^^^^^^^
 
 References:
-   create_element.js:89:33
-   89| class F extends React.Component<{children: Array<number>}> {}
-                                       ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   create_element.js:90:35
+   90| React.createElement(F, undefined, 1); // Error
+                                         ^ [1]
+   create_element.js:85:44
+   85| class F extends React.Component<{children: Array<number>}> {}
+                                                  ^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ create_element.js:91:24
 
-Cannot call `React.createElement` because property `children` is missing in props [1] but exists in object type [2].
-[prop-missing]
+Cannot call `React.createElement` because number [1] is incompatible with array type [2] in property `children`.
+[incompatible-call]
 
    create_element.js:91:24
-   91| React.createElement(F, undefined); // Error
-                              ^^^^^^^^^ [1]
-
-References:
-   create_element.js:89:33
-   89| class F extends React.Component<{children: Array<number>}> {}
-                                       ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ create_element.js:92:24
-
-Cannot call `React.createElement` because property `children` is missing in props [1] but exists in object type [2].
-[prop-missing]
-
-   create_element.js:92:24
-   92| React.createElement(F, null); // Error
-                              ^^^^ [1]
-
-References:
-   create_element.js:89:33
-   89| class F extends React.Component<{children: Array<number>}> {}
-                                       ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ create_element.js:93:24
-
-Cannot call `React.createElement` because number [1] is incompatible with array type [2] in property `children`.
-[incompatible-call]
-
-   create_element.js:93:24
-   93| React.createElement(F, {}, 1); // Error
-                              ^^
-
-References:
-   create_element.js:93:28
-   93| React.createElement(F, {}, 1); // Error
-                                  ^ [1]
-   create_element.js:89:44
-   89| class F extends React.Component<{children: Array<number>}> {}
-                                                  ^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ create_element.js:94:24
-
-Cannot call `React.createElement` because number [1] is incompatible with array type [2] in property `children`.
-[incompatible-call]
-
-   create_element.js:94:24
-   94| React.createElement(F, undefined, 1); // Error
-                              ^^^^^^^^^
-
-References:
-   create_element.js:94:35
-   94| React.createElement(F, undefined, 1); // Error
-                                         ^ [1]
-   create_element.js:89:44
-   89| class F extends React.Component<{children: Array<number>}> {}
-                                                  ^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ create_element.js:95:24
-
-Cannot call `React.createElement` because number [1] is incompatible with array type [2] in property `children`.
-[incompatible-call]
-
-   create_element.js:95:24
-   95| React.createElement(F, null, 1); // Error
+   91| React.createElement(F, null, 1); // Error
                               ^^^^
 
 References:
-   create_element.js:95:30
-   95| React.createElement(F, null, 1); // Error
+   create_element.js:91:30
+   91| React.createElement(F, null, 1); // Error
                                     ^ [1]
-   create_element.js:89:44
-   89| class F extends React.Component<{children: Array<number>}> {}
+   create_element.js:85:44
+   85| class F extends React.Component<{children: Array<number>}> {}
+                                                  ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ create_element.js:97:24
+
+Cannot call `React.createElement` because array literal [1] is incompatible with number [2] in array element of property
+`children`. [incompatible-call]
+
+   create_element.js:97:24
+   97| React.createElement(F, {}, [1, 2], [3, 4]); // Error
+                              ^^
+
+References:
+   create_element.js:97:28
+   97| React.createElement(F, {}, [1, 2], [3, 4]); // Error
+                                  ^^^^^^ [1]
+   create_element.js:85:50
+   85| class F extends React.Component<{children: Array<number>}> {}
+                                                        ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ create_element.js:97:24
+
+Cannot call `React.createElement` because array literal [1] is incompatible with number [2] in array element of property
+`children`. [incompatible-call]
+
+   create_element.js:97:24
+   97| React.createElement(F, {}, [1, 2], [3, 4]); // Error
+                              ^^
+
+References:
+   create_element.js:97:36
+   97| React.createElement(F, {}, [1, 2], [3, 4]); // Error
+                                          ^^^^^^ [1]
+   create_element.js:85:50
+   85| class F extends React.Component<{children: Array<number>}> {}
+                                                        ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ create_element.js:98:24
+
+Cannot call `React.createElement` because property `children` is missing in props [1] but exists in object type [2].
+[prop-missing]
+
+   create_element.js:98:24
+   98| React.createElement(F, {}, ...[]); // Error
+                              ^^ [1]
+
+References:
+   create_element.js:85:33
+   85| class F extends React.Component<{children: Array<number>}> {}
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ create_element.js:99:24
+
+Cannot call `React.createElement` because number [1] is incompatible with array type [2] in property `children`.
+[incompatible-call]
+
+   create_element.js:99:24
+   99| React.createElement(F, {}, ...[1]); // Error
+                              ^^
+
+References:
+   create_element.js:99:32
+   99| React.createElement(F, {}, ...[1]); // Error
+                                      ^ [1]
+   create_element.js:85:44
+   85| class F extends React.Component<{children: Array<number>}> {}
                                                   ^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- create_element.js:101:24
 
-Cannot call `React.createElement` because array literal [1] is incompatible with number [2] in array element of property
-`children`. [incompatible-call]
+Cannot call `React.createElement` because number [1] is incompatible with array type [2] in property `children`.
+[incompatible-call]
 
    create_element.js:101:24
-   101| React.createElement(F, {}, [1, 2], [3, 4]); // Error
+   101| React.createElement(F, {}, ...(any: Array<number>)); // Error
                                ^^
 
 References:
-   create_element.js:101:28
-   101| React.createElement(F, {}, [1, 2], [3, 4]); // Error
-                                   ^^^^^^ [1]
-   create_element.js:89:50
-    89| class F extends React.Component<{children: Array<number>}> {}
-                                                         ^^^^^^ [2]
+   create_element.js:85:50
+    85| class F extends React.Component<{children: Array<number>}> {}
+                                                         ^^^^^^ [1]
+   create_element.js:85:44
+    85| class F extends React.Component<{children: Array<number>}> {}
+                                                   ^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- create_element.js:101:24
-
-Cannot call `React.createElement` because array literal [1] is incompatible with number [2] in array element of property
-`children`. [incompatible-call]
-
-   create_element.js:101:24
-   101| React.createElement(F, {}, [1, 2], [3, 4]); // Error
-                               ^^
-
-References:
-   create_element.js:101:36
-   101| React.createElement(F, {}, [1, 2], [3, 4]); // Error
-                                           ^^^^^^ [1]
-   create_element.js:89:50
-    89| class F extends React.Component<{children: Array<number>}> {}
-                                                         ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------- create_element.js:102:24
-
-Cannot call `React.createElement` because property `children` is missing in props [1] but exists in object type [2].
-[prop-missing]
-
-   create_element.js:102:24
-   102| React.createElement(F, {}, ...[]); // Error
-                               ^^ [1]
-
-References:
-   create_element.js:89:33
-    89| class F extends React.Component<{children: Array<number>}> {}
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------- create_element.js:103:24
-
-Cannot call `React.createElement` because number [1] is incompatible with array type [2] in property `children`.
-[incompatible-call]
-
-   create_element.js:103:24
-   103| React.createElement(F, {}, ...[1]); // Error
-                               ^^
-
-References:
-   create_element.js:103:32
-   103| React.createElement(F, {}, ...[1]); // Error
-                                       ^ [1]
-   create_element.js:89:44
-    89| class F extends React.Component<{children: Array<number>}> {}
-                                                   ^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------- create_element.js:105:24
-
-Cannot call `React.createElement` because number [1] is incompatible with array type [2] in property `children`.
-[incompatible-call]
-
-   create_element.js:105:24
-   105| React.createElement(F, {}, ...(any: Array<number>)); // Error
-                               ^^
-
-References:
-   create_element.js:89:50
-    89| class F extends React.Component<{children: Array<number>}> {}
-                                                         ^^^^^^ [1]
-   create_element.js:89:44
-    89| class F extends React.Component<{children: Array<number>}> {}
-                                                   ^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------- create_element.js:105:24
 
 Cannot call `React.createElement` because undefined [1] is incompatible with array type [2] in property `children`.
 [incompatible-call]
 
-   create_element.js:105:24
-   105| React.createElement(F, {}, ...(any: Array<number>)); // Error
+   create_element.js:101:24
+   101| React.createElement(F, {}, ...(any: Array<number>)); // Error
                                ^^
 
 References:
-   create_element.js:105:1
-   105| React.createElement(F, {}, ...(any: Array<number>)); // Error
+   create_element.js:101:1
+   101| React.createElement(F, {}, ...(any: Array<number>)); // Error
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   create_element.js:89:44
-    89| class F extends React.Component<{children: Array<number>}> {}
+   create_element.js:85:44
+    85| class F extends React.Component<{children: Array<number>}> {}
                                                    ^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- create_element.js:105:24
+Error ----------------------------------------------------------------------------------------- create_element.js:101:24
 
 Cannot call `React.createElement` because number [1] is incompatible with array type [2] in property `children`.
 [incompatible-call]
 
-   create_element.js:105:24
-   105| React.createElement(F, {}, ...(any: Array<number>)); // Error
+   create_element.js:101:24
+   101| React.createElement(F, {}, ...(any: Array<number>)); // Error
                                ^^
 
 References:
-   create_element.js:105:43
-   105| React.createElement(F, {}, ...(any: Array<number>)); // Error
+   create_element.js:101:43
+   101| React.createElement(F, {}, ...(any: Array<number>)); // Error
                                                   ^^^^^^ [1]
-   create_element.js:89:44
-    89| class F extends React.Component<{children: Array<number>}> {}
+   create_element.js:85:44
+    85| class F extends React.Component<{children: Array<number>}> {}
                                                    ^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- create_element.js:106:24
+Error ----------------------------------------------------------------------------------------- create_element.js:102:24
 
 Cannot call `React.createElement` because number [1] is incompatible with array type [2] in property `children`.
 [incompatible-call]
 
-   create_element.js:106:24
-   106| React.createElement(F, {}, 1, ...[]); // Error
+   create_element.js:102:24
+   102| React.createElement(F, {}, 1, ...[]); // Error
                                ^^
 
 References:
-   create_element.js:106:28
-   106| React.createElement(F, {}, 1, ...[]); // Error
+   create_element.js:102:28
+   102| React.createElement(F, {}, 1, ...[]); // Error
                                    ^ [1]
-   create_element.js:89:44
-    89| class F extends React.Component<{children: Array<number>}> {}
+   create_element.js:85:44
+    85| class F extends React.Component<{children: Array<number>}> {}
                                                    ^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- create_element.js:108:24
+Error ----------------------------------------------------------------------------------------- create_element.js:104:24
 
 Cannot call `React.createElement` because number [1] is incompatible with array type [2] in property `children`.
 [incompatible-call]
 
-   create_element.js:108:24
-   108| React.createElement(F, {}, 1, ...(any: Array<number>)); // Error
+   create_element.js:104:24
+   104| React.createElement(F, {}, 1, ...(any: Array<number>)); // Error
                                ^^
 
 References:
-   create_element.js:108:28
-   108| React.createElement(F, {}, 1, ...(any: Array<number>)); // Error
+   create_element.js:104:28
+   104| React.createElement(F, {}, 1, ...(any: Array<number>)); // Error
                                    ^ [1]
-   create_element.js:89:44
-    89| class F extends React.Component<{children: Array<number>}> {}
+   create_element.js:85:44
+    85| class F extends React.Component<{children: Array<number>}> {}
                                                    ^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- create_element.js:111:24
+Error ----------------------------------------------------------------------------------------- create_element.js:107:24
 
 Cannot call `React.createElement` because property `children` is missing in props [1] but exists in object type [2].
 [prop-missing]
 
-   create_element.js:111:24
-   111| React.createElement(G, {}); // Error
+   create_element.js:107:24
+   107| React.createElement(G, {}); // Error
                                ^^ [1]
 
 References:
-   create_element.js:110:33
-   110| class G extends React.Component<{children: number | Array<number>}> {}
+   create_element.js:106:33
+   106| class G extends React.Component<{children: number | Array<number>}> {}
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- create_element.js:112:24
+
+Cannot call `React.createElement` because in property `children`: [incompatible-call]
+ - Either array literal [1] is incompatible with number [2] in array element.
+ - Or children array [3] is incompatible with number [4].
+
+   create_element.js:112:24
+   112| React.createElement(G, {}, [1, 2], [3, 4]); // Error
+                               ^^
+
+References:
+   create_element.js:112:28
+   112| React.createElement(G, {}, [1, 2], [3, 4]); // Error
+                                   ^^^^^^ [1]
+   create_element.js:106:59
+   106| class G extends React.Component<{children: number | Array<number>}> {}
+                                                                  ^^^^^^ [2]
+   create_element.js:112:1
+   112| React.createElement(G, {}, [1, 2], [3, 4]); // Error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   create_element.js:106:44
+   106| class G extends React.Component<{children: number | Array<number>}> {}
+                                                   ^^^^^^ [4]
+
+
+Error ----------------------------------------------------------------------------------------- create_element.js:113:24
+
+Cannot call `React.createElement` because property `children` is missing in props [1] but exists in object type [2].
+[prop-missing]
+
+   create_element.js:113:24
+   113| React.createElement(G, {}, ...[]); // Error
+                               ^^ [1]
+
+References:
+   create_element.js:106:33
+   106| class G extends React.Component<{children: number | Array<number>}> {}
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- create_element.js:116:24
 
 Cannot call `React.createElement` because in property `children`: [incompatible-call]
- - Either array literal [1] is incompatible with number [2] in array element.
- - Or children array [3] is incompatible with number [4].
-
-   create_element.js:116:24
-   116| React.createElement(G, {}, [1, 2], [3, 4]); // Error
-                               ^^
-
-References:
-   create_element.js:116:28
-   116| React.createElement(G, {}, [1, 2], [3, 4]); // Error
-                                   ^^^^^^ [1]
-   create_element.js:110:59
-   110| class G extends React.Component<{children: number | Array<number>}> {}
-                                                                  ^^^^^^ [2]
-   create_element.js:116:1
-   116| React.createElement(G, {}, [1, 2], [3, 4]); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   create_element.js:110:44
-   110| class G extends React.Component<{children: number | Array<number>}> {}
-                                                   ^^^^^^ [4]
-
-
-Error ----------------------------------------------------------------------------------------- create_element.js:117:24
-
-Cannot call `React.createElement` because property `children` is missing in props [1] but exists in object type [2].
-[prop-missing]
-
-   create_element.js:117:24
-   117| React.createElement(G, {}, ...[]); // Error
-                               ^^ [1]
-
-References:
-   create_element.js:110:33
-   110| class G extends React.Component<{children: number | Array<number>}> {}
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------- create_element.js:120:24
-
-Cannot call `React.createElement` because in property `children`: [incompatible-call]
  - Either undefined [1] is incompatible with number [2].
  - Or undefined [1] is incompatible with array type [3].
 
-   create_element.js:120:24
-   120| React.createElement(G, {}, ...(any: Array<number>)); // Error
+   create_element.js:116:24
+   116| React.createElement(G, {}, ...(any: Array<number>)); // Error
                                ^^
 
 References:
-   create_element.js:120:1
-   120| React.createElement(G, {}, ...(any: Array<number>)); // Error
+   create_element.js:116:1
+   116| React.createElement(G, {}, ...(any: Array<number>)); // Error
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   create_element.js:110:44
-   110| class G extends React.Component<{children: number | Array<number>}> {}
+   create_element.js:106:44
+   106| class G extends React.Component<{children: number | Array<number>}> {}
                                                    ^^^^^^ [2]
-   create_element.js:110:53
-   110| class G extends React.Component<{children: number | Array<number>}> {}
+   create_element.js:106:53
+   106| class G extends React.Component<{children: number | Array<number>}> {}
                                                             ^^^^^^^^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------- create_element.js:131:25
+Error ----------------------------------------------------------------------------------------- create_element.js:127:25
 
 Cannot call `React.createElement` because in property `children`: [incompatible-call]
  - Either array literal [1] is incompatible with number [2] in array element.
  - Or children array [3] is incompatible with number [4].
 
-   create_element.js:131:25
-   131| React.createElement(G2, {}, [1, 2], [3, 4]); // Error
+   create_element.js:127:25
+   127| React.createElement(G2, {}, [1, 2], [3, 4]); // Error
                                 ^^
 
 References:
-   create_element.js:131:29
-   131| React.createElement(G2, {}, [1, 2], [3, 4]); // Error
+   create_element.js:127:29
+   127| React.createElement(G2, {}, [1, 2], [3, 4]); // Error
                                     ^^^^^^ [1]
-   create_element.js:125:61
-   125| class G2 extends React.Component<{children?: number | Array<number>}> {}
+   create_element.js:121:61
+   121| class G2 extends React.Component<{children?: number | Array<number>}> {}
                                                                     ^^^^^^ [2]
-   create_element.js:131:1
-   131| React.createElement(G2, {}, [1, 2], [3, 4]); // Error
+   create_element.js:127:1
+   127| React.createElement(G2, {}, [1, 2], [3, 4]); // Error
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   create_element.js:125:46
-   125| class G2 extends React.Component<{children?: number | Array<number>}> {}
+   create_element.js:121:46
+   121| class G2 extends React.Component<{children?: number | Array<number>}> {}
                                                      ^^^^^^ [4]
 
 
-Error ----------------------------------------------------------------------------------------- create_element.js:142:24
+Error ----------------------------------------------------------------------------------------- create_element.js:138:24
 
 Cannot call `React.createElement` because property `children` is missing in props [1] but exists in object type [2].
 [prop-missing]
 
-   create_element.js:142:24
-   142| React.createElement(H, {}); // Error
+   create_element.js:138:24
+   138| React.createElement(H, {}); // Error
                                ^^ [1]
 
 References:
-   create_element.js:141:33
-   141| class H extends React.Component<{children: NumberArrayRecursive}> {}
+   create_element.js:137:33
+   137| class H extends React.Component<{children: NumberArrayRecursive}> {}
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- create_element.js:148:24
+Error ----------------------------------------------------------------------------------------- create_element.js:144:24
 
 Cannot call `React.createElement` because property `children` is missing in props [1] but exists in object type [2].
 [prop-missing]
 
-   create_element.js:148:24
-   148| React.createElement(H, {}, ...[]); // Error
+   create_element.js:144:24
+   144| React.createElement(H, {}, ...[]); // Error
                                ^^ [1]
 
 References:
-   create_element.js:141:33
-   141| class H extends React.Component<{children: NumberArrayRecursive}> {}
+   create_element.js:137:33
+   137| class H extends React.Component<{children: NumberArrayRecursive}> {}
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- create_element.js:151:24
+Error ----------------------------------------------------------------------------------------- create_element.js:147:24
 
 Cannot call `React.createElement` because in property `children`: [incompatible-call]
  - Either undefined [1] is incompatible with number [2].
  - Or undefined [1] is incompatible with array type [3].
 
-   create_element.js:151:24
-   151| React.createElement(H, {}, ...(any: Array<number>)); // Error
+   create_element.js:147:24
+   147| React.createElement(H, {}, ...(any: Array<number>)); // Error
                                ^^
 
 References:
-   create_element.js:151:1
-   151| React.createElement(H, {}, ...(any: Array<number>)); // Error
+   create_element.js:147:1
+   147| React.createElement(H, {}, ...(any: Array<number>)); // Error
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   create_element.js:140:29
-   140| type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
+   create_element.js:136:29
+   136| type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
                                     ^^^^^^ [2]
-   create_element.js:140:38
-   140| type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
+   create_element.js:136:38
+   136| type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------- create_element.js:159:24
+Error ----------------------------------------------------------------------------------------- create_element.js:155:24
 
 Cannot call `React.createElement` because null [1] is incompatible with number [2] in property `children`.
 [incompatible-call]
 
-   create_element.js:159:24
-   159| React.createElement(I, {}, null); // Error
+   create_element.js:155:24
+   155| React.createElement(I, {}, null); // Error
                                ^^
 
 References:
-   create_element.js:159:28
-   159| React.createElement(I, {}, null); // Error
+   create_element.js:155:28
+   155| React.createElement(I, {}, null); // Error
                                    ^^^^ [1]
-   create_element.js:156:45
-   156| class I extends React.Component<{children?: number}> {}
+   create_element.js:152:45
+   152| class I extends React.Component<{children?: number}> {}
+                                                    ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- create_element.js:157:24
+
+Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
+[incompatible-call]
+
+   create_element.js:157:24
+   157| React.createElement(I, {}, 1, 2); // Error
+                               ^^
+
+References:
+   create_element.js:157:1
+   157| React.createElement(I, {}, 1, 2); // Error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   create_element.js:152:45
+   152| class I extends React.Component<{children?: number}> {}
+                                                    ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- create_element.js:160:24
+
+Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
+[incompatible-call]
+
+   create_element.js:160:24
+   160| React.createElement(I, {}, ...[1, 2]); // Error
+                               ^^
+
+References:
+   create_element.js:160:1
+   160| React.createElement(I, {}, ...[1, 2]); // Error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   create_element.js:152:45
+   152| class I extends React.Component<{children?: number}> {}
                                                     ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- create_element.js:161:24
 
-Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
-[incompatible-call]
+Cannot call `React.createElement` because children array or array [1] is incompatible with number [2] in property
+`children`. [incompatible-call]
 
    create_element.js:161:24
-   161| React.createElement(I, {}, 1, 2); // Error
+   161| React.createElement(I, {}, ...(any: Array<number>)); // Error
                                ^^
 
 References:
    create_element.js:161:1
-   161| React.createElement(I, {}, 1, 2); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   create_element.js:156:45
-   156| class I extends React.Component<{children?: number}> {}
+   161| React.createElement(I, {}, ...(any: Array<number>)); // Error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   create_element.js:152:45
+   152| class I extends React.Component<{children?: number}> {}
+                                                    ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- create_element.js:163:24
+
+Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
+[incompatible-call]
+
+   create_element.js:163:24
+   163| React.createElement(I, {}, 1, ...[2]); // Error
+                               ^^
+
+References:
+   create_element.js:163:1
+   163| React.createElement(I, {}, 1, ...[2]); // Error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   create_element.js:152:45
+   152| class I extends React.Component<{children?: number}> {}
                                                     ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- create_element.js:164:24
 
-Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
-[incompatible-call]
+Cannot call `React.createElement` because children array or number [1] is incompatible with number [2] in property
+`children`. [incompatible-call]
 
    create_element.js:164:24
-   164| React.createElement(I, {}, ...[1, 2]); // Error
+   164| React.createElement(I, {}, 1, ...(any: Array<number>)); // Error
                                ^^
 
 References:
    create_element.js:164:1
-   164| React.createElement(I, {}, ...[1, 2]); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   create_element.js:156:45
-   156| class I extends React.Component<{children?: number}> {}
-                                                    ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------- create_element.js:165:24
-
-Cannot call `React.createElement` because children array or array [1] is incompatible with number [2] in property
-`children`. [incompatible-call]
-
-   create_element.js:165:24
-   165| React.createElement(I, {}, ...(any: Array<number>)); // Error
-                               ^^
-
-References:
-   create_element.js:165:1
-   165| React.createElement(I, {}, ...(any: Array<number>)); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   create_element.js:156:45
-   156| class I extends React.Component<{children?: number}> {}
+   164| React.createElement(I, {}, 1, ...(any: Array<number>)); // Error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   create_element.js:152:45
+   152| class I extends React.Component<{children?: number}> {}
                                                     ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- create_element.js:167:24
 
-Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
-[incompatible-call]
+Cannot call `React.createElement` because property `children` is missing in props [1] but exists in object type [2].
+[prop-missing]
 
    create_element.js:167:24
-   167| React.createElement(I, {}, 1, ...[2]); // Error
-                               ^^
+   167| React.createElement(J, {}); // Error
+                               ^^ [1]
 
 References:
-   create_element.js:167:1
-   167| React.createElement(I, {}, 1, ...[2]); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   create_element.js:156:45
-   156| class I extends React.Component<{children?: number}> {}
-                                                    ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------- create_element.js:168:24
-
-Cannot call `React.createElement` because children array or number [1] is incompatible with number [2] in property
-`children`. [incompatible-call]
-
-   create_element.js:168:24
-   168| React.createElement(I, {}, 1, ...(any: Array<number>)); // Error
-                               ^^
-
-References:
-   create_element.js:168:1
-   168| React.createElement(I, {}, 1, ...(any: Array<number>)); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   create_element.js:156:45
-   156| class I extends React.Component<{children?: number}> {}
-                                                    ^^^^^^ [2]
+   create_element.js:166:33
+   166| class J extends React.Component<{children: ?number}> {}
+                                        ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- create_element.js:171:24
 
+Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
+[incompatible-call]
+
+   create_element.js:171:24
+   171| React.createElement(J, {}, 1, 2); // Error
+                               ^^
+
+References:
+   create_element.js:171:1
+   171| React.createElement(J, {}, 1, 2); // Error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   create_element.js:166:45
+   166| class J extends React.Component<{children: ?number}> {}
+                                                    ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- create_element.js:172:24
+
 Cannot call `React.createElement` because property `children` is missing in props [1] but exists in object type [2].
 [prop-missing]
 
-   create_element.js:171:24
-   171| React.createElement(J, {}); // Error
+   create_element.js:172:24
+   172| React.createElement(J, {}, ...[]); // Error
                                ^^ [1]
 
 References:
-   create_element.js:170:33
-   170| class J extends React.Component<{children: ?number}> {}
+   create_element.js:166:33
+   166| class J extends React.Component<{children: ?number}> {}
                                         ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- create_element.js:174:24
+
+Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
+[incompatible-call]
+
+   create_element.js:174:24
+   174| React.createElement(J, {}, ...[1, 2]); // Error
+                               ^^
+
+References:
+   create_element.js:174:1
+   174| React.createElement(J, {}, ...[1, 2]); // Error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   create_element.js:166:45
+   166| class J extends React.Component<{children: ?number}> {}
+                                                    ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- create_element.js:175:24
 
-Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
-[incompatible-call]
+Cannot call `React.createElement` because children array or array [1] is incompatible with number [2] in property
+`children`. [incompatible-call]
 
    create_element.js:175:24
-   175| React.createElement(J, {}, 1, 2); // Error
+   175| React.createElement(J, {}, ...(any: Array<number>)); // Error
                                ^^
 
 References:
    create_element.js:175:1
-   175| React.createElement(J, {}, 1, 2); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   create_element.js:170:45
-   170| class J extends React.Component<{children: ?number}> {}
+   175| React.createElement(J, {}, ...(any: Array<number>)); // Error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   create_element.js:166:45
+   166| class J extends React.Component<{children: ?number}> {}
                                                     ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- create_element.js:176:24
+Error ----------------------------------------------------------------------------------------- create_element.js:177:24
 
-Cannot call `React.createElement` because property `children` is missing in props [1] but exists in object type [2].
-[prop-missing]
+Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
+[incompatible-call]
 
-   create_element.js:176:24
-   176| React.createElement(J, {}, ...[]); // Error
-                               ^^ [1]
+   create_element.js:177:24
+   177| React.createElement(J, {}, 1, ...[2]); // Error
+                               ^^
 
 References:
-   create_element.js:170:33
-   170| class J extends React.Component<{children: ?number}> {}
-                                        ^^^^^^^^^^^^^^^^^^^ [2]
+   create_element.js:177:1
+   177| React.createElement(J, {}, 1, ...[2]); // Error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   create_element.js:166:45
+   166| class J extends React.Component<{children: ?number}> {}
+                                                    ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- create_element.js:178:24
 
-Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
-[incompatible-call]
+Cannot call `React.createElement` because children array or number [1] is incompatible with number [2] in property
+`children`. [incompatible-call]
 
    create_element.js:178:24
-   178| React.createElement(J, {}, ...[1, 2]); // Error
+   178| React.createElement(J, {}, 1, ...(any: Array<number>)); // Error
                                ^^
 
 References:
    create_element.js:178:1
-   178| React.createElement(J, {}, ...[1, 2]); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   create_element.js:170:45
-   170| class J extends React.Component<{children: ?number}> {}
+   178| React.createElement(J, {}, 1, ...(any: Array<number>)); // Error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   create_element.js:166:45
+   166| class J extends React.Component<{children: ?number}> {}
                                                     ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- create_element.js:179:24
+Error ----------------------------------------------------------------------------------------- create_element.js:184:24
 
-Cannot call `React.createElement` because children array or array [1] is incompatible with number [2] in property
-`children`. [incompatible-call]
-
-   create_element.js:179:24
-   179| React.createElement(J, {}, ...(any: Array<number>)); // Error
-                               ^^
-
-References:
-   create_element.js:179:1
-   179| React.createElement(J, {}, ...(any: Array<number>)); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   create_element.js:170:45
-   170| class J extends React.Component<{children: ?number}> {}
-                                                    ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------- create_element.js:181:24
-
-Cannot call `React.createElement` because children array [1] is incompatible with number [2] in property `children`.
+Cannot call `React.createElement` because string [1] is incompatible with number [2] in property `children`.
 [incompatible-call]
 
-   create_element.js:181:24
-   181| React.createElement(J, {}, 1, ...[2]); // Error
+   create_element.js:184:24
+   184| React.createElement(K, {}, '42'); // Error
                                ^^
 
 References:
-   create_element.js:181:1
-   181| React.createElement(J, {}, 1, ...[2]); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   create_element.js:170:45
-   170| class J extends React.Component<{children: ?number}> {}
-                                                    ^^^^^^ [2]
+   create_element.js:184:28
+   184| React.createElement(K, {}, '42'); // Error
+                                   ^^^^ [1]
+   create_element.js:180:44
+   180| class K extends React.Component<{children: number}> {}
+                                                   ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- create_element.js:182:24
+Error ----------------------------------------------------------------------------------------- create_element.js:185:35
 
-Cannot call `React.createElement` because children array or number [1] is incompatible with number [2] in property
-`children`. [incompatible-call]
+Cannot call `React.createElement` because string [1] is incompatible with number [2] in property `children`.
+[incompatible-call]
 
-   create_element.js:182:24
-   182| React.createElement(J, {}, 1, ...(any: Array<number>)); // Error
-                               ^^
+   create_element.js:185:35
+   185| React.createElement(K, {children: '42'}); // Error
+                                          ^^^^ [1]
 
 References:
-   create_element.js:182:1
-   182| React.createElement(J, {}, 1, ...(any: Array<number>)); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   create_element.js:170:45
-   170| class J extends React.Component<{children: ?number}> {}
-                                                    ^^^^^^ [2]
+   create_element.js:180:44
+   180| class K extends React.Component<{children: number}> {}
+                                                   ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- create_element.js:187:24
+
+Cannot call `React.createElement` because string [1] is incompatible with number [2] in property `children`.
+[incompatible-call]
+
+   create_element.js:187:24
+   187| React.createElement(K, {children: 42}, '42'); // Error
+                               ^^^^^^^^^^^^^^
+
+References:
+   create_element.js:187:40
+   187| React.createElement(K, {children: 42}, '42'); // Error
+                                               ^^^^ [1]
+   create_element.js:180:44
+   180| class K extends React.Component<{children: number}> {}
+                                                   ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- create_element.js:188:24
@@ -1902,275 +1936,227 @@ Cannot call `React.createElement` because string [1] is incompatible with number
 [incompatible-call]
 
    create_element.js:188:24
-   188| React.createElement(K, {}, '42'); // Error
-                               ^^
-
-References:
-   create_element.js:188:28
-   188| React.createElement(K, {}, '42'); // Error
-                                   ^^^^ [1]
-   create_element.js:184:44
-   184| class K extends React.Component<{children: number}> {}
-                                                   ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------- create_element.js:189:35
-
-Cannot call `React.createElement` because string [1] is incompatible with number [2] in property `children`.
-[incompatible-call]
-
-   create_element.js:189:35
-   189| React.createElement(K, {children: '42'}); // Error
-                                          ^^^^ [1]
-
-References:
-   create_element.js:184:44
-   184| class K extends React.Component<{children: number}> {}
-                                                   ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------- create_element.js:191:24
-
-Cannot call `React.createElement` because string [1] is incompatible with number [2] in property `children`.
-[incompatible-call]
-
-   create_element.js:191:24
-   191| React.createElement(K, {children: 42}, '42'); // Error
-                               ^^^^^^^^^^^^^^
-
-References:
-   create_element.js:191:40
-   191| React.createElement(K, {children: 42}, '42'); // Error
-                                               ^^^^ [1]
-   create_element.js:184:44
-   184| class K extends React.Component<{children: number}> {}
-                                                   ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------- create_element.js:192:24
-
-Cannot call `React.createElement` because string [1] is incompatible with number [2] in property `children`.
-[incompatible-call]
-
-   create_element.js:192:24
-   192| React.createElement(K, {children: '42'}, '42'); // Error
+   188| React.createElement(K, {children: '42'}, '42'); // Error
                                ^^^^^^^^^^^^^^^^
 
 References:
-   create_element.js:192:42
-   192| React.createElement(K, {children: '42'}, '42'); // Error
+   create_element.js:188:42
+   188| React.createElement(K, {children: '42'}, '42'); // Error
                                                  ^^^^ [1]
-   create_element.js:184:44
-   184| class K extends React.Component<{children: number}> {}
+   create_element.js:180:44
+   180| class K extends React.Component<{children: number}> {}
                                                    ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- create_element.js:205:24
+Error ----------------------------------------------------------------------------------------- create_element.js:201:24
 
 Cannot call `React.createElement` because property `foo` is missing in props [1] but exists in object type [2].
 [prop-missing]
 
-   create_element.js:205:24
-   205| React.createElement(L, {}, 1); // Error
+   create_element.js:201:24
+   201| React.createElement(L, {}, 1); // Error
                                ^^ [1]
 
 References:
-   create_element.js:194:33
+   create_element.js:190:33
                                         v
-   194| class L extends React.Component<{
-   195|   foo: number,
-   196|   bar: number,
-   197|   children: number,
-   198| }> {
+   190| class L extends React.Component<{
+   191|   foo: number,
+   192|   bar: number,
+   193|   children: number,
+   194| }> {
         ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- create_element.js:206:24
+Error ----------------------------------------------------------------------------------------- create_element.js:202:24
 
 Cannot call `React.createElement` because property `foo` is missing in props [1] but exists in object type [2].
 [prop-missing]
 
-   create_element.js:206:24
-   206| React.createElement(L, {children: 1}); // Error
+   create_element.js:202:24
+   202| React.createElement(L, {children: 1}); // Error
                                ^^^^^^^^^^^^^ [1]
 
 References:
-   create_element.js:194:33
+   create_element.js:190:33
                                         v
-   194| class L extends React.Component<{
-   195|   foo: number,
-   196|   bar: number,
-   197|   children: number,
-   198| }> {
+   190| class L extends React.Component<{
+   191|   foo: number,
+   192|   bar: number,
+   193|   children: number,
+   194| }> {
         ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- create_element.js:207:24
+Error ----------------------------------------------------------------------------------------- create_element.js:203:24
 
 Cannot call `React.createElement` because property `foo` is missing in props [1] but exists in object type [2].
 [prop-missing]
 
-   create_element.js:207:24
-   207| React.createElement(L, {bar: 1}, 2); // Error
+   create_element.js:203:24
+   203| React.createElement(L, {bar: 1}, 2); // Error
                                ^^^^^^^^ [1]
 
 References:
-   create_element.js:194:33
+   create_element.js:190:33
                                         v
-   194| class L extends React.Component<{
-   195|   foo: number,
-   196|   bar: number,
-   197|   children: number,
-   198| }> {
+   190| class L extends React.Component<{
+   191|   foo: number,
+   192|   bar: number,
+   193|   children: number,
+   194| }> {
         ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- create_element.js:208:24
+Error ----------------------------------------------------------------------------------------- create_element.js:204:24
 
 Cannot call `React.createElement` because property `foo` is missing in props [1] but exists in object type [2].
 [prop-missing]
 
-   create_element.js:208:24
-   208| React.createElement(L, {bar: 1, children: 2}); // Error
+   create_element.js:204:24
+   204| React.createElement(L, {bar: 1, children: 2}); // Error
                                ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   create_element.js:194:33
+   create_element.js:190:33
                                         v
-   194| class L extends React.Component<{
-   195|   foo: number,
-   196|   bar: number,
-   197|   children: number,
-   198| }> {
+   190| class L extends React.Component<{
+   191|   foo: number,
+   192|   bar: number,
+   193|   children: number,
+   194| }> {
         ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- create_element.js:209:30
+Error ----------------------------------------------------------------------------------------- create_element.js:205:30
 
 Cannot call `React.createElement` because string [1] is incompatible with number [2] in property `foo`.
 [incompatible-call]
 
-   create_element.js:209:30
-   209| React.createElement(L, {foo: '1', bar: 2}, 3); // Error
+   create_element.js:205:30
+   205| React.createElement(L, {foo: '1', bar: 2}, 3); // Error
                                      ^^^ [1]
 
 References:
-   create_element.js:195:8
-   195|   foo: number,
+   create_element.js:191:8
+   191|   foo: number,
                ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- create_element.js:210:30
+Error ----------------------------------------------------------------------------------------- create_element.js:206:30
 
 Cannot call `React.createElement` because string [1] is incompatible with number [2] in property `foo`.
 [incompatible-call]
 
-   create_element.js:210:30
-   210| React.createElement(L, {foo: '1', bar: 2, children: 3}); // Error
+   create_element.js:206:30
+   206| React.createElement(L, {foo: '1', bar: 2, children: 3}); // Error
                                      ^^^ [1]
 
 References:
-   create_element.js:195:8
-   195|   foo: number,
+   create_element.js:191:8
+   191|   foo: number,
                ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- create_element.js:211:38
+Error ----------------------------------------------------------------------------------------- create_element.js:207:38
 
 Cannot call `React.createElement` because string [1] is incompatible with number [2] in property `bar`.
 [incompatible-call]
 
-   create_element.js:211:38
-   211| React.createElement(L, {foo: 1, bar: '2'}, 3); // Error
+   create_element.js:207:38
+   207| React.createElement(L, {foo: 1, bar: '2'}, 3); // Error
                                              ^^^ [1]
 
 References:
-   create_element.js:196:8
-   196|   bar: number,
+   create_element.js:192:8
+   192|   bar: number,
                ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- create_element.js:212:38
+Error ----------------------------------------------------------------------------------------- create_element.js:208:38
 
 Cannot call `React.createElement` because string [1] is incompatible with number [2] in property `bar`.
 [incompatible-call]
 
-   create_element.js:212:38
-   212| React.createElement(L, {foo: 1, bar: '2', children: 3}); // Error
+   create_element.js:208:38
+   208| React.createElement(L, {foo: 1, bar: '2', children: 3}); // Error
                                              ^^^ [1]
 
 References:
-   create_element.js:196:8
-   196|   bar: number,
+   create_element.js:192:8
+   192|   bar: number,
                ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- create_element.js:213:24
+Error ----------------------------------------------------------------------------------------- create_element.js:209:24
 
 Cannot call `React.createElement` because string [1] is incompatible with number [2] in property `children`.
 [incompatible-call]
 
-   create_element.js:213:24
-   213| React.createElement(L, {foo: 1, bar: 2}, '3'); // Error
+   create_element.js:209:24
+   209| React.createElement(L, {foo: 1, bar: 2}, '3'); // Error
                                ^^^^^^^^^^^^^^^^
 
 References:
-   create_element.js:213:42
-   213| React.createElement(L, {foo: 1, bar: 2}, '3'); // Error
+   create_element.js:209:42
+   209| React.createElement(L, {foo: 1, bar: 2}, '3'); // Error
                                                  ^^^ [1]
-   create_element.js:197:13
-   197|   children: number,
+   create_element.js:193:13
+   193|   children: number,
                     ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- create_element.js:214:51
+Error ----------------------------------------------------------------------------------------- create_element.js:210:51
 
 Cannot call `React.createElement` because string [1] is incompatible with number [2] in property `children`.
 [incompatible-call]
 
-   create_element.js:214:51
-   214| React.createElement(L, {foo: 1, bar: 2, children: '3'}); // Error
+   create_element.js:210:51
+   210| React.createElement(L, {foo: 1, bar: 2, children: '3'}); // Error
                                                           ^^^ [1]
 
 References:
-   create_element.js:197:13
-   197|   children: number,
+   create_element.js:193:13
+   193|   children: number,
                     ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ create_element.js:219:2
+Error ----------------------------------------------------------------------------------------- create_element.js:215:22
 
-Cannot cast `React.createElement(...).type` to `typeof N` because `M` [1] is incompatible with `N` [2].
-[incompatible-cast]
+Cannot cast `React.createElement(...)` to `React.Element` because `M` [1] is incompatible with `N` [2] in type argument
+`ElementType` [3]. [incompatible-cast]
 
-   create_element.js:219:2
-   219| (React.createElement(M).type: typeof N); // Error
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   create_element.js:215:22
+   215| (React.createElement(M): React.Element<Class<N>, any>); // Error
+                             ^
 
 References:
-   create_element.js:216:7
-   216| class M extends React.Component<{}> {}
+   create_element.js:212:7
+   212| class M extends React.Component<{}> {}
               ^ [1]
-   create_element.js:217:7
-   217| class N extends React.Component<{}> {}
-              ^ [2]
+   create_element.js:215:46
+   215| (React.createElement(M): React.Element<Class<N>, any>); // Error
+                                                     ^ [2]
+   <BUILTINS>/react.js:155:36
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                                           ^^^^^^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------- create_element.js:223:24
+Error ----------------------------------------------------------------------------------------- create_element.js:219:24
 
 Cannot call `React.createElement` because children array [1] has an unknown number of elements, so is incompatible with
 tuple type [2] in property `children`. [invalid-tuple-arity]
 
-   create_element.js:223:24
-   223| React.createElement(P, null, 1, 2, ...(any: Array<number>)); // ERROR
+   create_element.js:219:24
+   219| React.createElement(P, null, 1, 2, ...(any: Array<number>)); // ERROR
                                ^^^^
 
 References:
-   create_element.js:223:1
-   223| React.createElement(P, null, 1, 2, ...(any: Array<number>)); // ERROR
+   create_element.js:219:1
+   219| React.createElement(P, null, 1, 2, ...(any: Array<number>)); // ERROR
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   create_element.js:221:31
-   221| declare function P({children: [1, 2]}): void;
+   create_element.js:217:31
+   217| declare function P({children: [1, 2]}): void;
                                       ^^^^^^ [2]
 
 
@@ -2344,38 +2330,44 @@ References:
 
 Error ------------------------------------------------------------------------------------------- create_factory.js:36:2
 
-Cannot cast `aFactory(...).props.foo` to boolean because number [1] is incompatible with boolean [2].
-[incompatible-cast]
+Cannot cast `aFactory(...)` to `React.Element` because number [1] is incompatible with boolean [2] in property `foo` of
+type argument `P` [3]. [incompatible-cast]
 
    create_factory.js:36:2
-   36| (aFactory({foo: 1, bar: 2}).props.foo: boolean); // Error: `foo` is `number`.
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    36| (aFactory({foo: 1, bar: 2}): React$Element<Class<A>, {foo: boolean, bar: number}>); // Error: `foo` is `number`.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    create_factory.js:10:39
-   10| class A extends React.Component<{foo: number, bar: number}, void> {}
-                                             ^^^^^^ [1]
-   create_factory.js:36:40
-   36| (aFactory({foo: 1, bar: 2}).props.foo: boolean); // Error: `foo` is `number`.
-                                              ^^^^^^^ [2]
+    10| class A extends React.Component<{foo: number, bar: number}, void> {}
+                                              ^^^^^^ [1]
+   create_factory.js:36:60
+    36| (aFactory({foo: 1, bar: 2}): React$Element<Class<A>, {foo: boolean, bar: number}>); // Error: `foo` is `number`.
+                                                                   ^^^^^^^ [2]
+   <BUILTINS>/react.js:155:69
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                                                                            ^ [3]
 
 
 Error ------------------------------------------------------------------------------------------- create_factory.js:37:2
 
-Cannot cast `bFactory(...).props.foo` to boolean because number [1] is incompatible with boolean [2].
-[incompatible-cast]
+Cannot cast `bFactory(...)` to `React.Element` because number [1] is incompatible with boolean [2] in property `foo` of
+type argument `P` [3]. [incompatible-cast]
 
    create_factory.js:37:2
-   37| (bFactory({foo: 1, bar: 2}).props.foo: boolean); // Error: `foo` is `number`.
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    37| (bFactory({foo: 1, bar: 2}): React$Element<typeof B, {foo: boolean, bar: number}>); // Error: `foo` is `number`.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    create_factory.js:11:25
-   11| function B(props: {foo: number, bar: number}) { return null }
-                               ^^^^^^ [1]
-   create_factory.js:37:40
-   37| (bFactory({foo: 1, bar: 2}).props.foo: boolean); // Error: `foo` is `number`.
-                                              ^^^^^^^ [2]
+    11| function B(props: {foo: number, bar: number}) { return null }
+                                ^^^^^^ [1]
+   create_factory.js:37:60
+    37| (bFactory({foo: 1, bar: 2}): React$Element<typeof B, {foo: boolean, bar: number}>); // Error: `foo` is `number`.
+                                                                   ^^^^^^^ [2]
+   <BUILTINS>/react.js:155:69
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                                                                            ^ [3]
 
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:38:28
@@ -3589,23 +3581,27 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_factory.js:216:2
 
-Cannot cast `mFactory().type` to `typeof N` because `M` [1] is incompatible with `N` [2]. [incompatible-cast]
+Cannot cast `mFactory()` to `React.Element` because `M` [1] is incompatible with `N` [2] in type argument
+`ElementType` [3]. [incompatible-cast]
 
    create_factory.js:216:2
-   216| (mFactory().type: typeof N); // Error
-         ^^^^^^^^^^^^^^^
+   216| (mFactory(): React$Element<Class<N>>); // Error
+         ^^^^^^^^^^
 
 References:
    create_factory.js:212:7
    212| class M extends React.Component<{}> {}
               ^ [1]
-   create_factory.js:213:7
-   213| class N extends React.Component<{}> {}
-              ^ [2]
+   create_factory.js:216:34
+   216| (mFactory(): React$Element<Class<N>>); // Error
+                                         ^ [2]
+   <BUILTINS>/react.js:155:36
+   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+                                           ^^^^^^^^^^^ [3]
 
 
 
-Found 218 errors
+Found 216 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
