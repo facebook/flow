@@ -79,6 +79,10 @@ import { x as x18, y as y18, z as z18 } from './eval_readonly';
 (y18: empty); // error number ~> empty
 (z18: empty); // error string ~> empty
 
+import {baz1 as baz01, baz2 as baz02} from './eval_indexed_access';
+(baz01: empty); // error number ~> empty
+(baz02: empty); // error number ~> empty
+
 import { x as x19, y as y19, z as z19 } from './spread';
 (x19: { f: number });
 (y19: { a?: number }); // okay
