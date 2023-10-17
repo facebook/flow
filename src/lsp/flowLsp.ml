@@ -431,7 +431,7 @@ let get_next_event
           let edata = edata_of_exception exn in
           let server_died =
             try
-              let _ = Sys_utils.select_non_intr [client_fd] [] [] 0.0 in
+              let _ = Sys_utils.select_non_intr [server_fd] [] [] 0.0 in
               false
             with
             | Unix.Unix_error (Unix.EBADF, _, _) -> true
