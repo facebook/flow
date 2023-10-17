@@ -428,8 +428,8 @@ References:
    element_with_component_type.js:3:35
      3| class Foo extends React.Component<{a: number}> {}
                                           ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:155:36
-   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+   <BUILTINS>/react.js:160:36
+   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
 
 
@@ -449,8 +449,8 @@ References:
    element_with_component_type.js:6:51
      6| (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
                                                           ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:155:69
-   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+   <BUILTINS>/react.js:160:69
+   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                                                             ^ [3]
 
 

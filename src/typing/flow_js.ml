@@ -2814,7 +2814,14 @@ struct
           (* Intentional unknown_use when flowing to tout *)
           rec_flow_t cx trace ~use_op:unknown_use (result, tout)
         | ( OpaqueT
-              (_, { opaque_id; super_t = Some (ExactT (_, DefT (_, _, ObjT { props_tmap; _ }))); _ }),
+              ( _,
+                {
+                  opaque_id;
+                  super_t = Some (DefT (_, _, ObjT { props_tmap; _ }));
+                  opaque_type_args = (_, _, component_t, _) :: _;
+                  _;
+                }
+              ),
             PromoteRendersRepresentationT
               {
                 use_op;
@@ -2845,18 +2852,7 @@ struct
                   }
               )
           | None ->
-            let props = Context.find_props cx props_tmap in
-            let type_field = NameUtils.Map.find_opt (OrdinaryName "type") props in
-            let type_t =
-              Base.Option.value_map
-                ~f:(fun type_field -> Property.read_t type_field)
-                ~default:None
-                type_field
-            in
-            (match type_t with
-            (* Intentional unknown_use when flowing to tout *)
-            | None -> rec_flow_t cx trace ~use_op:unknown_use (l, tout)
-            | Some t when promote_structural_components ->
+            if promote_structural_components then
               (* We only want to promote if this is actually a React element, otherwise we want
                * to flow the original object to the tout.
                *
@@ -2870,16 +2866,20 @@ struct
               in
               if speculative_subtyping_succeeds cx l mixed_element then
                 let render_type =
-                  get_builtin_typeapp cx (reason_of_t l) (OrdinaryName "React$ComponentRenders") [t]
+                  get_builtin_typeapp
+                    cx
+                    (reason_of_t l)
+                    (OrdinaryName "React$ComponentRenders")
+                    [component_t]
                 in
                 rec_flow_t cx trace ~use_op:unknown_use (render_type, tout)
               else
                 rec_flow_t cx trace ~use_op:unknown_use (l, tout)
-            | Some t ->
+            else
               rec_flow
                 cx
                 trace
-                ( t,
+                ( component_t,
                   PromoteRendersRepresentationT
                     {
                       use_op;
@@ -2890,7 +2890,7 @@ struct
                       renders_variant;
                       promote_structural_components;
                     }
-                )))
+                ))
         | ( DefT (_, _, (RendersT _ as renders)),
             PromoteRendersRepresentationT
               {

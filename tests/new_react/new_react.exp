@@ -198,8 +198,8 @@ References:
    classes.js:39:15
     39| var foo: $jsx<number> = <Foo/>;
                       ^^^^^^ [2]
-   <BUILTINS>/react.js:155:36
-   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+   <BUILTINS>/react.js:160:36
+   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
 
 

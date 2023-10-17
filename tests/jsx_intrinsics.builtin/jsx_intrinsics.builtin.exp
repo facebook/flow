@@ -14,8 +14,8 @@ References:
    main.js:5:7
      5| class CustomComponentNope extends React.Component<{prop: string}, void> {}
               ^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:155:36
-   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+   <BUILTINS>/react.js:160:36
+   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
 
 
@@ -35,8 +35,8 @@ References:
    main.js:11:38
     11| var c: Element<Class<React.Component<{prop1: string}, void>>> =
                                              ^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:155:69
-   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+   <BUILTINS>/react.js:160:69
+   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                                                             ^ [3]
 
 
@@ -59,8 +59,8 @@ References:
    <BUILTINS>/react.js:30:31
     30| declare class React$Component<Props, State = void> {
                                       ^^^^^ [3]
-   <BUILTINS>/react.js:155:36
-   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+   <BUILTINS>/react.js:160:36
+   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [4]
 
 
@@ -83,8 +83,8 @@ References:
    <BUILTINS>/react.js:30:31
     30| declare class React$Component<Props, State = void> {
                                       ^^^^^ [3]
-   <BUILTINS>/react.js:155:36
-   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+   <BUILTINS>/react.js:160:36
+   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [4]
 
 
@@ -101,8 +101,8 @@ References:
    main.js:19:16
     19| var e: Element<'span'> = <div not_a_real_attr="asdf" />;
                        ^^^^^^ [2]
-   <BUILTINS>/react.js:155:36
-   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+   <BUILTINS>/react.js:160:36
+   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
 
 
