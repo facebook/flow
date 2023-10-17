@@ -482,6 +482,18 @@ module rec ConsGen : S = struct
     | (EvalT (t, TypeDestructorT (_, reason, ValuesType), _), _) ->
       let t = elab_t cx t (Annot_GetValuesT reason) in
       elab_t cx t op
+    | (EvalT (t, TypeDestructorT (use_op, reason, PropertyType { name }), _), _) ->
+      let reason_op = replace_desc_reason (RProperty (Some name)) reason in
+      let t =
+        elab_t
+          cx
+          t
+          (Annot_GetPropT (reason_op, use_op, Named { reason; name; from_indexed_access = true }))
+      in
+      elab_t cx t op
+    | (EvalT (t, TypeDestructorT (use_op, reason, ElementType { index_type }), _), _) ->
+      let t = elab_t cx t (Annot_GetElemT (reason, use_op, index_type)) in
+      elab_t cx t op
     | (EvalT (_, TypeDestructorT (_, _, TypeMap (ObjectMap _)), _), _) ->
       error_unsupported ~suggestion:"$ObjMapConst" cx t op
     | (EvalT (_, TypeDestructorT (_, _, TypeMap (ObjectMapi _)), _), _) ->
