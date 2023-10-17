@@ -120,6 +120,14 @@ class rename_mapper
       | Set _ ->
         super#object_property prop
 
+    method! jsx_element_name_identifier id =
+      let open Ast.JSX.Identifier in
+      let (loc, { name = _; comments }) = id in
+      if LocMap.mem loc targets then
+        (loc, { name = new_name; comments })
+      else
+        id
+
     method! jsx_attribute_name name =
       let open Ast.JSX.Attribute in
       match name with
