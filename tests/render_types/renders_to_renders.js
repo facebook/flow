@@ -81,7 +81,7 @@ declare const rendersBazOrBaz: renders (React$Element<typeof Baz> | React$Elemen
   (rendersNode: React$Node); // OK
   declare const rendersNullOrNull: renders (null | null);
   (rendersNullOrNull: null); // ERROR
-  rendersFooOrBar.props; // OK
+  rendersFooOrBar.props; // ERROR
   rendersNode.props; // ERROR
 }
 
@@ -89,5 +89,5 @@ declare const rendersBazOrBaz: renders (React$Element<typeof Baz> | React$Elemen
 {
   (rendersBaz: React$MixedElement); // OK
   (rendersBaz: empty); // ERROR
-  rendersBaz.props; // OK
+  rendersBaz.props; // ERROR
 }

@@ -594,8 +594,8 @@ References:
    component_in_type_position.js:10:25
     10| const polyElemBad: Poly<number> = <Poly prop="STRING" />; // ERROR
                                 ^^^^^^ [2]
-   <BUILTINS>/react.js:155:69
-   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+   <BUILTINS>/react.js:160:69
+   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                                                             ^ [3]
 
 
@@ -1888,8 +1888,8 @@ References:
    import_component_in_type_position.js:8:31
      8| const polyElemError: PolyType<string> = <Poly prop={3} />;
                                       ^^^^^^ [2]
-   <BUILTINS>/react.js:155:69
-   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+   <BUILTINS>/react.js:160:69
+   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                                                             ^ [3]
 
 
@@ -1909,8 +1909,8 @@ References:
    component_in_type_position.js:3:8
      3| export component Foo() { return null }
                ^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:155:36
-   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+   <BUILTINS>/react.js:160:36
+   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
 
 
@@ -2153,32 +2153,32 @@ References:
                          ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- poly.js:32:10
+Error ----------------------------------------------------------------------------------------------------- poly.js:32:4
 
-Cannot get `el.props.bar` because property `bar` is missing in object type [1]. [prop-missing]
+Cannot get `el.props` because property `props` is missing in `React.Element` [1]. [prop-missing]
 
-   poly.js:32:10
+   poly.js:32:4
    32| el.props.bar; // error
-                ^^^
+          ^^^^^
 
 References:
-   poly.js:30:42
-   30| declare const C: React.AbstractComponent<{foo: string}>;
-                                                ^^^^^^^^^^^^^ [1]
+   poly.js:31:12
+   31| const el = <C foo="str" />;
+                  ^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- poly.js:34:16
+Error ---------------------------------------------------------------------------------------------------- poly.js:34:10
 
-Cannot get `el_empty.props.bar` because property `bar` is missing in empty [1]. [incompatible-use]
+Cannot get `el_empty.props` because property `props` is missing in `React.Element` [1]. [prop-missing]
 
-   poly.js:34:16
+   poly.js:34:10
    34| el_empty.props.bar; // error
-                      ^^^
+                ^^^^^
 
 References:
-   poly.js:33:55
+   poly.js:33:17
    33| const el_empty: React.Element<React$AbstractComponent<empty>> = el;
-                                                             ^^^^^ [1]
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- props_reason.js:6:43

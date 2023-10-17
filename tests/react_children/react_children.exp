@@ -1040,8 +1040,8 @@ References:
    tabs.js:10:7
     10| class Tab extends React.Component<{}, void> {}
               ^^^ [2]
-   <BUILTINS>/react.js:155:36
-   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+   <BUILTINS>/react.js:160:36
+   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
    tabs.js:18:5
     18|   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
@@ -1065,8 +1065,8 @@ References:
    tabs.js:10:7
     10| class Tab extends React.Component<{}, void> {}
               ^^^ [2]
-   <BUILTINS>/react.js:155:36
-   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+   <BUILTINS>/react.js:160:36
+   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
    tabs.js:68:9
     68| <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
@@ -1099,8 +1099,8 @@ References:
    tabs.js:10:7
     10| class Tab extends React.Component<{}, void> {}
               ^^^ [2]
-   <BUILTINS>/react.js:155:36
-   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+   <BUILTINS>/react.js:160:36
+   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
    tabs.js:73:3
     73|   <NotTab/>

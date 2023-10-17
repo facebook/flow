@@ -50,8 +50,8 @@ References:
    test.js:5:28
      5| function Component2(props: {| bar: number |}): React$Node { return null }
                                    ^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:155:69
-   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+   <BUILTINS>/react.js:160:69
+   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                                                             ^ [3]
 
 
@@ -71,8 +71,8 @@ References:
    test.js:4:27
      4| function Component(props: Props): React$Node { return null }
                                   ^^^^^ [2]
-   <BUILTINS>/react.js:155:69
-   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+   <BUILTINS>/react.js:160:69
+   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                                                             ^ [3]
 
 
@@ -92,8 +92,8 @@ References:
    test.js:5:28
      5| function Component2(props: {| bar: number |}): React$Node { return null }
                                    ^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:155:36
-   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+   <BUILTINS>/react.js:160:36
+   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
 
 
@@ -113,8 +113,8 @@ References:
    test.js:4:27
      4| function Component(props: Props): React$Node { return null }
                                   ^^^^^ [2]
-   <BUILTINS>/react.js:155:36
-   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+   <BUILTINS>/react.js:160:36
+   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
 
 

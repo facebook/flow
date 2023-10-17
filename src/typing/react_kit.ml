@@ -667,14 +667,49 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           [component; Tvar.mk_where cx reason_op props_to_tout]
       in
       (* Concretize to an ObjT so that we can asssociate the monomorphized component with the props id *)
-      let () =
+      let elem =
         let result = Flow.singleton_concrete_type_for_inspection cx elem_reason elem in
         match result with
-        | OpaqueT (_, { super_t = Some (ExactT (_, DefT (_, _, ObjT { props_tmap; _ }))); _ }) ->
-          if record_monomorphized_result then Context.add_monomorphized_component cx props_tmap l
+        | OpaqueT
+            ( _,
+              ( {
+                  super_t =
+                    Some
+                      (DefT
+                        ( super_r,
+                          super_trust,
+                          ObjT { props_tmap; flags; proto_t; call_t; reachable_targs }
+                        )
+                        );
+                  _;
+                } as opaque_t
+              )
+            ) ->
+          if record_monomorphized_result then (
+            let props_tmap = Context.generate_property_map cx (Context.find_props cx props_tmap) in
+            let t =
+              OpaqueT
+                ( elem_reason,
+                  {
+                    opaque_t with
+                    super_t =
+                      Some
+                        (DefT
+                           ( super_r,
+                             super_trust,
+                             ObjT { props_tmap; flags; proto_t; call_t; reachable_targs }
+                           )
+                        );
+                  }
+                )
+            in
+            Context.add_monomorphized_component cx props_tmap l;
+            t
+          ) else
+            elem
         | _ ->
           (*TODO(jmbrown): Internal Error *)
-          ()
+          elem
       in
       rec_flow_t ~use_op:unknown_use cx trace (elem, tout)
     in

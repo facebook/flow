@@ -131,8 +131,8 @@ Cannot return `x` because `React.Element` [1] is incompatible with number [2]. [
                  ^
 
 References:
-   <BUILTINS>/react.js:155:21
-   155| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {|
+   <BUILTINS>/react.js:160:21
+   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                             ^^^^^^^^^^^^^ [1]
    arity.js:20:107
     20| function defaultsErrorMessages(x: React$AbstractComponent<empty>): React$AbstractComponent<empty, number, number> {
