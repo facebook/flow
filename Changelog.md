@@ -1,3 +1,39 @@
+### 0.219.0
+
+Likely to cause new Flow errors:
+* We changed the upper bound of `React.Element` to be an inexact empty object, effectively making it opaque.
+React doesn't recommend inspecting children and React.Element, so we make the change to increase friction. See https://react.dev/reference/react/Children#alternatives for alternatives.
+To keep existing code type safe, you can add a function like the following to explicitly expose the internal of `React.Element`:
+```
+export default function DangerouslyAccessReactElementInternals_DO_NOT_USE_IN_NEW_CODE<
+  E: React$ElementType,
+  P,
+>(e: React$Element<E, P>): {
+  +key: React$Key | null,
+  +props: P,
+  +ref: any,
+  +type: C,
+} {
+  return e;
+}
+```
+* Conditional types will now only distribute over a union if `A` in `A extends B ? C : D` is a generic type. This is a behavior change that might cause new errors ([example](https://flow.org/try/?fbclid=IwAR0GHHxGLEnES-u0e6uoOYFIHeRPkoD87dlo-yuBUxSYUWdgOfpvU2JpwD0#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+IFkolXpUCWewUEAwhCQgRDH8wEH4hMnwROHlsNnw4KHwwSLAAC3wANyo4LFxscWQuHgMNZmwsiRSAWglaY1cq-hIAa2wJXNpG4Vxcdvdu3v7B0RxKUYMhKDBSqmbWwIq3eagoOrKSKgH0wtMMPznY7d2SfcoBiEZ-aG5G3Ix085AF-ZhsRoRehqUEiNMgSQHlSruBZxJrMcJwMhzAC+-EgGiCLWMAAIALIYRjGNgAHgA1AB5ZBY4AkmDESmJZJsXhYqyspEAPixAF4sWSANoAclpEAFAF0sQoGlA2CQsfZTFAEAAdKBYrEAfjlUnSytVWMpwhEMxVKo0Syo2CxtnsWIglOAcMYlLxBJSROAwsp8p1WIAPljDTMOUiANxYgD04axtXycAgcVwtAlhVwQkiZSxYSpjq92sVfoD0xMKIDEAA7snuGmGrKsw7KPcDUXKEiVQAKO3ZhtOrUKhAFwPFgCUYcj0ZYsfjJETtq6zKgEAkEuoECBKpiIHyJhIcagQXyAAYrAAmACMAA4rAeQEigA)). Previously, we distribute over unions in more cases, which contradicts [what we said in the docs](https://flow.org/en/docs/types/conditional/?fbclid=IwAR3Yhr7j5FxH1dBgkxK-XWEj3uOj3VX7A7rqvEz0u5uwkb1v2q9H6V26vK8#toc-distributive-conditional-type), and caused some [weird behavior](https://flow.org/try/?fbclid=IwAR1Ea6RhpVT8OX3wQvWbdXznHuIhuyps0bhQmnjGtCt0xn739htLvPQzuIY#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+IFkolXpUCWewUEAwhCQgRDH8wEH4hMnwROHlsNnw4KHwwSLAAC3wANyo4LFxscWQuHgMNZmwsiRSAWglaY1cq-hIAa2wJXNpG4Vxcdvdu3v7B0RxKUYMhKDBSqmbWwIq3eagoOrKSKgH0wtMMPznY7d2SfcoBiEZ-aG5G3Ix085AF-ZhsRoRehqUEiNMgSQHlSruBZxJrMcJwMhzAC+-EgGiCLWMAAIAPJoABWWIAvFjgABqADa9lMUAQAF1kFjEsk2EiANwAHSg9wwAEcZFjMdhcY5+dgADxk-AANQAfMSsdT0ghOVAuUKsQBZDCMYxsSU4xl4-HyknALlYrGUgDS2FoWPSWJ6tAgMFxDNxFNttDpWIUDSgbBIuIJFstWIA-CK+TJxTivXa6bKw5ajaLY-HvUneFz2VyuRollRhbZ7FiIIzyTBiIyAOQARlreagAAoK1qdXrxcAvQ6oFja9WILW6RHGcyUkjZQBKNlYgD086xAHdsHBKGw-dQIJQV3AJDk-SIHrReFj4Cy+1iAAxWABM9YAnFZr1yYiB8iYSHBoEF8reHwADhfEAkSAA) that's fixed in this version.
+* If an exported class contains unannotated `propTypes`, Flow will now emit `signature-verification-failure`.
+
+New Features:
+* Hovering on enum members in IDE now show documentation if it's available.
+* Added `casting_syntax` option which can be `colon` (current), `as`, or `both`. If setting is `both`, both `(x: T)` and `x as T` are allowed. If set to `colon` or `as`, only `(x: T)` and `x as T` are allowed respectively.
+
+Notable bug fixes:
+* Previously, when Flow cannot decide which branch to take in a generic conditional type, Flow will produce a abstract type that's unusable almost everywhere. Now Flow will still produce an abstract type, but it will be bounded above by a union type of both branches of conditional type. [example](https://flow.org/try#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+IFkolXpUCWewUEAwhCQgRDH8wEH4hMnwROHlsNnw4KHwwSLAAC3wANyo4LFxscWQuHgMNZmwsiRSAWglaY1cq-hIAa2wJXNpG4Vxcdvdu3v7B0RxKUYMhKDBSqmbWwIq3eagoOrKSKgH0wtMMPznY7d2SfcoBiEZ-aG5G3Ix085AF-ZhsRoRehqUEiNMgSQHlSruBZxJrMcJwMhzAC+-EgGiCLWMAAIAMLQNhwR5QbgAHgAKgA+LEAXixAB0oFimViyViFA0oGwSFj7KYoAh6YzmQB+LEAcl56QQYsFzKxyHFEAkORMYoA3AyGRollRsFiYAtlHBoFj-hI8ZzCcbibhyRSABRkgCUCotBKJpMpGqgDLt9okyGdColUilMoAPorlaqaVTgAy5SwJEJKIyzW6rU9cP6nWqsQB6fP6t48LE4GAQFi8LGOa5SrFQCAAdwZSM1UHJCuEIhmDoDQfFkv5EajKsoMupcYTzKTKbTvQzHuzElzBaLXDgpfLldkNYwdf5DebrfbnZ5of5fcDLsHF+lWMjYqVY4nU6FTNnqdNC-xmZtObzQs9wPAVtxYLFTjYCCYEBE8oBiEB8hMEhrSCCJ7BMEAkSAA).
+
+Misc:
+* Flow's insert type quickfix in IDE will stop inserting very specific `React.Element` types. Instead, it will insert general types like `React.MixedElement`.
+
+Library Definitions:
+* Add type definition for `CanvasRenderingContext2D.roundRect`.
+* Add `tagName` to DOM element declarations (thanks @aselbie).
+
 ### 0.218.1
 
 New Features:
