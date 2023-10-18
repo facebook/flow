@@ -513,7 +513,10 @@ module rec TypeTerm : sig
     | TypeParamBound of { name: Subst_name.t }
     | OpaqueTypeBound of { opaque_t_reason: 'loc virtual_reason }
     | TypePredicateCompatibility
-    | InferredTypeForTypeGuardParameter of 'loc virtual_reason
+    | InferredTypeForTypeGuardParameter of {
+        reason: 'loc virtual_reason;
+        is_return_false_statement: bool;
+      }
     | RendersCompatibility
     | UnifyFlip
 

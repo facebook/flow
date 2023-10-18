@@ -821,8 +821,23 @@ let rec make_error_printable :
           [text "type argument "; code (Subst_name.string_of_subst_name name)]
       | Frame (TypePredicateCompatibility, use_op) ->
         unwrap_frame_without_loc loc frames use_op [text "the type predicate"]
-      | Frame (InferredTypeForTypeGuardParameter param, use_op) ->
-        unwrap_frame_without_loc loc frames use_op [text "the type inferred for "; ref param]
+      | Frame
+          (InferredTypeForTypeGuardParameter { reason = param; is_return_false_statement }, use_op)
+        ->
+        unwrap_frame_without_loc
+          loc
+          frames
+          use_op
+          ([text "the type inferred for "; ref param]
+          @
+          if is_return_false_statement then
+            [
+              text ". Consider replacing the body of this predicate ";
+              text "function with a single conditional expression";
+            ]
+          else
+            []
+          )
       | Frame (FunCompatibility { lower; _ }, use_op) -> next_with_loc loc frames lower use_op
       | Frame (OpaqueTypeBound { opaque_t_reason = _ }, use_op) -> loop loc frames use_op
       | Frame (FunMissingArg _, use_op)

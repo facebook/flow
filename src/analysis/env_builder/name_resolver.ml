@@ -3027,7 +3027,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         );
         Base.Option.iter env_state.type_guard_name ~f:(fun name ->
             let return = mk_expression_reason expr in
-            this#record_type_guard_maps name return expr
+            this#record_type_guard_maps None name return expr
         );
         super#body_expression expr
 
@@ -3044,7 +3044,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           this#record_predicate_refinement_maps loc names reason argument
         | (_, Some name, Some argument) ->
           let return = mk_expression_reason argument in
-          this#record_type_guard_maps name return argument);
+          this#record_type_guard_maps (Some argument) name return argument);
         this#raise_abrupt_completion AbruptCompletion.return
 
       method private record_predicate_refinement_maps loc names expr_reason expr =
@@ -3066,7 +3066,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 env_state.predicate_refinement_maps;
           }
 
-      method private record_type_guard_maps tg_info return expr =
+      method private record_type_guard_maps ret_expr tg_info return expr =
         let (TGinfo { loc = guard_param_loc; name; havoced; _ }) = tg_info in
         this#push_refinement_scope empty_refinements;
         ignore @@ this#expression_refinement expr;
@@ -3081,10 +3081,10 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               L.LMap.update
                 guard_param_loc
                 (function
-                  | None -> Some (!havoced, [(return, positive_read, negative_read)])
+                  | None -> Some (!havoced, [(ret_expr, return, positive_read, negative_read)])
                   | Some (old_havoced, xs) ->
                     let havoced = Base.Option.merge ~f:ALocSet.union old_havoced !havoced in
-                    Some (havoced, (return, positive_read, negative_read) :: xs))
+                    Some (havoced, (ret_expr, return, positive_read, negative_read) :: xs))
                 env_state.type_guard_consistency_maps;
           }
 

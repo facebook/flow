@@ -720,8 +720,8 @@ let rec mod_loc_of_virtual_use_op f =
     | OpaqueTypeBound { opaque_t_reason } ->
       OpaqueTypeBound { opaque_t_reason = mod_reason opaque_t_reason }
     | TypePredicateCompatibility -> TypePredicateCompatibility
-    | InferredTypeForTypeGuardParameter reason ->
-      InferredTypeForTypeGuardParameter (mod_reason reason)
+    | InferredTypeForTypeGuardParameter { reason; is_return_false_statement } ->
+      InferredTypeForTypeGuardParameter { reason = mod_reason reason; is_return_false_statement }
     | RendersCompatibility -> RendersCompatibility
     | UnifyFlip -> UnifyFlip
   in

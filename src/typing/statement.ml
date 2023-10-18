@@ -7493,7 +7493,13 @@ module Make
           )
       | Some (None, reads) ->
         (* Each read corresponds to a return expression. *)
-        Base.List.iter reads ~f:(fun (return_reason, { Env_api.write_locs; _ }, _) ->
+        Base.List.iter reads ~f:(fun (ret_expr, return_reason, { Env_api.write_locs; _ }, _) ->
+            let is_return_false_statement =
+              match ret_expr with
+              | Some (_, Ast.Expression.BooleanLiteral { Ast.BooleanLiteral.value = false; _ }) ->
+                true
+              | _ -> false
+            in
             let return_loc = Reason.loc_of_reason return_reason in
             match
               Type_env.type_guard_at_return cx param_reason ~param_loc ~return_loc write_locs
@@ -7501,7 +7507,8 @@ module Make
             | Ok t ->
               let use_op =
                 Frame
-                  ( InferredTypeForTypeGuardParameter tg_reason,
+                  ( InferredTypeForTypeGuardParameter
+                      { reason = tg_reason; is_return_false_statement },
                     Op (FunReturnStatement { value = return_reason })
                   )
               in
