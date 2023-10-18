@@ -2236,28 +2236,6 @@ References:
                ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ ref_import.js:4:2
-
-Cannot cast `<MyExportedInput />` to union type because: [incompatible-cast]
- - Either `MyExportedInput` element [1] is incompatible with number literal `1` [2].
- - Or property `current` is missing in function type [3] but exists in object type [4].
-
-   ref_import.js:4:2
-     4| (<MyExportedInput other="" />: React.Element<any> | 1); // spurious error
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   ref_import.js:4:53
-     4| (<MyExportedInput other="" />: React.Element<any> | 1); // spurious error
-                                                            ^ [2]
-   <BUILTINS>/react.js:185:6
-   185|   | ((T | null) => mixed);
-             ^^^^^^^^^^^^^^^^^^^ [3]
-   ref_export.js:3:54
-     3| export component MyExportedInput(other: string, ref: React$RefSetter<?HTMLElement>) {
-                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-
-
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:2
 
 Cannot cast `Foo` to AbstractComponent because component Reffed [1] is incompatible with string [2]. [incompatible-cast]
@@ -2831,7 +2809,7 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 191 errors
+Found 190 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
