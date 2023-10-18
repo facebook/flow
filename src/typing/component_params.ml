@@ -159,6 +159,19 @@ module Make
       | None -> Type.(MixedT.make instance_reason (bogus_trust ()))
       | Some (key_loc, instance) ->
         C.read_react cx key_loc;
+        let () =
+          let open Type in
+          let open Reason in
+          let reason_op = mk_reason RReactRef key_loc in
+          let u =
+            Flow_js.get_builtin_typeapp
+              cx
+              reason_op
+              (Reason.OrdinaryName "React$RefSetter")
+              [AnyT.error reason_op]
+          in
+          Flow_js.flow cx (instance, UseT (Op (DeclareComponentRef { op = reason_op }), u))
+        in
         Type.(
           Flow_js.mk_possibly_evaluated_destructor
             cx

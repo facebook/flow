@@ -238,6 +238,7 @@ type 'loc virtual_reason_desc =
   | RReactChildren
   | RReactChildrenOrType of 'loc virtual_reason_desc
   | RReactChildrenOrUndefinedOrType of 'loc virtual_reason_desc
+  | RReactRef
   | RReactSFC
   | RReactConfig
   | RPossiblyMissingPropFromObj of name * 'loc virtual_reason_desc
@@ -349,7 +350,7 @@ let rec map_desc_locs f = function
     r
   | RReactChildrenOrType desc -> RReactChildrenOrType (map_desc_locs f desc)
   | RReactChildrenOrUndefinedOrType desc -> RReactChildrenOrUndefinedOrType (map_desc_locs f desc)
-  | (RReactSFC | RReactConfig) as r -> r
+  | (RReactSFC | RReactRef | RReactConfig) as r -> r
   | RPossiblyMissingPropFromObj (propname, desc) ->
     RPossiblyMissingPropFromObj (propname, map_desc_locs f desc)
   | RWidenedObjProp desc -> RWidenedObjProp (map_desc_locs f desc)
@@ -759,6 +760,7 @@ let rec string_of_desc = function
   | RReactChildrenOrType desc -> spf "children array or %s" (string_of_desc desc)
   | RReactChildrenOrUndefinedOrType desc -> spf "children array or %s" (string_of_desc desc)
   | RReactSFC -> "React stateless functional component"
+  | RReactRef -> "React component ref"
   | RReactConfig -> "config of React component"
   | RPossiblyMissingPropFromObj (propname, desc) ->
     spf
@@ -1563,6 +1565,7 @@ let classification_of_reason r =
   | RReactChildren
   | RReactChildrenOrType _
   | RReactChildrenOrUndefinedOrType _
+  | RReactRef
   | RReactSFC
   | RReactConfig
   | RPossiblyMissingPropFromObj _

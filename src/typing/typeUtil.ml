@@ -610,6 +610,7 @@ let rec mod_loc_of_virtual_use_op f =
     | ConformToCommonInterface { self_sig_loc; self_module_loc } ->
       ConformToCommonInterface
         { self_sig_loc = f self_sig_loc; self_module_loc = f self_module_loc }
+    | DeclareComponentRef { op } -> DeclareComponentRef { op = mod_reason op }
     | DeleteProperty { lhs; prop } ->
       DeleteProperty { lhs = mod_reason lhs; prop = mod_reason prop }
     | DeleteVar { var } -> DeleteVar { var = mod_reason var }

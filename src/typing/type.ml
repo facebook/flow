@@ -351,6 +351,7 @@ module rec TypeTerm : sig
         self_sig_loc: 'loc;
         self_module_loc: 'loc;
       }
+    | DeclareComponentRef of { op: 'loc virtual_reason }
     | DeleteProperty of {
         lhs: 'loc virtual_reason;
         prop: 'loc virtual_reason;
@@ -3900,6 +3901,7 @@ let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
   | ClassMethodDefinition _ -> "ClassMethodDefinition"
   | Coercion _ -> "Coercion"
   | ConformToCommonInterface _ -> "ConformToCommonInterface"
+  | DeclareComponentRef _ -> "DeclareComponentRef"
   | DeleteProperty _ -> "DeleteProperty"
   | DeleteVar _ -> "DeleteVar"
   | FunCall _ -> "FunCall"

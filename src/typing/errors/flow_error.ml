@@ -522,6 +522,20 @@ let rec make_error_printable :
           (loc_of_aloc self_module_loc)
           (loc_of_aloc self_sig_loc)
           [text "Cannot conform to common interface module"]
+      | Op (DeclareComponentRef { op }) ->
+        let frames =
+          let explanation =
+            [
+              text "The ";
+              code "ref";
+              text " parameter must be a subtype of ";
+              code "React.RefSetter";
+            ]
+          in
+          let (all_frames, explanations) = frames in
+          (all_frames, explanation :: explanations)
+        in
+        root loc frames op [text "Cannot declare ref"]
       | Op (FunCall { op; fn; _ }) ->
         root_with_specific_reason loc frames op fn [text "Cannot call "; desc fn]
       | Op (FunCallMethod { op; fn; prop; _ }) ->
