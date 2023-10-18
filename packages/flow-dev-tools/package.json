@@ -6,9 +6,9 @@
   "dependencies": {
     "chalk": "^4.1.2",
     "diff": "^3.5.0",
-    "flow-parser": "*",
     "flow-remove-types": "*",
     "glob": "^7.0.3",
+    "hermes-parser": "0.17.0",
     "minimist": "~1.2.6",
     "mkdirp": "^0.5.1",
     "rimraf": "^2.5.2",
