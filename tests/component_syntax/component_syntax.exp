@@ -2240,7 +2240,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `<MyExportedInput />` to union type because: [incompatible-cast]
  - Either `MyExportedInput` element [1] is incompatible with number literal `1` [2].
- - Or `React.RefSetter` [3] is incompatible with object type [4].
+ - Or property `current` is missing in function type [3] but exists in object type [4].
 
    ref_import.js:4:2
      4| (<MyExportedInput other="" />: React.Element<any> | 1); // spurious error
@@ -2250,9 +2250,9 @@ References:
    ref_import.js:4:53
      4| (<MyExportedInput other="" />: React.Element<any> | 1); // spurious error
                                                             ^ [2]
-   <BUILTINS>/react.js:183:14
-   183| declare type React$RefSetter<-T> =
-                     ^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:185:6
+   185|   | ((T | null) => mixed);
+             ^^^^^^^^^^^^^^^^^^^ [3]
    ref_export.js:3:54
      3| export component MyExportedInput(other: string, ref: React$RefSetter<?HTMLElement>) {
                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
