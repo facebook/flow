@@ -243,7 +243,7 @@ declare export default T;
 // `this` params
 
 declare function y (this : string) : void
-type T = (this : string) : void
+type T = (this : string) => void
 function z (this : string) {}
 function u (this : string, ...a) {}
 function v (this : string
