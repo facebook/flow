@@ -727,7 +727,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       | Check.SubtypeLowerPoly u ->
         let (_, inferred_targ_list) = merge_targs None in
         let targs = Base.List.map ~f:(fun (_, t, _, _) -> t) inferred_targ_list in
-        Flow.flow cx (lhs, UseT (use_op, u));
         ( inferred_targ_list,
           Flow.mk_typeapp_instance_annot cx ~use_op ~reason_op ~reason_tapp lhs targs,
           UseT (use_op, u),
