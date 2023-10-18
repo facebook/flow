@@ -1804,7 +1804,8 @@ struct
                   prevents a drastic blowup of cases which can cause perf problems. *)
                | PredicateT (RightP (SentinelProp _, _), _)
                | PredicateT (NotP (RightP (SentinelProp _, _)), _)
-               | WriteComputedObjPropCheckT _ ->
+               | WriteComputedObjPropCheckT _
+               | ExtractReactRefT _ ->
                  false
                | ConditionalT { distributive_tparam_name; _ } ->
                  Option.is_some distributive_tparam_name
@@ -7082,6 +7083,7 @@ struct
       let should_destruct_union () =
         match d with
         | ConditionalType { distributive_tparam_name; _ } -> Option.is_some distributive_tparam_name
+        | ReactCheckComponentRef -> false
         | _ -> true
       in
       (match t with
