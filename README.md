@@ -23,8 +23,6 @@
 
 Flow is a static typechecker for JavaScript. To find out more about Flow, check out [flow.org](https://flow.org/).
 
-For more background information on the project, please read [this overview](https://flow.org/en/docs/lang/).
-
 ## Contents
 
 - [Requirements](#requirements)
