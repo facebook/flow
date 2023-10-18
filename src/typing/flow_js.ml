@@ -8342,6 +8342,7 @@ struct
               | ClassImplementsCheck _
               | ClassOwnProtoCheck _
               | ConformToCommonInterface _
+              | DeclareComponentRef _
               | GeneratorYield _
               | ReactCreateElementCall _
               | ReactGetIntrinsic _
