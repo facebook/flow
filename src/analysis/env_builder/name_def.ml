@@ -1241,7 +1241,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
             | Ast.Type.AvailableRenders (loc, renders) ->
               let annot = (loc, (loc, Ast.Type.Renders renders)) in
               [Hint_t (AnnotationHint (tparams, annot), ExpectedTypeHint)]
-            | Ast.Type.MissingRenders _ -> []
+            | Ast.Type.MissingRenders _ -> [Hint_t (BuiltinType "React$Node", ExpectedTypeHint)]
           in
           this#record_hint renders_loc renders_hint;
           let old_stack = return_hint_stack in
