@@ -708,6 +708,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         let bindings =
           let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
           run hoist#component_params params;
+          run hoist#component_body body;
           hoist#acc
         in
         this#with_bindings

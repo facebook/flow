@@ -789,6 +789,20 @@ References:
                                            ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------- component_type_checking.js:49:18
+
+Cannot assign `3` to `c` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   component_type_checking.js:49:18
+   49|   const c: Bar = 3; // error
+                        ^ [1]
+
+References:
+   component_type_checking.js:49:12
+   49|   const c: Bar = 3; // error
+                  ^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- cycle1.js:11:2
 
 Cannot cast `Bar` to `typeof Baz` because component Foo [1] is incompatible with component Baz [2]. [incompatible-cast]
@@ -2936,7 +2950,7 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 195 errors
+Found 196 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

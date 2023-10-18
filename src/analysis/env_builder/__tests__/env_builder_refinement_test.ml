@@ -7058,3 +7058,23 @@ declare component Foo(ref: any); // should not read
         (3, 14) to (3, 17) => {
           (2, 6) to (2, 11): (`React`)
         }] |}]
+
+let%expect_test "component type alias" =
+  print_ssa_test {|
+component Foo() {
+    type Bar = string;
+    const b: Bar = 'hi';
+    return <div />;
+}
+  |};
+    [%expect {|
+      [
+        (4, 13) to (4, 16) => {
+          (3, 9) to (3, 12): (`Bar`)
+        };
+        (5, 11) to (5, 18) => {
+          Global React
+        };
+        (5, 12) to (5, 15) => {
+          Global div
+        }] |}]

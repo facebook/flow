@@ -43,4 +43,11 @@ component ReactNodeDefaultReturn() {
   return node; // OK!
 }
 
+component InternalAlias() {
+  type Bar = string;
+  const b: Bar = 'hi'; // ok
+  const c: Bar = 3; // error
+  return null;
+}
+
 module.exports = { InlineParams, InlineWithRestParam, Defaults, ReactNodeDefaultReturn };
