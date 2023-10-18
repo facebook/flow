@@ -475,7 +475,14 @@ module Scope = struct
     let exports = Exports.create ~strict:true in
     begin
       match parent with
-      | Global g -> g.modules <- SMap.add name (loc, exports) g.modules
+      | Global g ->
+        g.modules <-
+          SMap.update
+            name
+            (function
+              | None -> Some (loc, exports)
+              | Some existing -> Some existing)
+            g.modules
       | _ -> ()
     end;
     DeclareModule { names = SMap.empty; exports; parent }

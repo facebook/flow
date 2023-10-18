@@ -5107,6 +5107,26 @@ let%expect_test "builtin_cjs_module" =
                 exports = (Some (TyRef (Unqualified LocalRef {ref_loc = [3:26-27]; index = 0})));
                 info = CJSModuleInfo {type_export_keys = [||]; type_stars = []; strict = true}} |}]
 
+let%expect_test "builtin_cjs_ignore_later" =
+  print_builtins [{|
+    type T = string;
+    declare module foo {
+      declare module.exports: string;
+    }
+    declare module foo {
+      declare module.exports: number;
+    }
+  |}];
+  [%expect {|
+    Local defs:
+    0. TypeAlias {id_loc = [1:5-6]; name = "T"; tparams = Mono; body = (Annot (String [1:9-15]))}
+
+    Builtin global T
+    Builtin module foo:
+    [2:15-18] CJSModule {type_exports = [||];
+                exports = (Some (Annot (String [3:26-32])));
+                info = CJSModuleInfo {type_export_keys = [||]; type_stars = []; strict = true}} |}]
+
 let%expect_test "builtin_cjs_module_auto_export_type" =
   (* All types in cjs modules are auto exported. *)
   print_builtins [{|
