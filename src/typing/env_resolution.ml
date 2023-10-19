@@ -354,9 +354,8 @@ let resolve_annotated_function
       function_
   in
   begin
-    match (synthesizable, Context.current_phase cx) with
-    | (_, Context.InitLib) -> ()
-    | (FunctionPredicateSynthesizable (_, pred_expr), _) ->
+    match synthesizable with
+    | FunctionPredicateSynthesizable (_, pred_expr) ->
       let { Statement.Func_stmt_sig.Types.return_t; fparams; _ } = func_sig in
       let params = Statement.Func_stmt_params.value fparams in
       let return_t = TypeUtil.type_t_of_annotated_or_inferred return_t in
@@ -630,9 +629,8 @@ let resolve_binding_partial cx reason loc b =
         function_
     in
     begin
-      match (synthesizable_from_annotation, Context.current_phase cx) with
-      | (_, Context.InitLib) -> ()
-      | (FunctionPredicateSynthesizable (_, pred_expr), _) ->
+      match synthesizable_from_annotation with
+      | FunctionPredicateSynthesizable (_, pred_expr) ->
         let { Statement.Func_stmt_sig.Types.return_t; fparams; _ } = func_sig in
         let return_t = TypeUtil.type_t_of_annotated_or_inferred return_t in
         let params = Statement.Func_stmt_params.value fparams in

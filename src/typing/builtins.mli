@@ -7,16 +7,15 @@
 
 type t
 
-val add_not_yet_seen_builtin : t -> Reason.name -> Type.t -> unit
+val builtin_set : t -> NameUtils.Set.t
 
 val get_builtin_opt : t -> Reason.name -> Type.t option
 
 val get_builtin :
   t -> Reason.name -> on_missing:(unit -> (Type.t, 'a) result) -> (Type.t, 'a) result
 
-val set_builtin : flow_t:(Type.t * Type.t -> unit) -> t -> Reason.name -> Type.t -> unit
+val set_builtin : t -> Reason.name -> Type.t lazy_t -> unit
 
 val empty : unit -> t
 
-val optimize_entries :
-  t -> on_missing:(Reason.name -> Type.t -> unit) -> optimize:(Type.t -> Type.t) -> unit
+val optimize_entries : t -> optimize:(Type.t -> Type.t) -> unit

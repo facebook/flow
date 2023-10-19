@@ -93,6 +93,23 @@ References:
                         ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------------ pick.js:9:2
+
+Cannot cast `pickedO1.bar` to string because undefined [1] is incompatible with string [2]. [incompatible-cast]
+
+   pick.js:9:2
+   9| (pickedO1.bar: string); // ERROR bar is optional
+       ^^^^^^^^^^^^
+
+References:
+   pick.js:1:32
+   1| type O1 = {+foo: number, bar?: string};
+                                     ^^^^^^ [1]
+   pick.js:9:16
+   9| (pickedO1.bar: string); // ERROR bar is optional
+                     ^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- pick.js:24:10
 
 Cannot get `picked.bar` because property `bar` is missing in `Pick` [1]. [prop-missing]
@@ -158,4 +175,4 @@ References:
 
 
 
-Found 11 errors
+Found 12 errors

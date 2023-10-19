@@ -14,3 +14,10 @@ val get_lint_severities :
   StrictModeSettings.t ->
   Severity.severity LintSettings.t ->
   Severity.severity LintSettings.t
+
+val merge_lib_files :
+  sig_opts:Type_sig_options.t ->
+  ccx:Context.component_t ->
+  metadata:Context.metadata ->
+  (Loc.t, Loc.t) Flow_ast.Program.t list ->
+  Type_sig_collections.Locs.index Packed_type_sig.Builtins.t * Context.t option

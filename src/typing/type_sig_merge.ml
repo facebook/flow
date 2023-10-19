@@ -2079,3 +2079,181 @@ let merge_cjs_export_t file =
   | Pack.Value (ObjSpreadLit { loc; frozen; proto; elems_rev }) ->
     merge_obj_spread_lit ~for_export:true tps infer_tps file (loc, frozen, proto, elems_rev)
   | packed -> merge tps file packed
+
+let merge_builtins
+    cx file_key builtin_locs (builtins : Type_sig_collections.Locs.index Packed_type_sig.Builtins.t)
+    =
+  let {
+    Packed_type_sig.Builtins.module_refs;
+    local_defs;
+    remote_refs;
+    pattern_defs;
+    patterns;
+    globals;
+    modules;
+  } =
+    builtins
+  in
+  ConsGen.set_dst_cx cx;
+  let open Type_sig_collections in
+  let source = Some file_key in
+  let aloc_table =
+    lazy (ALoc.ALocRepresentationDoNotUse.make_table file_key (Locs.to_array builtin_locs))
+  in
+  let aloc (i : Locs.index) =
+    ALoc.ALocRepresentationDoNotUse.make_keyed source (i :> int)
+    |> ALoc.to_loc aloc_table
+    |> ALoc.of_loc
+  in
+  let local_def file_and_dependency_map_rec def =
+    lazy
+      (let def = Pack.map_packed_def aloc def in
+       let loc = Type_sig.def_id_loc def in
+       let name = Type_sig.def_name def in
+       let reason = def_reason def in
+       let resolved = lazy (merge_def (Lazy.force file_and_dependency_map_rec |> fst) reason def) in
+       let t = ConsGen.mk_sig_tvar cx reason resolved in
+       (loc, name, t)
+      )
+  in
+
+  let remote_ref file_and_dependency_map_rec remote_ref =
+    lazy
+      (let remote_ref = Pack.map_remote_ref aloc remote_ref in
+       let loc = Pack.remote_ref_loc remote_ref in
+       let name = Pack.remote_ref_name remote_ref in
+       let reason = remote_ref_reason remote_ref in
+       let resolved =
+         lazy (merge_remote_ref (Lazy.force file_and_dependency_map_rec |> fst) reason remote_ref)
+       in
+       let t = ConsGen.mk_sig_tvar cx reason resolved in
+       (loc, name, t)
+      )
+  in
+
+  let pattern_def file_and_dependency_map_rec def =
+    lazy
+      (merge SMap.empty (Lazy.force file_and_dependency_map_rec |> fst) (Pack.map_packed aloc def))
+  in
+
+  let pattern file_and_dependency_map_rec p =
+    lazy (merge_pattern (Lazy.force file_and_dependency_map_rec |> fst) (Pack.map_pattern aloc p))
+  in
+
+  let map_module file_and_dependency_map_rec module_loc module_kind =
+    let reason = Reason.(mk_reason RExports module_loc) in
+    let type_export export =
+      lazy
+        (export
+        |> Pack.map_type_export aloc
+        |> merge_type_export (Lazy.force file_and_dependency_map_rec |> fst) reason
+        )
+    in
+    let cjs_exports export =
+      lazy
+        (export
+        |> Pack.map_packed aloc
+        |> merge_cjs_export_t (Lazy.force file_and_dependency_map_rec |> fst)
+        )
+    in
+    let es_export export =
+      lazy
+        (export
+        |> Pack.map_export aloc
+        |> merge_export (Lazy.force file_and_dependency_map_rec |> fst)
+        )
+    in
+    let cjs_module type_exports exports info =
+      let (Pack.CJSModuleInfo { type_export_keys; type_stars; strict }) =
+        Pack.map_cjs_module_info aloc info
+      in
+      let type_exports = Array.map type_export type_exports in
+      let exports = Option.map ~f:cjs_exports exports in
+      let type_exports =
+        let f acc name export = SMap.add name export acc in
+        Base.Array.fold2_exn ~init:SMap.empty ~f type_export_keys type_exports
+      in
+      CJSExports { type_exports; exports; type_stars; strict }
+    in
+    let es_module type_exports exports info =
+      let (Pack.ESModuleInfo { type_export_keys; export_keys; type_stars; stars; strict }) =
+        Pack.map_es_module_info aloc info
+      in
+      let type_exports = Array.map type_export type_exports in
+      let exports = Array.map es_export exports in
+      let type_exports =
+        let f acc name export = SMap.add name export acc in
+        Base.Array.fold2_exn ~init:SMap.empty ~f type_export_keys type_exports
+      in
+      let exports =
+        let f acc name export = SMap.add name export acc in
+        Base.Array.fold2_exn ~init:SMap.empty ~f export_keys exports
+      in
+      ESExports { type_exports; exports; type_stars; stars; strict }
+    in
+    let resolved =
+      lazy
+        (let info =
+           match module_kind with
+           | Pack.CJSModule { type_exports; exports; info } -> cjs_module type_exports exports info
+           | Pack.ESModule { type_exports; exports; info } -> es_module type_exports exports info
+         in
+         merge_exports (Lazy.force file_and_dependency_map_rec |> fst) reason info
+        )
+    in
+    ConsGen.mk_sig_tvar cx reason resolved
+  in
+
+  let rec file_and_dependency_map_rec =
+    lazy
+      (let dependencies_map =
+         SMap.fold
+           (fun s { Packed_type_sig.Builtins.loc; module_kind } acc ->
+             let lazy_t =
+               lazy
+                 (map_module
+                    file_and_dependency_map_rec
+                    (loc |> Locs.get builtin_locs |> ALoc.of_loc)
+                    module_kind
+                 )
+             in
+             SMap.add s lazy_t acc)
+           modules
+           SMap.empty
+       in
+       let map_module_ref s : Context.resolved_require Lazy.t =
+         match SMap.find_opt s dependencies_map with
+         | None -> lazy (Error (Reason.InternalModuleName s))
+         | Some lazy_t -> Lazy.map (fun t -> Ok t) lazy_t
+       in
+       ( {
+           cx;
+           dependencies = Module_refs.map (fun s -> (s, map_module_ref s)) module_refs;
+           exports = Type.AnyT.annot Reason.(locationless_reason RExports);
+           local_defs = Local_defs.map (local_def file_and_dependency_map_rec) local_defs;
+           remote_refs = Remote_refs.map (remote_ref file_and_dependency_map_rec) remote_refs;
+           pattern_defs = Pattern_defs.map (pattern_def file_and_dependency_map_rec) pattern_defs;
+           patterns = Patterns.map (pattern file_and_dependency_map_rec) patterns;
+         },
+         dependencies_map
+       )
+      )
+  in
+
+  NameUtils.Map.empty
+  |> SMap.fold
+       (fun s _ acc ->
+         let name = Reason.InternalModuleName s in
+         let t = SMap.find s (Lazy.force file_and_dependency_map_rec |> snd) in
+         NameUtils.Map.add name t acc)
+       modules
+  |> SMap.fold
+       (fun s i acc ->
+         let name = Reason.OrdinaryName s in
+         let t =
+           Lazy.map
+             (fun (_, _, t) -> t)
+             (local_def file_and_dependency_map_rec (Local_defs.get local_defs i))
+         in
+         NameUtils.Map.add name t acc)
+       globals

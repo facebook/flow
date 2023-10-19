@@ -9795,21 +9795,7 @@ struct
    *
    * If you are not in a lib file, then this behaves as a strict lookup. We error and return Any
    * in the case where the builtin is not already in the map *)
-  and get_builtin_tvar_result cx ?trace:_ x reason =
-    if Context.current_phase cx <> Context.InitLib then
-      lookup_builtin_strict_tvar_result cx x reason
-    else
-      let builtins = Context.builtins cx in
-      let builtin =
-        Builtins.get_builtin builtins x ~on_missing:(fun () ->
-            let tvar = Tvar.mk cx reason in
-            Builtins.add_not_yet_seen_builtin builtins x tvar;
-            Ok tvar
-        )
-      in
-      Env_api.map_result
-        ~f:(fun builtin -> Tvar.mk_where_no_wrap cx reason (fun t -> flow_t cx (builtin, t)))
-        builtin
+  and get_builtin_tvar_result cx ?trace:_ x reason = lookup_builtin_strict_tvar_result cx x reason
 
   and get_builtin_result cx ?trace x reason =
     Env_api.map_result (get_builtin_tvar_result cx ?trace x reason) ~f:(fun n -> OpenT (reason, n))
@@ -10130,10 +10116,9 @@ struct
       in
       (subst (reason_of_t property_type) property_type, homomorphic')
 
-  and set_builtin cx ?trace x t =
+  and set_builtin cx x t =
     let builtins = Context.builtins cx in
-    let flow_t = flow_opt_t cx ~use_op:unknown_use ?trace in
-    Builtins.set_builtin ~flow_t builtins x t
+    Builtins.set_builtin builtins x t
 
   (* Wrapper functions around __flow that manage traces. Use these functions for
      all recursive calls in the implementation of __flow. *)

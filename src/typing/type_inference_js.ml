@@ -622,11 +622,8 @@ let infer_lib_file ~exclude_syms ~lint_severities cx ast =
     in
     Context.add_severity_covers cx severity_cover;
     Context.add_error_suppressions cx suppressions;
-    List.iter (Flow_js.add_output cx) suppression_errors;
-
-    Type_env.init_builtins_from_libdef cx
+    List.iter (Flow_js.add_output cx) suppression_errors
   with
   | Env_api.Env_invariant (loc, inv) ->
     let loc = Base.Option.value ~default:(fst aloc_ast) loc in
-    Flow_js.add_output cx Error_message.(EInternal (loc, EnvInvariant inv));
-    []
+    Flow_js.add_output cx Error_message.(EInternal (loc, EnvInvariant inv))

@@ -93,10 +93,9 @@ let before_and_after_stmts file_name =
       Reason.mk_reason desc loc
     in
     Builtins.set_builtin
-      ~flow_t:(fun _ -> ())
       master_cx.Context.builtins
       (Reason.OrdinaryName "Object")
-      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)))
+      (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
   in
   let cx =
     let aloc_table = lazy (ALoc.empty_table file_key) in

@@ -538,17 +538,31 @@ let optimize_builtins cx =
     new Context_optimizer.context_optimizer ~no_lowers
   in
   let builtins = Context.builtins cx in
-  let on_missing name t =
-    let reason = TypeUtil.reason_of_t t in
-    Flow_js.flow_t cx (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)), t);
-    Flow_js.add_output
-      cx
-      (Error_message.EBuiltinLookupFailed { reason; name; potential_generator = None })
-  in
-  Builtins.optimize_entries builtins ~on_missing ~optimize:(reducer#type_ cx Polarity.Neutral);
+  Builtins.optimize_entries builtins ~optimize:(reducer#type_ cx Polarity.Neutral);
   Context.set_graph cx reducer#get_reduced_graph;
   Context.set_trust_graph cx reducer#get_reduced_trust_graph;
   Context.set_property_maps cx reducer#get_reduced_property_maps;
   Context.set_call_props cx reducer#get_reduced_call_props;
   Context.set_export_maps cx reducer#get_reduced_export_maps;
   Context.set_evaluated cx reducer#get_reduced_evaluated
+
+let merge_lib_files ~sig_opts ~ccx ~metadata ordered_asts =
+  let (_builtin_errors, builtin_locs, builtins) =
+    Type_sig_utils.parse_and_pack_builtins sig_opts ordered_asts
+  in
+  match ordered_asts with
+  | [] -> (builtins, None)
+  | fst_ast :: _ ->
+    let file_key = Base.Option.value_exn (fst_ast |> fst |> Loc.source) in
+    let cx =
+      Context.make
+        ccx
+        metadata
+        file_key
+        (lazy (ALoc.empty_table file_key))
+        (fun mref -> Error (Reason.InternalModuleName mref))
+        Context.InitLib
+    in
+    let global_names = Type_sig_merge.merge_builtins cx file_key builtin_locs builtins in
+    NameUtils.Map.iter (fun name t -> Flow_js.set_builtin cx name t) global_names;
+    (builtins, Some cx)

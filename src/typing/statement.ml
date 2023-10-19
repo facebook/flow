@@ -1792,12 +1792,17 @@ module Make
 
       let elements_ast = statement_list cx elements in
       let reason = mk_reason (RModule (OrdinaryName name)) id_loc in
-      Type_env.init_declare_module_synthetic_module_exports
-        cx
-        ~export_type:(Import_export.export_type ?preferred_def_locs:None)
-        loc
-        reason;
-      let module_t = Import_export.mk_module_t cx reason loc in
+      let module_t =
+        ModuleT
+          ( reason,
+            {
+              exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
+              cjs_export = None;
+              has_every_named_export = false;
+            },
+            Context.is_strict cx
+          )
+      in
       let ast =
         {
           DeclareModule.id =

@@ -834,8 +834,6 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
     write_entries: Env_api.env_entry EnvMap.t;
     predicate_refinement_maps: Env_api.predicate_refinement_maps;
     type_guard_consistency_maps: Env_api.type_guard_consistency_maps;
-    toplevel_members: Env_api.read NameUtils.Map.t;
-    module_toplevel_members: Env_api.toplevel_member list L.LMap.t;
     curr_id: int;
     (* Maps refinement ids to refinements. This mapping contains _all_ the refinements reachable at
      * any point in the code. The latest_refinement maps keep track of which entries to read. *)
@@ -1289,8 +1287,6 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         {
           values = L.LMap.empty;
           write_entries;
-          toplevel_members = NameUtils.Map.empty;
-          module_toplevel_members = L.LMap.empty;
           predicate_refinement_maps = L.LMap.empty;
           type_guard_consistency_maps = L.LMap.empty;
           curr_id = 0;
@@ -1319,10 +1315,6 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           env_state.values
 
       method write_entries : Env_api.env_entry EnvMap.t = env_state.write_entries
-
-      method toplevel_members = env_state.toplevel_members
-
-      method module_toplevel_members = env_state.module_toplevel_members
 
       method predicate_refinement_maps = env_state.predicate_refinement_maps
 
@@ -1960,14 +1952,12 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 kind;
               })
           m
+        |> SMap.filter (fun name _ -> not @@ this#is_excluded_ordinary_name name)
         |> SMap.map Nel.one
 
       method private push_env ~this_super_binding_env bindings =
         let old_env = env_state.env in
         let bindings = Bindings.to_map bindings in
-        let bindings =
-          SMap.filter (fun name _ -> not @@ this#is_excluded_ordinary_name name) bindings
-        in
         let env =
           SMap.fold
             (fun x v ->
@@ -2138,46 +2128,40 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
 
       method! binding_type_identifier ident =
         let (loc, { Flow_ast.Identifier.name; comments = _ }) = ident in
-        ( if this#is_excluded_ordinary_name name then
-          ()
-        else
-          let { kind; def_loc; _ } = this#env_read name in
-          let error =
-            match def_loc with
-            (* Identifiers with no binding can never reintroduce "cannot reassign binding" errors *)
-            | None -> None
-            | Some def_loc ->
-              (match kind with
-              | Bindings.Type _
-              | Bindings.DeclaredClass
-              | Bindings.DeclaredVar
-              | Bindings.DeclaredLet
-              | Bindings.DeclaredConst
-                when not (ALoc.equal loc def_loc) ->
-                (* Types are already bind in hoister,
-                   so we only check for rebind in different locations. *)
-                Some
-                  Error_message.(EBindingError (ENameAlreadyBound, loc, OrdinaryName name, def_loc))
-              | Bindings.Type _ -> None
-              | Bindings.Var
-              | Bindings.Const
-              | Bindings.Let
-              | Bindings.Class
-              | Bindings.Function
-              | Bindings.Component
-              | Bindings.Parameter
-              | Bindings.Import ->
-                Some
-                  Error_message.(EBindingError (ENameAlreadyBound, loc, OrdinaryName name, def_loc))
-              | _ -> None)
-          in
-          Base.Option.iter error ~f:(fun error ->
-              add_output error;
-              let write_entries =
-                EnvMap.add_ordinary loc Env_api.NonAssigningWrite env_state.write_entries
-              in
-              env_state <- { env_state with write_entries }
-          )
+        let { kind; def_loc; _ } = this#env_read name in
+        let error =
+          match def_loc with
+          (* Identifiers with no binding can never reintroduce "cannot reassign binding" errors *)
+          | None -> None
+          | Some def_loc ->
+            (match kind with
+            | Bindings.Type _
+            | Bindings.DeclaredClass
+            | Bindings.DeclaredVar
+            | Bindings.DeclaredLet
+            | Bindings.DeclaredConst
+              when not (ALoc.equal loc def_loc) ->
+              (* Types are already bind in hoister,
+                 so we only check for rebind in different locations. *)
+              Some Error_message.(EBindingError (ENameAlreadyBound, loc, OrdinaryName name, def_loc))
+            | Bindings.Type _ -> None
+            | Bindings.Var
+            | Bindings.Const
+            | Bindings.Let
+            | Bindings.Class
+            | Bindings.Function
+            | Bindings.Component
+            | Bindings.Parameter
+            | Bindings.Import ->
+              Some Error_message.(EBindingError (ENameAlreadyBound, loc, OrdinaryName name, def_loc))
+            | _ -> None)
+        in
+        Base.Option.iter error ~f:(fun error ->
+            add_output error;
+            let write_entries =
+              EnvMap.add_ordinary loc Env_api.NonAssigningWrite env_state.write_entries
+            in
+            env_state <- { env_state with write_entries }
         );
         super#identifier ident
 
@@ -2329,57 +2313,56 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         elem
 
       method private bind_pattern_identifier_customized ~kind ?(get_assigned_val = Val.one) loc x =
-        if this#is_excluded_ordinary_name x then
-          ()
-        else
-          let reason = Reason.(mk_reason (RIdentifier (OrdinaryName x))) loc in
-          let {
-            val_ref;
-            heap_refinements;
-            kind = stored_binding_kind;
-            def_loc;
-            havoc = _;
-            writes_by_closure_provider_val = _;
-          } =
-            this#env_read x
-          in
-          match kind with
-          (* Assignments to undeclared bindings that aren't part of declarations do not
-           * initialize those bindings. *)
-          | AssignmentWrite when Val.is_undeclared_or_skipped !val_ref ->
-            (match def_loc with
-            | None ->
-              raise
-                Env_api.(
-                  Env_invariant
-                    ( Some loc,
-                      Impossible "Cannot have an undeclared or skipped binding without a def loc"
-                    )
-                )
-            | Some def_loc ->
-              add_output
-                Error_message.(
-                  EBindingError (EReferencedBeforeDeclaration, loc, OrdinaryName x, def_loc)
-                ))
+        let reason = Reason.(mk_reason (RIdentifier (OrdinaryName x))) loc in
+        let {
+          val_ref;
+          heap_refinements;
+          kind = stored_binding_kind;
+          def_loc;
+          havoc = _;
+          writes_by_closure_provider_val = _;
+        } =
+          this#env_read x
+        in
+        match kind with
+        (* Assignments to undeclared bindings that aren't part of declarations do not
+         * initialize those bindings. *)
+        | AssignmentWrite when Val.is_undeclared_or_skipped !val_ref ->
+          (match def_loc with
+          | None ->
+            raise
+              Env_api.(
+                Env_invariant
+                  ( Some loc,
+                    Impossible "Cannot have an undeclared or skipped binding without a def loc"
+                  )
+              )
+          | Some def_loc ->
+            add_output
+              Error_message.(
+                EBindingError (EReferencedBeforeDeclaration, loc, OrdinaryName x, def_loc)
+              ))
+        | _ ->
+          (match error_for_assignment_kind cx x loc def_loc stored_binding_kind kind !val_ref with
+          | Some err -> this#error_assignment loc x reason stored_binding_kind kind err val_ref
           | _ ->
-            (match error_for_assignment_kind cx x loc def_loc stored_binding_kind kind !val_ref with
-            | Some err -> this#error_assignment loc reason stored_binding_kind kind err val_ref
-            | _ ->
-              this#havoc_heap_refinements heap_refinements;
-              let current_val = !val_ref in
-              if not (Val.is_declared_function current_val) then val_ref := get_assigned_val reason;
-              let write_entries =
-                let write_entry =
-                  if Val.is_global current_val then
-                    Env_api.GlobalWrite reason
-                  else
-                    Env_api.AssigningWrite reason
-                in
-                EnvMap.add_ordinary loc write_entry env_state.write_entries
+            this#havoc_heap_refinements heap_refinements;
+            let current_val = !val_ref in
+            if (not (Val.is_declared_function current_val)) && not (this#is_excluded_ordinary_name x)
+            then
+              val_ref := get_assigned_val reason;
+            let write_entries =
+              let write_entry =
+                if Val.is_global current_val then
+                  Env_api.GlobalWrite reason
+                else
+                  Env_api.AssigningWrite reason
               in
-              env_state <- { env_state with write_entries })
+              EnvMap.add_ordinary loc write_entry env_state.write_entries
+            in
+            env_state <- { env_state with write_entries })
 
-      method error_assignment loc reason stored_binding_kind kind err val_ref =
+      method error_assignment loc x reason stored_binding_kind kind err val_ref =
         add_output err;
         let write_entries =
           EnvMap.add_ordinary loc Env_api.NonAssigningWrite env_state.write_entries
@@ -2388,7 +2371,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             possibly undefined variable. Essentially, we are treating var redeclaration as a
             assignment with an any-typed value. *)
         (match (stored_binding_kind, kind) with
-        | (Bindings.Var, VarBinding) -> val_ref := Val.illegal_write reason
+        | (Bindings.Var, VarBinding) when not (this#is_excluded_ordinary_name x) ->
+          val_ref := Val.illegal_write reason
         | _ -> ());
         env_state <- { env_state with write_entries }
 
@@ -2861,8 +2845,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                       _;
                     }
                 )
-              )
-              when not @@ this#is_excluded_ordinary_name x ->
+              ) ->
               let kind = variable_declaration_binding_kind_to_pattern_write_kind (Some kind) in
               let reason = Reason.(mk_reason (RIdentifier (OrdinaryName x))) name_loc in
               let write_kind = Env_api.AssigningWrite reason in
@@ -2899,7 +2882,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 this#havoc_heap_refinements heap_refinements;
                 let write_entries =
                   if not (Val.is_declared_function !val_ref) then (
-                    val_ref := assigned_val;
+                    if not (this#is_excluded_ordinary_name x) then val_ref := assigned_val;
                     (* Unlike with a typical write, we don't want to create a write_entry here,
                        because the type should be computed from the array providers. *)
                     EnvMap.add_ordinary name_loc write_kind env_state.write_entries
@@ -2927,39 +2910,28 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               this#record_pattern_loc_writes id;
               Flow_ast_utils.fold_bindings_of_pattern
                 (fun () (loc, { Flow_ast.Identifier.name; _ }) ->
-                  if this#is_excluded_ordinary_name name then
-                    ()
-                  else
-                    let { val_ref; kind = stored_binding_kind; def_loc; _ } = this#env_read name in
-                    let kind =
-                      variable_declaration_binding_kind_to_pattern_write_kind (Some kind)
-                    in
-                    let error =
-                      error_for_assignment_kind
-                        cx
-                        name
-                        loc
-                        def_loc
-                        stored_binding_kind
-                        kind
-                        !val_ref
-                    in
-                    if Val.is_undeclared !val_ref then val_ref := Val.uninitialized loc;
-                    let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
-                    match (error, annot) with
-                    | (None, Ast.Type.Available _) ->
-                      env_state <-
-                        {
-                          env_state with
-                          write_entries =
-                            EnvMap.add_ordinary
-                              loc
-                              (Env_api.AssigningWrite reason)
-                              env_state.write_entries;
-                        }
-                    | (Some err, _) ->
-                      this#error_assignment loc reason stored_binding_kind kind err val_ref
-                    | _ -> ())
+                  let { val_ref; kind = stored_binding_kind; def_loc; _ } = this#env_read name in
+                  let kind = variable_declaration_binding_kind_to_pattern_write_kind (Some kind) in
+                  let error =
+                    error_for_assignment_kind cx name loc def_loc stored_binding_kind kind !val_ref
+                  in
+                  if Val.is_undeclared !val_ref && not (this#is_excluded_ordinary_name name) then
+                    val_ref := Val.uninitialized loc;
+                  let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
+                  match (error, annot) with
+                  | (None, Ast.Type.Available _) ->
+                    env_state <-
+                      {
+                        env_state with
+                        write_entries =
+                          EnvMap.add_ordinary
+                            loc
+                            (Env_api.AssigningWrite reason)
+                            env_state.write_entries;
+                      }
+                  | (Some err, _) ->
+                    this#error_assignment loc name reason stored_binding_kind kind err val_ref
+                  | _ -> ())
                 ()
                 id;
               this#with_current_pattern_bindings id ~f:(fun () ->
@@ -5681,7 +5653,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         this#jsx_function_call loc;
         super#jsx_fragment loc expr
 
-      method private statements_with_bindings loc bindings statements ~finally =
+      method private statements_with_bindings loc bindings statements =
         this#with_bindings
           loc
           bindings
@@ -5689,7 +5661,6 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             let completion_state =
               this#run_to_completion (fun () -> ignore @@ this#statement_list statements)
             in
-            finally ();
             completion_state)
           None
 
@@ -5737,21 +5708,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         in
         let saved_exclude_syms = env_state.exclude_syms in
         env_state <- { env_state with exclude_syms = NameUtils.Set.empty };
-        ignore
-        @@ this#statements_with_bindings block_loc bindings statements ~finally:(fun () ->
-               let members =
-                 bindings
-                 |> Bindings.to_map
-                 |> SMap.keys
-                 |> Base.List.map ~f:(fun name -> (OrdinaryName name, this#synthesize_read name))
-               in
-               env_state <-
-                 {
-                   env_state with
-                   module_toplevel_members =
-                     L.LMap.add loc members env_state.module_toplevel_members;
-                 }
-           );
+        ignore @@ this#statements_with_bindings block_loc bindings statements;
         env_state <- { env_state with exclude_syms = saved_exclude_syms };
         m
 
@@ -5761,43 +5718,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           let hoist = new hoister ~flowmin_compatibility:false ~enable_enums ~with_types:true in
           hoist#eval hoist#program program
         in
-        this#statements_with_bindings loc bindings statements ~finally:(fun () ->
-            let rev_bindings =
-              bindings
-              |> Bindings.to_map
-              |> SMap.keys
-              |> Base.List.rev_filter_map ~f:(fun name ->
-                     if not (this#is_excluded_ordinary_name name) then
-                       Some (OrdinaryName name, this#synthesize_read name)
-                     else
-                       None
-                 )
-            in
-            let statements =
-              Base.List.rev_filter_map statements ~f:(function
-                  | ( _,
-                      Ast.Statement.DeclareModule
-                        {
-                          Ast.Statement.DeclareModule.id =
-                            ( Ast.Statement.DeclareModule.Identifier
-                                (loc, { Ast.Identifier.name; _ })
-                            | Ast.Statement.DeclareModule.Literal
-                                (loc, { Ast.StringLiteral.value = name; _ }) );
-                          _;
-                        }
-                    )
-                    when not (this#is_excluded (internal_module_name name)) ->
-                    let reason = mk_reason (RModule (OrdinaryName name)) loc in
-                    let v = Val.one reason |> Val.simplify (Some loc) None (Some name) in
-                    Some (internal_module_name name, v)
-                  | _ -> None
-                  )
-            in
-            let toplevel_members =
-              Base.List.rev_append rev_bindings statements |> NameUtils.Map.of_list
-            in
-            env_state <- { env_state with toplevel_members }
-        )
+        this#statements_with_bindings loc bindings statements
     end
 
   (* The EnvBuilder does not traverse dead code, but statement.ml does. Dead code
@@ -6055,8 +5976,6 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         env_values = dead_code_marker#values;
         env_entries = dead_code_marker#write_entries;
         providers;
-        toplevel_members = env_walk#toplevel_members;
-        module_toplevel_members = env_walk#module_toplevel_members;
         predicate_refinement_maps = env_walk#predicate_refinement_maps;
         type_guard_consistency_maps = env_walk#type_guard_consistency_maps;
         refinement_of_id = env_walk#refinement_of_id;

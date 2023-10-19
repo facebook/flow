@@ -72,33 +72,34 @@ let rec js_of_json = function
 
 let load_lib_files ~ccx ~metadata files =
   (* iterate in reverse override order *)
-  let (leader, _) =
-    List.rev files
-    |> List.fold_left
-         (fun (leader, exclude_syms) file ->
-           let lib_content = Sys_utils.cat file in
-           let lib_file = File_key.LibFile file in
-           match parse_content lib_file lib_content with
-           | Ok (ast, _file_sig) ->
-             (* Lib files use only concrete locations, so this is not used. *)
-             let aloc_table = lazy (ALoc.empty_table lib_file) in
-             let resolve_require mref = Error (Reason.internal_module_name mref) in
-             let cx =
-               Context.make ccx metadata lib_file aloc_table resolve_require Context.InitLib
-             in
-             let syms =
-               Type_inference_js.infer_lib_file
-                 cx
-                 ast
-                 ~exclude_syms
-                 ~lint_severities:LintSettings.empty_severities
-             in
-             (* symbols loaded from this file are suppressed if found in later ones *)
-             (Some cx, NameUtils.Set.union exclude_syms (NameUtils.Set.of_list syms))
-           | Error _ -> (leader, exclude_syms))
-         (None, NameUtils.Set.empty)
+  let asts =
+    List.rev_map
+      (fun file ->
+        let lib_content = Sys_utils.cat file in
+        let lib_file = File_key.LibFile file in
+        let (ast, _) = parse_content lib_file lib_content |> Result.get_ok in
+        ast)
+      files
   in
-  leader
+  let sig_opts =
+    let open Type_sig_options in
+    {
+      munge = false;
+      facebook_keyMirror = false;
+      enable_relay_integration = false;
+      relay_integration_module_prefix = None;
+      suppress_types = SSet.empty;
+      facebook_fbt = None;
+      max_literal_len = 100;
+      exact_by_default = true;
+      enable_enums = true;
+      enable_component_syntax = true;
+      casting_syntax = Options.CastingSyntax.Both;
+      for_builtins = true;
+      locs_to_dirtify = [];
+    }
+  in
+  Merge_js.merge_lib_files ~sig_opts ~ccx ~metadata asts |> snd
 
 let stub_metadata ~root ~checked =
   {

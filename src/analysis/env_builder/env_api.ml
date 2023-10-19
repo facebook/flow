@@ -180,8 +180,6 @@ module type S = sig
     | GlobalWrite of L.t virtual_reason
     | NonAssigningWrite
 
-  type toplevel_member = Reason.name * read
-
   type predicate_refinement = read * L.t * Pattern_helper.binding
 
   type predicate_refinement_maps =
@@ -210,8 +208,6 @@ module type S = sig
     ssa_values: Ssa_api.values;
     env_values: values;
     env_entries: env_entry EnvMap.t;
-    toplevel_members: read NameUtils.Map.t;
-    module_toplevel_members: toplevel_member list L.LMap.t;
     predicate_refinement_maps: predicate_refinement_maps;
     type_guard_consistency_maps: type_guard_consistency_maps;
     providers: Provider_api.info;
@@ -481,8 +477,6 @@ module Make
     | GlobalWrite of L.t virtual_reason
     | NonAssigningWrite
 
-  type toplevel_member = Reason.name * read
-
   type predicate_refinement = read * L.t * Pattern_helper.binding
 
   type predicate_refinement_maps =
@@ -509,8 +503,6 @@ module Make
     ssa_values: Ssa_api.values;
     env_values: values;
     env_entries: env_entry EnvMap.t;
-    toplevel_members: read NameUtils.Map.t;
-    module_toplevel_members: toplevel_member list L.LMap.t;
     predicate_refinement_maps: predicate_refinement_maps;
     type_guard_consistency_maps: type_guard_consistency_maps;
     providers: Provider_api.info;
@@ -532,8 +524,6 @@ module Make
       ssa_values = L.LMap.empty;
       env_values = L.LMap.empty;
       env_entries = EnvMap.empty;
-      toplevel_members = NameUtils.Map.empty;
-      module_toplevel_members = L.LMap.empty;
       predicate_refinement_maps = L.LMap.empty;
       type_guard_consistency_maps = L.LMap.empty;
       providers = Provider_api.empty;

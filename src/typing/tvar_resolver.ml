@@ -113,16 +113,10 @@ class resolver ~no_lowers =
         seen
   end
 
-let run_conditionally cx f =
-  match Context.current_phase cx with
-  | Context.InitLib -> ()
-  | _ -> ignore @@ f ()
-
 let resolve ?(no_lowers = default_no_lowers) cx t =
-  run_conditionally cx (fun () ->
-      let resolver = new resolver ~no_lowers in
-      resolver#type_ cx Polarity.Positive ISet.empty t
-  )
+  let resolver = new resolver ~no_lowers in
+  let (_ : ISet.t) = resolver#type_ cx Polarity.Positive ISet.empty t in
+  ()
 
 let resolved_t ?(no_lowers = default_no_lowers) cx t =
   resolve ~no_lowers cx t;

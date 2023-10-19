@@ -117,25 +117,22 @@ let t_option_value_exn cx loc t =
 (************************)
 
 let enforced_env_read_error_opt cx kind loc =
-  if Context.current_phase cx <> Context.InitLib then
-    let ({ Loc_env.under_resolution; var_info; _ } as env) = Context.environment cx in
-    match EnvMap.find_opt (kind, loc) var_info.Env_api.env_entries with
-    | Some Env_api.NonAssigningWrite -> None
-    | _ ->
-      (match Loc_env.find_write env kind loc with
-      | None -> Some Error_message.(EInternal (loc, MissingEnvWrite loc))
-      | Some (OpenT (_, id)) ->
-        if not (Loc_env.is_readable env kind loc) then
-          Some Error_message.(EInternal (loc, ReadOfUnreachedTvar kind))
-        else if not (Env_api.EnvSet.mem (kind, loc) under_resolution) then
-          match Context.find_graph cx id with
-          | Type.Constraint.FullyResolved _ -> None
-          | _ -> Some Error_message.(EInternal (loc, ReadOfUnresolvedTvar kind))
-        else
-          None
-      | Some t -> assert_false ("Expect only OpenTs in env, instead we have " ^ Debug_js.dump_t cx t))
-  else
-    None
+  let ({ Loc_env.under_resolution; var_info; _ } as env) = Context.environment cx in
+  match EnvMap.find_opt (kind, loc) var_info.Env_api.env_entries with
+  | Some Env_api.NonAssigningWrite -> None
+  | _ ->
+    (match Loc_env.find_write env kind loc with
+    | None -> Some Error_message.(EInternal (loc, MissingEnvWrite loc))
+    | Some (OpenT (_, id)) ->
+      if not (Loc_env.is_readable env kind loc) then
+        Some Error_message.(EInternal (loc, ReadOfUnreachedTvar kind))
+      else if not (Env_api.EnvSet.mem (kind, loc) under_resolution) then
+        match Context.find_graph cx id with
+        | Type.Constraint.FullyResolved _ -> None
+        | _ -> Some Error_message.(EInternal (loc, ReadOfUnresolvedTvar kind))
+      else
+        None
+    | Some t -> assert_false ("Expect only OpenTs in env, instead we have " ^ Debug_js.dump_t cx t))
 
 let check_readable cx kind loc =
   enforced_env_read_error_opt cx kind loc |> Base.Option.iter ~f:(Flow_js_utils.add_output cx)
@@ -853,70 +850,3 @@ let discriminant_after_negated_cases cx switch_loc refinement_key_opt =
 let get_next cx loc =
   let name = InternalName "next" in
   read_entry_exn ~lookup_mode:ForValue cx loc (mk_reason (RIdentifier name) loc)
-
-let init_declare_module_synthetic_module_exports cx ~export_type loc reason =
-  let env = Context.environment cx in
-  let module_toplevel_members =
-    match ALocMap.find_opt loc env.Loc_env.var_info.Env_api.module_toplevel_members with
-    | Some m -> m
-    | None ->
-      Flow_js_utils.add_output
-        cx
-        Error_message.(
-          EInternal (loc, EnvInvariant (Env_api.Impossible "Did not find loc in toplevel members"))
-        );
-      []
-  in
-  match Context.module_kind cx with
-  | Module_info.ES _ -> ()
-  | Module_info.CJS clobbered ->
-    let () =
-      match clobbered with
-      | Some _ -> ()
-      | None ->
-        let props =
-          Base.List.fold
-            module_toplevel_members
-            ~init:NameUtils.Map.empty
-            ~f:(fun acc (name, { Env_api.write_locs; val_kind; id; _ }) ->
-              match val_kind with
-              | Some Env_api.Value ->
-                let t = type_of_state ~lookup_mode:ForValue cx env loc reason write_locs id None in
-                Properties.add_field name Polarity.Positive ~key_loc:(Some loc) t acc
-              | _ -> acc
-          )
-        in
-        let proto = ObjProtoT reason in
-        let t = Obj_type.mk_with_proto cx reason ~obj_kind:Exact ~props proto in
-        set_module_exports cx t
-    in
-    Base.List.iter
-      module_toplevel_members
-      ~f:(fun (name, { Env_api.write_locs; val_kind; id; _ }) ->
-        match val_kind with
-        | Some (Env_api.Type { imported = false }) ->
-          let t = type_of_state ~lookup_mode:ForType cx env loc reason write_locs id None in
-          export_type cx name ~name_loc:(Some loc) t
-        | _ -> ()
-    )
-
-let init_builtins_from_libdef cx =
-  let env = Context.environment cx in
-  let filename = Context.file cx in
-  let read_loc = Loc.{ none with source = Some filename } |> ALoc.of_loc in
-  let read_reason =
-    let desc = Reason.(RModule (OrdinaryName (File_key.to_string filename))) in
-    Reason.mk_reason desc read_loc
-  in
-  env.Loc_env.var_info.Env_api.toplevel_members
-  |> NameUtils.Map.elements
-  |> Base.List.map ~f:(fun (name, { Env_api.write_locs; val_kind; id; _ }) ->
-         let lookup_mode =
-           match val_kind with
-           | Some (Env_api.Type _) -> ForType
-           | _ -> ForValue
-         in
-         let t = type_of_state ~lookup_mode cx env read_loc read_reason write_locs id None in
-         Flow_js.set_builtin cx name t;
-         name
-     )

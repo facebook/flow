@@ -84,50 +84,41 @@ let dummy_context () =
   let () =
     (* Add builtins that will be used by tests. *)
     Builtins.set_builtin
-      ~flow_t:(fun _ -> ())
       master_cx.Context.builtins
       (Reason.OrdinaryName "console")
-      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
+      (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))));
     Builtins.set_builtin
-      ~flow_t:(fun _ -> ())
       master_cx.Context.builtins
       (Reason.OrdinaryName "Object")
-      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
+      (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))));
     Builtins.set_builtin
-      ~flow_t:(fun _ -> ())
       master_cx.Context.builtins
       (Reason.OrdinaryName "Generator")
-      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
+      (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))));
     Builtins.set_builtin
-      ~flow_t:(fun _ -> ())
       master_cx.Context.builtins
       (Reason.OrdinaryName "AsyncGenerator")
-      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
+      (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))));
     Builtins.set_builtin
-      ~flow_t:(fun _ -> ())
       master_cx.Context.builtins
       (Reason.OrdinaryName "Promise")
-      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
+      (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))));
     Builtins.set_builtin
-      ~flow_t:(fun _ -> ())
       master_cx.Context.builtins
       (Reason.OrdinaryName "promise")
-      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
+      (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))));
     Builtins.set_builtin
-      ~flow_t:(fun _ -> ())
       master_cx.Context.builtins
       (Reason.OrdinaryName "$await")
-      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
+      (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))));
     Builtins.set_builtin
-      ~flow_t:(fun _ -> ())
       master_cx.Context.builtins
       (Reason.OrdinaryName "$AsyncIterable")
-      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
+      (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))));
     Builtins.set_builtin
-      ~flow_t:(fun _ -> ())
       master_cx.Context.builtins
       (Reason.OrdinaryName "$Iterable")
-      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)))
+      (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
   in
   let ccx = Context.make_ccx master_cx in
   let metadata = stub_metadata ~root ~checked:true in

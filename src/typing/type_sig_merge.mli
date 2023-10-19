@@ -56,3 +56,10 @@ val merge_resource_module_t : Context.t -> File_key.t -> string -> Type.t
 val merge : tparams_map -> file -> ALoc.t Pack.packed -> Type.t
 
 val merge_cjs_export_t : file -> ALoc.t Pack.packed -> Type.t
+
+val merge_builtins :
+  Context.t ->
+  File_key.t ->
+  Loc.t Locs.t ->
+  Locs.index Packed_type_sig.Builtins.t ->
+  Type.t lazy_t NameUtils.Map.t

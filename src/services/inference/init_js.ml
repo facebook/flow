@@ -61,8 +61,7 @@ let parse_lib_file ~reader options file =
   with
   | _ -> failwith (spf "Can't read library definitions file %s, exiting." file)
 
-let infer_lib_file ~ccx ~options ~exclude_syms lib_file ast =
-  let verbose = Options.verbose options in
+let check_lib_file ~ccx ~options ast =
   let lint_severities = Options.lint_severities options in
   let metadata =
     Context.(
@@ -70,20 +69,17 @@ let infer_lib_file ~ccx ~options ~exclude_syms lib_file ast =
       { metadata with checked = false }
     )
   in
+  let lib_file = Base.Option.value_exn (ast |> fst |> Loc.source) in
   (* Lib files use only concrete locations, so this is not used. *)
   let aloc_table = lazy (ALoc.empty_table lib_file) in
   let resolve_require mref = Error (Reason.internal_module_name mref) in
   let cx = Context.make ccx metadata lib_file aloc_table resolve_require Context.InitLib in
-  let syms = Infer.infer_lib_file cx ast ~exclude_syms ~lint_severities in
-
-  if verbose != None then
-    prerr_endlinef
-      "load_lib %s: added symbols { %s }"
-      (File_key.to_string lib_file)
-      (String.concat ", " (Base.List.map ~f:Reason.display_string_of_name syms));
-
-  (* symbols loaded from this file are suppressed if found in later ones *)
-  (cx, NameUtils.Set.union exclude_syms (NameUtils.Set.of_list syms))
+  Infer.infer_lib_file
+    cx
+    ast
+    ~exclude_syms:(cx |> Context.builtins |> Builtins.builtin_set)
+    ~lint_severities;
+  Context.errors cx
 
 (* process all lib files: parse, infer, and add the symbols they define
    to the builtins object.
@@ -96,22 +92,21 @@ let infer_lib_file ~ccx ~options ~exclude_syms lib_file ast =
    returns (success, parse and signature errors, exports)
 *)
 let load_lib_files ~ccx ~options ~reader files =
-  (* iterate in reverse override order *)
-  let%lwt (_, leader, ok, errors, ordered_asts) =
-    List.rev files
+  let%lwt (ok, errors, ordered_asts) =
+    files
     |> Lwt_list.fold_left_s
-         (fun (exclude_syms, leader, ok_acc, errors_acc, asts_acc) file ->
+         (fun (ok_acc, errors_acc, asts_acc) file ->
            let lib_file = File_key.LibFile file in
            match%lwt parse_lib_file ~reader options file with
            | Lib_ok { ast; file_sig = _; tolerable_errors } ->
-             let (cx, exclude_syms) = infer_lib_file ~ccx ~options ~exclude_syms lib_file ast in
              let errors =
                tolerable_errors
                |> Inference_utils.set_of_file_sig_tolerable_errors ~source_file:lib_file
              in
              let errors_acc = ErrorSet.union errors errors_acc in
+             (* construct ast list in reverse override order *)
              let asts_acc = ast :: asts_acc in
-             Lwt.return (exclude_syms, Some cx, ok_acc, errors_acc, asts_acc)
+             Lwt.return (ok_acc, errors_acc, asts_acc)
            | Lib_fail fail ->
              let errors =
                match fail with
@@ -123,21 +118,33 @@ let load_lib_files ~ccx ~options ~reader files =
                  Inference_utils.set_of_docblock_errors ~source_file:lib_file errs
              in
              let errors_acc = ErrorSet.union errors errors_acc in
-             Lwt.return (exclude_syms, leader, false, errors_acc, asts_acc)
-           | Lib_skip -> Lwt.return (exclude_syms, leader, ok_acc, errors_acc, asts_acc))
-         (NameUtils.Set.empty, None, true, ErrorSet.empty, [])
+             Lwt.return (false, errors_acc, asts_acc)
+           | Lib_skip -> Lwt.return (ok_acc, errors_acc, asts_acc))
+         (true, ErrorSet.empty, [])
   in
-  let builtin_exports =
-    if ok then
+  let (builtin_exports, cx_opt) =
+    if ok then (
       let sig_opts = Type_sig_options.builtin_options options in
-      let (_builtin_errors, _builtin_locs, builtins) =
-        Type_sig_utils.parse_and_pack_builtins sig_opts ordered_asts
+      let metadata =
+        Context.(
+          let metadata = metadata_of_options options in
+          { metadata with checked = false }
+        )
       in
-      Exports.of_builtins builtins
-    else
-      Exports.empty
+      let (builtins, cx_opt) = Merge_js.merge_lib_files ~sig_opts ~ccx ~metadata ordered_asts in
+      Base.Option.iter cx_opt ~f:(fun cx ->
+          let errors =
+            Base.List.fold ordered_asts ~init:(Context.errors cx) ~f:(fun errors ast ->
+                ErrorSet.union errors (check_lib_file ~ccx ~options ast)
+            )
+          in
+          Context.reset_errors cx errors
+      );
+      (Exports.of_builtins builtins, cx_opt)
+    ) else
+      (Exports.empty, None)
   in
-  Lwt.return (ok, leader, errors, builtin_exports)
+  Lwt.return (ok, cx_opt, errors, builtin_exports)
 
 type init_result = {
   ok: bool;
@@ -168,12 +175,12 @@ let error_set_to_filemap err_set =
 let init ~options ~reader lib_files =
   let ccx = Context.(make_ccx (empty_master_cx ())) in
 
-  let%lwt (ok, leader, parse_and_sig_errors, exports) =
+  let%lwt (ok, cx_opt, parse_and_sig_errors, exports) =
     load_lib_files ~ccx ~options ~reader lib_files
   in
 
   let (master_cx, errors, warnings, suppressions) =
-    match leader with
+    match cx_opt with
     | None -> (Context.empty_master_cx (), ErrorSet.empty, ErrorSet.empty, Error_suppressions.empty)
     | Some cx ->
       Merge_js.optimize_builtins cx;
@@ -181,12 +188,13 @@ let init ~options ~reader lib_files =
       let suppressions = Context.error_suppressions cx in
       let severity_cover = Context.severity_cover cx in
       let include_suppressions = Context.include_suppressions cx in
+      let aloc_tables = Context.aloc_tables cx in
       let (errors, warnings, suppressions) =
         Error_suppressions.filter_lints
           ~include_suppressions
           suppressions
           errors
-          (Context.aloc_tables cx)
+          aloc_tables
           severity_cover
       in
       let master_cx = Context.{ master_sig_cx = sig_cx cx; builtins = builtins cx } in
