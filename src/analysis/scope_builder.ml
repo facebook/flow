@@ -359,6 +359,10 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         let (loc, block) = body in
         (loc, super#block loc block)
 
+      method! component_body (body : 'loc * ('loc, 'loc) Ast.Statement.Block.t) =
+        let (loc, block) = body in
+        (loc, super#block loc block)
+
       method! switch loc (switch : ('loc, 'loc) Ast.Statement.Switch.t) =
         let open Ast.Statement.Switch in
         let { discriminant; cases; comments = _; exhaustive_out = _ } = switch in

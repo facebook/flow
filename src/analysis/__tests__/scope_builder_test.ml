@@ -384,7 +384,5 @@ let tests =
          "scope_loc_component_declaration"
          >:: mk_scope_builder_scope_loc_test
                "component Foo(param: T) {};"
-               [
-                 (0, mk_loc (1, 0) (1, 27)); (1, mk_loc (1, 13) (1, 23)); (2, mk_loc (1, 24) (1, 26));
-               ];
+               [(0, mk_loc (1, 0) (1, 27)); (1, mk_loc (1, 13) (1, 23))];
        ]
