@@ -1990,6 +1990,23 @@ References:
                                            ^^^^^^^^^^^ [3]
 
 
+Error ------------------------------------------------------------------------ import_component_in_type_position.js:15:2
+
+Cannot cast `aliasedFoo` to number because `React.Element` [1] is incompatible with number [2]. [incompatible-cast]
+
+   import_component_in_type_position.js:15:2
+   15| (aliasedFoo: number); // ERROR
+        ^^^^^^^^^^
+
+References:
+   import_component_in_type_position.js:14:19
+   14| const aliasedFoo: AliasedFoo = fooElem;
+                         ^^^^^^^^^^ [1]
+   import_component_in_type_position.js:15:14
+   15| (aliasedFoo: number); // ERROR
+                    ^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- names.js:4:36
 
 Component property `a` [1] is re-declared [2] within a spread [3]. Property names may only be have one definition within
@@ -2964,7 +2981,7 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 197 errors
+Found 198 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
