@@ -532,6 +532,11 @@ module rec ConsGen : S = struct
     | (DefT (_, _, ClassT it), Annot_UseT_TypeT reason) ->
       (* a class value annotation becomes the instance type *)
       reposition cx (loc_of_reason reason) it
+    | ( (DefT (_, _, ReactAbstractComponentT { component_kind = Nominal _; _ }) as l),
+        Annot_UseT_TypeT reason
+      ) ->
+      (* a component syntax value annotation becomes an element of that component *)
+      get_builtin_typeapp cx reason (OrdinaryName "React$Element") [l]
     | (DefT (_, _, TypeT (_, l)), Annot_UseT_TypeT _) -> l
     | (DefT (lreason, trust, EnumObjectT enum), Annot_UseT_TypeT _) ->
       (* an enum object value annotation becomes the enum type *)
