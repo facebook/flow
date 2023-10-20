@@ -585,6 +585,20 @@ Cannot declare `M` [1] because the name is already bound. [name-already-bound]
              ^ [1]
 
 
+Error ------------------------------------------------------------------------------------------- binding_rules.js:64:32
+
+Cannot declare `p` [1] because the name is already bound. [name-already-bound]
+
+   binding_rules.js:64:32
+   64| component N(p: string) { const p: string = ''; return } // ERROR
+                                      ^
+
+References:
+   binding_rules.js:64:13
+   64| component N(p: string) { const p: string = ''; return } // ERROR
+                   ^ [1]
+
+
 Error ------------------------------------------------------------------------------- component_in_type_position.js:5:16
 
 Cannot assign `Foo` to `x` because component Foo [1] is incompatible with `Foo` element [2]. [incompatible-type]
@@ -2950,7 +2964,7 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 196 errors
+Found 197 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

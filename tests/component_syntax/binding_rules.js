@@ -60,3 +60,5 @@ component L() { return <div /> } // ERROR
 
 class M {} // ERROR
 component M() { return <div /> }
+
+component N(p: string) { const p: string = ''; return } // ERROR

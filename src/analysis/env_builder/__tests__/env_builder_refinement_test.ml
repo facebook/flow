@@ -6903,6 +6903,23 @@ let%expect_test "component_declaration" =
         }]
         |}]
 
+let%expect_test "component_declaration_conflicting_defs" =
+  print_ssa_test {|
+  component Foo(param: T) {
+    const param = 1;
+    param
+  }
+|};
+    [%expect {|
+      [
+        (2, 23) to (2, 24) => {
+          Global T
+        };
+        (4, 4) to (4, 9) => {
+          (2, 16) to (2, 21): (`param`)
+        }]
+        |}]
+
 let%expect_test "dead_component_declaration" =
   print_ssa_test {|
   throw 'lol';
