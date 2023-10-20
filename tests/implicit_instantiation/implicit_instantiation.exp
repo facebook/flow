@@ -12,6 +12,78 @@ References:
                 ^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------ repos_use.js:20:2
+
+Cannot cast `err1` to string literal `FOO` because string literal `BAR` [1] is incompatible with string literal
+`FOO` [2]. [incompatible-cast]
+
+   repos_use.js:20:2
+   20| (err1: 'FOO'); // ERR
+        ^^^^
+
+References:
+   repos_use.js:9:23
+    9| declare const dict: {[MyEnum]: mixed};
+                             ^^^^^^ [1]
+   repos_use.js:20:8
+   20| (err1: 'FOO'); // ERR
+              ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- repos_use.js:21:22
+
+Cannot assign `getKeys1(...)` to `err1_` because string literal `BAR` [1] is incompatible with string literal `FOO` [2].
+[incompatible-type]
+
+   repos_use.js:21:22
+   21| const err1_: 'FOO' = getKeys1(dict); // ERR
+                            ^^^^^^^^^^^^^^
+
+References:
+   repos_use.js:9:23
+    9| declare const dict: {[MyEnum]: mixed};
+                             ^^^^^^ [1]
+   repos_use.js:21:14
+   21| const err1_: 'FOO' = getKeys1(dict); // ERR
+                    ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ repos_use.js:24:2
+
+Cannot cast `err2` to string literal `FOO` because string literal `BAR` [1] is incompatible with string literal
+`FOO` [2]. [incompatible-cast]
+
+   repos_use.js:24:2
+   24| (err2: 'FOO'); // ERR
+        ^^^^
+
+References:
+   repos_use.js:9:23
+    9| declare const dict: {[MyEnum]: mixed};
+                             ^^^^^^ [1]
+   repos_use.js:24:8
+   24| (err2: 'FOO'); // ERR
+              ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- repos_use.js:25:22
+
+Cannot assign `getKeys2(...)` to `err2_` because string literal `BAR` [1] is incompatible with string literal `FOO` [2].
+[incompatible-type]
+
+   repos_use.js:25:22
+   25| const err2_: 'FOO' = getKeys2(dict); // ERR
+                            ^^^^^^^^^^^^^^
+
+References:
+   repos_use.js:9:23
+    9| declare const dict: {[MyEnum]: mixed};
+                             ^^^^^^ [1]
+   repos_use.js:25:14
+   25| const err2_: 'FOO' = getKeys2(dict); // ERR
+                    ^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- test.js:5:19
 
 Cannot assign `identity<...>(...)` to `y` because number [1] is incompatible with string [2]. [incompatible-type]
@@ -259,4 +331,4 @@ References:
 
 
 
-Found 15 errors
+Found 19 errors

@@ -592,6 +592,31 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | t -> UpperT t
 
   and merge_lower_bounds cx t =
+    (* When the input tvar has no lower bounds but a ReposUseT upper bound means
+     * that we might be discounting lower bounds that are just waiting to be added
+     * as soon as the ReposUseT fires. Here, we make sure we record the result of
+     * the ReposUseT before we make a decision based on lower bounds. *)
+    let t =
+      match t with
+      | OpenT (_r, id) ->
+        let constraints = Context.find_graph cx id in
+        begin
+          match constraints with
+          | Constraint.Unresolved bounds ->
+            let lowers = bounds.Constraint.lower in
+            if TypeMap.cardinal lowers = 0 then (
+              let upper = Constraint.UseTypeMap.keys bounds.Constraint.upper in
+              Base.List.iter upper ~f:(function
+                  | (ReposUseT (_, _, _, l), _) -> Flow.flow_t cx (l, t)
+                  | _ -> ()
+                  );
+              t
+            ) else
+              t
+          | _ -> t
+        end
+      | t -> t
+    in
     match t with
     | OpenT (r, id) ->
       let constraints = Context.find_graph cx id in
