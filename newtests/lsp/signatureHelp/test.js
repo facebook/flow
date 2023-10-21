@@ -24,6 +24,7 @@ module.exports = (suite(
           'tupleRestParam.js',
           'member_callee.js',
           'constructor.js',
+          'typeAliasCall.js',
         ),
         lspStartAndConnect(),
         lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
@@ -538,6 +539,45 @@ module.exports = (suite(
                         documentation: {
                           kind: 'markdown',
                           value: 'y - does a y',
+                        },
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 0,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/typeAliasCall.js',
+          },
+          position: {line: 14, character: 3},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label: '(x: string): void',
+                    documentation: {
+                      kind: 'markdown',
+                      value: 'variable declaration',
+                    },
+                    parameters: [
+                      {
+                        label: 'x: string',
+                        documentation: {
+                          kind: 'markdown',
+                          value: 'x - is a string',
                         },
                       },
                     ],

@@ -277,12 +277,18 @@ let rec collect_functions ~jsdoc ~exact_by_default acc = function
 let find_signatures ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc =
   match Callee_finder.find_opt ~reader ~cx ~typed_ast loc with
   | Some (scheme, active_parameter, callee_loc) ->
-    let ty =
-      Ty_normalizer.from_scheme
-        ~options:ty_normalizer_options
-        ~genv:(Ty_normalizer_env.mk_genv ~cx ~file:(Context.file cx) ~typed_ast ~file_sig)
-        scheme
-    in
+    let { Type.TypeScheme.type_ = t; _ } = scheme in
+    (* Ty_normalizer will attempt to recover an alias name for this type. Given that
+     * in collect_functions we try to match against the structure of the type, we
+     * would rather bypass the alias on the toplevel of the type. It is still
+     * desirable that deeper within the type aliases are maintained. Note that
+     * alternatively we could updated the normalizer to perform a one-off expansion
+     * of the toplevel alias, but that would be more complex that fixing this here. *)
+    let t = Flow_js.singleton_concrete_type_for_inspection cx (TypeUtil.reason_of_t t) t in
+    let t' = TypeUtil.mod_reason_of_t Reason.(update_desc_reason invalidate_rtype_alias) t in
+    let scheme = { scheme with Type.TypeScheme.type_ = t' } in
+    let genv = Ty_normalizer_env.mk_genv ~cx ~file:(Context.file cx) ~typed_ast ~file_sig in
+    let ty = Ty_normalizer.from_scheme ~options:ty_normalizer_options ~genv scheme in
     let jsdoc =
       match
         GetDef_js.get_def
