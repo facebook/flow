@@ -44,7 +44,7 @@ module Make
       subexpressions: unit -> 'a * 'b;
       get_result: 'a -> Reason.t -> Type.t -> Type.t;
       test_hooks: Type.t -> Type.tvar option;
-      get_opt_use: 'a -> Reason.t -> Type.t -> Type.opt_use_t;
+      get_opt_use: 'a -> Reason.t -> Type.opt_use_t;
       get_reason: Type.t -> Reason.t;
     }
   end
@@ -465,7 +465,6 @@ module Make
       cx
       opt_state
       ~voided_out
-      ~prop_t
       reason
       ~use_op
       ~private_
@@ -490,7 +489,6 @@ module Make
           {
             exp_reason;
             lhs_reason = mk_expression_reason expr;
-            this = prop_t;
             opt_methodcalltype;
             voided_out;
             return_hint = Type.hint_unavailable;
@@ -577,7 +575,6 @@ module Make
   let elem_call_opt_use
       opt_state
       ~voided_out
-      ~prop_t
       ~use_op
       ~reason_call
       ~reason_lookup
@@ -595,7 +592,6 @@ module Make
           {
             exp_reason = reason_chain;
             lhs_reason = reason_expr;
-            this = prop_t;
             opt_methodcalltype;
             voided_out;
             return_hint = Type.hint_unavailable;
@@ -3843,7 +3839,7 @@ module Make
       )
     in
     let noop _ = None in
-    let handle_new_chain conf lhs_reason loc (chain_t, voided_t, object_ast) ~this_reason =
+    let handle_new_chain conf lhs_reason loc (chain_t, voided_t, object_ast) =
       let { ChainingConf.subexpressions; get_reason; test_hooks; get_opt_use; _ } = conf in
       (* We've encountered an optional chaining operator.
          We need to flow the "success" type of object_ into a OptionalChainT
@@ -3889,8 +3885,7 @@ module Make
             Base.List.iter ~f:(fun voided_t -> Flow.flow_t cx (voided_t, t)) voided_t
         )
       in
-      let this_t = Tvar.mk cx this_reason in
-      let opt_use = get_opt_use subexpression_types reason this_t in
+      let opt_use = get_opt_use subexpression_types reason in
       Flow.flow
         cx
         ( chain_t,
@@ -3898,7 +3893,6 @@ module Make
             {
               reason = chain_reason;
               lhs_reason;
-              this_t;
               t_out = apply_opt_use opt_use mem_tvar;
               voided_out;
             }
@@ -3948,7 +3942,7 @@ module Make
       let lhs_t = join_optional_branches voided_t res_t in
       (res_t, voided_t, lhs_t, chain_t, object_ast, subexpression_asts)
     in
-    let handle_chaining conf opt object_ loc ~this_reason =
+    let handle_chaining conf opt object_ loc =
       let {
         ChainingConf.refinement_action;
         refine;
@@ -4002,7 +3996,7 @@ module Make
               object_ast,
               subexpression_asts
             )
-          | _ -> handle_new_chain conf lhs_reason loc object_data ~this_reason
+          | _ -> handle_new_chain conf lhs_reason loc object_data
         end
       | ContinueChain -> handle_continue_chain conf (optional_chain ~cond:None cx object_)
     in
@@ -4103,10 +4097,10 @@ module Make
       | (Member { Member._object; property = Member.PropertyExpression index; comments }, _) ->
         let reason = mk_reason (RProperty None) loc in
         let use_op = Op (GetProperty (mk_expression_reason ex)) in
-        let get_opt_use tind _ _ = OptGetElemT (use_op, reason, false (* annot *), tind) in
+        let get_opt_use tind _ = OptGetElemT (use_op, reason, false (* annot *), tind) in
         let get_mem_t tind reason obj_t =
           Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
-              let use = apply_opt_use (get_opt_use tind reason obj_t) t in
+              let use = apply_opt_use (get_opt_use tind reason) t in
               Flow.flow cx (obj_t, use)
           )
         in
@@ -4126,7 +4120,7 @@ module Make
           }
         in
         let (filtered_out, voided_out, lhs_t, _, object_ast, index) =
-          handle_chaining conf opt_state _object loc ~this_reason:(mk_expression_reason _object)
+          handle_chaining conf opt_state _object loc
         in
         ( filtered_out,
           voided_out,
@@ -4169,12 +4163,12 @@ module Make
             get_result = get_mem_t;
             refine = (fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc);
             test_hooks;
-            get_opt_use = (fun _ _ _ -> opt_use);
+            get_opt_use = (fun _ _ -> opt_use);
             get_reason = Fun.const expr_reason;
           }
         in
         let (filtered_out, voided_out, lhs_t, _, object_ast, _) =
-          handle_chaining conf opt_state _object loc ~this_reason:(mk_expression_reason _object)
+          handle_chaining conf opt_state _object loc
         in
         let property = Member.PropertyIdentifier ((ploc, lhs_t), id) in
         ( filtered_out,
@@ -4214,12 +4208,12 @@ module Make
             get_result = get_mem_t;
             refine = (fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc);
             test_hooks;
-            get_opt_use = (fun _ _ _ -> opt_use);
+            get_opt_use = (fun _ _ -> opt_use);
             get_reason = Fun.const expr_reason;
           }
         in
         let (filtered_out, voided_out, lhs_t, _, object_ast, _) =
-          handle_chaining conf opt_state _object loc ~this_reason:(mk_expression_reason _object)
+          handle_chaining conf opt_state _object loc
         in
         ( filtered_out,
           voided_out,
@@ -4252,7 +4246,6 @@ module Make
           | Member.PropertyIdentifier (prop_loc, { Ast.Identifier.name; comments = _ }) ->
             let reason_call = mk_reason (RMethodCall (Some name)) loc in
             let reason_prop = mk_reason (RProperty (Some (OrdinaryName name))) prop_loc in
-            let this_reason = mk_expression_reason callee in
             let use_op =
               Op
                 (FunCallMethod
@@ -4274,11 +4267,10 @@ module Make
               | Member.PropertyPrivateName _ -> true
               | Member.PropertyIdentifier _ -> false
             in
-            let get_opt_use argts _ _ =
+            let get_opt_use argts _ =
               method_call_opt_use
                 cx
                 opt_state
-                ~prop_t
                 ~voided_out:call_voided_out
                 reason_call
                 ~use_op
@@ -4313,12 +4305,10 @@ module Make
                     | NewChain ->
                       let chain_reason = mk_reason ROptionalChain loc in
                       let lhs_reason = mk_expression_reason callee in
-                      let this_t = Tvar.mk cx this_reason in
                       OptionalChainT
                         {
                           reason = chain_reason;
                           lhs_reason;
-                          this_t;
                           t_out =
                             CallT
                               {
@@ -4343,7 +4333,7 @@ module Make
             in
             let get_mem_t argts reason obj_t =
               Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason_call (fun t ->
-                  let use = apply_opt_use (get_opt_use argts reason obj_t) t in
+                  let use = apply_opt_use (get_opt_use argts reason) t in
                   Flow.flow cx (obj_t, use)
               )
             in
@@ -4368,7 +4358,7 @@ module Make
                   object_ast,
                   argument_asts
                 ) =
-              handle_chaining conf member_opt _object lookup_loc ~this_reason
+              handle_chaining conf member_opt _object lookup_loc
             in
             let prop_ast =
               match property with
@@ -4405,10 +4395,9 @@ module Make
             in
             let call_voided_out = Tvar.mk cx expr_reason in
             let prop_t = Tvar.mk cx reason_lookup in
-            let get_opt_use (argts, elem_t) _ _ =
+            let get_opt_use (argts, elem_t) _ =
               elem_call_opt_use
                 opt_state
-                ~prop_t
                 ~voided_out:call_voided_out
                 ~use_op
                 ~reason_call
@@ -4422,7 +4411,7 @@ module Make
             in
             let get_mem_t arg_and_elem_ts reason obj_t =
               Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason_call (fun t ->
-                  let use = apply_opt_use (get_opt_use arg_and_elem_ts reason obj_t) t in
+                  let use = apply_opt_use (get_opt_use arg_and_elem_ts reason) t in
                   Flow.flow cx (obj_t, use)
               )
             in
@@ -4431,7 +4420,6 @@ module Make
               let (argts, arguments_ast) = arg_list cx arguments in
               ((argts, elem_t), (arguments_ast, expr))
             in
-            let this_reason = mk_expression_reason callee in
             let conf =
               {
                 ChainingConf.refinement_action = None;
@@ -4450,7 +4438,7 @@ module Make
                   object_ast,
                   (argument_asts, expr_ast)
                 ) =
-              handle_chaining conf member_opt _object lookup_loc ~this_reason
+              handle_chaining conf member_opt _object lookup_loc
             in
             ( filtered_out,
               lookup_voided_out,
@@ -4501,13 +4489,13 @@ module Make
             )
         in
         let spec_callee = Context.new_specialized_callee cx in
-        let get_opt_use argts reason _ =
+        let get_opt_use argts reason =
           func_call_opt_use cx loc reason ~use_op targts argts (Some spec_callee)
         in
         let get_reason lhs_t = mk_reason (RFunctionCall (desc_of_t lhs_t)) loc in
         let get_result argts reason f =
           Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
-              let use = apply_opt_use (get_opt_use argts reason f) t in
+              let use = apply_opt_use (get_opt_use argts reason) t in
               Flow.flow cx (f, use)
           )
         in
@@ -4524,7 +4512,7 @@ module Make
           }
         in
         let (filtered_out, voided_out, lhs_t, _, object_ast, argument_asts) =
-          handle_chaining conf opt_state callee loc ~this_reason:(mk_expression_reason ex)
+          handle_chaining conf opt_state callee loc
         in
         let exp callee =
           let callee = specialize_callee callee spec_callee in
@@ -4937,10 +4925,10 @@ module Make
               is equivalent to
              a == null ? true : delete a.b
            So if a is null, no work has to be done. Hence, the nullable output
-           and this-type for the optional chain are mixed.
+           for the optional chain is mixed.
         *)
         let mixed = MixedT.at lhs_loc (literal_trust ()) in
-        OptionalChainT { reason; lhs_reason; this_t = mixed; t_out = use_t; voided_out = mixed }
+        OptionalChainT { reason; lhs_reason; t_out = use_t; voided_out = mixed }
       | _ -> use_t
     in
     let typecheck_object obj =

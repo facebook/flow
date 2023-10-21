@@ -29,7 +29,6 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
         {
           exp_reason = _;
           lhs_reason = _;
-          this = _;
           methodcalltype = { meth_tout; _ };
           voided_out = tout;
           return_hint = _;

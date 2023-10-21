@@ -809,7 +809,6 @@ module rec TypeTerm : sig
     | OptionalChainT of {
         reason: reason;
         lhs_reason: reason;
-        this_t: t;
         t_out: use_t;
         voided_out: t_out;
       }
@@ -1028,7 +1027,6 @@ module rec TypeTerm : sig
     | ChainM of {
         exp_reason: reason;
         lhs_reason: reason;
-        this: t;
         methodcalltype: methodcalltype;
         voided_out: t_out;
         return_hint: lazy_hint_t;
@@ -1045,7 +1043,6 @@ module rec TypeTerm : sig
     | OptChainM of {
         exp_reason: reason;
         lhs_reason: reason;
-        this: t;
         opt_methodcalltype: opt_methodcalltype;
         voided_out: t_out;
         return_hint: lazy_hint_t;
@@ -4314,20 +4311,11 @@ let apply_opt_action action t_out =
         specialized_callee;
       }
   | OptChainM
-      {
-        exp_reason;
-        lhs_reason;
-        this;
-        opt_methodcalltype;
-        voided_out;
-        return_hint;
-        specialized_callee;
-      } ->
+      { exp_reason; lhs_reason; opt_methodcalltype; voided_out; return_hint; specialized_callee } ->
     ChainM
       {
         exp_reason;
         lhs_reason;
-        this;
         methodcalltype = apply_opt_methodcalltype opt_methodcalltype t_out;
         voided_out;
         return_hint;

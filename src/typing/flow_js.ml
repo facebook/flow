@@ -1980,7 +1980,7 @@ struct
         (******************************)
         (* The remaining cases of OptionalChainT will be handled after union-like,
          * intersections and type applications have been resolved *)
-        | (_, OptionalChainT { reason; lhs_reason; this_t; t_out; voided_out = _ }) ->
+        | (_, OptionalChainT { reason; lhs_reason; t_out; voided_out = _ }) ->
           Context.mark_optional_chain
             cx
             (loc_of_reason reason)
@@ -1992,7 +1992,6 @@ struct
               | AnyT _ ->
                 true
               | _ -> false);
-          rec_flow_t ~use_op:unknown_use cx trace (l, this_t);
           rec_flow cx trace (l, t_out)
         (**************************)
         (* logical types - part B *)
@@ -5939,7 +5938,6 @@ struct
           {
             exp_reason;
             lhs_reason;
-            this;
             methodcalltype = mct;
             voided_out;
             return_hint;
@@ -5949,7 +5947,6 @@ struct
           {
             exp_reason;
             lhs_reason;
-            this;
             methodcalltype = { mct with meth_generic_this = Some l };
             voided_out;
             return_hint;
@@ -9742,7 +9739,6 @@ struct
         {
           exp_reason;
           lhs_reason;
-          this;
           methodcalltype = app;
           voided_out = vs;
           return_hint;
@@ -9753,7 +9749,6 @@ struct
           {
             reason = exp_reason;
             lhs_reason;
-            this_t = this;
             t_out =
               CallT
                 {
