@@ -2491,8 +2491,10 @@ let reinit ~profiling ~workers ~options ~updates ~files_to_force ~will_be_checke
       ~files_to_force
       ();
 
-    (* TODO: these are stubbed out because we didn't actually recheck *)
-    let log_recheck_event ~profiling:_ = Lwt.return_unit in
+    let log_recheck_event ~profiling =
+      FlowEventLogger.reinit ~profiling;
+      Lwt.return_unit
+    in
     let recheck_stats =
       { LspProt.dependent_file_count = 0; changed_file_count = 0; top_cycle = None }
     in
