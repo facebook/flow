@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+open Loc_collections
+
 let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc
 
 let parameter_name is_opt name =
@@ -282,7 +284,6 @@ let find_signatures ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc =
         scheme
     in
     let jsdoc =
-      let open GetDef_js.Get_def_result in
       match
         GetDef_js.get_def
           ~options
@@ -294,8 +295,10 @@ let find_signatures ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc =
           ~purpose:Get_def_types.Purpose.GoToDefinition
           callee_loc
       with
-      | Def ([getdef_loc], _)
-      | Partial ([getdef_loc], _, _) ->
+      | GetDef_js.Get_def_result.Def (locs, _)
+      | GetDef_js.Get_def_result.Partial (locs, _, _)
+        when LocSet.cardinal locs = 1 ->
+        let getdef_loc = LocSet.choose locs in
         Find_documentation.jsdoc_of_getdef_loc ~current_ast:typed_ast ~reader getdef_loc
       | _ -> None
     in

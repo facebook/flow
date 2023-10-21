@@ -313,8 +313,10 @@ let jsdoc_of_loc ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc =
       ~purpose:Get_def_types.Purpose.GoToDefinition
       loc
   with
-  | Def ([getdef_loc], _)
-  | Partial ([getdef_loc], _, _) ->
+  | Def (locs, _)
+  | Partial (locs, _, _)
+    when LocSet.cardinal locs = 1 ->
+    let getdef_loc = LocSet.choose locs in
     Find_documentation.jsdoc_of_getdef_loc ~current_ast:typed_ast ~reader getdef_loc
   | _ -> None
 

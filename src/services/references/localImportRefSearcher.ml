@@ -65,7 +65,7 @@ let search ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast def_locs =
         with
         | GetDef_js.Get_def_result.Def (locs, _)
         | GetDef_js.Get_def_result.Partial (locs, _, _) ->
-          if Base.List.exists locs ~f:(Base.List.mem def_locs ~equal:Loc.equal) then
+          if LocSet.exists (Base.List.mem def_locs ~equal:Loc.equal) locs then
             if Loc.equal remote_loc local_loc then
               (LocSet.add local_loc local_locs, remote_locs)
             else

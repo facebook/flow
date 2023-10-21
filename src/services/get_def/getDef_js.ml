@@ -5,10 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+open Loc_collections
+
 module Get_def_result = struct
   type t =
-    | Def of Loc.t list * (* the final location of the definition, name *) string option
-    | Partial of Loc.t list * (* name *) string option * string
+    | Def of LocSet.t * (* the final location of the definition, name *) string option
+    | Partial of LocSet.t * (* name *) string option * string
         (** if an intermediate get-def failed, return partial progress and the error message *)
     | Bad_loc of string  (** the input loc didn't point at anything you can call get-def on *)
     | Def_error of string  (** an unexpected, internal error *)
@@ -158,13 +160,13 @@ let get_def ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast ~purpose request
             "GetDef_js cycle detected. Trace (most recent first):\n%s"
             (trace_of_locs locs)
       in
-      Partial ([req_loc], loop_name, log_message)
+      Partial (LocSet.singleton req_loc, loop_name, log_message)
     | Ok (Depth.CachedResult result) -> result
     | Ok Depth.NoResult ->
       let open Get_def_process_location in
       let result =
         match process_location_in_typed_ast ~is_legit_require ~typed_ast ~purpose req_loc with
-        | OwnDef (aloc, name) -> Def ([loc_of_aloc aloc], Some name)
+        | OwnDef (aloc, name) -> Def (LocSet.singleton (loc_of_aloc aloc), Some name)
         | Request request -> begin
           match
             process_request
@@ -186,22 +188,21 @@ let get_def ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast ~purpose request
                       - when res_loc is not in the file the request originated from, meaning
                         the typed_ast we have is the wrong one to recur with *)
                    if Loc.equal req_loc res_loc || Loc.(res_loc.source <> requested_loc.source) then
-                     Def ([res_loc], name)
+                     Def (LocSet.singleton res_loc, name)
                    else
                      match loop ~depth res_loc name with
-                     | Bad_loc _ -> Def ([res_loc], name)
-                     | Def_error msg -> Partial ([res_loc], name, msg)
+                     | Bad_loc _ -> Def (LocSet.singleton res_loc, name)
+                     | Def_error msg -> Partial (LocSet.singleton res_loc, name, msg)
                      | (Def _ | Partial _) as res -> res
                )
             |> Nel.reduce (fun res1 res2 ->
                    match (res1, res2) with
-                   | (Def (locs1, n), Def (locs2, _)) ->
-                     Def (Base.List.unordered_append locs1 locs2, n)
+                   | (Def (locs1, n), Def (locs2, _)) -> Def (LocSet.union locs1 locs2, n)
                    | (Partial (locs1, n, msg1), Partial (locs2, _, msg2)) ->
-                     Partial (Base.List.unordered_append locs1 locs2, n, msg1 ^ msg2)
+                     Partial (LocSet.union locs1 locs2, n, msg1 ^ msg2)
                    | (Def (locs1, n), Partial (locs2, _, msg))
                    | (Partial (locs1, n, msg), Def (locs2, _)) ->
-                     Partial (Base.List.unordered_append locs1 locs2, n, msg)
+                     Partial (LocSet.union locs1 locs2, n, msg)
                    | ((Bad_loc _ | Def_error _), other)
                    | (other, (Bad_loc _ | Def_error _)) ->
                      other

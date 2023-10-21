@@ -6,6 +6,7 @@
  *)
 
 open Base.Result
+open Loc_collections
 open ServerEnv
 open Utils_js
 open Lsp
@@ -431,9 +432,10 @@ let get_def_of_check_result ~options ~reader ~profiling ~check_result (file, lin
       let open GetDef_js.Get_def_result in
       let json_props = fold_json_of_parse_errors parse_errors [] in
       match result with
-      | Def (loc, _) -> (Ok loc, Some (("result", Hh_json.JSON_String "SUCCESS") :: json_props))
-      | Partial (loc, _, msg) ->
-        ( Ok loc,
+      | Def (locs, _) ->
+        (Ok (LocSet.elements locs), Some (("result", Hh_json.JSON_String "SUCCESS") :: json_props))
+      | Partial (locs, _, msg) ->
+        ( Ok (LocSet.elements locs),
           Some
             (("result", Hh_json.JSON_String "PARTIAL_FAILURE")
             :: ("error", Hh_json.JSON_String msg)
