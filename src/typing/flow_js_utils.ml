@@ -2003,14 +2003,19 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
                     cx
                     ~trace
                     (Error_message.ETupleElementNotReadable { use_op; reason; index; name });
-                (* We don't allowing writing `undefined` to optional tuple elements.
-                 * User can add `| void` to the element type if they want this behavior. *)
-                let t =
-                  match (optional, t) with
-                  | (true, OptionalT { type_; _ }) -> type_
-                  | _ -> t
+                let (t, use_op) =
+                  if write_action then
+                    (* We don't allowing writing `undefined` to optional tuple elements.
+                     * User can add `| void` to the element type if they want this behavior. *)
+                    let t =
+                      match (optional, t) with
+                      | (true, OptionalT { type_; _ }) -> type_
+                      | _ -> t
+                    in
+                    (t, Frame (TupleAssignment { upper_optional = optional }, use_op))
+                  else
+                    (t, use_op)
                 in
-                let use_op = Frame (TupleAssignment { upper_optional = optional }, use_op) in
                 (true, t, use_op)
               | None ->
                 if is_tuple then (

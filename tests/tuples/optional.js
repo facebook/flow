@@ -23,6 +23,11 @@ type WithReadOnlyOpt = [a: number, +b?: string];
   (withOpt: [a: number, b?: string]); // OK
   (withOpt.length: 1 | 2); // OK
   (withOpt.length: 2); // ERROR
+
+  (withOpt[0]: number); // OK
+  (withOpt[1]: string | void); // OK
+  (withOpt[1]: string); // ERROR
+
   withOpt[1] = undefined; // ERROR
 }
 {
