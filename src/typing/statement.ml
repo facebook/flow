@@ -425,6 +425,587 @@ module Make
     | (_, true) -> Annotated (type_t_of_annotated_or_inferred annot_or_inferred)
     | _ -> annot_or_inferred
 
+  (******************)
+  (* Constraint gen *)
+  (******************)
+
+  (* We assume that constructor functions return void
+      and constructions return objects.
+      TODO: This assumption does not always hold.
+      If construction functions return non-void values (e.g., functions),
+      then those values are returned by constructions.
+  *)
+  let new_call cx loc reason ~use_op class_ targs args =
+    Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
+        Flow.flow
+          cx
+          ( class_,
+            ConstructorT
+              { use_op; reason; targs; args; tout; return_hint = Type_env.get_hint cx loc }
+          )
+    )
+
+  let func_call_opt_use
+      cx loc reason ~use_op ?(call_strict_arity = true) targts argts specialized_callee =
+    let opt_app =
+      mk_opt_functioncalltype reason targts argts call_strict_arity specialized_callee
+    in
+    let return_hint = Type_env.get_hint cx loc in
+    OptCallT { use_op; reason; opt_funcalltype = opt_app; return_hint }
+
+  let func_call cx loc reason ~use_op ?(call_strict_arity = true) func_t targts argts t_callee =
+    let opt_use =
+      func_call_opt_use cx loc reason ~use_op ~call_strict_arity targts argts t_callee
+    in
+    Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
+        Flow.flow cx (func_t, apply_opt_use opt_use t)
+    )
+
+  let method_call_opt_use
+      cx
+      opt_state
+      ~voided_out
+      ~prop_t
+      reason
+      ~use_op
+      ~private_
+      ?(call_strict_arity = true)
+      prop_loc
+      (expr, name)
+      chain_loc
+      targts
+      argts
+      specialized_callee =
+    let (expr_loc, _) = expr in
+    let prop_name = OrdinaryName name in
+    let reason_prop = mk_reason (RProperty (Some prop_name)) prop_loc in
+    let reason_expr = mk_reason (RProperty (Some prop_name)) expr_loc in
+    let opt_methodcalltype = mk_opt_methodcalltype targts argts call_strict_arity in
+    let propref = mk_named_prop ~reason:reason_prop prop_name in
+    let action =
+      match opt_state with
+      | NewChain ->
+        let exp_reason = mk_reason ROptionalChain chain_loc in
+        OptChainM
+          {
+            exp_reason;
+            lhs_reason = mk_expression_reason expr;
+            this = prop_t;
+            opt_methodcalltype;
+            voided_out;
+            return_hint = Type.hint_unavailable;
+            specialized_callee;
+          }
+      | _ ->
+        OptCallM
+          { opt_methodcalltype; return_hint = Type_env.get_hint cx chain_loc; specialized_callee }
+    in
+    if private_ then
+      let class_entries = Type_env.get_class_entries cx in
+      OptPrivateMethodT (use_op, reason, reason_expr, name, class_entries, false, action)
+    else
+      OptMethodT (use_op, reason, reason_expr, propref, action)
+
+  (* returns (type of method itself, type returned from method) *)
+  let method_call
+      cx reason ~use_op ?(call_strict_arity = true) prop_loc (expr, obj_t, name) targts argts =
+    let (expr_loc, _) = expr in
+    match Refinement.get ~allow_optional:true cx expr (loc_of_reason reason) with
+    | Some f ->
+      (* note: the current state of affairs is that we understand
+         member expressions as having refined types, rather than
+         understanding receiver objects as carrying refined properties.
+         generalizing this properly is a todo, and will deliver goodness.
+         meanwhile, here we must hijack the property selection normally
+         performed by the flow algorithm itself. *)
+      ( f,
+        Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
+            let app =
+              mk_boundfunctioncalltype
+                ~call_kind:RegularCallKind
+                obj_t
+                targts
+                argts
+                t
+                ~call_strict_arity
+            in
+            Flow.flow
+              cx
+              ( f,
+                CallT
+                  {
+                    use_op;
+                    reason;
+                    call_action = Funcalltype app;
+                    return_hint = Type.hint_unavailable;
+                  }
+              )
+        )
+      )
+    | None ->
+      let name = OrdinaryName name in
+      let reason_prop = mk_reason (RProperty (Some name)) prop_loc in
+      let specialized_callee = Context.new_specialized_callee cx in
+      let out =
+        Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
+            let reason_expr = mk_reason (RProperty (Some name)) expr_loc in
+            let methodcalltype =
+              mk_methodcalltype targts argts t ~meth_strict_arity:call_strict_arity
+            in
+            let propref = mk_named_prop ~reason:reason_prop name in
+            Flow.flow
+              cx
+              ( obj_t,
+                MethodT
+                  ( use_op,
+                    reason,
+                    reason_expr,
+                    propref,
+                    CallM
+                      {
+                        methodcalltype;
+                        return_hint = Type.hint_unavailable;
+                        specialized_callee = Some specialized_callee;
+                      }
+                  )
+              )
+        )
+      in
+      let prop_t = TypeUtil.type_of_specialized_callee reason_prop specialized_callee in
+      (prop_t, out)
+
+  let elem_call_opt_use
+      opt_state
+      ~voided_out
+      ~prop_t
+      ~use_op
+      ~reason_call
+      ~reason_lookup
+      ~reason_expr
+      ~reason_chain
+      targts
+      argts
+      elem_t
+      specialized_callee =
+    let opt_methodcalltype = mk_opt_methodcalltype targts argts true in
+    let action =
+      match opt_state with
+      | NewChain ->
+        OptChainM
+          {
+            exp_reason = reason_chain;
+            lhs_reason = reason_expr;
+            this = prop_t;
+            opt_methodcalltype;
+            voided_out;
+            return_hint = Type.hint_unavailable;
+            specialized_callee;
+          }
+      | _ ->
+        OptCallM { opt_methodcalltype; return_hint = Type.hint_unavailable; specialized_callee }
+    in
+    OptCallElemT (use_op, reason_call, reason_lookup, elem_t, action)
+
+  (**********)
+  (* Values *)
+  (**********)
+
+  let identifier_ cx name loc =
+    let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
+    let get_checking_mode_type () =
+      let t = Type_env.var_ref ~lookup_mode:ForValue cx (OrdinaryName name) loc in
+      (* We want to make sure that the reason description for the type we return
+       * is always `RIdentifier name`. *)
+      match (desc_of_t t, t) with
+      | (RIdentifier name', _) when OrdinaryName name = name' -> t
+      | (_, OpenT _) ->
+        (* If this is an `OpenT` we can change its reason description directly. *)
+        mod_reason_of_t (replace_desc_new_reason (RIdentifier (OrdinaryName name))) t
+      (* If this is not an `OpenT` then create a new type variable with our
+       * desired reason and unify it with our type. This adds a level of
+       * indirection so that we don't modify the underlying reason of our type. *)
+      | _ ->
+        let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
+        Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (Flow.unify cx t)
+    in
+    if Type_inference_hooks_js.dispatch_id_hook cx name loc then
+      let (_, lazy_hint) = Type_env.get_hint cx loc in
+      lazy_hint reason
+      |> Type_hint.with_hint_result ~ok:Base.Fn.id ~error:(fun () ->
+             EmptyT.at loc |> with_trust bogus_trust
+         )
+    else
+      get_checking_mode_type ()
+
+  let identifier cx { Ast.Identifier.name; comments = _ } loc =
+    let t = identifier_ cx name loc in
+    t
+
+  let string_literal_value cx loc value =
+    if Type_inference_hooks_js.dispatch_literal_hook cx loc then
+      let (_, lazy_hint) = Type_env.get_hint cx loc in
+      let hint = lazy_hint (mk_reason (RCustom "literal") loc) in
+      let error () = EmptyT.at loc |> with_trust bogus_trust in
+      Type_hint.with_hint_result hint ~ok:Base.Fn.id ~error
+    else
+      (* It's too expensive to track literal information for large strings.*)
+      let max_literal_length = Context.max_literal_length cx in
+      let make_trust = Context.trust_constructor cx in
+      if max_literal_length = 0 || String.length value <= max_literal_length then
+        let reason = mk_annot_reason RString loc in
+        DefT (reason, make_trust (), StrT (Literal (None, OrdinaryName value)))
+      else
+        let reason = mk_annot_reason (RLongStringLit max_literal_length) loc in
+        DefT (reason, make_trust (), StrT AnyLiteral)
+
+  let string_literal cx loc { Ast.StringLiteral.value; _ } = string_literal_value cx loc value
+
+  let boolean_literal cx loc { Ast.BooleanLiteral.value; _ } =
+    let make_trust = Context.trust_constructor cx in
+    let reason = mk_annot_reason RBoolean loc in
+    DefT (reason, make_trust (), BoolT (Some value))
+
+  let null_literal cx loc =
+    let make_trust = Context.trust_constructor cx in
+    NullT.at loc |> with_trust make_trust
+
+  let number_literal cx loc { Ast.NumberLiteral.value; raw; _ } =
+    let make_trust = Context.trust_constructor cx in
+    let reason = mk_annot_reason RNumber loc in
+    DefT (reason, make_trust (), NumT (Literal (None, (value, raw))))
+
+  let bigint_literal cx loc { Ast.BigIntLiteral.value; raw; _ } =
+    let make_trust = Context.trust_constructor cx in
+    let reason = mk_annot_reason RBigInt loc in
+    DefT (reason, make_trust (), BigIntT (Literal (None, (value, raw))))
+
+  let regexp_literal cx loc =
+    let reason = mk_annot_reason RRegExp loc in
+    Flow.get_builtin_type cx reason (OrdinaryName "RegExp")
+
+  let module_ref_literal cx loc lit =
+    let { Ast.ModuleRefLiteral.value; require_out; prefix_len; legacy_interop; _ } = lit in
+    let mref = Base.String.drop_prefix value prefix_len in
+    let module_t = Import_export.get_module_t cx (loc, mref) in
+    let require_t = Import_export.require cx ~legacy_interop loc mref module_t in
+    let reason = mk_reason (RCustom "module reference") loc in
+    let t = Flow.get_builtin_typeapp cx reason (OrdinaryName "$Flow$ModuleRef") [require_t] in
+    (t, { lit with Ast.ModuleRefLiteral.require_out = (require_out, require_t) })
+
+  (*********)
+  (* Types *)
+  (*********)
+
+  let opaque_type
+      cx
+      loc
+      {
+        Ast.Statement.OpaqueType.id = (name_loc, ({ Ast.Identifier.name; comments = _ } as id));
+        tparams;
+        impltype;
+        supertype;
+        comments;
+      } =
+    let cache = Context.node_cache cx in
+    match Node_cache.get_opaque cache loc with
+    | Some info ->
+      Debug_js.Verbose.print_if_verbose_lazy
+        cx
+        (lazy [spf "Opaque type cache hit at %s" (ALoc.debug_to_string loc)]);
+      info
+    | None ->
+      let r = DescFormat.type_reason (OrdinaryName name) name_loc in
+      let (tparams, tparams_map, tparams_ast) = Anno.mk_type_param_declarations cx tparams in
+      let (underlying_t, impltype_ast) = Anno.convert_opt cx tparams_map impltype in
+      let (super_t, supertype_ast) = Anno.convert_opt cx tparams_map supertype in
+      begin
+        match tparams with
+        | None -> ()
+        | Some (_, tps) ->
+          (* TODO: use tparams_map *)
+          let tparams =
+            Nel.fold_left (fun acc tp -> Subst_name.Map.add tp.name tp acc) Subst_name.Map.empty tps
+          in
+          Base.Option.iter underlying_t ~f:(Flow.check_polarity cx tparams Polarity.Positive);
+          Base.Option.iter super_t ~f:(Flow.check_polarity cx tparams Polarity.Positive)
+      end;
+      let opaque_type_args =
+        Base.List.map
+          ~f:(fun { name; reason; polarity; _ } ->
+            let t = Subst_name.Map.find name tparams_map in
+            (name, reason, t, polarity))
+          (TypeParams.to_list tparams)
+      in
+      let opaque_id = Context.make_aloc_id cx name_loc in
+      let opaquetype = { underlying_t; super_t; opaque_id; opaque_type_args; opaque_name = name } in
+      let t = OpaqueT (mk_reason (ROpaqueType name) name_loc, opaquetype) in
+      let type_ =
+        poly_type_of_tparams
+          (Type.Poly.generate_id ())
+          tparams
+          (DefT (r, bogus_trust (), TypeT (OpaqueKind, t)))
+      in
+      let () =
+        Flow.(
+          match (underlying_t, super_t) with
+          | (Some l, Some u) -> flow_t cx (l, u)
+          | _ -> ()
+        )
+      in
+
+      let opaque_type_ast =
+        {
+          Ast.Statement.OpaqueType.id = ((name_loc, type_), id);
+          tparams = tparams_ast;
+          impltype = impltype_ast;
+          supertype = supertype_ast;
+          comments;
+        }
+      in
+      (type_, opaque_type_ast)
+
+  (*****************)
+  (* Import/Export *)
+  (*****************)
+
+  let type_kind_of_kind = function
+    | Ast.Statement.ImportDeclaration.ImportType -> Type.ImportType
+    | Ast.Statement.ImportDeclaration.ImportTypeof -> Type.ImportTypeof
+    | Ast.Statement.ImportDeclaration.ImportValue -> Type.ImportValue
+
+  let get_imported_t cx get_reason module_name module_t import_kind remote_export_name local_name =
+    let is_strict = Context.is_strict cx in
+    let constraint_resolver tout =
+      let import_type =
+        if remote_export_name = "default" then
+          ImportDefaultT (get_reason, import_kind, (local_name, module_name), tout, is_strict)
+        else
+          ImportNamedT (get_reason, import_kind, remote_export_name, module_name, tout, is_strict)
+      in
+      Flow.flow cx (module_t, import_type)
+    in
+    let name_def_loc_ref = ref None in
+    let ordinary_file_resolver tout =
+      let assert_import_is_value cx trace reason name export_t =
+        Flow.FlowJs.flow_opt cx ~trace (export_t, AssertImportIsValueT (reason, name))
+      in
+      let with_concretized_type cx r f t = f (Flow.singleton_concrete_type_for_inspection cx r t) in
+      match Flow.possible_concrete_types_for_inspection cx get_reason module_t with
+      | [ModuleT m] ->
+        let (name_loc_opt, t) =
+          if remote_export_name = "default" then
+            Flow_js_utils.ImportDefaultTKit.on_ModuleT
+              cx
+              Trace.dummy_trace
+              ~mk_typeof_annotation:Flow.mk_typeof_annotation
+              ~assert_import_is_value
+              ~with_concretized_type
+              (get_reason, import_kind, (local_name, module_name), is_strict)
+              m
+          else
+            Flow_js_utils.ImportNamedTKit.on_ModuleT
+              cx
+              Trace.dummy_trace
+              ~mk_typeof_annotation:Flow.mk_typeof_annotation
+              ~assert_import_is_value
+              ~with_concretized_type
+              (get_reason, import_kind, remote_export_name, module_name, is_strict)
+              m
+        in
+        name_def_loc_ref := name_loc_opt;
+        Flow.flow_t cx (t, tout)
+      | [(AnyT (lreason, _) as l)] ->
+        Flow_js_utils.check_untyped_import cx import_kind lreason get_reason;
+        Flow.flow_t cx (Flow.reposition_reason cx get_reason l, tout)
+      | _ ->
+        Flow_js_utils.add_output
+          cx
+          Error_message.(
+            EInternal
+              (loc_of_reason get_reason, UnexpectedModuleT (Debug_js.dump_t cx ~depth:3 module_t))
+          );
+        Flow.flow_t cx (AnyT.error get_reason, tout)
+    in
+    let resolver =
+      if File_key.is_lib_file (Context.file cx) then
+        constraint_resolver
+      else
+        ordinary_file_resolver
+    in
+    let t = Tvar_resolver.mk_tvar_and_fully_resolve_where cx get_reason resolver in
+    let name_def_loc = !name_def_loc_ref in
+    (name_def_loc, t)
+
+  let import_named_specifier_type
+      cx
+      import_reason
+      import_kind
+      ~module_name
+      ~source_module_t
+      ~remote_name_loc
+      ~remote_name
+      ~local_name =
+    if Type_inference_hooks_js.dispatch_member_hook cx remote_name remote_name_loc source_module_t
+    then
+      (None, Unsoundness.why InferenceHooks import_reason)
+    else
+      let import_kind = type_kind_of_kind import_kind in
+      get_imported_t cx import_reason module_name source_module_t import_kind remote_name local_name
+
+  let import_namespace_specifier_type
+      cx import_reason import_kind ~module_name ~source_module_t ~local_loc =
+    let open Ast.Statement in
+    if File_key.is_lib_file (Context.file cx) then
+      match import_kind with
+      | ImportDeclaration.ImportType -> assert_false "import type * is a parse error"
+      | ImportDeclaration.ImportTypeof ->
+        let bind_reason = repos_reason local_loc import_reason in
+        let module_ns_t = Import_export.import_ns cx import_reason source_module_t in
+        Tvar_resolver.mk_tvar_and_fully_resolve_where cx bind_reason (fun t ->
+            Flow.flow cx (module_ns_t, ImportTypeofT (bind_reason, "*", t))
+        )
+      | ImportDeclaration.ImportValue ->
+        let reason = mk_reason (RModule (OrdinaryName module_name)) local_loc in
+        Import_export.import_ns cx reason source_module_t
+    else
+      let is_strict = Context.is_strict cx in
+      let get_module_ns_t reason =
+        match Flow.possible_concrete_types_for_inspection cx reason source_module_t with
+        | [ModuleT m] ->
+          Flow_js_utils.ImportModuleNsTKit.on_ModuleT cx Trace.dummy_trace (reason, is_strict) m
+        | [(AnyT (lreason, _) as l)] ->
+          Flow_js_utils.check_untyped_import cx ImportValue lreason reason;
+          Flow.reposition_reason cx reason l
+        | _ ->
+          Flow_js_utils.add_output
+            cx
+            Error_message.(
+              EInternal
+                ( loc_of_reason reason,
+                  UnexpectedModuleT (Debug_js.dump_t cx ~depth:3 source_module_t)
+                )
+            );
+          AnyT.error reason
+      in
+      match import_kind with
+      | ImportDeclaration.ImportType -> assert_false "import type * is a parse error"
+      | ImportDeclaration.ImportTypeof ->
+        let module_ns_t = get_module_ns_t import_reason in
+        let bind_reason = repos_reason local_loc import_reason in
+        Flow_js_utils.ImportTypeofTKit.on_concrete_type
+          cx
+          Trace.dummy_trace
+          ~mk_typeof_annotation:Flow.mk_typeof_annotation
+          bind_reason
+          "*"
+          module_ns_t
+      | ImportDeclaration.ImportValue ->
+        let reason = mk_reason (RModule (OrdinaryName module_name)) local_loc in
+        get_module_ns_t reason
+
+  let import_default_specifier_type
+      cx import_reason import_kind ~module_name ~source_module_t ~local_loc ~local_name =
+    if Type_inference_hooks_js.dispatch_member_hook cx "default" local_loc source_module_t then
+      (None, Unsoundness.why InferenceHooks import_reason)
+    else
+      let import_kind = type_kind_of_kind import_kind in
+      get_imported_t cx import_reason module_name source_module_t import_kind "default" local_name
+
+  let export_specifiers cx loc source export_kind =
+    let open Ast.Statement in
+    let module E = ExportNamedDeclaration in
+    let lookup_mode =
+      match export_kind with
+      | Ast.Statement.ExportValue -> ForValue
+      | Ast.Statement.ExportType -> ForType
+    in
+    (* [declare] export [type] {foo [as bar]}; *)
+    let export_ref loc local_name remote_name =
+      let t = Type_env.var_ref ~lookup_mode cx local_name loc in
+      match export_kind with
+      | Ast.Statement.ExportType ->
+        let reason = mk_reason (RType local_name) loc in
+        let t =
+          Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
+              Flow.flow cx (t, AssertExportIsTypeT (reason, local_name, tout))
+          )
+        in
+        Import_export.export_type cx remote_name ~name_loc:(Some loc) t;
+        t
+      | Ast.Statement.ExportValue ->
+        Import_export.export cx remote_name ~name_loc:loc ~is_type_only_export:false t;
+        t
+    in
+    (* [declare] export [type] {foo [as bar]} from 'module' *)
+    let export_from source_ns_t loc local_name remote_name =
+      let t =
+        let reason = mk_reason (RIdentifier local_name) loc in
+        Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
+            let use_t =
+              GetPropT (unknown_use, reason, None, mk_named_prop ~reason local_name, tout)
+            in
+            Flow.flow cx (source_ns_t, use_t)
+        )
+      in
+      match export_kind with
+      | Ast.Statement.ExportType ->
+        Import_export.export_type cx remote_name ~name_loc:(Some loc) t;
+        t
+      | Ast.Statement.ExportValue ->
+        Import_export.export cx remote_name ~name_loc:loc ~is_type_only_export:false t;
+        t
+    in
+    let export_specifier export (loc, { E.ExportSpecifier.local; exported }) =
+      let (local_loc, ({ Ast.Identifier.name = local_name; comments = _ } as local_id)) = local in
+      let local_name = OrdinaryName local_name in
+      let (remote_name, reconstruct_remote) =
+        match exported with
+        | None -> (local_name, Fun.const None)
+        | Some (remote_loc, ({ Ast.Identifier.name = remote_name; comments = _ } as remote_id)) ->
+          (OrdinaryName remote_name, (fun t -> Some ((remote_loc, t), remote_id)))
+      in
+      let t = export local_loc local_name remote_name in
+      ( loc,
+        { E.ExportSpecifier.local = ((local_loc, t), local_id); exported = reconstruct_remote t }
+      )
+    in
+    function
+    (* [declare] export [type] {foo [as bar]} [from ...]; *)
+    | E.ExportSpecifiers specifiers ->
+      let export =
+        match source with
+        | Some ((source_loc, module_t), { Ast.StringLiteral.value = module_name; _ }) ->
+          let source_ns_t =
+            let reason = mk_reason (RModule (OrdinaryName module_name)) source_loc in
+            Import_export.import_ns cx reason module_t
+          in
+          export_from source_ns_t
+        | None -> export_ref
+      in
+      let specifiers = Base.List.map ~f:(export_specifier export) specifiers in
+      E.ExportSpecifiers specifiers
+    (* [declare] export [type] * as id from "source"; *)
+    | E.ExportBatchSpecifier (specifier_loc, Some (id_loc, ({ Ast.Identifier.name; _ } as id))) ->
+      let ((_, module_t), _) = Base.Option.value_exn source in
+      let reason = mk_reason (RIdentifier (OrdinaryName name)) id_loc in
+      let ns_t = Import_export.import_ns cx reason module_t in
+      let is_type_only_export =
+        match export_kind with
+        | Ast.Statement.ExportValue -> false
+        | Ast.Statement.ExportType -> true
+      in
+      Import_export.export cx (OrdinaryName name) ~name_loc:loc ~is_type_only_export module_t;
+      E.ExportBatchSpecifier (specifier_loc, Some ((id_loc, ns_t), id))
+    (* [declare] export [type] * from "source"; *)
+    | E.ExportBatchSpecifier (specifier_loc, None) ->
+      let ((_, module_t), _) = Base.Option.value_exn source in
+      let reason = mk_reason (RCustom "batch export") loc in
+      Flow.flow cx (module_t, CheckUntypedImportT (reason, ImportValue));
+      (match export_kind with
+      | Ast.Statement.ExportValue -> Import_export.export_star cx loc module_t
+      | Ast.Statement.ExportType -> Import_export.export_type_star cx loc module_t);
+      E.ExportBatchSpecifier (specifier_loc, None)
+
   (************)
   (* Visitors *)
   (************)
@@ -1410,312 +1991,6 @@ module Make
         }
       in
       (type_, type_alias_ast)
-
-  and opaque_type
-      cx
-      loc
-      {
-        Ast.Statement.OpaqueType.id = (name_loc, ({ Ast.Identifier.name; comments = _ } as id));
-        tparams;
-        impltype;
-        supertype;
-        comments;
-      } =
-    let cache = Context.node_cache cx in
-    match Node_cache.get_opaque cache loc with
-    | Some info ->
-      Debug_js.Verbose.print_if_verbose_lazy
-        cx
-        (lazy [spf "Opaque type cache hit at %s" (ALoc.debug_to_string loc)]);
-      info
-    | None ->
-      let r = DescFormat.type_reason (OrdinaryName name) name_loc in
-      let (tparams, tparams_map, tparams_ast) = Anno.mk_type_param_declarations cx tparams in
-      let (underlying_t, impltype_ast) = Anno.convert_opt cx tparams_map impltype in
-      let (super_t, supertype_ast) = Anno.convert_opt cx tparams_map supertype in
-      begin
-        match tparams with
-        | None -> ()
-        | Some (_, tps) ->
-          (* TODO: use tparams_map *)
-          let tparams =
-            Nel.fold_left (fun acc tp -> Subst_name.Map.add tp.name tp acc) Subst_name.Map.empty tps
-          in
-          Base.Option.iter underlying_t ~f:(Flow.check_polarity cx tparams Polarity.Positive);
-          Base.Option.iter super_t ~f:(Flow.check_polarity cx tparams Polarity.Positive)
-      end;
-      let opaque_type_args =
-        Base.List.map
-          ~f:(fun { name; reason; polarity; _ } ->
-            let t = Subst_name.Map.find name tparams_map in
-            (name, reason, t, polarity))
-          (TypeParams.to_list tparams)
-      in
-      let opaque_id = Context.make_aloc_id cx name_loc in
-      let opaquetype = { underlying_t; super_t; opaque_id; opaque_type_args; opaque_name = name } in
-      let t = OpaqueT (mk_reason (ROpaqueType name) name_loc, opaquetype) in
-      let type_ =
-        poly_type_of_tparams
-          (Type.Poly.generate_id ())
-          tparams
-          (DefT (r, bogus_trust (), TypeT (OpaqueKind, t)))
-      in
-      let () =
-        Flow.(
-          match (underlying_t, super_t) with
-          | (Some l, Some u) -> flow_t cx (l, u)
-          | _ -> ()
-        )
-      in
-
-      let opaque_type_ast =
-        {
-          Ast.Statement.OpaqueType.id = ((name_loc, type_), id);
-          tparams = tparams_ast;
-          impltype = impltype_ast;
-          supertype = supertype_ast;
-          comments;
-        }
-      in
-      (type_, opaque_type_ast)
-
-  and type_kind_of_kind = function
-    | Ast.Statement.ImportDeclaration.ImportType -> Type.ImportType
-    | Ast.Statement.ImportDeclaration.ImportTypeof -> Type.ImportTypeof
-    | Ast.Statement.ImportDeclaration.ImportValue -> Type.ImportValue
-
-  and get_imported_t cx get_reason module_name module_t import_kind remote_export_name local_name =
-    let is_strict = Context.is_strict cx in
-    let constraint_resolver tout =
-      let import_type =
-        if remote_export_name = "default" then
-          ImportDefaultT (get_reason, import_kind, (local_name, module_name), tout, is_strict)
-        else
-          ImportNamedT (get_reason, import_kind, remote_export_name, module_name, tout, is_strict)
-      in
-      Flow.flow cx (module_t, import_type)
-    in
-    let name_def_loc_ref = ref None in
-    let ordinary_file_resolver tout =
-      let assert_import_is_value cx trace reason name export_t =
-        Flow.FlowJs.flow_opt cx ~trace (export_t, AssertImportIsValueT (reason, name))
-      in
-      let with_concretized_type cx r f t = f (Flow.singleton_concrete_type_for_inspection cx r t) in
-      match Flow.possible_concrete_types_for_inspection cx get_reason module_t with
-      | [ModuleT m] ->
-        let (name_loc_opt, t) =
-          if remote_export_name = "default" then
-            Flow_js_utils.ImportDefaultTKit.on_ModuleT
-              cx
-              Trace.dummy_trace
-              ~mk_typeof_annotation:Flow.mk_typeof_annotation
-              ~assert_import_is_value
-              ~with_concretized_type
-              (get_reason, import_kind, (local_name, module_name), is_strict)
-              m
-          else
-            Flow_js_utils.ImportNamedTKit.on_ModuleT
-              cx
-              Trace.dummy_trace
-              ~mk_typeof_annotation:Flow.mk_typeof_annotation
-              ~assert_import_is_value
-              ~with_concretized_type
-              (get_reason, import_kind, remote_export_name, module_name, is_strict)
-              m
-        in
-        name_def_loc_ref := name_loc_opt;
-        Flow.flow_t cx (t, tout)
-      | [(AnyT (lreason, _) as l)] ->
-        Flow_js_utils.check_untyped_import cx import_kind lreason get_reason;
-        Flow.flow_t cx (Flow.reposition_reason cx get_reason l, tout)
-      | _ ->
-        Flow_js_utils.add_output
-          cx
-          Error_message.(
-            EInternal
-              (loc_of_reason get_reason, UnexpectedModuleT (Debug_js.dump_t cx ~depth:3 module_t))
-          );
-        Flow.flow_t cx (AnyT.error get_reason, tout)
-    in
-    let resolver =
-      if File_key.is_lib_file (Context.file cx) then
-        constraint_resolver
-      else
-        ordinary_file_resolver
-    in
-    let t = Tvar_resolver.mk_tvar_and_fully_resolve_where cx get_reason resolver in
-    let name_def_loc = !name_def_loc_ref in
-    (name_def_loc, t)
-
-  and import_named_specifier_type
-      cx
-      import_reason
-      import_kind
-      ~module_name
-      ~source_module_t
-      ~remote_name_loc
-      ~remote_name
-      ~local_name =
-    if Type_inference_hooks_js.dispatch_member_hook cx remote_name remote_name_loc source_module_t
-    then
-      (None, Unsoundness.why InferenceHooks import_reason)
-    else
-      let import_kind = type_kind_of_kind import_kind in
-      get_imported_t cx import_reason module_name source_module_t import_kind remote_name local_name
-
-  and import_namespace_specifier_type
-      cx import_reason import_kind ~module_name ~source_module_t ~local_loc =
-    let open Ast.Statement in
-    if File_key.is_lib_file (Context.file cx) then
-      match import_kind with
-      | ImportDeclaration.ImportType -> assert_false "import type * is a parse error"
-      | ImportDeclaration.ImportTypeof ->
-        let bind_reason = repos_reason local_loc import_reason in
-        let module_ns_t = Import_export.import_ns cx import_reason source_module_t in
-        Tvar_resolver.mk_tvar_and_fully_resolve_where cx bind_reason (fun t ->
-            Flow.flow cx (module_ns_t, ImportTypeofT (bind_reason, "*", t))
-        )
-      | ImportDeclaration.ImportValue ->
-        let reason = mk_reason (RModule (OrdinaryName module_name)) local_loc in
-        Import_export.import_ns cx reason source_module_t
-    else
-      let is_strict = Context.is_strict cx in
-      let get_module_ns_t reason =
-        match Flow.possible_concrete_types_for_inspection cx reason source_module_t with
-        | [ModuleT m] ->
-          Flow_js_utils.ImportModuleNsTKit.on_ModuleT cx Trace.dummy_trace (reason, is_strict) m
-        | [(AnyT (lreason, _) as l)] ->
-          Flow_js_utils.check_untyped_import cx ImportValue lreason reason;
-          Flow.reposition_reason cx reason l
-        | _ ->
-          Flow_js_utils.add_output
-            cx
-            Error_message.(
-              EInternal
-                ( loc_of_reason reason,
-                  UnexpectedModuleT (Debug_js.dump_t cx ~depth:3 source_module_t)
-                )
-            );
-          AnyT.error reason
-      in
-      match import_kind with
-      | ImportDeclaration.ImportType -> assert_false "import type * is a parse error"
-      | ImportDeclaration.ImportTypeof ->
-        let module_ns_t = get_module_ns_t import_reason in
-        let bind_reason = repos_reason local_loc import_reason in
-        Flow_js_utils.ImportTypeofTKit.on_concrete_type
-          cx
-          Trace.dummy_trace
-          ~mk_typeof_annotation:Flow.mk_typeof_annotation
-          bind_reason
-          "*"
-          module_ns_t
-      | ImportDeclaration.ImportValue ->
-        let reason = mk_reason (RModule (OrdinaryName module_name)) local_loc in
-        get_module_ns_t reason
-
-  and import_default_specifier_type
-      cx import_reason import_kind ~module_name ~source_module_t ~local_loc ~local_name =
-    if Type_inference_hooks_js.dispatch_member_hook cx "default" local_loc source_module_t then
-      (None, Unsoundness.why InferenceHooks import_reason)
-    else
-      let import_kind = type_kind_of_kind import_kind in
-      get_imported_t cx import_reason module_name source_module_t import_kind "default" local_name
-
-  and export_specifiers cx loc source export_kind =
-    let open Ast.Statement in
-    let module E = ExportNamedDeclaration in
-    let lookup_mode =
-      match export_kind with
-      | Ast.Statement.ExportValue -> ForValue
-      | Ast.Statement.ExportType -> ForType
-    in
-    (* [declare] export [type] {foo [as bar]}; *)
-    let export_ref loc local_name remote_name =
-      let t = Type_env.var_ref ~lookup_mode cx local_name loc in
-      match export_kind with
-      | Ast.Statement.ExportType ->
-        let reason = mk_reason (RType local_name) loc in
-        let t =
-          Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
-              Flow.flow cx (t, AssertExportIsTypeT (reason, local_name, tout))
-          )
-        in
-        Import_export.export_type cx remote_name ~name_loc:(Some loc) t;
-        t
-      | Ast.Statement.ExportValue ->
-        Import_export.export cx remote_name ~name_loc:loc ~is_type_only_export:false t;
-        t
-    in
-    (* [declare] export [type] {foo [as bar]} from 'module' *)
-    let export_from source_ns_t loc local_name remote_name =
-      let t =
-        let reason = mk_reason (RIdentifier local_name) loc in
-        Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
-            let use_t =
-              GetPropT (unknown_use, reason, None, mk_named_prop ~reason local_name, tout)
-            in
-            Flow.flow cx (source_ns_t, use_t)
-        )
-      in
-      match export_kind with
-      | Ast.Statement.ExportType ->
-        Import_export.export_type cx remote_name ~name_loc:(Some loc) t;
-        t
-      | Ast.Statement.ExportValue ->
-        Import_export.export cx remote_name ~name_loc:loc ~is_type_only_export:false t;
-        t
-    in
-    let export_specifier export (loc, { E.ExportSpecifier.local; exported }) =
-      let (local_loc, ({ Ast.Identifier.name = local_name; comments = _ } as local_id)) = local in
-      let local_name = OrdinaryName local_name in
-      let (remote_name, reconstruct_remote) =
-        match exported with
-        | None -> (local_name, Fun.const None)
-        | Some (remote_loc, ({ Ast.Identifier.name = remote_name; comments = _ } as remote_id)) ->
-          (OrdinaryName remote_name, (fun t -> Some ((remote_loc, t), remote_id)))
-      in
-      let t = export local_loc local_name remote_name in
-      ( loc,
-        { E.ExportSpecifier.local = ((local_loc, t), local_id); exported = reconstruct_remote t }
-      )
-    in
-    function
-    (* [declare] export [type] {foo [as bar]} [from ...]; *)
-    | E.ExportSpecifiers specifiers ->
-      let export =
-        match source with
-        | Some ((source_loc, module_t), { Ast.StringLiteral.value = module_name; _ }) ->
-          let source_ns_t =
-            let reason = mk_reason (RModule (OrdinaryName module_name)) source_loc in
-            Import_export.import_ns cx reason module_t
-          in
-          export_from source_ns_t
-        | None -> export_ref
-      in
-      let specifiers = Base.List.map ~f:(export_specifier export) specifiers in
-      E.ExportSpecifiers specifiers
-    (* [declare] export [type] * as id from "source"; *)
-    | E.ExportBatchSpecifier (specifier_loc, Some (id_loc, ({ Ast.Identifier.name; _ } as id))) ->
-      let ((_, module_t), _) = Base.Option.value_exn source in
-      let reason = mk_reason (RIdentifier (OrdinaryName name)) id_loc in
-      let ns_t = Import_export.import_ns cx reason module_t in
-      let is_type_only_export =
-        match export_kind with
-        | Ast.Statement.ExportValue -> false
-        | Ast.Statement.ExportType -> true
-      in
-      Import_export.export cx (OrdinaryName name) ~name_loc:loc ~is_type_only_export module_t;
-      E.ExportBatchSpecifier (specifier_loc, Some ((id_loc, ns_t), id))
-    (* [declare] export [type] * from "source"; *)
-    | E.ExportBatchSpecifier (specifier_loc, None) ->
-      let ((_, module_t), _) = Base.Option.value_exn source in
-      let reason = mk_reason (RCustom "batch export") loc in
-      Flow.flow cx (module_t, CheckUntypedImportT (reason, ImportValue));
-      (match export_kind with
-      | Ast.Statement.ExportValue -> Import_export.export_star cx loc module_t
-      | Ast.Statement.ExportType -> Import_export.export_type_star cx loc module_t);
-      E.ExportBatchSpecifier (specifier_loc, None)
 
   and interface_helper cx loc (iface_sig, self) =
     let def_reason = mk_reason (desc_of_t self) loc in
@@ -4267,265 +4542,6 @@ module Make
   and subscript ~cond cx ex =
     let (_, _, ast) = optional_chain ~cond cx ex in
     ast
-
-  (* We assume that constructor functions return void
-     and constructions return objects.
-     TODO: This assumption does not always hold.
-     If construction functions return non-void values (e.g., functions),
-     then those values are returned by constructions.
-  *)
-  and new_call cx loc reason ~use_op class_ targs args =
-    Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
-        Flow.flow
-          cx
-          ( class_,
-            ConstructorT
-              { use_op; reason; targs; args; tout; return_hint = Type_env.get_hint cx loc }
-          )
-    )
-
-  and func_call_opt_use
-      cx loc reason ~use_op ?(call_strict_arity = true) targts argts specialized_callee =
-    let opt_app =
-      mk_opt_functioncalltype reason targts argts call_strict_arity specialized_callee
-    in
-    let return_hint = Type_env.get_hint cx loc in
-    OptCallT { use_op; reason; opt_funcalltype = opt_app; return_hint }
-
-  and func_call cx loc reason ~use_op ?(call_strict_arity = true) func_t targts argts t_callee =
-    let opt_use =
-      func_call_opt_use cx loc reason ~use_op ~call_strict_arity targts argts t_callee
-    in
-    Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
-        Flow.flow cx (func_t, apply_opt_use opt_use t)
-    )
-
-  and method_call_opt_use
-      cx
-      opt_state
-      ~voided_out
-      ~prop_t
-      reason
-      ~use_op
-      ~private_
-      ?(call_strict_arity = true)
-      prop_loc
-      (expr, name)
-      chain_loc
-      targts
-      argts
-      specialized_callee =
-    let (expr_loc, _) = expr in
-    let prop_name = OrdinaryName name in
-    let reason_prop = mk_reason (RProperty (Some prop_name)) prop_loc in
-    let reason_expr = mk_reason (RProperty (Some prop_name)) expr_loc in
-    let opt_methodcalltype = mk_opt_methodcalltype targts argts call_strict_arity in
-    let propref = mk_named_prop ~reason:reason_prop prop_name in
-    let action =
-      match opt_state with
-      | NewChain ->
-        let exp_reason = mk_reason ROptionalChain chain_loc in
-        OptChainM
-          {
-            exp_reason;
-            lhs_reason = mk_expression_reason expr;
-            this = prop_t;
-            opt_methodcalltype;
-            voided_out;
-            return_hint = Type.hint_unavailable;
-            specialized_callee;
-          }
-      | _ ->
-        OptCallM
-          { opt_methodcalltype; return_hint = Type_env.get_hint cx chain_loc; specialized_callee }
-    in
-    if private_ then
-      let class_entries = Type_env.get_class_entries cx in
-      OptPrivateMethodT (use_op, reason, reason_expr, name, class_entries, false, action)
-    else
-      OptMethodT (use_op, reason, reason_expr, propref, action)
-
-  (* returns (type of method itself, type returned from method) *)
-  and method_call
-      cx reason ~use_op ?(call_strict_arity = true) prop_loc (expr, obj_t, name) targts argts =
-    let (expr_loc, _) = expr in
-    match Refinement.get ~allow_optional:true cx expr (loc_of_reason reason) with
-    | Some f ->
-      (* note: the current state of affairs is that we understand
-         member expressions as having refined types, rather than
-         understanding receiver objects as carrying refined properties.
-         generalizing this properly is a todo, and will deliver goodness.
-         meanwhile, here we must hijack the property selection normally
-         performed by the flow algorithm itself. *)
-      ( f,
-        Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
-            let app =
-              mk_boundfunctioncalltype
-                ~call_kind:RegularCallKind
-                obj_t
-                targts
-                argts
-                t
-                ~call_strict_arity
-            in
-            Flow.flow
-              cx
-              ( f,
-                CallT
-                  {
-                    use_op;
-                    reason;
-                    call_action = Funcalltype app;
-                    return_hint = Type.hint_unavailable;
-                  }
-              )
-        )
-      )
-    | None ->
-      let name = OrdinaryName name in
-      let reason_prop = mk_reason (RProperty (Some name)) prop_loc in
-      let specialized_callee = Context.new_specialized_callee cx in
-      let out =
-        Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
-            let reason_expr = mk_reason (RProperty (Some name)) expr_loc in
-            let methodcalltype =
-              mk_methodcalltype targts argts t ~meth_strict_arity:call_strict_arity
-            in
-            let propref = mk_named_prop ~reason:reason_prop name in
-            Flow.flow
-              cx
-              ( obj_t,
-                MethodT
-                  ( use_op,
-                    reason,
-                    reason_expr,
-                    propref,
-                    CallM
-                      {
-                        methodcalltype;
-                        return_hint = Type.hint_unavailable;
-                        specialized_callee = Some specialized_callee;
-                      }
-                  )
-              )
-        )
-      in
-      let prop_t = TypeUtil.type_of_specialized_callee reason_prop specialized_callee in
-      (prop_t, out)
-
-  and elem_call_opt_use
-      opt_state
-      ~voided_out
-      ~prop_t
-      ~use_op
-      ~reason_call
-      ~reason_lookup
-      ~reason_expr
-      ~reason_chain
-      targts
-      argts
-      elem_t
-      specialized_callee =
-    let opt_methodcalltype = mk_opt_methodcalltype targts argts true in
-    let action =
-      match opt_state with
-      | NewChain ->
-        OptChainM
-          {
-            exp_reason = reason_chain;
-            lhs_reason = reason_expr;
-            this = prop_t;
-            opt_methodcalltype;
-            voided_out;
-            return_hint = Type.hint_unavailable;
-            specialized_callee;
-          }
-      | _ ->
-        OptCallM { opt_methodcalltype; return_hint = Type.hint_unavailable; specialized_callee }
-    in
-    OptCallElemT (use_op, reason_call, reason_lookup, elem_t, action)
-
-  and identifier_ cx name loc =
-    let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
-    let get_checking_mode_type () =
-      let t = Type_env.var_ref ~lookup_mode:ForValue cx (OrdinaryName name) loc in
-      (* We want to make sure that the reason description for the type we return
-       * is always `RIdentifier name`. *)
-      match (desc_of_t t, t) with
-      | (RIdentifier name', _) when OrdinaryName name = name' -> t
-      | (_, OpenT _) ->
-        (* If this is an `OpenT` we can change its reason description directly. *)
-        mod_reason_of_t (replace_desc_new_reason (RIdentifier (OrdinaryName name))) t
-      (* If this is not an `OpenT` then create a new type variable with our
-       * desired reason and unify it with our type. This adds a level of
-       * indirection so that we don't modify the underlying reason of our type. *)
-      | _ ->
-        let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
-        Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (Flow.unify cx t)
-    in
-    if Type_inference_hooks_js.dispatch_id_hook cx name loc then
-      let (_, lazy_hint) = Type_env.get_hint cx loc in
-      lazy_hint reason
-      |> Type_hint.with_hint_result ~ok:Base.Fn.id ~error:(fun () ->
-             EmptyT.at loc |> with_trust bogus_trust
-         )
-    else
-      get_checking_mode_type ()
-
-  and identifier cx { Ast.Identifier.name; comments = _ } loc =
-    let t = identifier_ cx name loc in
-    t
-
-  and string_literal_value cx loc value =
-    if Type_inference_hooks_js.dispatch_literal_hook cx loc then
-      let (_, lazy_hint) = Type_env.get_hint cx loc in
-      let hint = lazy_hint (mk_reason (RCustom "literal") loc) in
-      let error () = EmptyT.at loc |> with_trust bogus_trust in
-      Type_hint.with_hint_result hint ~ok:Base.Fn.id ~error
-    else
-      (* It's too expensive to track literal information for large strings.*)
-      let max_literal_length = Context.max_literal_length cx in
-      let make_trust = Context.trust_constructor cx in
-      if max_literal_length = 0 || String.length value <= max_literal_length then
-        let reason = mk_annot_reason RString loc in
-        DefT (reason, make_trust (), StrT (Literal (None, OrdinaryName value)))
-      else
-        let reason = mk_annot_reason (RLongStringLit max_literal_length) loc in
-        DefT (reason, make_trust (), StrT AnyLiteral)
-
-  and string_literal cx loc { Ast.StringLiteral.value; _ } = string_literal_value cx loc value
-
-  and boolean_literal cx loc { Ast.BooleanLiteral.value; _ } =
-    let make_trust = Context.trust_constructor cx in
-    let reason = mk_annot_reason RBoolean loc in
-    DefT (reason, make_trust (), BoolT (Some value))
-
-  and null_literal cx loc =
-    let make_trust = Context.trust_constructor cx in
-    NullT.at loc |> with_trust make_trust
-
-  and number_literal cx loc { Ast.NumberLiteral.value; raw; _ } =
-    let make_trust = Context.trust_constructor cx in
-    let reason = mk_annot_reason RNumber loc in
-    DefT (reason, make_trust (), NumT (Literal (None, (value, raw))))
-
-  and bigint_literal cx loc { Ast.BigIntLiteral.value; raw; _ } =
-    let make_trust = Context.trust_constructor cx in
-    let reason = mk_annot_reason RBigInt loc in
-    DefT (reason, make_trust (), BigIntT (Literal (None, (value, raw))))
-
-  and regexp_literal cx loc =
-    let reason = mk_annot_reason RRegExp loc in
-    Flow.get_builtin_type cx reason (OrdinaryName "RegExp")
-
-  and module_ref_literal cx loc lit =
-    let { Ast.ModuleRefLiteral.value; require_out; prefix_len; legacy_interop; _ } = lit in
-    let mref = Base.String.drop_prefix value prefix_len in
-    let module_t = Import_export.get_module_t cx (loc, mref) in
-    let require_t = Import_export.require cx ~legacy_interop loc mref module_t in
-    let reason = mk_reason (RCustom "module reference") loc in
-    let t = Flow.get_builtin_typeapp cx reason (OrdinaryName "$Flow$ModuleRef") [require_t] in
-    (t, { lit with Ast.ModuleRefLiteral.require_out = (require_out, require_t) })
 
   (* traverse a unary expression, return result type *)
   and unary cx ~cond loc =
