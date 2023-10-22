@@ -242,11 +242,6 @@ struct
   module InstantiationKit = Instantiation_kit (InstantiationHelper)
   module ImplicitInstantiationKit = Implicit_instantiation.Kit (FlowJs) (InstantiationHelper)
 
-  let assert_import_is_value cx trace reason name export_t =
-    FlowJs.rec_flow cx trace (export_t, AssertImportIsValueT (reason, name))
-
-  let with_concretized_type cx r f t = f (FlowJs.singleton_concrete_type_for_inspection cx r t)
-
   module Import_export_helper :
     Flow_js_utils.Import_export_helper_sig with type r = Type.t -> unit = struct
     type r = Type.t -> unit
@@ -802,23 +797,6 @@ struct
           rec_flow cx trace (representation_t, UseT (use_op, cast_to_t))
         | (cast_to_t, EnumCastT { use_op; enum = (reason, trust, enum) }) ->
           rec_flow cx trace (DefT (reason, trust, EnumT enum), UseT (use_op, cast_to_t))
-        (*******************)
-        (* `import typeof` *)
-        (*******************)
-        | (_, ImportTypeofT (reason, export_name, tout)) ->
-          FlowJs.rec_flow_t
-            cx
-            ~use_op:unknown_use
-            trace
-            ( ImportTypeofTKit.on_concrete_type
-                cx
-                trace
-                ~mk_typeof_annotation:FlowJs.mk_typeof_annotation
-                reason
-                export_name
-                l,
-              tout
-            )
         (******************)
         (* Module exports *)
         (******************)
@@ -853,43 +831,11 @@ struct
             ~use_op:unknown_use
             trace
             (ImportModuleNsTKit.on_ModuleT cx trace (reason, is_strict) m, tout)
-        | (ModuleT m, ImportDefaultT (reason, import_kind, local, tout, is_strict)) ->
-          let (_name_loc_opt, t) =
-            ImportDefaultTKit.on_ModuleT
-              cx
-              trace
-              ~mk_typeof_annotation:FlowJs.mk_typeof_annotation
-              ~assert_import_is_value
-              ~with_concretized_type
-              (reason, import_kind, local, is_strict)
-              m
-          in
-          rec_flow_t cx ~use_op:unknown_use trace (t, tout)
-        | (ModuleT m, ImportNamedT (reason, import_kind, export_name, module_name, tout, is_strict))
-          ->
-          let import = (reason, import_kind, export_name, module_name, is_strict) in
-          let (_name_loc_opt, t) =
-            ImportNamedTKit.on_ModuleT
-              cx
-              trace
-              ~mk_typeof_annotation:FlowJs.mk_typeof_annotation
-              ~assert_import_is_value
-              ~with_concretized_type
-              import
-              m
-          in
-          rec_flow_t cx ~use_op:unknown_use trace (t, tout)
         | (AnyT (lreason, _), CJSRequireT { reason; t_out; _ }) ->
           Flow_js_utils.check_untyped_import cx ImportValue lreason reason;
           rec_flow_t ~use_op:unknown_use cx trace (reposition_reason cx reason l, t_out)
         | (AnyT (lreason, _), ImportModuleNsT { reason; t; is_strict = _ }) ->
           Flow_js_utils.check_untyped_import cx ImportValue lreason reason;
-          rec_flow_t ~use_op:unknown_use cx trace (reposition_reason cx reason l, t)
-        | (AnyT (lreason, _), ImportDefaultT (reason, import_kind, _, t, _)) ->
-          Flow_js_utils.check_untyped_import cx import_kind lreason reason;
-          rec_flow_t ~use_op:unknown_use cx trace (reposition_reason cx reason l, t)
-        | (AnyT (lreason, _), ImportNamedT (reason, import_kind, _, _, t, _)) ->
-          Flow_js_utils.check_untyped_import cx import_kind lreason reason;
           rec_flow_t ~use_op:unknown_use cx trace (reposition_reason cx reason l, t)
         (*****************)
         (* Import checks *)
@@ -6392,10 +6338,7 @@ struct
     | FilterOptionalT _
     | FilterMaybeT _
     | DeepReadOnlyT _
-    | ImportDefaultT _
     | ImportModuleNsT _
-    | ImportNamedT _
-    | ImportTypeofT _
     | PreprocessKitT _
     | ResolveUnionT _
     | LookupT _

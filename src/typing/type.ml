@@ -778,9 +778,6 @@ module rec TypeTerm : sig
         t: t;
         is_strict: bool;  (** callee is @flow strict *)
       }
-    | ImportDefaultT of reason * import_kind * (string * string) * t * bool (* is_strict *)
-    | ImportNamedT of reason * import_kind * string * string * t * bool (* is_strict *)
-    | ImportTypeofT of reason * string * t
     | AssertImportIsValueT of reason * string
     (* Module export handling *)
     | CJSExtractNamedExportsT of
@@ -4022,10 +4019,7 @@ let string_of_use_ctor = function
   | GuardT _ -> "GuardT"
   | HasOwnPropT _ -> "HasOwnPropT"
   | ImplementsT _ -> "ImplementsT"
-  | ImportDefaultT _ -> "ImportDefaultT"
   | ImportModuleNsT _ -> "ImportModuleNsT"
-  | ImportNamedT _ -> "ImportNamedT"
-  | ImportTypeofT _ -> "ImportTypeofT"
   | PreprocessKitT (_, tool) ->
     spf
       "PreprocessKitT %s"

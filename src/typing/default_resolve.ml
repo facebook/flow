@@ -168,10 +168,7 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
   | ElemT (_, _, _, action) -> resolve_elem_action action
   | MakeExactT (_, k) -> resolve_cont k
   | CJSRequireT { t_out = t; _ }
-  | ImportModuleNsT { t; _ }
-  | ImportDefaultT (_, _, _, t, _)
-  | ImportNamedT (_, _, _, _, t, _)
-  | ImportTypeofT (_, _, t) ->
+  | ImportModuleNsT { t; _ } ->
     resolve t
   | AssertImportIsValueT _ -> ()
   | CJSExtractNamedExportsT (_, _, t)

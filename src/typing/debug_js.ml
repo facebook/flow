@@ -808,10 +808,7 @@ and dump_use_t_ (depth, tvars) cx t =
         ~extra:(spf "%s, %s, %s" (string_of_predicate pred) (kid result) (tout sink))
         t
     | HasOwnPropT _ -> p t
-    | ImportDefaultT _ -> p t
     | ImportModuleNsT { is_strict; _ } -> p ~extra:(spf "is_strict=%b" is_strict) t
-    | ImportNamedT _ -> p t
-    | ImportTypeofT _ -> p t
     | PreprocessKitT _ -> p t
     | InvariantT _ -> p t
     | LookupT { lookup_kind = kind; propref = prop; lookup_action = action; ids; _ } ->

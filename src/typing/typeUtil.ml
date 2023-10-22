@@ -95,10 +95,7 @@ and reason_of_use_t = function
   | GuardT (_, _, (r, _)) -> r
   | HasOwnPropT (_, reason, _) -> reason
   | ImplementsT (_, t) -> reason_of_t t
-  | ImportDefaultT (reason, _, _, _, _) -> reason
   | ImportModuleNsT { reason; _ } -> reason
-  | ImportNamedT (reason, _, _, _, _, _) -> reason
-  | ImportTypeofT (reason, _, _) -> reason
   | PreprocessKitT (reason, _) -> reason
   | InvariantT reason -> reason
   | LookupT { reason; _ } -> reason
@@ -318,12 +315,7 @@ and mod_reason_of_use_t f = function
   | GuardT (pred, result, (reason, tvar)) -> GuardT (pred, result, (f reason, tvar))
   | HasOwnPropT (use_op, reason, t) -> HasOwnPropT (use_op, f reason, t)
   | ImplementsT (use_op, t) -> ImplementsT (use_op, mod_reason_of_t f t)
-  | ImportDefaultT (reason, import_kind, name, t, is_strict) ->
-    ImportDefaultT (f reason, import_kind, name, t, is_strict)
   | ImportModuleNsT { reason; t; is_strict } -> ImportModuleNsT { reason = f reason; t; is_strict }
-  | ImportNamedT (reason, import_kind, name, t, module_name, is_strict) ->
-    ImportNamedT (f reason, import_kind, name, t, module_name, is_strict)
-  | ImportTypeofT (reason, name, t) -> ImportTypeofT (f reason, name, t)
   | PreprocessKitT (reason, tool) -> PreprocessKitT (f reason, tool)
   | InvariantT reason -> InvariantT (f reason)
   | LookupT
@@ -536,9 +528,6 @@ let rec util_use_op_of_use_t :
   | GetValuesT (_, _)
   | CJSRequireT _
   | ImportModuleNsT { reason = _; t = _; is_strict = _ }
-  | ImportDefaultT (_, _, _, _, _)
-  | ImportNamedT (_, _, _, _, _, _)
-  | ImportTypeofT (_, _, _)
   | AssertImportIsValueT (_, _)
   | CJSExtractNamedExportsT (_, _, _)
   | CopyNamedExportsT (_, _, _)
