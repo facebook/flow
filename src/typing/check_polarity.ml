@@ -169,7 +169,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
       check_polarity cx ?trace tparams (Polarity.inv polarity) config;
       check_polarity cx ?trace tparams polarity instance;
       check_polarity cx ?trace tparams polarity renders
-    | DefT (_, _, RendersT (NominalRenders { renders_id = _; renders_super })) ->
+    | DefT (_, _, RendersT (NominalRenders { renders_id = _; renders_name = _; renders_super })) ->
       check_polarity cx ?trace tparams polarity renders_super
     | DefT (_, _, RendersT (StructuralRenders { renders_variant = _; renders_structural_type = t }))
       ->

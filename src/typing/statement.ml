@@ -7278,7 +7278,7 @@ module Make
             let renders_t = TypeUtil.mk_renders_type ret_reason RendersNormal t in
             (loc, renders_t, Ast.Type.MissingRenders (loc, renders_t))
         in
-        let (id_loc, name) = id in
+        let (id_loc, ({ Ast.Identifier.name; comments = _ } as name_ast)) = id in
         ( {
             Component_sig_types.Component_declaration_sig_types.reason;
             tparams;
@@ -7286,12 +7286,12 @@ module Make
             body;
             renders_t;
             ret_annot_loc = ret_loc;
-            id_loc = Some id_loc;
+            id_opt = Some (id_loc, name);
           },
           fun params body component_type ->
             {
               component with
-              Ast.Statement.ComponentDeclaration.id = ((id_loc, component_type), name);
+              Ast.Statement.ComponentDeclaration.id = ((id_loc, component_type), name_ast);
               params;
               body;
               renders = renders_ast;

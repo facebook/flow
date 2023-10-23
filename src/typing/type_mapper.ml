@@ -341,12 +341,12 @@ class virtual ['a] t =
 
     method private canonical_renders_form cx map_cx form =
       match form with
-      | NominalRenders { renders_id; renders_super } ->
+      | NominalRenders { renders_id; renders_name; renders_super } ->
         let renders_super' = self#type_ cx map_cx renders_super in
         if renders_super' == renders_super then
           form
         else
-          NominalRenders { renders_id; renders_super = renders_super' }
+          NominalRenders { renders_id; renders_name; renders_super = renders_super' }
       | StructuralRenders { renders_variant; renders_structural_type } ->
         let renders_structural_type' = self#type_ cx map_cx renders_structural_type in
         if renders_structural_type' == renders_structural_type then

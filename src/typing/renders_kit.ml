@@ -24,8 +24,8 @@ module Make (Flow : INPUT) = struct
 
   let rec rec_renders cx trace ~use_op ((reasonl, l), (reasonu, u)) =
     match (l, u) with
-    | ( NominalRenders { renders_id = id1; renders_super },
-        NominalRenders { renders_id = id2; renders_super = _ }
+    | ( NominalRenders { renders_id = id1; renders_name = _; renders_super },
+        NominalRenders { renders_id = id2; renders_name = _; renders_super = _ }
       ) ->
       if ALoc.equal_id id1 id2 then
         ()
@@ -37,7 +37,7 @@ module Make (Flow : INPUT) = struct
           trace
           ~use_op:(Frame (RendersCompatibility, use_op))
           (super, reconstruct_render_type reasonu u)
-    | ( NominalRenders { renders_id = _; renders_super },
+    | ( NominalRenders { renders_id = _; renders_name = _; renders_super },
         StructuralRenders
           {
             renders_variant = RendersNormal | RendersMaybe | RendersStar;
