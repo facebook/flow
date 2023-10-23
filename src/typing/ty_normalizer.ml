@@ -562,15 +562,9 @@ end = struct
         let msg = "could not extract instance name from reason: " ^ desc in
         terr ~kind:BadInstanceT ~msg None
 
-    let component_symbol env reason =
-      match desc_of_reason reason with
-      | RComponent name ->
-        let symbol = symbol_from_reason env reason name in
-        return symbol
-      | desc ->
-        let desc = Reason.show_virtual_reason_desc (fun _ _ -> ()) desc in
-        let msg = "could not extract component name from reason: " ^ desc in
-        terr ~kind:UnsupportedTypeCtor ~msg None
+    let component_symbol env name reason =
+      let symbol = symbol_from_reason env reason (OrdinaryName name) in
+      return symbol
 
     let module_symbol_opt env reason =
       match desc_of_reason reason with
@@ -778,9 +772,9 @@ end = struct
         | _ -> type_app ~env type_ (Some targs))
       | DefT (r, _, InstanceT { super; inst; _ }) -> instance_t ~env r super inst
       | DefT (_, _, ClassT t) -> class_t ~env t
-      | DefT (reason, _, ReactAbstractComponentT { component_kind = Nominal _; _ })
+      | DefT (reason, _, ReactAbstractComponentT { component_kind = Nominal (_, name); _ })
         when Env.(env.under_render_type) ->
-        let%bind symbol = Reason_utils.component_symbol env reason in
+        let%bind symbol = Reason_utils.component_symbol env name reason in
         return (Ty.Generic (symbol, Ty.ComponentKind, None))
       | DefT (_, _, ReactAbstractComponentT { config; instance; renders; component_kind = _ }) ->
         let%bind config = type__ ~env config in
@@ -791,12 +785,25 @@ end = struct
              (Ty_symbol.builtin_symbol (Reason.OrdinaryName "React$AbstractComponent"))
              (Some [config; instance; renders])
           )
-      | DefT (_, _, RendersT _) ->
-        (* TODO(jmbrown): Ty normalization for render types with an id *)
-        terr
-          ~kind:UnsupportedTypeCtor
-          ~msg:"Normalization is not yet supported for render types"
-          None
+      | DefT (r, _, RendersT (NominalRenders { renders_id = _; renders_name; _ })) ->
+        let%bind symbol =
+          Reason_utils.component_symbol
+            env
+            renders_name
+            (mk_reason (RComponent (OrdinaryName renders_name)) (loc_of_reason r))
+        in
+        return (Ty.Generic (symbol, Ty.ComponentKind, None))
+      | DefT (_, _, RendersT (StructuralRenders { renders_variant; renders_structural_type })) ->
+        let%bind ty =
+          type_ctor ~env:(Env.set_under_render_type true env) ~cont renders_structural_type
+        in
+        let variant =
+          match renders_variant with
+          | T.RendersNormal -> Ty.RendersNormal
+          | T.RendersMaybe -> Ty.RendersMaybe
+          | T.RendersStar -> Ty.RendersStar
+        in
+        return (Ty.Renders (ty, variant))
       | ThisClassT (_, t, _, _) -> this_class_t ~env t
       | ThisTypeAppT (_, c, _, ts) -> type_app ~env c ts
       | KeysT (r, t) -> keys_t ~env ~cont:type__ r t

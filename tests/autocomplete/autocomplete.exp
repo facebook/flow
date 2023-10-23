@@ -263,6 +263,14 @@ Flags: --pretty
 {
   "result":[
     {"name":"Complementarity","type":"class Complementarity"},
+    {
+      "name":"ComponentSyntaxBar",
+      "type":"React$AbstractComponent<{||}, mixed, renders ComponentSyntaxFoo>"
+    },
+    {
+      "name":"ComponentSyntaxFoo",
+      "type":"React$AbstractComponent<{||}, mixed, renders ?(boolean | number | string | React$Element | React$Portal | $Iterable<?React$Node, void, void>)>"
+    },
     {"name":"Compressibility","type":"(props: empty) => void"},
     {"name":"Computerization","type":"(props: empty) => void"},
     {"name":"canvas","type":"JSX Intrinsic"},
