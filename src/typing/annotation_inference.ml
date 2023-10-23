@@ -105,8 +105,7 @@ module type S = sig
     Type.t ->
     Type.t
 
-  val cjs_extract_named_exports :
-    Context.t -> Reason.reason -> Reason.reason * Type.exporttypes * bool -> Type.t -> Type.t
+  val cjs_extract_named_exports : Context.t -> Reason.reason -> Type.moduletype -> Type.t -> Type.t
 
   val import_default :
     Context.t -> Reason.t -> Type.import_kind -> string -> string -> bool -> Type.t -> Type.t

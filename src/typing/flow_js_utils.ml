@@ -1134,7 +1134,7 @@ module type Import_export_helper_sig = sig
     Type.t
 
   val cjs_extract_named_exports :
-    Context.t -> Type.trace -> Reason.t * (Reason.t * Type.exporttypes * bool) -> Type.t -> Type.t
+    Context.t -> Type.trace -> Reason.t * Type.moduletype -> Type.t -> Type.t
 
   val return : Context.t -> Type.trace -> Type.t -> r
 end
@@ -1254,7 +1254,10 @@ end
 module CJSRequireT_kit (F : Import_export_helper_sig) = struct
   (* require('SomeModule') *)
   let on_ModuleT
-      cx trace (reason, is_strict, legacy_interop) (module_reason, exports, imported_is_strict) =
+      cx
+      trace
+      (reason, is_strict, legacy_interop)
+      { module_reason; module_export_types = exports; module_is_strict = imported_is_strict } =
     check_nonstrict_import cx trace is_strict imported_is_strict reason;
     match exports.cjs_export with
     | Some t ->
@@ -1294,7 +1297,7 @@ module ImportModuleNsTKit = struct
       trace
       ?(is_common_interface_module = false)
       (reason_op, is_strict)
-      (module_reason, exports, imported_is_strict) =
+      { module_reason; module_export_types = exports; module_is_strict = imported_is_strict } =
     if not is_common_interface_module then
       check_nonstrict_import cx trace is_strict imported_is_strict reason_op;
     let reason =
@@ -1356,7 +1359,7 @@ module ImportDefaultTKit = struct
       ~assert_import_is_value
       ~with_concretized_type
       (reason, import_kind, (local_name, module_name), is_strict)
-      (module_reason, exports, imported_is_strict) =
+      { module_reason; module_export_types = exports; module_is_strict = imported_is_strict } =
     check_nonstrict_import cx trace is_strict imported_is_strict reason;
     let (loc_opt, export_t) =
       match exports.cjs_export with
@@ -1419,7 +1422,7 @@ module ImportNamedTKit = struct
       ~assert_import_is_value
       ~with_concretized_type
       (reason, import_kind, export_name, module_name, is_strict)
-      (_, exports, imported_is_strict) =
+      { module_reason = _; module_export_types = exports; module_is_strict = imported_is_strict } =
     check_nonstrict_import cx trace is_strict imported_is_strict reason;
     (*
      * When importing from a CommonJS module, we shadow any potential named
@@ -1562,7 +1565,12 @@ end
 
 (* util that grows a module by adding named exports from a given map *)
 module ExportNamedT_kit (F : Import_export_helper_sig) = struct
-  let on_ModuleT cx trace (_, tmap, export_kind) lhs (_, { exports_tmap; _ }, _) =
+  let on_ModuleT
+      cx
+      trace
+      (_, tmap, export_kind)
+      lhs
+      { module_reason = _; module_export_types = { exports_tmap; _ }; module_is_strict = _ } =
     let add_export name export acc =
       let export' =
         match export_kind with
@@ -1604,7 +1612,11 @@ end
    to implement `export * from 'SomeModule'`, with the current module as
    the target and the imported module as the source. *)
 module CopyNamedExportsT_kit (F : Import_export_helper_sig) = struct
-  let on_ModuleT cx trace (reason, target_module_t) (_, source_exports, _) : F.r =
+  let on_ModuleT
+      cx
+      trace
+      (reason, target_module_t)
+      { module_reason = _; module_export_types = source_exports; module_is_strict = _ } : F.r =
     let source_tmap = Context.find_exports cx source_exports.exports_tmap in
     F.export_named cx trace (reason, source_tmap, ReExport) target_module_t
 
@@ -1617,7 +1629,11 @@ end
 (* Copy only the type exports from a source module into a target module.
  * Used to implement `export type * from ...`. *)
 module CopyTypeExportsT_kit (F : Import_export_helper_sig) = struct
-  let on_ModuleT cx trace (reason, target_module_t) (_, source_exports, _) =
+  let on_ModuleT
+      cx
+      trace
+      (reason, target_module_t)
+      { module_reason = _; module_export_types = source_exports; module_is_strict = _ } =
     let source_exports = Context.find_exports cx source_exports.exports_tmap in
     (* Remove locations. TODO at some point we may want to include them here. *)
     let source_exports =
@@ -1701,9 +1717,14 @@ module CJSExtractNamedExportsT_kit (F : Import_export_helper_sig) = struct
       F.export_named cx trace (reason, extract_named_exports proto_props, ExportValue) module_t
     (* If the module is exporting any or Object, then we allow any named import. *)
     | AnyT _ ->
-      let (module_t_reason, exporttypes, is_strict) = local_module in
+      let { module_reason; module_export_types = exporttypes; module_is_strict } = local_module in
       let module_t =
-        ModuleT (module_t_reason, { exporttypes with has_every_named_export = true }, is_strict)
+        ModuleT
+          {
+            module_reason;
+            module_export_types = { exporttypes with has_every_named_export = true };
+            module_is_strict;
+          }
       in
       F.return cx trace module_t
     (* All other CommonJS export value types do not get merged into the named

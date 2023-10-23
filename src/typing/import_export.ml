@@ -13,14 +13,16 @@ open Type
 
 let mk_module_t cx reason =
   ModuleT
-    ( reason,
-      {
-        exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
-        cjs_export = None;
-        has_every_named_export = false;
-      },
-      Context.is_strict cx
-    )
+    {
+      module_reason = reason;
+      module_export_types =
+        {
+          exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
+          cjs_export = None;
+          has_every_named_export = false;
+        };
+      module_is_strict = Context.is_strict cx;
+    }
 
 (**
  * When CommonJS modules set their export type, we do two things:
@@ -32,7 +34,7 @@ let mk_module_t cx reason =
  *     ES <-> CJS module interop semantics)
  *)
 let mk_commonjs_module_t cx reason_exports_module reason export_t =
-  let exporttypes =
+  let module_export_types =
     {
       exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
       cjs_export = Some export_t;
@@ -44,7 +46,14 @@ let mk_commonjs_module_t cx reason_exports_module reason export_t =
         cx
         ( export_t,
           CJSExtractNamedExportsT
-            (reason, (reason_exports_module, exporttypes, Context.is_strict cx), t)
+            ( reason,
+              {
+                module_reason = reason_exports_module;
+                module_export_types;
+                module_is_strict = Context.is_strict cx;
+              },
+              t
+            )
         )
   )
 

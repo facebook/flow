@@ -170,7 +170,7 @@ module rec TypeTerm : sig
      * opaquetype.name for pretty printing. *)
     | OpaqueT of reason * opaquetype
     (* Stores exports (and potentially other metadata) for a module *)
-    | ModuleT of (reason * exporttypes * bool) (* is_strict *)
+    | ModuleT of moduletype
     (* Here's to the crazy ones. The misfits. The rebels. The troublemakers.
        The round pegs in the square holes. **)
     (* types that should never appear in signatures *)
@@ -783,7 +783,7 @@ module rec TypeTerm : sig
     | CJSExtractNamedExportsT of
         reason
         * (* local ModuleT *)
-        (reason * exporttypes * bool)
+          moduletype
         * (* is_strict *)
           (* 't_out' to receive the resolved ModuleT *)
           t_out
@@ -1550,6 +1550,12 @@ module rec TypeTerm : sig
   and typeparams_nonempty = ALoc.t * typeparam Nel.t
 
   and typeparams = typeparams_nonempty option
+
+  and moduletype = {
+    module_reason: reason;
+    module_export_types: exporttypes;
+    module_is_strict: bool;
+  }
 
   and selector =
     | Prop of string * bool
@@ -3154,7 +3160,7 @@ module AConstraint = struct
         legacy_interop: bool;
       }
     (* Exports *)
-    | Annot_CJSExtractNamedExportsT of Reason.t * (Reason.t * TypeTerm.exporttypes * bool)
+    | Annot_CJSExtractNamedExportsT of Reason.t * TypeTerm.moduletype
     | Annot_ExportNamedT of Reason.t * TypeTerm.named_symbol NameUtils.Map.t * TypeTerm.export_kind
     | Annot_ExportTypeT of Reason.t * Reason.name * TypeTerm.t
     | Annot_AssertExportIsTypeT of Reason.t * name

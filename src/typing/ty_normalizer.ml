@@ -2009,7 +2009,7 @@ end = struct
         (* Polymorphic variants - see singleton_poly *)
         | DefT (_, _, PolyT { tparams; t_out; _ }) -> singleton_poly ~env ~orig_t tparams t_out
         (* Modules *)
-        | ModuleT (reason, exports, _) ->
+        | ModuleT { module_reason = reason; module_export_types = exports; module_is_strict = _ } ->
           let%map m = module_t ~env reason exports in
           Ty.Decl m
         | DefT (r, _, ObjT o) when Reason_utils.is_module_reason r ->

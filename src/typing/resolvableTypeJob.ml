@@ -176,7 +176,7 @@ and collect_of_type ?log_unresolved cx acc = function
      not immediately clear what we'd gain (or lose) by walking them. *)
   | InternalT (ChoiceKitT (_, _))
   | TypeDestructorTriggerT _
-  | ModuleT (_, _, _)
+  | ModuleT { module_reason = _; module_export_types = _; module_is_strict = _ }
   | InternalT (ExtendsT _) ->
     acc
   (* The following cases exactly follow Type_visitor (i.e., they do the

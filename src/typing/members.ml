@@ -659,7 +659,14 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
         SMap.empty
     in
     Success (AugmentableSMap.augment prot_members ~with_bindings:members)
-  | SuccessModule (ModuleT (_, { exports_tmap; cjs_export; has_every_named_export = _ }, _)) ->
+  | SuccessModule
+      (ModuleT
+        {
+          module_reason = _;
+          module_export_types = { exports_tmap; cjs_export; has_every_named_export = _ };
+          module_is_strict = _;
+        }
+        ) ->
     let named_exports = Context.find_exports cx exports_tmap in
     let cjs_export =
       match cjs_export with

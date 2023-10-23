@@ -2035,14 +2035,16 @@ module Make
       let reason = mk_reason (RModule (OrdinaryName name)) id_loc in
       let module_t =
         ModuleT
-          ( reason,
-            {
-              exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
-              cjs_export = None;
-              has_every_named_export = false;
-            },
-            Context.is_strict cx
-          )
+          {
+            module_reason = reason;
+            module_export_types =
+              {
+                exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
+                cjs_export = None;
+                has_every_named_export = false;
+              };
+            module_is_strict = Context.is_strict cx;
+          }
       in
       let ast =
         {

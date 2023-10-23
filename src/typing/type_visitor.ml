@@ -65,7 +65,8 @@ class ['a] t =
         let acc = self#opt (self#type_ cx pole) acc underlying_t in
         let acc = self#opt (self#type_ cx pole) acc super_t in
         acc
-      | ModuleT (_, exporttypes, _) -> self#export_types cx pole acc exporttypes
+      | ModuleT { module_reason = _; module_export_types = exporttypes; module_is_strict = _ } ->
+        self#export_types cx pole acc exporttypes
       | InternalT (ExtendsT (_, t1, t2)) ->
         let acc = self#type_ cx pole_TODO acc t1 in
         let acc = self#type_ cx pole_TODO acc t2 in

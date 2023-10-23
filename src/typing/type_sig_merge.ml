@@ -373,33 +373,33 @@ let merge_type_export file reason = function
     let (lazy (loc, _name, type_)) = Remote_refs.get file.remote_refs index in
     { Type.name_loc = Some loc; preferred_def_locs = None; is_type_only_export = true; type_ }
 
-let mk_commonjs_module_t cx reason strict t =
+let mk_commonjs_module_t cx module_reason module_is_strict t =
   let open Type in
-  let exporttypes =
+  let module_export_types =
     {
       exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
       cjs_export = Some t;
       has_every_named_export = false;
     }
   in
-  let local_module = (reason, exporttypes, strict) in
-  ConsGen.cjs_extract_named_exports cx reason local_module t
+  let local_module = { module_reason; module_export_types; module_is_strict } in
+  ConsGen.cjs_extract_named_exports cx module_reason local_module t
 
 let merge_exports =
   let merge_star file (loc, index) =
     let (mref, (lazy resolved_module)) = Module_refs.get file.dependencies index in
     (loc, get_module_t mref loc resolved_module)
   in
-  let mk_es_module_t file reason is_strict =
+  let mk_es_module_t file module_reason module_is_strict =
     let open Type in
-    let exportstype =
+    let module_export_types =
       {
         exports_tmap = Context.make_export_map file.cx NameUtils.Map.empty;
         cjs_export = None;
         has_every_named_export = false;
       }
     in
-    ModuleT (reason, exportstype, is_strict)
+    ModuleT { module_reason; module_export_types; module_is_strict }
   in
 
   let copy_named_exports file reason module_t (loc, from_ns) =

@@ -30,7 +30,7 @@ let rec reason_of_t = function
   | FunProtoBindT reason -> reason
   | FunProtoCallT reason -> reason
   | KeysT (reason, _) -> reason
-  | ModuleT (reason, _, _) -> reason
+  | ModuleT { module_reason = reason; _ } -> reason
   | NullProtoT reason -> reason
   | ObjProtoT reason -> reason
   | MatchingPropT (reason, _, _) -> reason
@@ -193,7 +193,8 @@ let rec mod_reason_of_t f = function
   | FunProtoBindT reason -> FunProtoBindT (f reason)
   | FunProtoCallT reason -> FunProtoCallT (f reason)
   | KeysT (reason, t) -> KeysT (f reason, t)
-  | ModuleT (reason, exports, is_strict) -> ModuleT (f reason, exports, is_strict)
+  | ModuleT { module_reason; module_export_types; module_is_strict } ->
+    ModuleT { module_reason = f module_reason; module_export_types; module_is_strict }
   | NullProtoT reason -> NullProtoT (f reason)
   | ObjProtoT reason -> ObjProtoT (f reason)
   | MatchingPropT (reason, k, v) -> MatchingPropT (f reason, k, v)

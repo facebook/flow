@@ -151,12 +151,12 @@ class virtual ['a] t =
           t
         else
           OpaqueT (r, { opaquetype with underlying_t; super_t; opaque_type_args })
-      | ModuleT (r, exporttypes, is_strict) ->
-        let exporttypes' = self#export_types cx map_cx exporttypes in
-        if exporttypes == exporttypes' then
+      | ModuleT { module_reason; module_export_types; module_is_strict } ->
+        let module_export_types' = self#export_types cx map_cx module_export_types in
+        if module_export_types == module_export_types' then
           t
         else
-          ModuleT (r, exporttypes', is_strict)
+          ModuleT { module_reason; module_export_types = module_export_types'; module_is_strict }
       | InternalT (ExtendsT (r, t1, t2)) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in
