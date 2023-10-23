@@ -258,7 +258,7 @@ jsx3.js:9:4
 Flags: --pretty
 {"result":[{"name":"x","type":"number"},{"name":"y","type":"string"}]}
 
-jsx4.js:7:3
+jsx4.js:10:3
 Flags: --pretty
 {
   "result":[
