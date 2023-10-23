@@ -2315,6 +2315,179 @@ References:
       ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- propsof.js:8:4
+
+Cannot cast `foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   propsof.js:8:4
+   8|   (foo: empty); // foo is string
+         ^^^
+
+References:
+   propsof.js:3:18
+   3| component A(foo: string, bar: number) {
+                       ^^^^^^ [1]
+   propsof.js:8:9
+   8|   (foo: empty); // foo is string
+              ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- propsof.js:9:4
+
+Cannot cast `bar` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   propsof.js:9:4
+   9|   (bar: empty); // bar is number
+         ^^^
+
+References:
+   propsof.js:3:31
+   3| component A(foo: string, bar: number) {
+                                    ^^^^^^ [1]
+   propsof.js:9:9
+   9|   (bar: empty); // bar is number
+              ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- propsof.js:14:2
+
+Cannot cast `intrinsicProp.children` to empty because `$Iterable` [1] is incompatible with empty [2].
+[incompatible-cast]
+
+   propsof.js:14:2
+    14| (intrinsicProp.children: empty); // children is ?React.Node
+         ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react-dom.js:430:19
+   430|       +children?: React$Node,
+                          ^^^^^^^^^^ [1]
+   propsof.js:14:26
+    14| (intrinsicProp.children: empty); // children is ?React.Node
+                                 ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- propsof.js:14:2
+
+Cannot cast `intrinsicProp.children` to empty because `React.Element` [1] is incompatible with empty [2].
+[incompatible-cast]
+
+   propsof.js:14:2
+    14| (intrinsicProp.children: empty); // children is ?React.Node
+         ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react-dom.js:430:19
+   430|       +children?: React$Node,
+                          ^^^^^^^^^^ [1]
+   propsof.js:14:26
+    14| (intrinsicProp.children: empty); // children is ?React.Node
+                                 ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- propsof.js:14:2
+
+Cannot cast `intrinsicProp.children` to empty because `React.Portal` [1] is incompatible with empty [2].
+[incompatible-cast]
+
+   propsof.js:14:2
+    14| (intrinsicProp.children: empty); // children is ?React.Node
+         ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react-dom.js:430:19
+   430|       +children?: React$Node,
+                          ^^^^^^^^^^ [1]
+   propsof.js:14:26
+    14| (intrinsicProp.children: empty); // children is ?React.Node
+                                 ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- propsof.js:14:2
+
+Cannot cast `intrinsicProp.children` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+
+   propsof.js:14:2
+    14| (intrinsicProp.children: empty); // children is ?React.Node
+         ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react-dom.js:430:19
+   430|       +children?: React$Node,
+                          ^^^^^^^^^^ [1]
+   propsof.js:14:26
+    14| (intrinsicProp.children: empty); // children is ?React.Node
+                                 ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- propsof.js:14:2
+
+Cannot cast `intrinsicProp.children` to empty because null [1] is incompatible with empty [2]. [incompatible-cast]
+
+   propsof.js:14:2
+    14| (intrinsicProp.children: empty); // children is ?React.Node
+         ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react-dom.js:430:19
+   430|       +children?: React$Node,
+                          ^^^^^^^^^^ [1]
+   propsof.js:14:26
+    14| (intrinsicProp.children: empty); // children is ?React.Node
+                                 ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- propsof.js:14:2
+
+Cannot cast `intrinsicProp.children` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   propsof.js:14:2
+    14| (intrinsicProp.children: empty); // children is ?React.Node
+         ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react-dom.js:430:19
+   430|       +children?: React$Node,
+                          ^^^^^^^^^^ [1]
+   propsof.js:14:26
+    14| (intrinsicProp.children: empty); // children is ?React.Node
+                                 ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- propsof.js:14:2
+
+Cannot cast `intrinsicProp.children` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   propsof.js:14:2
+    14| (intrinsicProp.children: empty); // children is ?React.Node
+         ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react-dom.js:430:19
+   430|       +children?: React$Node,
+                          ^^^^^^^^^^ [1]
+   propsof.js:14:26
+    14| (intrinsicProp.children: empty); // children is ?React.Node
+                                 ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- propsof.js:14:2
+
+Cannot cast `intrinsicProp.children` to empty because undefined [1] is incompatible with empty [2]. [incompatible-cast]
+
+   propsof.js:14:2
+    14| (intrinsicProp.children: empty); // children is ?React.Node
+         ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react-dom.js:430:19
+   430|       +children?: React$Node,
+                          ^^^^^^^^^^ [1]
+   propsof.js:14:26
+    14| (intrinsicProp.children: empty); // children is ?React.Node
+                                 ^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------------------- provider.js:4:9
 
 Cannot assign `42` to `x` because number [1] is incompatible with string [2]. All writes to `x` must be compatible with
@@ -2981,7 +3154,7 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 198 errors
+Found 208 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
