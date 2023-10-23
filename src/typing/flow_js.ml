@@ -2786,7 +2786,11 @@ struct
               ( _,
                 _,
                 ReactAbstractComponentT
-                  { component_kind = Nominal renders_id; renders = renders_super; _ }
+                  {
+                    component_kind = Nominal (renders_id, renders_name);
+                    renders = renders_super;
+                    _;
+                  }
               ),
             PromoteRendersRepresentationT
               {
@@ -2801,7 +2805,11 @@ struct
           ) ->
           let result =
             let t =
-              DefT (reason, bogus_trust (), RendersT (NominalRenders { renders_id; renders_super }))
+              DefT
+                ( reason,
+                  bogus_trust (),
+                  RendersT (NominalRenders { renders_id; renders_name; renders_super })
+                )
             in
             if should_distribute then
               DefT

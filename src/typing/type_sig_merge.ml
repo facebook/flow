@@ -1797,9 +1797,9 @@ and merge_component
     let component_kind =
       match id_opt with
       | None -> Structural
-      | Some loc ->
+      | Some (loc, name) ->
         let id = Context.make_aloc_id file.cx loc in
-        Nominal id
+        Nominal (id, name)
     in
     DefT
       (reason, trust, ReactAbstractComponentT { config = param; instance; renders; component_kind })
@@ -2000,8 +2000,8 @@ let merge_def file reason = function
     merge_fun SMap.empty SMap.empty file reason def statics
   | DeclareFun { id_loc; fn_loc; name = _; def; tail } ->
     merge_declare_fun file ((id_loc, fn_loc, def), tail)
-  | ComponentBinding { id_loc; name = _; fn_loc = _; def } ->
-    merge_component SMap.empty SMap.empty file reason def (Some id_loc)
+  | ComponentBinding { id_loc; name; fn_loc = _; def } ->
+    merge_component SMap.empty SMap.empty file reason def (Some (id_loc, name))
   | Variable { id_loc = _; name = _; def } -> merge SMap.empty SMap.empty file def
   | DisabledComponentBinding _
   | DisabledEnumBinding _ ->

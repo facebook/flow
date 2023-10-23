@@ -198,7 +198,7 @@ and collect_of_type ?log_unresolved cx acc = function
   | DefT (_, _, RendersT (StructuralRenders { renders_variant = _; renders_structural_type = t }))
     ->
     collect_of_type ?log_unresolved cx acc t
-  | DefT (_, _, RendersT (NominalRenders { renders_id = _; renders_super })) ->
+  | DefT (_, _, RendersT (NominalRenders { renders_id = _; renders_name = _; renders_super })) ->
     collect_of_type ?log_unresolved cx acc renders_super
   | OpaqueT (_, { underlying_t; super_t; _ }) ->
     let acc = Base.Option.fold underlying_t ~init:acc ~f:(collect_of_type ?log_unresolved cx) in

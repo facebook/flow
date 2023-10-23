@@ -267,6 +267,7 @@ module rec TypeTerm : sig
   and canonical_renders_form =
     | NominalRenders of {
         renders_id: ALoc.id;
+        renders_name: string;
         renders_super: t;
       }
     | StructuralRenders of {
@@ -281,7 +282,7 @@ module rec TypeTerm : sig
 
   and component_kind =
     | Structural
-    | Nominal of ALoc.id
+    | Nominal of ALoc.id * string
 
   and hint_eval_result =
     | HintAvailable of t * Hint.hint_kind

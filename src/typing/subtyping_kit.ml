@@ -1348,12 +1348,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
       rec_flow_t cx trace ~use_op (instancel, instanceu);
       let rendersl =
         match component_kind with
-        | Nominal renders_id ->
+        | Nominal (renders_id, renders_name) ->
           let reason = update_desc_reason (fun desc -> RRenderType desc) reasonl in
           DefT
             ( reason,
               bogus_trust (),
-              RendersT (NominalRenders { renders_id; renders_super = rendersl })
+              RendersT (NominalRenders { renders_id; renders_name; renders_super = rendersl })
             )
         | Structural -> rendersl
       in
@@ -1366,7 +1366,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                 config = configl;
                 instance = instancel;
                 renders = rendersl;
-                component_kind = Nominal idl;
+                component_kind = Nominal (idl, _name_l);
               }
           ),
         DefT
@@ -1377,7 +1377,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                 config = configu;
                 instance = instanceu;
                 renders = rendersu;
-                component_kind = Nominal idu;
+                component_kind = Nominal (idu, _name_u);
               }
           )
       )
