@@ -11,3 +11,4 @@ no_flowlib=false
 enums=true
 format.single_quotes=true
 autoimports_ranked_by_usage=true
+experimental.component_syntax=typing
