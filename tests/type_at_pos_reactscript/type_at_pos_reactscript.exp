@@ -1,22 +1,7 @@
 component.js:1:11
 Flags:
 component Foo
-= React$AbstractComponent<
-  {+foo: number},
-  mixed,
-  renders ?(
-    boolean
-    |
-    number
-    |
-    string
-    |
-    React$Element
-    |
-    React$Portal
-    |
-    $Iterable<?React$Node, void, void>),
->
+= React$AbstractComponent<{+foo: number}, mixed, renders React$Node>
 component.js:1:11,1:13
 
 component.js:3:11
@@ -50,31 +35,26 @@ render_types.js:3:6,3:6
 render_types.js:8:6
 Flags:
 type Z = renders Foo
-= renders Foo
 render_types.js:8:6,8:6
 
 render_types.js:10:6
 Flags:
 type U = renders (Foo | Bar)
-= renders (Foo | Bar)
 render_types.js:10:6,10:6
 
 render_types.js:12:6
 Flags:
 type V = renders Foo | Bar
-= renders Foo | Bar
 render_types.js:12:6,12:6
 
 render_types.js:15:6
 Flags:
 type MaybeRenders = renders? Foo
-= renders? Foo
 render_types.js:15:6,15:17
 
 render_types.js:18:6
 Flags:
 type StarRenders = renders* Foo
-= renders* Foo
 render_types.js:18:6,18:16
 
 render_types.js:8:7 = {
@@ -105,8 +85,8 @@ render_types.js:8:7 = {
           "kind":"Renders",
           "argument":{
             "kind":"Generic",
-            "type":{"provenance":{"kind":"Local","loc":"render_types.js:8:10-20"},"name":"Foo"},
-            "generic_kind":"component"
+            "type":{"provenance":{"kind":"Local","loc":"render_types.js:5:1-15"},"name":"Foo"},
+            "generic_kind":"type alias"
           },
           "variant":"normal"
         }
