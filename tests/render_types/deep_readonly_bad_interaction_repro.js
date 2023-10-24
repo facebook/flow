@@ -7,5 +7,5 @@ declare component Wrapper(label: string | renders Base);
 component UseWrapper(
   label: string | renders Base
 ) {
-  return <Wrapper label={label} />; // spurious error
+  return <Wrapper label={label} />; // ok, no more spurious error
 }
