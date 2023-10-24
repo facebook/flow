@@ -1,3 +1,29 @@
+Error --------------------------------------------------------------------- deep_readonly_bad_interaction_repro.js:10:26
+
+Cannot create `Wrapper` element because in property `label`: [incompatible-type]
+ - Either `React.Element` [1] is incompatible with string [2].
+ - Or cannot instantiate `React.Element` because string [3] is incompatible with AbstractComponent [4] in type argument
+   `T`.
+
+   deep_readonly_bad_interaction_repro.js:10:26
+    10|   return <Wrapper label={label} />; // spurious error
+                                 ^^^^^
+
+References:
+   deep_readonly_bad_interaction_repro.js:8:10
+     8|   label: string | renders Base
+                 ^^^^^^^^^^^^^^^^^^^^^ [1]
+   deep_readonly_bad_interaction_repro.js:5:34
+     5| declare component Wrapper(label: string | renders Base);
+                                         ^^^^^^ [2]
+   <BUILTINS>/react.js:162:49
+   162| declare type React$MixedElement = React$Element<React$ElementType>;
+                                                        ^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:213:32
+   213| type React$ComponentRenders<T: React$AbstractComponent<empty>> =
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+
+
 Error ---------------------------------------------------------------------------------------------------- import.js:7:2
 
 Cannot cast `<Foo />` to renders `React.Element` because `Foo` element [1] does not render `React.Element` [2].
@@ -1374,7 +1400,7 @@ please use `renders*` instead. [invalid-render]
 
 
 
-Found 92 errors
+Found 93 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
