@@ -509,7 +509,7 @@ class virtual ['a] t =
     method destructor cx map_cx t =
       match t with
       | ReactCheckComponentConfig map ->
-        let map' = NameUtils.Map.ident_map (Property.ident_map_t (self#type_ cx map_cx)) map in
+        let map' = NameUtils.Map.ident_map (self#prop cx map_cx) map in
         if map' == map then
           t
         else
@@ -666,9 +666,7 @@ class virtual ['a] t =
 
     method object_kit_spread_operand_slice
         cx map_cx ({ Object.Spread.reason; prop_map; dict; generics } as slice) =
-      let prop_map' =
-        NameUtils.Map.ident_map (Property.ident_map_t (self#type_ cx map_cx)) prop_map
-      in
+      let prop_map' = NameUtils.Map.ident_map (self#prop cx map_cx) prop_map in
       let dict' = OptionUtils.ident_map (self#dict_type cx map_cx) dict in
       if prop_map' == prop_map && dict' == dict then
         slice
@@ -929,37 +927,5 @@ class virtual ['a] t =
 
     method virtual eval_id : Context.t -> 'a -> Eval.id -> Eval.id
 
-    method prop cx map_cx prop =
-      match prop with
-      | Field { preferred_def_locs; key_loc; type_; polarity } ->
-        let type_' = self#type_ cx map_cx type_ in
-        if type_' == type_ then
-          prop
-        else
-          Field { preferred_def_locs; key_loc; type_ = type_'; polarity }
-      | Method { key_loc; type_ } ->
-        let type_' = self#type_ cx map_cx type_ in
-        if type_' == type_ then
-          prop
-        else
-          Method { key_loc; type_ = type_' }
-      | Get { key_loc; type_ } ->
-        let type_' = self#type_ cx map_cx type_ in
-        if type_' == type_ then
-          prop
-        else
-          Get { key_loc; type_ = type_' }
-      | Set { key_loc; type_ } ->
-        let type_' = self#type_ cx map_cx type_ in
-        if type_' == type_ then
-          prop
-        else
-          Set { key_loc; type_ = type_' }
-      | GetSet { get_key_loc; get_type; set_key_loc; set_type } ->
-        let get_type' = self#type_ cx map_cx get_type in
-        let set_type' = self#type_ cx map_cx set_type in
-        if get_type == get_type' && set_type == set_type' then
-          prop
-        else
-          GetSet { get_key_loc; get_type = get_type'; set_key_loc; set_type = set_type' }
+    method prop cx map_cx prop = Property.ident_map_t (self#type_ cx map_cx) prop
   end
