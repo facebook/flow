@@ -52,6 +52,7 @@ let string_of_ctor_decl = function
   | InterfaceDecl _ -> "InterfaceDecl"
   | ModuleDecl _ -> "Module"
   | VariableDecl _ -> "VariableDecl"
+  | NominalComponentDecl _ -> "NominalComponentDecl"
   | EnumDecl _ -> "EnumDecl"
 
 let dump_any_error_kind = function
@@ -408,6 +409,12 @@ struct
     | InterfaceDecl (s, ps) ->
       spf "InterfaceDecl (%s) (%s)" (dump_symbol s) (dump_type_params ~depth ps)
     | EnumDecl name -> spf "Enum(%s)" (dump_symbol name)
+    | NominalComponentDecl (s, ps, t) ->
+      spf
+        "NominalComponentDecl (%s, %s, %s)"
+        (dump_symbol s)
+        (dump_type_params ~depth ps)
+        (dump_t ~depth t)
     | ModuleDecl { name; exports; default } -> dump_module ~depth name exports default
 
   and dump_elt ~depth = function
@@ -741,6 +748,13 @@ struct
     let json_of_interface_decl (name, tparams) =
       [("name", json_of_symbol name); ("typeParams", json_of_type_params tparams)]
     in
+    let json_of_nominal_component_decl (name, tparams, t) =
+      [
+        ("name", json_of_symbol name);
+        ("typeParams", json_of_type_params tparams);
+        ("type_", json_of_t t);
+      ]
+    in
     let json_of_module name _ _ =
       Hh_json.[("name", Base.Option.value_map ~f:json_of_symbol ~default:JSON_Null name)]
     in
@@ -758,6 +772,7 @@ struct
       | ClassDecl (s, ps) -> json_of_class_decl (s, ps)
       | InterfaceDecl (s, ps) -> json_of_interface_decl (s, ps)
       | EnumDecl name -> [("name", json_of_symbol name)]
+      | NominalComponentDecl (s, ps, t) -> json_of_nominal_component_decl (s, ps, t)
       | ModuleDecl { name; exports; default } -> json_of_module name exports default
     in
     fun elt ->

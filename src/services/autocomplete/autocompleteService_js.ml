@@ -67,6 +67,7 @@ let lsp_completion_of_decl =
   | ClassDecl _ -> Lsp.Completion.Class
   | InterfaceDecl _ -> Lsp.Completion.Interface
   | EnumDecl _ -> Lsp.Completion.Enum
+  | NominalComponentDecl _ -> Lsp.Completion.Variable
   | ModuleDecl _ -> Lsp.Completion.Module
 
 let sort_text_of_rank rank = Some (Printf.sprintf "%020u" rank)
@@ -97,6 +98,7 @@ let detail_of_ty_decl ~exact_by_default d =
       (* TODO: the "signature" of a type alias arguably includes type params,
          and could include the RHS too like we do for variables. *)
       None
+    | Ty.NominalComponentDecl (_, _, ty)
     | Ty.VariableDecl (_, ty) ->
       let (_, detail) = detail_of_ty ~exact_by_default ty in
       detail

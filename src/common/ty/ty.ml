@@ -312,6 +312,7 @@ and decl =
   | ClassDecl of symbol * type_param list option
   | InterfaceDecl of symbol * type_param list option
   | EnumDecl of symbol
+  | NominalComponentDecl of symbol * type_param list option * t
   | ModuleDecl of {
       name: symbol option;
       exports: decl list;
@@ -575,7 +576,8 @@ class ['A] comparator_ty =
       | ClassDecl _ -> 2
       | InterfaceDecl _ -> 3
       | EnumDecl _ -> 4
-      | ModuleDecl _ -> 5
+      | NominalComponentDecl _ -> 5
+      | ModuleDecl _ -> 6
 
     method tag_of_elt _ =
       function

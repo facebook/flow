@@ -504,6 +504,10 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
     fuse
       [Atom "interface"; space; identifier name; option ~f:(type_parameter ~depth) typeParameters]
   in
+  let nominal_component_decl ~depth { sym_name = name; _ } typeParameters =
+    fuse
+      [Atom "component"; space; identifier name; option ~f:(type_parameter ~depth) typeParameters]
+  in
   let type_alias ~depth name tparams t_opt =
     let { sym_name = name; _ } = name in
     let tparams = option ~f:(type_parameter ~depth) tparams in
@@ -534,6 +538,7 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
     | ClassDecl (s, ps) -> class_decl ~depth s ps
     | InterfaceDecl (s, ps) -> interface_decl ~depth s ps
     | EnumDecl n -> enum_decl n
+    | NominalComponentDecl (s, ps, _t) -> nominal_component_decl ~depth s ps
     | ModuleDecl { name; exports = _; default = _ } -> module_ ~depth name
   in
   match elt with
