@@ -5489,6 +5489,8 @@ struct
             reason_inst
             (own_props, proto_props, inst_call_t, inst_dict);
           rec_flow cx trace (l, UseT (use_op, super))
+        (* Unwrap deep readonly *)
+        | (_, DeepReadOnlyT (tout, _)) -> rec_flow_t ~use_op:unknown_use cx trace (l, OpenT tout)
         (* Render Type Misc Uses *)
         | (DefT (_, _, RendersT (NominalRenders _)), ExitRendersT { renders_reason; u })
         | (DefT (renders_reason, _, RendersT (NominalRenders _)), u) ->
@@ -5688,7 +5690,6 @@ struct
         | (_, WriteComputedObjPropCheckT { reason = _; reason_key; _ }) ->
           let reason = reason_of_t l in
           add_output cx ~trace (Error_message.EObjectComputedPropertyAssign (reason, reason_key))
-        | (_, DeepReadOnlyT (tout, _)) -> rec_flow_t ~use_op:unknown_use cx trace (l, OpenT tout)
         | _ ->
           add_output
             cx
