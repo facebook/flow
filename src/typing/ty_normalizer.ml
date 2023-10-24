@@ -391,7 +391,10 @@ end = struct
         | ReactConfigType _ ->
           false)
       )
-    | Env.EvaluateAll -> true
+    | Env.EvaluateAll ->
+      (match d with
+      | T.ReactPromoteRendersRepresentation _ -> false
+      | _ -> true)
 
   (* Arguments:
    * - cont: apply when destructuring returned a single type

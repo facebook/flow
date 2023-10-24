@@ -269,7 +269,7 @@ Flags: --pretty
     },
     {
       "name":"ComponentSyntaxFoo",
-      "type":"React$AbstractComponent<{||}, mixed, renders ?(boolean | number | string | React$Element | React$Portal | $Iterable<?React$Node, void, void>)>"
+      "type":"React$AbstractComponent<{||}, mixed, renders React$Node>"
     },
     {"name":"Compressibility","type":"(props: empty) => void"},
     {"name":"Computerization","type":"(props: empty) => void"},
