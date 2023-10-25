@@ -17,3 +17,10 @@
   const x = 1;
   (x: number); // ERROR
 }
+
+// Synthesizable
+{
+  const obj = {
+    prop: [] as Array<number>, // OK
+  };
+}

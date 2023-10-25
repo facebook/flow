@@ -465,6 +465,7 @@ let resolve_binding_partial cx reason loc b =
         | Ast.Expression.ModuleRefLiteral _
         | Ast.Expression.Identifier _
         | Ast.Expression.TypeCast _
+        | Ast.Expression.AsExpression _
         | Ast.Expression.Member _ ->
           synthesizable_expression cx (loc, expr)
         | Ast.Expression.Function fn
@@ -520,7 +521,29 @@ let resolve_binding_partial cx reason loc b =
                 elem_spread_list
                 resolve_to
           )
-        | _ -> failwith "Object not synthesizable"
+        | Ast.Expression.Assignment _
+        | Ast.Expression.Binary _
+        | Ast.Expression.Call _
+        | Ast.Expression.Class _
+        | Ast.Expression.Conditional _
+        | Ast.Expression.Import _
+        | Ast.Expression.JSXElement _
+        | Ast.Expression.JSXFragment _
+        | Ast.Expression.Logical _
+        | Ast.Expression.MetaProperty _
+        | Ast.Expression.New _
+        | Ast.Expression.OptionalCall _
+        | Ast.Expression.OptionalMember _
+        | Ast.Expression.Sequence _
+        | Ast.Expression.Super _
+        | Ast.Expression.TaggedTemplate _
+        | Ast.Expression.TemplateLiteral _
+        | Ast.Expression.This _
+        | Ast.Expression.TSTypeCast _
+        | Ast.Expression.Unary _
+        | Ast.Expression.Update _
+        | Ast.Expression.Yield _ ->
+          failwith "Object not synthesizable"
       in
       let reason = mk_reason RObjectLit obj_loc in
       let obj_proto = ObjProtoT reason in

@@ -21,3 +21,10 @@
   const x = 1;
   (x: boolean); // ERROR
 }
+
+// Synthesizable
+{
+  const obj = {
+    prop: [] as Array<number>, // OK
+  };
+}
