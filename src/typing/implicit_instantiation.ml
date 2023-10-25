@@ -550,6 +550,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       else
         UpperT t
     in
+    let equal = Concrete_type_eq.eq cx in
     match tvar with
     | OpenT (_, id) ->
       if ISet.mem id seen then
@@ -575,11 +576,17 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
                    | (IntersectionT (_, rep1), IntersectionT (_, rep2)) ->
                      UpperT (IntersectionT (upper_r, InterRep.append (InterRep.members rep2) rep1))
                    | (_, IntersectionT (_, rep)) ->
-                     UpperT (IntersectionT (upper_r, InterRep.append [t'] rep))
+                     if Base.List.mem (InterRep.members rep) t' ~equal then
+                       UpperT t
+                     else
+                       UpperT (IntersectionT (upper_r, InterRep.append [t'] rep))
                    | (IntersectionT (_, rep), _) ->
-                     UpperT (IntersectionT (upper_r, InterRep.append [t] rep))
+                     if Base.List.mem (InterRep.members rep) t ~equal then
+                       UpperT t'
+                     else
+                       UpperT (IntersectionT (upper_r, InterRep.append [t] rep))
                    | (t', t) ->
-                     if t' = t then
+                     if equal t' t then
                        UpperT t
                      else
                        UpperT (IntersectionT (upper_r, InterRep.make t' t [])))
