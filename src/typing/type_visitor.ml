@@ -211,11 +211,17 @@ class ['a] t =
       | RequiredType
       | ReactElementPropsType
       | ReactElementConfigType
-      | ReactPromoteRendersRepresentation
-          { should_distribute = _; promote_structural_components = _; renders_variant = _ }
       | ReactElementRefType
       | ReactCheckComponentRef ->
         acc
+      | ReactPromoteRendersRepresentation
+          {
+            should_distribute = _;
+            promote_structural_components = _;
+            renders_variant = _;
+            resolved_elem;
+          } ->
+        self#opt (self#type_ cx pole_TODO) acc resolved_elem
       | ReactCheckComponentConfig map -> self#namemap (self#prop cx pole_TODO) acc map
       | ReactConfigType default_props -> self#type_ cx pole_TODO acc default_props
       | ElementType { index_type; _ } -> self#type_ cx pole_TODO acc index_type

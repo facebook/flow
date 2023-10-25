@@ -1084,7 +1084,12 @@ let mk_renders_type reason renders_variant t =
       ( unknown_use,
         reason,
         ReactPromoteRendersRepresentation
-          { should_distribute = true; promote_structural_components = false; renders_variant }
+          {
+            should_distribute = true;
+            promote_structural_components = false;
+            renders_variant;
+            resolved_elem = None;
+          }
       )
   in
   EvalT (t, destructor, Eval.generate_id ())

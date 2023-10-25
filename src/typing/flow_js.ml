@@ -1726,6 +1726,7 @@ struct
                           should_distribute = false;
                           promote_structural_components;
                           renders_variant;
+                          resolved_elem = None;
                         }
                     )
                 in
@@ -2945,6 +2946,7 @@ struct
                         should_distribute = true;
                         promote_structural_components = true;
                         renders_variant = RendersNormal;
+                        resolved_elem = None;
                       }
                   ),
                 Eval.generate_id ()
@@ -6992,7 +6994,8 @@ struct
       (* Intentional unknown_use for the tout Flow *)
       rec_flow cx trace (t, UseT (unknown_use, OpenT tout))
     | ReactPromoteRendersRepresentation
-        { should_distribute = true; promote_structural_components; renders_variant } ->
+        { should_distribute = true; promote_structural_components; renders_variant; resolved_elem }
+      ->
       rec_flow
         cx
         trace
@@ -7002,7 +7005,7 @@ struct
               use_op;
               reason;
               tout = OpenT tout;
-              resolved_elem = None;
+              resolved_elem;
               should_distribute = true;
               promote_structural_components;
               renders_variant;
@@ -7257,13 +7260,14 @@ struct
             | ReactElementConfigType -> ReactKitT (use_op, reason, React.GetConfig (OpenT tout))
             | ReactElementRefType -> ReactKitT (use_op, reason, React.GetRef (OpenT tout))
             | ReactPromoteRendersRepresentation
-                { should_distribute; promote_structural_components; renders_variant } ->
+                { should_distribute; promote_structural_components; renders_variant; resolved_elem }
+              ->
               PromoteRendersRepresentationT
                 {
                   use_op;
                   reason;
                   tout = OpenT tout;
-                  resolved_elem = None;
+                  resolved_elem;
                   should_distribute;
                   promote_structural_components;
                   renders_variant;
