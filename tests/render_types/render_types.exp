@@ -971,6 +971,25 @@ References:
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------- union_promotion.js:6:2
+
+Cannot cast `a` to renders `React.Element` because: [incompatible-cast]
+ - Either `Baz` [1] does not render `typeof Foo` [2].
+ - Or `Baz` [1] does not render `typeof Bar` [3].
+
+   union_promotion.js:6:2
+   6| (a: renders React$Element<typeof Foo | typeof Bar>); // ERROR
+       ^ [1]
+
+References:
+   union_promotion.js:6:27
+   6| (a: renders React$Element<typeof Foo | typeof Bar>); // ERROR
+                                ^^^^^^^^^^ [2]
+   union_promotion.js:6:40
+   6| (a: renders React$Element<typeof Foo | typeof Bar>); // ERROR
+                                             ^^^^^^^^^^ [3]
+
+
 Error ----------------------------------------------------------------------------------- validate_instantiation.js:2:18
 
 Cannot use object type [1] as a render type because: [incompatible-type]
@@ -1374,7 +1393,7 @@ please use `renders*` instead. [invalid-render]
 
 
 
-Found 92 errors
+Found 93 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
