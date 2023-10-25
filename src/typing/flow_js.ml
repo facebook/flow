@@ -28,13 +28,6 @@ open Debug_js.Verbose
 module FlowError = Flow_error
 module IICheck = Implicit_instantiation_check
 
-(* type exemplar set - reasons are not considered in compare *)
-module TypeExSet = Flow_set.Make (struct
-  include Type
-
-  let compare = reasonless_compare
-end)
-
 (**************************************************************)
 
 (* Check that id1 is not linked to id2. *)

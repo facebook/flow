@@ -743,6 +743,13 @@ let reasonless_compare =
 
 let reasonless_eq t1 t2 = reasonless_compare t1 t2 = 0
 
+(* type exemplar set - reasons are not considered in compare *)
+module TypeExSet = Flow_set.Make (struct
+  include Type
+
+  let compare = reasonless_compare
+end)
+
 let literal_eq x = function
   | Literal (_, y) -> x = y
   | Truthy -> false

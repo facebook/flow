@@ -29,17 +29,17 @@ let action_tvars cx =
     | ErrorAction _ -> failwith "tvars of error actions don't make sense"
   )
 
-let eq_t (t, t_) = TypeUtil.reasonless_compare t t_ = 0
+let eq_t cx (t, t_) = Concrete_type_eq.eq cx t t_
 
-let eq_use_t = function
-  | (Type.UseT (_, t), Type.UseT (_, t_)) -> eq_t (t, t_)
+let eq_use_t cx = function
+  | (Type.UseT (_, t), Type.UseT (_, t_)) -> eq_t cx (t, t_)
   | _ -> false
 
 (* Decide when two actions are the same. We use reasonless compare for types
    involved in the actions. *)
-let actions_eq = function
-  | (FlowAction (t1, t2), FlowAction (t1_, t2_)) -> eq_t (t1, t1_) && eq_use_t (t2, t2_)
-  | (UnifyAction (_, t1, t2), UnifyAction (_, t1_, t2_)) -> eq_t (t1, t1_) && eq_t (t2, t2_)
+let actions_eq cx = function
+  | (FlowAction (t1, t2), FlowAction (t1_, t2_)) -> eq_t cx (t1, t1_) && eq_use_t cx (t2, t2_)
+  | (UnifyAction (_, t1, t2), UnifyAction (_, t1_, t2_)) -> eq_t cx (t1, t1_) && eq_t cx (t2, t2_)
   | _ -> false
 
 (* A case could be diff'd with a later case to determine whether it is "less
@@ -55,7 +55,7 @@ let case_diff cx case1 case2 =
     List.filter
       (fun (benign, action1) ->
         (not benign)
-        && List.for_all (fun (_, action2) -> not (actions_eq (action1, action2))) actions2)
+        && List.for_all (fun (_, action2) -> not (actions_eq cx (action1, action2))) actions2)
       actions1
   in
   (* collect those unresolved tvars in ts1 that are involved in actions in

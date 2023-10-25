@@ -941,7 +941,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
      * inclusion is significantly faster that splitting for proving simple
      * inequalities (O(n) instead of O(n^2) for n cases).
      *)
-    | (IntersectionT (_, rep), u) when List.mem u (InterRep.members rep) -> ()
+    | (IntersectionT (_, rep), u)
+      when Base.List.mem ~equal:(Concrete_type_eq.eq cx) (InterRep.members rep) u ->
+      ()
     (* String enum sets can be handled in logarithmic time by just
      * checking for membership in the set.
      *)

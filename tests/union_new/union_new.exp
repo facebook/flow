@@ -16,33 +16,6 @@ References:
                          ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- issue-824.js:21:21
-
-Cannot call `this.foo` with `p` bound to `p` because: [incompatible-call]
- - Either `I` [1] is incompatible with `B` [2].
- - Or `C` [3] is incompatible with `B` [2].
- - Or `I` [1] is incompatible with `C` [4].
- - Or `B` [3] is incompatible with `C` [4].
-
-   issue-824.js:21:21
-   21|     return this.foo(p);
-                           ^
-
-References:
-   issue-824.js:13:17
-   13|   static bar(p: I & K): boolean {
-                       ^ [1]
-   issue-824.js:3:10
-    3| type K = B | C;
-                ^ [2]
-   issue-824.js:13:21
-   13|   static bar(p: I & K): boolean {
-                           ^ [3]
-   issue-824.js:3:14
-    3| type K = B | C;
-                    ^ [4]
-
-
 Error -------------------------------------------------------------------------------------------------- test10.js:38:11
 
 Cannot call `check_fun` with function bound to `_` because: [incompatible-call]
@@ -324,7 +297,7 @@ References:
 
 
 
-Found 17 errors
+Found 16 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

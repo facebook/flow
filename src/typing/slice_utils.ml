@@ -1200,13 +1200,14 @@ let object_update_optionality kind =
  * {...(A|B)&C} = {...(A&C)|(B&C)}
  *)
 let intersect2
+    cx
     reason
     { Object.reason = r1; props = props1; flags = flags1; generics = generics1; interface = _ }
     { Object.reason = r2; props = props2; flags = flags2; generics = generics2; interface = _ } =
   let dict1 = Obj_type.get_dict_opt flags1.obj_kind in
   let dict2 = Obj_type.get_dict_opt flags2.obj_kind in
   let intersection t1 t2 =
-    if reasonless_compare t1 t2 = 0 then
+    if Concrete_type_eq.eq cx t1 t2 then
       t1
     else
       IntersectionT (reason, InterRep.make t1 t2 [])
@@ -1299,8 +1300,8 @@ let intersect2
   let generics = Generic.spread_append generics1 generics2 in
   (props, flags, generics)
 
-let intersect2_with_reason reason intersection_loc x1 x2 =
-  let (props, flags, generics) = intersect2 reason x1 x2 in
+let intersect2_with_reason cx reason intersection_loc x1 x2 =
+  let (props, flags, generics) = intersect2 cx reason x1 x2 in
   let reason = mk_reason RObjectType intersection_loc in
   { Object.reason; props; flags; generics; interface = None }
 
@@ -1317,7 +1318,7 @@ let resolved ~next ~recurse cx use_op reason resolve_tool tool x =
         let x =
           match join with
           | (_, Or) -> Nel.cons x done_rev |> Nel.concat
-          | (loc, And) -> merge (intersect2_with_reason reason loc) x done_rev
+          | (loc, And) -> merge (intersect2_with_reason cx reason loc) x done_rev
         in
         next cx use_op tool reason x
       | t :: todo ->
@@ -1593,7 +1594,7 @@ let super
   | DefT (r, _, InstanceT { static; super; implements = _; inst = { own_props; _ } as inst }) ->
     let { Object.reason; _ } = acc in
     let slice = interface_slice cx r ~static ~inst own_props Generic.spread_empty in
-    let acc = intersect2 reason acc slice in
+    let acc = intersect2 cx reason acc slice in
     let acc =
       let (props, flags, generics) = acc in
       { Object.reason; props; flags; generics; interface = Some (static, inst) }

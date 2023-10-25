@@ -39,9 +39,7 @@ val mod_root_of_use_op : (Type.root_use_op -> Type.root_use_op) -> Type.use_op -
 
 val mod_loc_of_virtual_use_op : ('a -> 'b) -> 'a Type.virtual_use_op -> 'b Type.virtual_use_op
 
-val reasonless_compare : Type.t -> Type.t -> int
-
-val reasonless_eq : Type.t -> Type.t -> bool
+module TypeExSet : Flow_set.S with type elt = Type.t
 
 val literal_eq : 'a -> 'a Type.literal -> bool
 

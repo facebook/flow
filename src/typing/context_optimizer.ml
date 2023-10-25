@@ -191,7 +191,7 @@ class context_optimizer ~no_lowers =
         if not (UnionRep.is_optimized_finally rep) then
           UnionRep.optimize
             rep
-            ~reasonless_eq:TypeUtil.reasonless_eq
+            ~reasonless_eq:(Concrete_type_eq.eq cx)
             ~flatten:(Type_mapper.union_flatten cx)
             ~find_resolved:(Context.find_resolved cx)
             ~find_props:(Context.find_props cx);
