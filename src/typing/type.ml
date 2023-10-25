@@ -902,7 +902,7 @@ module rec TypeTerm : sig
         use_op: use_op;
         reason: reason;
         tout: t;
-        resolved_obj: t option;
+        resolved_elem: t option;
         should_distribute: bool;
         promote_structural_components: bool;
         renders_variant: renders_variant;
