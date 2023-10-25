@@ -218,7 +218,7 @@ and mod_reason_of_use_t f = function
         use_op;
         reason;
         tout;
-        resolved_obj;
+        resolved_elem;
         should_distribute;
         promote_structural_components;
         renders_variant;
@@ -228,7 +228,7 @@ and mod_reason_of_use_t f = function
         use_op;
         reason = f reason;
         tout;
-        resolved_obj;
+        resolved_elem;
         should_distribute;
         promote_structural_components;
         renders_variant;

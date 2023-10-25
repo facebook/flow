@@ -1767,7 +1767,7 @@ struct
             PromoteRendersRepresentationT
               {
                 reason = renders_reason;
-                resolved_obj = None;
+                resolved_elem = None;
                 use_op = _;
                 tout;
                 should_distribute = true;
@@ -2796,7 +2796,7 @@ struct
               {
                 reason;
                 tout;
-                resolved_obj = Some _;
+                resolved_elem = Some _;
                 use_op = _;
                 should_distribute;
                 promote_structural_components = _;
@@ -2836,7 +2836,7 @@ struct
                 use_op;
                 reason;
                 tout;
-                resolved_obj = None;
+                resolved_elem = None;
                 should_distribute;
                 renders_variant;
                 promote_structural_components;
@@ -2857,7 +2857,7 @@ struct
                     should_distribute;
                     renders_variant;
                     promote_structural_components;
-                    resolved_obj = Some l;
+                    resolved_elem = Some l;
                   }
               )
           | None ->
@@ -2894,7 +2894,7 @@ struct
                       use_op;
                       reason;
                       tout;
-                      resolved_obj = Some l;
+                      resolved_elem = Some l;
                       should_distribute;
                       renders_variant;
                       promote_structural_components;
@@ -2906,7 +2906,7 @@ struct
                 use_op = _;
                 reason;
                 tout;
-                resolved_obj = _;
+                resolved_elem = _;
                 should_distribute = _;
                 promote_structural_components = _;
                 renders_variant = _;
@@ -2919,7 +2919,7 @@ struct
                 use_op = _;
                 reason;
                 tout;
-                resolved_obj;
+                resolved_elem;
                 should_distribute;
                 promote_structural_components = _;
                 renders_variant;
@@ -2927,7 +2927,7 @@ struct
           ) ->
           let result =
             let t =
-              match resolved_obj with
+              match resolved_elem with
               | Some t -> t
               | None -> l
             in
@@ -7070,7 +7070,7 @@ struct
               use_op;
               reason;
               tout = OpenT tout;
-              resolved_obj = None;
+              resolved_elem = None;
               should_distribute = true;
               promote_structural_components;
               renders_variant;
@@ -7337,7 +7337,7 @@ struct
                   use_op;
                   reason;
                   tout = OpenT tout;
-                  resolved_obj = None;
+                  resolved_elem = None;
                   should_distribute;
                   promote_structural_components;
                   renders_variant;
