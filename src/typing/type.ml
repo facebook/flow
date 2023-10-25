@@ -1600,6 +1600,7 @@ module rec TypeTerm : sig
         should_distribute: bool;
         promote_structural_components: bool;
         renders_variant: renders_variant;
+        resolved_elem: t option;
       }
     | ReactConfigType of t
     | ReactCheckComponentConfig of Property.t NameUtils.Map.t

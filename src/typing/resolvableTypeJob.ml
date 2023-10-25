@@ -308,11 +308,19 @@ and collect_of_destructor ?log_unresolved cx acc = function
   | MappedType
       { property_type; mapped_type_flags = _; homomorphic = _; distributive_tparam_name = _ } ->
     collect_of_type ?log_unresolved cx acc property_type
+  | ReactPromoteRendersRepresentation
+      {
+        should_distribute = _;
+        promote_structural_components = _;
+        renders_variant = _;
+        resolved_elem;
+      } ->
+    (match resolved_elem with
+    | Some t -> collect_of_type ?log_unresolved cx acc t
+    | None -> acc)
   | ReactElementPropsType
   | ReactElementConfigType
-  | ReactElementRefType
-  | ReactPromoteRendersRepresentation
-      { should_distribute = _; promote_structural_components = _; renders_variant = _ } ->
+  | ReactElementRefType ->
     acc
 
 and collect_of_property ?log_unresolved cx name property acc =
