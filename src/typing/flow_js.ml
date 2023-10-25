@@ -1767,10 +1767,10 @@ struct
             PromoteRendersRepresentationT
               {
                 reason = renders_reason;
-                resolved_elem = None;
+                resolved_elem;
                 use_op = _;
                 tout;
-                should_distribute = true;
+                should_distribute;
                 promote_structural_components;
                 renders_variant;
               }
@@ -1788,7 +1788,7 @@ struct
                           should_distribute = false;
                           promote_structural_components;
                           renders_variant;
-                          resolved_elem = None;
+                          resolved_elem;
                         }
                     )
                 in
@@ -1796,17 +1796,20 @@ struct
               rep
           in
           let reason = update_desc_reason (fun desc -> RRenderType desc) reason in
-          let renders_t =
-            DefT
-              ( renders_reason,
-                bogus_trust (),
-                RendersT
-                  (StructuralRenders
-                     { renders_variant; renders_structural_type = UnionT (reason, rep) }
-                  )
-              )
+          let t =
+            if should_distribute then
+              DefT
+                ( renders_reason,
+                  bogus_trust (),
+                  RendersT
+                    (StructuralRenders
+                       { renders_variant; renders_structural_type = UnionT (reason, rep) }
+                    )
+                )
+            else
+              UnionT (reason, rep)
           in
-          rec_flow_t cx trace ~use_op:unknown_use (renders_t, tout)
+          rec_flow_t cx trace ~use_op:unknown_use (t, tout)
         | (UnionT (_, rep), _)
           when match u with
                (* For l.key !== sentinel when sentinel has a union type, don't split the union. This
