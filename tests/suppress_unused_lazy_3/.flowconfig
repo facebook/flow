@@ -1,0 +1,14 @@
+[ignore]
+
+[include]
+
+[libs]
+
+[lints]
+
+[options]
+all=true
+no_flowlib=true
+lazy_mode=true
+
+[strict]
