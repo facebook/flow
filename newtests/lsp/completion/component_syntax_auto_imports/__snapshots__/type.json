@@ -1,0 +1,59 @@
+{
+  "method": "textDocument/completion",
+  "result": {
+    "isIncomplete": false,
+    "items": [
+      {
+        "label": "FooBarBaz1",
+        "kind": 6,
+        "detail": "Import type from ./__fixtures__/FooBarBaz1",
+        "sortText": "00000000000000000000",
+        "insertTextFormat": 1,
+        "textEdit": {
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 9
+            },
+            "end": {
+              "line": 2,
+              "character": 18
+            }
+          },
+          "newText": "FooBarBaz1"
+        },
+        "additionalTextEdits": [
+          {
+            "range": {
+              "start": {
+                "line": 2,
+                "character": 0
+              },
+              "end": {
+                "line": 2,
+                "character": 0
+              }
+            },
+            "newText": "import type { FooBarBaz1 } from \"./__fixtures__/FooBarBaz1\";\n\n"
+          }
+        ],
+        "command": {
+          "title": "",
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "arguments": [
+            "textDocument/completion",
+            "autoimport",
+            {
+              "token": "FooBarBazAUTO332",
+              "index": 0,
+              "session_requests": 1,
+              "typed_length": 9,
+              "completion": "FooBarBaz1",
+              "ac_type": "Actype"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

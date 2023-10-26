@@ -64,6 +64,7 @@ module Eval = struct
     | Value of 'loc packed_value
     | ClassDecl
     | EnumDecl
+    | ComponentDecl
     | Nothing
 
   let seen_ref seen = function
@@ -109,6 +110,7 @@ module Eval = struct
         Nothing
       | ClassDecl -> ClassDecl
       | EnumDecl -> EnumDecl
+      | ComponentDecl -> ComponentDecl
       | Nothing -> Nothing)
     | Unqualified r -> ref type_sig seen r
 
@@ -137,11 +139,11 @@ module Eval = struct
     | DeclareClassBinding _ -> ClassDecl
     | EnumBinding _ -> EnumDecl
     | DisabledEnumBinding _ -> EnumDecl
+    | ComponentBinding _ -> ComponentDecl
+    | DisabledComponentBinding _ -> ComponentDecl
     | Interface _
     | FunBinding _
     | DeclareFun _
-    | ComponentBinding _
-    | DisabledComponentBinding _
     | OpaqueType _ ->
       (* None of these contain anything that can be imported separately. For example,
          you can't `import {someMethod} ...` from an exported class. *)
@@ -193,6 +195,7 @@ module Eval = struct
       Nothing
     | ClassDecl -> Nothing
     | EnumDecl -> Nothing
+    | ComponentDecl -> Nothing
     | Nothing -> Nothing
 end
 
@@ -201,7 +204,8 @@ end
     values and types. *)
 let add_named_type acc name = function
   | Eval.ClassDecl
-  | Eval.EnumDecl ->
+  | Eval.EnumDecl
+  | Eval.ComponentDecl ->
     NamedType name :: acc
   | Eval.Value _
   | Eval.Annot _
@@ -308,6 +312,7 @@ module CJS = struct
     | Eval.Value value -> exports_of_value acc type_sig value
     | Eval.ClassDecl
     | Eval.EnumDecl
+    | Eval.ComponentDecl
     | Eval.Nothing ->
       acc
 
