@@ -1178,8 +1178,8 @@ function test() {
   return (
     <div>
       <NewComponent />
-      <NewComponent />
-      <NewComponent />
+      <div>hi</div>
+      <div>hi</div>
     </div>
   );
 }
@@ -1196,8 +1196,8 @@ function test() {
   return (
     <div>
       {newLocal}
-      {newLocal}
-      {newLocal}
+      <div>hi</div>
+      <div>hi</div>
     </div>
   );
 }
@@ -1211,8 +1211,8 @@ function test() {
   return (
     <div>
       {newLocal}
-      {newLocal}
-      {newLocal}
+      <div>hi</div>
+      <div>hi</div>
     </div>
   );
 }

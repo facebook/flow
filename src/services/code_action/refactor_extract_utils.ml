@@ -639,25 +639,28 @@ module RefactorProgramMappers = struct
       method! jsx_child child =
         let open Flow_ast.JSX in
         let (loc, child') = child in
-        ( loc,
-          match child' with
-          | Element _
-          | Fragment _ ->
-            (match expression_replacement with
-            | (_, Flow_ast.Expression.JSXElement e) -> Element e
-            | (_, Flow_ast.Expression.JSXFragment f) -> Fragment f
-            | _ ->
-              ExpressionContainer
-                {
-                  ExpressionContainer.expression =
-                    ExpressionContainer.Expression expression_replacement;
-                  comments = None;
-                })
-          | ExpressionContainer _
-          | SpreadChild _
-          | Text _ ->
-            child'
-        )
+        if Loc.equal loc expression_loc then
+          ( loc,
+            match child' with
+            | Element _
+            | Fragment _ ->
+              (match expression_replacement with
+              | (_, Flow_ast.Expression.JSXElement e) -> Element e
+              | (_, Flow_ast.Expression.JSXFragment f) -> Fragment f
+              | _ ->
+                ExpressionContainer
+                  {
+                    ExpressionContainer.expression =
+                      ExpressionContainer.Expression expression_replacement;
+                    comments = None;
+                  })
+            | ExpressionContainer _
+            | SpreadChild _
+            | Text _ ->
+              child'
+          )
+        else
+          child
     end
 
   class extract_expression_to_react_component_refactor_mapper
