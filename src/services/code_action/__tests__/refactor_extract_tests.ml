@@ -1163,6 +1163,8 @@ function test() {
   return (
     <div>
       <div>hi</div>
+      <div>hi</div>
+      <div>hi</div>
     </div>
   );
 }|}
@@ -1175,6 +1177,8 @@ import React from "react";
 function test() {
   return (
     <div>
+      <NewComponent />
+      <NewComponent />
       <NewComponent />
     </div>
   );
@@ -1192,6 +1196,8 @@ function test() {
   return (
     <div>
       {newLocal}
+      {newLocal}
+      {newLocal}
     </div>
   );
 }
@@ -1204,6 +1210,8 @@ const newLocal = <div>hi</div>;
 function test() {
   return (
     <div>
+      {newLocal}
+      {newLocal}
       {newLocal}
     </div>
   );
