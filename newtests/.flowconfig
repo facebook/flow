@@ -10,3 +10,4 @@
 [options]
 exact_by_default=false
 emoji=true
+experimental.component_syntax=typing
