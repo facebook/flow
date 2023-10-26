@@ -23,4 +23,8 @@
   const obj = {
     prop: [] as Array<number>, // OK
   };
+};
+
+// Extends
+class A extends (Object as any) { // OK
 }

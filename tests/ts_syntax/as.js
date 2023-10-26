@@ -27,3 +27,6 @@ n as T === n; // ERROR
 n as const; // ERROR
 
 const as = 1; // OK
+
+class A extends (Object as any) { // ERROR
+}
