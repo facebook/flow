@@ -23,6 +23,8 @@ runTest('no-flow-enums-object-mapping', {
     'const o = {[(Foo.A: T)]: 1};',
     'const o = {[f(Foo.A)]: 1};',
     'const o = {[(Foo.A: string)]: 1, ...Bar};',
+    'const o = {[x as string]: 1};',
+    'const o = {[Foo.A as T]: 1};',
     'const o = {};',
   ],
   invalid: [
@@ -36,6 +38,14 @@ runTest('no-flow-enums-object-mapping', {
     },
     {
       code: 'const o = {[String(Foo.A)]: 1, [String(Foo.B)]: 2};',
+      errors: [
+        {
+          messageId: 'message',
+        },
+      ],
+    },
+    {
+      code: 'const o = {[Foo.A as string]: 1, [Foo.B as string]: 3};',
       errors: [
         {
           messageId: 'message',

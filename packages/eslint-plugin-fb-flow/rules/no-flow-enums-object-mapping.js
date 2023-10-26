@@ -73,6 +73,11 @@ function isEnumStringCast(node) {
       typeAnnotation.typeAnnotation.type == 'StringTypeAnnotation' &&
       isEnumAccess(expression)
     );
+  } else if (node.type === 'AsExpression') {
+    const {typeAnnotation, expression} = node;
+    return (
+      typeAnnotation.type == 'StringTypeAnnotation' && isEnumAccess(expression)
+    );
   }
   return false;
 }
