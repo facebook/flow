@@ -106,6 +106,15 @@ type using the form `(<expr>: <type>)`. [ts-syntax]
        ^^^^^^^^^^
 
 
+Error ------------------------------------------------------------------------------------------------------ as.js:31:18
+
+Invalid type cast syntax. Use the form `(<expr>: <type>)` instead of the form `<expr> as <type>`.
+[invalid-type-cast-syntax]
+
+   31| class A extends (Object as any) { // ERROR
+                        ^^^^^^^^^^^^^
+
+
 Error ------------------------------------------------------------------------------------------ in_out_variance.js:1:20
 
 The equivalent of TypeScript's `in` variance annotation is `-` in Flow. [ts-syntax]
@@ -344,4 +353,4 @@ The equivalent of TypeScript's `unknown` type in Flow is `mixed`. [ts-syntax]
 
 
 
-Found 40 errors
+Found 41 errors

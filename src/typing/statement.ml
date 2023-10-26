@@ -6581,17 +6581,58 @@ module Make
                       }
                   )
               )
-            | TypeCast { TypeCast.expression = expr; annot; comments } ->
-              let (t, annot') = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
-              ( t,
-                fun () ->
-                  let (((_, infer_t), _) as e') = expression cx expr in
-                  let use_op =
-                    Op (Cast { lower = mk_expression_reason expr; upper = reason_of_t t })
-                  in
-                  Flow.flow cx (infer_t, TypeCastT (use_op, t));
-                  ((loc, t), TypeCast { TypeCast.expression = e'; annot = annot'; comments })
-              )
+            | AsExpression ({ AsExpression.expression = expr; annot; comments } as cast) ->
+              let casting_syntax = Context.casting_syntax cx in
+              let open Options.CastingSyntax in
+              (match casting_syntax with
+              | As
+              | Both ->
+                let (t, annot') = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
+                ( t,
+                  fun () ->
+                    let (((_, infer_t), _) as e') = expression cx expr in
+                    let use_op =
+                      Op (Cast { lower = mk_expression_reason expr; upper = reason_of_t t })
+                    in
+                    Flow.flow cx (infer_t, TypeCastT (use_op, t));
+                    ( (loc, t),
+                      AsExpression { AsExpression.expression = e'; annot = annot'; comments }
+                    )
+                )
+              | Colon ->
+                Flow_js_utils.add_output
+                  cx
+                  (Error_message.EInvalidTypeCastSyntax
+                     { loc; enabled_casting_syntax = casting_syntax }
+                  );
+                let t = AnyT.at (AnyError None) loc in
+                ( t,
+                  (fun () -> ((loc, t), AsExpression (Tast_utils.error_mapper#as_expression cast)))
+                ))
+            | TypeCast ({ TypeCast.expression = expr; annot; comments } as cast) ->
+              let casting_syntax = Context.casting_syntax cx in
+              let open Options.CastingSyntax in
+              (match casting_syntax with
+              | Colon
+              | Both ->
+                let (t, annot') = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
+                ( t,
+                  fun () ->
+                    let (((_, infer_t), _) as e') = expression cx expr in
+                    let use_op =
+                      Op (Cast { lower = mk_expression_reason expr; upper = reason_of_t t })
+                    in
+                    Flow.flow cx (infer_t, TypeCastT (use_op, t));
+                    ((loc, t), TypeCast { TypeCast.expression = e'; annot = annot'; comments })
+                )
+              | As ->
+                Flow_js_utils.add_output
+                  cx
+                  (Error_message.EInvalidTypeCastSyntax
+                     { loc; enabled_casting_syntax = casting_syntax }
+                  );
+                let t = AnyT.at (AnyError None) loc in
+                (t, (fun () -> ((loc, t), TypeCast (Tast_utils.error_mapper#type_cast cast)))))
             | _ ->
               Flow.add_output cx Error_message.(EInvalidExtends (mk_expression_reason (loc, expr)));
               (AnyT.at (AnyError None) loc, (fun () -> expression cx (loc, expr)))
