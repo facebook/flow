@@ -54,3 +54,5 @@ val filter_lints :
   Flow_error.ErrorSet.t * Flow_error.ErrorSet.t * t
 
 val get_lint_settings : 'a ExactCover.t Utils_js.FilenameMap.t -> Loc.t -> 'a option
+
+val filter_by_file : Utils_js.FilenameSet.t -> t -> t

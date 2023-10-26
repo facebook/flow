@@ -1,0 +1,117 @@
+
+=== Initial check shows no errors or warnings
+No errors!
+
+The Flow server is currently in lazy mode and is only checking 0/7 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+=== Force check A1.js
+Warning ------------------------------------------------------------------------------------------------------ A2.js:7:1
+
+Unused suppression comment.
+
+   7| // $FlowFixMe - Unused suppression
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 1 warning
+
+The Flow server is currently in lazy mode and is only checking 3/7 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+=== Force check B1.js
+Warning ------------------------------------------------------------------------------------------------------ A2.js:7:1
+
+Unused suppression comment.
+
+   7| // $FlowFixMe - Unused suppression
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning ----------------------------------------------------------------------------------------------------- B2.js:15:1
+
+Unused suppression comment.
+
+   15| // $FlowFixMe[incompatible-cast] This is an unused suppression
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 2 warnings
+
+The Flow server is currently in lazy mode and is only checking 7/7 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+=== Add comment to B1.js (should skip B2.js check)
+Warning ------------------------------------------------------------------------------------------------------ A2.js:7:1
+
+Unused suppression comment.
+
+   7| // $FlowFixMe - Unused suppression
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning ----------------------------------------------------------------------------------------------------- B2.js:15:1
+
+Unused suppression comment.
+
+   15| // $FlowFixMe[incompatible-cast] This is an unused suppression
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 2 warnings
+
+The Flow server is currently in lazy mode and is only checking 7/7 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+Warning ------------------------------------------------------------------------------------------------------ A2.js:7:1
+
+Unused suppression comment.
+
+   7| // $FlowFixMe - Unused suppression
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning ----------------------------------------------------------------------------------------------------- B2.js:15:1
+
+Unused suppression comment.
+
+   15| // $FlowFixMe[incompatible-cast] This is an unused suppression
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 2 warnings
+
+The Flow server is currently in lazy mode and is only checking 7/7 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+=== Add comment to B1.js (B4 won't be in to_merge set)
+Warning ------------------------------------------------------------------------------------------------------ A2.js:7:1
+
+Unused suppression comment.
+
+   7| // $FlowFixMe - Unused suppression
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning ----------------------------------------------------------------------------------------------------- B2.js:15:1
+
+Unused suppression comment.
+
+   15| // $FlowFixMe[incompatible-cast] This is an unused suppression
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 2 warnings
+
+The Flow server is currently in lazy mode and is only checking 7/7 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+=== Add comment to B4.js (We still need to suppress the error in B2)
+No errors!
+
+The Flow server is currently in lazy mode and is only checking 7/7 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
