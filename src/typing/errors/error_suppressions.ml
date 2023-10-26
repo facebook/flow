@@ -389,3 +389,5 @@ let filter_lints suppressions errors aloc_tables ~include_suppressions severity_
       errors
       (ErrorSet.empty, ErrorSet.empty, suppressions)
   )
+
+let filter_by_file files m = FilenameMap.filter (fun file _ -> FilenameSet.mem file files) m
