@@ -855,11 +855,11 @@ struct
         (* optional chaining - part A *)
         (******************************)
         | (DefT (_, _, VoidT), OptionalChainT { reason; lhs_reason; voided_out; t_out; _ }) ->
-          Flow_js_utils.add_specialized_callee_use cx l t_out;
+          CalleeRecorder.add_callee_use cx CalleeRecorder.Tast l t_out;
           Context.mark_optional_chain cx (loc_of_reason reason) lhs_reason ~useful:true;
           rec_flow_t ~use_op:unknown_use cx trace (l, voided_out)
         | (DefT (r, trust, NullT), OptionalChainT { reason; lhs_reason; voided_out; t_out; _ }) ->
-          Flow_js_utils.add_specialized_callee_use cx l t_out;
+          CalleeRecorder.add_callee_use cx CalleeRecorder.Tast l t_out;
           let void =
             match desc_of_reason r with
             | RNull ->
@@ -1916,6 +1916,20 @@ struct
            reused for unions as well. See comments on try_union and
            try_intersection.) *)
         | (IntersectionT (r, rep), u) ->
+          let u' =
+            match u with
+            | OptionalChainT { t_out; _ } -> t_out
+            | u -> u
+          in
+          (* We only call CalleeRecorder here for sig-help information. As far as
+           * the typed AST is concerned when dealing with intersections we record
+           * the specific branch that was selected. Therefore, we do not record
+           * intersections when they hit a CallT constraint. The only time when an
+           * intersection is allowed is when we have exhausted the branches of a
+           * speculation job (this is a Flow error) and fall back to the
+           * intersection as the type for the callee node. (This happens in
+           * Default_resolver.) *)
+          CalleeRecorder.add_callee_use cx CalleeRecorder.SigHelp l u';
           let unresolved = parts_to_replace cx u in
           SpeculationKit.prep_try_intersection cx trace (reason_of_use_t u) unresolved [] u r rep
         (******************************)
@@ -3006,7 +3020,7 @@ struct
             calltype
           in
           rec_flow cx trace (o2, UseT (use_op, o1));
-          Flow_js_utils.add_specialized_callee cx l call_specialized_callee;
+          CalleeRecorder.add_callee cx CalleeRecorder.All l call_specialized_callee;
 
           Base.Option.iter call_targs ~f:(fun _ ->
               add_output
@@ -3055,7 +3069,7 @@ struct
           } =
             calltype
           in
-          Flow_js_utils.add_specialized_callee cx l call_specialized_callee;
+          CalleeRecorder.add_callee cx CalleeRecorder.All l call_specialized_callee;
           let src = any_mod_src_keep_placeholder Untyped src in
           let any = AnyT.why src reason_fundef in
           rec_flow_t cx ~use_op trace (call_this_t, any);
@@ -3186,7 +3200,7 @@ struct
           } =
             calltype
           in
-          Flow_js_utils.add_specialized_callee cx l call_specialized_callee;
+          CalleeRecorder.add_callee cx CalleeRecorder.All l call_specialized_callee;
           (* None of the supported custom funs are polymorphic, so error here
              instead of threading targs into spread resolution. *)
           Base.Option.iter call_targs ~f:(fun _ ->
@@ -3446,7 +3460,7 @@ struct
           let src = any_mod_src_keep_placeholder Untyped src in
           let any = AnyT.why src reason_op in
           call_args_iter (fun t -> rec_flow cx trace (t, UseT (use_op, any))) meth_args_tlist;
-          Flow_js_utils.add_specialized_callee cx l specialized_callee;
+          CalleeRecorder.add_callee cx CalleeRecorder.Tast l specialized_callee;
           rec_flow_t cx trace ~use_op:unknown_use (any, OpenT meth_tout)
         | (AnyT (_, src), MethodT (use_op, reason_op, _, _, (ChainM _ as chain))) ->
           let src = any_mod_src_keep_placeholder Untyped src in
@@ -4623,7 +4637,7 @@ struct
           } =
             calltype
           in
-          Flow_js_utils.add_specialized_callee cx l call_specialized_callee;
+          CalleeRecorder.add_callee cx CalleeRecorder.All l call_specialized_callee;
           (* TODO: closure *)
           rec_flow_t cx trace ~use_op (o2, o1);
 
@@ -4649,7 +4663,7 @@ struct
           } =
             calltype
           in
-          Flow_js_utils.add_specialized_callee cx l call_specialized_callee;
+          CalleeRecorder.add_callee cx CalleeRecorder.All l call_specialized_callee;
           let src = any_mod_src_keep_placeholder Untyped src in
           rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src reason, call_this_t);
           call_args_iter
@@ -10307,7 +10321,7 @@ struct
   and add_specialized_callee_method_action cx trace l = function
     | CallM { specialized_callee; _ }
     | ChainM { specialized_callee; _ } ->
-      Flow_js_utils.add_specialized_callee cx l specialized_callee
+      CalleeRecorder.add_callee cx CalleeRecorder.All l specialized_callee
     | NoMethodAction prop_t -> rec_flow_t cx ~use_op:unknown_use trace (l, prop_t)
 
   include CheckPolarity

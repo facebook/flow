@@ -1204,12 +1204,18 @@ module rec TypeTerm : sig
    * made. After speculation is done (at the "fire action" part of Speculation_kit)
    * we determine if the branch was successful, and if so, we promote the type to
    * the finalized list.
+   *
+   * Note that for signature-help results we do not record types under speculation
+   * so we only need a simple list to record signatures.
    *)
   and specialized_callee =
     | Specialized_callee of {
+        (* Utilities for populating the typed AST *)
         mutable finalized: t list;
         mutable speculative_candidates: (t * spec_state) list;
         init_speculation_state: spec_state option;
+        (* Utilities for signature help *)
+        mutable sig_help: t list;
       }
 
   (* Used by CallT and similar constructors *)

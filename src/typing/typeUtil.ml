@@ -1100,7 +1100,3 @@ let mk_renders_type reason renders_variant t =
       )
   in
   EvalT (t, destructor, Eval.generate_id ())
-
-let type_of_specialized_callee reason specialized_callee =
-  let (Specialized_callee { finalized; _ }) = specialized_callee in
-  union_of_ts reason finalized

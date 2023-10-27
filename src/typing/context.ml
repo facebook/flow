@@ -193,6 +193,8 @@ type component_t = {
    * of the monomorphized version here by mapping the Element's object id to the monomorphized
    * component *)
   mutable monomorphized_components: Type.t Type.Properties.Map.t;
+  (* Signature help *)
+  mutable signature_help_callee: Type.t ALocMap.t;
 }
 [@@warning "-69"]
 
@@ -386,6 +388,7 @@ let make_ccx master_cx =
     in_implicit_instantiation = false;
     allow_method_unbinding = ALocSet.empty;
     monomorphized_components = Type.Properties.Map.empty;
+    signature_help_callee = ALocMap.empty;
   }
 
 let make ccx metadata file aloc_table resolve_require phase =
@@ -763,6 +766,11 @@ let set_type_graph cx type_graph = cx.ccx.type_graph <- type_graph
 
 let set_exists_checks cx exists_checks = cx.ccx.exists_checks <- exists_checks
 
+let set_signature_help_callee cx loc t =
+  cx.ccx.signature_help_callee <- ALocMap.add loc t cx.ccx.signature_help_callee
+
+let get_signature_help_callee cx loc = ALocMap.find_opt loc cx.ccx.signature_help_callee
+
 let add_exists_check cx loc t =
   let tset =
     match ALocMap.find_opt loc cx.ccx.exists_checks with
@@ -1114,4 +1122,9 @@ let iter_annot_dependent_set cx f set =
 let new_specialized_callee cx =
   let open Type in
   Specialized_callee
-    { init_speculation_state = speculation_id cx; finalized = []; speculative_candidates = [] }
+    {
+      init_speculation_state = speculation_id cx;
+      finalized = [];
+      speculative_candidates = [];
+      sig_help = [];
+    }

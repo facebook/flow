@@ -204,6 +204,7 @@ module Callee_finder = struct
         let { Flow_ast.Expression.Call.callee = ((callee_loc, t), callee_expr); arguments; _ } =
           expr
         in
+        let t = Base.Option.value ~default:t (Context.get_signature_help_callee cx callee_loc) in
         let callee_loc =
           let open Flow_ast.Expression in
           let open Member in
@@ -274,18 +275,30 @@ let rec collect_functions ~jsdoc ~exact_by_default acc = function
     Base.List.fold_left ~init:acc ~f:(collect_functions ~jsdoc ~exact_by_default) (t1 :: t2 :: ts)
   | _ -> acc
 
+(* Ty_normalizer will attempt to recover an alias name for this type. Given that
+ * in collect_functions we try to match against the structure of the type, we
+ * would rather bypass the alias on the toplevel of the type. It is still
+ * desirable that deeper within the type aliases are maintained. Note that
+ * alternatively we could updated the normalizer to perform a one-off expansion
+ * of the toplevel alias, but that would be more complex that fixing this here. *)
+let rec fix_alias_reason cx t =
+  let open Type in
+  let t = Flow_js.singleton_concrete_type_for_inspection cx (TypeUtil.reason_of_t t) t in
+  let t' = TypeUtil.mod_reason_of_t Reason.(update_desc_reason invalidate_rtype_alias) t in
+  match t' with
+  | IntersectionT (r, rep) ->
+    let (t0, (t1, ts)) = InterRep.members_nel rep in
+    let t0 = fix_alias_reason cx t0 in
+    let t1 = fix_alias_reason cx t1 in
+    let ts = Base.List.map ~f:(fix_alias_reason cx) ts in
+    IntersectionT (r, InterRep.make t0 t1 ts)
+  | _ -> t'
+
 let find_signatures ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc =
   match Callee_finder.find_opt ~reader ~cx ~typed_ast loc with
   | Some (scheme, active_parameter, callee_loc) ->
     let { Type.TypeScheme.type_ = t; _ } = scheme in
-    (* Ty_normalizer will attempt to recover an alias name for this type. Given that
-     * in collect_functions we try to match against the structure of the type, we
-     * would rather bypass the alias on the toplevel of the type. It is still
-     * desirable that deeper within the type aliases are maintained. Note that
-     * alternatively we could updated the normalizer to perform a one-off expansion
-     * of the toplevel alias, but that would be more complex that fixing this here. *)
-    let t = Flow_js.singleton_concrete_type_for_inspection cx (TypeUtil.reason_of_t t) t in
-    let t' = TypeUtil.mod_reason_of_t Reason.(update_desc_reason invalidate_rtype_alias) t in
+    let t' = fix_alias_reason cx t in
     let scheme = { scheme with Type.TypeScheme.type_ = t' } in
     let genv = Ty_normalizer_env.mk_genv ~cx ~file:(Context.file cx) ~typed_ast ~file_sig in
     let ty = Ty_normalizer.from_scheme ~options:ty_normalizer_options ~genv scheme in

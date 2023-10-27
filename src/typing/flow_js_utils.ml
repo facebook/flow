@@ -2402,26 +2402,77 @@ let mk_tuple_type cx ?trace ~id ~mk_type_destructor reason elements =
     else
       AnyT.error reason
 
-let add_specialized_callee cx l specialized_callee =
-  (* Avoid recording results computed during implicit instantiation. We redo the
-   * call after the instantiation portion using the concretized results. We will
-   * record that latter call result. *)
-  if not (Context.in_implicit_instantiation cx) then
-    match specialized_callee with
-    | None -> ()
-    | Some (Specialized_callee data) ->
-      (match Context.speculation_id cx with
-      | Some id
-      (* It is possible that the call we are inspecting was initiated in a speculative
-       * state. It is important to compare with the state during the beginning of the
-       * call to determine if this is a true speculative candidate. *)
-        when Some id <> data.init_speculation_state ->
-        data.speculative_candidates <- (l, id) :: data.speculative_candidates
-      | _ -> data.finalized <- l :: data.finalized)
+module CalleeRecorder : sig
+  type kind =
+    | Tast
+    | SigHelp
+    | All
 
-let add_specialized_callee_use cx l =
-  let open Type in
-  function
-  | CallT { call_action = Funcalltype { call_specialized_callee; _ }; _ } ->
-    add_specialized_callee cx l call_specialized_callee
-  | _ -> ()
+  val add_callee : Context.t -> kind -> Type.t -> Type.specialized_callee option -> unit
+
+  val add_callee_use : Context.t -> kind -> Type.t -> Type.use_t -> unit
+
+  val type_for_sig_help : Reason.t -> Type.specialized_callee -> Type.t
+
+  val type_for_tast : Reason.t -> Type.specialized_callee -> Type.t
+end = struct
+  type kind =
+    | Tast
+    | SigHelp
+    | All
+
+  let add_tast cx l (Specialized_callee data) =
+    match Context.speculation_id cx with
+    | Some id
+    (* It is possible that the call we are inspecting was initiated in a speculative
+     * state. It is important to compare with the state during the beginning of the
+     * call to determine if this is a true speculative candidate. *)
+      when Some id <> data.init_speculation_state ->
+      data.speculative_candidates <- (l, id) :: data.speculative_candidates
+    | _ -> data.finalized <- l :: data.finalized
+
+  (* For signature-help, we are intereseted in all branches of intersections, so
+   * we include intersections in the accumulated result. Note that we discard nested
+   * intersection types. These would appear under speculation, so we can effectively
+   * enforce this constraint by checking that we are not in a speculation enviornment.
+   * Also we skip voided out results in case of optional chaining. *)
+  let add_signature_help cx l (Specialized_callee data) =
+    if Base.Option.is_none (Context.speculation_id cx) then data.sig_help <- l :: data.sig_help
+
+  let do_tast = function
+    | Tast
+    | All ->
+      true
+    | SigHelp -> false
+
+  let do_sig_help = function
+    | All
+    | SigHelp ->
+      true
+    | Tast -> false
+
+  let add_callee cx kind l specialized_callee =
+    Base.Option.iter specialized_callee ~f:(fun specialized_callee ->
+        (* Avoid recording results computed during implicit instantiation. We redo the
+         * call after the instantiation portion using the concretized results. We will
+         * record that latter call result. *)
+        if not (Context.in_implicit_instantiation cx) then (
+          if do_tast kind then add_tast cx l specialized_callee;
+          if do_sig_help kind then add_signature_help cx l specialized_callee
+        )
+    )
+
+  let add_callee_use cx kind l u =
+    match u with
+    | Type.CallT Type.{ call_action = Funcalltype { call_specialized_callee; _ }; _ } ->
+      add_callee cx kind l call_specialized_callee
+    | _ -> ()
+
+  let type_for_sig_help reason specialized_callee =
+    let (Specialized_callee { sig_help; _ }) = specialized_callee in
+    union_of_ts reason sig_help
+
+  let type_for_tast reason specialized_callee =
+    let (Specialized_callee { finalized; _ }) = specialized_callee in
+    union_of_ts reason finalized
+end

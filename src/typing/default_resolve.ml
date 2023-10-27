@@ -6,6 +6,7 @@
  *)
 
 open Type
+open Flow_js_utils
 
 let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
   let _TODO = () in
@@ -21,7 +22,7 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
       | Some (_, [t]) -> t
       | Some (r, t1 :: t2 :: ts) -> IntersectionT (r, InterRep.make t1 t2 ts)
     in
-    Flow_js_utils.add_specialized_callee cx resolve_callee x
+    CalleeRecorder.add_callee cx CalleeRecorder.All resolve_callee x
   in
   let resolve_method_action action =
     match action with

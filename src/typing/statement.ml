@@ -569,7 +569,7 @@ module Make
               )
         )
       in
-      let prop_t = TypeUtil.type_of_specialized_callee reason_prop specialized_callee in
+      let prop_t = Flow_js_utils.CalleeRecorder.type_for_tast reason_prop specialized_callee in
       (prop_t, out)
 
   let elem_call_opt_use
@@ -3331,7 +3331,9 @@ module Make
           (opt_state, filtered_out, Member member)
         | _ -> (NonOptional, loc, e)
       in
-      let call_ast call ty =
+      let call_ast ~filtered_out:ty ~sig_help call =
+        let { Call.callee = ((loc, _), _); _ } = call in
+        Context.set_signature_help_callee cx loc sig_help;
         match opt_state with
         | NewChain ->
           OptionalCall { OptionalCall.call; optional = true; filtered_out = (filtered_out_loc, ty) }
@@ -3453,13 +3455,14 @@ module Make
         Some
           ( (loc, lhs_t),
             call_ast
+              ~filtered_out:lhs_t
+              ~sig_help:id_t
               {
                 Call.callee = ((callee_loc, id_t), Identifier ((id_loc, id_t), name));
                 targs;
                 arguments;
                 comments;
               }
-              lhs_t
           )
       | Call
           {
@@ -3487,6 +3490,8 @@ module Make
           ( (loc, lhs_t),
             let t = bogus_trust () |> MixedT.at callee_loc in
             call_ast
+              ~filtered_out:lhs_t
+              ~sig_help:t
               {
                 Call.callee (* TODO(vijayramamurthy): what is the type of `Object.name` ? *) =
                   ( (callee_loc, t),
@@ -3501,7 +3506,6 @@ module Make
                 arguments;
                 comments;
               }
-              lhs_t
           )
       | Call
           {
@@ -3561,10 +3565,12 @@ module Make
                 )
           )
         in
-        let prop_t = TypeUtil.type_of_specialized_callee reason_lookup specialized_callee in
+        let prop_t = Flow_js_utils.CalleeRecorder.type_for_tast reason_lookup specialized_callee in
         Some
           ( (loc, lhs_t),
             call_ast
+              ~filtered_out:lhs_t
+              ~sig_help:prop_t
               {
                 Call.callee =
                   ( (callee_loc, prop_t),
@@ -3579,7 +3585,6 @@ module Make
                 arguments = arguments_ast;
                 comments;
               }
-              lhs_t
           )
       | Call { Call.callee = (super_loc, Super super) as callee; targs; arguments; comments } ->
         let (targts, targs) = convert_call_targs_opt cx targs in
@@ -3624,13 +3629,14 @@ module Make
         Some
           ( (loc, lhs_t),
             call_ast
+              ~filtered_out:lhs_t
+              ~sig_help:super_t
               {
                 Call.callee = ((super_loc, super_t), Super super);
                 targs;
                 arguments = arguments_ast;
                 comments;
               }
-              lhs_t
           )
       (******************************************)
       (* See ~/www/static_upstream/core/ *)
@@ -3743,7 +3749,10 @@ module Make
             let t = AnyT.at (AnyError None) loc in
             (t, Tast_utils.error_mapper#arg_list arguments)
         in
-        Some ((loc, t), call_ast { Call.callee; targs; arguments; comments } t)
+        Some
+          ( (loc, t),
+            call_ast ~filtered_out:t ~sig_help:callee_t { Call.callee; targs; arguments; comments }
+          )
       | Member
           {
             Member._object = (super_loc, Super super);
@@ -3968,7 +3977,7 @@ module Make
               object_ast,
               subexpression_asts
             )
-          | _ -> handle_new_chain conf lhs_reason loc object_data
+          | None -> handle_new_chain conf lhs_reason loc object_data
         end
       | ContinueChain -> handle_continue_chain conf (optional_chain ~cond:None cx object_)
     in
@@ -4211,7 +4220,8 @@ module Make
               obj_filtered_out,
               object_ast,
               property,
-              argument_asts
+              argument_asts,
+              reason_lookup
             ) =
           match property with
           | Member.PropertyPrivateName (prop_loc, { Ast.PrivateName.name; comments = _ })
@@ -4348,7 +4358,8 @@ module Make
               obj_filtered_out,
               object_ast,
               prop_ast,
-              argument_asts
+              argument_asts,
+              reason_prop
             )
           | Member.PropertyExpression expr ->
             let reason_call = mk_reason (RMethodCall None) loc in
@@ -4420,7 +4431,8 @@ module Make
               obj_filtered_out,
               object_ast,
               Member.PropertyExpression expr_ast,
-              argument_asts
+              argument_asts,
+              reason_lookup
             )
         in
         let voided_out =
@@ -4440,9 +4452,15 @@ module Make
           )
         in
         let callee = specialize_callee callee specialized_callee in
+        let sig_help =
+          Flow_js_utils.CalleeRecorder.type_for_sig_help reason_lookup specialized_callee
+        in
         let call =
           ( (loc, lhs_t),
-            call_ast { Call.callee; targs; arguments = argument_asts; comments } filtered_out
+            call_ast
+              ~filtered_out
+              ~sig_help
+              { Call.callee; targs; arguments = argument_asts; comments }
           )
         in
         (filtered_out, voided_out, call)
@@ -4486,9 +4504,14 @@ module Make
         let (filtered_out, voided_out, lhs_t, _, object_ast, argument_asts) =
           handle_chaining conf opt_state callee loc
         in
+        let reason_callee = mk_expression_reason callee in
+        let sig_help = Flow_js_utils.CalleeRecorder.type_for_sig_help reason_callee spec_callee in
         let exp callee =
           let callee = specialize_callee callee spec_callee in
-          call_ast { Call.callee; targs; arguments = argument_asts; comments } filtered_out
+          call_ast
+            ~filtered_out
+            ~sig_help
+            { Call.callee; targs; arguments = argument_asts; comments }
         in
         (filtered_out, voided_out, ((loc, lhs_t), exp object_ast))
       | _ ->

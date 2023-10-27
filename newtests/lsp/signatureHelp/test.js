@@ -25,6 +25,9 @@ module.exports = (suite(
           'member_callee.js',
           'constructor.js',
           'typeAliasCall.js',
+          'calls_monomorphic.js',
+          'calls_overloaded.js',
+          'calls_generic.js',
         ),
         lspStartAndConnect(),
         lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
@@ -585,6 +588,1668 @@ module.exports = (suite(
                 ],
                 activeSignature: 0,
                 activeParameter: 0,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_monomorphic.js',
+          },
+          position: {line: 5, character: 4},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label: '(x: string): void',
+                    parameters: [
+                      {
+                        label: 'x: string',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 0,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_monomorphic.js',
+          },
+          position: {line: 9, character: 6},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label: '(x: string): void',
+                    parameters: [
+                      {
+                        label: 'x: string',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 0,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_monomorphic.js',
+          },
+          position: {line: 17, character: 13},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label: '(x: string): void',
+                    parameters: [
+                      {
+                        label: 'x: string',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 0,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_monomorphic.js',
+          },
+          position: {line: 21, character: 9},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label: '(x: string): void',
+                    parameters: [
+                      {
+                        label: 'x: string',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 0,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_monomorphic.js',
+          },
+          position: {line: 25, character: 8},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label: '(x: string): void',
+                    parameters: [
+                      {
+                        label: 'x: string',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 0,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_monomorphic.js',
+          },
+          position: {line: 30, character: 8},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label: '(x: string): void',
+                    parameters: [
+                      {
+                        label: 'x: string',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 0,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_overloaded.js',
+          },
+          position: {line: 8, character: 4},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label: '(): void',
+                    parameters: [],
+                  },
+                  {
+                    label: '(x: string): void',
+                    parameters: [
+                      {
+                        label: 'x: string',
+                      },
+                    ],
+                  },
+                  {
+                    label: '(x: A, y: A): void',
+                    parameters: [
+                      {
+                        label: 'x: A',
+                      },
+                      {
+                        label: 'y: A',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 0,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_overloaded.js',
+          },
+          position: {line: 12, character: 6},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label: '(): void',
+                    parameters: [],
+                  },
+                  {
+                    label: '(x: string): void',
+                    parameters: [
+                      {
+                        label: 'x: string',
+                      },
+                    ],
+                  },
+                  {
+                    label: '(x: A, y: A): void',
+                    parameters: [
+                      {
+                        label: 'x: A',
+                      },
+                      {
+                        label: 'y: A',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 0,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_overloaded.js',
+          },
+          position: {line: 16, character: 7},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label: '(): void',
+                    parameters: [],
+                  },
+                  {
+                    label: '(x: string): void',
+                    parameters: [
+                      {
+                        label: 'x: string',
+                      },
+                    ],
+                  },
+                  {
+                    label: '(x: A, y: A): void',
+                    parameters: [
+                      {
+                        label: 'x: A',
+                      },
+                      {
+                        label: 'y: A',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 0,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_overloaded.js',
+          },
+          position: {line: 20, character: 13},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label: '(): void',
+                    parameters: [],
+                  },
+                  {
+                    label: '(x: string): void',
+                    parameters: [
+                      {
+                        label: 'x: string',
+                      },
+                    ],
+                  },
+                  {
+                    label: '(x: A, y: A): void',
+                    parameters: [
+                      {
+                        label: 'x: A',
+                      },
+                      {
+                        label: 'y: A',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 0,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_overloaded.js',
+          },
+          position: {line: 24, character: 9},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label: '(): void',
+                    parameters: [],
+                  },
+                  {
+                    label: '(x: string): void',
+                    parameters: [
+                      {
+                        label: 'x: string',
+                      },
+                    ],
+                  },
+                  {
+                    label: '(x: A, y: A): void',
+                    parameters: [
+                      {
+                        label: 'x: A',
+                      },
+                      {
+                        label: 'y: A',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 0,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_overloaded.js',
+          },
+          position: {line: 28, character: 8},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label: '(): void',
+                    parameters: [],
+                  },
+                  {
+                    label: '(x: string): void',
+                    parameters: [
+                      {
+                        label: 'x: string',
+                      },
+                    ],
+                  },
+                  {
+                    label: '(x: A, y: A): void',
+                    parameters: [
+                      {
+                        label: 'x: A',
+                      },
+                      {
+                        label: 'y: A',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 0,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_overloaded.js',
+          },
+          position: {line: 33, character: 8},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label: '(): void',
+                    parameters: [],
+                  },
+                  {
+                    label: '(x: string): void',
+                    parameters: [
+                      {
+                        label: 'x: string',
+                      },
+                    ],
+                  },
+                  {
+                    label: '(x: A, y: A): void',
+                    parameters: [
+                      {
+                        label: 'x: A',
+                      },
+                      {
+                        label: 'y: A',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 0,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_overloaded.js',
+          },
+          position: {line: 48, character: 4},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label: '(): void',
+                    parameters: [],
+                  },
+                  {
+                    label: '(x: string): void',
+                    parameters: [
+                      {
+                        label: 'x: string',
+                      },
+                    ],
+                  },
+                  {
+                    label: '(x: A, y: A): void',
+                    parameters: [
+                      {
+                        label: 'x: A',
+                      },
+                      {
+                        label: 'y: A',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 0,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_overloaded.js',
+          },
+          position: {line: 52, character: 6},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label: '(): void',
+                    parameters: [],
+                  },
+                  {
+                    label: '(x: string): void',
+                    parameters: [
+                      {
+                        label: 'x: string',
+                      },
+                    ],
+                  },
+                  {
+                    label: '(x: A, y: A): void',
+                    parameters: [
+                      {
+                        label: 'x: A',
+                      },
+                      {
+                        label: 'y: A',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 0,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_overloaded.js',
+          },
+          position: {line: 56, character: 7},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label: '(): void',
+                    parameters: [],
+                  },
+                  {
+                    label: '(x: string): void',
+                    parameters: [
+                      {
+                        label: 'x: string',
+                      },
+                    ],
+                  },
+                  {
+                    label: '(x: A, y: A): void',
+                    parameters: [
+                      {
+                        label: 'x: A',
+                      },
+                      {
+                        label: 'y: A',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 0,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_overloaded.js',
+          },
+          position: {line: 60, character: 13},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label: '(): void',
+                    parameters: [],
+                  },
+                  {
+                    label: '(x: string): void',
+                    parameters: [
+                      {
+                        label: 'x: string',
+                      },
+                    ],
+                  },
+                  {
+                    label: '(x: A, y: A): void',
+                    parameters: [
+                      {
+                        label: 'x: A',
+                      },
+                      {
+                        label: 'y: A',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 0,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_overloaded.js',
+          },
+          position: {line: 64, character: 9},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label: '(): void',
+                    parameters: [],
+                  },
+                  {
+                    label: '(x: string): void',
+                    parameters: [
+                      {
+                        label: 'x: string',
+                      },
+                    ],
+                  },
+                  {
+                    label: '(x: A, y: A): void',
+                    parameters: [
+                      {
+                        label: 'x: A',
+                      },
+                      {
+                        label: 'y: A',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 0,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_overloaded.js',
+          },
+          position: {line: 68, character: 8},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label: '(): void',
+                    parameters: [],
+                  },
+                  {
+                    label: '(x: string): void',
+                    parameters: [
+                      {
+                        label: 'x: string',
+                      },
+                    ],
+                  },
+                  {
+                    label: '(x: A, y: A): void',
+                    parameters: [
+                      {
+                        label: 'x: A',
+                      },
+                      {
+                        label: 'y: A',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 0,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_overloaded.js',
+          },
+          position: {line: 73, character: 8},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label: '(): void',
+                    parameters: [],
+                  },
+                  {
+                    label: '(x: string): void',
+                    parameters: [
+                      {
+                        label: 'x: string',
+                      },
+                    ],
+                  },
+                  {
+                    label: '(x: A, y: A): void',
+                    parameters: [
+                      {
+                        label: 'x: A',
+                      },
+                      {
+                        label: 'y: A',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 0,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_overloaded.js',
+          },
+          position: {line: 80, character: 4},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: null,
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_overloaded.js',
+          },
+          position: {line: 81, character: 4},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: null,
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_generic.js',
+          },
+          position: {line: 5, character: 4},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label: '(x: void, y: void, z: Array<void>): void',
+                    parameters: [
+                      {
+                        label: 'x: void',
+                      },
+                      {
+                        label: 'y: void',
+                      },
+                      {
+                        label: 'z: Array<void>',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 0,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_generic.js',
+          },
+          position: {line: 6, character: 7},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label:
+                      '(x: number | void, y: number | void, z: Array<(number | void)>): void',
+                    parameters: [
+                      {
+                        label: 'x: number | void',
+                      },
+                      {
+                        label: 'y: number | void',
+                      },
+                      {
+                        label: 'z: Array<(number | void)>',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 1,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_generic.js',
+          },
+          position: {line: 7, character: 11},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label:
+                      '(x: number | string, y: number | string, z: Array<(number | string)>): void',
+                    parameters: [
+                      {
+                        label: 'x: number | string',
+                      },
+                      {
+                        label: 'y: number | string',
+                      },
+                      {
+                        label: 'z: Array<(number | string)>',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 2,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_generic.js',
+          },
+          position: {line: 11, character: 6},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label: '(x: void, y: void, z: Array<void>): void',
+                    parameters: [
+                      {
+                        label: 'x: void',
+                      },
+                      {
+                        label: 'y: void',
+                      },
+                      {
+                        label: 'z: Array<void>',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 0,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_generic.js',
+          },
+          position: {line: 12, character: 9},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label:
+                      '(x: number | void, y: number | void, z: Array<(number | void)>): void',
+                    parameters: [
+                      {
+                        label: 'x: number | void',
+                      },
+                      {
+                        label: 'y: number | void',
+                      },
+                      {
+                        label: 'z: Array<(number | void)>',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 1,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_generic.js',
+          },
+          position: {line: 13, character: 13},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label:
+                      '(x: number | string, y: number | string, z: Array<(number | string)>): void',
+                    parameters: [
+                      {
+                        label: 'x: number | string',
+                      },
+                      {
+                        label: 'y: number | string',
+                      },
+                      {
+                        label: 'z: Array<(number | string)>',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 2,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_generic.js',
+          },
+          position: {line: 17, character: 7},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label: '(x: void, y: void, z: Array<void>): void',
+                    parameters: [
+                      {
+                        label: 'x: void',
+                      },
+                      {
+                        label: 'y: void',
+                      },
+                      {
+                        label: 'z: Array<void>',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 0,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_generic.js',
+          },
+          position: {line: 18, character: 10},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label:
+                      '(x: number | void, y: number | void, z: Array<(number | void)>): void',
+                    parameters: [
+                      {
+                        label: 'x: number | void',
+                      },
+                      {
+                        label: 'y: number | void',
+                      },
+                      {
+                        label: 'z: Array<(number | void)>',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 1,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_generic.js',
+          },
+          position: {line: 19, character: 14},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label:
+                      '(x: number | string, y: number | string, z: Array<(number | string)>): void',
+                    parameters: [
+                      {
+                        label: 'x: number | string',
+                      },
+                      {
+                        label: 'y: number | string',
+                      },
+                      {
+                        label: 'z: Array<(number | string)>',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 2,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_generic.js',
+          },
+          position: {line: 23, character: 13},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label: '(x: void, y: void, z: Array<void>): void',
+                    parameters: [
+                      {
+                        label: 'x: void',
+                      },
+                      {
+                        label: 'y: void',
+                      },
+                      {
+                        label: 'z: Array<void>',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 0,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_generic.js',
+          },
+          position: {line: 24, character: 16},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label:
+                      '(x: number | void, y: number | void, z: Array<(number | void)>): void',
+                    parameters: [
+                      {
+                        label: 'x: number | void',
+                      },
+                      {
+                        label: 'y: number | void',
+                      },
+                      {
+                        label: 'z: Array<(number | void)>',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 1,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_generic.js',
+          },
+          position: {line: 25, character: 20},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label:
+                      '(x: number | string, y: number | string, z: Array<(number | string)>): void',
+                    parameters: [
+                      {
+                        label: 'x: number | string',
+                      },
+                      {
+                        label: 'y: number | string',
+                      },
+                      {
+                        label: 'z: Array<(number | string)>',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 2,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_generic.js',
+          },
+          position: {line: 29, character: 9},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label: '(x: void, y: void, z: Array<void>): void',
+                    parameters: [
+                      {
+                        label: 'x: void',
+                      },
+                      {
+                        label: 'y: void',
+                      },
+                      {
+                        label: 'z: Array<void>',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 0,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_generic.js',
+          },
+          position: {line: 30, character: 12},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label:
+                      '(x: number | void, y: number | void, z: Array<(number | void)>): void',
+                    parameters: [
+                      {
+                        label: 'x: number | void',
+                      },
+                      {
+                        label: 'y: number | void',
+                      },
+                      {
+                        label: 'z: Array<(number | void)>',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 1,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_generic.js',
+          },
+          position: {line: 31, character: 16},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label:
+                      '(x: number | string, y: number | string, z: Array<(number | string)>): void',
+                    parameters: [
+                      {
+                        label: 'x: number | string',
+                      },
+                      {
+                        label: 'y: number | string',
+                      },
+                      {
+                        label: 'z: Array<(number | string)>',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 2,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_generic.js',
+          },
+          position: {line: 35, character: 8},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label: '(x: void, y: void, z: Array<void>): void',
+                    parameters: [
+                      {
+                        label: 'x: void',
+                      },
+                      {
+                        label: 'y: void',
+                      },
+                      {
+                        label: 'z: Array<void>',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 0,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_generic.js',
+          },
+          position: {line: 36, character: 11},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label:
+                      '(x: number | void, y: number | void, z: Array<(number | void)>): void',
+                    parameters: [
+                      {
+                        label: 'x: number | void',
+                      },
+                      {
+                        label: 'y: number | void',
+                      },
+                      {
+                        label: 'z: Array<(number | void)>',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 1,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_generic.js',
+          },
+          position: {line: 37, character: 15},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label:
+                      '(x: number | string, y: number | string, z: Array<(number | string)>): void',
+                    parameters: [
+                      {
+                        label: 'x: number | string',
+                      },
+                      {
+                        label: 'y: number | string',
+                      },
+                      {
+                        label: 'z: Array<(number | string)>',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 2,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_generic.js',
+          },
+          position: {line: 42, character: 8},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label: '(x: void, y: void, z: Array<void>): void',
+                    parameters: [
+                      {
+                        label: 'x: void',
+                      },
+                      {
+                        label: 'y: void',
+                      },
+                      {
+                        label: 'z: Array<void>',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 0,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_generic.js',
+          },
+          position: {line: 43, character: 11},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label:
+                      '(x: number | void, y: number | void, z: Array<(number | void)>): void',
+                    parameters: [
+                      {
+                        label: 'x: number | void',
+                      },
+                      {
+                        label: 'y: number | void',
+                      },
+                      {
+                        label: 'z: Array<(number | void)>',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 1,
+              },
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/signatureHelp', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/calls_generic.js',
+          },
+          position: {line: 44, character: 15},
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/signatureHelp',
+              result: {
+                signatures: [
+                  {
+                    label:
+                      '(x: number | string, y: number | string, z: Array<(number | string)>): void',
+                    parameters: [
+                      {
+                        label: 'x: number | string',
+                      },
+                      {
+                        label: 'y: number | string',
+                      },
+                      {
+                        label: 'z: Array<(number | string)>',
+                      },
+                    ],
+                  },
+                ],
+                activeSignature: 0,
+                activeParameter: 2,
               },
             },
           ],
