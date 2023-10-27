@@ -30,12 +30,15 @@ component.js:9:11,9:14
 
 component.js:11:11
 Flags:
-(unknown)
+type PolyElementTypeApp = Poly<string>
 component.js:11:6,11:23
 
 component.js:13:11
 Flags:
-(unknown)
+type ConcretizedPolyComponent = Poly<string> extends React$Element<infer C>
+  ? C
+  : empty
+= React$AbstractComponent<{+foo: string}, mixed, renders React$Node>
 component.js:13:6,13:29
 
 render_types.js:1:6

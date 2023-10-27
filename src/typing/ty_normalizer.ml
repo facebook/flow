@@ -1314,6 +1314,14 @@ end = struct
         | DefT (_, _, ClassT (DefT (r, _, InstanceT { inst; _ }))) ->
           instance_app ~env r inst tparams targs
         | DefT (r, _, TypeT (kind, _)) -> type_t_app ~env r kind tparams targs
+        | DefT
+            ( r,
+              _,
+              ReactAbstractComponentT
+                { component_kind = Nominal (_, name); config = _; instance = _; renders = _ }
+            ) ->
+          let%bind symbol = Reason_utils.component_symbol env name r in
+          mk_generic ~env symbol Ty.ComponentKind tparams targs
         | DefT (_, _, ClassT (TypeAppT { reason = _; use_op = _; type_; targs = _; use_desc = _ }))
           ->
           type_app ~env type_ targs
