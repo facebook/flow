@@ -357,9 +357,7 @@ let get_and_clear_recheck_workload ~process_updates ~get_forced =
      be rechecked, so we push it onto the workload stream and cancel the priority recheck. if
      [foo.js] was not included in the next priority workload, then it would fail and be retried
      but again discover it needs [foo.js]. *)
-  let (dependencies_to_force, files_to_force) =
-    CheckedSet.partition ~f:(fun _file -> CheckedSet.is_dependency) files_to_force
-  in
+  let (dependencies_to_force, files_to_force) = CheckedSet.partition_dependencies files_to_force in
   if CheckedSet.is_empty dependencies_to_force then (
     recheck_acc := empty_recheck_workload;
     (Normal, recheck_workload)

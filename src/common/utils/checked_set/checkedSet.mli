@@ -34,8 +34,6 @@ val add :
 
 val remove : Utils_js.FilenameSet.t -> t -> t
 
-val fold : ('a -> File_key.t -> 'a) -> 'a -> t -> 'a
-
 val union : t -> t -> t
 
 (** [diff a b] removes from [a] every key which exists in [b] and which has an equal or higher
@@ -52,9 +50,7 @@ val diff : t -> t -> t
 
 val filter : f:(File_key.t -> kind -> bool) -> t -> t
 
-val filter_into_set : f:(kind -> bool) -> t -> Utils_js.FilenameSet.t
-
-val partition : f:(File_key.t -> kind -> bool) -> t -> t * t
+val partition_dependencies : t -> t * t
 
 val all : t -> Utils_js.FilenameSet.t
 

@@ -28,50 +28,63 @@ type kind =
   | Dependent
   | Dependency
 
-type t = kind FilenameMap.t
+type t = {
+  focused: FilenameSet.t;
+  dependents: FilenameSet.t;
+  dependencies: FilenameSet.t;
+}
 
-(* This uses polymorphic compare. Use caution if `kind` becomes a more complex type. *)
-let debug_equal = FilenameMap.equal ( = )
+let debug_equal a b =
+  let { focused = a_focused; dependents = a_dependents; dependencies = a_dependencies } = a in
+  let { focused = b_focused; dependents = b_dependents; dependencies = b_dependencies } = b in
+  FilenameSet.equal a_focused b_focused
+  && FilenameSet.equal a_dependents b_dependents
+  && FilenameSet.equal a_dependencies b_dependencies
 
-let combine a b =
-  match (a, b) with
-  | (Focused, _)
-  | (_, Focused) ->
-    Focused
-  | (Dependent, _)
-  | (_, Dependent) ->
-    Dependent
-  | _ -> Dependency
+let empty =
+  { focused = FilenameSet.empty; dependents = FilenameSet.empty; dependencies = FilenameSet.empty }
 
-let empty = FilenameMap.empty
+let is_empty { focused; dependents; dependencies } =
+  FilenameSet.is_empty focused
+  && FilenameSet.is_empty dependents
+  && FilenameSet.is_empty dependencies
 
-let is_empty = FilenameMap.is_empty
+let of_focused_list focused =
+  {
+    focused = FilenameSet.of_list focused;
+    dependents = FilenameSet.empty;
+    dependencies = FilenameSet.empty;
+  }
 
-let of_focused_list = List.fold_left (fun acc f -> FilenameMap.add f Focused acc) empty
+let cardinal { focused; dependents; dependencies } =
+  FilenameSet.cardinal focused + FilenameSet.cardinal dependents + FilenameSet.cardinal dependencies
 
-let cardinal = FilenameMap.cardinal
+let mem key { focused; dependents; dependencies } =
+  FilenameSet.mem key focused || FilenameSet.mem key dependents || FilenameSet.mem key dependencies
 
-let mem = FilenameMap.mem
+let add
+    ?(focused = FilenameSet.empty)
+    ?(dependents = FilenameSet.empty)
+    ?(dependencies = FilenameSet.empty)
+    checked =
+  let focused = FilenameSet.union focused checked.focused in
+  let dependents = FilenameSet.union dependents checked.dependents in
+  let dependencies = FilenameSet.union dependencies checked.dependencies in
+  (* ensure disjointness *)
+  let dependents = FilenameSet.diff dependents focused in
+  let dependencies = FilenameSet.diff dependencies focused in
+  let dependencies = FilenameSet.diff dependencies dependents in
+  { focused; dependents; dependencies }
 
-let add =
-  let add_all files kind checked =
-    Base.Option.value_map
-      files
-      ~f:(fun files ->
-        FilenameSet.fold (fun f checked -> FilenameMap.add ~combine f kind checked) files checked)
-      ~default:checked
-  in
-  fun ?focused ?dependents ?dependencies checked ->
-    checked
-    |> add_all focused Focused
-    |> add_all dependents Dependent
-    |> add_all dependencies Dependency
+let remove to_remove { focused; dependents; dependencies } =
+  {
+    focused = FilenameSet.diff focused to_remove;
+    dependents = FilenameSet.diff dependents to_remove;
+    dependencies = FilenameSet.diff dependencies to_remove;
+  }
 
-let remove set_to_remove = FilenameMap.filter (fun k _ -> not (FilenameSet.mem k set_to_remove))
-
-let fold f acc checked = FilenameMap.fold (fun k _ acc -> f acc k) checked acc
-
-let union = FilenameMap.union ~combine:(fun _ a b -> Some (combine a b))
+let union { focused; dependents; dependencies } checked =
+  add ~focused ~dependents ~dependencies checked
 
 (** [diff a b] removes from [a] every key which exists in [b] and which has an equal or higher
     kind in [b] than it does in [a], where Focused > Dependent > Dependency. So
@@ -83,47 +96,24 @@ let union = FilenameMap.union ~combine:(fun _ a b -> Some (combine a b))
       = { B: Focused, D: Dependent }
     ]}
  *)
-let diff a b =
-  FilenameMap.filter
-    (fun k kind1 ->
-      let kind2 = FilenameMap.find_opt k b in
-      match (kind1, kind2) with
-      | (_, None) -> true (* Key doesn't exist in b, so keep k around *)
-      | (_, Some Focused) -> false (* Focused removes anything *)
-      | (Focused, _) -> true (* Focused survives anything except Focused *)
-      | (_, Some Dependent) -> false (* Dependent removes anything except Focused *)
-      | (Dependent, Some Dependency) -> true (* Dependent survives Dependency *)
-      | (Dependency, Some Dependency) -> false)
-    (* Dependency removes Dependency *)
-    a
+let diff { focused; dependents; dependencies } b =
+  let focused = FilenameSet.diff focused b.focused in
+  let dependents = FilenameSet.diff dependents b.focused in
+  let dependents = FilenameSet.diff dependents b.dependents in
+  let dependencies = FilenameSet.diff dependencies b.focused in
+  let dependencies = FilenameSet.diff dependencies b.dependents in
+  let dependencies = FilenameSet.diff dependencies b.dependencies in
+  { focused; dependents; dependencies }
 
-let filter ~f checked = FilenameMap.filter f checked
+let filter ~f { focused; dependents; dependencies } =
+  {
+    focused = FilenameSet.filter (fun key -> f key Focused) focused;
+    dependents = FilenameSet.filter (fun key -> f key Dependent) dependents;
+    dependencies = FilenameSet.filter (fun key -> f key Dependency) dependencies;
+  }
 
-let filter_into_set ~f checked =
-  FilenameMap.fold
-    (fun key kind acc ->
-      if f kind then
-        FilenameSet.add key acc
-      else
-        acc)
-    checked
-    FilenameSet.empty
-
-let partition ~(f : File_key.t -> kind -> bool) (checked : t) : t * t =
-  FilenameMap.partition f checked
-
-let count ~f checked =
-  FilenameMap.fold
-    (fun _key kind acc ->
-      if f kind then
-        acc + 1
-      else
-        acc)
-    checked
-    0
-
-(* Gives you a FilenameSet of all the checked files *)
-let all = filter_into_set ~f:(fun _ -> true)
+let partition_dependencies { focused; dependents; dependencies } =
+  ({ empty with dependencies }, { empty with focused; dependents })
 
 let is_focused kind = kind = Focused
 
@@ -131,31 +121,30 @@ let is_dependent kind = kind = Dependent
 
 let is_dependency kind = kind = Dependency
 
-(* Gives you a FilenameSet of all the focused files *)
-let focused = filter_into_set ~f:is_focused
+(* Gives you a FilenameSet of all the checked files *)
+let all { focused; dependents; dependencies } =
+  FilenameSet.union focused (FilenameSet.union dependents dependencies)
 
-let focused_cardinal = count ~f:is_focused
+(* Gives you a FilenameSet of all the focused files *)
+let focused { focused; _ } = focused
+
+let focused_cardinal { focused; _ } = FilenameSet.cardinal focused
 
 (* Gives you a FilenameSet of all the dependent files *)
-let dependents = filter_into_set ~f:is_dependent
+let dependents { dependents; _ } = dependents
 
-let dependents_cardinal = count ~f:is_dependent
+let dependents_cardinal { dependents; _ } = FilenameSet.cardinal dependents
 
 (* Gives you a FilenameSet of all the dependency files *)
-let dependencies = filter_into_set ~f:is_dependency
+let dependencies { dependencies; _ } = dependencies
 
-let dependencies_cardinal = count ~f:is_dependency
+let dependencies_cardinal { dependencies; _ } = FilenameSet.cardinal dependencies
 
-let mem_kind ~f fn t =
-  match FilenameMap.find_opt fn t with
-  | Some kind -> f kind
-  | None -> false
+let mem_focused x { focused; _ } = FilenameSet.mem x focused
 
-let mem_focused = mem_kind ~f:is_focused
+let mem_dependent x { dependents; _ } = FilenameSet.mem x dependents
 
-let mem_dependent = mem_kind ~f:is_dependent
-
-let mem_dependency = mem_kind ~f:is_dependency
+let mem_dependency x { dependencies; _ } = FilenameSet.mem x dependencies
 
 (* Helper function for debugging *)
 let debug_to_string ?limit =
@@ -179,14 +168,8 @@ let debug_to_string ?limit =
       (checked |> dependencies |> string_of_set)
 
 let debug_counts_to_string checked =
-  let (focused, dependents, dependencies) =
-    FilenameMap.fold
-      (fun _ kind (focused, dependents, dependencies) ->
-        match kind with
-        | Focused -> (focused + 1, dependents, dependencies)
-        | Dependent -> (focused, dependents + 1, dependencies)
-        | Dependency -> (focused, dependents, dependencies + 1))
-      checked
-      (0, 0, 0)
-  in
-  Printf.sprintf "Focused: %d, Dependents: %d, Dependencies: %d" focused dependents dependencies
+  Printf.sprintf
+    "Focused: %d, Dependents: %d, Dependencies: %d"
+    (focused_cardinal checked)
+    (dependents_cardinal checked)
+    (dependencies_cardinal checked)
