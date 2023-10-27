@@ -37,8 +37,8 @@ References:
    lazy.js:6:1
      6| function FunctionComponent(x: Props): React.Node { return null }
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:309:22
-   309|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance, React$Node>, ... }>,
+   <BUILTINS>/react.js:311:22
+   311|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance, React$Node>, ... }>,
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -55,8 +55,8 @@ References:
    lazy.js:7:7
      7| class ClassComponent extends React.Component<Props> {}
               ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:309:22
-   309|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance, React$Node>, ... }>,
+   <BUILTINS>/react.js:311:22
+   311|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance, React$Node>, ... }>,
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -73,8 +73,8 @@ References:
    lazy.js:6:1
       6| function FunctionComponent(x: Props): React.Node { return null }
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:309:30
-    309|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance, React$Node>, ... }>,
+   <BUILTINS>/react.js:311:30
+    311|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance, React$Node>, ... }>,
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:1936:24
    1936| declare class Promise<+R = mixed> {
@@ -94,8 +94,8 @@ References:
    lazy.js:7:7
       7| class ClassComponent extends React.Component<Props> {}
                ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:309:30
-    309|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance, React$Node>, ... }>,
+   <BUILTINS>/react.js:311:30
+    311|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance, React$Node>, ... }>,
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:1936:24
    1936| declare class Promise<+R = mixed> {
@@ -332,8 +332,8 @@ Cannot call `React.forwardRef` with `Demo` bound to `render` because in the seco
                                                  ^^^^
 
 References:
-   <BUILTINS>/react.js:299:12
-   299|       ref: React$RefSetter<Instance>,
+   <BUILTINS>/react.js:301:12
+   301|       ref: React$RefSetter<Instance>,
                    ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    memo_ref.js:7:33
      7| function Demo(props: {}, ref: ?({current: (T | null), ...} | ((inst: (T | null)) => mixed))) {

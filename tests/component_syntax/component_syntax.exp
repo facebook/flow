@@ -2325,7 +2325,7 @@ Cannot cast `foo` to empty because string [1] is incompatible with empty [2]. [i
 
 References:
    propsof.js:3:18
-   3| component A(foo: string, bar: number) {
+   3| component A(foo: string, bar: number, ref: React.RefSetter<HTMLAnchorElement>) {
                        ^^^^^^ [1]
    propsof.js:8:9
    8|   (foo: empty); // foo is string
@@ -2342,7 +2342,7 @@ Cannot cast `bar` to empty because number [1] is incompatible with empty [2]. [i
 
 References:
    propsof.js:3:31
-   3| component A(foo: string, bar: number) {
+   3| component A(foo: string, bar: number, ref: React.RefSetter<HTMLAnchorElement>) {
                                     ^^^^^^ [1]
    propsof.js:9:9
    9|   (bar: empty); // bar is number
@@ -2486,6 +2486,71 @@ References:
    propsof.js:14:26
     14| (intrinsicProp.children: empty); // children is ?React.Node
                                  ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- propsof.js:17:16
+
+Cannot assign `42` to `s` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   propsof.js:17:16
+   17| const s: Str = 42; // Str is string
+                      ^^ [1]
+
+References:
+   propsof.js:17:10
+   17| const s: Str = 42; // Str is string
+                ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- propsof.js:28:22
+
+Cannot create `meta` element because in property `ref`: [incompatible-type]
+ - Either property `current` is missing in function type [1] but exists in object type [2].
+ - Or `HTMLAnchorElement` [3] is incompatible with `HTMLMetaElement` [4] in the first parameter.
+
+   propsof.js:28:22
+    28|   let b = <meta ref={ref} />; // error
+                             ^^^
+
+References:
+   propsof.js:26:18
+    26| component C(ref: React.RefSetter<React.RefOf<A>>) {
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:175:5
+   175|   | { -current: React$ElementRef<ElementType> | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   propsof.js:26:34
+    26| component C(ref: React.RefSetter<React.RefOf<A>>) {
+                                         ^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react-dom.js:427:15
+   427|     instance: HTMLMetaElement,
+                      ^^^^^^^^^^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------------- propsof.js:28:22
+
+Cannot create `meta` element because in property `ref`: [incompatible-type]
+ - Either `HTMLAnchorElement` [1] is incompatible with `HTMLMetaElement` [2] in property `current`.
+ - Or a call signature declaring the expected parameter / return type is missing in object type [3] but exists in
+   function type [4].
+
+   propsof.js:28:22
+    28|   let b = <meta ref={ref} />; // error
+                             ^^^
+
+References:
+   propsof.js:26:34
+    26| component C(ref: React.RefSetter<React.RefOf<A>>) {
+                                         ^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react-dom.js:427:15
+   427|     instance: HTMLMetaElement,
+                      ^^^^^^^^^^^^^^^ [2]
+   propsof.js:26:18
+    26| component C(ref: React.RefSetter<React.RefOf<A>>) {
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:176:6
+   176|   | ((React$ElementRef<ElementType> | null) => mixed)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------------- provider.js:4:9
@@ -3154,7 +3219,7 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 208 errors
+Found 211 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
