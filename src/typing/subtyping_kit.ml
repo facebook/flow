@@ -966,12 +966,37 @@ module Make (Flow : INPUT) : OUTPUT = struct
            List.exists (TypeUtil.quick_subtype (Context.trust_errors cx) l) ts ->
       ()
     | (DefT (renders_r, _, RendersT _), UnionT (r, rep)) ->
-      (* This is a tricky case. It's not clear if there will be a matching RendersT in the union,
-       * and in that case we should behave like React.Node because all Render types are subtypes
-       * of React.Node. So we kick off intersection speculation to try the renders type against the
-       * union and fall back to React.Node if it fails *)
+      (* This is a tricky case because there are multiple ways that it could pass. Either
+       * the union contains a supertype of the LHS, or the Union itself is a super type of
+       * React.Node, in which case we can pass without splitting the union. Crucially, if the
+       * union is a super type of React.Node then splitting the union too early will cause
+       * spurious errors.
+       *
+       * This is further complicated during implicit instantiation, where the union may contain
+       * implicitly instantiated tvars that should be constrained by the LHS.
+       *
+       * To handle these cases, we first check to see if the union contains any implicitly instantiated
+       * tvars. If so, we start speculation. If not, we try to see if the RHS is a supertype of React.Node
+       * before kicking off regular speculation *)
+      let union_contains_instantiable_tvars =
+        if Context.in_implicit_instantiation cx then
+          UnionRep.members rep
+          |> List.exists (fun t ->
+                 match t with
+                 | OpenT (r, id) ->
+                   let open Constraint in
+                   (match Context.find_graph cx id with
+                   | Resolved _
+                   | FullyResolved _ ->
+                     false
+                   | Unresolved _ -> is_instantiable_reason r)
+                 | _ -> false
+             )
+        else
+          false
+      in
       let node = get_builtin_type cx ~trace ~use_desc:true renders_r (OrdinaryName "React$Node") in
-      if not (speculative_subtyping_succeeds cx node u) then
+      if union_contains_instantiable_tvars || not (speculative_subtyping_succeeds cx node u) then
         SpeculationKit.try_union cx trace use_op l r rep
     | (_, UnionT (r, rep)) ->
       (* Try the branches of the union in turn, with the goal of selecting the
