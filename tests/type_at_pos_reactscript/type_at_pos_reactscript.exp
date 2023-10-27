@@ -22,6 +22,22 @@ component Qux
 = React$AbstractComponent<{+bar: string}, mixed, renders* number>
 component.js:7:11,7:13
 
+component.js:9:11
+Flags:
+component Poly<T>
+= React$AbstractComponent<{+foo: mixed}, mixed, renders React$Node>
+component.js:9:11,9:14
+
+component.js:11:11
+Flags:
+(unknown)
+component.js:11:6,11:23
+
+component.js:13:11
+Flags:
+(unknown)
+component.js:13:6,13:29
+
 render_types.js:1:6
 Flags:
 type X = renders null
