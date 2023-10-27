@@ -181,6 +181,7 @@ end = struct
   let rec normalize_exports t =
     let open Exports in
     let f = function
+      | DefaultType -> DefaultType
       | Default -> Default
       | Named str -> Named (intern t str)
       | NamedType str -> NamedType (intern t str)

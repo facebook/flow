@@ -6,6 +6,7 @@
  *)
 
 type kind =
+  | DefaultType
   | Default
   | Named
   | NamedType

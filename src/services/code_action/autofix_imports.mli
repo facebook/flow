@@ -11,6 +11,7 @@ type named_binding = {
 }
 
 type bindings =
+  | DefaultType of string
   | Default of string
   | Named of named_binding list
   | NamedType of named_binding list

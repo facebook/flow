@@ -6,6 +6,7 @@
  *)
 
 type kind =
+  | DefaultType
   | Default
   | Named
   | NamedType
@@ -183,11 +184,15 @@ let kind_is_value = function
   | Named
   | Namespace ->
     true
-  | NamedType -> false
+  | DefaultType
+  | NamedType ->
+    false
 
 let kind_is_type = function
   | Default
   | Named
   | Namespace ->
     false
-  | NamedType -> true
+  | DefaultType
+  | NamedType ->
+    true

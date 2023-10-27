@@ -13,6 +13,7 @@ type named_binding = {
 }
 
 type bindings =
+  | DefaultType of string
   | Default of string
   | Named of named_binding list
   | NamedType of named_binding list
@@ -89,7 +90,7 @@ let loc_with_comments stmt =
   Comment_attachment.statement_comment_bounds stmt
   |> Comment_attachment.expand_loc_with_comment_bounds (fst stmt)
 
-let mk_default_import ?loc ?comments ~from name =
+let mk_default_import ?loc ?comments ~import_kind ~from name =
   let open Ast_builder in
   let source = (Loc.none, string_literal from) in
   let default =
@@ -100,13 +101,7 @@ let mk_default_import ?loc ?comments ~from name =
       }
   in
   let specifiers = None in
-  Statements.import_declaration
-    ?loc
-    ?comments
-    Statement.ImportDeclaration.ImportValue
-    source
-    default
-    specifiers
+  Statements.import_declaration ?loc ?comments import_kind source default specifiers
 
 let mk_named_import ?loc ?comments ~import_kind ~from names =
   let open Ast_builder in
@@ -145,7 +140,10 @@ let mk_namespace_import ?loc ?comments ~from name =
 
 let mk_import ~bindings ~from =
   match bindings with
-  | Default id_name -> mk_default_import ~from id_name
+  | DefaultType id_name ->
+    mk_default_import ~import_kind:Statement.ImportDeclaration.ImportType ~from id_name
+  | Default id_name ->
+    mk_default_import ~import_kind:Statement.ImportDeclaration.ImportValue ~from id_name
   | Named id_names ->
     mk_named_import ~import_kind:Statement.ImportDeclaration.ImportValue ~from id_names
   | NamedType id_names ->
@@ -215,6 +213,7 @@ let update_import ~bindings stmt =
     let (_, { StringLiteral.value = from; _ }) = source in
     let edit =
       match (bindings, default, specifiers) with
+      | (DefaultType bound_name, Some { identifier = (_, { Identifier.name; _ }); _ }, _)
       | (Default bound_name, Some { identifier = (_, { Identifier.name; _ }); _ }, _)
       | ( Namespace bound_name,
           None,
@@ -233,6 +232,7 @@ let update_import ~bindings stmt =
               Below { skip_line = false }
           in
           (placement, mk_import ~bindings ~from)
+      | (DefaultType _, None, Some _)
       | (Default _, None, Some _) ->
         (* a `import {bar} from 'foo'` or `import * as Foo from 'foo'` already exists.
            rather than change it to `import Foo, {bar} from 'foo'`, we choose to insert
@@ -425,11 +425,11 @@ let section_matches_bindings bindings section =
   let open Section in
   (* TODO: confirm CJS/ESM interop, depends on flowconfig *)
   match (section, bindings) with
-  | (ImportType, NamedType _) -> true
+  | (ImportType, (DefaultType _ | NamedType _)) -> true
   | (ImportType, (Default _ | Named _ | Namespace _)) -> false
   | (Require, Default _) -> true
-  | (Require, (Named _ | NamedType _ | Namespace _)) -> false
-  | ((ImportValueFromRelative | ImportValueFromModule), NamedType _) -> false
+  | (Require, (DefaultType _ | Named _ | NamedType _ | Namespace _)) -> false
+  | ((ImportValueFromRelative | ImportValueFromModule), (DefaultType _ | NamedType _)) -> false
   | ((ImportValueFromRelative | ImportValueFromModule), (Default _ | Named _ | Namespace _)) -> true
 
 let existing_import ~bindings ~from imports =
