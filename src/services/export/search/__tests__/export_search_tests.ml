@@ -8,6 +8,8 @@
 open OUnit2
 open Export_search
 
+let default_type = Export_index.DefaultType
+
 let default = Export_index.Default
 
 let named = Export_index.Named

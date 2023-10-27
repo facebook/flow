@@ -51,6 +51,7 @@ let summarize_exports exports =
     (fun (_file, kind) num (has_value, has_type, max_count) ->
       let max_count = max num max_count in
       match kind with
+      | Export_index.DefaultType -> (has_value, true, max_count)
       | Export_index.Default -> (true, has_type, max_count)
       | Export_index.Named -> (true, has_type, max_count)
       | Export_index.NamedType -> (has_value, true, max_count)
@@ -119,9 +120,9 @@ let search_result_of_export ~query name source kind =
   let open Export_index in
   match (query, kind) with
   | (Value _, (Default | Named | Namespace))
-  | (Type _, NamedType) ->
+  | (Type _, (DefaultType | NamedType)) ->
     Some { name; source; kind }
-  | (Value _, NamedType)
+  | (Value _, (DefaultType | NamedType))
   | (Type _, (Default | Named | Namespace)) ->
     None
 

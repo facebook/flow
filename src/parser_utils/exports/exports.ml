@@ -6,7 +6,7 @@
  *)
 
 type export =
-  (* TODO: DefaultType, e.g. `export default class Foo {}` *)
+  | DefaultType (* e.g. `export default class Foo {}` *)
   | Default  (** e.g. `export default function() {}` *)
   | Named of string  (** `export const foo: string = "foo"` *)
   | NamedType of string  (** `export type T = string` *)
@@ -199,17 +199,33 @@ module Eval = struct
     | Nothing -> Nothing
 end
 
-(** [add_named_type acc name def] adds [NamedType name] to [acc] if [def] is a
-    class or enum, since its type is also exported because classes and enums are both
-    values and types. *)
-let add_named_type acc name = function
+(** [is_typeish def] determines if [def] is a class or enum, whose type is also exported because
+    classes and enums are both values and types. *)
+let is_typeish = function
   | Eval.ClassDecl
   | Eval.EnumDecl
   | Eval.ComponentDecl ->
-    NamedType name :: acc
+    true
   | Eval.Value _
   | Eval.Annot _
   | Eval.Nothing ->
+    false
+
+(** [add_named_type acc name def] adds [NamedType name] to [acc] if [def] is a
+    class or enum, since its type is also exported because classes and enums are both
+    values and types. *)
+let add_named_type acc name def =
+  if is_typeish def then
+    NamedType name :: acc
+  else
+    acc
+
+(** [add_default_type acc def] adds [DefaultType] to [acc] if [def] is a class or enum,
+    since its type is also exported because classes and enums are both values and types. *)
+let add_default_type acc def =
+  if is_typeish def then
+    DefaultType :: acc
+  else
     acc
 
 let empty_seen = Type_sig_collections.Local_defs.IndexSet.empty
@@ -228,8 +244,14 @@ module ESM = struct
         add_named_type acc name def
       in
       Named name :: acc
-    | ExportDefault _
-    | ExportDefaultBinding _ ->
+    | ExportDefault { def; _ } ->
+      let acc = Eval.packed type_sig empty_seen def |> add_default_type acc in
+      Default :: acc
+    | ExportDefaultBinding { index; _ } ->
+      let acc =
+        let def = Eval.def type_sig empty_seen (local_def_of_index type_sig index) in
+        add_default_type acc def
+      in
       Default :: acc
     | ExportFrom _ ->
       (* TODO: ExportFrom defines aliases, which we don't handle yet. TS

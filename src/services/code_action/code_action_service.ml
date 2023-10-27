@@ -360,6 +360,7 @@ let text_edits_of_import ~options ~reader ~src_dir ~ast kind name source =
   | Some from ->
     let title =
       match kind with
+      | Export_index.DefaultType -> Printf.sprintf "Import default type from %s" from
       | Export_index.Default -> Printf.sprintf "Import default from %s" from
       | Export_index.Named -> Printf.sprintf "Import from %s" from
       | Export_index.NamedType -> Printf.sprintf "Import type from %s" from
@@ -367,6 +368,7 @@ let text_edits_of_import ~options ~reader ~src_dir ~ast kind name source =
     in
     let bindings =
       match kind with
+      | Export_index.DefaultType -> Autofix_imports.DefaultType name
       | Export_index.Default -> Autofix_imports.Default name
       | Export_index.Named ->
         Autofix_imports.Named [{ Autofix_imports.remote_name = name; local_name = None }]
@@ -1286,6 +1288,12 @@ let autofix_imports ~options ~env ~reader ~cx ~ast ~uri =
           ExportKindMap.fold
             (fun export_kind names added_imports ->
               match export_kind with
+              | Export_index.DefaultType ->
+                Base.List.fold_left
+                  ~init:added_imports
+                  ~f:(fun added_imports name ->
+                    (from, Autofix_imports.DefaultType name) :: added_imports)
+                  names
               | Export_index.Default ->
                 Base.List.fold_left
                   ~init:added_imports

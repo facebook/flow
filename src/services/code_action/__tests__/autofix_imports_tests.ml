@@ -320,6 +320,35 @@ let add_import_tests =
       |} in
       assert_import ~ctxt expected binding from contents );
 
+    ( "import_default_type_no_existing" >:: fun ctxt ->
+      let binding = (Autofix_imports.DefaultType "foo") in
+      let from = "./foo" in
+      let contents = {|
+        foo
+      |} in
+      let expected = {|
+        import type foo from "./foo";
+
+        foo
+      |} in
+      assert_import ~ctxt expected binding from contents );
+
+    ( "import_default_type_duplicate" >:: fun ctxt ->
+      let binding = Autofix_imports.DefaultType "Foo" in
+      let from = "./foo" in
+      let contents = {|
+        import type Bar from "./foo";
+
+        foo
+      |} in
+      let expected = {|
+        import type Bar from "./foo";
+        import type Foo from "./foo";
+
+        foo
+      |} in
+      assert_import ~ctxt expected binding from contents );
+
     ( "import_type_no_existing" >:: fun ctxt ->
       let binding = Autofix_imports.NamedType [named_binding "IFoo"] in
       let from = "./foo" in
@@ -384,6 +413,22 @@ let add_import_tests =
         import type { IFoo } from "./foo";
 
         import foo from "./foo";
+
+        foo
+      |} in
+      assert_import ~ctxt expected binding from contents );
+
+    ( "import_type_above_existing_default_type" >:: fun ctxt ->
+      let binding = Autofix_imports.NamedType [named_binding "IFoo"] in
+      let from = "./foo" in
+      let contents = {|
+        import type Foo from "./foo";
+
+        foo
+      |} in
+      let expected = {|
+        import type Foo from "./foo";
+        import type { IFoo } from "./foo";
 
         foo
       |} in
@@ -622,12 +667,15 @@ let add_imports_tests =
       let added_imports = [
         ("./foo", Autofix_imports.Named [named_binding "foo"]);
         ("./foo", Autofix_imports.Default "Foo");
+        ("./foo", Autofix_imports.DefaultType "FooType");
         ("./foo", Autofix_imports.Namespace "FooNS");
       ] in
       let contents = {|
         foo
       |} in
       let expected = {|
+        import type FooType from "./foo";
+
         import Foo from "./foo";
         import * as FooNS from "./foo";
         import { foo } from "./foo";

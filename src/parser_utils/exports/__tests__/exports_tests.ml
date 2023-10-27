@@ -195,9 +195,8 @@ let%expect_test "es6_default_class" =
       bar(): void {}
     };
   |};
-  (* TODO: also DefaultType *)
   [%expect {|
-    [Default]
+    [Default; DefaultType]
   |}]
 
 let%expect_test "cjs_default_class_ref" =
@@ -274,9 +273,8 @@ let%expect_test "es6_default_enum" =
       BAR,
     };
   |};
-  (* TODO: also DefaultType *)
   [%expect {|
-    [Default]
+    [Default; DefaultType]
   |}]
 
 let%expect_test "cjs_default_enum" =

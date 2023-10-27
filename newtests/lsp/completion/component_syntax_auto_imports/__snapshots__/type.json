@@ -53,6 +53,57 @@
             }
           ]
         }
+      },
+      {
+        "label": "FooBarBaz2",
+        "kind": 6,
+        "detail": "Import default type from ./__fixtures__/FooBarBaz2",
+        "sortText": "00000000000000000001",
+        "insertTextFormat": 1,
+        "textEdit": {
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 9
+            },
+            "end": {
+              "line": 2,
+              "character": 18
+            }
+          },
+          "newText": "FooBarBaz2"
+        },
+        "additionalTextEdits": [
+          {
+            "range": {
+              "start": {
+                "line": 2,
+                "character": 0
+              },
+              "end": {
+                "line": 2,
+                "character": 0
+              }
+            },
+            "newText": "import type FooBarBaz2 from \"./__fixtures__/FooBarBaz2\";\n\n"
+          }
+        ],
+        "command": {
+          "title": "",
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "arguments": [
+            "textDocument/completion",
+            "autoimport",
+            {
+              "token": "FooBarBazAUTO332",
+              "index": 1,
+              "session_requests": 1,
+              "typed_length": 9,
+              "completion": "FooBarBaz2",
+              "ac_type": "Actype"
+            }
+          ]
+        }
       }
     ]
   }
