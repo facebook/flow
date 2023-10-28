@@ -1,0 +1,59 @@
+{
+  "method": "textDocument/completion",
+  "result": {
+    "isIncomplete": false,
+    "items": [
+      {
+        "label": "xyz",
+        "kind": 6,
+        "detail": "Import default from @example/xyz",
+        "sortText": "00000000000000000000",
+        "insertTextFormat": 1,
+        "textEdit": {
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 0
+            },
+            "end": {
+              "line": 2,
+              "character": 2
+            }
+          },
+          "newText": "xyz"
+        },
+        "additionalTextEdits": [
+          {
+            "range": {
+              "start": {
+                "line": 2,
+                "character": 0
+              },
+              "end": {
+                "line": 2,
+                "character": 0
+              }
+            },
+            "newText": "import xyz from \"@example/xyz\";\n\n"
+          }
+        ],
+        "command": {
+          "title": "",
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "arguments": [
+            "textDocument/completion",
+            "autoimport",
+            {
+              "token": "xyAUTO332",
+              "index": 0,
+              "session_requests": 1,
+              "typed_length": 2,
+              "completion": "xyz",
+              "ac_type": "Acid"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
