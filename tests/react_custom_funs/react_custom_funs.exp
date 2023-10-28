@@ -52,27 +52,6 @@ References:
 Error ------------------------------------------------------------------------------------------- clone_element.js:26:21
 
 Cannot cast `React.cloneElement(...)` to `Element` because property `bar` is missing in object type [1] but exists in
-object type [2] in type argument `ElementType` [3]. [prop-missing]
-
-   clone_element.js:26:21
-    26| (React.cloneElement(a): Element<Class<B>>); // Error: A ~> B
-                            ^
-
-References:
-   clone_element.js:6:33
-     6| class A extends React.Component<{foo: number}, void> {}
-                                        ^^^^^^^^^^^^^ [1]
-   clone_element.js:7:33
-     7| class B extends React.Component<{foo: number, bar: number}, void> {}
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:160:36
-   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                           ^^^^^^^^^^^ [3]
-
-
-Error ------------------------------------------------------------------------------------------- clone_element.js:26:21
-
-Cannot cast `React.cloneElement(...)` to `Element` because property `bar` is missing in object type [1] but exists in
 object type [2] in type argument `P` [3]. [prop-missing]
 
    clone_element.js:26:21
@@ -3601,7 +3580,7 @@ References:
 
 
 
-Found 216 errors
+Found 215 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
