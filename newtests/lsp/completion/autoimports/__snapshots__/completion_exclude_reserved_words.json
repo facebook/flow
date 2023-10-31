@@ -1,0 +1,69 @@
+{
+  "method": "textDocument/completion",
+  "result": {
+    "isIncomplete": false,
+    "items": [
+      {
+        "label": "not_null",
+        "kind": 6,
+        "detail": "Import from ./reserved",
+        "sortText": "00000000000000000000",
+        "insertTextFormat": 1,
+        "textEdit": {
+          "newText": "not_null",
+          "insert": {
+            "start": {
+              "line": 2,
+              "character": 0
+            },
+            "end": {
+              "line": 2,
+              "character": 3
+            }
+          },
+          "replace": {
+            "start": {
+              "line": 2,
+              "character": 0
+            },
+            "end": {
+              "line": 2,
+              "character": 4
+            }
+          }
+        },
+        "additionalTextEdits": [
+          {
+            "range": {
+              "start": {
+                "line": 2,
+                "character": 0
+              },
+              "end": {
+                "line": 2,
+                "character": 0
+              }
+            },
+            "newText": "import { not_null } from \"./reserved\";\n\n"
+          }
+        ],
+        "command": {
+          "title": "",
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "arguments": [
+            "textDocument/completion",
+            "autoimport",
+            {
+              "token": "nulAUTO332l",
+              "index": 0,
+              "session_requests": 1,
+              "typed_length": 3,
+              "completion": "not_null",
+              "ac_type": "Acid"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
