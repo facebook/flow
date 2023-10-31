@@ -92,6 +92,22 @@ end)
 
 type heap_refinement_map = Val.t HeapRefinementMap.t
 
+type env_val = {
+  val_ref: Val.t ref;
+  havoc: Val.t;
+  writes_by_closure_provider_val: Val.t option;
+  def_loc: ALoc.t option;
+  heap_refinements: heap_refinement_map ref;
+  kind: Bindings.kind;
+}
+
+type read_entry = {
+  def_loc: ALoc.t option;
+  binding_kind_opt: Bindings.kind option;
+  value: Val.t;
+  name: string option;
+}
+
 (* An environment is a map from variables to values. *)
 module Env = struct
   type entry = {
@@ -99,6 +115,15 @@ module Env = struct
     heap_refinements: heap_refinement_map;
     def_loc: ALoc.t option;
   }
+
+  let entry_of_env_val { val_ref; heap_refinements; def_loc; _ } =
+    { env_val = !val_ref; heap_refinements = !heap_refinements; def_loc }
+
+  let reset_val_with_entry
+      { env_val; heap_refinements; def_loc = _ }
+      { val_ref; heap_refinements = heap_refinements_ref; _ } =
+    val_ref := env_val;
+    heap_refinements_ref := heap_refinements
 
   type t = entry SMap.t
 end
@@ -170,8 +195,6 @@ module SuperCallInDerivedCtorChecker : sig
     (L.t, L.t) Ast.Class.t ->
     unit
 end = struct
-  open Ssa_builder
-
   class checker ~enable_enums ~add_output this_def_loc super_def_loc =
     object (this)
       inherit Ssa_builder.ssa_builder ~flowmin_compatibility:false ~enable_enums as super
@@ -184,11 +207,11 @@ end = struct
 
       method private init_internal_name name loc def_loc =
         let reason = mk_reason (RIdentifier (internal_name name)) def_loc in
-        let { val_ref; havoc } = smap_find name ssa_env in
+        let { Ssa_builder.val_ref; havoc } = smap_find name ssa_env in
         this#any_identifier loc name;
         super_call_loc_list <- loc :: super_call_loc_list;
-        val_ref := Val.one reason;
-        Havoc.(havoc.locs <- reason :: havoc.locs)
+        val_ref := Ssa_builder.Val.one reason;
+        Ssa_builder.Havoc.(havoc.locs <- reason :: havoc.locs)
 
       method add_errors =
         let values = this#values in
@@ -295,22 +318,6 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
   type abrupt_kind = AbruptCompletion.t
 
   exception AbruptCompletionExn = AbruptCompletion.Exn
-
-  type env_val = {
-    val_ref: Val.t ref;
-    havoc: Val.t;
-    writes_by_closure_provider_val: Val.t option;
-    def_loc: ALoc.t option;
-    heap_refinements: heap_refinement_map ref;
-    kind: Bindings.kind;
-  }
-
-  type read_entry = {
-    def_loc: ALoc.t option;
-    binding_kind_opt: Bindings.kind option;
-    value: Val.t;
-    name: string option;
-  }
 
   type refinement_id = int
 
@@ -913,11 +920,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
 
       method env_read_opt x = SMap.find_opt x env_state.env |> Base.Option.map ~f:Nel.hd
 
-      method env : Env.t =
-        SMap.map
-          (fun ({ val_ref; heap_refinements; def_loc; _ }, _) ->
-            { Env.env_val = !val_ref; heap_refinements = !heap_refinements; def_loc })
-          env_state.env
+      method env : Env.t = SMap.map (fun (env_val, _) -> Env.entry_of_env_val env_val) env_state.env
 
       (* We often want to merge the refinement scopes and writes of two environments with
        * different strategies, especially in logical refinement scopes. In order to do that, we
@@ -1021,13 +1024,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
       method reset_env (env0 : Env.t) : unit =
         let env0 = SMap.values env0 in
         let env = SMap.values env_state.env in
-        List.iter2
-          (fun ({ val_ref; heap_refinements; _ }, _)
-               { Env.env_val; heap_refinements = old_heap_refinements; def_loc = _ } ->
-            val_ref := env_val;
-            heap_refinements := old_heap_refinements)
-          env
-          env0
+        List.iter2 (fun (env_val, _) entry -> Env.reset_val_with_entry entry env_val) env env0
 
       method empty_env : Env.t =
         SMap.map
@@ -1108,9 +1105,10 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         match RefinementKey.of_expression expr with
         | None -> None
         | Some { RefinementKey.loc = _; lookup = { RefinementKey.base; projections } } ->
-          (match SMap.find_opt base this#env with
+          (match this#env_read_opt base with
           | None -> None
-          | Some { Env.env_val; heap_refinements; def_loc = _ } ->
+          | Some env_val ->
+            let { Env.env_val; heap_refinements; def_loc = _ } = Env.entry_of_env_val env_val in
             (match projections with
             | [] -> Some env_val
             | _ ->
