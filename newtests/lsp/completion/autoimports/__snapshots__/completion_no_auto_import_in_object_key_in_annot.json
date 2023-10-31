@@ -1,0 +1,7 @@
+{
+  "method": "textDocument/completion",
+  "result": {
+    "isIncomplete": false,
+    "items": []
+  }
+}

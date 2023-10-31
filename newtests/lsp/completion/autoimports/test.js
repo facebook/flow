@@ -212,5 +212,27 @@ module.exports = (suite(
         ],
       ),
     ]),
+
+    test('should not auto import values in object keys in type annotations', [
+      addFiles('functions.js'),
+      addCode(`type A = {\nfuncA\n}`),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/test.js'},
+        position: {line: 3, character: 5},
+        context: {triggerKind: 1},
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'completion_no_auto_import_in_object_key_in_annot.json',
+        ),
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+    ]),
   ],
 ): Suite);
