@@ -189,6 +189,22 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       if this#covers_target ac_loc then this#find ac_loc name (Ac_id (this#default_ac_id type_));
       ident
 
+    (* Override to avoid providing autocomplete for object key identifier in type annotations *)
+    method! object_property_type opt =
+      let open Flow_ast.Type.Object.Property in
+      match opt with
+      | ( _,
+          {
+            key =
+              Flow_ast.Expression.Object.Property.Identifier
+                ((key_loc, _), { Flow_ast.Identifier.name; _ });
+            _;
+          }
+        )
+        when this#covers_target key_loc ->
+        this#find key_loc name Ac_type_binding
+      | _ -> super#object_property_type opt
+
     method member_with_loc expr_loc expr =
       let open Flow_ast.Expression.Member in
       let { _object = ((obj_loc, obj_type), _); property; comments = _ } = expr in
