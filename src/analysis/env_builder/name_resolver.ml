@@ -66,99 +66,107 @@ module Val = Ssa_val
 open Scope_builder
 open Env_api.Refi
 
+type refinement_chain =
+  | BASE of refinement
+  | AND of int * int
+  | OR of int * int
+  | NOT of int
+
+type cond_context =
+  | SwitchTest
+  | OtherTest
+
+module RefinementKey = Refinement_key.Make (Loc_sig.ALocS)
+
+module HeapRefinementMap = WrappedMap.Make (struct
+  type t = RefinementKey.proj list
+
+  let compare = Stdlib.compare
+end)
+
+module LookupMap = WrappedMap.Make (struct
+  type t = RefinementKey.lookup
+
+  let compare = Stdlib.compare
+end)
+
+type heap_refinement_map = Val.t HeapRefinementMap.t
+
+(* An environment is a map from variables to values. *)
+module Env = struct
+  type entry = {
+    env_val: Val.t;
+    heap_refinements: heap_refinement_map;
+    def_loc: ALoc.t option;
+  }
+
+  type t = entry SMap.t
+end
+
+let smap_find x t =
+  match SMap.find_opt x t with
+  | Some r -> r
+  | None -> raise Env_api.(Env_invariant (None, Impossible (Utils_js.spf "%s missing in map" x)))
+
+let heap_map_find x t =
+  match HeapRefinementMap.find_opt x t with
+  | Some r -> r
+  | None -> raise Env_api.(Env_invariant (None, Impossible "heap entry missing in map"))
+
+let imap_find x t =
+  match IMap.find_opt x t with
+  | Some r -> r
+  | None -> raise Env_api.(Env_invariant (None, Impossible (Utils_js.spf "%d missing in map" x)))
+
+let rec list_iter3 f l1 l2 l3 =
+  match (l1, l2, l3) with
+  | ([], [], []) -> ()
+  | (x1 :: l1, x2 :: l2, x3 :: l3) ->
+    f x1 x2 x3;
+    list_iter3 f l1 l2 l3
+  | _ -> raise Env_api.(Env_invariant (None, Impossible "list_iter3 mismatch"))
+
+(* Abrupt completions induce control flows, so modeling them accurately is
+   necessary for soundness. *)
+module AbruptCompletion = struct
+  type label = string
+
+  type t =
+    | Break of label option
+    | Continue of label option
+    | Return
+    | Throw
+
+  let label_opt = Base.Option.map ~f:Flow_ast_utils.name_of_ident
+
+  let break x = Break (label_opt x)
+
+  let continue x = Continue (label_opt x)
+
+  let return = Return
+
+  let throw = Throw
+
+  (* match particular abrupt completions *)
+  let mem list : t -> bool = (fun t -> List.mem t list)
+
+  (* match all abrupt completions *)
+  let all : t -> bool = (fun _t -> true)
+
+  (* Model an abrupt completion as an OCaml exception. *)
+  exception Exn of t
+
+  (* An abrupt completion carries an environment, which is the current
+     environment at the point where the abrupt completion is "raised." This
+     environment is merged wherever the abrupt completion is "handled." *)
+  type env = t * Env.t
+end
+
 module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
   S with module Env_api = Env_api and type cx = Context.t = struct
   module Env_api = Env_api
 
   type cx = Context.t
-
-  type refinement_chain =
-    | BASE of refinement
-    | AND of int * int
-    | OR of int * int
-    | NOT of int
-
-  type cond_context =
-    | SwitchTest
-    | OtherTest
-
-  module RefinementKey = Refinement_key.Make (L)
-
-  module HeapRefinementMap = WrappedMap.Make (struct
-    type t = RefinementKey.proj list
-
-    let compare = Stdlib.compare
-  end)
-
-  module LookupMap = WrappedMap.Make (struct
-    type t = RefinementKey.lookup
-
-    let compare = Stdlib.compare
-  end)
-
-  type heap_refinement_map = Val.t HeapRefinementMap.t
-
-  (* An environment is a map from variables to values. *)
-  module Env = struct
-    type entry = {
-      env_val: Val.t;
-      heap_refinements: heap_refinement_map;
-      def_loc: ALoc.t option;
-    }
-
-    type t = entry SMap.t
-  end
-
-  let smap_find x t =
-    match SMap.find_opt x t with
-    | Some r -> r
-    | None -> raise Env_api.(Env_invariant (None, Impossible (Utils_js.spf "%s missing in map" x)))
-
-  let heap_map_find x t =
-    match HeapRefinementMap.find_opt x t with
-    | Some r -> r
-    | None -> raise Env_api.(Env_invariant (None, Impossible "heap entry missing in map"))
-
-  let imap_find x t =
-    match IMap.find_opt x t with
-    | Some r -> r
-    | None -> raise Env_api.(Env_invariant (None, Impossible (Utils_js.spf "%d missing in map" x)))
-
-  (* Abrupt completions induce control flows, so modeling them accurately is
-     necessary for soundness. *)
-  module AbruptCompletion = struct
-    type label = string
-
-    type t =
-      | Break of label option
-      | Continue of label option
-      | Return
-      | Throw
-
-    let label_opt = Base.Option.map ~f:Flow_ast_utils.name_of_ident
-
-    let break x = Break (label_opt x)
-
-    let continue x = Continue (label_opt x)
-
-    let return = Return
-
-    let throw = Throw
-
-    (* match particular abrupt completions *)
-    let mem list : t -> bool = (fun t -> List.mem t list)
-
-    (* match all abrupt completions *)
-    let all : t -> bool = (fun _t -> true)
-
-    (* Model an abrupt completion as an OCaml exception. *)
-    exception Exn of t
-
-    (* An abrupt completion carries an environment, which is the current
-       environment at the point where the abrupt completion is "raised." This
-       environment is merged wherever the abrupt completion is "handled." *)
-    type env = t * Env.t
-  end
 
   module SuperCallInDerivedCtorChecker : sig
     val check : cx -> L.t -> (L.t, L.t) Ast.Class.t -> unit
@@ -285,14 +293,6 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             | _ -> ()
             )
   end
-
-  let rec list_iter3 f l1 l2 l3 =
-    match (l1, l2, l3) with
-    | ([], [], []) -> ()
-    | (x1 :: l1, x2 :: l2, x3 :: l3) ->
-      f x1 x2 x3;
-      list_iter3 f l1 l2 l3
-    | _ -> raise Env_api.(Env_invariant (None, Impossible "list_iter3 mismatch"))
 
   type abrupt_kind = AbruptCompletion.t
 
