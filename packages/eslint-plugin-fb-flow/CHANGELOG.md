@@ -1,5 +1,9 @@
+# 0.0.5
+- Added support for `AsExpression`s in rule `no-flow-enums-object-mapping`
+- Updated README documentation
+
 # 0.0.4
-- Update README documentation
+- Updated README documentation
 
 # 0.0.3
 - Exported the rules added in 0.0.2 from `index.js`
