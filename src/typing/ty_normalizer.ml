@@ -115,18 +115,24 @@ module NormalizerMonad : sig
   val run_type :
     options:Env.options ->
     genv:Env.genv ->
+    toplevel_is_type_identifier_reference:bool ->
     imported_names:Ty.imported_ident ALocMap.t ->
     tparams_rev:Type.typeparam list ->
     State.t ->
     Type.t ->
     (Ty.elt, error) result * State.t
 
-  val run_imports : options:Env.options -> genv:Env.genv -> Ty.imported_ident ALocMap.t
+  val run_imports :
+    options:Env.options ->
+    genv:Env.genv ->
+    toplevel_is_type_identifier_reference:bool ->
+    Ty.imported_ident ALocMap.t
 
   val run_expand_members :
     force_instance:bool ->
     options:Env.options ->
     genv:Env.genv ->
+    toplevel_is_type_identifier_reference:bool ->
     imported_names:Ty.imported_ident Loc_collections.ALocMap.t ->
     tparams_rev:Type.typeparam list ->
     State.t ->
@@ -136,6 +142,7 @@ module NormalizerMonad : sig
   val run_expand_literal_union :
     options:Env.options ->
     genv:Env.genv ->
+    toplevel_is_type_identifier_reference:bool ->
     imported_names:Ty.imported_ident Loc_collections.ALocMap.t ->
     tparams_rev:Type.typeparam list ->
     State.t ->
@@ -1998,7 +2005,10 @@ end = struct
           | None -> return None
         in
         let%map name = Reason_utils.component_symbol env name reason in
-        Ty.Decl (Ty.NominalComponentDecl { name; tparams; is_type = false })
+        Ty.Decl
+          (Ty.NominalComponentDecl
+             { name; tparams; is_type = env.Env.toplevel_is_type_identifier_reference }
+          )
       in
       let enum_decl ~env reason =
         let%bind symbol = Reason_utils.local_type_alias_symbol env reason in
@@ -2141,11 +2151,14 @@ end = struct
       ~(simpl : merge_kinds:bool -> ?sort:bool -> 'a -> 'a)
       ~options
       ~genv
+      ~toplevel_is_type_identifier_reference
       ~imported_names
       ~tparams_rev
       state
       t : ('a, error) result * State.t =
-    let env = Env.init ~options ~genv ~tparams_rev ~imported_names in
+    let env =
+      Env.init ~options ~genv ~tparams_rev ~toplevel_is_type_identifier_reference ~imported_names
+    in
     let (result, state) = run state (f ~env t) in
     let result =
       match result with
@@ -2189,19 +2202,22 @@ end = struct
       | Type t -> def_loc_of_ty t
       | Decl d -> def_loc_of_decl d
     in
-    let convert ~options ~genv scheme =
+    let convert ~options ~genv ~toplevel_is_type_identifier_reference scheme =
       let { Type.TypeScheme.tparams_rev; type_ = t } = scheme in
       let imported_names = ALocMap.empty in
-      let env = Env.init ~options ~genv ~tparams_rev ~imported_names in
+      let env =
+        Env.init ~options ~genv ~tparams_rev ~toplevel_is_type_identifier_reference ~imported_names
+      in
       let%map ty = ElementConverter.convert_toplevel ~env t in
       def_loc_of_elt ty
     in
-    fun ~options ~genv imported_schemes : Ty.imported_ident ALocMap.t ->
+    fun ~options ~genv ~toplevel_is_type_identifier_reference imported_schemes :
+        Ty.imported_ident ALocMap.t ->
       let state = State.empty in
       let (_, result) =
         List.fold_left
           (fun (st, acc) (name, loc, import_mode, scheme) ->
-            match run st (convert ~options ~genv scheme) with
+            match run st (convert ~options ~genv ~toplevel_is_type_identifier_reference scheme) with
             | (Ok (Some def_loc), st) -> (st, ALocMap.add def_loc (loc, name, import_mode) acc)
             | (Ok None, st) ->
               (* unrecognizable remote type *)
@@ -2214,11 +2230,11 @@ end = struct
       in
       result
 
-  let run_imports ~options ~genv =
+  let run_imports ~options ~genv ~toplevel_is_type_identifier_reference =
     let { Env.file_sig; typed_ast; cx; _ } = genv in
     Ty_normalizer_imports.extract_imported_idents file_sig
     |> Ty_normalizer_imports.extract_schemes cx typed_ast
-    |> normalize_imports ~options ~genv
+    |> normalize_imports ~options ~genv ~toplevel_is_type_identifier_reference
 
   module type EXPAND_MEMBERS_CONVERTER = sig
     val force_instance : bool
@@ -2544,14 +2560,23 @@ let print_normalizer_banner env =
     in
     prerr_endlinef "%s" banner
 
-let from_schemes ~options ~genv schemes =
+let from_schemes ~options ~genv ?(toplevel_is_type_identifier_reference = false) schemes =
   print_normalizer_banner options;
-  let imported_names = run_imports ~options ~genv in
+  let imported_names = run_imports ~options ~genv ~toplevel_is_type_identifier_reference in
   let (_, result) =
     Base.List.fold_map
       ~f:(fun state (a, scheme) ->
         let { Type.TypeScheme.tparams_rev; type_ = t } = scheme in
-        match run_type ~options ~genv ~imported_names ~tparams_rev state t with
+        match
+          run_type
+            ~options
+            ~genv
+            ~toplevel_is_type_identifier_reference
+            ~imported_names
+            ~tparams_rev
+            state
+            t
+        with
         | (Ok t, state) -> (state, (a, Ok t))
         | (Error s, state) -> (state, (a, Error s)))
       ~init:State.empty
@@ -2559,13 +2584,22 @@ let from_schemes ~options ~genv schemes =
   in
   result
 
-let from_types ~options ~genv ts =
+let from_types ~options ~genv ?(toplevel_is_type_identifier_reference = false) ts =
   print_normalizer_banner options;
-  let imported_names = run_imports ~options ~genv in
+  let imported_names = run_imports ~options ~genv ~toplevel_is_type_identifier_reference in
   let (_, result) =
     Base.List.fold_map
       ~f:(fun state (a, t) ->
-        match run_type ~options ~genv ~imported_names ~tparams_rev:[] state t with
+        match
+          run_type
+            ~options
+            ~genv
+            ~toplevel_is_type_identifier_reference
+            ~imported_names
+            ~tparams_rev:[]
+            state
+            t
+        with
         | (Ok t, state) -> (state, (a, Ok t))
         | (Error s, state) -> (state, (a, Error s)))
       ~init:State.empty
@@ -2573,34 +2607,68 @@ let from_types ~options ~genv ts =
   in
   result
 
-let from_scheme ~options ~genv scheme =
+let from_scheme ~options ~genv ?(toplevel_is_type_identifier_reference = false) scheme =
   print_normalizer_banner options;
-  let imported_names = run_imports ~options ~genv in
-  let { Type.TypeScheme.tparams_rev; type_ = t } = scheme in
-  let (result, _) = run_type ~options ~genv ~imported_names ~tparams_rev State.empty t in
-  result
-
-let from_type ~options ~genv t =
-  print_normalizer_banner options;
-  let imported_names = run_imports ~options ~genv in
-  let (result, _) = run_type ~options ~genv ~imported_names ~tparams_rev:[] State.empty t in
-  result
-
-let expand_members ~force_instance ~options ~genv scheme =
-  print_normalizer_banner options;
-  let imported_names = run_imports ~options ~genv in
+  let imported_names = run_imports ~options ~genv ~toplevel_is_type_identifier_reference in
   let { Type.TypeScheme.tparams_rev; type_ = t } = scheme in
   let (result, _) =
-    run_expand_members ~options ~genv ~force_instance ~imported_names ~tparams_rev State.empty t
+    run_type
+      ~options
+      ~genv
+      ~toplevel_is_type_identifier_reference
+      ~imported_names
+      ~tparams_rev
+      State.empty
+      t
   in
   result
 
-let expand_literal_union ~options ~genv scheme =
+let from_type ~options ~genv ?(toplevel_is_type_identifier_reference = false) t =
   print_normalizer_banner options;
-  let imported_names = run_imports ~options ~genv in
+  let imported_names = run_imports ~options ~genv ~toplevel_is_type_identifier_reference in
+  let (result, _) =
+    run_type
+      ~options
+      ~genv
+      ~toplevel_is_type_identifier_reference
+      ~imported_names
+      ~tparams_rev:[]
+      State.empty
+      t
+  in
+  result
+
+let expand_members
+    ~force_instance ~options ~genv ?(toplevel_is_type_identifier_reference = false) scheme =
+  print_normalizer_banner options;
+  let imported_names = run_imports ~options ~genv ~toplevel_is_type_identifier_reference in
   let { Type.TypeScheme.tparams_rev; type_ = t } = scheme in
   let (result, _) =
-    run_expand_literal_union ~options ~genv ~imported_names ~tparams_rev State.empty t
+    run_expand_members
+      ~options
+      ~genv
+      ~toplevel_is_type_identifier_reference
+      ~force_instance
+      ~imported_names
+      ~tparams_rev
+      State.empty
+      t
+  in
+  result
+
+let expand_literal_union ~options ~genv ?(toplevel_is_type_identifier_reference = false) scheme =
+  print_normalizer_banner options;
+  let imported_names = run_imports ~options ~genv ~toplevel_is_type_identifier_reference in
+  let { Type.TypeScheme.tparams_rev; type_ = t } = scheme in
+  let (result, _) =
+    run_expand_literal_union
+      ~options
+      ~genv
+      ~toplevel_is_type_identifier_reference
+      ~imported_names
+      ~tparams_rev
+      State.empty
+      t
   in
   result
 

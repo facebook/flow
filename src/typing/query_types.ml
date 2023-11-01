@@ -27,7 +27,7 @@ let type_at_pos_type
     Ty.type_at_pos_result result =
   match find_type_at_pos_annotation cx typed_ast loc with
   | None -> FailureNoMatch
-  | Some (loc, is_type_identifier, scheme) ->
+  | Some (loc, toplevel_is_type_identifier_reference, scheme) ->
     let genv = Ty_normalizer_env.mk_genv ~cx ~file ~file_sig ~typed_ast in
     let from_scheme evaluate_type_destructors =
       Ty_normalizer.from_scheme
@@ -44,13 +44,8 @@ let type_at_pos_type
             max_depth = Some max_depth;
           }
         ~genv
+        ~toplevel_is_type_identifier_reference
         scheme
-      |> Base.Result.map ~f:(fun elt ->
-             if is_type_identifier then
-               Ty_utils.reinterpret_elt_as_type_identifier elt
-             else
-               elt
-         )
     in
     let unevaluated = from_scheme Ty_normalizer_env.EvaluateNone in
     let evaluated =
