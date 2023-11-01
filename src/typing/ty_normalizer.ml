@@ -1989,7 +1989,7 @@ end = struct
           let%map symbol = Reason_utils.instance_symbol env r in
           Ty.Decl (Ty.ClassDecl (symbol, ps))
       in
-      let component_decl ~env tparams name reason orig_t =
+      let component_decl ~env tparams name reason =
         let%bind tparams =
           match tparams with
           | Some tparams ->
@@ -1997,9 +1997,8 @@ end = struct
             ps
           | None -> return None
         in
-        let%bind s = Reason_utils.component_symbol env name reason in
-        let%map t = TypeConverter.convert_t ~env orig_t in
-        Ty.Decl (Ty.NominalComponentDecl (s, tparams, t))
+        let%map name = Reason_utils.component_symbol env name reason in
+        Ty.Decl (Ty.NominalComponentDecl { name; tparams; is_type = false })
       in
       let enum_decl ~env reason =
         let%bind symbol = Reason_utils.local_type_alias_symbol env reason in
@@ -2027,7 +2026,7 @@ end = struct
           ->
           toplevel ~env type_
         | DefT (reason, _, ReactAbstractComponentT { component_kind = Nominal (_, name); _ }) ->
-          component_decl ~env (Some tparams) name reason orig_t
+          component_decl ~env (Some tparams) name reason
         (* Type Aliases *)
         | DefT (r, _, TypeT (kind, t)) ->
           let%bind (env, ps) = TypeConverter.convert_type_params_t ~env tparams in
@@ -2058,7 +2057,7 @@ end = struct
         | DefT (_, _, TypeT (ImportEnumKind, DefT (reason, _, EnumT _))) ->
           enum_decl ~env reason
         | DefT (reason, _, ReactAbstractComponentT { component_kind = Nominal (_, name); _ }) ->
-          component_decl ~env None name reason orig_t
+          component_decl ~env None name reason
         (* Monomorphic Type Aliases *)
         | DefT (r, _, TypeT (kind, t)) ->
           let r =

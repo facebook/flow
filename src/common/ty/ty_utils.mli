@@ -22,3 +22,5 @@ val elt_equal : Ty.elt -> Ty.elt -> bool
     it to an equivalent type. For example it will convert `class C` to `typeof C`,
     `enum E` to `typeof E`. *)
 val typify_elt : Ty.elt -> Ty.t option
+
+val reinterpret_elt_as_type_identifier : Ty.elt -> Ty.elt
