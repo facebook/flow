@@ -1106,7 +1106,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------- dro.js:2:5
 
 Cannot assign `42` to `a.x.y` because property `y` is not writable. React component properties [1] and their nested
-props and elements cannot be written to. [cannot-write]
+props and elements cannot be written to. [react-rule-unsafe-mutation]
 
    dro.js:2:5
    2| a.x.y = 42; // error
@@ -1121,7 +1121,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------- dro.js:3:3
 
 Cannot assign `42` to `a.x` because property `x` is not writable. React component properties [1] and their nested props
-and elements cannot be written to. [cannot-write]
+and elements cannot be written to. [react-rule-unsafe-mutation]
 
    dro.js:3:3
    3| a.x = 42; // error
@@ -1153,7 +1153,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ dro.js:11:3
 
 Cannot assign `0` to `w.v` because property `v` is not writable. React component properties [1] and their nested props
-and elements cannot be written to. [cannot-write]
+and elements cannot be written to. [react-rule-unsafe-mutation]
 
    dro.js:11:3
    11| w.v = 0; // error
@@ -1168,7 +1168,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ dro.js:12:5
 
 Cannot assign `42` to `x.x.a` because property `a` is not writable. React component properties [1] and their nested
-props and elements cannot be written to. [cannot-write]
+props and elements cannot be written to. [react-rule-unsafe-mutation]
 
    dro.js:12:5
    12| x.x.a = 42; // error
@@ -1183,7 +1183,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ dro.js:13:5
 
 Cannot assign array literal to `x.x.y` because property `y` is not writable. React component properties [1] and their
-nested props and elements cannot be written to. [cannot-write]
+nested props and elements cannot be written to. [react-rule-unsafe-mutation]
 
    dro.js:13:5
    13| x.x.y = []; // error
@@ -1198,7 +1198,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ dro.js:14:3
 
 Cannot assign `42` to `x.x` because property `x` is not writable. React component properties [1] and their nested props
-and elements cannot be written to. [cannot-write]
+and elements cannot be written to. [react-rule-unsafe-mutation]
 
    dro.js:14:3
    14| x.x = (42: any);
@@ -1213,7 +1213,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ dro.js:22:6
 
 Cannot assign `42` to `w2.a.b` because property `b` is not writable. React component properties [1] and their nested
-props and elements cannot be written to. [cannot-write]
+props and elements cannot be written to. [react-rule-unsafe-mutation]
 
    dro.js:22:6
    22| w2.a.b = 42; // error
@@ -1228,7 +1228,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ dro.js:27:7
 
 Cannot assign `42` to `v2[1].a` because property `a` is not writable. React component properties [1] and their nested
-props and elements cannot be written to. [cannot-write]
+props and elements cannot be written to. [react-rule-unsafe-mutation]
 
    dro.js:27:7
    27| v2[1].a = 42; //error
@@ -1243,7 +1243,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ dro.js:32:7
 
 Cannot assign `42` to `x.y` because property `y` is not writable. React component properties [1] and their nested props
-and elements cannot be written to. [cannot-write]
+and elements cannot be written to. [react-rule-unsafe-mutation]
 
    dro.js:32:7
    32|     x.y = 42 // error;
@@ -1258,7 +1258,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- dro.js:36:10
 
 Cannot assign `42` to `rest.bar` because property `bar` is not writable. React component properties [1] and their nested
-props and elements cannot be written to. [cannot-write]
+props and elements cannot be written to. [react-rule-unsafe-mutation]
 
    dro.js:36:10
    36|     rest.bar = 42; // error;
@@ -1273,7 +1273,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ dro.js:38:5
 
 Cannot assign `42` to `rest.qux[0]` because read-only arrays cannot be written to. React component properties [1] and
-their nested props and elements cannot be written to. [cannot-write]
+their nested props and elements cannot be written to. [react-rule-unsafe-mutation]
 
    dro.js:38:5
    38|     rest.qux[0] = 42; // error

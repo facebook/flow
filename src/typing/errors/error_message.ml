@@ -5132,6 +5132,13 @@ let defered_in_speculation = function
 
 open Error_codes
 
+let react_rule_of_use_op use_op ~default =
+  let code_of_frame acc = function
+    | ReactPropsDeepReadOnly _ -> Some ReactRuleMutation
+    | _ -> acc
+  in
+  Base.Option.first_some (fold_use_op (fun _ -> None) code_of_frame use_op) (Some default)
+
 let error_code_of_use_op use_op ~default =
   let code_of_root = function
     | Cast _ -> Some IncompatibleCast
@@ -5336,12 +5343,12 @@ let error_code_of_message err : error_code option =
   | EPropertyTypeAnnot _ -> Some InvalidPropertyTypeArg
   | EPropNotFound _ -> Some Error_codes.PropMissing
   | EPropNotReadable _ -> Some CannotRead
-  | EPropNotWritable _ -> Some CannotWrite
+  | EPropNotWritable { use_op; _ } -> react_rule_of_use_op use_op ~default:CannotWrite
   | EPropPolarityMismatch _ -> Some IncompatibleVariance
   | EReactElementFunArity (_, _, _) -> Some MissingArg
   (* We don't want these to be suppressible *)
   | ERecursionLimit (_, _) -> None
-  | EROArrayWrite _ -> Some CannotWrite
+  | EROArrayWrite (_, use_op) -> react_rule_of_use_op use_op ~default:CannotWrite
   | ESignatureVerification _ -> Some SignatureVerificationFailure
   | ESpeculationAmbiguous _ -> Some SpeculationAmbiguous
   | EThisInExportedFunction _ -> Some ThisInExportedFunction

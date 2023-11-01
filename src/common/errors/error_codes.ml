@@ -7,6 +7,7 @@
 
 type error_code =
   | AmbiguousObjectType
+  | ReactRuleMutation
   | CannotDelete
   | CannotImplement
   | CannotInferType
@@ -207,6 +208,7 @@ let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.UnusedPromise -> UnusedPromise
 
 let string_of_code : error_code -> string = function
+  | ReactRuleMutation -> "react-rule-unsafe-mutation"
   | AmbiguousObjectType -> "ambiguous-object-type"
   | CannotDelete -> "cannot-delete"
   | CannotImplement -> "cannot-implement"
