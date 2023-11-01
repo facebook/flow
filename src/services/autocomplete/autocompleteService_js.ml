@@ -1286,7 +1286,7 @@ let autocomplete_unqualified_type
                  ~exact_by_default
                  ~log_info:"unqualified type: react element shorthand"
                  (name, edit_locs)
-                 elt
+                 (Ty_utils.reinterpret_elt_as_type_identifier elt)
              in
              (result :: items_rev, errors_to_log)
            | Ok elt

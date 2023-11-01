@@ -599,11 +599,11 @@ Flags: --pretty
 
 components.js:8:29
 Flags: --pretty
-{"result":[{"name":"MyComponent","type":"component MyComponent"}]}
+{"result":[{"name":"MyComponent","type":"element of component MyComponent"}]}
 
 components.js:13:28
 Flags: --pretty
-{"result":[{"name":"MyComponent","type":"component MyComponent"}]}
+{"result":[{"name":"MyComponent","type":"element of component MyComponent"}]}
 
 customfun.js:5:3
 Flags: --pretty

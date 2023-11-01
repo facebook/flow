@@ -1,45 +1,50 @@
 component.js:1:11
 Flags:
 component Foo
-= component Foo
 component.js:1:11,1:13
 
 component.js:3:11
 Flags:
 component Bar
-= component Bar
 component.js:3:11,3:13
 
 component.js:5:11
 Flags:
 component Baz
-= component Baz
 component.js:5:11,5:13
 
 component.js:7:11
 Flags:
 component Qux
-= component Qux
 component.js:7:11,7:13
 
 component.js:9:11
 Flags:
 component Poly<T>
-= component Poly<T>
 component.js:9:11,9:14
 
 component.js:11:11
 Flags:
-type PolyElementTypeApp = Poly<string>
-component.js:11:6,11:23
+type PolyElementTypeApp1 = Poly<string>
+component.js:11:6,11:24
 
-component.js:13:11
+component.js:13:29
+Flags:
+element of component Poly<T>
+component.js:13:28,13:31
+
+component.js:15:11
 Flags:
 type ConcretizedPolyComponent = Poly<string> extends React$Element<infer C>
   ? C
   : empty
 = React$AbstractComponent<{+foo: string}, mixed, renders React$Node>
-component.js:13:6,13:29
+component.js:15:6,15:29
+
+component.js:17:20
+Flags:
+element of component Foo
+component.js:17:19,17:21
 
 render_types.js:1:6
 Flags:

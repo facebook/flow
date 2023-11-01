@@ -312,7 +312,11 @@ and decl =
   | ClassDecl of symbol * type_param list option
   | InterfaceDecl of symbol * type_param list option
   | EnumDecl of symbol
-  | NominalComponentDecl of symbol * type_param list option * t
+  | NominalComponentDecl of {
+      name: symbol;
+      tparams: type_param list option;
+      is_type: bool;
+    }
   | ModuleDecl of {
       name: symbol option;
       exports: decl list;

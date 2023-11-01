@@ -259,6 +259,11 @@ let typify_elt = function
   | Ty.Type ty -> Some ty
   | Ty.Decl (Ty.ClassDecl (s, _))
   | Ty.Decl (Ty.EnumDecl s)
-  | Ty.Decl (Ty.NominalComponentDecl (s, _, _)) ->
+  | Ty.Decl (Ty.NominalComponentDecl { name = s; _ }) ->
     Some (Ty.TypeOf (Ty.TSymbol s, None))
   | Ty.Decl _ -> None
+
+let reinterpret_elt_as_type_identifier = function
+  | Ty.Decl (Ty.NominalComponentDecl d) ->
+    Ty.Decl (Ty.NominalComponentDecl { d with is_type = true })
+  | elt -> elt

@@ -52,7 +52,7 @@ val find_type_at_pos_annotation :
   Context.t ->
   (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   Loc.t ->
-  (Loc.t * Type.TypeScheme.t) option
+  (Loc.t * bool * Type.TypeScheme.t) option
 
 val typed_ast_to_map :
   (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.Program.t ->
