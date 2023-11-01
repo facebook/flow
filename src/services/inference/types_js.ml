@@ -409,9 +409,7 @@ let merge
     ~to_merge
     ~components
     ~recheck_set
-    ~sig_dependency_graph
-    ~deleted
-    ~unparsed_set =
+    ~sig_dependency_graph =
   (* to_merge is the union of inferred (newly inferred files) and the
      transitive closure of all dependents.
 
@@ -425,11 +423,7 @@ let merge
   let%lwt components = calc_deps ~options ~profiling ~components files_to_merge in
   Hh_logger.info "Merging";
   let%lwt ((suppressions, skipped_count, sig_new_or_changed), time_to_merge) =
-    let mutator =
-      Parsing_heaps.Merge_context_mutator.create
-        transaction
-        (FilenameSet.union files_to_merge deleted |> FilenameSet.union unparsed_set)
-    in
+    let mutator = Parsing_heaps.Merge_context_mutator.create transaction files_to_merge in
     let merge_start_time = Unix.gettimeofday () in
     let%lwt result =
       run_merge_service
@@ -1300,8 +1294,7 @@ end = struct
         new_or_changed,
         unchanged_checked,
         unchanged_files_to_force,
-        unchanged_files_to_upgrade,
-        unparsed_set
+        unchanged_files_to_upgrade
       )
     in
     Lwt.return (env, intermediate_values)
@@ -1513,8 +1506,7 @@ end = struct
           new_or_changed,
           unchanged_checked,
           unchanged_files_to_force,
-          unchanged_files_to_upgrade,
-          unparsed_set
+          unchanged_files_to_upgrade
         ) =
       intermediate_values
     in
@@ -1584,8 +1576,6 @@ end = struct
         ~components
         ~recheck_set
         ~sig_dependency_graph
-        ~deleted
-        ~unparsed_set
     in
 
     let%lwt ( errors,
@@ -1722,7 +1712,7 @@ end = struct
         ~files_to_force
         ~env
     in
-    let (_, _, errors, incr_collated_errors, _, _, _, _, _, _) = intermediate_values in
+    let (_, _, errors, incr_collated_errors, _, _, _, _, _) = intermediate_values in
     Lwt.return { env with ServerEnv.errors; incr_collated_errors }
 end
 
@@ -2584,8 +2574,6 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
           ~components
           ~recheck_set
           ~sig_dependency_graph
-          ~deleted:FilenameSet.empty
-          ~unparsed_set:FilenameSet.empty
       in
 
       let checked_files = to_merge_or_check in
