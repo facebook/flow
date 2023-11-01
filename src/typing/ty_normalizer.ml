@@ -2587,20 +2587,6 @@ let from_type ~options ~genv t =
   let (result, _) = run_type ~options ~genv ~imported_names ~tparams_rev:[] State.empty t in
   result
 
-let fold_hashtbl ~options ~genv ~f ~g ~htbl init =
-  print_normalizer_banner options;
-  let imported_names = run_imports ~options ~genv in
-  let (result, _) =
-    Hashtbl.fold
-      (fun loc x (acc, state) ->
-        let { Type.TypeScheme.tparams_rev; type_ = t } = g x in
-        let (result, state) = run_type ~options ~genv ~imported_names ~tparams_rev state t in
-        (f acc (loc, result), state))
-      htbl
-      (init, State.empty)
-  in
-  result
-
 let expand_members ~force_instance ~options ~genv scheme =
   print_normalizer_banner options;
   let imported_names = run_imports ~options ~genv in
