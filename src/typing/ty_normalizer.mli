@@ -40,8 +40,6 @@ module Lookahead : sig
   val peek : Context.t -> Type.t -> t
 end
 
-val from_type : options:options -> genv:genv -> Type.t -> (Ty.elt, error) result
-
 val from_scheme : options:options -> genv:genv -> Type.TypeScheme.t -> (Ty.elt, error) result
 
 (* The following differ from mapping `from_type` on each input as it folds over
@@ -55,15 +53,6 @@ val from_schemes :
   genv:genv ->
   ('a * Type.TypeScheme.t) list ->
   ('a * (Ty.elt, error) result) list
-
-val fold_hashtbl :
-  options:options ->
-  genv:genv ->
-  f:('a -> 'loc * (Ty.elt, error) result -> 'a) ->
-  g:('b -> Type.TypeScheme.t) ->
-  htbl:('loc, 'b) Hashtbl.t ->
-  'a ->
-  'a
 
 val expand_members :
   force_instance:bool -> options:options -> genv:genv -> Type.TypeScheme.t -> (Ty.t, error) result
