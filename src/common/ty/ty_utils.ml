@@ -258,6 +258,7 @@ let elt_equal elt1 elt2 = (new Ty.comparator_ty)#compare_elt () elt1 elt2 = 0
 let typify_elt = function
   | Ty.Type ty -> Some ty
   | Ty.Decl (Ty.ClassDecl (s, _))
-  | Ty.Decl (Ty.EnumDecl s) ->
+  | Ty.Decl (Ty.EnumDecl s)
+  | Ty.Decl (Ty.NominalComponentDecl (s, _, _)) ->
     Some (Ty.TypeOf (Ty.TSymbol s, None))
   | Ty.Decl _ -> None

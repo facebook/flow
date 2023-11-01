@@ -1,31 +1,31 @@
 component.js:1:11
 Flags:
 component Foo
-= React$AbstractComponent<{+foo: number}, mixed, renders React$Node>
+= component Foo
 component.js:1:11,1:13
 
 component.js:3:11
 Flags:
 component Bar
-= React$AbstractComponent<{+bar: string}, mixed, renders number>
+= component Bar
 component.js:3:11,3:13
 
 component.js:5:11
 Flags:
 component Baz
-= React$AbstractComponent<{+foo: number}, mixed, renders? number>
+= component Baz
 component.js:5:11,5:13
 
 component.js:7:11
 Flags:
 component Qux
-= React$AbstractComponent<{+bar: string}, mixed, renders* number>
+= component Qux
 component.js:7:11,7:13
 
 component.js:9:11
 Flags:
 component Poly<T>
-= React$AbstractComponent<{+foo: mixed}, mixed, renders React$Node>
+= component Poly<T>
 component.js:9:11,9:14
 
 component.js:11:11

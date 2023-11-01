@@ -263,14 +263,8 @@ Flags: --pretty
 {
   "result":[
     {"name":"Complementarity","type":"class Complementarity"},
-    {
-      "name":"ComponentSyntaxBar",
-      "type":"React$AbstractComponent<{||}, mixed, renders ComponentSyntaxFoo>"
-    },
-    {
-      "name":"ComponentSyntaxFoo",
-      "type":"React$AbstractComponent<{||}, mixed, renders React$Node>"
-    },
+    {"name":"ComponentSyntaxBar","type":"component ComponentSyntaxBar"},
+    {"name":"ComponentSyntaxFoo","type":"component ComponentSyntaxFoo"},
     {"name":"Compressibility","type":"(props: empty) => void"},
     {"name":"Computerization","type":"(props: empty) => void"},
     {"name":"canvas","type":"JSX Intrinsic"},
@@ -598,6 +592,18 @@ Flags: --pretty
 jsx-text.js:1:11
 Flags: --pretty
 {"result":[]}
+
+components.js:5:21
+Flags: --pretty
+{"result":[]}
+
+components.js:8:29
+Flags: --pretty
+{"result":[{"name":"MyComponent","type":"component MyComponent"}]}
+
+components.js:13:28
+Flags: --pretty
+{"result":[{"name":"MyComponent","type":"component MyComponent"}]}
 
 customfun.js:5:3
 Flags: --pretty

@@ -35,6 +35,7 @@ queries_in_file autocomplete "jsx-function-component-3.js" --pretty
 queries_in_file autocomplete "jsx-abstract-component.js" --pretty
 queries_in_file autocomplete "jsx-with-children.js" --pretty
 queries_in_file autocomplete "jsx-text.js" --pretty
+queries_in_file autocomplete "components.js" --pretty
 queries_in_file autocomplete "customfun.js" --pretty
 queries_in_file autocomplete "issue-1368.js" --pretty
 queries_in_file autocomplete "if.js" --pretty
