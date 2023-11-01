@@ -163,7 +163,7 @@ let merge_targets ~env ~options ~profiling ~get_dependent_files roots =
   let%lwt (sig_dependent_files, all_dependent_files) =
     get_dependent_files sig_dependency_graph implementation_dependency_graph roots
   in
-  let%lwt (to_merge, to_check, _to_merge_or_check, _components, _recheck_set) =
+  let%lwt (to_merge, to_check, _to_merge_or_check, components, _recheck_set) =
     Types_js.include_dependencies_and_dependents
       ~options
       ~profiling
@@ -175,7 +175,6 @@ let merge_targets ~env ~options ~profiling ~get_dependent_files roots =
       ~all_dependent_files
   in
   let roots = CheckedSet.all to_merge in
-  let components = Sort_js.topsort ~roots (Utils_js.FilenameGraph.to_map sig_dependency_graph) in
   let%lwt components = Types_js.calc_deps ~options ~profiling ~components roots in
   Lwt.return (sig_dependency_graph, components, roots, to_check)
 
