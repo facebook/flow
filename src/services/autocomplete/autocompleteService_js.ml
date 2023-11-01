@@ -93,12 +93,12 @@ let detail_of_ty_decl ~exact_by_default d =
     | Ty.ClassDecl _ -> None
     | Ty.EnumDecl _ -> None
     | Ty.InterfaceDecl _ -> None
+    | Ty.NominalComponentDecl _ -> None
     | Ty.ModuleDecl _ -> None
     | Ty.TypeAliasDecl _ ->
       (* TODO: the "signature" of a type alias arguably includes type params,
          and could include the RHS too like we do for variables. *)
       None
-    | Ty.NominalComponentDecl (_, _, ty)
     | Ty.VariableDecl (_, ty) ->
       let (_, detail) = detail_of_ty ~exact_by_default ty in
       detail
@@ -1198,6 +1198,7 @@ let autocomplete_unqualified_type
     ~imports
     ~imports_ranked_usage
     ~show_ranking_info
+    ~allow_react_element_shorthand_completion
     ~tparams_rev
     ~file_sig
     ~ac_loc
@@ -1255,6 +1256,7 @@ let autocomplete_unqualified_type
   (* The value-level identifiers we suggest in type autocompletion:
       - classes
       - enums
+      - react.element shorthand
       - modules (followed by a dot) *)
   let (items_rev, errors_to_log) =
     value_identifiers
@@ -1271,6 +1273,18 @@ let autocomplete_unqualified_type
                  ?tags
                  ~exact_by_default
                  ~log_info:"unqualified type: class or enum"
+                 (name, edit_locs)
+                 elt
+             in
+             (result :: items_rev, errors_to_log)
+           | Ok (Ty.Decl (Ty.NominalComponentDecl _) as elt)
+             when allow_react_element_shorthand_completion ->
+             let result =
+               autocomplete_create_result_elt
+                 ?documentation
+                 ?tags
+                 ~exact_by_default
+                 ~log_info:"unqualified type: react element shorthand"
                  (name, edit_locs)
                  elt
              in
@@ -1551,6 +1565,7 @@ let autocomplete_member
             ~imports
             ~imports_ranked_usage
             ~show_ranking_info
+            ~allow_react_element_shorthand_completion:false
             ~tparams_rev
             ~ac_loc:ac_aloc
             ~ast
@@ -2178,7 +2193,7 @@ let string_of_autocomplete_type ac_type =
   | Ac_comment _ -> "Ac_comment"
   | Ac_enum -> "Acenum"
   | Ac_module -> "Acmodule"
-  | Ac_type -> "Actype"
+  | Ac_type _ -> "Actype"
   | Ac_jsx_text -> "Empty"
   | Ac_id _ -> "Acid"
   | Ac_class_key _ -> "Ac_class_key"
@@ -2432,7 +2447,7 @@ let autocomplete_get_results
           typed_ast
           component_t
           (ac_loc, attribute_name)
-      | Ac_type ->
+      | Ac_type { allow_react_element_shorthand } ->
         AcResult
           (autocomplete_unqualified_type
              ~env
@@ -2442,6 +2457,7 @@ let autocomplete_get_results
              ~imports
              ~imports_ranked_usage
              ~show_ranking_info
+             ~allow_react_element_shorthand_completion:allow_react_element_shorthand
              ~tparams_rev
              ~ac_loc
              ~ast

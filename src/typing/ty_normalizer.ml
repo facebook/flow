@@ -1989,7 +1989,6 @@ end = struct
           let%map symbol = Reason_utils.instance_symbol env r in
           Ty.Decl (Ty.ClassDecl (symbol, ps))
       in
-      let show_component_decl ~env = Env.evaluate_type_destructors env = Env.EvaluateNone in
       let component_decl ~env tparams name reason orig_t =
         let%bind tparams =
           match tparams with
@@ -2027,8 +2026,7 @@ end = struct
         | DefT (_, _, ClassT (TypeAppT { reason = _; use_op = _; type_; targs = _; use_desc = _ }))
           ->
           toplevel ~env type_
-        | DefT (reason, _, ReactAbstractComponentT { component_kind = Nominal (_, name); _ })
-          when show_component_decl ~env ->
+        | DefT (reason, _, ReactAbstractComponentT { component_kind = Nominal (_, name); _ }) ->
           component_decl ~env (Some tparams) name reason orig_t
         (* Type Aliases *)
         | DefT (r, _, TypeT (kind, t)) ->
@@ -2059,8 +2057,7 @@ end = struct
         | DefT (reason, _, EnumObjectT _)
         | DefT (_, _, TypeT (ImportEnumKind, DefT (reason, _, EnumT _))) ->
           enum_decl ~env reason
-        | DefT (reason, _, ReactAbstractComponentT { component_kind = Nominal (_, name); _ })
-          when show_component_decl ~env ->
+        | DefT (reason, _, ReactAbstractComponentT { component_kind = Nominal (_, name); _ }) ->
           component_decl ~env None name reason orig_t
         (* Monomorphic Type Aliases *)
         | DefT (r, _, TypeT (kind, t)) ->
