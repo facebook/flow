@@ -256,7 +256,7 @@ let tests =
                          let expected_to_merge =
                            (* We always include direct dependents, and compute them using the
                             * implementation dependency graph. *)
-                           make_checked_set ~focused:["a"] ~dependents:["b"] ~dependencies:[]
+                           make_checked_set ~focused:["a"] ~dependents:["b"; "c"] ~dependencies:[]
                          in
                          let expected_to_check =
                            make_checked_set ~focused:["a"] ~dependents:["b"; "c"] ~dependencies:[]
@@ -344,7 +344,7 @@ let tests =
                          let expected_to_merge =
                            (* We always include direct dependents, and compute them using the
                             * implementation dependency graph. *)
-                           make_checked_set ~focused:["a"] ~dependents:["b"] ~dependencies:[]
+                           make_checked_set ~focused:["a"] ~dependents:["b"; "c"] ~dependencies:[]
                          in
                          let expected_to_check =
                            make_checked_set ~focused:["a"] ~dependents:["b"; "c"] ~dependencies:[]
@@ -413,7 +413,7 @@ let tests =
                              ~input_dependencies:[]
                          in
                          let expected_to_merge =
-                           make_checked_set ~focused:["a"] ~dependents:[] ~dependencies:[]
+                           make_checked_set ~focused:["a"] ~dependents:["b"] ~dependencies:[]
                          in
                          let expected_to_check =
                            make_checked_set ~focused:["a"] ~dependents:["b"] ~dependencies:[]
@@ -453,7 +453,7 @@ let tests =
                          let expected_to_merge =
                            make_checked_set
                              ~focused:["a"]
-                             ~dependents:["b"; "c"; "d"]
+                             ~dependents:["b"; "c"; "d"; "e"]
                              ~dependencies:[]
                          in
                          let expected_to_check =
@@ -489,8 +489,7 @@ let tests =
                              ~input_dependencies:[]
                          in
                          let expected_to_merge =
-                           (* TODO "c" should not be listed as a dependency *)
-                           make_checked_set ~focused:["d"] ~dependents:[] ~dependencies:["c"]
+                           make_checked_set ~focused:["d"] ~dependents:["c"] ~dependencies:[]
                          in
                          let expected_to_check =
                            make_checked_set ~focused:["d"] ~dependents:["c"] ~dependencies:[]

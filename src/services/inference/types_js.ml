@@ -177,7 +177,7 @@ let include_dependencies_and_dependents
     ~input
     ~implementation_dependency_graph
     ~sig_dependency_graph
-    ~sig_dependent_files
+    ~sig_dependent_files:_
     ~all_dependent_files =
   with_memory_timer_lwt ~options "PruneDeps" profiling (fun () ->
       (* We need to run the check phase on the entire input set as well as all_dependent_files.
@@ -224,7 +224,7 @@ let include_dependencies_and_dependents
       (* Definitely recheck input and dependencies. As merging proceeds, dependents may or may not be
          rechecked. *)
       let definitely_to_merge = CheckedSet.add ~dependencies input in
-      let to_merge = CheckedSet.add ~dependents:sig_dependent_files definitely_to_merge in
+      let to_merge = CheckedSet.add ~dependents:all_dependent_files definitely_to_merge in
       (* This contains all of the files which may be merged or checked. Conveniently, this is
        * currently the same as to_check except for the addition of dependencies, so we can avoid
        * doing a costly union, but if we change how to_check or to_merge is computed we should be
