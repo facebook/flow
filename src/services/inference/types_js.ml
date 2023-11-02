@@ -801,8 +801,8 @@ type determine_what_to_recheck_result =
 
 module Recheck : sig
   type recheck_result = {
-    new_or_changed: Utils_js.FilenameSet.t;
-    deleted: Utils_js.FilenameSet.t;
+    modified_count: int;
+    deleted_count: int;
     to_merge: CheckedSet.t;
     to_check: CheckedSet.t;
     all_dependent_files: Utils_js.FilenameSet.t;
@@ -859,8 +859,8 @@ module Recheck : sig
     determine_what_to_recheck_result Lwt.t
 end = struct
   type recheck_result = {
-    new_or_changed: Utils_js.FilenameSet.t;
-    deleted: Utils_js.FilenameSet.t;
+    modified_count: int;
+    deleted_count: int;
     to_merge: CheckedSet.t;
     to_check: CheckedSet.t;
     all_dependent_files: Utils_js.FilenameSet.t;
@@ -1274,12 +1274,12 @@ end = struct
       { ServerEnv.local_errors; duplicate_providers; merge_errors; warnings; suppressions }
     in
     let intermediate_values =
-      ( deleted,
+      ( modified_count,
+        deleted_count,
         dirty_direct_dependents,
         errors,
         incr_collated_errors,
         freshparsed,
-        new_or_changed,
         unchanged_checked,
         unchanged_files_to_force,
         unchanged_files_to_upgrade
@@ -1473,12 +1473,12 @@ end = struct
       ~changed_mergebase
       ~intermediate_values
       ~env =
-    let ( deleted,
+    let ( modified_count,
+          deleted_count,
           dirty_direct_dependents,
           errors,
           incr_collated_errors,
           freshparsed,
-          new_or_changed,
           unchanged_checked,
           unchanged_files_to_force,
           unchanged_files_to_upgrade
@@ -1587,8 +1587,8 @@ end = struct
     Lwt.return
       ( { env with ServerEnv.checked_files; errors; incr_collated_errors; coverage },
         {
-          new_or_changed;
-          deleted;
+          modified_count;
+          deleted_count;
           to_merge;
           to_check;
           all_dependent_files;
@@ -1673,7 +1673,7 @@ end = struct
         ~files_to_force
         ~env
     in
-    let (_, _, errors, incr_collated_errors, _, _, _, _, _) = intermediate_values in
+    let (_, _, _, errors, incr_collated_errors, _, _, _, _) = intermediate_values in
     Lwt.return { env with ServerEnv.errors; incr_collated_errors }
 end
 
@@ -1721,8 +1721,8 @@ let recheck_impl
     )
   in
   let {
-    Recheck.new_or_changed = modified;
-    deleted;
+    Recheck.modified_count;
+    deleted_count;
     to_merge;
     to_check;
     all_dependent_files;
@@ -1756,8 +1756,6 @@ let recheck_impl
   in
   let env = { env with ServerEnv.incr_collated_errors } in
 
-  let modified_count = FilenameSet.cardinal modified in
-  let deleted_count = FilenameSet.cardinal deleted in
   let dependent_file_count = FilenameSet.cardinal all_dependent_files in
 
   (* TODO: update log to reflect current terminology **)
