@@ -803,9 +803,9 @@ module Recheck : sig
   type recheck_result = {
     modified_count: int;
     deleted_count: int;
+    dependent_file_count: int;
     to_merge: CheckedSet.t;
     to_check: CheckedSet.t;
-    all_dependent_files: Utils_js.FilenameSet.t;
     top_cycle: (File_key.t * int) option;
     merge_skip_count: int;
     check_skip_count: int;
@@ -861,9 +861,9 @@ end = struct
   type recheck_result = {
     modified_count: int;
     deleted_count: int;
+    dependent_file_count: int;
     to_merge: CheckedSet.t;
     to_check: CheckedSet.t;
-    all_dependent_files: Utils_js.FilenameSet.t;
     top_cycle: (File_key.t * int) option;
     merge_skip_count: int;
     check_skip_count: int;
@@ -1523,9 +1523,10 @@ end = struct
       ensure_parsed_or_trigger_recheck ~options ~profiling ~workers ~reader (CheckedSet.all to_merge)
     in
     (* recheck *)
+    let dependent_file_count = FilenameSet.cardinal all_dependent_files in
     let%lwt (updated_suppressions, merge_skip_count, sig_new_or_changed, top_cycle, time_to_merge) =
-      let n = FilenameSet.cardinal all_dependent_files in
-      if n > 0 then Hh_logger.info "recheck %d dependent files:" n;
+      if dependent_file_count > 0 then
+        Hh_logger.info "recheck %d dependent files:" dependent_file_count;
       merge
         ~transaction
         ~reader
@@ -1589,9 +1590,9 @@ end = struct
         {
           modified_count;
           deleted_count;
+          dependent_file_count;
           to_merge;
           to_check;
-          all_dependent_files;
           top_cycle;
           merge_skip_count;
           check_skip_count;
@@ -1723,9 +1724,9 @@ let recheck_impl
   let {
     Recheck.modified_count;
     deleted_count;
+    dependent_file_count;
     to_merge;
     to_check;
-    all_dependent_files;
     top_cycle;
     merge_skip_count;
     check_skip_count;
@@ -1755,8 +1756,6 @@ let recheck_impl
       env.ServerEnv.incr_collated_errors
   in
   let env = { env with ServerEnv.incr_collated_errors } in
-
-  let dependent_file_count = FilenameSet.cardinal all_dependent_files in
 
   (* TODO: update log to reflect current terminology **)
   let log_recheck_event : profiling:Profiling_js.finished -> unit Lwt.t =
