@@ -86,11 +86,10 @@ let exit ?error:_ _ _ = ()
 let report_from_monitor_server_exit_due_to_signal _ = ()
 
 let recheck
-    ~modified:_
-    ~deleted:_
-    ~to_merge:_
-    ~to_check:_
-    ~all_dependent_files:_
+    ~modified_count:_
+    ~deleted_count:_
+    ~merged_dependency_count:_
+    ~dependent_file_count:_
     ~merge_skip_count:_
     ~check_skip_count:_
     ~profiling:_

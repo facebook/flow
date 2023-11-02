@@ -1756,15 +1756,18 @@ let recheck_impl
   in
   let env = { env with ServerEnv.incr_collated_errors } in
 
+  let modified_count = FilenameSet.cardinal modified in
+  let deleted_count = FilenameSet.cardinal deleted in
+  let dependent_file_count = FilenameSet.cardinal all_dependent_files in
+
   (* TODO: update log to reflect current terminology **)
   let log_recheck_event : profiling:Profiling_js.finished -> unit Lwt.t =
    fun ~profiling ->
     FlowEventLogger.recheck
-      ~modified
-      ~deleted
-      ~to_merge
-      ~to_check
-      ~all_dependent_files
+      ~modified_count
+      ~deleted_count
+      ~merged_dependency_count:(CheckedSet.dependencies_cardinal to_merge)
+      ~dependent_file_count
       ~merge_skip_count
       ~check_skip_count
       ~slowest_file
@@ -1775,13 +1778,8 @@ let recheck_impl
     record_recheck_time ()
   in
 
-  let all_dependent_file_count = Utils_js.FilenameSet.cardinal all_dependent_files in
-  let changed_file_count =
-    Utils_js.FilenameSet.cardinal modified + Utils_js.FilenameSet.cardinal deleted
-  in
-  let recheck_stats =
-    { LspProt.dependent_file_count = all_dependent_file_count; changed_file_count; top_cycle }
-  in
+  let changed_file_count = modified_count + deleted_count in
+  let recheck_stats = { LspProt.dependent_file_count; changed_file_count; top_cycle } in
 
   Lwt.return (log_recheck_event, recheck_stats, find_ref_results, env)
 
