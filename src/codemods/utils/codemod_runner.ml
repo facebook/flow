@@ -163,7 +163,7 @@ let merge_targets ~env ~options ~profiling ~get_dependent_files roots =
   let%lwt all_dependent_files =
     get_dependent_files sig_dependency_graph implementation_dependency_graph roots
   in
-  let%lwt (to_merge, to_check, _to_merge_or_check, components, _recheck_set) =
+  let%lwt (to_merge, to_check, components, _recheck_set) =
     Types_js.include_dependencies_and_dependents
       ~options
       ~profiling

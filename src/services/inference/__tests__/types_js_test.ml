@@ -153,7 +153,6 @@ let tests =
                                    {
                                      to_merge;
                                      to_check;
-                                     to_merge_or_check;
                                      components = _;
                                      recheck_set = _;
                                      all_dependent_files = _;
@@ -173,10 +172,6 @@ let tests =
                          in
                          assert_checked_sets_equal ~ctxt expected_to_merge to_merge;
                          assert_checked_sets_equal ~ctxt expected_to_check to_check;
-                         assert_checked_sets_equal
-                           ~ctxt
-                           (CheckedSet.union to_merge to_check)
-                           to_merge_or_check;
                          Lwt.return_unit
                      );
                 "long_chain"
@@ -192,7 +187,6 @@ let tests =
                                    {
                                      to_merge;
                                      to_check;
-                                     to_merge_or_check;
                                      components = _;
                                      recheck_set = _;
                                      all_dependent_files = _;
@@ -218,10 +212,6 @@ let tests =
                          in
                          assert_checked_sets_equal ~ctxt expected_to_merge to_merge;
                          assert_checked_sets_equal ~ctxt expected_to_check to_check;
-                         assert_checked_sets_equal
-                           ~ctxt
-                           (CheckedSet.union to_merge to_check)
-                           to_merge_or_check;
                          Lwt.return_unit
                      );
                 "long_chain_no_sig_dependencies"
@@ -237,7 +227,6 @@ let tests =
                                    {
                                      to_merge;
                                      to_check;
-                                     to_merge_or_check;
                                      components = _;
                                      recheck_set = _;
                                      all_dependent_files = _;
@@ -259,10 +248,6 @@ let tests =
                          in
                          assert_checked_sets_equal ~ctxt expected_to_merge to_merge;
                          assert_checked_sets_equal ~ctxt expected_to_check to_check;
-                         assert_checked_sets_equal
-                           ~ctxt
-                           (CheckedSet.union to_merge to_check)
-                           to_merge_or_check;
                          Lwt.return_unit
                      );
                 "simple_cycle"
@@ -278,7 +263,6 @@ let tests =
                                    {
                                      to_merge;
                                      to_check;
-                                     to_merge_or_check;
                                      components = _;
                                      recheck_set = _;
                                      all_dependent_files = _;
@@ -304,10 +288,6 @@ let tests =
                          in
                          assert_checked_sets_equal ~ctxt expected_to_merge to_merge;
                          assert_checked_sets_equal ~ctxt expected_to_check to_check;
-                         assert_checked_sets_equal
-                           ~ctxt
-                           (CheckedSet.union to_merge to_check)
-                           to_merge_or_check;
                          Lwt.return_unit
                      );
                 "simple_cycle_no_sig_dependencies"
@@ -323,7 +303,6 @@ let tests =
                                    {
                                      to_merge;
                                      to_check;
-                                     to_merge_or_check;
                                      components = _;
                                      recheck_set = _;
                                      all_dependent_files = _;
@@ -345,10 +324,6 @@ let tests =
                          in
                          assert_checked_sets_equal ~ctxt expected_to_merge to_merge;
                          assert_checked_sets_equal ~ctxt expected_to_check to_check;
-                         assert_checked_sets_equal
-                           ~ctxt
-                           (CheckedSet.union to_merge to_check)
-                           to_merge_or_check;
                          Lwt.return_unit
                      );
               ];
@@ -362,8 +337,7 @@ let tests =
                          let implementation_dependency_graph =
                            [("a", ["b"]); ("b", ["c"; "d"]); ("c", []); ("d", [])]
                          in
-                         let%lwt (to_merge, to_check, to_merge_or_check, _components, _recheck_set)
-                             =
+                         let%lwt (to_merge, to_check, _components, _recheck_set) =
                            include_dependencies_and_dependents
                              ~profiling
                              ~checked_files:`All
@@ -381,10 +355,6 @@ let tests =
                          in
                          assert_checked_sets_equal ~ctxt expected_to_merge to_merge;
                          assert_checked_sets_equal ~ctxt expected_to_check to_check;
-                         assert_checked_sets_equal
-                           ~ctxt
-                           (CheckedSet.union to_merge to_check)
-                           to_merge_or_check;
                          Lwt.return_unit
                      );
                 "long_chain_no_sig_dependencies"
@@ -395,8 +365,7 @@ let tests =
                          let implementation_dependency_graph =
                            [("a", []); ("b", ["a"]); ("c", ["b"]); ("d", ["c"]); ("e", ["d"])]
                          in
-                         let%lwt (to_merge, to_check, to_merge_or_check, _components, _recheck_set)
-                             =
+                         let%lwt (to_merge, to_check, _components, _recheck_set) =
                            include_dependencies_and_dependents
                              ~profiling
                              ~checked_files:`All
@@ -414,10 +383,6 @@ let tests =
                          in
                          assert_checked_sets_equal ~ctxt expected_to_merge to_merge;
                          assert_checked_sets_equal ~ctxt expected_to_check to_check;
-                         assert_checked_sets_equal
-                           ~ctxt
-                           (CheckedSet.union to_merge to_check)
-                           to_merge_or_check;
                          Lwt.return_unit
                      );
                 "cycle"
@@ -434,7 +399,7 @@ let tests =
                              ("e", ["d"]);
                            ]
                          in
-                         let%lwt (to_merge, to_check, to_merge_or_check, components, _recheck_set) =
+                         let%lwt (to_merge, to_check, components, _recheck_set) =
                            include_dependencies_and_dependents
                              ~profiling
                              ~checked_files:`All
@@ -459,10 +424,6 @@ let tests =
                          let expected_components = [["a"; "b"; "c"]; ["d"]; ["e"]] in
                          assert_checked_sets_equal ~ctxt expected_to_merge to_merge;
                          assert_checked_sets_equal ~ctxt expected_to_check to_check;
-                         assert_checked_sets_equal
-                           ~ctxt
-                           (CheckedSet.union to_merge to_check)
-                           to_merge_or_check;
                          assert_components_equal ~ctxt expected_components components;
                          Lwt.return_unit
                      );
@@ -472,7 +433,7 @@ let tests =
                          let implementation_dependency_graph =
                            [("a", ["b"]); ("b", ["c"]); ("c", ["d"]); ("d", [])]
                          in
-                         let%lwt (to_merge, to_check, to_merge_or_check, components, _recheck_set) =
+                         let%lwt (to_merge, to_check, components, _recheck_set) =
                            include_dependencies_and_dependents
                              ~profiling
                              ~checked_files:(`Lazy [])
@@ -491,10 +452,6 @@ let tests =
                          let expected_components = [["c"]; ["d"]] in
                          assert_checked_sets_equal ~ctxt expected_to_merge to_merge;
                          assert_checked_sets_equal ~ctxt expected_to_check to_check;
-                         assert_checked_sets_equal
-                           ~ctxt
-                           (CheckedSet.union to_merge to_check)
-                           to_merge_or_check;
                          assert_components_equal ~ctxt expected_components components;
                          Lwt.return_unit
                      );

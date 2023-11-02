@@ -54,8 +54,6 @@ type determine_what_to_recheck_result =
   | Determine_what_to_recheck_result of {
       to_merge: CheckedSet.t;
       to_check: CheckedSet.t;
-      (* union of to_merge and to_check *)
-      to_merge_or_check: CheckedSet.t;
       components: File_key.t Nel.t list;
       recheck_set: FilenameSet.t;
       all_dependent_files: FilenameSet.t;
@@ -80,7 +78,7 @@ val debug_include_dependencies_and_dependents :
   implementation_dependency_graph:FilenameGraph.t ->
   sig_dependency_graph:FilenameGraph.t ->
   all_dependent_files:FilenameSet.t ->
-  (CheckedSet.t * CheckedSet.t * CheckedSet.t * File_key.t Nel.t list * FilenameSet.t) Lwt.t
+  (CheckedSet.t * CheckedSet.t * File_key.t Nel.t list * FilenameSet.t) Lwt.t
 
 val include_dependencies_and_dependents :
   options:Options.t ->
@@ -90,5 +88,4 @@ val include_dependencies_and_dependents :
   implementation_dependency_graph:Utils_js.FilenameGraph.t ->
   sig_dependency_graph:Utils_js.FilenameGraph.t ->
   all_dependent_files:Utils_js.FilenameSet.t ->
-  (CheckedSet.t * CheckedSet.t * CheckedSet.t * File_key.t Nel.t list * Utils_js.FilenameSet.t)
-  Lwt.t
+  (CheckedSet.t * CheckedSet.t * File_key.t Nel.t list * Utils_js.FilenameSet.t) Lwt.t
