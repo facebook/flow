@@ -576,7 +576,6 @@ let rec extract_type cx this_t =
     Some [elem_t] |> instantiate_poly_t cx array_t |> instantiate_type |> extract_type cx
   | EvalT (t, defer, id) -> eval_evalt cx t defer id |> extract_type cx
   | InternalT (ChoiceKitT (_, _))
-  | TypeDestructorTriggerT _
   | DefT (_, _, ClassT _)
   | CustomFunT (_, _)
   | MatchingPropT (_, _, _)

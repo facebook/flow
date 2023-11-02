@@ -385,10 +385,6 @@ let rec dump_t_ (depth, tvars) cx t =
     | InternalT (ExtendsT (_, l, u)) -> p ~extra:(spf "%s, %s" (kid l) (kid u)) t
     | CustomFunT (_, kind) -> p ~extra:(custom_fun kind) t
     | InternalT (ChoiceKitT _) -> p t
-    | TypeDestructorTriggerT (_, _, _, s, (r, x)) ->
-      p
-        ~extra:(spf "%s on upper, (%s, %s)" (string_of_destructor s) (string_of_reason r) (tvar x))
-        t
 
 and dump_use_t_ (depth, tvars) cx t =
   let p ?(reason = true) ?(extra = "") use_t =
@@ -993,6 +989,10 @@ and dump_use_t_ (depth, tvars) cx t =
     | ConvertEmptyPropsToMixedT _ -> "ConvertEmptyPropsToMixedT"
     | TryRenderTypePromotionT _ -> "TryRenderTypePromotionT"
     | ExitRendersT _ -> "ExitRendersT"
+    | EvalTypeDestructorT { destructor = s; tout = (r, x); _ } ->
+      p
+        ~extra:(spf "%s on upper, (%s, %s)" (string_of_destructor s) (string_of_reason r) (tvar x))
+        t
 
 and dump_tvar_ (depth, tvars) cx id =
   if ISet.mem id tvars then

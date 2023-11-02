@@ -573,45 +573,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
 
   let rec_sub_t cx use_op l u trace =
     match (l, u) with
-    (***************************)
-    (* type destructor trigger *)
-    (***************************)
-
-    (* For evaluating type destructors we add a trigger, TypeDestructorTriggerT,
-     * to both sides of a type. When TypeDestructorTriggerT sees a new upper or
-     * lower bound we destruct that bound and flow the result in the same
-     * direction to some tout type. *)
-
-    (* Don't let two TypeDestructorTriggerTs reach each other or else we quickly
-     * run into non-termination scenarios. *)
-    | (TypeDestructorTriggerT _, TypeDestructorTriggerT _) -> ()
-    | (l, TypeDestructorTriggerT (use_op', reason, repos, d, tout)) ->
-      let l =
-        match repos with
-        | None -> l
-        | Some (reason, use_desc) -> reposition_reason cx ~trace reason ~use_desc l
-      in
-      eval_destructor cx ~trace use_op' reason l d tout
-    | (TypeDestructorTriggerT (use_op', reason, _, d, tout), AnnotT (r, t, use_desc)) ->
-      let tout' =
-        Tvar.mk_no_wrap_where cx reason (fun tout' ->
-            let repos = Some (r, use_desc) in
-            rec_flow
-              cx
-              trace
-              (t, UseT (use_op, TypeDestructorTriggerT (use_op', reason, repos, d, tout')))
-        )
-      in
-      rec_flow cx trace (tout', ReposUseT (reason, false, use_op, OpenT tout))
-    | (TypeDestructorTriggerT (use_op', reason, _, d, tout), _) ->
-      (* With the same "slingshot" trick used by AnnotT, hold the lower bound
-       * at bay until result itself gets concretized, and then flow the lower
-       * bound to that concrete type. *)
-      let t =
-        Tvar.mk_no_wrap_where cx reason (fun t -> eval_destructor cx ~trace use_op' reason u d t)
-      in
-      let use_desc = false in
-      rec_flow cx trace (t, ReposUseT (reason, use_desc, use_op, OpenT tout))
     (* The sink component of an annotation constrains values flowing
        into the annotated site. *)
     | (_, AnnotT (r, t, use_desc)) -> rec_flow cx trace (t, ReposUseT (r, use_desc, use_op, l))

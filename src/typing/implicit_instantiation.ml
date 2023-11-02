@@ -95,6 +95,20 @@ let get_t cx =
   | OpenT (r, id) -> Flow_js_utils.merge_tvar ~no_lowers cx r id
   | t -> t
 
+(* Sorting of the upper bounds is mostly done for compatibility with the version
+ * before EvalTypeDestructorT was a use_t. *)
+let sort_upper_bounds_for_merging xs =
+  let (use_t, rest_t) =
+    Base.List.partition_tf
+      ~f:(function
+        | (UseT _, _)
+        | (EvalTypeDestructorT _, _) ->
+          true
+        | _ -> false)
+      xs
+  in
+  use_t @ rest_t
+
 module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
   module Flow = Flow
   module SpeculationKit = Speculation_kit.Make (Flow)
@@ -183,7 +197,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     in
     match u with
     | UseT (_, (OpenT (r, _) as t)) -> merge_upper_bounds cx seen r t
-    | UseT (_, TypeDestructorTriggerT (_, r, _, destructor, tout)) ->
+    | EvalTypeDestructorT { reason = r; destructor; tout; _ } ->
       (match destructor with
       | PropertyType _
       | ElementType _
@@ -564,6 +578,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
         | Constraint.Unresolved bounds ->
           let uppers = Constraint.UseTypeMap.keys bounds.Constraint.upper in
           uppers
+          |> sort_upper_bounds_for_merging
           |> List.fold_left
                (fun acc (t, _) ->
                  match (acc, t_of_use_t cx (ISet.add id seen) tvar t) with

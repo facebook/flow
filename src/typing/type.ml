@@ -175,8 +175,6 @@ module rec TypeTerm : sig
        The round pegs in the square holes. **)
     (* types that should never appear in signatures *)
     | InternalT of internal_t
-    (* upper bound trigger for type destructors *)
-    | TypeDestructorTriggerT of use_op * reason * (reason * bool) option * destructor * tvar
     (* Sigil representing functions that the type system is not expressive
        enough to annotate, so we customize their behavior internally. *)
     | CustomFunT of reason * custom_fun_kind (* Predicate types **)
@@ -925,6 +923,14 @@ module rec TypeTerm : sig
     | ExitRendersT of {
         renders_reason: reason;
         u: use_t;
+      }
+    (* delay a type destructor evaluation *)
+    | EvalTypeDestructorT of {
+        destructor_use_op: use_op;
+        reason: reason;
+        repos: (reason * bool) option;
+        destructor: destructor;
+        tout: tvar;
       }
 
   and implicit_return_action =
@@ -3873,7 +3879,6 @@ let string_of_ctor = function
         match tool with
         | Trigger -> "Trigger"
       end
-  | TypeDestructorTriggerT _ -> "TypeDestructorTriggerT"
   | CustomFunT _ -> "CustomFunT"
   | DefT (_, _, t) -> string_of_def_ctor t
   | EvalT _ -> "EvalT"
@@ -4110,6 +4115,7 @@ let string_of_use_ctor = function
   | ConvertEmptyPropsToMixedT _ -> "ConvertEmptyPropsToMixedT"
   | TryRenderTypePromotionT _ -> "TryRenderTypePromotionT"
   | ExitRendersT _ -> "ExitRendersT"
+  | EvalTypeDestructorT _ -> "EvalTypeDestructorT"
 
 let string_of_binary_test = function
   | InstanceofTest -> "instanceof"

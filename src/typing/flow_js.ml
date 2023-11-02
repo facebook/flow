@@ -497,45 +497,20 @@ struct
           | Resolved t2
           | FullyResolved (lazy t2) ->
             rec_flow cx trace (t1, UseT (use_op, t2)))
+        (************************)
+        (* Eval type destructor *)
+        (************************)
+        | (l, EvalTypeDestructorT { destructor_use_op; reason; repos; destructor; tout }) ->
+          let l =
+            match repos with
+            | None -> l
+            | Some (reason, use_desc) -> reposition_reason cx ~trace reason ~use_desc l
+          in
+          eval_destructor cx ~trace destructor_use_op reason l destructor tout
         (************)
         (* Subtyping *)
         (*************)
         | (_, UseT (use_op, u)) -> rec_sub_t cx use_op l u trace
-        (***************************)
-        (* type destructor trigger *)
-        (***************************)
-
-        (* Ignore any non-type uses. The implementation of type destructors operate
-         * solely on types and not arbitrary uses. We also don't want to add errors
-         * for arbitrary uses that get added to the subject of our trigger in type
-         * destruction evaluation.
-         *
-         * This may be a risky behavior when considering tvars with *only* non-type
-         * uses. However, such tvars are rare and often come from non-sensical
-         * programs.
-         *
-         * Type destructors, currently, may only be created as type annotations.
-         * This means that the type is either always 0->1, or it is a polymorphic
-         * type argument which will be instantiated with an open tvar. Polymorphic
-         * type arguments will also always get some type upper bound with the
-         * default type being MixedT. We destruct these upper bounds. *)
-        | (TypeDestructorTriggerT _, ReposLowerT (reason_op, use_desc, u)) ->
-          let loc = loc_of_reason reason_op in
-          let desc =
-            if use_desc then
-              Some (desc_of_reason reason_op)
-            else
-              None
-          in
-          rec_flow cx trace (reposition cx ~trace loc ?desc l, u)
-        | (TypeDestructorTriggerT _, TypeCastT (use_op, cast_to_t)) ->
-          rec_flow cx trace (l, UseT (use_op, cast_to_t))
-        | (TypeDestructorTriggerT _, _) ->
-          Default_resolve.default_resolve_touts
-            ~flow:(rec_flow_t cx trace ~use_op:unknown_use)
-            cx
-            (reason_of_t l |> loc_of_reason)
-            u
         (************************)
         (* Full type resolution *)
         (************************)
@@ -5839,7 +5814,7 @@ struct
     match u with
     (* Work has to happen when Empty flows to these types *)
     | UseT (_, OpenT _)
-    | UseT (_, TypeDestructorTriggerT _)
+    | EvalTypeDestructorT _
     | UseT (_, DefT (_, _, TypeT _))
     | ChoiceKitUseT _
     | CondT _
@@ -6110,7 +6085,7 @@ struct
         else
           wait_for_concrete_bound ()
       | UseT (_, KeysT _)
-      | UseT (_, TypeDestructorTriggerT _) ->
+      | EvalTypeDestructorT _ ->
         if is_concrete bound then
           false
         else
@@ -6421,7 +6396,7 @@ struct
        this can be handled by the pre-existing rules *)
     | UseT (_, UnionT _)
     | UseT (_, IntersectionT _) (* Already handled in the wildcard case in __flow *)
-    | UseT (_, TypeDestructorTriggerT _)
+    | EvalTypeDestructorT _
     | ConvertEmptyPropsToMixedT _
     | CheckUnusedPromiseT _ ->
       false
@@ -6561,8 +6536,7 @@ struct
     (* Should never occur as the lower bound of any *)
     | InternalT (ChoiceKitT _)
     | InternalT (ExtendsT _)
-    | ModuleT _
-    | TypeDestructorTriggerT _ ->
+    | ModuleT _ ->
       false
     (* TODO: Punt on these for now, but figure out whether these should fall through or not *)
     | CustomFunT (_, ReactElementFactory _)
@@ -6961,19 +6935,41 @@ struct
           match t with
           | OpenT _
           | GenericT { bound = OpenT _; _ } ->
-            let x = TypeDestructorTriggerT (use_op, reason, None, d, tvar) in
-            rec_flow_t cx trace ~use_op:unknown_use (t, x)
+            let x =
+              EvalTypeDestructorT
+                { destructor_use_op = use_op; reason; repos = None; destructor = d; tout = tvar }
+            in
+            rec_flow cx trace (t, x)
           | GenericT { bound = AnnotT (r, t, use_desc); reason; name; id } ->
-            let repos = Some (r, use_desc) in
-            let x = TypeDestructorTriggerT (use_op, reason, repos, d, tvar) in
-            rec_flow_t cx trace ~use_op:unknown_use (GenericT { reason; name; id; bound = t }, x)
+            let x =
+              EvalTypeDestructorT
+                {
+                  destructor_use_op = use_op;
+                  reason;
+                  repos = Some (r, use_desc);
+                  destructor = d;
+                  tout = tvar;
+                }
+            in
+            rec_flow cx trace (GenericT { reason; name; id; bound = t }, x)
           | EvalT _ ->
-            let x = TypeDestructorTriggerT (use_op, reason, None, d, tvar) in
-            rec_flow_t cx trace ~use_op:unknown_use (t, x)
+            let x =
+              EvalTypeDestructorT
+                { destructor_use_op = use_op; reason; repos = None; destructor = d; tout = tvar }
+            in
+            rec_flow cx trace (t, x)
           | AnnotT (r, t, use_desc) ->
-            let repos = Some (r, use_desc) in
-            let x = TypeDestructorTriggerT (use_op, reason, repos, d, tvar) in
-            rec_flow_t cx trace ~use_op:unknown_use (t, x)
+            let x =
+              EvalTypeDestructorT
+                {
+                  destructor_use_op = use_op;
+                  reason;
+                  repos = Some (r, use_desc);
+                  destructor = d;
+                  tout = tvar;
+                }
+            in
+            rec_flow cx trace (t, x)
           | _ -> eval_destructor cx ~trace use_op reason t d tvar
         in
         Tvar.mk_no_wrap_where cx reason (fun tvar ->

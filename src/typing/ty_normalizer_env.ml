@@ -43,11 +43,11 @@ type options = {
   flag_shadowed_type_params: bool;
   (* Consider all kinds of Bot and Any the same when simplifying types.
    *
-   * The normalized type Ty.Bot may correspond to either the `Empty` type, not
-   * lower-bounds or the internal types MatchingPropT or TypeDestructorTriggerT.
-   * These types are not easy to normalize, but may still encode some constraint.
-   * When using normalized types for codemods we might want to know if there might
-   * be some constraints that we missing in the normalized type.
+   * The normalized type Ty.Bot may correspond to either the `Empty` type, not have
+   * any lower-bounds or the internal type MatchingPropT. These types are not easy to
+   * normalize, but may still encode some constraint. When using normalized types
+   * for codemods we might want to know if there might be some constraints that we
+   * missing in the normalized type.
    *
    * Any can be due to an annotation or implicitly arising from inference.
    *)

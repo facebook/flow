@@ -125,8 +125,6 @@ and bot_kind =
   | EmptyType
   (* Type.MatchingPropT *)
   | EmptyMatchingPropT
-  (* Type.TypeDestructorTriggerT *)
-  | EmptyTypeDestructorTriggerT of aloc
   (* A tvar with no lower bounds *)
   | NoLowerWithUpper of upper_bound_kind
 
@@ -689,8 +687,7 @@ class ['A] comparator_ty =
       function
       | EmptyType -> 0
       | EmptyMatchingPropT -> 1
-      | EmptyTypeDestructorTriggerT _ -> 2
-      | NoLowerWithUpper _ -> 3
+      | NoLowerWithUpper _ -> 2
 
     method tag_of_upper_bound_kind _env =
       function

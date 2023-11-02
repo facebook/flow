@@ -224,9 +224,7 @@ class visitor =
         (Kind.Checked, Taint.of_trust cx t)
       (* Concrete uncovered constructors *)
       (* TODO: Rethink coverage and trust for these types *)
-      | MatchingPropT _
-      | TypeDestructorTriggerT _ ->
-        (Kind.Empty, Taint.Untainted)
+      | MatchingPropT _ -> (Kind.Empty, Taint.Untainted)
       | DefT (_, t, EmptyT) -> (Kind.Empty, Taint.of_trust cx t)
       | AnyT _ -> (Kind.Any, Taint.Tainted)
 

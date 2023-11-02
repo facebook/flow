@@ -25,10 +25,6 @@ class ['a] t =
       | OpenT (r, id) -> self#tvar cx pole acc r id
       | DefT (_, _, t) -> self#def_type cx pole acc t
       | InternalT (ChoiceKitT (_, Trigger)) -> acc
-      | TypeDestructorTriggerT (_, _, _, d, tout) ->
-        let acc = self#destructor cx acc d in
-        let acc = self#tout cx pole acc tout in
-        acc
       | FunProtoT _
       | FunProtoApplyT _
       | FunProtoBindT _

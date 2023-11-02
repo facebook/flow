@@ -18,7 +18,6 @@ let rec reason_of_t = function
   | OpenT (reason, _) -> reason
   | AnnotT (reason, _, _) -> reason
   | InternalT (ChoiceKitT (reason, _)) -> reason
-  | TypeDestructorTriggerT (_, reason, _, _, _) -> reason
   | CustomFunT (reason, _) -> reason
   | DefT (reason, _, _) -> reason
   | EvalT (_, defer_use_t, _) -> reason_of_defer_use_t defer_use_t
@@ -152,6 +151,7 @@ and reason_of_use_t = function
   | ConvertEmptyPropsToMixedT (reason, _) -> reason
   | TryRenderTypePromotionT { reason; _ } -> reason
   | ExitRendersT { renders_reason; _ } -> renders_reason
+  | EvalTypeDestructorT { reason; _ } -> reason
 
 (* helper: we want the tvar id as well *)
 (* NOTE: uncalled for now, because ids are nondetermistic
@@ -175,8 +175,6 @@ let rec mod_reason_of_t f = function
   | OpenT (reason, id) -> OpenT (f reason, id)
   | AnnotT (reason, t, use_desc) -> AnnotT (f reason, t, use_desc)
   | InternalT (ChoiceKitT (reason, tool)) -> InternalT (ChoiceKitT (f reason, tool))
-  | TypeDestructorTriggerT (use_op, reason, repos, d, t) ->
-    TypeDestructorTriggerT (use_op, f reason, repos, d, t)
   | CustomFunT (reason, kind) -> CustomFunT (f reason, kind)
   | DefT (reason, trust, t) -> DefT (f reason, trust, t)
   | AnyT (reason, src) -> AnyT (f reason, src)
@@ -400,6 +398,8 @@ and mod_reason_of_use_t f = function
   | ResolveUnionT { reason; resolved; unresolved; upper; id } ->
     ResolveUnionT { reason = f reason; resolved; unresolved; upper; id }
   | ExitRendersT { renders_reason; u } -> ExitRendersT { renders_reason = f renders_reason; u }
+  | EvalTypeDestructorT { destructor_use_op; reason; repos; destructor; tout } ->
+    EvalTypeDestructorT { destructor_use_op; reason = f reason; repos; destructor; tout }
 
 and mod_reason_of_opt_use_t f = function
   | OptCallT { use_op; reason; opt_funcalltype; return_hint } ->
@@ -555,7 +555,8 @@ let rec util_use_op_of_use_t :
   | EnumExhaustiveCheckT _
   | SealGenericT _
   | CheckUnusedPromiseT _
-  | WriteComputedObjPropCheckT _ ->
+  | WriteComputedObjPropCheckT _
+  | EvalTypeDestructorT _ ->
     nope u
 
 let use_op_of_use_t = util_use_op_of_use_t (fun _ -> None) (fun _ op _ -> Some op)

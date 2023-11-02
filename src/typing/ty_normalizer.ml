@@ -257,9 +257,7 @@ end = struct
     match bot_kind with
     | Ty.EmptyType -> empty_type
     | Ty.EmptyMatchingPropT -> empty_matching_prop_t
-    | Ty.EmptyTypeDestructorTriggerT _
-    | Ty.NoLowerWithUpper _ ->
-      Ty.Bot bot_kind
+    | Ty.NoLowerWithUpper _ -> Ty.Bot bot_kind
 
   (***********************)
   (* Construct built-ins *)
@@ -651,15 +649,9 @@ end = struct
     and type_with_alias_reason ~env ?id t =
       let open Type in
       (* These type are treated as transparent when it comes to the type alias
-       * annotation.
-       *
-       * TypeDestructorTriggerT might hold a type-app, so avoid using the type here.
-       * Instead, do the fallback action which is to normalize to Bot. The trigger
-       * should have actually produced another concrete type as a lower bound. *)
+       * annotation. *)
       match t with
-      | OpenT _
-      | TypeDestructorTriggerT _ ->
-        type_ctor ~env ?id ~cont:type_with_alias_reason t
+      | OpenT _ -> type_ctor ~env ?id ~cont:type_with_alias_reason t
       | EvalT _ when should_eval_skip_aliases ~env () ->
         type_ctor ~env ~cont:type_with_alias_reason t
       | _ -> begin
@@ -811,9 +803,6 @@ end = struct
       | ThisTypeAppT (_, c, _, ts) -> type_app ~env c ts
       | KeysT (r, t) -> keys_t ~env ~cont:type__ r t
       | OpaqueT (r, o) -> opaque_t ~env r o
-      | TypeDestructorTriggerT (_, r, _, _, _) ->
-        let loc = Reason.def_loc_of_reason r in
-        return (mk_empty (Ty.EmptyTypeDestructorTriggerT loc))
       | ObjProtoT _ -> return Ty.(TypeOf (ObjProto, None))
       | FunProtoT _ -> return Ty.(TypeOf (FunProto, None))
       | FunProtoApplyT _ ->

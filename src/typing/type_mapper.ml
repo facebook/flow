@@ -165,13 +165,6 @@ class virtual ['a] t =
         else
           InternalT (ExtendsT (r, t1', t2'))
       | InternalT (ChoiceKitT _) -> t
-      | TypeDestructorTriggerT (u, r, repos, d, x) ->
-        let d' = self#destructor cx map_cx d in
-        let x' = self#tout cx map_cx x in
-        if d == d' && x == x' then
-          t
-        else
-          TypeDestructorTriggerT (u, r, repos, d', x')
       | CustomFunT (r, kind) ->
         let kind' = self#custom_fun_kind cx map_cx kind in
         if kind' == kind then

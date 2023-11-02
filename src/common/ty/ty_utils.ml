@@ -130,7 +130,6 @@ module Simplify = struct
         in
         let is_bot_kind = function
           | Ty.EmptyType -> true
-          | Ty.EmptyTypeDestructorTriggerT _ -> false
           | Ty.EmptyMatchingPropT -> false
           | Ty.NoLowerWithUpper kind -> is_bot_upper_kind kind
         in

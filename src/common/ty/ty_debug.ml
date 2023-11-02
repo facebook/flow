@@ -109,7 +109,6 @@ struct
   let dump_bot_kind = function
     | EmptyType -> "EmptyType"
     | EmptyMatchingPropT -> "EmptyMatchingPropT"
-    | EmptyTypeDestructorTriggerT _ -> "EmptyTypeDestructorTriggerT"
     | NoLowerWithUpper u -> spf "NoLowerWithUpper (%s)" (dump_bot_upper_bound_kind u)
 
   let dump_import_mode = function

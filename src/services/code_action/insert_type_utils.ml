@@ -491,10 +491,6 @@ module Validator = struct
         | Ty.Bot Ty.EmptyMatchingPropT ->
           env := Empty_MatchingPropT :: !env;
           Ty.explicit_any
-        | Ty.Bot (Ty.EmptyTypeDestructorTriggerT loc) ->
-          let concrete_loc = loc_of_aloc loc in
-          env := Empty_TypeDestructorTriggerT concrete_loc :: !env;
-          Ty.explicit_any
         | Ty.Any
             (Ty.Unsound
               ( ( Ty.Constructor | Ty.DummyStatic | Ty.Exports | Ty.FunctionPrototype

@@ -731,7 +731,6 @@ and tag_of_t cx t =
   | OpaqueT (_, _)
   | ModuleT _
   | InternalT _
-  | TypeDestructorTriggerT (_, _, _, _, _)
   | CustomFunT (_, _)
   | AnyT (_, _) ->
     None
