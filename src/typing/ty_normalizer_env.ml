@@ -70,6 +70,10 @@ type options = {
   verbose_normalizer: bool;
   (* Maximum depth of recursion *)
   max_depth: int option;
+  (* In typed AST for type references, we store the type as if it's read under the
+   * value namespace. In some places, we might want to record the fact that it's
+   * a type-namespace read. *)
+  toplevel_is_type_identifier_reference: bool;
 }
 
 let default_options =
@@ -83,6 +87,7 @@ let default_options =
     preserve_inferred_literal_types = false;
     verbose_normalizer = false;
     max_depth = Some 50;
+    toplevel_is_type_identifier_reference = false;
   }
 
 let default_codemod_options =
@@ -96,6 +101,7 @@ let default_codemod_options =
     merge_bot_and_any_kinds = false;
     verbose_normalizer = false;
     max_depth = None;
+    toplevel_is_type_identifier_reference = false;
   }
 
 (* This is a global environment that should not change during normalization *)
@@ -148,10 +154,6 @@ type t = {
      be: Empty | Mixed, which simplifies to Mixed. *)
   tparams_rev: Type.typeparam list;
   infer_tparams: Type.typeparam list;
-  (* In typed AST for type references, we store the type as if it's read under the
-   * value namespace. In some places, we might want to record the fact that it's
-   * a type-namespace read. *)
-  toplevel_is_type_identifier_reference: bool;
   (* In determining whether a symbol is Local, Imported, Remote, etc, it is
      useful to keep a map of imported names and the corresponding
      location available. We can then make this decision by comparing the
@@ -183,7 +185,7 @@ type t = {
   seen_eval_ids: Type.EvalIdSet.t;
 }
 
-let init ~options ~genv ~tparams_rev ~toplevel_is_type_identifier_reference ~imported_names =
+let init ~options ~genv ~tparams_rev ~imported_names =
   {
     options;
     genv;
@@ -191,7 +193,6 @@ let init ~options ~genv ~tparams_rev ~toplevel_is_type_identifier_reference ~imp
     tparams_rev;
     infer_tparams = [];
     imported_names;
-    toplevel_is_type_identifier_reference;
     under_type_alias = SymbolSet.empty;
     under_render_type = false;
     seen_tvar_ids = ISet.empty;

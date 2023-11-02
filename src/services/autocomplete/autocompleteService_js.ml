@@ -281,6 +281,7 @@ let ty_normalizer_options =
     merge_bot_and_any_kinds = true;
     verbose_normalizer = false;
     max_depth = Some 50;
+    toplevel_is_type_identifier_reference = false;
   }
 
 type ac_result = {

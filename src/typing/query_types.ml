@@ -42,9 +42,9 @@ let type_at_pos_type
             merge_bot_and_any_kinds = true;
             verbose_normalizer;
             max_depth = Some max_depth;
+            toplevel_is_type_identifier_reference;
           }
         ~genv
-        ~toplevel_is_type_identifier_reference
         scheme
     in
     let unevaluated = from_scheme Ty_normalizer_env.EvaluateNone in
@@ -107,6 +107,7 @@ let insert_type_normalize
       merge_bot_and_any_kinds = true;
       verbose_normalizer = false;
       max_depth = None;
+      toplevel_is_type_identifier_reference = false;
     }
   in
   let genv = Ty_normalizer_env.mk_genv ~cx ~file ~file_sig ~typed_ast in

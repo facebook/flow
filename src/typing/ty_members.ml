@@ -308,6 +308,7 @@ let ty_normalizer_options =
     merge_bot_and_any_kinds = true;
     verbose_normalizer = false;
     max_depth = Some 50;
+    toplevel_is_type_identifier_reference = false;
   }
 
 let extract ?(force_instance = false) ~cx ~typed_ast ~file_sig scheme =
