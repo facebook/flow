@@ -49,6 +49,11 @@ type InvalidSpread2 = [1, ...Alias]; // ERROR
   declare const x: InvalidSpread2;
   (x: empty); // OK
 }
+type ArraySpread = [...Array<mixed>]; // ERROR
+{
+  declare const x: ArraySpread;
+  (x: empty); // OK
+}
 
 // Spreading `any`
 type AnySpread = [1, 2, ...any]; // OK

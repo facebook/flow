@@ -1134,36 +1134,50 @@ References:
                                     ^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- spread.js:70:9
+Error -------------------------------------------------------------------------------------------------- spread.js:52:20
+
+Cannot spread non-tuple (array type [1]) into tuple type. [tuple-invalid-type-spread]
+
+   spread.js:52:20
+   52| type ArraySpread = [...Array<mixed>]; // ERROR
+                          ^^^^^^^^^^^^^^^^^
+
+References:
+   spread.js:52:24
+   52| type ArraySpread = [...Array<mixed>]; // ERROR
+                              ^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- spread.js:75:9
 
 Cannot cast array literal to `WithTail` because number [1] is incompatible with number literal `3` [2] in index 2.
 [incompatible-cast]
 
-   spread.js:70:9
-   70| ([1, 2, 66]: WithTail<[2, 3]>); // ERROR
+   spread.js:75:9
+   75| ([1, 2, 66]: WithTail<[2, 3]>); // ERROR
                ^^ [1]
 
 References:
-   spread.js:70:27
-   70| ([1, 2, 66]: WithTail<[2, 3]>); // ERROR
+   spread.js:75:27
+   75| ([1, 2, 66]: WithTail<[2, 3]>); // ERROR
                                  ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- spread.js:73:1
+Error --------------------------------------------------------------------------------------------------- spread.js:78:1
 
 Cannot call `f` because `T` [1] is underconstrained by call of `f` [2]. Either add explicit type arguments or cast the
 expression to your expected type. [underconstrained-implicit-instantiation]
 
-   spread.js:73:1
-   73| f([1, 2, 3]); // ERROR: annotation required - reversal not yet implemented
+   spread.js:78:1
+   78| f([1, 2, 3]); // ERROR: annotation required - reversal not yet implemented
        ^
 
 References:
-   spread.js:72:20
-   72| declare function f<T>(xs: [1, ...T]): void;
+   spread.js:77:20
+   77| declare function f<T>(xs: [1, ...T]): void;
                           ^ [1]
-   spread.js:73:1
-   73| f([1, 2, 3]); // ERROR: annotation required - reversal not yet implemented
+   spread.js:78:1
+   78| f([1, 2, 3]); // ERROR: annotation required - reversal not yet implemented
        ^^^^^^^^^^^^ [2]
 
 
@@ -1919,4 +1933,4 @@ References:
 
 
 
-Found 120 errors
+Found 121 errors

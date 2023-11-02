@@ -2017,7 +2017,17 @@ struct
             match lt with
             | DefT (_, _, ArrT arrtype) ->
               (* Arrays *)
-              arrtype
+              (match (rrt_resolve_to, arrtype) with
+              | (ResolveSpreadsToTupleType _, (ArrayAT _ | ROArrayAT _)) ->
+                (* Only tuples can be spread into tuple types. *)
+                add_output
+                  cx
+                  ~trace
+                  (Error_message.ETupleInvalidTypeSpread
+                     { reason_spread = reason_op; reason_arg = reason }
+                  );
+                ArrayAT { elem_t = AnyT.error reason; tuple_view = None; react_dro = None }
+              | _ -> arrtype)
             | _ ->
               (* Non-array non-any iterables, opaque arrays, etc *)
               let resolve_to =
