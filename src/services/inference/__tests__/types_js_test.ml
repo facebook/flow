@@ -113,7 +113,7 @@ let include_dependencies_and_dependents
   in
   let unchanged_checked = make_unchanged_checked checked_files input in
   let options = Test_utils.make_options () in
-  let (sig_dependent_files, all_dependent_files) =
+  let all_dependent_files =
     Pure_dep_graph_operations.calc_all_dependents
       ~sig_dependency_graph
       ~implementation_dependency_graph
@@ -126,7 +126,6 @@ let include_dependencies_and_dependents
     ~input
     ~implementation_dependency_graph
     ~sig_dependency_graph
-    ~sig_dependent_files
     ~all_dependent_files
 
 (* There is memory sampling embedded throughout the code under test. It polls the shared memory
@@ -157,7 +156,6 @@ let tests =
                                      to_merge_or_check;
                                      components = _;
                                      recheck_set = _;
-                                     sig_dependent_files = _;
                                      all_dependent_files = _;
                                    }
                                    ) =
@@ -197,7 +195,6 @@ let tests =
                                      to_merge_or_check;
                                      components = _;
                                      recheck_set = _;
-                                     sig_dependent_files = _;
                                      all_dependent_files = _;
                                    }
                                    ) =
@@ -243,7 +240,6 @@ let tests =
                                      to_merge_or_check;
                                      components = _;
                                      recheck_set = _;
-                                     sig_dependent_files = _;
                                      all_dependent_files = _;
                                    }
                                    ) =
@@ -285,7 +281,6 @@ let tests =
                                      to_merge_or_check;
                                      components = _;
                                      recheck_set = _;
-                                     sig_dependent_files = _;
                                      all_dependent_files = _;
                                    }
                                    ) =
@@ -331,7 +326,6 @@ let tests =
                                      to_merge_or_check;
                                      components = _;
                                      recheck_set = _;
-                                     sig_dependent_files = _;
                                      all_dependent_files = _;
                                    }
                                    ) =

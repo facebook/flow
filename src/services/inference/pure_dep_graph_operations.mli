@@ -17,5 +17,4 @@ val calc_all_dependents :
   sig_dependency_graph:Utils_js.FilenameGraph.t ->
   implementation_dependency_graph:Utils_js.FilenameGraph.t ->
   Utils_js.FilenameSet.t ->
-  (* sig dependents, all dependents *)
-  Utils_js.FilenameSet.t * Utils_js.FilenameSet.t
+  Utils_js.FilenameSet.t

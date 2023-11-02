@@ -160,7 +160,7 @@ let merge_targets ~env ~options ~profiling ~get_dependent_files roots =
     Dependency_info.implementation_dependency_graph dependency_info
   in
   Hh_logger.info "Calculating dependencies";
-  let%lwt (sig_dependent_files, all_dependent_files) =
+  let%lwt all_dependent_files =
     get_dependent_files sig_dependency_graph implementation_dependency_graph roots
   in
   let%lwt (to_merge, to_check, _to_merge_or_check, components, _recheck_set) =
@@ -171,7 +171,6 @@ let merge_targets ~env ~options ~profiling ~get_dependent_files roots =
       ~input:(CheckedSet.of_focused_list (FilenameSet.elements roots))
       ~implementation_dependency_graph
       ~sig_dependency_graph
-      ~sig_dependent_files
       ~all_dependent_files
   in
   let roots = CheckedSet.all to_merge in
@@ -299,7 +298,7 @@ module SimpleTypedRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : TYPED_RUNNER_CONFIG 
 
         (* Calculate dependencies that need to be merged *)
         let%lwt (sig_dependency_graph, components, files_to_merge, _) =
-          let get_dependent_files _ _ _ = Lwt.return (FilenameSet.empty, FilenameSet.empty) in
+          let get_dependent_files _ _ _ = Lwt.return FilenameSet.empty in
           merge_targets ~env ~options ~profiling ~get_dependent_files roots
         in
         let mutator = Parsing_heaps.Merge_context_mutator.create transaction files_to_merge in
@@ -391,7 +390,7 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
                     )
               )
             else
-              Lwt.return (FilenameSet.empty, FilenameSet.empty)
+              Lwt.return FilenameSet.empty
           in
           merge_targets ~env ~options ~profiling ~get_dependent_files roots
         in

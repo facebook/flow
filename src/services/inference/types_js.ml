@@ -177,7 +177,6 @@ let include_dependencies_and_dependents
     ~input
     ~implementation_dependency_graph
     ~sig_dependency_graph
-    ~sig_dependent_files:_
     ~all_dependent_files =
   with_memory_timer_lwt ~options "PruneDeps" profiling (fun () ->
       (* We need to run the check phase on the entire input set as well as all_dependent_files.
@@ -663,7 +662,7 @@ let init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader 
 (** Given a set of focused files and a dependency graph, calculates the recursive dependents and
     returns a CheckedSet containing both the focused and dependent files. *)
 let focused_files_to_infer ~implementation_dependency_graph ~sig_dependency_graph focused =
-  let (_sig_dependents, roots) =
+  let roots =
     Pure_dep_graph_operations.calc_all_dependents
       ~sig_dependency_graph
       ~implementation_dependency_graph
@@ -805,7 +804,6 @@ type determine_what_to_recheck_result =
       to_merge_or_check: CheckedSet.t;
       components: File_key.t Nel.t list;
       recheck_set: FilenameSet.t;
-      sig_dependent_files: FilenameSet.t;
       all_dependent_files: FilenameSet.t;
     }
 
@@ -815,7 +813,6 @@ module Recheck : sig
     deleted: Utils_js.FilenameSet.t;
     to_merge: CheckedSet.t;
     to_check: CheckedSet.t;
-    sig_dependent_files: Utils_js.FilenameSet.t;
     all_dependent_files: Utils_js.FilenameSet.t;
     top_cycle: (File_key.t * int) option;
     merge_skip_count: int;
@@ -874,7 +871,6 @@ end = struct
     deleted: Utils_js.FilenameSet.t;
     to_merge: CheckedSet.t;
     to_check: CheckedSet.t;
-    sig_dependent_files: Utils_js.FilenameSet.t;
     all_dependent_files: Utils_js.FilenameSet.t;
     top_cycle: (File_key.t * int) option;
     merge_skip_count: int;
@@ -1430,14 +1426,11 @@ end = struct
        from the changed files ([input_focused] + [input_dependencies]) to all of the files that
        could be impacted by those changes.
 
-       [sig_dependent_files] is the set of files whose signatures transitively depend on the input.
-       We re-merge these because their exports may have changed.
-
        [all_dependent_files] is the set of files whose implementations directly depend on the
        signature dependents. In other words, if a file F imports something from G where G's
        signature is impacted by C (a changed file), then G is a sig dependent and F needs to be
        checked because its implementation may use something from C through G. *)
-    let%lwt (sig_dependent_files, all_dependent_files) =
+    let%lwt all_dependent_files =
       with_memory_timer_lwt ~options "AllDependentFiles" profiling (fun () ->
           let implementation_dependents =
             direct_dependents_to_recheck
@@ -1446,16 +1439,15 @@ end = struct
               ~focused:input_focused
               ~dependencies:input_dependencies
           in
-          let (sig_dependent_files, all_dependent_files) =
+          let all_dependent_files =
             Pure_dep_graph_operations.calc_all_dependents
               ~sig_dependency_graph
               ~implementation_dependency_graph
               implementation_dependents
           in
           (* Prevent files in node_modules from being added to the checked set. *)
-          let sig_dependent_files = filter_out_node_modules ~options sig_dependent_files in
           let all_dependent_files = filter_out_node_modules ~options all_dependent_files in
-          Lwt.return (sig_dependent_files, all_dependent_files)
+          Lwt.return all_dependent_files
       )
     in
     let input = unfocused_files_to_infer ~options ~input_focused ~input_dependencies in
@@ -1467,20 +1459,11 @@ end = struct
         ~input
         ~implementation_dependency_graph
         ~sig_dependency_graph
-        ~sig_dependent_files
         ~all_dependent_files
     in
     Lwt.return
       (Determine_what_to_recheck_result
-         {
-           to_merge;
-           to_check;
-           to_merge_or_check;
-           components;
-           recheck_set;
-           sig_dependent_files;
-           all_dependent_files;
-         }
+         { to_merge; to_check; to_merge_or_check; components; recheck_set; all_dependent_files }
       )
 
   (* This function assumes it is called after recheck_parse_and_update_dependency_info. It uses some
@@ -1522,7 +1505,6 @@ end = struct
                 to_merge_or_check;
                 components;
                 recheck_set;
-                sig_dependent_files;
                 all_dependent_files;
               }
               ) =
@@ -1629,7 +1611,6 @@ end = struct
           deleted;
           to_merge;
           to_check;
-          sig_dependent_files;
           all_dependent_files;
           top_cycle;
           merge_skip_count;
@@ -1764,7 +1745,6 @@ let recheck_impl
     deleted;
     to_merge;
     to_check;
-    sig_dependent_files;
     all_dependent_files;
     top_cycle;
     merge_skip_count;
@@ -1804,7 +1784,6 @@ let recheck_impl
       ~deleted
       ~to_merge
       ~to_check
-      ~sig_dependent_files
       ~all_dependent_files
       ~merge_skip_count
       ~check_skip_count
@@ -2533,7 +2512,6 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
   let { ServerEnv.files = parsed; dependency_info; errors; incr_collated_errors; _ } = env in
   with_transaction "full check" (fun transaction reader ->
       let%lwt input = files_to_infer ~options ~focus_targets ~profiling ~parsed ~dependency_info in
-      let sig_dependent_files = FilenameSet.empty in
       let all_dependent_files = FilenameSet.empty in
       let implementation_dependency_graph =
         Dependency_info.implementation_dependency_graph dependency_info
@@ -2547,7 +2525,6 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
           ~input
           ~implementation_dependency_graph
           ~sig_dependency_graph
-          ~sig_dependent_files
           ~all_dependent_files
       in
       (* The values to_merge and recheck_set are essentially the same as input, aggregated. This

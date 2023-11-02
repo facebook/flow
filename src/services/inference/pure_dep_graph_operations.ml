@@ -54,5 +54,4 @@ let calc_direct_dependents dependency_graph files =
   turn, directly or transitively depends on [files]. *)
 let calc_all_dependents ~sig_dependency_graph ~implementation_dependency_graph files =
   let all_sig_dependents = rdep_closure sig_dependency_graph files in
-  let all_dependents = calc_direct_dependents implementation_dependency_graph all_sig_dependents in
-  (all_sig_dependents, all_dependents)
+  calc_direct_dependents implementation_dependency_graph all_sig_dependents

@@ -39,16 +39,14 @@ let tests =
                     [("a", []); ("b", ["a"]); ("c", ["b"]); ("d", ["c"]); ("e", ["d"])]
                   in
                   let root_files = ["b"] in
-                  let (sig_dependents, all_dependents) =
+                  let all_dependents =
                     calc_all_dependents
                       ~sig_dependency_graph
                       ~implementation_dependency_graph
                       root_files
                   in
                   let expected_all_dependents = make_filename_set ["b"; "c"; "d"; "e"] in
-                  assert_sets_equal ~ctxt expected_all_dependents all_dependents;
-                  let expected_sig_dependents = make_filename_set ["b"; "c"; "d"; "e"] in
-                  assert_sets_equal ~ctxt expected_sig_dependents sig_dependents
+                  assert_sets_equal ~ctxt expected_all_dependents all_dependents
                 );
                 ( "long_chain_no_sig_dependencies" >:: fun ctxt ->
                   let sig_dependency_graph =
@@ -58,7 +56,7 @@ let tests =
                     [("a", []); ("b", ["a"]); ("c", ["b"]); ("d", ["c"]); ("e", ["d"])]
                   in
                   let root_files = ["b"] in
-                  let (sig_dependents, all_dependents) =
+                  let all_dependents =
                     calc_all_dependents
                       ~sig_dependency_graph
                       ~implementation_dependency_graph
@@ -66,9 +64,7 @@ let tests =
                   in
                   (* See comments on `calc_all_dependents` for why this is expected behavior. *)
                   let expected_all_dependents = make_filename_set ["b"; "c"] in
-                  assert_sets_equal ~ctxt expected_all_dependents all_dependents;
-                  let expected_sig_dependents = make_filename_set ["b"] in
-                  assert_sets_equal ~ctxt expected_sig_dependents sig_dependents
+                  assert_sets_equal ~ctxt expected_all_dependents all_dependents
                 );
               ];
        ]
