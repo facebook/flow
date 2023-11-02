@@ -153,9 +153,9 @@ function method(param /*: string */) /*: number */ {
 class MyClass {
 }
 
-// Comment type includes are emptied out
+// Comment type includes are not emptied out
 class MyClass {
-  /*:: prop; */
+  /*:: prop: string; */
 }
 
 // Inferred predicate

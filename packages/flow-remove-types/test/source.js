@@ -192,7 +192,7 @@ class MyClass {
   declare prop: string;
 }
 
-// Comment type includes are emptied out
+// Comment type includes are not emptied out
 class MyClass {
   /*:: prop: string; */
 }

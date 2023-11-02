@@ -7,7 +7,7 @@
  * @format
  */
 
-var parse = require('flow-parser').parse;
+var parse = require('hermes-parser').parse;
 var vlq = require('vlq');
 
 /**
@@ -57,16 +57,7 @@ module.exports = function flowRemoveTypes(source, options) {
   }
 
   // This parse configuration is intended to be as permissive as possible.
-  var ast = parse(source, {
-    esproposal_decorators: true,
-    esproposal_class_instance_fields: true,
-    esproposal_class_static_fields: true,
-    esproposal_export_star_as: true,
-    esproposal_optional_chaining: true,
-    esproposal_nullish_coalescing: true,
-    types: true,
-    tokens: true,
-  });
+  var ast = parse(source, {types: true, tokens: true});
 
   var removedNodes = [];
 
@@ -165,7 +156,7 @@ var removeFlowVisitor = {
   TypePredicate: removeNodeIfNotCommentType,
   TypeParameterDeclaration: removeNode,
   TypeParameterInstantiation: removeNode,
-  InferredPredicate: removeNode,
+  InferredPredicate: removeInferredPredicateNode,
   OpaqueType: removeNode,
   DeclareOpaqueType: removeNode,
   DeclareExportDeclaration: removeNode,
@@ -365,6 +356,16 @@ function removeNodeIfNotCommentType(context, node) {
   var start = startOf(node);
   if (source[start] === '/') {
     return false;
+  }
+  return removeNode(context, node);
+}
+
+function removeInferredPredicateNode(context, node) {
+  var tokens = context.ast.tokens;
+  var priorTokenIdx = findTokenIndexAtStartOfNode(tokens, node) - 1;
+  var token = tokens[priorTokenIdx];
+  if (token && token.type === 'Punctuator' && token.value === ':') {
+    removeNode(context, token);
   }
   return removeNode(context, node);
 }
