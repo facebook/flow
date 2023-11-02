@@ -11,9 +11,6 @@
     "lodash": ">=4.17.14",
     "sshpk": ">=1.13.2"
   },
-  "scripts": {
-    "prepublish": "yarn workspace flow-parser run prepublish"
-  },
   "packageManager": "yarn@1.22.19",
   "devDependencies": {}
 }

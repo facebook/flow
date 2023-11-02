@@ -788,15 +788,12 @@ workflows:
       - tool_test_linux:
           requires:
             - build_linux
-            - build_js
       - tool_test_macos:
           requires:
             - build_macos
-            - build_js
       - tool_test_win:
           requires:
             - build_win
-            - build_js
       - ounit_test_linux:
           requires:
             - checkout

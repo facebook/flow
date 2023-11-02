@@ -18,7 +18,7 @@
   },
   "scripts": {
     "test": "node test/run_tests.js",
-    "prepublish": "make js"
+    "build": "make js"
   },
   "dependencies": {},
   "devDependencies": {
