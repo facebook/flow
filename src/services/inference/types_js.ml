@@ -796,7 +796,7 @@ type determine_what_to_recheck_result =
       to_check: CheckedSet.t;
       components: File_key.t Nel.t list;
       recheck_set: FilenameSet.t;
-      all_dependent_files: FilenameSet.t;
+      dependent_file_count: int;
     }
 
 module Recheck : sig
@@ -1453,9 +1453,10 @@ end = struct
         ~sig_dependency_graph
         ~all_dependent_files
     in
+    let dependent_file_count = FilenameSet.cardinal all_dependent_files in
     Lwt.return
       (Determine_what_to_recheck_result
-         { to_merge; to_check; components; recheck_set; all_dependent_files }
+         { to_merge; to_check; components; recheck_set; dependent_file_count }
       )
 
   (* This function assumes it is called after recheck_parse_and_update_dependency_info. It uses some
@@ -1491,7 +1492,7 @@ end = struct
     in
     let sig_dependency_graph = Dependency_info.sig_dependency_graph dependency_info in
     let%lwt (Determine_what_to_recheck_result
-              { to_merge; to_check; components; recheck_set; all_dependent_files }
+              { to_merge; to_check; components; recheck_set; dependent_file_count }
               ) =
       let unchanged_files_to_force =
         CheckedSet.union unchanged_files_to_force unchanged_files_to_upgrade
@@ -1523,7 +1524,6 @@ end = struct
       ensure_parsed_or_trigger_recheck ~options ~profiling ~workers ~reader (CheckedSet.all to_merge)
     in
     (* recheck *)
-    let dependent_file_count = FilenameSet.cardinal all_dependent_files in
     let%lwt (updated_suppressions, merge_skip_count, sig_new_or_changed, top_cycle, time_to_merge) =
       if dependent_file_count > 0 then
         Hh_logger.info "recheck %d dependent files:" dependent_file_count;

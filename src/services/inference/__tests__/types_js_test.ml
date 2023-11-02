@@ -155,7 +155,7 @@ let tests =
                                      to_check;
                                      components = _;
                                      recheck_set = _;
-                                     all_dependent_files = _;
+                                     dependent_file_count = _;
                                    }
                                    ) =
                            determine_what_to_recheck
@@ -189,7 +189,7 @@ let tests =
                                      to_check;
                                      components = _;
                                      recheck_set = _;
-                                     all_dependent_files = _;
+                                     dependent_file_count = _;
                                    }
                                    ) =
                            determine_what_to_recheck
@@ -229,7 +229,7 @@ let tests =
                                      to_check;
                                      components = _;
                                      recheck_set = _;
-                                     all_dependent_files = _;
+                                     dependent_file_count = _;
                                    }
                                    ) =
                            determine_what_to_recheck
@@ -265,7 +265,7 @@ let tests =
                                      to_check;
                                      components = _;
                                      recheck_set = _;
-                                     all_dependent_files = _;
+                                     dependent_file_count = _;
                                    }
                                    ) =
                            determine_what_to_recheck
@@ -305,7 +305,7 @@ let tests =
                                      to_check;
                                      components = _;
                                      recheck_set = _;
-                                     all_dependent_files = _;
+                                     dependent_file_count = _;
                                    }
                                    ) =
                            determine_what_to_recheck

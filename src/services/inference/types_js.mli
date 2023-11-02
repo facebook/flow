@@ -56,7 +56,7 @@ type determine_what_to_recheck_result =
       to_check: CheckedSet.t;
       components: File_key.t Nel.t list;
       recheck_set: FilenameSet.t;
-      all_dependent_files: FilenameSet.t;
+      dependent_file_count: int;
     }
 
 val debug_determine_what_to_recheck :
