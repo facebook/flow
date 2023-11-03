@@ -193,6 +193,23 @@ let inherited_method = function
   | OrdinaryName "constructor" -> false
   | _ -> true
 
+let find_resolved_opt cx ~default ~f id =
+  let constraints = Context.find_graph cx id in
+  match constraints with
+  | Resolved t
+  | FullyResolved (lazy t) ->
+    f t
+  | Unresolved _ -> default
+
+let rec drop_resolved cx t =
+  match t with
+  | GenericT { reason; name; id = g_id; bound = OpenT (_, id) } ->
+    find_resolved_opt cx id ~default:t ~f:(fun t ->
+        GenericT { reason; name; id = g_id; bound = drop_resolved cx t }
+    )
+  | OpenT (_, id) -> find_resolved_opt cx id ~default:t ~f:(drop_resolved cx)
+  | _ -> t
+
 (********************** start of slab **********************************)
 module M__flow
     (FlowJs : Flow_common.S)
@@ -6904,24 +6921,7 @@ struct
     let evaluated = Context.evaluated cx in
     (* As an optimization, unwrap resolved tvars so that they are only evaluated
      * once to an annotation instead of a tvar that gets a bound on both sides. *)
-    let t =
-      match t with
-      | GenericT { reason; name; id = g_id; bound = OpenT (_, id) } ->
-        let constraints = Context.find_graph cx id in
-        (match constraints with
-        | Resolved t
-        | FullyResolved (lazy t) ->
-          GenericT { reason; name; id = g_id; bound = t }
-        | Unresolved _ -> t)
-      | OpenT (_, id) ->
-        let constraints = Context.find_graph cx id in
-        (match constraints with
-        | Resolved t
-        | FullyResolved (lazy t) ->
-          t
-        | Unresolved _ -> t)
-      | _ -> t
-    in
+    let t = drop_resolved cx t in
     let slingshot =
       match drop_generic t with
       | OpenT _ -> false
