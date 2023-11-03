@@ -2795,7 +2795,7 @@ struct
               )
           | None ->
             if promote_structural_components then
-              (* We only want to promote if this is actually a React element, otherwise we want
+              (* We only want to promote if this is actually a React of a component, otherwise we want
                * to flow the original object to the tout.
                *
                * We perform a speculative subtyping check and then use ComponentRenders to
@@ -2803,10 +2803,18 @@ struct
                * TryRenderTypePromotionT, and we continue with renders subtyping if we get a RendersT
                * from ComponentRenders, otherwise we error, as we've already checked for structural
                * compatibility in subtyping kit. *)
-              let mixed_element =
-                get_builtin_type cx ~trace reason (OrdinaryName "React$MixedElement")
+              let top_abstract_component =
+                let config = EmptyT.why reason (bogus_trust ()) in
+                let instance = MixedT.why reason (bogus_trust ()) in
+                let renders = get_builtin_type cx reason (OrdinaryName "React$Node") in
+                DefT
+                  ( reason,
+                    bogus_trust (),
+                    ReactAbstractComponentT
+                      { config; instance; renders; component_kind = Structural }
+                  )
               in
-              if speculative_subtyping_succeeds cx l mixed_element then
+              if speculative_subtyping_succeeds cx component_t top_abstract_component then
                 let render_type =
                   get_builtin_typeapp
                     cx
