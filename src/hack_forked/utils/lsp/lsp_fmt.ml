@@ -1750,6 +1750,7 @@ let request_name_to_string (request : lsp_request) : string =
   | DocumentRangeFormattingRequest _ -> "textDocument/rangeFormatting"
   | DocumentOnTypeFormattingRequest _ -> "textDocument/onTypeFormatting"
   | RageRequest -> "telemetry/rage"
+  | PingRequest -> "telemetry/ping"
   | RenameRequest _ -> "textDocument/rename"
   | DocumentCodeLensRequest _ -> "textDocument/codeLens"
   | ExecuteCommandRequest _ -> "workspace/executeCommand"
@@ -1786,6 +1787,7 @@ let result_name_to_string (result : lsp_result) : string =
   | DocumentRangeFormattingResult _ -> "textDocument/rangeFormatting"
   | DocumentOnTypeFormattingResult _ -> "textDocument/onTypeFormatting"
   | RageResult _ -> "telemetry/rage"
+  | PingResult -> "telemetry/ping"
   | RenameResult _ -> "textDocument/rename"
   | DocumentCodeLensResult _ -> "textDocument/codeLens"
   | ExecuteCommandResult _ -> "workspace/executeCommand"
@@ -1859,6 +1861,7 @@ let parse_lsp_request (method_ : string) (params : json option) : lsp_request =
   | "textDocument/selectionRange" -> SelectionRangeRequest (SelectionRangeFmt.params_of_json params)
   | "textDocument/signatureHelp" -> SignatureHelpRequest (SignatureHelpFmt.of_json params)
   | "telemetry/rage" -> RageRequest
+  | "telemetry/ping" -> PingRequest
   | "workspace/executeCommand" -> ExecuteCommandRequest (ExecuteCommandFmt.params_of_json params)
   | "workspace/configuration" -> ConfigurationRequest (ConfigurationFmt.params_of_json params)
   | "workspace/willRenameFiles" -> WillRenameFilesRequest (WillRenameFilesFmt.params_of_json params)
@@ -1925,6 +1928,7 @@ let parse_lsp_result (request : lsp_request) (result : json) : lsp_result =
   | DocumentRangeFormattingRequest _
   | DocumentOnTypeFormattingRequest _
   | RageRequest
+  | PingRequest
   | RenameRequest _
   | WillRenameFilesRequest _
   | DocumentCodeLensRequest _
@@ -1994,6 +1998,7 @@ let print_lsp_request (id : lsp_id) (request : lsp_request) : json =
     | DocumentRangeFormattingRequest _
     | DocumentOnTypeFormattingRequest _
     | RageRequest
+    | PingRequest
     | RenameRequest _
     | WillRenameFilesRequest _
     | DocumentCodeLensRequest _
@@ -2035,6 +2040,7 @@ let print_lsp_response ?include_error_stack_trace ~key (id : lsp_id) (result : l
     | DocumentRangeFormattingResult r -> print_documentRangeFormatting r
     | DocumentOnTypeFormattingResult r -> print_documentOnTypeFormatting r
     | RageResult r -> print_rage r
+    | PingResult -> JSON_String "pong"
     | RenameResult r -> RenameFmt.json_of_result r
     | DocumentCodeLensResult r -> DocumentCodeLensFmt.json_of_result ~key r
     | ExecuteCommandResult r -> ExecuteCommandFmt.json_of_result r

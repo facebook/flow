@@ -2716,6 +2716,10 @@ let handle_persistent_rage ~reader ~genv ~id ~metadata ~client:_ ~profiling ~env
   let response = ResponseMessage (id, RageResult items) in
   Lwt.return (LspProt.LspFromServer (Some response), metadata)
 
+let handle_persistent_ping ~id ~metadata ~client:_ ~profiling:_ ~env:_ =
+  let response = ResponseMessage (id, PingResult) in
+  Lwt.return (LspProt.LspFromServer (Some response), metadata)
+
 let handle_persistent_log_command ~id ~metadata ~arguments:_ ~client:_ ~profiling:_ =
   (* don't need to do anything, since everything we need to log is already in `metadata` *)
   (LspProt.LspFromServer (Some (ResponseMessage (id, ExecuteCommandResult ()))), metadata)
@@ -3160,6 +3164,8 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
   | LspToServer (RequestMessage (id, RageRequest)) ->
     (* Whoever is waiting for the rage results probably doesn't want to wait for a recheck *)
     mk_parallelizable_persistent ~options (handle_persistent_rage ~reader ~genv ~id ~metadata)
+  | LspToServer (RequestMessage (id, PingRequest)) ->
+    mk_parallelizable_persistent ~options (handle_persistent_ping ~id ~metadata)
   | LspToServer (RequestMessage (id, ExecuteCommandRequest params)) ->
     let ExecuteCommand.{ command = Command.Command command; arguments } = params in
     let extra_data =

@@ -502,6 +502,7 @@ let default_mapper =
           ShowMessageRequestResult (mapper.of_show_message_request_result mapper result)
         | ShowStatusResult result -> ShowStatusResult (mapper.of_show_status_result mapper result)
         | RageResult result -> RageResult (mapper.of_rage_result mapper result)
+        | PingResult -> PingResult
         | RegisterCapabilityResult -> RegisterCapabilityResult
         | RenameResult result -> RenameResult (mapper.of_rename_result mapper result)
         | DocumentCodeLensResult result ->
@@ -564,6 +565,7 @@ let default_mapper =
           ShowMessageRequestRequest (mapper.of_show_message_request_params mapper params)
         | ShowStatusRequest params -> ShowStatusRequest (mapper.of_show_status_params mapper params)
         | RageRequest -> RageRequest
+        | PingRequest -> PingRequest
         | RenameRequest params -> RenameRequest (mapper.of_rename_params mapper params)
         | DocumentCodeLensRequest params ->
           DocumentCodeLensRequest (mapper.of_document_code_lens_params mapper params)

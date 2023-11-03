@@ -1197,6 +1197,7 @@ type lsp_request =
   | ShowMessageRequestRequest of ShowMessageRequest.params
   | ShowStatusRequest of ShowStatus.params
   | RageRequest
+  | PingRequest
   | RenameRequest of Rename.params
   | DocumentCodeLensRequest of DocumentCodeLens.params
   | ExecuteCommandRequest of ExecuteCommand.params
@@ -1232,6 +1233,7 @@ type lsp_result =
   | ShowMessageRequestResult of ShowMessageRequest.result
   | ShowStatusResult of ShowStatus.result
   | RageResult of Rage.result
+  | PingResult
   | RenameResult of Rename.result
   | DocumentCodeLensResult of DocumentCodeLens.result
   | ExecuteCommandResult of ExecuteCommand.result
