@@ -108,8 +108,9 @@ type read_entry = {
   name: string option;
 }
 
-(* An environment is a map from variables to values. *)
-module Env = struct
+(* A partial environment is a map from variables to environment value snapshots.
+ * This environment contains only the set of values that might change under the current scope. *)
+module PartialEnvSnapshot = struct
   type entry = {
     env_val: Val.t;
     heap_refinements: heap_refinement_map;
@@ -126,6 +127,251 @@ module Env = struct
     heap_refinements_ref := heap_refinements
 
   type t = entry SMap.t
+
+  let read_with_fallback ~fallback x env =
+    match SMap.find_opt x env with
+    | Some v -> v
+    | None -> fallback x
+end
+
+(**
+ * In this module, we maintain a mapping from names to mutable environment values that
+ * represent the state of the program. Instead of a simple name -> value mapping, we have
+ * multiple hierarchies.
+ *
+ * e.g.
+ * ```
+ * const foo = 1; /* v1 */
+ * () => {
+ *   const foo = 1; /* v2 */
+ *   { const foo = 1; /* v3 */ }
+ * }
+ * ```
+ *
+ * In the inner most scope, a full environment will be:
+ * ```
+ * -----------------------
+ * {"foo" => [v3; v2]}
+ * -----------------------
+ * {"foo" => [v1]}
+ * -----------------------
+ * ```
+ *
+ * Note that we organize the environment into two kinds of stacks:
+ * - function scope stack (separated by --- in the ASCII art)
+ * - local shadowing stack (separated by ; within [] in the ASCII art)
+ *
+ * We push a new stack function scope entry when we enter the function body.
+ * Everything below the entry will be frozen. aka no mutations are possible on
+ * any value below the entry will be possible. This encodes the idea that, for
+ * type checking purposes, no effect happening inside the function body can leak
+ * outside.
+ *
+ * The local shadowing stack represents shadowing that might happen when we enter
+ * a new lexical scope. We still need to keep around all the shadowed entries so
+ * that refinement invalidation can still be done on those entries.
+ *
+ * In addition to entries that are defined locally in the function scope, we need
+ * to also keep tracked of refinements done on captured value. Therefore, in each
+ * function scope, we also maintain a lazily populated `captured` map.
+ *
+ * The module also contains some function that merges environment with snapshots.
+ * We do not have the invariant that environment and snapshot has the same key set.
+ * Instead, the current environment's keyset is a super set of snapshot's key set,
+ * since the captured value map is monotonously increasing in the current environment.
+ *)
+module FullEnv : sig
+  type t
+
+  (** Initialize the environment with globals *)
+  val init : env_val SMap.t -> t
+
+  val fold_current_function_scope_values : init:'a -> f:('a -> env_val -> 'a) -> t -> 'a
+
+  val env_read_opt :
+    should_havoc_val_to_initialized:(env_val -> bool) -> string -> t -> env_val option
+
+  val env_read : should_havoc_val_to_initialized:(env_val -> bool) -> string -> t -> env_val
+
+  val env_read_entry_from_below :
+    should_havoc_val_to_initialized:(env_val -> bool) -> string -> t -> PartialEnvSnapshot.entry
+
+  (** Push new bindings that might shadow bindings in the current function scope. *)
+  val push_new_bindings : env_val SMap.t -> t -> t
+
+  val push_new_function_scope : t -> t
+
+  val to_partial_env_snapshot :
+    f:(string -> env_val -> PartialEnvSnapshot.entry) -> t -> PartialEnvSnapshot.t
+
+  (* Update the environment entry for every single value in the current function scope.
+   * This function should not be used for environment merging purposes. *)
+  val update_env : f:(string -> env_val -> unit) -> t -> unit
+
+  val update_env_with_partial_env_snapshot :
+    should_havoc_val_to_initialized:(env_val -> bool) ->
+    f:(string -> PartialEnvSnapshot.entry -> env_val -> unit) ->
+    PartialEnvSnapshot.t ->
+    t ->
+    unit
+
+  val merge_env_with_partial_env_snapshots :
+    should_havoc_val_to_initialized:(env_val -> bool) ->
+    f:(PartialEnvSnapshot.entry -> PartialEnvSnapshot.entry -> env_val -> unit) ->
+    PartialEnvSnapshot.t ->
+    PartialEnvSnapshot.t ->
+    t ->
+    unit
+end = struct
+  type function_scope = {
+    local_stacked_env: env_val Nel.t SMap.t;
+    captured: env_val SMap.t ref;
+  }
+
+  type t = function_scope Nel.t
+
+  let init globals =
+    ({ local_stacked_env = SMap.map Nel.one globals; captured = ref SMap.empty }, [])
+
+  let copy_env_val_from_env_below ~should_havoc_val_to_initialized env_val =
+    let { val_ref; havoc; writes_by_closure_provider_val; def_loc; heap_refinements = _; kind } =
+      env_val
+    in
+    if should_havoc_val_to_initialized env_val then
+      {
+        val_ref = ref havoc;
+        havoc;
+        writes_by_closure_provider_val;
+        def_loc;
+        heap_refinements = ref HeapRefinementMap.empty;
+        kind;
+      }
+    else
+      {
+        val_ref = ref !val_ref;
+        havoc;
+        writes_by_closure_provider_val;
+        def_loc;
+        heap_refinements = ref HeapRefinementMap.empty;
+        kind;
+      }
+
+  let function_scope_read x ({ local_stacked_env; captured } : function_scope) =
+    match SMap.find_opt x local_stacked_env with
+    | Some (v, _) -> Some v
+    | None -> SMap.find_opt x !captured
+
+  let map_function_scope_into_partial_env_entries
+      ~f ({ local_stacked_env; captured } : function_scope) : PartialEnvSnapshot.t =
+    let acc = SMap.mapi (fun x (v, _) -> f x v) local_stacked_env in
+    SMap.fold
+      (fun x v ->
+        SMap.adjust x (function
+            | None -> f x v
+            | Some existing -> existing
+            ))
+      !captured
+      acc
+
+  let iter_function_scope ~f ({ local_stacked_env; captured } : function_scope) =
+    SMap.iter (fun x (v, _) -> f x v) local_stacked_env;
+    SMap.iter
+      (fun x v ->
+        if SMap.mem x local_stacked_env then
+          ()
+        else
+          f x v)
+      !captured
+
+  let fold_current_function_scope_values ~init ~f (env : t) =
+    let ({ local_stacked_env; captured }, _) = env in
+    let acc = SMap.fold (fun _ elts acc -> Nel.fold_left f acc elts) local_stacked_env init in
+    SMap.fold (fun _ v acc -> f acc v) !captured acc
+
+  let env_read_opt ~should_havoc_val_to_initialized x (env : t) =
+    let (head_scope, tail_scopes) = env in
+    match function_scope_read x head_scope with
+    | Some v -> Some v
+    | None ->
+      (match Base.List.find_map tail_scopes ~f:(function_scope_read x) with
+      | None -> None
+      | Some env_val ->
+        let copy = copy_env_val_from_env_below ~should_havoc_val_to_initialized env_val in
+        head_scope.captured := SMap.add x copy !(head_scope.captured);
+        Some copy)
+
+  let env_read ~should_havoc_val_to_initialized x env =
+    match env_read_opt ~should_havoc_val_to_initialized x env with
+    | Some v -> v
+    | None -> raise Env_api.(Env_invariant (None, MissingEnvEntry x))
+
+  let env_read_from_below ~should_havoc_val_to_initialized x (env : t) =
+    let (_, tail_scopes) = env in
+    match Base.List.find_map tail_scopes ~f:(function_scope_read x) with
+    | None -> raise Env_api.(Env_invariant (None, MissingEnvEntry x))
+    | Some v -> copy_env_val_from_env_below ~should_havoc_val_to_initialized v
+
+  let env_read_entry_from_below ~should_havoc_val_to_initialized x (env : t) =
+    env_read_from_below ~should_havoc_val_to_initialized x env
+    |> PartialEnvSnapshot.entry_of_env_val
+
+  let push_new_bindings bindings (env : t) : t =
+    let (old_scope, tail_scopes) = env in
+    let new_stacked_env =
+      SMap.fold
+        (fun x v ->
+          SMap.adjust x (function
+              | None -> Nel.one v
+              | Some y -> Nel.cons v y
+              ))
+        bindings
+        old_scope.local_stacked_env
+    in
+    ({ old_scope with local_stacked_env = new_stacked_env }, tail_scopes)
+
+  let push_new_function_scope (env : t) : t =
+    Nel.cons { local_stacked_env = SMap.empty; captured = ref SMap.empty } env
+
+  let to_partial_env_snapshot ~f env =
+    let (hd_scope, _) = env in
+    map_function_scope_into_partial_env_entries ~f hd_scope
+
+  let update_env ~f (env : t) =
+    let (hd_scope, _) = env in
+    iter_function_scope ~f hd_scope
+
+  let update_env_with_partial_env_snapshot
+      ~should_havoc_val_to_initialized ~f (partial_env : PartialEnvSnapshot.t) (env : t) =
+    let (hd_scope, _) = env in
+    iter_function_scope hd_scope ~f:(fun x env_val ->
+        let env_entry =
+          PartialEnvSnapshot.read_with_fallback x partial_env ~fallback:(fun x ->
+              env_read_entry_from_below ~should_havoc_val_to_initialized x env
+          )
+        in
+        f x env_entry env_val
+    )
+
+  let merge_env_with_partial_env_snapshots
+      ~should_havoc_val_to_initialized
+      ~f
+      (env1 : PartialEnvSnapshot.t)
+      (env2 : PartialEnvSnapshot.t)
+      (env : t) =
+    let (hd_scope, _) = env in
+    iter_function_scope hd_scope ~f:(fun x env_val ->
+        let v1 =
+          PartialEnvSnapshot.read_with_fallback x env1 ~fallback:(fun x ->
+              env_read_entry_from_below ~should_havoc_val_to_initialized x env
+          )
+        in
+        let v2 =
+          PartialEnvSnapshot.read_with_fallback x env2 ~fallback:(fun x ->
+              env_read_entry_from_below ~should_havoc_val_to_initialized x env
+          )
+        in
+        f v1 v2 env_val
+    )
 end
 
 let smap_find x t =
@@ -142,14 +388,6 @@ let imap_find x t =
   match IMap.find_opt x t with
   | Some r -> r
   | None -> raise Env_api.(Env_invariant (None, Impossible (Utils_js.spf "%d missing in map" x)))
-
-let rec list_iter3 f l1 l2 l3 =
-  match (l1, l2, l3) with
-  | ([], [], []) -> ()
-  | (x1 :: l1, x2 :: l2, x3 :: l3) ->
-    f x1 x2 x3;
-    list_iter3 f l1 l2 l3
-  | _ -> raise Env_api.(Env_invariant (None, Impossible "list_iter3 mismatch"))
 
 (* Abrupt completions induce control flows, so modeling them accurately is
    necessary for soundness. *)
@@ -184,7 +422,7 @@ module AbruptCompletion = struct
   (* An abrupt completion carries an environment, which is the current
      environment at the point where the abrupt completion is "raised." This
      environment is merged wherever the abrupt completion is "handled." *)
-  type env = t * Env.t
+  type env = t * PartialEnvSnapshot.t
 end
 
 module SuperCallInDerivedCtorChecker : sig
@@ -378,7 +616,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
      * any point in the code. The latest_refinement maps keep track of which entries to read. *)
     refinement_heap: refinement_chain IMap.t;
     latest_refinements: refinement_maps list;
-    env: env_val Nel.t SMap.t;
+    env: FullEnv.t;
     (* A set of names that have to be excluded from binding.
        This set is always empty when we are checking normal code. It will only be possibly non-empty
        when we are checking libdef code. In libdefs, this set represents a list of names that we
@@ -692,26 +930,23 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
       | Options.Jsx_react -> Some "React"
       | Options.Jsx_pragma (_, ast) -> extract_jsx_basename ast
     in
-    let globals = SMap.map Nel.one globals in
     match jsx_base_name with
-    | None -> (globals, None)
+    | None -> (FullEnv.init globals, None)
     | Some jsx_base_name ->
       (* We use a global here so that if the base name is never created locally
        * we first check the globals before emitting an error *)
       let global_val = Val.global jsx_base_name in
-      let entry =
-        ( {
-            val_ref = ref global_val;
-            havoc = global_val;
-            writes_by_closure_provider_val = None;
-            def_loc = None;
-            heap_refinements = ref HeapRefinementMap.empty;
-            kind = Bindings.Var;
-          },
-          []
-        )
+      let env_val =
+        {
+          val_ref = ref global_val;
+          havoc = global_val;
+          writes_by_closure_provider_val = None;
+          def_loc = None;
+          heap_refinements = ref HeapRefinementMap.empty;
+          kind = Bindings.Var;
+        }
       in
-      (SMap.add jsx_base_name entry globals, Some jsx_base_name)
+      (FullEnv.init (SMap.add jsx_base_name env_val globals), Some jsx_base_name)
 
   let conj_total t1 t2 =
     match (t1, t2) with
@@ -913,14 +1148,42 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         env_state <- { env_state with curr_id };
         new_id
 
+      method private should_invalidate ~all def_loc =
+        match def_loc with
+        | None -> true
+        | Some loc ->
+          Invalidation_api.should_invalidate
+            ~all
+            invalidation_caches
+            prepass_info
+            prepass_values
+            loc
+
       method env_read x =
-        match SMap.find_opt x env_state.env with
-        | Some (hd, _) -> hd
-        | None -> raise Env_api.(Env_invariant (None, MissingEnvEntry x))
+        FullEnv.env_read
+          ~should_havoc_val_to_initialized:this#should_havoc_val_to_initialized
+          x
+          env_state.env
 
-      method env_read_opt x = SMap.find_opt x env_state.env |> Base.Option.map ~f:Nel.hd
+      method env_read_opt x =
+        FullEnv.env_read_opt
+          ~should_havoc_val_to_initialized:this#should_havoc_val_to_initialized
+          x
+          env_state.env
 
-      method env : Env.t = SMap.map (fun (env_val, _) -> Env.entry_of_env_val env_val) env_state.env
+      method env_read_into_snapshot_from_below x =
+        FullEnv.env_read_entry_from_below
+          ~should_havoc_val_to_initialized:this#should_havoc_val_to_initialized
+          x
+          env_state.env
+
+      method partial_env_snapshot_read x (env : PartialEnvSnapshot.t) =
+        PartialEnvSnapshot.read_with_fallback x env ~fallback:this#env_read_into_snapshot_from_below
+
+      method env_snapshot : PartialEnvSnapshot.t =
+        FullEnv.to_partial_env_snapshot
+          ~f:(fun _x v -> PartialEnvSnapshot.entry_of_env_val v)
+          env_state.env
 
       (* We often want to merge the refinement scopes and writes of two environments with
        * different strategies, especially in logical refinement scopes. In order to do that, we
@@ -931,7 +1194,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
        * An alternative implementation here might have just used PHI nodes to model disjunctions
        * and successive refinement writes to model conjunctions, but it's not clear that that
        * approach is simpler than this one. *)
-      method env_without_latest_refinements : Env.t =
+      method env_snapshot_without_latest_refinements : PartialEnvSnapshot.t =
         let refinements_by_key { applied; _ } =
           IMap.fold
             (fun _ (lookup_key, refinement_id) ->
@@ -948,8 +1211,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                ~f:(fun refinement_ids -> ISet.fold Val.unrefine refinement_ids v)
                ~default:v
         in
-        SMap.mapi
-          (fun name ({ val_ref; heap_refinements; def_loc; _ }, _) ->
+        FullEnv.to_partial_env_snapshot
+          ~f:(fun name { val_ref; heap_refinements; def_loc; _ } ->
             let head = List.hd env_state.latest_refinements in
             let refinements_by_key = refinements_by_key head in
             let lookup_key = RefinementKey.lookup_of_name name in
@@ -961,7 +1224,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                   unrefine refinements_by_key lookup_key v)
                 !heap_refinements
             in
-            { Env.env_val; heap_refinements = unrefined_heap_refinements; def_loc })
+            { PartialEnvSnapshot.env_val; heap_refinements = unrefined_heap_refinements; def_loc })
           env_state.env
 
       method merge_heap_refinements =
@@ -981,14 +1244,18 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             | _ -> None
         )
 
-      method merge_remote_env (env : Env.t) : unit =
+      method merge_remote_env (env : PartialEnvSnapshot.t) : unit =
         (* NOTE: env might have more keys than env_state.env, since the environment it
            describes might be nested inside the current environment *)
-        SMap.iter
-          (fun x
-               ({ val_ref; havoc; heap_refinements = heap_refinements1; def_loc = def_loc_1; _ }, _) ->
-            let { Env.env_val; heap_refinements = heap_refinements2; def_loc = def_loc_2 } =
-              smap_find x env
+        FullEnv.update_env
+          ~f:
+            (fun x { val_ref; havoc; heap_refinements = heap_refinements1; def_loc = def_loc_1; _ } ->
+            let {
+              PartialEnvSnapshot.env_val;
+              heap_refinements = heap_refinements2;
+              def_loc = def_loc_2;
+            } =
+              this#partial_env_snapshot_read x env
             in
             if def_loc_1 = def_loc_2 then (
               val_ref := this#merge_vals_with_havoc ~havoc ~def_loc:def_loc_1 !val_ref env_val;
@@ -996,41 +1263,60 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             ))
           env_state.env
 
-      method merge_env (env1 : Env.t) (env2 : Env.t) : unit =
-        let env1 = SMap.values env1 in
-        let env2 = SMap.values env2 in
-        let env = SMap.values env_state.env in
-        list_iter3
-          (fun ({ val_ref; havoc; heap_refinements; def_loc; _ }, _)
-               { Env.env_val = value1; heap_refinements = heap_refinements1; def_loc = _ }
-               { Env.env_val = value2; heap_refinements = heap_refinements2; def_loc = _ } ->
-            val_ref := this#merge_vals_with_havoc ~havoc ~def_loc value1 value2;
-            heap_refinements := this#merge_heap_refinements heap_refinements1 heap_refinements2)
-          env
+      method merge_env (env1 : PartialEnvSnapshot.t) (env2 : PartialEnvSnapshot.t) : unit =
+        FullEnv.merge_env_with_partial_env_snapshots
           env1
           env2
+          env_state.env
+          ~should_havoc_val_to_initialized:this#should_havoc_val_to_initialized
+          ~f:(fun
+               {
+                 PartialEnvSnapshot.env_val = value1;
+                 heap_refinements = heap_refinements1;
+                 def_loc = _;
+               }
+               {
+                 PartialEnvSnapshot.env_val = value2;
+                 heap_refinements = heap_refinements2;
+                 def_loc = _;
+               }
+               { val_ref; havoc; heap_refinements; def_loc; _ }
+             ->
+            val_ref := this#merge_vals_with_havoc ~havoc ~def_loc value1 value2;
+            heap_refinements := this#merge_heap_refinements heap_refinements1 heap_refinements2
+        )
 
-      method merge_self_env (other_env : Env.t) : unit =
-        let other_env = SMap.values other_env in
-        let env = SMap.values env_state.env in
-        List.iter2
-          (fun ({ val_ref; havoc; heap_refinements; def_loc; _ }, _)
-               { Env.env_val = value; heap_refinements = new_heap_refinements; def_loc = _ } ->
-            val_ref := this#merge_vals_with_havoc ~havoc ~def_loc !val_ref value;
-            heap_refinements := this#merge_heap_refinements !heap_refinements new_heap_refinements)
-          env
+      method merge_self_env (other_env : PartialEnvSnapshot.t) : unit =
+        FullEnv.update_env_with_partial_env_snapshot
           other_env
+          env_state.env
+          ~should_havoc_val_to_initialized:this#should_havoc_val_to_initialized
+          ~f:(fun
+               _
+               {
+                 PartialEnvSnapshot.env_val = value;
+                 heap_refinements = new_heap_refinements;
+                 def_loc = _;
+               }
+               { val_ref; havoc; heap_refinements; def_loc; _ }
+             ->
+            val_ref := this#merge_vals_with_havoc ~havoc ~def_loc !val_ref value;
+            heap_refinements := this#merge_heap_refinements !heap_refinements new_heap_refinements
+        )
 
-      method reset_env (env0 : Env.t) : unit =
-        let env0 = SMap.values env0 in
-        let env = SMap.values env_state.env in
-        List.iter2 (fun (env_val, _) entry -> Env.reset_val_with_entry entry env_val) env env0
+      method reset_env (env0 : PartialEnvSnapshot.t) : unit =
+        FullEnv.update_env_with_partial_env_snapshot
+          env0
+          env_state.env
+          ~should_havoc_val_to_initialized:this#should_havoc_val_to_initialized
+          ~f:(fun _ -> PartialEnvSnapshot.reset_val_with_entry
+        )
 
-      method empty_env : Env.t =
-        SMap.map
-          (fun _ ->
+      method empty_env_snapshot : PartialEnvSnapshot.t =
+        FullEnv.to_partial_env_snapshot
+          ~f:(fun _ _ ->
             {
-              Env.env_val = Val.empty ();
+              PartialEnvSnapshot.env_val = Val.empty ();
               heap_refinements = HeapRefinementMap.empty;
               (* The empty env is always used as a reset value,
                  and the reset_env method (see above) does not mutate def_loc at all.
@@ -1108,7 +1394,9 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           (match this#env_read_opt base with
           | None -> None
           | Some env_val ->
-            let { Env.env_val; heap_refinements; def_loc = _ } = Env.entry_of_env_val env_val in
+            let { PartialEnvSnapshot.env_val; heap_refinements; def_loc = _ } =
+              PartialEnvSnapshot.entry_of_env_val env_val
+            in
             (match projections with
             | [] -> Some env_val
             | _ ->
@@ -1138,89 +1426,56 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
       method havoc_heap_refinements heap_refinements = heap_refinements := HeapRefinementMap.empty
 
       method havoc_all_heap_refinements () =
-        SMap.iter
-          (fun _ elts ->
-            Nel.iter
-              (fun { heap_refinements; _ } -> this#havoc_heap_refinements heap_refinements)
-              elts)
+        FullEnv.update_env
+          ~f:(fun _ { heap_refinements; _ } -> this#havoc_heap_refinements heap_refinements)
           env_state.env
 
-      method havoc_env ~all ~deep ~loc =
-        let force_initialization = not deep in
+      method havoc_current_env ~all ~loc =
         let havoced_ids =
-          SMap.fold
-            (fun _x elts acc ->
-              let elts =
-                if deep then
-                  elts
-                else
-                  Nel.hd elts |> Nel.one
+          FullEnv.fold_current_function_scope_values env_state.env ~init:ISet.empty ~f:(fun acc -> function
+            | { kind = Bindings.Internal; _ } -> acc
+            | {
+                val_ref;
+                havoc;
+                writes_by_closure_provider_val;
+                def_loc;
+                heap_refinements;
+                kind = _;
+              } ->
+              this#havoc_heap_refinements heap_refinements;
+              let uninitialized_writes =
+                lazy (Val.writes_of_uninitialized this#refinement_may_be_undefined !val_ref)
               in
-              Nel.fold_left
-                (fun acc elt ->
-                  match elt with
-                  | { kind = Bindings.Internal; _ } -> acc
-                  | {
-                   val_ref;
-                   havoc;
-                   writes_by_closure_provider_val;
-                   def_loc;
-                   heap_refinements;
-                   kind = _;
-                  } ->
-                    this#havoc_heap_refinements heap_refinements;
-                    let uninitialized_writes =
-                      lazy (Val.writes_of_uninitialized this#refinement_may_be_undefined !val_ref)
-                    in
-                    let val_is_undeclared_or_skipped = Val.is_undeclared_or_skipped !val_ref in
-                    let havoc_ref =
-                      if force_initialization then
-                        havoc
-                      else if val_is_undeclared_or_skipped then
-                        !val_ref
-                      else
-                        let havoc =
-                          match (all, writes_by_closure_provider_val) with
-                          | (false, Some writes_by_closure_provider_val) ->
-                            Val.merge !val_ref writes_by_closure_provider_val
-                          | _ -> havoc
-                        in
-                        Base.List.fold
-                          ~init:havoc
-                          ~f:(fun acc write -> Val.merge acc (Val.of_write write))
-                          (Lazy.force uninitialized_writes)
-                    in
-                    if
-                      Base.Option.is_none def_loc
-                      || Invalidation_api.should_invalidate
-                           ~all
-                           invalidation_caches
-                           prepass_info
-                           prepass_values
-                           (Base.Option.value_exn def_loc (* checked against none above *))
-                      || force_initialization
-                         && (List.length (Lazy.force uninitialized_writes) > 0
-                            || val_is_undeclared_or_skipped
-                            )
-                    then begin
-                      val_ref := havoc_ref;
-                      ISet.add (Val.base_id_of_val havoc_ref) acc
-                    end else
-                      acc)
+              let val_is_undeclared_or_skipped = Val.is_undeclared_or_skipped !val_ref in
+              let havoc_ref =
+                if val_is_undeclared_or_skipped then
+                  !val_ref
+                else
+                  let havoc =
+                    match (all, writes_by_closure_provider_val) with
+                    | (false, Some writes_by_closure_provider_val) ->
+                      Val.merge !val_ref writes_by_closure_provider_val
+                    | _ -> havoc
+                  in
+                  Base.List.fold
+                    ~init:havoc
+                    ~f:(fun acc write -> Val.merge acc (Val.of_write write))
+                    (Lazy.force uninitialized_writes)
+              in
+              if this#should_invalidate ~all def_loc then begin
+                val_ref := havoc_ref;
+                ISet.add (Val.base_id_of_val havoc_ref) acc
+              end else
                 acc
-                elts)
-            env_state.env
-            ISet.empty
+          )
         in
         Base.Option.iter env_state.type_guard_name ~f:(fun (TGinfo { id; havoced; _ }) ->
             if ISet.mem id havoced_ids then
               havoced :=
                 Some
-                  (match (loc, !havoced) with
-                  | (Some loc, Some s) -> ALocSet.add loc s
-                  | (Some loc, None) -> ALocSet.singleton loc
-                  | (None, Some s) -> s
-                  | (None, None) -> ALocSet.empty)
+                  (match !havoced with
+                  | Some s -> ALocSet.add loc s
+                  | None -> ALocSet.singleton loc)
         );
         let latest_refinements =
           Base.List.map
@@ -1242,9 +1497,29 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         in
         env_state <- { env_state with latest_refinements }
 
-      method havoc_current_env ~all ~loc = this#havoc_env ~all ~deep:true ~loc:(Some loc)
+      method private should_havoc_val_to_initialized =
+        function
+        | { kind = Bindings.Internal; _ } -> false
+        | {
+            val_ref;
+            def_loc;
+            havoc = _;
+            heap_refinements = _;
+            writes_by_closure_provider_val = _;
+            kind = _;
+          } ->
+          this#should_invalidate ~all:true def_loc
+          || List.length (Val.writes_of_uninitialized this#refinement_may_be_undefined !val_ref) > 0
+          || Val.is_undeclared_or_skipped !val_ref
 
-      method havoc_uninitialized_env = this#havoc_env ~loc:None ~all:true ~deep:false
+      method under_uninitialized_env : 'a. f:(unit -> 'a) -> 'a =
+        fun ~f ->
+          let old_env = env_state.env in
+          let env = FullEnv.push_new_function_scope old_env in
+          env_state <- { env_state with env };
+          let result = f () in
+          env_state <- { env_state with env = old_env };
+          result
 
       method refinement_may_be_undefined id =
         let rec refine_undefined = function
@@ -1483,25 +1758,17 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               })
           m
         |> SMap.filter (fun name _ -> not @@ this#is_excluded_ordinary_name name)
-        |> SMap.map Nel.one
 
       method private push_env ~this_super_binding_env bindings =
         let old_env = env_state.env in
         let bindings = Bindings.to_map bindings in
         let env =
-          SMap.fold
-            (fun x v ->
-              SMap.adjust x (function
-                  | None -> v
-                  | Some y -> Nel.append v y
-                  ))
-            (this#mk_env ~this_super_binding_env bindings)
-            old_env
+          FullEnv.push_new_bindings (this#mk_env ~this_super_binding_env bindings) old_env
         in
         env_state <- { env_state with env };
-        (bindings, old_env)
+        old_env
 
-      method private pop_env (_, old_env) = env_state <- { env_state with env = old_env }
+      method private pop_env old_env = env_state <- { env_state with env = old_env }
 
       method private with_scoped_bindings
           : 'a.
@@ -1544,8 +1811,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
 
       method raise_abrupt_completion : 'a. AbruptCompletion.t -> 'a =
         fun abrupt_completion ->
-          let env = this#env in
-          this#reset_env this#empty_env;
+          let env = this#env_snapshot in
+          this#reset_env this#empty_env_snapshot;
           let abrupt_completion_envs =
             (abrupt_completion, env) :: env_state.abrupt_completion_envs
           in
@@ -2050,16 +2317,13 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         jsx_mem_expr
 
       method havoc_heap_refinements_using_name ~private_ name =
-        SMap.iter
-          (fun _ elts ->
-            Nel.iter
-              (fun { heap_refinements; _ } ->
-                heap_refinements :=
-                  HeapRefinementMap.filter
-                    (fun projections _ ->
-                      not (RefinementKey.proj_uses_propname ~private_ name projections))
-                    !heap_refinements)
-              elts)
+        FullEnv.update_env
+          ~f:(fun _ { heap_refinements; _ } ->
+            heap_refinements :=
+              HeapRefinementMap.filter
+                (fun projections _ ->
+                  not (RefinementKey.proj_uses_propname ~private_ name projections))
+                !heap_refinements)
           env_state.env
 
       (* This function should be called _after_ a member expression is assigned a value.
@@ -2310,8 +2574,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 ignore (this#expression left_expr);
                 this#add_refinement_to_expr left_expr (L.LSet.singleton left_loc, NotR MaybeR)
               | _ -> ()));
-            let env1 = this#env_without_latest_refinements in
-            let env1_with_refinements = this#env in
+            let env1 = this#env_snapshot_without_latest_refinements in
+            let env1_with_refinements = this#env_snapshot in
             (match operator with
             | NullishAssign
             | OrAssign ->
@@ -2603,15 +2867,15 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         this#push_refinement_scope empty_refinements;
         ignore @@ this#expression_refinement test;
         let test_refinements = this#peek_new_refinements () in
-        let env0 = this#env_without_latest_refinements in
+        let env0 = this#env_snapshot_without_latest_refinements in
         (* collect completions and environments of every branch *)
         let then_completion_state =
           this#run_to_completion (fun () ->
               ignore @@ this#if_consequent_statement ~has_else:(alternate <> None) consequent
           )
         in
-        let then_env_no_refinements = this#env_without_latest_refinements in
-        let then_env_with_refinements = this#env in
+        let then_env_no_refinements = this#env_snapshot_without_latest_refinements in
+        let then_env_with_refinements = this#env_snapshot in
         this#pop_refinement_scope ();
         this#reset_env env0;
         this#push_refinement_scope test_refinements;
@@ -2626,8 +2890,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           )
         in
         (* merge environments *)
-        let else_env_no_refinements = this#env_without_latest_refinements in
-        let else_env_with_refinements = this#env in
+        let else_env_no_refinements = this#env_snapshot_without_latest_refinements in
+        let else_env_with_refinements = this#env_snapshot in
         this#pop_refinement_scope ();
         this#reset_env env0;
         this#merge_conditional_branches_with_refinements
@@ -2645,12 +2909,12 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         this#push_refinement_scope empty_refinements;
         ignore @@ this#expression_refinement test;
         let test_refinements = this#peek_new_refinements () in
-        let env0 = this#env_without_latest_refinements in
+        let env0 = this#env_snapshot_without_latest_refinements in
         let consequent_completion_state =
           this#run_to_completion (fun () -> ignore @@ this#expression consequent)
         in
-        let consequent_env_no_refinements = this#env_without_latest_refinements in
-        let consequent_env_with_refinements = this#env in
+        let consequent_env_no_refinements = this#env_snapshot_without_latest_refinements in
+        let consequent_env_with_refinements = this#env_snapshot in
         this#pop_refinement_scope ();
         this#reset_env env0;
         this#push_refinement_scope test_refinements;
@@ -2658,8 +2922,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         let alternate_completion_state =
           this#run_to_completion (fun () -> ignore @@ this#expression alternate)
         in
-        let alternate_env_no_refinements = this#env_without_latest_refinements in
-        let alternate_env_with_refinements = this#env in
+        let alternate_env_no_refinements = this#env_snapshot_without_latest_refinements in
+        let alternate_env_with_refinements = this#env_snapshot in
         this#pop_refinement_scope ();
         this#reset_env env0;
         this#merge_conditional_branches_with_refinements
@@ -2689,27 +2953,39 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         | (None, Some _) -> this#reset_env refined_env1
         | (Some _, None) -> this#reset_env refined_env2
         | _ ->
-          SMap.iter
-            (fun name ({ val_ref; heap_refinements; havoc; def_loc; _ }, _) ->
-              let { Env.env_val = value1; heap_refinements = heap_entries1; def_loc = _ } =
-                smap_find name env1
-              in
-              let { Env.env_val = value2; heap_refinements = heap_entries2; def_loc = _ } =
-                smap_find name env2
+          (* FullEnv.populate_top_stacked_env_entries
+             ~should_havoc_val_to_initialized:this#should_havoc_val_to_initialized
+             [env1; refined_env1; env2; refined_env2]
+             env_state.env; *)
+          FullEnv.update_env
+            ~f:(fun name { val_ref; heap_refinements; havoc; def_loc; _ } ->
+              let {
+                PartialEnvSnapshot.env_val = value1;
+                heap_refinements = heap_entries1;
+                def_loc = _;
+              } =
+                this#partial_env_snapshot_read name env1
               in
               let {
-                Env.env_val = refined_value1;
+                PartialEnvSnapshot.env_val = value2;
+                heap_refinements = heap_entries2;
+                def_loc = _;
+              } =
+                this#partial_env_snapshot_read name env2
+              in
+              let {
+                PartialEnvSnapshot.env_val = refined_value1;
                 heap_refinements = refined_heap_entries1;
                 def_loc = _;
               } =
-                smap_find name refined_env1
+                this#partial_env_snapshot_read name refined_env1
               in
               let {
-                Env.env_val = refined_value2;
+                PartialEnvSnapshot.env_val = refined_value2;
                 heap_refinements = refined_heap_entries2;
                 def_loc = _;
               } =
-                smap_find name refined_env2
+                this#partial_env_snapshot_read name refined_env2
               in
               (* If the same key exists on both versions of the object then we can
                * merge the two heap refinements, even though the underlying value
@@ -2740,7 +3016,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
 
       method with_env_state f =
         let pre_state = env_state in
-        let pre_env = this#env in
+        let pre_env = this#env_snapshot in
         let result = f () in
         env_state <- pre_state;
         (* It's not enough to just restore the old env_state, since the env itself contains
@@ -2757,7 +3033,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
          * because a scout should be followed-up by a run that revisits everything visited by
          * the scout. with_env_state will ensure that all mutable state is restored. *)
         this#with_env_state (fun () ->
-            let pre_env = this#env in
+            let pre_env = this#env_snapshot in
             let completion_state = this#run_to_completion scout in
             let _ =
               this#run_to_completion (fun () ->
@@ -2766,13 +3042,25 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                     completion_state
               )
             in
-            let post_env = this#env in
-            SMap.fold
-              (fun name
-                   { Env.env_val = env_val1; heap_refinements = heap_refinements1; def_loc = _ }
-                   acc ->
-                let { Env.env_val = env_val2; heap_refinements = heap_refinements2; def_loc = _ } =
-                  smap_find name pre_env
+            let post_env = this#env_snapshot in
+            SMap.merge_env [] pre_env post_env ~combine:(fun acc name pre_env_v post_env_v ->
+                let {
+                  PartialEnvSnapshot.env_val = env_val1;
+                  heap_refinements = heap_refinements1;
+                  def_loc = _;
+                } =
+                  match post_env_v with
+                  | Some v -> v
+                  | None -> this#env_read_into_snapshot_from_below name
+                in
+                let {
+                  PartialEnvSnapshot.env_val = env_val2;
+                  heap_refinements = heap_refinements2;
+                  def_loc = _;
+                } =
+                  match pre_env_v with
+                  | Some v -> v
+                  | None -> this#env_read_into_snapshot_from_below name
                 in
                 let acc =
                   HeapRefinementMap.fold
@@ -2789,11 +3077,11 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                     acc
                 in
                 if Val.id_of_val env_val1 = Val.id_of_val env_val2 then
-                  acc
+                  (acc, None)
                 else
-                  RefinementKey.lookup_of_name name :: acc)
-              post_env
-              []
+                  (RefinementKey.lookup_of_name name :: acc, None)
+            )
+            |> fst
         )
 
       method havoc_changed_refinement_keys changed_refinement_keys =
@@ -2852,7 +3140,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           ignore @@ this#expression_refinement guard;
           this#negate_new_refinements ();
           this#pop_refinement_scope_without_unrefining ();
-          let final_env = this#env in
+          let final_env = this#env_snapshot in
           this#reset_env env_before_guard;
           (* This may seem unnecessary, but we need to ensure that when we revisit the guard that
            * the special writes we record for literal subtyping checks are present. This are only
@@ -2964,9 +3252,9 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           ignore @@ this#run_to_completion (fun () -> ignore @@ this#statement body)
         in
         let visit_guard_and_body () =
-          let env_before_guard = this#env in
+          let env_before_guard = this#env_snapshot in
           ignore @@ this#expression_refinement test;
-          let env = this#env_without_latest_refinements in
+          let env = this#env_snapshot_without_latest_refinements in
           let loop_completion_state =
             this#run_to_completion (fun () -> ignore @@ this#statement body)
           in
@@ -3001,7 +3289,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             this#run_to_completion (fun () -> ignore @@ this#statement body)
           in
           let loop_completion_state = this#handle_continues loop_completion_state continues in
-          let env_before_guard = this#env in
+          let env_before_guard = this#env_snapshot in
           (match loop_completion_state with
           | None -> ignore @@ this#expression_refinement test
           | Some _ -> ());
@@ -3034,9 +3322,9 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         in
         let visit_guard_and_body () =
           ignore @@ Flow_ast_mapper.map_opt this#for_statement_init init;
-          let env_before_guard = this#env in
+          let env_before_guard = this#env_snapshot in
           ignore @@ Flow_ast_mapper.map_opt this#expression_refinement test;
-          let env = this#env_without_latest_refinements in
+          let env = this#env_snapshot_without_latest_refinements in
           let loop_completion_state =
             this#run_to_completion (fun () -> ignore @@ this#statement body)
           in
@@ -3095,7 +3383,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           ignore @@ this#run_to_completion (fun () -> ignore @@ this#statement body)
         in
         let visit_guard_and_body () =
-          let env = this#env in
+          let env = this#env_snapshot in
           traverse_left ();
           let loop_completion_state =
             this#run_to_completion (fun () -> ignore @@ this#statement body)
@@ -3138,7 +3426,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
 
       method! switch loc switch =
         let open Flow_ast.Statement.Switch in
-        let incoming_env = this#env in
+        let incoming_env = this#env_snapshot in
         let { discriminant; cases; comments = _; exhaustive_out } = switch in
         let _ = this#expression discriminant in
         let lexical_hoist = new lexical_hoister ~flowmin_compatibility:false ~enable_enums in
@@ -3159,7 +3447,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                  (this#switch_cases_with_lexical_bindings loc exhaustive_out discriminant)
                  cases_with_lexical_bindings)
           ~finally:(fun () ->
-            let post_env = this#env in
+            let post_env = this#env_snapshot in
             (* After all refinements and potential shadowing inside switch,
                we need to re-read the discriminant to restore it. *)
             this#reset_env incoming_env;
@@ -3197,7 +3485,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
       (***********************************************************)
       method private switch_cases_with_lexical_bindings
           switch_loc exhaustive_out discriminant cases_with_lexical_bindings =
-        let incoming_env = this#env in
+        let incoming_env = this#env_snapshot in
         this#expecting_abrupt_completions (fun () ->
             let (case_starting_env, case_completion_states, fallthrough_env, has_default) =
               List.fold_left
@@ -3235,7 +3523,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
              * determined by joining all of the breaks with the last fallthrough env. If there
              * was no fallthrough env, then the we can use empty as the base. *)
             | Some env when has_default -> this#reset_env env
-            | None when has_default -> this#reset_env this#empty_env
+            | None when has_default -> this#reset_env this#empty_env_snapshot
             (* If the switch wasn't exhaustive then merge with the case_starting_env as a base. If
              * the last case fell out then merge that in too. *)
             | Some fallthrough ->
@@ -3274,7 +3562,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         this#push_refinement_scope empty_refinements;
         let (has_default, latest_refinements, case_starting_env) =
           match test with
-          | None -> (true, empty_refinements, this#env)
+          | None -> (true, empty_refinements, this#env_snapshot)
           | Some test ->
             (* As a convention, locate refined versions of the discriminant on
                case locations, in order to read them from the environment for
@@ -3300,7 +3588,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             ignore @@ this#expression test;
             let (loc, _) = test in
             this#eq_test ~strict:true ~sense:true ~cond_context:SwitchTest loc discriminant test;
-            (has_default, this#peek_new_refinements (), this#env_without_latest_refinements)
+            (has_default, this#peek_new_refinements (), this#env_snapshot_without_latest_refinements)
         in
         (match fallthrough_env with
         | None -> ()
@@ -3327,14 +3615,14 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         in
         let fallthrough_env =
           match case_completion_state with
-          | None -> Some this#env
+          | None -> Some this#env_snapshot
           | Some _ -> None
         in
         this#pop_refinement_scope ();
         this#reset_env case_starting_env;
         let negated_refinements = this#negate_refinements latest_refinements in
         this#push_refinement_scope negated_refinements;
-        let case_starting_env = this#env in
+        let case_starting_env = this#env_snapshot in
         this#pop_refinement_scope ();
         ( case_starting_env,
           case_completion_state :: case_completion_states,
@@ -3346,11 +3634,11 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         this#expecting_abrupt_completions (fun () ->
             let open Ast.Statement.Try in
             let { block = (loc, block); handler; finalizer; comments = _ } = stmt in
-            let try_entry_env = this#env in
+            let try_entry_env = this#env_snapshot in
             let try_completion_state =
               this#run_to_completion (fun () -> ignore @@ this#block loc block)
             in
-            let try_exit_env = this#env in
+            let try_exit_env = this#env_snapshot in
             (* The catch entry env must take into account the fact that any line in the try may
              * have thrown. We conservatively approximate this by assuming that the very first
              * line may have thrown, so we merge the entrance env. The other possible states that
@@ -3371,7 +3659,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                     this#raise_abrupt_completion AbruptCompletion.Throw
                 )
             in
-            let catch_exit_env = this#env in
+            let catch_exit_env = this#env_snapshot in
             let completion_state =
               match (try_completion_state, catch_completion_state) with
               | (Some AbruptCompletion.Throw, Some AbruptCompletion.Throw)
@@ -3402,7 +3690,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                     | Some _ -> this#reset_env try_exit_env);
                     ignore @@ this#run_to_completion (fun () -> ignore @@ this#block loc block)
                 );
-                let exit_env = this#env in
+                let exit_env = this#env_snapshot in
                 (* Now check assuming that we may throw anywhere in try or catch so that
                  * we can conservatively check the finally case. The starting env here is modeled as
                  * the merge of the try_entry_env with the catch_exit env, and we include all abrupt
@@ -3501,189 +3789,189 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         env_state <- { env_state with write_entries }
 
       method! component_body_with_params ~component_loc body params =
-        this#expecting_abrupt_completions (fun () ->
-            let env = this#env in
-            this#run
-              (fun () ->
-                this#havoc_uninitialized_env;
-                let completion_state =
-                  this#run_to_completion (fun () ->
-                      let (loc, _) = body in
-                      let bindings =
-                        Bindings.(
-                          singleton
-                            ( ( loc,
-                                {
-                                  Ast.Identifier.name = maybe_exhaustively_checked_var_name;
-                                  comments = None;
-                                }
-                              ),
-                              Internal
-                            )
-                        )
-                      in
+        let f () =
+          let env = this#env_snapshot in
+          this#run
+            (fun () ->
+              let completion_state =
+                this#run_to_completion (fun () ->
+                    let (loc, _) = body in
+                    let bindings =
+                      Bindings.(
+                        singleton
+                          ( ( loc,
+                              {
+                                Ast.Identifier.name = maybe_exhaustively_checked_var_name;
+                                comments = None;
+                              }
+                            ),
+                            Internal
+                          )
+                      )
+                    in
 
-                      this#with_bindings
-                        component_loc
-                        bindings
-                        (fun () ->
-                          Context.add_exhaustive_check cx loc ([], false);
+                    this#with_bindings
+                      component_loc
+                      bindings
+                      (fun () ->
+                        Context.add_exhaustive_check cx loc ([], false);
 
-                          super#component_body_with_params ~component_loc body params;
+                        super#component_body_with_params ~component_loc body params;
 
-                          let { val_ref; _ } = this#env_read maybe_exhaustively_checked_var_name in
-                          let { Env_api.write_locs; _ } = Val.simplify None None None !val_ref in
-                          let (locs, undeclared) =
-                            Base.List.fold
-                              ~init:([], false)
-                              ~f:
-                                (fun (locs, undeclared) -> function
-                                  | Env_api.Undeclared _ -> (locs, true)
-                                  | Env_api.Write r -> (Reason.loc_of_reason r :: locs, undeclared)
-                                  | _ ->
-                                    raise
-                                      Env_api.(
-                                        Env_invariant
-                                          ( Some component_loc,
-                                            Impossible
-                                              "Unexpected env state for maybe_exhaustively_checked"
-                                          )
-                                      ))
-                              write_locs
-                          in
-                          Context.add_exhaustive_check cx loc (locs, undeclared))
-                        ()
-                  )
-                in
-                this#commit_abrupt_completion_matching
-                  AbruptCompletion.(mem [return; throw])
-                  completion_state)
-              ~finally:(fun () -> this#reset_env env)
-        )
+                        let { val_ref; _ } = this#env_read maybe_exhaustively_checked_var_name in
+                        let { Env_api.write_locs; _ } = Val.simplify None None None !val_ref in
+                        let (locs, undeclared) =
+                          Base.List.fold
+                            ~init:([], false)
+                            ~f:
+                              (fun (locs, undeclared) -> function
+                                | Env_api.Undeclared _ -> (locs, true)
+                                | Env_api.Write r -> (Reason.loc_of_reason r :: locs, undeclared)
+                                | _ ->
+                                  raise
+                                    Env_api.(
+                                      Env_invariant
+                                        ( Some component_loc,
+                                          Impossible
+                                            "Unexpected env state for maybe_exhaustively_checked"
+                                        )
+                                    ))
+                            write_locs
+                        in
+                        Context.add_exhaustive_check cx loc (locs, undeclared))
+                      ()
+                )
+              in
+              this#commit_abrupt_completion_matching
+                AbruptCompletion.(mem [return; throw])
+                completion_state)
+            ~finally:(fun () -> this#reset_env env)
+        in
+        this#under_uninitialized_env ~f:(fun () -> this#expecting_abrupt_completions f)
 
       (* We also havoc state when entering functions and exiting calls. *)
       method! lambda ~is_arrow ~fun_loc ~generator_return_loc params return_ predicate body =
-        this#expecting_abrupt_completions (fun () ->
-            let env = this#env in
-            this#run
-              (fun () ->
-                let saved_predicate_scope_names = env_state.predicate_scope_names in
-                (* If this is a type guard function type_guard_name will be set in
-                   type_guard_annotation. *)
-                let saved_type_guard_name = env_state.type_guard_name in
-                let predicate_scope_names =
-                  Base.Option.map predicate ~f:(fun _ -> Pattern_helper.bindings_of_params params)
-                in
-                env_state <- { env_state with predicate_scope_names };
-                this#havoc_uninitialized_env;
-                let completion_state =
-                  this#run_to_completion (fun () ->
-                      let loc =
-                        let open Ast.Function in
-                        match body with
-                        | BodyBlock (loc, _)
-                        | BodyExpression (loc, _) ->
-                          loc
-                      in
-                      let bindings =
-                        Bindings.(
-                          singleton
-                            ( ( loc,
-                                {
-                                  Ast.Identifier.name = maybe_exhaustively_checked_var_name;
-                                  comments = None;
-                                }
-                              ),
-                              Internal
-                            )
-                        )
-                      in
-                      let bindings =
-                        if not is_arrow then
-                          match params with
-                          | (_, { Ast.Function.Params.this_ = Some (loc, _); _ }) ->
-                            let id name = (loc, { Ast.Identifier.name; comments = None }) in
-                            env_state <-
+        let f () =
+          let env = this#env_snapshot in
+          this#run
+            (fun () ->
+              let saved_predicate_scope_names = env_state.predicate_scope_names in
+              (* If this is a type guard function type_guard_name will be set in
+                 type_guard_annotation. *)
+              let saved_type_guard_name = env_state.type_guard_name in
+              let predicate_scope_names =
+                Base.Option.map predicate ~f:(fun _ -> Pattern_helper.bindings_of_params params)
+              in
+              env_state <- { env_state with predicate_scope_names };
+              let completion_state =
+                this#run_to_completion (fun () ->
+                    let loc =
+                      let open Ast.Function in
+                      match body with
+                      | BodyBlock (loc, _)
+                      | BodyExpression (loc, _) ->
+                        loc
+                    in
+                    let bindings =
+                      Bindings.(
+                        singleton
+                          ( ( loc,
                               {
-                                env_state with
-                                write_entries =
-                                  EnvMap.add_ordinary
-                                    loc
-                                    (Env_api.AssigningWrite (mk_reason RThis loc))
-                                    env_state.write_entries;
-                              };
-                            Bindings.(add (id "this", ThisAnnot) bindings)
-                          | _ ->
-                            let id name = (fun_loc, { Ast.Identifier.name; comments = None }) in
-                            Bindings.(add (id "this", Const) bindings)
-                        else
-                          bindings
-                      in
-                      let bindings =
-                        Base.Option.value_map
-                          ~f:(fun return_loc ->
-                            Bindings.(
-                              add
-                                ( ( return_loc,
-                                    { Ast.Identifier.name = next_var_name; comments = None }
-                                  ),
-                                  GeneratorNext
-                                )
-                                bindings
-                            ))
-                          ~default:bindings
-                          generator_return_loc
-                      in
-                      this#with_bindings
-                        fun_loc
+                                Ast.Identifier.name = maybe_exhaustively_checked_var_name;
+                                comments = None;
+                              }
+                            ),
+                            Internal
+                          )
+                      )
+                    in
+                    let bindings =
+                      if not is_arrow then
+                        match params with
+                        | (_, { Ast.Function.Params.this_ = Some (loc, _); _ }) ->
+                          let id name = (loc, { Ast.Identifier.name; comments = None }) in
+                          env_state <-
+                            {
+                              env_state with
+                              write_entries =
+                                EnvMap.add_ordinary
+                                  loc
+                                  (Env_api.AssigningWrite (mk_reason RThis loc))
+                                  env_state.write_entries;
+                            };
+                          Bindings.(add (id "this", ThisAnnot) bindings)
+                        | _ ->
+                          let id name = (fun_loc, { Ast.Identifier.name; comments = None }) in
+                          Bindings.(add (id "this", Const) bindings)
+                      else
                         bindings
-                        (fun () ->
-                          Context.add_exhaustive_check cx loc ([], false);
+                    in
+                    let bindings =
+                      Base.Option.value_map
+                        ~f:(fun return_loc ->
+                          Bindings.(
+                            add
+                              ( ( return_loc,
+                                  { Ast.Identifier.name = next_var_name; comments = None }
+                                ),
+                                GeneratorNext
+                              )
+                              bindings
+                          ))
+                        ~default:bindings
+                        generator_return_loc
+                    in
+                    this#with_bindings
+                      fun_loc
+                      bindings
+                      (fun () ->
+                        Context.add_exhaustive_check cx loc ([], false);
 
-                          super#lambda
-                            ~is_arrow
-                            ~fun_loc
-                            ~generator_return_loc
-                            params
-                            return_
-                            predicate
-                            body;
+                        super#lambda
+                          ~is_arrow
+                          ~fun_loc
+                          ~generator_return_loc
+                          params
+                          return_
+                          predicate
+                          body;
 
-                          let { val_ref; _ } = this#env_read maybe_exhaustively_checked_var_name in
-                          let { Env_api.write_locs; _ } = Val.simplify None None None !val_ref in
-                          let (locs, undeclared) =
-                            Base.List.fold
-                              ~init:([], false)
-                              ~f:
-                                (fun (locs, undeclared) -> function
-                                  | Env_api.Undeclared _ -> (locs, true)
-                                  | Env_api.Write r -> (Reason.loc_of_reason r :: locs, undeclared)
-                                  | _ ->
-                                    raise
-                                      Env_api.(
-                                        Env_invariant
-                                          ( Some fun_loc,
-                                            Impossible
-                                              "Unexpected env state for maybe_exhaustively_checked"
-                                          )
-                                      ))
-                              write_locs
-                          in
-                          Context.add_exhaustive_check cx loc (locs, undeclared))
-                        ()
-                  )
-                in
-                env_state <-
-                  {
-                    env_state with
-                    predicate_scope_names = saved_predicate_scope_names;
-                    type_guard_name = saved_type_guard_name;
-                  };
-                this#commit_abrupt_completion_matching
-                  AbruptCompletion.(mem [return; throw])
-                  completion_state)
-              ~finally:(fun () -> this#reset_env env)
-        )
+                        let { val_ref; _ } = this#env_read maybe_exhaustively_checked_var_name in
+                        let { Env_api.write_locs; _ } = Val.simplify None None None !val_ref in
+                        let (locs, undeclared) =
+                          Base.List.fold
+                            ~init:([], false)
+                            ~f:
+                              (fun (locs, undeclared) -> function
+                                | Env_api.Undeclared _ -> (locs, true)
+                                | Env_api.Write r -> (Reason.loc_of_reason r :: locs, undeclared)
+                                | _ ->
+                                  raise
+                                    Env_api.(
+                                      Env_invariant
+                                        ( Some fun_loc,
+                                          Impossible
+                                            "Unexpected env state for maybe_exhaustively_checked"
+                                        )
+                                    ))
+                            write_locs
+                        in
+                        Context.add_exhaustive_check cx loc (locs, undeclared))
+                      ()
+                )
+              in
+              env_state <-
+                {
+                  env_state with
+                  predicate_scope_names = saved_predicate_scope_names;
+                  type_guard_name = saved_type_guard_name;
+                };
+              this#commit_abrupt_completion_matching
+                AbruptCompletion.(mem [return; throw])
+                completion_state)
+            ~finally:(fun () -> this#reset_env env)
+        in
+        this#under_uninitialized_env ~f:(fun () -> this#expecting_abrupt_completions f)
 
       method! type_guard_annotation tg =
         let (_, (_, { Ast.Type.TypeGuard.guard = ((loc, { Ast.Identifier.name; _ }), _); _ })) =
@@ -3806,28 +4094,30 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         let { static; _ } = prop in
         if static then
           super#class_property loc prop
-        else
-          let env = this#env in
-          this#run
-            (fun () ->
-              this#havoc_uninitialized_env;
-              ignore @@ super#class_property loc prop)
-            ~finally:(fun () -> this#reset_env env);
+        else (
+          this#under_uninitialized_env ~f:(fun () ->
+              let env = this#env_snapshot in
+              this#run
+                (fun () -> ignore @@ super#class_property loc prop)
+                ~finally:(fun () -> this#reset_env env)
+          );
           prop
+        )
 
       method! class_private_field loc field =
         let open Ast.Class.PrivateField in
         let { static; _ } = field in
         if static then
           super#class_private_field loc field
-        else
-          let env = this#env in
-          this#run
-            (fun () ->
-              this#havoc_uninitialized_env;
-              ignore @@ super#class_private_field loc field)
-            ~finally:(fun () -> this#reset_env env);
+        else (
+          this#under_uninitialized_env ~f:(fun () ->
+              let env = this#env_snapshot in
+              this#run
+                (fun () -> ignore @@ super#class_private_field loc field)
+                ~finally:(fun () -> this#reset_env env)
+          );
           field
+        )
 
       method! object_ loc expr =
         let open Ast.Expression.Object in
@@ -4494,7 +4784,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           | Flow_ast.Expression.Logical.And ->
             ignore @@ this#expression_refinement left;
             let lhs_latest_refinements_or = this#peek_new_refinements () in
-            let env1 = this#env_without_latest_refinements in
+            let env1 = this#env_snapshot_without_latest_refinements in
             (match operator with
             | Flow_ast.Expression.Logical.Or -> this#negate_new_refinements ()
             | _ -> ());
@@ -4533,7 +4823,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             ignore (this#expression left);
             this#add_refinement_to_expr left (L.LSet.singleton loc, NotR MaybeR);
             let nullish = this#peek_new_refinements () in
-            let env1 = this#env_without_latest_refinements in
+            let env1 = this#env_snapshot_without_latest_refinements in
             this#negate_new_refinements ();
             this#push_refinement_scope empty_refinements;
             let rhs_completion_state =
@@ -4561,7 +4851,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         in
         match rhs_completion_state with
         | Some AbruptCompletion.Throw ->
-          let env2 = this#env in
+          let env2 = this#env_snapshot in
           this#reset_env env1;
           this#push_refinement_scope lhs_latest_refinements;
           this#pop_refinement_scope_without_unrefining ();
@@ -5073,8 +5363,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         | Flow_ast.Expression.Logical.NullishCoalesce ->
           ignore (this#expression left);
           this#add_refinement_to_expr left (L.LSet.singleton loc, NotR MaybeR));
-        let env1 = this#env_without_latest_refinements in
-        let env1_with_refinements = this#env in
+        let env1 = this#env_snapshot_without_latest_refinements in
+        let env1_with_refinements = this#env_snapshot in
         (match operator with
         | Flow_ast.Expression.Logical.NullishCoalesce
         | Flow_ast.Expression.Logical.Or ->
@@ -5089,7 +5379,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         in
         (match rhs_completion_state with
         | Some AbruptCompletion.Throw ->
-          let env2 = this#env in
+          let env2 = this#env_snapshot in
           this#reset_env env1_with_refinements;
           this#pop_refinement_scope_without_unrefining ();
           this#merge_self_env env2

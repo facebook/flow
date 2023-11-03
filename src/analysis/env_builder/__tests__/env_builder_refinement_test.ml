@@ -3789,6 +3789,84 @@ if (y.f(x, y)) {
           {refinement = LatentR (index = 2); writes = (4, 4) to (4, 5): (`y`)}
         }] |}]
 
+let%expect_test "loop read from havoc" =
+  print_ssa_test {|
+type T = string;
+
+function switch_fn() {
+  declare const n: number;
+
+  switch (n) {
+    case 2:
+      ('a': T);
+      return 1;
+
+    case 3:
+      if (String(('a': T))) {}
+  }
+}
+
+  |};
+    [%expect {|
+      [
+        (7, 2) to (14, 3) => {
+          {refinement = Not (3); writes = {refinement = Not (2); writes = (5, 16) to (5, 17): (`n`)}}
+        };
+        (7, 10) to (7, 11) => {
+          (5, 16) to (5, 17): (`n`)
+        };
+        (9, 12) to (9, 13) => {
+          (2, 5) to (2, 6): (`T`)
+        };
+        (13, 10) to (13, 16) => {
+          Global String
+        };
+        (13, 23) to (13, 24) => {
+          (2, 5) to (2, 6): (`T`)
+        }] |}]
+
+let%expect_test "read merged value instead of captured value" =
+  print_ssa_test {|
+let a: string | number = '';
+
+const f = () => {
+  if (true) {
+    a = 1;
+  } else {
+    a = 2;
+  }
+  a;
+}
+  |};
+    [%expect {|
+      [
+        (10, 2) to (10, 3) => {
+          (6, 4) to (6, 5): (`a`),
+          (8, 4) to (8, 5): (`a`)
+        }] |}]
+
+let%expect_test "loop read from havoc" =
+  print_ssa_test {|
+let data: any = [];
+
+function asObjectList(length: number) {
+  while (data) {
+    data = data.concat(data);
+  }
+}
+  |};
+    [%expect {|
+      [
+        (5, 9) to (5, 13) => {
+          (2, 4) to (2, 8): (`data`)
+        };
+        (6, 11) to (6, 15) => {
+          {refinement = Truthy; writes = (2, 4) to (2, 8): (`data`)}
+        };
+        (6, 23) to (6, 27) => {
+          {refinement = Truthy; writes = (2, 4) to (2, 8): (`data`)}
+        }] |}]
+
 let%expect_test "heap_refinement_basic" =
   print_ssa_test {|
 let x = {};
