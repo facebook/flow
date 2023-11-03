@@ -22,7 +22,6 @@ const {RunQueue} = require('./RunQueue');
 
 import type {Suite} from './Suite';
 import type {Args} from './testCommand';
-import type {SaneWatcher} from 'sane';
 
 /* We potentially have a ton of info to dump into stdout/stderr. Let's handle
  * drain events properly */
@@ -33,197 +32,6 @@ async function write(
 ): Promise<void> {
   if (false == writer.write(format(fmt, ...args))) {
     await drain(writer);
-  }
-}
-
-function startWatchAndRun(suites: Set<string>, args: Args) {
-  // Require in here to avoid the dependency for most test runs
-  const sane = require('sane');
-
-  let running = false;
-  let queuedSet = new Set<string>();
-  let changedThings = new Set<string>();
-  let queuedMessages: Array<string> = [];
-
-  process.stderr.write(format('Watching %d suites\n', suites.size));
-
-  let shortcuts: Map<string, [string, () => Promise<mixed>]> = new Map();
-
-  const printShortcuts = () => {
-    process.stdout.write('\nShortcuts:\n');
-    for (const [char, [descr, _]] of shortcuts.entries()) {
-      process.stdout.write(format('%s    %s\n', char, descr));
-    }
-    process.stdout.write('> ');
-  };
-
-  const keydown = (chunk: Buffer) => {
-    const char = chunk.toString()[0];
-
-    const shortcut = shortcuts.get(char);
-
-    if (shortcut) {
-      const [name, fn] = shortcut;
-      process.stdout.write(format('%s\n\n', name));
-      fn();
-    } else {
-      process.stdout.write(format('Unknown shortcut: %s\n', char));
-      printShortcuts();
-    }
-  };
-
-  const startListeningForShortcuts = () => {
-    // $FlowFixMe[prop-missing]
-    // $FlowFixMe[method-unbinding]
-    if (typeof process.stdin.setRawMode === 'function') {
-      (process.stdin.setRawMode: any).call(process.stdin, true);
-      process.stdin.resume();
-      process.stdin.setEncoding('utf8');
-      process.stdin.on('data', keydown);
-
-      printShortcuts();
-    }
-  };
-
-  const stopListeningForShortcuts = () => {
-    // $FlowFixMe[prop-missing]
-    // $FlowFixMe[method-unbinding]
-    if (typeof process.stdin.setRawMode === 'function') {
-      (process.stdin.setRawMode: any).call(process.stdin, false);
-      process.stdin.resume();
-      process.stdin.setEncoding('utf8');
-      process.stdin.removeListener('data', keydown);
-    }
-  };
-
-  const run = async () => {
-    if (running === true) {
-      return;
-    }
-
-    if (changedThings.size > 0) {
-      process.stderr.write('\n!!!!!!!!!!!!!!!!\n');
-      for (const changedThing of changedThings) {
-        process.stderr.write(
-          format('Watcher noticed that %s changed\n', changedThing),
-        );
-      }
-    }
-    changedThings = new Set<string>();
-
-    if (queuedSet.size === 0) {
-      return;
-    }
-
-    running = true;
-    stopListeningForShortcuts();
-    const runSet = queuedSet;
-    queuedSet = new Set<string>();
-
-    const suitesToRun: {[string]: Suite} = {};
-    for (const suiteName of runSet) {
-      try {
-        suitesToRun[suiteName] = loadSuite(suiteName);
-      } catch (e) {
-        process.stderr.write(
-          format(
-            chalk.red.bold('Failed to load test suite `%s`\n%s\n'),
-            chalk.blue(suiteName),
-            e.stack,
-          ),
-        );
-      }
-    }
-
-    if (Object.keys(suitesToRun).length > 0) {
-      const [exitCode, runID] = await runOnce(suitesToRun, args);
-
-      shortcuts.set('t', [
-        'rerun the tests you just ran',
-        () => rerun(runID, false),
-      ]);
-      if (exitCode) {
-        shortcuts.set('f', [
-          'rerun only the tests that just failed',
-          () => rerun(runID, true),
-        ]);
-        shortcuts.set('r', [
-          'record the tests that just failed',
-          () => record(runID),
-        ]);
-      } else {
-        shortcuts.delete('f');
-        shortcuts.delete('r');
-      }
-    }
-
-    running = false;
-    startListeningForShortcuts();
-    run();
-  };
-
-  async function rerun(runID: string, failedOnly: boolean) {
-    suites = await findTestsByRun(runID, failedOnly);
-    suites.forEach(suite => queuedSet.add(suite));
-    run();
-  }
-
-  async function record(runID: string) {
-    running = true;
-    stopListeningForShortcuts();
-
-    const child = spawn(
-      process.argv[0],
-      [process.argv[1], 'record', '--rerun-failed', runID],
-      {stdio: 'inherit'},
-    );
-    const code = await new Promise((resolve, reject) => {
-      child.on('close', resolve);
-    });
-
-    if (code === 0) {
-      shortcuts.delete('f');
-      shortcuts.delete('r');
-    }
-    startListeningForShortcuts();
-    running = false;
-  }
-
-  const watch = (
-    watcher: SaneWatcher,
-    name: string,
-    suiteNames: Array<string>,
-  ) => {
-    const callback = () => {
-      changedThings.add(name);
-      suiteNames.forEach(suite => queuedSet.add(suite));
-
-      // We may have a lot of FS events...wait for things to settle
-      setTimeout(run, 500);
-    };
-    watcher.on('change', callback);
-    watcher.on('add', callback);
-    watcher.on('delete', callback);
-  };
-
-  shortcuts.set('q', ['quit', async () => (process.exit(0): mixed)]);
-  shortcuts.set('a', [
-    'run all the tests',
-    async () => {
-      suites.forEach(suiteName => queuedSet.add(suiteName));
-      run();
-    },
-  ]);
-  startListeningForShortcuts();
-
-  watch(
-    sane(dirname(args.bin), {glob: [basename(args.bin)]}),
-    'the Flow binary',
-    Array.from(suites),
-  );
-  for (const suite of suites) {
-    const suiteDir = resolve(getTestsDir(), suite);
-    watch(sane(suiteDir), format('the `%s` suite', suite), [suite]);
   }
 }
 
@@ -405,20 +213,16 @@ async function testRunner(args: Args): Promise<void> {
     suites = await findTestsByName(args.suites);
   }
 
-  if (args.watch) {
-    startWatchAndRun(suites, args);
+  const loadedSuites: {[string]: Suite} = {};
+  for (const suiteName of suites) {
+    loadedSuites[suiteName] = loadSuite(suiteName);
+  }
+  if (Object.keys(loadedSuites).length > 0) {
+    const [exitCode, _] = await runOnce(loadedSuites, args);
+    process.exit(exitCode);
   } else {
-    const loadedSuites: {[string]: Suite} = {};
-    for (const suiteName of suites) {
-      loadedSuites[suiteName] = loadSuite(suiteName);
-    }
-    if (Object.keys(loadedSuites).length > 0) {
-      const [exitCode, _] = await runOnce(loadedSuites, args);
-      process.exit(exitCode);
-    } else {
-      process.stderr.write('No suites to run\n');
-      process.exit(1);
-    }
+    process.stderr.write('No suites to run\n');
+    process.exit(1);
   }
 }
 
