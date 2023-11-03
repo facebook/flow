@@ -1738,20 +1738,21 @@ let recheck_impl
   (* Collate errors after transaction has completed. *)
   let incr_collated_errors =
     if Options.incremental_error_collation options then
-      let focused_to_check = CheckedSet.focused to_check in
-      let dependents_to_check = CheckedSet.dependents to_check in
-      let files = FilenameSet.union focused_to_check dependents_to_check in
-      let new_errors = filter_errors files env.ServerEnv.errors in
-      let all_suppressions = ServerEnv.(env.errors.suppressions) in
-      env.ServerEnv.incr_collated_errors
-      |> Incremental_collated_errors.clear_merge files
-      |> ErrorCollator.Incremental.update_collated_errors
-           ~profiling
-           ~reader:(Abstract_state_reader.State_reader (State_reader.create ()))
-           ~options
-           ~checked_files:env.ServerEnv.checked_files
-           ~all_suppressions
-           new_errors
+      Profiling_js.with_timer ~timer:"CollateErrors" profiling ~f:(fun () ->
+          let focused_to_check = CheckedSet.focused to_check in
+          let dependents_to_check = CheckedSet.dependents to_check in
+          let files = FilenameSet.union focused_to_check dependents_to_check in
+          let new_errors = filter_errors files env.ServerEnv.errors in
+          let all_suppressions = ServerEnv.(env.errors.suppressions) in
+          env.ServerEnv.incr_collated_errors
+          |> Incremental_collated_errors.clear_merge files
+          |> ErrorCollator.Incremental.update_collated_errors
+               ~reader:(Abstract_state_reader.State_reader (State_reader.create ()))
+               ~options
+               ~checked_files:env.ServerEnv.checked_files
+               ~all_suppressions
+               new_errors
+      )
     else
       env.ServerEnv.incr_collated_errors
   in
@@ -2549,14 +2550,15 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
 
       let incr_collated_errors =
         if Options.incremental_error_collation options then
-          ErrorCollator.Incremental.update_collated_errors
-            ~profiling
-            ~reader:(Abstract_state_reader.Mutator_state_reader reader)
-            ~options
-            ~checked_files
-            ~all_suppressions:updated_suppressions
-            errors
-            incr_collated_errors
+          Profiling_js.with_timer ~timer:"CollateErrors" profiling ~f:(fun () ->
+              ErrorCollator.Incremental.update_collated_errors
+                ~reader:(Abstract_state_reader.Mutator_state_reader reader)
+                ~options
+                ~checked_files
+                ~all_suppressions:updated_suppressions
+                errors
+                incr_collated_errors
+          )
         else
           incr_collated_errors
       in

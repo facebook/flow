@@ -16,7 +16,6 @@ module Incremental : sig
       that we found during checking (not all_suppressions).
   *)
   val update_collated_errors :
-    profiling:Profiling_js.running ->
     reader:Parsing_heaps.Reader_dispatcher.reader ->
     options:Options.t ->
     checked_files:CheckedSet.t ->

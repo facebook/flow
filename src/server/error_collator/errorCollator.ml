@@ -194,71 +194,67 @@ module Incremental = struct
     in
     { acc with collated_local_errors }
 
-  let update_collated_errors ~profiling ~reader ~options ~checked_files ~all_suppressions errors acc
-      =
-    Profiling_js.with_timer ~timer:"CollateErrors" profiling ~f:(fun () ->
-        let root = Options.root options in
-        let { local_errors; duplicate_providers; merge_errors; warnings; suppressions } = errors in
-        let loc_of_aloc = Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader in
-        let acc_fun filename file_errs (errors, suppressed, unused) =
-          let file_options = Some (Options.file_options options) in
-          let (file_errs, file_suppressed, unused) =
-            Error_suppressions.filter_suppressed_errors
-              ~root
-              ~file_options
-              ~loc_of_aloc
-              (* Use all_suppressions here to account for misplaced errors. *)
-              all_suppressions
-              file_errs
-              ~unused
-          in
-          let errors = FilenameMap.add filename file_errs errors in
-          let suppressed = FilenameMap.add filename file_suppressed suppressed in
-          (errors, suppressed, unused)
-        in
-        MonitorRPC.status_update ~event:ServerStatus.Collating_errors_start;
-        let {
-          collated_duplicate_providers_errors;
-          collated_local_errors;
-          collated_merge_errors;
-          collated_warning_map;
-          collated_suppressed_errors;
-        } =
-          acc
-        in
-        let collated_duplicate_providers_errors =
-          collate_duplicate_providers
-            ~update:(fun provider_file duplicate err acc -> (err, provider_file, duplicate) :: acc)
-            root
-            duplicate_providers
-            collated_duplicate_providers_errors
-        in
-        let (collated_local_errors, collated_suppressed_errors, unused) =
-          (collated_local_errors, collated_suppressed_errors, suppressions)
-          |> FilenameMap.fold acc_fun local_errors
-        in
-        let (collated_merge_errors, collated_suppressed_errors, unused) =
-          (collated_merge_errors, collated_suppressed_errors, unused)
-          |> FilenameMap.fold acc_fun merge_errors
-        in
-        let (warnings, collated_suppressed_errors, unused) =
-          (FilenameMap.empty, collated_suppressed_errors, unused)
-          |> FilenameMap.fold acc_fun warnings
-        in
-        (* Compute "unused suppression warnings" based on the suppression set that
-         * emerged from the current checked set, not the entire set of suppressions. *)
-        let collated_warning_map =
-          add_suppression_warnings root checked_files unused warnings
-          |> FilenameMap.union collated_warning_map
-        in
-        {
-          collated_duplicate_providers_errors;
-          collated_local_errors;
-          collated_merge_errors;
-          collated_warning_map;
-          collated_suppressed_errors;
-        }
-    )
+  let update_collated_errors ~reader ~options ~checked_files ~all_suppressions errors acc =
+    let root = Options.root options in
+    let { local_errors; duplicate_providers; merge_errors; warnings; suppressions } = errors in
+    let loc_of_aloc = Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader in
+    let acc_fun filename file_errs (errors, suppressed, unused) =
+      let file_options = Some (Options.file_options options) in
+      let (file_errs, file_suppressed, unused) =
+        Error_suppressions.filter_suppressed_errors
+          ~root
+          ~file_options
+          ~loc_of_aloc
+          (* Use all_suppressions here to account for misplaced errors. *)
+          all_suppressions
+          file_errs
+          ~unused
+      in
+      let errors = FilenameMap.add filename file_errs errors in
+      let suppressed = FilenameMap.add filename file_suppressed suppressed in
+      (errors, suppressed, unused)
+    in
+    MonitorRPC.status_update ~event:ServerStatus.Collating_errors_start;
+    let {
+      collated_duplicate_providers_errors;
+      collated_local_errors;
+      collated_merge_errors;
+      collated_warning_map;
+      collated_suppressed_errors;
+    } =
+      acc
+    in
+    let collated_duplicate_providers_errors =
+      collate_duplicate_providers
+        ~update:(fun provider_file duplicate err acc -> (err, provider_file, duplicate) :: acc)
+        root
+        duplicate_providers
+        collated_duplicate_providers_errors
+    in
+    let (collated_local_errors, collated_suppressed_errors, unused) =
+      (collated_local_errors, collated_suppressed_errors, suppressions)
+      |> FilenameMap.fold acc_fun local_errors
+    in
+    let (collated_merge_errors, collated_suppressed_errors, unused) =
+      (collated_merge_errors, collated_suppressed_errors, unused)
+      |> FilenameMap.fold acc_fun merge_errors
+    in
+    let (warnings, collated_suppressed_errors, unused) =
+      (FilenameMap.empty, collated_suppressed_errors, unused) |> FilenameMap.fold acc_fun warnings
+    in
+    (* Compute "unused suppression warnings" based on the suppression set that
+     * emerged from the current checked set, not the entire set of suppressions. *)
+    let collated_warning_map =
+      add_suppression_warnings root checked_files unused warnings
+      |> FilenameMap.union collated_warning_map
+    in
+    {
+      collated_duplicate_providers_errors;
+      collated_local_errors;
+      collated_merge_errors;
+      collated_warning_map;
+      collated_suppressed_errors;
+    }
 
   let get_with_separate_warnings env =
     let open ServerEnv in
