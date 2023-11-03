@@ -1,3 +1,9 @@
+### 0.220.1
+
+Notable bug fixes:
+* We will now provide auto type import for default-exported classes.
+* We no longer suggest defined values when doing auto complete in object keys when we are under a type annotation.
+
 ### 0.220.0
 
 Likely to cause new Flow errors:
