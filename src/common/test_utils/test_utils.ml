@@ -20,7 +20,7 @@ let make_options_flags
     ?(debug = false)
     ?(flowconfig_flags = make_flowconfig_flags ())
     ?(include_warnings = false)
-    ?(incremental_error_collation = false)
+    ?incremental_error_collation
     ?max_warnings
     ?max_workers
     ?merge_timeout

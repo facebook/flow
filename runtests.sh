@@ -26,7 +26,7 @@ show_help() {
   echo "    -s"
   echo "        test saved state"
   echo "    -i"
-  echo "        test incremental error collation"
+  echo "        test non-incremental error collation"
   echo "    -L"
   echo "        test long-lived workers"
   echo "    -v"
@@ -48,13 +48,13 @@ fi
 OPTIND=1
 record=0
 saved_state=0
-incr_error_collation=0
+non_incr_error_collation=0
 verbose=0
 quiet=0
 relative="."
 check_only=0
 long_lived_workers=0
-export saved_state incr_error_collation filter check_only long_lived_workers
+export saved_state non_incr_error_collation filter check_only long_lived_workers
 while getopts "b:d:f:clqxrsiLt:vh?" opt; do
   case "$opt" in
   b)
@@ -86,7 +86,7 @@ while getopts "b:d:f:clqxrsiLt:vh?" opt; do
     printf "Testing saved state by running all tests using saved state\\n"
     ;;
   i)
-    incr_error_collation=1
+    non_incr_error_collation=1
     ;;
   L)
     long_lived_workers=1

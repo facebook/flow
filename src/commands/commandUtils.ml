@@ -866,7 +866,7 @@ module Options_flags = struct
     debug: bool;
     flowconfig_flags: flowconfig_params;
     include_warnings: bool;
-    incremental_error_collation: bool;
+    incremental_error_collation: bool option;
     max_warnings: int option;
     max_workers: int option;
     merge_timeout: int option;
@@ -1008,7 +1008,7 @@ let options_flags =
            (optional int)
            ~doc:"Maximum number of workers to create (capped by number of cores)"
            ~env:"FLOW_MAX_WORKERS"
-      |> flag "--incremental-error-collation" truthy ~doc:""
+      |> flag "--incremental-error-collation" (optional bool) ~doc:""
       |> warning_flags
       |> flowconfig_flags
       |> verbose_flags
@@ -1407,7 +1407,9 @@ let make_options
       || options_flags.max_warnings <> None
       || FlowConfig.include_warnings flowconfig;
     opt_incremental_error_collation =
-      options_flags.incremental_error_collation || FlowConfig.incremental_error_collation flowconfig;
+      Base.Option.value
+        options_flags.incremental_error_collation
+        ~default:(FlowConfig.incremental_error_collation flowconfig);
     opt_max_header_tokens = FlowConfig.max_header_tokens flowconfig;
     opt_haste_module_ref_prefix = FlowConfig.haste_module_ref_prefix flowconfig;
     opt_haste_module_ref_prefix_LEGACY_INTEROP =
