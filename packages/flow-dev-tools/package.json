@@ -21,7 +21,7 @@
     "jest": "^27"
   },
   "scripts": {
-    "test": "jest"
+    "test": "node src/__tests__/all-tests.js"
   },
   "jest": {
     "rootDir": "src",

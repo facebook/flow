@@ -7,6 +7,8 @@
  * @format
  */
 
+require('flow-remove-types/register');
+
 const path = require('path');
 
 const {exec} = require('../utils/async');
@@ -19,12 +21,42 @@ const {
 } = require('../comment/remove-commentsRunner');
 const {addCommentsToCode} = require('../comment/add-commentsRunner');
 
+class Expected {
+  constructor(actualValue) {
+    this.actualValue = actualValue;
+  }
+
+  toBe(expectedValue) {
+    if (this.actualValue !== expectedValue) {
+      throw new Error(`Expected ${this.actualValue} to be ${expectedValue}`);
+    }
+  }
+
+  toEqual(expectedValue) {
+    const actual = JSON.stringify(this.actualValue);
+    const expected = JSON.stringify(expectedValue);
+    if (actual !== expected) {
+      throw new Error(`Expected ${actual} to be ${expected}`);
+    }
+  }
+}
+
+function expect(v) {
+  return new Expected(v);
+}
+
 function repeatString(str, times) {
   let result = '';
   for (let i = 0; i < times; i++) {
     result += str;
   }
   return result;
+}
+
+const collectedTests = [];
+
+function test(name, fn) {
+  collectedTests.push({name, fn});
 }
 
 test('exec', async () => {
@@ -961,3 +993,16 @@ async function expectCommentsAreRemoved(
   );
   expect(actualOutput.toString()).toEqual(expectedOutput);
 }
+
+(async () => {
+  for (const {name, fn} of collectedTests) {
+    try {
+      await fn();
+      console.error(`[SUCCESS] ${name}`);
+    } catch (e) {
+      console.error(`[FAILURE] ${name}`);
+      console.error(e);
+      throw e;
+    }
+  }
+})();
