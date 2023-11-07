@@ -70,7 +70,7 @@ let rec js_of_json = function
   | Hh_json.JSON_Bool value -> Js.Unsafe.inject (Js.bool value)
   | Hh_json.JSON_Null -> Js.Unsafe.inject Js.null
 
-let load_lib_files ~ccx ~metadata files =
+let load_lib_files files =
   (* iterate in reverse override order *)
   let asts =
     List.rev_map
@@ -99,7 +99,7 @@ let load_lib_files ~ccx ~metadata files =
       locs_to_dirtify = [];
     }
   in
-  Merge_js.merge_lib_files ~sig_opts ~ccx ~metadata asts |> snd
+  Merge_js.merge_lib_files ~sig_opts asts |> snd
 
 let stub_metadata ~root ~checked =
   {
@@ -160,19 +160,7 @@ let get_master_cx root =
 
 let init_builtins filenames =
   let root = File_path.dummy_path in
-  let ccx = Context.(make_ccx (empty_master_cx ())) in
-  let leader =
-    let metadata = stub_metadata ~root ~checked:true in
-    load_lib_files ~ccx ~metadata filenames
-  in
-  let master_cx =
-    match leader with
-    | None -> Context.empty_master_cx ()
-    | Some cx ->
-      Merge_js.optimize_builtins cx;
-      { Context.master_sig_cx = Context.sig_cx cx; builtins = Context.builtins cx }
-  in
-  master_cx_ref := Some (root, master_cx)
+  master_cx_ref := Some (root, load_lib_files filenames)
 
 (* Keep this in sync with configSchema below.
  *
@@ -235,7 +223,7 @@ let merge_custom_lint_config js_config_object severities =
 let infer_and_merge ~root filename js_config_object docblock ast file_sig =
   (* create cx *)
   let master_cx = get_master_cx root in
-  let ccx = Context.make_ccx master_cx in
+  let ccx = Context.make_ccx () in
   let metadata =
     stub_metadata ~root ~checked:true
     |> merge_custom_check_config js_config_object
@@ -245,7 +233,16 @@ let infer_and_merge ~root filename js_config_object docblock ast file_sig =
   let aloc_table = lazy (ALoc.empty_table filename) in
   let resolved_requires = ref SMap.empty in
   let resolve_require mref = SMap.find mref !resolved_requires in
-  let cx = Context.make ccx metadata filename aloc_table resolve_require Context.Checking in
+  let cx =
+    Context.make
+      ccx
+      metadata
+      filename
+      aloc_table
+      resolve_require
+      (Merge_js.mk_builtins metadata master_cx)
+      Context.Checking
+  in
   resolved_requires :=
     SMap.mapi
       (fun mref _locs ->

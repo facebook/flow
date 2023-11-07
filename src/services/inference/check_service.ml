@@ -19,107 +19,6 @@ type check_file =
   * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
   * (FindRefsTypes.single_ref list, string) result
 
-(* Check will lazily create types for the checked file's dependencies. These
- * types are created in the dependency's context and need to be copied into the
- * checked file's context.
- *
- * This visitor walks a type in the dependency's context (src_cx) and copies
- * any tvars, property maps, evaluated types, etc. into the check file's context
- * (dst_cx).
- *
- * When calculating a direct dependency's types, we might also need to construct
- * types for a transitive dependency. These types are similarly created in the
- * transitive dependency's context, then copied into the dependency's context,
- * and so on.
- *
- * Finally, due to cycles, it's possile that src_cx and dst_cx share the same
- * component cx, and thus have the same tvar graph, property maps, etc. Happily,
- * this does not complicate the implementation, as the mem checks and early
- * returns on each method override are sufficient.
- *
- * Crucially, this copying process is shallow. We only copy what is necessary to
- * interpret a given type. *)
-let copier =
-  let open Type in
-  let open Constraint in
-  object (self)
-    inherit [Context.t] Type_visitor.t as super
-
-    (* Copying a tvar produces a FullyResolved tvar in the dst cx, which
-     * contains an unevaluated thunk. The laziness here makes the copying
-     * shallow. Note that the visitor stops at root tvars here and only resumes
-     * if the thunk is forced. *)
-    method! tvar src_cx pole dst_cx r id =
-      let dst_graph = Context.graph dst_cx in
-      if IMap.mem id dst_graph then
-        dst_cx
-      else
-        let (root_id, constraints) = Context.find_constraints src_cx id in
-        if id == root_id then (
-          let t =
-            match constraints with
-            | Unresolved _
-            | Resolved _ ->
-              failwith "unexpected unresolved constraint"
-            | FullyResolved thunk ->
-              lazy
-                (let (lazy t) = thunk in
-                 let (_ : Context.t) = self#type_ src_cx pole dst_cx t in
-                 t
-                )
-          in
-          let node = create_root (FullyResolved t) in
-          Context.set_graph dst_cx (IMap.add id node dst_graph);
-          dst_cx
-        ) else
-          let node = create_goto root_id in
-          Context.set_graph dst_cx (IMap.add id node dst_graph);
-          self#tvar src_cx pole dst_cx r root_id
-
-    method! props src_cx pole dst_cx id =
-      let dst_property_maps = Context.property_maps dst_cx in
-      if Properties.Map.mem id dst_property_maps then
-        dst_cx
-      else
-        let props = Context.find_props src_cx id in
-        Context.set_property_maps dst_cx (Properties.Map.add id props dst_property_maps);
-        super#props src_cx pole dst_cx id
-
-    method! call_prop src_cx pole dst_cx id =
-      let dst_call_props = Context.call_props dst_cx in
-      if IMap.mem id dst_call_props then
-        dst_cx
-      else
-        let t = Context.find_call src_cx id in
-        Context.set_call_props dst_cx (IMap.add id t dst_call_props);
-        super#call_prop src_cx pole dst_cx id
-
-    method! exports src_cx pole dst_cx id =
-      let dst_export_maps = Context.export_maps dst_cx in
-      if Exports.Map.mem id dst_export_maps then
-        dst_cx
-      else
-        let map = Context.find_exports src_cx id in
-        Context.set_export_maps dst_cx (Exports.Map.add id map dst_export_maps);
-        super#exports src_cx pole dst_cx id
-
-    method! eval_id src_cx pole dst_cx id =
-      match Eval.Map.find_opt id (Context.evaluated src_cx) with
-      | None -> dst_cx
-      | Some t ->
-        let dst_evaluated = Context.evaluated dst_cx in
-        if Eval.Map.mem id dst_evaluated then
-          dst_cx
-        else (
-          Context.set_evaluated dst_cx (Eval.Map.add id t dst_evaluated);
-          super#eval_id src_cx pole dst_cx id
-        )
-  end
-
-let copy_into dst_cx src_cx t =
-  let (_ : Context.t) = copier#type_ src_cx Polarity.Positive dst_cx t in
-  ()
-
 let unknown_module_t cx _mref m =
   let m_name = Reason.internal_module_name (Modulename.to_string m) in
   let builtins = Context.builtins cx in
@@ -159,6 +58,8 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
   let module Bin = Type_sig_bin in
   let base_metadata = Context.metadata_of_options options in
 
+  let mk_builtins = Merge_js.mk_builtins base_metadata master_cx in
+
   (* Create a type representing the exports of a dependency. For checked
    * dependencies, we will create a "sig tvar" with a lazy thunk that evaluates
    * to a ModuleT type. *)
@@ -184,9 +85,9 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
         |> Parsing_heaps.read_file_key
         )
     in
-    let file = Check_cache.find_or_create cache ~leader ~master_cx ~create_file file_key in
+    let file = Check_cache.find_or_create cache ~leader ~create_file file_key in
     let t = file.Type_sig_merge.exports in
-    copy_into cx file.Type_sig_merge.cx t;
+    Merge_js.copy_into cx file.Type_sig_merge.cx t;
     t
   (* Create a Type_sig_merge.file record for a dependency, which we use to
    * convert signatures into types. This function reads the signature for a file
@@ -210,7 +111,7 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
       let docblock = Parsing_heaps.read_docblock_unsafe file_key parse in
       let metadata = Context.docblock_overrides docblock base_metadata in
       let resolve_require mref = Lazy.force (SMap.find mref !resolved_requires) in
-      Context.make ccx metadata file_key aloc_table resolve_require Context.Merging
+      Context.make ccx metadata file_key aloc_table resolve_require mk_builtins Context.Merging
     in
 
     resolved_requires := SMap.mapi (fun mref m -> lazy (dep_module_t cx mref m)) resolved_modules;
@@ -368,11 +269,13 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
   fun file_key resolved_modules ast file_sig docblock aloc_table find_ref_request ->
     let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in
     let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
-    let ccx = Context.make_ccx master_cx in
+    let ccx = Context.make_ccx () in
     let metadata = Context.docblock_overrides docblock base_metadata in
     let resolved_requires = ref SMap.empty in
     let resolve_require mref = SMap.find mref !resolved_requires in
-    let cx = Context.make ccx metadata file_key aloc_table resolve_require Context.Checking in
+    let cx =
+      Context.make ccx metadata file_key aloc_table resolve_require mk_builtins Context.Checking
+    in
     resolved_requires := SMap.mapi (dep_module_t cx) resolved_modules;
     ConsGen.set_dst_cx cx;
     let (typed_ast, obj_to_obj_map) =

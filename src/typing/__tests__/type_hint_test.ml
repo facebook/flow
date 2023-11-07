@@ -162,7 +162,7 @@ end = struct
   (* No verbose mode during libdef init. *)
   let metadata = { metadata with Context.verbose = None }
 
-  let load_lib_files ccx =
+  let init_master_cx () =
     let asts =
       Flowlib.contents_list ~no_flowlib:false
       |> List.rev_map (fun (filename, lib_content) ->
@@ -189,15 +189,7 @@ end = struct
         locs_to_dirtify = [];
       }
     in
-    Merge_js.merge_lib_files ~sig_opts ~ccx ~metadata asts |> snd
-
-  let init_master_cx () =
-    let ccx = Context.(make_ccx (empty_master_cx ())) in
-    match load_lib_files ccx with
-    | None -> Context.empty_master_cx ()
-    | Some cx ->
-      Merge_js.optimize_builtins cx;
-      { Context.master_sig_cx = Context.sig_cx cx; builtins = Context.builtins cx }
+    Merge_js.merge_lib_files ~sig_opts asts |> snd
 
   let master_cx_ref = ref None
 
@@ -233,7 +225,7 @@ end = struct
       let metadata = Context.metadata cx in
       let aloc_table = Utils_js.FilenameMap.find file (Context.aloc_tables cx) in
       let resolve_require mref = Error (Reason.internal_module_name mref) in
-      let ccx = Context.make_ccx (get_master_cx ()) in
+      let ccx = Context.make_ccx () in
       let t = reducer#type_ cx Polarity.Neutral t in
       Context.merge_into
         ccx
@@ -245,7 +237,16 @@ end = struct
           export_maps = reducer#get_reduced_export_maps;
           evaluated = reducer#get_reduced_evaluated;
         };
-      let cx = Context.make ccx metadata file aloc_table resolve_require Context.PostInference in
+      let cx =
+        Context.make
+          ccx
+          metadata
+          file
+          aloc_table
+          resolve_require
+          (Merge_js.mk_builtins metadata (get_master_cx ()))
+          Context.PostInference
+      in
       (cx, t)
     | _ -> failwith "Must have a last statement that's an expression"
 end
@@ -269,17 +270,23 @@ let fun_t ~params ~return_t =
     )
 
 let mk_cx ~verbose () =
-  let master_cx = TypeLoader.get_master_cx () in
   let aloc_table = lazy (ALoc.empty_table dummy_filename) in
   let resolve_require mref = Error (Reason.internal_module_name mref) in
-  let ccx = Context.(make_ccx master_cx) in
+  let ccx = Context.make_ccx () in
   let metadata =
     if verbose then
       metadata
     else
       { metadata with Context.verbose = None }
   in
-  Context.make ccx metadata dummy_filename aloc_table resolve_require Context.Checking
+  Context.make
+    ccx
+    metadata
+    dummy_filename
+    aloc_table
+    resolve_require
+    (Merge_js.mk_builtins metadata (TypeLoader.get_master_cx ()))
+    Context.Checking
 
 let mk_hint base_t ops =
   ops

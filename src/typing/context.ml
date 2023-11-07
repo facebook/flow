@@ -107,14 +107,17 @@ end
 
 type sig_t = Type.TypeContext.t
 
-type master_context = {
-  master_sig_cx: sig_t;
-  builtins: Builtins.t;
-}
+type master_context =
+  | EmptyMasterContext
+  | NonEmptyMasterContext of {
+      builtin_leader_file_key: File_key.t;
+      builtin_locs: Loc.t Type_sig_collections.Locs.t;
+      builtins: Type_sig_collections.Locs.index Packed_type_sig.Builtins.t;
+    }
 
 type component_t = {
   mutable sig_cx: sig_t;
-  mutable builtins: Builtins.t;
+  mutable builtins: Builtins.t lazy_t;
   (* mapping from keyed alocs to concrete locations *)
   mutable aloc_tables: ALoc.table Lazy.t Utils_js.FilenameMap.t;
   (* map from goal ids to types *)
@@ -342,12 +345,10 @@ let empty_sig_cx =
     evaluated = Type.Eval.Map.empty;
   }
 
-let empty_master_cx () = { master_sig_cx = empty_sig_cx; builtins = Builtins.empty () }
-
-let make_ccx master_cx =
+let make_ccx () =
   {
-    sig_cx = master_cx.master_sig_cx;
-    builtins = master_cx.builtins;
+    sig_cx = empty_sig_cx;
+    builtins = lazy (Builtins.empty ());
     aloc_tables = Utils_js.FilenameMap.empty;
     goal_map = IMap.empty;
     type_graph = Graph_explorer.new_graph ();
@@ -391,25 +392,29 @@ let make_ccx master_cx =
     signature_help_callee = ALocMap.empty;
   }
 
-let make ccx metadata file aloc_table resolve_require phase =
+let make ccx metadata file aloc_table resolve_require mk_builtins phase =
   ccx.aloc_tables <- Utils_js.FilenameMap.add file aloc_table ccx.aloc_tables;
-  {
-    ccx;
-    file;
-    phase;
-    aloc_table;
-    metadata;
-    resolve_require;
-    module_info = Module_info.empty_cjs_module ();
-    trust_constructor = Trust.literal_trust;
-    hint_map_arglist_cache = ref ALocMap.empty;
-    hint_map_jsx_cache = Hashtbl.create 0;
-    hint_eval_cache = IMap.empty;
-    declare_module_ref = None;
-    environment = Loc_env.empty Name_def.Global;
-    typing_mode = CheckingMode;
-    node_cache = Node_cache.mk_empty ();
-  }
+  let cx =
+    {
+      ccx;
+      file;
+      phase;
+      aloc_table;
+      metadata;
+      resolve_require;
+      module_info = Module_info.empty_cjs_module ();
+      trust_constructor = Trust.literal_trust;
+      hint_map_arglist_cache = ref ALocMap.empty;
+      hint_map_jsx_cache = Hashtbl.create 0;
+      hint_eval_cache = IMap.empty;
+      declare_module_ref = None;
+      environment = Loc_env.empty Name_def.Global;
+      typing_mode = CheckingMode;
+      node_cache = Node_cache.mk_empty ();
+    }
+  in
+  ccx.builtins <- lazy (mk_builtins cx);
+  cx
 
 let sig_cx cx = cx.ccx.sig_cx
 
@@ -453,7 +458,7 @@ let max_literal_length cx = cx.metadata.max_literal_length
 
 let babel_loose_array_spread cx = cx.metadata.babel_loose_array_spread
 
-let builtins cx = cx.ccx.builtins
+let builtins cx = Lazy.force cx.ccx.builtins
 
 let file cx = cx.file
 

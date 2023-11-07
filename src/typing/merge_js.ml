@@ -532,37 +532,138 @@ let post_merge_checks cx ast metadata =
   detect_literal_subtypes cx;
   detect_unused_promises cx
 
-let optimize_builtins cx =
-  let reducer =
-    let no_lowers _ r = Type.AnyT (r, Type.AnyError (Some Type.UnresolvedName)) in
-    new Context_optimizer.context_optimizer ~no_lowers
-  in
-  let builtins = Context.builtins cx in
-  Builtins.optimize_entries builtins ~optimize:(reducer#type_ cx Polarity.Neutral);
-  Context.set_graph cx reducer#get_reduced_graph;
-  Context.set_trust_graph cx reducer#get_reduced_trust_graph;
-  Context.set_property_maps cx reducer#get_reduced_property_maps;
-  Context.set_call_props cx reducer#get_reduced_call_props;
-  Context.set_export_maps cx reducer#get_reduced_export_maps;
-  Context.set_evaluated cx reducer#get_reduced_evaluated
+(* Check will lazily create types for the checked file's dependencies. These
+ * types are created in the dependency's context and need to be copied into the
+ * checked file's context.
+ *
+ * This visitor walks a type in the dependency's context (src_cx) and copies
+ * any tvars, property maps, evaluated types, etc. into the check file's context
+ * (dst_cx).
+ *
+ * When calculating a direct dependency's types, we might also need to construct
+ * types for a transitive dependency. These types are similarly created in the
+ * transitive dependency's context, then copied into the dependency's context,
+ * and so on.
+ *
+ * Finally, due to cycles, it's possile that src_cx and dst_cx share the same
+ * component cx, and thus have the same tvar graph, property maps, etc. Happily,
+ * this does not complicate the implementation, as the mem checks and early
+ * returns on each method override are sufficient.
+ *
+ * Crucially, this copying process is shallow. We only copy what is necessary to
+ * interpret a given type. *)
+let copier =
+  let open Type in
+  let open Constraint in
+  object (self)
+    inherit [Context.t] Type_visitor.t as super
 
-let merge_lib_files ~sig_opts ~ccx ~metadata ordered_asts =
+    (* Copying a tvar produces a FullyResolved tvar in the dst cx, which
+     * contains an unevaluated thunk. The laziness here makes the copying
+     * shallow. Note that the visitor stops at root tvars here and only resumes
+     * if the thunk is forced. *)
+    method! tvar src_cx pole dst_cx r id =
+      let dst_graph = Context.graph dst_cx in
+      if IMap.mem id dst_graph then
+        dst_cx
+      else
+        let (root_id, constraints) = Context.find_constraints src_cx id in
+        if id == root_id then (
+          let t =
+            match constraints with
+            | Unresolved _
+            | Resolved _ ->
+              failwith "unexpected unresolved constraint"
+            | FullyResolved thunk ->
+              lazy
+                (let (lazy t) = thunk in
+                 let (_ : Context.t) = self#type_ src_cx pole dst_cx t in
+                 t
+                )
+          in
+          let node = create_root (FullyResolved t) in
+          Context.set_graph dst_cx (IMap.add id node dst_graph);
+          dst_cx
+        ) else
+          let node = create_goto root_id in
+          Context.set_graph dst_cx (IMap.add id node dst_graph);
+          self#tvar src_cx pole dst_cx r root_id
+
+    method! props src_cx pole dst_cx id =
+      let dst_property_maps = Context.property_maps dst_cx in
+      if Properties.Map.mem id dst_property_maps then
+        dst_cx
+      else
+        let props = Context.find_props src_cx id in
+        Context.set_property_maps dst_cx (Properties.Map.add id props dst_property_maps);
+        super#props src_cx pole dst_cx id
+
+    method! call_prop src_cx pole dst_cx id =
+      let dst_call_props = Context.call_props dst_cx in
+      if IMap.mem id dst_call_props then
+        dst_cx
+      else
+        let t = Context.find_call src_cx id in
+        Context.set_call_props dst_cx (IMap.add id t dst_call_props);
+        super#call_prop src_cx pole dst_cx id
+
+    method! exports src_cx pole dst_cx id =
+      let dst_export_maps = Context.export_maps dst_cx in
+      if Exports.Map.mem id dst_export_maps then
+        dst_cx
+      else
+        let map = Context.find_exports src_cx id in
+        Context.set_export_maps dst_cx (Exports.Map.add id map dst_export_maps);
+        super#exports src_cx pole dst_cx id
+
+    method! eval_id src_cx pole dst_cx id =
+      match Eval.Map.find_opt id (Context.evaluated src_cx) with
+      | None -> dst_cx
+      | Some t ->
+        let dst_evaluated = Context.evaluated dst_cx in
+        if Eval.Map.mem id dst_evaluated then
+          dst_cx
+        else (
+          Context.set_evaluated dst_cx (Eval.Map.add id t dst_evaluated);
+          super#eval_id src_cx pole dst_cx id
+        )
+  end
+
+let copy_into dst_cx src_cx t =
+  let (_ : Context.t) = copier#type_ src_cx Polarity.Positive dst_cx t in
+  ()
+
+let copied dst_cx src_cx t =
+  let (_ : Context.t) = copier#type_ src_cx Polarity.Positive dst_cx t in
+  t
+
+let merge_lib_files ~sig_opts ordered_asts =
   let (_builtin_errors, builtin_locs, builtins) =
     Type_sig_utils.parse_and_pack_builtins sig_opts ordered_asts
   in
   match ordered_asts with
-  | [] -> (builtins, None)
+  | [] -> (builtins, Context.EmptyMasterContext)
   | fst_ast :: _ ->
-    let file_key = Base.Option.value_exn (fst_ast |> fst |> Loc.source) in
+    let builtin_leader_file_key = Base.Option.value_exn (fst_ast |> fst |> Loc.source) in
+    (builtins, Context.NonEmptyMasterContext { builtin_leader_file_key; builtin_locs; builtins })
+
+let mk_builtins metadata master_cx =
+  match master_cx with
+  | Context.EmptyMasterContext -> (fun _ -> Builtins.empty ())
+  | Context.NonEmptyMasterContext { builtin_leader_file_key; builtin_locs; builtins } ->
+    let builtins_ref = ref (Builtins.empty ()) in
     let cx =
       Context.make
-        ccx
-        metadata
-        file_key
-        (lazy (ALoc.empty_table file_key))
+        (Context.make_ccx ())
+        { metadata with Context.checked = false }
+        builtin_leader_file_key
+        (lazy (ALoc.empty_table builtin_leader_file_key))
         (fun mref -> Error (Reason.InternalModuleName mref))
+        (fun _ -> !builtins_ref)
         Context.InitLib
     in
-    let global_names = Type_sig_merge.merge_builtins cx file_key builtin_locs builtins in
-    NameUtils.Map.iter (fun name t -> Flow_js.set_builtin cx name t) global_names;
-    (builtins, Some cx)
+    let global_names =
+      Type_sig_merge.merge_builtins cx builtin_leader_file_key builtin_locs builtins
+    in
+    builtins_ref := Builtins.of_name_map ~mapper:Base.Fn.id global_names;
+    (fun dst_cx -> Builtins.of_name_map ~mapper:(copied dst_cx cx) global_names)

@@ -146,8 +146,6 @@ val get_builtin_type : Context.t -> ?trace:Type.trace -> reason -> ?use_desc:boo
 
 val get_builtin_module : Context.t -> ?trace:Type.trace -> ALoc.t -> string -> Type.tvar
 
-val set_builtin : Context.t -> name -> Type.t lazy_t -> unit
-
 val mk_instance : Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> Type.t -> Type.t
 
 val mk_typeof_annotation : Context.t -> ?trace:Type.trace -> reason -> Type.t -> Type.t

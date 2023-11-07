@@ -49,10 +49,13 @@ type component_t
  * resolved tvars. *)
 type sig_t = Type.TypeContext.t
 
-type master_context = {
-  master_sig_cx: sig_t;
-  builtins: Builtins.t;
-}
+type master_context =
+  | EmptyMasterContext
+  | NonEmptyMasterContext of {
+      builtin_leader_file_key: File_key.t;
+      builtin_locs: Loc.t Type_sig_collections.Locs.t;
+      builtins: Type_sig_collections.Locs.index Packed_type_sig.Builtins.t;
+    }
 
 type metadata = {
   (* local *)
@@ -129,12 +132,17 @@ type subst_cache_err =
   | ETooFewTypeArgs of ALoc.t Reason.virtual_reason * int
   | ETooManyTypeArgs of ALoc.t Reason.virtual_reason * int
 
-val empty_master_cx : unit -> master_context
-
-val make_ccx : master_context -> component_t
+val make_ccx : unit -> component_t
 
 val make :
-  component_t -> metadata -> File_key.t -> ALoc.table Lazy.t -> resolve_require -> phase -> t
+  component_t ->
+  metadata ->
+  File_key.t ->
+  ALoc.table Lazy.t ->
+  resolve_require ->
+  (t -> Builtins.t) ->
+  phase ->
+  t
 
 val metadata_of_options : Options.t -> metadata
 

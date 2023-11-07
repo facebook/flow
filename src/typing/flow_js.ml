@@ -10089,10 +10089,6 @@ struct
       in
       (subst (reason_of_t property_type) property_type, homomorphic')
 
-  and set_builtin cx x t =
-    let builtins = Context.builtins cx in
-    Builtins.set_builtin builtins x t
-
   (* Wrapper functions around __flow that manage traces. Use these functions for
      all recursive calls in the implementation of __flow. *)
 

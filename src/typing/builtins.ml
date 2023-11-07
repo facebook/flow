@@ -5,28 +5,31 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type t = (Reason.name, Type.t lazy_t) Hashtbl.t
+type t = {
+  original: Type.t lazy_t NameUtils.Map.t;
+  mapper: Type.t -> Type.t;
+  mapped: (Reason.name, Type.t) Hashtbl.t;
+}
 
-let builtin_set builtins =
-  Hashtbl.fold (fun k _ acc -> NameUtils.Set.add k acc) builtins NameUtils.Set.empty
+let builtin_set { original; _ } =
+  NameUtils.Map.fold (fun k _ acc -> NameUtils.Set.add k acc) original NameUtils.Set.empty
 
-let get_builtin_opt builtins name = Hashtbl.find_opt builtins name |> Option.map Lazy.force
+let get_builtin_opt { original; mapper; mapped } name =
+  match Hashtbl.find_opt mapped name with
+  | Some v -> Some v
+  | None ->
+    (match NameUtils.Map.find_opt name original with
+    | None -> None
+    | Some (lazy v) ->
+      let v = mapper v in
+      Hashtbl.add mapped name v;
+      Some v)
 
 let get_builtin builtins name ~on_missing =
-  match Hashtbl.find_opt builtins name with
+  match get_builtin_opt builtins name with
   | None -> on_missing ()
-  | Some t -> Ok (Lazy.force t)
+  | Some t -> Ok t
 
-let set_builtin builtins name t =
-  match Hashtbl.find_opt builtins name with
-  | None -> Hashtbl.add builtins name t
-  | Some _ -> failwith ("Should have been excluded: " ^ Reason.display_string_of_name name)
+let of_name_map ~mapper original = { original; mapper; mapped = Hashtbl.create 0 }
 
-let empty () : t = Hashtbl.create 0
-
-let optimize_entries builtins ~optimize =
-  Hashtbl.iter
-    (fun name t ->
-      let entry' = optimize (Lazy.force t) in
-      Hashtbl.replace builtins name (lazy entry'))
-    builtins
+let empty () : t = of_name_map ~mapper:Base.Fn.id NameUtils.Map.empty

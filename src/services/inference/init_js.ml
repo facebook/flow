@@ -61,7 +61,7 @@ let parse_lib_file ~reader options file =
   with
   | _ -> failwith (spf "Can't read library definitions file %s, exiting." file)
 
-let check_lib_file ~ccx ~options ast =
+let check_lib_file ~ccx ~options mk_builtins ast =
   let lint_severities = Options.lint_severities options in
   let metadata =
     Context.(
@@ -73,7 +73,9 @@ let check_lib_file ~ccx ~options ast =
   (* Lib files use only concrete locations, so this is not used. *)
   let aloc_table = lazy (ALoc.empty_table lib_file) in
   let resolve_require mref = Error (Reason.internal_module_name mref) in
-  let cx = Context.make ccx metadata lib_file aloc_table resolve_require Context.InitLib in
+  let cx =
+    Context.make ccx metadata lib_file aloc_table resolve_require mk_builtins Context.InitLib
+  in
   Infer.infer_lib_file
     cx
     ast
@@ -122,29 +124,44 @@ let load_lib_files ~ccx ~options ~reader files =
            | Lib_skip -> Lwt.return (ok_acc, errors_acc, asts_acc))
          (true, ErrorSet.empty, [])
   in
-  let (builtin_exports, cx_opt) =
-    if ok then (
+  let (builtin_exports, master_cx, cx_opt) =
+    if ok then
       let sig_opts = Type_sig_options.builtin_options options in
-      let metadata =
-        Context.(
-          let metadata = metadata_of_options options in
-          { metadata with checked = false }
-        )
-      in
-      let (builtins, cx_opt) = Merge_js.merge_lib_files ~sig_opts ~ccx ~metadata ordered_asts in
-      Base.Option.iter cx_opt ~f:(fun cx ->
-          let errors =
-            Base.List.fold ordered_asts ~init:(Context.errors cx) ~f:(fun errors ast ->
-                ErrorSet.union errors (check_lib_file ~ccx ~options ast)
+      let (builtins, master_cx) = Merge_js.merge_lib_files ~sig_opts ordered_asts in
+      let cx_opt =
+        match master_cx with
+        | Context.EmptyMasterContext -> None
+        | Context.NonEmptyMasterContext { builtin_leader_file_key; _ } ->
+          let metadata =
+            Context.(
+              let metadata = metadata_of_options options in
+              { metadata with checked = false }
             )
           in
-          Context.reset_errors cx errors
-      );
-      (Exports.of_builtins builtins, cx_opt)
-    ) else
-      (Exports.empty, None)
+          let mk_builtins = Merge_js.mk_builtins metadata master_cx in
+          let cx =
+            Context.make
+              ccx
+              metadata
+              builtin_leader_file_key
+              (lazy (ALoc.empty_table builtin_leader_file_key))
+              (fun mref -> Error (Reason.InternalModuleName mref))
+              mk_builtins
+              Context.InitLib
+          in
+          let errors =
+            Base.List.fold ordered_asts ~init:ErrorSet.empty ~f:(fun errors ast ->
+                ErrorSet.union errors (check_lib_file ~ccx ~options mk_builtins ast)
+            )
+          in
+          Context.reset_errors cx errors;
+          Some cx
+      in
+      (Exports.of_builtins builtins, master_cx, cx_opt)
+    else
+      (Exports.empty, Context.EmptyMasterContext, None)
   in
-  Lwt.return (ok, cx_opt, errors, builtin_exports)
+  Lwt.return (ok, master_cx, cx_opt, errors, builtin_exports)
 
 type init_result = {
   ok: bool;
@@ -173,17 +190,16 @@ let error_set_to_filemap err_set =
    returns list of (lib file, success) pairs.
 *)
 let init ~options ~reader lib_files =
-  let ccx = Context.(make_ccx (empty_master_cx ())) in
+  let ccx = Context.make_ccx () in
 
-  let%lwt (ok, cx_opt, parse_and_sig_errors, exports) =
+  let%lwt (ok, master_cx, cx_opt, parse_and_sig_errors, exports) =
     load_lib_files ~ccx ~options ~reader lib_files
   in
 
-  let (master_cx, errors, warnings, suppressions) =
+  let (errors, warnings, suppressions) =
     match cx_opt with
-    | None -> (Context.empty_master_cx (), ErrorSet.empty, ErrorSet.empty, Error_suppressions.empty)
+    | None -> (ErrorSet.empty, ErrorSet.empty, Error_suppressions.empty)
     | Some cx ->
-      Merge_js.optimize_builtins cx;
       let errors = Context.errors cx in
       let suppressions = Context.error_suppressions cx in
       let severity_cover = Context.severity_cover cx in
@@ -197,8 +213,7 @@ let init ~options ~reader lib_files =
           aloc_tables
           severity_cover
       in
-      let master_cx = Context.{ master_sig_cx = sig_cx cx; builtins = builtins cx } in
-      (master_cx, errors, warnings, suppressions)
+      (errors, warnings, suppressions)
   in
 
   (* store master signature context to heap *)

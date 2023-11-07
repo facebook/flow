@@ -85,23 +85,24 @@ let before_and_after_stmts file_name =
    * in a few tests. In order to avoid EBuiltinLookupFailed errors with an empty source location,
    * we manually add "Object" -> Any into the builtins map. We use the UnresolvedName any type
    * to avoid any "Any value used as type" errors that may otherwise appear *)
-  let master_cx = Context.empty_master_cx () in
-  let () =
+  let mk_builtins _cx =
     let reason =
       let loc = ALoc.none in
       let desc = Reason.RCustom "Explicit any used in type_ast tests" in
       Reason.mk_reason desc loc
     in
-    Builtins.set_builtin
-      master_cx.Context.builtins
-      (Reason.OrdinaryName "Object")
-      (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+    Builtins.of_name_map
+      ~mapper:Base.Fn.id
+      (NameUtils.Map.singleton
+         (Reason.OrdinaryName "Object")
+         (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+      )
   in
   let cx =
     let aloc_table = lazy (ALoc.empty_table file_key) in
     let resolve_require mref = Error (Reason.internal_module_name mref) in
-    let ccx = Context.(make_ccx master_cx) in
-    Context.make ccx metadata file_key aloc_table resolve_require Context.Checking
+    let ccx = Context.make_ccx () in
+    Context.make ccx metadata file_key aloc_table resolve_require mk_builtins Context.Checking
   in
   let stmts = Base.List.map ~f:Ast_loc_utils.loc_to_aloc_mapper#statement stmts in
   let (_, { Flow_ast.Program.statements = t_stmts; _ }) =

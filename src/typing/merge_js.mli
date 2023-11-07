@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val optimize_builtins : Context.t -> unit
-
 val post_merge_checks : Context.t -> (ALoc.t, ALoc.t) Flow_ast.Program.t -> Context.metadata -> unit
 
 val get_lint_severities :
@@ -15,9 +13,11 @@ val get_lint_severities :
   Severity.severity LintSettings.t ->
   Severity.severity LintSettings.t
 
+val copy_into : Context.t -> Context.t -> Type.t -> unit
+
 val merge_lib_files :
   sig_opts:Type_sig_options.t ->
-  ccx:Context.component_t ->
-  metadata:Context.metadata ->
   (Loc.t, Loc.t) Flow_ast.Program.t list ->
-  Type_sig_collections.Locs.index Packed_type_sig.Builtins.t * Context.t option
+  Type_sig_collections.Locs.index Packed_type_sig.Builtins.t * Context.master_context
+
+val mk_builtins : Context.metadata -> Context.master_context -> Context.t -> Builtins.t

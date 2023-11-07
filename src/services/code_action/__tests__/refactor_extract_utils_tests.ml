@@ -75,56 +75,55 @@ let file_sig_of_ast ast =
 
 let dummy_context () =
   let root = File_path.dummy_path in
-  let master_cx = Context.empty_master_cx () in
   let reason =
     let loc = ALoc.none in
     let desc = Reason.RCustom "Explicit any used in refactor_extract_functioon tests" in
     Reason.mk_reason desc loc
   in
-  let () =
+  let builtins =
     (* Add builtins that will be used by tests. *)
-    Builtins.set_builtin
-      master_cx.Context.builtins
-      (Reason.OrdinaryName "console")
-      (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))));
-    Builtins.set_builtin
-      master_cx.Context.builtins
-      (Reason.OrdinaryName "Object")
-      (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))));
-    Builtins.set_builtin
-      master_cx.Context.builtins
-      (Reason.OrdinaryName "Generator")
-      (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))));
-    Builtins.set_builtin
-      master_cx.Context.builtins
-      (Reason.OrdinaryName "AsyncGenerator")
-      (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))));
-    Builtins.set_builtin
-      master_cx.Context.builtins
-      (Reason.OrdinaryName "Promise")
-      (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))));
-    Builtins.set_builtin
-      master_cx.Context.builtins
-      (Reason.OrdinaryName "promise")
-      (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))));
-    Builtins.set_builtin
-      master_cx.Context.builtins
-      (Reason.OrdinaryName "$await")
-      (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))));
-    Builtins.set_builtin
-      master_cx.Context.builtins
-      (Reason.OrdinaryName "$AsyncIterable")
-      (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))));
-    Builtins.set_builtin
-      master_cx.Context.builtins
-      (Reason.OrdinaryName "$Iterable")
-      (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+    NameUtils.Map.empty
+    |> NameUtils.Map.add
+         (Reason.OrdinaryName "console")
+         (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+    |> NameUtils.Map.add
+         (Reason.OrdinaryName "Object")
+         (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+    |> NameUtils.Map.add
+         (Reason.OrdinaryName "Generator")
+         (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+    |> NameUtils.Map.add
+         (Reason.OrdinaryName "AsyncGenerator")
+         (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+    |> NameUtils.Map.add
+         (Reason.OrdinaryName "Promise")
+         (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+    |> NameUtils.Map.add
+         (Reason.OrdinaryName "promise")
+         (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+    |> NameUtils.Map.add
+         (Reason.OrdinaryName "$await")
+         (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+    |> NameUtils.Map.add
+         (Reason.OrdinaryName "$AsyncIterable")
+         (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+    |> NameUtils.Map.add
+         (Reason.OrdinaryName "$Iterable")
+         (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+    |> Builtins.of_name_map ~mapper:Base.Fn.id
   in
-  let ccx = Context.make_ccx master_cx in
+  let ccx = Context.make_ccx () in
   let metadata = stub_metadata ~root ~checked:true in
   let aloc_table = lazy (ALoc.empty_table dummy_filename) in
   let resolve_require _ = Ok (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))) in
-  Context.make ccx metadata dummy_filename aloc_table resolve_require Context.Checking
+  Context.make
+    ccx
+    metadata
+    dummy_filename
+    aloc_table
+    resolve_require
+    (fun _ -> builtins)
+    Context.Checking
 
 let typed_ast_of_ast cx ast =
   let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in
