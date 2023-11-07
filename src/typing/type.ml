@@ -2825,6 +2825,7 @@ and Object : sig
     flags: TypeTerm.flags;
     generics: Generic.spread_id;
     interface: (TypeTerm.static * TypeTerm.insttype) option;
+    reachable_targs: (TypeTerm.t * Polarity.t) list;
   }
 
   and props = prop NameUtils.Map.t
@@ -2848,6 +2849,7 @@ and Object : sig
       prop_map: Properties.t;
       generics: Generic.spread_id;
       dict: dict;
+      reachable_targs: (TypeTerm.t * Polarity.t) list;
     }
 
     type operand =
@@ -4282,8 +4284,8 @@ let mk_opt_methodcalltype
 
 let default_flags = { obj_kind = Exact; frozen = false; react_dro = None }
 
-let mk_objecttype ?(flags = default_flags) ~call pmap proto =
-  { flags; proto_t = proto; props_tmap = pmap; call_t = call; reachable_targs = [] }
+let mk_objecttype ?(flags = default_flags) ?(reachable_targs = []) ~call pmap proto =
+  { flags; proto_t = proto; props_tmap = pmap; call_t = call; reachable_targs }
 
 let mk_object_def_type ~reason ?(flags = default_flags) ~call pmap proto =
   let reason = update_desc_reason invalidate_rtype_alias reason in

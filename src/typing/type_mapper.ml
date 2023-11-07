@@ -664,13 +664,29 @@ class virtual ['a] t =
         t
 
     method object_kit_spread_operand_slice
-        cx map_cx ({ Object.Spread.reason; prop_map; dict; generics } as slice) =
+        cx map_cx ({ Object.Spread.reason; prop_map; dict; generics; reachable_targs } as slice) =
       let prop_map' = NameUtils.Map.ident_map (self#prop cx map_cx) prop_map in
       let dict' = OptionUtils.ident_map (self#dict_type cx map_cx) dict in
-      if prop_map' == prop_map && dict' == dict then
+      let reachable_targs' =
+        ListUtils.ident_map
+          (fun ((t, p) as tup) ->
+            let t' = self#type_ cx map_cx t in
+            if t == t' then
+              tup
+            else
+              (t', p))
+          reachable_targs
+      in
+      if prop_map' == prop_map && dict' == dict && reachable_targs' == reachable_targs then
         slice
       else
-        { Object.Spread.reason; prop_map = prop_map'; dict = dict'; generics }
+        {
+          Object.Spread.reason;
+          prop_map = prop_map';
+          dict = dict';
+          generics;
+          reachable_targs = reachable_targs';
+        }
 
     method object_kit_spread_operand cx map_cx operand =
       Object.Spread.(

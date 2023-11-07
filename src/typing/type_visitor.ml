@@ -429,7 +429,8 @@ class ['a] t =
       | ObjectKeyMirror -> acc
 
     method private object_kit_spread_operand_slice
-        cx acc { Object.Spread.reason = _; prop_map; dict; generics = _ } =
+        cx acc { Object.Spread.reason = _; prop_map; dict; generics = _; reachable_targs = _ } =
+      (* See obj_type for why we don't visit reachable targs *)
       let acc = self#namemap (Property.fold_t (self#type_ cx pole_TODO)) acc prop_map in
       let acc = self#opt (self#dict_type cx pole_TODO) acc dict in
       acc

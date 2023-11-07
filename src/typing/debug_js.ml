@@ -488,7 +488,15 @@ and dump_use_t_ (depth, tvars) cx t =
       | GetRef tout -> spf "GetRef (%s)" (kid tout)
     )
   in
-  let slice { Object.reason = _; props; flags = { obj_kind; _ }; generics = _; interface = _ } =
+  let slice
+      {
+        Object.reason = _;
+        props;
+        flags = { obj_kind; _ };
+        generics = _;
+        interface = _;
+        reachable_targs = _;
+      } =
     let xs =
       match obj_kind with
       | Indexed { dict_polarity = p; _ } -> [Polarity.sigil p ^ "[]"]
@@ -540,7 +548,15 @@ and dump_use_t_ (depth, tvars) cx t =
       | Some d -> Indexed d
     in
     let flags = { obj_kind; frozen = false; react_dro = None } in
-    slice { Object.reason; props; flags; generics = Generic.spread_empty; interface = None }
+    slice
+      {
+        Object.reason;
+        props;
+        flags;
+        generics = Generic.spread_empty;
+        interface = None;
+        reachable_targs = [];
+      }
   in
   let object_kit =
     Object.(
@@ -569,7 +585,7 @@ and dump_use_t_ (depth, tvars) cx t =
         | Super (s, tool) -> spf "Super (%s, %s)" (slice s) (resolve tool)
       in
       let acc_element = function
-        | Spread.InlineSlice { Spread.reason; prop_map; dict; generics = _ } ->
+        | Spread.InlineSlice { Spread.reason; prop_map; dict; generics = _; reachable_targs = _ } ->
           operand_slice reason prop_map dict
         | Spread.ResolvedSlice xs -> resolved xs
       in
@@ -581,7 +597,7 @@ and dump_use_t_ (depth, tvars) cx t =
             | Value { make_seal } -> spf "Value {make_seal=%b" (bool_of_sealtype make_seal)
           in
           let spread_operand = function
-            | Slice { Spread.reason; prop_map; dict; generics = _ } ->
+            | Slice { Spread.reason; prop_map; dict; generics = _; reachable_targs = _ } ->
               operand_slice reason prop_map dict
             | Type t -> kid t
           in

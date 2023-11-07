@@ -1020,7 +1020,13 @@ and merge_annot tps infer_tps file = function
       let prop_map =
         SMap.map (merge_obj_annot_prop tps infer_tps file) props |> NameUtils.namemap_of_smap
       in
-      { Type.Object.Spread.reason; prop_map; dict; generics = Generic.spread_empty }
+      {
+        Type.Object.Spread.reason;
+        prop_map;
+        dict;
+        generics = Generic.spread_empty;
+        reachable_targs = [];
+      }
     in
     let merge_elem = function
       | ObjSpreadAnnotElem t -> Type.Object.Spread.Type (merge tps infer_tps file t)
@@ -1201,7 +1207,13 @@ and merge_obj_spread_lit ~for_export tps infer_tps file (loc, frozen, proto, ele
       SMap.mapi (merge_obj_value_prop ~for_export tps infer_tps file) props
       |> NameUtils.namemap_of_smap
     in
-    { Type.Object.Spread.reason; prop_map; dict = None; generics = Generic.spread_empty }
+    {
+      Type.Object.Spread.reason;
+      prop_map;
+      dict = None;
+      generics = Generic.spread_empty;
+      reachable_targs = [];
+    }
   in
   let merge_elem = function
     | ObjValueSpreadElem t -> Type.Object.Spread.Type (merge tps infer_tps file t)

@@ -13,7 +13,16 @@ open TypeUtil
 module Flow_js = struct end
 
 let mk_object_type
-    ~def_reason ~exact_reason ~invalidate_aliases ~interface flags call id proto generics =
+    ~def_reason
+    ~exact_reason
+    ~invalidate_aliases
+    ~interface
+    ~reachable_targs
+    flags
+    call
+    id
+    proto
+    generics =
   let def_reason =
     if invalidate_aliases then
       update_desc_reason invalidate_rtype_alias def_reason
@@ -39,7 +48,10 @@ let mk_object_type
         def_reason
       )
     | None ->
-      let t = DefT (def_reason, bogus_trust (), ObjT (mk_objecttype ~flags ~call id proto)) in
+      let t =
+        DefT
+          (def_reason, bogus_trust (), ObjT (mk_objecttype ~reachable_targs ~flags ~call id proto))
+      in
       (* Wrap the final type in an `ExactT` if we have an exact flag *)
       Base.Option.value_map
         ~f:(fun exact_reason ->
@@ -138,7 +150,7 @@ let read_dict r { value; dict_polarity; _ } =
     let reason = replace_desc_reason (RUnknownProperty None) r in
     DefT (reason, bogus_trust (), MixedT Mixed_everything)
 
-let object_slice cx ~interface r id flags generics =
+let object_slice cx ~interface r id flags reachable_targs generics =
   let props = Context.find_props cx id in
   let props = NameUtils.Map.mapi (read_prop r flags) props in
   let obj_kind =
@@ -153,7 +165,7 @@ let object_slice cx ~interface r id flags generics =
       flags.obj_kind
   in
   let flags = { flags with obj_kind } in
-  { Object.reason = r; props; flags; generics; interface }
+  { Object.reason = r; props; flags; generics; interface; reachable_targs }
 
 (* Treat dictionaries as optional, own properties. Dictionary reads should
  * be exact. TODO: Forbid writes to indexers through the photo chain.
@@ -271,11 +283,25 @@ let spread2
     reason
     ( _inline1,
       inexact_reason1,
-      { Object.reason = r1; props = props1; flags = flags1; generics = generics1; interface = _ }
+      {
+        Object.reason = r1;
+        props = props1;
+        flags = flags1;
+        generics = generics1;
+        interface = _;
+        reachable_targs = targs1;
+      }
     )
     ( inline2,
       _inexact_reason2,
-      { Object.reason = r2; props = props2; flags = flags2; generics = generics2; interface = _ }
+      {
+        Object.reason = r2;
+        props = props2;
+        flags = flags2;
+        generics = generics2;
+        interface = _;
+        reachable_targs = targs2;
+      }
     ) =
   let exact1 = Obj_type.is_exact flags1.obj_kind in
   let exact2 = Obj_type.is_exact flags2.obj_kind in
@@ -452,6 +478,7 @@ let spread2
       }
     in
     let generics = Generic.spread_append generics1 generics2 in
+    let reachable_targs = targs1 @ targs2 in
     let inexact_reason =
       match (exact1, exact2) with
       (* If the inexact reason is None, that means we still haven't hit an inexact object yet, so we can
@@ -470,13 +497,18 @@ let spread2
     in
     (match props with
     | Ok props ->
-      Ok (false, inexact_reason, { Object.reason; props; flags; generics; interface = None })
+      Ok
+        ( false,
+          inexact_reason,
+          { Object.reason; props; flags; generics; interface = None; reachable_targs }
+        )
     | Error e -> Error e)
 
 let spread =
   let resolved_of_acc_element = function
     | Object.Spread.ResolvedSlice resolved -> Nel.map (fun x -> (false, None, x)) resolved
-    | Object.Spread.InlineSlice { Object.Spread.reason; prop_map; dict; generics } ->
+    | Object.Spread.InlineSlice { Object.Spread.reason; prop_map; dict; generics; reachable_targs }
+      ->
       let obj_kind =
         match dict with
         | Some d -> Indexed d
@@ -484,7 +516,8 @@ let spread =
       in
       let flags = { obj_kind; frozen = false; react_dro = None } in
       let props = NameUtils.Map.mapi (read_prop reason flags) prop_map in
-      Nel.one (true, None, { Object.reason; props; flags; generics; interface = None })
+      Nel.one
+        (true, None, { Object.reason; props; flags; generics; interface = None; reachable_targs })
   in
 
   fun ~dict_check cx ~use_op reason nel ->
@@ -493,7 +526,8 @@ let spread =
     | (x0, (x1 :: xs : Object.Spread.acc_element list)) ->
       merge_result (spread2 ~dict_check cx ~use_op reason) resolved_of_acc_element x0 (x1, xs)
 
-let spread_mk_object cx reason target { Object.reason = _; props; flags; generics; interface = _ } =
+let spread_mk_object
+    cx reason target { Object.reason = _; props; flags; generics; interface = _; reachable_targs } =
   let open Object.Spread in
   let mk_dro t =
     match flags.react_dro with
@@ -541,6 +575,7 @@ let spread_mk_object cx reason target { Object.reason = _; props; flags; generic
     ~exact_reason:(Some reason)
     ~invalidate_aliases:true
     ~interface:None
+    ~reachable_targs
     flags
     call
     id
@@ -564,7 +599,14 @@ let object_spread
     let reason = update_desc_reason invalidate_rtype_alias reason in
     let { todo_rev; acc; spread_id; union_reason; curr_resolve_idx } = state in
     Nel.iter
-      (fun { Object.reason = r; props = _; flags = { obj_kind; _ }; generics = _; interface = _ } ->
+      (fun {
+             Object.reason = r;
+             props = _;
+             flags = { obj_kind; _ };
+             generics = _;
+             interface = _;
+             reachable_targs = _;
+           } ->
         match options with
         | Annot { make_exact } when make_exact && obj_kind = Inexact ->
           add_output
@@ -647,7 +689,8 @@ let object_spread
 
 exception InvalidConfig of Error_message.t
 
-let check_config2 cx pmap { Object.reason; props; flags; generics; interface = _ } =
+let check_config2 cx pmap { Object.reason; props; flags; generics; interface = _; reachable_targs }
+    =
   let dict = Obj_type.get_dict_opt flags.obj_kind in
   let props =
     try
@@ -719,6 +762,7 @@ let check_config2 cx pmap { Object.reason; props; flags; generics; interface = _
          ~exact_reason:(Some reason)
          ~invalidate_aliases:true
          ~interface:None
+         ~reachable_targs
          flags
          call
          id
@@ -787,8 +831,22 @@ let object_rest
       cx
       ~use_op
       merge_mode
-      { Object.reason = r1; props = props1; flags = flags1; generics = generics1; interface = _ }
-      { Object.reason = r2; props = props2; flags = flags2; generics = generics2; interface = _ } =
+      {
+        Object.reason = r1;
+        props = props1;
+        flags = flags1;
+        generics = generics1;
+        interface = _;
+        reachable_targs;
+      }
+      {
+        Object.reason = r2;
+        props = props2;
+        flags = flags2;
+        generics = generics2;
+        interface = _;
+        reachable_targs = _;
+      } =
     let dict1 = Obj_type.get_dict_opt flags1.obj_kind in
     let dict2 = Obj_type.get_dict_opt flags2.obj_kind in
     let props =
@@ -1066,6 +1124,8 @@ let object_rest
       ~exact_reason:(Some r1)
       ~invalidate_aliases:true
       ~interface:None
+        (* Keep the reachable targs from o1, because we don't know whether all appearences of them were removed *)
+      ~reachable_targs
       flags
       call
       id
@@ -1094,7 +1154,7 @@ let object_rest
 let object_read_only =
   let polarity = Polarity.Positive in
   let mk_read_only_object cx reason slice =
-    let { Object.reason = r; props; flags; generics; interface } = slice in
+    let { Object.reason = r; props; flags; generics; interface; reachable_targs } = slice in
     let props =
       NameUtils.Map.map
         (fun { Object.prop_t; is_method; is_own = _; polarity = _; key_loc } ->
@@ -1125,6 +1185,7 @@ let object_read_only =
       ~exact_reason:(Some reason)
       ~invalidate_aliases:false
       ~interface
+      ~reachable_targs
       flags
       call
       id
@@ -1138,7 +1199,7 @@ let object_read_only =
 
 let object_update_optionality kind =
   let mk_object cx reason slice =
-    let { Object.reason = r; props; flags; generics; interface } = slice in
+    let { Object.reason = r; props; flags; generics; interface; reachable_targs } = slice in
     let props =
       NameUtils.Map.map
         (fun { Object.prop_t; is_method; is_own = _; polarity; key_loc } ->
@@ -1177,6 +1238,7 @@ let object_update_optionality kind =
       ~exact_reason:(Some reason)
       ~invalidate_aliases:false
       ~interface
+      ~reachable_targs
       flags
       call
       id
@@ -1202,8 +1264,22 @@ let object_update_optionality kind =
 let intersect2
     cx
     reason
-    { Object.reason = r1; props = props1; flags = flags1; generics = generics1; interface = _ }
-    { Object.reason = r2; props = props2; flags = flags2; generics = generics2; interface = _ } =
+    {
+      Object.reason = r1;
+      props = props1;
+      flags = flags1;
+      generics = generics1;
+      interface = _;
+      reachable_targs = targs1;
+    }
+    {
+      Object.reason = r2;
+      props = props2;
+      flags = flags2;
+      generics = generics2;
+      interface = _;
+      reachable_targs = targs2;
+    } =
   let dict1 = Obj_type.get_dict_opt flags1.obj_kind in
   let dict2 = Obj_type.get_dict_opt flags2.obj_kind in
   let intersection t1 t2 =
@@ -1298,12 +1374,13 @@ let intersect2
     }
   in
   let generics = Generic.spread_append generics1 generics2 in
-  (props, flags, generics)
+  let reachable_targs = targs1 @ targs2 in
+  (props, flags, generics, reachable_targs)
 
 let intersect2_with_reason cx reason intersection_loc x1 x2 =
-  let (props, flags, generics) = intersect2 cx reason x1 x2 in
+  let (props, flags, generics, reachable_targs) = intersect2 cx reason x1 x2 in
   let reason = mk_reason RObjectType intersection_loc in
-  { Object.reason; props; flags; generics; interface = None }
+  { Object.reason; props; flags; generics; interface = None; reachable_targs }
 
 let resolved ~next ~recurse cx use_op reason resolve_tool tool x =
   Object.(
@@ -1334,7 +1411,7 @@ let interface_slice cx r ~static ~inst id generics =
     | None -> Inexact
   in
   let flags = { frozen = false; obj_kind; react_dro = None } in
-  object_slice cx ~interface:(Some (static, inst)) r id flags generics
+  object_slice cx ~interface:(Some (static, inst)) r id flags [] generics
 
 let resolve
     (type a)
@@ -1363,8 +1440,10 @@ let resolve
   in
   match t with
   (* We extract the props from an ObjT. *)
-  | DefT (r, _, ObjT { props_tmap; Type.flags; _ }) ->
-    let x = Nel.one (object_slice cx ~interface:None r props_tmap flags t_generic_id) in
+  | DefT (r, _, ObjT { props_tmap; Type.flags; reachable_targs; _ }) ->
+    let x =
+      Nel.one (object_slice cx ~interface:None r props_tmap flags reachable_targs t_generic_id)
+    in
     resolved ~next ~recurse cx use_op reason resolve_tool tool x
   (* We take the fields from an InstanceT excluding methods (because methods
    * are always on the prototype). We also want to resolve fields from the
@@ -1437,6 +1516,7 @@ let resolve
           flags;
           generics = t_generic_id;
           interface = None;
+          reachable_targs = [];
         }
     in
     resolved ~next ~recurse cx use_op reason resolve_tool tool x
@@ -1460,6 +1540,7 @@ let resolve
           flags;
           generics = t_generic_id;
           interface = None;
+          reachable_targs = [];
         }
     in
     resolved ~next ~recurse cx use_op reason resolve_tool tool x
@@ -1486,6 +1567,7 @@ let resolve
             flags;
             generics = t_generic_id;
             interface = None;
+            reachable_targs = [];
           }
       | _ ->
         let flags =
@@ -1508,6 +1590,7 @@ let resolve
             flags;
             generics = t_generic_id;
             interface = None;
+            reachable_targs = [];
           }
     in
     resolved ~next ~recurse cx use_op reason resolve_tool tool x
@@ -1596,8 +1679,8 @@ let super
     let slice = interface_slice cx r ~static ~inst own_props Generic.spread_empty in
     let acc = intersect2 cx reason acc slice in
     let acc =
-      let (props, flags, generics) = acc in
-      { Object.reason; props; flags; generics; interface = Some (static, inst) }
+      let (props, flags, generics, reachable_targs) = acc in
+      { Object.reason; props; flags; generics; interface = Some (static, inst); reachable_targs }
     in
     let resolve_tool = Object.Super (acc, resolve_tool) in
     recurse cx use_op reason resolve_tool tool super
@@ -1611,7 +1694,7 @@ let map_object
     reason
     use_op
     selected_keys_and_indexers
-    { Object.reason = _; props; flags; generics; interface } =
+    { Object.reason = _; props; flags; generics; interface; reachable_targs } =
   let mk_prop_type key_t prop_optional =
     (* We persist the original use_op here so that errors involving the typeapp are positioned
      * at the use site and not the typeapp site *)
@@ -1736,6 +1819,7 @@ let map_object
     ~exact_reason:(Some reason)
     ~invalidate_aliases:true
     ~interface
+    ~reachable_targs
     flags
     call
     id

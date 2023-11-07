@@ -147,13 +147,20 @@ module Make
                         prop_map = slice_pmap;
                         dict = None;
                         generics = Generic.spread_empty;
+                        reachable_targs = [];
                       })
                 ts
             in
             (t, ts, None)
           | (Slice { slice_pmap = prop_map }, Spread t :: ts) ->
             let head_slice =
-              { Type.Object.Spread.reason; prop_map; dict = None; generics = Generic.spread_empty }
+              {
+                Type.Object.Spread.reason;
+                prop_map;
+                dict = None;
+                generics = Generic.spread_empty;
+                reachable_targs = [];
+              }
             in
             let ts =
               Base.List.map
@@ -166,6 +173,7 @@ module Make
                         prop_map = slice_pmap;
                         dict = None;
                         generics = Generic.spread_empty;
+                        reachable_targs = [];
                       })
                 ts
             in

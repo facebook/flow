@@ -329,7 +329,10 @@ and collect_of_property ?log_unresolved cx name property acc =
     Property.fold_t (fun acc -> collect_of_type ?log_unresolved cx acc) acc property
 
 and collect_of_object_kit_spread_operand_slice
-    ?log_unresolved cx acc { Object.Spread.reason = _; prop_map; dict; generics = _ } =
+    ?log_unresolved
+    cx
+    acc
+    { Object.Spread.reason = _; prop_map; dict; generics = _; reachable_targs = _ } =
   let acc = NameUtils.Map.fold (collect_of_property ?log_unresolved cx) prop_map acc in
   let ts =
     match dict with

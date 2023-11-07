@@ -2214,13 +2214,20 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                             prop_map = pmap;
                             dict;
                             generics = Generic_ID.spread_empty;
+                            reachable_targs = [];
                           })
                     ts
                 in
                 (t, ts, None)
               | (Acc.Slice { dict; pmap = prop_map }, Acc.Spread t :: ts) ->
                 let head_slice =
-                  { Type.Object.Spread.reason; prop_map; dict; generics = Generic_ID.spread_empty }
+                  {
+                    Type.Object.Spread.reason;
+                    prop_map;
+                    dict;
+                    generics = Generic_ID.spread_empty;
+                    reachable_targs = [];
+                  }
                 in
                 let ts =
                   Base.List.map
@@ -2233,6 +2240,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                             prop_map = pmap;
                             dict;
                             generics = Generic_ID.spread_empty;
+                            reachable_targs = [];
                           })
                     ts
                 in

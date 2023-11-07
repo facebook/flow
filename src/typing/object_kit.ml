@@ -147,7 +147,9 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
     let flags = { frozen = false; obj_kind; react_dro = None } in
     let interface = None in
     let obj_reason = replace_desc_reason RObjectType reason in
-    let slice = { Object.reason = obj_reason; props; flags; generics; interface } in
+    let slice =
+      { Object.reason = obj_reason; props; flags; generics; interface; reachable_targs = [] }
+    in
     fun ~property_type mapped_type_flags ->
       Slice_utils.map_object property_type mapped_type_flags cx reason use_op None slice
 
@@ -260,7 +262,8 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
     (* Object Rep *)
     (**************)
     let object_rep =
-      let mk_object cx reason { Object.reason = r; props; flags; generics; interface = _ } =
+      let mk_object
+          cx reason { Object.reason = r; props; flags; generics; interface = _; reachable_targs } =
         (* TODO(jmbrown): Add polarity information to props *)
         let polarity = Polarity.Neutral in
         let props =
@@ -287,6 +290,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           ~exact_reason:(Some reason)
           ~invalidate_aliases:true
           ~interface:None
+          ~reachable_targs
           flags
           call
           id
@@ -306,7 +310,8 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
     (****************)
     let object_widen =
       let open Slice_utils in
-      let mk_object cx reason { Object.reason = r; props; flags; generics; interface = _ } =
+      let mk_object
+          cx reason { Object.reason = r; props; flags; generics; interface = _; reachable_targs } =
         let polarity = Polarity.Neutral in
         let props =
           NameUtils.Map.map
@@ -332,6 +337,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           ~exact_reason:None
           ~invalidate_aliases:true
           ~interface:None
+          ~reachable_targs
           flags
           call
           id
@@ -490,6 +496,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 flags;
                 generics = widest.generics;
                 interface = None;
+                reachable_targs = slice.Object.reachable_targs;
               }
             in
             Context.spread_widened_types_add_widest cx widened_id slice';
@@ -519,6 +526,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             flags = config_flags;
             generics = config_generics;
             interface = _;
+            reachable_targs = config_targs;
           } =
             config
           in
@@ -549,7 +557,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
            *
            * NOTE: React will copy any enumerable prop whether or not it
            * is own to the config. *)
-          let (props_map, flags, generics) =
+          let (props_map, flags, generics, reachable_targs) =
             match defaults with
             (* If we have some default props then we want to add the types for those
              * default props to our final props object. *)
@@ -560,6 +568,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                   flags = defaults_flags;
                   generics = defaults_generics;
                   interface = _;
+                  reachable_targs = defaults_targs;
                 } ->
               let defaults_dict = Obj_type.get_dict_opt defaults_flags.obj_kind in
               (* Merge our props and default props. *)
@@ -666,7 +675,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
               in
               let flags = { frozen = true; obj_kind; react_dro = None } in
               let generics = Generic.spread_append config_generics defaults_generics in
-              (props, flags, generics)
+              (props, flags, generics, config_targs @ defaults_targs)
             (* Otherwise turn our slice props map into an object props. *)
             | None ->
               let props =
@@ -700,7 +709,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                     )
               in
               let flags = { frozen = true; obj_kind; react_dro = None } in
-              (props, flags, config_generics)
+              (props, flags, config_generics, config_targs)
           in
           let call = None in
           (* Finish creating our props object. *)
@@ -720,6 +729,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             ~exact_reason:(Some reason)
             ~invalidate_aliases:false
             ~interface:None
+            ~reachable_targs
             flags
             call
             id
