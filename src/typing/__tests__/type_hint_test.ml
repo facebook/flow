@@ -136,7 +136,7 @@ end
 module TypeLoader : sig
   val get_master_cx : unit -> Context.master_context
 
-  val get_type_of_last_expression : Context.t -> string -> Context.t * Type.t
+  val get_type_of_last_expression : Context.t -> string -> Type.t
 end = struct
   let parse_content file content =
     let parse_options =
@@ -218,36 +218,7 @@ end = struct
           Flow_ast.Statement.Expression
             { Flow_ast.Statement.Expression.expression = ((_, t), _); _ }
         ) ->
-      let reducer =
-        new Context_optimizer.context_optimizer ~no_lowers:(fun _ r -> Type.Unsoundness.merged_any r)
-      in
-      let file = Context.file cx in
-      let metadata = Context.metadata cx in
-      let aloc_table = Utils_js.FilenameMap.find file (Context.aloc_tables cx) in
-      let resolve_require mref = Error (Reason.internal_module_name mref) in
-      let ccx = Context.make_ccx () in
-      let t = reducer#type_ cx Polarity.Neutral t in
-      Context.merge_into
-        ccx
-        {
-          Type.TypeContext.graph = reducer#get_reduced_graph;
-          trust_graph = reducer#get_reduced_trust_graph;
-          property_maps = reducer#get_reduced_property_maps;
-          call_props = reducer#get_reduced_call_props;
-          export_maps = reducer#get_reduced_export_maps;
-          evaluated = reducer#get_reduced_evaluated;
-        };
-      let cx =
-        Context.make
-          ccx
-          metadata
-          file
-          aloc_table
-          resolve_require
-          (Merge_js.mk_builtins metadata (get_master_cx ()))
-          Context.PostInference
-      in
-      (cx, t)
+      t
     | _ -> failwith "Must have a last statement that's an expression"
 end
 
@@ -380,7 +351,7 @@ let mk_private_method_eval_hint_test
 
 let mk_eval_hint_test_with_type_setup ~expected type_setup_code ops ctxt =
   let cx = mk_cx ~verbose:false () in
-  let (cx, base_t) = TypeLoader.get_type_of_last_expression cx type_setup_code in
+  let base_t = TypeLoader.get_type_of_last_expression cx type_setup_code in
   let actual =
     mk_hint base_t ops |> Type_hint.evaluate_hint cx dummy_reason |> string_of_hint_eval_result cx
   in
