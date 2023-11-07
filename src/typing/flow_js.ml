@@ -2923,11 +2923,12 @@ struct
           |> Base.Option.value_map ~f:snd ~default:(Obj_type.mk ~obj_kind:Exact cx reason)
           |> fun t ->
           rec_flow_t ~use_op:unknown_use cx trace (props, t);
-          rec_flow_t
-            ~use_op:unknown_use
-            cx
-            trace
-            (return_t, get_builtin_type cx reason_op (OrdinaryName "React$Node"))
+          if not (Context.in_implicit_instantiation cx) then
+            rec_flow_t
+              ~use_op:unknown_use
+              cx
+              trace
+              (return_t, get_builtin_type cx reason_op (OrdinaryName "React$Node"))
         | ( DefT (r, _, FunT _),
             (ReactInToProps (reason_op, props) | ReactPropsToOut (reason_op, props))
           ) ->
