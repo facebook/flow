@@ -2,15 +2,15 @@
 
 let tests = [
   // ErrorEvent
-  function() {
+  function () {
     const event = new ErrorEvent('error', {
       message: 'An error occurred, and what an event!',
       lineno: 1000,
     });
-    (event.message: string);
-    (event.filename: string);
-    (event.lineno: number);
-    (event.colno: number);
-    (event.error: any);
-  }
+    event.message as string;
+    event.filename as string;
+    event.lineno as number;
+    event.colno as number;
+    event.error as any;
+  },
 ];

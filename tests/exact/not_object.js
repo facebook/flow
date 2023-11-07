@@ -1,29 +1,27 @@
 //@flow
 
-let x : {||} = 3;
-let y : {||} = "";
-let z : {||} = true;
+let x: {||} = 3;
+let y: {||} = '';
+let z: {||} = true;
 
-let c : {||} = new class {};
-let f : {||} = () => {};
+let c: {||} = new (class {})();
+let f: {||} = () => {};
 
-declare var u : {||} | {};
-(u : {||});
+declare var u: {||} | {};
+u as {||};
 
-declare var v : number | {};
-(v : {||});
-
+declare var v: number | {};
+v as {||};
 
 class A {}
 
-(0: $Exact<number>);
-("": $Exact<string>);
-(true: $Exact<boolean>);
-(new A(): $Exact<A>);
-(()=>{} : $Exact<()=>{}>);
-
+0 as $Exact<number>;
+'' as $Exact<string>;
+true as $Exact<boolean>;
+new A() as $Exact<A>;
+(() => {}) as $Exact<() => {}>;
 
 let foo = () => {};
-(()=>{} : $Exact<typeof foo>);
-let bar = new A;
-(new A(): $Exact<typeof bar>);
+(() => {}) as $Exact<typeof foo>;
+let bar = new A();
+new A() as $Exact<typeof bar>;

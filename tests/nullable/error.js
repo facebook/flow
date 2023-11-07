@@ -5,16 +5,16 @@
 
 declare var any: any;
 
-((any: ?number): number);
-((any: ?number): null);
-((any: ?number): void);
+any as ?number as number;
+any as ?number as null;
+any as ?number as void;
 
-((any: number): ?number);
-((any: null): ?number);
-((any: void): ?number);
+any as number as ?number;
+any as null as ?number;
+any as void as ?number;
 
-((any: ?number): number | null);
-((any: ?number): number | void);
+any as ?number as number | null;
+any as ?number as number | void;
 
-((any: number | null): ?number);
-((any: number | void): ?number);
+any as number | null as ?number;
+any as number | void as ?number;

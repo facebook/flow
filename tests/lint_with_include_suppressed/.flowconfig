@@ -7,6 +7,7 @@ libs/
 
 [options]
 all=true
+casting_syntax=both
 no_flowlib=true
 
 [lints]

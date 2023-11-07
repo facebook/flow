@@ -1,4 +1,4 @@
 //@flow
 
-import { x } from './server'
-module.exports = (x: number);
+import {x} from './server';
+module.exports = x as number;

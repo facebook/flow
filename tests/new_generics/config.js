@@ -11,10 +11,10 @@ function f<P: Props, D: DefaultProps, C: Config, W: NotTheRightConfig>(
   y: React$Config<P, D>,
   z: W,
 ) {
-  (x: React$Config<Props, DefaultProps>);
-  (y: Config);
-  (y: C); // error, generics don't match
-  (y: React$Config<P, D>);
-  (y: NotTheRightConfig); // Error, configs don't match
-  (z: React$Config<Props, DefaultProps>); // Error, configs don't match
+  x as React$Config<Props, DefaultProps>;
+  y as Config;
+  y as C; // error, generics don't match
+  y as React$Config<P, D>;
+  y as NotTheRightConfig; // Error, configs don't match
+  z as React$Config<Props, DefaultProps>; // Error, configs don't match
 }

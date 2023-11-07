@@ -1,12 +1,12 @@
 //@flow
 
 function f() {
-    x.push('a')
+  x.push('a');
 }
 
 var x = [];
 
-(x: Array<number>);
+x as Array<number>;
 
 var y: Array<number> = [];
-([]: Array<number>);
+[] as Array<number>;

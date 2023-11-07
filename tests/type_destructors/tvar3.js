@@ -17,12 +17,12 @@ declare function fn6<T>(x: (T) => void): ($NonMaybeType<T>) => void;
 declare function fn7<T>(x: T, y: (T) => void): $NonMaybeType<T>;
 declare function fn8<T>(x: T, y: (T) => void): ($NonMaybeType<T>) => void;
 
-(fn1(a): B); // Error
-(fn2((a: A) => {}): B => void); // Error
-(fn3(a, (b: B) => {}): C); // Error
-(fn4(a, (b: B) => {}): C => void); // Error
+fn1(a) as B; // Error
+fn2((a: A) => {}) as (B) => void; // Error
+fn3(a, (b: B) => {}) as C; // Error
+fn4(a, (b: B) => {}) as (C) => void; // Error
 
-(fn5(a): B); // Error
-(fn6((a: A) => {}): B => void); // Error
-(fn7(a, (b: B) => {}): C); // Error
-(fn8(a, (b: B) => {}): C => void); // Error
+fn5(a) as B; // Error
+fn6((a: A) => {}) as (B) => void; // Error
+fn7(a, (b: B) => {}) as C; // Error
+fn8(a, (b: B) => {}) as (C) => void; // Error

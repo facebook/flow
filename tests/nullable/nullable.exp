@@ -3,13 +3,13 @@ Error --------------------------------------------------------------------------
 Cannot cast `any` to number because null or undefined [1] is incompatible with number [2]. [incompatible-cast]
 
    error.js:8:8
-   8| ((any: ?number): number);
+   8| any as ?number as number;
              ^^^^^^^ [1]
 
 References:
-   error.js:8:18
-   8| ((any: ?number): number);
-                       ^^^^^^ [2]
+   error.js:8:19
+   8| any as ?number as number;
+                        ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- error.js:9:8
@@ -17,13 +17,13 @@ Error --------------------------------------------------------------------------
 Cannot cast `any` to null because null or undefined [1] is incompatible with null [2]. [incompatible-cast]
 
    error.js:9:8
-   9| ((any: ?number): null);
+   9| any as ?number as null;
              ^^^^^^^ [1]
 
 References:
-   error.js:9:18
-   9| ((any: ?number): null);
-                       ^^^^ [2]
+   error.js:9:19
+   9| any as ?number as null;
+                        ^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- error.js:9:9
@@ -31,13 +31,13 @@ Error --------------------------------------------------------------------------
 Cannot cast `any` to null because number [1] is incompatible with null [2]. [incompatible-cast]
 
    error.js:9:9
-   9| ((any: ?number): null);
+   9| any as ?number as null;
               ^^^^^^ [1]
 
 References:
-   error.js:9:18
-   9| ((any: ?number): null);
-                       ^^^^ [2]
+   error.js:9:19
+   9| any as ?number as null;
+                        ^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- error.js:10:8
@@ -45,13 +45,13 @@ Error --------------------------------------------------------------------------
 Cannot cast `any` to undefined because null or undefined [1] is incompatible with undefined [2]. [incompatible-cast]
 
    error.js:10:8
-   10| ((any: ?number): void);
+   10| any as ?number as void;
               ^^^^^^^ [1]
 
 References:
-   error.js:10:18
-   10| ((any: ?number): void);
-                        ^^^^ [2]
+   error.js:10:19
+   10| any as ?number as void;
+                         ^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- error.js:10:9
@@ -59,13 +59,13 @@ Error --------------------------------------------------------------------------
 Cannot cast `any` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
 
    error.js:10:9
-   10| ((any: ?number): void);
+   10| any as ?number as void;
                ^^^^^^ [1]
 
 References:
-   error.js:10:18
-   10| ((any: ?number): void);
-                        ^^^^ [2]
+   error.js:10:19
+   10| any as ?number as void;
+                         ^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- error.js:16:8
@@ -75,16 +75,16 @@ Cannot cast `any` to union type because: [incompatible-cast]
  - Or null or undefined [1] is incompatible with number [3].
 
    error.js:16:8
-   16| ((any: ?number): number | null);
+   16| any as ?number as number | null;
               ^^^^^^^ [1]
 
 References:
-   error.js:16:27
-   16| ((any: ?number): number | null);
-                                 ^^^^ [2]
-   error.js:16:18
-   16| ((any: ?number): number | null);
-                        ^^^^^^ [3]
+   error.js:16:28
+   16| any as ?number as number | null;
+                                  ^^^^ [2]
+   error.js:16:19
+   16| any as ?number as number | null;
+                         ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- error.js:17:8
@@ -94,16 +94,16 @@ Cannot cast `any` to union type because: [incompatible-cast]
  - Or null or undefined [1] is incompatible with number [3].
 
    error.js:17:8
-   17| ((any: ?number): number | void);
+   17| any as ?number as number | void;
               ^^^^^^^ [1]
 
 References:
-   error.js:17:27
-   17| ((any: ?number): number | void);
-                                 ^^^^ [2]
-   error.js:17:18
-   17| ((any: ?number): number | void);
-                        ^^^^^^ [3]
+   error.js:17:28
+   17| any as ?number as number | void;
+                                  ^^^^ [2]
+   error.js:17:19
+   17| any as ?number as number | void;
+                         ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:3:11

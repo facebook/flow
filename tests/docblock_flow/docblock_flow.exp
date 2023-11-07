@@ -7,18 +7,18 @@ Error --------------------------------------------------------------------------
                ^^^^^
 
 
-Error ----------------------------------------------------------------------------------------- license_with_flow.js:4:2
+Error ----------------------------------------------------------------------------------------- license_with_flow.js:4:1
 
 Cannot cast empty string to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
 
-   license_with_flow.js:4:2
-   4| ("": void); // error
-       ^^ [1]
+   license_with_flow.js:4:1
+   4| '' as void; // error
+      ^^ [1]
 
 References:
-   license_with_flow.js:4:6
-   4| ("": void); // error
-           ^^^^ [2]
+   license_with_flow.js:4:7
+   4| '' as void; // error
+            ^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ multiple_flows_1.js:2:4
@@ -37,32 +37,32 @@ Unexpected `@flow` declaration. Only one per file is allowed. [duplicate-flow-de
          ^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------- use_strict_with_flow.js:4:2
+Error -------------------------------------------------------------------------------------- use_strict_with_flow.js:4:1
 
 Cannot cast empty string to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
 
-   use_strict_with_flow.js:4:2
-   4| ("": void); // error
-       ^^ [1]
+   use_strict_with_flow.js:4:1
+   4| '' as void; // error
+      ^^ [1]
 
 References:
-   use_strict_with_flow.js:4:6
-   4| ("": void); // error
-           ^^^^ [2]
+   use_strict_with_flow.js:4:7
+   4| '' as void; // error
+            ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- with_flow.js:3:2
+Error ------------------------------------------------------------------------------------------------- with_flow.js:3:1
 
 Cannot cast empty string to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
 
-   with_flow.js:3:2
-   3| ("": void); // error
-       ^^ [1]
+   with_flow.js:3:1
+   3| '' as void; // error
+      ^^ [1]
 
 References:
-   with_flow.js:3:6
-   3| ("": void); // error
-           ^^^^ [2]
+   with_flow.js:3:7
+   3| '' as void; // error
+            ^^^^ [2]
 
 
 

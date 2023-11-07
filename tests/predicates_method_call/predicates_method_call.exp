@@ -1,69 +1,69 @@
-Error ----------------------------------------------------------------------------------------------------- file.js:22:6
+Error ----------------------------------------------------------------------------------------------------- file.js:22:5
 
 Cannot cast `x` to `B` because string literal `A` [1] is incompatible with string literal `B` [2]. [incompatible-cast]
 
-   file.js:22:6
-   22|     (x: B); // error
-            ^
+   file.js:22:5
+   22|     x as B; // error
+           ^
 
 References:
    file.js:9:22
     9|     return value === 'A';
                             ^^^ [1]
-   file.js:22:9
-   22|     (x: B); // error
-               ^ [2]
+   file.js:22:10
+   22|     x as B; // error
+                ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- file.js:22:6
+Error ----------------------------------------------------------------------------------------------------- file.js:22:5
 
 Cannot cast `x` to `B` because string literal `A` [1] is incompatible with string literal `B` [2]. [incompatible-cast]
 
-   file.js:22:6
-   22|     (x: B); // error
-            ^
+   file.js:22:5
+   22|     x as B; // error
+           ^
 
 References:
    file.js:18:12
    18|   const x: T = 'A';
                   ^ [1]
-   file.js:22:9
-   22|     (x: B); // error
-               ^ [2]
+   file.js:22:10
+   22|     x as B; // error
+                ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- file.js:27:6
+Error ----------------------------------------------------------------------------------------------------- file.js:27:5
 
 Cannot cast `x` to `B` because string literal `A` [1] is incompatible with string literal `B` [2]. [incompatible-cast]
 
-   file.js:27:6
-   27|     (x: B);  // error
-            ^
+   file.js:27:5
+   27|     x as B; // error
+           ^
 
 References:
    file.js:9:22
     9|     return value === 'A';
                             ^^^ [1]
-   file.js:27:9
-   27|     (x: B);  // error
-               ^ [2]
+   file.js:27:10
+   27|     x as B; // error
+                ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- file.js:27:6
+Error ----------------------------------------------------------------------------------------------------- file.js:27:5
 
 Cannot cast `x` to `B` because string literal `A` [1] is incompatible with string literal `B` [2]. [incompatible-cast]
 
-   file.js:27:6
-   27|     (x: B);  // error
-            ^
+   file.js:27:5
+   27|     x as B; // error
+           ^
 
 References:
    file.js:18:12
    18|   const x: T = 'A';
                   ^ [1]
-   file.js:27:9
-   27|     (x: B);  // error
-               ^ [2]
+   file.js:27:10
+   27|     x as B; // error
+                ^ [2]
 
 
 

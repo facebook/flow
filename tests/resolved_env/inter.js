@@ -1,24 +1,23 @@
 //@flow
 
 interface A extends B {
-    foo: C
+  foo: C;
 }
 
 interface B {
-    bar: A;
+  bar: A;
 }
 
 declare class D {
-    w(): number
+  w(): number;
 }
 
 declare class C extends D {
-    m(): this;
+  m(): this;
 }
 
-
 declare var a: A;
-(a.foo.w(): empty); // err
+a.foo.w() as empty; // err
 
 var c = new C();
-(c.m().w(): empty); // err
+c.m().w() as empty; // err

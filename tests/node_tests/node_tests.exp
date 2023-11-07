@@ -21,80 +21,80 @@ References:
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------ child_process/execSync.js:8:2
+Error ------------------------------------------------------------------------------------ child_process/execSync.js:8:1
 
 Cannot call `execSync` because: [incompatible-call]
  - Either string [1] is incompatible with number [2] in property `timeout`.
  - Or property `encoding` is missing in object literal [3] but exists in object type [4].
 
-   child_process/execSync.js:8:2
-     8| (execSync('ls', {timeout: '250'})); // error, no signatures match
-         ^^^^^^^^
+   child_process/execSync.js:8:1
+     8| execSync('ls', {timeout: '250'}); // error, no signatures match
+        ^^^^^^^^
 
 References:
-   child_process/execSync.js:8:27
-     8| (execSync('ls', {timeout: '250'})); // error, no signatures match
-                                  ^^^^^ [1]
+   child_process/execSync.js:8:26
+     8| execSync('ls', {timeout: '250'}); // error, no signatures match
+                                 ^^^^^ [1]
    <BUILTINS>/node.js:173:13
    173|   timeout?: number,
                     ^^^^^^ [2]
-   child_process/execSync.js:8:17
-     8| (execSync('ls', {timeout: '250'})); // error, no signatures match
-                        ^^^^^^^^^^^^^^^^ [3]
+   child_process/execSync.js:8:16
+     8| execSync('ls', {timeout: '250'}); // error, no signatures match
+                       ^^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/node.js:305:14
    305|     options: { encoding: buffer$NonBufferEncoding, ... } & child_process$execSyncOpts
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error -------------------------------------------------------------------------------------------- crypto/crypto.js:12:8
+Error -------------------------------------------------------------------------------------------- crypto/crypto.js:12:7
 
 Cannot cast `hmac.read()` to number because null or undefined [1] is incompatible with number [2]. [incompatible-cast]
 
-   crypto/crypto.js:12:8
-     12|       (hmac.read(): number); // 4 errors: null, void, string, Buffer
-                ^^^^^^^^^^^
+   crypto/crypto.js:12:7
+     12|       hmac.read() as number; // 4 errors: null, void, string, Buffer
+               ^^^^^^^^^^^
 
 References:
    <BUILTINS>/node.js:2017:24
    2017|   read(size?: number): ?(string | Buffer);
                                 ^^^^^^^^^^^^^^^^^^ [1]
-   crypto/crypto.js:12:21
-     12|       (hmac.read(): number); // 4 errors: null, void, string, Buffer
-                             ^^^^^^ [2]
+   crypto/crypto.js:12:22
+     12|       hmac.read() as number; // 4 errors: null, void, string, Buffer
+                              ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- crypto/crypto.js:12:8
+Error -------------------------------------------------------------------------------------------- crypto/crypto.js:12:7
 
 Cannot cast `hmac.read()` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
-   crypto/crypto.js:12:8
-     12|       (hmac.read(): number); // 4 errors: null, void, string, Buffer
-                ^^^^^^^^^^^
+   crypto/crypto.js:12:7
+     12|       hmac.read() as number; // 4 errors: null, void, string, Buffer
+               ^^^^^^^^^^^
 
 References:
    <BUILTINS>/node.js:2017:26
    2017|   read(size?: number): ?(string | Buffer);
                                   ^^^^^^ [1]
-   crypto/crypto.js:12:21
-     12|       (hmac.read(): number); // 4 errors: null, void, string, Buffer
-                             ^^^^^^ [2]
+   crypto/crypto.js:12:22
+     12|       hmac.read() as number; // 4 errors: null, void, string, Buffer
+                              ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- crypto/crypto.js:12:8
+Error -------------------------------------------------------------------------------------------- crypto/crypto.js:12:7
 
 Cannot cast `hmac.read()` to number because `Buffer` [1] is incompatible with number [2]. [incompatible-cast]
 
-   crypto/crypto.js:12:8
-     12|       (hmac.read(): number); // 4 errors: null, void, string, Buffer
-                ^^^^^^^^^^^
+   crypto/crypto.js:12:7
+     12|       hmac.read() as number; // 4 errors: null, void, string, Buffer
+               ^^^^^^^^^^^
 
 References:
    <BUILTINS>/node.js:2017:35
    2017|   read(size?: number): ?(string | Buffer);
                                            ^^^^^^ [1]
-   crypto/crypto.js:12:21
-     12|       (hmac.read(): number); // 4 errors: null, void, string, Buffer
-                             ^^^^^^ [2]
+   crypto/crypto.js:12:22
+     12|       hmac.read() as number; // 4 errors: null, void, string, Buffer
+                              ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- crypto/crypto.js:16:10
@@ -153,38 +153,38 @@ References:
           -------^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- crypto/crypto.js:36:6
+Error -------------------------------------------------------------------------------------------- crypto/crypto.js:36:5
 
 Cannot cast `hmac.digest(...)` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
 
-   crypto/crypto.js:36:6
-    36|     (hmac.digest('hex'): void); // 1 error
-             ^^^^^^^^^^^^^^^^^^
+   crypto/crypto.js:36:5
+    36|     hmac.digest('hex') as void; // 1 error
+            ^^^^^^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/node.js:525:61
    525|   digest(encoding: 'hex' | 'latin1' | 'binary' | 'base64'): string;
                                                                     ^^^^^^ [1]
-   crypto/crypto.js:36:26
-    36|     (hmac.digest('hex'): void); // 1 error
-                                 ^^^^ [2]
+   crypto/crypto.js:36:27
+    36|     hmac.digest('hex') as void; // 1 error
+                                  ^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- crypto/crypto.js:37:6
+Error -------------------------------------------------------------------------------------------- crypto/crypto.js:37:5
 
 Cannot cast `hmac.digest()` to undefined because `Buffer` [1] is incompatible with undefined [2]. [incompatible-cast]
 
-   crypto/crypto.js:37:6
-    37|     (hmac.digest(): void); // 1 error
-             ^^^^^^^^^^^^^
+   crypto/crypto.js:37:5
+    37|     hmac.digest() as void; // 1 error
+            ^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/node.js:527:27
    527|   digest(encoding: void): Buffer;
                                   ^^^^^^ [1]
-   crypto/crypto.js:37:21
-    37|     (hmac.digest(): void); // 1 error
-                            ^^^^ [2]
+   crypto/crypto.js:37:22
+    37|     hmac.digest() as void; // 1 error
+                             ^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- dns/dns.js:23:5
@@ -1976,55 +1976,55 @@ Unexpected end of input, expected the token `{`
       
 
 
-Error ----------------------------------------------------------------------------------------------- os/userInfo.js:7:2
+Error ----------------------------------------------------------------------------------------------- os/userInfo.js:7:1
 
 Cannot cast `u1.username` to `Buffer` because string [1] is incompatible with `Buffer` [2]. [incompatible-cast]
 
-   os/userInfo.js:7:2
-      7| (u1.username: Buffer); // error
-          ^^^^^^^^^^^
+   os/userInfo.js:7:1
+      7| u1.username as Buffer; // error
+         ^^^^^^^^^^^
 
 References:
    <BUILTINS>/node.js:1865:13
    1865|   username: string,
                      ^^^^^^ [1]
-   os/userInfo.js:7:15
-      7| (u1.username: Buffer); // error
-                       ^^^^^^ [2]
+   os/userInfo.js:7:16
+      7| u1.username as Buffer; // error
+                        ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- os/userInfo.js:11:2
+Error ---------------------------------------------------------------------------------------------- os/userInfo.js:11:1
 
 Cannot cast `u2.username` to `Buffer` because string [1] is incompatible with `Buffer` [2]. [incompatible-cast]
 
-   os/userInfo.js:11:2
-     11| (u2.username: Buffer); // error
-          ^^^^^^^^^^^
+   os/userInfo.js:11:1
+     11| u2.username as Buffer; // error
+         ^^^^^^^^^^^
 
 References:
    <BUILTINS>/node.js:1865:13
    1865|   username: string,
                      ^^^^^^ [1]
-   os/userInfo.js:11:15
-     11| (u2.username: Buffer); // error
-                       ^^^^^^ [2]
+   os/userInfo.js:11:16
+     11| u2.username as Buffer; // error
+                        ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- os/userInfo.js:14:2
+Error ---------------------------------------------------------------------------------------------- os/userInfo.js:14:1
 
 Cannot cast `u3.username` to string because `Buffer` [1] is incompatible with string [2]. [incompatible-cast]
 
-   os/userInfo.js:14:2
-     14| (u3.username: string); // error
-          ^^^^^^^^^^^
+   os/userInfo.js:14:1
+     14| u3.username as string; // error
+         ^^^^^^^^^^^
 
 References:
    <BUILTINS>/node.js:1856:13
    1856|   username: Buffer,
                      ^^^^^^ [1]
-   os/userInfo.js:14:15
-     14| (u3.username: string); // error
-                       ^^^^^^ [2]
+   os/userInfo.js:14:16
+     14| u3.username as string; // error
+                        ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------- process/emitWarning.js:10:9
@@ -2100,12 +2100,12 @@ Cannot call `process.emitWarning` because: [incompatible-call]
  - Or number [1] is incompatible with string [3].
 
    process/emitWarning.js:12:9
-     12| process.emitWarning("blah", 42); // error
+     12| process.emitWarning('blah', 42); // error
                  ^^^^^^^^^^^
 
 References:
    process/emitWarning.js:12:29
-     12| process.emitWarning("blah", 42); // error
+     12| process.emitWarning('blah', 42); // error
                                      ^^ [1]
    <BUILTINS>/node.js:3298:38
    3298|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
@@ -2122,12 +2122,12 @@ Cannot call `process.emitWarning` because: [incompatible-call]
  - Or number [1] is incompatible with string [3].
 
    process/emitWarning.js:13:9
-     13| process.emitWarning("blah", "blah", 42); // error
+     13| process.emitWarning('blah', 'blah', 42); // error
                  ^^^^^^^^^^^
 
 References:
    process/emitWarning.js:13:37
-     13| process.emitWarning("blah", "blah", 42); // error
+     13| process.emitWarning('blah', 'blah', 42); // error
                                              ^^ [1]
    <BUILTINS>/node.js:3302:11
    3302|     code: string,
@@ -2137,22 +2137,22 @@ References:
                                                                   ^^^^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------- process/emitWarning.js:14:2
+Error -------------------------------------------------------------------------------------- process/emitWarning.js:14:1
 
 Cannot cast `process.emitWarning(...)` to string because undefined [1] is incompatible with string [2].
 [incompatible-cast]
 
-   process/emitWarning.js:14:2
-     14| (process.emitWarning("blah"): string); // error
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   process/emitWarning.js:14:1
+     14| process.emitWarning('blah') as string; // error
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/node.js:3296:41
    3296|   emitWarning(warning: string | Error): void;
                                                  ^^^^ [1]
-   process/emitWarning.js:14:31
-     14| (process.emitWarning("blah"): string); // error
-                                       ^^^^^^ [2]
+   process/emitWarning.js:14:32
+     14| process.emitWarning('blah') as string; // error
+                                        ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- process/nextTick.js:13:3
@@ -2224,91 +2224,91 @@ References:
                              ^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- process/process.js:5:2
+Error ------------------------------------------------------------------------------------------- process/process.js:5:1
 
 Cannot cast `process.allowedNodeEnvironmentFlags` to string because `Set` [1] is incompatible with string [2].
 [incompatible-cast]
 
-   process/process.js:5:2
-      5| (process.allowedNodeEnvironmentFlags: string); // error
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   process/process.js:5:1
+      5| process.allowedNodeEnvironmentFlags as string; // error
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/node.js:3285:32
    3285|   allowedNodeEnvironmentFlags: Set<string>;
                                         ^^^^^^^^^^^ [1]
-   process/process.js:5:39
-      5| (process.allowedNodeEnvironmentFlags: string); // error
-                                               ^^^^^^ [2]
+   process/process.js:5:40
+      5| process.allowedNodeEnvironmentFlags as string; // error
+                                                ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- stream/stream.js:36:2
+Error -------------------------------------------------------------------------------------------- stream/stream.js:36:1
 
 Cannot cast `pipe` to `MyDuplex` because `MyWriteStream` [1] is incompatible with `MyDuplex` [2]. [incompatible-cast]
 
-   stream/stream.js:36:2
-   36| (pipe: MyDuplex); // error
-        ^^^^
+   stream/stream.js:36:1
+   36| pipe as MyDuplex; // error
+       ^^^^
 
 References:
    stream/stream.js:32:9
    32|   .pipe(new MyWriteStream());
                ^^^^^^^^^^^^^^^^^^^ [1]
-   stream/stream.js:36:8
-   36| (pipe: MyDuplex); // error
-              ^^^^^^^^ [2]
+   stream/stream.js:36:9
+   36| pipe as MyDuplex; // error
+               ^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- stream/stream.js:45:6
+Error -------------------------------------------------------------------------------------------- stream/stream.js:45:5
 
 Cannot cast `error` to null because `Error` [1] is incompatible with null [2]. [incompatible-cast]
 
-   stream/stream.js:45:6
-     45|     (error: null); // error
-              ^^^^^
+   stream/stream.js:45:5
+     45|     error as null; // error
+             ^^^^^
 
 References:
    <BUILTINS>/node.js:2145:18
    2145|     cb: (error?: Error) => void,
                           ^^^^^ [1]
-   stream/stream.js:45:13
-     45|     (error: null); // error
-                     ^^^^ [2]
+   stream/stream.js:45:14
+     45|     error as null; // error
+                      ^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- stream/stream.js:45:6
+Error -------------------------------------------------------------------------------------------- stream/stream.js:45:5
 
 Cannot cast `error` to null because undefined [1] is incompatible with null [2]. [incompatible-cast]
 
-   stream/stream.js:45:6
-     45|     (error: null); // error
-              ^^^^^
+   stream/stream.js:45:5
+     45|     error as null; // error
+             ^^^^^
 
 References:
    <BUILTINS>/node.js:2145:18
    2145|     cb: (error?: Error) => void,
                           ^^^^^ [1]
-   stream/stream.js:45:13
-     45|     (error: null); // error
-                     ^^^^ [2]
+   stream/stream.js:45:14
+     45|     error as null; // error
+                      ^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- stream/stream.js:50:2
+Error -------------------------------------------------------------------------------------------- stream/stream.js:50:1
 
 Cannot cast `pipeline` to `MyDuplex` because `MyWriteStream` [1] is incompatible with `MyDuplex` [2].
 [incompatible-cast]
 
-   stream/stream.js:50:2
-   50| (pipeline: MyDuplex); // error
-        ^^^^^^^^
+   stream/stream.js:50:1
+   50| pipeline as MyDuplex; // error
+       ^^^^^^^^
 
 References:
    stream/stream.js:42:3
    42|   new MyWriteStream(),
          ^^^^^^^^^^^^^^^^^^^ [1]
-   stream/stream.js:50:12
-   50| (pipeline: MyDuplex); // error
-                  ^^^^^^^^ [2]
+   stream/stream.js:50:13
+   50| pipeline as MyDuplex; // error
+                   ^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- stream/stream.js:52:8
@@ -2417,7 +2417,7 @@ References:
                  ^^^^^^^^^^^^^ [6]
 
 
-Error ------------------------------------------------------------------------------------------- stream/stream.js:85:22
+Error ------------------------------------------------------------------------------------------- stream/stream.js:84:22
 
 Cannot call `stream.Readable.from` with `'banana'` bound to `iterable` because: [incompatible-call]
  - Either string [1], a primitive, cannot be used as a subtype of `$Iterable` [2]. You can wrap it in `new String(...))`
@@ -2425,9 +2425,30 @@ Cannot call `stream.Readable.from` with `'banana'` bound to `iterable` because: 
  - Or string [1], a primitive, cannot be used as a subtype of `$AsyncIterable` [3]. You can wrap it in
    `new String(...))` to turn it into an object and attempt to use it as a subtype of an interface.
 
-   stream/stream.js:85:22
-     85| stream.Readable.from('banana'); // ERROR
+   stream/stream.js:84:22
+     84| stream.Readable.from('banana'); // ERROR
                               ^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/node.js:2010:25
+   2010|   static from(iterable: Iterable<any> | AsyncIterable<any>, options?: readableStreamOptions): stream$Readable;
+                                 ^^^^^^^^^^^^^ [2]
+   <BUILTINS>/node.js:2010:41
+   2010|   static from(iterable: Iterable<any> | AsyncIterable<any>, options?: readableStreamOptions): stream$Readable;
+                                                 ^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- stream/stream.js:85:22
+
+Cannot call `stream.Readable.from` with `101` bound to `iterable` because: [incompatible-call]
+ - Either number [1], a primitive, cannot be used as a subtype of `$Iterable` [2]. You can wrap it in `new Number(...))`
+   to turn it into an object and attempt to use it as a subtype of an interface.
+ - Or number [1], a primitive, cannot be used as a subtype of `$AsyncIterable` [3]. You can wrap it in
+   `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
+
+   stream/stream.js:85:22
+     85| stream.Readable.from(101); // error - TypeError [ERR_INVALID_ARG_TYPE]: The "iterable" argument must be an instance of Iterable. Received type number (101)
+                              ^^^ [1]
 
 References:
    <BUILTINS>/node.js:2010:25
@@ -2440,33 +2461,12 @@ References:
 
 Error ------------------------------------------------------------------------------------------- stream/stream.js:86:22
 
-Cannot call `stream.Readable.from` with `101` bound to `iterable` because: [incompatible-call]
- - Either number [1], a primitive, cannot be used as a subtype of `$Iterable` [2]. You can wrap it in `new Number(...))`
-   to turn it into an object and attempt to use it as a subtype of an interface.
- - Or number [1], a primitive, cannot be used as a subtype of `$AsyncIterable` [3]. You can wrap it in
-   `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
-
-   stream/stream.js:86:22
-     86| stream.Readable.from(101); // error - TypeError [ERR_INVALID_ARG_TYPE]: The "iterable" argument must be an instance of Iterable. Received type number (101)
-                              ^^^ [1]
-
-References:
-   <BUILTINS>/node.js:2010:25
-   2010|   static from(iterable: Iterable<any> | AsyncIterable<any>, options?: readableStreamOptions): stream$Readable;
-                                 ^^^^^^^^^^^^^ [2]
-   <BUILTINS>/node.js:2010:41
-   2010|   static from(iterable: Iterable<any> | AsyncIterable<any>, options?: readableStreamOptions): stream$Readable;
-                                                 ^^^^^^^^^^^^^^^^^^ [3]
-
-
-Error ------------------------------------------------------------------------------------------- stream/stream.js:87:22
-
 Cannot call `stream.Readable.from` with `null` bound to `iterable` because: [incompatible-call]
  - Either null [1] is incompatible with `$Iterable` [2].
  - Or null [1] is incompatible with `$AsyncIterable` [3].
 
-   stream/stream.js:87:22
-     87| stream.Readable.from(null); // error - TypeError [ERR_INVALID_ARG_TYPE]: The "iterable" argument must be an instance of Iterable. Received null
+   stream/stream.js:86:22
+     86| stream.Readable.from(null); // error - TypeError [ERR_INVALID_ARG_TYPE]: The "iterable" argument must be an instance of Iterable. Received null
                               ^^^^ [1]
 
 References:

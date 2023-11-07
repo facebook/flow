@@ -1,10 +1,10 @@
 //@flow
 
-import {x as y, type T} from "./export";
-import X from "./export";
-import * as Y from "./export";
+import {x as y, type T} from './export';
+import X from './export';
+import * as Y from './export';
 
-var w: T = "a"; // err
-(y: empty); // err
-(X: empty); // err
-(Y.x: empty); // err
+var w: T = 'a'; // err
+y as empty; // err
+X as empty; // err
+Y.x as empty; // err

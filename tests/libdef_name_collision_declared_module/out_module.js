@@ -1,6 +1,5 @@
-
 //@flow
 
 declare var x: Long;
 
-(x: number);
+x as number;

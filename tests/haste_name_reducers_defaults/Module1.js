@@ -2,6 +2,6 @@
 
 const test = require('test');
 
-(test: boolean);
+test as boolean;
 
 module.exports = test;

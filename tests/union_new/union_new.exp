@@ -121,38 +121,38 @@ References:
                                                    ^^^^^^^ [4]
 
 
-Error ---------------------------------------------------------------------------------------------------- test17.js:7:2
+Error ---------------------------------------------------------------------------------------------------- test17.js:7:1
 
 Cannot cast `[].concat(...)[1]` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   test17.js:7:2
-   7| (([]: Array<empty>).concat([0,1])[1]: string)
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   test17.js:7:1
+   7| ([]: Array<empty>).concat([0, 1])[1] as string;
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test17.js:7:29
-   7| (([]: Array<empty>).concat([0,1])[1]: string)
-                                  ^ [1]
-   test17.js:7:39
-   7| (([]: Array<empty>).concat([0,1])[1]: string)
-                                            ^^^^^^ [2]
+   test17.js:7:28
+   7| ([]: Array<empty>).concat([0, 1])[1] as string;
+                                 ^ [1]
+   test17.js:7:41
+   7| ([]: Array<empty>).concat([0, 1])[1] as string;
+                                              ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test17.js:7:2
+Error ---------------------------------------------------------------------------------------------------- test17.js:7:1
 
 Cannot cast `[].concat(...)[1]` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   test17.js:7:2
-   7| (([]: Array<empty>).concat([0,1])[1]: string)
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   test17.js:7:1
+   7| ([]: Array<empty>).concat([0, 1])[1] as string;
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    test17.js:7:31
-   7| (([]: Array<empty>).concat([0,1])[1]: string)
+   7| ([]: Array<empty>).concat([0, 1])[1] as string;
                                     ^ [1]
-   test17.js:7:39
-   7| (([]: Array<empty>).concat([0,1])[1]: string)
-                                            ^^^^^^ [2]
+   test17.js:7:41
+   7| ([]: Array<empty>).concat([0, 1])[1] as string;
+                                              ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test19.js:5:16
@@ -209,73 +209,73 @@ Cannot call `(new Record()).set` because: [incompatible-call]
  - Or string [3] is incompatible with string literal `bar` [4].
 
    test26.js:20:14
-   20| new Record().set('foo', "42");
+   20| new Record().set('foo', '42');
                     ^^^
 
 References:
    test26.js:20:25
-   20| new Record().set('foo', "42");
+   20| new Record().set('foo', '42');
                                ^^^^ [1]
    test26.js:16:20
    16|   set(x: 'foo', y: number): void;
                           ^^^^^^ [2]
    test26.js:20:18
-   20| new Record().set('foo', "42");
+   20| new Record().set('foo', '42');
                         ^^^^^ [3]
    test26.js:17:10
    17|   set(x: 'bar', y: string): void;
                 ^^^^^ [4]
 
 
-Error ---------------------------------------------------------------------------------------------------- test33.js:8:2
+Error --------------------------------------------------------------------------------------------------- test33.js:10:1
 
 Cannot cast `bar()` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   test33.js:8:2
-   8| (bar(): string); // error: number ~> string
+   test33.js:10:1
+   10| bar() as string; // error: number ~> string
        ^^^^^
 
 References:
-   test33.js:6:25
-   6| function bar() { return 0 }
-                              ^ [1]
-   test33.js:8:9
-   8| (bar(): string); // error: number ~> string
-              ^^^^^^ [2]
+   test33.js:7:10
+    7|   return 0;
+                ^ [1]
+   test33.js:10:10
+   10| bar() as string; // error: number ~> string
+                ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test34.js:10:6
+Error ---------------------------------------------------------------------------------------------------- test34.js:8:5
 
 Cannot cast `x.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
-   test34.js:10:6
-   10|     (x.foo: empty); // error: string ~> empty
-            ^^^^^
+   test34.js:8:5
+    8|     x.foo as empty; // error: string ~> empty
+           ^^^^^
 
 References:
-   test34.js:16:18
-   16| type A = {| foo: string |};
-                        ^^^^^^ [1]
-   test34.js:10:13
-   10|     (x.foo: empty); // error: string ~> empty
-                   ^^^^^ [2]
+   test34.js:14:17
+   14| type A = {|foo: string|};
+                       ^^^^^^ [1]
+   test34.js:8:14
+    8|     x.foo as empty; // error: string ~> empty
+                    ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test35.js:8:2
+Error ---------------------------------------------------------------------------------------------------- test35.js:8:1
 
 Cannot cast `ret` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
-   test35.js:8:2
-   8| (ret: empty); // err, string ~> empty (matched case 2)
-       ^^^
+   test35.js:8:1
+   8| ret as empty; // err, string ~> empty (matched case 2)
+      ^^^
 
 References:
    test35.js:4:31
    4| declare function f(x: mixed): string;
                                     ^^^^^^ [1]
-   test35.js:8:7
-   8| (ret: empty); // err, string ~> empty (matched case 2)
-            ^^^^^ [2]
+   test35.js:8:8
+   8| ret as empty; // err, string ~> empty (matched case 2)
+             ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test9.js:16:27

@@ -4,7 +4,7 @@ Cannot call await because `T` [1] is underconstrained by await [2]. Either add e
 expression to your expected type. [underconstrained-implicit-instantiation]
 
    async_return.js:8:10
-      8|   return await [][0]
+      8|   return await [][0];
                   ^^^^^^^^^^^ [2]
 
 References:
@@ -293,7 +293,7 @@ Either add explicit type arguments or cast the expression to your expected type.
 [underconstrained-implicit-instantiation]
 
    upper_non_t.js:11:1
-   11| ReposLowerTRegressionTest({}) // Error: T under constrained.
+   11| ReposLowerTRegressionTest({}); // Error: T under constrained.
        ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
@@ -301,7 +301,7 @@ References:
    10| declare function ReposLowerTRegressionTest<T>({o?: T}): T;
                                                   ^ [1]
    upper_non_t.js:11:1
-   11| ReposLowerTRegressionTest({}) // Error: T under constrained.
+   11| ReposLowerTRegressionTest({}); // Error: T under constrained.
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -352,7 +352,7 @@ the expression to your expected type. [underconstrained-implicit-instantiation]
 
 References:
    upper_non_t.js:24:23
-   24| declare function Call<T>($Call<T, <V>(V)=>void>): T;
+   24| declare function Call<T>($Call<T, <V>(V) => void>): T;
                              ^ [1]
    upper_non_t.js:25:1
    25| Call(undefined); // Error: T under constrained.
@@ -370,7 +370,7 @@ cast the expression to your expected type. [underconstrained-implicit-instantiat
 
 References:
    upper_non_t.js:26:25
-   26| declare function ObjMap<T>($ObjMap<T, <V>(V)=>void>): T;
+   26| declare function ObjMap<T>($ObjMap<T, <V>(V) => void>): T;
                                ^ [1]
    upper_non_t.js:27:1
    27| ObjMap({}); // Error: T under constrained.
@@ -413,278 +413,278 @@ References:
        ^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- upper_non_t.js:47:6
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:55:6
 
 Cannot get `s1.bad` because property `bad` (did you mean `bar`?) is missing in object literal [1]. [prop-missing]
 
-   upper_non_t.js:47:6
-   47|   s1.bad; // error
+   upper_non_t.js:55:6
+   55|   s1.bad; // error
             ^^^
 
 References:
-   upper_non_t.js:43:22
-   43|   const s1 = spread1({foo: 3, bar: 2, baz: 1}); // ok
-                            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------- upper_non_t.js:51:6
-
-Cannot get `s2.bad` because property `bad` is missing in object literal [1]. [prop-missing]
-
-   upper_non_t.js:51:6
-   51|   s2.bad; // error
-            ^^^
-
-References:
-   upper_non_t.js:49:22
-   49|   const s2 = spread2({foo: 3, bar: 2, baz: 1}); // ok
-                            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------- upper_non_t.js:52:6
-
-Cannot get `s2.bar` because property `bar` is missing in object literal [1]. [prop-missing]
-
-   upper_non_t.js:52:6
-   52|   s2.bar; // error
-            ^^^
-
-References:
-   upper_non_t.js:49:22
-   49|   const s2 = spread2({foo: 3, bar: 2, baz: 1}); // ok
-                            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------- upper_non_t.js:53:6
-
-Cannot get `s2.baz` because property `baz` is missing in object literal [1]. [prop-missing]
-
-   upper_non_t.js:53:6
-   53|   s2.baz; // error
-            ^^^
-
-References:
-   upper_non_t.js:49:22
-   49|   const s2 = spread2({foo: 3, bar: 2, baz: 1}); // ok
-                            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------- upper_non_t.js:57:6
-
-Cannot get `s3.bad` because property `bad` is missing in object literal [1]. [prop-missing]
-
-   upper_non_t.js:57:6
-   57|   s3.bad; // error
-            ^^^
-
-References:
-   upper_non_t.js:55:22
-   55|   const s3 = spread3({foo: 3, bar: 2, baz: 1}); // ok
-                            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------- upper_non_t.js:58:6
-
-Cannot get `s3.bar` because property `bar` is missing in object literal [1]. [prop-missing]
-
-   upper_non_t.js:58:6
-   58|   s3.bar; // error
-            ^^^
-
-References:
-   upper_non_t.js:55:22
-   55|   const s3 = spread3({foo: 3, bar: 2, baz: 1}); // ok
+   upper_non_t.js:51:22
+   51|   const s1 = spread1({foo: 3, bar: 2, baz: 1}); // ok
                             ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- upper_non_t.js:59:6
 
-Cannot get `s3.baz` because property `baz` is missing in object literal [1]. [prop-missing]
+Cannot get `s2.bad` because property `bad` is missing in object literal [1]. [prop-missing]
 
    upper_non_t.js:59:6
-   59|   s3.baz; // error
+   59|   s2.bad; // error
             ^^^
 
 References:
-   upper_non_t.js:55:22
-   55|   const s3 = spread3({foo: 3, bar: 2, baz: 1}); // ok
+   upper_non_t.js:57:22
+   57|   const s2 = spread2({foo: 3, bar: 2, baz: 1}); // ok
                             ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- upper_non_t.js:63:6
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:60:6
 
-Cannot get `s4.bad` because property `bad` is missing in object literal [1]. [prop-missing]
+Cannot get `s2.bar` because property `bar` is missing in object literal [1]. [prop-missing]
 
-   upper_non_t.js:63:6
-   63|   s4.bad; // error
+   upper_non_t.js:60:6
+   60|   s2.bar; // error
             ^^^
 
 References:
-   upper_non_t.js:61:22
-   61|   const s4 = spread4({foo: 3, bar: 2, baz: 1}); // ok
+   upper_non_t.js:57:22
+   57|   const s2 = spread2({foo: 3, bar: 2, baz: 1}); // ok
                             ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- upper_non_t.js:64:6
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:61:6
 
-Cannot get `s4.bar` because property `bar` is missing in object literal [1]. [prop-missing]
+Cannot get `s2.baz` because property `baz` is missing in object literal [1]. [prop-missing]
 
-   upper_non_t.js:64:6
-   64|   s4.bar; // error
+   upper_non_t.js:61:6
+   61|   s2.baz; // error
             ^^^
 
 References:
-   upper_non_t.js:61:22
-   61|   const s4 = spread4({foo: 3, bar: 2, baz: 1}); // ok
+   upper_non_t.js:57:22
+   57|   const s2 = spread2({foo: 3, bar: 2, baz: 1}); // ok
                             ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- upper_non_t.js:65:6
 
-Cannot get `s4.baz` because property `baz` is missing in object literal [1]. [prop-missing]
+Cannot get `s3.bad` because property `bad` is missing in object literal [1]. [prop-missing]
 
    upper_non_t.js:65:6
-   65|   s4.baz; // error
+   65|   s3.bad; // error
             ^^^
 
 References:
-   upper_non_t.js:61:22
-   61|   const s4 = spread4({foo: 3, bar: 2, baz: 1}); // ok
+   upper_non_t.js:63:22
+   63|   const s3 = spread3({foo: 3, bar: 2, baz: 1}); // ok
                             ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- upper_non_t.js:69:6
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:66:6
 
-Cannot get `s5.bad` because property `bad` is missing in object literal [1]. [prop-missing]
+Cannot get `s3.bar` because property `bar` is missing in object literal [1]. [prop-missing]
 
-   upper_non_t.js:69:6
-   69|   s5.bad; // error
+   upper_non_t.js:66:6
+   66|   s3.bar; // error
             ^^^
 
 References:
-   upper_non_t.js:67:22
-   67|   const s5 = spread5({foo: 3, bar: 2, baz: 1}); // ok
+   upper_non_t.js:63:22
+   63|   const s3 = spread3({foo: 3, bar: 2, baz: 1}); // ok
                             ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- upper_non_t.js:70:6
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:67:6
 
-Cannot get `s5.bar` because property `bar` is missing in object literal [1]. [prop-missing]
+Cannot get `s3.baz` because property `baz` is missing in object literal [1]. [prop-missing]
 
-   upper_non_t.js:70:6
-   70|   s5.bar; // error
+   upper_non_t.js:67:6
+   67|   s3.baz; // error
             ^^^
 
 References:
-   upper_non_t.js:67:22
-   67|   const s5 = spread5({foo: 3, bar: 2, baz: 1}); // ok
+   upper_non_t.js:63:22
+   63|   const s3 = spread3({foo: 3, bar: 2, baz: 1}); // ok
                             ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- upper_non_t.js:71:6
 
-Cannot get `s5.baz` because property `baz` is missing in object literal [1]. [prop-missing]
+Cannot get `s4.bad` because property `bad` is missing in object literal [1]. [prop-missing]
 
    upper_non_t.js:71:6
-   71|   s5.baz; // error
+   71|   s4.bad; // error
             ^^^
 
 References:
-   upper_non_t.js:67:22
-   67|   const s5 = spread5({foo: 3, bar: 2, baz: 1}); // ok
+   upper_non_t.js:69:22
+   69|   const s4 = spread4({foo: 3, bar: 2, baz: 1}); // ok
                             ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- upper_non_t.js:75:6
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:72:6
 
-Cannot get `s6.bad` because property `bad` is missing in object literal [1]. [prop-missing]
+Cannot get `s4.bar` because property `bar` is missing in object literal [1]. [prop-missing]
 
-   upper_non_t.js:75:6
-   75|   s6.bad; // error
+   upper_non_t.js:72:6
+   72|   s4.bar; // error
             ^^^
 
 References:
-   upper_non_t.js:73:22
-   73|   const s6 = spread6({foo: 3, bar: 2, baz: 1, hhh: 0}); // ok
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   upper_non_t.js:69:22
+   69|   const s4 = spread4({foo: 3, bar: 2, baz: 1}); // ok
+                            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- upper_non_t.js:76:6
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:73:6
 
-Cannot get `s6.bar` because property `bar` is missing in object literal [1]. [prop-missing]
+Cannot get `s4.baz` because property `baz` is missing in object literal [1]. [prop-missing]
 
-   upper_non_t.js:76:6
-   76|   s6.bar; // error
+   upper_non_t.js:73:6
+   73|   s4.baz; // error
             ^^^
 
 References:
-   upper_non_t.js:73:22
-   73|   const s6 = spread6({foo: 3, bar: 2, baz: 1, hhh: 0}); // ok
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   upper_non_t.js:69:22
+   69|   const s4 = spread4({foo: 3, bar: 2, baz: 1}); // ok
+                            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- upper_non_t.js:77:6
 
-Cannot get `s6.baz` because property `baz` is missing in object literal [1]. [prop-missing]
+Cannot get `s5.bad` because property `bad` is missing in object literal [1]. [prop-missing]
 
    upper_non_t.js:77:6
-   77|   s6.baz; // error
+   77|   s5.bad; // error
             ^^^
 
 References:
-   upper_non_t.js:73:22
-   73|   const s6 = spread6({foo: 3, bar: 2, baz: 1, hhh: 0}); // ok
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   upper_non_t.js:75:22
+   75|   const s5 = spread5({foo: 3, bar: 2, baz: 1}); // ok
+                            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:78:6
+
+Cannot get `s5.bar` because property `bar` is missing in object literal [1]. [prop-missing]
+
+   upper_non_t.js:78:6
+   78|   s5.bar; // error
+            ^^^
+
+References:
+   upper_non_t.js:75:22
+   75|   const s5 = spread5({foo: 3, bar: 2, baz: 1}); // ok
+                            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:79:6
+
+Cannot get `s5.baz` because property `baz` is missing in object literal [1]. [prop-missing]
+
+   upper_non_t.js:79:6
+   79|   s5.baz; // error
+            ^^^
+
+References:
+   upper_non_t.js:75:22
+   75|   const s5 = spread5({foo: 3, bar: 2, baz: 1}); // ok
+                            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- upper_non_t.js:83:6
 
-Cannot get `sr.bad` because property `bad` (did you mean `bar`?) is missing in object literal [1]. [prop-missing]
+Cannot get `s6.bad` because property `bad` is missing in object literal [1]. [prop-missing]
 
    upper_non_t.js:83:6
-   83|   sr.bad; // error
+   83|   s6.bad; // error
             ^^^
 
 References:
-   upper_non_t.js:80:34
-   80|   const sr = spread_and_readonly({foo: 1, bar: ''});
+   upper_non_t.js:81:22
+   81|   const s6 = spread6({foo: 3, bar: 2, baz: 1, hhh: 0}); // ok
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:84:6
+
+Cannot get `s6.bar` because property `bar` is missing in object literal [1]. [prop-missing]
+
+   upper_non_t.js:84:6
+   84|   s6.bar; // error
+            ^^^
+
+References:
+   upper_non_t.js:81:22
+   81|   const s6 = spread6({foo: 3, bar: 2, baz: 1, hhh: 0}); // ok
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:85:6
+
+Cannot get `s6.baz` because property `baz` is missing in object literal [1]. [prop-missing]
+
+   upper_non_t.js:85:6
+   85|   s6.baz; // error
+            ^^^
+
+References:
+   upper_non_t.js:81:22
+   81|   const s6 = spread6({foo: 3, bar: 2, baz: 1, hhh: 0}); // ok
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:91:6
+
+Cannot get `sr.bad` because property `bad` (did you mean `bar`?) is missing in object literal [1]. [prop-missing]
+
+   upper_non_t.js:91:6
+   91|   sr.bad; // error
+            ^^^
+
+References:
+   upper_non_t.js:88:34
+   88|   const sr = spread_and_readonly({foo: 1, bar: ''});
                                         ^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- upper_non_t.js:88:5
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:96:5
 
 Cannot get `o.cp` because property `cp` is missing in object literal [1]. [prop-missing]
 
-   upper_non_t.js:88:5
-   88|   o.cp; // error
+   upper_non_t.js:96:5
+   96|   o.cp; // error
            ^^
 
 References:
-   upper_non_t.js:87:22
-   87|   const o = optional({cp, foo: '', bar: 3}); // ok
+   upper_non_t.js:95:22
+   95|   const o = optional({cp, foo: '', bar: 3}); // ok
                             ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- upper_non_t.js:89:5
+Error ---------------------------------------------------------------------------------------------- upper_non_t.js:97:5
 
 Cannot get `o.foo` because property `foo` is missing in object literal [1]. [prop-missing]
 
-   upper_non_t.js:89:5
-   89|   o.foo; // error
+   upper_non_t.js:97:5
+   97|   o.foo; // error
            ^^^
 
 References:
-   upper_non_t.js:87:22
-   87|   const o = optional({cp, foo: '', bar: 3}); // ok
+   upper_non_t.js:95:22
+   95|   const o = optional({cp, foo: '', bar: 3}); // ok
                             ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- upper_non_t.js:99:6
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:107:6
 
 Cannot get `r1.bad` because property `bad` is missing in `Array` [1]. [prop-missing]
 
-   upper_non_t.js:99:6
-    99|   r1.bad; // error
+   upper_non_t.js:107:6
+   107|   r1.bad; // error
              ^^^
 
 References:
@@ -693,46 +693,46 @@ References:
                       ^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- upper_non_t.js:103:4
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:111:3
 
 Cannot cast `r2[2]` to empty because number literal `1` [1] is incompatible with empty [2]. [incompatible-cast]
 
-   upper_non_t.js:103:4
-   103|   (r2[2]: empty); // error
-           ^^^^^
+   upper_non_t.js:111:3
+   111|   r2[2] as empty; // error
+          ^^^^^
 
 References:
-   upper_non_t.js:96:35
-    96|   const r2 = ArrRest(...([1, 2]: [1, 2])); // ok
-                                          ^ [1]
-   upper_non_t.js:103:11
-   103|   (r2[2]: empty); // error
-                  ^^^^^ [2]
+   upper_non_t.js:104:37
+   104|   const r2 = ArrRest(...([1, 2] as [1, 2])); // ok
+                                            ^ [1]
+   upper_non_t.js:111:12
+   111|   r2[2] as empty; // error
+                   ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- upper_non_t.js:103:4
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:111:3
 
 Cannot cast `r2[2]` to empty because number literal `2` [1] is incompatible with empty [2]. [incompatible-cast]
 
-   upper_non_t.js:103:4
-   103|   (r2[2]: empty); // error
-           ^^^^^
+   upper_non_t.js:111:3
+   111|   r2[2] as empty; // error
+          ^^^^^
 
 References:
-   upper_non_t.js:96:38
-    96|   const r2 = ArrRest(...([1, 2]: [1, 2])); // ok
-                                             ^ [1]
-   upper_non_t.js:103:11
-   103|   (r2[2]: empty); // error
-                  ^^^^^ [2]
+   upper_non_t.js:104:40
+   104|   const r2 = ArrRest(...([1, 2] as [1, 2])); // ok
+                                               ^ [1]
+   upper_non_t.js:111:12
+   111|   r2[2] as empty; // error
+                   ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- upper_non_t.js:104:6
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:112:6
 
 Cannot get `r2.bad` because property `bad` is missing in `Array` [1]. [prop-missing]
 
-   upper_non_t.js:104:6
-   104|   r2.bad; // error
+   upper_non_t.js:112:6
+   112|   r2.bad; // error
              ^^^
 
 References:
@@ -741,252 +741,252 @@ References:
                       ^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- upper_non_t.js:114:6
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:126:6
 
 Cannot call `f1` because string [1] is incompatible with number [2] in index 0. [incompatible-call]
 
-   upper_non_t.js:114:6
-   114|   f1(""); // error
+   upper_non_t.js:126:6
+   126|   f1(''); // error
              ^^ [1]
 
 References:
-   upper_non_t.js:111:17
-   111|   function g(x: number): void {}
+   upper_non_t.js:123:17
+   123|   function g(x: number): void {}
                         ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- upper_non_t.js:119:6
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:131:6
 
 Cannot call `f2` because string [1] is incompatible with number [2] in index 0. [incompatible-call]
 
-   upper_non_t.js:119:6
-   119|   f2("", 0); // error
+   upper_non_t.js:131:6
+   131|   f2('', 0); // error
              ^^ [1]
 
 References:
-   upper_non_t.js:116:17
-   116|   function h(x: number, y: string): void {}
+   upper_non_t.js:128:17
+   128|   function h(x: number, y: string): void {}
                         ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- upper_non_t.js:119:10
+Error -------------------------------------------------------------------------------------------- upper_non_t.js:131:10
 
 Cannot call `f2` because number [1] is incompatible with string [2] in index 1. [incompatible-call]
 
-   upper_non_t.js:119:10
-   119|   f2("", 0); // error
+   upper_non_t.js:131:10
+   131|   f2('', 0); // error
                  ^ [1]
 
 References:
-   upper_non_t.js:116:28
-   116|   function h(x: number, y: string): void {}
+   upper_non_t.js:128:28
+   128|   function h(x: number, y: string): void {}
                                    ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- upper_non_t.js:124:6
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:136:6
 
 Cannot call `f3` because string [1] is incompatible with number [2] in array element. [incompatible-call]
 
-   upper_non_t.js:124:6
-   124|   f3("") // error
+   upper_non_t.js:136:6
+   136|   f3(''); // error
              ^^ [1]
 
 References:
-   upper_non_t.js:121:29
-   121|   function i(...rest: Array<number>): void {}
+   upper_non_t.js:133:29
+   133|   function i(...rest: Array<number>): void {}
                                     ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- upper_non_t.js:128:4
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:140:3
 
 Cannot cast `v1` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-cast]
 
-   upper_non_t.js:128:4
-   128|   (v1: empty); // error: tuple ~> empty
-           ^^
+   upper_non_t.js:140:3
+   140|   v1 as empty; // error: tuple ~> empty
+          ^^
 
 References:
-   upper_non_t.js:109:66
-   109|   declare function params<TArguments: $ReadOnlyArray<mixed>>(fn: (...TArguments) => mixed): TArguments;
-                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   upper_non_t.js:128:8
-   128|   (v1: empty); // error: tuple ~> empty
-               ^^^^^ [2]
+   upper_non_t.js:120:9
+   120|     fn: (...TArguments) => mixed,
+                ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   upper_non_t.js:140:9
+   140|   v1 as empty; // error: tuple ~> empty
+                ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- upper_non_t.js:133:3
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:145:3
 
 Cannot call `Diff0` because `T` [1] is underconstrained by call of `Diff0` [2]. Either add explicit type arguments or
 cast the expression to your expected type. [underconstrained-implicit-instantiation]
 
-   upper_non_t.js:133:3
-   133|   Diff0(); // error
+   upper_non_t.js:145:3
+   145|   Diff0(); // error
           ^^^^^
 
 References:
-   upper_non_t.js:132:26
-   132|   declare function Diff0<T>(): $Diff<T, {foo: number}>;
+   upper_non_t.js:144:26
+   144|   declare function Diff0<T>(): $Diff<T, {foo: number}>;
                                  ^ [1]
-   upper_non_t.js:133:3
-   133|   Diff0(); // error
+   upper_non_t.js:145:3
+   145|   Diff0(); // error
           ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- upper_non_t.js:139:4
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:151:3
 
 Cannot cast `d1` to object type because number [1] is incompatible with string [2] in property `foo`. This property is
 invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 [incompatible-cast]
 
-   upper_non_t.js:139:4
-   139|   (d1: {|foo: string | number, bar: number|}); // error
-           ^^
+   upper_non_t.js:151:3
+   151|   d1 as {|foo: string | number, bar: number|}; // error
+          ^^
 
 References:
-   upper_non_t.js:139:24
-   139|   (d1: {|foo: string | number, bar: number|}); // error
-                               ^^^^^^ [1]
-   upper_non_t.js:134:45
-   134|   declare function Diff1<T>($Diff<T, {|foo: string|}>): T;
+   upper_non_t.js:151:25
+   151|   d1 as {|foo: string | number, bar: number|}; // error
+                                ^^^^^^ [1]
+   upper_non_t.js:146:45
+   146|   declare function Diff1<T>($Diff<T, {|foo: string|}>): T;
                                                     ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------- upper_non_t.js:140:6
-
-Cannot get `d1.bad` because property `bad` (did you mean `bar`?) is missing in `$Diff` [1]. [prop-missing]
-
-   upper_non_t.js:140:6
-   140|   d1.bad; // error
-             ^^^
-
-References:
-   upper_non_t.js:134:29
-   134|   declare function Diff1<T>($Diff<T, {|foo: string|}>): T;
-                                    ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error --------------------------------------------------------------------------------------------- upper_non_t.js:141:4
-
-Cannot cast `d1` to empty because `$Diff` [1] is incompatible with empty [2]. [incompatible-cast]
-
-   upper_non_t.js:141:4
-   141|   (d1: empty); // error
-           ^^
-
-References:
-   upper_non_t.js:134:29
-   134|   declare function Diff1<T>($Diff<T, {|foo: string|}>): T;
-                                    ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   upper_non_t.js:141:8
-   141|   (d1: empty); // error
-               ^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------- upper_non_t.js:146:6
-
-Cannot get `d2.bad` because property `bad` (did you mean `bar`?) is missing in `$Diff` [1]. [prop-missing]
-
-   upper_non_t.js:146:6
-   146|   d2.bad; // error
-             ^^^
-
-References:
-   upper_non_t.js:142:29
-   142|   declare function Diff2<T>($Diff<T, {|foo?: string|}>): T;
-                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error --------------------------------------------------------------------------------------------- upper_non_t.js:147:4
-
-Cannot cast `d2` to empty because `$Diff` [1] is incompatible with empty [2]. [incompatible-cast]
-
-   upper_non_t.js:147:4
-   147|   (d2: empty); // error
-           ^^
-
-References:
-   upper_non_t.js:142:29
-   142|   declare function Diff2<T>($Diff<T, {|foo?: string|}>): T;
-                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   upper_non_t.js:147:8
-   147|   (d2: empty); // error
-               ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- upper_non_t.js:152:6
 
-Cannot get `d3.bad` because property `bad` (did you mean `bar`?) is missing in `$Diff` [1]. [prop-missing]
+Cannot get `d1.bad` because property `bad` (did you mean `bar`?) is missing in `$Diff` [1]. [prop-missing]
 
    upper_non_t.js:152:6
-   152|   d3.bad; // error
+   152|   d1.bad; // error
              ^^^
 
 References:
-   upper_non_t.js:148:29
-   148|   declare function Diff3<T>($Diff<T, {foo: string, ...}>): T;
+   upper_non_t.js:146:29
+   146|   declare function Diff1<T>($Diff<T, {|foo: string|}>): T;
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:153:3
+
+Cannot cast `d1` to empty because `$Diff` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   upper_non_t.js:153:3
+   153|   d1 as empty; // error
+          ^^
+
+References:
+   upper_non_t.js:146:29
+   146|   declare function Diff1<T>($Diff<T, {|foo: string|}>): T;
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   upper_non_t.js:153:9
+   153|   d1 as empty; // error
+                ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:158:6
+
+Cannot get `d2.bad` because property `bad` (did you mean `bar`?) is missing in `$Diff` [1]. [prop-missing]
+
+   upper_non_t.js:158:6
+   158|   d2.bad; // error
+             ^^^
+
+References:
+   upper_non_t.js:154:29
+   154|   declare function Diff2<T>($Diff<T, {|foo?: string|}>): T;
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:159:3
+
+Cannot cast `d2` to empty because `$Diff` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   upper_non_t.js:159:3
+   159|   d2 as empty; // error
+          ^^
+
+References:
+   upper_non_t.js:154:29
+   154|   declare function Diff2<T>($Diff<T, {|foo?: string|}>): T;
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   upper_non_t.js:159:9
+   159|   d2 as empty; // error
+                ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:164:6
+
+Cannot get `d3.bad` because property `bad` (did you mean `bar`?) is missing in `$Diff` [1]. [prop-missing]
+
+   upper_non_t.js:164:6
+   164|   d3.bad; // error
+             ^^^
+
+References:
+   upper_non_t.js:160:29
+   160|   declare function Diff3<T>($Diff<T, {foo: string, ...}>): T;
                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- upper_non_t.js:153:4
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:165:3
 
 Cannot cast `d3` to empty because `$Diff` [1] is incompatible with empty [2]. [incompatible-cast]
 
-   upper_non_t.js:153:4
-   153|   (d3: empty); // error
-           ^^
+   upper_non_t.js:165:3
+   165|   d3 as empty; // error
+          ^^
 
 References:
-   upper_non_t.js:148:29
-   148|   declare function Diff3<T>($Diff<T, {foo: string, ...}>): T;
+   upper_non_t.js:160:29
+   160|   declare function Diff3<T>($Diff<T, {foo: string, ...}>): T;
                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   upper_non_t.js:153:8
-   153|   (d3: empty); // error
-               ^^^^^ [2]
+   upper_non_t.js:165:9
+   165|   d3 as empty; // error
+                ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- upper_non_t.js:154:4
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:166:3
 
 Cannot cast `d3` to object type because inexact `$Diff` [1] is incompatible with exact object type [2].
 [incompatible-exact]
 
-   upper_non_t.js:154:4
-   154|   (d3: {|foo: string, bar: number|}); // error
-           ^^
+   upper_non_t.js:166:3
+   166|   d3 as {|foo: string, bar: number|}; // error
+          ^^
 
 References:
-   upper_non_t.js:148:29
-   148|   declare function Diff3<T>($Diff<T, {foo: string, ...}>): T;
+   upper_non_t.js:160:29
+   160|   declare function Diff3<T>($Diff<T, {foo: string, ...}>): T;
                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   upper_non_t.js:154:8
-   154|   (d3: {|foo: string, bar: number|}); // error
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   upper_non_t.js:166:9
+   166|   d3 as {|foo: string, bar: number|}; // error
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- upper_non_t.js:157:15
+Error -------------------------------------------------------------------------------------------- upper_non_t.js:169:15
 
 Cannot call `Diff4` because string [1] is incompatible with number [2]. [incompatible-call]
 
-   upper_non_t.js:157:15
-   157|   Diff4({bar: ''}); // error: number is incompatible with string
+   upper_non_t.js:169:15
+   169|   Diff4({bar: ''}); // error: number is incompatible with string
                       ^^ [1]
 
 References:
-   upper_non_t.js:155:49
-   155|   declare function Diff4<T>($Diff<T, {[string]: number}>): T;
+   upper_non_t.js:167:49
+   167|   declare function Diff4<T>($Diff<T, {[string]: number}>): T;
                                                         ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- upper_non_t.js:161:6
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:173:6
 
 number [1] is incompatible with string [2]. [incompatible-type]
 
-   upper_non_t.js:161:6
-   161|   d4[0]; // error
+   upper_non_t.js:173:6
+   173|   d4[0]; // error
              ^ [1]
 
 References:
-   upper_non_t.js:155:40
-   155|   declare function Diff4<T>($Diff<T, {[string]: number}>): T;
+   upper_non_t.js:167:40
+   167|   declare function Diff4<T>($Diff<T, {[string]: number}>): T;
                                                ^^^^^^ [2]
 
 

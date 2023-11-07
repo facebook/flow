@@ -1,281 +1,281 @@
-Error ----------------------------------------------------------------------------------------------------- cast.js:37:2
+Error ----------------------------------------------------------------------------------------------------- cast.js:36:1
 
 Cannot cast `S.A` to nullable string because `S` [1] is incompatible with string [2]. You can explicitly cast your enum
 value to a string using `(<expression>: string)`. [incompatible-cast]
 
-   cast.js:37:2
-   37| (S.A: ?string); // Error: if casting to representation type, must cast to exactly it
-        ^^^
+   cast.js:36:1
+   36| S.A as ?string; // Error: if casting to representation type, must cast to exactly it
+       ^^^
 
 References:
    cast.js:13:6
    13| enum S of string {
             ^ [1]
-   cast.js:37:8
-   37| (S.A: ?string); // Error: if casting to representation type, must cast to exactly it
-              ^^^^^^ [2]
+   cast.js:36:9
+   36| S.A as ?string; // Error: if casting to representation type, must cast to exactly it
+               ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- cast.js:51:2
+Error ----------------------------------------------------------------------------------------------------- cast.js:50:1
 
 Cannot cast `B.A` to number because `B` [1] is incompatible with number [2]. [incompatible-cast]
 
-   cast.js:51:2
-   51| (B.A: number); // Error
-        ^^^
+   cast.js:50:1
+   50| B.A as number; // Error
+       ^^^
 
 References:
    cast.js:3:6
     3| enum B of boolean {
             ^ [1]
-   cast.js:51:7
-   51| (B.A: number); // Error
-             ^^^^^^ [2]
+   cast.js:50:8
+   50| B.A as number; // Error
+              ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- cast.js:52:2
+Error ----------------------------------------------------------------------------------------------------- cast.js:51:1
 
 Cannot cast `S.A` to boolean because `S` [1] is incompatible with boolean [2]. [incompatible-cast]
 
-   cast.js:52:2
-   52| (S.A: boolean); // Error
-        ^^^
+   cast.js:51:1
+   51| S.A as boolean; // Error
+       ^^^
 
 References:
    cast.js:13:6
    13| enum S of string {
             ^ [1]
-   cast.js:52:7
-   52| (S.A: boolean); // Error
-             ^^^^^^^ [2]
+   cast.js:51:8
+   51| S.A as boolean; // Error
+              ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- cast.js:53:2
+Error ----------------------------------------------------------------------------------------------------- cast.js:52:1
 
 Cannot cast `N.A` to boolean because `N` [1] is incompatible with boolean [2]. [incompatible-cast]
 
-   cast.js:53:2
-   53| (N.A: boolean); // Error
-        ^^^
+   cast.js:52:1
+   52| N.A as boolean; // Error
+       ^^^
 
 References:
    cast.js:8:6
     8| enum N of number {
             ^ [1]
-   cast.js:53:7
-   53| (N.A: boolean); // Error
-             ^^^^^^^ [2]
+   cast.js:52:8
+   52| N.A as boolean; // Error
+              ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- cast.js:54:2
+Error ----------------------------------------------------------------------------------------------------- cast.js:53:1
 
 Cannot cast `Y.A` to boolean because `Y` [1] is incompatible with boolean [2]. [incompatible-cast]
 
-   cast.js:54:2
-   54| (Y.A: boolean); // Error
-        ^^^
+   cast.js:53:1
+   53| Y.A as boolean; // Error
+       ^^^
 
 References:
    cast.js:18:6
    18| enum Y of symbol {
             ^ [1]
-   cast.js:54:7
-   54| (Y.A: boolean); // Error
-             ^^^^^^^ [2]
+   cast.js:53:8
+   53| Y.A as boolean; // Error
+              ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- cast.js:55:2
+Error ----------------------------------------------------------------------------------------------------- cast.js:54:1
 
 Cannot cast `X.A` to string because `B` [1] is incompatible with string [2]. [incompatible-cast]
 
-   cast.js:55:2
-   55| (X.A: string); // Error
-        ^^^
+   cast.js:54:1
+   54| X.A as string; // Error
+       ^^^
 
 References:
    cast.js:3:6
     3| enum B of boolean {
             ^ [1]
-   cast.js:55:7
-   55| (X.A: string); // Error
-             ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- cast.js:66:2
-
-Cannot cast `BS.A` to union type because: [incompatible-cast]
- - Either `B` [1] is incompatible with boolean [2]. You can explicitly cast your enum value to a boolean using
-   `(<expression>: boolean)`.
- - Or `B` [1] is incompatible with string [3].
-
-   cast.js:66:2
-   66| (BS.A: string | boolean); // Error
-        ^^^^
-
-References:
-   cast.js:64:17
-   64| declare var BS: typeof B | typeof S;
-                       ^^^^^^^^ [1]
-   cast.js:66:17
-   66| (BS.A: string | boolean); // Error
-                       ^^^^^^^ [2]
-   cast.js:66:8
-   66| (BS.A: string | boolean); // Error
-              ^^^^^^ [3]
-
-
-Error ----------------------------------------------------------------------------------------------------- cast.js:66:2
-
-Cannot cast `BS.A` to union type because: [incompatible-cast]
- - Either `S` [1] is incompatible with string [2]. You can explicitly cast your enum value to a string using
-   `(<expression>: string)`.
- - Or `S` [1] is incompatible with boolean [3].
-
-   cast.js:66:2
-   66| (BS.A: string | boolean); // Error
-        ^^^^
-
-References:
-   cast.js:64:28
-   64| declare var BS: typeof B | typeof S;
-                                  ^^^^^^^^ [1]
-   cast.js:66:8
-   66| (BS.A: string | boolean); // Error
+   cast.js:54:8
+   54| X.A as string; // Error
               ^^^^^^ [2]
-   cast.js:66:17
-   66| (BS.A: string | boolean); // Error
-                       ^^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------------- cast.js:69:2
+Error ----------------------------------------------------------------------------------------------------- cast.js:65:1
+
+Cannot cast `BS.A` to union type because: [incompatible-cast]
+ - Either `B` [1] is incompatible with boolean [2]. You can explicitly cast your enum value to a boolean using
+   `(<expression>: boolean)`.
+ - Or `B` [1] is incompatible with string [3].
+
+   cast.js:65:1
+   65| BS.A as string | boolean; // Error
+       ^^^^
+
+References:
+   cast.js:63:17
+   63| declare var BS: typeof B | typeof S;
+                       ^^^^^^^^ [1]
+   cast.js:65:18
+   65| BS.A as string | boolean; // Error
+                        ^^^^^^^ [2]
+   cast.js:65:9
+   65| BS.A as string | boolean; // Error
+               ^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- cast.js:65:1
+
+Cannot cast `BS.A` to union type because: [incompatible-cast]
+ - Either `S` [1] is incompatible with string [2]. You can explicitly cast your enum value to a string using
+   `(<expression>: string)`.
+ - Or `S` [1] is incompatible with boolean [3].
+
+   cast.js:65:1
+   65| BS.A as string | boolean; // Error
+       ^^^^
+
+References:
+   cast.js:63:28
+   63| declare var BS: typeof B | typeof S;
+                                  ^^^^^^^^ [1]
+   cast.js:65:9
+   65| BS.A as string | boolean; // Error
+               ^^^^^^ [2]
+   cast.js:65:18
+   65| BS.A as string | boolean; // Error
+                        ^^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- cast.js:68:1
 
 Cannot cast `sb` to union type because: [incompatible-cast]
  - Either `S` [1] is incompatible with string [2]. You can explicitly cast your enum value to a string using
    `(<expression>: string)`.
  - Or `S` [1] is incompatible with boolean [3].
 
-   cast.js:69:2
-   69| (sb: string | boolean); // Error
-        ^^
+   cast.js:68:1
+   68| sb as string | boolean; // Error
+       ^^
 
 References:
-   cast.js:68:17
-   68| declare var sb: S | B;
+   cast.js:67:17
+   67| declare var sb: S | B;
                        ^ [1]
-   cast.js:69:6
-   69| (sb: string | boolean); // Error
-            ^^^^^^ [2]
-   cast.js:69:15
-   69| (sb: string | boolean); // Error
-                     ^^^^^^^ [3]
+   cast.js:68:7
+   68| sb as string | boolean; // Error
+             ^^^^^^ [2]
+   cast.js:68:16
+   68| sb as string | boolean; // Error
+                      ^^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------------- cast.js:69:2
+Error ----------------------------------------------------------------------------------------------------- cast.js:68:1
 
 Cannot cast `sb` to union type because: [incompatible-cast]
  - Either `B` [1] is incompatible with boolean [2]. You can explicitly cast your enum value to a boolean using
    `(<expression>: boolean)`.
  - Or `B` [1] is incompatible with string [3].
 
-   cast.js:69:2
-   69| (sb: string | boolean); // Error
-        ^^
+   cast.js:68:1
+   68| sb as string | boolean; // Error
+       ^^
 
 References:
-   cast.js:68:21
-   68| declare var sb: S | B;
+   cast.js:67:21
+   67| declare var sb: S | B;
                            ^ [1]
-   cast.js:69:15
-   69| (sb: string | boolean); // Error
-                     ^^^^^^^ [2]
-   cast.js:69:6
-   69| (sb: string | boolean); // Error
-            ^^^^^^ [3]
+   cast.js:68:16
+   68| sb as string | boolean; // Error
+                      ^^^^^^^ [2]
+   cast.js:68:7
+   68| sb as string | boolean; // Error
+             ^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------------- cast.js:71:2
+Error ----------------------------------------------------------------------------------------------------- cast.js:70:1
 
 Cannot cast `S.A` to interface type because `S` [1] is incompatible with interface type [2]. [incompatible-cast]
 
-   cast.js:71:2
-   71| (S.A: interface {}); // Error
-        ^^^
+   cast.js:70:1
+   70| S.A as interface {}; // Error
+       ^^^
 
 References:
    cast.js:13:6
    13| enum S of string {
             ^ [1]
-   cast.js:71:7
-   71| (S.A: interface {}); // Error
-             ^^^^^^^^^^^^ [2]
+   cast.js:70:8
+   70| S.A as interface {}; // Error
+              ^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- cast.js:72:2
+Error ----------------------------------------------------------------------------------------------------- cast.js:71:1
 
 Cannot cast `S.A` to empty because `S` [1] is incompatible with empty [2]. [incompatible-cast]
 
-   cast.js:72:2
-   72| (S.A: empty); // Error
-        ^^^
+   cast.js:71:1
+   71| S.A as empty; // Error
+       ^^^
 
 References:
    cast.js:13:6
    13| enum S of string {
             ^ [1]
-   cast.js:72:7
-   72| (S.A: empty); // Error
-             ^^^^^ [2]
+   cast.js:71:8
+   71| S.A as empty; // Error
+              ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- declared.js:9:2
+Error -------------------------------------------------------------------------------------------------- declared.js:9:1
 
 Cannot cast `E.A` to empty because `E` [1] is incompatible with empty [2]. [incompatible-cast]
 
-   declared.js:9:2
-   9| (E.A: empty); // ERROR
-       ^^^
+   declared.js:9:1
+   9| E.A as empty; // ERROR
+      ^^^
 
 References:
    declared.js:3:14
    3| declare enum E {
                    ^ [1]
-   declared.js:9:7
-   9| (E.A: empty); // ERROR
-            ^^^^^ [2]
+   declared.js:9:8
+   9| E.A as empty; // ERROR
+             ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- declared.js:17:2
+Error ------------------------------------------------------------------------------------------------- declared.js:17:1
 
 Cannot cast `F.N` to empty because `F` [1] is incompatible with empty [2]. [incompatible-cast]
 
-   declared.js:17:2
-   17| (F.N: empty); // ERROR
-        ^^^
+   declared.js:17:1
+   17| F.N as empty; // ERROR
+       ^^^
 
 References:
    declared.js:11:21
    11| declare export enum F {
                            ^ [1]
-   declared.js:17:7
-   17| (F.N: empty); // ERROR
-             ^^^^^ [2]
+   declared.js:17:8
+   17| F.N as empty; // ERROR
+              ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- enum-object.js:16:2
+Error ---------------------------------------------------------------------------------------------- enum-object.js:16:1
 
 Cannot cast `F` to `EO` because enum `F` [1] is incompatible with enum `E` [2]. [incompatible-cast]
 
-   enum-object.js:16:2
-   16| (F: EO); // Error: types are incompatible
-        ^
+   enum-object.js:16:1
+   16| F as EO; // Error: types are incompatible
+       ^
 
 References:
    enum-object.js:8:6
     8| enum F {
             ^ [1]
-   enum-object.js:16:5
-   16| (F: EO); // Error: types are incompatible
-           ^^ [2]
+   enum-object.js:16:6
+   16| F as EO; // Error: types are incompatible
+            ^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- enum-object.js:19:1
@@ -292,131 +292,131 @@ References:
             ^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- enum-object.js:28:4
+Error ---------------------------------------------------------------------------------------------- enum-object.js:28:3
 
 Cannot cast `x` to `EO` because undefined [1] is incompatible with enum `E` [2]. [incompatible-cast]
 
-   enum-object.js:28:4
-   28|   (x: EO); // Error
-          ^
+   enum-object.js:28:3
+   28|   x as EO; // Error
+         ^
 
 References:
    enum-object.js:24:10
    24| const x: VoidableEO = E;
                 ^^^^^^^^^^ [1]
-   enum-object.js:28:7
-   28|   (x: EO); // Error
-             ^^ [2]
+   enum-object.js:28:8
+   28|   x as EO; // Error
+              ^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- enum-object.js:32:4
+Error ---------------------------------------------------------------------------------------------- enum-object.js:32:3
 
 Cannot cast `x` to undefined because enum `E` [1] is incompatible with undefined [2]. [incompatible-cast]
 
-   enum-object.js:32:4
-   32|   (x: void); // Error
-          ^
+   enum-object.js:32:3
+   32|   x as void; // Error
+         ^
 
 References:
    enum-object.js:24:10
    24| const x: VoidableEO = E;
                 ^^^^^^^^^^ [1]
-   enum-object.js:32:7
-   32|   (x: void); // Error
-             ^^^^ [2]
+   enum-object.js:32:8
+   32|   x as void; // Error
+              ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- enum-object.js:37:4
+Error ---------------------------------------------------------------------------------------------- enum-object.js:37:3
 
 Cannot cast `x` to undefined because enum `E` [1] is incompatible with undefined [2]. [incompatible-cast]
 
-   enum-object.js:37:4
-   37|   (x: void); // Error
-          ^
+   enum-object.js:37:3
+   37|   x as void; // Error
+         ^
 
 References:
    enum-object.js:24:10
    24| const x: VoidableEO = E;
                 ^^^^^^^^^^ [1]
-   enum-object.js:37:7
-   37|   (x: void); // Error
-             ^^^^ [2]
+   enum-object.js:37:8
+   37|   x as void; // Error
+              ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- enum-object.js:43:4
+Error ---------------------------------------------------------------------------------------------- enum-object.js:43:3
 
 Cannot cast `x` to `EO` because undefined [1] is incompatible with enum `E` [2]. [incompatible-cast]
 
-   enum-object.js:43:4
-   43|   (x: EO); // Error
-          ^
+   enum-object.js:43:3
+   43|   x as EO; // Error
+         ^
 
 References:
    enum-object.js:24:10
    24| const x: VoidableEO = E;
                 ^^^^^^^^^^ [1]
-   enum-object.js:43:7
-   43|   (x: EO); // Error
-             ^^ [2]
+   enum-object.js:43:8
+   43|   x as EO; // Error
+              ^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- enum-object.js:47:4
+Error ---------------------------------------------------------------------------------------------- enum-object.js:47:3
 
 Cannot cast `x` to undefined because enum `E` [1] is incompatible with undefined [2]. [incompatible-cast]
 
-   enum-object.js:47:4
-   47|   (x: void); // Error
-          ^
+   enum-object.js:47:3
+   47|   x as void; // Error
+         ^
 
 References:
    enum-object.js:24:10
    24| const x: VoidableEO = E;
                 ^^^^^^^^^^ [1]
-   enum-object.js:47:7
-   47|   (x: void); // Error
-             ^^^^ [2]
+   enum-object.js:47:8
+   47|   x as void; // Error
+              ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- enum-object.js:53:4
+Error ---------------------------------------------------------------------------------------------- enum-object.js:53:3
 
 Cannot cast `x` to `EO` because undefined [1] is incompatible with enum `E` [2]. [incompatible-cast]
 
-   enum-object.js:53:4
-   53|   (x: EO); // Error
-          ^
+   enum-object.js:53:3
+   53|   x as EO; // Error
+         ^
 
 References:
    enum-object.js:24:10
    24| const x: VoidableEO = E;
                 ^^^^^^^^^^ [1]
-   enum-object.js:53:7
-   53|   (x: EO); // Error
-             ^^ [2]
+   enum-object.js:53:8
+   53|   x as EO; // Error
+              ^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- enum-object.js:57:17
 
 Enum `E` is not an iterable. You can use `E.members()` to get an iterator for the enum's members. [not-iterable]
 
-   57| for (const x of E) { // Error
+   57| for (const x of E) {
                        ^
 
 
-Error --------------------------------------------------------------------------------------------- enum-object.js:63:10
+Error --------------------------------------------------------------------------------------------- enum-object.js:65:10
 
 Enum `E` is not an iterable. You can use `E.members()` to get an iterator for the enum's members. [not-iterable]
 
-   63|   yield* E; // Error
+   65|   yield* E; // Error
                 ^
 
 
-Error --------------------------------------------------------------------------------------------- enum-object.js:69:17
+Error --------------------------------------------------------------------------------------------- enum-object.js:71:17
 
 Cannot iterate using a `for...in` loop because enum `E` [1] is not an object, null, or undefined. You can use
 `for (... of E.members()) { ... }` to iterate over the enum's members. [not-iterable]
 
-   enum-object.js:69:17
-   69| for (const x in E) { // Error
+   enum-object.js:71:17
+   71| for (const x in E) {
                        ^
 
 References:
@@ -425,48 +425,48 @@ References:
             ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- enum-object.js:73:2
+Error ---------------------------------------------------------------------------------------------- enum-object.js:76:1
 
 Cannot cast `E` to interface type because enum `E` [1] is incompatible with interface type [2]. [incompatible-cast]
 
-   enum-object.js:73:2
-   73| (E: interface {}); // Error
-        ^
+   enum-object.js:76:1
+   76| E as interface {}; // Error
+       ^
 
 References:
    enum-object.js:3:6
     3| enum E {
             ^ [1]
-   enum-object.js:73:5
-   73| (E: interface {}); // Error
-           ^^^^^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------- enum-object.js:74:2
-
-Cannot cast `E` to interface type because enum `E` [1] is incompatible with interface type [2]. [incompatible-cast]
-
-   enum-object.js:74:2
-   74| (E: interface {A: E; B: E}); // Error
-        ^
-
-References:
-   enum-object.js:3:6
-    3| enum E {
-            ^ [1]
-   enum-object.js:74:5
-   74| (E: interface {A: E; B: E}); // Error
-           ^^^^^^^^^^^^^^^^^^^^^^ [2]
+   enum-object.js:76:6
+   76| E as interface {}; // Error
+            ^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- enum-object.js:77:1
+
+Cannot cast `E` to interface type because enum `E` [1] is incompatible with interface type [2]. [incompatible-cast]
+
+   enum-object.js:77:1
+   77| E as interface {A: E, B: E}; // Error
+       ^
+
+References:
+   enum-object.js:3:6
+    3| enum E {
+            ^ [1]
+   enum-object.js:77:6
+   77| E as interface {A: E, B: E}; // Error
+            ^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- enum-object.js:80:1
 
 Cannot call function `Object.values` [1] with argument enum `E` [2] because it is not an object. You can use
 `E.members()` to get an iterator of the enum's members. You can turn that into an array using `Array.from`, which
 optionally takes a second argument if you wish to also map over the result. [not-an-object]
 
-   enum-object.js:77:1
-   77| Object.values(E); // Error
+   enum-object.js:80:1
+   80| Object.values(E); // Error
        ^^^^^^^^^^^^^^^^ [1]
 
 References:
@@ -738,7 +738,7 @@ Error --------------------------------------------------------------------------
 Cannot access string on enum `E` [1] because computed access is not allowed on enums. [invalid-enum-access]
 
    error-access.js:14:3
-   14| E["A"];
+   14| E['A'];
          ^^^
 
 References:
@@ -1989,54 +1989,54 @@ References:
              ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- import-declared.js:6:2
+Error ------------------------------------------------------------------------------------------- import-declared.js:6:1
 
 Cannot cast `F.M` to boolean because `F` [1] is incompatible with boolean [2]. [incompatible-cast]
 
-   import-declared.js:6:2
-    6| (F.M: boolean); // ERROR
-        ^^^
+   import-declared.js:6:1
+    6| F.M as boolean; // ERROR
+       ^^^
 
 References:
    declared.js:11:21
    11| declare export enum F {
                            ^ [1]
-   import-declared.js:6:7
-    6| (F.M: boolean); // ERROR
-             ^^^^^^^ [2]
+   import-declared.js:6:8
+    6| F.M as boolean; // ERROR
+              ^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ import-declared.js:12:2
+Error ------------------------------------------------------------------------------------------ import-declared.js:11:1
 
 Cannot cast `H.X` to boolean because `H` [1] is incompatible with boolean [2]. [incompatible-cast]
 
-   import-declared.js:12:2
-   12| (H.X: boolean); // ERROR
-        ^^^
+   import-declared.js:11:1
+   11| H.X as boolean; // ERROR
+       ^^^
 
 References:
    lib.js:8:23
     8|   declare export enum H {
                              ^ [1]
-   import-declared.js:12:7
-   12| (H.X: boolean); // ERROR
-             ^^^^^^^ [2]
+   import-declared.js:11:8
+   11| H.X as boolean; // ERROR
+              ^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- import-type.js:10:2
+Error ----------------------------------------------------------------------------------------------- import-type.js:9:1
 
 Cannot cast `b` to `C` because `B` [1] is incompatible with `C` [2]. [incompatible-cast]
 
-   import-type.js:10:2
-   10| (b: C); // Error
-        ^
+   import-type.js:9:1
+   9| b as C; // Error
+      ^
 
 References:
-   import-type.js:9:16
-    9| declare var b: B;
-                      ^ [1]
-   import-type.js:10:5
-   10| (b: C); // Error
+   import-type.js:8:16
+   8| declare var b: B;
+                     ^ [1]
+   import-type.js:9:6
+   9| b as C; // Error
            ^ [2]
 
 
@@ -2070,12 +2070,12 @@ References:
             ^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- methods.js:28:3
+Error -------------------------------------------------------------------------------------------------- methods.js:29:3
 
 Cannot get `E.nonExistent` because property `nonExistent` is missing in `$EnumProto` [1]. [prop-missing]
 
-   methods.js:28:3
-     28| E.nonExistent; // Error
+   methods.js:29:3
+     29| E.nonExistent; // Error
            ^^^^^^^^^^^
 
 References:
@@ -2091,12 +2091,12 @@ References:
          -^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- methods.js:31:3
+Error -------------------------------------------------------------------------------------------------- methods.js:32:3
 
 Cannot call `E.nonExistent` because property `nonExistent` is missing in `$EnumProto` [1]. [prop-missing]
 
-   methods.js:31:3
-     31| E.nonExistent(); // Error
+   methods.js:32:3
+     32| E.nonExistent(); // Error
            ^^^^^^^^^^^
 
 References:
@@ -2112,12 +2112,12 @@ References:
          -^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- methods.js:34:3
+Error -------------------------------------------------------------------------------------------------- methods.js:35:3
 
 An index signature declaring the expected key / value type is missing in enum `E` [1]. [incompatible-use]
 
-   methods.js:34:3
-   34| E['members'](); // Error
+   methods.js:35:3
+   35| E['members'](); // Error
          ^^^^^^^^^
 
 References:
@@ -2126,12 +2126,12 @@ References:
             ^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- methods.js:37:3
+Error -------------------------------------------------------------------------------------------------- methods.js:38:3
 
 Cannot call `E.A` because property `A` is missing in `$EnumProto` [1]. [prop-missing]
 
-   methods.js:37:3
-     37| E.A(); // Error
+   methods.js:38:3
+     38| E.A(); // Error
            ^
 
 References:
@@ -2147,12 +2147,12 @@ References:
          -^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- methods.js:40:3
+Error -------------------------------------------------------------------------------------------------- methods.js:41:3
 
 Cannot call `E.toString` because property `toString` is missing in `$EnumProto` [1]. [prop-missing]
 
-   methods.js:40:3
-     40| E.toString(); // Error
+   methods.js:41:3
+     41| E.toString(); // Error
            ^^^^^^^^
 
 References:
@@ -2168,37 +2168,37 @@ References:
          -^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- methods.js:43:2
+Error -------------------------------------------------------------------------------------------------- methods.js:44:1
 
 Cannot cast `E.getName(...)` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
 
-   methods.js:43:2
-     43| (E.getName(E.B): boolean); // Error - wrong type
-          ^^^^^^^^^^^^^^
+   methods.js:44:1
+     44| E.getName(E.B) as boolean; // Error - wrong type
+         ^^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/core.js:2621:45
    2621|   getName(this: TEnumObject, input: TEnum): string,
                                                      ^^^^^^ [1]
-   methods.js:43:18
-     43| (E.getName(E.B): boolean); // Error - wrong type
-                          ^^^^^^^ [2]
+   methods.js:44:19
+     44| E.getName(E.B) as boolean; // Error - wrong type
+                           ^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- methods.js:49:1
+Error -------------------------------------------------------------------------------------------------- methods.js:50:1
 
 Cannot call `o.cast` because object literal [1] is incompatible with enum `E` [2]. [incompatible-call]
 
-   methods.js:49:1
-   49| o.cast('x'); // Error
+   methods.js:50:1
+   50| o.cast('x'); // Error
        ^
 
 References:
-   methods.js:46:11
+   methods.js:47:11
                  v
-   46| const o = {
-   47|   cast: E.cast,
-   48| };
+   47| const o = {
+   48|   cast: E.cast,
+   49| };
        ^ [1]
    methods.js:3:6
     3| enum E {
@@ -3861,135 +3861,135 @@ References:
                 ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- utility-types.js:12:11
+Error ------------------------------------------------------------------------------------------- utility-types.js:12:12
 
 Cannot access `X` because `X` is not a member of enum `E` [1]. [invalid-enum-access]
 
-   utility-types.js:12:11
-   12| (trigger: $PropertyType<typeof E, 'X'>); // Error: `X` is not a member of enum `E`
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   utility-types.js:12:12
+   12| trigger as $PropertyType<typeof E, 'X'>; // Error: `X` is not a member of enum `E`
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   utility-types.js:12:25
-   12| (trigger: $PropertyType<typeof E, 'X'>); // Error: `X` is not a member of enum `E`
-                               ^^^^^^^^ [1]
+   utility-types.js:12:26
+   12| trigger as $PropertyType<typeof E, 'X'>; // Error: `X` is not a member of enum `E`
+                                ^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- utility-types.js:15:34
+Error ------------------------------------------------------------------------------------------- utility-types.js:15:35
 
 Cannot access string on enum `E` [1] because computed access is not allowed on enums. [invalid-enum-access]
 
-   utility-types.js:15:34
-   15| (trigger: $ElementType<typeof E, string>); // Error: computed access is not allowed on enums
-                                        ^^^^^^
+   utility-types.js:15:35
+   15| trigger as $ElementType<typeof E, string>; // Error: computed access is not allowed on enums
+                                         ^^^^^^
 
 References:
-   utility-types.js:15:24
-   15| (trigger: $ElementType<typeof E, string>); // Error: computed access is not allowed on enums
-                              ^^^^^^^^ [1]
+   utility-types.js:15:25
+   15| trigger as $ElementType<typeof E, string>; // Error: computed access is not allowed on enums
+                               ^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- utility-types.js:18:17
+Error ------------------------------------------------------------------------------------------- utility-types.js:18:18
 
 Cannot instantiate `$Diff` because enum `E` [1] is not an object. [not-an-object]
 
-   18| (trigger: $Diff<typeof E, {A: E}>); // Error: enum  `E` is not an object
-                       ^^^^^^^^ [1]
+   18| trigger as $Diff<typeof E, {A: E}>; // Error: enum  `E` is not an object
+                        ^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- utility-types.js:21:21
+Error ------------------------------------------------------------------------------------------- utility-types.js:21:22
 
 Cannot instantiate `$ReadOnly` because enum `E` [1] is not an object. [not-an-object]
 
-   21| (trigger: $ReadOnly<typeof E>); // Error: enum `E` is not an object
-                           ^^^^^^^^ [1]
+   21| trigger as $ReadOnly<typeof E>; // Error: enum `E` is not an object
+                            ^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- utility-types.js:24:2
+Error -------------------------------------------------------------------------------------------- utility-types.js:24:1
 
-Cannot cast `"A"` to key set because property `A` is missing in enum `E` [1]. [incompatible-use]
+Cannot cast `'A'` to key set because property `A` is missing in enum `E` [1]. [incompatible-use]
 
-   utility-types.js:24:2
-   24| ("A": $Keys<typeof E>); // Error: TODO: improve error
-        ^^^
+   utility-types.js:24:1
+   24| 'A' as $Keys<typeof E>; // Error: TODO: improve error
+       ^^^
 
 References:
-   utility-types.js:24:13
-   24| ("A": $Keys<typeof E>); // Error: TODO: improve error
-                   ^^^^^^^^ [1]
+   utility-types.js:24:14
+   24| 'A' as $Keys<typeof E>; // Error: TODO: improve error
+                    ^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- utility-types.js:24:7
+Error -------------------------------------------------------------------------------------------- utility-types.js:24:8
 
 enum `E` [1] is not an object. [not-an-object]
 
-   utility-types.js:24:7
-   24| ("A": $Keys<typeof E>); // Error: TODO: improve error
-             ^^^^^^^^^^^^^^^
+   utility-types.js:24:8
+   24| 'A' as $Keys<typeof E>; // Error: TODO: improve error
+              ^^^^^^^^^^^^^^^
 
 References:
-   utility-types.js:24:13
-   24| ("A": $Keys<typeof E>); // Error: TODO: improve error
-                   ^^^^^^^^ [1]
+   utility-types.js:24:14
+   24| 'A' as $Keys<typeof E>; // Error: TODO: improve error
+                    ^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- utility-types.js:27:11
+Error ------------------------------------------------------------------------------------------- utility-types.js:27:12
 
 Cannot instantiate `$Values` because enum `E` [1] is not an object. You can use the enum's name `E` as the type of its
 members. [not-an-object]
 
-   utility-types.js:27:11
-   27| (trigger: $Values<typeof E>); // Error
-                 ^^^^^^^^^^^^^^^^^
+   utility-types.js:27:12
+   27| trigger as $Values<typeof E>; // Error
+                  ^^^^^^^^^^^^^^^^^
 
 References:
-   utility-types.js:27:19
-   27| (trigger: $Values<typeof E>); // Error
-                         ^^^^^^^^ [1]
+   utility-types.js:27:20
+   27| trigger as $Values<typeof E>; // Error
+                          ^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- utility-types.js:30:12
+Error ------------------------------------------------------------------------------------------- utility-types.js:30:13
 
 Cannot create exact type from enum `E` [1]. [invalid-exact]
 
-   30| (E: $Exact<typeof E>); // Error: TODO: improve error
-                  ^^^^^^^^ [1]
+   30| E as $Exact<typeof E>; // Error: TODO: improve error
+                   ^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- utility-types.js:33:17
+Error ------------------------------------------------------------------------------------------- utility-types.js:33:18
 
 Cannot instantiate `$Rest` because enum `E` [1] is not an object. [not-an-object]
 
-   33| (trigger: $Rest<typeof E, {A: E}>); // Error: enum  `E` is not an object
-                       ^^^^^^^^ [1]
+   33| trigger as $Rest<typeof E, {A: E}>; // Error: enum  `E` is not an object
+                        ^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- utility-types.js:36:11
+Error ------------------------------------------------------------------------------------------- utility-types.js:36:12
 
 Cannot instantiate `$ObjMap` because enum `E` [1] is not a valid argument of `$ObjMap` [2]. [incompatible-use]
 
-   utility-types.js:36:11
-   36| (trigger: $ObjMap<typeof E, <T>(T) => [T]>); // Error: enum `E` is not a valid arg to $ObjMap
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   utility-types.js:36:12
+   36| trigger as $ObjMap<typeof E, <T>(T) => [T]>; // Error: enum `E` is not a valid arg to $ObjMap
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 References:
-   utility-types.js:36:19
-   36| (trigger: $ObjMap<typeof E, <T>(T) => [T]>); // Error: enum `E` is not a valid arg to $ObjMap
-                         ^^^^^^^^ [1]
+   utility-types.js:36:20
+   36| trigger as $ObjMap<typeof E, <T>(T) => [T]>; // Error: enum `E` is not a valid arg to $ObjMap
+                          ^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- utility-types.js:39:11
+Error ------------------------------------------------------------------------------------------- utility-types.js:39:12
 
 Cannot instantiate `$ObjMapi` because enum `E` [1] is not a valid argument of `$ObjMapi` [2]. [incompatible-use]
 
-   utility-types.js:39:11
-   39| (trigger: $ObjMapi<typeof E, <K, V>(K, V) => [K, V]>); // Error: enum `E` is not a valid arg to $ObjMapi
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   utility-types.js:39:12
+   39| trigger as $ObjMapi<typeof E, <K, V>(K, V) => [K, V]>; // Error: enum `E` is not a valid arg to $ObjMapi
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 References:
-   utility-types.js:39:20
-   39| (trigger: $ObjMapi<typeof E, <K, V>(K, V) => [K, V]>); // Error: enum `E` is not a valid arg to $ObjMapi
-                          ^^^^^^^^ [1]
+   utility-types.js:39:21
+   39| trigger as $ObjMapi<typeof E, <K, V>(K, V) => [K, V]>; // Error: enum `E` is not a valid arg to $ObjMapi
+                           ^^^^^^^^ [1]
 
 
 

@@ -1,32 +1,41 @@
 //@flow
 
 function g() {
-    return f();
+  return f();
 }
 
 function f() {
-    return 42;
+  return 42;
 }
 
-var x = (function h() { (h(): empty); return 42 }); // err in old inference, no err in LTI
+var x = function h() {
+  h() as empty;
+  return 42;
+}; // err in old inference, no err in LTI
 
-(f(): empty); // err
-(g(): empty); // err
-
+f() as empty; // err
+g() as empty; // err
 
 function h(): number {
-    return i();
+  return i();
 }
 
 function i(): number {
-    return h();
+  return h();
 }
 
-var y = (function k(): number { (k(): empty); return 42 }); // err
+var y = function k(): number {
+  k() as empty;
+  return 42;
+}; // err
 
-(h(): empty); // err
-(i(): empty); // err
+h() as empty; // err
+i() as empty; // err
 
 const foo = (): number => foo(); // ok
-const bar = function (): number { return bar() }; // ok
-const baz = function _(): number { return baz() }; // ok
+const bar = function (): number {
+  return bar();
+}; // ok
+const baz = function _(): number {
+  return baz();
+}; // ok

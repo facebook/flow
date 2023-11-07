@@ -1,5 +1,5 @@
 //@flow
 
-type A = {| [string]: number |};
+type A = {|[string]: number|};
 declare var a: A;
-(a: $Exact<A>);
+a as $Exact<A>;

@@ -45,5 +45,5 @@ export type GetPropFragmentRef = (<T>(Fragment<T, FragmentData>) => T) &
 export function createFragmentContainer<Props: {}>(
   Component: React.ComponentType<Props>,
 ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
-  return (null: any);
+  return null as any;
 }

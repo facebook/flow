@@ -1,56 +1,56 @@
-Error ---------------------------------------------------------------------------------------------- forwardRef.js:12:13
+Error ---------------------------------------------------------------------------------------------- forwardRef.js:11:13
 
 Cannot create `FancyButton` element because property `foo` is missing in props [1] but exists in `Props` [2].
 [prop-missing]
 
-   forwardRef.js:12:13
-   12| const _a = <FancyButton />; // Error, missing foo
+   forwardRef.js:11:13
+   11| const _a = <FancyButton />; // Error, missing foo
                    ^^^^^^^^^^^
 
 References:
-   forwardRef.js:12:12
-   12| const _a = <FancyButton />; // Error, missing foo
+   forwardRef.js:11:12
+   11| const _a = <FancyButton />; // Error, missing foo
                   ^^^^^^^^^^^^^^^ [1]
    forwardRef.js:5:38
     5| const FancyButton = React.forwardRef<Props, HTMLButtonElement>((props, ref) => (
                                             ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- forwardRef.js:14:13
+Error ---------------------------------------------------------------------------------------------- forwardRef.js:13:13
 
 Cannot create `FancyButton` element because property `bar` is missing in `Props` [1] but exists in props [2].
 [prop-missing]
 
-   forwardRef.js:14:13
-   14| const _c = <FancyButton foo={3} bar={3} />; // Error bar, not allowed in exact props
+   forwardRef.js:13:13
+   13| const _c = <FancyButton foo={3} bar={3} />; // Error bar, not allowed in exact props
                    ^^^^^^^^^^^
 
 References:
    forwardRef.js:5:38
     5| const FancyButton = React.forwardRef<Props, HTMLButtonElement>((props, ref) => (
                                             ^^^^^ [1]
-   forwardRef.js:14:12
-   14| const _c = <FancyButton foo={3} bar={3} />; // Error bar, not allowed in exact props
+   forwardRef.js:13:12
+   13| const _c = <FancyButton foo={3} bar={3} />; // Error bar, not allowed in exact props
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- forwardRef.js:20:38
+Error ---------------------------------------------------------------------------------------------- forwardRef.js:19:38
 
 Cannot create `FancyButton` element because in property `ref`: [incompatible-type]
  - Either `HTMLButtonElement` [1] is incompatible with `HTMLDivElement` [2] in property `current`.
  - Or a call signature declaring the expected parameter / return type is missing in object type [3] but exists in
    function type [4].
 
-   forwardRef.js:20:38
-    20| const _e = <FancyButton foo={3} ref={badRef} />; // Incorrect ref type
+   forwardRef.js:19:38
+    19| const _e = <FancyButton foo={3} ref={badRef} />; // Incorrect ref type
                                              ^^^^^^
 
 References:
    forwardRef.js:5:45
      5| const FancyButton = React.forwardRef<Props, HTMLButtonElement>((props, ref) => (
                                                     ^^^^^^^^^^^^^^^^^ [1]
-   forwardRef.js:19:32
-    19| const badRef = React.createRef<HTMLDivElement>();
+   forwardRef.js:18:32
+    18| const badRef = React.createRef<HTMLDivElement>();
                                        ^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:239:6
    239|   ): {|current: null | T|};
@@ -60,15 +60,15 @@ References:
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ---------------------------------------------------------------------------------------------- forwardRef.js:23:39
+Error ---------------------------------------------------------------------------------------------- forwardRef.js:22:38
 
 Cannot create `FancyButton` element because in property `ref`: [incompatible-type]
  - Either property `current` is missing in function [1] but exists in object type [2].
  - Or `HTMLButtonElement` [3] is incompatible with `HTMLDivElement` [4] in the first parameter.
 
-   forwardRef.js:23:39
-    23| const _g =  <FancyButton foo={3} ref={(x: null | HTMLDivElement) => x} />; // Incorrect ref type
-                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   forwardRef.js:22:38
+    22| const _g = <FancyButton foo={3} ref={(x: null | HTMLDivElement) => x} />; // Incorrect ref type
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
    <BUILTINS>/react.js:175:5
@@ -77,9 +77,9 @@ References:
    forwardRef.js:5:45
      5| const FancyButton = React.forwardRef<Props, HTMLButtonElement>((props, ref) => (
                                                     ^^^^^^^^^^^^^^^^^ [3]
-   forwardRef.js:23:50
-    23| const _g =  <FancyButton foo={3} ref={(x: null | HTMLDivElement) => x} />; // Incorrect ref type
-                                                         ^^^^^^^^^^^^^^ [4]
+   forwardRef.js:22:49
+    22| const _g = <FancyButton foo={3} ref={(x: null | HTMLDivElement) => x} />; // Incorrect ref type
+                                                        ^^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------- forwardRef.js:42:35
@@ -95,9 +95,9 @@ Cannot create `UnionRef` element because in property `ref`: [incompatible-type]
                                           ^^^^^^^^^^^
 
 References:
-   forwardRef.js:27:65
-    27| const UnionRef = React.forwardRef<FooProps, HTMLButtonElement | HTMLAnchorElement>(
-                                                                        ^^^^^^^^^^^^^^^^^ [1]
+   forwardRef.js:28:23
+    28|   HTMLButtonElement | HTMLAnchorElement,
+                              ^^^^^^^^^^^^^^^^^ [1]
    forwardRef.js:41:37
     41| const badUnionRef = React.createRef<HTMLButtonElement | HTMLDivElement>();
                                             ^^^^^^^^^^^^^^^^^ [2]

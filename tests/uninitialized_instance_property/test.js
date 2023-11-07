@@ -26,7 +26,7 @@ class E4 {
 class E5 {
   p: number; // PropertyNotDefinitelyInitialized
   constructor() {
-    if (true) throw "";
+    if (true) throw '';
     this.p = 0;
   }
 }
@@ -45,12 +45,11 @@ class E7 {
   p: number; // PropertyNotDefinitelyInitialized
   constructor() {
     {
-      if (true) throw "";
+      if (true) throw '';
       this.p = 0;
     }
   }
 }
-
 
 class E8 {
   p: number; // PropertyNotDefinitelyInitialized
@@ -66,7 +65,7 @@ class E9 {
   p: number; // PropertyNotDefinitelyInitialized
   constructor() {
     if (true) {
-      throw "";
+      throw '';
     }
     this.p = 0;
   }
@@ -126,7 +125,6 @@ class E14 {
   }
 }
 
-
 class E15 {
   p: number; // PropertyNotDefinitelyInitialized
   constructor() {
@@ -141,7 +139,7 @@ class E16 {
   p: number; // PropertyNotDefinitelyInitialized
   constructor() {
     do {
-      if (true) throw "";
+      if (true) throw '';
       this.p = 0;
     } while (true);
   }
@@ -223,7 +221,8 @@ class E26 {
 class E27 {
   p: number;
   constructor() {
-    if (this) {} // ThisBeforeEverythingInitialized
+    if (this) {
+    } // ThisBeforeEverythingInitialized
     this.p = 0;
   }
 }
@@ -275,7 +274,7 @@ class E32 {
 
 class E33 {
   p: number;
-  #p: "a"; // PropertyNotDefinitelyInitialized
+  #p: 'a'; // PropertyNotDefinitelyInitialized
   constructor() {
     this.p = 0;
   }
@@ -310,7 +309,8 @@ class E37 {
   p1: number; // PropertyNotDefinitelyInitialized
   p2: number;
   constructor() {
-    while (this.p2 = this.p1) { // ReadFromUninitializedProperty
+    while ((this.p2 = this.p1)) {
+      // ReadFromUninitializedProperty
       this.p1 = 0;
     }
   }
@@ -345,7 +345,6 @@ class E40 {
     }
   }
 }
-
 
 class E41 {
   p: number; // PropertyNotDefinitelyInitialized
@@ -426,7 +425,7 @@ class E47 {
 }
 
 class E48 {
-  p: 0.; // PropertyNotDefinitelyInitialized
+  p: 0; // PropertyNotDefinitelyInitialized
   constructor() {
     do {
       if (true) {
@@ -463,7 +462,7 @@ class E51 {
   p2: number;
   constructor() {
     const a = (this.p2 = this.p1), // ReadFromUninitializedProperty
-          b = (this.p1 = 0);
+      b = (this.p1 = 0);
   }
 }
 
@@ -517,7 +516,7 @@ class E56 {
 class E57 {
   p: number;
   constructor() {
-    this.m(this.p = 0); // MethodCallBeforeEverythingInitialized
+    this.m((this.p = 0)); // MethodCallBeforeEverythingInitialized
   }
   m(x: number): number {
     return x;
@@ -546,14 +545,14 @@ class E61 {
 class E62 {
   p: string; // PropertyNotDefinitelyInitialized
   constructor() {
-    (this.p: string); // ReadFromUninitializedProperty
+    this.p as string; // ReadFromUninitializedProperty
   }
 }
 
 class E63 {
   #p: string; // PropertyNotDefinitelyInitialized
   constructor() {
-    (this.#p: string); // ReadFromUninitializedProperty
+    this.#p as string; // ReadFromUninitializedProperty
   }
 }
 
@@ -599,23 +598,27 @@ class E68 {
     this.p2 = true;
     this.m(); // MethodCallBeforeEverythingInitialized
   }
-  m(): number { return this.#p1 }
+  m(): number {
+    return this.#p1;
+  }
 }
-const x_E68: number = (new E68()).m();
+const x_E68: number = new E68().m();
 
 class E69 {
   p: boolean; // PropertyNotDefinitelyInitialized
   constructor() {
     this.m(this.p); // MethodCallBeforeEverythingInitialized, ReadFromUninitializedProperty
   }
-  m(x: boolean): boolean { return !x; }
+  m(x: boolean): boolean {
+    return !x;
+  }
 }
 
 class E70 {
   p: number;
   constructor() {
     this; // ThisBeforeEverythingInitialized
-    (this.p: number); // ReadFromUninitializedProperty
+    this.p as number; // ReadFromUninitializedProperty
     this.p = 0;
   }
 }
@@ -661,7 +664,7 @@ class E75 {
   p: number;
   f: (x: number | void) => number;
   constructor() {
-    this.f = x => this.p += x;
+    this.f = x => (this.p += x);
     this.f(this.f()); // PropertyFunctionCallBeforeEverythingInitialized, PropertyFunctionCallBeforeEverythingInitialized
     this.p = 0;
   }
@@ -702,12 +705,16 @@ class E78 {
 class E79 {
   p: number = this.m(); // MethodCallBeforeEverythingInitialized
   constructor() {}
-  m(): number { return 0; }
+  m(): number {
+    return 0;
+  }
 }
 
 class E80 {
   p: number = this.m(); // MethodCallBeforeEverythingInitialized
-  m(): number { return 0; }
+  m(): number {
+    return 0;
+  }
 }
 
 class E81 {
@@ -760,7 +767,7 @@ class E86 {
 
 class E87 {
   p: number;
-  f = (x: number | void): number => this.p += x;
+  f = (x: number | void): number => (this.p += x);
   constructor() {
     this.f(this.f()); // PropertyFunctionCallBeforeEverythingInitialized, PropertyFunctionCallBeforeEverythingInitialized
     this.p = 0;
@@ -775,10 +782,10 @@ class E88 {
 }
 
 class E89 {
-  p = (): string => "property function";
+  p = (): string => 'property function';
   // $FlowExpectedError[duplicate-class-member]
   p(): string {
-    return "method";
+    return 'method';
   }
   q: number;
   constructor() {
@@ -789,10 +796,10 @@ class E89 {
 
 class E90 {
   p(): string {
-    return "method";
+    return 'method';
   }
   // $FlowExpectedError[duplicate-class-member]
-  p = (): string => "property function";
+  p = (): string => 'property function';
   q: number;
   constructor() {
     this.p(); // PropertyFunctionCallBeforeEverythingInitialized
@@ -822,7 +829,7 @@ class P4 {
 
 class P5 {
   constructor() {
-    throw "";
+    throw '';
   }
 }
 
@@ -878,7 +885,8 @@ class P12 {
 class P13 {
   p: number;
   constructor() {
-    if ((this.p = 0)) {}
+    if ((this.p = 0)) {
+    }
   }
 }
 
@@ -923,7 +931,6 @@ class P16 {
   }
 }
 
-
 class P17 {
   p1: number;
   p2: number;
@@ -946,7 +953,7 @@ class P19 {
   constructor() {
     do {
       this.p1 = 0;
-    } while (this.p2 = this.p1);
+    } while ((this.p2 = this.p1));
   }
 }
 
@@ -968,8 +975,7 @@ class ParentP21 {
     this.p = 0;
   }
 }
-class P21 extends ParentP21 {
-}
+class P21 extends ParentP21 {}
 
 class P22 {
   p1: number;
@@ -977,10 +983,11 @@ class P22 {
   p3: number;
   p4: number;
   constructor() {
-    if ((this.p1 = 1) != null) {}
+    if ((this.p1 = 1) != null) {
+    }
     while ((this.p2 = 2) != null) {}
-    for (; (this.p3 = 3) != null;) {}
-    for (this.p4 = 4;;) {}
+    for (; (this.p3 = 3) != null; ) {}
+    for (this.p4 = 4; ; ) {}
   }
 }
 
@@ -993,7 +1000,9 @@ class P23 {
   }
 }
 
-function somethingThatThrows(): void { throw "the football"; }
+function somethingThatThrows(): void {
+  throw 'the football';
+}
 class P24 {
   p: number;
   constructor() {
@@ -1024,7 +1033,7 @@ class P26 {
   p2: number;
   constructor() {
     const a = (this.p1 = 0),
-          b = (this.p2 = this.p1);
+      b = (this.p2 = this.p1);
   }
 }
 
@@ -1034,7 +1043,7 @@ class P27 {
   constructor() {
     do {
       this.p1 = 0;
-    } while (this.p2 = this.p1);
+    } while ((this.p2 = this.p1));
   }
 }
 
@@ -1051,12 +1060,12 @@ class P29 {
   m(): void {}
 }
 
-
 class P30 {
   p: number;
   constructor() {
     this.p = 0;
-    if (this) {}
+    if (this) {
+    }
   }
 }
 
@@ -1110,7 +1119,7 @@ class P39<T: void> {
 class P40 {
   p: void;
   constructor() {
-    (this.p: void);
+    this.p as void;
   }
 }
 
@@ -1199,7 +1208,9 @@ class P55 {
     this.p2 = true;
     this.m();
   }
-  m(): void { return this.#p1 }
+  m(): void {
+    return this.#p1;
+  }
 }
 
 class P56 {
@@ -1231,7 +1242,7 @@ class P58 {
         return this.f();
       }
       return b;
-    }
+    };
   }
 }
 
@@ -1239,8 +1250,8 @@ class P59 {
   isEven: number => boolean;
   isOdd: number => boolean;
   constructor() {
-    this.isEven = x => x === 0 ? true : this.isOdd(x - 1);
-    this.isOdd = x => x === 0 ? false : this.isEven(x - 1);
+    this.isEven = x => (x === 0 ? true : this.isOdd(x - 1));
+    this.isOdd = x => (x === 0 ? false : this.isEven(x - 1));
   }
 }
 
@@ -1270,7 +1281,7 @@ class P62 {
 
 class P63 {
   p1: number;
-  p2: number = this.p1 = 0;
+  p2: number = (this.p1 = 0);
 }
 
 class P64 {

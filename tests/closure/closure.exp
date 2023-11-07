@@ -142,55 +142,55 @@ References:
                                 ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- Closure.js:95:4
+Error -------------------------------------------------------------------------------------------------- Closure.js:95:3
 
 Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   Closure.js:95:4
-   95|   (x: string); // blame
-          ^
+   Closure.js:95:3
+   95|   x as string; // blame
+         ^
 
 References:
    Closure.js:93:10
    93|   var x: number | string = 'hello world';
                 ^^^^^^ [1]
-   Closure.js:95:7
-   95|   (x: string); // blame
-             ^^^^^^ [2]
+   Closure.js:95:8
+   95|   x as string; // blame
+              ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- Closure.js:105:6
+Error ------------------------------------------------------------------------------------------------- Closure.js:105:5
 
 Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   Closure.js:105:6
-   105|     (x: string); // blame
-             ^
+   Closure.js:105:5
+   105|     x as string; // blame
+            ^
 
 References:
    Closure.js:102:10
    102|   var x: number | string = 'hello world';
                  ^^^^^^ [1]
-   Closure.js:105:9
-   105|     (x: string); // blame
-                ^^^^^^ [2]
+   Closure.js:105:10
+   105|     x as string; // blame
+                 ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- Closure.js:132:4
+Error ------------------------------------------------------------------------------------------------- Closure.js:132:3
 
 Cannot cast `x` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
 
-   Closure.js:132:4
-   132|   (x: void); // should error
-           ^
+   Closure.js:132:3
+   132|   x as void; // should error
+          ^
 
 References:
    Closure.js:126:10
    126|   var x: number;
                  ^^^^^^ [1]
-   Closure.js:132:7
-   132|   (x: void); // should error
-              ^^^^ [2]
+   Closure.js:132:8
+   132|   x as void; // should error
+               ^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- Closure.js:136:3
@@ -209,12 +209,12 @@ Cannot resolve name `x`. [cannot-resolve-name]
             ^
 
 
-Error ------------------------------------------------------------------------------------------------- Closure.js:141:4
+Error ------------------------------------------------------------------------------------------------- Closure.js:141:3
 
 Cannot resolve name `x`. [cannot-resolve-name]
 
-   141|   (x: void); // should error
-           ^
+   141|   x as void; // should error
+          ^
 
 
 Error ---------------------------------------------------------------------------------------------- cond_havoc.js:10:10

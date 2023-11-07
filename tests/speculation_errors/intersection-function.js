@@ -53,10 +53,10 @@ f({p: 42});
 f({});
 f(new Y());
 f(new Z());
-f(([1]: [number]));
-f(([1, 2]: [number, number]));
-f(([1, 2, 3]: [number, number, number]));
-f(((null: any): Array<number> & {p: number}));
+f([1] as [number]);
+f([1, 2] as [number, number]);
+f([1, 2, 3] as [number, number, number]);
+f(null as any as Array<number> & {p: number});
 
 declare function g(x: string): void;
 declare function g(x: Z): void;
@@ -81,4 +81,4 @@ k(1, {p: 2});
 
 declare function m(x: W<string>): void;
 declare function m(x: interface {p: string}): void;
-m((new W(): W<number>));
+m(new W() as W<number>);

@@ -1,26 +1,26 @@
 /* @flow */
 
 declare interface IDataBase {
-  id: string,
-  name: string,
+  id: string;
+  name: string;
 }
 
 declare interface IUserData extends IDataBase {
-  kind: "user",
+  kind: 'user';
 }
 
 declare interface ISystemData extends IDataBase {
-  kind: "system",
+  kind: 'system';
 }
 
 declare type IData = IUserData | ISystemData;
 
 const data: IData = {
-  id: "",
-  name: "",
-  kind: "system",
-}
+  id: '',
+  name: '',
+  kind: 'system',
+};
 
-if (data.kind === "system") {
-  (data: ISystemData);
+if (data.kind === 'system') {
+  data as ISystemData;
 }

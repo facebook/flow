@@ -9,4 +9,4 @@ type S = Set<number> | Set<string>;
 
 declare var set: S;
 const arr = set.filter(_ => true).toArray();
-(arr: Array<number> | Array<string>);
+arr as Array<number> | Array<string>;

@@ -1,4 +1,3 @@
-#!/bin/env node
 // @flow
 
-(1: string); // error
+1 as string; // error

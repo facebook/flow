@@ -1,5 +1,5 @@
 /* @flow */
 
-("string": number); // Error
+'string' as number; // Error
 
-module.exports = "foo";
+module.exports = 'foo';

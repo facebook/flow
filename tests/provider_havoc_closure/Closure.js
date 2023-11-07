@@ -50,8 +50,8 @@ function local_func() {
 var global_y = 'hello';
 
 var global_o = {
-  f: function() {},
-  g: function() {
+  f: function () {},
+  g: function () {
     global_y = 42; // blame
   },
 };
@@ -71,8 +71,8 @@ function local_meth() {
   var local_y = 'hello';
 
   var local_o = {
-    f: function() {},
-    g: function() {
+    f: function () {},
+    g: function () {
       local_y = 42;
     }, // blame
   };
@@ -92,7 +92,7 @@ function havoc_before_decl() {
   }
   var x = 'hello world';
   havoc();
-  (x: string); // fine
+  x as string; // fine
 }
 
 function havoc_before_decl_annot() {
@@ -102,7 +102,7 @@ function havoc_before_decl_annot() {
   var x: number | string = 'hello world';
   if (typeof x === 'string') {
     havoc();
-    (x: string); // error
+    x as string; // error
   }
 }
 
@@ -110,7 +110,7 @@ function no_havoc_before_decl_annot1() {
   function no_havoc() {}
   var x = 'hello world';
   no_havoc();
-  (x: string);
+  x as string;
 }
 
 function no_havoc_before_decl_annot2() {
@@ -118,7 +118,7 @@ function no_havoc_before_decl_annot2() {
   var x: number | string = 'hello world';
   if (typeof x === 'string') {
     no_havoc();
-    (x: string);
+    x as string;
   }
 }
 
@@ -129,7 +129,7 @@ function havoc_uninitialized() {
     x = 42;
   }
   havoc();
-  (x: void); // should error
+  x as void; // should error
 }
 
 function havoc_undeclared() {
@@ -138,7 +138,7 @@ function havoc_undeclared() {
     x = 42;
   }
   havoc();
-  (x: void); // should error
+  x as void; // should error
 }
 
 function havoc_not_yet_declared() {

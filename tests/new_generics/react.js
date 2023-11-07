@@ -10,8 +10,8 @@ type Props = $ReadOnly<{
 function a<Props: Props>() {
   declare var a: React.ComponentType<Props>;
   declare var b: React.Component<{+a: number}>;
-  (a: React.ComponentType<{a: number}>); // nope, contravariance
-  (b: React.Component<Props>); // nope
+  a as React.ComponentType<{a: number}>; // nope, contravariance
+  b as React.Component<Props>; // nope
 }
 
 type DefaultProps = {|
@@ -77,7 +77,7 @@ export type PCCP = {
 export function withCommentsConfig<TProps: PCCP>(
   Component: React.ComponentType<TProps>,
 ): React.ComponentType<$Diff<TProps, PCCP>> {
-  return function(props) {
+  return function (props) {
     return <Component {...props} commentsConfig={42} />;
   };
 }

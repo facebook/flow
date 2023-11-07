@@ -53,7 +53,7 @@ class ObjectUtils {
 
   static stableFilteredCopy<T: mixed>(value: T): T {
     const stable = {};
-    return (stable: any);
+    return stable as any;
   }
 }
 

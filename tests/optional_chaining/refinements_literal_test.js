@@ -4,17 +4,17 @@ type S = ?{type: 'foo'};
 declare var x: S;
 
 if (x?.type === 'foo') {
-  (x.type: 'foo');
-  (x.type: 'foo');
-  (x: {type: 'foo'});
+  x.type as 'foo';
+  x.type as 'foo';
+  x as {type: 'foo'};
 } else {
-  (x: null | void)
+  x as null | void;
 }
 
 if (x?.type !== 'foo') {
-  (x: null | void)
+  x as null | void;
 } else {
-  (x.type: 'foo');
-  (x.type: 'foo');
-  (x: {type: 'foo'});
+  x.type as 'foo';
+  x.type as 'foo';
+  x as {type: 'foo'};
 }

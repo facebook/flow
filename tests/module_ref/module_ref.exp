@@ -39,38 +39,38 @@ Importing from an untyped module makes it `any` and is not safe! Did you mean to
          ^^^^^
 
 
-Error -------------------------------------------------------------------------------------------------------- G.js:34:6
+Error -------------------------------------------------------------------------------------------------------- G.js:34:5
 
 Cannot cast `E` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
-   G.js:34:6
-   34|     (E: number); // Error - E exports string
-            ^
+   G.js:34:5
+   34|     E as number; // Error - E exports string
+           ^
 
 References:
    E.js:5:25
     5| declare module.exports: string;
                                ^^^^^^ [1]
-   G.js:34:9
-   34|     (E: number); // Error - E exports string
-               ^^^^^^ [2]
+   G.js:34:10
+   34|     E as number; // Error - E exports string
+                ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------------- G.js:35:6
+Error -------------------------------------------------------------------------------------------------------- G.js:35:5
 
 Cannot cast `F` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   G.js:35:6
-   35|     (F: string); // Error - F exports number
-            ^
+   G.js:35:5
+   35|     F as string; // Error - F exports number
+           ^
 
 References:
    F.js:5:25
     5| declare module.exports: number;
                                ^^^^^^ [1]
-   G.js:35:9
-   35|     (F: string); // Error - F exports number
-               ^^^^^^ [2]
+   G.js:35:10
+   35|     F as string; // Error - F exports number
+                ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- object_prop.js:5:4

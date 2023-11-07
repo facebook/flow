@@ -1,40 +1,40 @@
-Error ----------------------------------------------------------------------------------------------------- array.js:7:2
+Error ----------------------------------------------------------------------------------------------------- array.js:7:1
 
 Cannot cast array literal to `Iterable` because string [1] is incompatible with number [2] in type argument `Yield` [3]
 of the return value of property `@@iterator`. [incompatible-cast]
 
-   array.js:7:2
-      7| (["hi"]: Iterable<number>); // Error string ~> number
-          ^^^^^^
+   array.js:7:1
+      7| ['hi'] as Iterable<number>; // Error string ~> number
+         ^^^^^^
 
 References:
-   array.js:7:3
-      7| (["hi"]: Iterable<number>); // Error string ~> number
-           ^^^^ [1]
-   array.js:7:19
-      7| (["hi"]: Iterable<number>); // Error string ~> number
-                           ^^^^^^ [2]
+   array.js:7:2
+      7| ['hi'] as Iterable<number>; // Error string ~> number
+          ^^^^ [1]
+   array.js:7:20
+      7| ['hi'] as Iterable<number>; // Error string ~> number
+                            ^^^^^^ [2]
    <BUILTINS>/core.js:1756:22
    1756| interface $Iterator<+Yield,+Return,-Next> {
                               ^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------------- array.js:8:2
+Error ----------------------------------------------------------------------------------------------------- array.js:8:1
 
 Cannot cast array literal to `Iterable` because number [1] is incompatible with string [2] in type argument `Yield` [3]
 of the return value of property `@@iterator`. [incompatible-cast]
 
-   array.js:8:2
-      8| (["hi", 1]: Iterable<string>); // Error number ~> string
-          ^^^^^^^^^
+   array.js:8:1
+      8| ['hi', 1] as Iterable<string>; // Error number ~> string
+         ^^^^^^^^^
 
 References:
-   array.js:8:9
-      8| (["hi", 1]: Iterable<string>); // Error number ~> string
-                 ^ [1]
-   array.js:8:22
-      8| (["hi", 1]: Iterable<string>); // Error number ~> string
-                              ^^^^^^ [2]
+   array.js:8:8
+      8| ['hi', 1] as Iterable<string>; // Error number ~> string
+                ^ [1]
+   array.js:8:23
+      8| ['hi', 1] as Iterable<string>; // Error number ~> string
+                               ^^^^^^ [2]
    <BUILTINS>/core.js:1756:22
    1756| interface $Iterator<+Yield,+Return,-Next> {
                               ^^^^^ [3]

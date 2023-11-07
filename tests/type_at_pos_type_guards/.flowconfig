@@ -8,6 +8,7 @@
 
 [options]
 all=true
+casting_syntax=both
 enums=true
 no_flowlib=false
 

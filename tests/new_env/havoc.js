@@ -5,26 +5,24 @@ function f() {
 }
 
 var ya: number;
-(ya: number)
+ya as number;
 
-
-
-const externalProps : {s: ?{field: string}} = {s : {field : "foo"}}
-function mandatory(s : { field: string} ){ }
+const externalProps: {s: ?{field: string}} = {s: {field: 'foo'}};
+function mandatory(s: {field: string}) {}
 
 externalProps.s && modifyProps() && mandatory(externalProps.s);
 
-function modifyProps(){
-    externalProps.s = null;
-    return true;
+function modifyProps() {
+  externalProps.s = null;
+  return true;
 }
 
 let x: number | string = 42;
 let y: number | string = 42;
 
 function havoc() {
-    x = 42;
+  x = 42;
 }
 
-(typeof x === 'string') && havoc() && (x: string);
-(typeof y === 'string') && havoc() && (y: string);
+typeof x === 'string' && havoc() && (x as string);
+typeof y === 'string' && havoc() && (y as string);

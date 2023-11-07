@@ -9,6 +9,6 @@ class X {
     if (typeof this.p === 'number') {
       this.p = 'foo';
     }
-    (this.p: number);
+    this.p as number;
   }
 }

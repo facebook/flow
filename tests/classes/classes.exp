@@ -251,72 +251,72 @@ References:
            ^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- statics.js:10:2
+Error -------------------------------------------------------------------------------------------------- statics.js:10:1
 
 Cannot cast `C` to object type because string [1] is incompatible with number [2] in property `p`. [incompatible-cast]
 
-   statics.js:10:2
-   10| (C: {p:number}); // errors, string ~> number & vice versa (unify)
-        ^
+   statics.js:10:1
+   10| C as {p: number}; // errors, string ~> number & vice versa (unify)
+       ^
 
 References:
    statics.js:4:13
     4|   static p: string;
                    ^^^^^^ [1]
-   statics.js:10:8
-   10| (C: {p:number}); // errors, string ~> number & vice versa (unify)
-              ^^^^^^ [2]
+   statics.js:10:10
+   10| C as {p: number}; // errors, string ~> number & vice versa (unify)
+                ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- statics.js:13:2
+Error -------------------------------------------------------------------------------------------------- statics.js:13:1
 
 Cannot cast `o` to statics of `C` because object type [1] is incompatible with statics of `C` [2]. [incompatible-cast]
 
-   statics.js:13:2
-   13| (o: Class<C>); // error, object type incompatible with class type
-        ^
+   statics.js:13:1
+   13| o as Class<C>; // error, object type incompatible with class type
+       ^
 
 References:
    statics.js:12:16
-   12| declare var o: {p:number};
-                      ^^^^^^^^^^ [1]
-   statics.js:13:5
-   13| (o: Class<C>); // error, object type incompatible with class type
-           ^^^^^^^^ [2]
+   12| declare var o: {p: number};
+                      ^^^^^^^^^^^ [1]
+   statics.js:13:6
+   13| o as Class<C>; // error, object type incompatible with class type
+            ^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- statics.js:20:2
+Error -------------------------------------------------------------------------------------------------- statics.js:20:1
 
 Cannot cast `Dup1.x` to empty because function [1] is incompatible with empty [2]. [incompatible-cast]
 
-   statics.js:20:2
-   20| (Dup1.x: empty); // function ~> empty
-        ^^^^^^
+   statics.js:20:1
+   20| Dup1.x as empty; // function ~> empty
+       ^^^^^^
 
 References:
    statics.js:18:3
    18|   static x() {}
          ^^^^^^^^^^^^^ [1]
-   statics.js:20:10
-   20| (Dup1.x: empty); // function ~> empty
-                ^^^^^ [2]
+   statics.js:20:11
+   20| Dup1.x as empty; // function ~> empty
+                 ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- statics.js:27:2
+Error -------------------------------------------------------------------------------------------------- statics.js:27:1
 
 Cannot cast `Dup2.x` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
-   statics.js:27:2
-   27| (Dup2.x: empty); // string ~> empty
-        ^^^^^^
+   statics.js:27:1
+   27| Dup2.x as empty; // string ~> empty
+       ^^^^^^
 
 References:
    statics.js:25:13
    25|   static x: string;
                    ^^^^^^ [1]
-   statics.js:27:10
-   27| (Dup2.x: empty); // string ~> empty
-                ^^^^^ [2]
+   statics.js:27:11
+   27| Dup2.x as empty; // string ~> empty
+                 ^^^^^ [2]
 
 
 

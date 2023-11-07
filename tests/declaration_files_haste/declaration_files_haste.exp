@@ -6,89 +6,89 @@ Cannot resolve module `SomeOtherModule`. [cannot-resolve-module]
                                     ^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:7:2
+Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:7:1
 
 Cannot cast `min.fun()` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   foo/bar/nested_test.js:7:2
-   7| (min.fun(): string);
-       ^^^^^^^^^
+   foo/bar/nested_test.js:7:1
+   7| min.fun() as string;
+      ^^^^^^^^^
 
 References:
    external/_d3/min.js.flow:2:32
    2| declare export function fun(): number;
                                      ^^^^^^ [1]
-   foo/bar/nested_test.js:7:13
-   7| (min.fun(): string);
-                  ^^^^^^ [2]
+   foo/bar/nested_test.js:7:14
+   7| min.fun() as string;
+                   ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:8:2
+Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:8:1
 
 Cannot cast `corge.fun()` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   foo/bar/nested_test.js:8:2
-   8| (corge.fun(): string);
-       ^^^^^^^^^^^
+   foo/bar/nested_test.js:8:1
+   8| corge.fun() as string;
+      ^^^^^^^^^^^
 
 References:
    node_modules/qux/corge/lib/index.js.flow:2:32
    2| declare export function fun(): number;
                                      ^^^^^^ [1]
-   foo/bar/nested_test.js:8:15
-   8| (corge.fun(): string);
-                    ^^^^^^ [2]
+   foo/bar/nested_test.js:8:16
+   8| corge.fun() as string;
+                     ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ test.js:4:2
+Error ------------------------------------------------------------------------------------------------------ test.js:4:1
 
 Cannot cast `Implicit.fun()` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   test.js:4:2
-   4| (Implicit.fun(): string);
-       ^^^^^^^^^^^^^^
+   test.js:4:1
+   4| Implicit.fun() as string;
+      ^^^^^^^^^^^^^^
 
 References:
    ImplicitProvidesModule.js.flow:2:32
    2| declare export function fun(): number;
                                      ^^^^^^ [1]
-   test.js:4:18
-   4| (Implicit.fun(): string);
-                       ^^^^^^ [2]
+   test.js:4:19
+   4| Implicit.fun() as string;
+                        ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ test.js:8:2
+Error ------------------------------------------------------------------------------------------------------ test.js:8:1
 
 Cannot cast `Flow.x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   test.js:8:2
-   8| (Flow.x: empty); // error: should be number
-       ^^^^^^
+   test.js:8:1
+   8| Flow.x as empty; // error: should be number
+      ^^^^^^
 
 References:
    pragmas/Flow.js.flow:9:17
    9| export const x: number = 123;
                       ^^^^^^ [1]
-   test.js:8:10
-   8| (Flow.x: empty); // error: should be number
-               ^^^^^ [2]
+   test.js:8:11
+   8| Flow.x as empty; // error: should be number
+                ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:20:2
+Error ----------------------------------------------------------------------------------------------------- test.js:20:1
 
 Cannot cast `NotFlowShadowed.x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   test.js:20:2
-   20| (NotFlowShadowed.x: empty); // error: should be number
-        ^^^^^^^^^^^^^^^^^
+   test.js:20:1
+   20| NotFlowShadowed.x as empty; // error: should be number
+       ^^^^^^^^^^^^^^^^^
 
 References:
    pragmas/NotFlowShadowed.js.flow:8:17
     8| export const x: number = 123;
                        ^^^^^^ [1]
-   test.js:20:21
-   20| (NotFlowShadowed.x: empty); // error: should be number
-                           ^^^^^ [2]
+   test.js:20:22
+   20| NotFlowShadowed.x as empty; // error: should be number
+                            ^^^^^ [2]
 
 
 

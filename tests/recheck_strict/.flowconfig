@@ -7,4 +7,5 @@ nonstrict-import
 
 [options]
 all=true
+casting_syntax=both
 no_flowlib=true

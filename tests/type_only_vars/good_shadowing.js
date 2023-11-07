@@ -2,8 +2,8 @@
  * @flow
  */
 
-import typeof A from "./A.js";
-import type {Foo, Bar as Baz} from "./A.js";
+import typeof A from './A.js';
+import type {Foo, Bar as Baz} from './A.js';
 
 var A = require('./A.js');
 var Foo = A.Foo;
@@ -17,4 +17,4 @@ var o = Baz;
 // errors from value positions only
 var a: Foo = new Foo();
 var b: Foo = new A.Foo();
-(new A.Bar(): Baz);
+new A.Bar() as Baz;

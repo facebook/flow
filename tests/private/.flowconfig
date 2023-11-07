@@ -1,3 +1,4 @@
 [options]
 munge_underscores=true
 all=true
+casting_syntax=both

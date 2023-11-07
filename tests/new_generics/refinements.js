@@ -6,16 +6,16 @@ class C {
 
 function f<X>(x: X) {
   if (typeof x === 'number') {
-    (x: X);
-    (x: number);
-    (x: string); // nope
+    x as X;
+    x as number;
+    x as string; // nope
   }
-  (x: number); // nope
+  x as number; // nope
   var c = C;
   if (x instanceof C) {
-    (x: C);
-    (x: X);
-    (x: string); // nope
+    x as C;
+    x as X;
+    x as string; // nope
   }
-  (x: C); // nope
+  x as C; // nope
 }

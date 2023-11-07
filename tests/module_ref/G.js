@@ -29,9 +29,9 @@ class JSResourceReference<+T> {
 JSResourceReference.loadAll(
   [new JSResourceReference('m#E'), new JSResourceReference('m#F')],
   (E, F) => {
-    (E: string);
-    (F: number);
-    (E: number); // Error - E exports string
-    (F: string); // Error - F exports number
-  }
+    E as string;
+    F as number;
+    E as number; // Error - E exports string
+    F as string; // Error - F exports number
+  },
 );

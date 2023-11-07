@@ -1,4 +1,4 @@
 /* Copyright example */
 /* @flow */
 
-("": void); // error
+'' as void; // error

@@ -2,8 +2,8 @@
  * @flow
  */
 
-import typeof A from "./A.js";
-import type {Foo, Bar as Baz} from "./A.js";
+import typeof A from './A.js';
+import type {Foo, Bar as Baz} from './A.js';
 
 var actualA = require('./A.js');
 
@@ -14,4 +14,4 @@ var o = Baz;
 
 // But using it in a type should still work
 var a: Foo = new actualA.Foo();
-(new actualA.Bar(): Baz);
+new actualA.Bar() as Baz;

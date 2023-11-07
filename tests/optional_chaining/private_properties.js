@@ -1,17 +1,17 @@
 // @flow
 
 class X {
-  #foo: number
+  #foo: number;
   constructor() {
-    (this?.#foo: empty);
+    this?.#foo as empty;
   }
-};
+}
 
 class Y {
-  #bar: X
-  #baz: ?X
+  #bar: X;
+  #baz: ?X;
   constructor() {
-    (this?.#bar: empty);
-    (this?.#baz: empty);
+    this?.#bar as empty;
+    this?.#baz as empty;
   }
-};
+}

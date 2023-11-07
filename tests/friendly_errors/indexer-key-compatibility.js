@@ -4,4 +4,4 @@
  */
 
 declare var o: {[k: number]: any};
-(o: {[k: string]: any});
+o as {[k: string]: any};

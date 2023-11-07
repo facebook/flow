@@ -3,23 +3,23 @@ Error --------------------------------------------------------------------------
 Cannot call `a.push` because property `push` is missing in undefined [1]. [incompatible-use]
 
    positining.js:40:3
-   40| a.push("");
+   40| a.push('');
          ^^^^
 
 References:
-   positining.js:32:16
-   32|     get(): V | void;
-                      ^^^^ [1]
+   positining.js:32:14
+   32|   get(): V | void;
+                    ^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- positining.js:43:13
+Error ---------------------------------------------------------------------------------------------- positining.js:43:11
 
 Cannot call `map.set` with `new A()` bound to `value` because `A` [1] is incompatible with `Array` [2].
 [incompatible-call]
 
-   positining.js:43:13
-   43|     map.set(new A());
-                   ^^^^^^^ [1]
+   positining.js:43:11
+   43|   map.set(new A());
+                 ^^^^^^^ [1]
 
 References:
    positining.js:38:17

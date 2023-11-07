@@ -3,6 +3,6 @@
 
 declare function f(): React$Element<'a'> | React$Element<'b'>;
 
-module.exports = (f(): React$MixedElement);
+module.exports = (f() as React$MixedElement);
 > flow status
 No errors!

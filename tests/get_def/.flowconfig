@@ -1,5 +1,6 @@
 [options]
 all=true
+casting_syntax=both
 module.system=haste
 module.system.haste.module_ref_prefix=m#
 no_flowlib=true

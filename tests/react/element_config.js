@@ -16,11 +16,11 @@ class B extends React.Component<{p: ?number}> {
 }
 
 class C extends React.Component<{p: ?number}> {
-  static defaultProps: {p?: number} = ({}: {p?: number}); // OK
+  static defaultProps: {p?: number} = {} as {p?: number}; // OK
 }
 
 class D extends React.Component<{p: ?number}> {
-  static defaultProps: {p?: string} = ({}: {p?: string}); // OK
+  static defaultProps: {p?: string} = {} as {p?: string}; // OK
 }
 
 class E extends React.Component<{}> {
@@ -40,49 +40,49 @@ class H extends React.Component<{p?: ?number}> {
 }
 
 class I extends React.Component<{p?: ?number}> {
-  static defaultProps: {p?: number} = ({}: {p?: number}); // OK
+  static defaultProps: {p?: number} = {} as {p?: number}; // OK
 }
 
 class J extends React.Component<{p?: ?number}> {
-  static defaultProps: {p?: string} = ({}: {p?: string}); // Error: string ~> number
+  static defaultProps: {p?: string} = {} as {p?: string}; // Error: string ~> number
 }
 
-({}: React.ElementConfig<typeof A>); // OK
-({p: 42}: React.ElementConfig<typeof A>); // OK
-({p: 'foo'}: React.ElementConfig<typeof A>); // Error: string ~> number
+({}) as React.ElementConfig<typeof A>; // OK
+({p: 42}) as React.ElementConfig<typeof A>; // OK
+({p: 'foo'}) as React.ElementConfig<typeof A>; // Error: string ~> number
 
-({}: React.ElementConfig<typeof B>); // OK
-({p: 42}: React.ElementConfig<typeof B>); // OK
-({p: 'foo'}: React.ElementConfig<typeof B>); // Error: string ~> number
+({}) as React.ElementConfig<typeof B>; // OK
+({p: 42}) as React.ElementConfig<typeof B>; // OK
+({p: 'foo'}) as React.ElementConfig<typeof B>; // Error: string ~> number
 
-(({}: {}): React.ElementConfig<typeof C>); // Error: missing property `p`
-({p: 42}: React.ElementConfig<typeof C>); // OK
-({p: 'foo'}: React.ElementConfig<typeof C>); // Error: string ~> number
+({}) as {} as React.ElementConfig<typeof C>; // Error: missing property `p`
+({p: 42}) as React.ElementConfig<typeof C>; // OK
+({p: 'foo'}) as React.ElementConfig<typeof C>; // Error: string ~> number
 
-(({}: {}): React.ElementConfig<typeof D>); // Error: missing property `p`
-({p: 42}: React.ElementConfig<typeof D>); // OK
-({p: 'foo'}: React.ElementConfig<typeof D>); // Error: string ~> number
+({}) as {} as React.ElementConfig<typeof D>; // Error: missing property `p`
+({p: 42}) as React.ElementConfig<typeof D>; // OK
+({p: 'foo'}) as React.ElementConfig<typeof D>; // Error: string ~> number
 
-({}: React.ElementConfig<typeof E>); // OK
-({p: 42}: React.ElementConfig<typeof E>); // OK
-({p: 'foo'}: React.ElementConfig<typeof E>); // OK
+({}) as React.ElementConfig<typeof E>; // OK
+({p: 42}) as React.ElementConfig<typeof E>; // OK
+({p: 'foo'}) as React.ElementConfig<typeof E>; // OK
 
-(exactEmptyObject: React.ElementConfig<typeof F>); // OK
-({p: 42}: React.ElementConfig<typeof F>); // Error: extra property `p`
-({p: 'foo'}: React.ElementConfig<typeof F>); // Error: extra property `p`
+exactEmptyObject as React.ElementConfig<typeof F>; // OK
+({p: 42}) as React.ElementConfig<typeof F>; // Error: extra property `p`
+({p: 'foo'}) as React.ElementConfig<typeof F>; // Error: extra property `p`
 
-({}: React.ElementConfig<typeof G>); // OK
-({p: 42}: React.ElementConfig<typeof G>); // OK
-({p: 'foo'}: React.ElementConfig<typeof G>); // Error: string ~> number
+({}) as React.ElementConfig<typeof G>; // OK
+({p: 42}) as React.ElementConfig<typeof G>; // OK
+({p: 'foo'}) as React.ElementConfig<typeof G>; // Error: string ~> number
 
-({}: React.ElementConfig<typeof H>); // OK
-({p: 42}: React.ElementConfig<typeof H>); // OK
-({p: 'foo'}: React.ElementConfig<typeof H>); // Error: string ~> number
+({}) as React.ElementConfig<typeof H>; // OK
+({p: 42}) as React.ElementConfig<typeof H>; // OK
+({p: 'foo'}) as React.ElementConfig<typeof H>; // Error: string ~> number
 
-({}: React.ElementConfig<typeof I>); // OK
-({p: 42}: React.ElementConfig<typeof I>); // OK
-({p: 'foo'}: React.ElementConfig<typeof I>); // Error: string ~> number
+({}) as React.ElementConfig<typeof I>; // OK
+({p: 42}) as React.ElementConfig<typeof I>; // OK
+({p: 'foo'}) as React.ElementConfig<typeof I>; // Error: string ~> number
 
-({}: React.ElementConfig<typeof J>); // OK
-({p: 42}: React.ElementConfig<typeof J>); // OK
-({p: 'foo'}: React.ElementConfig<typeof J>); // Error: string ~> number
+({}) as React.ElementConfig<typeof J>; // OK
+({p: 42}) as React.ElementConfig<typeof J>; // OK
+({p: 'foo'}) as React.ElementConfig<typeof J>; // Error: string ~> number

@@ -1,6 +1,8 @@
 /* @flow */
 
 export type talias4 = number;
-export interface IFoo { prop: number };
+export interface IFoo {
+  prop: number;
+}
 
-module.exports = ({}: $TEMPORARY$object<{}>)
+module.exports = {} as $TEMPORARY$object<{}>;

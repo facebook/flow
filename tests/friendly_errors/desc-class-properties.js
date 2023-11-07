@@ -13,9 +13,9 @@ class X extends Y {
   #c: string;
 
   foo() {
-    (this.a: number); // Error: string ~> number
-    (super.a: number); // Error: string ~> number
-    (this.b: number); // Error: string ~> number
-    (this.#c: number); // Error: string ~> number
+    this.a as number; // Error: string ~> number
+    super.a as number; // Error: string ~> number
+    this.b as number; // Error: string ~> number
+    this.#c as number; // Error: string ~> number
   }
 }

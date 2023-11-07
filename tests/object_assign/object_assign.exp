@@ -1,129 +1,129 @@
-Error ------------------------------------------------------------------------------------------------------- A.js:14:21
+Error ------------------------------------------------------------------------------------------------------- A.js:16:21
 
 Cannot assign `Bad.foo()` to `bad` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   A.js:14:21
-   14|   var bad: number = Bad.foo();
+   A.js:16:21
+   16|   var bad: number = Bad.foo();
                            ^^^^^^^^^
 
 References:
-   A.js:8:43
-    8| var Bad = Object.assign(({}: {foo?: () => string}), EventEmitter.prototype, {
-                                                 ^^^^^^ [1]
-   A.js:14:12
-   14|   var bad: number = Bad.foo();
+   A.js:8:44
+    8| var Bad = Object.assign({} as {foo?: () => string}, EventEmitter.prototype, {
+                                                  ^^^^^^ [1]
+   A.js:16:12
+   16|   var bad: number = Bad.foo();
                   ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------- A.js:19:27
+Error ------------------------------------------------------------------------------------------------------- A.js:21:26
 
 Cannot cast object literal to object type because property `foo` is missing in object literal [1] but exists in object
 type [2]. [prop-missing]
 
-   A.js:19:27
-   19| var Good = Object.assign(({}: {foo: () => string}), MyEventEmitter.prototype, {
-                                 ^^ [1]
+   A.js:21:26
+   21| var Good = Object.assign({} as {foo: () => string}, MyEventEmitter.prototype, {
+                                ^^ [1]
 
 References:
-   A.js:19:31
-   19| var Good = Object.assign(({}: {foo: () => string}), MyEventEmitter.prototype, {
-                                     ^^^^^^^^^^^^^^^^^^^ [2]
+   A.js:21:32
+   21| var Good = Object.assign({} as {foo: () => string}, MyEventEmitter.prototype, {
+                                      ^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------- A.js:25:22
+Error ------------------------------------------------------------------------------------------------------- A.js:29:22
 
 Cannot assign `Good.foo()` to `good` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   A.js:25:22
-   25|   var good: number = Good.foo();
+   A.js:29:22
+   29|   var good: number = Good.foo();
                             ^^^^^^^^^^
 
 References:
-   A.js:19:43
-   19| var Good = Object.assign(({}: {foo: () => string}), MyEventEmitter.prototype, {
-                                                 ^^^^^^ [1]
-   A.js:25:13
-   25|   var good: number = Good.foo();
+   A.js:21:44
+   21| var Good = Object.assign({} as {foo: () => string}, MyEventEmitter.prototype, {
+                                                  ^^^^^^ [1]
+   A.js:29:13
+   29|   var good: number = Good.foo();
                    ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------- A.js:32:23
+Error ------------------------------------------------------------------------------------------------------- A.js:36:23
 
 Cannot assign `A.Good.foo()` to `good_` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   A.js:32:23
-   32|   var good_: number = A.Good.foo(); // string ~> number
+   A.js:36:23
+   36|   var good_: number = A.Good.foo(); // string ~> number
                              ^^^^^^^^^^^^
 
 References:
-   A.js:19:43
-   19| var Good = Object.assign(({}: {foo: () => string}), MyEventEmitter.prototype, {
-                                                 ^^^^^^ [1]
-   A.js:32:14
-   32|   var good_: number = A.Good.foo(); // string ~> number
+   A.js:21:44
+   21| var Good = Object.assign({} as {foo: () => string}, MyEventEmitter.prototype, {
+                                                  ^^^^^^ [1]
+   A.js:36:14
+   36|   var good_: number = A.Good.foo(); // string ~> number
                     ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------- A.js:35:22
+Error ------------------------------------------------------------------------------------------------------- A.js:39:22
 
 Cannot assign `f()` to `bad_` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   A.js:35:22
-   35|   var bad_: number = f(); // error: string ~> number
+   A.js:39:22
+   39|   var bad_: number = f(); // error: string ~> number
                             ^^^
 
 References:
-   A.js:8:43
-    8| var Bad = Object.assign(({}: {foo?: () => string}), EventEmitter.prototype, {
-                                                 ^^^^^^ [1]
-   A.js:35:13
-   35|   var bad_: number = f(); // error: string ~> number
+   A.js:8:44
+    8| var Bad = Object.assign({} as {foo?: () => string}, EventEmitter.prototype, {
+                                                  ^^^^^^ [1]
+   A.js:39:13
+   39|   var bad_: number = f(); // error: string ~> number
                    ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------- A.js:35:22
+Error ------------------------------------------------------------------------------------------------------- A.js:39:22
 
 Cannot call `f` because undefined [1] is not a function. [not-a-function]
 
-   A.js:35:22
-   35|   var bad_: number = f(); // error: string ~> number
+   A.js:39:22
+   39|   var bad_: number = f(); // error: string ~> number
                             ^
 
 References:
-   A.js:8:37
-    8| var Bad = Object.assign(({}: {foo?: () => string}), EventEmitter.prototype, {
-                                           ^^^^^^^^^^^^ [1]
+   A.js:8:38
+    8| var Bad = Object.assign({} as {foo?: () => string}, EventEmitter.prototype, {
+                                            ^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------------- A.js:37:23
+Error ------------------------------------------------------------------------------------------------------- A.js:41:23
 
 Cannot assign `A.Bad.foo()` to `bad__` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   A.js:37:23
-   37|   var bad__: number = A.Bad.foo(); // error: string, number (but `this` types are compatible)
+   A.js:41:23
+   41|   var bad__: number = A.Bad.foo(); // error: string, number (but `this` types are compatible)
                              ^^^^^^^^^^^
 
 References:
-   A.js:8:43
-    8| var Bad = Object.assign(({}: {foo?: () => string}), EventEmitter.prototype, {
-                                                 ^^^^^^ [1]
-   A.js:37:14
-   37|   var bad__: number = A.Bad.foo(); // error: string, number (but `this` types are compatible)
+   A.js:8:44
+    8| var Bad = Object.assign({} as {foo?: () => string}, EventEmitter.prototype, {
+                                                  ^^^^^^ [1]
+   A.js:41:14
+   41|   var bad__: number = A.Bad.foo(); // error: string, number (but `this` types are compatible)
                     ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------- A.js:37:29
+Error ------------------------------------------------------------------------------------------------------- A.js:41:29
 
 Cannot call `A.Bad.foo` because undefined [1] is not a function. [not-a-function]
 
-   A.js:37:29
-   37|   var bad__: number = A.Bad.foo(); // error: string, number (but `this` types are compatible)
+   A.js:41:29
+   41|   var bad__: number = A.Bad.foo(); // error: string, number (but `this` types are compatible)
                                    ^^^
 
 References:
-   A.js:8:37
-    8| var Bad = Object.assign(({}: {foo?: () => string}), EventEmitter.prototype, {
-                                           ^^^^^^^^^^^^ [1]
+   A.js:8:38
+    8| var Bad = Object.assign({} as {foo?: () => string}, EventEmitter.prototype, {
+                                            ^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:2:73
@@ -260,21 +260,21 @@ References:
                                 ^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- scope.js:33:4
+Error ---------------------------------------------------------------------------------------------------- scope.js:32:3
 
 Cannot cast `obj.attr` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
-   scope.js:33:4
-   33|   (obj.attr: number);
-          ^^^^^^^^
+   scope.js:32:3
+   32|   obj.attr as number;
+         ^^^^^^^^
 
 References:
-   scope.js:31:16
-   31|     obj.attr = "hello";
+   scope.js:30:16
+   30|     obj.attr = 'hello';
                       ^^^^^^^ [1]
-   scope.js:33:14
-   33|   (obj.attr: number);
-                    ^^^^^^ [2]
+   scope.js:32:15
+   32|   obj.attr as number;
+                     ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- spread.js:5:28

@@ -1,78 +1,73 @@
 //@flow
 
 interface I {
-  [string] : number;
-  constructor() : void
+  [string]: number;
+  constructor(): void;
 }
 
 class C {
-  x : number
+  x: number;
 }
 
-(new C : I);
-
+new C() as I;
 
 declare class C2 {
-  [string] : number;
-  x : number
+  [string]: number;
+  x: number;
 }
 
-(new C2 : I);
+new C2() as I;
 
 class A {
-    x : number
+  x: number;
 }
 
 class B extends A {
-    y : number
+  y: number;
 }
 
 interface J {
-    x : number;
-    y : number
+  x: number;
+  y: number;
 }
 
-(new A : J); // error
-(new B : J);
-
+new A() as J; // error
+new B() as J;
 
 class D {
-    static x : number
+  static x: number;
 }
 
 interface K {
-    x : number
+  x: number;
 }
 
-(new D : K); // error
-(D : K);
-
+new D() as K; // error
+D as K;
 
 class E {
-  static x : number
+  static x: number;
 }
 
 class F extends E {
-  static y : number
+  static y: number;
 }
 
 interface L {
-    x : number;
-    y : number
+  x: number;
+  y: number;
 }
 
-(E : L); // error
-(F : L);
+E as L; // error
+F as L;
 
-class G {
-}
+class G {}
 
 interface M {
-  z : number
+  z: number;
 }
 
-interface N extends M {
-}
+interface N extends M {}
 
-(new G : M); // error
-(new G : N); // error
+new G() as M; // error
+new G() as N; // error

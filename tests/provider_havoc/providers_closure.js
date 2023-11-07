@@ -1,9 +1,10 @@
 //@flow
 
-var x = null, y = null;
+var x = null,
+  y = null;
 function havoc() {
-    x = 21;
-    y = 31;
+  x = 21;
+  y = 31;
 }
 function havoc2() {
   y = 42; // a non provider write, so we dont get the special treatment for havocing that x does
@@ -12,15 +13,14 @@ function havoc2() {
 havoc();
 
 if (typeof x === 'number' && typeof y === 'number') {
-    (x: number);
-    (x: empty); // error, just to show that x is not empty
-    (y: number);
-    havoc();
-    (x: number);
-    (x: empty); // error similarly
-    (y: number); // error b/c y was fully havoced
+  x as number;
+  x as empty; // error, just to show that x is not empty
+  y as number;
+  havoc();
+  x as number;
+  x as empty; // error similarly
+  y as number; // error b/c y was fully havoced
 }
-
 
 var z = null;
 
@@ -29,20 +29,20 @@ function havocz() {
 }
 
 havocz();
-(z: number); // should fail, initial type of z was null
+z as number; // should fail, initial type of z was null
 
-if (typeof z === 'number'){
+if (typeof z === 'number') {
   havocz();
-  (z: number); //ok
+  z as number; //ok
 }
 
 // Calls on require should also havoc.
 if (typeof x === 'number' && typeof y === 'number') {
-    (x: number);
-    (x: empty); // error, just to show that x is not empty
-    (y: number);
-    require('./empty');
-    (x: number);
-    (x: empty); // error similarly
-    (y: number); // error b/c y was fully havoced
+  x as number;
+  x as empty; // error, just to show that x is not empty
+  y as number;
+  require('./empty');
+  x as number;
+  x as empty; // error similarly
+  y as number; // error b/c y was fully havoced
 }

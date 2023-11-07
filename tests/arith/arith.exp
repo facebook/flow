@@ -816,46 +816,46 @@ References:
             ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ relational.js:4:2
+Error ------------------------------------------------------------------------------------------------ relational.js:4:1
 
 Cannot compare number [1] to string [2]. [invalid-compare]
 
-   relational.js:4:2
-   4| (1 < "foo"); // error
-       ^ [1]
+   relational.js:4:1
+   4| 1 < 'foo'; // error
+      ^ [1]
 
 References:
-   relational.js:4:6
-   4| (1 < "foo"); // error
-           ^^^^^ [2]
+   relational.js:4:5
+   4| 1 < 'foo'; // error
+          ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ relational.js:5:2
+Error ------------------------------------------------------------------------------------------------ relational.js:5:1
 
 Cannot compare string [1] to number [2]. [invalid-compare]
 
-   relational.js:5:2
-   5| ("foo" < 1); // error
-       ^^^^^ [1]
+   relational.js:5:1
+   5| 'foo' < 1; // error
+      ^^^^^ [1]
 
 References:
-   relational.js:5:10
-   5| ("foo" < 1); // error
-               ^ [2]
+   relational.js:5:9
+   5| 'foo' < 1; // error
+              ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ relational.js:7:2
+Error ------------------------------------------------------------------------------------------------ relational.js:7:1
 
 Cannot compare number [1] to object literal [2]. [invalid-compare]
 
-   relational.js:7:2
-   7| (1 < {foo: 1}); // error
-       ^ [1]
+   relational.js:7:1
+   7| 1 < {foo: 1}; // error
+      ^ [1]
 
 References:
-   relational.js:7:6
-   7| (1 < {foo: 1}); // error
-           ^^^^^^^^ [2]
+   relational.js:7:5
+   7| 1 < {foo: 1}; // error
+          ^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ relational.js:8:2
@@ -863,13 +863,13 @@ Error --------------------------------------------------------------------------
 Cannot compare object literal [1] to number [2]. [invalid-compare]
 
    relational.js:8:2
-   8| ({foo: 1} < 1); // error
+   8| ({foo: 1}) < 1; // error
        ^^^^^^^^ [1]
 
 References:
-   relational.js:8:13
-   8| ({foo: 1} < 1); // error
-                  ^ [2]
+   relational.js:8:14
+   8| ({foo: 1}) < 1; // error
+                   ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ relational.js:9:2
@@ -877,27 +877,27 @@ Error --------------------------------------------------------------------------
 Cannot compare object literal [1] to object literal [2]. [invalid-compare]
 
    relational.js:9:2
-   9| ({foo: 1} < {foo: 1}); // error
+   9| ({foo: 1}) < {foo: 1}; // error
        ^^^^^^^^ [1]
 
 References:
-   relational.js:9:13
-   9| ({foo: 1} < {foo: 1}); // error
-                  ^^^^^^^^ [2]
+   relational.js:9:14
+   9| ({foo: 1}) < {foo: 1}; // error
+                   ^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- relational.js:10:2
+Error ----------------------------------------------------------------------------------------------- relational.js:10:1
 
 Cannot compare string [1] to object literal [2]. [invalid-compare]
 
-   relational.js:10:2
-   10| ("foo" < {foo: 1}); // error
-        ^^^^^ [1]
+   relational.js:10:1
+   10| 'foo' < {foo: 1}; // error
+       ^^^^^ [1]
 
 References:
-   relational.js:10:10
-   10| ("foo" < {foo: 1}); // error
-                ^^^^^^^^ [2]
+   relational.js:10:9
+   10| 'foo' < {foo: 1}; // error
+               ^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- relational.js:11:2
@@ -905,100 +905,100 @@ Error --------------------------------------------------------------------------
 Cannot compare object literal [1] to string [2]. [invalid-compare]
 
    relational.js:11:2
-   11| ({foo: 1} < "foo"); // error
+   11| ({foo: 1}) < 'foo'; // error
         ^^^^^^^^ [1]
 
 References:
-   relational.js:11:13
-   11| ({foo: 1} < "foo"); // error
-                   ^^^^^ [2]
+   relational.js:11:14
+   11| ({foo: 1}) < 'foo'; // error
+                    ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- relational.js:14:2
+Error ----------------------------------------------------------------------------------------------- relational.js:14:1
 
 Cannot compare number [1] to null or undefined [2]. [invalid-compare]
 
-   relational.js:14:2
-   14| (1 < x); // 2 errors: null !~> number; undefined !~> number
-        ^ [1]
+   relational.js:14:1
+   14| 1 < x; // 2 errors: null !~> number; undefined !~> number
+       ^ [1]
 
 References:
    relational.js:13:17
-   13| var x = (null : ?number);
+   13| var x = null as ?number;
                        ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- relational.js:15:2
+Error ----------------------------------------------------------------------------------------------- relational.js:15:1
 
 Cannot compare null or undefined [1] to number [2]. [invalid-compare]
 
-   relational.js:15:2
-   15| (x < 1); // 2 errors: null !~> number; undefined !~> number
-        ^
+   relational.js:15:1
+   15| x < 1; // 2 errors: null !~> number; undefined !~> number
+       ^
 
 References:
    relational.js:13:17
-   13| var x = (null : ?number);
+   13| var x = null as ?number;
                        ^^^^^^^ [1]
-   relational.js:15:6
-   15| (x < 1); // 2 errors: null !~> number; undefined !~> number
-            ^ [2]
+   relational.js:15:5
+   15| x < 1; // 2 errors: null !~> number; undefined !~> number
+           ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- relational.js:17:2
+Error ----------------------------------------------------------------------------------------------- relational.js:17:1
 
 Cannot compare null [1] to null [2]. [invalid-compare]
 
-   relational.js:17:2
-   17| (null < null); // error
-        ^^^^ [1]
+   relational.js:17:1
+   17| null < null; // error
+       ^^^^ [1]
 
 References:
-   relational.js:17:9
-   17| (null < null); // error
-               ^^^^ [2]
+   relational.js:17:8
+   17| null < null; // error
+              ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- relational.js:18:2
+Error ----------------------------------------------------------------------------------------------- relational.js:18:1
 
 Cannot compare undefined [1] to null [2]. [invalid-compare]
 
-   relational.js:18:2
-   18| (undefined < null); // error
-        ^^^^^^^^^ [1]
+   relational.js:18:1
+   18| undefined < null; // error
+       ^^^^^^^^^ [1]
 
 References:
-   relational.js:18:14
-   18| (undefined < null); // error
-                    ^^^^ [2]
+   relational.js:18:13
+   18| undefined < null; // error
+                   ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- relational.js:19:2
+Error ----------------------------------------------------------------------------------------------- relational.js:19:1
 
 Cannot compare null [1] to undefined [2]. [invalid-compare]
 
-   relational.js:19:2
-   19| (null < undefined); // error
-        ^^^^ [1]
+   relational.js:19:1
+   19| null < undefined; // error
+       ^^^^ [1]
 
 References:
-   relational.js:19:9
-   19| (null < undefined); // error
-               ^^^^^^^^^ [2]
+   relational.js:19:8
+   19| null < undefined; // error
+              ^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- relational.js:20:2
+Error ----------------------------------------------------------------------------------------------- relational.js:20:1
 
 Cannot compare undefined [1] to undefined [2]. [invalid-compare]
 
-   relational.js:20:2
-   20| (undefined < undefined); // error
-        ^^^^^^^^^ [1]
+   relational.js:20:1
+   20| undefined < undefined; // error
+       ^^^^^^^^^ [1]
 
 References:
-   relational.js:20:14
-   20| (undefined < undefined); // error
-                    ^^^^^^^^^ [2]
+   relational.js:20:13
+   20| undefined < undefined; // error
+                   ^^^^^^^^^ [2]
 
 
 

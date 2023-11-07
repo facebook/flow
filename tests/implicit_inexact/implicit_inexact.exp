@@ -26,47 +26,47 @@ Error --------------------------------------------------------------------------
 
 Please add `...` to the end of the list of properties to express an inexact object type. [implicit-inexact-object]
 
-   9| function test2(): {} { return {}; } // need ... in function return
+   9| function test2(): {} {
                         ^^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:12:7
+Error ----------------------------------------------------------------------------------------------------- test.js:14:7
 
 Please add `...` to the end of the list of properties to express an inexact object type. [implicit-inexact-object]
 
-   12| test3<{}>(); // need ... in generic function type parameter
+   14| test3<{}>(); // need ... in generic function type parameter
              ^^
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:14:12
+Error ---------------------------------------------------------------------------------------------------- test.js:16:12
 
 Please add `...` to the end of the list of properties to express an inexact object type. [implicit-inexact-object]
 
-   14| class A<T: {}> {} // need ... in upper bound of generic
+   16| class A<T: {}> {} // need ... in upper bound of generic
                   ^^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:17:7
+Error ----------------------------------------------------------------------------------------------------- test.js:19:7
 
 Please add `...` to the end of the list of properties to express an inexact object type. [implicit-inexact-object]
 
-   17| new B<{}>(); // need ... in generic class type parameter
+   19| new B<{}>(); // need ... in generic class type parameter
              ^^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:19:6
+Error ----------------------------------------------------------------------------------------------------- test.js:21:9
 
 Please add `...` to the end of the list of properties to express an inexact object type. [implicit-inexact-object]
 
-   19| ({}: {}); // need ... in cast
-            ^^
+   21| ({}) as {}; // need ... in cast
+               ^^
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:21:10
+Error ---------------------------------------------------------------------------------------------------- test.js:23:10
 
 Please add `...` to the end of the list of properties to express an inexact object type. [implicit-inexact-object]
 
-   21| const x: {} = {}; // need ... in annotation
+   23| const x: {} = {}; // need ... in annotation
                 ^^
 
 

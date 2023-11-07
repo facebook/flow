@@ -1,31 +1,31 @@
-Error --------------------------------------------------------------------------------------------------- basic.js:24:27
+Error --------------------------------------------------------------------------------------------------- basic.js:30:27
 
 Cannot assign `d` to `e` because explicit 'any' [1] is incompatible with trusted number [2]. [incompatible-trust]
 
-   basic.js:24:27
-   24| var e: $Trusted<number> = d; // fail
+   basic.js:30:27
+   30| var e: $Trusted<number> = d; // fail
                                  ^
 
 References:
-   basic.js:23:15
-   23| d = ('Hello': any) // ok
-                     ^^^ [1]
-   basic.js:24:8
-   24| var e: $Trusted<number> = d; // fail
+   basic.js:29:16
+   29| d = 'Hello' as any; // ok
+                      ^^^ [1]
+   basic.js:30:8
+   30| var e: $Trusted<number> = d; // fail
               ^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- errmsg.js:4:19
+Error --------------------------------------------------------------------------------------------------- errmsg.js:4:20
 
 Cannot assign `42` to `b` because private number [1] is incompatible with explicit 'any' [2]. [incompatible-trust]
 
-   errmsg.js:4:19
-   4| var b: any = (42: $Private<number>)
-                        ^^^^^^^^^^^^^^^^ [1]
+   errmsg.js:4:20
+   4| var b: any = 42 as $Private<number>;
+                         ^^^^^^^^^^^^^^^^ [1]
 
 References:
    errmsg.js:4:8
-   4| var b: any = (42: $Private<number>)
+   4| var b: any = 42 as $Private<number>;
              ^^^ [2]
 
 
@@ -94,7 +94,7 @@ Error --------------------------------------------------------------------------
 
 Not a valid type to mark as `$Trusted`. [invalid-trusted-type-arg]
 
-   7| declare var z: $Trusted<T>
+   7| declare var z: $Trusted<T>;
                      ^^^^^^^^^^^
 
 

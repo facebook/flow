@@ -11,24 +11,24 @@ bliffl.bar = '23456'; // error
 bliffl.baz = 3456; // error
 bliffl.corge; // error
 bliffl.constructor = baz; // error
-bliffl.toString = function() {}; // error
+bliffl.toString = function () {}; // error
 
 baz.baz = 0;
 
-var x : number = Object.freeze(123);
+var x: number = Object.freeze(123);
 
-var xx : { x: number } = Object.freeze({ x: "error" })
+var xx: {x: number} = Object.freeze({x: 'error'});
 
 function f(x: Object) {
-  (Object.freeze({...x}): Object); // ok
+  Object.freeze({...x}) as Object; // ok
 
   let y = Object.freeze({...x});
-  y.foo = "bar"; // there is no frozen form of AnyT so this is "allowed"
+  y.foo = 'bar'; // there is no frozen form of AnyT so this is "allowed"
 }
 
-var inexact: {...} = { p: 0 };
-(Object.freeze({...inexact}): {||}); // Error: inexact -> exact
+var inexact: {...} = {p: 0};
+Object.freeze({...inexact}) as {||}; // Error: inexact -> exact
 
 module.exports = {
   inexact: Object.freeze({...inexact}),
-}
+};

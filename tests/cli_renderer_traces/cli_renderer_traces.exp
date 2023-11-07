@@ -162,23 +162,23 @@ Trace:
       v
   6: ({
   7:   p: 42, // Error: number ~> empty
-  8: }: {
+  8: }) as {
      ^ ObjT [object literal]
-        v
-  8: }: {
+           v
+  8: }) as {
   9:   p: empty,
- 10: });
+ 10: };
      ^ ~> UseT(Cast, ObjT) [object type] (from path 3)
 * path 3:
       v
   6: ({
   7:   p: 42, // Error: number ~> empty
-  8: }: {
+  8: }) as {
      ^ ObjT [object literal]
-        v
-  8: }: {
+           v
+  8: }) as {
   9:   p: empty,
- 10: });
+ 10: };
      ^ ~> TypeCastT [object type]
 
 
@@ -208,14 +208,14 @@ Trace:
  13:   a: 1, // Error: number ~> empty
  14:   b: 2, // Error: number ~> empty
  15:   c: 3, // Error: number ~> empty
- 16: }: {
+ 16: }) as {
      ^ ObjT [object literal]
-        v
- 16: }: {
+           v
+ 16: }) as {
  17:   a: empty,
  18:   b: empty,
  19:   c: empty,
- 20: });
+ 20: };
      ^ ~> UseT(Cast, ObjT) [object type] (from path 3)
 * path 3:
       v
@@ -223,14 +223,14 @@ Trace:
  13:   a: 1, // Error: number ~> empty
  14:   b: 2, // Error: number ~> empty
  15:   c: 3, // Error: number ~> empty
- 16: }: {
+ 16: }) as {
      ^ ObjT [object literal]
-        v
- 16: }: {
+           v
+ 16: }) as {
  17:   a: empty,
  18:   b: empty,
  19:   c: empty,
- 20: });
+ 20: };
      ^ ~> TypeCastT [object type]
 
 
@@ -260,14 +260,14 @@ Trace:
  13:   a: 1, // Error: number ~> empty
  14:   b: 2, // Error: number ~> empty
  15:   c: 3, // Error: number ~> empty
- 16: }: {
+ 16: }) as {
      ^ ObjT [object literal]
-        v
- 16: }: {
+           v
+ 16: }) as {
  17:   a: empty,
  18:   b: empty,
  19:   c: empty,
- 20: });
+ 20: };
      ^ ~> UseT(Cast, ObjT) [object type] (from path 3)
 * path 3:
       v
@@ -275,14 +275,14 @@ Trace:
  13:   a: 1, // Error: number ~> empty
  14:   b: 2, // Error: number ~> empty
  15:   c: 3, // Error: number ~> empty
- 16: }: {
+ 16: }) as {
      ^ ObjT [object literal]
-        v
- 16: }: {
+           v
+ 16: }) as {
  17:   a: empty,
  18:   b: empty,
  19:   c: empty,
- 20: });
+ 20: };
      ^ ~> TypeCastT [object type]
 
 
@@ -312,14 +312,14 @@ Trace:
  13:   a: 1, // Error: number ~> empty
  14:   b: 2, // Error: number ~> empty
  15:   c: 3, // Error: number ~> empty
- 16: }: {
+ 16: }) as {
      ^ ObjT [object literal]
-        v
- 16: }: {
+           v
+ 16: }) as {
  17:   a: empty,
  18:   b: empty,
  19:   c: empty,
- 20: });
+ 20: };
      ^ ~> UseT(Cast, ObjT) [object type] (from path 3)
 * path 3:
       v
@@ -327,14 +327,14 @@ Trace:
  13:   a: 1, // Error: number ~> empty
  14:   b: 2, // Error: number ~> empty
  15:   c: 3, // Error: number ~> empty
- 16: }: {
+ 16: }) as {
      ^ ObjT [object literal]
-        v
- 16: }: {
+           v
+ 16: }) as {
  17:   a: empty,
  18:   b: empty,
  19:   c: empty,
- 20: });
+ 20: };
      ^ ~> TypeCastT [object type]
 
 

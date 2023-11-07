@@ -8,32 +8,32 @@ enum E {
 const trigger = null;
 
 // $PropertyType
-(E.A: $PropertyType<typeof E, 'A'>); // OK
-(trigger: $PropertyType<typeof E, 'X'>); // Error: `X` is not a member of enum `E`
+E.A as $PropertyType<typeof E, 'A'>; // OK
+trigger as $PropertyType<typeof E, 'X'>; // Error: `X` is not a member of enum `E`
 
 // $ElementType
-(trigger: $ElementType<typeof E, string>); // Error: computed access is not allowed on enums
+trigger as $ElementType<typeof E, string>; // Error: computed access is not allowed on enums
 
 // $Diff
-(trigger: $Diff<typeof E, {A: E}>); // Error: enum  `E` is not an object
+trigger as $Diff<typeof E, {A: E}>; // Error: enum  `E` is not an object
 
 // $ReadOnly
-(trigger: $ReadOnly<typeof E>); // Error: enum `E` is not an object
+trigger as $ReadOnly<typeof E>; // Error: enum `E` is not an object
 
 // $Keys
-("A": $Keys<typeof E>); // Error: TODO: improve error
+'A' as $Keys<typeof E>; // Error: TODO: improve error
 
 // $Values
-(trigger: $Values<typeof E>); // Error
+trigger as $Values<typeof E>; // Error
 
 // $Exact
-(E: $Exact<typeof E>); // Error: TODO: improve error
+E as $Exact<typeof E>; // Error: TODO: improve error
 
 // $Rest
-(trigger: $Rest<typeof E, {A: E}>); // Error: enum  `E` is not an object
+trigger as $Rest<typeof E, {A: E}>; // Error: enum  `E` is not an object
 
 // $ObjMap
-(trigger: $ObjMap<typeof E, <T>(T) => [T]>); // Error: enum `E` is not a valid arg to $ObjMap
+trigger as $ObjMap<typeof E, <T>(T) => [T]>; // Error: enum `E` is not a valid arg to $ObjMap
 
 // $ObjMapi
-(trigger: $ObjMapi<typeof E, <K, V>(K, V) => [K, V]>); // Error: enum `E` is not a valid arg to $ObjMapi
+trigger as $ObjMapi<typeof E, <K, V>(K, V) => [K, V]>; // Error: enum `E` is not a valid arg to $ObjMapi

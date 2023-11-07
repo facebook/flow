@@ -8,7 +8,7 @@ function f<X: string, Y: 'lit', Z: 'prop'>(
 ) {
   a[x] = 'hi';
   a['foo'] = 'hi'; // nope
-  (a[x]: string);
+  a[x] as string;
   a['foo']; // allowed as a result of assignment above
   b[x] = 42; // nope
   b[y] = 42; // nope

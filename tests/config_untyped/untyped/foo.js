@@ -1,5 +1,5 @@
 /* @flow */
 
-("string": number); // No error, this file is untyped
+'string' as number; // No error, this file is untyped
 
-module.exports = "foo";
+module.exports = 'foo';

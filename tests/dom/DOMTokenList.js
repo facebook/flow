@@ -2,64 +2,64 @@
 
 let tests = [
   //length
-  function(element: DOMTokenList) {
-    (element.length: number);
+  function (element: DOMTokenList) {
+    element.length as number;
   },
 
   //item
-  function(element: DOMTokenList) {
-    (element.item(1): string);
+  function (element: DOMTokenList) {
+    element.item(1) as string;
   },
 
   //contains
-  function(element: DOMTokenList) {
-    (element.contains('test-token'): boolean);
+  function (element: DOMTokenList) {
+    element.contains('test-token') as boolean;
   },
 
   //add
-  function(element: DOMTokenList) {
+  function (element: DOMTokenList) {
     element.add('test-class');
     element.add('class-one', 'class-two');
   },
 
   //remove
-  function(element: DOMTokenList) {
-    (element.remove('token'): void);
-    (element.remove('token', 'token'): void);
+  function (element: DOMTokenList) {
+    element.remove('token') as void;
+    element.remove('token', 'token') as void;
   },
 
   //toggle
-  function(element: DOMTokenList) {
-    (element.toggle('test-token'): boolean);
-    (element.toggle('test-token', true): boolean);
+  function (element: DOMTokenList) {
+    element.toggle('test-token') as boolean;
+    element.toggle('test-token', true) as boolean;
   },
 
   //replace
-  function(element: DOMTokenList) {
-    (element.replace('old-token', 'new-token'): boolean);
+  function (element: DOMTokenList) {
+    element.replace('old-token', 'new-token') as boolean;
   },
 
   //forEach
-  function(element: DOMTokenList) {
-    (element.forEach((value, index, list) => {
+  function (element: DOMTokenList) {
+    element.forEach((value, index, list) => {
       const testValue: string = value;
       const testIndex: number = index;
       const testList: DOMTokenList = list;
-    }): void);
+    }) as void;
   },
 
   //entries
-  function(element: DOMTokenList) {
-    (element.entries(): Iterator<[number, string]>);
+  function (element: DOMTokenList) {
+    element.entries() as Iterator<[number, string]>;
   },
 
   //keys
-  function(element: DOMTokenList) {
-    (element.keys(): Iterator<number>);
+  function (element: DOMTokenList) {
+    element.keys() as Iterator<number>;
   },
 
   //values
-  function(element: DOMTokenList) {
-    (element.values(): Iterator<string>);
+  function (element: DOMTokenList) {
+    element.values() as Iterator<string>;
   },
 ];

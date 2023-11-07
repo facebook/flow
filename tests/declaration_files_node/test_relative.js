@@ -2,15 +2,15 @@
 
 // This will require ./A.js.flow
 var A1 = require('./A');
-(A1.fun(): string); // Error number ~> string
+A1.fun() as string; // Error number ~> string
 
 // This will require ./A.js.flow
 var A2 = require('./A.js');
-(A2.fun(): string); // Error number ~> string
+A2.fun() as string; // Error number ~> string
 
 var CJS = require('./CJS.js');
-(CJS: string);
-(CJS: number); // Error: string ~> number
+CJS as string;
+CJS as number; // Error: string ~> number
 
 // flowlint-next-line untyped-import:error
 require('./not_flow');

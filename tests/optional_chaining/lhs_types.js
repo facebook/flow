@@ -9,9 +9,9 @@ declare var empty: empty;
 declare var maybe: ?Foo;
 declare var union: Foo | null | void;
 
-(x?.foo: ?number); // no error, lint
-(mixed?.foo: ?number); // error, no lint
-(any?.foo: ?number); // no error, no lint
-(empty?.foo: ?number); // no error, no lint
-(maybe?.foo: ?number); // no error, no lint
-(union?.foo: ?number); // no error, no lint
+x?.foo as ?number; // no error, lint
+mixed?.foo as ?number; // error, no lint
+any?.foo as ?number; // no error, no lint
+empty?.foo as ?number; // no error, no lint
+maybe?.foo as ?number; // no error, no lint
+union?.foo as ?number; // no error, no lint

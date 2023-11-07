@@ -1,32 +1,32 @@
-Error -------------------------------------------------------------------------------------------- object_create.js:12:2
+Error -------------------------------------------------------------------------------------------- object_create.js:14:2
 
 Cannot cast object literal to `C` because object literal [1] is incompatible with `C` [2]. [incompatible-cast]
 
-   object_create.js:12:2
-   12| ({ foo: "foo" }: C);
-        ^^^^^^^^^^^^^^ [1]
+   object_create.js:14:2
+   14| ({foo: 'foo'}) as C;
+        ^^^^^^^^^^^^ [1]
 
 References:
-   object_create.js:12:18
-   12| ({ foo: "foo" }: C);
-                        ^ [2]
+   object_create.js:14:19
+   14| ({foo: 'foo'}) as C;
+                         ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- object_create.js:17:2
+Error -------------------------------------------------------------------------------------------- object_create.js:19:1
 
 Cannot cast `o` to `C` because `O` [1] is incompatible with `C` [2]. [incompatible-cast]
 
-   object_create.js:17:2
-   17| (o: C);
-        ^
+   object_create.js:19:1
+   19| o as C;
+       ^
 
 References:
-   object_create.js:16:16
-   16| declare var o: O;
+   object_create.js:18:16
+   18| declare var o: O;
                       ^ [1]
-   object_create.js:17:5
-   17| (o: C);
-           ^ [2]
+   object_create.js:19:6
+   19| o as C;
+            ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- object_entries.js:27:2

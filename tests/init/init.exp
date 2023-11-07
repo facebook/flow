@@ -397,21 +397,21 @@ References:
                 ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- let.js:17:18
+Error ----------------------------------------------------------------------------------------------------- let.js:17:19
 
 Cannot assign `x` to `z` because uninitialized variable [1] is incompatible with number [2]. [incompatible-type]
 
-   let.js:17:18
-   17|   let z:number = x;   // error
-                        ^
+   let.js:17:19
+   17|   let z: number = x; // error
+                         ^
 
 References:
    let.js:15:7
-   15|   let x:number;
+   15|   let x: number;
              ^ [1]
-   let.js:17:9
-   17|   let z:number = x;   // error
-               ^^^^^^ [2]
+   let.js:17:10
+   17|   let z: number = x; // error
+                ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- let.js:24:11
@@ -419,117 +419,117 @@ Error --------------------------------------------------------------------------
 Cannot use variable `x` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
 
    let.js:24:11
-   24|   let x = x;  // 'x' not initialized!
+   24|   let x = x; // 'x' not initialized!
                  ^
 
 References:
    let.js:24:7
-   24|   let x = x;  // 'x' not initialized!
+   24|   let x = x; // 'x' not initialized!
              ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- let.js:33:18
+Error ----------------------------------------------------------------------------------------------------- let.js:33:19
 
 Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
 [incompatible-type]
 
-   let.js:33:18
-   33|   var y:number = x; // error, possibly uninitialized
-                        ^
+   let.js:33:19
+   33|   var y: number = x; // error, possibly uninitialized
+                         ^
 
 References:
    let.js:29:7
-   29|   let x:number;
+   29|   let x: number;
              ^ [1]
-   let.js:33:9
-   33|   var y:number = x; // error, possibly uninitialized
-               ^^^^^^ [2]
+   let.js:33:10
+   33|   var y: number = x; // error, possibly uninitialized
+                ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- let.js:58:18
+Error ----------------------------------------------------------------------------------------------------- let.js:58:19
 
 Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
 [incompatible-type]
 
-   let.js:58:18
-   58|   var y:number = x; // error, possibly uninitialized
-                        ^
+   let.js:58:19
+   58|   var y: number = x; // error, possibly uninitialized
+                         ^
 
 References:
    let.js:49:7
-   49|   let x:number;
+   49|   let x: number;
              ^ [1]
-   let.js:58:9
-   58|   var y:number = x; // error, possibly uninitialized
-               ^^^^^^ [2]
+   let.js:58:10
+   58|   var y: number = x; // error, possibly uninitialized
+                ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- let.js:83:22
+Error ----------------------------------------------------------------------------------------------------- let.js:83:23
 
 Cannot use variable `x` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
 
-   let.js:83:22
-   83|       let y:number = x; // error, skipped declaration
-                            ^
+   let.js:83:23
+   83|       let y: number = x; // error, skipped declaration
+                             ^
 
 References:
    let.js:81:11
-   81|       let x:number;
+   81|       let x: number;
                  ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- let.js:93:18
+Error ----------------------------------------------------------------------------------------------------- let.js:93:19
 
 Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
 [incompatible-type]
 
-   let.js:93:18
-   93|   var y:number = x; // error
-                        ^
+   let.js:93:19
+   93|   var y: number = x; // error
+                         ^
 
 References:
    let.js:89:7
-   89|   let x:number;
+   89|   let x: number;
              ^ [1]
-   let.js:93:9
-   93|   var y:number = x; // error
-               ^^^^^^ [2]
+   let.js:93:10
+   93|   var y: number = x; // error
+                ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- let.js:111:18
+Error ---------------------------------------------------------------------------------------------------- let.js:111:19
 
 Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
 [incompatible-type]
 
-   let.js:111:18
-   111|   var y:number = x; // error
-                         ^
+   let.js:111:19
+   111|   var y: number = x; // error
+                          ^
 
 References:
    let.js:107:7
-   107|   var x:number;
+   107|   var x: number;
               ^ [1]
-   let.js:111:9
-   111|   var y:number = x; // error
-                ^^^^^^ [2]
+   let.js:111:10
+   111|   var y: number = x; // error
+                 ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- let.js:120:18
+Error ---------------------------------------------------------------------------------------------------- let.js:120:19
 
 Cannot assign `x` to `y` because possibly uninitialized variable [1] is incompatible with number [2].
 [incompatible-type]
 
-   let.js:120:18
-   120|   var y:number = x; // error
-                         ^
+   let.js:120:19
+   120|   var y: number = x; // error
+                          ^
 
 References:
    let.js:116:7
-   116|   var x:number;
+   116|   var x: number;
               ^ [1]
-   let.js:120:9
-   120|   var y:number = x; // error
-                ^^^^^^ [2]
+   let.js:120:10
+   120|   var y: number = x; // error
+                 ^^^^^^ [2]
 
 
 

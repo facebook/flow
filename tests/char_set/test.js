@@ -1,26 +1,26 @@
 /* @flow */
 
-type C$flags = $CharSet<"ab">
+type C$flags = $CharSet<'ab'>;
 
 declare class C {
-    constructor(flags?: C$flags): C;
+  constructor(flags?: C$flags): C;
 }
 
 function f() {
-  ("a": $CharSet<"ab">); // ok
-  ("b": $CharSet<"ab">); // ok
-  ("ab": $CharSet<"ab">); // ok
-  ("ba": $CharSet<"ab">); // ok
-  ("aaaa": $CharSet<"ab">); // error
-  ("c": $CharSet<"ab">); // error
-  ("ac": $CharSet<"ab">); // error
+  'a' as $CharSet<'ab'>; // ok
+  'b' as $CharSet<'ab'>; // ok
+  'ab' as $CharSet<'ab'>; // ok
+  'ba' as $CharSet<'ab'>; // ok
+  'aaaa' as $CharSet<'ab'>; // error
+  'c' as $CharSet<'ab'>; // error
+  'ac' as $CharSet<'ab'>; // error
 }
 
 function g(x: C$flags) {
   new C(x);
 }
-g("abcd");
+g('abcd');
 
-function h(x: $CharSet<"ab">) {
-  (x: "foo");
+function h(x: $CharSet<'ab'>) {
+  x as 'foo';
 }

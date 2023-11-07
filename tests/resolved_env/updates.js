@@ -2,13 +2,12 @@
 
 var x = 42;
 x++;
-(++x: empty); // err
-(x: empty); // err
+++x as empty; // err
+x as empty; // err
 x += 42;
-(x: empty); // err
+x as empty; // err
 x -= 42;
-(x: empty); // err
-
+x as empty; // err
 
 {
   // Changing type
@@ -27,7 +26,7 @@ x -= 42;
   declare function expectNullable(null): A;
 
   let x: A | null = null;
-  x ??= (x: null);
+  x ??= x as null;
 }
 
 {
@@ -37,7 +36,13 @@ x -= 42;
   let x: null = null;
   let y: A = new A();
 
-  function alwaysThrows1(): number { x ??= invariant(false); } // Error
-  function alwaysThrows2(): number { y &&= invariant(false); } // Error
-  function alwaysThrows3(): number { x ||= invariant(false); } // Error
+  function alwaysThrows1(): number {
+    x ??= invariant(false);
+  } // Error
+  function alwaysThrows2(): number {
+    y &&= invariant(false);
+  } // Error
+  function alwaysThrows3(): number {
+    x ||= invariant(false);
+  } // Error
 }

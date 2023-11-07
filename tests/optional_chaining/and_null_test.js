@@ -8,7 +8,7 @@ function test1(data: ?Obj) {
   // ==> !(!(data != null && data.p != null) && !(data != null && data.q != null))
   // ==> (data != null && data.p != null) || (data != null && data.q != null)
   // Applied: data != null && (data.p != null || (data.q != null)
-  (data: Obj); // ok
+  data as Obj; // ok
 }
 
 function test2(data: ?{foo: {bar: ?Obj}}) {
@@ -16,6 +16,6 @@ function test2(data: ?{foo: {bar: ?Obj}}) {
 
   // Similar to the reasoning in test1 above, we will have:
   // data != null && data.foo.bar != null && (data.foo.bar.p != null || data.foo.bar.q != null)
-  (data: $NotNullOrVoid); // ok
-  (data.foo.bar: Obj); // ok
+  data as $NotNullOrVoid; // ok
+  data.foo.bar as Obj; // ok
 }

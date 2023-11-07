@@ -13,13 +13,13 @@ function foo(c: C, x: any): string {
 var any_fun1 = require('./nonflowfile');
 function bar1(x: mixed) {
   if (any_fun1(x)) {
-    (x: boolean);
+    x as boolean;
   }
 }
 
 var any_fun2 = require('./anyexportflowfile');
 function bar2(x: mixed) {
   if (any_fun2(x)) {
-    (x: boolean);
+    x as boolean;
   }
 }

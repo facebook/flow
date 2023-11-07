@@ -49,164 +49,164 @@ References:
                  ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- instanceof.js:17:34
+Error ---------------------------------------------------------------------------------------------- instanceof.js:23:32
 
 Cannot assign `'1337'` to `g.foo` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   instanceof.js:17:34
-   17|     if (g instanceof X1) g.foo = '1337';  // oops
-                                        ^^^^^^ [1]
+   instanceof.js:23:32
+   23|   if (g instanceof X1) g.foo = '1337'; // oops
+                                      ^^^^^^ [1]
 
 References:
-   instanceof.js:4:17
-    4| class X1 { foo: number; };
-                       ^^^^^^ [2]
+   instanceof.js:5:8
+    5|   foo: number;
+              ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- instanceof.js:34:42
+Error ---------------------------------------------------------------------------------------------- instanceof.js:46:40
 
 Cannot assign `'1337'` to `g.bar.foo` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   instanceof.js:34:42
-   34|     if (g.bar instanceof X1) g.bar.foo = '1337';  // oops
-                                                ^^^^^^ [1]
+   instanceof.js:46:40
+   46|   if (g.bar instanceof X1) g.bar.foo = '1337'; // oops
+                                              ^^^^^^ [1]
 
 References:
-   instanceof.js:4:17
-    4| class X1 { foo: number; };
-                       ^^^^^^ [2]
+   instanceof.js:5:8
+    5|   foo: number;
+              ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- instanceof.js:51:50
+Error ---------------------------------------------------------------------------------------------- instanceof.js:69:48
 
 Cannot assign `'1337'` to `g.baz.bar.foo` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   instanceof.js:51:50
-   51|     if (g.baz.bar instanceof X1) g.baz.bar.foo = '1337';  // oops
-                                                        ^^^^^^ [1]
+   instanceof.js:69:48
+   69|   if (g.baz.bar instanceof X1) g.baz.bar.foo = '1337'; // oops
+                                                      ^^^^^^ [1]
 
 References:
-   instanceof.js:4:17
-    4| class X1 { foo: number; };
-                       ^^^^^^ [2]
+   instanceof.js:5:8
+    5|   foo: number;
+              ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- instanceof.js:83:5
+Error ----------------------------------------------------------------------------------------------- instanceof.js:98:5
 
 Cannot perform arithmetic operation because array type [1] is not a number or bigint. [unsafe-arithmetic]
 
-   instanceof.js:83:5
-   83|     x++; // error
+   instanceof.js:98:5
+   98|     x++; // error
            ^
 
 References:
-   instanceof.js:81:18
-   81| function foo1(x: Array<number> | number) {
+   instanceof.js:96:18
+   96| function foo1(x: Array<number> | number) {
                         ^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- instanceof.js:85:7
+Error ---------------------------------------------------------------------------------------------- instanceof.js:100:7
 
 Cannot assign `123` to `x[0]` because an index signature declaring the expected key / value type is missing in
 number [1]. [incompatible-use]
 
-   instanceof.js:85:7
-   85|     x[0] = 123; // error
-             ^
+   instanceof.js:100:7
+   100|     x[0] = 123; // error
+              ^
 
 References:
-   instanceof.js:81:34
-   81| function foo1(x: Array<number> | number) {
-                                        ^^^^^^ [1]
+   instanceof.js:96:34
+    96| function foo1(x: Array<number> | number) {
+                                         ^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- instanceof.js:90:26
-
-The right-hand side of an `instanceof` expression must be an object, but got string [1]. [invalid-in-rhs]
-
-   90|   const y = x instanceof 'bad'; // error
-                                ^^^^^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------- instanceof.js:91:20
+Error --------------------------------------------------------------------------------------------- instanceof.js:105:26
 
 The right-hand side of an `instanceof` expression must be an object, but got string [1]. [invalid-in-rhs]
 
-   91|   if (x instanceof 'bad') {x;} // error
-                          ^^^^^ [1]
+   105|   const y = x instanceof 'bad'; // error
+                                 ^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- instanceof.js:93:28
+Error --------------------------------------------------------------------------------------------- instanceof.js:106:20
+
+The right-hand side of an `instanceof` expression must be an object, but got string [1]. [invalid-in-rhs]
+
+   106|   if (x instanceof 'bad') {
+                           ^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- instanceof.js:112:30
 
 The right-hand side of an `instanceof` expression must be an object, but got mixed [1]. [invalid-in-rhs]
 
-   93|   if (x instanceof ('bad': mixed)) {x;} // error
-                                  ^^^^^ [1]
+   112|   if (x instanceof ('bad' as mixed)) {
+                                     ^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- instanceof.js:110:6
+Error ---------------------------------------------------------------------------------------------- instanceof.js:132:5
 
 Cannot cast `x` to empty because `B` [1] is incompatible with empty [2]. [incompatible-cast]
 
-   instanceof.js:110:6
-   110|     (x: empty); //error
-             ^
+   instanceof.js:132:5
+   132|     x as empty; //error
+            ^
 
 References:
-   instanceof.js:109:20
-   109|   if (x instanceof A.B) {
+   instanceof.js:131:20
+   131|   if (x instanceof A.B) {
                            ^^^ [1]
-   instanceof.js:110:9
-   110|     (x: empty); //error
-                ^^^^^ [2]
+   instanceof.js:132:10
+   132|     x as empty; //error
+                 ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- instanceof.js:124:6
+Error ---------------------------------------------------------------------------------------------- instanceof.js:145:5
 
 Cannot cast `x` to empty because `B` [1] is incompatible with empty [2]. [incompatible-cast]
 
-   instanceof.js:124:6
-   124|     (x: empty); //error
-             ^
+   instanceof.js:145:5
+   145|     x as empty; //error
+            ^
 
 References:
-   instanceof.js:119:9
-   119|   class B {}
+   instanceof.js:140:9
+   140|   class B {}
                 ^ [1]
-   instanceof.js:124:9
-   124|     (x: empty); //error
-                ^^^^^ [2]
+   instanceof.js:145:10
+   145|     x as empty; //error
+                 ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- instanceof.js:136:20
+Error --------------------------------------------------------------------------------------------- instanceof.js:157:20
 
 The right-hand side of an `instanceof` expression must be an object, but got null or undefined [1]. [invalid-in-rhs]
 
-   instanceof.js:136:20
-   136|   if (x instanceof A?.B) { //error
+   instanceof.js:157:20
+   157|   if (x instanceof A?.B) {
                            ^
 
 References:
-   instanceof.js:134:18
-   134|   declare var A: ?{ B: Class<B>};
-                         ^^^^^^^^^^^^^^^ [1]
+   instanceof.js:155:18
+   155|   declare var A: ?{B: Class<B>};
+                         ^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- instanceof.js:137:6
+Error ---------------------------------------------------------------------------------------------- instanceof.js:159:5
 
 Cannot cast `x` to empty because `B` [1] is incompatible with empty [2]. [incompatible-cast]
 
-   instanceof.js:137:6
-   137|     (x: empty); //error
-             ^
+   instanceof.js:159:5
+   159|     x as empty; //error
+            ^
 
 References:
-   instanceof.js:132:9
-   132|   class B {}
+   instanceof.js:153:9
+   153|   class B {}
                 ^ [1]
-   instanceof.js:137:9
-   137|     (x: empty); //error
-                ^^^^^ [2]
+   instanceof.js:159:10
+   159|     x as empty; //error
+                 ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- mixed.js:4:6

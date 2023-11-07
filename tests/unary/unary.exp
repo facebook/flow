@@ -17,7 +17,7 @@ Error --------------------------------------------------------------------------
 Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
 
    unary.js:12:11
-   12|   return ~y;  // error, we don't allow coercion here
+   12|   return ~y; // error, we don't allow coercion here
                  ^
 
 References:
@@ -26,18 +26,18 @@ References:
                       ^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- unary.js:19:2
+Error ---------------------------------------------------------------------------------------------------- unary.js:19:1
 
 Cannot cast `-1` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
 
-   unary.js:19:2
-   19| (-1: void); // error, number ~> void
-        ^^ [1]
+   unary.js:19:1
+   19| -1 as void; // error, number ~> void
+       ^^ [1]
 
 References:
-   unary.js:19:6
-   19| (-1: void); // error, number ~> void
-            ^^^^ [2]
+   unary.js:19:7
+   19| -1 as void; // error, number ~> void
+             ^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- unary.js:28:10
@@ -84,18 +84,18 @@ References:
                        ^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- unary.js:73:4
+Error ---------------------------------------------------------------------------------------------------- unary.js:73:3
 
 Cannot cast `+y` to bigint because number [1] is incompatible with bigint [2]. [incompatible-cast]
 
-   unary.js:73:4
-   73|   (+y: bigint); // error, bigint ~> number
-          ^^ [1]
+   unary.js:73:3
+   73|   +y as bigint; // error, bigint ~> number
+         ^^ [1]
 
 References:
-   unary.js:73:8
-   73|   (+y: bigint); // error, bigint ~> number
-              ^^^^^^ [2]
+   unary.js:73:9
+   73|   +y as bigint; // error, bigint ~> number
+               ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- update.js:10:5

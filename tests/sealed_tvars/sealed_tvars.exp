@@ -18,16 +18,16 @@ Error --------------------------------------------------------------------------
 
 Cannot use `42.f(...)` [1] as a superclass. Only variables and member expressions may be extended [invalid-extends]
 
-   3| class C extends ((42: any): D).f(x => 42) {}
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   3| class C extends (42 as any as D).f(x => 42) {}
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ class_ext.js:3:34
+Error ------------------------------------------------------------------------------------------------ class_ext.js:3:36
 
 An annotation on `x` is required because Flow cannot infer its type from local context. [missing-local-annot]
 
-   3| class C extends ((42: any): D).f(x => 42) {}
-                                       ^
+   3| class C extends (42 as any as D).f(x => 42) {}
+                                         ^
 
 
 Error ---------------------------------------------------------------------------------------------------- enums.js:2:17
@@ -146,21 +146,21 @@ definition. To get the type of a non-class value, use `typeof`. [value-as-type]
              ^^^
 
 
-Error --------------------------------------------------------------------------------------------------- react.js:19:13
+Error --------------------------------------------------------------------------------------------------- react.js:21:10
 
 Cannot cast `Dialog.c` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
-   react.js:19:13
-   19|     return (Dialog.c: empty)
-                   ^^^^^^^^
+   react.js:21:10
+   21|   return Dialog.c as empty;
+                ^^^^^^^^
 
 References:
-   react.js:17:12
-   17| Dialog.c = ""; // OK
+   react.js:19:12
+   19| Dialog.c = ''; // OK
                   ^^ [1]
-   react.js:19:23
-   19|     return (Dialog.c: empty)
-                             ^^^^^ [2]
+   react.js:21:22
+   21|   return Dialog.c as empty;
+                            ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ regression_tests.js:9:8
@@ -439,20 +439,20 @@ Missing an annotation on implicit `this` parameter of function. [missing-this-an
                 ^^
 
 
-Error ----------------------------------------------------------------------------------------------------- this.js:9:19
+Error ----------------------------------------------------------------------------------------------------- this.js:9:18
 
 Missing an annotation on implicit `this` parameter of function. [missing-this-annot]
 
-   9|     foo = function(): void { //require this annot
-                        ^^
+   9|   foo = function (): void {
+                       ^^
 
 
-Error ---------------------------------------------------------------------------------------------------- this.js:12:33
+Error ---------------------------------------------------------------------------------------------------- this.js:13:32
 
 Missing an annotation on implicit `this` parameter of function. [missing-this-annot]
 
-   12|     foo_a: () => void = function(): void { // require this annot
-                                       ^^
+   13|   foo_a: () => void = function (): void {
+                                      ^^
 
 
 

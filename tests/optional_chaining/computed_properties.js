@@ -9,25 +9,25 @@ declare var x2: X;
 declare var y1: ?Y;
 declare var y2: Y;
 
-(x1?.["foo"]: empty);
-(x2?.["foo"]: empty);
+x1?.['foo'] as empty;
+x2?.['foo'] as empty;
 
-(y1?.["bar"]?.["foo"]: empty);
-(y2?.["bar"]?.["foo"]: empty);
-(y1?.["baz"]?.["foo"]: empty);
-(y2?.["baz"]?.["foo"]: empty);
+y1?.['bar']?.['foo'] as empty;
+y2?.['bar']?.['foo'] as empty;
+y1?.['baz']?.['foo'] as empty;
+y2?.['baz']?.['foo'] as empty;
 
-(y1?.["bar"]["foo"]: empty);
-(y2?.["bar"]["foo"]: empty);
-(y1?.["baz"]["foo"]: empty);
-(y2?.["baz"]["foo"]: empty);
+y1?.['bar']['foo'] as empty;
+y2?.['bar']['foo'] as empty;
+y1?.['baz']['foo'] as empty;
+y2?.['baz']['foo'] as empty;
 
-(y1["bar"]?.["foo"]: empty);
-(y2["bar"]?.["foo"]: empty);
-(y1["baz"]?.["foo"]: empty);
-(y2["baz"]?.["foo"]: empty);
+y1['bar']?.['foo'] as empty;
+y2['bar']?.['foo'] as empty;
+y1['baz']?.['foo'] as empty;
+y2['baz']?.['foo'] as empty;
 
-((y1?.["bar"])["foo"]: empty);
-((y2?.["bar"])["foo"]: empty);
-((y1?.["baz"])["foo"]: empty);
-((y2?.["baz"])["foo"]: empty);
+(y1?.['bar'])['foo'] as empty;
+(y2?.['bar'])['foo'] as empty;
+(y1?.['baz'])['foo'] as empty;
+(y2?.['baz'])['foo'] as empty;

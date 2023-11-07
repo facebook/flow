@@ -4,7 +4,6 @@
 var x = 10;
 var y: number = 10;
 
-
 function f(x: number): number {
   return x;
 }
@@ -19,5 +18,5 @@ var a: number = g(10);
 var b = a;
 var c: number = b;
 var d: number = b;
-d = (42: any);
+d = 42 as any;
 var e: $Trusted<number> = c;

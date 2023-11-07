@@ -16,10 +16,10 @@ class ObjectUtils {
 
 function makeEqualFn<T>(customEqual?: (T, T) => boolean): (T, T) => boolean {
   return customEqual
-    ? function(a, b) {
+    ? function (a, b) {
         return a === b || customEqual(a, b);
       }
-    : (42: any);
+    : (42 as any);
 }
 
 function o<X>(x: X) {
@@ -47,7 +47,6 @@ function fa<T>(a: T, b: boolean): T {
   }
   return xa[0];
 }
-
 
 function hh<X>({a}: {a: X}): X {
   return a;

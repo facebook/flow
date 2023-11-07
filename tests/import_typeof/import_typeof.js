@@ -6,8 +6,8 @@
 // == Importing Class Typeof (Default Export) == //
 ///////////////////////////////////////////////////
 
-import typeof ClassFoo1T from "./ExportDefault_Class";
-import ClassFoo1 from "./ExportDefault_Class";
+import typeof ClassFoo1T from './ExportDefault_Class';
+import ClassFoo1 from './ExportDefault_Class';
 
 var a1: ClassFoo1T = ClassFoo1;
 var a2: ClassFoo1T = new ClassFoo1(); // Error: ClassFoo1 (inst) ~> ClassFoo1 (class)
@@ -17,8 +17,8 @@ new ClassFoo1T(); // Error: ClassFoo1T is not bound to a value
 // == Importing Class Typeof (Named Export) == //
 /////////////////////////////////////////////////
 
-import typeof {ClassFoo2 as ClassFoo2T} from "./ExportNamed_Class";
-import {ClassFoo2} from "./ExportNamed_Class";
+import typeof {ClassFoo2 as ClassFoo2T} from './ExportNamed_Class';
+import {ClassFoo2} from './ExportNamed_Class';
 
 var b1: ClassFoo2T = ClassFoo2;
 var b2: ClassFoo2T = new ClassFoo2(); // Error: ClassFoo2 (inst) ~> ClassFoo2 (class)
@@ -28,8 +28,8 @@ new ClassFoo2T(); // Error: ClassFoo2T is not bound to a value
 // == Importing Class Typeof (CJS Default Export) == //
 ///////////////////////////////////////////////////////
 
-import typeof ClassFoo3T from "./ExportCJSDefault_Class";
-import ClassFoo3 from "./ExportCJSDefault_Class";
+import typeof ClassFoo3T from './ExportCJSDefault_Class';
+import ClassFoo3 from './ExportCJSDefault_Class';
 
 var c1: ClassFoo3T = ClassFoo3;
 var c2: ClassFoo3T = new ClassFoo3(); // Error: ClassFoo3 (inst) ~> ClassFoo3 (class)
@@ -38,8 +38,8 @@ var c2: ClassFoo3T = new ClassFoo3(); // Error: ClassFoo3 (inst) ~> ClassFoo3 (c
 // == Importing Class Typeof (CJS Named Export) == //
 /////////////////////////////////////////////////////
 
-import typeof {ClassFoo4 as ClassFoo4T} from "./ExportCJSNamed_Class";
-import {ClassFoo4} from "./ExportCJSNamed_Class";
+import typeof {ClassFoo4 as ClassFoo4T} from './ExportCJSNamed_Class';
+import {ClassFoo4} from './ExportCJSNamed_Class';
 
 var d1: ClassFoo4T = ClassFoo4;
 var d2: ClassFoo4T = new ClassFoo4(); // Error: ClassFoo4 (inst) ~> ClassFoo4 (class)
@@ -48,43 +48,43 @@ var d2: ClassFoo4T = new ClassFoo4(); // Error: ClassFoo4 (inst) ~> ClassFoo4 (c
 // == Importing Function Typeof (Default Export) == //
 //////////////////////////////////////////////////////
 
-import typeof functionFoo1T from "./ExportDefault_Function";
-import functionFoo1 from "./ExportDefault_Function";
-(functionFoo1: functionFoo1T);
-(() => {}: functionFoo1T); // Error: return types are not compatible
+import typeof functionFoo1T from './ExportDefault_Function';
+import functionFoo1 from './ExportDefault_Function';
+functionFoo1 as functionFoo1T;
+(() => {}) as functionFoo1T; // Error: return types are not compatible
 
 ////////////////////////////////////////////////////
 // == Importing Function Typeof (Named Export) == //
 ////////////////////////////////////////////////////
 
-import typeof {functionFoo2 as functionFoo2T} from "./ExportNamed_Function";
-import {functionFoo2} from "./ExportNamed_Function";
-(functionFoo2: functionFoo2T);
-(() => {}: functionFoo2T); // Error: return types are not compatible
+import typeof {functionFoo2 as functionFoo2T} from './ExportNamed_Function';
+import {functionFoo2} from './ExportNamed_Function';
+functionFoo2 as functionFoo2T;
+(() => {}) as functionFoo2T; // Error: return types are not compatible
 
 //////////////////////////////////////////////////////////
 // == Importing Function Typeof (CJS Default Export) == //
 //////////////////////////////////////////////////////////
 
-import typeof functionFoo3T from "./ExportCJSDefault_Function";
-import functionFoo3 from "./ExportCJSDefault_Function";
-(functionFoo3: functionFoo3T);
-(() => {}: functionFoo3T); // Error: return types are not compatible
+import typeof functionFoo3T from './ExportCJSDefault_Function';
+import functionFoo3 from './ExportCJSDefault_Function';
+functionFoo3 as functionFoo3T;
+(() => {}) as functionFoo3T; // Error: return types are not compatible
 
 ////////////////////////////////////////////////////////
 // == Importing Function Typeof (CJS Named Export) == //
 ////////////////////////////////////////////////////////
 
-import typeof {functionFoo4 as functionFoo4T} from "./ExportCJSNamed_Function";
-import {functionFoo4} from "./ExportCJSNamed_Function";
-(functionFoo4: functionFoo4T);
-(() => {}: functionFoo4T); // Error: return types are not compatible
+import typeof {functionFoo4 as functionFoo4T} from './ExportCJSNamed_Function';
+import {functionFoo4} from './ExportCJSNamed_Function';
+functionFoo4 as functionFoo4T;
+(() => {}) as functionFoo4T; // Error: return types are not compatible
 
 //////////////////////////////////////////////
 // == Import Typeof Alias (Named Export) == //
 //////////////////////////////////////////////
 
-import typeof {AliasFoo3} from "./ExportNamed_Alias"; // Error: Can't `import typeof` type aliases!
+import typeof {AliasFoo3} from './ExportNamed_Alias'; // Error: Can't `import typeof` type aliases!
 
 ////////////////////////////////////////////////
 // == Import Typeof Alias (Default Export) == //
@@ -98,7 +98,7 @@ import typeof {AliasFoo3} from "./ExportNamed_Alias"; // Error: Can't `import ty
 // == Import Typeof With Non-Class Value (Default Export) == //
 ///////////////////////////////////////////////////////////////
 
-import typeof num_default from "./ExportDefault_Number";
+import typeof num_default from './ExportDefault_Number';
 
 var f1: num_default = 42;
 var f2: num_default = 'asdf'; // Error: string ~> number
@@ -107,7 +107,7 @@ var f2: num_default = 'asdf'; // Error: string ~> number
 // == Import Typeof With Non-Class Value (Named Export) == //
 /////////////////////////////////////////////////////////////
 
-import typeof {num as num_named} from "./ExportNamed_Number";
+import typeof {num as num_named} from './ExportNamed_Number';
 
 var g1: num_named = 42;
 var g2: num_named = 'asdf'; // Error: string ~> number
@@ -116,7 +116,7 @@ var g2: num_named = 'asdf'; // Error: string ~> number
 // == Import Typeof With Non-Class Value (CJS Default Export) == //
 ///////////////////////////////////////////////////////////////////
 
-import typeof num_cjs_default from "./ExportCJSDefault_Number";
+import typeof num_cjs_default from './ExportCJSDefault_Number';
 
 var h1: num_cjs_default = 42;
 var h2: num_cjs_default = 'asdf'; // Error: string ~> number
@@ -125,7 +125,7 @@ var h2: num_cjs_default = 'asdf'; // Error: string ~> number
 // == Import Typeof With Non-Class Value (CJS Named Export) == //
 /////////////////////////////////////////////////////////////////
 
-import typeof {num as num_cjs_named} from "./ExportCJSNamed_Number";
+import typeof {num as num_cjs_named} from './ExportCJSNamed_Number';
 
 var i1: num_cjs_named = 42;
 var i2: num_cjs_named = 'asdf'; // Error: string ~> number
@@ -134,32 +134,31 @@ var i2: num_cjs_named = 'asdf'; // Error: string ~> number
 // == Import Typeof ModuleNamespaceObject == //
 ///////////////////////////////////////////////
 
-import typeof * as ModuleNSObjT from "./ExportNamed_Multi";
+import typeof * as ModuleNSObjT from './ExportNamed_Multi';
 var j1: ModuleNSObjT = {num: 42, str: 'asdf'};
 var j2: ModuleNSObjT = {num: 42, str: 42}; // Error: number ~> string
-
 
 ////////////////////////////////////////////////////
 // == Import typeof empty file with no exports == //
 ////////////////////////////////////////////////////
 
 import typeof E from './empty';
-({a: 1}: E); // Error
+({a: 1}) as E; // Error
 
 ///////////////////////////////////
 // == Unaliased typeof import == //
 ///////////////////////////////////
 
-import {typeof C, C as CImpl1} from "./ExportClassAndType";
+import {typeof C, C as CImpl1} from './ExportClassAndType';
 new CImpl1(); // ok
-(CImpl1: C); // ok
-("str": C); // Error
+CImpl1 as C; // ok
+'str' as C; // Error
 
 /////////////////////////////////
 // == Aliased typeof import == //
 /////////////////////////////////
 
-import {typeof C as CPrime, C as CImpl2} from "./ExportClassAndType";
+import {typeof C as CPrime, C as CImpl2} from './ExportClassAndType';
 new CImpl2(); // ok
-(CImpl2: CPrime); // ok
-("str": CPrime); // Error
+CImpl2 as CPrime; // ok
+'str' as CPrime; // Error

@@ -1,25 +1,25 @@
 // @flow
 
-let listener: EventListener = function (event: Event) :void {};
+let listener: EventListener = function (event: Event): void {};
 
 let tests = [
   // attachEvent
-  function() {
+  function () {
     let target = new EventTarget();
-    (target.attachEvent('foo', listener): void); // invalid, may be undefined
-    (target.attachEvent && target.attachEvent('foo', listener): void); // valid
+    target.attachEvent('foo', listener) as void; // invalid, may be undefined
+    (target.attachEvent && target.attachEvent('foo', listener)) as void; // valid
   },
 
   // detachEvent
-  function() {
+  function () {
     let target = new EventTarget();
-    (target.detachEvent('foo', listener): void); // invalid, may be undefined
-    (target.detachEvent && target.detachEvent('foo', listener): void); // valid
+    target.detachEvent('foo', listener) as void; // invalid, may be undefined
+    (target.detachEvent && target.detachEvent('foo', listener)) as void; // valid
   },
 
-  function() {
+  function () {
     window.onmessage = (event: MessageEvent) => {
-      (event.target: window);
+      event.target as window;
     };
   },
 ];

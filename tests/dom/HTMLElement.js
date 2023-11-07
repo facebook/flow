@@ -2,7 +2,7 @@
 
 let tests = [
   // hasAttributes
-  function(element: HTMLElement) {
+  function (element: HTMLElement) {
     element.hasAttributes();
 
     // fails
@@ -10,7 +10,7 @@ let tests = [
   },
 
   // scrollIntoView
-  function(element: HTMLElement) {
+  function (element: HTMLElement) {
     element.scrollIntoView();
     element.scrollIntoView(false);
     element.scrollIntoView({});
@@ -25,44 +25,44 @@ let tests = [
   },
 
   // functions with specific overloads
-  function(element: HTMLElement) {
+  function (element: HTMLElement) {
     const str: string = 'a';
     // broad
-    (element.getElementsByTagName(str): HTMLCollection<HTMLElement>);
-    (element.getElementsByTagNameNS(null, str): HTMLCollection<HTMLElement>);
-    (element.querySelector(str): HTMLElement | null);
-    (element.querySelectorAll(str): NodeList<HTMLElement>);
+    element.getElementsByTagName(str) as HTMLCollection<HTMLElement>;
+    element.getElementsByTagNameNS(null, str) as HTMLCollection<HTMLElement>;
+    element.querySelector(str) as HTMLElement | null;
+    element.querySelectorAll(str) as NodeList<HTMLElement>;
 
     // specific
-    (element.getElementsByTagName('a'): HTMLCollection<HTMLAnchorElement>);
-    (element.getElementsByTagNameNS(
+    element.getElementsByTagName('a') as HTMLCollection<HTMLAnchorElement>;
+    element.getElementsByTagNameNS(
       null,
       'a',
-    ): HTMLCollection<HTMLAnchorElement>);
-    (element.querySelector('a'): HTMLAnchorElement | null);
-    (element.querySelectorAll('a'): NodeList<HTMLAnchorElement>);
+    ) as HTMLCollection<HTMLAnchorElement>;
+    element.querySelector('a') as HTMLAnchorElement | null;
+    element.querySelectorAll('a') as NodeList<HTMLAnchorElement>;
 
     // overly broad input (fails)
-    (element.getElementsByTagName(str): HTMLCollection<HTMLAnchorElement>);
-    (element.getElementsByTagNameNS(
+    element.getElementsByTagName(str) as HTMLCollection<HTMLAnchorElement>;
+    element.getElementsByTagNameNS(
       null,
       str,
-    ): HTMLCollection<HTMLAnchorElement>);
-    (element.querySelector(str): HTMLAnchorElement | null);
-    (element.querySelectorAll(str): NodeList<HTMLAnchorElement>);
+    ) as HTMLCollection<HTMLAnchorElement>;
+    element.querySelector(str) as HTMLAnchorElement | null;
+    element.querySelectorAll(str) as NodeList<HTMLAnchorElement>;
 
     // wrong specific input (fails)
-    (element.getElementsByTagName('div'): HTMLCollection<HTMLAnchorElement>);
-    (element.getElementsByTagNameNS(
+    element.getElementsByTagName('div') as HTMLCollection<HTMLAnchorElement>;
+    element.getElementsByTagNameNS(
       null,
       'div',
-    ): HTMLCollection<HTMLAnchorElement>);
-    (element.querySelector('div'): HTMLAnchorElement | null);
-    (element.querySelectorAll('div'): NodeList<HTMLAnchorElement>);
+    ) as HTMLCollection<HTMLAnchorElement>;
+    element.querySelector('div') as HTMLAnchorElement | null;
+    element.querySelectorAll('div') as NodeList<HTMLAnchorElement>;
   },
 
   // focus
-  function(element: HTMLElement) {
+  function (element: HTMLElement) {
     element.focus();
     element.focus({});
     element.focus({preventScroll: true});

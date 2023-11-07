@@ -158,135 +158,138 @@ References:
                                          ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- object.js:32:3
+Error --------------------------------------------------------------------------------------------------- object.js:46:3
 
 Computed getters and setters are not yet supported. [unsupported-syntax]
 
-   32|   set [z](x: string) {},
+   46|   set [z](x: string) {},
          ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------------------- object.js:33:3
+Error --------------------------------------------------------------------------------------------------- object.js:47:3
 
 Computed getters and setters are not yet supported. [unsupported-syntax]
 
-   33|   get [z](): string { return string; },
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+         v------------------
+   47|   get [z](): string {
+   48|     return string;
+   49|   },
+         ^
 
 
-Error -------------------------------------------------------------------------------------------------- object.js:43:35
+Error -------------------------------------------------------------------------------------------------- object.js:59:35
 
 Cannot assign `obj.goodGetterWithAnnotation` to `testGetterWithError` because number [1] is incompatible with
 string [2]. [incompatible-type]
 
-   object.js:43:35
-   43| var testGetterWithError: string = obj.goodGetterWithAnnotation; // Error number ~> string
+   object.js:59:35
+   59| var testGetterWithError: string = obj.goodGetterWithAnnotation; // Error number ~> string
                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    object.js:12:35
-   12|   get goodGetterWithAnnotation(): number { return 4; },
+   12|   get goodGetterWithAnnotation(): number {
                                          ^^^^^^ [1]
-   object.js:43:26
-   43| var testGetterWithError: string = obj.goodGetterWithAnnotation; // Error number ~> string
+   object.js:59:26
+   59| var testGetterWithError: string = obj.goodGetterWithAnnotation; // Error number ~> string
                                 ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- object.js:47:32
+Error -------------------------------------------------------------------------------------------------- object.js:63:32
 
-Cannot assign `"hello"` to `obj.goodSetterWithAnnotation` because string [1] is incompatible with number [2].
+Cannot assign `'hello'` to `obj.goodSetterWithAnnotation` because string [1] is incompatible with number [2].
 [incompatible-type]
 
-   object.js:47:32
-   47| obj.goodSetterWithAnnotation = "hello"; // Error string ~> number
+   object.js:63:32
+   63| obj.goodSetterWithAnnotation = 'hello'; // Error string ~> number
                                       ^^^^^^^ [1]
 
 References:
-   object.js:14:35
-   14|   set goodSetterWithAnnotation(x: number) { z = x; },
+   object.js:16:35
+   16|   set goodSetterWithAnnotation(x: number) {
                                          ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- object.js:49:44
+Error -------------------------------------------------------------------------------------------------- object.js:65:44
 
 Cannot assign `obj.propWithSubtypingGetterAndSetter` to `testSubtypingGetterAndSetter` because null or undefined [1] is
 incompatible with number [2]. [incompatible-type]
 
-   object.js:49:44
-   49| var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+   object.js:65:44
+   65| var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   object.js:20:43
-   20|   get propWithSubtypingGetterAndSetter(): ?number { return 4; }, // OK
+   object.js:26:43
+   26|   get propWithSubtypingGetterAndSetter(): ?number {
                                                  ^^^^^^^ [1]
-   object.js:49:35
-   49| var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+   object.js:65:35
+   65| var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
                                          ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- object.js:54:39
+Error -------------------------------------------------------------------------------------------------- object.js:70:39
 
 Cannot assign `new C()` to `obj.exampleOfOrderOfGetterAndSetter` because `C` [1] is incompatible with `B` [2].
 [incompatible-type]
 
-   object.js:54:39
-   54| obj.exampleOfOrderOfGetterAndSetter = new C(); // Error C ~> B
+   object.js:70:39
+   70| obj.exampleOfOrderOfGetterAndSetter = new C(); // Error C ~> B
                                              ^^^^^^^ [1]
 
 References:
-   object.js:27:42
-   27|   set exampleOfOrderOfGetterAndSetter(x: B) {},
+   object.js:39:42
+   39|   set exampleOfOrderOfGetterAndSetter(x: B) {},
                                                 ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- object.js:58:3
+Error --------------------------------------------------------------------------------------------------- object.js:74:3
 
 Cannot assign `obj.exampleOfOrderOfGetterAndSetterReordered` to `testExampleOrOrderOfGetterAndSetterReordered` because
 `A` [1] is incompatible with number [2]. [incompatible-type]
 
-   object.js:58:3
-   58|   obj.exampleOfOrderOfGetterAndSetterReordered; // Error A ~> B
+   object.js:74:3
+   74|   obj.exampleOfOrderOfGetterAndSetterReordered; // Error A ~> B
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   object.js:30:51
-   30|   get exampleOfOrderOfGetterAndSetterReordered(): A { return new A(); },
+   object.js:42:51
+   42|   get exampleOfOrderOfGetterAndSetterReordered(): A {
                                                          ^ [1]
-   object.js:57:51
-   57| var testExampleOrOrderOfGetterAndSetterReordered: number =
+   object.js:73:51
+   73| var testExampleOrOrderOfGetterAndSetterReordered: number =
                                                          ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- object.js:60:2
+Error --------------------------------------------------------------------------------------------------- object.js:76:1
 
-Cannot cast `obj["stringLiteral"]` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `obj['stringLiteral']` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   object.js:60:2
-   60| (obj["stringLiteral"]: string); // err, num !~> string
-        ^^^^^^^^^^^^^^^^^^^^
+   object.js:76:1
+   76| obj['stringLiteral'] as string; // err, num !~> string
+       ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   object.js:36:26
-   36|   get "stringLiteral"(): number { return 4; },
-                                ^^^^^^ [1]
-   object.js:60:24
-   60| (obj["stringLiteral"]: string); // err, num !~> string
-                              ^^^^^^ [2]
+   object.js:52:24
+   52|   get stringLiteral(): number {
+                              ^^^^^^ [1]
+   object.js:76:25
+   76| obj['stringLiteral'] as string; // err, num !~> string
+                               ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- object.js:61:24
+Error -------------------------------------------------------------------------------------------------- object.js:77:24
 
-Cannot assign `"foo"` to `obj["stringLiteral"]` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `'foo'` to `obj['stringLiteral']` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   object.js:61:24
-   61| obj["stringLiteral"] = "foo"; // err, string !~> num
+   object.js:77:24
+   77| obj['stringLiteral'] = 'foo'; // err, string !~> num
                               ^^^^^ [1]
 
 References:
-   object.js:35:26
-   35|   set "stringLiteral"(x: number) { },
-                                ^^^^^^ [2]
+   object.js:51:24
+   51|   set stringLiteral(x: number) {},
+                              ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- object_type.js:36:38

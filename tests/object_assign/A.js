@@ -5,8 +5,10 @@
 var EventEmitter = require('events').EventEmitter;
 
 // Bad is deferred on decl merge
-var Bad = Object.assign(({}: {foo?: () => string}), EventEmitter.prototype, {
-  foo: function(): string { return 'hi'; }
+var Bad = Object.assign({} as {foo?: () => string}, EventEmitter.prototype, {
+  foo: function (): string {
+    return 'hi';
+  },
 });
 
 if (Bad.foo != null) {
@@ -16,8 +18,10 @@ if (Bad.foo != null) {
 
 // Good is not deferred, as MyEventEmitter is local
 class MyEventEmitter extends events$EventEmitter {}
-var Good = Object.assign(({}: {foo: () => string}), MyEventEmitter.prototype, {
-  foo: function(): string { return 'hi'; }
+var Good = Object.assign({} as {foo: () => string}, MyEventEmitter.prototype, {
+  foo: function (): string {
+    return 'hi';
+  },
 });
 
 if (Good.foo != null) {

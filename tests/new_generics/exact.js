@@ -1,8 +1,8 @@
 //@flow
 
 function f<X: {...}>(ex: $Exact<X>, x: X) {
-  (ex: X);
-  (ex: $Exact<X>);
-  (x: $Exact<X>); // nope
-  (((42: any): {||}): $Exact<X>); // nope
+  ex as X;
+  ex as $Exact<X>;
+  x as $Exact<X>; // nope
+  42 as any as {||} as $Exact<X>; // nope
 }

@@ -1,18 +1,18 @@
 //@flow
 
 function remove<A>(a: A, x): A {
-  (a: empty);
-  (42: A);
-  return a
+  a as empty;
+  42 as A;
+  return a;
 }
 
 const o: empty = remove<number>(1, 42);
 const p: empty = remove(1, 42);
 
 function remove_anno<A>(a: A): A {
-  (a: empty);
-  (42: A);
-  return a
+  a as empty;
+  42 as A;
+  return a;
 }
 
 const q: empty = remove_anno<number>(1);
@@ -24,11 +24,13 @@ function removex<A, B>(a: A): [$Rest<A, {p: B}>, B] {
 }
 
 const [ox, px] = removex<_, number>({x: 'foo', p: 42});
-(ox: {|x: string|});
-(px: number);
+ox as {|x: string|};
+px as number;
 
 function test_tparams_signature_scope() {
-  function foo<A>(): <B: A>(b: B) => void { throw '' };
+  function foo<A>(): <B: A>(b: B) => void {
+    throw '';
+  }
   const f = foo<number>();
   f(0);
 
@@ -43,5 +45,5 @@ function test_tparams_signature_scope() {
     m2<B: A>() {} // Error: Cannot resolve name `A`.
   }
 
-  function tparam_in_default<X>(x: X = (42: X)) { } // Error: cannot cast 42 to X
+  function tparam_in_default<X>(x: X = 42 as X) {} // Error: cannot cast 42 to X
 }

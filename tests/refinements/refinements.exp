@@ -242,9 +242,9 @@ Cannot get `x.result` because property `result` is missing in object type [1]. [
                     ^^^^^^
 
 References:
-   cond_prop.js:15:48
-   15|   function(x: { done: true, result: string } | { done: false }) {
-                                                      ^^^^^^^^^^^^^^^ [1]
+   cond_prop.js:15:47
+   15|   function (x: {done: true, result: string} | {done: false}) {
+                                                     ^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- cond_prop.js:24:16
@@ -256,9 +256,9 @@ Cannot get `x.result` because property `result` is missing in object type [1]. [
                       ^^^^^^
 
 References:
-   cond_prop.js:22:48
-   22|   function(x: { done: true, result: string } | { foo: string }) {
-                                                      ^^^^^^^^^^^^^^^ [1]
+   cond_prop.js:22:47
+   22|   function (x: {done: true, result: string} | {foo: string}) {
+                                                     ^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- cond_prop.js:26:14
@@ -270,79 +270,79 @@ Cannot get `x.result` because property `result` is missing in object type [1]. [
                     ^^^^^^
 
 References:
-   cond_prop.js:22:48
-   22|   function(x: { done: true, result: string } | { foo: string }) {
-                                                      ^^^^^^^^^^^^^^^ [1]
+   cond_prop.js:22:47
+   22|   function (x: {done: true, result: string} | {foo: string}) {
+                                                     ^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- cond_prop.js:36:12
+Error ----------------------------------------------------------------------------------------------- cond_prop.js:34:11
 
 Cannot get `t.bar` because property `bar` (did you mean `baz`?) is missing in object type [1]. [prop-missing]
 
-   cond_prop.js:36:12
-   36|         (t.bar: string); // error, consider { baz: "x", quux: "y", foo: "boom" }
-                  ^^^
+   cond_prop.js:34:11
+   34|         t.bar as string; // error, consider { baz: "x", quux: "y", foo: "boom" }
+                 ^^^
 
 References:
-   cond_prop.js:34:38
-   34|     function testAlwaysTruthyProp(t: T) {
+   cond_prop.js:32:38
+   32|     function testAlwaysTruthyProp(t: T) {
                                             ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- cond_prop.js:46:12
+Error ----------------------------------------------------------------------------------------------- cond_prop.js:44:11
 
 Cannot get `t.foo` because property `foo` is missing in object type [1]. [prop-missing]
 
-   cond_prop.js:46:12
-   46|         (t.foo: Object); // error, consider { baz: "x", quux: "y", bar: "boom" }
-                  ^^^
+   cond_prop.js:44:11
+   44|         t.foo as Object; // error, consider { baz: "x", quux: "y", bar: "boom" }
+                 ^^^
 
 References:
-   cond_prop.js:44:41
-   44|     function testSometimesTruthyProp(t: T) {
+   cond_prop.js:42:41
+   42|     function testSometimesTruthyProp(t: T) {
                                                ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- cond_prop.js:48:12
+Error ----------------------------------------------------------------------------------------------- cond_prop.js:46:11
 
 Cannot get `t.quux` because property `quux` is missing in object type [1]. [prop-missing]
 
-   cond_prop.js:48:12
-   48|         (t.quux: string); // error, consider { foo: {}, bar: "" }
-                  ^^^^
+   cond_prop.js:46:11
+   46|         t.quux as string; // error, consider { foo: {}, bar: "" }
+                 ^^^^
 
 References:
-   cond_prop.js:44:41
-   44|     function testSometimesTruthyProp(t: T) {
+   cond_prop.js:42:41
+   42|     function testSometimesTruthyProp(t: T) {
                                                ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- cond_prop.js:54:11
+Error ----------------------------------------------------------------------------------------------- cond_prop.js:52:11
 
 Cannot get `o.p` because property `p` is missing in null [1]. [incompatible-use]
 
-   cond_prop.js:54:11
-   54|     if (o.p) {} // 2 errors: property `p` not found on null and not found in {}
+   cond_prop.js:52:11
+   52|     if (o.p) {
                  ^
 
 References:
-   cond_prop.js:53:15
-   53|   function(o: null|{}) {
-                     ^^^^ [1]
+   cond_prop.js:51:16
+   51|   function (o: null | {}) {
+                      ^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- cond_prop.js:54:11
+Error ----------------------------------------------------------------------------------------------- cond_prop.js:52:11
 
 Cannot get `o.p` because property `p` is missing in object type [1]. [prop-missing]
 
-   cond_prop.js:54:11
-   54|     if (o.p) {} // 2 errors: property `p` not found on null and not found in {}
+   cond_prop.js:52:11
+   52|     if (o.p) {
                  ^
 
 References:
-   cond_prop.js:53:20
-   53|   function(o: null|{}) {
-                          ^^ [1]
+   cond_prop.js:51:23
+   51|   function (o: null | {}) {
+                             ^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------------- eq.js:5:9
@@ -429,22 +429,22 @@ Cannot get `TDR.current` because property `current` is not readable. [cannot-rea
                ^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------- flow_to_general.js:14:11
+Error ----------------------------------------------------------------------------------------- flow_to_general.js:15:11
 
 Invalid check of string literal `C` against optional nullable `T` [1] because string literal `C` [2] is incompatible
 with literal union [3]. [incompatible-type]
 
-   flow_to_general.js:14:11
-   14| if (p === 'C') { }
+   flow_to_general.js:15:11
+   15| if (p === 'C') {
                  ^^^ [2]
 
 References:
-   flow_to_general.js:11:22
-   11| declare var x: { p?: ?T };
-                            ^^ [1]
-   flow_to_general.js:11:23
-   11| declare var x: { p?: ?T };
-                             ^ [3]
+   flow_to_general.js:12:21
+   12| declare var x: {p?: ?T};
+                           ^^ [1]
+   flow_to_general.js:12:22
+   12| declare var x: {p?: ?T};
+                            ^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------ fn.js:14:22
@@ -3237,26 +3237,26 @@ Cannot call `takesString` with `x` bound to `x` because number [1] is incompatib
 
 References:
    mixed.js:7:7
-   7|   if (typeof x === "number") {
+   7|   if (typeof x === 'number') {
             ^^^^^^^^^^^^^^^^^^^^^ [1]
    mixed.js:4:25
    4| function takesString(x: string) {}
                               ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- mixed.js:9:6
+Error ----------------------------------------------------------------------------------------------------- mixed.js:9:5
 
 Cannot cast `!x` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
 [incompatible-cast]
 
-   mixed.js:9:6
-   9|     (!x: false); // error: we don't know the truthiness of x
-           ^^ [1]
+   mixed.js:9:5
+   9|     !x as false; // error: we don't know the truthiness of x
+          ^^ [1]
 
 References:
-   mixed.js:9:10
-   9|     (!x: false); // error: we don't know the truthiness of x
-               ^^^^^ [2]
+   mixed.js:9:11
+   9|     !x as false; // error: we don't know the truthiness of x
+                ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:21:17
@@ -3269,26 +3269,26 @@ Cannot call `takesNumber` with `x` bound to `x` because string [1] is incompatib
 
 References:
    mixed.js:20:7
-   20|   if (typeof x === "string") {
+   20|   if (typeof x === 'string') {
              ^^^^^^^^^^^^^^^^^^^^^ [1]
    mixed.js:3:25
     3| function takesNumber(x: number) {}
                                ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- mixed.js:22:6
+Error ---------------------------------------------------------------------------------------------------- mixed.js:22:5
 
 Cannot cast `!x` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
 [incompatible-cast]
 
-   mixed.js:22:6
-   22|     (!x: false); // error: we don't know the truthiness of x
-            ^^ [1]
+   mixed.js:22:5
+   22|     !x as false; // error: we don't know the truthiness of x
+           ^^ [1]
 
 References:
-   mixed.js:22:10
-   22|     (!x: false); // error: we don't know the truthiness of x
-                ^^^^^ [2]
+   mixed.js:22:11
+   22|     !x as false; // error: we don't know the truthiness of x
+                 ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:34:17
@@ -3301,29 +3301,29 @@ Cannot call `takesString` with `x` bound to `x` because boolean [1] is incompati
 
 References:
    mixed.js:33:7
-   33|   if (typeof x === "boolean") {
+   33|   if (typeof x === 'boolean') {
              ^^^^^^^^^^^^^^^^^^^^^^ [1]
    mixed.js:4:25
     4| function takesString(x: string) {}
                                ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- mixed.js:35:6
+Error ---------------------------------------------------------------------------------------------------- mixed.js:35:5
 
 Cannot cast `x` to boolean literal `true` because boolean [1] is incompatible with boolean literal `true` [2].
 [incompatible-cast]
 
-   mixed.js:35:6
-   35|     (x: true); // error: we don't know the truthiness of x
-            ^
+   mixed.js:35:5
+   35|     x as true; // error: we don't know the truthiness of x
+           ^
 
 References:
    mixed.js:33:7
-   33|   if (typeof x === "boolean") {
+   33|   if (typeof x === 'boolean') {
              ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   mixed.js:35:9
-   35|     (x: true); // error: we don't know the truthiness of x
-               ^^^^ [2]
+   mixed.js:35:10
+   35|     x as true; // error: we don't know the truthiness of x
+                ^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:47:17
@@ -3502,21 +3502,21 @@ References:
                                ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- mixed.js:97:8
+Error ---------------------------------------------------------------------------------------------------- mixed.js:97:7
 
 Cannot cast `x['foo']` to string because mixed [1] is incompatible with string [2]. [incompatible-cast]
 
-   mixed.js:97:8
-   97|       (x['foo']: string); // error, mixed
-              ^^^^^^^^
+   mixed.js:97:7
+   97|       x['foo'] as string; // error, mixed
+             ^^^^^^^^
 
 References:
    mixed.js:93:18
    93| function obj2(x: mixed) {
                         ^^^^^ [1]
-   mixed.js:97:18
-   97|       (x['foo']: string); // error, mixed
-                        ^^^^^^ [2]
+   mixed.js:97:19
+   97|       x['foo'] as string; // error, mixed
+                         ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- mixed.js:119:17
@@ -3612,54 +3612,54 @@ Cannot get `x[0]` because an index signature declaring the expected key / value 
            ^^^^
 
 References:
-   not.js:15:19
-   15| function baz (x: ?number) {
-                         ^^^^^^ [1]
+   not.js:15:18
+   15| function baz(x: ?number) {
+                        ^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------------ not.js:41:6
-
-Cannot cast `!x` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
-[incompatible-cast]
-
-   not.js:41:6
-   41|     (!x: false); // error, strings are not always truthy
-            ^^ [1]
-
-References:
-   not.js:41:10
-   41|     (!x: false); // error, strings are not always truthy
-                ^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------------ not.js:44:6
+Error ------------------------------------------------------------------------------------------------------ not.js:41:5
 
 Cannot cast `!x` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
 [incompatible-cast]
 
-   not.js:44:6
-   44|     (!x: false); // error, numbers are not always truthy
-            ^^ [1]
+   not.js:41:5
+   41|     !x as false; // error, strings are not always truthy
+           ^^ [1]
 
 References:
-   not.js:44:10
-   44|     (!x: false); // error, numbers are not always truthy
-                ^^^^^ [2]
+   not.js:41:11
+   41|     !x as false; // error, strings are not always truthy
+                 ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ not.js:47:6
+Error ------------------------------------------------------------------------------------------------------ not.js:44:5
 
 Cannot cast `!x` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
 [incompatible-cast]
 
-   not.js:47:6
-   47|     (!x: false); // error, bools are not always truthy
-            ^^ [1]
+   not.js:44:5
+   44|     !x as false; // error, numbers are not always truthy
+           ^^ [1]
 
 References:
-   not.js:47:10
-   47|     (!x: false); // error, bools are not always truthy
-                ^^^^^ [2]
+   not.js:44:11
+   44|     !x as false; // error, numbers are not always truthy
+                 ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ not.js:47:5
+
+Cannot cast `!x` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
+[incompatible-cast]
+
+   not.js:47:5
+   47|     !x as false; // error, bools are not always truthy
+           ^^ [1]
+
+References:
+   not.js:47:11
+   47|     !x as false; // error, bools are not always truthy
+                 ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ null.js:4:7
@@ -5641,12 +5641,12 @@ References:
                        ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- typeof.js:23:7
+Error --------------------------------------------------------------------------------------------------- typeof.js:22:7
 
 Cannot call `BAZ.stuff` because undefined [1] is not a function. [not-a-function]
 
-   typeof.js:23:7
-   23|   BAZ.stuff(123); // error, refinement is gone
+   typeof.js:22:7
+   22|   BAZ.stuff(123); // error, refinement is gone
              ^^^^^
 
 References:
@@ -5655,12 +5655,12 @@ References:
                                  ^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- typeof.js:23:7
+Error --------------------------------------------------------------------------------------------------- typeof.js:22:7
 
 Cannot call `BAZ.stuff` because property `stuff` is missing in undefined [1]. [incompatible-use]
 
-   typeof.js:23:7
-   23|   BAZ.stuff(123); // error, refinement is gone
+   typeof.js:22:7
+   22|   BAZ.stuff(123); // error, refinement is gone
              ^^^^^
 
 References:
@@ -5669,12 +5669,12 @@ References:
                                                              ^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- typeof.js:26:7
+Error --------------------------------------------------------------------------------------------------- typeof.js:25:7
 
 Cannot get `BAZ.stuff` because property `stuff` is missing in undefined [1]. [incompatible-use]
 
-   typeof.js:26:7
-   26|   BAZ.stuff; // error, could be undefined
+   typeof.js:25:7
+   25|   BAZ.stuff; // error, could be undefined
              ^^^^^
 
 References:
@@ -5683,12 +5683,12 @@ References:
                                                              ^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- typeof.js:30:9
+Error --------------------------------------------------------------------------------------------------- typeof.js:28:9
 
 Cannot call `BAZ.stuff` because undefined [1] is not a function. [not-a-function]
 
-   typeof.js:30:9
-   30|     BAZ.stuff(123); // error, refinement is gone
+   typeof.js:28:9
+   28|     BAZ.stuff(123); // error, refinement is gone
                ^^^^^
 
 References:
@@ -5697,12 +5697,12 @@ References:
                                  ^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- typeof.js:30:9
+Error --------------------------------------------------------------------------------------------------- typeof.js:28:9
 
 Cannot call `BAZ.stuff` because property `stuff` is missing in undefined [1]. [incompatible-use]
 
-   typeof.js:30:9
-   30|     BAZ.stuff(123); // error, refinement is gone
+   typeof.js:28:9
+   28|     BAZ.stuff(123); // error, refinement is gone
                ^^^^^
 
 References:
@@ -5711,210 +5711,210 @@ References:
                                                              ^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- typeof.js:49:20
+Error -------------------------------------------------------------------------------------------------- typeof.js:47:20
 
 Cannot compare the result of `typeof` to string literal `foo` because it is not a valid `typeof` return value.
 [illegal-typeof]
 
-   49|   if (typeof x === "foo") { // error
+   47|   if (typeof x === 'foo') {
                           ^^^^^
 
 
-Error -------------------------------------------------------------------------------------------------- typeof.js:61:20
+Error -------------------------------------------------------------------------------------------------- typeof.js:60:20
 
 Cannot compare the result of `typeof` to string literal `foo` because it is not a valid `typeof` return value.
 [illegal-typeof]
 
-   61|   if (typeof x === `foo`) { // error
+   60|   if (typeof x === `foo`) {
                           ^^^^^
 
 
-Error --------------------------------------------------------------------------------------------------- typeof.js:69:6
+Error --------------------------------------------------------------------------------------------------- typeof.js:69:5
 
 Cannot cast `Foo` to empty because class `Foo` [1] is incompatible with empty [2]. [incompatible-cast]
 
-   typeof.js:69:6
-   69|     (Foo: empty); // error, Foo is a class
-            ^^^
+   typeof.js:69:5
+   69|     Foo as empty; // error, Foo is a class
+           ^^^
 
 References:
    typeof.js:67:9
    67|   class Foo {}
                ^^^ [1]
-   typeof.js:69:11
-   69|     (Foo: empty); // error, Foo is a class
-                 ^^^^^ [2]
+   typeof.js:69:12
+   69|     Foo as empty; // error, Foo is a class
+                  ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- typeof.js:77:6
+Error --------------------------------------------------------------------------------------------------- typeof.js:77:5
 
 Cannot cast `x` to empty because `Foo` [1] is incompatible with empty [2]. [incompatible-cast]
 
-   typeof.js:77:6
-   77|     (x: empty); // error
-            ^
+   typeof.js:77:5
+   77|     x as empty; // error
+           ^
 
 References:
    typeof.js:75:11
    75|   let x = new Foo();
                  ^^^^^^^^^ [1]
-   typeof.js:77:9
-   77|     (x: empty); // error
-               ^^^^^ [2]
+   typeof.js:77:10
+   77|     x as empty; // error
+                ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- typeof.js:83:6
+Error --------------------------------------------------------------------------------------------------- typeof.js:84:5
 
 Cannot cast `x` to string because symbol [1] is incompatible with string [2]. [incompatible-cast]
 
-   typeof.js:83:6
-   83|     (x: string); // error
-            ^
+   typeof.js:84:5
+   84|     x as string; // error
+           ^
 
 References:
    typeof.js:82:7
-   82|   if (typeof x === "symbol") { // ok
+   82|   if (typeof x === 'symbol') {
              ^^^^^^^^^^^^^^^^^^^^^ [1]
-   typeof.js:83:9
-   83|     (x: string); // error
-               ^^^^^^ [2]
+   typeof.js:84:10
+   84|     x as string; // error
+                ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- typeof.js:89:6
+Error --------------------------------------------------------------------------------------------------- typeof.js:90:5
 
 Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   typeof.js:89:6
-   89|     (x: empty); // error number ~> empty
-            ^
+   typeof.js:90:5
+   90|     x as empty; // error number ~> empty
+           ^
 
 References:
-   typeof.js:88:7
-   88|   if (typeof x === "number") {
+   typeof.js:89:7
+   89|   if (typeof x === 'number') {
              ^^^^^^^^^^^^^^^^^^^^^ [1]
-   typeof.js:89:9
-   89|     (x: empty); // error number ~> empty
-               ^^^^^ [2]
+   typeof.js:90:10
+   90|     x as empty; // error number ~> empty
+                ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- typeof.js:96:6
+Error --------------------------------------------------------------------------------------------------- typeof.js:97:5
 
 Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   typeof.js:96:6
-   96|     (x: empty); // error number ~> empty
-            ^
+   typeof.js:97:5
+   97|     x as empty; // error number ~> empty
+           ^
 
 References:
-   typeof.js:94:7
-   94|   if (typeof x === "number") {
+   typeof.js:95:7
+   95|   if (typeof x === 'number') {
              ^^^^^^^^^^^^^^^^^^^^^ [1]
-   typeof.js:96:9
-   96|     (x: empty); // error number ~> empty
-               ^^^^^ [2]
+   typeof.js:97:10
+   97|     x as empty; // error number ~> empty
+                ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- typeof.js:107:6
+Error -------------------------------------------------------------------------------------------------- typeof.js:109:5
 
 Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
-   typeof.js:107:6
-   107|     (x: empty); // error string ~> empty
-             ^
+   typeof.js:109:5
+   109|     x as empty; // error string ~> empty
+            ^
 
 References:
-   typeof.js:106:7
-   106|   if (typeof x === "string") {
+   typeof.js:108:7
+   108|   if (typeof x === 'string') {
               ^^^^^^^^^^^^^^^^^^^^^ [1]
-   typeof.js:107:9
-   107|     (x: empty); // error string ~> empty
-                ^^^^^ [2]
+   typeof.js:109:10
+   109|     x as empty; // error string ~> empty
+                 ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- typeof.js:113:6
+Error -------------------------------------------------------------------------------------------------- typeof.js:115:5
 
 Cannot cast `x` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
 
-   typeof.js:113:6
-   113|     (x: empty); // error boolean ~> empty
-             ^
+   typeof.js:115:5
+   115|     x as empty; // error boolean ~> empty
+            ^
 
 References:
-   typeof.js:112:7
-   112|   if (typeof x === "boolean") {
+   typeof.js:114:7
+   114|   if (typeof x === 'boolean') {
               ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   typeof.js:113:9
-   113|     (x: empty); // error boolean ~> empty
-                ^^^^^ [2]
+   typeof.js:115:10
+   115|     x as empty; // error boolean ~> empty
+                 ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- typeof.js:119:6
+Error -------------------------------------------------------------------------------------------------- typeof.js:121:5
 
 Cannot cast `x` to boolean literal `true` because boolean [1] is incompatible with boolean literal `true` [2].
 [incompatible-cast]
 
-   typeof.js:119:6
-   119|     (x: true);
-             ^
+   typeof.js:121:5
+   121|     x as true;
+            ^
 
 References:
-   typeof.js:118:7
-   118|   if (typeof x === "boolean") {
+   typeof.js:120:7
+   120|   if (typeof x === 'boolean') {
               ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   typeof.js:119:9
-   119|     (x: true);
-                ^^^^ [2]
+   typeof.js:121:10
+   121|     x as true;
+                 ^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- typeof.js:120:6
+Error -------------------------------------------------------------------------------------------------- typeof.js:122:5
 
 Cannot cast `x` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
 
-   typeof.js:120:6
-   120|     (x: empty); // error boolean ~> empty
-             ^
+   typeof.js:122:5
+   122|     x as empty; // error boolean ~> empty
+            ^
 
 References:
-   typeof.js:118:7
-   118|   if (typeof x === "boolean") {
+   typeof.js:120:7
+   120|   if (typeof x === 'boolean') {
               ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   typeof.js:120:9
-   120|     (x: empty); // error boolean ~> empty
-                ^^^^^ [2]
+   typeof.js:122:10
+   122|     x as empty; // error boolean ~> empty
+                 ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- typeof.js:126:6
+Error -------------------------------------------------------------------------------------------------- typeof.js:128:5
 
 Cannot cast `x` to empty because symbol [1] is incompatible with empty [2]. [incompatible-cast]
 
-   typeof.js:126:6
-   126|     (x: empty); // error symbol ~> empty
-             ^
+   typeof.js:128:5
+   128|     x as empty; // error symbol ~> empty
+            ^
 
 References:
-   typeof.js:125:7
-   125|   if (typeof x === "symbol") {
+   typeof.js:127:7
+   127|   if (typeof x === 'symbol') {
               ^^^^^^^^^^^^^^^^^^^^^ [1]
-   typeof.js:126:9
-   126|     (x: empty); // error symbol ~> empty
-                ^^^^^ [2]
+   typeof.js:128:10
+   128|     x as empty; // error symbol ~> empty
+                 ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- typeof.js:133:6
+Error -------------------------------------------------------------------------------------------------- typeof.js:135:5
 
 Cannot cast `C` to empty because class `C` [1] is incompatible with empty [2]. [incompatible-cast]
 
-   typeof.js:133:6
-   133|     (C: empty); // error class C ~> empty
-             ^
+   typeof.js:135:5
+   135|     C as empty; // error class C ~> empty
+            ^
 
 References:
-   typeof.js:131:17
-   131|   declare class C<X> {}
+   typeof.js:133:17
+   133|   declare class C<X> {}
                         ^ [1]
-   typeof.js:133:9
-   133|     (C: empty); // error class C ~> empty
-                ^^^^^ [2]
+   typeof.js:135:10
+   135|     C as empty; // error class C ~> empty
+                 ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- undef.js:31:13

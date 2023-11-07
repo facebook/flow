@@ -11,6 +11,6 @@ class Foo {
 
 class Bar extends Foo {
   test() {
-    (this._method(): string); // ok
+    this._method() as string; // ok
   }
 }

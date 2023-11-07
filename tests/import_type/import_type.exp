@@ -27,7 +27,7 @@ also be used as a value, try importing it using `import ClassFoo1` instead of `i
 
 References:
    import_type.js:9:13
-    9| import type ClassFoo1 from "./ExportDefault_Class";
+    9| import type ClassFoo1 from './ExportDefault_Class';
                    ^^^^^^^^^ [1]
 
 
@@ -60,7 +60,7 @@ also be used as a value, try importing it using `import ClassFoo2` instead of `i
 
 References:
    import_type.js:20:14
-   20| import type {ClassFoo2} from "./ExportNamed_Class";
+   20| import type {ClassFoo2} from './ExportNamed_Class';
                     ^^^^^^^^^ [1]
 
 
@@ -76,7 +76,7 @@ also be used as a value, try importing it using `import ClassFoo3T` instead of `
 
 References:
    import_type.js:31:13
-   31| import type ClassFoo3T from "./ExportCJSDefault_Class";
+   31| import type ClassFoo3T from './ExportCJSDefault_Class';
                    ^^^^^^^^^^ [1]
 
 
@@ -89,9 +89,9 @@ Cannot assign `foo4Inst` to `d2` because `ClassFoo4` [1] is incompatible with nu
                         ^^^^^^^^
 
 References:
-   ExportCJSNamed_Class.js:21:38
-   21| exports.foo4Inst = (new ClassFoo4(): ClassFoo4);
-                                            ^^^^^^^^^ [1]
+   ExportCJSNamed_Class.js:23:39
+   23| exports.foo4Inst = new ClassFoo4() as ClassFoo4;
+                                             ^^^^^^^^^ [1]
    import_type.js:44:9
    44| var d2: number = foo4Inst; // Error: ClassFoo4 ~> number
                ^^^^^^ [2]
@@ -109,7 +109,7 @@ also be used as a value, try importing it using `import ClassFoo4` instead of `i
 
 References:
    import_type.js:40:14
-   40| import type {ClassFoo4, ClassFoo5} from "./ExportCJSNamed_Class";
+   40| import type {ClassFoo4, ClassFoo5} from './ExportCJSNamed_Class';
                     ^^^^^^^^^ [1]
 
 
@@ -125,7 +125,7 @@ also be used as a value, try importing it using `import ClassFoo5` instead of `i
 
 References:
    import_type.js:40:25
-   40| import type {ClassFoo4, ClassFoo5} from "./ExportCJSNamed_Class";
+   40| import type {ClassFoo4, ClassFoo5} from './ExportCJSNamed_Class';
                                ^^^^^^^^^ [1]
 
 
@@ -158,7 +158,7 @@ also be used as a value, try importing it using `import AliasFoo3` instead of `i
 
 References:
    import_type.js:53:14
-   53| import type {AliasFoo3} from "./ExportNamed_Alias";
+   53| import type {AliasFoo3} from './ExportNamed_Alias';
                     ^^^^^^^^^ [1]
 
 
@@ -167,7 +167,7 @@ Error --------------------------------------------------------------------------
 Cannot import the value `numValue` as a type. `import type` only works on type exports like type aliases, interfaces,
 and classes. If you intended to import the type of a value use `import typeof` instead. [import-value-as-type]
 
-   71| import type {numValue} from "./ExportsANumber"; // Error: Cannot import-type a number value
+   71| import type {numValue} from './ExportsANumber'; // Error: Cannot import-type a number value
                     ^^^^^^^^
 
 
@@ -183,7 +183,7 @@ also be used as a value, try importing it using `import ClassFoo6` instead of `i
 
 References:
    import_type.js:79:13
-   79| import type ClassFoo6 from "./issue-359";
+   79| import type ClassFoo6 from './issue-359';
                    ^^^^^^^^^ [1]
 
 
@@ -196,32 +196,32 @@ classes. If you intended to import the type of a value use `import typeof` inste
                     ^
 
 
-Error --------------------------------------------------------------------------------------------- import_type.js:109:2
+Error --------------------------------------------------------------------------------------------- import_type.js:109:1
 
-Cannot cast `"str"` to `T` because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `'str'` to `T` because string [1] is incompatible with number [2]. [incompatible-cast]
 
-   import_type.js:109:2
-   109| ("str": T); // error
-         ^^^^^ [1]
-
-References:
-   import_type.js:109:9
-   109| ("str": T); // error
-                ^ [2]
-
-
-Error --------------------------------------------------------------------------------------------- import_type.js:117:2
-
-Cannot cast `"str"` to `U` because string [1] is incompatible with number [2]. [incompatible-cast]
-
-   import_type.js:117:2
-   117| ("str": U); // error
-         ^^^^^ [1]
+   import_type.js:109:1
+   109| 'str' as T; // error
+        ^^^^^ [1]
 
 References:
-   import_type.js:117:9
-   117| ("str": U); // error
-                ^ [2]
+   import_type.js:109:10
+   109| 'str' as T; // error
+                 ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- import_type.js:117:1
+
+Cannot cast `'str'` to `U` because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   import_type.js:117:1
+   117| 'str' as U; // error
+        ^^^^^ [1]
+
+References:
+   import_type.js:117:10
+   117| 'str' as U; // error
+                 ^ [2]
 
 
 

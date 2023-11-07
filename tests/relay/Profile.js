@@ -20,10 +20,10 @@ type Props = {
 
 class Profile extends React.Component<Props> {
   render(): React.Node {
-    (this.props.foo: empty); // Error: number ~> empty
-    (this.props.user.id: empty); // Error: string ~> empty
-    (this.props.user.name: empty); // Error: string ~> empty
-    (this.props.user.pic.id: empty); // Error: string ~> empty
+    this.props.foo as empty; // Error: number ~> empty
+    this.props.user.id as empty; // Error: string ~> empty
+    this.props.user.name as empty; // Error: string ~> empty
+    this.props.user.pic.id as empty; // Error: string ~> empty
     <ProfilePic image={{url: 'https://facebook.com'}} />; // Error: object ~> opaque type
     return (
       <div>
@@ -36,6 +36,6 @@ class Profile extends React.Component<Props> {
   }
 }
 
-export default (createFragmentContainer(Profile): React.ComponentType<
+export default createFragmentContainer(Profile) as React.ComponentType<
   $ObjMap<Props, GetPropFragmentRef>,
->);
+>;

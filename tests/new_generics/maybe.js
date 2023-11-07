@@ -8,88 +8,88 @@ function f<X: number, Y: ?number, Z: ?X>(
   yu?: Y,
   zu?: Z,
 ) {
-  (x: null | void | X);
-  (x: ?X);
-  (x: X | ?X);
-  (x: ?Y | ?X);
-  (x: X); //nope
-  (x: ?number);
+  x as null | void | X;
+  x as ?X;
+  x as X | ?X;
+  x as ?Y | ?X;
+  x as X; //nope
+  x as ?number;
   if (typeof x === 'number') {
-    (x: X);
-    (x: ?X);
-    (x: null | void); // nope
+    x as X;
+    x as ?X;
+    x as null | void; // nope
   }
 
-  (y: null | void | number);
-  (y: Y);
-  (y: Y | X);
-  (y: ?Y);
-  (y: ?number);
+  y as null | void | number;
+  y as Y;
+  y as Y | X;
+  y as ?Y;
+  y as ?number;
   if (typeof y === 'number') {
-    (y: Y);
-    (y: number);
-    (y: null | void); // nope
+    y as Y;
+    y as number;
+    y as null | void; // nope
   }
 
-  (z: null | void | Z);
-  (z: null | void | X);
-  (z: ?X);
-  (z: ?Z);
-  (z: X); // nope
-  (z: Z);
-  (z: ?number);
+  z as null | void | Z;
+  z as null | void | X;
+  z as ?X;
+  z as ?Z;
+  z as X; // nope
+  z as Z;
+  z as ?number;
   if (typeof z === 'number') {
-    (z: X);
-    (z: ?X);
-    (z: null | void); // nope
+    z as X;
+    z as ?X;
+    z as null | void; // nope
   }
 
-  (xu: void | X);
-  (xu: X | (X | void));
-  (xu: ?Y | ?X);
-  (xu: X); //nope
-  (xu: void | number);
+  xu as void | X;
+  xu as X | (X | void);
+  xu as ?Y | ?X;
+  xu as X; //nope
+  xu as void | number;
   if (typeof xu === 'number') {
-    (xu: X);
-    (xu: ?X);
-    (xu: void); // nope
+    xu as X;
+    xu as ?X;
+    xu as void; // nope
   }
 
-  (yu: null | void | number);
-  (yu: void | number); // nope
-  (yu: Y); // nope
-  (yu: Y | X); // nope
-  (yu: ?Y);
-  (yu: ?number);
+  yu as null | void | number;
+  yu as void | number; // nope
+  yu as Y; // nope
+  yu as Y | X; // nope
+  yu as ?Y;
+  yu as ?number;
   if (typeof yu === 'number') {
-    (yu: Y);
-    (yu: number);
-    (yu: null | void); // nope
+    yu as Y;
+    yu as number;
+    yu as null | void; // nope
   }
 
-  (zu: null | void | Z);
-  (zu: null | void | X);
-  (zu: ?X);
-  (zu: ?Z);
-  (zu: X); // nope
-  (zu: Z | void);
-  (zu: Z); // nope
-  (zu: ?number);
+  zu as null | void | Z;
+  zu as null | void | X;
+  zu as ?X;
+  zu as ?Z;
+  zu as X; // nope
+  zu as Z | void;
+  zu as Z; // nope
+  zu as ?number;
   if (typeof zu === 'number') {
-    (zu: X);
-    (zu: ?X);
-    (zu: null | void); // nope
+    zu as X;
+    zu as ?X;
+    zu as null | void; // nope
   }
 
   // FilterOptionalT
   declare var a: {x?: X};
   var b = {...a};
-  (b.x: X | void);
-  (b.x: Y | void); //nope
+  b.x as X | void;
+  b.x as Y | void; //nope
 
   //FilterMaybeT
   declare var c: $NonMaybeType<X>;
-  (c: X);
-  (c: number);
-  (c: null | void); // nope
+  c as X;
+  c as number;
+  c as null | void; // nope
 }

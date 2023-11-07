@@ -9,32 +9,32 @@ function x1(y: string): number {
 }
 
 function x3(y: string) {
-  return ~y;  // error, we don't allow coercion here
+  return ~y; // error, we don't allow coercion here
 }
 
 function x4(y: string): boolean {
   return !y; // ok, coercion is allowed
 }
 
-(-1: void); // error, number ~> void
+-1 as void; // error, number ~> void
 
 type A<X> = X;
 
 function x5(a: A<false>): true {
   return !a; // ok
-};
+}
 
 function x6(a: A<false>): false {
   return !a; // error, true ~> false
-};
+}
 
 function x7(a: false & false): true {
   return !a; // ok
-};
+}
 
 function x8(a: false & false): false {
   return !a; // error, true ~> false
-};
+}
 
 function x9(): number {
   return -10; // ok
@@ -69,16 +69,16 @@ function x16(y: bigint): bigint {
 }
 
 function x17(y: any) {
-  (+y: number); // ok, + coerces to number
-  (+y: bigint); // error, bigint ~> number
-  (-y: number); // ok, any
-  (-y: bigint); // ok, any
-  (~y: number); // ok, any
-  (~y: bigint); // ok, any
+  +y as number; // ok, + coerces to number
+  +y as bigint; // error, bigint ~> number
+  -y as number; // ok, any
+  -y as bigint; // ok, any
+  ~y as number; // ok, any
+  ~y as bigint; // ok, any
 }
 
 function x18(y: empty) {
-  (+y: empty);
-  (-y: empty);
-  (~y: empty);
+  +y as empty;
+  -y as empty;
+  ~y as empty;
 }

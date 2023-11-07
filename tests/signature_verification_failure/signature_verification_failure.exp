@@ -120,21 +120,21 @@ annotation at array pattern: [signature-verification-failure]
                 ^
 
 
-Error -------------------------------------------------------------------------------------------- imports_tparam.js:8:2
+Error -------------------------------------------------------------------------------------------- imports_tparam.js:8:1
 
 Cannot cast `x` to number because `X` [1] is incompatible with number [2]. [incompatible-cast]
 
-   imports_tparam.js:8:2
-   8| (x: number); // nope
-       ^
+   imports_tparam.js:8:1
+   8| x as number; // nope
+      ^
 
 References:
    imports_tparam.js:6:9
    6| var x = new (f())();
               ^^^^^^^^^^^ [1]
-   imports_tparam.js:8:5
-   8| (x: number); // nope
-          ^^^^^^ [2]
+   imports_tparam.js:8:6
+   8| x as number; // nope
+           ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ keyMirror.js:4:28
@@ -281,31 +281,31 @@ annotation at array pattern: [signature-verification-failure]
                         ^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------- obj_decl.js:3:17
+Error ------------------------------------------------------------------------------------------------- obj_decl.js:3:15
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
 annotation at array pattern: [signature-verification-failure]
 
-   3| export var { a } = (42: any);
-                      
+   3| export var {a} = 42 as any;
+                    
 
 
-Error ------------------------------------------------------------------------------------------------- obj_decl.js:5:23
-
-Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
-annotation at array pattern: [signature-verification-failure]
-
-   5| export var { '42': b } = (42: any);
-                            
-
-
-Error ------------------------------------------------------------------------------------------------- obj_decl.js:7:22
+Error ------------------------------------------------------------------------------------------------- obj_decl.js:5:21
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
 annotation at array pattern: [signature-verification-failure]
 
-   7| export var { [b]: c } = (42: any);
-                           
+   5| export var {'42': b} = 42 as any;
+                          
+
+
+Error ------------------------------------------------------------------------------------------------- obj_decl.js:7:20
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
+annotation at array pattern: [signature-verification-failure]
+
+   7| export var {[b]: c} = 42 as any;
+                         
 
 
 Error ----------------------------------------------------------------------------------------------------- rest.js:3:33

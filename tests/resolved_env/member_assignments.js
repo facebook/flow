@@ -4,11 +4,11 @@ function member_assignment_simple() {
   type Foo = {bar: string};
   declare var foo: Foo;
 
-  (foo.bar: string); // ok
-  (foo.bar: number); // error: string is incompatible with number
-  foo.bar = ""; // ok
-  (foo.bar: string); // ok
-  (foo.bar: number); // error: string is incompatible with number
+  foo.bar as string; // ok
+  foo.bar as number; // error: string is incompatible with number
+  foo.bar = ''; // ok
+  foo.bar as string; // ok
+  foo.bar as number; // error: string is incompatible with number
 }
 
 function member_assignment_contravariant() {
@@ -16,9 +16,9 @@ function member_assignment_contravariant() {
   declare var foo: Foo;
 
   foo.bar; // error: not readable
-  foo.bar = ""; // ok
-  (foo.bar: string); // ok
-  (foo.bar: number); // error: string is incompatible with number
+  foo.bar = ''; // ok
+  foo.bar as string; // ok
+  foo.bar as number; // error: string is incompatible with number
 }
 
 function member_op_assignment_ok(o: {|p: number|}) {
@@ -35,7 +35,7 @@ function member_op_assignment_ok(o: {|p: number|}) {
 
 function member_op_assignment_refinement_ok(o: {|p: ?number|}) {
   o.p ??= 3;
-  (o.p: number) // ok
+  o.p as number; // ok
 }
 
 function member_op_assignment_non_writeable(o: {|+p: number|}) {

@@ -1,17 +1,17 @@
-Error ------------------------------------------------------------------------------------- import_shadow_exports.js:4:2
+Error ------------------------------------------------------------------------------------- import_shadow_exports.js:4:1
 
 Cannot cast `x` to number because exports [1] is incompatible with number [2]. [incompatible-cast]
 
-   import_shadow_exports.js:4:2
-   4| (x: number);
-       ^
+   import_shadow_exports.js:4:1
+   4| x as number;
+      ^
 
 References:
    shadow_exports.js
    ^^^^^^^^^^^^^^^^^ [1]
-   import_shadow_exports.js:4:5
-   4| (x: number);
-          ^^^^^^ [2]
+   import_shadow_exports.js:4:6
+   4| x as number;
+           ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- shadow_exports.js:4:8

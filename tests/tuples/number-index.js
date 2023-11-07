@@ -4,7 +4,7 @@
  */
 
 const tup: [number] = [42];
-tup[(0: number)] = 123; // error
+tup[0 as number] = 123; // error
 
 function foo(x: [1, 2]) {
   x[2]; // error

@@ -6,21 +6,21 @@ type DataBase = {
 };
 
 type UserData = DataBase & {
-  kind: "user",
+  kind: 'user',
 };
 
 type SystemData = DataBase & {
-  kind: "system",
-}
+  kind: 'system',
+};
 
 type Data = UserData | SystemData;
 
 const data: Data = {
-  id: "",
-  name: "",
-  kind: "system",
-}
+  id: '',
+  name: '',
+  kind: 'system',
+};
 
-if (data.kind === "system") {
-  (data: SystemData);
+if (data.kind === 'system') {
+  data as SystemData;
 }

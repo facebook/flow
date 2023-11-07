@@ -64,7 +64,7 @@ Cannot declare `A` [1] because the name is already bound. [name-already-bound]
 
 References:
    good_shadowing.js:5:15
-   5| import typeof A from "./A.js";
+   5| import typeof A from './A.js';
                     ^ [1]
 
 
@@ -78,7 +78,7 @@ Cannot declare `Foo` [1] because the name is already bound. [name-already-bound]
 
 References:
    good_shadowing.js:6:14
-   6| import type {Foo, Bar as Baz} from "./A.js";
+   6| import type {Foo, Bar as Baz} from './A.js';
                    ^^^ [1]
 
 
@@ -94,7 +94,7 @@ used as a value, try importing it using `import A` instead of `import type A` an
 
 References:
    good_shadowing.js:5:15
-   5| import typeof A from "./A.js";
+   5| import typeof A from './A.js';
                     ^ [1]
 
 
@@ -108,7 +108,7 @@ Cannot declare `Baz` [1] because the name is already bound. [name-already-bound]
 
 References:
    good_shadowing.js:6:26
-    6| import type {Foo, Bar as Baz} from "./A.js";
+    6| import type {Foo, Bar as Baz} from './A.js';
                                 ^^^ [1]
 
 
@@ -124,7 +124,7 @@ used as a value, try importing it using `import A` instead of `import type A` an
 
 References:
    good_shadowing.js:5:15
-    5| import typeof A from "./A.js";
+    5| import typeof A from './A.js';
                      ^ [1]
 
 
@@ -140,7 +140,7 @@ used as a value, try importing it using `import A` instead of `import type A` an
 
 References:
    good_shadowing.js:5:15
-    5| import typeof A from "./A.js";
+    5| import typeof A from './A.js';
                      ^ [1]
 
 
@@ -156,7 +156,7 @@ used as a value, try importing it using `import Foo` instead of `import type Foo
 
 References:
    good_shadowing.js:6:14
-    6| import type {Foo, Bar as Baz} from "./A.js";
+    6| import type {Foo, Bar as Baz} from './A.js';
                     ^^^ [1]
 
 
@@ -172,7 +172,7 @@ used as a value, try importing it using `import Baz` instead of `import type Baz
 
 References:
    good_shadowing.js:6:26
-    6| import type {Foo, Bar as Baz} from "./A.js";
+    6| import type {Foo, Bar as Baz} from './A.js';
                                 ^^^ [1]
 
 
@@ -188,7 +188,7 @@ used as a value, try importing it using `import Foo` instead of `import type Foo
 
 References:
    good_shadowing.js:6:14
-    6| import type {Foo, Bar as Baz} from "./A.js";
+    6| import type {Foo, Bar as Baz} from './A.js';
                     ^^^ [1]
 
 
@@ -204,23 +204,23 @@ used as a value, try importing it using `import A` instead of `import type A` an
 
 References:
    good_shadowing.js:5:15
-    5| import typeof A from "./A.js";
+    5| import typeof A from './A.js';
                      ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- good_shadowing.js:20:6
+Error ------------------------------------------------------------------------------------------- good_shadowing.js:20:5
 
 Cannot use type `A` [1] as a value. Types are erased and don't exist at runtime. If the exported binding can also be
 used as a value, try importing it using `import A` instead of `import type A` and `import {A}` instead of
 `import type {A}`. [type-as-value]
 
-   good_shadowing.js:20:6
-   20| (new A.Bar(): Baz);
-            ^
+   good_shadowing.js:20:5
+   20| new A.Bar() as Baz;
+           ^
 
 References:
    good_shadowing.js:5:15
-    5| import typeof A from "./A.js";
+    5| import typeof A from './A.js';
                      ^ [1]
 
 
@@ -236,7 +236,7 @@ used as a value, try importing it using `import A` instead of `import type A` an
 
 References:
    import_type.js:5:15
-    5| import typeof A from "./A.js";
+    5| import typeof A from './A.js';
                      ^ [1]
 
 
@@ -252,7 +252,7 @@ used as a value, try importing it using `import Foo` instead of `import type Foo
 
 References:
    import_type.js:6:14
-    6| import type {Foo, Bar as Baz} from "./A.js";
+    6| import type {Foo, Bar as Baz} from './A.js';
                     ^^^ [1]
 
 
@@ -268,7 +268,7 @@ used as a value, try importing it using `import Baz` instead of `import type Baz
 
 References:
    import_type.js:6:26
-    6| import type {Foo, Bar as Baz} from "./A.js";
+    6| import type {Foo, Bar as Baz} from './A.js';
                                 ^^^ [1]
 
 

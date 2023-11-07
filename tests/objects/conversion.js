@@ -1,19 +1,19 @@
 /* @flow */
 
-(Object({foo: 'bar'}): {foo: string});
-(Object("123"): String);
-(Object(123): Number);
-(Object(true): Boolean);
-(Object(null): {});
-(Object(undefined): {});
-(Object(void(0)): {});
-(Object(undefined): Number); // error
+Object({foo: 'bar'}) as {foo: string};
+Object('123') as String;
+Object(123) as Number;
+Object(true) as Boolean;
+Object(null) as {};
+Object(undefined) as {};
+Object(void 0) as {};
+Object(undefined) as Number; // error
 
 var x = Object(null);
-x.foo = "bar";
+x.foo = 'bar';
 
-var y = Object("123");
-(y.charAt(0): string);
+var y = Object('123');
+y.charAt(0) as string;
 
 var z = Object(123); // error (next line makes this not match any signatures)
-(z.charAt(0): string);
+z.charAt(0) as string;

@@ -13,18 +13,18 @@
     return value === 'B';
   }
 
-  const Predicates = { isA, isB };
+  const Predicates = {isA, isB};
 
   const x: T = 'A';
 
   if (isA(x)) {
-    (x: A); // okay
-    (x: B); // error
+    x as A; // okay
+    x as B; // error
   }
 
   if (Predicates.isA(x)) {
-    (x: A);  // okay
-    (x: B);  // error
+    x as A; // okay
+    x as B; // error
   }
 }
 

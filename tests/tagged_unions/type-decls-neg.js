@@ -8,23 +8,23 @@ type DataBase = {
 type UserData = {
   id: string,
   name: string,
-  kind: "user",
-}
+  kind: 'user',
+};
 
 type SystemData = {
   id: string,
   name: string,
-  kind: "system",
-}
+  kind: 'system',
+};
 
 declare type Data = UserData | SystemData;
 
 const data: Data = {
-  id: "",
-  name: "",
-  kind: "system",
-}
+  id: '',
+  name: '',
+  kind: 'system',
+};
 
-if (data.kind === "user") {
-  (data: SystemData);
+if (data.kind === 'user') {
+  data as SystemData;
 }

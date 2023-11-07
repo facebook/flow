@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 /* @flow */
 
-("": void); // error
+'' as void; // error

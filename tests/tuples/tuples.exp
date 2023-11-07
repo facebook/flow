@@ -272,7 +272,7 @@ Error --------------------------------------------------------------------------
 Cannot assign `123` to `tup[0]` because the index must be statically known to write a tuple element.
 [invalid-tuple-index]
 
-   7| tup[(0: number)] = 123; // error
+   7| tup[0 as number] = 123; // error
       ^^^^^^^^^^^^^^^^
 
 

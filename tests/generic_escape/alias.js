@@ -8,4 +8,4 @@ declare function aw<T>(p: Pr<T> | T): T;
 
 (f => {
   return aw(f());
-}: Tr);
+}) as Tr;

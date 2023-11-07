@@ -787,76 +787,76 @@ References:
                    ^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ subtyping.js:35:2
+Error ------------------------------------------------------------------------------------------------ subtyping.js:34:1
 
-Cannot cast `new A` to `J` because property `y` is missing in `A` [1] but exists in `J` [2]. [prop-missing]
+Cannot cast `new A()` to `J` because property `y` is missing in `A` [1] but exists in `J` [2]. [prop-missing]
 
-   subtyping.js:35:2
-   35| (new A : J); // error
-        ^^^^^ [1]
-
-References:
-   subtyping.js:35:10
-   35| (new A : J); // error
-                ^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ subtyping.js:47:2
-
-Cannot cast `new D` to `K` because property `x` is missing in `D` [1] but exists in `K` [2]. [prop-missing]
-
-   subtyping.js:47:2
-   47| (new D : K); // error
-        ^^^^^ [1]
+   subtyping.js:34:1
+   34| new A() as J; // error
+       ^^^^^^^ [1]
 
 References:
-   subtyping.js:47:10
-   47| (new D : K); // error
-                ^ [2]
+   subtyping.js:34:12
+   34| new A() as J; // error
+                  ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ subtyping.js:64:2
+Error ------------------------------------------------------------------------------------------------ subtyping.js:45:1
+
+Cannot cast `new D()` to `K` because property `x` is missing in `D` [1] but exists in `K` [2]. [prop-missing]
+
+   subtyping.js:45:1
+   45| new D() as K; // error
+       ^^^^^^^ [1]
+
+References:
+   subtyping.js:45:12
+   45| new D() as K; // error
+                  ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ subtyping.js:61:1
 
 Cannot cast `E` to `L` because property `y` is missing in class `E` [1] but exists in `L` [2]. [prop-missing]
 
-   subtyping.js:64:2
-   64| (E : L); // error
-        ^
+   subtyping.js:61:1
+   61| E as L; // error
+       ^
 
 References:
-   subtyping.js:51:7
-   51| class E {
+   subtyping.js:48:7
+   48| class E {
              ^ [1]
-   subtyping.js:64:6
-   64| (E : L); // error
+   subtyping.js:61:6
+   61| E as L; // error
             ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ subtyping.js:77:2
+Error ------------------------------------------------------------------------------------------------ subtyping.js:72:1
 
-Cannot cast `new G` to `M` because property `z` is missing in `G` [1] but exists in `M` [2]. [prop-missing]
+Cannot cast `new G()` to `M` because property `z` is missing in `G` [1] but exists in `M` [2]. [prop-missing]
 
-   subtyping.js:77:2
-   77| (new G : M); // error
-        ^^^^^ [1]
-
-References:
-   subtyping.js:77:10
-   77| (new G : M); // error
-                ^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ subtyping.js:78:2
-
-Cannot cast `new G` to `N` because property `z` is missing in `G` [1] but exists in `M` [2]. [prop-missing]
-
-   subtyping.js:78:2
-   78| (new G : N); // error
-        ^^^^^ [1]
+   subtyping.js:72:1
+   72| new G() as M; // error
+       ^^^^^^^ [1]
 
 References:
-   subtyping.js:74:21
-   74| interface N extends M {
+   subtyping.js:72:12
+   72| new G() as M; // error
+                  ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ subtyping.js:73:1
+
+Cannot cast `new G()` to `N` because property `z` is missing in `G` [1] but exists in `M` [2]. [prop-missing]
+
+   subtyping.js:73:1
+   73| new G() as N; // error
+       ^^^^^^^ [1]
+
+References:
+   subtyping.js:70:21
+   70| interface N extends M {}
                            ^ [2]
 
 

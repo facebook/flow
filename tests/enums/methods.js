@@ -17,9 +17,10 @@ E.isValid(maybeString);
 const s: string = E.getName(E.A);
 
 // .members()
-for (const x of E.members()) {} // OK
+for (const x of E.members()) {
+} // OK
 const iter = E.members();
-(iter.next().value: E | void); // OK
+iter.next().value as E | void; // OK
 
 ////////////
 // Errors //
@@ -40,7 +41,7 @@ E.A(); // Error
 E.toString(); // Error
 
 // `getName` errors
-(E.getName(E.B): boolean); // Error - wrong type
+E.getName(E.B) as boolean; // Error - wrong type
 
 // `this` must be the enum object
 const o = {

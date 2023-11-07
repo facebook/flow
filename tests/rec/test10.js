@@ -1,12 +1,12 @@
 //@flow
-type X<T> = Array<T> | X<Array<T>>
-  
-([] : X<number>)
+type X<T> = Array<T> | X<Array<T>>;
 
-type Y<T> = $ReadOnlyArray<T> | Y<$ReadOnlyArray<T>>
-  
-([] : Y<number>)
+[] as X<number>;
 
-type Z<T> = [T] | Z<[T]>
+type Y<T> = $ReadOnlyArray<T> | Y<$ReadOnlyArray<T>>;
 
-([] : Z<number>)
+[] as Y<number>;
+
+type Z<T> = [T] | Z<[T]>;
+
+[] as Z<number>;

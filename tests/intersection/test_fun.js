@@ -20,12 +20,12 @@ type F = (_: ObjA) => void;
 type G = (_: ObjB) => void;
 type FG = (_: ObjA | ObjB) => void;
 
-declare var fun1 : F & G;
+declare var fun1: F & G;
 
-(fun1 : FG);
+fun1 as FG;
 
-var fun2 : FG = fun1;
+var fun2: FG = fun1;
 
 // simpler variation
-declare var f : ((_: number) => void) & ((_: string) => void);
+declare var f: ((_: number) => void) & ((_: string) => void);
 var g: (_: number | string) => void = f;

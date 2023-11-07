@@ -1,9 +1,9 @@
 //@flow
 
-class C extends ((42: any): D).f(x => 42) {}
+class C extends (42 as any as D).f(x => 42) {}
 
 class D {
-    f(x: mixed): any {
-        return C;
-    }
+  f(x: mixed): any {
+    return C;
+  }
 }

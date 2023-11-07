@@ -5,7 +5,7 @@
 
 declare var any: any;
 
-((any: (x: {p: number}) => void): (x: {p: string}) => void);
+any as (x: {p: number}) => void as (x: {p: string}) => void;
 
 type X<-T> = mixed;
-((any: X<{p: number}>): X<{p: string}>);
+any as X<{p: number}> as X<{p: string}>;

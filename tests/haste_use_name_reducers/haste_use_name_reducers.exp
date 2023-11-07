@@ -1,18 +1,18 @@
-Error ----------------------------------------------------------------------------------------------------- index.js:3:2
+Error ----------------------------------------------------------------------------------------------------- index.js:3:1
 
 Cannot cast `require(...)` to boolean because `Decl` [1] is incompatible with boolean [2]. [incompatible-cast]
 
-   index.js:3:2
-   3| (require('Module1'): boolean);
-       ^^^^^^^^^^^^^^^^^^
+   index.js:3:1
+   3| require('Module1') as boolean;
+      ^^^^^^^^^^^^^^^^^^
 
 References:
-   dir1/Module1.js.flow:7:31
-   7| module.exports = (new Decl(): Decl);
-                                    ^^^^ [1]
-   index.js:3:22
-   3| (require('Module1'): boolean);
-                           ^^^^^^^ [2]
+   dir1/Module1.js.flow:7:32
+   7| module.exports = new Decl() as Decl;
+                                     ^^^^ [1]
+   index.js:3:23
+   3| require('Module1') as boolean;
+                            ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- index.js:6:9

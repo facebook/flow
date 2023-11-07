@@ -1,4 +1,4 @@
 //@flow
 
 function f() {}
-(f: {[string]: string});
+f as {[string]: string};

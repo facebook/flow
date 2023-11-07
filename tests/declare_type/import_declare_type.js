@@ -5,13 +5,13 @@
 ////////////////////////////////////////////////////////////
 // == Import Declared Type Alias From Declared Module == //
 //////////////////////////////////////////////////////////
-import type {baz} from "ModuleAliasFoo";
-import {foo} from "ModuleAliasFoo";
+import type {baz} from 'ModuleAliasFoo';
+import {foo} from 'ModuleAliasFoo';
 var k1: baz = 42;
-var k2: baz = "shab"; // Error: string to int
+var k2: baz = 'shab'; // Error: string to int
 var k3: toz = foo(k1); // works
 
-import type {toz} from "ModuleAliasFoo";
+import type {toz} from 'ModuleAliasFoo';
 var k4: toz = foo(k1); // works
 
 //////////////////////////////////////////////////////////
@@ -19,12 +19,12 @@ var k4: toz = foo(k1); // works
 ////////////////////////////////////////////////////////
 
 import blah from 'foo';
-import type { Foo, Bar, Id } from 'foo';
+import type {Foo, Bar, Id} from 'foo';
 
 blah(0, 0);
 
-({toz:3} : Foo); // error : {toz : number} ~> string
+({toz: 3}) as Foo; // error : {toz : number} ~> string
 
-(3 : Bar); // error : number ~> A
+3 as Bar; // error : number ~> A
 
-("lol" : Id<number>); // error : string ~> number
+'lol' as Id<number>; // error : string ~> number

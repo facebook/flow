@@ -48,24 +48,24 @@ References:
              ^^^^^^^^ [5]
 
 
-Error ------------------------------------------------------------------------------------- large_type_spread.js:1007:22
+Error ------------------------------------------------------------------------------------- large_type_spread.js:1007:21
 
 Computing object type [1] may lead to an exponentially large number of cases to reason about because `A` [2] and `A` [3]
 are both unions. Please use at most one union type per spread to simplify reasoning about the spread result. You may be
 able to get rid of a union by specifying a more general type that captures all of the branches of the union.
 [exponential-spread]
 
-   large_type_spread.js:1007:22
-   1007| declare var a: {| ...A, ...A, ...{||}|};
-                              ^ [2]
+   large_type_spread.js:1007:21
+   1007| declare var a: {|...A, ...A, ...{||}|};
+                             ^ [2]
 
 References:
    large_type_spread.js:1007:16
-   1007| declare var a: {| ...A, ...A, ...{||}|};
-                        ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   large_type_spread.js:1007:28
-   1007| declare var a: {| ...A, ...A, ...{||}|};
-                                    ^ [3]
+   1007| declare var a: {|...A, ...A, ...{||}|};
+                        ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   large_type_spread.js:1007:27
+   1007| declare var a: {|...A, ...A, ...{||}|};
+                                   ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- type_spread.js:9:20
@@ -76,15 +76,15 @@ able to get rid of a union by specifying a more general type that captures all o
 [exponential-spread]
 
    type_spread.js:9:20
-   9| declare var a: {...A, ...A, ...{| baz: number |}} // Error
+   9| declare var a: {...A, ...A, ...{|baz: number|}}; // Error
                          ^ [2]
 
 References:
    type_spread.js:9:16
-   9| declare var a: {...A, ...A, ...{| baz: number |}} // Error
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   9| declare var a: {...A, ...A, ...{|baz: number|}}; // Error
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    type_spread.js:9:26
-   9| declare var a: {...A, ...A, ...{| baz: number |}} // Error
+   9| declare var a: {...A, ...A, ...{|baz: number|}}; // Error
                                ^ [3]
 
 
@@ -107,21 +107,21 @@ References:
                       ^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------- type_spread.js:20:2
+Error ---------------------------------------------------------------------------------------------- type_spread.js:20:1
 
 Cannot cast `b` to null because object type [1] is incompatible with null [2]. [incompatible-cast]
 
-   type_spread.js:20:2
-   20| (b: null);
-        ^
+   type_spread.js:20:1
+   20| b as null;
+       ^
 
 References:
    type_spread.js:16:16
    16| declare var b: {...A, ...$ElementType<typeof x, 'a'>}; // Error
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   type_spread.js:20:5
-   20| (b: null);
-           ^^^^ [2]
+   type_spread.js:20:6
+   20| b as null;
+            ^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- type_spread.js:32:14
@@ -132,162 +132,176 @@ able to get rid of a union by specifying a more general type that captures all o
 [exponential-spread]
 
    type_spread.js:32:14
-   32| var c = Poly<A,A>();
+   32| var c = Poly<A, A>();
                     ^ [2]
 
 References:
    type_spread.js:30:32
-   30| declare function Poly<T, U>(): {| ...T, ...U, ...{| baz: number|} |};
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   type_spread.js:32:16
-   32| var c = Poly<A,A>();
-                      ^ [3]
+   30| declare function Poly<T, U>(): {|...T, ...U, ...{|baz: number|}|};
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   type_spread.js:32:17
+   32| var c = Poly<A, A>();
+                       ^ [3]
 
 
-Error --------------------------------------------------------------------------------------------- type_spread.js:44:20
+Error ---------------------------------------------------------------------------------------------- type_spread.js:45:6
 
 Computing object type [1] may lead to an exponentially large number of cases to reason about because `A` [2] and `A` [3]
 are both unions. Please use at most one union type per spread to simplify reasoning about the spread result. You may be
 able to get rid of a union by specifying a more general type that captures all of the branches of the union.
 [exponential-spread]
 
-   type_spread.js:44:20
-   44| declare var g: {...A, foo: number, bar: number, ...A, baz: number, ...A, qux: number}; // Error
-                          ^ [2]
+   type_spread.js:45:6
+   45|   ...A,
+            ^ [2]
 
 References:
    type_spread.js:44:16
-   44| declare var g: {...A, foo: number, bar: number, ...A, baz: number, ...A, qux: number}; // Error
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   type_spread.js:44:52
-   44| declare var g: {...A, foo: number, bar: number, ...A, baz: number, ...A, qux: number}; // Error
-                                                          ^ [3]
+                      v
+   44| declare var g: {
+   45|   ...A,
+   46|   foo: number,
+   47|   bar: number,
+   48|   ...A,
+   49|   baz: number,
+   50|   ...A,
+   51|   qux: number,
+   52| }; // Error
+       ^ [1]
+   type_spread.js:48:6
+   48|   ...A,
+            ^ [3]
 
 
-Error --------------------------------------------------------------------------------------------- type_spread.js:48:20
+Error ---------------------------------------------------------------------------------------------- type_spread.js:56:6
 
 Computing object type [1] may lead to an exponentially large number of cases to reason about because union type [2] and
 union type [3] are both unions. Please use at most one union type per spread to simplify reasoning about the spread
 result. You may be able to get rid of a union by specifying a more general type that captures all of the branches of the
 union. [exponential-spread]
 
-   type_spread.js:48:20
-   48| declare var h: {...{| foo: number |} | {| bar: number |}, ...{| foo: number |} | {| bar: number |}, ...{| baz: number |}}; // Error
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   type_spread.js:56:6
+   56|   ...{|foo: number|} | {|bar: number|},
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 References:
-   type_spread.js:48:16
-   48| declare var h: {...{| foo: number |} | {| bar: number |}, ...{| foo: number |} | {| bar: number |}, ...{| baz: number |}}; // Error
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   type_spread.js:48:62
-   48| declare var h: {...{| foo: number |} | {| bar: number |}, ...{| foo: number |} | {| bar: number |}, ...{| baz: number |}}; // Error
-                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   type_spread.js:55:16
+                      v
+   55| declare var h: {
+   56|   ...{|foo: number|} | {|bar: number|},
+   57|   ...{|foo: number|} | {|bar: number|},
+   58|   ...{|baz: number|},
+   59| }; // Error
+       ^ [1]
+   type_spread.js:57:6
+   57|   ...{|foo: number|} | {|bar: number|},
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------- type_spread.js:53:11
+Error --------------------------------------------------------------------------------------------- type_spread.js:64:11
 
 Computing object type [1] may lead to an exponentially large number of cases to reason about because `T` [2] and `T` [2]
 are both unions. Please use at most one union type per spread to simplify reasoning about the spread result. You may be
 able to get rid of a union by specifying a more general type that captures all of the branches of the union.
 [exponential-spread]
 
-   type_spread.js:53:11
-   53| const i = poly({foo: 3}, {bar: 3}); // Error, T has multiple lower bounds
+   type_spread.js:64:11
+   64| const i = poly({foo: 3}, {bar: 3}); // Error, T has multiple lower bounds
                  ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   type_spread.js:51:39
-   51| declare function poly<T>(x: T, y: T): {...T, ...T, ...T, ...T, ...T};
+   type_spread.js:62:39
+   62| declare function poly<T>(x: T, y: T): {...T, ...T, ...T, ...T, ...T};
                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   type_spread.js:51:23
-   51| declare function poly<T>(x: T, y: T): {...T, ...T, ...T, ...T, ...T};
+   type_spread.js:62:23
+   62| declare function poly<T>(x: T, y: T): {...T, ...T, ...T, ...T, ...T};
                              ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- type_spread.js:58:20
+Error --------------------------------------------------------------------------------------------- type_spread.js:68:20
 
 Computing object type [1] may lead to an exponentially large number of cases to reason about because `U` [2] and `U` [3]
 are both unions. Please use at most one union type per spread to simplify reasoning about the spread result. You may be
 able to get rid of a union by specifying a more general type that captures all of the branches of the union.
 [exponential-spread]
 
-   type_spread.js:58:20
-   58| declare var j: {...U, ...U, ...U};
+   type_spread.js:68:20
+   68| declare var j: {...U, ...U, ...U};
                           ^ [2]
 
 References:
-   type_spread.js:58:16
-   58| declare var j: {...U, ...U, ...U};
+   type_spread.js:68:16
+   68| declare var j: {...U, ...U, ...U};
                       ^^^^^^^^^^^^^^^^^^ [1]
-   type_spread.js:58:26
-   58| declare var j: {...U, ...U, ...U};
+   type_spread.js:68:26
+   68| declare var j: {...U, ...U, ...U};
                                 ^ [3]
 
 
-Error --------------------------------------------------------------------------------------------- type_spread.js:61:44
+Error --------------------------------------------------------------------------------------------- type_spread.js:71:44
 
 Computing object type [1] may lead to an exponentially large number of cases to reason about because `U` [2] and `U` [3]
 are both unions. Please use at most one union type per spread to simplify reasoning about the spread result. You may be
 able to get rid of a union by specifying a more general type that captures all of the branches of the union.
 [exponential-spread]
 
-   type_spread.js:61:44
-   61| declare var k: {...U, ...U, ...U, ...U, ...U, ...U, ...U};
+   type_spread.js:71:44
+   71| declare var k: {...U, ...U, ...U, ...U, ...U, ...U, ...U};
                                                   ^ [2]
 
 References:
-   type_spread.js:61:16
-   61| declare var k: {...U, ...U, ...U, ...U, ...U, ...U, ...U};
+   type_spread.js:71:16
+   71| declare var k: {...U, ...U, ...U, ...U, ...U, ...U, ...U};
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   type_spread.js:61:50
-   61| declare var k: {...U, ...U, ...U, ...U, ...U, ...U, ...U};
+   type_spread.js:71:50
+   71| declare var k: {...U, ...U, ...U, ...U, ...U, ...U, ...U};
                                                         ^ [3]
 
 
-Error --------------------------------------------------------------------------------------------- type_spread.js:66:11
+Error --------------------------------------------------------------------------------------------- type_spread.js:76:11
 
 Computing object type [1] may lead to an exponentially large number of cases to reason about because `T` [2] and `U` [3]
 are both unions. Please use at most one union type per spread to simplify reasoning about the spread result. You may be
 able to get rid of a union by specifying a more general type that captures all of the branches of the union.
 [exponential-spread]
 
-   type_spread.js:66:11
-   66| const l = poly2({foo: 3}, ({foo: 3}: U), {bar: 3}); // Error two unions
+   type_spread.js:76:11
+   76| const l = poly2({foo: 3}, {foo: 3} as U, {bar: 3}); // Error two unions
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   type_spread.js:64:49
-   64| declare function poly2<T, U>(x: T, y: U, z: T): {...T, ...U, ...U};
+   type_spread.js:74:49
+   74| declare function poly2<T, U>(x: T, y: U, z: T): {...T, ...U, ...U};
                                                        ^^^^^^^^^^^^^^^^^^ [1]
-   type_spread.js:64:24
-   64| declare function poly2<T, U>(x: T, y: U, z: T): {...T, ...U, ...U};
+   type_spread.js:74:24
+   74| declare function poly2<T, U>(x: T, y: U, z: T): {...T, ...U, ...U};
                               ^ [2]
-   type_spread.js:66:38
-   66| const l = poly2({foo: 3}, ({foo: 3}: U), {bar: 3}); // Error two unions
-                                            ^ [3]
+   type_spread.js:76:39
+   76| const l = poly2({foo: 3}, {foo: 3} as U, {bar: 3}); // Error two unions
+                                             ^ [3]
 
 
-Error --------------------------------------------------------------------------------------------- type_spread.js:81:16
+Error --------------------------------------------------------------------------------------------- type_spread.js:86:15
 
 Computing object type [1] may lead to an exponentially large number of cases to reason about because `State` [2] and
 `State` [3] are both unions. Please use at most one union type per spread to simplify reasoning about the spread result.
 You may be able to get rid of a union by specifying a more general type that captures all of the branches of the union.
 [exponential-spread]
 
-   type_spread.js:81:16
-   81| type N = {| ...$Exact<State>, ...$Exact<{||}>, ...$Exact<State> |}; // Error, two unions
-                      ^^^^^^^^^^^^^
+   type_spread.js:86:15
+   86| type N = {|...$Exact<State>, ...$Exact<{||}>, ...$Exact<State>|}; // Error, two unions
+                     ^^^^^^^^^^^^^
 
 References:
-   type_spread.js:81:10
-   81| type N = {| ...$Exact<State>, ...$Exact<{||}>, ...$Exact<State> |}; // Error, two unions
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   type_spread.js:81:23
-   81| type N = {| ...$Exact<State>, ...$Exact<{||}>, ...$Exact<State> |}; // Error, two unions
-                             ^^^^^ [2]
-   type_spread.js:81:58
-   81| type N = {| ...$Exact<State>, ...$Exact<{||}>, ...$Exact<State> |}; // Error, two unions
-                                                                ^^^^^ [3]
+   type_spread.js:86:10
+   86| type N = {|...$Exact<State>, ...$Exact<{||}>, ...$Exact<State>|}; // Error, two unions
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   type_spread.js:86:22
+   86| type N = {|...$Exact<State>, ...$Exact<{||}>, ...$Exact<State>|}; // Error, two unions
+                            ^^^^^ [2]
+   type_spread.js:86:57
+   86| type N = {|...$Exact<State>, ...$Exact<{||}>, ...$Exact<State>|}; // Error, two unions
+                                                               ^^^^^ [3]
 
 
 

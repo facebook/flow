@@ -1,3 +1,4 @@
 [options]
 all=true
+casting_syntax=both
 module.name_mapper='^\(.*\)\.css$' -> '<PROJECT_ROOT>\cssMock.js'

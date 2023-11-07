@@ -1,11 +1,11 @@
-Error ---------------------------------------------------------------------------------------------------- test.js:16:38
+Error ---------------------------------------------------------------------------------------------------- test.js:16:34
 
 Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
 [incompatible-variance]
 
-   test.js:16:38
-   16|     bad (x: number) : $ReadOnlyArray<T> {// Error: T in covariant position
-                                            ^
+   test.js:16:34
+   16|   bad(x: number): $ReadOnlyArray<T> {
+                                        ^
 
 References:
    test.js:15:12
@@ -13,34 +13,34 @@ References:
                   ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:22:28
+Error ---------------------------------------------------------------------------------------------------- test.js:23:26
 
 Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
 [incompatible-variance]
 
-   test.js:22:28
-   22|     bad (x: $ReadOnlyArray<T> => number) : number {// Error: T used covariantly
-                                  ^
+   test.js:23:26
+   23|   bad(x: ($ReadOnlyArray<T>) => number): number {
+                                ^
 
 References:
-   test.js:21:18
-   21| class ContraBaz<-T> {
+   test.js:22:18
+   22| class ContraBaz<-T> {
                         ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:38:1
+Error ----------------------------------------------------------------------------------------------------- test.js:40:1
 
 Cannot assign `42` to `x[0]` because read-only arrays cannot be written to. [cannot-write]
 
-   38| x[0] = 42;
+   40| x[0] = 42;
        ^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:39:1
+Error ----------------------------------------------------------------------------------------------------- test.js:41:1
 
 Cannot assign `42` to `x[0]` because read-only arrays cannot be written to. [cannot-write]
 
-   39| x[(0: any)] = 42;
+   41| x[0 as any] = 42;
        ^^^^^^^^^^^
 
 

@@ -1,4 +1,5 @@
 [options]
 all=true
+casting_syntax=both
 lazy_mode=true
 module.system=haste

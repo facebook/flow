@@ -30,20 +30,20 @@ Unclear type. Using `any`, `Object`, or `Function` types is not safe! [unclear-t
                       ^^^
 
 
-Error --------------------------------------------------------------------------------------------------- index.js:13:11
+Error --------------------------------------------------------------------------------------------------- index.js:13:10
 
 Unclear type. Using `any`, `Object`, or `Function` types is not safe! [unclear-type]
 
-   13| const f: (Object) => Function = ({}) => function() {};
-                 ^^^^^^
+   13| const f: Object => Function = ({}) => function () {};
+                ^^^^^^
 
 
-Error --------------------------------------------------------------------------------------------------- index.js:13:22
+Error --------------------------------------------------------------------------------------------------- index.js:13:20
 
 Unclear type. Using `any`, `Object`, or `Function` types is not safe! [unclear-type]
 
-   13| const f: (Object) => Function = ({}) => function() {};
-                            ^^^^^^^^
+   13| const f: Object => Function = ({}) => function () {};
+                          ^^^^^^^^
 
 
 Error --------------------------------------------------------------------------------------------------- index.js:15:15
@@ -54,20 +54,20 @@ Unclear type. Using `any`, `Object`, or `Function` types is not safe! [unclear-t
                      ^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- index.js:18:8
+Error ---------------------------------------------------------------------------------------------------- index.js:18:9
 
 Cannot apply type because it is not a polymorphic type. [nonpolymorphic-type-app]
 
-   18| (null: Object<mixed>);
-              ^^^^^^^^^^^^^
+   18| null as Object<mixed>;
+               ^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- index.js:19:8
+Error ---------------------------------------------------------------------------------------------------- index.js:19:9
 
 Cannot apply type because it is not a polymorphic type. [nonpolymorphic-type-app]
 
-   19| (null: Function<mixed>);
-              ^^^^^^^^^^^^^^^
+   19| null as Function<mixed>;
+               ^^^^^^^^^^^^^^^
 
 
 

@@ -1629,107 +1629,107 @@ Mapped Types do not yet support optionality removal. [invalid-mapped-type]
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------- pick_and_omit.js:15:9
+Error -------------------------------------------------------------------------------------------- pick_and_omit.js:17:9
 
 Cannot assign `3` to `noFoo.foo` because property `foo` is missing in `Omit` [1]. [prop-missing]
 
-   pick_and_omit.js:15:9
-   15|   noFoo.foo = 3; // ERROR!
+   pick_and_omit.js:17:9
+   17|   noFoo.foo = 3; // ERROR!
                ^^^
 
 References:
-   pick_and_omit.js:14:24
-   14|   declare const noFoo: Omit<O, 'foo'>;
+   pick_and_omit.js:16:24
+   16|   declare const noFoo: Omit<O, 'foo'>;
                               ^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- pick_and_omit.js:21:36
+Error ------------------------------------------------------------------------------------------- pick_and_omit.js:23:36
 
 Cannot instantiate `Omit` because an index signature declaring the expected key / value type is missing in `O` [1] in
 type argument `Keys`. [prop-missing]
 
-   pick_and_omit.js:21:36
-   21|   declare const noKeysBad: Omit<O, string>; // ERROR! string is not a subtype of $Keys<O>
+   pick_and_omit.js:23:36
+   23|   declare const noKeysBad: Omit<O, string>; // ERROR! string is not a subtype of $Keys<O>
                                           ^^^^^^
 
 References:
-   pick_and_omit.js:21:33
-   21|   declare const noKeysBad: Omit<O, string>; // ERROR! string is not a subtype of $Keys<O>
+   pick_and_omit.js:23:33
+   23|   declare const noKeysBad: Omit<O, string>; // ERROR! string is not a subtype of $Keys<O>
                                        ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- pick_and_omit.js:37:47
+Error ------------------------------------------------------------------------------------------- pick_and_omit.js:49:47
 
 Cannot call `omitInput` with object literal bound to `x` because property `bar` is missing in object literal [1] but
 exists in `Omit` [2]. [prop-missing]
 
-   pick_and_omit.js:37:47
-   37|   const badCall = omitInput({foo: 3, bar: 3}, {foo: 3}, ('foo': 'foo')); // ERROR 2x
+   pick_and_omit.js:49:47
+   49|   const badCall = omitInput({foo: 3, bar: 3}, {foo: 3}, 'foo' as 'foo'); // ERROR 2x
                                                      ^^^^^^^^ [1]
 
 References:
-   pick_and_omit.js:35:65
-   35|   declare function omitInput<O: {...}, Keys: $Keys<O>>(o: O, x: Omit<O, Keys>, ...$ReadOnlyArray<Keys>): void;
-                                                                       ^^^^^^^^^^^^^ [2]
+   pick_and_omit.js:45:8
+   45|     x: Omit<O, Keys>,
+              ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- pick_and_omit.js:37:47
+Error ------------------------------------------------------------------------------------------- pick_and_omit.js:49:47
 
 Cannot call `omitInput` with object literal bound to `x` because property `foo` is missing in `Omit` [1] but exists in
 object literal [2]. [prop-missing]
 
-   pick_and_omit.js:37:47
-   37|   const badCall = omitInput({foo: 3, bar: 3}, {foo: 3}, ('foo': 'foo')); // ERROR 2x
+   pick_and_omit.js:49:47
+   49|   const badCall = omitInput({foo: 3, bar: 3}, {foo: 3}, 'foo' as 'foo'); // ERROR 2x
                                                      ^^^^^^^^ [2]
 
 References:
-   pick_and_omit.js:35:65
-   35|   declare function omitInput<O: {...}, Keys: $Keys<O>>(o: O, x: Omit<O, Keys>, ...$ReadOnlyArray<Keys>): void;
-                                                                       ^^^^^^^^^^^^^ [1]
+   pick_and_omit.js:45:8
+   45|     x: Omit<O, Keys>,
+              ^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- pick_and_omit.js:51:11
+Error ------------------------------------------------------------------------------------------- pick_and_omit.js:63:11
 
 Cannot get `onlyFoo.bar` because property `bar` is missing in `Pick` [1]. [prop-missing]
 
-   pick_and_omit.js:51:11
-   51|   onlyFoo.bar; // ERROR!
+   pick_and_omit.js:63:11
+   63|   onlyFoo.bar; // ERROR!
                  ^^^
 
 References:
-   pick_and_omit.js:50:26
-   50|   declare const onlyFoo: Pick<P, 'foo'>;
+   pick_and_omit.js:62:26
+   62|   declare const onlyFoo: Pick<P, 'foo'>;
                                 ^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- pick_and_omit.js:64:47
+Error ------------------------------------------------------------------------------------------- pick_and_omit.js:83:47
 
 Cannot call `pickInput` with object literal bound to `x` because property `bar` is missing in `Pick` [1] but exists in
 object literal [2]. [prop-missing]
 
-   pick_and_omit.js:64:47
-   64|   const badCall = pickInput({foo: 3, bar: 3}, {bar : 3}, 'foo'); // ERROR 2x
-                                                     ^^^^^^^^^ [2]
+   pick_and_omit.js:83:47
+   83|   const badCall = pickInput({foo: 3, bar: 3}, {bar: 3}, 'foo'); // ERROR 2x
+                                                     ^^^^^^^^ [2]
 
 References:
-   pick_and_omit.js:61:65
-   61|   declare function pickInput<O: {...}, Keys: $Keys<O>>(o: O, x: Pick<O, Keys>, ...$ReadOnlyArray<Keys>): void;
-                                                                       ^^^^^^^^^^^^^ [1]
+   pick_and_omit.js:78:8
+   78|     x: Pick<O, Keys>,
+              ^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- pick_and_omit.js:64:47
+Error ------------------------------------------------------------------------------------------- pick_and_omit.js:83:47
 
 Cannot call `pickInput` with object literal bound to `x` because property `foo` is missing in object literal [1] but
 exists in `Pick` [2]. [prop-missing]
 
-   pick_and_omit.js:64:47
-   64|   const badCall = pickInput({foo: 3, bar: 3}, {bar : 3}, 'foo'); // ERROR 2x
-                                                     ^^^^^^^^^ [1]
+   pick_and_omit.js:83:47
+   83|   const badCall = pickInput({foo: 3, bar: 3}, {bar: 3}, 'foo'); // ERROR 2x
+                                                     ^^^^^^^^ [1]
 
 References:
-   pick_and_omit.js:61:65
-   61|   declare function pickInput<O: {...}, Keys: $Keys<O>>(o: O, x: Pick<O, Keys>, ...$ReadOnlyArray<Keys>): void;
-                                                                       ^^^^^^^^^^^^^ [2]
+   pick_and_omit.js:78:8
+   78|     x: Pick<O, Keys>,
+              ^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- reasons.js:10:26

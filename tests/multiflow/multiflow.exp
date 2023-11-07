@@ -184,16 +184,16 @@ Cannot create `AcceptsWhatever` element because string [1] is incompatible with 
 [incompatible-use]
 
    jsx.js:30:3
-   30| (<AcceptsWhatever />: number); // Error string ~> number
+   30| (<AcceptsWhatever />) as number; // Error string ~> number
          ^^^^^^^^^^^^^^^
 
 References:
    jsx.js:29:68
    29| declare function AcceptsWhatever(props: {} | null, children: any): string;
                                                                           ^^^^^^ [1]
-   jsx.js:30:23
-   30| (<AcceptsWhatever />: number); // Error string ~> number
-                             ^^^^^^ [2]
+   jsx.js:30:26
+   30| (<AcceptsWhatever />) as number; // Error string ~> number
+                                ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ jsx.js:31:3
@@ -203,44 +203,44 @@ Cannot create `AcceptsWhatever` element because: [incompatible-use]
  - Or props [3] is incompatible with null [4].
 
    jsx.js:31:3
-   31| (<AcceptsWhatever name="hi">Text</AcceptsWhatever>: number); // Error string ~> number
+   31| (<AcceptsWhatever name="hi">Text</AcceptsWhatever>) as number; // Error string ~> number
          ^^^^^^^^^^^^^^^
 
 References:
    jsx.js:29:68
    29| declare function AcceptsWhatever(props: {} | null, children: any): string;
                                                                           ^^^^^^ [1]
-   jsx.js:31:53
-   31| (<AcceptsWhatever name="hi">Text</AcceptsWhatever>: number); // Error string ~> number
-                                                           ^^^^^^ [2]
+   jsx.js:31:56
+   31| (<AcceptsWhatever name="hi">Text</AcceptsWhatever>) as number; // Error string ~> number
+                                                              ^^^^^^ [2]
    jsx.js:31:2
-   31| (<AcceptsWhatever name="hi">Text</AcceptsWhatever>: number); // Error string ~> number
+   31| (<AcceptsWhatever name="hi">Text</AcceptsWhatever>) as number; // Error string ~> number
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    jsx.js:13:10
    13|   props: null,
                 ^^^^ [4]
 
 
-Error ------------------------------------------------------------------------------------------------------ jsx.js:34:3
+Error ------------------------------------------------------------------------------------------------------ jsx.js:34:2
 
 Cannot create `ExpectsProps` element because: [incompatible-use]
  - Either property `name` is missing in object type [1] but exists in object type [2] in the first parameter.
  - Or null [3] is incompatible with object type [2].
 
-   jsx.js:34:3
-   34| (<ExpectsProps />); // Error - missing prop
-         ^^^^^^^^^^^^
+   jsx.js:34:2
+   34| <ExpectsProps />; // Error - missing prop
+        ^^^^^^^^^^^^
 
 References:
    jsx.js:10:14
-   10|   C: (props: {}, children: Children) => Elem
+   10|   C: (props: {}, children: Children) => Elem,
                     ^^ [1]
    jsx.js:33:38
-   33| declare function ExpectsProps(props: { name: string }, children: any): string;
-                                            ^^^^^^^^^^^^^^^^ [2]
-   jsx.js:34:2
-   34| (<ExpectsProps />); // Error - missing prop
-        ^^^^^^^^^^^^^^^^ [3]
+   33| declare function ExpectsProps(props: {name: string}, children: any): string;
+                                            ^^^^^^^^^^^^^^ [2]
+   jsx.js:34:1
+   34| <ExpectsProps />; // Error - missing prop
+       ^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------ jsx.js:35:3
@@ -250,94 +250,94 @@ Cannot create `ExpectsProps` element because: [incompatible-use]
  - Or props [3] is incompatible with null [4].
 
    jsx.js:35:3
-   35| (<ExpectsProps name="hi">Text</ExpectsProps>: number); // Error string ~> number
+   35| (<ExpectsProps name="hi">Text</ExpectsProps>) as number; // Error string ~> number
          ^^^^^^^^^^^^
 
 References:
-   jsx.js:33:72
-   33| declare function ExpectsProps(props: { name: string }, children: any): string;
-                                                                              ^^^^^^ [1]
-   jsx.js:35:47
-   35| (<ExpectsProps name="hi">Text</ExpectsProps>: number); // Error string ~> number
-                                                     ^^^^^^ [2]
+   jsx.js:33:70
+   33| declare function ExpectsProps(props: {name: string}, children: any): string;
+                                                                            ^^^^^^ [1]
+   jsx.js:35:50
+   35| (<ExpectsProps name="hi">Text</ExpectsProps>) as number; // Error string ~> number
+                                                        ^^^^^^ [2]
    jsx.js:35:2
-   35| (<ExpectsProps name="hi">Text</ExpectsProps>: number); // Error string ~> number
+   35| (<ExpectsProps name="hi">Text</ExpectsProps>) as number; // Error string ~> number
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    jsx.js:13:10
    13|   props: null,
                 ^^^^ [4]
 
 
-Error ------------------------------------------------------------------------------------------------------ jsx.js:38:3
+Error ------------------------------------------------------------------------------------------------------ jsx.js:38:2
 
 Cannot create `ExpectsChildrenTuple` element because rest array [1] has 0 elements but tuple type [2] has 1 element.
 [incompatible-use]
 
-   jsx.js:38:3
-   38| (<ExpectsChildrenTuple />); // Error - missing child
-         ^^^^^^^^^^^^^^^^^^^^
+   jsx.js:38:2
+   38| <ExpectsChildrenTuple />; // Error - missing child
+        ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   jsx.js:38:2
-   38| (<ExpectsChildrenTuple />); // Error - missing child
-        ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   jsx.js:38:1
+   38| <ExpectsChildrenTuple />; // Error - missing child
+       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    jsx.js:37:61
    37| declare function ExpectsChildrenTuple(props: any, children: [string]): string;
                                                                    ^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ jsx.js:40:3
+Error ------------------------------------------------------------------------------------------------------ jsx.js:40:2
 
 Cannot create `ExpectsChildrenTuple` element because number [1] is incompatible with string [2] in index 0.
 [incompatible-use]
 
-   jsx.js:40:3
-   40| (<ExpectsChildrenTuple>{123}</ExpectsChildrenTuple>); // Error: number ~> string
-         ^^^^^^^^^^^^^^^^^^^^
+   jsx.js:40:2
+   40| <ExpectsChildrenTuple>{123}</ExpectsChildrenTuple>; // Error: number ~> string
+        ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   jsx.js:40:25
-   40| (<ExpectsChildrenTuple>{123}</ExpectsChildrenTuple>); // Error: number ~> string
-                               ^^^ [1]
+   jsx.js:40:24
+   40| <ExpectsChildrenTuple>{123}</ExpectsChildrenTuple>; // Error: number ~> string
+                              ^^^ [1]
    jsx.js:37:62
    37| declare function ExpectsChildrenTuple(props: any, children: [string]): string;
                                                                     ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ jsx.js:41:3
+Error ------------------------------------------------------------------------------------------------------ jsx.js:41:2
 
 Cannot create `ExpectsChildrenTuple` element because rest array [1] has 2 elements but tuple type [2] has 1 element.
 [incompatible-use]
 
-   jsx.js:41:3
-   41| (<ExpectsChildrenTuple>Hi {"there"}</ExpectsChildrenTuple>); // Error: too many children
-         ^^^^^^^^^^^^^^^^^^^^
+   jsx.js:41:2
+   41| <ExpectsChildrenTuple>Hi {'there'}</ExpectsChildrenTuple>; // Error: too many children
+        ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   jsx.js:41:2
-   41| (<ExpectsChildrenTuple>Hi {"there"}</ExpectsChildrenTuple>); // Error: too many children
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   jsx.js:41:1
+   41| <ExpectsChildrenTuple>Hi {'there'}</ExpectsChildrenTuple>; // Error: too many children
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    jsx.js:37:61
    37| declare function ExpectsChildrenTuple(props: any, children: [string]): string;
                                                                    ^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ jsx.js:46:3
+Error ------------------------------------------------------------------------------------------------------ jsx.js:49:2
 
 Cannot create `ExpectsChildrenArray` element because number [1] is incompatible with string [2] in array element.
 [incompatible-use]
 
-   jsx.js:46:3
-   46| (<ExpectsChildrenArray>{123}</ExpectsChildrenArray>); // Error: number ~> string
-         ^^^^^^^^^^^^^^^^^^^^
+   jsx.js:49:2
+   49| <ExpectsChildrenArray>{123}</ExpectsChildrenArray>; // Error: number ~> string
+        ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   jsx.js:46:25
-   46| (<ExpectsChildrenArray>{123}</ExpectsChildrenArray>); // Error: number ~> string
-                               ^^^ [1]
-   jsx.js:43:67
-   43| declare function ExpectsChildrenArray(props: any, children: Array<string>): string;
-                                                                         ^^^^^^ [2]
+   jsx.js:49:24
+   49| <ExpectsChildrenArray>{123}</ExpectsChildrenArray>; // Error: number ~> string
+                              ^^^ [1]
+   jsx.js:45:19
+   45|   children: Array<string>,
+                         ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- spread.js:5:37

@@ -1,28 +1,28 @@
 //@flow
 
 function a<X: {}, Y: {}, Z: {}>(x: X, y: Y) {
-  ({...x, ...y}: {...X}); // nope, which is different than old generics
-  ({...y, ...x}: {...X}); // yup
-  ({...x}: {...Y, ...X}); // nope
-  ({...y, ...x}: {...X, ...Y}); // nope, which is different than old generics
-  ({...x, ...y}: {...X, ...Y}); // yup
-  ({...x, ...y}: {...X, ...Y, ...Y}); // yup
-  ({...x, ...y}: {...Y, ...X, ...Y}); // yup
-  ({...x, ...y}: {...X, ...Z, ...Y}); // nope
+  ({...x, ...y}) as {...X}; // nope, which is different than old generics
+  ({...y, ...x}) as {...X}; // yup
+  ({...x}) as {...Y, ...X}; // nope
+  ({...y, ...x}) as {...X, ...Y}; // nope, which is different than old generics
+  ({...x, ...y}) as {...X, ...Y}; // yup
+  ({...x, ...y}) as {...X, ...Y, ...Y}; // yup
+  ({...x, ...y}) as {...Y, ...X, ...Y}; // yup
+  ({...x, ...y}) as {...X, ...Z, ...Y}; // nope
 }
 
 // interchanging between spread and basic representation
 // with an object upper bound
 function t1<X: {a: number}>(x: X, sp_x: {...X}) {
-  (x: {...X}); // ok
-  (sp_x: X); // ok
+  x as {...X}; // ok
+  sp_x as X; // ok
 }
 
 // interchanging between spread and basic representation
 // with a mixed upper bound
 function t2<X>(x: X, sp_x: {...X}) {
-  (x: {...X}); // nope
-  (sp_x: X); // this probably should be banned--imagine if X=number--but is currently allowed
+  x as {...X}; // nope
+  sp_x as X; // this probably should be banned--imagine if X=number--but is currently allowed
 }
 
 // all below ok exept as noted
@@ -50,7 +50,7 @@ function f4b<X: {}, Y: {}>(y: {...Y, ...X}): Y {
 }
 
 function f<X: {}, Y: {}, Z: X & Y>(x: {...X}, xy: {...X, ...Y}, z: {...Z}) {
-  (x: {...(X & Y)}); // nope
-  (xy: {...(X & Y)}); // ok
-  (z: {...(X & Y)}); // ok
+  x as {...X & Y}; // nope
+  xy as {...X & Y}; // ok
+  z as {...X & Y}; // ok
 }

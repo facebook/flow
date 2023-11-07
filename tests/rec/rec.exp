@@ -1,20 +1,20 @@
-Error ------------------------------------------------------------------------------------------------ issue-598.js:7:48
+Error ------------------------------------------------------------------------------------------------ issue-598.js:8:10
 
 Cannot return `y` because number [1] is incompatible with string [2] in type argument `A` [3]. [incompatible-return]
 
-   issue-598.js:7:48
-   7| function bar(y: F<number>): F<string> { return y; }
-                                                     ^
+   issue-598.js:8:10
+   8|   return y;
+               ^
 
 References:
    issue-598.js:7:19
-   7| function bar(y: F<number>): F<string> { return y; }
+   7| function bar(y: F<number>): F<string> {
                         ^^^^^^ [1]
    issue-598.js:7:31
-   7| function bar(y: F<number>): F<string> { return y; }
+   7| function bar(y: F<number>): F<string> {
                                     ^^^^^^ [2]
    issue-598.js:3:8
-   3| type F<A> = { foo<B>(x: A): F<B> }
+   3| type F<A> = {foo<B>(x: A): F<B>};
              ^ [3]
 
 

@@ -9,34 +9,50 @@ class B extends A {}
 class C extends A {}
 
 var obj = {
-  get goodGetterWithAnnotation(): number { return 4; },
+  get goodGetterWithAnnotation(): number {
+    return 4;
+  },
 
-  set goodSetterWithAnnotation(x: number) { z = x; },
+  set goodSetterWithAnnotation(x: number) {
+    z = x;
+  },
 
-  get propWithMatchingGetterAndSetter(): number { return 4; },
-  set propWithMatchingGetterAndSetter(x: number) { },
+  get propWithMatchingGetterAndSetter(): number {
+    return 4;
+  },
+  set propWithMatchingGetterAndSetter(x: number) {},
 
   // The getter and setter need not have the same type
-  get propWithSubtypingGetterAndSetter(): ?number { return 4; }, // OK
-  set propWithSubtypingGetterAndSetter(x: number) { },
+  get propWithSubtypingGetterAndSetter(): ?number {
+    return 4;
+  }, // OK
+  set propWithSubtypingGetterAndSetter(x: number) {},
 
-  set propWithSubtypingGetterAndSetterReordered(x: number) { }, // OK
-  get propWithSubtypingGetterAndSetterReordered(): ?number { return 4; },
+  set propWithSubtypingGetterAndSetterReordered(x: number) {}, // OK
+  get propWithSubtypingGetterAndSetterReordered(): ?number {
+    return 4;
+  },
 
-  get exampleOfOrderOfGetterAndSetter(): A { return new A(); },
+  get exampleOfOrderOfGetterAndSetter(): A {
+    return new A();
+  },
   set exampleOfOrderOfGetterAndSetter(x: B) {},
 
   set exampleOfOrderOfGetterAndSetterReordered(x: B) {},
-  get exampleOfOrderOfGetterAndSetterReordered(): A { return new A(); },
+  get exampleOfOrderOfGetterAndSetterReordered(): A {
+    return new A();
+  },
 
   set [z](x: string) {},
-  get [z](): string { return string; },
+  get [z](): string {
+    return string;
+  },
 
-  set "stringLiteral"(x: number) { },
-  get "stringLiteral"(): number { return 4; },
+  set stringLiteral(x: number) {},
+  get stringLiteral(): number {
+    return 4;
+  },
 };
-
-
 
 // Test getting properties with getters
 var testGetterNoError: number = obj.goodGetterWithAnnotation;
@@ -44,7 +60,7 @@ var testGetterWithError: string = obj.goodGetterWithAnnotation; // Error number 
 
 // Test setting properties with setters
 obj.goodSetterWithAnnotation = 123;
-obj.goodSetterWithAnnotation = "hello"; // Error string ~> number
+obj.goodSetterWithAnnotation = 'hello'; // Error string ~> number
 
 var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
 
@@ -57,5 +73,5 @@ obj.exampleOfOrderOfGetterAndSetter = new C(); // Error C ~> B
 var testExampleOrOrderOfGetterAndSetterReordered: number =
   obj.exampleOfOrderOfGetterAndSetterReordered; // Error A ~> B
 
-(obj["stringLiteral"]: string); // err, num !~> string
-obj["stringLiteral"] = "foo"; // err, string !~> num
+obj['stringLiteral'] as string; // err, num !~> string
+obj['stringLiteral'] = 'foo'; // err, string !~> num

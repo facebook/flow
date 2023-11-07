@@ -45,7 +45,6 @@ function f4(escape: boolean, n: number): void {
   }
 }
 
-
 class C {}
 
 function f5<X>(x: X, escape: boolean): X | Class<C> {
@@ -102,14 +101,14 @@ try {
   }
 }
 
-for (const xe of [(42: any)]) {
+for (const xe of [42 as any]) {
   let {...x} = xe;
   function f<X>(y: X) {
     x = y;
   }
 }
 
-for (const xe of [(42: any)]) {
+for (const xe of [42 as any]) {
   let {x: y} = xe;
   function f<X>(z: X) {
     y = z;
@@ -118,7 +117,7 @@ for (const xe of [(42: any)]) {
 
 var aaa = 1;
 function foo<T: {}>(x: $Diff<T, {}>) {
-    aaa = x;
+  aaa = x;
 }
 
 var x4 = [];

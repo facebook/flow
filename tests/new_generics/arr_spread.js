@@ -3,15 +3,15 @@
 declare function takes_num_arr(n: number, ...x: Array<number>): void;
 
 function f<X: Array<number>, R>(fn: (...X) => R, x: X, arr: Array<number>) {
-  (fn(...x): R);
-  (fn(...arr): R); // nope
+  fn(...x) as R;
+  fn(...arr) as R; // nope
 
   takes_num_arr(...x);
 }
 
 function g<X: Array<number>>(A: X): X {
   var B = [...A];
-  if ((A: any)) {
+  if (A as any) {
     return B;
   } else {
     return [...B, 42]; // nope
@@ -44,13 +44,13 @@ function w3<A: Array<number>>(x: A, f: A => void) {
 }
 
 function l<X: $ReadOnlyArray<number>, Y: X>(x: X, y: Y) {
-  ([...x, ...y]: Y); // should be nope
-  ([...x, ...y]: X); // should be nope
+  [...x, ...y] as Y; // should be nope
+  [...x, ...y] as X; // should be nope
 }
 
 function l2<X: Array<number>, Y: X>(x: X, y: Y) {
-  ([...x, ...y]: Y); // should be nope
-  ([...x, ...y]: X); // ok
+  [...x, ...y] as Y; // should be nope
+  [...x, ...y] as X; // ok
 }
 
 function a<X: $ReadOnlyArray<number>>(x: X): X {

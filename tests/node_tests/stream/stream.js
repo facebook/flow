@@ -5,18 +5,18 @@ var fs = require('fs');
 var stream = require('stream');
 var ls = child_process.spawn('ls');
 
-var data = "foo";
+var data = 'foo';
 
 ls.stdin.write(data);
-ls.stdin.write(data, "utf-8");
+ls.stdin.write(data, 'utf-8');
 ls.stdin.write(data, () => {});
-ls.stdin.write(data, "utf-8", () => {});
+ls.stdin.write(data, 'utf-8', () => {});
 
 ls.stdin.end();
 ls.stdin.end(data);
-ls.stdin.end(data, "utf-8");
+ls.stdin.end(data, 'utf-8');
 ls.stdin.end(data, () => {});
-ls.stdin.end(data, "utf-8", () => {});
+ls.stdin.end(data, 'utf-8', () => {});
 
 var ws = fs.createWriteStream('/dev/null');
 ls.stdout.pipe(ws).end();
@@ -31,9 +31,9 @@ var pipe = new MyReadStream()
   .pipe(new MyTransform())
   .pipe(new MyWriteStream());
 
-(pipe: stream.Writable);
-(pipe: MyWriteStream);
-(pipe: MyDuplex); // error
+pipe as stream.Writable;
+pipe as MyWriteStream;
+pipe as MyDuplex; // error
 
 var pipeline = stream.pipeline(
   new MyReadStream(),
@@ -41,13 +41,13 @@ var pipeline = stream.pipeline(
   new MyTransform(),
   new MyWriteStream(),
   error => {
-    (error: ?Error);
-    (error: null); // error
+    error as ?Error;
+    error as null; // error
   },
 );
 
-(pipeline: MyWriteStream);
-(pipeline: MyDuplex); // error
+pipeline as MyWriteStream;
+pipeline as MyDuplex; // error
 
 stream.pipeline(
   new MyWriteStream(), // error - first stream must be Readable
@@ -74,8 +74,7 @@ new MyReadStream()
   .pipe(new MyDuplex())
   .once('close', () => {});
 
-
-async function * generator() {
+async function* generator() {
   yield 'hello';
   yield 'streams';
 }

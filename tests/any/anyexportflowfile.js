@@ -1,3 +1,3 @@
 // @flow
 
-module.exports = ((x: any) => x: any);
+module.exports = ((x: any) => x) as any;

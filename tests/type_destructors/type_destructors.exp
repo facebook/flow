@@ -48,13 +48,13 @@ References:
                         ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- non_maybe_type.js:4:15
+Error ------------------------------------------------------------------------------------------- non_maybe_type.js:5:17
 
 Cannot return `0` because number [1] is incompatible with string [2]. [incompatible-return]
 
-   non_maybe_type.js:4:15
-   4|   else return 0; // this should be an error
-                    ^ [1]
+   non_maybe_type.js:5:17
+   5|   } else return 0; // this should be an error
+                      ^ [1]
 
 References:
    non_maybe_type.js:2:42
@@ -62,88 +62,88 @@ References:
                                                ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- non_maybe_type.js:9:2
+Error ------------------------------------------------------------------------------------------- non_maybe_type.js:10:1
 
 Cannot cast `0` to `$NonMaybeType` because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   non_maybe_type.js:9:2
-   9| (0: $NonMaybeType<null>); // error
+   non_maybe_type.js:10:1
+   10| 0 as $NonMaybeType<null>; // error
        ^ [1]
 
 References:
-   non_maybe_type.js:9:19
-   9| (0: $NonMaybeType<null>); // error
-                        ^^^^ [2]
+   non_maybe_type.js:10:20
+   10| 0 as $NonMaybeType<null>; // error
+                          ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- non_maybe_type.js:16:2
+Error ------------------------------------------------------------------------------------------- non_maybe_type.js:17:1
 
 Cannot cast `null` to `$NonMaybeType` because null [1] is incompatible with mixed [2]. [incompatible-cast]
 
-   non_maybe_type.js:16:2
-   16| (null: $NonMaybeType<mixed>);
-        ^^^^ [1]
+   non_maybe_type.js:17:1
+   17| null as $NonMaybeType<mixed>;
+       ^^^^ [1]
 
 References:
-   non_maybe_type.js:16:22
-   16| (null: $NonMaybeType<mixed>);
-                            ^^^^^ [2]
+   non_maybe_type.js:17:23
+   17| null as $NonMaybeType<mixed>;
+                             ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- non_maybe_type.js:17:2
+Error ------------------------------------------------------------------------------------------- non_maybe_type.js:18:1
 
 Cannot cast `undefined` to `$NonMaybeType` because undefined [1] is incompatible with mixed [2]. [incompatible-cast]
 
-   non_maybe_type.js:17:2
-   17| (undefined: $NonMaybeType<mixed>);
-        ^^^^^^^^^ [1]
+   non_maybe_type.js:18:1
+   18| undefined as $NonMaybeType<mixed>;
+       ^^^^^^^^^ [1]
 
 References:
-   non_maybe_type.js:17:27
-   17| (undefined: $NonMaybeType<mixed>);
-                                 ^^^^^ [2]
+   non_maybe_type.js:18:28
+   18| undefined as $NonMaybeType<mixed>;
+                                  ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- non_maybe_type.js:55:2
+Error ------------------------------------------------------------------------------------------- non_maybe_type.js:49:1
 
 Cannot cast `'hi'` to `$NonMaybeType` because string [1] is incompatible with empty [2]. [incompatible-cast]
 
-   non_maybe_type.js:55:2
-   55| ('hi': $NonMaybeType<empty>); // Error
-        ^^^^ [1]
+   non_maybe_type.js:49:1
+   49| 'hi' as $NonMaybeType<empty>; // Error
+       ^^^^ [1]
 
 References:
-   non_maybe_type.js:55:22
-   55| ('hi': $NonMaybeType<empty>); // Error
-                            ^^^^^ [2]
+   non_maybe_type.js:49:23
+   49| 'hi' as $NonMaybeType<empty>; // Error
+                             ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- non_maybe_type.js:59:2
+Error ------------------------------------------------------------------------------------------- non_maybe_type.js:53:1
 
 Cannot cast `true` to `NonMaybeNumber` because boolean [1] is incompatible with number [2]. [incompatible-cast]
 
-   non_maybe_type.js:59:2
-   59| (true: NonMaybeNumber); // Error
-        ^^^^ [1]
+   non_maybe_type.js:53:1
+   53| true as NonMaybeNumber; // Error
+       ^^^^ [1]
 
 References:
-   non_maybe_type.js:59:8
-   59| (true: NonMaybeNumber); // Error
-              ^^^^^^^^^^^^^^ [2]
+   non_maybe_type.js:53:9
+   53| true as NonMaybeNumber; // Error
+               ^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- non_maybe_type.js:60:2
+Error ------------------------------------------------------------------------------------------- non_maybe_type.js:54:1
 
 Cannot cast `undefined` to `NonMaybeNumber` because undefined [1] is incompatible with number [2]. [incompatible-cast]
 
-   non_maybe_type.js:60:2
-   60| (undefined: NonMaybeNumber); // Error
-        ^^^^^^^^^ [1]
+   non_maybe_type.js:54:1
+   54| undefined as NonMaybeNumber; // Error
+       ^^^^^^^^^ [1]
 
 References:
-   non_maybe_type.js:60:13
-   60| (undefined: NonMaybeNumber); // Error
-                   ^^^^^^^^^^^^^^ [2]
+   non_maybe_type.js:54:14
+   54| undefined as NonMaybeNumber; // Error
+                    ^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- property_type.js:1:18
@@ -182,63 +182,63 @@ References:
                        ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- tvar3.js:20:2
+Error ---------------------------------------------------------------------------------------------------- tvar3.js:20:1
 
 Cannot cast `fn1(...)` to `B` because `A` [1] is incompatible with `B` [2]. [incompatible-cast]
 
-   tvar3.js:20:2
-   20| (fn1(a): B); // Error
-        ^^^^^^
+   tvar3.js:20:1
+   20| fn1(a) as B; // Error
+       ^^^^^^
 
 References:
    tvar3.js:6:16
     6| declare var a: A;
                       ^ [1]
-   tvar3.js:20:10
-   20| (fn1(a): B); // Error
-                ^ [2]
+   tvar3.js:20:11
+   20| fn1(a) as B; // Error
+                 ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- tvar3.js:21:10
+Error ---------------------------------------------------------------------------------------------------- tvar3.js:21:9
 
 Cannot call `fn2` with function bound to `x` because `A` [1] is incompatible with `B` [2] in the first parameter.
 [incompatible-call]
 
-   tvar3.js:21:10
-   21| (fn2((a: A) => {}): B => void); // Error
-                ^ [1]
+   tvar3.js:21:9
+   21| fn2((a: A) => {}) as (B) => void; // Error
+               ^ [1]
 
 References:
-   tvar3.js:21:21
-   21| (fn2((a: A) => {}): B => void); // Error
-                           ^ [2]
+   tvar3.js:21:23
+   21| fn2((a: A) => {}) as (B) => void; // Error
+                             ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- tvar3.js:22:2
+Error ---------------------------------------------------------------------------------------------------- tvar3.js:22:1
 
 Cannot cast `fn3(...)` to `C` because `A` [1] is incompatible with `C` [2]. [incompatible-cast]
 
-   tvar3.js:22:2
-   22| (fn3(a, (b: B) => {}): C); // Error
-        ^^^^^^^^^^^^^^^^^^^^
+   tvar3.js:22:1
+   22| fn3(a, (b: B) => {}) as C; // Error
+       ^^^^^^^^^^^^^^^^^^^^
 
 References:
    tvar3.js:6:16
     6| declare var a: A;
                       ^ [1]
-   tvar3.js:22:24
-   22| (fn3(a, (b: B) => {}): C); // Error
-                              ^ [2]
+   tvar3.js:22:25
+   22| fn3(a, (b: B) => {}) as C; // Error
+                               ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- tvar3.js:22:13
+Error --------------------------------------------------------------------------------------------------- tvar3.js:22:12
 
 Cannot call `fn3` with function bound to `y` because `B` [1] is incompatible with `A` [2] in the first parameter.
 [incompatible-call]
 
-   tvar3.js:22:13
-   22| (fn3(a, (b: B) => {}): C); // Error
-                   ^ [1]
+   tvar3.js:22:12
+   22| fn3(a, (b: B) => {}) as C; // Error
+                  ^ [1]
 
 References:
    tvar3.js:6:16
@@ -246,14 +246,14 @@ References:
                       ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- tvar3.js:23:13
+Error --------------------------------------------------------------------------------------------------- tvar3.js:23:12
 
 Cannot call `fn4` with function bound to `y` because `B` [1] is incompatible with `A` [2] in the first parameter.
 [incompatible-call]
 
-   tvar3.js:23:13
-   23| (fn4(a, (b: B) => {}): C => void); // Error
-                   ^ [1]
+   tvar3.js:23:12
+   23| fn4(a, (b: B) => {}) as (C) => void; // Error
+                  ^ [1]
 
 References:
    tvar3.js:6:16
@@ -261,81 +261,81 @@ References:
                       ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- tvar3.js:23:13
+Error --------------------------------------------------------------------------------------------------- tvar3.js:23:12
 
 Cannot call `fn4` with function bound to `y` because `B` [1] is incompatible with `C` [2] in the first parameter.
 [incompatible-call]
 
-   tvar3.js:23:13
-   23| (fn4(a, (b: B) => {}): C => void); // Error
-                   ^ [1]
+   tvar3.js:23:12
+   23| fn4(a, (b: B) => {}) as (C) => void; // Error
+                  ^ [1]
 
 References:
-   tvar3.js:23:24
-   23| (fn4(a, (b: B) => {}): C => void); // Error
-                              ^ [2]
+   tvar3.js:23:26
+   23| fn4(a, (b: B) => {}) as (C) => void; // Error
+                                ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- tvar3.js:25:2
+Error ---------------------------------------------------------------------------------------------------- tvar3.js:25:1
 
 Cannot cast `fn5(...)` to `B` because `A` [1] is incompatible with `B` [2]. [incompatible-cast]
 
-   tvar3.js:25:2
-   25| (fn5(a): B); // Error
-        ^^^^^^
+   tvar3.js:25:1
+   25| fn5(a) as B; // Error
+       ^^^^^^
 
 References:
    tvar3.js:6:16
     6| declare var a: A;
                       ^ [1]
-   tvar3.js:25:10
-   25| (fn5(a): B); // Error
-                ^ [2]
+   tvar3.js:25:11
+   25| fn5(a) as B; // Error
+                 ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- tvar3.js:26:2
+Error ---------------------------------------------------------------------------------------------------- tvar3.js:26:1
 
 Cannot cast `fn6(...)` to function type because `A` [1] is incompatible with `B` [2] in the first parameter.
 [incompatible-cast]
 
-   tvar3.js:26:2
-   26| (fn6((a: A) => {}): B => void); // Error
-        ^^^^^^^^^^^^^^^^^
+   tvar3.js:26:1
+   26| fn6((a: A) => {}) as (B) => void; // Error
+       ^^^^^^^^^^^^^^^^^
 
 References:
-   tvar3.js:26:10
-   26| (fn6((a: A) => {}): B => void); // Error
-                ^ [1]
-   tvar3.js:26:21
-   26| (fn6((a: A) => {}): B => void); // Error
-                           ^ [2]
+   tvar3.js:26:9
+   26| fn6((a: A) => {}) as (B) => void; // Error
+               ^ [1]
+   tvar3.js:26:23
+   26| fn6((a: A) => {}) as (B) => void; // Error
+                             ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- tvar3.js:27:2
+Error ---------------------------------------------------------------------------------------------------- tvar3.js:27:1
 
 Cannot cast `fn7(...)` to `C` because `A` [1] is incompatible with `C` [2]. [incompatible-cast]
 
-   tvar3.js:27:2
-   27| (fn7(a, (b: B) => {}): C); // Error
-        ^^^^^^^^^^^^^^^^^^^^
+   tvar3.js:27:1
+   27| fn7(a, (b: B) => {}) as C; // Error
+       ^^^^^^^^^^^^^^^^^^^^
 
 References:
    tvar3.js:6:16
     6| declare var a: A;
                       ^ [1]
-   tvar3.js:27:24
-   27| (fn7(a, (b: B) => {}): C); // Error
-                              ^ [2]
+   tvar3.js:27:25
+   27| fn7(a, (b: B) => {}) as C; // Error
+                               ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- tvar3.js:27:13
+Error --------------------------------------------------------------------------------------------------- tvar3.js:27:12
 
 Cannot call `fn7` with function bound to `y` because `B` [1] is incompatible with `A` [2] in the first parameter.
 [incompatible-call]
 
-   tvar3.js:27:13
-   27| (fn7(a, (b: B) => {}): C); // Error
-                   ^ [1]
+   tvar3.js:27:12
+   27| fn7(a, (b: B) => {}) as C; // Error
+                  ^ [1]
 
 References:
    tvar3.js:6:16
@@ -343,32 +343,32 @@ References:
                       ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- tvar3.js:28:2
+Error ---------------------------------------------------------------------------------------------------- tvar3.js:28:1
 
 Cannot cast `fn8(...)` to function type because `A` [1] is incompatible with `C` [2] in the first parameter.
 [incompatible-cast]
 
-   tvar3.js:28:2
-   28| (fn8(a, (b: B) => {}): C => void); // Error
-        ^^^^^^^^^^^^^^^^^^^^
+   tvar3.js:28:1
+   28| fn8(a, (b: B) => {}) as (C) => void; // Error
+       ^^^^^^^^^^^^^^^^^^^^
 
 References:
    tvar3.js:6:16
     6| declare var a: A;
                       ^ [1]
-   tvar3.js:28:24
-   28| (fn8(a, (b: B) => {}): C => void); // Error
-                              ^ [2]
+   tvar3.js:28:26
+   28| fn8(a, (b: B) => {}) as (C) => void; // Error
+                                ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- tvar3.js:28:13
+Error --------------------------------------------------------------------------------------------------- tvar3.js:28:12
 
 Cannot call `fn8` with function bound to `y` because `B` [1] is incompatible with `A` [2] in the first parameter.
 [incompatible-call]
 
-   tvar3.js:28:13
-   28| (fn8(a, (b: B) => {}): C => void); // Error
-                   ^ [1]
+   tvar3.js:28:12
+   28| fn8(a, (b: B) => {}) as (C) => void; // Error
+                  ^ [1]
 
 References:
    tvar3.js:6:16
@@ -494,22 +494,22 @@ References:
                        ^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- tvar5.js:5:13
+Error ---------------------------------------------------------------------------------------------------- tvar5.js:5:12
 
 Cannot call `unReadOnly` with `foo` bound to `thing` because object type [1] is incompatible with empty [2].
 [incompatible-call]
 
-   tvar5.js:5:13
-   5| (unReadOnly(foo): empty); // error
-                  ^^^
+   tvar5.js:5:12
+   5| unReadOnly(foo) as empty; // error
+                 ^^^
 
 References:
    tvar5.js:4:28
    4| declare var foo: $ReadOnly<{foo: string}>;
                                  ^^^^^^^^^^^^^ [1]
-   tvar5.js:5:19
-   5| (unReadOnly(foo): empty); // error
-                        ^^^^^ [2]
+   tvar5.js:5:20
+   5| unReadOnly(foo) as empty; // error
+                         ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- union.js:2:40

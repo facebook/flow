@@ -9,7 +9,7 @@
   a: 42,
   b: ('foo': empty),
   c: true,
-}: {
+}) as {
   a: boolean,
   c: number,
-});
+};

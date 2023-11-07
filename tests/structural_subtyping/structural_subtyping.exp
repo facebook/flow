@@ -63,14 +63,14 @@ References:
                           ^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- obj.js:10:35
+Error ----------------------------------------------------------------------------------------------------- obj.js:10:34
 
 Cannot assign object literal to `propTest2` because number [1] is incompatible with string [2] in property `x`.
 [incompatible-type]
 
-   obj.js:10:35
-   10| var propTest2: IHasXString = { x: 123 }; // Error string != number
-                                         ^^^ [1]
+   obj.js:10:34
+   10| var propTest2: IHasXString = {x: 123}; // Error string != number
+                                        ^^^ [1]
 
 References:
    obj.js:6:6
@@ -93,13 +93,13 @@ References:
                       ^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ obj.js:19:4
+Error ------------------------------------------------------------------------------------------------------ obj.js:19:3
 
 Cannot cast `y` to `IHasXString` because number [1] is incompatible with string [2] in property `x`. [incompatible-cast]
 
-   obj.js:19:4
-   19|   (y: IHasXString); // error: string != number
-          ^
+   obj.js:19:3
+   19|   y as IHasXString; // error: string != number
+         ^
 
 References:
    obj.js:18:39

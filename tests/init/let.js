@@ -5,48 +5,48 @@
 
 // deferred init on annotated lets is ok
 function linear_deferred_init() {
-  let x:number;
+  let x: number;
   x = 0;
-  let y:number = x;
+  let y: number = x;
 }
 
 // use of let before init gives undefined
 function linear_pre_init() {
-  let x:number;
-  let y:?number = x;  // ok
-  let z:number = x;   // error
+  let x: number;
+  let y: ?number = x; // ok
+  let z: number = x; // error
   x = 0;
-  let w:number = x;   // ok
+  let w: number = x; // ok
 }
 
 // self-references in let bindings are not ok
 function self_init() {
-  let x = x;  // 'x' not initialized!
+  let x = x; // 'x' not initialized!
 }
 
 // use of let after partial init (non-exhaustive if) gives undefined
 function if_partial_post_init(b: boolean) {
-  let x:number;
+  let x: number;
   if (b) {
     x = 0;
   }
-  var y:number = x; // error, possibly uninitialized
+  var y: number = x; // error, possibly uninitialized
 }
 
 // use of let after guaranteed init (exhaustive if) is ok
 function if_post_init(b: boolean) {
-  let x:number;
+  let x: number;
   if (b) {
     x = 0;
   } else {
     x = 1;
   }
-  var y:number = x;
+  var y: number = x;
 }
 
 // use of let after partial init (non-exhaustive switch) gives undefined
 function switch_partial_post_init(i: number) {
-  let x:number;
+  let x: number;
   switch (i) {
     case 0:
       x = 0;
@@ -55,12 +55,12 @@ function switch_partial_post_init(i: number) {
       x = 1;
       break;
   }
-  var y:number = x; // error, possibly uninitialized
+  var y: number = x; // error, possibly uninitialized
 }
 
 // use of let after guaranteed init (exhaustive switch) is ok
 function switch_post_init(i: number) {
-  let x:number;
+  let x: number;
   switch (i) {
     case 0:
       x = 0;
@@ -71,53 +71,53 @@ function switch_post_init(i: number) {
     default:
       x = 2;
   }
-  var y:number = x; // no error, all cases covered
+  var y: number = x; // no error, all cases covered
 }
 
 // use in a switch after a skipped decl is an error
 function switch_scoped_init_2(i: number) {
   switch (i) {
     case 0:
-      let x:number;
+      let x: number;
     case 1:
-      let y:number = x; // error, skipped declaration
+      let y: number = x; // error, skipped declaration
   }
 }
 
 // while leaves it possibly uninitialized
 function while_post_init(b: boolean) {
-  let x:number;
+  let x: number;
   while (b) {
     x = 0;
   }
-  var y:number = x; // error
+  var y: number = x; // error
 }
 
 // do-while is ok, because loop is guaranteed to run at least once
 function do_while_post_init(b: boolean) {
-  let x:number;
+  let x: number;
   do {
     x = 0;
   } while (b);
-  var y:number = x; // ok
+  var y: number = x; // ok
 }
 
 // for-in leaves it possibly uninitialized
 function for_in_post_init() {
-  var x:number;
+  var x: number;
   for (let p in {}) {
     x = 0;
   }
-  var y:number = x; // error
+  var y: number = x; // error
 }
 
 // for-of leaves it possibly uninitialized
 function for_of_post_init() {
-  var x:number;
-  for (let p of ([]: Array<mixed>)) {
+  var x: number;
+  for (let p of [] as Array<mixed>) {
     x = 0;
   }
-  var y:number = x; // error
+  var y: number = x; // error
 }
 
 // use of let after guaranteed init (exhaustive switch + throw) is ok
@@ -148,8 +148,12 @@ function switch_post_init3(i: number): number {
 
 // reference of a let-binding is permitted in a sub-closure within the init expr
 function sub_closure_init_reference() {
-  let x: mixed = function() { return x; };
-  const y: mixed = function() { return y; };
+  let x: mixed = function () {
+    return x;
+  };
+  const y: mixed = function () {
+    return y;
+  };
 
   // var-bindings can reference each other cyclically since they do not incur a
   // TDZ (...even though this is weird...)

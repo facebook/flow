@@ -1,6 +1,6 @@
 //@flow
 
 var x = undefined;
-(x: empty);
+x as empty;
 var y = new Promise<string>();
-(y: empty);
+y as empty;

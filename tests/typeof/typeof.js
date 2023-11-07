@@ -9,7 +9,9 @@
 // MyClass1 is a runtime value, a constructor function
 //
 class MyClass1 {
-  getNumber(): number { return 42; }
+  getNumber(): number {
+    return 42;
+  }
 }
 
 // a is an instance of MyClass1 - in runtime terms,
@@ -43,7 +45,9 @@ var a: MyClass1 = new MyClass1();
 var b: MyClass1 = MyClass1;
 
 class MyClass2 {
-  getNumber1(): number { return 42; }
+  getNumber1(): number {
+    return 42;
+  }
 }
 
 // The opposite error: assign an *instance* of MyClass2
@@ -56,7 +60,7 @@ var c: typeof MyClass2 = new MyClass2();
 // == typeof <<non-class value>> == //
 //////////////////////////////////////
 
-var numValue:number = 42;
+var numValue: number = 42;
 var d: typeof numValue = 100;
 var e: typeof numValue = 'asdf'; // Error: string ~> number
 
@@ -78,8 +82,8 @@ var f: typeof numberAlias = 42; // Error: 'typeof <<type-alias>>' makes no sense
  * "type is incompatible"
  */
 
- var Map = { "A": "this is A", "B": "this is B", "C": "this is C" };
- var keys: $Keys<Map> = "A";  // Error: ineligible value used in type anno
+var Map = {A: 'this is A', B: 'this is B', C: 'this is C'};
+var keys: $Keys<Map> = 'A'; // Error: ineligible value used in type anno
 
 ////////////////////////////////////////
 // typeof <<variable declared later>> //
@@ -88,20 +92,20 @@ var f: typeof numberAlias = 42; // Error: 'typeof <<type-alias>>' makes no sense
 declare var g: typeof h;
 const h = 1;
 
-(g: string); // error
-(g: number);
+g as string; // error
+g as number;
 
 declare var i: typeof j;
-const j = { p: 1 };
+const j = {p: 1};
 
-(i.p: string); // error
-(i.p: number);
+i.p as string; // error
+i.p as number;
 
 const boolean = 1;
-(1: typeof boolean); // OK
+1 as typeof boolean; // OK
 
 const type = 'foo';
-('foo': typeof type); // OK
+'foo' as typeof type; // OK
 
 const o = {default: 1};
-(1: typeof o.default); // OK
+1 as typeof o.default; // OK

@@ -10,10 +10,10 @@ declare function fn3<O>(o: O): $PropertyType<O, 'p'>;
 declare function fn4<O>(o: O): ($PropertyType<O, 'p'>) => void;
 
 type A = $PropertyType<{}, 'p'>; // We should get an error on this line.
-(null: A);
+null as A;
 
 type B = P<{}>; // We should get an error on this line.
-(null: B);
+null as B;
 
 fn1({x: 42}); // We should get an error on this line.
 fn1(null); // We should get an error on this line.

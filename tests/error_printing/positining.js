@@ -25,20 +25,20 @@ type Props = {
 
 declare var x: $RelayProps<React$ElementConfig<(Props) => React.Node>, {}>;
 
-(x: $RelayProps<Props>);
+x as $RelayProps<Props>;
 
 declare class Map<V> {
-    forEach<X>(callbackfn: (map: Map<V>) => mixed): void;
-    get(): V | void;
-    set(value: V): Map<V>;
+  forEach<X>(callbackfn: (map: Map<V>) => mixed): void;
+  get(): V | void;
+  set(value: V): Map<V>;
 }
 
-class A { }
+class A {}
 
 var m = new Map<Array<string>>();
 var a = m.get();
-a.push("");
+a.push('');
 
-m.forEach((map) => {
-    map.set(new A());
+m.forEach(map => {
+  map.set(new A());
 });

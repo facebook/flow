@@ -518,12 +518,12 @@ Missing an annotation on `y`. [missing-local-annot]
                      ^
 
 
-Error --------------------------------------------------------------------------------------------------- freeze.js:3:35
+Error --------------------------------------------------------------------------------------------------- freeze.js:3:34
 
 Missing an annotation on `x`. [missing-local-annot]
 
-   3| const noHint = Object.freeze({ f: x => {}}); // error
-                                        ^
+   3| const noHint = Object.freeze({f: x => {}}); // error
+                                       ^
 
 
 Error ----------------------------------------------------------------------------------------- function_statics.js:4:12

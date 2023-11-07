@@ -163,7 +163,7 @@ declare var aComplexUserRef: {
 
 // OK
 <PluralTest
-  users={([oneOfUsersRef]: Array<typeof oneOfUsersRef>)}
+  users={[oneOfUsersRef] as Array<typeof oneOfUsersRef>}
   nullableUsers={null}
 />;
 

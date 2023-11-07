@@ -1,9 +1,9 @@
 //@flow
 
 async function f() {
-  return await (null: any);
+  return await (null as any);
 }
 
 async function g() {
-  return await [][0]
+  return await [][0];
 }

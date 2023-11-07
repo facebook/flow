@@ -10,10 +10,10 @@ const d: Function = () => 0;
 
 const e: () => any = () => 0;
 
-const f: (Object) => Function = ({}) => function() {};
+const f: Object => Function = ({}) => function () {};
 
 type f2 = <T: Object>(x: T) => T;
 
 // malformed types should not also be unclear
-(null: Object<mixed>);
-(null: Function<mixed>);
+null as Object<mixed>;
+null as Function<mixed>;

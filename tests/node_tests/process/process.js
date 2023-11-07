@@ -1,5 +1,5 @@
 /* @flow */
 
-(process.allowedNodeEnvironmentFlags: Set<string>);
+process.allowedNodeEnvironmentFlags as Set<string>;
 
-(process.allowedNodeEnvironmentFlags: string); // error
+process.allowedNodeEnvironmentFlags as string; // error

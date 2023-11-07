@@ -25,48 +25,47 @@ enum B2 of boolean {
   B = false,
 }
 
-
-const s: string = (S.A: string); // OK
-const b: boolean = (B.A: boolean); // OK
-const n: number = (N.A: number); // OK
-const y: symbol = (Y.A: symbol); // OK
+const s: string = S.A as string; // OK
+const b: boolean = B.A as boolean; // OK
+const n: number = N.A as number; // OK
+const y: symbol = Y.A as symbol; // OK
 
 const X = B; // Renaming
-(X.A: boolean); // OK
+X.A as boolean; // OK
 
-(S.A: ?string); // Error: if casting to representation type, must cast to exactly it
+S.A as ?string; // Error: if casting to representation type, must cast to exactly it
 
-const ss: S = (S.A: S); // OK
-const bb: B = (B.A: B); // OK
-const nn: N = (N.A: N); // OK
-const yy: Y = (Y.A: Y); // OK
+const ss: S = S.A as S; // OK
+const bb: B = B.A as B; // OK
+const nn: N = N.A as N; // OK
+const yy: Y = Y.A as Y; // OK
 
-(S.A: ?S); // OK
-(S.A: S | B); // OK
-(S.A: mixed); // OK
+S.A as ?S; // OK
+S.A as S | B; // OK
+S.A as mixed; // OK
 
 type T = string;
-(S.A: T); // OK
+S.A as T; // OK
 
-(B.A: number); // Error
-(S.A: boolean); // Error
-(N.A: boolean); // Error
-(Y.A: boolean); // Error
-(X.A: string); // Error
+B.A as number; // Error
+S.A as boolean; // Error
+N.A as boolean; // Error
+Y.A as boolean; // Error
+X.A as string; // Error
 
 declare var BB: typeof B | typeof B2;
 const bba: B | B2 = BB.A;
-(BB.A: boolean); // OK
+BB.A as boolean; // OK
 
 declare var bs: B | B2;
-(bs: boolean); // OK
+bs as boolean; // OK
 
 declare var BS: typeof B | typeof S;
-const bsa: B | S  = BS.A;
-(BS.A: string | boolean); // Error
+const bsa: B | S = BS.A;
+BS.A as string | boolean; // Error
 
 declare var sb: S | B;
-(sb: string | boolean); // Error
+sb as string | boolean; // Error
 
-(S.A: interface {}); // Error
-(S.A: empty); // Error
+S.A as interface {}; // Error
+S.A as empty; // Error

@@ -26,107 +26,107 @@ References:
                 ^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- typeof.js:43:19
+Error -------------------------------------------------------------------------------------------------- typeof.js:45:19
 
 Cannot assign `MyClass1` to `b` because class `MyClass1` [1] is incompatible with `MyClass1` [2]. [incompatible-type]
 
-   typeof.js:43:19
-   43| var b: MyClass1 = MyClass1;
+   typeof.js:45:19
+   45| var b: MyClass1 = MyClass1;
                          ^^^^^^^^
 
 References:
    typeof.js:11:7
    11| class MyClass1 {
              ^^^^^^^^ [1]
-   typeof.js:43:8
-   43| var b: MyClass1 = MyClass1;
+   typeof.js:45:8
+   45| var b: MyClass1 = MyClass1;
               ^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- typeof.js:53:26
+Error -------------------------------------------------------------------------------------------------- typeof.js:57:26
 
 Cannot assign `new MyClass2()` to `c` because `MyClass2` [1] is incompatible with class `MyClass2` [2].
 [incompatible-type]
 
-   typeof.js:53:26
-   53| var c: typeof MyClass2 = new MyClass2();
+   typeof.js:57:26
+   57| var c: typeof MyClass2 = new MyClass2();
                                 ^^^^^^^^^^^^^^ [1]
 
 References:
-   typeof.js:53:8
-   53| var c: typeof MyClass2 = new MyClass2();
+   typeof.js:57:8
+   57| var c: typeof MyClass2 = new MyClass2();
               ^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- typeof.js:61:26
+Error -------------------------------------------------------------------------------------------------- typeof.js:65:26
 
 Cannot assign `'asdf'` to `e` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   typeof.js:61:26
-   61| var e: typeof numValue = 'asdf'; // Error: string ~> number
+   typeof.js:65:26
+   65| var e: typeof numValue = 'asdf'; // Error: string ~> number
                                 ^^^^^^ [1]
 
 References:
-   typeof.js:61:8
-   61| var e: typeof numValue = 'asdf'; // Error: string ~> number
+   typeof.js:65:8
+   65| var e: typeof numValue = 'asdf'; // Error: string ~> number
               ^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- typeof.js:73:15
+Error -------------------------------------------------------------------------------------------------- typeof.js:77:15
 
 Cannot use type `numberAlias` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
 
-   typeof.js:73:15
-   73| var f: typeof numberAlias = 42; // Error: 'typeof <<type-alias>>' makes no sense...
+   typeof.js:77:15
+   77| var f: typeof numberAlias = 42; // Error: 'typeof <<type-alias>>' makes no sense...
                      ^^^^^^^^^^^
 
 References:
-   typeof.js:67:6
-   67| type numberAlias = number;
+   typeof.js:71:6
+   71| type numberAlias = number;
             ^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- typeof.js:82:18
+Error -------------------------------------------------------------------------------------------------- typeof.js:86:17
 
 Cannot use `Map` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
 definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
-   82|  var keys: $Keys<Map> = "A";  // Error: ineligible value used in type anno
-                        ^^^
+   86| var keys: $Keys<Map> = 'A'; // Error: ineligible value used in type anno
+                       ^^^
 
 
-Error --------------------------------------------------------------------------------------------------- typeof.js:91:2
+Error --------------------------------------------------------------------------------------------------- typeof.js:95:1
 
 Cannot cast `g` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   typeof.js:91:2
-   91| (g: string); // error
-        ^
+   typeof.js:95:1
+   95| g as string; // error
+       ^
 
 References:
-   typeof.js:88:16
-   88| declare var g: typeof h;
+   typeof.js:92:16
+   92| declare var g: typeof h;
                       ^^^^^^^^ [1]
-   typeof.js:91:5
-   91| (g: string); // error
-           ^^^^^^ [2]
+   typeof.js:95:6
+   95| g as string; // error
+            ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- typeof.js:97:2
+Error -------------------------------------------------------------------------------------------------- typeof.js:101:1
 
 Cannot cast `i.p` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   typeof.js:97:2
-   97| (i.p: string); // error
+   typeof.js:101:1
+   101| i.p as string; // error
         ^^^
 
 References:
-   typeof.js:95:16
-   95| const j = { p: 1 };
+   typeof.js:99:15
+    99| const j = {p: 1};
                       ^ [1]
-   typeof.js:97:7
-   97| (i.p: string); // error
-             ^^^^^^ [2]
+   typeof.js:101:8
+   101| i.p as string; // error
+               ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- union.js:9:2

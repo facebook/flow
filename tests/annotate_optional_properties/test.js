@@ -5,56 +5,55 @@ x.foo = 3;
 
 let y = {}; // add annot
 if (x) {
-  y.foo = "";
+  y.foo = '';
 }
 
 let z = {}; // add annot
 z.foo = 3;
 if (x) {
-  z.bar = "";
+  z.bar = '';
 }
 
-let q = {foo : 3}; // add annot
+let q = {foo: 3}; // add annot
 if (x) {
-  q.bar = "";
+  q.bar = '';
 }
 
-let s = {foo : 3}; // should not annot, error is suppressed
+let s = {foo: 3}; // should not annot, error is suppressed
 if (x) {
   // $FlowFixMe[prop-missing]
-  s.bar = "";
+  s.bar = '';
 }
 
-let d = {} // should only annot foo once
+let d = {}; // should only annot foo once
 if (x) {
   d.foo = 3;
 } else {
-  d.foo = "";
+  d.foo = '';
 }
 
-let e = {};  // should only annot foo once
+let e = {}; // should only annot foo once
 if (x) {
-  e.foo = "";
+  e.foo = '';
 } else {
-  e.foo = "";
+  e.foo = '';
 }
 
 let f = {};
-let field : string = f.a;
+let field: string = f.a;
 
-const obj =
-    (() => {
-      const o = {
-        foo: {}, // {bar? : number, baz? : string}}
-      };
-      if (x) {
-        o.foo.bar = 3;
-      }
-      return o;
-    })();
+const obj = (() => {
+  const o = {
+    foo: {}, // {bar? : number, baz? : string}}
+  };
+  if (x) {
+    o.foo.bar = 3;
+  }
+  return o;
+})();
 
-obj.foo.baz = "";
+obj.foo.baz = '';
 
-(obj : {foo : {bar : number, baz : string}});
+obj as {foo: {bar: number, baz: string}};
 
-let annot : {x : number} = {}; // don't annot
+let annot: {x: number} = {}; // don't annot

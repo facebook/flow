@@ -12,22 +12,22 @@ References:
                 ^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ repos_use.js:20:2
+Error ------------------------------------------------------------------------------------------------ repos_use.js:20:1
 
 Cannot cast `err1` to string literal `FOO` because string literal `BAR` [1] is incompatible with string literal
 `FOO` [2]. [incompatible-cast]
 
-   repos_use.js:20:2
-   20| (err1: 'FOO'); // ERR
-        ^^^^
+   repos_use.js:20:1
+   20| err1 as 'FOO'; // ERR
+       ^^^^
 
 References:
    repos_use.js:9:23
     9| declare const dict: {[MyEnum]: mixed};
                              ^^^^^^ [1]
-   repos_use.js:20:8
-   20| (err1: 'FOO'); // ERR
-              ^^^^^ [2]
+   repos_use.js:20:9
+   20| err1 as 'FOO'; // ERR
+               ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- repos_use.js:21:22
@@ -48,22 +48,22 @@ References:
                     ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ repos_use.js:24:2
+Error ------------------------------------------------------------------------------------------------ repos_use.js:24:1
 
 Cannot cast `err2` to string literal `FOO` because string literal `BAR` [1] is incompatible with string literal
 `FOO` [2]. [incompatible-cast]
 
-   repos_use.js:24:2
-   24| (err2: 'FOO'); // ERR
-        ^^^^
+   repos_use.js:24:1
+   24| err2 as 'FOO'; // ERR
+       ^^^^
 
 References:
    repos_use.js:9:23
     9| declare const dict: {[MyEnum]: mixed};
                              ^^^^^^ [1]
-   repos_use.js:24:8
-   24| (err2: 'FOO'); // ERR
-              ^^^^^ [2]
+   repos_use.js:24:9
+   24| err2 as 'FOO'; // ERR
+               ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- repos_use.js:25:22
@@ -84,91 +84,91 @@ References:
                     ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:5:19
+Error ----------------------------------------------------------------------------------------------------- test.js:7:19
 
 Cannot assign `identity<...>(...)` to `y` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   test.js:5:19
-   5| const y: string = identity<_>(3); // Error, string incompatible with number.
+   test.js:7:19
+   7| const y: string = identity<_>(3); // Error, string incompatible with number.
                         ^^^^^^^^^^^^^^
 
 References:
-   test.js:5:31
-   5| const y: string = identity<_>(3); // Error, string incompatible with number.
+   test.js:7:31
+   7| const y: string = identity<_>(3); // Error, string incompatible with number.
                                     ^ [1]
-   test.js:5:10
-   5| const y: string = identity<_>(3); // Error, string incompatible with number.
+   test.js:7:10
+   7| const y: string = identity<_>(3); // Error, string incompatible with number.
                ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:10:11
+Error ---------------------------------------------------------------------------------------------------- test.js:11:11
 
 Cannot call `unimplementable` because `T` [1] is underconstrained by call of `unimplementable` [2]. Either add explicit
 type arguments or cast the expression to your expected type. [underconstrained-implicit-instantiation]
 
-   test.js:10:11
-   10| const a = unimplementable<_>(); // Ok, not exported. Leaks a tvar, errors in LTI and pinned to any
+   test.js:11:11
+   11| const a = unimplementable<_>(); // Ok, not exported. Leaks a tvar, errors in LTI and pinned to any
                  ^^^^^^^^^^^^^^^
 
 References:
-   test.js:7:34
-    7| declare function unimplementable<T>(): {x: T};
+   test.js:9:34
+    9| declare function unimplementable<T>(): {x: T};
                                         ^ [1]
-   test.js:10:11
-   10| const a = unimplementable<_>(); // Ok, not exported. Leaks a tvar, errors in LTI and pinned to any
+   test.js:11:11
+   11| const a = unimplementable<_>(); // Ok, not exported. Leaks a tvar, errors in LTI and pinned to any
                  ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:17:2
+Error ----------------------------------------------------------------------------------------------------- test.js:18:1
 
 Cannot cast `z` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   test.js:17:2
-   17| (z: string); // Error, number lower bound string upper bound
-        ^
+   test.js:18:1
+   18| z as string; // Error, number lower bound string upper bound
+       ^
 
 References:
-   test.js:16:23
-   16| const z = identity<_>(3); // Give z a lower bound.
+   test.js:17:23
+   17| const z = identity<_>(3); // Give z a lower bound.
                              ^ [1]
-   test.js:17:5
-   17| (z: string); // Error, number lower bound string upper bound
-           ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:22:6
-
-Cannot call `unimplementable` because `T` [1] is underconstrained by call of `unimplementable` [2]. Either add explicit
-type arguments or cast the expression to your expected type. [underconstrained-implicit-instantiation]
-
-   test.js:22:6
-   22|   x: unimplementable<_>(), // Error in LTI, requires concrete annot
-            ^^^^^^^^^^^^^^^
-
-References:
-   test.js:7:34
-    7| declare function unimplementable<T>(): {x: T};
-                                        ^ [1]
-   test.js:22:6
-   22|   x: unimplementable<_>(), // Error in LTI, requires concrete annot
-            ^^^^^^^^^^^^^^^^^^^^ [2]
+   test.js:18:6
+   18| z as string; // Error, number lower bound string upper bound
+            ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:23:6
 
+Cannot call `unimplementable` because `T` [1] is underconstrained by call of `unimplementable` [2]. Either add explicit
+type arguments or cast the expression to your expected type. [underconstrained-implicit-instantiation]
+
+   test.js:23:6
+   23|   x: unimplementable<_>(), // Error in LTI, requires concrete annot
+            ^^^^^^^^^^^^^^^
+
+References:
+   test.js:9:34
+    9| declare function unimplementable<T>(): {x: T};
+                                        ^ [1]
+   test.js:23:6
+   23|   x: unimplementable<_>(), // Error in LTI, requires concrete annot
+            ^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:24:6
+
 Cannot call `readOnly` because `T` [1] is underconstrained by call of `readOnly` [2]. Either add explicit type arguments
 or cast the expression to your expected type. [underconstrained-implicit-instantiation]
 
-   test.js:23:6
-   23|   y: readOnly<_>(), // Error in LTI
+   test.js:24:6
+   24|   y: readOnly<_>(), // Error in LTI
             ^^^^^^^^
 
 References:
-   test.js:19:27
-   19| declare function readOnly<T>(): {+x :T};
+   test.js:20:27
+   20| declare function readOnly<T>(): {+x: T};
                                  ^ [1]
-   test.js:23:6
-   23|   y: readOnly<_>(), // Error in LTI
+   test.js:24:6
+   24|   y: readOnly<_>(), // Error in LTI
             ^^^^^^^^^^^^^ [2]
 
 

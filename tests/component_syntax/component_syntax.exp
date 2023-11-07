@@ -817,55 +817,55 @@ References:
                   ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- cycle1.js:11:2
+Error --------------------------------------------------------------------------------------------------- cycle1.js:15:1
 
 Cannot cast `Bar` to `typeof Baz` because component Foo [1] is incompatible with component Baz [2]. [incompatible-cast]
 
-   cycle1.js:11:2
-   11| (Bar: typeof Baz); // ERROR
-        ^^^
+   cycle1.js:15:1
+   15| Bar as typeof Baz; // ERROR
+       ^^^
 
 References:
    cycle2.js:4:19
     4| export const Bar: typeof Foo = Foo;
                          ^^^^^^^^^^ [1]
-   cycle1.js:11:7
-   11| (Bar: typeof Baz); // ERROR
-             ^^^^^^^^^^ [2]
+   cycle1.js:15:8
+   15| Bar as typeof Baz; // ERROR
+              ^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- cycle1.js:12:2
+Error --------------------------------------------------------------------------------------------------- cycle1.js:16:1
 
 Cannot cast `Foo` to `typeof Baz` because component Foo [1] is incompatible with component Baz [2]. [incompatible-cast]
 
-   cycle1.js:12:2
-   12| (Foo: typeof Baz); // ERROR
-        ^^^
+   cycle1.js:16:1
+   16| Foo as typeof Baz; // ERROR
+       ^^^
 
 References:
    cycle1.js:5:8
-    5| export component Foo() { return null; }
+    5| export component Foo() {
               ^^^^^^^^^^^^^^^ [1]
-   cycle1.js:12:7
-   12| (Foo: typeof Baz); // ERROR
-             ^^^^^^^^^^ [2]
+   cycle1.js:16:8
+   16| Foo as typeof Baz; // ERROR
+              ^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- cycle1.js:13:2
+Error --------------------------------------------------------------------------------------------------- cycle1.js:17:1
 
 Cannot cast `Baz` to `typeof Bar` because component Baz [1] is incompatible with component Foo [2]. [incompatible-cast]
 
-   cycle1.js:13:2
-   13| (Baz: typeof Bar); // ERROR
-        ^^^
+   cycle1.js:17:1
+   17| Baz as typeof Bar; // ERROR
+       ^^^
 
 References:
-   cycle1.js:10:1
-   10| component Baz() { return null; }
+   cycle1.js:12:1
+   12| component Baz() {
        ^^^^^^^^^^^^^^^ [1]
-   cycle1.js:13:7
-   13| (Baz: typeof Bar); // ERROR
-             ^^^^^^^^^^ [2]
+   cycle1.js:17:8
+   17| Baz as typeof Bar; // ERROR
+              ^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- declared.js:5:2
@@ -1562,9 +1562,9 @@ Cannot create `InlineOnly` element because string [1] is incompatible with numbe
                                             ^^ [1]
 
 References:
-   signature.js:5:8
-   5|   foo: number,
-             ^^^^^^ [2]
+   signature.js:4:27
+   4| component InlineOnly(foo: number, bar: string) {
+                                ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- import.js:5:47
@@ -1577,9 +1577,9 @@ Cannot create `InlineOnly` element because number [1] is incompatible with strin
                                                     ^ [1]
 
 References:
-   signature.js:6:8
-   6|   bar: string,
-             ^^^^^^ [2]
+   signature.js:4:40
+   4| component InlineOnly(foo: number, bar: string) {
+                                             ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- import.js:8:37
@@ -1592,9 +1592,9 @@ Cannot create `InexactRest` element because string [1] is incompatible with numb
                                            ^^ [1]
 
 References:
-   signature.js:15:8
-   15|   foo: number,
-              ^^^^^^ [2]
+   signature.js:11:28
+   11| component InexactRest(foo: number, ...rest: {bar: string, ...}) {
+                                  ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- import.js:8:45
@@ -1607,9 +1607,9 @@ Cannot create `InexactRest` element because number [1] is incompatible with stri
                                                    ^ [1]
 
 References:
-   signature.js:16:18
-   16|   ...rest: {bar: string, ...}
-                        ^^^^^^ [2]
+   signature.js:11:51
+   11| component InexactRest(foo: number, ...rest: {bar: string, ...}) {
+                                                         ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- import.js:11:37
@@ -1622,9 +1622,9 @@ Cannot create `IndexedRest` element because string [1] is incompatible with numb
                                            ^^ [1]
 
 References:
-   signature.js:25:8
-   25|   foo: number,
-              ^^^^^^ [2]
+   signature.js:18:28
+   18| component IndexedRest(foo: number, ...rest: {[string]: number, ...}) {
+                                  ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- import.js:11:44
@@ -1637,9 +1637,9 @@ Cannot create `IndexedRest` element because string [1] is incompatible with numb
                                                   ^^^^^ [1]
 
 References:
-   signature.js:26:23
-   26|   ...rest: {[string]: number, ...}
-                             ^^^^^^ [2]
+   signature.js:18:56
+   18| component IndexedRest(foo: number, ...rest: {[string]: number, ...}) {
+                                                              ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- import.js:14:39
@@ -1652,9 +1652,9 @@ Cannot create `DefaultProps` element because string [1] is incompatible with num
                                              ^^^^^ [1]
 
 References:
-   signature.js:35:8
-   35|   foo: number = 3,
-              ^^^^^^ [2]
+   signature.js:25:29
+   25| component DefaultProps(foo: number = 3) {
+                                   ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- import.js:17:28
@@ -1667,13 +1667,13 @@ exists in props [2]. [prop-missing]
                                   ^^^^^^^^^^^^^
 
 References:
-   signature.js:43:24
+   signature.js:32:24
                               v
-   43| component RenamedParams(
-   44|   foo as bar: number,
-   45|   bar as foo: string,
-   46|   'non-ident' as baz: string,
-   47| ) { return <div /> }
+   32| component RenamedParams(
+   33|   foo as bar: number,
+   34|   bar as foo: string,
+   35|   'non-ident' as baz: string,
+   36| ) {
        ^ [1]
    import.js:17:27
    17| const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERROR 4x, bad foo type, bad bar type, no non-ident, extra baz
@@ -1693,13 +1693,13 @@ References:
    import.js:17:27
    17| const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERROR 4x, bad foo type, bad bar type, no non-ident, extra baz
                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   signature.js:43:24
+   signature.js:32:24
                               v
-   43| component RenamedParams(
-   44|   foo as bar: number,
-   45|   bar as foo: string,
-   46|   'non-ident' as baz: string,
-   47| ) { return <div /> }
+   32| component RenamedParams(
+   33|   foo as bar: number,
+   34|   bar as foo: string,
+   35|   'non-ident' as baz: string,
+   36| ) {
        ^ [2]
 
 
@@ -1713,8 +1713,8 @@ Cannot create `RenamedParams` element because number [1] is incompatible with st
                                                      ^ [1]
 
 References:
-   signature.js:45:15
-   45|   bar as foo: string,
+   signature.js:34:15
+   34|   bar as foo: string,
                      ^^^^^^ [2]
 
 
@@ -1728,8 +1728,8 @@ Cannot create `RenamedParams` element because string [1] is incompatible with nu
                                                             ^^^^^ [1]
 
 References:
-   signature.js:44:15
-   44|   foo as bar: number,
+   signature.js:33:15
+   33|   foo as bar: number,
                      ^^^^^^ [2]
 
 
@@ -1948,39 +1948,39 @@ References:
                            ^ [2]
 
 
-Error ------------------------------------------------------------------------ import_component_in_type_position.js:8:41
+Error ----------------------------------------------------------------------- import_component_in_type_position.js:12:41
 
 Cannot assign `<Poly />` to `polyElemError` because number [1] is incompatible with string [2] in property `prop` of
 type argument `P` [3]. [incompatible-type-arg]
 
-   import_component_in_type_position.js:8:41
-     8| const polyElemError: PolyType<string> = <Poly prop={3} />;
+   import_component_in_type_position.js:12:41
+    12| const polyElemError: PolyType<string> = <Poly prop={3} />;
                                                 ^^^^^^^^^^^^^^^^^
 
 References:
-   import_component_in_type_position.js:8:53
-     8| const polyElemError: PolyType<string> = <Poly prop={3} />;
+   import_component_in_type_position.js:12:53
+    12| const polyElemError: PolyType<string> = <Poly prop={3} />;
                                                             ^ [1]
-   import_component_in_type_position.js:8:31
-     8| const polyElemError: PolyType<string> = <Poly prop={3} />;
+   import_component_in_type_position.js:12:31
+    12| const polyElemError: PolyType<string> = <Poly prop={3} />;
                                       ^^^^^^ [2]
    <BUILTINS>/react.js:160:69
    160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                                                             ^ [3]
 
 
-Error ------------------------------------------------------------------------ import_component_in_type_position.js:12:3
+Error ------------------------------------------------------------------------ import_component_in_type_position.js:17:3
 
 Cannot cast `<Bar />` to `Foo` because component Bar [1] is incompatible with component Foo [2] in type argument
 `ElementType` [3]. [incompatible-cast]
 
-   import_component_in_type_position.js:12:3
-    12| (<Bar />: Foo); // ERROR
+   import_component_in_type_position.js:17:3
+    17| (<Bar />) as Foo; // ERROR
           ^^^
 
 References:
-   import_component_in_type_position.js:11:1
-    11| component Bar() { return null }
+   import_component_in_type_position.js:14:1
+    14| component Bar() {
         ^^^^^^^^^^^^^^^ [1]
    component_in_type_position.js:3:8
      3| export component Foo() { return null }
@@ -1990,21 +1990,21 @@ References:
                                            ^^^^^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------ import_component_in_type_position.js:15:2
+Error ------------------------------------------------------------------------ import_component_in_type_position.js:20:1
 
 Cannot cast `aliasedFoo` to number because `React.Element` [1] is incompatible with number [2]. [incompatible-cast]
 
-   import_component_in_type_position.js:15:2
-   15| (aliasedFoo: number); // ERROR
-        ^^^^^^^^^^
+   import_component_in_type_position.js:20:1
+   20| aliasedFoo as number; // ERROR
+       ^^^^^^^^^^
 
 References:
-   import_component_in_type_position.js:14:19
-   14| const aliasedFoo: AliasedFoo = fooElem;
+   import_component_in_type_position.js:19:19
+   19| const aliasedFoo: AliasedFoo = fooElem;
                          ^^^^^^^^^^ [1]
-   import_component_in_type_position.js:15:14
-   15| (aliasedFoo: number); // ERROR
-                    ^^^^^^ [2]
+   import_component_in_type_position.js:20:15
+   20| aliasedFoo as number; // ERROR
+                     ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- names.js:4:36
@@ -2131,74 +2131,74 @@ References:
                                           ^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- nominal.js:13:2
+Error -------------------------------------------------------------------------------------------------- nominal.js:13:1
 
 Cannot cast `Bar` to `typeof Foo` because component Bar [1] is incompatible with component Foo [2]. [incompatible-cast]
 
-   nominal.js:13:2
-   13| (Bar: typeof Foo); // ERROR
-        ^^^
+   nominal.js:13:1
+   13| Bar as typeof Foo; // ERROR
+       ^^^
 
 References:
    nominal.js:9:1
     9| component Bar() {
        ^^^^^^^^^^^^^^^ [1]
-   nominal.js:13:7
-   13| (Bar: typeof Foo); // ERROR
-             ^^^^^^^^^^ [2]
+   nominal.js:13:8
+   13| Bar as typeof Foo; // ERROR
+              ^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- nominal.js:14:2
+Error -------------------------------------------------------------------------------------------------- nominal.js:14:1
 
 Cannot cast `Foo` to `typeof Bar` because component Foo [1] is incompatible with component Bar [2]. [incompatible-cast]
 
-   nominal.js:14:2
-   14| (Foo: typeof Bar); // ERROR
-        ^^^
+   nominal.js:14:1
+   14| Foo as typeof Bar; // ERROR
+       ^^^
 
 References:
    nominal.js:5:1
     5| component Foo() {
        ^^^^^^^^^^^^^^^ [1]
-   nominal.js:14:7
-   14| (Foo: typeof Bar); // ERROR
-             ^^^^^^^^^^ [2]
+   nominal.js:14:8
+   14| Foo as typeof Bar; // ERROR
+              ^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- nominal.js:17:2
+Error -------------------------------------------------------------------------------------------------- nominal.js:17:1
 
 Cannot cast `Foo` to `React.AbstractComponent` because `React.Element` [1] is incompatible with null [2].
 [incompatible-cast]
 
-   nominal.js:17:2
-    17| (Foo: React.AbstractComponent<{}, mixed, null>); // ERROR, default render is React.Node
-         ^^^
+   nominal.js:17:1
+    17| Foo as React.AbstractComponent<{}, mixed, null>; // ERROR, default render is React.Node
+        ^^^
 
 References:
    <BUILTINS>/react.js:162:35
    162| declare type React$MixedElement = React$Element<React$ElementType>;
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   nominal.js:17:42
-    17| (Foo: React.AbstractComponent<{}, mixed, null>); // ERROR, default render is React.Node
-                                                 ^^^^ [2]
+   nominal.js:17:43
+    17| Foo as React.AbstractComponent<{}, mixed, null>; // ERROR, default render is React.Node
+                                                  ^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- nominal.js:18:2
+Error -------------------------------------------------------------------------------------------------- nominal.js:18:1
 
 Cannot cast `Foo` to `React.AbstractComponent` because property `foo` is missing in props of component Foo [1] but
 exists in object type [2]. [prop-missing]
 
-   nominal.js:18:2
-   18| (Foo: React.AbstractComponent<{foo: number}, mixed, React.Node>); // ERROR
-        ^^^
+   nominal.js:18:1
+   18| Foo as React.AbstractComponent<{foo: number}, mixed, React.Node>; // ERROR
+       ^^^
 
 References:
    nominal.js:5:1
     5| component Foo() {
        ^^^^^^^^^^^^^^^ [1]
-   nominal.js:18:31
-   18| (Foo: React.AbstractComponent<{foo: number}, mixed, React.Node>); // ERROR
-                                     ^^^^^^^^^^^^^ [2]
+   nominal.js:18:32
+   18| Foo as React.AbstractComponent<{foo: number}, mixed, React.Node>; // ERROR
+                                      ^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- poly.js:10:34
@@ -2949,228 +2949,228 @@ References:
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- signature.js:12:39
+Error ------------------------------------------------------------------------------------------------ signature.js:9:39
 
 Cannot create `InlineOnly` element because string [1] is incompatible with number [2] in property `foo`.
 [incompatible-type]
 
-   signature.js:12:39
-   12| const inlineOnlyBad = <InlineOnly foo="" bar={3} />; // Error 2x
-                                             ^^ [1]
+   signature.js:9:39
+   9| const inlineOnlyBad = <InlineOnly foo="" bar={3} />; // Error 2x
+                                            ^^ [1]
 
 References:
-   signature.js:5:8
-    5|   foo: number,
-              ^^^^^^ [2]
+   signature.js:4:27
+   4| component InlineOnly(foo: number, bar: string) {
+                                ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- signature.js:12:47
+Error ------------------------------------------------------------------------------------------------ signature.js:9:47
 
 Cannot create `InlineOnly` element because number [1] is incompatible with string [2] in property `bar`.
 [incompatible-type]
 
-   signature.js:12:47
-   12| const inlineOnlyBad = <InlineOnly foo="" bar={3} />; // Error 2x
-                                                     ^ [1]
+   signature.js:9:47
+   9| const inlineOnlyBad = <InlineOnly foo="" bar={3} />; // Error 2x
+                                                    ^ [1]
 
 References:
-   signature.js:6:8
-    6|   bar: string,
-              ^^^^^^ [2]
+   signature.js:4:40
+   4| component InlineOnly(foo: number, bar: string) {
+                                             ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- signature.js:22:37
+Error ----------------------------------------------------------------------------------------------- signature.js:16:37
 
 Cannot create `InexactRest` element because string [1] is incompatible with number [2] in property `foo`.
 [incompatible-type]
 
-   signature.js:22:37
-   22| const inexactBad = <InexactRest foo="" bar={3} baz={3} />; // ERROR 2x for foo and bar
+   signature.js:16:37
+   16| const inexactBad = <InexactRest foo="" bar={3} baz={3} />; // ERROR 2x for foo and bar
                                            ^^ [1]
 
 References:
-   signature.js:15:8
-   15|   foo: number,
-              ^^^^^^ [2]
+   signature.js:11:28
+   11| component InexactRest(foo: number, ...rest: {bar: string, ...}) {
+                                  ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- signature.js:22:45
+Error ----------------------------------------------------------------------------------------------- signature.js:16:45
 
 Cannot create `InexactRest` element because number [1] is incompatible with string [2] in property `bar`.
 [incompatible-type]
 
-   signature.js:22:45
-   22| const inexactBad = <InexactRest foo="" bar={3} baz={3} />; // ERROR 2x for foo and bar
+   signature.js:16:45
+   16| const inexactBad = <InexactRest foo="" bar={3} baz={3} />; // ERROR 2x for foo and bar
                                                    ^ [1]
 
 References:
-   signature.js:16:18
-   16|   ...rest: {bar: string, ...}
-                        ^^^^^^ [2]
+   signature.js:11:51
+   11| component InexactRest(foo: number, ...rest: {bar: string, ...}) {
+                                                         ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- signature.js:32:37
+Error ----------------------------------------------------------------------------------------------- signature.js:23:37
 
 Cannot create `IndexedRest` element because string [1] is incompatible with number [2] in property `foo`.
 [incompatible-type]
 
-   signature.js:32:37
-   32| const indexedBad = <IndexedRest foo="" bar="str" />; // ERROR 2x for foo and bar
+   signature.js:23:37
+   23| const indexedBad = <IndexedRest foo="" bar="str" />; // ERROR 2x for foo and bar
                                            ^^ [1]
 
 References:
-   signature.js:25:8
-   25|   foo: number,
-              ^^^^^^ [2]
+   signature.js:18:28
+   18| component IndexedRest(foo: number, ...rest: {[string]: number, ...}) {
+                                  ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- signature.js:32:44
+Error ----------------------------------------------------------------------------------------------- signature.js:23:44
 
 Cannot create `IndexedRest` element because string [1] is incompatible with number [2] in property `bar`.
 [incompatible-type]
 
-   signature.js:32:44
-   32| const indexedBad = <IndexedRest foo="" bar="str" />; // ERROR 2x for foo and bar
+   signature.js:23:44
+   23| const indexedBad = <IndexedRest foo="" bar="str" />; // ERROR 2x for foo and bar
                                                   ^^^^^ [1]
 
 References:
-   signature.js:26:23
-   26|   ...rest: {[string]: number, ...}
-                             ^^^^^^ [2]
+   signature.js:18:56
+   18| component IndexedRest(foo: number, ...rest: {[string]: number, ...}) {
+                                                              ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- signature.js:41:39
+Error ----------------------------------------------------------------------------------------------- signature.js:30:39
 
 Cannot create `DefaultProps` element because string [1] is incompatible with number [2] in property `foo`.
 [incompatible-type]
 
-   signature.js:41:39
-   41| const defaultsBad = <DefaultProps foo="bad" />; // ERROR
+   signature.js:30:39
+   30| const defaultsBad = <DefaultProps foo="bad" />; // ERROR
                                              ^^^^^ [1]
 
 References:
-   signature.js:35:8
-   35|   foo: number = 3,
-              ^^^^^^ [2]
+   signature.js:25:29
+   25| component DefaultProps(foo: number = 3) {
+                                   ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- signature.js:50:28
+Error ----------------------------------------------------------------------------------------------- signature.js:41:28
 
 Cannot create `RenamedParams` element because property `baz` is missing in props of component RenamedParams [1] but
 exists in props [2]. [prop-missing]
 
-   signature.js:50:28
-   50| const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERROR 4x, bad foo type, bad bar type, no non-ident, extra baz
+   signature.js:41:28
+   41| const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERROR 4x, bad foo type, bad bar type, no non-ident, extra baz
                                   ^^^^^^^^^^^^^
 
 References:
-   signature.js:43:1
+   signature.js:32:1
        v-----------------------
-   43| component RenamedParams(
-   44|   foo as bar: number,
-   45|   bar as foo: string,
-   46|   'non-ident' as baz: string,
-   47| ) { return <div /> }
+   32| component RenamedParams(
+   33|   foo as bar: number,
+   34|   bar as foo: string,
+   35|   'non-ident' as baz: string,
+   36| ) {
        ^ [1]
-   signature.js:50:27
-   50| const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERROR 4x, bad foo type, bad bar type, no non-ident, extra baz
+   signature.js:41:27
+   41| const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERROR 4x, bad foo type, bad bar type, no non-ident, extra baz
                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- signature.js:50:28
+Error ----------------------------------------------------------------------------------------------- signature.js:41:28
 
 Cannot create `RenamedParams` element because property `non-ident` is missing in props [1] but exists in props of
 component RenamedParams [2]. [prop-missing]
 
-   signature.js:50:28
-   50| const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERROR 4x, bad foo type, bad bar type, no non-ident, extra baz
+   signature.js:41:28
+   41| const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERROR 4x, bad foo type, bad bar type, no non-ident, extra baz
                                   ^^^^^^^^^^^^^
 
 References:
-   signature.js:50:27
-   50| const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERROR 4x, bad foo type, bad bar type, no non-ident, extra baz
+   signature.js:41:27
+   41| const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERROR 4x, bad foo type, bad bar type, no non-ident, extra baz
                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   signature.js:43:1
+   signature.js:32:1
        v-----------------------
-   43| component RenamedParams(
-   44|   foo as bar: number,
-   45|   bar as foo: string,
-   46|   'non-ident' as baz: string,
-   47| ) { return <div /> }
+   32| component RenamedParams(
+   33|   foo as bar: number,
+   34|   bar as foo: string,
+   35|   'non-ident' as baz: string,
+   36| ) {
        ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- signature.js:50:47
+Error ----------------------------------------------------------------------------------------------- signature.js:41:47
 
 Cannot create `RenamedParams` element because number [1] is incompatible with string [2] in property `bar`.
 [incompatible-type]
 
-   signature.js:50:47
-   50| const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERROR 4x, bad foo type, bad bar type, no non-ident, extra baz
+   signature.js:41:47
+   41| const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERROR 4x, bad foo type, bad bar type, no non-ident, extra baz
                                                      ^ [1]
 
 References:
-   signature.js:45:15
-   45|   bar as foo: string,
+   signature.js:34:15
+   34|   bar as foo: string,
                      ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- signature.js:50:54
+Error ----------------------------------------------------------------------------------------------- signature.js:41:54
 
 Cannot create `RenamedParams` element because string [1] is incompatible with number [2] in property `foo`.
 [incompatible-type]
 
-   signature.js:50:54
-   50| const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERROR 4x, bad foo type, bad bar type, no non-ident, extra baz
+   signature.js:41:54
+   41| const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERROR 4x, bad foo type, bad bar type, no non-ident, extra baz
                                                             ^^^^^ [1]
 
 References:
-   signature.js:44:15
-   44|   foo as bar: number,
+   signature.js:33:15
+   33|   foo as bar: number,
                      ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- signature.js:55:13
+Error ----------------------------------------------------------------------------------------------- signature.js:46:13
 
 Cannot use optional object type [1] as a component rest param. Component rest params must use an object type and cannot
 be optional. [incompatible-type]
 
-   55|   ...rest?: {foo: number} // ERROR, rest params can't be optional
+   46|   ...rest?: {foo: number} // ERROR, rest params can't be optional
                    ^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ signature.js:57:4
+Error ------------------------------------------------------------------------------------------------ signature.js:48:3
 
 Cannot cast `x` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
 
-   signature.js:57:4
-   57|   (x: number); // ERROR
-          ^
+   signature.js:48:3
+   48|   x as number; // ERROR
+         ^
 
 References:
-   signature.js:53:7
-   53|   x?: number,
+   signature.js:44:7
+   44|   x?: number,
              ^^^^^^ [1]
-   signature.js:57:7
-   57|   (x: number); // ERROR
-             ^^^^^^ [2]
+   signature.js:48:8
+   48|   x as number; // ERROR
+              ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ signature.js:59:4
+Error ------------------------------------------------------------------------------------------------ signature.js:50:3
 
 Cannot cast `rest` to object type because undefined [1] is incompatible with object type [2]. [incompatible-cast]
 
-   signature.js:59:4
-   59|   (rest: {foo: number}); // ERROR, rest is optional in the body, as typed
-          ^^^^
+   signature.js:50:3
+   50|   rest as {foo: number}; // ERROR, rest is optional in the body, as typed
+         ^^^^
 
 References:
-   signature.js:55:13
-   55|   ...rest?: {foo: number} // ERROR, rest params can't be optional
+   signature.js:46:13
+   46|   ...rest?: {foo: number} // ERROR, rest params can't be optional
                    ^^^^^^^^^^^^^ [1]
-   signature.js:59:10
-   59|   (rest: {foo: number}); // ERROR, rest is optional in the body, as typed
-                ^^^^^^^^^^^^^ [2]
+   signature.js:50:11
+   50|   rest as {foo: number}; // ERROR, rest is optional in the body, as typed
+                 ^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- statics.js:4:19

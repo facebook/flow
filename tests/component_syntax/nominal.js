@@ -10,16 +10,20 @@ component Bar() {
   return null;
 }
 
-(Bar: typeof Foo); // ERROR
-(Foo: typeof Bar); // ERROR
-(Foo: typeof Foo); // OK
-(Foo: React.AbstractComponent<{}, mixed, React.Node>); // OK
-(Foo: React.AbstractComponent<{}, mixed, null>); // ERROR, default render is React.Node
-(Foo: React.AbstractComponent<{foo: number}, mixed, React.Node>); // ERROR
+Bar as typeof Foo; // ERROR
+Foo as typeof Bar; // ERROR
+Foo as typeof Foo; // OK
+Foo as React.AbstractComponent<{}, mixed, React.Node>; // OK
+Foo as React.AbstractComponent<{}, mixed, null>; // ERROR, default render is React.Node
+Foo as React.AbstractComponent<{foo: number}, mixed, React.Node>; // ERROR
 
 component Baz(foo: number) renders null {
   return null;
 }
 
-(Baz: React.AbstractComponent<{foo: number}, mixed, renders React.Element<typeof Baz>>); // OK
-(Baz: React.AbstractComponent<{foo: number}, mixed, renders null>); // OK
+Baz as React.AbstractComponent<
+  {foo: number},
+  mixed,
+  renders React.Element<typeof Baz>,
+>; // OK
+Baz as React.AbstractComponent<{foo: number}, mixed, renders null>; // OK

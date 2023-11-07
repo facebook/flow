@@ -3,4 +3,4 @@
  * @flow
  */
 
-(null: empty); // Error: null ~> empty
+null as empty; // Error: null ~> empty

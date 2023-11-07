@@ -588,111 +588,111 @@ References:
                                    ^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- function.js:21:3
+Error ------------------------------------------------------------------------------------------------- function.js:23:3
 
 Cannot resolve name `React`. [cannot-resolve-name]
 
-   21|   <MyThing />;
+   23|   <MyThing />;
          ^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------- function.js:37:6
+Error ------------------------------------------------------------------------------------------------- function.js:39:5
 
 Cannot cast `x.length` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
 
-   function.js:37:6
-    37|     (x.length: void); // error, it's a number
-             ^^^^^^^^
+   function.js:39:5
+    39|     x.length as void; // error, it's a number
+            ^^^^^^^^
 
 References:
    <BUILTINS>/core.js:367:14
    367|     +length: number;
                      ^^^^^^ [1]
-   function.js:37:16
-    37|     (x.length: void); // error, it's a number
-                       ^^^^ [2]
+   function.js:39:17
+    39|     x.length as void; // error, it's a number
+                        ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- function.js:38:6
+Error ------------------------------------------------------------------------------------------------- function.js:40:5
 
 Cannot cast `y.length` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
 
-   function.js:38:6
-    38|     (y.length: void); // error, it's a number
-             ^^^^^^^^
+   function.js:40:5
+    40|     y.length as void; // error, it's a number
+            ^^^^^^^^
 
 References:
    <BUILTINS>/core.js:367:14
    367|     +length: number;
                      ^^^^^^ [1]
-   function.js:38:16
-    38|     (y.length: void); // error, it's a number
-                       ^^^^ [2]
+   function.js:40:17
+    40|     y.length as void; // error, it's a number
+                        ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- function.js:40:6
+Error ------------------------------------------------------------------------------------------------- function.js:42:5
 
 Cannot cast `x.name` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
 
-   function.js:40:6
-    40|     (x.name: void); // error, it's a string
-             ^^^^^^
+   function.js:42:5
+    42|     x.name as void; // error, it's a string
+            ^^^^^^
 
 References:
    <BUILTINS>/core.js:371:12
    371|     +name: string;
                    ^^^^^^ [1]
-   function.js:40:14
-    40|     (x.name: void); // error, it's a string
-                     ^^^^ [2]
+   function.js:42:15
+    42|     x.name as void; // error, it's a string
+                      ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- function.js:41:6
+Error ------------------------------------------------------------------------------------------------- function.js:43:5
 
 Cannot cast `y.name` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
 
-   function.js:41:6
-    41|     (y.name: void); // error, it's a string
-             ^^^^^^
+   function.js:43:5
+    43|     y.name as void; // error, it's a string
+            ^^^^^^
 
 References:
    <BUILTINS>/core.js:371:12
    371|     +name: string;
                    ^^^^^^ [1]
-   function.js:41:14
-    41|     (y.name: void); // error, it's a string
-                     ^^^^ [2]
+   function.js:43:15
+    43|     y.name as void; // error, it's a string
+                      ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- function.js:46:7
+Error ------------------------------------------------------------------------------------------------- function.js:48:7
 
 Cannot assign `'foo'` to `x.length` because property `length` is not writable. [cannot-write]
 
-   46|     x.length = 'foo'; // error, not writable
-             ^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------------- function.js:47:7
-
-Cannot assign `'foo'` to `y.length` because property `length` is not writable. [cannot-write]
-
-   47|     y.length = 'foo'; // error, not writable
+   48|     x.length = 'foo'; // error, not writable
              ^^^^^^
 
 
 Error ------------------------------------------------------------------------------------------------- function.js:49:7
 
+Cannot assign `'foo'` to `y.length` because property `length` is not writable. [cannot-write]
+
+   49|     y.length = 'foo'; // error, not writable
+             ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- function.js:51:7
+
 Cannot assign `123` to `x.name` because property `name` is not writable. [cannot-write]
 
-   49|     x.name = 123; // error, not writable
+   51|     x.name = 123; // error, not writable
              ^^^^
 
 
-Error ------------------------------------------------------------------------------------------------- function.js:50:7
+Error ------------------------------------------------------------------------------------------------- function.js:52:7
 
 Cannot assign `123` to `y.name` because property `name` is not writable. [cannot-write]
 
-   50|     y.name = 123; // error, not writable
+   52|     y.name = 123; // error, not writable
              ^^^^
 
 

@@ -3,13 +3,16 @@
 import {Children, type ChildrenArray} from 'react';
 
 const a: ChildrenArray<?number> = [
-  1, null, 2, undefined,
+  1,
+  null,
+  2,
+  undefined,
   [3, null, 4, undefined, [5, null, 6, undefined]],
 ];
 
-na(Children.map(a, (x: number) => (x: number))); // OK
-na(Children.map(a, (x: string) => (x: string))); // Error
-sa(Children.map(a, (x: number) => (x: number))); // Error
+na(Children.map(a, (x: number) => x as number)); // OK
+na(Children.map(a, (x: string) => x as string)); // Error
+sa(Children.map(a, (x: number) => x as number)); // Error
 
 Children.forEach(a, (x: number) => {}); // Error
 Children.forEach(a, (x: ?number) => {}); // OK

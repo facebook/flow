@@ -7,7 +7,9 @@
 // can only be called with 3 arguments.
 var a: Function = (a, b, c) => 123;
 
-var b: Function = function(a: number, b: number): number { return a + b; };
+var b: Function = function (a: number, b: number): number {
+  return a + b;
+};
 
 class C {}
 
@@ -32,16 +34,16 @@ function bad(x: Function, y: Object): void {
 }
 
 let tests = [
-  function(y: () => void) {
+  function (y: () => void) {
     function x() {}
-    (x.length: void); // error, it's a number
-    (y.length: void); // error, it's a number
+    x.length as void; // error, it's a number
+    y.length as void; // error, it's a number
 
-    (x.name: void); // error, it's a string
-    (y.name: void); // error, it's a string
+    x.name as void; // error, it's a string
+    y.name as void; // error, it's a string
   },
 
-  function(y: () => void) {
+  function (y: () => void) {
     function x() {}
     x.length = 'foo'; // error, not writable
     y.length = 'foo'; // error, not writable
@@ -53,6 +55,6 @@ let tests = [
 
 // `Function` types can be bound (resulting in a `Function` type)
 var d: Function = () => 1;
-var e = (d.bind(1): Function)();
-(e: number);
-(e: string);
+var e = (d.bind(1) as Function)();
+e as number;
+e as string;

@@ -3,29 +3,26 @@
 var x;
 
 function f() {
-  (x: number); //fine
+  x as number; //fine
 }
-(x: number); // error
+x as number; // error
 x = 10;
 
-
 var y;
-if ((42: any)) {
+if (42 as any) {
   y = 10;
 }
 
-let g = function() {
-  (y: number); //fine
+let g = function () {
+  y as number; //fine
 };
 
-(y: number); // error
+y as number; // error
 
-if ((42: any)) {
-  var w ;
+if (42 as any) {
+  var w;
 } else {
   var w;
 }
 
-(w: number); // Error, w is never initialized or assigned so cast to number is incorrect
-
-
+w as number; // Error, w is never initialized or assigned so cast to number is incorrect

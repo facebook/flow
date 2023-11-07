@@ -18,4 +18,4 @@ declare var userRef: Profile_userRef;
 <Profile />; // Error: Missing user and foo
 <Profile user={user} foo={42} />; // Error: You must pass in a ref
 <Profile user={user} foo="bar" />; // Error: You must pass in a ref and string ~> number
-<Profile user={(null: mixed)} foo={(null: mixed)} />; // Error: mixed ~> ref and mixed ~> number
+<Profile user={null as mixed} foo={null as mixed} />; // Error: mixed ~> ref and mixed ~> number

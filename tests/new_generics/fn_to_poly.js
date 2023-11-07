@@ -9,16 +9,16 @@ type Foo = {
   bar: string,
 };
 
-(foo: Foo);
+foo as Foo;
 
 function f(x: mixed): empty {
   return f(x);
 }
 
-(f: <T>(T) => T);
+f as <T>(T) => T;
 
 function g<T>(x: T): T {
   return x;
 }
 
-(g: empty => mixed);
+g as (empty) => mixed;

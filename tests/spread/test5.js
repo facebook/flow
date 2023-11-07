@@ -2,7 +2,7 @@
 
 declare function map<Tv, TNext>(
   obj: {[key: string]: Tv},
-  iterator:((obj: Tv) => TNext),
+  iterator: (obj: Tv) => TNext,
 ): Array<TNext>;
 
 /**
@@ -13,10 +13,10 @@ declare function map<Tv, TNext>(
  */
 function test(
   x: {kind: ?string},
-  kinds: {[key: string]: string}
+  kinds: {[key: string]: string},
 ): Array<{kind: ?string}> {
-  return map(kinds, (value) => {
-    (value: string); // OK
+  return map(kinds, value => {
+    value as string; // OK
     return {
       ...x,
       kind: value,

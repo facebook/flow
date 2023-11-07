@@ -138,18 +138,18 @@ References:
            ^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- errors2.js:6:8
+Error --------------------------------------------------------------------------------------------------- errors2.js:6:9
 
 Cannot instantiate `$PropertyType` because property `p` is missing in object type [1]. [prop-missing]
 
-   errors2.js:6:8
-   6| (null: $PropertyType<{}, 'p'>); // Error should point here.
-             ^^^^^^^^^^^^^^^^^^^^^^
+   errors2.js:6:9
+   6| null as $PropertyType<{}, 'p'>; // Error should point here.
+              ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   errors2.js:6:22
-   6| (null: $PropertyType<{}, 'p'>); // Error should point here.
-                           ^^ [1]
+   errors2.js:6:23
+   6| null as $PropertyType<{}, 'p'>; // Error should point here.
+                            ^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- errors2.js:8:10
@@ -208,13 +208,13 @@ References:
                                        ^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- errors2.js:25:2
+Error -------------------------------------------------------------------------------------------------- errors2.js:25:1
 
 Cannot call `f4` because property `p` is missing in object type [1]. [prop-missing]
 
-   errors2.js:25:2
-   25| (f4(o): empty); // Error should point here.
-        ^^
+   errors2.js:25:1
+   25| f4(o) as empty; // Error should point here.
+       ^^
 
 References:
    errors2.js:21:16
@@ -222,13 +222,13 @@ References:
                       ^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- errors2.js:26:2
+Error -------------------------------------------------------------------------------------------------- errors2.js:26:1
 
 Cannot call `f5` because property `p` is missing in object type [1]. [prop-missing]
 
-   errors2.js:26:2
-   26| (f5(o): empty); // Error should point here.
-        ^^
+   errors2.js:26:1
+   26| f5(o) as empty; // Error should point here.
+       ^^
 
 References:
    errors2.js:21:16

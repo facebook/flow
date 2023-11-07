@@ -1,45 +1,45 @@
-Error ---------------------------------------------------------------------------------------------------- errors.js:9:2
+Error ---------------------------------------------------------------------------------------------------- errors.js:9:1
 
 Cannot cast `k` to string literal `c` because string literal `a` [1] is incompatible with string literal `c` [2].
 [incompatible-cast]
 
-   errors.js:9:2
-   9| (k: 'c');
-       ^ [1]
+   errors.js:9:1
+   9| k as 'c';
+      ^ [1]
 
 References:
-   errors.js:9:5
-   9| (k: 'c');
-          ^^^ [2]
+   errors.js:9:6
+   9| k as 'c';
+           ^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- errors.js:9:2
+Error ---------------------------------------------------------------------------------------------------- errors.js:9:1
 
 Cannot cast `k` to string literal `c` because string literal `b` [1] is incompatible with string literal `c` [2].
 [incompatible-cast]
 
-   errors.js:9:2
-   9| (k: 'c');
-       ^ [1]
+   errors.js:9:1
+   9| k as 'c';
+      ^ [1]
 
 References:
-   errors.js:9:5
-   9| (k: 'c');
-          ^^^ [2]
+   errors.js:9:6
+   9| k as 'c';
+           ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- errors.js:10:2
+Error --------------------------------------------------------------------------------------------------- errors.js:10:1
 
 Cannot cast `'c'` to `K` because property `c` is missing in object literal [1]. [prop-missing]
 
-   errors.js:10:2
-   10| ('c': K);
-        ^^^
+   errors.js:10:1
+   10| 'c' as K;
+       ^^^
 
 References:
-   errors.js:10:7
-   10| ('c': K);
-             ^ [1]
+   errors.js:10:8
+   10| 'c' as K;
+              ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- instance.js:21:2
@@ -140,42 +140,42 @@ References:
           ^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- keys.js:10:4
+Error ----------------------------------------------------------------------------------------------------- keys.js:10:3
 
 Cannot cast `123` to key set because number [1] is incompatible with key set [2]. [incompatible-cast]
 
-   keys.js:10:4
-   10|   (123: $Keys<Object>); // Error: number -> keys of Object
-          ^^^ [1]
+   keys.js:10:3
+   10|   123 as $Keys<Object>; // Error: number -> keys of Object
+         ^^^ [1]
 
 References:
-   keys.js:10:9
-   10|   (123: $Keys<Object>); // Error: number -> keys of Object
-               ^^^^^^^^^^^^^ [2]
+   keys.js:10:10
+   10|   123 as $Keys<Object>; // Error: number -> keys of Object
+                ^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- keys.js:21:4
+Error ----------------------------------------------------------------------------------------------------- keys.js:21:3
 
 Cannot cast `123` to key set because number [1] is incompatible with key set [2]. [incompatible-cast]
 
-   keys.js:21:4
-   21|   (123: $Keys<StrDict>); // Error: number -> keys of StrDict
-          ^^^ [1]
+   keys.js:21:3
+   21|   123 as $Keys<StrDict>; // Error: number -> keys of StrDict
+         ^^^ [1]
 
 References:
-   keys.js:21:9
-   21|   (123: $Keys<StrDict>); // Error: number -> keys of StrDict
-               ^^^^^^^^^^^^^^ [2]
+   keys.js:21:10
+   21|   123 as $Keys<StrDict>; // Error: number -> keys of StrDict
+                ^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- keys.js:26:4
+Error ----------------------------------------------------------------------------------------------------- keys.js:26:3
 
 Cannot cast `str` to key set because some string with unknown value [1] is incompatible with string literal `hi` [2].
 [incompatible-cast]
 
-   keys.js:26:4
-   26|   (str: $Keys<StrLitDict>); // Error: Not all strings are allowed
-          ^^^ [1]
+   keys.js:26:3
+   26|   str as $Keys<StrLitDict>; // Error: Not all strings are allowed
+         ^^^ [1]
 
 References:
    keys.js:24:26
@@ -183,14 +183,14 @@ References:
                                 ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- keys.js:28:6
+Error ----------------------------------------------------------------------------------------------------- keys.js:28:5
 
 Cannot cast `str` to key set because some string with unknown value [1] is incompatible with string literal `hi` [2].
 [incompatible-cast]
 
-   keys.js:28:6
-   28|     (str: $Keys<StrLitDict>); // Error: Not all truthy strings are allowed
-            ^^^ [1]
+   keys.js:28:5
+   28|     str as $Keys<StrLitDict>; // Error: Not all truthy strings are allowed
+           ^^^ [1]
 
 References:
    keys.js:24:26
@@ -198,14 +198,14 @@ References:
                                 ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- keys.js:31:4
+Error ----------------------------------------------------------------------------------------------------- keys.js:31:3
 
 Cannot cast `'bye'` to key set because property `bye` [1] is incompatible with string literal `hi` [2].
 [incompatible-cast]
 
-   keys.js:31:4
-   31|   ('bye': $Keys<StrLitDict>); // Error: The wrong string literal is not allowed
-          ^^^^^ [1]
+   keys.js:31:3
+   31|   'bye' as $Keys<StrLitDict>; // Error: The wrong string literal is not allowed
+         ^^^^^ [1]
 
 References:
    keys.js:24:26
@@ -213,62 +213,62 @@ References:
                                 ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- keys.js:33:4
+Error ----------------------------------------------------------------------------------------------------- keys.js:33:3
 
 Cannot cast `123` to key set because number [1] is incompatible with key set [2]. [incompatible-cast]
 
-   keys.js:33:4
-   33|   (123: $Keys<StrLitDict>); // Error: number -> keys of StrLitDict
-          ^^^ [1]
+   keys.js:33:3
+   33|   123 as $Keys<StrLitDict>; // Error: number -> keys of StrLitDict
+         ^^^ [1]
 
 References:
-   keys.js:33:9
-   33|   (123: $Keys<StrLitDict>); // Error: number -> keys of StrLitDict
-               ^^^^^^^^^^^^^^^^^ [2]
+   keys.js:33:10
+   33|   123 as $Keys<StrLitDict>; // Error: number -> keys of StrLitDict
+                ^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- keys.js:38:4
+Error ----------------------------------------------------------------------------------------------------- keys.js:38:3
 
 Cannot cast `str` to key set because an index signature declaring the expected key / value type is missing in
 `ObjLit` [1]. [prop-missing]
 
-   keys.js:38:4
-   38|   (str: $Keys<ObjLit>); // Error: string -> keys of ObjLit
-          ^^^
+   keys.js:38:3
+   38|   str as $Keys<ObjLit>; // Error: string -> keys of ObjLit
+         ^^^
 
 References:
-   keys.js:38:15
-   38|   (str: $Keys<ObjLit>); // Error: string -> keys of ObjLit
-                     ^^^^^^ [1]
+   keys.js:38:16
+   38|   str as $Keys<ObjLit>; // Error: string -> keys of ObjLit
+                      ^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- keys.js:40:6
+Error ----------------------------------------------------------------------------------------------------- keys.js:40:5
 
 Cannot cast `str` to key set because an index signature declaring the expected key / value type is missing in
 `ObjLit` [1]. [prop-missing]
 
-   keys.js:40:6
-   40|     (str: $Keys<ObjLit>); // Error: truthy string -> keys of ObjLit
-            ^^^
+   keys.js:40:5
+   40|     str as $Keys<ObjLit>; // Error: truthy string -> keys of ObjLit
+           ^^^
 
 References:
-   keys.js:40:17
-   40|     (str: $Keys<ObjLit>); // Error: truthy string -> keys of ObjLit
-                       ^^^^^^ [1]
+   keys.js:40:18
+   40|     str as $Keys<ObjLit>; // Error: truthy string -> keys of ObjLit
+                        ^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- keys.js:44:4
+Error ----------------------------------------------------------------------------------------------------- keys.js:44:3
 
 Cannot cast `123` to key set because number [1] is incompatible with key set [2]. [incompatible-cast]
 
-   keys.js:44:4
-   44|   (123: $Keys<ObjLit>); // Error: number -> keys of ObjLit
-          ^^^ [1]
+   keys.js:44:3
+   44|   123 as $Keys<ObjLit>; // Error: number -> keys of ObjLit
+         ^^^ [1]
 
 References:
-   keys.js:44:9
-   44|   (123: $Keys<ObjLit>); // Error: number -> keys of ObjLit
-               ^^^^^^^^^^^^^ [2]
+   keys.js:44:10
+   44|   123 as $Keys<ObjLit>; // Error: number -> keys of ObjLit
+                ^^^^^^^^^^^^^ [2]
 
 
 

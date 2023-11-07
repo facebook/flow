@@ -1,177 +1,177 @@
-Error ------------------------------------------------------------------------------------------------ array_lib.js:5:34
+Error ------------------------------------------------------------------------------------------------- array_lib.js:6:7
 
 Cannot call `foo` with `x` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
 
-   array_lib.js:5:34
-   5| var b = a.map(function (x) { foo(x); return "" + x; });
-                                       ^
+   array_lib.js:6:7
+   6|   foo(x);
+            ^
 
 References:
    array_lib.js:4:10
    4| var a = [0];
                ^ [1]
-   array_lib.js:2:16
-   2| function foo(x:string) { }
-                     ^^^^^^ [2]
+   array_lib.js:2:17
+   2| function foo(x: string) {}
+                      ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ array_lib.js:8:17
+Error ----------------------------------------------------------------------------------------------- array_lib.js:11:17
 
 Cannot assign `b[0]` to `d` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   array_lib.js:8:17
-   8| var d: number = b[0];
-                      ^^^^
+   array_lib.js:11:17
+   11| var d: number = b[0];
+                       ^^^^
 
 References:
-   array_lib.js:5:45
-   5| var b = a.map(function (x) { foo(x); return "" + x; });
-                                                  ^^^^^^ [1]
-   array_lib.js:8:8
-   8| var d: number = b[0];
-             ^^^^^^ [2]
+   array_lib.js:7:10
+    7|   return '' + x;
+                ^^^^^^ [1]
+   array_lib.js:11:8
+   11| var d: number = b[0];
+              ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- array_lib.js:10:23
+Error ----------------------------------------------------------------------------------------------- array_lib.js:13:24
 
 Cannot assign `a.reverse()` to `e` because number [1] is incompatible with string [2] in array element.
 [incompatible-type]
 
-   array_lib.js:10:23
-   10| var e:Array<string> = a.reverse();
-                             ^^^^^^^^^^^
+   array_lib.js:13:24
+   13| var e: Array<string> = a.reverse();
+                              ^^^^^^^^^^^
 
 References:
    array_lib.js:4:10
     4| var a = [0];
                 ^ [1]
-   array_lib.js:10:13
-   10| var e:Array<string> = a.reverse();
-                   ^^^^^^ [2]
+   array_lib.js:13:14
+   13| var e: Array<string> = a.reverse();
+                    ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- array_lib.js:21:33
+Error ----------------------------------------------------------------------------------------------- array_lib.js:26:33
 
 Cannot assign `h.concat(...)` to `n` because string [1] is incompatible with number [2] in array element.
 [incompatible-type]
 
-   array_lib.js:21:33
-   21| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+   array_lib.js:26:33
+   26| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
                                        ^^^ [1]
 
 References:
-   array_lib.js:21:14
-   21| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+   array_lib.js:26:14
+   26| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
                     ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- array_lib.js:21:38
+Error ----------------------------------------------------------------------------------------------- array_lib.js:26:38
 
 Cannot assign `h.concat(...)` to `n` because string [1] is incompatible with number [2] in array element.
 [incompatible-type]
 
-   array_lib.js:21:38
-   21| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+   array_lib.js:26:38
+   26| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
                                             ^^^ [1]
 
 References:
-   array_lib.js:21:14
-   21| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+   array_lib.js:26:14
+   26| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
                     ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- array_lib.js:21:43
+Error ----------------------------------------------------------------------------------------------- array_lib.js:26:43
 
 Cannot assign `h.concat(...)` to `n` because string [1] is incompatible with number [2] in array element.
 [incompatible-type]
 
-   array_lib.js:21:43
-   21| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+   array_lib.js:26:43
+   26| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
                                                  ^^^ [1]
 
 References:
-   array_lib.js:21:14
-   21| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+   array_lib.js:26:14
+   26| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
                     ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- array_lib.js:46:29
+Error ----------------------------------------------------------------------------------------------- array_lib.js:55:29
 
 Cannot use operator `*` with operands string [1] and number [2] [unsafe-arithmetic]
 
-   array_lib.js:46:29
-     46|   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
+   array_lib.js:55:29
+     55|   [''].reduce((acc, str) => acc * str.length); // error, string ~> number
                                      ^^^^^^^^^^^^^^^^
 
 References:
-   array_lib.js:46:4
-     46|   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
+   array_lib.js:55:4
+     55|   [''].reduce((acc, str) => acc * str.length); // error, string ~> number
             ^^ [1]
    <BUILTINS>/core.js:1377:13
    1377|     length: number;
                      ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- array_lib.js:47:34
+Error ----------------------------------------------------------------------------------------------- array_lib.js:56:34
 
 Cannot use operator `*` with operands string [1] and number [2] [unsafe-arithmetic]
 
-   array_lib.js:47:34
-     47|   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
+   array_lib.js:56:34
+     56|   [''].reduceRight((acc, str) => acc * str.length); // error, string ~> number
                                           ^^^^^^^^^^^^^^^^
 
 References:
-   array_lib.js:47:4
-     47|   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
+   array_lib.js:56:4
+     56|   [''].reduceRight((acc, str) => acc * str.length); // error, string ~> number
             ^^ [1]
    <BUILTINS>/core.js:1377:13
    1377|     length: number;
                      ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ array_lib.js:59:4
+Error ------------------------------------------------------------------------------------------------ array_lib.js:68:3
 
 Cannot cast `Array.from(...)` to array type because string [1] is incompatible with empty [2] in array element.
 [incompatible-cast]
 
-   array_lib.js:59:4
-     59|   (Array.from("abcd"): Array<empty>); // ERROR
-            ^^^^^^^^^^^^^^^^^^
+   array_lib.js:68:3
+     68|   Array.from('abcd') as Array<empty>; // ERROR
+           ^^^^^^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/core.js:1150:37
    1150|     static from(str: string): Array<string>;
                                              ^^^^^^ [1]
-   array_lib.js:59:30
-     59|   (Array.from("abcd"): Array<empty>); // ERROR
-                                      ^^^^^ [2]
+   array_lib.js:68:31
+     68|   Array.from('abcd') as Array<empty>; // ERROR
+                                       ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- array_lib.js:66:57
+Error ----------------------------------------------------------------------------------------------- array_lib.js:75:57
 
 Cannot call `Array.of` because number [1] is incompatible with string [2] in array element. [incompatible-call]
 
-   array_lib.js:66:57
-   66|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
+   array_lib.js:75:57
+   75|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
                                                                ^ [1]
 
 References:
-   array_lib.js:66:38
-   66|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
+   array_lib.js:75:38
+   75|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
                                             ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- array_lib.js:66:60
+Error ----------------------------------------------------------------------------------------------- array_lib.js:75:60
 
 Cannot call `Array.of` because number [1] is incompatible with string [2] in array element. [incompatible-call]
 
-   array_lib.js:66:60
-   66|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
+   array_lib.js:75:60
+   75|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
                                                                   ^ [1]
 
 References:
-   array_lib.js:66:38
-   66|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
+   array_lib.js:75:38
+   75|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
                                             ^^^^^^ [2]
 
 

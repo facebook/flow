@@ -1,857 +1,857 @@
-Error ----------------------------------------------------------------------------------------------- expression.js:15:2
+Error ----------------------------------------------------------------------------------------------- expression.js:15:1
 
 Cannot cast `[].p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:15:2
-   15| ((([]: empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^
+   expression.js:15:1
+   15| (([]: empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^
 
 References:
    expression.js:6:14
     6| type T = {p: mixed};
                     ^^^^^ [1]
-   expression.js:15:22
-   15| ((([]: empty): T).p: empty);
-                            ^^^^^ [2]
+   expression.js:15:23
+   15| (([]: empty): T).p as empty;
+                             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:15:4
+Error ----------------------------------------------------------------------------------------------- expression.js:15:3
 
 Cannot cast array literal to empty because empty array literal [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:15:4
-   15| ((([]: empty): T).p: empty);
-          ^^ [1]
+   expression.js:15:3
+   15| (([]: empty): T).p as empty;
+         ^^ [1]
 
 References:
-   expression.js:15:8
-   15| ((([]: empty): T).p: empty);
+   expression.js:15:7
+   15| (([]: empty): T).p as empty;
+             ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:16:1
+
+Cannot cast `[...].p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:16:1
+   16| (([1]: empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^
+
+References:
+   expression.js:6:14
+    6| type T = {p: mixed};
+                    ^^^^^ [1]
+   expression.js:16:24
+   16| (([1]: empty): T).p as empty;
+                              ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:16:3
+
+Cannot cast array literal to empty because array literal [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:16:3
+   16| (([1]: empty): T).p as empty;
+         ^^^ [1]
+
+References:
+   expression.js:16:8
+   16| (([1]: empty): T).p as empty;
               ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:16:2
+Error ----------------------------------------------------------------------------------------------- expression.js:17:1
 
 Cannot cast `[...].p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:16:2
-   16| ((([1]: empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^
+   expression.js:17:1
+   17| (([1, 2, 3]: empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    expression.js:6:14
     6| type T = {p: mixed};
                     ^^^^^ [1]
-   expression.js:16:23
-   16| ((([1]: empty): T).p: empty);
-                             ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:16:4
-
-Cannot cast array literal to empty because array literal [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:16:4
-   16| ((([1]: empty): T).p: empty);
-          ^^^ [1]
-
-References:
-   expression.js:16:9
-   16| ((([1]: empty): T).p: empty);
-               ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:17:2
-
-Cannot cast `[...].p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:17:2
-   17| ((([1, 2, 3]: empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   expression.js:6:14
-    6| type T = {p: mixed};
-                    ^^^^^ [1]
-   expression.js:17:29
-   17| ((([1, 2, 3]: empty): T).p: empty);
-                                   ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:17:4
-
-Cannot cast array literal to empty because array literal [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:17:4
-   17| ((([1, 2, 3]: empty): T).p: empty);
-          ^^^^^^^^^ [1]
-
-References:
-   expression.js:17:15
-   17| ((([1, 2, 3]: empty): T).p: empty);
-                     ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:18:2
-
-Cannot cast `((...) => { ... }).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:18:2
-   18| (((() => {}: empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   expression.js:6:14
-    6| type T = {p: mixed};
-                    ^^^^^ [1]
-   expression.js:18:28
-   18| (((() => {}: empty): T).p: empty);
-                                  ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:18:4
-
-Cannot cast function to empty because function [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:18:4
-   18| (((() => {}: empty): T).p: empty);
-          ^^^^^^^^ [1]
-
-References:
-   expression.js:18:14
-   18| (((() => {}: empty): T).p: empty);
-                    ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:19:2
-
-Cannot cast `((...) => 42).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:19:2
-   19| (((() => 42: empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   expression.js:6:14
-    6| type T = {p: mixed};
-                    ^^^^^ [1]
-   expression.js:19:28
-   19| (((() => 42: empty): T).p: empty);
-                                  ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:19:4
-
-Cannot cast function to empty because function [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:19:4
-   19| (((() => 42: empty): T).p: empty);
-          ^^^^^^^^ [1]
-
-References:
-   expression.js:19:14
-   19| (((() => 42: empty): T).p: empty);
-                    ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:20:2
-
-Cannot cast `((...) => ({...})).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:20:2
-   20| (((() => ({}): empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   expression.js:6:14
-    6| type T = {p: mixed};
-                    ^^^^^ [1]
-   expression.js:20:30
-   20| (((() => ({}): empty): T).p: empty);
+   expression.js:17:30
+   17| (([1, 2, 3]: empty): T).p as empty;
                                     ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:20:4
+Error ----------------------------------------------------------------------------------------------- expression.js:17:3
 
-Cannot cast function to empty because function [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast array literal to empty because array literal [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:20:4
-   20| (((() => ({}): empty): T).p: empty);
-          ^^^^^^^^^^ [1]
-
-References:
-   expression.js:20:16
-   20| (((() => ({}): empty): T).p: empty);
-                      ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:21:2
-
-Cannot cast `(a = 42).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:21:2
-   21| ((((a = 42): empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^^
+   expression.js:17:3
+   17| (([1, 2, 3]: empty): T).p as empty;
+         ^^^^^^^^^ [1]
 
 References:
-   expression.js:6:14
-    6| type T = {p: mixed};
-                    ^^^^^ [1]
-   expression.js:21:28
-   21| ((((a = 42): empty): T).p: empty);
-                                  ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:21:9
-
-Cannot cast `a = 42` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:21:9
-   21| ((((a = 42): empty): T).p: empty);
-               ^^ [1]
-
-References:
-   expression.js:21:14
-   21| ((((a = 42): empty): T).p: empty);
+   expression.js:17:14
+   17| (([1, 2, 3]: empty): T).p as empty;
                     ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:22:2
+Error ----------------------------------------------------------------------------------------------- expression.js:18:1
 
-Cannot cast `(a >>>= 42).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `((...) => { ... }).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:22:2
-   22| ((((a >>>= 42): empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   expression.js:6:14
-    6| type T = {p: mixed};
-                    ^^^^^ [1]
-   expression.js:22:31
-   22| ((((a >>>= 42): empty): T).p: empty);
-                                     ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:22:5
-
-Cannot cast `a >>>= 42` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:22:5
-   22| ((((a >>>= 42): empty): T).p: empty);
-           ^
-
-References:
-   expression.js:21:9
-   21| ((((a = 42): empty): T).p: empty);
-               ^^ [1]
-   expression.js:22:17
-   22| ((((a >>>= 42): empty): T).p: empty);
-                       ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:23:2
-
-Cannot cast `({...} = {...}).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:23:2
-   23| (((({a} = {a: 42}): empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   expression.js:18:1
+   18| ((() => {}: empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    expression.js:6:14
     6| type T = {p: mixed};
                     ^^^^^ [1]
-   expression.js:23:35
-   23| (((({a} = {a: 42}): empty): T).p: empty);
-                                         ^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------- expression.js:23:11
-
-Cannot cast `{...} = {...}` to empty because object literal [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:23:11
-   23| (((({a} = {a: 42}): empty): T).p: empty);
-                 ^^^^^^^ [1]
-
-References:
-   expression.js:23:21
-   23| (((({a} = {a: 42}): empty): T).p: empty);
-                           ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:24:2
-
-Cannot cast `([...] = [...]).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:24:2
-   24| (((([a] = [42]): empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   expression.js:6:14
-    6| type T = {p: mixed};
-                    ^^^^^ [1]
-   expression.js:24:32
-   24| (((([a] = [42]): empty): T).p: empty);
-                                      ^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------- expression.js:24:11
-
-Cannot cast `[...] = [...]` to empty because array literal [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:24:11
-   24| (((([a] = [42]): empty): T).p: empty);
-                 ^^^^ [1]
-
-References:
-   expression.js:24:18
-   24| (((([a] = [42]): empty): T).p: empty);
-                        ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:25:2
-
-Cannot cast `(a = a = 42).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:25:2
-   25| ((((a = a = 42): empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   expression.js:6:14
-    6| type T = {p: mixed};
-                    ^^^^^ [1]
-   expression.js:25:32
-   25| ((((a = a = 42): empty): T).p: empty);
-                                      ^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------- expression.js:25:13
-
-Cannot cast `a = a = 42` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:25:13
-   25| ((((a = a = 42): empty): T).p: empty);
-                   ^^ [1]
-
-References:
-   expression.js:25:18
-   25| ((((a = a = 42): empty): T).p: empty);
-                        ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:26:2
-
-Cannot cast `(1 + 2).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:26:2
-   26| (((1 + 2: empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   expression.js:6:14
-    6| type T = {p: mixed};
-                    ^^^^^ [1]
-   expression.js:26:25
-   26| (((1 + 2: empty): T).p: empty);
-                               ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:26:4
-
-Cannot cast `1 + 2` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:26:4
-   26| (((1 + 2: empty): T).p: empty);
-          ^^^^^ [1]
-
-References:
-   expression.js:26:11
-   26| (((1 + 2: empty): T).p: empty);
-                 ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:27:2
-
-Cannot cast `(1 + 2 + 3).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:27:2
-   27| (((1 + 2 + 3: empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   expression.js:6:14
-    6| type T = {p: mixed};
-                    ^^^^^ [1]
-   expression.js:27:29
-   27| (((1 + 2 + 3: empty): T).p: empty);
+   expression.js:18:29
+   18| ((() => {}: empty): T).p as empty;
                                    ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:27:4
+Error ----------------------------------------------------------------------------------------------- expression.js:18:3
 
-Cannot cast `1 + 2 + 3` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast function to empty because function [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:27:4
-   27| (((1 + 2 + 3: empty): T).p: empty);
-          ^^^^^^^^^ [1]
+   expression.js:18:3
+   18| ((() => {}: empty): T).p as empty;
+         ^^^^^^^^ [1]
 
 References:
-   expression.js:27:15
-   27| (((1 + 2 + 3: empty): T).p: empty);
-                     ^^^^^ [2]
+   expression.js:18:13
+   18| ((() => {}: empty): T).p as empty;
+                   ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:28:2
+Error ----------------------------------------------------------------------------------------------- expression.js:19:1
 
-Cannot cast `(1 - (2 + 3)).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `((...) => 42).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:28:2
-   28| (((1 - (2 + 3): empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   expression.js:19:1
+   19| ((() => 42: empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    expression.js:6:14
     6| type T = {p: mixed};
                     ^^^^^ [1]
-   expression.js:28:31
-   28| (((1 - (2 + 3): empty): T).p: empty);
+   expression.js:19:29
+   19| ((() => 42: empty): T).p as empty;
+                                   ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:19:3
+
+Cannot cast function to empty because function [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:19:3
+   19| ((() => 42: empty): T).p as empty;
+         ^^^^^^^^ [1]
+
+References:
+   expression.js:19:13
+   19| ((() => 42: empty): T).p as empty;
+                   ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:20:1
+
+Cannot cast `((...) => ({...})).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:20:1
+   20| ((() => ({}): empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   expression.js:6:14
+    6| type T = {p: mixed};
+                    ^^^^^ [1]
+   expression.js:20:31
+   20| ((() => ({}): empty): T).p as empty;
                                      ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:28:4
+Error ----------------------------------------------------------------------------------------------- expression.js:20:3
 
-Cannot cast `1 - (2 + 3)` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast function to empty because function [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:28:4
-   28| (((1 - (2 + 3): empty): T).p: empty);
-          ^^^^^^^^^^^ [1]
+   expression.js:20:3
+   20| ((() => ({}): empty): T).p as empty;
+         ^^^^^^^^^^ [1]
 
 References:
-   expression.js:28:17
-   28| (((1 - (2 + 3): empty): T).p: empty);
+   expression.js:20:15
+   20| ((() => ({}): empty): T).p as empty;
+                     ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:21:1
+
+Cannot cast `(a = 42).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:21:1
+   21| (((a = 42): empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   expression.js:6:14
+    6| type T = {p: mixed};
+                    ^^^^^ [1]
+   expression.js:21:29
+   21| (((a = 42): empty): T).p as empty;
+                                   ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:21:8
+
+Cannot cast `a = 42` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:21:8
+   21| (((a = 42): empty): T).p as empty;
+              ^^ [1]
+
+References:
+   expression.js:21:13
+   21| (((a = 42): empty): T).p as empty;
+                   ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:22:1
+
+Cannot cast `(a >>>= 42).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:22:1
+   22| (((a >>>= 42): empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   expression.js:6:14
+    6| type T = {p: mixed};
+                    ^^^^^ [1]
+   expression.js:22:32
+   22| (((a >>>= 42): empty): T).p as empty;
+                                      ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:22:4
+
+Cannot cast `a >>>= 42` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:22:4
+   22| (((a >>>= 42): empty): T).p as empty;
+          ^
+
+References:
+   expression.js:21:8
+   21| (((a = 42): empty): T).p as empty;
+              ^^ [1]
+   expression.js:22:16
+   22| (((a >>>= 42): empty): T).p as empty;
+                      ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:23:1
+
+Cannot cast `({...} = {...}).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:23:1
+   23| ((({a} = {a: 42}): empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   expression.js:6:14
+    6| type T = {p: mixed};
+                    ^^^^^ [1]
+   expression.js:23:36
+   23| ((({a} = {a: 42}): empty): T).p as empty;
+                                          ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- expression.js:23:10
+
+Cannot cast `{...} = {...}` to empty because object literal [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:23:10
+   23| ((({a} = {a: 42}): empty): T).p as empty;
+                ^^^^^^^ [1]
+
+References:
+   expression.js:23:20
+   23| ((({a} = {a: 42}): empty): T).p as empty;
+                          ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:24:1
+
+Cannot cast `([...] = [...]).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:24:1
+   24| ((([a] = [42]): empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   expression.js:6:14
+    6| type T = {p: mixed};
+                    ^^^^^ [1]
+   expression.js:24:33
+   24| ((([a] = [42]): empty): T).p as empty;
+                                       ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- expression.js:24:10
+
+Cannot cast `[...] = [...]` to empty because array literal [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:24:10
+   24| ((([a] = [42]): empty): T).p as empty;
+                ^^^^ [1]
+
+References:
+   expression.js:24:17
+   24| ((([a] = [42]): empty): T).p as empty;
                        ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:29:2
+Error ----------------------------------------------------------------------------------------------- expression.js:25:1
+
+Cannot cast `(a = a = 42).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:25:1
+   25| (((a = a = 42): empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   expression.js:6:14
+    6| type T = {p: mixed};
+                    ^^^^^ [1]
+   expression.js:25:33
+   25| (((a = a = 42): empty): T).p as empty;
+                                       ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- expression.js:25:12
+
+Cannot cast `a = a = 42` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:25:12
+   25| (((a = a = 42): empty): T).p as empty;
+                  ^^ [1]
+
+References:
+   expression.js:25:17
+   25| (((a = a = 42): empty): T).p as empty;
+                       ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:26:1
+
+Cannot cast `(1 + 2).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:26:1
+   26| ((1 + 2: empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   expression.js:6:14
+    6| type T = {p: mixed};
+                    ^^^^^ [1]
+   expression.js:26:26
+   26| ((1 + 2: empty): T).p as empty;
+                                ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:26:3
+
+Cannot cast `1 + 2` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:26:3
+   26| ((1 + 2: empty): T).p as empty;
+         ^^^^^ [1]
+
+References:
+   expression.js:26:10
+   26| ((1 + 2: empty): T).p as empty;
+                ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:27:1
+
+Cannot cast `(1 + 2 + 3).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:27:1
+   27| ((1 + 2 + 3: empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   expression.js:6:14
+    6| type T = {p: mixed};
+                    ^^^^^ [1]
+   expression.js:27:30
+   27| ((1 + 2 + 3: empty): T).p as empty;
+                                    ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:27:3
+
+Cannot cast `1 + 2 + 3` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:27:3
+   27| ((1 + 2 + 3: empty): T).p as empty;
+         ^^^^^^^^^ [1]
+
+References:
+   expression.js:27:14
+   27| ((1 + 2 + 3: empty): T).p as empty;
+                    ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:28:1
+
+Cannot cast `(1 - (2 + 3)).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:28:1
+   28| ((1 - (2 + 3): empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   expression.js:6:14
+    6| type T = {p: mixed};
+                    ^^^^^ [1]
+   expression.js:28:32
+   28| ((1 - (2 + 3): empty): T).p as empty;
+                                      ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:28:3
+
+Cannot cast `1 - (2 + 3)` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:28:3
+   28| ((1 - (2 + 3): empty): T).p as empty;
+         ^^^^^^^^^^^ [1]
+
+References:
+   expression.js:28:16
+   28| ((1 - (2 + 3): empty): T).p as empty;
+                      ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:29:1
 
 Cannot cast `((1 + 2) * (3 + 4)).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:29:2
-   29| ((((1 + 2) * (3 + 4): empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   expression.js:29:1
+   29| (((1 + 2) * (3 + 4): empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    expression.js:6:14
     6| type T = {p: mixed};
                     ^^^^^ [1]
-   expression.js:29:37
-   29| ((((1 + 2) * (3 + 4): empty): T).p: empty);
-                                           ^^^^^ [2]
+   expression.js:29:38
+   29| (((1 + 2) * (3 + 4): empty): T).p as empty;
+                                            ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:29:4
+Error ----------------------------------------------------------------------------------------------- expression.js:29:3
 
 Cannot cast `(1 + 2) * (3 + 4)` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:29:4
-   29| ((((1 + 2) * (3 + 4): empty): T).p: empty);
-          ^^^^^^^^^^^^^^^^^ [1]
+   expression.js:29:3
+   29| (((1 + 2) * (3 + 4): empty): T).p as empty;
+         ^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   expression.js:29:23
-   29| ((((1 + 2) * (3 + 4): empty): T).p: empty);
-                             ^^^^^ [2]
+   expression.js:29:22
+   29| (((1 + 2) * (3 + 4): empty): T).p as empty;
+                            ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:30:2
+Error ----------------------------------------------------------------------------------------------- expression.js:30:1
 
 Cannot cast `(1 + (2 * (3 + 4))).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:30:2
-   30| (((1 + 2 * (3 + 4): empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   expression.js:30:1
+   30| ((1 + 2 * (3 + 4): empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    expression.js:6:14
     6| type T = {p: mixed};
                     ^^^^^ [1]
-   expression.js:30:35
-   30| (((1 + 2 * (3 + 4): empty): T).p: empty);
-                                         ^^^^^ [2]
+   expression.js:30:36
+   30| ((1 + 2 * (3 + 4): empty): T).p as empty;
+                                          ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:30:4
+Error ----------------------------------------------------------------------------------------------- expression.js:30:3
 
 Cannot cast `1 + (2 * (3 + 4))` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:30:4
-   30| (((1 + 2 * (3 + 4): empty): T).p: empty);
-          ^^^^^^^^^^^^^^^ [1]
+   expression.js:30:3
+   30| ((1 + 2 * (3 + 4): empty): T).p as empty;
+         ^^^^^^^^^^^^^^^ [1]
 
 References:
-   expression.js:30:21
-   30| (((1 + 2 * (3 + 4): empty): T).p: empty);
-                           ^^^^^ [2]
+   expression.js:30:20
+   30| ((1 + 2 * (3 + 4): empty): T).p as empty;
+                          ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:31:2
+Error ----------------------------------------------------------------------------------------------- expression.js:31:1
 
 Cannot cast `f().p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:31:2
-   31| (((f(): empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^
+   expression.js:31:1
+   31| ((f(): empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^
 
 References:
    expression.js:6:14
     6| type T = {p: mixed};
                     ^^^^^ [1]
-   expression.js:31:23
-   31| (((f(): empty): T).p: empty);
-                             ^^^^^ [2]
+   expression.js:31:24
+   31| ((f(): empty): T).p as empty;
+                              ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:31:4
+Error ----------------------------------------------------------------------------------------------- expression.js:31:3
 
 Cannot cast `f()` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:31:4
-   31| (((f(): empty): T).p: empty);
-          ^^^
+   expression.js:31:3
+   31| ((f(): empty): T).p as empty;
+         ^^^
 
 References:
    expression.js:9:23
     9| const f = (x: mixed): mixed => x;
                              ^^^^^ [1]
-   expression.js:31:9
-   31| (((f(): empty): T).p: empty);
-               ^^^^^ [2]
+   expression.js:31:8
+   31| ((f(): empty): T).p as empty;
+              ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:32:2
+Error ----------------------------------------------------------------------------------------------- expression.js:32:1
 
 Cannot cast `f(...).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:32:2
-   32| (((f(42): empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^^
+   expression.js:32:1
+   32| ((f(42): empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^^
 
 References:
    expression.js:6:14
     6| type T = {p: mixed};
                     ^^^^^ [1]
-   expression.js:32:25
-   32| (((f(42): empty): T).p: empty);
-                               ^^^^^ [2]
+   expression.js:32:26
+   32| ((f(42): empty): T).p as empty;
+                                ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:32:4
+Error ----------------------------------------------------------------------------------------------- expression.js:32:3
 
 Cannot cast `f(...)` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:32:4
-   32| (((f(42): empty): T).p: empty);
-          ^^^^^
+   expression.js:32:3
+   32| ((f(42): empty): T).p as empty;
+         ^^^^^
 
 References:
    expression.js:9:23
     9| const f = (x: mixed): mixed => x;
                              ^^^^^ [1]
-   expression.js:32:11
-   32| (((f(42): empty): T).p: empty);
-                 ^^^^^ [2]
+   expression.js:32:10
+   32| ((f(42): empty): T).p as empty;
+                ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:33:2
+Error ----------------------------------------------------------------------------------------------- expression.js:33:1
 
 Cannot cast `class { ... }.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:33:2
-   33| (((class {}: empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^^
+   expression.js:33:1
+   33| ((class {}: empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    expression.js:6:14
     6| type T = {p: mixed};
                     ^^^^^ [1]
-   expression.js:33:28
-   33| (((class {}: empty): T).p: empty);
-                                  ^^^^^ [2]
+   expression.js:33:29
+   33| ((class {}: empty): T).p as empty;
+                                   ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:33:4
+Error ----------------------------------------------------------------------------------------------- expression.js:33:3
 
 Cannot cast `class { ... }` to empty because class `<<anonymous class>>` [1] is incompatible with empty [2].
 [incompatible-cast]
 
-   expression.js:33:4
-   33| (((class {}: empty): T).p: empty);
-          ^^^^^^^^ [1]
+   expression.js:33:3
+   33| ((class {}: empty): T).p as empty;
+         ^^^^^^^^ [1]
 
 References:
-   expression.js:33:14
-   33| (((class {}: empty): T).p: empty);
-                    ^^^^^ [2]
+   expression.js:33:13
+   33| ((class {}: empty): T).p as empty;
+                   ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:34:2
+Error ----------------------------------------------------------------------------------------------- expression.js:34:1
 
 Cannot cast `(1 ? 2 : 3).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:34:2
-   34| ((((1 ? 2 : 3): empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   expression.js:34:1
+   34| (((1 ? 2 : 3): empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    expression.js:6:14
     6| type T = {p: mixed};
                     ^^^^^ [1]
-   expression.js:34:31
-   34| ((((1 ? 2 : 3): empty): T).p: empty);
-                                     ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:34:9
-
-Cannot cast `1 ? 2 : 3` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:34:9
-   34| ((((1 ? 2 : 3): empty): T).p: empty);
-               ^ [1]
-
-References:
-   expression.js:34:17
-   34| ((((1 ? 2 : 3): empty): T).p: empty);
-                       ^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------- expression.js:34:13
-
-Cannot cast `1 ? 2 : 3` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:34:13
-   34| ((((1 ? 2 : 3): empty): T).p: empty);
-                   ^ [1]
-
-References:
-   expression.js:34:17
-   34| ((((1 ? 2 : 3): empty): T).p: empty);
-                       ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:35:2
-
-Cannot cast `((1 ? 2 : 3) ? 4 : 5).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:35:2
-   35| (((((1 ? 2 : 3) ? 4 : 5): empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   expression.js:6:14
-    6| type T = {p: mixed};
-                    ^^^^^ [1]
-   expression.js:35:41
-   35| (((((1 ? 2 : 3) ? 4 : 5): empty): T).p: empty);
-                                               ^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------- expression.js:35:19
-
-Cannot cast `(1 ? 2 : 3) ? 4 : 5` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:35:19
-   35| (((((1 ? 2 : 3) ? 4 : 5): empty): T).p: empty);
-                         ^ [1]
-
-References:
-   expression.js:35:27
-   35| (((((1 ? 2 : 3) ? 4 : 5): empty): T).p: empty);
-                                 ^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------- expression.js:35:23
-
-Cannot cast `(1 ? 2 : 3) ? 4 : 5` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:35:23
-   35| (((((1 ? 2 : 3) ? 4 : 5): empty): T).p: empty);
-                             ^ [1]
-
-References:
-   expression.js:35:27
-   35| (((((1 ? 2 : 3) ? 4 : 5): empty): T).p: empty);
-                                 ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:36:2
-
-Cannot cast `function () { ... }.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:36:2
-   36| (((function() {}: empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   expression.js:6:14
-    6| type T = {p: mixed};
-                    ^^^^^ [1]
-   expression.js:36:33
-   36| (((function() {}: empty): T).p: empty);
-                                       ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:36:4
-
-Cannot cast function to empty because function [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:36:4
-   36| (((function() {}: empty): T).p: empty);
-          ^^^^^^^^^^ [1]
-
-References:
-   expression.js:36:19
-   36| (((function() {}: empty): T).p: empty);
-                         ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:37:2
-
-Cannot cast `a.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:37:2
-   37| (((a: empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^
-
-References:
-   expression.js:6:14
-    6| type T = {p: mixed};
-                    ^^^^^ [1]
-   expression.js:37:21
-   37| (((a: empty): T).p: empty);
-                           ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:37:4
-
-Cannot cast `a` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:37:4
-   37| (((a: empty): T).p: empty);
-          ^
-
-References:
-   expression.js:25:13
-   25| ((((a = a = 42): empty): T).p: empty);
-                   ^^ [1]
-   expression.js:37:7
-   37| (((a: empty): T).p: empty);
-             ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:38:2
-
-Cannot cast `import('fs').p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:38:2
-   38| (((import('fs'): empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   expression.js:6:14
-    6| type T = {p: mixed};
-                    ^^^^^ [1]
-   expression.js:38:32
-   38| (((import('fs'): empty): T).p: empty);
+   expression.js:34:32
+   34| (((1 ? 2 : 3): empty): T).p as empty;
                                       ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:38:4
+Error ----------------------------------------------------------------------------------------------- expression.js:34:8
 
-Cannot cast `import('fs')` to empty because `Promise` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `1 ? 2 : 3` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:38:4
-   38| (((import('fs'): empty): T).p: empty);
-          ^^^^^^^^^^^^ [1]
+   expression.js:34:8
+   34| (((1 ? 2 : 3): empty): T).p as empty;
+              ^ [1]
 
 References:
-   expression.js:38:18
-   38| (((import('fs'): empty): T).p: empty);
-                        ^^^^^ [2]
+   expression.js:34:16
+   34| (((1 ? 2 : 3): empty): T).p as empty;
+                      ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:39:2
+Error ---------------------------------------------------------------------------------------------- expression.js:34:12
 
-Cannot cast `<MyComponent />.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `1 ? 2 : 3` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:39:2
-   39| (((<MyComponent />: empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   expression.js:34:12
+   34| (((1 ? 2 : 3): empty): T).p as empty;
+                  ^ [1]
+
+References:
+   expression.js:34:16
+   34| (((1 ? 2 : 3): empty): T).p as empty;
+                      ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:35:1
+
+Cannot cast `((1 ? 2 : 3) ? 4 : 5).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:35:1
+   35| ((((1 ? 2 : 3) ? 4 : 5): empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    expression.js:6:14
     6| type T = {p: mixed};
                     ^^^^^ [1]
-   expression.js:39:35
-   39| (((<MyComponent />: empty): T).p: empty);
+   expression.js:35:42
+   35| ((((1 ? 2 : 3) ? 4 : 5): empty): T).p as empty;
+                                                ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- expression.js:35:18
+
+Cannot cast `(1 ? 2 : 3) ? 4 : 5` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:35:18
+   35| ((((1 ? 2 : 3) ? 4 : 5): empty): T).p as empty;
+                        ^ [1]
+
+References:
+   expression.js:35:26
+   35| ((((1 ? 2 : 3) ? 4 : 5): empty): T).p as empty;
+                                ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- expression.js:35:22
+
+Cannot cast `(1 ? 2 : 3) ? 4 : 5` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:35:22
+   35| ((((1 ? 2 : 3) ? 4 : 5): empty): T).p as empty;
+                            ^ [1]
+
+References:
+   expression.js:35:26
+   35| ((((1 ? 2 : 3) ? 4 : 5): empty): T).p as empty;
+                                ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:36:1
+
+Cannot cast `function () { ... }.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:36:1
+   36| ((function () {}: empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   expression.js:6:14
+    6| type T = {p: mixed};
+                    ^^^^^ [1]
+   expression.js:36:35
+   36| ((function () {}: empty): T).p as empty;
                                          ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:39:4
+Error ----------------------------------------------------------------------------------------------- expression.js:36:3
 
-Cannot cast `<MyComponent />` to empty because `React.Element` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast function to empty because function [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:39:4
-   39| (((<MyComponent />: empty): T).p: empty);
-          ^^^^^^^^^^^^^^^ [1]
+   expression.js:36:3
+   36| ((function () {}: empty): T).p as empty;
+         ^^^^^^^^^^^ [1]
 
 References:
-   expression.js:39:21
-   39| (((<MyComponent />: empty): T).p: empty);
-                           ^^^^^ [2]
+   expression.js:36:19
+   36| ((function () {}: empty): T).p as empty;
+                         ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:40:2
+Error ----------------------------------------------------------------------------------------------- expression.js:37:1
 
-Cannot cast `<>...</>.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `a.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:40:2
-   40| (((<>foo</>: empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^^
+   expression.js:37:1
+   37| ((a: empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^
 
 References:
    expression.js:6:14
     6| type T = {p: mixed};
                     ^^^^^ [1]
-   expression.js:40:28
-   40| (((<>foo</>: empty): T).p: empty);
-                                  ^^^^^ [2]
+   expression.js:37:22
+   37| ((a: empty): T).p as empty;
+                            ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:40:4
+Error ----------------------------------------------------------------------------------------------- expression.js:37:3
+
+Cannot cast `a` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:37:3
+   37| ((a: empty): T).p as empty;
+         ^
+
+References:
+   expression.js:25:12
+   25| (((a = a = 42): empty): T).p as empty;
+                  ^^ [1]
+   expression.js:37:6
+   37| ((a: empty): T).p as empty;
+            ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:38:1
+
+Cannot cast `import('fs').p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:38:1
+   38| ((import('fs'): empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   expression.js:6:14
+    6| type T = {p: mixed};
+                    ^^^^^ [1]
+   expression.js:38:33
+   38| ((import('fs'): empty): T).p as empty;
+                                       ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:38:3
+
+Cannot cast `import('fs')` to empty because `Promise` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:38:3
+   38| ((import('fs'): empty): T).p as empty;
+         ^^^^^^^^^^^^ [1]
+
+References:
+   expression.js:38:17
+   38| ((import('fs'): empty): T).p as empty;
+                       ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:39:1
+
+Cannot cast `<MyComponent />.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:39:1
+   39| ((<MyComponent />: empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   expression.js:6:14
+    6| type T = {p: mixed};
+                    ^^^^^ [1]
+   expression.js:39:36
+   39| ((<MyComponent />: empty): T).p as empty;
+                                          ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:39:3
+
+Cannot cast `<MyComponent />` to empty because `React.Element` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:39:3
+   39| ((<MyComponent />: empty): T).p as empty;
+         ^^^^^^^^^^^^^^^ [1]
+
+References:
+   expression.js:39:20
+   39| ((<MyComponent />: empty): T).p as empty;
+                          ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:40:1
+
+Cannot cast `<>...</>.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:40:1
+   40| ((<>foo</>: empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   expression.js:6:14
+    6| type T = {p: mixed};
+                    ^^^^^ [1]
+   expression.js:40:29
+   40| ((<>foo</>: empty): T).p as empty;
+                                   ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:40:3
 
 Cannot cast `<>...</>` to empty because `React.Element` [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:40:4
-   40| (((<>foo</>: empty): T).p: empty);
-          ^^^^^^^^ [1]
+   expression.js:40:3
+   40| ((<>foo</>: empty): T).p as empty;
+         ^^^^^^^^ [1]
 
 References:
-   expression.js:40:14
-   40| (((<>foo</>: empty): T).p: empty);
-                    ^^^^^ [2]
+   expression.js:40:13
+   40| ((<>foo</>: empty): T).p as empty;
+                   ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:40:4
+Error ----------------------------------------------------------------------------------------------- expression.js:40:3
 
 Cannot get `React.Fragment` because property `Fragment` is missing in object type [1]. [prop-missing]
 
-   expression.js:40:4
-   40| (((<>foo</>: empty): T).p: empty);
-          ^^^^^^^^
+   expression.js:40:3
+   40| ((<>foo</>: empty): T).p as empty;
+         ^^^^^^^^
 
 References:
    expression.js:12:20
@@ -859,348 +859,348 @@ References:
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:41:2
+Error ----------------------------------------------------------------------------------------------- expression.js:41:1
 
 Cannot cast `'foo'.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:41:2
-   41| ((('foo': empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^^
+   expression.js:41:1
+   41| (('foo': empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^^
 
 References:
    expression.js:6:14
     6| type T = {p: mixed};
                     ^^^^^ [1]
-   expression.js:41:25
-   41| ((('foo': empty): T).p: empty);
-                               ^^^^^ [2]
+   expression.js:41:26
+   41| (('foo': empty): T).p as empty;
+                                ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:41:4
+Error ----------------------------------------------------------------------------------------------- expression.js:41:3
 
 Cannot cast `'foo'` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:41:4
-   41| ((('foo': empty): T).p: empty);
-          ^^^^^ [1]
+   expression.js:41:3
+   41| (('foo': empty): T).p as empty;
+         ^^^^^ [1]
 
 References:
-   expression.js:41:11
-   41| ((('foo': empty): T).p: empty);
-                 ^^^^^ [2]
+   expression.js:41:10
+   41| (('foo': empty): T).p as empty;
+                ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:42:2
+Error ----------------------------------------------------------------------------------------------- expression.js:42:1
 
 Cannot cast `'abcdefghij...'.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:42:2
-   42| ((('abcdefghijklmnopqrstuvwxyz': empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   expression.js:42:1
+   42| (('abcdefghijklmnopqrstuvwxyz': empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    expression.js:6:14
     6| type T = {p: mixed};
                     ^^^^^ [1]
-   expression.js:42:48
-   42| ((('abcdefghijklmnopqrstuvwxyz': empty): T).p: empty);
-                                                      ^^^^^ [2]
+   expression.js:42:49
+   42| (('abcdefghijklmnopqrstuvwxyz': empty): T).p as empty;
+                                                       ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:42:4
+Error ----------------------------------------------------------------------------------------------- expression.js:42:3
 
 Cannot cast `'abcdefghij...'` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:42:4
-   42| ((('abcdefghijklmnopqrstuvwxyz': empty): T).p: empty);
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   expression.js:42:3
+   42| (('abcdefghijklmnopqrstuvwxyz': empty): T).p as empty;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   expression.js:42:34
-   42| ((('abcdefghijklmnopqrstuvwxyz': empty): T).p: empty);
-                                        ^^^^^ [2]
+   expression.js:42:33
+   42| (('abcdefghijklmnopqrstuvwxyz': empty): T).p as empty;
+                                       ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:43:2
+Error ----------------------------------------------------------------------------------------------- expression.js:43:1
 
 Cannot cast `42.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:43:2
-   43| (((42: empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^
+   expression.js:43:1
+   43| ((42: empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^
 
 References:
    expression.js:6:14
     6| type T = {p: mixed};
                     ^^^^^ [1]
-   expression.js:43:22
-   43| (((42: empty): T).p: empty);
-                            ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:43:4
-
-Cannot cast `42` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:43:4
-   43| (((42: empty): T).p: empty);
-          ^^ [1]
-
-References:
-   expression.js:43:8
-   43| (((42: empty): T).p: empty);
-              ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:44:2
-
-Cannot cast `true.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:44:2
-   44| (((true: empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^
-
-References:
-   expression.js:6:14
-    6| type T = {p: mixed};
-                    ^^^^^ [1]
-   expression.js:44:24
-   44| (((true: empty): T).p: empty);
-                              ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:44:4
-
-Cannot cast `true` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:44:4
-   44| (((true: empty): T).p: empty);
-          ^^^^ [1]
-
-References:
-   expression.js:44:10
-   44| (((true: empty): T).p: empty);
-                ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:45:2
-
-Cannot cast `false.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:45:2
-   45| (((false: empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   expression.js:6:14
-    6| type T = {p: mixed};
-                    ^^^^^ [1]
-   expression.js:45:25
-   45| (((false: empty): T).p: empty);
-                               ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:45:4
-
-Cannot cast `false` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:45:4
-   45| (((false: empty): T).p: empty);
-          ^^^^^ [1]
-
-References:
-   expression.js:45:11
-   45| (((false: empty): T).p: empty);
-                 ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:46:2
-
-Cannot cast `null.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:46:2
-   46| (((null: empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^
-
-References:
-   expression.js:6:14
-    6| type T = {p: mixed};
-                    ^^^^^ [1]
-   expression.js:46:24
-   46| (((null: empty): T).p: empty);
-                              ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:46:4
-
-Cannot cast `null` to empty because null [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:46:4
-   46| (((null: empty): T).p: empty);
-          ^^^^ [1]
-
-References:
-   expression.js:46:10
-   46| (((null: empty): T).p: empty);
-                ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:47:2
-
-Cannot cast `o.p.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:47:2
-   47| (((o.p: empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^
-
-References:
-   expression.js:6:14
-    6| type T = {p: mixed};
-                    ^^^^^ [1]
-   expression.js:47:23
-   47| (((o.p: empty): T).p: empty);
+   expression.js:43:23
+   43| ((42: empty): T).p as empty;
                              ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:47:4
+Error ----------------------------------------------------------------------------------------------- expression.js:43:3
+
+Cannot cast `42` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:43:3
+   43| ((42: empty): T).p as empty;
+         ^^ [1]
+
+References:
+   expression.js:43:7
+   43| ((42: empty): T).p as empty;
+             ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:44:1
+
+Cannot cast `true.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:44:1
+   44| ((true: empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   expression.js:6:14
+    6| type T = {p: mixed};
+                    ^^^^^ [1]
+   expression.js:44:25
+   44| ((true: empty): T).p as empty;
+                               ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:44:3
+
+Cannot cast `true` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:44:3
+   44| ((true: empty): T).p as empty;
+         ^^^^ [1]
+
+References:
+   expression.js:44:9
+   44| ((true: empty): T).p as empty;
+               ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:45:1
+
+Cannot cast `false.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:45:1
+   45| ((false: empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   expression.js:6:14
+    6| type T = {p: mixed};
+                    ^^^^^ [1]
+   expression.js:45:26
+   45| ((false: empty): T).p as empty;
+                                ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:45:3
+
+Cannot cast `false` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:45:3
+   45| ((false: empty): T).p as empty;
+         ^^^^^ [1]
+
+References:
+   expression.js:45:10
+   45| ((false: empty): T).p as empty;
+                ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:46:1
+
+Cannot cast `null.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:46:1
+   46| ((null: empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   expression.js:6:14
+    6| type T = {p: mixed};
+                    ^^^^^ [1]
+   expression.js:46:25
+   46| ((null: empty): T).p as empty;
+                               ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:46:3
+
+Cannot cast `null` to empty because null [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:46:3
+   46| ((null: empty): T).p as empty;
+         ^^^^ [1]
+
+References:
+   expression.js:46:9
+   46| ((null: empty): T).p as empty;
+               ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:47:1
+
+Cannot cast `o.p.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:47:1
+   47| ((o.p: empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^
+
+References:
+   expression.js:6:14
+    6| type T = {p: mixed};
+                    ^^^^^ [1]
+   expression.js:47:24
+   47| ((o.p: empty): T).p as empty;
+                              ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:47:3
 
 Cannot cast `o.p` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:47:4
-   47| (((o.p: empty): T).p: empty);
-          ^^^
+   expression.js:47:3
+   47| ((o.p: empty): T).p as empty;
+         ^^^
 
 References:
    expression.js:10:15
    10| const o = {p: 42};
                      ^^ [1]
-   expression.js:47:9
-   47| (((o.p: empty): T).p: empty);
-               ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:48:2
-
-Cannot cast `(new f()).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:48:2
-   48| (((new f(): empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   expression.js:6:14
-    6| type T = {p: mixed};
-                    ^^^^^ [1]
-   expression.js:48:27
-   48| (((new f(): empty): T).p: empty);
-                                 ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:48:8
-
-Cannot use `new` on function [1]. Only classes can be constructed. [invalid-constructor]
-
-   expression.js:48:8
-   48| (((new f(): empty): T).p: empty);
-              ^
-
-References:
-   expression.js:9:11
-    9| const f = (x: mixed): mixed => x;
-                 ^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:49:2
-
-Cannot cast `(new f(...)).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:49:2
-   49| (((new f(42): empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   expression.js:6:14
-    6| type T = {p: mixed};
-                    ^^^^^ [1]
-   expression.js:49:29
-   49| (((new f(42): empty): T).p: empty);
-                                   ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:49:8
-
-Cannot use `new` on function [1]. Only classes can be constructed. [invalid-constructor]
-
-   expression.js:49:8
-   49| (((new f(42): empty): T).p: empty);
-              ^
-
-References:
-   expression.js:9:11
-    9| const f = (x: mixed): mixed => x;
-                 ^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:50:2
-
-Cannot cast `{...}.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:50:2
-   50| ((({}: empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^
-
-References:
-   expression.js:6:14
-    6| type T = {p: mixed};
-                    ^^^^^ [1]
-   expression.js:50:22
-   50| ((({}: empty): T).p: empty);
-                            ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:50:4
-
-Cannot cast object literal to empty because object literal [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:50:4
-   50| ((({}: empty): T).p: empty);
-          ^^ [1]
-
-References:
-   expression.js:50:8
-   50| ((({}: empty): T).p: empty);
+   expression.js:47:8
+   47| ((o.p: empty): T).p as empty;
               ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:51:2
+Error ----------------------------------------------------------------------------------------------- expression.js:48:1
 
-Cannot cast `3.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `(new f()).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:51:2
-   51| ((((1, 2, 3): empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^^^
+   expression.js:48:1
+   48| ((new f(): empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    expression.js:6:14
     6| type T = {p: mixed};
                     ^^^^^ [1]
-   expression.js:51:29
-   51| ((((1, 2, 3): empty): T).p: empty);
-                                   ^^^^^ [2]
+   expression.js:48:28
+   48| ((new f(): empty): T).p as empty;
+                                  ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- expression.js:51:11
+Error ----------------------------------------------------------------------------------------------- expression.js:48:7
+
+Cannot use `new` on function [1]. Only classes can be constructed. [invalid-constructor]
+
+   expression.js:48:7
+   48| ((new f(): empty): T).p as empty;
+             ^
+
+References:
+   expression.js:9:11
+    9| const f = (x: mixed): mixed => x;
+                 ^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:49:1
+
+Cannot cast `(new f(...)).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:49:1
+   49| ((new f(42): empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   expression.js:6:14
+    6| type T = {p: mixed};
+                    ^^^^^ [1]
+   expression.js:49:30
+   49| ((new f(42): empty): T).p as empty;
+                                    ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:49:7
+
+Cannot use `new` on function [1]. Only classes can be constructed. [invalid-constructor]
+
+   expression.js:49:7
+   49| ((new f(42): empty): T).p as empty;
+             ^
+
+References:
+   expression.js:9:11
+    9| const f = (x: mixed): mixed => x;
+                 ^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:50:1
+
+Cannot cast `{...}.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:50:1
+   50| (({}: empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^
+
+References:
+   expression.js:6:14
+    6| type T = {p: mixed};
+                    ^^^^^ [1]
+   expression.js:50:23
+   50| (({}: empty): T).p as empty;
+                             ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:50:3
+
+Cannot cast object literal to empty because object literal [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:50:3
+   50| (({}: empty): T).p as empty;
+         ^^ [1]
+
+References:
+   expression.js:50:7
+   50| (({}: empty): T).p as empty;
+             ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:51:1
+
+Cannot cast `3.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:51:1
+   51| (((1, 2, 3): empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   expression.js:6:14
+    6| type T = {p: mixed};
+                    ^^^^^ [1]
+   expression.js:51:30
+   51| (((1, 2, 3): empty): T).p as empty;
+                                    ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- expression.js:51:10
 
 Cannot cast `3` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:51:11
-   51| ((((1, 2, 3): empty): T).p: empty);
-                 ^ [1]
+   expression.js:51:10
+   51| (((1, 2, 3): empty): T).p as empty;
+                ^ [1]
 
 References:
-   expression.js:51:15
-   51| ((((1, 2, 3): empty): T).p: empty);
-                     ^^^^^ [2]
+   expression.js:51:14
+   51| (((1, 2, 3): empty): T).p as empty;
+                    ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- expression.js:52:17
@@ -1214,391 +1214,391 @@ Cannot use `class { ... }` [1] as a superclass. Only variables and member expres
        ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:56:6
+Error ----------------------------------------------------------------------------------------------- expression.js:56:5
 
 Cannot cast `super.m.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:56:6
-   56|     (((super.m: empty): T).p: empty);
-            ^^^^^^^^^^^^^^^^^^^^^^^
+   expression.js:56:5
+   56|     ((super.m: empty): T).p as empty;
+           ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    expression.js:6:14
     6| type T = {p: mixed};
                     ^^^^^ [1]
-   expression.js:56:31
-   56|     (((super.m: empty): T).p: empty);
-                                     ^^^^^ [2]
+   expression.js:56:32
+   56|     ((super.m: empty): T).p as empty;
+                                      ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:59:2
+Error ----------------------------------------------------------------------------------------------- expression.js:59:1
 
 Cannot cast `f`...`.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:59:2
-   59| (((f`foobar`: empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^^^
+   expression.js:59:1
+   59| ((f`foobar`: empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    expression.js:6:14
     6| type T = {p: mixed};
                     ^^^^^ [1]
-   expression.js:59:29
-   59| (((f`foobar`: empty): T).p: empty);
-                                   ^^^^^ [2]
+   expression.js:59:30
+   59| ((f`foobar`: empty): T).p as empty;
+                                    ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:59:4
+Error ----------------------------------------------------------------------------------------------- expression.js:59:3
 
 Cannot cast template string to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:59:4
-   59| (((f`foobar`: empty): T).p: empty);
-          ^^^^^^^^^
+   expression.js:59:3
+   59| ((f`foobar`: empty): T).p as empty;
+         ^^^^^^^^^
 
 References:
    expression.js:9:23
     9| const f = (x: mixed): mixed => x;
                              ^^^^^ [1]
-   expression.js:59:15
-   59| (((f`foobar`: empty): T).p: empty);
-                     ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:60:2
-
-Cannot cast ``...`.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:60:2
-   60| (((`foobar`: empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   expression.js:6:14
-    6| type T = {p: mixed};
-                    ^^^^^ [1]
-   expression.js:60:28
-   60| (((`foobar`: empty): T).p: empty);
-                                  ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:60:4
-
-Cannot cast template string to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:60:4
-   60| (((`foobar`: empty): T).p: empty);
-          ^^^^^^^^ [1]
-
-References:
-   expression.js:60:14
-   60| (((`foobar`: empty): T).p: empty);
+   expression.js:59:14
+   59| ((f`foobar`: empty): T).p as empty;
                     ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:62:4
+Error ----------------------------------------------------------------------------------------------- expression.js:60:1
 
-Cannot cast `this.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast ``...`.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:62:4
-   62|   (((this: empty): T).p: empty);
-          ^^^^^^^^^^^^^^^^^^^^
-
-References:
-   expression.js:6:14
-    6| type T = {p: mixed};
-                    ^^^^^ [1]
-   expression.js:62:26
-   62|   (((this: empty): T).p: empty);
-                                ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:62:6
-
-Cannot cast `this` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:62:6
-   62|   (((this: empty): T).p: empty);
-            ^^^^
-
-References:
-   expression.js:61:17
-   61| (function(this: number) {
-                       ^^^^^^ [1]
-   expression.js:62:12
-   62|   (((this: empty): T).p: empty);
-                  ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:64:2
-
-Cannot cast `42.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:64:2
-   64| ((((42: string): empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   expression.js:60:1
+   60| ((`foobar`: empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    expression.js:6:14
     6| type T = {p: mixed};
                     ^^^^^ [1]
-   expression.js:64:32
-   64| ((((42: string): empty): T).p: empty);
-                                      ^^^^^ [2]
+   expression.js:60:29
+   60| ((`foobar`: empty): T).p as empty;
+                                   ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:64:9
+Error ----------------------------------------------------------------------------------------------- expression.js:60:3
 
-Cannot cast `42` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast template string to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:64:9
-   64| ((((42: string): empty): T).p: empty);
-               ^^^^^^ [1]
-
-References:
-   expression.js:64:18
-   64| ((((42: string): empty): T).p: empty);
-                        ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:64:5
-
-Cannot cast `42` to string because number [1] is incompatible with string [2]. [incompatible-cast]
-
-   expression.js:64:5
-   64| ((((42: string): empty): T).p: empty);
-           ^^ [1]
+   expression.js:60:3
+   60| ((`foobar`: empty): T).p as empty;
+         ^^^^^^^^ [1]
 
 References:
-   expression.js:64:9
-   64| ((((42: string): empty): T).p: empty);
-               ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:65:2
-
-Cannot cast `(-42).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:65:2
-   65| (((-42: empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^
-
-References:
-   expression.js:6:14
-    6| type T = {p: mixed};
-                    ^^^^^ [1]
-   expression.js:65:23
-   65| (((-42: empty): T).p: empty);
-                             ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:65:4
-
-Cannot cast `-42` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:65:4
-   65| (((-42: empty): T).p: empty);
-          ^^^ [1]
-
-References:
-   expression.js:65:9
-   65| (((-42: empty): T).p: empty);
-               ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:66:2
-
-Cannot cast `(!42).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:66:2
-   66| (((!42: empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^
-
-References:
-   expression.js:6:14
-    6| type T = {p: mixed};
-                    ^^^^^ [1]
-   expression.js:66:23
-   66| (((!42: empty): T).p: empty);
-                             ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:66:4
-
-Cannot cast `!42` to empty because boolean literal `false` [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:66:4
-   66| (((!42: empty): T).p: empty);
-          ^^^ [1]
-
-References:
-   expression.js:66:9
-   66| (((!42: empty): T).p: empty);
-               ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:67:2
-
-Cannot cast `(++a).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:67:2
-   67| (((++a: empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^
-
-References:
-   expression.js:6:14
-    6| type T = {p: mixed};
-                    ^^^^^ [1]
-   expression.js:67:23
-   67| (((++a: empty): T).p: empty);
-                             ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:67:4
-
-Cannot cast `++a` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:67:4
-   67| (((++a: empty): T).p: empty);
-          ^^^ [1]
-
-References:
-   expression.js:67:9
-   67| (((++a: empty): T).p: empty);
-               ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:68:2
-
-Cannot cast `(a++).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:68:2
-   68| (((a++: empty): T).p: empty);
-        ^^^^^^^^^^^^^^^^^^^
-
-References:
-   expression.js:6:14
-    6| type T = {p: mixed};
-                    ^^^^^ [1]
-   expression.js:68:23
-   68| (((a++: empty): T).p: empty);
-                             ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:68:4
-
-Cannot cast `a++` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:68:4
-   68| (((a++: empty): T).p: empty);
-          ^^^ [1]
-
-References:
-   expression.js:68:9
-   68| (((a++: empty): T).p: empty);
-               ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:70:4
-
-Cannot cast `yield.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:70:4
-   70|   (((yield: empty): T).p: empty);
-          ^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   expression.js:6:14
-    6| type T = {p: mixed};
-                    ^^^^^ [1]
-   expression.js:70:27
-   70|   (((yield: empty): T).p: empty);
-                                 ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:70:6
-
-Cannot cast `yield` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
-
-   expression.js:70:6
-   70|   (((yield: empty): T).p: empty);
-            ^^^^^
-
-References:
-   expression.js:69:48
-   69| function* g1(): Generator<number | void, void, number> {
-                                                      ^^^^^^ [1]
-   expression.js:70:13
-   70|   (((yield: empty): T).p: empty);
+   expression.js:60:13
+   60| ((`foobar`: empty): T).p as empty;
                    ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:71:4
+Error ----------------------------------------------------------------------------------------------- expression.js:62:3
 
-Cannot cast `(yield 42).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `this.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:71:4
-   71|   (((yield 42: empty): T).p: empty);
-          ^^^^^^^^^^^^^^^^^^^^^^^^
+   expression.js:62:3
+   62|   ((this: empty): T).p as empty;
+         ^^^^^^^^^^^^^^^^^^^^
 
 References:
    expression.js:6:14
     6| type T = {p: mixed};
                     ^^^^^ [1]
-   expression.js:71:30
-   71|   (((yield 42: empty): T).p: empty);
-                                    ^^^^^ [2]
+   expression.js:62:27
+   62|   ((this: empty): T).p as empty;
+                                 ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:71:6
+Error ----------------------------------------------------------------------------------------------- expression.js:62:5
 
-Cannot cast `yield 42` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `this` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:71:6
-   71|   (((yield 42: empty): T).p: empty);
-            ^^^^^^^^
+   expression.js:62:5
+   62|   ((this: empty): T).p as empty;
+           ^^^^
+
+References:
+   expression.js:61:18
+   61| (function (this: number) {
+                        ^^^^^^ [1]
+   expression.js:62:11
+   62|   ((this: empty): T).p as empty;
+                 ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:64:1
+
+Cannot cast `42.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:64:1
+   64| (((42: string): empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   expression.js:6:14
+    6| type T = {p: mixed};
+                    ^^^^^ [1]
+   expression.js:64:33
+   64| (((42: string): empty): T).p as empty;
+                                       ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:64:8
+
+Cannot cast `42` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:64:8
+   64| (((42: string): empty): T).p as empty;
+              ^^^^^^ [1]
+
+References:
+   expression.js:64:17
+   64| (((42: string): empty): T).p as empty;
+                       ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:64:4
+
+Cannot cast `42` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   expression.js:64:4
+   64| (((42: string): empty): T).p as empty;
+          ^^ [1]
+
+References:
+   expression.js:64:8
+   64| (((42: string): empty): T).p as empty;
+              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:65:1
+
+Cannot cast `(-42).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:65:1
+   65| ((-42: empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^
+
+References:
+   expression.js:6:14
+    6| type T = {p: mixed};
+                    ^^^^^ [1]
+   expression.js:65:24
+   65| ((-42: empty): T).p as empty;
+                              ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:65:3
+
+Cannot cast `-42` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:65:3
+   65| ((-42: empty): T).p as empty;
+         ^^^ [1]
+
+References:
+   expression.js:65:8
+   65| ((-42: empty): T).p as empty;
+              ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:66:1
+
+Cannot cast `(!42).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:66:1
+   66| ((!42: empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^
+
+References:
+   expression.js:6:14
+    6| type T = {p: mixed};
+                    ^^^^^ [1]
+   expression.js:66:24
+   66| ((!42: empty): T).p as empty;
+                              ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:66:3
+
+Cannot cast `!42` to empty because boolean literal `false` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:66:3
+   66| ((!42: empty): T).p as empty;
+         ^^^ [1]
+
+References:
+   expression.js:66:8
+   66| ((!42: empty): T).p as empty;
+              ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:67:1
+
+Cannot cast `(++a).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:67:1
+   67| ((++a: empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^
+
+References:
+   expression.js:6:14
+    6| type T = {p: mixed};
+                    ^^^^^ [1]
+   expression.js:67:24
+   67| ((++a: empty): T).p as empty;
+                              ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:67:3
+
+Cannot cast `++a` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:67:3
+   67| ((++a: empty): T).p as empty;
+         ^^^ [1]
+
+References:
+   expression.js:67:8
+   67| ((++a: empty): T).p as empty;
+              ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:68:1
+
+Cannot cast `(a++).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:68:1
+   68| ((a++: empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^
+
+References:
+   expression.js:6:14
+    6| type T = {p: mixed};
+                    ^^^^^ [1]
+   expression.js:68:24
+   68| ((a++: empty): T).p as empty;
+                              ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:68:3
+
+Cannot cast `a++` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:68:3
+   68| ((a++: empty): T).p as empty;
+         ^^^ [1]
+
+References:
+   expression.js:68:8
+   68| ((a++: empty): T).p as empty;
+              ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:70:3
+
+Cannot cast `yield.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:70:3
+   70|   ((yield: empty): T).p as empty;
+         ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   expression.js:6:14
+    6| type T = {p: mixed};
+                    ^^^^^ [1]
+   expression.js:70:28
+   70|   ((yield: empty): T).p as empty;
+                                  ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:70:5
+
+Cannot cast `yield` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:70:5
+   70|   ((yield: empty): T).p as empty;
+           ^^^^^
 
 References:
    expression.js:69:48
    69| function* g1(): Generator<number | void, void, number> {
                                                       ^^^^^^ [1]
-   expression.js:71:16
-   71|   (((yield 42: empty): T).p: empty);
-                      ^^^^^ [2]
+   expression.js:70:12
+   70|   ((yield: empty): T).p as empty;
+                  ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:74:4
+Error ----------------------------------------------------------------------------------------------- expression.js:71:3
 
-Cannot cast `(yield* g1()).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `(yield 42).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:74:4
-   74|   (((yield* g1(): empty): T).p: empty);
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   expression.js:71:3
+   71|   ((yield 42: empty): T).p as empty;
+         ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    expression.js:6:14
     6| type T = {p: mixed};
                     ^^^^^ [1]
-   expression.js:74:33
-   74|   (((yield* g1(): empty): T).p: empty);
-                                       ^^^^^ [2]
+   expression.js:71:31
+   71|   ((yield 42: empty): T).p as empty;
+                                     ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:74:6
+Error ----------------------------------------------------------------------------------------------- expression.js:71:5
+
+Cannot cast `yield 42` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:71:5
+   71|   ((yield 42: empty): T).p as empty;
+           ^^^^^^^^
+
+References:
+   expression.js:69:48
+   69| function* g1(): Generator<number | void, void, number> {
+                                                      ^^^^^^ [1]
+   expression.js:71:15
+   71|   ((yield 42: empty): T).p as empty;
+                     ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:74:3
+
+Cannot cast `(yield* g1()).p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+
+   expression.js:74:3
+   74|   ((yield* g1(): empty): T).p as empty;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   expression.js:6:14
+    6| type T = {p: mixed};
+                    ^^^^^ [1]
+   expression.js:74:34
+   74|   ((yield* g1(): empty): T).p as empty;
+                                        ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:74:5
 
 Cannot cast `yield* g1()` to empty because undefined [1] is incompatible with empty [2]. [incompatible-cast]
 
-   expression.js:74:6
-   74|   (((yield* g1(): empty): T).p: empty);
-            ^^^^^^^^^^^
+   expression.js:74:5
+   74|   ((yield* g1(): empty): T).p as empty;
+           ^^^^^^^^^^^
 
 References:
    expression.js:69:42
    69| function* g1(): Generator<number | void, void, number> {
                                                 ^^^^ [1]
-   expression.js:74:19
-   74|   (((yield* g1(): empty): T).p: empty);
-                         ^^^^^ [2]
+   expression.js:74:18
+   74|   ((yield* g1(): empty): T).p as empty;
+                        ^^^^^ [2]
 
 
 

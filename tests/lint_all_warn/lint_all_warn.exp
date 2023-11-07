@@ -20,7 +20,7 @@ Warning ------------------------------------------------------------------------
 
 Unclear type. Using `any`, `Object`, or `Function` types is not safe! [unclear-type]
 
-   3| module.exports = (3 : any); // should only report unclear type, not dynamic-export
+   3| module.exports = 3 as any; // should only report unclear type, not dynamic-export
                             ^^^
 
 

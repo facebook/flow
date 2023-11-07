@@ -12,7 +12,7 @@ function bar(x: ?number) {
   }
 }
 
-function baz (x: ?number) {
+function baz(x: ?number) {
   if (x === null || x === undefined) {
     return;
   }
@@ -25,28 +25,28 @@ function baz (x: ?number) {
 class TestClass {}
 
 let tests = [
-  function() {
+  function () {
     var y = true;
     while (y) {
       y = !y;
     }
   },
-  function(x: Function) {
-    (!x: false); // ok, functions are always truthy
+  function (x: Function) {
+    !x as false; // ok, functions are always truthy
   },
-  function(x: Object) {
-    (!x: false); // ok, objects are always truthy
+  function (x: Object) {
+    !x as false; // ok, objects are always truthy
   },
-  function(x: string) {
-    (!x: false); // error, strings are not always truthy
+  function (x: string) {
+    !x as false; // error, strings are not always truthy
   },
-  function(x: number) {
-    (!x: false); // error, numbers are not always truthy
+  function (x: number) {
+    !x as false; // error, numbers are not always truthy
   },
-  function(x: boolean) {
-    (!x: false); // error, bools are not always truthy
+  function (x: boolean) {
+    !x as false; // error, bools are not always truthy
   },
-  function(x: TestClass) {
-    (!x: false); // ok, classes are always truthy
+  function (x: TestClass) {
+    !x as false; // ok, classes are always truthy
   },
 ];

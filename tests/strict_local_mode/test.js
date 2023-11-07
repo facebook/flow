@@ -1,9 +1,9 @@
 // @flow strict-local
 
-import type { T } from './import'; // Error: untyped-type-import
-import type { S } from './nonstrict_import'; // No error
+import type {T} from './import'; // Error: untyped-type-import
+import type {S} from './nonstrict_import'; // No error
 
-(0: T);
+0 as T;
 
 function f(x: number) {
   x = 1; // Error: cannot reassign constant parameter

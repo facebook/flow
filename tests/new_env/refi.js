@@ -5,9 +5,9 @@ var x;
 var z: mixed = 100;
 z;
 if (z) {
-  x = "a"
+  x = 'a';
 } else {
-  x = 42
+  x = 42;
 }
 x;
 
@@ -21,7 +21,7 @@ function f(): number {
     y = 100;
   }
 
-  (y: empty);
+  y as empty;
 
   return y;
 }

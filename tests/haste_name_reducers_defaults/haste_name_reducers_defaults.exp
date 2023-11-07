@@ -1,52 +1,52 @@
-Error --------------------------------------------------------------------------------------------------- Module1.js:5:2
+Error --------------------------------------------------------------------------------------------------- Module1.js:5:1
 
 Cannot cast `test` to boolean because `Test` [1] is incompatible with boolean [2]. [incompatible-cast]
 
-   Module1.js:5:2
-   5| (test: boolean);
-       ^^^^
+   Module1.js:5:1
+   5| test as boolean;
+      ^^^^
 
 References:
    node_modules/test/Module1.js:4:31
    4| module.exports = (new Test(): Test);
                                     ^^^^ [1]
-   Module1.js:5:8
-   5| (test: boolean);
-             ^^^^^^^ [2]
+   Module1.js:5:9
+   5| test as boolean;
+              ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- index.js:3:2
+Error ----------------------------------------------------------------------------------------------------- index.js:3:1
 
 Cannot cast `require(...)` to boolean because `Test` [1] is incompatible with boolean [2]. [incompatible-cast]
 
-   index.js:3:2
-   3| (require('Module1'): boolean);
-       ^^^^^^^^^^^^^^^^^^
+   index.js:3:1
+   3| require('Module1') as boolean;
+      ^^^^^^^^^^^^^^^^^^
 
 References:
    node_modules/test/Module1.js:4:31
    4| module.exports = (new Test(): Test);
                                     ^^^^ [1]
-   index.js:3:22
-   3| (require('Module1'): boolean);
-                           ^^^^^^^ [2]
+   index.js:3:23
+   3| require('Module1') as boolean;
+                            ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- index.js:4:2
+Error ----------------------------------------------------------------------------------------------------- index.js:4:1
 
 Cannot cast `require(...).foo()` to boolean because `Test2` [1] is incompatible with boolean [2]. [incompatible-cast]
 
-   index.js:4:2
-   4| (require('Module2').foo(): boolean);
-       ^^^^^^^^^^^^^^^^^^^^^^^^
+   index.js:4:1
+   4| require('Module2').foo() as boolean;
+      ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    foo/Module2.js.flow:2:32
    2| declare export function foo(): Test2;
                                      ^^^^^ [1]
-   index.js:4:28
-   4| (require('Module2').foo(): boolean);
-                                 ^^^^^^^ [2]
+   index.js:4:29
+   4| require('Module2').foo() as boolean;
+                                  ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- index.js:5:9

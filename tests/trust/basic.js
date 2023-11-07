@@ -1,13 +1,19 @@
 // @flow
-var x: $Trusted<number> = (42: any); //Fail
+var x: $Trusted<number> = 42 as any; //Fail
 var y: $Trusted<number> = 42; //ok
 var z: any = y; // ok
 
-function f(x: number): $Trusted<number> { return x; } // Fail without inference, ok with
+function f(x: number): $Trusted<number> {
+  return x;
+} // Fail without inference, ok with
 
-function g(x: $Trusted<number>): $Trusted<number> { return x; } //Ok
+function g(x: $Trusted<number>): $Trusted<number> {
+  return x;
+} //Ok
 
-function h(x: $Trusted<number>): number { return x; } //Ok
+function h(x: $Trusted<number>): number {
+  return x;
+} //Ok
 
 var a = 42; //Ok
 var b: number = 42; // ok
@@ -20,5 +26,5 @@ var l: number = c; // ok
 var m = c; // ok
 
 var d = 42; // ok
-d = ('Hello': any) // ok
+d = 'Hello' as any; // ok
 var e: $Trusted<number> = d; // fail

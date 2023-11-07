@@ -5,13 +5,13 @@ declare enum E {
   B,
 }
 
-(E.A: E); // OK
-(E.A: empty); // ERROR
+E.A as E; // OK
+E.A as empty; // ERROR
 
 declare export enum F {
   N,
   M,
 }
 
-(F.N: F); // OK
-(F.N: empty); // ERROR
+F.N as F; // OK
+F.N as empty; // ERROR

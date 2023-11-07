@@ -3,7 +3,7 @@
  * @flow
  */
 
-(`some
+`some
 really
 really
 really
@@ -32,9 +32,9 @@ really
 really
 really
 really
-long string`: empty);
+long string` as empty;
 
-(`some
+`some
 really
 really
 really
@@ -64,9 +64,9 @@ really
 really
 really
 really
-long string`: empty);
+long string` as empty;
 
-(`some
+`some
 really
 really
 really
@@ -114,4 +114,4 @@ really
 really
 really
 really
-long string`: empty);
+long string` as empty;

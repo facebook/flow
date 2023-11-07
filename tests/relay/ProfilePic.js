@@ -14,11 +14,11 @@ type Props = {
 
 class ProfilePic extends React.Component<Props> {
   render(): React.Node {
-    (this.props.image.url: empty); // Error: string ~> empty
+    this.props.image.url as empty; // Error: string ~> empty
     return <img src={this.props.image.url} />;
   }
 }
 
-export default (createFragmentContainer(ProfilePic): React.ComponentType<
+export default createFragmentContainer(ProfilePic) as React.ComponentType<
   $ObjMap<Props, GetPropFragmentRef>,
->);
+>;

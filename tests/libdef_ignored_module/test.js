@@ -1,5 +1,5 @@
 /* @flow */
 
-import foo from "foo";
+import foo from 'foo';
 
-(foo.bar : string); // error number ~> string
+foo.bar as string; // error number ~> string

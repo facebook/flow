@@ -8,10 +8,10 @@ enum E {
 // Error: accessing non-existent member
 const x = E.C;
 // As it is the result of an error, `x` is `any`
-(x: boolean);
+x as boolean;
 
 // Error: computed access
-E["A"];
+E['A'];
 
 enum F {
   Cart,

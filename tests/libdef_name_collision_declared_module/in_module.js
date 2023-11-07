@@ -1,7 +1,7 @@
 //@flow
 
-import type {Long} from 'ff'
+import type {Long} from 'ff';
 
 declare var x: Long;
 
-(x: string);
+x as string;

@@ -2,3 +2,4 @@
 no_flowlib=false
 lazy_mode=fs
 all=true
+casting_syntax=both

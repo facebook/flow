@@ -3,4 +3,5 @@
 
 [options]
 all=true
+casting_syntax=both
 trust_mode=check
