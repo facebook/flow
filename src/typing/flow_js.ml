@@ -6557,6 +6557,7 @@ struct
     | TypeAppT _
     | UnionT _
     | IntersectionT _
+    | CustomFunT (_, DebugPrint)
     | ThisTypeAppT _ ->
       false
     (* Should never occur as the lower bound of any *)
@@ -6572,7 +6573,6 @@ struct
     | CustomFunT (_, Compose _)
     | CustomFunT (_, ReactCreateElement)
     | CustomFunT (_, ReactCloneElement)
-    | CustomFunT (_, DebugPrint)
     | CustomFunT (_, DebugThrow)
     | CustomFunT (_, DebugSleep)
     | DefT _
