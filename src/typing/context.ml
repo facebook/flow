@@ -160,7 +160,6 @@ type component_t = {
   mutable maybe_unused_promises: (ALoc.t * Type.t * bool) list;
   constraint_cache: Type.FlowSet.t ref;
   subst_cache: (subst_cache_err list * Type.t) Type.SubstCacheMap.t ref;
-  instantiation_cache: Type.t Reason.ImplicitInstantiationReasonMap.t ref;
   repos_cache: Repos_cache.t ref;
   eval_id_cache: Type.t Type.EvalIdCacheMap.t ref * Type.Eval.id Type.IdCacheMap.t ref;
   eval_repos_cache: Type.t Type.EvalReposCacheMap.t ref;
@@ -375,7 +374,6 @@ let make_ccx () =
     maybe_unused_promises = [];
     constraint_cache = ref Type.FlowSet.empty;
     subst_cache = ref Type.SubstCacheMap.empty;
-    instantiation_cache = ref Reason.ImplicitInstantiationReasonMap.empty;
     repos_cache = ref Repos_cache.empty;
     eval_id_cache = (ref Type.EvalIdCacheMap.empty, ref Type.IdCacheMap.empty);
     eval_repos_cache = ref Type.EvalReposCacheMap.empty;
@@ -797,7 +795,6 @@ type cache_snapshot = {
   snapshot_fix_cache: Type.t Type.FixCacheMap.t;
   snapshot_spread_cache: Spread_cache.t;
   snapshot_const_fold_cache: int Type.ConstFoldMap.t IMap.t;
-  snapshot_instantiation_cache: Type.t Reason.ImplicitInstantiationReasonMap.t;
   snapshot_evaluated: Type.t Type.Eval.Map.t;
   snapshot_instantiation_stack: TypeAppExpansion.entry list;
 }
@@ -813,7 +810,6 @@ let take_cache_snapshot cx =
     snapshot_fix_cache = !(cx.ccx.fix_cache);
     snapshot_spread_cache = !(cx.ccx.spread_cache);
     snapshot_const_fold_cache = !(cx.ccx.const_fold_cache);
-    snapshot_instantiation_cache = !(cx.ccx.instantiation_cache);
     snapshot_evaluated = cx.ccx.sig_cx.evaluated;
     snapshot_instantiation_stack = !(cx.ccx.instantiation_stack);
   }
@@ -828,7 +824,6 @@ let restore_cache_snapshot cx snapshot =
     snapshot_fix_cache;
     snapshot_spread_cache;
     snapshot_const_fold_cache;
-    snapshot_instantiation_cache;
     snapshot_evaluated;
     snapshot_instantiation_stack;
   } =
@@ -842,7 +837,6 @@ let restore_cache_snapshot cx snapshot =
   id_cache := snapshot_id_cache;
   cx.ccx.eval_repos_cache := snapshot_eval_repos_cache;
   cx.ccx.fix_cache := snapshot_fix_cache;
-  cx.ccx.instantiation_cache := snapshot_instantiation_cache;
   cx.ccx.spread_cache := snapshot_spread_cache;
   cx.ccx.const_fold_cache := snapshot_const_fold_cache;
   set_evaluated cx snapshot_evaluated;
@@ -1078,8 +1072,6 @@ let find_trust_graph cx id =
 let constraint_cache cx = cx.ccx.constraint_cache
 
 let subst_cache cx = cx.ccx.subst_cache
-
-let instantiation_cache cx = cx.ccx.instantiation_cache
 
 let repos_cache cx = cx.ccx.repos_cache
 

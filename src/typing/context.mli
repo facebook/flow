@@ -518,8 +518,6 @@ val constraint_cache : t -> Type.FlowSet.t ref
 
 val subst_cache : t -> (subst_cache_err list * Type.t) Type.SubstCacheMap.t ref
 
-val instantiation_cache : t -> Type.t Reason.ImplicitInstantiationReasonMap.t ref
-
 val repos_cache : t -> Repos_cache.t ref
 
 val eval_id_cache : t -> Type.t Type.EvalIdCacheMap.t ref * Type.Eval.id Type.IdCacheMap.t ref
