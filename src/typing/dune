@@ -11,22 +11,13 @@
   (pps ppx_let)))
 
 (library
- (name flow_typing_trust)
- (wrapped false)
- (modules trust)
- (libraries flow_common_utils)
- (preprocess
-  (pps ppx_let)))
-
-(library
  (name flow_typing_type)
  (wrapped false)
  (modules type typeUtil source_or_generated_id generic)
  (libraries
   flow_common
   flow_typing_key
-  flow_typing_polarity
-  flow_typing_trust)
+  flow_typing_polarity)
  (preprocess
   (pps ppx_let ppx_deriving.std)))
 
@@ -38,7 +29,6 @@
    \
    key
    key_map
-   trust
    type
    typeUtil
    source_or_generated_id

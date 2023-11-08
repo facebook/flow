@@ -14,8 +14,6 @@ type name =
 [@@deriving eq, ord, show]
 
 type 'loc virtual_reason_desc =
-  | RTrusted of 'loc virtual_reason_desc
-  | RPrivate of 'loc virtual_reason_desc
   | RAnyExplicit
   | RAnyImplicit
   | RNumber

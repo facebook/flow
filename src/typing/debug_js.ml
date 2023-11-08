@@ -1451,8 +1451,6 @@ let dump_error_message =
         |> Base.String.concat ~sep:", "
         )
     | EUnsupportedKeyInObjectType loc -> spf "EUnsupportedKeyInObjectType (%s)" (string_of_aloc loc)
-    | ETrustedAnnot loc -> spf "ETrustedAnnot (%s)" (string_of_aloc loc)
-    | EPrivateAnnot loc -> spf "EPrivateAnnot (%s)" (string_of_aloc loc)
     | EPredicateFuncTooShort { loc; _ } -> spf "EPredicateFuncTooShort (%s)" (string_of_aloc loc)
     | EFunPredInvalidIndex loc -> spf "EFunPredInvalidIndex (%s)" (string_of_aloc loc)
     | EPredicateFuncArityMismatch { use_op; _ } ->

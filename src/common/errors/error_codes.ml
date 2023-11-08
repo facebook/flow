@@ -92,12 +92,10 @@ type error_code =
   | InvalidModule
   | InvalidObjMap
   | InvalidObjMapi
-  | InvalidPrivateTypeArg
   | InvalidPropertyTypeArg
   | InvalidPropType
   | InvalidReactConfig
   | InvalidRendersTypeArgument
-  | InvalidTrustedTypeArg
   | InvalidTupleArity
   | InvalidTupleIndex
   | InvalidTupleMap
@@ -293,12 +291,10 @@ let string_of_code : error_code -> string = function
   | InvalidModule -> "invalid-module"
   | InvalidObjMap -> "invalid-obj-map"
   | InvalidObjMapi -> "invalid-obj-mapi"
-  | InvalidPrivateTypeArg -> "invalid-private-type-arg"
   | InvalidPropertyTypeArg -> "invalid-property-type-arg"
   | InvalidPropType -> "invalid-prop-type"
   | InvalidReactConfig -> "invalid-react-config"
   | InvalidRendersTypeArgument -> "invalid-render"
-  | InvalidTrustedTypeArg -> "invalid-trusted-type-arg"
   | InvalidTupleArity -> "invalid-tuple-arity"
   | InvalidTupleIndex -> "invalid-tuple-index"
   | InvalidTupleMap -> "invalid-tuple-map"

@@ -3507,7 +3507,6 @@ module TypeScheme = struct
 end
 
 include TypeTerm
-include Trust
 
 (*********************************************************)
 

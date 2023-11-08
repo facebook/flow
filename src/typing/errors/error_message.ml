@@ -266,8 +266,6 @@ and 'loc t' =
     }
   | EInvalidConstructor of 'loc virtual_reason
   | EUnsupportedKeyInObjectType of 'loc
-  | ETrustedAnnot of 'loc
-  | EPrivateAnnot of 'loc
   | EPredicateFuncTooShort of {
       loc: 'loc;
       pred_func: 'loc virtual_reason;
@@ -1031,8 +1029,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EExportsAnnot loc -> EExportsAnnot (f loc)
   | ECharSetAnnot loc -> ECharSetAnnot (f loc)
   | EUnsupportedKeyInObjectType loc -> EUnsupportedKeyInObjectType (f loc)
-  | ETrustedAnnot loc -> ETrustedAnnot (f loc)
-  | EPrivateAnnot loc -> EPrivateAnnot (f loc)
   | EPredicateFuncTooShort { loc; pred_func; pred_func_param_num; index } ->
     EPredicateFuncTooShort
       { loc = f loc; pred_func = map_reason pred_func; pred_func_param_num; index }
@@ -1484,8 +1480,6 @@ let util_use_op_of_msg nope util = function
   | EExportsAnnot _
   | ECharSetAnnot _
   | EUnsupportedKeyInObjectType _
-  | ETrustedAnnot _
-  | EPrivateAnnot _
   | EPredicateFuncTooShort _
   | EPredicateFuncArityMismatch _
   | EPredicateFuncIncompatibility _
@@ -1741,8 +1735,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EUseArrayLiteral loc
   | EUnsupportedSyntax (loc, _)
   | EInternal (loc, _)
-  | EPrivateAnnot loc
-  | ETrustedAnnot loc
   | EUnsupportedKeyInObjectType loc
   | ECharSetAnnot loc
   | EExportsAnnot loc
@@ -2753,10 +2745,6 @@ let friendly_message_of_msg loc_of_aloc msg =
         use_op;
       }
   | EUnsupportedKeyInObjectType _ -> Normal { features = [text "Unsupported key in object type."] }
-  | ETrustedAnnot _ ->
-    Normal { features = [text "Not a valid type to mark as "; code "$Trusted"; text "."] }
-  | EPrivateAnnot _ ->
-    Normal { features = [text "Not a valid type to mark as "; code "$Private"; text "."] }
   | EPredicateFuncTooShort { loc = _; pred_func; pred_func_param_num; index } ->
     Normal
       {
@@ -5325,7 +5313,6 @@ let error_code_of_message err : error_code option =
   | EParseError (_, _) -> None
   | EPolarityMismatch _ -> Some IncompatibleVariance
   | EPrimitiveAsInterface _ -> Some IncompatibleType
-  | EPrivateAnnot _ -> Some InvalidPrivateTypeArg
   | EPrivateLookupFailed _ -> Some Error_codes.PropMissing
   | EPropertyTypeAnnot _ -> Some InvalidPropertyTypeArg
   | EPropNotFound _ -> Some Error_codes.PropMissing
@@ -5342,7 +5329,6 @@ let error_code_of_message err : error_code option =
   | EExportRenamedDefault _ -> Some ExportRenamedDefault
   | ETooFewTypeArgs (_, _, _) -> Some MissingTypeArg
   | ETooManyTypeArgs (_, _, _) -> Some ExtraTypeArg
-  | ETrustedAnnot _ -> Some InvalidTrustedTypeArg
   | ETupleArityMismatch _ -> Some InvalidTupleArity
   | ETupleRequiredAfterOptional _ -> Some TupleRequiredAfterOptional
   | ETupleInvalidTypeSpread _ -> Some TupleInvalidTypeSpread

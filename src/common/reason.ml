@@ -49,8 +49,6 @@ let mk_id () = HeapIdent.make ""
 *)
 
 type 'loc virtual_reason_desc =
-  | RTrusted of 'loc virtual_reason_desc
-  | RPrivate of 'loc virtual_reason_desc
   | RAnyExplicit
   | RAnyImplicit
   | RNumber
@@ -341,8 +339,6 @@ let rec map_desc_locs f = function
   | RPartialOf desc -> RPartialOf (map_desc_locs f desc)
   | RRequiredOf desc -> RRequiredOf (map_desc_locs f desc)
   | RMatchingProp (s, desc) -> RMatchingProp (s, map_desc_locs f desc)
-  | RTrusted desc -> RTrusted (map_desc_locs f desc)
-  | RPrivate desc -> RPrivate (map_desc_locs f desc)
   | RImplicitThis desc -> RImplicitThis (map_desc_locs f desc)
   | ( RObjectPatternRestProp | RArrayPatternRestProp | RCommonJSExports _ | RModule _
     | ROptionalChain | RReactProps | RReactElement _ | RReactClass | RReactComponent | RReactStatics
@@ -545,8 +541,6 @@ let prettify_react_util s =
     s
 
 let rec string_of_desc = function
-  | RTrusted r -> spf "trusted %s" (string_of_desc r)
-  | RPrivate r -> spf "private %s" (string_of_desc r)
   | RNumber -> "number"
   | RBigInt -> "bigint"
   | RString
@@ -1565,8 +1559,6 @@ let classification_of_reason r =
   | RPossiblyMissingPropFromObj _
   | RWidenedObjProp _
   | RUnionBranching _
-  | RTrusted _
-  | RPrivate _
   | REnum _
   | REnumRepresentation _
   | RUnannotatedNext
