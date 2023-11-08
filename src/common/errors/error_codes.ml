@@ -58,7 +58,6 @@ type error_code =
   | IncompatibleFunctionIndexer
   | IncompatibleIndexer
   | IncompatibleReturn
-  | IncompatibleTrust
   | IncompatibleType
   | IncompatibleTypeArg
   | IncompatibleTypeGuard
@@ -260,7 +259,6 @@ let string_of_code : error_code -> string = function
   | IncompatibleFunctionIndexer -> "incompatible-function-indexer"
   | IncompatibleIndexer -> "incompatible-indexer"
   | IncompatibleReturn -> "incompatible-return"
-  | IncompatibleTrust -> "incompatible-trust"
   | IncompatibleType -> "incompatible-type"
   | IncompatibleTypeArg -> "incompatible-type-arg"
   | IncompatibleTypeGuard -> "incompatible-type-guard"

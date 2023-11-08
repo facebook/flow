@@ -1183,58 +1183,6 @@ let rec make_error_printable :
         | _ -> make_error lower [ref lower; text " is incompatible with "; ref upper]
       end)
   in
-  let mk_trust_incompatible_error lower upper use_op =
-    match (desc_of_reason lower, desc_of_reason upper) with
-    | ((RAnyExplicit | RAnyImplicit), (RTrusted _ | RPrivate (RTrusted _)))
-    | ((RPrivate _ | RTrusted (RPrivate _)), (RAnyExplicit | RAnyImplicit)) ->
-      mk_use_op_error_reason lower use_op [ref lower; text " is incompatible with "; ref upper]
-    | ((RAnyExplicit | RAnyImplicit), _) ->
-      mk_use_op_error_reason
-        lower
-        use_op
-        [ref lower; text " is incompatible with trusted "; ref upper]
-    | (_, (RAnyExplicit | RAnyImplicit)) ->
-      mk_use_op_error_reason
-        lower
-        use_op
-        [text "private "; ref lower; text " is incompatible with "; ref upper]
-    | (RPrivate _, RTrusted _) ->
-      mk_use_op_error_reason
-        lower
-        use_op
-        [
-          text "`any` may have been passed into ";
-          ref lower;
-          text " and `any` is incompatible with ";
-          ref upper;
-          text ", and ";
-          ref upper;
-          text " may be passed into `any` and ";
-          ref lower;
-          text " is incompatible with `any`";
-        ]
-    | (_, (RTrusted _ | RPrivate (RTrusted _))) ->
-      mk_use_op_error_reason
-        lower
-        use_op
-        [
-          text "`any` may have been passed into ";
-          ref lower;
-          text " and `any` is incompatible with ";
-          ref upper;
-        ]
-    | ((RPrivate _ | RTrusted (RPrivate _)), _) ->
-      mk_use_op_error_reason
-        lower
-        use_op
-        [
-          ref upper;
-          text " may be passed into `any` and ";
-          ref lower;
-          text " is incompatible with `any`";
-        ]
-    | _ -> mk_use_op_error_reason lower use_op [ref lower; text " is incompatible with "; ref upper]
-  in
   (* When we fail to find a property on an object we use this function to create
    * an error. prop_loc should be the position of the use which caused this
    * error. The use_op represents how we got to this error.
@@ -1391,8 +1339,6 @@ let rec make_error_printable :
       mk_incompatible_use_error loc upper_kind reason_lower reason_upper use_op
     | (None, Incompatible { reason_lower; reason_upper; use_op }) ->
       mk_incompatible_error reason_lower reason_upper use_op
-    | (None, IncompatibleTrust { reason_lower; reason_upper; use_op }) ->
-      mk_trust_incompatible_error reason_lower reason_upper use_op
     | (None, IncompatibleEnum { reason_lower; reason_upper; use_op; suggestion }) ->
       mk_incompatible_error ~additional_message:suggestion reason_lower reason_upper use_op
     | (None, Error_message.Speculation { loc; use_op; branches }) ->

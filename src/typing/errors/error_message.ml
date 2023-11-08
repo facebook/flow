@@ -359,7 +359,6 @@ and 'loc t' =
       reason_lower: 'loc virtual_reason;
       reason_upper: 'loc virtual_reason;
     }
-  | ETrustIncompatibleWithUseOp of 'loc virtual_reason * 'loc virtual_reason * 'loc virtual_use_op
   | EUnsupportedImplements of 'loc virtual_reason
   | ENotAReactComponent of {
       reason: 'loc virtual_reason;
@@ -965,8 +964,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         reason_lower = map_reason reason_lower;
         reason_upper = map_reason reason_upper;
       }
-  | ETrustIncompatibleWithUseOp (rl, ru, op) ->
-    ETrustIncompatibleWithUseOp (map_reason rl, map_reason ru, map_use_op op)
   | ENotAReactComponent { reason; use_op } ->
     ENotAReactComponent { reason = map_reason reason; use_op = map_use_op use_op }
   | EInvalidReactConfigType { reason; use_op } ->
@@ -1364,8 +1361,6 @@ let util_use_op_of_msg nope util = function
             EIncompatibleProp { use_op = Some use_op; prop; reason_prop; reason_obj; special }
         )
     )
-  | ETrustIncompatibleWithUseOp (rl, ru, op) ->
-    util op (fun op -> ETrustIncompatibleWithUseOp (rl, ru, op))
   | EExpectedStringLit { reason_lower; reason_upper; use_op } ->
     util use_op (fun use_op -> EExpectedStringLit { reason_lower; reason_upper; use_op })
   | EExpectedNumberLit { reason_lower; reason_upper; use_op } ->
@@ -1810,7 +1805,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ENotAReactComponent _
   | EInvalidReactConfigType _
   | EIncompatibleWithUseOp _
-  | ETrustIncompatibleWithUseOp _
   | EEnumIncompatible _
   | EIncompatibleDefs _
   | EInvalidObjectKit _
@@ -2002,11 +1996,6 @@ type 'loc friendly_message_recipe =
       branches: ('loc Reason.virtual_reason * 'loc t') list;
     }
   | Incompatible of {
-      reason_lower: 'loc Reason.virtual_reason;
-      reason_upper: 'loc Reason.virtual_reason;
-      use_op: 'loc Type.virtual_use_op;
-    }
-  | IncompatibleTrust of {
       reason_lower: 'loc Reason.virtual_reason;
       reason_upper: 'loc Reason.virtual_reason;
       use_op: 'loc Type.virtual_use_op;
@@ -3463,8 +3452,6 @@ let friendly_message_of_msg loc_of_aloc msg =
     Normal { features = [text "Invalid left-hand side in assignment expression."] }
   | EIncompatibleWithUseOp { reason_lower; reason_upper; use_op } ->
     Incompatible { reason_lower; reason_upper; use_op }
-  | ETrustIncompatibleWithUseOp (reason_lower, reason_upper, use_op) ->
-    IncompatibleTrust { reason_lower; reason_upper; use_op }
   | EUnsupportedImplements reason ->
     Normal
       {
@@ -5356,7 +5343,6 @@ let error_code_of_message err : error_code option =
   | ETooFewTypeArgs (_, _, _) -> Some MissingTypeArg
   | ETooManyTypeArgs (_, _, _) -> Some ExtraTypeArg
   | ETrustedAnnot _ -> Some InvalidTrustedTypeArg
-  | ETrustIncompatibleWithUseOp _ -> Some Error_codes.IncompatibleTrust
   | ETupleArityMismatch _ -> Some InvalidTupleArity
   | ETupleRequiredAfterOptional _ -> Some TupleRequiredAfterOptional
   | ETupleInvalidTypeSpread _ -> Some TupleInvalidTypeSpread
