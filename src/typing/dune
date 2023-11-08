@@ -21,7 +21,7 @@
 (library
  (name flow_typing_type)
  (wrapped false)
- (modules type typeUtil source_or_generated_id generic trust_constraint)
+ (modules type typeUtil source_or_generated_id generic)
  (libraries
   flow_common
   flow_typing_key
@@ -42,8 +42,7 @@
    type
    typeUtil
    source_or_generated_id
-   generic
-   trust_constraint))
+   generic))
  (libraries
   flow_env_builder
   flow_name_resolver
