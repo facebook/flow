@@ -64,11 +64,11 @@ let detect_sketchy_null_checks cx =
           make_checks seen cur_checks loc t
         | MaybeT (r, t) ->
           let acc = make_checks seen cur_checks loc t in
-          let acc = make_checks seen acc loc (NullT.why r (Trust.bogus_trust ())) in
-          make_checks seen acc loc (VoidT.why r (Trust.bogus_trust ()))
+          let acc = make_checks seen acc loc (NullT.why r) in
+          make_checks seen acc loc (VoidT.why r)
         | OptionalT { reason = r; type_ = t; _ } ->
           let acc = make_checks seen cur_checks loc t in
-          make_checks seen acc loc (VoidT.why r (Trust.bogus_trust ()))
+          make_checks seen acc loc (VoidT.why r)
         | UnionT (_, rep) ->
           UnionRep.members rep
           |> Base.List.fold ~f:(fun acc t -> make_checks seen acc loc t) ~init:cur_checks
@@ -84,23 +84,23 @@ let detect_sketchy_null_checks cx =
           in
           let exists_check =
             match Type_filter.maybe cx t with
-            | DefT (_, _, EmptyT) -> exists_check
+            | DefT (_, EmptyT) -> exists_check
             | _ -> { exists_check with null_loc = t_loc }
           in
           let exists_check =
             match t |> Type_filter.not_exists cx |> Type_filter.not_maybe cx with
-            | DefT (_, _, BoolT _) -> { exists_check with bool_loc = t_loc }
-            | DefT (_, _, StrT _) -> { exists_check with string_loc = t_loc }
-            | DefT (_, _, NumT _) -> { exists_check with number_loc = t_loc }
-            | DefT (_, _, BigIntT _) -> { exists_check with bigint_loc = t_loc }
-            | DefT (_, _, MixedT _) -> { exists_check with mixed_loc = t_loc }
-            | DefT (_, _, EnumT { representation_t = DefT (_, _, BoolT _); _ }) ->
+            | DefT (_, BoolT _) -> { exists_check with bool_loc = t_loc }
+            | DefT (_, StrT _) -> { exists_check with string_loc = t_loc }
+            | DefT (_, NumT _) -> { exists_check with number_loc = t_loc }
+            | DefT (_, BigIntT _) -> { exists_check with bigint_loc = t_loc }
+            | DefT (_, MixedT _) -> { exists_check with mixed_loc = t_loc }
+            | DefT (_, EnumT { representation_t = DefT (_, BoolT _); _ }) ->
               { exists_check with enum_bool_loc = t_loc }
-            | DefT (_, _, EnumT { representation_t = DefT (_, _, StrT _); _ }) ->
+            | DefT (_, EnumT { representation_t = DefT (_, StrT _); _ }) ->
               { exists_check with enum_string_loc = t_loc }
-            | DefT (_, _, EnumT { representation_t = DefT (_, _, NumT _); _ }) ->
+            | DefT (_, EnumT { representation_t = DefT (_, NumT _); _ }) ->
               { exists_check with enum_number_loc = t_loc }
-            | DefT (_, _, EnumT { representation_t = DefT (_, _, BigIntT _); _ }) ->
+            | DefT (_, EnumT { representation_t = DefT (_, BigIntT _); _ }) ->
               { exists_check with enum_bigint_loc = t_loc }
             | _ -> exists_check
           in
@@ -187,7 +187,7 @@ let detect_non_voidable_properties cx =
       | IntersectionT (_, rep) -> InterRep.members rep |> List.for_all (is_voidable seen_ids)
       (* trivially voidable *)
       | MaybeT _
-      | DefT (_, _, (VoidT | MixedT (Mixed_everything | Mixed_non_null)))
+      | DefT (_, (VoidT | MixedT (Mixed_everything | Mixed_non_null)))
       | OptionalT _
       | AnyT _ ->
         true
@@ -247,7 +247,7 @@ let detect_matching_props_violations cx =
   in
   let is_lit t =
     match drop_generic t with
-    | DefT (_, _, (BoolT (Some _) | StrT (Literal _) | NumT (Literal _))) -> true
+    | DefT (_, (BoolT (Some _) | StrT (Literal _) | NumT (Literal _))) -> true
     | _ -> false
   in
   let matching_props_checks =
@@ -305,13 +305,13 @@ let detect_literal_subtypes =
           match check with
           | Env_api.SingletonNum (lit_loc, sense, num, raw) ->
             let reason = lit_loc |> Reason.(mk_reason (RNumberLit raw)) in
-            DefT (reason, bogus_trust (), NumT (Literal (Some sense, (num, raw))))
+            DefT (reason, NumT (Literal (Some sense, (num, raw))))
           | Env_api.SingletonBool (lit_loc, b) ->
             let reason = lit_loc |> Reason.(mk_reason (RBooleanLit b)) in
-            DefT (reason, bogus_trust (), BoolT (Some b))
+            DefT (reason, BoolT (Some b))
           | Env_api.SingletonStr (lit_loc, sense, str) ->
             let reason = lit_loc |> Reason.(mk_reason (RStringLit (OrdinaryName str))) in
-            DefT (reason, bogus_trust (), StrT (Literal (Some sense, Reason.OrdinaryName str)))
+            DefT (reason, StrT (Literal (Some sense, Reason.OrdinaryName str)))
         in
         let use_op =
           Op
@@ -376,7 +376,7 @@ let validate_renders_type_arguments cx =
   let open Type in
   let open Reason in
   let rec validate_component_in_element loc renders_variant invalid_type_reason = function
-    | DefT (_, _, PolyT { tparams_loc; tparams; t_out; id = _ }) ->
+    | DefT (_, PolyT { tparams_loc; tparams; t_out; id = _ }) ->
       let subst_map =
         tparams
         |> Nel.to_list
@@ -389,7 +389,7 @@ let validate_renders_type_arguments cx =
         renders_variant
         invalid_type_reason
         (Type_subst.subst cx subst_map t_out)
-    | DefT (_, _, ReactAbstractComponentT { component_kind = Nominal _; _ }) -> ()
+    | DefT (_, ReactAbstractComponentT { component_kind = Nominal _; _ }) -> ()
     | _ ->
       Flow_js_utils.add_output
         cx
@@ -425,12 +425,12 @@ let validate_renders_type_arguments cx =
       Flow_js.possible_concrete_types_for_inspection cx r component_t
       |> Base.List.iter ~f:(validate_component_in_element loc renders_variant r);
       None
-    | DefT (invalid_type_reason, _, BoolT (Some false))
-    | DefT (invalid_type_reason, _, SingletonBoolT false)
-    | DefT (invalid_type_reason, _, NullT)
-    | DefT (invalid_type_reason, _, VoidT) ->
+    | DefT (invalid_type_reason, BoolT (Some false))
+    | DefT (invalid_type_reason, SingletonBoolT false)
+    | DefT (invalid_type_reason, NullT)
+    | DefT (invalid_type_reason, VoidT) ->
       Some (invalid_type_reason, `InvalidRendersNullVoidFalse)
-    | DefT (invalid_type_reason, _, ArrT _) -> Some (invalid_type_reason, `InvalidRendersIterable)
+    | DefT (invalid_type_reason, ArrT _) -> Some (invalid_type_reason, `InvalidRendersIterable)
     | t ->
       let r = TypeUtil.reason_of_t t in
       if

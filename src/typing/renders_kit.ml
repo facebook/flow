@@ -20,7 +20,7 @@ end
 module Make (Flow : INPUT) = struct
   open Flow
 
-  let reconstruct_render_type reason form = DefT (reason, bogus_trust (), RendersT form)
+  let reconstruct_render_type reason form = DefT (reason, RendersT form)
 
   let rec rec_renders cx trace ~use_op ((reasonl, l), (reasonu, u)) =
     match (l, u) with
@@ -71,11 +71,11 @@ module Make (Flow : INPUT) = struct
       | RendersNormal ->
         let u_type = reconstruct_render_type reasonu u in
         let reason = Reason.(replace_desc_reason RRendersNothing reasonl) in
-        let null_t = DefT (reason, bogus_trust (), NullT) in
+        let null_t = DefT (reason, NullT) in
         rec_flow_t cx trace ~use_op (null_t, u_type);
-        let void_t = DefT (reason, bogus_trust (), VoidT) in
+        let void_t = DefT (reason, VoidT) in
         rec_flow_t cx trace ~use_op (void_t, u_type);
-        let false_t = DefT (reason, bogus_trust (), BoolT (Some false)) in
+        let false_t = DefT (reason, BoolT (Some false)) in
         rec_flow_t cx trace ~use_op (false_t, u_type)
       | RendersMaybe -> ()
       | RendersStar -> ());

@@ -112,9 +112,7 @@ let rec synthesizable_expression cx ?cond exp =
 
 let mk_selector_reason_has_default cx loc = function
   | Name_def.Elem { index = n; has_default } ->
-    let key =
-      DefT (mk_reason RNumber loc, bogus_trust (), NumT (Literal (None, (float n, string_of_int n))))
-    in
+    let key = DefT (mk_reason RNumber loc, NumT (Literal (None, (float n, string_of_int n)))) in
     (Type.Elem key, mk_reason (RCustom (Utils_js.spf "element %d" n)) loc, has_default)
   | Name_def.Prop { prop; prop_loc; has_default } ->
     ( Type.Prop (prop, has_default),
@@ -181,11 +179,7 @@ let resolve_hint cx loc hint =
       Type_env.check_readable cx kind loc;
       Base.Option.value_exn (Loc_env.find_write env kind loc)
     | StringLiteralType name ->
-      DefT
-        ( mk_reason (RIdentifier (OrdinaryName name)) loc,
-          bogus_trust (),
-          SingletonStrT (OrdinaryName name)
-        )
+      DefT (mk_reason (RIdentifier (OrdinaryName name)) loc, SingletonStrT (OrdinaryName name))
     | BuiltinType name ->
       let reason = mk_reason (RCustom name) loc in
       Flow_js.get_builtin_type cx reason (OrdinaryName name)
@@ -480,11 +474,7 @@ let resolve_binding_partial cx reason loc b =
         | Ast.Expression.Object obj -> mk_obj loc obj
         | Ast.Expression.Array { Ast.Expression.Array.elements = []; _ } ->
           let (_, elem_t) = Statement.empty_array cx loc in
-          DefT
-            ( reason,
-              bogus_trust (),
-              ArrT (ArrayAT { elem_t; tuple_view = Some ([], (0, 0)); react_dro = None })
-            )
+          DefT (reason, ArrT (ArrayAT { elem_t; tuple_view = Some ([], (0, 0)); react_dro = None }))
         | Ast.Expression.Array { Ast.Expression.Array.elements; _ } ->
           (* TODO merge code with statement.ml implementation *)
           let array_elements cx undef_loc =
@@ -497,7 +487,7 @@ let resolve_binding_partial cx reason loc b =
                   let reason = mk_reason RArrayElement loc in
                   UnresolvedArg (TypeUtil.mk_tuple_element reason t, None)
                 | Hole hole_loc ->
-                  let t = EmptyT.at undef_loc |> with_trust bogus_trust in
+                  let t = EmptyT.at undef_loc in
                   let reason = mk_reason RArrayElement hole_loc in
                   UnresolvedArg (TypeUtil.mk_tuple_element reason t, None)
                 | Spread (_, { Ast.Expression.SpreadElement.argument; comments = _ }) ->
@@ -768,12 +758,10 @@ let resolve_binding_partial cx reason loc b =
       ) else
         let elem_t = Tvar.mk cx element_reason in
         Flow_js.add_output cx Error_message.(EEmptyArrayNoProvider { loc });
-        Flow_js.flow_t cx (EmptyT.make (mk_reason REmptyArrayElement loc) (bogus_trust ()), elem_t);
+        Flow_js.flow_t cx (EmptyT.make (mk_reason REmptyArrayElement loc), elem_t);
         (elem_t, Some ([], (0, 0)), replace_desc_reason REmptyArrayLit reason)
     in
-    let t =
-      DefT (reason, bogus_trust (), ArrT (ArrayAT { elem_t; tuple_view; react_dro = None }))
-    in
+    let t = DefT (reason, ArrT (ArrayAT { elem_t; tuple_view; react_dro = None })) in
     let cache = Context.node_cache cx in
     let exp =
       ((arr_loc, t), Flow_ast.Expression.(Array { Array.elements = []; comments = None }))
@@ -837,7 +825,7 @@ let resolve_binding_partial cx reason loc b =
     let reason = mk_reason (RCustom "unannotated catch parameter") loc in
     let t =
       if Context.use_mixed_in_catch_variables cx then
-        MixedT.why reason |> with_trust bogus_trust
+        MixedT.why reason
       else
         AnyT (reason, AnyError (Some MissingAnnotation))
     in
@@ -849,7 +837,7 @@ let resolve_binding_partial cx reason loc b =
       match kind with
       | In ->
         Flow_js.flow cx (right_t, AssertForInRHST reason);
-        StrT.at loc |> with_trust bogus_trust
+        StrT.at loc
       | Of { await } -> Statement.for_of_elemt cx right_t reason await
     in
     (t, mk_use_op t)
@@ -991,7 +979,7 @@ let resolve_op_assign cx ~exp_loc id_reason lhs op rhs =
     in
     let rhs_t =
       match right_abnormal with
-      | Some Abnormal.Throw -> EmptyT.at exp_loc |> with_trust bogus_trust
+      | Some Abnormal.Throw -> EmptyT.at exp_loc
       | None -> rhs_t
     in
     let result_t =
@@ -1144,7 +1132,7 @@ let resolve_cjs_exports_type cx reason state =
 let resolve_enum cx id_loc enum_reason enum_loc enum =
   if Context.enable_enums cx then
     let enum_t = Statement.mk_enum cx ~enum_reason id_loc enum in
-    (DefT (enum_reason, literal_trust (), EnumObjectT enum_t), unknown_use)
+    (DefT (enum_reason, EnumObjectT enum_t), unknown_use)
   else (
     Flow_js.add_output cx (Error_message.EEnumsNotEnabled enum_loc);
     (AnyT.error enum_reason, unknown_use)
@@ -1153,7 +1141,7 @@ let resolve_enum cx id_loc enum_reason enum_loc enum =
 let resolve_type_param cx id_loc =
   let { Loc_env.tparams; _ } = Context.environment cx in
   let (_, _, t) = ALocMap.find id_loc tparams in
-  let t = DefT (TypeUtil.reason_of_t t, bogus_trust (), TypeT (TypeParamKind, t)) in
+  let t = DefT (TypeUtil.reason_of_t t, TypeT (TypeParamKind, t)) in
   (t, unknown_use)
 
 let resolve_chain_expression cx ~cond exp =
@@ -1179,8 +1167,7 @@ let resolve_write_expression cx ~cond exp =
 let resolve_generator_next cx reason gen =
   let open TypeUtil in
   match gen with
-  | None ->
-    (VoidT.make (replace_desc_reason RUnannotatedNext reason) |> with_trust bogus_trust, unknown_use)
+  | None -> (VoidT.make (replace_desc_reason RUnannotatedNext reason), unknown_use)
   | Some { tparams_map; return_annot; async } ->
     let return_t =
       let cache = Context.node_cache cx in
@@ -1459,7 +1446,7 @@ let resolve_component_type_params cx graph component =
         {
           reason;
           name;
-          bound = DefT (reason, bogus_trust (), MixedT Mixed_everything);
+          bound = DefT (reason, MixedT Mixed_everything);
           polarity = Polarity.Neutral;
           default = None;
           is_this = false;
@@ -1479,7 +1466,7 @@ let resolve_component_type_params cx graph component =
         {
           reason;
           name;
-          bound = DefT (reason, bogus_trust (), MixedT Mixed_everything);
+          bound = DefT (reason, MixedT Mixed_everything);
           polarity = Polarity.Neutral;
           default = None;
           is_this = true;

@@ -30,7 +30,7 @@ let visitor =
       match t with
       | GenericT { name; _ } when not (Subst_name.Set.mem name bound) ->
         super#type_ cx pole { free = Subst_name.Set.add name free; bound } t
-      | DefT (_, _, PolyT { tparams_loc = _; tparams = xs; t_out = inner; _ }) ->
+      | DefT (_, PolyT { tparams_loc = _; tparams = xs; t_out = inner; _ }) ->
         let orig_bound = bound in
         let { free; bound } =
           Nel.fold_left
@@ -221,7 +221,7 @@ let substituter =
                 let t = GenericT { gen with name = name' } in
                 super#type_ cx map_cx t
             end
-          | DefT (reason, trust, PolyT { tparams_loc; tparams = xs; t_out = inner; id }) ->
+          | DefT (reason, PolyT { tparams_loc; tparams = xs; t_out = inner; id }) ->
             let prev_change_id = change_id in
             change_id <- false;
             let (xs, map, changed) =
@@ -258,7 +258,7 @@ let substituter =
             in
             change_id <- prev_change_id || change_id;
             if changed then
-              DefT (reason, trust, PolyT { tparams_loc; tparams = xs; t_out = inner_; id })
+              DefT (reason, PolyT { tparams_loc; tparams = xs; t_out = inner_; id })
             else
               t
           | ThisClassT (reason, this, i, this_name) ->

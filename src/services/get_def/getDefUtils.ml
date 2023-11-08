@@ -311,7 +311,7 @@ let extract_instancet cx ty : (Type.t, string) result =
     let resolved = Members.resolve_type cx ty in
     match resolved with
     | ThisClassT (_, t, _, _)
-    | DefT (_, _, PolyT { t_out = ThisClassT (_, t, _, _); _ }) ->
+    | DefT (_, PolyT { t_out = ThisClassT (_, t, _, _); _ }) ->
       Ok t
     | _ ->
       let type_string = string_of_ctor resolved in
@@ -373,9 +373,9 @@ and extract_def_loc_resolved ~loc_of_aloc cx ty name : (def_loc, string) result 
   Members.(
     Type.(
       match extract_type cx ty with
-      | Success (DefT (_, _, InstanceT { super; _ })) as extracted_type ->
+      | Success (DefT (_, InstanceT { super; _ })) as extracted_type ->
         extract_def_locs_from_instancet ~loc_of_aloc cx extracted_type super name
-      | (Success (DefT (_, _, ObjT _)) | SuccessModule _) as extracted_type ->
+      | (Success (DefT (_, ObjT _)) | SuccessModule _) as extracted_type ->
         get_def_locs_from_extracted_type cx extracted_type name >>| ( function
         | None -> NoDefFound
         | Some (loc, []) -> FoundObject (loc_of_aloc loc)
@@ -448,7 +448,7 @@ let def_info_of_typecheck_results ~loc_of_aloc cx obj_to_obj_map props_access_in
     def_info_of_type name ty >>| Base.Option.map ~f:(fun def_info -> (def_info, name))
   | Obj_literal (loc, ty, name) ->
     (match ty with
-    | Type.(DefT (_, _, ObjT { props_tmap = literal_obj_props_tmap_id; _ })) ->
+    | Type.(DefT (_, ObjT { props_tmap = literal_obj_props_tmap_id; _ })) ->
       let literal_props = Context.find_props cx literal_obj_props_tmap_id in
       let literal_result =
         match get_loc_of_prop ~loc_of_aloc literal_props name with

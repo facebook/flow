@@ -42,7 +42,7 @@ let rec collect_lowers ~filter_empty cx seen acc = function
       else
         let seen = ISet.add id seen in
         collect_lowers ~filter_empty cx seen acc (possible_types cx id @ ts)
-    | DefT (_, _, EmptyT) when filter_empty -> collect_lowers ~filter_empty cx seen acc ts
+    | DefT (_, EmptyT) when filter_empty -> collect_lowers ~filter_empty cx seen acc ts
     (* Everything else becomes part of the merge typed *)
     | _ -> collect_lowers ~filter_empty cx seen (t :: acc) ts)
 
@@ -104,18 +104,18 @@ let ground_subtype = function
   | (_, UseT (_, OpenT _)) ->
     false
   | (UnionT _, _) -> false
-  | (DefT (_, _, NumT _), UseT (_, DefT (_, _, NumT _)))
-  | (DefT (_, _, StrT _), UseT (_, DefT (_, _, StrT _)))
-  | (DefT (_, _, BoolT _), UseT (_, DefT (_, _, BoolT _)))
-  | (DefT (_, _, BigIntT _), UseT (_, DefT (_, _, BigIntT _)))
-  | (DefT (_, _, SymbolT), UseT (_, DefT (_, _, SymbolT)))
-  | (DefT (_, _, NullT), UseT (_, DefT (_, _, NullT)))
-  | (DefT (_, _, VoidT), UseT (_, DefT (_, _, VoidT))) ->
+  | (DefT (_, NumT _), UseT (_, DefT (_, NumT _)))
+  | (DefT (_, StrT _), UseT (_, DefT (_, StrT _)))
+  | (DefT (_, BoolT _), UseT (_, DefT (_, BoolT _)))
+  | (DefT (_, BigIntT _), UseT (_, DefT (_, BigIntT _)))
+  | (DefT (_, SymbolT), UseT (_, DefT (_, SymbolT)))
+  | (DefT (_, NullT), UseT (_, DefT (_, NullT)))
+  | (DefT (_, VoidT), UseT (_, DefT (_, VoidT))) ->
     true
-  | (DefT (_, _, NullT), UseT (_, DefT (_, _, MixedT (Mixed_non_maybe | Mixed_non_null))))
-  | (DefT (_, _, VoidT), UseT (_, DefT (_, _, MixedT (Mixed_non_maybe | Mixed_non_void)))) ->
+  | (DefT (_, NullT), UseT (_, DefT (_, MixedT (Mixed_non_maybe | Mixed_non_null))))
+  | (DefT (_, VoidT), UseT (_, DefT (_, MixedT (Mixed_non_maybe | Mixed_non_void)))) ->
     false
-  | (_, UseT (_, DefT (_, _, MixedT _))) -> true
+  | (_, UseT (_, DefT (_, MixedT _))) -> true
   (* we handle the any propagation check later *)
   | (AnyT _, _) -> false
   | (_, UseT (_, AnyT _)) -> false
@@ -123,19 +123,19 @@ let ground_subtype = function
   | (ObjProtoT _, UseT (_, ObjProtoT _))
   | (FunProtoT _, UseT (_, FunProtoT _))
   | (FunProtoT _, UseT (_, ObjProtoT _))
-  | (DefT (_, _, ObjT { proto_t = ObjProtoT _; _ }), UseT (_, ObjProtoT _))
-  | (DefT (_, _, ObjT { proto_t = FunProtoT _; _ }), UseT (_, FunProtoT _))
-  | (DefT (_, _, ObjT { proto_t = FunProtoT _; _ }), UseT (_, ObjProtoT _)) ->
+  | (DefT (_, ObjT { proto_t = ObjProtoT _; _ }), UseT (_, ObjProtoT _))
+  | (DefT (_, ObjT { proto_t = FunProtoT _; _ }), UseT (_, FunProtoT _))
+  | (DefT (_, ObjT { proto_t = FunProtoT _; _ }), UseT (_, ObjProtoT _)) ->
     true
   | _ -> false
 
 let is_date = function
-  | DefT (reason, _, InstanceT _) -> DescFormat.name_of_instance_reason reason = "Date"
+  | DefT (reason, InstanceT _) -> DescFormat.name_of_instance_reason reason = "Date"
   | _ -> false
 
 let function_like = function
-  | DefT (_, _, ClassT _)
-  | DefT (_, _, FunT _)
+  | DefT (_, ClassT _)
+  | DefT (_, FunT _)
   | CustomFunT _
   | FunProtoApplyT _
   | FunProtoBindT _
@@ -144,7 +144,7 @@ let function_like = function
   | _ -> false
 
 let object_like = function
-  | DefT (_, _, (ObjT _ | InstanceT _))
+  | DefT (_, (ObjT _ | InstanceT _))
   | ObjProtoT _
   | FunProtoT _
   | AnyT _ ->
@@ -181,33 +181,32 @@ let function_like_op = function
   | t -> object_like_op t
 
 let equatable = function
-  | (DefT (_, _, NumT _), DefT (_, _, NumT _))
-  | (DefT (_, _, SingletonNumT _), DefT (_, _, SingletonNumT _))
-  | (DefT (_, _, SingletonNumT _), DefT (_, _, NumT _))
-  | (DefT (_, _, NumT _), DefT (_, _, SingletonNumT _))
-  | (DefT (_, _, StrT _), DefT (_, _, StrT _))
-  | (DefT (_, _, StrT _), DefT (_, _, SingletonStrT _))
-  | (DefT (_, _, SingletonStrT _), DefT (_, _, StrT _))
-  | (DefT (_, _, SingletonStrT _), DefT (_, _, SingletonStrT _))
-  | (DefT (_, _, BoolT _), DefT (_, _, BoolT _))
-  | (DefT (_, _, BoolT _), DefT (_, _, SingletonBoolT _))
-  | (DefT (_, _, SingletonBoolT _), DefT (_, _, BoolT _))
-  | (DefT (_, _, SingletonBoolT _), DefT (_, _, SingletonBoolT _))
-  | (DefT (_, _, SymbolT), DefT (_, _, SymbolT))
-  | (DefT (_, _, EmptyT), _)
-  | (_, DefT (_, _, EmptyT))
-  | (_, DefT (_, _, MixedT _))
-  | (DefT (_, _, MixedT _), _)
+  | (DefT (_, NumT _), DefT (_, NumT _))
+  | (DefT (_, SingletonNumT _), DefT (_, SingletonNumT _))
+  | (DefT (_, SingletonNumT _), DefT (_, NumT _))
+  | (DefT (_, NumT _), DefT (_, SingletonNumT _))
+  | (DefT (_, StrT _), DefT (_, StrT _))
+  | (DefT (_, StrT _), DefT (_, SingletonStrT _))
+  | (DefT (_, SingletonStrT _), DefT (_, StrT _))
+  | (DefT (_, SingletonStrT _), DefT (_, SingletonStrT _))
+  | (DefT (_, BoolT _), DefT (_, BoolT _))
+  | (DefT (_, BoolT _), DefT (_, SingletonBoolT _))
+  | (DefT (_, SingletonBoolT _), DefT (_, BoolT _))
+  | (DefT (_, SingletonBoolT _), DefT (_, SingletonBoolT _))
+  | (DefT (_, SymbolT), DefT (_, SymbolT))
+  | (DefT (_, EmptyT), _)
+  | (_, DefT (_, EmptyT))
+  | (_, DefT (_, MixedT _))
+  | (DefT (_, MixedT _), _)
   | (AnyT _, _)
   | (_, AnyT _)
-  | (DefT (_, _, VoidT), _)
-  | (_, DefT (_, _, VoidT))
-  | (DefT (_, _, NullT), _)
-  | (_, DefT (_, _, NullT)) ->
+  | (DefT (_, VoidT), _)
+  | (_, DefT (_, VoidT))
+  | (DefT (_, NullT), _)
+  | (_, DefT (_, NullT)) ->
     true
   | ( DefT
         ( _,
-          _,
           ( NumT _ | StrT _ | BoolT _ | SingletonNumT _ | SingletonStrT _ | SingletonBoolT _
           | SymbolT | EnumObjectT _ | EnumT _ )
         ),
@@ -216,7 +215,6 @@ let equatable = function
   | ( _,
       DefT
         ( _,
-          _,
           ( NumT _ | StrT _ | BoolT _ | SingletonNumT _ | SingletonStrT _ | SingletonBoolT _
           | SymbolT | EnumObjectT _ | EnumT _ )
         )
@@ -241,9 +239,9 @@ let patt_that_needs_concretization = function
   | _ -> false
 
 let parts_to_replace_t cx = function
-  | DefT (_, _, ObjT { call_t = Some id; _ }) -> begin
+  | DefT (_, ObjT { call_t = Some id; _ }) -> begin
     match Context.find_call cx id with
-    | DefT (_, _, FunT (_, ft)) ->
+    | DefT (_, FunT (_, ft)) ->
       let ts =
         List.fold_left
           (fun acc (_, t) ->
@@ -259,7 +257,7 @@ let parts_to_replace_t cx = function
       | _ -> ts)
     | _ -> []
   end
-  | DefT (_, _, FunT (_, ft)) ->
+  | DefT (_, FunT (_, ft)) ->
     let ts =
       List.fold_left
         (fun acc (_, t) ->
@@ -320,23 +318,23 @@ let replace_parts =
       replace_args (arg :: acc) (ys, args)
   in
   fun cx resolved -> function
-    | UseT (op, DefT (r1, t1, ObjT ({ call_t = Some id; _ } as o))) as u -> begin
+    | UseT (op, DefT (r1, ObjT ({ call_t = Some id; _ } as o))) as u -> begin
       match Context.find_call cx id with
-      | DefT (r2, t2, FunT (static, ft)) ->
+      | DefT (r2, FunT (static, ft)) ->
         let (resolved, params) = replace_params [] (resolved, ft.params) in
         let (resolved, rest_param) = replace_rest_param (resolved, ft.rest_param) in
         assert (resolved = []);
         let id' =
-          Context.make_call_prop cx (DefT (r2, t2, FunT (static, { ft with params; rest_param })))
+          Context.make_call_prop cx (DefT (r2, FunT (static, { ft with params; rest_param })))
         in
-        UseT (op, DefT (r1, t1, ObjT { o with call_t = Some id' }))
+        UseT (op, DefT (r1, ObjT { o with call_t = Some id' }))
       | _ -> u
     end
-    | UseT (op, DefT (r, trust, FunT (t1, ft))) ->
+    | UseT (op, DefT (r, FunT (t1, ft))) ->
       let (resolved, params) = replace_params [] (resolved, ft.params) in
       let (resolved, rest_param) = replace_rest_param (resolved, ft.rest_param) in
       assert (resolved = []);
-      UseT (op, DefT (r, trust, FunT (t1, { ft with params; rest_param })))
+      UseT (op, DefT (r, FunT (t1, { ft with params; rest_param })))
     | CallT { use_op; reason; call_action = Funcalltype funcalltype; return_hint } ->
       let (resolved, call_args_tlist) = replace_args [] (resolved, funcalltype.call_args_tlist) in
       assert (resolved = []);
@@ -352,8 +350,8 @@ let replace_parts =
 (** Errors *)
 
 let error_message_kind_of_lower = function
-  | DefT (_, _, NullT) -> Some Error_message.Possibly_null
-  | DefT (_, _, VoidT) -> Some Error_message.Possibly_void
+  | DefT (_, NullT) -> Some Error_message.Possibly_null
+  | DefT (_, VoidT) -> Some Error_message.Possibly_void
   | MaybeT _ -> Some Error_message.Possibly_null_or_void
   | IntersectionT _
   | _ ->
@@ -375,7 +373,7 @@ let error_message_kind_of_upper = function
   | GetElemT { key_t; _ } -> Error_message.IncompatibleGetElemT (loc_of_t key_t)
   | SetElemT (_, _, t, _, _, _) -> Error_message.IncompatibleSetElemT (loc_of_t t)
   | CallElemT (_, _, _, t, _) -> Error_message.IncompatibleCallElemT (loc_of_t t)
-  | ElemT (_, _, DefT (_, _, ArrT _), _) -> Error_message.IncompatibleElemTOfArrT
+  | ElemT (_, _, DefT (_, ArrT _), _) -> Error_message.IncompatibleElemTOfArrT
   | ObjAssignFromT (_, _, _, _, ObjSpreadAssign) -> Error_message.IncompatibleObjAssignFromTSpread
   | ObjAssignFromT _ -> Error_message.IncompatibleObjAssignFromT
   | ObjRestT _ -> Error_message.IncompatibleObjRestT
@@ -391,8 +389,8 @@ let error_message_kind_of_upper = function
   | HasOwnPropT
       ( _,
         r,
-        ( DefT (_, _, StrT (Literal (_, name)))
-        | GenericT { bound = DefT (_, _, StrT (Literal (_, name))); _ } )
+        ( DefT (_, StrT (Literal (_, name)))
+        | GenericT { bound = DefT (_, StrT (Literal (_, name))); _ } )
       ) ->
     Error_message.IncompatibleHasOwnPropT (loc_of_reason r, Some name)
   | HasOwnPropT (_, r, _) -> Error_message.IncompatibleHasOwnPropT (loc_of_reason r, None)
@@ -636,15 +634,15 @@ let poly_minimum_arity =
 
 let string_key s reason =
   let key_reason = replace_desc_reason (RPropertyIsAString s) reason in
-  DefT (key_reason, bogus_trust (), StrT (Literal (None, s)))
+  DefT (key_reason, StrT (Literal (None, s)))
 
 (* common case checking a function as an object *)
 let quick_error_fun_as_obj cx trace ~use_op reason statics reason_o props =
   let statics_own_props =
     match statics with
-    | DefT (_, _, ObjT { props_tmap; _ }) -> Some (Context.find_props cx props_tmap)
+    | DefT (_, ObjT { props_tmap; _ }) -> Some (Context.find_props cx props_tmap)
     | AnyT _
-    | DefT (_, _, MixedT _) ->
+    | DefT (_, MixedT _) ->
       Some NameUtils.Map.empty
     | _ -> None
   in
@@ -754,11 +752,9 @@ let builtin_promise_class_id cx =
           (lazy
             (DefT
               ( _,
-                _,
                 PolyT
                   {
-                    t_out =
-                      ThisClassT (_, DefT (_, _, InstanceT { inst = { class_id; _ }; _ }), _, _);
+                    t_out = ThisClassT (_, DefT (_, InstanceT { inst = { class_id; _ }; _ }), _, _);
                     _;
                   }
               )
@@ -779,10 +775,7 @@ let builtin_react_element_opaque_id cx =
       | Constraint.FullyResolved
           (lazy
             (DefT
-              ( _,
-                _,
-                PolyT { t_out = DefT (_, _, TypeT (OpaqueKind, OpaqueT (_, { opaque_id; _ }))); _ }
-              )
+              (_, PolyT { t_out = DefT (_, TypeT (OpaqueKind, OpaqueT (_, { opaque_id; _ }))); _ })
               )
             ) ->
         Some opaque_id
@@ -800,7 +793,7 @@ let is_munged_prop_name_with_munge name ~should_munge_underscores =
 let is_munged_prop_name cx name =
   is_munged_prop_name_with_munge name ~should_munge_underscores:(Context.should_munge_underscores cx)
 
-let map_obj cx trust o reason_op ~map_t ~map_field =
+let map_obj cx o reason_op ~map_t ~map_field =
   let props_tmap =
     Context.find_props cx o.props_tmap
     |> Properties.mapi_fields map_field
@@ -818,13 +811,13 @@ let map_obj cx trust o reason_op ~map_t ~map_field =
     }
   in
   let reason = replace_desc_reason RObjectType reason_op in
-  let t = DefT (reason, trust, ObjT { o with props_tmap; flags }) in
+  let t = DefT (reason, ObjT { o with props_tmap; flags }) in
   if Obj_type.is_exact o.flags.obj_kind then
     ExactT (reason, t)
   else
     t
 
-let obj_key_mirror cx trust o reason_op =
+let obj_key_mirror cx o reason_op =
   let map_t key t =
     match t with
     | OptionalT _ -> optional key
@@ -832,18 +825,18 @@ let obj_key_mirror cx trust o reason_op =
   in
   let map_field key t =
     let reason = replace_desc_reason (RStringLit key) reason_op in
-    map_t (DefT (reason, bogus_trust (), SingletonStrT key)) t
+    map_t (DefT (reason, SingletonStrT key)) t
   in
-  map_obj cx trust o reason_op ~map_t ~map_field
+  map_obj cx o reason_op ~map_t ~map_field
 
-let obj_map_const cx trust o reason_op target =
+let obj_map_const cx o reason_op target =
   let map_t _ t =
     match t with
     | OptionalT _ -> optional target
     | _ -> target
   in
   let map_field _ t = map_t target t in
-  map_obj cx trust o reason_op ~map_t ~map_field
+  map_obj cx o reason_op ~map_t ~map_field
 
 let check_untyped_import cx import_kind lreason ureason =
   match (import_kind, desc_of_reason lreason) with
@@ -897,7 +890,7 @@ let fix_this_class cx reason (r, i, is_this, this_name) =
       in
       Lazy.force i'
   in
-  DefT (r, bogus_trust (), ClassT i')
+  DefT (r, ClassT i')
 
 module type Instantiation_helper_sig = sig
   val cache_instantiate :
@@ -1175,39 +1168,33 @@ end
 module ImportTypeTKit = struct
   let canonicalize_imported_type cx reason t =
     match t with
-    | DefT (_, trust, ClassT inst) -> Some (DefT (reason, trust, TypeT (ImportClassKind, inst)))
-    | DefT
-        (_, _, PolyT { tparams_loc; tparams = typeparams; t_out = DefT (_, trust, ClassT inst); id })
-      ->
-      Some
-        (poly_type id tparams_loc typeparams (DefT (reason, trust, TypeT (ImportClassKind, inst))))
+    | DefT (_, ClassT inst) -> Some (DefT (reason, TypeT (ImportClassKind, inst)))
+    | DefT (_, PolyT { tparams_loc; tparams = typeparams; t_out = DefT (_, ClassT inst); id }) ->
+      Some (poly_type id tparams_loc typeparams (DefT (reason, TypeT (ImportClassKind, inst))))
     (* delay fixing a polymorphic this-abstracted class until it is specialized,
        by transforming the instance type to a type application *)
-    | DefT (_, _, PolyT { tparams_loc; tparams = typeparams; t_out = ThisClassT _; _ }) ->
+    | DefT (_, PolyT { tparams_loc; tparams = typeparams; t_out = ThisClassT _; _ }) ->
       let (_, targs) = typeparams |> Nel.to_list |> mk_tparams cx in
       let tapp = implicit_typeapp t targs in
       Some (poly_type (Type.Poly.generate_id ()) tparams_loc typeparams (class_type tapp))
-    | DefT (_, _, PolyT { t_out = DefT (_, _, TypeT _); _ }) -> Some t
+    | DefT (_, PolyT { t_out = DefT (_, TypeT _); _ }) -> Some t
     (* fix this-abstracted class when used as a type *)
     | ThisClassT (r, i, this, this_name) -> Some (fix_this_class cx reason (r, i, this, this_name))
-    | DefT (enum_reason, trust, EnumObjectT enum) ->
-      let enum_type = mk_enum_type ~trust enum_reason enum in
-      Some (DefT (reason, trust, TypeT (ImportEnumKind, enum_type)))
-    | DefT (_, _, ReactAbstractComponentT { component_kind = Nominal _; _ }) -> Some t
+    | DefT (enum_reason, EnumObjectT enum) ->
+      let enum_type = mk_enum_type enum_reason enum in
+      Some (DefT (reason, TypeT (ImportEnumKind, enum_type)))
+    | DefT (_, ReactAbstractComponentT { component_kind = Nominal _; _ }) -> Some t
     | DefT
-        ( _,
-          _,
-          PolyT
-            { t_out = DefT (_, _, ReactAbstractComponentT { component_kind = Nominal _; _ }); _ }
-        ) ->
+        (_, PolyT { t_out = DefT (_, ReactAbstractComponentT { component_kind = Nominal _; _ }); _ })
+      ->
       Some t
-    | DefT (_, _, TypeT _) -> Some t
+    | DefT (_, TypeT _) -> Some t
     | AnyT _ -> Some t
     | _ -> None
 
   let on_concrete_type cx trace reason export_name exported_type =
     match (exported_type, export_name) with
-    | ((ExactT (_, DefT (_, _, ObjT _)) | DefT (_, _, ObjT _)), "default") -> exported_type
+    | ((ExactT (_, DefT (_, ObjT _)) | DefT (_, ObjT _)), "default") -> exported_type
     | (exported_type, _) ->
       (match canonicalize_imported_type cx reason exported_type with
       | Some imported_t -> imported_t
@@ -1226,29 +1213,24 @@ module ImportTypeofTKit = struct
     match l with
     | DefT
         ( _,
-          _,
           PolyT
             {
               tparams_loc;
               tparams = typeparams;
-              t_out = DefT (_, _, (ClassT _ | FunT _ | ReactAbstractComponentT _)) as lower_t;
+              t_out = DefT (_, (ClassT _ | FunT _ | ReactAbstractComponentT _)) as lower_t;
               id;
             }
         ) ->
       let typeof_t = mk_typeof_annotation cx ?trace:(Some trace) reason lower_t in
 
-      poly_type
-        id
-        tparams_loc
-        typeparams
-        (DefT (reason, bogus_trust (), TypeT (ImportTypeofKind, typeof_t)))
-    | DefT (_, _, TypeT _)
-    | DefT (_, _, PolyT { t_out = DefT (_, _, TypeT _); _ }) ->
+      poly_type id tparams_loc typeparams (DefT (reason, TypeT (ImportTypeofKind, typeof_t)))
+    | DefT (_, TypeT _)
+    | DefT (_, PolyT { t_out = DefT (_, TypeT _); _ }) ->
       add_output cx ~trace (Error_message.EImportTypeAsTypeof (reason, export_name));
       AnyT.error reason
     | _ ->
       let typeof_t = mk_typeof_annotation cx ?trace:(Some trace) reason l in
-      DefT (reason, bogus_trust (), TypeT (ImportTypeofKind, typeof_t))
+      DefT (reason, TypeT (ImportTypeofKind, typeof_t))
 end
 
 module CJSRequireT_kit (F : Import_export_helper_sig) = struct
@@ -1336,7 +1318,7 @@ module ImportModuleNsTKit = struct
       if exports.has_every_named_export then
         Indexed
           {
-            key = StrT.why reason |> with_trust bogus_trust;
+            key = StrT.why reason;
             value = AnyT.untyped reason;
             dict_name = None;
             dict_polarity = Polarity.Neutral;
@@ -1590,13 +1572,13 @@ end
 
 module AssertExportIsTypeT_kit (F : Import_export_helper_sig) = struct
   let rec is_type = function
-    | DefT (_, _, ClassT _)
-    | DefT (_, _, EnumObjectT _)
+    | DefT (_, ClassT _)
+    | DefT (_, EnumObjectT _)
     | ThisClassT (_, _, _, _)
-    | DefT (_, _, TypeT _)
+    | DefT (_, TypeT _)
     | AnyT _ ->
       true
-    | DefT (_, _, PolyT { t_out = t'; _ }) -> is_type t'
+    | DefT (_, PolyT { t_out = t'; _ }) -> is_type t'
     | _ -> false
 
   let on_concrete_type cx trace name l =
@@ -1667,7 +1649,7 @@ module ExportTypeT_kit (F : Import_export_helper_sig) = struct
   let on_concrete_type cx trace (reason, export_name, target_module_t) l =
     let is_type_export =
       match l with
-      | DefT (_, _, ObjT _) when export_name = OrdinaryName "default" -> true
+      | DefT (_, ObjT _) when export_name = OrdinaryName "default" -> true
       | l -> ImportTypeTKit.canonicalize_imported_type cx reason l <> None
     in
     if is_type_export then
@@ -1685,8 +1667,8 @@ end
 module CJSExtractNamedExportsT_kit (F : Import_export_helper_sig) = struct
   let on_concrete_type cx trace (reason, local_module) = function
     (* ObjT CommonJS export values have their properties turned into named exports. *)
-    | DefT (_, _, ObjT o)
-    | ExactT (_, DefT (_, _, ObjT o)) ->
+    | DefT (_, ObjT o)
+    | ExactT (_, DefT (_, ObjT o)) ->
       let { props_tmap; proto_t; _ } = o in
       (* Copy props from the prototype *)
       let module_t = F.cjs_extract_named_exports cx trace (reason, local_module) proto_t in
@@ -1697,7 +1679,7 @@ module CJSExtractNamedExportsT_kit (F : Import_export_helper_sig) = struct
         (reason, Properties.extract_named_exports (Context.find_props cx props_tmap), ExportValue)
         module_t
     (* InstanceT CommonJS export values have their properties turned into named exports. *)
-    | DefT (_, _, InstanceT { inst = { own_props; proto_props; _ }; _ }) ->
+    | DefT (_, InstanceT { inst = { own_props; proto_props; _ }; _ }) ->
       let module_t = ModuleT local_module in
       let extract_named_exports id =
         Context.find_props cx id
@@ -1737,11 +1719,10 @@ end
 (*******************)
 
 let rec unbind_this_method = function
-  | DefT (r, trust, FunT (static, ({ this_t = (this_t, This_Method { unbound = false }); _ } as ft)))
-    ->
-    DefT (r, trust, FunT (static, { ft with this_t = (this_t, This_Method { unbound = true }) }))
-  | DefT (r, trust, PolyT { tparams_loc; tparams; t_out; id }) ->
-    DefT (r, trust, PolyT { tparams_loc; tparams; t_out = unbind_this_method t_out; id })
+  | DefT (r, FunT (static, ({ this_t = (this_t, This_Method { unbound = false }); _ } as ft))) ->
+    DefT (r, FunT (static, { ft with this_t = (this_t, This_Method { unbound = true }) }))
+  | DefT (r, PolyT { tparams_loc; tparams; t_out; id }) ->
+    DefT (r, PolyT { tparams_loc; tparams; t_out = unbind_this_method t_out; id })
   | IntersectionT (r, rep) -> IntersectionT (r, InterRep.map unbind_this_method rep)
   | t -> t
 
@@ -1783,8 +1764,7 @@ module type Get_prop_helper_sig = sig
 
   val mk_react_dro : Context.t -> use_op -> ALoc.t -> Type.t -> Type.t
 
-  val enum_proto :
-    Context.t -> Type.trace -> reason:Reason.t -> Reason.t * Trust.trust_rep * Type.enum_t -> Type.t
+  val enum_proto : Context.t -> Type.trace -> reason:Reason.t -> Reason.t * Type.enum_t -> Type.t
 
   val return : Context.t -> use_op:use_op -> Type.trace -> Type.t -> r
 
@@ -1873,7 +1853,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
         super
         (reason_op, lookup_kind, propref, use_op, ids)
 
-  let on_EnumObjectT cx trace enum_reason trust enum access =
+  let on_EnumObjectT cx trace enum_reason enum access =
     let (_, access_reason, _, (prop_reason, member_name)) = access in
     let { members; _ } = enum in
     let error_invalid_access ~suggestion =
@@ -1895,24 +1875,24 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
     | OrdinaryName name when is_valid_member_name name ->
       if SMap.mem name members then
         let enum_type =
-          F.reposition cx ~trace (loc_of_reason access_reason) (mk_enum_type ~trust enum_reason enum)
+          F.reposition cx ~trace (loc_of_reason access_reason) (mk_enum_type enum_reason enum)
         in
         F.return cx trace ~use_op:unknown_use enum_type
       else
         let suggestion = typo_suggestion (SMap.keys members |> List.rev) name in
         error_invalid_access ~suggestion
     | OrdinaryName _ ->
-      let t = F.enum_proto cx trace ~reason:access_reason (enum_reason, trust, enum) in
+      let t = F.enum_proto cx trace ~reason:access_reason (enum_reason, enum) in
       F.cg_get_prop cx trace t access
     | InternalName _
     | InternalModuleName _ ->
       error_invalid_access ~suggestion:None
 
-  let on_array_length cx trace reason trust arity reason_op =
+  let on_array_length cx trace reason arity reason_op =
     (* Use definition as the reason for the length, as this is
      * the actual location where the length is in fact set. *)
     let loc = Reason.loc_of_reason reason_op in
-    let t = tuple_length reason trust arity in
+    let t = tuple_length reason arity in
     F.return cx trace ~use_op:unknown_use (F.reposition cx ~trace loc t)
 
   let get_obj_prop cx trace o propref reason_op =
@@ -1937,7 +1917,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
     | _ -> None
 
   let read_obj_prop cx trace ~use_op o propref reason_obj reason_op lookup_info =
-    let l = DefT (reason_obj, bogus_trust (), ObjT o) in
+    let l = DefT (reason_obj, ObjT o) in
     match get_obj_prop cx trace o propref reason_op with
     | Some (p, _target_kind) ->
       Base.Option.iter ~f:(fun (id, _) -> Context.test_prop_hit cx id) lookup_info;
@@ -1950,7 +1930,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
           | Some (id, lookup_default_tout) when Obj_type.is_exact o.flags.obj_kind ->
             let lookup_default =
               let r = replace_desc_reason (RMissingProperty (Some name)) reason_op in
-              Some (DefT (r, bogus_trust (), VoidT), lookup_default_tout)
+              Some (DefT (r, VoidT), lookup_default_tout)
             in
             NonstrictReturning (lookup_default, Some (id, (reason_prop, reason_obj)))
           | _ -> Strict reason_obj
@@ -1963,16 +1943,16 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
           let loc = loc_of_t elem_t in
           add_output cx ~trace Error_message.(EInternal (loc, PropRefComputedOpen));
           F.error_type cx trace reason_op
-        | GenericT { bound = DefT (_, _, StrT (Literal _)); _ }
-        | DefT (_, _, StrT (Literal _)) ->
+        | GenericT { bound = DefT (_, StrT (Literal _)); _ }
+        | DefT (_, StrT (Literal _)) ->
           let loc = loc_of_t elem_t in
           add_output cx ~trace Error_message.(EInternal (loc, PropRefComputedLiteral));
           F.error_type cx trace reason_op
         | AnyT (_, src) -> F.return cx trace ~use_op:unknown_use (AnyT.why src reason_op)
-        | GenericT { bound = DefT (_, _, StrT _); _ }
-        | GenericT { bound = DefT (_, _, NumT _); _ }
-        | DefT (_, _, StrT _)
-        | DefT (_, _, NumT _) ->
+        | GenericT { bound = DefT (_, StrT _); _ }
+        | GenericT { bound = DefT (_, NumT _); _ }
+        | DefT (_, StrT _)
+        | DefT (_, NumT _) ->
           (* string, and number keys are allowed, but there's nothing else to
              flow without knowing their literal values. *)
           F.return cx trace ~use_op:unknown_use (Unsoundness.why ComputedNonLiteralKey reason_op)
@@ -1998,7 +1978,7 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
   in
   let (can_write_tuple, value, use_op) =
     match l with
-    | DefT (index_reason, _, NumT (Literal (_, (float_value, _)))) -> begin
+    | DefT (index_reason, NumT (Literal (_, (float_value, _)))) -> begin
       match elements with
       | None -> (false, elem_t, use_op)
       | Some elements ->
@@ -2097,8 +2077,8 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
   (value, is_tuple, use_op, react_dro)
 
 let propref_for_elem_t = function
-  | GenericT { bound = DefT (_, _, StrT (Literal (_, name))); reason; _ }
-  | DefT (reason, _, StrT (Literal (_, name))) ->
+  | GenericT { bound = DefT (_, StrT (Literal (_, name))); reason; _ }
+  | DefT (reason, StrT (Literal (_, name))) ->
     let reason = replace_desc_reason (RProperty (Some name)) reason in
     mk_named_prop ~reason ~from_indexed_access:true name
   | l -> Computed l
@@ -2109,7 +2089,7 @@ let keylist_of_props props reason_op =
       match name with
       | OrdinaryName _ ->
         let reason = replace_desc_new_reason (RStringLit name) reason_op in
-        DefT (reason, bogus_trust (), SingletonStrT name) :: acc
+        DefT (reason, SingletonStrT name) :: acc
       | InternalName _
       | InternalModuleName _ ->
         acc)
@@ -2171,15 +2151,15 @@ let get_values_type_of_obj_t cx o reason =
           let t =
             if flags.frozen then
               match t with
-              | DefT (t_reason, trust, StrT (Literal (_, (OrdinaryName _ as name)))) ->
+              | DefT (t_reason, StrT (Literal (_, (OrdinaryName _ as name)))) ->
                 let t_reason = replace_desc_reason (RStringLit name) t_reason in
-                DefT (t_reason, trust, SingletonStrT name)
-              | DefT (t_reason, trust, NumT (Literal (_, lit))) ->
+                DefT (t_reason, SingletonStrT name)
+              | DefT (t_reason, NumT (Literal (_, lit))) ->
                 let t_reason = replace_desc_reason (RNumberLit (snd lit)) t_reason in
-                DefT (t_reason, trust, SingletonNumT lit)
-              | DefT (t_reason, trust, BoolT (Some lit)) ->
+                DefT (t_reason, SingletonNumT lit)
+              | DefT (t_reason, BoolT (Some lit)) ->
                 let t_reason = replace_desc_reason (RBooleanLit lit) t_reason in
-                DefT (t_reason, trust, SingletonBoolT lit)
+                DefT (t_reason, SingletonBoolT lit)
               | _ -> t
             else
               t
@@ -2229,22 +2209,22 @@ let any_mod_src_keep_placeholder new_src = function
 let flow_unary_arith cx ?trace l reason kind =
   let open UnaryArithKind in
   match (kind, l) with
-  | (Minus, DefT (_, trust, NumT (Literal (_, (value, raw))))) ->
+  | (Minus, DefT (_, NumT (Literal (_, (value, raw))))) ->
     let (value, raw) = Flow_ast_utils.negate_number_literal (value, raw) in
-    DefT (replace_desc_reason RNumber reason, trust, NumT (Literal (None, (value, raw))))
-  | (Minus, DefT (_, _, NumT (AnyLiteral | Truthy))) -> l
-  | (Minus, DefT (_, trust, BigIntT (Literal (_, (value, raw))))) ->
+    DefT (replace_desc_reason RNumber reason, NumT (Literal (None, (value, raw))))
+  | (Minus, DefT (_, NumT (AnyLiteral | Truthy))) -> l
+  | (Minus, DefT (_, BigIntT (Literal (_, (value, raw))))) ->
     let (value, raw) = Flow_ast_utils.negate_bigint_literal (value, raw) in
-    DefT (replace_desc_reason RBigInt reason, trust, BigIntT (Literal (None, (value, raw))))
-  | (Minus, DefT (_, _, BigIntT (AnyLiteral | Truthy))) -> l
-  | (Plus, DefT (reason_bigint, _, BigIntT _)) ->
+    DefT (replace_desc_reason RBigInt reason, BigIntT (Literal (None, (value, raw))))
+  | (Minus, DefT (_, BigIntT (AnyLiteral | Truthy))) -> l
+  | (Plus, DefT (reason_bigint, BigIntT _)) ->
     add_output cx ?trace (Error_message.EBigIntNumCoerce reason_bigint);
     AnyT.error reason
-  | (Plus, _) -> NumT.why reason (bogus_trust ())
-  | (BitNot, DefT (_, _, NumT _)) -> NumT.why reason (bogus_trust ())
-  | (BitNot, DefT (_, _, BigIntT _)) -> BigIntT.why reason (bogus_trust ())
-  | (Update, DefT (_, _, NumT _)) -> NumT.why reason (bogus_trust ())
-  | (Update, DefT (_, _, BigIntT _)) -> BigIntT.why reason (bogus_trust ())
+  | (Plus, _) -> NumT.why reason
+  | (BitNot, DefT (_, NumT _)) -> NumT.why reason
+  | (BitNot, DefT (_, BigIntT _)) -> BigIntT.why reason
+  | (Update, DefT (_, NumT _)) -> NumT.why reason
+  | (Update, DefT (_, BigIntT _)) -> BigIntT.why reason
   | (_, AnyT (_, src)) ->
     let src = any_mod_src_keep_placeholder Untyped src in
     AnyT.why src reason
@@ -2263,24 +2243,23 @@ let flow_arith cx ?trace reason l r kind =
     AnyT.why src reason
   (* empty <> _ *)
   (* _ <> empty *)
-  | (_, DefT (_, _, EmptyT), _)
-  | (_, _, DefT (_, _, EmptyT)) ->
-    EmptyT.why reason |> with_trust bogus_trust
+  | (_, DefT (_, EmptyT), _)
+  | (_, _, DefT (_, EmptyT)) ->
+    EmptyT.why reason
   (* num <> num *)
-  | (_, DefT (_, _, NumT _), DefT (_, _, NumT _)) -> NumT.why reason |> with_trust bogus_trust
-  | (RShift3, DefT (reason, _, BigIntT _), _) ->
+  | (_, DefT (_, NumT _), DefT (_, NumT _)) -> NumT.why reason
+  | (RShift3, DefT (reason, BigIntT _), _) ->
     add_output cx ?trace (Error_message.EBigIntRShift3 reason);
     AnyT.error reason
   (* bigint <> bigint *)
-  | (_, DefT (_, _, BigIntT _), DefT (_, _, BigIntT _)) ->
-    BigIntT.why reason |> with_trust bogus_trust
+  | (_, DefT (_, BigIntT _), DefT (_, BigIntT _)) -> BigIntT.why reason
   (* str + str *)
   (* str + num *)
   (* num + str *)
-  | (Plus, DefT (_, _, StrT _), DefT (_, _, StrT _))
-  | (Plus, DefT (_, _, StrT _), DefT (_, _, NumT _))
-  | (Plus, DefT (_, _, NumT _), DefT (_, _, StrT _)) ->
-    StrT.why reason |> with_trust bogus_trust
+  | (Plus, DefT (_, StrT _), DefT (_, StrT _))
+  | (Plus, DefT (_, StrT _), DefT (_, NumT _))
+  | (Plus, DefT (_, NumT _), DefT (_, StrT _)) ->
+    StrT.why reason
   | _ ->
     add_output
       cx
@@ -2306,7 +2285,7 @@ let flow_arith cx ?trace reason l r kind =
  *)
 let rec wraps_mapped_type cx = function
   | EvalT (_, TypeDestructorT (_, _, MappedType _), _) -> true
-  | DefT (_, _, TypeT (_, t)) -> wraps_mapped_type cx t
+  | DefT (_, TypeT (_, t)) -> wraps_mapped_type cx t
   | OpenT (_, id) ->
     let (_, constraints) = Context.find_constraints cx id in
     (match constraints with
@@ -2314,7 +2293,7 @@ let rec wraps_mapped_type cx = function
     | Resolved t ->
       wraps_mapped_type cx t
     | _ -> false)
-  | DefT (_, _, PolyT { t_out; _ }) -> wraps_mapped_type cx t_out
+  | DefT (_, PolyT { t_out; _ }) -> wraps_mapped_type cx t_out
   | TypeAppT { reason = _; use_op = _; type_; targs = _; use_desc = _ } ->
     wraps_mapped_type cx type_
   | _ -> false
@@ -2398,7 +2377,7 @@ let mk_tuple_type cx ?trace ~id ~mk_type_destructor reason elements =
         *)
         union_of_ts elem_t_reason ts
       in
-      DefT (reason, bogus_trust (), ArrT (TupleAT { elem_t; elements; arity; react_dro = None }))
+      DefT (reason, ArrT (TupleAT { elem_t; elements; arity; react_dro = None }))
     else
       AnyT.error reason
 

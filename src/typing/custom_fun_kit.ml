@@ -125,7 +125,7 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
               (OpenT tvar)
           )
       in
-      rec_flow_t ~use_op:unknown_use cx trace (DefT (reason_op, bogus_trust (), funt), tout)
+      rec_flow_t ~use_op:unknown_use cx trace (DefT (reason_op, funt), tout)
     | ReactCreateElement ->
       (match args with
       (* React.createElement(component) *)

@@ -116,7 +116,7 @@ let synthesis_instantiate_callee cx reason tparams tout targs =
 let rec get_t cx ~depth = function
   | AnnotT (_, t, _) when depth >= 0 -> get_t cx ~depth:(depth - 1) t
   | OpenT (r, id) when depth >= 0 ->
-    Flow_js_utils.merge_tvar ~no_lowers:(fun _ r -> DefT (r, bogus_trust (), EmptyT)) cx r id
+    Flow_js_utils.merge_tvar ~no_lowers:(fun _ r -> DefT (r, EmptyT)) cx r id
     |> get_t cx ~depth:(depth - 1)
   | t -> t
 
@@ -127,19 +127,17 @@ let get_t = get_t ~depth:3
 let rec instantiate_callee cx fn instantiation_hint =
   let { Hint.reason; targs; arg_list; return_hints; arg_index } = instantiation_hint in
   let rec handle_poly = function
-    | ExactT (_, DefT (_, _, ObjT { call_t = Some id; _ }))
-    | DefT (_, _, ObjT { call_t = Some id; _ })
-    | DefT (_, _, InstanceT { inst = { inst_call_t = Some id; _ }; _ }) ->
+    | ExactT (_, DefT (_, ObjT { call_t = Some id; _ }))
+    | DefT (_, ObjT { call_t = Some id; _ })
+    | DefT (_, InstanceT { inst = { inst_call_t = Some id; _ }; _ }) ->
       handle_poly (Context.find_call cx id)
-    | DefT (reason, _, ClassT instance) ->
+    | DefT (reason, ClassT instance) ->
       let statics = (reason, Tvar.mk_no_wrap cx reason) in
       Flow_js.flow cx (instance, GetStaticsT statics);
       handle_poly (get_t cx (OpenT statics))
     | DefT
-        ( _,
-          _,
-          PolyT { tparams_loc = _; tparams; t_out = ThisClassT (r, i, this, this_name); id = _ }
-        ) ->
+        (_, PolyT { tparams_loc = _; tparams; t_out = ThisClassT (r, i, this, this_name); id = _ })
+      ->
       let subst_map =
         tparams
         |> Nel.map (fun tparam -> (tparam.name, tparam.bound))
@@ -150,7 +148,7 @@ let rec instantiate_callee cx fn instantiation_hint =
         Flow_js_utils.fix_this_class cx r (r, Flow_js.subst cx subst_map i, this, this_name)
       in
       handle_poly (get_t cx t)
-    | DefT (_, _, PolyT { tparams_loc; tparams; t_out; id = _ }) as t ->
+    | DefT (_, PolyT { tparams_loc; tparams; t_out; id = _ }) as t ->
       let call_targs = Lazy.force targs in
       (match TypeUtil.all_explicit_targ_ts call_targs with
       | Some targ_ts -> synthesis_instantiate_callee cx reason tparams t_out targ_ts
@@ -224,8 +222,8 @@ let rec instantiate_callee cx fn instantiation_hint =
 
 and instantiate_component cx component instantiation_hint =
   match get_t cx component with
-  | DefT (_, _, PolyT { tparams_loc; tparams; t_out; id = _ })
-    when Context.jsx cx = Options.Jsx_react ->
+  | DefT (_, PolyT { tparams_loc; tparams; t_out; id = _ }) when Context.jsx cx = Options.Jsx_react
+    ->
     let {
       Hint.jsx_reason = reason;
       jsx_name = _;
@@ -290,7 +288,7 @@ and type_of_hint_decomposition cx op reason t =
         def_reason = reason;
       }
     in
-    DefT (reason, bogus_trust (), FunT (statics, func))
+    DefT (reason, FunT (statics, func))
   in
 
   let map_intersection t ~f =
@@ -310,12 +308,10 @@ and type_of_hint_decomposition cx op reason t =
     let mod_ctor_return instance_type = function
       | DefT
           ( reason,
-            trust,
             FunT (static, { this_t; params; rest_param; return_t = _; predicate; def_reason })
           ) ->
         DefT
           ( reason,
-            trust,
             FunT
               ( static,
                 { this_t; params; rest_param; return_t = instance_type; predicate; def_reason }
@@ -324,13 +320,12 @@ and type_of_hint_decomposition cx op reason t =
       | t -> get_t cx t
     in
     match get_t cx t with
-    | DefT (_, trust, PolyT { tparams_loc; tparams; t_out = instance_type; id = _ }) ->
+    | DefT (_, PolyT { tparams_loc; tparams; t_out = instance_type; id = _ }) ->
       map_intersection (get_constructor_method_type instance_type) ~f:(function
-          | DefT (_, trust, PolyT { tparams_loc; tparams = tparams2; t_out; id = _ }) ->
+          | DefT (_, PolyT { tparams_loc; tparams = tparams2; t_out; id = _ }) ->
             let t_out = mod_ctor_return instance_type t_out in
             DefT
               ( reason,
-                trust,
                 PolyT
                   {
                     tparams_loc;
@@ -341,7 +336,7 @@ and type_of_hint_decomposition cx op reason t =
               )
           | t_out ->
             let t_out = mod_ctor_return instance_type t_out in
-            DefT (reason, trust, PolyT { tparams_loc; tparams; t_out; id = Poly.generate_id () })
+            DefT (reason, PolyT { tparams_loc; tparams; t_out; id = Poly.generate_id () })
           )
     | t -> map_intersection (get_constructor_method_type t) ~f:(mod_ctor_return t)
   in
@@ -361,7 +356,7 @@ and type_of_hint_decomposition cx op reason t =
                   use_op = unknown_use;
                   reason;
                   from_annot = true;
-                  key_t = DefT (reason, bogus_trust (), NumT num);
+                  key_t = DefT (reason, NumT num);
                   tout;
                 }
             in
@@ -387,7 +382,6 @@ and type_of_hint_decomposition cx op reason t =
                 ~upper_unresolved:false
                 ( DefT
                     ( reason,
-                      bogus_trust (),
                       ArrT (ArrayAT { elem_t; tuple_view = Some ([], (0, 0)); react_dro = None })
                     ),
                   t
@@ -408,19 +402,15 @@ and type_of_hint_decomposition cx op reason t =
            method). *)
         let get_this_t t =
           Tvar.mk_where cx reason (fun t' ->
-              SpeculationFlow.resolved_lower_flow_t_unsafe
-                cx
-                reason
-                (t, DefT (reason, bogus_trust (), ClassT t'))
+              SpeculationFlow.resolved_lower_flow_t_unsafe cx reason (t, DefT (reason, ClassT t'))
           )
           |> get_t cx
         in
         let this_t =
           match get_t cx t with
-          | DefT (reason, trust, PolyT { tparams_loc; tparams; t_out; id = _ }) ->
+          | DefT (reason, PolyT { tparams_loc; tparams; t_out; id = _ }) ->
             DefT
               ( reason,
-                trust,
                 PolyT { tparams_loc; tparams; t_out = get_this_t t_out; id = Poly.generate_id () }
               )
           | t -> get_this_t t
@@ -486,7 +476,7 @@ and type_of_hint_decomposition cx op reason t =
           cx
           t
           reason
-          (Computed (DefT (reason, bogus_trust (), StrT AnyLiteral)))
+          (Computed (DefT (reason, StrT AnyLiteral)))
       | Decomp_MethodName name ->
         SpeculationFlow.get_method_type_unsafe
           cx
@@ -562,12 +552,10 @@ and type_of_hint_decomposition cx op reason t =
             let predicate_of_check (prop, literal_check) =
               let other_t =
                 match literal_check with
-                | SingletonBool b -> DefT (reason, bogus_trust (), SingletonBoolT b)
-                | SingletonNum n ->
-                  DefT (reason, bogus_trust (), SingletonNumT (n, string_of_float n))
-                | SingletonStr s -> DefT (reason, bogus_trust (), SingletonStrT (OrdinaryName s))
-                | SingletonBigInt n ->
-                  DefT (reason, bogus_trust (), SingletonBigIntT (Some n, Int64.to_string n))
+                | SingletonBool b -> DefT (reason, SingletonBoolT b)
+                | SingletonNum n -> DefT (reason, SingletonNumT (n, string_of_float n))
+                | SingletonStr s -> DefT (reason, SingletonStrT (OrdinaryName s))
+                | SingletonBigInt n -> DefT (reason, SingletonBigIntT (Some n, Int64.to_string n))
                 | Member reason -> Type_env.find_write cx Env_api.ExpressionLoc reason
               in
               LeftP (SentinelProp prop, other_t)

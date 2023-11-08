@@ -53,7 +53,6 @@ module Kit (Flow : Flow_common.S) : REACT = struct
   let component_class cx reason props =
     DefT
       ( reason,
-        bogus_trust (),
         ClassT
           (Flow.get_builtin_typeapp
              cx
@@ -87,11 +86,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
      * non-literal without a dictionary. *)
     (match literal with
     | Literal _ -> ()
-    | _ ->
-      rec_flow
-        cx
-        trace
-        (intrinsics, HasOwnPropT (use_op, reason, DefT (reason, bogus_trust (), StrT literal))));
+    | _ -> rec_flow cx trace (intrinsics, HasOwnPropT (use_op, reason, DefT (reason, StrT literal))));
 
     (* Create a type variable which will represent the specific intrinsic we
      * find in the intrinsics map. *)
@@ -182,9 +177,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     let name = OrdinaryName "defaultProps" in
     let reason_missing = replace_desc_reason RReactDefaultProps (reason_of_t component) in
     let reason_prop = replace_desc_reason (RProperty (Some name)) reason_op in
-    let lookup_kind =
-      NonstrictReturning (Some (DefT (reason_missing, bogus_trust (), VoidT), upper), None)
-    in
+    let lookup_kind = NonstrictReturning (Some (DefT (reason_missing, VoidT), upper), None) in
     let propref = mk_named_prop ~reason:reason_prop name in
     let action = LookupProp (unknown_use, OrdinaryField { type_ = upper; polarity = pole }) in
     (* Lookup the `defaultProps` property. *)
@@ -210,29 +203,29 @@ module Kit (Flow : Flow_common.S) : REACT = struct
    * return None. *)
   let get_defaults cx trace component ~reason_op =
     match drop_generic component with
-    | DefT (_, _, ClassT _)
-    | DefT (_, _, FunT _)
-    | DefT (_, _, ObjT _) ->
+    | DefT (_, ClassT _)
+    | DefT (_, FunT _)
+    | DefT (_, ObjT _) ->
       let tvar = Tvar.mk cx reason_op in
       lookup_defaults cx trace component ~reason_op tvar Polarity.Positive;
       Some tvar
-    | DefT (_, _, ReactAbstractComponentT _) -> None
+    | DefT (_, ReactAbstractComponentT _) -> None
     (* Everything else will not have default props we should diff out. *)
     | _ -> None
 
   let props_to_tout cx trace component ~use_op ~reason_op u tout =
     match drop_generic component with
     (* Class components or legacy components. *)
-    | DefT (_, _, ClassT _) ->
+    | DefT (_, ClassT _) ->
       let props = Tvar.mk cx reason_op in
       rec_flow_t ~use_op:unknown_use cx trace (props, tout);
       rec_flow cx trace (component, ReactPropsToOut (reason_op, props))
     (* Stateless functional components. *)
-    | DefT (_, _, FunT _)
-    | DefT (_, _, ObjT { call_t = Some _; _ }) ->
+    | DefT (_, FunT _)
+    | DefT (_, ObjT { call_t = Some _; _ }) ->
       rec_flow cx trace (component, ReactPropsToOut (reason_op, tout))
     (* Special case for intrinsic components. *)
-    | DefT (_, _, StrT lit) ->
+    | DefT (_, StrT lit) ->
       get_intrinsic
         cx
         trace
@@ -243,7 +236,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         (OrdinaryField { type_ = tout; polarity = Polarity.Positive })
     (* any and any specializations *)
     | AnyT (reason, src) -> rec_flow_t ~use_op:unknown_use cx trace (AnyT.why src reason, tout)
-    | DefT (reason, _, ReactAbstractComponentT { config; _ }) ->
+    | DefT (reason, ReactAbstractComponentT { config; _ }) ->
       rec_flow cx trace (config, ConvertEmptyPropsToMixedT (reason, tout))
     (* ...otherwise, error. *)
     | _ ->
@@ -271,7 +264,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
    * destructor annotations. Like object spread, $Diff, and $Rest. *)
   let get_config cx trace component ~use_op ~reason_op u pole tout =
     match drop_generic component with
-    | DefT (_, _, ReactAbstractComponentT { config; _ }) ->
+    | DefT (_, ReactAbstractComponentT { config; _ }) ->
       let use_op = Frame (ReactGetConfig { polarity = pole }, use_op) in
       begin
         match pole with
@@ -315,22 +308,22 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       let component = l in
       match drop_generic component with
       (* Class components or legacy components. *)
-      | DefT (_, _, ClassT _) ->
+      | DefT (_, ClassT _) ->
         (* The Props type parameter is invariant, but we only want to create a
          * constraint tin <: props. *)
         let props = Tvar.mk cx reason_op in
         rec_flow_t ~use_op:unknown_use cx trace (tin, props);
         rec_flow cx trace (component, ReactInToProps (reason_op, props))
       (* Stateless functional components. *)
-      | DefT (_, _, FunT _)
+      | DefT (_, FunT _)
       (* Stateless functional components, again. This time for callable `ObjT`s. *)
-      | DefT (_, _, ObjT { call_t = Some _; _ }) ->
+      | DefT (_, ObjT { call_t = Some _; _ }) ->
         rec_flow cx trace (component, ReactInToProps (reason_op, tin))
       (* Abstract components. *)
-      | DefT (reason, trust, ReactAbstractComponentT _) ->
-        rec_flow_t ~use_op:unknown_use cx trace (tin, MixedT.why reason trust)
+      | DefT (reason, ReactAbstractComponentT _) ->
+        rec_flow_t ~use_op:unknown_use cx trace (tin, MixedT.why reason)
       (* Intrinsic components. *)
-      | DefT (_, _, StrT lit) ->
+      | DefT (_, StrT lit) ->
         get_intrinsic `Props lit (OrdinaryField { type_ = tin; polarity = Polarity.Negative })
       | AnyT (reason, source) ->
         rec_flow_t ~use_op:unknown_use cx trace (tin, AnyT.why source reason)
@@ -368,7 +361,6 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         Some
           (DefT
              ( r,
-               bogus_trust (),
                ArrT
                  (ArrayAT
                     {
@@ -396,10 +388,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                    [
                      spread;
                      DefT
-                       ( r,
-                         bogus_trust (),
-                         ArrT (ArrayAT { elem_t = spread; tuple_view = None; react_dro = None })
-                       );
+                       (r, ArrT (ArrayAT { elem_t = spread; tuple_view = None; react_dro = None }));
                    ];
                use_desc = false;
              }
@@ -423,7 +412,6 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                t;
                DefT
                  ( r,
-                   bogus_trust (),
                    ArrT
                      (ArrayAT
                         { elem_t = union_of_ts r [spread; t]; tuple_view = None; react_dro = None }
@@ -446,7 +434,6 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         Some
           (DefT
              ( r,
-               bogus_trust (),
                ArrT
                  (ArrayAT
                     {
@@ -479,7 +466,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
        * provide the entire props type. *)
       let (props, defaults) =
         match drop_generic l with
-        | DefT (_, _, ReactAbstractComponentT { config; _ }) ->
+        | DefT (_, ReactAbstractComponentT { config; _ }) ->
           (* This is a bit of a hack. We will be passing these props and
            * default props to react_config in flow_js.ml to calculate the
            * config and check the passed config against it. Since our config is
@@ -675,12 +662,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
               ( {
                   super_t =
                     Some
-                      (DefT
-                        ( super_r,
-                          super_trust,
-                          ObjT { props_tmap; flags; proto_t; call_t; reachable_targs }
-                        )
-                        );
+                      (DefT (super_r, ObjT { props_tmap; flags; proto_t; call_t; reachable_targs }));
                   _;
                 } as opaque_t
               )
@@ -694,11 +676,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                     opaque_t with
                     super_t =
                       Some
-                        (DefT
-                           ( super_r,
-                             super_trust,
-                             ObjT { props_tmap; flags; proto_t; call_t; reachable_targs }
-                           )
+                        (DefT (super_r, ObjT { props_tmap; flags; proto_t; call_t; reachable_targs })
                         );
                   }
                 )
@@ -739,26 +717,18 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       let component = l in
       match drop_generic component with
       (* Class components or legacy components. *)
-      | DefT (_, _, ClassT component) -> rec_flow_t ~use_op:unknown_use cx trace (component, tout)
+      | DefT (_, ClassT component) -> rec_flow_t ~use_op:unknown_use cx trace (component, tout)
       (* Stateless functional components. *)
-      | DefT (r, trust, FunT _) ->
-        rec_flow_t
-          ~use_op:unknown_use
-          cx
-          trace
-          (VoidT.make (replace_desc_reason RVoid r) trust, tout)
+      | DefT (r, FunT _) ->
+        rec_flow_t ~use_op:unknown_use cx trace (VoidT.make (replace_desc_reason RVoid r), tout)
       (* Stateless functional components, again. This time for callable `ObjT`s. *)
-      | DefT (r, trust, ObjT { call_t = Some _; _ }) ->
-        rec_flow_t
-          ~use_op:unknown_use
-          cx
-          trace
-          (VoidT.make (replace_desc_reason RVoid r) trust, tout)
+      | DefT (r, ObjT { call_t = Some _; _ }) ->
+        rec_flow_t ~use_op:unknown_use cx trace (VoidT.make (replace_desc_reason RVoid r), tout)
       (* Abstract components. *)
-      | DefT (_, _, ReactAbstractComponentT { instance; _ }) ->
+      | DefT (_, ReactAbstractComponentT { instance; _ }) ->
         rec_flow_t ~use_op:unknown_use cx trace (instance, tout)
       (* Intrinsic components. *)
-      | DefT (_, _, StrT lit) ->
+      | DefT (_, StrT lit) ->
         get_intrinsic `Instance lit (OrdinaryField { type_ = tout; polarity = Polarity.Positive })
       | AnyT (reason, source) ->
         rec_flow_t ~use_op:unknown_use cx trace (AnyT.why source reason, tout)

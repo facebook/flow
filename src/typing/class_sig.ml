@@ -169,7 +169,7 @@ module Make
 
   let add_name_field x =
     let r = update_desc_reason (fun desc -> RNameProperty desc) x.instance.reason in
-    let t = Type.StrT.why r |> Type.with_trust Trust.bogus_trust in
+    let t = Type.StrT.why r in
     add_field' ~static:true "name" (None, Polarity.Neutral, Annot t) x
 
   let add_proto_field name loc polarity field x =
@@ -496,7 +496,7 @@ module Make
     in
     Type.(
       match static with
-      | DefT (_, _, ObjT o) -> (inited_fields, o)
+      | DefT (_, ObjT o) -> (inited_fields, o)
       | _ -> failwith "statics must be an ObjT"
     )
 
@@ -691,8 +691,8 @@ module Make
     let (initialized_static_fields, static_objtype) = statictype cx static_proto x in
     let inst = insttype cx ~initialized_static_fields x in
     let open Type in
-    let static = DefT (sreason, bogus_trust (), ObjT static_objtype) in
-    DefT (reason, bogus_trust (), InstanceT { static; super; implements; inst })
+    let static = DefT (sreason, ObjT static_objtype) in
+    DefT (reason, InstanceT { static; super; implements; inst })
 
   let check_methods cx def_reason x =
     let open Type in
@@ -933,7 +933,7 @@ module Make
     let is_bound_to_empty { super; _ } =
       Type.(
         match super with
-        | Class { this_t = DefT (_, _, EmptyT); _ } -> true
+        | Class { this_t = DefT (_, EmptyT); _ } -> true
         | _ -> false
       )
 

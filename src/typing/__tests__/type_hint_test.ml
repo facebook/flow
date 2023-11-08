@@ -225,7 +225,6 @@ let fun_t ~params ~return_t =
   let open Type in
   DefT
     ( dummy_reason,
-      bogus_trust (),
       FunT
         ( Unsoundness.dummy_static_any dummy_reason,
           {
@@ -309,7 +308,6 @@ let mk_private_method_eval_hint_test
   let base =
     DefT
       ( dummy_reason,
-        bogus_trust (),
         InstanceT
           {
             static = ObjProtoT dummy_reason;
@@ -337,7 +335,7 @@ let mk_private_method_eval_hint_test
   in
   let base =
     if static then
-      DefT (dummy_reason, bogus_trust (), ClassT base)
+      DefT (dummy_reason, ClassT base)
     else
       base
   in
@@ -520,7 +518,7 @@ let eval_hint_tests =
               Method
                 {
                   key_loc = Some ALoc.none;
-                  type_ = fun_t ~params:[] ~return_t:(VoidT.make dummy_reason (bogus_trust ()));
+                  type_ = fun_t ~params:[] ~return_t:(VoidT.make dummy_reason);
                 }
             );
     "instance_private_method_call_from_static_method"
@@ -532,7 +530,7 @@ let eval_hint_tests =
               Method
                 {
                   key_loc = Some ALoc.none;
-                  type_ = fun_t ~params:[] ~return_t:(VoidT.make dummy_reason (bogus_trust ()));
+                  type_ = fun_t ~params:[] ~return_t:(VoidT.make dummy_reason);
                 }
             );
     "instance_private_method_call_from_field"
@@ -545,7 +543,7 @@ let eval_hint_tests =
                 {
                   preferred_def_locs = None;
                   key_loc = Some ALoc.none;
-                  type_ = fun_t ~params:[] ~return_t:(VoidT.make dummy_reason (bogus_trust ()));
+                  type_ = fun_t ~params:[] ~return_t:(VoidT.make dummy_reason);
                   polarity = Polarity.Neutral;
                 }
             );
@@ -559,7 +557,7 @@ let eval_hint_tests =
                 {
                   preferred_def_locs = None;
                   key_loc = Some ALoc.none;
-                  type_ = fun_t ~params:[] ~return_t:(VoidT.make dummy_reason (bogus_trust ()));
+                  type_ = fun_t ~params:[] ~return_t:(VoidT.make dummy_reason);
                   polarity = Polarity.Neutral;
                 }
             );

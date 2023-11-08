@@ -777,7 +777,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
         match l with
         | DefT
             ( _,
-              _,
               ( StrT (Literal _)
               | NumT (Literal _)
               | BoolT (Some _)
@@ -789,7 +788,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
         (* Types that are definitely incompatible with enums, after the above case. *)
         | DefT
             ( _,
-              _,
               ( NumT _ | BigIntT _ | StrT _ | MixedT _ | SymbolT | FunT _ | ObjT _ | ArrT _
               | ClassT _ | InstanceT _ | CharSetT _ | TypeT _ | PolyT _ | ReactAbstractComponentT _
               | EnumT _ | EnumObjectT _ )
@@ -807,8 +805,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
                }
             );
           true
-        | DefT (_, _, ObjT _)
-        | ExactT (_, DefT (_, _, ObjT _)) ->
+        | DefT (_, ObjT _)
+        | ExactT (_, DefT (_, ObjT _)) ->
           shortcut_disjoint_union cx trace reason_op use_op l rep
         | _ -> false
       end
@@ -837,7 +835,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | UnionRep.No ->
       (* membership check failed *)
       let r = UnionRep.specialized_reason ~reason_of_t:TypeUtil.reason_of_t reason_op rep in
-      rec_flow cx trace (l, UseT (use_op, DefT (r, bogus_trust (), EmptyT)));
+      rec_flow cx trace (l, UseT (use_op, DefT (r, EmptyT)));
       true
     (* Our work here is done, so no need to continue. *)
     | UnionRep.Conditional t ->

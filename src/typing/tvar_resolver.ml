@@ -75,7 +75,7 @@ let default_no_lowers r =
     | RIdentifier (OrdinaryName x) -> RCustom (spf "`%s` (resolved to type `empty`)" x)
     | _ -> REmpty
   in
-  EmptyT.make (replace_desc_reason desc r) (bogus_trust ())
+  EmptyT.make (replace_desc_reason desc r)
 
 class resolver ~no_lowers =
   object (this)

@@ -43,9 +43,7 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
 
   let array_element cx acc i loc =
     let { init; default; _ } = acc in
-    let key =
-      DefT (mk_reason RNumber loc, bogus_trust (), NumT (Literal (None, (float i, string_of_int i))))
-    in
+    let key = DefT (mk_reason RNumber loc, NumT (Literal (None, (float i, string_of_int i)))) in
     let reason = mk_reason (RCustom (Utils_js.spf "element %d" i)) loc in
     let init =
       Base.Option.map init ~f:(fun init ->

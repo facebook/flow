@@ -113,7 +113,7 @@ and collect_of_type ?log_unresolved cx acc = function
      types. In theory, ignoring them *might* lead to bugs, but we've not seen
      examples of such bugs yet. Leaving further investigation of this point as
      future work. *)
-  | DefT (_, _, ObjT { props_tmap; flags; call_t; _ }) ->
+  | DefT (_, ObjT { props_tmap; flags; call_t; _ }) ->
     let props_tmap = Context.find_props cx props_tmap in
     let acc = NameUtils.Map.fold (collect_of_property ?log_unresolved cx) props_tmap acc in
     let ts =
@@ -127,7 +127,7 @@ and collect_of_type ?log_unresolved cx acc = function
       | Some id -> Context.find_call cx id :: ts
     in
     collect_of_types ?log_unresolved cx acc ts
-  | DefT (_, _, FunT (_, { params; return_t; predicate; _ })) ->
+  | DefT (_, FunT (_, { params; return_t; predicate; _ })) ->
     let ts = List.fold_left (fun acc (_, t) -> t :: acc) [return_t] params in
     let ts =
       match predicate with
@@ -135,15 +135,14 @@ and collect_of_type ?log_unresolved cx acc = function
       | _ -> ts
     in
     collect_of_types ?log_unresolved cx acc ts
-  | DefT (_, _, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = _ })) ->
+  | DefT (_, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = _ })) ->
     collect_of_type ?log_unresolved cx acc elem_t
-  | DefT (_, _, ArrT (ArrayAT { elem_t; tuple_view = Some (elements, _); react_dro = _ }))
-  | DefT (_, _, ArrT (TupleAT { elem_t; elements; arity = _; react_dro = _ })) ->
+  | DefT (_, ArrT (ArrayAT { elem_t; tuple_view = Some (elements, _); react_dro = _ }))
+  | DefT (_, ArrT (TupleAT { elem_t; elements; arity = _; react_dro = _ })) ->
     collect_of_types ?log_unresolved cx acc (elem_t :: TypeUtil.tuple_ts_of_elements elements)
-  | DefT (_, _, ArrT (ROArrayAT (elemt, _))) -> collect_of_type ?log_unresolved cx acc elemt
+  | DefT (_, ArrT (ROArrayAT (elemt, _))) -> collect_of_type ?log_unresolved cx acc elemt
   | DefT
       ( _,
-        _,
         InstanceT
           {
             static;
@@ -171,7 +170,7 @@ and collect_of_type ?log_unresolved cx acc = function
       | Some id -> Context.find_call cx id :: ts
     in
     collect_of_types ?log_unresolved cx acc ts
-  | DefT (_, _, PolyT { t_out = t; _ }) -> collect_of_type ?log_unresolved cx acc t
+  | DefT (_, PolyT { t_out = t; _ }) -> collect_of_type ?log_unresolved cx acc t
   (* TODO: The following kinds of types are not walked out of laziness. It's
      not immediately clear what we'd gain (or lose) by walking them. *)
   | InternalT (ChoiceKitT (_, _))
@@ -192,41 +191,40 @@ and collect_of_type ?log_unresolved cx acc = function
   | IntersectionT (_, rep) ->
     let ts = InterRep.members rep in
     collect_of_types ?log_unresolved cx acc ts
-  | DefT (_, _, ReactAbstractComponentT { config; instance; renders; component_kind = _ }) ->
+  | DefT (_, ReactAbstractComponentT { config; instance; renders; component_kind = _ }) ->
     collect_of_types ?log_unresolved cx acc [config; instance; renders]
-  | DefT (_, _, RendersT (StructuralRenders { renders_variant = _; renders_structural_type = t }))
-    ->
+  | DefT (_, RendersT (StructuralRenders { renders_variant = _; renders_structural_type = t })) ->
     collect_of_type ?log_unresolved cx acc t
-  | DefT (_, _, RendersT (NominalRenders { renders_id = _; renders_name = _; renders_super })) ->
+  | DefT (_, RendersT (NominalRenders { renders_id = _; renders_name = _; renders_super })) ->
     collect_of_type ?log_unresolved cx acc renders_super
   | OpaqueT (_, { underlying_t; super_t; _ }) ->
     let acc = Base.Option.fold underlying_t ~init:acc ~f:(collect_of_type ?log_unresolved cx) in
     let acc = Base.Option.fold super_t ~init:acc ~f:(collect_of_type ?log_unresolved cx) in
     acc
   | ExactT (_, t)
-  | DefT (_, _, TypeT (_, t))
-  | DefT (_, _, ClassT t)
+  | DefT (_, TypeT (_, t))
+  | DefT (_, ClassT t)
   | ThisClassT (_, t, _, _) ->
     collect_of_type ?log_unresolved cx acc t
   | KeysT (_, t) -> collect_of_type ?log_unresolved cx acc t
   | MatchingPropT (_, _, t) -> collect_of_type ?log_unresolved cx acc t
   | GenericT { bound; _ } -> collect_of_type ?log_unresolved cx acc bound
-  | DefT (_, _, NumT _)
-  | DefT (_, _, StrT _)
-  | DefT (_, _, BoolT _)
-  | DefT (_, _, BigIntT _)
-  | DefT (_, _, SymbolT)
-  | DefT (_, _, VoidT)
-  | DefT (_, _, NullT)
-  | DefT (_, _, EmptyT)
-  | DefT (_, _, MixedT _)
-  | DefT (_, _, SingletonBoolT _)
-  | DefT (_, _, SingletonNumT _)
-  | DefT (_, _, SingletonStrT _)
-  | DefT (_, _, SingletonBigIntT _)
-  | DefT (_, _, CharSetT _)
-  | DefT (_, _, EnumT _)
-  | DefT (_, _, EnumObjectT _)
+  | DefT (_, NumT _)
+  | DefT (_, StrT _)
+  | DefT (_, BoolT _)
+  | DefT (_, BigIntT _)
+  | DefT (_, SymbolT)
+  | DefT (_, VoidT)
+  | DefT (_, NullT)
+  | DefT (_, EmptyT)
+  | DefT (_, MixedT _)
+  | DefT (_, SingletonBoolT _)
+  | DefT (_, SingletonNumT _)
+  | DefT (_, SingletonStrT _)
+  | DefT (_, SingletonBigIntT _)
+  | DefT (_, CharSetT _)
+  | DefT (_, EnumT _)
+  | DefT (_, EnumObjectT _)
   | AnyT _ ->
     acc
   | FunProtoBindT _

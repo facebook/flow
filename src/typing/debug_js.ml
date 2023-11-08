@@ -139,7 +139,7 @@ let rec dump_t_ (depth, tvars) cx t =
   else
     match t with
     | OpenT (_, id) -> p ~extra:(tvar id) t
-    | DefT (_, _, NumT lit) ->
+    | DefT (_, NumT lit) ->
       p
         ~extra:
           (match lit with
@@ -147,7 +147,7 @@ let rec dump_t_ (depth, tvars) cx t =
           | Truthy -> "truthy"
           | AnyLiteral -> "")
         t
-    | DefT (_, _, StrT c) ->
+    | DefT (_, StrT c) ->
       p
         ~extra:
           (match c with
@@ -155,14 +155,14 @@ let rec dump_t_ (depth, tvars) cx t =
           | Truthy -> "truthy"
           | AnyLiteral -> "")
         t
-    | DefT (_, _, BoolT c) ->
+    | DefT (_, BoolT c) ->
       p
         ~extra:
           (match c with
           | Some b -> spf "%B" b
           | None -> "")
         t
-    | DefT (_, _, BigIntT lit) ->
+    | DefT (_, BigIntT lit) ->
       p
         ~extra:
           (match lit with
@@ -170,7 +170,7 @@ let rec dump_t_ (depth, tvars) cx t =
           | Truthy -> "truthy"
           | AnyLiteral -> "")
         t
-    | DefT (_, _, FunT (_, { params; rest_param; return_t; this_t; predicate; _ })) ->
+    | DefT (_, FunT (_, { params; rest_param; return_t; this_t; predicate; _ })) ->
       p
         ~extra:
           (spf
@@ -187,11 +187,11 @@ let rec dump_t_ (depth, tvars) cx t =
           )
         t
     | AnyT (_, src) -> p ~extra:(string_of_any_source src) t
-    | DefT (_, _, MixedT flavor) -> p ~extra:(string_of_mixed_flavor flavor) t
-    | DefT (_, _, EmptyT)
-    | DefT (_, _, SymbolT)
-    | DefT (_, _, NullT)
-    | DefT (_, _, VoidT) ->
+    | DefT (_, MixedT flavor) -> p ~extra:(string_of_mixed_flavor flavor) t
+    | DefT (_, EmptyT)
+    | DefT (_, SymbolT)
+    | DefT (_, NullT)
+    | DefT (_, VoidT) ->
       p t
     | NullProtoT _
     | ObjProtoT _
@@ -200,7 +200,7 @@ let rec dump_t_ (depth, tvars) cx t =
     | FunProtoBindT _
     | FunProtoCallT _ ->
       p t
-    | DefT (_, _, PolyT { tparams = tps; t_out = c; id; _ }) ->
+    | DefT (_, PolyT { tparams = tps; t_out = c; id; _ }) ->
       p
         ~extra:
           (spf
@@ -219,7 +219,7 @@ let rec dump_t_ (depth, tvars) cx t =
     | ThisClassT (_, inst, _, _) -> p ~extra:(kid inst) t
     | GenericT { name; bound; _ } ->
       p ~extra:(spf "%s: %s" (Subst_name.string_of_subst_name name) (kid bound)) t
-    | DefT (_, _, ObjT { props_tmap; flags; _ }) ->
+    | DefT (_, ObjT { props_tmap; flags; _ }) ->
       let obj_kind =
         match flags.obj_kind with
         | Exact -> "Exact"
@@ -228,9 +228,9 @@ let rec dump_t_ (depth, tvars) cx t =
           spf "Indexed {[%s]: %s}" (p ~reason:false key) (p ~reason:false value)
       in
       p t ~extra:(spf "%s, %s" (Properties.string_of_id props_tmap) obj_kind)
-    | DefT (_, _, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = _ })) ->
+    | DefT (_, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = _ })) ->
       p ~extra:(spf "Array %s" (kid elem_t)) t
-    | DefT (_, _, ArrT (ArrayAT { elem_t; tuple_view = Some (elements, _arity); react_dro = _ })) ->
+    | DefT (_, ArrT (ArrayAT { elem_t; tuple_view = Some (elements, _arity); react_dro = _ })) ->
       p
         ~extra:
           (spf
@@ -245,7 +245,7 @@ let rec dump_t_ (depth, tvars) cx t =
              )
           )
         t
-    | DefT (_, _, ArrT (TupleAT { elements; _ })) ->
+    | DefT (_, ArrT (TupleAT { elements; _ })) ->
       p
         ~extra:
           (spf
@@ -253,14 +253,12 @@ let rec dump_t_ (depth, tvars) cx t =
              (String.concat ", " (Base.List.map ~f:(fun (TupleElement { t; _ }) -> kid t) elements))
           )
         t
-    | DefT (_, _, ArrT (ROArrayAT (elemt, _))) -> p ~extra:(spf "ReadOnlyArray %s" (kid elemt)) t
-    | DefT (_, _, CharSetT chars) -> p ~extra:(spf "<%S>" (String_utils.CharSet.to_string chars)) t
-    | DefT (_, _, ClassT inst) -> p ~extra:(kid inst) t
+    | DefT (_, ArrT (ROArrayAT (elemt, _))) -> p ~extra:(spf "ReadOnlyArray %s" (kid elemt)) t
+    | DefT (_, CharSetT chars) -> p ~extra:(spf "<%S>" (String_utils.CharSet.to_string chars)) t
+    | DefT (_, ClassT inst) -> p ~extra:(kid inst) t
     | DefT
-        ( _,
-          _,
-          InstanceT { static = _; super = _; implements = _; inst = { class_id; type_args; _ } }
-        ) ->
+        (_, InstanceT { static = _; super = _; implements = _; inst = { class_id; type_args; _ } })
+      ->
       p
         ~extra:
           (spf
@@ -275,11 +273,10 @@ let rec dump_t_ (depth, tvars) cx t =
              (ALoc.debug_to_string (class_id :> ALoc.t))
           )
         t
-    | DefT (_, _, TypeT (kind, arg)) ->
+    | DefT (_, TypeT (kind, arg)) ->
       p ~extra:(spf "%s, %s" (string_of_type_t_kind kind) (kid arg)) t
-    | DefT (_, _, EnumT { enum_id; members = _; representation_t = _; has_unknown_members = _ })
-    | DefT
-        (_, _, EnumObjectT { enum_id; members = _; representation_t = _; has_unknown_members = _ })
+    | DefT (_, EnumT { enum_id; members = _; representation_t = _; has_unknown_members = _ })
+    | DefT (_, EnumObjectT { enum_id; members = _; representation_t = _; has_unknown_members = _ })
       ->
       p ~extra:(spf "enum #%s" (ALoc.debug_to_string (enum_id :> ALoc.t))) t
     | AnnotT (_, arg, use_desc) -> p ~extra:(spf "use_desc=%b, %s" use_desc (kid arg)) t
@@ -331,14 +328,14 @@ let rec dump_t_ (depth, tvars) cx t =
              (UnionRep.string_of_specialization rep)
           )
         t
-    | DefT (_, _, ReactAbstractComponentT _) -> p t
-    | DefT (_, _, RendersT _) -> p t
+    | DefT (_, ReactAbstractComponentT _) -> p t
+    | DefT (_, RendersT _) -> p t
     | MatchingPropT (_, _, arg) -> p ~extra:(kid arg) t
     | KeysT (_, arg) -> p ~extra:(kid arg) t
-    | DefT (_, _, SingletonStrT s) -> p ~extra:(spf "%S" (display_string_of_name s)) t
-    | DefT (_, _, SingletonNumT (_, s)) -> p ~extra:s t
-    | DefT (_, _, SingletonBoolT b) -> p ~extra:(spf "%B" b) t
-    | DefT (_, _, SingletonBigIntT (_, s)) -> p ~extra:s t
+    | DefT (_, SingletonStrT s) -> p ~extra:(spf "%S" (display_string_of_name s)) t
+    | DefT (_, SingletonNumT (_, s)) -> p ~extra:s t
+    | DefT (_, SingletonBoolT b) -> p ~extra:(spf "%B" b) t
+    | DefT (_, SingletonBigIntT (_, s)) -> p ~extra:s t
     | ModuleT { module_reason = _; module_export_types = { exports_tmap; _ }; module_is_strict = _ }
       ->
       p
@@ -653,7 +650,7 @@ and dump_use_t_ (depth, tvars) cx t =
     match t with
     | UseT (use_op, OpenT (r, id)) ->
       spf "UseT (%s, OpenT (%S, %d))" (string_of_use_op use_op) (dump_reason cx r) id
-    | UseT (use_op, (DefT (_, _, _) as t)) -> spf "UseT (%s, %s)" (string_of_use_op use_op) (kid t)
+    | UseT (use_op, (DefT (_, _) as t)) -> spf "UseT (%s, %s)" (string_of_use_op use_op) (kid t)
     | UseT (use_op, t) -> spf "UseT (%s, %s)" (string_of_use_op use_op) (kid t)
     | ArithT { use_op; rhs_t; result_t; _ } ->
       p ~extra:(spf "%s, %s, %s" (string_of_use_op use_op) (kid rhs_t) (kid result_t)) t
@@ -906,8 +903,8 @@ and dump_use_t_ (depth, tvars) cx t =
         t
     | ConcretizeTypeAppsT _ -> p t
     | TypeCastT (_, arg) -> p ~reason:false ~extra:(kid arg) t
-    | EnumCastT { use_op = _; enum = (reason, trust, enum) } ->
-      p ~reason:false ~extra:(kid (DefT (reason, trust, EnumT enum))) t
+    | EnumCastT { use_op = _; enum = (reason, enum) } ->
+      p ~reason:false ~extra:(kid (DefT (reason, EnumT enum))) t
     | EnumExhaustiveCheckT { check; _ } ->
       let check_str =
         match check with

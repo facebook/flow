@@ -50,7 +50,7 @@ let tparam_finder =
         else
           super#type_ cx pole tparam_names t
       (* We remove any tparam names from the map when entering a PolyT to avoid naming conflicts. *)
-      | DefT (_, _, PolyT { tparams; _ }) as t ->
+      | DefT (_, PolyT { tparams; _ }) as t ->
         let tparam_names' =
           Nel.fold_left (fun names x -> Subst_name.Set.remove x.name names) tparam_names tparams
         in
@@ -156,7 +156,7 @@ module Make
     in
     let instance =
       match instance with
-      | None -> Type.(MixedT.make instance_reason (bogus_trust ()))
+      | None -> Type.MixedT.make instance_reason
       | Some (key_loc, instance) ->
         C.read_react cx key_loc;
         let () =

@@ -103,7 +103,7 @@ class type_parameter_mapper =
         | Some ((_, t), _) -> t
         | None ->
           let reason = mk_reason (RCustom "<<anonymous class>>") body_loc in
-          Type.DefT (reason, Trust.bogus_trust (), Type.MixedT Type.Mixed_everything)
+          Type.DefT (reason, Type.MixedT Type.Mixed_everything)
       in
       let this_tparam =
         {

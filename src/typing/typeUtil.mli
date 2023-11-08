@@ -67,8 +67,7 @@ val optional : ?annot_loc:ALoc.t -> ?use_desc:bool -> Type.t -> Type.t
 
 val maybe : Type.t -> Type.t
 
-val make_exact_object :
-  reason_obj:reason -> Type.trust_rep -> Type.objtype -> reason_op:reason -> Type.t
+val make_exact_object : reason_obj:reason -> Type.objtype -> reason_op:reason -> Type.t
 
 val class_type : ?structural:bool -> ?annot_loc:ALoc.t -> Type.t -> Type.t
 
@@ -115,7 +114,7 @@ val all_explicit_targs : Type.targ Base.List.t option -> Type.targ list option
 
 val all_explicit_targ_ts : Type.targ Base.List.t option -> Type.t list option
 
-val tuple_length : reason -> Trust.trust_rep -> int * int -> Type.t
+val tuple_length : reason -> int * int -> Type.t
 
 val tuple_ts_of_elements : Type.tuple_element list -> Type.t list
 

@@ -504,7 +504,7 @@ let upper_bound_t_of_t ~cx =
     let seen = ISet.empty in
     let reason = TypeUtil.reason_of_t lb_type in
     match upper_bounds_of_t seen lb_type with
-    | [] -> Type.MixedT.make reason (Trust.bogus_trust ())
+    | [] -> Type.MixedT.make reason
     | [upper_bound] -> upper_bound
     | ub1 :: ub2 :: ubs -> Type.IntersectionT (reason, Type.InterRep.make ub1 ub2 ubs)
 

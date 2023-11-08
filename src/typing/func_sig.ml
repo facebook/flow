@@ -37,11 +37,10 @@ class func_scope_visitor
       if not has_return_annot then (
         ( if no_return && has_throw then
           let reason = mk_reason REmpty body_loc in
-          let t = EmptyT.make reason (Trust.literal_trust ()) in
+          let t = EmptyT.make reason in
           Flow.flow cx (t, UseT (unknown_use, return_t))
         );
-        if no_yield then
-          Flow.flow_t cx (VoidT.make (mk_reason RVoid body_loc) (Trust.literal_trust ()), yield_t)
+        if no_yield then Flow.flow_t cx (VoidT.make (mk_reason RVoid body_loc), yield_t)
       )
 
     method! switch ({ Ast.Statement.Switch.exhaustive_out = (loc, t); _ } as switch) =
@@ -201,7 +200,7 @@ struct
       tparams = None;
       fparams = F.empty (fun _ _ _ -> None);
       body = None;
-      return_t = Annotated (VoidT.why reason |> with_trust bogus_trust);
+      return_t = Annotated (VoidT.why reason);
       ret_annot_loc = Reason.loc_of_reason reason;
       statics = None;
     }
@@ -249,7 +248,7 @@ struct
       | Some t -> t
       | None -> Obj_type.mk_with_proto cx reason (Type.FunProtoT reason) ~obj_kind:Type.Inexact
     in
-    let t = DefT (reason, Trust.literal_trust (), FunT (statics_t, funtype)) in
+    let t = DefT (reason, FunT (statics_t, funtype)) in
     if not arrow then Base.Option.iter func_loc ~f:(Type_env.bind_function_this cx this_type);
     poly_type_of_tparams (Type.Poly.generate_id ()) tparams t
 
@@ -270,7 +269,6 @@ struct
     let t =
       DefT
         ( reason,
-          bogus_trust (),
           FunT
             ( dummy_static reason,
               mk_boundfunctiontype
@@ -334,8 +332,7 @@ struct
         let next_t =
           match return_t with
           | Annotated _ -> Tvar.mk cx (replace_desc_reason (RCustom "next") reason)
-          | Inferred _ ->
-            VoidT.make (replace_desc_reason RUnannotatedNext reason) |> with_trust bogus_trust
+          | Inferred _ -> VoidT.make (replace_desc_reason RUnannotatedNext reason)
         in
         let return_targ = Tvar.mk cx reason in
         let (iterable, generator) =
@@ -380,13 +377,8 @@ struct
         in
         (yield_t, next_t)
       | _ ->
-        ( DefT
-            ( replace_desc_reason (RCustom "no yield") reason,
-              bogus_trust (),
-              MixedT Mixed_everything
-            ),
-          DefT
-            (replace_desc_reason (RCustom "no next") reason, bogus_trust (), MixedT Mixed_everything)
+        ( DefT (replace_desc_reason (RCustom "no yield") reason, MixedT Mixed_everything),
+          DefT (replace_desc_reason (RCustom "no next") reason, MixedT Mixed_everything)
         )
     in
 
@@ -430,7 +422,7 @@ struct
           match kind with
           | Ordinary
           | Ctor ->
-            let t = VoidT.at loc |> with_trust bogus_trust in
+            let t = VoidT.at loc in
             let use_op =
               Op
                 (FunImplicitReturn
@@ -440,7 +432,7 @@ struct
             (use_op, t, None)
           | Async ->
             let reason = mk_annot_reason (RType (OrdinaryName "Promise")) loc in
-            let void_t = VoidT.at loc |> with_trust bogus_trust in
+            let void_t = VoidT.at loc in
             let t = Flow.get_builtin_typeapp cx reason (OrdinaryName "Promise") [void_t] in
             let use_op =
               Op
@@ -452,7 +444,7 @@ struct
             (use_op, t, None)
           | Generator _ ->
             let reason = mk_annot_reason (RType (OrdinaryName "Generator")) loc in
-            let void_t = VoidT.at loc |> with_trust bogus_trust in
+            let void_t = VoidT.at loc in
             let t =
               Flow.get_builtin_typeapp
                 cx
@@ -470,7 +462,7 @@ struct
             (use_op, t, None)
           | AsyncGenerator _ ->
             let reason = mk_annot_reason (RType (OrdinaryName "AsyncGenerator")) loc in
-            let void_t = VoidT.at loc |> with_trust bogus_trust in
+            let void_t = VoidT.at loc in
             let t =
               Flow.get_builtin_typeapp
                 cx
@@ -492,7 +484,7 @@ struct
             let use_op = Op (InitField { op = reason_fn; body }) in
             (use_op, t, Some ast)
           | Predicate _ ->
-            let t = VoidT.at loc |> with_trust bogus_trust in
+            let t = VoidT.at loc in
             let use_op =
               Op
                 (FunImplicitReturn
@@ -513,8 +505,7 @@ struct
               ( Tvar.mk_where
                   cx
                   (replace_desc_reason (RCustom "maybe_exhaustively_checked") reason_fn)
-                  (fun t ->
-                    if undeclared then Flow.flow_t cx (VoidT.at body_loc (bogus_trust ()), t)
+                  (fun t -> if undeclared then Flow.flow_t cx (VoidT.at body_loc, t)
                 ),
                 exhaustive,
                 ImplicitVoidReturnT

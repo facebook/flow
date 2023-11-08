@@ -28,14 +28,11 @@ let union_flatten =
       )
     | AnnotT (_, t, _) -> flatten cx seen t
     | UnionT (_, rep) -> union_flatten cx seen @@ UnionRep.members rep
-    | MaybeT (r, t) ->
-      DefT (r, Trust.bogus_trust (), NullT)
-      :: DefT (r, Trust.bogus_trust (), VoidT)
-      :: flatten cx seen t
+    | MaybeT (r, t) -> DefT (r, NullT) :: DefT (r, VoidT) :: flatten cx seen t
     | OptionalT { reason = r; type_ = t; use_desc } ->
-      let void_t = VoidT.why_with_use_desc ~use_desc r |> with_trust Trust.bogus_trust in
+      let void_t = VoidT.why_with_use_desc ~use_desc r in
       void_t :: flatten cx seen t
-    | DefT (_, _, EmptyT) -> []
+    | DefT (_, EmptyT) -> []
     | _ -> [t]
   in
   (fun cx ts -> union_flatten cx (ref ISet.empty) ts)
@@ -55,12 +52,12 @@ class virtual ['a] t =
           t
         else
           OpenT (r, id')
-      | DefT (r, trust, t') ->
+      | DefT (r, t') ->
         let t'' = self#def_type cx map_cx t' in
         if t' == t'' then
           t
         else
-          DefT (r, trust, t'')
+          DefT (r, t'')
       | EvalT (t', dt, id) ->
         let t'' = self#type_ cx map_cx t' in
         let dt' = self#defer_use_type cx map_cx dt in

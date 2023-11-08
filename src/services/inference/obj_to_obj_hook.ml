@@ -22,7 +22,7 @@ let with_obj_to_obj_hook ~enabled ~loc_of_aloc ~f =
     | Some obj1_aloc ->
       let open Type in
       (match (obj1, obj2) with
-      | (DefT (_, _, ObjT _), DefT (_, _, ObjT { props_tmap = obj2_props_id; _ })) ->
+      | (DefT (_, ObjT _), DefT (_, ObjT { props_tmap = obj2_props_id; _ })) ->
         obj_to_obj_map :=
           Loc_collections.LocMap.adjust
             (loc_of_aloc obj1_aloc)

@@ -84,8 +84,6 @@ let obj_lit_reason ~frozen loc =
   in
   mk_reason desc loc
 
-let trust = Trust.bogus_trust ()
-
 let specialize file reason_op t =
   let reason = TypeUtil.reason_of_t t in
   ConsGen.specialize file.cx t Type.unknown_use reason_op reason None
@@ -127,9 +125,9 @@ let eval_unary file loc t =
   | U.Not ->
     let reason = Reason.(mk_reason (RUnaryOperator ("not", TypeUtil.desc_of_t t)) loc) in
     ConsGen.unary_not file.cx reason t
-  | U.Typeof -> Type.StrT.at loc trust
-  | U.Void -> Type.VoidT.at loc trust
-  | U.Delete -> Type.BoolT.at loc trust
+  | U.Typeof -> Type.StrT.at loc
+  | U.Void -> Type.VoidT.at loc
+  | U.Delete -> Type.BoolT.at loc
   | U.Await ->
     (* This is a parse error *)
     Type.(AnyT.at (AnyError None) loc)
@@ -159,7 +157,7 @@ let async_void_return file loc =
     file.cx
     Reason.(mk_reason (RCustom "async return") loc)
     (Reason.OrdinaryName "Promise")
-    [Type.VoidT.at loc trust]
+    [Type.VoidT.at loc]
 
 let add_default_constructor reason extends props =
   match extends with
@@ -173,7 +171,7 @@ let add_default_constructor reason extends props =
       (function
         | None ->
           let reason = Reason.(replace_desc_reason RDefaultConstructor reason) in
-          let return = Type.VoidT.why reason trust in
+          let return = Type.VoidT.why reason in
           let statics = Type.dummy_static reason in
           let funtype =
             Type.mk_boundfunctiontype
@@ -184,8 +182,7 @@ let add_default_constructor reason extends props =
               ~def_reason:reason
               ~predicate:None
           in
-          Some
-            Type.(Method { key_loc = None; type_ = DefT (reason, trust, FunT (statics, funtype)) })
+          Some Type.(Method { key_loc = None; type_ = DefT (reason, FunT (statics, funtype)) })
         | prop -> prop)
       props
 
@@ -199,7 +196,7 @@ let add_name_field reason =
            {
              preferred_def_locs = None;
              key_loc = None;
-             type_ = StrT.why reason trust;
+             type_ = StrT.why reason;
              polarity = Polarity.Neutral;
            }
         )
@@ -239,7 +236,7 @@ let import_typeof_ns file reason id_loc index =
 
 let merge_enum file reason id_loc rep members has_unknown_members =
   let rep_reason desc = Reason.(mk_reason (REnumRepresentation desc) id_loc) in
-  let rep_t desc def_t = Type.DefT (rep_reason desc, trust, def_t) in
+  let rep_t desc def_t = Type.DefT (rep_reason desc, def_t) in
   let representation_t =
     let open Type in
     match rep with
@@ -271,9 +268,7 @@ let merge_enum file reason id_loc rep members has_unknown_members =
       rep_t Reason.RBigInt (BigIntT lit)
   in
   let enum_id = Context.make_aloc_id file.cx id_loc in
-  Type.(
-    DefT (reason, trust, EnumObjectT { enum_id; members; representation_t; has_unknown_members })
-  )
+  Type.(DefT (reason, EnumObjectT { enum_id; members; representation_t; has_unknown_members }))
 
 let merge_pattern file = function
   | Pack.PDef i -> Lazy.force (Pattern_defs.get file.pattern_defs i)
@@ -302,7 +297,7 @@ let merge_pattern file = function
     let reason = Reason.(mk_reason (RCustom (Utils_js.spf "element %d" i)) loc) in
     let i =
       let reason = Reason.(mk_reason RNumber loc) in
-      Type.(DefT (reason, trust, NumT (Literal (None, (float i, string_of_int i)))))
+      Type.(DefT (reason, NumT (Literal (None, (float i, string_of_int i)))))
     in
     (* TODO: use_op *)
     let use_op = Type.unknown_use in
@@ -480,15 +475,15 @@ let rec merge tps infer_tps file = function
 
 and merge_annot tps infer_tps file = function
   | Any loc -> Type.AnyT.at Type.AnnotatedAny loc
-  | Mixed loc -> Type.MixedT.at loc trust
-  | Empty loc -> Type.EmptyT.at loc trust
-  | Void loc -> Type.VoidT.at loc trust
-  | Null loc -> Type.NullT.at loc trust
-  | Symbol loc -> Type.SymbolT.at loc trust
-  | Number loc -> Type.NumT.at loc trust
-  | BigInt loc -> Type.BigIntT.at loc trust
-  | String loc -> Type.StrT.at loc trust
-  | Boolean loc -> Type.BoolT.at loc trust
+  | Mixed loc -> Type.MixedT.at loc
+  | Empty loc -> Type.EmptyT.at loc
+  | Void loc -> Type.VoidT.at loc
+  | Null loc -> Type.NullT.at loc
+  | Symbol loc -> Type.SymbolT.at loc
+  | Number loc -> Type.NumT.at loc
+  | BigInt loc -> Type.BigIntT.at loc
+  | String loc -> Type.StrT.at loc
+  | Boolean loc -> Type.BoolT.at loc
   | Exists loc -> Type.AnyT.at Type.AnnotatedAny loc
   | Optional t -> TypeUtil.optional (merge tps infer_tps file t)
   | Maybe (loc, t) ->
@@ -533,23 +528,23 @@ and merge_annot tps infer_tps file = function
   | Array (loc, t) ->
     let reason = Reason.(mk_annot_reason RArrayType loc) in
     let elem_t = merge tps infer_tps file t in
-    Type.(DefT (reason, trust, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = None })))
+    Type.(DefT (reason, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = None })))
   | ReadOnlyArray (loc, t) ->
     let reason = Reason.(mk_annot_reason RROArrayType loc) in
     let t = merge tps infer_tps file t in
-    Type.(DefT (reason, trust, ArrT (ROArrayAT (t, None))))
+    Type.(DefT (reason, ArrT (ROArrayAT (t, None))))
   | SingletonString (loc, str) ->
     let reason = Reason.(mk_annot_reason (RStringLit (OrdinaryName str)) loc) in
-    Type.(DefT (reason, trust, SingletonStrT (Reason.OrdinaryName str)))
+    Type.(DefT (reason, SingletonStrT (Reason.OrdinaryName str)))
   | SingletonNumber (loc, num, raw) ->
     let reason = Reason.(mk_annot_reason (RNumberLit raw) loc) in
-    Type.(DefT (reason, trust, SingletonNumT (num, raw)))
+    Type.(DefT (reason, SingletonNumT (num, raw)))
   | SingletonBigInt (loc, bigint, raw) ->
     let reason = Reason.(mk_annot_reason (RBigIntLit raw) loc) in
-    Type.(DefT (reason, trust, SingletonBigIntT (bigint, raw)))
+    Type.(DefT (reason, SingletonBigIntT (bigint, raw)))
   | SingletonBoolean (loc, b) ->
     let reason = Reason.(mk_annot_reason (RBooleanLit b) loc) in
-    Type.(DefT (reason, trust, SingletonBoolT b))
+    Type.(DefT (reason, SingletonBoolT b))
   | Typeof { loc; qname; t; targs } ->
     let qname = String.concat "." qname in
     let reason = Reason.(mk_reason (RTypeof qname) loc) in
@@ -566,30 +561,30 @@ and merge_annot tps infer_tps file = function
     TypeUtil.mod_reason_of_t (Reason.repos_reason ref_loc) t
   | TEMPORARY_Number (loc, num, raw) ->
     let reason = Reason.(mk_annot_reason RNumber loc) in
-    Type.(DefT (reason, trust, NumT (Literal (None, (num, raw)))))
+    Type.(DefT (reason, NumT (Literal (None, (num, raw)))))
   | TEMPORARY_String (loc, str) ->
     let reason = Reason.(mk_annot_reason RString loc) in
-    Type.(DefT (reason, trust, StrT (Literal (None, Reason.OrdinaryName str))))
+    Type.(DefT (reason, StrT (Literal (None, Reason.OrdinaryName str))))
   | TEMPORARY_LongString loc ->
     let len = Context.max_literal_length file.cx in
     let reason = Reason.(mk_annot_reason (RLongStringLit len) loc) in
-    Type.(DefT (reason, trust, StrT AnyLiteral))
+    Type.(DefT (reason, StrT AnyLiteral))
   | TEMPORARY_Boolean (loc, b) ->
     let reason = Reason.(mk_annot_reason RBoolean loc) in
-    Type.(DefT (reason, trust, BoolT (Some b)))
+    Type.(DefT (reason, BoolT (Some b)))
   | TEMPORARY_Object t ->
     let t = merge tps infer_tps file t in
     let open Type in
     (match t with
-    | ExactT (_, DefT (r, trust, ObjT o))
-    | DefT (r, trust, ObjT o) ->
+    | ExactT (_, DefT (r, ObjT o))
+    | DefT (r, ObjT o) ->
       let r = Reason.(replace_desc_reason RObjectLit r) in
       let obj_kind =
         match o.flags.obj_kind with
         | Indexed _ -> o.flags.obj_kind
         | _ -> Type.Exact
       in
-      DefT (r, trust, ObjT { o with flags = { o.flags with obj_kind } })
+      DefT (r, ObjT { o with flags = { o.flags with obj_kind } })
     | EvalT (l, TypeDestructorT (use_op, r, SpreadType (target, ts, head_slice)), id) ->
       let r = Reason.(replace_desc_reason RObjectLit r) in
       EvalT (l, TypeDestructorT (use_op, r, SpreadType (target, ts, head_slice)), id)
@@ -597,7 +592,7 @@ and merge_annot tps infer_tps file = function
   | TEMPORARY_Array (loc, t) ->
     let reason = Reason.(mk_annot_reason RArrayLit loc) in
     let elem_t = merge tps infer_tps file t in
-    Type.(DefT (reason, trust, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = None })))
+    Type.(DefT (reason, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = None })))
   | AnyWithLowerBound (_loc, t) ->
     let t = merge tps infer_tps file t in
     Type.AnyT.annot (TypeUtil.reason_of_t t)
@@ -819,12 +814,12 @@ and merge_annot tps infer_tps file = function
     let char_str = String_utils.CharSet.to_string chars in
     let reason_str = Utils_js.spf "character set `%s`" char_str in
     let reason = Reason.(mk_annot_reason (RCustom reason_str) loc) in
-    Type.(DefT (reason, trust, CharSetT chars))
+    Type.(DefT (reason, CharSetT chars))
   | ClassT (loc, t) ->
     let t = merge tps infer_tps file t in
     let desc = TypeUtil.desc_of_t t in
     let reason = Reason.(mk_reason (RStatics desc) loc) in
-    Type.DefT (reason, trust, Type.ClassT t)
+    Type.DefT (reason, Type.ClassT t)
   | Function_apply loc ->
     let reason = Reason.(mk_annot_reason RFunctionType loc) in
     Type.FunProtoApplyT reason
@@ -865,7 +860,7 @@ and merge_annot tps infer_tps file = function
         ~f:(merge tps infer_tps file)
         ~default:
           (let reason = mk_default_type_argument_reason_at_position Reason.RMixed 2 in
-           Type.(MixedT.make reason (bogus_trust ()))
+           Type.MixedT.make reason
           )
         instance
     in
@@ -887,10 +882,7 @@ and merge_annot tps infer_tps file = function
     in
     Type.(
       DefT
-        ( reason,
-          trust,
-          ReactAbstractComponentT { config; instance; renders; component_kind = Structural }
-        )
+        (reason, ReactAbstractComponentT { config; instance; renders; component_kind = Structural })
     )
   | ReactConfig { loc; props; default } ->
     let reason = Reason.(mk_reason RReactConfig loc) in
@@ -1041,11 +1033,10 @@ and merge_annot tps infer_tps file = function
     let property_type =
       let prop_type = merge tps infer_tps file property_type in
       let prop_reason = TypeUtil.reason_of_t prop_type in
-      let type_t = Type.(DefT (prop_reason, trust, TypeT (MappedTypeKind, prop_type))) in
+      let type_t = Type.(DefT (prop_reason, TypeT (MappedTypeKind, prop_type))) in
       let id = Context.make_source_poly_id file.cx loc in
       Type.(
-        DefT
-          (prop_reason, trust, PolyT { tparams_loc = loc; tparams = Nel.one tp; t_out = type_t; id })
+        DefT (prop_reason, PolyT { tparams_loc = loc; tparams = Nel.one tp; t_out = type_t; id })
       )
     in
     let optional =
@@ -1111,33 +1102,33 @@ and merge_value tps infer_tps file = function
     merge_fun tps infer_tps file reason def statics
   | StringVal loc ->
     let reason = Reason.(mk_reason RString loc) in
-    Type.(DefT (reason, trust, StrT AnyLiteral))
+    Type.(DefT (reason, StrT AnyLiteral))
   | StringLit (loc, lit) ->
     let reason = Reason.(mk_reason RString loc) in
-    Type.(DefT (reason, trust, StrT (Literal (None, Reason.OrdinaryName lit))))
+    Type.(DefT (reason, StrT (Literal (None, Reason.OrdinaryName lit))))
   | LongStringLit loc ->
     let len = Context.max_literal_length file.cx in
     let reason = Reason.(mk_annot_reason (RLongStringLit len) loc) in
-    Type.(DefT (reason, trust, StrT AnyLiteral))
+    Type.(DefT (reason, StrT AnyLiteral))
   | NumberVal loc ->
     let reason = Reason.(mk_reason RNumber loc) in
-    Type.(DefT (reason, trust, NumT AnyLiteral))
+    Type.(DefT (reason, NumT AnyLiteral))
   | NumberLit (loc, num, raw) ->
     let reason = Reason.(mk_reason RNumber loc) in
-    Type.(DefT (reason, trust, NumT (Literal (None, (num, raw)))))
+    Type.(DefT (reason, NumT (Literal (None, (num, raw)))))
   | BigIntVal loc ->
     let reason = Reason.(mk_reason RBigInt loc) in
-    Type.(DefT (reason, trust, BigIntT AnyLiteral))
+    Type.(DefT (reason, BigIntT AnyLiteral))
   | BigIntLit (loc, bigint, raw) ->
     let reason = Reason.(mk_reason RBigInt loc) in
-    Type.(DefT (reason, trust, BigIntT (Literal (None, (bigint, raw)))))
+    Type.(DefT (reason, BigIntT (Literal (None, (bigint, raw)))))
   | BooleanVal loc ->
     let reason = Reason.(mk_reason RBoolean loc) in
-    Type.(DefT (reason, trust, BoolT None))
+    Type.(DefT (reason, BoolT None))
   | BooleanLit (loc, lit) ->
     let reason = Reason.(mk_reason RBoolean loc) in
-    Type.(DefT (reason, trust, BoolT (Some lit)))
-  | NullLit loc -> Type.NullT.at loc trust
+    Type.(DefT (reason, BoolT (Some lit)))
+  | NullLit loc -> Type.NullT.at loc
   | DeclareModuleImplicitlyExportedObject { loc; module_name; props } ->
     merge_declare_module_implicitly_exported_object tps infer_tps file (loc, module_name, props)
   | ObjLit { loc; frozen; proto; props } ->
@@ -1157,7 +1148,7 @@ and merge_value tps infer_tps file = function
           UnionT (reason, UnionRep.make ~source_aloc:(Context.make_aloc_id file.cx loc) t0 t1 ts)
         )
     in
-    Type.(DefT (reason, trust, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = None })))
+    Type.(DefT (reason, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = None })))
 
 and merge_declare_module_implicitly_exported_object tps infer_tps file (loc, module_name, props) =
   let reason = Reason.(mk_reason (RModule (OrdinaryName module_name)) loc) in
@@ -1345,15 +1336,14 @@ and merge_tparams_targs tps infer_tps file reason t = function
     let tparams = List.rev rev_tparams |> Nel.of_list_exn in
     let t_out = t (tps, List.rev rev_tparam_tuples) in
     let id = Context.make_source_poly_id file.cx tparams_loc in
-    Type.(DefT (poly_reason, trust, PolyT { tparams_loc; tparams; t_out; id }))
+    Type.(DefT (poly_reason, PolyT { tparams_loc; tparams; t_out; id }))
 
 and merge_tparam ~from_infer tps infer_tps file tp =
   let (TParam { name_loc; name; polarity; bound; default }) = tp in
   let reason = Reason.(mk_reason (RType (OrdinaryName name)) name_loc) in
   let bound =
     match bound with
-    | None ->
-      Type.(DefT (Reason.replace_desc_reason Reason.RMixed reason, trust, MixedT Mixed_everything))
+    | None -> Type.(DefT (Reason.replace_desc_reason Reason.RMixed reason, MixedT Mixed_everything))
     | Some t -> merge tps infer_tps file t
   in
   let default =
@@ -1444,7 +1434,7 @@ and merge_interface ~inline tps infer_tps file reason class_name id def =
         class_private_static_methods = Context.generate_property_map file.cx NameUtils.Map.empty;
       }
     in
-    DefT (reason, trust, InstanceT { static; super; implements = []; inst })
+    DefT (reason, InstanceT { static; super; implements = []; inst })
 
 and merge_class_extends tps infer_tps file this reason extends mixins =
   let super_reason = Reason.(update_desc_reason (fun d -> RSuperOf d) reason) in
@@ -1556,7 +1546,7 @@ and merge_class tps infer_tps file reason class_name id def =
         class_private_static_methods = Context.generate_property_map file.cx NameUtils.Map.empty;
       }
     in
-    let instance = DefT (reason, trust, InstanceT { static; super; implements; inst }) in
+    let instance = DefT (reason, InstanceT { static; super; implements; inst }) in
     TypeUtil.this_class_type instance false (Subst_name.Name "this")
   in
   let t (tps, targs) =
@@ -1636,25 +1626,25 @@ and merge_predicate tps infer_tps file (loc, p) =
     | VoidP key -> singleton key Type.VoidP
     | SentinelStrP (key, prop, loc, x) ->
       let reason = Reason.(mk_reason RString loc) in
-      let t = Type.(DefT (reason, trust, StrT (Literal (None, Reason.OrdinaryName x)))) in
+      let t = Type.(DefT (reason, StrT (Literal (None, Reason.OrdinaryName x)))) in
       singleton key Type.(LeftP (SentinelProp prop, t))
     | SentinelNumP (key, prop, loc, x, raw) ->
       let reason = Reason.(mk_reason RNumber loc) in
-      let t = Type.(DefT (reason, trust, NumT (Literal (None, (x, raw))))) in
+      let t = Type.(DefT (reason, NumT (Literal (None, (x, raw))))) in
       singleton key Type.(LeftP (SentinelProp prop, t))
     | SentinelBigIntP (key, prop, loc, x, raw) ->
       let reason = Reason.(mk_reason RBigInt loc) in
-      let t = Type.(DefT (reason, trust, BigIntT (Literal (None, (x, raw))))) in
+      let t = Type.(DefT (reason, BigIntT (Literal (None, (x, raw))))) in
       singleton key Type.(LeftP (SentinelProp prop, t))
     | SentinelBoolP (key, prop, loc, x) ->
       let reason = Reason.(mk_reason RBoolean loc) in
-      let t = Type.(DefT (reason, trust, BoolT (Some x))) in
+      let t = Type.(DefT (reason, BoolT (Some x))) in
       singleton key Type.(LeftP (SentinelProp prop, t))
     | SentinelNullP (key, prop, loc) ->
-      let t = Type.NullT.at loc trust in
+      let t = Type.NullT.at loc in
       singleton key Type.(LeftP (SentinelProp prop, t))
     | SentinelVoidP (key, prop, loc) ->
-      let t = Type.VoidT.at loc trust in
+      let t = Type.VoidT.at loc in
       singleton key Type.(LeftP (SentinelProp prop, t))
     | SentinelExprP (key, prop, t) ->
       let t = merge tps infer_tps file t in
@@ -1742,7 +1732,7 @@ and merge_fun
         def_reason = reason;
       }
     in
-    DefT (reason, trust, FunT (statics, funtype))
+    DefT (reason, FunT (statics, funtype))
   in
   merge_tparams_targs tps infer_tps file reason t tparams
 
@@ -1780,7 +1770,7 @@ and merge_component
     in
     let instance =
       match instance with
-      | None -> Type.(MixedT.make instance_reason (bogus_trust ()))
+      | None -> Type.MixedT.make instance_reason
       | Some instance ->
         Type.(
           EvalT
@@ -1810,8 +1800,7 @@ and merge_component
         let id = Context.make_aloc_id file.cx loc in
         Nominal (id, name)
     in
-    DefT
-      (reason, trust, ReactAbstractComponentT { config = param; instance; renders; component_kind })
+    DefT (reason, ReactAbstractComponentT { config = param; instance; renders; component_kind })
   in
   merge_tparams_targs tps infer_tps file reason t tparams
 
@@ -1841,7 +1830,7 @@ let merge_type_alias file reason name tparams body =
       let id_loc = loc_of_reason reason in
       mod_reason_of_t (update_desc_reason (fun desc -> RTypeAlias (name, Some id_loc, desc))) t
     in
-    Type.(DefT (reason, trust, TypeT (TypeAliasKind, t)))
+    Type.(DefT (reason, TypeT (TypeAliasKind, t)))
   in
   merge_tparams_targs SMap.empty SMap.empty file reason t tparams
 
@@ -1860,7 +1849,7 @@ let merge_opaque_type file reason id name tparams bound body =
         opaque_name = name;
       }
     in
-    DefT (reason, trust, TypeT (OpaqueKind, OpaqueT (opaque_reason, opaquetype)))
+    DefT (reason, TypeT (OpaqueKind, OpaqueT (opaque_reason, opaquetype)))
   in
   merge_tparams_targs SMap.empty SMap.empty file reason t tparams
 
@@ -1957,7 +1946,7 @@ let merge_declare_class file reason class_name id def =
         class_private_static_methods = Context.generate_property_map file.cx NameUtils.Map.empty;
       }
     in
-    let instance = DefT (reason, trust, InstanceT { static; super; implements; inst }) in
+    let instance = DefT (reason, InstanceT { static; super; implements; inst }) in
     TypeUtil.this_class_type instance false (Subst_name.Name "this")
   in
   let t (tps, targs) =
@@ -2057,7 +2046,7 @@ let merge_resource_module_t cx file_key filename =
       Type.AnyT.make Type.Untyped reason
     | Some _ ->
       let reason = Reason.mk_reason Reason.RString ALoc.none in
-      Type.StrT.why reason |> Type.with_trust Type.bogus_trust
+      Type.StrT.why reason
     | _ -> failwith "How did we find a resource file without an extension?!"
   in
   let file_loc = ALoc.of_loc { Loc.none with Loc.source = Some file_key } in

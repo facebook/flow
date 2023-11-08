@@ -133,7 +133,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
           else
             super#type_ cx pole acc t
         (* We remove any tparam names from the map when entering a PolyT to avoid naming conflicts. *)
-        | DefT (_, _, PolyT { tparams; t_out = t; _ }) ->
+        | DefT (_, PolyT { tparams; t_out = t; _ }) ->
           let tparam_names' =
             Nel.fold_left (fun names x -> Subst_name.Set.remove x.name names) tparam_names tparams
           in
@@ -167,8 +167,8 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
         fun targs cx pole acc t ->
           match get_t cx t with
           | AnnotT (_, t, _) -> self#typeapp targs cx pole acc t
-          | DefT (_, _, PolyT { tparams; _ }) -> loop cx pole acc (Some (Nel.to_list tparams), targs)
-          | DefT (_, _, EmptyT)
+          | DefT (_, PolyT { tparams; _ }) -> loop cx pole acc (Some (Nel.to_list tparams), targs)
+          | DefT (_, EmptyT)
           | AnyT _ ->
             loop cx pole acc (None, targs)
           (* All other cases are errors *)
@@ -215,11 +215,10 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
                UpperT
                  (DefT
                     ( r,
-                      bogus_trust (),
                       ReactAbstractComponentT
                         {
                           config;
-                          instance = MixedT.why r (bogus_trust ());
+                          instance = MixedT.why r;
                           renders = react_node;
                           component_kind = Structural;
                         }
@@ -263,9 +262,9 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | UseT (_, t) -> UpperT t
     | ArrRestT (_, _, i, tout) ->
       (match get_t cx tout with
-      | DefT (r, _, ArrT (ArrayAT { tuple_view = None; _ } | ROArrayAT _)) ->
+      | DefT (r, ArrT (ArrayAT { tuple_view = None; _ } | ROArrayAT _)) ->
         identity_reverse_upper_bound cx seen tvar r tout
-      | DefT (r, _, ArrT (ArrayAT { tuple_view = Some _; _ } | TupleAT _)) when i = 0 ->
+      | DefT (r, ArrT (ArrayAT { tuple_view = Some _; _ } | TupleAT _)) when i = 0 ->
         identity_reverse_upper_bound cx seen tvar r tout
       | _ -> UpperEmpty)
     (* Call related upper bounds are ignored because there is not enough info to reverse. *)
@@ -513,7 +512,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       | None ->
         let elem_t =
           match tuple_ts with
-          | [] -> EmptyT.why reason |> with_trust bogus_trust
+          | [] -> EmptyT.why reason
           | [t] -> t
           | t0 :: t1 :: ts -> UnionT (reason, UnionRep.make t0 t1 ts)
         in
@@ -540,7 +539,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
                       use_op = unknown_use;
                       reason;
                       from_annot = true;
-                      key_t = NumT.make reason (bogus_trust ());
+                      key_t = NumT.make reason;
                       tout;
                     }
                 )
@@ -555,7 +554,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
         let reason = update_desc_reason (fun _ -> RArray) reason in
         (reason, t)
     in
-    let solution = DefT (reason, bogus_trust (), ArrT arr_type) in
+    let solution = DefT (reason, ArrT arr_type) in
     Flow.flow_t cx (solution, tvar);
     UpperT solution
 
@@ -981,24 +980,24 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       | (_, Check.SubtypeLowerPoly _) ->
         let marked_tparams = Marked.empty in
         check_instantiation cx ~tparams ~marked_tparams ~implicit_instantiation
-      | (DefT (_, _, ReactAbstractComponentT { config; _ }), _) ->
+      | (DefT (_, ReactAbstractComponentT { config; _ }), _) ->
         check_react_fun cx ~tparams ~tparams_map ~props:(Some config) ~implicit_instantiation
-      | (DefT (_, _, FunT (_, funtype)), Check.Jsx _) ->
+      | (DefT (_, FunT (_, funtype)), Check.Jsx _) ->
         let props =
           match funtype.params with
           | (_, props) :: _ -> Some props
           | [] -> None
         in
         check_react_fun cx ~tparams ~tparams_map ~props ~implicit_instantiation
-      | (DefT (_, _, FunT (_, funtype)), _) ->
+      | (DefT (_, FunT (_, funtype)), _) ->
         check_fun cx ~tparams ~tparams_map ~return_t:funtype.return_t ~implicit_instantiation
-      | (ThisClassT (_, DefT (_, _, InstanceT _), _, _), Check.Call _) ->
+      | (ThisClassT (_, DefT (_, InstanceT _), _, _), Check.Call _) ->
         (* This case is hit when calling a static function. We will implicitly
          * instantiate the type variables on the class, but using an instance's
          * type params in a static method does not make sense. We ignore this case
          * intentionally *)
         ([], Marked.empty, None)
-      | (ThisClassT (_, DefT (_, _, InstanceT _), _, _), _) ->
+      | (ThisClassT (_, DefT (_, InstanceT _), _, _), _) ->
         check_instance cx ~tparams ~implicit_instantiation
       | _ ->
         (* There are no other valid cases of implicit instantiation, but it is still possible
@@ -1191,7 +1190,7 @@ module PinTypes (Flow : Flow_common.S) = struct
       {
         reason;
         name = Subst_name.Name "";
-        bound = MixedT.why reason |> with_trust bogus_trust;
+        bound = MixedT.why reason;
         polarity;
         default = None;
         is_this = false;
@@ -1448,7 +1447,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
   let run_ref_extractor cx ~use_op ~reason t =
     let lhs = Flow.get_builtin cx (OrdinaryName "React$RefSetter") reason in
     match get_t cx lhs with
-    | DefT (_, _, PolyT { tparams_loc; tparams = ({ name; _ }, []) as ids; t_out; _ }) ->
+    | DefT (_, PolyT { tparams_loc; tparams = ({ name; _ }, []) as ids; t_out; _ }) ->
       let poly_t = (tparams_loc, ids, t_out) in
       let check =
         {
@@ -1465,7 +1464,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
     | _ ->
       (* If the internal definition for React$RefSetter isn't polymorphic, either we're running with
          no-flowlib or things have gone majorly sideways. Either way, just use mixed *)
-      MixedT.make reason (bogus_trust ())
+      MixedT.make reason
 
   let run_monomorphize cx trace ~use_op ~reason_op ~reason_tapp tparams t =
     let subst_map =

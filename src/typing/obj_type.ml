@@ -30,7 +30,7 @@ let mk_with_proto
     | None -> Context.generate_property_map cx props
     | Some loc -> Context.make_source_property_map cx props loc
   in
-  DefT (reason, bogus_trust (), ObjT (mk_objecttype ?reachable_targs ~flags ~call pmap proto))
+  DefT (reason, ObjT (mk_objecttype ?reachable_targs ~flags ~call pmap proto))
 
 let mk_exact_empty cx reason =
   ObjProtoT reason |> mk_with_proto cx reason ~obj_kind:Exact ~frozen:true

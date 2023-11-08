@@ -40,18 +40,11 @@ let mk_object_type
       let inst = { inst with own_props = id; inst_dict } in
       (* Implemented/super interfaces are folded into the property map computed by the slice, so
            we effectively flatten the hierarchy in the output *)
-      ( DefT
-          ( def_reason,
-            bogus_trust (),
-            InstanceT { static; super = ObjProtoT def_reason; implements = []; inst }
-          ),
+      ( DefT (def_reason, InstanceT { static; super = ObjProtoT def_reason; implements = []; inst }),
         def_reason
       )
     | None ->
-      let t =
-        DefT
-          (def_reason, bogus_trust (), ObjT (mk_objecttype ~reachable_targs ~flags ~call id proto))
-      in
+      let t = DefT (def_reason, ObjT (mk_objecttype ~reachable_targs ~flags ~call id proto)) in
       (* Wrap the final type in an `ExactT` if we have an exact flag *)
       Base.Option.value_map
         ~f:(fun exact_reason ->
@@ -132,7 +125,7 @@ let read_prop r flags x p =
     | Some t -> t
     | None ->
       let reason = replace_desc_reason (RUnknownProperty (Some x)) r in
-      let t = DefT (reason, bogus_trust (), MixedT Mixed_everything) in
+      let t = DefT (reason, MixedT Mixed_everything) in
       t
   in
   {
@@ -148,7 +141,7 @@ let read_dict r { value; dict_polarity; _ } =
     value
   else
     let reason = replace_desc_reason (RUnknownProperty None) r in
-    DefT (reason, bogus_trust (), MixedT Mixed_everything)
+    DefT (reason, MixedT Mixed_everything)
 
 let object_slice cx ~interface r id flags reachable_targs generics =
   let props = Context.find_props cx id in
@@ -902,7 +895,7 @@ let object_rest
            * source object. *)
           | ((Sound | IgnoreExactAndOwn), None, Some { Object.prop_t = t2; _ }, _) ->
             let reason = replace_desc_reason (RUndefinedProperty k) r1 in
-            subt_check ~use_op cx (VoidT.make reason |> with_trust bogus_trust, t2);
+            subt_check ~use_op cx (VoidT.make reason, t2);
             None
           | ( (Sound | IgnoreExactAndOwn),
               Some { Object.prop_t = t1; _ },
@@ -919,7 +912,7 @@ let object_rest
               None,
               false
             ) ->
-            subt_check ~use_op cx (t1, MixedT.make r2 |> with_trust bogus_trust);
+            subt_check ~use_op cx (t1, MixedT.make r2);
             let p =
               if is_method then
                 Method { key_loc; type_ = optional t1 }
@@ -1440,7 +1433,7 @@ let resolve
   in
   match t with
   (* We extract the props from an ObjT. *)
-  | DefT (r, _, ObjT { props_tmap; Type.flags; reachable_targs; _ }) ->
+  | DefT (r, ObjT { props_tmap; Type.flags; reachable_targs; _ }) ->
     let x =
       Nel.one (object_slice cx ~interface:None r props_tmap flags reachable_targs t_generic_id)
     in
@@ -1448,8 +1441,7 @@ let resolve
   (* We take the fields from an InstanceT excluding methods (because methods
    * are always on the prototype). We also want to resolve fields from the
    * InstanceT's super class so we recurse. *)
-  | DefT
-      (r, _, InstanceT { static; super; implements = _; inst = { own_props; inst_kind; _ } as inst })
+  | DefT (r, InstanceT { static; super; implements = _; inst = { own_props; inst_kind; _ } as inst })
     ->
     let resolve_tool =
       Super (interface_slice cx r ~static ~inst own_props t_generic_id, resolve_tool)
@@ -1469,7 +1461,7 @@ let resolve
   (* Statics of a class. TODO: This logic is unfortunately duplicated from the
    * top-level pattern matching against class lower bounds to object-like
    * uses. This duplication should be removed. *)
-  | DefT (r, _, ClassT i) -> recurse cx use_op reason (Resolve resolve_tool) tool (statics cx r i)
+  | DefT (r, ClassT i) -> recurse cx use_op reason (Resolve resolve_tool) tool (statics cx r i)
   (* Resolve each member of a union. *)
   | UnionT (union_reason, rep) ->
     let union_loc = loc_of_reason union_reason in
@@ -1482,7 +1474,7 @@ let resolve
     in
     begin
       match members_filtered with
-      | [] -> return cx use_op (EmptyT.make union_reason (bogus_trust ()))
+      | [] -> return cx use_op (EmptyT.make union_reason)
       | t :: [] -> recurse cx use_op reason (Resolve Next) tool t
       | t :: t' :: ts ->
         let resolve_tool = Resolve (List0 ((t', ts), (union_loc, Or))) in
@@ -1496,7 +1488,7 @@ let resolve
     recurse cx use_op reason resolve_tool tool t
   (* `null` and `void` should pass through Partial and Required,
      since we would like e.g. Partial<?Foo> to be equivalent to ?Partial<Foo> *)
-  | DefT (_, _, (NullT | VoidT))
+  | DefT (_, (NullT | VoidT))
     when match tool with
          | Partial
          | Required
@@ -1506,7 +1498,7 @@ let resolve
     return cx use_op t
   (* Mirroring Object.assign() and {...null} semantics, treat null/void as
    * empty objects. *)
-  | DefT (_, _, (NullT | VoidT)) ->
+  | DefT (_, (NullT | VoidT)) ->
     let flags = { frozen = true; obj_kind = Exact; react_dro = None } in
     let x =
       Nel.one
@@ -1525,7 +1517,7 @@ let resolve
    * `const {x, ...y} = 3;` tries to get `x` from Number.
    * They don't make sense with $ReadOnly's semantics, since $ReadOnly doesn't model
    * copying/spreading an object. *)
-  | DefT (_, _, BoolT _)
+  | DefT (_, BoolT _)
     when match tool with
          | ObjectWiden _
          | Spread _ ->
@@ -1551,7 +1543,7 @@ let resolve
    * of `mixed` as an object. The fact that we don't today is technical debt that we should
    * clean up.
    *)
-  | DefT (r, _, MixedT _) as t ->
+  | DefT (r, MixedT _) as t ->
     (* TODO(jmbrown): This should be Inexact *)
     let flags = { frozen = true; obj_kind = Exact; react_dro = None } in
     let x =
@@ -1575,12 +1567,7 @@ let resolve
             flags with
             obj_kind =
               Indexed
-                {
-                  dict_name = None;
-                  key = StrT.make r |> with_trust bogus_trust;
-                  value = t;
-                  dict_polarity = Polarity.Neutral;
-                };
+                { dict_name = None; key = StrT.make r; value = t; dict_polarity = Polarity.Neutral };
           }
         in
         Nel.one
@@ -1594,7 +1581,7 @@ let resolve
           }
     in
     resolved ~next ~recurse cx use_op reason resolve_tool tool x
-  | DefT (r, trust, ArrT (TupleAT { elem_t; elements; arity; react_dro })) when tool = ReadOnly ->
+  | DefT (r, ArrT (TupleAT { elem_t; elements; arity; react_dro })) when tool = ReadOnly ->
     let elements =
       Base.List.map elements ~f:(fun (TupleElement { t; name; polarity = _; optional; reason }) ->
           TupleElement { t; name; polarity = Polarity.Positive; optional; reason }
@@ -1605,11 +1592,8 @@ let resolve
       | RReadOnlyType -> r
       | _ -> reason
     in
-    return
-      cx
-      use_op
-      (DefT (def_reason, trust, ArrT (TupleAT { elem_t; elements; arity; react_dro })))
-  | DefT (r, trust, ArrT (TupleAT { elem_t; elements; arity; react_dro })) when tool = Partial ->
+    return cx use_op (DefT (def_reason, ArrT (TupleAT { elem_t; elements; arity; react_dro })))
+  | DefT (r, ArrT (TupleAT { elem_t; elements; arity; react_dro })) when tool = Partial ->
     let elements =
       Base.List.map elements ~f:(fun (TupleElement { t; name; polarity; optional = _; reason }) ->
           let t = TypeUtil.optional t in
@@ -1624,11 +1608,8 @@ let resolve
     let elem_t = union_of_ts (reason_of_t elem_t) (tuple_ts_of_elements elements) in
     let (_, num_total) = arity in
     let arity = (0, num_total) in
-    return
-      cx
-      use_op
-      (DefT (def_reason, trust, ArrT (TupleAT { elem_t; elements; arity; react_dro })))
-  | DefT (r, trust, ArrT (TupleAT { elem_t; elements; arity; react_dro })) when tool = Required ->
+    return cx use_op (DefT (def_reason, ArrT (TupleAT { elem_t; elements; arity; react_dro })))
+  | DefT (r, ArrT (TupleAT { elem_t; elements; arity; react_dro })) when tool = Required ->
     let elements =
       Base.List.map elements ~f:(fun (TupleElement { t; name; polarity; optional = _; reason }) ->
           let t =
@@ -1647,12 +1628,9 @@ let resolve
     let elem_t = union_of_ts (reason_of_t elem_t) (tuple_ts_of_elements elements) in
     let (_, num_total) = arity in
     let arity = (num_total, num_total) in
-    return
-      cx
-      use_op
-      (DefT (def_reason, trust, ArrT (TupleAT { elem_t; elements; arity; react_dro })))
+    return cx use_op (DefT (def_reason, ArrT (TupleAT { elem_t; elements; arity; react_dro })))
   (* If we see an empty then propagate empty to tout. *)
-  | DefT (r, trust, EmptyT) -> return cx use_op (EmptyT.make r trust)
+  | DefT (r, EmptyT) -> return cx use_op (EmptyT.make r)
   (* Propagate any. *)
   | AnyT (_, src) -> return cx use_op (AnyT.why src reason)
   (* Other types have reasonable object representations that may be added as
@@ -1674,7 +1652,7 @@ let super
     resolve_tool
     tool
     acc = function
-  | DefT (r, _, InstanceT { static; super; implements = _; inst = { own_props; _ } as inst }) ->
+  | DefT (r, InstanceT { static; super; implements = _; inst = { own_props; _ } as inst }) ->
     let { Object.reason; _ } = acc in
     let slice = interface_slice cx r ~static ~inst own_props Generic.spread_empty in
     let acc = intersect2 cx reason acc slice in
@@ -1752,9 +1730,7 @@ let map_object
                | None -> loc_of_reason (reason_of_t prop_t)
                | Some loc -> loc
              in
-             let key_t =
-               DefT (mk_reason (RStringLit key) key_loc, bogus_trust (), SingletonStrT key)
-             in
+             let key_t = DefT (mk_reason (RStringLit key) key_loc, SingletonStrT key) in
              let prop_optional = is_prop_optional prop_t in
              let variance = mk_variance variance prop_polarity in
              let field =

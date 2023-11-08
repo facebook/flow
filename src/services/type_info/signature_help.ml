@@ -228,7 +228,7 @@ module Callee_finder = struct
                 let open Type in
                 let instance =
                   Tvar.mk_where cx reason (fun instance ->
-                      Flow_js.flow_t cx (class_t, DefT (reason, bogus_trust (), ClassT instance))
+                      Flow_js.flow_t cx (class_t, DefT (reason, ClassT instance))
                   )
                 in
                 let propref = TypeUtil.mk_named_prop ~reason (OrdinaryName "constructor") in

@@ -203,7 +203,7 @@ let provider_type_for_def_loc ?(intersect = false) cx env def_loc =
        )
   in
   match providers with
-  | [] -> MixedT.make (mk_reason (RCustom "no providers") def_loc) (Trust.bogus_trust ())
+  | [] -> MixedT.make (mk_reason (RCustom "no providers") def_loc)
   | [t] -> t
   | t1 :: t2 :: ts when intersect ->
     IntersectionT (mk_reason (RCustom "providers") def_loc, InterRep.make t1 t2 ts)
@@ -314,9 +314,8 @@ and res_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
              match (entry, lookup_mode) with
              | (Env_api.Undefined reason, _)
              | (Env_api.Uninitialized reason, _) ->
-               Ok Type.(VoidT.make reason |> with_trust Trust.bogus_trust)
-             | (Env_api.Number reason, _) ->
-               Ok Type.(NumT.make reason |> with_trust Trust.bogus_trust)
+               Ok Type.(VoidT.make reason)
+             | (Env_api.Number reason, _) -> Ok Type.(NumT.make reason)
              | (Env_api.DeclaredFunction loc, _) ->
                Ok (provider_type_for_def_loc ~intersect:true cx env loc)
              | (Env_api.Undeclared (_name, def_loc), ForType) ->
@@ -419,7 +418,7 @@ and res_of_state ~lookup_mode cx env loc reason write_locs val_id refi =
              | (Env_api.With_ALoc.ModuleScoped _, _) -> Ok Type.(AnyT.at AnnotatedAny loc)
              | (Env_api.With_ALoc.Unreachable loc, _) ->
                let reason = mk_reason (RCustom "unreachable value") loc in
-               Ok (EmptyT.make reason (Trust.bogus_trust ()))
+               Ok (EmptyT.make reason)
              | (Env_api.With_ALoc.Projection loc, _) ->
                Ok (checked_find_loc_env_write cx Env_api.OrdinaryNameLoc loc))
            states

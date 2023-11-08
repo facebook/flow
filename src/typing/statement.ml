@@ -634,10 +634,7 @@ module Make
     in
     if Type_inference_hooks_js.dispatch_id_hook cx name loc then
       let (_, lazy_hint) = Type_env.get_hint cx loc in
-      lazy_hint reason
-      |> Type_hint.with_hint_result ~ok:Base.Fn.id ~error:(fun () ->
-             EmptyT.at loc |> with_trust bogus_trust
-         )
+      lazy_hint reason |> Type_hint.with_hint_result ~ok:Base.Fn.id ~error:(fun () -> EmptyT.at loc)
     else
       get_checking_mode_type ()
 
@@ -649,33 +646,33 @@ module Make
     if Type_inference_hooks_js.dispatch_literal_hook cx loc then
       let (_, lazy_hint) = Type_env.get_hint cx loc in
       let hint = lazy_hint (mk_reason (RCustom "literal") loc) in
-      let error () = EmptyT.at loc |> with_trust bogus_trust in
+      let error () = EmptyT.at loc in
       Type_hint.with_hint_result hint ~ok:Base.Fn.id ~error
     else
       (* It's too expensive to track literal information for large strings.*)
       let max_literal_length = Context.max_literal_length cx in
       if max_literal_length = 0 || String.length value <= max_literal_length then
         let reason = mk_annot_reason RString loc in
-        DefT (reason, Trust.literal_trust (), StrT (Literal (None, OrdinaryName value)))
+        DefT (reason, StrT (Literal (None, OrdinaryName value)))
       else
         let reason = mk_annot_reason (RLongStringLit max_literal_length) loc in
-        DefT (reason, Trust.literal_trust (), StrT AnyLiteral)
+        DefT (reason, StrT AnyLiteral)
 
   let string_literal cx loc { Ast.StringLiteral.value; _ } = string_literal_value cx loc value
 
   let boolean_literal loc { Ast.BooleanLiteral.value; _ } =
     let reason = mk_annot_reason RBoolean loc in
-    DefT (reason, Trust.literal_trust (), BoolT (Some value))
+    DefT (reason, BoolT (Some value))
 
-  let null_literal loc = NullT.at loc |> with_trust Trust.literal_trust
+  let null_literal loc = NullT.at loc
 
   let number_literal loc { Ast.NumberLiteral.value; raw; _ } =
     let reason = mk_annot_reason RNumber loc in
-    DefT (reason, Trust.literal_trust (), NumT (Literal (None, (value, raw))))
+    DefT (reason, NumT (Literal (None, (value, raw))))
 
   let bigint_literal loc { Ast.BigIntLiteral.value; raw; _ } =
     let reason = mk_annot_reason RBigInt loc in
-    DefT (reason, Trust.literal_trust (), BigIntT (Literal (None, (value, raw))))
+    DefT (reason, BigIntT (Literal (None, (value, raw))))
 
   let regexp_literal cx loc =
     let reason = mk_annot_reason RRegExp loc in
@@ -738,10 +735,7 @@ module Make
       let opaquetype = { underlying_t; super_t; opaque_id; opaque_type_args; opaque_name = name } in
       let t = OpaqueT (mk_reason (ROpaqueType name) name_loc, opaquetype) in
       let type_ =
-        poly_type_of_tparams
-          (Type.Poly.generate_id ())
-          tparams
-          (DefT (r, bogus_trust (), TypeT (OpaqueKind, t)))
+        poly_type_of_tparams (Type.Poly.generate_id ()) tparams (DefT (r, TypeT (OpaqueKind, t)))
       in
       let () =
         Flow.(
@@ -1011,7 +1005,7 @@ module Make
             | Ast.Type.Missing mloc ->
               let t =
                 if Context.use_mixed_in_catch_variables cx then
-                  MixedT.why r |> with_trust bogus_trust
+                  MixedT.why r
                 else
                   AnyT.why CatchAny r
               in
@@ -1195,7 +1189,7 @@ module Make
     | (loc, Return { Return.argument; comments; return_out }) ->
       let (t, argument_ast) =
         match argument with
-        | None -> (VoidT.at loc |> with_trust literal_trust, None)
+        | None -> (VoidT.at loc, None)
         | Some expr ->
           let (((_, t), _) as ast) = expression cx expr in
           (t, Some ast)
@@ -1266,9 +1260,7 @@ module Make
               }
             ) ->
           let right_ast = eval_right () in
-          let (id_ast, _) =
-            variable cx kind id None ~if_uninitialized:(StrT.at %> with_trust bogus_trust)
-          in
+          let (id_ast, _) = variable cx kind id None ~if_uninitialized:StrT.at in
           ( ForIn.LeftDeclaration
               ( decl_loc,
                 {
@@ -1291,7 +1283,7 @@ module Make
                 }
             ) ->
           let right_ast = eval_right () in
-          let t = StrT.at pat_loc |> with_trust bogus_trust in
+          let t = StrT.at pat_loc in
           let use_op =
             Op
               (AssignVar
@@ -1892,13 +1884,7 @@ module Make
     let loc = loc_of_reason reason in
     (* Second and third args here are never relevant to the loop, but they should be as
        general as possible to allow iterating over arbitrary generators *)
-    let targs =
-      [
-        elem_t;
-        MixedT.why reason |> with_trust bogus_trust;
-        EmptyT.why reason |> with_trust bogus_trust;
-      ]
-    in
+    let targs = [elem_t; MixedT.why reason; EmptyT.why reason] in
     let (async, iterable_reason) =
       if await then
         (true, mk_reason (RCustom "async iteration expected on AsyncIterable") loc)
@@ -1934,10 +1920,7 @@ module Make
         mod_reason_of_t (update_desc_reason (fun desc -> RTypeAlias (name, Some name_loc, desc))) t
       in
       let type_ =
-        poly_type_of_tparams
-          (Type.Poly.generate_id ())
-          tparams
-          (DefT (r, bogus_trust (), TypeT (TypeAliasKind, t)))
+        poly_type_of_tparams (Type.Poly.generate_id ()) tparams (DefT (r, TypeT (TypeAliasKind, t)))
       in
       begin
         match tparams with
@@ -2255,11 +2238,11 @@ module Make
             }
         in
         let props = NameUtils.Map.singleton name prop in
-        let proto = NullT.make reason |> with_trust bogus_trust in
+        let proto = NullT.make reason in
         Obj_type.mk_with_proto ~obj_kind:Exact cx reason_obj ~props proto
     in
     match keys with
-    | [] -> DefT (reason_obj, bogus_trust (), EmptyT)
+    | [] -> DefT (reason_obj, EmptyT)
     | [key] -> single_key key
     | _ ->
       Flow_js_utils.add_output cx (Error_message.EComputedPropertyWithUnion reason);
@@ -2419,7 +2402,7 @@ module Make
         let r = reason_of_t t in
         (Some (t, r), None)
       | ((ploc, _), None, None) ->
-        let t = VoidT.at ploc |> with_trust bogus_trust in
+        let t = VoidT.at ploc in
         let r = reason_of_t t in
         (Some (t, r), None)
     in
@@ -2516,7 +2499,7 @@ module Make
              let reason = mk_reason RArrayElement loc in
              (UnresolvedArg (mk_tuple_element reason t, None), Expression e)
            | Hole loc ->
-             let t = EmptyT.at undef_loc |> with_trust bogus_trust in
+             let t = EmptyT.at undef_loc in
              let reason = mk_reason RArrayElement loc in
              (UnresolvedArg (mk_tuple_element reason t, None), Hole loc)
            | Spread (loc, { Ast.Expression.SpreadElement.argument; comments }) ->
@@ -2534,7 +2517,7 @@ module Make
     let elemt = Tvar.mk cx element_reason in
     (* empty array, analogous to object with implicit properties *)
     ( if not has_hint then
-      Flow.flow_t cx (EmptyT.make (mk_reason REmptyArrayElement loc) (bogus_trust ()), elemt)
+      Flow.flow_t cx (EmptyT.make (mk_reason REmptyArrayElement loc), elemt)
     else
       match lazy_hint element_reason with
       | HintAvailable (hint, _) -> Flow.flow_t cx (hint, elemt)
@@ -2543,7 +2526,7 @@ module Make
          * array element. In this case, the element type of the array is likely
          * useless (does not escape the annotation), so we can use `empty` as
          * its type. *)
-        Flow.flow_t cx (EmptyT.make (mk_reason REmptyArrayElement loc) (bogus_trust ()), elemt)
+        Flow.flow_t cx (EmptyT.make (mk_reason REmptyArrayElement loc), elemt)
       | NoHint
       | EncounteredPlaceholder ->
         (* If there is no hint then raise an error. The EncounteredPlaceholder case
@@ -2727,10 +2710,7 @@ module Make
         let elem_t = Context.mk_placeholder cx element_reason in
         ( ( loc,
             DefT
-              ( reason,
-                Trust.literal_trust (),
-                ArrT (ArrayAT { elem_t; tuple_view = Some ([], (0, 0)); react_dro = None })
-              )
+              (reason, ArrT (ArrayAT { elem_t; tuple_view = Some ([], (0, 0)); react_dro = None }))
           ),
           Array { Array.elements = []; comments }
         )
@@ -2738,10 +2718,7 @@ module Make
         let (reason, elem_t) = empty_array cx loc in
         ( ( loc,
             DefT
-              ( reason,
-                Trust.literal_trust (),
-                ArrT (ArrayAT { elem_t; tuple_view = Some ([], (0, 0)); react_dro = None })
-              )
+              (reason, ArrT (ArrayAT { elem_t; tuple_view = Some ([], (0, 0)); react_dro = None }))
           ),
           Array { Array.elements = []; comments }
         )
@@ -2796,14 +2773,13 @@ module Make
           (function
             | Arg t
             | SpreadArg t ->
-              Flow.flow_t cx (t, StrT.at loc |> with_trust bogus_trust))
+              Flow.flow_t cx (t, StrT.at loc))
           argts;
         let reason = mk_reason (RCustom "new Function(..)") loc in
         let proto = ObjProtoT reason in
         ( ( loc,
             DefT
               ( reason,
-                bogus_trust (),
                 FunT
                   ( dummy_static reason,
                     mk_functiontype
@@ -2892,7 +2868,7 @@ module Make
       | Ok (targ_t, arg_t) ->
         let reason = mk_reason (RCustom "new Array(..)") loc in
         let length_reason = replace_desc_reason (RCustom "array length") reason in
-        Flow.flow_t cx (arg_t, DefT (length_reason, bogus_trust (), NumT AnyLiteral));
+        Flow.flow_t cx (arg_t, DefT (length_reason, NumT AnyLiteral));
         let (targ_ts, targs_ast) =
           match targ_t with
           | Some (loc, ast, ExplicitArg t) -> (Some [ExplicitArg t], Some (loc, ast))
@@ -2961,7 +2937,7 @@ module Make
         match (then_abnormal, else_abnormal) with
         | (Some Abnormal.Throw, None) -> t2
         | (None, Some Abnormal.Throw) -> t1
-        | (Some Abnormal.Throw, Some Abnormal.Throw) -> EmptyT.at loc |> with_trust bogus_trust
+        | (Some Abnormal.Throw, Some Abnormal.Throw) -> EmptyT.at loc
         (* Both sides threw--see below for where we re-raise *)
         | (None, None) -> UnionT (reason, UnionRep.make t1 t2 [])
         (* NOTE: In general it is dangerous to express the least upper bound of
@@ -3118,7 +3094,7 @@ module Make
           let t = string_literal_value cx elem_loc cooked in
           (t, [])
         | _ ->
-          let t_out = StrT.at loc |> with_trust bogus_trust in
+          let t_out = StrT.at loc in
           let expressions =
             Base.List.map
               ~f:(fun expr ->
@@ -3182,7 +3158,7 @@ module Make
         | Some expr ->
           let (((_, t), _) as expr) = expression cx expr in
           (t, Some expr)
-        | None -> (VoidT.at loc |> with_trust bogus_trust, None)
+        | None -> (VoidT.at loc, None)
       in
       ( (loc, Type_env.get_next cx loc),
         Yield
@@ -3246,7 +3222,7 @@ module Make
           property = (_, { Ast.Identifier.name = "target"; _ }) as property;
           comments;
         } ->
-      let t = bogus_trust () |> MixedT.at loc in
+      let t = MixedT.at loc in
       ((loc, t), MetaProperty { MetaProperty.meta; property; comments })
     | MetaProperty
         {
@@ -3452,7 +3428,7 @@ module Make
               Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, RequireDynamicArgument));
             (AnyT.at (AnyError None) loc, Tast_utils.error_mapper#arg_list arguments)
         in
-        let id_t = bogus_trust () |> MixedT.at callee_loc in
+        let id_t = MixedT.at callee_loc in
         Some
           ( (loc, lhs_t),
             call_ast
@@ -3489,7 +3465,7 @@ module Make
         in
         Some
           ( (loc, lhs_t),
-            let t = bogus_trust () |> MixedT.at callee_loc in
+            let t = MixedT.at callee_loc in
             call_ast
               ~filtered_out:lhs_t
               ~sig_help:t
@@ -3659,7 +3635,7 @@ module Make
         let (t, arguments) =
           match (targs, arguments) with
           | (None, (args_loc, { ArgList.arguments = []; comments = args_comments })) ->
-            let t = EmptyT.at loc |> with_trust bogus_trust in
+            let t = EmptyT.at loc in
             (* invariant() is treated like a throw *)
             ( t,
               Abnormal.throw_expr_control_flow_exception
@@ -3692,7 +3668,7 @@ module Make
               Base.List.map ~f:(Base.Fn.compose snd (expression_or_spread cx)) arguments
             in
             let lit_exp = expression cx lit_exp in
-            let t = EmptyT.at loc |> with_trust bogus_trust in
+            let t = EmptyT.at loc in
             ( t,
               Abnormal.throw_expr_control_flow_exception
                 loc
@@ -3723,7 +3699,7 @@ module Make
             let (((_, cond_t), _) as cond) = condition ~cond:OtherTest cx cond in
             let reason = mk_reason (RFunctionCall (desc_of_t callee_t)) loc in
             Flow.flow cx (cond_t, InvariantT reason);
-            let t = VoidT.at loc |> with_trust bogus_trust in
+            let t = VoidT.at loc in
             ( t,
               ( args_loc,
                 { ArgList.arguments = Expression cond :: arguments; comments = args_comments }
@@ -4536,7 +4512,7 @@ module Make
       let reason = mk_reason (RUnaryOperator ("not", desc_of_t arg)) loc in
       let tout =
         match cond with
-        | Some _ -> BoolT.at loc |> with_trust bogus_trust
+        | Some _ -> BoolT.at loc
         | None ->
           Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
               Flow.flow cx (arg, NotT (reason, t))
@@ -4555,7 +4531,7 @@ module Make
       let (((_, argt), _) as argument) = expression cx argument in
       ( begin
           match argt with
-          | DefT (reason, trust, NumT (Literal (sense, (value, raw)))) ->
+          | DefT (reason, NumT (Literal (sense, (value, raw)))) ->
             (* special case for negative number literals, to avoid creating an unnecessary tvar. not
                having a tvar allows other special cases that match concrete lower bounds to proceed
                (notably, Object.freeze upgrades literal props to singleton types, and a tvar would
@@ -4563,7 +4539,7 @@ module Make
             let annot_loc = loc in
             let reason = annot_reason ~annot_loc @@ repos_reason annot_loc reason in
             let (value, raw) = Flow_ast_utils.negate_number_literal (value, raw) in
-            DefT (reason, trust, NumT (Literal (sense, (value, raw))))
+            DefT (reason, NumT (Literal (sense, (value, raw))))
           | arg ->
             let reason = mk_reason (desc_of_t arg) loc in
             Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun result_t ->
@@ -4582,15 +4558,13 @@ module Make
       )
     | { operator = Typeof; argument; comments } ->
       let argument = expression cx argument in
-      (StrT.at loc |> with_trust literal_trust, { operator = Typeof; argument; comments })
+      (StrT.at loc, { operator = Typeof; argument; comments })
     | { operator = Void; argument; comments } ->
       let argument = expression cx argument in
-      (VoidT.at loc |> with_trust literal_trust, { operator = Void; argument; comments })
+      (VoidT.at loc, { operator = Void; argument; comments })
     | { operator = Ast.Expression.Unary.Delete; argument; comments } ->
       let argument = delete cx loc argument in
-      ( BoolT.at loc |> with_trust literal_trust,
-        { operator = Ast.Expression.Unary.Delete; argument; comments }
-      )
+      (BoolT.at loc, { operator = Ast.Expression.Unary.Delete; argument; comments })
     | { operator = Await; argument; comments } ->
       (* TODO: await should look up Promise in the environment instead of going
          directly to the core definition. Otherwise, the following won't work
@@ -4717,7 +4691,7 @@ module Make
       in
       let reason = mk_reason desc loc in
       Flow.flow cx (t1, EqT { reason; flip = false; arg = t2 });
-      (BoolT.at loc |> with_trust literal_trust, { operator; left; right; comments })
+      (BoolT.at loc, { operator; left; right; comments })
     | In ->
       let (loc1, _) = left in
       let (loc2, _) = right in
@@ -4727,7 +4701,7 @@ module Make
       let reason_rhs = mk_reason (RCustom "RHS of `in` operator") loc2 in
       Flow.flow cx (t1, AssertBinaryInLHST reason_lhs);
       Flow.flow cx (t2, AssertBinaryInRHST reason_rhs);
-      (BoolT.at loc |> with_trust literal_trust, { operator; left; right; comments })
+      (BoolT.at loc, { operator; left; right; comments })
     | StrictEqual
     | StrictNotEqual ->
       let reconstruct_ast = visit_eq_test cx ~cond loc left right in
@@ -4742,13 +4716,13 @@ module Make
       in
       let reason = mk_reason desc loc in
       Flow.flow cx (t1, StrictEqT { reason; cond_context = cond; flip = false; arg = t2 });
-      (BoolT.at loc |> with_trust literal_trust, { operator; left; right; comments })
+      (BoolT.at loc, { operator; left; right; comments })
     | Instanceof ->
       let left = expression cx left in
       let (((right_loc, right_t), _) as right) = expression cx right in
       let reason_rhs = mk_reason (RCustom "RHS of `instanceof` operator") right_loc in
       Flow.flow cx (right_t, AssertInstanceofRHST reason_rhs);
-      (BoolT.at loc |> with_trust literal_trust, { operator; left; right; comments })
+      (BoolT.at loc, { operator; left; right; comments })
     | LessThan
     | LessThanEqual
     | GreaterThan
@@ -4764,7 +4738,7 @@ module Make
       in
       let reason = mk_reason desc loc in
       Flow.flow cx (t1, ComparatorT { reason; flip = false; arg = t2 });
-      (BoolT.at loc |> with_trust literal_trust, { operator; left; right; comments })
+      (BoolT.at loc, { operator; left; right; comments })
     | Plus
     | LShift
     | RShift
@@ -4830,7 +4804,7 @@ module Make
       in
       let t2 =
         match right_abnormal with
-        | Some Abnormal.Throw -> EmptyT.at loc |> with_trust bogus_trust
+        | Some Abnormal.Throw -> EmptyT.at loc
         | None -> t2
       in
       let reason = mk_reason (RLogical ("||", desc_of_t t1, desc_of_t t2)) loc in
@@ -4846,7 +4820,7 @@ module Make
       in
       let t2 =
         match right_abnormal with
-        | Some Abnormal.Throw -> EmptyT.at loc |> with_trust bogus_trust
+        | Some Abnormal.Throw -> EmptyT.at loc
         | None -> t2
       in
       let reason = mk_reason (RLogical ("&&", desc_of_t t1, desc_of_t t2)) loc in
@@ -4862,7 +4836,7 @@ module Make
       in
       let t2 =
         match right_abnormal with
-        | Some Abnormal.Throw -> EmptyT.at loc |> with_trust bogus_trust
+        | Some Abnormal.Throw -> EmptyT.at loc
         | None -> t2
       in
       let reason = mk_reason (RLogical ("??", desc_of_t t1, desc_of_t t2)) loc in
@@ -4923,7 +4897,7 @@ module Make
            So if a is null, no work has to be done. Hence, the nullable output
            for the optional chain is mixed.
         *)
-        let mixed = MixedT.at lhs_loc (literal_trust ()) in
+        let mixed = MixedT.at lhs_loc in
         OptionalChainT { reason; lhs_reason; t_out = use_t; voided_out = mixed }
       | _ -> use_t
     in
@@ -5208,7 +5182,7 @@ module Make
           in
           let rhs_t =
             match right_abnormal with
-            | Some Abnormal.Throw -> EmptyT.at loc |> with_trust bogus_trust
+            | Some Abnormal.Throw -> EmptyT.at loc
             | None -> rhs_t
           in
           let result_t =
@@ -5225,7 +5199,7 @@ module Make
           in
           let rhs_t =
             match right_abnormal with
-            | Some Abnormal.Throw -> EmptyT.at loc |> with_trust bogus_trust
+            | Some Abnormal.Throw -> EmptyT.at loc
             | None -> rhs_t
           in
           let result_t =
@@ -5243,7 +5217,7 @@ module Make
           in
           let rhs_t =
             match right_abnormal with
-            | Some Abnormal.Throw -> EmptyT.at loc |> with_trust bogus_trust
+            | Some Abnormal.Throw -> EmptyT.at loc
             | None -> rhs_t
           in
           let result_t =
@@ -5264,7 +5238,7 @@ module Make
   (* delete variables and properties *)
   and delete cx loc target =
     let open Ast.Expression in
-    let void = VoidT.at loc |> with_trust literal_trust in
+    let void = VoidT.at loc in
     let (lhs_loc, targ_exp) = target in
     match targ_exp with
     | Member mem ->
@@ -5365,14 +5339,7 @@ module Make
     let (unresolved_params, frag_children) = collapse_children cx frag_children in
     let locs = (expr_loc, frag_opening_element, children_loc) in
     let t =
-      jsx_desugar
-        cx
-        "React.Fragment"
-        fragment_t
-        (NullT.at expr_loc |> with_trust bogus_trust)
-        []
-        unresolved_params
-        locs
+      jsx_desugar cx "React.Fragment" fragment_t (NullT.at expr_loc) [] unresolved_params locs
     in
     Tvar_resolver.resolve cx t;
     (t, { frag_opening_element; frag_children; frag_closing_element; frag_comments })
@@ -5455,7 +5422,7 @@ module Make
                 | Options.Jsx_react -> SingletonStrT (OrdinaryName name)
                 | Options.Jsx_pragma _ -> StrT (Literal (None, OrdinaryName name))
               in
-              DefT (mk_reason (RIdentifier (OrdinaryName name)) loc, Trust.literal_trust (), strt)
+              DefT (mk_reason (RIdentifier (OrdinaryName name)) loc, strt)
             end
           in
           let (o, attributes', unresolved_params, children) =
@@ -5640,10 +5607,10 @@ module Make
                 )
               (* <element name={} /> *)
               | Some (Attribute.ExpressionContainer _ as ec) ->
-                let t = EmptyT.at attr_loc |> with_trust bogus_trust in
+                let t = EmptyT.at attr_loc in
                 (t, Some (Tast_utils.unchecked_mapper#jsx_attribute_value ec))
               (* <element name /> *)
-              | None -> (DefT (mk_reason RBoolean attr_loc, bogus_trust (), BoolT (Some true)), None)
+              | None -> (DefT (mk_reason RBoolean attr_loc, BoolT (Some true)), None)
             in
             let acc =
               if Type_inference_hooks_js.dispatch_jsx_hook cx aname id_loc then
@@ -5803,7 +5770,7 @@ module Make
        * arg *)
       let props =
         match attributes with
-        | [] -> NullT.at loc_opening |> with_trust bogus_trust
+        | [] -> NullT.at loc_opening
         | _ -> props
       in
       let argts =
@@ -5912,7 +5879,6 @@ module Make
       Some
         (DefT
            ( mk_reason RJSXText (loc |> ALoc.of_loc),
-             Trust.literal_trust (),
              StrT (Type.Literal (None, OrdinaryName trimmed))
            )
         )
@@ -6144,11 +6110,7 @@ module Make
       let arr_reason = mk_reason RArrayType loc in
       let (((_, o), _) as e_ast) = expression cx e in
       let keys_t = get_keys ~arr_reason o in
-      ( DefT
-          ( arr_reason,
-            bogus_trust (),
-            ArrT (ArrayAT { elem_t = keys_t; tuple_view = None; react_dro = None })
-          ),
+      ( DefT (arr_reason, ArrT (ArrayAT { elem_t = keys_t; tuple_view = None; react_dro = None })),
         None,
         (args_loc, { ArgList.arguments = [Expression e_ast]; comments })
       )
@@ -6157,7 +6119,6 @@ module Make
       let (((_, o), _) as e_ast) = expression cx e in
       ( DefT
           ( arr_reason,
-            bogus_trust (),
             ArrT (ArrayAT { elem_t = get_values ~arr_reason o; tuple_view = None; react_dro = None })
           ),
         None,
@@ -6173,7 +6134,6 @@ module Make
       let entry_t =
         DefT
           ( mk_reason RTupleType loc,
-            bogus_trust (),
             ArrT
               (TupleAT
                  {
@@ -6189,11 +6149,7 @@ module Make
               )
           )
       in
-      ( DefT
-          ( arr_reason,
-            bogus_trust (),
-            ArrT (ArrayAT { elem_t = entry_t; tuple_view = None; react_dro = None })
-          ),
+      ( DefT (arr_reason, ArrT (ArrayAT { elem_t = entry_t; tuple_view = None; react_dro = None })),
         None,
         (args_loc, { ArgList.arguments = [Expression e_ast]; comments })
       )
@@ -6867,11 +6823,7 @@ module Make
                       !body_ref
                       ~default:(Tast_utils.error_mapper#function_body_any func.Ast.Function.body)
                   in
-                  let func_t =
-                    Base.Option.value
-                      !func_t_ref
-                      ~default:(EmptyT.at id_loc |> with_trust bogus_trust)
-                  in
+                  let func_t = Base.Option.value !func_t_ref ~default:(EmptyT.at id_loc) in
                   let func = reconstruct_func params body func_t in
                   Body.Method
                     ( (method_loc, func_t),
@@ -7679,7 +7631,7 @@ module Make
         let (return_t, return, type_guard_opt) =
           match (return, type_guard_incompatible) with
           | (Ast.Function.ReturnAnnot.TypeGuard (_, (loc, _)), Some kind) ->
-            let return_t = BoolT.at loc |> with_trust bogus_trust in
+            let return_t = BoolT.at loc in
             let return = Tast_utils.error_mapper#function_return_annotation return in
             Flow_js_utils.add_output
               cx
@@ -7737,11 +7689,7 @@ module Make
           if kind = Func_class_sig_types.Func.Ctor then
             let return_t = TypeUtil.type_t_of_annotated_or_inferred return_t in
             let use_op = Op (FunReturnStatement { value = TypeUtil.reason_of_t return_t }) in
-            Flow.unify
-              cx
-              ~use_op
-              return_t
-              (VoidT.make (mk_reason RConstructorVoidReturn ret_loc) (literal_trust ()))
+            Flow.unify cx ~use_op return_t (VoidT.make (mk_reason RConstructorVoidReturn ret_loc))
         in
         let statics_t =
           let props =
@@ -8025,7 +7973,7 @@ module Make
     let t =
       if Context.enable_enums cx then (
         let enum_t = mk_enum cx ~enum_reason:reason name_loc body in
-        let t = DefT (reason, literal_trust (), EnumObjectT enum_t) in
+        let t = DefT (reason, EnumObjectT enum_t) in
         let use_op =
           Op
             (AssignVar
@@ -8084,7 +8032,7 @@ module Make
             ~init:(SMap.empty, None, BoolMap.empty)
             members
         in
-        (DefT (reason, literal_trust (), BoolT bool_type), members, has_unknown_members)
+        (DefT (reason, BoolT bool_type), members, has_unknown_members)
       | (_, NumberBody { NumberBody.members; has_unknown_members; _ }) ->
         let reason = mk_reason (REnumRepresentation RNumber) (loc_of_reason enum_reason) in
         let (members, num_type, _) =
@@ -8114,7 +8062,7 @@ module Make
             ~init:(SMap.empty, Truthy, NumberMap.empty)
             members
         in
-        (DefT (reason, literal_trust (), NumT num_type), members, has_unknown_members)
+        (DefT (reason, NumT num_type), members, has_unknown_members)
       | (_, BigIntBody { BigIntBody.members; has_unknown_members; _ }) ->
         let reason = mk_reason (REnumRepresentation RBigInt) (loc_of_reason enum_reason) in
         let (members, num_type, _) =
@@ -8144,7 +8092,7 @@ module Make
             ~init:(SMap.empty, Truthy, BigIntOptionMap.empty)
             members
         in
-        (DefT (reason, literal_trust (), BigIntT num_type), members, has_unknown_members)
+        (DefT (reason, BigIntT num_type), members, has_unknown_members)
       | ( _,
           StringBody { StringBody.members = StringBody.Initialized members; has_unknown_members; _ }
         ) ->
@@ -8176,17 +8124,17 @@ module Make
             ~init:(SMap.empty, Truthy, SMap.empty)
             members
         in
-        (DefT (reason, literal_trust (), StrT str_type), members, has_unknown_members)
+        (DefT (reason, StrT str_type), members, has_unknown_members)
       | (_, StringBody { StringBody.members = StringBody.Defaulted members; has_unknown_members; _ })
         ->
         let reason = mk_reason (REnumRepresentation RString) (loc_of_reason enum_reason) in
-        ( DefT (reason, literal_trust (), StrT Truthy (* Member names can't be the empty string *)),
+        ( DefT (reason, StrT Truthy (* Member names can't be the empty string *)),
           defaulted_members members,
           has_unknown_members
         )
       | (_, SymbolBody { SymbolBody.members; has_unknown_members; comments = _ }) ->
         let reason = mk_reason (REnumRepresentation RSymbol) (loc_of_reason enum_reason) in
-        (DefT (reason, literal_trust (), SymbolT), defaulted_members members, has_unknown_members)
+        (DefT (reason, SymbolT), defaulted_members members, has_unknown_members)
     in
     { enum_id; members; representation_t; has_unknown_members }
 end

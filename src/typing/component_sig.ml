@@ -152,10 +152,7 @@ module Make
     in
     let t =
       DefT
-        ( reason,
-          bogus_trust (),
-          ReactAbstractComponentT { config; instance; renders = renders_t; component_kind }
-        )
+        (reason, ReactAbstractComponentT { config; instance; renders = renders_t; component_kind })
     in
     poly_type_of_tparams (Type.Poly.generate_id ()) tparams t
 end

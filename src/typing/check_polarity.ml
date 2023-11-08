@@ -38,22 +38,22 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
      * type will certainly not contain a GenericT. *)
     | AnnotT _ -> ()
     | AnyT _
-    | DefT (_, _, BoolT _)
-    | DefT (_, _, BigIntT _)
-    | DefT (_, _, CharSetT _)
-    | DefT (_, _, EmptyT)
-    | DefT (_, _, EnumObjectT _)
-    | DefT (_, _, EnumT _)
-    | DefT (_, _, MixedT _)
-    | DefT (_, _, NullT)
-    | DefT (_, _, NumT _)
-    | DefT (_, _, SingletonBoolT _)
-    | DefT (_, _, SingletonNumT _)
-    | DefT (_, _, SingletonStrT _)
-    | DefT (_, _, SingletonBigIntT _)
-    | DefT (_, _, StrT _)
-    | DefT (_, _, VoidT)
-    | DefT (_, _, SymbolT)
+    | DefT (_, BoolT _)
+    | DefT (_, BigIntT _)
+    | DefT (_, CharSetT _)
+    | DefT (_, EmptyT)
+    | DefT (_, EnumObjectT _)
+    | DefT (_, EnumT _)
+    | DefT (_, MixedT _)
+    | DefT (_, NullT)
+    | DefT (_, NumT _)
+    | DefT (_, SingletonBoolT _)
+    | DefT (_, SingletonNumT _)
+    | DefT (_, SingletonStrT _)
+    | DefT (_, SingletonBigIntT _)
+    | DefT (_, StrT _)
+    | DefT (_, VoidT)
+    | DefT (_, SymbolT)
     | FunProtoApplyT _
     | FunProtoBindT _
     | FunProtoCallT _
@@ -65,8 +65,8 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
     | ExactT (_, t)
     | MaybeT (_, t) ->
       check_polarity cx ?trace tparams polarity t
-    | DefT (_, _, ClassT t) -> check_polarity cx ?trace tparams polarity t
-    | DefT (_, _, InstanceT { static; super; implements; inst }) ->
+    | DefT (_, ClassT t) -> check_polarity cx ?trace tparams polarity t
+    | DefT (_, InstanceT { static; super; implements; inst }) ->
       let {
         class_id = _;
         class_name = _;
@@ -96,7 +96,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
       Base.Option.iter inst_dict ~f:(check_polarity_dict cx ?trace tparams polarity)
     (* We can ignore the statics of function annotations, since
      * they will always be "uninteresting," never containing a GenericT. *)
-    | DefT (_, _, FunT (_static, f)) ->
+    | DefT (_, FunT (_static, f)) ->
       let {
         (* Similarly, we can ignore this types, which can not be explicitly
          * provided, and thus will not contain a GenericT. *)
@@ -116,18 +116,18 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
       (match predicate with
       | Some (TypeGuardBased { type_guard = t; _ }) -> check_polarity cx ?trace tparams polarity t
       | _ -> ())
-    | DefT (_, _, ArrT (ArrayAT { elem_t = _; tuple_view = Some _; react_dro = _ })) as t ->
+    | DefT (_, ArrT (ArrayAT { elem_t = _; tuple_view = Some _; react_dro = _ })) as t ->
       (* This representation signifies a literal, which is not a type. *)
       raise (UnexpectedType (Debug_js.dump_t cx t))
-    | DefT (_, _, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = _ })) ->
+    | DefT (_, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = _ })) ->
       check_polarity cx ?trace tparams Polarity.Neutral elem_t
-    | DefT (_, _, ArrT (TupleAT { elements; _ })) ->
+    | DefT (_, ArrT (TupleAT { elements; _ })) ->
       List.iter
         (fun (TupleElement { t; polarity = p; name = _; optional = _; reason = _ }) ->
           check_polarity cx ?trace tparams (Polarity.mult (polarity, p)) t)
         elements
-    | DefT (_, _, ArrT (ROArrayAT (t, _))) -> check_polarity cx ?trace tparams polarity t
-    | DefT (_, _, ObjT o) ->
+    | DefT (_, ArrT (ROArrayAT (t, _))) -> check_polarity cx ?trace tparams polarity t
+    | DefT (_, ObjT o) ->
       let { flags; props_tmap; proto_t; call_t; reachable_targs = _ } = o in
       check_polarity_propmap cx ?trace tparams polarity props_tmap;
       let dict = Obj_type.get_dict_opt flags.obj_kind in
@@ -137,7 +137,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
     | UnionT (_, rep) -> List.iter (check_polarity cx ?trace tparams polarity) (UnionRep.members rep)
     | IntersectionT (_, rep) ->
       List.iter (check_polarity cx ?trace tparams polarity) (InterRep.members rep)
-    | DefT (_, _, PolyT { tparams = tps; t_out = t; _ }) ->
+    | DefT (_, PolyT { tparams = tps; t_out = t; _ }) ->
       (* We might encounter a polymorphic function type or method inside of an
        * annotation. A newly introduced type parameter's bound or default might
        * refer to one of the tparams we're looking for. *)
@@ -165,14 +165,13 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
        * checking the type args once the root type is resolved. *)
       let reason = reason_of_t type_ in
       Flow.flow_opt cx ?trace (type_, VarianceCheckT (reason, tparams, targs, polarity))
-    | DefT (_, _, ReactAbstractComponentT { config; instance; renders; component_kind = _ }) ->
+    | DefT (_, ReactAbstractComponentT { config; instance; renders; component_kind = _ }) ->
       check_polarity cx ?trace tparams (Polarity.inv polarity) config;
       check_polarity cx ?trace tparams polarity instance;
       check_polarity cx ?trace tparams polarity renders
-    | DefT (_, _, RendersT (NominalRenders { renders_id = _; renders_name = _; renders_super })) ->
+    | DefT (_, RendersT (NominalRenders { renders_id = _; renders_name = _; renders_super })) ->
       check_polarity cx ?trace tparams polarity renders_super
-    | DefT (_, _, RendersT (StructuralRenders { renders_variant = _; renders_structural_type = t }))
-      ->
+    | DefT (_, RendersT (StructuralRenders { renders_variant = _; renders_structural_type = t })) ->
       check_polarity cx ?trace tparams polarity t
     | KeysT (_, t) -> check_polarity cx ?trace tparams Polarity.Positive t
     | EvalT (t, TypeDestructorT (use_op, r, ReadOnlyType), _) ->
@@ -195,8 +194,8 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
     | EvalT _ ->
       ()
     (* We only expect types which can appear in annotations. *)
-    | (InternalT _ | DefT (_, _, TypeT _) | OpaqueT _ | ThisClassT _ | ModuleT _ | MatchingPropT _)
-      as t ->
+    | (InternalT _ | DefT (_, TypeT _) | OpaqueT _ | ThisClassT _ | ModuleT _ | MatchingPropT _) as
+      t ->
       raise (UnexpectedType (Debug_js.dump_t cx t))
 
   and check_polarity_propmap cx ?trace ?(skip_ctor = false) tparams polarity id =

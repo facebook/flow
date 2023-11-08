@@ -18,7 +18,7 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
     let resolve_callee =
       match resolve_callee with
       | None -> any
-      | Some (r, []) -> DefT (r, bogus_trust (), MixedT Mixed_everything)
+      | Some (r, []) -> DefT (r, MixedT Mixed_everything)
       | Some (_, [t]) -> t
       | Some (r, t1 :: t2 :: ts) -> IntersectionT (r, InterRep.make t1 t2 ts)
     in

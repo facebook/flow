@@ -385,19 +385,19 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     | (loc, (Any _ as t_ast)) ->
       add_unclear_type_error_if_not_lib_file cx loc;
       ((loc, AnyT.at AnnotatedAny loc), t_ast)
-    | (loc, (Mixed _ as t_ast)) -> ((loc, MixedT.at loc (Trust.bogus_trust ())), t_ast)
-    | (loc, (Empty _ as t_ast)) -> ((loc, EmptyT.at loc (Trust.bogus_trust ())), t_ast)
-    | (loc, (Void _ as t_ast)) -> ((loc, VoidT.at loc (Trust.bogus_trust ())), t_ast)
-    | (loc, (Null _ as t_ast)) -> ((loc, NullT.at loc (Trust.bogus_trust ())), t_ast)
-    | (loc, (Symbol _ as t_ast)) -> ((loc, SymbolT.at loc (Trust.bogus_trust ())), t_ast)
-    | (loc, (Number _ as t_ast)) -> ((loc, NumT.at loc (Trust.bogus_trust ())), t_ast)
-    | (loc, (BigInt _ as t_ast)) -> ((loc, BigIntT.at loc (Trust.bogus_trust ())), t_ast)
-    | (loc, (String _ as t_ast)) -> ((loc, StrT.at loc (Trust.bogus_trust ())), t_ast)
+    | (loc, (Mixed _ as t_ast)) -> ((loc, MixedT.at loc), t_ast)
+    | (loc, (Empty _ as t_ast)) -> ((loc, EmptyT.at loc), t_ast)
+    | (loc, (Void _ as t_ast)) -> ((loc, VoidT.at loc), t_ast)
+    | (loc, (Null _ as t_ast)) -> ((loc, NullT.at loc), t_ast)
+    | (loc, (Symbol _ as t_ast)) -> ((loc, SymbolT.at loc), t_ast)
+    | (loc, (Number _ as t_ast)) -> ((loc, NumT.at loc), t_ast)
+    | (loc, (BigInt _ as t_ast)) -> ((loc, BigIntT.at loc), t_ast)
+    | (loc, (String _ as t_ast)) -> ((loc, StrT.at loc), t_ast)
     | (loc, (Boolean { raw; comments = _ } as t_ast)) ->
       (match raw with
       | `Bool -> Flow_js_utils.add_output cx (Error_message.EDeprecatedBool loc)
       | `Boolean -> ());
-      ((loc, BoolT.at loc (Trust.bogus_trust ())), t_ast)
+      ((loc, BoolT.at loc), t_ast)
     | (loc, (Unknown _ as t_ast)) ->
       Flow_js_utils.add_output cx (Error_message.ETSSyntax { kind = Error_message.TSUnknown; loc });
       ((loc, AnyT.at (AnyError None) loc), t_ast)
@@ -482,9 +482,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     | (loc, Array { Array.argument = t; comments }) ->
       let r = mk_annot_reason RArrayType loc in
       let (((_, elem_t), _) as t_ast) = convert cx tparams_map infer_tparams_map t in
-      ( ( loc,
-          DefT (r, bogus_trust (), ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = None }))
-        ),
+      ( (loc, DefT (r, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = None }))),
         Array { Array.argument = t_ast; comments }
       )
     | (loc, Conditional { Conditional.check_type; extends_type; true_type; false_type; comments })
@@ -744,9 +742,9 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (elemts, targs) = convert_type_params () in
               match List.hd elemts with
-              | DefT (r, trust, SingletonNumT num_lit) ->
+              | DefT (r, SingletonNumT num_lit) ->
                 reconstruct_ast
-                  (DefT (replace_desc_reason RNumber r, trust, NumT (Literal (None, num_lit))))
+                  (DefT (replace_desc_reason RNumber r, NumT (Literal (None, num_lit))))
                   targs
               | _ -> error_type cx loc (Error_message.EUnexpectedTemporaryBaseType loc) t_ast
           )
@@ -754,7 +752,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (elemts, targs) = convert_type_params () in
               match List.hd elemts with
-              | DefT (r, trust, SingletonStrT s) ->
+              | DefT (r, SingletonStrT s) ->
                 let max_literal_length = Context.max_literal_length cx in
                 let (lit, r_desc) =
                   if
@@ -765,17 +763,15 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                   else
                     (AnyLiteral, RLongStringLit max_literal_length)
                 in
-                reconstruct_ast (DefT (replace_desc_reason r_desc r, trust, StrT lit)) targs
+                reconstruct_ast (DefT (replace_desc_reason r_desc r, StrT lit)) targs
               | _ -> error_type cx loc (Error_message.EUnexpectedTemporaryBaseType loc) t_ast
           )
         | "$TEMPORARY$boolean" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (elemts, targs) = convert_type_params () in
               match List.hd elemts with
-              | DefT (r, trust, SingletonBoolT bool) ->
-                reconstruct_ast
-                  (DefT (replace_desc_reason RBoolean r, trust, BoolT (Some bool)))
-                  targs
+              | DefT (r, SingletonBoolT bool) ->
+                reconstruct_ast (DefT (replace_desc_reason RBoolean r, BoolT (Some bool))) targs
               | _ -> error_type cx loc (Error_message.EUnexpectedTemporaryBaseType loc) t_ast
           )
         | "$TEMPORARY$object" ->
@@ -791,7 +787,6 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               reconstruct_ast
                 (DefT
                    ( mk_annot_reason RArrayLit loc,
-                     bogus_trust (),
                      ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = None })
                    )
                 )
@@ -805,7 +800,6 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               reconstruct_ast
                 (DefT
                    ( mk_annot_reason RArrayType loc,
-                     bogus_trust (),
                      ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = None })
                    )
                 )
@@ -817,16 +811,14 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               let (elemts, targs) = convert_type_params () in
               let elemt = List.hd elemts in
               reconstruct_ast
-                (DefT
-                   (mk_annot_reason RROArrayType loc, bogus_trust (), ArrT (ROArrayAT (elemt, None)))
-                )
+                (DefT (mk_annot_reason RROArrayType loc, ArrT (ROArrayAT (elemt, None))))
                 targs
           )
         (* $PropertyType<T, 'x'> acts as the type of 'x' in object type T *)
         | "$PropertyType" ->
           check_type_arg_arity cx loc t_ast targs 2 (fun () ->
               match convert_type_params () with
-              | ([t; DefT (_, _, SingletonStrT key)], targs) ->
+              | ([t; DefT (_, SingletonStrT key)], targs) ->
                 let reason = mk_reason (RType (OrdinaryName "$PropertyType")) loc in
                 reconstruct_ast
                   (mk_type_destructor
@@ -1142,7 +1134,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                 (* sorts them *)
                 let reason = mk_annot_reason (RCustom (spf "character set `%s`" char_str)) loc in
                 reconstruct_ast
-                  (DefT (reason, bogus_trust (), CharSetT chars))
+                  (DefT (reason, CharSetT chars))
                   (Some
                      ( targs_loc,
                        {
@@ -1159,7 +1151,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               let (ts, targs) = convert_type_params () in
               let t = List.hd ts in
               let reason = mk_reason (RStatics (desc_of_t t)) loc in
-              reconstruct_ast (DefT (reason, bogus_trust (), ClassT t)) targs
+              reconstruct_ast (DefT (reason, ClassT t)) targs
           )
         | "Function" ->
           check_type_arg_arity cx loc t_ast targs 0 (fun () ->
@@ -1218,7 +1210,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                 (List.nth_opt ts 1)
                 ~default:
                   (let reason = mk_default_type_argument_reason_at_position RMixed 2 in
-                   MixedT.make reason (bogus_trust ())
+                   MixedT.make reason
                   )
             in
             let renders =
@@ -1236,7 +1228,6 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
             reconstruct_ast
               (DefT
                  ( reason,
-                   bogus_trust (),
                    ReactAbstractComponentT
                      { config; instance; renders; component_kind = Structural }
                  )
@@ -1455,7 +1446,6 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let ft =
         DefT
           ( reason,
-            bogus_trust (),
             FunT
               ( statics_t,
                 {
@@ -1592,9 +1582,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           let ((prop_loc, prop_type), prop_type_ast) =
             convert cx tparams_map infer_tparams_map prop_type
           in
-          let type_t =
-            DefT (reason_of_t prop_type, bogus_trust (), TypeT (MappedTypeKind, prop_type))
-          in
+          let type_t = DefT (reason_of_t prop_type, TypeT (MappedTypeKind, prop_type)) in
           let poly_prop_type =
             poly_type_of_tparams
               (Context.make_source_poly_id cx prop_loc)
@@ -1753,15 +1741,15 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     (t_opt, tast_opt)
 
   and convert_temporary_object = function
-    | ExactT (_, DefT (r, trust, ObjT o))
-    | DefT (r, trust, ObjT o) ->
+    | ExactT (_, DefT (r, ObjT o))
+    | DefT (r, ObjT o) ->
       let r = replace_desc_reason RObjectLit r in
       let obj_kind =
         match o.flags.obj_kind with
         | Indexed _ -> o.flags.obj_kind
         | _ -> Exact
       in
-      DefT (r, trust, ObjT { o with flags = { obj_kind; frozen = false; react_dro = None } })
+      DefT (r, ObjT { o with flags = { obj_kind; frozen = false; react_dro = None } })
     | EvalT (l, TypeDestructorT (use_op, r, SpreadType (_, ts, head_slice)), id) ->
       let r = replace_desc_reason RObjectLit r in
       let target =
@@ -1928,11 +1916,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
             Inexact
       in
       let flags = { obj_kind; frozen = false; react_dro = None } in
-      DefT
-        ( mk_annot_reason RObjectType loc,
-          bogus_trust (),
-          ObjT (mk_objecttype ~flags ~call pmap proto)
-        )
+      DefT (mk_annot_reason RObjectType loc, ObjT (mk_objecttype ~flags ~call pmap proto))
     in
     let mk_object_annot cx loc ~exact call dict pmap proto =
       let exact = exact && dict = None in
@@ -2332,7 +2316,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
   and convert_type_guard cx tparams_map infer_tparams_map fparams gloc id_name t comments =
     let (name_loc, { Ast.Identifier.name; _ }) = id_name in
     let (((_, type_guard), _) as t') = convert cx tparams_map infer_tparams_map t in
-    let bool_t = BoolT.at gloc (Trust.bogus_trust ()) in
+    let bool_t = BoolT.at gloc in
     let guard' = (gloc, { T.TypeGuard.guard = (id_name, Some t'); asserts = false; comments }) in
     let predicate = Some (TypeGuardBased { param_name = (name_loc, name); type_guard }) in
     check_guard_type cx fparams (name, type_guard);
@@ -2353,7 +2337,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           }
         ) ->
       if meth_kind <> MethodKind then (
-        let bool_t = BoolT.at gloc (Trust.bogus_trust ()) in
+        let bool_t = BoolT.at gloc in
         let return = Tast_utils.error_mapper#function_type_return_annotation return in
         let kind = method_kind_to_string meth_kind in
         Flow_js_utils.add_output
@@ -2507,7 +2491,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
   and mk_return_type_annotation cx tparams_map params reason ~void_return ~async annot =
     match annot with
     | Ast.Function.ReturnAnnot.Missing loc when void_return ->
-      let void_t = VoidT.why reason |> with_trust literal_trust in
+      let void_t = VoidT.why reason in
       let t =
         if async then
           let reason = mk_annot_reason (RType (OrdinaryName "Promise")) (loc_of_reason reason) in
@@ -2555,19 +2539,19 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
 
   and mk_singleton_string loc key =
     let reason = mk_annot_reason (RStringLit (OrdinaryName key)) loc in
-    DefT (reason, bogus_trust (), SingletonStrT (OrdinaryName key))
+    DefT (reason, SingletonStrT (OrdinaryName key))
 
   and mk_singleton_number loc num raw =
     let reason = mk_annot_reason (RNumberLit raw) loc in
-    DefT (reason, bogus_trust (), SingletonNumT (num, raw))
+    DefT (reason, SingletonNumT (num, raw))
 
   and mk_singleton_boolean loc b =
     let reason = mk_annot_reason (RBooleanLit b) loc in
-    DefT (reason, bogus_trust (), SingletonBoolT b)
+    DefT (reason, SingletonBoolT b)
 
   and mk_singleton_bigint loc num raw =
     let reason = mk_annot_reason (RBigIntLit raw) loc in
-    DefT (reason, bogus_trust (), SingletonBigIntT (num, raw))
+    DefT (reason, SingletonBigIntT (num, raw))
 
   (* Given the type of expression C and type arguments T1...Tn, return the type of
      values described by C<T1,...,Tn>, or C when there are no type arguments. *)
@@ -2621,10 +2605,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         let (bound, bound_ast) =
           match bound with
           | Ast.Type.Missing loc ->
-            let t =
-              DefT
-                (Reason.replace_desc_reason RMixed reason, bogus_trust (), MixedT Mixed_everything)
-            in
+            let t = DefT (Reason.replace_desc_reason RMixed reason, MixedT Mixed_everything) in
             (t, Ast.Type.Missing (loc, t))
           | Ast.Type.Available (bound_loc, u) ->
             let (bound, bound_ast) = mk_type cx tparams_map infer_tparams_map reason (Some u) in
@@ -2706,7 +2687,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     if Type_inference_hooks_js.dispatch_id_hook cx name loc then
       Unsoundness.at InferenceHooks loc
     else if name = "undefined" then
-      VoidT.at loc (Trust.bogus_trust ())
+      VoidT.at loc
     else
       Type_env.var_ref ~lookup_mode:ForType cx (OrdinaryName name) loc
 

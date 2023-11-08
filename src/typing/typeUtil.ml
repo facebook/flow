@@ -19,7 +19,7 @@ let rec reason_of_t = function
   | AnnotT (reason, _, _) -> reason
   | InternalT (ChoiceKitT (reason, _)) -> reason
   | CustomFunT (reason, _) -> reason
-  | DefT (reason, _, _) -> reason
+  | DefT (reason, _) -> reason
   | EvalT (_, defer_use_t, _) -> reason_of_defer_use_t defer_use_t
   | ExactT (reason, _) -> reason
   | GenericT { reason; _ } -> reason
@@ -74,7 +74,7 @@ and reason_of_use_t = function
   | DebugPrintT reason -> reason
   | DebugSleepT reason -> reason
   | ElemT (_, reason, _, _) -> reason
-  | EnumCastT { enum = (reason, _, _); _ } -> reason
+  | EnumCastT { enum = (reason, _); _ } -> reason
   | EnumExhaustiveCheckT { reason; _ } -> reason
   | EqT { reason; _ } -> reason
   | ConditionalT { reason; _ } -> reason
@@ -176,7 +176,7 @@ let rec mod_reason_of_t f = function
   | AnnotT (reason, t, use_desc) -> AnnotT (f reason, t, use_desc)
   | InternalT (ChoiceKitT (reason, tool)) -> InternalT (ChoiceKitT (f reason, tool))
   | CustomFunT (reason, kind) -> CustomFunT (f reason, kind)
-  | DefT (reason, trust, t) -> DefT (f reason, trust, t)
+  | DefT (reason, t) -> DefT (f reason, t)
   | AnyT (reason, src) -> AnyT (f reason, src)
   | UnionT (reason, src) -> UnionT (f reason, src)
   | IntersectionT (reason, src) -> IntersectionT (f reason, src)
@@ -275,8 +275,7 @@ and mod_reason_of_use_t f = function
   | DebugPrintT reason -> DebugPrintT (f reason)
   | DebugSleepT reason -> DebugSleepT (f reason)
   | ElemT (use_op, reason, t, action) -> ElemT (use_op, f reason, t, action)
-  | EnumCastT { use_op; enum = (reason, trust, enum) } ->
-    EnumCastT { use_op; enum = (f reason, trust, enum) }
+  | EnumCastT { use_op; enum = (reason, enum) } -> EnumCastT { use_op; enum = (f reason, enum) }
   | EnumExhaustiveCheckT { reason; check; incomplete_out; discriminant_after_check } ->
     EnumExhaustiveCheckT { reason = f reason; check; incomplete_out; discriminant_after_check }
   | EqT ({ reason; _ } as x) -> EqT { x with reason = f reason }
@@ -788,29 +787,27 @@ let nominal_id_have_same_logical_module
 
 let quick_subtype t1 t2 =
   match (t1, t2) with
-  | (DefT (_, _, NumT _), DefT (_, _, NumT _))
-  | (DefT (_, _, SingletonNumT _), DefT (_, _, NumT _))
-  | (DefT (_, _, StrT _), DefT (_, _, StrT _))
-  | (DefT (_, _, SingletonStrT _), DefT (_, _, StrT _))
-  | (DefT (_, _, BoolT _), DefT (_, _, BoolT _))
-  | (DefT (_, _, SingletonBoolT _), DefT (_, _, BoolT _))
-  | (DefT (_, _, BigIntT _), DefT (_, _, BigIntT _))
-  | (DefT (_, _, SingletonBigIntT _), DefT (_, _, SingletonBigIntT _))
-  | (DefT (_, _, NullT), DefT (_, _, NullT))
-  | (DefT (_, _, VoidT), DefT (_, _, VoidT))
-  | (DefT (_, _, SymbolT), DefT (_, _, SymbolT))
-  | (DefT (_, _, EmptyT), DefT (_, _, _))
-  | (DefT (_, _, _), DefT (_, _, MixedT _))
-  | (DefT (_, _, EmptyT), _)
-  | (_, DefT (_, _, MixedT _)) ->
+  | (DefT (_, NumT _), DefT (_, NumT _))
+  | (DefT (_, SingletonNumT _), DefT (_, NumT _))
+  | (DefT (_, StrT _), DefT (_, StrT _))
+  | (DefT (_, SingletonStrT _), DefT (_, StrT _))
+  | (DefT (_, BoolT _), DefT (_, BoolT _))
+  | (DefT (_, SingletonBoolT _), DefT (_, BoolT _))
+  | (DefT (_, BigIntT _), DefT (_, BigIntT _))
+  | (DefT (_, SingletonBigIntT _), DefT (_, SingletonBigIntT _))
+  | (DefT (_, NullT), DefT (_, NullT))
+  | (DefT (_, VoidT), DefT (_, VoidT))
+  | (DefT (_, SymbolT), DefT (_, SymbolT))
+  | (DefT (_, EmptyT), DefT (_, _))
+  | (DefT (_, _), DefT (_, MixedT _))
+  | (DefT (_, EmptyT), _)
+  | (_, DefT (_, MixedT _)) ->
     true
-  | (DefT (_, _, StrT actual), DefT (_, _, SingletonStrT expected)) -> literal_eq expected actual
-  | (DefT (_, _, NumT actual), DefT (_, _, SingletonNumT expected)) ->
-    number_literal_eq expected actual
-  | (DefT (_, _, BoolT actual), DefT (_, _, SingletonBoolT expected)) ->
+  | (DefT (_, StrT actual), DefT (_, SingletonStrT expected)) -> literal_eq expected actual
+  | (DefT (_, NumT actual), DefT (_, SingletonNumT expected)) -> number_literal_eq expected actual
+  | (DefT (_, BoolT actual), DefT (_, SingletonBoolT expected)) ->
     boolean_literal_eq expected actual
-  | (DefT (_, _, ObjT { flags = { obj_kind = Exact; _ }; _ }), ExactT (_, t2')) ->
-    reasonless_eq t1 t2'
+  | (DefT (_, ObjT { flags = { obj_kind = Exact; _ }; _ }), ExactT (_, t2')) -> reasonless_eq t1 t2'
   | _ -> reasonless_eq t1 t2
 
 let reason_of_propref = function
@@ -833,7 +830,7 @@ let maybe t =
   let reason = update_desc_new_reason (fun desc -> RMaybe desc) (reason_of_t t) in
   MaybeT (reason, t)
 
-let make_exact_object ~reason_obj trust obj ~reason_op =
+let make_exact_object ~reason_obj obj ~reason_op =
   let obj_kind =
     match obj.flags.obj_kind with
     | Inexact -> Exact
@@ -853,7 +850,7 @@ let make_exact_object ~reason_obj trust obj ~reason_op =
       (* If [r] is an RTypeAlias, then this alias is no longer valid. *)
       update_desc_reason invalidate_rtype_alias reason_obj
   in
-  DefT (reason_obj, trust, ObjT { obj with flags = { obj.flags with obj_kind } })
+  DefT (reason_obj, ObjT { obj with flags = { obj.flags with obj_kind } })
 
 let class_type ?(structural = false) ?annot_loc t =
   let reason =
@@ -867,7 +864,7 @@ let class_type ?(structural = false) ?annot_loc t =
     | Some annot_loc -> annot_reason ~annot_loc @@ repos_reason annot_loc reason
     | None -> reason
   in
-  DefT (reason, bogus_trust (), ClassT t)
+  DefT (reason, ClassT t)
 
 let this_class_type t is_this this_name =
   let reason = update_desc_new_reason (fun desc -> RClass desc) (reason_of_t t) in
@@ -884,7 +881,7 @@ let extends_use_type use_op l u =
 let poly_type id tparams_loc tparams t =
   let reason = update_desc_new_reason (fun desc -> RPolyType desc) (reason_of_t t) in
   let reason = annot_reason ~annot_loc:(loc_of_reason reason) reason in
-  DefT (reason, bogus_trust (), PolyT { tparams_loc; tparams; t_out = t; id })
+  DefT (reason, PolyT { tparams_loc; tparams; t_out = t; id })
 
 let poly_type_of_tparam_list id tparams_loc tparams t =
   match tparams with
@@ -1002,7 +999,7 @@ let map_annotated_or_inferred f = function
 let union_of_ts reason ts =
   match ts with
   (* If we have no types then this is an error. *)
-  | [] -> DefT (reason, bogus_trust (), EmptyT)
+  | [] -> DefT (reason, EmptyT)
   (* If we only have one type then only that should be used. *)
   | [t0] -> t0
   (* If we have more than one type then we make a union type. *)
@@ -1042,7 +1039,7 @@ let all_explicit_targ_ts = function
         | _ -> None
     )
 
-let tuple_length reason trust (num_req, num_total) =
+let tuple_length reason (num_req, num_total) =
   let t_of_n n =
     let r =
       let desc = RTupleLength n in
@@ -1053,7 +1050,7 @@ let tuple_length reason trust (num_req, num_total) =
       let string = Base.Int.to_string n in
       SingletonNumT (float, string)
     in
-    DefT (r, trust, t)
+    DefT (r, t)
   in
   Base.List.range num_req ~stop:`inclusive num_total
   |> Base.List.map ~f:t_of_n

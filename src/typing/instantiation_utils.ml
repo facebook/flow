@@ -90,7 +90,7 @@ end = struct
         match t with
         | TypeAppT { reason = _; use_op = _; type_; targs = _; use_desc = _ } ->
           super#type_ cx pole (RootSet.add (Type type_) acc) t
-        | DefT (r, _, ArrT a) -> super#type_ cx pole (RootSet.add (self#arrtype r a) acc) t
+        | DefT (r, ArrT a) -> super#type_ cx pole (RootSet.add (self#arrtype r a) acc) t
         | OpenT _ ->
           (match ImplicitTypeArgument.abstract_targ t with
           | None -> acc

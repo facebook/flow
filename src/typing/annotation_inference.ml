@@ -310,8 +310,8 @@ module rec ConsGen : S = struct
 
     let reposition cx ?trace:_ loc ?desc:_ ?annot_loc:_ t = reposition cx loc t
 
-    let enum_proto cx _trace ~reason (enum_reason, trust, enum) =
-      let enum_t = DefT (enum_reason, trust, EnumT enum) in
+    let enum_proto cx _trace ~reason (enum_reason, enum) =
+      let enum_t = DefT (enum_reason, EnumT enum) in
       let { representation_t; _ } = enum in
       get_builtin_typeapp cx reason (OrdinaryName "$EnumProto") [enum_t; representation_t]
 
@@ -520,7 +520,7 @@ module rec ConsGen : S = struct
       let reason_op = Type.AConstraint.reason_of_op op in
       let t = mk_typeapp_instance cx ~use_op:typeapp_use_op ~reason_op ~reason_tapp type_ targs in
       elab_t cx t op
-    | (DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; _ }), Annot_UseT_TypeT reason) ->
+    | (DefT (reason_tapp, PolyT { tparams_loc; tparams = ids; _ }), Annot_UseT_TypeT reason) ->
       Flow_js_utils.add_output
         cx
         (Error_message.EMissingTypeArgs
@@ -536,19 +536,19 @@ module rec ConsGen : S = struct
     | (ThisClassT (r, i, is_this, this_name), Annot_UseT_TypeT reason) ->
       let c = Flow_js_utils.fix_this_class cx reason (r, i, is_this, this_name) in
       elab_t cx c op
-    | (DefT (_, _, ClassT it), Annot_UseT_TypeT reason) ->
+    | (DefT (_, ClassT it), Annot_UseT_TypeT reason) ->
       (* a class value annotation becomes the instance type *)
       reposition cx (loc_of_reason reason) it
-    | ( (DefT (_, _, ReactAbstractComponentT { component_kind = Nominal _; _ }) as l),
+    | ( (DefT (_, ReactAbstractComponentT { component_kind = Nominal _; _ }) as l),
         Annot_UseT_TypeT reason
       ) ->
       (* a component syntax value annotation becomes an element of that component *)
       get_builtin_typeapp cx reason (OrdinaryName "React$Element") [l]
-    | (DefT (_, _, TypeT (_, l)), Annot_UseT_TypeT _) -> l
-    | (DefT (lreason, trust, EnumObjectT enum), Annot_UseT_TypeT _) ->
+    | (DefT (_, TypeT (_, l)), Annot_UseT_TypeT _) -> l
+    | (DefT (lreason, EnumObjectT enum), Annot_UseT_TypeT _) ->
       (* an enum object value annotation becomes the enum type *)
-      mk_enum_type ~trust lreason enum
-    | (DefT (enum_reason, _, EnumT _), Annot_UseT_TypeT reason) ->
+      mk_enum_type lreason enum
+    | (DefT (enum_reason, EnumT _), Annot_UseT_TypeT reason) ->
       Flow_js_utils.add_output cx Error_message.(EEnumMemberUsedAsType { reason; enum_reason });
       AnyT.error reason
     | (l, Annot_UseT_TypeT reason_use) ->
@@ -666,7 +666,7 @@ module rec ConsGen : S = struct
     | (KeysT (reason, t), _) ->
       let t = elab_t cx t (Annot_GetKeysT reason) in
       elab_t cx t op
-    | (DefT (_, _, ObjT { flags; props_tmap; _ }), Annot_GetKeysT reason_op) ->
+    | (DefT (_, ObjT { flags; props_tmap; _ }), Annot_GetKeysT reason_op) ->
       let dict_t = Obj_type.get_dict_opt flags.obj_kind in
       (* flow the union of keys of l to keys *)
       let keylist = Flow_js_utils.keylist_of_props (Context.find_props cx props_tmap) reason_op in
@@ -678,18 +678,18 @@ module rec ConsGen : S = struct
           key :: keylist
       in
       union_of_ts reason_op keylist
-    | (DefT (_, _, InstanceT { inst; _ }), Annot_GetKeysT reason_op) ->
+    | (DefT (_, InstanceT { inst; _ }), Annot_GetKeysT reason_op) ->
       (* methods are not enumerable, so only walk fields *)
       let own_props = Context.find_props cx inst.own_props in
       let keylist = Flow_js_utils.keylist_of_props own_props reason_op in
       union_of_ts reason_op keylist
-    | (AnyT _, Annot_GetKeysT reason_op) -> with_trust literal_trust (StrT.why reason_op)
+    | (AnyT _, Annot_GetKeysT reason_op) -> StrT.why reason_op
     (***********)
     (* $Values *)
     (***********)
-    | (DefT (_, _, ObjT o), Annot_GetValuesT reason) ->
+    | (DefT (_, ObjT o), Annot_GetValuesT reason) ->
       Flow_js_utils.get_values_type_of_obj_t cx o reason
-    | (DefT (_, _, InstanceT { inst = { own_props; inst_dict; _ }; _ }), Annot_GetValuesT reason) ->
+    | (DefT (_, InstanceT { inst = { own_props; inst_dict; _ }; _ }), Annot_GetValuesT reason) ->
       Flow_js_utils.get_values_type_of_instance_t cx own_props inst_dict reason
     (* Any will always be ok *)
     | (AnyT (_, src), Annot_GetValuesT reason) -> AnyT.why src reason
@@ -721,35 +721,34 @@ module rec ConsGen : S = struct
     (* any propagation *)
     | (AnyT _, Annot_NotT _) -> t
     (* !x when x is of unknown truthiness *)
-    | (DefT (_, trust, BoolT None), Annot_NotT reason)
-    | (DefT (_, trust, StrT AnyLiteral), Annot_NotT reason)
-    | (DefT (_, trust, NumT AnyLiteral), Annot_NotT reason) ->
-      BoolT.at (loc_of_reason reason) trust
+    | (DefT (_, BoolT None), Annot_NotT reason)
+    | (DefT (_, StrT AnyLiteral), Annot_NotT reason)
+    | (DefT (_, NumT AnyLiteral), Annot_NotT reason) ->
+      BoolT.at (loc_of_reason reason)
     (* !x when x is falsy *)
-    | (DefT (_, trust, BoolT (Some false)), Annot_NotT reason)
-    | (DefT (_, trust, SingletonBoolT false), Annot_NotT reason)
-    | (DefT (_, trust, StrT (Literal (_, OrdinaryName ""))), Annot_NotT reason)
-    | (DefT (_, trust, SingletonStrT (OrdinaryName "")), Annot_NotT reason)
-    | (DefT (_, trust, NumT (Literal (_, (0., _)))), Annot_NotT reason)
-    | (DefT (_, trust, SingletonNumT (0., _)), Annot_NotT reason)
-    | (DefT (_, trust, NullT), Annot_NotT reason)
-    | (DefT (_, trust, VoidT), Annot_NotT reason) ->
+    | (DefT (_, BoolT (Some false)), Annot_NotT reason)
+    | (DefT (_, SingletonBoolT false), Annot_NotT reason)
+    | (DefT (_, StrT (Literal (_, OrdinaryName ""))), Annot_NotT reason)
+    | (DefT (_, SingletonStrT (OrdinaryName "")), Annot_NotT reason)
+    | (DefT (_, NumT (Literal (_, (0., _)))), Annot_NotT reason)
+    | (DefT (_, SingletonNumT (0., _)), Annot_NotT reason)
+    | (DefT (_, NullT), Annot_NotT reason)
+    | (DefT (_, VoidT), Annot_NotT reason) ->
       let reason = replace_desc_reason (RBooleanLit true) reason in
-      DefT (reason, trust, BoolT (Some true))
+      DefT (reason, BoolT (Some true))
     (* !x when x is truthy *)
     | (_, Annot_NotT reason) ->
       let reason = replace_desc_reason (RBooleanLit false) reason in
-      DefT (reason, bogus_trust (), BoolT (Some false))
+      DefT (reason, BoolT (Some false))
     (*****************************)
     (* Singleton primitive types *)
     (*****************************)
-    | (DefT (reason, trust, SingletonStrT key), _) ->
-      elab_t cx (DefT (reason, trust, StrT (Literal (None, key)))) op
-    | (DefT (reason, trust, SingletonNumT lit), _) ->
-      elab_t cx (DefT (reason, trust, NumT (Literal (None, lit)))) op
-    | (DefT (reason, trust, SingletonBoolT b), _) ->
-      elab_t cx (DefT (reason, trust, BoolT (Some b))) op
-    | (NullProtoT reason, _) -> elab_t cx (DefT (reason, bogus_trust (), NullT)) op
+    | (DefT (reason, SingletonStrT key), _) ->
+      elab_t cx (DefT (reason, StrT (Literal (None, key)))) op
+    | (DefT (reason, SingletonNumT lit), _) ->
+      elab_t cx (DefT (reason, NumT (Literal (None, lit)))) op
+    | (DefT (reason, SingletonBoolT b), _) -> elab_t cx (DefT (reason, BoolT (Some b))) op
+    | (NullProtoT reason, _) -> elab_t cx (DefT (reason, NullT)) op
     (*********)
     (* Exact *)
     (*********)
@@ -757,35 +756,33 @@ module rec ConsGen : S = struct
       let t = push_type_alias_reason r t in
       let t = make_exact cx r t in
       elab_t cx t op
-    | (DefT (reason_obj, trust, ObjT obj), Annot_MakeExactT reason_op) ->
-      TypeUtil.make_exact_object ~reason_obj trust obj ~reason_op
+    | (DefT (reason_obj, ObjT obj), Annot_MakeExactT reason_op) ->
+      TypeUtil.make_exact_object ~reason_obj obj ~reason_op
     | (AnyT (_, src), Annot_MakeExactT reason_op) -> AnyT.why src reason_op
-    | (DefT (_, trust, VoidT), Annot_MakeExactT reason_op) -> VoidT.why reason_op trust
-    | (DefT (_, trust, EmptyT), Annot_MakeExactT reason_op) -> EmptyT.why reason_op trust
+    | (DefT (_, VoidT), Annot_MakeExactT reason_op) -> VoidT.why reason_op
+    | (DefT (_, EmptyT), Annot_MakeExactT reason_op) -> EmptyT.why reason_op
     | (_, Annot_MakeExactT reason_op) ->
       Flow_js_utils.add_output cx (Error_message.EUnsupportedExact (reason_op, reason_of_t t));
       AnyT.error reason_op
     (**********)
     (* Mixins *)
     (**********)
-    | (ThisClassT (_, DefT (_, trust, InstanceT { inst; _ }), is_this, this_name), Annot_MixinT r)
-      ->
+    | (ThisClassT (_, DefT (_, InstanceT { inst; _ }), is_this, this_name), Annot_MixinT r) ->
       (* A class can be viewed as a mixin by extracting its immediate properties,
        * and "erasing" its static and super *)
       let static = ObjProtoT r in
       let super = ObjProtoT r in
       this_class_type
-        (DefT (r, trust, InstanceT { static; super; implements = []; inst }))
+        (DefT (r, InstanceT { static; super; implements = []; inst }))
         is_this
         this_name
     | ( DefT
           ( _,
-            _,
             PolyT
               {
                 tparams_loc;
                 tparams = xs;
-                t_out = ThisClassT (_, DefT (_, trust, InstanceT { inst; _ }), is_this, this_name);
+                t_out = ThisClassT (_, DefT (_, InstanceT { inst; _ }), is_this, this_name);
                 _;
               }
           ),
@@ -793,7 +790,7 @@ module rec ConsGen : S = struct
       ) ->
       let static = ObjProtoT r in
       let super = ObjProtoT r in
-      let instance = DefT (r, trust, InstanceT { static; super; implements = []; inst }) in
+      let instance = DefT (r, InstanceT { static; super; implements = []; inst }) in
       poly_type
         (Type.Poly.generate_id ())
         tparams_loc
@@ -803,24 +800,24 @@ module rec ConsGen : S = struct
     (***********************)
     (* Type specialization *)
     (***********************)
-    | ( DefT (_, _, PolyT { tparams_loc; tparams = xs; t_out = t; id }),
+    | ( DefT (_, PolyT { tparams_loc; tparams = xs; t_out = t; id }),
         Annot_SpecializeT (use_op, reason_op, reason_tapp, ts)
       ) ->
       let ts = Base.Option.value ts ~default:[] in
       mk_typeapp_of_poly cx ~use_op ~reason_op ~reason_tapp id tparams_loc xs t ts
-    | ((DefT (_, _, ClassT _) | ThisClassT _), Annot_SpecializeT (_, _, _, None)) -> t
+    | ((DefT (_, ClassT _) | ThisClassT _), Annot_SpecializeT (_, _, _, None)) -> t
     | (AnyT _, Annot_SpecializeT _) -> t
     | (ThisClassT (_, i, _, this_name), Annot_ThisSpecializeT (reason, this)) ->
       let i = subst cx (Subst_name.Map.singleton this_name this) i in
       reposition cx (loc_of_reason reason) i
     (* this-specialization of non-this-abstracted classes is a no-op *)
-    | (DefT (_, _, ClassT i), Annot_ThisSpecializeT (reason, _this)) ->
+    | (DefT (_, ClassT i), Annot_ThisSpecializeT (reason, _this)) ->
       reposition cx (loc_of_reason reason) i
     | (AnyT _, Annot_ThisSpecializeT (reason, _)) -> reposition cx (loc_of_reason reason) t
     (**********************)
     (* Type instantiation *)
     (**********************)
-    | (DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; t_out = t; _ }), _) ->
+    | (DefT (reason_tapp, PolyT { tparams_loc; tparams = ids; t_out = t; _ }), _) ->
       let use_op = unknown_use in
       let reason_op = Type.AConstraint.reason_of_op op in
       let (t, _) = instantiate_poly cx ~use_op ~reason_op ~reason_tapp (tparams_loc, ids, t) in
@@ -832,7 +829,7 @@ module rec ConsGen : S = struct
     (*****************************)
     (* React Abstract Components *)
     (*****************************)
-    | (DefT (r, _, ReactAbstractComponentT _), (Annot_GetPropT _ | Annot_GetElemT _)) ->
+    | (DefT (r, ReactAbstractComponentT _), (Annot_GetPropT _ | Annot_GetElemT _)) ->
       let statics =
         Flow_js_utils.lookup_builtin_strict cx (OrdinaryName "React$AbstractComponentStatics") r
       in
@@ -840,13 +837,13 @@ module rec ConsGen : S = struct
     (****************)
     (* Custom types *)
     (****************)
-    | (DefT (reason, trust, CharSetT _), _) -> elab_t cx (StrT.why reason trust) op
+    | (DefT (reason, CharSetT _), _) -> elab_t cx (StrT.why reason) op
     | (CustomFunT (r, _), _) when function_like_op op -> elab_t cx (FunProtoT r) op
     (*****************)
     (* ObjTestProtoT *)
     (*****************)
     | (AnyT (_, src), Annot_ObjTestProtoT reason_op) -> AnyT.why src reason_op
-    | (DefT (_, trust, NullT), Annot_ObjTestProtoT reason_op) -> NullProtoT.why reason_op trust
+    | (DefT (_, NullT), Annot_ObjTestProtoT reason_op) -> NullProtoT.why reason_op
     | (_, Annot_ObjTestProtoT reason_op) ->
       if Flow_js_utils.object_like t then
         reposition cx (loc_of_reason reason_op) t
@@ -856,11 +853,11 @@ module rec ConsGen : S = struct
             cx
             (Error_message.EInvalidPrototype (loc_of_reason reason_op, reason_of_t t))
         in
-        ObjProtoT.why reason_op |> with_trust bogus_trust
+        ObjProtoT.why reason_op
     (***************)
     (* Get statics *)
     (***************)
-    | (DefT (_, _, InstanceT { static; _ }), Annot_GetStaticsT reason_op) ->
+    | (DefT (_, InstanceT { static; _ }), Annot_GetStaticsT reason_op) ->
       reposition cx (loc_of_reason reason_op) static
     | (AnyT (_, src), Annot_GetStaticsT reason_op) -> AnyT.why src reason_op
     | (ObjProtoT _, Annot_GetStaticsT reason_op) ->
@@ -870,12 +867,12 @@ module rec ConsGen : S = struct
     (***************)
     (* LookupT pt1 *)
     (***************)
-    | ( DefT (_lreason, _, InstanceT { super; inst; _ }),
+    | ( DefT (_lreason, InstanceT { super; inst; _ }),
         Annot_LookupT (reason_op, use_op, (Named _ as propref), objt)
       ) ->
       let react_dro =
         match objt with
-        | DefT (_, _, ObjT o) -> o.flags.react_dro
+        | DefT (_, ObjT o) -> o.flags.react_dro
         | _ -> None
       in
       (match
@@ -898,11 +895,11 @@ module rec ConsGen : S = struct
           reason_op
           react_dro
       | None -> Get_prop_helper.cg_lookup_ cx use_op super reason_op propref objt)
-    | (DefT (_, _, InstanceT _), Annot_LookupT (_, _, Computed _, _)) -> error_unsupported cx t op
-    | (DefT (_, _, ObjT o), Annot_LookupT (reason_op, use_op, propref, objt)) ->
+    | (DefT (_, InstanceT _), Annot_LookupT (_, _, Computed _, _)) -> error_unsupported cx t op
+    | (DefT (_, ObjT o), Annot_LookupT (reason_op, use_op, propref, objt)) ->
       let react_dro =
         match objt with
-        | DefT (_, _, ObjT o) -> o.flags.react_dro
+        | DefT (_, ObjT o) -> o.flags.react_dro
         | _ -> None
       in
       (match GetPropTKit.get_obj_prop cx dummy_trace o propref reason_op with
@@ -913,22 +910,22 @@ module rec ConsGen : S = struct
     (************)
     (* DRO *)
     (************)
-    | (DefT (r, t, ObjT ({ Type.flags; _ } as o)), Annot_DeepReadOnlyT (_, props_loc)) ->
-      DefT (r, t, ObjT { o with Type.flags = { flags with react_dro = Some props_loc } })
-    | ( DefT (r, trust, ArrT (TupleAT { elem_t; elements; arity; react_dro = _ })),
+    | (DefT (r, ObjT ({ Type.flags; _ } as o)), Annot_DeepReadOnlyT (_, props_loc)) ->
+      DefT (r, ObjT { o with Type.flags = { flags with react_dro = Some props_loc } })
+    | ( DefT (r, ArrT (TupleAT { elem_t; elements; arity; react_dro = _ })),
         Annot_DeepReadOnlyT (_, props_loc)
       ) ->
-      DefT (r, trust, ArrT (TupleAT { elem_t; elements; arity; react_dro = Some props_loc }))
-    | ( DefT (r, trust, ArrT (ArrayAT { elem_t; tuple_view; react_dro = _ })),
+      DefT (r, ArrT (TupleAT { elem_t; elements; arity; react_dro = Some props_loc }))
+    | ( DefT (r, ArrT (ArrayAT { elem_t; tuple_view; react_dro = _ })),
         Annot_DeepReadOnlyT (_, props_loc)
       ) ->
-      DefT (r, trust, ArrT (ArrayAT { elem_t; tuple_view; react_dro = Some props_loc }))
-    | (DefT (r, trust, ArrT (ROArrayAT (t, _))), Annot_DeepReadOnlyT (_, props_loc)) ->
-      DefT (r, trust, ArrT (ROArrayAT (t, Some props_loc)))
+      DefT (r, ArrT (ArrayAT { elem_t; tuple_view; react_dro = Some props_loc }))
+    | (DefT (r, ArrT (ROArrayAT (t, _))), Annot_DeepReadOnlyT (_, props_loc)) ->
+      DefT (r, ArrT (ROArrayAT (t, Some props_loc)))
     (************)
     (* ObjRestT *)
     (************)
-    | ( DefT (reason_obj, _, ObjT { props_tmap; flags = { obj_kind; _ }; _ }),
+    | ( DefT (reason_obj, ObjT { props_tmap; flags = { obj_kind; _ }; _ }),
         Annot_ObjRestT (reason_op, xs)
       ) ->
       Flow_js_utils.objt_to_obj_rest
@@ -939,19 +936,19 @@ module rec ConsGen : S = struct
         ~reason_op
         ~reason_obj
         xs
-    | (DefT (_, _, InstanceT _), Annot_ObjRestT _) ->
+    | (DefT (_, InstanceT _), Annot_ObjRestT _) ->
       (* This implementation relies on unsealed objects and set-prop logic that is
        * hard to implement in annotation inference. *)
       error_unsupported cx t op
     | (AnyT (_, src), Annot_ObjRestT (reason, _)) -> AnyT.why src reason
     | (ObjProtoT _, Annot_ObjRestT (reason, _)) ->
       Obj_type.mk_with_proto cx reason ~obj_kind:Exact t
-    | (DefT (_, _, (NullT | VoidT)), Annot_ObjRestT (reason, _)) ->
+    | (DefT (_, (NullT | VoidT)), Annot_ObjRestT (reason, _)) ->
       Obj_type.mk ~obj_kind:Exact cx reason
     (************)
     (* GetPropT *)
     (************)
-    | ( DefT (reason_instance, _, InstanceT { super; inst; _ }),
+    | ( DefT (reason_instance, InstanceT { super; inst; _ }),
         Annot_GetPropT (reason_op, use_op, (Named _ as propref))
       ) ->
       GetPropTKit.read_instance_prop
@@ -966,15 +963,15 @@ module rec ConsGen : S = struct
         inst
         propref
         reason_op
-    | (DefT (_, _, InstanceT _), Annot_GetPropT (_, _, Computed _)) -> error_unsupported cx t op
-    | ( DefT (_, _, ObjT _),
+    | (DefT (_, InstanceT _), Annot_GetPropT (_, _, Computed _)) -> error_unsupported cx t op
+    | ( DefT (_, ObjT _),
         Annot_GetPropT (reason_op, _, Named { name = OrdinaryName "constructor"; _ })
       ) ->
       Unsoundness.why Constructor reason_op
-    | (DefT (reason_obj, _, ObjT o), Annot_GetPropT (reason_op, use_op, propref)) ->
+    | (DefT (reason_obj, ObjT o), Annot_GetPropT (reason_op, use_op, propref)) ->
       GetPropTKit.read_obj_prop cx dummy_trace ~use_op o propref reason_obj reason_op None
     | (AnyT _, Annot_GetPropT (reason_op, _, _)) -> AnyT (reason_op, Untyped)
-    | ( DefT (reason, _, ClassT instance),
+    | ( DefT (reason, ClassT instance),
         Annot_GetPropT (_, _, Named { name = OrdinaryName "prototype"; _ })
       ) ->
       reposition cx (loc_of_reason reason) instance
@@ -986,23 +983,22 @@ module rec ConsGen : S = struct
     (********************)
     (* GetElemT / ElemT *)
     (********************)
-    | (DefT (_, trust, StrT _), Annot_GetElemT (reason_op, _use_op, _index)) ->
+    | (DefT (_, StrT _), Annot_GetElemT (reason_op, _use_op, _index)) ->
       (* NOTE bypassing check that index is a number *)
-      StrT.why reason_op trust
-    | ( (DefT (_, _, (ObjT _ | ArrT _ | InstanceT _)) | AnyT _),
-        Annot_GetElemT (reason_op, use_op, key)
-      ) ->
+      StrT.why reason_op
+    | ((DefT (_, (ObjT _ | ArrT _ | InstanceT _)) | AnyT _), Annot_GetElemT (reason_op, use_op, key))
+      ->
       elab_t cx key (Annot_ElemT (reason_op, use_op, t))
-    | (_, Annot_ElemT (reason_op, use_op, (DefT (_, _, (ObjT _ | InstanceT _)) as obj))) ->
+    | (_, Annot_ElemT (reason_op, use_op, (DefT (_, (ObjT _ | InstanceT _)) as obj))) ->
       let propref = Flow_js_utils.propref_for_elem_t t in
       elab_t cx obj (Annot_GetPropT (reason_op, use_op, propref))
     | (_, Annot_ElemT (reason_op, _use_op, (AnyT _ as _obj))) ->
       let value = AnyT.untyped reason_op in
       reposition cx (loc_of_reason reason_op) value
-    | (AnyT _, Annot_ElemT (reason_op, _, DefT (_, _, ArrT arrtype))) ->
+    | (AnyT _, Annot_ElemT (reason_op, _, DefT (_, ArrT arrtype))) ->
       let value = elemt_of_arrtype arrtype in
       reposition cx (loc_of_reason reason_op) value
-    | (DefT (_, _, NumT _), Annot_ElemT (reason_op, use_op, DefT (reason_tup, _, ArrT arrtype))) ->
+    | (DefT (_, NumT _), Annot_ElemT (reason_op, use_op, DefT (reason_tup, ArrT arrtype))) ->
       let (value, _, _, _) =
         Flow_js_utils.array_elem_check
           ~write_action:false
@@ -1015,10 +1011,10 @@ module rec ConsGen : S = struct
           arrtype
       in
       reposition cx (loc_of_reason reason_op) value
-    | (DefT (_, trust, ObjT o), Annot_ObjKeyMirror reason_op) ->
-      Flow_js_utils.obj_key_mirror cx trust o reason_op
-    | (DefT (_, trust, ObjT o), Annot_ObjMapConst (reason_op, target)) ->
-      Flow_js_utils.obj_map_const cx trust o reason_op target
+    | (DefT (_, ObjT o), Annot_ObjKeyMirror reason_op) ->
+      Flow_js_utils.obj_key_mirror cx o reason_op
+    | (DefT (_, ObjT o), Annot_ObjMapConst (reason_op, target)) ->
+      Flow_js_utils.obj_map_const cx o reason_op target
     (***********************)
     (* Opaque types (pt 2) *)
     (***********************)
@@ -1044,24 +1040,24 @@ module rec ConsGen : S = struct
     (********************)
     (* Function Statics *)
     (********************)
-    | (DefT (reason, _, FunT (static, _)), _) when object_like_op op ->
+    | (DefT (reason, FunT (static, _)), _) when object_like_op op ->
       let static = reposition cx (loc_of_reason reason) static in
       elab_t cx static op
     (*****************)
     (* Class statics *)
     (*****************)
-    | (DefT (reason, _, ClassT instance), _) when object_like_op op ->
+    | (DefT (reason, ClassT instance), _) when object_like_op op ->
       let t = get_statics cx reason instance in
       elab_t cx t op
     (*********)
     (* Enums *)
     (*********)
-    | ( DefT (enum_reason, trust, EnumObjectT enum),
+    | ( DefT (enum_reason, EnumObjectT enum),
         Annot_GetPropT (access_reason, use_op, Named { reason = prop_reason; name; _ })
       ) ->
       let access = (use_op, access_reason, None, (prop_reason, name)) in
-      GetPropTKit.on_EnumObjectT cx dummy_trace enum_reason trust enum access
-    | (DefT (enum_reason, _, EnumObjectT _), Annot_GetElemT (reason_op, _, elem)) ->
+      GetPropTKit.on_EnumObjectT cx dummy_trace enum_reason enum access
+    | (DefT (enum_reason, EnumObjectT _), Annot_GetElemT (reason_op, _, elem)) ->
       let reason = reason_of_t elem in
       Flow_js_utils.add_output
         cx
@@ -1078,7 +1074,7 @@ module rec ConsGen : S = struct
     | (FunProtoT _, Annot_LookupT (reason_op, _, Named { name; _ }, _))
       when Flow_js_utils.is_function_prototype name ->
       Flow_js_utils.lookup_builtin_strict cx (OrdinaryName "Function") reason_op
-    | ( (DefT (_, _, NullT) | ObjProtoT _ | FunProtoT _),
+    | ( (DefT (_, NullT) | ObjProtoT _ | FunProtoT _),
         Annot_LookupT (reason_op, use_op, Named { reason = reason_prop; name; _ }, _)
       ) ->
       let error_message =
@@ -1101,19 +1097,19 @@ module rec ConsGen : S = struct
     (*************)
     (* ToStringT *)
     (*************)
-    | (DefT (_, _, StrT _), Annot_ToStringT _) -> t
-    | (_, Annot_ToStringT { reason; _ }) -> with_trust bogus_trust (StrT.why reason)
+    | (DefT (_, StrT _), Annot_ToStringT _) -> t
+    | (_, Annot_ToStringT { reason; _ }) -> StrT.why reason
     (************)
     (* GetPropT *)
     (************)
-    | (DefT (reason, _, ArrT (ArrayAT { elem_t; _ })), (Annot_GetPropT _ | Annot_LookupT _)) ->
+    | (DefT (reason, ArrT (ArrayAT { elem_t; _ })), (Annot_GetPropT _ | Annot_LookupT _)) ->
       let arr = get_builtin_typeapp cx reason (OrdinaryName "Array") [elem_t] in
       elab_t cx arr op
-    | ( DefT (reason, trust, ArrT (TupleAT { arity; _ })),
+    | ( DefT (reason, ArrT (TupleAT { arity; _ })),
         Annot_GetPropT (reason_op, _, Named { name = OrdinaryName "length"; _ })
       ) ->
-      GetPropTKit.on_array_length cx dummy_trace reason trust arity reason_op
-    | ( DefT (reason, _, ArrT ((TupleAT _ | ROArrayAT _) as arrtype)),
+      GetPropTKit.on_array_length cx dummy_trace reason arity reason_op
+    | ( DefT (reason, ArrT ((TupleAT _ | ROArrayAT _) as arrtype)),
         (Annot_GetPropT _ | Annot_LookupT _)
       ) ->
       let t = elemt_of_arrtype arrtype in
@@ -1121,19 +1117,19 @@ module rec ConsGen : S = struct
     (************************)
     (* Promoting primitives *)
     (************************)
-    | (DefT (reason, _, StrT _), _) when primitive_promoting_op op ->
+    | (DefT (reason, StrT _), _) when primitive_promoting_op op ->
       let builtin = get_builtin_type cx reason ~use_desc:true (OrdinaryName "String") in
       elab_t cx builtin op
-    | (DefT (reason, _, NumT _), _) when primitive_promoting_op op ->
+    | (DefT (reason, NumT _), _) when primitive_promoting_op op ->
       let builtin = get_builtin_type cx reason ~use_desc:true (OrdinaryName "Number") in
       elab_t cx builtin op
-    | (DefT (reason, _, BoolT _), _) when primitive_promoting_op op ->
+    | (DefT (reason, BoolT _), _) when primitive_promoting_op op ->
       let builtin = get_builtin_type cx reason ~use_desc:true (OrdinaryName "Boolean") in
       elab_t cx builtin op
-    | (DefT (reason, _, SymbolT), _) when primitive_promoting_op op ->
+    | (DefT (reason, SymbolT), _) when primitive_promoting_op op ->
       let builtin = get_builtin_type cx reason ~use_desc:true (OrdinaryName "Symbol") in
       elab_t cx builtin op
-    | (DefT (lreason, _, MixedT Mixed_function), (Annot_GetPropT _ | Annot_LookupT _)) ->
+    | (DefT (lreason, MixedT Mixed_function), (Annot_GetPropT _ | Annot_LookupT _)) ->
       elab_t cx (FunProtoT lreason) op
     | (_, _) ->
       let open Error_message in
