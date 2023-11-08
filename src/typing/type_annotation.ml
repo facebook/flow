@@ -13,7 +13,6 @@ open Utils_js
 open Reason
 open Type
 open TypeUtil
-open Trust_helpers
 module Flow = Flow_js
 module T = Ast.Type
 
@@ -386,19 +385,19 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     | (loc, (Any _ as t_ast)) ->
       add_unclear_type_error_if_not_lib_file cx loc;
       ((loc, AnyT.at AnnotatedAny loc), t_ast)
-    | (loc, (Mixed _ as t_ast)) -> ((loc, MixedT.at loc |> with_trust_inference cx), t_ast)
-    | (loc, (Empty _ as t_ast)) -> ((loc, EmptyT.at loc |> with_trust_inference cx), t_ast)
-    | (loc, (Void _ as t_ast)) -> ((loc, VoidT.at loc |> with_trust_inference cx), t_ast)
-    | (loc, (Null _ as t_ast)) -> ((loc, NullT.at loc |> with_trust_inference cx), t_ast)
-    | (loc, (Symbol _ as t_ast)) -> ((loc, SymbolT.at loc |> with_trust_inference cx), t_ast)
-    | (loc, (Number _ as t_ast)) -> ((loc, NumT.at loc |> with_trust_inference cx), t_ast)
-    | (loc, (BigInt _ as t_ast)) -> ((loc, BigIntT.at loc |> with_trust_inference cx), t_ast)
-    | (loc, (String _ as t_ast)) -> ((loc, StrT.at loc |> with_trust_inference cx), t_ast)
+    | (loc, (Mixed _ as t_ast)) -> ((loc, MixedT.at loc (Trust.bogus_trust ())), t_ast)
+    | (loc, (Empty _ as t_ast)) -> ((loc, EmptyT.at loc (Trust.bogus_trust ())), t_ast)
+    | (loc, (Void _ as t_ast)) -> ((loc, VoidT.at loc (Trust.bogus_trust ())), t_ast)
+    | (loc, (Null _ as t_ast)) -> ((loc, NullT.at loc (Trust.bogus_trust ())), t_ast)
+    | (loc, (Symbol _ as t_ast)) -> ((loc, SymbolT.at loc (Trust.bogus_trust ())), t_ast)
+    | (loc, (Number _ as t_ast)) -> ((loc, NumT.at loc (Trust.bogus_trust ())), t_ast)
+    | (loc, (BigInt _ as t_ast)) -> ((loc, BigIntT.at loc (Trust.bogus_trust ())), t_ast)
+    | (loc, (String _ as t_ast)) -> ((loc, StrT.at loc (Trust.bogus_trust ())), t_ast)
     | (loc, (Boolean { raw; comments = _ } as t_ast)) ->
       (match raw with
       | `Bool -> Flow_js_utils.add_output cx (Error_message.EDeprecatedBool loc)
       | `Boolean -> ());
-      ((loc, BoolT.at loc |> with_trust_inference cx), t_ast)
+      ((loc, BoolT.at loc (Trust.bogus_trust ())), t_ast)
     | (loc, (Unknown _ as t_ast)) ->
       Flow_js_utils.add_output cx (Error_message.ETSSyntax { kind = Error_message.TSUnknown; loc });
       ((loc, AnyT.at (AnyError None) loc), t_ast)
@@ -484,7 +483,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let r = mk_annot_reason RArrayType loc in
       let (((_, elem_t), _) as t_ast) = convert cx tparams_map infer_tparams_map t in
       ( ( loc,
-          DefT (r, infer_trust cx, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = None }))
+          DefT (r, bogus_trust (), ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = None }))
         ),
         Array { Array.argument = t_ast; comments }
       )
@@ -589,15 +588,15 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         if Type_inference_hooks_js.dispatch_literal_hook cx loc then
           Tvar.mk cx (mk_reason (RCustom "literal") loc)
         else
-          mk_singleton_string cx loc value
+          mk_singleton_string loc value
       in
       ((loc, t), t_ast)
     | (loc, (NumberLiteral { Ast.NumberLiteral.value; raw; _ } as t_ast)) ->
-      ((loc, mk_singleton_number cx loc value raw), t_ast)
+      ((loc, mk_singleton_number loc value raw), t_ast)
     | (loc, (BigIntLiteral { Ast.BigIntLiteral.value; raw; _ } as t_ast)) ->
-      ((loc, mk_singleton_bigint cx loc value raw), t_ast)
+      ((loc, mk_singleton_bigint loc value raw), t_ast)
     | (loc, (BooleanLiteral { Ast.BooleanLiteral.value; _ } as t_ast)) ->
-      ((loc, mk_singleton_boolean cx loc value), t_ast)
+      ((loc, mk_singleton_boolean loc value), t_ast)
     | (loc, IndexedAccess { IndexedAccess._object; index; comments }) ->
       let reason = mk_reason (RIndexedAccess { optional = false }) loc in
       let (((_, object_type), _) as _object) = convert cx tparams_map infer_tparams_map _object in
@@ -792,7 +791,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               reconstruct_ast
                 (DefT
                    ( mk_annot_reason RArrayLit loc,
-                     infer_trust cx,
+                     bogus_trust (),
                      ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = None })
                    )
                 )
@@ -806,7 +805,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               reconstruct_ast
                 (DefT
                    ( mk_annot_reason RArrayType loc,
-                     infer_trust cx,
+                     bogus_trust (),
                      ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = None })
                    )
                 )
@@ -819,7 +818,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               let elemt = List.hd elemts in
               reconstruct_ast
                 (DefT
-                   (mk_annot_reason RROArrayType loc, infer_trust cx, ArrT (ROArrayAT (elemt, None)))
+                   (mk_annot_reason RROArrayType loc, bogus_trust (), ArrT (ROArrayAT (elemt, None)))
                 )
                 targs
           )
@@ -1003,7 +1002,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                 let desc = RModule (OrdinaryName value) in
                 let reason = mk_annot_reason desc loc in
                 let remote_module_t = ConsGen.get_builtin cx (internal_module_name value) reason in
-                let str_t = mk_singleton_string cx str_loc value in
+                let str_t = mk_singleton_string str_loc value in
                 reconstruct_ast
                   (ConsGen.cjs_require cx remote_module_t reason (Context.is_strict cx) false)
                   (Some
@@ -1137,13 +1136,13 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                     }
                   ) ->
                 let { Ast.StringLiteral.value; _ } = str_lit in
-                let str_t = mk_singleton_string cx str_loc value in
+                let str_t = mk_singleton_string str_loc value in
                 let chars = String_utils.CharSet.of_string value in
                 let char_str = String_utils.CharSet.to_string chars in
                 (* sorts them *)
                 let reason = mk_annot_reason (RCustom (spf "character set `%s`" char_str)) loc in
                 reconstruct_ast
-                  (DefT (reason, infer_trust cx, CharSetT chars))
+                  (DefT (reason, bogus_trust (), CharSetT chars))
                   (Some
                      ( targs_loc,
                        {
@@ -1160,7 +1159,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               let (ts, targs) = convert_type_params () in
               let t = List.hd ts in
               let reason = mk_reason (RStatics (desc_of_t t)) loc in
-              reconstruct_ast (DefT (reason, infer_trust cx, ClassT t)) targs
+              reconstruct_ast (DefT (reason, bogus_trust (), ClassT t)) targs
           )
         | "Function" ->
           check_type_arg_arity cx loc t_ast targs 0 (fun () ->
@@ -1237,7 +1236,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
             reconstruct_ast
               (DefT
                  ( reason,
-                   infer_trust cx,
+                   bogus_trust (),
                    ReactAbstractComponentT
                      { config; instance; renders; component_kind = Structural }
                  )
@@ -1456,7 +1455,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let ft =
         DefT
           ( reason,
-            infer_trust cx,
+            bogus_trust (),
             FunT
               ( statics_t,
                 {
@@ -1931,7 +1930,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let flags = { obj_kind; frozen = false; react_dro = None } in
       DefT
         ( mk_annot_reason RObjectType loc,
-          infer_trust cx,
+          bogus_trust (),
           ObjT (mk_objecttype ~flags ~call pmap proto)
         )
     in
@@ -2333,7 +2332,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
   and convert_type_guard cx tparams_map infer_tparams_map fparams gloc id_name t comments =
     let (name_loc, { Ast.Identifier.name; _ }) = id_name in
     let (((_, type_guard), _) as t') = convert cx tparams_map infer_tparams_map t in
-    let bool_t = BoolT.at gloc |> with_trust_inference cx in
+    let bool_t = BoolT.at gloc (Trust.bogus_trust ()) in
     let guard' = (gloc, { T.TypeGuard.guard = (id_name, Some t'); asserts = false; comments }) in
     let predicate = Some (TypeGuardBased { param_name = (name_loc, name); type_guard }) in
     check_guard_type cx fparams (name, type_guard);
@@ -2354,7 +2353,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           }
         ) ->
       if meth_kind <> MethodKind then (
-        let bool_t = BoolT.at gloc |> with_trust_inference cx in
+        let bool_t = BoolT.at gloc (Trust.bogus_trust ()) in
         let return = Tast_utils.error_mapper#function_type_return_annotation return in
         let kind = method_kind_to_string meth_kind in
         Flow_js_utils.add_output
@@ -2554,21 +2553,21 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     | ((_, function_type), Ast.Type.Function f_ast) -> (function_type, (loc, f_ast))
     | _ -> assert false
 
-  and mk_singleton_string cx loc key =
+  and mk_singleton_string loc key =
     let reason = mk_annot_reason (RStringLit (OrdinaryName key)) loc in
-    DefT (reason, infer_trust cx, SingletonStrT (OrdinaryName key))
+    DefT (reason, bogus_trust (), SingletonStrT (OrdinaryName key))
 
-  and mk_singleton_number cx loc num raw =
+  and mk_singleton_number loc num raw =
     let reason = mk_annot_reason (RNumberLit raw) loc in
-    DefT (reason, infer_trust cx, SingletonNumT (num, raw))
+    DefT (reason, bogus_trust (), SingletonNumT (num, raw))
 
-  and mk_singleton_boolean cx loc b =
+  and mk_singleton_boolean loc b =
     let reason = mk_annot_reason (RBooleanLit b) loc in
-    DefT (reason, infer_trust cx, SingletonBoolT b)
+    DefT (reason, bogus_trust (), SingletonBoolT b)
 
-  and mk_singleton_bigint cx loc num raw =
+  and mk_singleton_bigint loc num raw =
     let reason = mk_annot_reason (RBigIntLit raw) loc in
-    DefT (reason, infer_trust cx, SingletonBigIntT (num, raw))
+    DefT (reason, bogus_trust (), SingletonBigIntT (num, raw))
 
   (* Given the type of expression C and type arguments T1...Tn, return the type of
      values described by C<T1,...,Tn>, or C when there are no type arguments. *)
@@ -2624,7 +2623,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           | Ast.Type.Missing loc ->
             let t =
               DefT
-                (Reason.replace_desc_reason RMixed reason, infer_trust cx, MixedT Mixed_everything)
+                (Reason.replace_desc_reason RMixed reason, bogus_trust (), MixedT Mixed_everything)
             in
             (t, Ast.Type.Missing (loc, t))
           | Ast.Type.Available (bound_loc, u) ->
@@ -2707,7 +2706,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     if Type_inference_hooks_js.dispatch_id_hook cx name loc then
       Unsoundness.at InferenceHooks loc
     else if name = "undefined" then
-      VoidT.at loc |> with_trust_inference cx
+      VoidT.at loc (Trust.bogus_trust ())
     else
       Type_env.var_ref ~lookup_mode:ForType cx (OrdinaryName name) loc
 
