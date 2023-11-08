@@ -1,1 +1,17 @@
-Found 0 errors
+Error ------------------------------------------------------------------------------------------------------ test.js:7:5
+
+Sketchy null check on mixed [1] which is potentially false. Perhaps you meant to check for null or undefined [1]?
+[sketchy-null-mixed]
+
+   test.js:7:5
+   7| if (o.p) {
+          ^^^
+
+References:
+   test.js:3:24
+   3| declare opaque type T: mixed;
+                             ^^^^^ [1]
+
+
+
+Found 1 error

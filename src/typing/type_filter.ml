@@ -53,6 +53,22 @@ let recurse_into_intersection =
     | [t] -> t
     | t0 :: t1 :: ts -> IntersectionT (r, InterRep.make t0 t1 ts)
 
+let filter_opaque filter_fn reason ({ underlying_t; super_t; _ } as opq) =
+  match underlying_t with
+  | Some underlying_t -> begin
+    match filter_fn underlying_t with
+    | DefT (_, trust, EmptyT) -> DefT (reason, trust, EmptyT)
+    | t -> OpaqueT (reason, { opq with underlying_t = Some t })
+  end
+  | None -> begin
+    let super_t =
+      Base.Option.value ~default:(DefT (reason, bogus_trust (), MixedT Mixed_everything)) super_t
+    in
+    match filter_fn super_t with
+    | DefT (_, trust, EmptyT) -> DefT (reason, trust, EmptyT)
+    | t -> OpaqueT (reason, { opq with super_t = Some t })
+  end
+
 let map_poly ~f t =
   match t with
   | DefT (r, tr, PolyT ({ t_out; _ } as poly)) -> begin
@@ -78,6 +94,7 @@ let rec exists cx = function
       ) ->
     DefT (r, trust, EmptyT)
   (* unknown things become truthy *)
+  | OpaqueT (r, opq) -> filter_opaque (exists cx) r opq
   | UnionT (r, rep) -> recurse_into_union cx exists (r, UnionRep.members rep)
   | MaybeT (_, t) -> t
   | OptionalT { reason = _; type_ = t; use_desc = _ } -> exists cx t
@@ -107,6 +124,7 @@ let rec not_exists cx t =
         | NumT (Literal (_, (0., _))) )
       ) ->
     t
+  | OpaqueT (r, opq) -> filter_opaque (not_exists cx) r opq
   | AnyT (r, _) -> DefT (r, Trust.bogus_trust (), EmptyT)
   | UnionT (r, rep) -> recurse_into_union cx not_exists (r, UnionRep.members rep)
   (* truthy things get removed *)
@@ -148,6 +166,7 @@ let rec not_exists cx t =
   | t -> t
 
 let rec maybe cx = function
+  | OpaqueT (r, opq) -> filter_opaque (maybe cx) r opq
   | UnionT (r, rep) -> recurse_into_union cx maybe (r, UnionRep.members rep)
   | MaybeT (r, _) ->
     UnionT
@@ -171,6 +190,7 @@ let rec maybe cx = function
     EmptyT.why reason |> with_trust bogus_trust
 
 let rec not_maybe cx = function
+  | OpaqueT (r, opq) -> filter_opaque (not_maybe cx) r opq
   | UnionT (r, rep) -> recurse_into_union cx not_maybe (r, UnionRep.members rep)
   | MaybeT (_, t) -> t
   | OptionalT { reason = _; type_ = t; use_desc = _ } -> not_maybe cx t

@@ -9,8 +9,8 @@ Cannot cast `x` to `React.RefSetter` because in type argument `T` [1]: [incompat
          ^
 
 References:
-   <BUILTINS>/react.js:262:34
-   262|   declare export type RefSetter<-T> = React$RefSetter<T>;
+   <BUILTINS>/react.js:264:34
+   264|   declare export type RefSetter<-T> = React$RefSetter<T>;
                                          ^ [1]
    contravariant_refsetter.js:11:39
     11| (x: React.RefSetter<number | string | boolean>); // ERROR
@@ -48,8 +48,8 @@ References:
    contravariant_refsetter.js:7:18
      7| declare const y: React$RefSetter<number | string>;
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:185:6
-   185|   | ((T | null) => mixed);
+   <BUILTINS>/react.js:187:6
+   187|   | ((T | null) => mixed);
              ^^^^^^^^^^^^^^^^^^^ [5]
 
 
@@ -68,8 +68,8 @@ References:
    contravariant_refsetter.js:7:18
      7| declare const y: React$RefSetter<number | string>;
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:184:5
-   184|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:186:5
+   186|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    contravariant_refsetter.js:12:39
     12| (y: React.RefSetter<number | string | boolean>); // ERROR
@@ -1289,8 +1289,8 @@ References:
    ref.js:3:7
      3| class Foo extends React.Component<{}, void> {}
               ^^^ [2]
-   <BUILTINS>/react.js:175:5
-   175|   | { -current: React$ElementRef<ElementType> | null, ... }
+   <BUILTINS>/react.js:177:5
+   177|   | { -current: React$ElementRef<ElementType> | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -1303,8 +1303,8 @@ Cannot cast `foo` to `Foo` because null [1] is incompatible with `Foo` [2]. [inc
                           ^^^
 
 References:
-   <BUILTINS>/react.js:176:39
-   176|   | ((React$ElementRef<ElementType> | null) => mixed)
+   <BUILTINS>/react.js:178:39
+   178|   | ((React$ElementRef<ElementType> | null) => mixed)
                                               ^^^^ [1]
    ref.js:11:24
     11| <Foo ref={foo => (foo: Foo)} />; // Error: `Foo` may be null.
@@ -1350,8 +1350,8 @@ References:
    ref.js:15:7
     15| class FooExact extends React.Component<{||}, void> {}
               ^^^^^^^^ [2]
-   <BUILTINS>/react.js:175:5
-   175|   | { -current: React$ElementRef<ElementType> | null, ... }
+   <BUILTINS>/react.js:177:5
+   177|   | { -current: React$ElementRef<ElementType> | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -1369,11 +1369,11 @@ References:
    ref.js:22:22
     22| <FooExact ref={(foo: FooExact) => {}} />; // Error: `FooExact` may be null.
                              ^^^^^^^^ [1]
-   <BUILTINS>/react.js:176:39
-   176|   | ((React$ElementRef<ElementType> | null) => mixed)
+   <BUILTINS>/react.js:178:39
+   178|   | ((React$ElementRef<ElementType> | null) => mixed)
                                               ^^^^ [2]
-   <BUILTINS>/react.js:175:5
-   175|   | { -current: React$ElementRef<ElementType> | null, ... }
+   <BUILTINS>/react.js:177:5
+   177|   | { -current: React$ElementRef<ElementType> | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -1388,8 +1388,8 @@ Cannot create `FooExact` element because in property `ref`: [incompatible-type]
                        ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:175:5
-   175|   | { -current: React$ElementRef<ElementType> | null, ... }
+   <BUILTINS>/react.js:177:5
+   177|   | { -current: React$ElementRef<ElementType> | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    ref.js:15:7
     15| class FooExact extends React.Component<{||}, void> {}
@@ -1427,8 +1427,8 @@ References:
    useCallback_hook.js:4:3
      4|   React.useCallback(); // Error: function requires another argument.
           ^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:356:42
-   356|   declare export function useCallback<T: (...args: $ReadOnlyArray<empty>) => mixed>(
+   <BUILTINS>/react.js:359:42
+   359|   declare export function useCallback<T: (...args: $ReadOnlyArray<empty>) => mixed>(
                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1506,39 +1506,39 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:417:26
+   <BUILTINS>/react.js:420:26
                                  v
-   417|   declare export default {
-   418|     +DOM: typeof DOM,
-   419|     +version: typeof version,
-   420|     +checkPropTypes: typeof checkPropTypes,
-   421|     +memo: typeof memo,
-   422|     +lazy: typeof lazy,
-   423|     +createClass: typeof createClass,
-   424|     +createContext: typeof createContext,
-   425|     +createElement: typeof createElement,
-   426|     +cloneElement: typeof cloneElement,
-   427|     +createFactory: typeof createFactory,
-   428|     +createRef: typeof createRef,
-   429|     +forwardRef: typeof forwardRef,
-   430|     +isValidElement: typeof isValidElement,
-   431|     +Component: typeof Component,
+   420|   declare export default {
+   421|     +DOM: typeof DOM,
+   422|     +version: typeof version,
+   423|     +checkPropTypes: typeof checkPropTypes,
+   424|     +memo: typeof memo,
+   425|     +lazy: typeof lazy,
+   426|     +createClass: typeof createClass,
+   427|     +createContext: typeof createContext,
+   428|     +createElement: typeof createElement,
+   429|     +cloneElement: typeof cloneElement,
+   430|     +createFactory: typeof createFactory,
+   431|     +createRef: typeof createRef,
+   432|     +forwardRef: typeof forwardRef,
+   433|     +isValidElement: typeof isValidElement,
+   434|     +Component: typeof Component,
       :
-   441|     +useReducer: typeof useReducer,
-   442|     +useRef: typeof useRef,
-   443|     +useEffect: typeof useEffect,
-   444|     +useLayoutEffect: typeof useLayoutEffect,
-   445|     +useCallback: typeof useCallback,
-   446|     +useMemo: typeof useMemo,
-   447|     +useImperativeHandle: typeof useImperativeHandle,
-   448|     +useTransition: typeof useTransition,
-   449|     +useDeferredValue: typeof useDeferredValue,
-   450|     +startTransition: typeof startTransition,
-   451|     +useId: typeof useId,
-   452|     +useInsertionEffect: typeof useInsertionEffect,
-   453|     +useSyncExternalStore: typeof useSyncExternalStore,
-   454|     ...
-   455|   };
+   444|     +useReducer: typeof useReducer,
+   445|     +useRef: typeof useRef,
+   446|     +useEffect: typeof useEffect,
+   447|     +useLayoutEffect: typeof useLayoutEffect,
+   448|     +useCallback: typeof useCallback,
+   449|     +useMemo: typeof useMemo,
+   450|     +useImperativeHandle: typeof useImperativeHandle,
+   451|     +useTransition: typeof useTransition,
+   452|     +useDeferredValue: typeof useDeferredValue,
+   453|     +startTransition: typeof startTransition,
+   454|     +useId: typeof useId,
+   455|     +useInsertionEffect: typeof useInsertionEffect,
+   456|     +useSyncExternalStore: typeof useSyncExternalStore,
+   457|     ...
+   458|   };
           ^ [1]
 
 
@@ -1602,8 +1602,8 @@ Cannot call `React.useContext` because no more than 1 argument is expected by fu
                                                   ^^^^^
 
 References:
-   <BUILTINS>/react.js:317:37
-   317|   declare export function useContext<T>(context: React$Context<T>): T;
+   <BUILTINS>/react.js:319:37
+   319|   declare export function useContext<T>(context: React$Context<T>): T;
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -1616,8 +1616,8 @@ Cannot call `React.useContext` because no more than 1 argument is expected by fu
                                                   ^^^^^
 
 References:
-   <BUILTINS>/react.js:317:37
-   317|   declare export function useContext<T>(context: React$Context<T>): T;
+   <BUILTINS>/react.js:319:37
+   319|   declare export function useContext<T>(context: React$Context<T>): T;
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -1647,39 +1647,39 @@ Cannot call `React.useDebugValue` because property `useDebugValue` is missing in
                                      ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:417:26
+   <BUILTINS>/react.js:420:26
                                  v
-   417|   declare export default {
-   418|     +DOM: typeof DOM,
-   419|     +version: typeof version,
-   420|     +checkPropTypes: typeof checkPropTypes,
-   421|     +memo: typeof memo,
-   422|     +lazy: typeof lazy,
-   423|     +createClass: typeof createClass,
-   424|     +createContext: typeof createContext,
-   425|     +createElement: typeof createElement,
-   426|     +cloneElement: typeof cloneElement,
-   427|     +createFactory: typeof createFactory,
-   428|     +createRef: typeof createRef,
-   429|     +forwardRef: typeof forwardRef,
-   430|     +isValidElement: typeof isValidElement,
-   431|     +Component: typeof Component,
+   420|   declare export default {
+   421|     +DOM: typeof DOM,
+   422|     +version: typeof version,
+   423|     +checkPropTypes: typeof checkPropTypes,
+   424|     +memo: typeof memo,
+   425|     +lazy: typeof lazy,
+   426|     +createClass: typeof createClass,
+   427|     +createContext: typeof createContext,
+   428|     +createElement: typeof createElement,
+   429|     +cloneElement: typeof cloneElement,
+   430|     +createFactory: typeof createFactory,
+   431|     +createRef: typeof createRef,
+   432|     +forwardRef: typeof forwardRef,
+   433|     +isValidElement: typeof isValidElement,
+   434|     +Component: typeof Component,
       :
-   441|     +useReducer: typeof useReducer,
-   442|     +useRef: typeof useRef,
-   443|     +useEffect: typeof useEffect,
-   444|     +useLayoutEffect: typeof useLayoutEffect,
-   445|     +useCallback: typeof useCallback,
-   446|     +useMemo: typeof useMemo,
-   447|     +useImperativeHandle: typeof useImperativeHandle,
-   448|     +useTransition: typeof useTransition,
-   449|     +useDeferredValue: typeof useDeferredValue,
-   450|     +startTransition: typeof startTransition,
-   451|     +useId: typeof useId,
-   452|     +useInsertionEffect: typeof useInsertionEffect,
-   453|     +useSyncExternalStore: typeof useSyncExternalStore,
-   454|     ...
-   455|   };
+   444|     +useReducer: typeof useReducer,
+   445|     +useRef: typeof useRef,
+   446|     +useEffect: typeof useEffect,
+   447|     +useLayoutEffect: typeof useLayoutEffect,
+   448|     +useCallback: typeof useCallback,
+   449|     +useMemo: typeof useMemo,
+   450|     +useImperativeHandle: typeof useImperativeHandle,
+   451|     +useTransition: typeof useTransition,
+   452|     +useDeferredValue: typeof useDeferredValue,
+   453|     +startTransition: typeof startTransition,
+   454|     +useId: typeof useId,
+   455|     +useInsertionEffect: typeof useInsertionEffect,
+   456|     +useSyncExternalStore: typeof useSyncExternalStore,
+   457|     ...
+   458|   };
           ^ [1]
 
 
@@ -1692,12 +1692,12 @@ Cannot call `React.useEffect` because function [1] requires another argument. [i
                 ^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:346:36
+   <BUILTINS>/react.js:349:36
                                            v
-   346|   declare export function useEffect(
-   347|     create: () => MaybeCleanUpFn,
-   348|     inputs?: ?$ReadOnlyArray<mixed>,
-   349|   ): void;
+   349|   declare export function useEffect(
+   350|     create: () => MaybeCleanUpFn,
+   351|     inputs?: ?$ReadOnlyArray<mixed>,
+   352|   ): void;
           ------^ [1]
 
 
@@ -1711,8 +1711,8 @@ Cannot call `React.useEffect` with `1` bound to `create` because number [1] is i
                           ^ [1]
 
 References:
-   <BUILTINS>/react.js:347:13
-   347|     create: () => MaybeCleanUpFn,
+   <BUILTINS>/react.js:350:13
+   350|     create: () => MaybeCleanUpFn,
                     ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1726,8 +1726,8 @@ type [2]. [incompatible-call]
                                     ^ [1]
 
 References:
-   <BUILTINS>/react.js:348:15
-   348|     inputs?: ?$ReadOnlyArray<mixed>,
+   <BUILTINS>/react.js:351:15
+   351|     inputs?: ?$ReadOnlyArray<mixed>,
                       ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1743,11 +1743,11 @@ Cannot call `React.useEffect` with async function bound to `create` because in t
                                      ^ [1]
 
 References:
-   <BUILTINS>/react.js:314:41
-   314|   declare type MaybeCleanUpFn = void | (() => void);
+   <BUILTINS>/react.js:316:41
+   316|   declare type MaybeCleanUpFn = void | (() => void);
                                                 ^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:314:33
-   314|   declare type MaybeCleanUpFn = void | (() => void);
+   <BUILTINS>/react.js:316:33
+   316|   declare type MaybeCleanUpFn = void | (() => void);
                                         ^^^^ [3]
 
 
@@ -1765,11 +1765,11 @@ References:
    useEffect_hook.js:23:31
     23|   React.useEffect(() => () => 123) // Error: cleanup function should not return a value
                                       ^^^ [1]
-   <BUILTINS>/react.js:314:47
-   314|   declare type MaybeCleanUpFn = void | (() => void);
+   <BUILTINS>/react.js:316:47
+   316|   declare type MaybeCleanUpFn = void | (() => void);
                                                       ^^^^ [2]
-   <BUILTINS>/react.js:314:33
-   314|   declare type MaybeCleanUpFn = void | (() => void);
+   <BUILTINS>/react.js:316:33
+   316|   declare type MaybeCleanUpFn = void | (() => void);
                                         ^^^^ [4]
 
 
@@ -1782,13 +1782,13 @@ Cannot call `React.useImperativeHandle` because function [1] requires another ar
                 ^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:366:46
+   <BUILTINS>/react.js:369:46
                                                      v---
-   366|   declare export function useImperativeHandle<T>(
-   367|     ref: React$RefSetter<T> | null | void,
-   368|     create: () => T,
-   369|     inputs: ?$ReadOnlyArray<mixed>,
-   370|   ): void;
+   369|   declare export function useImperativeHandle<T>(
+   370|     ref: React$RefSetter<T> | null | void,
+   371|     create: () => T,
+   372|     inputs: ?$ReadOnlyArray<mixed>,
+   373|   ): void;
           ------^ [1]
 
 
@@ -1813,8 +1813,8 @@ References:
    useImperativeHandle_hook.js:28:14
     28|   const ref: {current: null | Interface } = React.createRef();
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:185:6
-   185|   | ((T | null) => mixed);
+   <BUILTINS>/react.js:187:6
+   187|   | ((T | null) => mixed);
              ^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -1832,8 +1832,8 @@ References:
    useImperativeHandle_hook.js:31:21
     31|   const refSetter = (instance: null | Interface) => {};
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:184:5
-   184|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:186:5
+   186|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    useImperativeHandle_hook.js:32:47
     32|   React.useImperativeHandle(refSetter, () => ({})); // Error: inexact object literal is incompatible with exact Interface
@@ -1852,12 +1852,12 @@ Cannot call `React.useLayoutEffect` because function [1] requires another argume
                 ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:351:42
+   <BUILTINS>/react.js:354:42
                                                  v
-   351|   declare export function useLayoutEffect(
-   352|     create: () => MaybeCleanUpFn,
-   353|     inputs?: ?$ReadOnlyArray<mixed>,
-   354|   ): void;
+   354|   declare export function useLayoutEffect(
+   355|     create: () => MaybeCleanUpFn,
+   356|     inputs?: ?$ReadOnlyArray<mixed>,
+   357|   ): void;
           ------^ [1]
 
 
@@ -1871,8 +1871,8 @@ type [2]. [incompatible-call]
                                 ^ [1]
 
 References:
-   <BUILTINS>/react.js:352:13
-   352|     create: () => MaybeCleanUpFn,
+   <BUILTINS>/react.js:355:13
+   355|     create: () => MaybeCleanUpFn,
                     ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1886,8 +1886,8 @@ type [2]. [incompatible-call]
                                           ^ [1]
 
 References:
-   <BUILTINS>/react.js:353:15
-   353|     inputs?: ?$ReadOnlyArray<mixed>,
+   <BUILTINS>/react.js:356:15
+   356|     inputs?: ?$ReadOnlyArray<mixed>,
                       ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1904,11 +1904,11 @@ Cannot call `React.useLayoutEffect` with async function bound to `create` becaus
                                            ^ [1]
 
 References:
-   <BUILTINS>/react.js:314:41
-   314|   declare type MaybeCleanUpFn = void | (() => void);
+   <BUILTINS>/react.js:316:41
+   316|   declare type MaybeCleanUpFn = void | (() => void);
                                                 ^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:314:33
-   314|   declare type MaybeCleanUpFn = void | (() => void);
+   <BUILTINS>/react.js:316:33
+   316|   declare type MaybeCleanUpFn = void | (() => void);
                                         ^^^^ [3]
 
 
@@ -1926,11 +1926,11 @@ References:
    useLayoutEffect_hook.js:23:37
     23|   React.useLayoutEffect(() => () => 123) // Error: cleanup function should not return a value
                                             ^^^ [1]
-   <BUILTINS>/react.js:314:47
-   314|   declare type MaybeCleanUpFn = void | (() => void);
+   <BUILTINS>/react.js:316:47
+   316|   declare type MaybeCleanUpFn = void | (() => void);
                                                       ^^^^ [2]
-   <BUILTINS>/react.js:314:33
-   314|   declare type MaybeCleanUpFn = void | (() => void);
+   <BUILTINS>/react.js:316:33
+   316|   declare type MaybeCleanUpFn = void | (() => void);
                                         ^^^^ [4]
 
 
@@ -1943,12 +1943,12 @@ Cannot call `React.useMemo` because function [1] requires another argument. [inc
                 ^^^^^^^
 
 References:
-   <BUILTINS>/react.js:361:34
+   <BUILTINS>/react.js:364:34
                                          v---
-   361|   declare export function useMemo<T>(
-   362|     create: () => T,
-   363|     inputs: ?$ReadOnlyArray<mixed>,
-   364|   ): T;
+   364|   declare export function useMemo<T>(
+   365|     create: () => T,
+   366|     inputs: ?$ReadOnlyArray<mixed>,
+   367|   ): T;
           ---^ [1]
 
 
@@ -1978,39 +1978,39 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:417:26
+   <BUILTINS>/react.js:420:26
                                  v
-   417|   declare export default {
-   418|     +DOM: typeof DOM,
-   419|     +version: typeof version,
-   420|     +checkPropTypes: typeof checkPropTypes,
-   421|     +memo: typeof memo,
-   422|     +lazy: typeof lazy,
-   423|     +createClass: typeof createClass,
-   424|     +createContext: typeof createContext,
-   425|     +createElement: typeof createElement,
-   426|     +cloneElement: typeof cloneElement,
-   427|     +createFactory: typeof createFactory,
-   428|     +createRef: typeof createRef,
-   429|     +forwardRef: typeof forwardRef,
-   430|     +isValidElement: typeof isValidElement,
-   431|     +Component: typeof Component,
+   420|   declare export default {
+   421|     +DOM: typeof DOM,
+   422|     +version: typeof version,
+   423|     +checkPropTypes: typeof checkPropTypes,
+   424|     +memo: typeof memo,
+   425|     +lazy: typeof lazy,
+   426|     +createClass: typeof createClass,
+   427|     +createContext: typeof createContext,
+   428|     +createElement: typeof createElement,
+   429|     +cloneElement: typeof cloneElement,
+   430|     +createFactory: typeof createFactory,
+   431|     +createRef: typeof createRef,
+   432|     +forwardRef: typeof forwardRef,
+   433|     +isValidElement: typeof isValidElement,
+   434|     +Component: typeof Component,
       :
-   441|     +useReducer: typeof useReducer,
-   442|     +useRef: typeof useRef,
-   443|     +useEffect: typeof useEffect,
-   444|     +useLayoutEffect: typeof useLayoutEffect,
-   445|     +useCallback: typeof useCallback,
-   446|     +useMemo: typeof useMemo,
-   447|     +useImperativeHandle: typeof useImperativeHandle,
-   448|     +useTransition: typeof useTransition,
-   449|     +useDeferredValue: typeof useDeferredValue,
-   450|     +startTransition: typeof startTransition,
-   451|     +useId: typeof useId,
-   452|     +useInsertionEffect: typeof useInsertionEffect,
-   453|     +useSyncExternalStore: typeof useSyncExternalStore,
-   454|     ...
-   455|   };
+   444|     +useReducer: typeof useReducer,
+   445|     +useRef: typeof useRef,
+   446|     +useEffect: typeof useEffect,
+   447|     +useLayoutEffect: typeof useLayoutEffect,
+   448|     +useCallback: typeof useCallback,
+   449|     +useMemo: typeof useMemo,
+   450|     +useImperativeHandle: typeof useImperativeHandle,
+   451|     +useTransition: typeof useTransition,
+   452|     +useDeferredValue: typeof useDeferredValue,
+   453|     +startTransition: typeof startTransition,
+   454|     +useId: typeof useId,
+   455|     +useInsertionEffect: typeof useInsertionEffect,
+   456|     +useSyncExternalStore: typeof useSyncExternalStore,
+   457|     ...
+   458|   };
           ^ [1]
 
 
@@ -2023,39 +2023,39 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:417:26
+   <BUILTINS>/react.js:420:26
                                  v
-   417|   declare export default {
-   418|     +DOM: typeof DOM,
-   419|     +version: typeof version,
-   420|     +checkPropTypes: typeof checkPropTypes,
-   421|     +memo: typeof memo,
-   422|     +lazy: typeof lazy,
-   423|     +createClass: typeof createClass,
-   424|     +createContext: typeof createContext,
-   425|     +createElement: typeof createElement,
-   426|     +cloneElement: typeof cloneElement,
-   427|     +createFactory: typeof createFactory,
-   428|     +createRef: typeof createRef,
-   429|     +forwardRef: typeof forwardRef,
-   430|     +isValidElement: typeof isValidElement,
-   431|     +Component: typeof Component,
+   420|   declare export default {
+   421|     +DOM: typeof DOM,
+   422|     +version: typeof version,
+   423|     +checkPropTypes: typeof checkPropTypes,
+   424|     +memo: typeof memo,
+   425|     +lazy: typeof lazy,
+   426|     +createClass: typeof createClass,
+   427|     +createContext: typeof createContext,
+   428|     +createElement: typeof createElement,
+   429|     +cloneElement: typeof cloneElement,
+   430|     +createFactory: typeof createFactory,
+   431|     +createRef: typeof createRef,
+   432|     +forwardRef: typeof forwardRef,
+   433|     +isValidElement: typeof isValidElement,
+   434|     +Component: typeof Component,
       :
-   441|     +useReducer: typeof useReducer,
-   442|     +useRef: typeof useRef,
-   443|     +useEffect: typeof useEffect,
-   444|     +useLayoutEffect: typeof useLayoutEffect,
-   445|     +useCallback: typeof useCallback,
-   446|     +useMemo: typeof useMemo,
-   447|     +useImperativeHandle: typeof useImperativeHandle,
-   448|     +useTransition: typeof useTransition,
-   449|     +useDeferredValue: typeof useDeferredValue,
-   450|     +startTransition: typeof startTransition,
-   451|     +useId: typeof useId,
-   452|     +useInsertionEffect: typeof useInsertionEffect,
-   453|     +useSyncExternalStore: typeof useSyncExternalStore,
-   454|     ...
-   455|   };
+   444|     +useReducer: typeof useReducer,
+   445|     +useRef: typeof useRef,
+   446|     +useEffect: typeof useEffect,
+   447|     +useLayoutEffect: typeof useLayoutEffect,
+   448|     +useCallback: typeof useCallback,
+   449|     +useMemo: typeof useMemo,
+   450|     +useImperativeHandle: typeof useImperativeHandle,
+   451|     +useTransition: typeof useTransition,
+   452|     +useDeferredValue: typeof useDeferredValue,
+   453|     +startTransition: typeof startTransition,
+   454|     +useId: typeof useId,
+   455|     +useInsertionEffect: typeof useInsertionEffect,
+   456|     +useSyncExternalStore: typeof useSyncExternalStore,
+   457|     ...
+   458|   };
           ^ [1]
 
 
@@ -2068,39 +2068,39 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:417:26
+   <BUILTINS>/react.js:420:26
                                  v
-   417|   declare export default {
-   418|     +DOM: typeof DOM,
-   419|     +version: typeof version,
-   420|     +checkPropTypes: typeof checkPropTypes,
-   421|     +memo: typeof memo,
-   422|     +lazy: typeof lazy,
-   423|     +createClass: typeof createClass,
-   424|     +createContext: typeof createContext,
-   425|     +createElement: typeof createElement,
-   426|     +cloneElement: typeof cloneElement,
-   427|     +createFactory: typeof createFactory,
-   428|     +createRef: typeof createRef,
-   429|     +forwardRef: typeof forwardRef,
-   430|     +isValidElement: typeof isValidElement,
-   431|     +Component: typeof Component,
+   420|   declare export default {
+   421|     +DOM: typeof DOM,
+   422|     +version: typeof version,
+   423|     +checkPropTypes: typeof checkPropTypes,
+   424|     +memo: typeof memo,
+   425|     +lazy: typeof lazy,
+   426|     +createClass: typeof createClass,
+   427|     +createContext: typeof createContext,
+   428|     +createElement: typeof createElement,
+   429|     +cloneElement: typeof cloneElement,
+   430|     +createFactory: typeof createFactory,
+   431|     +createRef: typeof createRef,
+   432|     +forwardRef: typeof forwardRef,
+   433|     +isValidElement: typeof isValidElement,
+   434|     +Component: typeof Component,
       :
-   441|     +useReducer: typeof useReducer,
-   442|     +useRef: typeof useRef,
-   443|     +useEffect: typeof useEffect,
-   444|     +useLayoutEffect: typeof useLayoutEffect,
-   445|     +useCallback: typeof useCallback,
-   446|     +useMemo: typeof useMemo,
-   447|     +useImperativeHandle: typeof useImperativeHandle,
-   448|     +useTransition: typeof useTransition,
-   449|     +useDeferredValue: typeof useDeferredValue,
-   450|     +startTransition: typeof startTransition,
-   451|     +useId: typeof useId,
-   452|     +useInsertionEffect: typeof useInsertionEffect,
-   453|     +useSyncExternalStore: typeof useSyncExternalStore,
-   454|     ...
-   455|   };
+   444|     +useReducer: typeof useReducer,
+   445|     +useRef: typeof useRef,
+   446|     +useEffect: typeof useEffect,
+   447|     +useLayoutEffect: typeof useLayoutEffect,
+   448|     +useCallback: typeof useCallback,
+   449|     +useMemo: typeof useMemo,
+   450|     +useImperativeHandle: typeof useImperativeHandle,
+   451|     +useTransition: typeof useTransition,
+   452|     +useDeferredValue: typeof useDeferredValue,
+   453|     +startTransition: typeof startTransition,
+   454|     +useId: typeof useId,
+   455|     +useInsertionEffect: typeof useInsertionEffect,
+   456|     +useSyncExternalStore: typeof useSyncExternalStore,
+   457|     ...
+   458|   };
           ^ [1]
 
 
@@ -2113,39 +2113,39 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:417:26
+   <BUILTINS>/react.js:420:26
                                  v
-   417|   declare export default {
-   418|     +DOM: typeof DOM,
-   419|     +version: typeof version,
-   420|     +checkPropTypes: typeof checkPropTypes,
-   421|     +memo: typeof memo,
-   422|     +lazy: typeof lazy,
-   423|     +createClass: typeof createClass,
-   424|     +createContext: typeof createContext,
-   425|     +createElement: typeof createElement,
-   426|     +cloneElement: typeof cloneElement,
-   427|     +createFactory: typeof createFactory,
-   428|     +createRef: typeof createRef,
-   429|     +forwardRef: typeof forwardRef,
-   430|     +isValidElement: typeof isValidElement,
-   431|     +Component: typeof Component,
+   420|   declare export default {
+   421|     +DOM: typeof DOM,
+   422|     +version: typeof version,
+   423|     +checkPropTypes: typeof checkPropTypes,
+   424|     +memo: typeof memo,
+   425|     +lazy: typeof lazy,
+   426|     +createClass: typeof createClass,
+   427|     +createContext: typeof createContext,
+   428|     +createElement: typeof createElement,
+   429|     +cloneElement: typeof cloneElement,
+   430|     +createFactory: typeof createFactory,
+   431|     +createRef: typeof createRef,
+   432|     +forwardRef: typeof forwardRef,
+   433|     +isValidElement: typeof isValidElement,
+   434|     +Component: typeof Component,
       :
-   441|     +useReducer: typeof useReducer,
-   442|     +useRef: typeof useRef,
-   443|     +useEffect: typeof useEffect,
-   444|     +useLayoutEffect: typeof useLayoutEffect,
-   445|     +useCallback: typeof useCallback,
-   446|     +useMemo: typeof useMemo,
-   447|     +useImperativeHandle: typeof useImperativeHandle,
-   448|     +useTransition: typeof useTransition,
-   449|     +useDeferredValue: typeof useDeferredValue,
-   450|     +startTransition: typeof startTransition,
-   451|     +useId: typeof useId,
-   452|     +useInsertionEffect: typeof useInsertionEffect,
-   453|     +useSyncExternalStore: typeof useSyncExternalStore,
-   454|     ...
-   455|   };
+   444|     +useReducer: typeof useReducer,
+   445|     +useRef: typeof useRef,
+   446|     +useEffect: typeof useEffect,
+   447|     +useLayoutEffect: typeof useLayoutEffect,
+   448|     +useCallback: typeof useCallback,
+   449|     +useMemo: typeof useMemo,
+   450|     +useImperativeHandle: typeof useImperativeHandle,
+   451|     +useTransition: typeof useTransition,
+   452|     +useDeferredValue: typeof useDeferredValue,
+   453|     +startTransition: typeof startTransition,
+   454|     +useId: typeof useId,
+   455|     +useInsertionEffect: typeof useInsertionEffect,
+   456|     +useSyncExternalStore: typeof useSyncExternalStore,
+   457|     ...
+   458|   };
           ^ [1]
 
 
@@ -2158,39 +2158,39 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:417:26
+   <BUILTINS>/react.js:420:26
                                  v
-   417|   declare export default {
-   418|     +DOM: typeof DOM,
-   419|     +version: typeof version,
-   420|     +checkPropTypes: typeof checkPropTypes,
-   421|     +memo: typeof memo,
-   422|     +lazy: typeof lazy,
-   423|     +createClass: typeof createClass,
-   424|     +createContext: typeof createContext,
-   425|     +createElement: typeof createElement,
-   426|     +cloneElement: typeof cloneElement,
-   427|     +createFactory: typeof createFactory,
-   428|     +createRef: typeof createRef,
-   429|     +forwardRef: typeof forwardRef,
-   430|     +isValidElement: typeof isValidElement,
-   431|     +Component: typeof Component,
+   420|   declare export default {
+   421|     +DOM: typeof DOM,
+   422|     +version: typeof version,
+   423|     +checkPropTypes: typeof checkPropTypes,
+   424|     +memo: typeof memo,
+   425|     +lazy: typeof lazy,
+   426|     +createClass: typeof createClass,
+   427|     +createContext: typeof createContext,
+   428|     +createElement: typeof createElement,
+   429|     +cloneElement: typeof cloneElement,
+   430|     +createFactory: typeof createFactory,
+   431|     +createRef: typeof createRef,
+   432|     +forwardRef: typeof forwardRef,
+   433|     +isValidElement: typeof isValidElement,
+   434|     +Component: typeof Component,
       :
-   441|     +useReducer: typeof useReducer,
-   442|     +useRef: typeof useRef,
-   443|     +useEffect: typeof useEffect,
-   444|     +useLayoutEffect: typeof useLayoutEffect,
-   445|     +useCallback: typeof useCallback,
-   446|     +useMemo: typeof useMemo,
-   447|     +useImperativeHandle: typeof useImperativeHandle,
-   448|     +useTransition: typeof useTransition,
-   449|     +useDeferredValue: typeof useDeferredValue,
-   450|     +startTransition: typeof startTransition,
-   451|     +useId: typeof useId,
-   452|     +useInsertionEffect: typeof useInsertionEffect,
-   453|     +useSyncExternalStore: typeof useSyncExternalStore,
-   454|     ...
-   455|   };
+   444|     +useReducer: typeof useReducer,
+   445|     +useRef: typeof useRef,
+   446|     +useEffect: typeof useEffect,
+   447|     +useLayoutEffect: typeof useLayoutEffect,
+   448|     +useCallback: typeof useCallback,
+   449|     +useMemo: typeof useMemo,
+   450|     +useImperativeHandle: typeof useImperativeHandle,
+   451|     +useTransition: typeof useTransition,
+   452|     +useDeferredValue: typeof useDeferredValue,
+   453|     +startTransition: typeof startTransition,
+   454|     +useId: typeof useId,
+   455|     +useInsertionEffect: typeof useInsertionEffect,
+   456|     +useSyncExternalStore: typeof useSyncExternalStore,
+   457|     ...
+   458|   };
           ^ [1]
 
 
@@ -2203,39 +2203,39 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:417:26
+   <BUILTINS>/react.js:420:26
                                  v
-   417|   declare export default {
-   418|     +DOM: typeof DOM,
-   419|     +version: typeof version,
-   420|     +checkPropTypes: typeof checkPropTypes,
-   421|     +memo: typeof memo,
-   422|     +lazy: typeof lazy,
-   423|     +createClass: typeof createClass,
-   424|     +createContext: typeof createContext,
-   425|     +createElement: typeof createElement,
-   426|     +cloneElement: typeof cloneElement,
-   427|     +createFactory: typeof createFactory,
-   428|     +createRef: typeof createRef,
-   429|     +forwardRef: typeof forwardRef,
-   430|     +isValidElement: typeof isValidElement,
-   431|     +Component: typeof Component,
+   420|   declare export default {
+   421|     +DOM: typeof DOM,
+   422|     +version: typeof version,
+   423|     +checkPropTypes: typeof checkPropTypes,
+   424|     +memo: typeof memo,
+   425|     +lazy: typeof lazy,
+   426|     +createClass: typeof createClass,
+   427|     +createContext: typeof createContext,
+   428|     +createElement: typeof createElement,
+   429|     +cloneElement: typeof cloneElement,
+   430|     +createFactory: typeof createFactory,
+   431|     +createRef: typeof createRef,
+   432|     +forwardRef: typeof forwardRef,
+   433|     +isValidElement: typeof isValidElement,
+   434|     +Component: typeof Component,
       :
-   441|     +useReducer: typeof useReducer,
-   442|     +useRef: typeof useRef,
-   443|     +useEffect: typeof useEffect,
-   444|     +useLayoutEffect: typeof useLayoutEffect,
-   445|     +useCallback: typeof useCallback,
-   446|     +useMemo: typeof useMemo,
-   447|     +useImperativeHandle: typeof useImperativeHandle,
-   448|     +useTransition: typeof useTransition,
-   449|     +useDeferredValue: typeof useDeferredValue,
-   450|     +startTransition: typeof startTransition,
-   451|     +useId: typeof useId,
-   452|     +useInsertionEffect: typeof useInsertionEffect,
-   453|     +useSyncExternalStore: typeof useSyncExternalStore,
-   454|     ...
-   455|   };
+   444|     +useReducer: typeof useReducer,
+   445|     +useRef: typeof useRef,
+   446|     +useEffect: typeof useEffect,
+   447|     +useLayoutEffect: typeof useLayoutEffect,
+   448|     +useCallback: typeof useCallback,
+   449|     +useMemo: typeof useMemo,
+   450|     +useImperativeHandle: typeof useImperativeHandle,
+   451|     +useTransition: typeof useTransition,
+   452|     +useDeferredValue: typeof useDeferredValue,
+   453|     +startTransition: typeof startTransition,
+   454|     +useId: typeof useId,
+   455|     +useInsertionEffect: typeof useInsertionEffect,
+   456|     +useSyncExternalStore: typeof useSyncExternalStore,
+   457|     ...
+   458|   };
           ^ [1]
 
 
@@ -2248,39 +2248,39 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:417:26
+   <BUILTINS>/react.js:420:26
                                  v
-   417|   declare export default {
-   418|     +DOM: typeof DOM,
-   419|     +version: typeof version,
-   420|     +checkPropTypes: typeof checkPropTypes,
-   421|     +memo: typeof memo,
-   422|     +lazy: typeof lazy,
-   423|     +createClass: typeof createClass,
-   424|     +createContext: typeof createContext,
-   425|     +createElement: typeof createElement,
-   426|     +cloneElement: typeof cloneElement,
-   427|     +createFactory: typeof createFactory,
-   428|     +createRef: typeof createRef,
-   429|     +forwardRef: typeof forwardRef,
-   430|     +isValidElement: typeof isValidElement,
-   431|     +Component: typeof Component,
+   420|   declare export default {
+   421|     +DOM: typeof DOM,
+   422|     +version: typeof version,
+   423|     +checkPropTypes: typeof checkPropTypes,
+   424|     +memo: typeof memo,
+   425|     +lazy: typeof lazy,
+   426|     +createClass: typeof createClass,
+   427|     +createContext: typeof createContext,
+   428|     +createElement: typeof createElement,
+   429|     +cloneElement: typeof cloneElement,
+   430|     +createFactory: typeof createFactory,
+   431|     +createRef: typeof createRef,
+   432|     +forwardRef: typeof forwardRef,
+   433|     +isValidElement: typeof isValidElement,
+   434|     +Component: typeof Component,
       :
-   441|     +useReducer: typeof useReducer,
-   442|     +useRef: typeof useRef,
-   443|     +useEffect: typeof useEffect,
-   444|     +useLayoutEffect: typeof useLayoutEffect,
-   445|     +useCallback: typeof useCallback,
-   446|     +useMemo: typeof useMemo,
-   447|     +useImperativeHandle: typeof useImperativeHandle,
-   448|     +useTransition: typeof useTransition,
-   449|     +useDeferredValue: typeof useDeferredValue,
-   450|     +startTransition: typeof startTransition,
-   451|     +useId: typeof useId,
-   452|     +useInsertionEffect: typeof useInsertionEffect,
-   453|     +useSyncExternalStore: typeof useSyncExternalStore,
-   454|     ...
-   455|   };
+   444|     +useReducer: typeof useReducer,
+   445|     +useRef: typeof useRef,
+   446|     +useEffect: typeof useEffect,
+   447|     +useLayoutEffect: typeof useLayoutEffect,
+   448|     +useCallback: typeof useCallback,
+   449|     +useMemo: typeof useMemo,
+   450|     +useImperativeHandle: typeof useImperativeHandle,
+   451|     +useTransition: typeof useTransition,
+   452|     +useDeferredValue: typeof useDeferredValue,
+   453|     +startTransition: typeof startTransition,
+   454|     +useId: typeof useId,
+   455|     +useInsertionEffect: typeof useInsertionEffect,
+   456|     +useSyncExternalStore: typeof useSyncExternalStore,
+   457|     ...
+   458|   };
           ^ [1]
 
 
@@ -2293,39 +2293,39 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:417:26
+   <BUILTINS>/react.js:420:26
                                  v
-   417|   declare export default {
-   418|     +DOM: typeof DOM,
-   419|     +version: typeof version,
-   420|     +checkPropTypes: typeof checkPropTypes,
-   421|     +memo: typeof memo,
-   422|     +lazy: typeof lazy,
-   423|     +createClass: typeof createClass,
-   424|     +createContext: typeof createContext,
-   425|     +createElement: typeof createElement,
-   426|     +cloneElement: typeof cloneElement,
-   427|     +createFactory: typeof createFactory,
-   428|     +createRef: typeof createRef,
-   429|     +forwardRef: typeof forwardRef,
-   430|     +isValidElement: typeof isValidElement,
-   431|     +Component: typeof Component,
+   420|   declare export default {
+   421|     +DOM: typeof DOM,
+   422|     +version: typeof version,
+   423|     +checkPropTypes: typeof checkPropTypes,
+   424|     +memo: typeof memo,
+   425|     +lazy: typeof lazy,
+   426|     +createClass: typeof createClass,
+   427|     +createContext: typeof createContext,
+   428|     +createElement: typeof createElement,
+   429|     +cloneElement: typeof cloneElement,
+   430|     +createFactory: typeof createFactory,
+   431|     +createRef: typeof createRef,
+   432|     +forwardRef: typeof forwardRef,
+   433|     +isValidElement: typeof isValidElement,
+   434|     +Component: typeof Component,
       :
-   441|     +useReducer: typeof useReducer,
-   442|     +useRef: typeof useRef,
-   443|     +useEffect: typeof useEffect,
-   444|     +useLayoutEffect: typeof useLayoutEffect,
-   445|     +useCallback: typeof useCallback,
-   446|     +useMemo: typeof useMemo,
-   447|     +useImperativeHandle: typeof useImperativeHandle,
-   448|     +useTransition: typeof useTransition,
-   449|     +useDeferredValue: typeof useDeferredValue,
-   450|     +startTransition: typeof startTransition,
-   451|     +useId: typeof useId,
-   452|     +useInsertionEffect: typeof useInsertionEffect,
-   453|     +useSyncExternalStore: typeof useSyncExternalStore,
-   454|     ...
-   455|   };
+   444|     +useReducer: typeof useReducer,
+   445|     +useRef: typeof useRef,
+   446|     +useEffect: typeof useEffect,
+   447|     +useLayoutEffect: typeof useLayoutEffect,
+   448|     +useCallback: typeof useCallback,
+   449|     +useMemo: typeof useMemo,
+   450|     +useImperativeHandle: typeof useImperativeHandle,
+   451|     +useTransition: typeof useTransition,
+   452|     +useDeferredValue: typeof useDeferredValue,
+   453|     +startTransition: typeof startTransition,
+   454|     +useId: typeof useId,
+   455|     +useInsertionEffect: typeof useInsertionEffect,
+   456|     +useSyncExternalStore: typeof useSyncExternalStore,
+   457|     ...
+   458|   };
           ^ [1]
 
 
@@ -2338,39 +2338,39 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:417:26
+   <BUILTINS>/react.js:420:26
                                  v
-   417|   declare export default {
-   418|     +DOM: typeof DOM,
-   419|     +version: typeof version,
-   420|     +checkPropTypes: typeof checkPropTypes,
-   421|     +memo: typeof memo,
-   422|     +lazy: typeof lazy,
-   423|     +createClass: typeof createClass,
-   424|     +createContext: typeof createContext,
-   425|     +createElement: typeof createElement,
-   426|     +cloneElement: typeof cloneElement,
-   427|     +createFactory: typeof createFactory,
-   428|     +createRef: typeof createRef,
-   429|     +forwardRef: typeof forwardRef,
-   430|     +isValidElement: typeof isValidElement,
-   431|     +Component: typeof Component,
+   420|   declare export default {
+   421|     +DOM: typeof DOM,
+   422|     +version: typeof version,
+   423|     +checkPropTypes: typeof checkPropTypes,
+   424|     +memo: typeof memo,
+   425|     +lazy: typeof lazy,
+   426|     +createClass: typeof createClass,
+   427|     +createContext: typeof createContext,
+   428|     +createElement: typeof createElement,
+   429|     +cloneElement: typeof cloneElement,
+   430|     +createFactory: typeof createFactory,
+   431|     +createRef: typeof createRef,
+   432|     +forwardRef: typeof forwardRef,
+   433|     +isValidElement: typeof isValidElement,
+   434|     +Component: typeof Component,
       :
-   441|     +useReducer: typeof useReducer,
-   442|     +useRef: typeof useRef,
-   443|     +useEffect: typeof useEffect,
-   444|     +useLayoutEffect: typeof useLayoutEffect,
-   445|     +useCallback: typeof useCallback,
-   446|     +useMemo: typeof useMemo,
-   447|     +useImperativeHandle: typeof useImperativeHandle,
-   448|     +useTransition: typeof useTransition,
-   449|     +useDeferredValue: typeof useDeferredValue,
-   450|     +startTransition: typeof startTransition,
-   451|     +useId: typeof useId,
-   452|     +useInsertionEffect: typeof useInsertionEffect,
-   453|     +useSyncExternalStore: typeof useSyncExternalStore,
-   454|     ...
-   455|   };
+   444|     +useReducer: typeof useReducer,
+   445|     +useRef: typeof useRef,
+   446|     +useEffect: typeof useEffect,
+   447|     +useLayoutEffect: typeof useLayoutEffect,
+   448|     +useCallback: typeof useCallback,
+   449|     +useMemo: typeof useMemo,
+   450|     +useImperativeHandle: typeof useImperativeHandle,
+   451|     +useTransition: typeof useTransition,
+   452|     +useDeferredValue: typeof useDeferredValue,
+   453|     +startTransition: typeof startTransition,
+   454|     +useId: typeof useId,
+   455|     +useInsertionEffect: typeof useInsertionEffect,
+   456|     +useSyncExternalStore: typeof useSyncExternalStore,
+   457|     ...
+   458|   };
           ^ [1]
 
 
@@ -2386,31 +2386,31 @@ Cannot call `React.useReducer` because: [incompatible-call]
                 ^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:325:37
+   <BUILTINS>/react.js:327:37
                                             v------
-   325|   declare export function useReducer<S, A>(
-   326|     reducer: (S, A) => S,
-   327|     initialState: S,
-   328|   ): [S, Dispatch<A>];
+   327|   declare export function useReducer<S, A>(
+   328|     reducer: (S, A) => S,
+   329|     initialState: S,
+   330|   ): [S, Dispatch<A>];
           ------------------^ [1]
    useReducer_hook.js:4:3
      4|   React.useReducer(); // Error: function requires another argument.
           ^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:330:37
+   <BUILTINS>/react.js:332:37
                                             v------
-   330|   declare export function useReducer<S, A>(
-   331|     reducer: (S, A) => S,
-   332|     initialState: S,
-   333|     init: void,
-   334|   ): [S, Dispatch<A>];
+   332|   declare export function useReducer<S, A>(
+   333|     reducer: (S, A) => S,
+   334|     initialState: S,
+   335|     init: void,
+   336|   ): [S, Dispatch<A>];
           ------------------^ [3]
-   <BUILTINS>/react.js:336:37
+   <BUILTINS>/react.js:338:37
                                             v---------
-   336|   declare export function useReducer<S, A, I>(
-   337|     reducer: (S, A) => S,
-   338|     initialArg: I,
-   339|     init: (I) => S,
-   340|   ): [S, Dispatch<A>];
+   338|   declare export function useReducer<S, A, I>(
+   339|     reducer: (S, A) => S,
+   340|     initialArg: I,
+   341|     init: (I) => S,
+   342|   ): [S, Dispatch<A>];
           ------------------^ [4]
 
 
@@ -2621,8 +2621,8 @@ References:
    useState_hook.js:5:42
      5| const [count, setCount] = React.useState<number>(1);
                                                  ^^^^^^ [2]
-   <BUILTINS>/react.js:315:52
-   315|   declare export type ReactSetStateFunction<S> = ((S => S) | S) => void;
+   <BUILTINS>/react.js:317:52
+   317|   declare export type ReactSetStateFunction<S> = ((S => S) | S) => void;
                                                            ^^^^^^ [3]
 
 
