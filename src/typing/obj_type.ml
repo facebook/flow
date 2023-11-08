@@ -14,7 +14,15 @@ let mk_seal ~frozen =
     Object.Spread.Sealed
 
 let mk_with_proto
-    cx reason ~obj_kind ?(frozen = false) ?call ?(props = NameUtils.Map.empty) ?loc proto =
+    cx
+    reason
+    ~obj_kind
+    ?(frozen = false)
+    ?reachable_targs
+    ?call
+    ?(props = NameUtils.Map.empty)
+    ?loc
+    proto =
   let flags = { obj_kind; frozen; react_dro = None } in
   let call = Base.Option.map call ~f:(Context.make_call_prop cx) in
   let pmap =
@@ -22,7 +30,7 @@ let mk_with_proto
     | None -> Context.generate_property_map cx props
     | Some loc -> Context.make_source_property_map cx props loc
   in
-  DefT (reason, bogus_trust (), ObjT (mk_objecttype ~flags ~call pmap proto))
+  DefT (reason, bogus_trust (), ObjT (mk_objecttype ?reachable_targs ~flags ~call pmap proto))
 
 let mk_exact_empty cx reason =
   ObjProtoT reason |> mk_with_proto cx reason ~obj_kind:Exact ~frozen:true

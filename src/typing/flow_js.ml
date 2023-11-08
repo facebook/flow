@@ -3959,13 +3959,20 @@ struct
         (*************************)
         (* objects can be copied *)
         (*************************)
-        | ( DefT (reason_obj, _, ObjT { props_tmap; flags = { obj_kind; _ }; _ }),
+        | ( DefT (reason_obj, _, ObjT { props_tmap; flags = { obj_kind; _ }; reachable_targs; _ }),
             ObjRestT (reason_op, xs, t, id)
           ) ->
           ConstFoldExpansion.guard cx id (reason_obj, 0) (function
               | 0 ->
                 let o =
-                  Flow_js_utils.objt_to_obj_rest cx props_tmap ~obj_kind ~reason_op ~reason_obj xs
+                  Flow_js_utils.objt_to_obj_rest
+                    cx
+                    props_tmap
+                    ~reachable_targs
+                    ~obj_kind
+                    ~reason_op
+                    ~reason_obj
+                    xs
                 in
                 rec_flow_t cx trace ~use_op:unknown_use (o, t)
               | _ -> ()
@@ -3982,6 +3989,7 @@ struct
             Flow_js_utils.objt_to_obj_rest
               cx
               inst.own_props
+              ~reachable_targs:[]
               ~obj_kind:Exact
               ~reason_op
               ~reason_obj:reason

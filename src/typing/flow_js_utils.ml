@@ -2116,7 +2116,7 @@ let keylist_of_props props reason_op =
     props
     []
 
-let objt_to_obj_rest cx props_tmap ~obj_kind ~reason_op ~reason_obj xs =
+let objt_to_obj_rest cx props_tmap ~reachable_targs ~obj_kind ~reason_op ~reason_obj xs =
   let props = Context.find_props cx props_tmap in
   let props = List.fold_left (fun map x -> NameUtils.Map.remove (OrdinaryName x) map) props xs in
   (* Remove shadow properties from rest result *)
@@ -2146,7 +2146,7 @@ let objt_to_obj_rest cx props_tmap ~obj_kind ~reason_op ~reason_obj xs =
       props
   in
   let proto = ObjProtoT reason_op in
-  Obj_type.mk_with_proto cx reason_op ~props proto ~obj_kind
+  Obj_type.mk_with_proto cx reason_op ~reachable_targs ~props proto ~obj_kind
 
 (* $Values *)
 

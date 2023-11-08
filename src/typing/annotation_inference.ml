@@ -931,7 +931,14 @@ module rec ConsGen : S = struct
     | ( DefT (reason_obj, _, ObjT { props_tmap; flags = { obj_kind; _ }; _ }),
         Annot_ObjRestT (reason_op, xs)
       ) ->
-      Flow_js_utils.objt_to_obj_rest cx props_tmap ~obj_kind ~reason_op ~reason_obj xs
+      Flow_js_utils.objt_to_obj_rest
+        cx
+        props_tmap
+        ~reachable_targs:[]
+        ~obj_kind
+        ~reason_op
+        ~reason_obj
+        xs
     | (DefT (_, _, InstanceT _), Annot_ObjRestT _) ->
       (* This implementation relies on unsealed objects and set-prop logic that is
        * hard to implement in annotation inference. *)

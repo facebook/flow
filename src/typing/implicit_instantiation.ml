@@ -430,12 +430,13 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     solution
 
   and reverse_obj_spread cx r todo_rev acc_elements tout =
-    let inline_slice_to_t { Object.Spread.prop_map; dict; _ } =
+    let inline_slice_to_t { Object.Spread.prop_map; dict; reachable_targs; _ } =
       Obj_type.mk_with_proto
         cx
         r
         ~obj_kind:(Obj_type.obj_kind_from_optional_dict ~dict ~otherwise:Exact)
         ~props:prop_map
+        ~reachable_targs
         (ObjProtoT r)
     in
     let slice_to_t (s : Object.slice) =
@@ -451,6 +452,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
                  { preferred_def_locs = None; key_loc; type_ = prop_t; polarity = Polarity.Neutral })
              s.Object.props
           )
+        ~reachable_targs:s.Object.reachable_targs
         (ObjProtoT r)
     in
     let operand_to_t = function
