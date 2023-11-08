@@ -72,13 +72,6 @@ let bool_of_sealtype = function
 
 (* debug printer *)
 
-let lookup_trust cx id =
-  Trust_constraint.(
-    match Context.find_trust_graph cx id with
-    | TrustResolved trust -> trust
-    | TrustUnresolved b -> get_trust b
-  )
-
 let dump_reason cx reason =
   let strip_root =
     if Context.should_strip_root cx then
@@ -89,15 +82,10 @@ let dump_reason cx reason =
   Reason.dump_reason ~strip_root reason
 
 let rec dump_t_ (depth, tvars) cx t =
-  let p ?(reason = true) ?(extra = "") ?(trust = None) t =
+  let p ?(reason = true) ?(extra = "") t =
     spf
-      "%s %s(%s%s%s)"
+      "%s (%s%s%s)"
       (string_of_ctor t)
-      ( if not (Context.trust_tracking cx) then
-        ""
-      else
-        Base.Option.value_map ~default:"" ~f:(lookup_trust cx |> string_of_trust_rep) trust
-      )
       ( if reason then
         spf "%S" (dump_reason cx (reason_of_t t))
       else
@@ -151,44 +139,39 @@ let rec dump_t_ (depth, tvars) cx t =
   else
     match t with
     | OpenT (_, id) -> p ~extra:(tvar id) t
-    | DefT (_, trust, NumT lit) ->
+    | DefT (_, _, NumT lit) ->
       p
-        ~trust:(Some trust)
         ~extra:
           (match lit with
           | Literal (_, (_, raw)) -> raw
           | Truthy -> "truthy"
           | AnyLiteral -> "")
         t
-    | DefT (_, trust, StrT c) ->
+    | DefT (_, _, StrT c) ->
       p
-        ~trust:(Some trust)
         ~extra:
           (match c with
           | Literal (_, s) -> spf "%S" (display_string_of_name s)
           | Truthy -> "truthy"
           | AnyLiteral -> "")
         t
-    | DefT (_, trust, BoolT c) ->
+    | DefT (_, _, BoolT c) ->
       p
-        ~trust:(Some trust)
         ~extra:
           (match c with
           | Some b -> spf "%B" b
           | None -> "")
         t
-    | DefT (_, trust, BigIntT lit) ->
+    | DefT (_, _, BigIntT lit) ->
       p
-        ~trust:(Some trust)
         ~extra:
           (match lit with
           | Literal (_, (_, raw)) -> raw
           | Truthy -> "truthy"
           | AnyLiteral -> "")
         t
-    | DefT (_, trust, FunT (_, { params; rest_param; return_t; this_t; predicate; _ })) ->
+    | DefT (_, _, FunT (_, { params; rest_param; return_t; this_t; predicate; _ })) ->
       p
-        ~trust:(Some trust)
         ~extra:
           (spf
              "<this: %s>(%s%s) => %s%s"
@@ -204,13 +187,12 @@ let rec dump_t_ (depth, tvars) cx t =
           )
         t
     | AnyT (_, src) -> p ~extra:(string_of_any_source src) t
-    | DefT (_, trust, MixedT flavor) ->
-      p ~trust:(Some trust) ~extra:(string_of_mixed_flavor flavor) t
-    | DefT (_, trust, EmptyT)
-    | DefT (_, trust, SymbolT)
-    | DefT (_, trust, NullT)
-    | DefT (_, trust, VoidT) ->
-      p ~trust:(Some trust) t
+    | DefT (_, _, MixedT flavor) -> p ~extra:(string_of_mixed_flavor flavor) t
+    | DefT (_, _, EmptyT)
+    | DefT (_, _, SymbolT)
+    | DefT (_, _, NullT)
+    | DefT (_, _, VoidT) ->
+      p t
     | NullProtoT _
     | ObjProtoT _
     | FunProtoT _
@@ -218,9 +200,8 @@ let rec dump_t_ (depth, tvars) cx t =
     | FunProtoBindT _
     | FunProtoCallT _ ->
       p t
-    | DefT (_, trust, PolyT { tparams = tps; t_out = c; id; _ }) ->
+    | DefT (_, _, PolyT { tparams = tps; t_out = c; id; _ }) ->
       p
-        ~trust:(Some trust)
         ~extra:
           (spf
              "%s [%s] #%s"
@@ -238,7 +219,7 @@ let rec dump_t_ (depth, tvars) cx t =
     | ThisClassT (_, inst, _, _) -> p ~extra:(kid inst) t
     | GenericT { name; bound; _ } ->
       p ~extra:(spf "%s: %s" (Subst_name.string_of_subst_name name) (kid bound)) t
-    | DefT (_, trust, ObjT { props_tmap; flags; _ }) ->
+    | DefT (_, _, ObjT { props_tmap; flags; _ }) ->
       let obj_kind =
         match flags.obj_kind with
         | Exact -> "Exact"
@@ -246,13 +227,11 @@ let rec dump_t_ (depth, tvars) cx t =
         | Indexed { key; value; _ } ->
           spf "Indexed {[%s]: %s}" (p ~reason:false key) (p ~reason:false value)
       in
-      p ~trust:(Some trust) t ~extra:(spf "%s, %s" (Properties.string_of_id props_tmap) obj_kind)
-    | DefT (_, trust, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = _ })) ->
-      p ~trust:(Some trust) ~extra:(spf "Array %s" (kid elem_t)) t
-    | DefT (_, trust, ArrT (ArrayAT { elem_t; tuple_view = Some (elements, _arity); react_dro = _ }))
-      ->
+      p t ~extra:(spf "%s, %s" (Properties.string_of_id props_tmap) obj_kind)
+    | DefT (_, _, ArrT (ArrayAT { elem_t; tuple_view = None; react_dro = _ })) ->
+      p ~extra:(spf "Array %s" (kid elem_t)) t
+    | DefT (_, _, ArrT (ArrayAT { elem_t; tuple_view = Some (elements, _arity); react_dro = _ })) ->
       p
-        ~trust:(Some trust)
         ~extra:
           (spf
              "Array %s, %s"
@@ -266,27 +245,23 @@ let rec dump_t_ (depth, tvars) cx t =
              )
           )
         t
-    | DefT (_, trust, ArrT (TupleAT { elements; _ })) ->
+    | DefT (_, _, ArrT (TupleAT { elements; _ })) ->
       p
-        ~trust:(Some trust)
         ~extra:
           (spf
              "Tuple [%s]"
              (String.concat ", " (Base.List.map ~f:(fun (TupleElement { t; _ }) -> kid t) elements))
           )
         t
-    | DefT (_, trust, ArrT (ROArrayAT (elemt, _))) ->
-      p ~trust:(Some trust) ~extra:(spf "ReadOnlyArray %s" (kid elemt)) t
-    | DefT (_, trust, CharSetT chars) ->
-      p ~trust:(Some trust) ~extra:(spf "<%S>" (String_utils.CharSet.to_string chars)) t
-    | DefT (_, trust, ClassT inst) -> p ~trust:(Some trust) ~extra:(kid inst) t
+    | DefT (_, _, ArrT (ROArrayAT (elemt, _))) -> p ~extra:(spf "ReadOnlyArray %s" (kid elemt)) t
+    | DefT (_, _, CharSetT chars) -> p ~extra:(spf "<%S>" (String_utils.CharSet.to_string chars)) t
+    | DefT (_, _, ClassT inst) -> p ~extra:(kid inst) t
     | DefT
         ( _,
-          trust,
+          _,
           InstanceT { static = _; super = _; implements = _; inst = { class_id; type_args; _ } }
         ) ->
       p
-        ~trust:(Some trust)
         ~extra:
           (spf
              "[%s] #%s"
@@ -300,15 +275,13 @@ let rec dump_t_ (depth, tvars) cx t =
              (ALoc.debug_to_string (class_id :> ALoc.t))
           )
         t
-    | DefT (_, trust, TypeT (kind, arg)) ->
-      p ~trust:(Some trust) ~extra:(spf "%s, %s" (string_of_type_t_kind kind) (kid arg)) t
-    | DefT (_, trust, EnumT { enum_id; members = _; representation_t = _; has_unknown_members = _ })
+    | DefT (_, _, TypeT (kind, arg)) ->
+      p ~extra:(spf "%s, %s" (string_of_type_t_kind kind) (kid arg)) t
+    | DefT (_, _, EnumT { enum_id; members = _; representation_t = _; has_unknown_members = _ })
     | DefT
-        ( _,
-          trust,
-          EnumObjectT { enum_id; members = _; representation_t = _; has_unknown_members = _ }
-        ) ->
-      p ~trust:(Some trust) ~extra:(spf "enum #%s" (ALoc.debug_to_string (enum_id :> ALoc.t))) t
+        (_, _, EnumObjectT { enum_id; members = _; representation_t = _; has_unknown_members = _ })
+      ->
+      p ~extra:(spf "enum #%s" (ALoc.debug_to_string (enum_id :> ALoc.t))) t
     | AnnotT (_, arg, use_desc) -> p ~extra:(spf "use_desc=%b, %s" use_desc (kid arg)) t
     | OpaqueT (_, { underlying_t; opaque_type_args; _ }) ->
       p
@@ -358,15 +331,14 @@ let rec dump_t_ (depth, tvars) cx t =
              (UnionRep.string_of_specialization rep)
           )
         t
-    | DefT (_, trust, ReactAbstractComponentT _) -> p ~trust:(Some trust) t
-    | DefT (_, trust, RendersT _) -> p ~trust:(Some trust) t
+    | DefT (_, _, ReactAbstractComponentT _) -> p t
+    | DefT (_, _, RendersT _) -> p t
     | MatchingPropT (_, _, arg) -> p ~extra:(kid arg) t
     | KeysT (_, arg) -> p ~extra:(kid arg) t
-    | DefT (_, trust, SingletonStrT s) ->
-      p ~trust:(Some trust) ~extra:(spf "%S" (display_string_of_name s)) t
-    | DefT (_, trust, SingletonNumT (_, s)) -> p ~trust:(Some trust) ~extra:s t
-    | DefT (_, trust, SingletonBoolT b) -> p ~trust:(Some trust) ~extra:(spf "%B" b) t
-    | DefT (_, trust, SingletonBigIntT (_, s)) -> p ~trust:(Some trust) ~extra:s t
+    | DefT (_, _, SingletonStrT s) -> p ~extra:(spf "%S" (display_string_of_name s)) t
+    | DefT (_, _, SingletonNumT (_, s)) -> p ~extra:s t
+    | DefT (_, _, SingletonBoolT b) -> p ~extra:(spf "%B" b) t
+    | DefT (_, _, SingletonBigIntT (_, s)) -> p ~extra:s t
     | ModuleT { module_reason = _; module_export_types = { exports_tmap; _ }; module_is_strict = _ }
       ->
       p
@@ -681,16 +653,7 @@ and dump_use_t_ (depth, tvars) cx t =
     match t with
     | UseT (use_op, OpenT (r, id)) ->
       spf "UseT (%s, OpenT (%S, %d))" (string_of_use_op use_op) (dump_reason cx r) id
-    | UseT (use_op, (DefT (_, trust, _) as t)) ->
-      spf
-        "UseT (%s, %s%s)"
-        (string_of_use_op use_op)
-        ( if Context.trust_tracking cx then
-          string_of_trust_rep (lookup_trust cx) trust
-        else
-          ""
-        )
-        (kid t)
+    | UseT (use_op, (DefT (_, _, _) as t)) -> spf "UseT (%s, %s)" (string_of_use_op use_op) (kid t)
     | UseT (use_op, t) -> spf "UseT (%s, %s)" (string_of_use_op use_op) (kid t)
     | ArithT { use_op; rhs_t; result_t; _ } ->
       p ~extra:(spf "%s, %s, %s" (string_of_use_op use_op) (kid rhs_t) (kid result_t)) t
