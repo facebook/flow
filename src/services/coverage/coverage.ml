@@ -41,12 +41,6 @@ module Taint = struct
     | Untainted
     | Tainted
 
-  let of_trust cx tr =
-    if Trust_helpers.actual_trust cx tr |> Trust.is_tainted then
-      Tainted
-    else
-      Untainted
-
   let to_string = function
     | Untainted -> "Untainted"
     | Tainted -> "Tainted"
@@ -199,33 +193,33 @@ class visitor =
       | ObjProtoT _
       | OptionalT _ ->
         (Kind.Checked, Taint.Untainted)
-      | DefT (_, t, ArrT _)
-      | DefT (_, t, BigIntT _)
-      | DefT (_, t, BoolT _)
-      | DefT (_, t, CharSetT _)
-      | DefT (_, t, ClassT _)
-      | DefT (_, t, FunT _)
-      | DefT (_, t, InstanceT _)
-      | DefT (_, t, MixedT _)
-      | DefT (_, t, NumT _)
-      | DefT (_, t, NullT)
-      | DefT (_, t, SymbolT)
-      | DefT (_, t, ObjT _)
-      | DefT (_, t, ReactAbstractComponentT _)
-      | DefT (_, t, RendersT _)
-      | DefT (_, t, SingletonNumT _)
-      | DefT (_, t, SingletonStrT _)
-      | DefT (_, t, SingletonBigIntT _)
-      | DefT (_, t, SingletonBoolT _)
-      | DefT (_, t, StrT _)
-      | DefT (_, t, VoidT)
-      | DefT (_, t, EnumObjectT _)
-      | DefT (_, t, EnumT _) ->
-        (Kind.Checked, Taint.of_trust cx t)
+      | DefT (_, _, ArrT _)
+      | DefT (_, _, BigIntT _)
+      | DefT (_, _, BoolT _)
+      | DefT (_, _, CharSetT _)
+      | DefT (_, _, ClassT _)
+      | DefT (_, _, FunT _)
+      | DefT (_, _, InstanceT _)
+      | DefT (_, _, MixedT _)
+      | DefT (_, _, NumT _)
+      | DefT (_, _, NullT)
+      | DefT (_, _, SymbolT)
+      | DefT (_, _, ObjT _)
+      | DefT (_, _, ReactAbstractComponentT _)
+      | DefT (_, _, RendersT _)
+      | DefT (_, _, SingletonNumT _)
+      | DefT (_, _, SingletonStrT _)
+      | DefT (_, _, SingletonBigIntT _)
+      | DefT (_, _, SingletonBoolT _)
+      | DefT (_, _, StrT _)
+      | DefT (_, _, VoidT)
+      | DefT (_, _, EnumObjectT _)
+      | DefT (_, _, EnumT _) ->
+        (Kind.Checked, Taint.Untainted)
       (* Concrete uncovered constructors *)
       (* TODO: Rethink coverage and trust for these types *)
       | MatchingPropT _ -> (Kind.Empty, Taint.Untainted)
-      | DefT (_, t, EmptyT) -> (Kind.Empty, Taint.of_trust cx t)
+      | DefT (_, _, EmptyT) -> (Kind.Empty, Taint.Untainted)
       | AnyT _ -> (Kind.Any, Taint.Tainted)
 
     method private types_of_use acc =
