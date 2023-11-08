@@ -7,25 +7,15 @@
 
 open Trust
 
-let infer_trust cx =
-  if Context.trust_tracking cx then
-    Flow_js.mk_trust_var cx ~initial:(unknown_qualifier ()) () |> from_ident
-  else
-    bogus_trust ()
+let infer_trust _cx = bogus_trust ()
 
 let with_trust_inference cx constructor = infer_trust cx |> constructor
 
-let strengthen newtrust cx trust err =
+let strengthen newtrust _cx trust _err =
   if is_qualifier trust then
     as_qualifier trust |> join_trust newtrust |> from_qualifier
-  else (
-    Flow_js.strengthen_trust cx (as_ident trust) newtrust err;
+  else
     trust
-  )
-
-let make_trusted = unknown_qualifier () |> make_trusted |> strengthen
-
-let make_private = unknown_qualifier () |> make_private |> strengthen
 
 (* Get the trust of a trust_rep, whether it's an ident or a fixed trust. *)
 let actual_trust cx t =

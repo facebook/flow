@@ -150,11 +150,6 @@ val mk_instance : Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> 
 
 val mk_typeof_annotation : Context.t -> ?trace:Type.trace -> reason -> Type.t -> Type.t
 
-(* trust *)
-val mk_trust_var : Context.t -> ?initial:Trust.trust_qualifier -> unit -> Type.ident
-
-val strengthen_trust : Context.t -> Type.ident -> Trust.trust_qualifier -> Error_message.t -> unit
-
 val widen_obj_type :
   Context.t -> ?trace:Type.trace -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
 

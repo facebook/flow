@@ -937,13 +937,6 @@ and merge_annot tps infer_tps file = function
   | FlowDebugSleep loc ->
     let reason = Reason.(mk_reason RFunctionType loc) in
     Type.CustomFunT (reason, Type.DebugSleep)
-  | Trusted (loc, t) -> begin
-    match merge tps infer_tps file t with
-    | Type.DefT (r, trust, def_t) ->
-      let reason = Reason.(mk_annot_reason (RTrusted (desc_of_reason r)) loc) in
-      Type.(DefT (reason, trust, def_t))
-    | _ -> Type.(AnyT.at (AnyError None) loc)
-  end
   | Renders (loc, t, renders_variant) ->
     let t = merge tps infer_tps file t in
     let reason =
@@ -956,13 +949,6 @@ and merge_annot tps infer_tps file = function
       | Flow_ast.Type.Renders.Star -> Type.RendersStar
     in
     TypeUtil.mk_renders_type reason variant t
-  | Private (loc, t) -> begin
-    match merge tps infer_tps file t with
-    | Type.DefT (r, trust, def_t) ->
-      let reason = Reason.(mk_annot_reason (RPrivate (desc_of_reason r)) loc) in
-      Type.(DefT (reason, trust, def_t))
-    | _ -> Type.(AnyT.at (AnyError None) loc)
-  end
   | FunAnnot (loc, def) ->
     let reason = Reason.(mk_annot_reason RFunctionType loc) in
     let statics = merge_fun_statics tps infer_tps file reason SMap.empty in

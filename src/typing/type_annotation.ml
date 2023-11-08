@@ -1334,28 +1334,6 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         | "$Flow$DebugPrint" -> mk_custom_fun cx loc t_ast targs ident DebugPrint
         | "$Flow$DebugThrow" -> mk_custom_fun cx loc t_ast targs ident DebugThrow
         | "$Flow$DebugSleep" -> mk_custom_fun cx loc t_ast targs ident DebugSleep
-        | "$Trusted" ->
-          check_type_arg_arity cx loc t_ast targs 1 (fun () ->
-              match convert_type_params () with
-              | ([AnyT _], _) -> error_type cx loc (Error_message.ETrustedAnnot loc) t_ast
-              | ([DefT (rs, trust, ty)], targs) ->
-                let trust = make_trusted cx trust (Error_message.ETrustedAnnot loc) in
-                reconstruct_ast
-                  (DefT (mk_annot_reason (RTrusted (desc_of_reason rs)) loc, trust, ty))
-                  targs
-              | _ -> error_type cx loc (Error_message.ETrustedAnnot loc) t_ast
-          )
-        | "$Private" ->
-          check_type_arg_arity cx loc t_ast targs 1 (fun () ->
-              match convert_type_params () with
-              | ([AnyT _], _) -> error_type cx loc (Error_message.EPrivateAnnot loc) t_ast
-              | ([DefT (rs, trust, ty)], targs) ->
-                let trust = make_private cx trust (Error_message.EPrivateAnnot loc) in
-                reconstruct_ast
-                  (DefT (mk_annot_reason (RPrivate (desc_of_reason rs)) loc, trust, ty))
-                  targs
-              | _ -> error_type cx loc (Error_message.EPrivateAnnot loc) t_ast
-          )
         (* TS Types *)
         | "Readonly" ->
           error_type

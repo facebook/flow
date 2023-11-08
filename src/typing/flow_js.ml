@@ -215,7 +215,6 @@ module M__flow
     (FlowJs : Flow_common.S)
     (ReactJs : React_kit.REACT)
     (CheckPolarity : Flow_common.CHECK_POLARITY)
-    (TrustChecking : Flow_common.TRUST_CHECKING)
     (CustomFunKit : Custom_fun_kit.CUSTOM_FUN)
     (ObjectKit : Object_kit.OBJECT)
     (SpeculationKit : Speculation_kit.OUTPUT)
@@ -401,14 +400,12 @@ struct
       functions `rec_flow`, `join_flow`, or `flow_opt` (described below) inside
       this module, and the function `flow` outside this module. **)
   let rec __flow cx ((l : Type.t), (u : Type.use_t)) trace =
-    if ground_subtype (l, u) then (
-      if Context.trust_tracking cx then TrustChecking.trust_flow_to_use_t cx trace l u;
+    if ground_subtype (l, u) then
       print_types_if_verbose cx trace (l, u)
-    ) else if Cache.FlowConstraint.get cx (l, u) then
+    else if Cache.FlowConstraint.get cx (l, u) then
       print_types_if_verbose cx trace ~note:"(cached)" (l, u)
     else (
       print_types_if_verbose cx trace (l, u);
-      if Context.trust_tracking cx then TrustChecking.trust_flow_to_use_t cx trace l u;
 
       (* limit recursion depth *)
       RecursionCheck.check cx trace;
@@ -10334,20 +10331,17 @@ struct
     | NoMethodAction prop_t -> rec_flow_t cx ~use_op:unknown_use trace (l, prop_t)
 
   include CheckPolarity
-  include TrustChecking
 end
 
 module rec FlowJs : Flow_common.S = struct
   module React = React_kit.Kit (FlowJs)
   module CheckPolarity = Check_polarity.Kit (FlowJs)
-  module TrustKit = Trust_checking.TrustKit (FlowJs)
   module CustomFun = Custom_fun_kit.Kit (FlowJs)
   module ObjectKit = Object_kit.Kit (FlowJs)
   module SpeculationKit = Speculation_kit.Make (FlowJs)
   module SubtypingKit = Subtyping_kit.Make (FlowJs)
   include
-    M__flow (FlowJs) (React) (CheckPolarity) (TrustKit) (CustomFun) (ObjectKit) (SpeculationKit)
-      (SubtypingKit)
+    M__flow (FlowJs) (React) (CheckPolarity) (CustomFun) (ObjectKit) (SpeculationKit) (SubtypingKit)
 
   let widen_obj_type = ObjectKit.widen_obj_type
 

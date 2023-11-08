@@ -96,16 +96,6 @@ module type CHECK_POLARITY = sig
     unit
 end
 
-module type TRUST_CHECKING = sig
-  val trust_flow_to_use_t : Context.t -> Type.trace -> Type.t -> Type.use_t -> unit
-
-  val trust_flow : Context.t -> Type.trace -> Type.use_op -> Type.t -> Type.t -> unit
-
-  val mk_trust_var : Context.t -> ?initial:Trust.trust_qualifier -> unit -> Type.ident
-
-  val strengthen_trust : Context.t -> Type.ident -> Trust.trust_qualifier -> Error_message.t -> unit
-end
-
 module type BUILTINS = sig
   val get_builtin_type :
     Context.t -> ?trace:Type.trace -> Reason.reason -> ?use_desc:bool -> name -> Type.t
@@ -293,8 +283,6 @@ module type S = sig
   include SUBTYPING
 
   include CHECK_POLARITY
-
-  include TRUST_CHECKING
 
   val mk_typeof_annotation : Context.t -> ?trace:Type.trace -> reason -> Type.t -> Type.t
 

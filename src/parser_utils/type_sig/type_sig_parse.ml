@@ -2319,20 +2319,6 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
     | None -> Annot (FlowDebugSleep loc)
     | _ -> Err (loc, CheckError)
   end
-  | "$Trusted" -> begin
-    match targs with
-    | Some (_, { arguments = [t]; _ }) ->
-      let t = annot opts scope tbls xs t in
-      Annot (Trusted (loc, t))
-    | _ -> Err (loc, CheckError)
-  end
-  | "$Private" -> begin
-    match targs with
-    | Some (_, { arguments = [t]; _ }) ->
-      let t = annot opts scope tbls xs t in
-      Annot (Private (loc, t))
-    | _ -> Err (loc, CheckError)
-  end
   | name ->
     let name = Unqualified (Ref { ref_loc; name; scope; resolved = None }) in
     nominal_type opts scope tbls xs loc name targs

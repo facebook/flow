@@ -604,8 +604,6 @@ type ('loc, 'a) annot =
   | FlowDebugPrint of 'loc
   | FlowDebugThrow of 'loc
   | FlowDebugSleep of 'loc
-  | Trusted of 'loc * 'a
-  | Private of 'loc * 'a
   | FunAnnot of 'loc * ('loc, 'a) fun_sig
   | ComponentAnnot of 'loc * ('loc, 'a) component_sig
   | MappedTypeAnnot of {
