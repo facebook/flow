@@ -358,7 +358,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           | (DefT (_, _, VoidT), OptionalT _) -> true
           | (t1, MaybeT (_, t2)) -> is_subset (t1, t2)
           | (t1, OptionalT { reason = _; type_ = t2; use_desc = _ }) -> is_subset (t1, t2)
-          | (t1, t2) -> quick_subtype false t1 t2
+          | (t1, t2) -> quick_subtype t1 t2
         in
         let widen_type cx trace reason ~use_op t1 t2 =
           match (t1, t2) with

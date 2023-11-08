@@ -786,44 +786,32 @@ let nominal_id_have_same_logical_module
        )
   | _ -> false
 
-let trust_subtype_fixed tr1 tr2 =
-  match (Trust.expand tr1, Trust.expand tr2) with
-  | (Trust.QualifiedTrust trust1, Trust.QualifiedTrust trust2) -> Trust.subtype_trust trust1 trust2
-  | _ -> false
-
-let quick_subtype trust_checked t1 t2 =
-  Trust.(
-    match (t1, t2) with
-    | (DefT (_, ltrust, NumT _), DefT (_, rtrust, NumT _))
-    | (DefT (_, ltrust, SingletonNumT _), DefT (_, rtrust, NumT _))
-    | (DefT (_, ltrust, StrT _), DefT (_, rtrust, StrT _))
-    | (DefT (_, ltrust, SingletonStrT _), DefT (_, rtrust, StrT _))
-    | (DefT (_, ltrust, BoolT _), DefT (_, rtrust, BoolT _))
-    | (DefT (_, ltrust, SingletonBoolT _), DefT (_, rtrust, BoolT _))
-    | (DefT (_, ltrust, BigIntT _), DefT (_, rtrust, BigIntT _))
-    | (DefT (_, ltrust, SingletonBigIntT _), DefT (_, rtrust, SingletonBigIntT _))
-    | (DefT (_, ltrust, NullT), DefT (_, rtrust, NullT))
-    | (DefT (_, ltrust, VoidT), DefT (_, rtrust, VoidT))
-    | (DefT (_, ltrust, SymbolT), DefT (_, rtrust, SymbolT))
-    | (DefT (_, ltrust, EmptyT), DefT (_, rtrust, _))
-    | (DefT (_, ltrust, _), DefT (_, rtrust, MixedT _)) ->
-      (not trust_checked) || trust_subtype_fixed ltrust rtrust
-    | (DefT (_, ltrust, EmptyT), _) ->
-      (not trust_checked) || trust_value_map ~f:is_public ~default:false ltrust
-    | (_, DefT (_, rtrust, MixedT _)) ->
-      (not trust_checked) || trust_value_map ~f:is_tainted ~default:false rtrust
-    | (DefT (_, ltrust, StrT actual), DefT (_, rtrust, SingletonStrT expected)) ->
-      ((not trust_checked) || trust_subtype_fixed ltrust rtrust) && literal_eq expected actual
-    | (DefT (_, ltrust, NumT actual), DefT (_, rtrust, SingletonNumT expected)) ->
-      ((not trust_checked) || trust_subtype_fixed ltrust rtrust)
-      && number_literal_eq expected actual
-    | (DefT (_, ltrust, BoolT actual), DefT (_, rtrust, SingletonBoolT expected)) ->
-      ((not trust_checked) || trust_subtype_fixed ltrust rtrust)
-      && boolean_literal_eq expected actual
-    | (DefT (_, _, ObjT { flags = { obj_kind = Exact; _ }; _ }), ExactT (_, t2')) ->
-      reasonless_eq t1 t2'
-    | _ -> reasonless_eq t1 t2
-  )
+let quick_subtype t1 t2 =
+  match (t1, t2) with
+  | (DefT (_, _, NumT _), DefT (_, _, NumT _))
+  | (DefT (_, _, SingletonNumT _), DefT (_, _, NumT _))
+  | (DefT (_, _, StrT _), DefT (_, _, StrT _))
+  | (DefT (_, _, SingletonStrT _), DefT (_, _, StrT _))
+  | (DefT (_, _, BoolT _), DefT (_, _, BoolT _))
+  | (DefT (_, _, SingletonBoolT _), DefT (_, _, BoolT _))
+  | (DefT (_, _, BigIntT _), DefT (_, _, BigIntT _))
+  | (DefT (_, _, SingletonBigIntT _), DefT (_, _, SingletonBigIntT _))
+  | (DefT (_, _, NullT), DefT (_, _, NullT))
+  | (DefT (_, _, VoidT), DefT (_, _, VoidT))
+  | (DefT (_, _, SymbolT), DefT (_, _, SymbolT))
+  | (DefT (_, _, EmptyT), DefT (_, _, _))
+  | (DefT (_, _, _), DefT (_, _, MixedT _))
+  | (DefT (_, _, EmptyT), _)
+  | (_, DefT (_, _, MixedT _)) ->
+    true
+  | (DefT (_, _, StrT actual), DefT (_, _, SingletonStrT expected)) -> literal_eq expected actual
+  | (DefT (_, _, NumT actual), DefT (_, _, SingletonNumT expected)) ->
+    number_literal_eq expected actual
+  | (DefT (_, _, BoolT actual), DefT (_, _, SingletonBoolT expected)) ->
+    boolean_literal_eq expected actual
+  | (DefT (_, _, ObjT { flags = { obj_kind = Exact; _ }; _ }), ExactT (_, t2')) ->
+    reasonless_eq t1 t2'
+  | _ -> reasonless_eq t1 t2
 
 let reason_of_propref = function
   | Named { reason; _ } -> reason

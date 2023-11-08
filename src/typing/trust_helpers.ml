@@ -10,21 +10,3 @@ open Trust
 let infer_trust _cx = bogus_trust ()
 
 let with_trust_inference cx constructor = infer_trust cx |> constructor
-
-let strengthen newtrust _cx trust _err =
-  if is_qualifier trust then
-    as_qualifier trust |> join_trust newtrust |> from_qualifier
-  else
-    trust
-
-(* Get the trust of a trust_rep, whether it's an ident or a fixed trust. *)
-let actual_trust cx t =
-  Trust_constraint.(
-    match expand t with
-    | QualifiedTrust trust -> trust
-    | InferredTrust ident -> begin
-      match Context.find_trust_graph cx ident with
-      | TrustResolved trust -> trust
-      | TrustUnresolved bounds -> get_trust bounds
-    end
-  )

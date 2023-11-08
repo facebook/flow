@@ -816,11 +816,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | SingletonCase _ -> false
 
   and shortcut_enum cx trace reason_op use_op l rep =
-    let quick_subtype = TypeUtil.quick_subtype (Context.trust_errors cx) in
+    let quick_subtype = TypeUtil.quick_subtype in
     quick_mem_result cx trace reason_op use_op l rep @@ UnionRep.quick_mem_enum ~quick_subtype l rep
 
   and shortcut_disjoint_union cx trace reason_op use_op l rep =
-    let quick_subtype = TypeUtil.quick_subtype (Context.trust_errors cx) in
+    let quick_subtype = TypeUtil.quick_subtype in
     quick_mem_result cx trace reason_op use_op l rep
     @@ UnionRep.quick_mem_disjoint_union
          ~quick_subtype

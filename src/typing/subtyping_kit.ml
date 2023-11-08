@@ -811,17 +811,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (UnionT (reason, rep), _) when UnionRep.members rep |> List.exists is_union_resolvable ->
       iter_resolve_union ~f:rec_flow cx trace reason rep (UseT (use_op, u))
     (* cases where there is no loss of precision *)
-    | (UnionT _, UnionT _)
-      when union_optimization_guard
-             cx
-             ~equiv:false
-             (Context.trust_errors cx |> TypeUtil.quick_subtype)
-             l
-             u ->
+    | (UnionT _, UnionT _) when union_optimization_guard cx ~equiv:false TypeUtil.quick_subtype l u
+      ->
       if Context.is_verbose cx then prerr_endline "UnionT ~> UnionT fast path"
     (* Optimization to treat maybe and optional types as special unions for subset comparision *)
     | (UnionT (reason, rep), MaybeT (r, maybe)) ->
-      let quick_subtype = TypeUtil.quick_subtype (Context.trust_errors cx) in
+      let quick_subtype = TypeUtil.quick_subtype in
       let void = VoidT.why r |> with_trust bogus_trust in
       let null = NullT.why r |> with_trust bogus_trust in
       let filter_void t = quick_subtype t void in
@@ -850,7 +845,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         | _ -> flow_all_in_union cx trace rep (UseT (use_op, u))
       end
     | (UnionT (reason, rep), OptionalT { reason = r; type_ = opt; use_desc }) ->
-      let quick_subtype = TypeUtil.quick_subtype (Context.trust_errors cx) in
+      let quick_subtype = TypeUtil.quick_subtype in
       let void = VoidT.why_with_use_desc ~use_desc r |> with_trust bogus_trust in
       let filter_void t = quick_subtype t void in
       (* if the union doesn't contain void, then everything in it must be upper-bounded by u *)
@@ -928,7 +923,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       ()
     | (_, UnionT (_, rep))
       when let ts = Type_mapper.union_flatten cx @@ UnionRep.members rep in
-           List.exists (TypeUtil.quick_subtype (Context.trust_errors cx) l) ts ->
+           List.exists (TypeUtil.quick_subtype l) ts ->
       ()
     | (DefT (renders_r, _, RendersT _), UnionT (r, rep)) ->
       (* This is a tricky case because there are multiple ways that it could pass. Either
@@ -2143,7 +2138,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       when ALoc.equal_id id1 id2 ->
       ()
     | (DefT (enum_reason, _, EnumT { representation_t; _ }), t)
-      when TypeUtil.quick_subtype (Context.trust_errors cx) representation_t t ->
+      when TypeUtil.quick_subtype representation_t t ->
       let representation_type =
         match representation_t with
         | DefT (_, _, BoolT _) -> Some "boolean"

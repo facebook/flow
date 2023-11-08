@@ -757,12 +757,7 @@ struct
         | (DefT (reason, trust, EnumT enum), TypeCastT (use_op, cast_to_t)) ->
           rec_flow cx trace (cast_to_t, EnumCastT { use_op; enum = (reason, trust, enum) })
         | (UnionT _, TypeCastT (_, (UnionT _ as u)))
-          when union_optimization_guard
-                 cx
-                 ~equiv:false
-                 (Context.trust_errors cx |> TypeUtil.quick_subtype)
-                 l
-                 u ->
+          when union_optimization_guard cx ~equiv:false TypeUtil.quick_subtype l u ->
           ()
         | (UnionT (_, rep1), TypeCastT _) -> flow_all_in_union cx trace rep1 u
         | (_, TypeCastT (use_op, cast_to_t)) -> rec_flow cx trace (l, UseT (use_op, cast_to_t))
@@ -775,7 +770,7 @@ struct
         (* turn this into a `UseT`, it must placed back on the RHS.           *)
         (**********************************************************************)
         | (cast_to_t, EnumCastT { use_op; enum = (_, _, { representation_t; _ }) })
-          when TypeUtil.quick_subtype (Context.trust_errors cx) representation_t cast_to_t ->
+          when TypeUtil.quick_subtype representation_t cast_to_t ->
           rec_flow cx trace (representation_t, UseT (use_op, cast_to_t))
         | (cast_to_t, EnumCastT { use_op; enum = (reason, trust, enum) }) ->
           rec_flow cx trace (DefT (reason, trust, EnumT enum), UseT (use_op, cast_to_t))
@@ -1528,7 +1523,7 @@ struct
         | (_, ResolveUnionT { reason; resolved; unresolved; upper; id }) ->
           resolve_union cx trace reason id resolved unresolved l upper
         | (UnionT (reason, rep), FilterMaybeT (use_op, tout)) ->
-          let quick_subtype = TypeUtil.quick_subtype (Context.trust_errors cx) in
+          let quick_subtype = TypeUtil.quick_subtype in
           let void = VoidT.why reason |> with_trust bogus_trust in
           let null = NullT.why reason |> with_trust bogus_trust in
           let filter_void t = quick_subtype t void in
@@ -1619,7 +1614,7 @@ struct
               in
               (match
                  UnionRep.quick_mem_enum
-                   ~quick_subtype:(TypeUtil.quick_subtype (Context.trust_errors cx))
+                   ~quick_subtype:TypeUtil.quick_subtype
                    (DefT (r, Trust.bogus_trust (), def))
                    rep
                with
@@ -1645,7 +1640,7 @@ struct
                     UnionRep.join_quick_mem_results
                       ( acc,
                         UnionRep.quick_mem_enum
-                          ~quick_subtype:(TypeUtil.quick_subtype (Context.trust_errors cx))
+                          ~quick_subtype:TypeUtil.quick_subtype
                           (DefT (r, Trust.bogus_trust (), def))
                           rep
                       ))
@@ -6093,14 +6088,7 @@ struct
         else
           wait_for_concrete_bound ()
       | UseT (_, (UnionT _ as u)) ->
-        if
-          union_optimization_guard
-            cx
-            ~equiv:false
-            (Context.trust_errors cx |> TypeUtil.quick_subtype)
-            bound
-            u
-        then begin
+        if union_optimization_guard cx ~equiv:false TypeUtil.quick_subtype bound u then begin
           if Context.is_verbose cx then prerr_endline "UnionT ~> UnionT fast path (via a generic)";
           true
         end else if is_concrete bound then
@@ -10255,7 +10243,7 @@ struct
    * we concretize it first, before attempting any comparisons. *)
   and intersect cx t1 t2 =
     let module TSet = Type_filter.TypeTagSet in
-    let quick_subtype = TypeUtil.quick_subtype (Context.trust_errors cx) in
+    let quick_subtype = TypeUtil.quick_subtype in
     let t1_tags = Type_filter.tag_of_t cx t1 in
     let t2_tags =
       t2
@@ -10309,8 +10297,7 @@ struct
    * This means that the positive branch will always be taken, and so we are left with
    * `empty` in the negated case. *)
   and type_guard_diff cx t1 t2 =
-    let quick_subtype = TypeUtil.quick_subtype (Context.trust_errors cx) in
-    if quick_subtype t1 t2 || speculative_subtyping_succeeds cx t1 t2 then
+    if TypeUtil.quick_subtype t1 t2 || speculative_subtyping_succeeds cx t1 t2 then
       let r = update_desc_reason invalidate_rtype_alias (TypeUtil.reason_of_t t1) in
       DefT (r, bogus_trust (), EmptyT)
     else

@@ -57,7 +57,7 @@ val boolean_literal_eq : bool -> bool option -> bool
 val nominal_id_have_same_logical_module :
   file_options:Files.options -> ALoc.id * string option -> ALoc.id * string option -> bool
 
-val quick_subtype : bool -> Type.t -> Type.t -> bool
+val quick_subtype : Type.t -> Type.t -> bool
 
 val reason_of_propref : Type.propref -> reason
 
