@@ -239,8 +239,6 @@ val suppress_types : config -> SSet.t
 
 val traces : config -> int
 
-val trust_mode : config -> Options.trust_mode
-
 val use_mixed_in_catch_variables : config -> bool option
 
 val wait_for_recheck : config -> bool

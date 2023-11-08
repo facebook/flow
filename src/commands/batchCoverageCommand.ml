@@ -37,15 +37,11 @@ let spec =
              truthy
              ~doc:
                "Whether to output the coverage for all files. If not specified, this command will only print coverage for 50 files. "
-        |> flag
-             "--show-trust"
-             truthy
-             ~doc:"EXPERIMENTAL: Whether to include trust information in output"
         |> anon "FILE..." (list_of string)
       );
   }
 
-let output_results ~root ~strip_root ~json ~pretty ~show_all ~trust stats =
+let output_results ~root ~strip_root ~json ~pretty ~show_all stats =
   let strip_root =
     if strip_root then
       Some root
@@ -71,43 +67,20 @@ let output_results ~root ~strip_root ~json ~pretty ~show_all ~trust stats =
   let num_files_in_dir = Base.List.length stats in
   let covered = trusted + untrusted in
   let total = covered + any + empty in
-  let trusted_percentage = percent trusted total in
   let percentage = percent covered total in
   let file_stats (file_key, { Coverage_response.untainted; tainted; empty; uncovered }) =
     let covered = untainted + tainted in
     let total = covered + uncovered + empty in
     let percentage = percent covered total in
-    let trusted_percentage =
-      if trust then
-        Some (percent untainted total)
-      else
-        None
-    in
     let file = Reason.string_of_source ~strip_root file_key in
-    let untainted =
-      if trust then
-        Some untainted
-      else
-        None
-    in
-    (file, untainted, covered, total, trusted_percentage, percentage)
+    (file, covered, total, percentage)
   in
   if json then
     Hh_json.(
       let file_to_json stats =
-        let (file, trusted, covered, total, trusted_percentage, percentage) = file_stats stats in
+        let (file, covered, total, percentage) = file_stats stats in
         let percentage = [("percentage", JSON_Number (spf "%0.2f" percentage))] in
-        let percentage =
-          match trusted_percentage with
-          | Some p -> ("trusted_percentage", JSON_Number (spf "%0.2f" p)) :: percentage
-          | None -> percentage
-        in
         let covered = [("covered", int_ covered)] in
-        let covered =
-          match trusted with
-          | Some t -> ("trusted", int_ t) :: covered
-          | None -> covered
-        in
         JSON_Object ([("file", string_ file)] @ percentage @ covered @ [("total", int_ total)])
       in
       let array_ elts = JSON_Array elts in
@@ -116,19 +89,7 @@ let output_results ~root ~strip_root ~json ~pretty ~show_all ~trust stats =
         |> Base.List.map ~f:file_to_json
       in
       let covered_expressions = [("covered_expressions", int_ covered)] in
-      let covered_expressions =
-        if trust then
-          ("trusted_expressions", int_ trusted) :: covered_expressions
-        else
-          covered_expressions
-      in
       let percentage = [("percentage", JSON_Number (spf "%0.2f" percentage))] in
-      let percentage =
-        if trust then
-          ("trusted_percentage", JSON_Number (spf "%0.2f" trusted_percentage)) :: percentage
-        else
-          percentage
-      in
       let json_output =
         JSON_Object
           [
@@ -160,19 +121,8 @@ let output_results ~root ~strip_root ~json ~pretty ~show_all ~trust stats =
       print_endlinef "\nCoverage results from %d file(s):\n" num_files_in_dir;
       Base.List.iter
         ~f:(fun fstats ->
-          let (file, trusted, covered, total, trusted_percentage, percentage) = file_stats fstats in
-          match (trusted_percentage, trusted) with
-          | (Some p, Some t) ->
-            print_endlinef
-              "%s: %0.2f%% trusted (%d of %d expressions), %0.2f%% covered (%d of %d expressions)"
-              file
-              p
-              t
-              total
-              percentage
-              covered
-              total
-          | _ -> print_endlinef "%s: %0.2f%% (%d of %d expressions)" file percentage covered total)
+          let (file, covered, total, percentage) = file_stats fstats in
+          print_endlinef "%s: %0.2f%% (%d of %d expressions)" file percentage covered total)
         truncated_stats;
       print_endline truncation_text
     );
@@ -182,26 +132,13 @@ let output_results ~root ~strip_root ~json ~pretty ~show_all ~trust stats =
     print_endlinef "-----------------------------------";
     print_endlinef "Files                : %d" num_files_in_dir;
     print_endlinef "Expressions          :";
-    if trust then print_endlinef "  Trusted            : %d" trusted;
     print_endlinef "  Covered            : %d" covered;
     print_endlinef "  Total              : %d" total;
-    if trust then print_endlinef "  Trust Percentage   : %0.2f%%" trusted_percentage;
     print_endlinef "  Covered Percentage : %0.2f%%" percentage;
     print_endlinef ""
 
 let main
-    base_flags
-    option_values
-    json
-    pretty
-    root
-    strip_root
-    wait_for_recheck
-    input
-    show_all
-    trust
-    files
-    () =
+    base_flags option_values json pretty root strip_root wait_for_recheck input show_all files () =
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let batch =
     get_filenames_from_input input files |> Base.List.map ~f:(File_path.make %> File_path.to_string)
@@ -210,11 +147,11 @@ let main
   let root = get_the_root ~base_flags ?input root in
   (* pretty implies json *)
   let json = json || pretty in
-  let request = ServerProt.Request.BATCH_COVERAGE { batch; wait_for_recheck; trust } in
+  let request = ServerProt.Request.BATCH_COVERAGE { batch; wait_for_recheck } in
   match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.BATCH_COVERAGE (Error msg) -> Exit.(exit ~msg Unknown_error)
   | ServerProt.Response.BATCH_COVERAGE (Ok resp) ->
-    output_results ~root ~strip_root ~json ~pretty ~show_all ~trust resp
+    output_results ~root ~strip_root ~json ~pretty ~show_all resp
   | response -> failwith_bad_response ~request ~response
 
 let command = CommandSpec.command spec main

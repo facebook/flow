@@ -738,42 +738,33 @@ let dump_types ~options ~env ~profiling ~evaluate_type_destructors file_input =
   | Ok (Parse_artifacts { file_sig; _ }, Typecheck_artifacts { cx; typed_ast; _ }) ->
     Ok (Type_info_service.dump_types ~evaluate_type_destructors cx file_sig typed_ast)
 
-let coverage ~options ~env ~profiling ~type_parse_artifacts_cache ~force ~trust file_key content =
-  if Options.trust_mode options = Options.NoTrust && trust then
-    ( Error
-        "Coverage cannot be run in trust mode if the server is not in trust mode. \n\nRestart the Flow server with --trust-mode=check' to enable this command.",
-      None
-    )
-  else
-    let (file_artifacts_result, did_hit_cache) =
-      let parse_result = Type_contents.parse_contents ~options ~profiling content file_key in
-      type_parse_artifacts_with_cache
-        ~options
-        ~profiling
-        ~type_parse_artifacts_cache
-        env.master_cx
-        file_key
-        parse_result
+let coverage ~options ~env ~profiling ~type_parse_artifacts_cache ~force file_key content =
+  let (file_artifacts_result, did_hit_cache) =
+    let parse_result = Type_contents.parse_contents ~options ~profiling content file_key in
+    type_parse_artifacts_with_cache
+      ~options
+      ~profiling
+      ~type_parse_artifacts_cache
+      env.master_cx
+      file_key
+      parse_result
+  in
+  let extra_data =
+    let json_props = add_cache_hit_data_to_json [] did_hit_cache in
+    Hh_json.JSON_Object json_props
+  in
+  match file_artifacts_result with
+  | Ok (_, Typecheck_artifacts { cx; typed_ast; obj_to_obj_map = _ }) ->
+    let coverage =
+      Profiling_js.with_timer profiling ~timer:"Coverage" ~f:(fun () ->
+          Type_info_service.coverage ~cx ~typed_ast ~force file_key content
+      )
     in
-    let extra_data =
-      let json_props = add_cache_hit_data_to_json [] did_hit_cache in
-      Hh_json.JSON_Object json_props
-    in
-    match file_artifacts_result with
-    | Ok (_, Typecheck_artifacts { cx; typed_ast; obj_to_obj_map = _ }) ->
-      let coverage =
-        Profiling_js.with_timer profiling ~timer:"Coverage" ~f:(fun () ->
-            Type_info_service.coverage ~cx ~typed_ast ~force ~trust file_key content
-        )
-      in
-      (Ok coverage, Some extra_data)
-    | Error _parse_errors -> (Error "Couldn't parse file in parse_contents", Some extra_data)
+    (Ok coverage, Some extra_data)
+  | Error _parse_errors -> (Error "Couldn't parse file in parse_contents", Some extra_data)
 
-let batch_coverage ~options ~env ~trust ~batch =
-  if Options.trust_mode options = Options.NoTrust && trust then
-    Error
-      "Batch Coverage cannot be run in trust mode if the server is not in trust mode. \n\nRestart the Flow server with --trust-mode=check' to enable this command."
-  else if Options.lazy_mode options then
+let batch_coverage ~options ~env ~batch =
+  if Options.lazy_mode options then
     Error
       "Batch coverage cannot be run in lazy mode.\n\nRestart the Flow server with '--no-lazy' to enable this command."
   else
@@ -1033,7 +1024,7 @@ let handle_check_file ~options ~force ~input ~profiling ~env =
   let response = check_file ~options ~env ~force ~profiling input in
   Lwt.return (ServerProt.Response.CHECK_FILE response, None)
 
-let handle_coverage ~options ~force ~input ~trust ~profiling ~env =
+let handle_coverage ~options ~force ~input ~profiling ~env =
   let (response, json_data) =
     try_with_json (fun () ->
         let options = { options with Options.opt_all = options.Options.opt_all || force } in
@@ -1047,15 +1038,14 @@ let handle_coverage ~options ~force ~input ~trust ~profiling ~env =
             ~profiling
             ~type_parse_artifacts_cache:None
             ~force
-            ~trust
             file_key
             file_contents
     )
   in
   Lwt.return (ServerProt.Response.COVERAGE response, json_data)
 
-let handle_batch_coverage ~options ~profiling:_ ~env ~batch ~trust =
-  let response = batch_coverage ~options ~env ~batch ~trust in
+let handle_batch_coverage ~options ~profiling:_ ~env ~batch =
+  let response = batch_coverage ~options ~env ~batch in
   Lwt.return (ServerProt.Response.BATCH_COVERAGE response, None)
 
 let handle_cycle ~fn ~types_only ~profiling:_ ~env =
@@ -1354,10 +1344,10 @@ let get_ephemeral_handler genv command =
       }
     in
     mk_parallelizable ~wait_for_recheck ~options (handle_check_file ~options ~force ~input)
-  | ServerProt.Request.COVERAGE { input; force; wait_for_recheck; trust } ->
-    mk_parallelizable ~wait_for_recheck ~options (handle_coverage ~options ~force ~trust ~input)
-  | ServerProt.Request.BATCH_COVERAGE { batch; wait_for_recheck; trust } ->
-    mk_parallelizable ~wait_for_recheck ~options (handle_batch_coverage ~options ~trust ~batch)
+  | ServerProt.Request.COVERAGE { input; force; wait_for_recheck } ->
+    mk_parallelizable ~wait_for_recheck ~options (handle_coverage ~options ~force ~input)
+  | ServerProt.Request.BATCH_COVERAGE { batch; wait_for_recheck } ->
+    mk_parallelizable ~wait_for_recheck ~options (handle_batch_coverage ~options ~batch)
   | ServerProt.Request.CYCLE { filename; types_only } ->
     (* The user preference is to make this wait for up-to-date data *)
     let file_options = Options.file_options options in
@@ -2625,15 +2615,7 @@ let handle_persistent_coverage ~options ~id ~params ~file_input ~metadata ~clien
       let type_parse_artifacts_cache =
         Some (Persistent_connection.type_parse_artifacts_cache client)
       in
-      coverage
-        ~options
-        ~env
-        ~profiling
-        ~type_parse_artifacts_cache
-        ~force
-        ~trust:false
-        file_key
-        file_contents
+      coverage ~options ~env ~profiling ~type_parse_artifacts_cache ~force file_key file_contents
     in
     let metadata = with_data ~extra_data metadata in
     (match result with

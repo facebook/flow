@@ -25,11 +25,6 @@ type saved_state_fetcher =
   | Scm_fetcher
   | Fb_fetcher
 
-type trust_mode =
-  | NoTrust
-  | CheckTrust
-  | SilentTrust
-
 type react_runtime =
   | ReactRuntimeAutomatic
   | ReactRuntimeClassic
@@ -151,7 +146,6 @@ type t = {
   opt_suppress_types: SSet.t;
   opt_temp_dir: string;
   opt_traces: int;
-  opt_trust_mode: trust_mode;
   opt_use_mixed_in_catch_variables: bool;
   opt_verbose: Verbose.t option;
   opt_wait_for_recheck: bool;
@@ -351,8 +345,6 @@ let strict_mode opts = opts.opt_strict_mode
 let suppress_types opts = opts.opt_suppress_types
 
 let temp_dir opts = opts.opt_temp_dir
-
-let trust_mode opts = opts.opt_trust_mode
 
 let use_mixed_in_catch_variables opts = opts.opt_use_mixed_in_catch_variables
 

@@ -75,7 +75,7 @@ let dump_types ~evaluate_type_destructors cx file_sig typed_ast =
   let printer = Ty_printer.string_of_elt_single_line ~exact_by_default in
   Query_types.dump_types ~printer ~evaluate_type_destructors cx file_sig typed_ast
 
-let coverage ~cx ~typed_ast ~force ~trust file content =
+let coverage ~cx ~typed_ast ~force file content =
   let should_check =
     if force then
       true
@@ -88,4 +88,4 @@ let coverage ~cx ~typed_ast ~force ~trust file content =
       in
       Docblock.is_flow docblock
   in
-  Coverage.covered_types cx ~should_check ~check_trust:trust typed_ast
+  Coverage.covered_types cx ~should_check typed_ast

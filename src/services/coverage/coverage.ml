@@ -418,19 +418,10 @@ let m_or = function
 
 let initial_coverage = { untainted = 0; tainted = 0; uncovered = 0; empty = 0 }
 
-let covered_types ~should_check ~check_trust cx tast =
-  let check_trust =
-    if check_trust then
-      fun x ->
-    x
-    else
-      function
-    | Coverage_response.Tainted -> Coverage_response.Untainted
-    | x -> x
-  in
+let covered_types ~should_check cx tast =
   let compute_cov =
     if should_check then
-      (new visitor)#type_ cx %> result_of_coverage %> check_trust
+      (new visitor)#type_ cx %> result_of_coverage
     else
       fun _ ->
     Coverage_response.Empty

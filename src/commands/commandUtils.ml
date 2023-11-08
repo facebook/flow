@@ -878,7 +878,6 @@ module Options_flags = struct
     strip_root: bool;
     temp_dir: string option;
     traces: int option;
-    trust_mode: Options.trust_mode option;
     verbose: Verbose.t option;
     wait_for_recheck: bool option;
     include_suppressions: bool;
@@ -949,7 +948,6 @@ let options_flags =
       quiet
       merge_timeout
       include_suppressions
-      trust_mode
       estimate_recheck_time
       long_lived_workers
       distributed =
@@ -978,7 +976,6 @@ let options_flags =
         temp_dir;
         quiet;
         merge_timeout;
-        trust_mode;
         include_suppressions;
         estimate_recheck_time;
         long_lived_workers;
@@ -1028,18 +1025,6 @@ let options_flags =
            "--include-suppressed"
            truthy
            ~doc:"Ignore any `suppress_comment` lines in .flowconfig"
-      |> flag
-           "--trust-mode"
-           (optional
-              (enum
-                 [
-                   ("check", Options.CheckTrust);
-                   ("silent", Options.SilentTrust);
-                   ("none", Options.NoTrust);
-                 ]
-              )
-           )
-           ~doc:""
       (* restarting to save time is a hack and should be removed. this should
          not be part of our public API, so not included in the docs. *)
       |> flag "--estimate-recheck-time" (optional bool) ~doc:"" ~env:"FLOW_ESTIMATE_RECHECK_TIME"
@@ -1439,8 +1424,6 @@ let make_options
       FlowConfig.node_resolver_root_relative_dirnames flowconfig;
     opt_include_suppressions = options_flags.include_suppressions;
     opt_distributed = options_flags.distributed;
-    opt_trust_mode =
-      Base.Option.value options_flags.trust_mode ~default:(FlowConfig.trust_mode flowconfig);
     opt_use_mixed_in_catch_variables =
       Base.Option.value (FlowConfig.use_mixed_in_catch_variables flowconfig) ~default:false;
     opt_react_runtime = FlowConfig.react_runtime flowconfig;

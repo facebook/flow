@@ -28,7 +28,6 @@ val coverage :
   cx:Context.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   force:bool ->
-  trust:bool ->
   File_key.t ->
   string ->
   (Loc.t * Coverage_response.expression_coverage) list

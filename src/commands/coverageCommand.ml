@@ -48,7 +48,6 @@ let spec =
                )
         |> path_flag
         |> flag "--all" truthy ~doc:"Ignore absence of @flow pragma"
-        |> flag "--show-trust" truthy ~doc:"EXPERIMENTAL: Include trust information in output"
         |> anon "file" (optional string)
       );
   }
@@ -181,7 +180,6 @@ let handle_response
     ~strip_root
     ~color
     ~debug
-    ~trust
     (types : (Loc.t * Coverage_response.expression_coverage) list)
     content =
   if debug then Base.List.iter ~f:debug_range types;
@@ -204,13 +202,7 @@ let handle_response
   let (untainted, tainted, empty, total) =
     Base.List.fold_left ~f:accum_coverage ~init:(0, 0, 0, 0) types
   in
-  (* In trust mode, we only consider untainted locations covered. In normal mode we consider both *)
-  let covered =
-    if trust then
-      untainted
-    else
-      untainted + tainted
-  in
+  let covered = untainted + tainted in
   let percent =
     if total = 0 then
       100.
@@ -227,28 +219,13 @@ let handle_response
     in
     Hh_json.(
       let covered_data =
-        if trust then
-          [
-            ("untainted_count", int_ untainted);
-            ( "untainted_locs",
-              JSON_Array
-                (Base.List.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) untainted_locs)
-            );
-            ("tainted_count", int_ tainted);
-            ( "tainted_locs",
-              JSON_Array
-                (Base.List.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) tainted_locs)
-            );
-          ]
-        else
-          let covered_locs = untainted_locs @ tainted_locs |> Base.List.sort ~compare in
-          [
-            ("covered_count", int_ covered);
-            ( "covered_locs",
-              JSON_Array
-                (Base.List.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) covered_locs)
-            );
-          ]
+        let covered_locs = untainted_locs @ tainted_locs |> Base.List.sort ~compare in
+        [
+          ("covered_count", int_ covered);
+          ( "covered_locs",
+            JSON_Array (Base.List.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) covered_locs)
+          );
+        ]
       in
       JSON_Object
         [
@@ -290,7 +267,6 @@ let main
     debug
     path
     all
-    trust
     filename
     () =
   let file = get_file_from_filename_or_stdin ~cmd:CommandSpec.(spec.name) path filename in
@@ -321,14 +297,12 @@ let main
          { arg = "--debug"; msg = "Can't be used with json flags"; details = None }
       );
 
-  let request =
-    ServerProt.Request.COVERAGE { input = file; force = all; wait_for_recheck; trust }
-  in
+  let request = ServerProt.Request.COVERAGE { input = file; force = all; wait_for_recheck } in
   match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.COVERAGE (Error err) -> handle_error ~json ~pretty err
   | ServerProt.Response.COVERAGE (Ok resp) ->
     let content = File_input.content_of_file_input_unsafe file in
-    handle_response ~json ~pretty ~strip_root ~color ~debug ~trust resp content
+    handle_response ~json ~pretty ~strip_root ~color ~debug resp content
   | response -> failwith_bad_response ~request ~response
 
 let command = CommandSpec.command spec main

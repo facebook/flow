@@ -31,7 +31,6 @@ let make_options_flags
     ?(strip_root = false)
     ?temp_dir
     ?traces
-    ?trust_mode
     ?verbose
     ?wait_for_recheck
     ?(include_suppressions = false)
@@ -55,7 +54,6 @@ let make_options_flags
     strip_root;
     temp_dir;
     traces;
-    trust_mode;
     verbose;
     slow_to_check_logging = Slow_to_check_logging.default;
     wait_for_recheck;
