@@ -239,10 +239,9 @@ module Response = struct
 
   type autofix_missing_local_annot_response = (Replacement_printer.patch, string) result
 
-  type coverage_response = ((Loc.t * Coverage_response.expression_coverage) list, string) result
+  type coverage_response = ((Loc.t * Coverage.Kind.t) list, string) result
 
-  type batch_coverage_response =
-    ((File_key.t * Coverage_response.file_coverage) list, string) result
+  type batch_coverage_response = ((File_key.t * Coverage.file_coverage) list, string) result
 
   type dump_types_response = ((Loc.t * string) list, string) result
 

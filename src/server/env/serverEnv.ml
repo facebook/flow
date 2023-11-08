@@ -56,7 +56,7 @@ type env = {
   libs: SSet.t;  (** The lib files as a set *)
   unparsed: Utils_js.FilenameSet.t;  (** The files which didn't parse (skipped or errored) *)
   errors: errors;
-  coverage: Coverage_response.file_coverage Utils_js.FilenameMap.t;
+  coverage: Coverage.file_coverage Utils_js.FilenameMap.t;
   (* When the incremental_error_collation option is set, this ref will be None *)
   collated_errors: Collated_errors.t option ref;
   (* When the incremental_error_collation option is not set, this field will be empty. *)

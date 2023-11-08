@@ -61,19 +61,17 @@ let handle_error ~json ~pretty err =
   else
     prerr_endline err
 
-let accum_coverage (untainted, tainted, empty, total) (_loc, cov) =
+let accum_coverage (checked, empty, total) (_loc, cov) =
   match cov with
-  | Coverage_response.Uncovered -> (untainted, tainted, empty, total + 1)
-  | Coverage_response.Empty -> (untainted, tainted, empty + 1, total + 1)
-  | Coverage_response.Untainted -> (untainted + 1, tainted, empty, total + 1)
-  | Coverage_response.Tainted -> (untainted, tainted + 1, empty, total + 1)
+  | Coverage.Kind.Any -> (checked, empty, total + 1)
+  | Coverage.Kind.Empty -> (checked, empty + 1, total + 1)
+  | Coverage.Kind.Checked -> (checked + 1, empty, total + 1)
 
-let accum_coverage_locs (untainted, tainted, empty, uncovered) (loc, cov) =
+let accum_coverage_locs (checked, empty, uncovered) (loc, cov) =
   match cov with
-  | Coverage_response.Uncovered -> (untainted, tainted, empty, loc :: uncovered)
-  | Coverage_response.Empty -> (untainted, tainted, loc :: empty, loc :: uncovered)
-  | Coverage_response.Untainted -> (loc :: untainted, tainted, empty, uncovered)
-  | Coverage_response.Tainted -> (untainted, loc :: tainted, empty, uncovered)
+  | Coverage.Kind.Any -> (checked, empty, loc :: uncovered)
+  | Coverage.Kind.Empty -> (checked, loc :: empty, loc :: uncovered)
+  | Coverage.Kind.Checked -> (loc :: checked, empty, uncovered)
 
 let colorize content from_offset to_offset color accum =
   if to_offset > from_offset then
@@ -90,7 +88,7 @@ let debug_range (loc, cov) =
       loc.start.column
       loc._end.line
       loc._end.column
-      (Coverage.to_bool cov)
+      (Coverage.Kind.to_bool cov)
   )
 
 let rec colorize_file content last_offset accum = function
@@ -100,10 +98,9 @@ let rec colorize_file content last_offset accum = function
     let (accum, offset) = colorize content last_offset offset Tty.Default accum in
     let color =
       match kind with
-      | Coverage_response.Uncovered -> Tty.Red
-      | Coverage_response.Empty -> Tty.Blue
-      | Coverage_response.Tainted -> Tty.Yellow
-      | Coverage_response.Untainted -> Tty.Default
+      | Coverage.Kind.Any -> Tty.Red
+      | Coverage.Kind.Empty -> Tty.Blue
+      | Coverage.Kind.Checked -> Tty.Default
     in
     let (accum, offset) = colorize content offset end_offset color accum in
     colorize_file content offset accum rest
@@ -160,7 +157,9 @@ let rec split_overlapping_ranges accum = function
         let head_loc = (loc1_start, loc2_start - 1) in
         let overlap_loc = (loc2_start, loc1_end) in
         let tail_loc = (loc1_end + 1, loc2_end) in
-        ( (head_loc, is_covered1) :: (overlap_loc, Coverage.m_or (is_covered1, is_covered2)) :: accum,
+        ( (head_loc, is_covered1)
+          :: (overlap_loc, Coverage.Kind.m_or (is_covered1, is_covered2))
+          :: accum,
           (tail_loc, is_covered2) :: rest
         )
       else
@@ -175,13 +174,7 @@ let rec split_overlapping_ranges accum = function
     split_overlapping_ranges accum todo
 
 let handle_response
-    ~json
-    ~pretty
-    ~strip_root
-    ~color
-    ~debug
-    (types : (Loc.t * Coverage_response.expression_coverage) list)
-    content =
+    ~json ~pretty ~strip_root ~color ~debug (types : (Loc.t * Coverage.Kind.t) list) content =
   if debug then Base.List.iter ~f:debug_range types;
 
   let offset_table = lazy (Offset_utils.make ~kind:Offset_utils.Utf8 content) in
@@ -199,10 +192,7 @@ let handle_response
     print_endline ""
   );
 
-  let (untainted, tainted, empty, total) =
-    Base.List.fold_left ~f:accum_coverage ~init:(0, 0, 0, 0) types
-  in
-  let covered = untainted + tainted in
+  let (covered, empty, total) = Base.List.fold_left ~f:accum_coverage ~init:(0, 0, 0) types in
   let percent =
     if total = 0 then
       100.
@@ -211,15 +201,15 @@ let handle_response
   in
   if json then
     let offset_table = Some (Lazy.force offset_table) in
-    let (untainted_locs, tainted_locs, empty_locs, uncovered_locs) =
-      let (untainted, tainted, empty, uncovered) =
-        Base.List.fold_left ~f:accum_coverage_locs ~init:([], [], [], []) types
+    let (covered_locs, empty_locs, uncovered_locs) =
+      let (covered, empty, uncovered) =
+        Base.List.fold_left ~f:accum_coverage_locs ~init:([], [], []) types
       in
-      (Base.List.rev untainted, Base.List.rev tainted, Base.List.rev empty, Base.List.rev uncovered)
+      (Base.List.rev covered, Base.List.rev empty, Base.List.rev uncovered)
     in
     Hh_json.(
       let covered_data =
-        let covered_locs = untainted_locs @ tainted_locs |> Base.List.sort ~compare in
+        let covered_locs = Base.List.sort ~compare covered_locs in
         [
           ("covered_count", int_ covered);
           ( "covered_locs",

@@ -37,7 +37,7 @@ type check_error_result =
   Flow_error.ErrorSet.t
   * Flow_error.ErrorSet.t
   * Error_suppressions.t
-  * Coverage_response.file_coverage
+  * Coverage.file_coverage
   * (FindRefsTypes.single_ref list, string) result
   * duration
 

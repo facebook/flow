@@ -472,14 +472,14 @@ module Check_files : sig
     workers:MultiWorkerLwt.worker list option ->
     errors:ServerEnv.errors ->
     updated_suppressions:Error_suppressions.t ->
-    coverage:Coverage_response.file_coverage Utils_js.FilenameMap.t ->
+    coverage:Coverage.file_coverage Utils_js.FilenameMap.t ->
     to_check:CheckedSet.t ->
     dirty_direct_dependents:FilenameSet.t ->
     sig_new_or_changed:Utils_js.FilenameSet.t ->
     dependency_info:Dependency_info.t ->
     persistent_connections:Persistent_connection.t option ->
     ( ServerEnv.errors
-    * Coverage_response.file_coverage Utils_js.FilenameMap.t
+    * Coverage.file_coverage Utils_js.FilenameMap.t
     * (FindRefsTypes.single_ref list, string) result
     * float
     * int

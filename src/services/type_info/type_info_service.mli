@@ -30,4 +30,4 @@ val coverage :
   force:bool ->
   File_key.t ->
   string ->
-  (Loc.t * Coverage_response.expression_coverage) list
+  (Loc.t * Coverage.Kind.t) list

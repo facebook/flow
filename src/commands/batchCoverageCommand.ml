@@ -55,21 +55,17 @@ let output_results ~root ~strip_root ~json ~pretty ~show_all stats =
       float_of_int top /. float_of_int bottom *. 100.
   in
   (* Compute aggregate stats *)
-  let (trusted, untrusted, any, empty) =
+  let (covered, any, empty) =
     Base.List.fold_left
-      ~f:
-        (fun (acc_trust, acc_untrust, acc_any, acc_empty)
-             (_, { Coverage_response.untainted; tainted; empty; uncovered }) ->
-        (acc_trust + untainted, acc_untrust + tainted, acc_any + uncovered, acc_empty + empty))
+      ~f:(fun (acc_checked, acc_any, acc_empty) (_, { Coverage.checked; empty; uncovered }) ->
+        (acc_checked + checked, acc_any + uncovered, acc_empty + empty))
       stats
-      ~init:(0, 0, 0, 0)
+      ~init:(0, 0, 0)
   in
   let num_files_in_dir = Base.List.length stats in
-  let covered = trusted + untrusted in
   let total = covered + any + empty in
   let percentage = percent covered total in
-  let file_stats (file_key, { Coverage_response.untainted; tainted; empty; uncovered }) =
-    let covered = untainted + tainted in
+  let file_stats (file_key, { Coverage.checked = covered; empty; uncovered }) =
     let total = covered + uncovered + empty in
     let percentage = percent covered total in
     let file = Reason.string_of_source ~strip_root file_key in

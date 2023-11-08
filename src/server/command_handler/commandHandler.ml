@@ -2624,11 +2624,9 @@ let handle_persistent_coverage ~options ~id ~params ~file_input ~metadata ~clien
       let accum_coverage (covered, total) (_loc, cov) =
         let covered =
           match cov with
-          | Coverage_response.Tainted
-          | Coverage_response.Untainted ->
-            covered + 1
-          | Coverage_response.Uncovered
-          | Coverage_response.Empty ->
+          | Coverage.Kind.Checked -> covered + 1
+          | Coverage.Kind.Any
+          | Coverage.Kind.Empty ->
             covered
         in
         (covered, total + 1)
@@ -2644,11 +2642,9 @@ let handle_persistent_coverage ~options ~id ~params ~file_input ~metadata ~clien
       let uncovereds =
         Base.List.filter_map all_locs ~f:(fun (loc, cov) ->
             match cov with
-            | Coverage_response.Tainted
-            | Coverage_response.Untainted ->
-              None
-            | Coverage_response.Uncovered
-            | Coverage_response.Empty ->
+            | Coverage.Kind.Checked -> None
+            | Coverage.Kind.Any
+            | Coverage.Kind.Empty ->
               Some loc
         )
       in
