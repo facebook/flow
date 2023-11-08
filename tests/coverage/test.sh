@@ -47,30 +47,3 @@ echo "-----------------------------"
 echo
 assert_ok "$FLOW" coverage --strip-root --pretty unicode.js
 assert_ok "$FLOW" coverage --color unicode.js
-
-"$FLOW" stop
-"$FLOW" start --trust-mode=check
-echo "-----------------------------"
-echo "trust.js"
-echo "-----------------------------"
-echo
-assert_ok "$FLOW" coverage --show-trust --strip-root --pretty trust.js
-assert_ok "$FLOW" coverage --show-trust trust.js
-
-"$FLOW" stop
-"$FLOW" start --trust-mode=check
-echo "-----------------------------"
-echo "tparam.js"
-echo "-----------------------------"
-echo
-assert_ok "$FLOW" coverage --show-trust --strip-root --pretty tparam.js
-assert_ok "$FLOW" coverage --show-trust tparam.js
-
-"$FLOW" stop
-"$FLOW" start --trust-mode=check
-echo "-----------------------------"
-echo "tparam_import.js"
-echo "-----------------------------"
-echo
-assert_ok "$FLOW" coverage --show-trust --strip-root --pretty tparam_import.js
-assert_ok "$FLOW" coverage --show-trust tparam_import.js

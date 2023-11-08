@@ -37,11 +37,11 @@ coverage() {
   echo "-----------------------------"
   echo "file list"
   echo "-----------------------------"
-  assert_ok "$FLOW" batch-coverage --strip-root a.js folder/d.js folder/subfolder/j.js
+  assert_ok "$FLOW" batch-coverage --strip-root b.js folder/d.js folder/subfolder/j.js
   echo "-----------------------------"
   echo "file and dir list"
   echo "-----------------------------"
-  assert_ok "$FLOW" batch-coverage --strip-root a.js folder folder/d.js
+  assert_ok "$FLOW" batch-coverage --strip-root b.js folder folder/d.js
   echo "-----------------------------"
   echo "files"
   echo "-----------------------------"
