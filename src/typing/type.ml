@@ -3428,8 +3428,6 @@ module TypeContext = struct
   type t = {
     (* map from tvar ids to nodes (type info structures) *)
     graph: Constraint.node IMap.t;
-    (* map from tvar ids to trust nodes *)
-    trust_graph: Trust_constraint.node IMap.t;
     (* obj types point to mutable property maps *)
     property_maps: Properties.map;
     (* indirection to support context opt *)

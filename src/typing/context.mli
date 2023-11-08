@@ -211,8 +211,6 @@ val find_tvar : t -> Type.ident -> Type.Constraint.node
 
 val graph : t -> Type.Constraint.graph
 
-val trust_graph : t -> Trust_constraint.node IMap.t
-
 val in_implicit_instantiation : t -> bool
 
 val is_checked : t -> bool
@@ -336,8 +334,6 @@ val add_export_map : t -> Type.Exports.id -> Type.Exports.t -> unit
 
 val add_tvar : t -> Type.ident -> Type.Constraint.node -> unit
 
-val add_trust_var : t -> Trust_constraint.ident -> Trust_constraint.node -> unit
-
 val mk_placeholder : t -> Reason.t -> Type.t
 
 val add_matching_props : t -> string * ALoc.t * ALoc.t -> unit
@@ -368,8 +364,6 @@ val set_graph : t -> Type.Constraint.graph -> unit
 val run_in_implicit_instantiation_mode : t -> (unit -> 'a) -> 'a
 
 val run_in_post_inference_mode : t -> (unit -> 'a) -> 'a
-
-val set_trust_graph : t -> Trust_constraint.node IMap.t -> unit
 
 val set_property_maps : t -> Type.Properties.map -> unit
 
@@ -489,13 +483,6 @@ val find_root : t -> Type.ident -> Type.ident * Type.Constraint.node * Type.Cons
 val find_root_id : t -> Type.ident -> Type.ident
 
 val find_resolved : t -> Type.t -> Type.t option
-
-val find_trust_constraints :
-  t -> Trust_constraint.ident -> Trust_constraint.ident * Trust_constraint.constraints
-
-val find_trust_graph : t -> Trust_constraint.ident -> Trust_constraint.constraints
-
-val find_trust_root : t -> Trust_constraint.ident -> Trust_constraint.ident * Trust_constraint.root
 
 val global_value_cache_find_opt :
   t -> Reason.name -> (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result option

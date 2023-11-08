@@ -337,7 +337,6 @@ let docblock_overrides docblock_info metadata =
 let empty_sig_cx =
   {
     graph = IMap.empty;
-    trust_graph = IMap.empty;
     property_maps = Type.Properties.Map.empty;
     call_props = IMap.empty;
     export_maps = Type.Exports.Map.empty;
@@ -415,8 +414,6 @@ let make ccx metadata file aloc_table resolve_require mk_builtins phase =
   cx
 
 let sig_cx cx = cx.ccx.sig_cx
-
-let trust_graph_sig sig_cx = sig_cx.trust_graph
 
 (* modules *)
 
@@ -528,8 +525,6 @@ let find_tvar cx id =
   | Not_found -> raise (Union_find.Tvar_not_found id)
 
 let graph cx = cx.ccx.sig_cx.graph
-
-let trust_graph cx = trust_graph_sig cx.ccx.sig_cx
 
 let in_implicit_instantiation cx = cx.ccx.in_implicit_instantiation
 
@@ -695,10 +690,6 @@ let add_tvar cx id bounds =
   let graph = IMap.add id bounds cx.ccx.sig_cx.graph in
   cx.ccx.sig_cx <- { cx.ccx.sig_cx with graph }
 
-let add_trust_var cx id bounds =
-  let trust_graph = IMap.add id bounds cx.ccx.sig_cx.trust_graph in
-  cx.ccx.sig_cx <- { cx.ccx.sig_cx with trust_graph }
-
 let mk_placeholder cx reason =
   if cx.typing_mode = SynthesisMode then cx.ccx.synthesis_produced_placeholders <- true;
   Type.AnyT.placeholder reason
@@ -756,8 +747,6 @@ let run_in_post_inference_mode cx f =
   let saved = cx.phase in
   cx.phase <- PostInference;
   Exception.protect ~f ~finally:(fun () -> cx.phase <- saved)
-
-let set_trust_graph cx trust_graph = cx.ccx.sig_cx <- { cx.ccx.sig_cx with trust_graph }
 
 let set_property_maps cx property_maps = cx.ccx.sig_cx <- { cx.ccx.sig_cx with property_maps }
 
@@ -1014,7 +1003,6 @@ let merge_into ccx sig_cx_other =
       export_maps = Type.Exports.Map.union sig_cx_other.export_maps sig_cx.export_maps;
       evaluated = Type.Eval.Map.union sig_cx_other.evaluated sig_cx.evaluated;
       graph = IMap.union sig_cx_other.graph sig_cx.graph;
-      trust_graph = IMap.union sig_cx_other.trust_graph sig_cx.trust_graph;
     }
 
 let find_graph cx id = Type.Constraint.find_graph cx.ccx.sig_cx.graph id
@@ -1042,32 +1030,6 @@ let find_resolved =
     | t -> Some t
   in
   (fun cx t_in -> loop cx ISet.empty t_in)
-
-let rec find_trust_root cx (id : Trust_constraint.ident) =
-  Trust_constraint.(
-    match IMap.find_opt id (trust_graph cx) with
-    | Some (TrustGoto next_id) ->
-      let (root_id, root) = find_trust_root cx next_id in
-      if root_id != next_id then Trust_constraint.new_goto root_id |> add_trust_var cx id;
-      (root_id, root)
-    | Some (TrustRoot root) -> (id, root)
-    | None ->
-      let msg =
-        Utils_js.spf
-          "find_trust_root: trust var %d not found in file %s"
-          id
-          (File_key.to_string @@ file cx)
-      in
-      Utils_js.assert_false msg
-  )
-
-let find_trust_constraints cx id =
-  let (root_id, root) = find_trust_root cx id in
-  (root_id, Trust_constraint.get_constraints root)
-
-let find_trust_graph cx id =
-  let (_, constraints) = find_trust_constraints cx id in
-  constraints
 
 let constraint_cache cx = cx.ccx.constraint_cache
 
