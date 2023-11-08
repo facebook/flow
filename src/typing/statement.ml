@@ -654,34 +654,28 @@ module Make
     else
       (* It's too expensive to track literal information for large strings.*)
       let max_literal_length = Context.max_literal_length cx in
-      let make_trust = Context.trust_constructor cx in
       if max_literal_length = 0 || String.length value <= max_literal_length then
         let reason = mk_annot_reason RString loc in
-        DefT (reason, make_trust (), StrT (Literal (None, OrdinaryName value)))
+        DefT (reason, Trust.literal_trust (), StrT (Literal (None, OrdinaryName value)))
       else
         let reason = mk_annot_reason (RLongStringLit max_literal_length) loc in
-        DefT (reason, make_trust (), StrT AnyLiteral)
+        DefT (reason, Trust.literal_trust (), StrT AnyLiteral)
 
   let string_literal cx loc { Ast.StringLiteral.value; _ } = string_literal_value cx loc value
 
-  let boolean_literal cx loc { Ast.BooleanLiteral.value; _ } =
-    let make_trust = Context.trust_constructor cx in
+  let boolean_literal loc { Ast.BooleanLiteral.value; _ } =
     let reason = mk_annot_reason RBoolean loc in
-    DefT (reason, make_trust (), BoolT (Some value))
+    DefT (reason, Trust.literal_trust (), BoolT (Some value))
 
-  let null_literal cx loc =
-    let make_trust = Context.trust_constructor cx in
-    NullT.at loc |> with_trust make_trust
+  let null_literal loc = NullT.at loc |> with_trust Trust.literal_trust
 
-  let number_literal cx loc { Ast.NumberLiteral.value; raw; _ } =
-    let make_trust = Context.trust_constructor cx in
+  let number_literal loc { Ast.NumberLiteral.value; raw; _ } =
     let reason = mk_annot_reason RNumber loc in
-    DefT (reason, make_trust (), NumT (Literal (None, (value, raw))))
+    DefT (reason, Trust.literal_trust (), NumT (Literal (None, (value, raw))))
 
-  let bigint_literal cx loc { Ast.BigIntLiteral.value; raw; _ } =
-    let make_trust = Context.trust_constructor cx in
+  let bigint_literal loc { Ast.BigIntLiteral.value; raw; _ } =
     let reason = mk_annot_reason RBigInt loc in
-    DefT (reason, make_trust (), BigIntT (Literal (None, (value, raw))))
+    DefT (reason, Trust.literal_trust (), BigIntT (Literal (None, (value, raw))))
 
   let regexp_literal cx loc =
     let reason = mk_annot_reason RRegExp loc in
@@ -2620,7 +2614,6 @@ module Make
   and super_ cx loc = Type_env.var_ref cx (internal_name "super") loc
 
   and expression_ ~cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
-    let make_trust = Context.trust_constructor cx in
     let ex = (loc, e) in
     let open Ast.Expression in
     match e with
@@ -2628,16 +2621,16 @@ module Make
       let t = string_literal cx loc lit in
       ((loc, t), StringLiteral lit)
     | BooleanLiteral lit ->
-      let t = boolean_literal cx loc lit in
+      let t = boolean_literal loc lit in
       ((loc, t), BooleanLiteral lit)
     | NullLiteral lit ->
-      let t = null_literal cx loc in
+      let t = null_literal loc in
       ((loc, t), NullLiteral lit)
     | NumberLiteral lit ->
-      let t = number_literal cx loc lit in
+      let t = number_literal loc lit in
       ((loc, t), NumberLiteral lit)
     | BigIntLiteral lit ->
-      let t = bigint_literal cx loc lit in
+      let t = bigint_literal loc lit in
       ((loc, t), BigIntLiteral lit)
     | RegExpLiteral lit ->
       let t = regexp_literal cx loc in
@@ -2735,7 +2728,7 @@ module Make
         ( ( loc,
             DefT
               ( reason,
-                make_trust (),
+                Trust.literal_trust (),
                 ArrT (ArrayAT { elem_t; tuple_view = Some ([], (0, 0)); react_dro = None })
               )
           ),
@@ -2746,7 +2739,7 @@ module Make
         ( ( loc,
             DefT
               ( reason,
-                make_trust (),
+                Trust.literal_trust (),
                 ArrT (ArrayAT { elem_t; tuple_view = Some ([], (0, 0)); react_dro = None })
               )
           ),
@@ -5386,7 +5379,6 @@ module Make
 
   and jsx_title cx opening_element children closing_element locs =
     let open Ast.JSX in
-    let make_trust = Context.trust_constructor cx in
     let (loc_element, _, _) = locs in
     let (loc, { Opening.name; targs; attributes; self_closing }) = opening_element in
     let targs =
@@ -5463,7 +5455,7 @@ module Make
                 | Options.Jsx_react -> SingletonStrT (OrdinaryName name)
                 | Options.Jsx_pragma _ -> StrT (Literal (None, OrdinaryName name))
               in
-              DefT (mk_reason (RIdentifier (OrdinaryName name)) loc, make_trust (), strt)
+              DefT (mk_reason (RIdentifier (OrdinaryName name)) loc, Trust.literal_trust (), strt)
             end
           in
           let (o, attributes', unresolved_params, children) =
@@ -5877,7 +5869,6 @@ module Make
 
   and jsx_body cx (loc, child) =
     let open Ast.JSX in
-    let make_trust = Context.trust_constructor cx in
     match child with
     | Element e ->
       let (t, e) = jsx cx loc e in
@@ -5907,7 +5898,7 @@ module Make
       (Some (UnresolvedSpreadArg t), (loc, SpreadChild { SpreadChild.expression = e; comments }))
     | Text { Text.value; raw } ->
       let unresolved_param_opt =
-        match jsx_trim_text make_trust loc value with
+        match jsx_trim_text loc value with
         | Some c ->
           let reason = mk_reason RJSXChild loc in
           Some (UnresolvedArg (mk_tuple_element reason c, None))
@@ -5915,13 +5906,13 @@ module Make
       in
       (unresolved_param_opt, (loc, Text { Text.value; raw }))
 
-  and jsx_trim_text make_trust loc value =
+  and jsx_trim_text loc value =
     match Utils_jsx.trim_jsx_text (ALoc.to_loc_exn loc) value with
     | Some (loc, trimmed) ->
       Some
         (DefT
            ( mk_reason RJSXText (loc |> ALoc.of_loc),
-             make_trust (),
+             Trust.literal_trust (),
              StrT (Type.Literal (None, OrdinaryName trimmed))
            )
         )
@@ -6487,13 +6478,13 @@ module Make
               let t = string_literal cx loc lit in
               Flow.flow_t cx (t, annot_t)
             | ((loc, Ast.Expression.BooleanLiteral lit), Inferred _) ->
-              let t = boolean_literal cx loc lit in
+              let t = boolean_literal loc lit in
               Flow.flow_t cx (t, annot_t)
             | ((loc, Ast.Expression.NumberLiteral lit), Inferred _) ->
-              let t = number_literal cx loc lit in
+              let t = number_literal loc lit in
               Flow.flow_t cx (t, annot_t)
             | ((loc, Ast.Expression.BigIntLiteral lit), Inferred _) ->
-              let t = bigint_literal cx loc lit in
+              let t = bigint_literal loc lit in
               Flow.flow_t cx (t, annot_t)
             | ((loc, Ast.Expression.RegExpLiteral _), Inferred _) ->
               let t = regexp_literal cx loc in

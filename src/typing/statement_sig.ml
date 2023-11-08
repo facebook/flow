@@ -274,13 +274,13 @@ module type S = sig
 
   val string_literal : Context.t -> ALoc.t -> ALoc.t Ast.StringLiteral.t -> Type.t
 
-  val boolean_literal : Context.t -> ALoc.t -> ALoc.t Ast.BooleanLiteral.t -> Type.t
+  val boolean_literal : ALoc.t -> ALoc.t Ast.BooleanLiteral.t -> Type.t
 
-  val null_literal : Context.t -> ALoc.t -> Type.t
+  val null_literal : ALoc.t -> Type.t
 
-  val number_literal : Context.t -> ALoc.t -> ALoc.t Ast.NumberLiteral.t -> Type.t
+  val number_literal : ALoc.t -> ALoc.t Ast.NumberLiteral.t -> Type.t
 
-  val bigint_literal : Context.t -> ALoc.t -> ALoc.t Ast.BigIntLiteral.t -> Type.t
+  val bigint_literal : ALoc.t -> ALoc.t Ast.BigIntLiteral.t -> Type.t
 
   val regexp_literal : Context.t -> ALoc.t -> Type.t
 

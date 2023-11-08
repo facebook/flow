@@ -101,7 +101,6 @@ type metadata = {
   strict_es6_import_export_excludes: string list;
   strip_root: bool;
   suppress_types: SSet.t;
-  trust_mode: Options.trust_mode;
   use_mixed_in_catch_variables: bool;
 }
 
@@ -147,10 +146,6 @@ val make :
 val metadata_of_options : Options.t -> metadata
 
 val docblock_overrides : Docblock.t -> metadata -> metadata
-
-val trust_constructor : t -> unit -> Trust.trust_rep
-
-val cx_with_trust : t -> (unit -> Trust.trust_rep) -> t
 
 val sig_cx : t -> sig_t
 
@@ -254,12 +249,6 @@ val should_munge_underscores : t -> bool
 val should_strip_root : t -> bool
 
 val suppress_types : t -> SSet.t
-
-val trust_mode : t -> Options.trust_mode
-
-val trust_tracking : t -> bool
-
-val trust_errors : t -> bool
 
 val type_graph : t -> Graph_explorer.graph
 

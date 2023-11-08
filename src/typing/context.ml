@@ -64,7 +64,6 @@ type metadata = {
   strict_es6_import_export_excludes: string list;
   strip_root: bool;
   suppress_types: SSet.t;
-  trust_mode: Options.trust_mode;
   use_mixed_in_catch_variables: bool;
 }
 
@@ -227,7 +226,6 @@ type t = {
   metadata: metadata;
   resolve_require: resolve_require;
   module_info: Module_info.t;
-  trust_constructor: unit -> Trust.trust_rep;
   hint_map_arglist_cache: (ALoc.t * Type.call_arg) list ALocMap.t ref;
   hint_map_jsx_cache:
     ( Reason.t * string * ALoc.t list * ALoc.t,
@@ -289,7 +287,6 @@ let metadata_of_options options =
     strict_es6_import_export_excludes = Options.strict_es6_import_export_excludes options;
     strip_root = Options.should_strip_root options;
     suppress_types = Options.suppress_types options;
-    trust_mode = Options.trust_mode options;
     use_mixed_in_catch_variables = Options.use_mixed_in_catch_variables options;
   }
 
@@ -400,7 +397,6 @@ let make ccx metadata file aloc_table resolve_require mk_builtins phase =
       metadata;
       resolve_require;
       module_info = Module_info.empty_cjs_module ();
-      trust_constructor = Trust.literal_trust;
       hint_map_arglist_cache = ref ALocMap.empty;
       hint_map_jsx_cache = Hashtbl.create 0;
       hint_eval_cache = IMap.empty;
@@ -442,10 +438,6 @@ let module_kind cx =
 let current_phase cx = cx.phase
 
 let all_unresolved cx = cx.ccx.all_unresolved
-
-let trust_constructor cx = cx.trust_constructor
-
-let cx_with_trust cx trust = { cx with trust_constructor = trust }
 
 let metadata cx = cx.metadata
 
@@ -597,8 +589,6 @@ let type_graph cx = cx.ccx.type_graph
 
 let matching_props cx = cx.ccx.matching_props
 
-let trust_mode cx = cx.metadata.trust_mode
-
 let use_mixed_in_catch_variables cx = cx.metadata.use_mixed_in_catch_variables
 
 let verbose cx = cx.metadata.verbose
@@ -632,20 +622,6 @@ let hint_map_jsx_cache cx = cx.hint_map_jsx_cache
 let hint_eval_cache_find_opt cx id = IMap.find_opt id cx.hint_eval_cache
 
 let automatic_require_default cx = cx.metadata.automatic_require_default
-
-let trust_tracking cx =
-  match cx.metadata.trust_mode with
-  | Options.CheckTrust
-  | Options.SilentTrust ->
-    true
-  | Options.NoTrust -> false
-
-let trust_errors cx =
-  match cx.metadata.trust_mode with
-  | Options.CheckTrust -> true
-  | Options.SilentTrust
-  | Options.NoTrust ->
-    false
 
 let pid_prefix =
   let pid = lazy (Sys_utils.get_pretty_pid ()) in

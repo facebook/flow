@@ -220,7 +220,6 @@ struct
 
   let functiontype cx ~arrow func_loc this_default x =
     let { T.reason; kind; tparams; fparams; return_t; statics; _ } = x in
-    let make_trust = Context.trust_constructor cx in
     let this_type = F.this fparams |> Base.Option.value ~default:this_default in
     let return_t =
       match return_t with
@@ -250,7 +249,7 @@ struct
       | Some t -> t
       | None -> Obj_type.mk_with_proto cx reason (Type.FunProtoT reason) ~obj_kind:Type.Inexact
     in
-    let t = DefT (reason, make_trust (), FunT (statics_t, funtype)) in
+    let t = DefT (reason, Trust.literal_trust (), FunT (statics_t, funtype)) in
     if not arrow then Base.Option.iter func_loc ~f:(Type_env.bind_function_this cx this_type);
     poly_type_of_tparams (Type.Poly.generate_id ()) tparams t
 

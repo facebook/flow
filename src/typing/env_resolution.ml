@@ -77,10 +77,10 @@ let rec synthesizable_expression cx ?cond exp =
   match exp with
   | (loc, Identifier (_, name)) -> Statement.identifier cx name loc
   | (loc, StringLiteral lit) -> Statement.string_literal cx loc lit
-  | (loc, BooleanLiteral lit) -> Statement.boolean_literal cx loc lit
-  | (loc, NullLiteral _) -> Statement.null_literal cx loc
-  | (loc, NumberLiteral lit) -> Statement.number_literal cx loc lit
-  | (loc, BigIntLiteral lit) -> Statement.bigint_literal cx loc lit
+  | (loc, BooleanLiteral lit) -> Statement.boolean_literal loc lit
+  | (loc, NullLiteral _) -> Statement.null_literal loc
+  | (loc, NumberLiteral lit) -> Statement.number_literal loc lit
+  | (loc, BigIntLiteral lit) -> Statement.bigint_literal loc lit
   | (loc, RegExpLiteral _) -> Statement.regexp_literal cx loc
   | (loc, ModuleRefLiteral lit) ->
     let (t, _lit) = Statement.module_ref_literal cx loc lit in
