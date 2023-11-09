@@ -134,12 +134,15 @@ let relative_interface_mref_of_possibly_platform_specific_file ~options file =
   else
     None
 
-let platform_specific_extension_opt ~options filename =
-  Base.List.find options.multi_platform_extensions ~f:(fun platform_ext ->
+let platform_specific_extension_and_index_opt ~options filename =
+  Base.List.findi options.multi_platform_extensions ~f:(fun _ platform_ext ->
       Base.List.exists options.module_file_exts ~f:(fun module_ext ->
           Base.String.is_suffix filename ~suffix:(platform_ext ^ module_ext)
       )
   )
+
+let platform_specific_extension_opt ~options filename =
+  platform_specific_extension_and_index_opt ~options filename |> Base.Option.map ~f:snd
 
 let chop_platform_suffix ~options file =
   Base.List.find_map options.multi_platform_extensions ~f:(fun platform_ext ->

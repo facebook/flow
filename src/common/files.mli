@@ -63,6 +63,8 @@ val platform_specific_implementation_mrefs_of_possibly_interface_file :
 val relative_interface_mref_of_possibly_platform_specific_file :
   options:options -> File_key.t -> string option
 
+val platform_specific_extension_and_index_opt : options:options -> string -> (int * string) option
+
 val platform_specific_extension_opt : options:options -> string -> string option
 
 val chop_platform_suffix : options:options -> File_key.t -> File_key.t
