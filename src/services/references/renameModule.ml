@@ -71,6 +71,9 @@ let get_rename_edits ~reader ~options ~old_haste_name ~new_haste_name old_file_k
     {
       File_sig.enable_enums = Options.enums options;
       enable_relay_integration = Options.enable_relay_integration options;
+      (* This field is only necessary for implicit imports for multiplatform purposes.
+       * Renaming will never edit these implicit imports. *)
+      explicit_available_platforms = None;
       file_options = Options.file_options options;
       haste_module_ref_prefix = Options.haste_module_ref_prefix options;
       haste_module_ref_prefix_LEGACY_INTEROP =

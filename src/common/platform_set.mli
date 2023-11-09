@@ -18,3 +18,6 @@ val is_subset : t -> t -> bool
 val no_overlap : t -> t -> bool
 
 val to_platform_string_set : file_options:Files.options -> t -> SSet.t
+
+val platform_specific_implementation_mrefs_of_possibly_interface_file :
+  file_options:Files.options -> platform_set:t option -> file:File_key.t -> string list option

@@ -94,26 +94,6 @@ let is_prefix prefix =
   in
   (fun path -> path = prefix || String.starts_with ~prefix:prefix_with_sep path)
 
-let platform_specific_implementation_mrefs_of_possibly_interface_file ~options file =
-  if options.multi_platform && has_flow_ext file then
-    let file = chop_flow_ext file in
-    Base.List.find_map options.module_file_exts ~f:(fun module_file_ext ->
-        if File_key.check_suffix file module_file_ext then
-          let base =
-            File_key.chop_suffix file module_file_ext |> File_key.to_string |> Filename.basename
-          in
-          let implementation_mrefs =
-            Base.List.map options.multi_platform_extensions ~f:(fun platform_ext ->
-                "./" ^ base ^ platform_ext
-            )
-          in
-          Some implementation_mrefs
-        else
-          None
-    )
-  else
-    None
-
 let relative_interface_mref_of_possibly_platform_specific_file ~options file =
   if options.multi_platform then
     Base.List.find_map options.module_file_exts ~f:(fun module_filt_ext ->

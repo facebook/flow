@@ -8,6 +8,7 @@
 type options = {
   enable_enums: bool;
   enable_relay_integration: bool;
+  explicit_available_platforms: string list option;
   file_options: Files.options;
   haste_module_ref_prefix: string option;
   haste_module_ref_prefix_LEGACY_INTEROP: string option;

@@ -57,9 +57,6 @@ val chop_flow_ext : File_key.t -> File_key.t
 
 val eponymous_module : File_key.t -> Modulename.t
 
-val platform_specific_implementation_mrefs_of_possibly_interface_file :
-  options:options -> File_key.t -> string list option
-
 val relative_interface_mref_of_possibly_platform_specific_file :
   options:options -> File_key.t -> string option
 

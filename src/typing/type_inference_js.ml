@@ -423,9 +423,10 @@ let check_multiplatform_conformance cx filename prog_aloc =
       Flow_js.flow cx (self_t, UseT (use_op, interface_t)))
   | None ->
     (match
-       Files.platform_specific_implementation_mrefs_of_possibly_interface_file
-         ~options:file_options
-         filename
+       Platform_set.platform_specific_implementation_mrefs_of_possibly_interface_file
+         ~file_options
+         ~platform_set:(Context.available_platforms cx)
+         ~file:filename
      with
     | None -> ()
     | Some impl_mrefs ->

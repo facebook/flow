@@ -15,6 +15,7 @@ module Loc = Loc_sig.LocS
 type options = {
   enable_enums: bool;
   enable_relay_integration: bool;
+  explicit_available_platforms: string list option;
   file_options: Files.options;
   haste_module_ref_prefix: string option;
   haste_module_ref_prefix_LEGACY_INTEROP: string option;
@@ -79,6 +80,7 @@ let default_opts =
   {
     enable_relay_integration = false;
     enable_enums = false;
+    explicit_available_platforms = None;
     file_options = Files.default_options;
     haste_module_ref_prefix = None;
     haste_module_ref_prefix_LEGACY_INTEROP = None;
@@ -239,9 +241,15 @@ class requires_exports_calculator ~file_key ~ast ~opts =
 
     method add_multiplatform_synthetic_imports =
       match
-        Files.platform_specific_implementation_mrefs_of_possibly_interface_file
-          ~options:opts.file_options
-          file_key
+        Platform_set.platform_specific_implementation_mrefs_of_possibly_interface_file
+          ~file_options:opts.file_options
+          ~platform_set:
+            (Platform_set.available_platforms
+               ~file_options:opts.file_options
+               ~filename:(File_key.to_string file_key)
+               ~explicit_available_platforms:opts.explicit_available_platforms
+            )
+          ~file:file_key
       with
       | Some sources ->
         Base.List.iter sources ~f:(fun source -> this#add_require (ImportSynthetic { source }))

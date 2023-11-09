@@ -131,7 +131,7 @@ let types_checked ~force_types options docblock =
     | Some OptOut -> false
     | Some (OptIn | OptInStrict | OptInStrictLocal) -> true)
 
-let parse_file_sig options file ast =
+let parse_file_sig options file docblock ast =
   let enable_enums = Options.enums options in
 
   let haste_module_ref_prefix = Options.haste_module_ref_prefix options in
@@ -158,6 +158,7 @@ let parse_file_sig options file ast =
     {
       File_sig.enable_enums;
       enable_relay_integration;
+      explicit_available_platforms = Docblock.supportsPlatform docblock;
       file_options;
       haste_module_ref_prefix;
       haste_module_ref_prefix_LEGACY_INTEROP;
@@ -194,7 +195,7 @@ let do_parse ~options ~docblock ?force_types ?force_use_strict ?(locs_to_dirtify
         Parse_skip Skip_non_flow_file
       else
         let (ast, parse_errors) = parse_source_file ~options ~force_use_strict content file in
-        let (file_sig, tolerable_errors) = parse_file_sig options file ast in
+        let (file_sig, tolerable_errors) = parse_file_sig options file docblock ast in
         let requires = File_sig.require_set file_sig |> SSet.elements |> Array.of_list in
         (*If you want efficiency, can compute globals along with file_sig in the above function since scope is computed when computing file_sig*)
         let (_, (_, _, globals)) =
