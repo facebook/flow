@@ -70,10 +70,10 @@ let pack_builtins (tbls, (globals, modules)) =
 
 (* Modules are parsed and packed separately, then merged component wise
    according to the dependency DAG. *)
-let parse_module ~strict source opts ast =
+let parse_module ~strict ~platform_availability_set source opts ast =
   let open Parse in
   let (_, { Flow_ast.Program.statements = stmts; _ }) = ast in
-  let scope = Scope.create_module ~strict in
+  let scope = Scope.create_module ~strict ~platform_availability_set in
   let tbls = create_tables () in
   let file_loc = push_loc tbls { Loc.none with Loc.source } in
   List.iter (statement opts scope tbls) stmts;
@@ -132,10 +132,10 @@ let pack ~locs_to_dirtify source (tbls, file_loc, exports) =
     }
   )
 
-let parse_and_pack_module ~strict opts source ast =
+let parse_and_pack_module ~strict ~platform_availability_set opts source ast =
   pack
     ~locs_to_dirtify:opts.Type_sig_options.locs_to_dirtify
     source
-    (parse_module ~strict source opts ast)
+    (parse_module ~strict ~platform_availability_set source opts ast)
 
 let parse_and_pack_builtins opts ordered_asts = pack_builtins (parse_libs opts ordered_asts)

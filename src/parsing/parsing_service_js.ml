@@ -169,7 +169,13 @@ let parse_file_sig options file ast =
 let parse_type_sig options docblock locs_to_dirtify file ast =
   let sig_opts = Type_sig_options.of_options options docblock locs_to_dirtify file in
   let strict = Docblock.is_strict docblock in
-  Type_sig_utils.parse_and_pack_module ~strict sig_opts (Some file) ast
+  let platform_availability_set =
+    Platform_set.available_platforms
+      ~file_options:(Options.file_options options)
+      ~filename:(File_key.to_string file)
+      ~explicit_available_platforms:(Docblock.supportsPlatform docblock)
+  in
+  Type_sig_utils.parse_and_pack_module ~strict ~platform_availability_set sig_opts (Some file) ast
 
 let do_parse ~options ~docblock ?force_types ?force_use_strict ?(locs_to_dirtify = []) content file
     =

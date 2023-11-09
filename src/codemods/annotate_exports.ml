@@ -81,7 +81,13 @@ module SignatureVerification = struct
     in
     let (sig_errors, locs, _) =
       let strict = Docblock.is_strict docblock in
-      Type_sig_utils.parse_and_pack_module ~strict sig_opts None ast
+      let platform_availability_set =
+        Platform_set.available_platforms
+          ~file_options:(Options.file_options options)
+          ~filename:(File_key.to_string file)
+          ~explicit_available_platforms:(Docblock.supportsPlatform docblock)
+      in
+      Type_sig_utils.parse_and_pack_module ~strict ~platform_availability_set sig_opts None ast
     in
     List.fold_left
       (fun acc err ->

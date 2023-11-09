@@ -18,6 +18,8 @@ let metadata =
     munge_underscores = false;
     strict = false;
     strict_local = false;
+    available_platforms = None;
+    has_explicit_supports_platform = false;
     (* Provide some useful error traces for debugging when some tests fail. *)
     verbose =
       Some Verbose.{ indent = 2; depth = 10; enabled_during_flowlib = false; focused_files = None };

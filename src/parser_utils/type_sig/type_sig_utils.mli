@@ -31,6 +31,7 @@ val parse_and_pack_builtins :
 
 val parse_and_pack_module :
   strict:bool ->
+  platform_availability_set:Platform_set.t option ->
   Type_sig_options.t ->
   File_key.t option ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->

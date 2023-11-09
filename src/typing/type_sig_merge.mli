@@ -14,6 +14,7 @@ type exports =
       exports: Type.t Lazy.t option;
       type_stars: (ALoc.t * Module_refs.index) list;
       strict: bool;
+      platform_availability_set: Platform_set.t option;
     }
   | ESExports of {
       type_exports: Type.named_symbol Lazy.t SMap.t;
@@ -21,6 +22,7 @@ type exports =
       type_stars: (ALoc.t * Module_refs.index) list;
       stars: (ALoc.t * Module_refs.index) list;
       strict: bool;
+      platform_availability_set: Platform_set.t option;
     }
 
 type file = {

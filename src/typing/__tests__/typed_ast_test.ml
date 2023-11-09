@@ -17,6 +17,8 @@ let metadata =
     munge_underscores = false;
     strict = false;
     strict_local = false;
+    available_platforms = None;
+    has_explicit_supports_platform = false;
     verbose = None;
     slow_to_check_logging = Slow_to_check_logging.default;
     (* global *)

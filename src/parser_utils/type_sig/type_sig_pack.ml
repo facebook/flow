@@ -166,6 +166,7 @@ type 'loc cjs_module_info =
       type_export_keys: string array;
       type_stars: ('loc * Module_refs.index) list;
       strict: bool;
+      platform_availability_set: Platform_set.t option;
     }
 [@@deriving map, show { with_path = false }]
 
@@ -176,6 +177,7 @@ type 'loc es_module_info =
       export_keys: string array;
       stars: ('loc * Module_refs.index) list;
       strict: bool;
+      platform_availability_set: Platform_set.t option;
     }
 [@@deriving map, show { with_path = false }]
 
@@ -414,16 +416,20 @@ and pack_pattern = function
     let def = Patterns.index_exn def in
     ArrRestP { loc; i; def }
 
-and pack_exports cx file_loc module_name (P.Exports { kind; types; type_stars; strict }) =
+and pack_exports
+    cx
+    file_loc
+    module_name
+    (P.Exports { kind; types; type_stars; strict; platform_availability_set }) =
   let (type_export_keys, type_exports) = pack_smap pack_type_export types in
   let type_stars = List.map pack_star type_stars in
   match kind with
   | P.UnknownModule ->
-    let info = CJSModuleInfo { type_export_keys; type_stars; strict } in
+    let info = CJSModuleInfo { type_export_keys; type_stars; strict; platform_availability_set } in
     CJSModule { type_exports; exports = None; info }
   | P.CJSModule t ->
     let exports = Some (pack_parsed cx t) in
-    let info = CJSModuleInfo { type_export_keys; type_stars; strict } in
+    let info = CJSModuleInfo { type_export_keys; type_stars; strict; platform_availability_set } in
     CJSModule { type_exports; exports; info }
   | P.CJSModuleProps props ->
     let file_loc = pack_loc file_loc in
@@ -436,7 +442,7 @@ and pack_exports cx file_loc module_name (P.Exports { kind; types; type_stars; s
         props
     in
     let exports = Some (Value (ObjLit { loc = file_loc; frozen = true; proto = None; props })) in
-    let info = CJSModuleInfo { type_export_keys; type_stars; strict } in
+    let info = CJSModuleInfo { type_export_keys; type_stars; strict; platform_availability_set } in
     CJSModule { type_exports; exports; info }
   | P.CJSDeclareModule props ->
     let file_loc = pack_loc file_loc in
@@ -451,12 +457,15 @@ and pack_exports cx file_loc module_name (P.Exports { kind; types; type_stars; s
     let exports =
       Some (Value (DeclareModuleImplicitlyExportedObject { loc = file_loc; module_name; props }))
     in
-    let info = CJSModuleInfo { type_export_keys; type_stars; strict } in
+    let info = CJSModuleInfo { type_export_keys; type_stars; strict; platform_availability_set } in
     CJSModule { type_exports; exports; info }
   | P.ESModule { names; stars } ->
     let (export_keys, exports) = pack_smap (pack_export cx) names in
     let stars = List.map pack_star stars in
-    let info = ESModuleInfo { type_export_keys; type_stars; export_keys; stars; strict } in
+    let info =
+      ESModuleInfo
+        { type_export_keys; type_stars; export_keys; stars; strict; platform_availability_set }
+    in
     ESModule { type_exports; exports; info }
 
 and pack_export cx = function

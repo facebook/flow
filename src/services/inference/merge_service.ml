@@ -72,7 +72,9 @@ let sig_hash ~check_dirty_set ~root =
     let cjs_module file_key buf pos =
       let filename = Fun.const (hash_file_key file_key) in
       let info_pos = Bin.cjs_module_info buf pos in
-      let (P.CJSModuleInfo { type_export_keys; type_stars = _; strict = _ }) =
+      let (P.CJSModuleInfo
+            { type_export_keys; type_stars = _; strict = _; platform_availability_set = _ }
+            ) =
         Bin.read_hashed Bin.read_cjs_info buf info_pos
       in
       let type_exports = Bin.cjs_module_type_exports buf pos |> Bin.read_tbl read_hash buf in
@@ -87,8 +89,16 @@ let sig_hash ~check_dirty_set ~root =
     let es_module file_key buf pos =
       let filename = Fun.const (hash_file_key file_key) in
       let info_pos = Bin.es_module_info buf pos in
-      let (P.ESModuleInfo { type_export_keys; export_keys; type_stars = _; stars = _; strict = _ })
-          =
+      let (P.ESModuleInfo
+            {
+              type_export_keys;
+              export_keys;
+              type_stars = _;
+              stars = _;
+              strict = _;
+              platform_availability_set = _;
+            }
+            ) =
         Bin.read_hashed Bin.read_es_info buf info_pos
       in
       let type_exports = Bin.es_module_type_exports buf pos |> Bin.read_tbl read_hash buf in
@@ -146,7 +156,9 @@ let sig_hash ~check_dirty_set ~root =
     let cjs_module buf pos =
       let info_pos = Bin.cjs_module_info buf pos in
       let init_hash = Bin.read_hashed Bin.hash_serialized buf info_pos in
-      let (P.CJSModuleInfo { type_export_keys; type_stars; strict = _ }) =
+      let (P.CJSModuleInfo
+            { type_export_keys; type_stars; strict = _; platform_availability_set = _ }
+            ) =
         Bin.read_hashed Bin.read_cjs_info buf info_pos
       in
       let type_exports = Bin.cjs_module_type_exports buf pos |> Bin.read_tbl type_export buf in
@@ -172,7 +184,16 @@ let sig_hash ~check_dirty_set ~root =
     let es_module buf pos =
       let info_pos = Bin.es_module_info buf pos in
       let init_hash = Bin.read_hashed Bin.hash_serialized buf info_pos in
-      let (P.ESModuleInfo { type_export_keys; export_keys; type_stars; stars; strict = _ }) =
+      let (P.ESModuleInfo
+            {
+              type_export_keys;
+              export_keys;
+              type_stars;
+              stars;
+              strict = _;
+              platform_availability_set = _;
+            }
+            ) =
         Bin.read_hashed Bin.read_es_info buf info_pos
       in
       let type_exports = Bin.es_module_type_exports buf pos |> Bin.read_tbl type_export buf in
@@ -361,7 +382,7 @@ let merge_component ~mutator ~options ~for_find_all_refs ~reader component =
       Nel.fold_left
         (fun acc (file, _, parse) ->
           let docblock = Parsing_heaps.read_docblock_unsafe file parse in
-          let metadata = Context.docblock_overrides docblock metadata in
+          let metadata = Context.docblock_overrides docblock file metadata in
           let lint_severities = Merge_js.get_lint_severities metadata strict_mode lint_severities in
           let (_, { Flow_ast.Program.all_comments = comments; _ }) =
             Parsing_heaps.read_ast_unsafe file parse

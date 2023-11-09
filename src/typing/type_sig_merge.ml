@@ -25,6 +25,7 @@ type exports =
       exports: Type.t Lazy.t option;
       type_stars: (ALoc.t * Module_refs.index) list;
       strict: bool;
+      platform_availability_set: Platform_set.t option;
     }
   | ESExports of {
       type_exports: Type.named_symbol Lazy.t SMap.t;
@@ -32,6 +33,7 @@ type exports =
       type_stars: (ALoc.t * Module_refs.index) list;
       stars: (ALoc.t * Module_refs.index) list;
       strict: bool;
+      platform_availability_set: Platform_set.t option;
     }
 
 type file = {
@@ -419,7 +421,7 @@ let merge_exports =
     (fun file reason stars acc -> loop file reason acc stars)
   in
   fun file reason -> function
-    | CJSExports { type_exports; exports; type_stars; strict } ->
+    | CJSExports { type_exports; exports; type_stars; strict; platform_availability_set = _ } ->
       let exports =
         match exports with
         | Some (lazy t) -> t
@@ -430,7 +432,8 @@ let merge_exports =
       mk_commonjs_module_t file.cx reason strict exports
       |> ConsGen.export_named file.cx reason Type.ExportType type_exports
       |> copy_star_exports file reason ([], type_stars)
-    | ESExports { type_exports; exports; stars; type_stars; strict } ->
+    | ESExports { type_exports; exports; stars; type_stars; strict; platform_availability_set = _ }
+      ->
       let exports = SMap.map Lazy.force exports |> NameUtils.namemap_of_smap in
       let type_exports = SMap.map Lazy.force type_exports |> NameUtils.namemap_of_smap in
       let stars = List.map (merge_star file) stars in
@@ -2151,7 +2154,7 @@ let merge_builtins
         )
     in
     let cjs_module type_exports exports info =
-      let (Pack.CJSModuleInfo { type_export_keys; type_stars; strict }) =
+      let (Pack.CJSModuleInfo { type_export_keys; type_stars; strict; platform_availability_set }) =
         Pack.map_cjs_module_info aloc info
       in
       let type_exports = Array.map type_export type_exports in
@@ -2160,10 +2163,12 @@ let merge_builtins
         let f acc name export = SMap.add name export acc in
         Base.Array.fold2_exn ~init:SMap.empty ~f type_export_keys type_exports
       in
-      CJSExports { type_exports; exports; type_stars; strict }
+      CJSExports { type_exports; exports; type_stars; strict; platform_availability_set }
     in
     let es_module type_exports exports info =
-      let (Pack.ESModuleInfo { type_export_keys; export_keys; type_stars; stars; strict }) =
+      let (Pack.ESModuleInfo
+            { type_export_keys; export_keys; type_stars; stars; strict; platform_availability_set }
+            ) =
         Pack.map_es_module_info aloc info
       in
       let type_exports = Array.map type_export type_exports in
@@ -2176,7 +2181,7 @@ let merge_builtins
         let f acc name export = SMap.add name export acc in
         Base.Array.fold2_exn ~init:SMap.empty ~f export_keys exports
       in
-      ESExports { type_exports; exports; type_stars; stars; strict }
+      ESExports { type_exports; exports; type_stars; stars; strict; platform_availability_set }
     in
     let resolved =
       lazy

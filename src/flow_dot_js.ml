@@ -109,6 +109,8 @@ let stub_metadata ~root ~checked =
     munge_underscores = false;
     strict = false;
     strict_local = false;
+    available_platforms = None;
+    has_explicit_supports_platform = false;
     verbose = None;
     slow_to_check_logging = Slow_to_check_logging.default;
     (* global *)
@@ -226,7 +228,7 @@ let infer_and_merge ~root filename js_config_object docblock ast file_sig =
   let metadata =
     stub_metadata ~root ~checked:true
     |> merge_custom_check_config js_config_object
-    |> Context.docblock_overrides docblock
+    |> Context.docblock_overrides docblock filename
   in
   (* flow.js does not use abstract locations, so this is not used *)
   let aloc_table = lazy (ALoc.empty_table filename) in

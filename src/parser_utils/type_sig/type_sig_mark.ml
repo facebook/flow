@@ -218,7 +218,10 @@ let mark_star (loc, mref) =
   mark_loc ~visit_loc:ignore loc;
   mark_mref mref
 
-let mark_exports ~locs_to_dirtify file_loc (P.Exports { kind; types; type_stars; strict = _ }) =
+let mark_exports
+    ~locs_to_dirtify
+    file_loc
+    (P.Exports { kind; types; type_stars; strict = _; platform_availability_set = _ }) =
   SMap.iter (fun _ t -> mark_export_type ~locs_to_dirtify t) types;
   List.iter mark_star type_stars;
   match kind with

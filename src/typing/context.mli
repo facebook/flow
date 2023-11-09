@@ -65,6 +65,8 @@ type metadata = {
   munge_underscores: bool;
   strict: bool;
   strict_local: bool;
+  available_platforms: Platform_set.t option;
+  has_explicit_supports_platform: bool;
   verbose: Verbose.t option;
   slow_to_check_logging: Slow_to_check_logging.t;
   (* global *)
@@ -145,7 +147,7 @@ val make :
 
 val metadata_of_options : Options.t -> metadata
 
-val docblock_overrides : Docblock.t -> metadata -> metadata
+val docblock_overrides : Docblock.t -> File_key.t -> metadata -> metadata
 
 val sig_cx : t -> sig_t
 
@@ -215,6 +217,10 @@ val is_verbose : t -> bool
 val is_strict : t -> bool
 
 val is_strict_local : t -> bool
+
+val available_platforms : t -> Platform_set.t option
+
+val has_explicit_supports_platform : t -> bool
 
 val include_suppressions : t -> bool
 

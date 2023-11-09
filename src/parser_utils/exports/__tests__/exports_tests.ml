@@ -73,7 +73,9 @@ let print_index exports =
 
 let print_module contents_indent =
   let contents = dedent_trim contents_indent in
-  let (_, _, packed_sig) = parse_and_pack_module ~strict:true sig_opts contents in
+  let (_, _, packed_sig) =
+    parse_and_pack_module ~strict:true ~platform_availability_set:None sig_opts contents
+  in
   let exports = Exports.of_module packed_sig in
   print_index exports
 

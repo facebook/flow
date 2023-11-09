@@ -109,7 +109,7 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
     let resolved_requires = ref SMap.empty in
     let cx =
       let docblock = Parsing_heaps.read_docblock_unsafe file_key parse in
-      let metadata = Context.docblock_overrides docblock base_metadata in
+      let metadata = Context.docblock_overrides docblock file_key base_metadata in
       let resolve_require mref = Lazy.force (SMap.find mref !resolved_requires) in
       Context.make ccx metadata file_key aloc_table resolve_require mk_builtins Context.Merging
     in
@@ -150,7 +150,8 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
           )
       in
       let cjs_module buf pos =
-        let (Pack.CJSModuleInfo { type_export_keys; type_stars; strict }) =
+        let (Pack.CJSModuleInfo { type_export_keys; type_stars; strict; platform_availability_set })
+            =
           Bin.cjs_module_info buf pos
           |> Bin.read_hashed Bin.read_cjs_info buf
           |> Pack.map_cjs_module_info aloc
@@ -161,10 +162,20 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
           let f acc name export = SMap.add name export acc in
           Base.Array.fold2_exn ~init:SMap.empty ~f type_export_keys type_exports
         in
-        Type_sig_merge.CJSExports { type_exports; exports; type_stars; strict }
+        Type_sig_merge.CJSExports
+          { type_exports; exports; type_stars; strict; platform_availability_set }
       in
       let es_module buf pos =
-        let (Pack.ESModuleInfo { type_export_keys; export_keys; type_stars; stars; strict }) =
+        let (Pack.ESModuleInfo
+              {
+                type_export_keys;
+                export_keys;
+                type_stars;
+                stars;
+                strict;
+                platform_availability_set;
+              }
+              ) =
           Bin.es_module_info buf pos
           |> Bin.read_hashed Bin.read_es_info buf
           |> Pack.map_es_module_info aloc
@@ -179,7 +190,8 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
           let f acc name export = SMap.add name export acc in
           Base.Array.fold2_exn ~init:SMap.empty ~f export_keys exports
         in
-        Type_sig_merge.ESExports { type_exports; exports; type_stars; stars; strict }
+        Type_sig_merge.ESExports
+          { type_exports; exports; type_stars; stars; strict; platform_availability_set }
       in
       let resolved =
         lazy
@@ -270,7 +282,7 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
     let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in
     let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
     let ccx = Context.make_ccx () in
-    let metadata = Context.docblock_overrides docblock base_metadata in
+    let metadata = Context.docblock_overrides docblock file_key base_metadata in
     let resolved_requires = ref SMap.empty in
     let resolve_require mref = SMap.find mref !resolved_requires in
     let cx =

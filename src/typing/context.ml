@@ -28,6 +28,8 @@ type metadata = {
   munge_underscores: bool;
   strict: bool;
   strict_local: bool;
+  available_platforms: Platform_set.t option;
+  has_explicit_supports_platform: bool;
   verbose: Verbose.t option;
   slow_to_check_logging: Slow_to_check_logging.t;
   (* global *)
@@ -250,6 +252,8 @@ let metadata_of_options options =
     munge_underscores = Options.should_munge_underscores options;
     strict = false;
     strict_local = false;
+    available_platforms = None;
+    has_explicit_supports_platform = false;
     verbose = Options.verbose options;
     slow_to_check_logging = Options.slow_to_check_logging options;
     (* global *)
@@ -290,7 +294,7 @@ let metadata_of_options options =
     use_mixed_in_catch_variables = Options.use_mixed_in_catch_variables options;
   }
 
-let docblock_overrides docblock_info metadata =
+let docblock_overrides docblock_info file_key metadata =
   let metadata =
     let jsx =
       match Docblock.jsx docblock_info with
@@ -328,6 +332,21 @@ let docblock_overrides docblock_info metadata =
       { metadata with munge_underscores = false }
     else
       metadata
+  in
+  let metadata =
+    let file_options = metadata.file_options in
+    let explicit_available_platforms = Docblock.supportsPlatform docblock_info in
+    let available_platforms =
+      Platform_set.available_platforms
+        ~file_options
+        ~filename:(File_key.to_string file_key)
+        ~explicit_available_platforms
+    in
+    {
+      metadata with
+      available_platforms;
+      has_explicit_supports_platform = Option.is_some explicit_available_platforms;
+    }
   in
   metadata
 
@@ -533,6 +552,10 @@ let is_verbose cx =
 let is_strict cx = Base.Option.is_some cx.declare_module_ref || cx.metadata.strict
 
 let is_strict_local cx = cx.metadata.strict_local
+
+let available_platforms cx = cx.metadata.available_platforms
+
+let has_explicit_supports_platform cx = cx.metadata.has_explicit_supports_platform
 
 let include_suppressions cx = cx.metadata.include_suppressions
 

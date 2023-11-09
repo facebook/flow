@@ -125,6 +125,7 @@ and 'loc exports =
       mutable types: 'loc export_type smap;
       mutable type_stars: ('loc loc_node * module_ref_node) list;
       strict: bool;
+      platform_availability_set: Platform_set.t option;
     }
 
 (* The Global scope constructor is used only when parsing a library definition.
@@ -388,7 +389,15 @@ let extract_number_literal =
  * this logic.
  *)
 module Exports = struct
-  let create ~strict = Exports { kind = UnknownModule; types = SMap.empty; type_stars = []; strict }
+  let create ~strict ~platform_availability_set =
+    Exports
+      {
+        kind = UnknownModule;
+        types = SMap.empty;
+        type_stars = [];
+        strict;
+        platform_availability_set;
+      }
 
   let add name t (Exports e) =
     match e.kind with
@@ -467,12 +476,13 @@ end
 module Scope = struct
   let create_global () = Global { names = SMap.empty; modules = SMap.empty }
 
-  let create_module ~strict = Module { names = SMap.empty; exports = Exports.create ~strict }
+  let create_module ~strict ~platform_availability_set =
+    Module { names = SMap.empty; exports = Exports.create ~strict ~platform_availability_set }
 
   let push_lex parent = Lexical { parent; names = SMap.empty }
 
   let push_declare_module loc name parent =
-    let exports = Exports.create ~strict:true in
+    let exports = Exports.create ~strict:true ~platform_availability_set:None in
     begin
       match parent with
       | Global g ->

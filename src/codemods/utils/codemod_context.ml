@@ -45,8 +45,8 @@ module Typed = struct
   let typed_ast ccx = ccx.typed_ast
 
   let lint_severities ccx =
-    let { docblock; metadata; options; _ } = ccx in
-    let metadata = Context.docblock_overrides docblock metadata in
+    let { docblock; metadata; options; file; _ } = ccx in
+    let metadata = Context.docblock_overrides docblock file metadata in
     let { Context.strict; strict_local; _ } = metadata in
     if strict || strict_local then
       StrictModeSettings.fold

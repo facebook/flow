@@ -272,7 +272,16 @@ module ESM = struct
 
   let exports type_sig type_exports exports info =
     (* TODO: re-exports *)
-    let (ESModuleInfo { type_export_keys; export_keys; type_stars = _; stars = _; strict = _ }) =
+    let (ESModuleInfo
+          {
+            type_export_keys;
+            export_keys;
+            type_stars = _;
+            stars = _;
+            strict = _;
+            platform_availability_set = _;
+          }
+          ) =
       info
     in
     let acc = Base.Array.fold2_exn ~init:[] ~f:(fold_name type_sig) export_keys exports in
@@ -357,7 +366,11 @@ module CJS = struct
 
   let exports type_sig type_exports exports info =
     (* TODO: re-exports *)
-    let (CJSModuleInfo { type_export_keys; type_stars = _; strict = _ }) = info in
+    let (CJSModuleInfo
+          { type_export_keys; type_stars = _; strict = _; platform_availability_set = _ }
+          ) =
+      info
+    in
     let acc = add_default_exports type_sig [] exports in
     Base.Array.fold2_exn ~init:acc ~f:fold_type type_export_keys type_exports
 end
