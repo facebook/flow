@@ -1053,7 +1053,16 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
       (tparams_loc, xs, t)
       (Nel.to_list ts)
 
-  let mk_distributive_tparam_subst_fn cx _trace ~use_op name distributed_t _reason_op =
+  let mk_distributive_tparam_subst_fn cx ~use_op name distributed_t =
+    let distributed_t =
+      match distributed_t with
+      | OpenT _ -> distributed_t
+      | _ when not (Subst_name.Set.is_empty (free_var_finder cx distributed_t)) -> distributed_t
+      | _ ->
+        (* This indirection is added for performance purposes, since it prevents
+         * unnecessary deep substitution traversals. *)
+        Tvar.mk_resolved cx (TypeUtil.reason_of_t distributed_t) distributed_t
+    in
     subst cx ~use_op (Subst_name.Map.singleton name distributed_t)
 end
 

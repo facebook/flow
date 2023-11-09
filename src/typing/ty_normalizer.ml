@@ -1803,10 +1803,8 @@ end = struct
         terr ~kind:BadEvalT ~msg:(Debug_js.string_of_destructor d) None
       | T.MappedType { property_type; mapped_type_flags; homomorphic; distributive_tparam_name } ->
         let (property_type, homomorphic) =
-          let trace = Trace.dummy_trace in
           Flow_js.substitute_mapped_type_distributive_tparams
             (Env.get_cx env)
-            trace
             ~use_op:Type.unknown_use
             distributive_tparam_name
             ~property_type
