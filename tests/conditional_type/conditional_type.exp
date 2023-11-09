@@ -63,8 +63,10 @@ References:
 Error ---------------------------------------------------------------------------------------------- distributive.js:9:4
 
 Cannot cast `unionArr` to `ToArray` because: [incompatible-cast]
- - Either string [1] is incompatible with number [2] in array element.
- - Or number [3] is incompatible with string [4] in array element.
+ - Either string [1] is incompatible with number [2] in array element. Arrays are invariantly typed. See
+   https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+ - Or number [3] is incompatible with string [4] in array element. Arrays are invariantly typed. See
+   https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    distributive.js:9:4
    9|   (unionArr: ToArray<string | number>); // error

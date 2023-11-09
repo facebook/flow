@@ -2208,7 +2208,7 @@ struct
                 tout;
               }
           ) ->
-          let subst = mk_distributive_tparam_subst_fn cx trace ~use_op name check_t reason in
+          let subst = mk_distributive_tparam_subst_fn cx ~use_op name check_t in
           rec_flow
             cx
             trace
@@ -7218,7 +7218,6 @@ struct
               let (property_type, homomorphic) =
                 substitute_mapped_type_distributive_tparams
                   cx
-                  trace
                   ~use_op
                   distributive_tparam_name
                   ~property_type
@@ -9962,19 +9961,19 @@ struct
       AnyT.error reason
 
   and substitute_mapped_type_distributive_tparams
-      cx trace ~use_op distributive_tparam_name ~property_type homomorphic ~source =
+      cx ~use_op distributive_tparam_name ~property_type homomorphic ~source =
     match distributive_tparam_name with
     | None -> (property_type, homomorphic)
     | Some name ->
-      let subst = mk_distributive_tparam_subst_fn cx trace ~use_op name source in
+      let subst = mk_distributive_tparam_subst_fn cx ~use_op name source in
       let homomorphic' =
         match homomorphic with
-        | SemiHomomorphic t -> SemiHomomorphic (subst (reason_of_t t) t)
+        | SemiHomomorphic t -> SemiHomomorphic (subst t)
         | Homomorphic
         | Unspecialized ->
           homomorphic
       in
-      (subst (reason_of_t property_type) property_type, homomorphic')
+      (subst property_type, homomorphic')
 
   (* Wrapper functions around __flow that manage traces. Use these functions for
      all recursive calls in the implementation of __flow. *)
