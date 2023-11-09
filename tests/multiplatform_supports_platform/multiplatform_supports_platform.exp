@@ -1,0 +1,52 @@
+Error ----------------------------------------------------------------------------------------- android-only.js.flow:0:1
+
+Cannot resolve platform-specific implementation module `./android-only.android`. All platform-specific implementations
+must exist for this interface. Read the docs on Flow's multi-platform support for more information:
+https://flow.org/en/docs/react/multiplatform [cannot-resolve-module]
+
+
+
+Error ---------------------------------------------------------------------------------------------- bar.android.js:1:24
+
+The imported module supports the `ios` platform, but the current module requires the support of the `android` platform.
+Support for the `android` platform is missing. [missing-platform-support]
+
+   1| import {a as _x0} from './bar.ios'; // error, missing support for ios
+                             ^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- bar.ios.js:1:24
+
+The imported module supports the `android` platform, but the current module requires the support of the `ios` platform.
+Support for the `ios` platform is missing. [missing-platform-support]
+
+   1| import {a as _x0} from './bar.android'; // error, missing support for android
+                             ^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- foo.js.flow:0:1
+
+Cannot resolve platform-specific implementation module `./foo.android`. All platform-specific implementations must exist
+for this interface. Read the docs on Flow's multi-platform support for more information:
+https://flow.org/en/docs/react/multiplatform [cannot-resolve-module]
+
+
+
+Error ---------------------------------------------------------------------------------------------- foo.windows.js:1:18
+
+Cannot conform to common interface module because number [1] is incompatible with string [2] in property `a`. Read the
+docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[incompatible-type]
+
+   foo.windows.js:1:18
+   1| export const a = 1; // error: doesn't conform to interface
+                       ^ [1]
+
+References:
+   foo.js.flow:6:18
+   6| export const a = '';
+                       ^^ [2]
+
+
+
+Found 5 errors

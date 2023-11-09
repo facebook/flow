@@ -1,0 +1,1 @@
+import {b} from './B';

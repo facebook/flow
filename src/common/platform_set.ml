@@ -42,18 +42,22 @@ let to_platform_string_set ~file_options bitset =
   )
 
 let platform_specific_implementation_mrefs_of_possibly_interface_file
-    ~file_options ~platform_set:_ ~file =
+    ~file_options ~platform_set ~file =
   let open Files in
   if file_options.multi_platform && has_flow_ext file then
     let file = chop_flow_ext file in
+    let platform_set = Base.Option.value_exn platform_set in
     Base.List.find_map file_options.module_file_exts ~f:(fun module_file_ext ->
         if File_key.check_suffix file module_file_ext then
           let base =
             File_key.chop_suffix file module_file_ext |> File_key.to_string |> Filename.basename
           in
           let implementation_mrefs =
-            Base.List.map file_options.multi_platform_extensions ~f:(fun platform_ext ->
-                "./" ^ base ^ platform_ext
+            Base.List.filter_mapi file_options.multi_platform_extensions ~f:(fun i platform_ext ->
+                if Bitset.mem i platform_set then
+                  Some ("./" ^ base ^ platform_ext)
+                else
+                  None
             )
           in
           Some implementation_mrefs

@@ -1,5 +1,5 @@
 ========================================================================================================================
-We start with an interface conformance error in Android file
+We start with an interface conformance error in Android file for logical module A
 ========================================================================================================================
 Error ------------------------------------------------------------------------------------------------ A.android.js:1:38
 
@@ -23,7 +23,7 @@ Found 1 error
 
 
 ========================================================================================================================
-Fix the interface conformance error in Android file
+Fix the interface conformance error in Android file for logical module A
 ========================================================================================================================
 All interface conformance errors are fixed.
 No errors!
@@ -31,7 +31,7 @@ No errors!
 
 
 ========================================================================================================================
-Introduce an interface conformance error in iOS file
+Introduce an interface conformance error in iOS file for logical module A
 ========================================================================================================================
 Now we have an interface conformance error in iOS file.
 Error ---------------------------------------------------------------------------------------------------- A.ios.js:1:38
@@ -56,7 +56,7 @@ Found 1 error
 
 
 ========================================================================================================================
-Change interface file to get a different set of conformance errors
+Change interface file to get a different set of conformance errors for logical module A
 ========================================================================================================================
 Now we have an interface conformance error in Android file, but not in iOS file.
 Error ------------------------------------------------------------------------------------------------ A.android.js:1:38
@@ -114,7 +114,7 @@ Found 1 error
 
 
 ========================================================================================================================
-Add back interface file
+Add back interface file for logical module A
 ========================================================================================================================
 Error ------------------------------------------------------------------------------------------------ A.android.js:1:38
 
@@ -155,11 +155,11 @@ Found 2 errors
 
 
 ========================================================================================================================
-Fix all type errors
+Fix all type errors for logical module A
 ========================================================================================================================
 No errors!
 ========================================================================================================================
-Delete android file
+Delete android file for logical module A
 ========================================================================================================================
 Error ---------------------------------------------------------------------------------------------------- A.js.flow:0:1
 
@@ -175,6 +175,39 @@ Found 1 error
 
 
 ========================================================================================================================
-Add back android file
+Add back android file for logical module A
 ========================================================================================================================
 No errors!
+========================================================================================================================
+Delete android file for logical module B
+========================================================================================================================
+Error ---------------------------------------------------------------------------------------------------- B.js.flow:0:1
+
+Cannot resolve platform-specific implementation module `./B.android`. All platform-specific implementations must exist
+for this interface. Read the docs on Flow's multi-platform support for more information:
+https://flow.org/en/docs/react/multiplatform [cannot-resolve-module]
+
+
+
+
+Found 1 error
+
+
+
+========================================================================================================================
+Make logical module B iOS only
+========================================================================================================================
+Error ------------------------------------------------------------------------------------------------- import_B.js:1:17
+
+The imported module supports the `ios` platform, but the current module requires the support of the following platforms:
+`android`, `ios`. Support for the `android` platform is missing. [missing-platform-support]
+
+   1| import {b} from './B';
+                      ^^^^^
+
+
+
+Found 1 error
+
+
+

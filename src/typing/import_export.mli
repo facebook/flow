@@ -7,7 +7,12 @@
 
 val mk_module_t : Context.t -> Reason.t -> ALoc.t -> Type.t
 
-val get_module_t : Context.t -> ?declare_module:bool -> ALoc.t * string -> Type.t
+val get_module_t :
+  Context.t ->
+  ?declare_module:bool ->
+  ?perform_platform_validation:bool ->
+  ALoc.t * string ->
+  Type.t
 
 val require : Context.t -> legacy_interop:bool -> ALoc.t -> string -> Type.t -> Type.t
 

@@ -399,12 +399,23 @@ let check_multiplatform_conformance cx filename prog_aloc =
       let get_exports_t ~is_common_interface_module reason module_t =
         match Flow_js.possible_concrete_types_for_inspection cx reason module_t with
         | [ModuleT m] ->
-          Flow_js_utils.ImportModuleNsTKit.on_ModuleT
-            cx
-            Trace.dummy_trace
-            ~is_common_interface_module
-            (reason, false)
-            m
+          if
+            is_common_interface_module
+            && Platform_set.no_overlap
+                 (Base.Option.value_exn (Context.available_platforms cx))
+                 (Base.Option.value_exn m.module_available_platforms)
+          then
+            (* If the current module's platform has no overlap with the common interface
+             * file's platforms, then the common interface file is irrelevant. We give it an
+             * any type to make conformance check always passing. *)
+            AnyT.make Untyped reason
+          else
+            Flow_js_utils.ImportModuleNsTKit.on_ModuleT
+              cx
+              Trace.dummy_trace
+              ~is_common_interface_module
+              (reason, false)
+              m
         | _ -> AnyT.make Untyped reason
       in
       let interface_t =
@@ -434,7 +445,10 @@ let check_multiplatform_conformance cx filename prog_aloc =
       let mrefs_with_existence_status =
         List.map (fun mref -> (mref, module_exists mref)) impl_mrefs
       in
-      if List.for_all (fun (_, exists) -> not exists) mrefs_with_existence_status then
+      if
+        (not (Context.has_explicit_supports_platform cx))
+        && List.for_all (fun (_, exists) -> not exists) mrefs_with_existence_status
+      then
         (* We are fine if no implementation file exist.
          * The .js.flow file might be declaring a builtin module. *)
         ()

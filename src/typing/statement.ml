@@ -1698,7 +1698,14 @@ module Make
         match source with
         | None -> None
         | Some (source_loc, ({ Ast.StringLiteral.value = module_name; _ } as source_literal)) ->
-          let source_module_t = Import_export.get_module_t cx (source_loc, module_name) in
+          let perform_platform_validation =
+            match export_kind with
+            | Ast.Statement.ExportType -> false
+            | Ast.Statement.ExportValue -> true
+          in
+          let source_module_t =
+            Import_export.get_module_t cx (source_loc, module_name) ~perform_platform_validation
+          in
           Some ((source_loc, source_module_t), source_literal)
       in
       let specifiers = Option.map (export_specifiers cx loc source export_kind) specifiers in
@@ -1753,7 +1760,16 @@ module Make
     | (import_loc, ImportDeclaration import_decl) ->
       let { ImportDeclaration.source; specifiers; default; import_kind; comments } = import_decl in
       let (source_loc, ({ Ast.StringLiteral.value = module_name; _ } as source_literal)) = source in
-      let source_module_t = Import_export.get_module_t cx (source_loc, module_name) in
+      let perform_platform_validation =
+        match import_kind with
+        | ImportDeclaration.ImportType
+        | ImportDeclaration.ImportTypeof ->
+          false
+        | ImportDeclaration.ImportValue -> true
+      in
+      let source_module_t =
+        Import_export.get_module_t cx (source_loc, module_name) ~perform_platform_validation
+      in
       let source_ast = ((source_loc, source_module_t), source_literal) in
 
       let specifiers_ast =
@@ -3241,7 +3257,7 @@ module Make
       let t module_name =
         let ns_t =
           let reason = mk_reason (RModule (OrdinaryName module_name)) loc in
-          Import_export.get_module_t cx (source_loc, module_name)
+          Import_export.get_module_t cx (source_loc, module_name) ~perform_platform_validation:true
           |> Import_export.import_ns cx reason
         in
         let reason = mk_annot_reason RAsyncImport loc in
@@ -3370,7 +3386,10 @@ module Make
               )
             ) ->
             let t =
-              Import_export.get_module_t cx (source_loc, module_name)
+              Import_export.get_module_t
+                cx
+                (source_loc, module_name)
+                ~perform_platform_validation:true
               |> Import_export.require cx loc module_name ~legacy_interop:false
             in
             (t, (args_loc, { ArgList.arguments = [Expression (expression cx lit_exp)]; comments }))
@@ -3404,7 +3423,10 @@ module Make
               )
             ) ->
             let t =
-              Import_export.get_module_t cx (source_loc, module_name)
+              Import_export.get_module_t
+                cx
+                (source_loc, module_name)
+                ~perform_platform_validation:true
               |> Import_export.require cx loc module_name ~legacy_interop:false
             in
             (t, (args_loc, { ArgList.arguments = [Expression (expression cx lit_exp)]; comments }))

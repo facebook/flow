@@ -1,0 +1,6 @@
+/**
+ * @supportsPlatform android
+ * @supportsPlatform windows
+ */
+// error: missing android
+export const a = '';
