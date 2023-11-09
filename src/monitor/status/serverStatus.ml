@@ -26,6 +26,7 @@ type event =
   | Read_saved_state
   | Load_saved_state_progress of progress
   | Parsing_progress of progress
+  | Load_libraries_start
   | Indexing_progress of progress
   | Resolving_dependencies_progress
   | Calculating_dependencies_progress
@@ -45,6 +46,7 @@ type typecheck_status =
   | Fetching_saved_state of string  (** Fetching saved state, when it is taking a while *)
   | Reading_saved_state
   | Loading_saved_state of progress
+  | Loading_libraries
   | Parsing of progress
   | Indexing of progress
   | Resolving_dependencies
@@ -86,6 +88,7 @@ type emoji =
   | Eyes
   | File_cabinet
   | Ghost
+  | Library
   | Open_book
   | Panda_face
   | Parachute
@@ -104,6 +107,7 @@ let string_of_emoji = function
   | Eyes -> "\xF0\x9F\x91\x80"
   | File_cabinet -> "\xF0\x9F\x97\x84"
   | Ghost -> "\xF0\x9F\x91\xBB"
+  | Library -> "\xF0\x9F\x8F\x9B"
   | Open_book -> "\xF0\x9F\x93\x96"
   | Panda_face -> "\xF0\x9F\x90\xBC"
   | Parachute -> "\xF0\x9F\xAA\x82"
@@ -159,6 +163,7 @@ let string_of_event = function
   | GC_start -> "GC_start"
   | Collating_errors_start -> "Collating_errors_start"
   | Watchman_wait_start _deadline -> "Watchman_wait_start"
+  | Load_libraries_start -> "Loading_libaries_start"
 
 (** As a general rule, use past tense for status updates that show progress and present perfect
     progressive for those that don't. *)
@@ -169,6 +174,7 @@ let string_of_typecheck_status ~use_emoji = function
   | Reading_saved_state -> spf "%sreading saved state" (render_emoji ~use_emoji Closed_book)
   | Loading_saved_state progress ->
     spf "%sloading saved state %s" (render_emoji ~use_emoji Open_book) (string_of_progress progress)
+  | Loading_libraries -> spf "%sloading libraries" (render_emoji ~use_emoji Library)
   | Parsing progress ->
     spf "%sparsed files %s" (render_emoji ~use_emoji Ghost) (string_of_progress progress)
   | Indexing progress ->
@@ -272,6 +278,7 @@ let update ~event ~status =
          request if that's still the most important thing we're doing. *)
       Typechecking (Handling_request, Finishing_typecheck)
     | _ -> status)
+  | (Load_libraries_start, _) -> Typechecking (Initializing, Loading_libraries)
   | _ ->
     (* This is a bad transition. In dev mode, let's blow up since something is wrong. However in
      * production let's soldier on. Usually this means that we forgot to send something like
@@ -321,6 +328,7 @@ let is_significant_transition old_status new_status =
             | (_, Fetching_saved_state _)
             | (_, Reading_saved_state)
             | (_, Loading_saved_state _)
+            | (_, Loading_libraries)
             | (_, Parsing _)
             | (_, Indexing _)
             | (_, Resolving_dependencies)

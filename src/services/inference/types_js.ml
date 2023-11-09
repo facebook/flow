@@ -1793,7 +1793,6 @@ let make_next_files ~libs ~file_options root =
     let length = List.length files in
     MonitorRPC.status_update ~event:ServerStatus.(Parsing_progress { finished; total = None });
     total := finished + length;
-
     files |> Base.List.map ~f:(Files.filename_from_string ~options:file_options) |> Bucket.of_list
 
 let mk_env
@@ -2243,6 +2242,7 @@ let init_from_scratch ~profiling ~workers options =
   let local_errors = merge_error_maps package_errors local_errors in
 
   Hh_logger.info "Loading libraries";
+  MonitorRPC.status_update ~event:ServerStatus.Load_libraries_start;
   let%lwt (libs_ok, local_errors, warnings, suppressions, lib_exports, master_cx) =
     let suppressions = Error_suppressions.empty in
     init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs
