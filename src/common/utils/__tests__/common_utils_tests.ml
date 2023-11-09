@@ -10,6 +10,7 @@ open OUnit2
 let tests =
   "utils"
   >::: [
+         Bitset_test.tests;
          Line_test.tests;
          Nel_test.tests;
          ResizableArray_test.tests;
