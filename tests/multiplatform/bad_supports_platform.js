@@ -1,0 +1,4 @@
+/**
+ * @supportsPlatform ios
+ * @supportsPlatform random
+ */

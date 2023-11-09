@@ -1,3 +1,12 @@
+Error ------------------------------------------------------------------------------------- bad_supports_platform.js:3:4
+
+Invalid `@supportsPlatform` declaration. `random` is not configured in `experimental.multi_platform.extensions` in your
+flow config. [invalid-supports-platform]
+
+   3|  * @supportsPlatform random
+         ^^^^^^^^^^^^^^^^^
+
+
 Error --------------------------------------------------------------------------- cjs_conformance_errors.android.js:1:16
 
 Cannot conform to common interface module because exports [1] is incompatible with string [2] in property `default`.
@@ -30,6 +39,14 @@ References:
    cjs_conformance_errors.js.flow:1:25
    1| declare module.exports: string;
                               ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------- disallowed_supports_platform.ios.js:2:4
+
+`@supportsPlatform` declaration is disallowed in platform specific files. [invalid-supports-platform]
+
+   2|  * @supportsPlatform ios
+         ^^^^^^^^^^^^^^^^^
 
 
 Error --------------------------------------------------------------------------- esm_conformance_errors.android.js:1:16
@@ -160,4 +177,4 @@ Cannot resolve module `./allow_no_interface`. [cannot-resolve-module]
 
 
 
-Found 11 errors
+Found 13 errors

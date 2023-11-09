@@ -11,7 +11,13 @@ let run ctxt expected name content =
   let open Parsing_service_js in
   let file = File_key.SourceFile "/dummy.js" in
   let (_docblock_errors, docblock) =
-    Docblock_parser.(parse_docblock ~max_tokens:docblock_max_tokens file content)
+    Docblock_parser.(
+      parse_docblock
+        ~max_tokens:docblock_max_tokens
+        ~file_options:Files.default_options
+        file
+        content
+    )
   in
   let options =
     let options_flags = Test_utils.make_options_flags ~all:true () in

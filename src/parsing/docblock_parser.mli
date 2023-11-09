@@ -12,6 +12,8 @@ type docblock_error_kind =
   | InvalidJSXAttribute of string option
   | MultipleJSXRuntimeAttributes
   | InvalidJSXRuntimeAttribute
+  | InvalidSupportsPlatform of string
+  | DisallowedSupportsPlatform
 
 type docblock_error = Loc.t * docblock_error_kind
 
@@ -20,6 +22,7 @@ val docblock_max_tokens : int
 val parse_docblock :
   max_tokens:int ->
   (* how many tokens to check in the beginning of the file *)
+  file_options:Files.options ->
   File_key.t ->
   string ->
   docblock_error list * Docblock.t

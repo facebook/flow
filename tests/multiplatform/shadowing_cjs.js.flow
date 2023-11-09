@@ -1,2 +1,7 @@
+/**
+ * @supportsPlatform ios
+ * @supportsPlatform android
+ */
+
 export type MyType = string;
 declare export const myValue: string;

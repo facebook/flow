@@ -27,9 +27,11 @@ type t = {
   preventMunge: bool;
   jsx: jsx_pragma option;
   jsxRuntime: jsx_runtime_pragma option;
+  supportsPlatform: string list option;
 }
 
-let default_info = { flow = None; preventMunge = false; jsx = None; jsxRuntime = None }
+let default_info =
+  { flow = None; preventMunge = false; jsx = None; jsxRuntime = None; supportsPlatform = None }
 
 (* accessors *)
 let flow info = info.flow
@@ -58,6 +60,8 @@ let is_flow info =
   | Some OptOut
   | None ->
     false
+
+let supportsPlatform info = info.supportsPlatform
 
 (* debugging *)
 let json_of_docblock info =

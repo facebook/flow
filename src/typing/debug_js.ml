@@ -1595,7 +1595,9 @@ let dump_error_message =
         | MultipleJSXAttributes -> "MultipleJSXAttributes"
         | InvalidJSXAttribute _ -> "InvalidJSXAttribute"
         | MultipleJSXRuntimeAttributes -> "MultipleJSXRuntimeAttributes"
-        | InvalidJSXRuntimeAttribute -> "InvalidJSXRuntimeAttribute")
+        | InvalidJSXRuntimeAttribute -> "InvalidJSXRuntimeAttribute"
+        | InvalidSupportsPlatform _ -> "InvalidSupportsPlatform"
+        | DisallowedSupportsPlatform -> "DisallowedSupportsPlatform")
     | EImplicitInexactObject loc -> spf "EImplicitInexactObject (%s)" (string_of_aloc loc)
     | EAmbiguousObjectType loc -> spf "EAmbiguousObjectType (%s)" (string_of_aloc loc)
     | EUntypedTypeImport (loc, module_name) ->

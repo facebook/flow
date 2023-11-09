@@ -18,6 +18,8 @@ type docblock_error_kind =
   | InvalidJSXAttribute of string option
   | MultipleJSXRuntimeAttributes
   | InvalidJSXRuntimeAttribute
+  | InvalidSupportsPlatform of string
+  | DisallowedSupportsPlatform
 
 type docblock_error = Loc.t * docblock_error_kind
 
@@ -32,7 +34,7 @@ let extract_docblock =
     (* walks a list of words, returns a list of errors and the extracted info.
        if @flow or @providesModule is found more than once, the first one is used
        and an error is returned. *)
-    let rec parse_attributes (errors, info) = function
+    let rec parse_attributes ~file_options ~filename (errors, info) = function
       | (loc, "@flow") :: (_, "strict") :: xs ->
         let acc =
           if info.flow <> None then
@@ -40,7 +42,7 @@ let extract_docblock =
           else
             (errors, { info with flow = Some OptInStrict })
         in
-        parse_attributes acc xs
+        parse_attributes ~file_options ~filename acc xs
       | (loc, "@flow") :: (_, "strict-local") :: xs ->
         let acc =
           if info.flow <> None then
@@ -48,7 +50,7 @@ let extract_docblock =
           else
             (errors, { info with flow = Some OptInStrictLocal })
         in
-        parse_attributes acc xs
+        parse_attributes ~file_options ~filename acc xs
       | (flow_loc, "@flow") :: (next_loc, next) :: xs
         when Loc.lines_intersect flow_loc next_loc && (not @@ Str.string_match pragma_rx next 0) ->
         let (errors, info) =
@@ -58,7 +60,7 @@ let extract_docblock =
             (errors, { info with flow = Some OptIn })
         in
         let errors = (next_loc, InvalidFlowMode next) :: errors in
-        parse_attributes (errors, info) xs
+        parse_attributes ~file_options ~filename (errors, info) xs
       | (loc, "@flow") :: xs ->
         let acc =
           if info.flow <> None then
@@ -66,7 +68,7 @@ let extract_docblock =
           else
             (errors, { info with flow = Some OptIn })
         in
-        parse_attributes acc xs
+        parse_attributes ~file_options ~filename acc xs
       | (loc, "@noflow") :: xs ->
         let acc =
           if info.flow <> None then
@@ -74,10 +76,10 @@ let extract_docblock =
           else
             (errors, { info with flow = Some OptOut })
         in
-        parse_attributes acc xs
+        parse_attributes ~file_options ~filename acc xs
       | (_, "@preventMunge") :: xs ->
         (* dupes are ok since they can only be truthy *)
-        parse_attributes (errors, { info with preventMunge = true }) xs
+        parse_attributes ~file_options ~filename (errors, { info with preventMunge = true }) xs
       | [(jsx_loc, "@jsx")] -> ((jsx_loc, InvalidJSXAttribute None) :: errors, info)
       | (jsx_loc, "@jsx") :: (expr_loc, expr) :: xs ->
         let acc =
@@ -100,7 +102,7 @@ let extract_docblock =
               let e = Some (Parse_error.PP.error e) in
               ((expr_loc, InvalidJSXAttribute e) :: errors, info)
         in
-        parse_attributes acc xs
+        parse_attributes ~file_options ~filename acc xs
       | (loc, "@jsxRuntime") :: (_, "classic") :: xs ->
         let acc =
           if info.jsxRuntime <> None then
@@ -108,7 +110,7 @@ let extract_docblock =
           else
             (errors, { info with jsxRuntime = Some JsxRuntimePragmaClassic })
         in
-        parse_attributes acc xs
+        parse_attributes ~file_options ~filename acc xs
       | (loc, "@jsxRuntime") :: (_, "automatic") :: xs ->
         let acc =
           if info.jsxRuntime <> None then
@@ -116,11 +118,38 @@ let extract_docblock =
           else
             (errors, { info with jsxRuntime = Some JsxRuntimePragmaAutomatic })
         in
-        parse_attributes acc xs
+        parse_attributes ~file_options ~filename acc xs
       | (loc, "@jsxRuntime") :: _ :: xs ->
         let acc = ((loc, InvalidJSXRuntimeAttribute) :: errors, info) in
-        parse_attributes acc xs
-      | _ :: xs -> parse_attributes (errors, info) xs
+        parse_attributes ~file_options ~filename acc xs
+      | (loc, "@supportsPlatform") :: (_, platform) :: xs when file_options.Files.multi_platform ->
+        let acc =
+          if
+            filename
+            |> File_key.to_string
+            |> Files.platform_specific_extension_opt ~options:file_options
+            |> Option.is_some
+          then
+            ((loc, DisallowedSupportsPlatform) :: errors, info)
+          else if
+            Base.List.mem
+              ~equal:String.equal
+              file_options.Files.multi_platform_extensions
+              ("." ^ platform)
+          then
+            let existing_platforms = Base.Option.value info.supportsPlatform ~default:[] in
+            let platforms =
+              if Base.List.mem ~equal:String.equal existing_platforms platform then
+                existing_platforms
+              else
+                platform :: existing_platforms
+            in
+            (errors, { info with supportsPlatform = Some platforms })
+          else
+            ((loc, InvalidSupportsPlatform platform) :: errors, info)
+        in
+        parse_attributes ~file_options ~filename acc xs
+      | _ :: xs -> parse_attributes ~file_options ~filename (errors, info) xs
       | [] -> (errors, info)
     in
     let calc_end start s =
@@ -175,7 +204,7 @@ let extract_docblock =
       in
       (fun f n lst -> helper f n [] lst)
     in
-    fun ~max_tokens filename content ->
+    fun ~max_tokens ~file_options filename content ->
       (* Consume tokens in the file until we get a comment. This is a hack to
        * support Nuclide, which needs 'use babel' as the first token due to
        * contstraints with Atom (see https://github.com/atom/atom/issues/8416 for
@@ -213,15 +242,15 @@ let extract_docblock =
       match get_first_comment_contents env with
       | Some comments ->
         List.fold_left
-          (fun acc (loc, s) -> parse_attributes acc (split loc s))
+          (fun acc (loc, s) -> parse_attributes ~file_options ~filename acc (split loc s))
           ([], default_info)
           comments
       | None -> ([], default_info)
   )
 
-let parse_docblock ~max_tokens file content : docblock_error list * Docblock.t =
+let parse_docblock ~max_tokens ~file_options file content : docblock_error list * Docblock.t =
   match file with
   | File_key.ResourceFile _
   | File_key.JsonFile _ ->
     ([], Docblock.default_info)
-  | _ -> extract_docblock ~max_tokens file content
+  | _ -> extract_docblock ~max_tokens ~file_options file content

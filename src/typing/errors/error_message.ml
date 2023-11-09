@@ -652,6 +652,8 @@ and docblock_error =
   | InvalidJSXAttribute of string option
   | MultipleJSXRuntimeAttributes
   | InvalidJSXRuntimeAttribute
+  | InvalidSupportsPlatform of string
+  | DisallowedSupportsPlatform
 
 and internal_error =
   | MethodNotAFunction
@@ -3664,6 +3666,18 @@ let friendly_message_of_msg loc_of_aloc msg =
           code "automatic";
           text ".";
         ]
+      | InvalidSupportsPlatform p ->
+        [
+          text "Invalid ";
+          code "@supportsPlatform";
+          text " declaration. ";
+          code p;
+          text " is not configured in ";
+          code "experimental.multi_platform.extensions";
+          text " in your flow config.";
+        ]
+      | DisallowedSupportsPlatform ->
+        [code "@supportsPlatform"; text " declaration is disallowed in platform specific files."]
     in
     Normal { features }
   | EImplicitInexactObject _ ->
@@ -5218,6 +5232,8 @@ let error_code_of_message err : error_code option =
     | InvalidJSXAttribute _ -> Some InvalidJsxDecl
     | MultipleJSXRuntimeAttributes -> Some DuplicateJsxRuntimeDecl
     | InvalidJSXRuntimeAttribute -> Some InvalidJsxRuntimeDecl
+    | InvalidSupportsPlatform _ -> Some InvalidSupportsPlatformDecl
+    | DisallowedSupportsPlatform -> Some InvalidSupportsPlatformDecl
   end
   | EDuplicateModuleProvider _ -> Some DuplicateModule
   | EEnumAllMembersAlreadyChecked _ -> Some InvalidExhaustiveCheck

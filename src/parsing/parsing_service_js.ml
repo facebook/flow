@@ -327,7 +327,13 @@ let reducer
       else if skip_unchanged && content_hash_matches_old_file_hash ~reader file_key hash then
         { acc with unchanged = FilenameSet.add file_key acc.unchanged }
       else (
-        match parse_docblock ~max_tokens:(Options.max_header_tokens options) file_key content with
+        match
+          parse_docblock
+            ~max_tokens:(Options.max_header_tokens options)
+            ~file_options:(Options.file_options options)
+            file_key
+            content
+        with
         | ([], docblock) ->
           let docblock =
             if noflow file_key then

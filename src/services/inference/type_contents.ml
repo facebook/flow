@@ -18,7 +18,13 @@ type parse_contents_return =
  * interface we would like here. *)
 let do_parse_wrapper ~options filename contents =
   let max_tokens = Options.max_header_tokens options in
-  let (docblock_errors, docblock) = Docblock_parser.parse_docblock ~max_tokens filename contents in
+  let (docblock_errors, docblock) =
+    Docblock_parser.parse_docblock
+      ~max_tokens
+      ~file_options:(Options.file_options options)
+      filename
+      contents
+  in
   let parse_result = Parsing_service_js.do_parse ~options ~docblock contents filename in
   match parse_result with
   | Parsing_service_js.Parse_ok { ast; requires; file_sig; tolerable_errors; _ } ->

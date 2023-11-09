@@ -84,7 +84,13 @@ let coverage ~cx ~typed_ast ~force file content =
        * it and we want the original docblock. Fortunately this is a pure function, and pretty fast,
        * so recomputing it isn't a problem. *)
       let (_, docblock) =
-        Docblock_parser.(parse_docblock ~max_tokens:docblock_max_tokens file content)
+        Docblock_parser.(
+          parse_docblock
+            ~max_tokens:docblock_max_tokens
+            ~file_options:(Context.metadata cx).Context.file_options
+            file
+            content
+        )
       in
       Docblock.is_flow docblock
   in

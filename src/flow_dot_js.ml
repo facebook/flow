@@ -271,7 +271,13 @@ let check_content ~filename ~content ~js_config_object =
     match parse_content filename content with
     | Ok (ast, file_sig) ->
       let (_, docblock) =
-        Docblock_parser.(parse_docblock ~max_tokens:docblock_max_tokens filename content)
+        Docblock_parser.(
+          parse_docblock
+            ~max_tokens:docblock_max_tokens
+            ~file_options:Files.default_options
+            filename
+            content
+        )
       in
       let (cx, _) = infer_and_merge ~root filename js_config_object docblock ast file_sig in
       let suppressions = Context.error_suppressions cx in
@@ -347,7 +353,13 @@ let infer_type filename content line col js_config_object : Loc.t * (string, str
   | Error _ -> failwith "parse error"
   | Ok (ast, file_sig) ->
     let (_, docblock) =
-      Docblock_parser.(parse_docblock ~max_tokens:docblock_max_tokens filename content)
+      Docblock_parser.(
+        parse_docblock
+          ~max_tokens:docblock_max_tokens
+          ~file_options:Files.default_options
+          filename
+          content
+      )
     in
     let (cx, typed_ast) = infer_and_merge ~root filename js_config_object docblock ast file_sig in
     let file = Context.file cx in
@@ -399,7 +411,13 @@ let dump_types js_file js_content js_config_object =
   | Error _ -> failwith "parse error"
   | Ok (ast, file_sig) ->
     let (_, docblock) =
-      Docblock_parser.(parse_docblock ~max_tokens:docblock_max_tokens filename content)
+      Docblock_parser.(
+        parse_docblock
+          ~max_tokens:docblock_max_tokens
+          ~file_options:Files.default_options
+          filename
+          content
+      )
     in
     let (cx, typed_ast) = infer_and_merge ~root filename js_config_object docblock ast file_sig in
     let printer = Ty_printer.string_of_elt_single_line ~exact_by_default:true in
