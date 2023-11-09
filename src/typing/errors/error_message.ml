@@ -610,6 +610,11 @@ and 'loc t' =
       loc: 'loc;
       enabled_casting_syntax: Options.CastingSyntax.t;
     }
+  | EMissingPlatformSupport of {
+      loc: 'loc;
+      available_platforms: SSet.t;
+      required_platforms: SSet.t;
+    }
 
 and 'loc null_write = {
   null_loc: 'loc;
@@ -1342,6 +1347,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       }
   | EInvalidTypeCastSyntax { loc; enabled_casting_syntax } ->
     EInvalidTypeCastSyntax { loc = f loc; enabled_casting_syntax }
+  | EMissingPlatformSupport { loc; available_platforms; required_platforms } ->
+    EMissingPlatformSupport { loc = f loc; available_platforms; required_platforms }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1600,7 +1607,8 @@ let util_use_op_of_msg nope util = function
   | EDuplicateComponentProp _
   | ERefComponentProp _
   | EInvalidRendersTypeArgument _
-  | EInvalidTypeCastSyntax _ ->
+  | EInvalidTypeCastSyntax _
+  | EMissingPlatformSupport _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1759,7 +1767,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EReferenceInAnnotation (loc, _, _)
   | EDuplicateComponentProp { spread = loc; _ }
   | ERefComponentProp { spread = loc; _ }
-  | ETypeGuardIncompatibleWithFunctionKind { loc; _ } ->
+  | ETypeGuardIncompatibleWithFunctionKind { loc; _ }
+  | EMissingPlatformSupport { loc; _ } ->
     Some loc
   | EImplicitInstantiationWidenedError { reason_call; _ } -> Some (loc_of_reason reason_call)
   | ELintSetting (loc, _) -> Some loc
@@ -5098,6 +5107,28 @@ let friendly_message_of_msg loc_of_aloc msg =
       ]
     in
     Normal { features }
+  | EMissingPlatformSupport { loc = _; available_platforms; required_platforms } ->
+    let missing_platforms = SSet.diff required_platforms available_platforms |> SSet.elements in
+    let platform_features = function
+      | [] -> [text "no platforms"]
+      | [p] -> [text "the "; code p; text " platform"]
+      | p1 :: ps ->
+        let rec loop = function
+          | [] -> []
+          | p :: rest -> text ", " :: code p :: loop rest
+        in
+        text "the following platforms: " :: code p1 :: loop ps
+    in
+    let features =
+      [text "The imported module supports "]
+      @ platform_features (SSet.elements available_platforms)
+      @ [text ", but the current module requires the support of "]
+      @ platform_features (SSet.elements required_platforms)
+      @ [text ". Support for "]
+      @ platform_features missing_platforms
+      @ [text " is missing."]
+    in
+    Normal { features }
 
 let defered_in_speculation = function
   | EUntypedTypeImport _
@@ -5426,3 +5457,4 @@ let error_code_of_message err : error_code option =
   end
   | ETSSyntax _ -> Some TSSyntax
   | EInvalidTypeCastSyntax _ -> Some InvalidTypeCastSyntax
+  | EMissingPlatformSupport _ -> Some MissingPlatformSupport

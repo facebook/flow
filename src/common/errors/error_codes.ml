@@ -112,6 +112,7 @@ type error_code =
   | MissingThisAnnot
   | MissingArg
   | MissingExport
+  | MissingPlatformSupport
   | MissingTypeArg
   | MixedImportAndRequire
   | ModuleTypeConflict
@@ -312,6 +313,7 @@ let string_of_code : error_code -> string = function
   | MissingThisAnnot -> "missing-this-annot"
   | MissingArg -> "missing-arg"
   | MissingExport -> "missing-export"
+  | MissingPlatformSupport -> "missing-platform-support"
   | MissingTypeArg -> "missing-type-arg"
   | MixedImportAndRequire -> "mixed-import-and-require"
   | ModuleTypeConflict -> "module-type-conflict"

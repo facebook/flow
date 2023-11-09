@@ -1865,6 +1865,12 @@ let dump_error_message =
     | ERefComponentProp { loc; _ } -> spf "ERefComponentProp (%s)" (string_of_aloc loc)
     | EInvalidComponentRestParam loc -> spf "EInvalidComponentRestParam (%s)" (string_of_aloc loc)
     | EInvalidTypeCastSyntax { loc; _ } -> spf "EInvalidTypeCastSyntax (%s)" (string_of_aloc loc)
+    | EMissingPlatformSupport { loc; available_platforms; required_platforms } ->
+      spf
+        "EMissingPlatformSupport(%s, %s, %s)"
+        (string_of_aloc loc)
+        (SSet.to_string available_platforms)
+        (SSet.to_string required_platforms)
 
 module Verbose = struct
   let verbose_in_file cx verbose =
