@@ -174,7 +174,13 @@ and collect_of_type ?log_unresolved cx acc = function
   (* TODO: The following kinds of types are not walked out of laziness. It's
      not immediately clear what we'd gain (or lose) by walking them. *)
   | InternalT (ChoiceKitT (_, _))
-  | ModuleT { module_reason = _; module_export_types = _; module_is_strict = _ }
+  | ModuleT
+      {
+        module_reason = _;
+        module_export_types = _;
+        module_is_strict = _;
+        module_available_platforms = _;
+      }
   | InternalT (ExtendsT _) ->
     acc
   (* The following cases exactly follow Type_visitor (i.e., they do the

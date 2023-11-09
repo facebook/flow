@@ -2029,6 +2029,7 @@ module Make
                 has_every_named_export = false;
               };
             module_is_strict = Context.is_strict cx;
+            module_available_platforms = Context.available_platforms cx;
           }
       in
       let ast =

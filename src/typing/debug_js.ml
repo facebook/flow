@@ -336,8 +336,13 @@ let rec dump_t_ (depth, tvars) cx t =
     | DefT (_, SingletonNumT (_, s)) -> p ~extra:s t
     | DefT (_, SingletonBoolT b) -> p ~extra:(spf "%B" b) t
     | DefT (_, SingletonBigIntT (_, s)) -> p ~extra:s t
-    | ModuleT { module_reason = _; module_export_types = { exports_tmap; _ }; module_is_strict = _ }
-      ->
+    | ModuleT
+        {
+          module_reason = _;
+          module_export_types = { exports_tmap; _ };
+          module_is_strict = _;
+          module_available_platforms = _;
+        } ->
       p
         t
         ~extra:

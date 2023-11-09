@@ -370,7 +370,7 @@ let merge_type_export file reason = function
     let (lazy (loc, _name, type_)) = Remote_refs.get file.remote_refs index in
     { Type.name_loc = Some loc; preferred_def_locs = None; is_type_only_export = true; type_ }
 
-let mk_commonjs_module_t cx module_reason module_is_strict t =
+let mk_commonjs_module_t cx module_reason module_is_strict module_available_platforms t =
   let open Type in
   let module_export_types =
     {
@@ -379,7 +379,9 @@ let mk_commonjs_module_t cx module_reason module_is_strict t =
       has_every_named_export = false;
     }
   in
-  let local_module = { module_reason; module_export_types; module_is_strict } in
+  let local_module =
+    { module_reason; module_export_types; module_is_strict; module_available_platforms }
+  in
   ConsGen.cjs_extract_named_exports cx module_reason local_module t
 
 let merge_exports =
@@ -387,7 +389,7 @@ let merge_exports =
     let (mref, (lazy resolved_module)) = Module_refs.get file.dependencies index in
     (loc, get_module_t mref loc resolved_module)
   in
-  let mk_es_module_t file module_reason module_is_strict =
+  let mk_es_module_t file module_reason module_is_strict module_available_platforms =
     let open Type in
     let module_export_types =
       {
@@ -396,7 +398,7 @@ let merge_exports =
         has_every_named_export = false;
       }
     in
-    ModuleT { module_reason; module_export_types; module_is_strict }
+    ModuleT { module_reason; module_export_types; module_is_strict; module_available_platforms }
   in
 
   let copy_named_exports file reason module_t (loc, from_ns) =
@@ -421,7 +423,7 @@ let merge_exports =
     (fun file reason stars acc -> loop file reason acc stars)
   in
   fun file reason -> function
-    | CJSExports { type_exports; exports; type_stars; strict; platform_availability_set = _ } ->
+    | CJSExports { type_exports; exports; type_stars; strict; platform_availability_set } ->
       let exports =
         match exports with
         | Some (lazy t) -> t
@@ -429,16 +431,15 @@ let merge_exports =
       in
       let type_exports = SMap.map Lazy.force type_exports |> NameUtils.namemap_of_smap in
       let type_stars = List.map (merge_star file) type_stars in
-      mk_commonjs_module_t file.cx reason strict exports
+      mk_commonjs_module_t file.cx reason strict platform_availability_set exports
       |> ConsGen.export_named file.cx reason Type.ExportType type_exports
       |> copy_star_exports file reason ([], type_stars)
-    | ESExports { type_exports; exports; stars; type_stars; strict; platform_availability_set = _ }
-      ->
+    | ESExports { type_exports; exports; stars; type_stars; strict; platform_availability_set } ->
       let exports = SMap.map Lazy.force exports |> NameUtils.namemap_of_smap in
       let type_exports = SMap.map Lazy.force type_exports |> NameUtils.namemap_of_smap in
       let stars = List.map (merge_star file) stars in
       let type_stars = List.map (merge_star file) type_stars in
-      mk_es_module_t file reason strict
+      mk_es_module_t file reason strict platform_availability_set
       |> ConsGen.export_named file.cx reason Type.ExportValue exports
       |> ConsGen.export_named file.cx reason Type.ExportType type_exports
       |> copy_star_exports file reason (stars, type_stars)
@@ -2054,7 +2055,7 @@ let merge_resource_module_t cx file_key filename =
   in
   let file_loc = ALoc.of_loc { Loc.none with Loc.source = Some file_key } in
   let reason = Reason.(mk_reason RExports file_loc) in
-  mk_commonjs_module_t cx reason (Context.is_strict cx) exports_t
+  mk_commonjs_module_t cx reason (Context.is_strict cx) None exports_t
 
 let merge tps = merge tps SMap.empty
 

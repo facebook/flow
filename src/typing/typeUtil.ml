@@ -191,8 +191,14 @@ let rec mod_reason_of_t f = function
   | FunProtoBindT reason -> FunProtoBindT (f reason)
   | FunProtoCallT reason -> FunProtoCallT (f reason)
   | KeysT (reason, t) -> KeysT (f reason, t)
-  | ModuleT { module_reason; module_export_types; module_is_strict } ->
-    ModuleT { module_reason = f module_reason; module_export_types; module_is_strict }
+  | ModuleT { module_reason; module_export_types; module_is_strict; module_available_platforms } ->
+    ModuleT
+      {
+        module_reason = f module_reason;
+        module_export_types;
+        module_is_strict;
+        module_available_platforms;
+      }
   | NullProtoT reason -> NullProtoT (f reason)
   | ObjProtoT reason -> ObjProtoT (f reason)
   | MatchingPropT (reason, k, v) -> MatchingPropT (f reason, k, v)

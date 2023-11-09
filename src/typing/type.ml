@@ -1568,6 +1568,7 @@ module rec TypeTerm : sig
     module_reason: reason;
     module_export_types: exporttypes;
     module_is_strict: bool;
+    module_available_platforms: Platform_set.t option;
   }
 
   and selector =

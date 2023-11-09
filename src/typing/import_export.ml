@@ -22,6 +22,7 @@ let mk_module_t cx reason =
           has_every_named_export = false;
         };
       module_is_strict = Context.is_strict cx;
+      module_available_platforms = Context.available_platforms cx;
     }
 
 (**
@@ -51,6 +52,7 @@ let mk_commonjs_module_t cx reason_exports_module reason export_t =
                 module_reason = reason_exports_module;
                 module_export_types;
                 module_is_strict = Context.is_strict cx;
+                module_available_platforms = Context.available_platforms cx;
               },
               t
             )
