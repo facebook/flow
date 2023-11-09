@@ -1,3 +1,26 @@
+### 0.221.0
+
+Likely to cause new Flow errors:
+* Changed the signature of `React.Fragment` to only accept children and the key prop.
+* Changed the signature of `React.useRef` to return an opaque type.
+* Fixed a case where, in some cases, contextually-typed callbacks being passed as props would be typed as any rather than producing underconstrained-implicit-instantiation errors. This will result in new underconstrained errors, but removes a source of untracked unsoundness.
+* Banned non-tuple arrays from being spread into tuple types. It previously resulted in `any` without error.
+
+Notable bug fixes:
+* Improved signature help support for optional chaining calls and intersection types. Now we will show all possible signature possibilities for overloaded functions.
+
+Performance:
+* Incremental error collation, which helps IDE performance when you have a lot of suppressed errors, is now the default.
+* Optimized the way we generate global types for normal source files. You might see a reduction in checking times (3-9% as measured internally at Meta). (D51055838 samzhou19815)
+* Optimized the way we analyze syntactic environment required for type checking. On a large file like [this](https://github.com/facebook/metro/blob/fcd8867d5b2ccf4133e1c12f224695e315d09b6f/flow-typed/npm/babel-types_v7.x.x.js#L3194), it improves the checking time from 4s to 2s. (D50850606 samzhou19815)
+* Optimized substitution performance when conditional type and mapped types are operating on large and deep objects.
+
+Library Definitions:
+* Updated `IntersectionObserver` types.
+* `IndexedDB` transaction now allows consuming `storeNames` as `DOMStringList`.
+* Added `options` to IndexedDB transaction.
+* Added `durability` to IDBTransaction.
+
 ### 0.220.1
 
 Notable bug fixes:
