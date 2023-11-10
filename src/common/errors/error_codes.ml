@@ -176,6 +176,7 @@ type error_code =
   | ReactIntrinsicOverlap
   | NestedComponent
   | InvalidRef
+  | ReactRule
 
 let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.ReactIntrinsicOverlap -> ReactIntrinsicOverlap
@@ -377,3 +378,4 @@ let string_of_code : error_code -> string = function
   | BigIntRShift3 -> "bigint-unsigned-right-shift"
   | BigIntNumCoerce -> "bigint-num-coerce"
   | InvalidComponentProp -> "invalid-component-prop"
+  | ReactRule -> "react-rule"

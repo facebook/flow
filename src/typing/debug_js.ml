@@ -1836,6 +1836,7 @@ let dump_error_message =
     | EEmptyArrayNoProvider { loc } -> spf "EEmptyArrayNoProvider (%s)" (string_of_aloc loc)
     | EUnusedPromise { loc; _ } -> spf "EUnusedPromise (%s)" (string_of_aloc loc)
     | EReactIntrinsicOverlap _ -> "EReactIntrinsicOverlap (_, _, _)"
+    | EReactRefInRender _ -> "EReactRefInRender _"
     | EBigIntRShift3 reason -> spf "EBigIntRShift3 (%s)" (dump_reason cx reason)
     | EBigIntNumCoerce reason -> spf "EBigIntNumCoerce (%s)" (dump_reason cx reason)
     | EInvalidCatchParameterAnnotation loc ->

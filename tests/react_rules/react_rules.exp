@@ -1,0 +1,56 @@
+Error ------------------------------------------------------------------- error.invalid-access-ref-during-render.js:8:17
+
+Cannot read `current` from `ref` [1] because `ref` values may not be read during render. 
+(https://react.dev/reference/react/useRef). [react-rule]
+
+   8|   const value = ref.current; // Error
+                      ^^^ [1]
+
+
+Error ----------------------------------------------------------------------- error.invalid-pass-ref-to-function.js:8:17
+
+Cannot pass `ref` [1] as an argument because `ref` values may not be passed to functions because they could read the ref
+value (`current`) property) during render.  (https://react.dev/reference/react/useRef). [react-rule]
+
+   8|   const x = foo(ref); // Error
+                      ^^^ [1]
+
+
+Error ------------------------------------------------------------------------- error.invalid-ref-value-as-props.js:8:20
+
+Cannot read `current` from `ref` [1] because `ref` values may not be read during render. 
+(https://react.dev/reference/react/useRef). [react-rule]
+
+   8|   return <Foo ref={ref.current} />; // Error
+                         ^^^ [1]
+
+
+Error -------------------------------------------------------------- error.invalid-set-and-read-ref-during-render.js:6:3
+
+Cannot read `current` from `ref` [1] because `ref` values may not be read during render. 
+(https://react.dev/reference/react/useRef). [react-rule]
+
+   6|   ref.current = value; // Error
+        ^^^ [1]
+
+
+Error ------------------------------------------------------------- error.invalid-set-and-read-ref-during-render.js:7:10
+
+Cannot read `current` from `ref` [1] because `ref` values may not be read during render. 
+(https://react.dev/reference/react/useRef). [react-rule]
+
+   7|   return ref.current; // Error
+               ^^^ [1]
+
+
+Error ---------------------------------------------------- error.invalid-use-ref-added-to-dep-without-type-info.js:14:23
+
+Cannot read `current` from expression [1] because `ref` values may not be read during render. 
+(https://react.dev/reference/react/useRef). [react-rule]
+
+   14|   const x = { a, val: val.ref.current }; // Error
+                             ^^^^^^^ [1]
+
+
+
+Found 6 errors

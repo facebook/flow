@@ -367,6 +367,10 @@ and 'loc t' =
       use_op: 'loc virtual_use_op;
     }
   | EReactElementFunArity of 'loc virtual_reason * string * int
+  | EReactRefInRender of {
+      usage: 'loc virtual_reason;
+      kind: ref_in_render_kind;
+    }
   | EFunctionCallExtraArg of 'loc virtual_reason * 'loc virtual_reason * int * 'loc virtual_use_op
   | EUnsupportedSetProto of 'loc virtual_reason
   | EDuplicateModuleProvider of {
@@ -625,6 +629,10 @@ and 'loc exponential_spread_reason_group = {
   first_reason: 'loc virtual_reason;
   second_reason: 'loc virtual_reason option;
 }
+
+and ref_in_render_kind =
+  | Argument
+  | Access
 
 and exactness_error_kind =
   | Indexer
@@ -1108,6 +1116,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EInvalidLHSInAssignment l -> EInvalidLHSInAssignment (f l)
   | EUnsupportedImplements r -> EUnsupportedImplements (map_reason r)
   | EReactElementFunArity (r, s, i) -> EReactElementFunArity (map_reason r, s, i)
+  | EReactRefInRender { usage; kind } -> EReactRefInRender { usage = map_reason usage; kind }
   | EUnsupportedSetProto r -> EUnsupportedSetProto (map_reason r)
   | EDuplicateModuleProvider { module_name; provider; conflict } ->
     EDuplicateModuleProvider { module_name; provider = f provider; conflict = f conflict }
@@ -1532,6 +1541,7 @@ let util_use_op_of_msg nope util = function
   | EInvalidLHSInAssignment _
   | EUnsupportedImplements _
   | EReactElementFunArity (_, _, _)
+  | EReactRefInRender _
   | EUnsupportedSetProto _
   | EDuplicateModuleProvider { module_name = _; provider = _; conflict = _ }
   | EParseError (_, _)
@@ -1626,6 +1636,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EInvalidExtends reason
   | EUnsupportedSetProto reason
   | EReactElementFunArity (reason, _, _)
+  | EReactRefInRender { usage = reason; _ }
   | EUnsupportedImplements reason
   | EObjectComputedPropertyAssign (reason, _)
   | EObjectComputedPropertyAccess (_, reason)
@@ -3508,6 +3519,32 @@ let friendly_message_of_msg loc_of_aloc msg =
       ]
     in
     Normal { features }
+  | EReactRefInRender { usage; kind = Argument } ->
+    let features =
+      [
+        text "Cannot pass ";
+        ref usage;
+        text " as an argument because ";
+        code "ref";
+        text " values may not be passed to functions because they could read the ref value (";
+        code "current";
+        text ") property) during render.  (https://react.dev/reference/react/useRef).";
+      ]
+    in
+    Normal { features }
+  | EReactRefInRender { usage; kind = Access } ->
+    let features =
+      [
+        text "Cannot read ";
+        code "current";
+        text " from ";
+        ref usage;
+        text " because ";
+        code "ref";
+        text " values may not be read during render.  (https://react.dev/reference/react/useRef).";
+      ]
+    in
+    Normal { features }
   | EFunctionCallExtraArg (unused_reason, def_reason, param_count, use_op) ->
     let msg =
       match param_count with
@@ -5367,6 +5404,7 @@ let error_code_of_message err : error_code option =
   | EPropNotWritable { use_op; _ } -> react_rule_of_use_op use_op ~default:CannotWrite
   | EPropPolarityMismatch _ -> Some IncompatibleVariance
   | EReactElementFunArity (_, _, _) -> Some MissingArg
+  | EReactRefInRender _ -> Some ReactRule
   (* We don't want these to be suppressible *)
   | ERecursionLimit (_, _) -> None
   | EROArrayWrite (_, use_op) -> react_rule_of_use_op use_op ~default:CannotWrite

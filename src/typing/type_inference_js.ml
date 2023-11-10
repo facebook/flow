@@ -503,6 +503,7 @@ let infer_ast ~lint_severities cx filename comments aloc_ast =
       )
     in
 
+    React_rules.check_react_rules cx program;
     check_multiplatform_conformance cx filename prog_aloc;
     Exists_marker.mark cx program;
     program
