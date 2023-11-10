@@ -100,7 +100,7 @@ let is_fst = function
               }
             );
           return =
-            Flow_ast.Type.Function.TypeAnnotation
+            Ast.Type.Function.TypeAnnotation
               ( _,
                 T.Generic
                   {

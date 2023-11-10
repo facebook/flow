@@ -181,7 +181,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
       this#annotate_node loc ty (fun type_ast -> { prop with annot = Ast.Type.Available type_ast })
 
     method! variable_declarator ~kind decl =
-      let open Flow_ast.Statement.VariableDeclaration.Declarator in
+      let open Ast.Statement.VariableDeclaration.Declarator in
       match (kind, decl) with
       | ( Ast.Variable.Const,
           ( dloc,
@@ -249,7 +249,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
       | None -> expr
 
     method! function_return_annotation return =
-      let open Flow_ast.Function.ReturnAnnot in
+      let open Ast.Function.ReturnAnnot in
       match return with
       | Available _
       | TypeGuard _ ->
@@ -317,8 +317,8 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
           else
             Ast.Class.Body.Property (loc, prop'))
 
-    method! variable_declarator_pattern ~kind (expr : (Loc.t, Loc.t) Flow_ast.Pattern.t) =
-      let open Flow_ast.Pattern in
+    method! variable_declarator_pattern ~kind (expr : (Loc.t, Loc.t) Ast.Pattern.t) =
+      let open Ast.Pattern in
       let (loc, patt) = expr in
       match (patt, kind) with
       (* Unsupported cases. *)
@@ -375,7 +375,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
              comments = _;
            }
          );
-       return = Flow_ast.Function.ReturnAnnot.Missing rloc;
+       return = Ast.Function.ReturnAnnot.Missing rloc;
        _;
       }
         when ploc = rloc ->

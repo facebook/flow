@@ -6,6 +6,7 @@
  *)
 
 open Utils_js
+module Ast = Flow_ast
 
 module type REFINEMENT_KEY = sig
   module L : Loc_sig.S
@@ -27,11 +28,11 @@ module type REFINEMENT_KEY = sig
 
   val debug_string_of_t : t -> string
 
-  val of_optional_chain : ('a, L.t) Flow_ast.Expression.t -> t option
+  val of_optional_chain : ('a, L.t) Ast.Expression.t -> t option
 
-  val of_expression : ('a, L.t) Flow_ast.Expression.t -> t option
+  val of_expression : ('a, L.t) Ast.Expression.t -> t option
 
-  val of_argument : ('a, L.t) Flow_ast.Expression.expression_or_spread -> t option
+  val of_argument : ('a, L.t) Ast.Expression.expression_or_spread -> t option
 
   val of_name : string -> L.t -> t
 
@@ -39,11 +40,9 @@ module type REFINEMENT_KEY = sig
 
   val lookup_of_name_with_projections : string -> proj list -> lookup
 
-  val lookup_of_member :
-    allow_optional:bool -> ('a, L.t) Flow_ast.Expression.Member.t -> lookup option
+  val lookup_of_member : allow_optional:bool -> ('a, L.t) Ast.Expression.Member.t -> lookup option
 
-  val lookup_of_expression :
-    ?allow_optional:bool -> ('a, L.t) Flow_ast.Expression.t -> lookup option
+  val lookup_of_expression : ?allow_optional:bool -> ('a, L.t) Ast.Expression.t -> lookup option
 
   val proj_uses_propname : private_:bool -> string -> proj list -> bool
 
@@ -107,7 +106,7 @@ module Make (L : Loc_sig.S) : REFINEMENT_KEY with module L = L = struct
    * The purpose of these functions is to extract _what_ is being refined when we have something like
    * expr != null. What in expr does this refine? *)
   let rec lookup_of_expression ?(allow_optional = true) =
-    let open Flow_ast.Expression in
+    let open Ast.Expression in
     function
     | (_, Identifier id) -> Some (lookup_of_identifier id)
     | (_, This _) -> Some lookup_of_this
@@ -119,21 +118,18 @@ module Make (L : Loc_sig.S) : REFINEMENT_KEY with module L = L = struct
       (* other LHSes unsupported currently/here *)
       None
 
-  and lookup_of_member ~allow_optional { Flow_ast.Expression.Member._object; property; _ } =
-    let open Flow_ast.Expression.Member in
+  and lookup_of_member ~allow_optional { Ast.Expression.Member._object; property; _ } =
+    let open Ast.Expression.Member in
     match property with
-    | PropertyIdentifier (_, { Flow_ast.Identifier.name; comments = _ })
+    | PropertyIdentifier (_, { Ast.Identifier.name; comments = _ })
+    | PropertyExpression (_, Ast.Expression.StringLiteral { Ast.StringLiteral.value = name; _ })
     | PropertyExpression
-        (_, Flow_ast.Expression.StringLiteral { Flow_ast.StringLiteral.value = name; _ })
-    | PropertyExpression
-        ( _,
-          Flow_ast.Expression.NumberLiteral
-            { Flow_ast.NumberLiteral.value = _; raw = name; comments = _ }
-        ) ->
+        (_, Ast.Expression.NumberLiteral { Ast.NumberLiteral.value = _; raw = name; comments = _ })
+      ->
       (match lookup_of_expression ~allow_optional _object with
       | Some { base; projections } -> Some { base; projections = Prop name :: projections }
       | None -> None)
-    | PropertyPrivateName (_, { Flow_ast.PrivateName.name; comments = _ }) ->
+    | PropertyPrivateName (_, { Ast.PrivateName.name; comments = _ }) ->
       (match lookup_of_expression ~allow_optional _object with
       | Some { base; projections } -> Some { base; projections = PrivateField name :: projections }
       | None -> None)
@@ -146,7 +142,7 @@ module Make (L : Loc_sig.S) : REFINEMENT_KEY with module L = L = struct
         | None -> None)
       | None -> None)
 
-  and lookup_of_identifier (_, { Flow_ast.Identifier.name; comments = _ }) =
+  and lookup_of_identifier (_, { Ast.Identifier.name; comments = _ }) =
     { base = name; projections = [] }
 
   and lookup_of_this = { base = "this"; projections = [] }
@@ -161,8 +157,8 @@ module Make (L : Loc_sig.S) : REFINEMENT_KEY with module L = L = struct
 
   let of_argument arg =
     match arg with
-    | Flow_ast.Expression.Spread _ -> None
-    | Flow_ast.Expression.Expression e -> of_expression e
+    | Ast.Expression.Spread _ -> None
+    | Ast.Expression.Expression e -> of_expression e
 
   let lookup_of_name name = { base = name; projections = [] }
 
@@ -171,7 +167,7 @@ module Make (L : Loc_sig.S) : REFINEMENT_KEY with module L = L = struct
   let of_name name loc = { loc; lookup = lookup_of_name name }
 
   let rec of_optional_chain expr =
-    let open Flow_ast.Expression in
+    let open Ast.Expression in
     match expr with
     | (_, Call _) -> None
     | (_, Member _) -> None
@@ -179,7 +175,7 @@ module Make (L : Loc_sig.S) : REFINEMENT_KEY with module L = L = struct
         OptionalMember
           {
             OptionalMember.member =
-              { Member._object = (loc, Identifier (_, { Flow_ast.Identifier.name; _ })); _ };
+              { Member._object = (loc, Identifier (_, { Ast.Identifier.name; _ })); _ };
             _;
           }
       ) ->

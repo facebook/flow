@@ -928,11 +928,11 @@ struct
 
       method for_in_or_of_left_declaration left =
         let (_, decl) = left in
-        let open Flow_ast.Statement.VariableDeclaration in
+        let open Ast.Statement.VariableDeclaration in
         let { declarations; kind; comments = _ } = decl in
         match declarations with
-        | [(_, { Flow_ast.Statement.VariableDeclaration.Declarator.id; init = _ })] ->
-          let open Flow_ast.Pattern in
+        | [(_, { Ast.Statement.VariableDeclaration.Declarator.id; init = _ })] ->
+          let open Ast.Pattern in
           (match id with
           | (_, (Identifier _ | Object _ | Array _)) ->
             ignore @@ this#variable_declarator_pattern ~kind id

@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Ast = Flow_ast
 module FilenameMap = Utils_js.FilenameMap
 
 type ('a, 't) abstract_codemod_runner =
@@ -38,7 +39,7 @@ let save_ast_diff ~opts file_key ast ast' =
 let make_visitor :
     ('b, 'a) abstract_codemod_runner ->
     options:Options.t ->
-    (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t ->
+    (Loc.t, Loc.t) Ast.Program.t ->
     'a ->
     'b =
  fun runner ~options ast cctx ->
@@ -47,7 +48,7 @@ let make_visitor :
   match runner with
   | Reducer reducer ->
     let reducer = reducer cctx in
-    let (_ : (Loc.t, Loc.t) Flow_ast.Program.t) = reducer#program ast in
+    let (_ : (Loc.t, Loc.t) Ast.Program.t) = reducer#program ast in
     reducer#acc
   | Mapper mapper ->
     let mapper = mapper cctx in

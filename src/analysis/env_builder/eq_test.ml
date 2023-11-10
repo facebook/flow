@@ -5,8 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Ast = Flow_ast
+
 let is_number_literal node =
-  let open Flow_ast in
+  let open Ast in
   match node with
   | Expression.NumberLiteral _
   | Expression.Unary
@@ -19,7 +21,7 @@ let is_number_literal node =
   | _ -> false
 
 let extract_number_literal node =
-  let open Flow_ast in
+  let open Ast in
   match node with
   | Expression.NumberLiteral { NumberLiteral.value; raw; comments = _ } -> (value, raw)
   | Expression.Unary
@@ -32,13 +34,13 @@ let extract_number_literal node =
   | _ -> raise Env_api.(Env_invariant (None, Impossible "not a number literal"))
 
 let is_bigint_literal node =
-  let open Flow_ast in
+  let open Ast in
   match node with
   | Expression.BigIntLiteral _ -> true
   | _ -> false
 
 let extract_bigint_literal node =
-  let open Flow_ast in
+  let open Ast in
   match node with
   | Expression.BigIntLiteral { BigIntLiteral.value; raw; comments = _ } -> (value, raw)
   | _ -> Utils_js.assert_false "not a bigint literal"
@@ -47,16 +49,16 @@ module type S = sig
   module Env_api : Env_api.S with module L = Loc_sig.ALocS
 
   val jsx_attributes_possible_sentinel_refinements :
-    (ALoc.t, ALoc.t) Flow_ast.JSX.Opening.attribute list -> Hint.sentinel_refinement SMap.t
+    (ALoc.t, ALoc.t) Ast.JSX.Opening.attribute list -> Hint.sentinel_refinement SMap.t
 
   val object_properties_possible_sentinel_refinements :
-    (ALoc.t, ALoc.t) Flow_ast.Expression.Object.property list -> Hint.sentinel_refinement SMap.t
+    (ALoc.t, ALoc.t) Ast.Expression.Object.property list -> Hint.sentinel_refinement SMap.t
 
   val visit_eq_test :
     on_type_of_test:
       (ALoc.t ->
-      (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
-      (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
+      (ALoc.t, ALoc.t) Ast.Expression.t ->
+      (ALoc.t, ALoc.t) Ast.Expression.t ->
       string ->
       bool ->
       'a
@@ -65,17 +67,17 @@ module type S = sig
       (strict:bool ->
       sense:bool ->
       ALoc.t ->
-      (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
+      (ALoc.t, ALoc.t) Ast.Expression.t ->
       Env_api.Refi.refinement_kind ->
-      (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
+      (ALoc.t, ALoc.t) Ast.Expression.t ->
       'a
       ) ->
     on_null_test:
       (sense:bool ->
       strict:bool ->
       ALoc.t ->
-      (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
-      (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
+      (ALoc.t, ALoc.t) Ast.Expression.t ->
+      (ALoc.t, ALoc.t) Ast.Expression.t ->
       'a
       ) ->
     on_void_test:
@@ -83,22 +85,19 @@ module type S = sig
       strict:bool ->
       check_for_bound_undefined:bool ->
       ALoc.t ->
-      (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
-      (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
+      (ALoc.t, ALoc.t) Ast.Expression.t ->
+      (ALoc.t, ALoc.t) Ast.Expression.t ->
       'a
       ) ->
-    on_member_eq_other:
-      ((ALoc.t, ALoc.t) Flow_ast.Expression.t -> (ALoc.t, ALoc.t) Flow_ast.Expression.t -> 'a) ->
-    on_other_eq_member:
-      ((ALoc.t, ALoc.t) Flow_ast.Expression.t -> (ALoc.t, ALoc.t) Flow_ast.Expression.t -> 'a) ->
+    on_member_eq_other:((ALoc.t, ALoc.t) Ast.Expression.t -> (ALoc.t, ALoc.t) Ast.Expression.t -> 'a) ->
+    on_other_eq_member:((ALoc.t, ALoc.t) Ast.Expression.t -> (ALoc.t, ALoc.t) Ast.Expression.t -> 'a) ->
     is_switch_cond_context:bool ->
-    on_other_eq_test:
-      ((ALoc.t, ALoc.t) Flow_ast.Expression.t -> (ALoc.t, ALoc.t) Flow_ast.Expression.t -> 'a) ->
+    on_other_eq_test:((ALoc.t, ALoc.t) Ast.Expression.t -> (ALoc.t, ALoc.t) Ast.Expression.t -> 'a) ->
     strict:bool ->
     sense:bool ->
     ALoc.t ->
-    (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
-    (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
+    (ALoc.t, ALoc.t) Ast.Expression.t ->
+    (ALoc.t, ALoc.t) Ast.Expression.t ->
     'a
 end
 
@@ -116,13 +115,10 @@ module Make
 
   let literal_check_of_expr ((_loc, expr) as e) =
     match expr with
-    | Flow_ast.Expression.StringLiteral { Flow_ast.StringLiteral.value; _ } ->
-      Some (SingletonStr value)
-    | Flow_ast.Expression.NumberLiteral { Flow_ast.NumberLiteral.value; _ } ->
-      Some (SingletonNum value)
-    | Flow_ast.Expression.BooleanLiteral { Flow_ast.BooleanLiteral.value; _ } ->
-      Some (SingletonBool value)
-    | Flow_ast.Expression.Member mem ->
+    | Ast.Expression.StringLiteral { Ast.StringLiteral.value; _ } -> Some (SingletonStr value)
+    | Ast.Expression.NumberLiteral { Ast.NumberLiteral.value; _ } -> Some (SingletonNum value)
+    | Ast.Expression.BooleanLiteral { Ast.BooleanLiteral.value; _ } -> Some (SingletonBool value)
+    | Ast.Expression.Member mem ->
       if Base.Option.is_some @@ RefinementKey.lookup_of_member ~allow_optional:false mem then
         Some (Member (Reason.mk_expression_reason e))
       else
@@ -130,20 +126,20 @@ module Make
     | _ -> None
 
   let jsx_attributes_possible_sentinel_refinements =
-    let open Flow_ast.JSX in
+    let open Ast.JSX in
     Base.List.fold ~init:SMap.empty ~f:(fun acc -> function
       | Opening.Attribute
           ( _,
             {
               Attribute.name =
-                Flow_ast.JSX.Attribute.Identifier (_, { Flow_ast.JSX.Identifier.name; comments = _ });
+                Ast.JSX.Attribute.Identifier (_, { Ast.JSX.Identifier.name; comments = _ });
               value;
             }
           ) ->
         let check =
           match value with
           | None -> Some (SingletonBool true)
-          | Some (Attribute.StringLiteral (_, { Flow_ast.StringLiteral.value; _ })) ->
+          | Some (Attribute.StringLiteral (_, { Ast.StringLiteral.value; _ })) ->
             Some (SingletonStr value)
           | Some
               (Attribute.ExpressionContainer
@@ -162,17 +158,17 @@ module Make
 
   let object_properties_possible_sentinel_refinements =
     Base.List.fold ~init:SMap.empty ~f:(fun acc -> function
-      | Flow_ast.Expression.Object.Property p ->
-        let open Flow_ast.Expression.Object.Property in
+      | Ast.Expression.Object.Property p ->
+        let open Ast.Expression.Object.Property in
         (match p with
         | ( _,
             Init
               {
                 key =
-                  ( Flow_ast.Expression.Object.Property.StringLiteral
-                      (_, { Flow_ast.StringLiteral.value = name; _ })
-                  | Flow_ast.Expression.Object.Property.Identifier
-                      (_, { Flow_ast.Identifier.name; comments = _ }) );
+                  ( Ast.Expression.Object.Property.StringLiteral
+                      (_, { Ast.StringLiteral.value = name; _ })
+                  | Ast.Expression.Object.Property.Identifier
+                      (_, { Ast.Identifier.name; comments = _ }) );
                 value;
                 shorthand = _;
               }
@@ -180,7 +176,7 @@ module Make
           literal_check_of_expr value
           |> Base.Option.value_map ~default:acc ~f:(fun check -> SMap.add name check acc)
         | _ -> acc)
-      | Flow_ast.Expression.Object.SpreadProperty _ -> acc
+      | Ast.Expression.Object.SpreadProperty _ -> acc
     )
 
   let visit_eq_test
@@ -197,7 +193,7 @@ module Make
       loc
       left
       right =
-    let open Flow_ast in
+    let open Ast in
     match (left, right) with
     (* typeof expr ==/=== string *)
     | ( ( _,
@@ -348,14 +344,14 @@ module Make
     | (expr, ((_, Expression.NullLiteral _) as other)) ->
       on_null_test ~sense ~strict loc expr other
     (* expr op undefined *)
-    | ( ( (_, Expression.Identifier (_, { Flow_ast.Identifier.name = "undefined"; comments = _ }))
-        as undefined
+    | ( ( (_, Expression.Identifier (_, { Ast.Identifier.name = "undefined"; comments = _ })) as
+        undefined
         ),
         expr
       )
     | ( expr,
-        ( (_, Expression.Identifier (_, { Flow_ast.Identifier.name = "undefined"; comments = _ }))
-        as undefined
+        ( (_, Expression.Identifier (_, { Ast.Identifier.name = "undefined"; comments = _ })) as
+        undefined
         )
       ) ->
       on_void_test ~sense ~strict ~check_for_bound_undefined:true loc expr undefined
