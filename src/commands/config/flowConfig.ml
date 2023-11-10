@@ -52,7 +52,7 @@ module Opts = struct
     channel_mode: [ `pipe | `socket ] option;
     component_syntax: Options.component_syntax;
     component_syntax_includes: string list;
-    component_syntax_deep_read_only: bool;
+    react_rules: Options.react_rules list;
     direct_dependent_files_fix: bool option;
     emoji: bool option;
     enable_const_params: bool option;
@@ -176,7 +176,7 @@ module Opts = struct
       casting_syntax = None;
       component_syntax = Options.Off;
       component_syntax_includes = [];
-      component_syntax_deep_read_only = false;
+      react_rules = [];
       direct_dependent_files_fix = None;
       emoji = None;
       enable_const_params = None;
@@ -500,6 +500,17 @@ module Opts = struct
       ]
       (fun opts v -> Ok { opts with component_syntax = v })
 
+  let react_rules_parser =
+    let open Options in
+    enum
+      ~init:(fun opts -> { opts with react_rules = [] })
+      ~multiple:true
+      [
+        ("validateRefAccessDuringRender", ValidateRefAccessDuringRender);
+        ("deepReadOnlyProps", DeepReadOnlyProps);
+      ]
+      (fun opts v -> Ok { opts with react_rules = v :: opts.react_rules })
+
   let component_syntax_includes_parser =
     let open Options in
     string
@@ -519,7 +530,12 @@ module Opts = struct
           })
 
   let component_syntax_deep_read_only_parser =
-    boolean (fun opts v -> Ok { opts with component_syntax_deep_read_only = v })
+    boolean (fun opts v ->
+        if v then
+          Ok { opts with react_rules = Options.DeepReadOnlyProps :: opts.react_rules }
+        else
+          Ok opts
+    )
 
   let renders_type_validation_parser =
     boolean (fun opts v -> Ok { opts with renders_type_validation = v })
@@ -820,6 +836,7 @@ module Opts = struct
       ("experimental.component_syntax", component_syntax_parser);
       ("experimental.component_syntax.typing.includes", component_syntax_includes_parser);
       ("experimental.component_syntax.deep_read_only", component_syntax_deep_read_only_parser);
+      ("experimental.react_rule", react_rules_parser);
       ("experimental.renders_type_validation", renders_type_validation_parser);
       ("experimental.renders_type_validation.includes", renders_type_validation_includes_parser);
       ("experimental.direct_dependent_files_fix", direct_dependent_files_fix_parser);
@@ -1462,7 +1479,7 @@ let component_syntax c = c.options.Opts.component_syntax
 
 let component_syntax_includes c = c.options.Opts.component_syntax_includes
 
-let component_syntax_deep_read_only c = c.options.Opts.component_syntax_deep_read_only
+let react_rules c = c.options.Opts.react_rules
 
 let direct_dependent_files_fix c = c.options.Opts.direct_dependent_files_fix
 

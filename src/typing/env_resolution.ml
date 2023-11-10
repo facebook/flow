@@ -59,7 +59,7 @@ let resolve_annotation cx tparams_map ?(react_deep_read_only = None) anno =
   let (t, anno) = Anno.mk_type_available_annotation cx tparams_map anno in
   let t =
     match react_deep_read_only with
-    | Some param_loc when Context.component_syntax_deep_read_only cx ->
+    | Some param_loc when Context.react_rule_enabled cx Options.DeepReadOnlyProps ->
       Flow_js.mk_possibly_evaluated_destructor
         cx
         unknown_use

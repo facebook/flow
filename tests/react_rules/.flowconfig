@@ -1,4 +1,5 @@
 [options]
 experimental.component_syntax=typing
+experimental.react_rule=validateRefAccessDuringRender
 no_flowlib=false
 all=true

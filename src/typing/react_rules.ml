@@ -8,7 +8,7 @@
 module Ast = Flow_ast
 open Reason
 
-let illegal_render_read_var cx rrid var_reason kind t =
+let check_ref_use cx rrid var_reason kind t =
   let rec recur_id seen t =
     let recur = recur_id seen in
     let open Type in
@@ -54,19 +54,75 @@ let illegal_render_read_var cx rrid var_reason kind t =
   recur_id ISet.empty t
 
 let rec whole_ast_visitor cx rrid =
-  object
-    inherit [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper
+  object (this)
+    inherit
+      [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
 
     method on_loc_annot l = l
 
     method on_type_annot l = l
 
     method! component_declaration = (component_ast_visitor cx rrid)#component_declaration
+
+    method! function_declaration fn =
+      let {
+        Ast.Function.id;
+        params = (_, { Ast.Function.Params.params = params_list; rest; _ }) as params;
+        body;
+        async;
+        generator;
+        predicate;
+        return;
+        tparams;
+        sig_loc;
+        comments;
+      } =
+        fn
+      in
+      if
+        Context.react_rules_always cx
+        && Base.Option.value_map
+             ~f:(fun (_, { Ast.Identifier.name; _ }) ->
+               String.length name > 0
+               &&
+               let fst = String.sub name 0 1 in
+               fst = String.uppercase_ascii fst && fst <> "_")
+             ~default:false
+             id
+        && List.length params_list = 1
+        && Base.Option.is_none rest
+      then
+        let ident' = Base.Option.map ~f:this#function_identifier id in
+        this#type_params_opt tparams (fun tparams' ->
+            let params' = (component_ast_visitor cx rrid)#function_params params in
+            let return' = this#function_return_annotation return in
+            let body' = (component_ast_visitor cx rrid)#function_component_body body in
+            let predicate' =
+              Base.Option.map ~f:(component_ast_visitor cx rrid)#predicate predicate
+            in
+            let sig_loc' = this#on_loc_annot sig_loc in
+            let comments' = this#syntax_opt comments in
+            {
+              Ast.Function.id = ident';
+              params = params';
+              return = return';
+              body = body';
+              async;
+              generator;
+              predicate = predicate';
+              tparams = tparams';
+              sig_loc = sig_loc';
+              comments = comments';
+            }
+        )
+      else
+        super#function_declaration fn
   end
 
 and component_ast_visitor cx rrid =
   object (this)
-    inherit [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper
+    inherit
+      [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
 
     method on_loc_annot l = l
 
@@ -79,7 +135,8 @@ and component_ast_visitor cx rrid =
           mk_reason (RIdentifier (OrdinaryName name)) loc
         | _ -> mk_reason (RCustom "expression") loc
       in
-      illegal_render_read_var cx rrid reason err_kind ty;
+      if Context.react_rule_enabled cx Options.ValidateRefAccessDuringRender then
+        check_ref_use cx rrid reason err_kind ty;
       this#expression expr
 
     method! arg_list (annot, args) =
@@ -105,6 +162,8 @@ and component_ast_visitor cx rrid =
         | _ -> this#expression _object
       in
       expr
+
+    method function_component_body = super#function_body_any
 
     method! function_body_any = (whole_ast_visitor cx rrid)#function_body_any
 

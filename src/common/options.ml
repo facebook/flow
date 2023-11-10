@@ -34,6 +34,10 @@ type component_syntax =
   | Parsing
   | FullSupport
 
+type react_rules =
+  | ValidateRefAccessDuringRender
+  | DeepReadOnlyProps
+
 type format = {
   opt_bracket_spacing: bool;
   opt_single_quotes: bool;
@@ -73,7 +77,7 @@ type t = {
   opt_channel_mode: [ `pipe | `socket ];
   opt_component_syntax: component_syntax;
   opt_component_syntax_includes: string list;
-  opt_component_syntax_deep_read_only: bool;
+  opt_react_rules: react_rules list;
   opt_debug: bool;
   opt_direct_dependent_files_fix: bool;
   opt_enable_const_params: bool;
@@ -170,8 +174,6 @@ let channel_mode opts = opts.opt_channel_mode
 
 let component_syntax opts = opts.opt_component_syntax
 
-let component_syntax_deep_read_only opts = opts.opt_component_syntax_deep_read_only
-
 let typecheck_component_syntax opts =
   match opts.opt_component_syntax with
   | Off
@@ -198,6 +200,8 @@ let typecheck_component_syntax_in_file opts file =
          let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
          List.exists (fun str -> Base.String.is_prefix ~prefix:str normalized_filename) dirs
      end
+
+let react_rules opts = opts.opt_react_rules
 
 let direct_dependent_files_fix opts = opts.opt_direct_dependent_files_fix
 

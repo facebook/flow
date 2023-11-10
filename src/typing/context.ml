@@ -39,7 +39,8 @@ type metadata = {
   casting_syntax: Options.CastingSyntax.t;
   component_syntax: bool;
   component_syntax_includes: string list;
-  component_syntax_deep_read_only: bool;
+  react_rules: Options.react_rules list;
+  react_rules_always: bool;
   enable_const_params: bool;
   enable_enums: bool;
   enable_relay_integration: bool;
@@ -263,7 +264,8 @@ let metadata_of_options options =
     casting_syntax = Options.casting_syntax options;
     component_syntax = Options.typecheck_component_syntax options;
     component_syntax_includes = Options.component_syntax_includes options;
-    component_syntax_deep_read_only = Options.component_syntax_deep_read_only options;
+    react_rules = Options.react_rules options;
+    react_rules_always = false;
     enable_const_params = Options.enable_const_params options;
     enable_enums = Options.enums options;
     enable_relay_integration = Options.enable_relay_integration options;
@@ -481,7 +483,9 @@ let casting_syntax cx = cx.metadata.casting_syntax
 let component_syntax cx =
   cx.metadata.component_syntax || in_dirlist cx cx.metadata.component_syntax_includes
 
-let component_syntax_deep_read_only cx = cx.metadata.component_syntax_deep_read_only
+let react_rules_always cx = cx.metadata.react_rules_always
+
+let react_rule_enabled cx rule = List.mem rule cx.metadata.react_rules
 
 let enable_const_params cx =
   cx.metadata.enable_const_params || cx.metadata.strict || cx.metadata.strict_local

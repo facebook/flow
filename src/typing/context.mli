@@ -76,7 +76,8 @@ type metadata = {
   casting_syntax: Options.CastingSyntax.t;
   component_syntax: bool;
   component_syntax_includes: string list;
-  component_syntax_deep_read_only: bool;
+  react_rules: Options.react_rules list;
+  react_rules_always: bool;
   enable_const_params: bool;
   enable_enums: bool;
   enable_relay_integration: bool;
@@ -168,7 +169,9 @@ val casting_syntax : t -> Options.CastingSyntax.t
 
 val component_syntax : t -> bool
 
-val component_syntax_deep_read_only : t -> bool
+val react_rule_enabled : t -> Options.react_rules -> bool
+
+val react_rules_always : t -> bool
 
 val enable_const_params : t -> bool
 
