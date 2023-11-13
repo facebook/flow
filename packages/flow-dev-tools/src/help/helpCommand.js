@@ -11,7 +11,7 @@
 const {format} = require('util');
 
 const {default: Base} = require('../command/Base');
-const commandFinder = require('../command/finder');
+const allCommands = require('../command/allCommands');
 
 type Args = {
   command: ?string,
@@ -26,16 +26,14 @@ class HelpCommand extends Base<Args> {
   static async run(args: Args): Promise<void> {
     const commandName = args.command;
     if (commandName != null) {
-      const commandMap = await commandFinder(__dirname);
-      const commandPath = commandMap.get(commandName);
+      const commandModule = allCommands[commandName];
 
-      if (commandPath === undefined) {
+      if (commandModule === undefined) {
         process.stderr.write(format('Unsupported command `%s`\n', commandName));
         return this.showUsage(this.BAD_ARGS);
       }
 
-      // $FlowFixMe
-      require(commandPath).default.showUsage(this.OK);
+      commandModule().default.showUsage(this.OK);
     } else {
       await this.showGeneralUsage(this.OK);
     }
@@ -65,21 +63,19 @@ ${validCommands}
   }
 
   static async validCommands(): Promise<string> {
-    const commandMap = await commandFinder(__dirname);
     const maxLength = Math.max(
       16,
-      ...Array.from(commandMap.keys()).map(k => k.length),
+      ...Object.keys(allCommands).map(k => k.length),
     );
 
     const validCommands = [];
-    for (const commandName of commandMap.keys()) {
+    for (const [commandName, commandModule] of Object.entries(allCommands)) {
       validCommands.push(
         format(
           '%s%s  %s',
           commandName,
           Array(maxLength - commandName.length).join(' '),
-          // $FlowFixMe
-          require(commandMap.get(commandName)).default.description(),
+          commandModule().default.description(),
         ),
       );
     }

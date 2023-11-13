@@ -12,7 +12,7 @@ const chalk = require('chalk');
 
 const {format} = require('util');
 
-const commandFinder = require('./command/finder');
+const allCommands = require('./command/allCommands');
 
 function cleanUp() {
   process.stdout.write('\x1B[?25h'); // Show terminal cursor
@@ -36,11 +36,9 @@ process.on('SIGINT', () => {
 });
 
 async function run(): Promise<void> {
-  const commandMap = await commandFinder(__dirname);
-
   const command = process.argv[2];
-  const commandModulePath = commandMap.get(command);
-  if (command == undefined || commandModulePath == undefined) {
+  const commandModule = allCommands[command];
+  if (command == undefined || commandModule == undefined) {
     const HelpCommand = require('./help/helpCommand').default;
     if (command == undefined) {
       await HelpCommand.showGeneralUsage(HelpCommand.BAD_ARGS);
@@ -49,9 +47,7 @@ async function run(): Promise<void> {
       await HelpCommand.showGeneralUsage(HelpCommand.BAD_ARGS);
     }
   } else {
-    /* $FlowFixMe - Babel transforms when things are required, so we only want to require the
-     * command we're running */
-    await require(commandModulePath).default.go();
+    await commandModule().default.go();
   }
 }
 
