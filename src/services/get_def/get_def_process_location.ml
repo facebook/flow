@@ -76,6 +76,8 @@ class searcher
 
     val mutable in_require_declarator = false
 
+    val mutable available_private_names : ALoc.t SMap.t = SMap.empty
+
     val mutable found_loc_ = LocNotFound
 
     method found_loc = found_loc_
@@ -417,12 +419,6 @@ class searcher
       if annot_covers_target annot then this#found_empty "object key (literal)";
       literal
 
-    method! object_key_private_name name =
-      let (loc, _) = name in
-      (* TODO: this should be supported *)
-      if covers_target loc then this#found_empty "object key (private)";
-      name
-
     (* for object properties using the shorthand {variableName} syntax,
      * process the value before the key so that the explicit-non-find in this#object_key_identifier
      * doesn't make us miss the variable *)
@@ -485,6 +481,33 @@ class searcher
       match c with
       | Flow_ast.JSX.Text _ when covers_target loc -> this#found_empty "jsx text"
       | _ -> super#jsx_child child
+
+    method! class_body cls_body =
+      let open Flow_ast.Class in
+      let (_, { Body.body; comments = _ }) = cls_body in
+      let new_available_private_names =
+        let add_private_name (loc, { Flow_ast.PrivateName.name; _ }) = SMap.add name loc in
+        Base.List.fold body ~init:available_private_names ~f:(fun acc -> function
+          | Body.Method (_, { Method.key = Flow_ast.Expression.Object.Property.PrivateName name; _ })
+          | Body.PrivateField (_, { PrivateField.key = name; _ }) ->
+            add_private_name name acc
+          | Body.Method _ -> acc
+          | Body.Property _ -> acc
+        )
+      in
+      let saved_available_private_names = available_private_names in
+      available_private_names <- new_available_private_names;
+      let result = Base.Result.try_with (fun () -> super#class_body cls_body) in
+      available_private_names <- saved_available_private_names;
+      Base.Result.ok_exn result
+
+    method! private_name ((loc, { Flow_ast.PrivateName.name; comments = _ }) as pn) =
+      if covers_target loc then
+        match SMap.find_opt name available_private_names with
+        | None -> this#found_empty "unbound private name"
+        | Some l -> this#own_def l name
+      else
+        pn
   end
 
 let process_location_in_typed_ast ~typed_ast ~is_legit_require ~purpose loc =
