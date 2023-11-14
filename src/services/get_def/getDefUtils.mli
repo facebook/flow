@@ -9,7 +9,7 @@ open Get_def_types
 
 val get_object_literal_loc : Type.t -> ALoc.t option
 
-val all_locs_of_property_def_info : property_def_info -> Loc.t Nel.t
+val all_locs_of_ordinary_property_def_info : single_property_def_info Nel.t -> Loc.t Nel.t
 
 val all_locs_of_def_info : def_info -> Loc.t list
 

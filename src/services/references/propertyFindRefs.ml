@@ -50,7 +50,7 @@ let annot_of_jsx_name =
   | MemberExpression (_, MemberExpression.{ property = (annot, _); _ }) ->
     annot
 
-module Potential_refs_search = struct
+module Potential_ordinary_refs_search = struct
   exception Found_import of ALoc.t
 
   class searcher cx ~(target_name : string) ~(potential_refs : Type.t ALocMap.t ref) =
@@ -88,12 +88,10 @@ module Potential_refs_search = struct
         let open Flow_ast.Expression.Member in
         let { _object = ((_, ty), _); property; comments = _ } = expr in
         (match property with
-        | PropertyIdentifier ((loc, _), { Flow_ast.Identifier.name; _ })
-        | PropertyPrivateName (loc, { Flow_ast.PrivateName.name; _ })
-          when name = target_name ->
+        | PropertyIdentifier ((loc, _), { Flow_ast.Identifier.name; _ }) when name = target_name ->
           potential_refs := ALocMap.add loc ty !potential_refs
-        | PropertyIdentifier _
         | PropertyPrivateName _
+        | PropertyIdentifier _
         | PropertyExpression _ ->
           ());
         super#member expr
@@ -243,12 +241,13 @@ let process_prop_refs ~loc_of_aloc cx potential_refs file_key prop_def_info name
      )
   >>| fun refs -> refs |> Base.List.filter_opt |> add_ref_kind FindRefsTypes.PropertyAccess
 
-let property_find_refs_in_file ~loc_of_aloc ast_info type_info file_key (props_info, name) =
+let ordinary_property_find_refs_in_file ~loc_of_aloc ast_info type_info file_key (props_info, name)
+    =
   let potential_refs : Type.t ALocMap.t ref = ref ALocMap.empty in
   let (Types_js_types.Typecheck_artifacts { cx; typed_ast; obj_to_obj_map }) = type_info in
   let (ast, _file_sig, _info) = ast_info in
   let local_defs =
-    Nel.to_list (all_locs_of_property_def_info (props_info, name))
+    Nel.to_list (all_locs_of_ordinary_property_def_info props_info)
     |> List.filter (fun loc -> loc.Loc.source = Some file_key)
     |> add_ref_kind FindRefsTypes.PropertyDefinition
   in
@@ -256,7 +255,7 @@ let property_find_refs_in_file ~loc_of_aloc ast_info type_info file_key (props_i
   if not has_symbol then
     Ok local_defs
   else (
-    Potential_refs_search.search cx ~target_name:name ~potential_refs typed_ast;
+    Potential_ordinary_refs_search.search cx ~target_name:name ~potential_refs typed_ast;
     let literal_prop_refs_result =
       (* Lazy to avoid this computation if there are no potentially-relevant object literals to
        * examine *)
@@ -271,6 +270,15 @@ let property_find_refs_in_file ~loc_of_aloc ast_info type_info file_key (props_i
     >>| ( @ ) local_defs
     >>| ( @ ) literal_prop_refs_result
   )
+
+let property_find_refs_in_file ~loc_of_aloc ast_info type_info file_key = function
+  | OrdinaryProperty { props_info; name } ->
+    ordinary_property_find_refs_in_file ~loc_of_aloc ast_info type_info file_key (props_info, name)
+  | PrivateNameProperty { def_loc; references; name = _ } ->
+    Ok
+      ((FindRefsTypes.PropertyDefinition, def_loc)
+      :: Base.List.map references ~f:(fun l -> (FindRefsTypes.PropertyAccess, l))
+      )
 
 let find_local_refs ~reader file_key ast_info type_info loc =
   let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in

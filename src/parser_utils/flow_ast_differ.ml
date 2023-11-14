@@ -3402,7 +3402,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       if String.equal name1 name2 then
         []
       else
-        [replace loc (Raw name1) (Raw name2)]
+        [replace loc (Raw ("#" ^ name1)) (Raw ("#" ^ name2))]
     in
     let comments = syntax_opt loc comments1 comments2 |> Base.Option.value ~default:[] in
     comments @ name

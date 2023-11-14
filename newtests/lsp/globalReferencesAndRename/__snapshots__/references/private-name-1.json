@@ -1,0 +1,31 @@
+{
+  "method": "textDocument/references",
+  "result": [
+    {
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/private-name.js",
+      "range": {
+        "start": {
+          "line": 3,
+          "character": 2
+        },
+        "end": {
+          "line": 3,
+          "character": 6
+        }
+      }
+    },
+    {
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/private-name.js",
+      "range": {
+        "start": {
+          "line": 7,
+          "character": 10
+        },
+        "end": {
+          "line": 7,
+          "character": 14
+        }
+      }
+    }
+  ]
+}

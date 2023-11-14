@@ -1,0 +1,35 @@
+{
+  "method": "textDocument/rename",
+  "result": {
+    "changes": {
+      "<PLACEHOLDER_PROJECT_URL>/__fixtures__/private-name.js": [
+        {
+          "range": {
+            "start": {
+              "line": 3,
+              "character": 2
+            },
+            "end": {
+              "line": 3,
+              "character": 11
+            }
+          },
+          "newText": "NEW_NAME = 3;"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 7,
+              "character": 8
+            },
+            "end": {
+              "line": 7,
+              "character": 14
+            }
+          },
+          "newText": "f.NEW_NAME"
+        }
+      ]
+    }
+  }
+}

@@ -2340,6 +2340,24 @@ let handle_global_find_references
       let metadata = with_data ~extra_data:(Some extra_data) metadata in
       Lwt.return
         (env, LspProt.LspFromServer (Some (ResponseMessage (id, refs_to_lsp_result []))), metadata)
+    | Ok
+        (Get_def_types.PropertyDefinition
+          (Get_def_types.PrivateNameProperty { def_loc; references; name = _ })
+          ) ->
+      (* We directly return the already computed find-ref result for private names, instead of
+       * wasting time scheduling another recheck. *)
+      let references =
+        (FindRefsTypes.PropertyDefinition, def_loc)
+        :: Base.List.map references ~f:(fun l -> (FindRefsTypes.PropertyAccess, l))
+        |> Base.List.dedup_and_sort ~compare:(fun (_, loc1) (_, loc2) -> Loc.compare loc1 loc2)
+      in
+      let extra_data = Hh_json.JSON_Object [("result", Hh_json.JSON_String "SUCCESS")] in
+      let metadata = with_data ~extra_data:(Some extra_data) metadata in
+      Lwt.return
+        ( env,
+          LspProt.LspFromServer (Some (ResponseMessage (id, refs_to_lsp_result references))),
+          metadata
+        )
     | Ok def_info ->
       (* The most interesting path for global find refs. We schedule a recheck, and a new
        * non-parallelizable command after the recheck to read the find ref *)

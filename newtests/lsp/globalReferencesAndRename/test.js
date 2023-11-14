@@ -45,13 +45,14 @@ module.exports = (suite(
       line: number,
       col: number,
       expectedFile: string,
+      newName: string = 'NEW_NAME',
     ) {
       return lspRequestAndWaitUntilResponse('textDocument/rename', {
         textDocument: {
           uri: `<PLACEHOLDER_PROJECT_URL>/__fixtures__/${fixture}`,
         },
         position: {line: line, character: col},
-        newName: 'NEW_NAME',
+        newName,
       }).verifyLSPMessageSnapshot(
         join(__dirname, '__snapshots__', 'rename', expectedFile),
         [
@@ -92,6 +93,10 @@ module.exports = (suite(
           12,
           'identifiers-def-3.json',
         ),
+        findAllRefsSnapshot('private-name.js', 7, 14, 'private-name-1.json'),
+        findAllRefsSnapshot('private-name.js', 8, 14, 'private-name-2.json'),
+        findAllRefsSnapshot('private-name.js', 20, 17, 'private-name-3.json'),
+        findAllRefsSnapshot('private-name.js', 23, 12, 'private-name-4.json'),
       ]),
       test('Global rename property 1', [
         addFiles(...fixtures),
@@ -121,6 +126,62 @@ module.exports = (suite(
           3,
           17,
           'identifiers-def-2.json',
+        ),
+      ]),
+      test('Global rename private name', [
+        addFiles(...fixtures),
+        lspStartAndConnect(),
+        globalRenameSnapshot(
+          'private-name.js',
+          7,
+          14,
+          'private-name-rename-to-non-private-1.json',
+        ),
+        globalRenameSnapshot(
+          'private-name.js',
+          8,
+          14,
+          'private-name-rename-to-non-private-2.json',
+        ),
+        globalRenameSnapshot(
+          'private-name.js',
+          20,
+          17,
+          'private-name-rename-to-non-private-3.json',
+        ),
+        globalRenameSnapshot(
+          'private-name.js',
+          23,
+          12,
+          'private-name-rename-to-non-private-4.json',
+        ),
+        globalRenameSnapshot(
+          'private-name.js',
+          7,
+          14,
+          'private-name-rename-to-private-1.json',
+          '#NEW_NAME',
+        ),
+        globalRenameSnapshot(
+          'private-name.js',
+          8,
+          14,
+          'private-name-rename-to-private-2.json',
+          '#NEW_NAME',
+        ),
+        globalRenameSnapshot(
+          'private-name.js',
+          20,
+          17,
+          'private-name-rename-to-private-3.json',
+          '#NEW_NAME',
+        ),
+        globalRenameSnapshot(
+          'private-name.js',
+          23,
+          12,
+          'private-name-rename-to-private-4.json',
+          '#NEW_NAME',
         ),
       ]),
     ];

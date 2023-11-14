@@ -35,12 +35,19 @@ type 'loc def_kind =
   | Obj_literal of 'loc * (* type of the object *) Type.t * (* name *) string
       (** In an object literal. Includes the location of the property definition, the object type,
           and the prop name. This object does not necessarily contain the desired property/method *)
+  | PrivateName of {
+      def_loc: 'loc;
+      references: 'loc list;
+      name: string;
+    }
 
 let map_def_kind_loc ~f = function
   | Use (t, name) -> Use (t, name)
   | Class_def (t, name, static) -> Class_def (t, name, static)
   | Obj_def (loc, name) -> Obj_def (f loc, name)
   | Obj_literal (loc, t, name) -> Obj_literal (f loc, t, name)
+  | PrivateName { def_loc; references; name } ->
+    PrivateName { def_loc = f def_loc; references = List.map f references; name }
 
 module Def_kind_search = struct
   exception
@@ -59,10 +66,18 @@ module Def_kind_search = struct
 
   exception Found of ALoc.t def_kind
 
+  type available_private_name = {
+    def_loc: ALoc.t;
+    mutable references: ALoc.t list;
+    mutable has_covered_target_reference: bool;
+  }
+
   class searcher ~(covers_target : ALoc.t -> bool) =
     object (this)
       inherit
         [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
+
+      val mutable available_private_names : available_private_name SMap.t = SMap.empty
 
       method on_loc_annot x = x
 
@@ -70,23 +85,14 @@ module Def_kind_search = struct
 
       method! expression (((l, t), expr) as x) =
         let open Flow_ast.Expression in
-        if covers_target l then
-          match expr with
-          | Class _ ->
-            (try super#expression x with
-            | Found_class_def { name; static } -> raise (Found (Class_def (t, name, static))))
-          | Object _ ->
-            (try super#expression x with
-            | Found_obj_prop { name; loc = _ } -> raise (Found (Obj_literal (l, t, name))))
-          | _ -> super#expression x
-        else
-          x
-
-      method! statement ((l, _) as x) =
-        if covers_target l then
-          super#statement x
-        else
-          x
+        match expr with
+        | Class _ ->
+          (try super#expression x with
+          | Found_class_def { name; static } -> raise (Found (Class_def (t, name, static))))
+        | Object _ ->
+          (try super#expression x with
+          | Found_obj_prop { name; loc = _ } -> raise (Found (Obj_literal (l, t, name))))
+        | _ -> super#expression x
 
       method! class_declaration cls =
         let open Flow_ast.Class in
@@ -98,6 +104,48 @@ module Def_kind_search = struct
         in
         try super#class_declaration cls with
         | Found_class_def { name; static } -> raise (Found (Class_def (class_type, name, static)))
+
+      method! class_body cls_body =
+        let open Flow_ast.Class in
+        let (_, { Body.body; comments = _ }) = cls_body in
+        let (all_available_private_names, new_available_private_names) =
+          let add_private_name (all, new_) (def_loc, { Flow_ast.PrivateName.name; _ }) =
+            let entry = { def_loc; references = []; has_covered_target_reference = false } in
+            (SMap.add name entry all, SMap.add name entry new_)
+          in
+          Base.List.fold body ~init:(available_private_names, SMap.empty) ~f:(fun acc -> function
+            | Body.Method
+                (_, { Method.key = Flow_ast.Expression.Object.Property.PrivateName name; _ })
+            | Body.PrivateField (_, { PrivateField.key = name; _ }) ->
+              add_private_name acc name
+            | Body.Method _ -> acc
+            | Body.Property _ -> acc
+          )
+        in
+        let saved_available_private_names = available_private_names in
+        available_private_names <- all_available_private_names;
+        let result =
+          Base.Result.try_with (fun () ->
+              let r = super#class_body cls_body in
+              SMap.iter
+                (fun name { def_loc; references; has_covered_target_reference } ->
+                  if has_covered_target_reference then
+                    raise (Found (PrivateName { def_loc; references; name })))
+                new_available_private_names;
+              r
+          )
+        in
+        available_private_names <- saved_available_private_names;
+        Base.Result.ok_exn result
+
+      method! private_name ((loc, { Flow_ast.PrivateName.name; comments = _ }) as pn) =
+        match SMap.find_opt name available_private_names with
+        | Some entry ->
+          entry.has_covered_target_reference <-
+            entry.has_covered_target_reference || covers_target loc;
+          if loc <> entry.def_loc then entry.references <- loc :: entry.references;
+          pn
+        | None -> pn
 
       method private visit_class_key ~static key =
         let open Flow_ast.Expression.Object.Property in
@@ -117,13 +165,6 @@ module Def_kind_search = struct
         let { key; static; _ } = prop in
         this#visit_class_key ~static key;
         super#class_property prop
-
-      method! class_private_field field =
-        let open Flow_ast.Class.PrivateField in
-        let { key; static; _ } = field in
-        let (loc, { Flow_ast.PrivateName.name; comments = _ }) = key in
-        if covers_target loc then raise (Found_class_def { name; static });
-        super#class_private_field field
 
       method! import_declaration loc decl =
         let open Flow_ast.Statement.ImportDeclaration in
@@ -179,12 +220,13 @@ module Def_kind_search = struct
         let open Flow_ast.Expression.Member in
         let { _object; property; comments = _ } = expr in
         (match property with
-        | PropertyIdentifier ((id_loc, _), { Flow_ast.Identifier.name; _ })
-        | PropertyPrivateName (id_loc, { Flow_ast.PrivateName.name; _ }) ->
+        | PropertyIdentifier ((id_loc, _), { Flow_ast.Identifier.name; _ }) ->
           if covers_target id_loc then
             let ((_, obj_t), _) = _object in
             raise (Found (Use (obj_t, name)))
-        | PropertyExpression _ -> ());
+        | PropertyPrivateName _
+        | PropertyExpression _ ->
+          ());
         super#member expr
 
       method! object_property prop =
@@ -249,11 +291,13 @@ let loc_of_single_def_info = function
   | ClassProperty loc -> loc
   | ObjectProperty loc -> loc
 
-let all_locs_of_property_def_info (props_info, _) = props_info |> Nel.map loc_of_single_def_info
+let all_locs_of_ordinary_property_def_info props_info = props_info |> Nel.map loc_of_single_def_info
 
 let all_locs_of_def_info = function
   | VariableDefinition (locs, _) -> locs
-  | PropertyDefinition props_info -> props_info |> all_locs_of_property_def_info |> Nel.to_list
+  | PropertyDefinition (OrdinaryProperty { props_info; name = _ }) ->
+    props_info |> all_locs_of_ordinary_property_def_info |> Nel.to_list
+  | PropertyDefinition (PrivateNameProperty { def_loc; _ }) -> [def_loc]
   | NoDefinition _ -> []
 
 type def_loc =
@@ -428,24 +472,28 @@ let def_info_of_typecheck_results ~loc_of_aloc cx obj_to_obj_map props_access_in
     extract_def_loc ~loc_of_aloc cx ty name >>| def_info_of_def_loc
   in
   match props_access_info with
-  | Obj_def (loc, name) -> Ok (Some (Nel.one (ObjectProperty loc), name))
+  | Obj_def (loc, name) ->
+    Ok (Some (OrdinaryProperty { props_info = Nel.one (ObjectProperty loc); name }))
   | Class_def (ty, name, static) ->
     if static then
       (* Here, `ty` ends up resolving to `ObjT` so we lose the knowledge that this is a static
        * property. This means that we don't get the fancy look-up-the-inheritance-chain behavior
        * that we get with class instances. That would be nice to add at some point. *)
-      def_info_of_type name ty >>| Base.Option.map ~f:(fun def_info -> (def_info, name))
+      def_info_of_type name ty
+      >>| Base.Option.map ~f:(fun def_info -> OrdinaryProperty { props_info = def_info; name })
     else
       (* We get the type of the class back here, so we need to extract the type of an instance *)
       extract_instancet cx ty >>= fun ty ->
       extract_def_loc_resolved ~loc_of_aloc cx ty name >>= ( function
-      | FoundClass locs -> Ok (Some (def_info_of_class_member_locs locs, name))
+      | FoundClass locs ->
+        Ok (Some (OrdinaryProperty { props_info = def_info_of_class_member_locs locs; name }))
       | FoundUnion _
       | FoundObject _ ->
         Error "Expected to extract class def info from a class"
       | _ -> Error "Unexpectedly failed to extract definition from known type" )
   | Use (ty, name) ->
-    def_info_of_type name ty >>| Base.Option.map ~f:(fun def_info -> (def_info, name))
+    def_info_of_type name ty
+    >>| Base.Option.map ~f:(fun def_info -> OrdinaryProperty { props_info = def_info; name })
   | Obj_literal (loc, ty, name) ->
     (match ty with
     | Type.(DefT (_, ObjT { props_tmap = literal_obj_props_tmap_id; _ })) ->
@@ -473,8 +521,10 @@ let def_info_of_typecheck_results ~loc_of_aloc cx obj_to_obj_map props_access_in
           (* object literal has no upper bound objects *)
           Ok literal_result
       in
-      Base.Result.map ~f:(fun res -> Some (res, name)) result
+      Base.Result.map ~f:(fun res -> Some (OrdinaryProperty { props_info = res; name })) result
     | _ -> Error "Expected to find an object")
+  | PrivateName { def_loc; references; name } ->
+    Ok (Some (PrivateNameProperty { def_loc; references; name }))
 
 let get_property_def_info ~loc_of_aloc type_info loc : (property_def_info option, string) result =
   let (Types_js_types.Typecheck_artifacts { cx; typed_ast; obj_to_obj_map }) = type_info in

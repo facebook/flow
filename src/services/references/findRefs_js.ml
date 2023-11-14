@@ -53,7 +53,7 @@ let local_refs_of_find_ref_request
           ast_info
           type_info
           file_key
-          ((hd, tl), name)
+          (Get_def_types.OrdinaryProperty { props_info = (hd, tl); name })
     in
     merge_with_var_refs prop_refs
   | Get_def_types.PropertyDefinition props_info ->

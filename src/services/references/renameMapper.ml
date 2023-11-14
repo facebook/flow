@@ -17,7 +17,7 @@ let get_rename_order name new_name ref_kind =
 
 class rename_mapper
   ~global ~(targets : FindRefsTypes.ref_kind Loc_collections.LocMap.t) ~(new_name : string) =
-  object (_this)
+  object (this)
     inherit [Loc.t] Flow_ast_mapper.mapper as super
 
     method! identifier id =
@@ -119,6 +119,89 @@ class rename_mapper
       | Get _
       | Set _ ->
         super#object_property prop
+
+    method! member_property p =
+      let open Ast.Expression.Member in
+      match p with
+      | PropertyPrivateName (loc, { Ast.PrivateName.comments; name = _ })
+        when LocMap.mem loc targets ->
+        if Base.String.is_prefix ~prefix:"#" new_name then
+          PropertyPrivateName
+            ( loc,
+              { Ast.PrivateName.name = Base.String.chop_prefix_exn ~prefix:"#" new_name; comments }
+            )
+        else
+          PropertyIdentifier (loc, { Ast.Identifier.name = new_name; comments })
+      | _ -> super#member_property p
+
+    method! object_key key =
+      let open Ast.Expression.Object.Property in
+      match key with
+      | PrivateName (loc, { Ast.PrivateName.comments; name = _ }) when LocMap.mem loc targets ->
+        if Base.String.is_prefix ~prefix:"#" new_name then
+          PrivateName
+            ( loc,
+              { Ast.PrivateName.name = Base.String.chop_prefix_exn ~prefix:"#" new_name; comments }
+            )
+        else
+          Identifier (loc, { Ast.Identifier.name = new_name; comments })
+      | _ -> super#object_key key
+
+    method! class_element elem =
+      let open Ast.Class in
+      match elem with
+      | Body.PrivateField
+          ( field_loc,
+            {
+              PrivateField.key = (key_loc, { Ast.PrivateName.name = _; comments = name_comments });
+              value;
+              annot;
+              static;
+              variance;
+              decorators;
+              comments;
+            }
+          )
+        when LocMap.mem key_loc targets ->
+        if Base.String.is_prefix ~prefix:"#" new_name then
+          Body.PrivateField
+            ( field_loc,
+              this#class_private_field
+                field_loc
+                {
+                  PrivateField.key =
+                    ( key_loc,
+                      {
+                        Ast.PrivateName.name = Base.String.chop_prefix_exn ~prefix:"#" new_name;
+                        comments = name_comments;
+                      }
+                    );
+                  value;
+                  annot;
+                  static;
+                  variance;
+                  decorators;
+                  comments;
+                }
+            )
+        else
+          Body.Property
+            ( field_loc,
+              this#class_property
+                field_loc
+                {
+                  Property.key =
+                    Ast.Expression.Object.Property.Identifier
+                      (key_loc, { Ast.Identifier.name = new_name; comments = name_comments });
+                  value;
+                  annot;
+                  static;
+                  variance;
+                  decorators;
+                  comments;
+                }
+            )
+      | _ -> super#class_element elem
 
     method! jsx_element_name_identifier id =
       let open Ast.JSX.Identifier in

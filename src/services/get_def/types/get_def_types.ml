@@ -12,7 +12,16 @@ type single_property_def_info =
 (* If there are multiple relevant definition locations (e.g. the request was issued on an object
  * literal which is associated with multiple types) then there will be multiple locations in no
  * particular order. *)
-type property_def_info = single_property_def_info Nel.t * string
+type property_def_info =
+  | OrdinaryProperty of {
+      props_info: single_property_def_info Nel.t;
+      name: string;
+    }
+  | PrivateNameProperty of {
+      def_loc: Loc.t;
+      references: Loc.t list;
+      name: string;
+    }
 
 type def_info =
   | VariableDefinition of Loc.t list * string option

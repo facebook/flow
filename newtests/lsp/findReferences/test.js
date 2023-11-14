@@ -68,6 +68,14 @@ module.exports = (suite(
         lspStartAndConnect(),
         snapshot('locals.js', 29, 16, 'jsx_props.json'),
       ]),
+      test('Private Names', [
+        addFiles(...fixtures),
+        lspStartAndConnect(),
+        snapshot('private-name.js', 7, 14, 'private-name-1.json'),
+        snapshot('private-name.js', 8, 14, 'private-name-2.json'),
+        snapshot('private-name.js', 20, 17, 'private-name-3.json'),
+        snapshot('private-name.js', 23, 12, 'private-name-4.json'),
+      ]),
     ];
   },
 ): SuiteType);
