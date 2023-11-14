@@ -130,6 +130,35 @@ let avoid_capture map name =
   else
     (name, Subst_name.Map.remove name map)
 
+let union_ident_map_and_dedup =
+  let rec union_flatten cx seen ts = Base.List.concat_map ~f:(flatten cx seen) ts
+  and flatten cx seen = function
+    | UnionT (_, rep) -> union_flatten cx seen (UnionRep.members rep)
+    | MaybeT (r, t) -> DefT (r, NullT) :: DefT (r, VoidT) :: flatten cx seen t
+    | OptionalT { reason = r; type_ = t; use_desc } ->
+      let void_t = VoidT.why_with_use_desc ~use_desc r in
+      void_t :: flatten cx seen t
+    | t -> [t]
+  in
+  fun cx f t r rep ->
+    let (t0, (t1, ts)) = UnionRep.members_nel rep in
+    let t0_ = f t0 in
+    let t1_ = f t1 in
+    let ts_ = ListUtils.ident_map f ts in
+    if t0_ == t0 && t1_ == t1 && ts_ == ts then
+      t
+    else
+      let ts = union_flatten cx ISet.empty (t0_ :: t1_ :: ts_) in
+      let (ts, _) =
+        Base.List.fold_left ts ~init:([], TypeSet.empty) ~f:(fun (acc, seen) t ->
+            if TypeSet.mem t seen then
+              (acc, seen)
+            else
+              (t :: acc, TypeSet.add t seen)
+        )
+      in
+      TypeUtil.union_of_ts r (List.rev ts)
+
 let substituter =
   object (self)
     inherit [replacement Subst_name.Map.t * bool * use_op option] Type_mapper.t as super
@@ -295,6 +324,7 @@ let substituter =
           | ModuleT _
           | InternalT (ExtendsT _) ->
             failwith (Utils_js.spf "Unhandled type ctor: %s" (string_of_ctor t)) (* TODO *)
+          | UnionT (r, urep) -> union_ident_map_and_dedup cx (self#type_ cx map_cx) t r urep
           | t -> super#type_ cx map_cx t
         in
         if t == t_out then

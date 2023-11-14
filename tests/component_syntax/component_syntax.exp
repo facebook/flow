@@ -2701,7 +2701,8 @@ Error --------------------------------------------------------------------------
 
 Cannot create `MyNestedInput` element because in property `ref`: [incompatible-type]
  - Either property `current` is missing in function type [1] but exists in object type [2].
- - Or `HTMLElement` [3] is incompatible with `HTMLInputElement` [4] in the first parameter.
+ - Or `HTMLElement` [3] is incompatible with nullable `HTMLInputElement` [4] in the first parameter.
+ - Or `HTMLElement` [3] is incompatible with `HTMLInputElement` [5] in the first parameter.
 
    refs.js:64:53
     64|                 <MyNestedInput {...otherProps} ref={ref} />
@@ -2717,17 +2718,21 @@ References:
    refs.js:56:66
     56|     component MyNestedInput(other: string, ref: React$RefSetter<?HTMLElement>) {
                                                                          ^^^^^^^^^^^ [3]
+   refs.js:60:59
+    60|     component MyInput(label: string, ref: React$RefSetter<?HTMLInputElement>, ...otherProps: { other: string}) {
+                                                                  ^^^^^^^^^^^^^^^^^ [4]
    refs.js:60:60
     60|     component MyInput(label: string, ref: React$RefSetter<?HTMLInputElement>, ...otherProps: { other: string}) {
-                                                                   ^^^^^^^^^^^^^^^^ [4]
+                                                                   ^^^^^^^^^^^^^^^^ [5]
 
 
 Error ---------------------------------------------------------------------------------------------------- refs.js:64:53
 
 Cannot create `MyNestedInput` element because in property `ref`: [incompatible-type]
- - Either `HTMLElement` [1] is incompatible with `HTMLInputElement` [2] in property `current`.
- - Or a call signature declaring the expected parameter / return type is missing in object type [3] but exists in
-   function type [4].
+ - Either `HTMLElement` [1] is incompatible with nullable `HTMLInputElement` [2] in property `current`.
+ - Or `HTMLElement` [1] is incompatible with `HTMLInputElement` [3] in property `current`.
+ - Or a call signature declaring the expected parameter / return type is missing in object type [4] but exists in
+   function type [5].
 
    refs.js:64:53
     64|                 <MyNestedInput {...otherProps} ref={ref} />
@@ -2737,15 +2742,18 @@ References:
    refs.js:56:66
     56|     component MyNestedInput(other: string, ref: React$RefSetter<?HTMLElement>) {
                                                                          ^^^^^^^^^^^ [1]
+   refs.js:60:59
+    60|     component MyInput(label: string, ref: React$RefSetter<?HTMLInputElement>, ...otherProps: { other: string}) {
+                                                                  ^^^^^^^^^^^^^^^^^ [2]
    refs.js:60:60
     60|     component MyInput(label: string, ref: React$RefSetter<?HTMLInputElement>, ...otherProps: { other: string}) {
-                                                                   ^^^^^^^^^^^^^^^^ [2]
+                                                                   ^^^^^^^^^^^^^^^^ [3]
    refs.js:60:43
     60|     component MyInput(label: string, ref: React$RefSetter<?HTMLInputElement>, ...otherProps: { other: string}) {
-                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
    <BUILTINS>/react.js:178:6
    178|   | ((React$ElementRef<ElementType> | null) => mixed)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error ---------------------------------------------------------------------------------------------------- refs.js:87:18
