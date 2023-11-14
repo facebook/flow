@@ -60,6 +60,7 @@ type node =
   | TypeGuardAnnotation of (Loc.t, Loc.t) Flow_ast.Type.type_guard_annotation
   | FunctionTypeAnnotation of (Loc.t, Loc.t) Flow_ast.Type.annotation
   | ClassProperty of (Loc.t, Loc.t) Flow_ast.Class.Property.t
+  | ClassPrivateField of (Loc.t, Loc.t) Flow_ast.Class.PrivateField.t
   | ObjectProperty of (Loc.t, Loc.t) Flow_ast.Expression.Object.property
   | TemplateLiteral of Loc.t * (Loc.t, Loc.t) Flow_ast.Expression.TemplateLiteral.t
   | JSXChild of (Loc.t, Loc.t) Flow_ast.JSX.child

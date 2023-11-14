@@ -219,6 +219,7 @@ type node =
   | TypeGuardAnnotation of (Loc.t, Loc.t) Flow_ast.Type.type_guard_annotation
   | FunctionTypeAnnotation of (Loc.t, Loc.t) Flow_ast.Type.annotation
   | ClassProperty of (Loc.t, Loc.t) Flow_ast.Class.Property.t
+  | ClassPrivateField of (Loc.t, Loc.t) Flow_ast.Class.PrivateField.t
   | ObjectProperty of (Loc.t, Loc.t) Flow_ast.Expression.Object.property
   | TemplateLiteral of Loc.t * (Loc.t, Loc.t) Ast.Expression.TemplateLiteral.t
   | JSXChild of (Loc.t, Loc.t) Ast.JSX.child
@@ -260,6 +261,7 @@ let expand_loc_with_comments loc node =
     | TypeGuardAnnotation guard ->
       bounds guard (fun collect guard -> collect#type_guard_annotation guard)
     | ClassProperty prop -> bounds prop (fun collect (loc, prop) -> collect#class_property loc prop)
+    | ClassPrivateField f -> bounds f (fun collect (loc, f) -> collect#class_private_field loc f)
     | ObjectProperty (Ast.Expression.Object.Property prop) ->
       bounds prop (fun collect prop -> collect#object_property prop)
     | ObjectProperty (Ast.Expression.Object.SpreadProperty prop) ->
@@ -1212,8 +1214,53 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     match (elem1, elem2) with
     | (Method (loc, m1), Method (_, m2)) -> class_method loc m1 m2
     | (Property p1, Property p2) -> class_property p1 p2 |> Base.Option.return
-    | _ -> None
-  (* TODO *)
+    | (PrivateField f1, PrivateField f2) -> class_private_field f1 f2 |> Base.Option.return
+    | (Method _, _)
+    | (_, Method _) ->
+      None
+    | (Property p1, PrivateField f2) ->
+      Some [replace (fst p1) (ClassProperty p1) (ClassPrivateField f2)]
+    | (PrivateField f1, Property p2) ->
+      Some [replace (fst f1) (ClassPrivateField f1) (ClassProperty p2)]
+  and class_private_field field1 field2 : node change list =
+    let open Ast.Class.PrivateField in
+    let ( loc1,
+          {
+            key = key1;
+            value = val1;
+            annot = annot1;
+            static = s1;
+            variance = var1;
+            decorators = decorators1;
+            comments = comments1;
+          }
+        ) =
+      field1
+    in
+    let ( _,
+          {
+            key = key2;
+            value = val2;
+            annot = annot2;
+            static = s2;
+            variance = var2;
+            decorators = decorators2;
+            comments = comments2;
+          }
+        ) =
+      field2
+    in
+    ( if key1 != key2 || s1 != s2 || var1 != var2 then
+      None
+    else
+      let vals = diff_if_changed_ret_opt class_property_value val1 val2 in
+      let annots = Some (diff_if_changed type_annotation_hint annot1 annot2) in
+      let decorators = diff_and_recurse_no_trivial class_decorator decorators1 decorators2 in
+      let comments = syntax_opt loc1 comments1 comments2 in
+      join_diff_list [vals; annots; decorators; comments]
+    )
+    |> Base.Option.value
+         ~default:[replace loc1 (ClassPrivateField field1) (ClassPrivateField field2)]
   and class_property prop1 prop2 : node change list =
     let open Ast.Class.Property in
     let ( loc1,

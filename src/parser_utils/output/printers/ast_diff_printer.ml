@@ -62,6 +62,7 @@ let layout_of_node ~opts = function
     Js_layout_generator.type_guard_annotation ~opts ~needs_parens:true guard
   | FunctionTypeAnnotation annot -> Js_layout_generator.type_annotation ~opts ~parens:true annot
   | ClassProperty prop -> Js_layout_generator.class_property ~opts prop
+  | ClassPrivateField field -> Js_layout_generator.class_private_field ~opts field
   | ObjectProperty prop -> Js_layout_generator.object_property ~opts prop
   | TemplateLiteral (_, t_lit) -> Js_layout_generator.template_literal ~opts t_lit
   | JSXChild child -> begin

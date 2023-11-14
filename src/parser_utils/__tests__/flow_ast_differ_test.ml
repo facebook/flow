@@ -74,6 +74,14 @@ class useless_mapper =
       | "RENAME" -> Flow_ast_utils.ident_of_source (loc, "GOT_RENAMED")
       | _ -> id
 
+    method! private_name id =
+      let (loc, { Ast.PrivateName.name; comments }) = id in
+      match name with
+      | "rename" -> (loc, { Ast.PrivateName.name = "gotRenamed"; comments })
+      | "Rename" -> (loc, { Ast.PrivateName.name = "GotRenamed"; comments })
+      | "RENAME" -> (loc, { Ast.PrivateName.name = "GOT_RENAMED"; comments })
+      | _ -> id
+
     method! variable_declaration loc (decl : (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.t) =
       let open Ast.Variable in
       let open Ast.Statement.VariableDeclaration in
@@ -1037,6 +1045,15 @@ let tests =
              ~edits:[((18, 19), "5")]
              ~source
              ~expected:"class Foo { bar = 5; }"
+             ~mapper:(new useless_mapper)
+         );
+         ( "class3" >:: fun ctxt ->
+           let source = "class Foo { #rename = 4; }" in
+           assert_edits_equal
+             ctxt
+             ~edits:[((12, 24), "#gotRenamed = 5;")]
+             ~source
+             ~expected:"class Foo { #gotRenamed = 5; }"
              ~mapper:(new useless_mapper)
          );
          ( "class_prop_annot" >:: fun ctxt ->
