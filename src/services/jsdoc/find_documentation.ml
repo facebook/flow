@@ -5,31 +5,32 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Ast = Flow_ast
 open Flow_ast_utils
 
 let loc_of_object_key =
-  let open Flow_ast.Expression.Object.Property in
+  let open Ast.Expression.Object.Property in
   function
   | Identifier (loc, _)
   | StringLiteral (loc, _)
   | NumberLiteral (loc, _)
   | BigIntLiteral (loc, _)
-  | Computed (_, Flow_ast.ComputedKey.{ expression = (loc, _); _ })
+  | Computed (_, Ast.ComputedKey.{ expression = (loc, _); _ })
   | PrivateName (loc, _) ->
     loc
 
 let comments_of_variance =
-  let open Flow_ast.Variance in
+  let open Ast.Variance in
   Base.Option.bind ~f:(fun (_, { comments; _ }) -> comments)
 
 let comments_of_object_key =
-  let open Flow_ast.Expression.Object.Property in
+  let open Ast.Expression.Object.Property in
   function
-  | Identifier (_, Flow_ast.Identifier.{ comments; _ })
-  | StringLiteral (_, Flow_ast.StringLiteral.{ comments; _ })
-  | NumberLiteral (_, Flow_ast.NumberLiteral.{ comments; _ })
-  | BigIntLiteral (_, Flow_ast.BigIntLiteral.{ comments; _ })
-  | Computed (_, Flow_ast.ComputedKey.{ comments; _ }) ->
+  | Identifier (_, Ast.Identifier.{ comments; _ })
+  | StringLiteral (_, Ast.StringLiteral.{ comments; _ })
+  | NumberLiteral (_, Ast.NumberLiteral.{ comments; _ })
+  | BigIntLiteral (_, Ast.BigIntLiteral.{ comments; _ })
+  | Computed (_, Ast.ComputedKey.{ comments; _ }) ->
     comments
   | PrivateName _ -> None
 
@@ -37,14 +38,14 @@ let comments_of_object_key =
    contained in the export statement. That's why we don't bother with all
    cases; only statements that can appear in export declarations. *)
 let replace_comments_of_statement ~comments =
-  let open Flow_ast.Statement in
+  let open Ast.Statement in
   Utils_js.map_snd (function
       | TypeAlias x -> TypeAlias TypeAlias.{ x with comments }
       | OpaqueType x -> OpaqueType OpaqueType.{ x with comments }
       | InterfaceDeclaration x -> InterfaceDeclaration Interface.{ x with comments }
       | VariableDeclaration x -> VariableDeclaration VariableDeclaration.{ x with comments }
-      | ClassDeclaration x -> ClassDeclaration Flow_ast.Class.{ x with comments }
-      | FunctionDeclaration x -> FunctionDeclaration Flow_ast.Function.{ x with comments }
+      | ClassDeclaration x -> ClassDeclaration Ast.Class.{ x with comments }
+      | FunctionDeclaration x -> FunctionDeclaration Ast.Function.{ x with comments }
       | EnumDeclaration x -> EnumDeclaration EnumDeclaration.{ x with comments }
       | other -> other
       )
@@ -54,13 +55,13 @@ class jsdoc_documentation_searcher find =
     inherit [unit, Loc.t] Flow_ast_visitor.visitor ~init:() as super
 
     method! variable_declaration stmt_loc decl =
-      let open Flow_ast.Statement.VariableDeclaration in
+      let open Ast.Statement.VariableDeclaration in
       let { declarations; comments; _ } = decl in
       Base.List.iter declarations ~f:(function
           | ( _,
               Declarator.
                 {
-                  id = (_, Flow_ast.Pattern.(Identifier Identifier.{ name = (id_loc, _); annot; _ }));
+                  id = (_, Ast.Pattern.(Identifier Identifier.{ name = (id_loc, _); annot; _ }));
                   init;
                   _;
                 }
@@ -73,13 +74,13 @@ class jsdoc_documentation_searcher find =
       super#variable_declaration stmt_loc decl
 
     method! class_ stmt_loc cls =
-      let open Flow_ast.Class in
+      let open Ast.Class in
       let { id; comments; _ } = cls in
       Base.Option.iter id ~f:(fun (loc, _) -> find loc comments);
       super#class_ stmt_loc cls
 
     method! function_ loc func =
-      let open Flow_ast.Function in
+      let open Ast.Function in
       let { comments; id; sig_loc; _ } = func in
       find loc comments;
       find sig_loc comments;
@@ -87,7 +88,7 @@ class jsdoc_documentation_searcher find =
       super#function_ loc func
 
     method! component_declaration loc c =
-      let open Flow_ast.Statement.ComponentDeclaration in
+      let open Ast.Statement.ComponentDeclaration in
       let { comments; id = (id_loc, _); sig_loc; _ } = c in
       find loc comments;
       find sig_loc comments;
@@ -95,32 +96,32 @@ class jsdoc_documentation_searcher find =
       super#component_declaration loc c
 
     method! declare_variable stmt_loc decl =
-      let open Flow_ast.Statement.DeclareVariable in
+      let open Ast.Statement.DeclareVariable in
       let { id = (loc, _); comments; _ } = decl in
       find loc comments;
       super#declare_variable stmt_loc decl
 
     method! declare_class stmt_loc decl =
-      let open Flow_ast.Statement.DeclareClass in
+      let open Ast.Statement.DeclareClass in
       let { id = (loc, _); comments; _ } = decl in
       find loc comments;
       super#declare_class stmt_loc decl
 
     method! declare_function stmt_loc decl =
-      let open Flow_ast.Statement.DeclareFunction in
+      let open Ast.Statement.DeclareFunction in
       let { id = (id_loc, _); annot = (annot_loc, _); comments; _ } = decl in
       find id_loc comments;
       find annot_loc comments;
       super#declare_function stmt_loc decl
 
     method! object_property_type prop_type =
-      let open Flow_ast.Type.Object.Property in
+      let open Ast.Type.Object.Property in
       let (_, { key; value; comments; variance; _ }) = prop_type in
       let value_loc =
         match value with
         | Init (value_loc, _)
-        | Get (_, Flow_ast.Type.Function.{ return = TypeAnnotation (value_loc, _); _ })
-        | Get (_, Flow_ast.Type.Function.{ return = TypeGuard (value_loc, _); _ })
+        | Get (_, Ast.Type.Function.{ return = TypeAnnotation (value_loc, _); _ })
+        | Get (_, Ast.Type.Function.{ return = TypeGuard (value_loc, _); _ })
         | Set (value_loc, _) ->
           value_loc
       in
@@ -136,7 +137,7 @@ class jsdoc_documentation_searcher find =
       super#object_property_type prop_type
 
     method! class_method method_loc meth =
-      let open Flow_ast.Class.Method in
+      let open Ast.Class.Method in
       let { key; comments; _ } = meth in
       let key_loc = loc_of_object_key key in
       find key_loc comments;
@@ -144,7 +145,7 @@ class jsdoc_documentation_searcher find =
       super#class_method method_loc meth
 
     method! class_property prop_loc prop =
-      let open Flow_ast.Class.Property in
+      let open Ast.Class.Property in
       let { key; variance; comments; _ } = prop in
       let key_loc = loc_of_object_key key in
       find key_loc comments;
@@ -153,14 +154,14 @@ class jsdoc_documentation_searcher find =
       super#class_property prop_loc prop
 
     method! object_property prop =
-      let open Flow_ast.Expression.Object.Property in
+      let open Ast.Expression.Object.Property in
       let (locs, comments) =
         match prop with
         | (_, Init { key; value = (value_loc, _); _ }) ->
           ([loc_of_object_key key; value_loc], [comments_of_object_key key])
-        | (prop_loc, Method { key; value = (_, Flow_ast.Function.{ comments; _ }) }) ->
+        | (prop_loc, Method { key; value = (_, Ast.Function.{ comments; _ }) }) ->
           ([prop_loc; loc_of_object_key key], [comments_of_object_key key; comments])
-        | (_, Get { key; value = (_, Flow_ast.Function.{ return; _ }); comments }) ->
+        | (_, Get { key; value = (_, Ast.Function.{ return; _ }); comments }) ->
           ([loc_of_object_key key; loc_of_return_annot return], [comments])
         | (_, Set _) -> ([], [])
       in
@@ -170,26 +171,26 @@ class jsdoc_documentation_searcher find =
       super#object_property prop
 
     method! enum_declaration loc enum =
-      let open Flow_ast.Statement.EnumDeclaration in
+      let open Ast.Statement.EnumDeclaration in
       let { comments; id = (id_loc, _); _ } = enum in
       find loc comments;
       find id_loc comments;
       super#enum_declaration loc enum
 
     method! enum_defaulted_member member =
-      let open Flow_ast.Statement.EnumDeclaration.DefaultedMember in
-      let (loc, { id = (id_loc, Flow_ast.Identifier.{ comments; _ }) }) = member in
+      let open Ast.Statement.EnumDeclaration.DefaultedMember in
+      let (loc, { id = (id_loc, Ast.Identifier.{ comments; _ }) }) = member in
       find loc comments;
       find id_loc comments;
       member
 
     method enum_initialized_member
         : 'a.
-          ('a, Loc.t) Flow_ast.Statement.EnumDeclaration.InitializedMember.t ->
-          ('a, Loc.t) Flow_ast.Statement.EnumDeclaration.InitializedMember.t =
+          ('a, Loc.t) Ast.Statement.EnumDeclaration.InitializedMember.t ->
+          ('a, Loc.t) Ast.Statement.EnumDeclaration.InitializedMember.t =
       fun member ->
-        let open Flow_ast.Statement.EnumDeclaration.InitializedMember in
-        let (loc, { id = (id_loc, Flow_ast.Identifier.{ comments; _ }); _ }) = member in
+        let open Ast.Statement.EnumDeclaration.InitializedMember in
+        let (loc, { id = (id_loc, Ast.Identifier.{ comments; _ }); _ }) = member in
         find loc comments;
         find id_loc comments;
         member
@@ -201,7 +202,7 @@ class jsdoc_documentation_searcher find =
     method! enum_string_member member = this#enum_initialized_member member
 
     method! export_named_declaration loc decl =
-      let open Flow_ast.Statement.ExportNamedDeclaration in
+      let open Ast.Statement.ExportNamedDeclaration in
       let { declaration; comments; _ } = decl in
       find loc comments;
       Base.Option.iter
@@ -210,10 +211,10 @@ class jsdoc_documentation_searcher find =
       super#export_named_declaration loc decl
 
     method! export_default_declaration loc decl =
-      let open Flow_ast.Statement.ExportDefaultDeclaration in
+      let open Ast.Statement.ExportDefaultDeclaration in
       let { default; declaration; comments; _ } = decl in
       find default comments;
-      (let open Flow_ast.Expression in
+      (let open Ast.Expression in
       match declaration with
       | Declaration stmt ->
         stmt |> replace_comments_of_statement ~comments |> this#statement |> ignore
@@ -228,20 +229,20 @@ class jsdoc_documentation_searcher find =
       super#export_default_declaration loc decl
 
     method! type_alias loc type_alias =
-      let open Flow_ast.Statement.TypeAlias in
+      let open Ast.Statement.TypeAlias in
       let { id = (id_loc, _); comments; _ } = type_alias in
       find loc comments;
       find id_loc comments;
       super#type_alias loc type_alias
 
     method! opaque_type loc opaque_type =
-      let open Flow_ast.Statement.OpaqueType in
+      let open Ast.Statement.OpaqueType in
       let { id = (id_loc, _); comments; _ } = opaque_type in
       find id_loc comments;
       super#opaque_type loc opaque_type
 
     method! interface loc interface =
-      let open Flow_ast.Statement.Interface in
+      let open Ast.Statement.Interface in
       let { id = (id_loc, _); comments; _ } = interface in
       find loc comments;
       find id_loc comments;
@@ -325,7 +326,7 @@ class hardcoded_documentation_searcher find =
     inherit [unit, Loc.t] Flow_ast_visitor.visitor ~init:() as super
 
     method! render_type t =
-      let open Flow_ast.Type.Renders in
+      let open Ast.Type.Renders in
       let { operator_loc; variant; _ } = t in
       let doc =
         match variant with
@@ -353,7 +354,7 @@ let hardcoded_documentation_at_loc ast target_loc =
 let def_loc_to_comment_loc_map ast =
   let map_ref = ref Loc_sig.LocS.LMap.empty in
   let add_to_map def_loc =
-    Base.Option.iter ~f:(fun Flow_ast.Syntax.{ leading; _ } ->
+    Base.Option.iter ~f:(fun Ast.Syntax.{ leading; _ } ->
         Base.Option.iter (Base.List.last leading) ~f:(fun (comment_loc, _) ->
             map_ref := Loc_sig.LocS.LMap.add ~combine:Base.Fn.const def_loc comment_loc !map_ref
         )
@@ -363,7 +364,7 @@ let def_loc_to_comment_loc_map ast =
   ignore (searcher#program ast);
   !map_ref
 
-let module_doc_loc (_, Flow_ast.Program.{ comments; _ }) : Loc.t option =
+let module_doc_loc (_, Ast.Program.{ comments; _ }) : Loc.t option =
   match comments with
-  | Some Flow_ast.Syntax.{ leading = (comment_loc, _) :: _; _ } -> Some comment_loc
+  | Some Ast.Syntax.{ leading = (comment_loc, _) :: _; _ } -> Some comment_loc
   | _ -> None
