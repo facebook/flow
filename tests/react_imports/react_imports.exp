@@ -48,8 +48,8 @@ Cannot get `React.Missing` because property `Missing` is missing in module `reac
                      ^^^^^^^
 
 References:
-   <BUILTINS>/react.js:464:27
-   464|   declare module.exports: $Exports<'react'>;
+   <BUILTINS>/react.js:684:27
+   684|   declare module.exports: $Exports<'react'>;
                                   ^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -158,8 +158,8 @@ Cannot get `React.Missing` because property `Missing` is missing in module `reac
                      ^^^^^^^
 
 References:
-   <BUILTINS>/react.js:464:27
-   464|   declare module.exports: $Exports<'react'>;
+   <BUILTINS>/react.js:684:27
+   684|   declare module.exports: $Exports<'react'>;
                                   ^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -190,39 +190,39 @@ Cannot get `React.Node` because property `Node` is missing in object type [1]. [
                                 ^^^^
 
 References:
-   <BUILTINS>/react.js:420:26
+   <BUILTINS>/react.js:640:26
                                  v
-   420|   declare export default {
-   421|     +DOM: typeof DOM,
-   422|     +version: typeof version,
-   423|     +checkPropTypes: typeof checkPropTypes,
-   424|     +memo: typeof memo,
-   425|     +lazy: typeof lazy,
-   426|     +createClass: typeof createClass,
-   427|     +createContext: typeof createContext,
-   428|     +createElement: typeof createElement,
-   429|     +cloneElement: typeof cloneElement,
-   430|     +createFactory: typeof createFactory,
-   431|     +createRef: typeof createRef,
-   432|     +forwardRef: typeof forwardRef,
-   433|     +isValidElement: typeof isValidElement,
-   434|     +Component: typeof Component,
+   640|   declare export default {
+   641|     +DOM: typeof DOM,
+   642|     +version: typeof version,
+   643|     +checkPropTypes: typeof checkPropTypes,
+   644|     +memo: typeof memo,
+   645|     +lazy: typeof lazy,
+   646|     +createClass: typeof createClass,
+   647|     +createContext: typeof createContext,
+   648|     +createElement: typeof createElement,
+   649|     +cloneElement: typeof cloneElement,
+   650|     +createFactory: typeof createFactory,
+   651|     +createRef: typeof createRef,
+   652|     +forwardRef: typeof forwardRef,
+   653|     +isValidElement: typeof isValidElement,
+   654|     +Component: typeof Component,
       :
-   444|     +useReducer: typeof useReducer,
-   445|     +useRef: typeof useRef,
-   446|     +useEffect: typeof useEffect,
-   447|     +useLayoutEffect: typeof useLayoutEffect,
-   448|     +useCallback: typeof useCallback,
-   449|     +useMemo: typeof useMemo,
-   450|     +useImperativeHandle: typeof useImperativeHandle,
-   451|     +useTransition: typeof useTransition,
-   452|     +useDeferredValue: typeof useDeferredValue,
-   453|     +startTransition: typeof startTransition,
-   454|     +useId: typeof useId,
-   455|     +useInsertionEffect: typeof useInsertionEffect,
-   456|     +useSyncExternalStore: typeof useSyncExternalStore,
-   457|     ...
-   458|   };
+   664|     +useReducer: typeof useReducer,
+   665|     +useRef: typeof useRef,
+   666|     +useEffect: typeof useEffect,
+   667|     +useLayoutEffect: typeof useLayoutEffect,
+   668|     +useCallback: typeof useCallback,
+   669|     +useMemo: typeof useMemo,
+   670|     +useImperativeHandle: typeof useImperativeHandle,
+   671|     +useTransition: typeof useTransition,
+   672|     +useDeferredValue: typeof useDeferredValue,
+   673|     +startTransition: typeof startTransition,
+   674|     +useId: typeof useId,
+   675|     +useInsertionEffect: typeof useInsertionEffect,
+   676|     +useSyncExternalStore: typeof useSyncExternalStore,
+   677|     ...
+   678|   };
           ^ [1]
 
 
@@ -235,39 +235,39 @@ Cannot get `React.Node` because property `Node` is missing in object type [1]. [
                    ^^^^
 
 References:
-   <BUILTINS>/react.js:420:26
+   <BUILTINS>/react.js:640:26
                                  v
-   420|   declare export default {
-   421|     +DOM: typeof DOM,
-   422|     +version: typeof version,
-   423|     +checkPropTypes: typeof checkPropTypes,
-   424|     +memo: typeof memo,
-   425|     +lazy: typeof lazy,
-   426|     +createClass: typeof createClass,
-   427|     +createContext: typeof createContext,
-   428|     +createElement: typeof createElement,
-   429|     +cloneElement: typeof cloneElement,
-   430|     +createFactory: typeof createFactory,
-   431|     +createRef: typeof createRef,
-   432|     +forwardRef: typeof forwardRef,
-   433|     +isValidElement: typeof isValidElement,
-   434|     +Component: typeof Component,
+   640|   declare export default {
+   641|     +DOM: typeof DOM,
+   642|     +version: typeof version,
+   643|     +checkPropTypes: typeof checkPropTypes,
+   644|     +memo: typeof memo,
+   645|     +lazy: typeof lazy,
+   646|     +createClass: typeof createClass,
+   647|     +createContext: typeof createContext,
+   648|     +createElement: typeof createElement,
+   649|     +cloneElement: typeof cloneElement,
+   650|     +createFactory: typeof createFactory,
+   651|     +createRef: typeof createRef,
+   652|     +forwardRef: typeof forwardRef,
+   653|     +isValidElement: typeof isValidElement,
+   654|     +Component: typeof Component,
       :
-   444|     +useReducer: typeof useReducer,
-   445|     +useRef: typeof useRef,
-   446|     +useEffect: typeof useEffect,
-   447|     +useLayoutEffect: typeof useLayoutEffect,
-   448|     +useCallback: typeof useCallback,
-   449|     +useMemo: typeof useMemo,
-   450|     +useImperativeHandle: typeof useImperativeHandle,
-   451|     +useTransition: typeof useTransition,
-   452|     +useDeferredValue: typeof useDeferredValue,
-   453|     +startTransition: typeof startTransition,
-   454|     +useId: typeof useId,
-   455|     +useInsertionEffect: typeof useInsertionEffect,
-   456|     +useSyncExternalStore: typeof useSyncExternalStore,
-   457|     ...
-   458|   };
+   664|     +useReducer: typeof useReducer,
+   665|     +useRef: typeof useRef,
+   666|     +useEffect: typeof useEffect,
+   667|     +useLayoutEffect: typeof useLayoutEffect,
+   668|     +useCallback: typeof useCallback,
+   669|     +useMemo: typeof useMemo,
+   670|     +useImperativeHandle: typeof useImperativeHandle,
+   671|     +useTransition: typeof useTransition,
+   672|     +useDeferredValue: typeof useDeferredValue,
+   673|     +startTransition: typeof startTransition,
+   674|     +useId: typeof useId,
+   675|     +useInsertionEffect: typeof useInsertionEffect,
+   676|     +useSyncExternalStore: typeof useSyncExternalStore,
+   677|     ...
+   678|   };
           ^ [1]
 
 
@@ -280,39 +280,39 @@ Cannot get `React.Missing` because property `Missing` is missing in object type 
                      ^^^^^^^
 
 References:
-   <BUILTINS>/react.js:420:26
+   <BUILTINS>/react.js:640:26
                                  v
-   420|   declare export default {
-   421|     +DOM: typeof DOM,
-   422|     +version: typeof version,
-   423|     +checkPropTypes: typeof checkPropTypes,
-   424|     +memo: typeof memo,
-   425|     +lazy: typeof lazy,
-   426|     +createClass: typeof createClass,
-   427|     +createContext: typeof createContext,
-   428|     +createElement: typeof createElement,
-   429|     +cloneElement: typeof cloneElement,
-   430|     +createFactory: typeof createFactory,
-   431|     +createRef: typeof createRef,
-   432|     +forwardRef: typeof forwardRef,
-   433|     +isValidElement: typeof isValidElement,
-   434|     +Component: typeof Component,
+   640|   declare export default {
+   641|     +DOM: typeof DOM,
+   642|     +version: typeof version,
+   643|     +checkPropTypes: typeof checkPropTypes,
+   644|     +memo: typeof memo,
+   645|     +lazy: typeof lazy,
+   646|     +createClass: typeof createClass,
+   647|     +createContext: typeof createContext,
+   648|     +createElement: typeof createElement,
+   649|     +cloneElement: typeof cloneElement,
+   650|     +createFactory: typeof createFactory,
+   651|     +createRef: typeof createRef,
+   652|     +forwardRef: typeof forwardRef,
+   653|     +isValidElement: typeof isValidElement,
+   654|     +Component: typeof Component,
       :
-   444|     +useReducer: typeof useReducer,
-   445|     +useRef: typeof useRef,
-   446|     +useEffect: typeof useEffect,
-   447|     +useLayoutEffect: typeof useLayoutEffect,
-   448|     +useCallback: typeof useCallback,
-   449|     +useMemo: typeof useMemo,
-   450|     +useImperativeHandle: typeof useImperativeHandle,
-   451|     +useTransition: typeof useTransition,
-   452|     +useDeferredValue: typeof useDeferredValue,
-   453|     +startTransition: typeof startTransition,
-   454|     +useId: typeof useId,
-   455|     +useInsertionEffect: typeof useInsertionEffect,
-   456|     +useSyncExternalStore: typeof useSyncExternalStore,
-   457|     ...
-   458|   };
+   664|     +useReducer: typeof useReducer,
+   665|     +useRef: typeof useRef,
+   666|     +useEffect: typeof useEffect,
+   667|     +useLayoutEffect: typeof useLayoutEffect,
+   668|     +useCallback: typeof useCallback,
+   669|     +useMemo: typeof useMemo,
+   670|     +useImperativeHandle: typeof useImperativeHandle,
+   671|     +useTransition: typeof useTransition,
+   672|     +useDeferredValue: typeof useDeferredValue,
+   673|     +startTransition: typeof startTransition,
+   674|     +useId: typeof useId,
+   675|     +useInsertionEffect: typeof useInsertionEffect,
+   676|     +useSyncExternalStore: typeof useSyncExternalStore,
+   677|     ...
+   678|   };
           ^ [1]
 
 
@@ -366,8 +366,8 @@ Cannot get `React.Missing` because property `Missing` is missing in module `Reac
                      ^^^^^^^
 
 References:
-   <BUILTINS>/react.js:463:16
-   463| declare module React {
+   <BUILTINS>/react.js:683:16
+   683| declare module React {
                        ^^^^^ [1]
 
 
