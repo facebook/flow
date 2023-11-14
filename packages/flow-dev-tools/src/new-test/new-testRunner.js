@@ -50,7 +50,7 @@ const {suite, test} = require('${testerLoc}');
 module.exports = (suite(({addFile, addFiles, addCode}) => [
   test('TestName', [
   ]),
-]): Suite);
+]): SuiteType);
 `,
   );
 

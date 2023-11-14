@@ -19,7 +19,7 @@ function getTestsDir(relative_to?: string): string {
   if (relative_to !== undefined) {
     return resolve(relative_to, defaultTestsDirName);
   } else {
-    return dirname(require.resolve(join(defaultTestsDirName, 'package.json')));
+    return join(FLOW_ROOT, defaultTestsDirName);
   }
 }
 

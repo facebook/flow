@@ -15,8 +15,8 @@ const {format} = require('util');
 const {glob} = require('../utils/async');
 const {default: Builder} = require('./builder');
 const {getTestsDir} = require('../constants');
-const {default: Suite} = require('./Suite');
 
+import type {Suite} from './Suite';
 import type {Tests} from './Tester';
 import type {SuiteResult} from './runTestSuite';
 
@@ -70,7 +70,7 @@ function loadSuiteByFilename(filename: string): Suite {
   const suite = (require: any)(filename);
   // I don't know why, but suite instanceof Suite doesn't seem to work when
   // using symlinks. So this is a fuzzy approximation
-  if (!(suite && suite.constructor && suite.constructor.name === Suite.name)) {
+  if (!(suite && suite.__SUITE__)) {
     throw new Error(
       format('Test suite `%s` forgot to export default suite(...)', filename),
     );

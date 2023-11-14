@@ -2,9 +2,8 @@
  * @flow
  */
 
-
-import type {Suite} from "flow-dev-tools/src/test/Suite";
-const {suite, test} = require('flow-dev-tools/src/test/Tester');
+import type {SuiteType} from "../Tester";
+const {suite, test} = require('../Tester');
 
 module.exports = (suite(({addFile, addFiles, addCode}) => [
   test('Make sure the server does not die when a parse error is introduced', [
@@ -19,4 +18,4 @@ module.exports = (suite(({addFile, addFiles, addCode}) => [
         `,
       ),
   ]),
-]): Suite);
+]): SuiteType);

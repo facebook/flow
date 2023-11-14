@@ -3,9 +3,9 @@
  * @format
  */
 
-import type {Suite} from 'flow-dev-tools/src/test/Suite';
+import type {SuiteType} from '../../../Tester';
 const path = require('path');
-const {suite, test} = require('flow-dev-tools/src/test/Tester');
+const {suite, test} = require('../../../Tester');
 
 module.exports = (suite(
   ({
@@ -235,4 +235,4 @@ module.exports = (suite(
       ),
     ]),
   ],
-): Suite);
+): SuiteType);

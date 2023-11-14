@@ -2,9 +2,8 @@
  * @flow
  */
 
-
-import type {Suite} from "flow-dev-tools/src/test/Suite";
-const {suite, test} = require('flow-dev-tools/src/test/Tester');
+import type {SuiteType} from "../Tester";
+const {suite, test} = require('../Tester');
 
 // A suite is a function. It takes an empty step and returns a list of tests.
 // For convinience, it's nice to destructure the empty test, since you almost
@@ -251,4 +250,4 @@ module.exports = (suite(({addFile, addFiles, addCode}) => [
         `,
       ),
   ]),
-]): Suite);
+]): SuiteType);

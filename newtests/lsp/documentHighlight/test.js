@@ -3,10 +3,10 @@
  * @format
  */
 
-import type {Suite} from 'flow-dev-tools/src/test/Suite';
+import type {SuiteType} from '../../Tester';
 const {readFileSync, readdirSync} = require('fs');
 const {join} = require('path');
-const {suite, test} = require('flow-dev-tools/src/test/Tester');
+const {suite, test} = require('../../Tester');
 
 module.exports = (suite(
   ({
@@ -271,4 +271,4 @@ x.foo;
       ]),
     ];
   },
-): Suite);
+): SuiteType);

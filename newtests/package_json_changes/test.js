@@ -2,8 +2,8 @@
  * @flow
  */
 
-import type {Suite} from "flow-dev-tools/src/test/Suite";
-const {suite, test} = require('flow-dev-tools/src/test/Tester');
+import type {SuiteType} from "../Tester";
+const {suite, test} = require('../Tester');
 
 module.exports = (suite(({addFile, removeFile, flowCmd}) => [
   test('node - Adding a package.json should kill the server', [
@@ -118,4 +118,4 @@ module.exports = (suite(({addFile, removeFile, flowCmd}) => [
       .waitUntilServerStatus(2000, 'stopped') // only 2s not 10s so as not to waste time
       .verifyServerStatus('running')
   ]).flowConfig('node_flowconfig_with_main_field').noAutoRestart(),
-]): Suite);
+]): SuiteType);

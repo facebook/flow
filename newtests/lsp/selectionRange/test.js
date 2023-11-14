@@ -3,9 +3,9 @@
  * @format
  */
 
-import type {Suite} from 'flow-dev-tools/src/test/Suite';
 import type LSPMessage from 'flow-dev-tools/src/test/lsp';
-const {suite, test} = require('flow-dev-tools/src/test/Tester');
+import type {SuiteType} from '../../Tester';
+const {suite, test} = require('../../Tester');
 
 module.exports = (suite(
   ({
@@ -2235,4 +2235,4 @@ module.exports = (suite(
       ]),
     ];
   },
-): Suite);
+): SuiteType);

@@ -3,10 +3,10 @@
  * @format
  */
 
-import type {Suite} from 'flow-dev-tools/src/test/Suite';
+import type {SuiteType} from '../../Tester';
 const {readFileSync, readdirSync} = require('fs');
 const {join} = require('path');
-const {suite, test} = require('flow-dev-tools/src/test/Tester');
+const {suite, test} = require('../../Tester');
 
 /**
  * The code in findReferences shares the same logic as documentHighlight. That test suite is
@@ -125,4 +125,4 @@ module.exports = (suite(
       ]),
     ];
   },
-): Suite);
+): SuiteType);

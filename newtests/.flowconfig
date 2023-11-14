@@ -6,6 +6,7 @@
 .*/json5/test/parse-cases/.*
 .*/newtests/.*
 !.*/newtests/.*/test.js
+!.*/newtests/Tester.js
 
 [options]
 exact_by_default=false
