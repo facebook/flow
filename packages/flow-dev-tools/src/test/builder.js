@@ -72,6 +72,7 @@ class TestBuilder {
     bin: string,
     errorCheckCommand: CheckCommand,
     baseDir: string,
+    providedTestsDir: ?string,
     suiteName: string,
     testNum: number,
     flowConfigFilename: string,
@@ -86,7 +87,7 @@ class TestBuilder {
     this.lspEmitter = new EventEmitter();
     this.serverEmitter = new EventEmitter();
     this.dir = join(baseDir, String(testNum));
-    this.sourceDir = join(getTestsDir(), suiteName);
+    this.sourceDir = join(getTestsDir(providedTestsDir), suiteName);
     this.tmpDir = join(baseDir, 'tmp', String(testNum));
     this.flowConfigFilename = flowConfigFilename;
     this.lazyMode = lazyMode;
@@ -954,6 +955,7 @@ class TestBuilder {
 class Builder {
   runID: string;
   dir: string;
+  providedTestsDir: ?string;
   errorCheckCommand: CheckCommand;
 
   static builders: Array<TestBuilder> = [];
@@ -1012,8 +1014,9 @@ class Builder {
     return true;
   }
 
-  constructor(errorCheckCommand: CheckCommand) {
+  constructor(errorCheckCommand: CheckCommand, providedTestsDir: ?string) {
     this.errorCheckCommand = errorCheckCommand;
+    this.providedTestsDir = providedTestsDir;
     this.runID = randomBytes(5).toString('hex');
     this.dir = Builder.getDirForRun(this.runID);
     process.stderr.write(format('Tests will be built in %s\n', this.dir));
@@ -1036,6 +1039,7 @@ class Builder {
   async createFreshTest(
     bin: string,
     suiteName: string,
+    providedTestsDir: ?string,
     testNum: number,
     flowConfigFilename: string,
     lazyMode: 'fs' | 'ide' | null,
@@ -1046,6 +1050,7 @@ class Builder {
       bin,
       this.errorCheckCommand,
       this.baseDirForSuite(suiteName),
+      providedTestsDir,
       suiteName,
       testNum,
       flowConfigFilename,

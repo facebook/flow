@@ -15,9 +15,9 @@ const defaultTestsDirName = 'newtests';
 
 // This is where we look for tests to run and where we put newly converted
 // tests
-function getTestsDir(relative_to?: string): string {
-  if (relative_to !== undefined) {
-    return resolve(relative_to, defaultTestsDirName);
+function getTestsDir(explicitlyProvided: ?string): string {
+  if (explicitlyProvided != null) {
+    return resolve(explicitlyProvided);
   } else {
     return join(FLOW_ROOT, defaultTestsDirName);
   }

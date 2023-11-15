@@ -55,7 +55,7 @@ async function runOnce(suites: {[suiteName: string]: Suite}, args: Args) {
     );
   }
 
-  const builder = new Builder(args.errorCheckCommand);
+  const builder = new Builder(args.errorCheckCommand, args.testsDir);
   const runQueue = new RunQueue(
     args.bin,
     args.parallelism,
@@ -198,24 +198,16 @@ async function testRunner(args: Args): Promise<void> {
 
   await write(process.stderr, `Using flow binary: ${args.bin}\n`);
 
-  if (args.buckCpTestsDir != null) {
-    const src = args.buckCpTestsDir;
-    const dest = getTestsDir();
-
-    await rimraf(dest);
-    await symlink(src, dest);
-  }
-
   let suites;
   if (args.rerun != null) {
     suites = await findTestsByRun(args.rerun, args.failedOnly);
   } else {
-    suites = await findTestsByName(args.suites);
+    suites = await findTestsByName(args.testsDir, args.suites);
   }
 
   const loadedSuites: {[string]: Suite} = {};
   for (const suiteName of suites) {
-    loadedSuites[suiteName] = loadSuite(suiteName);
+    loadedSuites[suiteName] = loadSuite(args.testsDir, suiteName);
   }
   if (Object.keys(loadedSuites).length > 0) {
     const [exitCode, _] = await runOnce(loadedSuites, args);

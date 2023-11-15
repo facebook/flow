@@ -22,15 +22,18 @@ import type {SuiteResult} from './runTestSuite';
 
 const testSuiteRegex = /(.*)[\/\\]test.js/;
 
-async function findTestSuites(): Promise<Array<string>> {
-  const testSuites = await glob(format('%s/**/test.js', getTestsDir()), {
+async function findTestSuites(testsDir: string): Promise<Array<string>> {
+  const testSuites = await glob(format('%s/**/test.js', testsDir), {
     cwd: __dirname,
   });
   // On Windows, glob still uses unix dir seperators, so we need to normalize
   return testSuites.map(normalize);
 }
 
-async function findTestsByName(suitesOrig: ?Set<string>): Promise<Set<string>> {
+async function findTestsByName(
+  providedTestsDir: ?string,
+  suitesOrig: ?Set<string>,
+): Promise<Set<string>> {
   let suites = null;
   if (suitesOrig != null) {
     suites = new Set<string>();
@@ -40,8 +43,8 @@ async function findTestsByName(suitesOrig: ?Set<string>): Promise<Set<string>> {
       suites.add(resolve(suite));
     }
   }
-  const testsDir = getTestsDir();
-  const testSuites = await findTestSuites();
+  const testsDir = getTestsDir(providedTestsDir);
+  const testSuites = await findTestSuites(testsDir);
 
   const result = new Set<string>();
 
@@ -78,8 +81,10 @@ function loadSuiteByFilename(filename: string): Suite {
   return suite;
 }
 
-function loadSuite(suiteName: string): Suite {
-  return loadSuiteByFilename(resolve(getTestsDir(), suiteName, 'test.js'));
+function loadSuite(testsDir: ?string, suiteName: string): Suite {
+  return loadSuiteByFilename(
+    resolve(getTestsDir(testsDir), suiteName, 'test.js'),
+  );
 }
 
 async function exists(dir: string): Promise<boolean> {
@@ -94,6 +99,7 @@ async function exists(dir: string): Promise<boolean> {
 async function findTestsByRun(
   runID: string,
   failedOnly: boolean,
+  testsDir: ?string,
 ): Promise<Set<string>> {
   const runDir = Builder.getDirForRun(runID);
   const runDirExists = await exists(runDir);
@@ -146,7 +152,7 @@ async function findTestsByRun(
     ),
   );
 
-  return findTestsByName(suites);
+  return findTestsByName(testsDir, suites);
 }
 
 module.exports = {

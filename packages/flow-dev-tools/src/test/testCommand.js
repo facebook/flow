@@ -19,6 +19,7 @@ const findFlowBin = require('../command/findFlowBin').default;
 
 export type Args = {
   suites: ?Set<string>,
+  testsDir?: string,
   bin: string,
   fbmakeJson: boolean,
   parallelism: number,
@@ -26,7 +27,6 @@ export type Args = {
   rerun: ?string,
   failedOnly: boolean,
   watch: boolean,
-  buckCpTestsDir: ?string,
   maxErroredTests: ?number,
   maxErroredTestsPct: ?number,
 };
@@ -57,7 +57,7 @@ class TestCommand extends Base<Args> {
       rerun: argv.rerun || argv['rerun-failed'],
       failedOnly: !!argv['rerun-failed'],
       watch: Boolean(argv.watch),
-      buckCpTestsDir: argv['buck-copy-tests-dir'],
+      testsDir: argv['tests-dir'],
       maxErroredTests: argv['max-errored-tests'],
       maxErroredTestsPct: argv['max-errored-tests-pct'],
     };
@@ -113,14 +113,9 @@ SUITE
       },
       {
         type: 'string',
-        name: 'buck-copy-tests-dir',
-        argName: 'PATH',
-        description: format(
-          "You probably don't want to use this option. " +
-            "It's basically `rm %s; cp $PATH %s`.",
-          defaultTestsDirName,
-          defaultTestsDirName,
-        ),
+        name: 'tests-dir',
+        argName: 'newtests',
+        description: 'Path to test directory',
       },
       {
         type: 'string',

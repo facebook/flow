@@ -103,17 +103,17 @@ function dfsForRange(node: any, line: number, col: number): ?[number, number] {
 async function runner(args: Args): Promise<void> {
   process.stderr.write(`Using flow binary: ${args.bin}\n`);
 
-  const builder = new Builder(args.errorCheckCommand);
+  const builder = new Builder(args.errorCheckCommand, args.testsDir);
   let suites;
   if (args.rerun != null) {
     suites = await findTestsByRun(args.rerun, true);
   } else {
-    suites = await findTestsByName(args.suites);
+    suites = await findTestsByName(args.testsDir, args.suites);
   }
 
   const loadedSuites: {[string]: Suite} = {};
   for (const suiteName of suites) {
-    loadedSuites[suiteName] = loadSuite(suiteName);
+    loadedSuites[suiteName] = loadSuite(args.testsDir, suiteName);
   }
 
   const runQueue = new RunQueue(
@@ -212,7 +212,11 @@ async function runner(args: Args): Promise<void> {
                 if (assertLoc) {
                   let filename = assertLoc.filename;
                   if (!isAbsolute(filename)) {
-                    filename = join(getTestsDir(), suiteName, filename);
+                    filename = join(
+                      getTestsDir(args.testsDir),
+                      suiteName,
+                      filename,
+                    );
                   }
                   const code = await readFile(filename, 'utf8');
                   const ast = parser.parse(code, {});
@@ -239,7 +243,11 @@ async function runner(args: Args): Promise<void> {
               } else if (suggestion.file) {
                 let filename = suggestion.file;
                 if (!isAbsolute(filename)) {
-                  filename = join(getTestsDir(), suiteName, filename);
+                  filename = join(
+                    getTestsDir(args.testsDir),
+                    suiteName,
+                    filename,
+                  );
                 }
                 await writeFile(filename, suggestion.contents);
               }

@@ -17,6 +17,7 @@ const findFlowBin = require('../command/findFlowBin').default;
 
 export type Args = {
   suites: ?Set<string>,
+  testsDir?: string,
   bin: string,
   parallelism: number,
   errorCheckCommand: 'check' | 'status',
@@ -28,6 +29,7 @@ class RecordCommand extends Base<Args> {
     const suites = argv._.length > 0 ? new Set(argv._) : null;
     return {
       suites,
+      testsDir: argv['tests-dir'],
       bin: findFlowBin(argv.bin),
       parallelism: argv.parallelism,
       errorCheckCommand: argv.check,
@@ -61,6 +63,12 @@ SUITE
       commonFlags.bin,
       commonFlags.parallelism,
       commonFlags.errorCheckCommand,
+      {
+        type: 'string',
+        name: 'tests-dir',
+        argName: 'newtests',
+        description: 'Path to test directory',
+      },
       {
         type: 'string',
         name: 'rerun-failed',

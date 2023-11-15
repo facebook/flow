@@ -105,6 +105,7 @@ async function runTestSuite(
       let testBuilder: TestBuilder = await builder.createFreshTest(
         bin,
         suiteName,
+        builder.providedTestsDir,
         testNum,
         test.flowConfigFilename,
         test.lazyMode,
