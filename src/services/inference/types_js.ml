@@ -2053,6 +2053,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
   if verify then assert_valid_hashes updates invalid_hashes;
 
   Hh_logger.info "Loading libraries";
+  MonitorRPC.status_update ~event:ServerStatus.Load_libraries_start;
 
   (* We actually parse and typecheck the libraries, even though we're loading from saved state.
    * We'd need to check them anyway, as soon as any file is checked, since we don't track
