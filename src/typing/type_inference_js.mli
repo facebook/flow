@@ -28,4 +28,4 @@ val infer_lib_file :
   lint_severities:Severity.severity LintSettings.t ->
   Context.t ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->
-  unit
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t

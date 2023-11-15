@@ -976,7 +976,18 @@ module Make
    * flow to check types/create graphs for merge-time checking
    ***************************************************************)
 
-  let rec statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
+  let rec statement cx ((loc, _) as stmt) =
+    let node_cache = Context.node_cache cx in
+    match Node_cache.get_statement node_cache loc with
+    | Some node ->
+      Debug_js.Verbose.print_if_verbose_lazy
+        cx
+        (lazy [spf "Statement cache hit at %s" (ALoc.debug_to_string loc)]);
+      node
+    | None -> statement_ cx stmt
+
+  and statement_ cx : (ALoc.t, ALoc.t) Ast.Statement.t -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t
+      =
     let open Ast.Statement in
     let variables cx decls =
       VariableDeclaration.(

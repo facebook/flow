@@ -545,55 +545,50 @@ class lib_def_loc_mapper_and_validator cx =
       | OpaqueType _ ->
         None
       | ExportNamedDeclaration { ExportNamedDeclaration.export_kind = ExportValue; _ } ->
-        Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "export"))
+        Some (Error_message.EUnsupportedStatementInLibdef (loc, "export"))
       | ImportDeclaration _ ->
         if in_toplevel_scope then
-          Some (Error_message.EToplevelLibraryImport (ALoc.of_loc loc))
+          Some (Error_message.EToplevelLibraryImport loc)
         else
           None
-      | Block _ -> Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "block"))
-      | Break _ -> Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "break"))
+      | Block _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "block"))
+      | Break _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "break"))
       | ClassDeclaration _ ->
-        Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "class declaration"))
+        Some (Error_message.EUnsupportedStatementInLibdef (loc, "class declaration"))
       | ComponentDeclaration _ ->
-        Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "component declaration"))
-      | Continue _ ->
-        Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "continue"))
-      | Debugger _ ->
-        Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "debugger"))
-      | DoWhile _ -> Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "do while"))
+        Some (Error_message.EUnsupportedStatementInLibdef (loc, "component declaration"))
+      | Continue _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "continue"))
+      | Debugger _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "debugger"))
+      | DoWhile _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "do while"))
       | ExportDefaultDeclaration _ ->
-        Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "export default"))
-      | Expression _ ->
-        Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "expression"))
-      | For _ -> Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "for"))
-      | ForIn _ -> Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "for in"))
-      | ForOf _ -> Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "for of"))
+        Some (Error_message.EUnsupportedStatementInLibdef (loc, "export default"))
+      | Expression _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "expression"))
+      | For _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "for"))
+      | ForIn _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "for in"))
+      | ForOf _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "for of"))
       | FunctionDeclaration _ ->
-        Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "function declaration"))
-      | If _ -> Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "if"))
-      | Labeled _ -> Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "labeled"))
-      | Return _ -> Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "return"))
-      | Switch _ -> Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "switch"))
-      | Throw _ -> Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "throw"))
-      | Try _ -> Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "try"))
+        Some (Error_message.EUnsupportedStatementInLibdef (loc, "function declaration"))
+      | If _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "if"))
+      | Labeled _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "labeled"))
+      | Return _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "return"))
+      | Switch _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "switch"))
+      | Throw _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "throw"))
+      | Try _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "try"))
       | VariableDeclaration _ ->
-        Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "variable declaration"))
-      | While _ -> Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "while"))
-      | With _ -> Some (Error_message.EUnsupportedStatementInLibdef (ALoc.of_loc loc, "with"))
+        Some (Error_message.EUnsupportedStatementInLibdef (loc, "variable declaration"))
+      | While _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "while"))
+      | With _ -> Some (Error_message.EUnsupportedStatementInLibdef (loc, "with"))
     in
     match error_opt with
     | None -> true
     | Some error ->
+      let node_cache = Context.node_cache cx in
+      Node_cache.set_statement node_cache (Typed_ast_utils.error_mapper#statement (loc, stmt));
       Flow_js_utils.add_output cx error;
       false
   in
   object
-    inherit [Loc.t, Loc.t, ALoc.t, ALoc.t] Flow_polymorphic_ast_mapper.mapper as super
-
-    method on_loc_annot = ALoc.of_loc
-
-    method on_type_annot = ALoc.of_loc
+    inherit [ALoc.t] Flow_ast_mapper.mapper as super
 
     method! toplevel_statement_list stmts =
       stmts |> Base.List.filter ~f:(stmt_validator ~in_toplevel_scope:true) |> super#statement_list
@@ -626,19 +621,50 @@ class lib_def_loc_mapper_and_validator cx =
    b) bindings are added as properties to the builtin object
 *)
 let infer_lib_file ~exclude_syms ~lint_severities cx ast =
-  let visitor = new lib_def_loc_mapper_and_validator cx in
-  let aloc_ast = visitor#program ast in
+  let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
+  let validator_visitor = new lib_def_loc_mapper_and_validator cx in
+  let filtered_aloc_ast = validator_visitor#program aloc_ast in
   let (_, { Ast.Program.all_comments; _ }) = ast in
+  let ( prog_aloc,
+        {
+          Ast.Program.statements = aloc_statements;
+          interpreter = aloc_interpreter;
+          comments = aloc_comments;
+          all_comments = aloc_all_comments;
+        }
+      ) =
+    aloc_ast
+  in
 
   try
-    initialize_env ~lib:true ~exclude_syms cx aloc_ast Name_def.Global;
+    initialize_env ~lib:true ~exclude_syms cx filtered_aloc_ast Name_def.Global;
     let (severity_cover, suppressions, suppression_errors) =
       scan_for_suppressions ~in_libdef:true lint_severities [(Context.file cx, all_comments)]
     in
+    let typed_statements = Statement.statement_list cx aloc_statements in
+    let program =
+      ( prog_aloc,
+        {
+          Ast.Program.statements = typed_statements;
+          interpreter = aloc_interpreter;
+          comments = aloc_comments;
+          all_comments = aloc_all_comments;
+        }
+      )
+    in
     Context.add_severity_covers cx severity_cover;
     Context.add_error_suppressions cx suppressions;
-    List.iter (Flow_js.add_output cx) suppression_errors
+    List.iter (Flow_js.add_output cx) suppression_errors;
+    program
   with
   | Env_api.Env_invariant (loc, inv) ->
-    let loc = Base.Option.value ~default:(fst aloc_ast) loc in
-    Flow_js.add_output cx Error_message.(EInternal (loc, EnvInvariant inv))
+    let loc = Base.Option.value ~default:prog_aloc loc in
+    Flow_js.add_output cx Error_message.(EInternal (loc, EnvInvariant inv));
+    ( prog_aloc,
+      {
+        Ast.Program.statements = Typed_ast_utils.error_mapper#statement_list aloc_statements;
+        interpreter = aloc_interpreter;
+        comments = aloc_comments;
+        all_comments = aloc_all_comments;
+      }
+    )

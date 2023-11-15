@@ -76,11 +76,13 @@ let check_lib_file ~ccx ~options mk_builtins ast =
   let cx =
     Context.make ccx metadata lib_file aloc_table resolve_require mk_builtins Context.InitLib
   in
-  Infer.infer_lib_file
-    cx
-    ast
-    ~exclude_syms:(cx |> Context.builtins |> Builtins.builtin_set)
-    ~lint_severities;
+  let (_ : (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t) =
+    Infer.infer_lib_file
+      cx
+      ast
+      ~exclude_syms:(cx |> Context.builtins |> Builtins.builtin_set)
+      ~lint_severities
+  in
   Context.errors cx
 
 (* process all lib files: parse, infer, and add the symbols they define

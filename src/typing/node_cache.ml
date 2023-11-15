@@ -11,6 +11,7 @@ open Loc_collections
 type cache = {
   annotations: (ALoc.t, ALoc.t * Type.t) Ast.Type.annotation ALocMap.t;
   expressions: (ALoc.t, ALoc.t * Type.t) Ast.Expression.t ALocMap.t;
+  statements: (ALoc.t, ALoc.t * Type.t) Ast.Statement.t ALocMap.t;
   jsx_body:
     (Type.unresolved_param list * (ALoc.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.child list)) ALocMap.t;
   functions: (Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Function.t) ALocMap.t;
@@ -57,6 +58,7 @@ let mk_empty () =
     {
       annotations = ALocMap.empty;
       expressions = ALocMap.empty;
+      statements = ALocMap.empty;
       jsx_body = ALocMap.empty;
       functions = ALocMap.empty;
       function_sigs = ALocMap.empty;
@@ -77,6 +79,9 @@ let set_annotation cache ((loc, _) as anno) =
 
 let set_expression cache (((loc, _), _) as exp) =
   cache := { !cache with expressions = ALocMap.add loc exp !cache.expressions }
+
+let set_statement cache ((loc, _) as stmt) =
+  cache := { !cache with statements = ALocMap.add loc stmt !cache.statements }
 
 let set_jsx_children cache ((_, (loc, _)) as children) =
   cache := { !cache with jsx_body = ALocMap.add loc children !cache.jsx_body }
@@ -121,6 +126,8 @@ let set_component_sig cache loc c =
 let get_annotation cache loc = ALocMap.find_opt loc !cache.annotations
 
 let get_expression cache loc = ALocMap.find_opt loc !cache.expressions
+
+let get_statement cache loc = ALocMap.find_opt loc !cache.statements
 
 let get_jsx_children cache loc = ALocMap.find_opt loc !cache.jsx_body
 
