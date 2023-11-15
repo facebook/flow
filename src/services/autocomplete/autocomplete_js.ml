@@ -131,7 +131,7 @@ exception Found of process_location_result
 
 class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) =
   object (this)
-    inherit Typed_ast_utils.type_parameter_mapper as super
+    inherit Typed_ast_finder.type_parameter_mapper as super
 
     val mutable enclosing_classes : Type.t list = []
 

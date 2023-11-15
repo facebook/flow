@@ -49,7 +49,7 @@ end
 
 class member_searcher add_member =
   object (this)
-    inherit Typed_ast_utils.type_parameter_mapper as super
+    inherit Typed_ast_finder.type_parameter_mapper as super
 
     method! on_loc_annot x = x
 
@@ -554,7 +554,7 @@ let local_declaration_references ~root ~write_root ~scope_info =
 
 class declaration_info_collector ~scope_info ~reader ~add_var_info ~add_member_info ~add_type_info =
   object (this)
-    inherit Typed_ast_utils.type_parameter_mapper as super
+    inherit Typed_ast_finder.type_parameter_mapper as super
 
     method! t_identifier (((aloc, type_), Flow_ast.Identifier.{ name; _ }) as ident) =
       let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in

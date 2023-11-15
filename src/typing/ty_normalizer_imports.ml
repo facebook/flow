@@ -58,7 +58,7 @@ let extract_imported_idents file_sig =
 let extract_schemes cx typed_ast (imported_locs : acc_t) =
   List.fold_left
     (fun acc (loc, name, import_mode) ->
-      match Typed_ast_utils.find_exact_match_annotation cx typed_ast loc with
+      match Typed_ast_finder.find_exact_match_annotation cx typed_ast loc with
       | Some scheme -> (name, loc, import_mode, scheme) :: acc
       | None -> acc)
     []

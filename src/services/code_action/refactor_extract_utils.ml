@@ -91,7 +91,7 @@ module InsertionPointCollectors = struct
 
   class function_and_method_insertion_point_collector reader extracted_loc =
     object (this)
-      inherit Typed_ast_utils.type_parameter_mapper as type_parameter_mapper
+      inherit Typed_ast_finder.type_parameter_mapper as type_parameter_mapper
 
       inherit! [ALoc.t, ALoc.t * Type.t] function_and_method_insertion_point_visitor
 
@@ -134,7 +134,7 @@ module InsertionPointCollectors = struct
 
   class class_insertion_point_collector reader extracted_loc =
     object (this)
-      inherit Typed_ast_utils.type_parameter_mapper as super
+      inherit Typed_ast_finder.type_parameter_mapper as super
 
       val mutable acc = None
 
@@ -975,7 +975,7 @@ module TypeSynthesizer = struct
 
   class type_collector reader (locs : LocSet.t) =
     object (this)
-      inherit Typed_ast_utils.type_parameter_mapper as super
+      inherit Typed_ast_finder.type_parameter_mapper as super
 
       val mutable acc = LocMap.empty
 

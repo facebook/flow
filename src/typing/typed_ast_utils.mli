@@ -5,35 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val polarity : 'a Flow_ast.Variance.t option -> Polarity.t
-
-class type_parameter_mapper :
-  object
-    inherit [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper
-
-    method on_loc_annot : ALoc.t -> ALoc.t
-
-    method on_type_annot : ALoc.t * Type.t -> ALoc.t * Type.t
-
-    method annot_with_tparams : 'a. (tparams_rev:Type.typeparam list -> 'a) -> 'a
-  end
-
-(**
- * Return the first typed AST entry that exactly matches the (abstract) location
- * passed as input.
- *
- *)
-val find_exact_match_annotation :
-  Context.t -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t -> ALoc.t -> Type.TypeScheme.t option
-
-(**
- * Return the tparams_rev at the location that exactly matches the (abstract) location
- * passed as input.
- *
- *)
-val find_tparams_rev_at_location :
-  (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t -> ALoc.t -> Type.typeparam list option
-
 (**
  * Find the first typed AST entry for "type-at-pos" related queries. A query
  * succeeds if the location is within the range of a symbol in the AST. The kinds

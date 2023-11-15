@@ -150,7 +150,7 @@ module Callee_finder = struct
 
   class finder ~(reader : State_reader.t) ~(cx : Context.t) (cursor : Loc.t) =
     object (this)
-      inherit Typed_ast_utils.type_parameter_mapper as super
+      inherit Typed_ast_finder.type_parameter_mapper as super
 
       method covers_target loc = Reason.in_range cursor (loc_of_aloc ~reader loc)
 

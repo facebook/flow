@@ -383,7 +383,7 @@ class mapper ~strict ~synth_type ~casting_syntax target =
   end
 
 let type_lookup_at_location cx typed_ast loc =
-  match Typed_ast_utils.find_exact_match_annotation cx typed_ast (ALoc.of_loc loc) with
+  match Typed_ast_finder.find_exact_match_annotation cx typed_ast (ALoc.of_loc loc) with
   | Some p -> p
   | None -> raise @@ unexpected @@ UnknownTypeAtPoint loc
 
