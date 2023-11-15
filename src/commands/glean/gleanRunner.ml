@@ -657,7 +657,7 @@ let declaration_infos ~root ~write_root ~scope_info ~file ~file_sig ~cx ~reader 
   let docs_and_spans = DocumentationFullspanMap.create ast file in
 
   Base.List.fold
-    (Ty_normalizer.from_schemes ~options ~genv !infos)
+    (Ty_normalizer_flow.from_schemes ~options ~genv !infos)
     ~init:([], [], [])
     ~f:(fun (var_infos, member_infos, type_infos) ((kind, name, loc), elt_result) ->
       let (documentation, span) =

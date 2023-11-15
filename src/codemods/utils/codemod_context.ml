@@ -32,7 +32,7 @@ module Typed = struct
     | None -> Error MissingTypeAnnotation
     | Some scheme ->
       let genv = Ty_normalizer_env.mk_genv ~cx ~file ~file_sig ~typed_ast in
-      (match Ty_normalizer.from_scheme ~options:norm_opts ~genv scheme with
+      (match Ty_normalizer_flow.from_scheme ~options:norm_opts ~genv scheme with
       | Ok ty -> Ok ty
       | Error e -> Error (NormalizationError e))
 

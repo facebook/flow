@@ -475,7 +475,7 @@ let local_value_identifiers
              ((name, documentation, tags), Type.TypeScheme.{ tparams_rev; type_ })
          )
      )
-  |> Ty_normalizer.from_schemes ~options:ty_normalizer_options ~genv
+  |> Ty_normalizer_flow.from_schemes ~options:ty_normalizer_options ~genv
 
 (* Roughly collects upper bounds of a type.
  * This logic will be changed or made unnecessary once we have contextual typing *)
@@ -552,7 +552,7 @@ let autocomplete_literals
   let scheme = { Type.TypeScheme.tparams_rev; type_ = upper_bound } in
   let options = ty_normalizer_options in
   let upper_bound_ty =
-    Result.value (Ty_normalizer.expand_literal_union ~options ~genv scheme) ~default:Ty.Top
+    Result.value (Ty_normalizer_flow.expand_literal_union ~options ~genv scheme) ~default:Ty.Top
   in
   let exact_by_default = Context.exact_by_default cx in
   let literals = literals_of_ty [] upper_bound_ty in
@@ -1187,7 +1187,7 @@ let local_type_identifiers ~typed_ast ~cx ~file_sig =
   Stdlib.ignore (search#program typed_ast);
   search#rev_ids
   |> Base.List.rev_map ~f:(fun ((loc, t), Flow_ast.Identifier.{ name; _ }) -> ((name, loc), t))
-  |> Ty_normalizer.from_types
+  |> Ty_normalizer_flow.from_types
        ~options:ty_normalizer_options
        ~genv:(Ty_normalizer_env.mk_genv ~cx ~file:(Context.file cx) ~typed_ast ~file_sig)
 
@@ -1855,7 +1855,7 @@ let autocomplete_module_exports
   let scheme = Type.TypeScheme.{ tparams_rev; type_ = module_type } in
   let exact_by_default = Context.exact_by_default cx in
   let module_ty_res =
-    Ty_normalizer.from_scheme
+    Ty_normalizer_flow.from_scheme
       ~options:ty_normalizer_options
       ~genv:(Ty_normalizer_env.mk_genv ~cx ~file:(Context.file cx) ~typed_ast ~file_sig)
       scheme

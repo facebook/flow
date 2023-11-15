@@ -314,7 +314,7 @@ let ty_normalizer_options =
 let extract ?(force_instance = false) ~cx ~typed_ast ~file_sig scheme =
   let genv = Ty_normalizer_env.mk_genv ~cx ~file:(Context.file cx) ~typed_ast ~file_sig in
   match
-    Ty_normalizer.expand_members ~force_instance ~options:ty_normalizer_options ~genv scheme
+    Ty_normalizer_flow.expand_members ~force_instance ~options:ty_normalizer_options ~genv scheme
   with
   | Error error -> Error (Ty_normalizer.error_to_string error)
   | Ok (Ty.Any _) -> Error "not enough type information to extract members"

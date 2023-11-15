@@ -269,7 +269,7 @@ let mk_hint base_t ops =
        ~f:(fun l -> Hint_Decomp (l, base_t, ExpectedTypeHint))
 
 let string_of_hint_eval_result cx = function
-  | Type.HintAvailable (t, _) -> Ty_normalizer.debug_string_of_t cx t
+  | Type.HintAvailable (t, _) -> Ty_normalizer_flow.debug_string_of_t cx t
   | Type.NoHint -> "NoHint"
   | Type.EncounteredPlaceholder -> "EncounteredPlaceholder"
   | Type.DecompositionError -> "DecompositionError"

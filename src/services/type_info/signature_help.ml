@@ -275,7 +275,7 @@ let rec collect_functions ~jsdoc ~exact_by_default acc = function
     Base.List.fold_left ~init:acc ~f:(collect_functions ~jsdoc ~exact_by_default) (t1 :: t2 :: ts)
   | _ -> acc
 
-(* Ty_normalizer will attempt to recover an alias name for this type. Given that
+(* Ty_normalizer_flow will attempt to recover an alias name for this type. Given that
  * in collect_functions we try to match against the structure of the type, we
  * would rather bypass the alias on the toplevel of the type. It is still
  * desirable that deeper within the type aliases are maintained. Note that
@@ -301,7 +301,7 @@ let find_signatures ~options ~reader ~cx ~file_sig ~ast ~typed_ast loc =
     let t' = fix_alias_reason cx t in
     let scheme = { scheme with Type.TypeScheme.type_ = t' } in
     let genv = Ty_normalizer_env.mk_genv ~cx ~file:(Context.file cx) ~typed_ast ~file_sig in
-    let ty = Ty_normalizer.from_scheme ~options:ty_normalizer_options ~genv scheme in
+    let ty = Ty_normalizer_flow.from_scheme ~options:ty_normalizer_options ~genv scheme in
     let jsdoc =
       match
         GetDef_js.get_def

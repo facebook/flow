@@ -30,7 +30,7 @@ let type_at_pos_type
   | Some (loc, toplevel_is_type_identifier_reference, scheme) ->
     let genv = Ty_normalizer_env.mk_genv ~cx ~file ~file_sig ~typed_ast in
     let from_scheme evaluate_type_destructors =
-      Ty_normalizer.from_scheme
+      Ty_normalizer_flow.from_scheme
         ~options:
           {
             Ty_normalizer_env.expand_internal_types = false;
@@ -78,7 +78,7 @@ let dump_types ~printer ~evaluate_type_destructors cx file_sig typed_ast =
   let file = Context.file cx in
   let genv = Ty_normalizer_env.mk_genv ~cx ~file ~typed_ast ~file_sig in
   let result =
-    Ty_normalizer.from_schemes ~options ~genv (Typed_ast_utils.typed_ast_to_list typed_ast)
+    Ty_normalizer_flow.from_schemes ~options ~genv (Typed_ast_utils.typed_ast_to_list typed_ast)
   in
   let print_ok = function
     | (l, Ok t) -> Some (l, printer t)
@@ -111,6 +111,6 @@ let insert_type_normalize
     }
   in
   let genv = Ty_normalizer_env.mk_genv ~cx ~file ~file_sig ~typed_ast in
-  match Ty_normalizer.from_scheme ~options ~genv scheme with
+  match Ty_normalizer_flow.from_scheme ~options ~genv scheme with
   | Ok elt -> Success (loc, elt)
   | Error err -> result_of_normalizer_error loc scheme err
