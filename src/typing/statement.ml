@@ -2745,7 +2745,9 @@ module Make
             Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
                 let reason_op = reason in
                 let element_reason =
-                  replace_desc_reason Reason.inferred_union_elem_array_desc reason_op
+                  replace_desc_reason
+                    (Reason.RInferredUnionElemArray { instantiable = false })
+                    reason_op
                 in
                 let elem_t = Tvar.mk cx element_reason in
                 let resolve_to = ResolveSpreadsToArrayLiteral (mk_id (), elem_t, tout) in
@@ -5688,7 +5690,9 @@ module Make
           Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
               let reason_op = reason in
               let element_reason =
-                replace_desc_reason Reason.inferred_union_elem_array_desc reason_op
+                replace_desc_reason
+                  (Reason.RInferredUnionElemArray { instantiable = false })
+                  reason_op
               in
               let elem_t = Tvar.mk cx element_reason in
               Flow.resolve_spread_list

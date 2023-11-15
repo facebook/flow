@@ -85,6 +85,7 @@ type 'loc virtual_reason_desc =
   | REmptyArrayLit
   | RArrayType
   | RArrayElement
+  | RInferredUnionElemArray of { instantiable: bool }
   | RROArrayType
   | RTupleType
   | RTupleElement of { name: string option }
@@ -281,7 +282,7 @@ let rec map_desc_locs f = function
     | RFunctionUnusedArgument | RJSXChild | RJSXFunctionCall _ | RJSXIdentifier _
     | RJSXElementProps _ | RJSXElement _ | RJSXText | RFbt | RUninitialized | RPossiblyUninitialized
     | RUnannotatedNext | REmptyArrayElement | RMappedType | RTypeGuardParam _ | RComponent _
-    | RComponentType ) as r ->
+    | RComponentType | RInferredUnionElemArray _ ) as r ->
     r
   | RFunctionCall desc -> RFunctionCall (map_desc_locs f desc)
   | RUnknownUnspecifiedProperty desc -> RUnknownUnspecifiedProperty (map_desc_locs f desc)
@@ -795,6 +796,9 @@ let rec string_of_desc = function
   | RRenderMaybeType desc -> spf "renders? %s" (string_of_desc desc)
   | RRenderStarType desc -> spf "renders* %s" (string_of_desc desc)
   | RRendersNothing -> "a value that renders nothing"
+  | RInferredUnionElemArray _ ->
+    "inferred union of array element types "
+    ^ "(alternatively, provide an annotation to summarize the array element type)"
 
 let string_of_reason ?(strip_root = None) r =
   let spos = string_of_aloc ~strip_root (loc_of_reason r) in
@@ -862,6 +866,7 @@ let is_instantiable_reason r =
   | RThisType ->
     true
   | RImplicitInstantiation -> true
+  | RInferredUnionElemArray { instantiable } -> instantiable
   | _ -> false
 
 (* TODO: Property accesses create unresolved tvars to hold results, even when
@@ -1348,10 +1353,6 @@ let mk_pattern_reason ((loc, _) as patt) = mk_reason (RCode (code_desc_of_patter
 (* TODO: replace RCustom descriptions with proper descriptions *)
 let unknown_elem_empty_array_desc = RCustom "unknown element type of empty array"
 
-let inferred_union_elem_array_desc =
-  RCustom
-    "inferred union of array element types (alternatively, provide an annotation to summarize the array element type)"
-
 (* Classifies a reason description. These classifications can be used to
  * implement various asthetic behaviors in error messages when we would like to
  * distinguish between different error "classes".
@@ -1407,6 +1408,7 @@ let classification_of_reason r =
   | RAnyExplicit
   | RAnyImplicit
   | RArrayElement
+  | RInferredUnionElemArray _
   | RIndexedAccess _
   | RConditionalType
   | RInferType _

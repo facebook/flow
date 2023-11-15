@@ -9024,8 +9024,8 @@ struct
         (unused_parlist, rest_param)
       | Some (name, loc, rest_param) ->
         List.iter (rec_flow cx trace) used_pairs;
-
-        let orig_rest_reason = repos_reason loc (reason_of_t rest_param) in
+        let rest_reason = reason_of_t rest_param in
+        let orig_rest_reason = repos_reason loc rest_reason in
         (* We're going to build an array literal with all the unused arguments
          * (and the spread argument if it exists). Then we're going to flow that
          * to the rest parameter *)
@@ -9041,7 +9041,6 @@ struct
           | None ->
             (* If the rest parameter is consuming N elements, then drop N elements
              * from the rest parameter *)
-            let rest_reason = reason_of_t rest_param in
             Tvar.mk_where cx rest_reason (fun tout ->
                 let i = List.length rev_elems in
                 rec_flow cx trace (rest_param, ArrRestT (use_op, orig_rest_reason, i, tout))
@@ -9079,7 +9078,8 @@ struct
           Tvar.mk_where cx arg_array_reason (fun tout ->
               let reason_op = arg_array_reason in
               let element_reason =
-                replace_desc_reason Reason.inferred_union_elem_array_desc reason_op
+                let instantiable = Reason.is_instantiable_reason rest_reason in
+                replace_desc_reason (Reason.RInferredUnionElemArray { instantiable }) reason_op
               in
               let elem_t = Tvar.mk cx element_reason in
               ResolveSpreadsToArrayLiteral (mk_id (), elem_t, tout)

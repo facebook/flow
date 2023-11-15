@@ -198,7 +198,7 @@ let resolve_hint cx loc hint =
       Tvar.mk_where cx reason (fun tout ->
           let reason_op = reason in
           let element_reason =
-            replace_desc_reason Reason.inferred_union_elem_array_desc reason_op
+            replace_desc_reason (Reason.RInferredUnionElemArray { instantiable = false }) reason_op
           in
           let elem_t = Tvar.mk cx element_reason in
           Flow_js.resolve_spread_list
@@ -500,7 +500,9 @@ let resolve_binding_partial cx reason loc b =
           Tvar.mk_where cx reason (fun tout ->
               let reason_op = reason in
               let element_reason =
-                replace_desc_reason Reason.inferred_union_elem_array_desc reason_op
+                replace_desc_reason
+                  (Reason.RInferredUnionElemArray { instantiable = false })
+                  reason_op
               in
               let elem_t = Tvar.mk cx element_reason in
               let resolve_to = ResolveSpreadsToArrayLiteral (mk_id (), elem_t, tout) in
