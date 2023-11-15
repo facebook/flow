@@ -47,6 +47,14 @@ let replace_comments_of_statement ~comments =
       | ClassDeclaration x -> ClassDeclaration Ast.Class.{ x with comments }
       | FunctionDeclaration x -> FunctionDeclaration Ast.Function.{ x with comments }
       | EnumDeclaration x -> EnumDeclaration EnumDeclaration.{ x with comments }
+      | DeclareVariable x -> DeclareVariable DeclareVariable.{ x with comments }
+      | DeclareFunction x -> DeclareFunction DeclareFunction.{ x with comments }
+      | DeclareClass x -> DeclareClass DeclareClass.{ x with comments }
+      | DeclareComponent x -> DeclareComponent DeclareComponent.{ x with comments }
+      | DeclareTypeAlias x -> DeclareTypeAlias TypeAlias.{ x with comments }
+      | DeclareOpaqueType x -> DeclareOpaqueType OpaqueType.{ x with comments }
+      | DeclareInterface x -> DeclareInterface Interface.{ x with comments }
+      | DeclareEnum x -> DeclareEnum EnumDeclaration.{ x with comments }
       | other -> other
       )
 
@@ -113,6 +121,44 @@ class jsdoc_documentation_searcher find =
       find id_loc comments;
       find annot_loc comments;
       super#declare_function stmt_loc decl
+
+    method! declare_export_declaration loc decl =
+      let open Ast.Statement.DeclareExportDeclaration in
+      let { default; source = _; specifiers = _; declaration; comments } = decl in
+      Base.Option.iter default ~f:(fun l -> find l comments);
+      let () =
+        let open Utils_js in
+        Base.Option.iter declaration ~f:(function
+            | Variable (loc, d) ->
+              (loc, Ast.Statement.DeclareVariable d)
+              |> replace_comments_of_statement ~comments %> this#statement %> ignore
+            | Function (loc, d) ->
+              (loc, Ast.Statement.DeclareFunction d)
+              |> replace_comments_of_statement ~comments %> this#statement %> ignore
+            | Class (loc, d) ->
+              (loc, Ast.Statement.DeclareClass d)
+              |> replace_comments_of_statement ~comments %> this#statement %> ignore
+            | Component (loc, d) ->
+              (loc, Ast.Statement.DeclareComponent d)
+              |> replace_comments_of_statement ~comments %> this#statement %> ignore
+            | DefaultType ((loc, _) as t) ->
+              find loc comments;
+              ignore @@ this#type_ t
+            | NamedType (loc, d) ->
+              (loc, Ast.Statement.DeclareTypeAlias d)
+              |> replace_comments_of_statement ~comments %> this#statement %> ignore
+            | NamedOpaqueType (loc, d) ->
+              (loc, Ast.Statement.DeclareOpaqueType d)
+              |> replace_comments_of_statement ~comments %> this#statement %> ignore
+            | Interface (loc, d) ->
+              (loc, Ast.Statement.DeclareInterface d)
+              |> replace_comments_of_statement ~comments %> this#statement %> ignore
+            | Enum (loc, d) ->
+              (loc, Ast.Statement.DeclareEnum d)
+              |> replace_comments_of_statement ~comments %> this#statement %> ignore
+            )
+      in
+      super#declare_export_declaration loc decl
 
     method! object_property_type prop_type =
       let open Ast.Type.Object.Property in

@@ -4,11 +4,18 @@ lazy_ref.js:19:9 = Promise<{+default: (x: Props) => Element<(x: Props) => Node>}
 lazy_ref.js:19:9,19:9
 react_component.js:3:9 = module "react"
 react_component.js:3:7,3:11
-react_component.js:13:33 = class React$Component<Props, State = void>
+react_component.js:13:33 = `Component` lets you define a React component as a JavaScript class.
+
+We recommend defining components as functions instead of classes.
+[See how to migrate](https://react.dev/reference/react/PureComponent#alternatives).
+
+**@see** https://react.dev/reference/react/Component
+class React$Component<Props, State = void>
 react_component.js:13:29,13:37
 react_component.js:18:17 = State
 react_component.js:18:14,18:18
 react_component.js:31:7 = {
+  "documentation":"`<Fragment>`, often used via `<>...</>` syntax,\nlets you group elements without a wrapper node.\n\n**@see** https://react.dev/reference/react/Fragment",
   "types":{
     "unevaluated":{
       "expanded":{
