@@ -620,11 +620,9 @@ class lib_def_loc_mapper_and_validator cx =
    a) symbols from prior library loads are suppressed if found,
    b) bindings are added as properties to the builtin object
 *)
-let infer_lib_file ~exclude_syms ~lint_severities cx ast =
-  let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
+let infer_lib_file ~lint_severities cx file_key all_comments aloc_ast =
   let validator_visitor = new lib_def_loc_mapper_and_validator cx in
   let filtered_aloc_ast = validator_visitor#program aloc_ast in
-  let (_, { Ast.Program.all_comments; _ }) = ast in
   let ( prog_aloc,
         {
           Ast.Program.statements = aloc_statements;
@@ -635,11 +633,12 @@ let infer_lib_file ~exclude_syms ~lint_severities cx ast =
       ) =
     aloc_ast
   in
+  let exclude_syms = cx |> Context.builtins |> Builtins.builtin_set in
 
   try
     initialize_env ~lib:true ~exclude_syms cx filtered_aloc_ast Name_def.Global;
     let (severity_cover, suppressions, suppression_errors) =
-      scan_for_suppressions ~in_libdef:true lint_severities [(Context.file cx, all_comments)]
+      scan_for_suppressions ~in_libdef:true lint_severities [(file_key, all_comments)]
     in
     let typed_statements = Statement.statement_list cx aloc_statements in
     let program =

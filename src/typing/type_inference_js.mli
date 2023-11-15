@@ -24,8 +24,9 @@ val infer_ast :
 
 (* Lint suppressions are handled iff lint_severities is Some. *)
 val infer_lib_file :
-  exclude_syms:NameUtils.Set.t ->
   lint_severities:Severity.severity LintSettings.t ->
   Context.t ->
-  (Loc.t, Loc.t) Flow_ast.Program.t ->
+  File_key.t ->
+  Loc.t Flow_ast.Comment.t list ->
+  (ALoc.t, ALoc.t) Flow_ast.Program.t ->
   (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t

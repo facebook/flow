@@ -14,6 +14,7 @@
    future. *)
 
 open Utils_js
+module Ast = Flow_ast
 module Parsing = Parsing_service_js
 module Infer = Type_inference_js
 module ErrorSet = Flow_error.ErrorSet
@@ -24,7 +25,7 @@ let is_fail { Parsing.failed; _ } = fst failed <> []
 
 type lib_result =
   | Lib_ok of {
-      ast: (Loc.t, Loc.t) Flow_ast.Program.t;
+      ast: (Loc.t, Loc.t) Ast.Program.t;
       file_sig: File_sig.t;
       tolerable_errors: File_sig.tolerable_error list;
     }
@@ -69,19 +70,17 @@ let check_lib_file ~ccx ~options mk_builtins ast =
       { metadata with checked = false }
     )
   in
-  let lib_file = Base.Option.value_exn (ast |> fst |> Loc.source) in
+  let (prog_loc, { Ast.Program.all_comments; _ }) = ast in
+  let lib_file = Base.Option.value_exn (Loc.source prog_loc) in
   (* Lib files use only concrete locations, so this is not used. *)
   let aloc_table = lazy (ALoc.empty_table lib_file) in
   let resolve_require mref = Error (Reason.internal_module_name mref) in
   let cx =
     Context.make ccx metadata lib_file aloc_table resolve_require mk_builtins Context.InitLib
   in
+  let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   let (_ : (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t) =
-    Infer.infer_lib_file
-      cx
-      ast
-      ~exclude_syms:(cx |> Context.builtins |> Builtins.builtin_set)
-      ~lint_severities
+    Infer.infer_lib_file ~lint_severities cx lib_file all_comments aloc_ast
   in
   Context.errors cx
 
