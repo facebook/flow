@@ -39,12 +39,6 @@ let not_linked (id1, _bounds1) (_id2, bounds2) =
 
 (********************************************************************)
 
-(* visit an optional evaluated type at an evaluation id *)
-let visit_eval_id cx id f =
-  match Eval.Map.find_opt id (Context.evaluated cx) with
-  | None -> ()
-  | Some t -> f t
-
 module ImplicitTypeArgument = Instantiation_utils.ImplicitTypeArgument
 module TypeAppExpansion = Instantiation_utils.TypeAppExpansion
 module Cache = Flow_cache
@@ -255,26 +249,32 @@ struct
     Flow_js_utils.Import_export_helper_sig with type r = Type.t -> unit = struct
     type r = Type.t -> unit
 
-    let reposition = FlowJs.reposition
+    let reposition = FlowJs.reposition ~trace:Trace.dummy_trace
 
-    let return cx trace t tout = FlowJs.rec_flow_t cx ~use_op:unknown_use trace (t, tout)
+    let return cx t tout = FlowJs.rec_flow_t cx ~use_op:unknown_use Trace.dummy_trace (t, tout)
 
-    let export_named cx trace (reason, named, kind) module_t tout =
-      FlowJs.rec_flow cx trace (module_t, Type.ExportNamedT (reason, named, kind, tout))
+    let export_named cx (reason, named, kind) module_t tout =
+      FlowJs.rec_flow cx Trace.dummy_trace (module_t, Type.ExportNamedT (reason, named, kind, tout))
 
-    let export_named_fresh_var cx trace (reason, named, kind) module_t =
+    let export_named_fresh_var cx (reason, named, kind) module_t =
       Tvar.mk_where cx reason (fun t ->
-          FlowJs.rec_flow cx trace (module_t, Type.ExportNamedT (reason, named, kind, t))
+          FlowJs.rec_flow cx Trace.dummy_trace (module_t, Type.ExportNamedT (reason, named, kind, t))
       )
 
-    let export_type cx trace (reason, export_name, target_module_t) export_t =
+    let export_type cx (reason, export_name, target_module_t) export_t =
       Tvar.mk_where cx reason (fun t ->
-          FlowJs.rec_flow cx trace (export_t, ExportTypeT (reason, export_name, target_module_t, t))
+          FlowJs.rec_flow
+            cx
+            Trace.dummy_trace
+            (export_t, ExportTypeT (reason, export_name, target_module_t, t))
       )
 
-    let cjs_extract_named_exports cx trace (reason, local_module) proto_t =
+    let cjs_extract_named_exports cx (reason, local_module) proto_t =
       Tvar.mk_where cx reason (fun t ->
-          FlowJs.rec_flow cx trace (proto_t, CJSExtractNamedExportsT (reason, local_module, t))
+          FlowJs.rec_flow
+            cx
+            Trace.dummy_trace
+            (proto_t, CJSExtractNamedExportsT (reason, local_module, t))
       )
   end
 
@@ -337,13 +337,12 @@ struct
         add_output cx ~trace (Error_message.EPropNotReadable { reason_prop; prop_name; use_op })
     end
 
-  let enum_proto cx trace ~reason (enum_reason, enum) =
+  let enum_proto cx ~reason (enum_reason, enum) =
     let enum_object_t = DefT (enum_reason, EnumObjectT enum) in
     let enum_t = DefT (enum_reason, EnumT enum) in
     let { representation_t; _ } = enum in
     FlowJs.get_builtin_typeapp
       cx
-      ~trace
       reason
       (OrdinaryName "$EnumProto")
       [enum_object_t; enum_t; representation_t]
@@ -776,21 +775,21 @@ struct
         (* Module exports *)
         (******************)
         | (ModuleT m, ExportNamedT (reason, tmap, export_kind, tout)) ->
-          ExportNamedTKit.on_ModuleT cx trace (reason, tmap, export_kind) l m tout
+          ExportNamedTKit.on_ModuleT cx (reason, tmap, export_kind) l m tout
         | (_, AssertExportIsTypeT (_, name, t_out)) ->
-          AssertExportIsTypeTKit.on_concrete_type cx trace name l t_out
+          AssertExportIsTypeTKit.on_concrete_type cx name l t_out
         | (ModuleT m, CopyNamedExportsT (reason, target_module_t, t_out)) ->
-          CopyNamedExportsTKit.on_ModuleT cx trace (reason, target_module_t) m t_out
+          CopyNamedExportsTKit.on_ModuleT cx (reason, target_module_t) m t_out
         | (ModuleT m, CopyTypeExportsT (reason, target_module_t, t_out)) ->
-          CopyTypeExportsTKit.on_ModuleT cx trace (reason, target_module_t) m t_out
+          CopyTypeExportsTKit.on_ModuleT cx (reason, target_module_t) m t_out
         | (_, ExportTypeT (reason, export_name, target_module_t, t_out)) ->
-          ExportTypeTKit.on_concrete_type cx trace (reason, export_name, target_module_t) l t_out
+          ExportTypeTKit.on_concrete_type cx (reason, export_name, target_module_t) l t_out
         | (AnyT (lreason, _), CopyNamedExportsT (reason, target_module, t)) ->
-          CopyNamedExportsTKit.on_AnyT cx trace lreason (reason, target_module) t
+          CopyNamedExportsTKit.on_AnyT cx lreason (reason, target_module) t
         | (AnyT (lreason, _), CopyTypeExportsT (reason, target_module, t)) ->
-          CopyTypeExportsTKit.on_AnyT cx trace lreason (reason, target_module) t
+          CopyTypeExportsTKit.on_AnyT cx lreason (reason, target_module) t
         | (_, CJSExtractNamedExportsT (reason, local_module, t_out)) ->
-          CJSExtractNamedExportsTKit.on_concrete_type cx trace (reason, local_module) l t_out
+          CJSExtractNamedExportsTKit.on_concrete_type cx (reason, local_module) l t_out
         (******************)
         (* Module imports *)
         (******************)
@@ -799,13 +798,13 @@ struct
             cx
             ~use_op:unknown_use
             trace
-            (CJSRequireTKit.on_ModuleT cx trace (reason, is_strict, legacy_interop) m, t_out)
+            (CJSRequireTKit.on_ModuleT cx (reason, is_strict, legacy_interop) m, t_out)
         | (ModuleT m, ImportModuleNsT { reason; t = tout; is_strict }) ->
           FlowJs.rec_flow_t
             cx
             ~use_op:unknown_use
             trace
-            (ImportModuleNsTKit.on_ModuleT cx trace (reason, is_strict) m, tout)
+            (ImportModuleNsTKit.on_ModuleT cx (reason, is_strict) m, tout)
         | (AnyT (lreason, _), CJSRequireT { reason; t_out; _ }) ->
           Flow_js_utils.check_untyped_import cx ImportValue lreason reason;
           rec_flow_t ~use_op:unknown_use cx trace (reposition_reason cx reason l, t_out)
@@ -4332,7 +4331,7 @@ struct
           in
           rec_flow_t cx trace ~use_op:unknown_use (t, tout)
         | (_, MapTypeT (use_op, reason, TupleMap funt, tout)) ->
-          let iter = get_builtin cx ~trace (OrdinaryName "$iterate") reason in
+          let iter = get_builtin cx (OrdinaryName "$iterate") reason in
           let elemt =
             EvalT
               ( iter,
@@ -4937,7 +4936,7 @@ struct
                 rec_flow
                   cx
                   trace
-                  ( enum_proto cx trace ~reason:lookup_reason (enum_reason, enum),
+                  ( enum_proto cx ~reason:lookup_reason (enum_reason, enum),
                     GetPropT (use_op, lookup_reason, None, propref, tout)
                   )
             )
@@ -5505,7 +5504,7 @@ struct
         | ( DefT (reason, ArrT (ArrayAT { elem_t; _ })),
             (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)
           ) ->
-          rec_flow cx trace (get_builtin_typeapp cx ~trace reason (OrdinaryName "Array") [elem_t], u)
+          rec_flow cx trace (get_builtin_typeapp cx reason (OrdinaryName "Array") [elem_t], u)
         (*************************)
         (* Tuple "length" access *)
         (*************************)
@@ -5517,10 +5516,7 @@ struct
             (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)
           ) ->
           let t = elemt_of_arrtype arrtype in
-          rec_flow
-            cx
-            trace
-            (get_builtin_typeapp cx ~trace reason (OrdinaryName "$ReadOnlyArray") [t], u)
+          rec_flow cx trace (get_builtin_typeapp cx reason (OrdinaryName "$ReadOnlyArray") [t], u)
         (***********************)
         (* String library call *)
         (***********************)
@@ -6751,21 +6747,6 @@ struct
           }
       )
 
-  and eval_evalt cx ?trace t evaluator id =
-    match evaluator with
-    | TypeDestructorT (use_op, reason, d) ->
-      let (_, result) =
-        mk_type_destructor
-          cx
-          ~trace:(Base.Option.value ~default:Trace.dummy_trace trace)
-          use_op
-          reason
-          t
-          d
-          id
-      in
-      result
-
   and destruct cx ~trace reason kind t selector tout id =
     match kind with
     | DestructAnnot ->
@@ -7240,11 +7221,6 @@ struct
                   )
               )
           ))
-
-  and eval_keys cx ~trace reason t =
-    Tvar.mk_where cx reason (fun tout ->
-        rec_flow cx trace (t, GetKeysT (reason, UseT (unknown_use, tout)))
-    )
 
   and mk_possibly_evaluated_destructor cx use_op reason t d id =
     let eval_t = EvalT (t, TypeDestructorT (use_op, reason, d), id) in
@@ -7939,12 +7915,12 @@ struct
     | (true, (DefT (reason, ArrT arrtype) as arr), DefT (r, ClassT a)) ->
       let elemt = elemt_of_arrtype arrtype in
       let right = extends_type r arr a in
-      let arrt = get_builtin_typeapp cx ~trace reason (OrdinaryName "Array") [elemt] in
+      let arrt = get_builtin_typeapp cx reason (OrdinaryName "Array") [elemt] in
       rec_flow cx trace (arrt, PredicateT (LeftP (InstanceofTest, right), result))
     | (false, (DefT (reason, ArrT arrtype) as arr), DefT (r, ClassT a)) ->
       let elemt = elemt_of_arrtype arrtype in
       let right = extends_type r arr a in
-      let arrt = get_builtin_typeapp cx ~trace reason (OrdinaryName "Array") [elemt] in
+      let arrt = get_builtin_typeapp cx reason (OrdinaryName "Array") [elemt] in
       let pred = NotP (LeftP (InstanceofTest, right)) in
       rec_flow cx trace (arrt, PredicateT (pred, result))
     (* Suppose that we have an instance x of class C, and we check whether x is
@@ -9661,22 +9637,21 @@ struct
    *
    * If you are not in a lib file, then this behaves as a strict lookup. We error and return Any
    * in the case where the builtin is not already in the map *)
-  and get_builtin_tvar_result cx ?trace:_ x reason = lookup_builtin_strict_tvar_result cx x reason
+  and get_builtin_tvar_result cx x reason = lookup_builtin_strict_tvar_result cx x reason
 
-  and get_builtin_result cx ?trace x reason =
-    Env_api.map_result (get_builtin_tvar_result cx ?trace x reason) ~f:(fun n -> OpenT (reason, n))
+  and get_builtin_result cx x reason =
+    Env_api.map_result (get_builtin_tvar_result cx x reason) ~f:(fun n -> OpenT (reason, n))
 
-  and get_builtin cx ?trace x reason =
-    get_builtin_result cx ?trace x reason |> Flow_js_utils.apply_env_errors cx (loc_of_reason reason)
+  and get_builtin cx x reason =
+    get_builtin_result cx x reason |> Flow_js_utils.apply_env_errors cx (loc_of_reason reason)
 
-  and get_builtin_tvar cx ?trace x reason =
-    get_builtin_tvar_result cx ?trace x reason
-    |> Flow_js_utils.apply_env_errors cx (loc_of_reason reason)
+  and get_builtin_tvar cx x reason =
+    get_builtin_tvar_result cx x reason |> Flow_js_utils.apply_env_errors cx (loc_of_reason reason)
 
-  and get_builtin_module cx ?trace loc mref =
+  and get_builtin_module cx loc mref =
     let m_name = Reason.internal_module_name mref in
     let reason = Reason.(mk_reason (RCustom mref) loc) in
-    (reason, get_builtin_tvar cx ?trace m_name reason)
+    (reason, get_builtin_tvar cx m_name reason)
 
   (* Looks up a builtin and errors if it is not found. Does not add an entry that requires a
    * write later. *)
@@ -9700,8 +9675,8 @@ struct
     let builtin = Flow_js_utils.lookup_builtin_with_default cx x default in
     Tvar.mk_where cx (reason_of_t default) (fun t -> flow_t cx (builtin, t))
 
-  and get_builtin_typeapp cx ?trace reason ?(use_desc = false) x targs =
-    let t = get_builtin cx ?trace x reason in
+  and get_builtin_typeapp cx reason ?(use_desc = false) x targs =
+    let t = get_builtin cx x reason in
     typeapp ~use_desc reason t targs
 
   (* Specialize a polymorphic class, make an instance of the specialized class. *)
@@ -9936,7 +9911,7 @@ struct
     AnnotT (opt_annot_reason ~annot_loc reason, source, false)
 
   and get_builtin_type cx ?trace reason ?(use_desc = false) x =
-    let t = get_builtin cx ?trace x reason in
+    let t = get_builtin cx x reason in
     mk_instance cx ?trace reason ~use_desc t
 
   and flow_all_in_union cx trace rep u =
@@ -10271,5 +10246,31 @@ let mk_default cx reason =
           eval_selector cx ~annot:false r t sel tvar (Reason.mk_id ())
       ))
 
+(* Export some functions without the trace parameter *)
+
 let resolve_id cx id t =
   resolve_id cx Trace.dummy_trace ~use_op:unknown_use ~fully_resolved:true id t
+
+let mk_instance cx instance_reason ?use_desc c = mk_instance cx instance_reason ?use_desc c
+
+let mk_typeof_annotation cx reason t = mk_typeof_annotation cx reason t
+
+let widen_obj_type cx ~use_op reason t = widen_obj_type cx ~use_op reason t
+
+let get_builtin_type cx reason ?use_desc x = get_builtin_type cx reason ?use_desc x
+
+let reposition_reason cx reason ?use_desc t = reposition_reason cx reason ?use_desc t
+
+let filter_optional cx reason opt_t = filter_optional cx reason opt_t
+
+let reposition cx loc ?desc ?annot_loc t = reposition cx loc ?desc ?annot_loc t
+
+let mk_typeapp_instance_annot cx ~use_op ~reason_op ~reason_tapp ?cache c ts =
+  mk_typeapp_instance_annot cx ~use_op ~reason_op ~reason_tapp ?cache c ts
+
+let mk_type_destructor cx use_op reason t d id =
+  mk_type_destructor cx ~trace:Trace.dummy_trace use_op reason t d id
+
+let check_polarity cx tparams polarity t = check_polarity cx tparams polarity t
+
+let add_output cx msg = add_output cx msg

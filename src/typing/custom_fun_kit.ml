@@ -171,7 +171,6 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
         let expected_element =
           get_builtin_typeapp
             cx
-            ~trace
             (reason_of_t element)
             (OrdinaryName "React$Element")
             [Tvar.mk cx reason_op]
@@ -190,9 +189,7 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
           ~use_op:unknown_use
           cx
           trace
-          ( element,
-            get_builtin_typeapp cx ~trace reason_op (OrdinaryName "React$Element") [component]
-          );
+          (element, get_builtin_typeapp cx reason_op (OrdinaryName "React$Element") [component]);
 
         (* Create a React element using the config and children. *)
         rec_flow

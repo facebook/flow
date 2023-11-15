@@ -1070,11 +1070,11 @@ end
 (* Imports *)
 (***********)
 
-let check_nonstrict_import cx trace is_strict imported_is_strict reason =
+let check_nonstrict_import cx is_strict imported_is_strict reason =
   if is_strict && not imported_is_strict then
     let loc = Reason.loc_of_reason reason in
     let message = Error_message.ENonstrictImport loc in
-    add_output cx ~trace message
+    add_output cx message
 
 (**************************************************************************)
 (* Module imports                                                         *)
@@ -1105,40 +1105,20 @@ let check_nonstrict_import cx trace is_strict imported_is_strict reason =
 module type Import_export_helper_sig = sig
   type r
 
-  val reposition :
-    Context.t ->
-    ?trace:Type.trace ->
-    ALoc.t ->
-    ?desc:reason_desc ->
-    ?annot_loc:ALoc.t ->
-    Type.t ->
-    Type.t
+  val reposition : Context.t -> ALoc.t -> ?desc:reason_desc -> ?annot_loc:ALoc.t -> Type.t -> Type.t
 
   val export_named :
-    Context.t ->
-    Type.trace ->
-    Reason.t * Type.named_symbol NameUtils.Map.t * export_kind ->
-    Type.t ->
-    r
+    Context.t -> Reason.t * Type.named_symbol NameUtils.Map.t * export_kind -> Type.t -> r
 
   val export_named_fresh_var :
-    Context.t ->
-    Type.trace ->
-    Reason.t * Type.named_symbol NameUtils.Map.t * export_kind ->
-    Type.t ->
-    Type.t
+    Context.t -> Reason.t * Type.named_symbol NameUtils.Map.t * export_kind -> Type.t -> Type.t
 
   val export_type :
-    Context.t ->
-    Type.trace ->
-    reason * name (* export_name *) * t (* target_module_t *) ->
-    Type.t ->
-    Type.t
+    Context.t -> reason * name (* export_name *) * t (* target_module_t *) -> Type.t -> Type.t
 
-  val cjs_extract_named_exports :
-    Context.t -> Type.trace -> Reason.t * Type.moduletype -> Type.t -> Type.t
+  val cjs_extract_named_exports : Context.t -> Reason.t * Type.moduletype -> Type.t -> Type.t
 
-  val return : Context.t -> Type.trace -> Type.t -> r
+  val return : Context.t -> Type.t -> r
 end
 
 (*********************************************************************)
@@ -1201,14 +1181,14 @@ module ImportTypeTKit = struct
     | AnyT _ -> Some t
     | _ -> None
 
-  let on_concrete_type cx trace reason export_name exported_type =
+  let on_concrete_type cx reason export_name exported_type =
     match (exported_type, export_name) with
     | ((ExactT (_, DefT (_, ObjT _)) | DefT (_, ObjT _)), "default") -> exported_type
     | (exported_type, _) ->
       (match canonicalize_imported_type cx reason exported_type with
       | Some imported_t -> imported_t
       | None ->
-        add_output cx ~trace (Error_message.EImportValueAsType (reason, export_name));
+        add_output cx (Error_message.EImportValueAsType (reason, export_name));
         AnyT.error reason)
 end
 
@@ -1218,7 +1198,7 @@ end
 (************************************************************************)
 
 module ImportTypeofTKit = struct
-  let on_concrete_type cx trace ~mk_typeof_annotation reason export_name l =
+  let on_concrete_type cx ~mk_typeof_annotation reason export_name l =
     match l with
     | DefT
         ( _,
@@ -1230,36 +1210,35 @@ module ImportTypeofTKit = struct
               id;
             }
         ) ->
-      let typeof_t = mk_typeof_annotation cx ?trace:(Some trace) reason lower_t in
+      let typeof_t = mk_typeof_annotation cx reason lower_t in
 
       poly_type id tparams_loc typeparams (DefT (reason, TypeT (ImportTypeofKind, typeof_t)))
     | DefT (_, TypeT _)
     | DefT (_, PolyT { t_out = DefT (_, TypeT _); _ }) ->
-      add_output cx ~trace (Error_message.EImportTypeAsTypeof (reason, export_name));
+      add_output cx (Error_message.EImportTypeAsTypeof (reason, export_name));
       AnyT.error reason
     | _ ->
-      let typeof_t = mk_typeof_annotation cx ?trace:(Some trace) reason l in
+      let typeof_t = mk_typeof_annotation cx reason l in
       DefT (reason, TypeT (ImportTypeofKind, typeof_t))
 end
 
 module CJSRequireT_kit (F : Import_export_helper_sig) = struct
   (* require('SomeModule') *)
-  let on_ModuleT
-      cx
-      trace
-      (reason, is_strict, legacy_interop)
-      {
-        module_reason;
-        module_export_types = exports;
-        module_is_strict = imported_is_strict;
-        module_available_platforms = _IGNORED_TODO;
-      } =
-    check_nonstrict_import cx trace is_strict imported_is_strict reason;
+  let on_ModuleT cx (reason, is_strict, legacy_interop) module_ =
+    let {
+      module_reason;
+      module_export_types = exports;
+      module_is_strict = imported_is_strict;
+      module_available_platforms = _IGNORED_TODO;
+    } =
+      module_
+    in
+    check_nonstrict_import cx is_strict imported_is_strict reason;
     match exports.cjs_export with
     | Some t ->
       (* reposition the export to point at the require(), like the object
          we create below for non-CommonJS exports *)
-      F.reposition ~trace cx (loc_of_reason reason) t
+      F.reposition cx (loc_of_reason reason) t
     | None ->
       (* Use default export if option is enabled and module is not lib *)
       let automatic_require_default =
@@ -1288,19 +1267,17 @@ end
 
 module ImportModuleNsTKit = struct
   (* import * as X from 'SomeModule'; *)
-  let on_ModuleT
-      cx
-      trace
-      ?(is_common_interface_module = false)
-      (reason_op, is_strict)
-      {
-        module_reason;
-        module_export_types = exports;
-        module_is_strict = imported_is_strict;
-        module_available_platforms = _IGNORED_TODO;
-      } =
+  let on_ModuleT cx ?(is_common_interface_module = false) (reason_op, is_strict) module_ =
+    let {
+      module_reason;
+      module_export_types = exports;
+      module_is_strict = imported_is_strict;
+      module_available_platforms = _IGNORED_TODO;
+    } =
+      module_
+    in
     if not is_common_interface_module then
-      check_nonstrict_import cx trace is_strict imported_is_strict reason_op;
+      check_nonstrict_import cx is_strict imported_is_strict reason_op;
     let reason =
       module_reason
       |> Reason.repos_reason (loc_of_reason reason_op)
@@ -1355,18 +1332,20 @@ module ImportDefaultTKit = struct
   (* import [type] X from 'SomeModule'; *)
   let on_ModuleT
       cx
-      trace
       ~mk_typeof_annotation
       ~assert_import_is_value
       ~with_concretized_type
       (reason, import_kind, (local_name, module_name), is_strict)
-      {
-        module_reason;
-        module_export_types = exports;
-        module_is_strict = imported_is_strict;
-        module_available_platforms = _IGNORED_TODO;
-      } =
-    check_nonstrict_import cx trace is_strict imported_is_strict reason;
+      module_ =
+    let {
+      module_reason;
+      module_export_types = exports;
+      module_is_strict = imported_is_strict;
+      module_available_platforms = _IGNORED_TODO;
+    } =
+      module_
+    in
+    check_nonstrict_import cx is_strict imported_is_strict reason;
     let (loc_opt, export_t) =
       match exports.cjs_export with
       | Some t -> (None, t)
@@ -1394,7 +1373,7 @@ module ImportDefaultTKit = struct
             NameUtils.Map.keys exports_tmap |> List.rev_map display_string_of_name
           in
           let suggestion = typo_suggestion known_exports local_name in
-          add_output cx ~trace (Error_message.ENoDefaultExport (reason, module_name, suggestion));
+          add_output cx (Error_message.ENoDefaultExport (reason, module_name, suggestion));
           (None, AnyT.error module_reason))
     in
     match import_kind with
@@ -1403,7 +1382,7 @@ module ImportDefaultTKit = struct
         with_concretized_type
           cx
           reason
-          (ImportTypeTKit.on_concrete_type cx trace reason "default")
+          (ImportTypeTKit.on_concrete_type cx reason "default")
           export_t
       )
     | ImportTypeof ->
@@ -1411,11 +1390,11 @@ module ImportDefaultTKit = struct
         with_concretized_type
           cx
           reason
-          (ImportTypeofTKit.on_concrete_type cx trace ~mk_typeof_annotation reason "default")
+          (ImportTypeofTKit.on_concrete_type cx ~mk_typeof_annotation reason "default")
           export_t
       )
     | ImportValue ->
-      assert_import_is_value cx trace reason "default" export_t;
+      assert_import_is_value cx reason "default" export_t;
       (loc_opt, export_t)
 end
 
@@ -1423,18 +1402,20 @@ module ImportNamedTKit = struct
   (* import {X} from 'SomeModule'; *)
   let on_ModuleT
       cx
-      trace
       ~mk_typeof_annotation
       ~assert_import_is_value
       ~with_concretized_type
       (reason, import_kind, export_name, module_name, is_strict)
-      {
-        module_reason = _;
-        module_export_types = exports;
-        module_is_strict = imported_is_strict;
-        module_available_platforms = _IGNORED_TODO;
-      } =
-    check_nonstrict_import cx trace is_strict imported_is_strict reason;
+      module_ =
+    let {
+      module_reason = _;
+      module_export_types = exports;
+      module_is_strict = imported_is_strict;
+      module_available_platforms = _IGNORED_TODO;
+    } =
+      module_
+    in
+    check_nonstrict_import cx is_strict imported_is_strict reason;
     (*
      * When importing from a CommonJS module, we shadow any potential named
      * exports called "default" with a pointer to the raw `module.exports`
@@ -1457,7 +1438,7 @@ module ImportNamedTKit = struct
         with_concretized_type
           cx
           reason
-          (ImportTypeTKit.on_concrete_type cx trace reason export_name)
+          (ImportTypeTKit.on_concrete_type cx reason export_name)
           type_
       )
     | (ImportType, None) when has_every_named_export ->
@@ -1465,7 +1446,7 @@ module ImportNamedTKit = struct
         with_concretized_type
           cx
           reason
-          (ImportTypeTKit.on_concrete_type cx trace reason export_name)
+          (ImportTypeTKit.on_concrete_type cx reason export_name)
           (AnyT.untyped reason)
       )
     | (ImportTypeof, Some { preferred_def_locs = _; is_type_only_export = _; name_loc; type_ }) ->
@@ -1473,7 +1454,7 @@ module ImportNamedTKit = struct
         with_concretized_type
           cx
           reason
-          (ImportTypeofTKit.on_concrete_type cx trace ~mk_typeof_annotation reason export_name)
+          (ImportTypeofTKit.on_concrete_type cx ~mk_typeof_annotation reason export_name)
           type_
       )
     | (ImportTypeof, None) when has_every_named_export ->
@@ -1481,15 +1462,15 @@ module ImportNamedTKit = struct
         with_concretized_type
           cx
           reason
-          (ImportTypeofTKit.on_concrete_type cx trace ~mk_typeof_annotation reason export_name)
+          (ImportTypeofTKit.on_concrete_type cx ~mk_typeof_annotation reason export_name)
           (AnyT.untyped reason)
       )
     | (ImportValue, Some { preferred_def_locs = _; is_type_only_export = _; name_loc; type_ }) ->
-      assert_import_is_value cx trace reason export_name type_;
+      assert_import_is_value cx reason export_name type_;
       (name_loc, type_)
     | (ImportValue, None) when has_every_named_export ->
       let t = AnyT.untyped reason in
-      assert_import_is_value cx trace reason export_name t;
+      assert_import_is_value cx reason export_name t;
       (None, t)
     | (_, None) ->
       let num_exports = NameUtils.Map.cardinal exports_tmap in
@@ -1505,7 +1486,7 @@ module ImportNamedTKit = struct
           let suggestion = typo_suggestion known_exports export_name in
           Error_message.ENoNamedExport (reason, module_name, export_name, suggestion)
       in
-      add_output cx ~trace msg;
+      add_output cx msg;
       (None, AnyT.error reason)
 end
 
@@ -1576,17 +1557,15 @@ end
 
 (* util that grows a module by adding named exports from a given map *)
 module ExportNamedT_kit (F : Import_export_helper_sig) = struct
-  let on_ModuleT
-      cx
-      trace
-      (_, tmap, export_kind)
-      lhs
-      {
-        module_reason = _;
-        module_export_types = { exports_tmap; _ };
-        module_is_strict = _;
-        module_available_platforms = _;
-      } =
+  let on_ModuleT cx (_, tmap, export_kind) lhs module_ =
+    let {
+      module_reason = _;
+      module_export_types = { exports_tmap; _ };
+      module_is_strict = _;
+      module_available_platforms = _;
+    } =
+      module_
+    in
     let add_export name export acc =
       let export' =
         match export_kind with
@@ -1601,7 +1580,7 @@ module ExportNamedT_kit (F : Import_export_helper_sig) = struct
     Context.find_exports cx exports_tmap
     |> NameUtils.Map.fold add_export tmap
     |> Context.add_export_map cx exports_tmap;
-    F.return cx trace lhs
+    F.return cx lhs
 end
 
 module AssertExportIsTypeT_kit (F : Import_export_helper_sig) = struct
@@ -1615,51 +1594,49 @@ module AssertExportIsTypeT_kit (F : Import_export_helper_sig) = struct
     | DefT (_, PolyT { t_out = t'; _ }) -> is_type t'
     | _ -> false
 
-  let on_concrete_type cx trace name l =
+  let on_concrete_type cx name l =
     if is_type l then
-      F.return cx trace l
+      F.return cx l
     else
       let reason = reason_of_t l in
-      add_output cx ~trace Error_message.(EExportValueAsType (reason, name));
-      F.return cx trace (AnyT.error reason)
+      add_output cx Error_message.(EExportValueAsType (reason, name));
+      F.return cx (AnyT.error reason)
 end
 
 (* Copy the named exports from a source module into a target module. Used
    to implement `export * from 'SomeModule'`, with the current module as
    the target and the imported module as the source. *)
 module CopyNamedExportsT_kit (F : Import_export_helper_sig) = struct
-  let on_ModuleT
-      cx
-      trace
-      (reason, target_module_t)
-      {
-        module_reason = _;
-        module_export_types = source_exports;
-        module_is_strict = _;
-        module_available_platforms = _;
-      } : F.r =
+  let on_ModuleT cx (reason, target_module_t) module_ : F.r =
+    let {
+      module_reason = _;
+      module_export_types = source_exports;
+      module_is_strict = _;
+      module_available_platforms = _;
+    } =
+      module_
+    in
     let source_tmap = Context.find_exports cx source_exports.exports_tmap in
-    F.export_named cx trace (reason, source_tmap, ReExport) target_module_t
+    F.export_named cx (reason, source_tmap, ReExport) target_module_t
 
   (* There is nothing to copy from a module exporting `any` or `Object`. *)
-  let on_AnyT cx trace lreason (reason, target_module) =
+  let on_AnyT cx lreason (reason, target_module) =
     check_untyped_import cx ImportValue lreason reason;
-    F.return cx trace target_module
+    F.return cx target_module
 end
 
 (* Copy only the type exports from a source module into a target module.
  * Used to implement `export type * from ...`. *)
 module CopyTypeExportsT_kit (F : Import_export_helper_sig) = struct
-  let on_ModuleT
-      cx
-      trace
-      (reason, target_module_t)
-      {
-        module_reason = _;
-        module_export_types = source_exports;
-        module_is_strict = _;
-        module_available_platforms = _;
-      } =
+  let on_ModuleT cx (reason, target_module_t) module_ =
+    let {
+      module_reason = _;
+      module_export_types = source_exports;
+      module_is_strict = _;
+      module_available_platforms = _;
+    } =
+      module_
+    in
     let source_exports = Context.find_exports cx source_exports.exports_tmap in
     (* Remove locations. TODO at some point we may want to include them here. *)
     let source_exports =
@@ -1670,16 +1647,16 @@ module CopyTypeExportsT_kit (F : Import_export_helper_sig) = struct
     let target_module_t =
       NameUtils.Map.fold
         (fun export_name export_t target_module_t ->
-          F.export_type cx trace (reason, export_name, target_module_t) export_t)
+          F.export_type cx (reason, export_name, target_module_t) export_t)
         source_exports
         target_module_t
     in
-    F.return cx trace target_module_t
+    F.return cx target_module_t
 
   (* There is nothing to copy from a module exporting `any` or `Object`. *)
-  let on_AnyT cx trace lreason (reason, target_module) =
+  let on_AnyT cx lreason (reason, target_module) =
     check_untyped_import cx ImportValue lreason reason;
-    F.return cx trace target_module
+    F.return cx target_module
 end
 
 (* Export a type from a given ModuleT, but only if the type is compatible
@@ -1690,7 +1667,7 @@ end
  * exports one type at a time and it takes the type to be exported as a
  * lower (so that the type can be filtered post-resolution). *)
 module ExportTypeT_kit (F : Import_export_helper_sig) = struct
-  let on_concrete_type cx trace (reason, export_name, target_module_t) l =
+  let on_concrete_type cx (reason, export_name, target_module_t) l =
     let is_type_export =
       match l with
       | DefT (_, ObjT _) when export_name = OrdinaryName "default" -> true
@@ -1703,23 +1680,22 @@ module ExportTypeT_kit (F : Import_export_helper_sig) = struct
           export_name
           { preferred_def_locs = None; name_loc = None; is_type_only_export = true; type_ = l }
       in
-      F.export_named cx trace (reason, named, ReExport) target_module_t
+      F.export_named cx (reason, named, ReExport) target_module_t
     else
-      F.return cx trace target_module_t
+      F.return cx target_module_t
 end
 
 module CJSExtractNamedExportsT_kit (F : Import_export_helper_sig) = struct
-  let on_concrete_type cx trace (reason, local_module) = function
+  let on_concrete_type cx (reason, local_module) = function
     (* ObjT CommonJS export values have their properties turned into named exports. *)
     | DefT (_, ObjT o)
     | ExactT (_, DefT (_, ObjT o)) ->
       let { props_tmap; proto_t; _ } = o in
       (* Copy props from the prototype *)
-      let module_t = F.cjs_extract_named_exports cx trace (reason, local_module) proto_t in
+      let module_t = F.cjs_extract_named_exports cx (reason, local_module) proto_t in
       (* Copy own props *)
       F.export_named
         cx
-        trace
         (reason, Properties.extract_named_exports (Context.find_props cx props_tmap), ExportValue)
         module_t
     (* InstanceT CommonJS export values have their properties turned into named exports. *)
@@ -1732,15 +1708,11 @@ module CJSExtractNamedExportsT_kit (F : Import_export_helper_sig) = struct
       in
       (* Copy own props *)
       let module_t =
-        F.export_named_fresh_var
-          cx
-          trace
-          (reason, extract_named_exports own_props, ExportValue)
-          module_t
+        F.export_named_fresh_var cx (reason, extract_named_exports own_props, ExportValue) module_t
       in
       (* Copy proto props *)
       (* TODO: own props should take precedence *)
-      F.export_named cx trace (reason, extract_named_exports proto_props, ExportValue) module_t
+      F.export_named cx (reason, extract_named_exports proto_props, ExportValue) module_t
     (* If the module is exporting any or Object, then we allow any named import. *)
     | AnyT _ ->
       let {
@@ -1760,10 +1732,10 @@ module CJSExtractNamedExportsT_kit (F : Import_export_helper_sig) = struct
             module_available_platforms;
           }
       in
-      F.return cx trace module_t
+      F.return cx module_t
     (* All other CommonJS export value types do not get merged into the named
      * exports tmap in any special way. *)
-    | _ -> F.return cx trace (ModuleT local_module)
+    | _ -> F.return cx (ModuleT local_module)
 end
 
 (*******************)
@@ -1816,7 +1788,7 @@ module type Get_prop_helper_sig = sig
 
   val mk_react_dro : Context.t -> use_op -> ALoc.t -> Type.t -> Type.t
 
-  val enum_proto : Context.t -> Type.trace -> reason:Reason.t -> Reason.t * Type.enum_t -> Type.t
+  val enum_proto : Context.t -> reason:Reason.t -> Reason.t * Type.enum_t -> Type.t
 
   val return : Context.t -> use_op:use_op -> Type.trace -> Type.t -> r
 
@@ -1934,7 +1906,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
         let suggestion = typo_suggestion (SMap.keys members |> List.rev) name in
         error_invalid_access ~suggestion
     | OrdinaryName _ ->
-      let t = F.enum_proto cx trace ~reason:access_reason (enum_reason, enum) in
+      let t = F.enum_proto cx ~reason:access_reason (enum_reason, enum) in
       F.cg_get_prop cx trace t access
     | InternalName _
     | InternalModuleName _ ->

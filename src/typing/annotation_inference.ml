@@ -73,11 +73,11 @@ let get_builtin_typeapp cx reason x targs =
   TypeUtil.typeapp ~use_desc:false reason t targs
 
 module type S = sig
-  val mk_typeof_annotation : Context.t -> ?trace:Type.trace -> Reason.t -> Type.t -> Type.t
+  val mk_typeof_annotation : Context.t -> Reason.t -> Type.t -> Type.t
 
   val mk_type_reference : Context.t -> Reason.t -> Type.t -> Type.t
 
-  val mk_instance : Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> Type.t -> Type.t
+  val mk_instance : Context.t -> reason -> ?use_desc:bool -> Type.t -> Type.t
 
   val reposition : Context.t -> ALoc.t -> ?annot_loc:ALoc.t -> Type.t -> Type.t
 
@@ -86,7 +86,7 @@ module type S = sig
 
   val get_elem : Context.t -> Type.use_op -> Reason.t -> key:Type.t -> Type.t -> Type.t
 
-  val get_builtin : Context.t -> ?trace:Type.trace -> name -> reason -> Type.t
+  val get_builtin : Context.t -> name -> reason -> Type.t
 
   val qualify_type :
     Context.t -> Type.use_op -> Reason.t -> Reason.t * Reason.name -> Type.t -> Type.t
@@ -147,8 +147,7 @@ module type S = sig
     Type.t ->
     Type.t
 
-  val widen_obj_type :
-    Context.t -> ?trace:Type.trace -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
+  val widen_obj_type : Context.t -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
 
   val obj_test_proto : Context.t -> Reason.t -> Type.t -> Type.t
 
@@ -252,22 +251,22 @@ module rec ConsGen : S = struct
   module Import_export_helper : Flow_js_utils.Import_export_helper_sig with type r = Type.t = struct
     type r = Type.t
 
-    let reposition cx ?trace:_ loc ?desc:_ ?annot_loc:_ t = reposition cx loc t
+    let reposition cx loc ?desc:_ ?annot_loc:_ t = reposition cx loc t
 
-    let return _cx _trace t = t
+    let return _cx t = t
 
-    let export_named cx _trace (reason, named, kind) t = ConsGen.export_named cx reason kind named t
+    let export_named cx (reason, named, kind) t = ConsGen.export_named cx reason kind named t
 
     let export_named_fresh_var = export_named
 
-    let export_type cx _trace (reason, export_name, target_module_t) export_t =
+    let export_type cx (reason, export_name, target_module_t) export_t =
       ConsGen.elab_t cx export_t (Annot_ExportTypeT (reason, export_name, target_module_t))
 
-    let cjs_extract_named_exports cx _ (reason, local_module) t =
+    let cjs_extract_named_exports cx (reason, local_module) t =
       ConsGen.cjs_extract_named_exports cx reason local_module t
   end
 
-  let assert_import_is_value _cx _trace _reason _name _export_t = ()
+  let assert_import_is_value _cx _reason _name _export_t = ()
 
   let with_concretized_type cx r f t = ConsGen.elab_t cx t (Annot_ConcretizeForImportsExports (r, f))
 
@@ -310,7 +309,7 @@ module rec ConsGen : S = struct
 
     let reposition cx ?trace:_ loc ?desc:_ ?annot_loc:_ t = reposition cx loc t
 
-    let enum_proto cx _trace ~reason (enum_reason, enum) =
+    let enum_proto cx ~reason (enum_reason, enum) =
       let enum_t = DefT (enum_reason, EnumT enum) in
       let { representation_t; _ } = enum in
       get_builtin_typeapp cx reason (OrdinaryName "$EnumProto") [enum_t; representation_t]
@@ -565,7 +564,6 @@ module rec ConsGen : S = struct
     | (_, Annot_ImportTypeofT (reason, export_name)) ->
       ImportTypeofTKit.on_concrete_type
         cx
-        dummy_trace
         ~mk_typeof_annotation:ConsGen.mk_typeof_annotation
         reason
         export_name
@@ -574,33 +572,31 @@ module rec ConsGen : S = struct
     (* Module exports *)
     (******************)
     | (ModuleT m, Annot_ExportNamedT (reason, tmap, export_kind)) ->
-      ExportNamedTKit.on_ModuleT cx dummy_trace (reason, tmap, export_kind) t m
-    | (_, Annot_AssertExportIsTypeT (_, name)) ->
-      AssertExportIsTypeTKit.on_concrete_type cx dummy_trace name t
+      ExportNamedTKit.on_ModuleT cx (reason, tmap, export_kind) t m
+    | (_, Annot_AssertExportIsTypeT (_, name)) -> AssertExportIsTypeTKit.on_concrete_type cx name t
     | (ModuleT m, Annot_CopyNamedExportsT (reason, target_module_t)) ->
-      CopyNamedExportsTKit.on_ModuleT cx dummy_trace (reason, target_module_t) m
+      CopyNamedExportsTKit.on_ModuleT cx (reason, target_module_t) m
     | (ModuleT m, Annot_CopyTypeExportsT (reason, target_module_t)) ->
-      CopyTypeExportsTKit.on_ModuleT cx dummy_trace (reason, target_module_t) m
+      CopyTypeExportsTKit.on_ModuleT cx (reason, target_module_t) m
     | (_, Annot_ExportTypeT (reason, export_name, target_module_t)) ->
-      ExportTypeTKit.on_concrete_type cx dummy_trace (reason, export_name, target_module_t) t
+      ExportTypeTKit.on_concrete_type cx (reason, export_name, target_module_t) t
     | (AnyT (lreason, _), Annot_CopyNamedExportsT (reason, target_module)) ->
-      CopyNamedExportsTKit.on_AnyT cx dummy_trace lreason (reason, target_module)
+      CopyNamedExportsTKit.on_AnyT cx lreason (reason, target_module)
     | (AnyT (lreason, _), Annot_CopyTypeExportsT (reason, target_module)) ->
-      CopyTypeExportsTKit.on_AnyT cx dummy_trace lreason (reason, target_module)
+      CopyTypeExportsTKit.on_AnyT cx lreason (reason, target_module)
     | (_, Annot_CJSExtractNamedExportsT (reason, local_module)) ->
-      CJSExtractNamedExportsTKit.on_concrete_type cx dummy_trace (reason, local_module) t
+      CJSExtractNamedExportsTKit.on_concrete_type cx (reason, local_module) t
     (******************)
     (* Module imports *)
     (******************)
     | (ModuleT m, Annot_CJSRequireT { reason; is_strict; legacy_interop }) ->
-      CJSRequireTKit.on_ModuleT cx dummy_trace (reason, is_strict, legacy_interop) m
+      CJSRequireTKit.on_ModuleT cx (reason, is_strict, legacy_interop) m
     | (ModuleT m, Annot_ImportModuleNsT (reason, is_strict)) ->
-      ImportModuleNsTKit.on_ModuleT cx dummy_trace (reason, is_strict) m
+      ImportModuleNsTKit.on_ModuleT cx (reason, is_strict) m
     | (ModuleT m, Annot_ImportDefaultT (reason, import_kind, local, is_strict)) ->
       let (_name_loc_opt, t) =
         ImportDefaultTKit.on_ModuleT
           cx
-          dummy_trace
           ~mk_typeof_annotation:ConsGen.mk_typeof_annotation
           ~assert_import_is_value
           ~with_concretized_type
@@ -612,7 +608,6 @@ module rec ConsGen : S = struct
       let (_name_loc_opt, t) =
         ImportNamedTKit.on_ModuleT
           cx
-          dummy_trace
           ~mk_typeof_annotation:ConsGen.mk_typeof_annotation
           ~assert_import_is_value
           ~with_concretized_type
@@ -1144,7 +1139,7 @@ module rec ConsGen : S = struct
     let t = Flow_js_utils.lookup_builtin_strict cx name reason in
     mk_instance_raw cx reason ~use_desc ~reason_type:(reason_of_t t) t
 
-  and get_builtin cx ?trace:_ x reason =
+  and get_builtin cx x reason =
     let builtin = Flow_js_utils.lookup_builtin_strict cx x reason in
     let f id = resolve_id cx reason id builtin in
     mk_lazy_tvar cx reason f
@@ -1164,7 +1159,7 @@ module rec ConsGen : S = struct
     let tvar = mk_lazy_tvar cx reason f in
     AnnotT (reason, tvar, false)
 
-  and mk_instance cx ?trace:_ instance_reason ?use_desc c =
+  and mk_instance cx instance_reason ?use_desc c =
     mk_instance_raw cx instance_reason ?use_desc ~reason_type:instance_reason c
 
   and mk_instance_raw cx instance_reason ?(use_desc = false) ~reason_type c =
@@ -1193,7 +1188,7 @@ module rec ConsGen : S = struct
 
   (* Unlike Flow_js, types in this module are 0->1, so there is no need for a
    * mechanism similar to BecomeT of Flow_js. *)
-  and mk_typeof_annotation cx ?trace:_ reason t =
+  and mk_typeof_annotation cx reason t =
     let annot_loc = loc_of_reason reason in
     let t = reposition cx (loc_of_reason reason) t in
     AnnotT (opt_annot_reason ~annot_loc reason, t, false)
@@ -1242,7 +1237,7 @@ module rec ConsGen : S = struct
 
   and arr_rest cx _use_op reason_op _i t = error_unsupported_reason cx t reason_op
 
-  and widen_obj_type cx ?trace:_ ~use_op reason t =
+  and widen_obj_type cx ~use_op reason t =
     match t with
     | OpenT (_, id) ->
       let open Constraint in
@@ -1277,7 +1272,7 @@ module rec ConsGen : S = struct
       let dict_check _cx _use_op _d1 _d2 = () in
       Slice_utils.object_spread
         ~dict_check
-        ~widen_obj_type:(widen_obj_type ?trace:None)
+        ~widen_obj_type
         ~add_output
         ~return
         ~recurse

@@ -8,9 +8,9 @@
 open Reason
 
 module type C = sig
-  val mk_typeof_annotation : Context.t -> ?trace:Type.trace -> Reason.t -> Type.t -> Type.t
+  val mk_typeof_annotation : Context.t -> Reason.t -> Type.t -> Type.t
 
-  val mk_instance : Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> Type.t -> Type.t
+  val mk_instance : Context.t -> reason -> ?use_desc:bool -> Type.t -> Type.t
 
   val cjs_require : Context.t -> Type.t -> Reason.t -> bool -> bool -> Type.t
 
@@ -19,12 +19,11 @@ module type C = sig
 
   val reposition : Context.t -> ALoc.t -> ?annot_loc:ALoc.t -> Type.t -> Type.t
 
-  val get_builtin : Context.t -> ?trace:Type.trace -> name -> reason -> Type.t
+  val get_builtin : Context.t -> name -> reason -> Type.t
 
   val obj_test_proto : Context.t -> Reason.t -> Type.t -> Type.t
 
-  val widen_obj_type :
-    Context.t -> ?trace:Type.trace -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
+  val widen_obj_type : Context.t -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
 
   val mixin : Context.t -> Reason.t -> Type.t -> Type.t
 

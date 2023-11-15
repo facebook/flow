@@ -67,7 +67,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     (* Get the internal $JSXIntrinsics map. *)
     let intrinsics =
       let reason = mk_reason (RType (OrdinaryName "$JSXIntrinsics")) (loc_of_t component) in
-      get_builtin_type cx ~trace reason (OrdinaryName "$JSXIntrinsics")
+      get_builtin_type cx reason (OrdinaryName "$JSXIntrinsics")
     in
     (* Create a use_op for the upcoming operations. *)
     let use_op =
@@ -647,7 +647,6 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       let elem =
         get_builtin_typeapp
           cx
-          ~trace
           elem_reason
           ~use_desc:true
           (OrdinaryName "React$Element")

@@ -1543,7 +1543,7 @@ end
 module DummyFlow (Context : C) = struct
   type cx = Context.t
 
-  let add_output _ ?trace _ = ignore trace
+  let add_output _ ?trace:_ _ = ()
 end
 
 module Make_Test_With_Cx (Context : C) = Make (Context) (DummyFlow (Context))

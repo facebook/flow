@@ -769,8 +769,11 @@ module Make
     let is_strict = Context.is_strict cx in
     let name_def_loc_ref = ref None in
     let resolver tout =
-      let assert_import_is_value cx trace reason name export_t =
-        Flow.FlowJs.flow_opt cx ~trace (export_t, AssertImportIsValueT (reason, name))
+      let assert_import_is_value cx reason name export_t =
+        Flow.FlowJs.flow_opt
+          cx
+          ~trace:Trace.dummy_trace
+          (export_t, AssertImportIsValueT (reason, name))
       in
       let with_concretized_type cx r f t = f (Flow.singleton_concrete_type_for_inspection cx r t) in
       match Flow.possible_concrete_types_for_inspection cx get_reason module_t with
@@ -779,7 +782,6 @@ module Make
           if remote_export_name = "default" then
             Flow_js_utils.ImportDefaultTKit.on_ModuleT
               cx
-              Trace.dummy_trace
               ~mk_typeof_annotation:Flow.mk_typeof_annotation
               ~assert_import_is_value
               ~with_concretized_type
@@ -788,7 +790,6 @@ module Make
           else
             Flow_js_utils.ImportNamedTKit.on_ModuleT
               cx
-              Trace.dummy_trace
               ~mk_typeof_annotation:Flow.mk_typeof_annotation
               ~assert_import_is_value
               ~with_concretized_type
@@ -835,8 +836,7 @@ module Make
     let is_strict = Context.is_strict cx in
     let get_module_ns_t reason =
       match Flow.possible_concrete_types_for_inspection cx reason source_module_t with
-      | [ModuleT m] ->
-        Flow_js_utils.ImportModuleNsTKit.on_ModuleT cx Trace.dummy_trace (reason, is_strict) m
+      | [ModuleT m] -> Flow_js_utils.ImportModuleNsTKit.on_ModuleT cx (reason, is_strict) m
       | [(AnyT (lreason, _) as l)] ->
         Flow_js_utils.check_untyped_import cx ImportValue lreason reason;
         Flow.reposition_reason cx reason l
@@ -856,7 +856,6 @@ module Make
       let bind_reason = repos_reason local_loc import_reason in
       Flow_js_utils.ImportTypeofTKit.on_concrete_type
         cx
-        Trace.dummy_trace
         ~mk_typeof_annotation:Flow.mk_typeof_annotation
         bind_reason
         "*"

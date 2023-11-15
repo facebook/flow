@@ -412,7 +412,6 @@ let check_multiplatform_conformance cx filename prog_aloc =
           else
             Flow_js_utils.ImportModuleNsTKit.on_ModuleT
               cx
-              Trace.dummy_trace
               ~is_common_interface_module
               (reason, false)
               m

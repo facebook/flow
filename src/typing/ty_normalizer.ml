@@ -404,8 +404,7 @@ end = struct
     | T.TypeDestructorT (use_op, reason, d) ->
       if should_evaluate_destructor ~env ~force_eval d then
         let cx = Env.get_cx env in
-        let trace = Trace.dummy_trace in
-        let (_, tout) = Flow_js.mk_type_destructor cx ~trace use_op reason t d id in
+        let (_, tout) = Flow_js.mk_type_destructor cx use_op reason t d id in
         match Lookahead.peek (Env.get_cx env) tout with
         | Lookahead.LowerBounds [t] -> cont ~env ~id:(EvalKey id) t
         | _ -> default ~env tout
@@ -490,8 +489,11 @@ end = struct
     | Env.EvaluateNone -> default ()
     | _ ->
       let cx = Env.get_cx env in
-      let trace = Trace.dummy_trace in
-      let tout = Flow_js.eval_keys cx ~trace r t in
+      let tout =
+        Tvar.mk_where cx r (fun tout ->
+            Flow_js.flow cx (t, T.GetKeysT (r, T.UseT (T.unknown_use, tout)))
+        )
+      in
       begin
         match Lookahead.peek cx tout with
         | Lookahead.LowerBounds [t] ->
@@ -1319,7 +1321,6 @@ end = struct
             let t =
               Flow_js.mk_typeapp_instance_annot
                 (Env.get_cx env)
-                ~trace:Trace.dummy_trace
                 ~use_op:unknown_use
                 ~reason_op:reason
                 ~reason_tapp:reason
@@ -2420,7 +2421,6 @@ end = struct
         let t =
           Flow_js.mk_typeapp_instance_annot
             (Env.get_cx env)
-            ~trace:Trace.dummy_trace
             ~use_op
             ~reason_op:reason
             ~reason_tapp:reason
@@ -2499,7 +2499,6 @@ end = struct
         let t =
           Flow_js.mk_typeapp_instance_annot
             (Env.get_cx env)
-            ~trace:Trace.dummy_trace
             ~use_op
             ~reason_op:reason
             ~reason_tapp:reason

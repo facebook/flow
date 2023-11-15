@@ -101,20 +101,13 @@ module type BUILTINS = sig
     Context.t -> ?trace:Type.trace -> Reason.reason -> ?use_desc:bool -> name -> Type.t
 
   val get_builtin_result :
-    Context.t ->
-    ?trace:Type.trace ->
-    name ->
-    reason ->
-    (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result
+    Context.t -> name -> reason -> (Type.t, Type.t * Env_api.cacheable_env_error Nel.t) result
 
-  val get_builtin : Context.t -> ?trace:Type.trace -> name -> reason -> Type.t
+  val get_builtin : Context.t -> name -> reason -> Type.t
 
-  val get_builtin_tvar : Context.t -> ?trace:Type.trace -> name -> reason -> Type.ident
+  val get_builtin_typeapp : Context.t -> reason -> ?use_desc:bool -> name -> Type.t list -> Type.t
 
-  val get_builtin_typeapp :
-    Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> name -> Type.t list -> Type.t
-
-  val get_builtin_module : Context.t -> ?trace:Type.trace -> ALoc.t -> string -> Type.tvar
+  val get_builtin_module : Context.t -> ALoc.t -> string -> Type.tvar
 
   val lookup_builtin_strict : Context.t -> name -> reason -> Type.t
 
@@ -225,9 +218,6 @@ module type SUBTYPING = sig
 end
 
 module type EVAL = sig
-  val eval_evalt :
-    Context.t -> ?trace:Type.trace -> Type.t -> Type.defer_use_t -> Type.Eval.id -> Type.t
-
   val eval_selector :
     Context.t ->
     ?trace:Type.trace ->
@@ -248,8 +238,6 @@ module type EVAL = sig
     Type.destructor ->
     Type.Eval.id ->
     bool * Type.t
-
-  val eval_keys : Context.t -> trace:Type.trace -> Reason.reason -> Type.t -> Type.t
 
   val mk_possibly_evaluated_destructor :
     Context.t -> Type.use_op -> Reason.reason -> Type.t -> Type.destructor -> Type.Eval.id -> Type.t
