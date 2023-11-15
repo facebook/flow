@@ -9657,7 +9657,6 @@ struct
    * write later. *)
   and lookup_builtin_strict_tvar_result cx x reason =
     let builtin = Flow_js_utils.lookup_builtin_strict_result cx x reason in
-
     Env_api.map_result builtin ~f:(fun builtin ->
         Tvar.mk_where_no_wrap cx reason (fun t -> flow_t cx (builtin, t))
     )
@@ -9934,21 +9933,6 @@ struct
       let loc = loc_of_t arr in
       add_output cx ~trace Error_message.(EUnsupportedSyntax (loc, SpreadArgument));
       AnyT.error reason
-
-  and substitute_mapped_type_distributive_tparams
-      cx ~use_op distributive_tparam_name ~property_type homomorphic ~source =
-    match distributive_tparam_name with
-    | None -> (property_type, homomorphic)
-    | Some name ->
-      let subst = mk_distributive_tparam_subst_fn cx ~use_op name source in
-      let homomorphic' =
-        match homomorphic with
-        | SemiHomomorphic t -> SemiHomomorphic (subst t)
-        | Homomorphic
-        | Unspecialized ->
-          homomorphic
-      in
-      (subst property_type, homomorphic')
 
   (* Wrapper functions around __flow that manage traces. Use these functions for
      all recursive calls in the implementation of __flow. *)

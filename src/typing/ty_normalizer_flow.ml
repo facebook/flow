@@ -6,8 +6,63 @@
  *)
 
 open Utils_js
-open Ty_normalizer
-open NormalizerMonad
+module Env = Ty_normalizer_env
+
+module Normalizer = Ty_normalizer.Make (struct
+  open Reason
+  open Ty_normalizer
+
+  let eval cx ~should_eval ~cont ~default ~non_eval (t, d, id) =
+    let (Type.TypeDestructorT (use_op, reason, d)) = d in
+    if should_eval then
+      let (_, tout) = Flow_js.mk_type_destructor cx use_op reason t d id in
+      match Lookahead.peek cx tout with
+      | Lookahead.LowerBounds [t] -> cont t
+      | _ -> default tout
+    else
+      non_eval t d
+
+  let keys cx ~should_evaluate ~cont ~default r t =
+    if should_evaluate then
+      let tout =
+        Tvar.mk_where cx r (fun tout ->
+            Flow_js.flow cx (t, T.GetKeysT (r, T.UseT (T.unknown_use, tout)))
+        )
+      in
+      match Lookahead.peek cx tout with
+      | Lookahead.LowerBounds [t] ->
+        cont (TypeUtil.mod_reason_of_t (replace_desc_reason (RCustom "get keys")) t)
+      | _ -> default ()
+    else
+      default ()
+
+  let typeapp cx ~cont ~type_:_ ~app:_ reason t targs =
+    let t =
+      Flow_js.mk_typeapp_instance_annot
+        cx
+        ~use_op:Type.unknown_use
+        ~reason_op:reason
+        ~reason_tapp:reason
+        t
+        targs
+    in
+    cont t
+
+  let builtin cx ~cont reason name =
+    let t = Flow_js.get_builtin cx (OrdinaryName name) reason in
+    cont t
+
+  let builtin_type cx ~cont reason name =
+    let t = Flow_js.get_builtin_type cx reason (OrdinaryName name) in
+    cont t
+
+  let builtin_typeapp cx ~cont ~type_:_ ~app:_ reason name targs =
+    let t = Flow_js.get_builtin cx (OrdinaryName name) reason in
+    let t = TypeUtil.typeapp ~use_desc:false reason t targs in
+    cont t
+end)
+
+open Normalizer
 
 (* Exposed API *)
 
@@ -89,5 +144,5 @@ let debug_string_of_t cx t =
   let file_sig = { File_sig.requires = []; module_kind = File_sig.ES } in
   let genv = Ty_normalizer_env.mk_genv ~cx ~file:(Context.file cx) ~file_sig ~typed_ast in
   match from_type ~options:Ty_normalizer_env.default_options ~genv t with
-  | Error (e, _) -> Utils_js.spf "<Error %s>" (error_kind_to_string e)
+  | Error (e, _) -> Utils_js.spf "<Error %s>" (Ty_normalizer.error_kind_to_string e)
   | Ok elt -> Ty_printer.string_of_elt_single_line ~exact_by_default:true elt

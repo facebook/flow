@@ -291,13 +291,4 @@ module type S = sig
 
   val possible_concrete_types_for_computed_props :
     Context.t -> Reason.reason -> Type.t -> Type.t list
-
-  val substitute_mapped_type_distributive_tparams :
-    Context.t ->
-    use_op:Type.use_op ->
-    Subst_name.t option ->
-    property_type:Type.t ->
-    Type.mapped_type_homomorphic_flag ->
-    source:Type.t ->
-    Type.t * Type.mapped_type_homomorphic_flag
 end

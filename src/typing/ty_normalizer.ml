@@ -143,7 +143,51 @@ module type S = sig
     (Ty.t, error) result * State.t
 end
 
-module NormalizerMonad : S = struct
+module type INPUT = sig
+  val eval :
+    Context.t ->
+    should_eval:bool ->
+    cont:(Type.t -> 'a) ->
+    default:(Type.t -> 'a) ->
+    non_eval:(Type.t -> Type.destructor -> 'a) ->
+    Type.t * Type.defer_use_t * Type.Eval.id ->
+    'a
+
+  val keys :
+    Context.t ->
+    should_evaluate:bool ->
+    cont:(Type.t -> 'a) ->
+    default:(unit -> 'a) ->
+    Reason.t ->
+    Type.t ->
+    'a
+
+  val typeapp :
+    Context.t ->
+    cont:(Type.t -> 'a) ->
+    type_:(Type.t -> 'a) ->
+    app:('a -> 'a list -> 'a) ->
+    Reason.t ->
+    Type.t ->
+    Type.t list ->
+    'a
+
+  val builtin : Context.t -> cont:(Type.t -> 'a) -> Reason.t -> string -> 'a
+
+  val builtin_type : Context.t -> cont:(Type.t -> 'a) -> Reason.t -> string -> 'a
+
+  val builtin_typeapp :
+    Context.t ->
+    cont:(Type.t -> 'a) ->
+    type_:(Type.t -> 'a) ->
+    app:('a -> 'a list -> 'a) ->
+    Reason.t ->
+    string ->
+    Type.t list ->
+    'a
+end
+
+module Make (I : INPUT) : S = struct
   type id_key =
     | TVarKey of int
     | EvalKey of Type.Eval.id
@@ -260,6 +304,14 @@ module NormalizerMonad : S = struct
     | Ty.EmptyType -> empty_type
     | Ty.EmptyMatchingPropT -> empty_matching_prop_t
     | Ty.NoLowerWithUpper _ -> Ty.Bot bot_kind
+
+  (* This is intended to only be used by ty_normaizer_debug *)
+  let app_on_generic c ts =
+    let%bind c = c in
+    let%map ts = all ts in
+    match c with
+    | Ty.Generic (s, k, _) -> Ty.Generic (s, k, Some ts)
+    | _ -> c
 
   (***********************)
   (* Construct built-ins *)
@@ -401,17 +453,17 @@ module NormalizerMonad : S = struct
    * - default: apply when destructuring returned 0 or >1 types, or a recursive type
    * - non_eval: apply when no destructuring happened
    *)
-  let eval_t ~env ~(cont : fn_t) ~(default : fn_t) ~non_eval ?(force_eval = false) (t, d, id) =
-    match d with
-    | T.TypeDestructorT (use_op, reason, d) ->
-      if should_evaluate_destructor ~env ~force_eval d then
-        let cx = Env.get_cx env in
-        let (_, tout) = Flow_js.mk_type_destructor cx use_op reason t d id in
-        match Lookahead.peek (Env.get_cx env) tout with
-        | Lookahead.LowerBounds [t] -> cont ~env ~id:(EvalKey id) t
-        | _ -> default ~env tout
-      else
-        non_eval ~env t d
+  let eval_t ~env ~(cont : fn_t) ~(default : fn_t) ~non_eval ?(force_eval = false) x =
+    let (_, T.TypeDestructorT (_, _, d), id) = x in
+    let cx = Env.get_cx env in
+    let should_eval = should_evaluate_destructor ~env ~force_eval d in
+    I.eval
+      cx
+      ~should_eval
+      ~cont:(cont ~env ~id:(EvalKey id))
+      ~default:(default ~env)
+      ~non_eval:(non_eval ~env)
+      x
 
   let type_variable ~env ~(cont : fn_t) id =
     let uses_t =
@@ -483,25 +535,13 @@ module NormalizerMonad : S = struct
     Ty.mk_union ~from_bounds:false (Ty.Void, [t])
 
   let keys_t ~env ~(cont : fn_t) r t =
+    let cx = Env.get_cx env in
     let default () =
       let%map ty = cont ~env t in
       Ty.Utility (Ty.Keys ty)
     in
-    match Env.evaluate_type_destructors env with
-    | Env.EvaluateNone -> default ()
-    | _ ->
-      let cx = Env.get_cx env in
-      let tout =
-        Tvar.mk_where cx r (fun tout ->
-            Flow_js.flow cx (t, T.GetKeysT (r, T.UseT (T.unknown_use, tout)))
-        )
-      in
-      begin
-        match Lookahead.peek cx tout with
-        | Lookahead.LowerBounds [t] ->
-          cont ~env (TypeUtil.mod_reason_of_t (replace_desc_reason (RCustom "get keys")) t)
-        | _ -> default ()
-      end
+    let should_evaluate = Env.evaluate_type_destructors env <> Env.EvaluateNone in
+    I.keys cx ~should_evaluate ~cont:(cont ~env) ~default r t
 
   module Reason_utils = struct
     let local_type_alias_symbol env reason =
@@ -1320,16 +1360,14 @@ module NormalizerMonad : S = struct
           ->
           (match targs with
           | Some targs ->
-            let t =
-              Flow_js.mk_typeapp_instance_annot
-                (Env.get_cx env)
-                ~use_op:unknown_use
-                ~reason_op:reason
-                ~reason_tapp:reason
-                t
-                targs
-            in
-            type__ ~env t
+            I.typeapp
+              (Env.get_cx env)
+              ~cont:(type__ ~env)
+              ~type_:(type__ ~env)
+              ~app:app_on_generic
+              reason
+              t
+              targs
           | None -> type__ ~env inner_t)
         | DefT (_, PolyT { tparams; t_out; _ }) -> singleton_poly ~env targs tparams t_out
         | ThisClassT (_, t, _, _)
@@ -1809,7 +1847,7 @@ module NormalizerMonad : S = struct
         terr ~kind:BadEvalT ~msg:(Debug_js.string_of_destructor d) None
       | T.MappedType { property_type; mapped_type_flags; homomorphic; distributive_tparam_name } ->
         let (property_type, homomorphic) =
-          Flow_js.substitute_mapped_type_distributive_tparams
+          Flow_js_utils.substitute_mapped_type_distributive_tparams
             (Env.get_cx env)
             ~use_op:Type.unknown_use
             distributive_tparam_name
@@ -2265,12 +2303,10 @@ module NormalizerMonad : S = struct
         | T.TupleAT _ ->
           "$ReadOnlyArray"
       in
-      type__
-        ~env
-        ~inherited
-        ~source:(Ty.PrimitiveProto builtin)
-        ~imode:IMInstance
-        (Flow_js.get_builtin (Env.get_cx env) (OrdinaryName builtin) r)
+      let cont =
+        type__ ~env ~inherited ~source:(Ty.PrimitiveProto builtin) ~imode:IMInstance ?id:None
+      in
+      I.builtin (Env.get_cx env) ~cont r builtin
 
     and member_expand_object ~env ~inherited ~source super implements inst =
       let { T.own_props; proto_props; _ } = inst in
@@ -2309,15 +2345,15 @@ module NormalizerMonad : S = struct
       let { T.members; representation_t; _ } = enum in
       let enum_t = T.mk_enum_type reason enum in
       let enum_object_t = T.DefT (reason, T.EnumObjectT enum) in
-      let proto_t =
-        Flow_js.get_builtin_typeapp
-          Env.(env.genv.cx)
-          reason
-          (OrdinaryName "$EnumProto")
-          [enum_object_t; enum_t; representation_t]
-      in
       let%bind proto_ty =
-        type__ ~env ~inherited:true ~source:(Ty.PrimitiveProto "$EnumProto") ~imode:IMUnset proto_t
+        I.builtin_typeapp
+          (Env.get_cx env)
+          ~cont:(type__ ~env ~inherited:true ~source:(Ty.PrimitiveProto "$EnumProto") ~imode:IMUnset)
+          ~type_:(convert_t ~env)
+          ~app:app_on_generic
+          reason
+          "$EnumProto"
+          [enum_object_t; enum_t; representation_t]
       in
       let%map enum_ty = TypeConverter.convert_t ~env enum_t in
       let members_ty =
@@ -2345,9 +2381,9 @@ module NormalizerMonad : S = struct
       in
       { obj with Ty.obj_props = obj.Ty.obj_props @ extra_props }
 
-    and primitive ~env reason builtin =
-      let t = Flow_js.get_builtin_type (Env.get_cx env) reason (OrdinaryName builtin) in
-      type__ ~env ~inherited:true ~source:(Ty.PrimitiveProto builtin) ~imode:IMUnset t
+    and primitive ~env reason name =
+      let cont = type__ ~env ~inherited:true ~source:(Ty.PrimitiveProto name) ~imode:IMUnset in
+      I.builtin_type (Env.get_cx env) ~cont reason name
 
     and instance_t ~env ~inherited ~source ~imode r static super implements inst =
       let { T.inst_kind; _ } = inst in
@@ -2419,17 +2455,10 @@ module NormalizerMonad : S = struct
       | UnionT (_, rep) ->
         app_union ~from_bounds:false ~f:(type__ ~env ?id ~inherited ~source ~imode) rep
       | DefT (_, FunT (static, _)) -> type__ ~env ~inherited ~source ~imode static
-      | TypeAppT { reason; use_op; type_ = c; targs; use_desc = _ } ->
-        let t =
-          Flow_js.mk_typeapp_instance_annot
-            (Env.get_cx env)
-            ~use_op
-            ~reason_op:reason
-            ~reason_tapp:reason
-            c
-            targs
-        in
-        type__ ~env ~inherited ~source ~imode t
+      | TypeAppT { reason; use_op = _; type_ = c; targs; use_desc = _ } ->
+        let cont = type__ ~env ~inherited ~source ~imode in
+        let type_ = convert_t ~env in
+        I.typeapp (Env.get_cx env) ~cont ~type_ ~app:app_on_generic reason c targs
       | DefT (_, TypeT (_, t)) -> type__ ~env ~inherited ~source ~imode t
       | OptionalT { type_ = t; _ } -> optional_t ~env ?id ~cont:(type__ ~inherited ~source ~imode) t
       | EvalT (t, d, id') ->
@@ -2457,7 +2486,7 @@ module NormalizerMonad : S = struct
       | OpaqueT (r, o) -> opaque_t ~env ~inherited ~source ~imode r o
       | t -> TypeConverter.convert_t ~env t
 
-    let convert_t ~env t = type__ ~env ~inherited:false ~source:Ty.Other ~imode:IMUnset t
+    and convert_t ~env t = type__ ~env ~inherited:false ~source:Ty.Other ~imode:IMUnset t
   end
 
   let run_expand_members ~force_instance =
@@ -2497,17 +2526,15 @@ module NormalizerMonad : S = struct
       | AnnotT (_, t, _) -> type__ ~env ?id t
       | UnionT (_, rep) -> app_union ~from_bounds:false ~f:(type__ ~env ?id) rep
       | IntersectionT (_, rep) -> app_intersection ~f:(type__ ~env ?id) rep
-      | TypeAppT { reason; use_op; type_; targs; use_desc = _ } ->
-        let t =
-          Flow_js.mk_typeapp_instance_annot
-            (Env.get_cx env)
-            ~use_op
-            ~reason_op:reason
-            ~reason_tapp:reason
-            type_
-            targs
-        in
-        type__ ~env t
+      | TypeAppT { reason; use_op = _; type_ = t; targs; use_desc = _ } ->
+        I.typeapp
+          (Env.get_cx env)
+          ~cont:(type__ ~env)
+          ~type_:(type__ ~env)
+          ~app:app_on_generic
+          reason
+          t
+          targs
       | EvalT (t, d, id') ->
         if id = Some (EvalKey id') then
           return Ty.(Bot (NoLowerWithUpper NoUpper))
