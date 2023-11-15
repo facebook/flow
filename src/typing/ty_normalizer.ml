@@ -481,14 +481,6 @@ end = struct
     let%map t = cont ~env ?id t in
     Ty.mk_union ~from_bounds:false (Ty.Void, [t])
 
-  let type_app_t ~env ~(cont : fn_t) reason use_op c ts =
-    let cx = Env.get_cx env in
-    let trace = Trace.dummy_trace in
-    let reason_op = reason in
-    let reason_tapp = reason in
-    let t = Flow_js.mk_typeapp_instance_annot cx ~trace ~use_op ~reason_op ~reason_tapp c ts in
-    cont ~env t
-
   let keys_t ~env ~(cont : fn_t) r t =
     let default () =
       let%map ty = cont ~env t in
@@ -1323,7 +1315,18 @@ end = struct
         | DefT (reason, PolyT { tparams = _; t_out = DefT (_, TypeT (MappedTypeKind, inner_t)); _ })
           ->
           (match targs with
-          | Some targs -> type_app_t ~env ~cont:type__ reason unknown_use t targs
+          | Some targs ->
+            let t =
+              Flow_js.mk_typeapp_instance_annot
+                (Env.get_cx env)
+                ~trace:Trace.dummy_trace
+                ~use_op:unknown_use
+                ~reason_op:reason
+                ~reason_tapp:reason
+                t
+                targs
+            in
+            type__ ~env t
           | None -> type__ ~env inner_t)
         | DefT (_, PolyT { tparams; t_out; _ }) -> singleton_poly ~env targs tparams t_out
         | ThisClassT (_, t, _, _)
@@ -2413,8 +2416,18 @@ end = struct
       | UnionT (_, rep) ->
         app_union ~from_bounds:false ~f:(type__ ~env ?id ~inherited ~source ~imode) rep
       | DefT (_, FunT (static, _)) -> type__ ~env ~inherited ~source ~imode static
-      | TypeAppT { reason; use_op; type_; targs; use_desc = _ } ->
-        type_app_t ~env ~cont:(type__ ~inherited ~source ~imode) reason use_op type_ targs
+      | TypeAppT { reason; use_op; type_ = c; targs; use_desc = _ } ->
+        let t =
+          Flow_js.mk_typeapp_instance_annot
+            (Env.get_cx env)
+            ~trace:Trace.dummy_trace
+            ~use_op
+            ~reason_op:reason
+            ~reason_tapp:reason
+            c
+            targs
+        in
+        type__ ~env ~inherited ~source ~imode t
       | DefT (_, TypeT (_, t)) -> type__ ~env ~inherited ~source ~imode t
       | OptionalT { type_ = t; _ } -> optional_t ~env ?id ~cont:(type__ ~inherited ~source ~imode) t
       | EvalT (t, d, id') ->
@@ -2483,7 +2496,17 @@ end = struct
       | UnionT (_, rep) -> app_union ~from_bounds:false ~f:(type__ ~env ?id) rep
       | IntersectionT (_, rep) -> app_intersection ~f:(type__ ~env ?id) rep
       | TypeAppT { reason; use_op; type_; targs; use_desc = _ } ->
-        type_app_t ~env ~cont:type__ reason use_op type_ targs
+        let t =
+          Flow_js.mk_typeapp_instance_annot
+            (Env.get_cx env)
+            ~trace:Trace.dummy_trace
+            ~use_op
+            ~reason_op:reason
+            ~reason_tapp:reason
+            type_
+            targs
+        in
+        type__ ~env t
       | EvalT (t, d, id') ->
         if id = Some (EvalKey id') then
           return Ty.(Bot (NoLowerWithUpper NoUpper))
