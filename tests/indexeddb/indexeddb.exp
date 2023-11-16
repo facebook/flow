@@ -1,0 +1,62 @@
+Error ----------------------------------------------------------------------------------------------- indexeddb.js:11:40
+
+Cannot call `transaction.objectStore(...).getAll` because property `getAll` is missing in `IDBObjectStore` [1].
+[prop-missing]
+
+   indexeddb.js:11:40
+   11|     transaction.objectStore(storeName).getAll();
+                                              ^^^^^^
+
+References:
+   <BUILTINS>/indexeddb.js:73:30
+   73|   objectStore(name: string): IDBObjectStore;
+                                    ^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- indexeddb.js:12:40
+
+Cannot call `transaction.objectStore(...).getAll` because property `getAll` is missing in `IDBObjectStore` [1].
+[prop-missing]
+
+   indexeddb.js:12:40
+   12|     transaction.objectStore(storeName).getAll('q');
+                                              ^^^^^^
+
+References:
+   <BUILTINS>/indexeddb.js:73:30
+   73|   objectStore(name: string): IDBObjectStore;
+                                    ^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- indexeddb.js:13:40
+
+Cannot call `transaction.objectStore(...).getAll` because property `getAll` is missing in `IDBObjectStore` [1].
+[prop-missing]
+
+   indexeddb.js:13:40
+   13|     transaction.objectStore(storeName).getAll(undefined, 3);
+                                              ^^^^^^
+
+References:
+   <BUILTINS>/indexeddb.js:73:30
+   73|   objectStore(name: string): IDBObjectStore;
+                                    ^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- indexeddb.js:14:40
+
+Cannot call `transaction.objectStore(...).getAll` because property `getAll` is missing in `IDBObjectStore` [1].
+[prop-missing]
+
+   indexeddb.js:14:40
+   14|     transaction.objectStore(storeName).getAll('q', 3);
+                                              ^^^^^^
+
+References:
+   <BUILTINS>/indexeddb.js:73:30
+   73|   objectStore(name: string): IDBObjectStore;
+                                    ^^^^^^^^^^^^^^ [1]
+
+
+
+Found 4 errors
