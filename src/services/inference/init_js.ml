@@ -94,7 +94,7 @@ let check_lib_file ~ccx ~options mk_builtins ast =
 
    returns (success, parse and signature errors, exports)
 *)
-let load_lib_files ~ccx ~options ~reader files =
+let load_lib_files ~ccx ~options ~reader ~validate_libdefs files =
   let%lwt (ok, errors, ordered_asts) =
     files
     |> Lwt_list.fold_left_s
@@ -150,12 +150,14 @@ let load_lib_files ~ccx ~options ~reader files =
               mk_builtins
               Context.InitLib
           in
-          let errors =
-            Base.List.fold ordered_asts ~init:ErrorSet.empty ~f:(fun errors ast ->
-                ErrorSet.union errors (check_lib_file ~ccx ~options mk_builtins ast)
-            )
-          in
-          Context.reset_errors cx errors;
+          ( if validate_libdefs then
+            let errors =
+              Base.List.fold ordered_asts ~init:ErrorSet.empty ~f:(fun errors ast ->
+                  ErrorSet.union errors (check_lib_file ~ccx ~options mk_builtins ast)
+              )
+            in
+            Context.reset_errors cx errors
+          );
           Some cx
       in
       (Exports.of_builtins builtins, master_cx, cx_opt)
@@ -190,11 +192,11 @@ let error_set_to_filemap err_set =
    parse and do local inference on library files, and set up master context.
    returns list of (lib file, success) pairs.
 *)
-let init ~options ~reader lib_files =
+let init ~options ~reader ~validate_libdefs lib_files =
   let ccx = Context.make_ccx () in
 
   let%lwt (ok, master_cx, cx_opt, parse_and_sig_errors, exports) =
-    load_lib_files ~ccx ~options ~reader lib_files
+    load_lib_files ~ccx ~options ~reader ~validate_libdefs lib_files
   in
 
   let (errors, warnings, suppressions) =

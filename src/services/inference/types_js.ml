@@ -623,7 +623,9 @@ let ensure_parsed_or_trigger_recheck ~options ~profiling ~workers ~reader files 
   try%lwt ensure_parsed ~options ~profiling ~workers ~reader files with
   | Unexpected_file_changes changed_files -> handle_unexpected_file_changes changed_files
 
-let init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs =
+let init_libs
+    ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ~validate_libdefs ordered_libs
+    =
   with_memory_timer_lwt ~options "InitLibs" profiling (fun () ->
       let options =
         match Options.verbose options with
@@ -641,7 +643,7 @@ let init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader 
             exports;
             master_cx;
           } =
-        Init_js.init ~options ~reader ordered_libs
+        Init_js.init ~options ~reader ~validate_libdefs ordered_libs
       in
       Lwt.return
         ( ok,
@@ -2064,7 +2066,15 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
   let%lwt (libs_ok, local_errors, warnings, suppressions, lib_exports, master_cx) =
     let suppressions = Error_suppressions.empty in
     let warnings = FilenameMap.empty in
-    init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs
+    init_libs
+      ~options
+      ~profiling
+      ~local_errors
+      ~warnings
+      ~suppressions
+      ~reader
+      ~validate_libdefs:true
+      ordered_libs
   in
   Hh_logger.info "Resolving dependencies";
   MonitorRPC.status_update ~event:ServerStatus.Resolving_dependencies_progress;
@@ -2236,7 +2246,15 @@ let init_from_scratch ~profiling ~workers options =
   MonitorRPC.status_update ~event:ServerStatus.Load_libraries_start;
   let%lwt (libs_ok, local_errors, warnings, suppressions, lib_exports, master_cx) =
     let suppressions = Error_suppressions.empty in
-    init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs
+    init_libs
+      ~options
+      ~profiling
+      ~local_errors
+      ~warnings
+      ~suppressions
+      ~reader
+      ~validate_libdefs:true
+      ordered_libs
   in
 
   Hh_logger.info "Resolving dependencies";
