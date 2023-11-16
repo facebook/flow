@@ -882,6 +882,7 @@ module Options_flags = struct
     include_suppressions: bool;
     estimate_recheck_time: bool option;
     long_lived_workers: bool option;
+    libdef_in_checking: bool option;
     distributed: bool;
   }
 end
@@ -948,6 +949,7 @@ let options_flags =
       include_suppressions
       estimate_recheck_time
       long_lived_workers
+      libdef_in_checking
       distributed =
     (match merge_timeout with
     | Some timeout when timeout < 0 ->
@@ -976,6 +978,7 @@ let options_flags =
         include_suppressions;
         estimate_recheck_time;
         long_lived_workers;
+        libdef_in_checking;
         distributed;
       }
   in
@@ -1025,6 +1028,7 @@ let options_flags =
          not be part of our public API, so not included in the docs. *)
       |> flag "--estimate-recheck-time" (optional bool) ~doc:"" ~env:"FLOW_ESTIMATE_RECHECK_TIME"
       |> flag "--long-lived-workers" (optional bool) ~doc:"" ~env:"FLOW_LONG_LIVED_WORKERS"
+      |> flag "--libdef-in-checking" (optional bool) ~doc:"" ~env:"FLOW_LIBDEF_IN_CHECKING"
       |> flag "--distributed" truthy ~doc:""
     )
 
@@ -1401,6 +1405,10 @@ let make_options
         ~f:(Files.expand_project_root_token ~root)
         (FlowConfig.haste_paths_includes flowconfig);
     opt_file_options = file_options;
+    opt_libdef_in_checking =
+      Option.value
+        options_flags.libdef_in_checking
+        ~default:(FlowConfig.libdef_in_checking flowconfig);
     opt_lint_severities = lint_severities;
     opt_strict_mode = strict_mode;
     opt_merge_timeout;

@@ -106,6 +106,7 @@ type t = {
   opt_include_suppressions: bool;
   opt_include_warnings: bool;
   opt_lazy_mode: bool;
+  opt_libdef_in_checking: bool;
   opt_lint_severities: Severity.severity LintSettings.t;
   opt_log_file: File_path.t;
   opt_log_saving: log_saving SMap.t;
@@ -257,6 +258,8 @@ let is_debug_mode opts = opts.opt_debug
 let is_quiet opts = opts.opt_quiet
 
 let lazy_mode opts = opts.opt_lazy_mode
+
+let libdef_in_checking opts = opts.opt_libdef_in_checking
 
 let lint_severities opts = opts.opt_lint_severities
 
