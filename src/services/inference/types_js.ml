@@ -891,7 +891,7 @@ end = struct
       ~env =
     let loc_of_aloc = Parsing_heaps.Mutator_reader.loc_of_aloc ~reader in
     let errors = env.ServerEnv.errors in
-    let incr_collated_errors = env.ServerEnv.incr_collated_errors in
+    let collated_errors = env.ServerEnv.collated_errors in
     (* files_to_force is a request to promote certain files to be checked as a dependency, dependent,
      * or focused file. We can ignore a request if the file is already checked at the desired level
      * or at a more important level *)
@@ -933,17 +933,14 @@ end = struct
     in
 
     (* clear collated errors for new, changed and deleted files *)
-    let incr_collated_errors =
-      if Options.incremental_error_collation options then
-        incr_collated_errors
-        |> Incremental_collated_errors.clear_all new_or_changed_or_deleted
-        |> ErrorCollator.Incremental.update_local_collated_errors
-             ~reader:(Abstract_state_reader.Mutator_state_reader reader)
-             ~options
-             suppressions
-             new_local_errors
-      else
-        incr_collated_errors
+    let collated_errors =
+      collated_errors
+      |> Collated_errors.clear_all new_or_changed_or_deleted
+      |> ErrorCollator.update_local_collated_errors
+           ~reader:(Abstract_state_reader.Mutator_state_reader reader)
+           ~options
+           suppressions
+           new_local_errors
     in
 
     (* clear stale coverage info *)
@@ -1278,7 +1275,7 @@ end = struct
         deleted_count,
         dirty_direct_dependents,
         errors,
-        incr_collated_errors,
+        collated_errors,
         freshparsed,
         unchanged_checked,
         unchanged_files_to_force,
@@ -1478,7 +1475,7 @@ end = struct
           deleted_count,
           dirty_direct_dependents,
           errors,
-          incr_collated_errors,
+          collated_errors,
           freshparsed,
           unchanged_checked,
           unchanged_files_to_force,
@@ -1584,9 +1581,8 @@ end = struct
     Hh_logger.info "Checked set: %s" (CheckedSet.debug_counts_to_string checked_files);
 
     (* NOTE: unused fields are left in their initial empty state *)
-    env.ServerEnv.collated_errors := None;
     Lwt.return
-      ( { env with ServerEnv.checked_files; errors; incr_collated_errors; coverage },
+      ( { env with ServerEnv.checked_files; errors; collated_errors; coverage },
         {
           modified_count;
           deleted_count;
@@ -1674,8 +1670,8 @@ end = struct
         ~files_to_force
         ~env
     in
-    let (_, _, _, errors, incr_collated_errors, _, _, _, _) = intermediate_values in
-    Lwt.return { env with ServerEnv.errors; incr_collated_errors }
+    let (_, _, _, errors, collated_errors, _, _, _, _) = intermediate_values in
+    Lwt.return { env with ServerEnv.errors; collated_errors }
 end
 
 let clear_caches () =
@@ -1736,27 +1732,25 @@ let recheck_impl
     stats
   in
   (* Collate errors after transaction has completed. *)
-  let incr_collated_errors =
-    if Options.incremental_error_collation options then
-      Profiling_js.with_timer ~timer:"CollateErrors" profiling ~f:(fun () ->
-          let focused_to_check = CheckedSet.focused to_check in
-          let dependents_to_check = CheckedSet.dependents to_check in
-          let files = FilenameSet.union focused_to_check dependents_to_check in
-          let new_errors = filter_errors files env.ServerEnv.errors in
-          let all_suppressions = ServerEnv.(env.errors.suppressions) in
-          env.ServerEnv.incr_collated_errors
-          |> Incremental_collated_errors.clear_merge files
-          |> ErrorCollator.Incremental.update_collated_errors
-               ~reader:(Abstract_state_reader.State_reader (State_reader.create ()))
-               ~options
-               ~checked_files:env.ServerEnv.checked_files
-               ~all_suppressions
-               new_errors
-      )
-    else
-      env.ServerEnv.incr_collated_errors
+  let collated_errors =
+    Profiling_js.with_timer ~timer:"CollateErrors" profiling ~f:(fun () ->
+        let focused_to_check = CheckedSet.focused to_check in
+        let dependents_to_check = CheckedSet.dependents to_check in
+        let files = FilenameSet.union focused_to_check dependents_to_check in
+        let new_errors = filter_errors files env.ServerEnv.errors in
+        let all_suppressions = ServerEnv.(env.errors.suppressions) in
+        env.ServerEnv.collated_errors
+        |> Collated_errors.clear_merge files
+        |> ErrorCollator.update_collated_errors
+             ~reader:(Abstract_state_reader.State_reader (State_reader.create ()))
+             ~options
+             ~checked_files:env.ServerEnv.checked_files
+             ~all_suppressions
+             new_errors
+    )
   in
-  let env = { env with ServerEnv.incr_collated_errors } in
+
+  let env = { env with ServerEnv.collated_errors } in
 
   (* TODO: update log to reflect current terminology **)
   let log_recheck_event : profiling:Profiling_js.finished -> unit Lwt.t =
@@ -1804,7 +1798,7 @@ let mk_env
     ~ordered_libs
     ~libs
     ~errors
-    ~incr_collated_errors
+    ~collated_errors
     ~exports
     ~master_cx =
   {
@@ -1817,8 +1811,7 @@ let mk_env
     libs;
     errors;
     coverage = FilenameMap.empty;
-    collated_errors = ref None;
-    incr_collated_errors;
+    collated_errors;
     connections;
     exports;
     master_cx;
@@ -2105,16 +2098,13 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
       env
   in
 
-  let incr_collated_errors =
-    if Options.incremental_error_collation options then
-      ErrorCollator.Incremental.update_local_collated_errors
-        ~reader:abstract_reader
-        ~options
-        suppressions
-        local_errors
-        Incremental_collated_errors.empty
-    else
-      Incremental_collated_errors.empty
+  let collated_errors =
+    ErrorCollator.update_local_collated_errors
+      ~reader:abstract_reader
+      ~options
+      suppressions
+      local_errors
+      Collated_errors.empty
   in
 
   let env =
@@ -2126,7 +2116,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
       ~ordered_libs
       ~libs
       ~errors
-      ~incr_collated_errors
+      ~collated_errors
       ~exports
       ~connections
       ~master_cx
@@ -2271,16 +2261,13 @@ let init_from_scratch ~profiling ~workers options =
   in
   Hh_logger.info "Done";
 
-  let incr_collated_errors =
-    if Options.incremental_error_collation options then
-      ErrorCollator.Incremental.update_local_collated_errors
-        ~reader:(Abstract_state_reader.Mutator_state_reader reader)
-        ~options
-        suppressions
-        local_errors
-        Incremental_collated_errors.empty
-    else
-      Incremental_collated_errors.empty
+  let collated_errors =
+    ErrorCollator.update_local_collated_errors
+      ~reader:(Abstract_state_reader.Mutator_state_reader reader)
+      ~options
+      suppressions
+      local_errors
+      Collated_errors.empty
   in
 
   let errors =
@@ -2296,7 +2283,7 @@ let init_from_scratch ~profiling ~workers options =
       ~ordered_libs
       ~libs
       ~errors
-      ~incr_collated_errors
+      ~collated_errors
       ~exports
       ~connections:Persistent_connection.empty
       ~master_cx
@@ -2486,7 +2473,7 @@ let recheck
         Exit.(exit ~msg:"Restarting after a rebase to save time" Restart)
 
 let full_check ~profiling ~options ~workers ?focus_targets env =
-  let { ServerEnv.files = parsed; dependency_info; errors; incr_collated_errors; _ } = env in
+  let { ServerEnv.files = parsed; dependency_info; errors; collated_errors; _ } = env in
   with_transaction "full check" (fun transaction reader ->
       let%lwt input = files_to_infer ~options ~focus_targets ~profiling ~parsed ~dependency_info in
       let all_dependent_files = FilenameSet.empty in
@@ -2549,21 +2536,18 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
       in
       Base.Option.iter check_internal_error ~f:(Hh_logger.error "%s");
 
-      let incr_collated_errors =
-        if Options.incremental_error_collation options then
-          Profiling_js.with_timer ~timer:"CollateErrors" profiling ~f:(fun () ->
-              ErrorCollator.Incremental.update_collated_errors
-                ~reader:(Abstract_state_reader.Mutator_state_reader reader)
-                ~options
-                ~checked_files
-                ~all_suppressions:updated_suppressions
-                errors
-                incr_collated_errors
-          )
-        else
-          incr_collated_errors
+      let collated_errors =
+        Profiling_js.with_timer ~timer:"CollateErrors" profiling ~f:(fun () ->
+            ErrorCollator.update_collated_errors
+              ~reader:(Abstract_state_reader.Mutator_state_reader reader)
+              ~options
+              ~checked_files
+              ~all_suppressions:updated_suppressions
+              errors
+              collated_errors
+        )
       in
-      let env = { env with ServerEnv.checked_files; errors; coverage; incr_collated_errors } in
+      let env = { env with ServerEnv.checked_files; errors; coverage; collated_errors } in
       Hh_logger.info "Checked set: %s" (CheckedSet.debug_counts_to_string checked_files);
       Lwt.return (env, check_internal_error)
   )

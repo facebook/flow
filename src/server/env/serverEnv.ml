@@ -38,15 +38,6 @@ type errors = {
   suppressions: Error_suppressions.t;
 }
 
-module Collated_errors = struct
-  type t = {
-    collated_errorset: Flow_errors_utils.ConcreteLocPrintableErrorSet.t;
-    collated_warning_map: Flow_errors_utils.ConcreteLocPrintableErrorSet.t Utils_js.FilenameMap.t;
-    collated_suppressed_errors:
-      (Loc.t Flow_errors_utils.printable_error * Loc_collections.LocSet.t) list;
-  }
-end
-
 type env = {
   files: Utils_js.FilenameSet.t;  (** All the files that we at least parse (includes libs). *)
   dependency_info: Dependency_info.t;
@@ -57,10 +48,7 @@ type env = {
   unparsed: Utils_js.FilenameSet.t;  (** The files which didn't parse (skipped or errored) *)
   errors: errors;
   coverage: Coverage.file_coverage Utils_js.FilenameMap.t;
-  (* When the incremental_error_collation option is set, this ref will be None *)
-  collated_errors: Collated_errors.t option ref;
-  (* When the incremental_error_collation option is not set, this field will be empty. *)
-  incr_collated_errors: Incremental_collated_errors.t;
+  collated_errors: Collated_errors.t;
   connections: Persistent_connection.t;
   exports: Export_search.t;
   master_cx: Context.master_context;

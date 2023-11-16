@@ -231,11 +231,11 @@ let of_file_input ~options ~env file_input =
     | Error reason -> Error (Skipped reason)
     | Ok () -> Ok (file_key, file_contents))
 
-let get_status ~profiling ~reader ~options env =
+let get_status ~options env =
   let lazy_stats = Rechecker.get_lazy_stats ~options env in
   let status_response =
     (* collate errors by origin *)
-    let (errors, warnings, suppressed_errors) = ErrorCollator.get ~profiling ~reader ~options env in
+    let (errors, warnings, suppressed_errors) = ErrorCollator.get env in
     let warnings =
       if Options.should_include_warnings options then
         warnings
@@ -652,7 +652,7 @@ let autofix_missing_local_annot ~options ~env ~profiling ~input =
   File_input.content_of_file_input input >>= fun file_content ->
   Code_action_service.autofix_missing_local_annot ~options ~env ~profiling ~file_key ~file_content
 
-let collect_rage ~profiling ~options ~reader ~env ~files =
+let collect_rage ~options ~reader ~env ~files =
   let items = [] in
   (* options *)
   let data = Printf.sprintf "lazy_mode=%s\n" (Options.lazy_mode options |> Bool.to_string) in
@@ -687,7 +687,7 @@ let collect_rage ~profiling ~options ~reader ~env ~files =
   let data = "DEPENDENCIES:\n" ^ dependencies in
   let items = ("env.dependencies", data) :: items in
   (* env: errors *)
-  let (errors, warnings, _) = ErrorCollator.get ~profiling ~reader ~options env in
+  let (errors, warnings, _) = ErrorCollator.get env in
   let json =
     Flow_errors_utils.Json_output.json_of_errors_with_context
       ~strip_root:None
@@ -1126,12 +1126,12 @@ let handle_insert_type
   in
   Lwt.return (ServerProt.Response.INSERT_TYPE result, None)
 
-let handle_rage ~reader ~options ~files ~profiling ~env =
-  let items = collect_rage ~profiling ~options ~reader ~env ~files:(Some files) in
+let handle_rage ~reader ~options ~files ~profiling:_ ~env =
+  let items = collect_rage ~options ~reader ~env ~files:(Some files) in
   Lwt.return (ServerProt.Response.RAGE items, None)
 
-let handle_status ~reader ~options ~profiling ~env =
-  let (status_response, lazy_stats) = get_status ~profiling ~reader ~options env in
+let handle_status ~options ~profiling:_ ~env =
+  let (status_response, lazy_stats) = get_status ~options env in
   Lwt.return (env, ServerProt.Response.STATUS { status_response; lazy_stats }, None)
 
 let handle_save_state ~options ~out ~genv ~profiling ~env =
@@ -1421,7 +1421,7 @@ let get_ephemeral_handler genv command =
      * coworkers and users, glevi decided that users would rather that `flow status` always waits
      * for the current recheck to finish. So even though we could technically make `flow status`
      * parallelizable, we choose to make it nonparallelizable *)
-    Handle_nonparallelizable (handle_status ~reader ~options)
+    Handle_nonparallelizable (handle_status ~options)
   | ServerProt.Request.SAVE_STATE { out } ->
     (* save-state can take awhile to run. Furthermore, you probably don't want to run this with out
      * of date data. So save-state is not parallelizable *)
@@ -1727,12 +1727,8 @@ let handle_nonparallelizable_persistent ~genv ~client_id ~request ~workload env 
     ~default_ret:env
     env
 
-let did_open ~profiling ~reader genv env client (_files : (string * string) Nel.t) :
-    ServerEnv.env Lwt.t =
-  let options = genv.ServerEnv.options in
-  let (errors, warnings, _) =
-    ErrorCollator.get_with_separate_warnings ~profiling ~reader ~options env
-  in
+let did_open env client (_files : (string * string) Nel.t) : ServerEnv.env Lwt.t =
+  let (errors, warnings, _) = ErrorCollator.get_with_separate_warnings env in
   Persistent_connection.send_errors_if_subscribed
     ~client
     ~errors_reason:LspProt.Env_change
@@ -1740,11 +1736,8 @@ let did_open ~profiling ~reader genv env client (_files : (string * string) Nel.
     ~warnings;
   Lwt.return env
 
-let did_close ~profiling ~reader genv env client : ServerEnv.env Lwt.t =
-  let options = genv.options in
-  let (errors, warnings, _) =
-    ErrorCollator.get_with_separate_warnings ~profiling ~reader ~options env
-  in
+let did_close env client : ServerEnv.env Lwt.t =
+  let (errors, warnings, _) = ErrorCollator.get_with_separate_warnings env in
   Persistent_connection.send_errors_if_subscribed
     ~client
     ~errors_reason:LspProt.Env_change
@@ -1787,10 +1780,8 @@ let mk_lsp_error_response ~id ~reason ?stack metadata =
   in
   (LspProt.LspFromServer (Some message), metadata)
 
-let handle_persistent_subscribe ~reader ~options ~metadata ~client ~profiling ~env =
-  let (current_errors, current_warnings, _) =
-    ErrorCollator.get_with_separate_warnings ~profiling ~reader ~options env
-  in
+let handle_persistent_subscribe ~metadata ~client ~profiling:_ ~env =
+  let (current_errors, current_warnings, _) = ErrorCollator.get_with_separate_warnings env in
   Persistent_connection.subscribe_client ~client ~current_errors ~current_warnings;
   Lwt.return (env, LspProt.LspFromServer None, metadata)
 
@@ -1808,11 +1799,11 @@ let (enqueue_did_open_files, handle_persistent_did_open_notification) =
     pending := SMap.empty;
     ret
   in
-  let handle_persistent_did_open_notification ~reader ~genv ~metadata ~client ~profiling ~env =
+  let handle_persistent_did_open_notification ~metadata ~client ~profiling:_ ~env =
     let%lwt env =
       match get_and_clear_did_open_files () with
       | [] -> Lwt.return env
-      | first :: rest -> did_open ~profiling ~reader genv env client (first, rest)
+      | first :: rest -> did_open env client (first, rest)
     in
     Lwt.return (env, LspProt.LspFromServer None, metadata)
   in
@@ -1832,8 +1823,8 @@ let handle_persistent_did_change_notification ~params ~metadata ~client ~profili
 let handle_persistent_did_save_notification ~metadata ~client:_ ~profiling:_ =
   (LspProt.LspFromServer None, metadata)
 
-let handle_persistent_did_close_notification ~reader ~genv ~metadata ~client ~profiling ~env =
-  let%lwt env = did_close ~profiling ~reader genv env client in
+let handle_persistent_did_close_notification ~metadata ~client ~profiling:_ ~env =
+  let%lwt env = did_close env client in
   Lwt.return (env, LspProt.LspFromServer None, metadata)
 
 let handle_persistent_did_close_notification_no_op ~metadata ~client:_ ~profiling:_ =
@@ -2709,10 +2700,10 @@ let handle_persistent_coverage ~options ~id ~params ~file_input ~metadata ~clien
       Lwt.return (LspProt.LspFromServer (Some response), metadata)
     | Error reason -> Lwt.return (mk_lsp_error_response ~id:(Some id) ~reason metadata))
 
-let handle_persistent_rage ~reader ~genv ~id ~metadata ~client:_ ~profiling ~env =
+let handle_persistent_rage ~reader ~genv ~id ~metadata ~client:_ ~profiling:_ ~env =
   let root = File_path.to_string genv.ServerEnv.options.Options.opt_root in
   let items =
-    collect_rage ~profiling ~options:genv.ServerEnv.options ~reader ~env ~files:None
+    collect_rage ~options:genv.ServerEnv.options ~reader ~env ~files:None
     |> Base.List.map ~f:(fun (title, data) -> { Lsp.Rage.title = Some (root ^ ":" ^ title); data })
   in
   let response = ResponseMessage (id, RageResult items) in
@@ -3053,7 +3044,7 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
     Handle_persistent_immediately (handle_persistent_canceled ~id ~metadata)
   | Subscribe ->
     (* This mutates env, so it can't run in parallel *)
-    Handle_nonparallelizable_persistent (handle_persistent_subscribe ~reader ~options ~metadata)
+    Handle_nonparallelizable_persistent (handle_persistent_subscribe ~metadata)
   | LspToServer (NotificationMessage (DidOpenNotification params)) ->
     let { Lsp.DidOpen.textDocument } = params in
     let { Lsp.TextDocumentItem.text; uri; languageId = _; version = _ } = textDocument in
@@ -3071,8 +3062,7 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
       enqueue_did_open_files files;
 
       (* This mutates env, so it can't run in parallel *)
-      Handle_nonparallelizable_persistent
-        (handle_persistent_did_open_notification ~reader ~genv ~metadata)
+      Handle_nonparallelizable_persistent (handle_persistent_did_open_notification ~metadata)
     ) else
       (* It's a no-op, so we can respond immediately *)
       Handle_persistent_immediately (handle_persistent_did_open_notification_no_op ~metadata)
@@ -3095,8 +3085,7 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
     in
     if did_anything_change then
       (* This mutates env, so it can't run in parallel *)
-      Handle_nonparallelizable_persistent
-        (handle_persistent_did_close_notification ~reader ~genv ~metadata)
+      Handle_nonparallelizable_persistent (handle_persistent_did_close_notification ~metadata)
     else
       (* It's a no-op, so we can respond immediately *)
       Handle_persistent_immediately (handle_persistent_did_close_notification_no_op ~metadata)

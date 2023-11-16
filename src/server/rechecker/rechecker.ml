@@ -95,17 +95,14 @@ let send_start_recheck env =
   Persistent_connection.send_start_recheck env.connections
 
 (** Notify clients that the recheck is done and send finalized errors *)
-let send_end_recheck ~profiling ~options env =
+let send_end_recheck ~options env =
   (* We must send "end_recheck" prior to sending errors+warnings so the client
      knows that this set of errors+warnings are final ones, not incremental. *)
   let lazy_stats = get_lazy_stats ~options env in
   Persistent_connection.send_end_recheck ~lazy_stats env.connections;
 
   let calc_errors_and_warnings () =
-    let reader = State_reader.create () in
-    let (errors, warnings, _) =
-      ErrorCollator.get_with_separate_warnings ~profiling ~reader ~options env
-    in
+    let (errors, warnings, _) = ErrorCollator.get_with_separate_warnings env in
     (errors, warnings)
   in
   Persistent_connection.update_clients
@@ -154,7 +151,7 @@ let recheck
             let metadata = { metadata with LspProt.server_logging_context } in
             Persistent_connection.send_response (resp, metadata) client
         );
-        send_end_recheck ~profiling ~options env;
+        send_end_recheck ~options env;
         Lwt.return (log_recheck_event, recheck_stats, env)
     )
   in

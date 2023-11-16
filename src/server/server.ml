@@ -318,10 +318,7 @@ let check_once ~init_id ~shared_mem_config ~format_errors ?focus_targets options
     let%lwt (profiling, (print_errors, errors, warnings, first_internal_error)) =
       Profiling_js.with_profiling_lwt ~label:"Init" ~should_print_summary (fun profiling ->
           let%lwt (env, first_internal_error) = program_init profiling in
-          let reader = State_reader.create () in
-          let (errors, warnings, suppressed_errors) =
-            ErrorCollator.get ~profiling ~reader ~options env
-          in
+          let (errors, warnings, suppressed_errors) = ErrorCollator.get env in
           let collated_errors = (errors, warnings, suppressed_errors) in
           let%lwt print_errors =
             Profiling_js.with_timer_lwt ~timer:"FormatErrors" profiling ~f:(fun () ->
