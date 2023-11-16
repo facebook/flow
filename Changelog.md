@@ -1,3 +1,17 @@
+### 0.222.0
+
+New Features:
+* Go-to-definition now works for private names
+* Find references and rename now work for private names
+
+Notable bug fixes:
+* Documentation will now show up for `declare export` statements in hover and autocomplete. This means that jsdoc for exports in `declare module` will finally show up in IDE services.
+
+Library Definitions:
+* Added `USBConnectionEvent`
+* Added `SecurityPolicyViolationEvent`
+* Added `crypto.randomUUID`, `http$Server.closeAllConnections`, `http$Server.closeIdleConnections`
+
 ### 0.221.0
 
 Likely to cause new Flow errors:
