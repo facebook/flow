@@ -675,7 +675,6 @@ and internal_error =
   | PropertyDescriptorPropertyCannotBeRead
   | ForInLHS
   | ForOfLHS
-  | InstanceLookupComputed
   | PropRefComputedOpen
   | PropRefComputedLiteral
   | RestParameterNotIdentifierPattern
@@ -684,13 +683,10 @@ and internal_error =
   | ParseJobException of Exception.t
   | CheckTimeout of float
   | CheckJobException of Exception.t
-  | UnexpectedTypeapp of string
   | UnexpectedAnnotationInference of string
   | MissingEnvRead of ALoc.t
   | MissingEnvWrite of ALoc.t
-  | UnconstrainedTvar of int option
   | UnexpectedModuleT of string
-  | PlaceholderTypeInChecking
   | ReadOfUnreachedTvar of Env_api.def_loc_type
   | ReadOfUnresolvedTvar of Env_api.def_loc_type
   | EnvInvariant of Env_api.env_invariant_failure
@@ -1937,10 +1933,7 @@ let enum_name_of_reason reason =
   | _ -> None
 
 let string_of_internal_error = function
-  | UnconstrainedTvar None -> "unconstrained tvar during tvar resolution"
-  | UnconstrainedTvar (Some i) -> spf "unconstrained tvar (%d) during tvar resolution" i
   | UnexpectedModuleT s -> spf "unexpected module type: %s" s
-  | PlaceholderTypeInChecking -> "placeholder type in checking mode"
   | ReadOfUnreachedTvar k ->
     spf "read of %s entry which has not been prepared for typechecking" (Env_api.show_def_loc_type k)
   | ReadOfUnresolvedTvar k ->
@@ -1951,7 +1944,6 @@ let string_of_internal_error = function
   | PropertyDescriptorPropertyCannotBeRead -> "unexpected property in properties object"
   | ForInLHS -> "unexpected LHS in for...in"
   | ForOfLHS -> "unexpected LHS in for...of"
-  | InstanceLookupComputed -> "unexpected computed property lookup on InstanceT"
   | PropRefComputedOpen -> "unexpected open computed property element type"
   | PropRefComputedLiteral -> "unexpected literal computed property element type"
   | RestParameterNotIdentifierPattern -> "unexpected rest parameter, expected an identifier pattern"
@@ -1960,7 +1952,6 @@ let string_of_internal_error = function
   | ParseJobException exc -> "uncaught exception: " ^ Exception.to_string exc
   | CheckTimeout s -> spf "check job timed out after %0.2f seconds" s
   | CheckJobException exc -> "uncaught exception: " ^ Exception.to_string exc
-  | UnexpectedTypeapp s -> "unexpected typeapp: " ^ s
   | UnexpectedAnnotationInference s -> "unexpected " ^ s ^ " in annotation inference"
   | MissingEnvRead l -> "missing env entry for read at " ^ ALoc.debug_to_string l
   | MissingEnvWrite loc -> "expected env entry for write location" ^ ALoc.debug_to_string loc

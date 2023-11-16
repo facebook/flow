@@ -1104,9 +1104,7 @@ let dump_error_message =
   let open Error_message in
   let string_of_use_op = string_of_use_op_rec in
   let dump_internal_error = function
-    | UnconstrainedTvar _ -> "UnconstrainedTvar"
     | UnexpectedModuleT _ -> "UnexpectedModuleT"
-    | PlaceholderTypeInChecking -> "PlaceholderTypeInChecking"
     | ReadOfUnreachedTvar _ -> "ReadOfUnreachedTvar"
     | ReadOfUnresolvedTvar _ -> "ReadOfUnresolvedTvar"
     | MethodNotAFunction -> "MethodNotAFunction"
@@ -1115,7 +1113,6 @@ let dump_error_message =
     | PropertyDescriptorPropertyCannotBeRead -> "PropertyDescriptorPropertyCannotBeRead"
     | ForInLHS -> "ForInLHS"
     | ForOfLHS -> "ForOfLHS"
-    | InstanceLookupComputed -> "InstanceLookupComputed"
     | PropRefComputedOpen -> "PropRefComputedOpen"
     | PropRefComputedLiteral -> "PropRefComputedLiteral"
     | RestParameterNotIdentifierPattern -> "RestParameterNotIdentifierPattern"
@@ -1124,7 +1121,6 @@ let dump_error_message =
     | ParseJobException _ -> "ParseJobException"
     | CheckTimeout _ -> "CheckTimeout"
     | CheckJobException _ -> "CheckJobException"
-    | UnexpectedTypeapp _ -> "UnexpectedTypeapp"
     | UnexpectedAnnotationInference _ -> "UnexpectedAnnotationInference"
     | MissingEnvRead _ -> "MissingEnvRead"
     | MissingEnvWrite _ -> "MissingEnvWrite"
