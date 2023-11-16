@@ -30,3 +30,11 @@ val infer_lib_file :
   Loc.t Flow_ast.Comment.t list ->
   (ALoc.t, ALoc.t) Flow_ast.Program.t ->
   (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
+
+val infer_file :
+  lint_severities:Severity.severity LintSettings.t ->
+  Context.t ->
+  File_key.t ->
+  Loc.t Flow_ast.Comment.t list ->
+  (ALoc.t, ALoc.t) Flow_ast.Program.t ->
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t

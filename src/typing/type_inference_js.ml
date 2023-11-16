@@ -667,3 +667,9 @@ let infer_lib_file ~lint_severities cx file_key all_comments aloc_ast =
         all_comments = aloc_all_comments;
       }
     )
+
+let infer_file ~lint_severities cx file_key all_comments aloc_ast =
+  if File_key.is_lib_file file_key then
+    infer_lib_file ~lint_severities cx file_key all_comments aloc_ast
+  else
+    infer_ast ~lint_severities cx file_key all_comments aloc_ast
