@@ -1,6 +1,6 @@
 // @flow
 
-const React = require("React");
+const React = require("react");
 
 declare opaque type O<T>;
 type Mono = { m: number };

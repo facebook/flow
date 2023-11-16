@@ -2,7 +2,7 @@
  * @flow
  */
 
-const React = require('React');
+const React = require('react');
 
 type Props = {
   elements: Array<React.Element<any>>,

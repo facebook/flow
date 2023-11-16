@@ -1,4 +1,4 @@
-import * as React from "React";
+import * as React from "react";
 
 declare function f<T>(T => void): void;
 declare class A<T> {

@@ -14,7 +14,7 @@ declare opaque type FragmentReference<T: FragmentTypeof>;
 declare opaque type BadFragmentReference<T>;
 declare opaque type RelayProp;
 
-const React = require('React');
+const React = require('react');
 
 /*********************************
  * RelayModernTyped              *

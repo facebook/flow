@@ -1,6 +1,6 @@
 //@flow
 
-const React = require('React');
+const React = require('react');
 const {
   FunctionComponent,
   ClassComponent,

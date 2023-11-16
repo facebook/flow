@@ -2,7 +2,7 @@
 
 'use strict';
 
-const React = require('React');
+const React = require('react');
 
 type $FragmentRef<T> = {
   $fragmentRefs: $PropertyType<T, '$refType'>,

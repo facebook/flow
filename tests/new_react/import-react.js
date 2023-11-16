@@ -7,9 +7,6 @@
 // 'react' might show up here.
 
 import React from "react";
-//import React from "React";
-//var React = require("react");
-//var React = require("React");
 
 class HelloMessage extends React.Component<{ name: string }> {}
 

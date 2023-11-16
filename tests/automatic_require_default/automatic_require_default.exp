@@ -12,33 +12,19 @@ References:
                       ^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- react.js:8:13
-
-Cannot get `React.NotAType` because property `NotAType` is missing in module `react` [1]. [prop-missing]
-
-   react.js:8:13
-     8| ("" : React.NotAType); // error NotAType missing in React
-                    ^^^^^^^^
-
-References:
-   <BUILTINS>/react.js:684:27
-   684|   declare module.exports: $Exports<'react'>;
-                                  ^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------------- react.js:9:13
+Error ---------------------------------------------------------------------------------------------------- react.js:6:13
 
 Cannot get `react.NotAType` because property `NotAType` is missing in module `react` [1]. [prop-missing]
 
-   react.js:9:13
-   9| ("" : react.NotAType); // error NotAType missing in react
+   react.js:6:13
+   6| ("" : react.NotAType); // error NotAType missing in react
                   ^^^^^^^^
 
 References:
-   react.js:2:15
-   2| const react = require('react');
+   react.js:1:15
+   1| const react = require('react');
                     ^^^^^^^^^^^^^^^^ [1]
 
 
 
-Found 3 errors
+Found 2 errors
