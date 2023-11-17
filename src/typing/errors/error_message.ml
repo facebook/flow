@@ -5395,7 +5395,7 @@ let error_code_of_message err : error_code option =
   | EPropNotWritable { use_op; _ } -> react_rule_of_use_op use_op ~default:CannotWrite
   | EPropPolarityMismatch _ -> Some IncompatibleVariance
   | EReactElementFunArity (_, _, _) -> Some MissingArg
-  | EReactRefInRender _ -> Some ReactRule
+  | EReactRefInRender _ -> Some ReactRuleRef
   (* We don't want these to be suppressible *)
   | ERecursionLimit (_, _) -> None
   | EROArrayWrite (_, use_op) -> react_rule_of_use_op use_op ~default:CannotWrite
