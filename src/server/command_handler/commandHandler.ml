@@ -955,8 +955,20 @@ let linked_editing_range ~options ~env ~profiling ~params ~client =
     let (parse_result, parse_errors) =
       Type_contents.parse_contents ~options ~profiling contents filename
     in
-    if not (Flow_error.ErrorSet.is_empty parse_errors) then
-      (* If there are parse errors, we can't necessarily match opening/closing tags in the way a user might expect. *)
+    (* Due to a known issue, when the client sends multiple subsequent linkedEditingRange
+     * requests, it is possible to enter a state of parse error where the opening and
+     * closing tag don't match. If this is the only kind of error we are seeing, then
+     * we allow this process to resume. This gives the opportunity to the client to
+     * restore the tags to a matching state. *)
+    let has_non_expected_jsx_closing_tag_errors =
+      Flow_error.ErrorSet.exists
+        (fun e ->
+          match Flow_error.msg_of_error e with
+          | Error_message.EParseError (_, Parse_error.ExpectedJSXClosingTag _) -> false
+          | _ -> true)
+        parse_errors
+    in
+    if has_non_expected_jsx_closing_tag_errors then
       (Ok None, None)
     else (
       match parse_result with
