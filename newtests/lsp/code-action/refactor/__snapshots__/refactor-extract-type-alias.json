@@ -1,0 +1,38 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Extract to type alias",
+      "kind": "refactor.extract",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/refactor-extract-type-alias.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 3,
+                  "character": 2
+                },
+                "end": {
+                  "line": 3,
+                  "character": 22
+                }
+              },
+              "newText": "type NewType = number;\n  const a: NewType = 3;"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "refactor_extract",
+          "Extract to type alias"
+        ]
+      }
+    }
+  ]
+}

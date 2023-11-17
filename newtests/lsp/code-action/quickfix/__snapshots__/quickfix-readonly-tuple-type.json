@@ -1,0 +1,38 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Convert to `$ReadOnly`",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/fix-readonly-tuple-type.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 2,
+                  "character": 9
+                },
+                "end": {
+                  "line": 2,
+                  "character": 34
+                }
+              },
+              "newText": "$ReadOnly<[string, number]>"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "convert_readonly_tuple_type",
+          "Convert to `$ReadOnly`"
+        ]
+      }
+    }
+  ]
+}

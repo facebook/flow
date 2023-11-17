@@ -1,0 +1,71 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Extract to field in class 'Test'",
+      "kind": "refactor.extract",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/refactor-extract-method.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 2,
+                  "character": 0
+                },
+                "end": {
+                  "line": 6,
+                  "character": 1
+                }
+              },
+              "newText": "class Test {\n  newProperty = this.test();\n  test(): void {\n    this.newProperty;\n  }\n}"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "refactor_extract",
+          "Extract to field in class 'Test'"
+        ]
+      }
+    },
+    {
+      "title": "Extract to constant in method 'test'",
+      "kind": "refactor.extract",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/refactor-extract-method.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 4,
+                  "character": 4
+                },
+                "end": {
+                  "line": 4,
+                  "character": 16
+                }
+              },
+              "newText": "const newLocal = this.test();\n    newLocal;"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "refactor_extract",
+          "Extract to constant in method 'test'"
+        ]
+      }
+    }
+  ]
+}

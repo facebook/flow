@@ -1,0 +1,38 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Remove",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/fix-in-out-variance.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 2,
+                  "character": 18
+                },
+                "end": {
+                  "line": 2,
+                  "character": 34
+                }
+              },
+              "newText": ": (<A>(A) => A)"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "remove_in_out_variance",
+          "Remove"
+        ]
+      }
+    }
+  ]
+}

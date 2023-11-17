@@ -1,0 +1,38 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Convert to `void`",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/fix-undefined-type.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 2,
+                  "character": 9
+                },
+                "end": {
+                  "line": 2,
+                  "character": 18
+                }
+              },
+              "newText": "void"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "convert_undefined_type",
+          "Convert to `void`"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Insert `await`",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/fix-unused-promise.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 5,
+                  "character": 4
+                },
+                "end": {
+                  "line": 5,
+                  "character": 9
+                }
+              },
+              "newText": "await foo()"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "insert_await",
+          "Insert `await`"
+        ]
+      }
+    },
+    {
+      "title": "Insert `void`",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/fix-unused-promise.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 5,
+                  "character": 4
+                },
+                "end": {
+                  "line": 5,
+                  "character": 9
+                }
+              },
+              "newText": "void foo()"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "insert_void",
+          "Insert `void`"
+        ]
+      }
+    }
+  ]
+}

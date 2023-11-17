@@ -1,0 +1,38 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Convert to `-`",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/fix-in-variance.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 2,
+                  "character": 18
+                },
+                "end": {
+                  "line": 2,
+                  "character": 33
+                }
+              },
+              "newText": ": (<-A>(A) => void)"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "convert_in_variance",
+          "Convert to `-`"
+        ]
+      }
+    }
+  ]
+}

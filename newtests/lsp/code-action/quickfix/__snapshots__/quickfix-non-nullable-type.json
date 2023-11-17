@@ -1,0 +1,38 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Convert to `$NonMaybeType`",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/fix-nonnullable-type.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 1,
+                  "character": 9
+                },
+                "end": {
+                  "line": 1,
+                  "character": 20
+                }
+              },
+              "newText": "$NonMaybeType"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "convert_NonNullable_type",
+          "Convert to `$NonMaybeType`"
+        ]
+      }
+    }
+  ]
+}

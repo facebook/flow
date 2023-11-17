@@ -1,0 +1,57 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Use as-renaming",
+      "kind": "quickfix",
+      "diagnostics": [
+        {
+          "range": {
+            "start": {
+              "line": 1,
+              "character": 23
+            },
+            "end": {
+              "line": 1,
+              "character": 24
+            }
+          },
+          "severity": 1,
+          "code": "ParseError",
+          "source": "Flow",
+          "message": "You must use `'string-key' as localBinding?: <TYPE>` for props with invalid identifier names.",
+          "relatedInformation": [],
+          "relatedLocations": []
+        }
+      ],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/component-as-renaming-with-optional-parse-error.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 1,
+                  "character": 23
+                },
+                "end": {
+                  "line": 1,
+                  "character": 24
+                }
+              },
+              "newText": " as dataId?"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "fix_parse_error",
+          "Use as-renaming"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Remove braces from arrow function",
+      "kind": "refactor.rewrite",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/refactor-arrow-functions.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 6,
+                  "character": 4
+                },
+                "end": {
+                  "line": 8,
+                  "character": 1
+                }
+              },
+              "newText": "() => \"foo\""
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

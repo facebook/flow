@@ -1,0 +1,85 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Organize imports",
+      "kind": "source.organizeImports.flow",
+      "diagnostics": [],
+      "command": {
+        "title": "",
+        "command": "source.organizeImports:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          {
+            "uri": "<PLACEHOLDER_PROJECT_URL>/only-filter.js"
+          }
+        ]
+      }
+    },
+    {
+      "title": "Extract to constant in module scope",
+      "kind": "refactor.extract",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/only-filter.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 3,
+                  "character": 0
+                },
+                "end": {
+                  "line": 3,
+                  "character": 8
+                }
+              },
+              "newText": "const newLocal = foo.bar;\nnewLocal;"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "refactor_extract",
+          "Extract to constant in module scope"
+        ]
+      }
+    },
+    {
+      "title": "Add optional chaining for object that might be `undefined`",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/only-filter.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 3,
+                  "character": 0
+                },
+                "end": {
+                  "line": 3,
+                  "character": 7
+                }
+              },
+              "newText": "foo?.bar"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "add_optional_chaining",
+          "Add optional chaining for object that might be `undefined`"
+        ]
+      }
+    }
+  ]
+}

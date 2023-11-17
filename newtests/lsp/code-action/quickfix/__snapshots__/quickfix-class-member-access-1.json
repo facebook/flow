@@ -1,0 +1,38 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Prefix with `this.`",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/fix-class-member-access.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 8,
+                  "character": 4
+                },
+                "end": {
+                  "line": 8,
+                  "character": 9
+                }
+              },
+              "newText": "this.field"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "prefix_with_this",
+          "Prefix with `this.`"
+        ]
+      }
+    }
+  ]
+}

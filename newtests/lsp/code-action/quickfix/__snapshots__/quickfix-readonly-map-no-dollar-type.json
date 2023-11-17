@@ -1,0 +1,38 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Convert to `$ReadOnlyMap`",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/fix-readonlymap-type.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 1,
+                  "character": 9
+                },
+                "end": {
+                  "line": 1,
+                  "character": 20
+                }
+              },
+              "newText": "$ReadOnlyMap"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "convert_ReadonlyMap_type",
+          "Convert to `$ReadOnlyMap`"
+        ]
+      }
+    }
+  ]
+}

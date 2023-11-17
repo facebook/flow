@@ -1,0 +1,57 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Replace `>` with `{'>'}`",
+      "kind": "quickfix",
+      "diagnostics": [
+        {
+          "range": {
+            "start": {
+              "line": 4,
+              "character": 6
+            },
+            "end": {
+              "line": 4,
+              "character": 7
+            }
+          },
+          "severity": 1,
+          "code": "ParseError",
+          "source": "Flow",
+          "message": "Unexpected token `>`. Did you mean `{'>'}`?",
+          "relatedInformation": [],
+          "relatedLocations": []
+        }
+      ],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/parse-error.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 4,
+                  "character": 6
+                },
+                "end": {
+                  "line": 4,
+                  "character": 7
+                }
+              },
+              "newText": "{'>'}"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "fix_parse_error",
+          "Replace `>` with `{'>'}`"
+        ]
+      }
+    }
+  ]
+}

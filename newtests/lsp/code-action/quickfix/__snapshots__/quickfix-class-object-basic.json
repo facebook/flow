@@ -1,0 +1,57 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Rewrite object type as an interface",
+      "kind": "quickfix",
+      "diagnostics": [
+        {
+          "range": {
+            "start": {
+              "line": 8,
+              "character": 4
+            },
+            "end": {
+              "line": 8,
+              "character": 11
+            }
+          },
+          "severity": 1,
+          "code": "InferError",
+          "source": "Flow",
+          "message": "Cannot call foo with new A() bound to x because cannot subtype class A [1] with object type [2]. Please use an interface instead.",
+          "relatedInformation": [],
+          "relatedLocations": []
+        }
+      ],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/class-object-subtype.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 6,
+                  "character": 17
+                },
+                "end": {
+                  "line": 6,
+                  "character": 35
+                }
+              },
+              "newText": "interface { x: number }"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "replace_obj_with_interface",
+          "Rewrite object type as an interface"
+        ]
+      }
+    }
+  ]
+}

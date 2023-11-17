@@ -1,0 +1,57 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Replace `:` with `renders`",
+      "kind": "quickfix",
+      "diagnostics": [
+        {
+          "range": {
+            "start": {
+              "line": 1,
+              "character": 15
+            },
+            "end": {
+              "line": 1,
+              "character": 16
+            }
+          },
+          "severity": 1,
+          "code": "ParseError",
+          "source": "Flow",
+          "message": "Components use `renders` instead of `:` to annotate the render type of a component.",
+          "relatedInformation": [],
+          "relatedLocations": []
+        }
+      ],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/component-render-parse-error.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 1,
+                  "character": 15
+                },
+                "end": {
+                  "line": 1,
+                  "character": 16
+                }
+              },
+              "newText": " renders"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "fix_parse_error",
+          "Replace `:` with `renders`"
+        ]
+      }
+    }
+  ]
+}

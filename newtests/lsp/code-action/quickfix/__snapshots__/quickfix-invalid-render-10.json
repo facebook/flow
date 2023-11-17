@@ -1,0 +1,38 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Simplify `renders*`",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/invalid-renders.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 16,
+                  "character": 13
+                },
+                "end": {
+                  "line": 16,
+                  "character": 32
+                }
+              },
+              "newText": "renders* Foo"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "simplify_renders_star",
+          "Simplify `renders*`"
+        ]
+      }
+    }
+  ]
+}
