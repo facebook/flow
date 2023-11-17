@@ -828,6 +828,30 @@ module.exports = (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
+    test('provide autoimport for missing React import', [
+      addFile('fix-missing-import.js.ignored', 'fix-missing-import.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-missing-import.js',
+        },
+        range: {
+          start: {line: 6, character: 4},
+          end: {line: 6, character: 5},
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'quickfix-auto-import-react.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
     test('provide quickfix for `unknown` type', [
       addFile('fix-unknown-type.js.ignored', 'fix-unknown-type.js'),
       lspStartAndConnect(),

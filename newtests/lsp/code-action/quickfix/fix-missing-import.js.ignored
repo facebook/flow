@@ -3,3 +3,5 @@
 import type {A} from './import-provider';
 
 type C = B;
+
+<div />;
