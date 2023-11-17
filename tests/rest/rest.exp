@@ -1459,12 +1459,12 @@ Cannot cast object literal to `O1` because: [incompatible-cast]
         ^^^ [2]
 
 References:
-   type_union.js:10:34
-   10| type O1<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void|}>;
-                                        ^^^^^^^^ [1]
    type_union.js:10:23
    10| type O1<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void|}>;
-                             ^^^^^^^^ [3]
+                             ^^^^^^^^ [1]
+   type_union.js:10:34
+   10| type O1<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void|}>;
+                                        ^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------- type_union.js:14:2
@@ -1478,12 +1478,12 @@ Cannot cast object literal to `O1` because: [incompatible-cast]
         ^^^^^^ [2]
 
 References:
-   type_union.js:10:34
-   10| type O1<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void|}>;
-                                        ^^^^^^^^ [1]
    type_union.js:10:23
    10| type O1<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void|}>;
-                             ^^^^^^^^ [3]
+                             ^^^^^^^^ [1]
+   type_union.js:10:34
+   10| type O1<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void|}>;
+                                        ^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------- type_union.js:19:2
@@ -1497,31 +1497,31 @@ Cannot cast object literal to `O2` because: [incompatible-cast]
         ^^^ [2]
 
 References:
-   type_union.js:16:34
-   16| type O2<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|y: Y | void|}>;
-                                        ^^^^^^^^ [1]
    type_union.js:16:23
    16| type O2<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|y: Y | void|}>;
-                             ^^^^^^^^ [3]
+                             ^^^^^^^^ [1]
+   type_union.js:16:34
+   16| type O2<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|y: Y | void|}>;
+                                        ^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------- type_union.js:20:2
 
 Cannot cast object literal to `O2` because: [incompatible-cast]
- - Either property `x` is missing in object type [1] but exists in object literal [2].
- - Or property `y` is missing in object type [3] but exists in object literal [2].
+ - Either property `y` is missing in object type [1] but exists in object literal [2].
+ - Or property `x` is missing in object type [3] but exists in object literal [2].
 
    type_union.js:20:2
    20| ({x, y}: O2<X, Y>); // Error: y is not allowed
         ^^^^^^ [2]
 
 References:
-   type_union.js:16:34
-   16| type O2<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|y: Y | void|}>;
-                                        ^^^^^^^^ [1]
    type_union.js:16:23
    16| type O2<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|y: Y | void|}>;
-                             ^^^^^^^^ [3]
+                             ^^^^^^^^ [1]
+   type_union.js:16:34
+   16| type O2<X, Y> = $Rest<{|x: X|} | {|y: Y|}, {|y: Y | void|}>;
+                                        ^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- type_union.js:22:17
@@ -1563,12 +1563,12 @@ Cannot cast object literal to `O4` because: [incompatible-cast]
         ^^^ [2]
 
 References:
-   type_union.js:25:28
-   25| type O4 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void, y: Y | void|}>;
-                                  ^^^^^^^^ [1]
    type_union.js:25:17
    25| type O4 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void, y: Y | void|}>;
-                       ^^^^^^^^ [3]
+                       ^^^^^^^^ [1]
+   type_union.js:25:28
+   25| type O4 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void, y: Y | void|}>;
+                                  ^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------- type_union.js:28:2
@@ -1582,12 +1582,12 @@ Cannot cast object literal to `O4` because: [incompatible-cast]
         ^^^ [2]
 
 References:
-   type_union.js:25:28
-   25| type O4 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void, y: Y | void|}>;
-                                  ^^^^^^^^ [1]
    type_union.js:25:17
    25| type O4 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void, y: Y | void|}>;
-                       ^^^^^^^^ [3]
+                       ^^^^^^^^ [1]
+   type_union.js:25:28
+   25| type O4 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void, y: Y | void|}>;
+                                  ^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------- type_union.js:29:2
@@ -1601,12 +1601,12 @@ Cannot cast object literal to `O4` because: [incompatible-cast]
         ^^^^^^ [2]
 
 References:
-   type_union.js:25:28
-   25| type O4 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void, y: Y | void|}>;
-                                  ^^^^^^^^ [1]
    type_union.js:25:17
    25| type O4 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void, y: Y | void|}>;
-                       ^^^^^^^^ [3]
+                       ^^^^^^^^ [1]
+   type_union.js:25:28
+   25| type O4 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void, y: Y | void|}>;
+                                  ^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------- type_union.js:32:2
@@ -1719,8 +1719,8 @@ References:
 Error ----------------------------------------------------------------------------------------------- type_union.js:53:2
 
 Cannot cast object literal to `O9` because: [incompatible-cast]
- - Either property `x` is missing in object type [1] but exists in object literal [2].
- - Or property `y` is missing in object type [3] but exists in object literal [2].
+ - Either property `y` is missing in object type [1] but exists in object literal [2].
+ - Or property `x` is missing in object type [1] but exists in object literal [2].
  - Or property `x` is missing in object type [3] but exists in object literal [2].
 
    type_union.js:53:2
@@ -1728,12 +1728,12 @@ Cannot cast object literal to `O9` because: [incompatible-cast]
         ^^^^^^ [2]
 
 References:
-   type_union.js:49:28
-   49| type O9 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void|} | {|y: Y | void|}>;
-                                  ^^^^^^^^ [1]
    type_union.js:49:17
    49| type O9 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void|} | {|y: Y | void|}>;
-                       ^^^^^^^^ [3]
+                       ^^^^^^^^ [1]
+   type_union.js:49:28
+   49| type O9 = $Rest<{|x: X|} | {|y: Y|}, {|x: X | void|} | {|y: Y | void|}>;
+                                  ^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- value.js:4:10

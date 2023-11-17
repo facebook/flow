@@ -63,9 +63,9 @@ References:
 Error ---------------------------------------------------------------------------------------------- distributive.js:9:4
 
 Cannot cast `unionArr` to `ToArray` because: [incompatible-cast]
- - Either string [1] is incompatible with number [2] in array element. Arrays are invariantly typed. See
+ - Either number [1] is incompatible with string [2] in array element. Arrays are invariantly typed. See
    https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
- - Or number [3] is incompatible with string [4] in array element. Arrays are invariantly typed. See
+ - Or string [3] is incompatible with number [4] in array element. Arrays are invariantly typed. See
    https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    distributive.js:9:4
@@ -73,56 +73,56 @@ Cannot cast `unionArr` to `ToArray` because: [incompatible-cast]
          ^^^^^^^^
 
 References:
-   distributive.js:4:33
-   4|   declare const unionArr: Array<string | number>;
-                                      ^^^^^^ [1]
-   distributive.js:9:31
-   9|   (unionArr: ToArray<string | number>); // error
-                                    ^^^^^^ [2]
    distributive.js:4:42
    4|   declare const unionArr: Array<string | number>;
-                                               ^^^^^^ [3]
+                                               ^^^^^^ [1]
    distributive.js:9:22
    9|   (unionArr: ToArray<string | number>); // error
-                           ^^^^^^ [4]
+                           ^^^^^^ [2]
+   distributive.js:4:33
+   4|   declare const unionArr: Array<string | number>;
+                                      ^^^^^^ [3]
+   distributive.js:9:31
+   9|   (unionArr: ToArray<string | number>); // error
+                                    ^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------- distributive.js:20:4
 
 Cannot cast `new B()` to `A_or_C` because: [incompatible-cast]
- - Either `B` [1] is incompatible with `C` [2].
- - Or `B` [1] is incompatible with `A` [3].
+ - Either `B` [1] is incompatible with `A` [2].
+ - Or `B` [1] is incompatible with `C` [3].
 
    distributive.js:20:4
    20|   (new B(): A_or_C); // error: B ~> A|C
           ^^^^^^^ [1]
 
 References:
-   distributive.js:18:29
-   18|   type A_or_C = Exclude<A|B|C, B>;
-                                   ^ [2]
    distributive.js:18:25
    18|   type A_or_C = Exclude<A|B|C, B>;
-                               ^ [3]
+                               ^ [2]
+   distributive.js:18:29
+   18|   type A_or_C = Exclude<A|B|C, B>;
+                                   ^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- distributive.js:22:4
 
 Cannot cast `new D()` to `A_or_C` because: [incompatible-cast]
- - Either `D` [1] is incompatible with `C` [2].
- - Or `D` [1] is incompatible with `A` [3].
+ - Either `D` [1] is incompatible with `A` [2].
+ - Or `D` [1] is incompatible with `C` [3].
 
    distributive.js:22:4
    22|   (new D(): A_or_C); // error: D ~> A|C
           ^^^^^^^ [1]
 
 References:
-   distributive.js:18:29
-   18|   type A_or_C = Exclude<A|B|C, B>;
-                                   ^ [2]
    distributive.js:18:25
    18|   type A_or_C = Exclude<A|B|C, B>;
-                               ^ [3]
+                               ^ [2]
+   distributive.js:18:29
+   18|   type A_or_C = Exclude<A|B|C, B>;
+                                   ^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- distributive.js:26:4
@@ -923,39 +923,39 @@ References:
 Error -------------------------------------------------------------------------------------------- type_sig_uses.js:23:2
 
 Cannot cast `new B()` to `A_or_C` because: [incompatible-cast]
- - Either `B` [1] is incompatible with `C` [2].
- - Or `B` [1] is incompatible with `A` [3].
+ - Either `B` [1] is incompatible with `A` [2].
+ - Or `B` [1] is incompatible with `C` [3].
 
    type_sig_uses.js:23:2
    23| (new B(): A_or_C); // error: B ~> A|C
         ^^^^^^^ [1]
 
 References:
-   type_sig_uses.js:21:27
-   21| type A_or_C = Exclude<A|B|C, B>;
-                                 ^ [2]
    type_sig_uses.js:21:23
    21| type A_or_C = Exclude<A|B|C, B>;
-                             ^ [3]
+                             ^ [2]
+   type_sig_uses.js:21:27
+   21| type A_or_C = Exclude<A|B|C, B>;
+                                 ^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- type_sig_uses.js:25:2
 
 Cannot cast `new D()` to `A_or_C` because: [incompatible-cast]
- - Either `D` [1] is incompatible with `C` [2].
- - Or `D` [1] is incompatible with `A` [3].
+ - Either `D` [1] is incompatible with `A` [2].
+ - Or `D` [1] is incompatible with `C` [3].
 
    type_sig_uses.js:25:2
    25| (new D(): A_or_C); // error: D ~> A|C
         ^^^^^^^ [1]
 
 References:
-   type_sig_uses.js:21:27
-   21| type A_or_C = Exclude<A|B|C, B>;
-                                 ^ [2]
    type_sig_uses.js:21:23
    21| type A_or_C = Exclude<A|B|C, B>;
-                             ^ [3]
+                             ^ [2]
+   type_sig_uses.js:21:27
+   21| type A_or_C = Exclude<A|B|C, B>;
+                                 ^ [3]
 
 
 

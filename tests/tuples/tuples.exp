@@ -1093,8 +1093,8 @@ References:
 Error --------------------------------------------------------------------------------------------------- spread.js:38:2
 
 Cannot cast array literal to `FromUnion` because: [incompatible-cast]
- - Either array literal [1] has 2 elements but tuple type [2] has 3 elements.
- - Or array literal [1] has 2 elements but tuple type [2] has 4 elements.
+ - Either array literal [1] has 2 elements but tuple type [2] has 4 elements.
+ - Or array literal [1] has 2 elements but tuple type [2] has 3 elements.
 
    spread.js:38:2
    38| ([0, 9]: FromUnion); // ERROR

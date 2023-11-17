@@ -443,12 +443,12 @@ References:
    flat.js:30:24
    30| const result4_1: Array<Array<number>> = arr4.flat(); // Error - should be flattened to Array<number>
                               ^^^^^^^^^^^^^ [1]
-   flat.js:28:19
-   28| const arr4 = [1, [2]];
-                         ^ [2]
    flat.js:28:15
    28| const arr4 = [1, [2]];
-                     ^ [3]
+                     ^ [2]
+   flat.js:28:19
+   28| const arr4 = [1, [2]];
+                         ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- length.js:7:3

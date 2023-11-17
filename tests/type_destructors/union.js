@@ -9,3 +9,11 @@ declare var p2: P2;
 (0: P2); // ok, number ~> string|number
 (null: P2); // err, null ~> string|number
 type T = {p: string} | {p: number}; // NB: T resolved here
+
+// Order
+ type TupleUnion = [1] | [2];
+{
+  declare const x: [3];
+  (x: TupleUnion); // ERROR: 1, 2
+  (x: $ReadOnly<TupleUnion>); // ERROR: 1, 2 (same order as above)
+}

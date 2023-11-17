@@ -6934,7 +6934,10 @@ struct
     | _ ->
       let destruct_union ?(f = (fun t -> t)) r members upper =
         let destructor = TypeDestructorT (use_op, reason, d) in
-        let unresolved = members |> Base.List.map ~f:(fun t -> Cache.Eval.id cx (f t) destructor) in
+        (* `ResolveUnionT` resolves in reverse order, so `rev_map` here so we resolve in the original order. *)
+        let unresolved =
+          members |> Base.List.rev_map ~f:(fun t -> Cache.Eval.id cx (f t) destructor)
+        in
         let (first, unresolved) = (List.hd unresolved, List.tl unresolved) in
         let u =
           ResolveUnionT { reason = r; unresolved; resolved = []; upper; id = Reason.mk_id () }

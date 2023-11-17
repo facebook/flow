@@ -228,20 +228,20 @@ References:
 Error ----------------------------------------------------------------------------------------------------- union.js:4:9
 
 Cannot cast `null` to `A` because: [incompatible-cast]
- - Either mixed [1] is incompatible with string [2].
- - Or mixed [1] is incompatible with number [3].
+ - Either mixed [1] is incompatible with number [2].
+ - Or mixed [1] is incompatible with string [3].
 
    union.js:4:9
    4| ((null: mixed): A); // Error: mixed ~> number | string
               ^^^^^ [1]
 
 References:
-   union.js:1:40
-   1| type A = $Call<(() => number) | (() => string)>;
-                                             ^^^^^^ [2]
    union.js:1:23
    1| type A = $Call<(() => number) | (() => string)>;
-                            ^^^^^^ [3]
+                            ^^^^^^ [2]
+   union.js:1:40
+   1| type A = $Call<(() => number) | (() => string)>;
+                                             ^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- union.js:5:2
@@ -298,20 +298,20 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:12:9
 
 Cannot cast `null` to `B` because: [incompatible-cast]
- - Either mixed [1] is incompatible with string [2].
- - Or mixed [1] is incompatible with number [3].
+ - Either mixed [1] is incompatible with number [2].
+ - Or mixed [1] is incompatible with string [3].
 
    union.js:12:9
    12| ((null: mixed): B); // Error: mixed ~> number | string
                ^^^^^ [1]
 
 References:
-   union.js:9:60
-    9| type B = $Call<(<T>(T) => T) | (<T>(any, T) => T), number, string>;
-                                                                  ^^^^^^ [2]
    union.js:9:52
     9| type B = $Call<(<T>(T) => T) | (<T>(any, T) => T), number, string>;
-                                                          ^^^^^^ [3]
+                                                          ^^^^^^ [2]
+   union.js:9:60
+    9| type B = $Call<(<T>(T) => T) | (<T>(any, T) => T), number, string>;
+                                                                  ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- union.js:13:2
