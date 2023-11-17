@@ -27,3 +27,12 @@ declare let content:
 if (content != null) {
   content = content ? 'TRUE' : 'FALSE'; // ok
 }
+
+{
+  declare opaque type S;
+  declare const x: ?S;
+
+  if (x == null) {
+    (x: null | void); // ok
+  }
+}
