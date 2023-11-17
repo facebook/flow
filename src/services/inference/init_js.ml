@@ -75,9 +75,7 @@ let check_lib_file ~ccx ~options mk_builtins ast =
   (* Lib files use only concrete locations, so this is not used. *)
   let aloc_table = lazy (ALoc.empty_table lib_file) in
   let resolve_require mref = Error (Reason.internal_module_name mref) in
-  let cx =
-    Context.make ccx metadata lib_file aloc_table resolve_require mk_builtins Context.InitLib
-  in
+  let cx = Context.make ccx metadata lib_file aloc_table resolve_require mk_builtins in
   let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   let (_ : (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t) =
     Infer.infer_lib_file ~lint_severities cx lib_file all_comments aloc_ast
@@ -148,7 +146,6 @@ let load_lib_files ~ccx ~options ~reader ~validate_libdefs files =
               (lazy (ALoc.empty_table builtin_leader_file_key))
               (fun mref -> Error (Reason.InternalModuleName mref))
               mk_builtins
-              Context.InitLib
           in
           ( if validate_libdefs then
             let errors =

@@ -660,7 +660,6 @@ let mk_builtins metadata master_cx =
         (lazy (ALoc.empty_table builtin_leader_file_key))
         (fun mref -> Error (Reason.InternalModuleName mref))
         (fun _ -> !builtins_ref)
-        Context.InitLib
     in
     let global_names =
       Type_sig_merge.merge_builtins cx builtin_leader_file_key builtin_locs builtins

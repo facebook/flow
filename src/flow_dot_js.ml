@@ -243,7 +243,6 @@ let infer_and_merge ~root filename js_config_object docblock ast file_sig =
       aloc_table
       resolve_require
       (Merge_js.mk_builtins metadata master_cx)
-      Context.Checking
   in
   resolved_requires :=
     SMap.mapi

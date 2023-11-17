@@ -118,14 +118,7 @@ let dummy_context () =
   let metadata = stub_metadata ~root ~checked:true in
   let aloc_table = lazy (ALoc.empty_table dummy_filename) in
   let resolve_require _ = Ok (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))) in
-  Context.make
-    ccx
-    metadata
-    dummy_filename
-    aloc_table
-    resolve_require
-    (fun _ -> builtins)
-    Context.Checking
+  Context.make ccx metadata dummy_filename aloc_table resolve_require (fun _ -> builtins)
 
 let typed_ast_of_ast cx ast =
   let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in

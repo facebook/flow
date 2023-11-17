@@ -202,18 +202,6 @@ type component_t = {
 }
 [@@warning "-69"]
 
-type phase =
-  | InitLib
-  | Checking
-  | Merging
-  | PostInference
-
-let string_of_phase = function
-  | InitLib -> "InitLib"
-  | Checking -> "Checking"
-  | Merging -> "Merging"
-  | PostInference -> "PostInference"
-
 type typing_mode =
   | CheckingMode
   | SynthesisMode
@@ -224,7 +212,6 @@ type resolved_require = (Type.t, Reason.name) result
 type t = {
   ccx: component_t;
   file: File_key.t;
-  mutable phase: phase;
   aloc_table: ALoc.table Lazy.t;
   metadata: metadata;
   resolve_require: resolve_require;
@@ -407,13 +394,12 @@ let make_ccx () =
     signature_help_callee = ALocMap.empty;
   }
 
-let make ccx metadata file aloc_table resolve_require mk_builtins phase =
+let make ccx metadata file aloc_table resolve_require mk_builtins =
   ccx.aloc_tables <- Utils_js.FilenameMap.add file aloc_table ccx.aloc_tables;
   let cx =
     {
       ccx;
       file;
-      phase;
       aloc_table;
       metadata;
       resolve_require;
@@ -456,7 +442,6 @@ let module_kind cx =
   info.Module_info.kind
 
 (* accessors *)
-let current_phase cx = cx.phase
 
 let all_unresolved cx = cx.ccx.all_unresolved
 
@@ -745,11 +730,6 @@ let run_in_implicit_instantiation_mode cx f =
   let saved = in_implicit_instantiation cx in
   cx.ccx.in_implicit_instantiation <- true;
   Exception.protect ~f ~finally:(fun () -> cx.ccx.in_implicit_instantiation <- saved)
-
-let run_in_post_inference_mode cx f =
-  let saved = cx.phase in
-  cx.phase <- PostInference;
-  Exception.protect ~f ~finally:(fun () -> cx.phase <- saved)
 
 let set_property_maps cx property_maps = cx.ccx.sig_cx <- { cx.ccx.sig_cx with property_maps }
 

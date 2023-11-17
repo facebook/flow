@@ -258,7 +258,6 @@ let mk_cx ~verbose () =
     aloc_table
     resolve_require
     (Merge_js.mk_builtins metadata (TypeLoader.get_master_cx ()))
-    Context.Checking
 
 let mk_hint base_t ops =
   ops

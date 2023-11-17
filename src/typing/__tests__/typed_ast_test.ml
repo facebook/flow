@@ -104,7 +104,7 @@ let before_and_after_stmts file_name =
     let aloc_table = lazy (ALoc.empty_table file_key) in
     let resolve_require mref = Error (Reason.internal_module_name mref) in
     let ccx = Context.make_ccx () in
-    Context.make ccx metadata file_key aloc_table resolve_require mk_builtins Context.Checking
+    Context.make ccx metadata file_key aloc_table resolve_require mk_builtins
   in
   let stmts = Base.List.map ~f:Ast_loc_utils.loc_to_aloc_mapper#statement stmts in
   let (_, { Flow_ast.Program.statements = t_stmts; _ }) =

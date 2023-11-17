@@ -732,10 +732,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               in
               reconstruct_ast t None
           )
-        | _
-          when Type_env.local_scope_entry_exists cx name_loc
-               && Context.current_phase cx <> Context.InitLib ->
-          local_generic_type ()
+        | _ when Type_env.local_scope_entry_exists cx name_loc -> local_generic_type ()
         (* Temporary base types with literal information *)
         | "$TEMPORARY$number" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->

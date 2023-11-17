@@ -111,7 +111,7 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
       let docblock = Parsing_heaps.read_docblock_unsafe file_key parse in
       let metadata = Context.docblock_overrides docblock file_key base_metadata in
       let resolve_require mref = Lazy.force (SMap.find mref !resolved_requires) in
-      Context.make ccx metadata file_key aloc_table resolve_require mk_builtins Context.Merging
+      Context.make ccx metadata file_key aloc_table resolve_require mk_builtins
     in
 
     resolved_requires := SMap.mapi (fun mref m -> lazy (dep_module_t cx mref m)) resolved_modules;
@@ -285,9 +285,7 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
     let metadata = Context.docblock_overrides docblock file_key base_metadata in
     let resolved_requires = ref SMap.empty in
     let resolve_require mref = SMap.find mref !resolved_requires in
-    let cx =
-      Context.make ccx metadata file_key aloc_table resolve_require mk_builtins Context.Checking
-    in
+    let cx = Context.make ccx metadata file_key aloc_table resolve_require mk_builtins in
     resolved_requires := SMap.mapi (dep_module_t cx) resolved_modules;
     ConsGen.set_dst_cx cx;
     let (typed_ast, obj_to_obj_map) =

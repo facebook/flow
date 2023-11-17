@@ -107,14 +107,6 @@ type metadata = {
   use_mixed_in_catch_variables: bool;
 }
 
-type phase =
-  | InitLib
-  | Checking
-  | Merging
-  | PostInference
-
-val string_of_phase : phase -> string
-
 type typing_mode =
   | CheckingMode
   | SynthesisMode
@@ -143,7 +135,6 @@ val make :
   ALoc.table Lazy.t ->
   resolve_require ->
   (t -> Builtins.t) ->
-  phase ->
   t
 
 val metadata_of_options : Options.t -> metadata
@@ -153,8 +144,6 @@ val docblock_overrides : Docblock.t -> File_key.t -> metadata -> metadata
 val sig_cx : t -> sig_t
 
 (* accessors *)
-val current_phase : t -> phase
-
 val all_unresolved : t -> ISet.t IMap.t
 
 val metadata : t -> metadata
@@ -360,8 +349,6 @@ val set_all_unresolved : t -> ISet.t IMap.t -> unit
 val set_graph : t -> Type.Constraint.graph -> unit
 
 val run_in_implicit_instantiation_mode : t -> (unit -> 'a) -> 'a
-
-val run_in_post_inference_mode : t -> (unit -> 'a) -> 'a
 
 val set_property_maps : t -> Type.Properties.map -> unit
 
