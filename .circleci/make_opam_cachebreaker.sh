@@ -6,6 +6,7 @@
 
 make print-switch
 make print-jsoo-version
+make print-ounit-version
 opam --version
 gcc -dumpfullversion -dumpversion
 cat flowtype.opam

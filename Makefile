@@ -16,6 +16,7 @@ else
 endif
 
 JS_OF_OCAML_VERSION=5.1.1
+OUNIT_VERSION=2.2.2.4
 
 # set FLOW_RELEASE=[1|true] or CI=true for an optimized build; otherwise,
 # defaults to dev mode that builds faster but is less efficient at runtime.
@@ -55,11 +56,11 @@ deps:
 
 .PHONY: deps-js
 deps-js:
-	opam install js_of_ocaml.$(JS_OF_OCAML_VERSION)
+	opam install js_of_ocaml.$(JS_OF_OCAML_VERSION) --yes
 
 .PHONY: deps-test
 deps-test:
-	opam install ounit2.2.2.4
+	opam install ounit$(OUNIT_VERSION)
 
 clean:
 	if command -v dune >/dev/null; then dune clean; fi
@@ -138,3 +139,6 @@ print-switch:
 
 print-jsoo-version:
 	@echo $(JS_OF_OCAML_VERSION)
+
+print-ounit-version:
+	@echo $(OUNIT_VERSION)
