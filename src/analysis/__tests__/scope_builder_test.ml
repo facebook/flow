@@ -70,6 +70,33 @@ let mk_scope_builder_toplevel_scopes_test
   let printer = String.concat ", " in
   assert_equal ~ctxt ~printer expected_defs_in_toplevel actual_defs_in_toplevel
 
+let mk_autocomplete_identifiers_test contents ?(enable_enums = false) ac_loc expected_names ctxt =
+  let scope_info = Scope_builder.program ~enable_enums ~with_types:false (parse contents) in
+  (* get the innermost scope enclosing the requested location *)
+  let ac_scope_id = Scope_api.closest_enclosing_scope scope_info ac_loc Reason.in_range in
+  (* gather all in-scope variables *)
+  let actual_names =
+    Scope_api.fold_scope_chain
+      scope_info
+      (fun _ scope acc ->
+        let scope_vars = scope.Scope_api.Scope.defs in
+        let relevant_scope_vars =
+          SMap.filter
+            (fun _name { Scope_api.Def.locs; kind; _ } ->
+              Bindings.allow_forward_ref kind || Loc.compare (Nel.hd locs) ac_loc < 0)
+            scope_vars
+          |> SMap.keys
+          |> SSet.of_list
+        in
+        SSet.union acc relevant_scope_vars)
+      ac_scope_id
+      SSet.empty
+    |> SSet.elements
+    |> Base.List.sort ~compare:String.compare
+  in
+  let printer = String.concat ", " in
+  assert_equal ~ctxt ~printer expected_names actual_names
+
 let mk_scope_builder_scope_loc_test ?(enable_enums = false) contents expected_scope_locs ctxt =
   let info = Scope_builder.program ~enable_enums ~with_types:true (parse contents) in
   let scope_locs =
@@ -385,4 +412,20 @@ let tests =
          >:: mk_scope_builder_scope_loc_test
                "component Foo(param: T) {};"
                [(0, mk_loc (1, 0) (1, 27)); (1, mk_loc (1, 13) (1, 23))];
+         "identifier_test_fun"
+         >:: mk_autocomplete_identifiers_test
+               "function F() {
+                  const xaaa = 42;
+                  const y = x
+               }"
+               (mk_loc (3, 13) (3, 13))
+               ["F"; "xaaa"];
+         "identifier_test_component"
+         >:: mk_autocomplete_identifiers_test
+               "component F() {
+                  const xaaa = 42;
+                  const y = x
+               }"
+               (mk_loc (3, 13) (3, 13))
+               ["F"];
        ]
