@@ -1506,40 +1506,9 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:640:26
-                                 v
-   640|   declare export default {
-   641|     +DOM: typeof DOM,
-   642|     +version: typeof version,
-   643|     +checkPropTypes: typeof checkPropTypes,
-   644|     +memo: typeof memo,
-   645|     +lazy: typeof lazy,
-   646|     +createClass: typeof createClass,
-   647|     +createContext: typeof createContext,
-   648|     +createElement: typeof createElement,
-   649|     +cloneElement: typeof cloneElement,
-   650|     +createFactory: typeof createFactory,
-   651|     +createRef: typeof createRef,
-   652|     +forwardRef: typeof forwardRef,
-   653|     +isValidElement: typeof isValidElement,
-   654|     +Component: typeof Component,
-      :
-   664|     +useReducer: typeof useReducer,
-   665|     +useRef: typeof useRef,
-   666|     +useEffect: typeof useEffect,
-   667|     +useLayoutEffect: typeof useLayoutEffect,
-   668|     +useCallback: typeof useCallback,
-   669|     +useMemo: typeof useMemo,
-   670|     +useImperativeHandle: typeof useImperativeHandle,
-   671|     +useTransition: typeof useTransition,
-   672|     +useDeferredValue: typeof useDeferredValue,
-   673|     +startTransition: typeof startTransition,
-   674|     +useId: typeof useId,
-   675|     +useInsertionEffect: typeof useInsertionEffect,
-   676|     +useSyncExternalStore: typeof useSyncExternalStore,
-   677|     ...
-   678|   };
-          ^ [1]
+   <BUILTINS>/react.js:679:26
+   679|   declare export default typeof React;
+                                 ^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------- useContext_hook.js:19:18
@@ -1647,40 +1616,9 @@ Cannot call `React.useDebugValue` because property `useDebugValue` is missing in
                                      ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:640:26
-                                 v
-   640|   declare export default {
-   641|     +DOM: typeof DOM,
-   642|     +version: typeof version,
-   643|     +checkPropTypes: typeof checkPropTypes,
-   644|     +memo: typeof memo,
-   645|     +lazy: typeof lazy,
-   646|     +createClass: typeof createClass,
-   647|     +createContext: typeof createContext,
-   648|     +createElement: typeof createElement,
-   649|     +cloneElement: typeof cloneElement,
-   650|     +createFactory: typeof createFactory,
-   651|     +createRef: typeof createRef,
-   652|     +forwardRef: typeof forwardRef,
-   653|     +isValidElement: typeof isValidElement,
-   654|     +Component: typeof Component,
-      :
-   664|     +useReducer: typeof useReducer,
-   665|     +useRef: typeof useRef,
-   666|     +useEffect: typeof useEffect,
-   667|     +useLayoutEffect: typeof useLayoutEffect,
-   668|     +useCallback: typeof useCallback,
-   669|     +useMemo: typeof useMemo,
-   670|     +useImperativeHandle: typeof useImperativeHandle,
-   671|     +useTransition: typeof useTransition,
-   672|     +useDeferredValue: typeof useDeferredValue,
-   673|     +startTransition: typeof startTransition,
-   674|     +useId: typeof useId,
-   675|     +useInsertionEffect: typeof useInsertionEffect,
-   676|     +useSyncExternalStore: typeof useSyncExternalStore,
-   677|     ...
-   678|   };
-          ^ [1]
+   <BUILTINS>/react.js:679:26
+   679|   declare export default typeof React;
+                                 ^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- useEffect_hook.js:4:9
@@ -1978,40 +1916,9 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:640:26
-                                 v
-   640|   declare export default {
-   641|     +DOM: typeof DOM,
-   642|     +version: typeof version,
-   643|     +checkPropTypes: typeof checkPropTypes,
-   644|     +memo: typeof memo,
-   645|     +lazy: typeof lazy,
-   646|     +createClass: typeof createClass,
-   647|     +createContext: typeof createContext,
-   648|     +createElement: typeof createElement,
-   649|     +cloneElement: typeof cloneElement,
-   650|     +createFactory: typeof createFactory,
-   651|     +createRef: typeof createRef,
-   652|     +forwardRef: typeof forwardRef,
-   653|     +isValidElement: typeof isValidElement,
-   654|     +Component: typeof Component,
-      :
-   664|     +useReducer: typeof useReducer,
-   665|     +useRef: typeof useRef,
-   666|     +useEffect: typeof useEffect,
-   667|     +useLayoutEffect: typeof useLayoutEffect,
-   668|     +useCallback: typeof useCallback,
-   669|     +useMemo: typeof useMemo,
-   670|     +useImperativeHandle: typeof useImperativeHandle,
-   671|     +useTransition: typeof useTransition,
-   672|     +useDeferredValue: typeof useDeferredValue,
-   673|     +startTransition: typeof startTransition,
-   674|     +useId: typeof useId,
-   675|     +useInsertionEffect: typeof useInsertionEffect,
-   676|     +useSyncExternalStore: typeof useSyncExternalStore,
-   677|     ...
-   678|   };
-          ^ [1]
+   <BUILTINS>/react.js:679:26
+   679|   declare export default typeof React;
+                                 ^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------ useMutationEffect_hook.js:9:9
@@ -2023,40 +1930,9 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:640:26
-                                 v
-   640|   declare export default {
-   641|     +DOM: typeof DOM,
-   642|     +version: typeof version,
-   643|     +checkPropTypes: typeof checkPropTypes,
-   644|     +memo: typeof memo,
-   645|     +lazy: typeof lazy,
-   646|     +createClass: typeof createClass,
-   647|     +createContext: typeof createContext,
-   648|     +createElement: typeof createElement,
-   649|     +cloneElement: typeof cloneElement,
-   650|     +createFactory: typeof createFactory,
-   651|     +createRef: typeof createRef,
-   652|     +forwardRef: typeof forwardRef,
-   653|     +isValidElement: typeof isValidElement,
-   654|     +Component: typeof Component,
-      :
-   664|     +useReducer: typeof useReducer,
-   665|     +useRef: typeof useRef,
-   666|     +useEffect: typeof useEffect,
-   667|     +useLayoutEffect: typeof useLayoutEffect,
-   668|     +useCallback: typeof useCallback,
-   669|     +useMemo: typeof useMemo,
-   670|     +useImperativeHandle: typeof useImperativeHandle,
-   671|     +useTransition: typeof useTransition,
-   672|     +useDeferredValue: typeof useDeferredValue,
-   673|     +startTransition: typeof startTransition,
-   674|     +useId: typeof useId,
-   675|     +useInsertionEffect: typeof useInsertionEffect,
-   676|     +useSyncExternalStore: typeof useSyncExternalStore,
-   677|     ...
-   678|   };
-          ^ [1]
+   <BUILTINS>/react.js:679:26
+   679|   declare export default typeof React;
+                                 ^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:10:9
@@ -2068,40 +1944,9 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:640:26
-                                 v
-   640|   declare export default {
-   641|     +DOM: typeof DOM,
-   642|     +version: typeof version,
-   643|     +checkPropTypes: typeof checkPropTypes,
-   644|     +memo: typeof memo,
-   645|     +lazy: typeof lazy,
-   646|     +createClass: typeof createClass,
-   647|     +createContext: typeof createContext,
-   648|     +createElement: typeof createElement,
-   649|     +cloneElement: typeof cloneElement,
-   650|     +createFactory: typeof createFactory,
-   651|     +createRef: typeof createRef,
-   652|     +forwardRef: typeof forwardRef,
-   653|     +isValidElement: typeof isValidElement,
-   654|     +Component: typeof Component,
-      :
-   664|     +useReducer: typeof useReducer,
-   665|     +useRef: typeof useRef,
-   666|     +useEffect: typeof useEffect,
-   667|     +useLayoutEffect: typeof useLayoutEffect,
-   668|     +useCallback: typeof useCallback,
-   669|     +useMemo: typeof useMemo,
-   670|     +useImperativeHandle: typeof useImperativeHandle,
-   671|     +useTransition: typeof useTransition,
-   672|     +useDeferredValue: typeof useDeferredValue,
-   673|     +startTransition: typeof startTransition,
-   674|     +useId: typeof useId,
-   675|     +useInsertionEffect: typeof useInsertionEffect,
-   676|     +useSyncExternalStore: typeof useSyncExternalStore,
-   677|     ...
-   678|   };
-          ^ [1]
+   <BUILTINS>/react.js:679:26
+   679|   declare export default typeof React;
+                                 ^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:11:9
@@ -2113,40 +1958,9 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:640:26
-                                 v
-   640|   declare export default {
-   641|     +DOM: typeof DOM,
-   642|     +version: typeof version,
-   643|     +checkPropTypes: typeof checkPropTypes,
-   644|     +memo: typeof memo,
-   645|     +lazy: typeof lazy,
-   646|     +createClass: typeof createClass,
-   647|     +createContext: typeof createContext,
-   648|     +createElement: typeof createElement,
-   649|     +cloneElement: typeof cloneElement,
-   650|     +createFactory: typeof createFactory,
-   651|     +createRef: typeof createRef,
-   652|     +forwardRef: typeof forwardRef,
-   653|     +isValidElement: typeof isValidElement,
-   654|     +Component: typeof Component,
-      :
-   664|     +useReducer: typeof useReducer,
-   665|     +useRef: typeof useRef,
-   666|     +useEffect: typeof useEffect,
-   667|     +useLayoutEffect: typeof useLayoutEffect,
-   668|     +useCallback: typeof useCallback,
-   669|     +useMemo: typeof useMemo,
-   670|     +useImperativeHandle: typeof useImperativeHandle,
-   671|     +useTransition: typeof useTransition,
-   672|     +useDeferredValue: typeof useDeferredValue,
-   673|     +startTransition: typeof startTransition,
-   674|     +useId: typeof useId,
-   675|     +useInsertionEffect: typeof useInsertionEffect,
-   676|     +useSyncExternalStore: typeof useSyncExternalStore,
-   677|     ...
-   678|   };
-          ^ [1]
+   <BUILTINS>/react.js:679:26
+   679|   declare export default typeof React;
+                                 ^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:14:9
@@ -2158,40 +1972,9 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:640:26
-                                 v
-   640|   declare export default {
-   641|     +DOM: typeof DOM,
-   642|     +version: typeof version,
-   643|     +checkPropTypes: typeof checkPropTypes,
-   644|     +memo: typeof memo,
-   645|     +lazy: typeof lazy,
-   646|     +createClass: typeof createClass,
-   647|     +createContext: typeof createContext,
-   648|     +createElement: typeof createElement,
-   649|     +cloneElement: typeof cloneElement,
-   650|     +createFactory: typeof createFactory,
-   651|     +createRef: typeof createRef,
-   652|     +forwardRef: typeof forwardRef,
-   653|     +isValidElement: typeof isValidElement,
-   654|     +Component: typeof Component,
-      :
-   664|     +useReducer: typeof useReducer,
-   665|     +useRef: typeof useRef,
-   666|     +useEffect: typeof useEffect,
-   667|     +useLayoutEffect: typeof useLayoutEffect,
-   668|     +useCallback: typeof useCallback,
-   669|     +useMemo: typeof useMemo,
-   670|     +useImperativeHandle: typeof useImperativeHandle,
-   671|     +useTransition: typeof useTransition,
-   672|     +useDeferredValue: typeof useDeferredValue,
-   673|     +startTransition: typeof startTransition,
-   674|     +useId: typeof useId,
-   675|     +useInsertionEffect: typeof useInsertionEffect,
-   676|     +useSyncExternalStore: typeof useSyncExternalStore,
-   677|     ...
-   678|   };
-          ^ [1]
+   <BUILTINS>/react.js:679:26
+   679|   declare export default typeof React;
+                                 ^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:15:9
@@ -2203,40 +1986,9 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:640:26
-                                 v
-   640|   declare export default {
-   641|     +DOM: typeof DOM,
-   642|     +version: typeof version,
-   643|     +checkPropTypes: typeof checkPropTypes,
-   644|     +memo: typeof memo,
-   645|     +lazy: typeof lazy,
-   646|     +createClass: typeof createClass,
-   647|     +createContext: typeof createContext,
-   648|     +createElement: typeof createElement,
-   649|     +cloneElement: typeof cloneElement,
-   650|     +createFactory: typeof createFactory,
-   651|     +createRef: typeof createRef,
-   652|     +forwardRef: typeof forwardRef,
-   653|     +isValidElement: typeof isValidElement,
-   654|     +Component: typeof Component,
-      :
-   664|     +useReducer: typeof useReducer,
-   665|     +useRef: typeof useRef,
-   666|     +useEffect: typeof useEffect,
-   667|     +useLayoutEffect: typeof useLayoutEffect,
-   668|     +useCallback: typeof useCallback,
-   669|     +useMemo: typeof useMemo,
-   670|     +useImperativeHandle: typeof useImperativeHandle,
-   671|     +useTransition: typeof useTransition,
-   672|     +useDeferredValue: typeof useDeferredValue,
-   673|     +startTransition: typeof startTransition,
-   674|     +useId: typeof useId,
-   675|     +useInsertionEffect: typeof useInsertionEffect,
-   676|     +useSyncExternalStore: typeof useSyncExternalStore,
-   677|     ...
-   678|   };
-          ^ [1]
+   <BUILTINS>/react.js:679:26
+   679|   declare export default typeof React;
+                                 ^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:16:9
@@ -2248,40 +2000,9 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:640:26
-                                 v
-   640|   declare export default {
-   641|     +DOM: typeof DOM,
-   642|     +version: typeof version,
-   643|     +checkPropTypes: typeof checkPropTypes,
-   644|     +memo: typeof memo,
-   645|     +lazy: typeof lazy,
-   646|     +createClass: typeof createClass,
-   647|     +createContext: typeof createContext,
-   648|     +createElement: typeof createElement,
-   649|     +cloneElement: typeof cloneElement,
-   650|     +createFactory: typeof createFactory,
-   651|     +createRef: typeof createRef,
-   652|     +forwardRef: typeof forwardRef,
-   653|     +isValidElement: typeof isValidElement,
-   654|     +Component: typeof Component,
-      :
-   664|     +useReducer: typeof useReducer,
-   665|     +useRef: typeof useRef,
-   666|     +useEffect: typeof useEffect,
-   667|     +useLayoutEffect: typeof useLayoutEffect,
-   668|     +useCallback: typeof useCallback,
-   669|     +useMemo: typeof useMemo,
-   670|     +useImperativeHandle: typeof useImperativeHandle,
-   671|     +useTransition: typeof useTransition,
-   672|     +useDeferredValue: typeof useDeferredValue,
-   673|     +startTransition: typeof startTransition,
-   674|     +useId: typeof useId,
-   675|     +useInsertionEffect: typeof useInsertionEffect,
-   676|     +useSyncExternalStore: typeof useSyncExternalStore,
-   677|     ...
-   678|   };
-          ^ [1]
+   <BUILTINS>/react.js:679:26
+   679|   declare export default typeof React;
+                                 ^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:20:9
@@ -2293,40 +2014,9 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:640:26
-                                 v
-   640|   declare export default {
-   641|     +DOM: typeof DOM,
-   642|     +version: typeof version,
-   643|     +checkPropTypes: typeof checkPropTypes,
-   644|     +memo: typeof memo,
-   645|     +lazy: typeof lazy,
-   646|     +createClass: typeof createClass,
-   647|     +createContext: typeof createContext,
-   648|     +createElement: typeof createElement,
-   649|     +cloneElement: typeof cloneElement,
-   650|     +createFactory: typeof createFactory,
-   651|     +createRef: typeof createRef,
-   652|     +forwardRef: typeof forwardRef,
-   653|     +isValidElement: typeof isValidElement,
-   654|     +Component: typeof Component,
-      :
-   664|     +useReducer: typeof useReducer,
-   665|     +useRef: typeof useRef,
-   666|     +useEffect: typeof useEffect,
-   667|     +useLayoutEffect: typeof useLayoutEffect,
-   668|     +useCallback: typeof useCallback,
-   669|     +useMemo: typeof useMemo,
-   670|     +useImperativeHandle: typeof useImperativeHandle,
-   671|     +useTransition: typeof useTransition,
-   672|     +useDeferredValue: typeof useDeferredValue,
-   673|     +startTransition: typeof startTransition,
-   674|     +useId: typeof useId,
-   675|     +useInsertionEffect: typeof useInsertionEffect,
-   676|     +useSyncExternalStore: typeof useSyncExternalStore,
-   677|     ...
-   678|   };
-          ^ [1]
+   <BUILTINS>/react.js:679:26
+   679|   declare export default typeof React;
+                                 ^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:21:9
@@ -2338,40 +2028,9 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                 ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:640:26
-                                 v
-   640|   declare export default {
-   641|     +DOM: typeof DOM,
-   642|     +version: typeof version,
-   643|     +checkPropTypes: typeof checkPropTypes,
-   644|     +memo: typeof memo,
-   645|     +lazy: typeof lazy,
-   646|     +createClass: typeof createClass,
-   647|     +createContext: typeof createContext,
-   648|     +createElement: typeof createElement,
-   649|     +cloneElement: typeof cloneElement,
-   650|     +createFactory: typeof createFactory,
-   651|     +createRef: typeof createRef,
-   652|     +forwardRef: typeof forwardRef,
-   653|     +isValidElement: typeof isValidElement,
-   654|     +Component: typeof Component,
-      :
-   664|     +useReducer: typeof useReducer,
-   665|     +useRef: typeof useRef,
-   666|     +useEffect: typeof useEffect,
-   667|     +useLayoutEffect: typeof useLayoutEffect,
-   668|     +useCallback: typeof useCallback,
-   669|     +useMemo: typeof useMemo,
-   670|     +useImperativeHandle: typeof useImperativeHandle,
-   671|     +useTransition: typeof useTransition,
-   672|     +useDeferredValue: typeof useDeferredValue,
-   673|     +startTransition: typeof startTransition,
-   674|     +useId: typeof useId,
-   675|     +useInsertionEffect: typeof useInsertionEffect,
-   676|     +useSyncExternalStore: typeof useSyncExternalStore,
-   677|     ...
-   678|   };
-          ^ [1]
+   <BUILTINS>/react.js:679:26
+   679|   declare export default typeof React;
+                                 ^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- useReducer_hook.js:4:9
