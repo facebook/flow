@@ -75,11 +75,13 @@ let empty_result =
   }
 
 (**************************** internal *********************************)
-let parse_source_file ~options ~force_use_strict content file =
+let parse_source_file ~options content file =
   let use_strict =
-    match force_use_strict with
-    | Some use_strict -> use_strict
-    | None -> Options.modules_are_use_strict options
+    if File_key.is_lib_file file then
+      (* lib files are always "use strict" *)
+      true
+    else
+      Options.modules_are_use_strict options
   in
   let parse_options =
     Some
@@ -121,15 +123,16 @@ let parse_package_json_file ~options content file =
 (* Allow types based on `types_mode`, using the @flow annotation in the
    file header if possible. Note, this should be consistent with
    Infer_service.apply_docblock_overrides w.r.t. the metadata.checked flag. *)
-let types_checked ~force_types options docblock =
-  match force_types with
-  | Some types -> types
-  | None ->
+let types_checked options file docblock =
+  if File_key.is_lib_file file then
+    (* types are always allowed in lib files *)
+    true
+  else
     let open Docblock in
-    (match flow docblock with
+    match flow docblock with
     | None -> Options.all options
     | Some OptOut -> false
-    | Some (OptIn | OptInStrict | OptInStrictLocal) -> true)
+    | Some (OptIn | OptInStrict | OptInStrictLocal) -> true
 
 let parse_file_sig options file docblock ast =
   let enable_enums = Options.enums options in
@@ -178,8 +181,7 @@ let parse_type_sig options docblock locs_to_dirtify file ast =
   in
   Type_sig_utils.parse_and_pack_module ~strict ~platform_availability_set sig_opts (Some file) ast
 
-let do_parse ~options ~docblock ?force_types ?force_use_strict ?(locs_to_dirtify = []) content file
-    =
+let do_parse ~options ~docblock ?(locs_to_dirtify = []) content file =
   try
     match file with
     | File_key.JsonFile str ->
@@ -191,10 +193,10 @@ let do_parse ~options ~docblock ?force_types ?force_use_strict ?(locs_to_dirtify
     | File_key.ResourceFile _ -> Parse_skip Skip_resource_file
     | _ ->
       (* either all=true or @flow pragma exists *)
-      if not (types_checked ~force_types options docblock) then
+      if not (types_checked options file docblock) then
         Parse_skip Skip_non_flow_file
       else
-        let (ast, parse_errors) = parse_source_file ~options ~force_use_strict content file in
+        let (ast, parse_errors) = parse_source_file ~options content file in
         let (file_sig, tolerable_errors) = parse_file_sig options file docblock ast in
         let requires = File_sig.require_set file_sig |> SSet.elements |> Array.of_list in
         (*If you want efficiency, can compute globals along with file_sig in the above function since scope is computed when computing file_sig*)
@@ -281,8 +283,6 @@ let reducer
     ~options
     ~skip_changed
     ~skip_unchanged
-    ~force_types
-    ~force_use_strict
     ~locs_to_dirtify
     ~noflow
     ~exported_module
@@ -349,16 +349,7 @@ let reducer
               docblock
           in
           begin
-            match
-              do_parse
-                ~options
-                ~docblock
-                ?force_types
-                ?force_use_strict
-                ~locs_to_dirtify
-                content
-                file_key
-            with
+            match do_parse ~options ~docblock ~locs_to_dirtify content file_key with
             | Parse_ok
                 { ast; requires; file_sig; exports; imports; locs; type_sig; tolerable_errors } ->
               let file_sig = (file_sig, tolerable_errors) in
@@ -465,16 +456,8 @@ let next_of_filename_set ?(with_progress = false) workers filenames =
     MultiWorkerLwt.next workers (FilenameSet.elements filenames)
 
 let parse
-    ~worker_mutator
-    ~reader
-    ~options
-    ~skip_changed
-    ~skip_unchanged
-    ~force_types
-    ~force_use_strict
-    ~locs_to_dirtify
-    workers
-    next : results Lwt.t =
+    ~worker_mutator ~reader ~options ~skip_changed ~skip_unchanged ~locs_to_dirtify workers next :
+    results Lwt.t =
   let t = Unix.gettimeofday () in
   let noflow fn = Files.is_untyped (Options.file_options options) (File_key.to_string fn) in
   let exported_module = Module_js.exported_module ~options in
@@ -485,8 +468,6 @@ let parse
       ~options
       ~skip_changed
       ~skip_unchanged
-      ~force_types
-      ~force_use_strict
       ~locs_to_dirtify
       ~noflow
       ~exported_module
@@ -517,16 +498,7 @@ let parse
     ();
   Lwt.return results
 
-let reparse
-    ~transaction
-    ~reader
-    ~options
-    ~force_types
-    ~force_use_strict
-    ~locs_to_dirtify
-    ~with_progress
-    ~workers
-    ~modified:files =
+let reparse ~transaction ~reader ~options ~locs_to_dirtify ~with_progress ~workers ~modified:files =
   let (master_mutator, worker_mutator) = Parsing_heaps.Reparse_mutator.create transaction files in
   let next = next_of_filename_set ~with_progress workers files in
   let%lwt results =
@@ -536,8 +508,6 @@ let reparse
       ~options
       ~skip_changed:false
       ~skip_unchanged:(locs_to_dirtify = [])
-      ~force_types
-      ~force_use_strict
       ~locs_to_dirtify
       workers
       next
@@ -546,8 +516,7 @@ let reparse
   Parsing_heaps.Reparse_mutator.record_not_found master_mutator results.not_found;
   Lwt.return results
 
-let parse_with_defaults
-    ?force_types ?force_use_strict ?(locs_to_dirtify = []) ~reader options workers next =
+let parse_with_defaults ?(locs_to_dirtify = []) ~reader options workers next =
   (* This isn't a recheck, so there shouldn't be any unchanged *)
   let worker_mutator = Parsing_heaps.Parse_mutator.create () in
   parse
@@ -556,32 +525,13 @@ let parse_with_defaults
     ~options
     ~skip_changed:false
     ~skip_unchanged:false
-    ~force_types
-    ~force_use_strict
     ~locs_to_dirtify
     workers
     next
 
 let reparse_with_defaults
-    ~transaction
-    ~reader
-    ?force_types
-    ?force_use_strict
-    ?(locs_to_dirtify = [])
-    ~with_progress
-    ~workers
-    ~modified
-    options =
-  reparse
-    ~transaction
-    ~reader
-    ~options
-    ~force_types
-    ~force_use_strict
-    ~locs_to_dirtify
-    ~with_progress
-    ~workers
-    ~modified
+    ~transaction ~reader ?(locs_to_dirtify = []) ~with_progress ~workers ~modified options =
+  reparse ~transaction ~reader ~options ~locs_to_dirtify ~with_progress ~workers ~modified
 
 (* ensure_parsed takes a set of files, finds the files which haven't been parsed, and parses them.
  * Any not-yet-parsed files who's on-disk contents don't match their already-known hash are skipped
@@ -625,8 +575,6 @@ let ensure_parsed ~reader options workers files =
       ~options
       ~skip_changed:true
       ~skip_unchanged:false
-      ~force_types:None
-      ~force_use_strict:None
       ~locs_to_dirtify:[]
       workers
       next

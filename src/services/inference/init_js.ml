@@ -33,19 +33,13 @@ type lib_result =
   | Lib_skip
 
 let parse_lib_file ~reader options file =
-  (* types are always allowed in lib files *)
-  let force_types = true in
-  (* lib files are always "use strict" *)
-  let force_use_strict = true in
   (* do not parallelize *)
   let workers = None in
   try%lwt
     let lib_file = File_key.LibFile file in
     let filename_set = FilenameSet.singleton lib_file in
     let next = Parsing.next_of_filename_set (* workers *) None filename_set in
-    let%lwt results =
-      Parsing.parse_with_defaults ~force_types ~force_use_strict ~reader options workers next
-    in
+    let%lwt results = Parsing.parse_with_defaults ~reader options workers next in
     Lwt.return
       ( if is_ok results then
         let ast = Parsing_heaps.Mutator_reader.get_ast_unsafe ~reader lib_file in
