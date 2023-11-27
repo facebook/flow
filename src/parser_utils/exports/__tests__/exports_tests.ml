@@ -102,7 +102,7 @@ let%expect_test "cjs_named_const" =
     exports.x = x;
   |};
   [%expect {|
-    [Default; (Named "x")]
+    [(Default None); (Named "x")]
   |}]
 
 let%expect_test "es6_default_string_literal" =
@@ -110,7 +110,7 @@ let%expect_test "es6_default_string_literal" =
     export default "foo";
   |};
   [%expect {|
-    [Default]
+    [(Default None)]
   |}]
 
 let%expect_test "cjs_default_string_literal" =
@@ -118,7 +118,7 @@ let%expect_test "cjs_default_string_literal" =
     module.exports = "foo";
   |};
   [%expect {|
-    [Default]
+    [(Default None)]
   |}]
 
 let%expect_test "es6_default_number_literal" =
@@ -126,7 +126,7 @@ let%expect_test "es6_default_number_literal" =
     export default 0;
   |};
   [%expect {|
-    [Default]
+    [(Default None)]
   |}]
 
 let%expect_test "cjs_default_number_literal" =
@@ -134,7 +134,7 @@ let%expect_test "cjs_default_number_literal" =
     module.exports = 0;
   |};
   [%expect {|
-    [Default]
+    [(Default None)]
   |}]
 
 let%expect_test "es6_named_type_ref" =
@@ -144,7 +144,7 @@ let%expect_test "es6_named_type_ref" =
     export default 0; // need an exported value to force ES6 modules
   |};
   [%expect {|
-    [(NamedType "U"); Default]
+    [(NamedType "U"); (Default None)]
   |}]
 
 let%expect_test "cjs_named_type_ref" =
@@ -162,7 +162,7 @@ let%expect_test "es6_named_type_binding" =
     export default 0; // need an exported value to force ES6 modules
   |};
   [%expect {|
-    [(NamedType "T"); Default]
+    [(NamedType "T"); (Default None)]
   |}]
 
 let%expect_test "cjs_named_type_binding" =
@@ -179,7 +179,7 @@ let%expect_test "es6_named_opaque_type_binding" =
     export default 0; // need an exported value to force ES6 modules
   |};
   [%expect {|
-    [(NamedType "T"); Default]
+    [(NamedType "T"); (Default None)]
   |}]
 
 let%expect_test "cjs_named_opaque_type_binding" =
@@ -198,7 +198,7 @@ let%expect_test "es6_default_class" =
     };
   |};
   [%expect {|
-    [Default; DefaultType]
+    [(Default (Some "Foo")); (DefaultType (Some "Foo"))]
   |}]
 
 let%expect_test "cjs_default_class_ref" =
@@ -211,7 +211,7 @@ let%expect_test "cjs_default_class_ref" =
   |};
   (* TODO: also DefaultType *)
   [%expect {|
-    [Default]
+    [(Default None)]
   |}]
 
 let%expect_test "cjs_default_class_expr" =
@@ -223,7 +223,7 @@ let%expect_test "cjs_default_class_expr" =
   |};
   (* TODO: also DefaultType *)
   [%expect {|
-    [Default]
+    [(Default None)]
   |}]
 
 let%expect_test "es6_enum" =
@@ -246,7 +246,7 @@ let%expect_test "cjs_enum" =
     exports.E = E;
   |};
   [%expect {|
-    [Default; (Named "E"); (NamedType "E")]
+    [(Default None); (Named "E"); (NamedType "E")]
   |}]
 
 let%expect_test "es6_type_enum" =
@@ -256,7 +256,7 @@ let%expect_test "es6_type_enum" =
     export default 0; // need an exported value to force ES6 modules
   |};
   [%expect {|
-    [(NamedType "E"); Default]
+    [(NamedType "E"); (Default None)]
   |}]
 
 let%expect_test "cjs_type_enum" =
@@ -276,7 +276,7 @@ let%expect_test "es6_default_enum" =
     };
   |};
   [%expect {|
-    [Default; DefaultType]
+    [(Default (Some "E")); (DefaultType (Some "E"))]
   |}]
 
 let%expect_test "cjs_default_enum" =
@@ -289,7 +289,7 @@ let%expect_test "cjs_default_enum" =
   |};
   (* TODO: also DefaultType *)
   [%expect {|
-    [Default]
+    [(Default None)]
   |}]
 
 let%expect_test "cjs_default_named_enum" =
@@ -301,7 +301,7 @@ let%expect_test "cjs_default_named_enum" =
     module.exports = { E };
   |};
   [%expect {|
-    [Default; (Named "E"); (NamedType "E")]
+    [(Default None); (Named "E"); (NamedType "E")]
   |}]
 
 let%expect_test "es6_named_class_ref" =
@@ -319,7 +319,7 @@ let%expect_test "cjs_named_class_ref" =
     exports.Foo = Foo;
   |};
   [%expect {|
-    [Default; (Named "Foo"); (NamedType "Foo")]
+    [(Default None); (Named "Foo"); (NamedType "Foo")]
   |}]
 
 let%expect_test "es6_named_class_ref_ref" =
@@ -337,7 +337,7 @@ let%expect_test "cjs_named_class_ref_inline" =
     exports.Foo = class Foo {};
   |};
   [%expect {|
-    [Default; (Named "Foo"); (NamedType "Foo")]
+    [(Default None); (Named "Foo"); (NamedType "Foo")]
   |}]
 
 let%expect_test "es6_named_class_binding" =
@@ -357,7 +357,25 @@ let%expect_test "es6_default_obj" =
     };
   |};
   [%expect {|
-    [Default]
+    [(Default None)]
+  |}]
+
+let%expect_test "es6_default_variable" =
+  print_module {|
+    const foo = 3;
+    export default foo;
+  |};
+  [%expect {|
+    [(Default (Some "foo"))]
+  |}]
+
+let%expect_test "es6_declare_export_default_typeof_variable" =
+  print_module {|
+    const foo = 3;
+    declare export default typeof foo;
+  |};
+  [%expect {|
+    [(Default (Some "foo"))]
   |}]
 
 let%expect_test "cjs_default_obj" =
@@ -369,7 +387,7 @@ let%expect_test "cjs_default_obj" =
     };
   |};
   [%expect {|
-    [Default; (Named "foo"); (Named "baz"); (Named "bar")]
+    [(Default None); (Named "foo"); (Named "baz"); (Named "bar")]
   |}]
 
 let%expect_test "cjs_default_obj_ref" =
@@ -381,7 +399,7 @@ let%expect_test "cjs_default_obj_ref" =
     module.exports = O;
   |};
   [%expect {|
-    [Default; (Named "foo"); (Named "bar")]
+    [(Default None); (Named "foo"); (Named "bar")]
   |}]
 
 let%expect_test "cjs_default_obj_ref_annot" =
@@ -393,7 +411,7 @@ let%expect_test "cjs_default_obj_ref_annot" =
     module.exports = O;
   |};
   [%expect {|
-    [Default; (Named "foo"); (Named "bar")]
+    [(Default None); (Named "foo"); (Named "bar")]
   |}]
 
 let%expect_test "cjs_default_obj_ref_annot_ref" =
@@ -403,7 +421,7 @@ let%expect_test "cjs_default_obj_ref_annot_ref" =
     module.exports = O;
   |};
   [%expect {|
-    [Default; (Named "foo"); (Named "bar")]
+    [(Default None); (Named "foo"); (Named "bar")]
   |}]
 
 let%expect_test "es6_default_obj_type" =
@@ -414,7 +432,7 @@ let%expect_test "es6_default_obj_type" =
     }: { foo: number, bar: string });
   |};
   [%expect {|
-    [Default]
+    [(Default None)]
   |}]
 
 let%expect_test "cjs_default_obj_type" =
@@ -425,7 +443,7 @@ let%expect_test "cjs_default_obj_type" =
     }: { foo: number, bar: string });
   |};
   [%expect {|
-    [Default; (Named "foo"); (Named "bar")]
+    [(Default None); (Named "foo"); (Named "bar")]
   |}]
 
 let%expect_test "cjs_default_obj_type_app" =
@@ -434,7 +452,7 @@ let%expect_test "cjs_default_obj_type_app" =
     module.exports = ({ foo: 123 }: O<number>)
   |};
   [%expect {|
-    [Default; (Named "foo")]
+    [(Default None); (Named "foo")]
   |}]
 
 let%expect_test "cjs_default_obj_type_ref" =
@@ -443,7 +461,7 @@ let%expect_test "cjs_default_obj_type_ref" =
     module.exports = ({ foo: 123, bar: "bar"} : O);
   |};
   [%expect {|
-    [Default; (Named "foo"); (Named "bar")]
+    [(Default None); (Named "foo"); (Named "bar")]
   |}]
 
 let%expect_test "es6_default_obj_type_opaque" =
@@ -455,7 +473,7 @@ let%expect_test "es6_default_obj_type_opaque" =
     }: T);
   |};
   [%expect {|
-    [Default]
+    [(Default None)]
   |}]
 
 let%expect_test "cjs_default_obj_type_opaque" =
@@ -467,7 +485,7 @@ let%expect_test "cjs_default_obj_type_opaque" =
     }: T);
   |};
   [%expect {|
-    [Default]
+    [(Default None)]
   |}]
 
 let%expect_test "es6_default_obj_with_class_expr" =
@@ -478,7 +496,7 @@ let%expect_test "es6_default_obj_with_class_expr" =
     };
   |};
   [%expect {|
-    [Default]
+    [(Default None)]
   |}]
 
 let%expect_test "cjs_default_obj_with_class_expr" =
@@ -488,7 +506,7 @@ let%expect_test "cjs_default_obj_with_class_expr" =
     };
   |};
   [%expect {|
-    [Default; (Named "Foo"); (NamedType "Foo")]
+    [(Default None); (Named "Foo"); (NamedType "Foo")]
   |}]
 
 let%expect_test "cjs_default_obj_with_class_ref" =
@@ -497,7 +515,7 @@ let%expect_test "cjs_default_obj_with_class_ref" =
     module.exports = { Foo };
   |};
   [%expect {|
-    [Default; (Named "Foo"); (NamedType "Foo")]
+    [(Default None); (Named "Foo"); (NamedType "Foo")]
   |}]
 
 let%expect_test "cjs_default_obj_with_class_ref_inline" =
@@ -507,7 +525,7 @@ let%expect_test "cjs_default_obj_with_class_ref_inline" =
     };
   |};
   [%expect {|
-    [Default; (Named "Foo"); (NamedType "Foo")]
+    [(Default None); (Named "Foo"); (NamedType "Foo")]
   |}]
 
 let%expect_test "cjs_default_obj_with_string_literal" =
@@ -516,7 +534,7 @@ let%expect_test "cjs_default_obj_with_string_literal" =
     module.exports = { 'Foo bar': 123 }
   |};
   [%expect {|
-    [Default]
+    [(Default None)]
   |}]
 
 let%expect_test "cjs_default_pattern_ref" =
@@ -527,7 +545,7 @@ let%expect_test "cjs_default_pattern_ref" =
     module.exports = Foo;
   |};
   [%expect {|
-    [Default; (Named "foo")]
+    [(Default None); (Named "foo")]
   |}]
 
 let%expect_test "cjs_default_pattern_ref_of_ref" =
@@ -539,7 +557,7 @@ let%expect_test "cjs_default_pattern_ref_of_ref" =
     module.exports = Foo;
   |};
   [%expect {|
-    [Default; (Named "foo")]
+    [(Default None); (Named "foo")]
   |}]
 
 let%expect_test "cjs_default_pattern_tyref" =
@@ -551,7 +569,7 @@ let%expect_test "cjs_default_pattern_tyref" =
   |};
   (* TODO: also DefaultType *)
   [%expect {|
-    [Default]
+    [(Default None)]
   |}]
 
 let%expect_test "cjs_default_eval_getprop" =
@@ -560,7 +578,7 @@ let%expect_test "cjs_default_eval_getprop" =
     module.exports = O.prop;
   |};
   [%expect {|
-    [Default; (Named "foo")]
+    [(Default None); (Named "foo")]
   |}]
 
 let%expect_test "cjs_default_eval_getprop_method" =
@@ -569,7 +587,7 @@ let%expect_test "cjs_default_eval_getprop_method" =
     module.exports = O.prop;
   |};
   [%expect {|
-    [Default]
+    [(Default None)]
   |}]
 
 let%expect_test "cjs_default_eval_getprop_of_variable" =
@@ -579,7 +597,7 @@ let%expect_test "cjs_default_eval_getprop_of_variable" =
     module.exports = T;
   |};
   [%expect {|
-    [Default; (Named "foo")]
+    [(Default None); (Named "foo")]
   |}]
 
 let%expect_test "cjs_default_nested_typealias" =
@@ -590,7 +608,7 @@ let%expect_test "cjs_default_nested_typealias" =
     module.exports = X;
   |};
   [%expect {|
-    [Default; (Named "foo"); (Named "bar")]
+    [(Default None); (Named "foo"); (Named "bar")]
   |}]
 
 let%expect_test "cjs_default_nested_ref" =
@@ -601,7 +619,7 @@ let%expect_test "cjs_default_nested_ref" =
     module.exports = Y;
   |};
   [%expect {|
-    [Default; (Named "foo"); (Named "bar")]
+    [(Default None); (Named "foo"); (Named "bar")]
   |}]
 
 let%expect_test "es6_default_function" =
@@ -609,7 +627,7 @@ let%expect_test "es6_default_function" =
     export default function() {}
   |};
   [%expect {|
-    [Default]
+    [(Default None)]
   |}]
 
 let%expect_test "cjs_default_function" =
@@ -617,7 +635,7 @@ let%expect_test "cjs_default_function" =
     module.exports = function foo(): void {}
   |};
   [%expect {|
-    [Default]
+    [(Default None)]
   |}]
 
 let%expect_test "cjs_default_function_ref" =
@@ -627,7 +645,7 @@ let%expect_test "cjs_default_function_ref" =
     module.exports = foo;
   |};
   [%expect {|
-    [Default]
+    [(Default None)]
   |}]
 
 let%expect_test "es6_named_function" =
@@ -653,7 +671,7 @@ let%expect_test "cjs_default_remote_ref" =
     module.exports = ({ foo: 123, bar: "bar" }: T);
   |};
   [%expect {|
-    [Default]
+    [(Default None)]
   |}]
 
 let%expect_test "cjs_recursive_type" =
@@ -670,7 +688,7 @@ let%expect_test "cjs_recursive_ref" =
     module.exports = T;
   |};
   [%expect {|
-    [Default]
+    [(Default None)]
   |}]
 
 let%expect_test "es6_declare_function" =
@@ -697,7 +715,7 @@ let%expect_test "es6_interface" =
     export default 0; // need an exported value to force ES6 modules
   |};
   [%expect {|
-    [(NamedType "Foo"); Default]
+    [(NamedType "Foo"); (Default None)]
   |}]
 
 let%expect_test "cjs_interface" =

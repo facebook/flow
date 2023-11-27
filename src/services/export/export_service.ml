@@ -26,9 +26,11 @@ let entries_of_exports =
     let (has_named, acc) =
       Base.List.fold exports ~init:(false, acc) ~f:(fun (has_named, acc) export ->
           match export with
-          | Exports.DefaultType ->
+          | Exports.DefaultType (Some name) -> (has_named, (name, DefaultType) :: acc)
+          | Exports.DefaultType None ->
             (has_named, (string_of_modulename module_name, DefaultType) :: acc)
-          | Exports.Default -> (has_named, (string_of_modulename module_name, Default) :: acc)
+          | Exports.Default (Some name) -> (has_named, (name, Default) :: acc)
+          | Exports.Default None -> (has_named, (string_of_modulename module_name, Default) :: acc)
           | Exports.Named name -> (true, (name, Named) :: acc)
           | Exports.NamedType name -> (has_named, (name, NamedType) :: acc)
           | Exports.Module (module_name, exports) ->
@@ -124,8 +126,8 @@ let add_exports_of_builtins lib_exports index =
         add_exports ~source ~module_name exports acc
       | Exports.Named name -> Export_index.add name Global Named acc
       | Exports.NamedType name -> Export_index.add name Global NamedType acc
-      | Exports.DefaultType -> (* impossible *) acc
-      | Exports.Default -> (* impossible *) acc
+      | Exports.DefaultType _ -> (* impossible *) acc
+      | Exports.Default _ -> (* impossible *) acc
   )
 
 (** [index_file ~reader (exports_to_add, exports_to_remove) file] reads the exports of [file] from

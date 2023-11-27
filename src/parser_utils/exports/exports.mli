@@ -6,8 +6,8 @@
  *)
 
 type export =
-  | DefaultType (* e.g. `export default class Foo {}` *)
-  | Default  (** e.g. `export default function() {}` *)
+  | DefaultType of string option (* e.g. `export default class Foo {}` *)
+  | Default of string option  (** e.g. `export default function() {}` *)
   | Named of string  (** `export const foo: string = "foo"` *)
   | NamedType of string  (** `export type T = string` *)
   | Module of string * export list  (** `declare module "foo" { ... exports ... }` *)

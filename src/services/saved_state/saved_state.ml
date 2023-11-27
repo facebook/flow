@@ -181,8 +181,8 @@ end = struct
   let rec normalize_exports t =
     let open Exports in
     let f = function
-      | DefaultType -> DefaultType
-      | Default -> Default
+      | DefaultType name_opt -> DefaultType (Base.Option.map ~f:(intern t) name_opt)
+      | Default name_opt -> DefaultType (Base.Option.map ~f:(intern t) name_opt)
       | Named str -> Named (intern t str)
       | NamedType str -> NamedType (intern t str)
       | Module (str, exports) -> Module (intern t str, normalize_exports t exports)

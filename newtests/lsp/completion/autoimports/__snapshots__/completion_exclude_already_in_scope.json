@@ -38,6 +38,57 @@
             }
           ]
         }
+      },
+      {
+        "label": "FooBar",
+        "kind": 6,
+        "detail": "Import default from ./foobar",
+        "sortText": "00000000000000000001",
+        "insertTextFormat": 1,
+        "textEdit": {
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 19
+            },
+            "end": {
+              "line": 2,
+              "character": 25
+            }
+          },
+          "newText": "FooBar"
+        },
+        "additionalTextEdits": [
+          {
+            "range": {
+              "start": {
+                "line": 2,
+                "character": 0
+              },
+              "end": {
+                "line": 2,
+                "character": 0
+              }
+            },
+            "newText": "import FooBar from \"./foobar\";\n\n"
+          }
+        ],
+        "command": {
+          "title": "",
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "arguments": [
+            "textDocument/completion",
+            "autoimport",
+            {
+              "token": "foobarAUTO332",
+              "index": 1,
+              "session_requests": 1,
+              "typed_length": 6,
+              "completion": "FooBar",
+              "ac_type": "Acid"
+            }
+          ]
+        }
       }
     ]
   }
