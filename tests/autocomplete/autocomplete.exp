@@ -605,6 +605,10 @@ components.js:13:28
 Flags: --pretty
 {"result":[{"name":"MyComponent","type":"element of component MyComponent"}]}
 
+components.js:19:16
+Flags: --pretty
+{"result":[{"name":"xaaa","type":"number"},{"name":"xbbb","type":"string"}]}
+
 customfun.js:5:3
 Flags: --pretty
 {

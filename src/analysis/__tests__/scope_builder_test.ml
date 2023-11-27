@@ -411,7 +411,7 @@ let tests =
          "scope_loc_component_declaration"
          >:: mk_scope_builder_scope_loc_test
                "component Foo(param: T) {};"
-               [(0, mk_loc (1, 0) (1, 27)); (1, mk_loc (1, 13) (1, 23))];
+               [(0, mk_loc (1, 0) (1, 27)); (1, mk_loc (1, 24) (1, 26))];
          "identifier_test_fun"
          >:: mk_autocomplete_identifiers_test
                "function F() {
@@ -427,5 +427,5 @@ let tests =
                   const y = x
                }"
                (mk_loc (3, 13) (3, 13))
-               ["F"];
+               ["F"; "xaaa"];
        ]

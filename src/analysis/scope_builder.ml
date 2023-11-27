@@ -716,7 +716,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           hoist#acc
         in
         this#with_bindings
-          (fst params)
+          (fst body)
           bindings
           (fun () ->
             (* This is to ensure that params are declared *)
