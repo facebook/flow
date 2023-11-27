@@ -66,6 +66,8 @@ function from_test() {
 
   Array.from('abcd') as Array<string>; // OK
   Array.from('abcd') as Array<empty>; // ERROR
+
+  Array.from('abcd', x => x.length) as Array<number>; // OK
 }
 
 function of_test() {
