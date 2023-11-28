@@ -23,7 +23,11 @@ module.exports = (suite(
   }) => {
     return [
       test('auto import value', [
-        addFiles('__fixtures__/FooBarBaz1.js', '__fixtures__/FooBarBaz2.js'),
+        addFiles(
+          '__fixtures__/FooBarBaz1.js',
+          '__fixtures__/FooBarBaz2.js',
+          '__fixtures__/FooBarBaz3.js',
+        ),
         addCode(`FooBarBaz`),
         lspStartAndConnect(),
         lspRequestAndWaitUntilResponse('textDocument/completion', {

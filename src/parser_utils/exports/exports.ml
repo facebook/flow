@@ -6,8 +6,8 @@
  *)
 
 type export =
-  | DefaultType (* e.g. `export default class Foo {}` *)
-  | Default  (** e.g. `export default function() {}` *)
+  | DefaultType of string option (* e.g. `export default class Foo {}` *)
+  | Default of string option  (** e.g. `export default function() {}` *)
   | Named of string  (** `export const foo: string = "foo"` *)
   | NamedType of string  (** `export type T = string` *)
   | Module of string * export list  (** `declare module "foo" { ... exports ... }` *)
@@ -60,12 +60,22 @@ module Eval = struct
   open Type_sig_pack
 
   type 'loc evaled =
-    | Annot of 'loc packed_annot
-    | Value of 'loc packed_value
-    | ClassDecl
-    | EnumDecl
-    | ComponentDecl
+    | Annot of 'loc packed_annot * string option
+    | Value of 'loc packed_value * string option
+    | ClassDecl of string
+    | EnumDecl of string
+    | ComponentDecl of string
     | Nothing
+
+  let opt_name_of_evaled = function
+    | ClassDecl name
+    | EnumDecl name
+    | ComponentDecl name ->
+      Some name
+    | Annot (_, name_opt)
+    | Value (_, name_opt) ->
+      name_opt
+    | Nothing -> None
 
   let seen_ref seen = function
     | LocalRef { index; _ } ->
@@ -108,9 +118,9 @@ module Eval = struct
       | Value _ ->
         (* TODO: get `_qual._name` *)
         Nothing
-      | ClassDecl -> ClassDecl
-      | EnumDecl -> EnumDecl
-      | ComponentDecl -> ComponentDecl
+      | ClassDecl n -> ClassDecl n
+      | EnumDecl n -> EnumDecl n
+      | ComponentDecl n -> ComponentDecl n
       | Nothing -> Nothing)
     | Unqualified r -> ref type_sig seen r
 
@@ -133,14 +143,14 @@ module Eval = struct
 
       so, for [var x = y], returns [Some y]; for all other definitions, returns [None]. *)
   and def type_sig seen : 'loc packed_def -> 'loc evaled = function
-    | Variable { def; _ } -> packed type_sig seen def
-    | TypeAlias { body; _ } -> packed type_sig seen body
-    | ClassBinding _ -> ClassDecl
-    | DeclareClassBinding _ -> ClassDecl
-    | EnumBinding _ -> EnumDecl
-    | DisabledEnumBinding _ -> EnumDecl
-    | ComponentBinding _ -> ComponentDecl
-    | DisabledComponentBinding _ -> ComponentDecl
+    | Variable { def; name; _ } -> packed ~name type_sig seen def
+    | TypeAlias { body; name; _ } -> packed ~name type_sig seen body
+    | ClassBinding { name; _ } -> ClassDecl name
+    | DeclareClassBinding { name; _ } -> ClassDecl name
+    | EnumBinding { name; _ } -> EnumDecl name
+    | DisabledEnumBinding { name; _ } -> EnumDecl name
+    | ComponentBinding { name; _ } -> ComponentDecl name
+    | DisabledComponentBinding { name; _ } -> ComponentDecl name
     | Interface _
     | FunBinding _
     | DeclareFun _
@@ -149,9 +159,11 @@ module Eval = struct
          you can't `import {someMethod} ...` from an exported class. *)
       Nothing
 
-  and packed type_sig seen : 'loc packed -> 'loc evaled = function
-    | Value x -> Value x
-    | Annot x -> Annot x
+  and packed type_sig ?name seen : 'loc packed -> 'loc evaled = function
+    | Value x -> Value (x, name)
+    | Annot (Typeof { qname = [typeof_name]; _ } as x) ->
+      Annot (x, Some (Base.Option.value ~default:typeof_name name))
+    | Annot x -> Annot (x, name)
     | Ref r -> ref type_sig seen r
     | TyRef r -> tyref type_sig seen r
     | TyRefApp { name; _ } -> tyref type_sig seen name
@@ -180,31 +192,33 @@ module Eval = struct
       object AND it has a [name] field; [None] otherwise. *)
   and get_field type_sig seen (name : string) (evaled : 'a evaled) : 'a evaled =
     match evaled with
-    | Value (ObjLit { props; _ } | DeclareModuleImplicitlyExportedObject { props; _ }) ->
+    | Value ((ObjLit { props; _ } | DeclareModuleImplicitlyExportedObject { props; _ }), _) ->
       (match field_of_obj_props name props with
       | Some p -> packed type_sig seen p
       | None -> Nothing)
-    | Value (ObjSpreadLit _) -> (* TODO *) Nothing
+    | Value (ObjSpreadLit _, _) -> (* TODO *) Nothing
     | Annot _ ->
       (* TODO? *)
       Nothing
     | Value
-        ( ClassExpr _ | FunExpr _ | StringVal _ | StringLit _ | LongStringLit _ | NumberVal _
-        | NumberLit _ | BooleanVal _ | BooleanLit _ | NullLit _ | ArrayLit _ | BigIntVal _
-        | BigIntLit _ ) ->
+        ( ( ClassExpr _ | FunExpr _ | StringVal _ | StringLit _ | LongStringLit _ | NumberVal _
+          | NumberLit _ | BooleanVal _ | BooleanLit _ | NullLit _ | ArrayLit _ | BigIntVal _
+          | BigIntLit _ ),
+          _
+        ) ->
       Nothing
-    | ClassDecl -> Nothing
-    | EnumDecl -> Nothing
-    | ComponentDecl -> Nothing
+    | ClassDecl _ -> Nothing
+    | EnumDecl _ -> Nothing
+    | ComponentDecl _ -> Nothing
     | Nothing -> Nothing
 end
 
 (** [is_typeish def] determines if [def] is a class or enum, whose type is also exported because
     classes and enums are both values and types. *)
 let is_typeish = function
-  | Eval.ClassDecl
-  | Eval.EnumDecl
-  | Eval.ComponentDecl ->
+  | Eval.ClassDecl _
+  | Eval.EnumDecl _
+  | Eval.ComponentDecl _ ->
     true
   | Eval.Value _
   | Eval.Annot _
@@ -222,9 +236,9 @@ let add_named_type acc name def =
 
 (** [add_default_type acc def] adds [DefaultType] to [acc] if [def] is a class or enum,
     since its type is also exported because classes and enums are both values and types. *)
-let add_default_type acc def =
+let add_default_type acc name_opt def =
   if is_typeish def then
-    DefaultType :: acc
+    DefaultType name_opt :: acc
   else
     acc
 
@@ -245,14 +259,15 @@ module ESM = struct
       in
       Named name :: acc
     | ExportDefault { def; _ } ->
-      let acc = Eval.packed type_sig empty_seen def |> add_default_type acc in
-      Default :: acc
+      let def = Eval.packed type_sig empty_seen def in
+      let opt_name = Eval.opt_name_of_evaled def in
+      let acc = add_default_type acc opt_name def in
+      Default opt_name :: acc
     | ExportDefaultBinding { index; _ } ->
-      let acc =
-        let def = Eval.def type_sig empty_seen (local_def_of_index type_sig index) in
-        add_default_type acc def
-      in
-      Default :: acc
+      let def = Eval.def type_sig empty_seen (local_def_of_index type_sig index) in
+      let opt_name = Eval.opt_name_of_evaled def in
+      let acc = add_default_type acc opt_name def in
+      Default opt_name :: acc
     | ExportFrom _ ->
       (* TODO: ExportFrom defines aliases, which we don't handle yet. TS
          keeps track of them and only suggests them if the re-exported thing
@@ -340,16 +355,16 @@ module CJS = struct
 
   let add_named_exports acc type_sig packed =
     match Eval.packed type_sig empty_seen packed with
-    | Eval.Annot annot -> exports_of_annot acc annot
-    | Eval.Value value -> exports_of_value acc type_sig value
-    | Eval.ClassDecl
-    | Eval.EnumDecl
-    | Eval.ComponentDecl
+    | Eval.Annot (annot, _) -> exports_of_annot acc annot
+    | Eval.Value (value, _) -> exports_of_value acc type_sig value
+    | Eval.ClassDecl _
+    | Eval.EnumDecl _
+    | Eval.ComponentDecl _
     | Eval.Nothing ->
       acc
 
   let add_default_exports type_sig acc = function
-    | Some module_exports -> Default :: add_named_exports acc type_sig module_exports
+    | Some module_exports -> Default None :: add_named_exports acc type_sig module_exports
     | None -> acc
 
   let fold_type acc name value =

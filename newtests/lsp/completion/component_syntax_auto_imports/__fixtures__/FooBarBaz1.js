@@ -1,1 +1,1 @@
-export component FooBarBaz1() { return 0 }
+export component FooBarBaz() { return 0 }
