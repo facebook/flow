@@ -219,36 +219,39 @@ end = struct
 
   (* Collect all the data for a single parsed file *)
   let collect_normalized_data_for_parsed_file t ~reader fn parsed_heaps =
-    let addr = Parsing_heaps.get_file_addr_unsafe fn in
-    let parse = Parsing_heaps.Reader.get_typed_parse_unsafe ~reader fn addr in
-    let imports = Parsing_heaps.read_imports parse in
-    let requires = Parsing_heaps.read_requires parse in
-    let resolved_requires = Parsing_heaps.Reader.get_resolved_requires_unsafe fn ~reader parse in
-    let resolved_modules =
-      Parsing_heaps.read_resolved_modules
-        (Parsing_heaps.read_resolved_module Parsing_heaps.read_dependency)
-        resolved_requires
-    in
-    let phantom_dependencies =
-      Parsing_heaps.read_phantom_dependencies Parsing_heaps.read_dependency resolved_requires
-    in
-    let file_data =
-      {
-        module_name = Parsing_heaps.Reader.get_haste_name ~reader addr;
-        normalized_file_data =
-          {
-            requires;
-            resolved_modules;
-            phantom_dependencies;
-            exports = Parsing_heaps.read_exports parse;
-            hash = Parsing_heaps.read_file_hash parse;
-            imports;
-          };
-      }
-    in
-    let relative_fn = normalize_file_key t fn in
-    let relative_file_data = normalize_parsed_data t file_data in
-    (relative_fn, relative_file_data) :: parsed_heaps
+    if File_key.is_lib_file fn then
+      parsed_heaps
+    else
+      let addr = Parsing_heaps.get_file_addr_unsafe fn in
+      let parse = Parsing_heaps.Reader.get_typed_parse_unsafe ~reader fn addr in
+      let imports = Parsing_heaps.read_imports parse in
+      let requires = Parsing_heaps.read_requires parse in
+      let resolved_requires = Parsing_heaps.Reader.get_resolved_requires_unsafe fn ~reader parse in
+      let resolved_modules =
+        Parsing_heaps.read_resolved_modules
+          (Parsing_heaps.read_resolved_module Parsing_heaps.read_dependency)
+          resolved_requires
+      in
+      let phantom_dependencies =
+        Parsing_heaps.read_phantom_dependencies Parsing_heaps.read_dependency resolved_requires
+      in
+      let file_data =
+        {
+          module_name = Parsing_heaps.Reader.get_haste_name ~reader addr;
+          normalized_file_data =
+            {
+              requires;
+              resolved_modules;
+              phantom_dependencies;
+              exports = Parsing_heaps.read_exports parse;
+              hash = Parsing_heaps.read_file_hash parse;
+              imports;
+            };
+        }
+      in
+      let relative_fn = normalize_file_key t fn in
+      let relative_file_data = normalize_parsed_data t file_data in
+      (relative_fn, relative_file_data) :: parsed_heaps
 
   let collect_normalized_data_for_package_json_file t ~reader fn package_heaps =
     let addr = Parsing_heaps.get_file_addr_unsafe fn in
@@ -268,16 +271,19 @@ end = struct
 
   (* Collect all the data for a single unparsed file *)
   let collect_normalized_data_for_unparsed_file t ~reader fn unparsed_heaps =
-    let addr = Parsing_heaps.get_file_addr_unsafe fn in
-    let parse = Parsing_heaps.Reader.get_parse_unsafe ~reader fn addr in
-    let unparsed_module_name =
-      Parsing_heaps.Reader.get_haste_name ~reader addr |> Option.map (intern t)
-    in
-    let relative_file_data =
-      { unparsed_module_name; unparsed_hash = Parsing_heaps.read_file_hash parse }
-    in
-    let relative_fn = normalize_file_key t fn in
-    (relative_fn, relative_file_data) :: unparsed_heaps
+    if File_key.is_lib_file fn then
+      unparsed_heaps
+    else
+      let addr = Parsing_heaps.get_file_addr_unsafe fn in
+      let parse = Parsing_heaps.Reader.get_parse_unsafe ~reader fn addr in
+      let unparsed_module_name =
+        Parsing_heaps.Reader.get_haste_name ~reader addr |> Option.map (intern t)
+      in
+      let relative_file_data =
+        { unparsed_module_name; unparsed_hash = Parsing_heaps.read_file_hash parse }
+      in
+      let relative_fn = normalize_file_key t fn in
+      (relative_fn, relative_file_data) :: unparsed_heaps
 
   (* The builtin flowlibs are excluded from the saved state. The server which loads the saved state
    * will extract and typecheck its own builtin flowlibs *)
@@ -340,6 +346,16 @@ end = struct
     in
     let dependency_graph =
       let dependency_info = env.ServerEnv.dependency_info in
+      let dependency_info =
+        Dependency_info.update
+          dependency_info
+          FilenameMap.empty
+          (SSet.fold
+             (fun n -> FilenameSet.add (File_key.LibFile n))
+             env.ServerEnv.libs
+             FilenameSet.empty
+          )
+      in
       let impl_map =
         dependency_info |> Dependency_info.implementation_dependency_graph |> FilenameGraph.to_map
       in
