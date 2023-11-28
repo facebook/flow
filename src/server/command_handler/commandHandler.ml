@@ -776,7 +776,9 @@ let batch_coverage ~options ~env ~batch =
   else
     let filter key = Base.List.exists ~f:(fun elt -> Files.is_prefix elt key) batch in
     let coverage_map =
-      FilenameMap.filter (fun key _ -> File_key.to_string key |> filter) env.coverage
+      FilenameMap.filter
+        (fun key _ -> (not (File_key.is_lib_file key)) && File_key.to_string key |> filter)
+        env.coverage
     in
     let response =
       FilenameMap.fold (fun key coverage -> List.cons (key, coverage)) coverage_map []
