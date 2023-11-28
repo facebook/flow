@@ -15,7 +15,7 @@ References:
 
 Found 1 error
 
-The Flow server is currently in lazy mode and is only checking 3/3 files.
+The Flow server is currently in lazy mode and is only checking 4/4 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 Error -------------------------------------------------------------------------------------------------- cycle_b.js:15:2
 
@@ -34,5 +34,5 @@ References:
 
 Found 1 error
 
-The Flow server is currently in lazy mode and is only checking 3/3 files.
+The Flow server is currently in lazy mode and is only checking 4/4 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes

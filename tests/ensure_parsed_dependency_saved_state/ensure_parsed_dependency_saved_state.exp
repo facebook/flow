@@ -1,26 +1,26 @@
 ==== No errors at start====
 No errors!
 
-The Flow server is currently in lazy mode and is only checking 0/3 files.
+The Flow server is currently in lazy mode and is only checking 1/4 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 
 ==== ensure_parsed does not recheck unrelated dependent ====
 No errors!
 
-The Flow server is currently in lazy mode and is only checking 2/3 files.
+The Flow server is currently in lazy mode and is only checking 3/4 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 ==== No errors after restart====
 No errors!
 
-The Flow server is currently in lazy mode and is only checking 0/3 files.
+The Flow server is currently in lazy mode and is only checking 1/4 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 
 ==== ensure_parsed skips dependent ====
 No errors!
 
-The Flow server is currently in lazy mode and is only checking 2/3 files.
+The Flow server is currently in lazy mode and is only checking 3/4 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 ========Skipping stats========
@@ -46,7 +46,7 @@ References:
 
 Found 1 error
 
-The Flow server is currently in lazy mode and is only checking 3/3 files.
+The Flow server is currently in lazy mode and is only checking 4/4 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 ========Skipping stats========
@@ -72,7 +72,7 @@ References:
 
 Found 1 error
 
-The Flow server is currently in lazy mode and is only checking 3/3 files.
+The Flow server is currently in lazy mode and is only checking 4/4 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 ========Skipping stats========

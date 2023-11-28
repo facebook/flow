@@ -3,7 +3,7 @@ No errors!
 Status including warnings:
 No errors!
 
-The Flow server is currently in lazy mode and is only checking 2/8 files.
+The Flow server is currently in lazy mode and is only checking 3/9 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 Status after focusing a.js:
@@ -34,7 +34,7 @@ Unused suppression comment.
 
 Found 3 warnings
 
-The Flow server is currently in lazy mode and is only checking 8/8 files.
+The Flow server is currently in lazy mode and is only checking 9/9 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 Status after check-contents type_error.js:
 Error ------------------------------------------------------------------------------------------------ type_error.js:7:2
@@ -82,7 +82,7 @@ Unused suppression comment.
 
 Found 3 warnings
 
-The Flow server is currently in lazy mode and is only checking 8/8 files.
+The Flow server is currently in lazy mode and is only checking 9/9 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 Status after focusing dependents:
@@ -120,5 +120,5 @@ References:
 
 Found 3 errors
 
-The Flow server is currently in lazy mode and is only checking 8/8 files.
+The Flow server is currently in lazy mode and is only checking 9/9 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes

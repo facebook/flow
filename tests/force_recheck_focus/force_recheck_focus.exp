@@ -1,7 +1,7 @@
 ===== force-recheck of a unchanged file does nothing: =====
 No errors!
 
-The Flow server is currently in lazy mode and is only checking 0/2 files.
+The Flow server is currently in lazy mode and is only checking 1/3 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 ===== force-recheck --focus of a unchanged file does a recheck: =====
@@ -39,5 +39,5 @@ References:
 
 Found 2 errors
 
-The Flow server is currently in lazy mode and is only checking 2/2 files.
+The Flow server is currently in lazy mode and is only checking 3/3 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes

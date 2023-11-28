@@ -1,7 +1,7 @@
 ==== No errors at start====
 No errors!
 
-The Flow server is currently in lazy mode and is only checking 0/3 files.
+The Flow server is currently in lazy mode and is only checking 1/4 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 
@@ -17,5 +17,5 @@ Cannot resolve module `./B`. [cannot-resolve-module]
 
 Found 1 error
 
-The Flow server is currently in lazy mode and is only checking 2/2 files.
+The Flow server is currently in lazy mode and is only checking 3/3 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
