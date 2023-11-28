@@ -65,8 +65,6 @@ type results = {
 (* Use default values for the various settings that parse takes. Each one can be overridden
    individually *)
 val parse_with_defaults :
-  ?force_types:bool ->
-  ?force_use_strict:bool ->
   ?locs_to_dirtify:Loc.t list ->
   reader:Mutator_state_reader.t ->
   Options.t ->
@@ -77,8 +75,6 @@ val parse_with_defaults :
 val reparse_with_defaults :
   transaction:Transaction.t ->
   reader:Mutator_state_reader.t ->
-  ?force_types:bool ->
-  ?force_use_strict:bool ->
   ?locs_to_dirtify:Loc.t list ->
   with_progress:bool ->
   workers:MultiWorkerLwt.worker list option ->
@@ -113,8 +109,6 @@ val parse_type_sig :
 val do_parse :
   options:Options.t ->
   docblock:Docblock.t ->
-  ?force_types:bool ->
-  ?force_use_strict:bool ->
   ?locs_to_dirtify:Loc.t list ->
   string ->
   (* contents of the file *)
