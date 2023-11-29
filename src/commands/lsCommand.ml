@@ -137,7 +137,7 @@ let make_options ~flowconfig ~root ~ignore_flag ~include_flag ~untyped_flag ~dec
 (* The problem with Files.wanted is that it says yes to everything except ignored files and libs.
  * So implicitly ignored files (like files in another directory) pass the Files.wanted check *)
 let wanted ~root ~options libs file =
-  Files.wanted ~options libs file
+  Files.wanted ~options ~include_libdef:false libs file
   &&
   let root_str = spf "%s%s" (File_path.to_string root) Filename.dir_sep in
   String.starts_with ~prefix:root_str file || Files.is_included options file
@@ -146,12 +146,13 @@ let wanted ~root ~options libs file =
    directory. Individual files will return a closure that returns just that file
 *)
 let get_ls_files ~root ~all ~options ~libs ~imaginary = function
-  | None -> Files.make_next_files ~sort:true ~root ~all ~subdir:None ~options ~libs
+  | None ->
+    Files.make_next_files ~sort:true ~root ~all ~subdir:None ~options ~include_libdef:false ~libs
   | Some dir
     when try Sys.is_directory dir with
          | _ -> false ->
     let subdir = Some (File_path.make dir) in
-    Files.make_next_files ~sort:true ~root ~all ~subdir ~options ~libs
+    Files.make_next_files ~sort:true ~root ~all ~subdir ~options ~include_libdef:false ~libs
   | Some file ->
     if (Sys.file_exists file || imaginary) && (all || wanted ~root ~options libs file) then
       let file = file |> File_path.make |> File_path.to_string in

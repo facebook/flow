@@ -541,9 +541,9 @@ let is_declaration (options : options) path =
 (* true if a file path matches an [include] path in config *)
 let is_included options f = Path_matcher.matches options.includes f
 
-let wanted ~options lib_fileset =
+let wanted ~options ~include_libdef lib_fileset =
   let is_ignored_ = is_ignored options in
-  (fun path -> (not (is_ignored_ path)) && not (SSet.mem path lib_fileset))
+  (fun path -> (not (is_ignored_ path)) && (include_libdef || not (SSet.mem path lib_fileset)))
 
 let watched_paths options =
   Path_matcher.stems options.includes
@@ -558,16 +558,27 @@ let watched_paths options =
  * included files, minus the ignored files and the libs.
  *
  * If `all` is true, ignored files and libs are also returned.
- * If subdir is set, then we return the subset of files under subdir
+ * If `include_libdef` is true, libdef files are also included.
+ * If subdir is set, then we return the subset of files under subdir.
  *)
-let make_next_files ~root ~all ~sort ~subdir ~options ~libs =
+let make_next_files ~root ~all ~sort ~subdir ~options ~include_libdef ~libs =
   let node_module_filter = is_node_module options in
   let filter =
     if all then
       fun _ ->
     true
     else
-      wanted ~options libs
+      wanted ~options ~include_libdef libs
+  in
+  let (flowlib_starting_point, is_flowlib_filter) =
+    if include_libdef then
+      match options.default_lib_dir with
+      | None -> (None, (fun _ -> false))
+      | Some (Prelude root | Flowlib root) ->
+        let is_in_flowlib = is_prefix (File_path.to_string root) in
+        (Some root, is_in_flowlib)
+    else
+      (None, (fun _ -> false))
   in
   (* The directories from which we start our search *)
   let starting_points =
@@ -575,8 +586,17 @@ let make_next_files ~root ~all ~sort ~subdir ~options ~libs =
     | None -> watched_paths options
     | Some subdir -> [subdir]
   in
+  let starting_points =
+    match flowlib_starting_point with
+    | Some p -> p :: starting_points
+    | None -> starting_points
+  in
   let root_str = File_path.to_string root in
-  let is_valid_path = is_valid_path ~options in
+  (* Flowlib paths are allowed to bypass is_valid_path check. Without the logic, certain config
+   * might cause libdefs to be accidentally ignored. The config_file_extensions test offers
+   * an example: it overrides the .js extension with .js.es6, so without the logic, all the libdef
+   * files that only end with .js will be dropped. *)
+  let is_valid_path path = is_valid_path ~options path || is_flowlib_filter path in
   let realpath_filter path = is_valid_path path && filter path in
   let path_filter =
     (*
@@ -586,7 +606,10 @@ let make_next_files ~root ~all ~sort ~subdir ~options ~libs =
     match subdir with
     | None ->
       fun path ->
-        (String.starts_with ~prefix:root_str path || is_included options path)
+        (String.starts_with ~prefix:root_str path
+        || is_included options path
+        || is_flowlib_filter path
+        )
         && realpath_filter path
     | Some subdir ->
       (* The subdir might contain symlinks outside of the subdir. To prevent
@@ -595,7 +618,10 @@ let make_next_files ~root ~all ~sort ~subdir ~options ~libs =
       let subdir_str = File_path.to_string subdir in
       fun path ->
         String.starts_with ~prefix:subdir_str path
-        && (String.starts_with ~prefix:root_str path || is_included options path)
+        && (String.starts_with ~prefix:root_str path
+           || is_included options path
+           || is_flowlib_filter path
+           )
         && realpath_filter path
   in
   let dir_filter = dir_filter_of_options options filter in
@@ -714,12 +740,16 @@ let absolute_path root =
 let get_flowtyped_path root = make_path_absolute root "flow-typed"
 
 (* helper: make different kinds of File_key.t from a path string *)
-let filename_from_string ~options p =
+let filename_from_string ~options ~consider_libdefs ~libs p =
   let resource_file_exts = options.module_resource_exts in
   match Utils_js.extension_of_filename p with
   | Some ".json" -> File_key.JsonFile p
   | Some ext when SSet.mem ext resource_file_exts -> File_key.ResourceFile p
-  | _ -> File_key.SourceFile p
+  | _ ->
+    if consider_libdefs && SSet.mem p libs then
+      File_key.LibFile p
+    else
+      File_key.SourceFile p
 
 let mkdirp path_str perm =
   let parts = Str.split dir_sep path_str in

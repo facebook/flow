@@ -158,7 +158,16 @@ let filter_wanted_updates ~file_options ~sroot ~want updates =
         && (* removes excluded and lib files. the latter are already filtered *)
         want f
       then
-        let filename = Files.filename_from_string ~options:file_options f in
+        let filename =
+          (* At this point, we already checked whether libdef files are touched.
+           * If so, we already decided that the server should restart, and this
+           * function won't be called. *)
+          Files.filename_from_string
+            ~options:file_options
+            ~consider_libdefs:false
+            ~libs:SSet.empty
+            f
+        in
         FilenameSet.add filename acc
       else
         acc)
@@ -183,7 +192,9 @@ let process_updates ?(skip_incompatible = false) ~options ~libs updates =
   let root = Options.root options in
   let config_path = Server_files_js.config_file (Options.flowconfig_name options) root in
   let sroot = File_path.to_string root ^ Filename.dir_sep in
-  let want = Files.wanted ~options:file_options all_libs in
+  (* We can ignore libdef here, since we check below that whether we touched libdef files,
+   * if so, we will restart anyways. *)
+  let want = Files.wanted ~options:file_options ~include_libdef:false all_libs in
   let is_incompatible_package_json =
     is_incompatible_package_json ~options ~reader ~want ~sroot ~file_options
   in

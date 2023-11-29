@@ -1778,9 +1778,16 @@ let recheck_impl
   Lwt.return (log_recheck_event, recheck_stats, find_ref_results, env)
 
 (* creates a closure that lists all files in the given root, returned in chunks *)
-let make_next_files ~libs ~file_options root =
+let make_next_files ~libs ~file_options ~include_libdef root =
   let make_next_raw =
-    Files.make_next_files ~root ~all:false ~sort:false ~subdir:None ~options:file_options ~libs
+    Files.make_next_files
+      ~root
+      ~all:false
+      ~sort:false
+      ~subdir:None
+      ~options:file_options
+      ~include_libdef
+      ~libs
   in
   let total = ref 0 in
   fun () ->
@@ -1789,7 +1796,10 @@ let make_next_files ~libs ~file_options root =
     let length = List.length files in
     MonitorRPC.status_update ~event:ServerStatus.(Parsing_progress { finished; total = None });
     total := finished + length;
-    files |> Base.List.map ~f:(Files.filename_from_string ~options:file_options) |> Bucket.of_list
+    files
+    |> Base.List.map
+         ~f:(Files.filename_from_string ~options:file_options ~consider_libdefs:include_libdef ~libs)
+    |> Bucket.of_list
 
 let mk_env
     ~connections
@@ -2210,7 +2220,9 @@ let init_from_scratch ~profiling ~workers options =
    * libraries
    *)
   let (ordered_libs, libs) = Files.init file_options in
-  let next_files = make_next_files ~libs ~file_options (Options.root options) in
+  let next_files_for_parse =
+    make_next_files ~libs ~file_options ~include_libdef:false (Options.root options)
+  in
   Hh_logger.info "Parsing";
   MonitorRPC.status_update ~event:ServerStatus.(Parsing_progress { finished = 0; total = None });
   let%lwt ( parsed_set,
@@ -2221,7 +2233,7 @@ let init_from_scratch ~profiling ~workers options =
             local_errors,
             (package_json_files, package_json_errors)
           ) =
-    parse ~options ~profiling ~workers ~reader next_files
+    parse ~options ~profiling ~workers ~reader next_files_for_parse
   in
   assert (FilenameSet.is_empty unchanged);
 

@@ -102,7 +102,7 @@ val absolute_path_regexp : Str.regexp
 val watched_paths : options -> File_path.t list
 
 (* given a root, make a filter for file names *)
-val wanted : options:options -> SSet.t -> string -> bool
+val wanted : options:options -> include_libdef:bool -> SSet.t -> string -> bool
 
 (* given a root, make a next_files function for MultiWorker *)
 val make_next_files :
@@ -111,6 +111,7 @@ val make_next_files :
   sort:bool ->
   subdir:File_path.t option ->
   options:options ->
+  include_libdef:bool ->
   libs:SSet.t ->
   unit ->
   string list
@@ -136,7 +137,8 @@ val is_prefix : string -> string -> bool
 
 val get_flowtyped_path : File_path.t -> File_path.t
 
-val filename_from_string : options:options -> string -> File_key.t
+val filename_from_string :
+  options:options -> consider_libdefs:bool -> libs:SSet.t -> string -> File_key.t
 
 val mkdirp : string -> Unix.file_perm -> unit
 
