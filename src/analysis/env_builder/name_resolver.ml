@@ -698,6 +698,11 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           Error_message.(
             EBindingError (EConstParamReassigned, assignment_loc, OrdinaryName name, def_loc)
           )
+      | (Bindings.ComponentParameter, AssignmentWrite) ->
+        Some
+          Error_message.(
+            EBindingError (EConstParamReassigned, assignment_loc, OrdinaryName name, def_loc)
+          )
       | (Bindings.(Class | DeclaredClass), AssignmentWrite) ->
         let def_reason = mk_reason (RIdentifier (OrdinaryName name)) def_loc in
         Some
@@ -796,15 +801,18 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             EBindingError
               (ETypeInValuePosition { imported; name }, assignment_loc, OrdinaryName name, def_loc)
           )
-      | ( Bindings.Parameter,
+      | ( Bindings.(Parameter | ComponentParameter),
           (VarBinding | LetBinding | ConstBinding | FunctionBinding | ComponentBinding)
         )
-        when Context.enable_const_params cx && not (Val.is_undeclared v) ->
+        when (Context.enable_const_params cx || stored_binding_kind = Bindings.ComponentParameter)
+             && not (Val.is_undeclared v) ->
         Some
           Error_message.(
             EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)
           )
-      | (Bindings.Parameter, (LetBinding | ConstBinding | FunctionBinding | ComponentBinding))
+      | ( Bindings.(Parameter | ComponentParameter),
+          (LetBinding | ConstBinding | FunctionBinding | ComponentBinding)
+        )
         when not (Val.is_undeclared v) ->
         Some
           Error_message.(
@@ -1709,6 +1717,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                     | Bindings.Const
                     | Bindings.Enum
                     | Bindings.Parameter
+                    | Bindings.ComponentParameter
                     | Bindings.Function
                     | Bindings.Component ->
                       Val.undeclared name loc
@@ -1949,6 +1958,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             | Bindings.Function
             | Bindings.Component
             | Bindings.Parameter
+            | Bindings.ComponentParameter
             | Bindings.Import ->
               Some Error_message.(EBindingError (ENameAlreadyBound, loc, OrdinaryName name, def_loc))
             | _ -> None)

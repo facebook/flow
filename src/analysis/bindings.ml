@@ -27,6 +27,7 @@ type kind =
   | Internal
   | GeneratorNext
   | Component
+  | ComponentParameter
 [@@deriving show]
 
 type 'loc entry = ('loc, 'loc) Ast.Identifier.t * kind

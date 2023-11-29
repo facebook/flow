@@ -138,6 +138,13 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
       let_kind <- old_lkind;
       res
 
+    method! component_param_pattern (expr : ('loc, 'loc) Ast.Pattern.t) =
+      let old_lkind = let_kind in
+      let_kind <- Bindings.ComponentParameter;
+      let res = this#binding_pattern ~kind:Ast.Variable.Let expr in
+      let_kind <- old_lkind;
+      res
+
     method! catch_clause_pattern (expr : ('loc, 'loc) Ast.Pattern.t) =
       let old_lkind = let_kind in
       let_kind <- Bindings.CatchParameter;
