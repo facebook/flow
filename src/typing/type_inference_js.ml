@@ -368,7 +368,7 @@ let initialize_env ~lib ?(exclude_syms = NameUtils.Set.empty) cx aloc_ast toplev
   let pred_func_map =
     ALocMap.map (Env_resolution.resolve_pred_func cx) info.Env_api.pred_func_map
   in
-  let env = Loc_env.with_info Name_def.Global hint_map info pred_func_map in
+  let env = Loc_env.with_info Name_def.Global hint_map info pred_func_map name_def_graph in
   Context.set_environment cx env;
   let components = NameDefOrdering.build_ordering cx ~autocomplete_hooks info name_def_graph in
   Base.List.iter ~f:(Cycles.handle_component cx name_def_graph) components;

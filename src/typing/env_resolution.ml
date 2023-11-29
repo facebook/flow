@@ -397,7 +397,15 @@ let resolve_binding_partial cx reason loc b =
   match b with
   | Root
       (Annotation
-        { tparams_map; optional; has_default_expression; param_loc; annot; react_deep_read_only }
+        {
+          tparams_map;
+          optional;
+          has_default_expression;
+          param_loc;
+          annot;
+          react_deep_read_only;
+          concrete = _;
+        }
         ) ->
     let t =
       resolve_annotation

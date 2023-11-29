@@ -88,6 +88,7 @@ type root =
       react_deep_read_only: bool;
       param_loc: ALoc.t option;
       annot: (ALoc.t, ALoc.t) Ast.Type.annotation;
+      concrete: root option;
     }
   | Value of {
       hints: ast_hints;

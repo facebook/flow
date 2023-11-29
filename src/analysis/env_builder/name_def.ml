@@ -953,8 +953,34 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
       let open Ast.Statement.VariableDeclaration.Declarator in
       let (_, { id; init }) = decl in
       let (source, hints) =
-        match (Destructure.type_of_pattern id, init, id) with
-        | (Some annot, _, _) ->
+        let concrete =
+          match (init, id) with
+          | ( Some (arr_loc, Ast.Expression.Array { Ast.Expression.Array.elements = []; _ }),
+              (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name = (name_loc, _); _ })
+            ) ->
+            let { Provider_api.array_providers; _ } =
+              Base.Option.value_exn
+                (Provider_api.providers_of_def env_info.Env_api.providers name_loc)
+            in
+            Some (EmptyArray { array_providers; arr_loc })
+          | ( Some
+                ( ( loc,
+                    Ast.Expression.Object ({ Ast.Expression.Object.properties = _ :: _; _ } as obj)
+                  ) as init
+                ),
+              _
+            ) ->
+            let this_write_locs = obj_this_write_locs obj in
+            begin
+              match obj_properties_synthesizable ~this_write_locs obj with
+              | Unsynthesizable -> Some (Value { hints = []; expr = init })
+              | synthesizable -> Some (ObjectValue { obj_loc = loc; obj; synthesizable })
+            end
+          | (Some init, _) -> Some (Value { hints = []; expr = init })
+          | (None, _) -> None
+        in
+        match Destructure.type_of_pattern id with
+        | Some annot ->
           ( Some
               (Annotation
                  {
@@ -964,34 +990,12 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                    react_deep_read_only = false;
                    param_loc = None;
                    annot;
+                   concrete;
                  }
               ),
             [Hint_t (AnnotationHint (ALocMap.empty, annot), ExpectedTypeHint)]
           )
-        | ( None,
-            Some (arr_loc, Ast.Expression.Array { Ast.Expression.Array.elements = []; _ }),
-            (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name = (name_loc, _); _ })
-          ) ->
-          let { Provider_api.array_providers; _ } =
-            Base.Option.value_exn (Provider_api.providers_of_def env_info.Env_api.providers name_loc)
-          in
-          (Some (EmptyArray { array_providers; arr_loc }), [])
-        | ( None,
-            Some
-              ( ( loc,
-                  Ast.Expression.Object ({ Ast.Expression.Object.properties = _ :: _; _ } as obj)
-                ) as init
-              ),
-            _
-          ) ->
-          let this_write_locs = obj_this_write_locs obj in
-          begin
-            match obj_properties_synthesizable ~this_write_locs obj with
-            | Unsynthesizable -> (Some (Value { hints = []; expr = init }), [])
-            | synthesizable -> (Some (ObjectValue { obj_loc = loc; obj; synthesizable }), [])
-          end
-        | (None, Some init, _) -> (Some (Value { hints = []; expr = init }), [])
-        | (None, None, _) -> (None, [])
+        | None -> (concrete, [])
       in
       Base.Option.iter ~f:(fun acc -> this#add_destructure_bindings acc id) source;
       ignore @@ this#variable_declarator_pattern ~kind id;
@@ -1016,6 +1020,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                    react_deep_read_only = false;
                    param_loc = None;
                    annot;
+                   concrete = None;
                  }
               )
            )
@@ -1064,6 +1069,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
               react_deep_read_only = false;
               param_loc = Some param_loc;
               annot;
+              concrete = None;
             }
         | None ->
           Base.Option.iter
@@ -1120,6 +1126,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
               react_deep_read_only = false;
               param_loc = Some param_loc;
               annot;
+              concrete = None;
             }
         | None ->
           let reason =
@@ -1155,6 +1162,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                    react_deep_read_only = false;
                    param_loc = None;
                    annot;
+                   concrete = None;
                  }
               )
            )
@@ -1182,6 +1190,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                 react_deep_read_only = false;
                 param_loc = None;
                 annot;
+                concrete = None;
               }
           | None -> CatchUnannotated)
         | _ -> CatchUnannotated
@@ -1281,6 +1290,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
               react_deep_read_only = true;
               param_loc = Some param_loc;
               annot;
+              concrete = None;
             }
         | None ->
           Base.Option.iter
@@ -1343,6 +1353,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
               react_deep_read_only = true;
               param_loc = Some param_loc;
               annot;
+              concrete = None;
             }
         | None ->
           let reason =
@@ -1804,6 +1815,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                      react_deep_read_only = false;
                      param_loc = None;
                      annot;
+                     concrete = None;
                    }
                 )
              )
@@ -1994,6 +2006,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
               }
             ) ->
           let source =
+            let forof = For (Of { await }, right) in
             match Destructure.type_of_pattern id with
             | Some annot ->
               Annotation
@@ -2004,8 +2017,9 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                   react_deep_read_only = false;
                   param_loc = None;
                   annot;
+                  concrete = Some forof;
                 }
-            | None -> For (Of { await }, right)
+            | None -> forof
           in
           this#add_destructure_bindings source id
         | LeftDeclaration _ ->
@@ -2028,6 +2042,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
               }
             ) ->
           let source =
+            let forin = For (In, right) in
             match Destructure.type_of_pattern id with
             | Some annot ->
               Annotation
@@ -2038,8 +2053,9 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                   react_deep_read_only = false;
                   param_loc = None;
                   annot;
+                  concrete = Some forin;
                 }
-            | None -> For (In, right)
+            | None -> forin
           in
           this#add_destructure_bindings source id
         | LeftDeclaration _ ->

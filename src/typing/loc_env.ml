@@ -25,6 +25,7 @@ type t = {
   hint_map: Type.lazy_hint_t ALocMap.t;
   var_info: Env_api.env_info;
   pred_func_map: Type.pred_funcall_info Lazy.t ALocMap.t;
+  name_defs: Name_def.env_entries_map;
 }
 
 let initialize info def_loc_kind loc t =
@@ -69,8 +70,9 @@ let empty scope_kind =
     hint_map = ALocMap.empty;
     under_resolution = EnvSet.empty;
     pred_func_map = ALocMap.empty;
+    name_defs = EnvMap.empty;
   }
 
-let with_info scope_kind hint_map var_info pred_func_map =
+let with_info scope_kind hint_map var_info pred_func_map name_defs =
   let env = empty scope_kind in
-  { env with hint_map; var_info; pred_func_map }
+  { env with hint_map; var_info; pred_func_map; name_defs }
