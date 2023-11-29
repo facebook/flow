@@ -2073,6 +2073,24 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
    *)
   let ordered_libs = List.rev_append (List.rev ordered_flowlib_libs) ordered_non_flowlib_libs in
   let libs = SSet.of_list ordered_libs in
+  let%lwt ( additional_parsed,
+            additional_unparsed,
+            _unchanged,
+            _not_found,
+            additional_dirty_modules,
+            additional_local_errors,
+            _
+          ) =
+    let additional_libdef_files_not_delivered = ref (Options.libdef_in_checking options) in
+    parse ~options ~profiling ~workers ~reader (fun () ->
+        if !additional_libdef_files_not_delivered then (
+          let files = SSet.fold (fun name acc -> File_key.LibFile name :: acc) libs [] in
+          additional_libdef_files_not_delivered := false;
+          Bucket.of_list files
+        ) else
+          Bucket.of_list []
+    )
+  in
   let%lwt (libs_ok, local_errors, warnings, suppressions, lib_exports, master_cx) =
     let suppressions = Error_suppressions.empty in
     let warnings = FilenameMap.empty in
@@ -2083,8 +2101,18 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
       ~warnings
       ~suppressions
       ~reader
-      ~validate_libdefs:true
+      ~validate_libdefs:(not (Options.libdef_in_checking options))
       ordered_libs
+  in
+  let (parsed, unparsed, dirty_modules, local_errors) =
+    ( FilenameSet.union parsed additional_parsed,
+      FilenameSet.union unparsed additional_unparsed,
+      Modulename.Set.union dirty_modules additional_dirty_modules,
+      FilenameMap.union
+        ~combine:(fun _ a b -> Some (Flow_error.ErrorSet.union a b))
+        local_errors
+        additional_local_errors
+    )
   in
   Hh_logger.info "Resolving dependencies";
   MonitorRPC.status_update ~event:ServerStatus.Resolving_dependencies_progress;
@@ -2092,6 +2120,16 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
   (* This will restore InfoHeap, NameHeap, & all_providers hashtable *)
   let%lwt (_changed_modules, duplicate_providers) =
     commit_modules ~options ~profiling ~workers ~duplicate_providers:SMap.empty dirty_modules
+  in
+  let%lwt () =
+    resolve_requires
+      ~transaction
+      ~reader
+      ~options
+      ~profiling
+      ~workers
+      ~parsed:(FilenameSet.elements additional_parsed)
+      ~parsed_set:additional_parsed
   in
   let errors =
     let merge_errors = FilenameMap.empty in
@@ -2102,6 +2140,18 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
     with_memory_timer_lwt ~options "RestoreDependencyInfo" profiling (fun () ->
         Lwt.return (Saved_state.restore_dependency_info dependency_graph)
     )
+  in
+  (* We explicitly add libdef files to the dependency graph, since they are not included
+   * in the saved state due to unstable temporarily path problem. *)
+  let dependency_info =
+    Dependency_info.update
+      dependency_info
+      (FilenameSet.fold
+         (fun f -> FilenameMap.add f (FilenameSet.empty, FilenameSet.empty))
+         additional_parsed
+         FilenameMap.empty
+      )
+      FilenameSet.empty
   in
 
   Hh_logger.info "Indexing files";
@@ -2221,7 +2271,11 @@ let init_from_scratch ~profiling ~workers options =
    *)
   let (ordered_libs, libs) = Files.init file_options in
   let next_files_for_parse =
-    make_next_files ~libs ~file_options ~include_libdef:false (Options.root options)
+    make_next_files
+      ~libs
+      ~file_options
+      ~include_libdef:(Options.libdef_in_checking options)
+      (Options.root options)
   in
   Hh_logger.info "Parsing";
   MonitorRPC.status_update ~event:ServerStatus.(Parsing_progress { finished = 0; total = None });
@@ -2502,9 +2556,9 @@ let recheck
       else
         Exit.(exit ~msg:"Restarting after a rebase to save time" Restart)
 
-let full_check ~profiling ~options ~workers ?focus_targets env =
-  let { ServerEnv.files = parsed; dependency_info; errors; collated_errors; _ } = env in
-  with_transaction "full check" (fun transaction reader ->
+let check_files_for_init ~profiling ~options ~workers ~focus_targets ~parsed ~message env =
+  let { ServerEnv.dependency_info; errors; collated_errors; _ } = env in
+  with_transaction message (fun transaction reader ->
       let%lwt input = files_to_infer ~options ~focus_targets ~profiling ~parsed ~dependency_info in
       let all_dependent_files = FilenameSet.empty in
       let implementation_dependency_graph =
@@ -2577,10 +2631,41 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
               collated_errors
         )
       in
-      let env = { env with ServerEnv.checked_files; errors; coverage; collated_errors } in
+      let env =
+        {
+          env with
+          ServerEnv.checked_files = CheckedSet.union checked_files env.ServerEnv.checked_files;
+          errors;
+          coverage;
+          collated_errors;
+        }
+      in
       Hh_logger.info "Checked set: %s" (CheckedSet.debug_counts_to_string checked_files);
       Lwt.return (env, check_internal_error)
   )
+
+let libdef_check_for_lazy_init ~profiling ~options ~workers env =
+  let parsed =
+    SSet.fold (fun n -> FilenameSet.add (File_key.LibFile n)) env.ServerEnv.libs FilenameSet.empty
+  in
+  check_files_for_init
+    ~profiling
+    ~options
+    ~workers
+    ~focus_targets:None
+    ~parsed
+    ~message:"lazy init check"
+    env
+
+let full_check_for_init ~profiling ~options ~workers ?focus_targets env =
+  check_files_for_init
+    ~profiling
+    ~options
+    ~workers
+    ~focus_targets
+    ~parsed:env.ServerEnv.files
+    ~message:"full check"
+    env
 
 let debug_determine_what_to_recheck = Recheck.determine_what_to_recheck
 

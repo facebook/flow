@@ -88,34 +88,47 @@ let check_lib_file ~ccx ~options mk_builtins ast =
 *)
 let load_lib_files ~ccx ~options ~reader ~validate_libdefs files =
   let%lwt (ok, errors, ordered_asts) =
-    files
-    |> Lwt_list.fold_left_s
-         (fun (ok_acc, errors_acc, asts_acc) file ->
-           let lib_file = File_key.LibFile file in
-           match%lwt parse_lib_file ~reader options file with
-           | Lib_ok { ast; file_sig = _; tolerable_errors } ->
-             let errors =
-               tolerable_errors
-               |> Inference_utils.set_of_file_sig_tolerable_errors ~source_file:lib_file
-             in
-             let errors_acc = ErrorSet.union errors errors_acc in
-             (* construct ast list in reverse override order *)
-             let asts_acc = ast :: asts_acc in
-             Lwt.return (ok_acc, errors_acc, asts_acc)
-           | Lib_fail fail ->
-             let errors =
-               match fail with
-               | Parsing.Uncaught_exception exn ->
-                 Inference_utils.set_of_parse_exception ~source_file:lib_file exn
-               | Parsing.Parse_error error ->
-                 Inference_utils.set_of_parse_error ~source_file:lib_file error
-               | Parsing.Docblock_errors errs ->
-                 Inference_utils.set_of_docblock_errors ~source_file:lib_file errs
-             in
-             let errors_acc = ErrorSet.union errors errors_acc in
-             Lwt.return (false, errors_acc, asts_acc)
-           | Lib_skip -> Lwt.return (ok_acc, errors_acc, asts_acc))
-         (true, ErrorSet.empty, [])
+    if Options.libdef_in_checking options then
+      files
+      |> Lwt_list.fold_left_s
+           (fun (ok_acc, errors_acc, asts_acc) file ->
+             let lib_file = File_key.LibFile file in
+             match Parsing_heaps.Mutator_reader.get_ast ~reader lib_file with
+             | Some ast ->
+               (* construct ast list in reverse override order *)
+               let asts_acc = ast :: asts_acc in
+               Lwt.return (ok_acc, errors_acc, asts_acc)
+             | None -> Lwt.return (false, errors_acc, asts_acc))
+           (true, ErrorSet.empty, [])
+    else
+      files
+      |> Lwt_list.fold_left_s
+           (fun (ok_acc, errors_acc, asts_acc) file ->
+             let lib_file = File_key.LibFile file in
+             match%lwt parse_lib_file ~reader options file with
+             | Lib_ok { ast; file_sig = _; tolerable_errors } ->
+               let errors =
+                 tolerable_errors
+                 |> Inference_utils.set_of_file_sig_tolerable_errors ~source_file:lib_file
+               in
+               let errors_acc = ErrorSet.union errors errors_acc in
+               (* construct ast list in reverse override order *)
+               let asts_acc = ast :: asts_acc in
+               Lwt.return (ok_acc, errors_acc, asts_acc)
+             | Lib_fail fail ->
+               let errors =
+                 match fail with
+                 | Parsing.Uncaught_exception exn ->
+                   Inference_utils.set_of_parse_exception ~source_file:lib_file exn
+                 | Parsing.Parse_error error ->
+                   Inference_utils.set_of_parse_error ~source_file:lib_file error
+                 | Parsing.Docblock_errors errs ->
+                   Inference_utils.set_of_docblock_errors ~source_file:lib_file errs
+               in
+               let errors_acc = ErrorSet.union errors errors_acc in
+               Lwt.return (false, errors_acc, asts_acc)
+             | Lib_skip -> Lwt.return (ok_acc, errors_acc, asts_acc))
+           (true, ErrorSet.empty, [])
   in
   let (builtin_exports, master_cx, cx_opt) =
     if ok then
