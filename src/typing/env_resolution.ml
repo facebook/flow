@@ -411,12 +411,10 @@ let resolve_binding_partial cx reason loc b =
       resolve_annotation
         cx
         tparams_map
-        ?react_deep_read_only:
-          ( if react_deep_read_only then
-            Some param_loc
-          else
-            None
-          )
+        ~react_deep_read_only:
+          (match param_loc with
+          | Some param_loc when react_deep_read_only -> Some (param_loc, Props)
+          | _ -> None)
         annot
     in
     Base.Option.iter param_loc ~f:(Type_env.bind_function_param cx t);

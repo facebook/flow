@@ -122,7 +122,7 @@ module type BUILTINS = sig
     Type.propref ->
     Type.property_type ->
     Reason.reason ->
-    ALoc.t option ->
+    (ALoc.t * Type.dro_type) option ->
     Type.tvar ->
     unit
 end

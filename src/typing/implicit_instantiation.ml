@@ -370,7 +370,8 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | ExtractReactRefT _
     | SealGenericT _ ->
       UpperNonT u
-    | DeepReadOnlyT (((r, _) as tout), _) -> identity_reverse_upper_bound cx seen tvar r (OpenT tout)
+    | DeepReadOnlyT (((r, _) as tout), _, _) ->
+      identity_reverse_upper_bound cx seen tvar r (OpenT tout)
     | MakeExactT (_, Lower (_, t)) -> UpperT t
     | MakeExactT (_, Upper use_t) -> t_of_use_t cx seen tvar use_t
     | ReposLowerT (_, _, use_t) -> t_of_use_t cx seen tvar use_t

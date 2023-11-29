@@ -324,8 +324,8 @@ module rec ConsGen : S = struct
         t
         (Annot_GetPropT (access_reason, use_op, mk_named_prop ~reason:prop_reason name))
 
-    let mk_react_dro cx _use_op props_loc t =
-      ConsGen.elab_t cx t (Annot_DeepReadOnlyT (reason_of_t t, props_loc))
+    let mk_react_dro cx _use_op (props_loc, dro_t) t =
+      ConsGen.elab_t cx t (Annot_DeepReadOnlyT (reason_of_t t, props_loc, dro_t))
   end
 
   module GetPropTKit = Flow_js_utils.GetPropT_kit (Get_prop_helper)
@@ -443,8 +443,8 @@ module rec ConsGen : S = struct
     | (EvalT (t, TypeDestructorT (use_op, reason, ReadOnlyType), _), _) ->
       let t = make_readonly cx use_op reason t in
       elab_t cx t op
-    | (EvalT (t, TypeDestructorT (_, reason, ReactDRO props_loc), _), _) ->
-      let t = elab_t cx t (Annot_DeepReadOnlyT (reason, props_loc)) in
+    | (EvalT (t, TypeDestructorT (_, reason, ReactDRO (dro_loc, dro_kind)), _), _) ->
+      let t = elab_t cx t (Annot_DeepReadOnlyT (reason, dro_loc, dro_kind)) in
       elab_t cx t op
     | (EvalT (t, TypeDestructorT (use_op, reason, PartialType), _), _) ->
       let t = make_partial cx use_op reason t in
@@ -905,18 +905,18 @@ module rec ConsGen : S = struct
     (************)
     (* DRO *)
     (************)
-    | (DefT (r, ObjT ({ Type.flags; _ } as o)), Annot_DeepReadOnlyT (_, props_loc)) ->
-      DefT (r, ObjT { o with Type.flags = { flags with react_dro = Some props_loc } })
+    | (DefT (r, ObjT ({ Type.flags; _ } as o)), Annot_DeepReadOnlyT (_, dro_loc, dro_kind)) ->
+      DefT (r, ObjT { o with Type.flags = { flags with react_dro = Some (dro_loc, dro_kind) } })
     | ( DefT (r, ArrT (TupleAT { elem_t; elements; arity; react_dro = _ })),
-        Annot_DeepReadOnlyT (_, props_loc)
+        Annot_DeepReadOnlyT (_, dro_loc, dro_kind)
       ) ->
-      DefT (r, ArrT (TupleAT { elem_t; elements; arity; react_dro = Some props_loc }))
+      DefT (r, ArrT (TupleAT { elem_t; elements; arity; react_dro = Some (dro_loc, dro_kind) }))
     | ( DefT (r, ArrT (ArrayAT { elem_t; tuple_view; react_dro = _ })),
-        Annot_DeepReadOnlyT (_, props_loc)
+        Annot_DeepReadOnlyT (_, dro_loc, dro_kind)
       ) ->
-      DefT (r, ArrT (ArrayAT { elem_t; tuple_view; react_dro = Some props_loc }))
-    | (DefT (r, ArrT (ROArrayAT (t, _))), Annot_DeepReadOnlyT (_, props_loc)) ->
-      DefT (r, ArrT (ROArrayAT (t, Some props_loc)))
+      DefT (r, ArrT (ArrayAT { elem_t; tuple_view; react_dro = Some (dro_loc, dro_kind) }))
+    | (DefT (r, ArrT (ROArrayAT (t, _))), Annot_DeepReadOnlyT (_, dro_loc, dro_kind)) ->
+      DefT (r, ArrT (ROArrayAT (t, Some (dro_loc, dro_kind))))
     (************)
     (* ObjRestT *)
     (************)

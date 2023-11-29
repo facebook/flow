@@ -1801,7 +1801,7 @@ module type Get_prop_helper_sig = sig
     Type.t ->
     Type.t
 
-  val mk_react_dro : Context.t -> use_op -> ALoc.t -> Type.t -> Type.t
+  val mk_react_dro : Context.t -> use_op -> ALoc.t * Type.dro_type -> Type.t -> Type.t
 
   val enum_proto : Context.t -> reason:Reason.t -> Reason.t * Type.enum_t -> Type.t
 
@@ -1824,7 +1824,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
       let loc = loc_of_reason ureason in
       let t =
         match react_dro with
-        | Some loc when not (is_exception_to_react_dro propref) -> F.mk_react_dro cx use_op loc t
+        | Some dro when not (is_exception_to_react_dro propref) -> F.mk_react_dro cx use_op dro t
         | _ -> t
       in
       F.return cx trace ~use_op:unknown_use (F.reposition cx ~trace loc t)
@@ -2096,13 +2096,11 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
   in
   begin
     match react_dro with
-    | Some loc when write_action ->
+    | Some dro when write_action ->
       add_output
         cx
         ~trace
-        (Error_message.EROArrayWrite
-           ((reason, reason_tup), Frame (ReactPropsDeepReadOnly loc, use_op))
-        )
+        (Error_message.EROArrayWrite ((reason, reason_tup), Frame (ReactDeepReadOnly dro, use_op)))
     | _ -> ()
   end;
   ( if is_index_restricted && (not can_write_tuple) && write_action then

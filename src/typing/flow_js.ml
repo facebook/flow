@@ -347,9 +347,9 @@ struct
       (OrdinaryName "$EnumProto")
       [enum_object_t; enum_t; representation_t]
 
-  let mk_react_dro cx use_op props_loc t =
+  let mk_react_dro cx use_op dro t =
     let id = Eval.generate_id () in
-    FlowJs.mk_possibly_evaluated_destructor cx use_op (reason_of_t t) t (ReactDRO props_loc) id
+    FlowJs.mk_possibly_evaluated_destructor cx use_op (reason_of_t t) t (ReactDRO dro) id
 
   module Get_prop_helper = struct
     type r = Type.tvar -> unit
@@ -909,7 +909,7 @@ struct
         (*************)
         (* DRO *)
         (*************)
-        | (OptionalT ({ type_; _ } as o), DeepReadOnlyT (((r, _) as tout), props_loc)) ->
+        | (OptionalT ({ type_; _ } as o), DeepReadOnlyT (((r, _) as tout), dro_loc, dro_type)) ->
           rec_flow_t
             cx
             trace
@@ -919,12 +919,12 @@ struct
                   o with
                   type_ =
                     Tvar.mk_no_wrap_where cx r (fun tvar ->
-                        rec_flow cx trace (type_, DeepReadOnlyT (tvar, props_loc))
+                        rec_flow cx trace (type_, DeepReadOnlyT (tvar, dro_loc, dro_type))
                     );
                 },
               OpenT tout
             )
-        | (MaybeT (rl, t), DeepReadOnlyT (((r, _) as tout), props_loc)) ->
+        | (MaybeT (rl, t), DeepReadOnlyT (((r, _) as tout), dro_loc, dro_type)) ->
           rec_flow_t
             cx
             trace
@@ -932,56 +932,60 @@ struct
             ( MaybeT
                 ( rl,
                   Tvar.mk_no_wrap_where cx r (fun tvar ->
-                      rec_flow cx trace (t, DeepReadOnlyT (tvar, props_loc))
+                      rec_flow cx trace (t, DeepReadOnlyT (tvar, dro_loc, dro_type))
                   )
                 ),
               OpenT tout
             )
-        | (UnionT (reason, rep), DeepReadOnlyT (tout, props_loc)) ->
+        | (UnionT (reason, rep), DeepReadOnlyT (tout, dro_loc, dro_type)) ->
           let dro_union =
             map_union
               ~f:(fun cx trace t tout ->
                 let tout = open_tvar tout in
-                rec_flow cx trace (t, DeepReadOnlyT (tout, props_loc)))
+                rec_flow cx trace (t, DeepReadOnlyT (tout, dro_loc, dro_type)))
               cx
               trace
               rep
               reason
           in
           rec_flow_t ~use_op:unknown_use cx trace (dro_union, OpenT tout)
-        | (DefT (r, ObjT ({ Type.flags; _ } as o)), DeepReadOnlyT (tout, props_loc)) ->
+        | (DefT (r, ObjT ({ Type.flags; _ } as o)), DeepReadOnlyT (tout, dro_loc, dro_type)) ->
           rec_flow_t
             ~use_op:unknown_use
             cx
             trace
-            ( DefT (r, ObjT { o with Type.flags = { flags with react_dro = Some props_loc } }),
+            ( DefT
+                (r, ObjT { o with Type.flags = { flags with react_dro = Some (dro_loc, dro_type) } }),
               OpenT tout
             )
         | ( DefT (r, ArrT (TupleAT { elem_t; elements; arity; react_dro = _ })),
-            DeepReadOnlyT (tout, props_loc)
+            DeepReadOnlyT (tout, dro_loc, dro_type)
           ) ->
           rec_flow_t
             ~use_op:unknown_use
             cx
             trace
-            ( DefT (r, ArrT (TupleAT { elem_t; elements; arity; react_dro = Some props_loc })),
+            ( DefT
+                (r, ArrT (TupleAT { elem_t; elements; arity; react_dro = Some (dro_loc, dro_type) })),
               OpenT tout
             )
         | ( DefT (r, ArrT (ArrayAT { elem_t; tuple_view; react_dro = _ })),
-            DeepReadOnlyT (tout, props_loc)
+            DeepReadOnlyT (tout, dro_loc, dro_type)
           ) ->
           rec_flow_t
             ~use_op:unknown_use
             cx
             trace
-            (DefT (r, ArrT (ArrayAT { elem_t; tuple_view; react_dro = Some props_loc })), OpenT tout)
-        | (DefT (r, ArrT (ROArrayAT (t, _))), DeepReadOnlyT (tout, props_loc)) ->
+            ( DefT (r, ArrT (ArrayAT { elem_t; tuple_view; react_dro = Some (dro_loc, dro_type) })),
+              OpenT tout
+            )
+        | (DefT (r, ArrT (ROArrayAT (t, _))), DeepReadOnlyT (tout, dro_loc, dro_type)) ->
           rec_flow_t
             ~use_op:unknown_use
             cx
             trace
-            (DefT (r, ArrT (ROArrayAT (t, Some props_loc))), OpenT tout)
-        | ((IntersectionT _ | OpaqueT _ | DefT (_, PolyT _)), DeepReadOnlyT (tout, _)) ->
+            (DefT (r, ArrT (ROArrayAT (t, Some (dro_loc, dro_type)))), OpenT tout)
+        | ((IntersectionT _ | OpaqueT _ | DefT (_, PolyT _)), DeepReadOnlyT (tout, _, _)) ->
           rec_flow_t ~use_op:unknown_use cx trace (l, OpenT tout)
         (***************)
         (* maybe types *)
@@ -4065,7 +4069,7 @@ struct
           if obj_is_readonlyish flags then
             let use_op =
               match flags.react_dro with
-              | Some loc -> Frame (ReactPropsDeepReadOnly loc, use_op)
+              | Some dro -> Frame (ReactDeepReadOnly dro, use_op)
               | None -> use_op
             in
             add_output
@@ -4081,7 +4085,7 @@ struct
           let prop_name = name_of_propref propref in
           let use_op =
             match flags.react_dro with
-            | Some loc -> Frame (ReactPropsDeepReadOnly loc, use_op)
+            | Some dro -> Frame (ReactDeepReadOnly dro, use_op)
             | None -> use_op
           in
           add_output cx ~trace (Error_message.EPropNotWritable { reason_prop; prop_name; use_op })
@@ -4188,9 +4192,9 @@ struct
               let reasons = (reason_op, reason_tup) in
               let use_op =
                 match arrtype with
-                | TupleAT { react_dro = Some loc; _ }
-                | ArrayAT { react_dro = Some loc; _ } ->
-                  Frame (ReactPropsDeepReadOnly loc, use_op)
+                | TupleAT { react_dro = Some dro; _ }
+                | ArrayAT { react_dro = Some dro; _ } ->
+                  Frame (ReactDeepReadOnly dro, use_op)
                 | _ -> use_op
               in
               add_output cx ~trace (Error_message.EROArrayWrite (reasons, use_op));
@@ -4204,7 +4208,7 @@ struct
           let value = elemt_of_arrtype arrtype in
           let value =
             match react_dro with
-            | Some loc -> mk_react_dro cx use_op loc value
+            | Some dro -> mk_react_dro cx use_op dro value
             | None -> value
           in
           perform_elem_action cx trace ~use_op ~restrict_deletes:false reason_op arr value action
@@ -4222,7 +4226,7 @@ struct
           in
           let value =
             match react_dro with
-            | Some loc when read_action -> mk_react_dro cx use_op loc value
+            | Some dro when read_action -> mk_react_dro cx use_op dro value
             | _ -> value
           in
           perform_elem_action cx trace ~use_op ~restrict_deletes:is_tuple reason arr value action
@@ -5446,7 +5450,7 @@ struct
             (own_props, proto_props, inst_call_t, inst_dict);
           rec_flow cx trace (l, UseT (use_op, super))
         (* Unwrap deep readonly *)
-        | (_, DeepReadOnlyT (tout, _)) -> rec_flow_t ~use_op:unknown_use cx trace (l, OpenT tout)
+        | (_, DeepReadOnlyT (tout, _, _)) -> rec_flow_t ~use_op:unknown_use cx trace (l, OpenT tout)
         (* Render Type Misc Uses *)
         | (DefT (_, RendersT (NominalRenders _)), ExitRendersT { renders_reason; u })
         | (DefT (renders_reason, RendersT (NominalRenders _)), u) ->
@@ -5928,8 +5932,8 @@ struct
           (fun t_out' -> UseT (use_op, OptionalT { opt with type_ = t_out' }))
           t_out;
         true
-      | DeepReadOnlyT (t_out, props_loc) ->
-        narrow_generic_tvar (fun t_out' -> DeepReadOnlyT (t_out', props_loc)) t_out;
+      | DeepReadOnlyT (t_out, dro_loc, dro_type) ->
+        narrow_generic_tvar (fun t_out' -> DeepReadOnlyT (t_out', dro_loc, dro_type)) t_out;
         true
       | FilterMaybeT (use_op, t_out) ->
         narrow_generic (fun t_out' -> FilterMaybeT (use_op, t_out')) t_out;
@@ -7130,7 +7134,7 @@ struct
                 )
               )
             | ReadOnlyType -> Object.(ObjKitT (use_op, reason, Resolve Next, ReadOnly, OpenT tout))
-            | ReactDRO props_loc -> DeepReadOnlyT (tout, props_loc)
+            | ReactDRO (dro_loc, dro_type) -> DeepReadOnlyT (tout, dro_loc, dro_type)
             | PartialType -> Object.(ObjKitT (use_op, reason, Resolve Next, Partial, OpenT tout))
             | RequiredType -> Object.(ObjKitT (use_op, reason, Resolve Next, Required, OpenT tout))
             | ValuesType -> GetValuesT (reason, OpenT tout)

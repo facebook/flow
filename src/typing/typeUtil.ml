@@ -136,7 +136,7 @@ and reason_of_use_t = function
   | FilterOptionalT (_, t) -> reason_of_t t
   | ExtractReactRefT (reason, _) -> reason
   | FilterMaybeT (_, t) -> reason_of_t t
-  | DeepReadOnlyT ((r, _), _) -> r
+  | DeepReadOnlyT ((r, _), _, _) -> r
   | ConcretizeTypeAppsT (_, _, (_, _, _, reason), _) -> reason
   | CondT (reason, _, _, _) -> reason
   | ReactPropsToOut (reason, _)
@@ -392,7 +392,7 @@ and mod_reason_of_use_t f = function
   | TypeCastT (use_op, t) -> TypeCastT (use_op, mod_reason_of_t f t)
   | FilterOptionalT (use_op, t) -> FilterOptionalT (use_op, mod_reason_of_t f t)
   | FilterMaybeT (use_op, t) -> FilterMaybeT (use_op, mod_reason_of_t f t)
-  | DeepReadOnlyT ((r, i), rr) -> DeepReadOnlyT ((f r, i), rr)
+  | DeepReadOnlyT ((r, i), rr, dro) -> DeepReadOnlyT ((f r, i), rr, dro)
   | ConcretizeTypeAppsT (use_op, t1, (t2, ts2, op2, r2), targs) ->
     ConcretizeTypeAppsT (use_op, t1, (t2, ts2, op2, f r2), targs)
   | CondT (reason, then_t, else_t, tout) -> CondT (f reason, then_t, else_t, tout)
@@ -672,7 +672,7 @@ let rec mod_loc_of_virtual_use_op f =
     | ConstrainedAssignment { name; declaration; providers; array } ->
       ConstrainedAssignment
         { name; declaration = f declaration; providers = List.map f providers; array }
-    | ReactPropsDeepReadOnly loc -> ReactPropsDeepReadOnly (f loc)
+    | ReactDeepReadOnly (loc, l) -> ReactDeepReadOnly (f loc, l)
     | ArrayElementCompatibility { lower; upper } ->
       ArrayElementCompatibility { lower = mod_reason lower; upper = mod_reason upper }
     | FunCompatibility { lower; upper } ->

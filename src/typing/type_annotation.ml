@@ -928,7 +928,14 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               let t = List.hd ts in
               let reason = mk_reason RReadOnlyType loc in
               reconstruct_ast
-                (mk_type_destructor cx (use_op reason) reason t (ReactDRO loc) (mk_eval_id cx loc))
+                (mk_type_destructor
+                   cx
+                   (use_op reason)
+                   reason
+                   t
+                   (ReactDRO (loc, DROAnnot))
+                   (mk_eval_id cx loc)
+                )
                 targs
           )
         (* $Keys<T> is the set of keys of T *)

@@ -126,7 +126,7 @@ module Make
                 {
                   obj_kind = Inexact;
                   frozen = false;
-                  react_dro = Some (Reason.loc_of_reason config_reason);
+                  react_dro = Some (Reason.loc_of_reason config_reason, Props);
                 }
             in
             let call = None in
