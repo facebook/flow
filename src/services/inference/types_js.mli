@@ -39,8 +39,15 @@ val recheck :
   )
   Lwt.t
 
+val libdef_check_for_lazy_init :
+  profiling:Profiling_js.running ->
+  options:Options.t ->
+  workers:MultiWorkerLwt.worker list option ->
+  ServerEnv.env ->
+  (ServerEnv.env * string option) Lwt.t
+
 (* initial (full) check *)
-val full_check :
+val full_check_for_init :
   profiling:Profiling_js.running ->
   options:Options.t ->
   workers:MultiWorkerLwt.worker list option ->

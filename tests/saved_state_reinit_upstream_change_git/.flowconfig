@@ -1,3 +1,4 @@
 [options]
 all=true
 casting_syntax=both
+experimental.libdef_in_checking=true

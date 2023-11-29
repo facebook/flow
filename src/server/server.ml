@@ -75,10 +75,15 @@ let init ~profiling ?focus_targets genv =
    * Furthermore, if we're in lazy mode, we forego typechecking until later,
    * when it proceeds on an as-needed basis. *)
   let%lwt (env, first_internal_error) =
-    if (not libs_ok) || Options.lazy_mode options then
+    if not libs_ok then
       Lwt.return (env, None)
+    else if Options.lazy_mode options then
+      if Options.libdef_in_checking options then
+        Types_js.libdef_check_for_lazy_init ~profiling ~workers ~options env
+      else
+        Lwt.return (env, None)
     else
-      Types_js.full_check ~profiling ~workers ?focus_targets ~options env
+      Types_js.full_check_for_init ~profiling ~workers ?focus_targets ~options env
   in
   sample_init_memory profiling;
 
