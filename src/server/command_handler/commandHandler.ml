@@ -144,7 +144,10 @@ let file_input_of_text_document_position_opt ~client_id t =
 let file_key_of_file_input_without_env ~options ~libs file_input =
   let file_options = Options.file_options options in
   File_input.filename_of_file_input file_input
-  |> Files.filename_from_string ~options:file_options ~consider_libdefs:false ~libs
+  |> Files.filename_from_string
+       ~options:file_options
+       ~consider_libdefs:(Options.libdef_in_checking options)
+       ~libs
 
 let file_key_of_file_input ~options ~env file_input =
   file_key_of_file_input_without_env ~options ~libs:env.ServerEnv.libs file_input
@@ -160,8 +163,14 @@ let file_key_of_file_input ~options ~env file_input =
  *)
 let check_that_we_care_about_this_file =
   let is_stdin file_path = String.equal file_path "-" in
-  let check_file_not_ignored ~file_options ~env ~file_path () =
-    if Files.wanted ~options:file_options ~include_libdef:false env.ServerEnv.libs file_path then
+  let check_file_not_ignored ~options ~file_options ~env ~file_path () =
+    if
+      Files.wanted
+        ~options:file_options
+        ~include_libdef:(Options.libdef_in_checking options)
+        env.ServerEnv.libs
+        file_path
+    then
       Ok ()
     else
       Error "File is ignored"
@@ -185,7 +194,7 @@ let check_that_we_care_about_this_file =
       Error "File is not a Flow file"
   in
   let check_flow_pragma ~options ~content ~file_key () =
-    if Options.all options then
+    if Options.all options || File_key.is_lib_file file_key then
       Ok ()
     else
       let (_, docblock) =
@@ -207,11 +216,16 @@ let check_that_we_care_about_this_file =
     if is_stdin file_path then
       (* if we don't know the filename (stdin), assume it's ok *)
       Ok ()
+    else if
+      Options.libdef_in_checking options
+      && Files.is_in_flowlib (Options.file_options options) file_path
+    then
+      Ok ()
     else
       let file_path = Files.imaginary_realpath file_path in
       let file_options = Options.file_options options in
       Ok ()
-      >>= check_file_not_ignored ~file_options ~env ~file_path
+      >>= check_file_not_ignored ~options ~file_options ~env ~file_path
       >>= check_file_included ~options ~file_options ~file_path
       >>= check_is_flow_file ~file_options ~file_path
       >>= check_flow_pragma ~options ~content ~file_key
@@ -1378,7 +1392,7 @@ let get_ephemeral_handler genv command =
     let fn =
       Files.filename_from_string
         ~options:file_options
-        ~consider_libdefs:false
+        ~consider_libdefs:(Options.libdef_in_checking options)
         ~libs:SSet.empty
         filename
     in
@@ -2951,7 +2965,7 @@ let handle_live_errors_request =
                   let file_options = Options.file_options options in
                   Files.filename_from_string
                     ~options:file_options
-                    ~consider_libdefs:false
+                    ~consider_libdefs:(Options.libdef_in_checking options)
                     ~libs:env.ServerEnv.libs
                     file_path
                 in

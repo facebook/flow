@@ -14,6 +14,7 @@ module.exports = (suite(
     lspStartAndConnect,
     lspRequestAndWaitUntilResponse,
     addFiles,
+    addFile,
   }) => {
     function snapshot(
       fixture: string,
@@ -268,6 +269,23 @@ x.foo;
           ],
         ),
         snapshot('empty.js', 2, 15, 'unsaved_1.json'),
+      ]),
+      test('libdef', [
+        addFile('__lib_fixtures__/lib.js', 'lib.js'),
+        lspStartAndConnect(),
+        lspRequestAndWaitUntilResponse('textDocument/documentHighlight', {
+          textDocument: {
+            uri: `<PLACEHOLDER_PROJECT_URL>/lib.js`,
+          },
+          position: {line: 0, character: 7},
+        }).verifyLSPMessageSnapshot(
+          join(__dirname, '__snapshots__', 'libdef.json'),
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
       ]),
     ];
   },
