@@ -1,3 +1,19 @@
+### 0.223.0
+
+Notable bug fixes:
+* Mitigates a bug in Linked Editing Range where typing characters quickly on one side would throw off sync on the other side. With this fix, even if some characters are skipped Flow will be able to later recover the matching of open and close tag.
+* Fixed an issue that will cause some nested conditional types to be evaluated to `any`. (Example: Issue #9107)
+
+IDE:
+* Auto-import for default-exported values will prefer the name of the exported value over the name inferred from the module.
+
+Misc:
+* Error collation is incremental only. The `incremental_error_collation` flowconfig option is not recognized anymore.
+
+Library Definitions:
+* Remove `status` global from dom.js
+* Delete declared `React` module. You should always import react with lowercase like `require('react')` or `import React from 'react'`
+
 ### 0.222.0
 
 New Features:
