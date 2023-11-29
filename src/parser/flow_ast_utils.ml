@@ -424,3 +424,31 @@ let push_toplevel_type t exp =
     | _ -> e
   in
   ((loc, t), e')
+
+let hook_name s =
+  let is_A_to_Z c = c >= 'A' && c <= 'Z' in
+  String.starts_with ~prefix:"use" s && (String.length s = 3 || is_A_to_Z s.[3])
+
+let hook_function { Flow_ast.Function.id; _ } =
+  match id with
+  | Some (loc, { Flow_ast.Identifier.name; _ }) when hook_name name -> Some loc
+  | _ -> None
+
+let hook_call { Flow_ast.Expression.Call.callee; _ } =
+  (* A.B.C.useFoo() is a hook, A().useFoo() is not *)
+  let open Flow_ast.Expression in
+  let rec hook_callee top exp =
+    match exp with
+    | (_, Identifier (_, { Flow_ast.Identifier.name; _ })) -> hook_name name || not top
+    | ( _,
+        Member
+          {
+            Member._object;
+            property = Member.PropertyIdentifier (_, { Flow_ast.Identifier.name; _ });
+            _;
+          }
+      ) ->
+      (hook_name name || not top) && hook_callee false _object
+    | _ -> false
+  in
+  hook_callee true callee

@@ -137,3 +137,7 @@ val loc_of_return_annot : ('loc, 'loc) Flow_ast.Function.ReturnAnnot.t -> 'loc
 
 val push_toplevel_type :
   't -> ('loc, 'loc * 't) Flow_ast.Expression.t -> ('loc, 'loc * 't) Flow_ast.Expression.t
+
+val hook_function : ('a, 'b) Flow_ast.Function.t -> 'b option
+
+val hook_call : ('loc, 'loc) Flow_ast.Expression.Call.t -> bool
