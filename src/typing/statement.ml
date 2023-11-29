@@ -4090,7 +4090,16 @@ module Make
       | (Member { Member._object; property = Member.PropertyExpression index; comments }, _) ->
         let reason = mk_reason (RProperty None) loc in
         let use_op = Op (GetProperty (mk_expression_reason ex)) in
-        let get_opt_use tind _ = OptGetElemT (use_op, reason, false (* annot *), tind) in
+        (* Only create an id if the property expression is a literal, which are
+           treated like named props. *)
+        let id =
+          match index with
+          | (_, StringLiteral _)
+          | (_, NumberLiteral _) ->
+            Some (mk_id ())
+          | _ -> None
+        in
+        let get_opt_use tind _ = OptGetElemT (use_op, reason, id, false (* annot *), tind) in
         let get_mem_t tind reason obj_t =
           Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
               let use = apply_opt_use (get_opt_use tind reason) t in

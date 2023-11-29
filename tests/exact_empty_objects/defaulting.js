@@ -109,3 +109,11 @@ declare var a: ?any;
   const {y} = a || {}; // OK
   const {z} = a ? a : {}; // OK
 }
+
+// Computed props
+{
+  const x = o ?? {};
+
+  const a = x['prop'];
+  (a: number | void); // OK
+}

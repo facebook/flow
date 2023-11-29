@@ -539,6 +539,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
                     {
                       use_op = unknown_use;
                       reason;
+                      id = None;
                       from_annot = true;
                       key_t = NumT.make reason;
                       tout;

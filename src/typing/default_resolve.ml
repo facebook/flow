@@ -54,7 +54,7 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
   in
   let resolve_elem_action action =
     match action with
-    | ReadElem (_, tvar) -> resolve_tvar tvar
+    | ReadElem (_, _, tvar) -> resolve_tvar tvar
     | WriteElem (_, topt, _) -> map_opt resolve topt
     | CallElem (_, action) -> resolve_method_action action
   in

@@ -416,7 +416,7 @@ and mod_reason_of_opt_use_t f = function
   | OptGetPrivatePropT (use_op, reason, name, bindings, static) ->
     OptGetPrivatePropT (use_op, f reason, name, bindings, static)
   | OptTestPropT (use_op, reason, id, n) -> OptTestPropT (use_op, f reason, id, n)
-  | OptGetElemT (use_op, reason, annot, it) -> OptGetElemT (use_op, f reason, annot, it)
+  | OptGetElemT (use_op, reason, id, annot, it) -> OptGetElemT (use_op, f reason, id, annot, it)
   | OptCallElemT (use_op, r1, r2, elt, call) -> OptCallElemT (use_op, f r1, r2, elt, call)
 
 let rec util_use_op_of_use_t :

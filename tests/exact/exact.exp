@@ -186,98 +186,145 @@ References:
            ^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- nonstrict-access.js:17:4
+Error ----------------------------------------------------------------------------------------- nonstrict-access.js:18:4
 
 Cannot cast `x.some` to string because `void` (due to access of non-existent property `some`) [1] is incompatible with
 string [2]. [incompatible-cast]
 
-   nonstrict-access.js:17:4
-   17|   (x.some: string); // ERROR
+   nonstrict-access.js:18:4
+   18|   (x.some: string); // ERROR
           ^^^^^^ [1]
 
 References:
-   nonstrict-access.js:17:12
-   17|   (x.some: string); // ERROR
+   nonstrict-access.js:18:12
+   18|   (x.some: string); // ERROR
                   ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- nonstrict-access.js:19:6
+Error ----------------------------------------------------------------------------------------- nonstrict-access.js:19:4
+
+Cannot cast `x['some']` to string because `void` (due to access of non-existent property `some`) [1] is incompatible
+with string [2]. [incompatible-cast]
+
+   nonstrict-access.js:19:4
+   19|   (x['some']: string); // ERROR
+          ^^^^^^^^^ [1]
+
+References:
+   nonstrict-access.js:19:15
+   19|   (x['some']: string); // ERROR
+                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- nonstrict-access.js:22:6
 
 Cannot get `x.NONE` because property `NONE` is missing in object type [1]. [prop-missing]
 
-   nonstrict-access.js:19:6
-   19|   (x.NONE); // ERROR
+   nonstrict-access.js:22:6
+   22|   (x.NONE); // ERROR
             ^^^^
 
 References:
-   nonstrict-access.js:13:18
-   13|   declare var x: T;
-                        ^ [1]
+   nonstrict-access.js:13:20
+   13|   declare const x: T;
+                          ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------- nonstrict-access.js:24:4
+Error ----------------------------------------------------------------------------------------- nonstrict-access.js:23:6
+
+Cannot get `x['NONE']` because property `NONE` is missing in object type [1]. [prop-missing]
+
+   nonstrict-access.js:23:6
+   23|   (x['NONE']); // ERROR
+            ^^^^^^
+
+References:
+   nonstrict-access.js:13:20
+   13|   declare const x: T;
+                          ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- nonstrict-access.js:28:4
 
 Cannot cast `some` to string because `void` (due to access of non-existent property `some`) [1] is incompatible with
 string [2]. [incompatible-cast]
 
-   nonstrict-access.js:24:4
-   24|   (some: string); // ERROR
+   nonstrict-access.js:28:4
+   28|   (some: string); // ERROR
           ^^^^
 
 References:
-   nonstrict-access.js:22:15
-   22|   const {all, some} = x;
+   nonstrict-access.js:26:15
+   26|   const {all, some} = x;
                      ^^^^ [1]
-   nonstrict-access.js:24:10
-   24|   (some: string); // ERROR
+   nonstrict-access.js:28:10
+   28|   (some: string); // ERROR
                 ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- nonstrict-access.js:27:10
+Error ---------------------------------------------------------------------------------------- nonstrict-access.js:31:10
 
 Property `NONE` is missing in object type [1]. [prop-missing]
 
-   nonstrict-access.js:27:10
-   27|   const {NONE} = x; // ERROR
+   nonstrict-access.js:31:10
+   31|   const {NONE} = x; // ERROR
                 ^^^^
 
 References:
-   nonstrict-access.js:13:18
-   13|   declare var x: T;
-                        ^ [1]
+   nonstrict-access.js:13:20
+   13|   declare const x: T;
+                          ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------- nonstrict-access.js:43:4
+Error ----------------------------------------------------------------------------------------- nonstrict-access.js:47:4
 
 Cannot cast `obj.some` to string because `void` (due to access of non-existent property `some`) [1] is incompatible with
 string [2]. [incompatible-cast]
 
-   nonstrict-access.js:43:4
-   43|   (obj.some: string); // ERROR
+   nonstrict-access.js:47:4
+   47|   (obj.some: string); // ERROR
           ^^^^^^^^ [1]
 
 References:
-   nonstrict-access.js:43:14
-   43|   (obj.some: string); // ERROR
+   nonstrict-access.js:47:14
+   47|   (obj.some: string); // ERROR
                     ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- nonstrict-access.js:50:4
+Error ----------------------------------------------------------------------------------------- nonstrict-access.js:54:4
 
 Cannot cast `some` to string because `void` (due to access of non-existent property `some`) [1] is incompatible with
 string [2]. [incompatible-cast]
 
-   nonstrict-access.js:50:4
-   50|   (some: string); // ERROR
+   nonstrict-access.js:54:4
+   54|   (some: string); // ERROR
           ^^^^
 
 References:
-   nonstrict-access.js:46:15
-   46|   const {all, some, baz} = obj;
+   nonstrict-access.js:50:15
+   50|   const {all, some, baz} = obj;
                      ^^^^ [1]
-   nonstrict-access.js:50:10
-   50|   (some: string); // ERROR
+   nonstrict-access.js:54:10
+   54|   (some: string); // ERROR
                 ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- nonstrict-access.js:82:7
+
+Cannot get `Foo[k]` because property `xxx` is missing in object type [1]. [prop-missing]
+
+   nonstrict-access.js:82:7
+   82|   Foo[k]; // ERROR: prop-missing
+             ^
+
+References:
+   nonstrict-access.js:75:21
+                           v
+   75|   declare const Foo:{
+   76|     foo: 1,
+   77|     bar: 2,
+   78|   };
+         ^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- not_object.js:3:15
@@ -621,4 +668,4 @@ References:
 
 
 
-Found 42 errors
+Found 45 errors

@@ -751,7 +751,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | ExportTypeT _ -> p t
     | ImplicitVoidReturnT _ -> p t
     | AssertExportIsTypeT _ -> p t
-    | GetElemT { use_op = _; reason = _; from_annot; key_t; tout = (preason, ptvar) } ->
+    | GetElemT { use_op = _; reason = _; id = _; from_annot; key_t; tout = (preason, ptvar) } ->
       p
         ~extra:
           (spf

@@ -588,6 +588,7 @@ module rec TypeTerm : sig
     | GetElemT of {
         use_op: use_op;
         reason: reason;
+        id: ident option;
         from_annot: bool;
         key_t: t;
         tout: tvar;
@@ -1014,7 +1015,7 @@ module rec TypeTerm : sig
     | OptGetPropT of use_op * reason * ident option * propref
     | OptGetPrivatePropT of use_op * reason * string * class_binding list * bool
     | OptTestPropT of use_op * reason * ident * propref
-    | OptGetElemT of use_op * reason * bool (* from annot *) * t
+    | OptGetElemT of use_op * reason * ident option * bool (* from annot *) * t
     | OptCallElemT of use_op * (* call *) reason * (* lookup *) reason * t * opt_method_action
 
   and opt_state =
@@ -1411,7 +1412,7 @@ module rec TypeTerm : sig
      to initialize the property value, but in order to avoid race conditions we
      need to ensure that reads happen after writes. *)
   and elem_action =
-    | ReadElem of bool (* annot *) * tvar
+    | ReadElem of ident option * bool (* annot *) * tvar
     | WriteElem of t * t option (* tout *) * set_mode
     | CallElem of reason * method_action
 
@@ -4346,8 +4347,8 @@ let apply_opt_use opt_use t_out =
   | OptGetPropT (u, r, i, p) -> GetPropT (u, r, i, p, t_out)
   | OptGetPrivatePropT (u, r, s, cbs, b) -> GetPrivatePropT (u, r, s, cbs, b, t_out)
   | OptTestPropT (u, r, i, p) -> TestPropT (u, r, i, p, t_out)
-  | OptGetElemT (use_op, reason, from_annot, key_t) ->
-    GetElemT { use_op; reason; from_annot; key_t; tout = t_out }
+  | OptGetElemT (use_op, reason, id, from_annot, key_t) ->
+    GetElemT { use_op; reason; id; from_annot; key_t; tout = t_out }
   | OptCallElemT (u, r1, r2, elt, call) -> CallElemT (u, r1, r2, elt, apply_opt_action call t_out)
 
 let mk_enum_type reason enum =
