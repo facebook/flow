@@ -42,7 +42,7 @@ let has_placeholders =
     | exception EncounteredPlaceholderType -> true
     | _ -> false
 
-let has_unresolved_tvars_visitor =
+class has_unresolved_tvars_visitor =
   object (this)
     inherit [ISet.t] Type_visitor.t
 
@@ -58,6 +58,24 @@ let has_unresolved_tvars_visitor =
         | C.Resolved t -> this#type_ cx pole seen t
         | C.Unresolved _ -> raise EncounteredUnresolvedTvar
   end
+
+let has_unresolved_tvars_or_placeholders_visitor =
+  object
+    inherit has_unresolved_tvars_visitor as super
+
+    method! type_ cx pole seen t =
+      match t with
+      | AnyT (_, Placeholder) -> raise EncounteredPlaceholderType
+      | t -> super#type_ cx pole seen t
+  end
+
+let has_unresolved_tvars_visitor = new has_unresolved_tvars_visitor
+
+let has_unresolved_tvars_or_placeholders cx t =
+  match has_unresolved_tvars_or_placeholders_visitor#type_ cx Polarity.Positive ISet.empty t with
+  | exception EncounteredUnresolvedTvar -> true
+  | exception EncounteredPlaceholderType -> true
+  | _ -> false
 
 let has_unresolved_tvars cx t =
   match has_unresolved_tvars_visitor#type_ cx Polarity.Positive ISet.empty t with

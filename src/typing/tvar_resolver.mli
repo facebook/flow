@@ -7,6 +7,8 @@
 
 val has_placeholders : Context.t -> Type.t -> bool
 
+val has_unresolved_tvars_or_placeholders : Context.t -> Type.t -> bool
+
 val has_unresolved_tvars : Context.t -> Type.t -> bool
 
 val has_unresolved_tvars_in_destructors : Context.t -> Type.destructor -> bool

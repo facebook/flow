@@ -1497,10 +1497,10 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
   let run_conditional cx trace ~use_op ~reason ~tparams ~check_t ~extends_t ~true_t ~false_t =
     if
       Context.in_implicit_instantiation cx
-      && (Tvar_resolver.has_unresolved_tvars cx check_t
-         || Tvar_resolver.has_unresolved_tvars cx extends_t
-         || Tvar_resolver.has_unresolved_tvars cx true_t
-         || Tvar_resolver.has_unresolved_tvars cx false_t
+      && (Tvar_resolver.has_unresolved_tvars_or_placeholders cx check_t
+         || Tvar_resolver.has_unresolved_tvars_or_placeholders cx extends_t
+         || Tvar_resolver.has_unresolved_tvars_or_placeholders cx true_t
+         || Tvar_resolver.has_unresolved_tvars_or_placeholders cx false_t
          )
     then (
       Debug_js.Verbose.print_if_verbose
