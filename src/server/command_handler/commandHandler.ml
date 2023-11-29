@@ -141,9 +141,13 @@ let file_input_of_text_document_position_opt ~client_id t =
       file_input_of_text_document_position ~client t
   )
 
-let file_key_of_file_input ~options file_input =
+let file_key_of_file_input_without_env ~options ~libs file_input =
   let file_options = Options.file_options options in
-  File_input.filename_of_file_input file_input |> Files.filename_from_string ~options:file_options
+  File_input.filename_of_file_input file_input
+  |> Files.filename_from_string ~options:file_options ~consider_libdefs:false ~libs
+
+let file_key_of_file_input ~options ~env file_input =
+  file_key_of_file_input_without_env ~options ~libs:env.ServerEnv.libs file_input
 
 (* This tries to simulate the logic from elsewhere which determines whether we would report
  * errors for a given file. The criteria are
@@ -157,7 +161,7 @@ let file_key_of_file_input ~options file_input =
 let check_that_we_care_about_this_file =
   let is_stdin file_path = String.equal file_path "-" in
   let check_file_not_ignored ~file_options ~env ~file_path () =
-    if Files.wanted ~options:file_options env.ServerEnv.libs file_path then
+    if Files.wanted ~options:file_options ~include_libdef:false env.ServerEnv.libs file_path then
       Ok ()
     else
       Error "File is ignored"
@@ -223,7 +227,7 @@ let json_props_of_skipped reason =
 let json_of_skipped reason = Some (Hh_json.JSON_Object (json_props_of_skipped reason))
 
 let of_file_input ~options ~env file_input =
-  let file_key = file_key_of_file_input ~options file_input in
+  let file_key = file_key_of_file_input ~options ~env file_input in
   match File_input.content_of_file_input file_input with
   | Error msg -> Error (Failed msg)
   | Ok file_contents ->
@@ -628,7 +632,7 @@ let insert_type
     ~omit_targ_defaults
     ~location_is_strict
     ~ambiguity_strategy =
-  let file_key = file_key_of_file_input ~options file_input in
+  let file_key = file_key_of_file_input ~options ~env file_input in
   let options = { options with Options.opt_verbose = verbose } in
   File_input.content_of_file_input file_input >>= fun file_content ->
   Code_action_service.insert_type
@@ -643,12 +647,12 @@ let insert_type
     ~ambiguity_strategy
 
 let autofix_exports ~options ~env ~profiling ~input =
-  let file_key = file_key_of_file_input ~options input in
+  let file_key = file_key_of_file_input ~options ~env input in
   File_input.content_of_file_input input >>= fun file_content ->
   Code_action_service.autofix_exports ~options ~env ~profiling ~file_key ~file_content
 
 let autofix_missing_local_annot ~options ~env ~profiling ~input =
-  let file_key = file_key_of_file_input ~options input in
+  let file_key = file_key_of_file_input ~options ~env input in
   File_input.content_of_file_input input >>= fun file_content ->
   Code_action_service.autofix_missing_local_annot ~options ~env ~profiling ~file_key ~file_content
 
@@ -733,7 +737,7 @@ let collect_rage ~options ~reader ~env ~files =
 
 let dump_types ~options ~env ~profiling ~evaluate_type_destructors file_input =
   let open Base.Result in
-  let file_key = file_key_of_file_input ~options file_input in
+  let file_key = file_key_of_file_input ~options ~env file_input in
   File_input.content_of_file_input file_input >>= fun content ->
   let file_artifacts_result =
     let parse_result = Type_contents.parse_contents ~options ~profiling content file_key in
@@ -1251,7 +1255,7 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
 
 let add_missing_imports ~reader ~options ~env ~profiling ~client textDocument =
   let file_input = file_input_of_text_document_identifier ~client textDocument in
-  let file_key = file_key_of_file_input ~options file_input in
+  let file_key = file_key_of_file_input ~options ~env file_input in
   match File_input.content_of_file_input file_input with
   | Error msg -> Lwt.return (Error msg)
   | Ok file_contents ->
@@ -1277,7 +1281,7 @@ let add_missing_imports ~reader ~options ~env ~profiling ~client textDocument =
 
 let organize_imports ~options ~profiling ~client textDocument =
   let file_input = file_input_of_text_document_identifier ~client textDocument in
-  let file_key = file_key_of_file_input ~options file_input in
+  let file_key = file_key_of_file_input_without_env ~options ~libs:SSet.empty file_input in
   match File_input.content_of_file_input file_input with
   | Error msg -> Error msg
   | Ok file_contents ->
@@ -1371,7 +1375,13 @@ let get_ephemeral_handler genv command =
   | ServerProt.Request.CYCLE { filename; types_only } ->
     (* The user preference is to make this wait for up-to-date data *)
     let file_options = Options.file_options options in
-    let fn = Files.filename_from_string ~options:file_options filename in
+    let fn =
+      Files.filename_from_string
+        ~options:file_options
+        ~consider_libdefs:false
+        ~libs:SSet.empty
+        filename
+    in
     Handle_nonparallelizable (handle_cycle ~fn ~types_only)
   | ServerProt.Request.DUMP_TYPES { input; evaluate_type_destructors; wait_for_recheck } ->
     let evaluate_type_destructors =
@@ -2810,11 +2820,11 @@ let handle_persistent_linked_editing_range ~options ~id ~params ~metadata ~clien
       )
 
 let handle_persistent_rename_file_imports
-    ~reader ~options ~id ~params ~metadata ~client ~profiling:_ ~env:_ =
+    ~reader ~options ~id ~params ~metadata ~client ~profiling:_ ~env =
   let text_document_identifier = { TextDocumentIdentifier.uri = params.RenameFiles.oldUri } in
   let file_input = file_input_of_text_document_identifier ~client text_document_identifier in
   let (result, extra_data) =
-    let file_key = file_key_of_file_input ~options file_input in
+    let file_key = file_key_of_file_input ~options ~env file_input in
     (* This only works for haste modules right now *)
     let old_haste_name = Module_js.exported_module ~options file_key ~package_info:None in
     let new_flowpath =
@@ -2934,12 +2944,16 @@ let handle_live_errors_request =
               )
           | File_input.FileContent (_, content) ->
             let%lwt (live_errors, live_warnings, metadata) =
-              let file_key = file_key_of_file_input ~options file_input in
+              let file_key = file_key_of_file_input ~options ~env file_input in
               match check_that_we_care_about_this_file ~options ~env ~file_key ~content with
               | Ok () ->
                 let file_key =
                   let file_options = Options.file_options options in
-                  Files.filename_from_string ~options:file_options file_path
+                  Files.filename_from_string
+                    ~options:file_options
+                    ~consider_libdefs:false
+                    ~libs:env.ServerEnv.libs
+                    file_path
                 in
                 let (result, did_hit_cache) =
                   let ((_, parse_errs) as intermediate_result) =

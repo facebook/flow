@@ -83,7 +83,14 @@ let main (module Runnable : Codemod_runner.RUNNABLE) codemod_flags () =
   let roots =
     SSet.fold
       (fun f acc ->
-        Utils_js.FilenameSet.add (Files.filename_from_string ~options:file_options f) acc)
+        Utils_js.FilenameSet.add
+          (Files.filename_from_string
+             ~options:file_options
+             ~consider_libdefs:(Options.libdef_in_checking options)
+             ~libs:SSet.empty
+             f
+          )
+          acc)
       roots
       Utils_js.FilenameSet.empty
   in

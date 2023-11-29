@@ -202,7 +202,15 @@ module Node = struct
 
   let path_if_exists ~reader ~file_options phantom_acc path =
     let path = resolve_symlinks path in
-    let mname = Files.eponymous_module (Files.filename_from_string ~options:file_options path) in
+    let mname =
+      Files.eponymous_module
+        (Files.filename_from_string
+           ~options:file_options
+           ~consider_libdefs:false (* Module resolution should never resolve to a libdef file *)
+           ~libs:SSet.empty
+           path
+        )
+    in
     let dependency = Parsing_heaps.get_dependency mname in
     match Option.bind dependency (Parsing_heaps.Reader_dispatcher.get_provider ~reader) with
     | Some _ -> dependency

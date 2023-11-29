@@ -191,7 +191,8 @@ let do_parse ~options ~docblock ?(locs_to_dirtify = []) content file =
       else
         Parse_skip Skip_resource_file
     | File_key.ResourceFile _ -> Parse_skip Skip_resource_file
-    | _ ->
+    | File_key.LibFile _
+    | File_key.SourceFile _ ->
       (* either all=true or @flow pragma exists *)
       if not (types_checked options file docblock) then
         Parse_skip Skip_non_flow_file
