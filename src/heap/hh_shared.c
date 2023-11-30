@@ -339,11 +339,11 @@ static _Bool should_scan(hh_tag_t tag) {
 #define Color_black 0b11
 #define Color_blue 0b10
 
-#define Color_hd(hd) ((hd)&0b11)
+#define Obj_color(hd) ((hd)&0b11)
 
-#define Is_white(hd) (Color_hd(hd) == Color_white)
-#define Is_black(hd) (Color_hd(hd) == Color_black)
-#define Is_blue(hd) (Color_hd(hd) == Color_blue)
+#define Is_white(hd) (Obj_color(hd) == Color_white)
+#define Is_black(hd) (Obj_color(hd) == Color_black)
+#define Is_blue(hd) (Obj_color(hd) == Color_blue)
 
 #define White_hd(hd) (((hd) & ~0b11) | Color_white)
 #define Black_hd(hd) ((hd) | Color_black)
@@ -1176,7 +1176,7 @@ CAMLprim value hh_sweep_slice(value work_val) {
       uintnat hd = Deref(sweep_ptr);
       uintnat whsize = Obj_whsize(hd);
       uintnat bhsize = Bsize_wsize(whsize);
-      switch (Color_hd(hd)) {
+      switch (Obj_color(hd)) {
         case Color_white:
           Deref(sweep_ptr) = Blue_hd(hd);
           info->free_bsize += bhsize;
