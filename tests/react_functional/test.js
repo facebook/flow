@@ -16,8 +16,8 @@ function G(props: { foo: string | number }) {
 var Z = 0;
 <Z />; // error, expected React component
 
-// Ensure StatelessFunctionalComponent type is usable
-const H: React.StatelessFunctionalComponent<{ foo: string }> = props => {
+// Ensure AbstractComponent type is usable
+const H: React.AbstractComponent<{ foo: string }> = props => {
   return null;
 };
 <H foo="" />; // ok

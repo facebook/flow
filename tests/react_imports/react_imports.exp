@@ -80,8 +80,8 @@ Cannot get `React.Node` because property `Node` is missing in object type [1]. [
                                 ^^^^
 
 References:
-   <BUILTINS>/react.js:679:26
-   679|   declare export default typeof React;
+   <BUILTINS>/react.js:664:26
+   664|   declare export default typeof React;
                                  ^^^^^^^^^^^^ [1]
 
 
@@ -94,8 +94,8 @@ Cannot get `React.Node` because property `Node` is missing in object type [1]. [
                    ^^^^
 
 References:
-   <BUILTINS>/react.js:679:26
-   679|   declare export default typeof React;
+   <BUILTINS>/react.js:664:26
+   664|   declare export default typeof React;
                                  ^^^^^^^^^^^^ [1]
 
 
@@ -108,8 +108,8 @@ Cannot get `React.Missing` because property `Missing` is missing in object type 
                      ^^^^^^^
 
 References:
-   <BUILTINS>/react.js:679:26
-   679|   declare export default typeof React;
+   <BUILTINS>/react.js:664:26
+   664|   declare export default typeof React;
                                  ^^^^^^^^^^^^ [1]
 
 
@@ -163,8 +163,8 @@ Cannot get `React.Missing` because property `Missing` is missing in module `reac
                      ^^^^^^^
 
 References:
-   <BUILTINS>/react.js:218:16
-   218| declare module react {
+   <BUILTINS>/react.js:205:16
+   205| declare module react {
                        ^^^^^ [1]
 
 

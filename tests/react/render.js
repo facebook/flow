@@ -19,19 +19,19 @@ class B extends React.Component<{}, void> {
 /**
  * Basic render: stateless functional component tests
  */
-const C: React$StatelessFunctionalComponent<{}> = props => {};
-const D: React$StatelessFunctionalComponent<{}> = props => {
+const C: React$AbstractComponent<{}> = props => {};
+const D: React$AbstractComponent<{}> = props => {
   return;
 };
-const E: React$StatelessFunctionalComponent<{}> = props => {
+const E: React$AbstractComponent<{}> = props => {
   return null;
 };
 
 <C foo="bar" />;
-// Error: `React$StatelessFunctionalComponent` must return `React$Node` which can't be undefined
+// Error: `React$AbstractComponent` must return `React$Node` which can't be undefined
 
 <D foo="bar" />;
-// Error: `React$StatelessFunctionalComponent` must return `React$Node` which can't be undefined
+// Error: `React$AbstractComponent` must return `React$Node` which can't be undefined
 
 <E foo="bar" />;
 // OK
@@ -49,7 +49,7 @@ class F extends React.Component<UnfixedPropsType, void> {
 /**
  * PropsType inference: stateless functional component test
  */
-const G: React$StatelessFunctionalComponent<UnfixedPropsType> = props => {
+const G: React$AbstractComponent<UnfixedPropsType> = props => {
   return props.foo;
 };
 // Error: props.foo could be undefined

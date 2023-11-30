@@ -170,11 +170,11 @@ References:
    annotation.js:48:39
     48| declare var InlineRef: component(ref: number); // error
                                               ^^^^^^ [1]
-   <BUILTINS>/react.js:186:5
-   186|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:173:5
+   173|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:187:6
-   187|   | ((T | null) => mixed);
+   <BUILTINS>/react.js:174:6
+   174|   | ((T | null) => mixed);
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -632,8 +632,8 @@ References:
    component_in_type_position.js:10:25
     10| const polyElemBad: Poly<number> = <Poly prop="STRING" />; // ERROR
                                 ^^^^^^ [2]
-   <BUILTINS>/react.js:160:69
-   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:147:69
+   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                                                             ^ [3]
 
 
@@ -1048,11 +1048,11 @@ References:
    declared.js:50:34
     50| declare component InlineRef(ref: number); // error
                                          ^^^^^^ [1]
-   <BUILTINS>/react.js:186:5
-   186|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:173:5
+   173|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:187:6
-   187|   | ((T | null) => mixed);
+   <BUILTINS>/react.js:174:6
+   174|   | ((T | null) => mixed);
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -1782,8 +1782,8 @@ References:
    import_component_in_type_position.js:12:31
     12| const polyElemError: PolyType<string> = <Poly prop={3} />;
                                       ^^^^^^ [2]
-   <BUILTINS>/react.js:160:69
-   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:147:69
+   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                                                             ^ [3]
 
 
@@ -1803,8 +1803,8 @@ References:
    component_in_type_position.js:3:8
      3| export component Foo() { return null }
                ^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:160:36
-   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:147:36
+   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
 
 
@@ -1927,11 +1927,11 @@ References:
    names.js:22:29
     22| export component NoRef(ref: string) { return <div /> }; // Error
                                     ^^^^^^ [1]
-   <BUILTINS>/react.js:186:5
-   186|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:173:5
+   173|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:187:6
-   187|   | ((T | null) => mixed);
+   <BUILTINS>/react.js:174:6
+   174|   | ((T | null) => mixed);
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -1993,8 +1993,8 @@ Cannot cast `Foo` to `React.AbstractComponent` because `React.Element` [1] is in
         ^^^
 
 References:
-   <BUILTINS>/react.js:162:35
-   162| declare type React$MixedElement = React$Element<React$ElementType>;
+   <BUILTINS>/react.js:149:35
+   149| declare type React$MixedElement = React$Element<React$ElementType>;
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    nominal.js:17:43
     17| Foo as React.AbstractComponent<{}, mixed, null>; // ERROR, default render is React.Node
@@ -2390,8 +2390,8 @@ References:
    propsof.js:26:18
     26| component C(ref: React.RefSetter<React.RefOf<A>>) {
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:177:5
-   177|   | { -current: React$ElementRef<ElementType> | null, ... }
+   <BUILTINS>/react.js:164:5
+   164|   | { -current: React$ElementRef<ElementType> | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    propsof.js:26:34
     26| component C(ref: React.RefSetter<React.RefOf<A>>) {
@@ -2422,8 +2422,8 @@ References:
    propsof.js:26:18
     26| component C(ref: React.RefSetter<React.RefOf<A>>) {
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:178:6
-   178|   | ((React$ElementRef<ElementType> | null) => mixed)
+   <BUILTINS>/react.js:165:6
+   165|   | ((React$ElementRef<ElementType> | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -2479,8 +2479,8 @@ The `ref` parameter must be a subtype of `React.RefSetter`.
                       ^^^
 
 References:
-   <BUILTINS>/react.js:186:21
-   186|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:173:21
+   173|   | { -current: T | null, ... }
                             ^^^^ [1]
    refs.js:3:30
      3| component Foo(ref: {current: typeof Reffed}) { return null };
@@ -2488,8 +2488,8 @@ References:
    refs.js:3:20
      3| component Foo(ref: {current: typeof Reffed}) { return null };
                            ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:187:6
-   187|   | ((T | null) => mixed);
+   <BUILTINS>/react.js:174:6
+   174|   | ((T | null) => mixed);
              ^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -2509,14 +2509,14 @@ References:
    refs.js:5:22
      5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
                              ^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:187:11
-   187|   | ((T | null) => mixed);
+   <BUILTINS>/react.js:174:11
+   174|   | ((T | null) => mixed);
                   ^^^^ [2]
    refs.js:5:21
      5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
                             ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:186:5
-   186|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:173:5
+   173|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -2586,8 +2586,8 @@ References:
    refs.js:60:43
     60|     component MyInput(label: string, ref: React$RefSetter<?HTMLInputElement>, ...otherProps: { other: string}) {
                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:177:5
-   177|   | { -current: React$ElementRef<ElementType> | null, ... }
+   <BUILTINS>/react.js:164:5
+   164|   | { -current: React$ElementRef<ElementType> | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    refs.js:56:66
     56|     component MyNestedInput(other: string, ref: React$RefSetter<?HTMLElement>) {
@@ -2625,8 +2625,8 @@ References:
    refs.js:60:43
     60|     component MyInput(label: string, ref: React$RefSetter<?HTMLInputElement>, ...otherProps: { other: string}) {
                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:178:6
-   178|   | ((React$ElementRef<ElementType> | null) => mixed)
+   <BUILTINS>/react.js:165:6
+   165|   | ((React$ElementRef<ElementType> | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 

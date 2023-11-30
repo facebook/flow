@@ -57,11 +57,11 @@ References:
    test.js:16:9
     16| var Z = 0;
                 ^ [1]
-   <BUILTINS>/react.js:148:5
-   148|   | string
+   <BUILTINS>/react.js:135:5
+   135|   | string
             ^^^^^^ [2]
-   <BUILTINS>/react.js:149:5
-   149|   | React$AbstractComponent<empty, mixed, React$Node>;
+   <BUILTINS>/react.js:136:5
+   136|   | React$AbstractComponent<empty, mixed, React$Node>;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 

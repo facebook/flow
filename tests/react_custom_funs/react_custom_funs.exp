@@ -23,8 +23,8 @@ object literal [1] is incompatible with `React.Element` [2]. [incompatible-type]
                            ^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:160:21
-   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:147:21
+   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                             ^^^^^^^^^^^^^ [2]
 
 
@@ -44,8 +44,8 @@ References:
    clone_element.js:26:39
     26| (React.cloneElement(a): Element<Class<B>>); // Error: A ~> B
                                               ^ [2]
-   <BUILTINS>/react.js:160:36
-   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:147:36
+   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
 
 
@@ -65,8 +65,8 @@ References:
    clone_element.js:7:33
      7| class B extends React.Component<{foo: number, bar: number}, void> {}
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:160:69
-   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:147:69
+   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                                                             ^ [3]
 
 
@@ -276,8 +276,8 @@ Cannot call `React.cloneElement` because props [1] is incompatible with empty [2
                                  ^^ [1]
 
 References:
-   <BUILTINS>/react.js:149:29
-   149|   | React$AbstractComponent<empty, mixed, React$Node>;
+   <BUILTINS>/react.js:136:29
+   136|   | React$AbstractComponent<empty, mixed, React$Node>;
                                     ^^^^^ [2]
 
 
@@ -293,8 +293,8 @@ References:
    clone_element.js:99:21
     99|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:160:21
-   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:147:21
+   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                             ^^^^^^^^^^^^^ [2]
 
 
@@ -310,8 +310,8 @@ References:
    clone_element.js:99:21
     99|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:160:21
-   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:147:21
+   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                             ^^^^^^^^^^^^^ [2]
 
 
@@ -327,8 +327,8 @@ References:
    clone_element.js:99:21
     99|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:160:21
-   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:147:21
+   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                             ^^^^^^^^^^^^^ [2]
 
 
@@ -344,8 +344,8 @@ References:
    clone_element.js:99:21
     99|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:160:21
-   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:147:21
+   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                             ^^^^^^^^^^^^^ [2]
 
 
@@ -361,8 +361,8 @@ References:
    clone_element.js:99:21
     99|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:160:21
-   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:147:21
+   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                             ^^^^^^^^^^^^^ [2]
 
 
@@ -378,8 +378,8 @@ References:
    clone_element.js:99:21
     99|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:160:21
-   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:147:21
+   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                             ^^^^^^^^^^^^^ [2]
 
 
@@ -395,8 +395,8 @@ References:
    clone_element.js:99:21
     99|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:160:21
-   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:147:21
+   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                             ^^^^^^^^^^^^^ [2]
 
 
@@ -412,8 +412,8 @@ References:
    clone_element.js:99:21
     99|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:160:21
-   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:147:21
+   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                             ^^^^^^^^^^^^^ [2]
 
 
@@ -429,8 +429,8 @@ References:
    clone_element.js:99:21
     99|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:160:21
-   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:147:21
+   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                             ^^^^^^^^^^^^^ [2]
 
 
@@ -446,8 +446,8 @@ References:
    clone_element.js:99:21
     99|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:160:21
-   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:147:21
+   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                             ^^^^^^^^^^^^^ [2]
 
 
@@ -463,8 +463,8 @@ References:
    clone_element.js:99:21
     99|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:160:21
-   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:147:21
+   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                             ^^^^^^^^^^^^^ [2]
 
 
@@ -480,8 +480,8 @@ References:
    clone_element.js:99:21
     99|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:160:21
-   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:147:21
+   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                             ^^^^^^^^^^^^^ [2]
 
 
@@ -497,8 +497,8 @@ References:
    clone_element.js:99:21
     99|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:160:21
-   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:147:21
+   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                             ^^^^^^^^^^^^^ [2]
 
 
@@ -514,8 +514,8 @@ References:
    clone_element.js:99:21
     99|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:160:21
-   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:147:21
+   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                             ^^^^^^^^^^^^^ [2]
 
 
@@ -546,11 +546,11 @@ Cannot instantiate `React.Element` because in type argument `ElementType`: [inco
                             ^^ [1]
 
 References:
-   <BUILTINS>/react.js:148:5
-   148|   | string
+   <BUILTINS>/react.js:135:5
+   135|   | string
             ^^^^^^ [2]
-   <BUILTINS>/react.js:149:5
-   149|   | React$AbstractComponent<empty, mixed, React$Node>;
+   <BUILTINS>/react.js:136:5
+   136|   | React$AbstractComponent<empty, mixed, React$Node>;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -573,11 +573,11 @@ Cannot instantiate `React.Element` because in type argument `ElementType`: [inco
                             ^^ [1]
 
 References:
-   <BUILTINS>/react.js:148:5
-   148|   | string
+   <BUILTINS>/react.js:135:5
+   135|   | string
             ^^^^^^ [2]
-   <BUILTINS>/react.js:149:5
-   149|   | React$AbstractComponent<empty, mixed, React$Node>;
+   <BUILTINS>/react.js:136:5
+   136|   | React$AbstractComponent<empty, mixed, React$Node>;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -600,11 +600,11 @@ Cannot instantiate `React.Element` because in type argument `ElementType`: [inco
                             ^^ [1]
 
 References:
-   <BUILTINS>/react.js:149:5
-   149|   | React$AbstractComponent<empty, mixed, React$Node>;
+   <BUILTINS>/react.js:136:5
+   136|   | React$AbstractComponent<empty, mixed, React$Node>;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:148:5
-   148|   | string
+   <BUILTINS>/react.js:135:5
+   135|   | string
             ^^^^^^ [3]
 
 
@@ -804,8 +804,8 @@ References:
    create_element.js:34:74
     34| (React.createElement(A, {foo: 1, bar: 2}): React.Element<Class<A>, {foo: boolean, bar: number}>); // error
                                                                                  ^^^^^^^ [2]
-   <BUILTINS>/react.js:160:69
-   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:147:69
+   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                                                             ^ [3]
 
 
@@ -825,8 +825,8 @@ References:
    create_element.js:35:74
     35| (React.createElement(B, {foo: 1, bar: 2}): React.Element<typeof B, {foo: boolean, bar: number}>); // error
                                                                                  ^^^^^^^ [2]
-   <BUILTINS>/react.js:160:69
-   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:147:69
+   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                                                             ^ [3]
 
 
@@ -2116,8 +2116,8 @@ References:
    create_element.js:215:46
    215| (React.createElement(M): React.Element<Class<N>, any>); // Error
                                                      ^ [2]
-   <BUILTINS>/react.js:160:36
-   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:147:36
+   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
 
 
@@ -2323,8 +2323,8 @@ References:
    create_factory.js:36:60
     36| (aFactory({foo: 1, bar: 2}): React$Element<Class<A>, {foo: boolean, bar: number}>); // Error: `foo` is `number`.
                                                                    ^^^^^^^ [2]
-   <BUILTINS>/react.js:160:69
-   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:147:69
+   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                                                             ^ [3]
 
 
@@ -2344,8 +2344,8 @@ References:
    create_factory.js:37:60
     37| (bFactory({foo: 1, bar: 2}): React$Element<typeof B, {foo: boolean, bar: number}>); // Error: `foo` is `number`.
                                                                    ^^^^^^^ [2]
-   <BUILTINS>/react.js:160:69
-   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:147:69
+   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                                                             ^ [3]
 
 
@@ -3574,8 +3574,8 @@ References:
    create_factory.js:216:34
    216| (mFactory(): React$Element<Class<N>>); // Error
                                          ^ [2]
-   <BUILTINS>/react.js:160:36
-   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:147:36
+   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
 
 

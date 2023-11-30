@@ -131,8 +131,8 @@ Cannot return `x` because `React.Element` [1] is incompatible with number [2]. [
                  ^
 
 References:
-   <BUILTINS>/react.js:160:21
-   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:147:21
+   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                             ^^^^^^^^^^^^^ [1]
    arity.js:25:43
     25| ): React$AbstractComponent<empty, number, number> {
@@ -148,8 +148,8 @@ Cannot return `x` because `React.Portal` [1] does not render number [2]. [incomp
                  ^
 
 References:
-   <BUILTINS>/react.js:210:21
-   210| declare opaque type React$Portal;
+   <BUILTINS>/react.js:197:21
+   197| declare opaque type React$Portal;
                             ^^^^^^^^^^^^ [1]
    arity.js:25:43
     25| ): React$AbstractComponent<empty, number, number> {
@@ -470,11 +470,11 @@ References:
    create_element.js:23:32
     23| const refBad = React.createRef<string>();
                                        ^^^^^^ [2]
-   <BUILTINS>/react.js:274:6
-   274|   ): {|current: null | T|};
+   <BUILTINS>/react.js:261:6
+   261|   ): {|current: null | T|};
              ^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:178:6
-   178|   | ((React$ElementRef<ElementType> | null) => mixed)
+   <BUILTINS>/react.js:165:6
+   165|   | ((React$ElementRef<ElementType> | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -489,11 +489,11 @@ Cannot create `C` element because in property `key`: [incompatible-type]
                                                         ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:168:26
-   168| declare type React$Key = string | number;
+   <BUILTINS>/react.js:155:26
+   155| declare type React$Key = string | number;
                                  ^^^^^^ [2]
-   <BUILTINS>/react.js:168:35
-   168| declare type React$Key = string | number;
+   <BUILTINS>/react.js:155:35
+   155| declare type React$Key = string | number;
                                           ^^^^^^ [3]
 
 
@@ -842,8 +842,8 @@ References:
    strict.js:4:11
      4| const c = <Component f = {3}/>;
                   ^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:149:29
-   149|   | React$AbstractComponent<empty, mixed, React$Node>;
+   <BUILTINS>/react.js:136:29
+   136|   | React$AbstractComponent<empty, mixed, React$Node>;
                                     ^^^^^ [2]
 
 
@@ -875,8 +875,8 @@ Cannot call `foo` with `ref` bound to `a` because mixed [1] is incompatible with
             ^^^
 
 References:
-   <BUILTINS>/react.js:149:36
-   149|   | React$AbstractComponent<empty, mixed, React$Node>;
+   <BUILTINS>/react.js:136:36
+   136|   | React$AbstractComponent<empty, mixed, React$Node>;
                                            ^^^^^ [1]
    strict.js:7:26
      7| declare function foo(a: ?React$Component<any, any>): void;

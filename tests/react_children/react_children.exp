@@ -138,8 +138,8 @@ Cannot call `s` with `Children.count(...)` bound to `x` because number [1] is in
           ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:388:42
-   388|     count(children: ChildrenArray<any>): number,
+   <BUILTINS>/react.js:373:42
+   373|     count(children: ChildrenArray<any>): number,
                                                  ^^^^^^ [1]
    api.js:32:15
     32| function s(x: string) {}
@@ -1056,8 +1056,8 @@ References:
    tabs.js:10:7
     10| class Tab extends React.Component<{}, void> {}
               ^^^ [2]
-   <BUILTINS>/react.js:160:36
-   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:147:36
+   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
    tabs.js:18:5
     18|   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
@@ -1081,8 +1081,8 @@ References:
    tabs.js:10:7
     10| class Tab extends React.Component<{}, void> {}
               ^^^ [2]
-   <BUILTINS>/react.js:160:36
-   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:147:36
+   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
    tabs.js:68:9
     68| <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
@@ -1115,8 +1115,8 @@ References:
    tabs.js:10:7
     10| class Tab extends React.Component<{}, void> {}
               ^^^ [2]
-   <BUILTINS>/react.js:160:36
-   160| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:147:36
+   147| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
    tabs.js:73:3
     73|   <NotTab/>
