@@ -1,0 +1,5 @@
+(lang dune 3.0)
+(name ppx_constraints)
+(package
+ (name ppx_constraints)
+ (depends ocaml dune))

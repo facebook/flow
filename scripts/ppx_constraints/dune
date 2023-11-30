@@ -1,0 +1,12 @@
+(library
+ (name ppx_constraints)
+ (modules ppx_constraints)
+ (public_name ppx_constraints)
+ (libraries ppxlib)
+)
+
+(executable
+  (name ppx_constraints_standalone)
+  (modules ppx_constraints_standalone)
+  (libraries ppx_constraints)
+  )

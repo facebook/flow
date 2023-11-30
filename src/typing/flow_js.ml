@@ -448,6 +448,7 @@ struct
       then
         ()
       else
+        (* START OF PATTERN MATCH *)
         match (l, u) with
         (********)
         (* eval *)
@@ -5664,6 +5665,7 @@ struct
             cx
             (reason_of_t l |> loc_of_reason)
             u
+      (* END OF PATTERN MATCH *)
     )
 
   (**
