@@ -222,6 +222,7 @@ struct
             | SingletonStrR _
             | SingletonNumR _
             | SingletonBigIntR _
+            | PropNullishR _
             | PropExistsR _ ->
               ()
           in

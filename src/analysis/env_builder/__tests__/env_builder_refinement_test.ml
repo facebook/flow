@@ -1208,7 +1208,7 @@ if (x.foo != null && x.foo.bar()) {}|};
           (1, 4) to (1, 5): (`x`)
         };
         (2, 21) to (2, 22) => {
-          (1, 4) to (1, 5): (`x`)
+          {refinement = Not (PropNullishR foo); writes = (1, 4) to (1, 5): (`x`)}
         };
         (2, 21) to (2, 26) => {
           {refinement = Not (Maybe); writes = projection at (2, 4) to (2, 9)}
@@ -1227,7 +1227,7 @@ if (x.foo != null && x.foo.bar()[0] === BAZ) {}|};
           (1, 4) to (1, 5): (`x`)
         };
         (2, 21) to (2, 22) => {
-          (1, 4) to (1, 5): (`x`)
+          {refinement = Not (PropNullishR foo); writes = (1, 4) to (1, 5): (`x`)}
         };
         (2, 21) to (2, 26) => {
           {refinement = Not (Maybe); writes = projection at (2, 4) to (2, 9)}
@@ -1392,7 +1392,7 @@ if (x.p != null) {
           Global alert
         };
         (5, 2) to (5, 3) => {
-          (2, 4) to (2, 5): (`x`)
+          {refinement = Not (PropNullishR p); writes = (2, 4) to (2, 5): (`x`)}
         }] |}]
 
 let%expect_test "conditional_expression" =
@@ -7172,4 +7172,46 @@ component Foo() {
         };
         (5, 12) to (5, 15) => {
           Global div
+        }] |}]
+
+let%expect_test "nullish props" =
+  print_ssa_test {|
+if (x.y == null) {
+  x;
+  x.y;
+}
+
+if (x.y == undefined) {
+  x;
+  x.y;
+}
+  |};
+    [%expect {|
+      [
+        (2, 4) to (2, 5) => {
+          Global x
+        };
+        (3, 2) to (3, 3) => {
+          {refinement = Not (Not (PropNullishR y)); writes = Global x}
+        };
+        (4, 2) to (4, 3) => {
+          {refinement = Not (Not (PropNullishR y)); writes = Global x}
+        };
+        (4, 2) to (4, 5) => {
+          {refinement = Not (Not (Maybe)); writes = projection at (2, 4) to (2, 7)}
+        };
+        (7, 4) to (7, 5) => {
+          Global x
+        };
+        (7, 11) to (7, 20) => {
+          Global undefined
+        };
+        (8, 2) to (8, 3) => {
+          {refinement = Not (Not (PropNullishR y)); writes = Global x}
+        };
+        (9, 2) to (9, 3) => {
+          {refinement = Not (Not (PropNullishR y)); writes = Global x}
+        };
+        (9, 2) to (9, 5) => {
+          {refinement = Not (Not (Maybe)); writes = projection at (7, 4) to (7, 7)}
         }] |}]

@@ -4885,20 +4885,22 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             in
             this#extend_refinement key (L.LSet.singleton loc, refinement) refis
         in
+        let will_negate = strict <> sense in
+        let refis = this#maybe_prop_nullish ~will_negate ~sense ~strict loc expr other refis in
         ignore @@ this#optional_chain expr;
         this#commit_refinement refis;
-        if strict <> sense then this#negate_new_refinements ()
+        if will_negate then this#negate_new_refinements ()
+
+      method is_global_undefined =
+        match this#env_read_opt "undefined" with
+        | None -> false
+        | Some { val_ref = v; _ } -> Val.is_global_undefined !v
 
       method void_test ~sense ~strict ~check_for_bound_undefined loc expr other =
         ignore @@ this#expression other;
         (* Negating if sense is true is handled by negate_new_refinements. *)
         let refis = this#maybe_sentinel ~sense:false ~strict loc expr other in
-        let is_global_undefined () =
-          match this#env_read_opt "undefined" with
-          | None -> false
-          | Some { val_ref = v; _ } -> Val.is_global_undefined !v
-        in
-        if (not check_for_bound_undefined) || is_global_undefined () then begin
+        if (not check_for_bound_undefined) || this#is_global_undefined then begin
           let refis =
             match RefinementKey.of_expression expr with
             | None -> refis
@@ -4912,8 +4914,10 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               this#extend_refinement key (L.LSet.singleton loc, refinement) refis
           in
           ignore @@ this#optional_chain expr;
+          let will_negate = sense in
+          let refis = this#maybe_prop_nullish ~will_negate ~sense ~strict loc expr other refis in
           this#commit_refinement refis;
-          if sense then this#negate_new_refinements ()
+          if will_negate then this#negate_new_refinements ()
         end else begin
           ignore @@ this#optional_chain expr;
           this#commit_refinement refis
@@ -4971,6 +4975,75 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         ignore @@ this#optional_chain expr;
         this#commit_refinement refis;
         if not sense then this#negate_new_refinements ()
+
+      method maybe_prop_nullish ~will_negate ~sense ~strict loc expr (other_loc, other) refis =
+        let open Flow_ast in
+        if strict then
+          refis
+        else begin
+          let expr' =
+            match expr with
+            | (loc, Expression.OptionalMember { Expression.OptionalMember.member; _ }) ->
+              (loc, Expression.Member member)
+            | _ -> expr
+          in
+          match expr' with
+          | ( _,
+              Expression.Member
+                {
+                  Expression.Member._object;
+                  property =
+                    ( Expression.Member.PropertyIdentifier (ploc, { Identifier.name = prop_name; _ })
+                    | Expression.Member.PropertyExpression
+                        (ploc, Expression.StringLiteral { StringLiteral.value = prop_name; _ }) );
+                  _;
+                }
+            ) ->
+            let sentinel =
+              match other with
+              | Expression.NullLiteral _ ->
+                Some (PropNullishR { propname = prop_name; loc = other_loc })
+              | Expression.Identifier (_, { Identifier.name = "undefined"; _ })
+                when this#is_global_undefined ->
+                Some (PropNullishR { propname = prop_name; loc = other_loc })
+              | Expression.Unary { Expression.Unary.operator = Expression.Unary.Void; _ } ->
+                Some (PropNullishR { propname = prop_name; loc = other_loc })
+              | _ -> None
+            in
+            (match (RefinementKey.of_expression _object, sentinel) with
+            | (Some refinement_key, Some sentinel) ->
+              let reason = mk_reason (RProperty (Some (OrdinaryName prop_name))) ploc in
+              ( if RefinementKey.(refinement_key.lookup.projections) = [] then
+                let { val_ref = _; def_loc; _ } =
+                  this#env_read RefinementKey.(refinement_key.lookup.base)
+                in
+                Base.Option.iter def_loc ~f:(fun def_loc ->
+                    Context.add_matching_props cx (prop_name, other_loc, def_loc)
+                )
+              );
+              let write_entries =
+                EnvMap.add
+                  (Env_api.ExpressionLoc, other_loc)
+                  (Env_api.AssigningWrite reason)
+                  env_state.write_entries
+              in
+              env_state <- { env_state with write_entries };
+              let refinement =
+                if sense then
+                  sentinel
+                else
+                  NotR sentinel
+              in
+              let refinement =
+                if will_negate then
+                  NotR refinement
+                else
+                  refinement
+              in
+              this#extend_refinement refinement_key (L.LSet.singleton loc, refinement) refis
+            | _ -> refis)
+          | _ -> refis
+        end
 
       method maybe_sentinel ~sense ~strict loc expr (other_loc, _) =
         let open Flow_ast in

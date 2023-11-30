@@ -77,3 +77,13 @@ function global_in_conditional2(x: number) {
         }
     }
 }
+
+{
+    const x: {foo: null} = {foo: null};
+
+    if (x.foo != null) {
+        (x: string); // ok
+    } else {
+        (x: string); // error
+    }
+}

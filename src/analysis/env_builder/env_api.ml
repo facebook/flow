@@ -150,6 +150,10 @@ module type S = sig
         }
       (* The location here is the location of expr in x.foo === expr *)
       | SentinelR of string * L.t
+      | PropNullishR of {
+          propname: string;
+          loc: L.t;
+        }
       | LatentR of {
           func: (L.t, L.t) Ast.Expression.t;
           targs: (L.t, L.t) Ast.Expression.CallTypeArgs.t option;
@@ -435,6 +439,10 @@ module Make
           lit: int64 option * string;
         }
       | SentinelR of string * L.t
+      | PropNullishR of {
+          propname: string;
+          loc: L.t;
+        }
       | LatentR of {
           func: (L.t, L.t) Ast.Expression.t;
           targs: (L.t, L.t) Ast.Expression.CallTypeArgs.t option;
@@ -660,6 +668,7 @@ module Make
       else
         lit
     | SentinelR (prop, _) -> Printf.sprintf "SentinelR %s" prop
+    | PropNullishR { propname = prop; _ } -> Printf.sprintf "PropNullishR %s" prop
     | LatentR { func = _; targs = _; arguments = _; index } ->
       Printf.sprintf "LatentR (index = %i)" index
     | PropExistsR { propname; loc = _ } -> Printf.sprintf "PropExistsR (%s)" propname

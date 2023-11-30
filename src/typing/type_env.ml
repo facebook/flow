@@ -280,6 +280,8 @@ let rec predicate_of_refinement cx =
     | LatentR { func = (func_loc, _); index; _ } ->
       let call_info = read_pred_func_info_exn cx func_loc in
       LatentP (call_info, index)
+    | PropNullishR { propname; loc } ->
+      NotP (PropNonMaybeP (propname, mk_reason (RProperty (Some (OrdinaryName propname))) loc))
     | PropExistsR { propname; loc } ->
       PropExistsP (propname, mk_reason (RProperty (Some (OrdinaryName propname))) loc)
   )
