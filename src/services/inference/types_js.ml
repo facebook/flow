@@ -1490,6 +1490,8 @@ end = struct
       Dependency_info.implementation_dependency_graph dependency_info
     in
     let sig_dependency_graph = Dependency_info.sig_dependency_graph dependency_info in
+    MonitorRPC.status_update ~event:ServerStatus.Calculating_dependents_start;
+    Hh_logger.info "Determining what to recheck...";
     let%lwt (Determine_what_to_recheck_result
               { to_merge; to_check; components; recheck_set; dependent_file_count }
               ) =
@@ -1506,6 +1508,7 @@ end = struct
         ~unchanged_files_to_force
         ~dirty_direct_dependents
     in
+    MonitorRPC.status_update ~event:ServerStatus.Calculating_dependents_end;
     (* This is a much better estimate of what checked_files will be after the merge finishes. We now
      * include the dependencies and dependents that are being implicitly included in the recheck. *)
     will_be_checked_files := CheckedSet.union to_merge !will_be_checked_files;
@@ -1519,6 +1522,7 @@ end = struct
          * from saved state even in non-lazy mode. TODO *)
         Lwt.return_unit
     in
+    (* No need to call MonitorRPC.status_update here. ensure_parsed will update it to parsing. *)
     let%lwt () =
       ensure_parsed_or_trigger_recheck ~options ~profiling ~workers ~reader (CheckedSet.all to_merge)
     in
@@ -1994,6 +1998,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
   in
 
   Hh_logger.info "Restoring heaps";
+  MonitorRPC.status_update ~event:ServerStatus.Restoring_heaps_start;
   let%lwt (parsed, unparsed, packages, dirty_modules, invalid_hashes) =
     with_memory_timer_lwt ~options "RestoreHeaps" profiling (fun () ->
         let neutral = (FilenameSet.empty, Modulename.Set.empty, []) in
