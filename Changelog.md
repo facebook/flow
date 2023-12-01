@@ -1,3 +1,8 @@
+### 0.223.2
+
+Notable bug fixes:
+* Fixed issue with saved state generation used to power auto imports.
+
 ### 0.223.1
 
 Notable bug fixes:
