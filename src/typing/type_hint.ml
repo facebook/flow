@@ -357,6 +357,7 @@ and type_of_hint_decomposition cx op reason t =
                   reason;
                   id = None;
                   from_annot = true;
+                  access_iterables = true;
                   key_t = DefT (reason, NumT num);
                   tout;
                 }
@@ -518,7 +519,16 @@ and type_of_hint_decomposition cx op reason t =
         let key_t = Type_env.find_write cx Env_api.ExpressionLoc reason in
         Tvar.mk_no_wrap_where cx reason (fun tout ->
             let use_t =
-              GetElemT { use_op = unknown_use; reason; id = None; from_annot = true; key_t; tout }
+              GetElemT
+                {
+                  use_op = unknown_use;
+                  reason;
+                  id = None;
+                  from_annot = true;
+                  access_iterables = false;
+                  key_t;
+                  tout;
+                }
             in
             SpeculationFlow.resolved_lower_flow_unsafe cx reason (t, use_t)
         )

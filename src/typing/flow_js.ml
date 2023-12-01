@@ -892,7 +892,16 @@ struct
                   tout_tvar
                 )
             | OptionalIndexedAccessTypeIndex key_t ->
-              GetElemT { use_op; reason; id = None; from_annot = true; key_t; tout = tout_tvar }
+              GetElemT
+                {
+                  use_op;
+                  reason;
+                  id = None;
+                  from_annot = true;
+                  access_iterables = false;
+                  key_t;
+                  tout = tout_tvar;
+                }
           in
           rec_flow cx trace (l, u)
         (*************)
@@ -1656,8 +1665,9 @@ struct
         | (UnionT (_, rep), PredicateT (((MaybeP | NotP MaybeP | ExistsP | NotP ExistsP) as p), t))
           when UnionRep.is_optimized_finally rep ->
           predicate cx trace t l p
-        | (UnionT (_, rep), ElemT (use_op, reason, obj, ReadElem { id; from_annot = true; tout }))
-          ->
+        | ( UnionT (_, rep),
+            ElemT (use_op, reason, obj, ReadElem { id; from_annot = true; access_iterables; tout })
+          ) ->
           let reason = update_desc_reason invalidate_rtype_alias reason in
           let (t0, (t1, ts)) = UnionRep.members_nel rep in
           let f t =
@@ -1668,7 +1678,12 @@ struct
                       cx
                       trace
                       ( t,
-                        ElemT (use_op, reason, obj, ReadElem { id; from_annot = true; tout = tvar })
+                        ElemT
+                          ( use_op,
+                            reason,
+                            obj,
+                            ReadElem { id; from_annot = true; access_iterables; tout = tvar }
+                          )
                       )
                 ),
                 false
@@ -4157,7 +4172,16 @@ struct
         (* strings may have their characters read *)
         (******************************************)
         | ( DefT (reason_s, StrT _),
-            GetElemT { use_op; reason = reason_op; id = _; from_annot = _; key_t; tout }
+            GetElemT
+              {
+                use_op;
+                reason = reason_op;
+                id = _;
+                from_annot = _;
+                access_iterables = _;
+                key_t;
+                tout;
+              }
           ) ->
           rec_flow cx trace (key_t, UseT (use_op, NumT.why reason_s));
           rec_flow_t cx trace ~use_op:unknown_use (StrT.why reason_op, OpenT tout)
@@ -4174,14 +4198,35 @@ struct
           ) ->
           rec_flow cx trace (key, ElemT (use_op, reason_op, l, WriteElem { tin; tout; mode }))
         | ( (DefT (_, (ObjT _ | ArrT _ | InstanceT _)) | AnyT _),
-            GetElemT { use_op; reason = reason_op; id; from_annot; key_t; tout }
+            GetElemT { use_op; reason = reason_op; id; from_annot; access_iterables; key_t; tout }
           ) ->
-          rec_flow cx trace (key_t, ElemT (use_op, reason_op, l, ReadElem { id; from_annot; tout }))
+          rec_flow
+            cx
+            trace
+            ( key_t,
+              ElemT (use_op, reason_op, l, ReadElem { id; from_annot; access_iterables; tout })
+            )
         | ( (DefT (_, (ObjT _ | ArrT _ | InstanceT _)) | AnyT _),
             CallElemT (use_op, reason_call, reason_lookup, key, action)
           ) ->
           let action = CallElem (reason_call, action) in
           rec_flow cx trace (key, ElemT (use_op, reason_lookup, l, action))
+        (* If we are accessing `Iterable<T>` with a number, and have `access_iterables = true`,
+           then output `T`. *)
+        | ( DefT (_, NumT _),
+            ElemT
+              ( use_op,
+                _,
+                DefT
+                  ( _,
+                    InstanceT
+                      { super = _; inst = { class_id; type_args = (_, _, t, _) :: _; _ }; _ }
+                  ),
+                ReadElem { access_iterables = true; tout; _ }
+              )
+          )
+          when is_builtin_iterable_class_id class_id cx ->
+          rec_flow_t cx trace ~use_op (t, OpenT tout)
         | (_, ElemT (use_op, reason_op, (DefT (_, (ObjT _ | InstanceT _)) as obj), action)) ->
           elem_action_on_obj cx trace ~use_op l obj reason_op action
         | (_, ElemT (use_op, reason_op, (AnyT (_, src) as obj), action)) ->
@@ -6822,7 +6867,15 @@ struct
             getprop_ub ()
         | Elem key_t ->
           GetElemT
-            { use_op = unknown_use; reason; id = None; from_annot = annot; key_t; tout = tvar }
+            {
+              use_op = unknown_use;
+              reason;
+              id = None;
+              from_annot = annot;
+              access_iterables = false;
+              key_t;
+              tout = tvar;
+            }
         | ObjRest xs -> ObjRestT (reason, xs, OpenT tvar, id)
         | ArrRest i -> ArrRestT (unknown_use, reason, i, OpenT tvar)
         | Default -> PredicateT (NotP VoidP, tvar)
@@ -7086,7 +7139,16 @@ struct
               let reason_op = replace_desc_reason (RProperty (Some name)) reason in
               GetPropT (use_op, reason, None, mk_named_prop ~reason:reason_op name, tout)
             | ElementType { index_type; _ } ->
-              GetElemT { use_op; reason; id = None; from_annot = true; key_t = index_type; tout }
+              GetElemT
+                {
+                  use_op;
+                  reason;
+                  id = None;
+                  from_annot = true;
+                  access_iterables = false;
+                  key_t = index_type;
+                  tout;
+                }
             | OptionalIndexedAccessNonMaybeType { index } ->
               OptionalIndexedAccessT { use_op; reason; index; tout_tvar = tout }
             | OptionalIndexedAccessResultType { void_reason } ->
@@ -7560,7 +7622,7 @@ struct
   and elem_action_on_obj cx trace ~use_op l obj reason_op action =
     let propref = propref_for_elem_t l in
     match action with
-    | ReadElem { id; from_annot = _; tout } ->
+    | ReadElem { id; from_annot = _; access_iterables = _; tout } ->
       rec_flow cx trace (obj, GetPropT (use_op, reason_op, id, propref, tout))
     | WriteElem { tin; tout; mode } ->
       rec_flow cx trace (obj, SetPropT (use_op, reason_op, propref, mode, Normal, tin, None));

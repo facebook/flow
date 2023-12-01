@@ -224,3 +224,9 @@ function test21() {
     );
   }
 }
+
+// Iterable
+{
+  declare const f: (Iterable<string => mixed>) => void;
+  f([x => 1]); // OK
+}

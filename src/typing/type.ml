@@ -590,6 +590,7 @@ module rec TypeTerm : sig
         reason: reason;
         id: ident option;
         from_annot: bool;
+        access_iterables: bool;
         key_t: t;
         tout: tvar;
       }
@@ -1415,6 +1416,7 @@ module rec TypeTerm : sig
     | ReadElem of {
         id: ident option;
         from_annot: bool;
+        access_iterables: bool;
         tout: tvar;
       }
     | WriteElem of {
@@ -4356,7 +4358,7 @@ let apply_opt_use opt_use t_out =
   | OptGetPrivatePropT (u, r, s, cbs, b) -> GetPrivatePropT (u, r, s, cbs, b, t_out)
   | OptTestPropT (u, r, i, p) -> TestPropT (u, r, i, p, t_out)
   | OptGetElemT (use_op, reason, id, from_annot, key_t) ->
-    GetElemT { use_op; reason; id; from_annot; key_t; tout = t_out }
+    GetElemT { use_op; reason; id; from_annot; access_iterables = false; key_t; tout = t_out }
   | OptCallElemT (u, r1, r2, elt, call) -> CallElemT (u, r1, r2, elt, apply_opt_action call t_out)
 
 let mk_enum_type reason enum =

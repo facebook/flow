@@ -765,6 +765,33 @@ let builtin_promise_class_id cx =
     end
   | _ -> None
 
+let is_builtin_iterable_class_id class_id cx =
+  let t = lookup_builtin_opt cx (OrdinaryName "$Iterable") in
+  match t with
+  | Some (OpenT (_, id)) ->
+    let (_, constraints) = Context.find_constraints cx id in
+    (match constraints with
+    | Constraint.FullyResolved
+        (lazy
+          (DefT
+            ( _,
+              PolyT
+                {
+                  t_out =
+                    DefT
+                      ( _,
+                        ClassT
+                          (DefT (_, InstanceT { inst = { class_id = iterable_class_id; _ }; _ }))
+                      );
+                  _;
+                }
+            )
+            )
+          ) ->
+      ALoc.equal_id class_id iterable_class_id
+    | _ -> false)
+  | _ -> false
+
 let builtin_react_element_opaque_id cx =
   let t_opt = lookup_builtin_opt cx (OrdinaryName "React$Element") in
   match t_opt with

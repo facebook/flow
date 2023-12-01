@@ -37,3 +37,16 @@ function jsx_function_children_error() {
     {n => <Child foo={(n: empty)} /> /* ERROR */}
   </Parent>;
 }
+
+function jsx_children_array_decomp() {
+  declare function Parent(props: {
+    children: React.Node,
+  }): React.Node;
+
+  const x = <Parent>
+    <span />
+    {Array.from({length: 3}, (_, index) => { // OK
+      return <div />;
+    })}
+  </Parent>;
+}
