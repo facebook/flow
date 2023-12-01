@@ -1,3 +1,8 @@
+### 0.223.1
+
+Notable bug fixes:
+Improved precision of server states, that are visible either in vscode status bar, or through the `flow status` command.
+
 ### 0.223.0
 
 Notable bug fixes:
