@@ -543,7 +543,12 @@ let is_included options f = Path_matcher.matches options.includes f
 
 let wanted ~options ~include_libdef lib_fileset =
   let is_ignored_ = is_ignored options in
-  (fun path -> (not (is_ignored_ path)) && (include_libdef || not (SSet.mem path lib_fileset)))
+  if include_libdef then
+    fun path ->
+  (not (is_ignored_ path)) || SSet.mem path lib_fileset
+  else
+    fun path ->
+  (not (is_ignored_ path)) && not (SSet.mem path lib_fileset)
 
 let watched_paths options =
   Path_matcher.stems options.includes

@@ -1,0 +1,16 @@
+Error ------------------------------------------------------------------------------------------ file_with_error.js:1:19
+
+Cannot assign `3` to `a` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   file_with_error.js:1:19
+   1| const a: string = 3;
+                        ^ [1]
+
+References:
+   file_with_error.js:1:10
+   1| const a: string = 3;
+               ^^^^^^ [2]
+
+
+
+Found 1 error
