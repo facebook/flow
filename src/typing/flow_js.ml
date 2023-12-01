@@ -1656,14 +1656,20 @@ struct
         | (UnionT (_, rep), PredicateT (((MaybeP | NotP MaybeP | ExistsP | NotP ExistsP) as p), t))
           when UnionRep.is_optimized_finally rep ->
           predicate cx trace t l p
-        | (UnionT (_, rep), ElemT (use_op, reason, obj, ReadElem (id, true (* annot *), tout))) ->
+        | (UnionT (_, rep), ElemT (use_op, reason, obj, ReadElem { id; from_annot = true; tout }))
+          ->
           let reason = update_desc_reason invalidate_rtype_alias reason in
           let (t0, (t1, ts)) = UnionRep.members_nel rep in
           let f t =
             AnnotT
               ( reason,
                 Tvar.mk_no_wrap_where cx reason (fun tvar ->
-                    rec_flow cx trace (t, ElemT (use_op, reason, obj, ReadElem (id, true, tvar)))
+                    rec_flow
+                      cx
+                      trace
+                      ( t,
+                        ElemT (use_op, reason, obj, ReadElem { id; from_annot = true; tout = tvar })
+                      )
                 ),
                 false
               )
@@ -4166,11 +4172,11 @@ struct
         | ( (DefT (_, (ObjT _ | ArrT _ | InstanceT _)) | AnyT _),
             SetElemT (use_op, reason_op, key, mode, tin, tout)
           ) ->
-          rec_flow cx trace (key, ElemT (use_op, reason_op, l, WriteElem (tin, tout, mode)))
+          rec_flow cx trace (key, ElemT (use_op, reason_op, l, WriteElem { tin; tout; mode }))
         | ( (DefT (_, (ObjT _ | ArrT _ | InstanceT _)) | AnyT _),
             GetElemT { use_op; reason = reason_op; id; from_annot; key_t; tout }
           ) ->
-          rec_flow cx trace (key_t, ElemT (use_op, reason_op, l, ReadElem (id, from_annot, tout)))
+          rec_flow cx trace (key_t, ElemT (use_op, reason_op, l, ReadElem { id; from_annot; tout }))
         | ( (DefT (_, (ObjT _ | ArrT _ | InstanceT _)) | AnyT _),
             CallElemT (use_op, reason_call, reason_lookup, key, action)
           ) ->
@@ -7554,8 +7560,9 @@ struct
   and elem_action_on_obj cx trace ~use_op l obj reason_op action =
     let propref = propref_for_elem_t l in
     match action with
-    | ReadElem (id, _, t) -> rec_flow cx trace (obj, GetPropT (use_op, reason_op, id, propref, t))
-    | WriteElem (tin, tout, mode) ->
+    | ReadElem { id; from_annot = _; tout } ->
+      rec_flow cx trace (obj, GetPropT (use_op, reason_op, id, propref, tout))
+    | WriteElem { tin; tout; mode } ->
       rec_flow cx trace (obj, SetPropT (use_op, reason_op, propref, mode, Normal, tin, None));
       Base.Option.iter ~f:(fun t -> rec_flow_t cx trace ~use_op:unknown_use (obj, t)) tout
     | CallElem (reason_call, ft) ->
@@ -9625,14 +9632,14 @@ struct
 
   and perform_elem_action cx trace ~use_op ~restrict_deletes reason_op l value action =
     match (action, restrict_deletes) with
-    | (ReadElem (_, _, t), _) ->
+    | (ReadElem { tout; _ }, _) ->
       let loc = loc_of_reason reason_op in
-      rec_flow_t cx trace ~use_op:unknown_use (reposition cx ~trace loc value, OpenT t)
-    | (WriteElem (tin, tout, Assign), _)
-    | (WriteElem (tin, tout, Delete), true) ->
+      rec_flow_t cx trace ~use_op:unknown_use (reposition cx ~trace loc value, OpenT tout)
+    | (WriteElem { tin; tout; mode = Assign }, _)
+    | (WriteElem { tin; tout; mode = Delete }, true) ->
       rec_flow cx trace (tin, UseT (use_op, value));
       Base.Option.iter ~f:(fun t -> rec_flow_t cx trace ~use_op:unknown_use (l, t)) tout
-    | (WriteElem (tin, tout, Delete), false) ->
+    | (WriteElem { tin; tout; mode = Delete }, false) ->
       (* Ok to delete arbitrary elements on arrays, not OK for tuples *)
       rec_flow cx trace (tin, UseT (use_op, VoidT.why (reason_of_t value)));
       Base.Option.iter ~f:(fun t -> rec_flow_t cx trace ~use_op:unknown_use (l, t)) tout

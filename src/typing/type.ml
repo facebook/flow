@@ -1412,8 +1412,16 @@ module rec TypeTerm : sig
      to initialize the property value, but in order to avoid race conditions we
      need to ensure that reads happen after writes. *)
   and elem_action =
-    | ReadElem of ident option * bool (* annot *) * tvar
-    | WriteElem of t * t option (* tout *) * set_mode
+    | ReadElem of {
+        id: ident option;
+        from_annot: bool;
+        tout: tvar;
+      }
+    | WriteElem of {
+        tin: t;
+        tout: t option;
+        mode: set_mode;
+      }
     | CallElem of reason * method_action
 
   and propref =
