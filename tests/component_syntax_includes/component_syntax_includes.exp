@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------------- exclude.js:1:8
 
-Component syntax is not supported [unsupported-syntax]
+Component syntax is not enabled. [unsupported-syntax]
 
    1| export component FooX() { return null }
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -8,7 +8,7 @@ Component syntax is not supported [unsupported-syntax]
 
 Error -------------------------------------------------------------------------------------------------- exclude.js:2:16
 
-Component syntax is not supported [unsupported-syntax]
+Component syntax is not enabled. [unsupported-syntax]
 
    2| declare export component BarX(x: number);
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -16,7 +16,7 @@ Component syntax is not supported [unsupported-syntax]
 
 Error -------------------------------------------------------------------------------------------------- exclude.js:3:20
 
-Component syntax is not supported [unsupported-syntax]
+Component syntax is not enabled. [unsupported-syntax]
 
    3| export const BazX: component() = (42: any);
                          ^^^^^^^^^^^

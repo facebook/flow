@@ -11,6 +11,6 @@ all=true
 casting_syntax=both
 no_flowlib=false
 enums=true
-experimental.component_syntax=true
+experimental.component_syntax=typing
 
 [strict]

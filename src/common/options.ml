@@ -30,7 +30,6 @@ type react_runtime =
   | ReactRuntimeClassic
 
 type component_syntax =
-  | Off
   | Parsing
   | FullSupport
 
@@ -177,17 +176,8 @@ let component_syntax opts = opts.opt_component_syntax
 
 let typecheck_component_syntax opts =
   match opts.opt_component_syntax with
-  | Off
-  | Parsing ->
-    false
+  | Parsing -> false
   | FullSupport -> true
-
-let parse_component_syntax opts =
-  match opts.opt_component_syntax with
-  | Off -> false
-  | Parsing
-  | FullSupport ->
-    true
 
 let component_syntax_includes opts = opts.opt_component_syntax_includes
 

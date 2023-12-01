@@ -2940,7 +2940,7 @@ let friendly_message_of_msg loc_of_aloc msg =
       | UnsupportedInternalSlot { name; static = true } ->
         [text "Unsupported static internal slot "; code name; text "."]
       | WithStatement -> [text "Flow doesn't support "; code "with"; text " statements."]
-      | ComponentSyntax -> [text "Component syntax is not supported"]
+      | ComponentSyntax -> [text "Component syntax is not enabled."]
       | TypeOfTypeArguments ->
         [
           code "typeof";

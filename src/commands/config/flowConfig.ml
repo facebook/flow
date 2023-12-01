@@ -174,7 +174,7 @@ module Opts = struct
       babel_loose_array_spread = None;
       channel_mode = None;
       casting_syntax = None;
-      component_syntax = Options.Off;
+      component_syntax = Options.Parsing;
       component_syntax_includes = [];
       react_rules = [];
       direct_dependent_files_fix = None;
@@ -490,14 +490,7 @@ module Opts = struct
   let component_syntax_parser =
     let open Options in
     enum
-      [
-        ("off", Off);
-        ("parsing", Parsing);
-        ("typing", FullSupport);
-        (* Compatibility with former boolean status here *)
-        ("false", Off);
-        ("true", FullSupport);
-      ]
+      [("parsing", Parsing); ("typing", FullSupport)]
       (fun opts v -> Ok { opts with component_syntax = v })
 
   let react_rules_parser =
@@ -513,20 +506,14 @@ module Opts = struct
       (fun opts v -> Ok { opts with react_rules = v :: opts.react_rules })
 
   let component_syntax_includes_parser =
-    let open Options in
     string
       ~init:(fun opts -> { opts with component_syntax_includes = [] })
       ~multiple:true
       (fun opts v ->
-        let component_syntax =
-          match opts.component_syntax with
-          | Off -> Parsing
-          | _ -> opts.component_syntax
-        in
         Ok
           {
             opts with
-            component_syntax;
+            component_syntax = opts.component_syntax;
             component_syntax_includes = v :: opts.component_syntax_includes;
           })
 
