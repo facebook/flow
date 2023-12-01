@@ -18,11 +18,16 @@ type event =
   | Fetch_saved_state_delay of string
   | Read_saved_state
   | Load_saved_state_progress of progress
+  | Restoring_heaps_start
   | Parsing_progress of progress
   | Load_libraries_start
   | Indexing_progress of progress
+  | Indexing_post_process
+  | Indexing_end
   | Resolving_dependencies_progress
   | Calculating_dependencies_progress
+  | Calculating_dependents_start
+  | Calculating_dependents_end
   | Merging_progress of progress
   | Checking_progress of progress
   | Canceling_progress of progress

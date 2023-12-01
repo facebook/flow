@@ -234,6 +234,7 @@ let index ~workers ~reader parsed :
         ))
       ~next:(MultiWorkerLwt.next workers parsed)
   in
+  MonitorRPC.status_update ~event:ServerStatus.Indexing_post_process;
 
   let exports_to_add =
     Base.List.fold exports_to_add ~init:Export_index.empty ~f:(fun acc index ->
@@ -269,7 +270,9 @@ let init ~workers ~reader ~libs parsed =
   let exports_to_add = add_exports_of_builtins libs exports_to_add in
   let final_export_index = Export_index.merge_export_import imports_to_add exports_to_add in
   (* TODO: assert that _exports_to_remove is empty? should be on init *)
-  Lwt.return (Export_search.init final_export_index)
+  let search = Export_search.init final_export_index in
+  MonitorRPC.status_update ~event:ServerStatus.Indexing_end;
+  Lwt.return search
 
 (** [update ~changed previous] updates the exports for all of the [changed] files
     in the [previous] [Export_search.t]. *)
@@ -278,12 +281,15 @@ let update ~workers ~reader ~update ~remove previous : Export_search.t Lwt.t =
   let%lwt (exports_to_add, exports_to_remove, imports_to_add, imports_to_remove) =
     index ~workers ~reader dirty_files
   in
-  previous
-  |> Export_search.subtract exports_to_remove
-  |> Export_search.merge exports_to_add
-  |> Export_search.subtract_count imports_to_remove
-  |> Export_search.merge_export_import imports_to_add
-  |> Lwt.return
+  let result =
+    previous
+    |> Export_search.subtract exports_to_remove
+    |> Export_search.merge exports_to_add
+    |> Export_search.subtract_count imports_to_remove
+    |> Export_search.merge_export_import imports_to_add
+  in
+  MonitorRPC.status_update ~event:ServerStatus.Indexing_end;
+  Lwt.return result
 
 module For_test = struct
   let string_of_modulename = string_of_modulename

@@ -551,6 +551,8 @@ let ensure_parsed ~reader options workers files =
     else
       FilenameSet.add fn acc
   in
+  (* NOTE: This call can be slow with large fanouts. It might be worth including this
+   * in its own server status. *)
   let%lwt files_missing_asts =
     MultiWorkerLwt.fold
       workers

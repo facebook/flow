@@ -25,11 +25,16 @@ type event =
   | Fetch_saved_state_delay of string  (** Fetching the saved state is taking a long time *)
   | Read_saved_state
   | Load_saved_state_progress of progress
+  | Restoring_heaps_start
   | Parsing_progress of progress
   | Load_libraries_start
   | Indexing_progress of progress
+  | Indexing_post_process
+  | Indexing_end
   | Resolving_dependencies_progress
   | Calculating_dependencies_progress
+  | Calculating_dependents_start
+  | Calculating_dependents_end
   | Merging_progress of progress
   | Checking_progress of progress
   | Canceling_progress of progress
@@ -46,17 +51,20 @@ type typecheck_status =
   | Fetching_saved_state of string  (** Fetching saved state, when it is taking a while *)
   | Reading_saved_state
   | Loading_saved_state of progress
+  | Restoring_heaps
   | Loading_libraries
   | Parsing of progress
-  | Indexing of progress
+  | Indexing of progress option (* None means post-processing *)
   | Resolving_dependencies
   | Calculating_dependencies
+  | Calculating_dependents
   | Merging of progress
   | Checking of progress
   | Canceling of progress
   | Collating_errors  (** We sometimes collate errors during typecheck *)
   | Finishing_typecheck  (** haven't reached free state yet *)
   | Waiting_for_watchman of deadline option
+  | Unaccounted of string
 
 type restart_reason =
   | Server_out_of_date
@@ -100,6 +108,7 @@ type emoji =
   | Motorcycle
   | Skier
   | Card_index_dividers
+  | Question_mark
 
 let string_of_emoji = function
   | Closed_book -> "\xF0\x9F\x93\x95"
@@ -119,6 +128,7 @@ let string_of_emoji = function
   | Motorcycle -> "\xf0\x9f\x8f\x8d"
   | Skier -> "\xE2\x9B\xB7"
   | Card_index_dividers -> "\xF0\x9F\x97\x82"
+  | Question_mark -> "\xE2\x9D\x93"
 
 type pad_emoji =
   | Before
@@ -149,9 +159,14 @@ let string_of_event = function
   | Read_saved_state -> "Read_saved_state"
   | Load_saved_state_progress progress ->
     spf "Load_saved_state_progress %s" (string_of_progress progress)
+  | Restoring_heaps_start -> "Restoring_heaps_start"
   | Parsing_progress progress -> spf "Parsing_progress files %s" (string_of_progress progress)
   | Indexing_progress progress -> spf "Indexing_progress %s" (string_of_progress progress)
+  | Indexing_post_process -> "Indexing_post_process"
+  | Indexing_end -> "Indexing_end"
   | Calculating_dependencies_progress -> "Calculating_dependencies_progress"
+  | Calculating_dependents_start -> "Calculating_dependents_start"
+  | Calculating_dependents_end -> "Calculating_dependents_end"
   | Resolving_dependencies_progress -> "Resolving_dependencies_progress"
   | Merging_progress progress -> spf "Merging_progress %s" (string_of_progress progress)
   | Checking_progress progress -> spf "Checking_progress files %s" (string_of_progress progress)
@@ -174,16 +189,20 @@ let string_of_typecheck_status ~use_emoji = function
   | Reading_saved_state -> spf "%sreading saved state" (render_emoji ~use_emoji Closed_book)
   | Loading_saved_state progress ->
     spf "%sloading saved state %s" (render_emoji ~use_emoji Open_book) (string_of_progress progress)
+  | Restoring_heaps -> spf "%sfinalizing saved state heaps" (render_emoji ~use_emoji Open_book)
   | Loading_libraries -> spf "%sloading libraries" (render_emoji ~use_emoji Library)
   | Parsing progress ->
     spf "%sparsed files %s" (render_emoji ~use_emoji Ghost) (string_of_progress progress)
-  | Indexing progress ->
+  | Indexing (Some progress) ->
     spf
       "%sindexing files %s"
       (render_emoji ~use_emoji Card_index_dividers)
       (string_of_progress progress)
+  | Indexing None ->
+    spf "%sindexing files (post-process)" (render_emoji ~use_emoji Card_index_dividers)
   | Resolving_dependencies -> spf "%sresolving dependencies" (render_emoji ~use_emoji Taco)
   | Calculating_dependencies -> spf "%scalculating dependencies" (render_emoji ~use_emoji Taco)
+  | Calculating_dependents -> spf "%scalculating dependents" (render_emoji ~use_emoji Taco)
   | Merging progress ->
     spf
       "%smerged module interfaces %s"
@@ -206,6 +225,7 @@ let string_of_typecheck_status ~use_emoji = function
     in
     spf "%swaiting for Watchman%s" (render_emoji ~use_emoji Eyes) timeout
   | Finishing_typecheck -> spf "%sfinishing up" (render_emoji ~use_emoji Cookie)
+  | Unaccounted s -> spf "%spost-%s work" (render_emoji ~use_emoji Question_mark) s
 
 let string_of_restart_reason = function
   | Server_out_of_date -> "restarting due to change which cannot be handled incrementally"
@@ -250,12 +270,21 @@ let update ~event ~status =
   | (Read_saved_state, Typechecking (mode, _)) -> Typechecking (mode, Reading_saved_state)
   | (Load_saved_state_progress progress, Typechecking (mode, _)) ->
     Typechecking (mode, Loading_saved_state progress)
+  | (Restoring_heaps_start, Typechecking (mode, Loading_saved_state _)) ->
+    Typechecking (mode, Restoring_heaps)
   | (Parsing_progress progress, Typechecking (mode, _)) -> Typechecking (mode, Parsing progress)
-  | (Indexing_progress progress, Typechecking (mode, _)) -> Typechecking (mode, Indexing progress)
+  | (Indexing_progress progress, Typechecking (mode, _)) ->
+    Typechecking (mode, Indexing (Some progress))
+  | (Indexing_post_process, Typechecking (mode, _)) -> Typechecking (mode, Indexing None)
+  | (Indexing_end, Typechecking (mode, _)) -> Typechecking (mode, Unaccounted "Indexing")
   | (Resolving_dependencies_progress, Typechecking (mode, _)) ->
     Typechecking (mode, Resolving_dependencies)
   | (Calculating_dependencies_progress, Typechecking (mode, _)) ->
     Typechecking (mode, Calculating_dependencies)
+  | (Calculating_dependents_start, Typechecking (mode, _)) ->
+    Typechecking (mode, Calculating_dependents)
+  | (Calculating_dependents_end, Typechecking (mode, _)) ->
+    Typechecking (mode, Unaccounted "Calculating dependents")
   | (Merging_progress progress, Typechecking (mode, _)) -> Typechecking (mode, Merging progress)
   | (Checking_progress progress, Typechecking (mode, _)) -> Typechecking (mode, Checking progress)
   | (Canceling_progress progress, Typechecking (mode, _)) -> Typechecking (mode, Canceling progress)
@@ -319,25 +348,30 @@ let is_significant_transition old_status new_status =
        || begin
             match (old_tc_status, new_tc_status) with
             | (Parsing _, Parsing _)
-            | (Indexing _, Indexing _)
+            | (Indexing (Some _), Indexing (Some _))
+            | (Indexing None, Indexing None)
             | (Merging _, Merging _)
             | (Checking _, Checking _)
-            | (Canceling _, Canceling _) ->
+            | (Canceling _, Canceling _)
+            | (Unaccounted _, Unaccounted _) ->
               (* Making progress within parsing, merging or canceling is not significant *)
               false
             | (_, Fetching_saved_state _)
             | (_, Reading_saved_state)
             | (_, Loading_saved_state _)
+            | (_, Restoring_heaps)
             | (_, Loading_libraries)
             | (_, Parsing _)
             | (_, Indexing _)
             | (_, Resolving_dependencies)
             | (_, Calculating_dependencies)
+            | (_, Calculating_dependents)
             | (_, Merging _)
             | (_, Checking _)
             | (_, Canceling _)
             | (_, Waiting_for_watchman _)
-            | (_, Collating_errors) ->
+            | (_, Collating_errors)
+            | (_, Unaccounted _) ->
               (* But changing typechecking status always is significant *)
               true
             | (_, Starting_typecheck)
