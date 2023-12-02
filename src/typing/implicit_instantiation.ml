@@ -201,11 +201,17 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       (match destructor with
       | PropertyType _
       | ElementType _
+      | OptionalIndexedAccessNonMaybeType _
+      | OptionalIndexedAccessResultType _
       | ValuesType
       | CallType _
       | ConditionalType _
       | TypeMap _
-      | ReactElementRefType ->
+      | MappedType _ (* TODO: Mapped Type reversals *)
+      | ReactElementRefType
+      | ReactCheckComponentConfig _
+      | ReactCheckComponentRef
+      | ReactPromoteRendersRepresentation _ ->
         UpperEmpty
       | ReactElementPropsType
       | ReactElementConfigType ->
@@ -251,14 +257,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
                |> merge_lower_bounds cx
                |> use_t_result_of_t_option
            )
-      | SpreadTupleType _
-      | MappedType _ (* TODO: Mapped Type reversals *)
-      | ReactPromoteRendersRepresentation _
-      | ReactCheckComponentConfig _
-      | ReactCheckComponentRef
-      | OptionalIndexedAccessNonMaybeType _
-      | OptionalIndexedAccessResultType _ ->
-        UpperNonT u)
+      | SpreadTupleType _ -> UpperNonT u)
     | UseT (_, t) -> UpperT t
     | ArrRestT (_, _, i, tout) ->
       (match get_t cx tout with
@@ -399,7 +398,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
           ( ReadOnly | Partial | Required | ObjectRep | ObjectWiden _ | Object.ReactConfig _
           | Object.ReactCheckComponentConfig _ )) ->
         identity_reverse_upper_bound cx seen tvar r tout
-      | Object.ObjectMap _ -> UpperNonT u (* TODO: reverse mapped types *)
+      | Object.ObjectMap _ -> UpperEmpty (* TODO: reverse mapped types *)
       | Object.Spread (_, { Object.Spread.todo_rev; acc; _ }) ->
         let solution = merge_upper_bounds cx seen r tout in
         (match solution with
@@ -1265,10 +1264,13 @@ module Observer : OBSERVER = struct
         { tparam; inferred = any_error tparam_binder_reason }
       )
 
-  let on_upper_non_t cx ~use_op _u tparam ~tparam_binder_reason ~instantiation_reason =
+  let on_upper_non_t cx ~use_op u tparam ~tparam_binder_reason ~instantiation_reason =
     if Context.typing_mode cx <> Context.CheckingMode then
       { tparam; inferred = Context.mk_placeholder cx tparam_binder_reason }
     else (
+      Debug_js.Verbose.print_if_verbose_lazy
+        cx
+        (lazy ["Underconstrained due to upper_non_t"; Type.string_of_use_ctor u]);
       Flow_js_utils.add_output
         cx
         (Error_message.EImplicitInstantiationUnderconstrainedError
