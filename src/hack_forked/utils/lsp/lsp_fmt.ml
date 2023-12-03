@@ -305,6 +305,13 @@ let print_rage (r : Rage.result) : json =
   )
 
 (************************************************************************)
+(* ping request                                                         *)
+(************************************************************************)
+
+let print_ping (r : Ping.result) : json =
+  JSON_Object [("startServerStatus", opt_string_to_json r.Ping.start_server_status)]
+
+(************************************************************************)
 (* textDocument/didOpen notification                                    *)
 (************************************************************************)
 
@@ -1787,7 +1794,7 @@ let result_name_to_string (result : lsp_result) : string =
   | DocumentRangeFormattingResult _ -> "textDocument/rangeFormatting"
   | DocumentOnTypeFormattingResult _ -> "textDocument/onTypeFormatting"
   | RageResult _ -> "telemetry/rage"
-  | PingResult -> "telemetry/ping"
+  | PingResult _ -> "telemetry/ping"
   | RenameResult _ -> "textDocument/rename"
   | DocumentCodeLensResult _ -> "textDocument/codeLens"
   | ExecuteCommandResult _ -> "workspace/executeCommand"
@@ -2040,7 +2047,7 @@ let print_lsp_response ?include_error_stack_trace ~key (id : lsp_id) (result : l
     | DocumentRangeFormattingResult r -> print_documentRangeFormatting r
     | DocumentOnTypeFormattingResult r -> print_documentOnTypeFormatting r
     | RageResult r -> print_rage r
-    | PingResult -> JSON_String "pong"
+    | PingResult r -> print_ping r
     | RenameResult r -> RenameFmt.json_of_result r
     | DocumentCodeLensResult r -> DocumentCodeLensFmt.json_of_result ~key r
     | ExecuteCommandResult r -> ExecuteCommandFmt.json_of_result r

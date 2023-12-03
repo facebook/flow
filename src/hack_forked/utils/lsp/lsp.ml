@@ -675,6 +675,10 @@ module Rage = struct
   }
 end
 
+module Ping = struct
+  type result = { start_server_status: string option }
+end
+
 (** Code Lens resolve request, method="codeLens/resolve" *)
 module CodeLensResolve = struct
   type params = CodeLens.t
@@ -1476,7 +1480,7 @@ type lsp_result =
   | ShowMessageRequestResult of ShowMessageRequest.result
   | ShowStatusResult of ShowStatus.result
   | RageResult of Rage.result
-  | PingResult
+  | PingResult of Ping.result
   | RenameResult of Rename.result
   | DocumentCodeLensResult of DocumentCodeLens.result
   | ExecuteCommandResult of ExecuteCommand.result

@@ -399,7 +399,7 @@ let trigger_of_lsp_msg =
   | ResponseMessage (_, ShowMessageRequestResult _)
   | ResponseMessage (_, ShowStatusResult _)
   | ResponseMessage (_, RageResult _)
-  | ResponseMessage (_, PingResult)
+  | ResponseMessage (_, PingResult _)
   | ResponseMessage (_, RenameResult _)
   | ResponseMessage (_, ErrorResult _)
   | ResponseMessage (_, CodeActionResult _)

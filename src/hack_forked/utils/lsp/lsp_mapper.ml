@@ -79,6 +79,7 @@ type t = {
   of_location: t -> Location.t -> Location.t;
   of_publish_diagnostics_params: t -> PublishDiagnostics.params -> PublishDiagnostics.params;
   of_rage_result: t -> Rage.result -> Rage.result;
+  of_ping_result: t -> Ping.result -> Ping.result;
   of_range: t -> range -> range;
   of_register_capability_params: t -> RegisterCapability.params -> RegisterCapability.params;
   of_rename_params: t -> Rename.params -> Rename.params;
@@ -502,7 +503,7 @@ let default_mapper =
           ShowMessageRequestResult (mapper.of_show_message_request_result mapper result)
         | ShowStatusResult result -> ShowStatusResult (mapper.of_show_status_result mapper result)
         | RageResult result -> RageResult (mapper.of_rage_result mapper result)
-        | PingResult -> PingResult
+        | PingResult result -> PingResult (mapper.of_ping_result mapper result)
         | RegisterCapabilityResult -> RegisterCapabilityResult
         | RenameResult result -> RenameResult (mapper.of_rename_result mapper result)
         | DocumentCodeLensResult result ->
@@ -591,6 +592,7 @@ let default_mapper =
         let diagnostics = Base.List.map ~f:(mapper.of_diagnostic mapper) diagnostics in
         { PublishDiagnostics.uri; diagnostics });
     of_rage_result = (fun _mapper t -> t);
+    of_ping_result = (fun _mapper t -> t);
     of_range = (fun _mapper t -> t);
     of_register_capability_params =
       (fun _mapper { RegisterCapability.registrations } ->

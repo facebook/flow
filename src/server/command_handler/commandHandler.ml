@@ -2748,7 +2748,12 @@ let handle_persistent_rage ~reader ~genv ~id ~metadata ~client:_ ~profiling:_ ~e
   Lwt.return (LspProt.LspFromServer (Some response), metadata)
 
 let handle_persistent_ping ~id ~metadata ~client:_ ~profiling:_ ~env:_ =
-  let response = ResponseMessage (id, PingResult) in
+  let start_server_status =
+    match metadata.LspProt.start_server_status with
+    | None -> None
+    | Some status -> Some (ServerStatus.string_of_status ~terse:true status)
+  in
+  let response = ResponseMessage (id, PingResult { Lsp.Ping.start_server_status }) in
   Lwt.return (LspProt.LspFromServer (Some response), metadata)
 
 let handle_persistent_log_command ~id ~metadata ~arguments:_ ~client:_ ~profiling:_ =

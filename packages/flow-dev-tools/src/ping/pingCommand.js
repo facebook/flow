@@ -14,7 +14,6 @@ const child_process = require('child_process');
 const rpc = require('vscode-jsonrpc');
 const uri = require('vscode-uri');
 
-const {performance} = require('perf_hooks');
 const path = require('path');
 
 const {commonFlags, default: Base} = require('../command/Base');
@@ -51,9 +50,10 @@ class PingCommand extends Base<Args> {
     });
 
     async function doPing(): Promise<number> {
-      const start = performance.now();
-      await conn.sendRequest(PingRequest);
-      return performance.now() - start;
+      const start = Date.now();
+      const response = await conn.sendRequest(PingRequest);
+      const duration = Date.now() - start;
+      return {start, duration, ...response};
     }
 
     async function throttle(ms: number): Promise<void> {
@@ -61,9 +61,8 @@ class PingCommand extends Base<Args> {
     }
 
     while (true) {
-      const now = Date.now();
-      const [duration, _] = await Promise.all([doPing(), throttle(100)]);
-      console.log(now, ' ', duration.toFixed(3));
+      const [pong, _] = await Promise.all([doPing(), throttle(100)]);
+      console.log(JSON.stringify(pong));
     }
   }
 
