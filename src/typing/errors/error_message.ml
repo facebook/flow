@@ -75,19 +75,21 @@ module InvalidObjKey = struct
     | NumberTooLarge
     | NumberTooSmall
 
+  let kind_of_num_value value =
+    if not (Float.is_integer value) then
+      NumberNonInt
+    else if value > Js_number.max_safe_integer then
+      NumberTooLarge
+    else if value < Js_number.min_safe_integer then
+      NumberTooSmall
+    else
+      Other
+
   let kind_of_num_lit = function
     | Truthy
     | AnyLiteral ->
       NumberNonLit
-    | Literal (_, (value, _)) ->
-      if not (Float.is_integer value) then
-        NumberNonInt
-      else if value > Js_number.max_safe_integer then
-        NumberTooLarge
-      else if value < Js_number.min_safe_integer then
-        NumberTooSmall
-      else
-        Other
+    | Literal (_, (value, _)) -> kind_of_num_value value
 
   let str_of_kind = function
     | Other -> "other"
@@ -312,7 +314,11 @@ and 'loc t' =
       use_op: 'loc virtual_use_op;
     }
   | EInvalidConstructor of 'loc virtual_reason
-  | EUnsupportedKeyInObjectType of 'loc
+  | EUnsupportedKeyInObjectType of {
+      loc: 'loc;
+      key_error_kind: InvalidObjKey.t;
+    }
+  | EAmbiguousNumericKeyWithVariance of 'loc
   | EPredicateFuncTooShort of {
       loc: 'loc;
       pred_func: 'loc virtual_reason;
@@ -1087,7 +1093,9 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EPropertyTypeAnnot loc -> EPropertyTypeAnnot (f loc)
   | EExportsAnnot loc -> EExportsAnnot (f loc)
   | ECharSetAnnot loc -> ECharSetAnnot (f loc)
-  | EUnsupportedKeyInObjectType loc -> EUnsupportedKeyInObjectType (f loc)
+  | EUnsupportedKeyInObjectType { loc; key_error_kind } ->
+    EUnsupportedKeyInObjectType { loc = f loc; key_error_kind }
+  | EAmbiguousNumericKeyWithVariance loc -> EAmbiguousNumericKeyWithVariance (f loc)
   | EPredicateFuncTooShort { loc; pred_func; pred_func_param_num; index } ->
     EPredicateFuncTooShort
       { loc = f loc; pred_func = map_reason pred_func; pred_func_param_num; index }
@@ -1542,6 +1550,7 @@ let util_use_op_of_msg nope util = function
   | EExportsAnnot _
   | ECharSetAnnot _
   | EUnsupportedKeyInObjectType _
+  | EAmbiguousNumericKeyWithVariance _
   | EPredicateFuncTooShort _
   | EPredicateFuncArityMismatch _
   | EPredicateFuncIncompatibility _
@@ -1800,7 +1809,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EUseArrayLiteral loc
   | EUnsupportedSyntax (loc, _)
   | EInternal (loc, _)
-  | EUnsupportedKeyInObjectType loc
+  | EUnsupportedKeyInObjectType { loc; _ }
+  | EAmbiguousNumericKeyWithVariance loc
   | ECharSetAnnot loc
   | EExportsAnnot loc
   | EPropertyTypeAnnot loc
@@ -2805,7 +2815,20 @@ let friendly_message_of_msg loc_of_aloc msg =
           @ Flow_errors_utils.Friendly.conjunction_concat ~conjunction:"and" invalids;
         use_op;
       }
-  | EUnsupportedKeyInObjectType _ -> Normal { features = [text "Unsupported key in object type."] }
+  | EUnsupportedKeyInObjectType { key_error_kind; _ } ->
+    let suffix = Base.Option.value ~default:[] (InvalidObjKey.msg_of_kind key_error_kind) in
+    let features = [text "Unsupported key in object type."] @ suffix in
+    Normal { features }
+  | EAmbiguousNumericKeyWithVariance _ ->
+    let features =
+      [
+        text "Cannot mix number literal keys and variance annotations, ";
+        text "as the variance annotation could be interpreted as negating or ";
+        text "making positive the number literal. ";
+        text "Consider using a string literal key name to disambiguate.";
+      ]
+    in
+    Normal { features }
   | EPredicateFuncTooShort { loc = _; pred_func; pred_func_param_num; index } ->
     Normal
       {
@@ -5487,6 +5510,7 @@ let error_code_of_message err : error_code option =
   | EUnsupportedExact (_, _) -> Some InvalidExact
   | EUnsupportedImplements _ -> Some CannotImplement
   | EUnsupportedKeyInObjectType _ -> Some IllegalKey
+  | EAmbiguousNumericKeyWithVariance _ -> Some IllegalKey
   | EUnsupportedSetProto _ -> Some CannotWrite
   | EUnsupportedSyntax (_, _) -> Some UnsupportedSyntax
   | EImplicitInstantiationUnderconstrainedError _ -> Some UnderconstrainedImplicitInstantiation

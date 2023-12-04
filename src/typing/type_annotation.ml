@@ -1933,10 +1933,8 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     let named_property cx tparams_map infer_tparams_map loc acc prop =
       match prop with
       | { Object.Property.key; value = Object.Property.Init value; optional; variance; _method; _ }
-        -> begin
-        match key with
-        | Ast.Expression.Object.Property.StringLiteral (loc, { Ast.StringLiteral.value = name; _ })
-        | Ast.Expression.Object.Property.Identifier (loc, { Ast.Identifier.name; comments = _ }) ->
+        ->
+        let prop_of_name ~loc name =
           let (((_, t), _) as value_ast) = convert cx tparams_map infer_tparams_map value in
           let prop_ast t =
             {
@@ -1946,6 +1944,8 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                   match key with
                   | Ast.Expression.Object.Property.StringLiteral (_, lit) ->
                     Ast.Expression.Object.Property.StringLiteral ((loc, t), lit)
+                  | Ast.Expression.Object.Property.NumberLiteral (_, lit) ->
+                    Ast.Expression.Object.Property.NumberLiteral ((loc, t), lit)
                   | Ast.Expression.Object.Property.Identifier
                       (_loc, { Ast.Identifier.name = _; comments = comments_inner }) ->
                     Ast.Expression.Object.Property.Identifier
@@ -1984,14 +1984,41 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                   t
             in
             (Acc.add_prop prop acc, prop_ast t)
-        | Ast.Expression.Object.Property.NumberLiteral (loc, _)
+        in
+        (match key with
+        | Ast.Expression.Object.Property.StringLiteral (loc, { Ast.StringLiteral.value = name; _ })
+        | Ast.Expression.Object.Property.Identifier (loc, { Ast.Identifier.name; comments = _ }) ->
+          prop_of_name ~loc name
+        | Ast.Expression.Object.Property.NumberLiteral (loc, { Ast.NumberLiteral.value; _ }) ->
+          (match variance with
+          | Some (_, Ast.Variance.{ kind = Plus; _ })
+          | Some (_, Ast.Variance.{ kind = Minus; _ }) ->
+            Flow_js_utils.add_output cx (Error_message.EAmbiguousNumericKeyWithVariance loc);
+            let (_, prop_ast) = Tast_utils.error_mapper#object_property_type (loc, prop) in
+            (acc, prop_ast)
+          | _ ->
+            if Js_number.is_float_safe_integer value then
+              let name = Dtoa.ecma_string_of_float value in
+              prop_of_name ~loc name
+            else (
+              Flow_js_utils.add_output
+                cx
+                (Error_message.EUnsupportedKeyInObjectType
+                   { loc; key_error_kind = Error_message.InvalidObjKey.kind_of_num_value value }
+                );
+              let (_, prop_ast) = Tast_utils.error_mapper#object_property_type (loc, prop) in
+              (acc, prop_ast)
+            ))
         | Ast.Expression.Object.Property.BigIntLiteral (loc, _)
         | Ast.Expression.Object.Property.PrivateName (loc, _)
         | Ast.Expression.Object.Property.Computed (loc, _) ->
-          Flow_js_utils.add_output cx (Error_message.EUnsupportedKeyInObjectType loc);
+          Flow_js_utils.add_output
+            cx
+            (Error_message.EUnsupportedKeyInObjectType
+               { loc; key_error_kind = Error_message.InvalidObjKey.Other }
+            );
           let (_, prop_ast) = Tast_utils.error_mapper#object_property_type (loc, prop) in
-          (acc, prop_ast)
-      end
+          (acc, prop_ast))
       (* unsafe getter property *)
       | {
        Object.Property.key =
