@@ -17,7 +17,7 @@ let tests = [
 
     var x;
     if (x !== undefined) {
-      x[0]; // should error, could be void
+      x[0]; // error, no property 0
     }
 
     const bar = [

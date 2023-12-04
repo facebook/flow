@@ -1462,6 +1462,51 @@ References:
             ^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- tuple.js:5:4
+
+Cannot cast `a` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   tuple.js:5:4
+   5|   (a: empty); // ERROR
+         ^
+
+References:
+   tuple.js:2:21
+   2|   declare const x: [string];
+                          ^^^^^^ [1]
+   tuple.js:5:7
+   5|   (a: empty); // ERROR
+            ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- tuple.js:11:10
+
+Property `0` is missing in object type [1]. [prop-missing]
+
+   tuple.js:11:10
+   11|   const [x] = o; // ERROR
+                ^
+
+References:
+   tuple.js:10:20
+   10|   declare const o: {foo: 1};
+                          ^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- tuple.js:16:10
+
+Property `0` is missing in statics of function type [1]. [prop-missing]
+
+   tuple.js:16:10
+   16|   const [x] = f; // ERROR
+                ^
+
+References:
+   tuple.js:15:20
+   15|   declare const f: number => boolean;
+                          ^^^^^^^^^^^^^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------- unannotated.js:6:5
 
 Cannot get `x.bar` because property `bar` is missing in object literal [1]. [prop-missing]
@@ -1477,7 +1522,7 @@ References:
 
 
 
-Found 103 errors
+Found 106 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

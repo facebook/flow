@@ -3,11 +3,11 @@
 var x: {'123': string, bar: string} = {'123': 'val', bar: 'bar'};
 x.foo as string; // error, key doesn't exist
 x['foo'] as string; // error, key doesn't exist
-x[123] as boolean; // TODO: use the number's value to error here
+x[123] as boolean; // error, string !~> boolean
 x.bar as boolean; // error, string !~> boolean
 x['123'] as boolean; // error, string !~> boolean
 x['123'] = false; // error, boolean !~> string
-x[123] = false; // error: no indexed type
+x[123] = false; // error, boolean !~> string
 x['foo' + 'bar'] = 'derp'; // error: no indexed type
 x[`foo`] as string; // error, key doesn't exist
 

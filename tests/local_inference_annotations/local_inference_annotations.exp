@@ -324,6 +324,20 @@ Missing an annotation on return. [missing-local-annot]
                        
 
 
+Error ---------------------------------------------------------------------------------------- destructuring_init.js:3:6
+
+Property `0` is missing in statics of function type [1]. [prop-missing]
+
+   destructuring_init.js:3:6
+   3| let [a]: number => number = (x) => { // ERROR
+           ^
+
+References:
+   destructuring_init.js:3:10
+   3| let [a]: number => number = (x) => { // ERROR
+               ^^^^^^^^^^^^^^^^ [1]
+
+
 Error --------------------------------------------------------------------------------------- destructuring_init.js:4:14
 
 Missing an annotation on `x`. [missing-local-annot]
@@ -839,4 +853,4 @@ Missing an annotation on `y`. [missing-local-annot]
 
 
 
-Found 101 errors
+Found 102 errors

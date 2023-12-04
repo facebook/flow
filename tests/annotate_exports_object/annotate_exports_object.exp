@@ -55,7 +55,7 @@ function foo() {
   };
 }
 
-export const foo_: {| "": number, "-": number, "\ud83d\ude0a": number |} = foo();
+export const foo_: {| "": number, "-": number, "1": number, "\ud83d\ude0a": number |} = foo();
 
 declare var b: {
   '-': 1,
@@ -74,7 +74,7 @@ export const bar_: { [1]: 4, "": 2, "-": 1, "\ud83d\ude0a": 3 } = bar();
 Stats:
   Files changed:                            4
   Number of annotations added:              5
-  Total size of annotations:               17
+  Total size of annotations:               18
   Number of sig. ver. errors:               5
   Number of annotations required:           5
   Number of annotations skipped:            0
@@ -153,7 +153,7 @@ function foo() {
   };
 }
 
-export const foo_: { "": number, "-": number, "\ud83d\ude0a": number, ... } = foo();
+export const foo_: { "": number, "-": number, "1": number, "\ud83d\ude0a": number, ... } = foo();
 
 declare var b: {
   '-': 1,
@@ -183,7 +183,7 @@ export const bar_: { [1]: 4, "": 2, "-": 1, "\ud83d\ude0a": 3 } = bar();
 
 >>> ./d.js
 12c12
-< export const foo_: {| "": number, "-": number, "\ud83d\ude0a": number |} = foo();
+< export const foo_: {| "": number, "-": number, "1": number, "\ud83d\ude0a": number |} = foo();
 ---
-> export const foo_: { "": number, "-": number, "\ud83d\ude0a": number, ... } = foo();
+> export const foo_: { "": number, "-": number, "1": number, "\ud83d\ude0a": number, ... } = foo();
 

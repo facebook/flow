@@ -1061,19 +1061,53 @@ An annotation on `y` is required because Flow cannot infer its type from local c
           ^
 
 
+Error --------------------------------------------------------------------------------------------------- unions.js:4:48
+
+Cannot assign object literal to `x` because in the indexer property's key: [incompatible-type]
+ - Either property `42` [1] is incompatible with string literal `A` [2].
+ - Or property `42` [1] is incompatible with string literal `B` [3].
+
+   unions.js:4:48
+   4|   const x: {['A' | 'B']: (number) => number} = {[42]: v => v}; // ERROR
+                                                     ^^^^^^^^^^^^^^ [1]
+
+References:
+   unions.js:4:14
+   4|   const x: {['A' | 'B']: (number) => number} = {[42]: v => v}; // ERROR
+                   ^^^ [2]
+   unions.js:4:20
+   4|   const x: {['A' | 'B']: (number) => number} = {[42]: v => v}; // ERROR
+                         ^^^ [3]
+
+
 Error --------------------------------------------------------------------------------------------------- unions.js:4:55
 
 An annotation on `v` is required because Flow cannot infer its type from local context. [missing-local-annot]
 
-   4|   const x: {['A' | 'B']: (number) => number} = {[42]: v => v};
+   4|   const x: {['A' | 'B']: (number) => number} = {[42]: v => v}; // ERROR
                                                             ^
+
+
+Error --------------------------------------------------------------------------------------------------- unions.js:7:42
+
+Cannot assign object literal to `x` because property `42` [1] is incompatible with string literal `A` [2] in the indexer
+property's key. [incompatible-type]
+
+   unions.js:7:42
+   7|   const x: {['A']: (number) => number} = {[42]: v => v}; // ERROR
+                                               ^^^^^^^^^^^^^^ [1]
+
+References:
+   unions.js:7:14
+   7|   const x: {['A']: (number) => number} = {[42]: v => v}; // ERROR
+                   ^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- unions.js:7:49
 
 An annotation on `v` is required because Flow cannot infer its type from local context. [missing-local-annot]
 
-   7|   const x: {['A']: (number) => number} = {[42]: v => v};
+   7|   const x: {['A']: (number) => number} = {[42]: v => v}; // ERROR
                                                       ^
 
 
@@ -1171,4 +1205,4 @@ References:
 
 
 
-Found 84 errors
+Found 86 errors

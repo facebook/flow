@@ -170,7 +170,7 @@ function Diffs() {
   d4.foo as number;
   d4.boz as number;
   d4.bar as number;
-  d4[0]; // error
+  d4[0]; // ok: treated like `d4['0']`, valid for `string` key indexer
   d4 as {|[string]: number, bar: number|};
 }
 

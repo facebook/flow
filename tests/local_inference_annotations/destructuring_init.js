@@ -1,6 +1,6 @@
 //@flow
 
-let [a]: number => number = (x) => {
+let [a]: number => number = (x) => { // ERROR
   const d = (x) => 3;
   return 3; // annot available
 };

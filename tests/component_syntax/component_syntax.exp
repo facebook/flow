@@ -2770,6 +2770,34 @@ You may only use an identifier or a destructured object as a component rest para
                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Error ---------------------------------------------------------------------------------------- rest_constraints.js:13:31
+
+Property `0` is missing in object type [1]. [prop-missing]
+
+   rest_constraints.js:13:31
+   13| component DestructuredArr(...[foo, bar]: {foo: number, bar: number}) { // ERROR destructure array
+                                     ^^^
+
+References:
+   rest_constraints.js:13:42
+   13| component DestructuredArr(...[foo, bar]: {foo: number, bar: number}) { // ERROR destructure array
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- rest_constraints.js:13:36
+
+Property `1` is missing in object type [1]. [prop-missing]
+
+   rest_constraints.js:13:36
+   13| component DestructuredArr(...[foo, bar]: {foo: number, bar: number}) { // ERROR destructure array
+                                          ^^^
+
+References:
+   rest_constraints.js:13:42
+   13| component DestructuredArr(...[foo, bar]: {foo: number, bar: number}) { // ERROR destructure array
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error ---------------------------------------------------------------------------------------- rest_constraints.js:17:42
 
 You may only use an identifier or a destructured object as a component rest param. [invalid-component-prop]
@@ -3101,7 +3129,7 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 203 errors
+Found 205 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

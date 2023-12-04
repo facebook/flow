@@ -3573,21 +3573,6 @@ References:
                        ^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------------ not.js:11:5
-
-Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in `Number` [1].
-[prop-missing]
-
-   not.js:11:5
-   11|     x[0]; // should error for null, void and number (0)
-           ^^^^
-
-References:
-   not.js:9:18
-    9| function bar(x: ?number) {
-                        ^^^^^^ [1]
-
-
 Error ------------------------------------------------------------------------------------------------------ not.js:11:7
 
 Cannot get `x[0]` because null or undefined [1] does not have properties. [incompatible-use]
@@ -3602,14 +3587,27 @@ References:
                        ^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------------ not.js:21:5
+Error ------------------------------------------------------------------------------------------------------ not.js:11:7
 
-Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in `Number` [1].
-[prop-missing]
+Cannot get `x[0]` because property `0` is missing in `Number` [1]. [prop-missing]
 
-   not.js:21:5
+   not.js:11:7
+   11|     x[0]; // should error for null, void and number (0)
+             ^
+
+References:
+   not.js:9:18
+    9| function bar(x: ?number) {
+                        ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ not.js:21:7
+
+Cannot get `x[0]` because property `0` is missing in `Number` [1]. [prop-missing]
+
+   not.js:21:7
    21|     x[0]; // should error for number (0)
-           ^^^^
+             ^
 
 References:
    not.js:15:18
@@ -4693,14 +4691,13 @@ References:
                                            ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- switch.js:27:14
+Error -------------------------------------------------------------------------------------------------- switch.js:27:19
 
-Cannot get `text[0]` because an index signature declaring the expected key / value type is missing in `Number` [1].
-[prop-missing]
+Cannot get `text[0]` because property `0` is missing in `Number` [1]. [prop-missing]
 
-   switch.js:27:14
+   switch.js:27:19
    27|       return text[0]; // error, [0] on number
-                    ^^^^^^^
+                         ^
 
 References:
    switch.js:23:30
@@ -4708,14 +4705,13 @@ References:
                                     ^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- switch.js:37:14
+Error -------------------------------------------------------------------------------------------------- switch.js:37:19
 
-Cannot get `text[0]` because an index signature declaring the expected key / value type is missing in `Number` [1].
-[prop-missing]
+Cannot get `text[0]` because property `0` is missing in `Number` [1]. [prop-missing]
 
-   switch.js:37:14
+   switch.js:37:19
    37|       return text[0]; // error, [0] on number
-                    ^^^^^^^
+                         ^
 
 References:
    switch.js:33:30
@@ -5626,14 +5622,13 @@ References:
                        ^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- typeof.js:5:5
+Error ---------------------------------------------------------------------------------------------------- typeof.js:5:7
 
-Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in `Boolean` [1].
-[prop-missing]
+Cannot get `x[0]` because property `0` is missing in `Boolean` [1]. [prop-missing]
 
-   typeof.js:5:5
+   typeof.js:5:7
    5|     x[0]; // error for boolean, not number
-          ^^^^
+            ^
 
 References:
    typeof.js:3:17
@@ -6053,14 +6048,13 @@ References:
                          ^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- union.js:7:5
+Error ----------------------------------------------------------------------------------------------------- union.js:7:7
 
-Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in `Boolean` [1].
-[prop-missing]
+Cannot get `x[0]` because property `0` is missing in `Boolean` [1]. [prop-missing]
 
-   union.js:7:5
+   union.js:7:7
      7|     x[0]; // error on boolean
-            ^^^^
+              ^
 
 References:
    <BUILTINS>/core.js:374:15
@@ -6068,14 +6062,13 @@ References:
                       ^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- union.js:13:5
+Error ---------------------------------------------------------------------------------------------------- union.js:13:7
 
-Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in `Number` [1].
-[prop-missing]
+Cannot get `x[0]` because property `0` is missing in `Number` [1]. [prop-missing]
 
-   union.js:13:5
+   union.js:13:7
    13|     x[0]; // error on number
-           ^^^^
+             ^
 
 References:
    union.js:11:17
@@ -6083,14 +6076,13 @@ References:
                        ^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- union.js:19:5
+Error ---------------------------------------------------------------------------------------------------- union.js:19:7
 
-Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in `Number` [1].
-[prop-missing]
+Cannot get `x[0]` because property `0` is missing in `Number` [1]. [prop-missing]
 
-   union.js:19:5
+   union.js:19:7
    19|     x[0]; // error on number
-           ^^^^
+             ^
 
 References:
    union.js:17:18

@@ -1,10 +1,10 @@
 //@flow
 
 {
-  const x: {['A' | 'B']: (number) => number} = {[42]: v => v};
+  const x: {['A' | 'B']: (number) => number} = {[42]: v => v}; // ERROR
 }
 {
-  const x: {['A']: (number) => number} = {[42]: v => v};
+  const x: {['A']: (number) => number} = {[42]: v => v}; // ERROR
 }
 {
   const x: {...} | {...} = {a: v => v};

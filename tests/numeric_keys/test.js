@@ -114,3 +114,62 @@
   o as {[number]: boolean}; // ERROR
   o as {[string]: boolean}; // OK
 }
+
+// Creation with computed prop
+{
+  const o = {
+    [1]: true,
+    [9007199254740991]: false,
+  };
+  o[1] as boolean; // OK
+  o['1'] as boolean; // OK
+  o[9007199254740991.0] as boolean; // OK
+  o['9007199254740991'] as boolean; // OK
+  o[1] as empty; // ERROR
+  o['1'] as empty; // ERROR
+}
+
+{
+  const E = Object.freeze({
+    One: 1,
+  });
+  const o = {
+    [E.One]: true,
+  };
+  o[1] as boolean; // OK
+  o['1'] as boolean; // OK
+  o[1] as empty; // ERROR
+  o['1'] as empty; // ERROR
+}
+
+// Number literal shorthands
+{
+  const o = {
+    [1E3]: true, // OK
+    [0XA]: true, // OK
+    [010]: true, // OK
+  };
+  // 1E3
+  o[1000] as boolean; // OK
+  o[1000] as empty; // ERROR
+  // 0XA
+  o[10] as boolean; // OK
+  o[10] as empty; // ERROR
+  // 010
+  o[8] as boolean; // OK
+  o[8] as empty; // ERROR
+}
+
+// Access of dicts
+{
+  declare const x: {[number]: boolean};
+  x[1] as boolean; // OK
+  x['1'] as boolean; // OK
+  x['foo']; // ERROR
+}
+
+{
+  declare const x: {[string]: boolean};
+  x[1] as boolean; // OK - same as below
+  x['1'] as boolean; // OK
+}

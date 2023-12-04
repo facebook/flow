@@ -1911,7 +1911,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
     | (Some prop, _, _) -> Some (prop, PropertyMapProperty)
     | (None, Named { name; from_indexed_access = true; _ }, Some { key; value; dict_polarity; _ })
       when not ignore_dicts ->
-      F.dict_read_check cx trace ~use_op (string_key name reason_op, key);
+      F.dict_read_check cx trace ~use_op (type_of_key_name cx name reason_op, key);
       Some
         ( Field
             { preferred_def_locs = None; key_loc = None; type_ = value; polarity = dict_polarity },
@@ -2005,7 +2005,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
     | (Named { name; _ }, None, Some { key; value; dict_polarity; _ })
       when not (is_dictionary_exempt name) ->
       (* Dictionaries match all property reads *)
-      F.dict_read_check cx trace ~use_op:unknown_use (string_key name reason_op, key);
+      F.dict_read_check cx trace ~use_op:unknown_use (type_of_key_name cx name reason_op, key);
       Some (OrdinaryField { type_ = value; polarity = dict_polarity }, IndexerProperty)
     | (Computed k, None, Some { key; value; dict_polarity; _ }) ->
       F.dict_read_check cx trace ~use_op:unknown_use (k, key);
@@ -2174,6 +2174,12 @@ let propref_for_elem_t = function
   | GenericT { bound = DefT (_, StrT (Literal (_, name))); reason; _ }
   | DefT (reason, StrT (Literal (_, name))) ->
     let reason = replace_desc_reason (RProperty (Some name)) reason in
+    mk_named_prop ~reason ~from_indexed_access:true name
+  | GenericT { bound = DefT (_, NumT (Literal (_, (value, raw)))); reason = reason_num; _ }
+  | DefT (reason_num, NumT (Literal (_, (value, raw))))
+    when Js_number.is_float_safe_integer value ->
+    let reason = replace_desc_reason (RProperty (Some (OrdinaryName raw))) reason_num in
+    let name = OrdinaryName (Dtoa.ecma_string_of_float value) in
     mk_named_prop ~reason ~from_indexed_access:true name
   | l -> Computed l
 
