@@ -2046,15 +2046,27 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
           F.error_type cx trace reason_op
         | AnyT (_, src) -> F.return cx trace ~use_op:unknown_use (AnyT.why src reason_op)
         | GenericT { bound = DefT (_, StrT _); _ }
-        | GenericT { bound = DefT (_, NumT _); _ }
-        | DefT (_, StrT _)
-        | DefT (_, NumT _) ->
-          (* string, and number keys are allowed, but there's nothing else to
+        | DefT (_, StrT _) ->
+          (* string keys are unsoundly allowed, but there's nothing else to
              flow without knowing their literal values. *)
           F.return cx trace ~use_op:unknown_use (Unsoundness.why ComputedNonLiteralKey reason_op)
+        | GenericT { bound = DefT (_, NumT lit); _ }
+        | DefT (_, NumT lit) ->
+          let reason_prop = reason_of_t elem_t in
+          let kind = Error_message.InvalidObjKey.kind_of_num_lit lit in
+          add_output
+            cx
+            ~trace
+            (Error_message.EObjectComputedPropertyAccess (reason_op, reason_prop, kind));
+          F.error_type cx trace reason_op
         | _ ->
           let reason_prop = reason_of_t elem_t in
-          add_output cx ~trace (Error_message.EObjectComputedPropertyAccess (reason_op, reason_prop));
+          add_output
+            cx
+            ~trace
+            (Error_message.EObjectComputedPropertyAccess
+               (reason_op, reason_prop, Error_message.InvalidObjKey.Other)
+            );
           F.error_type cx trace reason_op))
 end
 

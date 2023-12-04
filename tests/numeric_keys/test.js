@@ -164,6 +164,7 @@
 {
   declare const x: {[number]: boolean};
   x[1] as boolean; // OK
+  x[1.1] as boolean; // OK
   x['1'] as boolean; // OK
   x['foo']; // ERROR
 }
@@ -172,4 +173,11 @@
   declare const x: {[string]: boolean};
   x[1] as boolean; // OK - same as below
   x['1'] as boolean; // OK
+}
+
+// Invalid access
+{
+  const x = {};
+  x[1.1]; // ERROR
+  x[9007199254740992]; // ERROR
 }

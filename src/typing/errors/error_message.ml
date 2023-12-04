@@ -67,6 +67,53 @@ module IncorrectType = struct
       TSType
 end
 
+module InvalidObjKey = struct
+  type t =
+    | Other
+    | NumberNonLit
+    | NumberNonInt
+    | NumberTooLarge
+    | NumberTooSmall
+
+  let kind_of_num_lit = function
+    | Truthy
+    | AnyLiteral ->
+      NumberNonLit
+    | Literal (_, (value, _)) ->
+      if not (Float.is_integer value) then
+        NumberNonInt
+      else if value > Js_number.max_safe_integer then
+        NumberTooLarge
+      else if value < Js_number.min_safe_integer then
+        NumberTooSmall
+      else
+        Other
+
+  let str_of_kind = function
+    | Other -> "other"
+    | NumberNonLit -> "number not literal"
+    | NumberNonInt -> "number non-int"
+    | NumberTooLarge -> "number too large"
+    | NumberTooSmall -> "number too small"
+
+  let msg_of_kind kind =
+    let text = Flow_errors_utils.Friendly.text in
+    let code = Flow_errors_utils.Friendly.code in
+    match kind with
+    | Other -> None
+    | NumberNonLit ->
+      Some [text " Only number literals are allowed, not "; code "number"; text " in general."]
+    | NumberNonInt -> Some [text " Only integer-like number literals are allowed."]
+    | NumberTooLarge ->
+      Some
+        [text " Number literals must not be larger than "; code "Number.MAX_SAFE_INTEGER"; text "."]
+    | NumberTooSmall ->
+      Some
+        [
+          text " Number literals must not be smaller than "; code "Number.MIN_SAFE_INTEGER"; text ".";
+        ]
+end
+
 type t = ALoc.t t'
 
 and 'loc t' =
@@ -349,7 +396,7 @@ and 'loc t' =
   | EArithmeticOperand of 'loc virtual_reason
   | EForInRHS of 'loc virtual_reason
   | EInstanceofRHS of 'loc virtual_reason
-  | EObjectComputedPropertyAccess of ('loc virtual_reason * 'loc virtual_reason)
+  | EObjectComputedPropertyAccess of ('loc virtual_reason * 'loc virtual_reason * InvalidObjKey.t)
   | EObjectComputedPropertyAssign of ('loc virtual_reason * 'loc virtual_reason option)
   | EInvalidLHSInAssignment of 'loc
   | EIncompatibleWithUseOp of {
@@ -1105,8 +1152,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EArithmeticOperand r -> EArithmeticOperand (map_reason r)
   | EForInRHS r -> EForInRHS (map_reason r)
   | EInstanceofRHS r -> EInstanceofRHS (map_reason r)
-  | EObjectComputedPropertyAccess (r1, r2) ->
-    EObjectComputedPropertyAccess (map_reason r1, map_reason r2)
+  | EObjectComputedPropertyAccess (r1, r2, kind) ->
+    EObjectComputedPropertyAccess (map_reason r1, map_reason r2, kind)
   | EObjectComputedPropertyAssign (r1, r2) ->
     EObjectComputedPropertyAssign (map_reason r1, Base.Option.map ~f:map_reason r2)
   | EInvalidLHSInAssignment l -> EInvalidLHSInAssignment (f l)
@@ -1531,7 +1578,7 @@ let util_use_op_of_msg nope util = function
   | EArithmeticOperand _
   | EForInRHS _
   | EInstanceofRHS _
-  | EObjectComputedPropertyAccess (_, _)
+  | EObjectComputedPropertyAccess _
   | EObjectComputedPropertyAssign (_, _)
   | EInvalidConstructor _
   | EInvalidLHSInAssignment _
@@ -1635,7 +1682,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EReactRefInRender { usage = reason; _ }
   | EUnsupportedImplements reason
   | EObjectComputedPropertyAssign (reason, _)
-  | EObjectComputedPropertyAccess (_, reason)
+  | EObjectComputedPropertyAccess (_, reason, _)
   | EForInRHS reason
   | EBinaryInRHS reason
   | EBinaryInLHS reason
@@ -3416,8 +3463,14 @@ let friendly_message_of_msg loc_of_aloc msg =
       ]
     in
     Normal { features }
-  | EObjectComputedPropertyAccess (_, reason_prop) ->
-    Normal { features = [text "Cannot access computed property using "; ref reason_prop; text "."] }
+  | EObjectComputedPropertyAccess (_, reason_prop, kind) ->
+    let suffix = Base.Option.value ~default:[] (InvalidObjKey.msg_of_kind kind) in
+    Normal
+      {
+        features =
+          [text "Cannot access object with computed property using "; ref reason_prop; text "."]
+          @ suffix;
+      }
   | EObjectComputedPropertyAssign (reason_prop, Some reason_key) ->
     Normal
       {
@@ -5382,7 +5435,7 @@ let error_code_of_message err : error_code option =
   | ENonConstVarExport _ -> Some NonConstVarExport
   | ENonLitArrayToTuple _ -> Some InvalidTupleArity
   | ENotAReactComponent _ -> Some NotAComponent
-  | EObjectComputedPropertyAccess (_, _) -> Some InvalidComputedProp
+  | EObjectComputedPropertyAccess _ -> Some InvalidComputedProp
   | EObjectComputedPropertyAssign (_, _) -> Some InvalidComputedProp
   | EOnlyDefaultExport (_, _, _) -> Some MissingExport
   (* We don't want these to be suppressible *)

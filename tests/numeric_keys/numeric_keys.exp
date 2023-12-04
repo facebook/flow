@@ -1,3 +1,18 @@
+Error ---------------------------------------------------------------------------------------- non_literal_number.js:5:5
+
+Cannot access object with computed property using number [1]. Only number literals are allowed, not `number` in general.
+[invalid-computed-prop]
+
+   non_literal_number.js:5:5
+   5|   o[n]; // ERROR
+          ^
+
+References:
+   non_literal_number.js:4:20
+   4|   declare const n: number;
+                         ^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------------ test.js:8:3
 
 Cannot cast `o` to object type because property `1` [1] is incompatible with symbol [2] in the indexer property's key.
@@ -494,12 +509,12 @@ References:
                   ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:168:3
+Error ---------------------------------------------------------------------------------------------------- test.js:169:3
 
 string `foo` [1] is incompatible with number [2]. [incompatible-type]
 
-   test.js:168:3
-   168|   x['foo']; // ERROR
+   test.js:169:3
+   169|   x['foo']; // ERROR
           ^^^^^^^^ [1]
 
 References:
@@ -508,5 +523,23 @@ References:
                              ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:181:5
 
-Found 28 errors
+Cannot access object with computed property using number [1]. Only integer-like number literals are allowed.
+[invalid-computed-prop]
+
+   181|   x[1.1]; // ERROR
+            ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:182:5
+
+Cannot access object with computed property using number [1]. Number literals must not be larger than
+`Number.MAX_SAFE_INTEGER`. [invalid-computed-prop]
+
+   182|   x[9007199254740992]; // ERROR
+            ^^^^^^^^^^^^^^^^ [1]
+
+
+
+Found 31 errors

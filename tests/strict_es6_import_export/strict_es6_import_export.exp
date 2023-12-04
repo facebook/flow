@@ -362,6 +362,15 @@ References:
               ^^^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------- import_star_invalid_use.js:37:27
+
+Cannot access object with computed property using number [1]. Only number literals are allowed, not `number` in general.
+[invalid-computed-prop]
+
+   37| const {named1: renamed4, [1 + 2]: computed1} = Foo;
+                                 ^^^^^ [1]
+
+
 Error --------------------------------------------------------------------------------- import_star_invalid_use.js:37:48
 
 `import *` [1] object can only be used by accessing one of its named exports with a member access or destructuring.
@@ -375,6 +384,15 @@ References:
    import_star_invalid_use.js:1:8
     1| import * as Foo from './foo';
               ^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------- import_star_invalid_use.js:38:15
+
+Cannot access object with computed property using number [1]. Only number literals are allowed, not `number` in general.
+[invalid-computed-prop]
+
+   38| ({named1: x, [1 + 2]: z}) = Foo;
+                     ^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------- import_star_invalid_use.js:38:29
@@ -612,7 +630,7 @@ export please `import` and then `export default` instead. [export-renamed-defaul
 
 
 
-Found 53 errors
+Found 55 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

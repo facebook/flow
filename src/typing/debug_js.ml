@@ -1548,8 +1548,13 @@ let dump_error_message =
     | EArithmeticOperand reason -> spf "EArithmeticOperand (%s)" (dump_reason cx reason)
     | EForInRHS reason -> spf "EForInRHS (%s)" (dump_reason cx reason)
     | EInstanceofRHS reason -> spf "EInstanceofRHS (%s)" (dump_reason cx reason)
-    | EObjectComputedPropertyAccess (reason1, reason2) ->
-      spf "EObjectComputedPropertyAccess (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
+    | EObjectComputedPropertyAccess (reason1, reason2, kind) ->
+      let kind = Error_message.InvalidObjKey.str_of_kind kind in
+      spf
+        "EObjectComputedPropertyAccess (%s, %s, %s)"
+        (dump_reason cx reason1)
+        (dump_reason cx reason2)
+        kind
     | EObjectComputedPropertyAssign (reason1, reason2) ->
       spf
         "EObjectComputedPropertyAssign (%s, %s)"

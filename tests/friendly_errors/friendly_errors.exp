@@ -975,7 +975,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- misc-incompatibles.js:14:3
 
-Cannot access computed property using boolean [1]. [invalid-computed-prop]
+Cannot access object with computed property using boolean [1]. [invalid-computed-prop]
 
    14| o[true];
          ^^^^ [1]
