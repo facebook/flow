@@ -332,6 +332,7 @@ let rec dump_t_ (depth, tvars) cx t =
     | DefT (_, RendersT _) -> p t
     | MatchingPropT (_, _, arg) -> p ~extra:(kid arg) t
     | KeysT (_, arg) -> p ~extra:(kid arg) t
+    | DefT (_, NumericStrKeyT (_, s)) -> p ~extra:s t
     | DefT (_, SingletonStrT s) -> p ~extra:(spf "%S" (display_string_of_name s)) t
     | DefT (_, SingletonNumT (_, s)) -> p ~extra:s t
     | DefT (_, SingletonBoolT b) -> p ~extra:(spf "%B" b) t

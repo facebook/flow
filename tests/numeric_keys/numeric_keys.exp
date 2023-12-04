@@ -1,0 +1,379 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:8:3
+
+Cannot cast `o` to object type because property `1` [1] is incompatible with symbol [2] in the indexer property's key.
+[incompatible-cast]
+
+   test.js:8:3
+   8|   o as {[symbol]: boolean}; // ERROR
+        ^
+
+References:
+   test.js:2:13
+                  v
+   2|   const o = {
+   3|     '1': true,
+   4|     '2': false,
+   5|   };
+        ^ [1]
+   test.js:8:10
+   8|   o as {[symbol]: boolean}; // ERROR
+               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:8:3
+
+Cannot cast `o` to object type because property `2` [1] is incompatible with symbol [2] in the indexer property's key.
+[incompatible-cast]
+
+   test.js:8:3
+   8|   o as {[symbol]: boolean}; // ERROR
+        ^
+
+References:
+   test.js:2:13
+                  v
+   2|   const o = {
+   3|     '1': true,
+   4|     '2': false,
+   5|   };
+        ^ [1]
+   test.js:8:10
+   8|   o as {[symbol]: boolean}; // ERROR
+               ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:16:3
+
+Cannot cast `o` to object type because property `2` [1] is incompatible with number literal `1` [2] in the indexer
+property's key. [incompatible-cast]
+
+   test.js:16:3
+   16|   o as {[1]: boolean}; // ERROR
+         ^
+
+References:
+   test.js:2:13
+                   v
+    2|   const o = {
+    3|     '1': true,
+    4|     '2': false,
+    5|   };
+         ^ [1]
+   test.js:16:10
+   16|   o as {[1]: boolean}; // ERROR
+                ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:17:3
+
+Cannot cast `o` to object type because property `2` [1] is incompatible with string literal `1` [2] in the indexer
+property's key. [incompatible-cast]
+
+   test.js:17:3
+   17|   o as {['1']: boolean}; // ERROR
+         ^
+
+References:
+   test.js:2:13
+                   v
+    2|   const o = {
+    3|     '1': true,
+    4|     '2': false,
+    5|   };
+         ^ [1]
+   test.js:17:10
+   17|   o as {['1']: boolean}; // ERROR
+                ^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:21:3
+
+Cannot cast `o` to object type because boolean [1] is incompatible with boolean literal `true` [2] in property `2`.
+[incompatible-cast]
+
+   test.js:21:3
+   21|   o as {'1': true, [number]: true}; // ERROR
+         ^
+
+References:
+   test.js:4:10
+    4|     '2': false,
+                ^^^^^ [1]
+   test.js:21:30
+   21|   o as {'1': true, [number]: true}; // ERROR
+                                    ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:25:3
+
+Cannot cast `'3'` to key set because property `3` is missing in object literal [1]. [prop-missing]
+
+   test.js:25:3
+   25|   '3' as $Keys<typeof o>; // ERROR
+         ^^^
+
+References:
+   test.js:25:16
+   25|   '3' as $Keys<typeof o>; // ERROR
+                      ^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:26:30
+
+Cannot assign `1` to `x` because number [1] is incompatible with key set [2]. [incompatible-type]
+
+   test.js:26:30
+   26|   const x: $Keys<typeof o> = 1; // ERROR
+                                    ^ [1]
+
+References:
+   test.js:26:12
+   26|   const x: $Keys<typeof o> = 1; // ERROR
+                  ^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:28:3
+
+Cannot cast `Object.keys(...)` to array type because string literal `1` [1] is incompatible with number [2] in array
+element. [incompatible-cast]
+
+   test.js:28:3
+   28|   Object.keys(o) as Array<number>; // ERROR
+         ^^^^^^^^^^^^^^ [1]
+
+References:
+   test.js:28:27
+   28|   Object.keys(o) as Array<number>; // ERROR
+                                 ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:28:3
+
+Cannot cast `Object.keys(...)` to array type because string literal `2` [1] is incompatible with number [2] in array
+element. [incompatible-cast]
+
+   test.js:28:3
+   28|   Object.keys(o) as Array<number>; // ERROR
+         ^^^^^^^^^^^^^^ [1]
+
+References:
+   test.js:28:27
+   28|   Object.keys(o) as Array<number>; // ERROR
+                                 ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:28:3
+
+Cannot cast `Object.keys(...)` to array type because number [1] is incompatible with literal union [2] in array element.
+Arrays are invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[incompatible-cast]
+
+   test.js:28:3
+   28|   Object.keys(o) as Array<number>; // ERROR
+         ^^^^^^^^^^^^^^ [2]
+
+References:
+   test.js:28:27
+   28|   Object.keys(o) as Array<number>; // ERROR
+                                 ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:42:5
+
+Cannot cast `x` to number because string `1` [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:42:5
+   42|     x as number; // ERROR
+           ^
+
+References:
+   test.js:32:13
+                   v
+   32|   const o = {
+   33|     '1': true,
+   34|     '2': false,
+   35|   };
+         ^ [1]
+   test.js:42:10
+   42|     x as number; // ERROR
+                ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:42:5
+
+Cannot cast `x` to number because string `2` [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:42:5
+   42|     x as number; // ERROR
+           ^
+
+References:
+   test.js:32:13
+                   v
+   32|   const o = {
+   33|     '1': true,
+   34|     '2': false,
+   35|   };
+         ^ [1]
+   test.js:42:10
+   42|     x as number; // ERROR
+                ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:47:17
+
+Cannot call `f` because string `1` [1] is incompatible with number [2] in type argument `Key`. [incompatible-call]
+
+   test.js:47:17
+   47|     const x = f(o); // ERROR
+                       ^
+
+References:
+   test.js:32:13
+                   v
+   32|   const o = {
+   33|     '1': true,
+   34|     '2': false,
+   35|   };
+         ^ [1]
+   test.js:46:28
+   46|     declare const f: <Key: number, Value>(o: {[Key]: Value}) => Key;
+                                  ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:47:17
+
+Cannot call `f` because string `2` [1] is incompatible with number [2] in type argument `Key`. [incompatible-call]
+
+   test.js:47:17
+   47|     const x = f(o); // ERROR
+                       ^
+
+References:
+   test.js:32:13
+                   v
+   32|   const o = {
+   33|     '1': true,
+   34|     '2': false,
+   35|   };
+         ^ [1]
+   test.js:46:28
+   46|     declare const f: <Key: number, Value>(o: {[Key]: Value}) => Key;
+                                  ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:62:5
+
+Cannot cast `x` to number because string `1` [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:62:5
+   62|     x as number; // ERROR
+           ^
+
+References:
+   test.js:61:22
+   61|     declare const x: GetKeys<{'1': boolean, '2': string}>;
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:62:10
+   62|     x as number; // ERROR
+                ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:62:5
+
+Cannot cast `x` to number because string `2` [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:62:5
+   62|     x as number; // ERROR
+           ^
+
+References:
+   test.js:61:22
+   61|     declare const x: GetKeys<{'1': boolean, '2': string}>;
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:62:10
+   62|     x as number; // ERROR
+                ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:82:3
+
+Cannot cast `o` to object type because boolean [1] is incompatible with string [2] in the indexer property.
+[incompatible-cast]
+
+   test.js:82:3
+   82|   o as {+[string]: string}; // ERROR
+         ^
+
+References:
+   test.js:76:15
+   76|     [number]: boolean,
+                     ^^^^^^^ [1]
+   test.js:82:20
+   82|   o as {+[string]: string}; // ERROR
+                          ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:82:3
+
+Cannot cast `o` to object type because number [1] is incompatible with string [2] in the indexer property's key.
+[incompatible-cast]
+
+   test.js:82:3
+   82|   o as {+[string]: string}; // ERROR
+         ^
+
+References:
+   test.js:76:6
+   76|     [number]: boolean,
+            ^^^^^^ [1]
+   test.js:82:11
+   82|   o as {+[string]: string}; // ERROR
+                 ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:105:3
+
+Cannot cast `o` to object type because string `1.0234` [1] is incompatible with number [2] in the indexer property's
+key. [incompatible-cast]
+
+   test.js:105:3
+   105|   o as {[number]: boolean}; // ERROR
+          ^
+
+References:
+   test.js:102:13
+                    v
+   102|   const o = {
+   103|     '1.0234': true,
+   104|   };
+          ^ [1]
+   test.js:105:10
+   105|   o as {[number]: boolean}; // ERROR
+                 ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:114:3
+
+Cannot cast `o` to object type because string `9007199254740992` [1] is incompatible with number [2] in the indexer
+property's key. [incompatible-cast]
+
+   test.js:114:3
+   114|   o as {[number]: boolean}; // ERROR
+          ^
+
+References:
+   test.js:111:13
+                    v
+   111|   const o = {
+   112|     '9007199254740992': true,
+   113|   };
+          ^ [1]
+   test.js:114:10
+   114|   o as {[number]: boolean}; // ERROR
+                 ^^^^^^ [2]
+
+
+
+Found 20 errors

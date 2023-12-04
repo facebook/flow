@@ -302,6 +302,7 @@ class virtual ['a] t =
           t
         else
           InstanceT { static = static'; super = super'; implements = implements'; inst = inst' }
+      | NumericStrKeyT _
       | SingletonStrT _
       | SingletonNumT _
       | SingletonBoolT _

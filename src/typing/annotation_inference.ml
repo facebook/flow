@@ -738,6 +738,8 @@ module rec ConsGen : S = struct
     (*****************************)
     (* Singleton primitive types *)
     (*****************************)
+    | (DefT (reason, NumericStrKeyT (_, s)), _) ->
+      elab_t cx (DefT (reason, StrT (Literal (None, OrdinaryName s)))) op
     | (DefT (reason, SingletonStrT key), _) ->
       elab_t cx (DefT (reason, StrT (Literal (None, key)))) op
     | (DefT (reason, SingletonNumT lit), _) ->

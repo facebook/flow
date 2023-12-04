@@ -206,6 +206,15 @@ module rec TypeTerm : sig
     (* singleton string, matches exactly a given string literal *)
     (* TODO SingletonStrT should not include internal names *)
     | SingletonStrT of name
+    (* This type is only to be used to represent numeric-like object keys in the
+       context of object-to-object subtyping. It allows numeric-like object keys
+       to be a subtype of both `number` and `string`, so that `{1: true}` can be
+       a subtyped of `{[number]: boolean}`. Do not use outside of this context!
+
+       The second element of the `number_literal` tuple, which is the `string`
+       representation, is the key name.
+    *)
+    | NumericStrKeyT of number_literal
     (* matches exactly a given number literal, for some definition of "exactly"
        when it comes to floats... *)
     | SingletonNumT of number_literal
@@ -2359,6 +2368,7 @@ end = struct
       | DefT (_, SingletonStrT lit)
       | DefT (_, StrT (Literal (_, lit))) ->
         Some (UnionEnum.Str lit)
+      | DefT (_, NumericStrKeyT (_, s)) -> Some (UnionEnum.Str (OrdinaryName s))
       | DefT (_, SingletonNumT (lit, _))
       | DefT (_, NumT (Literal (_, (lit, _)))) ->
         Some (UnionEnum.Num lit)
@@ -2376,6 +2386,7 @@ end = struct
   let is_base =
     TypeTerm.(
       function
+      | DefT (_, NumericStrKeyT _)
       | DefT (_, SingletonStrT _)
       | DefT (_, SingletonNumT _)
       | DefT (_, SingletonBigIntT _)
@@ -3865,6 +3876,7 @@ let string_of_def_ctor = function
   | PolyT _ -> "PolyT"
   | ReactAbstractComponentT _ -> "ReactAbstractComponentT"
   | RendersT _ -> "RendersT"
+  | NumericStrKeyT _ -> "NumericStrKeyT"
   | SingletonBoolT _ -> "SingletonBoolT"
   | SingletonNumT _ -> "SingletonNumT"
   | SingletonStrT _ -> "SingletonStrT"

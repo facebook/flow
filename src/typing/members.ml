@@ -533,7 +533,8 @@ let rec extract_type cx this_t =
   | IntersectionT _ as t -> Success t
   | UnionT _ as t -> Success t
   | DefT (reason, SingletonStrT _)
-  | DefT (reason, StrT _) ->
+  | DefT (reason, StrT _)
+  | DefT (reason, NumericStrKeyT _) ->
     get_builtin_type cx reason (OrdinaryName "String") |> extract_type cx
   | DefT (reason, SingletonNumT _)
   | DefT (reason, NumT _) ->

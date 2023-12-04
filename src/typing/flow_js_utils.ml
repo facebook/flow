@@ -1805,6 +1805,36 @@ let check_method_unbinding cx trace ~use_op ~method_accessible ~reason_op ~propr
     Method { key_loc; type_ = unbind_this_method t }
   | _ -> p
 
+(* e.g. `0`, `-123, `234234` *)
+let int_regex = Str.regexp {|^-?\(0\|[1-9][0-9]*\)$|}
+
+let is_str_intlike str = Str.string_match int_regex str 0
+
+let type_of_key_name cx name reason =
+  let str_key () =
+    let key_reason = replace_desc_reason (RPropertyIsAString name) reason in
+    DefT (key_reason, StrT (Literal (None, name)))
+  in
+  let str = display_string_of_name name in
+  (* We don't want the `NumericStrKeyT` type to leak out of the obj-to-obj
+     subtyping check context. Other than `Object.key` and `$Keys`, which
+     already we ensure always return a string, another way this type could
+     leak out is during implicit instantiation, e.g. for a function like
+     ```
+     declare function f<K>({+[K]: mixed}): K;
+     f({1: true});
+     ```
+     So, if we are in implicit instantiation, we always treat this as a string.
+  *)
+  if is_str_intlike str && not (Context.in_implicit_instantiation cx) then
+    match Float.of_string_opt str with
+    | Some value when Js_number.is_float_safe_integer value ->
+      let key_reason = replace_desc_reason (RProperty (Some name)) reason in
+      DefT (key_reason, NumericStrKeyT (value, str))
+    | _ -> str_key ()
+  else
+    str_key ()
+
 module type Get_prop_helper_sig = sig
   type r
 

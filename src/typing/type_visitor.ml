@@ -127,6 +127,7 @@ class ['a] t =
         let acc = self#list (self#type_ cx pole_TODO) acc implements in
         let acc = self#inst_type cx pole acc inst in
         acc
+      | NumericStrKeyT _
       | SingletonStrT _
       | SingletonNumT _
       | SingletonBoolT _

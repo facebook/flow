@@ -804,6 +804,7 @@ let quick_subtype t1 t2 =
   | (DefT (_, NullT), DefT (_, NullT))
   | (DefT (_, VoidT), DefT (_, VoidT))
   | (DefT (_, SymbolT), DefT (_, SymbolT))
+  | (DefT (_, NumericStrKeyT _), DefT (_, (NumT _ | StrT _)))
   | (DefT (_, EmptyT), DefT (_, _))
   | (DefT (_, _), DefT (_, MixedT _))
   | (DefT (_, EmptyT), _)
@@ -813,6 +814,10 @@ let quick_subtype t1 t2 =
   | (DefT (_, NumT actual), DefT (_, SingletonNumT expected)) -> number_literal_eq expected actual
   | (DefT (_, BoolT actual), DefT (_, SingletonBoolT expected)) ->
     boolean_literal_eq expected actual
+  | (DefT (_, NumericStrKeyT (actual, _)), DefT (_, SingletonNumT (expected, _))) ->
+    actual = expected
+  | (DefT (_, NumericStrKeyT (_, actual)), DefT (_, SingletonStrT expected)) ->
+    OrdinaryName actual = expected
   | (DefT (_, ObjT { flags = { obj_kind = Exact; _ }; _ }), ExactT (_, t2')) -> reasonless_eq t1 t2'
   | _ -> reasonless_eq t1 t2
 

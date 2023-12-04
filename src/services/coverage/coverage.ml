@@ -180,6 +180,7 @@ let visitor =
       | DefT (_, ObjT _)
       | DefT (_, ReactAbstractComponentT _)
       | DefT (_, RendersT _)
+      | DefT (_, NumericStrKeyT _)
       | DefT (_, SingletonNumT _)
       | DefT (_, SingletonStrT _)
       | DefT (_, SingletonBigIntT _)

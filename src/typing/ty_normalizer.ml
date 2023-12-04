@@ -775,6 +775,7 @@ module Make (I : INPUT) : S = struct
       | DefT (_, EmptyT) -> return (mk_empty Ty.EmptyType)
       | DefT (_, NullT) -> return Ty.Null
       | DefT (_, SymbolT) -> return Ty.Symbol
+      | DefT (_, NumericStrKeyT (_, s)) -> return (Ty.StrLit (OrdinaryName s))
       | DefT (_, SingletonNumT (_, lit)) -> return (Ty.NumLit lit)
       | DefT (_, SingletonStrT lit) -> return (Ty.StrLit lit)
       | DefT (_, SingletonBoolT lit) -> return (Ty.BoolLit lit)

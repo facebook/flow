@@ -224,6 +224,7 @@ and collect_of_type ?log_unresolved cx acc = function
   | DefT (_, NullT)
   | DefT (_, EmptyT)
   | DefT (_, MixedT _)
+  | DefT (_, NumericStrKeyT _)
   | DefT (_, SingletonBoolT _)
   | DefT (_, SingletonNumT _)
   | DefT (_, SingletonStrT _)

@@ -129,7 +129,7 @@ let rec not_exists cx t =
         ( SingletonBoolT _
         | BoolT (Some _)
         | EnumT { representation_t = DefT (_, BoolT (Some _)); _ }
-        | SingletonStrT _
+        | SingletonStrT _ | NumericStrKeyT _
         | StrT (Literal _ | Truthy)
         | EnumT { representation_t = DefT (_, StrT Truthy); _ }
         | ArrT _ | ObjT _ | InstanceT _ | EnumObjectT _ | FunT _ | ReactAbstractComponentT _
@@ -606,6 +606,7 @@ let sentinel_of_obj cx id =
       | Field { type_; _ } ->
         let v_opt =
           match Context.find_resolved cx type_ with
+          | Some (DefT (_, NumericStrKeyT (_, s))) -> Some (TypeTag.Str (OrdinaryName s))
           | Some (DefT (_, SingletonStrT name)) -> Some (TypeTag.Str name)
           | Some (DefT (_, SingletonNumT num_lit)) -> Some (TypeTag.Num num_lit)
           | Some (DefT (_, SingletonBoolT b)) -> Some (TypeTag.Bool b)
@@ -626,6 +627,7 @@ let rec tag_of_def_t cx = function
   | BoolT _ ->
     Some (TypeTagSet.singleton BoolTag)
   | SingletonStrT _
+  | NumericStrKeyT _
   | StrT _
   | CharSetT _ ->
     Some (TypeTagSet.singleton StringTag)

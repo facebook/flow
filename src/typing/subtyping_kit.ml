@@ -321,7 +321,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           rec_flow
             cx
             trace
-            ( string_key name reason_prop,
+            ( type_of_key_name cx name reason_prop,
               UseT
                 (Frame (IndexerKeyCompatibility { lower = lreason; upper = ureason }, use_op'), key)
             );
@@ -436,7 +436,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                   in
                   rec_flow_p cx ~trace ~use_op lreason ureason propref (lp, up)
               end;
-              string_key name lreason :: keys)
+              type_of_key_name cx name lreason :: keys)
           []
         |> union_of_ts lreason
       in
@@ -722,6 +722,39 @@ module Make (Flow : INPUT) : OUTPUT = struct
       when ALoc.source (loc_of_reason (reason_of_t l)) = ALoc.source (def_loc_of_reason r) ->
       rec_flow_t cx trace ~use_op (l, t)
     (***********************)
+    (* Numeric string keys *)
+    (***********************)
+    (*
+       This type is only to be used to represent numeric-like object keys in
+       the context of object-to-object subtyping.
+       It is a subtype of both string and number, so both of these are OK:
+       ```
+       const o = {1: true};
+       o as {[number]: boolean}: // OK
+       o as {[string]: boolean}: // OK
+       ```
+    *)
+    | (DefT (_, NumericStrKeyT _), DefT (_, (NumT _ | StrT _))) -> ()
+    | (DefT (rl, NumericStrKeyT (actual, _)), DefT (ru, SingletonNumT (expected, _))) ->
+      if actual = expected then
+        ()
+      else
+        add_output
+          cx
+          ~trace
+          (Error_message.EExpectedNumberLit { reason_lower = rl; reason_upper = ru; use_op })
+    | (DefT (rl, NumericStrKeyT (_, actual)), DefT (ru, SingletonStrT expected)) ->
+      if OrdinaryName actual = expected then
+        ()
+      else
+        add_output
+          cx
+          ~trace
+          (Error_message.EExpectedStringLit { reason_lower = rl; reason_upper = ru; use_op })
+    | (_, DefT (r, NumericStrKeyT (_, s))) ->
+      let u = DefT (r, StrT (Literal (None, OrdinaryName s))) in
+      rec_flow_t cx trace ~use_op (l, u)
+    (***********************)
     (* Singletons and keys *)
     (***********************)
 
@@ -797,6 +830,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
         | _ -> replace_desc_new_reason RUnknownString reason_s
       in
       (* check that o has key x *)
+      let u = HasOwnPropT (use_op, reason_next, l) in
+      rec_flow cx trace (o, ReposLowerT (reason_op, false, u))
+    | ( ( DefT (reason_s, NumericStrKeyT (_, s))
+        | GenericT { reason = reason_s; bound = DefT (_, NumericStrKeyT (_, s)); _ } ),
+        KeysT (reason_op, o)
+      ) ->
+      let reason_next = replace_desc_new_reason (RProperty (Some (OrdinaryName s))) reason_s in
+      let l = DefT (reason_s, StrT (Literal (None, OrdinaryName s))) in
       let u = HasOwnPropT (use_op, reason_next, l) in
       rec_flow cx trace (o, ReposLowerT (reason_op, false, u))
     | (KeysT (reason1, o1), _) ->
