@@ -181,3 +181,12 @@
   x[1.1]; // ERROR
   x[9007199254740992]; // ERROR
 }
+
+// Invalid creation
+{
+  const x = {
+    [1.1]: true, // ERROR
+    [9007199254740992]: false, // ERROR
+    [-9007199254740992]: false, // ERROR
+  };
+}

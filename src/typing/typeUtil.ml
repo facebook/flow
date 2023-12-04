@@ -238,14 +238,9 @@ and mod_reason_of_use_t f = function
   | TryRenderTypePromotionT { use_op; reason; reason_obj; upper_renders; tried_promotion } ->
     TryRenderTypePromotionT
       { use_op; reason = f reason; reason_obj; upper_renders; tried_promotion }
-  | WriteComputedObjPropCheckT { reason; reason_key; value_t; err_on_str_or_num_key } ->
+  | WriteComputedObjPropCheckT { reason; reason_key; value_t; err_on_str_key } ->
     WriteComputedObjPropCheckT
-      {
-        reason = f reason;
-        reason_key = Base.Option.map ~f reason_key;
-        value_t;
-        err_on_str_or_num_key;
-      }
+      { reason = f reason; reason_key = Base.Option.map ~f reason_key; value_t; err_on_str_key }
   | ArithT { use_op; reason; flip; rhs_t; result_t; kind } ->
     ArithT { use_op; reason = f reason; flip; rhs_t; result_t; kind }
   | AndT (reason, t1, t2) -> AndT (f reason, t1, t2)

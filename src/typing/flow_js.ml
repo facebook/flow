@@ -5675,8 +5675,8 @@ struct
         | (AnyT (_, src), WriteComputedObjPropCheckT { reason; value_t; _ }) ->
           let src = any_mod_src_keep_placeholder Untyped src in
           rec_flow_t cx trace ~use_op:unknown_use (value_t, AnyT.why src reason)
-        | (DefT (_, (StrT _ | NumT _)), WriteComputedObjPropCheckT { err_on_str_or_num_key; _ }) ->
-          Base.Option.iter err_on_str_or_num_key ~f:(fun (use_op, reason_obj) ->
+        | (DefT (_, StrT _), WriteComputedObjPropCheckT { err_on_str_key; _ }) ->
+          Base.Option.iter err_on_str_key ~f:(fun (use_op, reason_obj) ->
               add_output
                 cx
                 ~trace
@@ -5690,9 +5690,20 @@ struct
                    }
                 )
           )
+        | (DefT (reason, NumT lit), WriteComputedObjPropCheckT { reason_key; _ }) ->
+          let kind = Error_message.InvalidObjKey.kind_of_num_lit lit in
+          add_output
+            cx
+            ~trace
+            (Error_message.EObjectComputedPropertyAssign (reason, reason_key, kind))
         | (_, WriteComputedObjPropCheckT { reason = _; reason_key; _ }) ->
           let reason = reason_of_t l in
-          add_output cx ~trace (Error_message.EObjectComputedPropertyAssign (reason, reason_key))
+          add_output
+            cx
+            ~trace
+            (Error_message.EObjectComputedPropertyAssign
+               (reason, reason_key, Error_message.InvalidObjKey.Other)
+            )
         | _ ->
           add_output
             cx
@@ -7678,7 +7689,7 @@ struct
                 reason = TypeUtil.reason_of_t elem_t;
                 reason_key = None;
                 value_t = prop_t;
-                err_on_str_or_num_key = Some (use_op, reason_obj);
+                err_on_str_key = Some (use_op, reason_obj);
               }
           ))
 

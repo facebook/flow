@@ -13,6 +13,15 @@ References:
                          ^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------- non_literal_number.js:12:6
+
+Cannot use `n` [1] to assign a computed property. Only number literals are allowed, not `number` in general.
+[invalid-computed-prop]
+
+   12|     [n]: 1, // ERROR
+            ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------------ test.js:8:3
 
 Cannot cast `o` to object type because property `1` [1] is incompatible with symbol [2] in the indexer property's key.
@@ -541,5 +550,32 @@ Cannot access object with computed property using number [1]. Number literals mu
             ^^^^^^^^^^^^^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:188:6
 
-Found 31 errors
+Cannot use `1.1` [1] to assign a computed property. Only integer-like number literals are allowed.
+[invalid-computed-prop]
+
+   188|     [1.1]: true, // ERROR
+             ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:189:6
+
+Cannot use `9007199254740992` [1] to assign a computed property. Number literals must not be larger than
+`Number.MAX_SAFE_INTEGER`. [invalid-computed-prop]
+
+   189|     [9007199254740992]: false, // ERROR
+             ^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:190:6
+
+Cannot use `-9007199254740992` [1] to assign a computed property. Number literals must not be smaller than
+`Number.MIN_SAFE_INTEGER`. [invalid-computed-prop]
+
+   190|     [-9007199254740992]: false, // ERROR
+             ^^^^^^^^^^^^^^^^^ [1]
+
+
+
+Found 35 errors

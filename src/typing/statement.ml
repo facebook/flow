@@ -2249,7 +2249,7 @@ module Make
       | Computed elem_t ->
         let check =
           WriteComputedObjPropCheckT
-            { reason; reason_key = Some reason_key; value_t = value; err_on_str_or_num_key = None }
+            { reason; reason_key = Some reason_key; value_t = value; err_on_str_key = None }
         in
         Flow.flow cx (elem_t, check);
         (* No properties are added in this case. *)

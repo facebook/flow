@@ -1555,11 +1555,13 @@ let dump_error_message =
         (dump_reason cx reason1)
         (dump_reason cx reason2)
         kind
-    | EObjectComputedPropertyAssign (reason1, reason2) ->
+    | EObjectComputedPropertyAssign (reason1, reason2, kind) ->
+      let kind = Error_message.InvalidObjKey.str_of_kind kind in
       spf
-        "EObjectComputedPropertyAssign (%s, %s)"
+        "EObjectComputedPropertyAssign (%s, %s, %s)"
         (dump_reason cx reason1)
         (Base.Option.value_map ~f:(dump_reason cx) ~default:"none" reason2)
+        kind
     | EInvalidLHSInAssignment loc -> spf "EInvalidLHSInAssignment (%s)" (string_of_aloc loc)
     | EIncompatibleWithUseOp { reason_lower; reason_upper; use_op } ->
       spf

@@ -397,7 +397,8 @@ and 'loc t' =
   | EForInRHS of 'loc virtual_reason
   | EInstanceofRHS of 'loc virtual_reason
   | EObjectComputedPropertyAccess of ('loc virtual_reason * 'loc virtual_reason * InvalidObjKey.t)
-  | EObjectComputedPropertyAssign of ('loc virtual_reason * 'loc virtual_reason option)
+  | EObjectComputedPropertyAssign of
+      ('loc virtual_reason * 'loc virtual_reason option * InvalidObjKey.t)
   | EInvalidLHSInAssignment of 'loc
   | EIncompatibleWithUseOp of {
       use_op: 'loc virtual_use_op;
@@ -1154,8 +1155,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EInstanceofRHS r -> EInstanceofRHS (map_reason r)
   | EObjectComputedPropertyAccess (r1, r2, kind) ->
     EObjectComputedPropertyAccess (map_reason r1, map_reason r2, kind)
-  | EObjectComputedPropertyAssign (r1, r2) ->
-    EObjectComputedPropertyAssign (map_reason r1, Base.Option.map ~f:map_reason r2)
+  | EObjectComputedPropertyAssign (r1, r2, kind) ->
+    EObjectComputedPropertyAssign (map_reason r1, Base.Option.map ~f:map_reason r2, kind)
   | EInvalidLHSInAssignment l -> EInvalidLHSInAssignment (f l)
   | EUnsupportedImplements r -> EUnsupportedImplements (map_reason r)
   | EReactElementFunArity (r, s, i) -> EReactElementFunArity (map_reason r, s, i)
@@ -1579,7 +1580,7 @@ let util_use_op_of_msg nope util = function
   | EForInRHS _
   | EInstanceofRHS _
   | EObjectComputedPropertyAccess _
-  | EObjectComputedPropertyAssign (_, _)
+  | EObjectComputedPropertyAssign _
   | EInvalidConstructor _
   | EInvalidLHSInAssignment _
   | EUnsupportedImplements _
@@ -1681,7 +1682,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EReactElementFunArity (reason, _, _)
   | EReactRefInRender { usage = reason; _ }
   | EUnsupportedImplements reason
-  | EObjectComputedPropertyAssign (reason, _)
+  | EObjectComputedPropertyAssign (reason, _, _)
   | EObjectComputedPropertyAccess (_, reason, _)
   | EForInRHS reason
   | EBinaryInRHS reason
@@ -3471,25 +3472,28 @@ let friendly_message_of_msg loc_of_aloc msg =
           [text "Cannot access object with computed property using "; ref reason_prop; text "."]
           @ suffix;
       }
-  | EObjectComputedPropertyAssign (reason_prop, Some reason_key) ->
+  | EObjectComputedPropertyAssign (reason_prop, Some reason_key, kind) ->
+    let suffix =
+      match InvalidObjKey.msg_of_kind kind with
+      | Some msg -> msg
+      | None ->
+        [
+          text " Computed properties may only be numeric or string literal values,";
+          text " but this one is a ";
+          ref reason_prop;
+          text ". Can you add an appropriate type annotation to ";
+          ref reason_key;
+          text "?";
+          text
+            " See https://flow.org/en/docs/types/literals/ for more information on literal types.";
+        ]
+    in
     Normal
       {
         features =
-          [
-            text "Cannot use ";
-            ref reason_key;
-            text " to assign a computed property.";
-            text " Computed properties may only be numeric or string literal values,";
-            text " but this one is a ";
-            ref reason_prop;
-            text ". Can you add an appropriate type annotation to ";
-            ref reason_key;
-            text "?";
-            text
-              " See https://flow.org/en/docs/types/literals/ for more information on literal types.";
-          ];
+          [text "Cannot use "; ref reason_key; text " to assign a computed property."] @ suffix;
       }
-  | EObjectComputedPropertyAssign (reason_prop, None) ->
+  | EObjectComputedPropertyAssign (reason_prop, None, _) ->
     Normal
       {
         features =
@@ -5436,7 +5440,7 @@ let error_code_of_message err : error_code option =
   | ENonLitArrayToTuple _ -> Some InvalidTupleArity
   | ENotAReactComponent _ -> Some NotAComponent
   | EObjectComputedPropertyAccess _ -> Some InvalidComputedProp
-  | EObjectComputedPropertyAssign (_, _) -> Some InvalidComputedProp
+  | EObjectComputedPropertyAssign _ -> Some InvalidComputedProp
   | EOnlyDefaultExport (_, _, _) -> Some MissingExport
   (* We don't want these to be suppressible *)
   | EParseError (_, _) -> None
