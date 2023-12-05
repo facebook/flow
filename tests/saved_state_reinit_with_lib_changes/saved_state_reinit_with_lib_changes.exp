@@ -1,0 +1,17 @@
+No errors!
+
+The Flow server is currently in lazy mode and is only checking 13/13 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+Error --------------------------------------------------------------------------------------------- libs/globals.js:4:18
+
+Cannot resolve name `BADDD`. [cannot-resolve-name]
+
+   4| declare var Foo: BADDD;
+                       ^^^^^
+
+
+
+Found 1 error
+
+The Flow server is currently in lazy mode and is only checking 1/14 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
