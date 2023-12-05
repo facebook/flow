@@ -1,3 +1,11 @@
+### 0.223.3
+
+Before Flow 0.223, the autoimport system uses the filename as a hint of the name for default export. e.g. if the filename is `foo.react.js` or `foo.js`, regardless of whether the default export in that file has a name or not, or even the default name is `bar`, autoimport will always import it as `import foo from 'foo'`.
+
+However, in the new system starting from Flow 0.223, we will use the name of the default export as a stronger hint. In a lot of files that just give a default export a random generic name, they are relying on the old system to get reasonable auto imports.
+
+It's not practical to update every Flow codebase to avoid the UX regression, so now auto-import will provide both options.
+
 ### 0.223.2
 
 Notable bug fixes:
