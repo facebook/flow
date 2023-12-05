@@ -26,11 +26,24 @@ let entries_of_exports =
     let (has_named, acc) =
       Base.List.fold exports ~init:(false, acc) ~f:(fun (has_named, acc) export ->
           match export with
-          | Exports.DefaultType (Some name) -> (has_named, (name, DefaultType) :: acc)
-          | Exports.DefaultType None ->
-            (has_named, (string_of_modulename module_name, DefaultType) :: acc)
-          | Exports.Default (Some name) -> (has_named, (name, Default) :: acc)
-          | Exports.Default None -> (has_named, (string_of_modulename module_name, Default) :: acc)
+          | Exports.DefaultType name_opt ->
+            let name_from_modulename = string_of_modulename module_name in
+            let acc = (name_from_modulename, DefaultType) :: acc in
+            let acc =
+              match name_opt with
+              | Some name when name <> name_from_modulename -> (name, DefaultType) :: acc
+              | _ -> acc
+            in
+            (has_named, acc)
+          | Exports.Default name_opt ->
+            let name_from_modulename = string_of_modulename module_name in
+            let acc = (name_from_modulename, Default) :: acc in
+            let acc =
+              match name_opt with
+              | Some name when name <> name_from_modulename -> (name, Default) :: acc
+              | _ -> acc
+            in
+            (has_named, acc)
           | Exports.Named name -> (true, (name, Named) :: acc)
           | Exports.NamedType name -> (has_named, (name, NamedType) :: acc)
           | Exports.Module (module_name, exports) ->

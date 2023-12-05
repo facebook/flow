@@ -157,10 +157,61 @@
         }
       },
       {
-        "label": "FooBarBaz333",
+        "label": "FooBarBaz3",
         "kind": 6,
         "detail": "Import default from ./__fixtures__/FooBarBaz3",
         "sortText": "00000000000000000003",
+        "insertTextFormat": 1,
+        "textEdit": {
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 0
+            },
+            "end": {
+              "line": 2,
+              "character": 9
+            }
+          },
+          "newText": "FooBarBaz3"
+        },
+        "additionalTextEdits": [
+          {
+            "range": {
+              "start": {
+                "line": 2,
+                "character": 0
+              },
+              "end": {
+                "line": 2,
+                "character": 0
+              }
+            },
+            "newText": "import FooBarBaz3 from \"./__fixtures__/FooBarBaz3\";\n\n"
+          }
+        ],
+        "command": {
+          "title": "",
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "arguments": [
+            "textDocument/completion",
+            "autoimport",
+            {
+              "token": "FooBarBazAUTO332",
+              "index": 3,
+              "session_requests": 1,
+              "typed_length": 9,
+              "completion": "FooBarBaz3",
+              "ac_type": "Acid"
+            }
+          ]
+        }
+      },
+      {
+        "label": "FooBarBaz333",
+        "kind": 6,
+        "detail": "Import default from ./__fixtures__/FooBarBaz3",
+        "sortText": "00000000000000000004",
         "insertTextFormat": 1,
         "textEdit": {
           "range": {
@@ -198,7 +249,7 @@
             "autoimport",
             {
               "token": "FooBarBazAUTO332",
-              "index": 3,
+              "index": 4,
               "session_requests": 1,
               "typed_length": 9,
               "completion": "FooBarBaz333",
