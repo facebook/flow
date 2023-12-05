@@ -1,0 +1,9 @@
+[libs]
+libs
+
+[options]
+all=true
+casting_syntax=both
+experimental.libdef_in_checking=true
+saved_state.allow_reinit=true
+lazy_mode=true
