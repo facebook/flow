@@ -948,17 +948,22 @@ struct
               OpenT tout
             )
         | (UnionT (reason, rep), DeepReadOnlyT (tout, dro_loc, dro_type)) ->
-          let dro_union =
-            map_union
-              ~f:(fun cx trace t tout ->
-                let tout = open_tvar tout in
-                rec_flow cx trace (t, DeepReadOnlyT (tout, dro_loc, dro_type)))
-              cx
-              trace
-              rep
-              reason
-          in
-          rec_flow_t ~use_op:unknown_use cx trace (dro_union, OpenT tout)
+          if not (UnionRep.is_optimized_finally rep) then
+            UnionRep.optimize_enum_only ~flatten:(Type_mapper.union_flatten cx) rep;
+          if Option.is_some (UnionRep.check_enum rep) then
+            rec_flow_t ~use_op:unknown_use cx trace (l, OpenT tout)
+          else
+            let dro_union =
+              map_union
+                ~f:(fun cx trace t tout ->
+                  let tout = open_tvar tout in
+                  rec_flow cx trace (t, DeepReadOnlyT (tout, dro_loc, dro_type)))
+                cx
+                trace
+                rep
+                reason
+            in
+            rec_flow_t ~use_op:unknown_use cx trace (dro_union, OpenT tout)
         | (DefT (r, ObjT ({ Type.flags; _ } as o)), DeepReadOnlyT (tout, dro_loc, dro_type)) ->
           rec_flow_t
             ~use_op:unknown_use
@@ -7036,6 +7041,13 @@ struct
         match d with
         | ConditionalType { distributive_tparam_name; _ } -> Option.is_some distributive_tparam_name
         | ReactCheckComponentRef -> false
+        | ReactDRO _ ->
+          (match t with
+          | UnionT (_, rep) ->
+            if not (UnionRep.is_optimized_finally rep) then
+              UnionRep.optimize_enum_only ~flatten:(Type_mapper.union_flatten cx) rep;
+            Option.is_none (UnionRep.check_enum rep)
+          | _ -> true)
         | _ -> true
       in
       (match t with
