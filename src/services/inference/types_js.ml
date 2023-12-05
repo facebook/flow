@@ -2324,7 +2324,7 @@ let init_from_scratch ~profiling ~workers options =
       ~warnings
       ~suppressions
       ~reader
-      ~validate_libdefs:true
+      ~validate_libdefs:(not (Options.libdef_in_checking options))
       ordered_libs
   in
 
