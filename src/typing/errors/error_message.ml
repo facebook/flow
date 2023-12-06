@@ -314,8 +314,9 @@ and 'loc t' =
       use_op: 'loc virtual_use_op;
     }
   | EInvalidConstructor of 'loc virtual_reason
-  | EUnsupportedKeyInObjectType of {
+  | EUnsupportedKeyInObject of {
       loc: 'loc;
+      obj_kind: [ `Type | `Literal ];
       key_error_kind: InvalidObjKey.t;
     }
   | EAmbiguousNumericKeyWithVariance of 'loc
@@ -750,7 +751,6 @@ and unsupported_syntax =
   | AnnotationInsideDestructuring
   | ExistsType
   | MetaPropertyExpression
-  | ObjectPropertyLiteralNonString
   | ObjectPropertyGetSet
   | ObjectPropertyComputedGetSet
   | InvariantSpreadArgument
@@ -1093,8 +1093,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EPropertyTypeAnnot loc -> EPropertyTypeAnnot (f loc)
   | EExportsAnnot loc -> EExportsAnnot (f loc)
   | ECharSetAnnot loc -> ECharSetAnnot (f loc)
-  | EUnsupportedKeyInObjectType { loc; key_error_kind } ->
-    EUnsupportedKeyInObjectType { loc = f loc; key_error_kind }
+  | EUnsupportedKeyInObject { loc; obj_kind; key_error_kind } ->
+    EUnsupportedKeyInObject { loc = f loc; obj_kind; key_error_kind }
   | EAmbiguousNumericKeyWithVariance loc -> EAmbiguousNumericKeyWithVariance (f loc)
   | EPredicateFuncTooShort { loc; pred_func; pred_func_param_num; index } ->
     EPredicateFuncTooShort
@@ -1549,7 +1549,7 @@ let util_use_op_of_msg nope util = function
   | EPropertyTypeAnnot _
   | EExportsAnnot _
   | ECharSetAnnot _
-  | EUnsupportedKeyInObjectType _
+  | EUnsupportedKeyInObject _
   | EAmbiguousNumericKeyWithVariance _
   | EPredicateFuncTooShort _
   | EPredicateFuncArityMismatch _
@@ -1809,7 +1809,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EUseArrayLiteral loc
   | EUnsupportedSyntax (loc, _)
   | EInternal (loc, _)
-  | EUnsupportedKeyInObjectType { loc; _ }
+  | EUnsupportedKeyInObject { loc; _ }
   | EAmbiguousNumericKeyWithVariance loc
   | ECharSetAnnot loc
   | EExportsAnnot loc
@@ -2815,9 +2815,18 @@ let friendly_message_of_msg loc_of_aloc msg =
           @ Flow_errors_utils.Friendly.conjunction_concat ~conjunction:"and" invalids;
         use_op;
       }
-  | EUnsupportedKeyInObjectType { key_error_kind; _ } ->
-    let suffix = Base.Option.value ~default:[] (InvalidObjKey.msg_of_kind key_error_kind) in
-    let features = [text "Unsupported key in object type."] @ suffix in
+  | EUnsupportedKeyInObject { key_error_kind; obj_kind; _ } ->
+    let suffix =
+      Base.Option.value
+        ~default:[text " Only identifier, string literal, and number literal keys are allowed."]
+        (InvalidObjKey.msg_of_kind key_error_kind)
+    in
+    let obj_kind =
+      match obj_kind with
+      | `Type -> "type"
+      | `Literal -> "literal"
+    in
+    let features = [text "Unsupported key in object "; text obj_kind; text "."] @ suffix in
     Normal { features }
   | EAmbiguousNumericKeyWithVariance _ ->
     let features =
@@ -2972,7 +2981,6 @@ let friendly_message_of_msg loc_of_aloc msg =
           code "const [a, b]: [number, string] = ...";
           text ".";
         ]
-      | ObjectPropertyLiteralNonString -> [text "Non-string literal property keys not supported."]
       | ObjectPropertyGetSet -> [text "Get/set properties not yet supported."]
       | ObjectPropertyComputedGetSet -> [text "Computed getters and setters are not yet supported."]
       | InvariantSpreadArgument ->
@@ -5509,7 +5517,7 @@ let error_code_of_message err : error_code option =
   | EUnsafeGetSet _ -> Some IllegalGetSet
   | EUnsupportedExact (_, _) -> Some InvalidExact
   | EUnsupportedImplements _ -> Some CannotImplement
-  | EUnsupportedKeyInObjectType _ -> Some IllegalKey
+  | EUnsupportedKeyInObject _ -> Some IllegalKey
   | EAmbiguousNumericKeyWithVariance _ -> Some IllegalKey
   | EUnsupportedSetProto _ -> Some CannotWrite
   | EUnsupportedSyntax (_, _) -> Some UnsupportedSyntax

@@ -221,16 +221,43 @@ module Make
       );
     (r, tvar)
 
-  let translate_identifier_or_string_literal_key t =
+  let translate_identifer_or_literal_key t =
     let module P = Ast.Expression.Object.Property in
     function
     | P.Identifier (loc, name) -> P.Identifier ((loc, t), name)
     | P.StringLiteral (loc, lit) -> P.StringLiteral ((loc, t), lit)
-    | P.NumberLiteral _
+    | P.NumberLiteral (loc, lit) -> P.NumberLiteral ((loc, t), lit)
     | P.BigIntLiteral _
     | P.PrivateName _
     | P.Computed _ ->
       assert_false "precondition not met"
+
+  let name_of_identifier_or_literal_key key =
+    let module P = Ast.Expression.Object.Property in
+    match key with
+    | P.Identifier (_, { Ast.Identifier.name; _ })
+    | P.StringLiteral (_, { Ast.StringLiteral.value = name; _ }) ->
+      Ok name
+    | P.NumberLiteral (loc, { Ast.NumberLiteral.value; _ }) ->
+      if Js_number.is_float_safe_integer value then
+        let name = Dtoa.ecma_string_of_float value in
+        Ok name
+      else
+        Error
+          (Error_message.EUnsupportedKeyInObject
+             {
+               loc;
+               obj_kind = `Literal;
+               key_error_kind = Error_message.InvalidObjKey.kind_of_num_value value;
+             }
+          )
+    | P.BigIntLiteral (loc, _)
+    | P.PrivateName (loc, _)
+    | P.Computed (loc, _) ->
+      Error
+        (Error_message.EUnsupportedKeyInObject
+           { loc; obj_kind = `Literal; key_error_kind = Error_message.InvalidObjKey.Other }
+        )
 
   let convert_call_targs =
     let open Ast.Expression.CallTypeArg in
@@ -2087,55 +2114,69 @@ module Make
           Property.Init
             {
               key =
-                ( Property.Identifier (loc, { Ast.Identifier.name; _ })
-                | Property.StringLiteral (loc, { Ast.StringLiteral.value = name; _ }) ) as key;
+                ( Property.Identifier (loc, _)
+                | Property.StringLiteral (loc, _)
+                | Property.NumberLiteral (loc, _)
+                | Property.BigIntLiteral (loc, _) ) as key;
               value = v;
               shorthand;
             }
         ) ->
-      let (acc, key, value) =
-        if Type_inference_hooks_js.dispatch_obj_prop_decl_hook cx name loc then
-          let t = Unsoundness.at InferenceHooks loc in
-          let key = translate_identifier_or_string_literal_key t key in
-          (* don't add `name` to `acc` because `name` is the autocomplete token *)
-          let acc = ObjectExpressionAcc.set_obj_key_autocomplete acc in
-          let (((_, _t), _) as value) = expression cx v in
-          (acc, key, value)
-        else
-          let (((_, t), _) as value) = expression cx v in
-          let key = translate_identifier_or_string_literal_key t key in
-          let acc =
-            ObjectExpressionAcc.add_prop
-              (Properties.add_field (OrdinaryName name) Polarity.Neutral ~key_loc:(Some loc) t)
-              acc
-          in
-          (acc, key, value)
-      in
-      (acc, Property (prop_loc, Property.Init { key; value; shorthand }))
+      (match name_of_identifier_or_literal_key key with
+      | Error err ->
+        Flow.add_output cx err;
+        (acc, Tast_utils.error_mapper#object_property_or_spread_property prop)
+      | Ok name ->
+        let (acc, key, value) =
+          if Type_inference_hooks_js.dispatch_obj_prop_decl_hook cx name loc then
+            let t = Unsoundness.at InferenceHooks loc in
+            let key = translate_identifer_or_literal_key t key in
+            (* don't add `name` to `acc` because `name` is the autocomplete token *)
+            let acc = ObjectExpressionAcc.set_obj_key_autocomplete acc in
+            let (((_, _t), _) as value) = expression cx v in
+            (acc, key, value)
+          else
+            let (((_, t), _) as value) = expression cx v in
+            let key = translate_identifer_or_literal_key t key in
+            let acc =
+              ObjectExpressionAcc.add_prop
+                (Properties.add_field (OrdinaryName name) Polarity.Neutral ~key_loc:(Some loc) t)
+                acc
+            in
+            (acc, key, value)
+        in
+        (acc, Property (prop_loc, Property.Init { key; value; shorthand })))
     (* named method *)
     | Property
         ( prop_loc,
           Property.Method
             {
               key =
-                ( Property.Identifier (loc, { Ast.Identifier.name; comments = _ })
-                | Property.StringLiteral (loc, { Ast.StringLiteral.value = name; _ }) ) as key;
+                ( Property.Identifier (loc, _)
+                | Property.StringLiteral (loc, _)
+                | Property.NumberLiteral (loc, _)
+                | Property.BigIntLiteral (loc, _) ) as key;
               value = (fn_loc, func);
             }
         ) ->
-      let reason = func_reason ~async:false ~generator:false prop_loc in
-      let tvar = Tvar.mk cx reason in
-      let (t, func) =
-        mk_function_expression cx ~general:tvar ~needs_this_param:false reason fn_loc func
-      in
-      Flow.flow_t cx (t, tvar);
-      ( ObjectExpressionAcc.add_prop (Properties.add_method (OrdinaryName name) (Some loc) t) acc,
-        Property
-          ( prop_loc,
-            Property.Method
-              { key = translate_identifier_or_string_literal_key t key; value = (fn_loc, func) }
-          )
-      )
+      (match name_of_identifier_or_literal_key key with
+      | Error err ->
+        Flow.add_output cx err;
+        (acc, Tast_utils.error_mapper#object_property_or_spread_property prop)
+      | Ok name ->
+        let reason = func_reason ~async:false ~generator:false prop_loc in
+        let tvar = Tvar.mk cx reason in
+        let (t, func) =
+          mk_function_expression cx ~general:tvar ~needs_this_param:false reason fn_loc func
+        in
+        Flow.flow_t cx (t, tvar);
+        ( ObjectExpressionAcc.add_prop (Properties.add_method (OrdinaryName name) (Some loc) t) acc,
+          Property
+            ( prop_loc,
+              Property.Method
+                { key = translate_identifer_or_literal_key t key; value = (fn_loc, func) }
+            )
+        ))
     (* We enable some unsafe support for getters and setters. The main unsafe bit
      *  is that we don't properly havok refinements when getter and setter methods
      *  are called. *)
@@ -2145,75 +2186,80 @@ module Make
           Property.Get
             {
               key =
-                ( Property.Identifier (id_loc, { Ast.Identifier.name; comments = _ })
-                | Property.StringLiteral (id_loc, { Ast.StringLiteral.value = name; _ }) ) as key;
+                ( Property.Identifier (id_loc, _)
+                | Property.StringLiteral (id_loc, _)
+                | Property.NumberLiteral (id_loc, _)
+                | Property.BigIntLiteral (id_loc, _) ) as key;
               value = (vloc, func);
               comments;
             }
         ) ->
       Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
-      let reason = func_reason ~async:false ~generator:false vloc in
-      let tvar = Tvar.mk cx reason in
-      let (function_type, func) =
-        mk_function_expression cx ~general:tvar ~needs_this_param:false reason vloc func
-      in
-      Flow.flow_t cx (function_type, tvar);
-      let return_t = Type.extract_getter_type function_type in
-      ( ObjectExpressionAcc.add_prop
-          (Properties.add_getter (OrdinaryName name) (Some id_loc) return_t)
-          acc,
-        Property
-          ( loc,
-            Property.Get
-              {
-                key = translate_identifier_or_string_literal_key return_t key;
-                value = (vloc, func);
-                comments;
-              }
-          )
-      )
+      (match name_of_identifier_or_literal_key key with
+      | Error err ->
+        Flow.add_output cx err;
+        (acc, Tast_utils.error_mapper#object_property_or_spread_property prop)
+      | Ok name ->
+        let reason = func_reason ~async:false ~generator:false vloc in
+        let tvar = Tvar.mk cx reason in
+        let (function_type, func) =
+          mk_function_expression cx ~general:tvar ~needs_this_param:false reason vloc func
+        in
+        Flow.flow_t cx (function_type, tvar);
+        let return_t = Type.extract_getter_type function_type in
+        ( ObjectExpressionAcc.add_prop
+            (Properties.add_getter (OrdinaryName name) (Some id_loc) return_t)
+            acc,
+          Property
+            ( loc,
+              Property.Get
+                {
+                  key = translate_identifer_or_literal_key return_t key;
+                  value = (vloc, func);
+                  comments;
+                }
+            )
+        ))
     (* unsafe setter property *)
     | Property
         ( loc,
           Property.Set
             {
               key =
-                ( Property.Identifier (id_loc, { Ast.Identifier.name; comments = _ })
-                | Property.StringLiteral (id_loc, { Ast.StringLiteral.value = name; _ }) ) as key;
+                ( Property.Identifier (id_loc, _)
+                | Property.StringLiteral (id_loc, _)
+                | Property.NumberLiteral (id_loc, _)
+                | Property.BigIntLiteral (id_loc, _) ) as key;
               value = (vloc, func);
               comments;
             }
         ) ->
       Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
-      let reason = func_reason ~async:false ~generator:false vloc in
-      let tvar = Tvar.mk cx reason in
-      let (function_type, func) =
-        mk_function_expression cx ~general:tvar ~needs_this_param:false reason vloc func
-      in
-      Flow.flow_t cx (function_type, tvar);
-      let param_t = Type.extract_setter_type function_type in
-      ( ObjectExpressionAcc.add_prop
-          (Properties.add_setter (OrdinaryName name) (Some id_loc) param_t)
-          acc,
-        Property
-          ( loc,
-            Property.Set
-              {
-                key = translate_identifier_or_string_literal_key param_t key;
-                value = (vloc, func);
-                comments;
-              }
-          )
-      )
-    (* non-string literal LHS *)
-    | Property (loc, Property.Init { key = Property.NumberLiteral _ | Property.BigIntLiteral _; _ })
-    | Property
-        (loc, Property.Method { key = Property.NumberLiteral _ | Property.BigIntLiteral _; _ })
-    | Property (loc, Property.Get { key = Property.NumberLiteral _ | Property.BigIntLiteral _; _ })
-    | Property (loc, Property.Set { key = Property.NumberLiteral _ | Property.BigIntLiteral _; _ })
-      ->
-      Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, ObjectPropertyLiteralNonString));
-      (acc, Tast_utils.error_mapper#object_property_or_spread_property prop)
+      (match name_of_identifier_or_literal_key key with
+      | Error err ->
+        Flow.add_output cx err;
+        (acc, Tast_utils.error_mapper#object_property_or_spread_property prop)
+      | Ok name ->
+        let reason = func_reason ~async:false ~generator:false vloc in
+        let tvar = Tvar.mk cx reason in
+        let (function_type, func) =
+          mk_function_expression cx ~general:tvar ~needs_this_param:false reason vloc func
+        in
+        Flow.flow_t cx (function_type, tvar);
+        let param_t = Type.extract_setter_type function_type in
+        ( ObjectExpressionAcc.add_prop
+            (Properties.add_setter (OrdinaryName name) (Some id_loc) param_t)
+            acc,
+          Property
+            ( loc,
+              Property.Set
+                {
+                  key = translate_identifer_or_literal_key param_t key;
+                  value = (vloc, func);
+                  comments;
+                }
+            )
+        ))
     (* computed getters and setters aren't supported yet regardless of the
        `enable_getters_and_setters` config option *)
     | Property (loc, Property.Get { key = Property.Computed _; _ })
@@ -2371,7 +2417,7 @@ module Make
                 ( prop_loc,
                   Property.Init
                     {
-                      key = translate_identifier_or_string_literal_key vt key;
+                      key = translate_identifer_or_literal_key vt key;
                       value = v;
                       shorthand = false;
                     }

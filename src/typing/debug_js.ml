@@ -1462,9 +1462,14 @@ let dump_error_message =
         |> Base.List.map ~f:(dump_reason cx)
         |> Base.String.concat ~sep:", "
         )
-    | EUnsupportedKeyInObjectType { loc; key_error_kind } ->
+    | EUnsupportedKeyInObject { loc; obj_kind; key_error_kind } ->
       let key_error_kind = Error_message.InvalidObjKey.str_of_kind key_error_kind in
-      spf "EUnsupportedKeyInObjectType (%s, %s)" (string_of_aloc loc) key_error_kind
+      let obj_kind =
+        match obj_kind with
+        | `Type -> "type"
+        | `Literal -> "literal"
+      in
+      spf "EUnsupportedKeyInObject (%s, %s, %s)" (string_of_aloc loc) obj_kind key_error_kind
     | EAmbiguousNumericKeyWithVariance loc ->
       spf "EAmbiguousNumericKeyWithVariance (%s)" (string_of_aloc loc)
     | EPredicateFuncTooShort { loc; _ } -> spf "EPredicateFuncTooShort (%s)" (string_of_aloc loc)

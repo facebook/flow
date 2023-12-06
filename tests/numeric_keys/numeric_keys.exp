@@ -645,5 +645,55 @@ Cannot use `-9007199254740992` [1] to assign a computed property. Number literal
              ^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:193:5
 
-Found 41 errors
+Unsupported key in object literal. Only integer-like number literals are allowed. [illegal-key]
+
+   193|     1.1: true, // ERROR
+            ^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:194:5
+
+Unsupported key in object literal. Number literals must not be larger than `Number.MAX_SAFE_INTEGER`. [illegal-key]
+
+   194|     9007199254740992: false, // ERROR
+            ^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:206:3
+
+Cannot cast `o[1]` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:206:3
+   206|   o[1] as empty; // ERROR
+          ^^^^
+
+References:
+   test.js:201:8
+   201|     1: true,
+               ^^^^ [1]
+   test.js:206:11
+   206|   o[1] as empty; // ERROR
+                  ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:207:3
+
+Cannot cast `o[9007199254740991]` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:207:3
+   207|   o[9007199254740991] as empty; // ERROR
+          ^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:202:23
+   202|     9007199254740991: false,
+                              ^^^^^ [1]
+   test.js:207:26
+   207|   o[9007199254740991] as empty; // ERROR
+                                 ^^^^^ [2]
+
+
+
+Found 45 errors

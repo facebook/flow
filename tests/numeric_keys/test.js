@@ -189,4 +189,20 @@
     [9007199254740992]: false, // ERROR
     [-9007199254740992]: false, // ERROR
   };
+  const y = {
+    1.1: true, // ERROR
+    9007199254740992: false, // ERROR
+  };
+}
+
+// Direct creation
+{
+  const o = {
+    1: true,
+    9007199254740991: false,
+  };
+  o[1] as boolean; // OK
+  o[9007199254740991] as boolean; // OK
+  o[1] as empty; // ERROR
+  o[9007199254740991] as empty; // ERROR
 }

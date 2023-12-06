@@ -2003,8 +2003,12 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
             else (
               Flow_js_utils.add_output
                 cx
-                (Error_message.EUnsupportedKeyInObjectType
-                   { loc; key_error_kind = Error_message.InvalidObjKey.kind_of_num_value value }
+                (Error_message.EUnsupportedKeyInObject
+                   {
+                     loc;
+                     obj_kind = `Type;
+                     key_error_kind = Error_message.InvalidObjKey.kind_of_num_value value;
+                   }
                 );
               let (_, prop_ast) = Tast_utils.error_mapper#object_property_type (loc, prop) in
               (acc, prop_ast)
@@ -2014,8 +2018,8 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         | Ast.Expression.Object.Property.Computed (loc, _) ->
           Flow_js_utils.add_output
             cx
-            (Error_message.EUnsupportedKeyInObjectType
-               { loc; key_error_kind = Error_message.InvalidObjKey.Other }
+            (Error_message.EUnsupportedKeyInObject
+               { loc; obj_kind = `Type; key_error_kind = Error_message.InvalidObjKey.Other }
             );
           let (_, prop_ast) = Tast_utils.error_mapper#object_property_type (loc, prop) in
           (acc, prop_ast))

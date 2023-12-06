@@ -313,10 +313,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ object_key.js:5:4
 
-Non-string literal property keys not supported. [unsupported-syntax]
+Unsupported key in object literal. Only identifier, string literal, and number literal keys are allowed. [illegal-key]
 
    5| ({ 1n: "foo" }: T); // error (TODO: non-string literals not supported)
-         ^^^^^^^^^
+         ^^
 
 
 Error ------------------------------------------------------------------------------------------------ object_key.js:6:2
@@ -336,10 +336,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ object_key.js:6:4
 
-Non-string literal property keys not supported. [unsupported-syntax]
+Unsupported key in object literal. Only identifier, string literal, and number literal keys are allowed. [illegal-key]
 
    6| ({ 2n: "foo" }: T); // error
-         ^^^^^^^^^
+         ^^
 
 
 Error --------------------------------------------------------------------------------------------------- unions.js:5:10
