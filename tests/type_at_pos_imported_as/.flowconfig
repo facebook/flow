@@ -1,0 +1,14 @@
+[ignore]
+
+[include]
+
+[libs]
+
+[lints]
+
+[options]
+enums=true
+experimental.component_syntax=typing
+all=true
+
+[strict]

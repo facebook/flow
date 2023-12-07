@@ -1,0 +1,25 @@
+main.js:14:5
+Flags:
+class C
+main.js:14:5,14:10
+
+main.js:16:5
+Flags:
+type T = C
+main.js:16:5,16:10
+
+main.js:18:5
+Flags:
+interface I
+main.js:18:5,18:10
+
+main.js:20:5
+Flags:
+enum E
+main.js:20:5,20:10
+
+main.js:22:5
+Flags:
+element of component Comp
+main.js:22:5,22:13
+
