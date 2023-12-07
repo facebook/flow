@@ -445,6 +445,7 @@ and 'loc t' =
   | EDeprecatedBool of 'loc
   | EDeprecatedDollarCall of 'loc
   | EDeprecatedDollarObjMap of 'loc
+  | EDeprecatedPredicate of 'loc
   | EIncorrectTypeWithReplacement of {
       loc: 'loc;
       kind: IncorrectType.t;
@@ -1185,6 +1186,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EDeprecatedBool loc -> EDeprecatedBool (f loc)
   | EDeprecatedDollarCall loc -> EDeprecatedDollarCall (f loc)
   | EDeprecatedDollarObjMap loc -> EDeprecatedDollarObjMap (f loc)
+  | EDeprecatedPredicate loc -> EDeprecatedPredicate (f loc)
   | EIncorrectTypeWithReplacement { loc; kind } ->
     EIncorrectTypeWithReplacement { loc = f loc; kind }
   | EUnsafeGettersSetters loc -> EUnsafeGettersSetters (f loc)
@@ -1612,6 +1614,7 @@ let util_use_op_of_msg nope util = function
   | EDeprecatedBool _
   | EDeprecatedDollarCall _
   | EDeprecatedDollarObjMap _
+  | EDeprecatedPredicate _
   | EIncorrectTypeWithReplacement _
   | EUnsafeGettersSetters _
   | EUnusedSuppression _
@@ -1780,6 +1783,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EDeprecatedBool loc
   | EDeprecatedDollarCall loc
   | EDeprecatedDollarObjMap loc
+  | EDeprecatedPredicate loc
   | EIncorrectTypeWithReplacement { loc; _ }
   | EUnsafeGettersSetters loc
   | EUnnecessaryOptionalChain (loc, _)
@@ -1930,6 +1934,7 @@ let kind_of_msg =
     | EDeprecatedBool _ -> LintError Lints.(DeprecatedType DeprecatedBool)
     | EDeprecatedDollarCall _ -> LintError Lints.(DeprecatedType DeprecatedDollarCall)
     | EDeprecatedDollarObjMap _ -> LintError Lints.(DeprecatedType DeprecatedDollarObjMap)
+    | EDeprecatedPredicate _ -> LintError Lints.(DeprecatedType DeprecatedPredicate)
     | EUnsafeGettersSetters _ -> LintError Lints.UnsafeGettersSetters
     | ESketchyNullLint { kind; _ } -> LintError (Lints.SketchyNull kind)
     | ESketchyNumberLint (kind, _) -> LintError (Lints.SketchyNumber kind)
@@ -3919,6 +3924,16 @@ let friendly_message_of_msg loc_of_aloc msg =
               "See https://flow.org/en/docs/types/mapped-types/ for more information on mapped types.";
           ];
       }
+  | EDeprecatedPredicate _ ->
+    Normal
+      {
+        features =
+          [
+            text "Deprecated type. Use type guards instead. ";
+            text
+              "See https://flow.org/en/docs/types/type-guards/ for more information on type guards.";
+          ];
+      }
   | EIncorrectTypeWithReplacement { kind; _ } ->
     let open IncorrectType in
     let incorrect_name = incorrect_of_kind kind in
@@ -5284,6 +5299,7 @@ let defered_in_speculation = function
   | EDeprecatedBool _
   | EDeprecatedDollarCall _
   | EDeprecatedDollarObjMap _
+  | EDeprecatedPredicate _
   | EUnsafeGettersSetters _
   | ESketchyNullLint _
   | ESketchyNumberLint _
@@ -5593,6 +5609,7 @@ let error_code_of_message err : error_code option =
   | EDeprecatedBool _
   | EDeprecatedDollarCall _
   | EDeprecatedDollarObjMap _
+  | EDeprecatedPredicate _
   | EUnsafeGettersSetters _
   | ESketchyNullLint _
   | ESketchyNumberLint _

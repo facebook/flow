@@ -29,6 +29,7 @@ type deprecated_type_kind =
   | DeprecatedBool
   | DeprecatedDollarCall
   | DeprecatedDollarObjMap
+  | DeprecatedPredicate
 
 type lint_kind =
   | SketchyNull of sketchy_null_kind
@@ -77,6 +78,7 @@ let string_of_deprecated_type_kind = function
   | DeprecatedBool -> "deprecated-type-bool"
   | DeprecatedDollarCall -> "deprecated-type-dollar-call"
   | DeprecatedDollarObjMap -> "deprecated-type-dollar-objmap"
+  | DeprecatedPredicate -> "deprecated-predicate"
 
 let string_of_kind = function
   | SketchyNull kind -> string_of_sketchy_null_kind kind
