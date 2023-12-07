@@ -29,6 +29,7 @@ type deprecated_type_kind =
   | DeprecatedBool
   | DeprecatedDollarCall
   | DeprecatedDollarObjMap
+  | DeprecatedPredicate
 
 type lint_kind =
   | SketchyNull of sketchy_null_kind
