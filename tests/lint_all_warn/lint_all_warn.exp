@@ -16,6 +16,42 @@ References:
                      ^^^^^^^ [2]
 
 
+Warning --------------------------------------------------------------------------------------- deprecated_types.js:3:10
+
+Deprecated type. Use conditional types instead. See https://flow.org/en/docs/types/conditional/ for more information on
+conditional types. [deprecated-type]
+
+   3| type A = $Call<() => number>;
+               ^^^^^^^^^^^^^^^^^^^
+
+
+Warning --------------------------------------------------------------------------------------- deprecated_types.js:4:10
+
+Deprecated type. Use mapped types instead. See https://flow.org/en/docs/types/mapped-types/ for more information on
+mapped types. [deprecated-type]
+
+   4| type B = $ObjMap<{}, () => number>;
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning --------------------------------------------------------------------------------------- deprecated_types.js:5:10
+
+Deprecated type. Use mapped types instead. See https://flow.org/en/docs/types/mapped-types/ for more information on
+mapped types. [deprecated-type]
+
+   5| type C = $ObjMapi<{}, () => number>;
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning --------------------------------------------------------------------------------------- deprecated_types.js:6:10
+
+Deprecated type. Use mapped types instead. See https://flow.org/en/docs/types/mapped-types/ for more information on
+mapped types. [deprecated-type]
+
+   6| type D = $ObjMapConst<{}, number>;
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+
+
 Warning ----------------------------------------------------------------------------------------- dynamic-export.js:3:23
 
 Unclear type. Using `any`, `Object`, or `Function` types is not safe! [unclear-type]
@@ -43,4 +79,4 @@ References:
 
 
 
-Found 1 error and 2 warnings
+Found 1 error and 6 warnings

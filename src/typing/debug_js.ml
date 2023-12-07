@@ -1635,6 +1635,8 @@ let dump_error_message =
     | ENonstrictImport loc -> spf "ENonstrictImport (%s)" (string_of_aloc loc)
     | EUnclearType loc -> spf "EUnclearType (%s)" (string_of_aloc loc)
     | EDeprecatedBool loc -> spf "EDeprecatedBool (%s)" (string_of_aloc loc)
+    | EDeprecatedDollarCall loc -> spf "EDeprecatedDollarCall (%s)" (string_of_aloc loc)
+    | EDeprecatedDollarObjMap loc -> spf "EDeprecatedDollarObjMap (%s)" (string_of_aloc loc)
     | EIncorrectTypeWithReplacement { loc; kind } ->
       let deprecated_name = Error_message.IncorrectType.incorrect_of_kind kind in
       spf "EIncorrectTypeWithReplacement (%s) (%s)" (string_of_aloc loc) deprecated_name

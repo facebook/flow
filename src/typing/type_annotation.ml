@@ -1011,6 +1011,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
               | _ -> error_type cx loc (Error_message.EExportsAnnot loc) t_ast
           )
         | "$Call" ->
+          Flow_js_utils.add_output cx (Error_message.EDeprecatedDollarCall loc);
           (match convert_type_params () with
           | (fn :: args, targs) ->
             let reason = mk_reason RFunctionCallType loc in
@@ -1045,6 +1046,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                 targs
           )
         | "$ObjMap" ->
+          Flow_js_utils.add_output cx (Error_message.EDeprecatedDollarObjMap loc);
           check_type_arg_arity cx loc t_ast targs 2 (fun () ->
               let (t1, t2, targs) =
                 match convert_type_params () with
@@ -1064,6 +1066,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                 targs
           )
         | "$ObjMapi" ->
+          Flow_js_utils.add_output cx (Error_message.EDeprecatedDollarObjMap loc);
           check_type_arg_arity cx loc t_ast targs 2 (fun () ->
               let (t1, t2, targs) =
                 match convert_type_params () with
@@ -1102,6 +1105,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                 targs
           )
         | "$ObjMapConst" ->
+          Flow_js_utils.add_output cx (Error_message.EDeprecatedDollarObjMap loc);
           check_type_arg_arity cx loc t_ast targs 2 (fun () ->
               let (t1, t2, targs) =
                 match convert_type_params () with
