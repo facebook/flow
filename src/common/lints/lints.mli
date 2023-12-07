@@ -25,7 +25,10 @@ type property_assignment_kind =
   | ThisBeforeEverythingInitialized
   | PropertyFunctionCallBeforeEverythingInitialized
 
-type deprecated_type_kind = DeprecatedBool
+type deprecated_type_kind =
+  | DeprecatedBool
+  | DeprecatedDollarCall
+  | DeprecatedDollarObjMap
 
 type lint_kind =
   | SketchyNull of sketchy_null_kind

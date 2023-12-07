@@ -443,6 +443,8 @@ and 'loc t' =
   | ENonstrictImport of 'loc
   | EUnclearType of 'loc
   | EDeprecatedBool of 'loc
+  | EDeprecatedDollarCall of 'loc
+  | EDeprecatedDollarObjMap of 'loc
   | EIncorrectTypeWithReplacement of {
       loc: 'loc;
       kind: IncorrectType.t;
@@ -1181,6 +1183,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | ENonstrictImport loc -> ENonstrictImport (f loc)
   | EUnclearType loc -> EUnclearType (f loc)
   | EDeprecatedBool loc -> EDeprecatedBool (f loc)
+  | EDeprecatedDollarCall loc -> EDeprecatedDollarCall (f loc)
+  | EDeprecatedDollarObjMap loc -> EDeprecatedDollarObjMap (f loc)
   | EIncorrectTypeWithReplacement { loc; kind } ->
     EIncorrectTypeWithReplacement { loc = f loc; kind }
   | EUnsafeGettersSetters loc -> EUnsafeGettersSetters (f loc)
@@ -1606,6 +1610,8 @@ let util_use_op_of_msg nope util = function
   | ENonstrictImport _
   | EUnclearType _
   | EDeprecatedBool _
+  | EDeprecatedDollarCall _
+  | EDeprecatedDollarObjMap _
   | EIncorrectTypeWithReplacement _
   | EUnsafeGettersSetters _
   | EUnusedSuppression _
@@ -1772,6 +1778,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ENonstrictImport loc
   | EUnclearType loc
   | EDeprecatedBool loc
+  | EDeprecatedDollarCall loc
+  | EDeprecatedDollarObjMap loc
   | EIncorrectTypeWithReplacement { loc; _ }
   | EUnsafeGettersSetters loc
   | EUnnecessaryOptionalChain (loc, _)
@@ -1920,6 +1928,8 @@ let kind_of_msg =
     | ENonstrictImport _ -> LintError Lints.NonstrictImport
     | EUnclearType _ -> LintError Lints.UnclearType
     | EDeprecatedBool _ -> LintError Lints.(DeprecatedType DeprecatedBool)
+    | EDeprecatedDollarCall _ -> LintError Lints.(DeprecatedType DeprecatedDollarCall)
+    | EDeprecatedDollarObjMap _ -> LintError Lints.(DeprecatedType DeprecatedDollarObjMap)
     | EUnsafeGettersSetters _ -> LintError Lints.UnsafeGettersSetters
     | ESketchyNullLint { kind; _ } -> LintError (Lints.SketchyNull kind)
     | ESketchyNumberLint (kind, _) -> LintError (Lints.SketchyNumber kind)
@@ -3889,6 +3899,26 @@ let friendly_message_of_msg loc_of_aloc msg =
     Normal { features }
   | EDeprecatedBool _ ->
     Normal { features = [text "Deprecated type. Use "; code "boolean"; text " instead."] }
+  | EDeprecatedDollarCall _ ->
+    Normal
+      {
+        features =
+          [
+            text "Deprecated type. Use conditional types instead. ";
+            text
+              "See https://flow.org/en/docs/types/conditional/ for more information on conditional types.";
+          ];
+      }
+  | EDeprecatedDollarObjMap _ ->
+    Normal
+      {
+        features =
+          [
+            text "Deprecated type. Use mapped types instead. ";
+            text
+              "See https://flow.org/en/docs/types/mapped-types/ for more information on mapped types.";
+          ];
+      }
   | EIncorrectTypeWithReplacement { kind; _ } ->
     let open IncorrectType in
     let incorrect_name = incorrect_of_kind kind in
@@ -5252,6 +5282,8 @@ let defered_in_speculation = function
   | ENonstrictImport _
   | EUnclearType _
   | EDeprecatedBool _
+  | EDeprecatedDollarCall _
+  | EDeprecatedDollarObjMap _
   | EUnsafeGettersSetters _
   | ESketchyNullLint _
   | ESketchyNumberLint _
@@ -5559,6 +5591,8 @@ let error_code_of_message err : error_code option =
   | ENonstrictImport _
   | EUnclearType _
   | EDeprecatedBool _
+  | EDeprecatedDollarCall _
+  | EDeprecatedDollarObjMap _
   | EUnsafeGettersSetters _
   | ESketchyNullLint _
   | ESketchyNumberLint _
