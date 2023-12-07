@@ -1679,21 +1679,21 @@ let send_persistent_response ~profiling ~client result =
 type 'a persistent_handling_result = 'a * LspProt.response * LspProt.metadata
 
 let wrap_persistent_handler
-    (type a b c)
+    (type a b)
     (handler :
       genv:ServerEnv.genv ->
       workload:a ->
       client:Persistent_connection.single_client ->
       profiling:Profiling_js.running ->
-      b ->
-      c persistent_handling_result Lwt.t
+      env ->
+      b persistent_handling_result Lwt.t
       )
     ~(genv : ServerEnv.genv)
     ~(client_id : LspProt.client_id)
     ~(request : LspProt.request_with_metadata)
     ~(workload : a)
-    ~(default_ret : c)
-    (arg : b) : c Lwt.t =
+    ~(default_ret : b)
+    (arg : env) : b Lwt.t =
   let (request, metadata) = request in
   match Persistent_connection.get_client client_id with
   | None ->
@@ -3285,21 +3285,21 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
     mk_parallelizable_persistent ~options (handle_live_errors_request ~options ~uri ~metadata)
 
 let wrap_immediate_persistent_handler
-    (type a b c)
+    (type a b)
     (handler :
       genv:ServerEnv.genv ->
       workload:a ->
       client:Persistent_connection.single_client ->
       profiling:Profiling_js.running ->
-      b ->
-      c persistent_handling_result
+      unit ->
+      b persistent_handling_result
       )
     ~(genv : ServerEnv.genv)
     ~(client_id : LspProt.client_id)
     ~(request : LspProt.request_with_metadata)
     ~(workload : a)
-    ~(default_ret : c)
-    (arg : b) : c =
+    ~(default_ret : b)
+    (arg : unit) : b =
   let (request, metadata) = request in
   match Persistent_connection.get_client client_id with
   | None ->
