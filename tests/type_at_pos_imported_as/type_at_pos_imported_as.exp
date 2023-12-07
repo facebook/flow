@@ -1,21 +1,21 @@
 main.js:14:5
 Flags:
-class C
+class CLocal
 main.js:14:5,14:10
 
 main.js:16:5
 Flags:
-type T = C
+type T = CLocal
 main.js:16:5,16:10
 
 main.js:18:5
 Flags:
-interface I
+interface ILocal
 main.js:18:5,18:10
 
 main.js:20:5
 Flags:
-enum E
+enum ELocal
 main.js:20:5,20:10
 
 main.js:22:5

@@ -6888,7 +6888,7 @@ b.te
                 {
                   label: 'Typesafe',
                   kind: 8,
-                  detail: 'interface Typesafety',
+                  detail: 'interface Typesafe',
                   sortText: '00000000000000000003',
                   insertTextFormat: 1,
                   textEdit: {

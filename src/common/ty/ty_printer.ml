@@ -51,6 +51,14 @@ let variance_ = function
 let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~exact_by_default elt
     =
   let size = ref size in
+  let local_name_of_symbol symbol =
+    let { sym_name = name; sym_provenance = provenance; _ } = symbol in
+    match provenance with
+    | Remote { imported_as = Some (_loc, name, _mode); _ } ->
+      (* If the type is imported use the local name *)
+      Reason.OrdinaryName name
+    | _ -> name
+  in
   (* util to limit the number of calls to a (usually recursive) function *)
   let counted_map f xs =
     let rec type_list_aux acc xs_ =
@@ -69,7 +77,7 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
     | FunProtoApply -> Atom "Function.prototype.apply"
     | FunProtoBind -> Atom "Function.prototype.bind"
     | FunProtoCall -> Atom "Function.prototype.call"
-    | TSymbol { sym_name; _ } -> Atom (Reason.display_string_of_name sym_name)
+    | TSymbol s -> Atom (Reason.display_string_of_name (local_name_of_symbol s))
   in
   (* The depth parameter is useful for formatting unions: Top-level does not
      get parentheses.
@@ -202,9 +210,8 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
         | RendersStar -> "renders*"
       in
       fuse [Atom renders_str; space; type_ ~depth t]
-  and type_generic ~depth g =
-    let ({ sym_name = name; _ }, _, targs) = g in
-    let name = identifier name in
+  and type_generic ~depth (s, _, targs) =
+    let name = identifier (local_name_of_symbol s) in
     type_reference ~depth name targs
   and type_reference ~depth name targs =
     let targs = option ~f:(type_args ~depth) targs in
@@ -472,7 +479,7 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
     | Conditional _ ->
       wrap_in_parens (type_ ~depth t)
     | _ -> type_ ~depth t
-  and enum_decl { sym_name = name; _ } = fuse [Atom "enum"; space; identifier name]
+  and enum_decl s = fuse [Atom "enum"; space; identifier (local_name_of_symbol s)]
   and utility ~depth u =
     let ctor = Ty.string_of_utility_ctor u in
     let ts = Ty.types_of_utility u in
@@ -497,16 +504,32 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
       ]
   and type_annotation ~depth t = fuse [Atom ":"; pretty_space; type_ ~depth t] in
 
-  let class_decl ~depth { sym_name = name; _ } typeParameters =
-    fuse [Atom "class"; space; identifier name; option ~f:(type_parameter ~depth) typeParameters]
-  in
-  let interface_decl ~depth { sym_name = name; _ } typeParameters =
+  let class_decl ~depth s typeParameters =
     fuse
-      [Atom "interface"; space; identifier name; option ~f:(type_parameter ~depth) typeParameters]
+      [
+        Atom "class";
+        space;
+        identifier (local_name_of_symbol s);
+        option ~f:(type_parameter ~depth) typeParameters;
+      ]
   in
-  let nominal_component_decl ~depth { sym_name = name; _ } typeParameters is_type =
+  let interface_decl ~depth s typeParameters =
+    fuse
+      [
+        Atom "interface";
+        space;
+        identifier (local_name_of_symbol s);
+        option ~f:(type_parameter ~depth) typeParameters;
+      ]
+  in
+  let nominal_component_decl ~depth s typeParameters is_type =
     let base =
-      [Atom "component"; space; identifier name; option ~f:(type_parameter ~depth) typeParameters]
+      [
+        Atom "component";
+        space;
+        identifier (local_name_of_symbol s);
+        option ~f:(type_parameter ~depth) typeParameters;
+      ]
     in
     if is_type then
       fuse (Atom "element" :: space :: Atom "of" :: space :: base)

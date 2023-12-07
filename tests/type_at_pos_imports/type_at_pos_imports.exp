@@ -778,7 +778,10 @@ import-default.js:17:13 = {
   "end":14
 }
 import-default.js:18:13 = {
-  "types":{"unevaluated":{"type":"B"},"evaluated":{"type":"B"}},
+  "types":{
+    "unevaluated":{"type":"ImportedTypeDefaultClass"},
+    "evaluated":{"type":"ImportedTypeDefaultClass"}
+  },
   "reasons":[],
   "loc":{
     "source":"import-default.js",
@@ -793,7 +796,10 @@ import-default.js:18:13 = {
   "end":14
 }
 import-default.js:19:13 = {
-  "types":{"unevaluated":{"type":"B<number>"},"evaluated":{"type":"B<number>"}},
+  "types":{
+    "unevaluated":{"type":"ImportedTypeDefaultPolyClass<number>"},
+    "evaluated":{"type":"ImportedTypeDefaultPolyClass<number>"}
+  },
   "reasons":[],
   "loc":{
     "source":"import-default.js",
@@ -808,7 +814,10 @@ import-default.js:19:13 = {
   "end":14
 }
 import-default.js:20:13 = {
-  "types":{"unevaluated":{"type":"class B"},"evaluated":{"type":"class B"}},
+  "types":{
+    "unevaluated":{"type":"class ImportedTypeDefaultClass"},
+    "evaluated":{"type":"class ImportedTypeDefaultClass"}
+  },
   "reasons":[],
   "loc":{
     "source":"import-default.js",
@@ -823,7 +832,10 @@ import-default.js:20:13 = {
   "end":14
 }
 import-default.js:21:13 = {
-  "types":{"unevaluated":{"type":"class B<X>"},"evaluated":{"type":"class B<X>"}},
+  "types":{
+    "unevaluated":{"type":"class ImportedTypeDefaultPolyClass<X>"},
+    "evaluated":{"type":"class ImportedTypeDefaultPolyClass<X>"}
+  },
   "reasons":[],
   "loc":{
     "source":"import-default.js",
@@ -851,7 +863,7 @@ import-default.js:26:7 = {
         },
         "typeParams":null
       },
-      "type":"class B"
+      "type":"class ImportedTypeofDefaultClassFuncall"
     },
     "evaluated":{
       "expanded":{
@@ -865,7 +877,7 @@ import-default.js:26:7 = {
         },
         "typeParams":null
       },
-      "type":"class B"
+      "type":"class ImportedTypeofDefaultClassFuncall"
     }
   },
   "reasons":[],
