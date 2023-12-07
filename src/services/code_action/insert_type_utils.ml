@@ -938,8 +938,7 @@ end = struct
     (* Collect information about imports in currect file to accurately compute
      * wether the base GraphQL type is imported in the current file. *)
     let defs =
-      Ty_normalizer_imports.extract_imported_idents file_sig
-      |> Ty_normalizer_imports.extract_schemes cx typed_ast
+      Ty_normalizer_imports.extract_schemes cx file_sig typed_ast
       |> List.map (get_imported_ident cx)
       |> Loc_collections.LocMap.of_list
     in

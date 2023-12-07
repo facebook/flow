@@ -55,11 +55,12 @@ let from_require require (acc : acc_t) =
 let extract_imported_idents file_sig =
   List.fold_left (fun acc require -> from_require require acc) [] file_sig.requires
 
-let extract_schemes cx typed_ast (imported_locs : acc_t) =
-  List.fold_left
-    (fun acc (loc, name, import_mode) ->
-      match Typed_ast_finder.find_exact_match_annotation cx typed_ast loc with
-      | Some scheme -> (name, loc, import_mode, scheme) :: acc
-      | None -> acc)
-    []
-    imported_locs
+let extract_schemes cx file_sig typed_ast =
+  file_sig.requires
+  |> List.fold_left (fun acc require -> from_require require acc) []
+  |> List.fold_left
+       (fun acc (loc, name, import_mode) ->
+         match Typed_ast_finder.find_exact_match_annotation cx typed_ast loc with
+         | Some scheme -> (name, loc, import_mode, scheme) :: acc
+         | None -> acc)
+       []

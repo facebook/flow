@@ -599,9 +599,7 @@ module Make (I : INPUT) : S = struct
         let msg = "could not extract instance name from reason: " ^ desc in
         terr ~kind:BadInstanceT ~msg None
 
-    let component_symbol env name reason =
-      let symbol = symbol_from_reason env reason (OrdinaryName name) in
-      return symbol
+    let component_symbol env name reason = symbol_from_reason env reason (OrdinaryName name)
 
     let module_symbol_opt env reason =
       match desc_of_reason reason with
@@ -806,7 +804,7 @@ module Make (I : INPUT) : S = struct
       | DefT (_, ClassT t) -> class_t ~env t
       | DefT (reason, ReactAbstractComponentT { component_kind = Nominal (_, name); _ })
         when Env.(env.under_render_type) ->
-        let%bind symbol = Reason_utils.component_symbol env name reason in
+        let symbol = Reason_utils.component_symbol env name reason in
         return (Ty.Generic (symbol, Ty.ComponentKind, None))
       | DefT (_, ReactAbstractComponentT { config; instance; renders; component_kind = _ }) ->
         let%bind config = type__ ~env config in
@@ -818,7 +816,7 @@ module Make (I : INPUT) : S = struct
              (Some [config; instance; renders])
           )
       | DefT (r, RendersT (NominalRenders { renders_id = _; renders_name; _ })) ->
-        let%bind symbol =
+        let symbol =
           Reason_utils.component_symbol
             env
             renders_name
@@ -1345,7 +1343,7 @@ module Make (I : INPUT) : S = struct
               ReactAbstractComponentT
                 { component_kind = Nominal (_, name); config = _; instance = _; renders = _ }
             ) ->
-          let%bind symbol = Reason_utils.component_symbol env name r in
+          let symbol = Reason_utils.component_symbol env name r in
           mk_generic ~env symbol Ty.ComponentKind tparams targs
         | DefT (_, ClassT (TypeAppT { reason = _; use_op = _; type_; targs = _; use_desc = _ })) ->
           type_app ~env type_ targs
@@ -2024,10 +2022,15 @@ module Make (I : INPUT) : S = struct
             ps
           | None -> return None
         in
-        let%map name = Reason_utils.component_symbol env name reason in
-        Ty.Decl
-          (Ty.NominalComponentDecl
-             { name; tparams; is_type = Env.(env.options.toplevel_is_type_identifier_reference) }
+        return
+          (Ty.Decl
+             (Ty.NominalComponentDecl
+                {
+                  name = Reason_utils.component_symbol env name reason;
+                  tparams;
+                  is_type = Env.(env.options.toplevel_is_type_identifier_reference);
+                }
+             )
           )
       in
       let enum_decl ~env reason =
@@ -2215,10 +2218,14 @@ module Make (I : INPUT) : S = struct
       | TypeAliasDecl { import = false; name = { sym_def_loc; _ }; _ }
       | ClassDecl ({ sym_def_loc; _ }, _)
       | InterfaceDecl ({ sym_def_loc; _ }, _)
-      | EnumDecl { sym_def_loc; _ } ->
+      | EnumDecl { sym_def_loc; _ }
+      | NominalComponentDecl { name = { sym_def_loc; _ }; _ } ->
         Some sym_def_loc
       | TypeAliasDecl { import = true; type_ = Some t; _ } -> def_loc_of_ty t
-      | _ -> None
+      | TypeAliasDecl _
+      | VariableDecl _
+      | ModuleDecl _ ->
+        None
     in
     let def_loc_of_elt = function
       | Type t -> def_loc_of_ty t
@@ -2251,9 +2258,7 @@ module Make (I : INPUT) : S = struct
 
   let run_imports ~options ~genv =
     let { Env.file_sig; typed_ast; cx; _ } = genv in
-    Ty_normalizer_imports.extract_imported_idents file_sig
-    |> Ty_normalizer_imports.extract_schemes cx typed_ast
-    |> normalize_imports ~options ~genv
+    Ty_normalizer_imports.extract_schemes cx file_sig typed_ast |> normalize_imports ~options ~genv
 
   module type EXPAND_MEMBERS_CONVERTER = sig
     val force_instance : bool
