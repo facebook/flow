@@ -178,7 +178,7 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
     resolve t
   | CheckUntypedImportT _ -> ()
   | ExportNamedT (_, _, _, t)
-  | ExportTypeT (_, _, _, t)
+  | ExportTypeT { tout = t; _ }
   | AssertExportIsTypeT (_, _, t)
   | MapTypeT (_, _, _, t)
   | ObjKitT (_, _, _, _, t) ->

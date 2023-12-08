@@ -1156,7 +1156,16 @@ module type Import_export_helper_sig = sig
     Context.t -> Reason.t * Type.named_symbol NameUtils.Map.t * export_kind -> Type.t -> Type.t
 
   val export_type :
-    Context.t -> reason * name (* export_name *) * t (* target_module_t *) -> Type.t -> Type.t
+    Context.t ->
+    reason
+    * (* name_loc *)
+    ALoc.t option
+    * (* preferred_def_locs *)
+    ALoc.t Nel.t option
+    * name (* export_name *)
+    * t (* target_module_t *) ->
+    Type.t ->
+    Type.t
 
   val cjs_extract_named_exports : Context.t -> Reason.t * Type.moduletype -> Type.t -> Type.t
 
@@ -1680,16 +1689,19 @@ module CopyTypeExportsT_kit (F : Import_export_helper_sig) = struct
       module_
     in
     let source_exports = Context.find_exports cx source_exports.exports_tmap in
-    (* Remove locations. TODO at some point we may want to include them here. *)
     let source_exports =
       NameUtils.Map.map
-        (fun { name_loc = _; preferred_def_locs = _; is_type_only_export = _; type_ } -> type_)
+        (fun { name_loc; preferred_def_locs; is_type_only_export = _; type_ } ->
+          (name_loc, preferred_def_locs, type_))
         source_exports
     in
     let target_module_t =
       NameUtils.Map.fold
-        (fun export_name export_t target_module_t ->
-          F.export_type cx (reason, export_name, target_module_t) export_t)
+        (fun export_name (name_loc, preferred_def_locs, export_t) target_module_t ->
+          F.export_type
+            cx
+            (reason, name_loc, preferred_def_locs, export_name, target_module_t)
+            export_t)
         source_exports
         target_module_t
     in
@@ -1709,18 +1721,17 @@ end
  * exports one type at a time and it takes the type to be exported as a
  * lower (so that the type can be filtered post-resolution). *)
 module ExportTypeT_kit (F : Import_export_helper_sig) = struct
-  let on_concrete_type cx (reason, export_name, target_module_t) l =
+  let on_concrete_type cx (reason, name_loc, preferred_def_locs, export_name, target_module_t) l =
     let is_type_export =
       match l with
       | DefT (_, ObjT _) when export_name = OrdinaryName "default" -> true
       | l -> ImportTypeTKit.canonicalize_imported_type cx reason l <> None
     in
     if is_type_export then
-      (* TODO we may want to add location information here *)
       let named =
         NameUtils.Map.singleton
           export_name
-          { preferred_def_locs = None; name_loc = None; is_type_only_export = true; type_ = l }
+          { preferred_def_locs; name_loc; is_type_only_export = true; type_ = l }
       in
       F.export_named cx (reason, named, ReExport) target_module_t
     else
