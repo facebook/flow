@@ -801,7 +801,14 @@ module rec TypeTerm : sig
     | CopyTypeExportsT of reason * t * t_out
     | CheckUntypedImportT of reason * import_kind
     | ExportNamedT of reason * named_symbol NameUtils.Map.t (* exports_tmap *) * export_kind * t_out
-    | ExportTypeT of reason * name (* export_name *) * t (* target_module_t *) * t_out
+    | ExportTypeT of {
+        reason: reason;
+        name_loc: ALoc.t option;
+        preferred_def_locs: ALoc.t Nel.t option;
+        export_name: name;
+        target_module_t: t;
+        tout: t_out;
+      }
     | AssertExportIsTypeT of reason * name (* export name *) * t_out
     (* Map a FunT over a structure *)
     | MapTypeT of use_op * reason * type_map * t_out
@@ -3206,7 +3213,13 @@ module AConstraint = struct
     (* Exports *)
     | Annot_CJSExtractNamedExportsT of Reason.t * TypeTerm.moduletype
     | Annot_ExportNamedT of Reason.t * TypeTerm.named_symbol NameUtils.Map.t * TypeTerm.export_kind
-    | Annot_ExportTypeT of Reason.t * Reason.name * TypeTerm.t
+    | Annot_ExportTypeT of {
+        reason: Reason.t;
+        name_loc: ALoc.t option;
+        preferred_def_locs: ALoc.t Nel.t option;
+        export_name: Reason.name;
+        target_module_t: TypeTerm.t;
+      }
     | Annot_AssertExportIsTypeT of Reason.t * name
     | Annot_CopyNamedExportsT of Reason.t * TypeTerm.t
     | Annot_CopyTypeExportsT of Reason.t * TypeTerm.t
@@ -3345,7 +3358,7 @@ module AConstraint = struct
     | Annot_ImportModuleNsT (r, _)
     | Annot_CJSExtractNamedExportsT (r, _)
     | Annot_ExportNamedT (r, _, _)
-    | Annot_ExportTypeT (r, _, _)
+    | Annot_ExportTypeT { reason = r; _ }
     | Annot_AssertExportIsTypeT (r, _)
     | Annot_CopyNamedExportsT (r, _)
     | Annot_CopyTypeExportsT (r, _)

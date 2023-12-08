@@ -261,12 +261,16 @@ struct
           FlowJs.rec_flow cx Trace.dummy_trace (module_t, Type.ExportNamedT (reason, named, kind, t))
       )
 
-    let export_type cx (reason, export_name, target_module_t) export_t =
-      Tvar.mk_where cx reason (fun t ->
+    let export_type cx (reason, name_loc, preferred_def_locs, export_name, target_module_t) export_t
+        =
+      Tvar.mk_where cx reason (fun tout ->
           FlowJs.rec_flow
             cx
             Trace.dummy_trace
-            (export_t, ExportTypeT (reason, export_name, target_module_t, t))
+            ( export_t,
+              ExportTypeT
+                { reason; name_loc; preferred_def_locs; export_name; target_module_t; tout }
+            )
       )
 
     let cjs_extract_named_exports cx (reason, local_module) proto_t =
@@ -783,8 +787,14 @@ struct
           CopyNamedExportsTKit.on_ModuleT cx (reason, target_module_t) m t_out
         | (ModuleT m, CopyTypeExportsT (reason, target_module_t, t_out)) ->
           CopyTypeExportsTKit.on_ModuleT cx (reason, target_module_t) m t_out
-        | (_, ExportTypeT (reason, export_name, target_module_t, t_out)) ->
-          ExportTypeTKit.on_concrete_type cx (reason, export_name, target_module_t) l t_out
+        | ( _,
+            ExportTypeT { reason; name_loc; preferred_def_locs; export_name; target_module_t; tout }
+          ) ->
+          ExportTypeTKit.on_concrete_type
+            cx
+            (reason, name_loc, preferred_def_locs, export_name, target_module_t)
+            l
+            tout
         | (AnyT (lreason, _), CopyNamedExportsT (reason, target_module, t)) ->
           CopyNamedExportsTKit.on_AnyT cx lreason (reason, target_module) t
         | (AnyT (lreason, _), CopyTypeExportsT (reason, target_module, t)) ->

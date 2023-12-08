@@ -79,7 +79,7 @@ and reason_of_use_t = function
   | EqT { reason; _ } -> reason
   | ConditionalT { reason; _ } -> reason
   | ExportNamedT (reason, _, _, _) -> reason
-  | ExportTypeT (reason, _, _, _) -> reason
+  | ExportTypeT { reason; _ } -> reason
   | ImplicitVoidReturnT { reason; _ } -> reason
   | AssertExportIsTypeT (reason, _, _) -> reason
   | ExtendsUseT (_, reason, _, _, _) -> reason
@@ -296,7 +296,9 @@ and mod_reason_of_use_t f = function
       }
   | ExportNamedT (reason, tmap, export_kind, t_out) ->
     ExportNamedT (f reason, tmap, export_kind, t_out)
-  | ExportTypeT (reason, name, t, t_out) -> ExportTypeT (f reason, name, t, t_out)
+  | ExportTypeT { reason; name_loc; preferred_def_locs; export_name; target_module_t; tout } ->
+    ExportTypeT
+      { reason = f reason; name_loc; preferred_def_locs; export_name; target_module_t; tout }
   | AssertExportIsTypeT (reason, export_name, t_out) ->
     AssertExportIsTypeT (f reason, export_name, t_out)
   | ExtendsUseT (use_op, reason, ts, t1, t2) -> ExtendsUseT (use_op, f reason, ts, t1, t2)
@@ -535,7 +537,15 @@ let rec util_use_op_of_use_t :
   | CopyTypeExportsT (_, _, _)
   | CheckUntypedImportT (_, _)
   | ExportNamedT (_, _, _, _)
-  | ExportTypeT (_, _, _, _)
+  | ExportTypeT
+      {
+        reason = _;
+        name_loc = _;
+        preferred_def_locs = _;
+        export_name = _;
+        target_module_t = _;
+        tout = _;
+      }
   | AssertExportIsTypeT (_, _, _)
   | ChoiceKitUseT (_, _)
   | PreprocessKitT (_, _)

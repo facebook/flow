@@ -259,8 +259,12 @@ module rec ConsGen : S = struct
 
     let export_named_fresh_var = export_named
 
-    let export_type cx (reason, export_name, target_module_t) export_t =
-      ConsGen.elab_t cx export_t (Annot_ExportTypeT (reason, export_name, target_module_t))
+    let export_type cx (reason, name_loc, preferred_def_locs, export_name, target_module_t) export_t
+        =
+      ConsGen.elab_t
+        cx
+        export_t
+        (Annot_ExportTypeT { reason; name_loc; preferred_def_locs; export_name; target_module_t })
 
     let cjs_extract_named_exports cx (reason, local_module) t =
       ConsGen.cjs_extract_named_exports cx reason local_module t
@@ -578,8 +582,12 @@ module rec ConsGen : S = struct
       CopyNamedExportsTKit.on_ModuleT cx (reason, target_module_t) m
     | (ModuleT m, Annot_CopyTypeExportsT (reason, target_module_t)) ->
       CopyTypeExportsTKit.on_ModuleT cx (reason, target_module_t) m
-    | (_, Annot_ExportTypeT (reason, export_name, target_module_t)) ->
-      ExportTypeTKit.on_concrete_type cx (reason, export_name, target_module_t) t
+    | (_, Annot_ExportTypeT { reason; name_loc; preferred_def_locs; export_name; target_module_t })
+      ->
+      ExportTypeTKit.on_concrete_type
+        cx
+        (reason, name_loc, preferred_def_locs, export_name, target_module_t)
+        t
     | (AnyT (lreason, _), Annot_CopyNamedExportsT (reason, target_module)) ->
       CopyNamedExportsTKit.on_AnyT cx lreason (reason, target_module)
     | (AnyT (lreason, _), Annot_CopyTypeExportsT (reason, target_module)) ->
