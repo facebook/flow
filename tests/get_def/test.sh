@@ -177,6 +177,34 @@ assert_ok "$FLOW" get-def imports.js 30 23 --strip-root --pretty
 printf "local reference of typeof namespace import = "
 assert_ok "$FLOW" get-def imports.js 32 9 --strip-root --pretty
 
+# x as _barrel_x1;
+#         ^
+printf "imports of level-1 barrel-exported names type X = "
+assert_ok "$FLOW" get-def imports.js 35 14 --strip-root --pretty
+printf "imports of level-1 barrel-exported names x = "
+assert_ok "$FLOW" get-def imports.js 36 14 --strip-root --pretty
+printf "imports of level-1 barrel-exported names y = "
+assert_ok "$FLOW" get-def imports.js 37 14 --strip-root --pretty
+printf "imports of level-1 barrel-exported names z = "
+assert_ok "$FLOW" get-def imports.js 38 14 --strip-root --pretty
+printf "imports of level-1 barrel-exported names foo = "
+assert_ok "$FLOW" get-def imports.js 39 14 --strip-root --pretty
+printf "imports of level-1 barrel-exported names bar = "
+assert_ok "$FLOW" get-def imports.js 40 14 --strip-root --pretty
+# x as _barrel_x2;
+#         ^
+printf "imports of level-2 barrel-exported names type X = "
+assert_ok "$FLOW" get-def imports.js 43 14 --strip-root --pretty
+printf "imports of level-2 barrel-exported names x = "
+assert_ok "$FLOW" get-def imports.js 44 14 --strip-root --pretty
+printf "imports of level-2 barrel-exported names y = "
+assert_ok "$FLOW" get-def imports.js 45 14 --strip-root --pretty
+printf "imports of level-2 barrel-exported names z = "
+assert_ok "$FLOW" get-def imports.js 46 14 --strip-root --pretty
+printf "imports of level-2 barrel-exported names foo = "
+assert_ok "$FLOW" get-def imports.js 47 14 --strip-root --pretty
+printf "imports of level-2 barrel-exported names bar = "
+assert_ok "$FLOW" get-def imports.js 48 14 --strip-root --pretty
 
 printf "class name (should be itself) = "
 assert_ok "$FLOW" get-def class.js 3 8 --strip-root --pretty

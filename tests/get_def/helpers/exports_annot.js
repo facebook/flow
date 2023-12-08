@@ -1,6 +1,6 @@
 // @flow
 
-type X = string
+export type X = string
 
 type Y = number
 
