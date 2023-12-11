@@ -56,6 +56,8 @@ let broadcast_significant_transition t =
 module UpdateLoop = LwtLoop.Make (struct
   type acc = t
 
+  let should_pause = ref true
+
   let process_update t new_status =
     let new_status = ServerStatus.change_init_to_restart t.restart_reason new_status in
     Logger.debug "Server status: %s" (ServerStatus.string_of_status new_status);

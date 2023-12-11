@@ -39,6 +39,8 @@ module MemorySamplingLoop = LwtLoop.Make (struct
     heap_size:int ->
     unit
 
+  let should_pause = ref true
+
   let main callback =
     let%lwt () = with_memory_info callback in
     let%lwt () = Lwt_unix.sleep 1.0 in
