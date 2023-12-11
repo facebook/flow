@@ -8,6 +8,8 @@
 module type LOOP = sig
   type acc
 
+  val should_pause : bool ref
+
   val main : acc -> acc Lwt.t
 
   val catch : acc -> Exception.t -> unit Lwt.t

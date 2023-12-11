@@ -11,6 +11,8 @@ open Utils_js
 module Parallelizable_workload_loop = LwtLoop.Make (struct
   type acc = unit Lwt.t * ServerEnv.env
 
+  let should_pause = ref true
+
   let main (wait_for_cancel, env) =
     (* The Lwt.pick will arbitrarily choose one or the other thread if they are both ready. So let's
      * explicitly check if the wait_for_cancel thread has resolved to give it priority *)

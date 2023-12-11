@@ -154,6 +154,8 @@ module Make (ConnectionProcessor : CONNECTION_PROCESSOR) :
   module CommandLoop = LwtLoop.Make (struct
     type acc = t
 
+    let should_pause = ref true
+
     let main conn =
       let%lwt command = Lwt_stream.next conn.command_stream in
       let%lwt () = handle_command conn command in
@@ -174,6 +176,8 @@ module Make (ConnectionProcessor : CONNECTION_PROCESSOR) :
 
   module ReadLoop = LwtLoop.Make (struct
     type acc = t
+
+    let should_pause = ref true
 
     let main connection =
       let%lwt msg =

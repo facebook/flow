@@ -1566,6 +1566,8 @@ let with_timer (f : unit -> 'a) : float * 'a =
 module LogFlusher = LwtLoop.Make (struct
   type acc = unit
 
+  let should_pause = ref true
+
   let main () =
     let%lwt () = Lwt_unix.sleep 5.0 in
     Lwt.join [EventLoggerLwt.flush (); FlowInteractionLogger.flush ()]

@@ -33,6 +33,8 @@ let (msg_stream, push_to_msg_stream) = Lwt_stream.create ()
 module WriteLoop = LwtLoop.Make (struct
   type acc = Lwt_unix.file_descr option
 
+  let should_pause = ref true
+
   (* Given a list of messages and a fd, write them serially to the fd *)
   let write_msgs msgs fd =
     Lwt_list.iter_s

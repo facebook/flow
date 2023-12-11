@@ -13,6 +13,12 @@
 module type LOOP = sig
   type acc
 
+  (* By default, the value is reset to true before every workload run
+   * to prevent starving other threads.
+   * In some cases, we may set this to false based on the workload
+   * if we know the computation is fast. *)
+  val should_pause : bool ref
+
   (* A single iteration of the loop *)
   val main : acc -> acc Lwt.t
 
@@ -25,6 +31,7 @@ module Make (Loop : LOOP) : sig
   val run : ?cancel_condition:'a Lwt_condition.t -> Loop.acc -> unit Lwt.t
 end = struct
   let catch acc exn =
+    Loop.should_pause := true;
     match exn with
     (* Automatically handle Canceled. No one ever seems to want to handle it manually. *)
     | Lwt.Canceled -> Lwt.return_unit
@@ -36,7 +43,13 @@ end = struct
         (* `Lwt.pause` yields to allow other callbacks to run. We do that here because
            we're in an infinite loop and yielding allows other threads an opportunity
            to cancel this one. *)
-        let%lwt () = Lwt.pause () in
+        let%lwt () =
+          if !Loop.should_pause then
+            Lwt.pause ()
+          else
+            Lwt.return_unit
+        in
+        Loop.should_pause := true;
         Loop.main acc)
       loop
       (catch acc)

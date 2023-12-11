@@ -170,6 +170,8 @@ end = struct
   module CommandLoop = LwtLoop.Make (struct
     type acc = FileWatcher.watcher * ServerConnection.t
 
+    let should_pause = ref true
+
     (* Writes a message to the out-stream of the monitor, to be eventually *)
     (* picked up by the server. *)
     let send_request ~msg conn =
@@ -247,6 +249,8 @@ end = struct
 
   module FileWatcherLoop = LwtLoop.Make (struct
     type acc = FileWatcher.watcher
+
+    let should_pause = ref true
 
     (* Poll for file changes every second *)
     let main (watcher : acc) =
@@ -504,6 +508,8 @@ end
 (* A loop who's job is to start a server and then wait for it to die *)
 module KeepAliveLoop = LwtLoop.Make (struct
   type acc = FlowServerMonitorOptions.t * ServerStatus.restart_reason option
+
+  let should_pause = ref true
 
   (* Given that a Flow server has just exited with this exit status, should the monitor exit too?
    *

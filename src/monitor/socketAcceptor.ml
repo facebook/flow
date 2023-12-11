@@ -291,6 +291,8 @@ end
 module SocketAcceptorLoop (Handler : Handler) = LwtLoop.Make (struct
   type acc = bool * Lwt_unix.file_descr
 
+  let should_pause = ref true
+
   let main (autostop, socket_fd) =
     Logger.debug "Waiting for a new %s" Handler.name;
     let%lwt conn = Lwt_unix.accept socket_fd in

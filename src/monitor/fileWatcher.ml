@@ -275,6 +275,8 @@ end = struct
 
     type acc = env
 
+    let should_pause = ref true
+
     let extract_hg_update_metadata = function
       | None -> ("<UNKNOWN>", "<UNKNOWN REV>")
       | Some metadata ->

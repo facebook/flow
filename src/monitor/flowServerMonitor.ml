@@ -47,6 +47,8 @@ let handle_waiting_start_command waiting_fd =
 module LogFlusher = LwtLoop.Make (struct
   type acc = unit
 
+  let should_pause = ref true
+
   let main () =
     let%lwt () = Lwt_unix.sleep 5.0 in
     EventLoggerLwt.flush ()
