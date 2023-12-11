@@ -883,6 +883,7 @@ module Options_flags = struct
     estimate_recheck_time: bool option;
     long_lived_workers: bool option;
     libdef_in_checking: bool option;
+    batch_lsp_request_processing: bool option;
     distributed: bool;
   }
 end
@@ -950,6 +951,7 @@ let options_flags =
       estimate_recheck_time
       long_lived_workers
       libdef_in_checking
+      batch_lsp_request_processing
       distributed =
     (match merge_timeout with
     | Some timeout when timeout < 0 ->
@@ -979,6 +981,7 @@ let options_flags =
         estimate_recheck_time;
         long_lived_workers;
         libdef_in_checking;
+        batch_lsp_request_processing;
         distributed;
       }
   in
@@ -1029,6 +1032,11 @@ let options_flags =
       |> flag "--estimate-recheck-time" (optional bool) ~doc:"" ~env:"FLOW_ESTIMATE_RECHECK_TIME"
       |> flag "--long-lived-workers" (optional bool) ~doc:"" ~env:"FLOW_LONG_LIVED_WORKERS"
       |> flag "--libdef-in-checking" (optional bool) ~doc:"" ~env:"FLOW_LIBDEF_IN_CHECKING"
+      |> flag
+           "--batch-lsp-request-processing"
+           (optional bool)
+           ~doc:""
+           ~env:"FLOW_BATCH_LSP_REQUEST_PROCESSING"
       |> flag "--distributed" truthy ~doc:""
     )
 
@@ -1409,6 +1417,10 @@ let make_options
       Option.value
         options_flags.libdef_in_checking
         ~default:(FlowConfig.libdef_in_checking flowconfig);
+    opt_batch_lsp_request_processing =
+      Option.value
+        options_flags.batch_lsp_request_processing
+        ~default:(FlowConfig.batch_lsp_request_processing flowconfig);
     opt_lint_severities = lint_severities;
     opt_strict_mode = strict_mode;
     opt_merge_timeout;

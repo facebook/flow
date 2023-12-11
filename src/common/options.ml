@@ -73,6 +73,7 @@ type t = {
   opt_autoimports_ranked_by_usage: bool;
   opt_automatic_require_default: bool;
   opt_babel_loose_array_spread: bool;
+  opt_batch_lsp_request_processing: bool;
   opt_casting_syntax: CastingSyntax.t;
   opt_channel_mode: [ `pipe | `socket ];
   opt_component_syntax: component_syntax;
@@ -167,6 +168,8 @@ let autoimports_ranked_by_usage opts = opts.opt_autoimports_ranked_by_usage
 let automatic_require_default opts = opts.opt_automatic_require_default
 
 let babel_loose_array_spread opts = opts.opt_babel_loose_array_spread
+
+let batch_lsp_request_processing opts = opts.opt_batch_lsp_request_processing
 
 let casting_syntax opts = opts.opt_casting_syntax
 
