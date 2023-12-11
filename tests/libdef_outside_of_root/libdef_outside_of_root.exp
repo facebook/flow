@@ -1,0 +1,16 @@
+Error --------------------------------------------------------------------------------------------- root/use-foo.js:1:18
+
+Cannot assign `1` to `foo` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   root/use-foo.js:1:18
+   1| const foo: Foo = 1;
+                       ^ [1]
+
+References:
+   root/use-foo.js:1:12
+   1| const foo: Foo = 1;
+                 ^^^ [2]
+
+
+
+Found 1 error

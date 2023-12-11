@@ -1,0 +1,6 @@
+[libs]
+../other-root/flow-typed/
+../other-root/flow/
+
+[options]
+all=true
