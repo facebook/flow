@@ -130,8 +130,18 @@ let kinds_of_string = function
   | "nonstrict-import" -> Some [NonstrictImport]
   | "untyped-import" -> Some [UntypedImport]
   | "unclear-type" -> Some [UnclearType]
-  | "deprecated-type" -> Some [DeprecatedType DeprecatedBool]
+  | "deprecated-type" ->
+    Some
+      [
+        DeprecatedType DeprecatedBool;
+        DeprecatedType DeprecatedDollarCall;
+        DeprecatedType DeprecatedDollarObjMap;
+        DeprecatedType DeprecatedPredicate;
+      ]
   | "deprecated-type-bool" -> Some [DeprecatedType DeprecatedBool]
+  | "deprecated-type-dollar-call" -> Some [DeprecatedType DeprecatedDollarCall]
+  | "deprecated-type-dollar-objmap" -> Some [DeprecatedType DeprecatedDollarObjMap]
+  | "deprecated-type-predicate" -> Some [DeprecatedType DeprecatedPredicate]
   | "unsafe-getters-setters" -> Some [UnsafeGettersSetters]
   | "unnecessary-optional-chain" -> Some [UnnecessaryOptionalChain]
   | "unnecessary-invariant" -> Some [UnnecessaryInvariant]
