@@ -80,7 +80,7 @@ val wait_for_updates_for_recheck :
   priority:priority ->
   workload_changes Lwt.t
 
-val pop_next_workload : unit -> WorkloadStream.workload option
+val pop_next_workload : unit -> WorkloadStream.workload_handler option
 
 val pop_next_parallelizable_workload : unit -> WorkloadStream.parallelizable_workload option
 

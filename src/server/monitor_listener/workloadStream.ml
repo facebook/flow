@@ -16,9 +16,19 @@
  * front of the queue. We do this when parallelizable workloads are canceled due to a recheck.
  *)
 
-type workload = ServerEnv.env -> ServerEnv.env Lwt.t
+type workload_handler = ServerEnv.env -> ServerEnv.env Lwt.t
 
-type parallelizable_workload = ServerEnv.env -> unit Lwt.t
+type workload = {
+  workload_should_be_cancelled: unit -> bool;
+  workload_handler: workload_handler;
+}
+
+type parallelizable_workload_handler = ServerEnv.env -> unit Lwt.t
+
+type parallelizable_workload = {
+  parallelizable_workload_should_be_cancelled: unit -> bool;
+  parallelizable_workload_handler: parallelizable_workload_handler;
+}
 
 type 'a item = {
   enqueue_time: float;
@@ -74,9 +84,13 @@ let requeue_parallelizable ~name workload stream =
   Lwt_condition.broadcast stream.signal ()
 
 (* Cast a parallelizable workload to a nonparallelizable workload. *)
-let workload_of_parallelizable_workload parallelizable_workload env =
-  let%lwt () = parallelizable_workload env in
-  Lwt.return env
+let workload_of_parallelizable_workload
+    { parallelizable_workload_should_be_cancelled; parallelizable_workload_handler } =
+  let workload_handler env =
+    let%lwt () = parallelizable_workload_handler env in
+    Lwt.return env
+  in
+  { workload_should_be_cancelled = parallelizable_workload_should_be_cancelled; workload_handler }
 
 (* Pop the oldest workload *)
 let pop stream =
@@ -131,6 +145,8 @@ let pop stream =
     stream.parallelizable <- parallelizable;
     stream.nonparallelizable <- nonparallelizable;
     workload_opt
+
+let pop stream = pop stream |> Base.Option.map ~f:(fun { workload_handler; _ } -> workload_handler)
 
 (* Pop the oldest parallelizable workload *)
 let pop_parallelizable stream =

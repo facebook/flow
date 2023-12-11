@@ -1575,38 +1575,46 @@ let rec handle_parallelizable_ephemeral_unsafe
   in
   Lwt.return ((), response, json_data)
 
-and handle_parallelizable_ephemeral ~genv ~request_id ~client_context ~workload ~cmd_str env =
-  try%lwt
-    let handler = handle_parallelizable_ephemeral_unsafe ~client_context ~cmd_str in
-    let%lwt result =
-      wrap_ephemeral_handler handler ~genv ~request_id ~client_context ~workload ~cmd_str env
-    in
-    match result with
-    | Ok ()
-    | Error () ->
+and handle_parallelizable_ephemeral ~genv ~request_id ~client_context ~workload ~cmd_str =
+  let parallelizable_workload_should_be_cancelled () = false in
+  let parallelizable_workload_handler env =
+    try%lwt
+      let handler = handle_parallelizable_ephemeral_unsafe ~client_context ~cmd_str in
+      let%lwt result =
+        wrap_ephemeral_handler handler ~genv ~request_id ~client_context ~workload ~cmd_str env
+      in
+      match result with
+      | Ok ()
+      | Error () ->
+        Lwt.return_unit
+    with
+    | Lwt.Canceled ->
+      (* It's fine for parallelizable commands to be canceled - they'll be run again later *)
       Lwt.return_unit
-  with
-  | Lwt.Canceled ->
-    (* It's fine for parallelizable commands to be canceled - they'll be run again later *)
-    Lwt.return_unit
+  in
+  { WorkloadStream.parallelizable_workload_should_be_cancelled; parallelizable_workload_handler }
 
 let handle_nonparallelizable_ephemeral_unsafe ~genv ~request_id:_ ~workload ~profiling env =
   run_command_in_serial ~genv ~env ~profiling ~workload
 
-let handle_nonparallelizable_ephemeral ~genv ~request_id ~client_context ~workload ~cmd_str env =
-  let%lwt result =
-    wrap_ephemeral_handler
-      handle_nonparallelizable_ephemeral_unsafe
-      ~genv
-      ~request_id
-      ~client_context
-      ~workload
-      ~cmd_str
-      env
+let handle_nonparallelizable_ephemeral ~genv ~request_id ~client_context ~workload ~cmd_str =
+  let workload_should_be_cancelled () = false in
+  let workload_handler env =
+    let%lwt result =
+      wrap_ephemeral_handler
+        handle_nonparallelizable_ephemeral_unsafe
+        ~genv
+        ~request_id
+        ~client_context
+        ~workload
+        ~cmd_str
+        env
+    in
+    match result with
+    | Ok env -> Lwt.return env
+    | Error () -> Lwt.return env
   in
-  match result with
-  | Ok env -> Lwt.return env
-  | Error () -> Lwt.return env
+  { WorkloadStream.workload_should_be_cancelled; workload_handler }
 
 let enqueue_or_handle_ephemeral genv (request_id, command_with_context) =
   let { ServerProt.Request.client_logging_context = client_context; command } =
@@ -1650,16 +1658,24 @@ let handle_persistent_canceled ~id ~metadata ~client:_ ~profiling:_ =
   let metadata = with_error ~stack:(Utils.Callstack "") ~reason:"cancelled" metadata in
   (LspProt.LspFromServer (Some response), metadata)
 
-let check_if_cancelled ~profiling ~client request metadata =
-  match request with
+let cancelled_request_id_opt = function
   | LspProt.LspToServer (RequestMessage (id, _))
     when IdSet.mem id !ServerMonitorListenerState.cancellation_requests ->
-    Hh_logger.info "Skipping canceled persistent request: %s" (LspProt.string_of_request request);
-
-    (* We can't actually skip a canceled request...we need to send a response. But we can
-     * skip the normal handler *)
-    Some (handle_persistent_canceled ~id ~metadata ~client ~profiling)
+    Some id
   | _ -> None
+
+let check_if_cancelled ~profiling ~client request metadata =
+  request
+  |> cancelled_request_id_opt
+  |> Base.Option.map ~f:(fun id ->
+         Hh_logger.info
+           "Skipping canceled persistent request: %s"
+           (LspProt.string_of_request request);
+
+         (* We can't actually skip a canceled request...we need to send a response. But we can
+          * skip the normal handler *)
+         handle_persistent_canceled ~id ~metadata ~client ~profiling
+     )
 
 let handle_persistent_uncaught_exception request e =
   let exception_constructor = Exception.get_ctor_string e in
@@ -1736,34 +1752,46 @@ let rec handle_parallelizable_persistent_unsafe
   in
   Lwt.return ((), response, json_data)
 
-and handle_parallelizable_persistent ~genv ~client_id ~request ~name ~workload env : unit Lwt.t =
-  try%lwt
-    wrap_persistent_handler
-      (handle_parallelizable_persistent_unsafe ~request ~name)
-      ~genv
-      ~client_id
-      ~request
-      ~workload
-      ~default_ret:()
-      env
-  with
-  | Lwt.Canceled ->
-    (* It's fine for parallelizable commands to be canceled - they'll be run again later *)
-    Lwt.return_unit
+and handle_parallelizable_persistent ~genv ~client_id ~request ~name ~workload :
+    WorkloadStream.parallelizable_workload =
+  let parallelizable_workload_should_be_cancelled () =
+    Option.is_some (cancelled_request_id_opt (fst request))
+  in
+  let parallelizable_workload_handler env =
+    try%lwt
+      wrap_persistent_handler
+        (handle_parallelizable_persistent_unsafe ~request ~name)
+        ~genv
+        ~client_id
+        ~request
+        ~workload
+        ~default_ret:()
+        env
+    with
+    | Lwt.Canceled ->
+      (* It's fine for parallelizable commands to be canceled - they'll be run again later *)
+      Lwt.return_unit
+  in
+  { WorkloadStream.parallelizable_workload_should_be_cancelled; parallelizable_workload_handler }
 
 let handle_nonparallelizable_persistent_unsafe ~genv ~workload ~client ~profiling env =
   let workload = workload ~client in
   run_command_in_serial ~genv ~env ~profiling ~workload
 
-let handle_nonparallelizable_persistent ~genv ~client_id ~request ~workload env =
-  wrap_persistent_handler
-    handle_nonparallelizable_persistent_unsafe
-    ~genv
-    ~client_id
-    ~request
-    ~workload
-    ~default_ret:env
-    env
+let handle_nonparallelizable_persistent ~genv ~client_id ~request ~workload :
+    WorkloadStream.workload =
+  let workload_should_be_cancelled () = Option.is_some (cancelled_request_id_opt (fst request)) in
+  let workload_handler env =
+    wrap_persistent_handler
+      handle_nonparallelizable_persistent_unsafe
+      ~genv
+      ~client_id
+      ~request
+      ~workload
+      ~default_ret:env
+      env
+  in
+  { WorkloadStream.workload_should_be_cancelled; workload_handler }
 
 let did_open env client (_files : (string * string) Nel.t) : ServerEnv.env Lwt.t =
   let (errors, warnings, _) = ErrorCollator.get_with_separate_warnings env in
