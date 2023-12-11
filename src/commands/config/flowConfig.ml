@@ -48,6 +48,7 @@ module Opts = struct
     autoimports_ranked_by_usage: bool option;
     automatic_require_default: bool option;
     babel_loose_array_spread: bool option;
+    batch_lsp_request_processing: bool;
     casting_syntax: Options.CastingSyntax.t option;
     channel_mode: [ `pipe | `socket ] option;
     component_syntax: Options.component_syntax;
@@ -172,6 +173,7 @@ module Opts = struct
       autoimports_ranked_by_usage = None;
       automatic_require_default = None;
       babel_loose_array_spread = None;
+      batch_lsp_request_processing = false;
       channel_mode = None;
       casting_syntax = None;
       component_syntax = Options.Parsing;
@@ -818,6 +820,9 @@ module Opts = struct
       ("enums", boolean (fun opts v -> Ok { opts with enums = v }));
       ("estimate_recheck_time", estimate_recheck_time_parser);
       ("exact_by_default", boolean (fun opts v -> Ok { opts with exact_by_default = Some v }));
+      ( "experimental.batch_lsp_request_processing",
+        boolean (fun opts v -> Ok { opts with batch_lsp_request_processing = v })
+      );
       ( "experimental.const_params",
         boolean (fun opts v -> Ok { opts with enable_const_params = Some v })
       );
@@ -1458,6 +1463,8 @@ let autoimports_ranked_by_usage c = c.options.Opts.autoimports_ranked_by_usage
 let automatic_require_default c = c.options.Opts.automatic_require_default
 
 let babel_loose_array_spread c = c.options.Opts.babel_loose_array_spread
+
+let batch_lsp_request_processing c = c.options.Opts.batch_lsp_request_processing
 
 let casting_syntax c = c.options.Opts.casting_syntax
 

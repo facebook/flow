@@ -36,6 +36,7 @@ let make_options_flags
     ?estimate_recheck_time
     ?long_lived_workers
     ?libdef_in_checking
+    ?batch_lsp_request_processing
     ?(distributed = false)
     () =
   {
@@ -60,6 +61,7 @@ let make_options_flags
     estimate_recheck_time;
     long_lived_workers;
     libdef_in_checking;
+    batch_lsp_request_processing;
     distributed;
   }
 
