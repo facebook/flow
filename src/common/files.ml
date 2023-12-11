@@ -575,15 +575,13 @@ let make_next_files ~root ~all ~sort ~subdir ~options ~include_libdef ~libs =
     else
       wanted ~options ~include_libdef libs
   in
-  let (flowlib_starting_point, is_flowlib_filter) =
+  let (libdef_starting_points, is_libdef_filter) =
     if include_libdef then
-      match options.default_lib_dir with
-      | None -> (None, (fun _ -> false))
-      | Some (Prelude root | Flowlib root) ->
-        let is_in_flowlib = is_prefix (File_path.to_string root) in
-        (Some root, is_in_flowlib)
+      let lib_filepaths = SSet.fold (fun f acc -> File_path.make f :: acc) libs [] in
+      let is_libdef_filter s = SSet.mem s libs in
+      (lib_filepaths, is_libdef_filter)
     else
-      (None, (fun _ -> false))
+      ([], (fun _ -> false))
   in
   (* The directories from which we start our search *)
   let starting_points =
@@ -591,17 +589,13 @@ let make_next_files ~root ~all ~sort ~subdir ~options ~include_libdef ~libs =
     | None -> watched_paths options
     | Some subdir -> [subdir]
   in
-  let starting_points =
-    match flowlib_starting_point with
-    | Some p -> p :: starting_points
-    | None -> starting_points
-  in
+  let starting_points = List.append libdef_starting_points starting_points in
   let root_str = File_path.to_string root in
   (* Flowlib paths are allowed to bypass is_valid_path check. Without the logic, certain config
    * might cause libdefs to be accidentally ignored. The config_file_extensions test offers
    * an example: it overrides the .js extension with .js.es6, so without the logic, all the libdef
    * files that only end with .js will be dropped. *)
-  let is_valid_path path = is_valid_path ~options path || is_flowlib_filter path in
+  let is_valid_path path = is_valid_path ~options path || is_libdef_filter path in
   let realpath_filter path = is_valid_path path && filter path in
   let path_filter =
     (*
@@ -613,7 +607,7 @@ let make_next_files ~root ~all ~sort ~subdir ~options ~include_libdef ~libs =
       fun path ->
         (String.starts_with ~prefix:root_str path
         || is_included options path
-        || is_flowlib_filter path
+        || is_libdef_filter path
         )
         && realpath_filter path
     | Some subdir ->
@@ -625,7 +619,7 @@ let make_next_files ~root ~all ~sort ~subdir ~options ~include_libdef ~libs =
         String.starts_with ~prefix:subdir_str path
         && (String.starts_with ~prefix:root_str path
            || is_included options path
-           || is_flowlib_filter path
+           || is_libdef_filter path
            )
         && realpath_filter path
   in

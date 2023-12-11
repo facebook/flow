@@ -98,7 +98,9 @@ let load_lib_files ~ccx ~options ~reader ~validate_libdefs files =
                (* construct ast list in reverse override order *)
                let asts_acc = ast :: asts_acc in
                Lwt.return (ok_acc, errors_acc, asts_acc)
-             | None -> Lwt.return (false, errors_acc, asts_acc))
+             | None ->
+               Hh_logger.info "Failed to find %s in parsing heap." (File_key.show lib_file);
+               Lwt.return (false, errors_acc, asts_acc))
            (true, ErrorSet.empty, [])
     else
       files
