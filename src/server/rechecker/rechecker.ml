@@ -9,11 +9,11 @@ open ServerEnv
 open Utils_js
 
 module Parallelizable_workload_loop = LwtLoop.Make (struct
-  type acc = unit Lwt.t * ServerEnv.env
+  type acc = unit Lwt.t * ServerEnv.genv * ServerEnv.env
 
   let should_pause = ref true
 
-  let main (wait_for_cancel, env) =
+  let main (wait_for_cancel, genv, env) =
     (* The Lwt.pick will arbitrarily choose one or the other thread if they are both ready. So let's
      * explicitly check if the wait_for_cancel thread has resolved to give it priority *)
     let () =
@@ -44,23 +44,35 @@ module Parallelizable_workload_loop = LwtLoop.Make (struct
     in
     let%lwt () =
       match ServerMonitorListenerState.pop_next_parallelizable_workload () with
-      | Some workload ->
+      | Some
+          {
+            WorkloadStream.parallelizable_workload_should_be_cancelled;
+            parallelizable_workload_handler;
+          } ->
         (* We have a workload! Let's run it! *)
         Hh_logger.info "Running a parallel workload";
-        workload env
+        should_pause :=
+          if
+            genv.ServerEnv.options.Options.opt_batch_lsp_request_processing
+            && parallelizable_workload_should_be_cancelled ()
+          then
+            false
+          else
+            !should_pause;
+        parallelizable_workload_handler env
       | None ->
         (* this should never happen... we just waited for one! *)
         Lwt.return_unit
     in
-    Lwt.return (wait_for_cancel, env)
+    Lwt.return (wait_for_cancel, genv, env)
 
   let catch _ exn = Exception.reraise exn
 end)
 
-let start_parallelizable_workloads env =
+let start_parallelizable_workloads genv env =
   (* The wait_for_cancel thread itself is NOT cancelable *)
   let (wait_for_cancel, wakener) = Lwt.wait () in
-  let loop_thread = Parallelizable_workload_loop.run (wait_for_cancel, env) in
+  let loop_thread = Parallelizable_workload_loop.run (wait_for_cancel, genv, env) in
   (* Allow this stop function to be called multiple times for the same loop *)
   let already_woken = ref false in
   fun () ->
@@ -298,7 +310,7 @@ let rec recheck_single ~recheck_count genv env =
     Lwt.return (Nothing_to_do env)
   else
     (* Start the parallelizable workloads loop and return a function which will stop the loop *)
-    let stop_parallelizable_workloads = start_parallelizable_workloads env in
+    let stop_parallelizable_workloads = start_parallelizable_workloads genv env in
     let post_cancel () =
       Hh_logger.info
         "Recheck successfully canceled. Restarting the recheck to include new file changes";

@@ -5,9 +5,19 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type workload = ServerEnv.env -> ServerEnv.env Lwt.t
+type workload_handler = ServerEnv.env -> ServerEnv.env Lwt.t
 
-type parallelizable_workload = ServerEnv.env -> unit Lwt.t
+type workload = {
+  workload_should_be_cancelled: unit -> bool;
+  workload_handler: workload_handler;
+}
+
+type parallelizable_workload_handler = ServerEnv.env -> unit Lwt.t
+
+type parallelizable_workload = {
+  parallelizable_workload_should_be_cancelled: unit -> bool;
+  parallelizable_workload_handler: parallelizable_workload_handler;
+}
 
 type t
 
@@ -19,7 +29,7 @@ val push_parallelizable : name:string -> parallelizable_workload -> t -> unit
 
 val requeue_parallelizable : name:string -> parallelizable_workload -> t -> unit
 
-val pop : t -> workload option
+val pop : t -> workload_handler option
 
 val pop_parallelizable : t -> parallelizable_workload option
 
