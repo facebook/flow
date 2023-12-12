@@ -9,9 +9,9 @@ export type A = string;
 // export a value for cycle_b to use
 export const a: B = 'a';
 
-// import a value from dependency, so that editing
-// dependency dirties this file
-import {dependency} from './dependency';
+// export a value from dependency, so that editing
+// dependency dirties this file's signature
+export {dependency} from './dependency';
 
 // $FlowFixMe[incompatible-cast]
 (1: string); // suppressed error
