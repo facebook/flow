@@ -147,8 +147,6 @@ module type S = sig
     Type.t ->
     Type.t
 
-  val widen_obj_type : Context.t -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
-
   val obj_test_proto : Context.t -> Reason.t -> Type.t -> Type.t
 
   val obj_rest : Context.t -> Reason.t -> string list -> Type.t -> Type.t
@@ -1247,31 +1245,6 @@ module rec ConsGen : S = struct
 
   and arr_rest cx _use_op reason_op _i t = error_unsupported_reason cx t reason_op
 
-  and widen_obj_type cx ~use_op reason t =
-    match t with
-    | OpenT (_, id) ->
-      let open Constraint in
-      begin
-        match Context.find_graph cx id with
-        | exception Union_find.Tvar_not_found _ -> error_internal_reason cx "widen_obj_type" reason
-        | Unresolved _
-        | Resolved _ ->
-          failwith "widen_obj_type unexpected non-FullyResolved tvar"
-        | FullyResolved (lazy t) -> widen_obj_type cx ~use_op reason t
-      end
-    | UnionT (r, rep) ->
-      UnionT
-        ( r,
-          UnionRep.ident_map
-            (fun t ->
-              if is_proper_def t then
-                widen_obj_type cx ~use_op reason t
-              else
-                t)
-            rep
-        )
-    | t -> t
-
   and object_kit_concrete =
     let add_output cx msg : unit = Flow_js_utils.add_output cx msg in
     let return _cx _use_op t = t in
@@ -1280,15 +1253,7 @@ module rec ConsGen : S = struct
     in
     let object_spread options state cx =
       let dict_check _cx _use_op _d1 _d2 = () in
-      Slice_utils.object_spread
-        ~dict_check
-        ~widen_obj_type
-        ~add_output
-        ~return
-        ~recurse
-        options
-        state
-        cx
+      Slice_utils.object_spread ~dict_check ~add_output ~return ~recurse options state cx
     in
     let object_rest options state cx =
       let return _ _ _ t = t in
@@ -1314,7 +1279,6 @@ module rec ConsGen : S = struct
         | ReactConfig _ -> error_internal cx "ReactConfig" op
         | Object.ReactCheckComponentConfig pmap -> check_component_config cx pmap use_op reason x
         | ObjectRep -> error_internal cx "ObjectRep" op
-        | ObjectWiden _ -> error_internal cx "ObjectWiden" op
         | Object.ObjectMap _ ->
           (* TODO(jmbrown): Annotation inference for Mapped Types *)
           error_internal cx "ObjectMap" op

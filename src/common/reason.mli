@@ -199,7 +199,6 @@ type 'loc virtual_reason_desc =
   | RReactSFC
   | RReactConfig
   | RPossiblyMissingPropFromObj of name * 'loc virtual_reason_desc
-  | RWidenedObjProp of 'loc virtual_reason_desc
   | RUnionBranching of 'loc virtual_reason_desc * int
   | RUninitialized
   | RPossiblyUninitialized

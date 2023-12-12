@@ -66,11 +66,6 @@ let mk_object_type
          GenericT { bound = t; reason; id; name = Generic.subst_name_of_id id }
      )
 
-let is_widened_reason_desc r =
-  match desc_of_reason r with
-  | RWidenedObjProp _ -> true
-  | _ -> false
-
 let type_optionality_and_missing_property { Object.prop_t; _ } =
   match prop_t with
   | OptionalT { reason; type_ = t; use_desc } ->
@@ -578,7 +573,6 @@ let spread_mk_object
 let object_spread
     (type a)
     ~dict_check
-    ~widen_obj_type:_
     ~add_output
     ~(return : _ -> _ -> Type.t -> a)
     ~(recurse : _ -> Type.use_op -> Reason.t -> Object.resolve_tool -> Object.tool -> _ -> a)
@@ -1447,8 +1441,7 @@ let resolve
     in
     begin
       match (tool, inst_kind) with
-      | (Spread _, InterfaceKind _)
-      | (ObjectWiden _, InterfaceKind _) ->
+      | (Spread _, InterfaceKind _) ->
         add_output
           cx
           (Error_message.ECannotSpreadInterface
@@ -1518,9 +1511,7 @@ let resolve
    * copying/spreading an object. *)
   | DefT (_, BoolT _)
     when match tool with
-         | ObjectWiden _
-         | Spread _ ->
-           true
+         | Spread _ -> true
          | _ -> false ->
     let flags = { frozen = true; obj_kind = Exact; react_dro = None } in
     let x =
@@ -1547,7 +1538,6 @@ let resolve
     let flags = { frozen = true; obj_kind = Exact; react_dro = None } in
     let x =
       match tool with
-      | ObjectWiden _
       | Spread _
       | ObjectRep
       | ReactConfig _ ->

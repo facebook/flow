@@ -156,7 +156,6 @@ type component_t = {
    *)
   mutable voidable_checks: voidable_check list;
   mutable test_prop_hits_and_misses: test_prop_hit_or_miss IMap.t;
-  mutable spread_widened_types: Type.Object.slice IMap.t;
   mutable optional_chains_useful: (Reason.t * bool) ALocMap.t;
   mutable invariants_useful: (Reason.t * bool) ALocMap.t;
   mutable maybe_unused_promises: (ALoc.t * Type.t * bool) list;
@@ -372,7 +371,6 @@ let make_ccx () =
     exists_excuses = ALocMap.empty;
     voidable_checks = [];
     test_prop_hits_and_misses = IMap.empty;
-    spread_widened_types = IMap.empty;
     optional_chains_useful = ALocMap.empty;
     invariants_useful = ALocMap.empty;
     maybe_unused_promises = [];
@@ -875,11 +873,6 @@ let with_allowed_method_unbinding cx loc f =
   Exception.protect ~f ~finally:(fun () -> cx.ccx.allow_method_unbinding <- old_set)
 
 let allowed_method_unbinding cx loc = ALocSet.mem loc cx.ccx.allow_method_unbinding
-
-let spread_widened_types_get_widest cx id = IMap.find_opt id cx.ccx.spread_widened_types
-
-let spread_widened_types_add_widest cx id objtype =
-  cx.ccx.spread_widened_types <- IMap.add id objtype cx.ccx.spread_widened_types
 
 let mark_optional_chain cx loc lhs_reason ~useful =
   cx.ccx.optional_chains_useful <-

@@ -102,8 +102,6 @@ val mk_instance : Context.t -> reason -> ?use_desc:bool -> Type.t -> Type.t
 
 val mk_typeof_annotation : Context.t -> reason -> Type.t -> Type.t
 
-val widen_obj_type : Context.t -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
-
 val possible_concrete_types_for_inspection : Context.t -> Reason.reason -> Type.t -> Type.t list
 
 val singleton_concrete_type_for_inspection : Context.t -> Reason.reason -> Type.t -> Type.t

@@ -739,9 +739,6 @@ struct
         | (u_def, ReposUseT (reason, use_desc, use_op, l)) ->
           let u = reposition_reason cx ~trace reason ~use_desc u_def in
           rec_flow cx trace (l, UseT (use_op, u))
-        (* Don't widen annotations *)
-        | (AnnotT _, ObjKitT (use_op, _, Object.Resolve Object.Next, Object.ObjectWiden _, tout)) ->
-          rec_flow_t cx trace ~use_op (l, tout)
         (* The source component of an annotation flows out of the annotated
            site to downstream uses. *)
         | (AnnotT (r, t, use_desc), u) ->
@@ -10301,8 +10298,6 @@ module rec FlowJs : Flow_common.S = struct
   include
     M__flow (FlowJs) (React) (CheckPolarity) (CustomFun) (ObjectKit) (SpeculationKit) (SubtypingKit)
 
-  let widen_obj_type = ObjectKit.widen_obj_type
-
   let perform_read_prop_action = GetPropTKit.perform_read_prop_action
 
   let react_subtype_class_component_render = React.subtype_class_component_render
@@ -10350,8 +10345,6 @@ let resolve_id cx id t =
 let mk_instance cx instance_reason ?use_desc c = mk_instance cx instance_reason ?use_desc c
 
 let mk_typeof_annotation cx reason t = mk_typeof_annotation cx reason t
-
-let widen_obj_type cx ~use_op reason t = widen_obj_type cx ~use_op reason t
 
 let get_builtin_type cx reason ?use_desc x = get_builtin_type cx reason ?use_desc x
 

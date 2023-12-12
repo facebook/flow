@@ -410,10 +410,6 @@ val with_allowed_method_unbinding : t -> ALoc.t -> (unit -> 'a) -> 'a
 
 val allowed_method_unbinding : t -> ALoc.t -> bool
 
-val spread_widened_types_get_widest : t -> Type.ident -> Type.Object.slice option
-
-val spread_widened_types_add_widest : t -> Type.ident -> Type.Object.slice -> unit
-
 val mark_optional_chain : t -> ALoc.t -> Reason.t -> useful:bool -> unit
 
 val unnecessary_optional_chains : t -> (ALoc.t * Reason.t) list

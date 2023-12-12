@@ -21,9 +21,6 @@ module type OBJECT = sig
     tout:Type.t ->
     unit
 
-  val widen_obj_type :
-    Context.t -> ?trace:Type.trace -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
-
   val mapped_type_of_keys :
     Context.t ->
     Type.trace ->
@@ -37,38 +34,6 @@ end
 
 module Kit (Flow : Flow_common.S) : OBJECT = struct
   include Flow
-
-  let widen_obj_type cx ?trace ~use_op reason t =
-    match t with
-    | OpenT (r, id) ->
-      let open Constraint in
-      begin
-        match Context.find_graph cx id with
-        | Unresolved _ ->
-          let open Object in
-          let widened_id = Tvar.mk_no_wrap cx r in
-          let tout = OpenT (r, widened_id) in
-          flow_opt
-            cx
-            ?trace
-            (t, ObjKitT (use_op, reason, Resolve Next, ObjectWiden widened_id, tout));
-          tout
-        | Resolved t
-        | FullyResolved (lazy t) ->
-          widen_obj_type cx ?trace ~use_op reason t
-      end
-    | UnionT (r, rep) ->
-      UnionT
-        ( r,
-          UnionRep.ident_map
-            (fun t ->
-              if is_proper_def t then
-                widen_obj_type cx ?trace ~use_op reason t
-              else
-                t)
-            rep
-        )
-    | t -> t
 
   (* We use this function to transform a resolved UnionT into a ((name * reason) list * Type.t),
    * which represents a tuple of key names (with reasons for error messages) and an indexer to be
@@ -170,7 +135,6 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
       fun options state cx trace ->
         Slice_utils.object_spread
           ~dict_check:(dict_check trace)
-          ~widen_obj_type:(widen_obj_type ~trace)
           ~add_output:(Flow_js_utils.add_output ~trace)
           ~return:(return trace)
           ~recurse:(recurse trace)
@@ -305,208 +269,6 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
         in
         rec_flow_t cx trace ~use_op (t, tout)
     in
-    (****************)
-    (* Object Widen *)
-    (****************)
-    let object_widen =
-      let open Slice_utils in
-      let mk_object
-          cx reason { Object.reason = r; props; flags; generics; interface = _; reachable_targs } =
-        let polarity = Polarity.Neutral in
-        let props =
-          NameUtils.Map.map
-            (fun { Object.prop_t = t; is_own = _; is_method; polarity = _; key_loc } ->
-              if is_method then
-                Method { key_loc; type_ = t }
-              else
-                Field { preferred_def_locs = None; key_loc; type_ = t; polarity })
-            props
-        in
-        let flags =
-          {
-            flags with
-            obj_kind =
-              Obj_type.map_dict (fun dict -> { dict with dict_polarity = polarity }) flags.obj_kind;
-          }
-        in
-        let call = None in
-        let id = Context.generate_property_map cx props in
-        let proto = ObjProtoT reason in
-        Slice_utils.mk_object_type
-          ~def_reason:r
-          ~exact_reason:None
-          ~invalidate_aliases:true
-          ~interface:None
-          ~reachable_targs
-          flags
-          call
-          id
-          proto
-          generics
-      in
-      let widen cx trace ~use_op ~obj_reason ~slice ~widened_id ~tout =
-        let rec is_subset (x, y) =
-          match (x, y) with
-          | (UnionT (_, rep), u) -> UnionRep.members rep |> List.for_all (fun t -> is_subset (t, u))
-          | (t, UnionT (_, rep)) -> UnionRep.members rep |> List.exists (fun u -> is_subset (t, u))
-          | (MaybeT (_, t1), MaybeT (_, t2)) -> is_subset (t1, t2)
-          | ( OptionalT { reason = _; type_ = t1; use_desc = _ },
-              OptionalT { reason = _; type_ = t2; use_desc = _ }
-            ) ->
-            is_subset (t1, t2)
-          | (DefT (_, (NullT | VoidT)), MaybeT _) -> true
-          | (DefT (_, VoidT), OptionalT _) -> true
-          | (t1, MaybeT (_, t2)) -> is_subset (t1, t2)
-          | (t1, OptionalT { reason = _; type_ = t2; use_desc = _ }) -> is_subset (t1, t2)
-          | (t1, t2) -> quick_subtype t1 t2
-        in
-        let widen_type cx trace reason ~use_op t1 t2 =
-          match (t1, t2) with
-          | (t1, t2) when is_subset (t2, t1) -> (t1, false)
-          | (OpenT (r1, _), OpenT (r2, _))
-            when Slice_utils.(is_widened_reason_desc r1 && is_widened_reason_desc r2) ->
-            rec_unify cx trace ~use_op t1 t2;
-            (t1, false)
-          | (OpenT (r, _), t2) when Slice_utils.is_widened_reason_desc r ->
-            rec_flow_t cx trace ~use_op (t2, t1);
-            (t1, false)
-          | (t1, t2) ->
-            let reason = replace_desc_new_reason (RWidenedObjProp (desc_of_reason reason)) reason in
-            ( Tvar.mk_where cx reason (fun t ->
-                  rec_flow_t cx trace ~use_op (t1, t);
-                  rec_flow_t cx trace ~use_op (t2, t)
-              ),
-              true
-            )
-        in
-        let widest = Context.spread_widened_types_get_widest cx widened_id in
-        match widest with
-        | None ->
-          Context.spread_widened_types_add_widest cx widened_id slice;
-          rec_flow_t cx trace ~use_op (mk_object cx obj_reason slice, tout)
-        | Some widest ->
-          let widest_pmap = widest.props in
-          let widest_dict = Obj_type.get_dict_opt widest.Object.flags.obj_kind in
-          let slice_dict = Obj_type.get_dict_opt slice.Object.flags.obj_kind in
-          let new_pmap = slice.props in
-          let pmap_and_changed =
-            NameUtils.Map.merge
-              (fun propname p1 p2 ->
-                let p1 = get_prop widest.Object.reason p1 widest_dict in
-                let p2 = get_prop slice.Object.reason p2 slice_dict in
-                match (p1, p2) with
-                | (None, None) -> None
-                | (None, Some ({ Object.is_method = m; _ } as t)) ->
-                  let (t', opt, missing_prop) = type_optionality_and_missing_property t in
-                  let t' =
-                    if opt && not missing_prop then
-                      optional t'
-                    else
-                      possibly_missing_prop propname widest.Object.reason t'
-                  in
-                  Some ((t', m), true)
-                | (Some ({ Object.is_method = m; _ } as t), None) ->
-                  let (t', opt, missing_prop) = type_optionality_and_missing_property t in
-                  let t' =
-                    if opt && not missing_prop then
-                      optional t'
-                    else
-                      possibly_missing_prop propname slice.Object.reason t'
-                  in
-                  Some ((t', m), not opt)
-                | ( Some ({ Object.is_method = m1; _ } as t1),
-                    Some ({ Object.is_method = m2; _ } as t2)
-                  ) ->
-                  let (t1', opt1, missing_prop1) = type_optionality_and_missing_property t1 in
-                  let (t2', opt2, missing_prop2) = type_optionality_and_missing_property t2 in
-                  let (t, changed) = widen_type cx trace obj_reason ~use_op t1' t2' in
-                  if opt1 || opt2 then
-                    Some
-                      ( ( make_optional_with_possible_missing_props
-                            propname
-                            missing_prop1
-                            missing_prop2
-                            widest.Object.reason
-                            t,
-                          m1 || m2
-                        ),
-                        changed
-                      )
-                  else
-                    Some ((t, m1 || m2), changed))
-              widest_pmap
-              new_pmap
-          in
-          let (pmap', changed) =
-            NameUtils.Map.fold
-              (fun k (t, changed) (acc_map, acc_changed) ->
-                (NameUtils.Map.add k t acc_map, changed || acc_changed))
-              pmap_and_changed
-              (NameUtils.Map.empty, false)
-          in
-          (* TODO: (jmbrown) we can be less strict here than unifying. It may be possible to
-           * also merge the dictionary types *)
-          let (dict, changed) =
-            match (widest_dict, slice_dict) with
-            | (Some d1, Some d2) ->
-              rec_unify cx trace ~use_op d1.key d2.key;
-              rec_unify cx trace ~use_op d1.value d2.value;
-              (Some d1, changed)
-            | (Some _, None) -> (None, true)
-            | _ -> (None, changed)
-          in
-          let (exact, changed) =
-            if
-              Obj_type.is_exact widest.Object.flags.obj_kind
-              && not (Obj_type.is_exact slice.Object.flags.obj_kind)
-            then
-              (false, true)
-            else
-              ( Obj_type.is_exact widest.Object.flags.obj_kind
-                && Obj_type.is_exact slice.Object.flags.obj_kind,
-                changed
-              )
-          in
-          if not changed then
-            ()
-          else
-            let obj_kind =
-              match (exact, dict) with
-              | (_, Some d) -> Indexed d
-              | (true, _) -> Exact
-              | _ -> Inexact
-            in
-            let flags = { obj_kind; frozen = false; react_dro = None } in
-            let props =
-              NameUtils.Map.map
-                (fun (t, m) ->
-                  {
-                    Object.prop_t = t;
-                    is_own = true;
-                    is_method = m;
-                    polarity = Polarity.Neutral;
-                    key_loc = None;
-                  })
-                pmap'
-            in
-            let slice' =
-              {
-                Object.reason = slice.Object.reason;
-                props;
-                flags;
-                generics = widest.generics;
-                interface = None;
-                reachable_targs = slice.Object.reachable_targs;
-              }
-            in
-            Context.spread_widened_types_add_widest cx widened_id slice';
-            let obj = mk_object cx slice.Object.reason slice' in
-            rec_flow_t cx trace ~use_op (obj, tout)
-      in
-      fun widened_id cx trace use_op reason x tout ->
-        Nel.iter (fun slice -> widen cx trace ~use_op ~obj_reason:reason ~slice ~widened_id ~tout) x
-    in
-
     (****************)
     (* React Config *)
     (****************)
@@ -803,7 +565,6 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
       | Partial -> object_partial
       | Required -> object_required
       | ObjectRep -> object_rep
-      | ObjectWiden id -> object_widen id
       | Object.ReactCheckComponentConfig pmap -> check_component_config pmap
       | Object.ObjectMap { prop_type; mapped_type_flags; selected_keys_opt } ->
         object_map prop_type mapped_type_flags selected_keys_opt

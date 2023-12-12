@@ -23,8 +23,6 @@ module type C = sig
 
   val obj_test_proto : Context.t -> Reason.t -> Type.t -> Type.t
 
-  val widen_obj_type : Context.t -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
-
   val mixin : Context.t -> Reason.t -> Type.t -> Type.t
 
   val subtype_check : Context.t -> Type.t -> Type.t -> unit

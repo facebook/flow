@@ -32,8 +32,6 @@ module type C = sig
 
   val obj_test_proto : Context.t -> Reason.t -> Type.t -> Type.t
 
-  val widen_obj_type : Context.t -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
-
   val mixin : Context.t -> Reason.t -> Type.t -> Type.t
 
   val subtype_check : Context.t -> Type.t -> Type.t -> unit
@@ -2246,12 +2244,11 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                 (t, ts, Some head_slice)
               | _ -> failwith "Invariant Violation: spread list has two slices in a row"
             in
-            let l = ConsGen.widen_obj_type cx ~use_op:unknown_use reason t in
             mk_type_destructor
               cx
               unknown_use
               reason
-              l
+              t
               (SpreadType (target, ts, head_slice))
               (Type.Eval.generate_id ())
           )

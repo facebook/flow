@@ -241,7 +241,6 @@ type 'loc virtual_reason_desc =
   | RReactSFC
   | RReactConfig
   | RPossiblyMissingPropFromObj of name * 'loc virtual_reason_desc
-  | RWidenedObjProp of 'loc virtual_reason_desc
   | RUnionBranching of 'loc virtual_reason_desc * int
   | RUninitialized
   | RPossiblyUninitialized
@@ -350,7 +349,6 @@ let rec map_desc_locs f = function
   | (RReactSFC | RReactRef | RReactConfig) as r -> r
   | RPossiblyMissingPropFromObj (propname, desc) ->
     RPossiblyMissingPropFromObj (propname, map_desc_locs f desc)
-  | RWidenedObjProp desc -> RWidenedObjProp (map_desc_locs f desc)
   | RUnionBranching (desc, i) -> RUnionBranching (map_desc_locs f desc, i)
   | RPropsOfComponent desc -> RPropsOfComponent (map_desc_locs f desc)
   | RInstanceOfComponent desc -> RInstanceOfComponent (map_desc_locs f desc)
@@ -762,7 +760,6 @@ let rec string_of_desc = function
       "possibly missing property `%s` in %s"
       (display_string_of_name propname)
       (string_of_desc desc)
-  | RWidenedObjProp desc -> string_of_desc desc
   | RUnionBranching (desc, _) -> string_of_desc desc
   | RUninitialized -> "uninitialized variable"
   | RPossiblyUninitialized -> "possibly uninitialized variable"
@@ -1559,7 +1556,6 @@ let classification_of_reason r =
   | RReactSFC
   | RReactConfig
   | RPossiblyMissingPropFromObj _
-  | RWidenedObjProp _
   | RUnionBranching _
   | REnum _
   | REnumRepresentation _

@@ -282,9 +282,6 @@ module type S = sig
     spread_resolve ->
     unit
 
-  val widen_obj_type :
-    Context.t -> ?trace:Type.trace -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
-
   val possible_concrete_types_for_inspection : Context.t -> Reason.reason -> Type.t -> Type.t list
 
   val singleton_concrete_type_for_inspection : Context.t -> Reason.reason -> Type.t -> Type.t

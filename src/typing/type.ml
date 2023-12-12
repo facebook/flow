@@ -2950,7 +2950,6 @@ and Object : sig
     | ReactConfig of ReactConfig.state
     | ReactCheckComponentConfig of Property.t NameUtils.Map.t
     | ObjectRep
-    | ObjectWiden of ident
     | ObjectMap of {
         prop_type: TypeTerm.t;
         mapped_type_flags: TypeTerm.mapped_type_flags;
@@ -3438,7 +3437,6 @@ module AConstraint = struct
             | Rest _ -> "rest"
             | ReactConfig _ -> "react config"
             | ObjectRep -> "object"
-            | ObjectWiden _ -> "widening"
             | ObjectMap _ -> "mapped type"
           )
       in

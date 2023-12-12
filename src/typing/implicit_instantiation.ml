@@ -394,9 +394,12 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       t_of_use_t cx seen tvar u
     | ObjKitT (_, r, _, tool, tout) ->
       (match tool with
-      | Object.(
-          ( ReadOnly | Partial | Required | ObjectRep | ObjectWiden _ | Object.ReactConfig _
-          | Object.ReactCheckComponentConfig _ )) ->
+      | Object.ReadOnly
+      | Object.Partial
+      | Object.Required
+      | Object.ObjectRep
+      | Object.ReactConfig _
+      | Object.ReactCheckComponentConfig _ ->
         identity_reverse_upper_bound cx seen tvar r tout
       | Object.ObjectMap _ -> UpperEmpty (* TODO: reverse mapped types *)
       | Object.Spread (_, { Object.Spread.todo_rev; acc; _ }) ->

@@ -619,7 +619,6 @@ and dump_use_t_ (depth, tvars) cx t =
         | Partial -> "Partial"
         | Required -> "Required"
         | ObjectRep -> "ObjectRep"
-        | ObjectWiden id -> spf "ObjectWiden (%s)" (string_of_int id)
         | Spread (options, state) -> spread options state
         | Rest (options, state) -> rest options state
         | ReactConfig state -> react_props state
@@ -1831,7 +1830,6 @@ let dump_error_message =
     | EInvalidDeclaration { declaration = r; _ } -> spf "EInvalidDeclaration %s" (dump_reason cx r)
     | EImplicitInstantiationUnderconstrainedError { use_op; _ } ->
       spf "EImplicitInstantiationUnderconstrainedError (%s)" (string_of_use_op use_op)
-    | EImplicitInstantiationWidenedError _ -> "EImplicitInstantiationWidenedError"
     | EClassToObject _ -> "EClassToObject"
     | EMethodUnbinding { use_op; reason_prop; reason_op } ->
       spf
