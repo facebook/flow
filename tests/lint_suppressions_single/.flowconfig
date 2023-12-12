@@ -8,3 +8,5 @@ sketchy-null-bool=error
 sketchy-null-string=error
 sketchy-null-number=error
 sketchy-null-mixed=error
+deprecated-type=error
+deprecated-type-dollar-objmap=off
