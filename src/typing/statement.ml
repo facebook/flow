@@ -198,8 +198,7 @@ module Make
         in
         let tout = Tvar.mk cx reason in
         let use_op = Op (ObjectSpread { op = reason }) in
-        let l = Flow.widen_obj_type cx ~use_op reason t in
-        Flow.flow cx (l, ObjKitT (use_op, reason, tool, Type.Object.Spread (target, state), tout));
+        Flow.flow cx (t, ObjKitT (use_op, reason, tool, Type.Object.Spread (target, state), tout));
         if obj_key_autocomplete acc then
           let (_, lazy_hint) = Type_env.get_hint cx (Reason.loc_of_reason reason) in
           lazy_hint reason |> Type_hint.with_hint_result ~ok:Base.Fn.id ~error:(fun () -> tout)

@@ -578,7 +578,7 @@ let spread_mk_object
 let object_spread
     (type a)
     ~dict_check
-    ~widen_obj_type
+    ~widen_obj_type:_
     ~add_output
     ~(return : _ -> _ -> Type.t -> a)
     ~(recurse : _ -> Type.use_op -> Reason.t -> Object.resolve_tool -> Object.tool -> _ -> a)
@@ -632,9 +632,8 @@ let object_spread
         let state =
           { todo_rev; acc = resolved :: acc; spread_id; union_reason = None; curr_resolve_idx }
         in
-        let l = widen_obj_type cx ~use_op reason t in
         let tool = Object.Spread (options, state) in
-        recurse cx use_op reason resolve_tool tool l
+        recurse cx use_op reason resolve_tool tool t
       | Slice operand_slice :: todo_rev ->
         let acc = resolved :: acc in
         continue acc (InlineSlice operand_slice) (curr_resolve_idx + 1) todo_rev
