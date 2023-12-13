@@ -28,7 +28,7 @@ let dedent_trim str =
 
 let parse_options =
   let open Parser_env in
-  Some { default_parse_options with enums = true }
+  Some { default_parse_options with enums = true; components = true }
 
 let parse_and_pack_module ~strict sig_opts contents =
   let (ast, _errors) = Parser_flow.program ~parse_options contents in
@@ -749,3 +749,18 @@ let%expect_test "lib_value" =
   [%expect {|
     [(Named "foo")]
   |}]
+
+let%expect_test "react_dollar_ac" =
+  print_module {|
+    const x: React$AbstractComponent<{}> = null;
+    export default x;
+  |};
+  [%expect{| [(Default (Some "x")); (DefaultType (Some "x"))] |}]
+
+let%expect_test "react_dot_ac" =
+  print_module {|
+    import * as React from 'react';
+    const x: React.AbstractComponent<{}> = null;
+    export default x;
+  |};
+  [%expect{| [(Default (Some "x")); (DefaultType (Some "x"))] |}]

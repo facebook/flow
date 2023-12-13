@@ -11,3 +11,7 @@ const polyElemBad: Poly<number> = <Poly prop="STRING" />; // ERROR
 type PolyNoTargs = Poly; // ERROR
 
 export type AliasedFoo = Foo;
+
+export const MemoFoo = (React.memo(Foo): React.AbstractComponent<React.PropsOf<Foo>, React.RefOf<Foo>, renders Foo>);
+const FooElem: renders Foo = <MemoFoo />;
+const MemoFooElem: MemoFoo = <MemoFoo />;

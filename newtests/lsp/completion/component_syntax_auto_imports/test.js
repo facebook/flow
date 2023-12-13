@@ -27,6 +27,8 @@ module.exports = (suite(
           '__fixtures__/FooBarBaz1.js',
           '__fixtures__/FooBarBaz2.js',
           '__fixtures__/FooBarBaz3.js',
+          '__fixtures__/FooBarBaz4.js',
+          '__fixtures__/FooBarBaz5.js',
         ),
         addCode(`FooBarBaz`),
         lspStartAndConnect(),
@@ -44,7 +46,12 @@ module.exports = (suite(
         ),
       ]),
       test('auto import type', [
-        addFiles('__fixtures__/FooBarBaz1.js', '__fixtures__/FooBarBaz2.js'),
+        addFiles(
+          '__fixtures__/FooBarBaz1.js',
+          '__fixtures__/FooBarBaz2.js',
+          '__fixtures__/FooBarBaz4.js',
+          '__fixtures__/FooBarBaz5.js',
+        ),
         addCode(`type F = FooBarBaz`),
         lspStartAndConnect(),
         lspRequestAndWaitUntilResponse('textDocument/completion', {

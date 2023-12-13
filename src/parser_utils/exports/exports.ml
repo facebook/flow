@@ -108,9 +108,14 @@ module Eval = struct
       (* TODO? *)
       Nothing
 
-  and tyref type_sig seen (r : 'a tyref) : 'a evaled =
-    match r with
-    | Qualified { name = _name; qualification; _ } ->
+  and tyref type_sig seen ?name (r : 'a tyref) : 'a evaled =
+    match (r, name) with
+    (* This case is a heuristic to identify React.AbstractComponent exports, which can be used as types *)
+    | ( Qualified { name = "AbstractComponent"; qualification = Unqualified (RemoteRef _); _ },
+        Some name
+      ) ->
+      ComponentDecl name
+    | (Qualified { name = _name; qualification; _ }, _) ->
       (match tyref type_sig seen qualification with
       | Annot _ ->
         (* TODO: get `_qual._name` *)
@@ -122,7 +127,7 @@ module Eval = struct
       | EnumDecl n -> EnumDecl n
       | ComponentDecl n -> ComponentDecl n
       | Nothing -> Nothing)
-    | Unqualified r -> ref type_sig seen r
+    | (Unqualified r, _) -> ref type_sig seen r
 
   and ref type_sig seen (r : 'loc packed_ref) : 'loc evaled =
     let (dupe, seen) = seen_ref seen r in
@@ -163,10 +168,14 @@ module Eval = struct
     | Value x -> Value (x, name)
     | Annot (Typeof { qname = [typeof_name]; _ } as x) ->
       Annot (x, Some (Base.Option.value ~default:typeof_name name))
+    | Annot (ReactAbstractComponent _ as x) ->
+      (match name with
+      | Some name -> ComponentDecl name
+      | _ -> Annot (x, name))
     | Annot x -> Annot (x, name)
     | Ref r -> ref type_sig seen r
     | TyRef r -> tyref type_sig seen r
-    | TyRefApp { name; _ } -> tyref type_sig seen name
+    | TyRefApp { name = tyref_name; _ } -> tyref type_sig seen ?name tyref_name
     | Eval (_, x, op) -> eval type_sig seen x op
     | Pattern index -> pattern type_sig seen (pattern_of_index type_sig index)
     | Require _

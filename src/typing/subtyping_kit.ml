@@ -1889,9 +1889,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (DefT (enum_reason, EnumT _), DefT (reason, TypeT (_, t))) ->
       rec_unify cx trace ~use_op (AnyT.error reason) t;
       add_output cx ~trace Error_message.(EEnumMemberUsedAsType { reason; enum_reason })
-    | ( DefT (reasonl, ReactAbstractComponentT { component_kind = Nominal _; _ }),
-        DefT (r, TypeT (_, t))
-      ) ->
+    | (DefT (reasonl, ReactAbstractComponentT _), DefT (r, TypeT (_, t))) ->
       (* a component syntax value annotation becomes an element of that component *)
       let elem =
         let props =

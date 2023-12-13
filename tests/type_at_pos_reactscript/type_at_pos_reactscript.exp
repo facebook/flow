@@ -46,6 +46,11 @@ Flags:
 element of component Foo
 component.js:17:19,17:21
 
+component.js:22:17
+Flags:
+element of component x
+component.js:22:17,22:17
+
 render_types.js:1:6
 Flags:
 type X = renders null

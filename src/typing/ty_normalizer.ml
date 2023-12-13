@@ -2096,6 +2096,14 @@ module Make (I : INPUT) : S = struct
           enum_decl ~env reason
         | DefT (reason, ReactAbstractComponentT { component_kind = Nominal (_, name); _ }) ->
           component_decl ~env None name reason
+        | DefT (_, ReactAbstractComponentT { component_kind = Structural; _ })
+          when Env.(env.options.toplevel_is_type_identifier_reference) ->
+          let orig_reason = TypeUtil.reason_of_t orig_t in
+          (match desc_of_reason orig_reason with
+          | RIdentifier (OrdinaryName name) -> component_decl ~env None name orig_reason
+          | _ ->
+            let%map t = TypeConverter.convert_t ~env orig_t in
+            Ty.Type t)
         (* Monomorphic Type Aliases *)
         | DefT (r, TypeT (kind, t)) ->
           let r =

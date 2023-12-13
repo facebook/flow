@@ -4,8 +4,9 @@ import type {
   Foo as FooType,
   Poly as PolyType,
   AliasedFoo,
+  MemoFoo as MemoFooType,
 } from './component_in_type_position';
-import {Foo, Poly} from './component_in_type_position';
+import {Foo, Poly, MemoFoo} from './component_in_type_position';
 
 const fooElem: FooType = <Foo />;
 const polyElem: PolyType<number> = <Poly prop={3} />;
@@ -18,3 +19,8 @@ component Bar() {
 
 const aliasedFoo: AliasedFoo = fooElem;
 aliasedFoo as number; // ERROR
+
+const memoFoo1: MemoFooType =  <MemoFoo />;
+const memoFoo2: MemoFoo =  <MemoFoo />;
+const errMemoFoo: MemoFooType = 3; // ERROR
+const errMemoFooType: MemoFooType = 3; // ERROR

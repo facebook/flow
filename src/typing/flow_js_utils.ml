@@ -1223,11 +1223,8 @@ module ImportTypeTKit = struct
     | DefT (enum_reason, EnumObjectT enum) ->
       let enum_type = mk_enum_type enum_reason enum in
       Some (DefT (reason, TypeT (ImportEnumKind, enum_type)))
-    | DefT (_, ReactAbstractComponentT { component_kind = Nominal _; _ }) -> Some t
-    | DefT
-        (_, PolyT { t_out = DefT (_, ReactAbstractComponentT { component_kind = Nominal _; _ }); _ })
-      ->
-      Some t
+    | DefT (_, ReactAbstractComponentT _) -> Some t
+    | DefT (_, PolyT { t_out = DefT (_, ReactAbstractComponentT _); _ }) -> Some t
     | DefT (_, TypeT _) -> Some t
     | AnyT _ -> Some t
     | _ -> None

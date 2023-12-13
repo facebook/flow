@@ -16,3 +16,8 @@ type ConcretizedPolyComponent = Poly<string> extends React$Element<infer C> ? C 
 //        ^
 type FooElement = Foo;
 //                 ^
+
+declare const x: React$AbstractComponent<{}>;
+
+type xElement = x;
+//              ^
