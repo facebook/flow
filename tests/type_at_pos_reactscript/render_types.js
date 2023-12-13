@@ -17,3 +17,6 @@ type MaybeRenders = renders? Foo;
 
 type StarRenders = renders* Foo;
 //   ^
+
+type RendersElement = renders React$Element<typeof Foo>;
+//   ^
