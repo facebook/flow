@@ -8,23 +8,23 @@
 
 # OVERVIEW
 #
-# a.js and b.js form a cycle, so that b.js is both a dependency and
-# a dependent of a.js. everything else are dependents of b.js.
+# a.js and b.js form a cycle, so that b.js is both a signature dependency and a
+# signature dependent of a.js. everything else are dependents of b.js.
 #
-# If we check dependencies of a.js, we'll merge and check b.js. Then
-# when we check dependents of a.js, we'll merge and check the other test files,
-# but hit a recheck optimization because the dependency (b.js) is already checked
-# and unchanged.
+# If we check dependencies of a.js, we'll merge b.js. Then when we
+# check dependents of a.js, we'll merge and check the other test files, but hit
+# a recheck optimization because the dependency (b.js) is already checked and
+# unchanged.
 #
-# Suppressions are currently discovered during merge, so if we skip
-# checking we never discover the errors that are being suppressed and could end
-# up warning about an unused suppression. On the other hand, signature
-# verification errors occur during parsing and those also can be suppressed.
-# They should only appear on actually-checked files (not "checked" files that
-# get skipped due to recheck opts).
+# Suppressions are currently discovered during merge, so if we skip checking we
+# never discover the errors that are being suppressed and could end up warning
+# about an unused suppression. On the other hand, signature verification errors
+# occur during parsing and those also can be suppressed.  They should only
+# appear on actually-checked files (not "checked" files that get skipped due to
+# recheck opts).
 
 # check-contents a.js, which does a dependencies-only check. this merges
-# and checks a.js and b.js
+# a.js and b.js and checks only a.js
 printf "Status after check-contents a.js:\n"
 assert_ok "$FLOW" check-contents a.js < a.js
 
