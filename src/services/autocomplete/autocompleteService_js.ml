@@ -1312,15 +1312,7 @@ let autocomplete_unqualified_type
            | Ok _ -> (items_rev, errors_to_log))
          (items_rev, errors_to_log)
   in
-  let items_rev =
-    if imports_ranked_usage then
-      (* to maintain the order of the autoimports, we sort the non-imports
-          here, and then don't sort the whole list later. *)
-      filter_by_token_and_sort_rev token items_rev
-    else
-      items_rev
-  in
-  let (items_rev, is_incomplete) =
+  let (items_rev, is_incomplete, sorted) =
     if imports then
       let locals =
         let set = set_of_locals ~f:(fun ((name, _aloc), _ty) -> name) type_identifiers in
@@ -1335,6 +1327,14 @@ let autocomplete_unqualified_type
         Export_search.search_types ~options before env.ServerEnv.exports
       in
       let items_rev =
+        if imports_ranked_usage then
+          (* to maintain the order of the autoimports, we sort the non-imports
+              here, and then don't sort the whole list later. *)
+          filter_by_token_and_sort_rev token items_rev
+        else
+          items_rev
+      in
+      let items_rev =
         append_completion_items_of_autoimports
           ~options
           ~reader
@@ -1347,12 +1347,18 @@ let autocomplete_unqualified_type
           auto_imports
           items_rev
       in
-      (items_rev, is_incomplete)
+      let items_rev =
+        if imports_ranked_usage then
+          items_rev
+        else
+          filter_by_token_and_sort_rev token items_rev
+      in
+      (items_rev, is_incomplete, true)
     else
-      (items_rev, false)
+      (items_rev, false, false)
   in
   let items_rev =
-    if imports_ranked_usage then
+    if sorted then
       items_rev
     else
       filter_by_token_and_sort_rev token items_rev
