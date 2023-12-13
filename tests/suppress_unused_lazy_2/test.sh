@@ -11,6 +11,7 @@ assert_ok "$FLOW" force-recheck --focus dependency.js
 
 # finds an error in cycle_b (and 1 is suppressed)
 assert_errors "$FLOW" status
+show_skipping_stats "$FLOW_LOG_FILE"
 
 # change dependency's signature, which causes cycle_a and cycle_b to
 # recheck. cycle_a is a direct dependent so it gets both merged and
@@ -22,3 +23,4 @@ assert_ok "$FLOW" force-recheck dependency.js
 
 # asserts that the errors in cycle_b are still returned.
 assert_errors "$FLOW" status
+show_skipping_stats "$FLOW_LOG_FILE"
