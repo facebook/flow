@@ -49,6 +49,7 @@ let make_options_flags
     merge_timeout;
     munge_underscore_members;
     no_flowlib;
+    precise_dependents = Some true;
     profile;
     quiet;
     strip_root;
