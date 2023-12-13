@@ -18,7 +18,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 "Perturb" a dependent that depends on the warmed up, but unchanged dependency.
 No errors!
 
-The Flow server is currently in lazy mode and is only checking 16/17 files.
+The Flow server is currently in lazy mode and is only checking 15/17 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 Test that the perturbed dependent is actually known (expecting a crash otherwise).

@@ -7,8 +7,11 @@
 assert_ok "$FLOW" status --strip-root
 
 # We should drive merge based on the sig dependency graph, not the implementation dependency graph.
-# Therefore, only `foo.js` and `sig-dependent.js` should be considered for merge. At the time that
-# this test is being written, we consider all six files for merge. This results in unnecessary work.
+# Therefore, only `foo.js` and `sig-dependent.js` should be considered for merge.
+#
+# Currently, we also consider `impl-dependent.js` and `impl-dep-of-sig-dep.js`, because we need to
+# check these files and having the to-check set be a subset of the to-merge is simpler, and merging
+# is not expensive anyway.
 
 printf "\\nChanging the exported type should produce downstream errors.\\n"
 printf "We should recheck all files, but should not remerge files that are not recursive sig "
