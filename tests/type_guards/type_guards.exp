@@ -804,8 +804,8 @@ Error --------------------------------------------------------------------------
                                         ^^^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/core.js:1774:11
-   1774| interface Generator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1772:11
+   1772| interface Generator<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [1]
 
 
@@ -819,8 +819,8 @@ it into an object and attempt to use it as a subtype of an interface. [incompati
                                         ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1769:11
-   1769| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1767:11
+   1767| interface $Iterable<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [2]
 
 
@@ -833,8 +833,8 @@ Cannot return `(typeof x) == "number"` because `Generator` [1] is incompatible w
                   ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1774:11
-   1774| interface Generator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1772:11
+   1772| interface Generator<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [1]
    invalid.js:19:32
      19| function *generator(x: mixed): x is number { // error
@@ -875,8 +875,8 @@ Cannot return `(typeof x) == "number"` because `Promise` [1] is incompatible wit
                   ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1943:15
-   1943| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:1941:15
+   1941| declare class Promise<+R = mixed> {
                        ^^^^^^^ [1]
    invalid.js:28:33
      28| async function async(x: mixed): x is number { // error

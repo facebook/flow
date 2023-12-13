@@ -45,8 +45,8 @@ References:
    forof.js:23:26
      23| function testString(str: string): void {
                                   ^^^^^^ [1]
-   <BUILTINS>/core.js:1769:11
-   1769| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1767:11
+   1767| interface $Iterable<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [2]
 
 
@@ -59,8 +59,8 @@ Cannot cast `elem` to number because tuple type [1] is incompatible with number 
              ^^^^
 
 References:
-   <BUILTINS>/core.js:1828:28
-   1828|     @@iterator(): Iterator<[K, V]>;
+   <BUILTINS>/core.js:1826:28
+   1826|     @@iterator(): Iterator<[K, V]>;
                                     ^^^^^^ [1]
    forof.js:32:13
      32|     elem as number; // Error - tuple ~> number

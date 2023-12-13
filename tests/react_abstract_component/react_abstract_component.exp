@@ -114,8 +114,8 @@ Cannot return `x` because `$Iterable` [1] does not render number [2]. [incompati
                   ^
 
 References:
-   <BUILTINS>/core.js:1772:21
-   1772| type Iterable<+T> = $Iterable<T,void,void>;
+   <BUILTINS>/core.js:1770:21
+   1770| type Iterable<+T> = $Iterable<T,void,void>;
                              ^^^^^^^^^^^^^^^^^^^^^^ [1]
    arity.js:25:43
      25| ): React$AbstractComponent<empty, number, number> {

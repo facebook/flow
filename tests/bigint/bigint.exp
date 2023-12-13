@@ -30,23 +30,23 @@ Cannot call `BigInt` with `null` bound to `value` because: [incompatible-call]
                 ^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:2744:18
-   2744|   static (value: boolean | string | number | bigint | interface {} | $ReadOnlyArray<mixed>): bigint;
+   <BUILTINS>/core.js:2742:18
+   2742|   static (value: boolean | string | number | bigint | interface {} | $ReadOnlyArray<mixed>): bigint;
                           ^^^^^^^ [2]
-   <BUILTINS>/core.js:2744:28
-   2744|   static (value: boolean | string | number | bigint | interface {} | $ReadOnlyArray<mixed>): bigint;
+   <BUILTINS>/core.js:2742:28
+   2742|   static (value: boolean | string | number | bigint | interface {} | $ReadOnlyArray<mixed>): bigint;
                                     ^^^^^^ [3]
-   <BUILTINS>/core.js:2744:37
-   2744|   static (value: boolean | string | number | bigint | interface {} | $ReadOnlyArray<mixed>): bigint;
+   <BUILTINS>/core.js:2742:37
+   2742|   static (value: boolean | string | number | bigint | interface {} | $ReadOnlyArray<mixed>): bigint;
                                              ^^^^^^ [4]
-   <BUILTINS>/core.js:2744:46
-   2744|   static (value: boolean | string | number | bigint | interface {} | $ReadOnlyArray<mixed>): bigint;
+   <BUILTINS>/core.js:2742:46
+   2742|   static (value: boolean | string | number | bigint | interface {} | $ReadOnlyArray<mixed>): bigint;
                                                       ^^^^^^ [5]
-   <BUILTINS>/core.js:2744:55
-   2744|   static (value: boolean | string | number | bigint | interface {} | $ReadOnlyArray<mixed>): bigint;
+   <BUILTINS>/core.js:2742:55
+   2742|   static (value: boolean | string | number | bigint | interface {} | $ReadOnlyArray<mixed>): bigint;
                                                                ^^^^^^^^^^^^ [6]
-   <BUILTINS>/core.js:2744:70
-   2744|   static (value: boolean | string | number | bigint | interface {} | $ReadOnlyArray<mixed>): bigint;
+   <BUILTINS>/core.js:2742:70
+   2742|   static (value: boolean | string | number | bigint | interface {} | $ReadOnlyArray<mixed>): bigint;
                                                                               ^^^^^^^^^^^^^^^^^^^^^ [7]
 
 
