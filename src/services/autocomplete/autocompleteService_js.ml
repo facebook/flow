@@ -657,58 +657,6 @@ let is_reserved name kind =
   else
     Parser_env.is_reserved_type name
 
-let append_completion_items_of_autoimports
-    ~options
-    ~reader
-    ~ast
-    ~ac_loc
-    ~locals
-    ~imports_ranked_usage
-    ~show_ranking_info
-    ~edit_locs
-    auto_imports
-    acc =
-  let src_dir = src_dir_of_loc ac_loc in
-  Base.List.foldi
-    ~init:acc
-    ~f:(fun i acc { Export_search.search_result = auto_import; score; weight } ->
-      let rank =
-        (* after builtins *)
-        if imports_ranked_usage then
-          (* set a unique sort text per item *)
-          200 + i
-        else
-          (* if not sorted server-side, use a constant sort text *)
-          200
-      in
-      let { Export_search.name; kind; source = _ } = auto_import in
-      if is_reserved name kind || Base.Hash_set.mem locals name then
-        (* exclude reserved words and already-defined locals, because they can't be imported
-           without aliasing them, which we can't do automatically in autocomplete. for example,
-           `import {null} from ...` is invalid; and if we already have `const foo = ...` then
-           we can't auto-import another value named `foo`. *)
-        acc
-      else
-        let ranking_info =
-          if show_ranking_info then
-            Some (Printf.sprintf "Score: %d\nUses: %d" score weight)
-          else
-            None
-        in
-        let item =
-          completion_item_of_autoimport
-            ~options
-            ~reader
-            ~src_dir
-            ~ast
-            ~edit_locs
-            ~ranking_info
-            auto_import
-            rank
-        in
-        item :: acc)
-    auto_imports
-
 let compare_completion_items a b =
   let open ServerProt.Response.Completion in
   let rankCompare =
@@ -759,6 +707,77 @@ let filter_by_token_and_sort_rev token items =
     )
     |> Base.List.stable_sort ~compare:(fun a b -> Base.Int.compare (fst b) (fst a))
     |> Base.List.rev_map ~f:snd
+
+let append_completion_items_of_autoimports
+    ~options
+    ~reader
+    ~ast
+    ~ac_loc
+    ~locals
+    ~imports_ranked_usage
+    ~show_ranking_info
+    ~edit_locs
+    auto_imports
+    token
+    items_rev =
+  let items_rev =
+    if imports_ranked_usage then
+      (* to maintain the order of the autoimports, we sort the non-imports
+         here, and then don't sort the whole list later. *)
+      filter_by_token_and_sort_rev token items_rev
+    else
+      items_rev
+  in
+  let items_rev =
+    let src_dir = src_dir_of_loc ac_loc in
+    Base.List.foldi
+      ~init:items_rev
+      ~f:(fun i acc { Export_search.search_result = auto_import; score; weight } ->
+        let rank =
+          (* after builtins *)
+          if imports_ranked_usage then
+            (* set a unique sort text per item *)
+            200 + i
+          else
+            (* if not sorted server-side, use a constant sort text *)
+            200
+        in
+        let { Export_search.name; kind; source = _ } = auto_import in
+        if is_reserved name kind || Base.Hash_set.mem locals name then
+          (* exclude reserved words and already-defined locals, because they can't be imported
+             without aliasing them, which we can't do automatically in autocomplete. for example,
+             `import {null} from ...` is invalid; and if we already have `const foo = ...` then
+             we can't auto-import another value named `foo`. *)
+          acc
+        else
+          let ranking_info =
+            if show_ranking_info then
+              Some (Printf.sprintf "Score: %d\nUses: %d" score weight)
+            else
+              None
+          in
+          let item =
+            completion_item_of_autoimport
+              ~options
+              ~reader
+              ~src_dir
+              ~ast
+              ~edit_locs
+              ~ranking_info
+              auto_import
+              rank
+          in
+          item :: acc)
+      auto_imports
+  in
+  let items_rev =
+    if imports_ranked_usage then
+      (* when ranked imports are enabled, don't fuzzy score them *)
+      items_rev
+    else
+      filter_by_token_and_sort_rev token items_rev
+  in
+  items_rev
 
 let autocomplete_id
     ~env
@@ -904,14 +923,6 @@ let autocomplete_id
           Export_search.search_values ~options before env.ServerEnv.exports
         in
         let items_rev =
-          if imports_ranked_usage then
-            (* to maintain the order of the autoimports, we sort the non-imports
-               here, and then don't sort the whole list later. *)
-            filter_by_token_and_sort_rev token items_rev
-          else
-            items_rev
-        in
-        let items_rev =
           append_completion_items_of_autoimports
             ~options
             ~reader
@@ -922,14 +933,8 @@ let autocomplete_id
             ~show_ranking_info
             ~edit_locs
             auto_imports
+            token
             items_rev
-        in
-        let items_rev =
-          if imports_ranked_usage then
-            (* when ranked imports are enabled, don't fuzzy score them *)
-            items_rev
-          else
-            filter_by_token_and_sort_rev token items_rev
         in
         (items_rev, is_incomplete, true)
     else
@@ -1327,14 +1332,6 @@ let autocomplete_unqualified_type
         Export_search.search_types ~options before env.ServerEnv.exports
       in
       let items_rev =
-        if imports_ranked_usage then
-          (* to maintain the order of the autoimports, we sort the non-imports
-              here, and then don't sort the whole list later. *)
-          filter_by_token_and_sort_rev token items_rev
-        else
-          items_rev
-      in
-      let items_rev =
         append_completion_items_of_autoimports
           ~options
           ~reader
@@ -1345,13 +1342,8 @@ let autocomplete_unqualified_type
           ~show_ranking_info
           ~edit_locs
           auto_imports
+          token
           items_rev
-      in
-      let items_rev =
-        if imports_ranked_usage then
-          items_rev
-        else
-          filter_by_token_and_sort_rev token items_rev
       in
       (items_rev, is_incomplete, true)
     else
