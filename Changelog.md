@@ -1,3 +1,28 @@
+### 0.224.0
+
+Likely to cause new Flow errors:
+* `%checks` is now deprecated. It will still work as before (for now), but if you enable the `deprecated-type` Flow lint, you will see additional errors. Instead, use [type guards](https://flow.org/en/docs/types/type-guards/).
+* `$Call`, `$ObjMap`, `$ObjMapi`, `$ObjMapConst` are now deprecated. They will still work as before (for now), but if you enable the `deprecated-type` Flow lint, you will see additional errors. Since Flow 0.209, you can now use builtin types like `Parameters`, `ReturnType`, `Pick`, `Omit` to easily extract and transform types. For more advanced use cases, you can read the docs of conditional type and mapped type to understand how to write it in equivalent ways.
+* Ban creation of object literal computed properties with non-literal `number` keys
+* Ban accessing objects with non-literal `number` keys
+* You can now create and access object keys with int-like number literals, these act as their string equivalents.
+* Union of exact objects allow computed access as long as one of the members of the union have the property
+
+New Features:
+* Add support for number literals as keys in object literals, e.g. `const obj = {1: true, 2: false}`
+* Support numeric keys in object type annotations. They are equivalent to the string version.
+
+Notable bug fixes:
+* Removed spurious underconstrained error with mapped type, if the relevant type parameter already has a default. ([example](https://flow.org/try#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+IFkolXpUCWewUEAwhCQgRDH8wEH4hMnwROHlsNnw4KHwwSLAAC3wANyo4LFxscWQuHgMNZmwsiRSAWglaY1cq-hIAa2wJXNpG4Vxcdvdu3v7B0RxKUYMhKDBSqmbWwIq3eagoOrKSKgH0wtMMPznY7d2SfcoBiEZ-aG5G3Ix085AF-ZhsRoRehqUEiNMgSQHlSruBZxJrMcJwMhzAC+-EgGiCGiWVGwAAIYAtlHBoHiADwAFRxAF4ccAkQA+AAUAEpkDSANoAaRx6RxPVoEBgOLJAF1WRykQBuAA6UFKEhx8ipeOZEpxAHo1TiAKLUCBAnE4GB63EABisACZzQAWKwm3g4qAQHFEKD-Sg4kyUPUkblQHFmy02k0ymIgfImEhEqBBfIBy22kBIoA))
+* Support calling `Array.from` with string input and also mapping function, e.g. `Array.from('str', x => x.length)`
+
+IDE:
+* [ide] Go-to-definition for a barrel-exported type name will now jump to the original definition location, instead of incorrectly jumping to itself.
+
+Library Definitions:
+* Add type stubs for global `crypto` object, `crypto.getRandomValues`, and `crypto.randomUUID`
+* We removed `StatelessFunctionalComponent` type from the 'react' module and the `React$StatelessFunctionalComponent` type. The name might give an incorrect assumption that Flow can actually check that a function component doesn't use stateful hooks or can be called directly. If you have code that still uses this type, we recommend you use the `React.AbstractComponent` type, since it forces you to not make any assumption of what kind of React component you are dealing with.
+
 ### 0.223.3
 
 Before Flow 0.223, the autoimport system uses the filename as a hint of the name for default export. e.g. if the filename is `foo.react.js` or `foo.js`, regardless of whether the default export in that file has a name or not, or even the default name is `bar`, autoimport will always import it as `import foo from 'foo'`.

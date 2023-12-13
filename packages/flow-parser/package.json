@@ -1,6 +1,6 @@
 {
   "name": "flow-parser",
-  "version": "0.223.3",
+  "version": "0.224.0",
   "description": "JavaScript parser written in OCaml. Produces ESTree AST",
   "homepage": "https://flow.org",
   "license": "MIT",
