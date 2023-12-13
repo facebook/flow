@@ -720,18 +720,10 @@ let append_completion_items_of_autoimports
     auto_imports
     token
     items_rev =
-  let items_rev =
-    if imports_ranked_usage then
-      (* to maintain the order of the autoimports, we sort the non-imports
-         here, and then don't sort the whole list later. *)
-      filter_by_token_and_sort_rev token items_rev
-    else
-      items_rev
-  in
-  let items_rev =
-    let src_dir = src_dir_of_loc ac_loc in
+  let src_dir = src_dir_of_loc ac_loc in
+  let auto_imports_items_rev =
     Base.List.foldi
-      ~init:items_rev
+      ~init:[]
       ~f:(fun i acc { Export_search.search_result = auto_import; score; weight } ->
         let rank =
           (* after builtins *)
@@ -770,14 +762,12 @@ let append_completion_items_of_autoimports
           item :: acc)
       auto_imports
   in
-  let items_rev =
-    if imports_ranked_usage then
-      (* when ranked imports are enabled, don't fuzzy score them *)
-      items_rev
-    else
-      filter_by_token_and_sort_rev token items_rev
-  in
-  items_rev
+  if imports_ranked_usage then
+    (* to maintain the order of the autoimports, we sort the non-imports
+       here, and then don't sort the whole list later. *)
+    Base.List.append auto_imports_items_rev (filter_by_token_and_sort_rev token items_rev)
+  else
+    filter_by_token_and_sort_rev token (Base.List.append auto_imports_items_rev items_rev)
 
 let autocomplete_id
     ~env
