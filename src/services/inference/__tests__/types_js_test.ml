@@ -239,12 +239,10 @@ let tests =
                              ~freshparsed
                          in
                          let expected_to_merge =
-                           (* We always include direct dependents, and compute them using the
-                            * implementation dependency graph. *)
-                           make_checked_set ~focused:["a"] ~dependents:["b"; "c"] ~dependencies:[]
+                           make_checked_set ~focused:["a"] ~dependents:["b"] ~dependencies:[]
                          in
                          let expected_to_check =
-                           make_checked_set ~focused:["a"] ~dependents:["b"; "c"] ~dependencies:[]
+                           make_checked_set ~focused:["a"] ~dependents:["b"] ~dependencies:[]
                          in
                          assert_checked_sets_equal ~ctxt expected_to_merge to_merge;
                          assert_checked_sets_equal ~ctxt expected_to_check to_check;
@@ -315,12 +313,10 @@ let tests =
                              ~freshparsed
                          in
                          let expected_to_merge =
-                           (* We always include direct dependents, and compute them using the
-                            * implementation dependency graph. *)
-                           make_checked_set ~focused:["a"] ~dependents:["b"; "c"] ~dependencies:[]
+                           make_checked_set ~focused:["a"] ~dependents:["b"] ~dependencies:[]
                          in
                          let expected_to_check =
-                           make_checked_set ~focused:["a"] ~dependents:["b"; "c"] ~dependencies:[]
+                           make_checked_set ~focused:["a"] ~dependents:["b"] ~dependencies:[]
                          in
                          assert_checked_sets_equal ~ctxt expected_to_merge to_merge;
                          assert_checked_sets_equal ~ctxt expected_to_check to_check;

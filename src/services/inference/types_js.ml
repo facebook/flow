@@ -1286,7 +1286,10 @@ end = struct
     in
     Lwt.return (env, intermediate_values)
 
-  (** [direct_dependents_to_recheck ~dirty_direct_dependents ~focused ~dependencies] computes the
+  (** NOTE: This code is unnecessary, and unused when in "precise dependents" mode, which will
+      become the only mode after a brief rollout period.
+
+      [direct_dependents_to_recheck ~dirty_direct_dependents ~focused ~dependencies] computes the
       dependent files that directly depend on its inputs. a file directly depends on another if it
       literaly has an [import].
 
@@ -1417,18 +1420,22 @@ end = struct
        from the changed files ([input_focused] + [input_dependencies]) to all of the files that
        could be impacted by those changes.
 
-       [all_dependent_files] is the set of files whose implementations directly depend on the
-       signature dependents. In other words, if a file F imports something from G where G's
-       signature is impacted by C (a changed file), then G is a sig dependent and F needs to be
-       checked because its implementation may use something from C through G. *)
+       [all_dependent_files] is the set of files which may be possibly affected by incremental
+       changes. We can precisely compute this set based on (a) input focused and (b) dirty direct
+       dependent files. First, we take (c) the transitive signature dependents of union(a,b). Then,
+       we take (d) the direct implementation dependents of union(a,b,c). Finally, the set of
+       dependent files is union(c,d). *)
     let%lwt all_dependent_files =
       with_memory_timer_lwt ~options "AllDependentFiles" profiling (fun () ->
           let implementation_dependents =
-            direct_dependents_to_recheck
-              ~implementation_dependency_graph
-              ~dirty_direct_dependents
-              ~focused:input_focused
-              ~dependencies:input_dependencies
+            if Options.precise_dependents options then
+              FilenameSet.union input_focused dirty_direct_dependents
+            else
+              direct_dependents_to_recheck
+                ~implementation_dependency_graph
+                ~dirty_direct_dependents
+                ~focused:input_focused
+                ~dependencies:input_dependencies
           in
           let all_dependent_files =
             Pure_dep_graph_operations.calc_all_dependents
