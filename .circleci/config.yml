@@ -823,6 +823,10 @@ workflows:
           requires:
             - build_linux
             - build_js
+          filters:
+            branches:
+              only:
+                - main
 
   build_and_deploy:
     jobs:
