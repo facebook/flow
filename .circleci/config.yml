@@ -723,6 +723,12 @@ jobs:
         keys:
           - v2-gem-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "website/Gemfile.lock" }}
     - run:
+        name: Publish website to GitHub Pages
+        command: |
+          cd website
+          yarn add gh-pages
+          yarn gh-pages -d build -u "flow-bot <flow-bot@users.noreply.github.com>" --repo https://${FLOW_BOT_TOKEN}@github.com/facebook/flow.git --no-history
+    - run:
         name: Install gems
         command: |
           cd website
@@ -733,7 +739,7 @@ jobs:
         paths:
           - website/vendor/bundle
     - run:
-        name: Publish website
+        name: Publish website to s3 bucket
         command: cd website && bundle exec s3_website push --site build
 
   # deploys flow.js and the libdefs to Try Flow on release branches
