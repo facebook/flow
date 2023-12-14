@@ -88,8 +88,13 @@ render_types.js:18:6,18:16
 
 render_types.js:21:6
 Flags:
-type RendersElement = renders React$Element<Foo>
+type RendersElement = renders Foo
 render_types.js:21:6,21:19
+
+render_types.js:25:6
+Flags:
+type PolyElement = renders Poly<number>
+render_types.js:25:6,25:16
 
 render_types.js:8:7 = {
   "types":{

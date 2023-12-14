@@ -802,10 +802,6 @@ module Make (I : INPUT) : S = struct
         | _ -> type_app ~env type_ (Some targs))
       | DefT (r, InstanceT { super; inst; _ }) -> instance_t ~env r super inst
       | DefT (_, ClassT t) -> class_t ~env t
-      | DefT (reason, ReactAbstractComponentT { component_kind = Nominal (_, name); _ })
-        when Env.(env.under_render_type) ->
-        let symbol = Reason_utils.component_symbol env name reason in
-        return (Ty.Generic (symbol, Ty.ComponentKind, None))
       | DefT (_, ReactAbstractComponentT { config; instance; renders; component_kind = _ }) ->
         let%bind config = type__ ~env config in
         let%bind instance = type__ ~env instance in
@@ -824,9 +820,7 @@ module Make (I : INPUT) : S = struct
         in
         return (Ty.Generic (symbol, Ty.ComponentKind, None))
       | DefT (_, RendersT (StructuralRenders { renders_variant; renders_structural_type })) ->
-        let%bind ty =
-          type_ctor ~env:(Env.set_under_render_type true env) ~cont renders_structural_type
-        in
+        let%bind ty = type_ctor ~env ~cont renders_structural_type in
         let variant =
           match renders_variant with
           | T.RendersNormal -> Ty.RendersNormal
@@ -1337,7 +1331,15 @@ module Make (I : INPUT) : S = struct
         | DefT (_, TypeT (_, DefT (r, InstanceT { inst; _ })))
         | DefT (_, ClassT (DefT (r, InstanceT { inst; _ }))) ->
           instance_app ~env r inst tparams targs
-        | DefT (r, TypeT (kind, _)) -> type_t_app ~env r kind tparams targs
+        | DefT (r, TypeT (kind, t)) ->
+          (match (t, targs) with
+          | (OpaqueT (_, opaque_type), Some (component :: _))
+            when Some opaque_type.Type.opaque_id
+                 = Flow_js_utils.builtin_react_element_opaque_id (Env.get_cx env) ->
+            (match Lookahead.peek (Env.get_cx env) component with
+            | Lookahead.LowerBounds [t] -> react_element_shorthand ~env r opaque_type targs t
+            | _ -> type_t_app ~env r kind tparams targs)
+          | _ -> type_t_app ~env r kind tparams targs)
         | DefT
             ( r,
               ReactAbstractComponentT
@@ -1407,6 +1409,17 @@ module Make (I : INPUT) : S = struct
           (match tys with
           | [] -> Ty.Bot (Ty.NoLowerWithUpper Ty.NoUpper)
           | t :: ts -> Ty.mk_union ~from_bounds:true (t, ts))
+
+    and react_element_shorthand ~env opaque_reason opaque_type targs t =
+      match t with
+      | T.(DefT (reason, ReactAbstractComponentT { component_kind = Nominal (_, name); _ })) ->
+        let symbol = Reason_utils.component_symbol env name reason in
+        return (Ty.Generic (symbol, Ty.ComponentKind, None))
+      | _ ->
+        let name = opaque_type.Type.opaque_name in
+        let opaque_symbol = symbol_from_reason env opaque_reason (Reason.OrdinaryName name) in
+        let%bind targs = optMapM (type__ ~env) targs in
+        return (generic_talias opaque_symbol targs)
 
     and opaque_t ~env reason opaque_type =
       let name = opaque_type.Type.opaque_name in
@@ -1766,12 +1779,7 @@ module Make (I : INPUT) : S = struct
           }
         | _ -> env
       in
-      let arg_env =
-        match d with
-        | T.ReactPromoteRendersRepresentation _ -> Env.set_under_render_type true env
-        | _ -> env
-      in
-      let%bind ty = type__ ~env:arg_env t in
+      let%bind ty = type__ ~env t in
       match d with
       | T.ReactDRO _ -> return ty
       | T.NonMaybeType -> return (Ty.Utility (Ty.NonMaybeType ty))

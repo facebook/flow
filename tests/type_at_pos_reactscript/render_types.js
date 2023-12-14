@@ -20,3 +20,7 @@ type StarRenders = renders* Foo;
 
 type RendersElement = renders React$Element<typeof Foo>;
 //   ^
+
+component Poly<T>() { return null }
+type PolyElement = renders Poly<number>;
+//   ^
