@@ -727,7 +727,7 @@ jobs:
         command: |
           cd website
           yarn add gh-pages
-          GITHUB_TOKEN=$FLOW_BOT_TOKEN yarn gh-pages -d build -u "flow-bot <flow-bot@users.noreply.github.com>"
+          GITHUB_TOKEN=$FLOW_BOT_TOKEN yarn gh-pages -d build -u "flow-bot <flow-bot@users.noreply.github.com>" --repo https://github.com/facebook/flow.git
     - run:
         name: Install gems
         command: |
