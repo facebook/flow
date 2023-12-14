@@ -284,6 +284,7 @@ let autocomplete
     ~cursor
     ~imports
     ~imports_ranked_usage
+    ~imports_ranked_usage_boost_exact_match_min_length
     ~show_ranking_info =
   match of_file_input ~options ~env input with
   | Error (Failed e) -> (Error e, None)
@@ -345,6 +346,7 @@ let autocomplete
               ~typed_ast
               ~imports
               ~imports_ranked_usage
+              ~imports_ranked_usage_boost_exact_match_min_length
               ~show_ranking_info
               trigger_character
               cursor_loc
@@ -1026,6 +1028,7 @@ let handle_autocomplete
     ~cursor
     ~imports
     ~imports_ranked_usage
+    ~imports_ranked_usage_boost_exact_match_min_length
     ~show_ranking_info =
   let (result, json_data) =
     try_with_json (fun () ->
@@ -1039,6 +1042,7 @@ let handle_autocomplete
           ~cursor
           ~imports
           ~imports_ranked_usage
+          ~imports_ranked_usage_boost_exact_match_min_length
           ~show_ranking_info
     )
   in
@@ -1354,6 +1358,9 @@ let get_ephemeral_handler genv command =
         imports_ranked_usage;
         show_ranking_info;
       } ->
+    let imports_ranked_usage_boost_exact_match_min_length =
+      Options.autoimports_ranked_by_usage_boost_exact_match_min_length options
+    in
     mk_parallelizable
       ~wait_for_recheck
       ~options
@@ -1365,6 +1372,7 @@ let get_ephemeral_handler genv command =
          ~cursor
          ~imports
          ~imports_ranked_usage
+         ~imports_ranked_usage_boost_exact_match_min_length
          ~show_ranking_info
       )
   | ServerProt.Request.AUTOFIX_EXPORTS { input; verbose; wait_for_recheck } ->
@@ -2071,6 +2079,9 @@ let handle_persistent_autocomplete_lsp
     && Options.autoimports options
   in
   let imports_ranked_usage = rank_autoimports_by_usage ~options client in
+  let imports_ranked_usage_boost_exact_match_min_length =
+    Options.autoimports_ranked_by_usage_boost_exact_match_min_length options
+  in
   let show_ranking_info =
     Persistent_connection.Client_config.show_suggest_ranking_info client_config
   in
@@ -2085,6 +2096,7 @@ let handle_persistent_autocomplete_lsp
       ~cursor:(line, char)
       ~imports
       ~imports_ranked_usage
+      ~imports_ranked_usage_boost_exact_match_min_length
       ~show_ranking_info
   in
   let metadata = with_data ~extra_data metadata in

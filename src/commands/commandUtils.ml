@@ -1472,6 +1472,8 @@ let make_options
     opt_autoimports = Base.Option.value (FlowConfig.autoimports flowconfig) ~default:true;
     opt_autoimports_ranked_by_usage =
       Base.Option.value (FlowConfig.autoimports_ranked_by_usage flowconfig) ~default:false;
+    opt_autoimports_ranked_by_usage_boost_exact_match_min_length =
+      FlowConfig.autoimports_ranked_by_usage_boost_exact_match_min_length flowconfig;
     opt_flowconfig_hash = flowconfig_hash;
     opt_global_find_ref = Base.Option.value (FlowConfig.global_find_ref flowconfig) ~default:true;
     opt_global_rename = Base.Option.value (FlowConfig.global_rename flowconfig) ~default:true;

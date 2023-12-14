@@ -1,0 +1,182 @@
+{
+  "method": "textDocument/completion",
+  "result": {
+    "isIncomplete": false,
+    "items": [
+      {
+        "label": "actors",
+        "kind": 6,
+        "detail": "number",
+        "sortText": "00000000000000000000",
+        "insertTextFormat": 1,
+        "textEdit": {
+          "range": {
+            "start": {
+              "line": 4,
+              "character": 0
+            },
+            "end": {
+              "line": 4,
+              "character": 5
+            }
+          },
+          "newText": "actors"
+        },
+        "command": {
+          "title": "",
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "arguments": [
+            "textDocument/completion",
+            "local value identifier",
+            {
+              "token": "actorAUTO332",
+              "index": 0,
+              "session_requests": 1,
+              "typed_length": 5,
+              "completion": "actors",
+              "ac_type": "Acid"
+            }
+          ]
+        }
+      },
+      {
+        "label": "actor",
+        "kind": 6,
+        "detail": "Import from ./actor",
+        "sortText": "00000000000000000001",
+        "insertTextFormat": 1,
+        "textEdit": {
+          "range": {
+            "start": {
+              "line": 4,
+              "character": 0
+            },
+            "end": {
+              "line": 4,
+              "character": 5
+            }
+          },
+          "newText": "actor"
+        },
+        "additionalTextEdits": [
+          {
+            "range": {
+              "start": {
+                "line": 2,
+                "character": 0
+              },
+              "end": {
+                "line": 2,
+                "character": 0
+              }
+            },
+            "newText": "import { actor } from \"./actor\";\n\n"
+          }
+        ],
+        "command": {
+          "title": "",
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "arguments": [
+            "textDocument/completion",
+            "autoimport",
+            {
+              "token": "actorAUTO332",
+              "index": 1,
+              "session_requests": 1,
+              "typed_length": 5,
+              "completion": "actor",
+              "ac_type": "Acid"
+            }
+          ]
+        }
+      },
+      {
+        "label": "actor",
+        "kind": 6,
+        "detail": "Import * from ./actor",
+        "sortText": "00000000000000000002",
+        "insertTextFormat": 1,
+        "textEdit": {
+          "range": {
+            "start": {
+              "line": 4,
+              "character": 0
+            },
+            "end": {
+              "line": 4,
+              "character": 5
+            }
+          },
+          "newText": "actor"
+        },
+        "additionalTextEdits": [
+          {
+            "range": {
+              "start": {
+                "line": 2,
+                "character": 0
+              },
+              "end": {
+                "line": 2,
+                "character": 0
+              }
+            },
+            "newText": "import * as actor from \"./actor\";\n\n"
+          }
+        ],
+        "command": {
+          "title": "",
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "arguments": [
+            "textDocument/completion",
+            "autoimport",
+            {
+              "token": "actorAUTO332",
+              "index": 2,
+              "session_requests": 1,
+              "typed_length": 5,
+              "completion": "actor",
+              "ac_type": "Acid"
+            }
+          ]
+        }
+      },
+      {
+        "label": "actoooooooor",
+        "kind": 6,
+        "detail": "number",
+        "sortText": "00000000000000000003",
+        "insertTextFormat": 1,
+        "textEdit": {
+          "range": {
+            "start": {
+              "line": 4,
+              "character": 0
+            },
+            "end": {
+              "line": 4,
+              "character": 5
+            }
+          },
+          "newText": "actoooooooor"
+        },
+        "command": {
+          "title": "",
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "arguments": [
+            "textDocument/completion",
+            "local value identifier",
+            {
+              "token": "actorAUTO332",
+              "index": 3,
+              "session_requests": 1,
+              "typed_length": 5,
+              "completion": "actoooooooor",
+              "ac_type": "Acid"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -62,6 +62,31 @@ module.exports = (suite(
       ),
     ]).flowConfig('_flowconfig_ranked'),
 
+    test(
+      'textDocument/completion with ranked autoimports boosting exact match imports',
+      [
+        addFiles('actor.js'),
+        addCode(`const actoooooooor = 3;\nconst actors = 3;\nactor`),
+        lspStartAndConnect(),
+        lspRequestAndWaitUntilResponse('textDocument/completion', {
+          textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/test.js'},
+          position: {line: 4, character: 5},
+          context: {triggerKind: 1},
+        }).verifyLSPMessageSnapshot(
+          path.join(
+            __dirname,
+            '__snapshots__',
+            'completion_with_ranked_auto_imports_boost_exact_match_imports.json',
+          ),
+          [
+            'textDocument/publishDiagnostics',
+            'window/showStatus',
+            '$/cancelRequest',
+          ],
+        ),
+      ],
+    ).flowConfig('_flowconfig_ranked'),
+
     test('textDocument/completion with JSX autoimports', [
       addCode(`function Foo(props: {...}): null {}`),
       addCode(`(<F`),

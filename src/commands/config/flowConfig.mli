@@ -70,6 +70,8 @@ val autoimports : config -> bool option
 
 val autoimports_ranked_by_usage : config -> bool option
 
+val autoimports_ranked_by_usage_boost_exact_match_min_length : config -> int option
+
 val automatic_require_default : config -> bool option
 
 val babel_loose_array_spread : config -> bool option

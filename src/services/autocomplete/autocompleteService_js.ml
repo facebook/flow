@@ -692,7 +692,7 @@ let filter_by_token_and_sort token items =
 (** [filter_by_token_and_sort_rev token rev_items] fuzzy scores [rev_items]
      based on [token], sorts them by score (highest to lowest), then
      re-reverses the list. It is stable when two items have the same score. *)
-let filter_by_token_and_sort_rev token items =
+let filter_by_token_and_sort_rev ?(penalize_auto_import = false) token items =
   let (before, _after) = Autocomplete_sigil.remove token in
   if String.length before = 0 then
     (* if there's nothing to fuzzy match by, just sort regularly. since the
@@ -701,7 +701,8 @@ let filter_by_token_and_sort_rev token items =
   else
     Base.List.rev_filter_map items ~f:(fun item ->
         let open ServerProt.Response.Completion in
-        match Fuzzy_score.fuzzy_score ~pattern:before item.name with
+        let boost_full_match = not (penalize_auto_import && item.log_info = "autoimport") in
+        match Fuzzy_score.fuzzy_score ~boost_full_match ~pattern:before item.name with
         | None -> None
         | Some score -> Some (score, item)
     )
@@ -715,12 +716,15 @@ let append_completion_items_of_autoimports
     ~ac_loc
     ~locals
     ~imports_ranked_usage
+    ~imports_ranked_usage_boost_exact_match_min_length
     ~show_ranking_info
     ~edit_locs
+    ~locals_rank
     auto_imports
     token
     items_rev =
   let src_dir = src_dir_of_loc ac_loc in
+  let (before, _after) = Autocomplete_sigil.remove token in
   let auto_imports_items_rev =
     Base.List.foldi
       ~init:[]
@@ -763,9 +767,28 @@ let append_completion_items_of_autoimports
       auto_imports
   in
   if imports_ranked_usage then
-    (* to maintain the order of the autoimports, we sort the non-imports
-       here, and then don't sort the whole list later. *)
-    Base.List.append auto_imports_items_rev (filter_by_token_and_sort_rev token items_rev)
+    match imports_ranked_usage_boost_exact_match_min_length with
+    | Some min_length ->
+      let (exact_match_auto_imports_rev, other_auto_imports_rev) =
+        Base.List.partition_map auto_imports_items_rev ~f:(fun item ->
+            let open ServerProt.Response.Completion in
+            (* We boost exact match auto-imports so that they are sorted together with locals
+             * rather than always after locals. We only do this for auto-imports with long-enough
+             * names, so that we don't end up boosting auto-imports like `a`. *)
+            if item.name = before && Base.String.length item.name >= min_length then
+              Base.Either.First { item with sort_text = sort_text_of_rank locals_rank }
+            else
+              Base.Either.Second item
+        )
+      in
+      let items_rev = Base.List.append exact_match_auto_imports_rev items_rev in
+      Base.List.append
+        other_auto_imports_rev
+        (filter_by_token_and_sort_rev ~penalize_auto_import:true token items_rev)
+    | None ->
+      (* to maintain the order of the autoimports, we sort the non-imports
+         here, and then don't sort the whole list later. *)
+      Base.List.append auto_imports_items_rev (filter_by_token_and_sort_rev token items_rev)
   else
     filter_by_token_and_sort_rev token (Base.List.append auto_imports_items_rev items_rev)
 
@@ -783,6 +806,7 @@ let autocomplete_id
     ~include_this
     ~imports
     ~imports_ranked_usage
+    ~imports_ranked_usage_boost_exact_match_min_length
     ~show_ranking_info
     ~tparams_rev
     ~edit_locs
@@ -920,8 +944,10 @@ let autocomplete_id
             ~ac_loc
             ~locals
             ~imports_ranked_usage
+            ~imports_ranked_usage_boost_exact_match_min_length
             ~show_ranking_info
             ~edit_locs
+            ~locals_rank:rank
             auto_imports
             token
             items_rev
@@ -1193,6 +1219,7 @@ let autocomplete_unqualified_type
     ~cx
     ~imports
     ~imports_ranked_usage
+    ~imports_ranked_usage_boost_exact_match_min_length
     ~show_ranking_info
     ~allow_react_element_shorthand_completion
     ~tparams_rev
@@ -1329,8 +1356,10 @@ let autocomplete_unqualified_type
           ~ac_loc
           ~locals
           ~imports_ranked_usage
+          ~imports_ranked_usage_boost_exact_match_min_length
           ~show_ranking_info
           ~edit_locs
+          ~locals_rank:0
           auto_imports
           token
           items_rev
@@ -1416,6 +1445,7 @@ let autocomplete_member
     ~typed_ast
     ~imports
     ~imports_ranked_usage
+    ~imports_ranked_usage_boost_exact_match_min_length
     ~show_ranking_info
     ~edit_locs
     ~token
@@ -1553,6 +1583,7 @@ let autocomplete_member
             ~cx
             ~imports
             ~imports_ranked_usage
+            ~imports_ranked_usage_boost_exact_match_min_length
             ~show_ranking_info
             ~allow_react_element_shorthand_completion:false
             ~tparams_rev
@@ -1577,6 +1608,7 @@ let autocomplete_member
             ~include_this
             ~imports
             ~imports_ranked_usage
+            ~imports_ranked_usage_boost_exact_match_min_length
             ~show_ranking_info
             ~tparams_rev
             ~edit_locs
@@ -1688,6 +1720,7 @@ let autocomplete_jsx_element
     ~typed_ast
     ~imports
     ~imports_ranked_usage
+    ~imports_ranked_usage_boost_exact_match_min_length
     ~show_ranking_info
     ~tparams_rev
     ~edit_locs
@@ -1708,6 +1741,7 @@ let autocomplete_jsx_element
       ~include_this:false
       ~imports
       ~imports_ranked_usage
+      ~imports_ranked_usage_boost_exact_match_min_length
       ~show_ranking_info
       ~tparams_rev
       ~edit_locs
@@ -2204,6 +2238,7 @@ let autocomplete_get_results
     ~typed_ast
     ~imports
     ~imports_ranked_usage
+    ~imports_ranked_usage_boost_exact_match_min_length
     ~show_ranking_info
     trigger_character
     cursor =
@@ -2320,6 +2355,7 @@ let autocomplete_get_results
             ~include_this
             ~imports
             ~imports_ranked_usage
+            ~imports_ranked_usage_boost_exact_match_min_length
             ~show_ranking_info
             ~tparams_rev
             ~edit_locs
@@ -2339,6 +2375,7 @@ let autocomplete_get_results
               ~typed_ast
               ~imports
               ~imports_ranked_usage
+              ~imports_ranked_usage_boost_exact_match_min_length
               ~show_ranking_info
               ~edit_locs
               ~token
@@ -2395,6 +2432,7 @@ let autocomplete_get_results
           ~typed_ast
           ~imports
           ~imports_ranked_usage
+          ~imports_ranked_usage_boost_exact_match_min_length
           ~show_ranking_info
           ~edit_locs
           ~token
@@ -2418,6 +2456,7 @@ let autocomplete_get_results
           ~typed_ast
           ~imports
           ~imports_ranked_usage
+          ~imports_ranked_usage_boost_exact_match_min_length
           ~show_ranking_info
           ~tparams_rev
           ~edit_locs
@@ -2445,6 +2484,7 @@ let autocomplete_get_results
              ~cx
              ~imports
              ~imports_ranked_usage
+             ~imports_ranked_usage_boost_exact_match_min_length
              ~show_ranking_info
              ~allow_react_element_shorthand_completion:allow_react_element_shorthand
              ~tparams_rev

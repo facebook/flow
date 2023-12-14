@@ -46,6 +46,7 @@ module Opts = struct
     all: bool option;
     autoimports: bool option;
     autoimports_ranked_by_usage: bool option;
+    autoimports_ranked_by_usage_boost_exact_match_min_length: int option;
     automatic_require_default: bool option;
     babel_loose_array_spread: bool option;
     batch_lsp_request_processing: bool;
@@ -172,6 +173,7 @@ module Opts = struct
       all = None;
       autoimports = None;
       autoimports_ranked_by_usage = None;
+      autoimports_ranked_by_usage_boost_exact_match_min_length = None;
       automatic_require_default = None;
       babel_loose_array_spread = None;
       batch_lsp_request_processing = false;
@@ -817,6 +819,14 @@ module Opts = struct
       ("autoimports", boolean (fun opts v -> Ok { opts with autoimports = Some v }));
       ( "autoimports_ranked_by_usage",
         boolean (fun opts v -> Ok { opts with autoimports_ranked_by_usage = Some v })
+      );
+      ( "autoimports_ranked_by_usage.experimental.boost_exact_match_min_length",
+        uint (fun opts v ->
+            if opts.autoimports = Some false then
+              Error "Cannot be configured unless autoimport is enabled."
+            else
+              Ok { opts with autoimports_ranked_by_usage_boost_exact_match_min_length = Some v }
+        )
       );
       ("babel_loose_array_spread", babel_loose_array_spread_parser);
       ("casting_syntax", casting_syntax_parser);
@@ -1464,6 +1474,9 @@ let all c = c.options.Opts.all
 let autoimports c = c.options.Opts.autoimports
 
 let autoimports_ranked_by_usage c = c.options.Opts.autoimports_ranked_by_usage
+
+let autoimports_ranked_by_usage_boost_exact_match_min_length c =
+  c.options.Opts.autoimports_ranked_by_usage_boost_exact_match_min_length
 
 let automatic_require_default c = c.options.Opts.automatic_require_default
 
