@@ -840,7 +840,7 @@ and invalid_mapped_type_error_kind =
 and invalid_render_type_kind =
   | InvalidRendersNullVoidFalse
   | InvalidRendersIterable
-  | InvalidRendersNonNonimalElement
+  | InvalidRendersNonNominalElement
   | InvalidRendersGenericT
   | UncategorizedInvalidRenders
 
@@ -853,7 +853,7 @@ let string_of_assigned_const_like_binding_type = function
 let string_of_invalid_render_type_kind = function
   | InvalidRendersNullVoidFalse -> "null | void | false"
   | InvalidRendersIterable -> "iterable"
-  | InvalidRendersNonNonimalElement -> "non-nominal"
+  | InvalidRendersNonNominalElement -> "non-nominal"
   | InvalidRendersGenericT -> "generic"
   | UncategorizedInvalidRenders -> "uncategorized"
 
@@ -5183,7 +5183,7 @@ let friendly_message_of_msg loc_of_aloc msg =
       { loc = _; renders_variant; invalid_render_type_kind; invalid_type_reasons } ->
     let additional_explanation =
       match (invalid_render_type_kind, renders_variant) with
-      | (InvalidRendersNonNonimalElement, _) ->
+      | (InvalidRendersNonNominalElement, _) ->
         [text " Only elements of a component-syntax components can appear in renders."]
       | (InvalidRendersNullVoidFalse, Flow_ast.Type.Renders.Maybe) ->
         [

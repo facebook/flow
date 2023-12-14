@@ -398,7 +398,7 @@ let validate_renders_type_arguments cx =
             {
               loc;
               renders_variant;
-              invalid_render_type_kind = InvalidRendersNonNonimalElement;
+              invalid_render_type_kind = InvalidRendersNonNominalElement;
               invalid_type_reasons = Nel.one invalid_type_reason;
             }
         )
