@@ -724,7 +724,10 @@ jobs:
           - v2-gem-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "website/Gemfile.lock" }}
     - run:
         name: Publish website to GitHub Pages
-        command: cd website && yarn install gh-pages && GITHUB_TOKEN=$FLOW_BOT_TOKEN yarn gh-pages -d build -u "flow-bot <flow-bot@users.noreply.github.com>"
+        command: |
+          cd website
+          yarn add gh-pages
+          GITHUB_TOKEN=$FLOW_BOT_TOKEN yarn gh-pages -d build -u "flow-bot <flow-bot@users.noreply.github.com>"
     - run:
         name: Install gems
         command: |
