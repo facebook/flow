@@ -54,3 +54,11 @@ function recursive_awaited_type() {
   (awaited_n2: empty); // error: number ~> empty
   (awaited_n3: empty); // error: number ~> empty
 }
+
+function excluded_first_rest_params() {
+  type RestParams<T: (...args: $ReadOnlyArray<empty>) => mixed> =
+  T extends (fst: any, ...args: infer Args) => any ? Args : null;
+  declare function foobar(number, boolean, string, number): void;
+  const [b1, s1, n1]: RestParams<typeof foobar> = [true, 'hello', 123]; // ok
+  const [b2, s2, n2]: RestParams<typeof foobar> = [123, true, 'hello']; // error
+}

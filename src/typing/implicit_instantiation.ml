@@ -377,10 +377,20 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | ReposUseT (_, _, _use_op, t) ->
       Flow.flow_t cx (t, tvar);
       UpperT t
-    | ResolveSpreadT (_, reason, { rrt_resolved = []; rrt_unresolved = []; rrt_resolve_to }) ->
+    | ResolveSpreadT (_, reason, { rrt_resolved; rrt_unresolved = []; rrt_resolve_to }) ->
       (match rrt_resolve_to with
       | ResolveSpreadsToMultiflowSubtypeFull (_, { params; rest_param; _ }) ->
-        reverse_resolve_spread_multiflow_subtype_full_no_resolution cx tvar reason params rest_param
+        (match
+           reverse_resolve_spread_multiflow_subtype_full_partial_resolution
+             cx
+             tvar
+             reason
+             rrt_resolved
+             params
+             rest_param
+         with
+        | None -> UpperNonT u
+        | Some solution -> UpperT solution)
       | ResolveSpreadsToTupleType _
       | ResolveSpreadsToArrayLiteral _
       | ResolveSpreadsToArray _
@@ -561,7 +571,33 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     in
     let solution = DefT (reason, ArrT arr_type) in
     Flow.flow_t cx (solution, tvar);
-    UpperT solution
+    solution
+
+  and reverse_resolve_spread_multiflow_subtype_full_partial_resolution
+      cx tvar reason resolved params rest_param =
+    (* We remove resolved params one by one from the start.
+     * When we run out of params but we still have resolved_params,
+     * we record the number of rest_param we need to remove,
+     * and later perform an ArrayRest to remove them. *)
+    let rec loop = function
+      | ([], params) -> Some (params, 0)
+      | (_resolved :: resolved_rest, _params :: params_rest) -> loop (resolved_rest, params_rest)
+      | (resolved, []) ->
+        (match rest_param with
+        | None -> None
+        | Some _ -> Some ([], List.length resolved))
+    in
+    match loop (resolved, params) with
+    | None -> None
+    | Some (params, _rest_index) ->
+      Some
+        (reverse_resolve_spread_multiflow_subtype_full_no_resolution
+           cx
+           tvar
+           reason
+           params
+           rest_param
+        )
 
   and merge_upper_bounds cx seen upper_r tvar =
     let filter_placeholder t =

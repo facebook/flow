@@ -138,6 +138,12 @@ function ResolveSpreadsToMultiflowSubtypeFull() {
   const v1 = params(h);
   v1 as [number, string]; // ok
   v1 as empty; // error: tuple ~> empty
+
+  declare function funArgRest<Rest>(f: (first: empty, second: empty, ...args: Rest) => mixed): Rest;
+  declare function funArgRestInput(string, number, boolean, Date): void;
+  const f4 = funArgRest(funArgRestInput);
+  f4 as [+label1: boolean, +label2: Date]; // ok
+  f4 as empty; // error: tuple ~> empty
 }
 
 function Diffs() {
