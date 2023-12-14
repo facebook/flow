@@ -1,0 +1,23 @@
+{
+  "name": "try-flow-website-js",
+  "version": "0.224.0",
+  "description": "An NPM package to hold compiled `flow.js` and libdefs for every Flow version.",
+  "license": "MIT",
+  "repository": "facebook/flow",
+  "files": [
+    "flowlib",
+    "flow.js",
+    "README.md"
+  ],
+  "keywords": [
+    "flow",
+    "facebook",
+    "type",
+    "inference",
+    "check",
+    "checker",
+    "javascript",
+    "js",
+    "demo"
+  ]
+}
