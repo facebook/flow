@@ -390,7 +390,7 @@ let validate_renders_type_arguments cx =
         invalid_type_reason
         (Type_subst.subst cx subst_map t_out)
     | DefT (_, ReactAbstractComponentT { component_kind = Nominal _; _ }) -> ()
-    | _ ->
+    | t ->
       Flow_js_utils.add_output
         cx
         Error_message.(
@@ -398,7 +398,7 @@ let validate_renders_type_arguments cx =
             {
               loc;
               renders_variant;
-              invalid_render_type_kind = InvalidRendersNonNominalElement;
+              invalid_render_type_kind = InvalidRendersNonNominalElement (TypeUtil.reason_of_t t);
               invalid_type_reasons = Nel.one invalid_type_reason;
             }
         )

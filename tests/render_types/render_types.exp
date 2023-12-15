@@ -1175,19 +1175,31 @@ References:
 Error ----------------------------------------------------------------------------------- validation/validation.js:18:22
 
 Cannot use `React.Element` [1] as the type argument of renders type. Only elements of a component-syntax components can
-appear in renders. [invalid-render]
+appear in renders but function type [2] is not a component-syntax component. [invalid-render]
 
+   validation/validation.js:18:22
    18| type RBad1 = renders React$Element<typeof Baz>; // error
                             ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   validation/validation.js:18:36
+   18| type RBad1 = renders React$Element<typeof Baz>; // error
+                                          ^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------- validation/validation.js:19:22
 
 Cannot use `React.Element` [1] as the type argument of renders type. Only elements of a component-syntax components can
-appear in renders. [invalid-render]
+appear in renders but class `Boz` [2] is not a component-syntax component. [invalid-render]
 
+   validation/validation.js:19:22
    19| type RBad2 = renders React$Element<typeof Boz>; // error
                             ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   validation/validation.js:19:36
+   19| type RBad2 = renders React$Element<typeof Boz>; // error
+                                          ^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------- validation/validation.js:20:22
@@ -1201,10 +1213,16 @@ Cannot use number literal `1` [1] as the type argument of renders type. [invalid
 Error ----------------------------------------------------------------------------------- validation/validation.js:21:22
 
 Cannot use `React.Element` [1] as the type argument of renders type. Only elements of a component-syntax components can
-appear in renders. [invalid-render]
+appear in renders but explicit 'any' [2] is not a component-syntax component. [invalid-render]
 
+   validation/validation.js:21:22
    21| type RBad4 = renders React$Node; // error
                             ^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/react.js:21:19
+   21|   | React$Element<any>
+                         ^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------- validation/validation.js:21:22
@@ -1285,19 +1303,31 @@ Cannot use `Error` [1] as the type argument of renders type. [invalid-render]
 Error ----------------------------------------------------------------------------------- validation/validation.js:23:35
 
 Cannot use `React.Element` [1] as the type argument of renders type. Only elements of a component-syntax components can
-appear in renders. [invalid-render]
+appear in renders but function type [2] is not a component-syntax component. [invalid-render]
 
+   validation/validation.js:23:35
    23| type RBad6 = component () renders React$Element<typeof Baz>; // error
                                          ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   validation/validation.js:23:49
+   23| type RBad6 = component () renders React$Element<typeof Baz>; // error
+                                                       ^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------- validation/validation.js:26:41
 
 Cannot use `React.Element` [1] as the type argument of renders type. Only elements of a component-syntax components can
-appear in renders. [invalid-render]
+appear in renders but function type [2] is not a component-syntax component. [invalid-render]
 
+   validation/validation.js:26:41
    26| component BadComponentRenders() renders React$Element<typeof Baz> {return <Baz />} // error
                                                ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   validation/validation.js:26:55
+   26| component BadComponentRenders() renders React$Element<typeof Baz> {return <Baz />} // error
+                                                             ^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------- validation/validation.js:29:52
@@ -1381,8 +1411,23 @@ please use `renders*` instead. [invalid-render]
                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------- validation/validation.js:38:25
 
-Found 92 errors
+Cannot use `React.Element` [1] as the type argument of renders type. Only elements of a component-syntax components can
+appear in renders but function type [2] is not a component-syntax component. [invalid-render]
+
+   validation/validation.js:38:25
+   38| type BadUnion = renders React$Element<typeof Bar | typeof Baz>; // error
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   validation/validation.js:38:52
+   38| type BadUnion = renders React$Element<typeof Bar | typeof Baz>; // error
+                                                          ^^^^^^^^^^ [2]
+
+
+
+Found 93 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

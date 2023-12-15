@@ -661,7 +661,7 @@ and 'loc t' =
   | EInvalidRendersTypeArgument of {
       loc: 'loc;
       renders_variant: Flow_ast.Type.Renders.variant;
-      invalid_render_type_kind: invalid_render_type_kind;
+      invalid_render_type_kind: 'loc invalid_render_type_kind;
       invalid_type_reasons: 'loc virtual_reason Nel.t;
     }
   | EInvalidTypeCastSyntax of {
@@ -837,10 +837,10 @@ and invalid_mapped_type_error_kind =
   | ExplicitExactOrInexact
   | RemoveOptionality
 
-and invalid_render_type_kind =
+and 'loc invalid_render_type_kind =
   | InvalidRendersNullVoidFalse
   | InvalidRendersIterable
-  | InvalidRendersNonNominalElement
+  | InvalidRendersNonNominalElement of 'loc virtual_reason
   | InvalidRendersGenericT
   | UncategorizedInvalidRenders
 
@@ -853,12 +853,19 @@ let string_of_assigned_const_like_binding_type = function
 let string_of_invalid_render_type_kind = function
   | InvalidRendersNullVoidFalse -> "null | void | false"
   | InvalidRendersIterable -> "iterable"
-  | InvalidRendersNonNominalElement -> "non-nominal"
+  | InvalidRendersNonNominalElement _ -> "non-nominal"
   | InvalidRendersGenericT -> "generic"
   | UncategorizedInvalidRenders -> "uncategorized"
 
 let map_loc_of_exponential_spread_reason_group f { first_reason; second_reason } =
   { first_reason = f first_reason; second_reason = Base.Option.map ~f second_reason }
+
+let map_loc_of_invalid_render_type_kind f = function
+  | InvalidRendersNullVoidFalse -> InvalidRendersNullVoidFalse
+  | InvalidRendersIterable -> InvalidRendersIterable
+  | InvalidRendersNonNominalElement r -> InvalidRendersNonNominalElement (f r)
+  | InvalidRendersGenericT -> InvalidRendersGenericT
+  | UncategorizedInvalidRenders -> UncategorizedInvalidRenders
 
 let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   let map_use_op = TypeUtil.mod_loc_of_virtual_use_op f in
@@ -1403,7 +1410,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       {
         loc = f loc;
         renders_variant;
-        invalid_render_type_kind;
+        invalid_render_type_kind =
+          map_loc_of_invalid_render_type_kind map_reason invalid_render_type_kind;
         invalid_type_reasons = Nel.map map_reason invalid_type_reasons;
       }
   | EInvalidTypeCastSyntax { loc; enabled_casting_syntax } ->
@@ -5183,8 +5191,12 @@ let friendly_message_of_msg loc_of_aloc msg =
       { loc = _; renders_variant; invalid_render_type_kind; invalid_type_reasons } ->
     let additional_explanation =
       match (invalid_render_type_kind, renders_variant) with
-      | (InvalidRendersNonNominalElement, _) ->
-        [text " Only elements of a component-syntax components can appear in renders."]
+      | (InvalidRendersNonNominalElement r, _) ->
+        [
+          text " Only elements of a component-syntax components can appear in renders but ";
+          ref r;
+          text " is not a component-syntax component.";
+        ]
       | (InvalidRendersNullVoidFalse, Flow_ast.Type.Renders.Maybe) ->
         [
           text " Only elements of a component-syntax components can appear in renders. ";

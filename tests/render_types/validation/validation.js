@@ -34,3 +34,5 @@ type BadSpecificRenders3 = renders ($ReadOnlyArray<React$Element<typeof Foo>>); 
 type BadSpecificRenders4 = renders (Iterable<React$Element<typeof Foo>>); // error
 type BadSpecificRenders5 = renders (React.ChildrenArray<React$Element<typeof Foo>>); // error
 type BadSpecificRenders6 = renders (React.ChildrenArray<React$Element<typeof Foo> | null>); // error
+
+type BadUnion = renders React$Element<typeof Bar | typeof Baz>; // error
