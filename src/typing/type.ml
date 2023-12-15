@@ -1791,6 +1791,8 @@ module rec TypeTerm : sig
     | ImportEnumKind
     | InstanceKind
     | MappedTypeKind
+    | RenderTypeKind
+  (* T/U in renders T/renders (T | U). Render types do not require type arguments for polymorphic components *)
 
   (*
      Terminology:
@@ -4200,6 +4202,7 @@ let string_of_type_t_kind = function
   | ImportEnumKind -> "ImportEnumKind"
   | InstanceKind -> "InstanceKind"
   | MappedTypeKind -> "MappedTypeKind"
+  | RenderTypeKind -> "RenderTypeKind"
 
 (** A setter's type is determined by its sole parameter.
 

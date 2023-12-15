@@ -1311,7 +1311,8 @@ module Make (I : INPUT) : S = struct
         let%bind symbol =
           match kind with
           | TypeAliasKind
-          | InstanceKind ->
+          | InstanceKind
+          | RenderTypeKind ->
             Reason_utils.local_type_alias_symbol env r
           | ImportTypeofKind
           | ImportClassKind
@@ -1976,6 +1977,7 @@ module Make (I : INPUT) : S = struct
         | TypeParamKind -> type_param env r t
         (* The following cases are not common *)
         | InstanceKind -> terr ~kind:BadTypeAlias ~msg:"instance" (Some t)
+        | RenderTypeKind -> terr ~kind:BadTypeAlias ~msg:"render type" (Some t)
         | MappedTypeKind ->
           terr
             ~kind:BadTypeAlias
