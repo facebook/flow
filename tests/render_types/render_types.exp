@@ -1426,8 +1426,23 @@ References:
                                                           ^^^^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------- validation/validation.js:40:39
 
-Found 93 errors
+Cannot use `React.Element` [1] as the type argument of renders type. You can only use an element of `AbstractComponent`
+when the third type argument is a render type and number [2] is not a render type. [invalid-render]
+
+   validation/validation.js:40:39
+   40| type BadStructuralComponent = renders React$Element<React$AbstractComponent<empty, mixed, number>>; // error
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   validation/validation.js:40:91
+   40| type BadStructuralComponent = renders React$Element<React$AbstractComponent<empty, mixed, number>>; // error
+                                                                                                 ^^^^^^ [2]
+
+
+
+Found 94 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

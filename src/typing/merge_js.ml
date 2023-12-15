@@ -389,6 +389,24 @@ let validate_renders_type_arguments cx =
         renders_variant
         invalid_type_reason
         (Type_subst.subst cx subst_map t_out)
+    | DefT (_, ReactAbstractComponentT { component_kind = Structural; renders; _ }) ->
+      Flow_js.possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t renders) renders
+      |> Base.List.iter ~f:(fun t ->
+             match t with
+             | DefT (_, RendersT _) -> ()
+             | t ->
+               Flow_js_utils.add_output
+                 cx
+                 Error_message.(
+                   EInvalidRendersTypeArgument
+                     {
+                       loc;
+                       renders_variant;
+                       invalid_render_type_kind = InvalidRendersStructural (TypeUtil.reason_of_t t);
+                       invalid_type_reasons = Nel.one invalid_type_reason;
+                     }
+                 )
+         )
     | DefT (_, ReactAbstractComponentT { component_kind = Nominal _; _ }) -> ()
     | t ->
       Flow_js_utils.add_output

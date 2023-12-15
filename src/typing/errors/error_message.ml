@@ -840,6 +840,7 @@ and invalid_mapped_type_error_kind =
 and 'loc invalid_render_type_kind =
   | InvalidRendersNullVoidFalse
   | InvalidRendersIterable
+  | InvalidRendersStructural of 'loc virtual_reason
   | InvalidRendersNonNominalElement of 'loc virtual_reason
   | InvalidRendersGenericT
   | UncategorizedInvalidRenders
@@ -853,6 +854,7 @@ let string_of_assigned_const_like_binding_type = function
 let string_of_invalid_render_type_kind = function
   | InvalidRendersNullVoidFalse -> "null | void | false"
   | InvalidRendersIterable -> "iterable"
+  | InvalidRendersStructural _ -> "non-nominal-return"
   | InvalidRendersNonNominalElement _ -> "non-nominal"
   | InvalidRendersGenericT -> "generic"
   | UncategorizedInvalidRenders -> "uncategorized"
@@ -863,6 +865,7 @@ let map_loc_of_exponential_spread_reason_group f { first_reason; second_reason }
 let map_loc_of_invalid_render_type_kind f = function
   | InvalidRendersNullVoidFalse -> InvalidRendersNullVoidFalse
   | InvalidRendersIterable -> InvalidRendersIterable
+  | InvalidRendersStructural r -> InvalidRendersStructural (f r)
   | InvalidRendersNonNominalElement r -> InvalidRendersNonNominalElement (f r)
   | InvalidRendersGenericT -> InvalidRendersGenericT
   | UncategorizedInvalidRenders -> UncategorizedInvalidRenders
@@ -5191,6 +5194,14 @@ let friendly_message_of_msg loc_of_aloc msg =
       { loc = _; renders_variant; invalid_render_type_kind; invalid_type_reasons } ->
     let additional_explanation =
       match (invalid_render_type_kind, renders_variant) with
+      | (InvalidRendersStructural r, _) ->
+        [
+          text " You can only use an element of ";
+          code "AbstractComponent";
+          text " when the third type argument is a render type and ";
+          ref r;
+          text " is not a render type.";
+        ]
       | (InvalidRendersNonNominalElement r, _) ->
         [
           text " Only elements of a component-syntax components can appear in renders but ";

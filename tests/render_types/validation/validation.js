@@ -36,3 +36,6 @@ type BadSpecificRenders5 = renders (React.ChildrenArray<React$Element<typeof Foo
 type BadSpecificRenders6 = renders (React.ChildrenArray<React$Element<typeof Foo> | null>); // error
 
 type BadUnion = renders React$Element<typeof Bar | typeof Baz>; // error
+
+type BadStructuralComponent = renders React$Element<React$AbstractComponent<empty, mixed, number>>; // error
+type GoodStructuralComponent = renders React$Element<React$AbstractComponent<empty, mixed, renders Foo>>; // ok
