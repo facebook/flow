@@ -64,10 +64,6 @@ executors:
     docker:
       - image: ghcr.io/facebook/flow-website:latest
     working_directory: ~/flow
-  awscli:
-    docker:
-      - image: xueshanf/awscli:latest
-    working_directory: ~/flow
 
 commands:
   install-opam-mac:
@@ -728,37 +724,24 @@ jobs:
           cd website
           yarn add gh-pages
           yarn gh-pages -d build -u "flow-bot <flow-bot@users.noreply.github.com>" --repo https://${FLOW_BOT_TOKEN}@github.com/facebook/flow.git --no-history
-    - run:
-        name: Install gems
-        command: |
-          cd website
-          bundle config set path 'vendor/bundle'
-          bundle install
-    - save_cache:
-        key: v2-gem-{{ arch }}-{{ .Branch }}-{{ checksum "/etc/os-release" }}-{{ checksum "website/Gemfile.lock" }}
-        paths:
-          - website/vendor/bundle
-    - run:
-        name: Publish website to s3 bucket
-        command: cd website && bundle exec s3_website push --site build
 
   # deploys flow.js and the libdefs to Try Flow on release branches
   try_flow_deploy:
-    executor: awscli
+    executor: linux-node
     steps:
     - attach_workspace:
         at: ~/flow
     - run:
         name: Assemble files
         command: |
-          rm -rf ~/try_flow
-          mkdir ~/try_flow
-          cp bin/flow.js ~/try_flow/flow.js
-          cp -r lib ~/try_flow/flowlib
+          cp bin/flow.js packages/try-flow-website-js/flow.js
+          cp -r lib packages/try-flow-website-js/flowlib
+          make dist/npm-try-flow-website-js.tgz
     - run:
-        name: Upload to AWS
+        name: Deploy to NPM
         command: |
-          aws s3 cp ~/try_flow s3://${S3_BUCKET_NEW_WEBSITE}/flow/${CIRCLE_TAG}/ --recursive
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+          npm publish ./dist/npm-try-flow-website-js.tgz
 
 workflows:
   build_and_test:
