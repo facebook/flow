@@ -662,6 +662,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
   type pattern_write_kind =
     | VarBinding
     | LetBinding
+    | ClassBinding
     | ConstBinding
     | FunctionBinding
     | ComponentBinding
@@ -742,7 +743,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               }
           )
       | ( Bindings.(Var | DeclaredVar),
-          (LetBinding | ConstBinding | FunctionBinding | ComponentBinding)
+          (LetBinding | ClassBinding | ConstBinding | FunctionBinding | ComponentBinding)
         ) ->
         Some
           Error_message.(
@@ -755,23 +756,32 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             EBindingError (EVarRedeclaration, assignment_loc, OrdinaryName name, def_loc)
           )
       | ( Bindings.Const,
-          (VarBinding | LetBinding | ConstBinding | FunctionBinding | ComponentBinding)
+          ( VarBinding | LetBinding | ClassBinding | ConstBinding | FunctionBinding
+          | ComponentBinding )
         )
-      | (Bindings.Let, (VarBinding | LetBinding | ConstBinding | FunctionBinding | ComponentBinding))
+      | ( Bindings.Let,
+          ( VarBinding | LetBinding | ClassBinding | ConstBinding | FunctionBinding
+          | ComponentBinding )
+        )
       | ( Bindings.Class,
-          (VarBinding | LetBinding | ConstBinding | FunctionBinding | ComponentBinding)
+          ( VarBinding | LetBinding | ClassBinding | ConstBinding | FunctionBinding
+          | ComponentBinding )
         )
       | ( Bindings.Function,
-          (VarBinding | LetBinding | ConstBinding | FunctionBinding | ComponentBinding)
+          ( VarBinding | LetBinding | ClassBinding | ConstBinding | FunctionBinding
+          | ComponentBinding )
         )
       | ( Bindings.Component,
-          (VarBinding | LetBinding | ConstBinding | FunctionBinding | ComponentBinding)
+          ( VarBinding | LetBinding | ClassBinding | ConstBinding | FunctionBinding
+          | ComponentBinding )
         )
       | ( Bindings.Import,
-          (VarBinding | LetBinding | ConstBinding | FunctionBinding | ComponentBinding)
+          ( VarBinding | LetBinding | ClassBinding | ConstBinding | FunctionBinding
+          | ComponentBinding )
         )
       | ( Bindings.Type _,
-          (VarBinding | LetBinding | ConstBinding | FunctionBinding | ComponentBinding)
+          ( VarBinding | LetBinding | ClassBinding | ConstBinding | FunctionBinding
+          | ComponentBinding )
         )
         when not (Val.is_undeclared v) ->
         Some
@@ -779,15 +789,17 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)
           )
       | ( Bindings.(DeclaredClass | DeclaredConst | DeclaredLet),
-          (VarBinding | LetBinding | ConstBinding | FunctionBinding | ComponentBinding)
+          ( VarBinding | LetBinding | ClassBinding | ConstBinding | FunctionBinding
+          | ComponentBinding )
         )
         when assignment_loc <> def_loc ->
         Some
           Error_message.(
             EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)
           )
-      | (Bindings.DeclaredFunction _, (VarBinding | LetBinding | ConstBinding | ComponentBinding))
-        ->
+      | ( Bindings.DeclaredFunction _,
+          (VarBinding | LetBinding | ClassBinding | ConstBinding | ComponentBinding)
+        ) ->
         Some
           Error_message.(
             EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)
@@ -802,7 +814,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               (ETypeInValuePosition { imported; name }, assignment_loc, OrdinaryName name, def_loc)
           )
       | ( Bindings.(Parameter | ComponentParameter),
-          (VarBinding | LetBinding | ConstBinding | FunctionBinding | ComponentBinding)
+          ( VarBinding | LetBinding | ClassBinding | ConstBinding | FunctionBinding
+          | ComponentBinding )
         )
         when (Context.enable_const_params cx || stored_binding_kind = Bindings.ComponentParameter)
              && not (Val.is_undeclared v) ->
@@ -811,7 +824,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             EBindingError (ENameAlreadyBound, assignment_loc, OrdinaryName name, def_loc)
           )
       | ( Bindings.(Parameter | ComponentParameter),
-          (LetBinding | ConstBinding | FunctionBinding | ComponentBinding)
+          (LetBinding | ClassBinding | ConstBinding | FunctionBinding | ComponentBinding)
         )
         when not (Val.is_undeclared v) ->
         Some
@@ -2172,7 +2185,18 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
       method error_assignment loc x reason stored_binding_kind kind err val_ref =
         add_output err;
         let write_entries =
-          EnvMap.add_ordinary loc Env_api.NonAssigningWrite env_state.write_entries
+          let write_entry =
+            match kind with
+            | ClassBinding ->
+              (* Record duplicate classes as assigning writes so that in class_identifier_opt
+               * we can install entries for "this" and "super". *)
+              if Val.is_global !val_ref then
+                Env_api.GlobalWrite reason
+              else
+                Env_api.AssigningWrite reason
+            | _ -> Env_api.NonAssigningWrite
+          in
+          EnvMap.add_ordinary loc write_entry env_state.write_entries
         in
         (* Give unsupported var redeclaration a write to avoid spurious errors like use of
             possibly undefined variable. Essentially, we are treating var redeclaration as a
@@ -4009,7 +4033,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         let (class_write_loc, class_self_reason) =
           match id with
           | Some ((name_loc, { Ast.Identifier.name; comments = _ }) as id) ->
-            ignore @@ this#pattern_identifier ~kind:Ast.Variable.Let id;
+            this#bind_pattern_identifier_customized ~kind:ClassBinding name_loc name;
+            ignore @@ super#identifier id;
             (name_loc, mk_reason (RType (OrdinaryName name)) name_loc)
           | None ->
             let reason = mk_reason (RType (OrdinaryName "<<anonymous class>>")) loc in

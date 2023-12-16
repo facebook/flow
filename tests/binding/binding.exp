@@ -563,6 +563,118 @@ References:
                  ^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ duplicate.js:10:7
+
+Cannot declare `Bar1` [1] because the name is already bound. [name-already-bound]
+
+   duplicate.js:10:7
+   10| class Bar1 { // error - duplicate name
+             ^^^^
+
+References:
+   duplicate.js:3:6
+    3| type Bar1 = {};
+            ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- duplicate.js:13:10
+
+Cannot call `this.n` because property `n` is missing in `Bar1` [1]. [prop-missing]
+
+   duplicate.js:13:10
+   13|     this.n(); // error, n is not a method
+                ^
+
+References:
+   duplicate.js:10:7
+   10| class Bar1 { // error - duplicate name
+             ^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ duplicate.js:17:7
+
+Cannot declare `Bar2` [1] because the name is already bound. [name-already-bound]
+
+   duplicate.js:17:7
+   17| class Bar2 { // error - duplicate name
+             ^^^^
+
+References:
+   duplicate.js:4:22
+    4| import type {Node as Bar2} from 'react';
+                            ^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ duplicate.js:21:7
+
+Cannot declare `Bar3` [1] because the name is already bound. [name-already-bound]
+
+   duplicate.js:21:7
+   21| class Bar3 { // error - duplicate name
+             ^^^^
+
+References:
+   duplicate.js:5:7
+    5| class Bar3 {}
+             ^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ duplicate.js:26:6
+
+Cannot call `bar3.m` because property `m` is missing in `Bar3` [1]. [prop-missing]
+
+   duplicate.js:26:6
+   26| bar3.m(); // error, n is not a method in first definition of Bar3
+            ^
+
+References:
+   duplicate.js:25:14
+   25| const bar3 = new Bar3();
+                    ^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ duplicate.js:28:7
+
+Cannot declare `Bar4` [1] because the name is already bound. [name-already-bound]
+
+   duplicate.js:28:7
+   28| class Bar4 { // error - duplicate name
+             ^^^^
+
+References:
+   duplicate.js:6:10
+    6| function Bar4() {}
+                ^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ duplicate.js:32:7
+
+Cannot declare `Bar5` [1] because the name is already bound. [name-already-bound]
+
+   duplicate.js:32:7
+   32| class Bar5 { // error - duplicate name
+             ^^^^
+
+References:
+   duplicate.js:7:13
+    7| declare var Bar5: mixed;
+                   ^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ duplicate.js:36:7
+
+Cannot declare `Bar6` [1] because the name is already bound. [name-already-bound]
+
+   duplicate.js:36:7
+   36| class Bar6 { // error - duplicate name
+             ^^^^
+
+References:
+   duplicate.js:8:11
+    8| component Bar6() { return null; }
+                 ^^^^ [1]
+
+
 Error --------------------------------------------------------------------------------------------------- imports.js:2:8
 
 Cannot declare `R1` [1] because the name is already bound. [name-already-bound]
@@ -2049,4 +2161,4 @@ Cannot resolve name `unboundFunction2`. [cannot-resolve-name]
 
 
 
-Found 156 errors
+Found 164 errors
