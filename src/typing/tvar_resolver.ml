@@ -108,20 +108,18 @@ class resolver ~no_lowers =
       | _ ->
         let t =
           match Flow_js_utils.merge_tvar_opt cx r root_id with
-          | Some t -> Some t
-          | None -> Some (no_lowers r)
+          | Some t -> t
+          | None -> no_lowers r
         in
-        Base.Option.value_map t ~default:seen ~f:(fun t ->
-            let constraints =
-              if Context.typing_mode cx <> Context.CheckingMode then
-                C.Resolved t
-              else
-                C.FullyResolved (lazy t)
-            in
-            root.C.constraints <- constraints;
-            let seen = ISet.add root_id seen in
-            this#type_ cx pole seen t
-        )
+        let constraints =
+          if Context.typing_mode cx <> Context.CheckingMode then
+            C.Resolved t
+          else
+            C.FullyResolved (lazy t)
+        in
+        root.C.constraints <- constraints;
+        let seen = ISet.add root_id seen in
+        this#type_ cx pole seen t
 
     method call_arg cx seen t =
       match t with

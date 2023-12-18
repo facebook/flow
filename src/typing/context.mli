@@ -287,8 +287,6 @@ val pid_prefix : t -> string
 
 val copy_of_context : t -> t
 
-val merge_into : component_t -> sig_t -> unit
-
 val any_propagation : t -> bool
 
 val automatic_require_default : t -> bool

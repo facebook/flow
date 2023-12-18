@@ -969,18 +969,6 @@ let make_export_map cx tmap =
 
 let make_source_poly_id cx aloc = make_aloc_id cx aloc |> Type.Poly.id_of_aloc_id
 
-(* Copy context from cx_other to cx *)
-let merge_into ccx sig_cx_other =
-  let sig_cx = ccx.sig_cx in
-  ccx.sig_cx <-
-    {
-      property_maps = Type.Properties.Map.union sig_cx_other.property_maps sig_cx.property_maps;
-      call_props = IMap.union sig_cx_other.call_props sig_cx.call_props;
-      export_maps = Type.Exports.Map.union sig_cx_other.export_maps sig_cx.export_maps;
-      evaluated = Type.Eval.Map.union sig_cx_other.evaluated sig_cx.evaluated;
-      graph = IMap.union sig_cx_other.graph sig_cx.graph;
-    }
-
 let find_graph cx id = Type.Constraint.find_graph cx.ccx.sig_cx.graph id
 
 let find_constraints cx id = Type.Constraint.find_constraints cx.ccx.sig_cx.graph id
