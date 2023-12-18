@@ -96,6 +96,21 @@ Flags:
 type PolyElement = renders Poly<number>
 render_types.js:25:6,25:16
 
+render_types.js:28:6
+Flags:
+type PolyElementNoTargs = renders Poly
+render_types.js:28:6,28:23
+
+render_types.js:30:36
+Flags:
+element of component Poly<T>
+render_types.js:30:36,30:39
+
+render_types.js:35:6
+Flags:
+type UnionPoly = renders (Poly | Poly2)
+render_types.js:35:6,35:14
+
 render_types.js:8:7 = {
   "types":{
     "unevaluated":{

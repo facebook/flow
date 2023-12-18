@@ -9802,18 +9802,18 @@ struct
     let t = mk_typeapp_of_poly cx trace ~use_op ~reason_op ~reason_tapp id tparams_loc xs t ts in
     mk_instance cx ~trace reason_tapp t
 
-  and mk_instance cx ?trace instance_reason ?use_desc c =
-    mk_instance_raw cx ?trace instance_reason ?use_desc ~reason_type:instance_reason c
+  and mk_instance cx ?type_t_kind ?trace instance_reason ?use_desc c =
+    mk_instance_raw cx ?type_t_kind ?trace instance_reason ?use_desc ~reason_type:instance_reason c
 
-  and mk_instance_source cx ?trace instance_reason ~reason_type c =
+  and mk_instance_source cx ?(type_t_kind = InstanceKind) ?trace instance_reason ~reason_type c =
     Tvar.mk_where cx instance_reason (fun t ->
         (* this part is similar to making a runtime value *)
-        flow_opt_t cx ?trace ~use_op:unknown_use (c, DefT (reason_type, TypeT (InstanceKind, t)))
+        flow_opt_t cx ?trace ~use_op:unknown_use (c, DefT (reason_type, TypeT (type_t_kind, t)))
     )
 
-  and mk_instance_raw cx ?trace instance_reason ?(use_desc = false) ~reason_type c =
+  and mk_instance_raw cx ?type_t_kind ?trace instance_reason ?(use_desc = false) ~reason_type c =
     (* Make an annotation. *)
-    let source = mk_instance_source cx ?trace instance_reason ~reason_type c in
+    let source = mk_instance_source cx ?type_t_kind ?trace instance_reason ~reason_type c in
     AnnotT (instance_reason, source, use_desc)
 
   and instance_lookup_kind
@@ -10342,7 +10342,8 @@ let mk_default cx reason =
 let resolve_id cx id t =
   resolve_id cx Trace.dummy_trace ~use_op:unknown_use ~fully_resolved:true id t
 
-let mk_instance cx instance_reason ?use_desc c = mk_instance cx instance_reason ?use_desc c
+let mk_instance cx ?type_t_kind instance_reason ?use_desc c =
+  mk_instance ?type_t_kind cx instance_reason ?use_desc c
 
 let mk_typeof_annotation cx reason t = mk_typeof_annotation cx reason t
 

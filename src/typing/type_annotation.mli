@@ -10,7 +10,8 @@ open Reason
 module type C = sig
   val mk_typeof_annotation : Context.t -> Reason.t -> Type.t -> Type.t
 
-  val mk_instance : Context.t -> reason -> ?use_desc:bool -> Type.t -> Type.t
+  val mk_instance :
+    Context.t -> ?type_t_kind:Type.type_t_kind -> reason -> ?use_desc:bool -> Type.t -> Type.t
 
   val cjs_require : Context.t -> Type.t -> Reason.t -> bool -> bool -> Type.t
 

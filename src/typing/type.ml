@@ -3227,7 +3227,7 @@ module AConstraint = struct
     (* Other operations *)
     | Annot_SpecializeT of TypeTerm.use_op * Reason.t * Reason.t * TypeTerm.t list option
     | Annot_ThisSpecializeT of Reason.t * TypeTerm.t
-    | Annot_UseT_TypeT of Reason.t
+    | Annot_UseT_TypeT of Reason.t * TypeTerm.type_t_kind
     | Annot_GetPropT of Reason.t * TypeTerm.use_op * TypeTerm.propref
     | Annot_GetElemT of Reason.t * TypeTerm.use_op * TypeTerm.t (* key *)
     | Annot_ElemT of Reason.t * TypeTerm.use_op * TypeTerm.t (* read action only *)
@@ -3351,7 +3351,7 @@ module AConstraint = struct
     | Annot_ConcretizeForImportsExports (r, _)
     | Annot_SpecializeT (_, r, _, _)
     | Annot_ThisSpecializeT (r, _)
-    | Annot_UseT_TypeT r
+    | Annot_UseT_TypeT (r, _)
     | Annot_CJSRequireT { reason = r; _ }
     | Annot_ImportTypeofT (r, _)
     | Annot_ImportNamedT (r, _, _, _, _)

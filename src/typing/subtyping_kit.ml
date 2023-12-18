@@ -1191,6 +1191,26 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (_, ThisClassT (r, i, this, this_name)) ->
       let reason = reason_of_t l in
       rec_flow cx trace (l, UseT (use_op, fix_this_class cx reason (r, i, this, this_name)))
+    | ( DefT
+          ( reason_tapp,
+            PolyT
+              { tparams_loc; tparams = ids; t_out = DefT (_, ReactAbstractComponentT _) as t; _ }
+          ),
+        DefT (_, TypeT (RenderTypeKind, _))
+      ) ->
+      let reason_op = reason_of_t u in
+      let targs = Nel.to_list ids |> List.map (fun _ -> AnyT.untyped reason_op) in
+      let (t_, _) =
+        instantiate_poly_with_targs
+          cx
+          trace
+          ~use_op
+          ~reason_op
+          ~reason_tapp
+          (tparams_loc, ids, t)
+          targs
+      in
+      rec_flow_t cx trace ~use_op (t_, u)
     | (DefT (reason_tapp, PolyT { tparams_loc; tparams = ids; _ }), DefT (_, TypeT (_, t))) ->
       rec_flow_t cx trace ~use_op:unknown_use (AnyT.error reason_tapp, t);
       add_output

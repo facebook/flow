@@ -19,7 +19,8 @@ module T = Ast.Type
 module type C = sig
   val mk_typeof_annotation : Context.t -> Reason.t -> Type.t -> Type.t
 
-  val mk_instance : Context.t -> reason -> ?use_desc:bool -> Type.t -> Type.t
+  val mk_instance :
+    Context.t -> ?type_t_kind:Type.type_t_kind -> reason -> ?use_desc:bool -> Type.t -> Type.t
 
   val cjs_require : Context.t -> Type.t -> Reason.t -> bool -> bool -> Type.t
 
@@ -376,7 +377,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         )
     )
 
-  let rec convert cx tparams_map infer_tparams_map =
+  let rec convert cx ?(in_renders_arg = false) tparams_map infer_tparams_map =
     let open Ast.Type in
     function
     | (loc, (Any _ as t_ast)) ->
@@ -409,9 +410,9 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let reason = mk_annot_reason (RMaybe (desc_of_t t)) loc in
       ((loc, MaybeT (reason, t)), Nullable { Nullable.argument = t_ast; comments })
     | (loc, Union { Union.types = (t0, t1, ts); comments }) ->
-      let (((_, t0), _) as t0_ast) = convert cx tparams_map infer_tparams_map t0 in
-      let (((_, t1), _) as t1_ast) = convert cx tparams_map infer_tparams_map t1 in
-      let (ts, ts_ast) = convert_list cx tparams_map infer_tparams_map ts in
+      let (((_, t0), _) as t0_ast) = convert ~in_renders_arg cx tparams_map infer_tparams_map t0 in
+      let (((_, t1), _) as t1_ast) = convert ~in_renders_arg cx tparams_map infer_tparams_map t1 in
+      let (ts, ts_ast) = convert_list cx ~in_renders_arg tparams_map infer_tparams_map ts in
       let rep = UnionRep.make ~source_aloc:(Context.make_aloc_id cx loc) t0 t1 ts in
       ( (loc, UnionT (mk_annot_reason RUnionType loc, rep)),
         Union { Union.types = (t0_ast, t1_ast, ts_ast); comments }
@@ -633,7 +634,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         ConsGen.get_prop cx use_op id_reason ~op_reason:qid_reason (OrdinaryName name) m
       in
       let (t, targs) =
-        mk_nominal_type cx reason tparams_map infer_tparams_map (t_unapplied, targs)
+        mk_nominal_type cx ~in_renders_arg reason tparams_map infer_tparams_map (t_unapplied, targs)
       in
       ( (loc, t),
         Generic
@@ -687,7 +688,9 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let local_generic_type () =
         let reason = mk_reason (RType (OrdinaryName name)) loc in
         let c = type_identifier cx name name_loc in
-        let (t, targs) = mk_nominal_type cx reason tparams_map infer_tparams_map (c, targs) in
+        let (t, targs) =
+          mk_nominal_type cx ~in_renders_arg reason tparams_map infer_tparams_map (c, targs)
+        in
         reconstruct_ast t ~id_t:c targs
       in
       begin
@@ -1731,14 +1734,14 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       ((loc, AnyT.at AnnotatedAny loc), t_ast)
 
   and convert_list =
-    let rec loop (ts, tasts) cx tparams_map infer_tparams_map = function
+    let rec loop (ts, tasts) cx ?in_renders_arg tparams_map infer_tparams_map = function
       | [] -> (List.rev ts, List.rev tasts)
       | ast :: asts ->
-        let (((_, t), _) as tast) = convert cx tparams_map infer_tparams_map ast in
-        loop (t :: ts, tast :: tasts) cx tparams_map infer_tparams_map asts
+        let (((_, t), _) as tast) = convert ?in_renders_arg cx tparams_map infer_tparams_map ast in
+        loop (t :: ts, tast :: tasts) cx ?in_renders_arg tparams_map infer_tparams_map asts
     in
-    fun cx tparams_map infer_tparams_map asts ->
-      loop ([], []) cx tparams_map infer_tparams_map asts
+    fun cx ?in_renders_arg tparams_map infer_tparams_map asts ->
+      loop ([], []) cx ?in_renders_arg tparams_map infer_tparams_map asts
 
   and convert_opt cx tparams_map ast_opt =
     let tast_opt = Base.Option.map ~f:(convert cx tparams_map ALocMap.empty) ast_opt in
@@ -1812,7 +1815,9 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       infer_tparams_map
       loc
       { Ast.Type.Renders.operator_loc; comments; argument; variant } =
-    let (((argument_loc, t), _) as t_ast) = convert cx tparams_map infer_tparams_map argument in
+    let (((argument_loc, t), _) as t_ast) =
+      convert cx ~in_renders_arg:true tparams_map infer_tparams_map argument
+    in
     Context.add_renders_type_argument_validation cx ~allow_generic_t argument_loc variant t;
     let reason_desc =
       let arg_desc = desc_of_reason (reason_of_t t) in
@@ -2590,12 +2595,18 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
 
   (* Given the type of expression C and type arguments T1...Tn, return the type of
      values described by C<T1,...,Tn>, or C when there are no type arguments. *)
-  and mk_nominal_type cx reason tparams_map infer_tparams_map (c, targs) =
+  and mk_nominal_type cx ~in_renders_arg reason tparams_map infer_tparams_map (c, targs) =
     let annot_loc = loc_of_reason reason in
     match targs with
     | None ->
       let reason = annot_reason ~annot_loc reason in
-      (ConsGen.mk_instance cx reason c, None)
+      let type_t_kind =
+        if in_renders_arg then
+          RenderTypeKind
+        else
+          InstanceKind
+      in
+      (ConsGen.mk_instance cx ~type_t_kind reason c, None)
     | Some (loc, { Ast.Type.TypeArgs.arguments = targs; comments }) ->
       let (targs, targs_ast) = convert_list cx tparams_map infer_tparams_map targs in
       ( typeapp_annot ~use_desc:false annot_loc c targs,
@@ -3343,7 +3354,8 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
   let mk_function_type_annotation cx tparams_map =
     mk_function_type_annotation cx tparams_map ALocMap.empty
 
-  let mk_nominal_type cx reason tparams_map = mk_nominal_type cx reason tparams_map ALocMap.empty
+  let mk_nominal_type cx reason tparams_map =
+    mk_nominal_type cx ~in_renders_arg:false reason tparams_map ALocMap.empty
 
   let mk_type_param cx tparams_map = mk_type_param cx tparams_map ALocMap.empty
 

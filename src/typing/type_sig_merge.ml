@@ -444,14 +444,20 @@ let merge_exports =
       |> ConsGen.export_named file.cx reason Type.ExportType type_exports
       |> copy_star_exports file reason (stars, type_stars)
 
-let rec merge tps infer_tps file = function
-  | Pack.Annot t -> merge_annot tps infer_tps file t
+let rec merge ?(in_renders_arg = false) tps infer_tps file = function
+  | Pack.Annot t -> merge_annot ~in_renders_arg tps infer_tps file t
   | Pack.Value t -> merge_value tps infer_tps file t
   | Pack.Ref ref -> merge_ref file (fun t ~ref_loc:_ ~def_loc:_ _ -> t) ref
   | Pack.TyRef name ->
     let f t ref_loc (name, _) =
       let reason = Reason.(mk_annot_reason (RType (Reason.OrdinaryName name)) ref_loc) in
-      ConsGen.mk_type_reference file.cx reason t
+      let type_t_kind =
+        if in_renders_arg then
+          Type.RenderTypeKind
+        else
+          Type.TypeAliasKind
+      in
+      ConsGen.mk_type_reference ~type_t_kind file.cx reason t
     in
     merge_tyref file f name
   | Pack.TyRefApp { loc; name; targs } ->
@@ -477,7 +483,7 @@ let rec merge tps infer_tps file = function
     let reason = Reason.(mk_reason (RCustom "module reference") loc) in
     Flow_js_utils.lookup_builtin_typeapp file.cx reason (Reason.OrdinaryName "$Flow$ModuleRef") [t]
 
-and merge_annot tps infer_tps file = function
+and merge_annot ?(in_renders_arg = false) tps infer_tps file = function
   | Any loc -> Type.AnyT.at Type.AnnotatedAny loc
   | Mixed loc -> Type.MixedT.at loc
   | Empty loc -> Type.EmptyT.at loc
@@ -497,10 +503,10 @@ and merge_annot tps infer_tps file = function
     Type.MaybeT (reason, t)
   | Union { loc; t0; t1; ts } ->
     let reason = Reason.(mk_annot_reason RUnionType loc) in
-    let t0 = merge tps infer_tps file t0 in
-    let t1 = merge tps infer_tps file t1 in
+    let t0 = merge ~in_renders_arg tps infer_tps file t0 in
+    let t1 = merge ~in_renders_arg tps infer_tps file t1 in
     (* NB: tail-recursive map in case of very large types *)
-    let ts = Base.List.map ~f:(merge tps infer_tps file) ts in
+    let ts = Base.List.map ~f:(merge ~in_renders_arg tps infer_tps file) ts in
     Type.(UnionT (reason, UnionRep.make ~source_aloc:(Context.make_aloc_id file.cx loc) t0 t1 ts))
   | Intersection { loc; t0; t1; ts } ->
     let reason = Reason.(mk_annot_reason RIntersectionType loc) in
@@ -934,7 +940,7 @@ and merge_annot tps infer_tps file = function
     let reason = Reason.(mk_reason RFunctionType loc) in
     Type.CustomFunT (reason, Type.DebugSleep)
   | Renders (loc, t, renders_variant) ->
-    let t = merge tps infer_tps file t in
+    let t = merge ~in_renders_arg:true tps infer_tps file t in
     let reason =
       Reason.(mk_annot_reason (RRenderType (desc_of_reason (TypeUtil.reason_of_t t))) loc)
     in

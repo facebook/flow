@@ -24,3 +24,13 @@ type RendersElement = renders React$Element<typeof Foo>;
 component Poly<T>() { return null }
 type PolyElement = renders Poly<number>;
 //   ^
+
+type PolyElementNoTargs = renders Poly;
+//   ^
+type PolyElementNoTargs2 = renders Poly;
+//                                 ^
+
+component Poly2<T>() { return null }
+
+type UnionPoly = renders (Poly | Poly2);
+//   ^

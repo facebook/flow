@@ -233,6 +233,114 @@ References:
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------- poly_no_args.js:4:10
+
+Cannot use component Poly [1] without 1 type argument. [missing-type-arg]
+
+   poly_no_args.js:4:10
+   4| type T = Poly; // ERROR
+               ^^^^
+
+References:
+   poly_no_args.js:2:22
+   2| export component Poly<T>() { return null }
+                           ^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- poly_no_args.js:15:17
+
+Cannot assign `<NotPoly />` to `bad1` because `NotPoly` element [1] does not render `U` [2]. [incompatible-type]
+
+   poly_no_args.js:15:17
+   15| const bad1: U = <NotPoly />; // ERROR
+                       ^^^^^^^^^^^ [1]
+
+References:
+   poly_no_args.js:15:13
+   15| const bad1: U = <NotPoly />; // ERROR
+                   ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- poly_no_args.js:16:21
+
+Cannot assign `<NotPoly />` to `bad2` because: [incompatible-type]
+ - Either `NotPoly` element [1] does not render `Poly` [2].
+ - Or `NotPoly` element [1] does not render `Poly2` [3].
+
+   poly_no_args.js:16:21
+   16| const bad2: Multi = <NotPoly />; // ERROR
+                           ^^^^^^^^^^^ [1]
+
+References:
+   poly_no_args.js:8:30
+    8| export type Multi = renders (Poly | Poly2);
+                                    ^^^^ [2]
+   poly_no_args.js:8:37
+    8| export type Multi = renders (Poly | Poly2);
+                                           ^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------- poly_no_args_import.js:4:10
+
+Cannot use component Poly [1] without 1 type argument. [missing-type-arg]
+
+   poly_no_args_import.js:4:10
+   4| type T = Poly; // ERROR
+               ^^^^
+
+References:
+   poly_no_args.js:2:22
+   2| export component Poly<T>() { return null }
+                           ^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- poly_no_args_import.js:13:17
+
+Cannot assign `<NotPoly />` to `bad1` because `NotPoly` element [1] does not render `U` [2]. [incompatible-type]
+
+   poly_no_args_import.js:13:17
+   13| const bad1: U = <NotPoly />; // ERROR
+                       ^^^^^^^^^^^ [1]
+
+References:
+   poly_no_args_import.js:13:13
+   13| const bad1: U = <NotPoly />; // ERROR
+                   ^ [2]
+
+
+Error ------------------------------------------------------------------------------------- poly_no_args_import.js:14:18
+
+Cannot assign `<NotPoly />` to `bad2` because `NotPoly` element [1] does not render `U2` [2]. [incompatible-type]
+
+   poly_no_args_import.js:14:18
+   14| const bad2: U2 = <NotPoly />; // ERROR
+                        ^^^^^^^^^^^ [1]
+
+References:
+   poly_no_args_import.js:14:13
+   14| const bad2: U2 = <NotPoly />; // ERROR
+                   ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- poly_no_args_import.js:15:21
+
+Cannot assign `<NotPoly />` to `bad3` because: [incompatible-type]
+ - Either `NotPoly` element [1] does not render `Poly` [2].
+ - Or `NotPoly` element [1] does not render `Poly2` [3].
+
+   poly_no_args_import.js:15:21
+   15| const bad3: Multi = <NotPoly />; // ERROR
+                           ^^^^^^^^^^^ [1]
+
+References:
+   poly_no_args.js:8:30
+    8| export type Multi = renders (Poly | Poly2);
+                                    ^^^^ [2]
+   poly_no_args.js:8:37
+    8| export type Multi = renders (Poly | Poly2);
+                                           ^^^^^ [3]
+
+
 Error -------------------------------------------------------------------------------------------- renders_maybe.js:23:2
 
 Cannot cast `<Bar />` to renders? `MenuItem` because `Bar` element [1] does not render `MenuItem` [2].
@@ -1442,7 +1550,7 @@ References:
 
 
 
-Found 94 errors
+Found 101 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

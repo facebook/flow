@@ -214,7 +214,14 @@ module type SUBTYPING = sig
     Type.t list ->
     Type.t
 
-  val mk_instance : Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> Type.t -> Type.t
+  val mk_instance :
+    Context.t ->
+    ?type_t_kind:Type.type_t_kind ->
+    ?trace:Type.trace ->
+    reason ->
+    ?use_desc:bool ->
+    Type.t ->
+    Type.t
 end
 
 module type EVAL = sig

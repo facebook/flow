@@ -75,9 +75,10 @@ let get_builtin_typeapp cx reason x targs =
 module type S = sig
   val mk_typeof_annotation : Context.t -> Reason.t -> Type.t -> Type.t
 
-  val mk_type_reference : Context.t -> Reason.t -> Type.t -> Type.t
+  val mk_type_reference : Context.t -> type_t_kind:Type.type_t_kind -> Reason.t -> Type.t -> Type.t
 
-  val mk_instance : Context.t -> reason -> ?use_desc:bool -> Type.t -> Type.t
+  val mk_instance :
+    Context.t -> ?type_t_kind:Type.type_t_kind -> reason -> ?use_desc:bool -> Type.t -> Type.t
 
   val reposition : Context.t -> ALoc.t -> ?annot_loc:ALoc.t -> Type.t -> Type.t
 
@@ -240,6 +241,8 @@ module rec ConsGen : S = struct
   module InstantiationKit = Flow_js_utils.Instantiation_kit (Instantiation_helper)
 
   let instantiate_poly cx = InstantiationKit.instantiate_poly cx dummy_trace
+
+  let instantiate_poly_with_targs cx = InstantiationKit.instantiate_poly_with_targs cx dummy_trace
 
   let mk_typeapp_of_poly cx = InstantiationKit.mk_typeapp_of_poly cx dummy_trace
 
@@ -521,7 +524,25 @@ module rec ConsGen : S = struct
       let reason_op = Type.AConstraint.reason_of_op op in
       let t = mk_typeapp_instance cx ~use_op:typeapp_use_op ~reason_op ~reason_tapp type_ targs in
       elab_t cx t op
-    | (DefT (reason_tapp, PolyT { tparams_loc; tparams = ids; _ }), Annot_UseT_TypeT reason) ->
+    | ( DefT
+          ( reason_tapp,
+            PolyT
+              { tparams_loc; tparams = ids; t_out = DefT (_, ReactAbstractComponentT _) as t; _ }
+          ),
+        Annot_UseT_TypeT (reason_op, RenderTypeKind)
+      ) ->
+      let targs = Nel.to_list ids |> List.map (fun _ -> AnyT.untyped reason_op) in
+      let (t_, _) =
+        instantiate_poly_with_targs
+          cx
+          ~use_op:unknown_use
+          ~reason_op
+          ~reason_tapp
+          (tparams_loc, ids, t)
+          targs
+      in
+      elab_t cx t_ op
+    | (DefT (reason_tapp, PolyT { tparams_loc; tparams = ids; _ }), Annot_UseT_TypeT (reason, _)) ->
       Flow_js_utils.add_output
         cx
         (Error_message.EMissingTypeArgs
@@ -534,23 +555,23 @@ module rec ConsGen : S = struct
            }
         );
       AnyT.error reason
-    | (ThisClassT (r, i, is_this, this_name), Annot_UseT_TypeT reason) ->
+    | (ThisClassT (r, i, is_this, this_name), Annot_UseT_TypeT (reason, _)) ->
       let c = Flow_js_utils.fix_this_class cx reason (r, i, is_this, this_name) in
       elab_t cx c op
-    | (DefT (_, ClassT it), Annot_UseT_TypeT reason) ->
+    | (DefT (_, ClassT it), Annot_UseT_TypeT (reason, _)) ->
       (* a class value annotation becomes the instance type *)
       reposition cx (loc_of_reason reason) it
-    | ((DefT (_, ReactAbstractComponentT _) as l), Annot_UseT_TypeT reason) ->
+    | ((DefT (_, ReactAbstractComponentT _) as l), Annot_UseT_TypeT (reason, _)) ->
       (* a component syntax value annotation becomes an element of that component *)
       get_builtin_typeapp cx reason (OrdinaryName "React$Element") [l]
     | (DefT (_, TypeT (_, l)), Annot_UseT_TypeT _) -> l
     | (DefT (lreason, EnumObjectT enum), Annot_UseT_TypeT _) ->
       (* an enum object value annotation becomes the enum type *)
       mk_enum_type lreason enum
-    | (DefT (enum_reason, EnumT _), Annot_UseT_TypeT reason) ->
+    | (DefT (enum_reason, EnumT _), Annot_UseT_TypeT (reason, _)) ->
       Flow_js_utils.add_output cx Error_message.(EEnumMemberUsedAsType { reason; enum_reason });
       AnyT.error reason
-    | (l, Annot_UseT_TypeT reason_use) ->
+    | (l, Annot_UseT_TypeT (reason_use, _)) ->
       (match l with
       (* Short-circut as we already error on the unresolved name. *)
       | AnyT (_, AnyError _) -> ()
@@ -1160,16 +1181,17 @@ module rec ConsGen : S = struct
     | None -> c
     | Some ts -> specialize cx c unknown_use reason_op reason_tapp (Some ts)
 
-  and mk_type_reference cx reason c =
-    let f id = resolve_id cx reason id (elab_t cx c (Annot_UseT_TypeT reason)) in
+  and mk_type_reference cx ~type_t_kind reason c =
+    let f id = resolve_id cx reason id (elab_t cx c (Annot_UseT_TypeT (reason, type_t_kind))) in
     let tvar = mk_lazy_tvar cx reason f in
     AnnotT (reason, tvar, false)
 
-  and mk_instance cx instance_reason ?use_desc c =
-    mk_instance_raw cx instance_reason ?use_desc ~reason_type:instance_reason c
+  and mk_instance cx ?type_t_kind instance_reason ?use_desc c =
+    mk_instance_raw cx ?type_t_kind instance_reason ?use_desc ~reason_type:instance_reason c
 
-  and mk_instance_raw cx instance_reason ?(use_desc = false) ~reason_type c =
-    let source = elab_t cx c (Annot_UseT_TypeT reason_type) in
+  and mk_instance_raw
+      cx ?(type_t_kind = InstanceKind) instance_reason ?(use_desc = false) ~reason_type c =
+    let source = elab_t cx c (Annot_UseT_TypeT (reason_type, type_t_kind)) in
     AnnotT (instance_reason, source, use_desc)
 
   and mk_typeapp_instance cx ~use_op ~reason_op ~reason_tapp c ts =
