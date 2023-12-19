@@ -30,11 +30,20 @@ let type_parse_artifacts_with_cache
     ~options ~profiling ~type_parse_artifacts_cache master_cx file artifacts =
   match type_parse_artifacts_cache with
   | None ->
-    let result = Type_contents.type_parse_artifacts ~options ~profiling master_cx file artifacts in
+    let result =
+      Type_contents.type_parse_artifacts ~options ~profiling master_cx file (Lazy.force artifacts)
+    in
     (result, None)
   | Some cache ->
     let lazy_result =
-      lazy (Type_contents.type_parse_artifacts ~options ~profiling master_cx file artifacts)
+      lazy
+        (Type_contents.type_parse_artifacts
+           ~options
+           ~profiling
+           master_cx
+           file
+           (Lazy.force artifacts)
+        )
     in
     let (result, did_hit) = FilenameCache.with_cache_sync file lazy_result cache in
     (result, Some did_hit)
@@ -560,7 +569,7 @@ let infer_type
   | Ok (file_key, content) ->
     let options = { options with Options.opt_verbose = verbose } in
     let (file_artifacts_result, did_hit_cache) =
-      let parse_result = Type_contents.parse_contents ~options ~profiling content file_key in
+      let parse_result = lazy (Type_contents.parse_contents ~options ~profiling content file_key) in
       type_parse_artifacts_with_cache
         ~options
         ~profiling
@@ -766,7 +775,7 @@ let dump_types ~options ~env ~profiling ~evaluate_type_destructors file_input =
 
 let coverage ~options ~env ~profiling ~type_parse_artifacts_cache ~force file_key content =
   let (file_artifacts_result, did_hit_cache) =
-    let parse_result = Type_contents.parse_contents ~options ~profiling content file_key in
+    let parse_result = lazy (Type_contents.parse_contents ~options ~profiling content file_key) in
     type_parse_artifacts_with_cache
       ~options
       ~profiling
@@ -899,7 +908,9 @@ let get_def ~options ~reader ~env ~profiling ~type_parse_artifacts_cache (file_i
   | Ok (file_key, content) ->
     let (check_result, did_hit_cache) =
       match
-        let parse_result = Type_contents.parse_contents ~options ~profiling content file_key in
+        let parse_result =
+          lazy (Type_contents.parse_contents ~options ~profiling content file_key)
+        in
         type_parse_artifacts_with_cache
           ~options
           ~profiling
@@ -1210,7 +1221,7 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
     | Ok (file_key, file_contents) ->
       let (file_artifacts_result, _did_hit_cache) =
         let parse_result =
-          Type_contents.parse_contents ~options ~profiling file_contents file_key
+          lazy (Type_contents.parse_contents ~options ~profiling file_contents file_key)
         in
         let type_parse_artifacts_cache =
           Some (Persistent_connection.type_parse_artifacts_cache client)
@@ -1282,7 +1293,9 @@ let add_missing_imports ~reader ~options ~env ~profiling ~client textDocument =
     in
     let uri = TextDocumentIdentifier.(textDocument.uri) in
     let (file_artifacts_result, _did_hit_cache) =
-      let parse_result = Type_contents.parse_contents ~options ~profiling file_contents file_key in
+      let parse_result =
+        lazy (Type_contents.parse_contents ~options ~profiling file_contents file_key)
+      in
       type_parse_artifacts_with_cache
         ~options
         ~profiling
@@ -2196,7 +2209,7 @@ let handle_persistent_signaturehelp_lsp
     in
     let path = File_key.SourceFile path in
     let (file_artifacts_result, did_hit_cache) =
-      let parse_result = Type_contents.parse_contents ~options ~profiling contents path in
+      let parse_result = lazy (Type_contents.parse_contents ~options ~profiling contents path) in
       let type_parse_artifacts_cache =
         Some (Persistent_connection.type_parse_artifacts_cache client)
       in
@@ -2263,7 +2276,7 @@ let get_file_artifacts ~options ~client ~profiling ~env pos :
       let type_parse_artifacts_cache =
         Some (Persistent_connection.type_parse_artifacts_cache client)
       in
-      let parse_result = Type_contents.parse_contents ~options ~profiling content file_key in
+      let parse_result = lazy (Type_contents.parse_contents ~options ~profiling content file_key) in
       type_parse_artifacts_with_cache
         ~options
         ~profiling
@@ -3030,7 +3043,7 @@ let handle_live_errors_request =
                       ~type_parse_artifacts_cache
                       env.master_cx
                       file_key
-                      intermediate_result
+                      (lazy intermediate_result)
                 in
                 let (live_errors, live_warnings) =
                   Type_contents.printable_errors_of_file_artifacts_result
