@@ -1215,7 +1215,10 @@ recursive.js:51:31 = {
   "end":31
 }
 subst.js:13:7 = {
-  "types":{"unevaluated":{"type":"{f: number, ...}"},"evaluated":null},
+  "types":{
+    "unevaluated":{"type":"{f: number, ...}"},
+    "evaluated":{"type":"{f: number, ...}"}
+  },
   "reasons":[],
   "loc":{
     "source":"subst.js",
@@ -1230,7 +1233,7 @@ subst.js:13:7 = {
   "end":8
 }
 subst.js:14:7 = {
-  "types":{"unevaluated":{"type":"Poly<number>"},"evaluated":null},
+  "types":{"unevaluated":{"type":"Poly<number>"},"evaluated":{"type":"Poly<number>"}},
   "reasons":[],
   "loc":{
     "source":"subst.js",
@@ -1245,7 +1248,7 @@ subst.js:14:7 = {
   "end":8
 }
 subst.js:17:7 = {
-  "types":{"unevaluated":{"type":"Mono"},"evaluated":null},
+  "types":{"unevaluated":{"type":"Mono"},"evaluated":{"type":"Mono"}},
   "reasons":[],
   "loc":{
     "source":"subst.js",
@@ -1260,7 +1263,7 @@ subst.js:17:7 = {
   "end":8
 }
 subst.js:18:7 = {
-  "types":{"unevaluated":{"type":"Mono"},"evaluated":null},
+  "types":{"unevaluated":{"type":"Mono"},"evaluated":{"type":"Mono"}},
   "reasons":[],
   "loc":{
     "source":"subst.js",
@@ -1275,7 +1278,7 @@ subst.js:18:7 = {
   "end":8
 }
 subst.js:21:7 = {
-  "types":{"unevaluated":{"type":"React$Element"},"evaluated":null},
+  "types":{"unevaluated":{"type":"React$Element"},"evaluated":{"type":"React$Element"}},
   "reasons":[],
   "loc":{
     "source":"subst.js",
@@ -1290,7 +1293,10 @@ subst.js:21:7 = {
   "end":8
 }
 subst.js:22:7 = {
-  "types":{"unevaluated":{"type":"React$Element<any, any>"},"evaluated":null},
+  "types":{
+    "unevaluated":{"type":"React$Element<any, any>"},
+    "evaluated":{"type":"React$Element<any, any>"}
+  },
   "reasons":[],
   "loc":{
     "source":"subst.js",
