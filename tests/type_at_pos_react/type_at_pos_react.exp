@@ -28,7 +28,17 @@ react_component.js:31:7 = {
       },
       "type":"React$FragmentType"
     },
-    "evaluated":null
+    "evaluated":{
+      "expanded":{
+        "kind":"Generic",
+        "type":{
+          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:199:14-31"},
+          "name":"React$FragmentType"
+        },
+        "generic_kind":"type alias"
+      },
+      "type":"React$FragmentType"
+    }
   },
   "reasons":[],
   "loc":{
@@ -57,7 +67,18 @@ react_component.js:32:13 = {
       },
       "type":"ComponentType<number>"
     },
-    "evaluated":null
+    "evaluated":{
+      "expanded":{
+        "kind":"Generic",
+        "typeArgs":[{"kind":"Num"}],
+        "type":{
+          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:296:23-35"},
+          "name":"ComponentType"
+        },
+        "generic_kind":"type alias"
+      },
+      "type":"ComponentType<number>"
+    }
   },
   "reasons":[],
   "loc":{
@@ -94,7 +115,26 @@ react_component.js:32:29 = {
       },
       "type":"type ComponentType<-P> = React$ComponentType<P>"
     },
-    "evaluated":null
+    "evaluated":{
+      "expanded":{
+        "kind":"TypeAlias",
+        "name":{
+          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:296:23-35"},
+          "name":"ComponentType"
+        },
+        "typeParams":[{"name":"P","bound":null,"polarity":"Negative"}],
+        "body":{
+          "kind":"Generic",
+          "typeArgs":[{"kind":"Bound","bound":"P"}],
+          "type":{
+            "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:124:14-32"},
+            "name":"React$ComponentType"
+          },
+          "generic_kind":"type alias"
+        }
+      },
+      "type":"type ComponentType<-P> = React$ComponentType<P>"
+    }
   },
   "reasons":[],
   "loc":{

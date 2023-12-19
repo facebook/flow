@@ -2254,6 +2254,8 @@ module Make (I : INPUT) : S = struct
     let convert ~options ~genv scheme =
       let { Type.TypeScheme.tparams_rev; type_ = t } = scheme in
       let imported_names = ALocMap.empty in
+      (* We shouldn't need to evaluate any destructors for imports. *)
+      let options = { options with Env.evaluate_type_destructors = Env.EvaluateNone } in
       let env = Env.init ~options ~genv ~tparams_rev ~imported_names in
       let%map ty = ElementConverter.convert_toplevel ~env t in
       def_loc_of_elt ty
