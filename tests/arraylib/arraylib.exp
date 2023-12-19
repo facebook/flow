@@ -147,31 +147,31 @@ References:
                                        ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- array_lib.js:77:57
+Error ----------------------------------------------------------------------------------------------- array_lib.js:83:57
 
 Cannot call `Array.of` because number [1] is incompatible with string [2] in array element. [incompatible-call]
 
-   array_lib.js:77:57
-   77|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
+   array_lib.js:83:57
+   83|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
                                                                ^ [1]
 
 References:
-   array_lib.js:77:38
-   77|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
+   array_lib.js:83:38
+   83|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
                                             ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- array_lib.js:77:60
+Error ----------------------------------------------------------------------------------------------- array_lib.js:83:60
 
 Cannot call `Array.of` because number [1] is incompatible with string [2] in array element. [incompatible-call]
 
-   array_lib.js:77:60
-   77|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
+   array_lib.js:83:60
+   83|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
                                                                   ^ [1]
 
 References:
-   array_lib.js:77:38
-   77|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
+   array_lib.js:83:38
+   83|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
                                             ^^^^^^ [2]
 
 
