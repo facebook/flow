@@ -72,6 +72,47 @@ module.exports = (suite(
         findAllRefsSnapshot('use-prop-site-a.js', 5, 6, 'prop_defs_1.json'),
         findAllRefsSnapshot('use-prop-site-b.js', 5, 6, 'prop_defs_2.json'),
       ]),
+      test('Find all refs and rename with unsaved changes', [
+        addFiles(...fixtures),
+        lspStartAndConnect(),
+        // Open a document with errors. We should get a live syntax error immediately.
+        lspNotification('textDocument/didOpen', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-a.js',
+            languageId: 'javascript',
+            version: 1,
+            text: readFileSync(
+              join(__dirname, '__fixtures__', 'use-prop-site-a.js'),
+            ).toString(),
+          },
+        }).waitUntilLSPMessage(9000, 'textDocument/publishDiagnostics'),
+        // Make a change that introduces the error. We should get a report immediately.
+        lspNotification('textDocument/didChange', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-a.js',
+            version: 2,
+          },
+          contentChanges: [
+            {
+              text: `\n${readFileSync(
+                join(__dirname, '__fixtures__', 'use-prop-site-a.js'),
+              ).toString()}`,
+            },
+          ],
+        }).waitUntilLSPMessage(9000, 'textDocument/publishDiagnostics'),
+        findAllRefsSnapshot(
+          'use-prop-site-a.js',
+          6,
+          6,
+          'prop_defs_with_unsaved_changes.json',
+        ),
+        globalRenameSnapshot(
+          'use-prop-site-a.js',
+          6,
+          6,
+          'prop_defs_with_unsaved_changes.json',
+        ),
+      ]),
       test('Find all refs from identifiers', [
         addFiles(...fixtures),
         lspStartAndConnect(),
