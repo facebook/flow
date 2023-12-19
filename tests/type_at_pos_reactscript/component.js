@@ -21,3 +21,6 @@ declare const x: React$AbstractComponent<{}>;
 
 type xElement = x;
 //              ^
+
+component FooForParam(foo: ?number) { return null; }
+//                     ^

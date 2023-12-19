@@ -445,7 +445,9 @@ module Make (I : INPUT) : S = struct
       )
     | Env.EvaluateAll ->
       (match d with
-      | T.ReactPromoteRendersRepresentation _ -> false
+      | T.ReactDRO _
+      | T.ReactPromoteRendersRepresentation _ ->
+        false
       | _ -> true)
 
   (* Arguments:

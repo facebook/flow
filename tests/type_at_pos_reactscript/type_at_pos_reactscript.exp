@@ -51,6 +51,11 @@ Flags:
 element of component x
 component.js:22:17,22:17
 
+component.js:25:24
+Flags:
+?number
+component.js:25:23,25:25
+
 render_types.js:1:6
 Flags:
 type X = renders null
