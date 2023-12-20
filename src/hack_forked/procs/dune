@@ -17,7 +17,6 @@
   flow_common
   heap_shared_mem
   marshal_tools
-  marshal_tools_lwt
   procs_bucket
   procfs
   lwt.unix
