@@ -18,11 +18,11 @@
       "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-a.js",
       "range": {
         "start": {
-          "line": 4,
+          "line": 5,
           "character": 18
         },
         "end": {
-          "line": 4,
+          "line": 5,
           "character": 21
         }
       }
@@ -31,11 +31,11 @@
       "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-a.js",
       "range": {
         "start": {
-          "line": 5,
+          "line": 6,
           "character": 4
         },
         "end": {
-          "line": 5,
+          "line": 6,
           "character": 7
         }
       }
@@ -44,11 +44,11 @@
       "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-a.js",
       "range": {
         "start": {
-          "line": 7,
+          "line": 8,
           "character": 22
         },
         "end": {
-          "line": 7,
+          "line": 8,
           "character": 25
         }
       }
@@ -57,11 +57,11 @@
       "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-a.js",
       "range": {
         "start": {
-          "line": 8,
+          "line": 9,
           "character": 2
         },
         "end": {
-          "line": 8,
+          "line": 9,
           "character": 5
         }
       }
@@ -70,11 +70,11 @@
       "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-a.js",
       "range": {
         "start": {
-          "line": 11,
+          "line": 12,
           "character": 13
         },
         "end": {
-          "line": 11,
+          "line": 12,
           "character": 16
         }
       }
@@ -83,11 +83,11 @@
       "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-a.js",
       "range": {
         "start": {
-          "line": 13,
+          "line": 14,
           "character": 7
         },
         "end": {
-          "line": 13,
+          "line": 14,
           "character": 10
         }
       }
@@ -96,11 +96,11 @@
       "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-a.js",
       "range": {
         "start": {
-          "line": 14,
+          "line": 15,
           "character": 12
         },
         "end": {
-          "line": 14,
+          "line": 15,
           "character": 15
         }
       }
