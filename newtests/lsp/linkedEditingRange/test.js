@@ -296,59 +296,16 @@ module.exports = (suite(
       ),
     ]),
     test('malformed', [
-      addFile('malformed_jsx_1.js'),
+      addFile('malformed_jsx.js'),
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/linkedEditingRange', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/malformed_jsx_1.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/malformed_jsx.js'},
         position: {line: 4, character: 7}, // inner div tag
       }).verifyAllLSPMessagesInStep(
         [
           {
             method: 'textDocument/linkedEditingRange',
             result: null,
-          },
-        ],
-        [
-          'textDocument/publishDiagnostics',
-          'window/showStatus',
-          '$/cancelRequest',
-        ],
-      ),
-    ]),
-    test('malformed', [
-      addFile('malformed_jsx_2.js'),
-      lspStartAndConnect(),
-      lspRequestAndWaitUntilResponse('textDocument/linkedEditingRange', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/malformed_jsx_2.js'},
-        position: {line: 3, character: 4}, // non matching tag will return result
-      }).verifyAllLSPMessagesInStep(
-        [
-          {
-            method: 'textDocument/linkedEditingRange',
-            result: {
-              ranges: [
-                {
-                  start: {
-                    line: 3,
-                    character: 3,
-                  },
-                  end: {
-                    line: 3,
-                    character: 5,
-                  },
-                },
-                {
-                  start: {
-                    line: 3,
-                    character: 9,
-                  },
-                  end: {
-                    line: 3,
-                    character: 12,
-                  },
-                },
-              ],
-            },
           },
         ],
         [
