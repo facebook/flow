@@ -883,7 +883,6 @@ module Options_flags = struct
     include_suppressions: bool;
     estimate_recheck_time: bool option;
     long_lived_workers: bool option;
-    libdef_in_checking: bool option;
     batch_lsp_request_processing: bool option;
     distributed: bool;
   }
@@ -952,7 +951,6 @@ let options_flags =
       include_suppressions
       estimate_recheck_time
       long_lived_workers
-      libdef_in_checking
       batch_lsp_request_processing
       distributed =
     (match merge_timeout with
@@ -983,7 +981,6 @@ let options_flags =
         include_suppressions;
         estimate_recheck_time;
         long_lived_workers;
-        libdef_in_checking;
         batch_lsp_request_processing;
         distributed;
       }
@@ -1035,7 +1032,6 @@ let options_flags =
          not be part of our public API, so not included in the docs. *)
       |> flag "--estimate-recheck-time" (optional bool) ~doc:"" ~env:"FLOW_ESTIMATE_RECHECK_TIME"
       |> flag "--long-lived-workers" (optional bool) ~doc:"" ~env:"FLOW_LONG_LIVED_WORKERS"
-      |> flag "--libdef-in-checking" (optional bool) ~doc:"" ~env:"FLOW_LIBDEF_IN_CHECKING"
       |> flag
            "--batch-lsp-request-processing"
            (optional bool)
@@ -1417,10 +1413,7 @@ let make_options
         ~f:(Files.expand_project_root_token ~root)
         (FlowConfig.haste_paths_includes flowconfig);
     opt_file_options = file_options;
-    opt_libdef_in_checking =
-      Option.value
-        options_flags.libdef_in_checking
-        ~default:(FlowConfig.libdef_in_checking flowconfig);
+    opt_libdef_in_checking = FlowConfig.libdef_in_checking flowconfig;
     opt_batch_lsp_request_processing =
       Option.value
         options_flags.batch_lsp_request_processing

@@ -3,4 +3,3 @@ lib.js
 
 [options]
 exact_by_default=false
-experimental.libdef_in_checking=true
