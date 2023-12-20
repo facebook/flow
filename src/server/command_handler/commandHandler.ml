@@ -856,7 +856,7 @@ let get_cycle ~env fn types_only =
       Dependency_info.implementation_dependency_graph dependency_info
   in
   Ok
-    (let components = Sort_js.topsort ~roots:parsed (FilenameGraph.to_map dependency_graph) in
+    (let components = Sort_js.topsort ~roots:parsed dependency_graph in
      (* Get component for target file *)
      let component = List.find (Nel.mem ~equal:File_key.equal fn) components in
      (* Restrict dep graph to only in-cycle files *)

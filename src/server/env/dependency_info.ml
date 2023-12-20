@@ -44,13 +44,6 @@ let implementation_dependency_graph dep_info = dep_info.implementation_dependenc
 
 let sig_dependency_graph dep_info = dep_info.sig_dependency_graph
 
-let map_filenames f dep_info =
-  let { sig_dependency_graph; implementation_dependency_graph } = dep_info in
-  {
-    sig_dependency_graph = FilenameGraph.map f sig_dependency_graph;
-    implementation_dependency_graph = FilenameGraph.map f implementation_dependency_graph;
-  }
-
 let debug_to_string dep_info =
   let { sig_dependency_graph; implementation_dependency_graph } = dep_info in
   let sig_map = FilenameGraph.to_map sig_dependency_graph in

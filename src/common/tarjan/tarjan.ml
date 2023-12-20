@@ -18,10 +18,20 @@ module type NODE = sig
   val to_string : t -> string
 end
 
+module type Map = sig
+  type key
+
+  type value
+
+  type t
+
+  val find : key -> t -> value
+end
+
 module Make
     (N : NODE)
-    (NMap : WrappedMap.S with type key = N.t)
-    (NSet : Flow_set.S with type elt = N.t) =
+    (NSet : Flow_set.S with type elt = N.t)
+    (NMap : Map with type key = N.t and type value = NSet.t) =
 struct
   type node = {
     value: N.t;
@@ -34,7 +44,7 @@ struct
 
   (** Nodes are N.t. Edges are dependencies. **)
   type topsort_state = {
-    graph: NSet.t NMap.t;
+    graph: NMap.t;
     (* nodes, created on demand *)
     nodes: (N.t, node) Hashtbl.t;
     (* number of nodes visited *)

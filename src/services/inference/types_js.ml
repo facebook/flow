@@ -199,7 +199,7 @@ let include_dependencies_and_dependents
       let components =
         (* Grab the subgraph containing all our dependencies and sort it into the strongly connected
          * cycles *)
-        Sort_js.topsort ~roots:preliminary_dependencies (FilenameGraph.to_map sig_dependency_graph)
+        Sort_js.topsort ~roots:preliminary_dependencies sig_dependency_graph
       in
       let dependencies =
         let add_filename_to_set set filename = FilenameSet.add filename set in
