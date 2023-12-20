@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+let max_size = 10000
+
 module Size = struct
   exception SizeCutOff
 
@@ -16,29 +18,38 @@ module Size = struct
     | Exactly x -> Utils_js.spf "%d" x
     | GreaterThan x -> Utils_js.spf "(Greater than %d)" x
 
-  let of_type =
-    Ty.(
-      let size = ref 0 in
-      let o =
-        object
-          inherit [_] iter_ty as super
+  let size = ref 0
 
-          method! on_t max (t : Ty.t) =
-            size := !size + 1;
-            if !size > max then raise SizeCutOff;
-            super#on_t max t
-        end
-      in
-      fun ~max t ->
-        size := 0;
-        match o#on_t max t with
-        | exception SizeCutOff -> GreaterThan max
-        | () -> Exactly !size
-    )
+  let size_counter =
+    object
+      inherit [_] Ty.iter_ty as super
+
+      method! on_t max (t : Ty.t) =
+        size := !size + 1;
+        if !size > max then raise SizeCutOff;
+        super#on_t max t
+    end
+
+  let of_type ~max t =
+    size := 0;
+    match size_counter#on_t max t with
+    | exception SizeCutOff -> GreaterThan max
+    | () -> Exactly !size
+
+  let of_elt ~max t =
+    size := 0;
+    match size_counter#on_elt max t with
+    | exception SizeCutOff -> GreaterThan max
+    | () -> Exactly !size
 end
 
-let size_of_type ?(max = 10000) t =
+let size_of_type ?(max = max_size) t =
   match Size.of_type ~max t with
+  | Size.GreaterThan _ -> None
+  | Size.Exactly s -> Some s
+
+let size_of_elt ?(max = max_size) elt =
+  match Size.of_elt ~max elt with
   | Size.GreaterThan _ -> None
   | Size.Exactly s -> Some s
 

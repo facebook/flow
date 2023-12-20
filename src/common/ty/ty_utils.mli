@@ -9,6 +9,8 @@
     exceeds the max parameter. *)
 val size_of_type : ?max:int -> Ty.t -> int option
 
+val size_of_elt : ?max:int -> Ty.elt -> int option
+
 val simplify_type : merge_kinds:bool -> ?sort:bool -> Ty.t -> Ty.t
 
 val simplify_elt : merge_kinds:bool -> ?sort:bool -> Ty.elt -> Ty.elt

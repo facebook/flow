@@ -988,3 +988,50 @@ Flags:
 SemiHomomorphic<{foo: number, ...}, "foo">
 mapped-type.js:79:4,79:4
 
+evaluated-size-limit.js:6:6
+Flags:
+type ObjSmall = {p1: {[key in Keys]: string}, ...}
+= {
+  p1: {|
+    a: string,
+    b: string,
+    c: string,
+    d: string,
+    e: string,
+    f: string,
+    g: string,
+    h: string,
+    i: string,
+    j: string,
+    k: string,
+    l: string,
+    m: string,
+    n: string,
+    o: string,
+    p: string,
+    q: string,
+    r: string,
+    s: string,
+    t: string,
+    u: string,
+    v: string,
+    w: string,
+    x: string,
+    y: string,
+    z: string
+  |},
+  ...
+}
+evaluated-size-limit.js:6:6,6:13
+
+evaluated-size-limit.js:12:6
+Flags:
+type ObjBig = {
+  p1: {[key in Keys]: string},
+  p2: {[key in Keys]: string},
+  p3: {[key in Keys]: string},
+  p4: {[key in Keys]: string},
+  ...
+}
+evaluated-size-limit.js:12:6,12:11
+

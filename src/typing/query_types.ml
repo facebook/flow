@@ -22,6 +22,8 @@ let result_of_normalizer_error loc scheme err =
   let msg = Ty_normalizer.error_to_string err in
   FailureUnparseable (loc, scheme.Type.TypeScheme.type_, msg)
 
+let max_size_of_evaluated_type = 100
+
 let type_at_pos_type
     ~cx ~file ~file_sig ~omit_targ_defaults ~verbose_normalizer ~max_depth ~typed_ast loc :
     Ty.type_at_pos_result result =
@@ -66,7 +68,9 @@ let type_at_pos_type
     begin
       match (unevaluated, evaluated) with
       | (Ok unevaluated, Some (Ok evaluated)) ->
-        Success (loc, { Ty.unevaluated; evaluated = Some evaluated })
+        (match Ty_utils.size_of_elt ~max:max_size_of_evaluated_type evaluated with
+        | Some _ -> Success (loc, { Ty.unevaluated; evaluated = Some evaluated })
+        | None -> Success (loc, { Ty.unevaluated; evaluated = None }))
       | (Ok unevaluated, _) -> Success (loc, { Ty.unevaluated; evaluated = None })
       | (Error err, _) -> result_of_normalizer_error loc scheme err
     end
