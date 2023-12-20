@@ -1,60 +1,60 @@
-Error ----------------------------------------------------------------------------------------------- indexeddb.js:11:40
+Error ----------------------------------------------------------------------------------------------- indexeddb.js:19:40
 
 Cannot call `transaction.objectStore(...).getAll` because property `getAll` is missing in `IDBObjectStore` [1].
 [prop-missing]
 
-   indexeddb.js:11:40
-   11|     transaction.objectStore(storeName).getAll();
+   indexeddb.js:19:40
+   19|     transaction.objectStore(storeName).getAll();
                                               ^^^^^^
 
 References:
-   <BUILTINS>/indexeddb.js:73:30
-   73|   objectStore(name: string): IDBObjectStore;
+   <BUILTINS>/indexeddb.js:83:30
+   83|   objectStore(name: string): IDBObjectStore;
                                     ^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- indexeddb.js:12:40
+Error ----------------------------------------------------------------------------------------------- indexeddb.js:20:40
 
 Cannot call `transaction.objectStore(...).getAll` because property `getAll` is missing in `IDBObjectStore` [1].
 [prop-missing]
 
-   indexeddb.js:12:40
-   12|     transaction.objectStore(storeName).getAll('q');
+   indexeddb.js:20:40
+   20|     transaction.objectStore(storeName).getAll('q');
                                               ^^^^^^
 
 References:
-   <BUILTINS>/indexeddb.js:73:30
-   73|   objectStore(name: string): IDBObjectStore;
+   <BUILTINS>/indexeddb.js:83:30
+   83|   objectStore(name: string): IDBObjectStore;
                                     ^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- indexeddb.js:13:40
+Error ----------------------------------------------------------------------------------------------- indexeddb.js:21:40
 
 Cannot call `transaction.objectStore(...).getAll` because property `getAll` is missing in `IDBObjectStore` [1].
 [prop-missing]
 
-   indexeddb.js:13:40
-   13|     transaction.objectStore(storeName).getAll(undefined, 3);
+   indexeddb.js:21:40
+   21|     transaction.objectStore(storeName).getAll(undefined, 3);
                                               ^^^^^^
 
 References:
-   <BUILTINS>/indexeddb.js:73:30
-   73|   objectStore(name: string): IDBObjectStore;
+   <BUILTINS>/indexeddb.js:83:30
+   83|   objectStore(name: string): IDBObjectStore;
                                     ^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- indexeddb.js:14:40
+Error ----------------------------------------------------------------------------------------------- indexeddb.js:22:40
 
 Cannot call `transaction.objectStore(...).getAll` because property `getAll` is missing in `IDBObjectStore` [1].
 [prop-missing]
 
-   indexeddb.js:14:40
-   14|     transaction.objectStore(storeName).getAll('q', 3);
+   indexeddb.js:22:40
+   22|     transaction.objectStore(storeName).getAll('q', 3);
                                               ^^^^^^
 
 References:
-   <BUILTINS>/indexeddb.js:73:30
-   73|   objectStore(name: string): IDBObjectStore;
+   <BUILTINS>/indexeddb.js:83:30
+   83|   objectStore(name: string): IDBObjectStore;
                                     ^^^^^^^^^^^^^^ [1]
 
 

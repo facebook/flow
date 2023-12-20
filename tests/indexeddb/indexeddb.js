@@ -1,6 +1,14 @@
 // @flow
 
-const openRequest = (window.indexedDB: IDBFactory).open('dbName', 1);
+declare var indexedDB: IDBFactory;
+
+if (indexedDB.databases) {
+    indexedDB.databases().then(databases => {
+        databases.forEach(db => console.log(db))
+    });
+}
+
+const openRequest = indexedDB.open('dbName', 1);
 
 openRequest.onsuccess = function (e) {
     const db = e.target.result as IDBDatabase;
