@@ -14,7 +14,7 @@ val find_local_refs :
   kind:FindRefsTypes.kind ->
   line:int ->
   col:int ->
-  (FindRefsTypes.find_refs_ok, string) result
+  (Get_def_types.def_info * FindRefsTypes.find_refs_ok, string) result
 
 val local_refs_of_find_ref_request :
   options:Options.t ->

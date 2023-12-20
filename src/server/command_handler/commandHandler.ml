@@ -2280,7 +2280,8 @@ let get_file_artifacts ~options ~client ~profiling ~env pos :
     | Ok file_artifacts -> (Ok (Some (file_artifacts, file_key)), None))
 
 let find_local_references ~reader ~options ~file_artifacts ~kind file_key pos :
-    ((FindRefsTypes.find_refs_ok, string) result * Hh_json.json option) Lwt.t =
+    ((Get_def_types.def_info * FindRefsTypes.find_refs_ok, string) result * Hh_json.json option)
+    Lwt.t =
   let (parse_artifacts, typecheck_artifacts) = file_artifacts in
   let (line, col) = Flow_lsp_conversions.position_of_document_position pos in
   let%lwt refs_results =
@@ -2299,9 +2300,9 @@ let find_local_references ~reader ~options ~file_artifacts ~kind file_key pos :
   in
   let extra_data =
     match refs_results with
-    | Ok (FindRefsTypes.FoundReferences _) ->
+    | Ok (_def_info, FindRefsTypes.FoundReferences _) ->
       Some (Hh_json.JSON_Object [("result", Hh_json.JSON_String "SUCCESS")])
-    | Ok (FindRefsTypes.NoDefinition no_def_reason) ->
+    | Ok (_def_info, FindRefsTypes.NoDefinition no_def_reason) ->
       Some
         (Hh_json.JSON_Object
            [
@@ -2337,8 +2338,8 @@ let map_local_find_references_results ~reader ~options ~client ~profiling ~env ~
     in
     let mapped_refs =
       match local_refs with
-      | Ok (FindRefsTypes.FoundReferences refs) -> Ok (Base.List.filter_map ~f refs)
-      | Ok (FindRefsTypes.NoDefinition _) -> Ok []
+      | Ok (_def_info, FindRefsTypes.FoundReferences refs) -> Ok (Base.List.filter_map ~f refs)
+      | Ok (_def_info, FindRefsTypes.NoDefinition _) -> Ok []
       | Error _ as err -> err
     in
     Lwt.return (mapped_refs, extra_data)
@@ -2379,23 +2380,28 @@ let handle_global_find_references
   | Ok None ->
     let metadata = with_data ~extra_data:extra_parse_data metadata in
     Lwt.return
-      (env, LspProt.LspFromServer (Some (ResponseMessage (id, refs_to_lsp_result []))), metadata)
+      ( env,
+        LspProt.LspFromServer (Some (ResponseMessage (id, refs_to_lsp_result ~current_ast:None []))),
+        metadata
+      )
   | Ok (Some ((parse_artifacts, typecheck_artifacts), file_key)) ->
-    let (Types_js_types.Parse_artifacts { ast; file_sig; docblock; _ }) = parse_artifacts in
+    let (Types_js_types.Parse_artifacts { ast; _ }) = parse_artifacts in
     let (line, col) = Flow_lsp_conversions.position_of_document_position text_doc_position in
     (match
-       GetDefUtils.get_def_info
+       FindRefs_js.find_local_refs
          ~options
          ~reader
-         ~purpose:Get_def_types.Purpose.FindReferences
-         (ast, file_sig, docblock)
-         typecheck_artifacts
-         (Loc.cursor (Some file_key) line col)
+         ~file_key
+         ~parse_artifacts
+         ~typecheck_artifacts
+         ~kind
+         ~line
+         ~col
      with
     | Error reason ->
       (* If initial go-to-definition errors, we respond with error. *)
       Lwt.return (error_return reason)
-    | Ok (Get_def_types.NoDefinition no_def_reason) ->
+    | Ok (Get_def_types.NoDefinition no_def_reason, _) ->
       (* If initial go-to-definition returns no result, we respond with empty results. *)
       let extra_data =
         Hh_json.JSON_Object
@@ -2408,33 +2414,44 @@ let handle_global_find_references
       in
       let metadata = with_data ~extra_data:(Some extra_data) metadata in
       Lwt.return
-        (env, LspProt.LspFromServer (Some (ResponseMessage (id, refs_to_lsp_result []))), metadata)
-    | Ok
-        (Get_def_types.PropertyDefinition
-          (Get_def_types.PrivateNameProperty { def_loc; references; name = _ })
-          ) ->
+        ( env,
+          LspProt.LspFromServer
+            (Some (ResponseMessage (id, refs_to_lsp_result ~current_ast:(Some ast) []))),
+          metadata
+        )
+    | Ok (Get_def_types.PropertyDefinition (Get_def_types.PrivateNameProperty _), local_refs) ->
       (* We directly return the already computed find-ref result for private names, instead of
        * wasting time scheduling another recheck. *)
       let references =
-        (FindRefsTypes.PropertyDefinition, def_loc)
-        :: Base.List.map references ~f:(fun l -> (FindRefsTypes.PropertyAccess, l))
-        |> Base.List.dedup_and_sort ~compare:(fun (_, loc1) (_, loc2) -> Loc.compare loc1 loc2)
+        match local_refs with
+        | FindRefsTypes.NoDefinition _ -> []
+        | FindRefsTypes.FoundReferences refs -> refs
       in
       let extra_data = Hh_json.JSON_Object [("result", Hh_json.JSON_String "SUCCESS")] in
       let metadata = with_data ~extra_data:(Some extra_data) metadata in
       Lwt.return
         ( env,
-          LspProt.LspFromServer (Some (ResponseMessage (id, refs_to_lsp_result references))),
+          LspProt.LspFromServer
+            (Some (ResponseMessage (id, refs_to_lsp_result ~current_ast:(Some ast) references))),
           metadata
         )
-    | Ok def_info ->
+    | Ok (def_info, local_refs) ->
       (* The most interesting path for global find refs. We schedule a recheck, and a new
        * non-parallelizable command after the recheck to read the find ref *)
       let def_locs = GetDefUtils.all_locs_of_def_info def_info in
       let references_to_lsp_response result =
         match result with
         | Ok refs ->
-          let response = ResponseMessage (id, refs_to_lsp_result refs) in
+          (* We replace all the find ref results from recheck on the current file with the ones
+           * from local_refs. The local ones are more fresh, since it can see unsaved changes. *)
+          let refs =
+            Base.List.append
+              (match local_refs with
+              | FindRefsTypes.NoDefinition _ -> []
+              | FindRefsTypes.FoundReferences refs -> refs)
+              (Base.List.filter refs ~f:(fun (_, ref_loc) -> Loc.source ref_loc <> Some file_key))
+          in
+          let response = ResponseMessage (id, refs_to_lsp_result ~current_ast:(Some ast) refs) in
           let metadata =
             with_data
               ~extra_data:(Some (Hh_json.JSON_Object [("result", Hh_json.JSON_String "SUCCESS")]))
@@ -2467,7 +2484,7 @@ let handle_persistent_find_references ~reader ~options ~id ~params ~metadata ~cl
       ~env
       ~kind:FindRefsTypes.FindReferences
       ~request:(LspProt.LspToServer (RequestMessage (id, FindReferencesRequest params)))
-      ~refs_to_lsp_result:(fun refs ->
+      ~refs_to_lsp_result:(fun ~current_ast:_ refs ->
         let result_compare (_, l1) (_, l2) = Loc.compare l1 l2 in
         let locs =
           refs
@@ -2539,7 +2556,7 @@ let handle_persistent_rename ~reader ~options ~id ~params ~metadata ~client ~pro
       ~env
       ~kind:FindRefsTypes.Rename
       ~request:(LspProt.LspToServer (RequestMessage (id, RenameRequest params)))
-      ~refs_to_lsp_result:(fun refs ->
+      ~refs_to_lsp_result:(fun ~current_ast refs ->
         let (ref_map, files) =
           List.fold_left
             (fun (ref_map, files) (ref_kind, loc) ->
@@ -2554,7 +2571,11 @@ let handle_persistent_rename ~reader ~options ~id ~params ~metadata ~client ~pro
         let asts =
           files
           |> FilenameSet.elements
-          |> Base.List.filter_map ~f:(Parsing_heaps.Reader.get_ast ~reader)
+          |> Base.List.filter_map ~f:(fun filename ->
+                 match current_ast with
+                 | Some (ast_loc, _) when Loc.source ast_loc = Some filename -> current_ast
+                 | _ -> Parsing_heaps.Reader.get_ast ~reader filename
+             )
         in
         let diff_of_ast ast =
           Flow_ast_differ.program
@@ -2605,7 +2626,7 @@ let handle_persistent_rename ~reader ~options ~id ~params ~metadata ~client ~pro
         let (parse_artifacts, _typecheck_artifacts) = file_artifacts in
         let edits =
           match all_refs with
-          | Ok (FindRefsTypes.FoundReferences refs) ->
+          | Ok (_def_info, FindRefsTypes.FoundReferences refs) ->
             let (ref_map, files) =
               List.fold_left
                 (fun (ref_map, files) (ref_kind, loc) ->
@@ -2654,7 +2675,7 @@ let handle_persistent_rename ~reader ~options ~id ~params ~metadata ~client ~pro
               )
             in
             Ok { WorkspaceEdit.changes }
-          | Ok (FindRefsTypes.NoDefinition _) ->
+          | Ok (_def_info, FindRefsTypes.NoDefinition _) ->
             (* e.g. if it was requested on a place that's not even an identifier *)
             Ok { WorkspaceEdit.changes = UriMap.empty }
           | Error _ as err -> err

@@ -98,4 +98,4 @@ let find_local_refs
     | FindRefsTypes.FoundReferences refs -> FindRefsTypes.FoundReferences (sort_and_dedup refs)
     | FindRefsTypes.NoDefinition no_def_reason -> FindRefsTypes.NoDefinition no_def_reason
   in
-  Ok result
+  Ok (def_info, result)
