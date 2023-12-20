@@ -353,6 +353,8 @@ module Make
     let equal k1 k2 = compare k1 k2 = 0
   end
 
+  module EnvSet = Flow_set.Make (EnvKey)
+
   module EnvMap = struct
     include WrappedMap.Make (EnvKey)
 
@@ -364,8 +366,6 @@ module Make
 
     let update_ordinary l = update (OrdinaryNameLoc, l)
   end
-
-  module EnvSet = Flow_set.Make (EnvKey)
 
   type read_loc = L.t
 

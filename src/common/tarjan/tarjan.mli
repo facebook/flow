@@ -13,13 +13,23 @@ module type NODE = sig
   val to_string : t -> string
 end
 
+module type Map = sig
+  type key
+
+  type value
+
+  type t
+
+  val find : key -> t -> value
+end
+
 module Make
     (N : NODE)
-    (NMap : WrappedMap.S with type key = N.t)
-    (NSet : Flow_set.S with type elt = N.t) : sig
+    (NSet : Flow_set.S with type elt = N.t)
+    (NMap : Map with type key = N.t and type value = NSet.t) : sig
   (* given a map from keys to dependencies, returns whether the dependencies are
      cyclic, as well as a topologically sorted list of key lists where any keys in
      a list only depend on keys in a subsequent list
   *)
-  val topsort : roots:NSet.t -> NSet.t NMap.t -> N.t Nel.t list
+  val topsort : roots:NSet.t -> NMap.t -> N.t Nel.t list
 end

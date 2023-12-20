@@ -12,6 +12,16 @@ open Dependency_sigs
 module EnvMap = Env_api.EnvMap
 module EnvSet = Env_api.EnvSet
 
+module EnvMapToEnvSet = struct
+  type key = Env_api.EnvKey.t
+
+  type value = EnvSet.t
+
+  type t = ALoc.t Nel.t EnvMap.t EnvMap.t
+
+  let find key map = EnvMap.find key map |> EnvMap.keys |> EnvSet.of_list
+end
+
 module Tarjan =
   Tarjan.Make
     (struct
@@ -19,8 +29,8 @@ module Tarjan =
 
       let to_string (_, l) = ALoc.debug_to_string l
     end)
-    (EnvMap)
     (EnvSet)
+    (EnvMapToEnvSet)
 
 type 'k blame = {
   payload: 'k;
@@ -1419,7 +1429,7 @@ struct
     let order_graph = EnvMap.map (fun deps -> EnvMap.keys deps |> EnvSet.of_list) graph in
     let roots = EnvMap.keys order_graph |> EnvSet.of_list in
     let sort =
-      try Tarjan.topsort ~roots order_graph |> List.rev with
+      try Tarjan.topsort ~roots graph |> List.rev with
       | Not_found ->
         let all_locs =
           EnvMap.values order_graph

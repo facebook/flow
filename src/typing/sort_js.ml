@@ -6,4 +6,15 @@
  *)
 
 open Utils_js
-include Tarjan.Make (File_key) (FilenameMap) (FilenameSet)
+
+module IndirectFilenameMap = struct
+  type key = File_key.t
+
+  type value = FilenameSet.t
+
+  type t = FilenameGraph.t
+
+  let find file graph = FilenameGraph.find file graph
+end
+
+include Tarjan.Make (File_key) (FilenameSet) (IndirectFilenameMap)
