@@ -1,3 +1,12 @@
+### 0.225.1
+
+Notable bug fixes:
+
+* [fix] disable aggressive behavior of linkedEditingRange requests when there are parse errors
+* [fix] Only print "evaluated" hover type results if the type is of a reasonable size (less than 100 nodes)
+* [perf] faster LSP commands through skipping redundant parsing
+* [fix][ide] Find-all-references and rename will no longer return stale results on the file that triggers the request. Instead, we will compute the most up-to-date result at the time of the request for the triggering file.
+
 ### 0.225.0
 
 Notable bug fixes:
