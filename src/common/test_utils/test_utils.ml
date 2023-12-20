@@ -35,7 +35,6 @@ let make_options_flags
     ?(include_suppressions = false)
     ?estimate_recheck_time
     ?long_lived_workers
-    ?batch_lsp_request_processing
     ?(distributed = false)
     () =
   {
@@ -60,7 +59,6 @@ let make_options_flags
     include_suppressions;
     estimate_recheck_time;
     long_lived_workers;
-    batch_lsp_request_processing;
     distributed;
   }
 
