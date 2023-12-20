@@ -161,12 +161,30 @@ let make ~worker_mode ~channel_mode ~saved_state ~entry ~nbr_procs ~gc_control ~
   !made_workers
 
 (** Sends a request to call `f x` on `worker` *)
-let send worker worker_pid outfd (f : 'a -> 'b) (x : 'a) : unit Lwt.t =
+let send worker worker_pid outfd_lwt (f : 'a -> 'b) (x : 'a) : unit Lwt.t =
+  let outfd = Lwt_unix.unix_file_descr outfd_lwt in
   let request = Request (fun { send } -> send (f x)) in
   try%lwt
-    let%lwt _ =
-      Marshal_tools_lwt.to_fd_with_preamble ~flags:[Stdlib.Marshal.Closures] outfd request
-    in
+    (* Wait in an lwt-friendly manner for the worker to be writable (should be instant) *)
+    let%lwt () = Lwt_unix.wait_write outfd_lwt in
+
+    (* Write in a lwt-unfriendly, blocking manner to the worker.
+
+       I, glevi, found a perf regression when I used Marshal_tools_lwt to send the job
+       to the worker. Here's my hypothesis:
+
+       1. On a machine with many CPUs (like 56) we create 56 threads to send a job to each worker.
+       2. Lwt attempts to write the jobs to the workers in parallel.
+       3. Each worker spends more time between getting the first byte and last byte
+       4. Something something this leads to more context switches for the worker
+       5. The worker spends more time on a job
+
+       This is reinforced by the observation that the regression only happens as the number of
+       workers grows.
+
+       By switching from Marshal_tools_lwt.to_fd_with_preamble to Marshal_tools.to_fd_with_preamble,
+       the issue seems to have disappeared. *)
+    let _ = Marshal_tools.to_fd_with_preamble ~flags:[Stdlib.Marshal.Closures] outfd request in
     Lwt.return_unit
   with
   | exn ->
@@ -181,10 +199,20 @@ let send worker worker_pid outfd (f : 'a -> 'b) (x : 'a) : unit Lwt.t =
     | exception Unix.Unix_error (Unix.ECHILD, _, _) ->
       raise (Worker_failed_to_send_job (Worker_already_exited None)))
 
-let read (type result) worker_pid infd : (result * Measure.record_data) Lwt.t =
+let read (type result) worker_pid infd_lwt : (result * Measure.record_data) Lwt.t =
+  let infd = Lwt_unix.unix_file_descr infd_lwt in
   try%lwt
-    let%lwt (data : result) = Marshal_tools_lwt.from_fd_with_preamble infd in
-    let%lwt (stats : Measure.record_data) = Marshal_tools_lwt.from_fd_with_preamble infd in
+    (* Wait in an lwt-friendly manner for the worker to finish the job *)
+    let%lwt () = Lwt_unix.wait_read infd_lwt in
+
+    (* Read in a lwt-unfriendly, blocking manner from the worker.
+
+       Unlike writing (see `send`), reading from the worker didn't seem to trigger a perf issue
+       in our testing, but there's really nothing more urgent than reading a response from a
+       finished worker, so reading in a blocking manner is fine. *)
+    (* Due to https://github.com/ocsigen/lwt/issues/564, annotation cannot go on let%let node *)
+    let data : result = Marshal_tools.from_fd_with_preamble infd in
+    let stats : Measure.record_data = Marshal_tools.from_fd_with_preamble infd in
     Lwt.return (data, stats)
   with
   | Lwt.Canceled as exn ->
@@ -194,9 +222,11 @@ let read (type result) worker_pid infd : (result * Measure.record_data) Lwt.t =
     (* Each worker might call this but that's ok *)
     WorkerCancel.stop_workers ();
 
+    (* Wait for the worker to finish cancelling *)
+    let%lwt () = Lwt_unix.wait_read infd_lwt in
     (* Read the junk from the pipe *)
-    let%lwt _ = Marshal_tools_lwt.from_fd_with_preamble infd in
-    let%lwt _ = Marshal_tools_lwt.from_fd_with_preamble infd in
+    let _ = Marshal_tools.from_fd_with_preamble infd in
+    let _ = Marshal_tools.from_fd_with_preamble infd in
     Exception.reraise exn
   | exn ->
     let exn = Exception.wrap exn in
