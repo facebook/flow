@@ -1,3 +1,17 @@
+Error ------------------------------------------------------------------------------------------------- fragment.js:9:26
+
+Cannot assign `<>...</>` to `el3` because `Fragment` element [1] does not render `Bad` [2]. [incompatible-type]
+
+   fragment.js:9:26
+   9| const el3: renders Bad = <><Bar/></>; // ERROR
+                               ^^^^^^^^^^^ [1]
+
+References:
+   fragment.js:9:12
+   9| const el3: renders Bad = <><Bar/></>; // ERROR
+                 ^^^^^^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- import.js:7:2
 
 Cannot cast `<Foo />` to renders `React.Element` because `Foo` element [1] does not render `React.Element` [2].
@@ -1550,7 +1564,7 @@ References:
 
 
 
-Found 101 errors
+Found 102 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

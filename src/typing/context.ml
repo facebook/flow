@@ -464,7 +464,9 @@ let in_dirlist cx dirs =
 let casting_syntax cx = cx.metadata.casting_syntax
 
 let component_syntax cx =
-  cx.metadata.component_syntax || in_dirlist cx cx.metadata.component_syntax_includes
+  cx.metadata.component_syntax
+  || in_dirlist cx cx.metadata.component_syntax_includes
+  || File_key.is_lib_file cx.file
 
 let react_rules_always cx = cx.metadata.react_rules_always
 

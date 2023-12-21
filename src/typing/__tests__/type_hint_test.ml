@@ -28,7 +28,7 @@ let metadata =
     automatic_require_default = false;
     babel_loose_array_spread = false;
     casting_syntax = Options.CastingSyntax.Colon;
-    component_syntax = false;
+    component_syntax = true;
     component_syntax_includes = [];
     react_rules = [];
     react_rules_always = false;
@@ -78,7 +78,7 @@ end = struct
     let parse_options =
       Some
         {
-          Parser_env.components = false;
+          Parser_env.components = true;
           enums = true;
           esproposal_decorators = true;
           types = true;
@@ -151,7 +151,7 @@ end = struct
     let parse_options =
       Some
         {
-          Parser_env.components = false;
+          Parser_env.components = true;
           enums = true;
           (*
            * Always parse ES proposal syntax. The user-facing config option to

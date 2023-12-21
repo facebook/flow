@@ -216,10 +216,9 @@ function test21() {
   declare var a: Array<number>;
 
   function F(): React.MixedElement {
-    // okay on []
     return (
       <>
-        { a.map(_ => []) }
+        { a.map(_ => 3) }
       </>
     );
   }

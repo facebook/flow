@@ -6,5 +6,23 @@ Component syntax is not enabled. [unsupported-syntax]
       ^^^^^^^^^^^^^^^^^^^
 
 
+Error ------------------------------------------------------------------------------------------------------ test.js:4:2
 
-Found 1 error
+Cannot cast `3` to `React.FragmentType` because number [1] is incompatible with component Fragment [2].
+[incompatible-cast]
+
+   test.js:4:2
+     4| (3: React$FragmentType); // ERROR
+         ^ [1]
+
+References:
+   <BUILTINS>/react.js:319:18
+                         v----------------------------------------------------
+   319|   declare export component Fragment<Renders: React$Node = React$Node>(
+   320|     children?: Renders,
+   321|   ) renders Renders;
+          -----------------^ [2]
+
+
+
+Found 2 errors

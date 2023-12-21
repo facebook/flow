@@ -191,6 +191,7 @@ let component_syntax_includes opts = opts.opt_component_syntax_includes
 
 let typecheck_component_syntax_in_file opts file =
   typecheck_component_syntax opts
+  || File_key.is_lib_file file
   || begin
        match component_syntax_includes opts with
        | [] -> false

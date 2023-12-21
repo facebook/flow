@@ -15,29 +15,72 @@ react_component.js:13:29,13:37
 react_component.js:18:17 = State
 react_component.js:18:14,18:18
 react_component.js:31:7 = {
-  "documentation":"`<Fragment>`, often used via `<>...</>` syntax,\nlets you group elements without a wrapper node.\n\n**@see** https://react.dev/reference/react/Fragment",
   "types":{
     "unevaluated":{
       "expanded":{
-        "kind":"Generic",
-        "type":{
-          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:199:14-31"},
-          "name":"React$FragmentType"
+        "kind":"NominalComponentDecl",
+        "name":{
+          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:319:18,321:20"},
+          "name":"Fragment"
         },
-        "generic_kind":"type alias"
+        "typeParams":[
+          {
+            "name":"Renders",
+            "bound":{
+              "kind":"Generic",
+              "type":{
+                "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:15:14-23"},
+                "name":"React$Node"
+              },
+              "generic_kind":"type alias"
+            },
+            "polarity":"Neutral",
+            "default":{
+              "kind":"Generic",
+              "type":{
+                "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:15:14-23"},
+                "name":"React$Node"
+              },
+              "generic_kind":"type alias"
+            }
+          }
+        ],
+        "isType":false
       },
-      "type":"React$FragmentType"
+      "type":"component Fragment<Renders: React$Node = React$Node>"
     },
     "evaluated":{
       "expanded":{
-        "kind":"Generic",
-        "type":{
-          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:199:14-31"},
-          "name":"React$FragmentType"
+        "kind":"NominalComponentDecl",
+        "name":{
+          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:319:18,321:20"},
+          "name":"Fragment"
         },
-        "generic_kind":"type alias"
+        "typeParams":[
+          {
+            "name":"Renders",
+            "bound":{
+              "kind":"Generic",
+              "type":{
+                "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:15:14-23"},
+                "name":"React$Node"
+              },
+              "generic_kind":"type alias"
+            },
+            "polarity":"Neutral",
+            "default":{
+              "kind":"Generic",
+              "type":{
+                "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:15:14-23"},
+                "name":"React$Node"
+              },
+              "generic_kind":"type alias"
+            }
+          }
+        ],
+        "isType":false
       },
-      "type":"React$FragmentType"
+      "type":"component Fragment<Renders: React$Node = React$Node>"
     }
   },
   "reasons":[],
