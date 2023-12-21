@@ -8678,23 +8678,7 @@ struct
     | _ -> true
 
   and __unify cx ~use_op ~unify_any t1 t2 trace =
-    begin
-      match Context.verbose cx with
-      | Some { Verbose.indent; depth; enabled_during_flowlib = _; focused_files = _ }
-        when Context.is_verbose cx ->
-        let indent = String.make ((Trace.trace_depth trace - 1) * indent) ' ' in
-        let pid = Context.pid_prefix cx in
-        prerr_endlinef
-          "\n%s%s%s =\n%s%s%s"
-          indent
-          pid
-          (Debug_js.dump_t ~depth cx t1)
-          indent
-          pid
-          (Debug_js.dump_t ~depth cx t2)
-      | _ -> ()
-    end;
-
+    print_unify_types_if_verbose cx trace (t1, t2);
     (* If the type is the same type or we have already seen this type pair in our
      * cache then do not continue. *)
     if t1 = t2 then

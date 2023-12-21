@@ -42,4 +42,7 @@ module Verbose : sig
 
   val print_types_if_verbose :
     Context.t -> Type.trace -> ?note:string -> Type.t * Type.use_t -> unit
+
+  val print_unify_types_if_verbose :
+    Context.t -> Type.trace -> ?note:string -> Type.t * Type.t -> unit
 end

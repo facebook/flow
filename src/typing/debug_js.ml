@@ -1924,4 +1924,15 @@ module Verbose = struct
       in
       print_if_verbose cx ~trace ~delim [dump_t ~depth cx l; dump_use_t ~depth cx u]
     | _ -> ()
+
+  let print_unify_types_if_verbose cx trace ?(note : string option) ((l : Type.t), (u : Type.t)) =
+    match Context.verbose cx with
+    | Some { Verbose.depth; _ } when Context.is_verbose cx ->
+      let delim =
+        match note with
+        | Some x -> spf " = %s" x
+        | None -> " ="
+      in
+      print_if_verbose cx ~trace ~delim [dump_t ~depth cx l; dump_t ~depth cx u]
+    | _ -> ()
 end
