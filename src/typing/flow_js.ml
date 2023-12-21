@@ -8680,8 +8680,8 @@ struct
   and __unify cx ~use_op ~unify_any t1 t2 trace =
     begin
       match Context.verbose cx with
-      | Some ({ Verbose.indent; depth; enabled_during_flowlib = _; focused_files = _ } as verbose)
-        when Debug_js.Verbose.verbose_in_file cx verbose ->
+      | Some { Verbose.indent; depth; enabled_during_flowlib = _; focused_files = _ }
+        when Context.is_verbose cx ->
         let indent = String.make ((Trace.trace_depth trace - 1) * indent) ' ' in
         let pid = Context.pid_prefix cx in
         prerr_endlinef

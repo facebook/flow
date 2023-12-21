@@ -1898,16 +1898,10 @@ let dump_error_message =
         (SSet.to_string required_platforms)
 
 module Verbose = struct
-  let verbose_in_file cx verbose =
-    match verbose with
-    | { Verbose.focused_files = Some filenames; _ } ->
-      Base.List.mem filenames (Context.file cx |> File_key.to_string) ~equal:String.equal
-    | { Verbose.focused_files = None; _ } -> true
-
   let print_if_verbose_lazy
       cx ?(trace = Trace.dummy_trace) ?(delim = "") ?(indent = 0) (lines : string list Lazy.t) =
     match Context.verbose cx with
-    | Some ({ Verbose.indent = num_spaces; _ } as verbose) when verbose_in_file cx verbose ->
+    | Some { Verbose.indent = num_spaces; _ } when Context.is_verbose cx ->
       let indent = max (indent + Trace.trace_depth trace - 1) 0 in
       let prefix = String.make (indent * num_spaces) ' ' in
       let pid = Context.pid_prefix cx in
@@ -1918,14 +1912,11 @@ module Verbose = struct
 
   let print_if_verbose
       cx ?(trace = Trace.dummy_trace) ?(delim = "") ?(indent = 0) (lines : string list) =
-    match Context.verbose cx with
-    | Some verbose when verbose_in_file cx verbose ->
-      print_if_verbose_lazy cx ~trace ~delim ~indent (lazy lines)
-    | _ -> ()
+    if Context.is_verbose cx then print_if_verbose_lazy cx ~trace ~delim ~indent (lazy lines)
 
   let print_types_if_verbose cx trace ?(note : string option) ((l : Type.t), (u : Type.use_t)) =
     match Context.verbose cx with
-    | Some ({ Verbose.depth; _ } as verbose) when verbose_in_file cx verbose ->
+    | Some { Verbose.depth; _ } when Context.is_verbose cx ->
       let delim =
         match note with
         | Some x -> spf " ~> %s" x

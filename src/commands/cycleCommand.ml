@@ -7,10 +7,6 @@
 
 open CommandUtils
 
-let print_endlinef = Utils_js.print_endlinef
-
-let prerr_endlinef = Utils_js.prerr_endlinef
-
 let spec =
   {
     CommandSpec.name = "cycle";
