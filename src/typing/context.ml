@@ -531,10 +531,14 @@ let is_checked cx = cx.metadata.checked
 let is_verbose cx =
   match cx.metadata.verbose with
   | None -> false
-  | Some { Verbose.focused_files = None; _ } -> true
-  | Some { Verbose.focused_files = Some files; _ } ->
+  | Some { Verbose.focused_files = None; enabled_during_flowlib; _ } ->
+    enabled_during_flowlib || not (File_key.is_lib_file (file cx))
+  | Some { Verbose.focused_files = Some files; enabled_during_flowlib; _ } ->
     let file = file cx in
-    Base.List.mem files (File_key.to_string file) ~equal:String.equal
+    if File_key.is_lib_file file then
+      enabled_during_flowlib
+    else
+      Base.List.mem files (File_key.to_string file) ~equal:String.equal
 
 let is_strict cx = Base.Option.is_some cx.declare_module_ref || cx.metadata.strict
 

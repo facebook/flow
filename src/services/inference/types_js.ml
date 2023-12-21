@@ -627,14 +627,6 @@ let init_libs
     ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ~validate_libdefs ordered_libs
     =
   with_memory_timer_lwt ~options "InitLibs" profiling (fun () ->
-      let options =
-        match Options.verbose options with
-        | Some { Verbose.enabled_during_flowlib = false; _ } ->
-          (* Normally we disable verbosity while loading the libs. But if we're running with
-           * --verbose-flowlib then we want to leave verbosity on *)
-          { options with Options.opt_verbose = None }
-        | _ -> options
-      in
       let%lwt {
             Init_js.ok;
             errors = lib_errors;
