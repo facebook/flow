@@ -34,7 +34,7 @@ class mapper target =
       } ->
         let opening_loc = loc_of_jsx_name opening_name in
         let closing_loc = loc_of_jsx_name closing_name in
-        if Loc.contains opening_loc target || Loc.contains closing_loc target then
+        if Loc.contains opening_loc target then
           raise (Found [opening_loc; closing_loc])
         else
           super#jsx_element elem_loc elem
@@ -45,7 +45,7 @@ class mapper target =
       let { frag_opening_element; frag_closing_element; _ } = frag in
       let opening_loc = name_loc_of_jsx_fragment_element_loc frag_opening_element in
       let closing_loc = name_loc_of_jsx_fragment_element_loc frag_closing_element in
-      if Loc.contains opening_loc target || Loc.contains closing_loc target then
+      if Loc.contains opening_loc target then
         raise (Found [opening_loc; closing_loc])
       else
         super#jsx_fragment frag_loc frag

@@ -67,35 +67,7 @@ module.exports = (suite(
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/jsx.js'},
         position: {line: 7, character: 7}, // closing Foo
       }).verifyAllLSPMessagesInStep(
-        [
-          {
-            method: 'textDocument/linkedEditingRange',
-            result: {
-              ranges: [
-                {
-                  start: {
-                    line: 5,
-                    character: 3,
-                  },
-                  end: {
-                    line: 5,
-                    character: 6,
-                  },
-                },
-                {
-                  start: {
-                    line: 7,
-                    character: 4,
-                  },
-                  end: {
-                    line: 7,
-                    character: 7,
-                  },
-                },
-              ],
-            },
-          },
-        ],
+        [{method: 'textDocument/linkedEditingRange', result: null}],
         [
           'textDocument/publishDiagnostics',
           'window/showStatus',
@@ -239,35 +211,7 @@ module.exports = (suite(
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/jsx.js'},
         position: {line: 21, character: 4}, // closing fragment
       }).verifyAllLSPMessagesInStep(
-        [
-          {
-            method: 'textDocument/linkedEditingRange',
-            result: {
-              ranges: [
-                {
-                  start: {
-                    line: 19,
-                    character: 3,
-                  },
-                  end: {
-                    line: 19,
-                    character: 3,
-                  },
-                },
-                {
-                  start: {
-                    line: 21,
-                    character: 4,
-                  },
-                  end: {
-                    line: 21,
-                    character: 4,
-                  },
-                },
-              ],
-            },
-          },
-        ],
+        [{method: 'textDocument/linkedEditingRange', result: null}],
         [
           'textDocument/publishDiagnostics',
           'window/showStatus',
