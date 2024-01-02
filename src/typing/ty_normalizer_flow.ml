@@ -104,12 +104,15 @@ let from_types ~options ~genv ts =
   in
   result
 
-let from_scheme ~options ~genv scheme =
+let from_scheme_with_found_computed_type ~options ~genv scheme =
   print_normalizer_banner options;
   let imported_names = run_imports ~options ~genv in
   let { Type.TypeScheme.tparams_rev; type_ = t } = scheme in
-  let (result, _) = run_type ~options ~genv ~imported_names ~tparams_rev State.empty t in
-  result
+  let (result, state) = run_type ~options ~genv ~imported_names ~tparams_rev State.empty t in
+  (result, State.found_computed_type state)
+
+let from_scheme ~options ~genv scheme =
+  fst (from_scheme_with_found_computed_type ~options ~genv scheme)
 
 let from_type ~options ~genv t =
   print_normalizer_banner options;

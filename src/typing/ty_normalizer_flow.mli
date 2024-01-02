@@ -10,6 +10,9 @@ open Ty_normalizer_env
 val from_scheme :
   options:options -> genv:genv -> Type.TypeScheme.t -> (Ty.elt, Ty_normalizer.error) result
 
+val from_scheme_with_found_computed_type :
+  options:options -> genv:genv -> Type.TypeScheme.t -> (Ty.elt, Ty_normalizer.error) result * bool
+
 (* The following differ from mapping `from_type` on each input as it folds over
    the input elements of the input propagating the state (caches) after each
    transformation to the next element. *)

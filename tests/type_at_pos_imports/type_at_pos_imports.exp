@@ -1,5 +1,5 @@
 exports-class-cjs.js:3:24 = {
-  "types":{"unevaluated":{"type":"class klass<T>"},"evaluated":{"type":"class klass<T>"}},
+  "types":{"unevaluated":{"type":"class klass<T>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"exports-class-cjs.js",
@@ -14,7 +14,7 @@ exports-class-cjs.js:3:24 = {
   "end":27
 }
 exports-class-cjs.js:5:25 = {
-  "types":{"unevaluated":{"type":"() => void"},"evaluated":{"type":"() => void"}},
+  "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"exports-class-cjs.js",
@@ -41,17 +41,7 @@ import-interface.js:3:15 (--expand-json-output) = {
       },
       "type":"interface Listener<TFields>"
     },
-    "evaluated":{
-      "expanded":{
-        "kind":"InterfaceDecl",
-        "name":{
-          "provenance":{"kind":"Imported as `Listener` (type)","loc":"exports-interface.js:9:18-25"},
-          "name":"Listener"
-        },
-        "typeParams":[{"name":"TFields","bound":null,"polarity":"Neutral"}]
-      },
-      "type":"interface Listener<TFields>"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -79,17 +69,7 @@ import-interface.js:3:25 (--expand-json-output) = {
       },
       "type":"interface Logger"
     },
-    "evaluated":{
-      "expanded":{
-        "kind":"InterfaceDecl",
-        "name":{
-          "provenance":{"kind":"Imported as `Logger` (type)","loc":"exports-interface.js:3:18-23"},
-          "name":"Logger"
-        },
-        "typeParams":null
-      },
-      "type":"interface Logger"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -117,17 +97,7 @@ import-interface.js:5:15 (--expand-json-output) = {
       },
       "type":"interface Listener<TFields>"
     },
-    "evaluated":{
-      "expanded":{
-        "kind":"InterfaceDecl",
-        "name":{
-          "provenance":{"kind":"Imported as `Listener` (type)","loc":"exports-interface.js:9:18-25"},
-          "name":"Listener"
-        },
-        "typeParams":[{"name":"TFields","bound":null,"polarity":"Neutral"}]
-      },
-      "type":"interface Listener<TFields>"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -155,17 +125,7 @@ import-interface.js:5:27 (--expand-json-output) = {
       },
       "type":"interface Listener<TFields>"
     },
-    "evaluated":{
-      "expanded":{
-        "kind":"InterfaceDecl",
-        "name":{
-          "provenance":{"kind":"Imported as `Listener` (type)","loc":"exports-interface.js:9:18-25"},
-          "name":"Listener"
-        },
-        "typeParams":[{"name":"TFields","bound":null,"polarity":"Neutral"}]
-      },
-      "type":"interface Listener<TFields>"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -193,17 +153,7 @@ import-interface.js:5:38 (--expand-json-output) = {
       },
       "type":"interface Logger"
     },
-    "evaluated":{
-      "expanded":{
-        "kind":"InterfaceDecl",
-        "name":{
-          "provenance":{"kind":"Imported as `Logger` (type)","loc":"exports-interface.js:3:18-23"},
-          "name":"Logger"
-        },
-        "typeParams":null
-      },
-      "type":"interface Logger"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -231,17 +181,7 @@ import-interface.js:5:48 (--expand-json-output) = {
       },
       "type":"interface Logger"
     },
-    "evaluated":{
-      "expanded":{
-        "kind":"InterfaceDecl",
-        "name":{
-          "provenance":{"kind":"Imported as `Logger` (type)","loc":"exports-interface.js:3:18-23"},
-          "name":"Logger"
-        },
-        "typeParams":null
-      },
-      "type":"interface Logger"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -257,7 +197,7 @@ import-interface.js:5:48 (--expand-json-output) = {
   "end":54
 }
 import-class-as-type.js:8:13 = {
-  "types":{"unevaluated":{"type":"C"},"evaluated":{"type":"C"}},
+  "types":{"unevaluated":{"type":"C"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"import-class-as-type.js",
@@ -272,7 +212,7 @@ import-class-as-type.js:8:13 = {
   "end":13
 }
 import-class-as-type.js:9:13 = {
-  "types":{"unevaluated":{"type":"P<number>"},"evaluated":{"type":"P<number>"}},
+  "types":{"unevaluated":{"type":"P<number>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"import-class-as-type.js",
@@ -287,7 +227,7 @@ import-class-as-type.js:9:13 = {
   "end":13
 }
 import-class-as-type.js:10:13 = {
-  "types":{"unevaluated":{"type":"C"},"evaluated":{"type":"C"}},
+  "types":{"unevaluated":{"type":"C"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"import-class-as-type.js",
@@ -302,7 +242,7 @@ import-class-as-type.js:10:13 = {
   "end":14
 }
 import-class-as-type.js:11:13 = {
-  "types":{"unevaluated":{"type":"P<number>"},"evaluated":{"type":"P<number>"}},
+  "types":{"unevaluated":{"type":"P<number>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"import-class-as-type.js",
@@ -339,27 +279,7 @@ import-class_of_poly_instance-es6.js:4:8 = {
       },
       "type":"Class<P<any>>"
     },
-    "evaluated":{
-      "expanded":{
-        "kind":"Utility",
-        "kind":"Class",
-        "typeArgs":[
-          {
-            "kind":"Generic",
-            "typeArgs":[{"kind":"Explicit Any","any":"explicit"}],
-            "type":{
-              "provenance":{
-                "kind":"Imported as `P` (value)",
-                "loc":"exports-class_of_poly_instance-es6.js:3:14"
-              },
-              "name":"P"
-            },
-            "generic_kind":"class"
-          }
-        ]
-      },
-      "type":"Class<P<any>>"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -397,27 +317,7 @@ import-class_of_poly_instance-es6.js:5:13 = {
       },
       "type":"Class<P<any>>"
     },
-    "evaluated":{
-      "expanded":{
-        "kind":"Utility",
-        "kind":"Class",
-        "typeArgs":[
-          {
-            "kind":"Generic",
-            "typeArgs":[{"kind":"Explicit Any","any":"explicit"}],
-            "type":{
-              "provenance":{
-                "kind":"Imported as `P` (value)",
-                "loc":"exports-class_of_poly_instance-es6.js:3:14"
-              },
-              "name":"P"
-            },
-            "generic_kind":"class"
-          }
-        ]
-      },
-      "type":"Class<P<any>>"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -455,27 +355,7 @@ import-class_of_poly_instance-es6.js:7:13 = {
       },
       "type":"Class<P<any>>"
     },
-    "evaluated":{
-      "expanded":{
-        "kind":"Utility",
-        "kind":"Class",
-        "typeArgs":[
-          {
-            "kind":"Generic",
-            "typeArgs":[{"kind":"Explicit Any","any":"explicit"}],
-            "type":{
-              "provenance":{
-                "kind":"Imported as `P` (value)",
-                "loc":"exports-class_of_poly_instance-es6.js:3:14"
-              },
-              "name":"P"
-            },
-            "generic_kind":"class"
-          }
-        ]
-      },
-      "type":"Class<P<any>>"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -507,21 +387,7 @@ import-class_of_poly_instance-es6.js:8:13 = {
       },
       "type":"P<any>"
     },
-    "evaluated":{
-      "expanded":{
-        "kind":"Generic",
-        "typeArgs":[{"kind":"Explicit Any","any":"explicit"}],
-        "type":{
-          "provenance":{
-            "kind":"Imported as `P` (value)",
-            "loc":"exports-class_of_poly_instance-es6.js:3:14"
-          },
-          "name":"P"
-        },
-        "generic_kind":"class"
-      },
-      "type":"P<any>"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -556,24 +422,7 @@ import-class_of_poly_instance-cjs.js:3:8 = {
       },
       "type":"Class<P<any>>"
     },
-    "evaluated":{
-      "expanded":{
-        "kind":"Utility",
-        "kind":"Class",
-        "typeArgs":[
-          {
-            "kind":"Generic",
-            "typeArgs":[{"kind":"Explicit Any","any":"explicit"}],
-            "type":{
-              "provenance":{"kind":"Remote","loc":"exports-class_of_poly_instance-cjs.js:3:7"},
-              "name":"P"
-            },
-            "generic_kind":"class"
-          }
-        ]
-      },
-      "type":"Class<P<any>>"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -608,24 +457,7 @@ import-class_of_poly_instance-cjs.js:4:13 = {
       },
       "type":"Class<P<any>>"
     },
-    "evaluated":{
-      "expanded":{
-        "kind":"Utility",
-        "kind":"Class",
-        "typeArgs":[
-          {
-            "kind":"Generic",
-            "typeArgs":[{"kind":"Explicit Any","any":"explicit"}],
-            "type":{
-              "provenance":{"kind":"Remote","loc":"exports-class_of_poly_instance-cjs.js:3:7"},
-              "name":"P"
-            },
-            "generic_kind":"class"
-          }
-        ]
-      },
-      "type":"Class<P<any>>"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -660,24 +492,7 @@ import-class_of_poly_instance-cjs.js:6:13 = {
       },
       "type":"Class<P<any>>"
     },
-    "evaluated":{
-      "expanded":{
-        "kind":"Utility",
-        "kind":"Class",
-        "typeArgs":[
-          {
-            "kind":"Generic",
-            "typeArgs":[{"kind":"Explicit Any","any":"explicit"}],
-            "type":{
-              "provenance":{"kind":"Remote","loc":"exports-class_of_poly_instance-cjs.js:3:7"},
-              "name":"P"
-            },
-            "generic_kind":"class"
-          }
-        ]
-      },
-      "type":"Class<P<any>>"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -706,18 +521,7 @@ import-class_of_poly_instance-cjs.js:7:13 = {
       },
       "type":"P<any>"
     },
-    "evaluated":{
-      "expanded":{
-        "kind":"Generic",
-        "typeArgs":[{"kind":"Explicit Any","any":"explicit"}],
-        "type":{
-          "provenance":{"kind":"Remote","loc":"exports-class_of_poly_instance-cjs.js:3:7"},
-          "name":"P"
-        },
-        "generic_kind":"class"
-      },
-      "type":"P<any>"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -748,7 +552,7 @@ import-default.js:15:13 = {
   "end":0
 }
 import-default.js:16:13 = {
-  "types":{"unevaluated":{"type":"A"},"evaluated":{"type":"A"}},
+  "types":{"unevaluated":{"type":"A"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"import-default.js",
@@ -763,7 +567,7 @@ import-default.js:16:13 = {
   "end":14
 }
 import-default.js:17:13 = {
-  "types":{"unevaluated":{"type":"P<number>"},"evaluated":{"type":"P<number>"}},
+  "types":{"unevaluated":{"type":"P<number>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"import-default.js",
@@ -778,10 +582,7 @@ import-default.js:17:13 = {
   "end":14
 }
 import-default.js:18:13 = {
-  "types":{
-    "unevaluated":{"type":"ImportedTypeDefaultClass"},
-    "evaluated":{"type":"ImportedTypeDefaultClass"}
-  },
+  "types":{"unevaluated":{"type":"ImportedTypeDefaultClass"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"import-default.js",
@@ -798,7 +599,7 @@ import-default.js:18:13 = {
 import-default.js:19:13 = {
   "types":{
     "unevaluated":{"type":"ImportedTypeDefaultPolyClass<number>"},
-    "evaluated":{"type":"ImportedTypeDefaultPolyClass<number>"}
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -814,10 +615,7 @@ import-default.js:19:13 = {
   "end":14
 }
 import-default.js:20:13 = {
-  "types":{
-    "unevaluated":{"type":"class ImportedTypeDefaultClass"},
-    "evaluated":{"type":"class ImportedTypeDefaultClass"}
-  },
+  "types":{"unevaluated":{"type":"class ImportedTypeDefaultClass"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"import-default.js",
@@ -834,7 +632,7 @@ import-default.js:20:13 = {
 import-default.js:21:13 = {
   "types":{
     "unevaluated":{"type":"class ImportedTypeDefaultPolyClass<X>"},
-    "evaluated":{"type":"class ImportedTypeDefaultPolyClass<X>"}
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -865,20 +663,7 @@ import-default.js:26:7 = {
       },
       "type":"class ImportedTypeofDefaultClassFuncall"
     },
-    "evaluated":{
-      "expanded":{
-        "kind":"ClassDecl",
-        "name":{
-          "provenance":{
-            "kind":"Imported as `ImportedTypeofDefaultClassFuncall` (typeof)",
-            "loc":"exports-default-class-funcall-a.js:4:7"
-          },
-          "name":"B"
-        },
-        "typeParams":null
-      },
-      "type":"class ImportedTypeofDefaultClassFuncall"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -894,7 +679,7 @@ import-default.js:26:7 = {
   "end":8
 }
 import-rec-export.js:3:10 = {
-  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":{"type":"any (implicit)"}},
+  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"import-rec-export.js",
@@ -909,10 +694,7 @@ import-rec-export.js:3:10 = {
   "end":10
 }
 import-star.js:5:7 = {
-  "types":{
-    "unevaluated":{"type":"{foo: () => MyUnionType}"},
-    "evaluated":{"type":"{foo: () => MyUnionType}"}
-  },
+  "types":{"unevaluated":{"type":"{foo: () => MyUnionType}"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"import-star.js",
@@ -927,10 +709,7 @@ import-star.js:5:7 = {
   "end":23
 }
 import-star.js:5:31 = {
-  "types":{
-    "unevaluated":{"type":"module \"./exports-type\""},
-    "evaluated":{"type":"module \"./exports-type\""}
-  },
+  "types":{"unevaluated":{"type":"module \"./exports-type\""},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"import-star.js",
@@ -961,21 +740,7 @@ import-typeof-class.js:6:16 {
       },
       "type":"type C = typeof C"
     },
-    "evaluated":{
-      "expanded":{
-        "kind":"TypeAlias",
-        "name":{"provenance":{"kind":"Local","loc":"import-typeof-class.js:3:17"},"name":"C"},
-        "typeParams":null,
-        "body":{
-          "kind":"Typeof",
-          "name":{
-            "provenance":{"kind":"Imported as `C` (typeof)","loc":"exports-class.js:3:15"},
-            "name":"C"
-          }
-        }
-      },
-      "type":"type C = typeof C"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -1007,21 +772,7 @@ import-typeof-class.js:7:16 {
       },
       "type":"type D = typeof C"
     },
-    "evaluated":{
-      "expanded":{
-        "kind":"TypeAlias",
-        "name":{"provenance":{"kind":"Local","loc":"import-typeof-class.js:4:17"},"name":"D"},
-        "typeParams":null,
-        "body":{
-          "kind":"Typeof",
-          "name":{
-            "provenance":{"kind":"Imported as `C` (typeof)","loc":"exports-class.js:3:15"},
-            "name":"C"
-          }
-        }
-      },
-      "type":"type D = typeof C"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -1037,10 +788,7 @@ import-typeof-class.js:7:16 {
   "end":16
 }
 module-export-0.js:3:20 = {
-  "types":{
-    "unevaluated":{"type":"module \"lib_a\""},
-    "evaluated":{"type":"module \"lib_a\""}
-  },
+  "types":{"unevaluated":{"type":"module \"lib_a\""},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"module-export-0.js",
@@ -1055,7 +803,7 @@ module-export-0.js:3:20 = {
   "end":20
 }
 module-export-1.js:3:8 = {
-  "types":{"unevaluated":{"type":"number"},"evaluated":{"type":"number"}},
+  "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"module-export-1.js",
@@ -1070,7 +818,7 @@ module-export-1.js:3:8 = {
   "end":14
 }
 module-export-1.js:4:9 = {
-  "types":{"unevaluated":{"type":"number"},"evaluated":{"type":"number"}},
+  "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"module-export-1.js",
@@ -1085,7 +833,7 @@ module-export-1.js:4:9 = {
   "end":15
 }
 module-export-1.js:7:10 = {
-  "types":{"unevaluated":{"type":"string"},"evaluated":{"type":"string"}},
+  "types":{"unevaluated":{"type":"string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"module-export-1.js",
@@ -1100,7 +848,7 @@ module-export-1.js:7:10 = {
   "end":16
 }
 module-export-1.js:8:11 = {
-  "types":{"unevaluated":{"type":"string"},"evaluated":{"type":"string"}},
+  "types":{"unevaluated":{"type":"string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"module-export-1.js",
@@ -1115,10 +863,7 @@ module-export-1.js:8:11 = {
   "end":17
 }
 module-export-1.js:10:9 = {
-  "types":{
-    "unevaluated":{"type":"number | string"},
-    "evaluated":{"type":"number | string"}
-  },
+  "types":{"unevaluated":{"type":"number | string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"module-export-1.js",
@@ -1133,10 +878,7 @@ module-export-1.js:10:9 = {
   "end":15
 }
 module-import.js:3:7 = {
-  "types":{
-    "unevaluated":{"type":"module \"./module-export-0\""},
-    "evaluated":{"type":"module \"./module-export-0\""}
-  },
+  "types":{"unevaluated":{"type":"module \"./module-export-0\""},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"module-import.js",
@@ -1163,17 +905,7 @@ require-class.js:5:16 = {
       },
       "type":"class C"
     },
-    "evaluated":{
-      "expanded":{
-        "kind":"ClassDecl",
-        "name":{
-          "provenance":{"kind":"Imported as `C` (value)","loc":"exports-class.js:3:15"},
-          "name":"C"
-        },
-        "typeParams":null
-      },
-      "type":"class C"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -1201,17 +933,7 @@ require-class.js:6:16 = {
       },
       "type":"class C"
     },
-    "evaluated":{
-      "expanded":{
-        "kind":"ClassDecl",
-        "name":{
-          "provenance":{"kind":"Imported as `C` (value)","loc":"exports-class.js:3:15"},
-          "name":"C"
-        },
-        "typeParams":null
-      },
-      "type":"class C"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -1229,7 +951,7 @@ require-class.js:6:16 = {
 import-type.js:3:20 = {
   "types":{
     "unevaluated":{"type":"type MyUnionType = \"A\" | \"B\" | \"C\""},
-    "evaluated":{"type":"type MyUnionType = \"A\" | \"B\" | \"C\""}
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -1257,17 +979,7 @@ import-type.js:7:7 = {
       },
       "type":"MyUnionType"
     },
-    "evaluated":{
-      "expanded":{
-        "kind":"Generic",
-        "type":{
-          "provenance":{"kind":"Imported as `MyUnionType` (type)","loc":"exports-type.js:3:13-23"},
-          "name":"MyUnionType"
-        },
-        "generic_kind":"type alias"
-      },
-      "type":"MyUnionType"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -1293,15 +1005,7 @@ rtype-main.js:4:13 = {
       },
       "type":"Value<mixed>"
     },
-    "evaluated":{
-      "expanded":{
-        "kind":"Generic",
-        "typeArgs":[{"kind":"Top"}],
-        "type":{"provenance":{"kind":"Remote","loc":"rtype-c.js:3:15-19"},"name":"Value"},
-        "generic_kind":"type alias"
-      },
-      "type":"Value<mixed>"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{

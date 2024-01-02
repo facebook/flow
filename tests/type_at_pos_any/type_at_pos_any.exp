@@ -1,5 +1,5 @@
 typed.js:2:7 = {
-  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":{"type":"any (implicit)"}},
+  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"typed.js",
@@ -14,7 +14,7 @@ typed.js:2:7 = {
   "end":13
 }
 typed.js:4:5 = {
-  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":{"type":"any (explicit)"}},
+  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"typed.js",
@@ -29,7 +29,7 @@ typed.js:4:5 = {
   "end":5
 }
 typed.js:5:5 = {
-  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":{"type":"any (explicit)"}},
+  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"typed.js",
@@ -44,7 +44,7 @@ typed.js:5:5 = {
   "end":5
 }
 typed.js:5:9 = {
-  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":{"type":"any (explicit)"}},
+  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"typed.js",
@@ -59,7 +59,7 @@ typed.js:5:9 = {
   "end":16
 }
 typed.js:6:5 = {
-  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":{"type":"any (explicit)"}},
+  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"typed.js",
@@ -74,7 +74,7 @@ typed.js:6:5 = {
   "end":5
 }
 typed.js:6:9 = {
-  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":{"type":"any (explicit)"}},
+  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"typed.js",
@@ -89,7 +89,7 @@ typed.js:6:9 = {
   "end":14
 }
 typed.js:8:5 = {
-  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":{"type":"any (explicit)"}},
+  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"typed.js",
@@ -104,7 +104,7 @@ typed.js:8:5 = {
   "end":5
 }
 typed.js:8:9 = {
-  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":{"type":"any (explicit)"}},
+  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"typed.js",
@@ -119,7 +119,7 @@ typed.js:8:9 = {
   "end":9
 }
 typed.js:9:5 = {
-  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":{"type":"any (implicit)"}},
+  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"typed.js",
@@ -134,7 +134,7 @@ typed.js:9:5 = {
   "end":5
 }
 typed.js:9:9 = {
-  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":{"type":"any (explicit)"}},
+  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"typed.js",
@@ -149,7 +149,7 @@ typed.js:9:9 = {
   "end":9
 }
 typed.js:9:12 = {
-  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":{"type":"any (implicit)"}},
+  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"typed.js",
@@ -164,7 +164,7 @@ typed.js:9:12 = {
   "end":12
 }
 typed.js:10:5 = {
-  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":{"type":"any (implicit)"}},
+  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"typed.js",
@@ -179,7 +179,7 @@ typed.js:10:5 = {
   "end":5
 }
 typed.js:10:9 = {
-  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":{"type":"any (explicit)"}},
+  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"typed.js",
@@ -194,7 +194,7 @@ typed.js:10:9 = {
   "end":9
 }
 typed.js:12:5 = {
-  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":{"type":"any (implicit)"}},
+  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"typed.js",
@@ -209,7 +209,7 @@ typed.js:12:5 = {
   "end":5
 }
 typed.js:12:9 = {
-  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":{"type":"any (implicit)"}},
+  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"typed.js",
@@ -224,7 +224,7 @@ typed.js:12:9 = {
   "end":15
 }
 typed.js:12:17 = {
-  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":{"type":"any (implicit)"}},
+  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"typed.js",
@@ -239,7 +239,7 @@ typed.js:12:17 = {
   "end":18
 }
 typed.js:13:5 = {
-  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":{"type":"any (implicit)"}},
+  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"typed.js",
@@ -254,7 +254,7 @@ typed.js:13:5 = {
   "end":5
 }
 typed.js:13:9 = {
-  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":{"type":"any (implicit)"}},
+  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"typed.js",
@@ -269,7 +269,7 @@ typed.js:13:9 = {
   "end":15
 }
 typed.js:15:5 = {
-  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":{"type":"any (implicit)"}},
+  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"typed.js",
@@ -284,7 +284,7 @@ typed.js:15:5 = {
   "end":12
 }
 typed.js:15:27 = {
-  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":{"type":"any (implicit)"}},
+  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"typed.js",
@@ -317,7 +317,7 @@ typed.js:16:5 = {
   "end":12
 }
 typed.js:18:5 = {
-  "types":{"unevaluated":{"type":"number"},"evaluated":{"type":"number"}},
+  "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"typed.js",
@@ -332,7 +332,7 @@ typed.js:18:5 = {
   "end":7
 }
 typed.js:20:5 = {
-  "types":{"unevaluated":{"type":"string"},"evaluated":{"type":"string"}},
+  "types":{"unevaluated":{"type":"string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"typed.js",
@@ -347,7 +347,7 @@ typed.js:20:5 = {
   "end":7
 }
 typed.js:21:5 = {
-  "types":{"unevaluated":{"type":"string"},"evaluated":{"type":"string"}},
+  "types":{"unevaluated":{"type":"string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"typed.js",
@@ -362,7 +362,7 @@ typed.js:21:5 = {
   "end":5
 }
 typed.js:23:5 = {
-  "types":{"unevaluated":{"type":"Array<any>"},"evaluated":{"type":"Array<any>"}},
+  "types":{"unevaluated":{"type":"Array<any>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"typed.js",
@@ -377,7 +377,7 @@ typed.js:23:5 = {
   "end":7
 }
 typed.js:24:5 = {
-  "types":{"unevaluated":{"type":"Array<any>"},"evaluated":{"type":"Array<any>"}},
+  "types":{"unevaluated":{"type":"Array<any>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"typed.js",
@@ -392,7 +392,7 @@ typed.js:24:5 = {
   "end":8
 }
 typed.js:27:5 = {
-  "types":{"unevaluated":{"type":"(any) => void"},"evaluated":{"type":"(any) => void"}},
+  "types":{"unevaluated":{"type":"(any) => void"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"typed.js",
@@ -407,7 +407,7 @@ typed.js:27:5 = {
   "end":7
 }
 typed.js:28:5 = {
-  "types":{"unevaluated":{"type":"(any) => void"},"evaluated":{"type":"(any) => void"}},
+  "types":{"unevaluated":{"type":"(any) => void"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"typed.js",

@@ -1,5 +1,5 @@
 predicates.js - undefined: {
-  "types":{"unevaluated":{"type":"void"},"evaluated":{"type":"void"}},
+  "types":{"unevaluated":{"type":"void"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"predicates.js",
@@ -14,7 +14,7 @@ predicates.js - undefined: {
   "end":18
 }
 predicates.js - Array: {
-  "types":{"unevaluated":{"type":"class Array<T>"},"evaluated":{"type":"class Array<T>"}},
+  "types":{"unevaluated":{"type":"class Array<T>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"predicates.js",
@@ -29,7 +29,7 @@ predicates.js - Array: {
   "end":9
 }
 predicates.js - isArray: {
-  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":{"type":"any (implicit)"}},
+  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"predicates.js",
@@ -44,10 +44,7 @@ predicates.js - isArray: {
   "end":17
 }
 predicates.js - y (refined obj): {
-  "types":{
-    "unevaluated":{"type":"{|FOO: string|}"},
-    "evaluated":{"type":"{|FOO: string|}"}
-  },
+  "types":{"unevaluated":{"type":"{|FOO: string|}"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"predicates.js",
@@ -62,10 +59,7 @@ predicates.js - y (refined obj): {
   "end":5
 }
 predicates.js - if (y.FOO) obj: {
-  "types":{
-    "unevaluated":{"type":"{|FOO: string|}"},
-    "evaluated":{"type":"{|FOO: string|}"}
-  },
+  "types":{"unevaluated":{"type":"{|FOO: string|}"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"predicates.js",
@@ -80,7 +74,7 @@ predicates.js - if (y.FOO) obj: {
   "end":5
 }
 predicates.js - if (y.FOO) prop: {
-  "types":{"unevaluated":{"type":"string"},"evaluated":{"type":"string"}},
+  "types":{"unevaluated":{"type":"string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"predicates.js",
@@ -95,10 +89,7 @@ predicates.js - if (y.FOO) prop: {
   "end":9
 }
 predicates.js - if (y.FOO == '') obj: {
-  "types":{
-    "unevaluated":{"type":"{|FOO: string|}"},
-    "evaluated":{"type":"{|FOO: string|}"}
-  },
+  "types":{"unevaluated":{"type":"{|FOO: string|}"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"predicates.js",
@@ -113,7 +104,7 @@ predicates.js - if (y.FOO == '') obj: {
   "end":5
 }
 predicates.js - if (y.FOO == '') prop: {
-  "types":{"unevaluated":{"type":"string"},"evaluated":{"type":"string"}},
+  "types":{"unevaluated":{"type":"string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"predicates.js",
@@ -128,10 +119,7 @@ predicates.js - if (y.FOO == '') prop: {
   "end":9
 }
 predicates.js - if (y.FOO === '') obj: {
-  "types":{
-    "unevaluated":{"type":"{|FOO: string|}"},
-    "evaluated":{"type":"{|FOO: string|}"}
-  },
+  "types":{"unevaluated":{"type":"{|FOO: string|}"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"predicates.js",
@@ -146,7 +134,7 @@ predicates.js - if (y.FOO === '') obj: {
   "end":5
 }
 predicates.js - if (y.FOO === '') prop: {
-  "types":{"unevaluated":{"type":"string"},"evaluated":{"type":"string"}},
+  "types":{"unevaluated":{"type":"string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"predicates.js",
@@ -161,7 +149,7 @@ predicates.js - if (y.FOO === '') prop: {
   "end":9
 }
 predicates.js - if (y.FOO == null) prop: {
-  "types":{"unevaluated":{"type":"string"},"evaluated":{"type":"string"}},
+  "types":{"unevaluated":{"type":"string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"predicates.js",
@@ -176,7 +164,7 @@ predicates.js - if (y.FOO == null) prop: {
   "end":9
 }
 predicates.js - if (y.FOO == undefined) prop: {
-  "types":{"unevaluated":{"type":"string"},"evaluated":{"type":"string"}},
+  "types":{"unevaluated":{"type":"string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"predicates.js",
@@ -191,7 +179,7 @@ predicates.js - if (y.FOO == undefined) prop: {
   "end":9
 }
 predicates.js - if (Array.isArray(y.FOO)): {
-  "types":{"unevaluated":{"type":"string"},"evaluated":{"type":"string"}},
+  "types":{"unevaluated":{"type":"string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"predicates.js",
@@ -206,7 +194,7 @@ predicates.js - if (Array.isArray(y.FOO)): {
   "end":23
 }
 refinement.js:7:25 = {
-  "types":{"unevaluated":{"type":"() => void"},"evaluated":{"type":"() => void"}},
+  "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"refinement.js",
@@ -221,7 +209,7 @@ refinement.js:7:25 = {
   "end":26
 }
 refinement.js:8:25 = {
-  "types":{"unevaluated":{"type":"() => void"},"evaluated":{"type":"() => void"}},
+  "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"refinement.js",

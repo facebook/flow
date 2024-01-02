@@ -1,5 +1,5 @@
 interface.js:3:12 = {
-  "types":{"unevaluated":{"type":"interface IA"},"evaluated":{"type":"interface IA"}},
+  "types":{"unevaluated":{"type":"interface IA"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"interface.js",
@@ -14,7 +14,7 @@ interface.js:3:12 = {
   "end":12
 }
 interface.js:9:15 = {
-  "types":{"unevaluated":{"type":"IA"},"evaluated":{"type":"IA"}},
+  "types":{"unevaluated":{"type":"IA"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"interface.js",
@@ -29,7 +29,7 @@ interface.js:9:15 = {
   "end":15
 }
 interface.js:9:19 = {
-  "types":{"unevaluated":{"type":"interface IA"},"evaluated":{"type":"interface IA"}},
+  "types":{"unevaluated":{"type":"interface IA"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"interface.js",
@@ -44,7 +44,7 @@ interface.js:9:19 = {
   "end":19
 }
 interface.js:17:7 = {
-  "types":{"unevaluated":{"type":"string"},"evaluated":{"type":"string"}},
+  "types":{"unevaluated":{"type":"string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"interface.js",
@@ -59,7 +59,7 @@ interface.js:17:7 = {
   "end":7
 }
 interface.js:18:7 = {
-  "types":{"unevaluated":{"type":"number"},"evaluated":{"type":"number"}},
+  "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"interface.js",

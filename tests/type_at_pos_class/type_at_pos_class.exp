@@ -1,8 +1,5 @@
 annot_t.js:9:21 = {
-  "types":{
-    "unevaluated":{"type":"class KeyedSeq<K, +V>"},
-    "evaluated":{"type":"class KeyedSeq<K, +V>"}
-  },
+  "types":{"unevaluated":{"type":"class KeyedSeq<K, +V>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"annot_t.js",
@@ -17,7 +14,7 @@ annot_t.js:9:21 = {
   "end":24
 }
 class-0.js:3:7 = {
-  "types":{"unevaluated":{"type":"class A"},"evaluated":{"type":"class A"}},
+  "types":{"unevaluated":{"type":"class A"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-0.js",
@@ -32,7 +29,7 @@ class-0.js:3:7 = {
   "end":7
 }
 class-0.js:4:3 = {
-  "types":{"unevaluated":{"type":"() => void"},"evaluated":{"type":"() => void"}},
+  "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-0.js",
@@ -47,7 +44,7 @@ class-0.js:4:3 = {
   "end":3
 }
 class-0.js:4:10 = {
-  "types":{"unevaluated":{"type":"this"},"evaluated":{"type":"this"}},
+  "types":{"unevaluated":{"type":"this"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-0.js",
@@ -62,7 +59,7 @@ class-0.js:4:10 = {
   "end":12
 }
 class-0.js:12:5 = {
-  "types":{"unevaluated":{"type":"Class<mixed>"},"evaluated":{"type":"Class<mixed>"}},
+  "types":{"unevaluated":{"type":"Class<mixed>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-0.js",
@@ -77,10 +74,7 @@ class-0.js:12:5 = {
   "end":5
 }
 class-0.js:21:5 = {
-  "types":{
-    "unevaluated":{"type":"Class<(C1 & C2)>"},
-    "evaluated":{"type":"Class<(C1 & C2)>"}
-  },
+  "types":{"unevaluated":{"type":"Class<(C1 & C2)>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-0.js",
@@ -95,10 +89,7 @@ class-0.js:21:5 = {
   "end":5
 }
 class-0.js:24:5 = {
-  "types":{
-    "unevaluated":{"type":"Class<(C1 | C2)>"},
-    "evaluated":{"type":"Class<(C1 | C2)>"}
-  },
+  "types":{"unevaluated":{"type":"Class<(C1 | C2)>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-0.js",
@@ -113,7 +104,7 @@ class-0.js:24:5 = {
   "end":5
 }
 class-1.js:4:3 = {
-  "types":{"unevaluated":{"type":"() => void"},"evaluated":{"type":"() => void"}},
+  "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-1.js",
@@ -128,7 +119,7 @@ class-1.js:4:3 = {
   "end":3
 }
 class-1.js:8:3 = {
-  "types":{"unevaluated":{"type":"() => number"},"evaluated":{"type":"() => number"}},
+  "types":{"unevaluated":{"type":"() => number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-1.js",
@@ -143,7 +134,7 @@ class-1.js:8:3 = {
   "end":3
 }
 class-2.js:4:3 = {
-  "types":{"unevaluated":{"type":"() => A"},"evaluated":{"type":"() => A"}},
+  "types":{"unevaluated":{"type":"() => A"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-2.js",
@@ -158,7 +149,7 @@ class-2.js:4:3 = {
   "end":3
 }
 class-2.js:9:9 = {
-  "types":{"unevaluated":{"type":"() => A"},"evaluated":{"type":"() => A"}},
+  "types":{"unevaluated":{"type":"() => A"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-2.js",
@@ -173,7 +164,7 @@ class-2.js:9:9 = {
   "end":9
 }
 class-2.js:10:9 = {
-  "types":{"unevaluated":{"type":"() => A"},"evaluated":{"type":"() => A"}},
+  "types":{"unevaluated":{"type":"() => A"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-2.js",
@@ -188,7 +179,7 @@ class-2.js:10:9 = {
   "end":9
 }
 class-2.js:12:7 = {
-  "types":{"unevaluated":{"type":"A"},"evaluated":{"type":"A"}},
+  "types":{"unevaluated":{"type":"A"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-2.js",
@@ -203,7 +194,7 @@ class-2.js:12:7 = {
   "end":7
 }
 class-2.js:13:7 = {
-  "types":{"unevaluated":{"type":"A"},"evaluated":{"type":"A"}},
+  "types":{"unevaluated":{"type":"A"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-2.js",
@@ -218,7 +209,7 @@ class-2.js:13:7 = {
   "end":7
 }
 class-3.js:4:3 = {
-  "types":{"unevaluated":{"type":"() => this"},"evaluated":{"type":"() => this"}},
+  "types":{"unevaluated":{"type":"() => this"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-3.js",
@@ -233,7 +224,7 @@ class-3.js:4:3 = {
   "end":3
 }
 class-3.js:9:9 = {
-  "types":{"unevaluated":{"type":"() => A"},"evaluated":{"type":"() => A"}},
+  "types":{"unevaluated":{"type":"() => A"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-3.js",
@@ -248,7 +239,7 @@ class-3.js:9:9 = {
   "end":9
 }
 class-3.js:10:9 = {
-  "types":{"unevaluated":{"type":"() => B"},"evaluated":{"type":"() => B"}},
+  "types":{"unevaluated":{"type":"() => B"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-3.js",
@@ -263,7 +254,7 @@ class-3.js:10:9 = {
   "end":9
 }
 class-4.js:9:6 = {
-  "types":{"unevaluated":{"type":"Y"},"evaluated":{"type":"Y"}},
+  "types":{"unevaluated":{"type":"Y"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-4.js",
@@ -278,10 +269,7 @@ class-4.js:9:6 = {
   "end":10
 }
 class-bound.js:4:6 = {
-  "types":{
-    "unevaluated":{"type":"type C<T: R<any>> = Class<T>"},
-    "evaluated":{"type":"type C<T: R<any>> = Class<T>"}
-  },
+  "types":{"unevaluated":{"type":"type C<T: R<any>> = Class<T>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-bound.js",
@@ -296,7 +284,7 @@ class-bound.js:4:6 = {
   "end":6
 }
 class-getters-setters.js:6:7 = {
-  "types":{"unevaluated":{"type":"string"},"evaluated":{"type":"string"}},
+  "types":{"unevaluated":{"type":"string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-getters-setters.js",
@@ -311,7 +299,7 @@ class-getters-setters.js:6:7 = {
   "end":7
 }
 class-getters-setters.js:9:7 = {
-  "types":{"unevaluated":{"type":"?string"},"evaluated":{"type":"?string"}},
+  "types":{"unevaluated":{"type":"?string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-getters-setters.js",
@@ -326,10 +314,7 @@ class-getters-setters.js:9:7 = {
   "end":7
 }
 class-poly-0.js:5:7 = {
-  "types":{
-    "unevaluated":{"type":"class A<X: Base>"},
-    "evaluated":{"type":"class A<X: Base>"}
-  },
+  "types":{"unevaluated":{"type":"class A<X: Base>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-poly-0.js",
@@ -344,7 +329,7 @@ class-poly-0.js:5:7 = {
   "end":7
 }
 class-poly-0.js:5:9 = {
-  "types":{"unevaluated":{"type":"X"},"evaluated":{"type":"X"}},
+  "types":{"unevaluated":{"type":"X"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-poly-0.js",
@@ -359,10 +344,7 @@ class-poly-0.js:5:9 = {
   "end":9
 }
 class-poly-0.js:10:26 = {
-  "types":{
-    "unevaluated":{"type":"class A<X: Base>"},
-    "evaluated":{"type":"class A<X: Base>"}
-  },
+  "types":{"unevaluated":{"type":"class A<X: Base>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-poly-0.js",
@@ -377,7 +359,7 @@ class-poly-0.js:10:26 = {
   "end":26
 }
 class-poly-0.js:12:7 = {
-  "types":{"unevaluated":{"type":"A<X>"},"evaluated":{"type":"A<X>"}},
+  "types":{"unevaluated":{"type":"A<X>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-poly-0.js",
@@ -392,7 +374,7 @@ class-poly-0.js:12:7 = {
   "end":9
 }
 class-poly-0.js:16:7 = {
-  "types":{"unevaluated":{"type":"this"},"evaluated":{"type":"this"}},
+  "types":{"unevaluated":{"type":"this"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-poly-0.js",
@@ -407,7 +389,7 @@ class-poly-0.js:16:7 = {
   "end":8
 }
 class-poly-0.js:16:10 = {
-  "types":{"unevaluated":{"type":"X"},"evaluated":{"type":"X"}},
+  "types":{"unevaluated":{"type":"X"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-poly-0.js",
@@ -422,7 +404,7 @@ class-poly-0.js:16:10 = {
   "end":10
 }
 class-poly-0.js:17:7 = {
-  "types":{"unevaluated":{"type":"A<X>"},"evaluated":{"type":"A<X>"}},
+  "types":{"unevaluated":{"type":"A<X>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-poly-0.js",
@@ -437,7 +419,7 @@ class-poly-0.js:17:7 = {
   "end":9
 }
 class-poly-1.js:9:5 = {
-  "types":{"unevaluated":{"type":"number"},"evaluated":{"type":"number"}},
+  "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-poly-1.js",
@@ -452,7 +434,7 @@ class-poly-1.js:9:5 = {
   "end":5
 }
 class-poly-1.js:9:11 = {
-  "types":{"unevaluated":{"type":"() => number"},"evaluated":{"type":"() => number"}},
+  "types":{"unevaluated":{"type":"() => number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-poly-1.js",
@@ -467,7 +449,7 @@ class-poly-1.js:9:11 = {
   "end":11
 }
 class-statics.js:4:10 = {
-  "types":{"unevaluated":{"type":"() => void"},"evaluated":{"type":"() => void"}},
+  "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-statics.js",
@@ -482,10 +464,7 @@ class-statics.js:4:10 = {
   "end":10
 }
 class-statics.js:8:10 = {
-  "types":{
-    "unevaluated":{"type":"() => Class<this>"},
-    "evaluated":{"type":"() => Class<this>"}
-  },
+  "types":{"unevaluated":{"type":"() => Class<this>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-statics.js",
@@ -500,7 +479,7 @@ class-statics.js:8:10 = {
   "end":10
 }
 class-statics.js:9:7 = {
-  "types":{"unevaluated":{"type":"Class<this>"},"evaluated":{"type":"Class<this>"}},
+  "types":{"unevaluated":{"type":"Class<this>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-statics.js",
@@ -515,7 +494,7 @@ class-statics.js:9:7 = {
   "end":9
 }
 class-statics.js:11:8 = {
-  "types":{"unevaluated":{"type":"Class<A>"},"evaluated":{"type":"Class<A>"}},
+  "types":{"unevaluated":{"type":"Class<A>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-statics.js",
@@ -530,7 +509,7 @@ class-statics.js:11:8 = {
   "end":9
 }
 class-statics.js:16:5 = {
-  "types":{"unevaluated":{"type":"Class<B>"},"evaluated":{"type":"Class<B>"}},
+  "types":{"unevaluated":{"type":"Class<B>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-statics.js",
@@ -545,7 +524,7 @@ class-statics.js:16:5 = {
   "end":9
 }
 class-statics.js:17:5 = {
-  "types":{"unevaluated":{"type":"B"},"evaluated":{"type":"B"}},
+  "types":{"unevaluated":{"type":"B"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-statics.js",
@@ -560,7 +539,7 @@ class-statics.js:17:5 = {
   "end":5
 }
 class-statics.js:20:11 = {
-  "types":{"unevaluated":{"type":"this"},"evaluated":{"type":"this"}},
+  "types":{"unevaluated":{"type":"this"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-statics.js",
@@ -575,7 +554,7 @@ class-statics.js:20:11 = {
   "end":11
 }
 class-statics-poly.js:4:10 = {
-  "types":{"unevaluated":{"type":"() => void"},"evaluated":{"type":"() => void"}},
+  "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-statics-poly.js",
@@ -590,10 +569,7 @@ class-statics-poly.js:4:10 = {
   "end":10
 }
 class-statics-poly.js:8:10 = {
-  "types":{
-    "unevaluated":{"type":"() => Class<B<T>>"},
-    "evaluated":{"type":"() => Class<B<T>>"}
-  },
+  "types":{"unevaluated":{"type":"() => Class<B<T>>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-statics-poly.js",
@@ -608,7 +584,7 @@ class-statics-poly.js:8:10 = {
   "end":10
 }
 class-statics-poly.js:9:7 = {
-  "types":{"unevaluated":{"type":"Class<this>"},"evaluated":{"type":"Class<this>"}},
+  "types":{"unevaluated":{"type":"Class<this>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-statics-poly.js",
@@ -623,7 +599,7 @@ class-statics-poly.js:9:7 = {
   "end":9
 }
 class-statics-poly.js:11:8 = {
-  "types":{"unevaluated":{"type":"Class<A<T>>"},"evaluated":{"type":"Class<A<T>>"}},
+  "types":{"unevaluated":{"type":"Class<A<T>>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-statics-poly.js",
@@ -638,10 +614,7 @@ class-statics-poly.js:11:8 = {
   "end":9
 }
 class-statics-poly.js:16:5 = {
-  "types":{
-    "unevaluated":{"type":"Class<B<empty>>"},
-    "evaluated":{"type":"Class<B<empty>>"}
-  },
+  "types":{"unevaluated":{"type":"Class<B<empty>>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-statics-poly.js",
@@ -656,7 +629,7 @@ class-statics-poly.js:16:5 = {
   "end":9
 }
 class-statics-poly.js:17:5 = {
-  "types":{"unevaluated":{"type":"B<empty>"},"evaluated":{"type":"B<empty>"}},
+  "types":{"unevaluated":{"type":"B<empty>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"class-statics-poly.js",
@@ -679,10 +652,7 @@ declare_class.js:6:15,6:15
 declare_class.js:7:5 = {P: typeof P}
 declare_class.js:7:5,7:5
 FluxStore.js:14:5 = {
-  "types":{
-    "unevaluated":{"type":"Class<FluxStore<any>>"},
-    "evaluated":{"type":"Class<FluxStore<any>>"}
-  },
+  "types":{"unevaluated":{"type":"Class<FluxStore<any>>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"FluxStore.js",
@@ -697,10 +667,7 @@ FluxStore.js:14:5 = {
   "end":9
 }
 implements.js:7:8 = {
-  "types":{
-    "unevaluated":{"type":"interface IA<T>"},
-    "evaluated":{"type":"interface IA<T>"}
-  },
+  "types":{"unevaluated":{"type":"interface IA<T>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"implements.js",
@@ -715,10 +682,7 @@ implements.js:7:8 = {
   "end":24
 }
 multi-inheritance.js:6:7 = {
-  "types":{
-    "unevaluated":{"type":"Class<A> | Class<B>"},
-    "evaluated":{"type":"Class<A> | Class<B>"}
-  },
+  "types":{"unevaluated":{"type":"Class<A> | Class<B>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"multi-inheritance.js",
@@ -742,14 +706,7 @@ type-utils.js:5:13 {
       },
       "type":"class C<P>"
     },
-    "evaluated":{
-      "expanded":{
-        "kind":"ClassDecl",
-        "name":{"provenance":{"kind":"Local","loc":"type-utils.js:3:15"},"name":"C"},
-        "typeParams":[{"name":"P","bound":null,"polarity":"Neutral"}]
-      },
-      "type":"class C<P>"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -781,21 +738,7 @@ type-utils.js:6:13 {
       },
       "type":"Class<C<number>>"
     },
-    "evaluated":{
-      "expanded":{
-        "kind":"Utility",
-        "kind":"Class",
-        "typeArgs":[
-          {
-            "kind":"Generic",
-            "typeArgs":[{"kind":"Num"}],
-            "type":{"provenance":{"kind":"Local","loc":"type-utils.js:3:15"},"name":"C"},
-            "generic_kind":"class"
-          }
-        ]
-      },
-      "type":"Class<C<number>>"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -811,7 +754,7 @@ type-utils.js:6:13 {
   "end":29
 }
 type-utils.js:10:13 {
-  "types":{"unevaluated":{"type":"Class<A>"},"evaluated":{"type":"Class<A>"}},
+  "types":{"unevaluated":{"type":"Class<A>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"type-utils.js",
@@ -826,10 +769,7 @@ type-utils.js:10:13 {
   "end":19
 }
 type-utils.js:11:13 {
-  "types":{
-    "unevaluated":{"type":"Class<Class<A>>"},
-    "evaluated":{"type":"Class<Class<A>>"}
-  },
+  "types":{"unevaluated":{"type":"Class<Class<A>>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"type-utils.js",
@@ -844,10 +784,7 @@ type-utils.js:11:13 {
   "end":25
 }
 type-utils.js:12:13 {
-  "types":{
-    "unevaluated":{"type":"Class<Class<Class<A>>>"},
-    "evaluated":{"type":"Class<Class<Class<A>>>"}
-  },
+  "types":{"unevaluated":{"type":"Class<Class<Class<A>>>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"type-utils.js",
@@ -862,7 +799,7 @@ type-utils.js:12:13 {
   "end":31
 }
 default.js:4:17 {
-  "types":{"unevaluated":{"type":"number"},"evaluated":{"type":"number"}},
+  "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"default.js",
@@ -877,7 +814,7 @@ default.js:4:17 {
   "end":17
 }
 default.js:5:18 {
-  "types":{"unevaluated":{"type":"number"},"evaluated":{"type":"number"}},
+  "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"default.js",
@@ -892,10 +829,7 @@ default.js:5:18 {
   "end":18
 }
 constructor.js:4:7 {
-  "types":{
-    "unevaluated":{"type":"(x: string) => void"},
-    "evaluated":{"type":"(x: string) => void"}
-  },
+  "types":{"unevaluated":{"type":"(x: string) => void"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"constructor.js",

@@ -189,6 +189,27 @@ type $Pick<O: {}, K: $Keys<O>> = $ElementType<$NonMaybeType<O>, K>;
 function f({ x }: { x: ReadOnlyObj, ... }) {}
 //           ^
 
+// Non-evaluated due to alias
+function non_evaluated() {
+  type T = $ReadOnly<{
+    prop: R,
+    ...
+  }>;
+
+  type R = $ReadOnly<{
+    ...T,
+    type: 'blah',
+    ...
+  }>;
+
+  declare var obj: R;
+
+  const spread = {...obj};
+//      ^
+// Only show '{prop: R, type: "blah", ...}'. Do not expand R.
+}
+
+
 // TODO
 // React.ElementPropsType
 // React.ElementConfigType

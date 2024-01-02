@@ -11,7 +11,7 @@ Found 1 error
 setter_class_missing_param.js:6:4
 Flags: --pretty
 {
-  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":{"type":"any (implicit)"}},
+  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"setter_class_missing_param.js",
@@ -39,7 +39,7 @@ Found 1 error
 setter_class_multiple_params.js:6:4
 Flags: --pretty
 {
-  "types":{"unevaluated":{"type":"string"},"evaluated":{"type":"string"}},
+  "types":{"unevaluated":{"type":"string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"setter_class_multiple_params.js",
@@ -67,7 +67,7 @@ Found 1 error
 setter_interface_missing_param.js:6:4
 Flags: --pretty
 {
-  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":{"type":"any (implicit)"}},
+  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"setter_interface_missing_param.js",
@@ -95,7 +95,7 @@ Found 1 error
 setter_interface_multiple_params.js:6:4
 Flags: --pretty
 {
-  "types":{"unevaluated":{"type":"string"},"evaluated":{"type":"string"}},
+  "types":{"unevaluated":{"type":"string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"setter_interface_multiple_params.js",
@@ -123,7 +123,7 @@ Found 1 error
 setter_object_missing_param.js:5:4
 Flags: --pretty
 {
-  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":{"type":"any (implicit)"}},
+  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"setter_object_missing_param.js",
@@ -151,7 +151,7 @@ Found 1 error
 setter_object_multiple_params.js:5:4
 Flags: --pretty
 {
-  "types":{"unevaluated":{"type":"string"},"evaluated":{"type":"string"}},
+  "types":{"unevaluated":{"type":"string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"setter_object_multiple_params.js",
@@ -179,7 +179,7 @@ Found 1 error
 setter_type_missing_param.js:6:4
 Flags: --pretty
 {
-  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":{"type":"any (implicit)"}},
+  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"setter_type_missing_param.js",
@@ -207,7 +207,7 @@ Found 1 error
 setter_type_multiple_params.js:6:4
 Flags: --pretty
 {
-  "types":{"unevaluated":{"type":"string"},"evaluated":{"type":"string"}},
+  "types":{"unevaluated":{"type":"string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"setter_type_multiple_params.js",

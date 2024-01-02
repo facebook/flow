@@ -49,39 +49,7 @@ react_component.js:31:7 = {
       },
       "type":"component Fragment<Renders: React$Node = React$Node>"
     },
-    "evaluated":{
-      "expanded":{
-        "kind":"NominalComponentDecl",
-        "name":{
-          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:319:18,321:20"},
-          "name":"Fragment"
-        },
-        "typeParams":[
-          {
-            "name":"Renders",
-            "bound":{
-              "kind":"Generic",
-              "type":{
-                "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:15:14-23"},
-                "name":"React$Node"
-              },
-              "generic_kind":"type alias"
-            },
-            "polarity":"Neutral",
-            "default":{
-              "kind":"Generic",
-              "type":{
-                "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:15:14-23"},
-                "name":"React$Node"
-              },
-              "generic_kind":"type alias"
-            }
-          }
-        ],
-        "isType":false
-      },
-      "type":"component Fragment<Renders: React$Node = React$Node>"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -110,18 +78,7 @@ react_component.js:32:13 = {
       },
       "type":"ComponentType<number>"
     },
-    "evaluated":{
-      "expanded":{
-        "kind":"Generic",
-        "typeArgs":[{"kind":"Num"}],
-        "type":{
-          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:296:23-35"},
-          "name":"ComponentType"
-        },
-        "generic_kind":"type alias"
-      },
-      "type":"ComponentType<number>"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -158,26 +115,7 @@ react_component.js:32:29 = {
       },
       "type":"type ComponentType<-P> = React$ComponentType<P>"
     },
-    "evaluated":{
-      "expanded":{
-        "kind":"TypeAlias",
-        "name":{
-          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:296:23-35"},
-          "name":"ComponentType"
-        },
-        "typeParams":[{"name":"P","bound":null,"polarity":"Negative"}],
-        "body":{
-          "kind":"Generic",
-          "typeArgs":[{"kind":"Bound","bound":"P"}],
-          "type":{
-            "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:124:14-32"},
-            "name":"React$ComponentType"
-          },
-          "generic_kind":"type alias"
-        }
-      },
-      "type":"type ComponentType<-P> = React$ComponentType<P>"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{

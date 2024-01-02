@@ -3,9 +3,7 @@ dictionary.js:3:7 = {
     "unevaluated":{
       "type":"{|\"\": null, \" \": null, \"'\": null, \"1\": null, _: null, \"a b\": null, \"a'b\": null, ab: null, get x(): null, set y(string): void|}"
     },
-    "evaluated":{
-      "type":"{|\"\": null, \" \": null, \"'\": null, \"1\": null, _: null, \"a b\": null, \"a'b\": null, ab: null, get x(): null, set y(string): void|}"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -25,9 +23,7 @@ dictionary.js:19:7 = {
     "unevaluated":{
       "type":"{|\"\": null, \" \": null, '\"': null, \"1\": null, _: null, \"a b\": null, 'a\"b': null, ab: null, get x(): null, set y(string): void|}"
     },
-    "evaluated":{
-      "type":"{|\"\": null, \" \": null, '\"': null, \"1\": null, _: null, \"a b\": null, 'a\"b': null, ab: null, get x(): null, set y(string): void|}"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -43,7 +39,7 @@ dictionary.js:19:7 = {
   "end":8
 }
 jsx.js:7:12 = {
-  "types":{"unevaluated":{"type":"\"div\""},"evaluated":{"type":"\"div\""}},
+  "types":{"unevaluated":{"type":"\"div\""},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"jsx.js",
@@ -58,7 +54,7 @@ jsx.js:7:12 = {
   "end":14
 }
 jsx.js:7:16 = {
-  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":{"type":"any (explicit)"}},
+  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"jsx.js",
@@ -73,10 +69,7 @@ jsx.js:7:16 = {
   "end":20
 }
 jsx.js:7:23 = {
-  "types":{
-    "unevaluated":{"type":"{data: A, name: string, ...}"},
-    "evaluated":{"type":"{data: A, name: string, ...}"}
-  },
+  "types":{"unevaluated":{"type":"{data: A, name: string, ...}"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"jsx.js",
@@ -91,7 +84,7 @@ jsx.js:7:23 = {
   "end":27
 }
 jsx.js:7:29 = {
-  "types":{"unevaluated":{"type":"A"},"evaluated":{"type":"A"}},
+  "types":{"unevaluated":{"type":"A"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"jsx.js",
@@ -106,7 +99,7 @@ jsx.js:7:29 = {
   "end":32
 }
 jsx.js:7:35 = {
-  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":{"type":"any (explicit)"}},
+  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"jsx.js",
@@ -121,7 +114,7 @@ jsx.js:7:35 = {
   "end":39
 }
 jsx.js:7:55 = {
-  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":{"type":"any (explicit)"}},
+  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"jsx.js",
@@ -136,10 +129,7 @@ jsx.js:7:55 = {
   "end":55
 }
 jsx.js:7:61 = {
-  "types":{
-    "unevaluated":{"type":"{data: A, name: string, ...}"},
-    "evaluated":{"type":"{data: A, name: string, ...}"}
-  },
+  "types":{"unevaluated":{"type":"{data: A, name: string, ...}"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"jsx.js",
@@ -154,10 +144,7 @@ jsx.js:7:61 = {
   "end":65
 }
 jsx.js:8:17 = {
-  "types":{
-    "unevaluated":{"type":"{data: A, name: string, ...}"},
-    "evaluated":{"type":"{data: A, name: string, ...}"}
-  },
+  "types":{"unevaluated":{"type":"{data: A, name: string, ...}"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"jsx.js",
@@ -172,7 +159,7 @@ jsx.js:8:17 = {
   "end":21
 }
 jsx.js:8:23 = {
-  "types":{"unevaluated":{"type":"string"},"evaluated":{"type":"string"}},
+  "types":{"unevaluated":{"type":"string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"jsx.js",
@@ -187,7 +174,7 @@ jsx.js:8:23 = {
   "end":26
 }
 jsx.js:8:30 = {
-  "types":{"unevaluated":{"type":"\"div\""},"evaluated":{"type":"\"div\""}},
+  "types":{"unevaluated":{"type":"\"div\""},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"jsx.js",
@@ -202,7 +189,7 @@ jsx.js:8:30 = {
   "end":32
 }
 jsx.js:11:17 = {
-  "types":{"unevaluated":{"type":"string"},"evaluated":{"type":"string"}},
+  "types":{"unevaluated":{"type":"string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"jsx.js",
@@ -217,10 +204,7 @@ jsx.js:11:17 = {
   "end":19
 }
 jsx.js:18:12 = {
-  "types":{
-    "unevaluated":{"type":"{|r: typeof C|}"},
-    "evaluated":{"type":"{|r: typeof C|}"}
-  },
+  "types":{"unevaluated":{"type":"{|r: typeof C|}"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"jsx.js",
@@ -235,7 +219,7 @@ jsx.js:18:12 = {
   "end":12
 }
 jsx.js:18:14 = {
-  "types":{"unevaluated":{"type":"class C"},"evaluated":{"type":"class C"}},
+  "types":{"unevaluated":{"type":"class C"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"jsx.js",
@@ -250,10 +234,7 @@ jsx.js:18:14 = {
   "end":14
 }
 jsx.js:18:12 = {
-  "types":{
-    "unevaluated":{"type":"{|r: typeof C|}"},
-    "evaluated":{"type":"{|r: typeof C|}"}
-  },
+  "types":{"unevaluated":{"type":"{|r: typeof C|}"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"jsx.js",
@@ -268,7 +249,7 @@ jsx.js:18:12 = {
   "end":22
 }
 jsx.js:18:24 = {
-  "types":{"unevaluated":{"type":"class C"},"evaluated":{"type":"class C"}},
+  "types":{"unevaluated":{"type":"class C"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"jsx.js",
@@ -283,7 +264,7 @@ jsx.js:18:24 = {
   "end":24
 }
 literals.js:6:7 = {
-  "types":{"unevaluated":{"type":"string"},"evaluated":{"type":"string"}},
+  "types":{"unevaluated":{"type":"string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"literals.js",
@@ -298,7 +279,7 @@ literals.js:6:7 = {
   "end":7
 }
 literals.js:7:7 = {
-  "types":{"unevaluated":{"type":"number"},"evaluated":{"type":"number"}},
+  "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"literals.js",
@@ -313,7 +294,7 @@ literals.js:7:7 = {
   "end":7
 }
 literals.js:8:7 = {
-  "types":{"unevaluated":{"type":"number"},"evaluated":{"type":"number"}},
+  "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"literals.js",
@@ -328,7 +309,7 @@ literals.js:8:7 = {
   "end":7
 }
 literals.js:9:7 = {
-  "types":{"unevaluated":{"type":"boolean"},"evaluated":{"type":"boolean"}},
+  "types":{"unevaluated":{"type":"boolean"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"literals.js",
@@ -343,10 +324,7 @@ literals.js:9:7 = {
   "end":7
 }
 literals.js:10:7 = {
-  "types":{
-    "unevaluated":{"type":"boolean | number | string"},
-    "evaluated":{"type":"boolean | number | string"}
-  },
+  "types":{"unevaluated":{"type":"boolean | number | string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"literals.js",
@@ -361,7 +339,7 @@ literals.js:10:7 = {
   "end":7
 }
 literals.js:13:6 = {
-  "types":{"unevaluated":{"type":"type S = \"A\""},"evaluated":{"type":"type S = \"A\""}},
+  "types":{"unevaluated":{"type":"type S = \"A\""},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"literals.js",
@@ -376,7 +354,7 @@ literals.js:13:6 = {
   "end":6
 }
 literals.js:14:6 = {
-  "types":{"unevaluated":{"type":"type N = 1"},"evaluated":{"type":"type N = 1"}},
+  "types":{"unevaluated":{"type":"type N = 1"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"literals.js",
@@ -391,7 +369,7 @@ literals.js:14:6 = {
   "end":6
 }
 literals.js:15:6 = {
-  "types":{"unevaluated":{"type":"type F = 1.01"},"evaluated":{"type":"type F = 1.01"}},
+  "types":{"unevaluated":{"type":"type F = 1.01"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"literals.js",
@@ -406,7 +384,7 @@ literals.js:15:6 = {
   "end":6
 }
 literals.js:16:6 = {
-  "types":{"unevaluated":{"type":"type B = true"},"evaluated":{"type":"type B = true"}},
+  "types":{"unevaluated":{"type":"type B = true"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"literals.js",
@@ -421,10 +399,7 @@ literals.js:16:6 = {
   "end":6
 }
 literals.js:17:6 = {
-  "types":{
-    "unevaluated":{"type":"type U = \"A\" | 1 | 1.01 | true"},
-    "evaluated":{"type":"type U = \"A\" | 1 | 1.01 | true"}
-  },
+  "types":{"unevaluated":{"type":"type U = \"A\" | 1 | 1.01 | true"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"literals.js",
@@ -441,7 +416,7 @@ literals.js:17:6 = {
 literals.js:19:7 = {
   "types":{
     "unevaluated":{"type":"(x: (\"A\" | \"B\")) => (\"A\" | \"B\")"},
-    "evaluated":{"type":"(x: (\"A\" | \"B\")) => (\"A\" | \"B\")"}
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -457,7 +432,7 @@ literals.js:19:7 = {
   "end":8
 }
 literals.js:21:7 = {
-  "types":{"unevaluated":{"type":"{|f: string|}"},"evaluated":{"type":"{|f: string|}"}},
+  "types":{"unevaluated":{"type":"{|f: string|}"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"literals.js",
@@ -472,7 +447,7 @@ literals.js:21:7 = {
   "end":8
 }
 literals.js:22:7 = {
-  "types":{"unevaluated":{"type":"{|f: \"f\"|}"},"evaluated":{"type":"{|f: \"f\"|}"}},
+  "types":{"unevaluated":{"type":"{|f: \"f\"|}"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"literals.js",
@@ -489,7 +464,7 @@ literals.js:22:7 = {
 literals.js:24:7 = {
   "types":{
     "unevaluated":{"type":"(x: (\"A\" | \"B\")) => (\"A\" | \"B\")"},
-    "evaluated":{"type":"(x: (\"A\" | \"B\")) => (\"A\" | \"B\")"}
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -505,7 +480,7 @@ literals.js:24:7 = {
   "end":8
 }
 literals.js:28:7 = {
-  "types":{"unevaluated":{"type":"Array<number>"},"evaluated":{"type":"Array<number>"}},
+  "types":{"unevaluated":{"type":"Array<number>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"literals.js",
@@ -520,7 +495,7 @@ literals.js:28:7 = {
   "end":17
 }
 literals.js:31:7 = {
-  "types":{"unevaluated":{"type":"A<number>"},"evaluated":{"type":"A<number>"}},
+  "types":{"unevaluated":{"type":"A<number>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"literals.js",
@@ -535,7 +510,7 @@ literals.js:31:7 = {
   "end":9
 }
 literals.js:32:7 = {
-  "types":{"unevaluated":{"type":"A<1>"},"evaluated":{"type":"A<1>"}},
+  "types":{"unevaluated":{"type":"A<1>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"literals.js",
@@ -551,7 +526,7 @@ literals.js:32:7 = {
 }
 new-array.js:3:15 = {
   "documentation":"Returns a new JavaScript array with its length property set to that number.\n(Note: this implies an array of arrayLength empty slots, not slots with actual undefined\nvalues. See [sparse arrays](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Indexed_collections#sparse_arrays)).",
-  "types":{"unevaluated":{"type":"class Array<T>"},"evaluated":{"type":"class Array<T>"}},
+  "types":{"unevaluated":{"type":"class Array<T>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"new-array.js",
@@ -566,7 +541,7 @@ new-array.js:3:15 = {
   "end":17
 }
 object-resolution.js:5:2 = {
-  "types":{"unevaluated":{"type":"{|+p: number|}"},"evaluated":{"type":"{|+p: number|}"}},
+  "types":{"unevaluated":{"type":"{|+p: number|}"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"object-resolution.js",
@@ -581,10 +556,7 @@ object-resolution.js:5:2 = {
   "end":3
 }
 object-resolution.js:10:2 = {
-  "types":{
-    "unevaluated":{"type":"{q: string, ...}"},
-    "evaluated":{"type":"{q: string, ...}"}
-  },
+  "types":{"unevaluated":{"type":"{q: string, ...}"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"object-resolution.js",
@@ -599,10 +571,7 @@ object-resolution.js:10:2 = {
   "end":5
 }
 object-resolution.js:13:5 = {
-  "types":{
-    "unevaluated":{"type":"{p: number, q: string, ...}"},
-    "evaluated":{"type":"{p: number, q: string, ...}"}
-  },
+  "types":{"unevaluated":{"type":"{p: number, q: string, ...}"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"object-resolution.js",
@@ -619,7 +588,7 @@ object-resolution.js:13:5 = {
 object.js:3:15 = {
   "types":{
     "unevaluated":{"type":"{a?: {b: ?{c: (null | {d: number, ...}), ...}, ...}, ...}"},
-    "evaluated":{"type":"{a?: {b: ?{c: (null | {d: number, ...}), ...}, ...}, ...}"}
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -637,7 +606,7 @@ object.js:3:15 = {
 object.js:3:19 = {
   "types":{
     "unevaluated":{"type":"void | {b: ?{c: (null | {d: number, ...}), ...}, ...}"},
-    "evaluated":{"type":"void | {b: ?{c: (null | {d: number, ...}), ...}, ...}"}
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -655,7 +624,7 @@ object.js:3:19 = {
 object.js:3:24 = {
   "types":{
     "unevaluated":{"type":"?{c: (null | {d: number, ...}), ...}"},
-    "evaluated":{"type":"?{c: (null | {d: number, ...}), ...}"}
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -671,10 +640,7 @@ object.js:3:24 = {
   "end":24
 }
 object.js:3:29 = {
-  "types":{
-    "unevaluated":{"type":"null | {d: number, ...}"},
-    "evaluated":{"type":"null | {d: number, ...}"}
-  },
+  "types":{"unevaluated":{"type":"null | {d: number, ...}"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"object.js",
@@ -689,7 +655,7 @@ object.js:3:29 = {
   "end":29
 }
 object.js:3:40 = {
-  "types":{"unevaluated":{"type":"number"},"evaluated":{"type":"number"}},
+  "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"object.js",
@@ -706,7 +672,7 @@ object.js:3:40 = {
 object.js:6:5 = {
   "types":{
     "unevaluated":{"type":"{a?: {b: ?{c: (null | {d: number, ...}), ...}, ...}, ...}"},
-    "evaluated":{"type":"{a?: {b: ?{c: (null | {d: number, ...}), ...}, ...}, ...}"}
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -724,7 +690,7 @@ object.js:6:5 = {
 object.js:6:7 = {
   "types":{
     "unevaluated":{"type":"void | {b: ?{c: (null | {d: number, ...}), ...}, ...}"},
-    "evaluated":{"type":"void | {b: ?{c: (null | {d: number, ...}), ...}, ...}"}
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -742,7 +708,7 @@ object.js:6:7 = {
 object.js:7:10 = {
   "types":{
     "unevaluated":{"type":"{b: ?{c: (null | {d: number, ...}), ...}, ...}"},
-    "evaluated":{"type":"{b: ?{c: (null | {d: number, ...}), ...}, ...}"}
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -760,7 +726,7 @@ object.js:7:10 = {
 object.js:7:12 = {
   "types":{
     "unevaluated":{"type":"?{c: (null | {d: number, ...}), ...}"},
-    "evaluated":{"type":"?{c: (null | {d: number, ...}), ...}"}
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -776,10 +742,7 @@ object.js:7:12 = {
   "end":12
 }
 object.js:8:14 = {
-  "types":{
-    "unevaluated":{"type":"{c: (null | {d: number, ...}), ...}"},
-    "evaluated":{"type":"{c: (null | {d: number, ...}), ...}"}
-  },
+  "types":{"unevaluated":{"type":"{c: (null | {d: number, ...}), ...}"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"object.js",
@@ -794,10 +757,7 @@ object.js:8:14 = {
   "end":14
 }
 object.js:8:16 = {
-  "types":{
-    "unevaluated":{"type":"null | {d: number, ...}"},
-    "evaluated":{"type":"null | {d: number, ...}"}
-  },
+  "types":{"unevaluated":{"type":"null | {d: number, ...}"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"object.js",
@@ -812,10 +772,7 @@ object.js:8:16 = {
   "end":16
 }
 object.js:9:18 = {
-  "types":{
-    "unevaluated":{"type":"{d: number, ...}"},
-    "evaluated":{"type":"{d: number, ...}"}
-  },
+  "types":{"unevaluated":{"type":"{d: number, ...}"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"object.js",
@@ -830,7 +787,7 @@ object.js:9:18 = {
   "end":18
 }
 object.js:9:34 = {
-  "types":{"unevaluated":{"type":"number"},"evaluated":{"type":"number"}},
+  "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"object.js",
@@ -845,10 +802,7 @@ object.js:9:34 = {
   "end":34
 }
 object.js:15:3 = {
-  "types":{
-    "unevaluated":{"type":"(n: string) => string"},
-    "evaluated":{"type":"(n: string) => string"}
-  },
+  "types":{"unevaluated":{"type":"(n: string) => string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"object.js",
@@ -863,10 +817,7 @@ object.js:15:3 = {
   "end":3
 }
 object.js:16:3 = {
-  "types":{
-    "unevaluated":{"type":"(k: number) => number"},
-    "evaluated":{"type":"(k: number) => number"}
-  },
+  "types":{"unevaluated":{"type":"(k: number) => number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"object.js",
@@ -883,7 +834,7 @@ object.js:16:3 = {
 object.js:19:3 = {
   "types":{
     "unevaluated":{"type":"{|m(n: string): string, n: (k: number) => number|}"},
-    "evaluated":{"type":"{|m(n: string): string, n: (k: number) => number|}"}
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -899,10 +850,7 @@ object.js:19:3 = {
   "end":5
 }
 object.js:19:7 = {
-  "types":{
-    "unevaluated":{"type":"(n: string) => string"},
-    "evaluated":{"type":"(n: string) => string"}
-  },
+  "types":{"unevaluated":{"type":"(n: string) => string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"object.js",
@@ -917,10 +865,7 @@ object.js:19:7 = {
   "end":7
 }
 object.js:20:7 = {
-  "types":{
-    "unevaluated":{"type":"(n: string) => string"},
-    "evaluated":{"type":"(n: string) => string"}
-  },
+  "types":{"unevaluated":{"type":"(n: string) => string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"object.js",
@@ -935,10 +880,7 @@ object.js:20:7 = {
   "end":7
 }
 object.js:21:7 = {
-  "types":{
-    "unevaluated":{"type":"(k: number) => number"},
-    "evaluated":{"type":"(k: number) => number"}
-  },
+  "types":{"unevaluated":{"type":"(k: number) => number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"object.js",
@@ -953,10 +895,7 @@ object.js:21:7 = {
   "end":7
 }
 object.js:22:7 = {
-  "types":{
-    "unevaluated":{"type":"(k: number) => number"},
-    "evaluated":{"type":"(k: number) => number"}
-  },
+  "types":{"unevaluated":{"type":"(k: number) => number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"object.js",
@@ -975,9 +914,7 @@ object.js:35:1 = {
     "unevaluated":{
       "type":"{b: 0b111, d: 11, f: \"ff\", g: 'g\"g', h: 'h\"h', i: \"i'i\", j: \"'\", x: 0x111, ...}"
     },
-    "evaluated":{
-      "type":"{b: 0b111, d: 11, f: \"ff\", g: 'g\"g', h: 'h\"h', i: \"i'i\", j: \"'\", x: 0x111, ...}"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -993,7 +930,7 @@ object.js:35:1 = {
   "end":6
 }
 optional_chaining.js:16:7 = {
-  "types":{"unevaluated":{"type":"number | void"},"evaluated":{"type":"number | void"}},
+  "types":{"unevaluated":{"type":"number | void"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"optional_chaining.js",
@@ -1008,7 +945,7 @@ optional_chaining.js:16:7 = {
   "end":7
 }
 optional_chaining.js:16:11 = {
-  "types":{"unevaluated":{"type":"?Foo"},"evaluated":{"type":"?Foo"}},
+  "types":{"unevaluated":{"type":"?Foo"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"optional_chaining.js",
@@ -1023,7 +960,7 @@ optional_chaining.js:16:11 = {
   "end":13
 }
 optional_chaining.js:16:16 = {
-  "types":{"unevaluated":{"type":"void | Bar"},"evaluated":{"type":"void | Bar"}},
+  "types":{"unevaluated":{"type":"void | Bar"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"optional_chaining.js",
@@ -1038,7 +975,7 @@ optional_chaining.js:16:16 = {
   "end":18
 }
 optional_chaining.js:16:20 = {
-  "types":{"unevaluated":{"type":"void | Baz"},"evaluated":{"type":"void | Baz"}},
+  "types":{"unevaluated":{"type":"void | Baz"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"optional_chaining.js",
@@ -1053,7 +990,7 @@ optional_chaining.js:16:20 = {
   "end":22
 }
 optional_chaining.js:16:24 = {
-  "types":{"unevaluated":{"type":"number | void"},"evaluated":{"type":"number | void"}},
+  "types":{"unevaluated":{"type":"number | void"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"optional_chaining.js",

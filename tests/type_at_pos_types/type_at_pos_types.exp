@@ -1,5 +1,5 @@
 any.js:3:15 = {
-  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":{"type":"any (explicit)"}},
+  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"any.js",
@@ -14,7 +14,7 @@ any.js:3:15 = {
   "end":15
 }
 any.js:4:2 = {
-  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":{"type":"any (explicit)"}},
+  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"any.js",
@@ -29,7 +29,7 @@ any.js:4:2 = {
   "end":3
 }
 any.js:4:6 = {
-  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":{"type":"any (explicit)"}},
+  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"any.js",
@@ -44,7 +44,7 @@ any.js:4:6 = {
   "end":7
 }
 any.js:5:5 = {
-  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":{"type":"any (implicit)"}},
+  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"any.js",
@@ -59,7 +59,7 @@ any.js:5:5 = {
   "end":7
 }
 any.js:7:13 = {
-  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":{"type":"any (explicit)"}},
+  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"any.js",
@@ -74,7 +74,7 @@ any.js:7:13 = {
   "end":19
 }
 any.js:8:5 = {
-  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":{"type":"any (explicit)"}},
+  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"any.js",
@@ -89,7 +89,7 @@ any.js:8:5 = {
   "end":7
 }
 any.js:8:10 = {
-  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":{"type":"any (explicit)"}},
+  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"any.js",
@@ -104,7 +104,7 @@ any.js:8:10 = {
   "end":11
 }
 any.js:9:10 = {
-  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":{"type":"any (implicit)"}},
+  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"any.js",
@@ -119,7 +119,7 @@ any.js:9:10 = {
   "end":11
 }
 array.js:6:15 = {
-  "types":{"unevaluated":{"type":"NumType"},"evaluated":{"type":"NumType"}},
+  "types":{"unevaluated":{"type":"NumType"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"array.js",
@@ -134,10 +134,7 @@ array.js:6:15 = {
   "end":16
 }
 array.js:10:15 = {
-  "types":{
-    "unevaluated":{"type":"ReadOnlyNumType"},
-    "evaluated":{"type":"ReadOnlyNumType"}
-  },
+  "types":{"unevaluated":{"type":"ReadOnlyNumType"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"array.js",
@@ -152,7 +149,7 @@ array.js:10:15 = {
   "end":16
 }
 array.js:15:4 = {
-  "types":{"unevaluated":{"type":"Array<string>"},"evaluated":{"type":"Array<string>"}},
+  "types":{"unevaluated":{"type":"Array<string>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"array.js",
@@ -167,7 +164,7 @@ array.js:15:4 = {
   "end":5
 }
 array.js:19:4 = {
-  "types":{"unevaluated":{"type":"Array<?string>"},"evaluated":{"type":"Array<?string>"}},
+  "types":{"unevaluated":{"type":"Array<?string>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"array.js",
@@ -182,10 +179,7 @@ array.js:19:4 = {
   "end":5
 }
 array.js:23:4 = {
-  "types":{
-    "unevaluated":{"type":"Array<(string | number)>"},
-    "evaluated":{"type":"Array<(string | number)>"}
-  },
+  "types":{"unevaluated":{"type":"Array<(string | number)>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"array.js",
@@ -200,10 +194,7 @@ array.js:23:4 = {
   "end":5
 }
 charset.js:3:13 = {
-  "types":{
-    "unevaluated":{"type":"$CharSet<\"ab\">"},
-    "evaluated":{"type":"$CharSet<\"ab\">"}
-  },
+  "types":{"unevaluated":{"type":"$CharSet<\"ab\">"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"charset.js",
@@ -218,7 +209,7 @@ charset.js:3:13 = {
   "end":13
 }
 destructuring.js:3:6 = {
-  "types":{"unevaluated":{"type":"number"},"evaluated":{"type":"number"}},
+  "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"destructuring.js",
@@ -233,7 +224,7 @@ destructuring.js:3:6 = {
   "end":6
 }
 destructuring.js:11:13 = {
-  "types":{"unevaluated":{"type":"number"},"evaluated":{"type":"number"}},
+  "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"destructuring.js",
@@ -248,7 +239,7 @@ destructuring.js:11:13 = {
   "end":13
 }
 generics.js:5:1 = {
-  "types":{"unevaluated":{"type":"C<number>"},"evaluated":{"type":"C<number>"}},
+  "types":{"unevaluated":{"type":"C<number>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"generics.js",
@@ -263,7 +254,7 @@ generics.js:5:1 = {
   "end":2
 }
 generics.js:10:1 = {
-  "types":{"unevaluated":{"type":"C<number>"},"evaluated":{"type":"C<number>"}},
+  "types":{"unevaluated":{"type":"C<number>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"generics.js",
@@ -278,7 +269,7 @@ generics.js:10:1 = {
   "end":2
 }
 generics.js:14:1 = {
-  "types":{"unevaluated":{"type":"E<number>"},"evaluated":{"type":"E<number>"}},
+  "types":{"unevaluated":{"type":"E<number>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"generics.js",
@@ -293,7 +284,7 @@ generics.js:14:1 = {
   "end":2
 }
 generics.js:18:1 = {
-  "types":{"unevaluated":{"type":"F<number>"},"evaluated":{"type":"F<number>"}},
+  "types":{"unevaluated":{"type":"F<number>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"generics.js",
@@ -308,7 +299,7 @@ generics.js:18:1 = {
   "end":2
 }
 generics.js:22:1 = {
-  "types":{"unevaluated":{"type":"O<number>"},"evaluated":{"type":"O<number>"}},
+  "types":{"unevaluated":{"type":"O<number>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"generics.js",
@@ -323,7 +314,7 @@ generics.js:22:1 = {
   "end":2
 }
 generics.js:30:13 = {
-  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":{"type":"any (implicit)"}},
+  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"generics.js",
@@ -338,7 +329,7 @@ generics.js:30:13 = {
   "end":13
 }
 generics.js:34:5 = {
-  "types":{"unevaluated":{"type":"X"},"evaluated":{"type":"X"}},
+  "types":{"unevaluated":{"type":"X"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"generics.js",
@@ -353,7 +344,7 @@ generics.js:34:5 = {
   "end":5
 }
 ill-formed.js:30:13 = {
-  "types":{"unevaluated":{"type":"Foo"},"evaluated":{"type":"Foo"}},
+  "types":{"unevaluated":{"type":"Foo"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"ill-formed.js",
@@ -368,10 +359,7 @@ ill-formed.js:30:13 = {
   "end":7
 }
 implicit-instantiation.js:5:10{
-  "types":{
-    "unevaluated":{"expanded":{"kind":"Num"},"type":"number"},
-    "evaluated":{"expanded":{"kind":"Num"},"type":"number"}
-  },
+  "types":{"unevaluated":{"expanded":{"kind":"Num"},"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"implicit-instantiation.js",
@@ -386,10 +374,7 @@ implicit-instantiation.js:5:10{
   "end":10
 }
 implicit-instantiation.js:6:10{
-  "types":{
-    "unevaluated":{"expanded":{"kind":"Str"},"type":"string"},
-    "evaluated":{"expanded":{"kind":"Str"},"type":"string"}
-  },
+  "types":{"unevaluated":{"expanded":{"kind":"Str"},"type":"string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"implicit-instantiation.js",
@@ -409,10 +394,7 @@ implicit-instantiation.js:10:21{
       "expanded":{"kind":"Union","types":[{"kind":"Num"},{"kind":"Str"}]},
       "type":"number | string"
     },
-    "evaluated":{
-      "expanded":{"kind":"Union","types":[{"kind":"Num"},{"kind":"Str"}]},
-      "type":"number | string"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -442,7 +424,7 @@ interface.js:11:6,11:7
 interface.js:12:7 = type I7 = interface extends C {(): number}
 interface.js:12:6,12:7
 mixed.js:18:17 = {
-  "types":{"unevaluated":{"type":"AB"},"evaluated":{"type":"AB"}},
+  "types":{"unevaluated":{"type":"AB"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"mixed.js",
@@ -461,9 +443,7 @@ callable-object.js:8:6 = {
     "unevaluated":{
       "type":"type Obj1 = {(...args: $ReadOnlyArray<mixed>): void, f: <T>(x: T) => T, ...}"
     },
-    "evaluated":{
-      "type":"type Obj1 = {(...args: $ReadOnlyArray<mixed>): void, f: <T>(x: T) => T, ...}"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -483,9 +463,7 @@ callable-object.js:13:6 = {
     "unevaluated":{
       "type":"type Obj2 = {$call: (...args: $ReadOnlyArray<mixed>) => void, f: <T>(x: T) => T, ...}"
     },
-    "evaluated":{
-      "type":"type Obj2 = {$call: (...args: $ReadOnlyArray<mixed>) => void, f: <T>(x: T) => T, ...}"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -505,9 +483,7 @@ callable-object.js:18:6 = {
     "unevaluated":{
       "type":"type Obj3 = {(...args: $ReadOnlyArray<mixed>): void, f: <T>(x: T) => T, ...}"
     },
-    "evaluated":{
-      "type":"type Obj3 = {(...args: $ReadOnlyArray<mixed>): void, f: <T>(x: T) => T, ...}"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -527,9 +503,7 @@ callable-object.js:23:6 = {
     "unevaluated":{
       "type":"type Obj4 = {(...args: $ReadOnlyArray<mixed>): O1, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T, ...} & {(...args: $ReadOnlyArray<mixed>): O2, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T, ...} & {(...args: $ReadOnlyArray<mixed>): O4, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T, ...}"
     },
-    "evaluated":{
-      "type":"type Obj4 = {(...args: $ReadOnlyArray<mixed>): O1, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T, ...} & {(...args: $ReadOnlyArray<mixed>): O2, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T, ...} & {(...args: $ReadOnlyArray<mixed>): O4, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T, ...}"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -549,9 +523,7 @@ callable-object.js:31:6 = {
     "unevaluated":{
       "type":"type Obj5 = {(...args: $ReadOnlyArray<mixed>): O4, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T, ...} & {(...args: $ReadOnlyArray<mixed>): O1, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T, ...} & {(...args: $ReadOnlyArray<mixed>): O2, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T, ...}"
     },
-    "evaluated":{
-      "type":"type Obj5 = {(...args: $ReadOnlyArray<mixed>): O4, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T, ...} & {(...args: $ReadOnlyArray<mixed>): O1, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T, ...} & {(...args: $ReadOnlyArray<mixed>): O2, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T, ...}"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -569,10 +541,7 @@ callable-object.js:31:6 = {
 opaque.js:3:20
 Flags: --pretty
 {
-  "types":{
-    "unevaluated":{"type":"type Foo = number"},
-    "evaluated":{"type":"type Foo = number"}
-  },
+  "types":{"unevaluated":{"type":"type Foo = number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"opaque.js",
@@ -590,10 +559,7 @@ Flags: --pretty
 opaque.js:6:19
 Flags: --pretty
 {
-  "types":{
-    "unevaluated":{"type":"type Foo = number"},
-    "evaluated":{"type":"type Foo = number"}
-  },
+  "types":{"unevaluated":{"type":"type Foo = number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"opaque.js",
@@ -611,7 +577,7 @@ Flags: --pretty
 opaque.js:8:3
 Flags: --pretty
 {
-  "types":{"unevaluated":{"type":"Foo"},"evaluated":{"type":"Foo"}},
+  "types":{"unevaluated":{"type":"Foo"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"opaque.js",
@@ -629,10 +595,7 @@ Flags: --pretty
 opaque.js:11:22
 Flags: --pretty
 {
-  "types":{
-    "unevaluated":{"type":"type Bar = number"},
-    "evaluated":{"type":"type Bar = number"}
-  },
+  "types":{"unevaluated":{"type":"type Bar = number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"opaque.js",
@@ -650,10 +613,7 @@ Flags: --pretty
 opaque.js:14:18
 Flags: --pretty
 {
-  "types":{
-    "unevaluated":{"type":"type Bar = number"},
-    "evaluated":{"type":"type Bar = number"}
-  },
+  "types":{"unevaluated":{"type":"type Bar = number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"opaque.js",
@@ -671,7 +631,7 @@ Flags: --pretty
 opaque.js:16:3
 Flags: --pretty
 {
-  "types":{"unevaluated":{"type":"Bar"},"evaluated":{"type":"Bar"}},
+  "types":{"unevaluated":{"type":"Bar"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"opaque.js",
@@ -689,7 +649,7 @@ Flags: --pretty
 opaque.js:19:22
 Flags: --pretty
 {
-  "types":{"unevaluated":{"type":"type Baz"},"evaluated":{"type":"type Baz"}},
+  "types":{"unevaluated":{"type":"type Baz"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"opaque.js",
@@ -707,7 +667,7 @@ Flags: --pretty
 opaque.js:22:18
 Flags: --pretty
 {
-  "types":{"unevaluated":{"type":"type Baz"},"evaluated":{"type":"type Baz"}},
+  "types":{"unevaluated":{"type":"type Baz"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"opaque.js",
@@ -725,7 +685,7 @@ Flags: --pretty
 opaque.js:24:3
 Flags: --pretty
 {
-  "types":{"unevaluated":{"type":"Baz"},"evaluated":{"type":"Baz"}},
+  "types":{"unevaluated":{"type":"Baz"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"opaque.js",
@@ -743,10 +703,7 @@ Flags: --pretty
 opaque.js:27:14
 Flags: --pretty
 {
-  "types":{
-    "unevaluated":{"type":"type Bak<A> = number | A"},
-    "evaluated":{"type":"type Bak<A> = number | A"}
-  },
+  "types":{"unevaluated":{"type":"type Bak<A> = number | A"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"opaque.js",
@@ -764,10 +721,7 @@ Flags: --pretty
 opaque.js:30:19
 Flags: --pretty
 {
-  "types":{
-    "unevaluated":{"type":"type Bak<A> = number | A"},
-    "evaluated":{"type":"type Bak<A> = number | A"}
-  },
+  "types":{"unevaluated":{"type":"type Bak<A> = number | A"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"opaque.js",
@@ -785,7 +739,7 @@ Flags: --pretty
 opaque.js:32:3
 Flags: --pretty
 {
-  "types":{"unevaluated":{"type":"Bak<string>"},"evaluated":{"type":"Bak<string>"}},
+  "types":{"unevaluated":{"type":"Bak<string>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"opaque.js",
@@ -803,7 +757,7 @@ Flags: --pretty
 opaque.js:35:22
 Flags: --pretty
 {
-  "types":{"unevaluated":{"type":"type Bam<A>"},"evaluated":{"type":"type Bam<A>"}},
+  "types":{"unevaluated":{"type":"type Bam<A>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"opaque.js",
@@ -821,7 +775,7 @@ Flags: --pretty
 opaque.js:38:19
 Flags: --pretty
 {
-  "types":{"unevaluated":{"type":"type Bam<A>"},"evaluated":{"type":"type Bam<A>"}},
+  "types":{"unevaluated":{"type":"type Bam<A>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"opaque.js",
@@ -839,7 +793,7 @@ Flags: --pretty
 opaque.js:40:3
 Flags: --pretty
 {
-  "types":{"unevaluated":{"type":"Bam<string>"},"evaluated":{"type":"Bam<string>"}},
+  "types":{"unevaluated":{"type":"Bam<string>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"opaque.js",
@@ -857,7 +811,7 @@ Flags: --pretty
 opaque.js:45:22
 Flags: --pretty
 {
-  "types":{"unevaluated":{"type":"type Opaque"},"evaluated":{"type":"type Opaque"}},
+  "types":{"unevaluated":{"type":"type Opaque"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"opaque.js",
@@ -875,7 +829,7 @@ Flags: --pretty
 opaque.js:47:4
 Flags: --pretty
 {
-  "types":{"unevaluated":{"type":"Opaque"},"evaluated":{"type":"Opaque"}},
+  "types":{"unevaluated":{"type":"Opaque"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"opaque.js",
@@ -895,7 +849,7 @@ Flags: --pretty
 {
   "types":{
     "unevaluated":{"type":"type PolyTransparent<A> = Poly$Opaque<A>"},
-    "evaluated":{"type":"type PolyTransparent<A> = Poly$Opaque<A>"}
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -914,10 +868,7 @@ Flags: --pretty
 opaque.js:52:4
 Flags: --pretty
 {
-  "types":{
-    "unevaluated":{"type":"PolyTransparent<string>"},
-    "evaluated":{"type":"PolyTransparent<string>"}
-  },
+  "types":{"unevaluated":{"type":"PolyTransparent<string>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"opaque.js",
@@ -935,10 +886,7 @@ Flags: --pretty
 opaque.js:55:27
 Flags: --pretty
 {
-  "types":{
-    "unevaluated":{"type":"type PolyOpaque<A>"},
-    "evaluated":{"type":"type PolyOpaque<A>"}
-  },
+  "types":{"unevaluated":{"type":"type PolyOpaque<A>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"opaque.js",
@@ -956,10 +904,7 @@ Flags: --pretty
 opaque.js:57:4
 Flags: --pretty
 {
-  "types":{
-    "unevaluated":{"type":"PolyOpaque<string>"},
-    "evaluated":{"type":"PolyOpaque<string>"}
-  },
+  "types":{"unevaluated":{"type":"PolyOpaque<string>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"opaque.js",
@@ -977,7 +922,7 @@ Flags: --pretty
 opaque.js:61:7
 Flags: --pretty
 {
-  "types":{"unevaluated":{"type":"Opaque"},"evaluated":{"type":"Opaque"}},
+  "types":{"unevaluated":{"type":"Opaque"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"opaque.js",
@@ -995,10 +940,7 @@ Flags: --pretty
 opaque.js:66:7
 Flags: --pretty
 {
-  "types":{
-    "unevaluated":{"type":"OpaqueKeyWithSupertype1"},
-    "evaluated":{"type":"OpaqueKeyWithSupertype1"}
-  },
+  "types":{"unevaluated":{"type":"OpaqueKeyWithSupertype1"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"opaque.js",
@@ -1014,7 +956,7 @@ Flags: --pretty
 }
 
 optional.js:4:10 = {
-  "types":{"unevaluated":{"type":"void | string"},"evaluated":{"type":"void | string"}},
+  "types":{"unevaluated":{"type":"void | string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"optional.js",
@@ -1029,10 +971,7 @@ optional.js:4:10 = {
   "end":10
 }
 optional.js:7:2 = {
-  "types":{
-    "unevaluated":{"type":"(x?: string) => (void | string)"},
-    "evaluated":{"type":"(x?: string) => (void | string)"}
-  },
+  "types":{"unevaluated":{"type":"(x?: string) => (void | string)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"optional.js",
@@ -1047,10 +986,7 @@ optional.js:7:2 = {
   "end":3
 }
 optional.js:10:11 = {
-  "types":{
-    "unevaluated":{"type":"{x?: string, ...}"},
-    "evaluated":{"type":"{x?: string, ...}"}
-  },
+  "types":{"unevaluated":{"type":"{x?: string, ...}"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"optional.js",
@@ -1065,7 +1001,7 @@ optional.js:10:11 = {
   "end":12
 }
 optional.js:10:14 = {
-  "types":{"unevaluated":{"type":"void | string"},"evaluated":{"type":"void | string"}},
+  "types":{"unevaluated":{"type":"void | string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"optional.js",
@@ -1080,7 +1016,7 @@ optional.js:10:14 = {
   "end":14
 }
 optional.js:14:10 = {
-  "types":{"unevaluated":{"type":"void"},"evaluated":{"type":"void"}},
+  "types":{"unevaluated":{"type":"void"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"optional.js",
@@ -1095,7 +1031,7 @@ optional.js:14:10 = {
   "end":10
 }
 recursive.js:3:25 = {
-  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":{"type":"any (implicit)"}},
+  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"recursive.js",
@@ -1110,10 +1046,7 @@ recursive.js:3:25 = {
   "end":27
 }
 recursive.js:6:11 = {
-  "types":{
-    "unevaluated":{"type":"(n: number) => AList"},
-    "evaluated":{"type":"(n: number) => AList"}
-  },
+  "types":{"unevaluated":{"type":"(n: number) => AList"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"recursive.js",
@@ -1128,10 +1061,7 @@ recursive.js:6:11 = {
   "end":14
 }
 recursive.js:13:12 = {
-  "types":{
-    "unevaluated":{"type":"(n: number) => BList"},
-    "evaluated":{"type":"(n: number) => BList"}
-  },
+  "types":{"unevaluated":{"type":"(n: number) => BList"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"recursive.js",
@@ -1146,10 +1076,7 @@ recursive.js:13:12 = {
   "end":14
 }
 recursive.js:23:12 = {
-  "types":{
-    "unevaluated":{"type":"(n: number) => CList"},
-    "evaluated":{"type":"(n: number) => CList"}
-  },
+  "types":{"unevaluated":{"type":"(n: number) => CList"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"recursive.js",
@@ -1164,7 +1091,7 @@ recursive.js:23:12 = {
   "end":14
 }
 recursive.js:49:1 = {
-  "types":{"unevaluated":{"type":"string"},"evaluated":{"type":"string"}},
+  "types":{"unevaluated":{"type":"string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"recursive.js",
@@ -1179,10 +1106,7 @@ recursive.js:49:1 = {
   "end":1
 }
 recursive.js:51:6 = {
-  "types":{
-    "unevaluated":{"type":"type CA<+T> = $ReadOnlyArray<CA<T>>"},
-    "evaluated":{"type":"type CA<+T> = $ReadOnlyArray<CA<T>>"}
-  },
+  "types":{"unevaluated":{"type":"type CA<+T> = $ReadOnlyArray<CA<T>>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"recursive.js",
@@ -1197,10 +1121,7 @@ recursive.js:51:6 = {
   "end":7
 }
 recursive.js:51:31 = {
-  "types":{
-    "unevaluated":{"type":"type CA<+T> = $ReadOnlyArray<CA<T>>"},
-    "evaluated":{"type":"type CA<+T> = $ReadOnlyArray<CA<T>>"}
-  },
+  "types":{"unevaluated":{"type":"type CA<+T> = $ReadOnlyArray<CA<T>>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"recursive.js",
@@ -1215,10 +1136,7 @@ recursive.js:51:31 = {
   "end":31
 }
 subst.js:13:7 = {
-  "types":{
-    "unevaluated":{"type":"{f: number, ...}"},
-    "evaluated":{"type":"{f: number, ...}"}
-  },
+  "types":{"unevaluated":{"type":"{f: number, ...}"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"subst.js",
@@ -1233,7 +1151,7 @@ subst.js:13:7 = {
   "end":8
 }
 subst.js:14:7 = {
-  "types":{"unevaluated":{"type":"Poly<number>"},"evaluated":{"type":"Poly<number>"}},
+  "types":{"unevaluated":{"type":"Poly<number>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"subst.js",
@@ -1248,7 +1166,7 @@ subst.js:14:7 = {
   "end":8
 }
 subst.js:17:7 = {
-  "types":{"unevaluated":{"type":"Mono"},"evaluated":{"type":"Mono"}},
+  "types":{"unevaluated":{"type":"Mono"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"subst.js",
@@ -1263,7 +1181,7 @@ subst.js:17:7 = {
   "end":8
 }
 subst.js:18:7 = {
-  "types":{"unevaluated":{"type":"Mono"},"evaluated":{"type":"Mono"}},
+  "types":{"unevaluated":{"type":"Mono"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"subst.js",
@@ -1278,7 +1196,7 @@ subst.js:18:7 = {
   "end":8
 }
 subst.js:21:7 = {
-  "types":{"unevaluated":{"type":"React$Element"},"evaluated":{"type":"React$Element"}},
+  "types":{"unevaluated":{"type":"React$Element"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"subst.js",
@@ -1293,10 +1211,7 @@ subst.js:21:7 = {
   "end":8
 }
 subst.js:22:7 = {
-  "types":{
-    "unevaluated":{"type":"React$Element<any, any>"},
-    "evaluated":{"type":"React$Element<any, any>"}
-  },
+  "types":{"unevaluated":{"type":"React$Element<any, any>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"subst.js",
@@ -1311,7 +1226,7 @@ subst.js:22:7 = {
   "end":8
 }
 type-alias.js:3:6 = {
-  "types":{"unevaluated":{"type":"type A = A"},"evaluated":{"type":"type A = A"}},
+  "types":{"unevaluated":{"type":"type A = A"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"type-alias.js",
@@ -1326,10 +1241,7 @@ type-alias.js:3:6 = {
   "end":6
 }
 type-alias.js:4:6 = {
-  "types":{
-    "unevaluated":{"type":"type B = B | null"},
-    "evaluated":{"type":"type B = B | null"}
-  },
+  "types":{"unevaluated":{"type":"type B = B | null"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"type-alias.js",
@@ -1344,7 +1256,7 @@ type-alias.js:4:6 = {
   "end":6
 }
 type-alias.js:5:6 = {
-  "types":{"unevaluated":{"type":"type C = A"},"evaluated":{"type":"type C = A"}},
+  "types":{"unevaluated":{"type":"type C = A"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"type-alias.js",
@@ -1359,10 +1271,7 @@ type-alias.js:5:6 = {
   "end":6
 }
 type-alias.js:6:6 = {
-  "types":{
-    "unevaluated":{"type":"type D = {x: number, ...}"},
-    "evaluated":{"type":"type D = {x: number, ...}"}
-  },
+  "types":{"unevaluated":{"type":"type D = {x: number, ...}"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"type-alias.js",
@@ -1377,10 +1286,7 @@ type-alias.js:6:6 = {
   "end":6
 }
 type-alias.js:7:6 = {
-  "types":{
-    "unevaluated":{"type":"type E = $Exact<D>"},
-    "evaluated":{"type":"type E = $Exact<D>"}
-  },
+  "types":{"unevaluated":{"type":"type E = $Exact<D>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"type-alias.js",
@@ -1395,7 +1301,7 @@ type-alias.js:7:6 = {
   "end":6
 }
 type-alias.js:8:6 = {
-  "types":{"unevaluated":{"type":"type F = ?D"},"evaluated":{"type":"type F = ?D"}},
+  "types":{"unevaluated":{"type":"type F = ?D"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"type-alias.js",
@@ -1410,7 +1316,7 @@ type-alias.js:8:6 = {
   "end":6
 }
 type-alias.js:12:12 {
-  "types":{"unevaluated":{"type":"P<string>"},"evaluated":{"type":"P<string>"}},
+  "types":{"unevaluated":{"type":"P<string>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"type-alias.js",
@@ -1425,10 +1331,7 @@ type-alias.js:12:12 {
   "end":12
 }
 type-alias.js:12:29 {
-  "types":{
-    "unevaluated":{"type":"{t: string, ...}"},
-    "evaluated":{"type":"{t: string, ...}"}
-  },
+  "types":{"unevaluated":{"type":"{t: string, ...}"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"type-alias.js",
@@ -1443,7 +1346,7 @@ type-alias.js:12:29 {
   "end":29
 }
 type-alias.js:15:8 {
-  "types":{"unevaluated":{"type":"type A = X"},"evaluated":{"type":"type A = X"}},
+  "types":{"unevaluated":{"type":"type A = X"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"type-alias.js",
@@ -1458,10 +1361,7 @@ type-alias.js:15:8 {
   "end":8
 }
 type-alias.js:16:8 {
-  "types":{
-    "unevaluated":{"type":"type B = B | null"},
-    "evaluated":{"type":"type B = B | null"}
-  },
+  "types":{"unevaluated":{"type":"type B = B | null"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"type-alias.js",
@@ -1476,7 +1376,7 @@ type-alias.js:16:8 {
   "end":8
 }
 type-alias.js:17:8 {
-  "types":{"unevaluated":{"type":"type C = A"},"evaluated":{"type":"type C = A"}},
+  "types":{"unevaluated":{"type":"type C = A"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"type-alias.js",
@@ -1491,10 +1391,7 @@ type-alias.js:17:8 {
   "end":8
 }
 type-alias.js:18:8 {
-  "types":{
-    "unevaluated":{"type":"type D = {x: X, ...}"},
-    "evaluated":{"type":"type D = {x: X, ...}"}
-  },
+  "types":{"unevaluated":{"type":"type D = {x: X, ...}"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"type-alias.js",
@@ -1509,10 +1406,7 @@ type-alias.js:18:8 {
   "end":8
 }
 type-alias.js:19:8 {
-  "types":{
-    "unevaluated":{"type":"type E = $Exact<X>"},
-    "evaluated":{"type":"type E = $Exact<X>"}
-  },
+  "types":{"unevaluated":{"type":"type E = $Exact<X>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"type-alias.js",
@@ -1527,7 +1421,7 @@ type-alias.js:19:8 {
   "end":8
 }
 type-alias.js:20:8 {
-  "types":{"unevaluated":{"type":"type F = ?X"},"evaluated":{"type":"type F = ?X"}},
+  "types":{"unevaluated":{"type":"type F = ?X"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"type-alias.js",
@@ -1542,10 +1436,7 @@ type-alias.js:20:8 {
   "end":8
 }
 type-alias.js:24:6 {
-  "types":{
-    "unevaluated":{"type":"type H = G<number>"},
-    "evaluated":{"type":"type H = G<number>"}
-  },
+  "types":{"unevaluated":{"type":"type H = G<number>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"type-alias.js",
@@ -1560,10 +1451,7 @@ type-alias.js:24:6 {
   "end":6
 }
 type-alias.js:25:6 {
-  "types":{
-    "unevaluated":{"type":"type I = G<(G<number> | string)>"},
-    "evaluated":{"type":"type I = G<(G<number> | string)>"}
-  },
+  "types":{"unevaluated":{"type":"type I = G<(G<number> | string)>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"type-alias.js",
@@ -1578,10 +1466,7 @@ type-alias.js:25:6 {
   "end":6
 }
 type-alias.js:27:6 {
-  "types":{
-    "unevaluated":{"type":"type K = J<number>"},
-    "evaluated":{"type":"type K = J<number>"}
-  },
+  "types":{"unevaluated":{"type":"type K = J<number>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"type-alias.js",
@@ -1596,10 +1481,7 @@ type-alias.js:27:6 {
   "end":6
 }
 type-alias.js:29:6 {
-  "types":{
-    "unevaluated":{"type":"type M<Z> = L<number, Z>"},
-    "evaluated":{"type":"type M<Z> = L<number, Z>"}
-  },
+  "types":{"unevaluated":{"type":"type M<Z> = L<number, Z>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"type-alias.js",
@@ -1614,10 +1496,7 @@ type-alias.js:29:6 {
   "end":6
 }
 type-alias.js:31:6 {
-  "types":{
-    "unevaluated":{"type":"type O = N<number>"},
-    "evaluated":{"type":"type O = N<number>"}
-  },
+  "types":{"unevaluated":{"type":"type O = N<number>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"type-alias.js",
@@ -1645,18 +1524,7 @@ type-alias.js:34:6 {
       },
       "type":"type TKlass = typeof Klass"
     },
-    "evaluated":{
-      "expanded":{
-        "kind":"TypeAlias",
-        "name":{"provenance":{"kind":"Local","loc":"type-alias.js:34:6-11"},"name":"TKlass"},
-        "typeParams":null,
-        "body":{
-          "kind":"Typeof",
-          "name":{"provenance":{"kind":"Local","loc":"type-alias.js:33:7-11"},"name":"Klass"}
-        }
-      },
-      "type":"type TKlass = typeof Klass"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -1672,10 +1540,7 @@ type-alias.js:34:6 {
   "end":11
 }
 type-destructor-trigger.js:11:7 = {
-  "types":{
-    "unevaluated":{"type":"KeyMirrorRecursive<{|A: string|}>"},
-    "evaluated":{"type":"KeyMirrorRecursive<{|A: string|}>"}
-  },
+  "types":{"unevaluated":{"type":"KeyMirrorRecursive<{|A: string|}>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"type-destructor-trigger.js",
@@ -1692,10 +1557,7 @@ type-destructor-trigger.js:11:7 = {
 tuple.js:3:6
 Flags: --pretty
 {
-  "types":{
-    "unevaluated":{"type":"type T = [1, b: 2, c?: 3]"},
-    "evaluated":{"type":"type T = [1, b: 2, c?: 3]"}
-  },
+  "types":{"unevaluated":{"type":"type T = [1, b: 2, c?: 3]"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"tuple.js",
@@ -1732,10 +1594,7 @@ Flags: --pretty
 }
 
 unions.js:9:3 = {
-  "types":{
-    "unevaluated":{"type":"() => (number | string)"},
-    "evaluated":{"type":"() => (number | string)"}
-  },
+  "types":{"unevaluated":{"type":"() => (number | string)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"unions.js",
@@ -1750,10 +1609,7 @@ unions.js:9:3 = {
   "end":3
 }
 unions.js:15:2 = {
-  "types":{
-    "unevaluated":{"type":"(x: string) => void"},
-    "evaluated":{"type":"(x: string) => void"}
-  },
+  "types":{"unevaluated":{"type":"(x: string) => void"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"unions.js",
@@ -1768,10 +1624,7 @@ unions.js:15:2 = {
   "end":3
 }
 unions.js:24:3 = {
-  "types":{
-    "unevaluated":{"type":"{+f: number, ...}"},
-    "evaluated":{"type":"{+f: number, ...}"}
-  },
+  "types":{"unevaluated":{"type":"{+f: number, ...}"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"unions.js",
@@ -1786,10 +1639,7 @@ unions.js:24:3 = {
   "end":3
 }
 unions.js:43:3 = {
-  "types":{
-    "unevaluated":{"type":"(() => number) | (() => string)"},
-    "evaluated":{"type":"(() => number) | (() => string)"}
-  },
+  "types":{"unevaluated":{"type":"(() => number) | (() => string)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"unions.js",
@@ -1806,7 +1656,7 @@ unions.js:43:3 = {
 unions.js:44:3 = {
   "types":{
     "unevaluated":{"type":"((x: number) => void) | ((x: string) => void)"},
-    "evaluated":{"type":"((x: number) => void) | ((x: string) => void)"}
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -1822,7 +1672,7 @@ unions.js:44:3 = {
   "end":7
 }
 unions.js:49:1 = {
-  "types":{"unevaluated":{"type":"mixed"},"evaluated":{"type":"mixed"}},
+  "types":{"unevaluated":{"type":"mixed"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"unions.js",
@@ -1837,10 +1687,7 @@ unions.js:49:1 = {
   "end":3
 }
 unions.js:52:1 = {
-  "types":{
-    "unevaluated":{"type":"{g: mixed, ...}"},
-    "evaluated":{"type":"{g: mixed, ...}"}
-  },
+  "types":{"unevaluated":{"type":"{g: mixed, ...}"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"unions.js",
@@ -1855,7 +1702,7 @@ unions.js:52:1 = {
   "end":5
 }
 unions.js:57:5 = {
-  "types":{"unevaluated":{"type":"{|f: number|}"},"evaluated":{"type":"{|f: number|}"}},
+  "types":{"unevaluated":{"type":"{|f: number|}"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"unions.js",
@@ -1870,7 +1717,7 @@ unions.js:57:5 = {
   "end":5
 }
 unions.js:59:18 = {
-  "types":{"unevaluated":{"type":"?empty"},"evaluated":{"type":"?empty"}},
+  "types":{"unevaluated":{"type":"?empty"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"unions.js",

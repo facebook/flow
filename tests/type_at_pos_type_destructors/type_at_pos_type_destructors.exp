@@ -567,6 +567,11 @@ Flags:
 {+key: any, ...}
 type-destructor.js:189:14,189:14
 
+type-destructor.js:207:9
+Flags:
+{prop: R, type: "blah", ...}
+type-destructor.js:207:9,207:14
+
 mapped-type.js:7:6
 Flags:
 type MappedObj1 = {[key in keyof O]: number}

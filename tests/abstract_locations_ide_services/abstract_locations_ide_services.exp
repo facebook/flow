@@ -219,7 +219,7 @@ dump types:
 ]
 type-at-pos:
 {
-  "types":{"unevaluated":{"type":"() => void"},"evaluated":{"type":"() => void"}},
+  "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"bar.js",

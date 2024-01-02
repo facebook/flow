@@ -110,6 +110,8 @@ module type S = sig
     type t
 
     val empty : t
+
+    val found_computed_type : t -> bool
   end
 
   val run_type :
@@ -196,9 +198,17 @@ module Make (I : INPUT) : S = struct
     type t = {
       rec_tvar_ids: ISet.t;
       rec_eval_ids: Type.EvalIdSet.t;
+      found_computed_type: bool;
     }
 
-    let empty = { rec_tvar_ids = ISet.empty; rec_eval_ids = Type.EvalIdSet.empty }
+    let empty =
+      {
+        rec_tvar_ids = ISet.empty;
+        rec_eval_ids = Type.EvalIdSet.empty;
+        found_computed_type = false;
+      }
+
+    let found_computed_type { found_computed_type = x; _ } = x
   end
 
   include StateResult.Make (State)
@@ -458,6 +468,7 @@ module Make (I : INPUT) : S = struct
   let eval_t ~env ~(cont : fn_t) ~(default : fn_t) ~non_eval ?(force_eval = false) x =
     let (_, T.TypeDestructorT (_, _, d), id) = x in
     let cx = Env.get_cx env in
+    let%bind () = modify (fun state -> { state with State.found_computed_type = true }) in
     let should_eval = should_evaluate_destructor ~env ~force_eval d in
     I.eval
       cx
@@ -542,6 +553,7 @@ module Make (I : INPUT) : S = struct
       let%map ty = cont ~env t in
       Ty.Utility (Ty.Keys ty)
     in
+    let%bind () = modify (fun state -> { state with State.found_computed_type = true }) in
     let should_evaluate = Env.evaluate_type_destructors env <> Env.EvaluateNone in
     I.keys cx ~should_evaluate ~cont:(cont ~env) ~default r t
 

@@ -54,7 +54,7 @@ get-def without --wait-for-recheck runs immediately:
 
 type-at-pos without --wait-for-recheck runs immediately:
 {
-  "types":{"unevaluated":{"type":"number"},"evaluated":{"type":"number"}},
+  "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"focused.js",

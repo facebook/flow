@@ -32,7 +32,7 @@ let type_at_pos_type
   | Some (loc, toplevel_is_type_identifier_reference, scheme) ->
     let genv = Ty_normalizer_env.mk_genv ~cx ~file ~file_sig ~typed_ast in
     let from_scheme evaluate_type_destructors =
-      Ty_normalizer_flow.from_scheme
+      Ty_normalizer_flow.from_scheme_with_found_computed_type
         ~options:
           {
             Ty_normalizer_env.expand_internal_types = false;
@@ -49,21 +49,24 @@ let type_at_pos_type
         ~genv
         scheme
     in
-    let unevaluated = from_scheme Ty_normalizer_env.EvaluateNone in
+    let (unevaluated, found_computed_type) = from_scheme Ty_normalizer_env.EvaluateNone in
     let evaluated =
-      (* We need to roll back caches and errors, because server state persists
-         through IDE requests. If evaluation results in new errors, future
-         requests at the same location should also result in "new" errors. *)
-      Context.run_and_rolled_back_cache cx (fun () ->
-          let errors = Context.errors cx in
-          let evaluated = from_scheme Ty_normalizer_env.EvaluateAll in
-          let errors' = Context.errors cx in
-          Context.reset_errors cx errors;
-          if Flow_error.ErrorSet.equal errors errors' then
-            Some evaluated
-          else
-            None
-      )
+      if found_computed_type then
+        (* We need to roll back caches and errors, because server state persists
+           through IDE requests. If evaluation results in new errors, future
+           requests at the same location should also result in "new" errors. *)
+        Context.run_and_rolled_back_cache cx (fun () ->
+            let errors = Context.errors cx in
+            let (evaluated, _) = from_scheme Ty_normalizer_env.EvaluateAll in
+            let errors' = Context.errors cx in
+            Context.reset_errors cx errors;
+            if Flow_error.ErrorSet.equal errors errors' then
+              Some evaluated
+            else
+              None
+        )
+      else
+        None
     in
     begin
       match (unevaluated, evaluated) with

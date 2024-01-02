@@ -1,5 +1,5 @@
 object.js:11:3 = {
-  "types":{"unevaluated":{"type":"O"},"evaluated":{"type":"O"}},
+  "types":{"unevaluated":{"type":"O"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"object.js",
@@ -14,7 +14,7 @@ object.js:11:3 = {
   "end":3
 }
 object.js:12:3 = {
-  "types":{"unevaluated":{"type":"O"},"evaluated":{"type":"O"}},
+  "types":{"unevaluated":{"type":"O"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"object.js",
@@ -29,7 +29,7 @@ object.js:12:3 = {
   "end":3
 }
 object.js:13:3 = {
-  "types":{"unevaluated":{"type":"O"},"evaluated":{"type":"O"}},
+  "types":{"unevaluated":{"type":"O"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"object.js",
@@ -44,7 +44,7 @@ object.js:13:3 = {
   "end":3
 }
 object.js:14:3 = {
-  "types":{"unevaluated":{"type":"O"},"evaluated":{"type":"O"}},
+  "types":{"unevaluated":{"type":"O"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"object.js",
@@ -59,7 +59,7 @@ object.js:14:3 = {
   "end":3
 }
 object.js:15:4 = {
-  "types":{"unevaluated":{"type":"string"},"evaluated":{"type":"string"}},
+  "types":{"unevaluated":{"type":"string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"object.js",
