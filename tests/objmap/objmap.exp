@@ -754,6 +754,24 @@ References:
                                             ^ [1]
 
 
+Error ------------------------------------------------------------------------------- lti_implicit_instantiation.js:9:12
+
+Cannot cast `map(...)` to object type because string [1] is incompatible with number [2] in property `bar`.
+[incompatible-cast]
+
+   lti_implicit_instantiation.js:9:12
+   9| const o1 = map(foo) as {bar: number}; // error
+                 ^^^^^^^^
+
+References:
+   lti_implicit_instantiation.js:8:49
+   8| const foo = Object.freeze({bar: {log: (f: () => string) => {}}})
+                                                      ^^^^^^ [1]
+   lti_implicit_instantiation.js:9:30
+   9| const o1 = map(foo) as {bar: number}; // error
+                                   ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------------ main.js:7:2
 
 Cannot cast `t1` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
@@ -917,4 +935,4 @@ References:
 
 
 
-Found 48 errors
+Found 49 errors
