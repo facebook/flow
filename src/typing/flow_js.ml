@@ -2609,8 +2609,7 @@ struct
         *)
         | ( DefT (reason_tapp, PolyT { tparams_loc; tparams = ids; t_out = t; _ }),
             CallT { use_op; reason = reason_op; call_action = Funcalltype calltype; return_hint }
-          )
-          when calltype.call_kind <> MapTypeKind ->
+          ) ->
           let check = lazy (IICheck.of_call l (tparams_loc, ids, t) use_op reason_op calltype) in
           let lparts = (reason_tapp, tparams_loc, ids, t) in
           let uparts = (use_op, reason_op, calltype.call_targs, return_hint) in
