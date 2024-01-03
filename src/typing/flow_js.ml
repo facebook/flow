@@ -2691,6 +2691,20 @@ struct
               t_out
           in
           rec_flow cx trace (t_, u)
+        (******************************)
+        (* functions statics - part A *)
+        (******************************)
+        | ( ( DefT (reason, FunT (static, _))
+            | DefT (_, PolyT { t_out = DefT (reason, FunT (static, _)); _ }) ),
+            MethodT (use_op, reason_call, reason_lookup, propref, action)
+          ) ->
+          let method_type =
+            Tvar.mk_no_wrap_where cx reason_lookup (fun tout ->
+                let u = GetPropT (use_op, reason_lookup, None, propref, tout) in
+                rec_flow cx trace (static, ReposLowerT (reason, false, u))
+            )
+          in
+          apply_method_action cx trace method_type use_op reason_call l action
         | (DefT (reason_tapp, PolyT { tparams_loc; tparams = ids; t_out = t; _ }), _) ->
           let reason_op = reason_of_use_t u in
           let use_op =
@@ -4894,19 +4908,9 @@ struct
         | (_, SentinelPropTestT (reason, obj, sense, enum, result)) ->
           let t = Type_filter.sentinel_refinement l reason obj sense enum in
           rec_flow_t cx trace ~use_op:unknown_use (t, OpenT result)
-        (*********************)
-        (* functions statics *)
-        (*********************)
-        | ( DefT (reason, FunT (static, _)),
-            MethodT (use_op, reason_call, reason_lookup, propref, action)
-          ) ->
-          let method_type =
-            Tvar.mk_no_wrap_where cx reason_lookup (fun tout ->
-                let u = GetPropT (use_op, reason_lookup, None, propref, tout) in
-                rec_flow cx trace (static, ReposLowerT (reason, false, u))
-            )
-          in
-          apply_method_action cx trace method_type use_op reason_call l action
+        (******************************)
+        (* functions statics - part B *)
+        (******************************)
         | (DefT (reason, FunT (static, _)), _) when object_like_op u ->
           rec_flow cx trace (static, ReposLowerT (reason, false, u))
         (*****************************************)
