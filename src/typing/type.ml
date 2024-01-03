@@ -2112,7 +2112,9 @@ and Properties : sig
 
   val generate_id : unit -> id
 
-  val id_of_aloc_id : ALoc.id -> id
+  val id_of_aloc_id : type_sig:bool -> ALoc.id -> id
+
+  val equal_id : id -> id -> bool
 
   val string_of_id : id -> string
 
@@ -2228,6 +2230,9 @@ and Eval : sig
 end = struct
   include Source_or_generated_id
 
+  (* type_sig is always false - effectively use common mapping *)
+  let id_of_aloc_id = id_of_aloc_id ~type_sig:false
+
   module Map : WrappedMap.S with type key = id = WrappedMap.Make (struct
     type key = id
 
@@ -2253,6 +2258,9 @@ and Poly : sig
   module Set : Flow_set.S with type elt = id
 end = struct
   include Source_or_generated_id
+
+  (* type_sig is always false - effectively use common mapping *)
+  let id_of_aloc_id = id_of_aloc_id ~type_sig:false
 
   module Set : Flow_set.S with type elt = id = Flow_set.Make (struct
     type elt = id

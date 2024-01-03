@@ -445,7 +445,8 @@ val make_generic_id : t -> Subst_name.t -> ALoc.t -> Generic.id
 
 val generate_property_map : t -> Type.Properties.t -> Type.Properties.id
 
-val make_source_property_map : t -> Type.Properties.t -> ALoc.t -> Type.Properties.id
+val make_source_property_map :
+  t -> Type.Properties.t -> type_sig:bool -> ALoc.t -> Type.Properties.id
 
 val make_call_prop : t -> Type.t -> int
 

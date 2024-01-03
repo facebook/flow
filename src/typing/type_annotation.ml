@@ -1911,7 +1911,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     let mk_object cx loc ~src_loc ~exact call dict pmap proto =
       let pmap =
         if src_loc && Type_env.in_toplevel_scope cx then
-          Context.make_source_property_map cx pmap loc
+          Context.make_source_property_map cx pmap ~type_sig:false loc
         else
           Context.generate_property_map cx pmap
       in
