@@ -32,32 +32,38 @@ References:
                     ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- fileB1.js:11:5
+Error --------------------------------------------------------------------------------------------------- fileB1.js:16:2
 
-object type [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `data.propA` to empty because `$ReadOnly` [1] is incompatible with empty [2]. [incompatible-cast]
 
-   fileB1.js:11:5
-   11|   | { ...PropsA, ... } // TODO should not error here
-           ^^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   fileB1.js:6:10
-    6|   propA: Data,
-                ^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- fileB1.js:12:5
-
-`$ReadOnly` [1] is incompatible with empty [2]. [incompatible-type]
-
-   fileB1.js:12:5
-   12|   | PropsB // TODO should not error here
-           ^^^^^^ [1]
+   fileB1.js:16:2
+   16| (data.propA: empty); // error obj ~> empty
+        ^^^^^^^^^^
 
 References:
    fileB1.js:6:10
     6|   propA: Data,
-                ^^^^ [2]
+                ^^^^ [1]
+   fileB1.js:16:14
+   16| (data.propA: empty); // error obj ~> empty
+                    ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- fileB1.js:16:2
+
+Cannot cast `data.propA` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   fileB1.js:16:2
+   16| (data.propA: empty); // error obj ~> empty
+        ^^^^^^^^^^
+
+References:
+   fileB1.js:6:10
+    6|   propA: Data,
+                ^^^^ [1]
+   fileB1.js:16:14
+   16| (data.propA: empty); // error obj ~> empty
+                    ^^^^^ [2]
 
 
 

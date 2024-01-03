@@ -2218,7 +2218,7 @@ and Eval : sig
 
   val compare_id : id -> id -> int
 
-  val id_of_aloc_id : ALoc.id -> id
+  val id_of_aloc_id : type_sig:bool -> ALoc.id -> id
 
   val string_of_id : id -> string
 
@@ -2229,9 +2229,6 @@ and Eval : sig
   module Map : WrappedMap.S with type key = id
 end = struct
   include Source_or_generated_id
-
-  (* type_sig is always false - effectively use common mapping *)
-  let id_of_aloc_id = id_of_aloc_id ~type_sig:false
 
   module Map : WrappedMap.S with type key = id = WrappedMap.Make (struct
     type key = id

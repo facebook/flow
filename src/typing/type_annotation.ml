@@ -276,7 +276,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
 
   let mk_eval_id cx loc =
     if Type_env.in_toplevel_scope cx then
-      Context.make_aloc_id cx loc |> Eval.id_of_aloc_id
+      Context.make_aloc_id cx loc |> Eval.id_of_aloc_id ~type_sig:false
     else
       Eval.generate_id ()
 

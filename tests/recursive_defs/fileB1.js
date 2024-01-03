@@ -8,9 +8,9 @@ export type PropsA = $ReadOnly<{
 }>;
 
 export type Data = $ReadOnly<
-  | { ...PropsA, ... } // TODO should not error here
-  | PropsB // TODO should not error here
+  | { ...PropsA, ... }
+  | PropsB
 >;
 
 declare var data: Data;
-(data.propA: empty); // TODO error obj ~> empty
+(data.propA: empty); // error obj ~> empty
