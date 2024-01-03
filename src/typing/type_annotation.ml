@@ -1471,7 +1471,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         match tparams with
         | None -> ft
         | Some (tparams_loc, tparams_nel) ->
-          let id = Context.make_source_poly_id cx tparams_loc in
+          let id = Context.make_source_poly_id cx ~type_sig:false tparams_loc in
           poly_type id tparams_loc tparams_nel ft
       in
       ( (loc, t),
@@ -1593,7 +1593,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           let type_t = DefT (reason_of_t prop_type, TypeT (MappedTypeKind, prop_type)) in
           let poly_prop_type =
             poly_type_of_tparams
-              (Context.make_source_poly_id cx prop_loc)
+              (Context.make_source_poly_id cx ~type_sig:false prop_loc)
               (Some (fst key_tparam, Nel.one tparam))
               type_t
           in

@@ -973,7 +973,8 @@ let make_export_map cx tmap =
   add_export_map cx id tmap;
   id
 
-let make_source_poly_id cx aloc = make_aloc_id cx aloc |> Type.Poly.id_of_aloc_id
+let make_source_poly_id cx ~type_sig aloc =
+  make_aloc_id cx aloc |> Type.Poly.id_of_aloc_id ~type_sig
 
 let find_graph cx id = Type.Constraint.find_graph cx.ccx.sig_cx.graph id
 

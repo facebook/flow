@@ -452,7 +452,7 @@ val make_call_prop : t -> Type.t -> int
 
 val make_export_map : t -> Type.Exports.t -> Type.Exports.id
 
-val make_source_poly_id : t -> ALoc.t -> Type.Poly.id
+val make_source_poly_id : t -> type_sig:bool -> ALoc.t -> Type.Poly.id
 
 val find_constraints : t -> Type.ident -> Type.ident * Type.Constraint.constraints
 
