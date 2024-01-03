@@ -938,12 +938,6 @@ let has_prop cx id x = find_props cx id |> NameUtils.Map.mem x
 
 let get_prop cx id x = find_props cx id |> NameUtils.Map.find_opt x
 
-let set_prop cx id x p = find_props cx id |> NameUtils.Map.add x p |> add_property_map cx id
-
-let has_export cx id name = find_exports cx id |> NameUtils.Map.mem name
-
-let set_export cx id name t = find_exports cx id |> NameUtils.Map.add name t |> add_export_map cx id
-
 (* constructors *)
 let make_aloc_id cx aloc = ALoc.id_of_aloc cx.aloc_table aloc
 
