@@ -64,6 +64,11 @@ function get(url: string) {
   });
 }
 
+function versionedUnpkgComUrl(version: string): string {
+  version = version.startsWith('v') ? version.substring(1) : version;
+  return `https://unpkg.com/try-flow-website-js@${version}`;
+}
+
 export function load(
   withBaseUrl: string => string,
   version: string,
@@ -83,30 +88,30 @@ export function load(
         ].map(withBaseUrl)
       : majorVersion <= 54
       ? [
-          `https://unpkg.com/try-flow-website-js@${version}/flowlib/core.js`,
-          `https://unpkg.com/try-flow-website-js@${version}/flowlib/bom.js`,
-          `https://unpkg.com/try-flow-website-js@${version}/flowlib/cssom.js`,
-          `https://unpkg.com/try-flow-website-js@${version}/flowlib/dom.js`,
-          `https://unpkg.com/try-flow-website-js@${version}/flowlib/node.js`,
-          `https://unpkg.com/try-flow-website-js@${version}/flowlib/react.js`,
-          `https://unpkg.com/try-flow-website-js@${version}/flowlib/streams.js`,
+          `${versionedUnpkgComUrl(version)}/flowlib/core.js`,
+          `${versionedUnpkgComUrl(version)}/flowlib/bom.js`,
+          `${versionedUnpkgComUrl(version)}/flowlib/cssom.js`,
+          `${versionedUnpkgComUrl(version)}/flowlib/dom.js`,
+          `${versionedUnpkgComUrl(version)}/flowlib/node.js`,
+          `${versionedUnpkgComUrl(version)}/flowlib/react.js`,
+          `${versionedUnpkgComUrl(version)}/flowlib/streams.js`,
         ]
       : majorVersion <= 71
       ? [
-          `https://unpkg.com/try-flow-website-js@${version}/flowlib/core.js`,
-          `https://unpkg.com/try-flow-website-js@${version}/flowlib/react.js`,
+          `${versionedUnpkgComUrl(version)}/flowlib/core.js`,
+          `${versionedUnpkgComUrl(version)}/flowlib/react.js`,
         ]
       : [
-          `https://unpkg.com/try-flow-website-js@${version}/flowlib/core.js`,
-          `https://unpkg.com/try-flow-website-js@${version}/flowlib/react.js`,
-          `https://unpkg.com/try-flow-website-js@${version}/flowlib/intl.js`,
+          `${versionedUnpkgComUrl(version)}/flowlib/core.js`,
+          `${versionedUnpkgComUrl(version)}/flowlib/react.js`,
+          `${versionedUnpkgComUrl(version)}/flowlib/intl.js`,
         ];
   const flowLoader = new Promise<[string, string]>(resolve => {
     requirejs(
       [
         version === 'master'
           ? withBaseUrl('/flow/master/flow.js')
-          : `https://unpkg.com/try-flow-website-js@${version}/flow.js`,
+          : `${versionedUnpkgComUrl(version)}/flow.js`,
         ,
       ],
       resolve,
