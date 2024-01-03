@@ -1,0 +1,58 @@
+Error --------------------------------------------------------------------------------------------------- fileA1.js:11:5
+
+object type [1] is incompatible with empty [2]. [incompatible-type]
+
+   fileA1.js:11:5
+   11|   | { ...PropsA, ... } // TODO should not error here
+           ^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   fileA1.js:6:10
+    6|   propA: Data,
+                ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- fileA1.js:12:5
+
+`$ReadOnly` [1] is incompatible with empty [2]. [incompatible-type]
+
+   fileA1.js:12:5
+   12|   | PropsB // TODO should not error here
+           ^^^^^^ [1]
+
+References:
+   fileA1.js:6:10
+    6|   propA: Data,
+                ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- fileB1.js:11:5
+
+object type [1] is incompatible with empty [2]. [incompatible-type]
+
+   fileB1.js:11:5
+   11|   | { ...PropsA, ... } // TODO should not error here
+           ^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   fileB1.js:6:10
+    6|   propA: Data,
+                ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- fileB1.js:12:5
+
+`$ReadOnly` [1] is incompatible with empty [2]. [incompatible-type]
+
+   fileB1.js:12:5
+   12|   | PropsB // TODO should not error here
+           ^^^^^^ [1]
+
+References:
+   fileB1.js:6:10
+    6|   propA: Data,
+                ^^^^ [2]
+
+
+
+Found 4 errors
