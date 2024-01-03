@@ -86,6 +86,9 @@ let obj_lit_reason ~frozen loc =
   in
   mk_reason desc loc
 
+let eval_id_of_aloc file loc =
+  Type.Eval.id_of_aloc_id ~type_sig:true (Context.make_aloc_id file.cx loc)
+
 let specialize file reason_op t =
   let reason = TypeUtil.reason_of_t t in
   ConsGen.specialize file.cx t Type.unknown_use reason_op reason None
@@ -533,7 +536,7 @@ and merge_annot ?(in_renders_arg = false) tps infer_tps file = function
     let mk_type_destructor _cx use_op reason t destructor id =
       Type.(EvalT (t, TypeDestructorT (use_op, reason, destructor), id))
     in
-    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
+    let id = eval_id_of_aloc file loc in
     Flow_js_utils.mk_tuple_type file.cx ~id ~mk_type_destructor reason unresolved
   | Array (loc, t) ->
     let reason = Reason.(mk_annot_reason RArrayType loc) in
@@ -613,7 +616,7 @@ and merge_annot ?(in_renders_arg = false) tps infer_tps file = function
     let reason = Reason.(mk_reason (RType (OrdinaryName "$PropertyType")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
     let obj = merge tps infer_tps file obj in
-    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
+    let id = eval_id_of_aloc file loc in
     Type.(
       EvalT
         ( obj,
@@ -626,7 +629,7 @@ and merge_annot ?(in_renders_arg = false) tps infer_tps file = function
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
     let obj = merge tps infer_tps file obj in
     let index_type = merge tps infer_tps file elem in
-    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
+    let id = eval_id_of_aloc file loc in
     Type.(EvalT (obj, TypeDestructorT (use_op, reason, Type.ElementType { index_type }), id))
   | OptionalIndexedAccessNonMaybeType { loc; obj; index } ->
     let reason = Reason.(mk_reason (RIndexedAccess { optional = true }) loc) in
@@ -637,7 +640,7 @@ and merge_annot ?(in_renders_arg = false) tps infer_tps file = function
     let use_op =
       Type.Op (Type.IndexedTypeAccess { _object = object_reason; index = index_reason })
     in
-    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
+    let id = eval_id_of_aloc file loc in
     let index =
       match index with
       | Pack.Annot (SingletonString (_, str)) ->
@@ -666,14 +669,14 @@ and merge_annot ?(in_renders_arg = false) tps infer_tps file = function
     let reason = Reason.(mk_reason (RType (OrdinaryName "$NonMaybeType")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
     let t = merge tps infer_tps file t in
-    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
+    let id = eval_id_of_aloc file loc in
     Type.(EvalT (t, TypeDestructorT (use_op, reason, Type.NonMaybeType), id))
   | Diff (loc, t1, t2) ->
     let reason = Reason.(mk_reason (RType (OrdinaryName "$Diff")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
     let t1 = merge tps infer_tps file t1 in
     let t2 = merge tps infer_tps file t2 in
-    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
+    let id = eval_id_of_aloc file loc in
     Type.(
       EvalT (t1, TypeDestructorT (use_op, reason, RestType (Object.Rest.IgnoreExactAndOwn, t2)), id)
     )
@@ -681,19 +684,19 @@ and merge_annot ?(in_renders_arg = false) tps infer_tps file = function
     let reason = Reason.(mk_reason RReadOnlyType loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
     let t = merge tps infer_tps file t in
-    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
+    let id = eval_id_of_aloc file loc in
     Type.(EvalT (t, TypeDestructorT (use_op, reason, ReadOnlyType), id))
   | Partial (loc, t) ->
     let t = merge tps infer_tps file t in
     let reason = Reason.(mk_reason (RPartialOf (TypeUtil.desc_of_t t)) loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
-    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
+    let id = eval_id_of_aloc file loc in
     Type.(EvalT (t, TypeDestructorT (use_op, reason, PartialType), id))
   | Required (loc, t) ->
     let t = merge tps infer_tps file t in
     let reason = Reason.(mk_reason (RRequiredOf (TypeUtil.desc_of_t t)) loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
-    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
+    let id = eval_id_of_aloc file loc in
     Type.(EvalT (t, TypeDestructorT (use_op, reason, RequiredType), id))
   | Keys (loc, t) ->
     let reason = Reason.(mk_reason RKeySet loc) in
@@ -703,7 +706,7 @@ and merge_annot ?(in_renders_arg = false) tps infer_tps file = function
     let reason = Reason.(mk_reason (RType (OrdinaryName "$Values")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
     let t = merge tps infer_tps file t in
-    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
+    let id = eval_id_of_aloc file loc in
     Type.(EvalT (t, TypeDestructorT (use_op, reason, ValuesType), id))
   | Exact (loc, t) ->
     let t = merge tps infer_tps file t in
@@ -715,7 +718,7 @@ and merge_annot ?(in_renders_arg = false) tps infer_tps file = function
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
     let t1 = merge tps infer_tps file t1 in
     let t2 = merge tps infer_tps file t2 in
-    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
+    let id = eval_id_of_aloc file loc in
     Type.(EvalT (t1, TypeDestructorT (use_op, reason, RestType (Object.Rest.Sound, t2)), id))
   | ExportsT (loc, ref) ->
     let reason = Reason.(mk_annot_reason (RModule (OrdinaryName ref)) loc) in
@@ -726,7 +729,7 @@ and merge_annot ?(in_renders_arg = false) tps infer_tps file = function
       { loc; distributive_tparam; infer_tparams; check_type; extends_type; true_type; false_type }
     ->
     let reason = Reason.(mk_reason RConditionalType loc) in
-    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
+    let id = eval_id_of_aloc file loc in
     let convert distributive_tparam_name tps =
       let check_t = merge tps infer_tps file check_type in
       let (tps_for_true_type, infer_tps_for_extends_types, infer_tparams) =
@@ -783,41 +786,41 @@ and merge_annot ?(in_renders_arg = false) tps infer_tps file = function
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
     let fn = merge tps infer_tps file fn in
     let args = List.map (merge tps infer_tps file) args in
-    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
+    let id = eval_id_of_aloc file loc in
     Type.(EvalT (fn, TypeDestructorT (use_op, reason, CallType { from_maptype = false; args }), id))
   | TupleMap { loc; tup; fn } ->
     let reason = Reason.(mk_reason RTupleMap loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
     let tup = merge tps infer_tps file tup in
     let fn = merge tps infer_tps file fn in
-    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
+    let id = eval_id_of_aloc file loc in
     Type.(EvalT (tup, TypeDestructorT (use_op, reason, TypeMap (Type.TupleMap fn)), id))
   | ObjMap { loc; obj; fn } ->
     let reason = Reason.(mk_reason RObjectMap loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
     let obj = merge tps infer_tps file obj in
     let fn = merge tps infer_tps file fn in
-    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
+    let id = eval_id_of_aloc file loc in
     Type.(EvalT (obj, TypeDestructorT (use_op, reason, TypeMap (ObjectMap fn)), id))
   | ObjMapi { loc; obj; fn } ->
     let reason = Reason.(mk_reason RObjectMapi loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
     let obj = merge tps infer_tps file obj in
     let fn = merge tps infer_tps file fn in
-    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
+    let id = eval_id_of_aloc file loc in
     Type.(EvalT (obj, TypeDestructorT (use_op, reason, TypeMap (ObjectMapi fn)), id))
   | ObjKeyMirror { loc; obj } ->
     let reason = Reason.(mk_reason RObjectKeyMirror loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
     let obj = merge tps infer_tps file obj in
-    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
+    let id = eval_id_of_aloc file loc in
     Type.(EvalT (obj, TypeDestructorT (use_op, reason, TypeMap ObjectKeyMirror), id))
   | ObjMapConst { loc; obj; t } ->
     let reason = Reason.(mk_reason RObjectMapConst loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
     let obj = merge tps infer_tps file obj in
     let t = merge tps infer_tps file t in
-    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
+    let id = eval_id_of_aloc file loc in
     Type.(EvalT (obj, TypeDestructorT (use_op, reason, TypeMap (ObjectMapConst t)), id))
   | CharSet (loc, str) ->
     let chars = String_utils.CharSet.of_string str in
@@ -899,7 +902,7 @@ and merge_annot ?(in_renders_arg = false) tps infer_tps file = function
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
     let props = merge tps infer_tps file props in
     let default = merge tps infer_tps file default in
-    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
+    let id = eval_id_of_aloc file loc in
     Type.(EvalT (props, TypeDestructorT (use_op, reason, ReactConfigType default), id))
   | ReactCreateClass loc -> Type.AnyT.at Type.Untyped loc
   | ReactCreateElement loc ->
@@ -916,19 +919,19 @@ and merge_annot ?(in_renders_arg = false) tps infer_tps file = function
     let reason = Reason.(mk_reason (RType (OrdinaryName "React$ElementProps")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
     let t = merge tps infer_tps file t in
-    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
+    let id = eval_id_of_aloc file loc in
     Type.(EvalT (t, TypeDestructorT (use_op, reason, ReactElementPropsType), id))
   | ReactElementConfig (loc, t) ->
     let reason = Reason.(mk_reason (RType (OrdinaryName "React$ElementConfig")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
     let t = merge tps infer_tps file t in
-    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
+    let id = eval_id_of_aloc file loc in
     Type.(EvalT (t, TypeDestructorT (use_op, reason, ReactElementConfigType), id))
   | ReactElementRef (loc, t) ->
     let reason = Reason.(mk_reason (RType (OrdinaryName "React$ElementRef")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
     let t = merge tps infer_tps file t in
-    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
+    let id = eval_id_of_aloc file loc in
     Type.(EvalT (t, TypeDestructorT (use_op, reason, ReactElementRefType), id))
   | FlowDebugPrint loc ->
     let reason = Reason.(mk_reason RFunctionType loc) in
@@ -1029,7 +1032,7 @@ and merge_annot ?(in_renders_arg = false) tps infer_tps file = function
       | (Slice _, Slice _ :: _) -> failwith "unexpected adjacent slices"
       | (Slice _, []) -> failwith "unexpected solo slice"
     in
-    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
+    let id = eval_id_of_aloc file loc in
     Type.(
       EvalT (t, TypeDestructorT (unknown_use, reason, SpreadType (target, todo_rev, head_slice)), id)
     )
@@ -1061,7 +1064,7 @@ and merge_annot ?(in_renders_arg = false) tps infer_tps file = function
       )
     in
     let mapped_type_flags = { Type.variance; optional } in
-    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
+    let id = eval_id_of_aloc file loc in
     let reason = Reason.(mk_reason RObjectType loc) in
     let (source_type, homomorphic) =
       Type.(
