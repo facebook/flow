@@ -954,12 +954,12 @@ let generate_property_map cx pmap =
   add_property_map cx id pmap;
   id
 
-let make_source_property_map cx pmap aloc =
+let make_source_property_map cx pmap ~type_sig aloc =
   (* To prevent cases where we might compare a concrete and an abstract
      aloc (like in a cycle) we abstractify all incoming alocs before adding
      them to the map. The only exception is for library files, which have only
      concrete definitions and by definition cannot appear in cycles. *)
-  let id = make_aloc_id cx aloc |> Type.Properties.id_of_aloc_id in
+  let id = make_aloc_id cx aloc |> Type.Properties.id_of_aloc_id ~type_sig in
   add_property_map cx id pmap;
   id
 

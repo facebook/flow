@@ -21,14 +21,16 @@ let mk_with_proto
     ?reachable_targs
     ?call
     ?(props = NameUtils.Map.empty)
-    ?loc
+    ?id
     proto =
   let flags = { obj_kind; frozen; react_dro = None } in
   let call = Base.Option.map call ~f:(Context.make_call_prop cx) in
   let pmap =
-    match loc with
+    match id with
     | None -> Context.generate_property_map cx props
-    | Some loc -> Context.make_source_property_map cx props loc
+    | Some id ->
+      Context.add_property_map cx id props;
+      id
   in
   DefT (reason, ObjT (mk_objecttype ?reachable_targs ~flags ~call pmap proto))
 

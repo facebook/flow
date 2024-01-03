@@ -970,7 +970,8 @@ and merge_annot ?(in_renders_arg = false) tps infer_tps file = function
       SMap.map (merge_obj_annot_prop tps infer_tps file) props |> NameUtils.namemap_of_smap
     in
     let mk_object call proto =
-      let t = Obj_type.mk_with_proto file.cx reason proto ?call ~props ~obj_kind ~loc in
+      let id = Type.Properties.id_of_aloc_id ~type_sig:true (Context.make_aloc_id file.cx loc) in
+      let t = Obj_type.mk_with_proto file.cx reason proto ?call ~props ~obj_kind ~id in
       if obj_kind = Type.Exact then
         let exact_reason = Reason.(mk_annot_reason (RExactType RObjectType) loc) in
         Type.ExactT (exact_reason, t)

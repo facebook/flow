@@ -1623,7 +1623,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let u_deft = u in
       Type_inference_hooks_js.dispatch_obj_to_obj_hook cx l u_deft;
       let print_fast_path = Context.is_verbose cx in
-      if lflds = uflds then (
+      if Properties.equal_id lflds uflds then (
         if print_fast_path then prerr_endline "ObjT ~> ObjT fast path: yes"
       ) else (
         if print_fast_path then prerr_endline "ObjT ~> ObjT fast path: no";

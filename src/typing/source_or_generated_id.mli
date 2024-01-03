@@ -11,7 +11,7 @@ val compare_id : id -> id -> int
 
 val equal_id : id -> id -> bool
 
-val id_of_aloc_id : ALoc.id -> id
+val id_of_aloc_id : type_sig:bool -> ALoc.id -> id
 
 val string_of_id : id -> string
 
