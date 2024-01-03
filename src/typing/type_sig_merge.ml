@@ -1048,7 +1048,7 @@ and merge_annot ?(in_renders_arg = false) tps infer_tps file = function
       let prop_type = merge tps infer_tps file property_type in
       let prop_reason = TypeUtil.reason_of_t prop_type in
       let type_t = Type.(DefT (prop_reason, TypeT (MappedTypeKind, prop_type))) in
-      let id = Context.make_source_poly_id file.cx loc in
+      let id = Context.make_source_poly_id file.cx ~type_sig:true loc in
       Type.(
         DefT (prop_reason, PolyT { tparams_loc = loc; tparams = Nel.one tp; t_out = type_t; id })
       )
@@ -1346,10 +1346,9 @@ and merge_tparams_targs tps infer_tps file reason t = function
         ~init:(tps, [], [])
         (tp :: tps')
     in
-
     let tparams = List.rev rev_tparams |> Nel.of_list_exn in
     let t_out = t (tps, List.rev rev_tparam_tuples) in
-    let id = Context.make_source_poly_id file.cx tparams_loc in
+    let id = Context.make_source_poly_id file.cx ~type_sig:true tparams_loc in
     Type.(DefT (poly_reason, PolyT { tparams_loc; tparams; t_out; id }))
 
 and merge_tparam ~from_infer tps infer_tps file tp =

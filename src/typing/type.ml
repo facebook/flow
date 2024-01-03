@@ -2246,7 +2246,7 @@ and Poly : sig
 
   val equal_id : id -> id -> bool
 
-  val id_of_aloc_id : ALoc.id -> id
+  val id_of_aloc_id : type_sig:bool -> ALoc.id -> id
 
   val string_of_id : id -> string
 
@@ -2255,9 +2255,6 @@ and Poly : sig
   module Set : Flow_set.S with type elt = id
 end = struct
   include Source_or_generated_id
-
-  (* type_sig is always false - effectively use common mapping *)
-  let id_of_aloc_id = id_of_aloc_id ~type_sig:false
 
   module Set : Flow_set.S with type elt = id = Flow_set.Make (struct
     type elt = id
