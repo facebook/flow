@@ -77,8 +77,6 @@ export function load(
   if (cached) {
     return Promise.resolve(cached);
   }
-  const majorVersion =
-    version === 'master' ? Infinity : parseInt(version.split('.')[1], 10);
   const libs =
     version === 'master'
       ? [
@@ -86,21 +84,6 @@ export function load(
           `/flow/master/flowlib/react.js`,
           `/flow/master/flowlib/intl.js`,
         ].map(withBaseUrl)
-      : majorVersion <= 54
-      ? [
-          `${versionedUnpkgComUrl(version)}/flowlib/core.js`,
-          `${versionedUnpkgComUrl(version)}/flowlib/bom.js`,
-          `${versionedUnpkgComUrl(version)}/flowlib/cssom.js`,
-          `${versionedUnpkgComUrl(version)}/flowlib/dom.js`,
-          `${versionedUnpkgComUrl(version)}/flowlib/node.js`,
-          `${versionedUnpkgComUrl(version)}/flowlib/react.js`,
-          `${versionedUnpkgComUrl(version)}/flowlib/streams.js`,
-        ]
-      : majorVersion <= 71
-      ? [
-          `${versionedUnpkgComUrl(version)}/flowlib/core.js`,
-          `${versionedUnpkgComUrl(version)}/flowlib/react.js`,
-        ]
       : [
           `${versionedUnpkgComUrl(version)}/flowlib/core.js`,
           `${versionedUnpkgComUrl(version)}/flowlib/react.js`,
@@ -123,14 +106,10 @@ export function load(
         self.flow.registerFile(nameAndContent[0], nameAndContent[1]);
       });
       self.flow.registerFile('try-lib.js', TRY_LIB_CONTENTS);
-      if (majorVersion <= 126) {
-        self.flow.setLibs([...libs.map(normalizeUrlForFilename), 'try-lib.js']);
-      } else {
-        self.flow.initBuiltins([
-          ...libs.map(normalizeUrlForFilename),
-          'try-lib.js',
-        ]);
-      }
+      self.flow.initBuiltins([
+        ...libs.map(normalizeUrlForFilename),
+        'try-lib.js',
+      ]);
       versionCache.set(version, self.flow);
       // $FlowFixMe[cannot-resolve-name]
       return flow;
