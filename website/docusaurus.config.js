@@ -9,6 +9,7 @@
 
 const {fbContent} = require('docusaurus-plugin-internaldocs-fb/internal');
 const webpack = require('webpack');
+const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 const allFlowVersions = require('./src/js/flow-versions');
 
 /** @type {import('@docusaurus/types').DocusaurusConfig} */
@@ -65,6 +66,17 @@ module.exports = {
                 INTERNAL_STATIC_DOCS: process.env.INTERNAL_STATIC_DOCS || false,
               }),
             ],
+          };
+        },
+      };
+    },
+    function enableMonacoEditorPlugin() {
+      return {
+        name: 'enableMonacoEditorPlugin',
+        configureWebpack() {
+          return {
+            // https://stackoverflow.com/questions/69265357/monaco-editor-worker
+            plugins: [new MonacoWebpackPlugin()],
           };
         },
       };
