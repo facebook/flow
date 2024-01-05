@@ -749,16 +749,6 @@ module rec TypeTerm : sig
     | ObjTestT of reason * t * t
     (* assignment rest element in array pattern *)
     | ArrRestT of use_op * reason * int * t
-    (* unifies with incoming concrete lower bound
-     * empty_success is a hack that we will likely be able to get rid of once we move to
-     * local inference. When empty_success is true, we short circuit on the EmptyT ~> BecomeT
-     * flow. This is clearly a bug, but there are too many spurious errors due to typeof when
-     * we try to fix it. *)
-    | BecomeT of {
-        reason: reason;
-        t: t;
-        empty_success: bool;
-      }
     (* Keys *)
     | GetKeysT of reason * use_t
     | HasOwnPropT of use_op * reason * t (* The incoming string that we want to check against *)
@@ -997,8 +987,7 @@ module rec TypeTerm : sig
    * annotations. That is, `var {p}: {p: string}; p = 0` should be an error,
    * because `p` should behave like a `string` annotation.
    *
-   * We accomplish this by wrapping the binding itself in an AnnotT type. The
-   * wrapped type must be 0->1, which is enforced with BecomeT.
+   * We accomplish this by wrapping the binding itself in an AnnotT type.
    *
    * Since DestructuringT uses with the DestructAnnot kind should only encounter
    * annotations, the set of lower bounds will be a subset of all possible
@@ -4033,7 +4022,6 @@ let string_of_use_ctor = function
   | AssertNonComponentLikeT _ -> "AssertNonComponentLikeT"
   | AssertIterableT _ -> "AssertIterableT"
   | AssertImportIsValueT _ -> "AssertImportIsValueT"
-  | BecomeT _ -> "BecomeT"
   | BindT _ -> "BindT"
   | CallElemT _ -> "CallElemT"
   | CallLatentPredT _ -> "CallLatentPredT"

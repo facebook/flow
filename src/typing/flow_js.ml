@@ -744,12 +744,6 @@ struct
         | (AnnotT (r, t, use_desc), u) ->
           let t = reposition_reason ~trace cx r ~use_desc t in
           rec_flow cx trace (t, u)
-        (****************************************************************)
-        (* BecomeT unifies a tvar with an incoming concrete lower bound *)
-        (****************************************************************)
-        | (_, BecomeT { reason; t; empty_success = _ }) when is_proper_def l ->
-          let l = reposition ~trace cx (loc_of_reason reason) l in
-          rec_unify cx trace ~use_op:unknown_use ~unify_any:true l t
         (***************************)
         (* type cast e.g. `(x: T)` *)
         (***************************)
@@ -5866,7 +5860,6 @@ struct
     | ConvertEmptyPropsToMixedT _
     | ArithT _ ->
       false
-    | BecomeT { empty_success; _ } -> empty_success
     | _ -> true
 
   and handle_generic cx trace bound reason id name u =
@@ -6334,7 +6327,6 @@ struct
     | AndT _
     | ArrRestT _
     | AssertIterableT _
-    | BecomeT _
     | BindT _
     | CallT _
     | CallElemT _

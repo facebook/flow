@@ -213,11 +213,7 @@ module Make
   let inference_hook_tvar cx ploc =
     let r = mk_annot_reason (AnyT.desc (Unsound InferenceHooks)) ploc in
     let tvar = Tvar.mk_no_wrap cx r in
-    Flow.flow
-      cx
-      ( OpenT (r, tvar),
-        BecomeT { reason = r; t = Unsoundness.at InferenceHooks ploc; empty_success = true }
-      );
+    Flow_js.unify cx (OpenT (r, tvar)) (Unsoundness.at InferenceHooks ploc);
     (r, tvar)
 
   let translate_identifer_or_literal_key t =

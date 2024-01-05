@@ -358,7 +358,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | VarianceCheckT _
     | ConcretizeTypeAppsT _
     | ObjRestT _
-    | BecomeT _
     | ElemT _
     | ReactKitT _
     | PreprocessKitT _

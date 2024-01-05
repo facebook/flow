@@ -161,7 +161,6 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
   | ObjTestT (_, _, t)
   | ArrRestT (_, _, _, t) ->
     resolve t
-  | BecomeT { t; _ } -> resolve t
   | GetDictValuesT (_, use) -> default_resolve_touts ~flow cx loc use
   | GetKeysT (_, use) -> default_resolve_touts ~flow cx loc use
   | HasOwnPropT _ -> ()
