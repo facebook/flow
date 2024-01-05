@@ -444,7 +444,7 @@ coverage.js
         "end":{"line":42,"column":21,"offset":791}
       }
     ],
-    "empty_count":3,
+    "empty_count":5,
     "empty_locs":[
       {
         "source":"coverage.js",
@@ -463,6 +463,18 @@ coverage.js
         "type":"SourceFile",
         "start":{"line":20,"column":1,"offset":334},
         "end":{"line":20,"column":25,"offset":359}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":25,"column":1,"offset":434},
+        "end":{"line":25,"column":11,"offset":445}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":31,"column":1,"offset":539},
+        "end":{"line":31,"column":15,"offset":554}
       }
     ]
   }

@@ -95,43 +95,70 @@ let default_no_lowers r =
   in
   EmptyT.make (replace_desc_reason desc r)
 
+(* The resolver accummulator consists of the usual "seen" set and an "immediate"
+ * set of tvar ids. This latter set is intended to detect trivial cycles of the
+ * form:
+ *
+ *   OpenT (_, id0)
+ *   id0 -> AnnotT (_, OpenT (_, id1))
+ *   id1 -> AnnotT (_, OpenT (_, id0))
+ *
+ * These can arise for example from code like the following
+ *
+ *   const x: X = {};
+ *   type X = typeof x;
+ *
+ * and are currently not detectable by the name_def_ordering checks since the cycle
+ * involves an annotation.
+ *)
 class resolver ~no_lowers =
   object (this)
-    inherit [ISet.t] Type_visitor.t
+    inherit [ISet.t * ISet.t] Type_visitor.t as super
 
-    method! tvar cx pole seen r id =
+    method! tvar cx pole (seen, immediate) r id =
       let module C = Type.Constraint in
       let (root_id, _, root) = Context.find_root cx id in
-      match root.C.constraints with
-      | C.FullyResolved _ -> seen
-      | _ when ISet.mem root_id seen -> seen
-      | _ ->
-        let t =
-          match Flow_js_utils.merge_tvar_opt cx r root_id with
-          | Some t -> t
-          | None -> no_lowers r
-        in
-        let constraints =
-          if Context.typing_mode cx <> Context.CheckingMode then
-            C.Resolved t
-          else
-            C.FullyResolved (lazy t)
-        in
-        root.C.constraints <- constraints;
-        let seen = ISet.add root_id seen in
-        this#type_ cx pole seen t
+      if ISet.mem root_id immediate then (
+        root.C.constraints <- C.FullyResolved (lazy (no_lowers r));
+        (seen, immediate)
+      ) else
+        let immediate = ISet.add root_id immediate in
+        match root.C.constraints with
+        | C.FullyResolved _ -> (seen, ISet.empty)
+        | _ when ISet.mem root_id seen -> (seen, ISet.empty)
+        | _ ->
+          let t =
+            match Flow_js_utils.merge_tvar_opt cx r root_id with
+            | Some t -> t
+            | None -> no_lowers r
+          in
+          let constraints =
+            if Context.typing_mode cx <> Context.CheckingMode then
+              C.Resolved t
+            else
+              C.FullyResolved (lazy t)
+          in
+          root.C.constraints <- constraints;
+          let seen = ISet.add root_id seen in
+          this#type_ cx pole (seen, immediate) t
 
-    method call_arg cx seen t =
+    method call_arg cx (seen, (_ : ISet.t)) t =
       match t with
       | Arg t
       | SpreadArg t ->
-        let _ = this#type_ cx Polarity.Positive seen t in
-        seen
+        let _ = this#type_ cx Polarity.Positive (seen, ISet.empty) t in
+        (seen, ISet.empty)
+
+    method! type_ cx pole (seen, immediate) =
+      function
+      | OpenT (r, id) -> this#tvar cx pole (seen, immediate) r id
+      | AnnotT (_, t, _) -> this#type_ cx Polarity.Positive (seen, immediate) t
+      | t -> super#type_ cx pole (seen, ISet.empty) t
   end
 
 let resolve ?(no_lowers = default_no_lowers) cx t =
   let resolver = new resolver ~no_lowers in
-  let (_ : ISet.t) = resolver#type_ cx Polarity.Positive ISet.empty t in
+  let (_ : ISet.t * ISet.t) = resolver#type_ cx Polarity.Positive (ISet.empty, ISet.empty) t in
   ()
 
 let resolved_t ?(no_lowers = default_no_lowers) cx t =
