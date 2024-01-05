@@ -1218,8 +1218,7 @@ struct
            their reasons, so we'd trivially lose precision. *)
         | (ThisTypeAppT (reason_tapp, c, this, ts), _) ->
           let reason_op = reason_of_use_t u in
-          let tc = specialize_class cx trace ~reason_op ~reason_tapp c ts in
-          instantiate_this_class cx trace reason_tapp tc this (Upper u)
+          instantiate_this_class cx trace ~reason_op ~reason_tapp c ts this (Upper u)
         | (TypeAppT _, ReposLowerT (reason, use_desc, u)) ->
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
         | ( TypeAppT { reason = reason_tapp; use_op; type_; targs; use_desc = _ },
@@ -7399,21 +7398,19 @@ struct
     t
 
   (* Specialize This in a class. Eventually this causes substitution. *)
-  and instantiate_this_class cx trace reason tc this k =
-    rec_flow cx trace (tc, ThisSpecializeT (reason, this, k))
-
-  (* Specialize targs in a class. This is somewhat different from
-     mk_typeapp_instance, in that it returns the specialized class type, not the
-     specialized instance type. *)
-  and specialize_class cx trace ~reason_op ~reason_tapp c = function
-    | None -> c
-    | Some ts ->
-      Tvar.mk_where cx reason_tapp (fun tout ->
-          rec_flow
-            cx
-            trace
-            (c, SpecializeT (unknown_use, reason_op, reason_tapp, false, Some ts, tout))
-      )
+  and instantiate_this_class cx trace ~reason_op ~reason_tapp c ts this k =
+    let tc =
+      match ts with
+      | None -> c
+      | Some ts ->
+        Tvar.mk_where cx reason_tapp (fun tout ->
+            rec_flow
+              cx
+              trace
+              (c, SpecializeT (unknown_use, reason_op, reason_tapp, false, Some ts, tout))
+        )
+    in
+    rec_flow cx trace (tc, ThisSpecializeT (reason_tapp, this, k))
 
   (* Object assignment patterns. In the `Object.assign` model (chain_objects), an
      existing object receives properties from other objects. This pattern suffers

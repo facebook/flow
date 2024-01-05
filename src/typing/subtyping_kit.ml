@@ -606,12 +606,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
       rec_flow_t cx trace ~use_op (t, u)
     | (ThisTypeAppT (reason_tapp, c, this, ts), _) ->
       let reason_op = reason_of_t u in
-      let tc = specialize_class cx trace ~reason_op ~reason_tapp c ts in
-      instantiate_this_class cx trace reason_tapp tc this (Upper (UseT (use_op, u)))
+      instantiate_this_class cx trace ~reason_op ~reason_tapp c ts this (Upper (UseT (use_op, u)))
     | (_, ThisTypeAppT (reason_tapp, c, this, ts)) ->
       let reason_op = reason_of_t l in
-      let tc = specialize_class cx trace ~reason_op ~reason_tapp c ts in
-      instantiate_this_class cx trace reason_tapp tc this (Lower (use_op, l))
+      instantiate_this_class cx trace ~reason_op ~reason_tapp c ts this (Lower (use_op, l))
     (* If we have a TypeAppT (c, ts) ~> TypeAppT (c, ts) then we want to
      * concretize both cs to PolyTs so that we may referentially compare them.
      * We cannot compare the non-concretized versions since they may have been

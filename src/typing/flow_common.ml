@@ -165,7 +165,15 @@ module type SUBTYPING = sig
     unit
 
   val instantiate_this_class :
-    Context.t -> Type.trace -> Reason.reason -> Type.t -> Type.t -> Type.cont -> unit
+    Context.t ->
+    Type.trace ->
+    reason_op:Reason.reason ->
+    reason_tapp:Reason.reason ->
+    Type.t ->
+    Type.t list option ->
+    Type.t ->
+    Type.cont ->
+    unit
 
   val instantiate_poly_with_targs :
     Context.t ->
@@ -190,15 +198,6 @@ module type SUBTYPING = sig
     ?unify_bounds:bool ->
     ALoc.t * Type.typeparam Nel.t * Type.t ->
     Type.t * (Type.t * Subst_name.t) list
-
-  val specialize_class :
-    Context.t ->
-    Type.trace ->
-    reason_op:reason ->
-    reason_tapp:reason ->
-    Type.t ->
-    Type.t list option ->
-    Type.t
 
   val mk_typeapp_of_poly :
     Context.t ->
