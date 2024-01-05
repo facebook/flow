@@ -113,7 +113,6 @@ module Opts = struct
     node_resolver_allow_root_relative: bool;
     node_resolver_dirnames: string list;
     node_resolver_root_relative_dirnames: string list;
-    precise_dependents: bool;
     react_runtime: Options.react_runtime;
     recursion_limit: int;
     relay_integration: bool;
@@ -241,7 +240,6 @@ module Opts = struct
       node_resolver_allow_root_relative = false;
       node_resolver_dirnames = ["node_modules"];
       node_resolver_root_relative_dirnames = [""];
-      precise_dependents = false;
       react_runtime = Options.ReactRuntimeClassic;
       recursion_limit = 10000;
       relay_integration = false;
@@ -734,7 +732,13 @@ module Opts = struct
         let node_resolver_root_relative_dirnames = v :: opts.node_resolver_root_relative_dirnames in
         Ok { opts with node_resolver_root_relative_dirnames })
 
-  let precise_dependents_parser = boolean (fun opts v -> Ok { opts with precise_dependents = v })
+  let precise_dependents_parser =
+    boolean (fun opts v ->
+        if not v then
+          Error "precise dependents must be enabled."
+        else
+          Ok opts
+    )
 
   let react_runtime_parser =
     enum
@@ -1610,8 +1614,6 @@ let node_resolver_allow_root_relative c = c.options.Opts.node_resolver_allow_roo
 let node_resolver_dirnames c = c.options.Opts.node_resolver_dirnames
 
 let node_resolver_root_relative_dirnames c = c.options.Opts.node_resolver_root_relative_dirnames
-
-let precise_dependents c = c.options.Opts.precise_dependents
 
 let react_runtime c = c.options.Opts.react_runtime
 

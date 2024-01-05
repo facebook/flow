@@ -156,7 +156,6 @@ start_flow_unsafe () {
         --log-file "$abs_log_file" \
         --monitor-log-file "$abs_monitor_log_file" \
         --long-lived-workers "$long_lived_workers" \
-        --precise-dependents 1 \
         "$@"
       return $?
     else
@@ -173,7 +172,6 @@ start_flow_unsafe () {
       --log-file "$abs_log_file" \
       --monitor-log-file "$abs_monitor_log_file" \
       --long-lived-workers "$long_lived_workers" \
-      --precise-dependents 1 \
       "$@"
     return $?
   fi
@@ -390,7 +388,6 @@ runtest() {
               --log-file "$abs_log_file" \
               --monitor-log-file "$abs_monitor_log_file" \
               --long-lived-workers "$long_lived_workers" \
-              --precise-dependents 1 \
 
             local SAVED_STATE_FILENAME="$root/.flow.saved_state"
             local CHANGES_FILENAME="$root/.flow.saved_state_file_changes"
@@ -416,7 +413,6 @@ runtest() {
                 $flowlib \
                 --strip-root --show-all-errors \
                 --long-lived-workers "$long_lived_workers" \
-                --precise-dependents 1 \
                  1>> "$abs_out_file" 2>> "$stderr_dest"
               st=$?
             fi

@@ -871,7 +871,6 @@ module Options_flags = struct
     merge_timeout: int option;
     munge_underscore_members: bool;
     no_flowlib: bool;
-    precise_dependents: bool option;
     profile: bool;
     quiet: bool;
     slow_to_check_logging: Slow_to_check_logging.t;
@@ -930,7 +929,6 @@ let options_flags =
   let collect_options_flags
       main
       debug
-      precise_dependents
       profile
       all
       wait_for_recheck
@@ -959,7 +957,6 @@ let options_flags =
     main
       {
         Options_flags.debug;
-        precise_dependents;
         profile;
         all;
         wait_for_recheck;
@@ -987,7 +984,6 @@ let options_flags =
       prev
       |> collect collect_options_flags
       |> flag "--debug" truthy ~doc:"Print debug info during typecheck" ~env:"FLOW_DEBUG"
-      |> flag "--precise-dependents" (optional bool) ~doc:""
       |> profile_flag
       |> flag "--all" truthy ~doc:"Typecheck all files, not just @flow"
       |> flag
@@ -1478,10 +1474,6 @@ let make_options
       Option.value
         options_flags.long_lived_workers
         ~default:(FlowConfig.long_lived_workers flowconfig);
-    opt_precise_dependents =
-      Option.value
-        options_flags.precise_dependents
-        ~default:(FlowConfig.precise_dependents flowconfig);
     (* Not user-configurable for now, but set to false for some codemods. *)
     opt_any_propagation = true;
   }

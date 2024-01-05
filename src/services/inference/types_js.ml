@@ -1278,117 +1278,6 @@ end = struct
     in
     Lwt.return (env, intermediate_values)
 
-  (** NOTE: This code is unnecessary, and unused when in "precise dependents" mode, which will
-      become the only mode after a brief rollout period.
-
-      [direct_dependents_to_recheck ~dirty_direct_dependents ~focused ~dependencies] computes the
-      dependent files that directly depend on its inputs. a file directly depends on another if it
-      literaly has an [import].
-
-      Here's an example:
-
-      - D depends on B, B and C depend on A
-
-      ```
-            A
-           / \
-          B   C
-           \
-            D
-      ```
-
-      The dirty_direct_dependents are dependents of modules which have a different provider file, or
-      whose provider file changed between parsed and unparsed.
-
-      Suppose we're rechecking B and notice that A changed unexpectedly such that its dependents are
-      dirty (e.g., A got an initial provider).
-
-      focused = {B}
-      dependencies = {A}
-      dirty_direct_dependents = {C}
-
-      (Note that B is not a dirty dependent because it is also changed. Dirty dependents only
-      contains unchanged files.)
-
-      The dependents of the focused updates, {B}, are {D}. These are the dependents we want to
-      check. We don't want to check C right now. We want to do it when we receive the file watcher
-      update for A. How do we exclude C?
-
-      We could recompute the direct dependents of {B} using `implementation_dependency_graph` and
-      get {D}. win!
-
-      But consider this expanded graph:
-
-      ```
-         E   A
-        / \ / \
-       F   B   C
-            \
-             D
-      ```
-
-      What if `E` is deleted (and A is changed as before)?
-
-      focused = {B}
-      dependencies = {A, E}
-      dirty_direct_dependents = {C, F}
-
-      We actually have to recheck F. We won't want to -- it's not required to recheck B -- but as
-      soon as the transaction commits, all record of the E <- B and E <- F edges are gone and we
-      won't know to recheck F and B when we get the deletion event about E. Maybe we could keep
-      track of this, but not today.
-
-      implementation_dependency_graph doesn't contain E because it was deleted. Whereas before, we
-      could recompute the direct dependents of B, we can't compute the direct dependents of E.
-
-      Who knows what depended on E? dirty_direct_dependents!
-
-      But recall that we don't want to just use everything from dirty_direct_dependents, because it
-      might includes dependents of changed dependencies (C, because A changed).
-
-      The result we're looking for is {D, F}.
-
-      - direct dependents of focused updates = {D}
-      - direct dependents of dependency updates = {B, C}
-      - dirty_direct_dependents = {C, F}
-
-      It's tempting to just remove the dependents of dependencies from dirty_direct_dependents:
-      {C, F} - {B, C} = {F} -- fail!
-
-      So we need to add the focused dependents back in:
-
-      {D} + ({C, F} - {B, C}) =
-      {D} + {F} =
-      {D, F}
-  *)
-  let direct_dependents_to_recheck
-      ~implementation_dependency_graph ~dirty_direct_dependents ~focused ~dependencies =
-    (* These are all the files that literally import the files we're focusing. *)
-    let focused_direct_dependents =
-      Pure_dep_graph_operations.calc_direct_dependents implementation_dependency_graph focused
-    in
-    (* These are all the files that import changed dependencies. We don't want to check
-       dependents of dependencies. *)
-    let dependency_direct_dependents =
-      Pure_dep_graph_operations.calc_direct_dependents implementation_dependency_graph dependencies
-    in
-    (* These are files that import deleted files[1]. They need to be included now because
-       we will forget they're dirty as soon as this recheck is over and we commit the
-       updated dependency graph.
-
-       We have to compute it this way because (a) the deleted edges are already removed
-       from implementation_dependency_graph, so focused_direct_dependents doesn't include
-       them, and (b) dirty_direct_dependents doesn't track which files a dependent depended
-       on, so it doesn't tell us which files are dependents of deleted files.
-
-       [1] strictly, we should also diff out focused_direct_dependents to get the orphaned
-       dependents, but since we're about to union it with focused_direct_dependents, that's
-       a waste. *)
-    let orphaned_direct_dependents =
-      FilenameSet.diff dirty_direct_dependents dependency_direct_dependents
-    in
-    FilenameSet.union focused_direct_dependents orphaned_direct_dependents
-
   let determine_what_to_recheck
       ~profiling
       ~options
@@ -1419,21 +1308,12 @@ end = struct
        dependent files is union(c,d). *)
     let%lwt all_dependent_files =
       with_memory_timer_lwt ~options "AllDependentFiles" profiling (fun () ->
-          let implementation_dependents =
-            if Options.precise_dependents options then
-              FilenameSet.union input_focused dirty_direct_dependents
-            else
-              direct_dependents_to_recheck
-                ~implementation_dependency_graph
-                ~dirty_direct_dependents
-                ~focused:input_focused
-                ~dependencies:input_dependencies
-          in
+          let roots = FilenameSet.union input_focused dirty_direct_dependents in
           let all_dependent_files =
             Pure_dep_graph_operations.calc_all_dependents
               ~sig_dependency_graph
               ~implementation_dependency_graph
-              implementation_dependents
+              roots
           in
           (* Prevent files in node_modules from being added to the checked set. *)
           let all_dependent_files = filter_out_node_modules ~options all_dependent_files in

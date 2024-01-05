@@ -205,8 +205,6 @@ val node_resolver_dirnames : config -> string list
 
 val node_resolver_root_relative_dirnames : config -> string list
 
-val precise_dependents : config -> bool
-
 val react_runtime : config -> Options.react_runtime
 
 val recursion_limit : config -> int
