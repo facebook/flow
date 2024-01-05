@@ -903,20 +903,10 @@ let resolve_binding cx reason loc_kind loc binding =
     match binding with
     | Select _ when has_annot && loc_kind <> Env_api.PatternLoc ->
       (* This is unnecessary if we are directly resolving an annotation. *)
-      (* If we are destructuring an annotation, the chain of constraints leading
-       * to here will preserve the 0->1 constraint. The mk_typeof_annotation
-       * helper will wrap the destructured type in an AnnotT, to ensure it is
-       * resolved before it is used as an upper bound. The helper also enforces
-       * the destructured type is 0->1 via BecomeT.
-       *
-       * The BecomeT part should not be necessary, but for now it is. Ideally an
-       * annotation would recursively be 0->1, but it's possible for them to
-       * contain inferred parts. For example, a class's instance type where one of
-       * the fields is unannotated. *)
       AnnotT
         ( reason,
           Tvar.mk_where cx reason (fun t' ->
-              Flow_js.flow cx (t, BecomeT { reason; t = t'; empty_success = true })
+              Flow_js.unify cx (Flow_js.reposition cx (loc_of_reason reason) t) t'
           ),
           false
         )

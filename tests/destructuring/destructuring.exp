@@ -1295,8 +1295,7 @@ References:
 
 Error ----------------------------------------------------------------------------- destructuring_missing_props.js:27:18
 
-Cannot assign string to `defaultProps` because string [1] is incompatible with `defaultProps` (resolved to type
-`empty`) [2]. [incompatible-type]
+Cannot assign string to `defaultProps` because string [1] is incompatible with undefined [2]. [incompatible-type]
 
    destructuring_missing_props.js:27:18
    27|   defaultProps = 'default',
