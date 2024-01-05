@@ -1084,8 +1084,8 @@ module Make
         let { Ast.Function.sig_loc; async; generator; _ } = func in
         let (name_loc, _) = id in
         let reason = func_reason ~async ~generator sig_loc in
-        let general = Type_env.read_declared_type cx reason name_loc in
-        let (fn_type, func_ast) = mk_function_declaration cx ~general reason loc func in
+        let tast_fun_type = Type_env.read_declared_type cx reason name_loc in
+        let (fn_type, func_ast) = mk_function_declaration cx ~tast_fun_type reason loc func in
         (fn_type, id, (loc, FunctionDeclaration func_ast))
     in
     function
@@ -1511,9 +1511,9 @@ module Make
       let (name_loc, { Ast.Identifier.name; comments = _ }) = id in
       let name = OrdinaryName name in
       let reason = DescFormat.instance_reason name name_loc in
-      let general = Type_env.read_declared_type cx reason name_loc in
+      let tast_class_type = Type_env.read_declared_type cx reason name_loc in
       (* ClassDeclarations are statements, so we will never have an annotation to push down here *)
-      let (class_t, c_ast) = mk_class cx class_loc ~name_loc ~general reason c in
+      let (class_t, c_ast) = mk_class cx class_loc ~name_loc ~tast_class_type reason c in
       let use_op =
         Op
           (AssignVar
@@ -1755,16 +1755,12 @@ module Make
             | FunctionDeclaration ({ Ast.Function.id = None; _ } as fn) ->
               let { Ast.Function.sig_loc; async; generator; _ } = fn in
               let reason = func_reason ~async ~generator sig_loc in
-              let general = Tvar.mk cx reason in
-              let (t, fn) = mk_function_declaration cx ~general reason loc fn in
-              Flow_js.flow_t cx (t, general);
-              (loc, general, (loc, FunctionDeclaration fn))
+              let (t, fn) = mk_function_declaration cx reason loc fn in
+              (loc, t, (loc, FunctionDeclaration fn))
             | ClassDeclaration ({ Ast.Class.id = None; _ } as c) ->
               let reason = DescFormat.instance_reason (internal_name "*default*") loc in
-              let general = Tvar.mk cx reason in
-              let (t, c) = mk_class cx loc ~name_loc:loc ~general reason c in
-              Flow_js.flow_t cx (t, general);
-              (loc, general, (loc, ClassDeclaration c))
+              let (t, c) = mk_class cx loc ~name_loc:loc reason c in
+              (loc, t, (loc, ClassDeclaration c))
             | FunctionDeclaration { Ast.Function.id = Some id; _ }
             | ClassDeclaration { Ast.Class.id = Some id; _ }
             | EnumDeclaration { EnumDeclaration.id; _ }
@@ -2160,11 +2156,7 @@ module Make
         (acc, Tast_utils.error_mapper#object_property_or_spread_property prop)
       | Ok name ->
         let reason = func_reason ~async:false ~generator:false prop_loc in
-        let tvar = Tvar.mk cx reason in
-        let (t, func) =
-          mk_function_expression cx ~general:tvar ~needs_this_param:false reason fn_loc func
-        in
-        Flow.flow_t cx (t, tvar);
+        let (t, func) = mk_function_expression cx ~needs_this_param:false reason fn_loc func in
         ( ObjectExpressionAcc.add_prop (Properties.add_method (OrdinaryName name) (Some loc) t) acc,
           Property
             ( prop_loc,
@@ -2196,11 +2188,9 @@ module Make
         (acc, Tast_utils.error_mapper#object_property_or_spread_property prop)
       | Ok name ->
         let reason = func_reason ~async:false ~generator:false vloc in
-        let tvar = Tvar.mk cx reason in
         let (function_type, func) =
-          mk_function_expression cx ~general:tvar ~needs_this_param:false reason vloc func
+          mk_function_expression cx ~needs_this_param:false reason vloc func
         in
-        Flow.flow_t cx (function_type, tvar);
         let return_t = Type.extract_getter_type function_type in
         ( ObjectExpressionAcc.add_prop
             (Properties.add_getter (OrdinaryName name) (Some id_loc) return_t)
@@ -2236,11 +2226,9 @@ module Make
         (acc, Tast_utils.error_mapper#object_property_or_spread_property prop)
       | Ok name ->
         let reason = func_reason ~async:false ~generator:false vloc in
-        let tvar = Tvar.mk cx reason in
         let (function_type, func) =
-          mk_function_expression cx ~general:tvar ~needs_this_param:false reason vloc func
+          mk_function_expression cx ~needs_this_param:false reason vloc func
         in
-        Flow.flow_t cx (function_type, tvar);
         let param_t = Type.extract_setter_type function_type in
         ( ObjectExpressionAcc.add_prop
             (Properties.add_setter (OrdinaryName name) (Some id_loc) param_t)
@@ -3059,19 +3047,15 @@ module Make
           Error_message.(EUnsupportedSyntax (loc, PredicateDeclarationWithoutExpression))
       | _ -> ());
       let reason = func_reason ~async ~generator sig_loc in
-      let tvar = Tvar.mk cx reason in
       let (t, func) =
         match id with
-        | None -> mk_function_expression cx reason ~needs_this_param:true ~general:tvar loc func
+        | None -> mk_function_expression cx reason ~needs_this_param:true loc func
         | Some _ ->
           let prev_scope_kind = Type_env.set_scope_kind cx Name_def.Ordinary in
-          let (t, func) =
-            mk_function_expression cx reason ~needs_this_param:true ~general:tvar loc func
-          in
+          let (t, func) = mk_function_expression cx reason ~needs_this_param:true loc func in
           ignore @@ Type_env.set_scope_kind cx prev_scope_kind;
           (t, func)
       in
-      Flow.flow_t cx (t, tvar);
       ((loc, t), Function func)
     | ArrowFunction func ->
       let reason = Ast.Function.(func_reason ~async:func.async ~generator:func.generator loc) in
@@ -3198,10 +3182,9 @@ module Make
         | None -> (class_loc, "<<anonymous class>>")
       in
       let reason = mk_reason (RIdentifier (OrdinaryName name)) name_loc in
-      let tvar = Tvar.mk cx reason in
       (match c.Ast.Class.id with
       | Some _ ->
-        let (class_t, c) = mk_class cx class_loc ~name_loc ~general:tvar reason c in
+        let (class_t, c) = mk_class cx class_loc ~name_loc reason c in
         (* mk_class above ensures that the function name in the inline declaration
            has the same type as its references inside the class.
            However, in the new env, we need to perform a bind of the class declaration type to the
@@ -3216,11 +3199,9 @@ module Make
           in
           Type_env.init_implicit_let cx ~use_op class_t name_loc
         in
-        Flow.flow_t cx (class_t, tvar);
         ((class_loc, class_t), Class c)
       | None ->
-        let (class_t, c) = mk_class cx class_loc ~name_loc ~general:tvar reason c in
-        Flow.flow_t cx (class_t, tvar);
+        let (class_t, c) = mk_class cx class_loc ~name_loc reason c in
         ((class_loc, class_t), Class c))
     | Yield { Yield.argument; delegate = false; comments; result_out } ->
       let (t, argument_ast) =
@@ -6443,7 +6424,7 @@ module Make
         arg_asts
       )
 
-  and mk_class cx class_loc ~name_loc ~general reason c =
+  and mk_class cx class_loc ~name_loc ?tast_class_type reason c =
     let node_cache = Context.node_cache cx in
     match Node_cache.get_class node_cache class_loc with
     | Some x ->
@@ -6481,7 +6462,8 @@ module Make
           private_property_map;
           errors = Property_assignment.eval_property_assignment class_body;
         };
-      (class_t, class_ast_f general)
+      let tast_class_type = Base.Option.value tast_class_type ~default:class_t in
+      (class_t, class_ast_f tast_class_type)
 
   (* Process a class definition, returning a (polymorphic) class type. A class
      type is a wrapper around an instance type, which contains types of instance
@@ -7869,18 +7851,18 @@ module Make
       )
 
   (* Process a function declaration, returning a (polymorphic) function type. *)
-  and mk_function_declaration cx ~general reason fun_loc func =
-    mk_function cx ~general ~needs_this_param:true ~statics:SMap.empty reason fun_loc func
+  and mk_function_declaration cx ?tast_fun_type reason fun_loc func =
+    mk_function cx ?tast_fun_type ~needs_this_param:true ~statics:SMap.empty reason fun_loc func
 
   (* Process a function expression, returning a (polymorphic) function type. *)
-  and mk_function_expression cx ~general ~needs_this_param reason fun_loc func =
-    mk_function cx ~needs_this_param ~general ~statics:SMap.empty reason fun_loc func
+  and mk_function_expression cx ~needs_this_param reason fun_loc func =
+    mk_function cx ~needs_this_param ?tast_fun_type:None ~statics:SMap.empty reason fun_loc func
 
   (* Internal helper function. Use `mk_function_declaration` and `mk_function_expression` instead. *)
   and mk_function
       cx
       ~needs_this_param
-      ~general
+      ?tast_fun_type
       ~statics
       reason
       fun_loc
@@ -7922,7 +7904,8 @@ module Make
           func
           (Base.Option.some_if needs_this_param default_this)
       in
-      (fun_type, reconstruct_ast general)
+      let tast_fun_type = Base.Option.value ~default:fun_type tast_fun_type in
+      (fun_type, reconstruct_ast tast_fun_type)
 
   (* Process an arrow function, returning a (polymorphic) function type. *)
   and mk_arrow cx ~statics reason func =

@@ -688,22 +688,13 @@ let resolve_binding_partial cx reason loc b =
           sig_loc
         )
     in
-    let general = Tvar.mk cx reason in
     let func =
       if arrow then
         Statement.mk_arrow cx ~statics reason_fun function_
       else
-        Statement.mk_function
-          cx
-          ~needs_this_param:true
-          ~statics
-          ~general
-          reason_fun
-          function_loc
-          function_
+        Statement.mk_function cx ~needs_this_param:true ~statics reason_fun function_loc function_
     in
     let (func_type, func_ast) = func in
-    Flow_js.flow_t cx (func_type, general);
     let cache = Context.node_cache cx in
     (match id with
     | Some (id_loc, _) -> Node_cache.set_function cache id_loc func
@@ -916,14 +907,9 @@ let resolve_binding cx reason loc_kind loc binding =
 
 let resolve_inferred_function cx ~statics ~needs_this_param id_loc reason function_loc function_ =
   let cache = Context.node_cache cx in
-  (* TODO: This is intended to be the general type for the variable in the old environment, needed
-     for generic escape detection. We can do generic escape differently in the future and remove
-     this when we kill the old env. *)
-  let general = Tvar.mk cx reason in
   let ((fun_type, _) as fn) =
-    Statement.mk_function cx ~needs_this_param ~statics ~general reason function_loc function_
+    Statement.mk_function cx ~needs_this_param ~statics reason function_loc function_
   in
-  Flow_js.flow_t cx (fun_type, general);
   Node_cache.set_function cache id_loc fn;
   (fun_type, unknown_use)
 

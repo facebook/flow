@@ -119,7 +119,9 @@ module type S = sig
   val mk_function :
     Context.t ->
     needs_this_param:bool ->
-    general:Type.t ->
+    (* Type of the function in typed ast.
+     * For overloaded functions, the type must be read from the environment. *)
+    ?tast_fun_type:Type.t ->
     statics:Env_api.EnvKey.t SMap.t ->
     Reason.reason ->
     ALoc.t ->
@@ -179,7 +181,7 @@ module type S = sig
     Context.t ->
     ALoc.t ->
     name_loc:ALoc.t ->
-    general:Type.t ->
+    ?tast_class_type:Type.t ->
     Reason.t ->
     (ALoc.t, ALoc.t) Ast.Class.t ->
     Type.t * (ALoc.t, ALoc.t * Type.t) Ast.Class.t
