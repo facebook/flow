@@ -6831,18 +6831,12 @@ struct
       )
 
   and destruct cx ~trace reason kind t selector tout id =
-    match kind with
-    | DestructAnnot ->
-      (* NB: BecomeT used to enforce that 0->1 property is preserved. Is
-       * currently necessary, since 0->1 annotations are not always
-       * recursively 0->1 -- e.g., class instance types. *)
-      let tvar = Tvar.mk_no_wrap cx reason in
-      eval_selector cx ~trace ~annot:true reason t selector (reason, tvar) id;
-      rec_flow
-        cx
-        trace
-        (OpenT (reason, tvar), BecomeT { reason; t = OpenT tout; empty_success = false })
-    | DestructInfer -> eval_selector cx ~trace ~annot:false reason t selector tout id
+    let annot =
+      match kind with
+      | DestructAnnot -> true
+      | DestructInfer -> false
+    in
+    eval_selector cx ~trace ~annot reason t selector tout id
 
   and eval_selector cx ?trace ~annot reason curr_t s tvar id =
     flow_opt
