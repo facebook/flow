@@ -1214,8 +1214,6 @@ module rec ConsGen : S = struct
     in
     mk_lazy_tvar cx reason f
 
-  (* Unlike Flow_js, types in this module are 0->1, so there is no need for a
-   * mechanism similar to BecomeT of Flow_js. *)
   and mk_typeof_annotation cx reason t =
     let annot_loc = loc_of_reason reason in
     let t = reposition cx (loc_of_reason reason) t in

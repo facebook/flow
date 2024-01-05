@@ -584,16 +584,17 @@ References:
 
 Error ------------------------------------------------------------------------------------------ immediate_cycle.js:1:14
 
-Cannot assign object literal to `x` because object literal [1] is incompatible with empty [2]. [incompatible-type]
+Cannot assign object literal to `x` because object literal [1] is incompatible with `x` (resolved to type `empty`) [2].
+[incompatible-type]
 
    immediate_cycle.js:1:14
    1| const x: X = {}; // error {} ~> empty
                    ^^ [1]
 
 References:
-   immediate_cycle.js:1:10
+   immediate_cycle.js:1:7
    1| const x: X = {}; // error {} ~> empty
-               ^ [2]
+            ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- import.js:7:12

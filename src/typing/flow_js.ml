@@ -9980,30 +9980,9 @@ struct
     in
     recurse IMap.empty t
 
-  (* Given the type of a value v, return the type term representing the `typeof v`
-     annotation expression. If the type of v is a tvar, we need to take extra
-     care. Annotations are designed to constrain types, and therefore should not
-     themselves grow when used. *)
-  and mk_typeof_annotation cx ?trace reason t =
-    let source =
-      match t with
-      | OpenT _ ->
-        (* Ensure that `source` is a 0->1 type by creating a tvar that resolves to
-           the first lower bound. If there are multiple lower bounds, the typeof
-           itself is an error. *)
-        Tvar.mk_where cx reason (fun t' ->
-            flow_opt cx ?trace (t, BecomeT { reason; t = t'; empty_success = true })
-        )
-      | _ ->
-        (* If this is not a tvar, then it should be 0->1 (see TODO). Note that
-           GenericT types potentially appear unsubstituted at this point, so we can't
-           emit constraints even if we wanted to. *)
-        (* TODO: Even in this case, the type might recursively include tvars, which
-           allows them to widen unexpectedly and may cause unpreditable behavior. *)
-        t
-    in
+  and mk_typeof_annotation _cx ?trace:_ reason t =
     let annot_loc = loc_of_reason reason in
-    AnnotT (opt_annot_reason ~annot_loc reason, source, false)
+    AnnotT (opt_annot_reason ~annot_loc reason, t, false)
 
   and get_builtin_type cx ?trace reason ?(use_desc = false) x =
     let t = get_builtin cx x reason in
