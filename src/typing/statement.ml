@@ -2570,27 +2570,27 @@ module Make
     let reason = mk_reason REmptyArrayLit loc in
     let element_reason = mk_reason Reason.unknown_elem_empty_array_desc loc in
     let (has_hint, lazy_hint) = Type_env.get_hint cx loc in
-    let elemt = Tvar.mk cx element_reason in
     (* empty array, analogous to object with implicit properties *)
-    ( if not has_hint then
-      Flow.flow_t cx (EmptyT.make (mk_reason REmptyArrayElement loc), elemt)
-    else
-      match lazy_hint element_reason with
-      | HintAvailable (hint, _) -> Flow.flow_t cx (hint, elemt)
-      | DecompositionError ->
-        (* A hint is available, but cannot be used to provide a type for this
-         * array element. In this case, the element type of the array is likely
-         * useless (does not escape the annotation), so we can use `empty` as
-         * its type. *)
-        Flow.flow_t cx (EmptyT.make (mk_reason REmptyArrayElement loc), elemt)
-      | NoHint
-      | EncounteredPlaceholder ->
-        (* If there is no hint then raise an error. The EncounteredPlaceholder case
-         * corresponds to code like `const set = new Set([]);`. This case will
-         * raise a [missing-empty-array-annot] error on `[]`. *)
-        Flow.add_output cx (Error_message.EEmptyArrayNoProvider { loc });
-        Flow.flow_t cx (AnyT.at Untyped loc, elemt)
-    );
+    let elemt =
+      if not has_hint then
+        EmptyT.make (mk_reason REmptyArrayElement loc)
+      else
+        match lazy_hint element_reason with
+        | HintAvailable (hint, _) -> hint
+        | DecompositionError ->
+          (* A hint is available, but cannot be used to provide a type for this
+           * array element. In this case, the element type of the array is likely
+           * useless (does not escape the annotation), so we can use `empty` as
+           * its type. *)
+          EmptyT.make (mk_reason REmptyArrayElement loc)
+        | NoHint
+        | EncounteredPlaceholder ->
+          (* If there is no hint then raise an error. The EncounteredPlaceholder case
+           * corresponds to code like `const set = new Set([]);`. This case will
+           * raise a [missing-empty-array-annot] error on `[]`. *)
+          Flow.add_output cx (Error_message.EEmptyArrayNoProvider { loc });
+          AnyT.at Untyped loc
+    in
     (reason, elemt)
 
   (* can raise Abnormal.(Exn (_, _))
