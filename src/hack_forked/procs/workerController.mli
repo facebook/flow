@@ -55,7 +55,7 @@ val make :
   worker list
 
 (* Call in a sub-process (CAREFUL, GLOBALS ARE COPIED) *)
-val call : worker -> ('a -> 'b) -> 'a -> 'b Lwt.t
+val call : worker -> ('a -> 'b) -> 'a -> 'b option Lwt.t
 
 (* Killall the workers *)
 val killall : unit -> unit

@@ -199,7 +199,7 @@ let send worker worker_pid outfd_lwt (f : 'a -> 'b) (x : 'a) : unit Lwt.t =
     | exception Unix.Unix_error (Unix.ECHILD, _, _) ->
       raise (Worker_failed_to_send_job (Worker_already_exited None)))
 
-let read (type result) worker_pid infd_lwt : (result * Measure.record_data) Lwt.t =
+let read (type result) worker_pid infd_lwt : (result * Measure.record_data) option Lwt.t =
   let infd = Lwt_unix.unix_file_descr infd_lwt in
   try%lwt
     (* Wait in an lwt-friendly manner for the worker to finish the job *)
@@ -211,9 +211,12 @@ let read (type result) worker_pid infd_lwt : (result * Measure.record_data) Lwt.
        in our testing, but there's really nothing more urgent than reading a response from a
        finished worker, so reading in a blocking manner is fine. *)
     (* Due to https://github.com/ocsigen/lwt/issues/564, annotation cannot go on let%let node *)
-    let data : result = Marshal_tools.from_fd_with_preamble infd in
-    let stats : Measure.record_data = Marshal_tools.from_fd_with_preamble infd in
-    Lwt.return (data, stats)
+    let data : result option = Marshal_tools.from_fd_with_preamble infd in
+    match data with
+    | None -> Lwt.return_none
+    | Some data ->
+      let stats : Measure.record_data = Marshal_tools.from_fd_with_preamble infd in
+      Lwt.return (Some (data, stats))
   with
   | Lwt.Canceled as exn ->
     (* Worker is handling a job but we're cancelling *)
@@ -224,9 +227,13 @@ let read (type result) worker_pid infd_lwt : (result * Measure.record_data) Lwt.
 
     (* Wait for the worker to finish cancelling *)
     let%lwt () = Lwt_unix.wait_read infd_lwt in
-    (* Read the junk from the pipe *)
-    let _ = Marshal_tools.from_fd_with_preamble infd in
-    let _ = Marshal_tools.from_fd_with_preamble infd in
+    (* Read the junk from the pipe. If the worker was almost finished, it will
+       send real data, so handle both cases. *)
+    begin
+      match Marshal_tools.from_fd_with_preamble infd with
+      | None -> ()
+      | Some _ -> ignore (Marshal_tools.from_fd_with_preamble infd)
+    end;
     Exception.reraise exn
   | exn ->
     let exn = Exception.wrap exn in
@@ -258,24 +265,22 @@ let read (type result) worker_pid infd_lwt : (result * Measure.record_data) Lwt.
 
     This is basically an lwt thread that writes a job to the worker, waits for the response, and
     then returns the result. *)
-let call w (f : 'a -> 'b) (x : 'a) : 'b Lwt.t =
+let call w (f : 'a -> 'b) (x : 'a) : 'b option Lwt.t =
   if is_killed w then Printf.ksprintf failwith "killed worker (%d)" (worker_id w);
   mark_busy w;
   let { Daemon.pid = worker_pid; channels = (inc, outc) } = w.handle in
   let infd = Lwt_unix.of_unix_file_descr (Daemon.descr_of_in_channel inc) in
   let outfd = Lwt_unix.of_unix_file_descr (Daemon.descr_of_out_channel outc) in
-  try%lwt
-    let%lwt () = send w worker_pid outfd f x in
-    let%lwt (res, measure_data) = read worker_pid infd in
-    Measure.merge (Measure.deserialize measure_data);
-    mark_free w;
-    Lwt.return res
-  with
-  | exn ->
-    let exn = Exception.wrap exn in
-    (* No matter what, always close and mark worker as free when we're done *)
-    mark_free w;
-    Exception.reraise exn
+  (let%lwt () = send w worker_pid outfd f x in
+   match%lwt read worker_pid infd with
+   | None -> Lwt.return_none
+   | Some (data, stats) ->
+     Measure.merge (Measure.deserialize stats);
+     Lwt.return (Some data)
+  )
+    [%lwt.finally
+      mark_free w;
+      Lwt.return_unit]
 
 (**************************************************************************
  * Worker termination

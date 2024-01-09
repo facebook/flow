@@ -71,8 +71,11 @@ let multi_threaded_call
     | None -> Lwt.return idle_start_wall_time
     | Some bucket ->
       Measure.sample "worker_idle" (Unix.gettimeofday () -. idle_start_wall_time);
-      let%lwt result = WorkerController.call worker (fun xl -> job xl) bucket in
-      let%lwt () = merge_with_acc result in
+      let%lwt () =
+        match%lwt WorkerController.call worker (fun xl -> job xl) bucket with
+        | None -> Lwt.return_unit
+        | Some result -> merge_with_acc result
+      in
       (* Wait means "ask again after a worker has finished and has merged its result". So now that
          * we've merged our response, let's wake any other workers which are waiting for work *)
       Lwt_condition.broadcast wait_signal ();

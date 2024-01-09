@@ -101,7 +101,7 @@ let worker_job_main infd outfd =
 
     let len =
       Measure.time "worker_send_response" (fun () ->
-          try Marshal_tools.to_fd_with_preamble ~flags:[Marshal.Closures] outfd data with
+          try Marshal_tools.to_fd_with_preamble ~flags:[Marshal.Closures] outfd (Some data) with
           | Unix.Unix_error (Unix.EPIPE, _, _) -> raise Connection_closed
       )
     in
@@ -145,14 +145,9 @@ let worker_job_main infd outfd =
     start_wall_time := Unix.gettimeofday ();
     try do_process { send = send_result } with
     | WorkerCancel.Worker_should_cancel ->
-      (* The cancelling controller will ignore result of cancelled job anyway (see
-       * wait_for_cancel function), so we can send back anything. Write twice, since
-       * the normal response writes twice too *)
+      (* Send `None` to reflect canceled status. *)
       if not !result_sent then (
-        try
-          ignore (Marshal_tools.to_fd_with_preamble outfd "anything");
-          ignore (Marshal_tools.to_fd_with_preamble outfd "anything")
-        with
+        try ignore (Marshal_tools.to_fd_with_preamble outfd None) with
         | Unix.Unix_error (Unix.EPIPE, _, _) -> raise Connection_closed
       )
   with
