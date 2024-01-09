@@ -33,7 +33,7 @@ const arr3: Array<mixed> = [1, true, "three"];
 ## `$ReadOnlyArray` Type {#toc-readonlyarray}
 
 You can use the type `$ReadOnlyArray<T>` instead of `Array<T>` to represent a [read-only](../../lang/variance) array which cannot be mutated.
-You can't write to a read-only array directly, and can't use methods which mutate the array like `.push()`, `.push()`, etc.
+You can't write to a read-only array directly, and can't use methods which mutate the array like `.push()`, `.unshift()`, etc.
 
 ```js flow-check
 const readonlyArray: $ReadOnlyArray<number> = [1, 2, 3]
@@ -41,6 +41,7 @@ const readonlyArray: $ReadOnlyArray<number> = [1, 2, 3]
 const first = readonlyArray[0]; // OK to read
 readonlyArray[1] = 20;          // Error!
 readonlyArray.push(4);          // Error!
+readonlyArray.unshift(4);       // Error!
 ```
 
 Note that an array of type `$ReadOnlyArray<T>` can still have mutable _elements_:
