@@ -1,3 +1,17 @@
+### 0.226.0
+
+Likely to cause new Flow errors:
+* $ObjMap and $TupleMap become stricter. The following code now errors: [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+IFkolXpUCWewUEAwhCQgRDH8wEH4hMnwROHlsNnw4KHwwSLAAC3wANyo4LFxscWQuHgMNZmwsiRSAWglaY1cq-hIAa2wJXNpG4Vxcdvdu3v7B0RxKUYMhKDBSqmbWwIq3eagoOrKSKgH0wtMMPznY7d2SfcoBiEZ-aG5G3Ix085AF-ZhsRoRehqUEiNMgSQHlSruBZxJrMcJwMhzAC+-EgGiCLWMAAIAGIAHgAKgA+LEAXixABIAEqsNgAeSguFoeOAAB0oFisUQEMgsQAKPkASjJJIJwtJJPyEDgbF47M5VkV7KRRIA3Oz2RollRsFiYAtlHBoFiIowAIx4um84CKqwqvkQM28umC3kUuloABWAFkMIxLbwsXiAGpEvn40OCiWh9VQLW4HV6g2PDmmgBMeIAgm6aewGUzM9Q6HjEsk2ESwxA07yAAqUeFkLNE12UglCRilX3+zOBkNhiPN6NqjWLaD2PXEMlYj2eureGAsbAAL2wfOAmEo1u5vL5MB34pJ9lMUAQB6xwCRl8F7Ns48dU9NZt3xGFGBI543vOEIhmSNjN7HCQsTQSdyTrBtsCsbhcD5ABtGBiFggByDckIAXTQwVY1vICqwfP00z5ECIFfd9YIAanyL9phMNDYxiEB8hMEgjSgIJ8gABisNM0wAVisM0QCRIA)
+
+IDE:
+* Linked JSX editing will now only trigger if you edit the opening tag, instead of both the opening and the closing tag.
+* We now provide IDE services in user-defined library definitions.
+
+Notable bug fixes:
+* Fixed a bug where recursive types defined across multiple files caused spurious errors and led to unsound types
+* Add .databases() to IDBFactory (thanks @bobrovnikov)
+* Mark `DOMStringList` as iterable, so that it works with `Array.from(...)` (thanks @bobrovnikov)
+
 ### 0.225.1
 
 Notable bug fixes:
