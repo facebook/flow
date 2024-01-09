@@ -49,8 +49,8 @@ Cannot cast `quasis.raw` to empty because read-only array type [1] is incompatib
               ^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1180:9
-   1180|   +raw: $ReadOnlyArray<string>;
+   <BUILTINS>/core.js:1168:9
+   1168|   +raw: $ReadOnlyArray<string>;
                  ^^^^^^^^^^^^^^^^^^^^^^ [1]
    tagged_template.js:25:18
      25|     (quasis.raw: empty); // ERROR
@@ -66,8 +66,8 @@ Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [inc
             ^
 
 References:
-   <BUILTINS>/core.js:1401:110
-   1401|     static raw(callSite: interface {+raw: $ReadOnlyArray<string>}, ...substitutions: $ReadOnlyArray<mixed>): string;
+   <BUILTINS>/core.js:1389:110
+   1389|     static raw(callSite: interface {+raw: $ReadOnlyArray<string>}, ...substitutions: $ReadOnlyArray<mixed>): string;
                                                                                                                       ^^^^^^ [1]
    tagged_template.js:34:7
      34|   (x: empty); // ERROR
@@ -85,8 +85,8 @@ subtype of an interface. [incompatible-type]
                       ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1401:26
-   1401|     static raw(callSite: interface {+raw: $ReadOnlyArray<string>}, ...substitutions: $ReadOnlyArray<mixed>): string;
+   <BUILTINS>/core.js:1389:26
+   1389|     static raw(callSite: interface {+raw: $ReadOnlyArray<string>}, ...substitutions: $ReadOnlyArray<mixed>): string;
                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -99,8 +99,8 @@ Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [inc
             ^
 
 References:
-   <BUILTINS>/core.js:1401:110
-   1401|     static raw(callSite: interface {+raw: $ReadOnlyArray<string>}, ...substitutions: $ReadOnlyArray<mixed>): string;
+   <BUILTINS>/core.js:1389:110
+   1389|     static raw(callSite: interface {+raw: $ReadOnlyArray<string>}, ...substitutions: $ReadOnlyArray<mixed>): string;
                                                                                                                       ^^^^^^ [1]
    tagged_template.js:45:7
      45|   (x: empty); // ERROR

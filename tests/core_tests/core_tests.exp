@@ -7,33 +7,33 @@ Cannot use `new` on object type [1]. Only classes can be constructed. [invalid-c
              ^^^^
 
 References:
-   <BUILTINS>/core.js:1721:19
+   <BUILTINS>/core.js:1709:19
                            v-
-   1721| declare var JSON: {|
-   1722|     /**
-   1723|      * Converts a JavaScript Object Notation (JSON) string into an object.
-   1724|      * @param text A valid JSON string.
-   1725|      * @param reviver A function that transforms the results. This function is called for each member of the object.
-   1726|      * If a member contains nested objects, the nested objects are transformed before the parent object is.
-   1727|      */
-   1728|     +parse: (text: string, reviver?: (key: any, value: any) => any) => any,
-   1729|     /**
-   1730|      * Converts a JavaScript value to a JavaScript Object Notation (JSON) string.
-   1731|      * @param value A JavaScript value, usually an object or array, to be converted.
-   1732|      * @param replacer A function that transforms the results or an array of strings and numbers that acts as a approved list for selecting the object properties that will be stringified.
-   1733|      * @param space Adds indentation, white space, and line break characters to the return-value JSON text to make it easier to read.
-   1734|      */
-   1735|     +stringify: ((
-   1736|         value: null | string | number | boolean | interface {} | $ReadOnlyArray<mixed>,
-   1737|         replacer?: ?((key: string, value: any) => any) | Array<any>,
-   1738|         space?: string | number
-   1739|       ) => string) &
-   1740|       (
-   1741|         value: mixed,
-   1742|         replacer?: ?((key: string, value: any) => any) | Array<any>,
-   1743|         space?: string | number
-   1744|       ) => string | void,
-   1745| |};
+   1709| declare var JSON: {|
+   1710|     /**
+   1711|      * Converts a JavaScript Object Notation (JSON) string into an object.
+   1712|      * @param text A valid JSON string.
+   1713|      * @param reviver A function that transforms the results. This function is called for each member of the object.
+   1714|      * If a member contains nested objects, the nested objects are transformed before the parent object is.
+   1715|      */
+   1716|     +parse: (text: string, reviver?: (key: any, value: any) => any) => any,
+   1717|     /**
+   1718|      * Converts a JavaScript value to a JavaScript Object Notation (JSON) string.
+   1719|      * @param value A JavaScript value, usually an object or array, to be converted.
+   1720|      * @param replacer A function that transforms the results or an array of strings and numbers that acts as a approved list for selecting the object properties that will be stringified.
+   1721|      * @param space Adds indentation, white space, and line break characters to the return-value JSON text to make it easier to read.
+   1722|      */
+   1723|     +stringify: ((
+   1724|         value: null | string | number | boolean | interface {} | $ReadOnlyArray<mixed>,
+   1725|         replacer?: ?((key: string, value: any) => any) | Array<any>,
+   1726|         space?: string | number
+   1727|       ) => string) &
+   1728|       (
+   1729|         value: mixed,
+   1730|         replacer?: ?((key: string, value: any) => any) | Array<any>,
+   1731|         space?: string | number
+   1732|       ) => string | void,
+   1733| |};
          -^ [1]
 
 
@@ -54,8 +54,8 @@ Cannot cast `JSON.stringify(...)` to string because undefined [1] is incompatibl
           ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1744:21
-   1744|       ) => string | void,
+   <BUILTINS>/core.js:1732:21
+   1732|       ) => string | void,
                              ^^^^ [1]
    json_stringify.js:7:24
       7| (JSON.stringify(bad1): string);
@@ -75,11 +75,11 @@ References:
    map.js:21:22
      21|     let x = new Map(['foo', 123]); // error
                               ^^^^^ [1]
-   <BUILTINS>/core.js:1827:38
-   1827|     constructor(iterable?: ?Iterable<[K, V]>): void;
+   <BUILTINS>/core.js:1815:38
+   1815|     constructor(iterable?: ?Iterable<[K, V]>): void;
                                               ^^^^^^ [2]
-   <BUILTINS>/core.js:1761:22
-   1761| interface $Iterator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1749:22
+   1749| interface $Iterator<+Yield,+Return,-Next> extends $Iterable<Yield,Return,Next> {
                               ^^^^^ [3]
 
 
@@ -96,11 +96,11 @@ References:
    map.js:21:29
      21|     let x = new Map(['foo', 123]); // error
                                      ^^^ [1]
-   <BUILTINS>/core.js:1827:38
-   1827|     constructor(iterable?: ?Iterable<[K, V]>): void;
+   <BUILTINS>/core.js:1815:38
+   1815|     constructor(iterable?: ?Iterable<[K, V]>): void;
                                               ^^^^^^ [2]
-   <BUILTINS>/core.js:1761:22
-   1761| interface $Iterator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1749:22
+   1749| interface $Iterator<+Yield,+Return,-Next> extends $Iterable<Yield,Return,Next> {
                               ^^^^^ [3]
 
 
@@ -120,8 +120,8 @@ References:
    map.js:22:16
      22|     let y: Map<number, string> = new Map([['foo', 123]]); // error
                         ^^^^^^ [2]
-   <BUILTINS>/core.js:1761:22
-   1761| interface $Iterator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1749:22
+   1749| interface $Iterator<+Yield,+Return,-Next> extends $Iterable<Yield,Return,Next> {
                               ^^^^^ [3]
 
 
@@ -141,8 +141,8 @@ References:
    map.js:22:24
      22|     let y: Map<number, string> = new Map([['foo', 123]]); // error
                                 ^^^^^^ [2]
-   <BUILTINS>/core.js:1761:22
-   1761| interface $Iterator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1749:22
+   1749| interface $Iterator<+Yield,+Return,-Next> extends $Iterable<Yield,Return,Next> {
                               ^^^^^ [3]
 
 
@@ -155,8 +155,8 @@ Cannot cast `x.get(...)` to boolean because undefined [1] is incompatible with b
               ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1835:22
-   1835|     get(key: K): V | void;
+   <BUILTINS>/core.js:1823:22
+   1823|     get(key: K): V | void;
                               ^^^^ [1]
    map.js:27:20
      27|     (x.get('foo'): boolean); // error, string | void
@@ -204,8 +204,8 @@ since `z` is not a member of the set. [invalid-charset-type-arg]
                            ^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1171:21
-   1171| type RegExp$flags = $CharSet<"gimsuy">;
+   <BUILTINS>/core.js:1159:21
+   1159| type RegExp$flags = $CharSet<"gimsuy">;
                              ^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -219,8 +219,8 @@ since `z` is not a member of the set. [invalid-charset-type-arg]
                                ^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1171:21
-   1171| type RegExp$flags = $CharSet<"gimsuy">;
+   <BUILTINS>/core.js:1159:21
+   1159| type RegExp$flags = $CharSet<"gimsuy">;
                              ^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -236,11 +236,11 @@ Cannot call `WeakRef` because in type argument `T`: [incompatible-call]
                                ^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1858:26
-   1858| declare class WeakRef<T: interface {} | $ReadOnlyArray<mixed>> {
+   <BUILTINS>/core.js:1846:26
+   1846| declare class WeakRef<T: interface {} | $ReadOnlyArray<mixed>> {
                                   ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1858:41
-   1858| declare class WeakRef<T: interface {} | $ReadOnlyArray<mixed>> {
+   <BUILTINS>/core.js:1846:41
+   1846| declare class WeakRef<T: interface {} | $ReadOnlyArray<mixed>> {
                                                  ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -256,11 +256,11 @@ Cannot call `WeakRef` because in type argument `T`: [incompatible-call]
                                ^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1858:26
-   1858| declare class WeakRef<T: interface {} | $ReadOnlyArray<mixed>> {
+   <BUILTINS>/core.js:1846:26
+   1846| declare class WeakRef<T: interface {} | $ReadOnlyArray<mixed>> {
                                   ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1858:41
-   1858| declare class WeakRef<T: interface {} | $ReadOnlyArray<mixed>> {
+   <BUILTINS>/core.js:1846:41
+   1846| declare class WeakRef<T: interface {} | $ReadOnlyArray<mixed>> {
                                                  ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -276,11 +276,11 @@ Cannot call `WeakRef` because in type argument `T`: [incompatible-call]
                                ^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1858:26
-   1858| declare class WeakRef<T: interface {} | $ReadOnlyArray<mixed>> {
+   <BUILTINS>/core.js:1846:26
+   1846| declare class WeakRef<T: interface {} | $ReadOnlyArray<mixed>> {
                                   ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1858:41
-   1858| declare class WeakRef<T: interface {} | $ReadOnlyArray<mixed>> {
+   <BUILTINS>/core.js:1846:41
+   1846| declare class WeakRef<T: interface {} | $ReadOnlyArray<mixed>> {
                                                  ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -296,11 +296,11 @@ Cannot call `WeakSet` because in type argument `T`: [incompatible-call]
                                 ^ [1]
 
 References:
-   <BUILTINS>/core.js:1928:26
-   1928| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
+   <BUILTINS>/core.js:1916:26
+   1916| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
                                   ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1928:41
-   1928| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
+   <BUILTINS>/core.js:1916:41
+   1916| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
                                                  ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -316,11 +316,11 @@ Cannot call `WeakSet` because in type argument `T`: [incompatible-call]
                                    ^ [1]
 
 References:
-   <BUILTINS>/core.js:1928:26
-   1928| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
+   <BUILTINS>/core.js:1916:26
+   1916| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
                                   ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1928:41
-   1928| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
+   <BUILTINS>/core.js:1916:41
+   1916| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
                                                  ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -336,11 +336,11 @@ Cannot call `WeakSet` because in type argument `T`: [incompatible-call]
                                       ^ [1]
 
 References:
-   <BUILTINS>/core.js:1928:26
-   1928| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
+   <BUILTINS>/core.js:1916:26
+   1916| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
                                   ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1928:41
-   1928| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
+   <BUILTINS>/core.js:1916:41
+   1916| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
                                                  ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -359,11 +359,11 @@ References:
    weakset.js:27:31
      27| function* numbers(): Iterable<number> {
                                        ^^^^^^ [1]
-   <BUILTINS>/core.js:1928:26
-   1928| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
+   <BUILTINS>/core.js:1916:26
+   1916| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
                                   ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1928:41
-   1928| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
+   <BUILTINS>/core.js:1916:41
+   1916| declare class WeakSet<T: interface {} | $ReadOnlyArray<mixed>> extends $ReadOnlyWeakSet<T> {
                                                  ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 

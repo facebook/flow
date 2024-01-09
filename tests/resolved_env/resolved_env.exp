@@ -36,8 +36,8 @@ expression to your expected type. [underconstrained-implicit-instantiation]
                      ^^^^^^^^^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/core.js:2050:25
-   2050| declare function $await<T>(p: Promise<T> | T): T;
+   <BUILTINS>/core.js:2038:25
+   2038| declare function $await<T>(p: Promise<T> | T): T;
                                  ^ [1]
 
 
@@ -51,8 +51,8 @@ in `new Number(...))` to turn it into an object and attempt to use it as a subty
                                    ^^ [1]
 
 References:
-   <BUILTINS>/core.js:1789:11
-   1789| interface $AsyncIterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1777:11
+   1777| interface $AsyncIterable<+Yield,+Return,-Next> {
                    ^^^^^^^^^^^^^^ [2]
 
 
