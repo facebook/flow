@@ -563,8 +563,13 @@ and merge_annot ?(in_renders_arg = false) tps infer_tps file = function
     let reason = Reason.(mk_reason (RTypeof qname) loc) in
     let t = merge tps infer_tps file t in
     let targs = Option.map ~f:(List.map (merge tps infer_tps file)) targs in
-    ignore targs;
-    ConsGen.mk_typeof_annotation file.cx reason t
+    let targs =
+      if (Context.metadata file.cx).Context.typeof_with_type_arguments then
+        targs
+      else
+        None
+    in
+    ConsGen.mk_typeof_annotation file.cx reason t targs
   | Bound { ref_loc; name } ->
     let t =
       match SMap.find_opt name infer_tps with
@@ -987,7 +992,7 @@ and merge_annot ?(in_renders_arg = false) tps infer_tps file = function
       | ObjAnnotExplicitProto (loc, t) ->
         let reason = Reason.(mk_reason RPrototype loc) in
         let proto = ConsGen.obj_test_proto file.cx reason (merge tps infer_tps file t) in
-        let proto = ConsGen.mk_typeof_annotation file.cx reason proto in
+        let proto = ConsGen.mk_typeof_annotation file.cx reason proto None in
         mk_object None proto
       | ObjAnnotCallable { ts_rev } ->
         let proto = Type.FunProtoT reason in
@@ -1181,7 +1186,7 @@ and merge_object_lit ~for_export tps infer_tps file (loc, frozen, proto, props) 
     | Some (loc, t) ->
       let reason = Reason.(mk_reason RPrototype loc) in
       let proto = ConsGen.obj_test_proto file.cx reason (merge tps infer_tps file t) in
-      ConsGen.mk_typeof_annotation file.cx reason proto
+      ConsGen.mk_typeof_annotation file.cx reason proto None
   in
   let props =
     SMap.mapi (merge_obj_value_prop ~for_export tps infer_tps file) props

@@ -148,21 +148,206 @@ References:
                       ^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------- with-targs.js:2:35
+Error ------------------------------------------------------------------------------------------------ with-targs.js:9:1
 
-`typeof` annotation with type arguments is not supported yet. The type arguments will be ignored. [unsupported-syntax]
+Cannot cast `new FooClass()` to `Foo` because string [1] is incompatible with number [2] in type argument `T` [3].
+[incompatible-cast]
 
-   2| declare const FooClass: typeof Foo<string>;
-                                        ^^^^^^^^
+   with-targs.js:9:1
+   9| new FooClass() as Foo<number>; // error: string ~> number
+      ^^^^^^^^^^^^^^
+
+References:
+   with-targs.js:4:36
+   4| declare const FooClass: typeof Foo<string>;
+                                         ^^^^^^ [1]
+   with-targs.js:9:23
+   9| new FooClass() as Foo<number>; // error: string ~> number
+                            ^^^^^^ [2]
+   with-targs.js:3:11
+   3| class Foo<T> {}
+                ^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------- with-targs.js:5:31
+Error ----------------------------------------------------------------------------------------------- with-targs.js:10:1
 
-`typeof` annotation with type arguments is not supported yet. The type arguments will be ignored. [unsupported-syntax]
+Cannot cast `barF()` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
-   5| declare const barF: typeof bar<string>;
-                                    ^^^^^^^^
+   with-targs.js:10:1
+   10| barF() as number; // error: string ~> number
+       ^^^^^^
+
+References:
+   with-targs.js:7:32
+    7| declare const barF: typeof bar<string>;
+                                      ^^^^^^ [1]
+   with-targs.js:10:11
+   10| barF() as number; // error: string ~> number
+                 ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- with-targs.js:11:1
+
+Cannot cast `new FooClassStringExported()` to `FooClassExported` because string [1] is incompatible with number [2] in
+type argument `T` [3]. [incompatible-cast]
+
+   with-targs.js:11:1
+   11| new FooClassStringExported() as FooClassExported<number>; // error: string ~> number
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   with-targs-exported.js:2:70
+    2| declare export const FooClassStringExported: typeof FooClassExported<string>;
+                                                                            ^^^^^^ [1]
+   with-targs.js:11:50
+   11| new FooClassStringExported() as FooClassExported<number>; // error: string ~> number
+                                                        ^^^^^^ [2]
+   with-targs-exported.js:1:31
+    1| export class FooClassExported<T> {}
+                                     ^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- with-targs.js:12:1
+
+Cannot cast `barFExported()` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   with-targs.js:12:1
+   12| barFExported() as number; // error: string ~> number
+       ^^^^^^^^^^^^^^
+
+References:
+   with-targs-exported.js:5:47
+    5| declare export const barFExported: typeof bar<string>;
+                                                     ^^^^^^ [1]
+   with-targs.js:12:19
+   12| barFExported() as number; // error: string ~> number
+                         ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- with-targs.js:14:17
+
+Cannot instantiate `typeof barF` because function type [1] is not a polymorphic type. [incompatible-use]
+
+   14| type Invalid1 = typeof barF<string>; // error
+                       ^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- with-targs.js:15:17
+
+Cannot instantiate `typeof FooClass` because class `Foo` [1] is not a polymorphic type. [incompatible-use]
+
+   15| type Invalid2 = typeof FooClass<string>; // error
+                       ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- with-targs.js:16:17
+
+Cannot instantiate `typeof barFExported` because function type [1] is not a polymorphic type. [incompatible-use]
+
+   16| type Invalid3 = typeof barFExported<string>; // error
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- with-targs.js:17:17
+
+Cannot instantiate `typeof FooClassStringExported` because class `FooClassExported` [1] is not a polymorphic type.
+[incompatible-use]
+
+   17| type Invalid4 = typeof FooClassStringExported<string>; // error
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- with-targs.js:26:15
+
+Cannot use `Invalid5` [1] with more than 1 type argument. [extra-type-arg]
+
+   with-targs.js:26:15
+   26| emptyValue as Invalid5; // error
+                     ^^^^^^^^
+
+References:
+   with-targs.js:6:21
+    6| declare function bar<T>(): T;
+                           ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- with-targs.js:27:15
+
+Cannot use `Invalid6` [1] with more than 1 type argument. [extra-type-arg]
+
+   with-targs.js:27:15
+   27| emptyValue as Invalid6; // error
+                     ^^^^^^^^
+
+References:
+   with-targs.js:3:10
+    3| class Foo<T> {}
+                ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- with-targs.js:32:26
+
+Cannot call `barGeneric` with function bound to `cb` because number [1] is incompatible with string [2] in the return
+value. [incompatible-call]
+
+   with-targs.js:32:26
+   32| barGeneric<string>(() => 1); // error: number ~> string
+                                ^ [1]
+
+References:
+   with-targs.js:32:12
+   32| barGeneric<string>(() => 1); // error: number ~> string
+                  ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- with-targs.js:34:1
+
+Cannot cast `barGeneric(...)` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   with-targs.js:34:1
+   34| barGeneric(() => 1) as string; // error: number ~> string
+       ^^^^^^^^^^^^^^^^^^^
+
+References:
+   with-targs.js:34:18
+   34| barGeneric(() => 1) as string; // error: number ~> string
+                        ^ [1]
+   with-targs.js:34:24
+   34| barGeneric(() => 1) as string; // error: number ~> string
+                              ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- with-targs.js:36:34
+
+Cannot call `barGenericExported` with function bound to `cb` because number [1] is incompatible with string [2] in the
+return value. [incompatible-call]
+
+   with-targs.js:36:34
+   36| barGenericExported<string>(() => 1); // error: number ~> string
+                                        ^ [1]
+
+References:
+   with-targs.js:36:20
+   36| barGenericExported<string>(() => 1); // error: number ~> string
+                          ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- with-targs.js:38:1
+
+Cannot cast `barGenericExported(...)` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   with-targs.js:38:1
+   38| barGenericExported(() => 1) as string; // error: number ~> string
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   with-targs.js:38:26
+   38| barGenericExported(() => 1) as string; // error: number ~> string
+                                ^ [1]
+   with-targs.js:38:32
+   38| barGenericExported(() => 1) as string; // error: number ~> string
+                                      ^^^^^^ [2]
 
 
 
-Found 12 errors
+Found 24 errors

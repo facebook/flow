@@ -1258,7 +1258,7 @@ module ImportTypeofTKit = struct
               id;
             }
         ) ->
-      let typeof_t = mk_typeof_annotation cx reason lower_t in
+      let typeof_t = mk_typeof_annotation cx reason lower_t None in
 
       poly_type id tparams_loc typeparams (DefT (reason, TypeT (ImportTypeofKind, typeof_t)))
     | DefT (_, TypeT _)
@@ -1266,7 +1266,7 @@ module ImportTypeofTKit = struct
       add_output cx (Error_message.EImportTypeAsTypeof (reason, export_name));
       AnyT.error reason
     | _ ->
-      let typeof_t = mk_typeof_annotation cx reason l in
+      let typeof_t = mk_typeof_annotation cx reason l None in
       DefT (reason, TypeT (ImportTypeofKind, typeof_t))
 end
 

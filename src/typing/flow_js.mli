@@ -102,7 +102,7 @@ val get_builtin_module : Context.t -> ALoc.t -> string -> Type.tvar
 val mk_instance :
   Context.t -> ?type_t_kind:Type.type_t_kind -> reason -> ?use_desc:bool -> Type.t -> Type.t
 
-val mk_typeof_annotation : Context.t -> reason -> Type.t -> Type.t
+val mk_typeof_annotation : Context.t -> reason -> Type.t -> Type.t list option -> Type.t
 
 val possible_concrete_types_for_inspection : Context.t -> Reason.reason -> Type.t -> Type.t list
 

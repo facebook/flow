@@ -9995,9 +9995,15 @@ struct
     in
     recurse IMap.empty t
 
-  and mk_typeof_annotation _cx ?trace:_ reason t =
+  and mk_typeof_annotation _cx reason t targs =
     let annot_loc = loc_of_reason reason in
-    AnnotT (opt_annot_reason ~annot_loc reason, t, false)
+    let t = AnnotT (opt_annot_reason ~annot_loc reason, t, false) in
+    match targs with
+    | None -> t
+    | Some targs ->
+      let reason_tapp = mk_annot_reason (RTypeApp (desc_of_reason reason)) annot_loc in
+      let use_op = Op (TypeApplication { type_ = reason_tapp }) in
+      TypeUtil.typeapp_with_use_op ~from_value:true ~use_desc:false reason use_op t targs
 
   and get_builtin_type cx ?trace reason ?(use_desc = false) x =
     let t = get_builtin cx x reason in
@@ -10325,8 +10331,6 @@ let resolve_id cx id t =
 
 let mk_instance cx ?type_t_kind instance_reason ?use_desc c =
   mk_instance ?type_t_kind cx instance_reason ?use_desc c
-
-let mk_typeof_annotation cx reason t = mk_typeof_annotation cx reason t
 
 let get_builtin_type cx reason ?use_desc x = get_builtin_type cx reason ?use_desc x
 

@@ -17,7 +17,7 @@ module Flow = Flow_js
 module T = Ast.Type
 
 module type C = sig
-  val mk_typeof_annotation : Context.t -> Reason.t -> Type.t -> Type.t
+  val mk_typeof_annotation : Context.t -> Reason.t -> Type.t -> Type.t list option -> Type.t
 
   val mk_instance :
     Context.t -> ?type_t_kind:Type.type_t_kind -> reason -> ?use_desc:bool -> Type.t -> Type.t
@@ -433,12 +433,18 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         match targs with
         | None -> (None, None)
         | Some (l, { TypeArgs.arguments; comments }) ->
-          Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (l, TypeOfTypeArguments));
           let (targs, targs_ast) = convert_list cx tparams_map infer_tparams_map arguments in
-          (Some targs, Some (l, { TypeArgs.arguments = targs_ast; comments }))
+          let targs =
+            if (Context.metadata cx).Context.typeof_with_type_arguments then
+              Some targs
+            else (
+              Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (l, TypeOfTypeArguments));
+              None
+            )
+          in
+          (targs, Some (l, { TypeArgs.arguments = targs_ast; comments }))
       in
-      ignore targs;
-      ( (loc, ConsGen.mk_typeof_annotation cx reason valtype),
+      ( (loc, ConsGen.mk_typeof_annotation cx reason valtype targs),
         Typeof { Typeof.argument = qualification_ast; targs = targs_ast; comments }
       )
     | (loc, Keyof keyof) ->
@@ -1966,7 +1972,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
             let reason = mk_reason RPrototype (fst value) in
             let proto = ConsGen.obj_test_proto cx reason t in
             let acc =
-              match Acc.add_proto (ConsGen.mk_typeof_annotation cx reason proto) acc with
+              match Acc.add_proto (ConsGen.mk_typeof_annotation cx reason proto None) acc with
               | Ok acc -> acc
               | Error err ->
                 Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, err));
