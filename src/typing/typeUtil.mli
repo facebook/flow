@@ -83,11 +83,12 @@ val poly_type_of_tparam_list : Type.Poly.id -> ALoc.t -> Type.typeparam list -> 
 
 val poly_type_of_tparams : Type.Poly.id -> Type.typeparams -> Type.t -> Type.t
 
-val typeapp_with_use_op : use_desc:bool -> reason -> Type.use_op -> Type.t -> Type.t list -> Type.t
+val typeapp_with_use_op :
+  from_value:bool -> use_desc:bool -> reason -> Type.use_op -> Type.t -> Type.t list -> Type.t
 
-val typeapp : use_desc:bool -> reason -> Type.t -> Type.t list -> Type.t
+val typeapp : from_value:bool -> use_desc:bool -> reason -> Type.t -> Type.t list -> Type.t
 
-val typeapp_annot : use_desc:bool -> ALoc.t -> Type.t -> Type.t list -> Type.t
+val typeapp_annot : from_value:bool -> use_desc:bool -> ALoc.t -> Type.t -> Type.t list -> Type.t
 
 val implicit_typeapp : ?annot_loc:ALoc.t -> Type.t -> Type.t list -> Type.t
 

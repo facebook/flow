@@ -136,7 +136,7 @@ and reason_of_use_t = function
   | ExtractReactRefT (reason, _) -> reason
   | FilterMaybeT (_, t) -> reason_of_t t
   | DeepReadOnlyT ((r, _), _, _) -> r
-  | ConcretizeTypeAppsT (_, _, (_, _, _, reason), _) -> reason
+  | ConcretizeTypeAppsT (_, _, (_, _, _, _, reason), _) -> reason
   | CondT (reason, _, _, _) -> reason
   | ReactPropsToOut (reason, _)
   | ReactInToProps (reason, _)
@@ -204,8 +204,8 @@ let rec mod_reason_of_t f = function
   | OpaqueT (reason, opaquetype) -> OpaqueT (f reason, opaquetype)
   | ThisClassT (reason, t, is_this, this_name) -> ThisClassT (f reason, t, is_this, this_name)
   | ThisTypeAppT (reason, t1, t2, t3) -> ThisTypeAppT (f reason, t1, t2, t3)
-  | TypeAppT { reason; use_op; type_; targs; use_desc } ->
-    TypeAppT { reason = f reason; use_op; type_; targs; use_desc }
+  | TypeAppT { reason; use_op; type_; targs; from_value; use_desc } ->
+    TypeAppT { reason = f reason; use_op; type_; targs; from_value; use_desc }
 
 and mod_reason_of_defer_use_t f = function
   | TypeDestructorT (use_op, reason, s) -> TypeDestructorT (use_op, f reason, s)
@@ -388,8 +388,8 @@ and mod_reason_of_use_t f = function
   | FilterOptionalT (use_op, t) -> FilterOptionalT (use_op, mod_reason_of_t f t)
   | FilterMaybeT (use_op, t) -> FilterMaybeT (use_op, mod_reason_of_t f t)
   | DeepReadOnlyT ((r, i), rr, dro) -> DeepReadOnlyT ((f r, i), rr, dro)
-  | ConcretizeTypeAppsT (use_op, t1, (t2, ts2, op2, r2), targs) ->
-    ConcretizeTypeAppsT (use_op, t1, (t2, ts2, op2, f r2), targs)
+  | ConcretizeTypeAppsT (use_op, t1, (t2, ts2, b, op2, r2), targs) ->
+    ConcretizeTypeAppsT (use_op, t1, (t2, ts2, b, op2, f r2), targs)
   | CondT (reason, then_t, else_t, tout) -> CondT (f reason, then_t, else_t, tout)
   | ReactPropsToOut (reason, t) -> ReactPropsToOut (f reason, t)
   | ReactInToProps (reason, t) -> ReactInToProps (f reason, t)
@@ -475,8 +475,8 @@ let rec util_use_op_of_use_t :
     util use_op (fun use_op -> ImplicitVoidReturnT { contents with use_op })
   | FilterOptionalT (op, t) -> util op (fun op -> FilterOptionalT (op, t))
   | FilterMaybeT (op, t) -> util op (fun op -> FilterMaybeT (op, t))
-  | ConcretizeTypeAppsT (u, (ts1, op, r1), x2, b) ->
-    util op (fun op -> ConcretizeTypeAppsT (u, (ts1, op, r1), x2, b))
+  | ConcretizeTypeAppsT (u, (ts1, b1, op, r1), x2, b2) ->
+    util op (fun op -> ConcretizeTypeAppsT (u, (ts1, b1, op, r1), x2, b2))
   | ArrRestT (op, r, i, t) -> util op (fun op -> ArrRestT (op, r, i, t))
   | HasOwnPropT (op, r, t) -> util op (fun op -> HasOwnPropT (op, r, t))
   | GetKeysT (r, u2) -> nested_util u2 (fun u2 -> GetKeysT (r, u2))
@@ -908,19 +908,19 @@ let poly_type_of_tparams id tparams t =
   | None -> t
   | Some (tparams_loc, tparams_nel) -> poly_type id tparams_loc tparams_nel t
 
-let typeapp_with_use_op ~use_desc reason use_op t targs =
+let typeapp_with_use_op ~from_value ~use_desc reason use_op t targs =
   let reason = replace_desc_reason (RTypeApp (desc_of_t t)) reason in
-  TypeAppT { reason; use_op; type_ = t; targs; use_desc }
+  TypeAppT { reason; use_op; type_ = t; targs; from_value; use_desc }
 
-let typeapp ~use_desc reason t targs =
+let typeapp ~from_value ~use_desc reason t targs =
   let use_op = Op (TypeApplication { type_ = reason }) in
-  typeapp_with_use_op ~use_desc reason use_op t targs
+  typeapp_with_use_op ~from_value ~use_desc reason use_op t targs
 
-let typeapp_annot ~use_desc loc t targs =
+let typeapp_annot ~from_value ~use_desc loc t targs =
   let desc = RTypeApp (desc_of_t t) in
   let reason = mk_annot_reason desc loc in
   let use_op = Op (TypeApplication { type_ = reason }) in
-  TypeAppT { reason; use_op; type_ = t; targs; use_desc }
+  TypeAppT { reason; use_op; type_ = t; targs; from_value; use_desc }
 
 (* An implicit typeapp is not a product of some source level type application,
  * but merely a tool for some other functionality, e.g.
@@ -933,7 +933,7 @@ let implicit_typeapp ?annot_loc t targs =
     | None -> reason
   in
   let use_op = Op (TypeApplication { type_ = reason }) in
-  TypeAppT { reason; use_op; type_ = t; targs; use_desc = false }
+  TypeAppT { reason; use_op; type_ = t; targs; from_value = false; use_desc = false }
 
 let this_typeapp ?annot_loc t this targs =
   let reason =

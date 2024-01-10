@@ -91,6 +91,7 @@ module rec TypeTerm : sig
         use_op: use_op;
         type_: t;
         targs: t list;
+        from_value: bool;
         use_desc: bool;
       }
     (* exact *)
@@ -705,12 +706,12 @@ module rec TypeTerm : sig
     | ConcretizeTypeAppsT of
         (* The use_op from our original TypeAppT ~> TypeAppT *)
         use_op
-        * (* The type args and reason for the TypeAppT that is currently the
+        * (* The type args, from_value, and reason for the TypeAppT that is currently the
            * lower bound *)
-        (t list * use_op * reason)
-        * (* The polymorphic type, its type args, and reason for the TypeAppT that
-           * is currently the upper bound. *)
-        (t * t list * use_op * reason)
+        (t list * bool * use_op * reason)
+        * (* The polymorphic type, its type args, from_value from TypeApp,
+           * and reason for the TypeAppT that is currently the upper bound. *)
+        (t * t list * bool * use_op * reason)
         * (* A boolean which answers the question: Is the TypeAppT that is
            * currently our lower bound in fact our upper bound in the original
            * TypeAppT ~> TypeAppT? If the answer is yes then we need to flip our

@@ -739,7 +739,7 @@ let lookup_builtin_opt cx x =
 
 let lookup_builtin_typeapp cx reason x targs =
   let t = lookup_builtin_strict cx x reason in
-  typeapp ~use_desc:false reason t targs
+  typeapp ~from_value:false ~use_desc:false reason t targs
 
 let builtin_promise_class_id cx =
   let promise_t = lookup_builtin_opt cx (OrdinaryName "Promise") in
@@ -2414,7 +2414,7 @@ let rec wraps_mapped_type cx = function
       wraps_mapped_type cx t
     | _ -> false)
   | DefT (_, PolyT { t_out; _ }) -> wraps_mapped_type cx t_out
-  | TypeAppT { reason = _; use_op = _; type_; targs = _; use_desc = _ } ->
+  | TypeAppT { reason = _; use_op = _; type_; targs = _; from_value = _; use_desc = _ } ->
     wraps_mapped_type cx type_
   | _ -> false
 

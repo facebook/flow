@@ -82,7 +82,7 @@ class ['a] t =
            information should override this to be more specific. *)
         let acc = self#opt (self#list (self#type_ cx pole_TODO)) acc ts_opt in
         acc
-      | TypeAppT { reason = _; use_op = _; type_; targs; use_desc = _ } ->
+      | TypeAppT { reason = _; use_op = _; type_; targs; from_value = _; use_desc = _ } ->
         let acc = self#type_ cx P.Positive acc type_ in
         (* If we knew what `t` resolved to, we could determine the polarities for
            `ts`, but in general `t` might be unresolved. Subclasses which have more

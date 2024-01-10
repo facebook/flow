@@ -88,7 +88,7 @@ end = struct
 
       method! type_ cx pole acc t =
         match t with
-        | TypeAppT { reason = _; use_op = _; type_; targs = _; use_desc = _ } ->
+        | TypeAppT { reason = _; use_op = _; type_; targs = _; from_value = _; use_desc = _ } ->
           super#type_ cx pole (RootSet.add (Type type_) acc) t
         | DefT (r, ArrT a) -> super#type_ cx pole (RootSet.add (self#arrtype r a) acc) t
         | OpenT _ ->

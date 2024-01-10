@@ -465,7 +465,7 @@ let rec merge ?(in_renders_arg = false) tps infer_tps file = function
     merge_tyref file f name
   | Pack.TyRefApp { loc; name; targs } ->
     let targs = List.map (merge tps infer_tps file) targs in
-    let f t _ _ = TypeUtil.typeapp_annot ~use_desc:false loc t targs in
+    let f t _ _ = TypeUtil.typeapp_annot ~from_value:false ~use_desc:false loc t targs in
     merge_tyref file f name
   | Pack.AsyncVoidReturn loc -> async_void_return file loc
   | Pack.Pattern i -> Lazy.force (Patterns.get file.patterns i)

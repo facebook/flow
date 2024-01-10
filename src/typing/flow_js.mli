@@ -43,6 +43,7 @@ val mk_typeapp_instance_annot :
   use_op:Type.use_op ->
   reason_op:Reason.reason ->
   reason_tapp:Reason.reason ->
+  from_value:bool ->
   ?cache:bool ->
   Type.t ->
   Type.t list ->

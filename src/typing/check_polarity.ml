@@ -158,7 +158,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
        * not contain any type parameters in scope -- only concrete types. *)
       ()
     | ThisTypeAppT (_, type_, _, Some targs)
-    | TypeAppT { reason = _; use_op = _; type_; targs; use_desc = _ } ->
+    | TypeAppT { reason = _; use_op = _; type_; targs; from_value = _; use_desc = _ } ->
       (* Type arguments in a typeapp might contain a GenericT, but the root type
        * which defines the type parameters is not necessarily resolved at this
        * point. We need to know the polarity of the type parameters in order to

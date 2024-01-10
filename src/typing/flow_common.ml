@@ -59,6 +59,7 @@ module type BASE = sig
     use_op:Type.use_op ->
     reason_op:Reason.reason ->
     reason_tapp:Reason.reason ->
+    from_value:bool ->
     ?cache:bool ->
     Type.t ->
     Type.t list ->
@@ -70,6 +71,7 @@ module type BASE = sig
     use_op:Type.use_op ->
     reason_op:Reason.reason ->
     reason_tapp:Reason.reason ->
+    from_value:bool ->
     Type.t ->
     Type.t list ->
     Type.t

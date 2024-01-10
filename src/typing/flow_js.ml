@@ -1221,10 +1221,10 @@ struct
           instantiate_this_class cx trace ~reason_op ~reason_tapp c ts this (Upper u)
         | (TypeAppT _, ReposLowerT (reason, use_desc, u)) ->
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
-        | ( TypeAppT { reason = reason_tapp; use_op; type_; targs; use_desc = _ },
+        | ( TypeAppT { reason = reason_tapp; use_op; type_; targs; from_value; use_desc = _ },
             MethodT (_, _, _, _, _)
           )
-        | ( TypeAppT { reason = reason_tapp; use_op; type_; targs; use_desc = _ },
+        | ( TypeAppT { reason = reason_tapp; use_op; type_; targs; from_value; use_desc = _ },
             PrivateMethodT (_, _, _, _, _, _, _)
           ) ->
           let reason_op = reason_of_use_t u in
@@ -1235,6 +1235,7 @@ struct
               ~use_op
               ~reason_op
               ~reason_tapp
+              ~from_value
               ~cache:true
               type_
               targs
@@ -1251,12 +1252,12 @@ struct
          * If the upper bound's c is not a PolyT then we will fall down to an
          * incompatible use error. *)
         | ( (DefT (_, PolyT _) as c2),
-            ConcretizeTypeAppsT (use_op, (ts2, op2, r2), (c1, ts1, op1, r1), true)
+            ConcretizeTypeAppsT (use_op, (ts2, fv2, op2, r2), (c1, ts1, fv1, op1, r1), true)
           ) ->
           rec_flow
             cx
             trace
-            (c1, ConcretizeTypeAppsT (use_op, (ts1, op1, r1), (c2, ts2, op2, r2), false))
+            (c1, ConcretizeTypeAppsT (use_op, (ts1, fv1, op1, r1), (c2, ts2, fv2, op2, r2), false))
         (* When we have concretized the c for our lower bound TypeAppT then we can
          * finally run our TypeAppT ~> TypeAppT logic. If we have referentially the
          * same PolyT for each TypeAppT then we want to check the type arguments
@@ -1271,9 +1272,12 @@ struct
          * made it here if it was not given the logic of our earlier case. *)
         | ( DefT (_, PolyT { tparams_loc; tparams; id = id1; t_out; _ }),
             ConcretizeTypeAppsT
-              (use_op, (ts1, _, r1), (DefT (_, PolyT { id = id2; _ }), ts2, _, r2), false)
+              (use_op, (ts1, fv1, _, r1), (DefT (_, PolyT { id = id2; _ }), ts2, fv2, _, r2), false)
           )
-          when id1 = id2 && List.length ts1 = List.length ts2 && not (wraps_mapped_type cx t_out) ->
+          when id1 = id2
+               && List.length ts1 = List.length ts2
+               && (not (wraps_mapped_type cx t_out))
+               && fv1 = fv2 ->
           let targs = List.map2 (fun t1 t2 -> (t1, t2)) ts1 ts2 in
           type_app_variance_check cx trace use_op r1 r2 targs tparams_loc tparams
         (* This is the case which implements the expansion for our
@@ -1281,9 +1285,10 @@ struct
         | ( DefT (_, PolyT { tparams_loc = tparams_loc1; tparams = xs1; t_out = t1; id = id1 }),
             ConcretizeTypeAppsT
               ( use_op,
-                (ts1, op1, r1),
+                (ts1, fv1, op1, r1),
                 ( DefT (_, PolyT { tparams_loc = tparams_loc2; tparams = xs2; t_out = t2; id = id2 }),
                   ts2,
+                  fv2,
                   op2,
                   r2
                 ),
@@ -1302,6 +1307,7 @@ struct
               ~use_op:op2
               ~reason_op:r2
               ~reason_tapp:r1
+              ~from_value:fv1
               id1
               tparams_loc1
               xs1
@@ -1315,6 +1321,7 @@ struct
               ~use_op:op1
               ~reason_op:r1
               ~reason_tapp:r2
+              ~from_value:fv2
               id2
               tparams_loc2
               xs2
@@ -1322,11 +1329,19 @@ struct
               ts2
           in
           rec_flow cx trace (t1, UseT (use_op, t2))
-        | (TypeAppT { reason = reason_tapp; use_op; type_; targs; use_desc = _ }, _) ->
+        | (TypeAppT { reason = reason_tapp; use_op; type_; targs; from_value; use_desc = _ }, _) ->
           if TypeAppExpansion.push_unless_loop cx (type_, targs) then (
             let reason_op = reason_of_use_t u in
             let t =
-              mk_typeapp_instance_annot cx ~trace ~use_op ~reason_op ~reason_tapp type_ targs
+              mk_typeapp_instance_annot
+                cx
+                ~trace
+                ~use_op
+                ~reason_op
+                ~reason_tapp
+                ~from_value
+                type_
+                targs
             in
             rec_flow cx trace (t, u);
             TypeAppExpansion.pop cx
@@ -7064,7 +7079,8 @@ struct
          which will be fully resolved using the AnnotT case above. *)
       | GenericT
           {
-            bound = TypeAppT { reason = _; use_op = use_op_tapp; type_; targs; use_desc = _ };
+            bound =
+              TypeAppT { reason = _; use_op = use_op_tapp; type_; targs; from_value; use_desc = _ };
             reason = reason_tapp;
             id;
             name;
@@ -7077,6 +7093,7 @@ struct
             ~use_op:use_op_tapp
             ~reason_op:reason
             ~reason_tapp
+            ~from_value
             type_
             targs
         in
@@ -7086,7 +7103,8 @@ struct
           ( Cache.Eval.id cx (GenericT { bound = t; name; id; reason = reason_tapp }) destructor,
             UseT (use_op, OpenT tout)
           )
-      | TypeAppT { reason = reason_tapp; use_op = use_op_tapp; type_; targs; use_desc = _ } ->
+      | TypeAppT
+          { reason = reason_tapp; use_op = use_op_tapp; type_; targs; from_value; use_desc = _ } ->
         let destructor = TypeDestructorT (use_op, reason, d) in
         let t =
           mk_typeapp_instance_annot
@@ -7095,6 +7113,7 @@ struct
             ~use_op:use_op_tapp
             ~reason_op:reason
             ~reason_tapp
+            ~from_value
             type_
             targs
         in
@@ -8842,10 +8861,12 @@ struct
             funtype1.params
             funtype2.params;
           rec_unify cx trace ~use_op funtype1.return_t funtype2.return_t
-        | ( TypeAppT { reason = _; use_op = _; type_ = c1; targs = ts1; use_desc = _ },
-            TypeAppT { reason = _; use_op = _; type_ = c2; targs = ts2; use_desc = _ }
+        | ( TypeAppT
+              { reason = _; use_op = _; type_ = c1; targs = ts1; from_value = fv1; use_desc = _ },
+            TypeAppT
+              { reason = _; use_op = _; type_ = c2; targs = ts2; from_value = fv2; use_desc = _ }
           )
-          when c1 = c2 && List.length ts1 = List.length ts2 ->
+          when c1 = c2 && List.length ts1 = List.length ts2 && fv1 = fv2 ->
           List.iter2 (rec_unify cx trace ~use_op) ts1 ts2
         | (AnnotT (_, OpenT (_, id1), _), AnnotT (_, OpenT (_, id2), _)) -> begin
           (* It is tempting to unify the tvars here, but that would be problematic. These tvars should
@@ -9755,22 +9776,33 @@ struct
 
   and get_builtin_typeapp cx reason ?(use_desc = false) x targs =
     let t = get_builtin cx x reason in
-    typeapp ~use_desc reason t targs
+    typeapp ~from_value:false ~use_desc reason t targs
 
   (* Specialize a polymorphic class, make an instance of the specialized class. *)
-  and mk_typeapp_instance_annot cx ?trace ~use_op ~reason_op ~reason_tapp ?(cache = false) c ts =
+  and mk_typeapp_instance_annot
+      cx ?trace ~use_op ~reason_op ~reason_tapp ~from_value ?(cache = false) c ts =
     let t = Tvar.mk cx reason_tapp in
     flow_opt cx ?trace (c, SpecializeT (use_op, reason_op, reason_tapp, cache, Some ts, t));
-    mk_instance_raw cx ?trace reason_tapp ~reason_type:(reason_of_t c) t
+    if from_value then
+      reposition_reason cx ?trace reason_tapp ~use_desc:false t
+    else
+      mk_instance_raw cx ?trace reason_tapp ~reason_type:(reason_of_t c) t
 
-  and mk_typeapp_instance cx ?trace ~use_op ~reason_op ~reason_tapp c ts =
+  and mk_typeapp_instance cx ?trace ~use_op ~reason_op ~reason_tapp ~from_value c ts =
     let t = Tvar.mk cx reason_tapp in
     flow_opt cx ?trace (c, SpecializeT (use_op, reason_op, reason_tapp, false, Some ts, t));
-    mk_instance_source cx ?trace reason_tapp ~reason_type:(reason_of_t c) t
+    if from_value then
+      reposition_reason cx ?trace reason_tapp ~use_desc:false t
+    else
+      mk_instance_source cx ?trace reason_tapp ~reason_type:(reason_of_t c) t
 
-  and mk_typeapp_instance_of_poly cx trace ~use_op ~reason_op ~reason_tapp id tparams_loc xs t ts =
+  and mk_typeapp_instance_of_poly
+      cx trace ~use_op ~reason_op ~reason_tapp ~from_value id tparams_loc xs t ts =
     let t = mk_typeapp_of_poly cx trace ~use_op ~reason_op ~reason_tapp id tparams_loc xs t ts in
-    mk_instance cx ~trace reason_tapp t
+    if from_value then
+      reposition_reason cx ~trace reason_tapp ~use_desc:false t
+    else
+      mk_instance cx ~trace reason_tapp t
 
   and mk_instance cx ?type_t_kind ?trace instance_reason ?use_desc c =
     mk_instance_raw cx ?type_t_kind ?trace instance_reason ?use_desc ~reason_type:instance_reason c
@@ -10304,8 +10336,8 @@ let filter_optional cx reason opt_t = filter_optional cx reason opt_t
 
 let reposition cx loc ?desc ?annot_loc t = reposition cx loc ?desc ?annot_loc t
 
-let mk_typeapp_instance_annot cx ~use_op ~reason_op ~reason_tapp ?cache c ts =
-  mk_typeapp_instance_annot cx ~use_op ~reason_op ~reason_tapp ?cache c ts
+let mk_typeapp_instance_annot cx ~use_op ~reason_op ~reason_tapp ~from_value ?cache c ts =
+  mk_typeapp_instance_annot cx ~use_op ~reason_op ~reason_tapp ~from_value ?cache c ts
 
 let mk_type_destructor cx use_op reason t d id =
   mk_type_destructor cx ~trace:Trace.dummy_trace use_op reason t d id

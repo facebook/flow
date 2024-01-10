@@ -20,7 +20,7 @@ module Normalizer = Ty_normalizer.Make (struct
 
   let keys _ ~should_evaluate:_ ~cont:_ ~default _ _ = default ()
 
-  let typeapp _ ~cont:_ ~type_ ~app _ t targs =
+  let typeapp _ ~cont:_ ~type_ ~app ~from_value:_ _ t targs =
     let c = type_ t in
     let targs = Base.List.map ~f:type_ targs in
     app c targs

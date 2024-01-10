@@ -36,13 +36,14 @@ module Normalizer = Ty_normalizer.Make (struct
     else
       default ()
 
-  let typeapp cx ~cont ~type_:_ ~app:_ reason t targs =
+  let typeapp cx ~cont ~type_:_ ~app:_ ~from_value reason t targs =
     let t =
       Flow_js.mk_typeapp_instance_annot
         cx
         ~use_op:Type.unknown_use
         ~reason_op:reason
         ~reason_tapp:reason
+        ~from_value
         t
         targs
     in
@@ -58,7 +59,7 @@ module Normalizer = Ty_normalizer.Make (struct
 
   let builtin_typeapp cx ~cont ~type_:_ ~app:_ reason name targs =
     let t = Flow_js.get_builtin cx (OrdinaryName name) reason in
-    let t = TypeUtil.typeapp ~use_desc:false reason t targs in
+    let t = TypeUtil.typeapp ~from_value:false ~use_desc:false reason t targs in
     cont t
 end)
 

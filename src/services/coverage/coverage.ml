@@ -139,7 +139,7 @@ let visitor =
       | AnnotT (_, t, _)
       | ExactT (_, t)
       | DefT (_, PolyT { t_out = t; _ })
-      | TypeAppT { reason = _; use_op = _; type_ = t; targs = _; use_desc = _ }
+      | TypeAppT { reason = _; use_op = _; type_ = t; targs = _; from_value = _; use_desc = _ }
       | DefT (_, TypeT (_, t))
       | GenericT { bound = t; _ }
       | ThisClassT (_, t, _, _)

@@ -169,6 +169,7 @@ module type INPUT = sig
     cont:(Type.t -> 'a) ->
     type_:(Type.t -> 'a) ->
     app:('a -> 'a list -> 'a) ->
+    from_value:bool ->
     Reason.t ->
     Type.t ->
     Type.t list ->
@@ -804,7 +805,7 @@ module Make (I : INPUT) : S = struct
       | UnionT (_, rep) -> app_union ~from_bounds:false ~f:(type__ ~env ?id) rep
       | IntersectionT (_, rep) -> app_intersection ~f:(type__ ~env ?id) rep
       | DefT (_, PolyT { tparams = ps; t_out = t; _ }) -> poly_ty ~env t ps
-      | TypeAppT { reason; use_op = _; type_; targs; use_desc = _ } ->
+      | TypeAppT { reason; use_op = _; type_; targs; from_value = _; use_desc = _ } ->
         (match (desc_of_reason reason, targs) with
         | ( RTypeApp (RReactElement { name_opt = Some name; from_component_syntax = true }),
             component :: _
@@ -1362,7 +1363,11 @@ module Make (I : INPUT) : S = struct
             ) ->
           let symbol = Reason_utils.component_symbol env name r in
           mk_generic ~env symbol Ty.ComponentKind tparams targs
-        | DefT (_, ClassT (TypeAppT { reason = _; use_op = _; type_; targs = _; use_desc = _ })) ->
+        | DefT
+            ( _,
+              ClassT
+                (TypeAppT { reason = _; use_op = _; type_; targs = _; from_value = _; use_desc = _ })
+            ) ->
           type_app ~env type_ targs
         | _ ->
           let msg = "PolyT:" ^ Type.string_of_ctor t in
@@ -1381,6 +1386,7 @@ module Make (I : INPUT) : S = struct
               ~cont:(type__ ~env)
               ~type_:(type__ ~env)
               ~app:app_on_generic
+              ~from_value:false
               reason
               t
               targs
@@ -2079,7 +2085,11 @@ module Make (I : INPUT) : S = struct
            The initial abstraction is wrapper within an abstraction and a type application.
            The current case unwraps the abstraction and application to reveal the
            initial imported type. *)
-        | DefT (_, ClassT (TypeAppT { reason = _; use_op = _; type_; targs = _; use_desc = _ })) ->
+        | DefT
+            ( _,
+              ClassT
+                (TypeAppT { reason = _; use_op = _; type_; targs = _; from_value = _; use_desc = _ })
+            ) ->
           toplevel ~env type_
         | DefT (reason, ReactAbstractComponentT { component_kind = Nominal (_, name); _ }) ->
           component_decl ~env (Some tparams) name reason
@@ -2495,10 +2505,10 @@ module Make (I : INPUT) : S = struct
       | UnionT (_, rep) ->
         app_union ~from_bounds:false ~f:(type__ ~env ?id ~inherited ~source ~imode) rep
       | DefT (_, FunT (static, _)) -> type__ ~env ~inherited ~source ~imode static
-      | TypeAppT { reason; use_op = _; type_ = c; targs; use_desc = _ } ->
+      | TypeAppT { reason; use_op = _; type_ = c; targs; from_value; use_desc = _ } ->
         let cont = type__ ~env ~inherited ~source ~imode in
         let type_ = convert_t ~env in
-        I.typeapp (Env.get_cx env) ~cont ~type_ ~app:app_on_generic reason c targs
+        I.typeapp (Env.get_cx env) ~cont ~type_ ~app:app_on_generic ~from_value reason c targs
       | DefT (_, TypeT (_, t)) -> type__ ~env ~inherited ~source ~imode t
       | OptionalT { type_ = t; _ } -> optional_t ~env ?id ~cont:(type__ ~inherited ~source ~imode) t
       | EvalT (t, d, id') ->
@@ -2566,12 +2576,13 @@ module Make (I : INPUT) : S = struct
       | AnnotT (_, t, _) -> type__ ~env ?id t
       | UnionT (_, rep) -> app_union ~from_bounds:false ~f:(type__ ~env ?id) rep
       | IntersectionT (_, rep) -> app_intersection ~f:(type__ ~env ?id) rep
-      | TypeAppT { reason; use_op = _; type_ = t; targs; use_desc = _ } ->
+      | TypeAppT { reason; use_op = _; type_ = t; targs; from_value; use_desc = _ } ->
         I.typeapp
           (Env.get_cx env)
           ~cont:(type__ ~env)
           ~type_:(type__ ~env)
           ~app:app_on_generic
+          ~from_value
           reason
           t
           targs

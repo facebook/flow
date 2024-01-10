@@ -625,20 +625,24 @@ module Make (Flow : INPUT) : OUTPUT = struct
      * The next step happens back in flow_js.ml, at the cases for a
      * ConcretizeTypeAppsT use type.
      *)
-    | ( TypeAppT { reason = r1; use_op = op1; type_ = c1; targs = ts1; use_desc = _ },
-        TypeAppT { reason = r2; use_op = op2; type_ = c2; targs = ts2; use_desc = _ }
+    | ( TypeAppT
+          { reason = r1; use_op = op1; type_ = c1; targs = ts1; from_value = fv1; use_desc = _ },
+        TypeAppT
+          { reason = r2; use_op = op2; type_ = c2; targs = ts2; from_value = fv2; use_desc = _ }
       ) ->
       if TypeAppExpansion.push_unless_loop cx (c1, ts1) then (
         if TypeAppExpansion.push_unless_loop cx (c2, ts2) then (
           rec_flow
             cx
             trace
-            (c2, ConcretizeTypeAppsT (use_op, (ts2, op2, r2), (c1, ts1, op1, r1), true));
+            (c2, ConcretizeTypeAppsT (use_op, (ts2, fv2, op2, r2), (c1, ts1, fv1, op1, r1), true));
           TypeAppExpansion.pop cx
         );
         TypeAppExpansion.pop cx
       )
-    | (TypeAppT { reason = reason_tapp; use_op = use_op_tapp; type_; targs; use_desc }, _) ->
+    | ( TypeAppT { reason = reason_tapp; use_op = use_op_tapp; type_; targs; from_value; use_desc },
+        _
+      ) ->
       if TypeAppExpansion.push_unless_loop cx (type_, targs) then (
         let reason_op = reason_of_t u in
         let t =
@@ -647,16 +651,35 @@ module Make (Flow : INPUT) : OUTPUT = struct
             cx
             reason_tapp
             ~use_desc
-            (mk_typeapp_instance cx ~trace ~use_op:use_op_tapp ~reason_op ~reason_tapp type_ targs)
+            (mk_typeapp_instance
+               cx
+               ~trace
+               ~use_op:use_op_tapp
+               ~reason_op
+               ~reason_tapp
+               ~from_value
+               type_
+               targs
+            )
         in
         rec_flow_t cx trace ~use_op (t, u);
         TypeAppExpansion.pop cx
       )
-    | (_, TypeAppT { reason = reason_tapp; use_op = use_op_tapp; type_; targs; use_desc }) ->
+    | ( _,
+        TypeAppT { reason = reason_tapp; use_op = use_op_tapp; type_; targs; from_value; use_desc }
+      ) ->
       if TypeAppExpansion.push_unless_loop cx (type_, targs) then (
         let reason_op = reason_of_t l in
         let t =
-          mk_typeapp_instance cx ~trace ~use_op:use_op_tapp ~reason_op ~reason_tapp type_ targs
+          mk_typeapp_instance
+            cx
+            ~trace
+            ~use_op:use_op_tapp
+            ~reason_op
+            ~reason_tapp
+            ~from_value
+            type_
+            targs
         in
         (* We do the slingshot trick here so that we flow l to the results of making the typeapp
          * instead of adding another lower bound to t. We can't use an Annot here, which would do

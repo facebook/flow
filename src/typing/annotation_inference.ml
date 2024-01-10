@@ -70,7 +70,7 @@ let get_fully_resolved_type cx id =
 
 let get_builtin_typeapp cx reason x targs =
   let t = Flow_js_utils.lookup_builtin_strict cx x reason in
-  TypeUtil.typeapp ~use_desc:false reason t targs
+  TypeUtil.typeapp ~from_value:false ~use_desc:false reason t targs
 
 module type S = sig
   val mk_typeof_annotation : Context.t -> Reason.t -> Type.t -> Type.t
@@ -517,12 +517,22 @@ module rec ConsGen : S = struct
       let tc = specialize_class cx c reason_op reason_tapp ts in
       let t = this_specialize cx reason_tapp this tc in
       elab_t cx t op
-    | ( TypeAppT { reason = reason_tapp; use_op = typeapp_use_op; type_; targs; use_desc = _ },
+    | ( TypeAppT
+          { reason = reason_tapp; use_op = typeapp_use_op; type_; targs; from_value; use_desc = _ },
         Annot_UseT_TypeT _
       ) ->
       (* NOTE omitting TypeAppExpansion.push_unless_loop check. *)
       let reason_op = Type.AConstraint.reason_of_op op in
-      let t = mk_typeapp_instance cx ~use_op:typeapp_use_op ~reason_op ~reason_tapp type_ targs in
+      let t =
+        mk_typeapp_instance
+          cx
+          ~use_op:typeapp_use_op
+          ~reason_op
+          ~reason_tapp
+          ~from_value
+          type_
+          targs
+      in
       elab_t cx t op
     | ( DefT
           ( reason_tapp,
@@ -666,10 +676,22 @@ module rec ConsGen : S = struct
       let tc = specialize_class cx c reason_op reason_tapp ts in
       let t = this_specialize cx reason_tapp this tc in
       elab_t cx t op
-    | (TypeAppT { reason = reason_tapp; use_op = typeapp_use_op; type_; targs; use_desc = _ }, _) ->
+    | ( TypeAppT
+          { reason = reason_tapp; use_op = typeapp_use_op; type_; targs; from_value; use_desc = _ },
+        _
+      ) ->
       (* NOTE omitting TypeAppExpansion.push_unless_loop check. *)
       let reason_op = Type.AConstraint.reason_of_op op in
-      let t = mk_typeapp_instance cx ~use_op:typeapp_use_op ~reason_op ~reason_tapp type_ targs in
+      let t =
+        mk_typeapp_instance
+          cx
+          ~use_op:typeapp_use_op
+          ~reason_op
+          ~reason_tapp
+          ~from_value
+          type_
+          targs
+      in
       elab_t cx t op
     (****************)
     (* Opaque types *)
@@ -1194,9 +1216,12 @@ module rec ConsGen : S = struct
     let source = elab_t cx c (Annot_UseT_TypeT (reason_type, type_t_kind)) in
     AnnotT (instance_reason, source, use_desc)
 
-  and mk_typeapp_instance cx ~use_op ~reason_op ~reason_tapp c ts =
+  and mk_typeapp_instance cx ~use_op ~reason_op ~reason_tapp ~from_value c ts =
     let t = specialize cx c use_op reason_op reason_tapp (Some ts) in
-    mk_instance_raw cx reason_tapp ~reason_type:(reason_of_t c) t
+    if from_value then
+      mod_reason_of_t (fun _ -> reason_tapp) t
+    else
+      mk_instance_raw cx reason_tapp ~reason_type:(reason_of_t c) t
 
   and get_statics cx reason t = elab_t cx t (Annot_GetStaticsT reason)
 

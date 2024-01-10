@@ -140,7 +140,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
           let (marked, _) = self#type_ cx pole (marked, tparam_names') t in
           (* TODO(jmbrown): Handle defaults on type parameters *)
           (marked, tparam_names)
-        | TypeAppT { reason = _; use_op = _; type_; targs; use_desc = _ } ->
+        | TypeAppT { reason = _; use_op = _; type_; targs; from_value = _; use_desc = _ } ->
           self#typeapp targs cx pole acc type_
         (* ThisTypeAppT is created from a new expression, which cannot
          * be used as an annotation, so we do not special case it like
@@ -809,7 +809,14 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
         let (_, inferred_targ_list) = merge_targs None in
         let targs = Base.List.map ~f:(fun (_, t, _, _) -> t) inferred_targ_list in
         ( inferred_targ_list,
-          Flow.mk_typeapp_instance_annot cx ~use_op ~reason_op ~reason_tapp lhs targs,
+          Flow.mk_typeapp_instance_annot
+            cx
+            ~use_op
+            ~reason_op
+            ~reason_tapp
+            ~from_value:false
+            lhs
+            targs,
           UseT (use_op, u),
           None
         )
