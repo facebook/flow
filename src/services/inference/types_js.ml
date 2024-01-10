@@ -1617,7 +1617,7 @@ let recheck_impl
     stats
   in
   (* Collate errors after transaction has completed. *)
-  let collated_errors =
+  let (collated_errors, time_to_resolve_all_errors) =
     Profiling_js.with_timer ~timer:"CollateErrors" profiling ~f:(fun () ->
         let focused_to_check = CheckedSet.focused to_check in
         let dependents_to_check = CheckedSet.dependents to_check in
@@ -1632,6 +1632,7 @@ let recheck_impl
              ~checked_files:env.ServerEnv.checked_files
              ~all_suppressions
              new_errors
+        |> ErrorCollator.update_timestamp_start_of_non_zero_errors
     )
   in
 
@@ -1649,6 +1650,7 @@ let recheck_impl
       ~check_skip_count
       ~slowest_file
       ~num_slow_files
+      ~time_to_resolve_all_errors
       ~first_internal_error
       ~scm_changed_mergebase:changed_mergebase
       ~profiling;
@@ -2052,13 +2054,14 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
       env
   in
 
-  let collated_errors =
+  let (collated_errors, _) =
     ErrorCollator.update_local_collated_errors
       ~reader:abstract_reader
       ~options
       suppressions
       local_errors
       Collated_errors.empty
+    |> ErrorCollator.update_timestamp_start_of_non_zero_errors
   in
 
   let env =
@@ -2229,13 +2232,14 @@ let init_from_scratch ~profiling ~workers options =
   in
   Hh_logger.info "Done";
 
-  let collated_errors =
+  let (collated_errors, _) =
     ErrorCollator.update_local_collated_errors
       ~reader:(Abstract_state_reader.Mutator_state_reader reader)
       ~options
       suppressions
       local_errors
       Collated_errors.empty
+    |> ErrorCollator.update_timestamp_start_of_non_zero_errors
   in
 
   let errors =
@@ -2504,7 +2508,7 @@ let check_files_for_init ~profiling ~options ~workers ~focus_targets ~parsed ~me
       in
       Base.Option.iter check_internal_error ~f:(Hh_logger.error "%s");
 
-      let collated_errors =
+      let (collated_errors, _) =
         Profiling_js.with_timer ~timer:"CollateErrors" profiling ~f:(fun () ->
             ErrorCollator.update_collated_errors
               ~reader:(Abstract_state_reader.Mutator_state_reader reader)
@@ -2513,6 +2517,7 @@ let check_files_for_init ~profiling ~options ~workers ~focus_targets ~parsed ~me
               ~all_suppressions:updated_suppressions
               errors
               collated_errors
+            |> ErrorCollator.update_timestamp_start_of_non_zero_errors
         )
       in
       let env =

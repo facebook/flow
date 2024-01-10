@@ -15,6 +15,7 @@ type t = {
   collated_warning_map: ConcreteLocPrintableErrorSet.t Utils_js.FilenameMap.t;
   collated_suppressed_errors:
     (Loc.t printable_error * Loc_collections.LocSet.t) list Utils_js.FilenameMap.t;
+  timestamp_start_of_non_zero_errors: float option;
 }
 
 let empty =
@@ -24,6 +25,7 @@ let empty =
     collated_merge_errors = FilenameMap.empty;
     collated_warning_map = FilenameMap.empty;
     collated_suppressed_errors = FilenameMap.empty;
+    timestamp_start_of_non_zero_errors = None;
   }
 
 let clear_all files errors =
@@ -35,6 +37,7 @@ let clear_all files errors =
            collated_merge_errors;
            collated_warning_map;
            collated_suppressed_errors;
+           timestamp_start_of_non_zero_errors;
          } ->
       let collated_duplicate_providers_errors =
         Base.List.filter
@@ -47,6 +50,7 @@ let clear_all files errors =
         collated_merge_errors = FilenameMap.remove file collated_merge_errors;
         collated_warning_map = FilenameMap.remove file collated_warning_map;
         collated_suppressed_errors = FilenameMap.remove file collated_suppressed_errors;
+        timestamp_start_of_non_zero_errors;
       })
     files
     errors
@@ -60,6 +64,7 @@ let clear_merge files errors =
            collated_merge_errors;
            collated_warning_map;
            collated_suppressed_errors;
+           timestamp_start_of_non_zero_errors;
          } ->
       {
         collated_duplicate_providers_errors;
@@ -67,6 +72,7 @@ let clear_merge files errors =
         collated_merge_errors = FilenameMap.remove file collated_merge_errors;
         collated_warning_map = FilenameMap.remove file collated_warning_map;
         collated_suppressed_errors = FilenameMap.remove file collated_suppressed_errors;
+        timestamp_start_of_non_zero_errors;
       })
     files
     errors

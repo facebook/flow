@@ -37,6 +37,10 @@ val get_with_separate_warnings :
   * Flow_errors_utils.ConcreteLocPrintableErrorSet.t Utils_js.FilenameMap.t
   * (Loc.t Flow_errors_utils.printable_error * Loc_collections.LocSet.t) list
 
+(* Update timestamp_start_of_non_zero_errors, and return time to resolve all errors. *)
+val update_timestamp_start_of_non_zero_errors :
+  Collated_errors.t -> Collated_errors.t * float option
+
 val get :
   ServerEnv.env ->
   Flow_errors_utils.ConcreteLocPrintableErrorSet.t

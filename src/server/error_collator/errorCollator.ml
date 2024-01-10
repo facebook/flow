@@ -134,6 +134,7 @@ let update_collated_errors ~reader ~options ~checked_files ~all_suppressions err
     collated_merge_errors;
     collated_warning_map;
     collated_suppressed_errors;
+    timestamp_start_of_non_zero_errors;
   } =
     acc
   in
@@ -167,6 +168,7 @@ let update_collated_errors ~reader ~options ~checked_files ~all_suppressions err
     collated_merge_errors;
     collated_warning_map;
     collated_suppressed_errors;
+    timestamp_start_of_non_zero_errors;
   }
 
 let get_with_separate_warnings env =
@@ -179,6 +181,7 @@ let get_with_separate_warnings env =
     collated_merge_errors;
     collated_warning_map;
     collated_suppressed_errors;
+    timestamp_start_of_non_zero_errors = _;
   } =
     collated_errors
   in
@@ -194,6 +197,52 @@ let get_with_separate_warnings env =
     FilenameMap.fold (fun _ -> List.rev_append) collated_suppressed_errors []
   in
   (collated_errorset, collated_warning_map, collated_suppressed_errors)
+
+let has_errors collated_errors =
+  let open Flow_errors_utils in
+  let {
+    collated_duplicate_providers_errors;
+    collated_local_errors;
+    collated_merge_errors;
+    collated_warning_map = _;
+    collated_suppressed_errors = _;
+    timestamp_start_of_non_zero_errors = _;
+  } =
+    collated_errors
+  in
+  let error_map_is_empty map =
+    FilenameMap.for_all (fun _ -> ConcreteLocPrintableErrorSet.is_empty) map
+  in
+  not
+    (Base.List.is_empty collated_duplicate_providers_errors
+    && error_map_is_empty collated_local_errors
+    && error_map_is_empty collated_merge_errors
+    )
+
+let update_timestamp_start_of_non_zero_errors collated_errors =
+  let init_timestamp_start_of_non_zero_errors =
+    collated_errors.timestamp_start_of_non_zero_errors
+  in
+  let timestamp_start_of_non_zero_errors =
+    if has_errors collated_errors then
+      if Base.Option.is_some init_timestamp_start_of_non_zero_errors then
+        init_timestamp_start_of_non_zero_errors
+      else
+        Some (Unix.gettimeofday ())
+    else
+      None
+  in
+  let time_to_resolve_all_errors =
+    match (init_timestamp_start_of_non_zero_errors, timestamp_start_of_non_zero_errors) with
+    (* If we start with no errors, then we are not resolving any errors.  *)
+    | (None, _) -> None
+    (* If we end with errors, then we are not fully resolving all errors. *)
+    | (_, Some _) -> None
+    | (Some t_start, None) -> Some (Unix.gettimeofday () -. t_start)
+  in
+  ( { collated_errors with Collated_errors.timestamp_start_of_non_zero_errors },
+    time_to_resolve_all_errors
+  )
 
 (* combine error maps into a single error set and a single warning set *)
 let get env =

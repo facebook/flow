@@ -93,6 +93,7 @@ let recheck
     ~merge_skip_count:_
     ~check_skip_count:_
     ~profiling:_
+    ~time_to_resolve_all_errors:_
     ~first_internal_error:_
     ~slowest_file:_
     ~num_slow_files:_
