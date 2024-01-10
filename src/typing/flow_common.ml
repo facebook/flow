@@ -280,8 +280,6 @@ module type S = sig
 
   include CHECK_POLARITY
 
-  val mk_typeof_annotation : Context.t -> reason -> Type.t -> Type.t list option -> Type.t
-
   val resolve_spread_list :
     Context.t ->
     use_op:use_op ->

@@ -948,6 +948,16 @@ let this_typeapp ?annot_loc t this targs =
   in
   ThisTypeAppT (reason, t, this, targs)
 
+let typeof_annotation reason t targs =
+  let annot_loc = loc_of_reason reason in
+  let t = AnnotT (opt_annot_reason ~annot_loc reason, t, false) in
+  match targs with
+  | None -> t
+  | Some targs ->
+    let reason_tapp = mk_annot_reason (RTypeApp (desc_of_reason reason)) annot_loc in
+    let use_op = Op (TypeApplication { type_ = reason_tapp }) in
+    typeapp_with_use_op ~from_value:true ~use_desc:false reason use_op t targs
+
 let push_type_alias_reason r t =
   match desc_of_reason ~unwrap:false r with
   | RTypeAlias (n, _, _) ->

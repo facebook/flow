@@ -73,8 +73,6 @@ let get_builtin_typeapp cx reason x targs =
   TypeUtil.typeapp ~from_value:false ~use_desc:false reason t targs
 
 module type S = sig
-  val mk_typeof_annotation : Context.t -> Reason.t -> Type.t -> Type.t list option -> Type.t
-
   val mk_type_reference : Context.t -> type_t_kind:Type.type_t_kind -> Reason.t -> Type.t -> Type.t
 
   val mk_instance :
@@ -593,12 +591,7 @@ module rec ConsGen : S = struct
     (* `import typeof` *)
     (*******************)
     | (_, Annot_ImportTypeofT (reason, export_name)) ->
-      ImportTypeofTKit.on_concrete_type
-        cx
-        ~mk_typeof_annotation:ConsGen.mk_typeof_annotation
-        reason
-        export_name
-        t
+      ImportTypeofTKit.on_concrete_type cx reason export_name t
     (******************)
     (* Module exports *)
     (******************)
@@ -632,7 +625,6 @@ module rec ConsGen : S = struct
       let (_name_loc_opt, t) =
         ImportDefaultTKit.on_ModuleT
           cx
-          ~mk_typeof_annotation:ConsGen.mk_typeof_annotation
           ~assert_import_is_value
           ~with_concretized_type
           (reason, import_kind, local, is_strict)
@@ -643,7 +635,6 @@ module rec ConsGen : S = struct
       let (_name_loc_opt, t) =
         ImportNamedTKit.on_ModuleT
           cx
-          ~mk_typeof_annotation:ConsGen.mk_typeof_annotation
           ~assert_import_is_value
           ~with_concretized_type
           (reason, import_kind, export_name, module_name, is_strict)
@@ -1238,16 +1229,6 @@ module rec ConsGen : S = struct
       resolve_id cx reason id t
     in
     mk_lazy_tvar cx reason f
-
-  and mk_typeof_annotation _cx reason t targs =
-    let annot_loc = loc_of_reason reason in
-    let t = AnnotT (opt_annot_reason ~annot_loc reason, t, false) in
-    match targs with
-    | None -> t
-    | Some targs ->
-      let reason_tapp = mk_annot_reason (RTypeApp (desc_of_reason reason)) annot_loc in
-      let use_op = Op (TypeApplication { type_ = reason_tapp }) in
-      TypeUtil.typeapp_with_use_op ~from_value:true ~use_desc:false reason use_op t targs
 
   and assert_export_is_type cx reason name t =
     let f id =

@@ -17,8 +17,6 @@ module Flow = Flow_js
 module T = Ast.Type
 
 module type C = sig
-  val mk_typeof_annotation : Context.t -> Reason.t -> Type.t -> Type.t list option -> Type.t
-
   val mk_instance :
     Context.t -> ?type_t_kind:Type.type_t_kind -> reason -> ?use_desc:bool -> Type.t -> Type.t
 
@@ -444,7 +442,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           in
           (targs, Some (l, { TypeArgs.arguments = targs_ast; comments }))
       in
-      ( (loc, ConsGen.mk_typeof_annotation cx reason valtype targs),
+      ( (loc, TypeUtil.typeof_annotation reason valtype targs),
         Typeof { Typeof.argument = qualification_ast; targs = targs_ast; comments }
       )
     | (loc, Keyof keyof) ->
@@ -1972,7 +1970,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
             let reason = mk_reason RPrototype (fst value) in
             let proto = ConsGen.obj_test_proto cx reason t in
             let acc =
-              match Acc.add_proto (ConsGen.mk_typeof_annotation cx reason proto None) acc with
+              match Acc.add_proto (TypeUtil.typeof_annotation reason proto None) acc with
               | Ok acc -> acc
               | Error err ->
                 Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, err));

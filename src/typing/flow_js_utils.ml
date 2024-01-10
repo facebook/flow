@@ -1246,7 +1246,7 @@ end
 (************************************************************************)
 
 module ImportTypeofTKit = struct
-  let on_concrete_type cx ~mk_typeof_annotation reason export_name l =
+  let on_concrete_type cx reason export_name l =
     match l with
     | DefT
         ( _,
@@ -1258,7 +1258,7 @@ module ImportTypeofTKit = struct
               id;
             }
         ) ->
-      let typeof_t = mk_typeof_annotation cx reason lower_t None in
+      let typeof_t = TypeUtil.typeof_annotation reason lower_t None in
 
       poly_type id tparams_loc typeparams (DefT (reason, TypeT (ImportTypeofKind, typeof_t)))
     | DefT (_, TypeT _)
@@ -1266,7 +1266,7 @@ module ImportTypeofTKit = struct
       add_output cx (Error_message.EImportTypeAsTypeof (reason, export_name));
       AnyT.error reason
     | _ ->
-      let typeof_t = mk_typeof_annotation cx reason l None in
+      let typeof_t = TypeUtil.typeof_annotation reason l None in
       DefT (reason, TypeT (ImportTypeofKind, typeof_t))
 end
 
@@ -1380,7 +1380,6 @@ module ImportDefaultTKit = struct
   (* import [type] X from 'SomeModule'; *)
   let on_ModuleT
       cx
-      ~mk_typeof_annotation
       ~assert_import_is_value
       ~with_concretized_type
       (reason, import_kind, (local_name, module_name), is_strict)
@@ -1438,7 +1437,7 @@ module ImportDefaultTKit = struct
         with_concretized_type
           cx
           reason
-          (ImportTypeofTKit.on_concrete_type cx ~mk_typeof_annotation reason "default")
+          (ImportTypeofTKit.on_concrete_type cx reason "default")
           export_t
       )
     | ImportValue ->
@@ -1450,7 +1449,6 @@ module ImportNamedTKit = struct
   (* import {X} from 'SomeModule'; *)
   let on_ModuleT
       cx
-      ~mk_typeof_annotation
       ~assert_import_is_value
       ~with_concretized_type
       (reason, import_kind, export_name, module_name, is_strict)
@@ -1502,7 +1500,7 @@ module ImportNamedTKit = struct
         with_concretized_type
           cx
           reason
-          (ImportTypeofTKit.on_concrete_type cx ~mk_typeof_annotation reason export_name)
+          (ImportTypeofTKit.on_concrete_type cx reason export_name)
           type_
       )
     | (ImportTypeof, None) when has_every_named_export ->
@@ -1510,7 +1508,7 @@ module ImportNamedTKit = struct
         with_concretized_type
           cx
           reason
-          (ImportTypeofTKit.on_concrete_type cx ~mk_typeof_annotation reason export_name)
+          (ImportTypeofTKit.on_concrete_type cx reason export_name)
           (AnyT.untyped reason)
       )
     | (ImportValue, Some { preferred_def_locs = _; is_type_only_export = _; name_loc; type_ }) ->

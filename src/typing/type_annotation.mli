@@ -8,8 +8,6 @@
 open Reason
 
 module type C = sig
-  val mk_typeof_annotation : Context.t -> Reason.t -> Type.t -> Type.t list option -> Type.t
-
   val mk_instance :
     Context.t -> ?type_t_kind:Type.type_t_kind -> reason -> ?use_desc:bool -> Type.t -> Type.t
 

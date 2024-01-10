@@ -804,7 +804,6 @@ module Make
           if remote_export_name = "default" then
             Flow_js_utils.ImportDefaultTKit.on_ModuleT
               cx
-              ~mk_typeof_annotation:Flow.mk_typeof_annotation
               ~assert_import_is_value
               ~with_concretized_type
               (get_reason, import_kind, (local_name, module_name), is_strict)
@@ -812,7 +811,6 @@ module Make
           else
             Flow_js_utils.ImportNamedTKit.on_ModuleT
               cx
-              ~mk_typeof_annotation:Flow.mk_typeof_annotation
               ~assert_import_is_value
               ~with_concretized_type
               (get_reason, import_kind, remote_export_name, module_name, is_strict)
@@ -876,12 +874,7 @@ module Make
     | ImportDeclaration.ImportTypeof ->
       let module_ns_t = get_module_ns_t import_reason in
       let bind_reason = repos_reason local_loc import_reason in
-      Flow_js_utils.ImportTypeofTKit.on_concrete_type
-        cx
-        ~mk_typeof_annotation:Flow.mk_typeof_annotation
-        bind_reason
-        "*"
-        module_ns_t
+      Flow_js_utils.ImportTypeofTKit.on_concrete_type cx bind_reason "*" module_ns_t
     | ImportDeclaration.ImportValue ->
       let reason = mk_reason (RModule (OrdinaryName module_name)) local_loc in
       get_module_ns_t reason
