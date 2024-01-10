@@ -66,6 +66,7 @@ type metadata = {
   strict_es6_import_export_excludes: string list;
   strip_root: bool;
   suppress_types: SSet.t;
+  typeof_with_type_arguments: bool;
   use_mixed_in_catch_variables: bool;
 }
 
@@ -277,6 +278,7 @@ let metadata_of_options options =
     strict_es6_import_export_excludes = Options.strict_es6_import_export_excludes options;
     strip_root = Options.should_strip_root options;
     suppress_types = Options.suppress_types options;
+    typeof_with_type_arguments = Options.typeof_with_type_arguments options;
     use_mixed_in_catch_variables = Options.use_mixed_in_catch_variables options;
   }
 

@@ -103,6 +103,7 @@ type metadata = {
   strict_es6_import_export_excludes: string list;
   strip_root: bool;
   suppress_types: SSet.t;
+  typeof_with_type_arguments: bool;
   use_mixed_in_catch_variables: bool;
 }
 

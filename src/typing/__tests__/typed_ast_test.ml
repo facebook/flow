@@ -55,6 +55,7 @@ let metadata =
     strict_es6_import_export_excludes = [];
     strip_root = true;
     suppress_types = SSet.empty;
+    typeof_with_type_arguments = true;
     use_mixed_in_catch_variables = false;
   }
 
