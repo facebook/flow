@@ -327,9 +327,7 @@ let jsdoc_of_getdef_loc ?current_ast ~reader def_loc =
   let%bind source = Loc.source def_loc in
   let current_ast_if_should_use =
     let%bind ((current_file_loc, _) as typed_ast) = current_ast in
-    let%bind current_file_source =
-      Loc.source (Parsing_heaps.Reader.loc_of_aloc ~reader current_file_loc)
-    in
+    let%bind current_file_source = ALoc.source current_file_loc in
     if source = current_file_source then
       Some (Remove_types.f ~reader ~typed_ast)
     else
