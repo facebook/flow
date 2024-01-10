@@ -88,8 +88,6 @@ val component_syntax_includes : config -> string list
 
 val react_rules : config -> Options.react_rules list
 
-val direct_dependent_files_fix : config -> bool option
-
 val emoji : config -> bool option
 
 val enable_const_params : config -> bool option

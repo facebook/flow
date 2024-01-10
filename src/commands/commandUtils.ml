@@ -1323,9 +1323,6 @@ let make_options
         Base.Option.value (FlowConfig.format_single_quotes flowconfig) ~default:false;
     }
   in
-  let opt_direct_dependent_files_fix =
-    Base.Option.value (FlowConfig.direct_dependent_files_fix flowconfig) ~default:true
-  in
   let strict_mode = FlowConfig.strict_mode flowconfig in
   let opt_temp_dir = File_path.to_string temp_dir in
   let opt_log_file = server_log_file ~flowconfig_name ~tmp_dir:opt_temp_dir root in
@@ -1359,7 +1356,6 @@ let make_options
       |> min Sys_utils.nbr_procs;
     opt_suppress_types = FlowConfig.suppress_types flowconfig;
     opt_max_literal_length = FlowConfig.max_literal_length flowconfig;
-    opt_direct_dependent_files_fix;
     opt_component_syntax = FlowConfig.component_syntax flowconfig;
     opt_component_syntax_includes =
       Base.List.map

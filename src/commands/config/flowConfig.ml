@@ -55,7 +55,6 @@ module Opts = struct
     component_syntax: Options.component_syntax;
     component_syntax_includes: string list;
     react_rules: Options.react_rules list;
-    direct_dependent_files_fix: bool option;
     emoji: bool option;
     enable_const_params: bool option;
     enforce_strict_call_arity: bool;
@@ -181,7 +180,6 @@ module Opts = struct
       component_syntax = Options.Parsing;
       component_syntax_includes = [];
       react_rules = [];
-      direct_dependent_files_fix = None;
       emoji = None;
       enable_const_params = None;
       enforce_strict_call_arity = true;
@@ -549,9 +547,6 @@ module Opts = struct
   let babel_loose_array_spread_parser =
     boolean (fun opts v -> Ok { opts with babel_loose_array_spread = Some v })
 
-  let direct_dependent_files_fix_parser =
-    boolean (fun opts v -> Ok { opts with direct_dependent_files_fix = Some v })
-
   let enforce_strict_call_arity_parser =
     boolean (fun opts v -> Ok { opts with enforce_strict_call_arity = v })
 
@@ -850,7 +845,6 @@ module Opts = struct
       ("experimental.react_rule", react_rules_parser);
       ("experimental.renders_type_validation", renders_type_validation_parser);
       ("experimental.renders_type_validation.includes", renders_type_validation_includes_parser);
-      ("experimental.direct_dependent_files_fix", direct_dependent_files_fix_parser);
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
       ("experimental.module.automatic_require_default", automatic_require_default_parser);
       ("experimental.strict_call_arity", enforce_strict_call_arity_parser);
@@ -1497,8 +1491,6 @@ let component_syntax c = c.options.Opts.component_syntax
 let component_syntax_includes c = c.options.Opts.component_syntax_includes
 
 let react_rules c = c.options.Opts.react_rules
-
-let direct_dependent_files_fix c = c.options.Opts.direct_dependent_files_fix
 
 let emoji c = c.options.Opts.emoji
 

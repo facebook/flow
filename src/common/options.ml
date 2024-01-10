@@ -81,7 +81,6 @@ type t = {
   opt_component_syntax_includes: string list;
   opt_react_rules: react_rules list;
   opt_debug: bool;
-  opt_direct_dependent_files_fix: bool;
   opt_enable_const_params: bool;
   opt_enable_relay_integration: bool;
   opt_enabled_rollouts: string SMap.t;
@@ -201,8 +200,6 @@ let typecheck_component_syntax_in_file opts file =
      end
 
 let react_rules opts = opts.opt_react_rules
-
-let direct_dependent_files_fix opts = opts.opt_direct_dependent_files_fix
 
 let enable_const_params opts = opts.opt_enable_const_params
 
