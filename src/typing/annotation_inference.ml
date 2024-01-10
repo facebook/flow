@@ -1239,9 +1239,8 @@ module rec ConsGen : S = struct
     in
     mk_lazy_tvar cx reason f
 
-  and mk_typeof_annotation cx reason t targs =
+  and mk_typeof_annotation _cx reason t targs =
     let annot_loc = loc_of_reason reason in
-    let t = reposition cx (loc_of_reason reason) t in
     let t = AnnotT (opt_annot_reason ~annot_loc reason, t, false) in
     match targs with
     | None -> t
