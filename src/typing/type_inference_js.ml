@@ -353,53 +353,52 @@ module Statement = Fix_statement.Statement_
 (**********)
 
 let initialize_env ~lib ?(exclude_syms = NameUtils.Set.empty) cx aloc_ast toplevel_scope_kind =
-  let (_abrupt_completion, info) = NameResolver.program_with_scope cx ~lib ~exclude_syms aloc_ast in
-  let autocomplete_hooks =
-    {
-      Env_api.id_hook = Type_inference_hooks_js.dispatch_id_hook cx;
-      literal_hook = Type_inference_hooks_js.dispatch_literal_hook cx;
-      obj_prop_decl_hook = Type_inference_hooks_js.dispatch_obj_prop_decl_hook cx;
-    }
-  in
-  let (name_def_graph, hint_map) =
-    Name_def.find_defs ~autocomplete_hooks info toplevel_scope_kind (Context.file cx) aloc_ast
-  in
-  let hint_map = ALocMap.mapi (Env_resolution.lazily_resolve_hints cx) hint_map in
-  let pred_func_map =
-    ALocMap.map (Env_resolution.resolve_pred_func cx) info.Env_api.pred_func_map
-  in
-  let env = Loc_env.with_info Name_def.Global hint_map info pred_func_map name_def_graph in
-  Context.set_environment cx env;
-  let components = NameDefOrdering.build_ordering cx ~autocomplete_hooks info name_def_graph in
-  Base.List.iter ~f:(Cycles.handle_component cx name_def_graph) components;
-  Type_env.init_env cx toplevel_scope_kind;
-  let { Loc_env.scope_kind; class_stack; _ } = Context.environment cx in
-  Base.List.iter ~f:(Env_resolution.resolve_component cx name_def_graph) components;
-  Debug_js.Verbose.print_if_verbose_lazy cx (lazy ["Finished all components"]);
-  let env = Context.environment cx in
-  Context.set_environment cx { env with Loc_env.scope_kind; class_stack }
+  try
+    let (_abrupt_completion, info) =
+      NameResolver.program_with_scope cx ~lib ~exclude_syms aloc_ast
+    in
+    let autocomplete_hooks =
+      {
+        Env_api.id_hook = Type_inference_hooks_js.dispatch_id_hook cx;
+        literal_hook = Type_inference_hooks_js.dispatch_literal_hook cx;
+        obj_prop_decl_hook = Type_inference_hooks_js.dispatch_obj_prop_decl_hook cx;
+      }
+    in
+    let (name_def_graph, hint_map) =
+      Name_def.find_defs ~autocomplete_hooks info toplevel_scope_kind (Context.file cx) aloc_ast
+    in
+    let hint_map = ALocMap.mapi (Env_resolution.lazily_resolve_hints cx) hint_map in
+    let pred_func_map =
+      ALocMap.map (Env_resolution.resolve_pred_func cx) info.Env_api.pred_func_map
+    in
+    let env = Loc_env.with_info Name_def.Global hint_map info pred_func_map name_def_graph in
+    Context.set_environment cx env;
+    let components = NameDefOrdering.build_ordering cx ~autocomplete_hooks info name_def_graph in
+    Base.List.iter ~f:(Cycles.handle_component cx name_def_graph) components;
+    Type_env.init_env cx toplevel_scope_kind;
+    let { Loc_env.scope_kind; class_stack; _ } = Context.environment cx in
+    Base.List.iter ~f:(Env_resolution.resolve_component cx name_def_graph) components;
+    Debug_js.Verbose.print_if_verbose_lazy cx (lazy ["Finished all components"]);
+    let env = Context.environment cx in
+    Context.set_environment cx { env with Loc_env.scope_kind; class_stack }
+  with
+  | Env_api.Env_invariant (loc, inv) ->
+    let loc = Base.Option.value ~default:(fst aloc_ast) loc in
+    Flow_js.add_output cx Error_message.(EInternal (loc, EnvInvariant inv))
 
-(* build module graph *)
 (* Lint suppressions are handled iff lint_severities is Some. *)
 let infer_ast ~lint_severities cx filename loc_comments aloc_ast =
   assert (Context.is_checked cx);
   let (prog_aloc, { Ast.Program.statements; interpreter; comments; all_comments }) = aloc_ast in
-  try
-    initialize_env ~lib:false cx aloc_ast Name_def.Module;
-    let typed_statements = Statement.statement_list cx statements in
-    let (severity_cover, suppressions, suppression_errors) =
-      scan_for_suppressions ~in_libdef:false lint_severities [(filename, loc_comments)]
-    in
-    Context.add_severity_covers cx severity_cover;
-    Context.add_error_suppressions cx suppressions;
-    List.iter (Flow_js.add_output cx) suppression_errors;
-    (prog_aloc, { Ast.Program.statements = typed_statements; interpreter; comments; all_comments })
-  with
-  | Env_api.Env_invariant (loc, inv) ->
-    let loc = Base.Option.value ~default:prog_aloc loc in
-    Flow_js.add_output cx Error_message.(EInternal (loc, EnvInvariant inv));
-    let statements = Typed_ast_utils.error_mapper#statement_list statements in
-    (prog_aloc, { Ast.Program.statements; interpreter; comments; all_comments })
+  initialize_env ~lib:false cx aloc_ast Name_def.Module;
+  let typed_statements = Statement.statement_list cx statements in
+  let (severity_cover, suppressions, suppression_errors) =
+    scan_for_suppressions ~in_libdef:false lint_severities [(filename, loc_comments)]
+  in
+  Context.add_severity_covers cx severity_cover;
+  Context.add_error_suppressions cx suppressions;
+  List.iter (Flow_js.add_output cx) suppression_errors;
+  (prog_aloc, { Ast.Program.statements = typed_statements; interpreter; comments; all_comments })
 
 class lib_def_loc_mapper_and_validator cx =
   let stmt_validator ~in_toplevel_scope (loc, stmt) =
@@ -502,53 +501,20 @@ class lib_def_loc_mapper_and_validator cx =
    a) symbols from prior library loads are suppressed if found,
    b) bindings are added as properties to the builtin object
 *)
-let infer_lib_file ~lint_severities cx file_key all_comments aloc_ast =
+let infer_lib_file ~lint_severities cx file_key loc_comments aloc_ast =
   let validator_visitor = new lib_def_loc_mapper_and_validator cx in
   let filtered_aloc_ast = validator_visitor#program aloc_ast in
-  let ( prog_aloc,
-        {
-          Ast.Program.statements = aloc_statements;
-          interpreter = aloc_interpreter;
-          comments = aloc_comments;
-          all_comments = aloc_all_comments;
-        }
-      ) =
-    aloc_ast
-  in
+  let (prog_aloc, { Ast.Program.statements; interpreter; comments; all_comments }) = aloc_ast in
   let exclude_syms = cx |> Context.builtins |> Builtins.builtin_set in
-
-  try
-    initialize_env ~lib:true ~exclude_syms cx filtered_aloc_ast Name_def.Global;
-    let (severity_cover, suppressions, suppression_errors) =
-      scan_for_suppressions ~in_libdef:true lint_severities [(file_key, all_comments)]
-    in
-    let typed_statements = Statement.statement_list cx aloc_statements in
-    let program =
-      ( prog_aloc,
-        {
-          Ast.Program.statements = typed_statements;
-          interpreter = aloc_interpreter;
-          comments = aloc_comments;
-          all_comments = aloc_all_comments;
-        }
-      )
-    in
-    Context.add_severity_covers cx severity_cover;
-    Context.add_error_suppressions cx suppressions;
-    List.iter (Flow_js.add_output cx) suppression_errors;
-    program
-  with
-  | Env_api.Env_invariant (loc, inv) ->
-    let loc = Base.Option.value ~default:prog_aloc loc in
-    Flow_js.add_output cx Error_message.(EInternal (loc, EnvInvariant inv));
-    ( prog_aloc,
-      {
-        Ast.Program.statements = Typed_ast_utils.error_mapper#statement_list aloc_statements;
-        interpreter = aloc_interpreter;
-        comments = aloc_comments;
-        all_comments = aloc_all_comments;
-      }
-    )
+  initialize_env ~lib:true ~exclude_syms cx filtered_aloc_ast Name_def.Global;
+  let (severity_cover, suppressions, suppression_errors) =
+    scan_for_suppressions ~in_libdef:true lint_severities [(file_key, loc_comments)]
+  in
+  let typed_statements = Statement.statement_list cx statements in
+  Context.add_severity_covers cx severity_cover;
+  Context.add_error_suppressions cx suppressions;
+  List.iter (Flow_js.add_output cx) suppression_errors;
+  (prog_aloc, { Ast.Program.statements = typed_statements; interpreter; comments; all_comments })
 
 let infer_file ~lint_severities cx file_key all_comments aloc_ast =
   if File_key.is_lib_file file_key then
