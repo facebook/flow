@@ -298,7 +298,7 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
         ~f:(fun () ->
           let lint_severities = get_lint_severities metadata options in
           let tast = Type_inference_js.infer_file cx file_key comments aloc_ast ~lint_severities in
-          Merge_js.post_merge_checks cx aloc_ast metadata;
+          Merge_js.post_merge_checks cx aloc_ast tast metadata;
           Context.reset_errors cx (Flow_error.post_process_errors (Context.errors cx));
           tast)
     in

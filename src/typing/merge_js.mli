@@ -5,7 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val post_merge_checks : Context.t -> (ALoc.t, ALoc.t) Flow_ast.Program.t -> Context.metadata -> unit
+val post_merge_checks :
+  Context.t ->
+  (ALoc.t, ALoc.t) Flow_ast.Program.t ->
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
+  Context.metadata ->
+  unit
 
 val get_lint_severities :
   Context.metadata ->

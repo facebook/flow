@@ -372,6 +372,10 @@ let check_constrained_writes cx =
     Flow_error.ErrorSet.iter (Context.add_error cx) new_errors
   )
 
+let check_react_rules cx tast = React_rules.check_react_rules cx tast
+
+let check_exists_marker cx tast = Exists_marker.mark cx tast
+
 let validate_renders_type_arguments cx =
   let open Type in
   let open Reason in
@@ -520,6 +524,92 @@ let validate_renders_type_arguments cx =
   in
   Context.renders_type_argument_validations cx |> Base.List.iter ~f:validate_arg
 
+let check_multiplatform_conformance cx ast =
+  let (prog_aloc, _) = ast in
+  let filename = Context.file cx in
+  let file_options = (Context.metadata cx).Context.file_options in
+  let self_sig_loc =
+    Import_export.module_exports_sig_loc cx |> Base.Option.value ~default:prog_aloc
+  in
+  let file_loc = Loc.{ none with source = Some filename } |> ALoc.of_loc in
+  match
+    Files.relative_interface_mref_of_possibly_platform_specific_file ~options:file_options filename
+  with
+  | Some imported_interface_module_name ->
+    let open Type in
+    (match Context.find_require cx imported_interface_module_name with
+    | Error _ ->
+      (* It's ok if a platform speicific implementation file doesn't have an interface.
+       * It just makes the module non-importable without platform extension. *)
+      ()
+    | Ok interface_module_t ->
+      let get_exports_t ~is_common_interface_module reason module_t =
+        match Flow_js.possible_concrete_types_for_inspection cx reason module_t with
+        | [ModuleT m] ->
+          if
+            is_common_interface_module
+            && Platform_set.no_overlap
+                 (Base.Option.value_exn (Context.available_platforms cx))
+                 (Base.Option.value_exn m.module_available_platforms)
+          then
+            (* If the current module's platform has no overlap with the common interface
+             * file's platforms, then the common interface file is irrelevant. We give it an
+             * any type to make conformance check always passing. *)
+            AnyT.make Untyped reason
+          else
+            Flow_js_utils.ImportModuleNsTKit.on_ModuleT
+              cx
+              ~is_common_interface_module
+              (reason, false)
+              m
+        | _ -> AnyT.make Untyped reason
+      in
+      let interface_t =
+        let reason = Reason.(mk_reason (RCustom "common interface") prog_aloc) in
+        get_exports_t ~is_common_interface_module:true reason interface_module_t
+      in
+      let self_t =
+        let reason = Reason.(mk_reason (RCustom "self") prog_aloc) in
+        let source_module_t = Import_export.mk_module_t cx reason file_loc in
+        get_exports_t ~is_common_interface_module:false reason source_module_t
+      in
+      (* We need to fully resolve the type to prevent tvar widening. *)
+      Tvar_resolver.resolve cx interface_t;
+      Tvar_resolver.resolve cx self_t;
+      let use_op = Op (ConformToCommonInterface { self_sig_loc; self_module_loc = prog_aloc }) in
+      Flow_js.flow cx (self_t, UseT (use_op, interface_t)))
+  | None ->
+    (match
+       Platform_set.platform_specific_implementation_mrefs_of_possibly_interface_file
+         ~file_options
+         ~platform_set:(Context.available_platforms cx)
+         ~file:filename
+     with
+    | None -> ()
+    | Some impl_mrefs ->
+      let module_exists mref = Base.Result.is_ok @@ Context.find_require cx mref in
+      let mrefs_with_existence_status =
+        List.map (fun mref -> (mref, module_exists mref)) impl_mrefs
+      in
+      if
+        (not (Context.has_explicit_supports_platform cx))
+        && List.for_all (fun (_, exists) -> not exists) mrefs_with_existence_status
+      then
+        (* We are fine if no implementation file exist.
+         * The .js.flow file might be declaring a builtin module. *)
+        ()
+      else
+        (* If one implementation file exist, then all platform specific implementations must exist. *)
+        Base.List.iter mrefs_with_existence_status ~f:(fun (impl_mref, exist) ->
+            if not exist then
+              Flow_js_utils.add_output
+                cx
+                Error_message.(
+                  EPlatformSpecificImplementationModuleLookupFailed
+                    { loc = file_loc; name = impl_mref }
+                )
+        ))
+
 let get_lint_severities metadata strict_mode lint_severities =
   if metadata.Context.strict || metadata.Context.strict_local then
     StrictModeSettings.fold
@@ -537,7 +627,10 @@ let get_lint_severities metadata strict_mode lint_severities =
  * means we can complain about things that either haven't happened yet, or
  * which require complete knowledge of tvar bounds.
  *)
-let post_merge_checks cx ast metadata =
+let post_merge_checks cx ast tast metadata =
+  check_react_rules cx tast;
+  check_multiplatform_conformance cx ast;
+  check_exists_marker cx tast;
   check_constrained_writes cx;
   validate_renders_type_arguments cx;
   detect_sketchy_null_checks cx;

@@ -379,145 +379,27 @@ let initialize_env ~lib ?(exclude_syms = NameUtils.Set.empty) cx aloc_ast toplev
   let env = Context.environment cx in
   Context.set_environment cx { env with Loc_env.scope_kind; class_stack }
 
-let check_multiplatform_conformance cx filename prog_aloc =
-  let file_options = (Context.metadata cx).Context.file_options in
-  let self_sig_loc =
-    Import_export.module_exports_sig_loc cx |> Base.Option.value ~default:prog_aloc
-  in
-  let file_loc = Loc.{ none with source = Some filename } |> ALoc.of_loc in
-  match
-    Files.relative_interface_mref_of_possibly_platform_specific_file ~options:file_options filename
-  with
-  | Some imported_interface_module_name ->
-    let open Type in
-    (match Context.find_require cx imported_interface_module_name with
-    | Error _ ->
-      (* It's ok if a platform speicific implementation file doesn't have an interface.
-       * It just makes the module non-importable without platform extension. *)
-      ()
-    | Ok interface_module_t ->
-      let get_exports_t ~is_common_interface_module reason module_t =
-        match Flow_js.possible_concrete_types_for_inspection cx reason module_t with
-        | [ModuleT m] ->
-          if
-            is_common_interface_module
-            && Platform_set.no_overlap
-                 (Base.Option.value_exn (Context.available_platforms cx))
-                 (Base.Option.value_exn m.module_available_platforms)
-          then
-            (* If the current module's platform has no overlap with the common interface
-             * file's platforms, then the common interface file is irrelevant. We give it an
-             * any type to make conformance check always passing. *)
-            AnyT.make Untyped reason
-          else
-            Flow_js_utils.ImportModuleNsTKit.on_ModuleT
-              cx
-              ~is_common_interface_module
-              (reason, false)
-              m
-        | _ -> AnyT.make Untyped reason
-      in
-      let interface_t =
-        let reason = Reason.(mk_reason (RCustom "common interface") prog_aloc) in
-        get_exports_t ~is_common_interface_module:true reason interface_module_t
-      in
-      let self_t =
-        let reason = Reason.(mk_reason (RCustom "self") prog_aloc) in
-        let source_module_t = Import_export.mk_module_t cx reason file_loc in
-        get_exports_t ~is_common_interface_module:false reason source_module_t
-      in
-      (* We need to fully resolve the type to prevent tvar widening. *)
-      Tvar_resolver.resolve cx interface_t;
-      Tvar_resolver.resolve cx self_t;
-      let use_op = Op (ConformToCommonInterface { self_sig_loc; self_module_loc = prog_aloc }) in
-      Flow_js.flow cx (self_t, UseT (use_op, interface_t)))
-  | None ->
-    (match
-       Platform_set.platform_specific_implementation_mrefs_of_possibly_interface_file
-         ~file_options
-         ~platform_set:(Context.available_platforms cx)
-         ~file:filename
-     with
-    | None -> ()
-    | Some impl_mrefs ->
-      let module_exists mref = Base.Result.is_ok @@ Context.find_require cx mref in
-      let mrefs_with_existence_status =
-        List.map (fun mref -> (mref, module_exists mref)) impl_mrefs
-      in
-      if
-        (not (Context.has_explicit_supports_platform cx))
-        && List.for_all (fun (_, exists) -> not exists) mrefs_with_existence_status
-      then
-        (* We are fine if no implementation file exist.
-         * The .js.flow file might be declaring a builtin module. *)
-        ()
-      else
-        (* If one implementation file exist, then all platform specific implementations must exist. *)
-        Base.List.iter mrefs_with_existence_status ~f:(fun (impl_mref, exist) ->
-            if not exist then
-              Flow_js_utils.add_output
-                cx
-                Error_message.(
-                  EPlatformSpecificImplementationModuleLookupFailed
-                    { loc = file_loc; name = impl_mref }
-                )
-        ))
-
 (* build module graph *)
 (* Lint suppressions are handled iff lint_severities is Some. *)
-let infer_ast ~lint_severities cx filename comments aloc_ast =
+let infer_ast ~lint_severities cx filename loc_comments aloc_ast =
   assert (Context.is_checked cx);
-
-  let ( prog_aloc,
-        {
-          Ast.Program.statements = aloc_statements;
-          interpreter = aloc_interpreter;
-          comments = aloc_comments;
-          all_comments = aloc_all_comments;
-        }
-      ) =
-    aloc_ast
-  in
-
+  let (prog_aloc, { Ast.Program.statements; interpreter; comments; all_comments }) = aloc_ast in
   try
     initialize_env ~lib:false cx aloc_ast Name_def.Module;
-
-    let typed_statements = Statement.statement_list cx aloc_statements in
-
+    let typed_statements = Statement.statement_list cx statements in
     let (severity_cover, suppressions, suppression_errors) =
-      scan_for_suppressions ~in_libdef:false lint_severities [(filename, comments)]
+      scan_for_suppressions ~in_libdef:false lint_severities [(filename, loc_comments)]
     in
     Context.add_severity_covers cx severity_cover;
     Context.add_error_suppressions cx suppressions;
     List.iter (Flow_js.add_output cx) suppression_errors;
-
-    let program =
-      ( prog_aloc,
-        {
-          Ast.Program.statements = typed_statements;
-          interpreter = aloc_interpreter;
-          comments = aloc_comments;
-          all_comments = aloc_all_comments;
-        }
-      )
-    in
-
-    React_rules.check_react_rules cx program;
-    check_multiplatform_conformance cx filename prog_aloc;
-    Exists_marker.mark cx program;
-    program
+    (prog_aloc, { Ast.Program.statements = typed_statements; interpreter; comments; all_comments })
   with
   | Env_api.Env_invariant (loc, inv) ->
     let loc = Base.Option.value ~default:prog_aloc loc in
     Flow_js.add_output cx Error_message.(EInternal (loc, EnvInvariant inv));
-    ( prog_aloc,
-      {
-        Ast.Program.statements = Typed_ast_utils.error_mapper#statement_list aloc_statements;
-        interpreter = aloc_interpreter;
-        comments = aloc_comments;
-        all_comments = aloc_all_comments;
-      }
-    )
+    let statements = Typed_ast_utils.error_mapper#statement_list statements in
+    (prog_aloc, { Ast.Program.statements; interpreter; comments; all_comments })
 
 class lib_def_loc_mapper_and_validator cx =
   let stmt_validator ~in_toplevel_scope (loc, stmt) =
