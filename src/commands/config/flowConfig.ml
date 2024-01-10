@@ -57,7 +57,6 @@ module Opts = struct
     react_rules: Options.react_rules list;
     emoji: bool option;
     enable_const_params: bool option;
-    enforce_strict_call_arity: bool;
     enums: bool;
     estimate_recheck_time: bool option;
     exact_by_default: bool option;
@@ -182,7 +181,6 @@ module Opts = struct
       react_rules = [];
       emoji = None;
       enable_const_params = None;
-      enforce_strict_call_arity = true;
       enums = false;
       estimate_recheck_time = None;
       exact_by_default = None;
@@ -547,9 +545,6 @@ module Opts = struct
   let babel_loose_array_spread_parser =
     boolean (fun opts v -> Ok { opts with babel_loose_array_spread = Some v })
 
-  let enforce_strict_call_arity_parser =
-    boolean (fun opts v -> Ok { opts with enforce_strict_call_arity = v })
-
   let estimate_recheck_time_parser =
     boolean (fun opts v -> Ok { opts with estimate_recheck_time = Some v })
 
@@ -847,7 +842,6 @@ module Opts = struct
       ("experimental.renders_type_validation.includes", renders_type_validation_includes_parser);
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
       ("experimental.module.automatic_require_default", automatic_require_default_parser);
-      ("experimental.strict_call_arity", enforce_strict_call_arity_parser);
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
       ("experimental.strict_es6_import_export.excludes", strict_es6_import_export_excludes_parser);
       ("experimental.channel_mode", channel_mode_parser ~enabled:true);
@@ -1495,8 +1489,6 @@ let react_rules c = c.options.Opts.react_rules
 let emoji c = c.options.Opts.emoji
 
 let enable_const_params c = c.options.Opts.enable_const_params
-
-let enforce_strict_call_arity c = c.options.Opts.enforce_strict_call_arity
 
 let enums c = c.options.Opts.enums
 

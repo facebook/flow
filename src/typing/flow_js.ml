@@ -9083,7 +9083,7 @@ struct
       (* If there is a rest parameter, it will consume all the unused arguments *)
       match rest_param with
       | None ->
-        ( if is_strict && Context.enforce_strict_call_arity cx then
+        ( if is_strict then
           match unused_arglist with
           | [] -> ()
           | (first_unused_arg, _) :: _ ->

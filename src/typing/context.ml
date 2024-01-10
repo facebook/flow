@@ -44,7 +44,6 @@ type metadata = {
   enable_const_params: bool;
   enable_enums: bool;
   enable_relay_integration: bool;
-  enforce_strict_call_arity: bool;
   exact_by_default: bool;
   facebook_fbs: string option;
   facebook_fbt: string option;
@@ -255,7 +254,6 @@ let metadata_of_options options =
     enable_const_params = Options.enable_const_params options;
     enable_enums = Options.enums options;
     enable_relay_integration = Options.enable_relay_integration options;
-    enforce_strict_call_arity = Options.enforce_strict_call_arity options;
     exact_by_default = Options.exact_by_default options;
     facebook_fbs = Options.facebook_fbs options;
     facebook_fbt = Options.facebook_fbt options;
@@ -489,8 +487,6 @@ let relay_integration_module_prefix cx =
 
 let enable_renders_type_validation cx =
   cx.metadata.renders_type_validation || in_dirlist cx cx.metadata.renders_type_validation_includes
-
-let enforce_strict_call_arity cx = cx.metadata.enforce_strict_call_arity
 
 let errors cx = cx.ccx.errors
 

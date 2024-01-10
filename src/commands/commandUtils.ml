@@ -1367,7 +1367,6 @@ let make_options
     opt_enable_relay_integration = FlowConfig.relay_integration flowconfig;
     opt_enabled_rollouts = FlowConfig.enabled_rollouts flowconfig;
     opt_channel_mode = Base.Option.value ~default:`pipe (FlowConfig.channel_mode flowconfig);
-    opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;
     opt_enums = FlowConfig.enums flowconfig;
     opt_estimate_recheck_time =
       Base.Option.first_some

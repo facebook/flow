@@ -81,7 +81,6 @@ type metadata = {
   enable_const_params: bool;
   enable_enums: bool;
   enable_relay_integration: bool;
-  enforce_strict_call_arity: bool;
   exact_by_default: bool;
   facebook_fbs: string option;
   facebook_fbt: string option;
@@ -169,8 +168,6 @@ val enable_enums : t -> bool
 val enable_relay_integration : t -> bool
 
 val relay_integration_module_prefix : t -> string option
-
-val enforce_strict_call_arity : t -> bool
 
 val errors : t -> Flow_error.ErrorSet.t
 
