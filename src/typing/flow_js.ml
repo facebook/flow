@@ -864,16 +864,12 @@ struct
         | (UnionT (_, rep), OptionalIndexedAccessT { use_op; reason; index; tout_tvar }) ->
           let (t0, (t1, ts)) = UnionRep.members_nel rep in
           let f t =
-            AnnotT
-              ( reason,
-                Tvar.mk_no_wrap_where cx reason (fun tvar ->
-                    rec_flow
-                      cx
-                      trace
-                      (t, OptionalIndexedAccessT { use_op; reason; index; tout_tvar = tvar })
-                ),
-                false
-              )
+            Tvar.mk_no_wrap_where cx reason (fun tvar ->
+                rec_flow
+                  cx
+                  trace
+                  (t, OptionalIndexedAccessT { use_op; reason; index; tout_tvar = tvar })
+            )
           in
           let rep = UnionRep.make (f t0) (f t1) (Base.List.map ts ~f) in
           rec_unify cx trace ~use_op:unknown_use (UnionT (reason, rep)) (OpenT tout_tvar)
@@ -1029,16 +1025,12 @@ struct
           rec_flow cx trace (reposition cx ~trace loc ?desc l, u)
         | (MaybeT (r, t), DestructuringT (reason, DestructAnnot, s, tout, _)) ->
           let f t =
-            AnnotT
-              ( reason,
-                Tvar.mk_no_wrap_where cx reason (fun tvar ->
-                    rec_flow
-                      cx
-                      trace
-                      (t, DestructuringT (reason, DestructAnnot, s, tvar, Reason.mk_id ()))
-                ),
-                false
-              )
+            Tvar.mk_no_wrap_where cx reason (fun tvar ->
+                rec_flow
+                  cx
+                  trace
+                  (t, DestructuringT (reason, DestructAnnot, s, tvar, Reason.mk_id ()))
+            )
           in
           let void_t = VoidT.why r in
           let null_t = NullT.why r in
@@ -1076,16 +1068,12 @@ struct
             DestructuringT (reason, DestructAnnot, s, tout, _)
           ) ->
           let f t =
-            AnnotT
-              ( reason,
-                Tvar.mk_no_wrap_where cx reason (fun tvar ->
-                    rec_flow
-                      cx
-                      trace
-                      (t, DestructuringT (reason, DestructAnnot, s, tvar, Reason.mk_id ()))
-                ),
-                false
-              )
+            Tvar.mk_no_wrap_where cx reason (fun tvar ->
+                rec_flow
+                  cx
+                  trace
+                  (t, DestructuringT (reason, DestructAnnot, s, tvar, Reason.mk_id ()))
+            )
           in
           let void_t = VoidT.why_with_use_desc ~use_desc r in
           let rep = UnionRep.make (f void_t) (f t) [] in
@@ -1591,16 +1579,12 @@ struct
         | (UnionT (_, rep), DestructuringT (reason, DestructAnnot, s, tout, _)) ->
           let (t0, (t1, ts)) = UnionRep.members_nel rep in
           let f t =
-            AnnotT
-              ( reason,
-                Tvar.mk_no_wrap_where cx reason (fun tvar ->
-                    rec_flow
-                      cx
-                      trace
-                      (t, DestructuringT (reason, DestructAnnot, s, tvar, Reason.mk_id ()))
-                ),
-                false
-              )
+            Tvar.mk_no_wrap_where cx reason (fun tvar ->
+                rec_flow
+                  cx
+                  trace
+                  (t, DestructuringT (reason, DestructAnnot, s, tvar, Reason.mk_id ()))
+            )
           in
           let rep = UnionRep.make (f t0) (f t1) (Base.List.map ts ~f) in
           rec_unify cx trace ~use_op:unknown_use (UnionT (reason, rep)) (OpenT tout)
@@ -1691,23 +1675,19 @@ struct
           let reason = update_desc_reason invalidate_rtype_alias reason in
           let (t0, (t1, ts)) = UnionRep.members_nel rep in
           let f t =
-            AnnotT
-              ( reason,
-                Tvar.mk_no_wrap_where cx reason (fun tvar ->
-                    rec_flow
-                      cx
-                      trace
-                      ( t,
-                        ElemT
-                          ( use_op,
-                            reason,
-                            obj,
-                            ReadElem { id; from_annot = true; access_iterables; tout = tvar }
-                          )
+            Tvar.mk_no_wrap_where cx reason (fun tvar ->
+                rec_flow
+                  cx
+                  trace
+                  ( t,
+                    ElemT
+                      ( use_op,
+                        reason,
+                        obj,
+                        ReadElem { id; from_annot = true; access_iterables; tout = tvar }
                       )
-                ),
-                false
-              )
+                  )
+            )
           in
           let rep = UnionRep.make (f t0) (f t1) (Base.List.map ts ~f) in
           rec_flow_t cx trace ~use_op:unknown_use (UnionT (reason, rep), OpenT tout)
