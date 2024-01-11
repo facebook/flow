@@ -20,11 +20,11 @@ module type C = sig
 
   val get_builtin : Context.t -> name -> reason -> Type.t
 
+  val get_builtin_type : Context.t -> reason -> ?use_desc:bool -> name -> Type.t
+
   val obj_test_proto : Context.t -> Reason.t -> Type.t -> Type.t
 
   val mixin : Context.t -> Reason.t -> Type.t -> Type.t
-
-  val subtype_check : Context.t -> Type.t -> Type.t -> unit
 end
 
 module FlowJS : C

@@ -87,6 +87,8 @@ module type S = sig
 
   val get_builtin : Context.t -> name -> reason -> Type.t
 
+  val get_builtin_type : Context.t -> reason -> ?use_desc:bool -> name -> Type.t
+
   val qualify_type :
     Context.t -> Type.use_op -> Reason.t -> Reason.t * Reason.name -> Type.t -> Type.t
 

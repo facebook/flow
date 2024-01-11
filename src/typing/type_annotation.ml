@@ -29,19 +29,17 @@ module type C = sig
 
   val get_builtin : Context.t -> name -> reason -> Type.t
 
+  val get_builtin_type : Context.t -> reason -> ?use_desc:bool -> name -> Type.t
+
   val obj_test_proto : Context.t -> Reason.t -> Type.t -> Type.t
 
   val mixin : Context.t -> Reason.t -> Type.t -> Type.t
-
-  val subtype_check : Context.t -> Type.t -> Type.t -> unit
 end
 
 module FlowJS : C = struct
   include Flow
 
   let reposition = reposition ?desc:None
-
-  let subtype_check cx l u = Flow.flow_t cx (l, u)
 
   let mixin cx reason i =
     Tvar.mk_where cx reason (fun tout -> Flow.flow cx (i, Type.MixinT (reason, tout)))
@@ -60,11 +58,7 @@ module FlowJS : C = struct
     )
 end
 
-module Annot : C = struct
-  include Annotation_inference.ConsGen
-
-  let subtype_check _ _ _ = (* TODO *) ()
-end
+module Annot : C = Annotation_inference.ConsGen
 
 module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
   open Type_env.LookupMode
@@ -241,6 +235,14 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     let t_out = Tast_utils.error_mapper#type_ t_in |> snd in
     ((loc, AnyT.at (AnyError None) loc), t_out)
 
+  let var_ref ~lookup_mode cx name loc =
+    let t = Type_env.query_var ~lookup_mode cx name loc in
+    ConsGen.reposition cx loc t
+
+  let get_builtin_typeapp cx reason x targs =
+    let t = ConsGen.get_builtin cx x reason in
+    TypeUtil.typeapp ~from_value:false ~use_desc:false reason t targs
+
   let is_suppress_type cx type_name = SSet.mem type_name (Context.suppress_types cx)
 
   let check_type_arg_arity cx loc t_ast params n f =
@@ -362,7 +364,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
 
   (* converter *)
 
-  let mk_type_destructor = Flow_js.mk_possibly_evaluated_destructor
+  let mk_type_destructor = Flow.mk_possibly_evaluated_destructor
 
   let error_on_unsupported_variance_annotation cx ~kind tparams =
     Base.Option.iter tparams ~f:(fun (_, { Ast.Type.TypeParams.params; _ }) ->
@@ -1234,7 +1236,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                        (RIdentifier (OrdinaryName "React$Node"))
                        3
                    in
-                   Flow.get_builtin_type cx ~use_desc:true reason (OrdinaryName "React$Node")
+                   ConsGen.get_builtin_type cx ~use_desc:true reason (OrdinaryName "React$Node")
                   )
             in
             reconstruct_ast
@@ -1832,9 +1834,9 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     in
     let reason = mk_reason reason_desc loc in
     let renders_reason = reason_of_t t in
-    let node = Flow.get_builtin_type cx renders_reason (OrdinaryName "React$Node") in
+    let node = ConsGen.get_builtin_type cx renders_reason (OrdinaryName "React$Node") in
     let use_op = Op (RenderTypeInstantiation { render_type = renders_reason }) in
-    Flow.flow cx (t, UseT (use_op, node));
+    Context.add_post_inference_subtyping_check cx t use_op node;
     let renders_variant =
       let open Ast.Type in
       match variant with
@@ -2317,7 +2319,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
         | Some ((rloc, _), { I.name = rest_name; _ }) when rest_name = param_name ->
           let pred_reason = mk_reason (RTypeGuardParam param_name) name_loc in
           let binding_reason = mk_reason (RRestParameter (Some rest_name)) rloc in
-          Flow_js.add_output
+          Flow_js_utils.add_output
             cx
             Error_message.(EPredicateInvalidParameter { pred_reason; binding_reason })
         | _ -> ()
@@ -2354,7 +2356,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
                   { guard_type = reason_of_t guard_t; param_name = guard_name }
                )
            in
-           Flow.flow cx (guard_t, UseT (use_op, param_t))
+           Context.add_post_inference_subtyping_check cx guard_t use_op param_t
        )
 
   and convert_type_guard cx tparams_map infer_tparams_map fparams gloc id_name t comments =
@@ -2539,7 +2541,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
       let t =
         if async then
           let reason = mk_annot_reason (RType (OrdinaryName "Promise")) (loc_of_reason reason) in
-          Flow.get_builtin_typeapp cx reason (OrdinaryName "Promise") [void_t]
+          get_builtin_typeapp cx reason (OrdinaryName "Promise") [void_t]
         else
           void_t
       in
@@ -2671,7 +2673,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
           | None -> (None, None)
           | Some default ->
             let (t, default_ast) = mk_type cx tparams_map infer_tparams_map reason (Some default) in
-            ConsGen.subtype_check cx t bound;
+            Context.add_post_inference_subtyping_check cx t unknown_use bound;
             (Some t, default_ast)
         in
         let subst_name =
@@ -2739,7 +2741,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     else if name = "undefined" then
       VoidT.at loc
     else
-      Type_env.var_ref ~lookup_mode:ForType cx (OrdinaryName name) loc
+      var_ref ~lookup_mode:ForType cx (OrdinaryName name) loc
 
   and mk_interface_super
       cx tparams_map infer_tparams_map (loc, { Ast.Type.Generic.id; targs; comments }) =
@@ -3090,7 +3092,7 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
             (loc, t, Ast.Type.AvailableRenders (loc, renders_ast))
           | Ast.Type.MissingRenders loc ->
             let ren_reason = mk_reason RReturn loc in
-            let t = Flow.get_builtin_type cx ren_reason (OrdinaryName "React$Node") in
+            let t = ConsGen.get_builtin_type cx ren_reason (OrdinaryName "React$Node") in
             let renders_t = TypeUtil.mk_renders_type ren_reason RendersNormal t in
             (loc, renders_t, Ast.Type.MissingRenders (loc, renders_t))
         in
