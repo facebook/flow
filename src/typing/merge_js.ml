@@ -323,54 +323,9 @@ let detect_literal_subtypes =
       checks
 
 let check_constrained_writes cx =
-  let prepare_checks ~resolve_t checks =
-    Base.List.map
-      ~f:(fun (t, use_op, u_def) ->
-        let open Type in
-        let open Constraint in
-        let u_def = resolve_t u_def in
-        let (mk_use_op, use_op) =
-          let rec loop = function
-            | Frame ((ConstrainedAssignment _ as frame), op) ->
-              (TypeUtil.mod_use_op_of_use_t (fun op -> Frame (frame, op)), op)
-            | Op _ as op -> ((fun x -> x), op)
-            | Frame (frame, op) ->
-              let (f, op) = loop op in
-              (f, Frame (frame, op))
-          in
-          loop use_op
-        in
-        let u = UseT (use_op, u_def) in
-        match t with
-        | OpenT (_, id) ->
-          let (_, constraints) = Context.find_constraints cx id in
-          begin
-            match constraints with
-            | Unresolved { lower; _ } ->
-              TypeMap.bindings lower
-              |> Base.List.map ~f:(fun (t, (_, use_op)) ->
-                     let t = resolve_t t in
-                     (t, mk_use_op (Flow_js.flow_use_op cx use_op u))
-                 )
-            | Resolved _
-            | FullyResolved _ ->
-              let t = resolve_t t in
-              [(t, mk_use_op (Flow_js.flow_use_op cx unknown_use u))]
-          end
-        | _ ->
-          let t = resolve_t t in
-          [(t, mk_use_op u)])
-      checks
-    |> List.flatten
-  in
-
   let checks = Context.constrained_writes cx in
-  if not @@ Base.List.is_empty checks then (
-    let (cx, checks) = (cx, prepare_checks ~resolve_t:(fun t -> t) checks) in
-    Base.List.iter ~f:(Flow_js.flow cx) checks;
-    let new_errors = Context.errors cx in
-    Flow_error.ErrorSet.iter (Context.add_error cx) new_errors
-  )
+  if not @@ Base.List.is_empty checks then
+    Base.List.iter checks ~f:(fun (l, use_op, u) -> Flow_js.flow cx (l, Type.UseT (use_op, u)))
 
 let check_react_rules cx tast = React_rules.check_react_rules cx tast
 
