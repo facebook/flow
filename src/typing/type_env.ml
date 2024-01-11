@@ -711,7 +711,7 @@ let subtype_against_providers cx ~use_op ?potential_global_name t loc =
               )
           | None -> use_op
         in
-        Context.add_constrained_write cx (t, use_op, general)
+        Context.add_post_inference_subtyping_check cx t use_op general
 
 let resolve_env_entry ~use_op ~update_reason cx t kind loc =
   unify_write_entry cx ~use_op t kind loc;

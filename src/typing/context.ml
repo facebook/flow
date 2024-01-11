@@ -172,7 +172,7 @@ type component_t = {
   (* Post-inference checks *)
   mutable literal_subtypes: (ALoc.t * Env_api.literal_check) list;
   mutable matching_props: (string * ALoc.t * ALoc.t) list;
-  mutable constrained_writes: (Type.t * Type.use_op * Type.t) list;
+  mutable post_inference_validation_flows: (Type.t * Type.use_t) list;
   mutable renders_type_argument_validations:
     (ALoc.t * Flow_ast.Type.Renders.variant * bool * Type.t) list;
   mutable global_value_cache:
@@ -358,7 +358,7 @@ let make_ccx () =
     synthesis_produced_placeholders = false;
     matching_props = [];
     literal_subtypes = [];
-    constrained_writes = [];
+    post_inference_validation_flows = [];
     renders_type_argument_validations = [];
     global_value_cache = NameUtils.Map.empty;
     env_value_cache = IMap.empty;
@@ -582,7 +582,7 @@ let suppress_types cx = cx.metadata.suppress_types
 
 let literal_subtypes cx = cx.ccx.literal_subtypes
 
-let constrained_writes cx = cx.ccx.constrained_writes
+let post_inference_validation_flows cx = cx.ccx.post_inference_validation_flows
 
 let renders_type_argument_validations cx = cx.ccx.renders_type_argument_validations
 
@@ -688,7 +688,11 @@ let add_matching_props cx c = cx.ccx.matching_props <- c :: cx.ccx.matching_prop
 
 let add_literal_subtypes cx c = cx.ccx.literal_subtypes <- c :: cx.ccx.literal_subtypes
 
-let add_constrained_write cx c = cx.ccx.constrained_writes <- c :: cx.ccx.constrained_writes
+let add_post_inference_validation_flow cx t use_t =
+  cx.ccx.post_inference_validation_flows <- (t, use_t) :: cx.ccx.post_inference_validation_flows
+
+let add_post_inference_subtyping_check cx l use_op u =
+  add_post_inference_validation_flow cx l (Type.UseT (use_op, u))
 
 let add_renders_type_argument_validation cx ~allow_generic_t loc variant t =
   if enable_renders_type_validation cx then

@@ -322,10 +322,8 @@ let detect_literal_subtypes =
         Flow_js.flow cx (l, UseT (use_op, u_def)))
       checks
 
-let check_constrained_writes cx =
-  let checks = Context.constrained_writes cx in
-  if not @@ Base.List.is_empty checks then
-    Base.List.iter checks ~f:(fun (l, use_op, u) -> Flow_js.flow cx (l, Type.UseT (use_op, u)))
+let check_general_post_inference_validations cx =
+  Base.List.iter (Context.post_inference_validation_flows cx) ~f:(fun pair -> Flow_js.flow cx pair)
 
 let check_react_rules cx tast = React_rules.check_react_rules cx tast
 
@@ -586,7 +584,7 @@ let post_merge_checks cx ast tast metadata =
   check_react_rules cx tast;
   check_multiplatform_conformance cx ast;
   check_exists_marker cx tast;
-  check_constrained_writes cx;
+  check_general_post_inference_validations cx;
   validate_renders_type_arguments cx;
   detect_sketchy_null_checks cx;
   detect_non_voidable_properties cx;

@@ -752,7 +752,7 @@ let resolve_binding cx reason loc b =
               unknown_use
             )
         in
-        Context.add_constrained_write cx (elem_t, use_op, constrain_t);
+        Context.add_post_inference_subtyping_check cx elem_t use_op constrain_t;
         (elem_t, None, reason)
       ) else
         let elem_t = Tvar.mk cx element_reason in
