@@ -87,8 +87,7 @@
             "kind":"var"
           }
         ]
-      },
-      "kind":"CommonJS"
+      }
     },
     {
       "type":"EmptyStatement",

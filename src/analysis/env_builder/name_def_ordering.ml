@@ -906,8 +906,7 @@ struct
             ())
           EnvMap.empty
       in
-      let depends_of_declared_module
-          { Ast.Statement.DeclareModule.id = _; body; kind = _; comments = _ } =
+      let depends_of_declared_module { Ast.Statement.DeclareModule.id = _; body; comments = _ } =
         depends_of_node
           (fun visitor ->
             let open Flow_ast_mapper in

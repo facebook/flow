@@ -663,7 +663,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method declare_module _annot (m : ('M, 'T) Ast.Statement.DeclareModule.t)
         : ('N, 'U) Ast.Statement.DeclareModule.t =
       let open Ast.Statement.DeclareModule in
-      let { id; body; kind; comments } = m in
+      let { id; body; comments } = m in
       let id' =
         match id with
         | Identifier id -> Identifier (this#t_identifier id)
@@ -671,7 +671,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       in
       let body' = (this#on_loc_annot * this#block) body in
       let comments' = this#syntax_opt comments in
-      { id = id'; body = body'; kind; comments = comments' }
+      { id = id'; body = body'; comments = comments' }
 
     method declare_module_exports (exports : ('M, 'T) Ast.Statement.DeclareModuleExports.t)
         : ('N, 'U) Ast.Statement.DeclareModuleExports.t =

@@ -589,7 +589,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
 
       method! declare_module _loc m =
         let open Ast.Statement.DeclareModule in
-        let { id = _; body; kind = _; comments = _ } = m in
+        let { id = _; body; comments = _ } = m in
         let (loc, body) = body in
         let bindings =
           let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in

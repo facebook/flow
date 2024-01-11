@@ -20,8 +20,7 @@
         "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":19}},
         "range":[17,19],
         "body":[]
-      },
-      "kind":"CommonJS"
+      }
     },
     {
       "type":"DeclareModule",
@@ -40,8 +39,7 @@
         "loc":{"source":null,"start":{"line":2,"column":17},"end":{"line":2,"column":19}},
         "range":[37,39],
         "body":[]
-      },
-      "kind":"CommonJS"
+      }
     }
   ],
   "comments":[]

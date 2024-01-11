@@ -476,7 +476,7 @@ class lib_def_loc_mapper_and_validator cx =
 
     method! declare_module l m =
       let open Ast.Statement.DeclareModule in
-      let { id; body = (body_loc, body_block); kind; comments } = m in
+      let { id; body = (body_loc, body_block); comments } = m in
       super#declare_module
         l
         {
@@ -491,7 +491,6 @@ class lib_def_loc_mapper_and_validator cx =
                     body_block.Ast.Statement.Block.body;
               }
             );
-          kind;
           comments;
         }
   end

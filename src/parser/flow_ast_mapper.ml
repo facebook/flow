@@ -902,13 +902,13 @@ class ['loc] mapper =
 
     method declare_module _loc (m : ('loc, 'loc) Ast.Statement.DeclareModule.t) =
       let open Ast.Statement.DeclareModule in
-      let { id; body; kind; comments } = m in
+      let { id; body; comments } = m in
       let body' = map_loc this#block body in
       let comments' = this#syntax_opt comments in
       if body' == body && comments == comments' then
         m
       else
-        { id; body = body'; kind; comments = comments' }
+        { id; body = body'; comments = comments' }
 
     method declare_module_exports _loc (exports : ('loc, 'loc) Ast.Statement.DeclareModuleExports.t)
         =

@@ -4466,7 +4466,7 @@ and declare_module_exports ~opts loc { Ast.Statement.DeclareModuleExports.annot;
   @@ with_semicolon
        (fuse [Atom "declare"; space; Atom "module.exports"; type_annotation ~opts annot])
 
-and declare_module ~opts loc { Ast.Statement.DeclareModule.id; body; kind = _; comments } =
+and declare_module ~opts loc { Ast.Statement.DeclareModule.id; body; comments } =
   source_location_with_comments
     ?comments
     ( loc,

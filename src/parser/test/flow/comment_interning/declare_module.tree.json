@@ -58,8 +58,7 @@
         "loc":{"source":null,"start":{"line":1,"column":94},"end":{"line":1,"column":96}},
         "range":[94,96],
         "body":[]
-      },
-      "kind":"CommonJS"
+      }
     },
     {
       "type":"BlockStatement",
@@ -99,8 +98,7 @@
             "loc":{"source":null,"start":{"line":4,"column":38},"end":{"line":4,"column":40}},
             "range":[156,158],
             "body":[]
-          },
-          "kind":"CommonJS"
+          }
         },
         {
           "type":"DeclareModule",
@@ -135,8 +133,7 @@
             "loc":{"source":null,"start":{"line":5,"column":38},"end":{"line":5,"column":40}},
             "range":[215,217],
             "body":[]
-          },
-          "kind":"CommonJS"
+          }
         }
       ]
     },
@@ -173,8 +170,7 @@
         "loc":{"source":null,"start":{"line":10,"column":20},"end":{"line":10,"column":22}},
         "range":[295,297],
         "body":[]
-      },
-      "kind":"CommonJS"
+      }
     },
     {
       "type":"DeclareModule",
@@ -208,8 +204,7 @@
         "loc":{"source":null,"start":{"line":13,"column":20},"end":{"line":13,"column":22}},
         "range":[356,358],
         "body":[]
-      },
-      "kind":"CommonJS"
+      }
     },
     {
       "type":"DeclareModule",
@@ -236,8 +231,7 @@
         "loc":{"source":null,"start":{"line":15,"column":19},"end":{"line":15,"column":40}},
         "range":[379,400],
         "body":[]
-      },
-      "kind":"CommonJS"
+      }
     }
   ],
   "comments":[

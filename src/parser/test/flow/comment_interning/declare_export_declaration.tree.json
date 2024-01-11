@@ -637,8 +637,7 @@
             "source":null
           }
         ]
-      },
-      "kind":"ES"
+      }
     },
     {
       "type":"DeclareExportDeclaration",
@@ -823,8 +822,7 @@
             "source":null
           }
         ]
-      },
-      "kind":"ES"
+      }
     },
     {
       "type":"DeclareModule",
@@ -900,8 +898,7 @@
             }
           }
         ]
-      },
-      "kind":"ES"
+      }
     },
     {
       "type":"DeclareModule",
@@ -1015,8 +1012,7 @@
             "source":null
           }
         ]
-      },
-      "kind":"ES"
+      }
     },
     {
       "type":"DeclareModule",
@@ -1142,8 +1138,7 @@
             }
           }
         ]
-      },
-      "kind":"ES"
+      }
     }
   ],
   "comments":[

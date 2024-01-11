@@ -2035,7 +2035,7 @@ module Make
       let (t, decl_ast) = Anno.mk_declare_component_sig cx loc decl in
       (t, decl_ast)
 
-  and declare_module cx loc { Ast.Statement.DeclareModule.id; body; kind; comments } =
+  and declare_module cx loc { Ast.Statement.DeclareModule.id; body; comments } =
     let open Ast.Statement in
     let node_cache = Context.node_cache cx in
     match Node_cache.get_declared_module node_cache loc with
@@ -2080,7 +2080,6 @@ module Make
                 DeclareModule.Literal ((id_loc, module_t), lit)
             end;
           body = (body_loc, { Block.body = elements_ast; comments = elements_comments });
-          kind;
           comments;
         }
       in

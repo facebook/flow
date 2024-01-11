@@ -4664,7 +4664,7 @@ let rec statement opts scope tbls (loc, stmt) =
   | S.DeclareModuleExports { S.DeclareModuleExports.annot = (_, t); comments = _ } ->
     let t = annot opts scope tbls SSet.empty t in
     Scope.cjs_clobber scope t
-  | S.DeclareModule { S.DeclareModule.id; body; kind = _; comments = _ } ->
+  | S.DeclareModule { S.DeclareModule.id; body; comments = _ } ->
     let (loc, name) =
       match id with
       | S.DeclareModule.Identifier ((id_loc, _) as id) -> (push_loc tbls id_loc, id_name id)

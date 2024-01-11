@@ -34,8 +34,7 @@
         "loc":{"source":null,"start":{"line":1,"column":16},"end":{"line":2,"column":0}},
         "range":[16,18],
         "body":[]
-      },
-      "kind":"CommonJS"
+      }
     }
   ],
   "comments":[]

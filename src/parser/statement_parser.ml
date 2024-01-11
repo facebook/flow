@@ -1321,17 +1321,17 @@ module Statement
            * exceptions to this rule because they are valid in both CommonJS
            * and ES modules (and thus do not indicate an intent for either).
            *)
-          | (None, DeclareModuleExports _) -> Some DeclareModule.CommonJS
+          | (None, DeclareModuleExports _) -> Some `CommonJS
           | (None, DeclareExportDeclaration { DeclareExportDeclaration.declaration; _ }) ->
             (match declaration with
             | Some (DeclareExportDeclaration.NamedType _)
             | Some (DeclareExportDeclaration.Interface _) ->
               module_kind
-            | _ -> Some DeclareModule.ES)
+            | _ -> Some `ES)
           (*
            * There should never be more than one `declare module.exports`
            * statement *)
-          | (Some DeclareModule.CommonJS, DeclareModuleExports _) ->
+          | (Some `CommonJS, DeclareModuleExports _) ->
             error env Parse_error.DuplicateDeclareModuleExports;
             module_kind
           (*
@@ -1342,12 +1342,11 @@ module Statement
            * The 1 exception to this rule is that `export type/interface` are
            * both ok in CommonJS modules.
            *)
-          | (Some DeclareModule.ES, DeclareModuleExports _) ->
+          | (Some `ES, DeclareModuleExports _) ->
             error env Parse_error.AmbiguousDeclareModuleKind;
             module_kind
-          | ( Some DeclareModule.CommonJS,
-              DeclareExportDeclaration { DeclareExportDeclaration.declaration; _ }
-            ) ->
+          | (Some `CommonJS, DeclareExportDeclaration { DeclareExportDeclaration.declaration; _ })
+            ->
             (match declaration with
             | Some (DeclareExportDeclaration.NamedType _)
             | Some (DeclareExportDeclaration.Interface _) ->
@@ -1366,12 +1365,12 @@ module Statement
             (string_literal_remove_trailing env (string_literal env str))
         | _ -> Statement.DeclareModule.Identifier (id_remove_trailing env (Parse.identifier env))
       in
-      let (body, module_kind) =
-        with_loc_extra
+      let body =
+        with_loc
           (fun env ->
             let leading = Peek.comments env in
             Expect.token env T_LCURLY;
-            let (module_kind, body) = module_items env ~module_kind:None [] in
+            let (_module_kind, body) = module_items env ~module_kind:None [] in
             let internal =
               if body = [] then
                 Peek.comments env
@@ -1383,17 +1382,11 @@ module Statement
             let comments =
               Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ()
             in
-            let body = { Statement.Block.body; comments } in
-            (body, module_kind))
+            { Statement.Block.body; comments })
           env
       in
-      let kind =
-        match module_kind with
-        | Some k -> k
-        | None -> Statement.DeclareModule.CommonJS
-      in
       let comments = Flow_ast_utils.mk_comments_opt ~leading () in
-      Statement.(DeclareModule DeclareModule.{ id; body; kind; comments })
+      Statement.(DeclareModule DeclareModule.{ id; body; comments })
     in
     fun ~in_module env ->
       let start_loc = Peek.loc env in

@@ -1107,14 +1107,9 @@ and Statement : sig
       | Identifier of ('M, 'T) Identifier.t
       | Literal of ('T * 'M StringLiteral.t)
 
-    and module_kind =
-      | CommonJS
-      | ES
-
     and ('M, 'T) t = {
       id: ('M, 'T) id;
       body: 'M * ('M, 'T) Block.t;
-      kind: module_kind;
       comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
