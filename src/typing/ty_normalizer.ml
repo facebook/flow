@@ -548,14 +548,14 @@ module Make (I : INPUT) : S = struct
     let%map t = cont ~env ?id t in
     Ty.mk_union ~from_bounds:false (Ty.Void, [t])
 
-  let keys_t ~env ~(cont : fn_t) r t =
+  let keys_t ~env ~(cont : fn_t) ?(force_eval = false) r t =
     let cx = Env.get_cx env in
     let default () =
       let%map ty = cont ~env t in
       Ty.Utility (Ty.Keys ty)
     in
     let%bind () = modify (fun state -> { state with State.found_computed_type = true }) in
-    let should_evaluate = Env.evaluate_type_destructors env <> Env.EvaluateNone in
+    let should_evaluate = force_eval || Env.evaluate_type_destructors env <> Env.EvaluateNone in
     I.keys cx ~should_evaluate ~cont:(cont ~env) ~default r t
 
   module Reason_utils = struct
@@ -2608,7 +2608,7 @@ module Make (I : INPUT) : S = struct
               (t, d, id')
       | MaybeT (_, t) -> maybe_t ~env ?id ~cont:type__ t
       | OptionalT { type_ = t; _ } -> optional_t ~env ?id ~cont:type__ t
-      | KeysT (r, t) -> keys_t ~env ~cont:type__ r t
+      | KeysT (r, t) -> keys_t ~env ~cont:type__ r ~force_eval:true t
       | DefT (_, SingletonNumT (_, lit)) -> return (Ty.NumLit lit)
       | DefT (_, SingletonStrT lit) -> return (Ty.StrLit lit)
       | DefT (_, SingletonBoolT lit) -> return (Ty.BoolLit lit)

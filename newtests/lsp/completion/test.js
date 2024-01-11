@@ -8655,7 +8655,7 @@ b.te
                 {
                   label: 'B',
                   kind: 6,
-                  detail: 'type B = any',
+                  detail: 'type B = T[any]',
                   sortText: '00000000000000000002',
                   insertTextFormat: 1,
                   textEdit: {

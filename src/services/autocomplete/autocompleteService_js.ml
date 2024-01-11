@@ -270,19 +270,7 @@ let autocomplete_create_result_elt
       (name, edit_locs)
       d
 
-let ty_normalizer_options =
-  {
-    Ty_normalizer_env.expand_internal_types = true;
-    flag_shadowed_type_params = true;
-    preserve_inferred_literal_types = false;
-    evaluate_type_destructors = Ty_normalizer_env.EvaluateAll;
-    optimize_types = true;
-    omit_targ_defaults = false;
-    merge_bot_and_any_kinds = true;
-    verbose_normalizer = false;
-    max_depth = Some 50;
-    toplevel_is_type_identifier_reference = false;
-  }
+let ty_normalizer_options = Ty_normalizer_env.{ default_options with expand_internal_types = true }
 
 type ac_result = {
   result: ServerProt.Response.Completion.t;
