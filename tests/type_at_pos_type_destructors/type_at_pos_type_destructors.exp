@@ -564,7 +564,7 @@ type-destructor.js:184:6,184:10
 
 type-destructor.js:189:14
 Flags:
-{+key: any, ...}
+ReadOnlyObj
 type-destructor.js:189:14,189:14
 
 type-destructor.js:207:9

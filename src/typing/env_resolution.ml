@@ -392,7 +392,7 @@ let rec binding_has_annot = function
   | Select { parent = (_, b); _ } -> binding_has_annot b
   | _ -> false
 
-let resolve_binding_partial cx reason loc b =
+let resolve_binding cx reason loc b =
   let mk_use_op t = Op (AssignVar { var = Some reason; init = TypeUtil.reason_of_t t }) in
   match b with
   | Root
@@ -886,25 +886,6 @@ let resolve_binding_partial cx reason loc b =
       in
       (t, unknown_use))
 
-let resolve_binding cx reason loc_kind loc binding =
-  let (t, use_op) = resolve_binding_partial cx reason loc binding in
-  let has_annot = binding_has_annot binding in
-
-  let t =
-    match binding with
-    | Select _ when has_annot && loc_kind <> Env_api.PatternLoc ->
-      (* This is unnecessary if we are directly resolving an annotation. *)
-      AnnotT
-        ( reason,
-          Tvar.mk_where cx reason (fun t' ->
-              Flow_js.unify cx (Flow_js.reposition cx (loc_of_reason reason) t) t'
-          ),
-          false
-        )
-    | _ -> t
-  in
-  (t, use_op)
-
 let resolve_inferred_function cx ~statics ~needs_this_param id_loc reason function_loc function_ =
   let cache = Context.node_cache cx in
   let ((fun_type, _) as fn) =
@@ -1194,7 +1175,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
   Context.set_environment cx { env with Loc_env.scope_kind = def_scope_kind; class_stack };
   let (t, use_op) =
     match def with
-    | Binding b -> resolve_binding cx def_reason def_kind id_loc b
+    | Binding b -> resolve_binding cx def_reason id_loc b
     | ExpressionDef { cond_context = cond; expr; chain = true; hints = _ } ->
       resolve_chain_expression cx ~cond expr
     | ExpressionDef { cond_context = cond; expr; chain = false; hints = _ } ->
