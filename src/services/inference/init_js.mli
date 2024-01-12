@@ -19,9 +19,4 @@ type init_result = {
    circular deps in Ocaml prevent direct calls from here
    to Types_js, where error management stuff lives.
 *)
-val init :
-  options:Options.t ->
-  reader:Mutator_state_reader.t ->
-  validate_libdefs:bool ->
-  string list ->
-  init_result Lwt.t
+val init : options:Options.t -> reader:Mutator_state_reader.t -> string list -> init_result Lwt.t

@@ -14,67 +14,7 @@
    future. *)
 
 open Utils_js
-module Ast = Flow_ast
-module Parsing = Parsing_service_js
-module Infer = Type_inference_js
 module ErrorSet = Flow_error.ErrorSet
-
-let is_ok { Parsing.parsed; _ } = not (FilenameSet.is_empty parsed)
-
-let is_fail { Parsing.failed; _ } = fst failed <> []
-
-type lib_result =
-  | Lib_ok of {
-      ast: (Loc.t, Loc.t) Ast.Program.t;
-      file_sig: File_sig.t;
-      tolerable_errors: File_sig.tolerable_error list;
-    }
-  | Lib_fail of Parsing.parse_failure
-  | Lib_skip
-
-let parse_lib_file ~reader options file =
-  (* do not parallelize *)
-  let workers = None in
-  try%lwt
-    let lib_file = File_key.LibFile file in
-    let filename_set = FilenameSet.singleton lib_file in
-    let next = Parsing.next_of_filename_set (* workers *) None filename_set in
-    let%lwt results = Parsing.parse_with_defaults ~reader options workers next in
-    Lwt.return
-      ( if is_ok results then
-        let ast = Parsing_heaps.Mutator_reader.get_ast_unsafe ~reader lib_file in
-        let (file_sig, tolerable_errors) =
-          Parsing_heaps.Mutator_reader.get_tolerable_file_sig_unsafe ~reader lib_file
-        in
-        Lib_ok { ast; file_sig; tolerable_errors }
-      else if is_fail results then
-        let error = List.hd (snd results.Parsing.failed) in
-        Lib_fail error
-      else
-        Lib_skip
-      )
-  with
-  | _ -> failwith (spf "Can't read library definitions file %s, exiting." file)
-
-let check_lib_file ~ccx ~options mk_builtins ast =
-  let lint_severities = Options.lint_severities options in
-  let metadata =
-    Context.(
-      let metadata = metadata_of_options options in
-      { metadata with checked = false }
-    )
-  in
-  let (prog_loc, { Ast.Program.all_comments; _ }) = ast in
-  let lib_file = Base.Option.value_exn (Loc.source prog_loc) in
-  (* Lib files use only concrete locations, so this is not used. *)
-  let aloc_table = lazy (ALoc.empty_table lib_file) in
-  let resolve_require mref = Error (Reason.internal_module_name mref) in
-  let cx = Context.make ccx metadata lib_file aloc_table resolve_require mk_builtins in
-  let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
-  let (_ : (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t) =
-    Infer.infer_lib_file ~lint_severities cx lib_file all_comments aloc_ast
-  in
-  Context.errors cx
 
 (* process all lib files: parse, infer, and add the symbols they define
    to the builtins object.
@@ -86,51 +26,21 @@ let check_lib_file ~ccx ~options mk_builtins ast =
 
    returns (success, parse and signature errors, exports)
 *)
-let load_lib_files ~ccx ~options ~reader ~validate_libdefs files =
+let load_lib_files ~ccx ~options ~reader files =
   let%lwt (ok, errors, ordered_asts) =
-    if Options.libdef_in_checking options then
-      files
-      |> Lwt_list.fold_left_s
-           (fun (ok_acc, errors_acc, asts_acc) file ->
-             let lib_file = File_key.LibFile file in
-             match Parsing_heaps.Mutator_reader.get_ast ~reader lib_file with
-             | Some ast ->
-               (* construct ast list in reverse override order *)
-               let asts_acc = ast :: asts_acc in
-               Lwt.return (ok_acc, errors_acc, asts_acc)
-             | None ->
-               Hh_logger.info "Failed to find %s in parsing heap." (File_key.show lib_file);
-               Lwt.return (false, errors_acc, asts_acc))
-           (true, ErrorSet.empty, [])
-    else
-      files
-      |> Lwt_list.fold_left_s
-           (fun (ok_acc, errors_acc, asts_acc) file ->
-             let lib_file = File_key.LibFile file in
-             match%lwt parse_lib_file ~reader options file with
-             | Lib_ok { ast; file_sig = _; tolerable_errors } ->
-               let errors =
-                 tolerable_errors
-                 |> Inference_utils.set_of_file_sig_tolerable_errors ~source_file:lib_file
-               in
-               let errors_acc = ErrorSet.union errors errors_acc in
-               (* construct ast list in reverse override order *)
-               let asts_acc = ast :: asts_acc in
-               Lwt.return (ok_acc, errors_acc, asts_acc)
-             | Lib_fail fail ->
-               let errors =
-                 match fail with
-                 | Parsing.Uncaught_exception exn ->
-                   Inference_utils.set_of_parse_exception ~source_file:lib_file exn
-                 | Parsing.Parse_error error ->
-                   Inference_utils.set_of_parse_error ~source_file:lib_file error
-                 | Parsing.Docblock_errors errs ->
-                   Inference_utils.set_of_docblock_errors ~source_file:lib_file errs
-               in
-               let errors_acc = ErrorSet.union errors errors_acc in
-               Lwt.return (false, errors_acc, asts_acc)
-             | Lib_skip -> Lwt.return (ok_acc, errors_acc, asts_acc))
-           (true, ErrorSet.empty, [])
+    files
+    |> Lwt_list.fold_left_s
+         (fun (ok_acc, errors_acc, asts_acc) file ->
+           let lib_file = File_key.LibFile file in
+           match Parsing_heaps.Mutator_reader.get_ast ~reader lib_file with
+           | Some ast ->
+             (* construct ast list in reverse override order *)
+             let asts_acc = ast :: asts_acc in
+             Lwt.return (ok_acc, errors_acc, asts_acc)
+           | None ->
+             Hh_logger.info "Failed to find %s in parsing heap." (File_key.show lib_file);
+             Lwt.return (false, errors_acc, asts_acc))
+         (true, ErrorSet.empty, [])
   in
   let (builtin_exports, master_cx, cx_opt) =
     if ok then
@@ -156,14 +66,6 @@ let load_lib_files ~ccx ~options ~reader ~validate_libdefs files =
               (fun mref -> Error (Reason.InternalModuleName mref))
               mk_builtins
           in
-          ( if validate_libdefs then
-            let errors =
-              Base.List.fold ordered_asts ~init:ErrorSet.empty ~f:(fun errors ast ->
-                  ErrorSet.union errors (check_lib_file ~ccx ~options mk_builtins ast)
-              )
-            in
-            Context.reset_errors cx errors
-          );
           Some cx
       in
       (Exports.of_builtins builtins, master_cx, cx_opt)
@@ -198,11 +100,11 @@ let error_set_to_filemap err_set =
    parse and do local inference on library files, and set up master context.
    returns list of (lib file, success) pairs.
 *)
-let init ~options ~reader ~validate_libdefs lib_files =
+let init ~options ~reader lib_files =
   let ccx = Context.make_ccx () in
 
   let%lwt (ok, master_cx, cx_opt, parse_and_sig_errors, exports) =
-    load_lib_files ~ccx ~options ~reader ~validate_libdefs lib_files
+    load_lib_files ~ccx ~options ~reader lib_files
   in
 
   let (errors, warnings, suppressions) =

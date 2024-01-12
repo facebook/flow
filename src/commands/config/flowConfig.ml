@@ -87,7 +87,6 @@ module Opts = struct
     ignore_non_literal_requires: bool;
     include_warnings: bool;
     lazy_mode: lazy_mode option;
-    libdef_in_checking: bool;
     log_saving: Options.log_saving SMap.t;
     long_lived_workers: bool;
     max_files_checked_per_worker: int;
@@ -212,7 +211,6 @@ module Opts = struct
       ignore_non_literal_requires = false;
       include_warnings = false;
       lazy_mode = None;
-      libdef_in_checking = true;
       log_saving = SMap.empty;
       long_lived_workers = false;
       max_files_checked_per_worker = 100;
@@ -873,9 +871,6 @@ module Opts = struct
       ("gc.worker.space_overhead", gc_worker_space_overhead_parser);
       ("gc.worker.window_size", gc_worker_window_size_parser);
       ("include_warnings", boolean (fun opts v -> Ok { opts with include_warnings = v }));
-      ( "experimental.libdef_in_checking",
-        boolean (fun opts v -> Ok { opts with libdef_in_checking = v })
-      );
       ("lazy_mode", lazy_mode_parser);
       ("log_saving", log_saving_parser);
       ("max_header_tokens", uint (fun opts v -> Ok { opts with max_header_tokens = v }));
@@ -1547,8 +1542,6 @@ let ignore_non_literal_requires c = c.options.Opts.ignore_non_literal_requires
 let include_warnings c = c.options.Opts.include_warnings
 
 let lazy_mode c = c.options.Opts.lazy_mode
-
-let libdef_in_checking c = c.options.Opts.libdef_in_checking
 
 (* global defaults for lint severities and strict mode *)
 let lint_severities c = c.lint_severities

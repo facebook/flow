@@ -86,7 +86,7 @@ let main (module Runnable : Codemod_runner.RUNNABLE) codemod_flags () =
         Utils_js.FilenameSet.add
           (Files.filename_from_string
              ~options:file_options
-             ~consider_libdefs:(Options.libdef_in_checking options)
+             ~consider_libdefs:true
              ~libs:SSet.empty
              f
           )

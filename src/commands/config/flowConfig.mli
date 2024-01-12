@@ -150,8 +150,6 @@ val include_warnings : config -> bool
 
 val lazy_mode : config -> lazy_mode option
 
-val libdef_in_checking : config -> bool
-
 (* global defaults for lint suppressions and strict mode *)
 val lint_severities : config -> Severity.severity LintSettings.t
 

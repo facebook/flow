@@ -623,9 +623,7 @@ let ensure_parsed_or_trigger_recheck ~options ~profiling ~workers ~reader files 
   try%lwt ensure_parsed ~options ~profiling ~workers ~reader files with
   | Unexpected_file_changes changed_files -> handle_unexpected_file_changes changed_files
 
-let init_libs
-    ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ~validate_libdefs ordered_libs
-    =
+let init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs =
   with_memory_timer_lwt ~options "InitLibs" profiling (fun () ->
       let%lwt {
             Init_js.ok;
@@ -635,7 +633,7 @@ let init_libs
             exports;
             master_cx;
           } =
-        Init_js.init ~options ~reader ~validate_libdefs ordered_libs
+        Init_js.init ~options ~reader ordered_libs
       in
       Lwt.return
         ( ok,
@@ -1967,7 +1965,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
             additional_local_errors,
             _
           ) =
-    let additional_libdef_files_not_delivered = ref (Options.libdef_in_checking options) in
+    let additional_libdef_files_not_delivered = ref true in
     parse ~options ~profiling ~workers ~reader (fun () ->
         if !additional_libdef_files_not_delivered then (
           let files = SSet.fold (fun name acc -> File_key.LibFile name :: acc) libs [] in
@@ -1980,15 +1978,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
   let%lwt (libs_ok, local_errors, warnings, suppressions, lib_exports, master_cx) =
     let suppressions = Error_suppressions.empty in
     let warnings = FilenameMap.empty in
-    init_libs
-      ~options
-      ~profiling
-      ~local_errors
-      ~warnings
-      ~suppressions
-      ~reader
-      ~validate_libdefs:(not (Options.libdef_in_checking options))
-      ordered_libs
+    init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs
   in
   let (parsed, unparsed, dirty_modules, local_errors) =
     ( FilenameSet.union parsed additional_parsed,
@@ -2158,11 +2148,7 @@ let init_from_scratch ~profiling ~workers options =
    *)
   let (ordered_libs, libs) = Files.init file_options in
   let next_files_for_parse =
-    make_next_files
-      ~libs
-      ~file_options
-      ~include_libdef:(Options.libdef_in_checking options)
-      (Options.root options)
+    make_next_files ~libs ~file_options ~include_libdef:true (Options.root options)
   in
   Hh_logger.info "Parsing";
   MonitorRPC.status_update ~event:ServerStatus.(Parsing_progress { finished = 0; total = None });
@@ -2199,15 +2185,7 @@ let init_from_scratch ~profiling ~workers options =
   MonitorRPC.status_update ~event:ServerStatus.Load_libraries_start;
   let%lwt (libs_ok, local_errors, warnings, suppressions, lib_exports, master_cx) =
     let suppressions = Error_suppressions.empty in
-    init_libs
-      ~options
-      ~profiling
-      ~local_errors
-      ~warnings
-      ~suppressions
-      ~reader
-      ~validate_libdefs:(not (Options.libdef_in_checking options))
-      ordered_libs
+    init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader ordered_libs
   in
 
   Hh_logger.info "Resolving dependencies";
