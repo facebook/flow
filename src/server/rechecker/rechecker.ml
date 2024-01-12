@@ -52,10 +52,7 @@ module Parallelizable_workload_loop = LwtLoop.Make (struct
         (* We have a workload! Let's run it! *)
         Hh_logger.info "Running a parallel workload";
         should_pause :=
-          if
-            genv.ServerEnv.options.Options.opt_batch_lsp_request_processing
-            && parallelizable_workload_should_be_cancelled ()
-          then
+          if parallelizable_workload_should_be_cancelled () then
             false
           else
             !should_pause;

@@ -1397,7 +1397,6 @@ let make_options
         (FlowConfig.haste_paths_includes flowconfig);
     opt_file_options = file_options;
     opt_libdef_in_checking = FlowConfig.libdef_in_checking flowconfig;
-    opt_batch_lsp_request_processing = FlowConfig.batch_lsp_request_processing flowconfig;
     opt_lint_severities = lint_severities;
     opt_strict_mode = strict_mode;
     opt_merge_timeout;
