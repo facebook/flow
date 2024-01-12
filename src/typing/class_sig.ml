@@ -12,6 +12,7 @@ open Utils_js
 include Class_sig_intf
 
 module Make
+    (ConsGen : Type_annotation_sig.ConsGen)
     (CT : Func_class_sig_types.Config.S)
     (C : Func_params.Config with module Types := CT)
     (P : Func_params.S with module Config_types := CT and module Config := C)
@@ -466,12 +467,8 @@ module Make
     (initialized_fields, fields, methods, call)
 
   let specialize cx use_op targs c =
-    let open Type in
-    let open TypeUtil in
-    let reason = reason_of_t c in
-    Tvar.mk_where cx reason (fun tvar ->
-        Flow.flow cx (c, SpecializeT (use_op, reason, reason, false, targs, tvar))
-    )
+    let reason = TypeUtil.reason_of_t c in
+    ConsGen.specialize cx c use_op reason reason targs
 
   let statictype cx static_proto x =
     let s = x.static in
@@ -563,7 +560,7 @@ module Make
        We need this reference to constrain the `this` in the class. *)
     let rec_instance_type =
       match tparams with
-      | None -> Flow.mk_instance cx reason self
+      | None -> ConsGen.mk_instance cx reason self
       | _ ->
         let open Type in
         let (_, targs) = Flow_js_utils.mk_tparams cx (TypeParams.to_list tparams) in
@@ -595,7 +592,7 @@ module Make
             match targs_opt with
             | None ->
               let reason = annot_reason ~annot_loc @@ repos_reason annot_loc (reason_of_t c) in
-              Flow.mk_instance cx reason c
+              ConsGen.mk_instance cx reason c
             | Some targs -> typeapp_annot ~from_value:false ~use_desc:false annot_loc c targs)
           extends
       in
@@ -684,7 +681,7 @@ module Make
               let reason =
                 annot_reason ~annot_loc @@ repos_reason annot_loc (TypeUtil.reason_of_t c)
               in
-              Flow.mk_instance cx reason c
+              ConsGen.mk_instance cx reason c
             | Some targs ->
               TypeUtil.typeapp_annot ~from_value:false ~use_desc:false annot_loc c targs)
           implements
@@ -713,7 +710,7 @@ module Make
           in
           let reason = mk_reason (RMethod (Some name)) id_loc in
           let use_op = Op (ClassMethodDefinition { def = reason; name = def_reason }) in
-          Flow.flow cx (self, UseT (use_op, this_param)))
+          Context.add_post_inference_subtyping_check cx self use_op this_param)
         (F.this_param msig.F.Types.fparams)
     in
 
@@ -751,13 +748,13 @@ module Make
             match targs_opt with
             | None ->
               let reason = annot_reason ~annot_loc @@ repos_reason annot_loc (reason_of_t c) in
-              Flow.mk_instance cx reason c
+              ConsGen.mk_instance cx reason c
             | Some targs -> typeapp_annot ~from_value:false ~use_desc:false annot_loc c targs
           in
           let use_op =
             Op (ClassImplementsCheck { def = def_reason; name = reason; implements = reason_of_t i })
           in
-          Flow.flow cx (i, ImplementsT (use_op, this)))
+          Context.add_post_inference_validation_flow cx i (ImplementsT (use_op, this)))
         implements
 
   let check_super cx def_reason x =
@@ -798,19 +795,19 @@ module Make
 
     let (super, _) = supertype cx x in
     let use_op = Op (ClassExtendsCheck { def = def_reason; extends = reason_of_t super }) in
-    Flow.flow
+    Context.add_post_inference_validation_flow
       cx
-      ( super,
-        SuperT
-          ( use_op,
-            reason,
-            Derived
-              {
-                own = NameUtils.namemap_of_smap own;
-                proto = NameUtils.namemap_of_smap proto;
-                static = NameUtils.namemap_of_smap static;
-              }
-          )
+      super
+      (SuperT
+         ( use_op,
+           reason,
+           Derived
+             {
+               own = NameUtils.namemap_of_smap own;
+               proto = NameUtils.namemap_of_smap proto;
+               static = NameUtils.namemap_of_smap static;
+             }
+         )
       )
 
   (* TODO: Ideally we should check polarity for all class types, but this flag is

@@ -8,6 +8,7 @@
 include module type of Class_sig_intf
 
 module Make
+    (_ : Type_annotation_sig.ConsGen)
     (CT : Func_class_sig_types.Config.S)
     (C : Func_params.Config with module Types := CT)
     (P : Func_params.S with module Config_types := CT and module Config := C)

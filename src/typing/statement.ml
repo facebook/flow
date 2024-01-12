@@ -430,7 +430,8 @@ module Make
     Func_sig.Make (Statement) (Func_stmt_config_types.Types) (Func_stmt_config) (Func_stmt_params)
       (Func_stmt_sig_types)
   module Class_stmt_sig =
-    Class_sig.Make (Func_stmt_config_types.Types) (Func_stmt_config) (Func_stmt_params)
+    Class_sig.Make (Type_annotation.FlowJS) (Func_stmt_config_types.Types) (Func_stmt_config)
+      (Func_stmt_params)
       (Func_stmt_sig)
       (Class_stmt_sig_types)
   module Component_declaration_params =

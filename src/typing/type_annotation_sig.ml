@@ -5,6 +5,37 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+open Reason
+
+module type ConsGen = sig
+  val mk_instance :
+    Context.t -> ?type_t_kind:Type.type_t_kind -> reason -> ?use_desc:bool -> Type.t -> Type.t
+
+  val specialize :
+    Context.t ->
+    Type.t ->
+    Type.use_op ->
+    Reason.t ->
+    Reason.t ->
+    Type.t list Base.Option.t ->
+    Type.t
+
+  val cjs_require : Context.t -> Type.t -> Reason.t -> bool -> bool -> Type.t
+
+  val get_prop :
+    Context.t -> Type.use_op -> Reason.t -> ?op_reason:Reason.t -> Reason.name -> Type.t -> Type.t
+
+  val reposition : Context.t -> ALoc.t -> ?annot_loc:ALoc.t -> Type.t -> Type.t
+
+  val get_builtin : Context.t -> name -> reason -> Type.t
+
+  val get_builtin_type : Context.t -> reason -> ?use_desc:bool -> name -> Type.t
+
+  val obj_test_proto : Context.t -> Reason.t -> Type.t -> Type.t
+
+  val mixin : Context.t -> Reason.t -> Type.t -> Type.t
+end
+
 (** services for producing types from annotations,
     called during AST traversal.
  *)

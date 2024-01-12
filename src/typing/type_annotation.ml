@@ -16,28 +16,16 @@ open TypeUtil
 module Flow = Flow_js
 module T = Ast.Type
 
-module type C = sig
-  val mk_instance :
-    Context.t -> ?type_t_kind:Type.type_t_kind -> reason -> ?use_desc:bool -> Type.t -> Type.t
-
-  val cjs_require : Context.t -> Type.t -> Reason.t -> bool -> bool -> Type.t
-
-  val get_prop :
-    Context.t -> Type.use_op -> Reason.t -> ?op_reason:Reason.t -> Reason.name -> Type.t -> Type.t
-
-  val reposition : Context.t -> ALoc.t -> ?annot_loc:ALoc.t -> Type.t -> Type.t
-
-  val get_builtin : Context.t -> name -> reason -> Type.t
-
-  val get_builtin_type : Context.t -> reason -> ?use_desc:bool -> name -> Type.t
-
-  val obj_test_proto : Context.t -> Reason.t -> Type.t -> Type.t
-
-  val mixin : Context.t -> Reason.t -> Type.t -> Type.t
-end
-
-module FlowJS : C = struct
+module FlowJS : Type_annotation_sig.ConsGen = struct
   include Flow
+
+  let specialize cx c use_op reason_op reason_tapp targs =
+    let open Type in
+    let open TypeUtil in
+    let reason = reason_of_t c in
+    Tvar.mk_where cx reason (fun tvar ->
+        Flow.flow cx (c, SpecializeT (use_op, reason_op, reason_tapp, false, targs, tvar))
+    )
 
   let reposition = reposition ?desc:None
 
@@ -58,9 +46,10 @@ module FlowJS : C = struct
     )
 end
 
-module Annot : C = Annotation_inference.ConsGen
+module Annot : Type_annotation_sig.ConsGen = Annotation_inference.ConsGen
 
-module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
+module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S) :
+  Type_annotation_sig.S = struct
   open Type_env.LookupMode
 
   module Func_type_params_config_types = struct
@@ -182,7 +171,8 @@ module Make (ConsGen : C) (Statement : Statement_sig.S) : Type_annotation_sig.S 
     Func_class_sig_types.Class.Make (Func_type_params_config_types) (Func_type_params_types)
       (Func_type_sig_types)
   module Class_type_sig =
-    Class_sig.Make (Func_type_params_config_types) (Func_type_params_config) (Func_type_params)
+    Class_sig.Make (ConsGen) (Func_type_params_config_types) (Func_type_params_config)
+      (Func_type_params)
       (Func_type_sig)
       (Class_type_sig_types)
   module Component_type_params_types =
