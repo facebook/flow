@@ -22,10 +22,7 @@ type options = {
   relay_integration_module_prefix: string option;
 }
 
-type t = {
-  requires: require list;
-  module_kind: module_kind;
-}
+type t = require list
 
 and require =
   | Require of {
@@ -59,22 +56,13 @@ and imported_locs = {
 and require_bindings =
   | BindIdent of Loc.t Ast_utils.ident
   | BindNamed of (Loc.t Ast_utils.ident * require_bindings) list
-
-and module_kind =
-  | CommonJS of { mod_exp_loc: Loc.t option }
-  | ES
 [@@deriving show]
 
-type tolerable_error =
-  | IndeterminateModuleType of Loc.t
-  (* e.g. `foo(module)`, dangerous because `module` is aliased *)
-  | BadExportContext of string (* offending identifier *) * Loc.t
-  | SignatureVerificationError of Loc.t Signature_error.t
-[@@deriving show]
+type tolerable_error = SignatureVerificationError of Loc.t Signature_error.t [@@deriving show]
 
 type tolerable_t = t * tolerable_error list
 
-let empty = { requires = []; module_kind = CommonJS { mod_exp_loc = None } }
+let empty = []
 
 let default_opts =
   {
@@ -100,47 +88,29 @@ module PP = struct
     Printf.sprintf "%s\n%s%s%s" open_ items_str indent_str close
 
   let items_to_list_string indent items = items_to_collection_string indent "[" "]" items
-
-  let items_to_record_string indent items =
-    let items =
-      items |> Base.List.map ~f:(fun (label, value) -> Printf.sprintf "%s: %s" label value)
-    in
-    items_to_collection_string indent "{" "}" items
 end
 
-let to_string t =
-  let string_of_require_list require_list =
-    let string_of_require_bindings = function
-      | BindIdent (_, name) -> Printf.sprintf "BindIdent: %s" name
-      | BindNamed named ->
-        Printf.sprintf
-          "BindNamed: %s"
-          (String.concat ", " @@ Base.List.map ~f:(fun ((_, name), _) -> name) named)
-    in
-    let string_of_require = function
-      | Require { source = (_, name); bindings; _ } ->
-        Printf.sprintf
-          "Require (%s, %s)"
-          name
-          (PP.string_of_option string_of_require_bindings bindings)
-      | ImportDynamic _ -> "ImportDynamic"
-      | Import0 _ -> "Import0"
-      | ImportSynthetic _ -> "ImportSynthetic"
-      | Import _ -> "Import"
-      | ExportFrom _ -> "ExportFrom"
-    in
-    PP.items_to_list_string 2 (Base.List.map ~f:string_of_require require_list)
+let to_string require_list =
+  let string_of_require_bindings = function
+    | BindIdent (_, name) -> Printf.sprintf "BindIdent: %s" name
+    | BindNamed named ->
+      Printf.sprintf
+        "BindNamed: %s"
+        (String.concat ", " @@ Base.List.map ~f:(fun ((_, name), _) -> name) named)
   in
-  let string_of_module_kind = function
-    | CommonJS _ -> "CommonJS"
-    | ES -> "ES"
+  let string_of_require = function
+    | Require { source = (_, name); bindings; _ } ->
+      Printf.sprintf
+        "Require (%s, %s)"
+        name
+        (PP.string_of_option string_of_require_bindings bindings)
+    | ImportDynamic _ -> "ImportDynamic"
+    | Import0 _ -> "Import0"
+    | ImportSynthetic _ -> "ImportSynthetic"
+    | Import _ -> "Import"
+    | ExportFrom _ -> "ExportFrom"
   in
-  PP.items_to_record_string
-    1
-    [
-      ("requires", string_of_require_list t.requires);
-      ("module_kind", string_of_module_kind t.module_kind);
-    ]
+  PP.items_to_list_string 2 (Base.List.map ~f:string_of_require require_list)
 
 let combine_nel _ a b = Some (Nel.concat (a, [b]))
 
@@ -156,52 +126,27 @@ let require_loc_map msig =
       | ExportFrom { source = (loc, mref) } ->
         SMap.add mref [loc] acc ~combine:List.rev_append)
     SMap.empty
-    msig.requires
+    msig
 
 let require_set msig =
   let map = require_loc_map msig in
   SMap.fold (fun key _ acc -> SSet.add key acc) map SSet.empty
 
-let requires msig = msig.requires
+let requires msig = msig
 
-let expose_module_kind_for_testing msig = msig.module_kind
+let add_require require requires = require :: requires
 
-let add_require require msig errs =
-  let requires = require :: msig.requires in
-  ({ msig with requires }, errs)
-
-let add_es_export loc source { module_kind; requires } errs =
-  let requires =
-    match source with
-    | None -> requires
-    | Some source -> ExportFrom { source } :: requires
-  in
-  match module_kind with
-  | CommonJS { mod_exp_loc = Some _ } ->
-    (* We still need to add requires so the dependency is recorded, because we
-     * continue checking the file and will try to find the resolved module. *)
-    let errs = IndeterminateModuleType loc :: errs in
-    ({ module_kind; requires }, errs)
-  | CommonJS _
-  | ES ->
-    ({ module_kind = ES; requires }, errs)
-
-let set_cjs_exports mod_exp_loc msig errs =
-  match msig.module_kind with
-  | CommonJS { mod_exp_loc = original_mod_exp_loc } ->
-    let mod_exp_loc = Base.Option.first_some original_mod_exp_loc (Some mod_exp_loc) in
-    let module_kind = CommonJS { mod_exp_loc } in
-    ({ msig with module_kind }, errs)
-  | ES ->
-    let err = IndeterminateModuleType mod_exp_loc in
-    (msig, err :: errs)
+let add_es_export source requires =
+  match source with
+  | None -> requires
+  | Some source -> ExportFrom { source } :: requires
 
 (* Subclass of the AST visitor class that calculates requires and exports. Initializes with the
    scope builder class.
 *)
-class requires_exports_calculator ~file_key ~ast ~opts =
+class requires_calculator ~file_key ~ast ~opts =
   object (this)
-    inherit [tolerable_t, Loc.t] visitor ~init:(empty, []) as super
+    inherit [t, Loc.t] visitor ~init:empty as super
 
     val scope_info : Scope_api.info =
       Scope_builder.program ~with_types:true ~enable_enums:opts.enable_enums ast
@@ -218,30 +163,19 @@ class requires_exports_calculator ~file_key ~ast ~opts =
       if bindings <> None then
         visited_requires_with_bindings <- Loc.LSet.add loc visited_requires_with_bindings
 
-    method private update_file_sig f =
-      this#update_acc (fun (fsig, errs) ->
-          let (fsig, errs) = f fsig errs in
-          (fsig, errs)
-      )
+    method private update_file_sig f = this#update_acc f
 
     method private add_require require = this#update_file_sig (add_require require)
 
-    method private add_exports loc kind source =
+    method private add_exports kind source =
       let open Ast.Statement in
       let add =
         match (kind, source) with
-        | (ExportValue, _) -> add_es_export loc source
-        | (ExportType, None) -> (fun msig errs -> (msig, errs))
+        | (ExportValue, _) -> add_es_export source
+        | (ExportType, None) -> (fun msig -> msig)
         | (ExportType, Some source) -> add_require (ExportFrom { source })
       in
       this#update_file_sig add
-
-    method private set_cjs_exports mod_exp_loc = this#update_file_sig (set_cjs_exports mod_exp_loc)
-
-    method private add_cjs_export mod_exp_loc = this#update_file_sig (set_cjs_exports mod_exp_loc)
-
-    method private add_tolerable_error (err : tolerable_error) =
-      this#update_acc (fun (fsig, errs) -> (fsig, err :: errs))
 
     method add_multiplatform_synthetic_imports =
       match
@@ -266,86 +200,6 @@ class requires_exports_calculator ~file_key ~ast ~opts =
         | Some imported_interface_module_name ->
           this#add_require (ImportSynthetic { source = imported_interface_module_name })
         | None -> ())
-
-    method! expression (expr : (Loc.t, Loc.t) Ast.Expression.t) =
-      let open Ast.Expression in
-      begin
-        match expr with
-        (* Disallow expressions consisting of `module` or `exports`. These are dangerous because they
-         * can allow aliasing and mutation. *)
-        | ( _,
-            Identifier (loc, { Ast.Identifier.name = ("module" | "exports") as name; comments = _ })
-          )
-          when not (Scope_api.is_local_use scope_info loc) ->
-          this#add_tolerable_error (BadExportContext (name, loc))
-        | _ -> ()
-      end;
-      super#expression expr
-
-    method! binary loc (expr : (Loc.t, Loc.t) Ast.Expression.Binary.t) =
-      let open Ast.Expression in
-      let open Ast.Expression.Binary in
-      let is_module_or_exports = function
-        | (_, Identifier (_, { Ast.Identifier.name = "module" | "exports"; comments = _ })) -> true
-        | _ -> false
-      in
-      let is_legal_operator = function
-        | StrictEqual
-        | StrictNotEqual ->
-          true
-        | _ -> false
-      in
-      let identify_or_recurse subexpr =
-        if not (is_module_or_exports subexpr) then ignore (this#expression subexpr)
-      in
-      let { operator; left; right; comments = _ } = expr in
-      (* Allow e.g. `require.main === module` by avoiding the recursive calls (where the errors
-       * are generated) if the AST matches specific patterns. *)
-      if is_legal_operator operator then (
-        identify_or_recurse left;
-        identify_or_recurse right;
-        expr
-      ) else
-        super#binary loc expr
-
-    method! member loc (expr : (Loc.t, Loc.t) Ast.Expression.Member.t) =
-      let open Ast.Expression in
-      let open Ast.Expression.Member in
-      let { _object; property; comments = _ } = expr in
-      (* Strip the loc to simplify the patterns *)
-      let (_, _object) = _object in
-      (* This gets called when patterns like `module.id` appear on the LHS of an
-       * assignment, in addition to when they appear in ordinary expression
-       * locations. Therefore we have to prevent anything that would be dangerous
-       * if it appeared on the LHS side of an assignment. Ordinary export
-       * statements are handled by handle_assignment, which stops recursion so we
-       * don't arrive here in those cases. *)
-      begin
-        match (_object, property) with
-        (* Allow `module.anythingButExports` *)
-        | ( Identifier (_, { Ast.Identifier.name = "module"; comments = _ }),
-            PropertyIdentifier (_, { Ast.Identifier.name = prop; comments = _ })
-          )
-          when prop <> "exports" ->
-          ()
-        (* Allow `module.exports.whatever` -- this is safe because handle_assignment has already
-         * looked for assignments to it before recursing down here. *)
-        | ( Member
-              {
-                _object = (_, Identifier (_, { Ast.Identifier.name = "module"; comments = _ }));
-                property = PropertyIdentifier (_, { Ast.Identifier.name = "exports"; comments = _ });
-                _;
-              },
-            PropertyIdentifier _
-          )
-        (* Allow `exports.whatever`, for the same reason as above *)
-        | (Identifier (_, { Ast.Identifier.name = "exports"; comments = _ }), PropertyIdentifier _)
-          ->
-          (* In these cases we don't know much about the property so we should recurse *)
-          ignore (this#member_property property)
-        | _ -> ignore (super#member loc expr)
-      end;
-      expr
 
     method! call call_loc (expr : (Loc.t, Loc.t) Ast.Expression.Call.t) =
       let open Ast.Expression in
@@ -512,7 +366,7 @@ class requires_exports_calculator ~file_key ~ast ~opts =
         stmt_loc (decl : (Loc.t, Loc.t) Ast.Statement.ExportDefaultDeclaration.t) =
       let open Ast.Statement.ExportDefaultDeclaration in
       let { default = _; declaration = _; comments = _ } = decl in
-      this#add_exports stmt_loc Ast.Statement.ExportValue None;
+      this#add_exports Ast.Statement.ExportValue None;
       super#export_default_declaration stmt_loc decl
 
     method! export_named_declaration
@@ -527,19 +381,14 @@ class requires_exports_calculator ~file_key ~ast ~opts =
       begin
         match declaration with
         | None -> ()
-        | Some _ -> this#add_exports stmt_loc export_kind source
+        | Some _ -> this#add_exports export_kind source
       end;
       begin
         match specifiers with
         | None -> ()
-        | Some _ -> this#add_exports stmt_loc export_kind source
+        | Some _ -> this#add_exports export_kind source
       end;
       super#export_named_declaration stmt_loc decl
-
-    method! declare_module_exports
-        loc (exports : (Loc.t, Loc.t) Ast.Statement.DeclareModuleExports.t) =
-      this#set_cjs_exports loc;
-      super#declare_module_exports loc exports
 
     method! declare_export_declaration
         stmt_loc (decl : (Loc.t, Loc.t) Ast.Statement.DeclareExportDeclaration.t) =
@@ -569,110 +418,14 @@ class requires_exports_calculator ~file_key ~ast ~opts =
             | Interface _ ->
               ExportType
           in
-          this#add_exports stmt_loc export_kind source
+          this#add_exports export_kind source
       end;
       begin
         match specifiers with
         | None -> ()
-        | Some _ -> this#add_exports stmt_loc Ast.Statement.ExportValue source
+        | Some _ -> this#add_exports Ast.Statement.ExportValue source
       end;
       super#declare_export_declaration stmt_loc decl
-
-    method! assignment loc (expr : (Loc.t, Loc.t) Ast.Expression.Assignment.t) =
-      this#handle_assignment loc expr;
-      expr
-
-    method handle_assignment loc (expr : (Loc.t, Loc.t) Ast.Expression.Assignment.t) =
-      let open Ast.Expression in
-      let open Ast.Expression.Assignment in
-      let { operator; left; right; comments = _ } = expr in
-      (* Handle exports *)
-      match (operator, left) with
-      (* module.exports = ... *)
-      | ( None,
-          ( mod_exp_loc,
-            Ast.Pattern.Expression
-              ( _,
-                Member
-                  {
-                    Member._object =
-                      (module_loc, Identifier (_, { Ast.Identifier.name = "module"; comments = _ }));
-                    property =
-                      Member.PropertyIdentifier
-                        (_, { Ast.Identifier.name = "exports"; comments = _ });
-                    _;
-                  }
-              )
-          )
-        )
-        when not (Scope_api.is_local_use scope_info module_loc) ->
-        this#handle_cjs_default_export module_loc mod_exp_loc;
-        ignore (this#expression right)
-      (* exports.foo = ... *)
-      | ( None,
-          ( _,
-            Ast.Pattern.Expression
-              ( _,
-                Member
-                  {
-                    Member._object =
-                      ( (mod_exp_loc as module_loc),
-                        Identifier (_, { Ast.Identifier.name = "exports"; comments = _ })
-                      );
-                    property = Member.PropertyIdentifier _;
-                    _;
-                  }
-              )
-          )
-        )
-      (* module.exports.foo = ... *)
-      | ( None,
-          ( _,
-            Ast.Pattern.Expression
-              ( _,
-                Member
-                  {
-                    Member._object =
-                      ( mod_exp_loc,
-                        Member
-                          {
-                            Member._object =
-                              ( module_loc,
-                                Identifier (_, { Ast.Identifier.name = "module"; comments = _ })
-                              );
-                            property =
-                              Member.PropertyIdentifier
-                                (_, { Ast.Identifier.name = "exports"; comments = _ });
-                            _;
-                          }
-                      );
-                    property = Member.PropertyIdentifier _;
-                    _;
-                  }
-              )
-          )
-        )
-        when not (Scope_api.is_local_use scope_info module_loc) ->
-        this#add_cjs_export mod_exp_loc;
-        ignore (this#expression right)
-      (* module = ... *)
-      | ( None,
-          ( _,
-            Ast.Pattern.Identifier
-              {
-                Ast.Pattern.Identifier.name =
-                  (loc, { Ast.Identifier.name = ("exports" | "module") as id; comments = _ });
-                _;
-              }
-          )
-        )
-        when not (Scope_api.is_local_use scope_info loc) ->
-        ignore (this#expression right);
-        this#add_tolerable_error (BadExportContext (id, loc))
-      | _ -> ignore (super#assignment loc expr)
-
-    method private handle_cjs_default_export module_loc mod_exp_loc =
-      if not (Scope_api.is_local_use scope_info module_loc) then this#set_cjs_exports mod_exp_loc
 
     method! variable_declarator
         ~kind (decl : (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.Declarator.t) =
@@ -765,53 +518,9 @@ class requires_exports_calculator ~file_key ~ast ~opts =
 
     (* skip declare module *)
     method! declare_module _loc (m : (Loc.t, Loc.t) Ast.Statement.DeclareModule.t) = m
-
-    method! toplevel_statement_list (stmts : (Loc.t, Loc.t) Ast.Statement.t list) =
-      let open Ast in
-      let id = Flow_ast_mapper.id in
-      let map_expression (expr : (Loc.t, Loc.t) Expression.t) =
-        let open Expression in
-        match expr with
-        | (loc, Assignment assg) ->
-          this#handle_assignment loc assg;
-          expr
-        | _ -> this#expression expr
-      in
-      let map_expression_statement (stmt : (Loc.t, Loc.t) Statement.Expression.t) =
-        Statement.Expression.(
-          let { expression; _ } = stmt in
-          id map_expression expression stmt (fun expr -> { stmt with expression = expr })
-        )
-      in
-      let map_statement (stmt : (Loc.t, Loc.t) Statement.t) =
-        let open Statement in
-        match stmt with
-        | (loc, Expression expr) ->
-          id map_expression_statement expr stmt (fun expr -> (loc, Expression expr))
-        | _ -> this#statement stmt
-      in
-      ListUtils.ident_map map_statement stmts
   end
 
-(* Now that we've determined the kind of the export, we can filter out
-   BadExportContext from ES modules. These errors are only
-   relevant for CommonJS modules, since their goal is to capture aliasing of
-   `module` and `module.exports`. For ES modules these uses should be allowed,
-   so we discard these errors to allow more flexibility. Note that this pass only
-   accummulates BadExportContext errors. *)
-let filter_irrelevant_errors ~module_kind tolerable_errors =
-  match module_kind with
-  | CommonJS _ -> tolerable_errors
-  | ES ->
-    List.filter
-      (function
-        | BadExportContext _ -> false
-        | _ -> true)
-      tolerable_errors
-
 let program ~file_key ~ast ~opts =
-  let walk = new requires_exports_calculator ~file_key ~ast ~opts in
+  let walk = new requires_calculator ~file_key ~ast ~opts in
   walk#add_multiplatform_synthetic_imports;
-  let (fsig, tolerable_errors) = walk#eval walk#program ast in
-  let module_kind = fsig.module_kind in
-  (fsig, filter_irrelevant_errors ~module_kind tolerable_errors)
+  walk#eval walk#program ast

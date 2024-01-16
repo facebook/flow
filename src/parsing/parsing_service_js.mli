@@ -93,7 +93,7 @@ val parse_package_json_file :
   options:Options.t -> string -> File_key.t -> (Package_json.t, parse_error) Result.t
 
 val parse_file_sig :
-  Options.t -> File_key.t -> Docblock.t -> (Loc.t, Loc.t) Flow_ast.Program.t -> File_sig.tolerable_t
+  Options.t -> File_key.t -> Docblock.t -> (Loc.t, Loc.t) Flow_ast.Program.t -> File_sig.t
 
 val parse_type_sig :
   Options.t ->

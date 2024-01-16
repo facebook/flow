@@ -155,7 +155,10 @@ let detect_unused_promises cx =
         ))
     (Context.maybe_unused_promises cx)
 
-let detect_es6_import_export_errors = Strict_es6_import_export.detect_errors
+let detect_import_export_errors cx program metadata =
+  Strict_es6_import_export.detect_errors cx program metadata;
+  Module_exports_checker.check_program program
+  |> Base.List.iter ~f:(Flow_js_utils.add_output cx ?trace:None)
 
 let detect_non_voidable_properties cx =
   (* This function approximately checks whether VoidT can flow to the provided
@@ -591,7 +594,7 @@ let post_merge_checks cx ast tast metadata =
   detect_test_prop_misses cx;
   detect_unnecessary_optional_chains cx;
   detect_unnecessary_invariants cx;
-  detect_es6_import_export_errors cx ast metadata;
+  detect_import_export_errors cx ast metadata;
   detect_matching_props_violations cx;
   detect_literal_subtypes cx;
   detect_unused_promises cx

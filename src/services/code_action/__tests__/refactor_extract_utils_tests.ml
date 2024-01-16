@@ -71,9 +71,7 @@ let stub_metadata ~root ~checked =
 
 let dummy_filename = File_key.SourceFile ""
 
-let file_sig_of_ast ast =
-  let (file_sig, _) = File_sig.program ~file_key:dummy_filename ~ast ~opts:File_sig.default_opts in
-  file_sig
+let file_sig_of_ast ast = File_sig.program ~file_key:dummy_filename ~ast ~opts:File_sig.default_opts
 
 let dummy_context () =
   let root = File_path.dummy_path in

@@ -12,16 +12,7 @@ let visit ?parse_options ?(opts = default_opts) source =
   (* allow parse errors. we still need file sigs on invalid ASTs in Type_contents. *)
   let fail = false in
   let (ast, _) = Parser_flow.program ~fail ~parse_options source in
-  fst (program ~file_key:(File_key.SourceFile "test.js") ~ast ~opts)
-
-let visit_err ?parse_options ?(opts = default_opts) source =
-  (* allow parse errors; we still need file sigs on invalid ASTs in Type_contents. *)
-  let fail = false in
-  let (ast, _) = Parser_flow.program ~fail ~parse_options source in
-  match program ~file_key:(File_key.SourceFile "test.js") ~ast ~opts with
-  | (_, []) -> assert_failure "Unexpected success"
-  | (_, [e]) -> e
-  | _ -> assert_failure "Unexpected multiple errors"
+  program ~file_key:(File_key.SourceFile "test.js") ~ast ~opts
 
 let substring_loc s loc =
   Loc.(
@@ -34,20 +25,6 @@ let substring_loc s loc =
 let call_opt x = function
   | Some f -> f x
   | None -> ()
-
-let assert_es = function
-  | ES -> ()
-  | CommonJS _ -> assert_failure "Unexpected module kind"
-
-let assert_cjs ~source ?assert_export_loc = function
-  | CommonJS { mod_exp_loc } ->
-    let table = Offset_utils.make ~kind:Offset_utils.Utf8 source in
-    let offset_pair_of_loc loc =
-      Loc.(Offset_utils.offset table loc.start, Offset_utils.offset table loc._end)
-    in
-    let offsets = Base.Option.map mod_exp_loc ~f:offset_pair_of_loc in
-    call_opt offsets assert_export_loc
-  | ES -> assert_failure "Unexpected module kind"
 
 let assert_some opt ~f =
   match opt with
@@ -486,108 +463,10 @@ let tests =
              assert_equal ~ctxt None typesof_ns
            | _ -> assert_failure "Unexpected requires"
          );
-         ( "cjs_default" >:: fun ctxt ->
-           let source = "" in
-           let module_kind = visit source |> File_sig.expose_module_kind_for_testing in
-           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt None)
-         );
-         ( "cjs_clobber" >:: fun ctxt ->
-           let source = "module.exports = 0" in
-           let module_kind = visit source |> File_sig.expose_module_kind_for_testing in
-           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14)))
-         );
-         ( "cjs_clobber_rebound" >:: fun ctxt ->
-           let source = "var module = {}; module.exports = 0" in
-           let module_kind = visit source |> File_sig.expose_module_kind_for_testing in
-           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt None)
-         );
-         ( "cjs_exports_named_rebound" >:: fun ctxt ->
-           let source = "var module = {}; module.exports.bar = 0" in
-           let module_kind = visit source |> File_sig.expose_module_kind_for_testing in
-           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt None)
-         );
-         ( "cjs_exports_named_rebound2" >:: fun ctxt ->
-           let source = "var exports = {}; exports.bar = 0" in
-           let module_kind = visit source |> File_sig.expose_module_kind_for_testing in
-           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt None)
-         );
-         ( "cjs_exports" >:: fun ctxt ->
-           let source = "exports = {foo: bar}; exports.baz = qux;" in
-           let module_kind = visit source |> File_sig.expose_module_kind_for_testing in
-           (* TODO report an export loc here *)
-           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (22, 29)))
-         );
-         ( "cjs_export_named" >:: fun ctxt ->
-           let source = "module.exports.foo = 0; module.exports.bar = baz;" in
-           let module_kind = visit source |> File_sig.expose_module_kind_for_testing in
-           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14)))
-         );
-         ( "cjs_export_object" >:: fun ctxt ->
-           let source = "module.exports = {foo: bar, baz: 0, qux};" in
-           let module_kind = visit source |> File_sig.expose_module_kind_for_testing in
-           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14)))
-         );
-         ( "cjs_export_ident" >:: fun ctxt ->
-           let source = "module.exports = foo;" in
-           let module_kind = visit source |> File_sig.expose_module_kind_for_testing in
-           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14)))
-         );
-         ( "cjs_export_ident_then_props" >:: fun ctxt ->
-           let source = "module.exports = foo; module.exports.bar = baz;" in
-           let module_kind = visit source |> File_sig.expose_module_kind_for_testing in
-           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14)))
-         );
-         ( "cjs_export_props_then_ident" >:: fun ctxt ->
-           let source = "module.exports.foo = bar; module.exports = baz;" in
-           let module_kind = visit source |> File_sig.expose_module_kind_for_testing in
-           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14)))
-         );
-         ( "export_default_expr" >:: fun _ ->
-           let source = "export default 0" in
-           let module_kind = visit source |> File_sig.expose_module_kind_for_testing in
-           assert_es module_kind
-         );
-         ( "export_default_anon_decl" >:: fun _ ->
-           let source = "export default function() {}" in
-           let module_kind = visit source |> File_sig.expose_module_kind_for_testing in
-           assert_es module_kind
-         );
-         ( "export_default_named_func" >:: fun _ ->
-           let source = "export default function foo() {}" in
-           let module_kind = visit source |> File_sig.expose_module_kind_for_testing in
-           assert_es module_kind
-         );
-         ( "export_default_named_class" >:: fun _ ->
-           let source = "export default function C() {}" in
-           let module_kind = visit source |> File_sig.expose_module_kind_for_testing in
-           assert_es module_kind
-         );
-         ( "export_named_func" >:: fun _ ->
-           let source = "export function foo() {}" in
-           let module_kind = visit source |> File_sig.expose_module_kind_for_testing in
-           assert_es module_kind
-         );
-         ( "export_named_class" >:: fun _ ->
-           let source = "export class C {}" in
-           let module_kind = visit source |> File_sig.expose_module_kind_for_testing in
-           assert_es module_kind
-         );
-         ( "export_named_vars" >:: fun _ ->
-           let source = "export var x, y = 0, [a] = [], {p} = {}" in
-           let module_kind = visit source |> File_sig.expose_module_kind_for_testing in
-           assert_es module_kind
-         );
-         ( "export_named_specs" >:: fun _ ->
-           let source = "export {x, y as z}" in
-           let module_kind = visit source |> File_sig.expose_module_kind_for_testing in
-           assert_es module_kind
-         );
          ( "export_star" >:: fun ctxt ->
            let source = "export * from 'foo'" in
            let file_sig = visit source in
-           let module_kind = File_sig.expose_module_kind_for_testing file_sig in
            let requires = File_sig.requires file_sig in
-           assert_es module_kind;
            match requires with
            | [ExportFrom { source = (source_loc, "foo") }] ->
              assert_substring_equal ~ctxt "'foo'" source source_loc
@@ -596,9 +475,7 @@ let tests =
          ( "export_type_star" >:: fun ctxt ->
            let source = "export type * from 'foo'" in
            let file_sig = visit source in
-           let module_kind = File_sig.expose_module_kind_for_testing file_sig in
            let requires = File_sig.requires file_sig in
-           assert_cjs ~source module_kind;
            match requires with
            | [ExportFrom { source = (source_loc, "foo") }] ->
              assert_substring_equal ~ctxt "'foo'" source source_loc
@@ -608,61 +485,16 @@ let tests =
            let source = "export * as ns from 'foo'" in
            let parse_options = Parser_env.default_parse_options in
            let file_sig = visit ~parse_options source in
-           let module_kind = File_sig.expose_module_kind_for_testing file_sig in
            let requires = File_sig.requires file_sig in
-           assert_es module_kind;
            match requires with
            | [ExportFrom { source = (source_loc, "foo") }] ->
              assert_substring_equal ~ctxt "'foo'" source source_loc
            | _ -> assert_failure "Unexpected requires"
          );
-         ( "declare_module.exports" >:: fun ctxt ->
-           let source = "declare module.exports: ty" in
-           let module_kind = visit source |> File_sig.expose_module_kind_for_testing in
-           (* TODO use just the `module.exports` location *)
-           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 26)))
-         );
-         ( "declare_export_default" >:: fun _ ->
-           let source = "declare export default string" in
-           let module_kind = visit source |> File_sig.expose_module_kind_for_testing in
-           assert_es module_kind
-         );
-         ( "declare_export_default_func" >:: fun _ ->
-           let source = "declare export default function foo(): void" in
-           let module_kind = visit source |> File_sig.expose_module_kind_for_testing in
-           assert_es module_kind
-         );
-         ( "declare_export_default_class" >:: fun _ ->
-           let source = "declare export default class C {}" in
-           let module_kind = visit source |> File_sig.expose_module_kind_for_testing in
-           assert_es module_kind
-         );
-         ( "declare_export_named_func" >:: fun _ ->
-           let source = "declare export function foo(): void" in
-           let module_kind = visit source |> File_sig.expose_module_kind_for_testing in
-           assert_es module_kind
-         );
-         ( "declare_export_named_class" >:: fun _ ->
-           let source = "declare export class C {}" in
-           let module_kind = visit source |> File_sig.expose_module_kind_for_testing in
-           assert_es module_kind
-         );
-         ( "declare_export_named_var" >:: fun _ ->
-           let source = "declare export var foo: string" in
-           let module_kind = visit source |> File_sig.expose_module_kind_for_testing in
-           assert_es module_kind
-         );
-         ( "declare_export_named_specs" >:: fun _ ->
-           let source = "declare export {x, y as z}" in
-           let module_kind = visit source |> File_sig.expose_module_kind_for_testing in
-           assert_es module_kind
-         );
          ( "declare_export_star" >:: fun ctxt ->
            let source = "declare export * from 'foo'" in
            let file_sig = visit source in
-           let module_kind = File_sig.expose_module_kind_for_testing file_sig in
            let requires = File_sig.requires file_sig in
-           assert_es module_kind;
            match requires with
            | [ExportFrom { source = (source_loc, "foo") }] ->
              assert_substring_equal ~ctxt "'foo'" source source_loc
@@ -672,25 +504,10 @@ let tests =
            let source = "declare export * as ns from 'foo'" in
            let parse_options = Parser_env.default_parse_options in
            let file_sig = visit ~parse_options source in
-           let module_kind = File_sig.expose_module_kind_for_testing file_sig in
            let requires = File_sig.requires file_sig in
-           assert_es module_kind;
            match requires with
            | [ExportFrom { source = (source_loc, "foo") }] ->
              assert_substring_equal ~ctxt "'foo'" source source_loc
            | _ -> assert_failure "Unexpected requires"
-         );
-         ( "err_indeterminate_clobber_after_export" >:: fun ctxt ->
-           let source = "export default 0; module.exports = 0;" in
-           match visit_err source with
-           | IndeterminateModuleType loc -> assert_substring_equal ~ctxt "module.exports" source loc
-           | _ -> assert_failure "Unexpected error"
-         );
-         ( "err_indeterminate_export_after_clobber" >:: fun ctxt ->
-           let source = "module.exports = 0; export default 0;" in
-           match visit_err source with
-           | IndeterminateModuleType loc ->
-             assert_substring_equal ~ctxt "export default 0;" source loc
-           | _ -> assert_failure "Unexpected error"
          );
        ]
