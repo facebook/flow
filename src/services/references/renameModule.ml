@@ -25,7 +25,6 @@ let get_dependents ~reader file_key =
    paths, haste package + relative paths, and node requires *)
 let get_loc_to_replacement_map ~old_haste_name ~new_haste_name file_sig =
   let open File_sig in
-  let { requires; module_kind = _ } = file_sig in
   List.fold_left
     (fun acc require ->
       match require with
@@ -45,7 +44,7 @@ let get_loc_to_replacement_map ~old_haste_name ~new_haste_name file_sig =
           acc
       | ImportSynthetic _ -> acc)
     Loc_collections.LocMap.empty
-    requires
+    (File_sig.requires file_sig)
 
 let get_edits_for_file ~old_haste_name ~new_haste_name file_sig =
   let loc_to_replacement_map =

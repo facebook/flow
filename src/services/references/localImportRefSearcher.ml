@@ -15,7 +15,7 @@ type search_result = {
 let search ~options ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast def_locs =
   let open File_sig in
   let require_name_locs =
-    Base.List.fold file_sig.requires ~init:[] ~f:(fun acc -> function
+    Base.List.fold (File_sig.requires file_sig) ~init:[] ~f:(fun acc -> function
       | Require { bindings = Some bindings; _ } ->
         let rec loop acc = function
           | BindIdent (loc, _) -> (loc, loc) :: acc

@@ -66,4 +66,4 @@ let of_file_sig (file_sig : File_sig.t) =
       (* TODO: Require, ImportDynamic, etc. *)
       | _ -> acc)
     []
-    file_sig.requires
+    (File_sig.requires file_sig)

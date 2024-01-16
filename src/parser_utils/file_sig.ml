@@ -162,6 +162,10 @@ let require_set msig =
   let map = require_loc_map msig in
   SMap.fold (fun key _ acc -> SSet.add key acc) map SSet.empty
 
+let requires msig = msig.requires
+
+let expose_module_kind_for_testing msig = msig.module_kind
+
 let add_require require msig errs =
   let requires = require :: msig.requires in
   ({ msig with requires }, errs)

@@ -1649,7 +1649,7 @@ let should_autoimport_react ~options ~imports ~file_sig =
             | ImportDynamic _
             | ExportFrom _ ->
               false)
-          file_sig.requires
+          (File_sig.requires file_sig)
       in
       not requires_react
   else

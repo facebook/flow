@@ -17,10 +17,7 @@ type options = {
 
 (* We can extract the observable interface of a module by extracting information
  * about what it requires and what it exports. *)
-type t = {
-  requires: require list;
-  module_kind: module_kind;
-}
+type t
 
 (* We track information about dependencies for each unique module reference in a
  * file. For example, `import X from "foo"` and `require("foo")` both induce
@@ -132,3 +129,7 @@ val require_loc_map : t -> Loc.t list SMap.t
 
 (* Only the keys returned by `require_loc_map` *)
 val require_set : t -> SSet.t
+
+val requires : t -> require list
+
+val expose_module_kind_for_testing : t -> module_kind
