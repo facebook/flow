@@ -748,10 +748,11 @@ let set_var cx ~use_op name t loc =
   subtype_against_providers cx ~use_op ~potential_global_name:name t loc
 
 let set_module_exports cx t =
-  let env = Context.environment cx in
-  Base.Option.iter
-    env.Loc_env.declare_module_exports_write_loc
-    ~f:(unify_write_entry cx ~use_op:unknown_use t Env_api.CJSModuleExportsLoc)
+  if not (Context.in_declare_module cx) then
+    let env = Context.environment cx in
+    Base.Option.iter
+      env.Loc_env.declare_module_exports_write_loc
+      ~f:(unify_write_entry cx ~use_op:unknown_use t Env_api.CJSModuleExportsLoc)
 
 let bind_function_param cx t loc =
   unify_write_entry cx ~use_op:Type.unknown_use t Env_api.FunctionParamLoc loc

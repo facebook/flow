@@ -5607,7 +5607,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         let v = Val.simplify def_loc (Some kind) (Some name) v in
         v
 
-      method! declare_module loc ({ Ast.Statement.DeclareModule.id; body; _ } as m) =
+      method! declare_module _loc ({ Ast.Statement.DeclareModule.id; body; _ } as m) =
         let (name_loc, name) =
           match id with
           | Ast.Statement.DeclareModule.Identifier (loc, { Ast.Identifier.name; _ }) -> (loc, name)
@@ -5616,9 +5616,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         let (block_loc, { Ast.Statement.Block.body = statements; comments = _ }) = body in
         let reason = mk_reason (RModule (OrdinaryName name)) name_loc in
         let write_entries =
-          env_state.write_entries
-          |> EnvMap.add_ordinary name_loc (Env_api.AssigningWrite reason)
-          |> EnvMap.add (Env_api.CJSModuleExportsLoc, loc) (Env_api.AssigningWrite reason)
+          EnvMap.add_ordinary name_loc (Env_api.AssigningWrite reason) env_state.write_entries
         in
         let values =
           L.LMap.add
