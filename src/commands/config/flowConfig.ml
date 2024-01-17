@@ -104,6 +104,7 @@ module Opts = struct
     multi_platform: bool option;
     multi_platform_extensions: string list;
     munge_underscores: bool;
+    namespaces: bool;
     no_flowlib: bool;
     node_main_fields: string list;
     node_resolver_allow_root_relative: bool;
@@ -228,6 +229,7 @@ module Opts = struct
       multi_platform = None;
       multi_platform_extensions = [];
       munge_underscores = false;
+      namespaces = false;
       no_flowlib = false;
       node_main_fields = ["main"];
       node_resolver_allow_root_relative = false;
@@ -851,6 +853,7 @@ module Opts = struct
         boolean (fun opts v -> Ok { opts with multi_platform = Some v })
       );
       ("experimental.multi_platform.extensions", multi_platform_extensions_parser);
+      ("experimental.namespaces", boolean (fun opts v -> Ok { opts with namespaces = v }));
       ("experimenta.precise_dependents", precise_dependents_parser);
       ("facebook.fbs", string (fun opts v -> Ok { opts with facebook_fbs = Some v }));
       ("facebook.fbt", string (fun opts v -> Ok { opts with facebook_fbt = Some v }));
@@ -1579,6 +1582,8 @@ let multi_platform c = c.options.Opts.multi_platform
 let multi_platform_extensions c = c.options.Opts.multi_platform_extensions
 
 let munge_underscores c = c.options.Opts.munge_underscores
+
+let namespaces c = c.options.Opts.namespaces
 
 let no_flowlib c = c.options.Opts.no_flowlib
 

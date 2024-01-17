@@ -54,6 +54,7 @@ type metadata = {
   max_trace_depth: int;
   max_workers: int;
   missing_module_generators: (Str.regexp * string) list;
+  namespaces: bool;
   react_runtime: Options.react_runtime;
   recursion_limit: int;
   relay_integration_excludes: Str.regexp list;
@@ -265,6 +266,7 @@ let metadata_of_options options =
     max_trace_depth = Options.max_trace_depth options;
     max_workers = Options.max_workers options;
     missing_module_generators = Options.missing_module_generators options;
+    namespaces = Options.namespaces options;
     react_runtime = Options.react_runtime options;
     recursion_limit = Options.recursion_limit options;
     relay_integration_excludes = Options.relay_integration_excludes options;
@@ -612,6 +614,8 @@ let slow_to_check_logging cx = cx.metadata.slow_to_check_logging
 let max_workers cx = cx.metadata.max_workers
 
 let missing_module_generators cx = cx.metadata.missing_module_generators
+
+let namespaces cx = cx.metadata.namespaces
 
 let jsx cx = cx.metadata.jsx
 

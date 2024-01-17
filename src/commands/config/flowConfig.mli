@@ -187,6 +187,8 @@ val multi_platform_extensions : config -> string list
 
 val munge_underscores : config -> bool
 
+val namespaces : config -> bool
+
 val no_flowlib : config -> bool
 
 val node_main_fields : config -> string list

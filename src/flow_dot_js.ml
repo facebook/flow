@@ -133,6 +133,7 @@ let stub_metadata ~root ~checked =
     max_trace_depth = 0;
     max_workers = 0;
     missing_module_generators = [];
+    namespaces = false;
     react_runtime = Options.ReactRuntimeAutomatic;
     recursion_limit = 10000;
     relay_integration_excludes = [];
