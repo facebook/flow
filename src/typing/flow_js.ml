@@ -10096,7 +10096,8 @@ struct
     | Upper u -> rec_flow cx trace (t, u)
 
   and continue_repos cx trace reason ?(use_desc = false) t = function
-    | Lower (use_op, l) -> rec_flow cx trace (t, ReposUseT (reason, use_desc, use_op, l))
+    | Lower (use_op, l) ->
+      rec_flow_t cx trace ~use_op (l, reposition_reason cx ~trace reason ~use_desc t)
     | Upper u -> rec_flow cx trace (t, ReposLowerT (reason, use_desc, u))
 
   and type_app_variance_check cx trace use_op reason_op reason_tapp targs tparams_loc tparams =
