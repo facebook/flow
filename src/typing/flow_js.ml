@@ -10098,7 +10098,7 @@ struct
   and continue_repos cx trace reason ?(use_desc = false) t = function
     | Lower (use_op, l) ->
       rec_flow_t cx trace ~use_op (l, reposition_reason cx ~trace reason ~use_desc t)
-    | Upper u -> rec_flow cx trace (t, ReposLowerT (reason, use_desc, u))
+    | Upper u -> rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc t, u)
 
   and type_app_variance_check cx trace use_op reason_op reason_tapp targs tparams_loc tparams =
     let minimum_arity = poly_minimum_arity tparams in
