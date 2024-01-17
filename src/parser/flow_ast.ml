@@ -1123,6 +1123,15 @@ and Statement : sig
     [@@deriving show]
   end
 
+  module DeclareNamespace : sig
+    type ('M, 'T) t = {
+      id: ('M, 'T) Identifier.t;
+      body: 'M * ('M, 'T) Block.t;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   module ExportNamedDeclaration : sig
     module ExportSpecifier : sig
       type ('M, 'T) t = 'M * ('M, 'T) t'
@@ -1266,6 +1275,7 @@ and Statement : sig
     | DeclareInterface of ('M, 'T) Interface.t
     | DeclareModule of ('M, 'T) DeclareModule.t
     | DeclareModuleExports of ('M, 'T) DeclareModuleExports.t
+    | DeclareNamespace of ('M, 'T) DeclareNamespace.t
     | DeclareTypeAlias of ('M, 'T) TypeAlias.t
     | DeclareOpaqueType of ('M, 'T) OpaqueType.t
     | DeclareVariable of ('M, 'T) DeclareVariable.t

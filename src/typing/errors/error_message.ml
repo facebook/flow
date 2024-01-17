@@ -779,6 +779,7 @@ and unsupported_syntax =
   | WithStatement
   | ComponentSyntax
   | TypeOfTypeArguments
+  | DeclareNamespace
 
 and lower_kind =
   | Possibly_null
@@ -3043,6 +3044,12 @@ let friendly_message_of_msg loc_of_aloc msg =
           code "typeof";
           text " annotation with type arguments is not supported yet. ";
           text "The type arguments will be ignored.";
+        ]
+      | DeclareNamespace ->
+        [
+          code "declare namespace";
+          text " statement is not supported yet. ";
+          text "The declaration will be ignored.";
         ]
     in
     Normal { features }

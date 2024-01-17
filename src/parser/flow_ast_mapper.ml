@@ -131,6 +131,8 @@ class ['loc] mapper =
         id_loc this#declare_module_exports loc annot stmt (fun annot ->
             (loc, DeclareModuleExports annot)
         )
+      | (loc, DeclareNamespace n) ->
+        id_loc this#declare_namespace loc n stmt (fun n -> (loc, DeclareNamespace n))
       | (loc, DeclareOpaqueType otype) ->
         id_loc this#opaque_type loc otype stmt (fun otype -> (loc, DeclareOpaqueType otype))
       | (loc, DeclareTypeAlias stuff) ->
@@ -920,6 +922,17 @@ class ['loc] mapper =
         exports
       else
         { annot = annot'; comments = comments' }
+
+    method declare_namespace _loc (m : ('loc, 'loc) Ast.Statement.DeclareNamespace.t) =
+      let open Ast.Statement.DeclareNamespace in
+      let { id; body; comments } = m in
+      let id' = this#pattern_identifier id in
+      let body' = map_loc this#block body in
+      let comments' = this#syntax_opt comments in
+      if id' == id && body' == body && comments == comments' then
+        m
+      else
+        { id = id'; body = body'; comments = comments' }
 
     method declare_type_alias loc (decl : ('loc, 'loc) Ast.Statement.TypeAlias.t) =
       this#type_alias loc decl

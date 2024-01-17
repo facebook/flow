@@ -132,9 +132,9 @@ let check_for_duplicate_exports =
             | ClassDeclaration { Class.id = None; _ }
             | Continue _ | Debugger _ | DeclareClass _ | DeclareComponent _ | DeclareEnum _
             | DeclareExportDeclaration _ | DeclareFunction _ | DeclareInterface _ | DeclareModule _
-            | DeclareModuleExports _ | DeclareTypeAlias _ | DeclareOpaqueType _ | DeclareVariable _
-            | DoWhile _ | Empty _ | ExportDefaultDeclaration _ | ExportNamedDeclaration _
-            | Expression _ | For _ | ForIn _ | ForOf _
+            | DeclareModuleExports _ | DeclareNamespace _ | DeclareTypeAlias _ | DeclareOpaqueType _
+            | DeclareVariable _ | DoWhile _ | Empty _ | ExportDefaultDeclaration _
+            | ExportNamedDeclaration _ | Expression _ | For _ | ForIn _ | ForOf _
             | FunctionDeclaration { Function.id = None; _ }
             | If _ | ImportDeclaration _ | Labeled _ | Return _ | Switch _ | Throw _ | Try _
             | While _ | With _ ))
@@ -155,9 +155,9 @@ let check_for_duplicate_exports =
         Statement.(
           ( Block _ | Break _ | ClassDeclaration _ | Continue _ | Debugger _ | DeclareClass _
           | DeclareComponent _ | DeclareEnum _ | DeclareExportDeclaration _ | DeclareFunction _
-          | DeclareInterface _ | DeclareModule _ | DeclareModuleExports _ | DeclareTypeAlias _
-          | DeclareOpaqueType _ | DeclareVariable _ | DoWhile _ | Empty _ | EnumDeclaration _
-          | Expression _ | For _ | ForIn _ | ForOf _ | FunctionDeclaration _
+          | DeclareInterface _ | DeclareModule _ | DeclareModuleExports _ | DeclareNamespace _
+          | DeclareTypeAlias _ | DeclareOpaqueType _ | DeclareVariable _ | DoWhile _ | Empty _
+          | EnumDeclaration _ | Expression _ | For _ | ForIn _ | ForOf _ | FunctionDeclaration _
           | ComponentDeclaration _ | If _ | ImportDeclaration _ | InterfaceDeclaration _ | Labeled _
           | Return _ | Switch _ | Throw _ | Try _ | TypeAlias _ | OpaqueType _
           | VariableDeclaration _ | While _ | With _ ))

@@ -259,6 +259,9 @@ with type t = Impl.t = struct
           | DeclareModule.Identifier id -> identifier id
         in
         node ?comments "DeclareModule" loc [("id", id); ("body", block body)]
+      | (loc, DeclareNamespace { DeclareNamespace.id; body; comments }) ->
+        let id = identifier id in
+        node ?comments "DeclareNamespace" loc [("id", id); ("body", block body)]
       | ( loc,
           DeclareExportDeclaration
             { DeclareExportDeclaration.specifiers; declaration; default; source; comments }

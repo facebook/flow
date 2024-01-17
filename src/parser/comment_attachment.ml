@@ -539,6 +539,8 @@ let statement_add_comments
       DeclareModule { s with DeclareModule.comments = merge_comments comments }
     | DeclareModuleExports ({ DeclareModuleExports.comments; _ } as s) ->
       DeclareModuleExports { s with DeclareModuleExports.comments = merge_comments comments }
+    | DeclareNamespace ({ DeclareNamespace.comments; _ } as s) ->
+      DeclareNamespace { s with DeclareNamespace.comments = merge_comments comments }
     | DeclareTypeAlias ({ TypeAlias.comments; _ } as s) ->
       DeclareTypeAlias { s with TypeAlias.comments = merge_comments comments }
     | DeclareOpaqueType ({ OpaqueType.comments; _ } as s) ->

@@ -1562,6 +1562,9 @@ module Make
     | (loc, DeclareModule module_) ->
       let (_, decl_ast) = declare_module cx loc module_ in
       (loc, DeclareModule decl_ast)
+    | (loc, DeclareNamespace namespace) ->
+      let (_, decl_ast) = declare_namespace cx loc namespace in
+      (loc, DeclareNamespace decl_ast)
     | (loc, DeclareExportDeclaration decl) ->
       let module D = DeclareExportDeclaration in
       let { D.default; declaration; specifiers; source; comments = _ } = decl in
@@ -2088,6 +2091,10 @@ module Make
       ignore @@ Type_env.set_scope_kind cx prev_scope_kind;
 
       (module_t, ast)
+
+  and declare_namespace cx loc decl =
+    Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, DeclareNamespace));
+    (AnyT.at (AnyError None) loc, Tast_utils.error_mapper#declare_namespace loc decl)
 
   and object_prop cx acc prop =
     let open Ast.Expression.Object in

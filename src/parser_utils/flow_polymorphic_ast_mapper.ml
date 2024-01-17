@@ -56,6 +56,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | DeclareFunction stuff -> DeclareFunction (this#declare_function stuff)
         | DeclareInterface stuff -> DeclareInterface (this#declare_interface stuff)
         | DeclareModule m -> DeclareModule (this#declare_module annot m)
+        | DeclareNamespace n -> DeclareNamespace (this#declare_namespace annot n)
         | DeclareTypeAlias stuff -> DeclareTypeAlias (this#declare_type_alias stuff)
         | DeclareVariable stuff -> DeclareVariable (this#declare_variable stuff)
         | DeclareModuleExports exports -> DeclareModuleExports (this#declare_module_exports exports)
@@ -669,6 +670,15 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | Identifier id -> Identifier (this#t_identifier id)
         | Literal (annot, name) -> Literal (this#on_type_annot annot, this#string_literal name)
       in
+      let body' = (this#on_loc_annot * this#block) body in
+      let comments' = this#syntax_opt comments in
+      { id = id'; body = body'; comments = comments' }
+
+    method declare_namespace _annot (n : ('M, 'T) Ast.Statement.DeclareNamespace.t)
+        : ('N, 'U) Ast.Statement.DeclareNamespace.t =
+      let open Ast.Statement.DeclareNamespace in
+      let { id; body; comments } = n in
+      let id' = this#t_identifier id in
       let body' = (this#on_loc_annot * this#block) body in
       let comments' = this#syntax_opt comments in
       { id = id'; body = body'; comments = comments' }

@@ -4675,6 +4675,11 @@ let rec statement opts scope tbls (loc, stmt) =
     let (_, { S.Block.body = stmts; comments = _ }) = body in
     List.iter (statement opts scope tbls) stmts;
     Scope.finalize_declare_module_exports_exn scope
+  | S.DeclareNamespace { S.DeclareNamespace.id; body; comments = _ } ->
+    (* TODO(T174946399): namespace support *)
+    ignore id;
+    ignore body;
+    ()
   | S.DeclareEnum decl
   | S.EnumDeclaration decl ->
     enum_decl opts scope tbls decl ignore2

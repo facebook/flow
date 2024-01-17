@@ -902,6 +902,7 @@ and statement ?(pretty_semicolon = false) ~opts (root_stmt : (Loc.t, Loc.t) Ast.
       | S.DeclareVariable var -> declare_variable ~opts loc var
       | S.DeclareModuleExports exports -> declare_module_exports ~opts loc exports
       | S.DeclareModule m -> declare_module ~opts loc m
+      | S.DeclareNamespace n -> declare_namespace ~opts loc n
       | S.DeclareTypeAlias typeAlias -> type_alias ~opts ~declare:true loc typeAlias
       | S.DeclareOpaqueType opaqueType -> opaque_type ~opts ~declare:true loc opaqueType
       | S.DeclareExportDeclaration export -> declare_export_declaration ~opts loc export
@@ -4481,6 +4482,22 @@ and declare_module ~opts loc { Ast.Statement.DeclareModule.id; body; comments } 
             | Ast.Statement.DeclareModule.Identifier id -> identifier id
             | Ast.Statement.DeclareModule.Literal (loc, lit) -> string_literal ~opts loc lit
           end;
+          pretty_space;
+          block ~opts body;
+        ]
+    )
+
+and declare_namespace ~opts loc { Ast.Statement.DeclareNamespace.id; body; comments } =
+  source_location_with_comments
+    ?comments
+    ( loc,
+      fuse
+        [
+          Atom "declare";
+          space;
+          Atom "namespace";
+          space;
+          identifier id;
           pretty_space;
           block ~opts body;
         ]
