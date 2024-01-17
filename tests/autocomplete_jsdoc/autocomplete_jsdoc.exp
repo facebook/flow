@@ -1,0 +1,4658 @@
+jsdoc.js:18:4
+Flags: --lsp
+{
+  "label":"async",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"async"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"async",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"await",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"await"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"await",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"Bar",
+  "kind":7,
+  "detail":"class Bar",
+  "documentation":{"kind":"markdown","value":"the class Bar"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"Bar"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Bar",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"baz",
+  "labelDetails":{"detail":": number"},
+  "kind":6,
+  "detail":"number",
+  "documentation":{"kind":"markdown","value":"the variable baz"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"baz"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"baz",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"BooleanEnum",
+  "kind":13,
+  "detail":"enum BooleanEnum",
+  "documentation":{"kind":"markdown","value":"a boolean enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"BooleanEnum"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"BooleanEnum",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"break",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"break"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"break",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"case",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"case"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"case",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"catch",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"catch"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"catch",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"class",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"class"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":8,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"class",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"const",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"const"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":9,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"const",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"continue",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"continue"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":10,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"continue",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"debugger",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"debugger"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":11,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"debugger",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"declare",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"declare"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":12,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"declare",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"default",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"default"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":13,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"default",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"DefaultedStringEnum",
+  "kind":13,
+  "detail":"enum DefaultedStringEnum",
+  "documentation":{"kind":"markdown","value":"a defaulted string enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"DefaultedStringEnum"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {
+        "token":null,
+        "index":14,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"DefaultedStringEnum",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"delete",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"delete"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":15,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"delete",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"do",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"do"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":16,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"do",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"else",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"else"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":17,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"else",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"enum",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"enum"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":18,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"enum",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"export",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"export"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":19,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"export",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"extends",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"extends"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":20,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"extends",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"finally",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"finally"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":21,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"finally",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"foo",
+  "labelDetails":{"detail":": () => void"},
+  "kind":3,
+  "detail":"() => void",
+  "documentation":{"kind":"markdown","value":"the function foo"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"foo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {
+        "token":null,
+        "index":22,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"foo",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"for",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"for"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":23,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"for",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"function",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"function"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":24,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"function",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"if",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"if"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":25,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"if",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"implements",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"implements"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":26,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"implements",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"import",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"import"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":27,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"import",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"InitializedStringEnum",
+  "kind":13,
+  "detail":"enum InitializedStringEnum",
+  "documentation":{"kind":"markdown","value":"an initialized string enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"InitializedStringEnum"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {
+        "token":null,
+        "index":28,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"InitializedStringEnum",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"interface",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"interface"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":29,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"interface",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"let",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"let"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":30,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"let",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"new",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"new"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":31,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"new",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"NumberEnum",
+  "kind":13,
+  "detail":"enum NumberEnum",
+  "documentation":{"kind":"markdown","value":"a number enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"NumberEnum"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {
+        "token":null,
+        "index":32,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"NumberEnum",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"opaque",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"opaque"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":33,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"opaque",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"qux",
+  "labelDetails":{"detail":": number"},
+  "kind":6,
+  "detail":"number",
+  "documentation":{
+    "kind":"markdown",
+    "value":"description\n\n**@explorer-desc** this is qux\nit's a var\n\n**@explorer-ignore**\n\n**@explorer-title** qux"
+  },
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"qux"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {
+        "token":null,
+        "index":34,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"qux",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"return",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"return"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":35,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"return",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"static",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"static"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":36,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"static",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"switch",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"switch"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":37,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"switch",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"SymbolEnum",
+  "kind":13,
+  "detail":"enum SymbolEnum",
+  "documentation":{"kind":"markdown","value":"a symbol enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"SymbolEnum"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {
+        "token":null,
+        "index":38,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"SymbolEnum",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"throw",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"throw"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":39,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"throw",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"try",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"try"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":40,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"try",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"type",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"type"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":41,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"type",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"typeof",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"typeof"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":42,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"typeof",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"var",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"var"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":43,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"var",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"void",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"void"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":44,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"void",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"while",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"while"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":45,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"while",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"x",
+  "labelDetails":{"detail":": () => void"},
+  "kind":3,
+  "detail":"() => void",
+  "documentation":{"kind":"markdown","value":"**@deprecated** \n\na JSDoc in the same file."},
+  "tags":[1],
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"x"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {
+        "token":null,
+        "index":46,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"x",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"yield",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":3},"end":{"line":17,"character":3}},
+    "newText":"yield"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":47,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"yield",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+
+jsdoc-members-1.js:43:5
+Flags: --lsp
+{
+  "label":"a",
+  "labelDetails":{"detail":": number"},
+  "kind":6,
+  "detail":"number",
+  "documentation":{"kind":"markdown","value":"identifier property of an object literal"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
+    "newText":"a"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"a",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"b",
+  "labelDetails":{"detail":": number"},
+  "kind":6,
+  "detail":"number",
+  "documentation":{"kind":"markdown","value":"literal property of an object literal"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
+    "newText":"b"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"b",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"c",
+  "labelDetails":{"detail":": number"},
+  "kind":6,
+  "detail":"number",
+  "documentation":{"kind":"markdown","value":"computed property of an object literal"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
+    "newText":"c"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"c",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"d",
+  "labelDetails":{"detail":": number"},
+  "kind":6,
+  "detail":"number",
+  "documentation":{"kind":"markdown","value":"annotated getter property of an object literal"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
+    "newText":"d"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"d",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"e",
+  "labelDetails":{"detail":": void"},
+  "kind":6,
+  "detail":"void",
+  "documentation":{
+    "kind":"markdown",
+    "value":"unannotated getter property of an object literal (TODO)"
+  },
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
+    "newText":"e"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"e",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"f",
+  "labelDetails":{"detail":": () => void"},
+  "kind":3,
+  "detail":"() => void",
+  "documentation":{"kind":"markdown","value":"method property of an object literal"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
+    "newText":"f"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"f",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"g",
+  "labelDetails":{"detail":": () => Promise<void>"},
+  "kind":3,
+  "detail":"() => Promise<void>",
+  "documentation":{"kind":"markdown","value":"async method property of an object literal"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
+    "newText":"g"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"g",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"h",
+  "labelDetails":{"detail":": number"},
+  "kind":6,
+  "detail":"number",
+  "documentation":{
+    "kind":"markdown",
+    "value":"member h\n\n**@explorer-desc** this is h\nit's a member\n\n**@explorer-ignore**\n\n**@explorer-title** h the member"
+  },
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
+    "newText":"h"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"h",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+
+jsdoc-members-2.js:5:17
+Flags: --lsp
+{
+  "label":"bar",
+  "labelDetails":{"detail":": 2"},
+  "kind":12,
+  "detail":"2",
+  "documentation":{"kind":"markdown","value":"bar is a getter property"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":16},"end":{"line":4,"character":16}},
+    "newText":"bar="
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "jsx attribute",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"bar",
+        "ac_type":"Acjsx"
+      }
+    ]
+  }
+}
+{
+  "label":"baz",
+  "labelDetails":{"detail":": 3"},
+  "kind":12,
+  "detail":"3",
+  "documentation":{"kind":"markdown","value":"baz is an identifier property with variance"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":16},"end":{"line":4,"character":16}},
+    "newText":"baz="
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "jsx attribute",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"baz",
+        "ac_type":"Acjsx"
+      }
+    ]
+  }
+}
+{
+  "label":"foo",
+  "labelDetails":{"detail":": 1"},
+  "kind":12,
+  "detail":"1",
+  "documentation":{"kind":"markdown","value":"foo is an identifier property"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":16},"end":{"line":4,"character":16}},
+    "newText":"foo="
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "jsx attribute",
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"foo",
+        "ac_type":"Acjsx"
+      }
+    ]
+  }
+}
+{
+  "label":"qux",
+  "labelDetails":{"detail":": 4"},
+  "kind":12,
+  "detail":"4",
+  "documentation":{"kind":"markdown","value":"qux is a literal property"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":16},"end":{"line":4,"character":16}},
+    "newText":"qux="
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "jsx attribute",
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"qux",
+        "ac_type":"Acjsx"
+      }
+    ]
+  }
+}
+
+jsdoc-members-3.js:5:20
+Flags: --lsp
+{
+  "label":"bar",
+  "labelDetails":{"detail":": 2"},
+  "kind":12,
+  "detail":"2",
+  "documentation":{"kind":"markdown","value":"bar is a getter property"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":19},"end":{"line":4,"character":19}},
+    "newText":"bar="
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "jsx attribute",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"bar",
+        "ac_type":"Acjsx"
+      }
+    ]
+  }
+}
+{
+  "label":"baz",
+  "labelDetails":{"detail":": 3"},
+  "kind":12,
+  "detail":"3",
+  "documentation":{"kind":"markdown","value":"baz is an identifier property with variance"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":19},"end":{"line":4,"character":19}},
+    "newText":"baz="
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "jsx attribute",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"baz",
+        "ac_type":"Acjsx"
+      }
+    ]
+  }
+}
+{
+  "label":"foo",
+  "labelDetails":{"detail":": 1"},
+  "kind":12,
+  "detail":"1",
+  "documentation":{"kind":"markdown","value":"foo is an identifier property"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":19},"end":{"line":4,"character":19}},
+    "newText":"foo="
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "jsx attribute",
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"foo",
+        "ac_type":"Acjsx"
+      }
+    ]
+  }
+}
+{
+  "label":"qux",
+  "labelDetails":{"detail":": 4"},
+  "kind":12,
+  "detail":"4",
+  "documentation":{"kind":"markdown","value":"qux is a literal property"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":19},"end":{"line":4,"character":19}},
+    "newText":"qux="
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "jsx attribute",
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"qux",
+        "ac_type":"Acjsx"
+      }
+    ]
+  }
+}
+
+jsdoc-members-4.js:5:5
+Flags: --lsp
+{
+  "label":"staticMethod",
+  "labelDetails":{"detail":": () => void"},
+  "kind":3,
+  "detail":"() => void",
+  "documentation":{"kind":"markdown","value":"this is a static method"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"staticMethod"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"staticMethod",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"staticProp",
+  "labelDetails":{"detail":": 1"},
+  "kind":12,
+  "detail":"1",
+  "documentation":{"kind":"markdown","value":"this is a static property"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"staticProp"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"staticProp",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"apply",
+  "labelDetails":{"detail":": (thisArg: any, argArray?: any) => any"},
+  "kind":3,
+  "detail":"(thisArg: any, argArray?: any) => any",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"apply"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"apply",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"arguments",
+  "labelDetails":{"detail":": any"},
+  "kind":6,
+  "detail":"any",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"arguments"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"arguments",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"bind",
+  "labelDetails":{"detail":": (thisArg: any, ...argArray: Array<any>) => any"},
+  "kind":3,
+  "detail":"(thisArg: any, ...argArray: Array<any>) => any",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"bind"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"bind",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"call",
+  "labelDetails":{"detail":": (thisArg: any, ...argArray: Array<any>) => any"},
+  "kind":3,
+  "detail":"(thisArg: any, ...argArray: Array<any>) => any",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"call"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"call",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"caller",
+  "labelDetails":{"detail":": any | null"},
+  "kind":13,
+  "detail":"any | null",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"caller"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"caller",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"length",
+  "labelDetails":{"detail":": number"},
+  "kind":6,
+  "detail":"number",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"length"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"length",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"name",
+  "labelDetails":{"detail":": string"},
+  "kind":6,
+  "detail":"string",
+  "documentation":{"kind":"markdown","value":"Returns the name of the function."},
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"name"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":8,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"name",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"toString",
+  "labelDetails":{"detail":": () => string"},
+  "kind":3,
+  "detail":"() => string",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of a function."},
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":9,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"toString",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+
+jsdoc-members-5.js:5:13
+Flags: --lsp
+{
+  "label":"instanceMethod",
+  "labelDetails":{"detail":": () => void"},
+  "kind":3,
+  "detail":"() => void",
+  "documentation":{"kind":"markdown","value":"this is an instance method"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
+    "newText":"instanceMethod"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"instanceMethod",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"instanceProp",
+  "labelDetails":{"detail":": 2"},
+  "kind":12,
+  "detail":"2",
+  "documentation":{"kind":"markdown","value":"this is an instance property"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
+    "newText":"instanceProp"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"instanceProp",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"varianceProp",
+  "labelDetails":{"detail":": 3"},
+  "kind":12,
+  "detail":"3",
+  "documentation":{"kind":"markdown","value":"property with variance"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
+    "newText":"varianceProp"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"varianceProp",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+
+jsdoc-members-6.js:6:5
+Flags: --lsp
+{
+  "label":"bar",
+  "labelDetails":{"detail":": 2"},
+  "kind":12,
+  "detail":"2",
+  "documentation":{"kind":"markdown","value":"bar is a getter property"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
+    "newText":"bar"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"bar",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"baz",
+  "labelDetails":{"detail":": 3"},
+  "kind":12,
+  "detail":"3",
+  "documentation":{"kind":"markdown","value":"baz is an identifier property with variance"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
+    "newText":"baz"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"baz",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"foo",
+  "labelDetails":{"detail":": 1"},
+  "kind":12,
+  "detail":"1",
+  "documentation":{"kind":"markdown","value":"foo is an identifier property"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
+    "newText":"foo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"foo",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"qux",
+  "labelDetails":{"detail":": 4"},
+  "kind":12,
+  "detail":"4",
+  "documentation":{"kind":"markdown","value":"qux is a literal property"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
+    "newText":"qux"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"qux",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+
+jsdoc-members-7.js:6:5
+Flags: --lsp
+{
+  "label":"?.bar",
+  "labelDetails":{"detail":": void | 2"},
+  "kind":13,
+  "detail":"void | 2",
+  "documentation":{"kind":"markdown","value":"bar is a getter property"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
+    "newText":"?.bar"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.bar",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"?.baz",
+  "labelDetails":{"detail":": void | 3"},
+  "kind":13,
+  "detail":"void | 3",
+  "documentation":{"kind":"markdown","value":"baz is an identifier property with variance"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
+    "newText":"?.baz"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.baz",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"?.foo",
+  "labelDetails":{"detail":": void | 1"},
+  "kind":13,
+  "detail":"void | 1",
+  "documentation":{"kind":"markdown","value":"foo is an identifier property"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
+    "newText":"?.foo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.foo",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"?.qux",
+  "labelDetails":{"detail":": void | 4"},
+  "kind":13,
+  "detail":"void | 4",
+  "documentation":{"kind":"markdown","value":"qux is a literal property"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
+    "newText":"?.qux"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.qux",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+
+jsdoc-members-8.js:11:21
+Flags: --lsp
+{
+  "label":"Member1",
+  "labelDetails":{"detail":": DefaultedStringEnum"},
+  "kind":6,
+  "detail":"DefaultedStringEnum",
+  "documentation":{"kind":"markdown","value":"first member of a defaulted string enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"Member1",
+    "insert":{"start":{"line":10,"character":20},"end":{"line":10,"character":20}},
+    "replace":{"start":{"line":10,"character":20},"end":{"line":10,"character":21}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Member1",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"Member2",
+  "labelDetails":{"detail":": DefaultedStringEnum"},
+  "kind":6,
+  "detail":"DefaultedStringEnum",
+  "documentation":{"kind":"markdown","value":"second member of a defaulted string enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"Member2",
+    "insert":{"start":{"line":10,"character":20},"end":{"line":10,"character":20}},
+    "replace":{"start":{"line":10,"character":20},"end":{"line":10,"character":21}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Member2",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"cast",
+  "labelDetails":{"detail":": (input: ?string) => (void | DefaultedStringEnum)"},
+  "kind":3,
+  "detail":"(input: ?string) => (void | DefaultedStringEnum)",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"cast",
+    "insert":{"start":{"line":10,"character":20},"end":{"line":10,"character":20}},
+    "replace":{"start":{"line":10,"character":20},"end":{"line":10,"character":21}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"cast",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"getName",
+  "labelDetails":{"detail":": (input: DefaultedStringEnum) => string"},
+  "kind":3,
+  "detail":"(input: DefaultedStringEnum) => string",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"getName",
+    "insert":{"start":{"line":10,"character":20},"end":{"line":10,"character":20}},
+    "replace":{"start":{"line":10,"character":20},"end":{"line":10,"character":21}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"getName",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"isValid",
+  "labelDetails":{"detail":": (input: ?string) => boolean"},
+  "kind":3,
+  "detail":"(input: ?string) => boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"isValid",
+    "insert":{"start":{"line":10,"character":20},"end":{"line":10,"character":20}},
+    "replace":{"start":{"line":10,"character":20},"end":{"line":10,"character":21}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"isValid",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"members",
+  "labelDetails":{"detail":": () => Iterator<DefaultedStringEnum>"},
+  "kind":3,
+  "detail":"() => Iterator<DefaultedStringEnum>",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"members",
+    "insert":{"start":{"line":10,"character":20},"end":{"line":10,"character":20}},
+    "replace":{"start":{"line":10,"character":20},"end":{"line":10,"character":21}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"members",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+
+jsdoc-members-8.js:13:23
+Flags: --lsp
+{
+  "label":"Member1",
+  "labelDetails":{"detail":": InitializedStringEnum"},
+  "kind":6,
+  "detail":"InitializedStringEnum",
+  "documentation":{"kind":"markdown","value":"first member of an initialized string enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"Member1",
+    "insert":{"start":{"line":12,"character":22},"end":{"line":12,"character":22}},
+    "replace":{"start":{"line":12,"character":22},"end":{"line":12,"character":23}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Member1",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"Member2",
+  "labelDetails":{"detail":": InitializedStringEnum"},
+  "kind":6,
+  "detail":"InitializedStringEnum",
+  "documentation":{"kind":"markdown","value":"second member of an initialized string enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"Member2",
+    "insert":{"start":{"line":12,"character":22},"end":{"line":12,"character":22}},
+    "replace":{"start":{"line":12,"character":22},"end":{"line":12,"character":23}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Member2",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"cast",
+  "labelDetails":{"detail":": (input: ?string) => (void | InitializedStringEnum)"},
+  "kind":3,
+  "detail":"(input: ?string) => (void | InitializedStringEnum)",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"cast",
+    "insert":{"start":{"line":12,"character":22},"end":{"line":12,"character":22}},
+    "replace":{"start":{"line":12,"character":22},"end":{"line":12,"character":23}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"cast",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"getName",
+  "labelDetails":{"detail":": (input: InitializedStringEnum) => string"},
+  "kind":3,
+  "detail":"(input: InitializedStringEnum) => string",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"getName",
+    "insert":{"start":{"line":12,"character":22},"end":{"line":12,"character":22}},
+    "replace":{"start":{"line":12,"character":22},"end":{"line":12,"character":23}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"getName",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"isValid",
+  "labelDetails":{"detail":": (input: ?string) => boolean"},
+  "kind":3,
+  "detail":"(input: ?string) => boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"isValid",
+    "insert":{"start":{"line":12,"character":22},"end":{"line":12,"character":22}},
+    "replace":{"start":{"line":12,"character":22},"end":{"line":12,"character":23}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"isValid",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"members",
+  "labelDetails":{"detail":": () => Iterator<InitializedStringEnum>"},
+  "kind":3,
+  "detail":"() => Iterator<InitializedStringEnum>",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"members",
+    "insert":{"start":{"line":12,"character":22},"end":{"line":12,"character":22}},
+    "replace":{"start":{"line":12,"character":22},"end":{"line":12,"character":23}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"members",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+
+jsdoc-members-8.js:15:12
+Flags: --lsp
+{
+  "label":"Member1",
+  "labelDetails":{"detail":": NumberEnum"},
+  "kind":6,
+  "detail":"NumberEnum",
+  "documentation":{"kind":"markdown","value":"first member of a number enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"Member1",
+    "insert":{"start":{"line":14,"character":11},"end":{"line":14,"character":11}},
+    "replace":{"start":{"line":14,"character":11},"end":{"line":14,"character":12}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Member1",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"Member2",
+  "labelDetails":{"detail":": NumberEnum"},
+  "kind":6,
+  "detail":"NumberEnum",
+  "documentation":{"kind":"markdown","value":"second member of a number enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"Member2",
+    "insert":{"start":{"line":14,"character":11},"end":{"line":14,"character":11}},
+    "replace":{"start":{"line":14,"character":11},"end":{"line":14,"character":12}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Member2",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"cast",
+  "labelDetails":{"detail":": (input: ?number) => (void | NumberEnum)"},
+  "kind":3,
+  "detail":"(input: ?number) => (void | NumberEnum)",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"cast",
+    "insert":{"start":{"line":14,"character":11},"end":{"line":14,"character":11}},
+    "replace":{"start":{"line":14,"character":11},"end":{"line":14,"character":12}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"cast",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"getName",
+  "labelDetails":{"detail":": (input: NumberEnum) => string"},
+  "kind":3,
+  "detail":"(input: NumberEnum) => string",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"getName",
+    "insert":{"start":{"line":14,"character":11},"end":{"line":14,"character":11}},
+    "replace":{"start":{"line":14,"character":11},"end":{"line":14,"character":12}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"getName",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"isValid",
+  "labelDetails":{"detail":": (input: ?number) => boolean"},
+  "kind":3,
+  "detail":"(input: ?number) => boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"isValid",
+    "insert":{"start":{"line":14,"character":11},"end":{"line":14,"character":11}},
+    "replace":{"start":{"line":14,"character":11},"end":{"line":14,"character":12}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"isValid",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"members",
+  "labelDetails":{"detail":": () => Iterator<NumberEnum>"},
+  "kind":3,
+  "detail":"() => Iterator<NumberEnum>",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"members",
+    "insert":{"start":{"line":14,"character":11},"end":{"line":14,"character":11}},
+    "replace":{"start":{"line":14,"character":11},"end":{"line":14,"character":12}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"members",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+
+jsdoc-members-8.js:17:13
+Flags: --lsp
+{
+  "label":"Member1",
+  "labelDetails":{"detail":": BooleanEnum"},
+  "kind":6,
+  "detail":"BooleanEnum",
+  "documentation":{"kind":"markdown","value":"first member of a boolean enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"Member1",
+    "insert":{"start":{"line":16,"character":12},"end":{"line":16,"character":12}},
+    "replace":{"start":{"line":16,"character":12},"end":{"line":16,"character":13}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Member1",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"Member2",
+  "labelDetails":{"detail":": BooleanEnum"},
+  "kind":6,
+  "detail":"BooleanEnum",
+  "documentation":{"kind":"markdown","value":"second member of a boolean enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"Member2",
+    "insert":{"start":{"line":16,"character":12},"end":{"line":16,"character":12}},
+    "replace":{"start":{"line":16,"character":12},"end":{"line":16,"character":13}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Member2",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"cast",
+  "labelDetails":{"detail":": (input: ?boolean) => (void | BooleanEnum)"},
+  "kind":3,
+  "detail":"(input: ?boolean) => (void | BooleanEnum)",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"cast",
+    "insert":{"start":{"line":16,"character":12},"end":{"line":16,"character":12}},
+    "replace":{"start":{"line":16,"character":12},"end":{"line":16,"character":13}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"cast",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"getName",
+  "labelDetails":{"detail":": (input: BooleanEnum) => string"},
+  "kind":3,
+  "detail":"(input: BooleanEnum) => string",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"getName",
+    "insert":{"start":{"line":16,"character":12},"end":{"line":16,"character":12}},
+    "replace":{"start":{"line":16,"character":12},"end":{"line":16,"character":13}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"getName",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"isValid",
+  "labelDetails":{"detail":": (input: ?boolean) => boolean"},
+  "kind":3,
+  "detail":"(input: ?boolean) => boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"isValid",
+    "insert":{"start":{"line":16,"character":12},"end":{"line":16,"character":12}},
+    "replace":{"start":{"line":16,"character":12},"end":{"line":16,"character":13}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"isValid",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"members",
+  "labelDetails":{"detail":": () => Iterator<BooleanEnum>"},
+  "kind":3,
+  "detail":"() => Iterator<BooleanEnum>",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"members",
+    "insert":{"start":{"line":16,"character":12},"end":{"line":16,"character":12}},
+    "replace":{"start":{"line":16,"character":12},"end":{"line":16,"character":13}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"members",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+
+jsdoc-members-8.js:19:12
+Flags: --lsp
+{
+  "label":"Member1",
+  "labelDetails":{"detail":": SymbolEnum"},
+  "kind":6,
+  "detail":"SymbolEnum",
+  "documentation":{"kind":"markdown","value":"first member of a boolean enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"Member1",
+    "insert":{"start":{"line":18,"character":11},"end":{"line":18,"character":11}},
+    "replace":{"start":{"line":18,"character":11},"end":{"line":18,"character":12}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Member1",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"Member2",
+  "labelDetails":{"detail":": SymbolEnum"},
+  "kind":6,
+  "detail":"SymbolEnum",
+  "documentation":{"kind":"markdown","value":"second member of a boolean enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"Member2",
+    "insert":{"start":{"line":18,"character":11},"end":{"line":18,"character":11}},
+    "replace":{"start":{"line":18,"character":11},"end":{"line":18,"character":12}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Member2",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"cast",
+  "labelDetails":{"detail":": (input: ?symbol) => (void | SymbolEnum)"},
+  "kind":3,
+  "detail":"(input: ?symbol) => (void | SymbolEnum)",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"cast",
+    "insert":{"start":{"line":18,"character":11},"end":{"line":18,"character":11}},
+    "replace":{"start":{"line":18,"character":11},"end":{"line":18,"character":12}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"cast",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"getName",
+  "labelDetails":{"detail":": (input: SymbolEnum) => string"},
+  "kind":3,
+  "detail":"(input: SymbolEnum) => string",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"getName",
+    "insert":{"start":{"line":18,"character":11},"end":{"line":18,"character":11}},
+    "replace":{"start":{"line":18,"character":11},"end":{"line":18,"character":12}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"getName",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"isValid",
+  "labelDetails":{"detail":": (input: ?symbol) => boolean"},
+  "kind":3,
+  "detail":"(input: ?symbol) => boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"isValid",
+    "insert":{"start":{"line":18,"character":11},"end":{"line":18,"character":11}},
+    "replace":{"start":{"line":18,"character":11},"end":{"line":18,"character":12}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"isValid",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"members",
+  "labelDetails":{"detail":": () => Iterator<SymbolEnum>"},
+  "kind":3,
+  "detail":"() => Iterator<SymbolEnum>",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "newText":"members",
+    "insert":{"start":{"line":18,"character":11},"end":{"line":18,"character":11}},
+    "replace":{"start":{"line":18,"character":11},"end":{"line":18,"character":12}}
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"members",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+
+types-jsdoc.js:19:6
+Flags: --lsp
+{
+  "label":"ExportBar",
+  "kind":13,
+  "detail":"type ExportBar<T> = ?T",
+  "documentation":{"kind":"markdown","value":"this is ExportBar"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"ExportBar"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"ExportBar",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"ExportClass",
+  "kind":7,
+  "detail":"class ExportClass",
+  "documentation":{"kind":"markdown","value":"this is ExportClass"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"ExportClass"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"ExportClass",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"ExportEnum",
+  "kind":13,
+  "detail":"enum ExportEnum",
+  "documentation":{"kind":"markdown","value":"this is ExportEnum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"ExportEnum"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"ExportEnum",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"ExportFoo",
+  "kind":6,
+  "detail":"type ExportFoo = number",
+  "documentation":{
+    "kind":"markdown",
+    "value":"**@deprecated** Use number instead.\n\nthis is ExportFoo."
+  },
+  "tags":[1],
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"ExportFoo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"ExportFoo",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"ExportInterface",
+  "kind":8,
+  "detail":"interface ExportInterface",
+  "documentation":{"kind":"markdown","value":"this is ExportInterface"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"ExportInterface"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"ExportInterface",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"exportValue",
+  "kind":6,
+  "detail":"type exportValue = number",
+  "documentation":{"kind":"markdown","value":"this is ExportValue"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"exportValue"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"exportValue",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"myBar",
+  "kind":13,
+  "detail":"type myBar<T> = ?T",
+  "documentation":{"kind":"markdown","value":"this is myBar"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"myBar"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"myBar",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"myClass",
+  "kind":7,
+  "detail":"class myClass",
+  "documentation":{"kind":"markdown","value":"this is myClass"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"myClass"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: class or enum",
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"myClass",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"myEnum",
+  "kind":13,
+  "detail":"enum myEnum",
+  "documentation":{"kind":"markdown","value":"this is myEnum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"myEnum"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: class or enum",
+      {
+        "token":null,
+        "index":8,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"myEnum",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"myFoo",
+  "kind":6,
+  "detail":"type myFoo = number",
+  "documentation":{"kind":"markdown","value":"**@deprecated** \n\nthis is myFoo."},
+  "tags":[1],
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"myFoo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {
+        "token":null,
+        "index":9,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"myFoo",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"myInterface",
+  "kind":8,
+  "detail":"interface myInterface",
+  "documentation":{"kind":"markdown","value":"this is myInterface"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"myInterface"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {
+        "token":null,
+        "index":10,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"myInterface",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"any",
+  "kind":6,
+  "detail":"any",
+  "sortText":"00000000000000000100",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"any"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":11,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"any",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"bigint",
+  "kind":6,
+  "detail":"bigint",
+  "sortText":"00000000000000000100",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"bigint"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":12,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"bigint",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"boolean",
+  "kind":6,
+  "detail":"boolean",
+  "sortText":"00000000000000000100",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"boolean"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":13,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"boolean",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"empty",
+  "kind":6,
+  "detail":"empty",
+  "sortText":"00000000000000000100",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"empty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":14,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"empty",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"false",
+  "kind":6,
+  "detail":"false",
+  "sortText":"00000000000000000100",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"false"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":15,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"false",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"mixed",
+  "kind":6,
+  "detail":"mixed",
+  "sortText":"00000000000000000100",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"mixed"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":16,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"mixed",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"null",
+  "kind":6,
+  "detail":"null",
+  "sortText":"00000000000000000100",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"null"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":17,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"null",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"number",
+  "kind":6,
+  "detail":"number",
+  "sortText":"00000000000000000100",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"number"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":18,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"number",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"string",
+  "kind":6,
+  "detail":"string",
+  "sortText":"00000000000000000100",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"string"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":19,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"string",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"symbol",
+  "kind":6,
+  "detail":"symbol",
+  "sortText":"00000000000000000100",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"symbol"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":20,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"symbol",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"true",
+  "kind":6,
+  "detail":"true",
+  "sortText":"00000000000000000100",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"true"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":21,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"true",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"void",
+  "kind":6,
+  "detail":"void",
+  "sortText":"00000000000000000100",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"void"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":22,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"void",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"$Call",
+  "kind":3,
+  "detail":"$Call",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"$Call"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":23,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Call",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"$CharSet",
+  "kind":3,
+  "detail":"$CharSet",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"$CharSet"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":24,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$CharSet",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"$Diff",
+  "kind":3,
+  "detail":"$Diff",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"$Diff"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":25,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Diff",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"$ElementType",
+  "kind":3,
+  "detail":"$ElementType",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"$ElementType"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":26,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$ElementType",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"$Exact",
+  "kind":3,
+  "detail":"$Exact",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"$Exact"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":27,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Exact",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"$Exports",
+  "kind":3,
+  "detail":"$Exports",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"$Exports"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":28,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Exports",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"$KeyMirror",
+  "kind":3,
+  "detail":"$KeyMirror",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"$KeyMirror"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":29,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$KeyMirror",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"$Keys",
+  "kind":3,
+  "detail":"$Keys",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"$Keys"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":30,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Keys",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"$NonMaybeType",
+  "kind":3,
+  "detail":"$NonMaybeType",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"$NonMaybeType"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":31,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$NonMaybeType",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"$ObjMap",
+  "kind":3,
+  "detail":"$ObjMap",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"$ObjMap"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":32,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$ObjMap",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"$ObjMapi",
+  "kind":3,
+  "detail":"$ObjMapi",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"$ObjMapi"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":33,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$ObjMapi",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"$PropertyType",
+  "kind":3,
+  "detail":"$PropertyType",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"$PropertyType"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":34,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$PropertyType",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"$ReadOnly",
+  "kind":3,
+  "detail":"$ReadOnly",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"$ReadOnly"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":35,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$ReadOnly",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"$Rest",
+  "kind":3,
+  "detail":"$Rest",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"$Rest"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":36,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Rest",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"$TupleMap",
+  "kind":3,
+  "detail":"$TupleMap",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"$TupleMap"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":37,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$TupleMap",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"$Values",
+  "kind":3,
+  "detail":"$Values",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"$Values"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":38,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Values",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"Class",
+  "kind":3,
+  "detail":"Class",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"Class"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":39,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Class",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"Partial",
+  "kind":3,
+  "detail":"Partial",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"Partial"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":40,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Partial",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"Required",
+  "kind":3,
+  "detail":"Required",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":5},"end":{"line":18,"character":5}},
+    "newText":"Required"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":41,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Required",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+
+qualified-types-jsdoc.js:5:12
+Flags: --lsp
+{
+  "label":"ExportBar",
+  "kind":13,
+  "detail":"type ExportBar<T> = ?T",
+  "documentation":{"kind":"markdown","value":"this is ExportBar"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
+    "newText":"ExportBar"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "qualified type alias",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"ExportBar",
+        "ac_type":"Acqualifiedtype"
+      }
+    ]
+  }
+}
+{
+  "label":"ExportClass",
+  "kind":7,
+  "detail":"class ExportClass",
+  "documentation":{"kind":"markdown","value":"this is ExportClass"},
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
+    "newText":"ExportClass"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "qualified class",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"ExportClass",
+        "ac_type":"Acqualifiedtype"
+      }
+    ]
+  }
+}
+{
+  "label":"ExportEnum",
+  "kind":13,
+  "detail":"enum ExportEnum",
+  "documentation":{"kind":"markdown","value":"this is ExportEnum"},
+  "sortText":"00000000000000000002",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
+    "newText":"ExportEnum"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "qualified enum",
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"ExportEnum",
+        "ac_type":"Acqualifiedtype"
+      }
+    ]
+  }
+}
+{
+  "label":"ExportFoo",
+  "kind":6,
+  "detail":"type ExportFoo = number",
+  "documentation":{
+    "kind":"markdown",
+    "value":"**@deprecated** Use number instead.\n\nthis is ExportFoo."
+  },
+  "tags":[1],
+  "sortText":"00000000000000000003",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
+    "newText":"ExportFoo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "qualified type alias",
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"ExportFoo",
+        "ac_type":"Acqualifiedtype"
+      }
+    ]
+  }
+}
+{
+  "label":"ExportInterface",
+  "kind":8,
+  "detail":"interface ExportInterface",
+  "documentation":{"kind":"markdown","value":"this is ExportInterface"},
+  "sortText":"00000000000000000004",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
+    "newText":"ExportInterface"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "qualified interface",
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"ExportInterface",
+        "ac_type":"Acqualifiedtype"
+      }
+    ]
+  }
+}
+
+jsdoc_comment.js:3:4
+Flags: --lsp
+{
+  "label":"/** */",
+  "kind":1,
+  "detail":"JSDoc Comment",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":2,"character":0},"end":{"line":2,"character":6}},
+    "newText":"/**\n * $0\n * @param x $1\n * @param y $2\n */"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "jsdoc",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"/** */",
+        "ac_type":"Ac_comment"
+      }
+    ]
+  }
+}
+
+jsdoc_comment.js:8:4
+Flags: --lsp
+{
+  "label":"/** */",
+  "kind":1,
+  "detail":"JSDoc Comment",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":0},"end":{"line":7,"character":6}},
+    "newText":"/**\n * $0\n * @param x $1\n * @param y $2\n */"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "jsdoc",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"/** */",
+        "ac_type":"Ac_comment"
+      }
+    ]
+  }
+}
+
+jsdoc_comment.js:11:4
+Flags: --lsp
+{
+  "label":"/** */",
+  "kind":1,
+  "detail":"JSDoc Comment",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":10,"character":0},"end":{"line":10,"character":6}},
+    "newText":"/**\n * $0\n */"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "jsdoc",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"/** */",
+        "ac_type":"Ac_comment"
+      }
+    ]
+  }
+}
+

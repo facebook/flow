@@ -1,0 +1,363 @@
+jsx1.js:7:4
+Flags: --pretty
+{"result":[{"name":"x","type":"number"}]}
+
+jsx2.js:7:9
+Flags: --pretty
+{"result":[{"name":"y","type":"string"}]}
+
+jsx3.js:9:4
+Flags: --pretty
+{"result":[{"name":"x","type":"number"},{"name":"y","type":"string"}]}
+
+jsx4.js:10:3
+Flags: --pretty
+{
+  "result":[
+    {"name":"Complementarity","type":"class Complementarity"},
+    {"name":"ComponentSyntaxBar","type":"component ComponentSyntaxBar"},
+    {"name":"ComponentSyntaxFoo","type":"component ComponentSyntaxFoo"},
+    {"name":"Compressibility","type":"(props: empty) => void"},
+    {"name":"Computerization","type":"(props: empty) => void"},
+    {"name":"canvas","type":"JSX Intrinsic"},
+    {"name":"caption","type":"JSX Intrinsic"},
+    {"name":"circle","type":"JSX Intrinsic"},
+    {"name":"cite","type":"JSX Intrinsic"},
+    {"name":"code","type":"JSX Intrinsic"},
+    {"name":"col","type":"JSX Intrinsic"},
+    {"name":"colgroup","type":"JSX Intrinsic"}
+  ]
+}
+
+jsx-attribute-member.js:6:23
+Flags: --pretty
+{"result":[{"name":"bar","type":"string"}]}
+
+jsx-closing-tag.js:10:14
+Flags: --pretty
+{
+  "result":[
+    {"name":"Bar","type":"(props: Props) => void"},
+    {"name":"Foo","type":"(props: Props) => void"},
+    {"name":"React","type":"module \"react\""},
+    {"name":"a","type":"JSX Intrinsic"},
+    {"name":"abbr","type":"JSX Intrinsic"},
+    {"name":"address","type":"JSX Intrinsic"},
+    {"name":"animate","type":"JSX Intrinsic"},
+    {"name":"area","type":"JSX Intrinsic"},
+    {"name":"article","type":"JSX Intrinsic"},
+    {"name":"aside","type":"JSX Intrinsic"},
+    {"name":"audio","type":"JSX Intrinsic"},
+    {"name":"b","type":"JSX Intrinsic"},
+    {"name":"base","type":"JSX Intrinsic"},
+    {"name":"bdi","type":"JSX Intrinsic"},
+    {"name":"bdo","type":"JSX Intrinsic"},
+    {"name":"big","type":"JSX Intrinsic"},
+    {"name":"blockquote","type":"JSX Intrinsic"},
+    {"name":"body","type":"JSX Intrinsic"},
+    {"name":"br","type":"JSX Intrinsic"},
+    {"name":"button","type":"JSX Intrinsic"},
+    {"name":"canvas","type":"JSX Intrinsic"},
+    {"name":"caption","type":"JSX Intrinsic"},
+    {"name":"circle","type":"JSX Intrinsic"},
+    {"name":"cite","type":"JSX Intrinsic"},
+    {"name":"code","type":"JSX Intrinsic"},
+    {"name":"col","type":"JSX Intrinsic"},
+    {"name":"colgroup","type":"JSX Intrinsic"},
+    {"name":"data","type":"JSX Intrinsic"},
+    {"name":"datalist","type":"JSX Intrinsic"},
+    {"name":"dd","type":"JSX Intrinsic"},
+    {"name":"defs","type":"JSX Intrinsic"},
+    {"name":"del","type":"JSX Intrinsic"},
+    {"name":"details","type":"JSX Intrinsic"},
+    {"name":"dfn","type":"JSX Intrinsic"},
+    {"name":"dialog","type":"JSX Intrinsic"},
+    {"name":"div","type":"JSX Intrinsic"},
+    {"name":"dl","type":"JSX Intrinsic"},
+    {"name":"dt","type":"JSX Intrinsic"},
+    {"name":"ellipse","type":"JSX Intrinsic"},
+    {"name":"em","type":"JSX Intrinsic"},
+    {"name":"embed","type":"JSX Intrinsic"},
+    {"name":"fieldset","type":"JSX Intrinsic"},
+    {"name":"figcaption","type":"JSX Intrinsic"},
+    {"name":"figure","type":"JSX Intrinsic"},
+    {"name":"footer","type":"JSX Intrinsic"},
+    {"name":"form","type":"JSX Intrinsic"},
+    {"name":"g","type":"JSX Intrinsic"},
+    {"name":"h1","type":"JSX Intrinsic"},
+    {"name":"h2","type":"JSX Intrinsic"},
+    {"name":"h3","type":"JSX Intrinsic"},
+    {"name":"h4","type":"JSX Intrinsic"},
+    {"name":"h5","type":"JSX Intrinsic"},
+    {"name":"h6","type":"JSX Intrinsic"},
+    {"name":"head","type":"JSX Intrinsic"},
+    {"name":"header","type":"JSX Intrinsic"},
+    {"name":"hgroup","type":"JSX Intrinsic"},
+    {"name":"hr","type":"JSX Intrinsic"},
+    {"name":"html","type":"JSX Intrinsic"},
+    {"name":"i","type":"JSX Intrinsic"},
+    {"name":"iframe","type":"JSX Intrinsic"},
+    {"name":"image","type":"JSX Intrinsic"},
+    {"name":"img","type":"JSX Intrinsic"},
+    {"name":"input","type":"JSX Intrinsic"},
+    {"name":"ins","type":"JSX Intrinsic"},
+    {"name":"kbd","type":"JSX Intrinsic"},
+    {"name":"keygen","type":"JSX Intrinsic"},
+    {"name":"label","type":"JSX Intrinsic"},
+    {"name":"legend","type":"JSX Intrinsic"},
+    {"name":"li","type":"JSX Intrinsic"},
+    {"name":"line","type":"JSX Intrinsic"},
+    {"name":"linearGradient","type":"JSX Intrinsic"},
+    {"name":"link","type":"JSX Intrinsic"},
+    {"name":"main","type":"JSX Intrinsic"},
+    {"name":"map","type":"JSX Intrinsic"},
+    {"name":"mark","type":"JSX Intrinsic"},
+    {"name":"mask","type":"JSX Intrinsic"},
+    {"name":"menu","type":"JSX Intrinsic"},
+    {"name":"menuitem","type":"JSX Intrinsic"},
+    {"name":"meta","type":"JSX Intrinsic"},
+    {"name":"meter","type":"JSX Intrinsic"},
+    {"name":"nav","type":"JSX Intrinsic"},
+    {"name":"noscript","type":"JSX Intrinsic"},
+    {"name":"object","type":"JSX Intrinsic"},
+    {"name":"ol","type":"JSX Intrinsic"},
+    {"name":"optgroup","type":"JSX Intrinsic"},
+    {"name":"option","type":"JSX Intrinsic"},
+    {"name":"output","type":"JSX Intrinsic"},
+    {"name":"p","type":"JSX Intrinsic"},
+    {"name":"param","type":"JSX Intrinsic"},
+    {"name":"path","type":"JSX Intrinsic"},
+    {"name":"pattern","type":"JSX Intrinsic"},
+    {"name":"picture","type":"JSX Intrinsic"},
+    {"name":"polygon","type":"JSX Intrinsic"},
+    {"name":"polyline","type":"JSX Intrinsic"},
+    {"name":"pre","type":"JSX Intrinsic"},
+    {"name":"progress","type":"JSX Intrinsic"},
+    {"name":"q","type":"JSX Intrinsic"},
+    {"name":"radialGradient","type":"JSX Intrinsic"},
+    {"name":"rect","type":"JSX Intrinsic"},
+    {"name":"rp","type":"JSX Intrinsic"},
+    {"name":"rt","type":"JSX Intrinsic"},
+    {"name":"ruby","type":"JSX Intrinsic"},
+    {"name":"s","type":"JSX Intrinsic"},
+    {"name":"samp","type":"JSX Intrinsic"},
+    {"name":"script","type":"JSX Intrinsic"},
+    {"name":"section","type":"JSX Intrinsic"},
+    {"name":"select","type":"JSX Intrinsic"},
+    {"name":"small","type":"JSX Intrinsic"},
+    {"name":"source","type":"JSX Intrinsic"},
+    {"name":"span","type":"JSX Intrinsic"},
+    {"name":"stop","type":"JSX Intrinsic"},
+    {"name":"strong","type":"JSX Intrinsic"},
+    {"name":"style","type":"JSX Intrinsic"},
+    {"name":"sub","type":"JSX Intrinsic"},
+    {"name":"summary","type":"JSX Intrinsic"},
+    {"name":"sup","type":"JSX Intrinsic"},
+    {"name":"svg","type":"JSX Intrinsic"},
+    {"name":"symbol","type":"JSX Intrinsic"},
+    {"name":"table","type":"JSX Intrinsic"},
+    {"name":"tbody","type":"JSX Intrinsic"},
+    {"name":"td","type":"JSX Intrinsic"},
+    {"name":"text","type":"JSX Intrinsic"},
+    {"name":"textarea","type":"JSX Intrinsic"},
+    {"name":"tfoot","type":"JSX Intrinsic"},
+    {"name":"th","type":"JSX Intrinsic"},
+    {"name":"thead","type":"JSX Intrinsic"},
+    {"name":"time","type":"JSX Intrinsic"},
+    {"name":"title","type":"JSX Intrinsic"},
+    {"name":"tr","type":"JSX Intrinsic"},
+    {"name":"track","type":"JSX Intrinsic"},
+    {"name":"tspan","type":"JSX Intrinsic"},
+    {"name":"u","type":"JSX Intrinsic"},
+    {"name":"ul","type":"JSX Intrinsic"},
+    {"name":"use","type":"JSX Intrinsic"},
+    {"name":"var","type":"JSX Intrinsic"},
+    {"name":"video","type":"JSX Intrinsic"},
+    {"name":"wbr","type":"JSX Intrinsic"}
+  ]
+}
+
+jsx-closing-tag-unclosed.js:10:14
+Flags: --pretty
+{
+  "result":[
+    {"name":"Bar","type":"(props: Props) => void"},
+    {"name":"Foo","type":"(props: Props) => void"},
+    {"name":"React","type":"module \"react\""},
+    {"name":"a","type":"JSX Intrinsic"},
+    {"name":"abbr","type":"JSX Intrinsic"},
+    {"name":"address","type":"JSX Intrinsic"},
+    {"name":"animate","type":"JSX Intrinsic"},
+    {"name":"area","type":"JSX Intrinsic"},
+    {"name":"article","type":"JSX Intrinsic"},
+    {"name":"aside","type":"JSX Intrinsic"},
+    {"name":"audio","type":"JSX Intrinsic"},
+    {"name":"b","type":"JSX Intrinsic"},
+    {"name":"base","type":"JSX Intrinsic"},
+    {"name":"bdi","type":"JSX Intrinsic"},
+    {"name":"bdo","type":"JSX Intrinsic"},
+    {"name":"big","type":"JSX Intrinsic"},
+    {"name":"blockquote","type":"JSX Intrinsic"},
+    {"name":"body","type":"JSX Intrinsic"},
+    {"name":"br","type":"JSX Intrinsic"},
+    {"name":"button","type":"JSX Intrinsic"},
+    {"name":"canvas","type":"JSX Intrinsic"},
+    {"name":"caption","type":"JSX Intrinsic"},
+    {"name":"circle","type":"JSX Intrinsic"},
+    {"name":"cite","type":"JSX Intrinsic"},
+    {"name":"code","type":"JSX Intrinsic"},
+    {"name":"col","type":"JSX Intrinsic"},
+    {"name":"colgroup","type":"JSX Intrinsic"},
+    {"name":"data","type":"JSX Intrinsic"},
+    {"name":"datalist","type":"JSX Intrinsic"},
+    {"name":"dd","type":"JSX Intrinsic"},
+    {"name":"defs","type":"JSX Intrinsic"},
+    {"name":"del","type":"JSX Intrinsic"},
+    {"name":"details","type":"JSX Intrinsic"},
+    {"name":"dfn","type":"JSX Intrinsic"},
+    {"name":"dialog","type":"JSX Intrinsic"},
+    {"name":"div","type":"JSX Intrinsic"},
+    {"name":"dl","type":"JSX Intrinsic"},
+    {"name":"dt","type":"JSX Intrinsic"},
+    {"name":"ellipse","type":"JSX Intrinsic"},
+    {"name":"em","type":"JSX Intrinsic"},
+    {"name":"embed","type":"JSX Intrinsic"},
+    {"name":"fieldset","type":"JSX Intrinsic"},
+    {"name":"figcaption","type":"JSX Intrinsic"},
+    {"name":"figure","type":"JSX Intrinsic"},
+    {"name":"footer","type":"JSX Intrinsic"},
+    {"name":"form","type":"JSX Intrinsic"},
+    {"name":"g","type":"JSX Intrinsic"},
+    {"name":"h1","type":"JSX Intrinsic"},
+    {"name":"h2","type":"JSX Intrinsic"},
+    {"name":"h3","type":"JSX Intrinsic"},
+    {"name":"h4","type":"JSX Intrinsic"},
+    {"name":"h5","type":"JSX Intrinsic"},
+    {"name":"h6","type":"JSX Intrinsic"},
+    {"name":"head","type":"JSX Intrinsic"},
+    {"name":"header","type":"JSX Intrinsic"},
+    {"name":"hgroup","type":"JSX Intrinsic"},
+    {"name":"hr","type":"JSX Intrinsic"},
+    {"name":"html","type":"JSX Intrinsic"},
+    {"name":"i","type":"JSX Intrinsic"},
+    {"name":"iframe","type":"JSX Intrinsic"},
+    {"name":"image","type":"JSX Intrinsic"},
+    {"name":"img","type":"JSX Intrinsic"},
+    {"name":"input","type":"JSX Intrinsic"},
+    {"name":"ins","type":"JSX Intrinsic"},
+    {"name":"kbd","type":"JSX Intrinsic"},
+    {"name":"keygen","type":"JSX Intrinsic"},
+    {"name":"label","type":"JSX Intrinsic"},
+    {"name":"legend","type":"JSX Intrinsic"},
+    {"name":"li","type":"JSX Intrinsic"},
+    {"name":"line","type":"JSX Intrinsic"},
+    {"name":"linearGradient","type":"JSX Intrinsic"},
+    {"name":"link","type":"JSX Intrinsic"},
+    {"name":"main","type":"JSX Intrinsic"},
+    {"name":"map","type":"JSX Intrinsic"},
+    {"name":"mark","type":"JSX Intrinsic"},
+    {"name":"mask","type":"JSX Intrinsic"},
+    {"name":"menu","type":"JSX Intrinsic"},
+    {"name":"menuitem","type":"JSX Intrinsic"},
+    {"name":"meta","type":"JSX Intrinsic"},
+    {"name":"meter","type":"JSX Intrinsic"},
+    {"name":"nav","type":"JSX Intrinsic"},
+    {"name":"noscript","type":"JSX Intrinsic"},
+    {"name":"object","type":"JSX Intrinsic"},
+    {"name":"ol","type":"JSX Intrinsic"},
+    {"name":"optgroup","type":"JSX Intrinsic"},
+    {"name":"option","type":"JSX Intrinsic"},
+    {"name":"output","type":"JSX Intrinsic"},
+    {"name":"p","type":"JSX Intrinsic"},
+    {"name":"param","type":"JSX Intrinsic"},
+    {"name":"path","type":"JSX Intrinsic"},
+    {"name":"pattern","type":"JSX Intrinsic"},
+    {"name":"picture","type":"JSX Intrinsic"},
+    {"name":"polygon","type":"JSX Intrinsic"},
+    {"name":"polyline","type":"JSX Intrinsic"},
+    {"name":"pre","type":"JSX Intrinsic"},
+    {"name":"progress","type":"JSX Intrinsic"},
+    {"name":"q","type":"JSX Intrinsic"},
+    {"name":"radialGradient","type":"JSX Intrinsic"},
+    {"name":"rect","type":"JSX Intrinsic"},
+    {"name":"rp","type":"JSX Intrinsic"},
+    {"name":"rt","type":"JSX Intrinsic"},
+    {"name":"ruby","type":"JSX Intrinsic"},
+    {"name":"s","type":"JSX Intrinsic"},
+    {"name":"samp","type":"JSX Intrinsic"},
+    {"name":"script","type":"JSX Intrinsic"},
+    {"name":"section","type":"JSX Intrinsic"},
+    {"name":"select","type":"JSX Intrinsic"},
+    {"name":"small","type":"JSX Intrinsic"},
+    {"name":"source","type":"JSX Intrinsic"},
+    {"name":"span","type":"JSX Intrinsic"},
+    {"name":"stop","type":"JSX Intrinsic"},
+    {"name":"strong","type":"JSX Intrinsic"},
+    {"name":"style","type":"JSX Intrinsic"},
+    {"name":"sub","type":"JSX Intrinsic"},
+    {"name":"summary","type":"JSX Intrinsic"},
+    {"name":"sup","type":"JSX Intrinsic"},
+    {"name":"svg","type":"JSX Intrinsic"},
+    {"name":"symbol","type":"JSX Intrinsic"},
+    {"name":"table","type":"JSX Intrinsic"},
+    {"name":"tbody","type":"JSX Intrinsic"},
+    {"name":"td","type":"JSX Intrinsic"},
+    {"name":"text","type":"JSX Intrinsic"},
+    {"name":"textarea","type":"JSX Intrinsic"},
+    {"name":"tfoot","type":"JSX Intrinsic"},
+    {"name":"th","type":"JSX Intrinsic"},
+    {"name":"thead","type":"JSX Intrinsic"},
+    {"name":"time","type":"JSX Intrinsic"},
+    {"name":"title","type":"JSX Intrinsic"},
+    {"name":"tr","type":"JSX Intrinsic"},
+    {"name":"track","type":"JSX Intrinsic"},
+    {"name":"tspan","type":"JSX Intrinsic"},
+    {"name":"u","type":"JSX Intrinsic"},
+    {"name":"ul","type":"JSX Intrinsic"},
+    {"name":"use","type":"JSX Intrinsic"},
+    {"name":"var","type":"JSX Intrinsic"},
+    {"name":"video","type":"JSX Intrinsic"},
+    {"name":"wbr","type":"JSX Intrinsic"}
+  ]
+}
+
+jsx-function-component.js:9:4
+Flags: --pretty
+{"result":[{"name":"x","type":"number"},{"name":"y","type":"string"}]}
+
+jsx-function-component-2.js:9:11
+Flags: --pretty
+{"result":[{"name":"x","type":"number"}]}
+
+jsx-function-component-3.js:10:4
+Flags: --pretty
+{"result":[{"name":"y","type":"string"}]}
+
+jsx-abstract-component.js:8:4
+Flags: --pretty
+{"result":[{"name":"x","type":"number"},{"name":"y","type":"string"}]}
+
+jsx-with-children.js:10:4
+Flags: --pretty
+{"result":[{"name":"x","type":"number"}]}
+
+jsx-text.js:1:11
+Flags: --pretty
+{"result":[]}
+
+components.js:5:21
+Flags: --pretty
+{"result":[]}
+
+components.js:8:29
+Flags: --pretty
+{"result":[{"name":"MyComponent","type":"element of component MyComponent"}]}
+
+components.js:13:28
+Flags: --pretty
+{"result":[{"name":"MyComponent","type":"element of component MyComponent"}]}
+
+components.js:19:16
+Flags: --pretty
+{"result":[{"name":"xaaa","type":"number"},{"name":"xbbb","type":"string"}]}
+

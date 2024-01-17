@@ -1,0 +1,693 @@
+upper_bounds_1.js:10:3
+Flags: --lsp
+{
+  "label":"'bar'",
+  "labelDetails":{"detail":": \"bar\""},
+  "kind":12,
+  "detail":"\"bar\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"'bar'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'bar'",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"'baz'",
+  "labelDetails":{"detail":": \"baz\""},
+  "kind":12,
+  "detail":"\"baz\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"'baz'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'baz'",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"'foo'",
+  "labelDetails":{"detail":": \"foo\""},
+  "kind":12,
+  "detail":"\"foo\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"'foo'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'foo'",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"async",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"async"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"async",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"await",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"await"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"await",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"class",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"class"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"class",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"delete",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"delete"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"delete",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"function",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"function"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"function",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"import",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"import"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":8,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"import",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"new",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"new"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":9,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"new",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"typeof",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"typeof"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":10,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"typeof",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"void",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"void"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":11,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"void",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"yield",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"yield"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":12,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"yield",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"f",
+  "labelDetails":{"detail":": (Union) => void"},
+  "kind":3,
+  "detail":"(Union) => void",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"f"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {
+        "token":null,
+        "index":13,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"f",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+
+upper_bounds_2.js:10:4
+Flags: --lsp
+{
+  "label":"'baz'",
+  "labelDetails":{"detail":": \"baz\""},
+  "kind":12,
+  "detail":"\"baz\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"'baz'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'baz'",
+        "ac_type":"Acliteral"
+      }
+    ]
+  }
+}
+{
+  "label":"'bar'",
+  "labelDetails":{"detail":": \"bar\""},
+  "kind":12,
+  "detail":"\"bar\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"'bar'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'bar'",
+        "ac_type":"Acliteral"
+      }
+    ]
+  }
+}
+{
+  "label":"'foo'",
+  "labelDetails":{"detail":": \"foo\""},
+  "kind":12,
+  "detail":"\"foo\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"'foo'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'foo'",
+        "ac_type":"Acliteral"
+      }
+    ]
+  }
+}
+
+upper_bounds_6.js:5:5
+Flags: --pretty
+{
+  "result":[
+    {"name":"'foo.bar'","type":"boolean"},
+    {"name":"bar","type":"string"},
+    {"name":"foo","type":"number"},
+    {"name":"Symbol.iterator","type":"any"}
+  ]
+}
+
+upper_bounds_7.js:5:13
+Flags: --pretty
+{"result":[{"name":"bar","type":"string"},{"name":"baz","type":"boolean"}]}
+
+upper_bounds_8.js:5:6
+Flags: --pretty
+{"result":[{"name":"'foo.bar'","type":"boolean"}]}
+
+upper_bounds_9.js:5:14
+Flags: --pretty
+{"result":[{"name":"'foo.bar'","type":"boolean"}]}
+
+upper_bounds_10.js:19:16
+Flags: --pretty
+{
+  "result":[
+    {"name":"blue","type":"number"},
+    {"name":"indigo","type":"number"},
+    {"name":"yellow","type":"number"}
+  ]
+}
+
+upper_bounds_11.js:12:3
+Flags: --pretty
+{
+  "result":[
+    {"name":"'bar'","type":"\"bar\""},
+    {"name":"'baz'","type":"\"baz\""},
+    {"name":"'foo'","type":"\"foo\""},
+    {"name":"async","type":""},
+    {"name":"await","type":""},
+    {"name":"class","type":""},
+    {"name":"delete","type":""},
+    {"name":"function","type":""},
+    {"name":"import","type":""},
+    {"name":"new","type":""},
+    {"name":"typeof","type":""},
+    {"name":"void","type":""},
+    {"name":"yield","type":""},
+    {"name":"f","type":"(Union) => void"}
+  ]
+}
+
+upper_bounds_12.js:9:3
+Flags: --pretty
+{
+  "result":[
+    {"name":"'bar'","type":"\"bar\""},
+    {"name":"'baz'","type":"\"baz\""},
+    {"name":"'foo'","type":"\"foo\""},
+    {"name":"async","type":""},
+    {"name":"await","type":""},
+    {"name":"class","type":""},
+    {"name":"delete","type":""},
+    {"name":"function","type":""},
+    {"name":"import","type":""},
+    {"name":"new","type":""},
+    {"name":"typeof","type":""},
+    {"name":"void","type":""},
+    {"name":"yield","type":""},
+    {"name":"f","type":"(Union) => void"}
+  ]
+}
+
+upper_bounds_13.js:12:3
+Flags: --pretty
+{
+  "result":[
+    {"name":"'bar'","type":"\"bar\""},
+    {"name":"'baz'","type":"\"baz\""},
+    {"name":"'foo'","type":"\"foo\""},
+    {"name":"async","type":""},
+    {"name":"await","type":""},
+    {"name":"class","type":""},
+    {"name":"delete","type":""},
+    {"name":"function","type":""},
+    {"name":"import","type":""},
+    {"name":"new","type":""},
+    {"name":"typeof","type":""},
+    {"name":"void","type":""},
+    {"name":"yield","type":""},
+    {"name":"f","type":"(Union) => void"}
+  ]
+}
+
+upper_bounds_14.js:13:21
+Flags: --pretty
+{
+  "result":[
+    {"name":"'failure'","type":"\"failure\""},
+    {"name":"'success'","type":"\"success\""}
+  ]
+}
+
+upper_bounds_15.js:4:14
+Flags: --pretty
+{
+  "result":[
+    {"name":"'foo'","type":"\"foo\""},
+    {"name":"async","type":""},
+    {"name":"await","type":""},
+    {"name":"class","type":""},
+    {"name":"delete","type":""},
+    {"name":"function","type":""},
+    {"name":"import","type":""},
+    {"name":"new","type":""},
+    {"name":"null","type":"null"},
+    {"name":"typeof","type":""},
+    {"name":"void","type":""},
+    {"name":"yield","type":""},
+    {"name":"x","type":"U"}
+  ]
+}
+
+upper_bounds_16.js:9:11
+Flags: --pretty
+{
+  "result":[
+    {"name":"'foo'","type":"\"foo\""},
+    {"name":"async","type":""},
+    {"name":"await","type":""},
+    {"name":"class","type":""},
+    {"name":"delete","type":""},
+    {"name":"function","type":""},
+    {"name":"import","type":""},
+    {"name":"new","type":""},
+    {"name":"typeof","type":""},
+    {"name":"void","type":""},
+    {"name":"yield","type":""},
+    {"name":"x","type":"O"}
+  ]
+}
+
+upper_bounds_16.js:11:11
+Flags: --pretty
+{
+  "result":[
+    {"name":"'foo'","type":"\"foo\""},
+    {"name":"async","type":""},
+    {"name":"await","type":""},
+    {"name":"class","type":""},
+    {"name":"delete","type":""},
+    {"name":"function","type":""},
+    {"name":"import","type":""},
+    {"name":"new","type":""},
+    {"name":"null","type":"null"},
+    {"name":"typeof","type":""},
+    {"name":"void","type":""},
+    {"name":"yield","type":""},
+    {"name":"x","type":"O"}
+  ]
+}
+
+upper_bounds_17.js:5:13
+Flags: --pretty
+{
+  "result":[
+    {"name":"'bar'","type":"\"bar\""},
+    {"name":"'foo'","type":"\"foo\""},
+    {"name":"async","type":""},
+    {"name":"await","type":""},
+    {"name":"class","type":""},
+    {"name":"delete","type":""},
+    {"name":"function","type":""},
+    {"name":"import","type":""},
+    {"name":"new","type":""},
+    {"name":"typeof","type":""},
+    {"name":"void","type":""},
+    {"name":"yield","type":""},
+    {"name":"x","type":"T"}
+  ]
+}
+
+upper_bounds_17.js:11:13
+Flags: --pretty
+{
+  "result":[
+    {"name":"'bar'","type":"\"bar\""},
+    {"name":"'foo'","type":"\"foo\""},
+    {"name":"async","type":""},
+    {"name":"await","type":""},
+    {"name":"class","type":""},
+    {"name":"delete","type":""},
+    {"name":"function","type":""},
+    {"name":"import","type":""},
+    {"name":"new","type":""},
+    {"name":"typeof","type":""},
+    {"name":"void","type":""},
+    {"name":"yield","type":""},
+    {"name":"x","type":"T"},
+    {"name":"y","type":"A"}
+  ]
+}
+
+upper_bounds_18.js:10:13
+Flags: --pretty
+{
+  "result":[
+    {"name":"'bar'","type":"\"bar\""},
+    {"name":"'baz'","type":"\"baz\""},
+    {"name":"async","type":""},
+    {"name":"await","type":""},
+    {"name":"class","type":""},
+    {"name":"delete","type":""},
+    {"name":"function","type":""},
+    {"name":"import","type":""},
+    {"name":"new","type":""},
+    {"name":"typeof","type":""},
+    {"name":"void","type":""},
+    {"name":"yield","type":""},
+    {"name":"k","type":"K"}
+  ]
+}
+

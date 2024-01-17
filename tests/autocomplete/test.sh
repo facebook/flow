@@ -22,20 +22,6 @@ queries_in_file autocomplete "typeparams.js" --pretty
 queries_in_file autocomplete "typeparams_function.js" --pretty
 queries_in_file autocomplete "generics.js" --pretty
 queries_in_file autocomplete "optional.js" --pretty
-queries_in_file autocomplete "jsx1.js" --pretty
-queries_in_file autocomplete "jsx2.js" --pretty
-queries_in_file autocomplete "jsx3.js" --pretty
-queries_in_file autocomplete "jsx4.js" --pretty
-queries_in_file autocomplete "jsx-attribute-member.js" --pretty
-queries_in_file autocomplete "jsx-closing-tag.js" --pretty
-queries_in_file autocomplete "jsx-closing-tag-unclosed.js" --pretty
-queries_in_file autocomplete "jsx-function-component.js" --pretty
-queries_in_file autocomplete "jsx-function-component-2.js" --pretty
-queries_in_file autocomplete "jsx-function-component-3.js" --pretty
-queries_in_file autocomplete "jsx-abstract-component.js" --pretty
-queries_in_file autocomplete "jsx-with-children.js" --pretty
-queries_in_file autocomplete "jsx-text.js" --pretty
-queries_in_file autocomplete "components.js" --pretty
 queries_in_file autocomplete "customfun.js" --pretty
 queries_in_file autocomplete "issue-1368.js" --pretty
 queries_in_file autocomplete "if.js" --pretty
@@ -91,41 +77,7 @@ queries_in_file autocomplete "enum-key.js" --lsp
 queries_in_file autocomplete "enum-id.js" --pretty
 queries_in_file autocomplete "class_declaration_name.js" --pretty
 queries_in_file autocomplete "pattern_object_key_middle.js" --pretty
-queries_in_file autocomplete "jsdoc.js" --lsp
-queries_in_file autocomplete "jsdoc-members-1.js" --lsp
-queries_in_file autocomplete "jsdoc-members-2.js" --lsp
-queries_in_file autocomplete "jsdoc-members-3.js" --lsp
-queries_in_file autocomplete "jsdoc-members-4.js" --lsp
-queries_in_file autocomplete "jsdoc-members-5.js" --lsp
-queries_in_file autocomplete "jsdoc-members-6.js" --lsp
-queries_in_file autocomplete "jsdoc-members-7.js" --lsp
-queries_in_file autocomplete "jsdoc-members-8.js" --lsp
-queries_in_file autocomplete "types-jsdoc.js" --lsp
-queries_in_file autocomplete "qualified-types-jsdoc.js" --lsp
-queries_in_file autocomplete "bracket_syntax_1.js" --lsp
-queries_in_file autocomplete "bracket_syntax_2.js" --lsp
-queries_in_file autocomplete "bracket_syntax_3.js" --lsp
-queries_in_file autocomplete "bracket_syntax_4.js" --lsp
-queries_in_file autocomplete "bracket_syntax_5.js" --lsp
-queries_in_file autocomplete "bracket_syntax_6.js" --lsp
 queries_in_file autocomplete "iterator.js" --lsp
-queries_in_file autocomplete "bracket_syntax_needed.js" --lsp
-queries_in_file autocomplete "bracket_syntax_needed_2.js" --lsp
-queries_in_file autocomplete "upper_bounds_1.js" --lsp
-queries_in_file autocomplete "upper_bounds_2.js" --lsp
-queries_in_file autocomplete "upper_bounds_6.js" --pretty
-queries_in_file autocomplete "upper_bounds_7.js" --pretty
-queries_in_file autocomplete "upper_bounds_8.js" --pretty
-queries_in_file autocomplete "upper_bounds_9.js" --pretty
-queries_in_file autocomplete "upper_bounds_10.js" --pretty
-queries_in_file autocomplete "upper_bounds_11.js" --pretty
-queries_in_file autocomplete "upper_bounds_12.js" --pretty
-queries_in_file autocomplete "upper_bounds_13.js" --pretty
-queries_in_file autocomplete "upper_bounds_14.js" --pretty
-queries_in_file autocomplete "upper_bounds_15.js" --pretty
-queries_in_file autocomplete "upper_bounds_16.js" --pretty
-queries_in_file autocomplete "upper_bounds_17.js" --pretty
-queries_in_file autocomplete "upper_bounds_18.js" --pretty
 queries_in_file autocomplete "indexed-access-1.js" --lsp
 queries_in_file autocomplete "indexed-access-2.js" --lsp
 queries_in_file autocomplete "indexed-access-3.js" --lsp
@@ -145,9 +97,6 @@ query_at_pos autocomplete "fixme.js" 8 5 --lsp
 query_at_pos autocomplete "fixme.js" 14 8 --lsp
 query_at_pos autocomplete "fixme.js" 18 12 --pretty
 query_at_pos autocomplete "fixme.js" 21 10 --lsp
-query_at_pos autocomplete "jsdoc_comment.js" 3 4 --lsp
-query_at_pos autocomplete "jsdoc_comment.js" 8 4 --lsp
-query_at_pos autocomplete "jsdoc_comment.js" 11 4 --lsp
 queries_in_file autocomplete "super_member.js" --pretty
 queries_in_file autocomplete "switch.js" --pretty
 queries_in_file autocomplete "keywords_c.js" --pretty
