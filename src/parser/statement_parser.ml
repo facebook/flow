@@ -1312,7 +1312,7 @@ module Statement
         Statement.DeclareVariable var)
       env
 
-  and declare_module =
+  and declare_module_body env =
     let rec module_items env acc =
       match Peek.token env with
       | T_EOF
@@ -1322,6 +1322,26 @@ module Statement
         let stmt = declare ~in_module:true env in
         module_items env (stmt :: acc)
     in
+    with_loc
+      (fun env ->
+        let leading = Peek.comments env in
+        Expect.token env T_LCURLY;
+        let body = module_items env [] in
+        let internal =
+          if body = [] then
+            Peek.comments env
+          else
+            []
+        in
+        Expect.token env T_RCURLY;
+        let { trailing; _ } = statement_end_trailing_comments env in
+        let comments =
+          Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ()
+        in
+        { Statement.Block.body; comments })
+      env
+
+  and declare_module =
     let declare_module_ ~leading env =
       let id =
         match Peek.token env with
@@ -1330,26 +1350,7 @@ module Statement
             (string_literal_remove_trailing env (string_literal env str))
         | _ -> Statement.DeclareModule.Identifier (id_remove_trailing env (Parse.identifier env))
       in
-      let body =
-        with_loc
-          (fun env ->
-            let leading = Peek.comments env in
-            Expect.token env T_LCURLY;
-            let body = module_items env [] in
-            let internal =
-              if body = [] then
-                Peek.comments env
-              else
-                []
-            in
-            Expect.token env T_RCURLY;
-            let { trailing; _ } = statement_end_trailing_comments env in
-            let comments =
-              Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ()
-            in
-            { Statement.Block.body; comments })
-          env
-      in
+      let body = declare_module_body env in
       let comments = Flow_ast_utils.mk_comments_opt ~leading () in
       Statement.(DeclareModule DeclareModule.{ id; body; comments })
     in
