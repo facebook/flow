@@ -332,7 +332,8 @@ module Make (I : INPUT) : S = struct
 
   let non_opt_param = Ty.{ prm_optional = false }
 
-  let mk_fun ?(params = []) ?rest ?tparams ?(static = Ty.(TypeOf (FunProto, None))) ret =
+  let mk_fun
+      ?(params = []) ?(hook = false) ?rest ?tparams ?(static = Ty.(TypeOf (FunProto, None))) ret =
     Ty.(
       Fun
         {
@@ -341,6 +342,7 @@ module Make (I : INPUT) : S = struct
           fun_return = ret;
           fun_type_params = tparams;
           fun_static = static;
+          fun_hook = hook;
         }
     )
 
@@ -943,7 +945,14 @@ module Make (I : INPUT) : S = struct
 
     and fun_ty ~env static f fun_type_params =
       let%bind fun_static = type__ ~env static in
-      let { T.params; rest_param; return_t; predicate; _ } = f in
+      let { T.params; rest_param; return_t; predicate; hook; _ } = f in
+      let fun_hook =
+        match hook with
+        | T.HookAnnot
+        | T.HookDecl _ ->
+          true
+        | _ -> false
+      in
       let%bind fun_params = mapM (fun_param ~env) params in
       let%bind fun_rest_param = fun_rest_param_t ~env rest_param in
       let%bind fun_return =
@@ -956,7 +965,7 @@ module Make (I : INPUT) : S = struct
           let%map t = type__ ~env return_t in
           Ty.ReturnType t
       in
-      return { Ty.fun_params; fun_rest_param; fun_return; fun_type_params; fun_static }
+      return { Ty.fun_params; fun_rest_param; fun_return; fun_type_params; fun_static; fun_hook }
 
     and method_ty ~env t =
       let rec go = function

@@ -141,6 +141,7 @@ and fun_t = {
   fun_return: return_t;
   fun_type_params: type_param list option;
   fun_static: t;
+  fun_hook: bool;
 }
 
 and return_t =

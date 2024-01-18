@@ -1636,6 +1636,7 @@ with type t = Impl.t = struct
               (_, { Type.Function.Params.this_; params; rest; comments = params_comments });
             return;
             tparams;
+            hook;
             comments = func_comments;
           }
         ) =
@@ -1644,9 +1645,15 @@ with type t = Impl.t = struct
           ~inner:(format_internal_comments params_comments)
           ~outer:func_comments
       in
+      let name =
+        if hook then
+          "HookTypeAnnotation"
+        else
+          "FunctionTypeAnnotation"
+      in
       node
         ?comments
-        "FunctionTypeAnnotation"
+        name
         loc
         [
           ("params", array_of_list function_type_param params);

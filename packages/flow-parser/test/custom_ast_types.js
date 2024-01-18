@@ -186,6 +186,8 @@ function custom_ast_types(fork) {
 
   def('HookDeclaration').bases('FunctionDeclaration');
 
+  def('HookTypeAnnotation').bases('FunctionTypeAnnotation');
+
   def('ComponentParameter')
     .build('name', 'local', 'shorthand')
     .field('name', or(def('Identifier'), def('Literal')))

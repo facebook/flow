@@ -1230,7 +1230,7 @@ module Statement
                 Ast.Type.Function.TypeAnnotation return
           in
           Eat.pop_lex_mode env;
-          Ast.Type.(Function { Function.params; return; tparams; comments = None }))
+          Ast.Type.(Function { Function.params; return; tparams; comments = None; hook = false }))
         env
     in
     let predicate = Type.predicate_opt env in

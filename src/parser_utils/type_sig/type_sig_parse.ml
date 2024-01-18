@@ -1402,6 +1402,7 @@ and function_type opts scope tbls xs f =
     F.tparams = tps;
     params = (_, { F.Params.params = ps; rest = rp; this_; comments = _ });
     return = r;
+    hook;
     comments = _;
   } =
     f
@@ -1411,7 +1412,12 @@ and function_type opts scope tbls xs f =
   let params = function_type_params opts scope tbls xs ps in
   let rest_param = function_type_rest_param opts scope tbls xs rp in
   let (return, predicate) = return_annot opts scope tbls xs r in
-  let hook = NonHook in
+  let hook =
+    if hook then
+      HookAnnot
+    else
+      NonHook
+  in
   FunSig { tparams; params; rest_param; this_param; return; predicate; hook }
 
 and function_component_type_param opts scope tbls xs t optional =
@@ -4177,6 +4183,7 @@ let declare_function_decl opts scope tbls decl =
                  T.Function.tparams = tps;
                  params = (_, { T.Function.Params.params = ps; rest = rp; this_; comments = _ });
                  return = r;
+                 hook;
                  comments = _;
                } ->
              let (xs, tparams) = tparams opts scope tbls SSet.empty tps in
@@ -4206,7 +4213,12 @@ let declare_function_decl opts scope tbls decl =
                  (* inferred predicate not allowed in declared function *)
                  None
              in
-             let hook = NonHook in
+             let hook =
+               if hook then
+                 HookAnnot
+               else
+                 NonHook
+             in
              FunSig { tparams; params; rest_param; this_param; return; predicate; hook }
            | _ -> failwith "unexpected declare function annot"
        )

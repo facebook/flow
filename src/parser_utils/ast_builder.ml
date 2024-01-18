@@ -19,8 +19,8 @@ module Types = struct
     let params ?(loc = Loc.none) ?rest ?this ?comments params =
       (loc, { Ast.Type.Function.Params.params; rest; this_ = this; comments })
 
-    let make ?tparams ?comments params return =
-      { Ast.Type.Function.tparams; params; return; comments }
+    let make ?tparams ?comments ?(hook = false) params return =
+      { Ast.Type.Function.tparams; params; return; hook; comments }
   end
 
   module Objects = struct

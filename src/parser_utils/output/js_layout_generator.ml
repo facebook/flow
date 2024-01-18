@@ -3680,10 +3680,15 @@ and type_function_return ~opts = function
   | Ast.Type.Function.TypeGuard guard -> type_guard ~opts ~needs_parens:false guard
 
 and type_function
-    ~opts ~sep loc { Ast.Type.Function.params; return; tparams; comments = func_comments } =
+    ~opts ~sep loc { Ast.Type.Function.params; return; tparams; hook; comments = func_comments } =
   layout_node_with_comments_opt loc func_comments
   @@ group
        [
+         ( if hook then
+           Atom "hook"
+         else
+           Empty
+         );
          option (type_parameter ~opts) tparams;
          type_function_params ~opts params;
          sep;

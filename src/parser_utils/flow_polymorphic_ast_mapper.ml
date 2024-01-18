@@ -1012,6 +1012,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         return;
         tparams;
         comments = func_comments;
+        hook;
       } =
         ft
       in
@@ -1029,6 +1030,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
               );
             return = return';
             tparams = tparams';
+            hook;
             comments = func_comments';
           }
       )

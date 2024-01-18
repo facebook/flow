@@ -1364,7 +1364,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
         (* other applications with id as head expr *)
         | _ -> local_generic_type ()
       end
-    | (loc, Function { Function.params; return; tparams; comments = func_comments }) ->
+    | (loc, Function { Function.params; return; tparams; comments = func_comments; hook }) ->
       let (params_loc, { Function.Params.params = ps; rest; this_; comments = params_comments }) =
         params
       in
@@ -1447,7 +1447,12 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
         let reason = update_desc_reason (fun d -> RStatics d) reason in
         Obj_type.mk_with_proto cx reason (FunProtoT reason) ~obj_kind:Inexact ?call:None
       in
-      let hook = NonHook in
+      let hook_flag =
+        if hook then
+          HookAnnot
+        else
+          NonHook
+      in
       let ft =
         DefT
           ( reason,
@@ -1460,7 +1465,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                   return_t;
                   predicate;
                   def_reason = reason;
-                  hook;
+                  hook = hook_flag;
                 }
               )
           )
@@ -1474,7 +1479,13 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       in
       ( (loc, t),
         Function
-          { Function.params; return = return_ast; tparams = tparams_ast; comments = func_comments }
+          {
+            Function.params;
+            return = return_ast;
+            tparams = tparams_ast;
+            comments = func_comments;
+            hook;
+          }
       )
     | ( obj_loc,
         Object
@@ -2397,9 +2408,9 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       let guard' = Tast_utils.error_mapper#type_guard (loc, guard) in
       (AnyT.at (AnyError None) loc, TypeGuard guard', None)
 
-  and mk_func_sig =
-    let open Ast.Type.Function in
+  and mk_method_func_sig =
     let add_param cx tparams_map infer_tparams_map x param =
+      let open Ast.Type.Function in
       let (loc, { Param.name; annot; optional }) = param in
       let (((_, t), _) as annot) = convert cx tparams_map infer_tparams_map annot in
       let name = Base.Option.map ~f:(fun (loc, id_name) -> ((loc, t), id_name)) name in
@@ -2407,6 +2418,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       Func_type_params.add_param param x
     in
     let add_rest cx tparams_map infer_tparams_map x rest_param =
+      let open Ast.Type.Function in
       let (rest_loc, { RestParam.argument = (loc, { Param.name; annot; optional }); comments }) =
         rest_param
       in
@@ -2418,13 +2430,18 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       Func_type_params.add_rest rest x
     in
     let add_this cx tparams_map infer_tparams_map x this_param =
+      let open Ast.Type.Function in
       let (this_loc, { ThisParam.annot = (loc, annot); comments }) = this_param in
       let (((_, t), _) as annot') = convert cx tparams_map infer_tparams_map annot in
       let this = (t, (this_loc, { Ast.Type.Function.ThisParam.annot = (loc, annot'); comments })) in
       Func_type_params.add_this this x
     in
     let convert_params
-        cx tparams_map infer_tparams_map (loc, { Params.params; rest; this_; comments }) =
+        cx
+        tparams_map
+        infer_tparams_map
+        (loc, { Ast.Type.Function.Params.params; rest; this_; comments }) =
+      let open Ast.Type.Function in
       let fparams =
         Func_type_params.empty (fun params rest this_ ->
             Some (loc, { Params.params; rest; this_; comments })
@@ -2441,9 +2458,11 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       (fparams, Base.Option.value_exn params_ast)
     in
     fun ~meth_kind cx tparams_map infer_tparams_map loc func ->
-      let { Ast.Type.Function.params; _ } = func in
+      let { Ast.Type.Function.params; hook; tparams = func_tparams; return = func_return; _ } =
+        func
+      in
       let (tparams, tparams_map, tparams_ast) =
-        mk_type_param_declarations cx ~tparams_map ~infer_tparams_map func.tparams
+        mk_type_param_declarations cx ~tparams_map ~infer_tparams_map func_tparams
       in
       let (fparams, params_ast) = convert_params cx tparams_map infer_tparams_map params in
       let (return_t, return_ast, predicate) =
@@ -2454,7 +2473,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
           infer_tparams_map
           params_ast
           (Func_type_params.value fparams)
-          func.return
+          func_return
       in
       let kind =
         match predicate with
@@ -2462,7 +2481,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
         | Some pred -> Func_class_sig_types.Func.Predicate pred
       in
       let reason = mk_annot_reason RFunctionType loc in
-      let hook = NonHook in
+      let hook_flag = NonHook (* Methods can't be hooks *) in
       ( {
           Func_type_sig.Types.reason;
           kind;
@@ -2472,12 +2491,13 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
           return_t = Annotated return_t;
           ret_annot_loc = loc_of_t return_t;
           statics = None;
-          hook;
+          hook = hook_flag;
         },
         {
           Ast.Type.Function.tparams = tparams_ast;
           params = params_ast;
           return = return_ast;
+          hook;
           comments = None;
         }
       )
@@ -2818,7 +2838,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                       | _ -> MethodKind
                     in
                     let (fsig, func_ast) =
-                      mk_func_sig ~meth_kind cx tparams_map infer_tparams_map loc func
+                      mk_method_func_sig ~meth_kind cx tparams_map infer_tparams_map loc func
                     in
                     let this_write_loc = None in
                     let ft = Func_type_sig.methodtype cx this_write_loc this fsig in
@@ -2878,7 +2898,13 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                     ) ->
                     Flow_js_utils.add_output cx (Error_message.EUnsafeGettersSetters loc);
                     let (fsig, func_ast) =
-                      mk_func_sig ~meth_kind:GetterKind cx tparams_map infer_tparams_map loc func
+                      mk_method_func_sig
+                        ~meth_kind:GetterKind
+                        cx
+                        tparams_map
+                        infer_tparams_map
+                        loc
+                        func
                     in
                     let prop_t =
                       TypeUtil.type_t_of_annotated_or_inferred fsig.Func_type_sig.Types.return_t
@@ -2901,7 +2927,13 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                     ) ->
                     Flow_js_utils.add_output cx (Error_message.EUnsafeGettersSetters loc);
                     let (fsig, func_ast) =
-                      mk_func_sig ~meth_kind:SetterKind cx tparams_map infer_tparams_map loc func
+                      mk_method_func_sig
+                        ~meth_kind:SetterKind
+                        cx
+                        tparams_map
+                        infer_tparams_map
+                        loc
+                        func
                     in
                     let prop_t =
                       match fsig with

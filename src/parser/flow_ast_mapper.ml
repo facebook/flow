@@ -1329,6 +1329,7 @@ class ['loc] mapper =
         return;
         tparams;
         comments = func_comments;
+        hook;
       } =
         ft
       in
@@ -1358,6 +1359,7 @@ class ['loc] mapper =
           return = return';
           tparams = tparams';
           comments = func_comments';
+          hook;
         }
 
     method label_identifier (ident : ('loc, 'loc) Ast.Identifier.t) = this#identifier ident

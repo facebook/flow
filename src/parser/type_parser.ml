@@ -271,7 +271,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           )
         )
       in
-      function_with_params env start_loc tparams params
+      function_with_params ~hook:false env start_loc tparams params
     | _ -> param
 
   and prefix env =
@@ -472,6 +472,14 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     | T_RENDERS_QUESTION
     | T_RENDERS_STAR ->
       with_loc (fun env -> Type.Renders (render_type env)) env
+    | T_IDENTIFIER { raw = "hook"; _ } ->
+      (match Peek.ith_token ~i:1 env with
+      | T_LESS_THAN
+      | T_LPAREN ->
+        hook env
+      | _ ->
+        let (loc, g) = generic env in
+        (loc, Type.Generic g))
     | T_IDENTIFIER _
     | T_EXTENDS (* `extends` is reserved, but recover by treating it as an identifier *)
     | T_STATIC (* `static` is reserved, but recover by treating it as an identifier *) ->
@@ -1055,24 +1063,31 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
   and function_or_group env =
     let start_loc = Peek.loc env in
     match with_loc param_list_or_type env with
-    | (loc, ParamList params) -> function_with_params env start_loc None (loc, params)
+    | (loc, ParamList params) -> function_with_params ~hook:false env start_loc None (loc, params)
     | (_, Type _type) -> _type
 
   and _function env =
     let start_loc = Peek.loc env in
     let tparams = type_params_remove_trailing env (type_params env) in
     let params = function_param_list env in
-    function_with_params env start_loc tparams params
+    function_with_params ~hook:false env start_loc tparams params
 
-  and function_with_params env start_loc tparams (params : (Loc.t, Loc.t) Ast.Type.Function.Params.t)
-      =
+  and function_with_params
+      ~hook env start_loc tparams (params : (Loc.t, Loc.t) Ast.Type.Function.Params.t) =
     with_loc
       ~start_loc
       (fun env ->
         Expect.token env T_ARROW;
         let return = function_return_type env in
-        Type.(Function { Function.params; return; tparams; comments = None }))
+        Type.(Function { Function.params; return; tparams; comments = None; hook }))
       env
+
+  and hook env =
+    let start_loc = Peek.loc env in
+    Eat.token env;
+    let tparams = type_params_remove_trailing env (type_params env) in
+    let params = function_param_list env in
+    function_with_params ~hook:true env start_loc tparams params
 
   and function_return_type env =
     if is_start_of_type_guard env then
@@ -1114,7 +1129,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           let params = function_param_list env in
           Expect.token env T_COLON;
           let return = function_return_type env in
-          { Type.Function.params; return; tparams; comments = None })
+          { Type.Function.params; return; tparams; comments = None; hook = false })
         env
     in
     let method_property env start_loc static key ~leading =

@@ -256,7 +256,9 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
     let body = list ~wrap:(Atom "{", Atom "}") ~sep:(Atom ";") ~trailing:false properties in
     fuse_with_space [Atom "interface"; extends; body]
   and type_function
-      ~depth ~sep { fun_params; fun_rest_param; fun_return; fun_type_params; fun_static = _ } =
+      ~depth
+      ~sep
+      { fun_params; fun_rest_param; fun_return; fun_type_params; fun_static = _; fun_hook } =
     let params = counted_map (type_function_param ~depth) fun_params in
     let params =
       match fun_rest_param with
@@ -265,13 +267,19 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
       | None -> params
     in
     fuse
-      [
-        option ~f:(type_parameter ~depth) fun_type_params;
-        list ~wrap:(Atom "(", Atom ")") ~sep:(Atom ",") ~trailing:false params;
-        sep;
-        pretty_space;
-        return_t ~depth fun_return;
-      ]
+      (( if fun_hook then
+         [Atom "hook"; pretty_space]
+       else
+         []
+       )
+      @ [
+          option ~f:(type_parameter ~depth) fun_type_params;
+          list ~wrap:(Atom "(", Atom ")") ~sep:(Atom ",") ~trailing:false params;
+          sep;
+          pretty_space;
+          return_t ~depth fun_return;
+        ]
+      )
   and type_function_param ~depth (name, annot, { prm_optional }) =
     fuse
       [

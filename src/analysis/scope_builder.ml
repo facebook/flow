@@ -914,6 +914,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           params = (_, { Params.this_; params = ps; rest = rpo; comments = _ });
           return;
           tparams;
+          hook = _;
           comments = _;
         } =
           ft

@@ -210,6 +210,7 @@ and Type : sig
       params: ('M, 'T) Params.t;
       return: ('M, 'T) return_annotation;
       comments: ('M, unit) Syntax.t option;
+      hook: bool;
     }
 
     and ('M, 'T) return_annotation =
