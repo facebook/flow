@@ -7745,13 +7745,10 @@ module Make
             (return_t, Some pred)
           | (Some ((loc, { kind = Declared (expr_loc, _); comments = _ }) as pred), _) ->
             Flow_js.add_output cx (Error_message.EDeprecatedPredicate loc);
-            let (annotated_or_inferred, _) =
-              Anno.mk_type_annotation cx tparams_map ret_reason (Ast.Type.Missing loc)
-            in
             Flow_js.add_output
               cx
               Error_message.(EUnsupportedSyntax (expr_loc, PredicateDeclarationForImplementation));
-            (annotated_or_inferred, Some (Tast_utils.error_mapper#predicate pred))
+            (Inferred (AnyT.error ret_reason), Some (Tast_utils.error_mapper#predicate pred))
           | _ -> (return_t, Base.Option.map ~f:Tast_utils.error_mapper#predicate predicate)
         in
         let return_t =
