@@ -57,6 +57,7 @@ let sig_opts =
     exact_by_default = true;
     enable_enums = true;
     enable_component_syntax = true;
+    hooklike_functions = true;
     enable_relay_integration = false;
     casting_syntax = Options.CastingSyntax.Colon;
     relay_integration_module_prefix = None;

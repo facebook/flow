@@ -39,6 +39,7 @@ type metadata = {
   casting_syntax: Options.CastingSyntax.t;
   component_syntax: bool;
   component_syntax_includes: string list;
+  hooklike_functions: bool;
   react_rules: Options.react_rules list;
   react_rules_always: bool;
   enable_const_params: bool;
@@ -249,8 +250,9 @@ let metadata_of_options options =
     automatic_require_default = Options.automatic_require_default options;
     babel_loose_array_spread = Options.babel_loose_array_spread options;
     casting_syntax = Options.casting_syntax options;
-    component_syntax = Options.typecheck_component_syntax options;
+    component_syntax = Options.component_syntax options;
     component_syntax_includes = Options.component_syntax_includes options;
+    hooklike_functions = Options.hooklike_functions options;
     react_rules = Options.react_rules options;
     react_rules_always = false;
     enable_const_params = Options.enable_const_params options;
@@ -469,6 +471,8 @@ let component_syntax cx =
   cx.metadata.component_syntax
   || in_dirlist cx cx.metadata.component_syntax_includes
   || File_key.is_lib_file cx.file
+
+let hooklike_functions cx = cx.metadata.hooklike_functions
 
 let react_rules_always cx = cx.metadata.react_rules_always
 

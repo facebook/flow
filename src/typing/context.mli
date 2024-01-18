@@ -76,6 +76,7 @@ type metadata = {
   casting_syntax: Options.CastingSyntax.t;
   component_syntax: bool;
   component_syntax_includes: string list;
+  hooklike_functions: bool;
   react_rules: Options.react_rules list;
   react_rules_always: bool;
   enable_const_params: bool;
@@ -158,6 +159,8 @@ val builtins : t -> Builtins.t
 val casting_syntax : t -> Options.CastingSyntax.t
 
 val component_syntax : t -> bool
+
+val hooklike_functions : t -> bool
 
 val react_rule_enabled : t -> Options.react_rules -> bool
 

@@ -1,4 +1,4 @@
 [options]
 all=true
 autoimports=true
-experimental.component_syntax=typing
+experimental.component_syntax=true

@@ -28,6 +28,7 @@ let metadata =
     casting_syntax = Options.CastingSyntax.Colon;
     component_syntax = true;
     component_syntax_includes = [];
+    hooklike_functions = true;
     react_rules = [];
     react_rules_always = false;
     enable_const_params = false;

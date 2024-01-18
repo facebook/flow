@@ -1,5 +1,5 @@
 [options]
-experimental.component_syntax=typing
+experimental.component_syntax=true
 experimental.react_rule=deepReadOnlyProps
 experimental.react_rule=deepReadOnlyHookReturns
 experimental.react_rule=validateRefAccessDuringRender

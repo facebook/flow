@@ -213,6 +213,7 @@ let sig_options
     ?(exact_by_default = false)
     ?(enable_enums = true)
     ?(enable_component_syntax = true)
+    ?(hooklike_functions = true)
     ?(enable_relay_integration = false)
     ?(casting_syntax = Options.CastingSyntax.Colon)
     ?relay_integration_module_prefix
@@ -228,6 +229,7 @@ let sig_options
     exact_by_default;
     enable_enums;
     enable_component_syntax;
+    hooklike_functions;
     enable_relay_integration;
     casting_syntax;
     relay_integration_module_prefix;

@@ -1,5 +1,5 @@
 [options]
-experimental.component_syntax=typing
+experimental.component_syntax=true
 experimental.react_rule=deepReadOnlyProps
 all=true
 casting_syntax=both

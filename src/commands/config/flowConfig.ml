@@ -51,8 +51,9 @@ module Opts = struct
     babel_loose_array_spread: bool option;
     casting_syntax: Options.CastingSyntax.t option;
     channel_mode: [ `pipe | `socket ] option;
-    component_syntax: Options.component_syntax;
+    component_syntax: bool;
     component_syntax_includes: string list;
+    hooklike_functions: bool;
     react_rules: Options.react_rules list;
     emoji: bool option;
     enable_const_params: bool option;
@@ -175,8 +176,9 @@ module Opts = struct
       babel_loose_array_spread = None;
       channel_mode = None;
       casting_syntax = None;
-      component_syntax = Options.Parsing;
+      component_syntax = false;
       component_syntax_includes = [];
+      hooklike_functions = true;
       react_rules = [];
       emoji = None;
       enable_const_params = None;
@@ -488,9 +490,8 @@ module Opts = struct
       (fun opts v -> Ok { opts with haste_paths_includes = v :: opts.haste_paths_includes })
 
   let component_syntax_parser =
-    let open Options in
-    enum
-      [("parsing", Parsing); ("typing", FullSupport)]
+    enum (* Compatibility with old enum options *)
+      [("parsing", false); ("typing", true); ("true", true); ("false", false)]
       (fun opts v -> Ok { opts with component_syntax = v })
 
   let react_rules_parser =
@@ -525,6 +526,8 @@ module Opts = struct
         else
           Ok opts
     )
+
+  let hooklike_functions_parser = boolean (fun opts v -> Ok { opts with hooklike_functions = v })
 
   let renders_type_validation_parser =
     boolean (fun opts v -> Ok { opts with renders_type_validation = v })
@@ -835,6 +838,7 @@ module Opts = struct
       ("experimental.component_syntax", component_syntax_parser);
       ("experimental.component_syntax.typing.includes", component_syntax_includes_parser);
       ("experimental.component_syntax.deep_read_only", component_syntax_deep_read_only_parser);
+      ("experimental.component_syntax.hooklike_functions", hooklike_functions_parser);
       ("experimental.react_rule", react_rules_parser);
       ("experimental.renders_type_validation", renders_type_validation_parser);
       ("experimental.renders_type_validation.includes", renders_type_validation_includes_parser);
@@ -1480,6 +1484,8 @@ let channel_mode c = c.options.Opts.channel_mode
 let component_syntax c = c.options.Opts.component_syntax
 
 let component_syntax_includes c = c.options.Opts.component_syntax_includes
+
+let hooklike_functions c = c.options.Opts.hooklike_functions
 
 let react_rules c = c.options.Opts.react_rules
 

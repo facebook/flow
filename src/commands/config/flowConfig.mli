@@ -80,9 +80,11 @@ val casting_syntax : config -> Options.CastingSyntax.t option
 
 val channel_mode : config -> [ `pipe | `socket ] option
 
-val component_syntax : config -> Options.component_syntax
+val component_syntax : config -> bool
 
 val component_syntax_includes : config -> string list
+
+val hooklike_functions : config -> bool
 
 val react_rules : config -> Options.react_rules list
 

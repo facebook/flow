@@ -11,4 +11,4 @@
 [options]
 exact_by_default=false
 emoji=true
-experimental.component_syntax=typing
+experimental.component_syntax=true

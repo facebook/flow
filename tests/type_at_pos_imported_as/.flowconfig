@@ -8,7 +8,7 @@
 
 [options]
 enums=true
-experimental.component_syntax=typing
+experimental.component_syntax=true
 all=true
 
 [strict]
