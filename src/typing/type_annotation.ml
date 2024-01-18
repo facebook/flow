@@ -2523,12 +2523,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
 
   and mk_type_annotation cx tparams_map reason = function
     | T.Missing loc ->
-      let t =
-        if Context.typing_mode cx <> Context.CheckingMode then
-          Context.mk_placeholder cx reason
-        else
-          Tvar.mk cx reason
-      in
+      let t = Tvar.mk cx reason in
       (Inferred t, T.Missing (loc, t))
     | T.Available annot ->
       let (t, ast_annot) = mk_type_available_annotation cx tparams_map annot in
