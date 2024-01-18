@@ -691,6 +691,15 @@ let rec make_error_printable :
           ]
         in
         explanation loc frames use_op message
+      | Frame (ReactDeepReadOnly (props_loc, HookArg), use_op) ->
+        let message =
+          [
+            text "React ";
+            ref (mk_reason (RCustom "hook arguments") props_loc);
+            text " and their nested elements cannot be written to";
+          ]
+        in
+        explanation loc frames use_op message
       | Frame (ReactDeepReadOnly (hook_loc, HookReturn), use_op) ->
         let message =
           [

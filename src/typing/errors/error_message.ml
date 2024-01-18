@@ -5456,7 +5456,7 @@ open Error_codes
 let react_rule_of_use_op use_op ~default =
   let code_of_frame acc = function
     | ReactDeepReadOnly (_, HookReturn) -> Some ReactRuleHookMutation
-    | ReactDeepReadOnly (_, (DROAnnot | Props)) -> Some ReactRulePropsMutation
+    | ReactDeepReadOnly (_, (Props | HookArg)) -> Some ReactRulePropsMutation
     | _ -> acc
   in
   Base.Option.first_some (fold_use_op (fun _ -> None) code_of_frame use_op) (Some default)

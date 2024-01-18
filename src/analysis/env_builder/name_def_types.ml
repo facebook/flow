@@ -80,12 +80,16 @@ type object_synth_kind =
   | MissingMemberAnnots of { locs: object_missing_annot Nel.t }
   | Unsynthesizable
 
+type dro_annot =
+  | Hook
+  | Comp
+
 type root =
   | Annotation of {
       tparams_map: tparams_map;
       optional: bool;
       has_default_expression: bool;
-      react_deep_read_only: bool;
+      react_deep_read_only: dro_annot option;
       param_loc: ALoc.t option;
       annot: (ALoc.t, ALoc.t) Ast.Type.annotation;
       concrete: root option;

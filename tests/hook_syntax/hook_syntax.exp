@@ -140,6 +140,66 @@ References:
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- hook_tests.js:19:9
+
+Cannot assign `"hi"` to `foo.a` because property `a` is not writable. The return value of a React hook [1] cannot be
+written to. [react-rule-hook-mutation]
+
+   hook_tests.js:19:9
+   19|     foo.a = "hi"; // error
+               ^
+
+References:
+   hook_tests.js:23:1
+   23| hook useCoolHook2(): [{a: string}, React.RefObject<number>] {
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- hook_tests.js:31:5
+
+Cannot assign `42` to `arr[0]` because read-only arrays cannot be written to. The return value of a React hook [1]
+cannot be written to. [react-rule-hook-mutation]
+
+   hook_tests.js:31:5
+   31|     arr[0] = 42; // error
+           ^^^^^^
+
+References:
+   hook_tests.js:17:1
+   17| hook useCoolHook(): Array<number> {
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- hook_tests.js:33:9
+
+Cannot assign `"hi"` to `foo.a` because property `a` is not writable. The return value of a React hook [1] cannot be
+written to. [react-rule-hook-mutation]
+
+   hook_tests.js:33:9
+   33|     foo.a = "hi"; // error
+               ^
+
+References:
+   hook_tests.js:23:1
+   23| hook useCoolHook2(): [{a: string}, React.RefObject<number>] {
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- hook_tests.js:41:5
+
+Cannot assign `42` to `x[0]` because read-only arrays cannot be written to. React hook arguments [1] and their nested
+elements cannot be written to. [react-rule-unsafe-mutation]
+
+   hook_tests.js:41:5
+   41|     x[0] = 42; // error
+           ^^^^
+
+References:
+   hook_tests.js:40:17
+   40| hook useBadHook(x: Array<number>, y: React.RefObject<number>): void {
+                       ^^^^^^^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- hook_type_tests.js:4:3
 
 Cannot assign `100` to `v.a` because property `a` is not writable. The return value of a React hook [1] cannot be
@@ -226,4 +286,4 @@ References:
 
 
 
-Found 13 errors
+Found 17 errors

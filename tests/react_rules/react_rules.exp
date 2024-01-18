@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------- dro.js:2:5
 
-Cannot assign `42` to `a.x.y` because property `y` is not writable. [react-rule-unsafe-mutation]
+Cannot assign `42` to `a.x.y` because property `y` is not writable. [cannot-write]
 
    2| a.x.y = 42; // error
           ^
@@ -8,7 +8,7 @@ Cannot assign `42` to `a.x.y` because property `y` is not writable. [react-rule-
 
 Error ------------------------------------------------------------------------------------------------------- dro.js:3:3
 
-Cannot assign `42` to `a.x` because property `x` is not writable. [react-rule-unsafe-mutation]
+Cannot assign `42` to `a.x` because property `x` is not writable. [cannot-write]
 
    3| a.x = 42; // error
         ^
@@ -33,7 +33,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:11:3
 
-Cannot assign `0` to `w.v` because property `v` is not writable. [react-rule-unsafe-mutation]
+Cannot assign `0` to `w.v` because property `v` is not writable. [cannot-write]
 
    11| w.v = 0; // error
          ^
@@ -41,7 +41,7 @@ Cannot assign `0` to `w.v` because property `v` is not writable. [react-rule-uns
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:12:5
 
-Cannot assign `42` to `x.x.a` because property `a` is not writable. [react-rule-unsafe-mutation]
+Cannot assign `42` to `x.x.a` because property `a` is not writable. [cannot-write]
 
    12| x.x.a = 42; // error
            ^
@@ -49,7 +49,7 @@ Cannot assign `42` to `x.x.a` because property `a` is not writable. [react-rule-
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:13:5
 
-Cannot assign array literal to `x.x.y` because property `y` is not writable. [react-rule-unsafe-mutation]
+Cannot assign array literal to `x.x.y` because property `y` is not writable. [cannot-write]
 
    13| x.x.y = []; // error
            ^
@@ -57,7 +57,7 @@ Cannot assign array literal to `x.x.y` because property `y` is not writable. [re
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:14:3
 
-Cannot assign `42` to `x.x` because property `x` is not writable. [react-rule-unsafe-mutation]
+Cannot assign `42` to `x.x` because property `x` is not writable. [cannot-write]
 
    14| x.x = (42: any);
          ^
@@ -65,7 +65,7 @@ Cannot assign `42` to `x.x` because property `x` is not writable. [react-rule-un
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:22:6
 
-Cannot assign `42` to `w2.a.b` because property `b` is not writable. [react-rule-unsafe-mutation]
+Cannot assign `42` to `w2.a.b` because property `b` is not writable. [cannot-write]
 
    22| w2.a.b = 42; // error
             ^
@@ -73,7 +73,7 @@ Cannot assign `42` to `w2.a.b` because property `b` is not writable. [react-rule
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:27:7
 
-Cannot assign `42` to `v2[1].a` because property `a` is not writable. [react-rule-unsafe-mutation]
+Cannot assign `42` to `v2[1].a` because property `a` is not writable. [cannot-write]
 
    27| v2[1].a = 42; //error
              ^

@@ -1283,6 +1283,7 @@ module rec TypeTerm : sig
 
   and dro_type =
     | HookReturn
+    | HookArg
     | Props
     | DROAnnot
 

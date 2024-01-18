@@ -59,14 +59,25 @@ let resolve_annotation cx tparams_map ?(react_deep_read_only = None) anno =
   let (t, anno) = Anno.mk_type_available_annotation cx tparams_map anno in
   let t =
     match react_deep_read_only with
-    | Some param_loc when Context.react_rule_enabled cx Options.DeepReadOnlyProps ->
-      Flow_js.mk_possibly_evaluated_destructor
-        cx
-        unknown_use
-        (TypeUtil.reason_of_t t)
+    | Some ((_, kind) as param_loc) ->
+      let enabled =
+        match kind with
+        | HookArg
+        | Props ->
+          Context.react_rule_enabled cx Options.DeepReadOnlyProps
+        | HookReturn -> Context.react_rule_enabled cx Options.DeepReadOnlyHookReturns
+        | DROAnnot -> true
+      in
+      if enabled then
+        Flow_js.mk_possibly_evaluated_destructor
+          cx
+          unknown_use
+          (TypeUtil.reason_of_t t)
+          t
+          (ReactDRO param_loc)
+          (Eval.generate_id ())
+      else
         t
-        (ReactDRO param_loc)
-        (Eval.generate_id ())
     | _ -> t
   in
   if Context.typing_mode cx = Context.CheckingMode then Node_cache.set_annotation cache anno;
@@ -412,8 +423,9 @@ let resolve_binding cx reason loc b =
         cx
         tparams_map
         ~react_deep_read_only:
-          (match param_loc with
-          | Some param_loc when react_deep_read_only -> Some (param_loc, Props)
+          (match (param_loc, react_deep_read_only) with
+          | (Some param_loc, Some Comp) -> Some (param_loc, Props)
+          | (Some param_loc, Some Hook) -> Some (param_loc, HookArg)
           | _ -> None)
         annot
     in
