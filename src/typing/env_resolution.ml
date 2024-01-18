@@ -353,8 +353,8 @@ let resolve_pred_func cx (ex, callee, targs, arguments) =
     )
 
 let resolve_annotated_function
-    cx synthesizable ~bind_this ~statics ~hook_like reason tparams_map function_loc function_ =
-  let { Ast.Function.body; params; sig_loc; return; hook; _ } = function_ in
+    cx ~bind_this ~statics ~hook_like reason tparams_map function_loc function_ =
+  let { Ast.Function.body; params; sig_loc; hook; _ } = function_ in
   let cache = Context.node_cache cx in
   let tparams_map = mk_tparams_map cx tparams_map in
   let default_this =
@@ -376,18 +376,6 @@ let resolve_annotated_function
       reason
       function_
   in
-  begin
-    match synthesizable with
-    | FunctionPredicateSynthesizable (_, pred_expr) ->
-      let { Statement.Func_stmt_sig.Types.return_t; fparams; _ } = func_sig in
-      let params = Statement.Func_stmt_params.value fparams in
-      let return_t = TypeUtil.type_t_of_annotated_or_inferred return_t in
-      let (return_annot, _, _) = Anno.mk_return_annot cx tparams_map params reason return in
-      let return_annot = TypeUtil.type_t_of_annotated_or_inferred return_annot in
-      let use_op = Op (FunReturnStatement { value = mk_expression_reason pred_expr }) in
-      Flow_js.flow cx (return_annot, UseT (use_op, return_t))
-    | _ -> ()
-  end;
   Node_cache.set_function_sig cache sig_loc sig_data;
   let t =
     Statement.Func_stmt_sig.functiontype
@@ -486,7 +474,6 @@ let resolve_binding cx reason loc b =
       let (t, _) =
         resolve_annotated_function
           cx
-          FunctionSynthesizable
           ~bind_this
           ~hook_like:false
           ~statics:SMap.empty
@@ -652,9 +639,7 @@ let resolve_binding cx reason loc b =
       (FunctionValue
         {
           hints = _;
-          synthesizable_from_annotation =
-            (FunctionSynthesizable | FunctionPredicateSynthesizable _) as
-            synthesizable_from_annotation;
+          synthesizable_from_annotation = FunctionSynthesizable | FunctionPredicateSynthesizable _;
           function_loc;
           function_;
           statics;
@@ -665,7 +650,7 @@ let resolve_binding cx reason loc b =
         ) ->
     let cache = Context.node_cache cx in
     let tparams_map = mk_tparams_map cx tparams_map in
-    let { Ast.Function.sig_loc; async; generator; params; body; return; hook; _ } = function_ in
+    let { Ast.Function.sig_loc; async; generator; params; body; hook; _ } = function_ in
     let reason_fun =
       func_reason
         ~async
@@ -695,18 +680,6 @@ let resolve_binding cx reason loc b =
         reason_fun
         function_
     in
-    begin
-      match synthesizable_from_annotation with
-      | FunctionPredicateSynthesizable (_, pred_expr) ->
-        let { Statement.Func_stmt_sig.Types.return_t; fparams; _ } = func_sig in
-        let return_t = TypeUtil.type_t_of_annotated_or_inferred return_t in
-        let params = Statement.Func_stmt_params.value fparams in
-        let (return_annot, _, _) = Anno.mk_return_annot cx tparams_map params reason return in
-        let return_annot = TypeUtil.type_t_of_annotated_or_inferred return_annot in
-        let use_op = Op (FunReturnStatement { value = mk_expression_reason pred_expr }) in
-        Flow_js.flow cx (return_annot, UseT (use_op, return_t))
-      | _ -> ()
-    end;
     let t =
       Statement.Func_stmt_sig.functiontype cx ~arrow (Some function_loc) default_this func_sig
     in
@@ -1254,9 +1227,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
     | Function
         {
           function_;
-          synthesizable_from_annotation =
-            (FunctionSynthesizable | FunctionPredicateSynthesizable _) as
-            synthesizable_from_annotation;
+          synthesizable_from_annotation = FunctionSynthesizable | FunctionPredicateSynthesizable _;
           arrow;
           has_this_def = _;
           function_loc;
@@ -1267,7 +1238,6 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
       let hook_like = Base.Option.is_some (Flow_ast_utils.hook_function function_) in
       resolve_annotated_function
         cx
-        synthesizable_from_annotation
         ~bind_this:(not arrow)
         ~statics
         ~hook_like
