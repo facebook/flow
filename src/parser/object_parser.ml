@@ -195,6 +195,7 @@ module Object
             body;
             generator;
             async;
+            hook = false;
             predicate = None;
             (* setters/getter are not predicates *)
             return;
@@ -289,6 +290,7 @@ module Object
               params;
               body;
               generator;
+              hook = false;
               async;
               (* TODO: add support for object method predicates *)
               predicate = None;
@@ -864,6 +866,7 @@ module Object
                 body;
                 generator;
                 async;
+                hook = false;
                 (* TODO: add support for method predicates *)
                 predicate = None;
                 return;

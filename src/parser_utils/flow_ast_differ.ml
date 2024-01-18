@@ -855,6 +855,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       async = async1;
       generator = generator1;
       predicate = predicate1;
+      hook = hook1;
       return = return1;
       tparams = tparams1;
       sig_loc = _;
@@ -868,6 +869,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       body = body2;
       async = async2;
       generator = generator2;
+      hook = hook2;
       predicate = predicate2;
       return = return2;
       tparams = tparams2;
@@ -876,7 +878,8 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     } =
       func2
     in
-    if async1 != async2 || generator1 != generator2 || predicate1 != predicate2 then
+    if async1 != async2 || generator1 != generator2 || predicate1 != predicate2 || hook1 != hook2
+    then
       None
     else
       let id = diff_if_changed_nonopt_fn identifier id1 id2 in

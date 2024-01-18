@@ -260,6 +260,7 @@ let eval_property_assignment class_body =
                       params = _;
                       async = _;
                       generator = _;
+                      hook = _;
                       predicate = _;
                       return = _;
                       tparams = _;

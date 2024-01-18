@@ -7649,6 +7649,7 @@ module Make
         id;
         async;
         generator;
+        hook = _;
         sig_loc;
         comments = _;
       } =

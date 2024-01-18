@@ -216,6 +216,7 @@ module Functions = struct
       ?tparams
       ?(return = Ast.Function.ReturnAnnot.Missing Loc.none)
       ?(generator = false)
+      ?(hook = false)
       ?(async = false)
       ?body:body_
       () =
@@ -235,6 +236,7 @@ module Functions = struct
       body;
       async;
       generator;
+      hook;
       predicate = None;
       return;
       tparams;
@@ -286,6 +288,7 @@ module Functions = struct
       ?id
       ?(generator = false)
       ?(async = false)
+      ?(hook = false)
       ?body:body_
       { Ast.Type.Function.tparams; params; return; _ } =
     let params = params_of_type params in
@@ -306,6 +309,7 @@ module Functions = struct
           body;
           async;
           generator;
+          hook;
           predicate = None;
           return;
           tparams;

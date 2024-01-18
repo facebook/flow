@@ -1210,6 +1210,7 @@ module Expression
             params;
             body;
             generator;
+            hook = false (* TODO function expression hooks *);
             async;
             predicate;
             return;
@@ -1809,6 +1810,7 @@ module Expression
               async;
               generator = false;
               (* arrow functions cannot be generators *)
+              hook = false (* TODO arrow function hooks *);
               predicate;
               return;
               tparams;

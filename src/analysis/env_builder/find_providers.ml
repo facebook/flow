@@ -616,6 +616,7 @@ end = struct
           body;
           async = _;
           generator = _;
+          hook = _;
           predicate;
           return;
           tparams;
@@ -887,6 +888,7 @@ end = struct
           body;
           async = _;
           generator = _;
+          hook = _;
           predicate;
           return;
           tparams;
@@ -932,6 +934,7 @@ end = struct
           body;
           async = _;
           generator = _;
+          hook = _;
           predicate;
           return;
           tparams;

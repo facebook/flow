@@ -1737,6 +1737,7 @@ and arrow_function
       tparams;
       comments;
       generator = _;
+      hook = _;
       id = _;
       (* arrows don't have ids and can't be generators *) sig_loc = _;
     } =
@@ -1841,6 +1842,7 @@ and function_ ~opts loc func =
     body;
     async;
     generator;
+    hook;
     predicate;
     return;
     tparams;
@@ -1853,7 +1855,11 @@ and function_ ~opts loc func =
     let s_func =
       fuse
         [
-          Atom "function";
+          ( if hook then
+            Atom "hook"
+          else
+            Atom "function"
+          );
           ( if generator then
             Atom "*"
           else
@@ -2182,6 +2188,7 @@ and class_method
     body;
     async;
     generator;
+    hook = _;
     predicate;
     return;
     tparams;
@@ -2667,6 +2674,7 @@ and object_property ~opts property =
       body;
       async;
       generator;
+      hook = _;
       predicate;
       return;
       tparams;
@@ -2717,6 +2725,7 @@ and object_property ~opts property =
       body;
       async;
       generator;
+      hook = _;
       predicate;
       return;
       tparams;
@@ -2759,6 +2768,7 @@ and object_property ~opts property =
       body;
       async;
       generator;
+      hook = _;
       predicate;
       return;
       tparams;

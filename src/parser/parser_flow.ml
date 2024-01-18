@@ -312,7 +312,7 @@ module rec Parse : PARSER = struct
        * statements... (see section 13) *)
     | T_LET -> let_ env
     | T_CONST -> const env
-    | _ when Peek.is_function env -> Declaration._function env
+    | _ when Peek.is_function env || Peek.is_hook env -> Declaration._function env
     | _ when Peek.is_class env -> class_declaration env decorators
     | T_INTERFACE -> interface env
     | T_DECLARE -> declare env
@@ -374,7 +374,7 @@ module rec Parse : PARSER = struct
     (* The rest of these patterns handle ExpressionStatement and its negative
        lookaheads, which prevent ambiguities.
        See https://tc39.github.io/ecma262/#sec-expression-statement *)
-    | _ when Peek.is_function env ->
+    | _ when Peek.is_function env || Peek.is_hook env ->
       let func = Declaration._function env in
       function_as_statement_error_at env (fst func);
       func

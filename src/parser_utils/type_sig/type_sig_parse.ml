@@ -645,7 +645,7 @@ module Scope = struct
   (* Function declarations preceded by declared functions are taken to have the
    * type of the declared functions. This is a weird special case aimed to
    * support overloaded signatures. *)
-  let bind_function scope tbls id_loc fn_loc name ~async ~generator def k =
+  let bind_function scope tbls id_loc fn_loc name ~async ~generator ~hook:_ def k =
     bind scope name (fun binding_opt ->
         match binding_opt with
         | None ->
@@ -2719,7 +2719,7 @@ let rec expression opts scope tbls (loc, expr) =
         let def =
           lazy (splice tbls id_loc (fun tbls -> function_def opts scope tbls SSet.empty f))
         in
-        Scope.bind_function scope tbls id_loc sig_loc name ~async ~generator def ignore2;
+        Scope.bind_function scope tbls id_loc sig_loc name ~async ~generator ~hook:false def ignore2;
         val_ref scope id_loc name
       | None ->
         let def = function_def opts scope tbls SSet.empty f in
@@ -3151,6 +3151,7 @@ and function_def_helper =
       predicate = p;
       async;
       generator;
+      hook = _;
       sig_loc = _;
       comments = _;
     } =
@@ -3988,7 +3989,17 @@ let rec const_var_init_decl opts scope tbls id_loc name k expr =
         let def =
           lazy (splice tbls fn_id_loc (fun tbls -> function_def opts fn_scope tbls SSet.empty f))
         in
-        Scope.bind_function fn_scope tbls fn_id_loc sig_loc fn_name ~async ~generator def ignore2;
+        Scope.bind_function
+          fn_scope
+          tbls
+          fn_id_loc
+          sig_loc
+          fn_name
+          ~async
+          ~generator
+          ~hook:false
+          def
+          ignore2;
         Scope.bind_const_ref scope tbls id_loc name fn_id_loc fn_name fn_scope k
       | None ->
         let def =
@@ -4086,12 +4097,12 @@ let class_decl opts scope tbls decl =
   Scope.bind_class scope tbls id_loc name def
 
 let function_decl opts scope tbls decl =
-  let { Ast.Function.id; async; generator; sig_loc; _ } = decl in
+  let { Ast.Function.id; async; generator; hook; sig_loc; _ } = decl in
   let (id_loc, { Ast.Identifier.name; comments = _ }) = Base.Option.value_exn id in
   let sig_loc = push_loc tbls sig_loc in
   let id_loc = push_loc tbls id_loc in
   let def = lazy (splice tbls id_loc (fun tbls -> function_def opts scope tbls SSet.empty decl)) in
-  Scope.bind_function scope tbls id_loc sig_loc name ~async ~generator def
+  Scope.bind_function scope tbls id_loc sig_loc name ~async ~generator ~hook def
 
 let component_decl opts scope tbls decl =
   let {

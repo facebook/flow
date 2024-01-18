@@ -1927,6 +1927,7 @@ class ['loc] mapper =
         body;
         async;
         generator;
+        hook;
         predicate;
         return;
         tparams;
@@ -1960,6 +1961,7 @@ class ['loc] mapper =
           body = body';
           async;
           generator;
+          hook;
           predicate = predicate';
           tparams = tparams';
           sig_loc;

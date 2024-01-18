@@ -786,6 +786,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             tparams;
             async = _;
             generator;
+            hook = _;
             predicate;
             sig_loc = _;
             comments = _;
@@ -838,6 +839,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             tparams;
             async = _;
             generator;
+            hook = _;
             predicate;
             sig_loc = _;
             comments = _;

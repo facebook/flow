@@ -371,12 +371,22 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
   let _function =
     with_loc (fun env ->
         let (async, leading_async) = async env in
-        let (sig_loc, (generator, tparams, id, params, return, predicate, leading)) =
+        let (sig_loc, (generator, hook, tparams, id, params, return, predicate, leading)) =
           with_loc
             (fun env ->
               let leading_function = Peek.comments env in
-              Expect.token env T_FUNCTION;
-              let (generator, leading_generator) = generator env in
+              let (hook, (generator, leading_generator)) =
+                match Peek.token env with
+                | T_FUNCTION ->
+                  Eat.token env;
+                  (false, generator env)
+                | T_IDENTIFIER { raw = "hook"; _ } when not async ->
+                  Eat.token env;
+                  (true, (false, []))
+                | t ->
+                  Expect.error env t;
+                  (false, generator env)
+              in
               let leading = List.concat [leading_async; leading_function; leading_generator] in
               let (tparams, id) =
                 match (in_export_default env, Peek.token env) with
@@ -423,7 +433,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
                 | None -> (return_annotation_remove_trailing env return, predicate)
                 | Some _ -> (return, predicate_remove_trailing env predicate)
               in
-              (generator, tparams, id, params, return, predicate, leading))
+              (generator, hook, tparams, id, params, return, predicate, leading))
             env
         in
         let simple_params = is_simple_parameter_list params in
@@ -437,6 +447,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
             params;
             body;
             generator;
+            hook;
             async;
             predicate;
             return;

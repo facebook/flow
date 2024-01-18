@@ -1560,6 +1560,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
             body;
             async;
             generator;
+            hook = _;
             predicate;
             return;
             tparams = fun_tparams;

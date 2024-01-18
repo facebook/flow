@@ -1568,6 +1568,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         body;
         async;
         generator;
+        hook;
         predicate;
         return;
         tparams;
@@ -1591,6 +1592,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
             body = body';
             async;
             generator;
+            hook;
             predicate = predicate';
             tparams = tparams';
             sig_loc = sig_loc';

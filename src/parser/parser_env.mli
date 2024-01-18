@@ -228,6 +228,8 @@ module Peek : sig
 
   val is_function : env -> bool
 
+  val is_hook : env -> bool
+
   val is_class : env -> bool
 
   val is_component : env -> bool

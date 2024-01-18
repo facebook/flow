@@ -378,20 +378,20 @@
             "range":[470,488],
             "key":{
               "type":"PrivateIdentifier",
-              "leadingComments":[
-                {
-                  "type":"Block",
-                  "loc":{"source":null,"start":{"line":16,"column":2},"end":{"line":16,"column":21}},
-                  "range":[450,469],
-                  "value":" 5.1 L private "
-                }
-              ],
               "trailingComments":[
                 {
                   "type":"Block",
                   "loc":{"source":null,"start":{"line":16,"column":25},"end":{"line":16,"column":39}},
                   "range":[473,487],
                   "value":" 5.2 T id "
+                }
+              ],
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":16,"column":2},"end":{"line":16,"column":21}},
+                  "range":[450,469],
+                  "value":" 5.1 L private "
                 }
               ],
               "loc":{"source":null,"start":{"line":16,"column":22},"end":{"line":16,"column":24}},
@@ -460,20 +460,20 @@
                       },
                       "property":{
                         "type":"PrivateIdentifier",
-                        "leadingComments":[
-                          {
-                            "type":"Block",
-                            "loc":{"source":null,"start":{"line":18,"column":45},"end":{"line":18,"column":64}},
-                            "range":[552,571],
-                            "value":" 6.3 L private "
-                          }
-                        ],
                         "trailingComments":[
                           {
                             "type":"Block",
                             "loc":{"source":null,"start":{"line":18,"column":68},"end":{"line":18,"column":82}},
                             "range":[575,589],
                             "value":" 6.4 T id "
+                          }
+                        ],
+                        "leadingComments":[
+                          {
+                            "type":"Block",
+                            "loc":{"source":null,"start":{"line":18,"column":45},"end":{"line":18,"column":64}},
+                            "range":[552,571],
+                            "value":" 6.3 L private "
                           }
                         ],
                         "loc":{"source":null,"start":{"line":18,"column":65},"end":{"line":18,"column":67}},

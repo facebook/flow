@@ -184,6 +184,8 @@ function custom_ast_types(fork) {
     .field('rendersType', or(def('TypeOperator'), null))
     .field('body', def('BlockStatement'));
 
+  def('HookDeclaration').bases('FunctionDeclaration');
+
   def('ComponentParameter')
     .build('name', 'local', 'shorthand')
     .field('name', or(def('Identifier'), def('Literal')))

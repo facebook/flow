@@ -2178,6 +2178,7 @@ and Function : sig
     body: ('M, 'T) body;
     async: bool;
     generator: bool;
+    hook: bool;
     predicate: ('M, 'T) Type.Predicate.t option;
     return: ('M, 'T) ReturnAnnot.t;
     tparams: ('M, 'T) Type.TypeParams.t option;

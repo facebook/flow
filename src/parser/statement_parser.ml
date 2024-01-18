@@ -1519,7 +1519,7 @@ module Statement
           let (default, ()) = with_loc (fun env -> Expect.token env T_DEFAULT) env in
           let env = with_in_export_default true env in
           let (declaration, trailing) =
-            if Peek.is_function env then
+            if Peek.is_function env || Peek.is_hook env then
               (* export default [async] function [foo] (...) { ... } *)
               let fn = Declaration._function env in
               (Declaration fn, [])
@@ -1646,7 +1646,7 @@ module Statement
               comments = Flow_ast_utils.mk_comments_opt ~leading ();
             })
         env
-    | _ when Peek.is_function env ->
+    | _ when Peek.is_function env || Peek.is_hook env ->
       with_loc
         ~start_loc
         (fun env ->

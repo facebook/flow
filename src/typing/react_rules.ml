@@ -71,6 +71,7 @@ let rec whole_ast_visitor cx rrid =
         body;
         async;
         generator;
+        hook;
         predicate;
         return;
         tparams;
@@ -109,6 +110,7 @@ let rec whole_ast_visitor cx rrid =
               body = body';
               async;
               generator;
+              hook;
               predicate = predicate';
               tparams = tparams';
               sig_loc = sig_loc';

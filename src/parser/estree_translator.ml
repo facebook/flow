@@ -409,6 +409,7 @@ with type t = Impl.t = struct
             {
               Function.params = (_, { Function.Params.comments = params_comments; _ }) as params;
               async;
+              hook = _;
               predicate = predicate_;
               tparams;
               return;
@@ -650,6 +651,7 @@ with type t = Impl.t = struct
             params = (_, { Function.Params.comments = params_comments; _ }) as params;
             async;
             generator;
+            hook;
             predicate = predicate_;
             tparams;
             return;
@@ -668,9 +670,15 @@ with type t = Impl.t = struct
           ~outer:func_comments
           ~inner:(format_internal_comments params_comments)
       in
+      let node_name =
+        if hook then
+          "HookDeclaration"
+        else
+          "FunctionDeclaration"
+      in
       node
         ?comments
-        "FunctionDeclaration"
+        node_name
         loc
         [
           (* estree hasn't come around to the idea that function decls can have
@@ -693,6 +701,7 @@ with type t = Impl.t = struct
             params = (_, { Function.Params.comments = params_comments; _ }) as params;
             async;
             generator;
+            hook = _;
             predicate = predicate_;
             tparams;
             return;

@@ -130,6 +130,7 @@ let declare_function_to_function_declaration
               body;
               async = false;
               generator = false;
+              hook = false;
               predicate =
                 Some
                   ( loc,

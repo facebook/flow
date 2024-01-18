@@ -70,8 +70,8 @@
           "range":[89,91],
           "body":[]
         },
-        "superClass":null,
         "typeParameters":null,
+        "superClass":null,
         "superTypeParameters":null,
         "implements":[],
         "decorators":[]
