@@ -1,22 +1,6 @@
 ============================================
 No warnings:
 ============================================
-Error ---------------------------------------------------------------------------------------------- libs/exports.js:3:5
-
-There can be at most one `declare module.exports` statement in a module. [duplicate-declare-module-exports]
-
-   3|     declare module.exports: string; // error
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------------------- libs/exports.js:4:5
-
-There can be at most one `declare module.exports` statement in a module. [duplicate-declare-module-exports]
-
-   4|     declare module.exports: boolean; // error
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
 Error ---------------------------------------------------------------------------------------------- libs/exports.js:9:5
 
 Unable to determine module type (CommonJS vs ES) if both an export statement and `module.exports` are used in the same
@@ -109,7 +93,7 @@ Cannot cast `require(...)` to empty because boolean [1] is incompatible with emp
 
 References:
    libs/exports.js:4:29
-   4|     declare module.exports: boolean; // error
+   4|     declare module.exports: boolean; // ok
                                   ^^^^^^^ [1]
    a.js:7:17
    7| require('c') as empty; // error: boolean ~> empty
@@ -117,27 +101,11 @@ References:
 
 
 
-Found 11 errors
+Found 9 errors
 
 ============================================
 With warnings:
 ============================================
-Error ---------------------------------------------------------------------------------------------- libs/exports.js:3:5
-
-There can be at most one `declare module.exports` statement in a module. [duplicate-declare-module-exports]
-
-   3|     declare module.exports: string; // error
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------------------- libs/exports.js:4:5
-
-There can be at most one `declare module.exports` statement in a module. [duplicate-declare-module-exports]
-
-   4|     declare module.exports: boolean; // error
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
 Error ---------------------------------------------------------------------------------------------- libs/exports.js:9:5
 
 Unable to determine module type (CommonJS vs ES) if both an export statement and `module.exports` are used in the same
@@ -230,7 +198,7 @@ Cannot cast `require(...)` to empty because boolean [1] is incompatible with emp
 
 References:
    libs/exports.js:4:29
-   4|     declare module.exports: boolean; // error
+   4|     declare module.exports: boolean; // ok
                                   ^^^^^^^ [1]
    a.js:7:17
    7| require('c') as empty; // error: boolean ~> empty
@@ -246,4 +214,4 @@ Suppression is missing a code. Please update this suppression to use an error co
 
 
 
-Found 11 errors and 1 warning
+Found 9 errors and 1 warning

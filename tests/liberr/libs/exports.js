@@ -1,7 +1,7 @@
 declare module 'c' {
     declare module.exports: number; // ok
-    declare module.exports: string; // error
-    declare module.exports: boolean; // error
+    declare module.exports: string; // ok
+    declare module.exports: boolean; // ok
 }
 
 declare module 'd' {

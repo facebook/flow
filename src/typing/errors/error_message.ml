@@ -374,7 +374,6 @@ and 'loc t' =
   | EEnumsNotEnabled of 'loc
   | EUnsafeGetSet of 'loc
   | EIndeterminateModuleType of 'loc
-  | EDuplicateDeclareModuleExports of 'loc
   | EBadExportPosition of 'loc
   | EBadExportContext of string * 'loc
   | EBadDefaultImportAccess of 'loc * 'loc virtual_reason
@@ -1179,7 +1178,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUninitializedInstanceProperty (loc, e) -> EUninitializedInstanceProperty (f loc, e)
   | EEnumsNotEnabled loc -> EEnumsNotEnabled (f loc)
   | EIndeterminateModuleType loc -> EIndeterminateModuleType (f loc)
-  | EDuplicateDeclareModuleExports loc -> EDuplicateDeclareModuleExports (f loc)
   | EBadExportPosition loc -> EBadExportPosition (f loc)
   | EBadExportContext (s, loc) -> EBadExportContext (s, f loc)
   | EBadDefaultImportAccess (loc, r) -> EBadDefaultImportAccess (f loc, map_reason r)
@@ -1634,7 +1632,6 @@ let util_use_op_of_msg nope util = function
   | EUninitializedInstanceProperty _
   | EEnumsNotEnabled _
   | EIndeterminateModuleType _
-  | EDuplicateDeclareModuleExports _
   | EBadExportPosition _
   | EBadExportContext _
   | EBadDefaultImportAccess _
@@ -1878,7 +1875,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EUnsupportedVarianceAnnotation (loc, _)
   | EExportRenamedDefault { loc; _ }
   | EIndeterminateModuleType loc
-  | EDuplicateDeclareModuleExports loc
   | EEnumsNotEnabled loc
   | EUnsafeGetSet loc
   | EUninitializedInstanceProperty (loc, _)
@@ -2020,7 +2016,6 @@ let kind_of_msg =
     | EExportRenamedDefault _ -> LintError Lints.ExportRenamedDefault
     | EUnusedPromise _ -> LintError Lints.UnusedPromise
     | EReactIntrinsicOverlap _ -> LintError Lints.ReactIntrinsicOverlap
-    | EDuplicateDeclareModuleExports _
     | EBadExportPosition _
     | EBadExportContext _ ->
       InferWarning ExportKind
@@ -3320,15 +3315,6 @@ let friendly_message_of_msg loc_of_aloc msg =
         code "module.exports";
         text " are used in the ";
         text "same module!";
-      ]
-    in
-    Normal { features }
-  | EDuplicateDeclareModuleExports _ ->
-    let features =
-      [
-        text "There can be at most one ";
-        code "declare module.exports";
-        text " statement in a module.";
       ]
     in
     Normal { features }
@@ -5756,7 +5742,6 @@ let error_code_of_message err : error_code option =
   | EIncompatibleWithUseOp { use_op; _ } ->
     error_code_of_use_op use_op ~default:IncompatibleType
   | EIndeterminateModuleType _ -> Some ModuleTypeConflict
-  | EDuplicateDeclareModuleExports _ -> Some DuplicateDeclareModuleExports
   | EInexactMayOverwriteIndexer _ -> Some CannotSpreadInexact
   (* We don't want these to be suppressible *)
   | EInternal (_, _) -> None

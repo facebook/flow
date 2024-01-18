@@ -311,12 +311,8 @@ class exports_error_checker ~is_local_use =
           | Some (DeclareExportDeclaration.Interface _) ->
             module_kind
           | _ -> ES)
-        (*
-         * There should never be more than one `declare module.exports`
-         * statement *)
-        | (CommonJS, DeclareModuleExports _) ->
-          this#add_error (Error_message.EDuplicateDeclareModuleExports loc);
-          module_kind
+        (* We allow more than one `declare module.exports` statement *)
+        | (CommonJS, DeclareModuleExports _) -> module_kind
         (*
          * It's never ok to mix and match `declare export` and
          * `declare module.exports` in the same module because it leaves the
