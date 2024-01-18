@@ -927,6 +927,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                   ~var_assigned_to:(Some var_id)
                   ~statics
                   ~arrow
+                  ~hooklike:(Flow_ast_utils.hook_name name)
                   loc
                   func
               in
@@ -952,57 +953,99 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
     method! variable_declarator ~kind decl =
       let open Ast.Statement.VariableDeclaration.Declarator in
       let (_, { id; init }) = decl in
-      let (source, hints) =
-        let concrete =
-          match (init, id) with
-          | ( Some (arr_loc, Ast.Expression.Array { Ast.Expression.Array.elements = []; _ }),
-              (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name = (name_loc, _); _ })
-            ) ->
-            let { Provider_api.array_providers; _ } =
-              Base.Option.value_exn
-                (Provider_api.providers_of_def env_info.Env_api.providers name_loc)
-            in
-            Some (EmptyArray { array_providers; arr_loc })
-          | ( Some
-                ( ( loc,
-                    Ast.Expression.Object ({ Ast.Expression.Object.properties = _ :: _; _ } as obj)
-                  ) as init
-                ),
-              _
-            ) ->
-            let this_write_locs = obj_this_write_locs obj in
-            begin
-              match obj_properties_synthesizable ~this_write_locs obj with
-              | Unsynthesizable -> Some (Value { hints = []; expr = init })
-              | synthesizable -> Some (ObjectValue { obj_loc = loc; obj; synthesizable })
-            end
-          | (Some init, _) -> Some (Value { hints = []; expr = init })
-          | (None, _) -> None
-        in
-        match Destructure.type_of_pattern id with
-        | Some annot ->
-          ( Some
-              (Annotation
-                 {
-                   tparams_map = ALocMap.empty;
-                   optional = false;
-                   has_default_expression = false;
-                   react_deep_read_only = None;
-                   param_loc = None;
-                   annot;
-                   concrete;
-                 }
+      let concrete =
+        match (init, id) with
+        | ( Some (arr_loc, Ast.Expression.Array { Ast.Expression.Array.elements = []; _ }),
+            (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name = (name_loc, _); _ })
+          ) ->
+          let { Provider_api.array_providers; _ } =
+            Base.Option.value_exn (Provider_api.providers_of_def env_info.Env_api.providers name_loc)
+          in
+          Some (EmptyArray { array_providers; arr_loc })
+        | ( Some
+              ( ( loc,
+                  Ast.Expression.Object ({ Ast.Expression.Object.properties = _ :: _; _ } as obj)
+                ) as init
               ),
-            [Hint_t (AnnotationHint (ALocMap.empty, annot), ExpectedTypeHint)]
-          )
-        | None -> (concrete, [])
+            _
+          ) ->
+          let this_write_locs = obj_this_write_locs obj in
+          begin
+            match obj_properties_synthesizable ~this_write_locs obj with
+            | Unsynthesizable -> Some (Value { hints = []; expr = init })
+            | synthesizable -> Some (ObjectValue { obj_loc = loc; obj; synthesizable })
+          end
+        | (Some init, _) -> Some (Value { hints = []; expr = init })
+        | (None, _) -> None
       in
-      Base.Option.iter ~f:(fun acc -> this#add_destructure_bindings acc id) source;
-      ignore @@ this#variable_declarator_pattern ~kind id;
-      Base.Option.iter init ~f:(fun init ->
-          this#visit_expression ~hints ~cond:NonConditionalContext init
-      );
-      decl
+      match (init, id) with
+      | ( Some _,
+          ( _,
+            Ast.Pattern.Identifier
+              { Ast.Pattern.Identifier.name = (id_loc, { Ast.Identifier.name; _ }); _ }
+          )
+        )
+        when Flow_ast_utils.hook_name name ->
+        let (source, hints) =
+          match (Destructure.type_of_pattern id, concrete) with
+          | (Some annot, _) ->
+            ( Some
+                (Annotation
+                   {
+                     tparams_map = ALocMap.empty;
+                     optional = false;
+                     has_default_expression = false;
+                     react_deep_read_only = None;
+                     hook_like = true;
+                     param_loc = None;
+                     annot;
+                     concrete;
+                   }
+                ),
+              [Hint_t (AnnotationHint (ALocMap.empty, annot), ExpectedTypeHint)]
+            )
+          | (None, Some (Value value)) -> (Some (HooklikeValue value), [])
+          | _ -> (concrete, [])
+        in
+        Base.Option.iter
+          ~f:(fun acc ->
+            this#add_ordinary_binding
+              id_loc
+              (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
+              (Binding (Root acc)))
+          source;
+        ignore @@ this#variable_declarator_pattern ~kind id;
+        Base.Option.iter init ~f:(fun init ->
+            this#visit_expression ~hints ~cond:NonConditionalContext init
+        );
+        decl
+      | _ ->
+        let (source, hints) =
+          match Destructure.type_of_pattern id with
+          | Some annot ->
+            ( Some
+                (Annotation
+                   {
+                     tparams_map = ALocMap.empty;
+                     optional = false;
+                     has_default_expression = false;
+                     react_deep_read_only = None;
+                     hook_like = false;
+                     param_loc = None;
+                     annot;
+                     concrete;
+                   }
+                ),
+              [Hint_t (AnnotationHint (ALocMap.empty, annot), ExpectedTypeHint)]
+            )
+          | None -> (concrete, [])
+        in
+        Base.Option.iter ~f:(fun acc -> this#add_destructure_bindings acc id) source;
+        ignore @@ this#variable_declarator_pattern ~kind id;
+        Base.Option.iter init ~f:(fun init ->
+            this#visit_expression ~hints ~cond:NonConditionalContext init
+        );
+        decl
 
     method! declare_variable loc (decl : ('loc, 'loc) Ast.Statement.DeclareVariable.t) =
       let open Ast.Statement.DeclareVariable in
@@ -1018,6 +1061,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                    optional = false;
                    has_default_expression = false;
                    react_deep_read_only = None;
+                   hook_like = false;
                    param_loc = None;
                    annot;
                    concrete = None;
@@ -1073,6 +1117,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                 else
                   None
                 );
+              hook_like = false;
               param_loc = Some param_loc;
               annot;
               concrete = None;
@@ -1136,6 +1181,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                 else
                   None
                 );
+              hook_like = false;
               param_loc = Some param_loc;
               annot;
               concrete = None;
@@ -1172,6 +1218,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                    optional = false;
                    has_default_expression = false;
                    react_deep_read_only = None;
+                   hook_like = false;
                    param_loc = None;
                    annot;
                    concrete = None;
@@ -1200,6 +1247,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                 optional = false;
                 has_default_expression = false;
                 react_deep_read_only = None;
+                hook_like = false;
                 param_loc = None;
                 annot;
                 concrete = None;
@@ -1300,6 +1348,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
               optional;
               has_default_expression = Base.Option.is_some default_expression;
               react_deep_read_only = Some Comp;
+              hook_like = false;
               param_loc = Some param_loc;
               annot;
               concrete = None;
@@ -1363,6 +1412,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
               optional;
               has_default_expression = false;
               react_deep_read_only = Some Comp;
+              hook_like = false;
               param_loc = Some param_loc;
               annot;
               concrete = None;
@@ -1404,7 +1454,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
       ignore @@ super#component_rest_param param
 
     method visit_function_expr
-        ~func_hints ~has_this_def ~var_assigned_to ~statics ~arrow function_loc expr =
+        ~func_hints ~has_this_def ~var_assigned_to ~statics ~arrow ~hooklike function_loc expr =
       let {
         Ast.Function.id;
         async;
@@ -1446,6 +1496,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                          statics;
                          arrow;
                          tparams_map = tparams;
+                         hook_like = hooklike;
                        }
                     )
                  )
@@ -1487,6 +1538,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
         ~var_assigned_to:None
         ~statics:SMap.empty
         ~arrow:false
+        ~hooklike:false
         loc
         expr;
       expr
@@ -1816,7 +1868,9 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
         decl
       | None ->
         let open Ast.Statement.DeclareFunction in
-        let { id = (id_loc, _); annot; predicate = _; comments = _ } = decl in
+        let { id = (id_loc, { Ast.Identifier.name; _ }); annot; predicate = _; comments = _ } =
+          decl
+        in
         this#add_ordinary_binding
           id_loc
           (func_reason ~async:false ~generator:false loc)
@@ -1828,6 +1882,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                      optional = false;
                      has_default_expression = false;
                      react_deep_read_only = None;
+                     hook_like = Flow_ast_utils.hook_name name;
                      param_loc = None;
                      annot;
                      concrete = None;
@@ -2030,6 +2085,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                   optional = false;
                   has_default_expression = false;
                   react_deep_read_only = None;
+                  hook_like = false;
                   param_loc = None;
                   annot;
                   concrete = Some forof;
@@ -2066,6 +2122,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                   optional = false;
                   has_default_expression = false;
                   react_deep_read_only = None;
+                  hook_like = false;
                   param_loc = None;
                   annot;
                   concrete = Some forin;
@@ -2774,6 +2831,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
           ~var_assigned_to:None
           ~statics:SMap.empty
           ~arrow:false
+          ~hooklike:false
           loc
           x
       | Ast.Expression.Object expr -> this#visit_object_expression ~object_hints:hints expr
@@ -3007,6 +3065,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                 ~var_assigned_to:None
                 ~statics:SMap.empty
                 ~arrow:false
+                ~hooklike:false
                 loc
                 fn;
               ())

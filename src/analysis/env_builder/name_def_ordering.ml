@@ -959,6 +959,7 @@ struct
       in
       let depends_of_root state = function
         | Annotation { annot; tparams_map; _ } -> depends_of_annotation tparams_map annot state
+        | HooklikeValue { hints; expr }
         | Value { hints; expr } ->
           let state = depends_of_hints state hints in
           depends_of_expression expr state
@@ -1039,6 +1040,7 @@ struct
               statics;
               arrow = _;
               tparams_map;
+              hook_like = _;
             } ->
           depends_of_fun synthesizable_from_annotation tparams_map ~hints ~statics function_ state
         | EmptyArray { array_providers; _ } ->
@@ -1218,7 +1220,9 @@ struct
         | Root (UnannotatedParameter _) -> true
         | Root (Annotation _) -> true
         | Root (ObjectValue { synthesizable = ObjectSynthesizable _; _ }) -> true
-        | Root (For _ | Value _ | FunctionValue _ | Contextual _ | EmptyArray _ | ObjectValue _) ->
+        | Root
+            ( For _ | Value _ | HooklikeValue _ | FunctionValue _ | Contextual _ | EmptyArray _
+            | ObjectValue _ ) ->
           false
         | Select { selector = Computed _; _ } -> false
         | Select { parent = (_, binding); _ } -> bind_loop binding
@@ -1324,8 +1328,9 @@ struct
           with
           | Scope_api.With_ALoc.Missing_def _ -> functions
         end
-      | Root (For _ | Value _ | FunctionValue _ | Contextual _ | EmptyArray _ | ObjectValue _) ->
-      begin
+      | Root
+          ( For _ | Value _ | HooklikeValue _ | FunctionValue _ | Contextual _ | EmptyArray _
+          | ObjectValue _ ) -> begin
         try
           let { Provider_api.state; _ } =
             Base.Option.value_exn (Provider_api.providers_of_def providers loc)

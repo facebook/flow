@@ -84,20 +84,24 @@ type dro_annot =
   | Hook
   | Comp
 
+type value = {
+  hints: ast_hints;
+  expr: (ALoc.t, ALoc.t) Ast.Expression.t;
+}
+
 type root =
   | Annotation of {
       tparams_map: tparams_map;
       optional: bool;
       has_default_expression: bool;
       react_deep_read_only: dro_annot option;
+      hook_like: bool;
       param_loc: ALoc.t option;
       annot: (ALoc.t, ALoc.t) Ast.Type.annotation;
       concrete: root option;
     }
-  | Value of {
-      hints: ast_hints;
-      expr: (ALoc.t, ALoc.t) Ast.Expression.t;
-    }
+  | Value of value
+  | HooklikeValue of value
   | FunctionValue of {
       hints: ast_hints;
       synthesizable_from_annotation: function_synth_kind;
@@ -106,6 +110,7 @@ type root =
       statics: Env_api.EnvKey.t SMap.t;
       arrow: bool;
       tparams_map: tparams_map;
+      hook_like: bool;
     }
   | ObjectValue of {
       synthesizable: object_synth_kind;
@@ -255,6 +260,7 @@ module Print = struct
     | UnannotatedParameter r -> Reason.string_of_reason r
     | Annotation { annot = (loc, _); _ } -> spf "annot %s" (ALoc.debug_to_string loc)
     | Value { expr = (loc, _); _ } -> spf "val %s" (ALoc.debug_to_string loc)
+    | HooklikeValue { expr = (loc, _); _ } -> spf "val (hooklike) %s" (ALoc.debug_to_string loc)
     | FunctionValue { function_loc; _ } -> spf "function val %s" (ALoc.debug_to_string function_loc)
     | ObjectValue _ -> "object"
     | For (In, (loc, _)) -> spf "for in %s" (ALoc.debug_to_string loc)

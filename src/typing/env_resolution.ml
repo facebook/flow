@@ -416,6 +416,7 @@ let resolve_binding cx reason loc b =
           annot;
           react_deep_read_only;
           concrete = _;
+          hook_like = _;
         }
         ) ->
     let t =
@@ -444,6 +445,10 @@ let resolve_binding cx reason loc b =
     in
     (t, use_op)
   | Root (Value { hints = _; expr }) ->
+    let t = expression cx expr in
+    let use_op = Op (AssignVar { var = Some reason; init = mk_expression_reason expr }) in
+    (t, use_op)
+  | Root (HooklikeValue { hints = _; expr }) ->
     let t = expression cx expr in
     let use_op = Op (AssignVar { var = Some reason; init = mk_expression_reason expr }) in
     (t, use_op)
@@ -627,6 +632,7 @@ let resolve_binding cx reason loc b =
           statics;
           arrow;
           tparams_map;
+          hook_like = _;
         }
         ) ->
     let cache = Context.node_cache cx in
@@ -687,6 +693,7 @@ let resolve_binding cx reason loc b =
           statics;
           arrow;
           tparams_map = _;
+          hook_like = _;
         }
         ) ->
     let { Ast.Function.id; async; generator; sig_loc; _ } = function_ in
