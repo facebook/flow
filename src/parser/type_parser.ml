@@ -472,7 +472,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     | T_RENDERS_QUESTION
     | T_RENDERS_STAR ->
       with_loc (fun env -> Type.Renders (render_type env)) env
-    | T_IDENTIFIER { raw = "hook"; _ } ->
+    | T_IDENTIFIER { raw = "hook"; _ } when (parse_options env).components ->
       (match Peek.ith_token ~i:1 env with
       | T_LESS_THAN
       | T_LPAREN ->

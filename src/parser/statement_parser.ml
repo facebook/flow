@@ -1207,9 +1207,20 @@ module Statement
         Statement.DeclareEnum enum)
       env
 
-  and declare_function ?(leading = []) env =
+  and declare_function ~async ?(leading = []) env =
     let leading = leading @ Peek.comments env in
-    Expect.token env T_FUNCTION;
+    let hook =
+      match Peek.token env with
+      | T_FUNCTION ->
+        Eat.token env;
+        false
+      | T_IDENTIFIER { raw = "hook"; _ } when not async ->
+        Eat.token env;
+        true
+      | t ->
+        Expect.error env t;
+        false
+    in
     let id = id_remove_trailing env (Parse.identifier env) in
     let annot =
       with_loc
@@ -1219,18 +1230,18 @@ module Statement
           Expect.token env T_COLON;
           Eat.push_lex_mode env Lex_mode.TYPE;
           let return =
-            if is_start_of_type_guard env then
+            if is_start_of_type_guard env && not hook then
               Ast.Type.Function.TypeGuard (Type.type_guard env)
             else
               let return = Type._type env in
               let has_predicate = Peek.token env = T_CHECKS in
-              if has_predicate then
+              if has_predicate && not hook then
                 Ast.Type.Function.TypeAnnotation (type_remove_trailing env return)
               else
                 Ast.Type.Function.TypeAnnotation return
           in
           Eat.pop_lex_mode env;
-          Ast.Type.(Function { Function.params; return; tparams; comments = None; hook = false }))
+          Ast.Type.(Function { Function.params; return; tparams; comments = None; hook }))
         env
     in
     let predicate = Type.predicate_opt env in
@@ -1256,14 +1267,15 @@ module Statement
       (fun env ->
         let leading = Peek.comments env in
         Expect.token env T_DECLARE;
-        begin
+        let async =
           match Peek.token env with
           | T_ASYNC ->
             error env Parse_error.DeclareAsync;
-            Expect.token env T_ASYNC
-          | _ -> ()
-        end;
-        let fn = declare_function ~leading env in
+            Expect.token env T_ASYNC;
+            true
+          | _ -> false
+        in
+        let fn = declare_function ~async ~leading env in
         Statement.DeclareFunction fn)
       env
 
@@ -1432,6 +1444,8 @@ module Statement
     | T_TYPEOF when Peek.token env = T_IMPORT -> import_declaration env
     | T_FUNCTION
     | T_ASYNC ->
+      declare_function_statement env
+    | T_IDENTIFIER { raw = "hook"; _ } when (parse_options env).components ->
       declare_function_statement env
     | T_VAR -> declare_var_statement ~kind:Ast.Variable.Var env
     | T_LET -> declare_var_statement ~kind:Ast.Variable.Let env
@@ -1793,7 +1807,7 @@ module Statement
               match Peek.token env with
               | T_FUNCTION ->
                 (* declare export default function foo (...): ...  *)
-                let fn = with_loc declare_function env in
+                let fn = with_loc (declare_function ~async:false) env in
                 (Some (Function fn), [])
               | T_CLASS ->
                 (* declare export default class foo { ... } *)
@@ -1803,6 +1817,10 @@ module Statement
                 (* declare export default component Foo() { ... } *)
                 let component = with_loc (declare_component ~leading:[]) env in
                 (Some (Component component), [])
+              | T_IDENTIFIER { raw = "hook"; _ } when (parse_options env).components ->
+                (* declare export default hook foo (...): ...  *)
+                let fn = with_loc (declare_function ~async:false) env in
+                (Some (Function fn), [])
               | _ ->
                 (* declare export default [type]; *)
                 let type_ = Type._type env in
@@ -1826,7 +1844,7 @@ module Statement
               match Peek.token env with
               | T_FUNCTION ->
                 (* declare export function foo (...): ...  *)
-                let fn = with_loc declare_function env in
+                let fn = with_loc (declare_function ~async:false) env in
                 Some (Function fn)
               | T_CLASS ->
                 (* declare export class foo { ... } *)
@@ -1845,6 +1863,15 @@ module Statement
                 let var = with_loc (fun env -> declare_var ~kind:Ast.Variable.Const env []) env in
                 Some (Variable var)
               | _ -> assert false
+            in
+            let comments = Flow_ast_utils.mk_comments_opt ~leading () in
+            Statement.DeclareExportDeclaration
+              { default = None; declaration; specifiers = None; source = None; comments }
+          | T_IDENTIFIER { raw = "hook"; _ } when (parse_options env).components ->
+            let declaration =
+              (* declare export hook foo (...): ...  *)
+              let fn = with_loc (declare_function ~async:false) env in
+              Some (Function fn)
             in
             let comments = Flow_ast_utils.mk_comments_opt ~leading () in
             Statement.DeclareExportDeclaration
