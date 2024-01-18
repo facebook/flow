@@ -1516,6 +1516,8 @@ let dump_error_message =
         )
     | EEnumsNotEnabled loc -> spf "EEnumsNotEnabled (%s)" (string_of_aloc loc)
     | EIndeterminateModuleType loc -> spf "EIndeterminateModuleType (%s)" (string_of_aloc loc)
+    | EDuplicateDeclareModuleExports loc ->
+      spf "EDuplicateDeclareModuleExports (%s)" (string_of_aloc loc)
     | EBadExportPosition loc -> spf "EBadExportPosition (%s)" (string_of_aloc loc)
     | EBadExportContext (name, loc) -> spf "EBadExportContext (%s, %s)" name (string_of_aloc loc)
     | EBadDefaultImportAccess (loc, reason) ->

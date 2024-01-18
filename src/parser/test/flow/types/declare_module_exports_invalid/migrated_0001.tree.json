@@ -1,10 +1,4 @@
 {
-  "errors":[
-    {
-      "loc":{"source":null,"start":{"line":1,"column":87},"end":{"line":1,"column":88}},
-      "message":"Duplicate `declare module.exports` statement!"
-    }
-  ],
   "type":"Program",
   "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":88}},
   "range":[0,88],

@@ -1313,61 +1313,14 @@ module Statement
       env
 
   and declare_module =
-    let rec module_items env ~module_kind acc =
+    let rec module_items env acc =
       match Peek.token env with
       | T_EOF
       | T_RCURLY ->
-        (module_kind, List.rev acc)
+        List.rev acc
       | _ ->
         let stmt = declare ~in_module:true env in
-        (* TODO: This is a semantic analysis and shouldn't be in the parser *)
-        let module_kind =
-          let open Statement in
-          let (_loc, stmt) = stmt in
-          match (module_kind, stmt) with
-          (*
-           * The first time we see either a `declare export` or a
-           * `declare module.exports`, we lock in the kind of the module.
-           *
-           * `declare export type` and `declare export interface` are the two
-           * exceptions to this rule because they are valid in both CommonJS
-           * and ES modules (and thus do not indicate an intent for either).
-           *)
-          | (None, DeclareModuleExports _) -> Some `CommonJS
-          | (None, DeclareExportDeclaration { DeclareExportDeclaration.declaration; _ }) ->
-            (match declaration with
-            | Some (DeclareExportDeclaration.NamedType _)
-            | Some (DeclareExportDeclaration.Interface _) ->
-              module_kind
-            | _ -> Some `ES)
-          (*
-           * There should never be more than one `declare module.exports`
-           * statement *)
-          | (Some `CommonJS, DeclareModuleExports _) ->
-            error env Parse_error.DuplicateDeclareModuleExports;
-            module_kind
-          (*
-           * It's never ok to mix and match `declare export` and
-           * `declare module.exports` in the same module because it leaves the
-           * kind of the module (CommonJS vs ES) ambiguous.
-           *
-           * The 1 exception to this rule is that `export type/interface` are
-           * both ok in CommonJS modules.
-           *)
-          | (Some `ES, DeclareModuleExports _) ->
-            error env Parse_error.AmbiguousDeclareModuleKind;
-            module_kind
-          | (Some `CommonJS, DeclareExportDeclaration { DeclareExportDeclaration.declaration; _ })
-            ->
-            (match declaration with
-            | Some (DeclareExportDeclaration.NamedType _)
-            | Some (DeclareExportDeclaration.Interface _) ->
-              ()
-            | _ -> error env Parse_error.AmbiguousDeclareModuleKind);
-            module_kind
-          | _ -> module_kind
-        in
-        module_items env ~module_kind (stmt :: acc)
+        module_items env (stmt :: acc)
     in
     let declare_module_ ~leading env =
       let id =
@@ -1382,7 +1335,7 @@ module Statement
           (fun env ->
             let leading = Peek.comments env in
             Expect.token env T_LCURLY;
-            let (_module_kind, body) = module_items env ~module_kind:None [] in
+            let body = module_items env [] in
             let internal =
               if body = [] then
                 Peek.comments env

@@ -290,8 +290,62 @@ class exports_error_checker ~is_local_use =
         this#add_error (Error_message.EBadExportContext (id, loc))
       | _ -> ignore (super#assignment loc expr)
 
-    (* skip declare module *)
-    method! declare_module _loc (m : (ALoc.t, ALoc.t) Ast.Statement.DeclareModule.t) = m
+    (* skip declare module for other visits designed for toplevel exports only *)
+    method! declare_module _loc (m : (ALoc.t, ALoc.t) Ast.Statement.DeclareModule.t) =
+      let f module_kind (loc, stmt) =
+        let open Ast.Statement in
+        match (module_kind, stmt) with
+        (*
+         * The first time we see either a `declare export` or a
+         * `declare module.exports`, we lock in the kind of the module.
+         *
+         * `declare export type` and `declare export interface` are the two
+         * exceptions to this rule because they are valid in both CommonJS
+         * and ES modules (and thus do not indicate an intent for either).
+         *)
+        | (CommonJS { mod_exp_loc = None }, DeclareModuleExports _) ->
+          CommonJS { mod_exp_loc = Some loc }
+        | ( CommonJS { mod_exp_loc = None },
+            DeclareExportDeclaration { DeclareExportDeclaration.declaration; _ }
+          ) ->
+          (match declaration with
+          | Some (DeclareExportDeclaration.NamedType _)
+          | Some (DeclareExportDeclaration.Interface _) ->
+            module_kind
+          | _ -> ES)
+        (*
+         * There should never be more than one `declare module.exports`
+         * statement *)
+        | (CommonJS { mod_exp_loc = Some _ }, DeclareModuleExports _) ->
+          this#add_error (Error_message.EDuplicateDeclareModuleExports loc);
+          module_kind
+        (*
+         * It's never ok to mix and match `declare export` and
+         * `declare module.exports` in the same module because it leaves the
+         * kind of the module (CommonJS vs ES) ambiguous.
+         *
+         * The 1 exception to this rule is that `export type/interface` are
+         * both ok in CommonJS modules.
+         *)
+        | (ES, DeclareModuleExports _) ->
+          this#add_error (Error_message.EIndeterminateModuleType loc);
+          module_kind
+        | ( CommonJS { mod_exp_loc = Some _ },
+            DeclareExportDeclaration { DeclareExportDeclaration.declaration; _ }
+          ) ->
+          (match declaration with
+          | Some (DeclareExportDeclaration.NamedType _)
+          | Some (DeclareExportDeclaration.Interface _) ->
+            ()
+          | _ -> this#add_error (Error_message.EIndeterminateModuleType loc));
+          module_kind
+        | _ -> module_kind
+      in
+      let { Ast.Statement.DeclareModule.body = (_, { Ast.Statement.Block.body; _ }); _ } = m in
+      let _module_kind : module_kind =
+        Base.List.fold body ~init:(CommonJS { mod_exp_loc = None }) ~f
+      in
+      m
 
     method! toplevel_statement_list (stmts : (ALoc.t, ALoc.t) Ast.Statement.t list) =
       let open Ast in

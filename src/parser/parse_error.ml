@@ -9,7 +9,6 @@ type t =
   | AccessorDataProperty
   | AccessorGetSet
   | AdjacentJSXElements
-  | AmbiguousDeclareModuleKind
   | AmbiguousLetBracket
   | AsyncFunctionAsStatement
   | AwaitAsIdentifierReference
@@ -25,7 +24,6 @@ type t =
   | DeclareExportType
   | DeclareOpaqueTypeInitializer
   | DuplicateConstructor
-  | DuplicateDeclareModuleExports
   | DuplicateExport of string
   | DuplicatePrivateFields of string
   | ElementAfterRestElement
@@ -195,9 +193,6 @@ module PP = struct
     | AccessorGetSet -> "Object literal may not have multiple get/set accessors with the same name"
     | AdjacentJSXElements ->
       "Unexpected token <. Remember, adjacent JSX elements must be wrapped in an enclosing parent tag"
-    | AmbiguousDeclareModuleKind ->
-      "Found both `declare module.exports` and `declare export` in the same module. "
-      ^ "Modules can only have 1 since they are either an ES module xor they are a CommonJS module."
     | AmbiguousLetBracket ->
       "`let [` is ambiguous in this position because it is either a `let` binding pattern, or a member expression."
     | AsyncFunctionAsStatement ->
@@ -220,7 +215,6 @@ module PP = struct
     | DeclareOpaqueTypeInitializer ->
       "Unexpected token `=`. Initializers are not allowed in a `declare opaque type`."
     | DuplicateConstructor -> "Classes may only have one constructor"
-    | DuplicateDeclareModuleExports -> "Duplicate `declare module.exports` statement!"
     | DuplicateExport export -> Printf.sprintf "Duplicate export for `%s`" export
     | DuplicatePrivateFields name ->
       Printf.sprintf
