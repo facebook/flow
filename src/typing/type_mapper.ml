@@ -516,6 +516,7 @@ class virtual ['a] t =
           ReactCheckComponentConfig map'
       | ReactCheckComponentRef
       | ReactDRO _
+      | MakeHooklike
       | NonMaybeType
       | PropertyType _
       | OptionalIndexedAccessResultType _

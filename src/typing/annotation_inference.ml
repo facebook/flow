@@ -40,6 +40,7 @@ let object_like_op = function
   | Annot_ObjMapConst _
   | Annot_GetKeysT _
   | Annot_DeepReadOnlyT _
+  | Annot_HooklikeT _
   | Annot_ToStringT _
   | Annot__Future_added_value__ _ ->
     false
@@ -450,6 +451,9 @@ module rec ConsGen : S = struct
       elab_t cx t op
     | (EvalT (t, TypeDestructorT (_, reason, ReactDRO (dro_loc, dro_kind)), _), _) ->
       let t = elab_t cx t (Annot_DeepReadOnlyT (reason, dro_loc, dro_kind)) in
+      elab_t cx t op
+    | (EvalT (t, TypeDestructorT (_, reason, MakeHooklike), _), _) ->
+      let t = elab_t cx t (Annot_HooklikeT reason) in
       elab_t cx t op
     | (EvalT (t, TypeDestructorT (use_op, reason, PartialType), _), _) ->
       let t = make_partial cx use_op reason t in
@@ -959,6 +963,8 @@ module rec ConsGen : S = struct
       DefT (r, ArrT (ArrayAT { elem_t; tuple_view; react_dro = Some (dro_loc, dro_kind) }))
     | (DefT (r, ArrT (ROArrayAT (t, _))), Annot_DeepReadOnlyT (_, dro_loc, dro_kind)) ->
       DefT (r, ArrT (ROArrayAT (t, Some (dro_loc, dro_kind))))
+    | (DefT (r, FunT (s, ({ hook = NonHook; _ } as funtype))), Annot_HooklikeT _) ->
+      DefT (r, FunT (s, { funtype with hook = AnyHook }))
     (************)
     (* ObjRestT *)
     (************)

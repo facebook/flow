@@ -136,6 +136,7 @@ and reason_of_use_t = function
   | ExtractReactRefT (reason, _) -> reason
   | FilterMaybeT (_, t) -> reason_of_t t
   | DeepReadOnlyT ((r, _), _, _) -> r
+  | HooklikeT (r, _) -> r
   | ConcretizeTypeAppsT (_, _, (_, _, _, _, reason), _) -> reason
   | CondT (reason, _, _, _) -> reason
   | ReactPropsToOut (reason, _)
@@ -388,6 +389,7 @@ and mod_reason_of_use_t f = function
   | FilterOptionalT (use_op, t) -> FilterOptionalT (use_op, mod_reason_of_t f t)
   | FilterMaybeT (use_op, t) -> FilterMaybeT (use_op, mod_reason_of_t f t)
   | DeepReadOnlyT ((r, i), rr, dro) -> DeepReadOnlyT ((f r, i), rr, dro)
+  | HooklikeT (r, i) -> HooklikeT (f r, i)
   | ConcretizeTypeAppsT (use_op, t1, (t2, ts2, b, op2, r2), targs) ->
     ConcretizeTypeAppsT (use_op, t1, (t2, ts2, b, op2, f r2), targs)
   | CondT (reason, then_t, else_t, tout) -> CondT (f reason, then_t, else_t, tout)
@@ -508,6 +510,7 @@ let rec util_use_op_of_use_t :
   | ConvertEmptyPropsToMixedT _
   | AssertBinaryInRHST _
   | DeepReadOnlyT _
+  | HooklikeT _
   | AssertForInRHST _
   | AssertInstanceofRHST _
   | AssertNonComponentLikeT _

@@ -844,5 +844,183 @@ References:
              ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------- syntax_compatibility.js:15:1
 
-Found 53 errors
+Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
+
+   syntax_compatibility.js:15:1
+   15| useHook(); // Error
+       ^^^^^^^^^
+
+References:
+   syntax_compatibility.js:15:1
+   15| useHook(); // Error
+       ^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- syntax_compatibility.js:24:5
+
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
+defined as a non-hook function. [react-rule-hook]
+
+   syntax_compatibility.js:24:5
+   24|     useHooklikeAnnotatedFunction(); // Error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   syntax_compatibility.js:24:5
+   24|     useHooklikeAnnotatedFunction(); // Error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- syntax_compatibility.js:25:5
+
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
+defined as a non-hook function. [react-rule-hook]
+
+   syntax_compatibility.js:25:5
+   25|     useHooklikeInferredFunction(); // Error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   syntax_compatibility.js:25:5
+   25|     useHooklikeInferredFunction(); // Error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- syntax_compatibility.js:26:5
+
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
+defined as a non-hook function. [react-rule-hook]
+
+   syntax_compatibility.js:26:5
+   26|     useDeclaredHooklikeFunction(); // Error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   syntax_compatibility.js:26:5
+   26|     useDeclaredHooklikeFunction(); // Error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- syntax_compatibility.js:27:5
+
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
+defined as a non-hook function. [react-rule-hook]
+
+   syntax_compatibility.js:27:5
+   27|     useAssignedHooklikeArbitraryExpression(); // Error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   syntax_compatibility.js:27:5
+   27|     useAssignedHooklikeArbitraryExpression(); // Error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- syntax_compatibility.js:28:5
+
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
+defined as a non-hook function. [react-rule-hook]
+
+   syntax_compatibility.js:28:5
+   28|     useAssignedHooklikeFunctionExpression(); // Error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   syntax_compatibility.js:28:5
+   28|     useAssignedHooklikeFunctionExpression(); // Error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------- syntax_compatibility_import.js:3:1
+
+Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
+
+   syntax_compatibility_import.js:3:1
+   3| useHook(); // Error
+      ^^^^^^^^^
+
+References:
+   syntax_compatibility_import.js:3:1
+   3| useHook(); // Error
+      ^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------ syntax_compatibility_import.js:11:5
+
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
+defined as a non-hook function. [react-rule-hook]
+
+   syntax_compatibility_import.js:11:5
+   11|     useHooklikeAnnotatedFunction(); // Error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   syntax_compatibility_import.js:11:5
+   11|     useHooklikeAnnotatedFunction(); // Error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------ syntax_compatibility_import.js:12:5
+
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
+defined as a non-hook function. [react-rule-hook]
+
+   syntax_compatibility_import.js:12:5
+   12|     useDeclaredHooklikeFunction(); // Error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   syntax_compatibility_import.js:12:5
+   12|     useDeclaredHooklikeFunction(); // Error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------ syntax_compatibility_import.js:13:5
+
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
+defined as a non-hook function. [react-rule-hook]
+
+   syntax_compatibility_import.js:13:5
+   13|     useAssignedHooklikeArbitraryExpression(); // Error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   syntax_compatibility_import.js:13:5
+   13|     useAssignedHooklikeArbitraryExpression(); // Error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------ syntax_compatibility_import.js:14:5
+
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
+defined as a non-hook function. [react-rule-hook]
+
+   syntax_compatibility_import.js:14:5
+   14|     useAssignedHooklikeFunctionExpression(); // Error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   syntax_compatibility_import.js:14:5
+   14|     useAssignedHooklikeFunctionExpression(); // Error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- using_react.js:4:15
+
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
+defined as a non-hook function. [react-rule-hook]
+
+   using_react.js:4:15
+   4|     const x = React.useRef(null); // error, because currently useRef is a function not a hook
+                    ^^^^^^^^^^^^^^^^^^
+
+References:
+   using_react.js:4:15
+   4|     const x = React.useRef(null); // error, because currently useRef is a function not a hook
+                    ^^^^^^^^^^^^ [1]
+
+
+
+Found 65 errors

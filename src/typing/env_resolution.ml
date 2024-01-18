@@ -53,7 +53,19 @@ let expression cx ?cond exp =
   in
   t
 
-let resolve_annotation cx tparams_map ?(react_deep_read_only = None) anno =
+let make_hooklike cx t =
+  if Context.hooklike_functions cx then
+    Flow_js.mk_possibly_evaluated_destructor
+      cx
+      unknown_use
+      (TypeUtil.reason_of_t t)
+      t
+      MakeHooklike
+      (Eval.generate_id ())
+  else
+    t
+
+let resolve_annotation cx tparams_map ?(react_deep_read_only = None) ?(hook_like = false) anno =
   let cache = Context.node_cache cx in
   let tparams_map = mk_tparams_map cx tparams_map in
   let (t, anno) = Anno.mk_type_available_annotation cx tparams_map anno in
@@ -79,6 +91,12 @@ let resolve_annotation cx tparams_map ?(react_deep_read_only = None) anno =
       else
         t
     | _ -> t
+  in
+  let t =
+    if hook_like then
+      make_hooklike cx t
+    else
+      t
   in
   if Context.typing_mode cx = Context.CheckingMode then Node_cache.set_annotation cache anno;
   t
@@ -335,8 +353,8 @@ let resolve_pred_func cx (ex, callee, targs, arguments) =
     )
 
 let resolve_annotated_function
-    cx synthesizable ~bind_this ~statics reason tparams_map function_loc function_ =
-  let { Ast.Function.body; params; sig_loc; return; _ } = function_ in
+    cx synthesizable ~bind_this ~statics ~hook_like reason tparams_map function_loc function_ =
+  let { Ast.Function.body; params; sig_loc; return; hook; _ } = function_ in
   let cache = Context.node_cache cx in
   let tparams_map = mk_tparams_map cx tparams_map in
   let default_this =
@@ -371,14 +389,21 @@ let resolve_annotated_function
     | _ -> ()
   end;
   Node_cache.set_function_sig cache sig_loc sig_data;
-  ( Statement.Func_stmt_sig.functiontype
+  let t =
+    Statement.Func_stmt_sig.functiontype
       cx
       ~arrow:(not bind_this)
       (Some function_loc)
       default_this
-      func_sig,
-    unknown_use
-  )
+      func_sig
+  in
+  let t =
+    if (not hook) && hook_like then
+      make_hooklike cx t
+    else
+      t
+  in
+  (t, unknown_use)
 
 let resolve_annotated_component cx scope_kind reason tparams_map component_loc component =
   if not (Context.component_syntax cx) then begin
@@ -415,8 +440,8 @@ let resolve_binding cx reason loc b =
           param_loc;
           annot;
           react_deep_read_only;
+          hook_like;
           concrete = _;
-          hook_like = _;
         }
         ) ->
     let t =
@@ -428,6 +453,7 @@ let resolve_binding cx reason loc b =
           | (Some param_loc, Some Comp) -> Some (param_loc, Props)
           | (Some param_loc, Some Hook) -> Some (param_loc, HookArg)
           | _ -> None)
+        ~hook_like
         annot
     in
     Base.Option.iter param_loc ~f:(Type_env.bind_function_param cx t);
@@ -450,6 +476,7 @@ let resolve_binding cx reason loc b =
     (t, use_op)
   | Root (HooklikeValue { hints = _; expr }) ->
     let t = expression cx expr in
+    let t = make_hooklike cx t in
     let use_op = Op (AssignVar { var = Some reason; init = mk_expression_reason expr }) in
     (t, use_op)
   | Root (ObjectValue { obj_loc = loc; obj; synthesizable = ObjectSynthesizable _ }) ->
@@ -461,6 +488,7 @@ let resolve_binding cx reason loc b =
           cx
           FunctionSynthesizable
           ~bind_this
+          ~hook_like:false
           ~statics:SMap.empty
           reason
           ALocMap.empty
@@ -632,12 +660,12 @@ let resolve_binding cx reason loc b =
           statics;
           arrow;
           tparams_map;
-          hook_like = _;
+          hook_like;
         }
         ) ->
     let cache = Context.node_cache cx in
     let tparams_map = mk_tparams_map cx tparams_map in
-    let { Ast.Function.sig_loc; async; generator; params; body; return; _ } = function_ in
+    let { Ast.Function.sig_loc; async; generator; params; body; return; hook; _ } = function_ in
     let reason_fun =
       func_reason
         ~async
@@ -679,10 +707,17 @@ let resolve_binding cx reason loc b =
         Flow_js.flow cx (return_annot, UseT (use_op, return_t))
       | _ -> ()
     end;
+    let t =
+      Statement.Func_stmt_sig.functiontype cx ~arrow (Some function_loc) default_this func_sig
+    in
+    let t =
+      if (not hook) && hook_like then
+        make_hooklike cx t
+      else
+        t
+    in
     Node_cache.set_function_sig cache sig_loc sig_data;
-    ( Statement.Func_stmt_sig.functiontype cx ~arrow (Some function_loc) default_this func_sig,
-      Op (AssignVar { var = Some reason; init = reason_fun })
-    )
+    (t, Op (AssignVar { var = Some reason; init = reason_fun }))
   | Root
       (FunctionValue
         {
@@ -693,10 +728,10 @@ let resolve_binding cx reason loc b =
           statics;
           arrow;
           tparams_map = _;
-          hook_like = _;
+          hook_like;
         }
         ) ->
-    let { Ast.Function.id; async; generator; sig_loc; _ } = function_ in
+    let { Ast.Function.id; async; generator; sig_loc; hook; _ } = function_ in
     let reason_fun =
       func_reason
         ~async
@@ -728,6 +763,12 @@ let resolve_binding cx reason loc b =
     in
     Node_cache.set_expression cache expr;
     let use_op = Op (AssignVar { var = Some reason; init = reason_fun }) in
+    let func_type =
+      if (not hook) && hook_like then
+        make_hooklike cx func_type
+      else
+        func_type
+    in
     (func_type, use_op)
   | Root (EmptyArray { array_providers; arr_loc }) ->
     let env = Context.environment cx in
@@ -911,6 +952,15 @@ let resolve_inferred_function cx ~statics ~needs_this_param id_loc reason functi
     Statement.mk_function cx ~needs_this_param ~statics reason function_loc function_
   in
   Node_cache.set_function cache id_loc fn;
+  let fun_type =
+    if
+      (not function_.Ast.Function.hook)
+      && Base.Option.is_some (Flow_ast_utils.hook_function function_)
+    then
+      make_hooklike cx fun_type
+    else
+      fun_type
+  in
   (fun_type, unknown_use)
 
 let resolve_class cx id_loc reason class_loc class_ =
@@ -1214,11 +1264,13 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
           statics;
           hints = _;
         } ->
+      let hook_like = Base.Option.is_some (Flow_ast_utils.hook_function function_) in
       resolve_annotated_function
         cx
         synthesizable_from_annotation
         ~bind_this:(not arrow)
         ~statics
+        ~hook_like
         def_reason
         tparams_map
         function_loc

@@ -1,0 +1,30 @@
+Error ------------------------------------------------------------------------------------- syntax_compatibility.js:15:1
+
+Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
+
+   syntax_compatibility.js:15:1
+   15| useHook(); // Error
+       ^^^^^^^^^
+
+References:
+   syntax_compatibility.js:15:1
+   15| useHook(); // Error
+       ^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------- syntax_compatibility_import.js:3:1
+
+Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
+
+   syntax_compatibility_import.js:3:1
+   3| useHook(); // Error
+      ^^^^^^^^^
+
+References:
+   syntax_compatibility_import.js:3:1
+   3| useHook(); // Error
+      ^^^^^^^ [1]
+
+
+
+Found 2 errors

@@ -877,6 +877,7 @@ module rec TypeTerm : sig
     | FilterOptionalT of use_op * t
     | FilterMaybeT of use_op * t
     | DeepReadOnlyT of tvar * ALoc.t * dro_type
+    | HooklikeT of tvar
     | ImplicitVoidReturnT of {
         use_op: use_op;
         reason: reason;
@@ -1652,6 +1653,7 @@ module rec TypeTerm : sig
     | ReactCheckComponentConfig of Property.t NameUtils.Map.t
     | ReactCheckComponentRef
     | ReactDRO of (ALoc.t * dro_type)
+    | MakeHooklike
     | MappedType of {
         (* Homomorphic mapped types use an inline keyof: {[key in keyof O]: T} or a type parameter
          * bound by $Keys/keyof: type Homomorphic<Keys: $Keys<O>> = {[key in O]: T *)
@@ -3248,6 +3250,7 @@ module AConstraint = struct
     | Annot_ObjKeyMirror of Reason.t
     | Annot_ObjMapConst of Reason.t * TypeTerm.t
     | Annot_DeepReadOnlyT of Reason.t * ALoc.t * TypeTerm.dro_type
+    | Annot_HooklikeT of Reason.t
     | Annot_GetKeysT of Reason.t
     | Annot_ToStringT of {
         orig_t: TypeTerm.t option;
@@ -3313,6 +3316,7 @@ module AConstraint = struct
   let string_of_operation = function
     | Annot_SpecializeT _ -> "Annot_SpecializeT"
     | Annot_DeepReadOnlyT _ -> "Annot_DeepReadOnlyT"
+    | Annot_HooklikeT _ -> "Annot_HooklikeT"
     | Annot_ThisSpecializeT _ -> "Annot_ThisSpecializeT"
     | Annot_UseT_TypeT _ -> "Annot_UseT_TypeT"
     | Annot_ConcretizeForImportsExports _ -> "Annot_ConcretizeForImportsExports"
@@ -3382,6 +3386,7 @@ module AConstraint = struct
     | Annot_ObjRestT (r, _)
     | Annot_GetValuesT r
     | Annot_DeepReadOnlyT (r, _, _)
+    | Annot_HooklikeT r
     | Annot__Future_added_value__ r ->
       r
 
@@ -3418,6 +3423,7 @@ module AConstraint = struct
     | Annot_ObjMapConst _
     | Annot_GetKeysT _
     | Annot_DeepReadOnlyT _
+    | Annot_HooklikeT _
     | Annot_ToStringT _
     | Annot_ObjRestT _
     | Annot_GetValuesT _
@@ -4142,6 +4148,7 @@ let string_of_use_ctor = function
   | ExtractReactRefT _ -> "ExtractReactRefT"
   | FilterMaybeT _ -> "FilterMaybeT"
   | DeepReadOnlyT _ -> "DeepReadOnlyT"
+  | HooklikeT _ -> "HooklikeT"
   | SealGenericT _ -> "SealGenericT"
   | OptionalIndexedAccessT _ -> "OptionalIndexedAccessT"
   | CheckUnusedPromiseT _ -> "CheckUnusedPromiseT"

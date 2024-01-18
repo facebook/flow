@@ -447,10 +447,26 @@ let merge_exports =
       |> ConsGen.export_named file.cx reason Type.ExportType type_exports
       |> copy_star_exports file reason (stars, type_stars)
 
-let rec merge ?(in_renders_arg = false) tps infer_tps file = function
-  | Pack.Annot t -> merge_annot ~in_renders_arg tps infer_tps file t
-  | Pack.Value t -> merge_value tps infer_tps file t
-  | Pack.Ref ref -> merge_ref file (fun t ~ref_loc:_ ~def_loc:_ _ -> t) ref
+let make_hooklike file hooklike t =
+  if hooklike && Context.hooklike_functions file.cx then
+    Type.EvalT
+      ( t,
+        Type.TypeDestructorT
+          (Type.unknown_use (* not used *), TypeUtil.reason_of_t t, Type.MakeHooklike),
+        Type.Eval.generate_id ()
+      )
+  else
+    t
+
+let rec merge ?(in_renders_arg = false) ?(hooklike = false) tps infer_tps file = function
+  | Pack.Annot t ->
+    let t = merge_annot ~in_renders_arg tps infer_tps file t in
+    make_hooklike file hooklike t
+  | Pack.Value t ->
+    let t = merge_value tps infer_tps file t in
+    make_hooklike file hooklike t
+  | Pack.Ref ref ->
+    merge_ref file (fun t ~ref_loc:_ ~def_loc:_ _ -> make_hooklike file hooklike t) ref
   | Pack.TyRef name ->
     let f t ref_loc (name, _) =
       let reason = Reason.(mk_annot_reason (RType (Reason.OrdinaryName name)) ref_loc) in
@@ -473,18 +489,29 @@ let rec merge ?(in_renders_arg = false) tps infer_tps file = function
   | Pack.Eval (loc, t, op) ->
     let t = merge tps infer_tps file t in
     let op = merge_op tps infer_tps file op in
-    eval file loc t op
+    let t = eval file loc t op in
+    make_hooklike file hooklike t
   | Pack.Require { loc; index } -> require file loc index ~legacy_interop:false
   | Pack.ImportDynamic { loc; index } ->
     let (mref, _) = Module_refs.get file.dependencies index in
     let ns_reason = Reason.(mk_reason (RModule (OrdinaryName mref)) loc) in
     let ns_t = import_ns file ns_reason loc index in
     let reason = Reason.(mk_annot_reason RAsyncImport loc) in
-    Flow_js_utils.lookup_builtin_typeapp file.cx reason (Reason.OrdinaryName "Promise") [ns_t]
+    let t =
+      Flow_js_utils.lookup_builtin_typeapp file.cx reason (Reason.OrdinaryName "Promise") [ns_t]
+    in
+    make_hooklike file hooklike t
   | Pack.ModuleRef { loc; index; legacy_interop } ->
     let t = require file loc index ~legacy_interop in
     let reason = Reason.(mk_reason (RCustom "module reference") loc) in
-    Flow_js_utils.lookup_builtin_typeapp file.cx reason (Reason.OrdinaryName "$Flow$ModuleRef") [t]
+    let t =
+      Flow_js_utils.lookup_builtin_typeapp
+        file.cx
+        reason
+        (Reason.OrdinaryName "$Flow$ModuleRef")
+        [t]
+    in
+    make_hooklike file hooklike t
 
 and merge_annot ?(in_renders_arg = false) tps infer_tps file = function
   | Any loc -> Type.AnyT.at Type.AnnotatedAny loc
@@ -1756,6 +1783,7 @@ and merge_fun
       | HookDecl l -> (Type.HookDecl (Context.make_aloc_id file.cx l), dro_return_t ())
       | HookAnnot -> (Type.HookAnnot, dro_return_t ())
       | NonHook -> (Type.NonHook, return_t)
+      | AnyHook -> (Type.AnyHook, return_t)
     in
     let funtype =
       {
@@ -2036,7 +2064,8 @@ let merge_def file reason = function
     merge_declare_fun file ((id_loc, fn_loc, def), tail)
   | ComponentBinding { id_loc; name; fn_loc = _; def } ->
     merge_component SMap.empty SMap.empty file reason def (Some (id_loc, name))
-  | Variable { id_loc = _; name = _; def } -> merge SMap.empty SMap.empty file def
+  | Variable { id_loc = _; name; def } ->
+    merge ~hooklike:(Flow_ast_utils.hook_name name) SMap.empty SMap.empty file def
   | DisabledComponentBinding _
   | DisabledEnumBinding _ ->
     Type.AnyT.error reason

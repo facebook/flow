@@ -3150,7 +3150,7 @@ and function_def_helper =
   in
   fun opts scope tbls xs ~constructor fun_loc f ->
     let {
-      F.id = _;
+      F.id;
       tparams = tps;
       params = (_, { F.Params.params = ps; rest = rp; this_; comments = _ });
       body;
@@ -3188,10 +3188,12 @@ and function_def_helper =
         Predicate (loc, p)
     in
     let hook =
-      if hook then
-        HookDecl fun_loc
-      else
-        NonHook
+      match id with
+      | _ when hook -> HookDecl fun_loc
+      | Some (_, { Ast.Identifier.name; _ })
+        when opts.hooklike_functions && Flow_ast_utils.hook_name name ->
+        AnyHook
+      | _ -> NonHook
     in
     FunSig { tparams; params; rest_param; this_param; return; predicate; hook }
 
@@ -4216,6 +4218,8 @@ let declare_function_decl opts scope tbls decl =
              let hook =
                if hook then
                  HookAnnot
+               else if opts.hooklike_functions && Flow_ast_utils.hook_name name then
+                 AnyHook
                else
                  NonHook
              in

@@ -440,6 +440,7 @@ module Make (I : INPUT) : S = struct
           true
         | ReadOnlyType
         | ReactDRO _
+        | MakeHooklike
         | PartialType
         | RequiredType
         | SpreadType _
@@ -459,6 +460,7 @@ module Make (I : INPUT) : S = struct
     | Env.EvaluateAll ->
       (match d with
       | T.ReactDRO _
+      | T.MakeHooklike
       | T.ReactPromoteRendersRepresentation _ ->
         false
       | _ -> true)
@@ -1811,7 +1813,9 @@ module Make (I : INPUT) : S = struct
       in
       let%bind ty = type__ ~env t in
       match d with
-      | T.ReactDRO _ -> return ty
+      | T.MakeHooklike
+      | T.ReactDRO _ ->
+        return ty
       | T.NonMaybeType -> return (Ty.Utility (Ty.NonMaybeType ty))
       | T.ReadOnlyType -> return (Ty.Utility (Ty.ReadOnly ty))
       | T.PartialType -> return (Ty.Utility (Ty.Partial ty))

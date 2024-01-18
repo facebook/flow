@@ -914,7 +914,7 @@ struct
               | DefT (_, EmptyT) -> false
               | _ -> true)
         (*************)
-        (* DRO *)
+        (* DRO and hooklike *)
         (*************)
         | (OptionalT ({ type_; _ } as o), DeepReadOnlyT (((r, _) as tout), dro_loc, dro_type)) ->
           rec_flow_t
@@ -931,6 +931,21 @@ struct
                 },
               OpenT tout
             )
+        | (OptionalT ({ type_; _ } as o), HooklikeT ((r, _) as tout)) ->
+          rec_flow_t
+            cx
+            trace
+            ~use_op:unknown_use
+            ( OptionalT
+                {
+                  o with
+                  type_ =
+                    Tvar.mk_no_wrap_where cx r (fun tvar ->
+                        rec_flow cx trace (type_, HooklikeT tvar)
+                    );
+                },
+              OpenT tout
+            )
         | (MaybeT (rl, t), DeepReadOnlyT (((r, _) as tout), dro_loc, dro_type)) ->
           rec_flow_t
             cx
@@ -942,6 +957,15 @@ struct
                       rec_flow cx trace (t, DeepReadOnlyT (tvar, dro_loc, dro_type))
                   )
                 ),
+              OpenT tout
+            )
+        | (MaybeT (rl, t), HooklikeT ((r, _) as tout)) ->
+          rec_flow_t
+            cx
+            trace
+            ~use_op:unknown_use
+            ( MaybeT
+                (rl, Tvar.mk_no_wrap_where cx r (fun tvar -> rec_flow cx trace (t, HooklikeT tvar))),
               OpenT tout
             )
         | (UnionT (reason, rep), DeepReadOnlyT (tout, dro_loc, dro_type)) ->
@@ -961,6 +985,23 @@ struct
                 reason
             in
             rec_flow_t ~use_op:unknown_use cx trace (dro_union, OpenT tout)
+        | (UnionT (reason, rep), HooklikeT tout) ->
+          if not (UnionRep.is_optimized_finally rep) then
+            UnionRep.optimize_enum_only ~flatten:(Type_mapper.union_flatten cx) rep;
+          if Option.is_some (UnionRep.check_enum rep) then
+            rec_flow_t ~use_op:unknown_use cx trace (l, OpenT tout)
+          else
+            let hook_union =
+              map_union
+                ~f:(fun cx trace t tout ->
+                  let tout = open_tvar tout in
+                  rec_flow cx trace (t, HooklikeT tout))
+                cx
+                trace
+                rep
+                reason
+            in
+            rec_flow_t ~use_op:unknown_use cx trace (hook_union, OpenT tout)
         | (DefT (r, ObjT ({ Type.flags; _ } as o)), DeepReadOnlyT (tout, dro_loc, dro_type)) ->
           rec_flow_t
             ~use_op:unknown_use
@@ -997,7 +1038,15 @@ struct
             cx
             trace
             (DefT (r, ArrT (ROArrayAT (t, Some (dro_loc, dro_type)))), OpenT tout)
-        | ((IntersectionT _ | OpaqueT _ | DefT (_, PolyT _)), DeepReadOnlyT (tout, _, _)) ->
+        | (DefT (r, FunT (s, ({ hook = NonHook; _ } as funtype))), HooklikeT tout) ->
+          rec_flow_t
+            ~use_op:unknown_use
+            cx
+            trace
+            (DefT (r, FunT (s, { funtype with hook = AnyHook })), OpenT tout)
+        | ( (IntersectionT _ | OpaqueT _ | DefT (_, PolyT _)),
+            (DeepReadOnlyT (tout, _, _) | HooklikeT tout)
+          ) ->
           rec_flow_t ~use_op:unknown_use cx trace (l, OpenT tout)
         (***************)
         (* maybe types *)
@@ -5518,7 +5567,8 @@ struct
             (own_props, proto_props, inst_call_t, inst_dict);
           rec_flow cx trace (l, UseT (use_op, super))
         (* Unwrap deep readonly *)
-        | (_, DeepReadOnlyT (tout, _, _)) -> rec_flow_t ~use_op:unknown_use cx trace (l, OpenT tout)
+        | (_, (DeepReadOnlyT (tout, _, _) | HooklikeT tout)) ->
+          rec_flow_t ~use_op:unknown_use cx trace (l, OpenT tout)
         (* Render Type Misc Uses *)
         | (DefT (_, RendersT (NominalRenders _)), ExitRendersT { renders_reason; u })
         | (DefT (renders_reason, RendersT (NominalRenders _)), u) ->
@@ -6014,6 +6064,9 @@ struct
       | DeepReadOnlyT (t_out, dro_loc, dro_type) ->
         narrow_generic_tvar (fun t_out' -> DeepReadOnlyT (t_out', dro_loc, dro_type)) t_out;
         true
+      | HooklikeT t_out ->
+        narrow_generic_tvar (fun t_out' -> HooklikeT t_out') t_out;
+        true
       | FilterMaybeT (use_op, t_out) ->
         narrow_generic (fun t_out' -> FilterMaybeT (use_op, t_out')) t_out;
         true
@@ -6367,6 +6420,7 @@ struct
     | FilterOptionalT _
     | FilterMaybeT _
     | DeepReadOnlyT _
+    | HooklikeT _
     | ImportModuleNsT _
     | PreprocessKitT _
     | ResolveUnionT _
@@ -7236,6 +7290,7 @@ struct
               )
             | ReadOnlyType -> Object.(ObjKitT (use_op, reason, Resolve Next, ReadOnly, OpenT tout))
             | ReactDRO (dro_loc, dro_type) -> DeepReadOnlyT (tout, dro_loc, dro_type)
+            | MakeHooklike -> HooklikeT tout
             | PartialType -> Object.(ObjKitT (use_op, reason, Resolve Next, Partial, OpenT tout))
             | RequiredType -> Object.(ObjKitT (use_op, reason, Resolve Next, Required, OpenT tout))
             | ValuesType -> GetValuesT (reason, OpenT tout)

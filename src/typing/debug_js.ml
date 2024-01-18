@@ -32,6 +32,7 @@ let string_of_selector = function
 
 let string_of_destructor = function
   | ReactDRO _ -> "ReactDRO"
+  | MakeHooklike -> "MakeHooklike"
   | NonMaybeType -> "NonMaybeType"
   | PropertyType { name; _ } -> spf "PropertyType %s" (display_string_of_name name)
   | ElementType _ -> "ElementType"
@@ -929,6 +930,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | FilterOptionalT (_, arg) -> p ~reason:false ~extra:(kid arg) t
     | FilterMaybeT (_, arg) -> p ~reason:false ~extra:(kid arg) t
     | DeepReadOnlyT ((_, tv), _, _) -> p ~extra:(tvar tv) t
+    | HooklikeT (_, tv) -> p ~extra:(tvar tv) t
     | ExtractReactRefT (_, arg) -> p ~reason:false ~extra:(kid arg) t
     | SealGenericT { name; cont = Lower (_, l); _ } ->
       p ~extra:(spf "%s <~ %s" (Subst_name.string_of_subst_name name) (kid l)) t

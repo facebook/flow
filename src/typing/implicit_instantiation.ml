@@ -243,6 +243,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
         |> bind_use_t_result ~f:(fun t -> UpperT (MaybeT (r, t)))
       | ReadOnlyType
       | ReactDRO _
+      | MakeHooklike
       | PartialType
       | RequiredType
       | ReactConfigType _ ->
@@ -370,6 +371,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       UpperNonT u
     | DeepReadOnlyT (((r, _) as tout), _, _) ->
       identity_reverse_upper_bound cx seen tvar r (OpenT tout)
+    | HooklikeT ((r, _) as tout) -> identity_reverse_upper_bound cx seen tvar r (OpenT tout)
     | MakeExactT (_, Lower (_, t)) -> UpperT t
     | MakeExactT (_, Upper use_t) -> t_of_use_t cx seen tvar use_t
     | ReposLowerT (_, _, use_t) -> t_of_use_t cx seen tvar use_t

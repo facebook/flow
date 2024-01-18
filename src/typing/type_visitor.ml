@@ -205,6 +205,7 @@ class ['a] t =
       function
       | NonMaybeType
       | ReactDRO _
+      | MakeHooklike
       | OptionalIndexedAccessResultType _
       | OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessStrLitIndex _ }
       | PropertyType _

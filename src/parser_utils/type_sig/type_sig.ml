@@ -109,11 +109,11 @@ type ('loc, 'a) fun_rest_param =
     }
 [@@deriving iter, map, show { with_path = false }]
 
-(* Intentionally not having an AnyHook here--should only exist synthetically *)
 type 'loc react_hook =
   | HookDecl of 'loc
   | HookAnnot
   | NonHook
+  | AnyHook
 [@@deriving iter, map, show { with_path = false }]
 
 type ('loc, 'a) fun_sig =
