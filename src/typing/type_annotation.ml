@@ -2534,7 +2534,20 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       let (t, ast_annot) = mk_type_available_annotation cx tparams_map annot in
       (Annotated t, T.Available ast_annot)
 
-  and mk_return_annot cx tparams_map params reason = function
+  and mk_return_type_annotation cx tparams_map params reason ~void_return ~async annot =
+    match annot with
+    | Ast.Function.ReturnAnnot.Missing loc when void_return ->
+      let void_t = VoidT.why reason in
+      let t =
+        if async then
+          let reason = mk_annot_reason (RType (OrdinaryName "Promise")) (loc_of_reason reason) in
+          get_builtin_typeapp cx reason (OrdinaryName "Promise") [void_t]
+        else
+          void_t
+      in
+      (Inferred t, Ast.Function.ReturnAnnot.Missing (loc, t), None)
+    (* TODO we could probably take the same shortcut for functions with an explicit `void` annotation
+       and no explicit returns *)
     | Ast.Function.ReturnAnnot.Missing loc ->
       let t =
         if Context.typing_mode cx <> Context.CheckingMode then
@@ -2558,22 +2571,6 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
         cx
         (Error_message.EUnsupportedSyntax (loc, Error_message.UserDefinedTypeGuards));
       (Annotated (AnyT.at (AnyError None) loc), Ast.Function.ReturnAnnot.TypeGuard t_ast', None)
-
-  and mk_return_type_annotation cx tparams_map params reason ~void_return ~async annot =
-    match annot with
-    | Ast.Function.ReturnAnnot.Missing loc when void_return ->
-      let void_t = VoidT.why reason in
-      let t =
-        if async then
-          let reason = mk_annot_reason (RType (OrdinaryName "Promise")) (loc_of_reason reason) in
-          get_builtin_typeapp cx reason (OrdinaryName "Promise") [void_t]
-        else
-          void_t
-      in
-      (Inferred t, Ast.Function.ReturnAnnot.Missing (loc, t), None)
-    (* TODO we could probably take the same shortcut for functions with an explicit `void` annotation
-       and no explicit returns *)
-    | _ -> mk_return_annot cx tparams_map params reason annot
 
   and mk_type_available_annotation cx tparams_map (loc, annot) =
     let node_cache = Context.node_cache cx in
