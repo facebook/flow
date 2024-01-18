@@ -1447,11 +1447,22 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
         let reason = update_desc_reason (fun d -> RStatics d) reason in
         Obj_type.mk_with_proto cx reason (FunProtoT reason) ~obj_kind:Inexact ?call:None
       in
-      let hook_flag =
+      let (hook_flag, return_t) =
         if hook then
-          HookAnnot
+          ( HookAnnot,
+            if Context.react_rule_enabled cx Options.DeepReadOnlyHookReturns then
+              Flow_js.mk_possibly_evaluated_destructor
+                cx
+                unknown_use
+                (TypeUtil.reason_of_t return_t)
+                return_t
+                (ReactDRO (loc_of_reason reason, HookReturn))
+                (Eval.generate_id ())
+            else
+              return_t
+          )
         else
-          NonHook
+          (NonHook, return_t)
       in
       let ft =
         DefT

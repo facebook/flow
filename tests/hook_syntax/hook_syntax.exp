@@ -1,6 +1,21 @@
+Error ---------------------------------------------------------------------------------------- declare_hook_tests.js:4:3
+
+Cannot assign `100` to `v.a` because property `a` is not writable. The return value of a React hook [1] cannot be
+written to. [react-rule-hook-mutation]
+
+   declare_hook_tests.js:4:3
+   4| v.a = 100; // Error, x is not writable
+        ^
+
+References:
+   declare_hook_tests.js:1:23
+   1| declare hook useCustom<T>(x: T): [T];
+                            ^^^^^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------------- exp.js:5:1
 
-Cannot cast `useFoo()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `useFoo()` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-cast]
 
    exp.js:5:1
    5| useFoo() as empty; // error
@@ -8,16 +23,46 @@ Cannot cast `useFoo()` to empty because number [1] is incompatible with empty [2
 
 References:
    exp.js:1:23
-   1| export hook useFoo(): number {
-                            ^^^^^^ [1]
+   1| export hook useFoo(): [number] {
+                            ^^^^^^^^ [1]
    exp.js:5:13
    5| useFoo() as empty; // error
                   ^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ hook_tests.js:4:3
+
+Cannot assign `100` to `v.a` because property `a` is not writable. The return value of a React hook [1] cannot be
+written to. [react-rule-hook-mutation]
+
+   hook_tests.js:4:3
+   4| v.a = 100; // Error, x is not writable
+        ^
+
+References:
+   hook_tests.js:1:1
+   1| hook useCustom<T>(x: T): [T] { return [x]; }
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- hook_type_tests.js:4:3
+
+Cannot assign `100` to `v.a` because property `a` is not writable. The return value of a React hook [1] cannot be
+written to. [react-rule-hook-mutation]
+
+   hook_type_tests.js:4:3
+   4| v.a = 100; // Error, x is not writable
+        ^
+
+References:
+   hook_type_tests.js:1:26
+   1| declare const useCustom: hook <T>(x: T) => [T]
+                               ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------------- imp.js:3:1
 
-Cannot cast `useFoo()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `useFoo()` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-cast]
 
    imp.js:3:1
    3| useFoo() as empty; // error
@@ -25,12 +70,27 @@ Cannot cast `useFoo()` to empty because number [1] is incompatible with empty [2
 
 References:
    exp.js:1:23
-   1| export hook useFoo(): number {
-                            ^^^^^^ [1]
+   1| export hook useFoo(): [number] {
+                            ^^^^^^^^ [1]
    imp.js:3:13
    3| useFoo() as empty; // error
                   ^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------------- imp.js:7:5
 
-Found 2 errors
+Cannot assign `1` to `x[0]` because read-only arrays cannot be written to. The return value of a React hook [1] cannot
+be written to. [react-rule-hook-mutation]
+
+   imp.js:7:5
+   7|     x[0] = 1; // error
+          ^^^^
+
+References:
+   exp.js:1:8
+   1| export hook useFoo(): [number] {
+             ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+
+Found 6 errors

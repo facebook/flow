@@ -1740,11 +1740,22 @@ and merge_fun
       else
         Type.This_Function
     in
-    let hook =
+    let (hook, return_t) =
+      let dro_return_t () =
+        EvalT
+          ( return_t,
+            TypeDestructorT
+              ( unknown_use,
+                TypeUtil.reason_of_t return_t,
+                ReactDRO (Reason.loc_of_reason reason, HookReturn)
+              ),
+            Eval.generate_id ()
+          )
+      in
       match hook with
-      | HookDecl l -> Type.HookDecl (Context.make_aloc_id file.cx l)
-      | HookAnnot -> Type.HookAnnot
-      | NonHook -> Type.NonHook
+      | HookDecl l -> (Type.HookDecl (Context.make_aloc_id file.cx l), dro_return_t ())
+      | HookAnnot -> (Type.HookAnnot, dro_return_t ())
+      | NonHook -> (Type.NonHook, return_t)
     in
     let funtype =
       {
