@@ -13,6 +13,44 @@ References:
                             ^^^^^^^^^^^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------- declare_hook_tests.js:6:1
+
+Cannot cast `useCustom` to function type because function type [1] is a React hook type annotation but function type [2]
+is not a hook. React hooks and other functions are not compatible with each other, because hooks cannot be called
+conditionally. [react-rule-hook-incompatible]
+
+   declare_hook_tests.js:6:1
+   6| useCustom as <T>(T) => [T]; // error, hook and nonhook incompatible
+      ^^^^^^^^^
+
+References:
+   declare_hook_tests.js:1:23
+   1| declare hook useCustom<T>(x: T): [T];
+                            ^^^^^^^^^^^^^^ [1]
+   declare_hook_tests.js:6:14
+   6| useCustom as <T>(T) => [T]; // error, hook and nonhook incompatible
+                   ^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- declare_hook_tests.js:10:1
+
+Cannot cast `nonhook` to `typeof useCustom` because function type [1] is not a React hook but function type [2] is a
+hook type annotation. React hooks and other functions are not compatible with each other, because hooks cannot be called
+conditionally. [react-rule-hook-incompatible]
+
+   declare_hook_tests.js:10:1
+   10| nonhook as typeof useCustom; // error, nonhook and hook incompatible
+       ^^^^^^^
+
+References:
+   declare_hook_tests.js:9:24
+    9| declare const nonhook: <T>(T) => [T];
+                              ^^^^^^^^^^^^^ [1]
+   declare_hook_tests.js:1:23
+    1| declare hook useCustom<T>(x: T): [T];
+                             ^^^^^^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------------- exp.js:5:1
 
 Cannot cast `useFoo()` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-cast]
@@ -45,6 +83,63 @@ References:
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------ hook_tests.js:6:1
+
+Cannot cast `useCustom` to function type because function [1] is a React hook but function type [2] is not a hook. React
+hooks and other functions are not compatible with each other, because hooks cannot be called conditionally.
+[react-rule-hook-incompatible]
+
+   hook_tests.js:6:1
+   6| useCustom as <T>(T) => [T]; // error, hook and nonhook incompatible
+      ^^^^^^^^^
+
+References:
+   hook_tests.js:1:1
+   1| hook useCustom<T>(x: T): [T] { return [x]; }
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   hook_tests.js:6:14
+   6| useCustom as <T>(T) => [T]; // error, hook and nonhook incompatible
+                   ^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- hook_tests.js:10:1
+
+Cannot cast `nonhook` to `typeof useCustom` because function type [1] is not a React hook but function [2] is a hook.
+React hooks and other functions are not compatible with each other, because hooks cannot be called conditionally.
+[react-rule-hook-incompatible]
+
+   hook_tests.js:10:1
+   10| nonhook as typeof useCustom; // error, nonhook and hook incompatible
+       ^^^^^^^
+
+References:
+   hook_tests.js:9:24
+    9| declare const nonhook: <T>(T) => [T];
+                              ^^^^^^^^^^^^^ [1]
+   hook_tests.js:1:1
+    1| hook useCustom<T>(x: T): [T] { return [x]; }
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- hook_tests.js:13:1
+
+Cannot cast `useCustom` to `typeof useCustom2` because function [1] and function [2] are different React hooks.
+Different React hooks are not compatible with each other, because hooks cannot be called conditionally.
+[react-rule-hook-incompatible]
+
+   hook_tests.js:13:1
+   13| useCustom as typeof useCustom2; // error, hooks unique
+       ^^^^^^^^^
+
+References:
+   hook_tests.js:1:1
+    1| hook useCustom<T>(x: T): [T] { return [x]; }
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   hook_tests.js:12:1
+   12| hook useCustom2<T>(x: T): [T] { return [x];}
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------- hook_type_tests.js:4:3
 
 Cannot assign `100` to `v.a` because property `a` is not writable. The return value of a React hook [1] cannot be
@@ -58,6 +153,44 @@ References:
    hook_type_tests.js:1:26
    1| declare const useCustom: hook <T>(x: T) => [T]
                                ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- hook_type_tests.js:6:1
+
+Cannot cast `useCustom` to function type because function type [1] is a React hook type annotation but function type [2]
+is not a hook. React hooks and other functions are not compatible with each other, because hooks cannot be called
+conditionally. [react-rule-hook-incompatible]
+
+   hook_type_tests.js:6:1
+   6| useCustom as <T>(T) => [T]; // error, hook and nonhook incompatible
+      ^^^^^^^^^
+
+References:
+   hook_type_tests.js:1:26
+   1| declare const useCustom: hook <T>(x: T) => [T]
+                               ^^^^^^^^^^^^^^^^^^^^^ [1]
+   hook_type_tests.js:6:14
+   6| useCustom as <T>(T) => [T]; // error, hook and nonhook incompatible
+                   ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ hook_type_tests.js:10:1
+
+Cannot cast `nonhook` to `typeof useCustom` because function type [1] is not a React hook but function type [2] is a
+hook type annotation. React hooks and other functions are not compatible with each other, because hooks cannot be called
+conditionally. [react-rule-hook-incompatible]
+
+   hook_type_tests.js:10:1
+   10| nonhook as typeof useCustom; // error, nonhook and hook incompatible
+       ^^^^^^^
+
+References:
+   hook_type_tests.js:9:24
+    9| declare const nonhook: <T>(T) => [T];
+                              ^^^^^^^^^^^^^ [1]
+   hook_type_tests.js:1:26
+    1| declare const useCustom: hook <T>(x: T) => [T]
+                                ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------- imp.js:3:1
@@ -93,4 +226,4 @@ References:
 
 
 
-Found 6 errors
+Found 13 errors

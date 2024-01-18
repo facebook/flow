@@ -952,13 +952,16 @@ let rec make_error_printable :
   (* Make a friendly error based on a use_op. The message we are provided should
    * not have any punctuation. Punctuation will be provided after the frames of
    * an error message. *)
-  let mk_use_op_error loc use_op message =
+  let mk_use_op_error loc use_op ?explanation message =
     let (root, loc, frames, explanations) = unwrap_use_ops (loc_of_aloc loc) use_op in
     let code = code_of_error error in
+    let explanations =
+      Base.Option.value_map ~f:(fun x -> x :: explanations) ~default:explanations explanation
+    in
     mk_error ~trace_infos ?root ~frames ~explanations loc code message
   in
-  let mk_use_op_error_reason reason use_op message =
-    mk_use_op_error (loc_of_reason reason) use_op message
+  let mk_use_op_error_reason reason use_op ?explanation message =
+    mk_use_op_error (loc_of_reason reason) use_op ?explanation message
   in
   let mk_no_frame_or_explanation_error reason message =
     let loc = loc_of_aloc (loc_of_reason reason) in
@@ -1333,7 +1336,8 @@ let rec make_error_printable :
     match (loc, friendly_message_of_msg loc_of_aloc msg) with
     | (Some loc, Error_message.Normal { features }) ->
       mk_error ~trace_infos ~kind (loc_of_aloc loc) (code_of_error error) features
-    | (None, UseOp { loc; features; use_op }) -> mk_use_op_error loc use_op features
+    | (None, UseOp { loc; features; use_op; explanation }) ->
+      mk_use_op_error loc use_op ?explanation features
     | (None, PropMissing { loc; prop; reason_obj; use_op; suggestion }) ->
       mk_prop_missing_error loc prop reason_obj use_op suggestion
     | ( None,

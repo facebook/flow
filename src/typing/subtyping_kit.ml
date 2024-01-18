@@ -1573,6 +1573,47 @@ module Make (Flow : INPUT) : OUTPUT = struct
       in
       multiflow_subtype cx trace ~use_op ureason args ft1;
 
+      begin
+        match (ft1.hook, ft2.hook) with
+        | (AnyHook, _)
+        | (_, AnyHook)
+        | (NonHook, NonHook)
+        | ((HookDecl _ | HookAnnot), HookAnnot) ->
+          ()
+        | (HookDecl a, HookDecl b) when ALoc.equal_id a b -> ()
+        | ((HookDecl _ | HookAnnot), NonHook) ->
+          add_output
+            cx
+            ~trace
+            (Error_message.EHookIncompatible
+               {
+                 use_op;
+                 lower = lreason;
+                 upper = ureason;
+                 lower_is_hook = true;
+                 hook_is_annot = ft1.hook = HookAnnot;
+               }
+            )
+        | (NonHook, (HookDecl _ | HookAnnot)) ->
+          add_output
+            cx
+            ~trace
+            (Error_message.EHookIncompatible
+               {
+                 use_op;
+                 lower = lreason;
+                 upper = ureason;
+                 lower_is_hook = false;
+                 hook_is_annot = ft2.hook = HookAnnot;
+               }
+            )
+        | ((HookDecl _ | HookAnnot), HookDecl _) ->
+          add_output
+            cx
+            ~trace
+            (Error_message.EHookUniqueIncompatible { use_op; lower = lreason; upper = ureason })
+      end;
+
       (* Return type subtyping *)
       let ret_use_op =
         Frame

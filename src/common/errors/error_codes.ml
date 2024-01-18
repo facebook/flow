@@ -9,6 +9,7 @@ type error_code =
   | AmbiguousObjectType
   | ReactRulePropsMutation
   | ReactRuleHookMutation
+  | ReactRuleHookIncompatible
   | CannotDelete
   | CannotImplement
   | CannotInferType
@@ -211,6 +212,7 @@ let code_of_lint : Lints.lint_kind -> error_code = function
 let string_of_code : error_code -> string = function
   | ReactRulePropsMutation -> "react-rule-unsafe-mutation"
   | ReactRuleHookMutation -> "react-rule-hook-mutation"
+  | ReactRuleHookIncompatible -> "react-rule-hook-incompatible"
   | AmbiguousObjectType -> "ambiguous-object-type"
   | CannotDelete -> "cannot-delete"
   | CannotImplement -> "cannot-implement"
