@@ -7649,7 +7649,7 @@ module Make
         id;
         async;
         generator;
-        hook = _;
+        hook;
         sig_loc;
         comments = _;
       } =
@@ -7785,7 +7785,12 @@ module Make
           in
           Obj_type.mk_with_proto cx reason (FunProtoT reason) ~obj_kind:Type.Inexact ~props
         in
-        let hook = NonHook in
+        let hook =
+          if hook then
+            HookDecl (Context.make_aloc_id cx loc)
+          else
+            NonHook
+        in
         let func_stmt_sig =
           {
             Func_stmt_sig_types.reason;

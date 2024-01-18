@@ -2718,18 +2718,18 @@ let rec expression opts scope tbls (loc, expr) =
         let id_loc = push_loc tbls id_loc in
         let scope = Scope.push_lex scope in
         let def =
-          lazy (splice tbls id_loc (fun tbls -> function_def opts scope tbls SSet.empty f))
+          lazy (splice tbls id_loc (fun tbls -> function_def opts scope tbls SSet.empty loc f))
         in
         Scope.bind_function scope tbls id_loc sig_loc name ~async ~generator ~hook:false def ignore2;
         val_ref scope id_loc name
       | None ->
-        let def = function_def opts scope tbls SSet.empty f in
+        let def = function_def opts scope tbls SSet.empty loc f in
         let statics = SMap.empty in
         Value (FunExpr { loc = sig_loc; async; generator; def; statics })
     end
   | E.ArrowFunction f ->
     let { Ast.Function.async; generator; _ } = f in
-    let def = function_def opts scope tbls SSet.empty f in
+    let def = function_def opts scope tbls SSet.empty loc f in
     let statics = SMap.empty in
     Value (FunExpr { loc; async; generator; def; statics })
   | E.TypeCast { E.TypeCast.expression = _; annot = (_, t); comments = _ } ->
@@ -3142,7 +3142,7 @@ and function_def_helper =
         Some (loc, predicate opts scope tbls pnames expr)
       | _ -> None)
   in
-  fun opts scope tbls xs ~constructor f ->
+  fun opts scope tbls xs ~constructor fun_loc f ->
     let {
       F.id = _;
       tparams = tps;
@@ -3152,7 +3152,7 @@ and function_def_helper =
       predicate = p;
       async;
       generator;
-      hook = _;
+      hook;
       sig_loc = _;
       comments = _;
     } =
@@ -3181,7 +3181,12 @@ and function_def_helper =
         let%map (loc, p) = predicate opts scope tbls ps body p in
         Predicate (loc, p)
     in
-    let hook = NonHook in
+    let hook =
+      if hook then
+        HookDecl fun_loc
+      else
+        NonHook
+    in
     FunSig { tparams; params; rest_param; this_param; return; predicate; hook }
 
 and function_def = function_def_helper ~constructor:false
@@ -3576,13 +3581,13 @@ and class_def =
               let { Ast.Function.async; generator; _ } = fn in
               let fn_loc = push_loc tbls fn_loc in
               let id_loc = push_loc tbls id_loc in
-              let def = function_def opts scope tbls xs fn in
+              let def = function_def opts scope tbls xs fn_loc fn in
               Acc.add_method ~static name id_loc fn_loc ~async ~generator def acc
             | C.Method.Constructor ->
               let { Ast.Function.async; generator; _ } = fn in
               let fn_loc = push_loc tbls fn_loc in
               let id_loc = push_loc tbls id_loc in
-              let def = constructor_def opts scope tbls xs fn in
+              let def = constructor_def opts scope tbls xs fn_loc fn in
               Acc.add_method ~static name id_loc fn_loc ~async ~generator def acc
             | C.Method.Get ->
               let id_loc = push_loc tbls id_loc in
@@ -3693,7 +3698,7 @@ and object_literal =
       let { Ast.Function.async; generator; _ } = fn in
       let fn_loc = push_loc tbls prop_loc in
       let id_loc = push_loc tbls id_loc in
-      let def = function_def opts scope tbls SSet.empty fn in
+      let def = function_def opts scope tbls SSet.empty fn_loc fn in
       Acc.add_method name id_loc fn_loc ~async ~generator def acc
     | P.Get
         {
@@ -3989,7 +3994,11 @@ let rec const_var_init_decl opts scope tbls id_loc name k expr =
         let fn_id_loc = push_loc tbls fn_id_loc in
         let fn_scope = Scope.push_lex scope in
         let def =
-          lazy (splice tbls fn_id_loc (fun tbls -> function_def opts fn_scope tbls SSet.empty f))
+          lazy
+            (splice tbls fn_id_loc (fun tbls ->
+                 function_def opts fn_scope tbls SSet.empty fn_id_loc f
+             )
+            )
         in
         Scope.bind_function
           fn_scope
@@ -4005,7 +4014,7 @@ let rec const_var_init_decl opts scope tbls id_loc name k expr =
         Scope.bind_const_ref scope tbls id_loc name fn_id_loc fn_name fn_scope k
       | None ->
         let def =
-          lazy (splice tbls sig_loc (fun tbls -> function_def opts scope tbls SSet.empty f))
+          lazy (splice tbls sig_loc (fun tbls -> function_def opts scope tbls SSet.empty sig_loc f))
         in
         Scope.bind_const_fun scope tbls id_loc name sig_loc ~async ~generator def k
     end
@@ -4013,7 +4022,7 @@ let rec const_var_init_decl opts scope tbls id_loc name k expr =
   | (loc, E.ArrowFunction f) ->
     let { Ast.Function.async; generator; _ } = f in
     let loc = push_loc tbls loc in
-    let def = lazy (splice tbls loc (fun tbls -> function_def opts scope tbls SSet.empty f)) in
+    let def = lazy (splice tbls loc (fun tbls -> function_def opts scope tbls SSet.empty loc f)) in
     Scope.bind_const_fun scope tbls id_loc name loc ~async ~generator def k
   (* const x = a, b *)
   | (_, E.Sequence { E.Sequence.expressions; comments = _ }) ->
@@ -4103,7 +4112,9 @@ let function_decl opts scope tbls decl =
   let (id_loc, { Ast.Identifier.name; comments = _ }) = Base.Option.value_exn id in
   let sig_loc = push_loc tbls sig_loc in
   let id_loc = push_loc tbls id_loc in
-  let def = lazy (splice tbls id_loc (fun tbls -> function_def opts scope tbls SSet.empty decl)) in
+  let def =
+    lazy (splice tbls id_loc (fun tbls -> function_def opts scope tbls SSet.empty id_loc decl))
+  in
   Scope.bind_function scope tbls id_loc sig_loc name ~async ~generator ~hook def
 
 let component_decl opts scope tbls decl =
@@ -4426,7 +4437,7 @@ let export_default_decl =
     match id with
     | Some _ -> function_decl opts scope tbls decl (Scope.export_default_binding scope default_loc)
     | None ->
-      let def = function_def opts scope tbls SSet.empty decl in
+      let def = function_def opts scope tbls SSet.empty loc decl in
       let statics = SMap.empty in
       let def = Value (FunExpr { loc; async; generator; def; statics }) in
       Scope.export_default scope default_loc def

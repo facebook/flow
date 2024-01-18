@@ -1,0 +1,36 @@
+Error ------------------------------------------------------------------------------------------------------- exp.js:5:1
+
+Cannot cast `useFoo()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   exp.js:5:1
+   5| useFoo() as empty; // error
+      ^^^^^^^^
+
+References:
+   exp.js:1:23
+   1| export hook useFoo(): number {
+                            ^^^^^^ [1]
+   exp.js:5:13
+   5| useFoo() as empty; // error
+                  ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- imp.js:3:1
+
+Cannot cast `useFoo()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   imp.js:3:1
+   3| useFoo() as empty; // error
+      ^^^^^^^^
+
+References:
+   exp.js:1:23
+   1| export hook useFoo(): number {
+                            ^^^^^^ [1]
+   imp.js:3:13
+   3| useFoo() as empty; // error
+                  ^^^^^ [2]
+
+
+
+Found 2 errors
