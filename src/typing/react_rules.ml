@@ -7,6 +7,7 @@
 
 module Ast = Flow_ast
 open Reason
+open Loc_collections
 
 let check_ref_use cx rrid in_hook var_reason kind t =
   let rec recur_id seen t =
@@ -54,6 +55,98 @@ let check_ref_use cx rrid in_hook var_reason kind t =
     | _ -> ()
   in
   recur_id ISet.empty t
+
+type hook_result =
+  | HookCallee of ALocFuzzySet.t
+  | MaybeHookCallee of {
+      hooks: ALocFuzzySet.t;
+      non_hooks: ALocFuzzySet.t;
+    }
+  | NotHookCallee of ALocFuzzySet.t
+  | AnyCallee
+
+let hook_callee cx t =
+  let merge l r =
+    match (l, r) with
+    | (AnyCallee, other)
+    | (other, AnyCallee) ->
+      other
+    | (NotHookCallee l, NotHookCallee r) -> NotHookCallee (ALocFuzzySet.union l r)
+    | (HookCallee l, HookCallee r) -> HookCallee (ALocFuzzySet.union l r)
+    | (MaybeHookCallee l, MaybeHookCallee r) ->
+      MaybeHookCallee
+        {
+          hooks = ALocFuzzySet.union l.hooks r.hooks;
+          non_hooks = ALocFuzzySet.union l.non_hooks r.non_hooks;
+        }
+    | (MaybeHookCallee m, HookCallee h)
+    | (HookCallee h, MaybeHookCallee m) ->
+      MaybeHookCallee { m with hooks = ALocFuzzySet.union m.hooks h }
+    | (MaybeHookCallee m, NotHookCallee h)
+    | (NotHookCallee h, MaybeHookCallee m) ->
+      MaybeHookCallee { m with non_hooks = ALocFuzzySet.union m.non_hooks h }
+    | (HookCallee h, NotHookCallee n)
+    | (NotHookCallee n, HookCallee h) ->
+      MaybeHookCallee { non_hooks = n; hooks = h }
+  in
+  let set_of_reason r = def_loc_of_reason r |> ALocFuzzySet.singleton in
+  let rec recur_id seen t =
+    let recur = recur_id seen in
+    let open Type in
+    match t with
+    | DefT (r, FunT (_, { hook = HookDecl _ | HookAnnot; _ })) -> HookCallee (set_of_reason r)
+    | DefT (_, FunT (_, { hook = AnyHook; _ })) -> AnyCallee
+    | DefT (r, FunT (_, { hook = NonHook; _ })) -> NotHookCallee (set_of_reason r)
+    | OpaqueT (r, { underlying_t; super_t; _ }) -> begin
+      match (underlying_t, super_t) with
+      | (Some t, _)
+      | (None, Some t) ->
+        recur t
+      | _ -> NotHookCallee (set_of_reason r)
+    end
+    | OpenT (_, id) when ISet.mem id seen -> AnyCallee
+    | OpenT (_, id) ->
+      Flow_js_utils.possible_types cx id
+      |> Base.List.map ~f:(recur_id (ISet.add id seen))
+      |> Base.List.fold ~init:AnyCallee ~f:merge
+    | UnionT (_, rep) ->
+      UnionRep.members rep |> Base.List.fold ~init:AnyCallee ~f:(fun acc t -> merge (recur t) acc)
+    | IntersectionT (rs, rep) ->
+      (* Not tracking locations of hooks through unions *)
+      let inv_merge l r =
+        match (l, r) with
+        | (AnyCallee, other)
+        | (other, AnyCallee) ->
+          other
+        | _ when l = r -> l
+        | (HookCallee _, _)
+        | (_, HookCallee _) ->
+          HookCallee (set_of_reason rs)
+        | (MaybeHookCallee _, _)
+        | (_, MaybeHookCallee _) ->
+          MaybeHookCallee { hooks = set_of_reason rs; non_hooks = set_of_reason rs }
+        | (NotHookCallee _, NotHookCallee _) -> NotHookCallee (set_of_reason rs)
+      in
+      InterRep.members rep
+      |> Base.List.fold ~init:AnyCallee ~f:(fun acc t -> inv_merge (recur t) acc)
+    | MaybeT (_, t)
+    | OptionalT { type_ = t; _ }
+    | ExactT (_, t)
+    | AnnotT (_, t, _)
+    | TypeAppT { type_ = t; _ }
+    | GenericT { bound = t; _ }
+    | DefT (_, PolyT { t_out = t; _ })
+    | DefT (_, TypeT (_, t)) ->
+      recur t
+    | t -> NotHookCallee (set_of_reason (TypeUtil.reason_of_t t))
+  in
+  recur_id ISet.empty t
+
+let hook_error cx ~call_loc ~callee_loc kind =
+  if Context.react_rule_enabled cx Options.RulesOfHooks then
+    Flow_js_utils.add_output
+      cx
+      (Error_message.EHookRuleViolation { call_loc; callee_loc; hook_rule = kind })
 
 let rec whole_ast_visitor cx rrid =
   object (this)
@@ -122,12 +215,25 @@ let rec whole_ast_visitor cx rrid =
         )
       else
         super#function_declaration fn
+
+    method! call ((call_loc, _) as annot) expr =
+      let { Ast.Expression.Call.callee = ((callee_loc, callee_ty), _); _ } = expr in
+      begin
+        match hook_callee cx callee_ty with
+        | HookCallee _
+        | MaybeHookCallee _ ->
+          hook_error cx ~callee_loc ~call_loc Error_message.HookNotInComponentOrHook
+        | _ -> ()
+      end;
+      super#call annot expr
   end
 
 and component_ast_visitor cx is_hook rrid =
   object (this)
     inherit
       [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
+
+    val mutable conditional_context = false
 
     method on_loc_annot l = l
 
@@ -167,6 +273,82 @@ and component_ast_visitor cx is_hook rrid =
         | _ -> this#expression _object
       in
       expr
+
+    method! call ((call_loc, _) as annot) expr =
+      let { Ast.Expression.Call.callee = ((callee_loc, callee_ty), _); _ } = expr in
+      let hook_error = hook_error cx ~call_loc ~callee_loc in
+      begin
+        match hook_callee cx callee_ty with
+        | HookCallee _ ->
+          if Flow_ast_utils.hook_call expr then begin
+            if conditional_context then hook_error Error_message.ConditionalHook
+          end else
+            hook_error Error_message.HookHasIllegalName
+        | MaybeHookCallee { hooks; non_hooks } ->
+          hook_error
+            Error_message.(
+              MaybeHook
+                { hooks = ALocFuzzySet.elements hooks; non_hooks = ALocFuzzySet.elements non_hooks }
+            )
+        | NotHookCallee _ ->
+          if Flow_ast_utils.hook_call expr then hook_error Error_message.NonHookHasIllegalName
+        | AnyCallee -> ()
+      end;
+      super#call annot expr
+
+    method in_conditional : 'a 'b. ('a -> 'b) -> 'a -> 'b =
+      fun f n ->
+        let cur = conditional_context in
+        conditional_context <- true;
+        let res = f n in
+        conditional_context <- cur;
+        res
+
+    method! if_consequent_statement ~has_else =
+      this#in_conditional (super#if_consequent_statement ~has_else)
+
+    method! if_alternate_statement = this#in_conditional super#if_alternate_statement
+
+    method! conditional expr =
+      let { Ast.Expression.Conditional.test; consequent; alternate; _ } = expr in
+      let _test' : _ Ast.Expression.t = this#predicate_expression test in
+      let _consequent' : _ Ast.Expression.t = this#in_conditional this#expression consequent in
+      let _alternate' : _ Ast.Expression.t = this#in_conditional this#expression alternate in
+      expr
+
+    method! logical expr =
+      let { Ast.Expression.Logical.left; right; _ } = expr in
+      let _left' : _ Ast.Expression.t = this#expression left in
+      let _right' : _ Ast.Expression.t = this#in_conditional this#expression right in
+      expr
+
+    method! for_in_statement stmt =
+      let { Ast.Statement.ForIn.left; right; body; _ } = stmt in
+      let _left' : _ Ast.Statement.ForIn.left = this#for_in_statement_lhs left in
+      let _right' : _ Ast.Expression.t = this#expression right in
+      let _body' : _ Ast.Statement.t = this#in_conditional this#statement body in
+      stmt
+
+    method! for_of_statement stmt =
+      let { Ast.Statement.ForOf.left; right; body; _ } = stmt in
+      let _left' : _ Ast.Statement.ForOf.left = this#for_of_statement_lhs left in
+      let _right' : _ Ast.Expression.t = this#expression right in
+      let _body' : _ Ast.Statement.t = this#in_conditional this#statement body in
+      stmt
+
+    method! for_statement stmt =
+      let { Ast.Statement.For.init; test; update; body; _ } = stmt in
+      let _init' : _ option = Base.Option.map ~f:this#for_statement_init init in
+      let _test' : _ option = Base.Option.map ~f:this#predicate_expression test in
+      let _update' : _ option = Base.Option.map ~f:(this#in_conditional this#expression) update in
+      let _body' : _ Ast.Statement.t = this#in_conditional this#statement body in
+      stmt
+
+    method! while_ stmt =
+      let { Ast.Statement.While.test; body; _ } = stmt in
+      let _test' : _ Ast.Expression.t = this#predicate_expression test in
+      let _body' : _ Ast.Statement.t = this#in_conditional this#statement body in
+      stmt
 
     method function_component_body = super#function_body_any
 

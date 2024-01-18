@@ -140,4 +140,4 @@ val push_toplevel_type :
 
 val hook_function : ('a, 'b) Flow_ast.Function.t -> 'b option
 
-val hook_call : ('loc, 'loc) Flow_ast.Expression.Call.t -> bool
+val hook_call : ('a, 'b) Flow_ast.Expression.Call.t -> bool

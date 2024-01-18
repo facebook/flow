@@ -1,3 +1,17 @@
+Error --------------------------------------------------------------------------------------- declare_hook_tests.js:3:13
+
+Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
+
+   declare_hook_tests.js:3:13
+   3| const [v] = useCustom({a: 42});
+                  ^^^^^^^^^^^^^^^^^^
+
+References:
+   declare_hook_tests.js:3:13
+   3| const [v] = useCustom({a: 42});
+                  ^^^^^^^^^ [1]
+
+
 Error ---------------------------------------------------------------------------------------- declare_hook_tests.js:4:3
 
 Cannot assign `100` to `v.a` because property `a` is not writable. The return value of a React hook [1] cannot be
@@ -51,6 +65,166 @@ References:
                              ^^^^^^^^^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------- declare_hook_tests.js:23:5
+
+Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
+
+   declare_hook_tests.js:23:5
+   23|     useBadHook([], (42: any)); // error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   declare_hook_tests.js:23:5
+   23|     useBadHook([], (42: any)); // error
+           ^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------- declare_hook_tests.js:25:5
+
+Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
+
+   declare_hook_tests.js:25:5
+   25|     badName([], (42: any)); // error
+           ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   declare_hook_tests.js:25:5
+   25|     badName([], (42: any)); // error
+           ^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------- declare_hook_tests.js:34:5
+
+Cannot call hook because callee [1]'s name does not conform to React hook rules. Hook names must begin with `use`
+followed by a capitalized letter. [react-rule-hook]
+
+   declare_hook_tests.js:34:5
+   34|     badName([], (42: any)); // error
+           ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   declare_hook_tests.js:34:5
+   34|     badName([], (42: any)); // error
+           ^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------- declare_hook_tests.js:37:9
+
+Cannot call hook [1] because React hooks cannot be called in conditional contexts. [react-rule-hook]
+
+   declare_hook_tests.js:37:9
+   37|         useBadHook([], (42: any)); // error
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   declare_hook_tests.js:37:9
+   37|         useBadHook([], (42: any)); // error
+               ^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------- declare_hook_tests.js:47:5
+
+Cannot call function because callee [1] may be a React hook [2] or may be a regular function definition [3]. Function
+callees must either be definitely a hook or definitely not a hook, because the same hook must be called every time a
+component renders. [react-rule-hook]
+
+   declare_hook_tests.js:47:5
+   47|     f([], (42: any)) // error
+           ^^^^^^^^^^^^^^^^
+
+References:
+   declare_hook_tests.js:47:5
+   47|     f([], (42: any)) // error
+           ^ [1]
+   declare_hook_tests.js:20:24
+   20| declare hook useBadHook(x: Array<number>, y: React.RefObject<number>): void;
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   declare_hook_tests.js:44:9
+   44|         function badhook(x: Array<number>, y: React.RefObject<number>): void { }
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------- declare_hook_tests.js:50:5
+
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
+defined as a non-hook function. [react-rule-hook]
+
+   declare_hook_tests.js:50:5
+   50|     useBadName(); // error
+           ^^^^^^^^^^^^
+
+References:
+   declare_hook_tests.js:50:5
+   50|     useBadName(); // error
+           ^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------- declare_hook_tests.js:56:5
+
+Cannot call hook because callee [1]'s name does not conform to React hook rules. Hook names must begin with `use`
+followed by a capitalized letter. [react-rule-hook]
+
+   declare_hook_tests.js:56:5
+   56|     badName([], (42: any)); // error
+           ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   declare_hook_tests.js:56:5
+   56|     badName([], (42: any)); // error
+           ^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------- declare_hook_tests.js:59:9
+
+Cannot call hook [1] because React hooks cannot be called in conditional contexts. [react-rule-hook]
+
+   declare_hook_tests.js:59:9
+   59|         useBadHook([], (42: any)); // error
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   declare_hook_tests.js:59:9
+   59|         useBadHook([], (42: any)); // error
+               ^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------- declare_hook_tests.js:69:5
+
+Cannot call function because callee [1] may be a React hook [2] or may be a regular function definition [3]. Function
+callees must either be definitely a hook or definitely not a hook, because the same hook must be called every time a
+component renders. [react-rule-hook]
+
+   declare_hook_tests.js:69:5
+   69|     f([], (42: any)) // error
+           ^^^^^^^^^^^^^^^^
+
+References:
+   declare_hook_tests.js:69:5
+   69|     f([], (42: any)) // error
+           ^ [1]
+   declare_hook_tests.js:20:24
+   20| declare hook useBadHook(x: Array<number>, y: React.RefObject<number>): void;
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   declare_hook_tests.js:66:9
+   66|         function badhook(x: Array<number>, y: React.RefObject<number>): void { }
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------- declare_hook_tests.js:72:5
+
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
+defined as a non-hook function. [react-rule-hook]
+
+   declare_hook_tests.js:72:5
+   72|     useBadName(); // error
+           ^^^^^^^^^^^^
+
+References:
+   declare_hook_tests.js:72:5
+   72|     useBadName(); // error
+           ^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------------- exp.js:5:1
 
 Cannot cast `useFoo()` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-cast]
@@ -66,6 +240,34 @@ References:
    exp.js:5:13
    5| useFoo() as empty; // error
                   ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- exp.js:5:1
+
+Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
+
+   exp.js:5:1
+   5| useFoo() as empty; // error
+      ^^^^^^^^
+
+References:
+   exp.js:5:1
+   5| useFoo() as empty; // error
+      ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- hook_tests.js:3:13
+
+Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
+
+   hook_tests.js:3:13
+   3| const [v] = useCustom({a: 42});
+                  ^^^^^^^^^^^^^^^^^^
+
+References:
+   hook_tests.js:3:13
+   3| const [v] = useCustom({a: 42});
+                  ^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ hook_tests.js:4:3
@@ -155,13 +357,13 @@ References:
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- hook_tests.js:31:5
+Error ----------------------------------------------------------------------------------------------- hook_tests.js:32:5
 
 Cannot assign `42` to `arr[0]` because read-only arrays cannot be written to. The return value of a React hook [1]
 cannot be written to. [react-rule-hook-mutation]
 
-   hook_tests.js:31:5
-   31|     arr[0] = 42; // error
+   hook_tests.js:32:5
+   32|     arr[0] = 42; // error
            ^^^^^^
 
 References:
@@ -170,13 +372,13 @@ References:
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- hook_tests.js:33:9
+Error ----------------------------------------------------------------------------------------------- hook_tests.js:34:9
 
 Cannot assign `"hi"` to `foo.a` because property `a` is not writable. The return value of a React hook [1] cannot be
 written to. [react-rule-hook-mutation]
 
-   hook_tests.js:33:9
-   33|     foo.a = "hi"; // error
+   hook_tests.js:34:9
+   34|     foo.a = "hi"; // error
                ^
 
 References:
@@ -185,28 +387,202 @@ References:
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- hook_tests.js:41:5
+Error ----------------------------------------------------------------------------------------------- hook_tests.js:42:5
 
 Cannot assign `42` to `x[0]` because read-only arrays cannot be written to. React hook arguments [1] and their nested
 elements cannot be written to. [react-rule-unsafe-mutation]
 
-   hook_tests.js:41:5
-   41|     x[0] = 42; // error
+   hook_tests.js:42:5
+   42|     x[0] = 42; // error
            ^^^^
 
 References:
-   hook_tests.js:40:17
-   40| hook useBadHook(x: Array<number>, y: React.RefObject<number>): void {
+   hook_tests.js:41:17
+   41| hook useBadHook(x: Array<number>, y: React.RefObject<number>): void {
                        ^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- hook_tests.js:46:5
+Error ----------------------------------------------------------------------------------------------- hook_tests.js:47:5
 
 Cannot read `current` from `w` [1] because `ref` values may not be read within hooks.
 (https://react.dev/reference/react/useRef). [react-rule-unsafe-ref]
 
-   46|     w.current = 42; // error
+   47|     w.current = 42; // error
            ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- hook_tests.js:51:5
+
+Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
+
+   hook_tests.js:51:5
+   51|     useBadHook([], (42: any)); // error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   hook_tests.js:51:5
+   51|     useBadHook([], (42: any)); // error
+           ^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- hook_tests.js:53:5
+
+Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
+
+   hook_tests.js:53:5
+   53|     badName([], (42: any)); // error
+           ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   hook_tests.js:53:5
+   53|     badName([], (42: any)); // error
+           ^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- hook_tests.js:62:5
+
+Cannot call hook because callee [1]'s name does not conform to React hook rules. Hook names must begin with `use`
+followed by a capitalized letter. [react-rule-hook]
+
+   hook_tests.js:62:5
+   62|     badName([], (42: any)); // error
+           ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   hook_tests.js:62:5
+   62|     badName([], (42: any)); // error
+           ^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- hook_tests.js:65:9
+
+Cannot call hook [1] because React hooks cannot be called in conditional contexts. [react-rule-hook]
+
+   hook_tests.js:65:9
+   65|         useBadHook([], (42: any)); // error
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   hook_tests.js:65:9
+   65|         useBadHook([], (42: any)); // error
+               ^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- hook_tests.js:75:5
+
+Cannot call function because callee [1] may be a React hook [2] or may be a regular function definition [3]. Function
+callees must either be definitely a hook or definitely not a hook, because the same hook must be called every time a
+component renders. [react-rule-hook]
+
+   hook_tests.js:75:5
+   75|     f([], (42: any)) // error
+           ^^^^^^^^^^^^^^^^
+
+References:
+   hook_tests.js:75:5
+   75|     f([], (42: any)) // error
+           ^ [1]
+   hook_tests.js:41:1
+   41| hook useBadHook(x: Array<number>, y: React.RefObject<number>): void {
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   hook_tests.js:72:9
+   72|         function badhook(x: Array<number>, y: React.RefObject<number>): void { }
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- hook_tests.js:78:5
+
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
+defined as a non-hook function. [react-rule-hook]
+
+   hook_tests.js:78:5
+   78|     useBadName(); // error
+           ^^^^^^^^^^^^
+
+References:
+   hook_tests.js:78:5
+   78|     useBadName(); // error
+           ^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- hook_tests.js:84:5
+
+Cannot call hook because callee [1]'s name does not conform to React hook rules. Hook names must begin with `use`
+followed by a capitalized letter. [react-rule-hook]
+
+   hook_tests.js:84:5
+   84|     badName([], (42: any)); // error
+           ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   hook_tests.js:84:5
+   84|     badName([], (42: any)); // error
+           ^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- hook_tests.js:87:9
+
+Cannot call hook [1] because React hooks cannot be called in conditional contexts. [react-rule-hook]
+
+   hook_tests.js:87:9
+   87|         useBadHook([], (42: any)); // error
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   hook_tests.js:87:9
+   87|         useBadHook([], (42: any)); // error
+               ^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- hook_tests.js:97:5
+
+Cannot call function because callee [1] may be a React hook [2] or may be a regular function definition [3]. Function
+callees must either be definitely a hook or definitely not a hook, because the same hook must be called every time a
+component renders. [react-rule-hook]
+
+   hook_tests.js:97:5
+   97|     f([], (42: any)) // error
+           ^^^^^^^^^^^^^^^^
+
+References:
+   hook_tests.js:97:5
+   97|     f([], (42: any)) // error
+           ^ [1]
+   hook_tests.js:41:1
+   41| hook useBadHook(x: Array<number>, y: React.RefObject<number>): void {
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   hook_tests.js:94:9
+   94|         function badhook(x: Array<number>, y: React.RefObject<number>): void { }
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- hook_tests.js:100:5
+
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
+defined as a non-hook function. [react-rule-hook]
+
+   hook_tests.js:100:5
+   100|     useBadName(); // error
+            ^^^^^^^^^^^^
+
+References:
+   hook_tests.js:100:5
+   100|     useBadName(); // error
+            ^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ hook_type_tests.js:3:13
+
+Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
+
+   hook_type_tests.js:3:13
+   3| const [v] = useCustom({a: 42}); // error, not in component or hook
+                  ^^^^^^^^^^^^^^^^^^
+
+References:
+   hook_type_tests.js:3:13
+   3| const [v] = useCustom({a: 42}); // error, not in component or hook
+                  ^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- hook_type_tests.js:4:3
@@ -262,6 +638,166 @@ References:
                                 ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------ hook_type_tests.js:23:5
+
+Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
+
+   hook_type_tests.js:23:5
+   23|     useBadHook([], (42: any)); // error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   hook_type_tests.js:23:5
+   23|     useBadHook([], (42: any)); // error
+           ^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ hook_type_tests.js:25:5
+
+Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
+
+   hook_type_tests.js:25:5
+   25|     badName([], (42: any)); // error
+           ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   hook_type_tests.js:25:5
+   25|     badName([], (42: any)); // error
+           ^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ hook_type_tests.js:34:5
+
+Cannot call hook because callee [1]'s name does not conform to React hook rules. Hook names must begin with `use`
+followed by a capitalized letter. [react-rule-hook]
+
+   hook_type_tests.js:34:5
+   34|     badName([], (42: any)); // error
+           ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   hook_type_tests.js:34:5
+   34|     badName([], (42: any)); // error
+           ^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ hook_type_tests.js:37:9
+
+Cannot call hook [1] because React hooks cannot be called in conditional contexts. [react-rule-hook]
+
+   hook_type_tests.js:37:9
+   37|         useBadHook([], (42: any)); // error
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   hook_type_tests.js:37:9
+   37|         useBadHook([], (42: any)); // error
+               ^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ hook_type_tests.js:47:5
+
+Cannot call function because callee [1] may be a React hook [2] or may be a regular function definition [3]. Function
+callees must either be definitely a hook or definitely not a hook, because the same hook must be called every time a
+component renders. [react-rule-hook]
+
+   hook_type_tests.js:47:5
+   47|     f([], (42: any)) // error
+           ^^^^^^^^^^^^^^^^
+
+References:
+   hook_type_tests.js:47:5
+   47|     f([], (42: any)) // error
+           ^ [1]
+   hook_type_tests.js:20:27
+   20| declare const useBadHook: hook (x: Array<number>, y: React.RefObject<number>) => void;
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   hook_type_tests.js:44:9
+   44|         function badhook(x: Array<number>, y: React.RefObject<number>): void { }
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ hook_type_tests.js:50:5
+
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
+defined as a non-hook function. [react-rule-hook]
+
+   hook_type_tests.js:50:5
+   50|     useBadName(); // error
+           ^^^^^^^^^^^^
+
+References:
+   hook_type_tests.js:50:5
+   50|     useBadName(); // error
+           ^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ hook_type_tests.js:56:5
+
+Cannot call hook because callee [1]'s name does not conform to React hook rules. Hook names must begin with `use`
+followed by a capitalized letter. [react-rule-hook]
+
+   hook_type_tests.js:56:5
+   56|     badName([], (42: any)); // error
+           ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   hook_type_tests.js:56:5
+   56|     badName([], (42: any)); // error
+           ^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ hook_type_tests.js:59:9
+
+Cannot call hook [1] because React hooks cannot be called in conditional contexts. [react-rule-hook]
+
+   hook_type_tests.js:59:9
+   59|         useBadHook([], (42: any)); // error
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   hook_type_tests.js:59:9
+   59|         useBadHook([], (42: any)); // error
+               ^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ hook_type_tests.js:69:5
+
+Cannot call function because callee [1] may be a React hook [2] or may be a regular function definition [3]. Function
+callees must either be definitely a hook or definitely not a hook, because the same hook must be called every time a
+component renders. [react-rule-hook]
+
+   hook_type_tests.js:69:5
+   69|     f([], (42: any)) // error
+           ^^^^^^^^^^^^^^^^
+
+References:
+   hook_type_tests.js:69:5
+   69|     f([], (42: any)) // error
+           ^ [1]
+   hook_type_tests.js:20:27
+   20| declare const useBadHook: hook (x: Array<number>, y: React.RefObject<number>) => void;
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   hook_type_tests.js:66:9
+   66|         function badhook(x: Array<number>, y: React.RefObject<number>): void { }
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ hook_type_tests.js:72:5
+
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
+defined as a non-hook function. [react-rule-hook]
+
+   hook_type_tests.js:72:5
+   72|     useBadName(); // error
+           ^^^^^^^^^^^^
+
+References:
+   hook_type_tests.js:72:5
+   72|     useBadName(); // error
+           ^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------------- imp.js:3:1
 
 Cannot cast `useFoo()` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-cast]
@@ -277,6 +813,20 @@ References:
    imp.js:3:13
    3| useFoo() as empty; // error
                   ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- imp.js:3:1
+
+Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
+
+   imp.js:3:1
+   3| useFoo() as empty; // error
+      ^^^^^^^^
+
+References:
+   imp.js:3:1
+   3| useFoo() as empty; // error
+      ^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------- imp.js:7:5
@@ -295,4 +845,4 @@ References:
 
 
 
-Found 18 errors
+Found 53 errors

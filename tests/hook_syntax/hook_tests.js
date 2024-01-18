@@ -25,13 +25,14 @@ hook useCoolHook2(): [{a: string}, React.RefObject<number>] {
 }
 
 import * as React from 'react';
+import * as HookReact from './hookReact';
 
 component B() {
     const arr = useCoolHook();
     arr[0] = 42; // error
     const [foo, ref] = useCoolHook2();
     foo.a = "hi"; // error
-    React.useEffect(() => {
+    HookReact.useEffect(() => {
         ref.current = 42; // ok
     })
     return null;
@@ -39,9 +40,62 @@ component B() {
 
 hook useBadHook(x: Array<number>, y: React.RefObject<number>): void {
     x[0] = 42; // error
-    React.useEffect(() => {
+    HookReact.useEffect(() => {
         y.current = 42; // ok
     })
-    const w = React.useRef<?number>(null);
+    const w = HookReact.useRef<?number>(null);
     w.current = 42; // error
+}
+
+function nonHook() {
+    useBadHook([], (42: any)); // error
+    const badName = useBadHook;
+    badName([], (42: any)); // error
+
+    function nonHookInternal() { }
+    const useNonHookInternal = nonHookInternal;
+    useNonHookInternal(); // ok
+}
+
+component C() {
+    const badName = useBadHook;
+    badName([], (42: any)); // error
+
+    if (42) {
+        useBadHook([], (42: any)); // error
+    }
+
+    let f;
+    if (42) {
+        f = useBadHook
+    } else {
+        function badhook(x: Array<number>, y: React.RefObject<number>): void { }
+        f = badhook
+    }
+    f([], (42: any)) // error
+
+    const useBadName = nonHook;
+    useBadName(); // error
+    return null;
+}
+
+hook useC() {
+    const badName = useBadHook;
+    badName([], (42: any)); // error
+
+    if (42) {
+        useBadHook([], (42: any)); // error
+    }
+
+    let f;
+    if (42) {
+        f = useBadHook
+    } else {
+        function badhook(x: Array<number>, y: React.RefObject<number>): void { }
+        f = badhook
+    }
+    f([], (42: any)) // error
+
+    const useBadName = nonHook;
+    useBadName(); // error
 }

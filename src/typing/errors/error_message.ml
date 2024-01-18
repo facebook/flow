@@ -605,6 +605,11 @@ and 'loc t' =
       lower: 'loc virtual_reason;
       upper: 'loc virtual_reason;
     }
+  | EHookRuleViolation of {
+      hook_rule: 'loc hook_rule;
+      callee_loc: 'loc;
+      call_loc: 'loc;
+    }
   | EObjectThisReference of 'loc * 'loc virtual_reason
   | EComponentThisReference of {
       component_loc: 'loc;
@@ -858,6 +863,16 @@ and 'loc invalid_render_type_kind =
   | InvalidRendersNonNominalElement of 'loc virtual_reason
   | InvalidRendersGenericT
   | UncategorizedInvalidRenders
+
+and 'l hook_rule =
+  | ConditionalHook
+  | HookHasIllegalName
+  | NonHookHasIllegalName
+  | MaybeHook of {
+      hooks: 'l list;
+      non_hooks: 'l list;
+    }
+  | HookNotInComponentOrHook
 
 let string_of_assigned_const_like_binding_type = function
   | ClassNameBinding -> "class"
@@ -1362,6 +1377,17 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EHookUniqueIncompatible { use_op; lower; upper } ->
     EHookUniqueIncompatible
       { use_op = map_use_op use_op; lower = map_reason lower; upper = map_reason upper }
+  | EHookRuleViolation { callee_loc; call_loc; hook_rule } ->
+    let hook_rule =
+      match hook_rule with
+      | MaybeHook { hooks; non_hooks } ->
+        MaybeHook { hooks = List.map f hooks; non_hooks = List.map f non_hooks }
+      | HookHasIllegalName -> HookHasIllegalName
+      | NonHookHasIllegalName -> NonHookHasIllegalName
+      | HookNotInComponentOrHook -> HookNotInComponentOrHook
+      | ConditionalHook -> ConditionalHook
+    in
+    EHookRuleViolation { callee_loc = f callee_loc; call_loc = f call_loc; hook_rule }
   | EObjectThisReference (loc, r) -> EObjectThisReference (f loc, map_reason r)
   | EComponentThisReference { component_loc; this_loc } ->
     EComponentThisReference { component_loc = f component_loc; this_loc = f this_loc }
@@ -1680,6 +1706,7 @@ let util_use_op_of_msg nope util = function
   | EMethodUnbinding _
   | EHookIncompatible _
   | EHookUniqueIncompatible _
+  | EHookRuleViolation _
   | EObjectThisReference _
   | EComponentThisReference _
   | EComponentCase _
@@ -1856,6 +1883,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EInternal (loc, _)
   | EUnsupportedKeyInObject { loc; _ }
   | EAmbiguousNumericKeyWithVariance loc
+  | EHookRuleViolation { call_loc = loc; _ }
   | ECharSetAnnot loc
   | EExportsAnnot loc
   | EPropertyTypeAnnot loc
@@ -4829,6 +4857,78 @@ let friendly_message_of_msg loc_of_aloc msg =
                 "Different React hooks are not compatible with each other, because hooks cannot be called conditionally";
             ];
       }
+  | EHookRuleViolation { callee_loc; hook_rule = ConditionalHook; call_loc = _ } ->
+    Normal
+      {
+        features =
+          [
+            text "Cannot call ";
+            ref (mk_reason (RCustom "hook") callee_loc);
+            text " because React hooks cannot be called in conditional contexts.";
+          ];
+      }
+  | EHookRuleViolation { callee_loc; hook_rule = HookHasIllegalName; call_loc = _ } ->
+    Normal
+      {
+        features =
+          [
+            text "Cannot call hook because ";
+            ref (mk_reason (RCustom "callee") callee_loc);
+            text "'s name does not conform to React hook rules. Hook names must begin with ";
+            code "use";
+            text " followed by a capitalized letter.";
+          ];
+      }
+  | EHookRuleViolation { callee_loc; hook_rule = MaybeHook { hooks; non_hooks }; call_loc = _ } ->
+    let hook_blame =
+      match hooks with
+      | [] -> [text "React hook"]
+      | x :: _ -> [ref (mk_reason (RCustom "React hook") x)]
+    in
+    let non_hook_blame =
+      match non_hooks with
+      | [] -> [text "regular function definition"]
+      | x :: _ -> [text "regular "; ref (mk_reason (RCustom "function definition") x)]
+    in
+    Normal
+      {
+        features =
+          [
+            text "Cannot call function because ";
+            ref (mk_reason (RCustom "callee") callee_loc);
+            (* Kinda crummy, hopefully doesn't come up often *)
+            text " may be a ";
+          ]
+          @ hook_blame
+          @ [text " or may be a "]
+          @ non_hook_blame
+          @ [
+              text
+                ". Function callees must either be definitely a hook or definitely not a hook, because the same hook must be called every time a component renders.";
+            ];
+      }
+  | EHookRuleViolation { callee_loc; hook_rule = NonHookHasIllegalName; call_loc = _ } ->
+    Normal
+      {
+        features =
+          [
+            text "Cannot call function because ";
+            ref (mk_reason (RCustom "callee") callee_loc);
+            text " has a name that indicates it is a React hook (starting with ";
+            code "use";
+            text ") but it is defined as a non-hook function.";
+          ];
+      }
+  | EHookRuleViolation { callee_loc; hook_rule = HookNotInComponentOrHook; call_loc = _ } ->
+    Normal
+      {
+        features =
+          [
+            text "Cannot call ";
+            ref (mk_reason (RCustom "hook") callee_loc);
+            text " because React hooks can only be called within components or hooks.";
+          ];
+      }
   | EInvalidGraphQL (_, err) ->
     let features =
       match err with
@@ -5746,6 +5846,7 @@ let error_code_of_message err : error_code option =
   | EHookIncompatible _
   | EHookUniqueIncompatible _ ->
     Some ReactRuleHookIncompatible
+  | EHookRuleViolation _ -> Some ReactRuleHook
   | EInvalidGraphQL _ -> Some InvalidGraphQL
   | EAnnotationInference _ -> Some InvalidExportedAnnotation
   | EAnnotationInferenceRecursive _ -> Some InvalidExportedAnnotationRecursive

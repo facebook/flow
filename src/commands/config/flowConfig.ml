@@ -502,6 +502,7 @@ module Opts = struct
         ("validateRefAccessDuringRender", ValidateRefAccessDuringRender);
         ("deepReadOnlyProps", DeepReadOnlyProps);
         ("deepReadOnlyHookReturns", DeepReadOnlyHookReturns);
+        ("rulesOfHooks", RulesOfHooks);
       ]
       (fun opts v -> Ok { opts with react_rules = v :: opts.react_rules })
 

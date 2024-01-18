@@ -37,6 +37,7 @@ type react_rules =
   | ValidateRefAccessDuringRender
   | DeepReadOnlyProps
   | DeepReadOnlyHookReturns
+  | RulesOfHooks
 
 type format = {
   opt_bracket_spacing: bool;

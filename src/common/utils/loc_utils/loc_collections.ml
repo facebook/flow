@@ -28,3 +28,4 @@ end
 (* For ALocMaps that may contain both keyed and concrete locations. We call it fuzzy because
  * locations that are "equal" but represented differently would be considered unequal. *)
 module ALocFuzzyMap = Flow_map.Make (ALocFuzzy)
+module ALocFuzzySet = Flow_set.Make (ALocFuzzy)

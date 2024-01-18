@@ -10,6 +10,7 @@ type error_code =
   | ReactRulePropsMutation
   | ReactRuleHookMutation
   | ReactRuleHookIncompatible
+  | ReactRuleHook
   | CannotDelete
   | CannotImplement
   | CannotInferType
@@ -213,6 +214,7 @@ let string_of_code : error_code -> string = function
   | ReactRulePropsMutation -> "react-rule-unsafe-mutation"
   | ReactRuleHookMutation -> "react-rule-hook-mutation"
   | ReactRuleHookIncompatible -> "react-rule-hook-incompatible"
+  | ReactRuleHook -> "react-rule-hook"
   | AmbiguousObjectType -> "ambiguous-object-type"
   | CannotDelete -> "cannot-delete"
   | CannotImplement -> "cannot-implement"
