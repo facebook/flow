@@ -153,6 +153,8 @@ let rec whole_ast_visitor cx rrid =
     inherit
       [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
 
+    val mutable in_function_component = false
+
     method on_loc_annot l = l
 
     method on_type_annot l = l
@@ -175,20 +177,20 @@ let rec whole_ast_visitor cx rrid =
       } =
         fn
       in
-      if
-        Context.react_rules_always cx
-        && Base.Option.value_map
-             ~f:(fun (_, { Ast.Identifier.name; _ }) ->
-               String.length name > 0
-               &&
-               let fst = String.sub name 0 1 in
-               fst = String.uppercase_ascii fst && fst <> "_")
-             ~default:false
-             id
-        && List.length params_list = 1
+      let is_probably_function_component =
+        (* Capitalized letter initial name *)
+        Base.Option.value_map
+          ~f:(fun (_, { Ast.Identifier.name; _ }) ->
+            String.length name > 0
+            &&
+            let fst = String.sub name 0 1 in
+            fst = String.uppercase_ascii fst && fst <> "_")
+          ~default:false
+          id
+        && (List.length params_list = 1 || List.length params_list = 2 (* Props and maybe ref *))
         && Base.Option.is_none rest
-        || hook
-      then
+      in
+      if (Context.react_rules_always cx && is_probably_function_component) || hook then
         let ident' = Base.Option.map ~f:this#function_identifier id in
         this#type_params_opt tparams (fun tparams' ->
             let params' = (component_ast_visitor cx hook rrid)#function_params params in
@@ -213,15 +215,22 @@ let rec whole_ast_visitor cx rrid =
               comments = comments';
             }
         )
-      else
-        super#function_declaration fn
+      else begin
+        let cur_in_function_component = in_function_component in
+        if is_probably_function_component && Context.hooklike_functions cx then
+          in_function_component <- true;
+        let res = super#function_declaration fn in
+        in_function_component <- cur_in_function_component;
+        res
+      end
 
     method! call ((call_loc, _) as annot) expr =
       let { Ast.Expression.Call.callee = ((callee_loc, callee_ty), _); _ } = expr in
       begin
         match hook_callee cx callee_ty with
         | HookCallee _
-        | MaybeHookCallee _ ->
+        | MaybeHookCallee _
+          when not in_function_component ->
           hook_error cx ~callee_loc ~call_loc Error_message.HookNotInComponentOrHook
         | _ -> ()
       end;

@@ -933,6 +933,34 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------- syntax_compatibility.js:33:5
+
+Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
+
+   syntax_compatibility.js:33:5
+   33|     useHook(); // Error
+           ^^^^^^^^^
+
+References:
+   syntax_compatibility.js:33:5
+   33|     useHook(); // Error
+           ^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- syntax_compatibility.js:42:5
+
+Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
+
+   syntax_compatibility.js:42:5
+   42|     useHook(); // Error
+           ^^^^^^^^^
+
+References:
+   syntax_compatibility.js:42:5
+   42|     useHook(); // Error
+           ^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------- syntax_compatibility_import.js:3:1
 
 Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
@@ -1007,20 +1035,62 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- using_react.js:4:15
+Error ------------------------------------------------------------------------------ syntax_compatibility_import.js:19:5
+
+Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
+
+   syntax_compatibility_import.js:19:5
+   19|     useHook(); // Error
+           ^^^^^^^^^
+
+References:
+   syntax_compatibility_import.js:19:5
+   19|     useHook(); // Error
+           ^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------ syntax_compatibility_import.js:27:5
+
+Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
+
+   syntax_compatibility_import.js:27:5
+   27|     useHook(); // Error
+           ^^^^^^^^^
+
+References:
+   syntax_compatibility_import.js:27:5
+   27|     useHook(); // Error
+           ^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- using_react.js:5:15
 
 Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
 defined as a non-hook function. [react-rule-hook]
 
-   using_react.js:4:15
-   4|     const x = React.useRef(null); // error, because currently useRef is a function not a hook
+   using_react.js:5:15
+   5|     const x = React.useRef(null); // error, because currently useRef is a function not a hook
                     ^^^^^^^^^^^^^^^^^^
 
 References:
-   using_react.js:4:15
-   4|     const x = React.useRef(null); // error, because currently useRef is a function not a hook
+   using_react.js:5:15
+   5|     const x = React.useRef(null); // error, because currently useRef is a function not a hook
                     ^^^^^^^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------- using_react.js:10:15
 
-Found 65 errors
+Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
+
+   using_react.js:10:15
+   10|     const x = HookReact.useRef(null); // error, because this useRef is a hook and we're in a function
+                     ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   using_react.js:10:15
+   10|     const x = HookReact.useRef(null); // error, because this useRef is a hook and we're in a function
+                     ^^^^^^^^^^^^^^^^ [1]
+
+
+
+Found 70 errors

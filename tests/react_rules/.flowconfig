@@ -1,7 +1,9 @@
 [options]
 experimental.component_syntax=true
+experimental.component_syntax.hooklike_functions=true
 experimental.react_rule=validateRefAccessDuringRender
 experimental.react_rule=deepReadOnlyProps
 experimental.react_rule=deepReadOnlyHookReturns
+experimental.react_rule=rulesOfHooks
 no_flowlib=false
 all=true

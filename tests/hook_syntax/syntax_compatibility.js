@@ -28,3 +28,21 @@ component C() {
     useAssignedHooklikeFunctionExpression(); // Error
     return 42;
 }
+
+function FunctionComponent(_props: mixed) {
+    useHook(); // Error
+    useHooklikeAnnotatedFunction(); // Ok
+    useHooklikeInferredFunction(); // Ok
+    useDeclaredHooklikeFunction(); // Ok
+    useAssignedHooklikeArbitraryExpression(); // Ok
+    useAssignedHooklikeFunctionExpression(); // Ok
+}
+
+function notAFunctionComponent(_props: mixed) {
+    useHook(); // Error
+    useHooklikeAnnotatedFunction(); // Ok
+    useHooklikeInferredFunction(); // Ok
+    useDeclaredHooklikeFunction(); // Ok
+    useAssignedHooklikeArbitraryExpression(); // Ok
+    useAssignedHooklikeFunctionExpression(); // Ok
+}
