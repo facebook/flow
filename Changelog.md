@@ -1,3 +1,17 @@
+### 0.227.0
+
+Likely to cause new Flow errors:
+* Some errors related to empty arrays might have their error locations or codes changed.
+* Flow will now interpret trivially recursive types, such as `type T = T` as `empty`, instead of `any`. (e.g. [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+IFkolXpUCWewUEAwhCQgRDH8wEH4hMnwROHlsNnw4KHwwSLAAC3wANyo4LFxscWQuHgMNZmwsiRSAWglaY1cq-hIAa2wJXNpG4Vxcdvdu3v7B0RxKUYMhKDBSqmbWwIq3eagoOrKSKgH0wtMMPznY7d2SfcoBiEZ-aG5G3Ix085AF-ZhsRoRehqUEiNMgSQHlSruBZxJrMcJwMhzAC+-EgGiCAB0-GsAAQAQRxAF4cQAhADcWJaxlJRPxFKgWIADDiMCR8Sy2SSOTjsCIHrQyTiAPRCnEAdzgwxxUAgYpxOBZUB51AglBxzIAfgA+Hl8lo4gAU3GKbLxAEoYiB8iYSHBoEF8oyrAAmZ0AVisAEYQEigA)).
+* We now error when calling `.call()` on polymorphic functions where the return type is under-constrained (e.g. [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+IFkolXpUCWewUEAwhCQgRDH8wEH4hMnwROHlsNnw4KHwwSLAAC3wANyo4LFxscWQuHgMNZmwsiRSAWglaY1cq-hIAa2wJXNpG4Vxcdvdu3v7B0RxKUYMhKDBSqmbWwIq3eagoOrKSKgH0wtMMPznY7d2SfcoBiEZ-aG5G3Ix085AF-ZhsRoRehqUEiNMgSQHlSruBZxJrMcJwMhzAC+-EgGiCGiWVGwAAIYAtlHBoDjQQBRagQSgAHgAKgA+AAUJkolOQONOtAAlGyaQBuAA6i2g9hxzJxAF4Sb1ySzKDZuLgGRIcgjeDiAIyc3k4gD0OpxAHc4MMcVAIAbRRTKIa4MqcQsNJQXsKpG8dmwcTTBYLbCL4Mk2DK2cIRDMJVKJDLKfLhkqVSQ1ZrtXq8UkbXaWBIhJQoOzthBLI8oIKYiB8iYSESoEF8gAGKwAJgbAFYrOqQEigA)). To fix add an annotation to the return result.
+
+Parser:
+* DeclareModule AST will no longer have a kind field
+
+Library Definitions:
+* Removed redundant cases in `Array.from` overloads. It might cause some error locations and codes to change.
+* Add types for the Storage API, available via `window.navigator.storage` (thanks @ZelJin).
+
 ### 0.226.0
 
 Likely to cause new Flow errors:
