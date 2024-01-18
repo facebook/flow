@@ -99,6 +99,7 @@ module Func = struct
       fparams: func_params;
       body: (ALoc.t, ALoc.t) Flow_ast.Function.body option;
       return_t: Type.annotated_or_inferred;
+      hook: Type.react_hook;
       ret_annot_loc: ALoc.t;
       statics: Type.t option;
     }
@@ -117,6 +118,7 @@ module Func = struct
       fparams: func_params;
       body: (ALoc.t, ALoc.t) Ast.Function.body option;
       return_t: Type.annotated_or_inferred;
+      hook: Type.react_hook;
       ret_annot_loc: ALoc.t;
       statics: Type.t option;
     }

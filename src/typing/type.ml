@@ -1158,7 +1158,14 @@ module rec TypeTerm : sig
     return_t: t;
     predicate: fun_predicate option;
     def_reason: Reason.t;
+    hook: react_hook;
   }
+
+  and react_hook =
+    | HookDecl of ALoc.id
+    | HookAnnot
+    | NonHook
+    | AnyHook
 
   and fun_predicate =
     | PredBased of (reason * predicate Key_map.t * predicate Key_map.t)
@@ -4250,7 +4257,15 @@ let default_obj_assign_kind = ObjAssign { assert_exact = false }
 
 (* A method type is a function type with `this` specified. *)
 let mk_methodtype
-    this_t ?(subtyping = This_Function) tins ~rest_param ~def_reason ?params_names ~predicate tout =
+    this_t
+    ?(subtyping = This_Function)
+    ?(hook = NonHook)
+    tins
+    ~rest_param
+    ~def_reason
+    ?params_names
+    ~predicate
+    tout =
   {
     this_t = (this_t, subtyping);
     params =
@@ -4261,6 +4276,7 @@ let mk_methodtype
     return_t = tout;
     predicate;
     def_reason;
+    hook;
   }
 
 let mk_methodcalltype targs args ?meth_generic_this ?(meth_strict_arity = true) tout =

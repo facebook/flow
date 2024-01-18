@@ -7785,6 +7785,7 @@ module Make
           in
           Obj_type.mk_with_proto cx reason (FunProtoT reason) ~obj_kind:Type.Inexact ~props
         in
+        let hook = NonHook in
         let func_stmt_sig =
           {
             Func_stmt_sig_types.reason;
@@ -7795,6 +7796,7 @@ module Make
             return_t;
             ret_annot_loc = ret_loc;
             statics = Some statics_t;
+            hook;
           }
         in
         let reconstruct_ast params_tast body fun_type =

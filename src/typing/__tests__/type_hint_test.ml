@@ -245,6 +245,7 @@ let fun_t ~params ~return_t =
             return_t;
             predicate = None;
             def_reason = dummy_reason;
+            hook = AnyHook;
           }
         )
     )

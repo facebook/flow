@@ -1447,6 +1447,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
         let reason = update_desc_reason (fun d -> RStatics d) reason in
         Obj_type.mk_with_proto cx reason (FunProtoT reason) ~obj_kind:Inexact ?call:None
       in
+      let hook = NonHook in
       let ft =
         DefT
           ( reason,
@@ -1459,6 +1460,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                   return_t;
                   predicate;
                   def_reason = reason;
+                  hook;
                 }
               )
           )
@@ -2460,6 +2462,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
         | Some pred -> Func_class_sig_types.Func.Predicate pred
       in
       let reason = mk_annot_reason RFunctionType loc in
+      let hook = NonHook in
       ( {
           Func_type_sig.Types.reason;
           kind;
@@ -2469,6 +2472,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
           return_t = Annotated return_t;
           ret_annot_loc = loc_of_t return_t;
           statics = None;
+          hook;
         },
         {
           Ast.Type.Function.tparams = tparams_ast;

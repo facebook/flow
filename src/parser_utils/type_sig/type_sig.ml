@@ -109,6 +109,13 @@ type ('loc, 'a) fun_rest_param =
     }
 [@@deriving iter, map, show { with_path = false }]
 
+(* Intentionally not having an AnyHook here--should only exist synthetically *)
+type 'loc react_hook =
+  | HookDecl of 'loc
+  | HookAnnot
+  | NonHook
+[@@deriving iter, map, show { with_path = false }]
+
 type ('loc, 'a) fun_sig =
   | FunSig of {
       tparams: ('loc, 'a) tparams;
@@ -117,6 +124,7 @@ type ('loc, 'a) fun_sig =
       this_param: 'a option;
       return: 'a;
       predicate: ('loc, 'a) predicate_or_type_guard option;
+      hook: 'loc react_hook;
     }
 [@@deriving iter, map, show { with_path = false }]
 

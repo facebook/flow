@@ -2910,7 +2910,20 @@ struct
           Base.List.hd params
           |> Base.Option.value_map ~f:snd ~default:(Obj_type.mk ~obj_kind:Exact cx reason)
           |> fun t -> rec_flow_t ~use_op:unknown_use cx trace (t, props)
-        | ( DefT (reason, FunT (_, { params; return_t; rest_param = None; predicate = None; _ })),
+        | ( DefT
+              ( reason,
+                FunT
+                  ( _,
+                    {
+                      params;
+                      return_t;
+                      rest_param = None;
+                      predicate = None;
+                      hook = NonHook | AnyHook;
+                      _;
+                    }
+                  )
+              ),
             ReactInToProps (reason_op, props)
           ) ->
           (* Contravariance *)
@@ -6151,7 +6164,7 @@ struct
 
   and any_prop_to_function
       use_op
-      { this_t = (this, _); params; rest_param; return_t; predicate; def_reason = _ }
+      { this_t = (this, _); params; rest_param; return_t; predicate; def_reason = _; hook = _ }
       covariant
       contravariant =
     List.iter (snd %> contravariant ~use_op) params;
@@ -9511,7 +9524,7 @@ struct
         | Some trace -> trace
         | None -> failwith "All multiflows show have a trace"
       in
-      let { params; rest_param; return_t; def_reason; predicate; _ } = ft in
+      let { params; rest_param; return_t; def_reason; predicate; hook; _ } = ft in
       let (args, spread_arg) = flatten_call_arg cx ~use_op reason_op resolved in
       let (params, rest_param) =
         multiflow_partial
@@ -9545,6 +9558,7 @@ struct
                   ~rest_param
                   ~def_reason
                   ~params_names
+                  ~hook
               )
           )
       in

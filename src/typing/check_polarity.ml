@@ -107,6 +107,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
         return_t;
         predicate;
         def_reason = _;
+        hook = _;
       } =
         f
       in

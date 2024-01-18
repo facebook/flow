@@ -201,6 +201,7 @@ struct
       fparams = F.empty (fun _ _ _ -> None);
       body = None;
       return_t = Annotated (VoidT.why reason);
+      hook = NonHook;
       ret_annot_loc = Reason.loc_of_reason reason;
       statics = None;
     }
@@ -213,12 +214,13 @@ struct
       fparams = F.empty (fun _ _ _ -> None);
       body = None;
       return_t = return_annot_or_inferred;
+      hook = NonHook;
       ret_annot_loc = annot_loc;
       statics = None;
     }
 
   let functiontype cx ~arrow func_loc this_default x =
-    let { T.reason; kind; tparams; fparams; return_t; statics; _ } = x in
+    let { T.reason; kind; tparams; fparams; return_t; statics; hook; _ } = x in
     let this_type = F.this fparams |> Base.Option.value ~default:this_default in
     let return_t =
       match return_t with
@@ -239,6 +241,7 @@ struct
         params = F.value fparams;
         rest_param = F.rest fparams;
         return_t;
+        hook;
         predicate;
         def_reason = reason;
       }
@@ -252,7 +255,8 @@ struct
     if not arrow then Base.Option.iter func_loc ~f:(Type_env.bind_function_this cx this_type);
     poly_type_of_tparams (Type.Poly.generate_id ()) tparams t
 
-  let methodtype cx method_this_loc this_default { T.reason; kind; tparams; fparams; return_t; _ } =
+  let methodtype
+      cx method_this_loc this_default { T.reason; kind; tparams; fparams; return_t; hook; _ } =
     let params = F.value fparams in
     let (params_names, params_tlist) = List.split params in
     let rest_param = F.rest fparams in
@@ -273,6 +277,7 @@ struct
             ( dummy_static reason,
               mk_boundfunctiontype
                 ~this:param_this_t
+                ~hook
                 params_tlist
                 ~rest_param
                 ~def_reason

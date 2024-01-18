@@ -1697,7 +1697,7 @@ and merge_fun
     infer_tps
     file
     reason
-    (FunSig { tparams; params; rest_param; this_param; return; predicate })
+    (FunSig { tparams; params; rest_param; this_param; return; predicate; hook })
     statics =
   let t (tps, _) =
     let open Type in
@@ -1740,6 +1740,12 @@ and merge_fun
       else
         Type.This_Function
     in
+    let hook =
+      match hook with
+      | HookDecl l -> Type.HookDecl (Context.make_aloc_id file.cx l)
+      | HookAnnot -> Type.HookAnnot
+      | NonHook -> Type.NonHook
+    in
     let funtype =
       {
         this_t = (this_t, this_status);
@@ -1748,6 +1754,7 @@ and merge_fun
         return_t;
         predicate;
         def_reason = reason;
+        hook;
       }
     in
     DefT (reason, FunT (statics, funtype))
