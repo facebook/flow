@@ -425,6 +425,7 @@ and 'loc t' =
   | EReactRefInRender of {
       usage: 'loc virtual_reason;
       kind: ref_in_render_kind;
+      in_hook: bool;
     }
   | EFunctionCallExtraArg of 'loc virtual_reason * 'loc virtual_reason * int * 'loc virtual_use_op
   | EUnsupportedSetProto of 'loc virtual_reason
@@ -1190,7 +1191,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EInvalidLHSInAssignment l -> EInvalidLHSInAssignment (f l)
   | EUnsupportedImplements r -> EUnsupportedImplements (map_reason r)
   | EReactElementFunArity (r, s, i) -> EReactElementFunArity (map_reason r, s, i)
-  | EReactRefInRender { usage; kind } -> EReactRefInRender { usage = map_reason usage; kind }
+  | EReactRefInRender { usage; kind; in_hook } ->
+    EReactRefInRender { usage = map_reason usage; kind; in_hook }
   | EUnsupportedSetProto r -> EUnsupportedSetProto (map_reason r)
   | EDuplicateModuleProvider { module_name; provider; conflict } ->
     EDuplicateModuleProvider { module_name; provider = f provider; conflict = f conflict }
@@ -3679,7 +3681,13 @@ let friendly_message_of_msg loc_of_aloc msg =
       ]
     in
     Normal { features }
-  | EReactRefInRender { usage; kind = Argument } ->
+  | EReactRefInRender { usage; kind = Argument; in_hook } ->
+    let context =
+      if in_hook then
+        text "within hooks"
+      else
+        text "during render"
+    in
     let features =
       [
         text "Cannot pass ";
@@ -3688,11 +3696,19 @@ let friendly_message_of_msg loc_of_aloc msg =
         code "ref";
         text " values may not be passed to functions because they could read the ref value (";
         code "current";
-        text ") property) during render.  (https://react.dev/reference/react/useRef).";
+        text ") property) ";
+        context;
+        text ". (https://react.dev/reference/react/useRef).";
       ]
     in
     Normal { features }
-  | EReactRefInRender { usage; kind = Access } ->
+  | EReactRefInRender { usage; kind = Access; in_hook } ->
+    let context =
+      if in_hook then
+        text "within hooks"
+      else
+        text "during render"
+    in
     let features =
       [
         text "Cannot read ";
@@ -3701,7 +3717,9 @@ let friendly_message_of_msg loc_of_aloc msg =
         ref usage;
         text " because ";
         code "ref";
-        text " values may not be read during render.  (https://react.dev/reference/react/useRef).";
+        text " values may not be read ";
+        context;
+        text ". (https://react.dev/reference/react/useRef).";
       ]
     in
     Normal { features }

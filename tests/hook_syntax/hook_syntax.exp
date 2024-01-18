@@ -200,6 +200,15 @@ References:
                        ^^^^^^^^^^^^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------- hook_tests.js:46:5
+
+Cannot read `current` from `w` [1] because `ref` values may not be read within hooks.
+(https://react.dev/reference/react/useRef). [react-rule-unsafe-ref]
+
+   46|     w.current = 42; // error
+           ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- hook_type_tests.js:4:3
 
 Cannot assign `100` to `v.a` because property `a` is not writable. The return value of a React hook [1] cannot be
@@ -286,4 +295,4 @@ References:
 
 
 
-Found 17 errors
+Found 18 errors

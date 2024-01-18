@@ -42,4 +42,6 @@ hook useBadHook(x: Array<number>, y: React.RefObject<number>): void {
     React.useEffect(() => {
         y.current = 42; // ok
     })
+    const w = React.useRef<?number>(null);
+    w.current = 42; // error
 }

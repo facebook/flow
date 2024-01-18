@@ -2,6 +2,7 @@
 experimental.component_syntax=typing
 experimental.react_rule=deepReadOnlyProps
 experimental.react_rule=deepReadOnlyHookReturns
+experimental.react_rule=validateRefAccessDuringRender
 all=true
 casting_syntax=both
 no_flowlib=false

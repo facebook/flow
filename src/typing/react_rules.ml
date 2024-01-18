@@ -8,14 +8,16 @@
 module Ast = Flow_ast
 open Reason
 
-let check_ref_use cx rrid var_reason kind t =
+let check_ref_use cx rrid in_hook var_reason kind t =
   let rec recur_id seen t =
     let recur = recur_id seen in
     let open Type in
     match t with
     | OpaqueT (_, { opaque_id; _ })
       when Base.Option.value_map ~default:false ~f:(( = ) opaque_id) rrid ->
-      Flow_js_utils.add_output cx (Error_message.EReactRefInRender { usage = var_reason; kind })
+      Flow_js_utils.add_output
+        cx
+        (Error_message.EReactRefInRender { usage = var_reason; kind; in_hook })
     | OpaqueT (_, { underlying_t; super_t; _ }) ->
       Base.Option.iter ~f:recur underlying_t;
       Base.Option.iter ~f:recur super_t
@@ -62,7 +64,7 @@ let rec whole_ast_visitor cx rrid =
 
     method on_type_annot l = l
 
-    method! component_declaration = (component_ast_visitor cx rrid)#component_declaration
+    method! component_declaration = (component_ast_visitor cx false rrid)#component_declaration
 
     method! function_declaration fn =
       let {
@@ -92,14 +94,15 @@ let rec whole_ast_visitor cx rrid =
              id
         && List.length params_list = 1
         && Base.Option.is_none rest
+        || hook
       then
         let ident' = Base.Option.map ~f:this#function_identifier id in
         this#type_params_opt tparams (fun tparams' ->
-            let params' = (component_ast_visitor cx rrid)#function_params params in
+            let params' = (component_ast_visitor cx hook rrid)#function_params params in
             let return' = this#function_return_annotation return in
-            let body' = (component_ast_visitor cx rrid)#function_component_body body in
+            let body' = (component_ast_visitor cx hook rrid)#function_component_body body in
             let predicate' =
-              Base.Option.map ~f:(component_ast_visitor cx rrid)#predicate predicate
+              Base.Option.map ~f:(component_ast_visitor cx hook rrid)#predicate predicate
             in
             let sig_loc' = this#on_loc_annot sig_loc in
             let comments' = this#syntax_opt comments in
@@ -121,7 +124,7 @@ let rec whole_ast_visitor cx rrid =
         super#function_declaration fn
   end
 
-and component_ast_visitor cx rrid =
+and component_ast_visitor cx is_hook rrid =
   object (this)
     inherit
       [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
@@ -138,7 +141,7 @@ and component_ast_visitor cx rrid =
         | _ -> mk_reason (RCustom "expression") loc
       in
       if Context.react_rule_enabled cx Options.ValidateRefAccessDuringRender then
-        check_ref_use cx rrid reason err_kind ty;
+        check_ref_use cx rrid is_hook reason err_kind ty;
       this#expression expr
 
     method! arg_list (annot, args) =
