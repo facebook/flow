@@ -2438,10 +2438,6 @@ module Make
         mk_reason (RIdentifier (OrdinaryName name)) id_loc
       | (ploc, _) -> mk_reason RDestructuring ploc
     in
-    let (annot_or_inferred, annot_ast) =
-      Anno.mk_type_annotation cx Subst_name.Map.empty id_reason annot
-    in
-    let annot_t = type_t_of_annotated_or_inferred annot_or_inferred in
     (* Identifiers do not need to be initialized at the declaration site as long
      * as they are definitely initialized before use. Destructuring patterns must
      * be initialized, since their declaration involves some operation on the
@@ -2467,6 +2463,15 @@ module Make
       match id with
       | (ploc, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; annot = _; optional }) ->
         let (id_loc, { Ast.Identifier.name; comments }) = name in
+        let (annot_t, annot_ast) =
+          match annot with
+          | Ast.Type.Missing loc ->
+            let t = Tvar.mk cx id_reason in
+            (t, Ast.Type.Missing (loc, t))
+          | Ast.Type.Available annot ->
+            let (t, ast_annot) = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
+            (t, Ast.Type.Available ast_annot)
+        in
         if has_anno then
           ()
         else if Base.Option.is_some init_ast || Base.Option.is_some if_uninitialized then
@@ -2490,6 +2495,13 @@ module Make
             }
         )
       | _ ->
+        let annot_t =
+          match annot with
+          | Ast.Type.Missing _ -> Tvar.mk cx id_reason
+          | Ast.Type.Available annot ->
+            let (t, _) = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
+            t
+        in
         Base.Option.iter init_opt ~f:(fun (init_t, init_reason) ->
             let use_op = Op (AssignVar { var = Some id_reason; init = init_reason }) in
             Flow.flow cx (init_t, UseT (use_op, annot_t))
