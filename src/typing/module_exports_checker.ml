@@ -12,32 +12,33 @@ module Scope_builder = Scope_builder.With_ALoc
 module Loc = Loc_sig.ALocS
 
 type module_kind =
-  | CommonJS of { mod_exp_loc: ALoc.t option }
+  | Unknown
+  | CommonJS
   | ES
 
 type state = module_kind * Error_message.t list
 
 let add_es_export loc module_kind errs =
   match module_kind with
-  | CommonJS { mod_exp_loc = Some _ } ->
+  | CommonJS ->
     let errs = Error_message.EIndeterminateModuleType loc :: errs in
     (module_kind, errs)
-  | CommonJS _
+  | Unknown
   | ES ->
     (ES, errs)
 
 let set_cjs_exports mod_exp_loc module_kind errs =
   match module_kind with
-  | CommonJS { mod_exp_loc = original_mod_exp_loc } ->
-    let mod_exp_loc = Base.Option.first_some original_mod_exp_loc (Some mod_exp_loc) in
-    (CommonJS { mod_exp_loc }, errs)
+  | Unknown
+  | CommonJS ->
+    (CommonJS, errs)
   | ES ->
     let err = Error_message.EIndeterminateModuleType mod_exp_loc in
     (module_kind, err :: errs)
 
 class exports_error_checker ~is_local_use =
   object (this)
-    inherit [state, ALoc.t] visitor ~init:(CommonJS { mod_exp_loc = None }, []) as super
+    inherit [state, ALoc.t] visitor ~init:(Unknown, []) as super
 
     method private update_file_sig f =
       this#update_acc (fun (fsig, errs) ->
@@ -303,11 +304,8 @@ class exports_error_checker ~is_local_use =
          * exceptions to this rule because they are valid in both CommonJS
          * and ES modules (and thus do not indicate an intent for either).
          *)
-        | (CommonJS { mod_exp_loc = None }, DeclareModuleExports _) ->
-          CommonJS { mod_exp_loc = Some loc }
-        | ( CommonJS { mod_exp_loc = None },
-            DeclareExportDeclaration { DeclareExportDeclaration.declaration; _ }
-          ) ->
+        | (Unknown, DeclareModuleExports _) -> CommonJS
+        | (Unknown, DeclareExportDeclaration { DeclareExportDeclaration.declaration; _ }) ->
           (match declaration with
           | Some (DeclareExportDeclaration.NamedType _)
           | Some (DeclareExportDeclaration.Interface _) ->
@@ -316,7 +314,7 @@ class exports_error_checker ~is_local_use =
         (*
          * There should never be more than one `declare module.exports`
          * statement *)
-        | (CommonJS { mod_exp_loc = Some _ }, DeclareModuleExports _) ->
+        | (CommonJS, DeclareModuleExports _) ->
           this#add_error (Error_message.EDuplicateDeclareModuleExports loc);
           module_kind
         (*
@@ -330,9 +328,7 @@ class exports_error_checker ~is_local_use =
         | (ES, DeclareModuleExports _) ->
           this#add_error (Error_message.EIndeterminateModuleType loc);
           module_kind
-        | ( CommonJS { mod_exp_loc = Some _ },
-            DeclareExportDeclaration { DeclareExportDeclaration.declaration; _ }
-          ) ->
+        | (CommonJS, DeclareExportDeclaration { DeclareExportDeclaration.declaration; _ }) ->
           (match declaration with
           | Some (DeclareExportDeclaration.NamedType _)
           | Some (DeclareExportDeclaration.Interface _) ->
@@ -342,9 +338,7 @@ class exports_error_checker ~is_local_use =
         | _ -> module_kind
       in
       let { Ast.Statement.DeclareModule.body = (_, { Ast.Statement.Block.body; _ }); _ } = m in
-      let _module_kind : module_kind =
-        Base.List.fold body ~init:(CommonJS { mod_exp_loc = None }) ~f
-      in
+      let _module_kind : module_kind = Base.List.fold body ~init:Unknown ~f in
       m
 
     method! toplevel_statement_list (stmts : (ALoc.t, ALoc.t) Ast.Statement.t list) =
@@ -382,7 +376,9 @@ class exports_error_checker ~is_local_use =
    accummulates BadExportContext errors. *)
 let filter_irrelevant_errors ~module_kind errors =
   match module_kind with
-  | CommonJS _ -> errors
+  | Unknown
+  | CommonJS ->
+    errors
   | ES ->
     Base.List.filter errors ~f:(function
         | Error_message.EBadExportContext _ -> false
