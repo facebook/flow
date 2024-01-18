@@ -2466,18 +2466,19 @@ module Make
         let (annot_t, annot_ast) =
           match annot with
           | Ast.Type.Missing loc ->
-            let t = Tvar.mk cx id_reason in
+            (* When there is no annotation, we still need to populate `annot_t` when we can.
+               In this case, we unify it with the type of the env entry binding, if there is one *)
+            let t =
+              if Base.Option.is_some init_ast || Base.Option.is_some if_uninitialized then
+                Type_env.read_declared_type cx id_reason id_loc
+              else
+                EmptyT.at id_loc
+            in
             (t, Ast.Type.Missing (loc, t))
           | Ast.Type.Available annot ->
             let (t, ast_annot) = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
             (t, Ast.Type.Available ast_annot)
         in
-        if has_anno then
-          ()
-        else if Base.Option.is_some init_ast || Base.Option.is_some if_uninitialized then
-          (* TODO: When there is no annotation, we still need to populate `annot_t` when we can.
-             In this case, we unify it with the type of the env entry binding. *)
-          Flow.unify cx annot_t (Type_env.read_declared_type cx id_reason id_loc);
         begin
           match init_opt with
           | Some (init_t, init_reason) ->
@@ -2497,15 +2498,18 @@ module Make
       | _ ->
         let annot_t =
           match annot with
-          | Ast.Type.Missing _ -> Tvar.mk cx id_reason
+          | Ast.Type.Missing _ ->
+            (match init_opt with
+            | Some (init_t, _) -> init_t
+            | None -> EmptyT.why id_reason)
           | Ast.Type.Available annot ->
-            let (t, _) = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
-            t
+            let (annot_t, _) = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
+            Base.Option.iter init_opt ~f:(fun (init_t, init_reason) ->
+                let use_op = Op (AssignVar { var = Some id_reason; init = init_reason }) in
+                Flow.flow cx (init_t, UseT (use_op, annot_t))
+            );
+            annot_t
         in
-        Base.Option.iter init_opt ~f:(fun (init_t, init_reason) ->
-            let use_op = Op (AssignVar { var = Some id_reason; init = init_reason }) in
-            Flow.flow cx (init_t, UseT (use_op, annot_t))
-        );
         let init =
           Destructuring.empty
             ?init
