@@ -148,6 +148,7 @@ var removeFlowVisitor = {
   DeclareFunction: removeNode,
   DeclareInterface: removeNode,
   DeclareModule: removeNode,
+  DeclareNamespace: removeNode,
   DeclareTypeAlias: removeNode,
   DeclareVariable: removeNode,
   InterfaceDeclaration: removeNode,
