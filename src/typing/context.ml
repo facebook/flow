@@ -439,10 +439,6 @@ let module_info cx =
   | Some info -> info
   | None -> cx.module_info
 
-let module_kind cx =
-  let info = module_info cx in
-  info.Module_info.kind
-
 (* accessors *)
 
 let all_unresolved cx = cx.ccx.all_unresolved

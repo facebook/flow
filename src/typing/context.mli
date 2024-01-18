@@ -222,8 +222,6 @@ val severity_cover : t -> ExactCover.lint_severity_cover Utils_js.FilenameMap.t
 
 val max_trace_depth : t -> int
 
-val module_kind : t -> Module_info.kind
-
 val property_maps : t -> Type.Properties.map
 
 val call_props : t -> Type.t IMap.t
