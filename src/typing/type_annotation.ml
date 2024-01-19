@@ -2508,14 +2508,6 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
         }
       )
 
-  and mk_type cx tparams_map infer_tparams_map reason = function
-    | None ->
-      let t = Tvar.mk cx reason in
-      (t, None)
-    | Some annot ->
-      let (((_, t), _) as annot_ast) = convert cx tparams_map infer_tparams_map annot in
-      (t, Some annot_ast)
-
   and mk_return_type_annotation cx tparams_map params reason ~void_return ~async annot =
     match annot with
     | Ast.Function.ReturnAnnot.Missing loc when void_return ->
@@ -2658,13 +2650,17 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
         let ast = Tast_utils.error_mapper#type_param (loc, type_param) in
         (ast, tparam, t)
       | _ ->
+        let mk_type cx tparams_map infer_tparams_map annot =
+          let (((_, t), _) as annot_ast) = convert cx tparams_map infer_tparams_map annot in
+          (t, Some annot_ast)
+        in
         let (bound, bound_ast) =
           match bound with
           | Ast.Type.Missing loc ->
             let t = DefT (Reason.replace_desc_reason RMixed reason, MixedT Mixed_everything) in
             (t, Ast.Type.Missing (loc, t))
           | Ast.Type.Available (bound_loc, u) ->
-            let (bound, bound_ast) = mk_type cx tparams_map infer_tparams_map reason (Some u) in
+            let (bound, bound_ast) = mk_type cx tparams_map infer_tparams_map u in
             let bound_ast =
               match bound_ast with
               | Some ast -> Ast.Type.Available (bound_loc, ast)
@@ -2676,7 +2672,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
           match default with
           | None -> (None, None)
           | Some default ->
-            let (t, default_ast) = mk_type cx tparams_map infer_tparams_map reason (Some default) in
+            let (t, default_ast) = mk_type cx tparams_map infer_tparams_map default in
             Context.add_post_inference_subtyping_check cx t unknown_use bound;
             (Some t, default_ast)
         in
