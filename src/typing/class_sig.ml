@@ -282,8 +282,6 @@ module Make
 
   let mem_constructor { constructor; _ } = constructor <> []
 
-  let mem_field x = with_sig (fun s -> SMap.mem x s.fields)
-
   let iter_methods_with_name f s =
     SMap.iter (f %> Nel.iter) s.methods;
     SMap.iter f s.private_methods;
@@ -303,19 +301,6 @@ module Make
     | Interface _ -> None
 
   let this_or_mixed loc = this_t %> Base.Option.value ~default:(Type.dummy_this loc)
-
-  let this_or_mixed_of_t ~static x =
-    let loc =
-      if static then
-        loc_of_reason x.static.reason
-      else
-        loc_of_reason x.instance.reason
-    in
-    let this_t = this_or_mixed loc x in
-    if static then
-      TypeUtil.class_type this_t
-    else
-      this_t
 
   let tparams_with_this tparams this_tp =
     (* Use the loc for the original tparams, or just the loc for the this type if there are no

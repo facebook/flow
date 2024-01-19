@@ -154,17 +154,12 @@ module type S = sig
     t ->
     t
 
-  (** Check if this signature defines a given field *)
-  val mem_field : string -> static:bool -> t -> bool
-
   (** Check if this signature defines a constructor *)
   val mem_constructor : t -> bool
 
   val mk_this :
     Type.t -> (* self *)
               Context.t -> Reason.t -> Type.typeparams -> Type.typeparam * Type.t
-
-  val this_or_mixed_of_t : static:bool -> t -> Type.t
 
   val fields_to_prop_map : Context.t -> field' SMap.t -> Type.Properties.id
 
