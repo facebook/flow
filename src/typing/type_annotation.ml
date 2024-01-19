@@ -229,10 +229,6 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
     let t = Type_env.query_var ~lookup_mode cx name loc in
     ConsGen.reposition cx loc t
 
-  let get_builtin_typeapp cx reason x targs =
-    let t = ConsGen.get_builtin cx x reason in
-    TypeUtil.typeapp ~from_value:false ~use_desc:false reason t targs
-
   let is_suppress_type cx type_name = SSet.mem type_name (Context.suppress_types cx)
 
   let check_type_arg_arity cx loc t_ast params n f =
@@ -2508,44 +2504,6 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
         }
       )
 
-  and mk_return_type_annotation cx tparams_map params reason ~void_return ~async annot =
-    match annot with
-    | Ast.Function.ReturnAnnot.Missing loc when void_return ->
-      let void_t = VoidT.why reason in
-      let t =
-        if async then
-          let reason = mk_annot_reason (RType (OrdinaryName "Promise")) (loc_of_reason reason) in
-          get_builtin_typeapp cx reason (OrdinaryName "Promise") [void_t]
-        else
-          void_t
-      in
-      (Inferred t, Ast.Function.ReturnAnnot.Missing (loc, t), None)
-    (* TODO we could probably take the same shortcut for functions with an explicit `void` annotation
-       and no explicit returns *)
-    | Ast.Function.ReturnAnnot.Missing loc ->
-      let t =
-        if Context.typing_mode cx <> Context.CheckingMode then
-          Context.mk_placeholder cx reason
-        else
-          Tvar.mk cx reason
-      in
-      (Inferred t, Ast.Function.ReturnAnnot.Missing (loc, t), None)
-    | Ast.Function.ReturnAnnot.Available annot ->
-      let (t, ast_annot) = mk_type_available_annotation cx tparams_map annot in
-      (Annotated t, Ast.Function.ReturnAnnot.Available ast_annot, None)
-    | Ast.Function.ReturnAnnot.TypeGuard
-        (loc, (gloc, { T.TypeGuard.guard = (id_name, Some t); asserts = false; comments })) ->
-      let (bool_t, guard', predicate) =
-        convert_type_guard cx tparams_map ALocMap.empty params gloc id_name t comments
-      in
-      (Annotated bool_t, Ast.Function.ReturnAnnot.TypeGuard (loc, guard'), predicate)
-    | Ast.Function.ReturnAnnot.TypeGuard annot ->
-      let ((_, (loc, _)) as t_ast') = Tast_utils.error_mapper#type_guard_annotation annot in
-      Flow_js_utils.add_output
-        cx
-        (Error_message.EUnsupportedSyntax (loc, Error_message.UserDefinedTypeGuards));
-      (Annotated (AnyT.at (AnyError None) loc), Ast.Function.ReturnAnnot.TypeGuard t_ast', None)
-
   and mk_type_available_annotation cx tparams_map (loc, annot) =
     let node_cache = Context.node_cache cx in
     let (((_, t), _) as annot_ast) =
@@ -3360,12 +3318,11 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
   let convert_render_type cx ~allow_generic_t tparams_map =
     convert_render_type cx ~allow_generic_t tparams_map ALocMap.empty
 
+  let convert_type_guard cx tparams_map = convert_type_guard cx tparams_map ALocMap.empty
+
   let mk_super cx tparams_map = mk_super cx tparams_map ALocMap.empty
 
   let mk_type_available_annotation cx tparams_map = mk_type_available_annotation cx tparams_map
-
-  let mk_return_type_annotation cx tparams_map params =
-    mk_return_type_annotation cx tparams_map params
 
   let mk_function_type_annotation cx tparams_map =
     mk_function_type_annotation cx tparams_map ALocMap.empty

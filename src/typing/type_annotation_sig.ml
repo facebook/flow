@@ -76,6 +76,16 @@ module type S = sig
     (ALoc.t, ALoc.t) Flow_ast.Type.Renders.t ->
     Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.Renders.t
 
+  val convert_type_guard :
+    Context.t ->
+    Type.t Subst_name.Map.t ->
+    Type.fun_param list ->
+    ALoc.t ->
+    (ALoc.t, ALoc.t) Flow_ast.Identifier.t ->
+    (ALoc.t, ALoc.t) Flow_ast.Type.t ->
+    (ALoc.t, ALoc.t Flow_ast.Comment.t list) Flow_ast.Syntax.t option ->
+    Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.TypeGuard.t * Type.fun_predicate option
+
   val mk_super :
     Context.t ->
     Type.t Subst_name.Map.t ->
@@ -84,18 +94,6 @@ module type S = sig
     (ALoc.t, ALoc.t) Flow_ast.Type.TypeArgs.t option ->
     (ALoc.t * Type.t * Type.t list option)
     * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.TypeArgs.t option
-
-  val mk_return_type_annotation :
-    Context.t ->
-    Type.t Subst_name.Map.t ->
-    Type.fun_param list ->
-    Reason.t ->
-    void_return:bool ->
-    async:bool ->
-    (ALoc.t, ALoc.t) Flow_ast.Function.ReturnAnnot.t ->
-    Type.annotated_or_inferred
-    * (ALoc.t, ALoc.t * Type.t) Flow_ast.Function.ReturnAnnot.t
-    * Type.fun_predicate option
 
   val mk_type_available_annotation :
     Context.t ->

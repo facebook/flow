@@ -7730,15 +7730,57 @@ module Make
               cx
               Error_message.(ETypeGuardIncompatibleWithFunctionKind { loc; kind });
             (Annotated return_t, return, None)
-          | (_, _) ->
-            Anno.mk_return_type_annotation
+          | (Ast.Function.ReturnAnnot.Missing loc, _) when not has_nonvoid_return ->
+            let void_t = VoidT.why ret_reason in
+            let t =
+              if kind = Async then
+                let reason =
+                  mk_annot_reason (RType (OrdinaryName "Promise")) (loc_of_reason ret_reason)
+                in
+                Flow.get_builtin_typeapp cx reason (OrdinaryName "Promise") [void_t]
+              else
+                void_t
+            in
+            (Inferred t, Ast.Function.ReturnAnnot.Missing (loc, t), None)
+          (* TODO we could probably take the same shortcut for functions with an explicit `void` annotation
+             and no explicit returns *)
+          | (Ast.Function.ReturnAnnot.Missing loc, _) ->
+            let t =
+              if Context.typing_mode cx <> Context.CheckingMode then
+                Context.mk_placeholder cx ret_reason
+              else
+                Tvar.mk cx ret_reason
+            in
+            (Inferred t, Ast.Function.ReturnAnnot.Missing (loc, t), None)
+          | (Ast.Function.ReturnAnnot.Available annot, _) ->
+            let (t, ast_annot) = Anno.mk_type_available_annotation cx tparams_map annot in
+            (Annotated t, Ast.Function.ReturnAnnot.Available ast_annot, None)
+          | ( Ast.Function.ReturnAnnot.TypeGuard
+                ( loc,
+                  (gloc, { Ast.Type.TypeGuard.guard = (id_name, Some t); asserts = false; comments })
+                ),
+              _
+            ) ->
+            let (bool_t, guard', predicate) =
+              Anno.convert_type_guard
+                cx
+                tparams_map
+                (Func_stmt_params.value fparams)
+                gloc
+                id_name
+                t
+                comments
+            in
+            (Annotated bool_t, Ast.Function.ReturnAnnot.TypeGuard (loc, guard'), predicate)
+          | (Ast.Function.ReturnAnnot.TypeGuard annot, _) ->
+            let ((_, (loc, _)) as t_ast') = Tast_utils.error_mapper#type_guard_annotation annot in
+            Flow_js_utils.add_output
               cx
-              tparams_map
-              (Func_stmt_params.value fparams)
-              ret_reason
-              ~void_return:(not has_nonvoid_return)
-              ~async:(kind = Async)
-              return
+              (Error_message.EUnsupportedSyntax (loc, Error_message.UserDefinedTypeGuards));
+            ( Annotated (AnyT.at (AnyError None) loc),
+              Ast.Function.ReturnAnnot.TypeGuard t_ast',
+              None
+            )
         in
         (* Now that we've seen the return annotation we might need to update `kind`. *)
         let kind =
