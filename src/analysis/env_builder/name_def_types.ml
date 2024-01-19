@@ -20,6 +20,7 @@ type scope_kind =
   | Generator (* generator function *)
   | AsyncGenerator (* async generator function *)
   | Module (* module scope *)
+  | DeclareModule (* module scope *)
   | Global (* global scope *)
   | Ctor (* constructor function *)
   | ComponentBody (* component syntax *)

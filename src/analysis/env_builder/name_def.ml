@@ -2222,7 +2222,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
       let r = mk_reason (RModule (OrdinaryName name)) loc in
       this#add_ordinary_binding name_loc r (DeclaredModule (loc, m));
       in_declare_module <- true;
-      let ret = this#in_scope (super#declare_module loc) Ordinary m in
+      let ret = this#in_scope (super#declare_module loc) DeclareModule m in
       in_declare_module <- false;
       ret
 

@@ -432,7 +432,7 @@ let pop_declare_module cx =
   | None -> failwith "pop empty declare module"
   | Some _ -> cx.declare_module_ref <- None
 
-let in_declare_module cx = cx.declare_module_ref <> None
+let in_declare_module cx = cx.environment.Loc_env.scope_kind = Name_def.DeclareModule
 
 let module_info cx =
   match cx.declare_module_ref with
@@ -542,7 +542,7 @@ let is_verbose cx =
     else
       Base.List.mem files (File_key.to_string file) ~equal:String.equal
 
-let is_strict cx = Base.Option.is_some cx.declare_module_ref || cx.metadata.strict
+let is_strict cx = in_declare_module cx || cx.metadata.strict
 
 let is_strict_local cx = cx.metadata.strict_local
 

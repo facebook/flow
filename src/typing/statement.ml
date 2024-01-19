@@ -2054,7 +2054,7 @@ module Make
       let (body_loc, { Ast.Statement.Block.body = elements; comments = elements_comments }) =
         body
       in
-      let prev_scope_kind = Type_env.set_scope_kind cx Name_def.Ordinary in
+      let prev_scope_kind = Type_env.set_scope_kind cx Name_def.DeclareModule in
       Context.push_declare_module cx (Module_info.empty_cjs_module ());
 
       let elements_ast = statement_list cx elements in
