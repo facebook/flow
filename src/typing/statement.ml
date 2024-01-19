@@ -7754,6 +7754,9 @@ module Make
               );
             let t = AnyT.make (AnyError (Some MissingAnnotation)) reason in
             (Inferred t, Ast.Function.ReturnAnnot.Missing (loc, t), None)
+          | (Ast.Function.ReturnAnnot.Missing loc, _) when kind = Func_class_sig_types.Func.Ctor ->
+            let t = VoidT.make (mk_reason RConstructorVoidReturn ret_loc) in
+            (Inferred t, Ast.Function.ReturnAnnot.Missing (loc, t), None)
           (* TODO we could probably take the same shortcut for functions with an explicit `void` annotation
              and no explicit returns *)
           | (Ast.Function.ReturnAnnot.Missing loc, _) ->
@@ -7814,14 +7817,17 @@ module Make
             (Inferred (AnyT.error ret_reason), Some (Tast_utils.error_mapper#predicate pred))
           | _ -> (return_t, Base.Option.map ~f:Tast_utils.error_mapper#predicate predicate)
         in
-        let return_t =
-          mk_inference_target_with_annots ~has_hint:(Type_env.has_hint cx ret_loc) return_t
-        in
         let () =
-          if kind = Func_class_sig_types.Func.Ctor then
+          match (return, kind) with
+          | (Ast.Function.ReturnAnnot.Missing _, Func_class_sig_types.Func.Ctor) -> ()
+          | (_, Func_class_sig_types.Func.Ctor) ->
             let return_t = TypeUtil.type_t_of_annotated_or_inferred return_t in
             let use_op = Op (FunReturnStatement { value = TypeUtil.reason_of_t return_t }) in
             Flow.unify cx ~use_op return_t (VoidT.make (mk_reason RConstructorVoidReturn ret_loc))
+          | _ -> ()
+        in
+        let return_t =
+          mk_inference_target_with_annots ~has_hint:(Type_env.has_hint cx ret_loc) return_t
         in
         let statics_t =
           let props =
