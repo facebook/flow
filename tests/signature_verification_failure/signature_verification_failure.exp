@@ -43,15 +43,6 @@ annotation at array pattern: [signature-verification-failure]
                         ^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- class.js:3:3
-
-Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
-annotation at property `x`: [signature-verification-failure]
-
-   3|   x = 1;
-        ^^^^^^
-
-
 Error ----------------------------------------------------------------------------------------------------- class.js:6:3
 
 Literal properties not yet supported. [unsupported-syntax]
@@ -363,4 +354,4 @@ annotation at declaration of variable `x`: [signature-verification-failure]
 
 
 
-Found 37 errors
+Found 36 errors

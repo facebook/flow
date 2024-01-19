@@ -789,12 +789,9 @@ let%expect_test "export_class_reference_check1" =
                  rest_param = None; this_param = None;
                  return = (Annot (Number [3:16-22]));
                  predicate = None; hook = NonHook}} };
-           own_props = { "f" -> (ObjValueField ([2:2-3], (Err [2:2-8]), Polarity.Neutral)) }}}
-
-    Errors:
-    (SigError
-       (Signature_error.ExpectedAnnotation ([2:2-8],
-          Expected_annotation_sort.Property {name = "f"})))
+           own_props =
+           { "f" ->
+             (ObjValueField ([2:2-3], (Value (NumberLit ([2:6-7], 0., "0"))), Polarity.Neutral)) }}}
   |}]
 
 let%expect_test "export_class_reference_check2" =
@@ -1016,7 +1013,10 @@ let%expect_test "class_dependencies_check" =
          ClassSig {tparams = Mono; extends = ClassImplicitExtends;
            implements = []; static_props = {};
            proto_props = {};
-           own_props = { "f" -> (ObjValueField ([1:10-11], (Err [1:10-16]), Polarity.Neutral)) }}}
+           own_props =
+           { "f" ->
+             (ObjValueField ([1:10-11], (
+                Value (NumberLit ([1:14-15], 0., "0"))), Polarity.Neutral)) }}}
     1. ClassBinding {id_loc = [2:6-7];
          name = "C";
          def =
@@ -1040,11 +1040,6 @@ let%expect_test "class_dependencies_check" =
            { "f" ->
              (ObjValueField ([3:2-3],
                 (TyRef (Unqualified LocalRef {ref_loc = [3:5-6]; index = 0})), Polarity.Neutral)) }}}
-
-    Errors:
-    (SigError
-       (Signature_error.ExpectedAnnotation ([1:10-16],
-          Expected_annotation_sort.Property {name = "f"})))
   |}]
 
 let%expect_test "export_new_typecast" =
@@ -1128,7 +1123,10 @@ let%expect_test "export_new_typecast_check" =
          ClassSig {tparams = Mono; extends = ClassImplicitExtends;
            implements = []; static_props = {};
            proto_props = {};
-           own_props = { "f" -> (ObjValueField ([1:10-11], (Err [1:10-16]), Polarity.Neutral)) }}}
+           own_props =
+           { "f" ->
+             (ObjValueField ([1:10-11], (
+                Value (NumberLit ([1:14-15], 0., "0"))), Polarity.Neutral)) }}}
     1. ClassBinding {id_loc = [2:6-7];
          name = "C";
          def =
@@ -1152,11 +1150,6 @@ let%expect_test "export_new_typecast_check" =
            { "f" ->
              (ObjValueField ([3:2-3],
                 (TyRef (Unqualified LocalRef {ref_loc = [3:5-6]; index = 0})), Polarity.Neutral)) }}}
-
-    Errors:
-    (SigError
-       (Signature_error.ExpectedAnnotation ([1:10-16],
-          Expected_annotation_sort.Property {name = "f"})))
   |}]
 
 let%expect_test "recursive_dependencies" =
@@ -1243,12 +1236,10 @@ let%expect_test "recursive_dependencies_check" =
                  rest_param = None; this_param = None;
                  return = (TyRef (Unqualified LocalRef {ref_loc = [3:11-12]; index = 0}));
                  predicate = None; hook = NonHook}} };
-           own_props = { "f" -> (ObjValueField ([2:2-3], (Err [2:2-12]), Polarity.Neutral)) }}}
+           own_props = { "f" -> (ObjValueField ([2:2-3], (Err [2:6-11]), Polarity.Neutral)) }}}
 
     Errors:
-    (SigError
-       (Signature_error.ExpectedAnnotation ([2:2-12],
-          Expected_annotation_sort.Property {name = "f"})))
+    (SigError (Signature_error.UnexpectedExpression ([2:6-11], Flow_ast_utils.ExpressionSort.New)))
   |}]
 
 let%expect_test "typeof_dependencies" =
@@ -1923,14 +1914,28 @@ let%expect_test "report_all_errors" =
          ClassSig {tparams = Mono; extends = ClassImplicitExtends;
            implements = []; static_props = {};
            proto_props = {};
-           own_props = { "f" -> (ObjValueField ([2:2-3], (Err [2:2-23]), Polarity.Neutral)) }}}
+           own_props =
+           { "f" ->
+             (ObjValueField ([2:2-3],
+                (Value
+                   FunExpr {loc = [2:6-22];
+                     async = false; generator = false;
+                     def =
+                     FunSig {tparams = Mono;
+                       params = [FunParam {name = (Some "x"); t = (Annot (Number [2:10-16]))}];
+                       rest_param = None;
+                       this_param = None;
+                       return = (Err [2:17]);
+                       predicate = None;
+                       hook = NonHook};
+                     statics = {}}),
+                Polarity.Neutral)) }}}
 
     Errors:
     (SigError
        (Signature_error.ExpectedAnnotation ([6:16], Expected_annotation_sort.FunctionReturn)))
     (SigError
-       (Signature_error.ExpectedAnnotation ([2:2-23],
-          Expected_annotation_sort.Property {name = "f"})))
+       (Signature_error.ExpectedAnnotation ([2:17], Expected_annotation_sort.FunctionReturn)))
   |}]
 
 let%expect_test "munged_methods_ignored_if_directive" =
@@ -2053,12 +2058,25 @@ let%expect_test "munged_fields_not_ignored" =
          ClassSig {tparams = Mono; extends = ClassImplicitExtends;
            implements = []; static_props = {};
            proto_props = {};
-           own_props = { "_method" -> (ObjValueField ([2:2-9], (Err [2:2-31]), Polarity.Neutral)) }}}
+           own_props =
+           { "_method" ->
+             (ObjValueField ([2:2-9],
+                (Value
+                   FunExpr {loc = [2:12-31];
+                     async = false; generator = false;
+                     def =
+                     FunSig {tparams = Mono;
+                       params = []; rest_param = None;
+                       this_param = None;
+                       return = (Err [2:14]);
+                       predicate = None;
+                       hook = NonHook};
+                     statics = {}}),
+                Polarity.Neutral)) }}}
 
     Errors:
     (SigError
-       (Signature_error.ExpectedAnnotation ([2:2-31],
-          Expected_annotation_sort.Property {name = "_method"})))
+       (Signature_error.ExpectedAnnotation ([2:14], Expected_annotation_sort.FunctionReturn)))
   |}]
 
 let%expect_test "propTypes_static_failure" =
@@ -2086,13 +2104,11 @@ let%expect_test "propTypes_static_failure" =
          ClassSig {tparams = Mono; extends = ClassImplicitExtends;
            implements = [];
            static_props =
-           { "propTypes" -> (ObjValueField ([2:9-18], (Err [2:2-23]), Polarity.Neutral)) };
+           { "propTypes" ->
+             (ObjValueField ([2:9-18],
+                (Value ObjLit {loc = [2:21-23]; frozen = false; proto = None; props = {}}),
+                Polarity.Neutral)) };
            proto_props = {}; own_props = {}}}
-
-    Errors:
-    (SigError
-       (Signature_error.ExpectedAnnotation ([2:2-23],
-          Expected_annotation_sort.Property {name = "propTypes"})))
   |}]
 
 let%expect_test "array_spread" =

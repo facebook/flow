@@ -3611,7 +3611,7 @@ and class_def =
               {
                 C.Property.key = P.Identifier (id_loc, { Ast.Identifier.name; comments = _ });
                 annot = t;
-                value = _;
+                value;
                 static;
                 variance;
                 decorators = _;
@@ -3628,16 +3628,20 @@ and class_def =
                 (id_loc, annot opts scope tbls xs t)
               | Ast.Type.Missing _ ->
                 let prop_loc = push_loc tbls prop_loc in
-                let res =
-                  Err
-                    ( prop_loc,
-                      SigError
-                        (Signature_error.ExpectedAnnotation
-                           (prop_loc, Expected_annotation_sort.Property { name })
-                        )
-                    )
-                in
                 let id_loc = push_loc tbls id_loc in
+                let res =
+                  match value with
+                  | C.Property.Initialized e -> expression opts scope tbls e
+                  | C.Property.Declared
+                  | C.Property.Uninitialized ->
+                    Err
+                      ( prop_loc,
+                        SigError
+                          (Signature_error.ExpectedAnnotation
+                             (prop_loc, Expected_annotation_sort.Property { name })
+                          )
+                      )
+                in
                 (id_loc, res)
             in
             Acc.add_field ~static name id_loc (polarity variance) t acc
