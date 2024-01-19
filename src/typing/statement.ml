@@ -7721,6 +7721,8 @@ module Make
           | _ when getset -> Some "getter/setter"
           | _ -> None
         in
+        let from_generic_function = Base.Option.is_some tparams in
+        let require_return_annot = require_return_annot || from_generic_function in
         let (return_t, return, type_guard_opt) =
           match (return, type_guard_incompatible) with
           | (Ast.Function.ReturnAnnot.TypeGuard (_, (loc, _)), Some kind) ->
@@ -7741,6 +7743,16 @@ module Make
               else
                 void_t
             in
+            (Inferred t, Ast.Function.ReturnAnnot.Missing (loc, t), None)
+          | (Ast.Function.ReturnAnnot.Missing loc, _)
+            when has_nonvoid_return && require_return_annot ->
+            let reason = repos_reason ret_loc ret_reason in
+            Flow_js.add_output
+              cx
+              (Error_message.EMissingLocalAnnotation
+                 { reason; hint_available = false; from_generic_function }
+              );
+            let t = AnyT.make (AnyError (Some MissingAnnotation)) reason in
             (Inferred t, Ast.Function.ReturnAnnot.Missing (loc, t), None)
           (* TODO we could probably take the same shortcut for functions with an explicit `void` annotation
              and no explicit returns *)
@@ -7787,20 +7799,6 @@ module Make
           match type_guard_opt with
           | Some p -> Predicate p
           | None -> kind
-        in
-        let from_generic_function = Base.Option.is_some tparams in
-        let require_return_annot = require_return_annot || from_generic_function in
-        let () =
-          match return_t with
-          | Inferred t when has_nonvoid_return && require_return_annot ->
-            let reason = repos_reason ret_loc ret_reason in
-            Flow_js.add_output
-              cx
-              (Error_message.EMissingLocalAnnotation
-                 { reason; hint_available = false; from_generic_function }
-              );
-            Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, t)
-          | _ -> ()
         in
         let (return_t, predicate) =
           let open Ast.Type.Predicate in
