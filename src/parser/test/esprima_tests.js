@@ -1452,16 +1452,11 @@ module.exports = {
         content: 'declare module A { declare module B {} }',
         explanation: "We realize the error as soon as we see the B",
         expected_differences: {
-          'root.errors.0.column': {
-            type: 'Wrong error column',
-            expected: 19,
-            actual: '34-35'
+          'root.errors': {
+            type: 'Flow found no error',
+            expected: 'Line 1: Unexpected identifier',
+            actual: undefined,
           },
-          'root.errors.0.message': {
-            type: 'Wrong error message',
-            expected: 'Unexpected identifier',
-            actual: 'Unexpected identifier, expected the token `.`'
-          }
         }
       },
       {

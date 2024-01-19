@@ -163,6 +163,14 @@ References:
                   ^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- decmod.js:3:16
+
+`declare module` statement is only supported at the toplevel of a library file. [unsupported-syntax]
+
+   3| declare module foo { }
+                     ^^^
+
+
 Error -------------------------------------------------------------------------------------- empty_array_literals.js:5:7
 
 Cannot determine type of empty array literal. Please provide an annotation. [missing-empty-array-annot]
@@ -721,4 +729,4 @@ References:
 
 
 
-Found 45 errors
+Found 46 errors

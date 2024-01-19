@@ -255,6 +255,14 @@ Missing an annotation on rest parameter `y`. [missing-local-annot]
                                             ^
 
 
+Error ---------------------------------------------------------------------------------------- regression_tests.js:50:16
+
+`declare module` statement is only supported at the toplevel of a library file. [unsupported-syntax]
+
+   50| declare module 'declared-module' {
+                      ^^^^^^^^^^^^^^^^^
+
+
 Error ---------------------------------------------------------------------------------------- regression_tests.js:54:14
 
 Cannot cast `42` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
@@ -267,6 +275,14 @@ References:
    regression_tests.js:54:25
    54| (((42: any): ModScope): empty); // string ~> empty, not num ~> empty
                                ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- regression_tests.js:56:16
+
+`declare module` statement is only supported at the toplevel of a library file. [unsupported-syntax]
+
+   56| declare module DeclaredModule2 {
+                      ^^^^^^^^^^^^^^^
 
 
 Error ---------------------------------------------------------------------------------------- regression_tests.js:61:30
@@ -456,7 +472,7 @@ Missing an annotation on implicit `this` parameter of function. [missing-this-an
 
 
 
-Found 40 errors
+Found 42 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

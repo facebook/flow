@@ -1354,13 +1354,13 @@ module Statement
       let comments = Flow_ast_utils.mk_comments_opt ~leading () in
       Statement.(DeclareModule DeclareModule.{ id; body; comments })
     in
-    fun ~in_module env ->
+    fun env ->
       let start_loc = Peek.loc env in
       let leading = Peek.comments env in
       Expect.token env T_DECLARE;
       let leading = leading @ Peek.comments env in
       Expect.identifier env "module";
-      if in_module || Peek.token env = T_PERIOD then
+      if Peek.token env = T_PERIOD then
         with_loc ~start_loc (declare_module_exports ~leading) env
       else
         with_loc ~start_loc (declare_module_ ~leading) env
@@ -1405,7 +1405,7 @@ module Statement
     | T_LET -> declare_var_statement ~kind:Ast.Variable.Let env
     | T_CONST -> declare_var_statement ~kind:Ast.Variable.Const env
     | T_EXPORT when in_module -> declare_export_declaration ~allow_export_type:in_module env
-    | T_IDENTIFIER { raw = "module"; _ } -> declare_module ~in_module env
+    | T_IDENTIFIER { raw = "module"; _ } -> declare_module env
     | T_IDENTIFIER { raw = "component"; _ } when (parse_options env).components ->
       declare_component_statement env
     | _ when in_module ->

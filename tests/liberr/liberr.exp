@@ -45,6 +45,36 @@ References:
                     ^^^^^^ [3]
 
 
+Error -------------------------------------------------------------------------------------- libs/invalid-nested.js:2:18
+
+`declare module` statement is only supported at the toplevel of a library file. [unsupported-syntax]
+
+   2|   declare module 'nested-declare-module1' {}
+                       ^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------- libs/invalid-nested.js:5:1
+
+Cannot use block statements in a library file. The statement will be ignored. [unsupported-statement-in-lib]
+
+      v
+   5| {
+   6|   declare module 'nested-declare-module2' {}
+   7| }
+      ^
+
+
+Error --------------------------------------------------------------------------------------- libs/invalid-nested.js:9:1
+
+Cannot use if statements in a library file. The statement will be ignored. [unsupported-statement-in-lib]
+
+       v----------
+    9| if (true) {
+   10|   declare module 'nested-declare-module3' {}
+   11| }
+       ^
+
+
 Error ----------------------------------------------------------------------------------------------- libs/lints.js:3:18
 
 Nonexistent/misspelled lint rule. Perhaps you have a missing/extra `,`? [lint-setting]
@@ -100,8 +130,48 @@ References:
                       ^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------------------- a.js:10:9
 
-Found 9 errors
+Cannot resolve module `nested-declare-module1`. [cannot-resolve-module]
+
+   10| require('nested-declare-module1'); // error
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------------- a.js:11:9
+
+Cannot resolve module `nested-declare-module2`. [cannot-resolve-module]
+
+   11| require('nested-declare-module2'); // error
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------------- a.js:12:9
+
+Cannot resolve module `nested-declare-module3`. [cannot-resolve-module]
+
+   12| require('nested-declare-module3'); // error
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- a.js:14:16
+
+`declare module` statement is only supported at the toplevel of a library file. [unsupported-syntax]
+
+   14| declare module 'non-libdef-declare-module' {} // error
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------------- a.js:15:9
+
+Cannot resolve module `non-libdef-declare-module`. [cannot-resolve-module]
+
+   15| require('non-libdef-declare-module'); // error
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 17 errors
 
 ============================================
 With warnings:
@@ -150,6 +220,36 @@ References:
                     ^^^^^^ [3]
 
 
+Error -------------------------------------------------------------------------------------- libs/invalid-nested.js:2:18
+
+`declare module` statement is only supported at the toplevel of a library file. [unsupported-syntax]
+
+   2|   declare module 'nested-declare-module1' {}
+                       ^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------- libs/invalid-nested.js:5:1
+
+Cannot use block statements in a library file. The statement will be ignored. [unsupported-statement-in-lib]
+
+      v
+   5| {
+   6|   declare module 'nested-declare-module2' {}
+   7| }
+      ^
+
+
+Error --------------------------------------------------------------------------------------- libs/invalid-nested.js:9:1
+
+Cannot use if statements in a library file. The statement will be ignored. [unsupported-statement-in-lib]
+
+       v----------
+    9| if (true) {
+   10|   declare module 'nested-declare-module3' {}
+   11| }
+       ^
+
+
 Error ----------------------------------------------------------------------------------------------- libs/lints.js:3:18
 
 Nonexistent/misspelled lint rule. Perhaps you have a missing/extra `,`? [lint-setting]
@@ -205,6 +305,46 @@ References:
                       ^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------------------- a.js:10:9
+
+Cannot resolve module `nested-declare-module1`. [cannot-resolve-module]
+
+   10| require('nested-declare-module1'); // error
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------------- a.js:11:9
+
+Cannot resolve module `nested-declare-module2`. [cannot-resolve-module]
+
+   11| require('nested-declare-module2'); // error
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------------- a.js:12:9
+
+Cannot resolve module `nested-declare-module3`. [cannot-resolve-module]
+
+   12| require('nested-declare-module3'); // error
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- a.js:14:16
+
+`declare module` statement is only supported at the toplevel of a library file. [unsupported-syntax]
+
+   14| declare module 'non-libdef-declare-module' {} // error
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------------- a.js:15:9
+
+Cannot resolve module `non-libdef-declare-module`. [cannot-resolve-module]
+
+   15| require('non-libdef-declare-module'); // error
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
 Warning -------------------------------------------------------------------------------------- libs/missing_name.js:10:3
 
 Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[cannot-resolve-name]`
@@ -214,4 +354,4 @@ Suppression is missing a code. Please update this suppression to use an error co
 
 
 
-Found 9 errors and 1 warning
+Found 17 errors and 1 warning

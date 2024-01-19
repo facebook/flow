@@ -797,6 +797,7 @@ and unsupported_syntax =
   | WithStatement
   | ComponentSyntax
   | TypeOfTypeArguments
+  | NonLibdefToplevelDeclareModule
   | DeclareNamespace
 
 and lower_kind =
@@ -3121,6 +3122,11 @@ let friendly_message_of_msg loc_of_aloc msg =
           code "typeof";
           text " annotation with type arguments is not supported yet. ";
           text "The type arguments will be ignored.";
+        ]
+      | NonLibdefToplevelDeclareModule ->
+        [
+          code "declare module";
+          text " statement is only supported at the toplevel of a library file.";
         ]
       | DeclareNamespace ->
         [
