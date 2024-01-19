@@ -97,7 +97,6 @@ type t =
   | InvalidLHSInExponentiation
   | InvalidLHSInForIn
   | InvalidLHSInForOf
-  | InvalidNonTypeImportInDeclareModule
   | InvalidOptionalIndexedAccess
   | InvalidRegExp
   | InvalidRegExpFlags of string
@@ -385,8 +384,6 @@ module PP = struct
     | InvalidLHSInExponentiation -> "Invalid left-hand side in exponentiation expression"
     | InvalidLHSInForIn -> "Invalid left-hand side in for-in"
     | InvalidLHSInForOf -> "Invalid left-hand side in for-of"
-    | InvalidNonTypeImportInDeclareModule ->
-      "Imports within a `declare module` body must always be `import type` or `import typeof`!"
     | InvalidOptionalIndexedAccess ->
       "Invalid optional indexed access. Indexed access uses bracket notation. Use the format `T?.[K]`."
     | InvalidRegExp -> "Invalid regular expression"

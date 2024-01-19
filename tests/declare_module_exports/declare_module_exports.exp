@@ -136,5 +136,19 @@ References:
             ^^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- main.js:54:2
 
-Found 9 errors
+Cannot cast `new E()` to empty because `Def` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   main.js:54:2
+   54| (new E(): empty); // error
+        ^^^^^^^ [1]
+
+References:
+   main.js:54:11
+   54| (new E(): empty); // error
+                 ^^^^^ [2]
+
+
+
+Found 10 errors

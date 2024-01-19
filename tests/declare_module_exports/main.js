@@ -49,6 +49,10 @@ import type {DT} from "D"
   (dVal.C: CT); // ok
 }
 
+import E from "E";
+(new E(): BDefault); // ok
+(new E(): empty); // error
+
 /**
  * TODO: At the moment it isn't possible to import a non-libdef module from a
  *       libdef. There's no good reason to ban this, it's just a limitation of

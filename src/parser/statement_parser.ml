@@ -1410,9 +1410,7 @@ module Statement
       declare_component_statement env
     | _ when in_module ->
       (match Peek.token env with
-      | T_IMPORT ->
-        error env Parse_error.InvalidNonTypeImportInDeclareModule;
-        Parse.statement env
+      | T_IMPORT -> import_declaration env
       | _ ->
         (* Oh boy, found some bad stuff in a declare module. Let's just
          * pretend it's a declare var (arbitrary choice) *)
