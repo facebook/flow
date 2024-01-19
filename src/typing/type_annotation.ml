@@ -1721,9 +1721,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
           ~this:(implicit_mixed_this reason)
           iface_sig
       in
-      Class_type_sig.check_super cx reason iface_sig;
-      Class_type_sig.check_implements cx reason iface_sig;
-      Class_type_sig.check_methods cx reason iface_sig;
+      Class_type_sig.check_signature_compatibility cx reason iface_sig;
       ( (loc, Class_type_sig.thistype cx iface_sig),
         Interface
           {

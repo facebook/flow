@@ -795,6 +795,11 @@ module Make
          )
       )
 
+  let check_signature_compatibility cx def_reason x =
+    check_super cx def_reason x;
+    check_implements cx def_reason x;
+    check_methods cx def_reason x
+
   (* TODO: Ideally we should check polarity for all class types, but this flag is
      flipped off for interface/declare class currently. *)
   let classtype cx ?(check_polarity = true) x =

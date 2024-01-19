@@ -165,17 +165,12 @@ module type S = sig
 
   (** 1. Manipulation *)
 
-  (** Emits constraints to ensure the signature is compatible with its declared
-      interface implementations (classes) *)
-  val check_implements : Context.t -> Reason.reason -> t -> unit
-
-  (** Emits constraints to ensure the signature is compatible with its declared
-      superclass (classes) or extends/mixins (interfaces) *)
-  val check_super : Context.t -> Reason.reason -> t -> unit
-
-  (** Emits constraints to ensure that the signature's methods are compatible
-      with its type **)
-  val check_methods : Context.t -> Reason.reason -> t -> unit
+  (** Register checks to ensure that
+   * - the signature is compatible with its declared interface implementations (classes)
+   * - the signature is compatible with its declared superclass (classes) or extends/mixins (interfaces)
+   * - the signature's methods are compatible with its type
+   *)
+  val check_signature_compatibility : Context.t -> Reason.reason -> t -> unit
 
   val make_thises : Context.t -> t -> Type.t * Type.t * Type.t * Type.t
 

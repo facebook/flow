@@ -1986,9 +1986,7 @@ module Make
 
   and interface_helper cx loc (iface_sig, self) =
     let def_reason = mk_reason (desc_of_t self) loc in
-    Class_type_sig.check_super cx def_reason iface_sig;
-    Class_type_sig.check_implements cx def_reason iface_sig;
-    Class_type_sig.check_methods cx def_reason iface_sig;
+    Class_type_sig.check_signature_compatibility cx def_reason iface_sig;
     let (t_internal, t) = Class_type_sig.classtype ~check_polarity:false cx iface_sig in
     Flow.unify cx self t_internal;
     t
@@ -6468,9 +6466,7 @@ module Make
         Class_stmt_sig.fields_to_prop_map cx
         @@ Class_stmt_sig.private_fields_of_signature ~static:false class_sig
       in
-      Class_stmt_sig.check_super cx def_reason class_sig;
-      Class_stmt_sig.check_implements cx def_reason class_sig;
-      Class_stmt_sig.check_methods cx def_reason class_sig;
+      Class_stmt_sig.check_signature_compatibility cx def_reason class_sig;
       if this_in_class || not (Class_stmt_sig.This.is_bound_to_empty class_sig) then
         Class_stmt_sig.toplevels cx class_sig;
 
