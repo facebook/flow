@@ -3250,7 +3250,6 @@ module AConstraint = struct
     | Annot_ObjKeyMirror of Reason.t
     | Annot_ObjMapConst of Reason.t * TypeTerm.t
     | Annot_DeepReadOnlyT of Reason.t * ALoc.t * TypeTerm.dro_type
-    | Annot_HooklikeT of Reason.t
     | Annot_GetKeysT of Reason.t
     | Annot_ToStringT of {
         orig_t: TypeTerm.t option;
@@ -3316,7 +3315,6 @@ module AConstraint = struct
   let string_of_operation = function
     | Annot_SpecializeT _ -> "Annot_SpecializeT"
     | Annot_DeepReadOnlyT _ -> "Annot_DeepReadOnlyT"
-    | Annot_HooklikeT _ -> "Annot_HooklikeT"
     | Annot_ThisSpecializeT _ -> "Annot_ThisSpecializeT"
     | Annot_UseT_TypeT _ -> "Annot_UseT_TypeT"
     | Annot_ConcretizeForImportsExports _ -> "Annot_ConcretizeForImportsExports"
@@ -3386,7 +3384,6 @@ module AConstraint = struct
     | Annot_ObjRestT (r, _)
     | Annot_GetValuesT r
     | Annot_DeepReadOnlyT (r, _, _)
-    | Annot_HooklikeT r
     | Annot__Future_added_value__ r ->
       r
 
@@ -3423,7 +3420,6 @@ module AConstraint = struct
     | Annot_ObjMapConst _
     | Annot_GetKeysT _
     | Annot_DeepReadOnlyT _
-    | Annot_HooklikeT _
     | Annot_ToStringT _
     | Annot_ObjRestT _
     | Annot_GetValuesT _
