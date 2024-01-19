@@ -8,6 +8,7 @@
 let spf = Printf.sprintf
 
 type t =
+  | Identifier
   | ArrayPattern
   | ObjectPattern
   | FunctionReturn
@@ -16,6 +17,7 @@ type t =
 [@@deriving show]
 
 let to_string = function
+  | Identifier -> "identifier"
   | ArrayPattern -> "array pattern"
   | ObjectPattern -> "object pattern"
   | FunctionReturn -> "function return"

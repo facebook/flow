@@ -270,7 +270,7 @@ Missing an annotation on property `a`. [missing-local-annot]
 Error --------------------------------------------------------------------------------------------------- class.js:54:23
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
-annotation at array pattern: [signature-verification-failure]
+annotation at identifier: [signature-verification-failure]
 
    54| export class G { a = (p) => 42; } // error
                              ^

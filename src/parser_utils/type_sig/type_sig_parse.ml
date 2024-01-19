@@ -2554,7 +2554,7 @@ let setter_def opts scope tbls xs id_loc f =
     let t =
       annot_or_hint
         ~err_loc:(Some param_loc)
-        ~sort:Expected_annotation_sort.ArrayPattern (* seems wrong, matches original behavior *)
+        ~sort:Expected_annotation_sort.Identifier
         opts
         scope
         tbls
@@ -2983,7 +2983,7 @@ and param opts scope tbls xs loc patt default =
     let t =
       annot_or_hint
         ~err_loc:(Some loc)
-        ~sort:Expected_annotation_sort.ArrayPattern (*Seems wrong, matches original behavior*)
+        ~sort:Expected_annotation_sort.Identifier
         opts
         scope
         tbls
@@ -3003,7 +3003,10 @@ and param opts scope tbls xs loc patt default =
     let t =
       annot_or_hint
         ~err_loc:(Some loc)
-        ~sort:Expected_annotation_sort.ArrayPattern
+        ~sort:
+          (match patt with
+          | P.Object _ -> Expected_annotation_sort.ObjectPattern
+          | _ -> Expected_annotation_sort.ArrayPattern)
         opts
         scope
         tbls
@@ -3028,8 +3031,8 @@ and rest_param opts scope tbls xs param_loc p =
     let id_loc = push_loc tbls id_loc in
     let t =
       annot_or_hint
-        ~err_loc:(Some id_loc) (* TODO: this seems wrong but matches TF1.0 *)
-        ~sort:Expected_annotation_sort.ArrayPattern
+        ~err_loc:(Some id_loc)
+        ~sort:Expected_annotation_sort.Identifier
         opts
         scope
         tbls

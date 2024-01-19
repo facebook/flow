@@ -79,7 +79,7 @@ annotation at function return: [signature-verification-failure]
 Error ------------------------------------------------------------------------------------------------------- fn.js:7:12
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
-annotation at array pattern: [signature-verification-failure]
+annotation at identifier: [signature-verification-failure]
 
    7| function g(x): number {
                  ^
@@ -105,7 +105,7 @@ annotation at function return: [signature-verification-failure]
 Error --------------------------------------------------------------------------------------------------- getset.js:7:11
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
-annotation at array pattern: [signature-verification-failure]
+annotation at identifier: [signature-verification-failure]
 
    7|     set x(x) { }
                 ^
@@ -266,7 +266,7 @@ expression. [signature-verification-failure]
 Error ---------------------------------------------------------------------------------------------- obj-pattern.js:3:19
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
-annotation at array pattern: [signature-verification-failure]
+annotation at object pattern: [signature-verification-failure]
 
    3| module.exports = ({x, y}) => {};
                         ^^^^^^
@@ -302,7 +302,7 @@ annotation at array pattern: [signature-verification-failure]
 Error ----------------------------------------------------------------------------------------------------- rest.js:3:33
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
-annotation at array pattern: [signature-verification-failure]
+annotation at identifier: [signature-verification-failure]
 
    3| module.exports = (x: number, ...z) => {};
                                       ^

@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------------------------ foo.js:1:21
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
-annotation at array pattern: [signature-verification-failure]
+annotation at identifier: [signature-verification-failure]
 
    1| export function foo(x) { return x; }
                           ^

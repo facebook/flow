@@ -6,6 +6,7 @@
  *)
 
 type t =
+  | Identifier
   | ArrayPattern
   | ObjectPattern
   | FunctionReturn

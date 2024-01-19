@@ -404,8 +404,7 @@ let%expect_test "export_function_literal_check1" =
         stars = []; strict = true; platform_availability_set = None}}
 
     Errors:
-    (SigError
-       (Signature_error.ExpectedAnnotation ([1:24-25], Expected_annotation_sort.ArrayPattern)))
+    (SigError (Signature_error.ExpectedAnnotation ([1:24-25], Expected_annotation_sort.Identifier)))
   |}]
 
 let%expect_test "export_function_literal_check2" =
@@ -495,8 +494,7 @@ let%expect_test "export_function_reference_check1" =
          statics = {}}
 
     Errors:
-    (SigError
-       (Signature_error.ExpectedAnnotation ([1:13-14], Expected_annotation_sort.ArrayPattern)))
+    (SigError (Signature_error.ExpectedAnnotation ([1:13-14], Expected_annotation_sort.Identifier)))
   |}]
 
 let%expect_test "export_function_reference_check2" =
@@ -610,8 +608,7 @@ let%expect_test "function_param_default_check" =
         stars = []; strict = true; platform_availability_set = None}}
 
     Errors:
-    (SigError
-       (Signature_error.ExpectedAnnotation ([1:24-25], Expected_annotation_sort.ArrayPattern)))
+    (SigError (Signature_error.ExpectedAnnotation ([1:24-25], Expected_annotation_sort.Identifier)))
 
   |}]
 
@@ -834,7 +831,7 @@ let%expect_test "export_class_reference_check2" =
            { "f" -> (ObjValueField ([2:2-3], (Annot (Number [2:5-11])), Polarity.Neutral)) }}}
 
     Errors:
-    (SigError (Signature_error.ExpectedAnnotation ([3:4-5], Expected_annotation_sort.ArrayPattern)))
+    (SigError (Signature_error.ExpectedAnnotation ([3:4-5], Expected_annotation_sort.Identifier)))
   |}]
 
 let%expect_test "export_class_reference_check3" =
