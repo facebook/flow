@@ -3218,12 +3218,12 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
           | Some (loc, { Ast.Type.Generic.id; targs; comments }) ->
             let lookup_mode = Type_env.LookupMode.ForValue in
             let (i, id) = convert_qualification ~lookup_mode cx "mixins" id in
-            let (t, targs) = mk_super cx tparams_map_with_this ALocMap.empty loc i targs in
+            let (t, targs) = mk_super cx tparams_map ALocMap.empty loc i targs in
             (Some t, Some (loc, { Ast.Type.Generic.id; targs; comments }))
           | None -> (None, None)
         in
         let (mixins, mixins_ast) =
-          mixins |> Base.List.map ~f:(mk_mixins cx tparams_map_with_this) |> List.split
+          mixins |> Base.List.map ~f:(mk_mixins cx tparams_map) |> List.split
         in
         let (implements, implements_ast) =
           let open Ast.Class.Implements in
@@ -3242,9 +3242,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                        match targs with
                        | None -> ((loc, c, None), None)
                        | Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs; comments }) ->
-                         let (ts, targs_ast) =
-                           convert_list cx tparams_map_with_this ALocMap.empty targs
-                         in
+                         let (ts, targs_ast) = convert_list cx tparams_map ALocMap.empty targs in
                          ( (loc, c, Some ts),
                            Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments })
                          )

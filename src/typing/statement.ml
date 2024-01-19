@@ -6749,7 +6749,7 @@ module Make
         let class_name = Base.Option.map id ~f:(fun (_, { Ast.Identifier.name; _ }) -> name) in
         let (class_sig, extends_ast_f, implements_ast) =
           let id = Context.make_aloc_id cx name_loc in
-          let (extends, extends_ast_f) = mk_extends cx tparams_map_with_this extends in
+          let (extends, extends_ast_f) = mk_extends cx tparams_map extends in
           let (implements, implements_ast) =
             match implements with
             | None -> ([], None)
@@ -6769,7 +6769,7 @@ module Make
                          match targs with
                          | None -> ((loc, c, None), None)
                          | Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs; comments }) ->
-                           let (ts, targs_ast) = Anno.convert_list cx tparams_map_with_this targs in
+                           let (ts, targs_ast) = Anno.convert_list cx tparams_map targs in
                            ( (loc, c, Some ts),
                              Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments })
                            )
