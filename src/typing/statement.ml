@@ -1984,13 +1984,6 @@ module Make
       in
       (type_, type_alias_ast)
 
-  and interface_helper cx loc (iface_sig, self) =
-    let def_reason = mk_reason (desc_of_t self) loc in
-    Class_type_sig.check_signature_compatibility cx def_reason iface_sig;
-    let (t_internal, t) = Class_type_sig.classtype ~check_polarity:false cx iface_sig in
-    Flow.unify cx self t_internal;
-    t
-
   and interface cx loc decl =
     let node_cache = Context.node_cache cx in
     match Node_cache.get_interface node_cache loc with
@@ -2003,10 +1996,16 @@ module Make
       let { Ast.Statement.Interface.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ } =
         decl
       in
-      let reason = DescFormat.instance_reason (OrdinaryName name) name_loc in
+      let desc = RType (OrdinaryName name) in
+      let reason = mk_reason desc name_loc in
       let self = Tvar.mk cx reason in
       let (iface_sig, decl_ast) = Anno.mk_interface_sig cx loc reason self decl in
-      let t = interface_helper cx loc (iface_sig, self) in
+      let t =
+        let (t_internal, t) = Class_type_sig.classtype ~check_polarity:false cx iface_sig in
+        Flow.unify cx self t_internal;
+        t
+      in
+      Class_type_sig.check_signature_compatibility cx (mk_reason desc loc) iface_sig;
       (t, decl_ast)
 
   and declare_class cx loc decl =
@@ -2021,10 +2020,16 @@ module Make
       let { Ast.Statement.DeclareClass.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ } =
         decl
       in
-      let reason = DescFormat.instance_reason (OrdinaryName name) name_loc in
+      let desc = RType (OrdinaryName name) in
+      let reason = mk_reason desc name_loc in
       let self = Tvar.mk cx reason in
       let (class_sig, decl_ast) = Anno.mk_declare_class_sig cx loc name reason self decl in
-      let t = interface_helper cx loc (class_sig, self) in
+      let t =
+        let (t_internal, t) = Class_type_sig.classtype ~check_polarity:false cx class_sig in
+        Flow.unify cx self t_internal;
+        t
+      in
+      Class_type_sig.check_signature_compatibility cx (mk_reason desc loc) class_sig;
       (t, decl_ast)
 
   and declare_component cx loc decl =
