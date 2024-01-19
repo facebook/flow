@@ -2715,18 +2715,17 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
     (typeapp, (loc, { Ast.Type.Generic.id; targs; comments }))
 
   and add_interface_properties cx ~this tparams_map infer_tparams_map properties s =
-    let open Class_type_sig in
-    let open Class_type_sig.Types in
     let (x, rev_prop_asts) =
       List.fold_left
         Ast.Type.Object.(
           fun (x, rev_prop_asts) -> function
             | CallProperty (loc, { CallProperty.value; static; comments }) ->
               let (t, value) = mk_function_type_annotation cx tparams_map infer_tparams_map value in
-              ( append_call ~static t x,
+              ( Class_type_sig.append_call ~static t x,
                 CallProperty (loc, { CallProperty.value; static; comments }) :: rev_prop_asts
               )
-            | Indexer (loc, { Indexer.static; _ }) as indexer_prop when has_indexer ~static x ->
+            | Indexer (loc, { Indexer.static; _ }) as indexer_prop
+              when Class_type_sig.has_indexer ~static x ->
               Flow_js_utils.add_output cx Error_message.(EUnsupportedSyntax (loc, MultipleIndexers));
               (x, Tast_utils.error_mapper#object_type_property indexer_prop :: rev_prop_asts)
             | Indexer (loc, indexer) ->
@@ -2742,7 +2741,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                   dict_polarity = polarity;
                 }
               in
-              ( add_indexer ~static dict x,
+              ( Class_type_sig.add_indexer ~static dict x,
                 Indexer (loc, { indexer with Indexer.key; value }) :: rev_prop_asts
               )
             | Ast.Type.Object.MappedType (loc, _) as prop ->
@@ -2788,8 +2787,9 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                     let ft = Func_type_sig.methodtype cx this_write_loc this fsig in
                     let append_method =
                       match (static, meth_kind) with
-                      | (false, ConstructorKind) -> append_constructor ~id_loc:(Some id_loc)
-                      | _ -> append_method ~static name ~id_loc ~this_write_loc
+                      | (false, ConstructorKind) ->
+                        Class_type_sig.append_constructor ~id_loc:(Some id_loc)
+                      | _ -> Class_type_sig.append_method ~static name ~id_loc ~this_write_loc
                     in
                     let open Ast.Type in
                     ( append_method ~func_sig:fsig x,
@@ -2820,12 +2820,12 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                     in
                     let add =
                       if proto then
-                        add_proto_field
+                        Class_type_sig.add_proto_field
                       else
-                        add_field ~static
+                        Class_type_sig.add_field ~static
                     in
                     let open Ast.Type in
-                    ( add name id_loc polarity (Annot t) x,
+                    ( add name id_loc polarity (Class_type_sig.Types.Annot t) x,
                       ( loc,
                         {
                           prop with
@@ -2854,7 +2854,13 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                       TypeUtil.type_t_of_annotated_or_inferred fsig.Func_type_sig.Types.return_t
                     in
                     let open Ast.Type in
-                    ( add_getter ~static name ~id_loc ~this_write_loc:None ~func_sig:fsig x,
+                    ( Class_type_sig.add_getter
+                        ~static
+                        name
+                        ~id_loc
+                        ~this_write_loc:None
+                        ~func_sig:fsig
+                        x,
                       ( loc,
                         {
                           prop with
@@ -2890,7 +2896,13 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                       (* error case: report any ok *)
                     in
                     let open Ast.Type in
-                    ( add_setter ~static name ~id_loc ~this_write_loc:None ~func_sig:fsig x,
+                    ( Class_type_sig.add_setter
+                        ~static
+                        name
+                        ~id_loc
+                        ~this_write_loc:None
+                        ~func_sig:fsig
+                        x,
                       ( loc,
                         {
                           prop with
@@ -2921,7 +2933,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
                   else
                     t
                 in
-                ( append_call ~static t x,
+                ( Class_type_sig.append_call ~static t x,
                   InternalSlot (loc, { slot with InternalSlot.value }) :: rev_prop_asts
                 )
               else (
@@ -3089,8 +3101,6 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       ((loc, c, Some ts), Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments }))
 
   let mk_interface_sig cx intf_loc reason self decl =
-    let open Class_type_sig in
-    let open Class_type_sig.Types in
     let {
       Ast.Statement.Interface.id = (id_loc, id_name);
       tparams;
@@ -3120,12 +3130,14 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
             )
             properties
         in
-        Interface { inline = false; extends; callable }
+        Class_type_sig.Types.(Interface { inline = false; extends; callable })
       in
-      (empty id (Some class_name) intf_loc reason tparams tparams_map super, extends_ast)
+      ( Class_type_sig.empty id (Some class_name) intf_loc reason tparams tparams_map super,
+        extends_ast
+      )
     in
     (* TODO: interfaces don't have a name field, or even statics *)
-    let iface_sig = add_name_field iface_sig in
+    let iface_sig = Class_type_sig.add_name_field iface_sig in
     let (iface_sig, properties) =
       add_interface_properties
         cx
@@ -3173,8 +3185,6 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
     )
 
   let mk_declare_class_sig =
-    let open Class_type_sig in
-    let open Class_type_sig.Types in
     let mk_mixins cx tparams_map (loc, { Ast.Type.Generic.id; targs; comments }) =
       let name = qualified_name id in
       let r = mk_annot_reason (RType (OrdinaryName name)) loc in
@@ -3209,8 +3219,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
         decl
       in
       let (tparams, tparams_map, tparam_asts) = mk_type_param_declarations cx tparams in
-      let (this_tparam, this_t) = mk_this self cx reason tparams in
-      let tparams_map_with_this = Subst_name.Map.add (Subst_name.Name "this") this_t tparams_map in
+      let (this_tparam, this_t) = Class_type_sig.mk_this self cx reason tparams in
       let (iface_sig, extends_ast, mixins_ast, implements_ast) =
         let id = Context.make_aloc_id cx id_loc in
         let (extends, extends_ast) =
@@ -3256,19 +3265,21 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
         let super =
           let extends =
             match extends with
-            | None -> Implicit { null = is_object_builtin_libdef ident }
-            | Some extends -> Explicit extends
+            | None -> Class_type_sig.Types.Implicit { null = is_object_builtin_libdef ident }
+            | Some extends -> Class_type_sig.Types.Explicit extends
           in
-          Class { Class_type_sig.Types.extends; mixins; implements; this_t; this_tparam }
+          Class_type_sig.Types.Class
+            { Class_type_sig.Types.extends; mixins; implements; this_t; this_tparam }
         in
-        ( empty id (Some class_name) class_loc reason tparams tparams_map super,
+        ( Class_type_sig.empty id (Some class_name) class_loc reason tparams tparams_map super,
           extends_ast,
           mixins_ast,
           implements_ast
         )
       in
       (* All classes have a static "name" property. *)
-      let iface_sig = add_name_field iface_sig in
+      let iface_sig = Class_type_sig.add_name_field iface_sig in
+      let tparams_map_with_this = Subst_name.Map.add (Subst_name.Name "this") this_t tparams_map in
       let (iface_sig, properties) =
         add_interface_properties
           cx
@@ -3280,11 +3291,11 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       in
       (* Add a default ctor if we don't have a ctor and won't inherit one from a super *)
       let iface_sig =
-        if mem_constructor iface_sig || extends <> None || mixins <> [] then
+        if Class_type_sig.mem_constructor iface_sig || extends <> None || mixins <> [] then
           iface_sig
         else
           let reason = replace_desc_reason RDefaultConstructor reason in
-          add_default_constructor reason iface_sig
+          Class_type_sig.add_default_constructor reason iface_sig
       in
       ( iface_sig,
         {

@@ -6492,7 +6492,6 @@ module Make
      "metaclass": thus, the static type is itself implemented as an instance
      type. *)
   and mk_class_sig =
-    let open Class_stmt_sig in
     let open Class_stmt_sig_types in
     (* Given information about a field, returns:
        - Class_sig.field representation of this field
@@ -6742,7 +6741,7 @@ module Make
           Base.List.map ~f:Tast_utils.error_mapper#class_decorator class_decorators
         in
         let (tparams, tparams_map, tparams_ast) = Anno.mk_type_param_declarations cx tparams in
-        let (this_tparam, this_t) = mk_this self cx reason tparams in
+        let (this_tparam, this_t) = Class_stmt_sig.mk_this self cx reason tparams in
         let tparams_map_with_this =
           Subst_name.Map.add (Subst_name.Name "this") this_t tparams_map
         in
@@ -6787,7 +6786,7 @@ module Make
           let super =
             Class { Class_stmt_sig_types.extends; mixins = []; implements; this_t; this_tparam }
           in
-          ( empty id class_name class_loc reason tparams tparams_map super,
+          ( Class_stmt_sig.empty id class_name class_loc reason tparams tparams_map super,
             extends_ast_f,
             implements_ast
           )
@@ -6802,10 +6801,10 @@ module Make
             class_sig
           else
             let reason = replace_desc_reason RDefaultConstructor reason in
-            add_default_constructor reason class_sig
+            Class_stmt_sig.add_default_constructor reason class_sig
         in
         (* All classes have a static "name" property. *)
-        let class_sig = add_name_field class_sig in
+        let class_sig = Class_stmt_sig.add_name_field class_sig in
 
         let check_duplicate_name public_seen_names member_loc name ~static ~private_ kind =
           if private_ then
@@ -6938,12 +6937,14 @@ module Make
                 let (add, class_member_kind) =
                   match kind with
                   | Method.Constructor ->
-                    let add = add_constructor ~id_loc:(Some id_loc) ~set_asts ~set_type in
+                    let add =
+                      Class_stmt_sig.add_constructor ~id_loc:(Some id_loc) ~set_asts ~set_type
+                    in
                     (add, None)
                   | Method.Method ->
                     let add =
                       if private_ then
-                        add_private_method
+                        Class_stmt_sig.add_private_method
                           ~static
                           name
                           ~id_loc
@@ -6951,7 +6952,7 @@ module Make
                           ~set_asts
                           ~set_type
                       else
-                        add_method
+                        Class_stmt_sig.add_method
                           ~static
                           name
                           ~id_loc
@@ -6962,7 +6963,7 @@ module Make
                     (add, Some Class_Member_Method)
                   | Method.Get ->
                     let add =
-                      add_getter
+                      Class_stmt_sig.add_getter
                         ~static
                         name
                         ~id_loc
@@ -6973,7 +6974,7 @@ module Make
                     (add, Some Class_Member_Getter)
                   | Method.Set ->
                     let add =
-                      add_setter
+                      Class_stmt_sig.add_setter
                         ~static
                         name
                         ~id_loc
@@ -7093,7 +7094,7 @@ module Make
                     ~private_:true
                     Class_Member_Field
                 in
-                ( add_private_field ~static name id_loc polarity field c,
+                ( Class_stmt_sig.add_private_field ~static name id_loc polarity field c,
                   get_element :: rev_elements,
                   public_seen_names'
                 )
@@ -7143,7 +7144,7 @@ module Make
                     ~private_:false
                     Class_Member_Field
                 in
-                ( add_field ~static name id_loc polarity field c,
+                ( Class_stmt_sig.add_field ~static name id_loc polarity field c,
                   get_element :: rev_elements,
                   public_seen_names'
                 )
