@@ -3088,7 +3088,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       let (ts, targs_ast) = convert_list cx tparams_map infer_tparams_map targs in
       ((loc, c, Some ts), Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments }))
 
-  let mk_interface_sig cx intf_loc reason decl =
+  let mk_interface_sig cx intf_loc reason self decl =
     let open Class_type_sig in
     let open Class_type_sig.Types in
     let {
@@ -3103,7 +3103,6 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
     } =
       decl
     in
-    let self = Tvar.mk cx reason in
     let (tparams, tparams_map, tparams_ast) = mk_type_param_declarations cx tparams in
     let (iface_sig, extends_ast) =
       let class_name = id_name.Ast.Identifier.name in
@@ -3137,7 +3136,6 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
         iface_sig
     in
     ( iface_sig,
-      self,
       {
         Ast.Statement.Interface.id = ((id_loc, self), id_name);
         tparams = tparams_ast;
@@ -3195,7 +3193,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       | None -> false
       | Some source -> File_key.is_lib_file source
     in
-    fun cx class_loc class_name reason decl ->
+    fun cx class_loc class_name reason self decl ->
       let {
         Ast.Statement.DeclareClass.id = (id_loc, id_name) as ident;
         tparams;
@@ -3210,7 +3208,6 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       } =
         decl
       in
-      let self = Tvar.mk cx reason in
       let (tparams, tparams_map, tparam_asts) = mk_type_param_declarations cx tparams in
       let (this_tparam, this_t) = mk_this self cx reason tparams in
       let tparams_map_with_this = Subst_name.Map.add (Subst_name.Name "this") this_t tparams_map in
@@ -3292,7 +3289,6 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
           add_default_constructor reason iface_sig
       in
       ( iface_sig,
-        self,
         {
           Ast.Statement.DeclareClass.id = ((id_loc, self), id_name);
           tparams = tparam_asts;

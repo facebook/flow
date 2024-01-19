@@ -2006,8 +2006,9 @@ module Make
         decl
       in
       let reason = DescFormat.instance_reason (OrdinaryName name) name_loc in
-      let (iface_sig, iface_t, decl_ast) = Anno.mk_interface_sig cx loc reason decl in
-      let t = interface_helper cx loc (iface_sig, iface_t) in
+      let self = Tvar.mk cx reason in
+      let (iface_sig, decl_ast) = Anno.mk_interface_sig cx loc reason self decl in
+      let t = interface_helper cx loc (iface_sig, self) in
       (t, decl_ast)
 
   and declare_class cx loc decl =
@@ -2023,8 +2024,9 @@ module Make
         decl
       in
       let reason = DescFormat.instance_reason (OrdinaryName name) name_loc in
-      let (class_sig, class_t, decl_ast) = Anno.mk_declare_class_sig cx loc name reason decl in
-      let t = interface_helper cx loc (class_sig, class_t) in
+      let self = Tvar.mk cx reason in
+      let (class_sig, decl_ast) = Anno.mk_declare_class_sig cx loc name reason self decl in
+      let t = interface_helper cx loc (class_sig, self) in
       (t, decl_ast)
 
   and declare_component cx loc decl =
