@@ -33,7 +33,7 @@ module type STATEMENT = sig
 
   val debugger : env -> (Loc.t, Loc.t) Statement.t
 
-  val declare : ?in_module:bool -> env -> (Loc.t, Loc.t) Statement.t
+  val declare : ?in_module_or_namespace:bool -> env -> (Loc.t, Loc.t) Statement.t
 
   val declare_export_declaration : ?allow_export_type:bool -> env -> (Loc.t, Loc.t) Statement.t
 
@@ -1312,14 +1312,14 @@ module Statement
         Statement.DeclareVariable var)
       env
 
-  and declare_module_body env =
+  and declare_module_or_namespace_body env =
     let rec module_items env acc =
       match Peek.token env with
       | T_EOF
       | T_RCURLY ->
         List.rev acc
       | _ ->
-        let stmt = declare ~in_module:true env in
+        let stmt = declare ~in_module_or_namespace:true env in
         module_items env (stmt :: acc)
     in
     with_loc
@@ -1350,7 +1350,7 @@ module Statement
             (string_literal_remove_trailing env (string_literal env str))
         | _ -> Statement.DeclareModule.Identifier (id_remove_trailing env (Parse.identifier env))
       in
-      let body = declare_module_body env in
+      let body = declare_module_or_namespace_body env in
       let comments = Flow_ast_utils.mk_comments_opt ~leading () in
       Statement.(DeclareModule DeclareModule.{ id; body; comments })
     in
@@ -1364,6 +1364,21 @@ module Statement
         with_loc ~start_loc (declare_module_exports ~leading) env
       else
         with_loc ~start_loc (declare_module_ ~leading) env
+
+  and declare_namespace =
+    let declare_namespace_ ~leading env =
+      let id = id_remove_trailing env (Parse.identifier env) in
+      let body = declare_module_or_namespace_body env in
+      let comments = Flow_ast_utils.mk_comments_opt ~leading () in
+      Statement.(DeclareNamespace DeclareNamespace.{ id; body; comments })
+    in
+    fun env ->
+      let start_loc = Peek.loc env in
+      let leading = Peek.comments env in
+      Expect.token env T_DECLARE;
+      let leading = leading @ Peek.comments env in
+      Expect.identifier env "namespace";
+      with_loc ~start_loc (declare_namespace_ ~leading) env
 
   and declare_module_exports ~leading env =
     let leading_period = Peek.comments env in
@@ -1382,7 +1397,7 @@ module Statement
     let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
     Statement.DeclareModuleExports { Statement.DeclareModuleExports.annot; comments }
 
-  and declare ?(in_module = false) env =
+  and declare ?(in_module_or_namespace = false) env =
     if not (should_parse_types env) then error env Parse_error.UnexpectedTypeDeclaration;
 
     (* eventually, just emit a wrapper AST node *)
@@ -1392,7 +1407,7 @@ module Statement
     | T_INTERFACE -> declare_interface env
     | T_TYPE ->
       (match Peek.token env with
-      | T_IMPORT when in_module -> import_declaration env
+      | T_IMPORT when in_module_or_namespace -> import_declaration env
       | _ -> declare_type_alias env)
     | T_OPAQUE -> declare_opaque_type env
     | T_TYPEOF when Peek.token env = T_IMPORT -> import_declaration env
@@ -1404,11 +1419,13 @@ module Statement
     | T_VAR -> declare_var_statement ~kind:Ast.Variable.Var env
     | T_LET -> declare_var_statement ~kind:Ast.Variable.Let env
     | T_CONST -> declare_var_statement ~kind:Ast.Variable.Const env
-    | T_EXPORT when in_module -> declare_export_declaration ~allow_export_type:in_module env
+    | T_EXPORT when in_module_or_namespace ->
+      declare_export_declaration ~allow_export_type:in_module_or_namespace env
     | T_IDENTIFIER { raw = "module"; _ } -> declare_module env
+    | T_IDENTIFIER { raw = "namespace"; _ } -> declare_namespace env
     | T_IDENTIFIER { raw = "component"; _ } when (parse_options env).components ->
       declare_component_statement env
-    | _ when in_module ->
+    | _ when in_module_or_namespace ->
       (match Peek.token env with
       | T_IMPORT -> import_declaration env
       | _ ->

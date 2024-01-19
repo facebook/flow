@@ -1,0 +1,73 @@
+{
+  "errors": [
+    {
+      "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":4}},
+      "message":"Unexpected token `if`, expected the token `declare`"
+    },
+    {
+      "loc":{"source":null,"start":{"line":2,"column":5},"end":{"line":2,"column":6}},
+      "message":"Unexpected token `(`, expected the token `var`"
+    },
+    {
+      "loc":{"source":null,"start":{"line":2,"column":6},"end":{"line":2,"column":10}},
+      "message":"Unexpected reserved word"
+    },
+    {
+      "loc":{"source":null,"start":{"line":2,"column":10},"end":{"line":2,"column":11}},
+      "message":"Unexpected token `)`, expected the token `:`"
+    }
+  ],
+  "type":"Program",
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":3,"column":1}},
+  "range":[0,38],
+  "body":[
+    {
+      "type":"DeclareNamespace",
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":3,"column":1}},
+      "range":[0,38],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":1,"column":18},"end":{"line":1,"column":19}},
+        "range":[18,19],
+        "name":"A",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "body":{
+        "type":"BlockStatement",
+        "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":3,"column":1}},
+        "range":[20,38],
+        "body":[{
+          "type":"DeclareVariable",
+          "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":14}},
+          "range":[24,36],
+          "id":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":2,"column":6},"end":{"line":2,"column":14}},
+            "range":[28,36],
+            "name":"true",
+            "typeAnnotation":{
+              "type":"TypeAnnotation",
+              "loc":{"source":null,"start":{"line":2,"column":10},"end":{"line":2,"column":14}},
+              "range":[32,36],
+              "typeAnnotation":{
+                "type":"ObjectTypeAnnotation",
+                "loc":{"source":null,"start":{"line":2,"column":12},"end":{"line":2,"column":14}},
+                "range":[34,36],
+                "inexact":false,
+                "exact":false,
+                "properties":[],
+                "indexers":[],
+                "callProperties":[],
+                "internalSlots":[]
+              }
+            },
+            "optional":false
+          },
+          "kind":"var"
+        }]
+      }
+    }
+  ],
+  "comments":[]
+}

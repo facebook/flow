@@ -135,6 +135,12 @@ function custom_ast_types(fork) {
       ),
     );
 
+  def('DeclareNamespace')
+    .bases('Declaration')
+    .build('id', 'body')
+    .field('id', def('Identifier'))
+    .field('body', def('BlockStatement'));
+
   def('DeclareComponent')
     .bases('Declaration')
     .build('id', 'tparams', 'params', 'rest', 'return')
