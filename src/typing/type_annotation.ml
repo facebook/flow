@@ -2521,14 +2521,6 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       let (((_, t), _) as annot_ast) = convert cx tparams_map infer_tparams_map annot in
       (t, Some annot_ast)
 
-  and mk_type_annotation cx tparams_map reason = function
-    | T.Missing loc ->
-      let t = Tvar.mk cx reason in
-      (Inferred t, T.Missing (loc, t))
-    | T.Available annot ->
-      let (t, ast_annot) = mk_type_available_annotation cx tparams_map annot in
-      (Annotated t, T.Available ast_annot)
-
   and mk_return_type_annotation cx tparams_map params reason ~void_return ~async annot =
     match annot with
     | Ast.Function.ReturnAnnot.Missing loc when void_return ->
@@ -3378,8 +3370,6 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
     convert_render_type cx ~allow_generic_t tparams_map ALocMap.empty
 
   let mk_super cx tparams_map = mk_super cx tparams_map ALocMap.empty
-
-  let mk_type_annotation cx tparams_map = mk_type_annotation cx tparams_map
 
   let mk_type_available_annotation cx tparams_map = mk_type_available_annotation cx tparams_map
 

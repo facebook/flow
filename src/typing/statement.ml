@@ -6497,38 +6497,55 @@ module Make
          gets checked.
     *)
     let mk_field cx tparams_map reason annot init =
-      let (annot_or_inferred, annot_ast) = Anno.mk_type_annotation cx tparams_map reason annot in
-      let annot_t = type_t_of_annotated_or_inferred annot_or_inferred in
-      let annot_loc =
+      let (annot_t, annot_ast) =
         match annot with
-        | Ast.Type.Missing loc
-        | Ast.Type.Available (loc, _) ->
-          loc
+        | Ast.Type.Missing loc ->
+          let t = Tvar.mk cx reason in
+          (t, Ast.Type.Missing (loc, t))
+        | Ast.Type.Available annot ->
+          let (t, ast_annot) = Anno.mk_type_available_annotation cx tparams_map annot in
+          (t, Ast.Type.Available ast_annot)
+      in
+      let unconditionally_required_annot annot =
+        match annot with
+        | Ast.Type.Missing _ ->
+          Flow.add_output
+            cx
+            (Error_message.EMissingLocalAnnotation
+               { reason; hint_available = false; from_generic_function = false }
+            );
+          Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, annot_t)
+        | _ -> ()
       in
       let (field, get_init) =
         match init with
-        | Ast.Class.Property.Declared -> (Annot annot_t, Fun.const Ast.Class.Property.Declared)
+        | Ast.Class.Property.Declared ->
+          unconditionally_required_annot annot;
+          (Annot annot_t, Fun.const Ast.Class.Property.Declared)
         | Ast.Class.Property.Uninitialized ->
+          unconditionally_required_annot annot;
           (Annot annot_t, Fun.const Ast.Class.Property.Uninitialized)
         | Ast.Class.Property.Initialized expr ->
           begin
-            match (expr, annot_or_inferred) with
-            | ((loc, Ast.Expression.StringLiteral lit), Inferred _) ->
+            match (expr, annot) with
+            | ((loc, Ast.Expression.StringLiteral lit), Ast.Type.Missing _) ->
               let t = string_literal cx loc lit in
               Flow.flow_t cx (t, annot_t)
-            | ((loc, Ast.Expression.BooleanLiteral lit), Inferred _) ->
+            | ((loc, Ast.Expression.BooleanLiteral lit), Ast.Type.Missing _) ->
               let t = boolean_literal loc lit in
               Flow.flow_t cx (t, annot_t)
-            | ((loc, Ast.Expression.NumberLiteral lit), Inferred _) ->
+            | ((loc, Ast.Expression.NumberLiteral lit), Ast.Type.Missing _) ->
               let t = number_literal loc lit in
               Flow.flow_t cx (t, annot_t)
-            | ((loc, Ast.Expression.BigIntLiteral lit), Inferred _) ->
+            | ((loc, Ast.Expression.BigIntLiteral lit), Ast.Type.Missing _) ->
               let t = bigint_literal loc lit in
               Flow.flow_t cx (t, annot_t)
-            | ((loc, Ast.Expression.RegExpLiteral _), Inferred _) ->
+            | ((loc, Ast.Expression.RegExpLiteral _), Ast.Type.Missing _) ->
               let t = regexp_literal cx loc in
               Flow.flow_t cx (t, annot_t)
-            | ((_, Ast.Expression.(ArrowFunction function_ | Function function_)), Inferred _) ->
+            | ( (_, Ast.Expression.(ArrowFunction function_ | Function function_)),
+                Ast.Type.Missing _
+              ) ->
               let { Ast.Function.sig_loc; _ } = function_ in
               let cache = Context.node_cache cx in
               let (this_t, arrow, function_loc_opt) =
@@ -6566,7 +6583,7 @@ module Make
                 Statement.Func_stmt_sig.functiontype cx ~arrow function_loc_opt this_t func_sig
               in
               Flow.flow_t cx (t, annot_t)
-            | (_, Inferred _) ->
+            | (_, Ast.Type.Missing annot_loc) ->
               Flow.add_output
                 cx
                 (Error_message.EMissingLocalAnnotation
@@ -6577,9 +6594,14 @@ module Make
                    }
                 );
               Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, annot_t)
-            | _ -> ()
+            | (_, Ast.Type.Available _) -> ()
           end;
           let value_ref : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option ref = ref None in
+          let (annot_loc, annot_or_inferred) =
+            match annot with
+            | Ast.Type.Missing loc -> (loc, Inferred annot_t)
+            | Ast.Type.Available (loc, _) -> (loc, Annotated annot_t)
+          in
           ( Infer
               ( Func_stmt_sig.field_initializer reason expr annot_loc annot_or_inferred,
                 (fun (_, _, value_opt) -> value_ref := Some (Base.Option.value_exn value_opt))
@@ -6589,15 +6611,6 @@ module Make
                 (Base.Option.value !value_ref ~default:(Tast_utils.error_mapper#expression expr))
           )
       in
-      (match (init, annot_or_inferred) with
-      | ((Ast.Class.Property.Declared | Ast.Class.Property.Uninitialized), Inferred _) ->
-        Flow.add_output
-          cx
-          (Error_message.EMissingLocalAnnotation
-             { reason; hint_available = false; from_generic_function = false }
-          );
-        Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, annot_t)
-      | _ -> ());
       (field, annot_t, annot_ast, get_init)
     in
     let mk_method cx ~constructor ~getset =
