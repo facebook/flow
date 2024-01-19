@@ -127,15 +127,32 @@ let import_ns cx reason module_t =
    declared for exports or any other use of exports. *)
 
 let cjs_clobber cx loc t =
-  if Module_info.cjs_clobber (Context.module_info cx) loc then Type_env.set_module_exports cx t
+  if Context.in_declare_module cx then
+    ()
+  else if Module_info.cjs_clobber (Context.toplevel_module_info cx) loc then
+    Type_env.set_module_exports cx t
 
-let export cx = Module_info.export (Context.module_info cx)
+let export cx name ?preferred_def_locs ~name_loc ~is_type_only_export t =
+  if not @@ Context.in_declare_module cx then
+    Module_info.export
+      (Context.toplevel_module_info cx)
+      name
+      ?preferred_def_locs
+      ~name_loc
+      ~is_type_only_export
+      t
 
-let export_star cx = Module_info.export_star (Context.module_info cx)
+let export_star cx loc t =
+  if not @@ Context.in_declare_module cx then
+    Module_info.export_star (Context.toplevel_module_info cx) loc t
 
-let export_type cx = Module_info.export_type (Context.module_info cx)
+let export_type cx name ?preferred_def_locs ~name_loc t =
+  if not @@ Context.in_declare_module cx then
+    Module_info.export_type (Context.toplevel_module_info cx) name ?preferred_def_locs ~name_loc t
 
-let export_type_star cx = Module_info.export_type_star (Context.module_info cx)
+let export_type_star cx loc t =
+  if not @@ Context.in_declare_module cx then
+    Module_info.export_type_star (Context.toplevel_module_info cx) loc t
 
 let export_binding cx ?is_function name ?preferred_def_locs ~name_loc = function
   | Flow_ast.Statement.ExportValue ->
@@ -202,7 +219,7 @@ let mk_module_t =
       )
     in
     fun cx reason loc ->
-      let info = Context.module_info cx in
+      let info = Context.toplevel_module_info cx in
       match info.kind with
       | CJS _ ->
         Type_env.get_module_exports cx loc
@@ -222,7 +239,7 @@ let mk_module_t =
  * - For esm, we will first try to pick the location of default exports, then
  *   fallback to the first export. *)
 let module_exports_sig_loc cx =
-  let { Module_info.kind; type_named; _ } = Context.module_info cx in
+  let { Module_info.kind; type_named; _ } = Context.toplevel_module_info cx in
   let first_loc_of_named_exports named =
     named
     |> NameUtils.Map.values

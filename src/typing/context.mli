@@ -294,13 +294,9 @@ val any_propagation : t -> bool
 val automatic_require_default : t -> bool
 
 (* modules *)
-val push_declare_module : t -> Module_info.t -> unit
-
-val pop_declare_module : t -> unit
-
 val in_declare_module : t -> bool
 
-val module_info : t -> Module_info.t
+val toplevel_module_info : t -> Module_info.t
 
 (* mutators *)
 val add_exhaustive_check : t -> ALoc.t -> ALoc.t list * bool -> unit

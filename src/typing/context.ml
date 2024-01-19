@@ -216,7 +216,7 @@ type t = {
   aloc_table: ALoc.table Lazy.t;
   metadata: metadata;
   resolve_require: resolve_require;
-  module_info: Module_info.t;
+  toplevel_module_info: Module_info.t;
   hint_map_arglist_cache: (ALoc.t * Type.call_arg) list ALocMap.t ref;
   hint_map_jsx_cache:
     ( Reason.t * string * ALoc.t list * ALoc.t,
@@ -224,7 +224,6 @@ type t = {
     )
     Hashtbl.t;
   mutable hint_eval_cache: Type.t option IMap.t;
-  mutable declare_module_ref: Module_info.t option;
   mutable environment: Loc_env.t;
   mutable typing_mode: typing_mode;
   node_cache: Node_cache.t;
@@ -405,11 +404,10 @@ let make ccx metadata file aloc_table resolve_require mk_builtins =
       aloc_table;
       metadata;
       resolve_require;
-      module_info = Module_info.empty_cjs_module ();
+      toplevel_module_info = Module_info.empty_cjs_module ();
       hint_map_arglist_cache = ref ALocMap.empty;
       hint_map_jsx_cache = Hashtbl.create 0;
       hint_eval_cache = IMap.empty;
-      declare_module_ref = None;
       environment = Loc_env.empty Name_def.Global;
       typing_mode = CheckingMode;
       node_cache = Node_cache.mk_empty ();
@@ -422,22 +420,13 @@ let sig_cx cx = cx.ccx.sig_cx
 
 (* modules *)
 
-let push_declare_module cx info =
-  match cx.declare_module_ref with
-  | Some _ -> failwith "declare module must be one level deep"
-  | None -> cx.declare_module_ref <- Some info
-
-let pop_declare_module cx =
-  match cx.declare_module_ref with
-  | None -> failwith "pop empty declare module"
-  | Some _ -> cx.declare_module_ref <- None
-
 let in_declare_module cx = cx.environment.Loc_env.scope_kind = Name_def.DeclareModule
 
-let module_info cx =
-  match cx.declare_module_ref with
-  | Some info -> info
-  | None -> cx.module_info
+let toplevel_module_info cx =
+  if in_declare_module cx then
+    Utils_js.assert_false "module_info should not be called from within declare modules"
+  else
+    cx.toplevel_module_info
 
 (* accessors *)
 

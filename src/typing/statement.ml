@@ -2055,7 +2055,6 @@ module Make
         body
       in
       let prev_scope_kind = Type_env.set_scope_kind cx Name_def.DeclareModule in
-      Context.push_declare_module cx (Module_info.empty_cjs_module ());
 
       let elements_ast = statement_list cx elements in
       let reason = mk_reason (RModule (OrdinaryName name)) id_loc in
@@ -2087,7 +2086,6 @@ module Make
           comments;
         }
       in
-      Context.pop_declare_module cx;
       ignore @@ Type_env.set_scope_kind cx prev_scope_kind;
 
       (module_t, ast)
