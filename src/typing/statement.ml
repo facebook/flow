@@ -6497,121 +6497,117 @@ module Make
          gets checked.
     *)
     let mk_field cx tparams_map reason annot init =
-      let (annot_t, annot_ast) =
-        match annot with
-        | Ast.Type.Missing loc ->
-          let t = Tvar.mk cx reason in
-          (t, Ast.Type.Missing (loc, t))
-        | Ast.Type.Available annot ->
-          let (t, ast_annot) = Anno.mk_type_available_annotation cx tparams_map annot in
-          (t, Ast.Type.Available ast_annot)
-      in
       let unconditionally_required_annot annot =
         match annot with
-        | Ast.Type.Missing _ ->
+        | Ast.Type.Missing loc ->
           Flow.add_output
             cx
             (Error_message.EMissingLocalAnnotation
                { reason; hint_available = false; from_generic_function = false }
             );
-          Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, annot_t)
-        | _ -> ()
+          let t = AnyT.make (AnyError (Some MissingAnnotation)) reason in
+          (t, Ast.Type.Missing (loc, t))
+        | Ast.Type.Available annot ->
+          let (t, ast_annot) = Anno.mk_type_available_annotation cx tparams_map annot in
+          (t, Ast.Type.Available ast_annot)
       in
-      let (field, get_init) =
-        match init with
-        | Ast.Class.Property.Declared ->
-          unconditionally_required_annot annot;
-          (Annot annot_t, Fun.const Ast.Class.Property.Declared)
-        | Ast.Class.Property.Uninitialized ->
-          unconditionally_required_annot annot;
-          (Annot annot_t, Fun.const Ast.Class.Property.Uninitialized)
-        | Ast.Class.Property.Initialized expr ->
-          begin
-            match (expr, annot) with
-            | ((loc, Ast.Expression.StringLiteral lit), Ast.Type.Missing _) ->
-              let t = string_literal cx loc lit in
-              Flow.flow_t cx (t, annot_t)
-            | ((loc, Ast.Expression.BooleanLiteral lit), Ast.Type.Missing _) ->
-              let t = boolean_literal loc lit in
-              Flow.flow_t cx (t, annot_t)
-            | ((loc, Ast.Expression.NumberLiteral lit), Ast.Type.Missing _) ->
-              let t = number_literal loc lit in
-              Flow.flow_t cx (t, annot_t)
-            | ((loc, Ast.Expression.BigIntLiteral lit), Ast.Type.Missing _) ->
-              let t = bigint_literal loc lit in
-              Flow.flow_t cx (t, annot_t)
-            | ((loc, Ast.Expression.RegExpLiteral _), Ast.Type.Missing _) ->
-              let t = regexp_literal cx loc in
-              Flow.flow_t cx (t, annot_t)
-            | ( (_, Ast.Expression.(ArrowFunction function_ | Function function_)),
-                Ast.Type.Missing _
-              ) ->
-              let { Ast.Function.sig_loc; _ } = function_ in
-              let cache = Context.node_cache cx in
-              let (this_t, arrow, function_loc_opt) =
-                match expr with
-                | (_, Ast.Expression.ArrowFunction _) ->
-                  (dummy_this (loc_of_reason reason), true, None)
-                | (loc, _) ->
-                  let this_t =
-                    if
-                      Signature_utils.This_finder.found_this_in_body_or_params
-                        function_.Ast.Function.body
-                        function_.Ast.Function.params
-                    then
-                      Tvar.mk cx (mk_reason RThis sig_loc)
-                    else
-                      Type.implicit_mixed_this reason
-                  in
-                  (this_t, false, Some loc)
-              in
-              let ((func_sig, _) as sig_data) =
-                mk_func_sig
-                  cx
-                  ~required_this_param_type:(Base.Option.some_if (not arrow) this_t)
-                  ~constructor:false
-                  ~getset:false
-                  ~require_return_annot:true
-                  ~statics:SMap.empty
-                  tparams_map
-                  reason
-                  function_
-              in
-              if Context.typing_mode cx = Context.CheckingMode then
-                Node_cache.set_function_sig cache sig_loc sig_data;
-              let t =
-                Statement.Func_stmt_sig.functiontype cx ~arrow function_loc_opt this_t func_sig
-              in
-              Flow.flow_t cx (t, annot_t)
-            | (_, Ast.Type.Missing annot_loc) ->
-              Flow.add_output
+      match init with
+      | Ast.Class.Property.Declared ->
+        let (annot_t, ast_annot) = unconditionally_required_annot annot in
+        (Annot annot_t, annot_t, ast_annot, Fun.const Ast.Class.Property.Declared)
+      | Ast.Class.Property.Uninitialized ->
+        let (annot_t, ast_annot) = unconditionally_required_annot annot in
+        (Annot annot_t, annot_t, ast_annot, Fun.const Ast.Class.Property.Uninitialized)
+      | Ast.Class.Property.Initialized expr ->
+        let (annot_t, annot_ast) =
+          match (expr, annot) with
+          | ((loc, Ast.Expression.StringLiteral lit), Ast.Type.Missing annot_loc) ->
+            let t = string_literal cx loc lit in
+            (t, Ast.Type.Missing (annot_loc, t))
+          | ((loc, Ast.Expression.BooleanLiteral lit), Ast.Type.Missing annot_loc) ->
+            let t = boolean_literal loc lit in
+            (t, Ast.Type.Missing (annot_loc, t))
+          | ((loc, Ast.Expression.NumberLiteral lit), Ast.Type.Missing annot_loc) ->
+            let t = number_literal loc lit in
+            (t, Ast.Type.Missing (annot_loc, t))
+          | ((loc, Ast.Expression.BigIntLiteral lit), Ast.Type.Missing annot_loc) ->
+            let t = bigint_literal loc lit in
+            (t, Ast.Type.Missing (annot_loc, t))
+          | ((loc, Ast.Expression.RegExpLiteral _), Ast.Type.Missing annot_loc) ->
+            let t = regexp_literal cx loc in
+            (t, Ast.Type.Missing (annot_loc, t))
+          | ( (_, Ast.Expression.(ArrowFunction function_ | Function function_)),
+              Ast.Type.Missing annot_loc
+            ) ->
+            let { Ast.Function.sig_loc; _ } = function_ in
+            let cache = Context.node_cache cx in
+            let (this_t, arrow, function_loc_opt) =
+              match expr with
+              | (_, Ast.Expression.ArrowFunction _) ->
+                (dummy_this (loc_of_reason reason), true, None)
+              | (loc, _) ->
+                let this_t =
+                  if
+                    Signature_utils.This_finder.found_this_in_body_or_params
+                      function_.Ast.Function.body
+                      function_.Ast.Function.params
+                  then
+                    Tvar.mk cx (mk_reason RThis sig_loc)
+                  else
+                    Type.implicit_mixed_this reason
+                in
+                (this_t, false, Some loc)
+            in
+            let ((func_sig, _) as sig_data) =
+              mk_func_sig
                 cx
-                (Error_message.EMissingLocalAnnotation
-                   {
-                     reason = repos_reason annot_loc reason;
-                     hint_available = false;
-                     from_generic_function = false;
-                   }
-                );
-              Flow.flow_t cx (AnyT.make (AnyError (Some MissingAnnotation)) reason, annot_t)
-            | (_, Ast.Type.Available _) -> ()
-          end;
-          let value_ref : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option ref = ref None in
-          let (annot_loc, annot_or_inferred) =
-            match annot with
-            | Ast.Type.Missing loc -> (loc, Inferred annot_t)
-            | Ast.Type.Available (loc, _) -> (loc, Annotated annot_t)
-          in
-          ( Infer
-              ( Func_stmt_sig.field_initializer reason expr annot_loc annot_or_inferred,
-                (fun (_, _, value_opt) -> value_ref := Some (Base.Option.value_exn value_opt))
-              ),
-            fun () ->
-              Ast.Class.Property.Initialized
-                (Base.Option.value !value_ref ~default:(Tast_utils.error_mapper#expression expr))
-          )
-      in
-      (field, annot_t, annot_ast, get_init)
+                ~required_this_param_type:(Base.Option.some_if (not arrow) this_t)
+                ~constructor:false
+                ~getset:false
+                ~require_return_annot:true
+                ~statics:SMap.empty
+                tparams_map
+                reason
+                function_
+            in
+            if Context.typing_mode cx = Context.CheckingMode then
+              Node_cache.set_function_sig cache sig_loc sig_data;
+            let t =
+              Statement.Func_stmt_sig.functiontype cx ~arrow function_loc_opt this_t func_sig
+            in
+            (t, Ast.Type.Missing (annot_loc, t))
+          | (_, Ast.Type.Missing annot_loc) ->
+            Flow.add_output
+              cx
+              (Error_message.EMissingLocalAnnotation
+                 {
+                   reason = repos_reason annot_loc reason;
+                   hint_available = false;
+                   from_generic_function = false;
+                 }
+              );
+            let t = AnyT.make (AnyError (Some MissingAnnotation)) reason in
+            (t, Ast.Type.Missing (annot_loc, t))
+          | (_, Ast.Type.Available annot) ->
+            let (t, ast_annot) = Anno.mk_type_available_annotation cx tparams_map annot in
+            (t, Ast.Type.Available ast_annot)
+        in
+        let value_ref : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option ref = ref None in
+        let (annot_loc, annot_or_inferred) =
+          match annot with
+          | Ast.Type.Missing loc -> (loc, Inferred annot_t)
+          | Ast.Type.Available (loc, _) -> (loc, Annotated annot_t)
+        in
+        ( Infer
+            ( Func_stmt_sig.field_initializer reason expr annot_loc annot_or_inferred,
+              (fun (_, _, value_opt) -> value_ref := Some (Base.Option.value_exn value_opt))
+            ),
+          annot_t,
+          annot_ast,
+          fun () ->
+            Ast.Class.Property.Initialized
+              (Base.Option.value !value_ref ~default:(Tast_utils.error_mapper#expression expr))
+        )
     in
     let mk_method cx ~constructor ~getset =
       mk_func_sig
