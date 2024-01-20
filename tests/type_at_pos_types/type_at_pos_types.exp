@@ -955,6 +955,48 @@ Flags: --pretty
   "end":7
 }
 
+opaque.js:73:7
+Flags: --pretty
+{
+  "types":{
+    "unevaluated":{"type":"React$Element<typeof MonoComponent, Props>"},
+    "evaluated":null
+  },
+  "reasons":[],
+  "loc":{
+    "source":"opaque.js",
+    "type":"SourceFile",
+    "start":{"line":73,"column":7,"offset":1265},
+    "end":{"line":73,"column":17,"offset":1276}
+  },
+  "path":"opaque.js",
+  "line":73,
+  "endline":73,
+  "start":7,
+  "end":17
+}
+
+opaque.js:77:7
+Flags: --pretty
+{
+  "types":{
+    "unevaluated":{"type":"React$Element<typeof PolyComponent, PolyProps<string>>"},
+    "evaluated":null
+  },
+  "reasons":[],
+  "loc":{
+    "source":"opaque.js",
+    "type":"SourceFile",
+    "start":{"line":77,"column":7,"offset":1423},
+    "end":{"line":77,"column":17,"offset":1434}
+  },
+  "path":"opaque.js",
+  "line":77,
+  "endline":77,
+  "start":7,
+  "end":17
+}
+
 optional.js:4:10 = {
   "types":{"unevaluated":{"type":"void | string"},"evaluated":null},
   "reasons":[],
@@ -1196,7 +1238,7 @@ subst.js:18:7 = {
   "end":8
 }
 subst.js:21:7 = {
-  "types":{"unevaluated":{"type":"React$Element"},"evaluated":null},
+  "types":{"unevaluated":{"type":"React$Element<any, any>"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"subst.js",

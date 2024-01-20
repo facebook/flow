@@ -1450,13 +1450,18 @@ module Make (I : INPUT) : S = struct
       | _ ->
         let name = opaque_type.Type.opaque_name in
         let opaque_symbol = symbol_from_reason env opaque_reason (Reason.OrdinaryName name) in
-        let%bind targs = optMapM (type__ ~env) targs in
-        return (generic_talias opaque_symbol targs)
+        let%map targs = optMapM (type__ ~env) targs in
+        generic_talias opaque_symbol targs
 
     and opaque_t ~env reason opaque_type =
-      let name = opaque_type.Type.opaque_name in
-      let opaque_symbol = symbol_from_reason env reason (Reason.OrdinaryName name) in
-      return (generic_talias opaque_symbol None)
+      let { Type.opaque_type_args = targs; opaque_name; _ } = opaque_type in
+      let opaque_symbol = symbol_from_reason env reason (Reason.OrdinaryName opaque_name) in
+      let%map targs =
+        match targs with
+        | [] -> return None
+        | _ -> optMapM (fun (_, _, t, _) -> type__ ~env t) (Some targs)
+      in
+      generic_talias opaque_symbol targs
 
     and custom_fun_expanded ~env =
       Type.(

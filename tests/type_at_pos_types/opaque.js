@@ -63,5 +63,16 @@ const o = fOpaque();
 
 opaque type OpaqueKeyWithSupertype1: string = string;
 declare const opaqueDict: {[OpaqueKeyWithSupertype1]: number};
-const x = Object.keys(opaqueDict)[0]);
+const x = Object.keys(opaqueDict)[0];
+//    ^
+
+// React$Element
+import * as React from "react";
+type Props = { prop: string, ... };
+class MonoComponent extends React.Component<Props> {}
+const monoElement = <MonoComponent prop={""}/>;
+//    ^
+type PolyProps<T> = { prop: T, ... };
+class PolyComponent<T> extends React.Component<PolyProps<T>> {}
+const polyElement = <PolyComponent prop={""}/>;
 //    ^
