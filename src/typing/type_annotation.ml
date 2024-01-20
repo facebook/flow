@@ -3098,7 +3098,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       let (ts, targs_ast) = convert_list cx tparams_map infer_tparams_map targs in
       ((loc, c, Some ts), Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments }))
 
-  let mk_interface_sig cx intf_loc reason self decl =
+  let mk_interface_sig cx intf_loc reason decl =
     let {
       Ast.Statement.Interface.id = (id_loc, id_name);
       tparams;
@@ -3145,9 +3145,11 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
         ~this:(implicit_mixed_this reason)
         iface_sig
     in
-    ( iface_sig,
+    let (_, t) = Class_type_sig.classtype ~check_polarity:false cx iface_sig in
+    ( t,
+      iface_sig,
       {
-        Ast.Statement.Interface.id = ((id_loc, self), id_name);
+        Ast.Statement.Interface.id = ((id_loc, t), id_name);
         tparams = tparams_ast;
         extends = extends_ast;
         body =

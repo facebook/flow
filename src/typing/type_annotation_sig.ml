@@ -133,9 +133,8 @@ module type S = sig
     Context.t ->
     ALoc.t ->
     Reason.t ->
-    Type.t ->
     (ALoc.t, ALoc.t) Flow_ast.Statement.Interface.t ->
-    Class_type_sig.Types.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.Interface.t
+    Type.t * Class_type_sig.Types.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.Interface.t
 
   val mk_declare_class_sig :
     Context.t ->
