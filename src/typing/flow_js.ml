@@ -463,11 +463,8 @@ struct
           let (_, result) = mk_type_destructor cx ~trace use_op' reason t d id in
           rec_flow cx trace (result, u)
         | (_, UseT (use_op, EvalT (t, TypeDestructorT (use_op', reason, d), id))) ->
-          let (slingshot, result) = mk_type_destructor cx ~trace use_op' reason t d id in
-          if slingshot then
-            rec_flow cx trace (result, ReposUseT (reason, false, use_op, l))
-          else
-            rec_flow cx trace (l, UseT (use_op, result))
+          let (_, result) = mk_type_destructor cx ~trace use_op' reason t d id in
+          rec_flow cx trace (result, ReposUseT (reason, false, use_op, l))
         (******************)
         (* process X ~> Y *)
         (******************)

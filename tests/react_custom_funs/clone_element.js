@@ -100,3 +100,27 @@ type CompProps = $ReadOnly<{|
   React.cloneElement(el); // ERROR
   React.cloneElement(el, {}); // ERROR
 }
+
+// Cloned element is a union
+function cloneUnionElement() {
+  declare class A extends React.Component<{foo: number}, void> {}
+  declare component B(...props: { foo: number });
+
+  declare var element:
+    | React.Element<Class<A>>
+    | React.Element<typeof B>;
+
+  React.cloneElement(element); // OK
+  React.cloneElement(element, {foo: 1}); // OK
+
+  type Wrap<T> = { f: T }['f'];
+
+  declare var wrappedElement: Wrap<
+    | React.Element<Class<A>>
+    | React.Element<typeof B>
+  >;
+
+  // Tests that wrapping does not affect result
+  React.cloneElement(wrappedElement); // OK
+  React.cloneElement(wrappedElement, {foo: 1}); // OK
+}
