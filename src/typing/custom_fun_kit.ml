@@ -166,30 +166,44 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
       (match args with
       (* React.cloneElement(element) *)
       | [element] ->
-        (* Create the expected type for our element with a fresh tvar in the
-         * component position. *)
-        let expected_element =
-          get_builtin_typeapp
-            cx
-            (reason_of_t element)
-            (OrdinaryName "React$Element")
-            [Tvar.mk cx reason_op]
+        let f elt =
+          (* Create the expected type for our element with a fresh tvar in the
+           * component position. *)
+          let expected_element =
+            get_builtin_typeapp
+              cx
+              (reason_of_t element)
+              (OrdinaryName "React$Element")
+              [Tvar.mk cx reason_op]
+          in
+          (* Flow the element arg to our expected element. *)
+          rec_flow_t ~use_op cx trace (elt, expected_element);
+          expected_element
         in
-        (* Flow the element arg to our expected element. *)
-        rec_flow_t ~use_op cx trace (element, expected_element);
+        let expected_element =
+          match Flow.singleton_concrete_type_for_inspection cx (reason_of_t element) element with
+          | UnionT (reason, rep) -> UnionT (reason, UnionRep.ident_map f rep)
+          | _ -> f element
+        in
         (* Flow our expected element to the return type. *)
         rec_flow_t ~use_op:unknown_use cx trace (expected_element, tout)
       (* React.cloneElement(element, config, ...children) *)
       | element :: config :: children ->
-        (* Create a tvar for our component. *)
-        let component = Tvar.mk cx reason_op in
-        (* Flow the element arg to the element type we expect. *)
-        rec_flow_t
-          ~use_op
-          cx
-          trace
-          (element, get_builtin_typeapp cx reason_op (OrdinaryName "React$Element") [component]);
-
+        let f element =
+          (* Create a tvar for our component. *)
+          Tvar.mk_where cx reason_op (fun component ->
+              let expected_element =
+                get_builtin_typeapp cx reason_op (OrdinaryName "React$Element") [component]
+              in
+              (* Flow the element arg to the element type we expect. *)
+              rec_flow_t ~use_op cx trace (element, expected_element)
+          )
+        in
+        let component =
+          match Flow.singleton_concrete_type_for_inspection cx (reason_of_t element) element with
+          | UnionT (reason, rep) -> UnionT (reason, UnionRep.ident_map f rep)
+          | _ -> f element
+        in
         (* Create a React element using the config and children. *)
         rec_flow
           cx
