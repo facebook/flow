@@ -245,7 +245,7 @@ module type EVAL = sig
     Type.t ->
     Type.destructor ->
     Type.Eval.id ->
-    bool * Type.t
+    Type.t
 
   val mk_possibly_evaluated_destructor :
     Context.t -> Type.use_op -> Reason.reason -> Type.t -> Type.destructor -> Type.Eval.id -> Type.t

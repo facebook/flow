@@ -460,10 +460,10 @@ struct
         | (EvalT (_, _, id1), UseT (_, EvalT (_, _, id2))) when Type.Eval.equal_id id1 id2 ->
           if Context.is_verbose cx then prerr_endline "EvalT ~> EvalT fast path"
         | (EvalT (t, TypeDestructorT (use_op', reason, d), id), _) ->
-          let (_, result) = mk_type_destructor cx ~trace use_op' reason t d id in
+          let result = mk_type_destructor cx ~trace use_op' reason t d id in
           rec_flow cx trace (result, u)
         | (_, UseT (use_op, EvalT (t, TypeDestructorT (use_op', reason, d), id))) ->
-          let (_, result) = mk_type_destructor cx ~trace use_op' reason t d id in
+          let result = mk_type_destructor cx ~trace use_op' reason t d id in
           rec_flow cx trace (result, ReposUseT (reason, false, use_op, l))
         (******************)
         (* process X ~> Y *)
@@ -6956,11 +6956,6 @@ struct
     (* As an optimization, unwrap resolved tvars so that they are only evaluated
      * once to an annotation instead of a tvar that gets a bound on both sides. *)
     let t = drop_resolved cx t in
-    let slingshot =
-      match drop_generic t with
-      | OpenT _ -> false
-      | _ -> true
-    in
     let result =
       match Eval.Map.find_opt id evaluated with
       | Some cached_t -> cached_t
@@ -7024,7 +7019,7 @@ struct
       && not (Tvar_resolver.has_unresolved_tvars_in_destructors cx d)
     then
       Tvar_resolver.resolve cx result;
-    (slingshot, result)
+    result
 
   and eval_destructor cx ~trace use_op reason t d tout =
     match d with

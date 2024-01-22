@@ -67,13 +67,7 @@ val check_polarity : Context.t -> Type.typeparam Subst_name.Map.t -> Polarity.t 
 (* destructors *)
 
 val mk_type_destructor :
-  Context.t ->
-  Type.use_op ->
-  Reason.reason ->
-  Type.t ->
-  Type.destructor ->
-  Type.Eval.id ->
-  bool * Type.t
+  Context.t -> Type.use_op -> Reason.reason -> Type.t -> Type.destructor -> Type.Eval.id -> Type.t
 
 val mk_possibly_evaluated_destructor :
   Context.t -> Type.use_op -> Reason.reason -> Type.t -> Type.destructor -> Type.Eval.id -> Type.t

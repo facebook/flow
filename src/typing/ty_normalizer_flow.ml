@@ -15,7 +15,7 @@ module Normalizer = Ty_normalizer.Make (struct
   let eval cx ~should_eval ~cont ~default ~non_eval (t, d, id) =
     let (Type.TypeDestructorT (use_op, reason, d)) = d in
     if should_eval then
-      let (_, tout) = Flow_js.mk_type_destructor cx use_op reason t d id in
+      let tout = Flow_js.mk_type_destructor cx use_op reason t d id in
       match Lookahead.peek cx tout with
       | Lookahead.LowerBounds [t] -> cont t
       | _ -> default tout
