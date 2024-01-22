@@ -3203,7 +3203,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       | None -> false
       | Some source -> File_key.is_lib_file source
     in
-    fun cx class_loc class_name reason self decl ->
+    let f cx class_loc class_name reason self decl =
       let {
         Ast.Statement.DeclareClass.id = (id_loc, id_name) as ident;
         tparams;
@@ -3297,9 +3297,12 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
           let reason = replace_desc_reason RDefaultConstructor reason in
           Class_type_sig.add_default_constructor reason iface_sig
       in
-      ( iface_sig,
+      let (t_internal, t) = Class_type_sig.classtype ~check_polarity:false cx iface_sig in
+      ( t_internal,
+        t,
+        iface_sig,
         {
-          Ast.Statement.DeclareClass.id = ((id_loc, self), id_name);
+          Ast.Statement.DeclareClass.id = ((id_loc, t), id_name);
           tparams = tparam_asts;
           body =
             ( body_loc,
@@ -3311,6 +3314,12 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
           comments;
         }
       )
+    in
+    fun cx class_loc class_name reason decl ->
+      let self = Tvar.mk cx reason in
+      let (t_internal, t, iface_sig, tast) = f cx class_loc class_name reason self decl in
+      Flow.unify cx self t_internal;
+      (t, iface_sig, tast)
 
   (* Propagation of infer_tparams_map is an implementation detail of this module, so we shadow them.
      External callers should never need to pass such map,

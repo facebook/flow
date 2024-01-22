@@ -2016,13 +2016,7 @@ module Make
       in
       let desc = RType (OrdinaryName name) in
       let reason = mk_reason desc name_loc in
-      let self = Tvar.mk cx reason in
-      let (class_sig, decl_ast) = Anno.mk_declare_class_sig cx loc name reason self decl in
-      let t =
-        let (t_internal, t) = Class_type_sig.classtype ~check_polarity:false cx class_sig in
-        Flow.unify cx self t_internal;
-        t
-      in
+      let (t, class_sig, decl_ast) = Anno.mk_declare_class_sig cx loc name reason decl in
       Class_type_sig.check_signature_compatibility cx (mk_reason desc loc) class_sig;
       (t, decl_ast)
 
