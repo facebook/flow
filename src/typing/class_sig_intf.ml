@@ -185,10 +185,4 @@ module type S = sig
      class and the second type is the external view--which differ because the internal view can be
      comparible with `this`, while the external view shouldn't be. *)
   val classtype : Context.t -> ?check_polarity:bool -> t -> Type.t * Type.t
-
-  module This : sig
-    val is_bound_to_empty : t -> bool
-
-    val in_class : (ALoc.t, ALoc.t) Flow_ast.Class.t -> bool
-  end
 end

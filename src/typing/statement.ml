@@ -6445,7 +6445,6 @@ module Make
       x
     | None ->
       let def_reason = repos_reason class_loc reason in
-      let this_in_class = Class_stmt_sig.This.in_class c in
       let self = Type_env.read_class_self_type cx class_loc in
       let (class_t, _, class_sig, class_ast_f) =
         mk_class_sig cx ~name_loc ~class_loc reason self c
@@ -6460,8 +6459,7 @@ module Make
         @@ Class_stmt_sig.private_fields_of_signature ~static:false class_sig
       in
       Class_stmt_sig.check_signature_compatibility cx def_reason class_sig;
-      if this_in_class || not (Class_stmt_sig.This.is_bound_to_empty class_sig) then
-        Class_stmt_sig.toplevels cx class_sig;
+      Class_stmt_sig.toplevels cx class_sig;
 
       let class_body = Ast.Class.((snd c.body).Body.body) in
       Context.add_voidable_check

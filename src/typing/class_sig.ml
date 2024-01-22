@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module Ast = Flow_ast
 module Flow = Flow_js
 open Reason
 open Utils_js
@@ -916,33 +915,4 @@ module Make
                SMap.iter field s.proto_fields
            )
     )
-
-  module This = struct
-    let is_bound_to_empty { super; _ } =
-      Type.(
-        match super with
-        | Class { this_t = DefT (_, EmptyT); _ } -> true
-        | _ -> false
-      )
-
-    exception FoundInClass
-
-    class detector =
-      object
-        inherit [ALoc.t] Flow_ast_mapper.mapper as super
-
-        method! generic_identifier_type (git : (ALoc.t, ALoc.t) Ast.Type.Generic.Identifier.t) =
-          let open Ast.Type.Generic.Identifier in
-          match git with
-          | Unqualified (_, { Ast.Identifier.name = "this"; comments = _ }) -> raise FoundInClass
-          | _ -> super#generic_identifier_type git
-      end
-
-    let in_class c =
-      try
-        (new detector)#class_ ALoc.none c |> ignore;
-        false
-      with
-      | FoundInClass -> true
-  end
 end
