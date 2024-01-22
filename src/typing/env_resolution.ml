@@ -13,7 +13,7 @@ open Utils_js
 module Ast = Flow_ast
 module EnvMap = Env_api.EnvMap
 module Statement = Fix_statement.Statement_
-module Anno = Type_annotation.Make (Type_annotation.FlowJS) (Statement)
+module Anno = Type_annotation.Make (Type_annotation_cons_gen.FlowJS) (Statement)
 
 let mk_tparams_map cx tparams_map =
   let { Loc_env.tparams; _ } = Context.environment cx in

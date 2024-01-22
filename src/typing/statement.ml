@@ -27,7 +27,7 @@ module Make
                                       with module Types := Component_sig_types
                                                            .DeclarationParamConfig)
     (Statement : Statement_sig.S) : Statement_sig.S = struct
-  module Anno = Type_annotation.Make (Type_annotation.FlowJS) (Statement)
+  module Anno = Type_annotation.Make (Type_annotation_cons_gen.FlowJS) (Statement)
   module Class_type_sig = Anno.Class_type_sig
   module Func_stmt_config = Func_stmt_config
   module Component_declaration_config = Component_declaration_config
@@ -430,7 +430,8 @@ module Make
     Func_sig.Make (Statement) (Func_stmt_config_types.Types) (Func_stmt_config) (Func_stmt_params)
       (Func_stmt_sig_types)
   module Class_stmt_sig =
-    Class_sig.Make (Type_annotation.FlowJS) (Func_stmt_config_types.Types) (Func_stmt_config)
+    Class_sig.Make (Type_annotation_cons_gen.FlowJS) (Func_stmt_config_types.Types)
+      (Func_stmt_config)
       (Func_stmt_params)
       (Func_stmt_sig)
       (Class_stmt_sig_types)
