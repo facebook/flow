@@ -176,8 +176,7 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
             [Tvar.mk cx reason_op]
         in
         (* Flow the element arg to our expected element. *)
-        rec_flow_t ~use_op:unknown_use cx trace (element, expected_element);
-
+        rec_flow_t ~use_op cx trace (element, expected_element);
         (* Flow our expected element to the return type. *)
         rec_flow_t ~use_op:unknown_use cx trace (expected_element, tout)
       (* React.cloneElement(element, config, ...children) *)
@@ -186,7 +185,7 @@ module Kit (Flow : Flow_common.S) : CUSTOM_FUN = struct
         let component = Tvar.mk cx reason_op in
         (* Flow the element arg to the element type we expect. *)
         rec_flow_t
-          ~use_op:unknown_use
+          ~use_op
           cx
           trace
           (element, get_builtin_typeapp cx reason_op (OrdinaryName "React$Element") [component]);
