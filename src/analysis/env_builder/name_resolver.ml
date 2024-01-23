@@ -2402,12 +2402,12 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             if this#in_toplevel_scope then
               env_state <- { env_state with cjs_exports_state = Env_api.CJSModuleExports loc }
             else
-              add_output (Error_message.EBadExportPosition loc)
+              ()
           (* module.exports.foo = ... *)
           | ( None,
               {
                 Ast.Expression.Member._object =
-                  ( module_exports_loc,
+                  ( _,
                     Ast.Expression.Member
                       {
                         Ast.Expression.Member._object =
@@ -2438,12 +2438,12 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                     cjs_exports_state = Env_api.CJSExportNames (SMap.add name (key_loc, loc) named);
                   }
             else
-              add_output (Error_message.EBadExportPosition module_exports_loc)
+              ()
           (* exports.foo = ... *)
           | ( None,
               {
                 Ast.Expression.Member._object =
-                  ( exports_loc,
+                  ( _,
                     Ast.Expression.Identifier (_, { Ast.Identifier.name = "exports"; comments = _ })
                   );
                 property =
@@ -2463,7 +2463,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                     cjs_exports_state = Env_api.CJSExportNames (SMap.add name (key_loc, loc) named);
                   }
             else
-              add_output (Error_message.EBadExportPosition exports_loc)
+              ()
           | _ -> ())
         | _ -> statement_error
 

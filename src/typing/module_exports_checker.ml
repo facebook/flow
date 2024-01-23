@@ -199,10 +199,11 @@ class exports_error_checker ~is_local_use =
       super#declare_export_declaration stmt_loc decl
 
     method! assignment loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Assignment.t) =
-      this#handle_assignment loc expr;
+      this#handle_assignment ~is_toplevel:false loc expr;
       expr
 
-    method handle_assignment loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Assignment.t) =
+    method handle_assignment ~is_toplevel loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Assignment.t)
+        =
       let open Ast.Expression in
       let open Ast.Expression.Assignment in
       let { operator; left; right; comments = _ } = expr in
@@ -227,7 +228,8 @@ class exports_error_checker ~is_local_use =
         )
         when not (is_local_use module_loc) ->
         if not (is_local_use module_loc) then this#set_cjs_exports mod_exp_loc;
-        ignore (this#expression right)
+        ignore (this#expression right);
+        if not is_toplevel then this#add_error (Error_message.EBadExportPosition mod_exp_loc)
       (* exports.foo = ... *)
       | ( None,
           ( _,
@@ -274,7 +276,8 @@ class exports_error_checker ~is_local_use =
         )
         when not (is_local_use module_loc) ->
         this#add_cjs_export mod_exp_loc;
-        ignore (this#expression right)
+        ignore (this#expression right);
+        if not is_toplevel then this#add_error (Error_message.EBadExportPosition mod_exp_loc)
       (* module = ... *)
       | ( None,
           ( _,
@@ -344,7 +347,7 @@ class exports_error_checker ~is_local_use =
         let open Expression in
         match expr with
         | (loc, Assignment assg) ->
-          this#handle_assignment loc assg;
+          this#handle_assignment ~is_toplevel:true loc assg;
           expr
         | _ -> this#expression expr
       in
@@ -377,6 +380,7 @@ let filter_irrelevant_errors ~module_kind errors =
     errors
   | ES ->
     Base.List.filter errors ~f:(function
+        | Error_message.EBadExportPosition _ -> false
         | Error_message.EBadExportContext _ -> false
         | _ -> true
         )
