@@ -147,20 +147,6 @@ References:
 
 Error -------------------------------------------------------------------------------------------- constructor.js:136:18
 
-Cannot return `this` type because constructor void return [1] is incompatible with `this` [2]. [incompatible-return]
-
-   constructor.js:136:18
-   136|   constructor(): this { // error: this ~> void
-                         ^^^^ [2]
-
-References:
-   constructor.js:136:16
-   136|   constructor(): this { // error: this ~> void
-                       ^^^^^^ [1]
-
-
-Error -------------------------------------------------------------------------------------------- constructor.js:136:18
-
 Cannot return `this` type because `N_` [1] is incompatible with constructor void return [2]. [incompatible-return]
 
    constructor.js:136:18
@@ -301,4 +287,4 @@ References:
 
 
 
-Found 20 errors
+Found 19 errors
