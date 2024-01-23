@@ -15,7 +15,7 @@ else
   SWITCH=ocaml-base-compiler.4.14.0
 endif
 
-JS_OF_OCAML_VERSION=5.1.1
+JS_OF_OCAML_VERSION=5.5.2
 OUNIT_VERSION=2.2.2.4
 
 # set FLOW_RELEASE=[1|true] or CI=true for an optimized build; otherwise,

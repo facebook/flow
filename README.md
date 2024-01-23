@@ -107,7 +107,7 @@ Flow is written in OCaml (OCaml 4.14.0 is required).
 6. Build `flow.js` (optional):
 
     ```sh
-    opam install -y js_of_ocaml.5.1.1
+    opam install -y js_of_ocaml.5.5.2
     make js
     ```
 
