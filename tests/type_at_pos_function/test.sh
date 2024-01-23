@@ -5,8 +5,16 @@
 # LICENSE file in the root directory of this source tree.
 
 # declare.js
-printf "declare.js:4:3 = "
+printf "declare.js:3:18 = "
 assert_ok "$FLOW" type-at-pos declare.js 3 18 --strip-root --pretty
+printf "declare.js:5:18 = "
+assert_ok "$FLOW" type-at-pos declare.js 5 18 --strip-root --pretty
+printf "declare.js:6:18 = "
+assert_ok "$FLOW" type-at-pos declare.js 6 18 --strip-root --pretty
+printf "declare.js:8:18 = "
+assert_ok "$FLOW" type-at-pos declare.js 8 18 --strip-root --pretty
+printf "declare.js:9:18 = "
+assert_ok "$FLOW" type-at-pos declare.js 9 18 --strip-root --pretty
 
 # function.js
 printf "function.js:4:3 = "
