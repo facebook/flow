@@ -908,7 +908,7 @@ module Make
               Flow.flow cx (t, AssertExportIsTypeT (reason, local_name, tout))
           )
         in
-        Import_export.export_type cx remote_name ~name_loc:(Some loc) t;
+        Import_export.export_type cx remote_name ~name_loc:loc t;
         t
       | Ast.Statement.ExportValue ->
         Import_export.export cx remote_name ~name_loc:loc ~is_type_only_export:false t;
@@ -927,7 +927,7 @@ module Make
       in
       match export_kind with
       | Ast.Statement.ExportType ->
-        Import_export.export_type cx remote_name ~name_loc:(Some loc) t;
+        Import_export.export_type cx remote_name ~name_loc:loc t;
         t
       | Ast.Statement.ExportValue ->
         Import_export.export cx remote_name ~name_loc:loc ~is_type_only_export:false t;

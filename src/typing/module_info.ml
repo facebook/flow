@@ -69,7 +69,7 @@ let export_type info name ?preferred_def_locs ~name_loc type_ =
   info.type_named <-
     NameUtils.Map.add
       name
-      { Type.preferred_def_locs; name_loc; is_type_only_export = true; type_ }
+      { Type.preferred_def_locs; name_loc = Some name_loc; is_type_only_export = true; type_ }
       info.type_named
 
 let export_type_star info loc module_t = info.type_star <- (loc, module_t) :: info.type_star

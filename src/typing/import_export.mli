@@ -30,12 +30,7 @@ val export :
   unit
 
 val export_type :
-  Context.t ->
-  Reason.name ->
-  ?preferred_def_locs:ALoc.t Nel.t ->
-  name_loc:ALoc.t option ->
-  Type.t ->
-  unit
+  Context.t -> Reason.name -> ?preferred_def_locs:ALoc.t Nel.t -> name_loc:ALoc.t -> Type.t -> unit
 
 val export_binding :
   Context.t ->

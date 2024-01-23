@@ -174,7 +174,7 @@ let export_binding cx ?is_function name ?preferred_def_locs ~name_loc = function
         name
         name_loc
     in
-    export_type cx name ?preferred_def_locs ~name_loc:(Some name_loc) t
+    export_type cx name ?preferred_def_locs ~name_loc t
 
 (* After we have seen all the export statements in a module, this function will
  * calculate a ModuleT type (or a tvar that resolves to one) describing the
