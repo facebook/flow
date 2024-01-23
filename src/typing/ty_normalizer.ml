@@ -613,6 +613,9 @@ module Make (I : INPUT) : S = struct
         (* class or interface declaration *)
         let symbol = symbol_from_reason env reason name in
         return symbol
+      | RThisType ->
+        let symbol = symbol_from_reason env reason (OrdinaryName "this") in
+        return symbol
       | desc ->
         let desc = Reason.show_virtual_reason_desc (fun _ _ -> ()) desc in
         let msg = "could not extract instance name from reason: " ^ desc in
