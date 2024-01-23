@@ -7818,9 +7818,13 @@ module Make
           | (_, Func_class_sig_types.Func.Ctor) ->
             let return_t = TypeUtil.type_t_of_annotated_or_inferred return_t in
             let use_op = Op (FunReturnStatement { value = TypeUtil.reason_of_t return_t }) in
-            Flow.flow
+            (* Check delayed so that we don't have to force return_t which might contain a currently
+             * unresolved OpenT with implicit this tparam. *)
+            Context.add_post_inference_subtyping_check
               cx
-              (return_t, UseT (use_op, VoidT.make (mk_reason RConstructorVoidReturn ret_loc)))
+              return_t
+              use_op
+              (VoidT.make (mk_reason RConstructorVoidReturn ret_loc))
           | _ -> ()
         in
         let return_t =
