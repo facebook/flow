@@ -2227,6 +2227,8 @@ and Eval : sig
   val equal_id : id -> id -> bool
 
   module Map : WrappedMap.S with type key = id
+
+  module Set : Flow_set.S with type elt = id
 end = struct
   include Source_or_generated_id
 
@@ -2234,6 +2236,12 @@ end = struct
     type key = id
 
     type t = key
+
+    let compare = compare_id
+  end)
+
+  module Set : Flow_set.S with type elt = id = Flow_set.Make (struct
+    type t = id
 
     let compare = compare_id
   end)
