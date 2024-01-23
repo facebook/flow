@@ -187,8 +187,8 @@ module Def_kind_search = struct
 
       method! export_default_declaration loc decl =
         let open Flow_ast.Statement.ExportDefaultDeclaration in
-        let { default; _ } = decl in
-        if covers_target default then raise (Found (Obj_def (default, "default")));
+        let { default = (default_loc, _); _ } = decl in
+        if covers_target default_loc then raise (Found (Obj_def (default_loc, "default")));
         super#export_default_declaration loc decl
 
       method! export_named_declaration loc decl =

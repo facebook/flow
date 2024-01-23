@@ -1776,6 +1776,7 @@ module Make
           let (((loc, t), _) as expr) = expression cx expr in
           (loc, t, D.Expression expr)
       in
+      let default = (default, t) in
       Import_export.export
         cx
         (OrdinaryName "default")

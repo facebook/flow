@@ -1164,7 +1164,7 @@ and Statement : sig
 
   module ExportDefaultDeclaration : sig
     type ('M, 'T) t = {
-      default: 'M;
+      default: 'T;
       declaration: ('M, 'T) declaration;
       comments: ('M, unit) Syntax.t option;
     }

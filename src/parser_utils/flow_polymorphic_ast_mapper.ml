@@ -831,7 +831,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : ('N, 'U) Ast.Statement.ExportDefaultDeclaration.t =
       let open Ast.Statement.ExportDefaultDeclaration in
       let { default; declaration; comments } = decl in
-      let default' = this#on_loc_annot default in
+      let default' = this#on_type_annot default in
       let declaration' = this#export_default_declaration_decl declaration in
       let comments' = this#syntax_opt comments in
       { default = default'; declaration = declaration'; comments = comments' }
