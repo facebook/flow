@@ -192,6 +192,14 @@ References:
                                                ^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------- annotation.js:54:57
+
+Cannot use number [1] as the type argument of renders type. [invalid-render]
+
+   54| declare export var Export: component(x: number) renders number; // invalid-render
+                                                               ^^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------- annotation.js:59:2
 
 Cannot create `Export` element because property `x` is missing in props [1] but exists in props of component [2].
@@ -206,7 +214,7 @@ References:
    59| <Export />; // error
        ^^^^^^^^^^ [1]
    annotation.js:54:28
-   54| declare export var Export: component(x: number) renders number;
+   54| declare export var Export: component(x: number) renders number; // invalid-render
                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -712,16 +720,16 @@ References:
 
 Error --------------------------------------------------------------------------------- component_type_checking.js:17:10
 
-Cannot return `null` because null [1] does not render undefined [2]. [incompatible-return]
+Cannot return `null` because null [1] does not render `InlineParams` [2]. [incompatible-return]
 
    component_type_checking.js:17:10
    17|   return null; // ERROR
                 ^^^^ [1]
 
 References:
-   component_type_checking.js:8:11
-    8| ) renders void {
-                 ^^^^ [2]
+   component_type_checking.js:8:3
+    8| ) renders InlineParams {
+         ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------- component_type_checking.js:22:12
@@ -1068,6 +1076,14 @@ References:
    declared.js:53:36
    53| declare component SpreadRef(...p: {ref: number}); // error
                                           ^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ declared.js:56:52
+
+Cannot use number [1] as the type argument of renders type. [invalid-render]
+
+   56| declare export component Export(x: number) renders number;
+                                                          ^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- declared.js:60:2
@@ -1717,7 +1733,7 @@ References:
    42| <ExportType />; // error
        ^^^^^^^^^^^^^^ [1]
    annotation.js:54:37
-   54| declare export var Export: component(x: number) renders number;
+   54| declare export var Export: component(x: number) renders number; // invalid-render
                                            ^^^^^^^^^^^ [2]
 
 
@@ -1977,6 +1993,22 @@ References:
                                           ^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------- nested_with_function.js:5:27
+
+Cannot use string [1] as the type argument of renders type. [invalid-render]
+
+   5|   component Foo() renders string { // invalid-render
+                                ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------ nested_with_function.js:11:25
+
+Cannot use number [1] as the type argument of renders type. [invalid-render]
+
+   11| component Foo() renders number { // invalid-render
+                               ^^^^^^ [1]
+
+
 Error -------------------------------------------------------------------------------------------------- nominal.js:13:1
 
 Cannot cast `Bar` to `typeof Foo` because component Bar [1] is incompatible with component Foo [2]. [incompatible-cast]
@@ -2045,6 +2077,24 @@ References:
    nominal.js:18:32
    18| Foo as React.AbstractComponent<{foo: number}, mixed, React.Node>; // ERROR
                                       ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- nominal.js:20:36
+
+Cannot use null [1] as the type argument of renders type. Only elements of a component-syntax components can appear in
+renders. If you want to express the idea of rendering zero or one item, please use `renders?` instead. [invalid-render]
+
+   20| component Baz(foo: number) renders null { // invalid-render
+                                          ^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- nominal.js:29:62
+
+Cannot use null [1] as the type argument of renders type. Only elements of a component-syntax components can appear in
+renders. If you want to express the idea of rendering zero or one item, please use `renders?` instead. [invalid-render]
+
+   29| Baz as React.AbstractComponent<{foo: number}, mixed, renders null>; // OK
+                                                                    ^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------- param_reassignment.js:2:5
@@ -2716,6 +2766,14 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
+Error --------------------------------------------------------------------------------------- render_constraints.js:1:34
+
+Cannot use object type [1] as the type argument of renders type. [invalid-render]
+
+   1| component Foo(x: number) renders {...} { // ERROR, {...} not a subtype of React.Node
+                                       ^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------- rest_constraints.js:1:21
 
 number [1] is not an object. [not-an-object]
@@ -3157,7 +3215,7 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 207 errors
+Found 214 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

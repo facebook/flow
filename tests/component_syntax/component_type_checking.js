@@ -5,7 +5,7 @@ component InlineParams(
   'special-key' as bar: number,
   baz as qux: number,
   destructured as {a}: {a: number},
-) renders void {
+) renders InlineParams {
   (foo: number); // OK
   (foo: string); // ERROR
   (bar: number); // OK

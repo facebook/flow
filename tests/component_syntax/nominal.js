@@ -17,7 +17,7 @@ Foo as React.AbstractComponent<{}, mixed, React.Node>; // OK
 Foo as React.AbstractComponent<{}, mixed, null>; // ERROR, default render is React.Node
 Foo as React.AbstractComponent<{foo: number}, mixed, React.Node>; // ERROR
 
-component Baz(foo: number) renders null {
+component Baz(foo: number) renders null { // invalid-render
   return null;
 }
 

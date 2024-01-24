@@ -98,8 +98,6 @@ type metadata = {
   relay_integration_excludes: Str.regexp list;
   relay_integration_module_prefix: string option;
   relay_integration_module_prefix_includes: Str.regexp list;
-  renders_type_validation: bool;
-  renders_type_validation_includes: string list;
   root: File_path.t;
   strict_es6_import_export: bool;
   strict_es6_import_export_excludes: string list;

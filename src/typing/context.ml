@@ -61,8 +61,6 @@ type metadata = {
   relay_integration_excludes: Str.regexp list;
   relay_integration_module_prefix: string option;
   relay_integration_module_prefix_includes: Str.regexp list;
-  renders_type_validation: bool;
-  renders_type_validation_includes: string list;
   root: File_path.t;
   strict_es6_import_export: bool;
   strict_es6_import_export_excludes: string list;
@@ -276,8 +274,6 @@ let metadata_of_options options =
     relay_integration_module_prefix = Options.relay_integration_module_prefix options;
     relay_integration_module_prefix_includes =
       Options.relay_integration_module_prefix_includes options;
-    renders_type_validation = Options.renders_type_validation options;
-    renders_type_validation_includes = Options.renders_type_validation_includes options;
     root = Options.root options;
     strict_es6_import_export = Options.strict_es6_import_export options;
     strict_es6_import_export_excludes = Options.strict_es6_import_export_excludes options;
@@ -480,9 +476,6 @@ let relay_integration_module_prefix cx =
     cx.metadata.relay_integration_module_prefix_includes
     (file cx)
     cx.metadata.relay_integration_module_prefix
-
-let enable_renders_type_validation cx =
-  cx.metadata.renders_type_validation || in_dirlist cx cx.metadata.renders_type_validation_includes
 
 let errors cx = cx.ccx.errors
 
@@ -697,9 +690,8 @@ let add_post_inference_subtyping_check cx l use_op u =
   add_post_inference_validation_flow cx l (Type.UseT (use_op, u))
 
 let add_renders_type_argument_validation cx ~allow_generic_t loc variant t =
-  if enable_renders_type_validation cx then
-    cx.ccx.renders_type_argument_validations <-
-      (loc, variant, allow_generic_t, t) :: cx.ccx.renders_type_argument_validations
+  cx.ccx.renders_type_argument_validations <-
+    (loc, variant, allow_generic_t, t) :: cx.ccx.renders_type_argument_validations
 
 let add_global_value_cache_entry cx name t =
   cx.ccx.global_value_cache <- NameUtils.Map.add name t cx.ccx.global_value_cache

@@ -51,7 +51,7 @@ declare var InlineRef: component(ref: number); // error
 declare var SpreadRef: component(...p: {ref: number}); // error
 <SpreadRef ref={1} />;
 
-declare export var Export: component(x: number) renders number;
+declare export var Export: component(x: number) renders number; // invalid-render
 
 declare var DefaultExport: component(x: number);
 export default DefaultExport;
