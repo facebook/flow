@@ -885,39 +885,39 @@ let is_exception_to_react_dro = function
   | Named { name = OrdinaryName "current"; _ } -> true
   | _ -> false
 
+let fix_this_class_instance cx reason (r, i, is_this, this_name) =
+  match Flow_cache.Fix.find cx is_this i with
+  | Some i' -> i'
+  | None ->
+    let reason_i = reason_of_t i in
+    let rec i' =
+      lazy
+        (let this = Tvar.mk_fully_resolved_lazy cx reason_i i' in
+         let this_generic =
+           if is_this then
+             GenericT
+               {
+                 id = Context.make_generic_id cx this_name (def_loc_of_reason r);
+                 reason;
+                 name = this_name;
+                 bound = this;
+               }
+           else
+             this
+         in
+         let i' = subst cx (Subst_name.Map.singleton this_name this_generic) i in
+         Flow_cache.Fix.add cx is_this i i';
+         i'
+        )
+    in
+    Lazy.force i'
+
 (* Fix a this-abstracted instance type by tying a "knot": assume that the
    fixpoint is some `this`, substitute it as This in the instance type, and
    finally unify it with the instance type. Return the class type wrapping the
    instance type. *)
 let fix_this_class cx reason (r, i, is_this, this_name) =
-  let i' =
-    match Flow_cache.Fix.find cx is_this i with
-    | Some i' -> i'
-    | None ->
-      let reason_i = reason_of_t i in
-      let rec i' =
-        lazy
-          (let this = Tvar.mk_fully_resolved_lazy cx reason_i i' in
-           let this_generic =
-             if is_this then
-               GenericT
-                 {
-                   id = Context.make_generic_id cx this_name (def_loc_of_reason r);
-                   reason;
-                   name = this_name;
-                   bound = this;
-                 }
-             else
-               this
-           in
-           let i' = subst cx (Subst_name.Map.singleton this_name this_generic) i in
-           Flow_cache.Fix.add cx is_this i i';
-           i'
-          )
-      in
-      Lazy.force i'
-  in
-  DefT (r, ClassT i')
+  DefT (r, ClassT (fix_this_class_instance cx reason (r, i, is_this, this_name)))
 
 module type Instantiation_helper_sig = sig
   val cache_instantiate :
