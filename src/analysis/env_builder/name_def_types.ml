@@ -176,11 +176,6 @@ type generator_annot = {
   async: bool;
 }
 
-type class_implicit_this_tparam = {
-  tparams_map: tparams_map;
-  class_tparams_loc: ALoc.t option;
-}
-
 type expression_def = {
   cond_context: cond_context;
   chain: bool;
@@ -222,7 +217,6 @@ type def =
       component: (ALoc.t, ALoc.t) Ast.Statement.ComponentDeclaration.t;
     }
   | Class of {
-      class_implicit_this_tparam: class_implicit_this_tparam;
       class_: (ALoc.t, ALoc.t) Ast.Class.t;
       class_loc: ALoc.t;
       (* A set of this and super write locations that can be resolved by resolving the class. *)
@@ -348,13 +342,7 @@ module Print = struct
     | DeclaredComponent
         (_, { Ast.Statement.DeclareComponent.id = (_, { Ast.Identifier.name; _ }); _ }) ->
       spf "declared component %s" name
-    | Class
-        {
-          class_ = { Ast.Class.id; _ };
-          class_implicit_this_tparam = _;
-          class_loc = _;
-          this_super_write_locs = _;
-        } ->
+    | Class { class_ = { Ast.Class.id; _ }; class_loc = _; this_super_write_locs = _ } ->
       spf
         "class %s"
         (Base.Option.value_map

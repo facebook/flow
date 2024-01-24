@@ -3187,7 +3187,7 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
         decl
       in
       let (tparams, tparams_map, tparam_asts) = mk_type_param_declarations cx tparams in
-      let (this_tparam, this_t) = Class_type_sig.mk_this self cx reason tparams in
+      let (this_tparam, this_t) = Class_type_sig.mk_this ~self cx reason in
       let (iface_sig, extends_ast, mixins_ast, implements_ast) =
         let id = Context.make_aloc_id cx id_loc in
         let (extends, extends_ast) =

@@ -157,9 +157,7 @@ module type S = sig
   (** Check if this signature defines a constructor *)
   val mem_constructor : t -> bool
 
-  val mk_this :
-    Type.t -> (* self *)
-              Context.t -> Reason.t -> Type.typeparams -> Type.typeparam * Type.t
+  val mk_this : self:Type.t -> Context.t -> Reason.t -> Type.typeparam * Type.t
 
   val fields_to_prop_map : Context.t -> field' SMap.t -> Type.Properties.id
 

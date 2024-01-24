@@ -6759,7 +6759,7 @@ module Make
           Base.List.map ~f:Tast_utils.error_mapper#class_decorator class_decorators
         in
         let (tparams, tparams_map, tparams_ast) = Anno.mk_type_param_declarations cx tparams in
-        let (this_tparam, this_t) = Class_stmt_sig.mk_this self cx reason tparams in
+        let (this_tparam, this_t) = Class_stmt_sig.mk_this ~self cx reason in
         let tparams_map_with_this =
           Subst_name.Map.add (Subst_name.Name "this") this_t tparams_map
         in

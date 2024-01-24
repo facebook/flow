@@ -1183,9 +1183,7 @@ struct
           EnvMap.empty
       | Component { tparams_map; component; component_loc = _ } ->
         depends_of_component tparams_map component EnvMap.empty
-      | Class { class_; class_loc = _; class_implicit_this_tparam = _; this_super_write_locs = _ }
-        ->
-        depends_of_class class_
+      | Class { class_; class_loc = _; this_super_write_locs = _ } -> depends_of_class class_
       | DeclaredClass (_, decl) -> depends_of_declared_class decl
       | DeclaredComponent (loc, decl) -> depends_of_declared_component loc decl
       | TypeAlias (_, alias) -> depends_of_alias alias

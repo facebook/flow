@@ -1264,7 +1264,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
         def_reason
         function_loc
         function_
-    | Class { class_; class_loc; class_implicit_this_tparam = _; this_super_write_locs = _ } ->
+    | Class { class_; class_loc; this_super_write_locs = _ } ->
       resolve_class cx id_loc def_reason class_loc class_
     | MemberAssign { member_loc = _; member = _; rhs } -> (expression cx rhs, unknown_use)
     | OpAssign { exp_loc; lhs; op; rhs } -> resolve_op_assign cx ~exp_loc def_reason lhs op rhs
@@ -1379,24 +1379,9 @@ let init_type_param =
         let cache = Context.node_cache cx in
         Node_cache.set_tparam cache info;
         (name, tparam, t)
-      | Class { class_loc; class_implicit_this_tparam = { tparams_map; class_tparams_loc }; _ } ->
-        let class_t = Type_env.read_class_self_type cx class_loc in
-        let (this_param, this_t) =
-          let class_tparams =
-            Base.Option.map class_tparams_loc ~f:(fun tparams_loc ->
-                ( tparams_loc,
-                  tparams_map
-                  |> ALocMap.keys
-                  |> Base.List.map ~f:(fun l ->
-                         let (_, tparam, _) = get_type_param cx graph l in
-                         tparam
-                     )
-                  |> Nel.of_list_exn
-                )
-            )
-          in
-          Statement.Class_stmt_sig.mk_this class_t cx reason class_tparams
-        in
+      | Class { class_loc; _ } ->
+        let self = Type_env.read_class_self_type cx class_loc in
+        let (this_param, this_t) = Statement.Class_stmt_sig.mk_this ~self cx reason in
         (Subst_name.Name "this", this_param, this_t)
       | _ ->
         failwith

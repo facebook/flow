@@ -1718,22 +1718,18 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
       this#in_new_tparams_env (fun () ->
           let old_stack = class_stack in
           class_stack <- loc :: class_stack;
-          let class_implicit_this_tparam =
+          let () =
             this#in_scope
               (fun () ->
                 Flow_ast_visitor.run_opt this#class_identifier id;
                 Flow_ast_visitor.run_opt this#type_params class_tparams;
                 let this_tparam_loc = Base.Option.value_map ~default:loc ~f:fst id in
-                let class_tparams_map = tparams in
                 this#add_tparam this_tparam_loc "this";
                 ignore @@ this#class_body body;
                 Flow_ast_visitor.run_opt (Flow_ast_mapper.map_loc this#class_extends) extends;
                 Flow_ast_visitor.run_opt this#class_implements implements;
                 Flow_ast_visitor.run_list this#class_decorator class_decorators;
-                {
-                  tparams_map = class_tparams_map;
-                  class_tparams_loc = Base.Option.map ~f:fst class_tparams;
-                })
+                ())
               Ordinary
               ()
           in
@@ -1784,27 +1780,13 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
               this#add_ordinary_binding
                 id_loc
                 reason
-                (Class
-                   {
-                     class_loc = loc;
-                     class_implicit_this_tparam;
-                     class_ = expr;
-                     this_super_write_locs;
-                   }
-                )
+                (Class { class_loc = loc; class_ = expr; this_super_write_locs })
             | None ->
               let reason = mk_reason (RType (OrdinaryName "<<anonymous class>>")) loc in
               this#add_ordinary_binding
                 loc
                 reason
-                (Class
-                   {
-                     class_loc = loc;
-                     class_implicit_this_tparam;
-                     class_ = expr;
-                     this_super_write_locs;
-                   }
-                )
+                (Class { class_loc = loc; class_ = expr; this_super_write_locs })
           end;
           expr
       )

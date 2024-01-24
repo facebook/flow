@@ -538,7 +538,7 @@ module Make
         methods_to_prop_map ~cx ~this_default:(private_this_type s.static) s.static.private_methods;
     }
 
-  let mk_this self cx reason _tparams =
+  let mk_this ~self cx reason =
     let this_reason = replace_desc_reason RThisType reason in
     let this_tp =
       {
