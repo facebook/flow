@@ -1679,7 +1679,11 @@ module Make
             let (name_loc, { Ast.Identifier.name; comments = _ }) = id in
             let enum_ast = enum_declaration cx loc enum in
             if Context.enable_enums cx then
-              Import_export.export_binding cx (OrdinaryName name) ~name_loc Ast.Statement.ExportType;
+              Import_export.export_binding
+                cx
+                (OrdinaryName name)
+                ~name_loc
+                Ast.Statement.ExportValue;
             D.Enum (loc, enum_ast)
         in
         Option.map f declaration
