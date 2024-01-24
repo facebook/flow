@@ -7,7 +7,7 @@ component Fragment<T: React.Node>(children: T) renders T {
 }
 
 const el = <Fragment>{null}</Fragment>;
-el as renders null; // no error
+el as renders null; // type checks, but invalid-render
 el as renders void; // error
 
 component Foo() {

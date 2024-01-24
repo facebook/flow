@@ -7,13 +7,13 @@ component MenuItem() {
 component BlueMenuItem() renders MenuItem {
   return <MenuItem />;
 }
-component MaybeMenuItem() renders (renders? MenuItem) {
+component MaybeMenuItem() renders (renders? MenuItem) { // type checks, but invalid-render
   return null;
 }
 component Bar() {
   return true;
 }
-component Baz() renders null {
+component Baz() renders null { // type checks, but invalid-render
   return null;
 }
 
@@ -30,7 +30,7 @@ declare const Bad: renders? (MenuItem | BlueMenuItem | MaybeMenuItem | Bar);
 Bad as renders? MenuItem; // ERROR
 
 declare const rendersMenuItem: renders MenuItem;
-rendersMenuItem as renders (true | renders? MenuItem);
+rendersMenuItem as renders (true | renders? MenuItem); // type checks, but invalid-render
 
 declare const rendersMaybeMenuItem: renders? MenuItem;
 rendersMaybeMenuItem as renders MenuItem; // ERROR
@@ -43,7 +43,7 @@ component RendersMaybeMenuItem() renders MaybeMenuItem {
 }
 (<RendersMaybeMenuItem />) as renders? MenuItem; // OK
 
-rendersMaybeMenuItem as renders (null | false | void | MenuItem); // OK
+rendersMaybeMenuItem as renders (null | false | void | MenuItem); // type checks, but invalid-render
 
 rendersMaybeMenuItem as renders (null | false | void | Bar); // ERROR
 

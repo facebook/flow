@@ -17,7 +17,7 @@ component BlueMenuItem() renders MenuItem { return <MenuItem />; }
 declare const rendersMaybeBlueMenuItem: renders? MenuItem;
 (rendersMaybeBlueMenuItem: renders* MenuItem); // OK
 
-declare const rendersChildrenArrayBlueMenuItem: renders? React.ChildrenArray<BlueMenuItem>;
+declare const rendersChildrenArrayBlueMenuItem: renders? React.ChildrenArray<BlueMenuItem>; // invalid-render
 (rendersChildrenArrayBlueMenuItem: renders* MenuItem); // OK
 
 component Bad() { return null }
@@ -25,7 +25,7 @@ declare const rendersHuhBad: RendersHuh<Bad>;
 (rendersHuhBad: renders* MenuItem); // ERROR
 
 declare const rendersStarMenuItem: renders* MenuItem;
-(rendersStarMenuItem: renders (null | false | void | MenuItem | $ReadOnlyArray<renders* MenuItem>)); // OK
+(rendersStarMenuItem: renders (null | false | void | MenuItem | $ReadOnlyArray<renders* MenuItem>)); // type checks, but invalid-render
 
 ([<MenuItem />, <BlueMenuItem />, <Bad />]: renders* MenuItem); // ERROR
 

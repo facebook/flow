@@ -4,4 +4,4 @@ casting_syntax=both
 no_flowlib=false
 experimental.component_syntax=true
 experimental.component_syntax.deep_read_only=true
-experimental.renders_type_validation.includes=<PROJECT_ROOT>/validation/
+experimental.renders_type_validation=true

@@ -1,8 +1,8 @@
 //@flow
-component Foo() renders null {
+component Foo() renders null { // invalid-render
   return null;
 }
-component Bar() renders React$Node {
+component Bar() renders React$Node { // invalid-render
   return null;
 }
 component Baz() renders React$Element<typeof Foo> {
@@ -17,7 +17,7 @@ component Qux() renders (
 
 declare const rendersFoo: renders React$Element<typeof Foo>;
 declare const rendersBaz: renders React$Element<typeof Baz>;
-declare const rendersNode: renders React$Node;
+declare const rendersNode: renders React$Node; // invalid-render
 declare const rendersFooOrBar: renders (
   | React$Element<typeof Foo>
   | React$Element<typeof Bar>
@@ -34,7 +34,7 @@ declare const rendersBazOrBaz: renders (
 /* Renders ~> Union */
 {
   rendersNode as React$Node; // OK
-  rendersNode as renders React$Node; // OK
+  rendersNode as renders React$Node; // type checks, but invalid-render
   rendersFooOrBar as typeof rendersFooOrRendersBar; // ERROR
   rendersFooOrRendersBar as typeof rendersFooOrBar; // OK
 }
@@ -46,7 +46,7 @@ declare const rendersBazOrBaz: renders (
   rendersBaz as typeof rendersFoo; // OK
   rendersFoo as renders (renders React$Element<typeof Bar>); // ERROR
   rendersFoo as renders (renders React$Element<typeof Bar>); // ERROR
-  rendersBaz as renders typeof rendersFoo; // OK
+  rendersBaz as renders typeof rendersFoo; // type checks, but invalid-render
 }
 
 /* Nominal ~> Structural */
@@ -54,22 +54,22 @@ declare const rendersBazOrBaz: renders (
   rendersFoo as typeof rendersFooOrBar; // OK
   rendersFoo as renders (
     | React$Element<typeof Foo>
-    | null
+    | null  // invalid-render
     | React$Element<typeof Bar>
   ); // OK
-  rendersFoo as renders React$MixedElement; // OK
+  rendersFoo as renders React$MixedElement; // type checks, but invalid-render
   rendersQux as renders (React$Element<typeof Foo> | React$Element<typeof Bar>); // OK
   rendersQux as renders (React$Element<typeof Foo> | React$Element<typeof Baz>); // ERROR
-  component A0() renders null {
+  component A0() renders null { // invalid-render
     return null;
   }
-  component A1() renders (React$Element<typeof A0> | null) {
+  component A1() renders (React$Element<typeof A0> | null) { // invalide-render
     return null;
   }
   declare const x: renders React$Element<typeof A1>; // OK
-  x as renders null; // OK
-  x as renders (null | null); // OK
-  x as renders (null | React$Element<typeof A1>); // OK
+  x as renders null; // type checks, but invalid-render
+  x as renders (null | null);  // type checks, but invalid-render
+  x as renders (null | React$Element<typeof A1>);  // type checks, but invalid-render
 }
 
 /* Structural ~> Nominal */
@@ -97,11 +97,11 @@ declare const rendersBazOrBaz: renders (
 
 /* Enter Structural Render Types */
 {
-  null as renders null; // OK
+  null as renders null; // type checks, but invalid-render
   Foo as renders React$Element<typeof Foo>; // ERROR
-  3 as renders (null | number); // OK
+  3 as renders (null | number); // type checks, but invalid-render
   declare const x: React$Element<() => React$Node>;
-  x as renders typeof x; // OK
+  x as renders typeof x; // type checks, but invalid-render
   declare const mixedElement: React$MixedElement;
   // The test below ensures repositioning does not hit unsoundness in speculation
   mixedElement as renders (
@@ -118,7 +118,7 @@ declare const rendersBazOrBaz: renders (
   rendersFooOrBar as React$Node; // OK
   rendersNode as React$MixedElement; // ERROR
   rendersNode as React$Node; // OK
-  declare const rendersNullOrNull: renders (null | null);
+  declare const rendersNullOrNull: renders (null | null); // invalid-render
   rendersNullOrNull as null; // ERROR
   rendersFooOrBar.props; // ERROR
   rendersNode.props; // ERROR
