@@ -745,8 +745,12 @@ module Make
           let tparams =
             Nel.fold_left (fun acc tp -> Subst_name.Map.add tp.name tp acc) Subst_name.Map.empty tps
           in
-          Base.Option.iter underlying_t ~f:(Flow.check_polarity cx tparams Polarity.Positive);
-          Base.Option.iter super_t ~f:(Flow.check_polarity cx tparams Polarity.Positive)
+          Base.Option.iter
+            underlying_t
+            ~f:(Context.add_post_inference_polarity_check cx tparams Polarity.Positive);
+          Base.Option.iter
+            super_t
+            ~f:(Context.add_post_inference_polarity_check cx tparams Polarity.Positive)
       end;
       let opaque_type_args =
         Base.List.map
@@ -1988,7 +1992,7 @@ module Make
           let tparams =
             Nel.fold_left (fun acc tp -> Subst_name.Map.add tp.name tp acc) Subst_name.Map.empty tps
           in
-          Flow.check_polarity cx tparams Polarity.Positive t
+          Context.add_post_inference_polarity_check cx tparams Polarity.Positive t
       end;
 
       let type_alias_ast =

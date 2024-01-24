@@ -325,6 +325,11 @@ let detect_literal_subtypes =
         Flow_js.flow cx (l, UseT (use_op, u_def)))
       checks
 
+let check_polarity cx =
+  Base.List.iter (Context.post_inference_polarity_checks cx) ~f:(fun (tparams, polarity, t) ->
+      Flow_js.check_polarity cx tparams polarity t
+  )
+
 let check_general_post_inference_validations cx =
   Base.List.iter (Context.post_inference_validation_flows cx) ~f:(fun pair -> Flow_js.flow cx pair)
 
@@ -587,6 +592,7 @@ let post_merge_checks cx ast tast metadata =
   check_react_rules cx tast;
   check_multiplatform_conformance cx ast;
   check_exists_marker cx tast;
+  check_polarity cx;
   check_general_post_inference_validations cx;
   validate_renders_type_arguments cx;
   detect_sketchy_null_checks cx;

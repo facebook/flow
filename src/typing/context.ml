@@ -174,6 +174,8 @@ type component_t = {
   (* Post-inference checks *)
   mutable literal_subtypes: (ALoc.t * Env_api.literal_check) list;
   mutable matching_props: (string * ALoc.t * ALoc.t) list;
+  mutable post_inference_polarity_checks:
+    (Type.typeparam Subst_name.Map.t * Polarity.t * Type.t) list;
   mutable post_inference_validation_flows: (Type.t * Type.use_t) list;
   mutable renders_type_argument_validations:
     (ALoc.t * Flow_ast.Type.Renders.variant * bool * Type.t) list;
@@ -361,6 +363,7 @@ let make_ccx () =
     synthesis_produced_placeholders = false;
     matching_props = [];
     literal_subtypes = [];
+    post_inference_polarity_checks = [];
     post_inference_validation_flows = [];
     renders_type_argument_validations = [];
     global_value_cache = NameUtils.Map.empty;
@@ -573,6 +576,8 @@ let suppress_types cx = cx.metadata.suppress_types
 
 let literal_subtypes cx = cx.ccx.literal_subtypes
 
+let post_inference_polarity_checks cx = cx.ccx.post_inference_polarity_checks
+
 let post_inference_validation_flows cx = cx.ccx.post_inference_validation_flows
 
 let renders_type_argument_validations cx = cx.ccx.renders_type_argument_validations
@@ -680,6 +685,10 @@ let mk_placeholder cx reason =
 let add_matching_props cx c = cx.ccx.matching_props <- c :: cx.ccx.matching_props
 
 let add_literal_subtypes cx c = cx.ccx.literal_subtypes <- c :: cx.ccx.literal_subtypes
+
+let add_post_inference_polarity_check cx tparams polarity t =
+  cx.ccx.post_inference_polarity_checks <-
+    (tparams, polarity, t) :: cx.ccx.post_inference_polarity_checks
 
 let add_post_inference_validation_flow cx t use_t =
   cx.ccx.post_inference_validation_flows <- (t, use_t) :: cx.ccx.post_inference_validation_flows

@@ -803,9 +803,11 @@ module Make
      flipped off for interface/declare class currently. *)
   let classtype cx ?(check_polarity = true) x =
     let this = thistype cx x in
+    let this_tparam = this_tparam x in
     let tparams_with_this =
-      this_tparam x |> Base.Option.value_map ~default:x.tparams ~f:(tparams_with_this x.tparams)
+      this_tparam |> Base.Option.value_map ~default:x.tparams ~f:(tparams_with_this x.tparams)
     in
+    let this_name = Subst_name.Name "this" in
     begin
       match tparams_with_this with
       | Some (_, tps) when check_polarity ->
@@ -816,7 +818,9 @@ module Make
             Subst_name.Map.empty
             tps
         in
-        Flow.check_polarity cx tparams Polarity.Positive this
+        (* Check delayed so that we don't have to force the currently unresolved OpenT
+         * with implicit this tparam. *)
+        Context.add_post_inference_polarity_check cx tparams Polarity.Positive this
       | _ -> ()
     end;
     let open TypeUtil in
@@ -825,9 +829,7 @@ module Make
         let class_type = class_type ~structural:true this in
         (class_type, class_type)
       else
-        ( this_class_type this true (Subst_name.Name "this"),
-          this_class_type this false (Subst_name.Name "this")
-        )
+        (this_class_type this true this_name, this_class_type this false this_name)
     in
     let poly t = poly_type_of_tparams (Type.Poly.generate_id ()) x.tparams t in
     (poly t_inner, poly t_outer)

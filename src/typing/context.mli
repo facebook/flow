@@ -254,6 +254,9 @@ val matching_props : t -> (string * ALoc.t * ALoc.t) list
 
 val literal_subtypes : t -> (ALoc.t * Env_api.literal_check) list
 
+val post_inference_polarity_checks :
+  t -> (Type.typeparam Subst_name.Map.t * Polarity.t * Type.t) list
+
 val post_inference_validation_flows : t -> (Type.t * Type.use_t) list
 
 val renders_type_argument_validations :
@@ -322,6 +325,9 @@ val mk_placeholder : t -> Reason.t -> Type.t
 val add_matching_props : t -> string * ALoc.t * ALoc.t -> unit
 
 val add_literal_subtypes : t -> ALoc.t * Env_api.literal_check -> unit
+
+val add_post_inference_polarity_check :
+  t -> Type.typeparam Subst_name.Map.t -> Polarity.t -> Type.t -> unit
 
 val add_post_inference_validation_flow : t -> Type.t -> Type.use_t -> unit
 
