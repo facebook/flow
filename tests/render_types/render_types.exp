@@ -14,98 +14,94 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- import.js:7:2
 
-Cannot cast `<Foo />` to renders `React.Element` because `Foo` element [1] does not render `React.Element` [2].
-[incompatible-cast]
+Cannot cast `<Foo />` to renders `Bar` because `Foo` element [1] does not render `Bar` [2]. [incompatible-cast]
 
    import.js:7:2
-   7| (<Foo />: renders React.Element<typeof Bar>); // ERROR
+   7| (<Foo />: renders Bar); // ERROR
        ^^^^^^^ [1]
 
 References:
    import.js:7:11
-   7| (<Foo />: renders React.Element<typeof Bar>); // ERROR
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   7| (<Foo />: renders Bar); // ERROR
+                ^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- import.js:8:2
 
-Cannot cast `<Bar />` to renders `React.Element` because `Bar` element [1] does not render `React.Element` [2].
-[incompatible-cast]
+Cannot cast `<Bar />` to renders `Foo` because `Bar` element [1] does not render `Foo` [2]. [incompatible-cast]
 
    import.js:8:2
-   8| (<Bar />: renders React.Element<typeof Foo>); // ERROR
+   8| (<Bar />: renders Foo); // ERROR
        ^^^^^^^ [1]
 
 References:
    import.js:8:11
-   8| (<Bar />: renders React.Element<typeof Foo>); // ERROR
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   8| (<Bar />: renders Foo); // ERROR
+                ^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- import.js:10:2
 
-Cannot cast `<MaybeNumber />` to renders number because a value that renders nothing [1] does not render number [2].
+Cannot cast `<MaybeFoo />` to renders `Foo` because a value that renders nothing [1] does not render `Foo` [2].
 [incompatible-cast]
 
    import.js:10:2
-   10| (<MaybeNumber />: renders number); // ERROR
-        ^^^^^^^^^^^^^^^ [1]
+   10| (<MaybeFoo />: renders Foo); // ERROR
+        ^^^^^^^^^^^^ [1]
 
 References:
-   import.js:10:27
-   10| (<MaybeNumber />: renders number); // ERROR
-                                 ^^^^^^ [2]
+   import.js:10:16
+   10| (<MaybeFoo />: renders Foo); // ERROR
+                      ^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- import.js:14:2
 
-Cannot cast `<StarNumber />` to renders number because `$ReadOnlyArray` [1] does not render number [2].
-[incompatible-cast]
+Cannot cast `<StarFoo />` to renders `Foo` because `$ReadOnlyArray` [1] does not render `Foo` [2]. [incompatible-cast]
 
    import.js:14:2
-    14| (<StarNumber />: renders number); // ERROR
-         ^^^^^^^^^^^^^^
+    14| (<StarFoo />: renders Foo); // ERROR
+         ^^^^^^^^^^^
 
 References:
    <BUILTINS>/core.js:698:15
    698| declare class $ReadOnlyArray<+T> {
                       ^^^^^^^^^^^^^^ [1]
-   import.js:14:26
-    14| (<StarNumber />: renders number); // ERROR
-                                 ^^^^^^ [2]
+   import.js:14:15
+    14| (<StarFoo />: renders Foo); // ERROR
+                      ^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- import.js:14:2
 
-Cannot cast `<StarNumber />` to renders number because a value that renders nothing [1] does not render number [2].
+Cannot cast `<StarFoo />` to renders `Foo` because a value that renders nothing [1] does not render `Foo` [2].
 [incompatible-cast]
 
    import.js:14:2
-   14| (<StarNumber />: renders number); // ERROR
-        ^^^^^^^^^^^^^^ [1]
+   14| (<StarFoo />: renders Foo); // ERROR
+        ^^^^^^^^^^^ [1]
 
 References:
-   import.js:14:26
-   14| (<StarNumber />: renders number); // ERROR
-                                ^^^^^^ [2]
+   import.js:14:15
+   14| (<StarFoo />: renders Foo); // ERROR
+                     ^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- import.js:15:2
 
-Cannot cast `<StarNumber />` to renders? number because `$ReadOnlyArray` [1] does not render number [2].
-[incompatible-cast]
+Cannot cast `<StarFoo />` to renders? `Foo` because `$ReadOnlyArray` [1] does not render `Foo` [2]. [incompatible-cast]
 
    import.js:15:2
-    15| (<StarNumber />: renders? number); // ERROR
-         ^^^^^^^^^^^^^^
+    15| (<StarFoo />: renders? Foo); // ERROR
+         ^^^^^^^^^^^
 
 References:
    <BUILTINS>/core.js:698:15
    698| declare class $ReadOnlyArray<+T> {
                       ^^^^^^^^^^^^^^ [1]
-   import.js:15:27
-    15| (<StarNumber />: renders? number); // ERROR
-                                  ^^^^^^ [2]
+   import.js:15:15
+    15| (<StarFoo />: renders? Foo); // ERROR
+                      ^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- interop.js:19:2
@@ -125,32 +121,31 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- interop.js:25:2
 
-Cannot cast `<RendersBaz />` to renders `React.Element` because `React.Element` [1] does not render `React.Element` [2].
-[incompatible-cast]
+Cannot cast `<RendersBaz />` to renders `Qux` because `React.Element` [1] does not render `Qux` [2]. [incompatible-cast]
 
    interop.js:25:2
-   25| (<RendersBaz />) as renders React.Element<typeof Qux>; // ERROR
+   25| (<RendersBaz />) as renders Qux; // ERROR
         ^^^^^^^^^^^^^^ [1]
 
 References:
    interop.js:25:21
-   25| (<RendersBaz />) as renders React.Element<typeof Qux>; // ERROR
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   25| (<RendersBaz />) as renders Qux; // ERROR
+                           ^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- interop.js:31:2
 
-Cannot cast `<LongerChain />` to renders `React.Element` because `React.Element` [1] does not render
-`React.Element` [2]. [incompatible-cast]
+Cannot cast `<LongerChain />` to renders `Qux` because `React.Element` [1] does not render `Qux` [2].
+[incompatible-cast]
 
    interop.js:31:2
-   31| (<LongerChain />) as renders React.Element<typeof Qux>; // ERROR
+   31| (<LongerChain />) as renders Qux; // ERROR
         ^^^^^^^^^^^^^^^ [1]
 
 References:
    interop.js:31:22
-   31| (<LongerChain />) as renders React.Element<typeof Qux>; // ERROR
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   31| (<LongerChain />) as renders Qux; // ERROR
+                            ^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------- no_any_with_renders_react_node.js:5:10
@@ -179,40 +174,39 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error --------------------------------------------------------------------------------- no_spoofing_element_types.js:3:2
+Error --------------------------------------------------------------------------------- no_spoofing_element_types.js:3:1
 
 Cannot cast `x` to renders `React.Element` because object type [1] does not render `React.Element` [2].
 [incompatible-cast]
 
-   no_spoofing_element_types.js:3:2
-   3| (x: renders React$Element<typeof Foo>); // ERROR!
-       ^
+   no_spoofing_element_types.js:3:1
+   3| x as renders React$Element<typeof Foo>; // ERROR!
+      ^
 
 References:
    no_spoofing_element_types.js:2:18
    2| declare const x: {+type: typeof Foo};
                        ^^^^^^^^^^^^^^^^^^^ [1]
-   no_spoofing_element_types.js:3:13
-   3| (x: renders React$Element<typeof Foo>); // ERROR!
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   no_spoofing_element_types.js:3:14
+   3| x as renders React$Element<typeof Foo>; // ERROR!
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------- no_spoofing_element_types.js:7:2
+Error --------------------------------------------------------------------------------- no_spoofing_element_types.js:7:1
 
-Cannot cast `y` to renders `React.Element` because object type [1] does not render `React.Element` [2].
-[incompatible-cast]
+Cannot cast `y` to renders `Bar` because object type [1] does not render `Bar` [2]. [incompatible-cast]
 
-   no_spoofing_element_types.js:7:2
-   7| (y: renders React$Element<typeof Bar>); // ERROR! TODO better error message
-       ^
+   no_spoofing_element_types.js:7:1
+   7| y as renders Bar; // ERROR! TODO better error message
+      ^
 
 References:
    no_spoofing_element_types.js:6:18
    6| declare const y: {+type: typeof Bar};
                        ^^^^^^^^^^^^^^^^^^^ [1]
-   no_spoofing_element_types.js:7:5
-   7| (y: renders React$Element<typeof Bar>); // ERROR! TODO better error message
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   no_spoofing_element_types.js:7:6
+   7| y as renders Bar; // ERROR! TODO better error message
+           ^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- poly.js:11:1
@@ -231,8 +225,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- poly.js:33:5
 
-Cannot create `FooContainer` element because `Fragment` element [1] does not render `React.Element` [2] in property
-`children`. [incompatible-type]
+Cannot create `FooContainer` element because `Fragment` element [1] does not render `Foo` [2] in property `children`.
+[incompatible-type]
 
    poly.js:33:5
            v---------
@@ -243,8 +237,8 @@ Cannot create `FooContainer` element because `Fragment` element [1] does not ren
 
 References:
    poly.js:20:34
-   20| component FooContainer(children: renders React.Element<typeof Foo>) {
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   20| component FooContainer(children: renders Foo) {
+                                        ^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- poly_no_args.js:4:10
@@ -1101,31 +1095,6 @@ References:
                                              ^^^^^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------- validate_instantiation.js:2:18
-
-Cannot use object type [1] as a render type because: [incompatible-type]
- - Either object type [1] is incompatible with `React.Element` [2].
- - Or object type [1] is incompatible with `React.Portal` [3].
- - Or property `@@iterator` is missing in object type [1] but exists in `$Iterable` [4].
-
-Render types must be a subtype of `React.Node` or a reference to a component-syntax component.
-
-   validate_instantiation.js:2:18
-    2| type Y = renders {}; // ERROR
-                        ^^ [1]
-
-References:
-   <BUILTINS>/react.js:21:5
-   21|   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:22:5
-   22|   | React$Portal
-           ^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:23:5
-   23|   | Iterable<?React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^^ [4]
-
-
 Error ----------------------------------------------------------------------------------- validation/autofixable.js:7:23
 
 Cannot use boolean literal `false` [1], null [2] and undefined [3] as the type argument of renders type. Only elements
@@ -1292,6 +1261,48 @@ References:
    validation/autofixable.js:16:37
    16| type RBad10 = renders (Foo | null | 1);
                                            ^ [1]
+
+
+Error ------------------------------------------------------------------------ validation/validate_instantiation.js:1:18
+
+Cannot use null [1] as the type argument of renders type. Only elements of a component-syntax components can appear in
+renders. If you want to express the idea of rendering zero or one item, please use `renders?` instead. [invalid-render]
+
+   1| type X = renders null; // ERROR: subtype of React$Node, but invalid-render
+                       ^^^^ [1]
+
+
+Error ------------------------------------------------------------------------ validation/validate_instantiation.js:2:18
+
+Cannot use object type [1] as a render type because: [incompatible-type]
+ - Either object type [1] is incompatible with `React.Element` [2].
+ - Or object type [1] is incompatible with `React.Portal` [3].
+ - Or property `@@iterator` is missing in object type [1] but exists in `$Iterable` [4].
+
+Render types must be a subtype of `React.Node` or a reference to a component-syntax component.
+
+   validation/validate_instantiation.js:2:18
+    2| type Y = renders {}; // ERROR: not subtype of React$Node, invalid-render
+                        ^^ [1]
+
+References:
+   <BUILTINS>/react.js:21:5
+   21|   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:22:5
+   22|   | React$Portal
+           ^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:23:5
+   23|   | Iterable<?React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------ validation/validate_instantiation.js:2:18
+
+Cannot use object type [1] as the type argument of renders type. [invalid-render]
+
+   2| type Y = renders {}; // ERROR: not subtype of React$Node, invalid-render
+                       ^^ [1]
 
 
 Error ----------------------------------------------------------------------------------- validation/validation.js:18:22
@@ -1564,7 +1575,7 @@ References:
 
 
 
-Found 102 errors
+Found 104 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -21,11 +21,11 @@ component Qux() {
 function RendersBaz(): renders React.Element<typeof Baz> {
   return <Baz />;
 }
-(<RendersBaz />) as renders React.Element<typeof Bar>; // OK
-(<RendersBaz />) as renders React.Element<typeof Qux>; // ERROR
+(<RendersBaz />) as renders Bar; // OK
+(<RendersBaz />) as renders Qux; // ERROR
 
 function LongerChain(): renders React.Element<typeof RendersBaz> {
   return <RendersBaz />;
 }
-(<LongerChain />) as renders React.Element<typeof Bar>; // OK
-(<LongerChain />) as renders React.Element<typeof Qux>; // ERROR
+(<LongerChain />) as renders Bar; // OK
+(<LongerChain />) as renders Qux; // ERROR

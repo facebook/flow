@@ -17,7 +17,7 @@ component Bar() {
   return null;
 }
 
-component FooContainer(children: renders React.Element<typeof Foo>) {
+component FooContainer(children: renders Foo) {
   return null;
 }
 
@@ -36,7 +36,7 @@ const transitiveBad = (
   </FooContainer>
 ); // error
 
-component Baz() renders React.Element<typeof Foo> {
+component Baz() renders Foo {
   return <Foo />;
 }
 
@@ -49,7 +49,7 @@ const doubleTransitive = (
 ); // ok
 
 component Menu(
-  children: renders React.ChildrenArray<renders React.Element<typeof MenuItem>>,
+  children: renders* MenuItem,
 ) {
   return null;
 }
