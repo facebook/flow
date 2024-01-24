@@ -14,7 +14,7 @@ declare.js:3:18 = {
   "end":20
 }
 declare.js:5:18 = {
-  "types":{"unevaluated":{"type":"() => string"},"evaluated":null},
+  "types":{"unevaluated":{"type":"(() => string) & (() => number)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"declare.js",
@@ -29,7 +29,7 @@ declare.js:5:18 = {
   "end":20
 }
 declare.js:6:18 = {
-  "types":{"unevaluated":{"type":"() => number"},"evaluated":null},
+  "types":{"unevaluated":{"type":"(() => string) & (() => number)"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"declare.js",
@@ -44,7 +44,10 @@ declare.js:6:18 = {
   "end":20
 }
 declare.js:8:18 = {
-  "types":{"unevaluated":{"type":"(foo: string) => boolean"},"evaluated":null},
+  "types":{
+    "unevaluated":{"type":"((foo: string) => boolean) & ((foo: number) => boolean)"},
+    "evaluated":null
+  },
   "reasons":[],
   "loc":{
     "source":"declare.js",
@@ -59,7 +62,10 @@ declare.js:8:18 = {
   "end":20
 }
 declare.js:9:18 = {
-  "types":{"unevaluated":{"type":"(foo: number) => boolean"},"evaluated":null},
+  "types":{
+    "unevaluated":{"type":"((foo: string) => boolean) & ((foo: number) => boolean)"},
+    "evaluated":null
+  },
   "reasons":[],
   "loc":{
     "source":"declare.js",

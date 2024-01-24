@@ -1072,14 +1072,21 @@ module Make
           comments;
         }
     in
-    let function_ loc func =
+    let function_ ~is_declared_function loc func =
       match func with
       | { Ast.Function.id = None; _ } -> failwith "unexpected anonymous function statement"
       | { Ast.Function.id = Some id; _ } ->
         let { Ast.Function.sig_loc; async; generator; _ } = func in
-        let (name_loc, _) = id in
+        let (name_loc, { Ast.Identifier.name; comments = _ }) = id in
         let reason = func_reason ~async ~generator sig_loc in
-        let tast_fun_type = Type_env.read_declared_type cx reason name_loc in
+        let tast_fun_type =
+          Type_env.get_var_declared_type
+            ~lookup_mode:Type_env.LookupMode.ForValue
+            ~is_declared_function
+            cx
+            (OrdinaryName name)
+            name_loc
+        in
         let (fn_type, func_ast) = mk_function_declaration cx ~tast_fun_type reason loc func in
         (fn_type, id, (loc, FunctionDeclaration func_ast))
     in
@@ -1457,7 +1464,7 @@ module Make
       (loc, ForOf { ForOf.left = left_ast; right = right_ast; body = body_ast; await; comments })
     | (_, Debugger _) as stmt -> stmt
     | (loc, FunctionDeclaration func) ->
-      let (_, _, node) = function_ loc func in
+      let (_, _, node) = function_ ~is_declared_function:false loc func in
       node
     | (loc, ComponentDeclaration component) when Context.component_syntax cx ->
       error_on_this_uses_in_components cx component;
@@ -1486,14 +1493,22 @@ module Make
     | (loc, DeclareFunction declare_function) ->
       (match declare_function_to_function_declaration cx loc declare_function with
       | Some (FunctionDeclaration func, reconstruct_ast) ->
-        let (_, _, node) = function_ loc func in
+        let (_, _, node) = function_ ~is_declared_function:true loc func in
         (loc, DeclareFunction (reconstruct_ast node))
       | _ ->
         (* error case *)
         let { DeclareFunction.id = (id_loc, id_name); annot; predicate; comments } =
           declare_function
         in
-        let (t, annot_ast) = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
+        let (_, annot_ast) = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
+        let t =
+          Type_env.get_var_declared_type
+            ~lookup_mode:Type_env.LookupMode.ForValue
+            ~is_declared_function:true
+            cx
+            (OrdinaryName id_name.Ast.Identifier.name)
+            id_loc
+        in
         let predicate = Base.Option.map ~f:Tast_utils.error_mapper#predicate predicate in
         ( loc,
           DeclareFunction
