@@ -154,28 +154,6 @@ let export_type_star cx loc t =
   if not @@ Context.in_declare_module cx then
     Module_info.export_type_star (Context.toplevel_module_info cx) loc t
 
-let export_binding cx ?is_function name ?preferred_def_locs ~name_loc = function
-  | Flow_ast.Statement.ExportValue ->
-    let t =
-      Type_env.get_var_declared_type
-        ~lookup_mode:Type_env.LookupMode.ForValue
-        ?is_declared_function:is_function
-        cx
-        name
-        name_loc
-    in
-    export cx name ?preferred_def_locs ~name_loc ~is_type_only_export:false t
-  | Flow_ast.Statement.ExportType ->
-    let t =
-      Type_env.get_var_declared_type
-        ~lookup_mode:Type_env.LookupMode.ForType
-        ?is_declared_function:is_function
-        cx
-        name
-        name_loc
-    in
-    export_type cx name ?preferred_def_locs ~name_loc t
-
 (* After we have seen all the export statements in a module, this function will
  * calculate a ModuleT type (or a tvar that resolves to one) describing the
  * exports of a file.

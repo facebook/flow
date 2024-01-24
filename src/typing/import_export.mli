@@ -32,15 +32,6 @@ val export :
 val export_type :
   Context.t -> Reason.name -> ?preferred_def_locs:ALoc.t Nel.t -> name_loc:ALoc.t -> Type.t -> unit
 
-val export_binding :
-  Context.t ->
-  ?is_function:bool ->
-  Reason.name ->
-  ?preferred_def_locs:ALoc.t Nel.t ->
-  name_loc:ALoc.t ->
-  Flow_ast.Statement.export_kind ->
-  unit
-
 val export_star : Context.t -> ALoc.t -> Type.t -> unit
 
 val export_type_star : Context.t -> ALoc.t -> Type.t -> unit
