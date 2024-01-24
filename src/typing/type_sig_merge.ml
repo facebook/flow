@@ -239,7 +239,7 @@ let import_typeof_ns file reason id_loc index =
   let ns_t = ConsGen.import_ns file.cx reason false module_t in
   ConsGen.import_typeof file.cx reason "*" ns_t
 
-let merge_enum file reason id_loc rep members has_unknown_members =
+let merge_enum file reason id_loc enum_name rep members has_unknown_members =
   let rep_reason desc = Reason.(mk_reason (REnumRepresentation desc) id_loc) in
   let rep_t desc def_t = Type.DefT (rep_reason desc, def_t) in
   let representation_t =
@@ -273,7 +273,9 @@ let merge_enum file reason id_loc rep members has_unknown_members =
       rep_t Reason.RBigInt (BigIntT lit)
   in
   let enum_id = Context.make_aloc_id file.cx id_loc in
-  Type.(DefT (reason, EnumObjectT { enum_id; members; representation_t; has_unknown_members }))
+  Type.(
+    DefT (reason, EnumObjectT { enum_name; enum_id; members; representation_t; has_unknown_members })
+  )
 
 let merge_pattern file = function
   | Pack.PDef i -> Lazy.force (Pattern_defs.get file.pattern_defs i)
@@ -2069,8 +2071,8 @@ let merge_def file reason = function
   | DisabledComponentBinding _
   | DisabledEnumBinding _ ->
     Type.AnyT.error reason
-  | EnumBinding { id_loc; rep; members; has_unknown_members; name = _ } ->
-    merge_enum file reason id_loc rep members has_unknown_members
+  | EnumBinding { id_loc; rep; members; has_unknown_members; name } ->
+    merge_enum file reason id_loc name rep members has_unknown_members
 
 let merge_export file = function
   | Pack.ExportRef ref

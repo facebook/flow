@@ -276,10 +276,14 @@ let rec dump_t_ (depth, tvars) cx t =
         t
     | DefT (_, TypeT (kind, arg)) ->
       p ~extra:(spf "%s, %s" (string_of_type_t_kind kind) (kid arg)) t
-    | DefT (_, EnumT { enum_id; members = _; representation_t = _; has_unknown_members = _ })
-    | DefT (_, EnumObjectT { enum_id; members = _; representation_t = _; has_unknown_members = _ })
-      ->
-      p ~extra:(spf "enum #%s" (ALoc.debug_to_string (enum_id :> ALoc.t))) t
+    | DefT
+        (_, EnumT { enum_name; enum_id; members = _; representation_t = _; has_unknown_members = _ })
+    | DefT
+        ( _,
+          EnumObjectT
+            { enum_name; enum_id; members = _; representation_t = _; has_unknown_members = _ }
+        ) ->
+      p ~extra:(spf "enum %s #%s" enum_name (ALoc.debug_to_string (enum_id :> ALoc.t))) t
     | AnnotT (_, arg, use_desc) -> p ~extra:(spf "use_desc=%b, %s" use_desc (kid arg)) t
     | OpaqueT (_, { underlying_t; opaque_type_args; _ }) ->
       p

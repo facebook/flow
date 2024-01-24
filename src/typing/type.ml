@@ -305,6 +305,7 @@ module rec TypeTerm : sig
     | TypeDestructorT of use_op * reason * destructor
 
   and enum_t = {
+    enum_name: string;
     enum_id: ALoc.id;
     members: ALoc.t SMap.t;
     representation_t: t;

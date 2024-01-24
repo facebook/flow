@@ -238,7 +238,7 @@ type def =
       tparam: (ALoc.t, ALoc.t) Ast.Type.TypeParam.t;
     }
   | Interface of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.Interface.t
-  | Enum of ALoc.t * ALoc.t Ast.Statement.EnumDeclaration.body
+  | Enum of ALoc.t * string * ALoc.t Ast.Statement.EnumDeclaration.body
   | Import of {
       import_kind: Ast.Statement.ImportDeclaration.import_kind;
       import: import;
@@ -367,7 +367,7 @@ module Print = struct
     | OpaqueType (_, { Ast.Statement.OpaqueType.id = (loc, _); _ }) ->
       spf "opaque %s" (ALoc.debug_to_string loc)
     | TypeParam { tparam = (loc, _); _ } -> spf "tparam %s" (ALoc.debug_to_string loc)
-    | Enum (loc, _) -> spf "enum %s" (ALoc.debug_to_string loc)
+    | Enum (loc, name, _) -> spf "enum %s %s" name (ALoc.debug_to_string loc)
     | Interface _ -> "interface"
     | DeclaredModule _ -> "declare module"
     | CJSModuleExportsType _ -> "module.exports"

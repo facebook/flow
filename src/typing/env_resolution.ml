@@ -1136,9 +1136,9 @@ let resolve_cjs_exports_type cx reason state =
     unknown_use
   )
 
-let resolve_enum cx id_loc enum_reason enum_loc enum =
+let resolve_enum cx id_loc enum_reason enum_loc name enum =
   if Context.enable_enums cx then
-    let enum_t = Statement.mk_enum cx ~enum_reason id_loc enum in
+    let enum_t = Statement.mk_enum cx ~enum_reason id_loc name enum in
     (DefT (enum_reason, EnumObjectT enum_t), unknown_use)
   else (
     Flow_js.add_output cx (Error_message.EEnumsNotEnabled enum_loc);
@@ -1276,7 +1276,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
     | Interface (loc, inter) -> resolve_interface cx loc inter
     | DeclaredClass (loc, class_) -> resolve_declare_class cx loc class_
     | DeclaredComponent (loc, comp) -> resolve_declare_component cx loc comp
-    | Enum (enum_loc, enum) -> resolve_enum cx id_loc def_reason enum_loc enum
+    | Enum (enum_loc, name, enum) -> resolve_enum cx id_loc def_reason enum_loc name enum
     | TypeParam _ -> resolve_type_param cx id_loc
     | GeneratorNext gen -> resolve_generator_next cx def_reason gen
     | DeclaredModule (loc, module_) -> resolve_declare_module cx loc module_

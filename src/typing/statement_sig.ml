@@ -265,6 +265,7 @@ module type S = sig
     Context.t ->
     enum_reason:Reason.t ->
     ALoc.t ->
+    string ->
     ALoc.t Ast.Statement.EnumDeclaration.body ->
     Type.enum_t
 

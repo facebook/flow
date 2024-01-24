@@ -2229,7 +2229,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
     method! enum_declaration loc (enum : ('loc, 'loc) Ast.Statement.EnumDeclaration.t) =
       let open Ast.Statement.EnumDeclaration in
       let { id = (name_loc, { Ast.Identifier.name; _ }); body; _ } = enum in
-      this#add_ordinary_binding name_loc (mk_reason (REnum name) name_loc) (Enum (loc, body));
+      this#add_ordinary_binding name_loc (mk_reason (REnum name) name_loc) (Enum (loc, name, body));
       super#enum_declaration loc enum
 
     method! import_declaration loc (decl : ('loc, 'loc) Ast.Statement.ImportDeclaration.t) =

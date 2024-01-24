@@ -8139,7 +8139,7 @@ module Make
     let reason = mk_reason (REnum name) name_loc in
     let t =
       if Context.enable_enums cx then (
-        let enum_t = mk_enum cx ~enum_reason:reason name_loc body in
+        let enum_t = mk_enum cx ~enum_reason:reason name_loc name body in
         let t = DefT (reason, EnumObjectT enum_t) in
         let use_op =
           Op
@@ -8157,7 +8157,7 @@ module Make
     let id' = ((name_loc, t), ident) in
     { id = id'; body; comments }
 
-  and mk_enum cx ~enum_reason name_loc body =
+  and mk_enum cx ~enum_reason name_loc enum_name body =
     let open Ast.Statement.EnumDeclaration in
     let defaulted_members =
       Base.List.fold
@@ -8303,5 +8303,5 @@ module Make
         let reason = mk_reason (REnumRepresentation RSymbol) (loc_of_reason enum_reason) in
         (DefT (reason, SymbolT), defaulted_members members, has_unknown_members)
     in
-    { enum_id; members; representation_t; has_unknown_members }
+    { enum_name; enum_id; members; representation_t; has_unknown_members }
 end
