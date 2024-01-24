@@ -1,0 +1,36 @@
+declare export enum FooGood {
+  A,
+  B,
+}
+
+export enum BarGood {
+  A,
+  B,
+}
+
+declare export enum FooBad {
+  A,
+  B,
+}
+
+export enum BarBad1 {
+  A = '1',
+  B = '2',
+}
+
+export enum BarBad2 {
+  A,
+  B,
+}
+
+enum BazBadNotExported {
+  A,
+  B,
+}
+
+declare export const fooGood: FooGood;
+declare export const fooBar: FooBad;
+declare export const barGood: BarGood;
+declare export const barBad1: BarBad1;
+declare export const barBad2: BarBad2;
+declare export const bazBad: BazBadNotExported;

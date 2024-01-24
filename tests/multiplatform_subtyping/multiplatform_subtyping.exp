@@ -442,6 +442,182 @@ References:
                                               ^^^^^^ [3]
 
 
+Error ------------------------------------------------------------------------------------------------ enums.ios.js:1:21
+
+Cannot conform to common interface module because enum `FooGood` [1] is incompatible with enum `FooGood` [2] in property
+`FooGood`. Read the docs on Flow's multi-platform support for more information:
+https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+
+   enums.ios.js:1:21
+   1| declare export enum FooGood {// should be ok, but error
+                          ^^^^^^^ [1]
+
+References:
+   enums.js.flow:1:21
+   1| declare export enum FooGood {
+                          ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ enums.ios.js:6:13
+
+Cannot conform to common interface module because enum `BarGood` [1] is incompatible with enum `BarGood` [2] in property
+`BarGood`. Read the docs on Flow's multi-platform support for more information:
+https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+
+   enums.ios.js:6:13
+   6| export enum BarGood {// should be ok, but error
+                  ^^^^^^^ [1]
+
+References:
+   enums.js.flow:6:13
+   6| export enum BarGood {
+                  ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- enums.ios.js:11:21
+
+Cannot conform to common interface module because enum `FooBad` [1] is incompatible with enum `FooBad` [2] in property
+`FooBad`. Read the docs on Flow's multi-platform support for more information:
+https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+
+   enums.ios.js:11:21
+   11| declare export enum FooBad { // error
+                           ^^^^^^ [1]
+
+References:
+   enums.js.flow:11:21
+   11| declare export enum FooBad {
+                           ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- enums.ios.js:16:13
+
+Cannot conform to common interface module because enum `BarBad1` [1] is incompatible with enum `BarBad1` [2] in property
+`BarBad1`. Read the docs on Flow's multi-platform support for more information:
+https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+
+   enums.ios.js:16:13
+   16| export enum BarBad1 { // error
+                   ^^^^^^^ [1]
+
+References:
+   enums.js.flow:16:13
+   16| export enum BarBad1 {
+                   ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- enums.ios.js:21:13
+
+Cannot conform to common interface module because enum `BarBad2` [1] is incompatible with enum `BarBad2` [2] in property
+`BarBad2`. Read the docs on Flow's multi-platform support for more information:
+https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+
+   enums.ios.js:21:13
+   21| export enum BarBad2 { // error
+                   ^^^^^^^ [1]
+
+References:
+   enums.js.flow:21:13
+   21| export enum BarBad2 {
+                   ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- enums.ios.js:31:31
+
+Cannot conform to common interface module because `FooGood` [1] is incompatible with `FooGood` [2] in property
+`fooGood`. Read the docs on Flow's multi-platform support for more information:
+https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+
+   enums.ios.js:31:31
+   31| declare export const fooGood: FooGood; // should be ok, but error
+                                     ^^^^^^^ [1]
+
+References:
+   enums.js.flow:31:31
+   31| declare export const fooGood: FooGood;
+                                     ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- enums.ios.js:32:30
+
+Cannot conform to common interface module because `FooBad` [1] is incompatible with `FooBad` [2] in property `fooBar`.
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[incompatible-type]
+
+   enums.ios.js:32:30
+   32| declare export const fooBar: FooBad; // error
+                                    ^^^^^^ [1]
+
+References:
+   enums.js.flow:32:30
+   32| declare export const fooBar: FooBad;
+                                    ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- enums.ios.js:33:31
+
+Cannot conform to common interface module because `BarGood` [1] is incompatible with `BarGood` [2] in property
+`barGood`. Read the docs on Flow's multi-platform support for more information:
+https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+
+   enums.ios.js:33:31
+   33| declare export const barGood: BarGood;  // should be ok, but error
+                                     ^^^^^^^ [1]
+
+References:
+   enums.js.flow:33:31
+   33| declare export const barGood: BarGood;
+                                     ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- enums.ios.js:34:31
+
+Cannot conform to common interface module because `BarBad1` [1] is incompatible with `BarBad1` [2] in property
+`barBad1`. Read the docs on Flow's multi-platform support for more information:
+https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+
+   enums.ios.js:34:31
+   34| declare export const barBad1: BarBad1; // error
+                                     ^^^^^^^ [1]
+
+References:
+   enums.js.flow:34:31
+   34| declare export const barBad1: BarBad1;
+                                     ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- enums.ios.js:35:31
+
+Cannot conform to common interface module because `BarBad2` [1] is incompatible with `BarBad2` [2] in property
+`barBad2`. Read the docs on Flow's multi-platform support for more information:
+https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+
+   enums.ios.js:35:31
+   35| declare export const barBad2: BarBad2; // error
+                                     ^^^^^^^ [1]
+
+References:
+   enums.js.flow:35:31
+   35| declare export const barBad2: BarBad2;
+                                     ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- enums.ios.js:36:30
+
+Cannot conform to common interface module because `BazBadNotExported` [1] is incompatible with `BazBadNotExported` [2]
+in property `bazBad`. Read the docs on Flow's multi-platform support for more information:
+https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+
+   enums.ios.js:36:30
+   36| declare export const bazBad: BazBadNotExported; // error
+                                    ^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   enums.js.flow:36:30
+   36| declare export const bazBad: BazBadNotExported;
+                                    ^^^^^^^^^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------ opaque_type.ios.js:9:26
 
 Cannot conform to common interface module because string [1] is incompatible with number [2] in  of property `o3`. Read
@@ -555,4 +731,4 @@ References:
 
 
 
-Found 30 errors
+Found 41 errors
