@@ -5912,7 +5912,8 @@ struct
     | ResolveUnionT _
     | EnumCastT _
     | ConvertEmptyPropsToMixedT _
-    | ArithT _ ->
+    | ArithT _
+    | SpecializeT _ ->
       false
     | _ -> true
 

@@ -1,4 +1,4 @@
-import {FooClassExported, FooClassStringExported, barFExported, barGenericExported} from './with-targs-exported';
+import {FooClassExported, FooClassStringExported, barFExported, barGenericExported, EscapedGenericExported} from './with-targs-exported';
 
 class Foo<T> {}
 declare const FooClass: typeof Foo<string>;
@@ -36,3 +36,9 @@ barGenericExported<number>(() => 1); // ok
 barGenericExported<string>(() => 1); // error: number ~> string
 barGenericExported(() => 1) as number; // ok
 barGenericExported(() => 1) as string; // error: number ~> string
+
+class EscapedGeneric<T> {
+  static x: T;
+}
+emptyValue as typeof EscapedGeneric.x<number, boolean>; // error: empty not polymorphic
+emptyValue as typeof EscapedGenericExported.x<number, boolean>; // error: empty not polymorphic

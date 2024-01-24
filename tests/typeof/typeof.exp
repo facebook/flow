@@ -349,5 +349,21 @@ References:
                                       ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------- with-targs.js:43:15
 
-Found 24 errors
+Cannot instantiate `typeof EscapedGeneric.x` because empty [1] is not a polymorphic type. [incompatible-use]
+
+   43| emptyValue as typeof EscapedGeneric.x<number, boolean>; // error: empty not polymorphic
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- with-targs.js:44:15
+
+Cannot instantiate `typeof EscapedGenericExported.x` because empty [1] is not a polymorphic type. [incompatible-use]
+
+   44| emptyValue as typeof EscapedGenericExported.x<number, boolean>; // error: empty not polymorphic
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+
+Found 26 errors
