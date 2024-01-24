@@ -1,9 +1,9 @@
-declare export enum FooGood {// should be ok, but error
+declare export enum FooGood { // ok
   A,
   B,
 }
 
-export enum BarGood {// should be ok, but error
+export enum BarGood { // ok
   A,
   B,
 }
@@ -28,9 +28,9 @@ enum BazBadNotExported {
   C,
 }
 
-declare export const fooGood: FooGood; // should be ok, but error
+declare export const fooGood: FooGood; // ok
 declare export const fooBar: FooBad; // error
-declare export const barGood: BarGood;  // should be ok, but error
-declare export const barBad1: BarBad1; // error
+declare export const barGood: BarGood;  // ok
+declare export const barBad1: BarBad1; // errored at BarBad1 declaration site
 declare export const barBad2: BarBad2; // error
 declare export const bazBad: BazBadNotExported; // error

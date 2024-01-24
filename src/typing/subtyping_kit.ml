@@ -2204,6 +2204,60 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (DefT (_, EnumT { enum_id = id1; _ }), DefT (_, EnumT { enum_id = id2; _ }))
       when ALoc.equal_id id1 id2 ->
       ()
+    | ( DefT
+          ( _,
+            EnumObjectT
+              {
+                enum_id = id1;
+                enum_name = n1;
+                members = m1;
+                representation_t = r1;
+                has_unknown_members = has_unknown1;
+              }
+          ),
+        DefT
+          ( _,
+            EnumObjectT
+              {
+                enum_id = id2;
+                enum_name = n2;
+                members = m2;
+                representation_t = r2;
+                has_unknown_members = has_unknown2;
+              }
+          )
+      )
+    | ( DefT
+          ( _,
+            EnumT
+              {
+                enum_id = id1;
+                enum_name = n1;
+                members = m1;
+                representation_t = r1;
+                has_unknown_members = has_unknown1;
+                _;
+              }
+          ),
+        DefT
+          ( _,
+            EnumT
+              {
+                enum_id = id2;
+                enum_name = n2;
+                members = m2;
+                representation_t = r2;
+                has_unknown_members = has_unknown2;
+              }
+          )
+      )
+      when TypeUtil.nominal_id_have_same_logical_module
+             ~file_options:Context.((metadata cx).file_options)
+             (id1, Some n1)
+             (id2, Some n2)
+           && SSet.equal (SSet.of_list @@ SMap.keys m1) (SSet.of_list @@ SMap.keys m2)
+           && has_unknown1 = has_unknown2 ->
+      rec_flow_t cx trace ~use_op (r1, r2)
     | (DefT (enum_reason, EnumT { representation_t; _ }), t)
       when TypeUtil.quick_subtype representation_t t ->
       let representation_type =
