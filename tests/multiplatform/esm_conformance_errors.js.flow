@@ -1,1 +1,4 @@
 declare export const a: string;
+
+declare export function foo(): string;
+declare export function foo(): number;

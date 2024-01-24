@@ -61,10 +61,62 @@ https://flow.org/en/docs/react/multiplatform. [prop-missing]
 
 References:
    esm_conformance_errors.android.js:1:1
+      v----------------
    1| export default 3;
-      ^^^^^^^^^^^^^^^^^ [1]
+   2|
+   3| declare export function foo(): boolean;
+   4| declare export function foo(): number;
+      -------------------------------------^ [1]
    esm_conformance_errors.js.flow
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------- esm_conformance_errors.android.js:1:16
+
+Cannot conform to common interface module because in property `foo`: [incompatible-type]
+ - Either boolean [1] is incompatible with string [2] in the return value.
+ - Or number [3] is incompatible with string [2] in the return value.
+
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+
+   esm_conformance_errors.android.js:1:16
+   1| export default 3;
+                     ^
+
+References:
+   esm_conformance_errors.android.js:3:32
+   3| declare export function foo(): boolean;
+                                     ^^^^^^^ [1]
+   esm_conformance_errors.js.flow:3:32
+   3| declare export function foo(): string;
+                                     ^^^^^^ [2]
+   esm_conformance_errors.android.js:4:32
+   4| declare export function foo(): number;
+                                     ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------- esm_conformance_errors.ios.js:1:14
+
+Cannot conform to common interface module because in property `foo`: [incompatible-type]
+ - Either string [1] is incompatible with number [2] in the return value.
+ - Or boolean [3] is incompatible with number [2] in the return value.
+
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+
+   esm_conformance_errors.ios.js:1:14
+   1| export const a = 3;
+                   ^
+
+References:
+   esm_conformance_errors.ios.js:4:32
+   4| declare export function foo(): string;
+                                     ^^^^^^ [1]
+   esm_conformance_errors.js.flow:4:32
+   4| declare export function foo(): number;
+                                     ^^^^^^ [2]
+   esm_conformance_errors.ios.js:5:32
+   5| declare export function foo(): boolean;
+                                     ^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------- esm_conformance_errors.ios.js:1:18
@@ -195,4 +247,4 @@ Cannot resolve module `./allow_no_interface`. [cannot-resolve-module]
 
 
 
-Found 15 errors
+Found 17 errors
