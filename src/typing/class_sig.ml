@@ -538,24 +538,13 @@ module Make
         methods_to_prop_map ~cx ~this_default:(private_this_type s.static) s.static.private_methods;
     }
 
-  let mk_this self cx reason tparams =
-    (* We haven't computed the instance type yet, but we can still capture a
-       reference to it using the class name (as long as the class has a name).
-       We need this reference to constrain the `this` in the class. *)
-    let rec_instance_type =
-      match tparams with
-      | None -> ConsGen.mk_instance cx reason self
-      | _ ->
-        let open Type in
-        let (_, targs) = Flow_js_utils.mk_tparams cx (TypeParams.to_list tparams) in
-        TypeUtil.typeapp ~from_value:false ~use_desc:false reason self targs
-    in
+  let mk_this self cx reason _tparams =
     let this_reason = replace_desc_reason RThisType reason in
     let this_tp =
       {
         Type.name = Subst_name.Name "this";
         reason = this_reason;
-        bound = rec_instance_type;
+        bound = self;
         polarity = Polarity.Positive;
         default = None;
         is_this = true;
@@ -830,19 +819,16 @@ module Make
     let open TypeUtil in
     let (t_inner, t_outer) =
       if structural x then
-        let class_type = class_type ~structural:true this in
-        (class_type, class_type)
+        (this, class_type ~structural:true this)
       else
-        ( class_type
-            ~structural:false
-            (Type.ThisInstanceT (this_reason, this_instance_t, true, this_name)),
+        ( Type.ThisInstanceT (this_reason, this_instance_t, true, this_name),
           class_type
             ~structural:false
             (Type.ThisInstanceT (this_reason, this_instance_t, false, this_name))
         )
     in
     let poly t = poly_type_of_tparams (Type.Poly.generate_id ()) x.tparams t in
-    (poly t_inner, poly t_outer)
+    (t_inner, poly t_outer)
 
   let mk_class_binding _cx x = { Type.class_binding_id = x.id }
 
