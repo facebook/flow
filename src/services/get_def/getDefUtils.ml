@@ -354,9 +354,9 @@ let extract_instancet cx ty : (Type.t, string) result =
   Type.(
     let resolved = Members.resolve_type cx ty in
     match resolved with
-    | ThisClassT (_, t, _, _)
-    | DefT (_, PolyT { t_out = ThisClassT (_, t, _, _); _ }) ->
-      Ok t
+    | DefT (_, ClassT (ThisInstanceT (r, t, _, _)))
+    | DefT (_, PolyT { t_out = DefT (_, ClassT (ThisInstanceT (r, t, _, _))); _ }) ->
+      Ok (DefT (r, InstanceT t))
     | _ ->
       let type_string = string_of_ctor resolved in
       Error ("Expected a class type to extract an instance type from, got " ^ type_string)
@@ -417,7 +417,8 @@ and extract_def_loc_resolved ~loc_of_aloc cx ty name : (def_loc, string) result 
   Members.(
     Type.(
       match extract_type cx ty with
-      | Success (DefT (_, InstanceT { super; _ })) as extracted_type ->
+      | Success (DefT (_, InstanceT { super; _ }) | ThisInstanceT (_, { super; _ }, _, _)) as
+        extracted_type ->
         extract_def_locs_from_instancet ~loc_of_aloc cx extracted_type super name
       | (Success (DefT (_, ObjT _)) | SuccessModule _) as extracted_type ->
         get_def_locs_from_extracted_type cx extracted_type name >>| ( function

@@ -1209,9 +1209,20 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (* TODO: ideally we'd do the same when lower bounds flow to a
      * this-abstracted class, but fixing the class is easier; might need to
      * revisit *)
-    | (_, ThisClassT (r, i, this, this_name)) ->
+    | (_, DefT (class_r, ClassT (ThisInstanceT (inst_r, i, this, this_name)))) ->
       let reason = reason_of_t l in
-      rec_flow cx trace (l, UseT (use_op, fix_this_class cx reason (r, i, this, this_name)))
+      rec_flow
+        cx
+        trace
+        ( l,
+          UseT
+            ( use_op,
+              DefT (class_r, ClassT (fix_this_instance cx reason (inst_r, i, this, this_name)))
+            )
+        )
+    | (_, ThisInstanceT (r, i, this, this_name)) ->
+      let reason = reason_of_t l in
+      rec_flow cx trace (l, UseT (use_op, fix_this_instance cx reason (r, i, this, this_name)))
     | ( DefT
           ( reason_tapp,
             PolyT
@@ -1262,9 +1273,16 @@ module Make (Flow : INPUT) : OUTPUT = struct
       in
       rec_flow_t cx trace ~use_op (t_, u)
     (* when a this-abstracted class flows to upper bounds, fix the class *)
-    | (ThisClassT (r, i, this, this_name), _) ->
+    | (DefT (class_r, ClassT (ThisInstanceT (inst_r, i, this, this_name))), _) ->
       let reason = reason_of_t u in
-      rec_flow_t cx trace ~use_op (fix_this_class cx reason (r, i, this, this_name), u)
+      rec_flow_t
+        cx
+        trace
+        ~use_op
+        (DefT (class_r, ClassT (fix_this_instance cx reason (inst_r, i, this, this_name))), u)
+    | (ThisInstanceT (r, i, this, this_name), _) ->
+      let reason = reason_of_t u in
+      rec_flow_t cx trace ~use_op (fix_this_instance cx reason (r, i, this, this_name), u)
     (*****************************)
     (* React Abstract Components *)
     (*****************************)

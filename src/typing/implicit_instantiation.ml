@@ -1040,13 +1040,13 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
         check_react_fun cx ~tparams ~tparams_map ~props ~implicit_instantiation
       | (DefT (_, FunT (_, funtype)), _) ->
         check_fun cx ~tparams ~tparams_map ~return_t:funtype.return_t ~implicit_instantiation
-      | (ThisClassT (_, DefT (_, InstanceT _), _, _), Check.Call _) ->
+      | (DefT (_, ClassT (ThisInstanceT _)), Check.Call _) ->
         (* This case is hit when calling a static function. We will implicitly
          * instantiate the type variables on the class, but using an instance's
          * type params in a static method does not make sense. We ignore this case
          * intentionally *)
         ([], Marked.empty, None)
-      | (ThisClassT (_, DefT (_, InstanceT _), _, _), _) ->
+      | (DefT (_, ClassT (ThisInstanceT _)), _) ->
         check_instance cx ~tparams ~implicit_instantiation
       | _ ->
         (* There are no other valid cases of implicit instantiation, but it is still possible

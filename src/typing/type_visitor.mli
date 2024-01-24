@@ -28,6 +28,8 @@ class ['a] t :
 
     method fun_type : Context.t -> Polarity.t -> 'a -> Type.funtype -> 'a
 
+    method instance_type : Context.t -> Polarity.t -> 'a -> Type.instance_t -> 'a
+
     method dict_type : Context.t -> Polarity.t -> 'a -> Type.dicttype -> 'a
 
     method destructor : Context.t -> 'a -> Type.destructor -> 'a

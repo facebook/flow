@@ -427,7 +427,7 @@ let intersect_members cx members =
       map
 
 and instantiate_type = function
-  | ThisClassT (_, t, _, _)
+  | DefT (_, ClassT (ThisInstanceT (r, t, _, _))) -> DefT (r, InstanceT t)
   | DefT (_, ClassT t)
   | (AnyT _ as t)
   | DefT (_, TypeT (_, t))
@@ -507,6 +507,7 @@ let rec extract_type cx this_t =
     extract_type cx ty
   | DefT (_, (NullT | VoidT)) -> FailureNullishType
   | AnyT _ -> FailureAnyType
+  | ThisInstanceT (r, t, _, _) -> Success (DefT (r, InstanceT t))
   | DefT (_, InstanceT _) as t -> Success t
   | DefT (_, ObjT _) as t -> Success t
   | DefT (_, EnumObjectT _) as t -> Success t
@@ -531,7 +532,7 @@ let rec extract_type cx this_t =
   | DefT (_, PolyT { t_out = sub_type; _ }) ->
     (* TODO: replace type parameters with stable/proper names? *)
     extract_type cx sub_type
-  | ThisClassT (_, DefT (_, InstanceT { static; _ }), _, _)
+  | DefT (_, ClassT (ThisInstanceT (_, { static; _ }, _, _)))
   | DefT (_, ClassT (DefT (_, InstanceT { static; _ }))) ->
     extract_type cx static
   | DefT (_, FunT _) as t -> Success t
@@ -586,7 +587,6 @@ let rec extract_type cx this_t =
   | NullProtoT _
   | ObjProtoT _
   | OpaqueT _
-  | ThisClassT _
   | DefT (_, TypeT _)
   | DefT (_, EnumT _) ->
     FailureUnhandledType this_t
@@ -597,6 +597,7 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
   | FailureUnhandledType t -> FailureUnhandledType t
   | FailureUnhandledMembers t -> FailureUnhandledMembers t
   | Success (GenericT { bound; _ }) -> extract_members ~exclude_proto_members cx (Success bound)
+  | Success (ThisInstanceT (_, { super; inst = { own_props; proto_props; _ }; _ }, _, _))
   | Success (DefT (_, InstanceT { super; inst = { own_props; proto_props; _ }; _ })) ->
     let members =
       SMap.fold

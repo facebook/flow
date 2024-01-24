@@ -822,7 +822,10 @@ module Make (I : INPUT) : S = struct
                (symbol_from_reason env (TypeUtil.reason_of_t component) name, Ty.TypeAliasKind, None)
             )
         | _ -> type_app ~env type_ (Some targs))
-      | DefT (r, InstanceT { super; inst; _ }) -> instance_t ~env r super inst
+      | ThisInstanceT (r, { super; inst; _ }, _, _)
+      | DefT (r, InstanceT { super; inst; _ }) ->
+        instance_t ~env r super inst
+      | DefT (_, ClassT (ThisInstanceT (r, t, _, _))) -> this_class_t ~env r t
       | DefT (_, ClassT t) -> class_t ~env t
       | DefT (_, ReactAbstractComponentT { config; instance; renders; component_kind = _ }) ->
         let%bind config = type__ ~env config in
@@ -850,7 +853,6 @@ module Make (I : INPUT) : S = struct
           | T.RendersStar -> Ty.RendersStar
         in
         return (Ty.Renders (ty, variant))
-      | ThisClassT (_, t, _, _) -> this_class_t ~env t
       | ThisTypeAppT (_, c, _, ts) -> type_app ~env c ts
       | KeysT (r, t) -> keys_t ~env ~cont:type__ r t
       | OpaqueT (r, o) -> opaque_t ~env r o
@@ -1265,7 +1267,7 @@ module Make (I : INPUT) : S = struct
     (* The Class<T> utility type *)
     and class_t ~env t =
       match t with
-      | T.DefT (r, T.InstanceT { static; inst; _ })
+      | T.DefT (r, T.InstanceT { T.static; inst; _ })
         when desc_of_reason ~unwrap:false r = RReactComponent ->
         let { Type.own_props; _ } = inst in
         react_component_class ~env static own_props
@@ -1273,13 +1275,14 @@ module Make (I : INPUT) : S = struct
         let%map ty = type__ ~env t in
         Ty.Utility (Ty.Class ty)
 
-    and this_class_t ~env t =
+    and this_class_t ~env r t =
       let open Type in
       match t with
-      | DefT (r, InstanceT { inst = { inst_kind = ClassKind; _ }; _ }) ->
+      | { inst = { inst_kind = ClassKind; _ }; _ } ->
         let%map symbol = Reason_utils.instance_symbol env r in
         Ty.TypeOf (Ty.TSymbol symbol, None)
-      | _ -> terr ~kind:BadThisClassT ~msg:(string_of_ctor t) (Some t)
+      | { inst = { inst_kind = InterfaceKind _; _ }; _ } ->
+        terr ~kind:BadThisClassT ~msg:"InterfaceKind" (Some (DefT (r, InstanceT t)))
 
     and type_params_t ~env tparams =
       let (env, results) =
@@ -1301,7 +1304,7 @@ module Make (I : INPUT) : S = struct
     and poly_ty ~env t typeparams =
       let open Type in
       match t with
-      | ThisClassT (_, t, _, _) -> this_class_t ~env t
+      | DefT (_, ClassT (ThisInstanceT (r, t, _, _))) -> this_class_t ~env r t
       | DefT (_, FunT (static, f)) ->
         let%bind (env, ps) = type_params_t ~env typeparams in
         let%map fun_t = fun_ty ~env static f ps in
@@ -1357,8 +1360,8 @@ module Make (I : INPUT) : S = struct
       let singleton_poly ~env targs tparams t =
         let open Type in
         match t with
-        | ThisClassT (_, DefT (r, InstanceT { inst; _ }), _, _)
         | DefT (_, TypeT (_, DefT (r, InstanceT { inst; _ })))
+        | DefT (_, ClassT (ThisInstanceT (r, { inst; _ }, _, _)))
         | DefT (_, ClassT (DefT (r, InstanceT { inst; _ }))) ->
           instance_app ~env r inst tparams targs
         | DefT (r, TypeT (kind, t)) ->
@@ -1406,7 +1409,10 @@ module Make (I : INPUT) : S = struct
               targs
           | None -> type__ ~env inner_t)
         | DefT (_, PolyT { tparams; t_out; _ }) -> singleton_poly ~env targs tparams t_out
-        | ThisClassT (_, t, _, _)
+        | DefT (_, ClassT (ThisInstanceT (r, t, _, _))) ->
+          (* This is likely an error - cannot apply on non-polymorphic type.
+           * E.g type Foo = any; var x: Foo<number> *)
+          type__ ~env (DefT (r, InstanceT t))
         | DefT (_, TypeT (_, t)) ->
           (* This is likely an error - cannot apply on non-polymorphic type.
            * E.g type Foo = any; var x: Foo<number> *)
@@ -2098,7 +2104,7 @@ module Make (I : INPUT) : S = struct
         | DefT (_, TypeT (ImportClassKind, DefT (r, InstanceT { static; super; inst; _ }))) ->
           class_or_interface_decl ~env r (Some tparams) static super inst
         (* Classes *)
-        | ThisClassT (_, DefT (r, InstanceT { static; super; inst; _ }), _, _)
+        | DefT (_, ClassT (ThisInstanceT (r, { static; super; inst; _ }, _, _)))
         (* Interfaces *)
         | DefT (_, ClassT (DefT (r, InstanceT { static; super; inst; _ }))) ->
           class_or_interface_decl ~env r (Some tparams) static super inst
@@ -2140,7 +2146,7 @@ module Make (I : INPUT) : S = struct
           let%map (name, exports, default) = module_of_object ~env r o in
           Ty.Decl (Ty.ModuleDecl { name; exports; default })
         (* Monomorphic Classes/Interfaces *)
-        | ThisClassT (_, DefT (r, InstanceT { static; super; inst; _ }), _, _)
+        | DefT (_, ClassT (ThisInstanceT (r, { static; super; inst; _ }, _, _)))
         | DefT (_, ClassT (DefT (r, InstanceT { static; super; inst; _ })))
         | DefT (_, TypeT (InstanceKind, DefT (r, InstanceT { static; super; inst; _ })))
         | DefT (_, TypeT (ImportClassKind, DefT (r, InstanceT { static; super; inst; _ }))) ->
@@ -2510,12 +2516,14 @@ module Make (I : INPUT) : S = struct
       | DefT (r, ObjT o) ->
         let%map o = obj_t ~env ~inherited ~source ~imode r o in
         Ty.Obj o
+      | DefT (_, ClassT (ThisInstanceT (r, t, _, _))) ->
+        this_class_t ~env ~inherited ~source ~imode (DefT (r, InstanceT t))
       | DefT (_, ClassT t) -> type__ ~env ~inherited ~source ~imode t
       | DefT (r, ArrT a) -> arr_t ~env ~inherited r a
       | DefT (r, EnumObjectT e) -> enum_t ~env ~inherited r e
+      | ThisInstanceT (r, { static; super; implements; inst }, _, _)
       | DefT (r, InstanceT { static; super; implements; inst }) ->
         instance_t ~env ~inherited ~source ~imode r static super implements inst
-      | ThisClassT (_, t, _, _) -> this_class_t ~env ~inherited ~source ~imode t
       | DefT (_, PolyT { tparams; t_out; _ }) ->
         let tparams_rev = List.rev (Nel.to_list tparams) @ env.Env.tparams_rev in
         let env = Env.{ env with tparams_rev } in

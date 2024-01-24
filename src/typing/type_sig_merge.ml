@@ -1574,10 +1574,9 @@ and merge_class tps infer_tps file reason class_name id def =
       |> NameUtils.namemap_of_smap
       |> Context.generate_property_map file.cx
     in
-    let open Type in
     let inst =
       {
-        class_id = id;
+        Type.class_id = id;
         class_name;
         type_args = targs;
         own_props;
@@ -1585,7 +1584,7 @@ and merge_class tps infer_tps file reason class_name id def =
         inst_call_t = None;
         initialized_fields = SSet.empty;
         initialized_static_fields = SSet.empty;
-        inst_kind = ClassKind;
+        inst_kind = Type.ClassKind;
         inst_dict = None;
         class_private_fields = Context.generate_property_map file.cx NameUtils.Map.empty;
         class_private_methods = Context.generate_property_map file.cx NameUtils.Map.empty;
@@ -1593,8 +1592,11 @@ and merge_class tps infer_tps file reason class_name id def =
         class_private_static_methods = Context.generate_property_map file.cx NameUtils.Map.empty;
       }
     in
-    let instance = DefT (reason, InstanceT { static; super; implements; inst }) in
-    TypeUtil.this_class_type instance false (Subst_name.Name "this")
+    TypeUtil.class_type
+      ~structural:false
+      (Type.ThisInstanceT
+         (reason, { Type.static; super; implements; inst }, false, Subst_name.Name "this")
+      )
   in
   let t (tps, targs) =
     let rec t =
@@ -1993,10 +1995,9 @@ let merge_declare_class file reason class_name id def =
         Some (Context.make_call_prop file.cx t)
     in
     let inst_dict = Option.map ~f:(merge_dict tps infer_tps file) dict in
-    let open Type in
     let inst =
       {
-        class_id = id;
+        Type.class_id = id;
         class_name = Some class_name;
         type_args = targs;
         own_props;
@@ -2004,7 +2005,7 @@ let merge_declare_class file reason class_name id def =
         inst_call_t;
         initialized_fields = SSet.empty;
         initialized_static_fields = SSet.empty;
-        inst_kind = ClassKind;
+        inst_kind = Type.ClassKind;
         inst_dict;
         class_private_fields = Context.generate_property_map file.cx NameUtils.Map.empty;
         class_private_methods = Context.generate_property_map file.cx NameUtils.Map.empty;
@@ -2012,8 +2013,11 @@ let merge_declare_class file reason class_name id def =
         class_private_static_methods = Context.generate_property_map file.cx NameUtils.Map.empty;
       }
     in
-    let instance = DefT (reason, InstanceT { static; super; implements; inst }) in
-    TypeUtil.this_class_type instance false (Subst_name.Name "this")
+    TypeUtil.class_type
+      ~structural:false
+      (Type.ThisInstanceT
+         (reason, { Type.static; super; implements; inst }, false, Subst_name.Name "this")
+      )
   in
   let t (tps, targs) =
     let rec t =

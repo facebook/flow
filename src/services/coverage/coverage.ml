@@ -142,7 +142,6 @@ let visitor =
       | TypeAppT { reason = _; use_op = _; type_ = t; targs = _; from_value = _; use_desc = _ }
       | DefT (_, TypeT (_, t))
       | GenericT { bound = t; _ }
-      | ThisClassT (_, t, _, _)
       | ThisTypeAppT (_, t, _, _) ->
         self#type_ cx t
       | UnionT (_, rep) ->
@@ -158,6 +157,7 @@ let visitor =
       | FunProtoBindT _
       | FunProtoCallT _
       | InternalT _
+      | ThisInstanceT _
       | KeysT _
       | MaybeT _
       | ModuleT _

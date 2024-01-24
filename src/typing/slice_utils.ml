@@ -1420,6 +1420,8 @@ let resolve
         loop
           (mod_reason_of_t (fun _ -> reason) bound)
           (Generic.spread_append (Generic.make_spread id) ls)
+      | ThisInstanceT (r, i, is_this, this_name) ->
+        (ls, Flow_js_utils.fix_this_instance cx r (r, i, is_this, this_name))
       | _ -> (ls, t)
     in
     loop t Generic.spread_empty

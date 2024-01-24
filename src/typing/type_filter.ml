@@ -141,7 +141,7 @@ let rec not_exists cx t =
       ) ->
     DefT (r, EmptyT)
   | DefT (reason, ClassT _) -> DefT (reason, EmptyT)
-  | ThisClassT (reason, _, _, _) -> DefT (reason, EmptyT)
+  | ThisInstanceT (reason, _, _, _) -> DefT (reason, EmptyT)
   (* unknown boolies become falsy *)
   | MaybeT (r, t) -> UnionT (r, UnionRep.make (NullT.why r) (VoidT.why r) [not_exists cx t])
   | DefT (r, BoolT None) -> DefT (r, BoolT (Some false))
@@ -459,7 +459,7 @@ let rec function_ = function
   | DefT (_, PolyT _) as t -> map_poly ~f:function_ t
   | DefT (r, MixedT _) ->
     DefT (replace_desc_new_reason (RFunction RUnknown) r, MixedT Mixed_function)
-  | (ThisClassT _ | DefT (_, (FunT _ | ClassT _)) | AnyT _) as t -> t
+  | (DefT (_, (FunT _ | ClassT _)) | AnyT _) as t -> t
   | DefT (r, _) -> DefT (r, EmptyT)
   | t -> DefT (reason_of_t t, EmptyT)
 
@@ -467,7 +467,6 @@ let rec not_function t =
   match t with
   | DefT (_, PolyT _) -> map_poly ~f:not_function t
   | AnyT _ -> DefT (reason_of_t t, EmptyT)
-  | ThisClassT _ -> DefT (reason_of_t t, EmptyT)
   | DefT (_, (FunT _ | ClassT _)) -> DefT (reason_of_t t, EmptyT)
   | _ -> t
 
@@ -695,6 +694,7 @@ and tag_of_inst inst =
 and tag_of_t cx t =
   match t with
   | DefT (_, t) -> tag_of_def_t cx t
+  | ThisInstanceT (_, { inst; _ }, _, _) -> tag_of_inst inst
   | ExactT (_, t) -> tag_of_t cx t
   | OpenT _
   | AnnotT (_, _, _) ->
@@ -706,7 +706,6 @@ and tag_of_t cx t =
   (* Most of the types below should have boiled away thanks to concretization. *)
   | EvalT _
   | GenericT _
-  | ThisClassT _
   | ThisTypeAppT _
   | TypeAppT _
   | FunProtoT _

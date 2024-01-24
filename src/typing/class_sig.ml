@@ -651,7 +651,7 @@ module Make
       in
       (super, static_proto)
 
-  let thistype cx x =
+  let this_instance_type cx x =
     let { static = { reason = sreason; _ }; instance = { reason; _ }; _ } = x in
     let (super, static_proto) = supertype cx x in
     let implements =
@@ -672,14 +672,17 @@ module Make
     in
     let (initialized_static_fields, static_objtype) = statictype cx static_proto x in
     let inst = insttype cx ~initialized_static_fields x in
-    let open Type in
-    let static = DefT (sreason, ObjT static_objtype) in
-    DefT (reason, InstanceT { static; super; implements; inst })
+    let static = Type.DefT (sreason, Type.ObjT static_objtype) in
+    (reason, { Type.static; super; implements; inst })
+
+  let thistype cx x =
+    let (reason, instance_t) = this_instance_type cx x in
+    Type.(DefT (reason, InstanceT instance_t))
 
   let check_methods cx def_reason x =
     let open Type in
     let self =
-      match x.super with
+      match x.Types.super with
       | Interface _ -> thistype cx x
       | Class { this_t; _ } -> this_t
     in
@@ -802,7 +805,8 @@ module Make
   (* TODO: Ideally we should check polarity for all class types, but this flag is
      flipped off for interface/declare class currently. *)
   let classtype cx ?(check_polarity = true) x =
-    let this = thistype cx x in
+    let (this_reason, this_instance_t) = this_instance_type cx x in
+    let this = Type.(DefT (this_reason, InstanceT this_instance_t)) in
     let this_tparam = this_tparam x in
     let tparams_with_this =
       this_tparam |> Base.Option.value_map ~default:x.tparams ~f:(tparams_with_this x.tparams)
@@ -829,7 +833,13 @@ module Make
         let class_type = class_type ~structural:true this in
         (class_type, class_type)
       else
-        (this_class_type this true this_name, this_class_type this false this_name)
+        ( class_type
+            ~structural:false
+            (Type.ThisInstanceT (this_reason, this_instance_t, true, this_name)),
+          class_type
+            ~structural:false
+            (Type.ThisInstanceT (this_reason, this_instance_t, false, this_name))
+        )
     in
     let poly t = poly_type_of_tparams (Type.Poly.generate_id ()) x.tparams t in
     (poly t_inner, poly t_outer)

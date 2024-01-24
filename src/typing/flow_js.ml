@@ -2467,16 +2467,19 @@ struct
 
         (* A class can be viewed as a mixin by extracting its immediate properties,
            and "erasing" its static and super *)
-        | (ThisClassT (_, DefT (_, InstanceT { inst; _ }), is_this, this_name), MixinT (r, tvar)) ->
+        | ( DefT (class_reason, ClassT (ThisInstanceT (_, { inst; _ }, is_this, this_name))),
+            MixinT (r, tvar)
+          ) ->
           let static = ObjProtoT r in
           let super = ObjProtoT r in
           rec_flow
             cx
             trace
-            ( this_class_type
-                (DefT (r, InstanceT { static; super; implements = []; inst }))
-                is_this
-                this_name,
+            ( DefT
+                ( class_reason,
+                  ClassT
+                    (ThisInstanceT (r, { static; super; implements = []; inst }, is_this, this_name))
+                ),
               UseT (unknown_use, tvar)
             )
         | ( DefT
@@ -2485,7 +2488,8 @@ struct
                   {
                     tparams_loc;
                     tparams = xs;
-                    t_out = ThisClassT (_, DefT (_, InstanceT { inst; _ }), is_this, this_name);
+                    t_out =
+                      DefT (class_r, ClassT (ThisInstanceT (_, { inst; _ }, is_this, this_name)));
                     _;
                   }
               ),
@@ -2493,7 +2497,7 @@ struct
           ) ->
           let static = ObjProtoT r in
           let super = ObjProtoT r in
-          let instance = DefT (r, InstanceT { static; super; implements = []; inst }) in
+          let instance = { static; super; implements = []; inst } in
           rec_flow
             cx
             trace
@@ -2501,7 +2505,7 @@ struct
                 (Type.Poly.generate_id ())
                 tparams_loc
                 xs
-                (this_class_type instance is_this this_name),
+                (DefT (class_r, ClassT (ThisInstanceT (r, instance, is_this, this_name)))),
               UseT (unknown_use, tvar)
             )
         | (AnyT (_, src), MixinT (r, tvar)) ->
@@ -2538,21 +2542,22 @@ struct
           rec_flow_t ~use_op:unknown_use cx trace (t_, tvar)
         | (DefT (_, PolyT { tparams = tps; _ }), VarianceCheckT (_, tparams, targs, polarity)) ->
           variance_check cx ~trace tparams polarity (Nel.to_list tps, targs)
-        | (ThisClassT _, VarianceCheckT (_, _, [], _)) ->
+        | (ThisInstanceT _, VarianceCheckT (_, _, [], _)) ->
           (* We will emit this constraint when walking an extends clause which does
            * not have explicit type arguments. The class has an implicit this type
            * parameter which needs to be specialized to the inheriting class, but
            * that is uninteresting for the variance check machinery. *)
           ()
         (* empty targs specialization of non-polymorphic classes is a no-op *)
-        | ((DefT (_, ClassT _) | ThisClassT _), SpecializeT (_, _, _, _, None, tvar)) ->
+        | (DefT (_, ClassT _), SpecializeT (_, _, _, _, None, tvar)) ->
           rec_flow_t ~use_op:unknown_use cx trace (l, tvar)
         | (AnyT _, SpecializeT (_, _, _, _, _, tvar)) ->
           rec_flow_t ~use_op:unknown_use cx trace (l, tvar)
         (* this-specialize a this-abstracted class by substituting This *)
-        | (ThisClassT (_, i, _, this_name), ThisSpecializeT (r, this, k)) ->
-          let i = subst cx (Subst_name.Map.singleton this_name this) i in
-          continue_repos cx trace r i k
+        | (DefT (_, ClassT (ThisInstanceT (inst_r, i, _, this_name))), ThisSpecializeT (r, this, k))
+          ->
+          let i = Type_subst.subst_instance_type cx (Subst_name.Map.singleton this_name this) i in
+          continue_repos cx trace r (DefT (inst_r, InstanceT i)) k
         (* this-specialization of non-this-abstracted classes is a no-op *)
         | (DefT (_, ClassT i), ThisSpecializeT (r, _this, k)) ->
           (* TODO: check that this is a subtype of i? *)
@@ -2560,7 +2565,7 @@ struct
         | (AnyT _, ThisSpecializeT (r, _, k)) -> continue_repos cx trace r l k
         | (DefT (_, PolyT _), ReposLowerT (reason, use_desc, u)) ->
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
-        | (ThisClassT _, ReposLowerT (reason, use_desc, u)) ->
+        | (DefT (_, ClassT (ThisInstanceT _)), ReposLowerT (reason, use_desc, u)) ->
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
         (* Special case for `_ instanceof C` where C is polymorphic *)
         | ( DefT (reason_tapp, PolyT { tparams_loc; tparams = ids; t_out = t; _ }),
@@ -2593,7 +2598,11 @@ struct
          *
          * We use the bounds to explicitly instantiate so that we don't create yet another implicit
          * instantiation here that would be un-annotatable. *)
-        | ( DefT (reason_tapp, PolyT { tparams_loc; tparams = ids; t_out = ThisClassT _ as t; _ }),
+        | ( DefT
+              ( reason_tapp,
+                PolyT
+                  { tparams_loc; tparams = ids; t_out = DefT (_, ClassT (ThisInstanceT _)) as t; _ }
+              ),
             CallT { use_op; reason = reason_op; _ }
           ) ->
           let targs = Nel.map (fun tparam -> ExplicitArg tparam.bound) ids in
@@ -2763,9 +2772,15 @@ struct
           in
           rec_flow cx trace (t_, u)
         (* when a this-abstracted class flows to upper bounds, fix the class *)
-        | (ThisClassT (r, i, this, this_name), _) ->
+        | (DefT (class_r, ClassT (ThisInstanceT (r, i, this, this_name))), _) ->
           let reason = reason_of_use_t u in
-          rec_flow cx trace (fix_this_class cx reason (r, i, this, this_name), u)
+          rec_flow
+            cx
+            trace
+            (DefT (class_r, ClassT (fix_this_instance cx reason (r, i, this, this_name))), u)
+        | (ThisInstanceT (r, i, this, this_name), _) ->
+          let reason = reason_of_use_t u in
+          rec_flow cx trace (fix_this_instance cx reason (r, i, this, this_name), u)
         (*****************************)
         (* React Abstract Components *)
         (*****************************)
@@ -6597,7 +6612,7 @@ struct
     | OpenT (_, id) -> any_prop_tvar cx id
     (* Handled already in __flow *)
     | ExactT _
-    | ThisClassT _
+    | ThisInstanceT _
     | EvalT _
     | MatchingPropT _
     | OptionalT _

@@ -79,10 +79,10 @@ module rec TypeTerm : sig
         bound: t;
         id: Generic.id;
       }
-    (* this-abstracted class. If `is_this` is true, then this literally comes from
+    (* this-abstracted instance. If `is_this` is true, then this literally comes from
        `this` as an annotation or expression, and should be fixed to an internal
        view of the class, which is a generic whose upper bound is the class. *)
-    | ThisClassT of reason * t * (* is_this *) bool * Subst_name.t
+    | ThisInstanceT of reason * instance_t * (* is_this *) bool * Subst_name.t
     (* this instantiation *)
     | ThisTypeAppT of reason * t * t * t list option
     (* type application *)
@@ -198,12 +198,7 @@ module rec TypeTerm : sig
     (* type of a class *)
     | ClassT of t
     (* type of an instance of a class *)
-    | InstanceT of {
-        static: t;
-        super: t;
-        implements: t list;
-        inst: insttype;
-      }
+    | InstanceT of instance_t
     (* singleton string, matches exactly a given string literal *)
     (* TODO SingletonStrT should not include internal names *)
     | SingletonStrT of name
@@ -1541,6 +1536,13 @@ module rec TypeTerm : sig
   and instance_kind =
     | ClassKind
     | InterfaceKind of { inline: bool }
+
+  and instance_t = {
+    inst: insttype;
+    static: t;
+    super: t;
+    implements: t list;
+  }
 
   and opaquetype = {
     opaque_id: ALoc.id;
@@ -3942,7 +3944,7 @@ let string_of_ctor = function
   | ObjProtoT _ -> "ObjProtoT"
   | MatchingPropT _ -> "MatchingPropT"
   | OpaqueT _ -> "OpaqueT"
-  | ThisClassT _ -> "ThisClassT"
+  | ThisInstanceT _ -> "ThisInstanceT"
   | ThisTypeAppT _ -> "ThisTypeAppT"
   | TypeAppT _ -> "TypeAppT"
   | UnionT _ -> "UnionT"

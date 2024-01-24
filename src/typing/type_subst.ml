@@ -41,9 +41,9 @@ let visitor =
         in
         let { free; _ } = self#type_ cx pole { free; bound } inner in
         { free; bound = orig_bound }
-      | ThisClassT (_, t, _, this_name) ->
+      | ThisInstanceT (_, t, _, this_name) ->
         let { free; _ } =
-          self#type_ cx pole { free; bound = Subst_name.Set.add this_name bound } t
+          self#instance_type cx pole { free; bound = Subst_name.Set.add this_name bound } t
         in
         { free; bound }
       | _ -> super#type_ cx pole { bound; free } t
@@ -290,13 +290,13 @@ let substituter =
               DefT (reason, PolyT { tparams_loc; tparams = xs; t_out = inner_; id })
             else
               t
-          | ThisClassT (reason, this, i, this_name) ->
+          | ThisInstanceT (r, this, i, this_name) ->
             let (name, map) = avoid_capture map this_name in
-            let this_ = self#type_ cx (map, force, use_op) this in
+            let this_ = self#instance_type cx (map, force, use_op) this in
             if this_ == this && name == this_name then
               t
             else
-              ThisClassT (reason, this_, i, name)
+              ThisInstanceT (r, this_, i, name)
           | TypeAppT { reason; use_op = op; type_; targs; from_value; use_desc } ->
             let type_' = self#type_ cx map_cx type_ in
             let targs' = ListUtils.ident_map (self#type_ cx map_cx) targs in
@@ -439,3 +439,7 @@ let subst cx ?use_op ?(force = true) map ty =
 let subst_destructor cx ?use_op ?(force = true) map des =
   let map = Subst_name.Map.map (fun t -> TypeSubst (t, free_var_finder cx t)) map in
   substituter#destructor cx (map, force, use_op) des
+
+let subst_instance_type cx ?use_op ?(force = true) map instance_t =
+  let map = Subst_name.Map.map (fun t -> TypeSubst (t, free_var_finder cx t)) map in
+  substituter#instance_type cx (map, force, use_op) instance_t

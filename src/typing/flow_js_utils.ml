@@ -145,6 +145,7 @@ let function_like = function
 
 let object_like = function
   | DefT (_, (ObjT _ | InstanceT _))
+  | ThisInstanceT _
   | ObjProtoT _
   | FunProtoT _
   | AnyT _ ->
@@ -754,7 +755,7 @@ let builtin_promise_class_id cx =
               ( _,
                 PolyT
                   {
-                    t_out = ThisClassT (_, DefT (_, InstanceT { inst = { class_id; _ }; _ }), _, _);
+                    t_out = DefT (_, ClassT (ThisInstanceT (_, { inst = { class_id; _ }; _ }, _, _)));
                     _;
                   }
               )
@@ -885,11 +886,14 @@ let is_exception_to_react_dro = function
   | Named { name = OrdinaryName "current"; _ } -> true
   | _ -> false
 
-let fix_this_class_instance cx reason (r, i, is_this, this_name) =
-  match Flow_cache.Fix.find cx is_this i with
+(* Fix a this-abstracted instance type by tying a "knot": assume that the
+   fixpoint is some `this`, substitute it as This in the instance type, and
+   finally return the result as `this`. *)
+let fix_this_instance cx reason (reason_i, i, is_this, this_name) =
+  let cache_key = DefT (reason_i, InstanceT i) in
+  match Flow_cache.Fix.find cx is_this cache_key with
   | Some i' -> i'
   | None ->
-    let reason_i = reason_of_t i in
     let rec i' =
       lazy
         (let this = Tvar.mk_fully_resolved_lazy cx reason_i i' in
@@ -897,7 +901,7 @@ let fix_this_class_instance cx reason (r, i, is_this, this_name) =
            if is_this then
              GenericT
                {
-                 id = Context.make_generic_id cx this_name (def_loc_of_reason r);
+                 id = Context.make_generic_id cx this_name (def_loc_of_reason reason_i);
                  reason;
                  name = this_name;
                  bound = this;
@@ -905,19 +909,17 @@ let fix_this_class_instance cx reason (r, i, is_this, this_name) =
            else
              this
          in
-         let i' = subst cx (Subst_name.Map.singleton this_name this_generic) i in
-         Flow_cache.Fix.add cx is_this i i';
+         let i' =
+           DefT
+             ( reason_i,
+               InstanceT (subst_instance_type cx (Subst_name.Map.singleton this_name this_generic) i)
+             )
+         in
+         Flow_cache.Fix.add cx is_this cache_key i';
          i'
         )
     in
     Lazy.force i'
-
-(* Fix a this-abstracted instance type by tying a "knot": assume that the
-   fixpoint is some `this`, substitute it as This in the instance type, and
-   finally unify it with the instance type. Return the class type wrapping the
-   instance type. *)
-let fix_this_class cx reason (r, i, is_this, this_name) =
-  DefT (r, ClassT (fix_this_class_instance cx reason (r, i, is_this, this_name)))
 
 module type Instantiation_helper_sig = sig
   val cache_instantiate :
@@ -1208,18 +1210,22 @@ end
 module ImportTypeTKit = struct
   let canonicalize_imported_type cx reason t =
     match t with
+    (* fix this-abstracted class when used as a type *)
+    | DefT (_, ClassT (ThisInstanceT (r, i, this, this_name))) ->
+      Some (DefT (reason, ClassT (fix_this_instance cx reason (r, i, this, this_name))))
     | DefT (_, ClassT inst) -> Some (DefT (reason, TypeT (ImportClassKind, inst)))
-    | DefT (_, PolyT { tparams_loc; tparams = typeparams; t_out = DefT (_, ClassT inst); id }) ->
-      Some (poly_type id tparams_loc typeparams (DefT (reason, TypeT (ImportClassKind, inst))))
     (* delay fixing a polymorphic this-abstracted class until it is specialized,
        by transforming the instance type to a type application *)
-    | DefT (_, PolyT { tparams_loc; tparams = typeparams; t_out = ThisClassT _; _ }) ->
+    | DefT
+        ( _,
+          PolyT { tparams_loc; tparams = typeparams; t_out = DefT (_, ClassT (ThisInstanceT _)); _ }
+        ) ->
       let (_, targs) = typeparams |> Nel.to_list |> mk_tparams cx in
       let tapp = implicit_typeapp t targs in
       Some (poly_type (Type.Poly.generate_id ()) tparams_loc typeparams (class_type tapp))
+    | DefT (_, PolyT { tparams_loc; tparams = typeparams; t_out = DefT (_, ClassT inst); id }) ->
+      Some (poly_type id tparams_loc typeparams (DefT (reason, TypeT (ImportClassKind, inst))))
     | DefT (_, PolyT { t_out = DefT (_, TypeT _); _ }) -> Some t
-    (* fix this-abstracted class when used as a type *)
-    | ThisClassT (r, i, this, this_name) -> Some (fix_this_class cx reason (r, i, this, this_name))
     | DefT (enum_reason, EnumObjectT enum) ->
       let enum_type = mk_enum_type enum_reason enum in
       Some (DefT (reason, TypeT (ImportEnumKind, enum_type)))
@@ -1248,6 +1254,12 @@ end
 module ImportTypeofTKit = struct
   let on_concrete_type cx reason export_name l =
     match l with
+    | DefT
+        ( _,
+          PolyT { tparams_loc = _; tparams = _; t_out = DefT (_, ClassT (ThisInstanceT _)); id = _ }
+        ) ->
+      let typeof_t = TypeUtil.typeof_annotation reason l None in
+      DefT (reason, TypeT (ImportTypeofKind, typeof_t))
     | DefT
         ( _,
           PolyT
@@ -1633,7 +1645,6 @@ module AssertExportIsTypeT_kit (F : Import_export_helper_sig) = struct
   let rec is_type = function
     | DefT (_, ClassT _)
     | DefT (_, EnumObjectT _)
-    | ThisClassT (_, _, _, _)
     | DefT (_, TypeT _)
     | AnyT _ ->
       true

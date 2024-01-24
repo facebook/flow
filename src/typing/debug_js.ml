@@ -135,6 +135,18 @@ let rec dump_t_ (depth, tvars) cx t =
     | DebugThrow -> "DebugThrow"
     | DebugSleep -> "DebugSleep"
   in
+  let instance_t { static = _; super = _; implements = _; inst = { class_id; type_args; _ } } =
+    spf
+      "[%s] #%s"
+      (String.concat
+         ", "
+         (Base.List.map
+            ~f:(fun (n, _, t, _) -> spf "%s=%s" (Subst_name.string_of_subst_name n) (kid t))
+            type_args
+         )
+      )
+      (ALoc.debug_to_string (class_id :> ALoc.t))
+  in
   if depth = 0 then
     string_of_ctor t
   else
@@ -217,7 +229,7 @@ let rec dump_t_ (depth, tvars) cx t =
              (Poly.string_of_id id)
           )
         t
-    | ThisClassT (_, inst, _, _) -> p ~extra:(kid inst) t
+    | ThisInstanceT (_, inst_t, _, _) -> p ~extra:(instance_t inst_t) t
     | GenericT { name; bound; _ } ->
       p ~extra:(spf "%s: %s" (Subst_name.string_of_subst_name name) (kid bound)) t
     | DefT (_, ObjT { props_tmap; flags; _ }) ->
@@ -257,23 +269,7 @@ let rec dump_t_ (depth, tvars) cx t =
     | DefT (_, ArrT (ROArrayAT (elemt, _))) -> p ~extra:(spf "ReadOnlyArray %s" (kid elemt)) t
     | DefT (_, CharSetT chars) -> p ~extra:(spf "<%S>" (String_utils.CharSet.to_string chars)) t
     | DefT (_, ClassT inst) -> p ~extra:(kid inst) t
-    | DefT
-        (_, InstanceT { static = _; super = _; implements = _; inst = { class_id; type_args; _ } })
-      ->
-      p
-        ~extra:
-          (spf
-             "[%s] #%s"
-             (String.concat
-                ", "
-                (Base.List.map
-                   ~f:(fun (n, _, t, _) -> spf "%s=%s" (Subst_name.string_of_subst_name n) (kid t))
-                   type_args
-                )
-             )
-             (ALoc.debug_to_string (class_id :> ALoc.t))
-          )
-        t
+    | DefT (_, InstanceT inst_t) -> p ~extra:(instance_t inst_t) t
     | DefT (_, TypeT (kind, arg)) ->
       p ~extra:(spf "%s, %s" (string_of_type_t_kind kind) (kid arg)) t
     | DefT

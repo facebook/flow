@@ -136,8 +136,15 @@ let rec instantiate_callee cx fn instantiation_hint =
       Flow_js.flow cx (instance, GetStaticsT statics);
       handle_poly (get_t cx (OpenT statics))
     | DefT
-        (_, PolyT { tparams_loc = _; tparams; t_out = ThisClassT (r, i, this, this_name); id = _ })
-      ->
+        ( _,
+          PolyT
+            {
+              tparams_loc = _;
+              tparams;
+              t_out = DefT (class_r, ClassT (ThisInstanceT (inst_r, i, this, this_name)));
+              id = _;
+            }
+        ) ->
       let subst_map =
         tparams
         |> Nel.map (fun tparam -> (tparam.name, tparam.bound))
@@ -145,7 +152,15 @@ let rec instantiate_callee cx fn instantiation_hint =
         |> Subst_name.Map.of_list
       in
       let t =
-        Flow_js_utils.fix_this_class cx r (r, Flow_js.subst cx subst_map i, this, this_name)
+        DefT
+          ( class_r,
+            ClassT
+              (Flow_js_utils.fix_this_instance
+                 cx
+                 inst_r
+                 (inst_r, Type_subst.subst_instance_type cx subst_map i, this, this_name)
+              )
+          )
       in
       handle_poly (get_t cx t)
     | DefT (_, PolyT { tparams_loc; tparams; t_out; id = _ }) as t ->

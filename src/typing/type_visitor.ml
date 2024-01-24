@@ -73,7 +73,7 @@ class ['a] t =
         let acc = self#type_ cx pole_TODO acc t1 in
         let acc = self#type_ cx pole_TODO acc t2 in
         acc
-      | ThisClassT (_, t, _, _) -> self#type_ cx pole acc t
+      | ThisInstanceT (_, t, _, _) -> self#instance_type cx pole acc t
       | ThisTypeAppT (_, t, this, ts_opt) ->
         let acc = self#type_ cx P.Positive acc t in
         let acc = self#type_ cx pole acc this in
@@ -123,12 +123,7 @@ class ['a] t =
       | ArrT arrtype -> self#arr_type cx pole acc arrtype
       | CharSetT _ -> acc
       | ClassT t -> self#type_ cx pole acc t
-      | InstanceT { static; super; implements; inst } ->
-        let acc = self#type_ cx pole acc static in
-        let acc = self#type_ cx pole acc super in
-        let acc = self#list (self#type_ cx pole_TODO) acc implements in
-        let acc = self#inst_type cx pole acc inst in
-        acc
+      | InstanceT t -> self#instance_type cx pole acc t
       | NumericStrKeyT _
       | SingletonStrT _
       | SingletonNumT _
@@ -431,6 +426,13 @@ class ['a] t =
       let acc = self#props cx pole_TODO acc class_private_static_fields in
       let acc = self#props cx pole_TODO acc class_private_methods in
       let acc = self#props cx pole_TODO acc class_private_static_methods in
+      acc
+
+    method instance_type cx pole acc { static; super; implements; inst } =
+      let acc = self#type_ cx pole acc static in
+      let acc = self#type_ cx pole acc super in
+      let acc = self#list (self#type_ cx pole_TODO) acc implements in
+      let acc = self#inst_type cx pole acc inst in
       acc
 
     method private export_types cx pole acc e =

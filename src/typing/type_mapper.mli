@@ -31,6 +31,8 @@ class virtual ['a] t :
 
     method inst_type : Context.t -> 'a -> Type.insttype -> Type.insttype
 
+    method instance_type : Context.t -> 'a -> Type.instance_t -> Type.instance_t
+
     method object_kit_spread_operand :
       Context.t -> 'a -> Type.Object.Spread.operand -> Type.Object.Spread.operand
 

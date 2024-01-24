@@ -34,7 +34,7 @@ let rec reason_of_t = function
   | ObjProtoT reason -> reason
   | MatchingPropT (reason, _, _) -> reason
   | OpaqueT (reason, _) -> reason
-  | ThisClassT (reason, _, _, _) -> reason
+  | ThisInstanceT (reason, _, _, _) -> reason
   | ThisTypeAppT (reason, _, _, _) -> reason
   | TypeAppT { reason; _ } -> reason
   | AnyT (reason, _) -> reason
@@ -203,7 +203,7 @@ let rec mod_reason_of_t f = function
   | ObjProtoT reason -> ObjProtoT (f reason)
   | MatchingPropT (reason, k, v) -> MatchingPropT (f reason, k, v)
   | OpaqueT (reason, opaquetype) -> OpaqueT (f reason, opaquetype)
-  | ThisClassT (reason, t, is_this, this_name) -> ThisClassT (f reason, t, is_this, this_name)
+  | ThisInstanceT (reason, t, is_this, this_name) -> ThisInstanceT (f reason, t, is_this, this_name)
   | ThisTypeAppT (reason, t1, t2, t3) -> ThisTypeAppT (f reason, t1, t2, t3)
   | TypeAppT { reason; use_op; type_; targs; from_value; use_desc } ->
     TypeAppT { reason = f reason; use_op; type_; targs; from_value; use_desc }
@@ -881,10 +881,6 @@ let class_type ?(structural = false) ?annot_loc t =
     | None -> reason
   in
   DefT (reason, ClassT t)
-
-let this_class_type t is_this this_name =
-  let reason = update_desc_new_reason (fun desc -> RClass desc) (reason_of_t t) in
-  ThisClassT (reason, t, is_this, this_name)
 
 let extends_type r l u =
   let reason = update_desc_reason (fun desc -> RExtends desc) r in

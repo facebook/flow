@@ -66,12 +66,12 @@ class virtual ['a] t =
           t
         else
           EvalT (t'', dt', id')
-      | ThisClassT (r, t', i, n) ->
-        let t'' = self#type_ cx map_cx t' in
+      | ThisInstanceT (r, t', i, n) ->
+        let t'' = self#instance_type cx map_cx t' in
         if t'' == t' then
           t
         else
-          ThisClassT (r, t'', i, n)
+          ThisInstanceT (r, t'', i, n)
       | ThisTypeAppT (r, t1, t2, tlist_opt) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in
@@ -293,15 +293,12 @@ class virtual ['a] t =
           t
         else
           EnumObjectT enum'
-      | InstanceT { static; super; implements; inst } ->
-        let static' = self#type_ cx map_cx static in
-        let super' = self#type_ cx map_cx super in
-        let implements' = ListUtils.ident_map (self#type_ cx map_cx) implements in
-        let inst' = self#inst_type cx map_cx inst in
-        if static' == static && super' == super && implements' == implements && inst' == inst then
+      | InstanceT instance_t ->
+        let instance_t' = self#instance_type cx map_cx instance_t in
+        if instance_t' == instance_t then
           t
         else
-          InstanceT { static = static'; super = super'; implements = implements'; inst = inst' }
+          InstanceT instance_t'
       | NumericStrKeyT _
       | SingletonStrT _
       | SingletonNumT _
@@ -481,6 +478,17 @@ class virtual ['a] t =
           class_private_methods = class_private_methods';
           class_private_static_methods = class_private_static_methods';
         }
+
+    method instance_type cx map_cx t =
+      let { static; super; implements; inst } = t in
+      let static' = self#type_ cx map_cx static in
+      let super' = self#type_ cx map_cx super in
+      let implements' = ListUtils.ident_map (self#type_ cx map_cx) implements in
+      let inst' = self#inst_type cx map_cx inst in
+      if static' == static && super' == super && implements' == implements && inst' == inst then
+        t
+      else
+        { static = static'; super = super'; implements = implements'; inst = inst' }
 
     method type_param cx map_cx ({ reason; name; bound; polarity; default; is_this } as t) =
       let bound' = self#type_ cx map_cx bound in

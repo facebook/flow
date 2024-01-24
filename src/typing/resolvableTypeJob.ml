@@ -209,9 +209,9 @@ and collect_of_type ?log_unresolved cx acc = function
     acc
   | ExactT (_, t)
   | DefT (_, TypeT (_, t))
-  | DefT (_, ClassT t)
-  | ThisClassT (_, t, _, _) ->
+  | DefT (_, ClassT t) ->
     collect_of_type ?log_unresolved cx acc t
+  | ThisInstanceT (r, t, _, _) -> collect_of_type ?log_unresolved cx acc (DefT (r, InstanceT t))
   | KeysT (_, t) -> collect_of_type ?log_unresolved cx acc t
   | MatchingPropT (_, _, t) -> collect_of_type ?log_unresolved cx acc t
   | GenericT { bound; _ } -> collect_of_type ?log_unresolved cx acc bound

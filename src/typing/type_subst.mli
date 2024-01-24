@@ -19,3 +19,11 @@ val subst_destructor :
   Type.t Subst_name.Map.t ->
   Type.destructor ->
   Type.destructor
+
+val subst_instance_type :
+  Context.t ->
+  ?use_op:Type.use_op ->
+  ?force:bool ->
+  Type.t Subst_name.Map.t ->
+  Type.instance_t ->
+  Type.instance_t

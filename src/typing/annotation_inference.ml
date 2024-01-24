@@ -566,8 +566,12 @@ module rec ConsGen : S = struct
            }
         );
       AnyT.error reason
-    | (ThisClassT (r, i, is_this, this_name), Annot_UseT_TypeT (reason, _)) ->
-      let c = Flow_js_utils.fix_this_class cx reason (r, i, is_this, this_name) in
+    | ( DefT (class_r, ClassT (ThisInstanceT (r, i, is_this, this_name))),
+        Annot_UseT_TypeT (reason, _)
+      ) ->
+      let c =
+        DefT (class_r, ClassT (Flow_js_utils.fix_this_instance cx reason (r, i, is_this, this_name)))
+      in
       elab_t cx c op
     | (DefT (_, ClassT it), Annot_UseT_TypeT (reason, _)) ->
       (* a class value annotation becomes the instance type *)
@@ -805,22 +809,26 @@ module rec ConsGen : S = struct
     (**********)
     (* Mixins *)
     (**********)
-    | (ThisClassT (_, DefT (_, InstanceT { inst; _ }), is_this, this_name), Annot_MixinT r) ->
+    | ( DefT (class_r, ClassT (ThisInstanceT (inst_r, { inst; _ }, is_this, this_name))),
+        Annot_MixinT r
+      ) ->
       (* A class can be viewed as a mixin by extracting its immediate properties,
        * and "erasing" its static and super *)
       let static = ObjProtoT r in
       let super = ObjProtoT r in
-      this_class_type
-        (DefT (r, InstanceT { static; super; implements = []; inst }))
-        is_this
-        this_name
+      DefT
+        ( class_r,
+          ClassT
+            (ThisInstanceT (inst_r, { static; super; implements = []; inst }, is_this, this_name))
+        )
     | ( DefT
           ( _,
             PolyT
               {
                 tparams_loc;
                 tparams = xs;
-                t_out = ThisClassT (_, DefT (_, InstanceT { inst; _ }), is_this, this_name);
+                t_out =
+                  DefT (class_r, ClassT (ThisInstanceT (inst_r, { inst; _ }, is_this, this_name)));
                 _;
               }
           ),
@@ -828,12 +836,12 @@ module rec ConsGen : S = struct
       ) ->
       let static = ObjProtoT r in
       let super = ObjProtoT r in
-      let instance = DefT (r, InstanceT { static; super; implements = []; inst }) in
+      let instance = { static; super; implements = []; inst } in
       poly_type
         (Type.Poly.generate_id ())
         tparams_loc
         xs
-        (this_class_type instance is_this this_name)
+        (DefT (class_r, ClassT (ThisInstanceT (inst_r, instance, is_this, this_name))))
     | (AnyT (_, src), Annot_MixinT r) -> AnyT.why src r
     (***********************)
     (* Type specialization *)
@@ -843,11 +851,12 @@ module rec ConsGen : S = struct
       ) ->
       let ts = Base.Option.value ts ~default:[] in
       mk_typeapp_of_poly cx ~use_op ~reason_op ~reason_tapp id tparams_loc xs t ts
-    | ((DefT (_, ClassT _) | ThisClassT _), Annot_SpecializeT (_, _, _, None)) -> t
+    | (DefT (_, ClassT _), Annot_SpecializeT (_, _, _, None)) -> t
     | (AnyT _, Annot_SpecializeT _) -> t
-    | (ThisClassT (_, i, _, this_name), Annot_ThisSpecializeT (reason, this)) ->
-      let i = subst cx (Subst_name.Map.singleton this_name this) i in
-      reposition cx (loc_of_reason reason) i
+    | (DefT (_, ClassT (ThisInstanceT (r, i, _, this_name))), Annot_ThisSpecializeT (reason, this))
+      ->
+      let i = subst_instance_type cx (Subst_name.Map.singleton this_name this) i in
+      reposition cx (loc_of_reason reason) (DefT (r, InstanceT i))
     (* this-specialization of non-this-abstracted classes is a no-op *)
     | (DefT (_, ClassT i), Annot_ThisSpecializeT (reason, _this)) ->
       reposition cx (loc_of_reason reason) i
@@ -860,9 +869,9 @@ module rec ConsGen : S = struct
       let reason_op = Type.AConstraint.reason_of_op op in
       let (t, _) = instantiate_poly cx ~use_op ~reason_op ~reason_tapp (tparams_loc, ids, t) in
       elab_t cx t op
-    | (ThisClassT (r, i, is_this, this_name), _) ->
+    | (ThisInstanceT (r, i, is_this, this_name), _) ->
       let reason = Type.AConstraint.reason_of_op op in
-      let t = Flow_js_utils.fix_this_class cx reason (r, i, is_this, this_name) in
+      let t = Flow_js_utils.fix_this_instance cx reason (r, i, is_this, this_name) in
       elab_t cx t op
     (*****************************)
     (* React Abstract Components *)
