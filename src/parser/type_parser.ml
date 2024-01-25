@@ -5,51 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module Ast = Flow_ast
 open Token
 open Parser_env
 open Flow_ast
 open Parser_common
 open Comment_attachment
 
-module type TYPE = sig
-  val _type : env -> (Loc.t, Loc.t) Ast.Type.t
-
-  val type_identifier : env -> (Loc.t, Loc.t) Ast.Identifier.t
-
-  val type_params : env -> (Loc.t, Loc.t) Ast.Type.TypeParams.t option
-
-  val type_args : env -> (Loc.t, Loc.t) Ast.Type.TypeArgs.t option
-
-  val generic : env -> Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t
-
-  val _object : is_class:bool -> env -> Loc.t * (Loc.t, Loc.t) Type.Object.t
-
-  val interface_helper :
-    env ->
-    (Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t) list * (Loc.t * (Loc.t, Loc.t) Ast.Type.Object.t)
-
-  val function_param_list : env -> (Loc.t, Loc.t) Type.Function.Params.t
-
-  val component_param_list : env -> (Loc.t, Loc.t) Ast.Type.Component.Params.t
-
-  val annotation : env -> (Loc.t, Loc.t) Ast.Type.annotation
-
-  val annotation_opt : env -> (Loc.t, Loc.t) Ast.Type.annotation_or_hint
-
-  val renders_annotation_opt : env -> (Loc.t, Loc.t) Ast.Type.component_renders_annotation
-
-  val function_return_annotation_opt : env -> (Loc.t, Loc.t) Ast.Function.ReturnAnnot.t
-
-  val predicate_opt : env -> (Loc.t, Loc.t) Ast.Type.Predicate.t option
-
-  val function_return_annotation_and_predicate_opt :
-    env -> (Loc.t, Loc.t) Ast.Function.ReturnAnnot.t * (Loc.t, Loc.t) Ast.Type.Predicate.t option
-
-  val type_guard : env -> (Loc.t, Loc.t) Ast.Type.TypeGuard.t
-end
-
-module Type (Parse : Parser_common.PARSER) : TYPE = struct
+module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
   type param_list_or_type =
     | ParamList of (Loc.t, Loc.t) Type.Function.Params.t'
     | Type of (Loc.t, Loc.t) Type.t

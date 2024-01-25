@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module Ast = Flow_ast
 open Token
 open Parser_env
 open Flow_ast
@@ -16,27 +15,12 @@ open Comment_attachment
 (* A module for parsing various object related things, like object literals
  * and classes *)
 
-module type OBJECT = sig
-  val key : ?class_body:bool -> env -> Loc.t * (Loc.t, Loc.t) Ast.Expression.Object.Property.key
-
-  val _initializer : env -> Loc.t * (Loc.t, Loc.t) Ast.Expression.Object.t * pattern_errors
-
-  val class_declaration :
-    env -> (Loc.t, Loc.t) Ast.Class.Decorator.t list -> (Loc.t, Loc.t) Ast.Statement.t
-
-  val class_expression : env -> (Loc.t, Loc.t) Ast.Expression.t
-
-  val class_implements : env -> attach_leading:bool -> (Loc.t, Loc.t) Ast.Class.Implements.t
-
-  val decorator_list : env -> (Loc.t, Loc.t) Ast.Class.Decorator.t list
-end
-
 module Object
     (Parse : Parser_common.PARSER)
-    (Type : Type_parser.TYPE)
-    (Declaration : Declaration_parser.DECLARATION)
-    (Expression : Expression_parser.EXPRESSION)
-    (Pattern_cover : Pattern_cover.COVER) : OBJECT = struct
+    (Type : Parser_common.TYPE)
+    (Declaration : Parser_common.DECLARATION)
+    (Expression : Parser_common.EXPRESSION)
+    (Pattern_cover : Parser_common.COVER) : Parser_common.OBJECT = struct
   let decorator_list =
     let expression env =
       let expression = Expression.left_hand_side env in

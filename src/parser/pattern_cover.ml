@@ -5,25 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Flow_ast
 open Parser_common
 open Parser_env
 
-module type COVER = sig
-  val as_expression : env -> pattern_cover -> (Loc.t, Loc.t) Expression.t
-
-  val as_pattern : ?err:Parse_error.t -> env -> pattern_cover -> (Loc.t, Loc.t) Pattern.t
-
-  val empty_errors : pattern_errors
-
-  val cons_error : Loc.t * Parse_error.t -> pattern_errors -> pattern_errors
-
-  val rev_append_errors : pattern_errors -> pattern_errors -> pattern_errors
-
-  val rev_errors : pattern_errors -> pattern_errors
-end
-
-module Cover (Parse : PARSER) : COVER = struct
+module Cover (Parse : PARSER) : Parser_common.COVER = struct
   let as_expression env = function
     | Cover_expr expr -> expr
     | Cover_patt (expr, { if_expr; if_patt = _ }) ->

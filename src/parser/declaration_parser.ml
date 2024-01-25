@@ -5,75 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module Ast = Flow_ast
 open Token
 open Parser_common
 open Parser_env
 open Flow_ast
 open Comment_attachment
 
-module type DECLARATION = sig
-  val async : env -> bool * Loc.t Comment.t list
-
-  val generator : env -> bool * Loc.t Comment.t list
-
-  val variance : env -> parse_readonly:bool -> bool -> bool -> Loc.t Variance.t option
-
-  val function_params : await:bool -> yield:bool -> env -> (Loc.t, Loc.t) Ast.Function.Params.t
-
-  val function_body :
-    env ->
-    async:bool ->
-    generator:bool ->
-    expression:bool ->
-    simple_params:bool ->
-    (Loc.t, Loc.t) Function.body * bool
-
-  val check_unique_formal_parameters : env -> (Loc.t, Loc.t) Ast.Function.Params.t -> unit
-
-  val check_unique_component_formal_parameters :
-    env -> (Loc.t, Loc.t) Ast.Statement.ComponentDeclaration.Params.t -> unit
-
-  val strict_function_post_check :
-    env ->
-    contains_use_strict:bool ->
-    (Loc.t, Loc.t) Identifier.t option ->
-    (Loc.t, Loc.t) Ast.Function.Params.t ->
-    unit
-
-  val strict_component_post_check :
-    env ->
-    contains_use_strict:bool ->
-    (Loc.t, Loc.t) Identifier.t ->
-    (Loc.t, Loc.t) Ast.Statement.ComponentDeclaration.Params.t ->
-    unit
-
-  val let_ :
-    env ->
-    (Loc.t, Loc.t) Statement.VariableDeclaration.Declarator.t list
-    * Loc.t Ast.Comment.t list
-    * (Loc.t * Parse_error.t) list
-
-  val const :
-    env ->
-    (Loc.t, Loc.t) Statement.VariableDeclaration.Declarator.t list
-    * Loc.t Ast.Comment.t list
-    * (Loc.t * Parse_error.t) list
-
-  val var :
-    env ->
-    (Loc.t, Loc.t) Statement.VariableDeclaration.Declarator.t list
-    * Loc.t Ast.Comment.t list
-    * (Loc.t * Parse_error.t) list
-
-  val _function : env -> (Loc.t, Loc.t) Statement.t
-
-  val enum_declaration : ?leading:Loc.t Comment.t list -> env -> (Loc.t, Loc.t) Statement.t
-
-  val component : env -> (Loc.t, Loc.t) Statement.t
-end
-
-module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DECLARATION = struct
+module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
+  Parser_common.DECLARATION = struct
   module Enum = Enum_parser.Enum (Parse)
 
   let check_param =

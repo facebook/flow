@@ -5,76 +5,18 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module Ast = Flow_ast
 open Token
 open Parser_env
 open Flow_ast
 open Parser_common
 open Comment_attachment
 
-module type STATEMENT = sig
-  val for_ : env -> (Loc.t, Loc.t) Statement.t
-
-  val if_ : env -> (Loc.t, Loc.t) Statement.t
-
-  val let_ : env -> (Loc.t, Loc.t) Statement.t
-
-  val try_ : env -> (Loc.t, Loc.t) Statement.t
-
-  val while_ : env -> (Loc.t, Loc.t) Statement.t
-
-  val with_ : env -> (Loc.t, Loc.t) Statement.t
-
-  val block : env -> (Loc.t, Loc.t) Statement.t
-
-  val break : env -> (Loc.t, Loc.t) Statement.t
-
-  val continue : env -> (Loc.t, Loc.t) Statement.t
-
-  val debugger : env -> (Loc.t, Loc.t) Statement.t
-
-  val declare : ?in_module_or_namespace:bool -> env -> (Loc.t, Loc.t) Statement.t
-
-  val declare_export_declaration : ?allow_export_type:bool -> env -> (Loc.t, Loc.t) Statement.t
-
-  val declare_opaque_type : env -> (Loc.t, Loc.t) Statement.t
-
-  val do_while : env -> (Loc.t, Loc.t) Statement.t
-
-  val empty : env -> (Loc.t, Loc.t) Statement.t
-
-  val export_declaration :
-    decorators:(Loc.t, Loc.t) Class.Decorator.t list -> env -> (Loc.t, Loc.t) Statement.t
-
-  val expression : env -> (Loc.t, Loc.t) Statement.t
-
-  val import_declaration : env -> (Loc.t, Loc.t) Statement.t
-
-  val interface : env -> (Loc.t, Loc.t) Statement.t
-
-  val maybe_labeled : env -> (Loc.t, Loc.t) Statement.t
-
-  val opaque_type : env -> (Loc.t, Loc.t) Statement.t
-
-  val return : env -> (Loc.t, Loc.t) Statement.t
-
-  val switch : env -> (Loc.t, Loc.t) Statement.t
-
-  val throw : env -> (Loc.t, Loc.t) Statement.t
-
-  val type_alias : env -> (Loc.t, Loc.t) Statement.t
-
-  val var : env -> (Loc.t, Loc.t) Statement.t
-
-  val const : env -> (Loc.t, Loc.t) Statement.t
-end
-
 module Statement
     (Parse : PARSER)
-    (Type : Type_parser.TYPE)
-    (Declaration : Declaration_parser.DECLARATION)
-    (Object : Object_parser.OBJECT)
-    (Pattern_cover : Pattern_cover.COVER) : STATEMENT = struct
+    (Type : Parser_common.TYPE)
+    (Declaration : Parser_common.DECLARATION)
+    (Object : Parser_common.OBJECT)
+    (Pattern_cover : Parser_common.COVER) : Parser_common.STATEMENT = struct
   module Enum = Enum_parser.Enum (Parse)
 
   type for_lhs =

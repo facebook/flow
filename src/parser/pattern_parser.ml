@@ -13,7 +13,8 @@ open Flow_ast
 
 let missing_annot env = Ast.Type.Missing (Peek.loc_skip_lookahead env)
 
-module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
+module Pattern (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) : Parser_common.PATTERN =
+struct
   (* Reinterpret various expressions as patterns.
    * This is not the correct thing to do and is only used for assignment
    * expressions. This should be removed and replaced ASAP.

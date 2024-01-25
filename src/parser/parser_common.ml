@@ -77,6 +77,222 @@ module type PARSER = sig
   val bigint : env -> Token.bigint_type -> string -> int64 option
 end
 
+module type TYPE = sig
+  val _type : env -> (Loc.t, Loc.t) Type.t
+
+  val type_identifier : env -> (Loc.t, Loc.t) Identifier.t
+
+  val type_params : env -> (Loc.t, Loc.t) Type.TypeParams.t option
+
+  val type_args : env -> (Loc.t, Loc.t) Type.TypeArgs.t option
+
+  val generic : env -> Loc.t * (Loc.t, Loc.t) Type.Generic.t
+
+  val _object : is_class:bool -> env -> Loc.t * (Loc.t, Loc.t) Type.Object.t
+
+  val interface_helper :
+    env -> (Loc.t * (Loc.t, Loc.t) Type.Generic.t) list * (Loc.t * (Loc.t, Loc.t) Type.Object.t)
+
+  val function_param_list : env -> (Loc.t, Loc.t) Type.Function.Params.t
+
+  val component_param_list : env -> (Loc.t, Loc.t) Type.Component.Params.t
+
+  val annotation : env -> (Loc.t, Loc.t) Type.annotation
+
+  val annotation_opt : env -> (Loc.t, Loc.t) Type.annotation_or_hint
+
+  val renders_annotation_opt : env -> (Loc.t, Loc.t) Type.component_renders_annotation
+
+  val function_return_annotation_opt : env -> (Loc.t, Loc.t) Function.ReturnAnnot.t
+
+  val predicate_opt : env -> (Loc.t, Loc.t) Type.Predicate.t option
+
+  val function_return_annotation_and_predicate_opt :
+    env -> (Loc.t, Loc.t) Function.ReturnAnnot.t * (Loc.t, Loc.t) Type.Predicate.t option
+
+  val type_guard : env -> (Loc.t, Loc.t) Type.TypeGuard.t
+end
+
+module type COVER = sig
+  val as_expression : env -> pattern_cover -> (Loc.t, Loc.t) Expression.t
+
+  val as_pattern : ?err:Parse_error.t -> env -> pattern_cover -> (Loc.t, Loc.t) Pattern.t
+
+  val empty_errors : pattern_errors
+
+  val cons_error : Loc.t * Parse_error.t -> pattern_errors -> pattern_errors
+
+  val rev_append_errors : pattern_errors -> pattern_errors -> pattern_errors
+
+  val rev_errors : pattern_errors -> pattern_errors
+end
+
+module type PATTERN = sig
+  val from_expr : Parser_env.env -> (Loc.t, Loc.t) Expression.t -> (Loc.t, Loc.t) Pattern.t
+
+  val pattern : Parser_env.env -> Parse_error.t -> (Loc.t, Loc.t) Pattern.t
+end
+
+module type OBJECT = sig
+  val key : ?class_body:bool -> env -> Loc.t * (Loc.t, Loc.t) Expression.Object.Property.key
+
+  val _initializer : env -> Loc.t * (Loc.t, Loc.t) Expression.Object.t * pattern_errors
+
+  val class_declaration : env -> (Loc.t, Loc.t) Class.Decorator.t list -> (Loc.t, Loc.t) Statement.t
+
+  val class_expression : env -> (Loc.t, Loc.t) Expression.t
+
+  val class_implements : env -> attach_leading:bool -> (Loc.t, Loc.t) Class.Implements.t
+
+  val decorator_list : env -> (Loc.t, Loc.t) Class.Decorator.t list
+end
+
+module type JSX = sig
+  val element_or_fragment :
+    parent_opening_name:(Loc.t, Loc.t) JSX.name option ->
+    env ->
+    Loc.t * [ `Element of (Loc.t, Loc.t) JSX.element | `Fragment of (Loc.t, Loc.t) JSX.fragment ]
+end
+
+module type EXPRESSION = sig
+  val assignment : env -> (Loc.t, Loc.t) Expression.t
+
+  val assignment_cover : env -> pattern_cover
+
+  val conditional : env -> (Loc.t, Loc.t) Expression.t
+
+  val is_assignable_lhs : (Loc.t, Loc.t) Expression.t -> bool
+
+  val left_hand_side : env -> (Loc.t, Loc.t) Expression.t
+
+  val number : env -> Token.number_type -> string -> float
+
+  val bigint : env -> Token.bigint_type -> string -> int64 option
+
+  val sequence :
+    env -> start_loc:Loc.t -> (Loc.t, Loc.t) Expression.t list -> (Loc.t, Loc.t) Expression.t
+
+  val call_type_args : env -> (Loc.t, Loc.t) Expression.CallTypeArgs.t option
+end
+
+module type STATEMENT = sig
+  val for_ : env -> (Loc.t, Loc.t) Statement.t
+
+  val if_ : env -> (Loc.t, Loc.t) Statement.t
+
+  val let_ : env -> (Loc.t, Loc.t) Statement.t
+
+  val try_ : env -> (Loc.t, Loc.t) Statement.t
+
+  val while_ : env -> (Loc.t, Loc.t) Statement.t
+
+  val with_ : env -> (Loc.t, Loc.t) Statement.t
+
+  val block : env -> (Loc.t, Loc.t) Statement.t
+
+  val break : env -> (Loc.t, Loc.t) Statement.t
+
+  val continue : env -> (Loc.t, Loc.t) Statement.t
+
+  val debugger : env -> (Loc.t, Loc.t) Statement.t
+
+  val declare : ?in_module_or_namespace:bool -> env -> (Loc.t, Loc.t) Statement.t
+
+  val declare_export_declaration : ?allow_export_type:bool -> env -> (Loc.t, Loc.t) Statement.t
+
+  val declare_opaque_type : env -> (Loc.t, Loc.t) Statement.t
+
+  val do_while : env -> (Loc.t, Loc.t) Statement.t
+
+  val empty : env -> (Loc.t, Loc.t) Statement.t
+
+  val export_declaration :
+    decorators:(Loc.t, Loc.t) Class.Decorator.t list -> env -> (Loc.t, Loc.t) Statement.t
+
+  val expression : env -> (Loc.t, Loc.t) Statement.t
+
+  val import_declaration : env -> (Loc.t, Loc.t) Statement.t
+
+  val interface : env -> (Loc.t, Loc.t) Statement.t
+
+  val maybe_labeled : env -> (Loc.t, Loc.t) Statement.t
+
+  val opaque_type : env -> (Loc.t, Loc.t) Statement.t
+
+  val return : env -> (Loc.t, Loc.t) Statement.t
+
+  val switch : env -> (Loc.t, Loc.t) Statement.t
+
+  val throw : env -> (Loc.t, Loc.t) Statement.t
+
+  val type_alias : env -> (Loc.t, Loc.t) Statement.t
+
+  val var : env -> (Loc.t, Loc.t) Statement.t
+
+  val const : env -> (Loc.t, Loc.t) Statement.t
+end
+
+module type DECLARATION = sig
+  val async : env -> bool * Loc.t Comment.t list
+
+  val generator : env -> bool * Loc.t Comment.t list
+
+  val variance : env -> parse_readonly:bool -> bool -> bool -> Loc.t Variance.t option
+
+  val function_params : await:bool -> yield:bool -> env -> (Loc.t, Loc.t) Function.Params.t
+
+  val function_body :
+    env ->
+    async:bool ->
+    generator:bool ->
+    expression:bool ->
+    simple_params:bool ->
+    (Loc.t, Loc.t) Function.body * bool
+
+  val check_unique_formal_parameters : env -> (Loc.t, Loc.t) Function.Params.t -> unit
+
+  val check_unique_component_formal_parameters :
+    env -> (Loc.t, Loc.t) Statement.ComponentDeclaration.Params.t -> unit
+
+  val strict_function_post_check :
+    env ->
+    contains_use_strict:bool ->
+    (Loc.t, Loc.t) Identifier.t option ->
+    (Loc.t, Loc.t) Function.Params.t ->
+    unit
+
+  val strict_component_post_check :
+    env ->
+    contains_use_strict:bool ->
+    (Loc.t, Loc.t) Identifier.t ->
+    (Loc.t, Loc.t) Statement.ComponentDeclaration.Params.t ->
+    unit
+
+  val let_ :
+    env ->
+    (Loc.t, Loc.t) Statement.VariableDeclaration.Declarator.t list
+    * Loc.t Comment.t list
+    * (Loc.t * Parse_error.t) list
+
+  val const :
+    env ->
+    (Loc.t, Loc.t) Statement.VariableDeclaration.Declarator.t list
+    * Loc.t Comment.t list
+    * (Loc.t * Parse_error.t) list
+
+  val var :
+    env ->
+    (Loc.t, Loc.t) Statement.VariableDeclaration.Declarator.t list
+    * Loc.t Comment.t list
+    * (Loc.t * Parse_error.t) list
+
+  val _function : env -> (Loc.t, Loc.t) Statement.t
+
+  val enum_declaration : ?leading:Loc.t Comment.t list -> env -> (Loc.t, Loc.t) Statement.t
+
+  val component : env -> (Loc.t, Loc.t) Statement.t
+end
+
 let identifier_name_raw env =
   let open Token in
   let name =

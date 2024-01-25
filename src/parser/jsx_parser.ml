@@ -11,7 +11,8 @@ open Parser_common
 open Parser_env
 open Flow_ast
 
-module JSX (Parse : Parser_common.PARSER) (Expression : Expression_parser.EXPRESSION) = struct
+module JSX (Parse : Parser_common.PARSER) (Expression : Parser_common.EXPRESSION) :
+  Parser_common.JSX = struct
   (* Consumes and returns the trailing comments after the end of a JSX tag name,
      attribute, or spread attribute.
 

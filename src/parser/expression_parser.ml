@@ -5,39 +5,17 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module Ast = Flow_ast
 open Token
 open Parser_env
 open Flow_ast
 open Parser_common
 open Comment_attachment
 
-module type EXPRESSION = sig
-  val assignment : env -> (Loc.t, Loc.t) Expression.t
-
-  val assignment_cover : env -> pattern_cover
-
-  val conditional : env -> (Loc.t, Loc.t) Expression.t
-
-  val is_assignable_lhs : (Loc.t, Loc.t) Expression.t -> bool
-
-  val left_hand_side : env -> (Loc.t, Loc.t) Expression.t
-
-  val number : env -> number_type -> string -> float
-
-  val bigint : env -> bigint_type -> string -> int64 option
-
-  val sequence :
-    env -> start_loc:Loc.t -> (Loc.t, Loc.t) Expression.t list -> (Loc.t, Loc.t) Expression.t
-
-  val call_type_args : env -> (Loc.t, Loc.t) Expression.CallTypeArgs.t option
-end
-
 module Expression
     (Parse : PARSER)
-    (Type : Type_parser.TYPE)
-    (Declaration : Declaration_parser.DECLARATION)
-    (Pattern_cover : Pattern_cover.COVER) : EXPRESSION = struct
+    (Type : Parser_common.TYPE)
+    (Declaration : Parser_common.DECLARATION)
+    (Pattern_cover : Parser_common.COVER) : Parser_common.EXPRESSION = struct
   type op_precedence =
     | Left_assoc of int
     | Right_assoc of int
