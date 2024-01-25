@@ -136,8 +136,6 @@ val predicate_refinement_maps :
 
 val set_var : Context.t -> use_op:Type.use_op -> string -> Type.t -> ALoc.t -> unit
 
-val set_module_exports : Context.t -> Type.t -> unit
-
 val get_refinement : Context.t -> Key.t -> ALoc.t -> Type.t option
 
 val discriminant_after_negated_cases :

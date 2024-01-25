@@ -1067,20 +1067,9 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
 
       val mutable env_state : name_resolver_state =
         let (env, jsx_base_name) = initial_env cx ~is_lib exclude_syms unbound_names program_loc in
-        let write_entries =
-          if is_lib then
-            EnvMap.empty
-          else
-            let filename = Context.file cx in
-            let loc_none_with_file = Loc.{ none with source = Some filename } |> ALoc.of_loc in
-            EnvMap.empty
-            |> EnvMap.add
-                 (Env_api.CJSModuleExportsLoc, loc_none_with_file)
-                 (Env_api.AssigningWrite (mk_reason RExports loc_none_with_file))
-        in
         {
           values = L.LMap.empty;
-          write_entries;
+          write_entries = EnvMap.empty;
           predicate_refinement_maps = L.LMap.empty;
           type_guard_consistency_maps = L.LMap.empty;
           curr_id = 0;

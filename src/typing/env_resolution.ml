@@ -1085,14 +1085,8 @@ let resolve_declare_component cx loc component =
 
 let resolve_declare_module cx loc module_ =
   let cache = Context.node_cache cx in
-  let ({ Loc_env.declare_module_exports_write_loc = old_dme_loc; _ } as env) =
-    Context.environment cx
-  in
-  Context.set_environment cx { env with Loc_env.declare_module_exports_write_loc = Some loc };
   let ((t, _) as stuff) = Statement.declare_module cx loc module_ in
   Node_cache.set_declared_module cache loc stuff;
-  let env = Context.environment cx in
-  Context.set_environment cx { env with Loc_env.declare_module_exports_write_loc = old_dme_loc };
   (t, unknown_use)
 
 let resolve_enum cx id_loc enum_reason enum_loc name enum =
