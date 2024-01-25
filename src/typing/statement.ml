@@ -6476,10 +6476,7 @@ module Make
       x
     | None ->
       let def_reason = repos_reason class_loc reason in
-      let self = Type_env.read_class_self_type cx class_loc in
-      let (class_t, _, class_sig, class_ast_f) =
-        mk_class_sig cx ~name_loc ~class_loc reason self c
-      in
+      let (class_t, _, class_sig, class_ast_f) = mk_class_sig cx ~name_loc ~class_loc reason c in
 
       let public_property_map =
         Class_stmt_sig.fields_to_prop_map cx
@@ -6735,7 +6732,7 @@ module Make
         let (t, targs) = Anno.mk_super cx tparams_map loc c targs in
         (Explicit t, (fun () -> Some (loc, { Ast.Class.Extends.expr = expr (); targs; comments })))
     in
-    fun cx ~name_loc ~class_loc reason self cls ->
+    let mk_class_sig_with_self cx ~name_loc ~class_loc reason self cls =
       let node_cache = Context.node_cache cx in
       match Node_cache.get_class_sig node_cache class_loc with
       | Some x ->
@@ -7244,6 +7241,17 @@ module Make
               comments;
             }
         )
+    in
+    fun cx ~name_loc ~class_loc reason cls ->
+      let rec lazy_sig_info =
+        lazy
+          (let self =
+             Tvar.mk_fully_resolved_lazy cx reason (Lazy.map (fun (_, t, _, _) -> t) lazy_sig_info)
+           in
+           mk_class_sig_with_self cx ~name_loc ~class_loc reason self cls
+          )
+      in
+      Lazy.force lazy_sig_info
 
   and mk_component_sig =
     let mk_param_annot cx tparams_map reason = function

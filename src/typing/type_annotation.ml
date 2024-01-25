@@ -3284,9 +3284,18 @@ module Make (ConsGen : Type_annotation_sig.ConsGen) (Statement : Statement_sig.S
       )
     in
     fun cx class_loc class_name reason decl ->
-      let self = Tvar.mk cx reason in
-      let (t_internal, t, iface_sig, tast) = f cx class_loc class_name reason self decl in
-      Flow.unify cx self t_internal;
+      let rec lazy_ts_sig_and_tast =
+        lazy
+          (let self =
+             Tvar.mk_fully_resolved_lazy
+               cx
+               reason
+               (Lazy.map (fun (t, _, _, _) -> t) lazy_ts_sig_and_tast)
+           in
+           f cx class_loc class_name reason self decl
+          )
+      in
+      let (_, t, iface_sig, tast) = Lazy.force lazy_ts_sig_and_tast in
       (t, iface_sig, tast)
 
   (* Propagation of infer_tparams_map is an implementation detail of this module, so we shadow them.

@@ -191,7 +191,6 @@ module type S = sig
     name_loc:ALoc.t ->
     class_loc:ALoc.t ->
     Reason.t ->
-    Type.t ->
     (ALoc.t, ALoc.t) Ast.Class.t ->
     Type.t * Type.t * Class_stmt_sig.Types.t * (Type.t -> (ALoc.t, ALoc.t * Type.t) Ast.Class.t)
 

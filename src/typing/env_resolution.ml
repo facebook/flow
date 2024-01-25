@@ -938,11 +938,11 @@ let resolve_inferred_function cx ~statics ~needs_this_param id_loc reason functi
 
 let resolve_class cx id_loc reason class_loc class_ =
   let cache = Context.node_cache cx in
-  let self = Type_env.read_class_self_type cx class_loc in
   let ((class_t, class_t_internal, _, _) as sig_info) =
-    Statement.mk_class_sig cx ~name_loc:id_loc ~class_loc reason self class_
+    Statement.mk_class_sig cx ~name_loc:id_loc ~class_loc reason class_
   in
   Node_cache.set_class_sig cache class_loc sig_info;
+  let self = Type_env.read_class_self_type cx class_loc in
   Flow_js.unify cx self class_t_internal;
   (class_t, unknown_use)
 
