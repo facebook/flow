@@ -1030,7 +1030,7 @@ let resolve_import cx id_loc import_reason import_kind module_name source_loc im
   let source_module_t = Import_export.get_module_t cx ~declare_module (source_loc, module_name) in
   let t =
     match import with
-    | Name_def.Named { kind; remote; remote_loc; local } ->
+    | Name_def.Named { kind; remote; local } ->
       let import_kind = Base.Option.value ~default:import_kind kind in
       let (_, t) =
         Statement.import_named_specifier_type
@@ -1039,7 +1039,6 @@ let resolve_import cx id_loc import_reason import_kind module_name source_loc im
           import_kind
           ~module_name
           ~source_module_t
-          ~remote_name_loc:remote_loc
           ~remote_name:remote
           ~local_name:local
       in
@@ -1060,7 +1059,6 @@ let resolve_import cx id_loc import_reason import_kind module_name source_loc im
           import_kind
           ~module_name
           ~source_module_t
-          ~local_loc:id_loc
           ~local_name
       in
       t

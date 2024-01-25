@@ -210,12 +210,6 @@ module Make
 
   let snd_fst ((_, x), _) = x
 
-  let inference_hook_tvar cx ploc =
-    let r = mk_annot_reason (AnyT.desc (Unsound InferenceHooks)) ploc in
-    let tvar = Tvar.mk_no_wrap cx r in
-    Flow_js.unify cx (OpenT (r, tvar)) (Unsoundness.at InferenceHooks ploc);
-    (r, tvar)
-
   let translate_identifer_or_literal_key t =
     let module P = Ast.Expression.Object.Property in
     function
@@ -841,20 +835,9 @@ module Make
     (name_def_loc, t)
 
   let import_named_specifier_type
-      cx
-      import_reason
-      import_kind
-      ~module_name
-      ~source_module_t
-      ~remote_name_loc
-      ~remote_name
-      ~local_name =
-    if Type_inference_hooks_js.dispatch_member_hook cx remote_name remote_name_loc source_module_t
-    then
-      (None, Unsoundness.why InferenceHooks import_reason)
-    else
-      let import_kind = type_kind_of_kind import_kind in
-      get_imported_t cx import_reason module_name source_module_t import_kind remote_name local_name
+      cx import_reason import_kind ~module_name ~source_module_t ~remote_name ~local_name =
+    let import_kind = type_kind_of_kind import_kind in
+    get_imported_t cx import_reason module_name source_module_t import_kind remote_name local_name
 
   let import_namespace_specifier_type
       cx import_reason import_kind ~module_name ~source_module_t ~local_loc =
@@ -886,12 +869,9 @@ module Make
       get_module_ns_t reason
 
   let import_default_specifier_type
-      cx import_reason import_kind ~module_name ~source_module_t ~local_loc ~local_name =
-    if Type_inference_hooks_js.dispatch_member_hook cx "default" local_loc source_module_t then
-      (None, Unsoundness.why InferenceHooks import_reason)
-    else
-      let import_kind = type_kind_of_kind import_kind in
-      get_imported_t cx import_reason module_name source_module_t import_kind "default" local_name
+      cx import_reason import_kind ~module_name ~source_module_t ~local_name =
+    let import_kind = type_kind_of_kind import_kind in
+    get_imported_t cx import_reason module_name source_module_t import_kind "default" local_name
 
   let export_specifiers cx loc source export_kind =
     let open Ast.Statement in
@@ -1860,7 +1840,6 @@ module Make
                        import_kind
                        ~module_name
                        ~source_module_t
-                       ~remote_name_loc
                        ~remote_name
                        ~local_name
                    in
@@ -1926,7 +1905,6 @@ module Make
               import_kind
               ~module_name
               ~source_module_t
-              ~local_loc:loc
               ~local_name
           in
           Some
@@ -3843,11 +3821,8 @@ module Make
           match Refinement.get ~allow_optional:true cx (loc, e) loc with
           | Some t -> t
           | None ->
-            if Type_inference_hooks_js.dispatch_member_hook cx name ploc super_t then
-              Unsoundness.at InferenceHooks ploc
-            else
-              let use_op = Op (GetProperty (mk_expression_reason ex)) in
-              get_prop ~use_op ~cond cx expr_reason super_t (prop_reason, name)
+            let use_op = Op (GetProperty (mk_expression_reason ex)) in
+            get_prop ~use_op ~cond cx expr_reason super_t (prop_reason, name)
         in
         let property = Member.PropertyIdentifier ((ploc, lhs_t), id) in
         let ast =
@@ -4210,12 +4185,7 @@ module Make
         let prop_reason = mk_reason (RProperty (Some (OrdinaryName name))) ploc in
         let use_op = Op (GetProperty expr_reason) in
         let opt_use = get_prop_opt_use ~cond expr_reason ~use_op (prop_reason, name) in
-        let test_hooks obj_t =
-          if Type_inference_hooks_js.dispatch_member_hook cx name ploc obj_t then
-            Some (inference_hook_tvar cx ploc)
-          else
-            None
-        in
+        let test_hooks _ = None in
         let get_mem_t () _ obj_t =
           Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx expr_reason (fun t ->
               let use = apply_opt_use opt_use t in
@@ -4246,8 +4216,7 @@ module Make
             {
               Member._object;
               property =
-                Member.PropertyPrivateName (ploc, { Ast.PrivateName.name; comments = _ }) as
-                property;
+                Member.PropertyPrivateName (_, { Ast.PrivateName.name; comments = _ }) as property;
               comments;
             },
           _
@@ -4255,12 +4224,7 @@ module Make
         let expr_reason = mk_reason (RPrivateProperty name) loc in
         let use_op = Op (GetProperty (mk_expression_reason ex)) in
         let opt_use = get_private_field_opt_use cx expr_reason ~use_op name in
-        let test_hooks obj_t =
-          if Type_inference_hooks_js.dispatch_member_hook cx name ploc obj_t then
-            Some (inference_hook_tvar cx ploc)
-          else
-            None
-        in
+        let test_hooks _ = None in
         let get_mem_t () _ obj_t =
           Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx expr_reason (fun t ->
               let use = apply_opt_use opt_use t in
@@ -4349,12 +4313,7 @@ module Make
                 argts
                 (Some specialized_callee)
             in
-            let test_hooks obj_t =
-              if Type_inference_hooks_js.dispatch_member_hook cx name prop_loc obj_t then
-                Some (inference_hook_tvar cx prop_loc)
-              else
-                None
-            in
+            let test_hooks _ = None in
             let handle_refined_callee argts obj_t f =
               Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason_call (fun t ->
                   let app =
@@ -5076,27 +5035,23 @@ module Make
         | _ -> Normal
       in
       let prop_t =
-        (* if we fire this hook, it means the assignment is a sham. *)
-        if Type_inference_hooks_js.dispatch_member_hook cx name prop_loc o then
-          Unsoundness.at InferenceHooks prop_loc
-        else
-          let reason = mk_reason (RPropertyAssignment (Some name)) lhs_loc in
-          (* flow type to object property itself *)
-          let class_entries = Type_env.get_class_entries cx in
-          let prop_reason = mk_reason (RPrivateProperty name) prop_loc in
-          let prop_t = Tvar.mk cx prop_reason in
-          let use_op =
-            make_op ~lhs:reason ~prop:(mk_reason (desc_of_reason lhs_prop_reason) prop_loc)
-          in
-          let upper =
-            maybe_chain
-              lhs_reason
-              (SetPrivatePropT
-                 (use_op, reason, name, mode, class_entries, false, wr_ctx, t, Some prop_t)
-              )
-          in
-          Flow.flow cx (o, upper);
-          prop_t
+        let reason = mk_reason (RPropertyAssignment (Some name)) lhs_loc in
+        (* flow type to object property itself *)
+        let class_entries = Type_env.get_class_entries cx in
+        let prop_reason = mk_reason (RPrivateProperty name) prop_loc in
+        let prop_t = Tvar.mk cx prop_reason in
+        let use_op =
+          make_op ~lhs:reason ~prop:(mk_reason (desc_of_reason lhs_prop_reason) prop_loc)
+        in
+        let upper =
+          maybe_chain
+            lhs_reason
+            (SetPrivatePropT
+               (use_op, reason, name, mode, class_entries, false, wr_ctx, t, Some prop_t)
+            )
+        in
+        Flow.flow cx (o, upper);
+        prop_t
       in
       ((lhs_loc, prop_t), reconstruct_ast { Member._object; property; comments } prop_t)
     (* _object.name = e *)
@@ -5113,34 +5068,30 @@ module Make
       let lhs_reason = mk_expression_reason _object in
       let (o, _object) = typecheck_object _object in
       let prop_t =
-        (* if we fire this hook, it means the assignment is a sham. *)
-        if Type_inference_hooks_js.dispatch_member_hook cx name prop_loc o then
-          Unsoundness.at InferenceHooks prop_loc
-        else
-          let reason = mk_reason (RPropertyAssignment (Some name)) lhs_loc in
-          let prop_name = OrdinaryName name in
-          let prop_reason = mk_reason (RProperty (Some prop_name)) prop_loc in
-          (* flow type to object property itself *)
-          let prop_t = Tvar.mk cx prop_reason in
-          let use_op =
-            make_op ~lhs:reason ~prop:(mk_reason (desc_of_reason lhs_prop_reason) prop_loc)
-          in
-          let upper =
-            maybe_chain
-              lhs_reason
-              (SetPropT
-                 ( use_op,
-                   reason,
-                   mk_named_prop ~reason:prop_reason prop_name,
-                   mode,
-                   wr_ctx,
-                   t,
-                   Some prop_t
-                 )
-              )
-          in
-          Flow.flow cx (o, upper);
-          prop_t
+        let reason = mk_reason (RPropertyAssignment (Some name)) lhs_loc in
+        let prop_name = OrdinaryName name in
+        let prop_reason = mk_reason (RProperty (Some prop_name)) prop_loc in
+        (* flow type to object property itself *)
+        let prop_t = Tvar.mk cx prop_reason in
+        let use_op =
+          make_op ~lhs:reason ~prop:(mk_reason (desc_of_reason lhs_prop_reason) prop_loc)
+        in
+        let upper =
+          maybe_chain
+            lhs_reason
+            (SetPropT
+               ( use_op,
+                 reason,
+                 mk_named_prop ~reason:prop_reason prop_name,
+                 mode,
+                 wr_ctx,
+                 t,
+                 Some prop_t
+               )
+            )
+        in
+        Flow.flow cx (o, upper);
+        prop_t
       in
       let lhs_t =
         match (_object, name) with

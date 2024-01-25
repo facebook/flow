@@ -55,7 +55,6 @@ type def =
 type hook_state_t = {
   id_hook: Context.t -> string -> ALoc.t -> bool;
   literal_hook: Context.t -> ALoc.t -> bool;
-  member_hook: Context.t -> string -> ALoc.t -> Type.t -> bool;
   jsx_hook: Context.t -> string -> ALoc.t -> bool;
   obj_prop_decl_hook: Context.t -> string -> ALoc.t -> bool;
   (* Called when ObjT 1 ~> ObjT 2 *)
@@ -66,7 +65,6 @@ let nop_hook_state =
   {
     id_hook = id_nop;
     literal_hook = literal_nop;
-    member_hook = member_nop;
     jsx_hook = jsx_nop;
     obj_prop_decl_hook = obj_prop_decl_nop;
     obj_to_obj_hook = obj_to_obj_nop;
@@ -77,8 +75,6 @@ let hook_state = ref nop_hook_state
 let set_id_hook hook = hook_state := { !hook_state with id_hook = hook }
 
 let set_literal_hook hook = hook_state := { !hook_state with literal_hook = hook }
-
-let set_member_hook hook = hook_state := { !hook_state with member_hook = hook }
 
 let set_jsx_hook hook = hook_state := { !hook_state with jsx_hook = hook }
 
@@ -91,8 +87,6 @@ let reset_hooks () = hook_state := nop_hook_state
 let dispatch_id_hook cx name loc = !hook_state.id_hook cx name loc
 
 let dispatch_literal_hook cx loc = !hook_state.literal_hook cx loc
-
-let dispatch_member_hook cx name loc this_t = !hook_state.member_hook cx name loc this_t
 
 let dispatch_jsx_hook cx name loc = !hook_state.jsx_hook cx name loc
 

@@ -212,7 +212,6 @@ module type S = sig
     Ast.Statement.ImportDeclaration.import_kind ->
     module_name:string ->
     source_module_t:Type.t ->
-    remote_name_loc:ALoc.t ->
     remote_name:string ->
     local_name:string ->
     ALoc.t option * Type.t
@@ -232,7 +231,6 @@ module type S = sig
     Ast.Statement.ImportDeclaration.import_kind ->
     module_name:string ->
     source_module_t:Type.t ->
-    local_loc:ALoc.t ->
     local_name:string ->
     ALoc.t option * Type.t
 

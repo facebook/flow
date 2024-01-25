@@ -2250,7 +2250,7 @@ class def_finder ~autocomplete_hooks env_info toplevel_scope =
                      import_kind;
                      source;
                      source_loc;
-                     import = Named { kind; remote; remote_loc = rem_id_loc; local = name };
+                     import = Named { kind; remote; local = name };
                      declare_module = in_declare_module;
                    }
                 ))

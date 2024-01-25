@@ -164,7 +164,6 @@ type import =
   | Named of {
       kind: Ast.Statement.ImportDeclaration.import_kind option;
       remote: string;
-      remote_loc: ALoc.t;
       local: string;
     }
   | Namespace
@@ -282,7 +281,7 @@ module Print = struct
     | ImportValue -> ""
 
   let string_of_import = function
-    | Named { kind; remote; local = _; remote_loc = _ } ->
+    | Named { kind; remote; local = _ } ->
       spf "%s%s" (Base.Option.value_map ~f:string_of_import_kind ~default:"" kind) remote
     | Namespace -> "namespace"
     | Default _ -> "default"
