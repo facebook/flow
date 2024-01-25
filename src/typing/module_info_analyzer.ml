@@ -12,6 +12,88 @@ type cjs_exports_state =
   | CJSExportNames of (ALoc.t * Type.t) SMap.t
   | CJSModuleExports of ALoc.t * Type.t
 
+module Module_info = struct
+  type t = {
+    mutable kind: kind;
+    mutable type_named: Type.Exports.t;
+    mutable type_star: (ALoc.t * Type.t) list;
+  }
+
+  and kind =
+    | CJS of ALoc.t option
+    | ES of {
+        named: Type.Exports.t;
+        star: (ALoc.t * Type.t) list;
+      }
+
+  let empty_cjs_module () = { kind = CJS None; type_named = NameUtils.Map.empty; type_star = [] }
+
+  let export info name ?preferred_def_locs ~name_loc ~is_type_only_export type_ =
+    match info.kind with
+    | CJS None ->
+      info.kind <-
+        ES
+          {
+            named =
+              NameUtils.Map.singleton
+                name
+                { Type.preferred_def_locs; name_loc = Some name_loc; is_type_only_export; type_ };
+            star = [];
+          }
+    | ES { named; star } ->
+      info.kind <-
+        ES
+          {
+            named =
+              NameUtils.Map.add
+                name
+                { Type.preferred_def_locs; name_loc = Some name_loc; is_type_only_export; type_ }
+                named;
+            star;
+          }
+    | CJS (Some _) ->
+      (* Indeterminate module. We already errored during parsing. *)
+      ()
+
+  let export_star info loc module_t =
+    match info.kind with
+    | CJS None -> info.kind <- ES { named = NameUtils.Map.empty; star = [(loc, module_t)] }
+    | ES { named; star } -> info.kind <- ES { named; star = (loc, module_t) :: star }
+    | CJS (Some _) ->
+      (* Indeterminate module. We already errored during parsing. *)
+      ()
+
+  let export_type info name ?preferred_def_locs ~name_loc type_ =
+    info.type_named <-
+      NameUtils.Map.add
+        name
+        { Type.preferred_def_locs; name_loc = Some name_loc; is_type_only_export = true; type_ }
+        info.type_named
+
+  let export_type_star info loc module_t = info.type_star <- (loc, module_t) :: info.type_star
+
+  let cjs_clobber info loc =
+    match info.kind with
+    | CJS _ ->
+      info.kind <- CJS (Some loc);
+      true
+    | ES _ -> false
+
+  (* Re-exporting names from another file can lead to conflicts. We resolve
+   * conflicts on a last-export-wins basis. Star exports are accumulated in
+   * source order, so the head of each list is the last export. This helper
+   * function interleaves the two reverse-sorted lists. *)
+  let rec fold_star2 f g acc = function
+    | ([], []) -> acc
+    | (xs, []) -> List.fold_left f acc xs
+    | ([], ys) -> List.fold_left g acc ys
+    | ((x :: xs' as xs), (y :: ys' as ys)) ->
+      if ALoc.compare (fst x) (fst y) > 0 then
+        fold_star2 f g (f acc x) (xs', ys)
+      else
+        fold_star2 f g (g acc y) (xs, ys')
+end
+
 type state = {
   module_info: Module_info.t;
   mutable cjs_exports_state: cjs_exports_state;
